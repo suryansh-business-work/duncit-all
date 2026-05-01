@@ -1,0 +1,191 @@
+import { useState } from 'react';
+import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { Box, Container } from '@mui/material';
+import HomePage from './pages/HomePage';
+import RegisterPage from './pages/RegisterPage';
+import LoginPage from './pages/LoginPage';
+import AccountPage from './pages/AccountPage';
+import ProfilePage from './pages/ProfilePage';
+import PodDetailsPage from './pages/PodDetailsPage';
+import ClubDetailsPage from './pages/ClubDetailsPage';
+import BecomeHostPage from './pages/BecomeHostPage';
+import RegisterVenuePage from './pages/RegisterVenuePage';
+import FaqsPage from './pages/FaqsPage';
+import PolicyPage from './pages/PolicyPage';
+import PodIdeasPage from './pages/PodIdeasPage';
+import CheckoutPage from './pages/CheckoutPage';
+import ExplorePage from './pages/ExplorePage';
+import ClubsPage from './pages/ClubsPage';
+import ChatsPage from './pages/ChatsPage';
+import AppHeader from './components/AppHeader';
+import BottomNav from './components/BottomNav';
+
+function RequireAuth({ children }: { children: JSX.Element }) {
+  const isAuthed = !!localStorage.getItem('token');
+  const loc = useLocation();
+  if (!isAuthed) return <Navigate to="/login" state={{ from: loc }} replace />;
+  return children;
+}
+
+export default function App() {
+  const isAuthed = !!localStorage.getItem('token');
+  const [superCategory, setSuperCategory] = useState('');
+  const [locationId, setLocationId] = useState('');
+  const [zoneName, setZoneName] = useState('');
+  const loc = useLocation();
+  // Edge-to-edge full-bleed pages (no Container padding); they manage their
+  // own scrolling and need the full available viewport height.
+  const fullBleed = loc.pathname.startsWith('/explore');
+
+  return (
+    <Box sx={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
+      {isAuthed && (
+        <AppHeader
+          selectedSuperCategory={superCategory}
+          onSuperCategoryChange={setSuperCategory}
+          selectedLocationId={locationId}
+          onLocationChange={setLocationId}
+          selectedZoneName={zoneName}
+          onZoneChange={setZoneName}
+        />
+      )}
+      <Container
+        maxWidth={fullBleed ? false : 'lg'}
+        disableGutters={fullBleed}
+        sx={{
+          flex: 1,
+          minHeight: 0,
+          display: 'flex',
+          flexDirection: 'column',
+          py: fullBleed ? 0 : 4,
+          // Reserve space for the fixed BottomNav only on padded routes.
+          // Full-bleed routes handle their own bottom inset internally.
+          pb: fullBleed ? 0 : isAuthed ? 12 : 4,
+        }}
+      >
+        <Routes>
+          <Route
+            path="/"
+            element={
+              <RequireAuth>
+                <HomePage
+                  superCategorySlug={superCategory}
+                  locationId={locationId}
+                  zoneName={zoneName}
+                />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/profile"
+            element={
+              <RequireAuth>
+                <ProfilePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/account"
+            element={
+              <RequireAuth>
+                <AccountPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/pods/:id"
+            element={
+              <RequireAuth>
+                <PodDetailsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/clubs/:id"
+            element={
+              <RequireAuth>
+                <ClubDetailsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/become-host"
+            element={
+              <RequireAuth>
+                <BecomeHostPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/register-venue"
+            element={
+              <RequireAuth>
+                <RegisterVenuePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/faqs"
+            element={
+              <RequireAuth>
+                <FaqsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/policies/:slug"
+            element={
+              <RequireAuth>
+                <PolicyPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/pod-ideas"
+            element={
+              <RequireAuth>
+                <PodIdeasPage />
+              </RequireAuth>
+            }
+          />
+          <Route path="/register" element={<RegisterPage />} />
+          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/checkout"
+            element={
+              <RequireAuth>
+                <CheckoutPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/explore"
+            element={
+              <RequireAuth>
+                <ExplorePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/clubs"
+            element={
+              <RequireAuth>
+                <ClubsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/chats"
+            element={
+              <RequireAuth>
+                <ChatsPage />
+              </RequireAuth>
+            }
+          />
+          <Route path="*" element={<Navigate to="/" replace />} />
+        </Routes>
+      </Container>
+      {isAuthed && <BottomNav />}
+    </Box>
+  );
+}

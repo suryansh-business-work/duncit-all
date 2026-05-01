@@ -1,0 +1,34 @@
+<mjml>
+  <mj-body background-color="#f4f4f4">
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="bold" color="#222">
+          New {{type}} Application
+        </mj-text>
+        <mj-text font-size="14px" color="#555">
+          A new {{type}} application has been submitted on Duncit.
+        </mj-text>
+        <mj-divider border-color="#e5e5e5" />
+        <mj-text font-size="13px" color="#333" font-weight="bold">Applicant</mj-text>
+        <mj-text font-size="13px" color="#555">
+          {{name}} &middot; {{email}} &middot; {{phone}}
+        </mj-text>
+        <mj-text font-size="13px" color="#333" font-weight="bold">Business</mj-text>
+        <mj-text font-size="13px" color="#555">
+          {{business}}
+        </mj-text>
+        <mj-text font-size="13px" color="#333" font-weight="bold">About</mj-text>
+        <mj-text font-size="13px" color="#555">
+          {{about}}
+        </mj-text>
+        <mj-text font-size="13px" color="#333" font-weight="bold">Preferred Slots</mj-text>
+        <mj-text font-size="13px" color="#555">
+          {{slots}}
+        </mj-text>
+        <mj-button background-color="#3b82f6" href="{{adminLink}}">
+          Open in Admin
+        </mj-button>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

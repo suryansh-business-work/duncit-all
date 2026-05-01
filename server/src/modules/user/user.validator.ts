@@ -1,0 +1,59 @@
+import * as yup from 'yup';
+import { STATUSES } from './user.constants';
+
+const phoneRegex = /^[0-9]{6,15}$/;
+const extRegex = /^\+?[0-9]{1,5}$/;
+
+export const registerSchema = yup.object({
+  first_name: yup.string().min(1).max(60).required(),
+  last_name: yup.string().min(1).max(60).required(),
+  email: yup.string().email().required(),
+  phone_number: yup.string().matches(phoneRegex, 'Invalid phone').required(),
+  phone_extension: yup.string().matches(extRegex, 'Invalid extension').required(),
+  password: yup.string().min(8).max(100).required(),
+  dob: yup.date().max(new Date(), 'DOB must be in the past').required(),
+  city: yup.string().optional(),
+  zone: yup.string().optional(),
+});
+
+export const loginSchema = yup.object({
+  email: yup.string().email().required(),
+  password: yup.string().min(8).required(),
+});
+
+export const createUserSchema = yup.object({
+  first_name: yup.string().min(1).max(60).required(),
+  last_name: yup.string().min(1).max(60).required(),
+  email: yup.string().email().optional(),
+  phone_number: yup.string().matches(phoneRegex).required(),
+  phone_extension: yup.string().matches(extRegex).required(),
+  password: yup.string().min(8).required(),
+  dob: yup.date().max(new Date()).required(),
+  roles: yup.array().of(yup.string().required()).min(1).required(),
+  city: yup.string().optional(),
+  zone: yup.string().optional(),
+  assigned_city: yup.string().optional(),
+  assigned_zones: yup.array().of(yup.string()).optional(),
+});
+
+export const updateUserSchema = yup.object({
+  first_name: yup.string().min(1).max(60).optional(),
+  last_name: yup.string().min(1).max(60).optional(),
+  email: yup.string().email().optional(),
+  phone_number: yup.string().matches(phoneRegex).optional(),
+  phone_extension: yup.string().matches(extRegex).optional(),
+  dob: yup.date().max(new Date()).optional(),
+  city: yup.string().optional(),
+  zone: yup.string().optional(),
+  bio: yup.string().max(500).optional(),
+  profile_photo: yup.string().url().optional(),
+  status: yup.string().oneOf(STATUSES as readonly string[]).optional(),
+  roles: yup.array().of(yup.string().required()).optional(),
+  assigned_city: yup.string().optional(),
+  assigned_zones: yup.array().of(yup.string()).optional(),
+});
+
+export type RegisterDTO = yup.InferType<typeof registerSchema>;
+export type LoginDTO = yup.InferType<typeof loginSchema>;
+export type CreateUserDTO = yup.InferType<typeof createUserSchema>;
+export type UpdateUserDTO = yup.InferType<typeof updateUserSchema>;

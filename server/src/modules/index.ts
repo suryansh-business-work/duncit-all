@@ -1,0 +1,57 @@
+import gql from 'graphql-tag';
+import { userTypeDefs } from './user/user.schema';
+import { userResolvers } from './user/user.resolver';
+import { rbacTypeDefs } from './rbac/rbac.schema';
+import { rbacResolvers } from './rbac/rbac.resolver';
+import { settingsTypeDefs } from './settings/settings.schema';
+import { settingsResolvers } from './settings/settings.resolver';
+import { categoryTypeDefs } from './category/category.schema';
+import { categoryResolvers } from './category/category.resolver';
+import { locationTypeDefs } from './location/location.schema';
+import { locationResolvers } from './location/location.resolver';
+import { clubTypeDefs } from './club/club.schema';
+import { clubResolvers } from './club/club.resolver';
+import { podTypeDefs } from './pod/pod.schema';
+import { podResolvers } from './pod/pod.resolver';
+import { sliderTypeDefs } from './slider/slider.schema';
+import { sliderResolvers } from './slider/slider.resolver';
+import { notificationTypeDefs } from './notification/notification.schema';
+import { notificationResolvers } from './notification/notification.resolver';
+import { interviewTypeDefs } from './interview/interview.schema';
+import { interviewResolvers } from './interview/interview.resolver';
+import { faqTypeDefs } from './faq/faq.schema';
+import { faqResolvers } from './faq/faq.resolver';
+import { financeTypeDefs } from './finance/finance.schema';
+import { financeResolvers } from './finance/finance.resolver';
+import { paymentTypeDefs } from './payment/payment.schema';
+import { paymentResolvers } from './payment/payment.resolver';
+import { aiTypeDefs } from './ai/ai.schema';
+import { aiResolvers } from './ai/ai.resolver';
+import { postTypeDefs } from './post/post.schema';
+import { postResolvers } from './post/post.resolver';
+import { policyTypeDefs } from './policy/policy.schema';
+import { policyResolvers } from './policy/policy.resolver';
+import { podIdeaTypeDefs } from './podIdea/podIdea.schema';
+import { podIdeaResolvers } from './podIdea/podIdea.resolver';
+import { uploadTypeDefs } from './upload/upload.schema';
+import { uploadResolvers } from './upload/upload.resolver';
+import { emailTemplateTypeDefs } from './emailTemplate/emailTemplate.schema';
+import { emailTemplateResolvers } from './emailTemplate/emailTemplate.resolver';
+
+const rootTypeDefs = gql`
+  type Query {
+    _ping: String!
+  }
+  type Mutation {
+    _noop: Boolean
+  }
+`;
+
+const rootResolvers = {
+  Query: { _ping: () => 'pong' },
+  Mutation: { _noop: () => true },
+};
+
+export const typeDefs = [rootTypeDefs, userTypeDefs, rbacTypeDefs, settingsTypeDefs, categoryTypeDefs, locationTypeDefs, clubTypeDefs, podTypeDefs, sliderTypeDefs, notificationTypeDefs, interviewTypeDefs, faqTypeDefs, financeTypeDefs, paymentTypeDefs, aiTypeDefs, postTypeDefs, policyTypeDefs, podIdeaTypeDefs, uploadTypeDefs, emailTemplateTypeDefs];
+
+export const resolvers = [rootResolvers, userResolvers, rbacResolvers, settingsResolvers, categoryResolvers, locationResolvers, clubResolvers, podResolvers, sliderResolvers, notificationResolvers, interviewResolvers, faqResolvers, financeResolvers, paymentResolvers, aiResolvers, postResolvers, policyResolvers, podIdeaResolvers, uploadResolvers];

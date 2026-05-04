@@ -201,13 +201,22 @@ const NAV: NavSection[] = [
   },
   {
     heading: 'Engagement',
-    prefixes: ['/notifications', '/interview-requests', '/faqs', '/policies', '/email-templates'],
+    prefixes: ['/notifications', '/interview-requests', '/faqs', '/policies', '/email-templates', '/badges'],
     items: [
       { label: 'Notifications', to: '/notifications', icon: <NotificationsActiveIcon /> },
       { label: 'Interview Requests', to: '/interview-requests', icon: <EventAvailableIcon /> },
       { label: 'FAQs', to: '/faqs', icon: <HelpOutlineIcon /> },
       { label: 'Policies', to: '/policies', icon: <DescriptionIcon /> },
       { label: 'Email Templates', to: '/email-templates', icon: <MarkEmailReadIcon /> },
+      { label: 'Badges', to: '/badges', icon: <ShieldIcon /> },
+    ],
+  },
+  {
+    heading: 'Onboarding',
+    prefixes: ['/venues', '/hosts'],
+    items: [
+      { label: 'Venues', to: '/venues', icon: <StorefrontIcon /> },
+      { label: 'Hosts', to: '/hosts', icon: <PeopleIcon /> },
     ],
   },
   {

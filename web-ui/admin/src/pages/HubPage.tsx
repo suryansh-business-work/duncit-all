@@ -14,6 +14,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import SettingsIcon from '@mui/icons-material/Settings';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import type { ReactNode } from 'react';
 
 interface HubCard {
@@ -61,10 +62,18 @@ const CARDS: HubCard[] = [
   {
     key: 'engagement',
     title: 'Engagement',
-    description: 'Notifications, FAQs, policies and emails.',
+    description: 'Notifications, FAQs, policies, emails and badges.',
     to: '/notifications',
     icon: <NotificationsActiveIcon sx={{ fontSize: 36 }} />,
     gradient: 'linear-gradient(135deg,#ef4444,#f97316)',
+  },
+  {
+    key: 'onboarding',
+    title: 'Onboarding',
+    description: 'Review and approve venue & host applications.',
+    to: '/venues',
+    icon: <StorefrontIcon sx={{ fontSize: 36 }} />,
+    gradient: 'linear-gradient(135deg,#a855f7,#ec4899)',
   },
   {
     key: 'finance',

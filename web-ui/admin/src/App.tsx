@@ -23,6 +23,9 @@ import FaqsPage from './pages/FaqsPage';
 import PoliciesPage from './pages/PoliciesPage';
 import EmailTemplatesPage from './pages/EmailTemplatesPage';
 import PodIdeasPage from './pages/PodIdeasPage';
+import BadgesPage from './pages/BadgesPage';
+import VenuesPage from './pages/VenuesPage';
+import HostsPage from './pages/HostsPage';
 import FinanceDashboardPage from './pages/finance/FinanceDashboardPage';
 import FinanceSettingsPage from './pages/finance/FinanceSettingsPage';
 import PaymentLogsPage from './pages/finance/PaymentLogsPage';
@@ -66,6 +69,9 @@ export default function App() {
                 <Route path="/policies" element={<PoliciesPage />} />
                 <Route path="/email-templates" element={<EmailTemplatesPage />} />
                 <Route path="/pod-ideas" element={<PodIdeasPage />} />
+                <Route path="/badges" element={<BadgesPage />} />
+                <Route path="/venues" element={<VenuesPage />} />
+                <Route path="/hosts" element={<HostsPage />} />
                 <Route path="/finance/dashboard" element={<FinanceDashboardPage />} />
                 <Route path="/finance/settings" element={<FinanceSettingsPage />} />
                 <Route path="/finance/payment-logs" element={<PaymentLogsPage />} />

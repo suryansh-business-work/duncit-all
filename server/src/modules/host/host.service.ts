@@ -1,0 +1,112 @@
+import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
+import { HostModel, type IHost } from './host.model';
+
+const toPub = (h: IHost) => ({
+  id: String(h._id),
+  user_id: String(h.user_id),
+  full_name: h.full_name ?? '',
+  email: h.email ?? '',
+  phone: h.phone ?? '',
+  dob: h.dob ? h.dob.toISOString() : null,
+  aadhar_number: h.aadhar_number ?? '',
+  pan_number: h.pan_number ?? '',
+  passport_photo_url: h.passport_photo_url ?? '',
+  police_verification_url: h.police_verification_url ?? '',
+  full_address: h.full_address ?? '',
+  step_completed: h.step_completed ?? 0,
+  status: h.status,
+  reviewer_notes: h.reviewer_notes ?? '',
+  submitted_at: h.submitted_at ? h.submitted_at.toISOString() : null,
+  approved_at: h.approved_at ? h.approved_at.toISOString() : null,
+  rejected_at: h.rejected_at ? h.rejected_at.toISOString() : null,
+  created_at: h.created_at?.toISOString?.() ?? '',
+  updated_at: h.updated_at?.toISOString?.() ?? '',
+});
+
+async function getOrCreate(userId: string) {
+  const uid = new Types.ObjectId(userId);
+  let h = await HostModel.findOne({ user_id: uid });
+  if (!h) h = await HostModel.create({ user_id: uid });
+  return h;
+}
+
+export const hostService = {
+  async getMine(userId: string) {
+    const h = await HostModel.findOne({ user_id: new Types.ObjectId(userId) });
+    return h ? toPub(h) : null;
+  },
+  async list(filter?: { status?: string }) {
+    const q: any = {};
+    if (filter?.status) q.status = filter.status;
+    const docs = await HostModel.find(q).sort({ created_at: -1 });
+    return docs.map(toPub);
+  },
+  async getById(id: string) {
+    const h = await HostModel.findById(id);
+    return h ? toPub(h) : null;
+  },
+  async submitStep1(userId: string, input: any) {
+    const h = await getOrCreate(userId);
+    h.full_name = input.full_name;
+    h.email = input.email;
+    h.phone = input.phone;
+    h.dob = new Date(input.dob);
+    if (h.step_completed < 1) h.step_completed = 1;
+    if (h.status === 'REJECTED') h.status = 'DRAFT';
+    await h.save();
+    return toPub(h);
+  },
+  async submitStep2(userId: string, input: any) {
+    const h = await getOrCreate(userId);
+    if (h.step_completed < 1) {
+      throw new GraphQLError('Complete personal details first', { extensions: { code: 'BAD_REQUEST' } });
+    }
+    h.aadhar_number = input.aadhar_number;
+    h.pan_number = input.pan_number;
+    h.passport_photo_url = input.passport_photo_url;
+    if (h.step_completed < 2) h.step_completed = 2;
+    await h.save();
+    return toPub(h);
+  },
+  async submitStep3(userId: string, input: any) {
+    const h = await getOrCreate(userId);
+    if (h.step_completed < 2) {
+      throw new GraphQLError('Complete identity step first', { extensions: { code: 'BAD_REQUEST' } });
+    }
+    h.police_verification_url = input.police_verification_url;
+    h.full_address = input.full_address;
+    if (h.step_completed < 3) h.step_completed = 3;
+    await h.save();
+    return toPub(h);
+  },
+  async submitFinal(userId: string) {
+    const h = await getOrCreate(userId);
+    if (h.step_completed < 3) {
+      throw new GraphQLError('Complete all steps first', { extensions: { code: 'BAD_REQUEST' } });
+    }
+    h.step_completed = 4;
+    h.status = 'SUBMITTED';
+    h.submitted_at = new Date();
+    await h.save();
+    return toPub(h);
+  },
+  async approve(id: string, notes?: string) {
+    const h = await HostModel.findById(id);
+    if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
+    h.status = 'APPROVED';
+    h.approved_at = new Date();
+    h.reviewer_notes = notes ?? h.reviewer_notes;
+    await h.save();
+    return toPub(h);
+  },
+  async reject(id: string, notes: string) {
+    const h = await HostModel.findById(id);
+    if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
+    h.status = 'REJECTED';
+    h.rejected_at = new Date();
+    h.reviewer_notes = notes;
+    await h.save();
+    return toPub(h);
+  },
+};

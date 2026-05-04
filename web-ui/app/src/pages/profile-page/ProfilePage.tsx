@@ -24,6 +24,7 @@ import GridOnIcon from '@mui/icons-material/GridOn';
 import { ME_AND_POSTS } from './queries';
 import UploadDialog from './UploadDialog';
 import PostDialog from './PostDialog';
+import MyBadges from '../../components/MyBadges';
 
 function Stat({ label, value }: { label: string; value: number }) {
   return (
@@ -123,6 +124,8 @@ export default function ProfilePage() {
       </Stack>
 
       <Divider />
+
+      <MyBadges />
 
       <Stack direction="row" justifyContent="center" spacing={4}>
         <Stack direction="row" spacing={0.5} alignItems="center" sx={{ py: 1 }}>

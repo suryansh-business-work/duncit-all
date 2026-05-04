@@ -37,6 +37,14 @@ import { uploadTypeDefs } from './upload/upload.schema';
 import { uploadResolvers } from './upload/upload.resolver';
 import { emailTemplateTypeDefs } from './emailTemplate/emailTemplate.schema';
 import { emailTemplateResolvers } from './emailTemplate/emailTemplate.resolver';
+import { podMemberTypeDefs } from './podMember/podMember.schema';
+import { podMemberResolvers } from './podMember/podMember.resolver';
+import { badgeTypeDefs } from './badge/badge.schema';
+import { badgeResolvers } from './badge/badge.resolver';
+import { venueTypeDefs } from './venue/venue.schema';
+import { venueResolvers } from './venue/venue.resolver';
+import { hostTypeDefs } from './host/host.schema';
+import { hostResolvers } from './host/host.resolver';
 
 const rootTypeDefs = gql`
   type Query {
@@ -52,6 +60,6 @@ const rootResolvers = {
   Mutation: { _noop: () => true },
 };
 
-export const typeDefs = [rootTypeDefs, userTypeDefs, rbacTypeDefs, settingsTypeDefs, categoryTypeDefs, locationTypeDefs, clubTypeDefs, podTypeDefs, sliderTypeDefs, notificationTypeDefs, interviewTypeDefs, faqTypeDefs, financeTypeDefs, paymentTypeDefs, aiTypeDefs, postTypeDefs, policyTypeDefs, podIdeaTypeDefs, uploadTypeDefs, emailTemplateTypeDefs];
+export const typeDefs = [rootTypeDefs, userTypeDefs, rbacTypeDefs, settingsTypeDefs, categoryTypeDefs, locationTypeDefs, clubTypeDefs, podTypeDefs, sliderTypeDefs, notificationTypeDefs, interviewTypeDefs, faqTypeDefs, financeTypeDefs, paymentTypeDefs, aiTypeDefs, postTypeDefs, policyTypeDefs, podIdeaTypeDefs, uploadTypeDefs, emailTemplateTypeDefs, podMemberTypeDefs, badgeTypeDefs, venueTypeDefs, hostTypeDefs];
 
-export const resolvers = [rootResolvers, userResolvers, rbacResolvers, settingsResolvers, categoryResolvers, locationResolvers, clubResolvers, podResolvers, sliderResolvers, notificationResolvers, interviewResolvers, faqResolvers, financeResolvers, paymentResolvers, aiResolvers, postResolvers, policyResolvers, podIdeaResolvers, uploadResolvers];
+export const resolvers = [rootResolvers, userResolvers, rbacResolvers, settingsResolvers, categoryResolvers, locationResolvers, clubResolvers, podResolvers, sliderResolvers, notificationResolvers, interviewResolvers, faqResolvers, financeResolvers, paymentResolvers, aiResolvers, postResolvers, policyResolvers, podIdeaResolvers, uploadResolvers, emailTemplateResolvers, podMemberResolvers, badgeResolvers, venueResolvers, hostResolvers];

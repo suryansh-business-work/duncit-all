@@ -1,6 +1,6 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
@@ -23,6 +23,8 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import RepeatIcon from '@mui/icons-material/Repeat';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ShareIcon from '@mui/icons-material/Share';
+import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import { usePricing } from '../hooks/usePricing';
 
 const POD_DETAILS = gql`
@@ -50,6 +52,22 @@ const POD_DETAILS = gql`
       club_id
       location_id
     }
+    podMembershipState(pod_doc_id: $id) {
+      pod_id
+      is_member
+      status
+      can_backout
+      can_join
+      spots_taken
+      spots_total
+      refund_threshold_pct
+      membership {
+        id
+        status
+        referral_token
+        refund_status
+      }
+    }
     clubs {
       id
       club_name
@@ -75,19 +93,63 @@ const INC_HITS = gql`
   }
 `;
 
+const JOIN_FREE = gql`
+  mutation JoinFreePod($id: ID!, $referral: String) {
+    joinFreePod(pod_doc_id: $id, referral_token: $referral) {
+      id
+      status
+    }
+  }
+`;
+const BACKOUT = gql`
+  mutation BackoutPod($id: ID!) {
+    backoutPod(pod_doc_id: $id) {
+      id
+      status
+      referral_token
+      refund_status
+    }
+  }
+`;
+const REDEEM = gql`
+  mutation RedeemReferral($token: String!) {
+    redeemPodReferral(token: $token) {
+      id
+      status
+    }
+  }
+`;
+
 export default function PodDetailsPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const [search] = useSearchParams();
+  const referralFromUrl = search.get('ref');
   const { compute: priceCompute, format: priceFormat } = usePricing();
-  const { data, loading, error } = useQuery(POD_DETAILS, {
+  const { data, loading, error, refetch } = useQuery(POD_DETAILS, {
     variables: { id },
     fetchPolicy: 'cache-and-network',
   });
   const [incHits] = useMutation(INC_HITS);
+  const [joinFree, joinState] = useMutation(JOIN_FREE);
+  const [backout, backoutState] = useMutation(BACKOUT);
+  const [redeem, redeemState] = useMutation(REDEEM);
+  const [snack, setSnack] = useState<string | null>(null);
 
   useEffect(() => {
     if (id) incHits({ variables: { id } }).catch(() => {});
   }, [id, incHits]);
+
+  // If user landed via /pods/:id?ref=... try redeeming referral once
+  useEffect(() => {
+    if (!referralFromUrl || !id) return;
+    redeem({ variables: { token: referralFromUrl } })
+      .then(() => {
+        setSnack('Joined via referral 🎉');
+        refetch();
+      })
+      .catch((e) => setSnack(e.message));
+  }, [referralFromUrl, id, redeem, refetch]);
 
   if (loading && !data) return <PodDetailsSkeleton />;
   if (error) return <Alert severity="error">{error.message}</Alert>;
@@ -275,11 +337,33 @@ export default function PodDetailsPage() {
       )}
 
       <Divider />
-      <Button
-        variant="contained"
-        size="large"
-        disabled={isFree}
-        onClick={() =>
+      <PodActionPanel
+        pod={pod}
+        isFree={isFree}
+        priceFormat={priceFormat}
+        membershipState={data?.podMembershipState}
+        joining={joinState.loading}
+        backingOut={backoutState.loading}
+        onJoinFree={async () => {
+          try {
+            await joinFree({ variables: { id: pod.id, referral: referralFromUrl } });
+            setSnack('Joined!');
+            await refetch();
+          } catch (e: any) {
+            setSnack(e.message);
+          }
+        }}
+        onBackout={async () => {
+          if (!confirm('Backout from this pod?')) return;
+          try {
+            await backout({ variables: { id: pod.id } });
+            setSnack('You have backed out.');
+            await refetch();
+          } catch (e: any) {
+            setSnack(e.message);
+          }
+        }}
+        onPaidCheckout={() =>
           navigate('/checkout', {
             state: {
               pod_id: pod.id,
@@ -289,10 +373,122 @@ export default function PodDetailsPage() {
             },
           })
         }
-      >
-        {isFree ? 'Free pod — booking coming soon' : `Book & Pay ${priceFormat(pod.pod_amount)}`}
-      </Button>
+        onCopyReferral={(token: string) => {
+          const url = `${window.location.origin}/pods/${pod.id}?ref=${token}`;
+          navigator.clipboard?.writeText(url);
+          setSnack('Referral link copied');
+        }}
+      />
+      {snack && (
+        <Alert severity="info" onClose={() => setSnack(null)}>
+          {snack}
+        </Alert>
+      )}
     </Stack>
+  );
+}
+
+function PodActionPanel({
+  pod,
+  isFree,
+  priceFormat,
+  membershipState,
+  joining,
+  backingOut,
+  onJoinFree,
+  onBackout,
+  onPaidCheckout,
+  onCopyReferral,
+}: any) {
+  const ms = membershipState;
+  const isMember = ms?.is_member;
+  const m = ms?.membership;
+  const referralToken = m?.referral_token as string | null;
+
+  if (isMember) {
+    return (
+      <Stack spacing={1}>
+        <Stack direction="row" spacing={1}>
+          <Button variant="contained" color="success" disabled fullWidth>
+            Joined ✓
+          </Button>
+          <Button
+            variant="outlined"
+            color="error"
+            onClick={onBackout}
+            disabled={backingOut}
+            fullWidth
+          >
+            Backout
+          </Button>
+        </Stack>
+        <Typography variant="caption" color="text.secondary">
+          Refunds (paid pods) are processed once {ms?.refund_threshold_pct ?? 80}% of spots are
+          filled or someone joins via your referral link.
+        </Typography>
+      </Stack>
+    );
+  }
+
+  // Backed-out state — show referral
+  if (m && m.status === 'BACKED_OUT' && referralToken) {
+    return (
+      <Stack spacing={1}>
+        <Alert severity="warning">
+          You have backed out. Refund status: <b>{m.refund_status}</b>
+        </Alert>
+        <Typography variant="body2">
+          Refer a friend to refill your spot — your refund processes immediately when they join.
+        </Typography>
+        <Button
+          variant="outlined"
+          startIcon={<ContentCopyIcon />}
+          onClick={() => onCopyReferral(referralToken)}
+        >
+          Copy referral link
+        </Button>
+        {(navigator as any).share && (
+          <Button
+            variant="text"
+            startIcon={<ShareIcon />}
+            onClick={() =>
+              (navigator as any).share({
+                title: pod.pod_title,
+                url: `${window.location.origin}/pods/${pod.id}?ref=${referralToken}`,
+              })
+            }
+          >
+            Share
+          </Button>
+        )}
+      </Stack>
+    );
+  }
+
+  if (isFree) {
+    return (
+      <Button
+        variant="contained"
+        size="large"
+        disabled={joining || ms?.can_join === false}
+        onClick={onJoinFree}
+      >
+        {ms?.can_join === false ? 'Pod is full' : 'Join free pod'}
+      </Button>
+    );
+  }
+
+  return (
+    <Button
+      variant="contained"
+      size="large"
+      disabled={ms?.can_join === false}
+      onClick={onPaidCheckout}
+    >
+      {ms?.can_join === false
+        ? 'Pod is full'
+        : `Book & Pay ${priceFormat(pod.pod_amount)}`}
+    </Button>
   );
 }
 

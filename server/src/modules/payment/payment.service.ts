@@ -165,7 +165,7 @@ export const paymentService = {
     });
 
     if (status === 'SUCCESS') {
-      // Add user to pod attendees (slot booking)
+      // Add user to pod attendees (slot booking) + record PodMember row
       if (pod) {
         try {
           if (!pod.pod_attendees.some((u: any) => String(u) === String(user._id))) {
@@ -175,6 +175,18 @@ export const paymentService = {
         } catch (e) {
            
           console.warn('Pod attendee update failed', e);
+        }
+        try {
+          const { podMemberService } = await import('../podMember/podMember.service');
+          await podMemberService.recordPaidJoin(String(pod._id), String(user._id), String(doc._id));
+        } catch (e) {
+          console.warn('PodMember record failed', e);
+        }
+        try {
+          const { evaluateBadgesForUser } = await import('../badge/badge.service');
+          evaluateBadgesForUser(String(user._id), 'POD_JOIN').catch(() => {});
+        } catch {
+          /* noop */
         }
       }
 

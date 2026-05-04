@@ -2,6 +2,7 @@ import type { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/rbac';
 import { emailTemplateService, renderMjml, detectVariables } from './emailTemplate.service';
 import nodemailer from 'nodemailer';
+import { GraphQLError } from 'graphql';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN'];
 
@@ -48,17 +49,46 @@ export const emailTemplateResolvers = {
     },
   },
   Mutation: {
-    createEmailTemplate: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+    createEmailTemplate: async (
+      _p: unknown,
+      args: { input: any },
+      ctx: GraphQLContext
+    ) => {
       requireRole(ctx, ADMIN_ROLES);
-      return emailTemplateService.create(args.input);
+      try {
+        const doc = await emailTemplateService.create(args.input);
+        if (!doc) {
+          throw new GraphQLError('Failed to create email template (no document returned)', {
+            extensions: { code: 'INTERNAL_ERROR' },
+          });
+        }
+        return doc;
+      } catch (e: any) {
+        if (e instanceof GraphQLError) throw e;
+        // Mongo duplicate key
+        if (e?.code === 11000) {
+          throw new GraphQLError('Slug already exists', {
+            extensions: { code: 'CONFLICT' },
+          });
+        }
+        throw new GraphQLError(e?.message || 'Failed to create email template', {
+          extensions: { code: 'INTERNAL_ERROR' },
+        });
+      }
     },
-    updateEmailTemplate: (
+    updateEmailTemplate: async (
       _p: unknown,
       args: { template_id: string; input: any },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_ROLES);
-      return emailTemplateService.update(args.template_id, args.input);
+      const doc = await emailTemplateService.update(args.template_id, args.input);
+      if (!doc) {
+        throw new GraphQLError('Email template not found', {
+          extensions: { code: 'NOT_FOUND' },
+        });
+      }
+      return doc;
     },
     deleteEmailTemplate: (
       _p: unknown,

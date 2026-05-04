@@ -19,12 +19,17 @@ export const buildTheme = (mode: PaletteMode): Theme =>
             divider: 'rgba(255, 255, 255, 0.08)',
           }),
     },
-    shape: { borderRadius: 12 },
+    shape: { borderRadius: 8 },
+    spacing: 6, // tighter (default is 8) — denser, more compact UI
     typography: {
       fontFamily:
         '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
-      h5: { fontWeight: 600 },
-      h6: { fontWeight: 600 },
+      fontSize: 13.5,
+      h4: { fontWeight: 700, fontSize: '1.5rem' },
+      h5: { fontWeight: 600, fontSize: '1.2rem' },
+      h6: { fontWeight: 600, fontSize: '1rem' },
+      body1: { fontSize: '0.875rem' },
+      body2: { fontSize: '0.8125rem' },
       button: { textTransform: 'none', fontWeight: 600 },
     },
     components: {
@@ -36,6 +41,11 @@ export const buildTheme = (mode: PaletteMode): Theme =>
             borderBottom: `1px solid ${theme.palette.divider}`,
             backgroundColor: theme.palette.background.paper,
           }),
+        },
+      },
+      MuiToolbar: {
+        styleOverrides: {
+          root: { minHeight: 52, '@media (min-width:600px)': { minHeight: 56 } },
         },
       },
       MuiDrawer: {
@@ -51,11 +61,29 @@ export const buildTheme = (mode: PaletteMode): Theme =>
         styleOverrides: {
           root: ({ theme }) => ({
             border: `1px solid ${theme.palette.divider}`,
+            borderRadius: 8,
           }),
         },
       },
-      MuiButton: {
-        defaultProps: { disableElevation: true },
+      MuiCardContent: {
+        styleOverrides: { root: { padding: 14, '&:last-child': { paddingBottom: 14 } } },
       },
+      MuiButton: {
+        defaultProps: { disableElevation: true, size: 'small' },
+        styleOverrides: { root: { borderRadius: 6, paddingInline: 12 } },
+      },
+      MuiTextField: { defaultProps: { size: 'small' } },
+      MuiSelect: { defaultProps: { size: 'small' } },
+      MuiTable: { defaultProps: { size: 'small' } },
+      MuiChip: {
+        defaultProps: { size: 'small' },
+        styleOverrides: { root: { borderRadius: 6 } },
+      },
+      MuiIconButton: { defaultProps: { size: 'small' } },
+      MuiListItemButton: {
+        styleOverrides: { root: { borderRadius: 6, paddingTop: 4, paddingBottom: 4 } },
+      },
+      MuiPaper: { styleOverrides: { root: { borderRadius: 8 } } },
+      MuiDialog: { styleOverrides: { paper: { borderRadius: 10 } } },
     },
   });

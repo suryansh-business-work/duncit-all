@@ -37,6 +37,9 @@ export default function App() {
   // own scrolling and need the full available viewport height.
   const fullBleed = loc.pathname.startsWith('/explore');
 
+  // Reserve room for the fixed BottomNav (56px MUI default) + iOS safe-area.
+  const BOTTOM_NAV_OFFSET = 'calc(56px + env(safe-area-inset-bottom) + 8px)';
+
   return (
     <Box sx={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {isAuthed && (
@@ -57,10 +60,11 @@ export default function App() {
           minHeight: 0,
           display: 'flex',
           flexDirection: 'column',
-          py: fullBleed ? 0 : 4,
+          overflowY: 'auto',
+          py: fullBleed ? 0 : 2,
           // Reserve space for the fixed BottomNav only on padded routes.
           // Full-bleed routes handle their own bottom inset internally.
-          pb: fullBleed ? 0 : isAuthed ? 12 : 4,
+          pb: fullBleed ? 0 : isAuthed ? BOTTOM_NAV_OFFSET : 2,
         }}
       >
         <Routes>

@@ -10,6 +10,34 @@ set -euo pipefail
 cd /opt/duncit
 
 SERVICES=(server admin mweb)
+PORTS=(2001 2002 2003)
+
+remove_containers_publishing_ports() {
+  for port in "${PORTS[@]}"; do
+    ids="$(docker ps -aq --filter "publish=${port}" || true)"
+    if [ -n "$ids" ]; then
+      echo ">>> Removing container(s) still publishing port ${port}: ${ids}"
+      docker rm -f $ids || true
+    fi
+  done
+}
+
+wait_for_ports_to_release() {
+  for port in "${PORTS[@]}"; do
+    for i in {1..30}; do
+      if ! ss -H -ltn "sport = :${port}" 2>/dev/null | grep -q .; then
+        break
+      fi
+      if [ "$i" -eq 30 ]; then
+        echo ">>> Port ${port} is still allocated after cleanup"
+        ss -ltnp "sport = :${port}" || true
+        docker ps -a --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+        return 1
+      fi
+      sleep 1
+    done
+  done
+}
 
 echo ">>> Pulling images..."
 docker compose pull
@@ -26,6 +54,9 @@ for s in "${SERVICES[@]}"; do
     docker rm -f "$cname" || true
   fi
 done
+
+remove_containers_publishing_ports
+wait_for_ports_to_release
 
 echo ">>> Starting services..."
 docker compose up -d --remove-orphans --force-recreate

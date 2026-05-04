@@ -109,4 +109,24 @@ export const hostService = {
     await h.save();
     return toPub(h);
   },
+  async adminCreate(opts: {
+    targetUserId: string;
+    step1: any;
+    step2: any;
+    step3: any;
+    submit?: boolean;
+  }) {
+    const h = await getOrCreate(opts.targetUserId);
+    Object.assign(h, opts.step1);
+    if (opts.step1?.dob) h.dob = new Date(opts.step1.dob);
+    Object.assign(h, opts.step2);
+    Object.assign(h, opts.step3);
+    h.step_completed = opts.submit ? 4 : 3;
+    if (opts.submit) {
+      h.status = 'SUBMITTED';
+      h.submitted_at = new Date();
+    }
+    await h.save();
+    return toPub(h);
+  },
 };

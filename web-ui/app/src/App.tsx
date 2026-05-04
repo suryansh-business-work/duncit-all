@@ -17,6 +17,7 @@ import CheckoutPage from './pages/CheckoutPage';
 import ExplorePage from './pages/ExplorePage';
 import ClubsPage from './pages/ClubsPage';
 import ChatsPage from './pages/ChatsPage';
+import ChatRoomPage from './pages/ChatRoomPage';
 import AppHeader from './components/AppHeader';
 import BottomNav from './components/BottomNav';
 
@@ -183,6 +184,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <ChatsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/chats/:id"
+            element={
+              <RequireAuth>
+                <ChatRoomPage />
               </RequireAuth>
             }
           />

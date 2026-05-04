@@ -43,6 +43,7 @@ import {
 } from './queries';
 import RolesDialog from './RolesDialog';
 import ProfileForm from './ProfileForm';
+import UserBadgesSection from './UserBadgesSection';
 
 const Section = styled(Card)({ height: '100%' });
 
@@ -412,6 +413,8 @@ export default function UserDetailsPage() {
                 )}
               </CardContent>
             </Section>
+
+            <UserBadgesSection userId={user.user_id || user_id || ''} />
           </Stack>
         </Grid>
       </Grid>

@@ -96,5 +96,12 @@ export const venueTypeDefs = /* GraphQL */ `
     submitVenueFinal: Venue!
     approveVenue(venue_doc_id: ID!, notes: String): Venue!
     rejectVenue(venue_doc_id: ID!, notes: String!): Venue!
+    adminCreateVenue(
+      owner_user_id: ID!
+      step1: VenueStep1Input!
+      step2: VenueStep2Input!
+      step3: VenueStep3Input!
+      submit: Boolean
+    ): Venue!
   }
 `;

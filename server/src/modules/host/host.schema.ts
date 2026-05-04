@@ -32,7 +32,7 @@ export const hostTypeDefs = /* GraphQL */ `
     full_name: String!
     email: String!
     phone: String!
-    dob: String!
+    dob: String
   }
 
   input HostStep2Input {
@@ -59,5 +59,12 @@ export const hostTypeDefs = /* GraphQL */ `
     submitHostFinal: Host!
     approveHost(host_doc_id: ID!, notes: String): Host!
     rejectHost(host_doc_id: ID!, notes: String!): Host!
+    adminCreateHost(
+      target_user_id: ID!
+      step1: HostStep1Input!
+      step2: HostStep2Input!
+      step3: HostStep3Input!
+      submit: Boolean
+    ): Host!
   }
 `;

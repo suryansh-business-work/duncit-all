@@ -22,6 +22,7 @@ import {
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import AddIcon from '@mui/icons-material/Add';
+import MediaPickerField from '../components/MediaPickerField';
 
 const BADGES = gql`
   query Badges {
@@ -229,11 +230,12 @@ export default function BadgesPage() {
               minRows={2}
               fullWidth
             />
-            <TextField
-              label="Image URL"
+            <MediaPickerField
+              label="Badge image"
               value={form.image_url}
-              onChange={(e) => setForm({ ...form, image_url: e.target.value })}
-              fullWidth
+              onChange={(url) => setForm({ ...form, image_url: url })}
+              folder="/badges"
+              helperText="Upload a square PNG/SVG (transparent background recommended)"
             />
             <TextField
               select

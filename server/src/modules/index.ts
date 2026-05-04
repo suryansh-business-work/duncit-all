@@ -45,6 +45,8 @@ import { venueTypeDefs } from './venue/venue.schema';
 import { venueResolvers } from './venue/venue.resolver';
 import { hostTypeDefs } from './host/host.schema';
 import { hostResolvers } from './host/host.resolver';
+import { chatTypeDefs } from './chat/chat.schema';
+import { chatResolvers } from './chat/chat.resolver';
 
 const rootTypeDefs = gql`
   type Query {
@@ -60,6 +62,6 @@ const rootResolvers = {
   Mutation: { _noop: () => true },
 };
 
-export const typeDefs = [rootTypeDefs, userTypeDefs, rbacTypeDefs, settingsTypeDefs, categoryTypeDefs, locationTypeDefs, clubTypeDefs, podTypeDefs, sliderTypeDefs, notificationTypeDefs, interviewTypeDefs, faqTypeDefs, financeTypeDefs, paymentTypeDefs, aiTypeDefs, postTypeDefs, policyTypeDefs, podIdeaTypeDefs, uploadTypeDefs, emailTemplateTypeDefs, podMemberTypeDefs, badgeTypeDefs, venueTypeDefs, hostTypeDefs];
+export const typeDefs = [rootTypeDefs, userTypeDefs, rbacTypeDefs, settingsTypeDefs, categoryTypeDefs, locationTypeDefs, clubTypeDefs, podTypeDefs, sliderTypeDefs, notificationTypeDefs, interviewTypeDefs, faqTypeDefs, financeTypeDefs, paymentTypeDefs, aiTypeDefs, postTypeDefs, policyTypeDefs, podIdeaTypeDefs, uploadTypeDefs, emailTemplateTypeDefs, podMemberTypeDefs, badgeTypeDefs, venueTypeDefs, hostTypeDefs, chatTypeDefs];
 
-export const resolvers = [rootResolvers, userResolvers, rbacResolvers, settingsResolvers, categoryResolvers, locationResolvers, clubResolvers, podResolvers, sliderResolvers, notificationResolvers, interviewResolvers, faqResolvers, financeResolvers, paymentResolvers, aiResolvers, postResolvers, policyResolvers, podIdeaResolvers, uploadResolvers, emailTemplateResolvers, podMemberResolvers, badgeResolvers, venueResolvers, hostResolvers];
+export const resolvers = [rootResolvers, userResolvers, rbacResolvers, settingsResolvers, categoryResolvers, locationResolvers, clubResolvers, podResolvers, sliderResolvers, notificationResolvers, interviewResolvers, faqResolvers, financeResolvers, paymentResolvers, aiResolvers, postResolvers, policyResolvers, podIdeaResolvers, uploadResolvers, emailTemplateResolvers, podMemberResolvers, badgeResolvers, venueResolvers, hostResolvers, chatResolvers];

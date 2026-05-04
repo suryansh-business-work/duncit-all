@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
+import AdminVenueCreateDialog from '../components/AdminVenueCreateDialog';
 import {
   Alert,
   Box,
@@ -68,6 +69,7 @@ export default function VenuesPage() {
   const [reject] = useMutation(REJECT);
   const [active, setActive] = useState<any | null>(null);
   const [notes, setNotes] = useState('');
+  const [createOpen, setCreateOpen] = useState(false);
 
   const doApprove = async () => {
     await approve({ variables: { id: active.id, notes } });
@@ -89,7 +91,11 @@ export default function VenuesPage() {
         <Typography variant="h5" fontWeight={700}>
           Venue Onboarding
         </Typography>
-        <TextField
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Button variant="contained" onClick={() => setCreateOpen(true)}>
+            Create on behalf
+          </Button>
+          <TextField
           select
           size="small"
           label="Status"
@@ -103,6 +109,7 @@ export default function VenuesPage() {
             </MenuItem>
           ))}
         </TextField>
+        </Stack>
       </Stack>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
@@ -202,6 +209,12 @@ export default function VenuesPage() {
           </Button>
         </DialogActions>
       </Dialog>
+
+      <AdminVenueCreateDialog
+        open={createOpen}
+        onClose={() => setCreateOpen(false)}
+        onSaved={() => refetch()}
+      />
     </Box>
   );
 }

@@ -48,5 +48,19 @@ export const venueResolvers = {
       requireRole(ctx, ADMIN_REVIEW);
       return venueService.reject(args.venue_doc_id, args.notes);
     },
+    adminCreateVenue: async (
+      _p: unknown,
+      args: { owner_user_id: string; step1: any; step2: any; step3: any; submit?: boolean },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return venueService.adminCreate({
+        ownerUserId: args.owner_user_id,
+        step1: args.step1,
+        step2: args.step2,
+        step3: args.step3,
+        submit: args.submit,
+      });
+    },
   },
 };

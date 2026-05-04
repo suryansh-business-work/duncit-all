@@ -12,6 +12,7 @@ import { rbacService } from './modules/rbac/rbac.service';
 import { settingsService } from './modules/settings/settings.service';
 import { categoryService } from './modules/category/category.service';
 import { notificationService } from './modules/notification/notification.service';
+import { attachChatSocket } from './modules/chat/chat.socket';
 
 async function bootstrap() {
   await connectDB();
@@ -39,6 +40,9 @@ async function bootstrap() {
   );
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
+
+  // Real-time chat (socket.io) — shares the http server with Apollo.
+  attachChatSocket(httpServer);
 
   const port = Number(process.env.PORT || 2001);
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));

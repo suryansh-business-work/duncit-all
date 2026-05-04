@@ -76,11 +76,13 @@ export const venueService = {
     if (v.step_completed < 1) {
       throw new GraphQLError('Complete venue details first', { extensions: { code: 'BAD_REQUEST' } });
     }
-    v.documents = input.documents.map((d: any) => ({
-      type: d.type,
-      url: d.url,
-      uploaded_at: new Date(),
-    }));
+    v.documents = (input.documents || [])
+      .filter((d: any) => d && d.type && d.url)
+      .map((d: any) => ({
+        type: String(d.type).trim(),
+        url: String(d.url).trim(),
+        uploaded_at: new Date(),
+      }));
     if (input.gstin !== undefined) v.gstin = input.gstin;
     if (input.pan !== undefined) v.pan = input.pan;
     if (v.step_completed < 2) v.step_completed = 2;
@@ -127,6 +129,33 @@ export const venueService = {
     v.status = 'REJECTED';
     v.rejected_at = new Date();
     v.reviewer_notes = notes;
+    await v.save();
+    return toPub(v);
+  },
+  async adminCreate(opts: {
+    ownerUserId: string;
+    step1: any;
+    step2: any;
+    step3: any;
+    submit?: boolean;
+  }) {
+    const v = await getOrCreate(opts.ownerUserId);
+    Object.assign(v, opts.step1);
+    v.documents = (opts.step2.documents || [])
+      .filter((d: any) => d && d.type && d.url)
+      .map((d: any) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));
+    if (opts.step2.gstin !== undefined) v.gstin = opts.step2.gstin;
+    if (opts.step2.pan !== undefined) v.pan = opts.step2.pan;
+    v.owner_name = opts.step3.owner_name;
+    v.owner_email = opts.step3.owner_email;
+    v.owner_phone = opts.step3.owner_phone;
+    if (opts.step3.owner_dob) v.owner_dob = new Date(opts.step3.owner_dob);
+    if (opts.step3.owner_address !== undefined) v.owner_address = opts.step3.owner_address;
+    v.step_completed = opts.submit ? 4 : 3;
+    if (opts.submit) {
+      v.status = 'SUBMITTED';
+      v.submitted_at = new Date();
+    }
     await v.save();
     return toPub(v);
   },

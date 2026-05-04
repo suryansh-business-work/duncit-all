@@ -47,5 +47,19 @@ export const hostResolvers = {
       requireRole(ctx, ADMIN_REVIEW);
       return hostService.reject(args.host_doc_id, args.notes);
     },
+    adminCreateHost: async (
+      _p: unknown,
+      args: { target_user_id: string; step1: any; step2: any; step3: any; submit?: boolean },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return hostService.adminCreate({
+        targetUserId: args.target_user_id,
+        step1: args.step1,
+        step2: args.step2,
+        step3: args.step3,
+        submit: args.submit,
+      });
+    },
   },
 };

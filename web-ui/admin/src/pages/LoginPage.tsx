@@ -124,7 +124,7 @@ export default function LoginPage() {
                   return;
                 }
                 localStorage.setItem('admin_token', data.token);
-                navigate('/dashboard');
+                navigate('/hub');
               } catch (e: any) {
                 setStatus(e.message);
               }

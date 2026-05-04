@@ -1,0 +1,31 @@
+name: duncit
+
+services:
+  server:
+    image: ${DOCKERHUB_USERNAME}/duncit-server:${IMAGE_TAG:-latest}
+    container_name: duncit-server
+    restart: unless-stopped
+    env_file:
+      - /opt/duncit/server.env
+    ports:
+      - "127.0.0.1:2001:2001"
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:2001/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+  admin:
+    image: ${DOCKERHUB_USERNAME}/duncit-admin:${IMAGE_TAG:-latest}
+    container_name: duncit-admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2002:80"
+
+  mweb:
+    image: ${DOCKERHUB_USERNAME}/duncit-mweb:${IMAGE_TAG:-latest}
+    container_name: duncit-mweb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2003:80"

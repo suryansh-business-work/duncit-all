@@ -1,0 +1,176 @@
+name: deploy
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  IMAGE_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
+
+jobs:
+  typecheck:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci --no-audit --no-fund
+      - run: npm run build --workspaces --if-present
+
+  build-and-push:
+    needs: typecheck
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - image: duncit-server
+            dockerfile: server/Dockerfile
+            build_arg_name: ""
+            build_arg_value: ""
+          - image: duncit-admin
+            dockerfile: web-ui/admin/Dockerfile
+            build_arg_name: VITE_GRAPHQL_URL
+            build_arg_value: https://server.duncit.com/graphql
+          - image: duncit-mweb
+            dockerfile: web-ui/app/Dockerfile
+            build_arg_name: VITE_GRAPHQL_URL
+            build_arg_value: https://server.duncit.com/graphql
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build & push (with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            BUILD_ARG_FLAG=""
+            if [ -n "${{ matrix.build_arg_name }}" ]; then
+              BUILD_ARG_FLAG="--build-arg ${{ matrix.build_arg_name }}=${{ matrix.build_arg_value }}"
+            fi
+            docker buildx build \
+              --file ${{ matrix.dockerfile }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/${{ matrix.image }}:${{ github.sha }} \
+              $BUILD_ARG_FLAG \
+              --cache-from type=gha,scope=${{ matrix.image }} \
+              --cache-to   type=gha,scope=${{ matrix.image }},mode=max \
+              --push \
+              .
+
+  deploy:
+    needs: build-and-push
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > ~/.ssh/id_ed25519
+          chmod 600 ~/.ssh/id_ed25519
+          PORT="${{ secrets.SSH_PORT }}"
+          PORT="${PORT:-22}"
+          echo "SSH_PORT=$PORT" >> "$GITHUB_ENV"
+          ssh-keyscan -p "$PORT" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+
+      - name: Render compose + server.env from secrets
+        env:
+          DOCKERHUB_USERNAME: ${{ secrets.DOCKERHUB_USERNAME }}
+          MONGO_URI: ${{ secrets.MONGO_URI }}
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SMTP_HOST: ${{ secrets.SMTP_HOST }}
+          SMTP_PORT: ${{ secrets.SMTP_PORT }}
+          SMTP_USER: ${{ secrets.SMTP_USER }}
+          SMTP_PASS: ${{ secrets.SMTP_PASS }}
+          SMTP_FROM: ${{ secrets.SMTP_FROM }}
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+          IMAGEKIT_PUBLIC_KEY: ${{ secrets.IMAGEKIT_PUBLIC_KEY }}
+          IMAGEKIT_PRIVATE_KEY: ${{ secrets.IMAGEKIT_PRIVATE_KEY }}
+          IMAGEKIT_URL_ENDPOINT: ${{ secrets.IMAGEKIT_URL_ENDPOINT }}
+          PEXELS_API_KEY: ${{ secrets.PEXELS_API_KEY }}
+        run: |
+          envsubst '$DOCKERHUB_USERNAME' < deploy/docker-compose.yml > /tmp/docker-compose.yml
+
+          cat > /tmp/server.env <<EOF
+          NODE_ENV=production
+          PORT=2001
+          MONGO_URI=${MONGO_URI}
+          JWT_SECRET=${JWT_SECRET}
+          SMTP_HOST=${SMTP_HOST}
+          SMTP_PORT=${SMTP_PORT}
+          SMTP_USER=${SMTP_USER}
+          SMTP_PASS=${SMTP_PASS}
+          SMTP_FROM=${SMTP_FROM}
+          OPENAI_API_KEY=${OPENAI_API_KEY}
+          IMAGEKIT_PUBLIC_KEY=${IMAGEKIT_PUBLIC_KEY}
+          IMAGEKIT_PRIVATE_KEY=${IMAGEKIT_PRIVATE_KEY}
+          IMAGEKIT_URL_ENDPOINT=${IMAGEKIT_URL_ENDPOINT}
+          PEXELS_API_KEY=${PEXELS_API_KEY}
+          EOF
+
+      - name: Push files to VPS
+        run: |
+          ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "mkdir -p /opt/duncit"
+          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/docker-compose.yml \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/docker-compose.yml
+          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/server.env \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/server.env
+          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/redeploy.sh \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/redeploy.sh
+          ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "chmod 600 /opt/duncit/server.env && chmod +x /opt/duncit/redeploy.sh"
+
+      - name: Remote redeploy (with retry)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 10
+          max_attempts: 5
+          retry_wait_seconds: 15
+          command: |
+            ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
+              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+              "set -e; \
+               echo '${{ secrets.DOCKERHUB_TOKEN }}' | docker login -u '${{ secrets.DOCKERHUB_USERNAME }}' --password-stdin; \
+               /opt/duncit/redeploy.sh"
+
+      - name: Wait for health (loop until all up)
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 8
+          max_attempts: 24
+          retry_wait_seconds: 15
+          command: |
+            ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
+              ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
+              set -e
+              echo "--- containers ---"
+              docker ps --format "table {{.Names}}\t{{.Status}}"
+              echo "--- server health ---"
+              curl -fsS http://127.0.0.1:2001/health
+              echo
+              echo "--- admin static ---"
+              curl -fsSI http://127.0.0.1:2002/ | head -1
+              echo "--- mweb static ---"
+              curl -fsSI http://127.0.0.1:2003/ | head -1
+              '

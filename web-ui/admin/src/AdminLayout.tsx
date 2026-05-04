@@ -57,6 +57,7 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ShieldIcon from '@mui/icons-material/Shield';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import AppsIcon from '@mui/icons-material/Apps';
 import { useColorMode } from './ColorModeContext';
 
 const DRAWER_WIDTH = 264;
@@ -135,6 +136,8 @@ interface NavGroup {
 
 interface NavSection {
   heading?: string;
+  /** URL-prefix list — section is "active" when current path starts with one of these */
+  prefixes?: string[];
   items: (NavLeaf | NavGroup)[];
 }
 
@@ -144,10 +147,13 @@ function isGroup(i: NavLeaf | NavGroup): i is NavGroup {
 
 const NAV: NavSection[] = [
   {
+    heading: 'Dashboard',
+    prefixes: ['/dashboard'],
     items: [{ label: 'Dashboard', to: '/dashboard', icon: <DashboardIcon /> }],
   },
   {
     heading: 'User Management',
+    prefixes: ['/users', '/rbac'],
     items: [
       {
         label: 'Users',
@@ -170,6 +176,7 @@ const NAV: NavSection[] = [
   },
   {
     heading: 'Catalog',
+    prefixes: ['/categories', '/locations', '/sliders'],
     items: [
       { label: 'Categories', to: '/categories', icon: <AccountTreeIcon /> },
       { label: 'Locations', to: '/locations', icon: <LocationOnIcon /> },
@@ -178,6 +185,7 @@ const NAV: NavSection[] = [
   },
   {
     heading: 'Community',
+    prefixes: ['/clubs', '/pods', '/pod-ideas'],
     items: [
       {
         label: 'Clubs',
@@ -193,6 +201,7 @@ const NAV: NavSection[] = [
   },
   {
     heading: 'Engagement',
+    prefixes: ['/notifications', '/interview-requests', '/faqs', '/policies', '/email-templates'],
     items: [
       { label: 'Notifications', to: '/notifications', icon: <NotificationsActiveIcon /> },
       { label: 'Interview Requests', to: '/interview-requests', icon: <EventAvailableIcon /> },
@@ -203,6 +212,7 @@ const NAV: NavSection[] = [
   },
   {
     heading: 'Finance',
+    prefixes: ['/finance'],
     items: [
       {
         label: 'Finance',
@@ -225,6 +235,7 @@ const NAV: NavSection[] = [
   },
   {
     heading: 'System',
+    prefixes: ['/feature-flags', '/branding', '/settings'],
     items: [
       { label: 'Feature Flags', to: '/feature-flags', icon: <FlagIcon /> },
       { label: 'Branding', to: '/branding', icon: <BrandingWatermarkIcon /> },
@@ -280,6 +291,16 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
     setAnchorEl(null);
     navigate('/login');
   };
+
+  // Filter sidebar to only the active section so each "module" gets its own focused nav.
+  // On /hub (or unmatched), show all sections collapsed as section overview.
+  const activeSections: NavSection[] =
+    location.pathname === '/' || location.pathname.startsWith('/hub')
+      ? []
+      : NAV.filter(
+          (s) => s.prefixes && s.prefixes.some((p) => location.pathname.startsWith(p))
+        );
+  const visibleNav: NavSection[] = activeSections.length > 0 ? activeSections : NAV;
 
   const renderItem = (item: NavLeaf | NavGroup) => {
     if (isGroup(item)) {
@@ -351,7 +372,21 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </Brand>
       <Divider />
       <List sx={{ py: 1, flex: 1, overflowY: 'auto' }}>
-        {NAV.map((section, idx) => (
+        <NavItem
+          component={RouterLink}
+          to="/hub"
+          active={location.pathname === '/hub'}
+          onClick={closeMobile}
+        >
+          <ListItemIcon>
+            <AppsIcon />
+          </ListItemIcon>
+          <ListItemText
+            primary="Modules"
+            primaryTypographyProps={{ fontWeight: 600, fontSize: 14 }}
+          />
+        </NavItem>
+        {visibleNav.map((section, idx) => (
           <Box key={section.heading ?? `s-${idx}`} sx={{ mb: 1 }}>
             {section.heading && (
               <Typography

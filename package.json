@@ -13,9 +13,19 @@
     "dev:app": "npm run dev --workspace=app",
     "dev:admin": "npm run dev --workspace=admin",
     "build": "npm run build --workspaces --if-present",
-    "codegen": "npm run codegen --workspace=server"
+    "build:server": "npm run build --workspace=server",
+    "build:app": "npm run build --workspace=app",
+    "build:admin": "npm run build --workspace=admin",
+    "typecheck": "npm run build --workspaces --if-present",
+    "codegen": "npm run codegen --workspace=server",
+    "prepare": "husky || true"
   },
   "devDependencies": {
+    "husky": "^9.1.6",
+    "lint-staged": "^15.2.10",
     "typescript": "^5.4.5"
+  },
+  "lint-staged": {
+    "*.{ts,tsx,js,jsx,json,md,yml,yaml}": []
   }
 }

@@ -40,7 +40,7 @@ async function bootstrap() {
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
 
-  const port = Number(process.env.PORT || 4000);
+  const port = Number(process.env.PORT || 2001);
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));
   // eslint-disable-next-line no-console
   console.log(`🚀 Server ready at http://localhost:${port}/graphql`);

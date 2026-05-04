@@ -1,6 +1,7 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import AdminLayout from './AdminLayout';
 import LoginPage from './pages/LoginPage';
+import HubPage from './pages/HubPage';
 import UsersPage from './pages/UsersPage';
 import UserDetailsPage from './pages/UserDetailsPage';
 import DashboardPage from './pages/DashboardPage';
@@ -50,6 +51,7 @@ export default function App() {
           <RequireAuth>
             <AdminLayout>
               <Routes>
+                <Route path="/hub" element={<HubPage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
                 <Route path="/users" element={<UsersPage />} />
                 <Route path="/users/:user_id" element={<UserDetailsPage />} />
@@ -81,7 +83,7 @@ export default function App() {
                 <Route path="/rbac/actions" element={<ActionsPage />} />
                 <Route path="/feature-flags" element={<FeatureFlagsPage />} />
                 <Route path="/settings" element={<SettingsPage />} />
-                <Route path="*" element={<Navigate to="/dashboard" replace />} />
+                <Route path="*" element={<Navigate to="/hub" replace />} />
               </Routes>
             </AdminLayout>
           </RequireAuth>

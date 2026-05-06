@@ -72,7 +72,7 @@ export default function App() {
   const BOTTOM_NAV_OFFSET = 'calc(56px + env(safe-area-inset-bottom) + 8px)';
 
   return (
-    <Box sx={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
+    <Box sx={isAuthed ? { height: '100dvh', display: 'flex', flexDirection: 'column' } : undefined}>
       {splashOpen && <SplashScreen />}
       {isAuthed && (
         <AppHeader
@@ -88,11 +88,13 @@ export default function App() {
         maxWidth={fullBleed ? false : 'sm'}
         disableGutters={fullBleed}
         sx={{
-          flex: 1,
-          minHeight: 0,
-          display: 'flex',
-          flexDirection: 'column',
-          overflowY: 'auto',
+          ...(isAuthed && {
+            flex: 1,
+            minHeight: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            overflowY: 'auto',
+          }),
           py: fullBleed ? 0 : 2,
           // Reserve space for the fixed BottomNav only on padded routes.
           // Full-bleed routes handle their own bottom inset internally.

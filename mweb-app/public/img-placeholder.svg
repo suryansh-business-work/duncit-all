@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="300" viewBox="0 0 400 300">
+  <rect width="400" height="300" fill="#f1f3f7"/>
+  <g transform="translate(200,150)" opacity="0.35">
+    <!-- mountain / image icon -->
+    <rect x="-48" y="-36" width="96" height="72" rx="8" fill="none" stroke="#64748b" stroke-width="3"/>
+    <circle cx="-16" cy="-12" r="8" fill="#64748b"/>
+    <polyline points="-48,18 -20,-10 2,14 18,0 48,18" fill="#64748b" stroke="none"/>
+  </g>
+</svg>

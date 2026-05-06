@@ -10,6 +10,22 @@ import { initPwa } from './pwa';
 
 initPwa();
 
+// Global image fallback: replace any broken/404 <img> with a placeholder
+document.addEventListener(
+  'error',
+  (e) => {
+    const t = e.target as HTMLElement;
+    if (t.tagName === 'IMG') {
+      const img = t as HTMLImageElement;
+      if (!img.dataset.fallback) {
+        img.dataset.fallback = '1';
+        img.src = '/img-placeholder.svg';
+      }
+    }
+  },
+  true // capture phase — fires before React synthetic events
+);
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ApolloProvider client={apolloClient}>

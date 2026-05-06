@@ -38,12 +38,25 @@ export default function SliderCard({ slider }: { slider: any }) {
             p: 2,
           }}
         >
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="h6" fontWeight={700}>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography
+              variant="subtitle1"
+              fontWeight={700}
+              sx={{
+                lineHeight: 1.25,
+                mb: slider.description ? 0.5 : 0,
+                textShadow: '0 1px 4px rgba(0,0,0,0.5)',
+              }}
+            >
               {slider.title}
             </Typography>
             {slider.description && (
-              <Typography variant="caption">{slider.description}</Typography>
+              <Typography
+                variant="caption"
+                sx={{ lineHeight: 1.4, display: 'block', textShadow: '0 1px 3px rgba(0,0,0,0.5)' }}
+              >
+                {slider.description}
+              </Typography>
             )}
           </Box>
           {slider.link_url && (

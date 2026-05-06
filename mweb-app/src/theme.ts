@@ -136,8 +136,9 @@ export const theme = createTheme({
         root: {
           borderRadius: 16,
           fontWeight: 600,
-          height: 30,
-          paddingInline: 4,
+          height: 32,
+          paddingInline: 6,
+          fontSize: '0.8125rem',
         },
         outlined: { borderColor: BORDER, backgroundColor: SURFACE },
         filledPrimary: { backgroundColor: INK, color: '#ffffff' },

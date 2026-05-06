@@ -1,4 +1,4 @@
-import { Box, Chip, MenuItem, Stack, TextField } from '@mui/material';
+import { Box, Chip, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import SortIcon from '@mui/icons-material/Sort';
 import type { DateFilter, PriceFilter, SortBy } from './queries';
 
@@ -14,6 +14,14 @@ interface Props {
   setSortBy: (v: SortBy) => void;
 }
 
+const scrollRow = {
+  display: 'flex',
+  gap: 1,
+  overflowX: 'auto',
+  scrollbarWidth: 'none',
+  '&::-webkit-scrollbar': { display: 'none' },
+} as const;
+
 export default function FilterBar({
   categoryChips,
   categoryId,
@@ -26,18 +34,10 @@ export default function FilterBar({
   setSortBy,
 }: Props) {
   return (
-    <Stack spacing={1.5}>
+    <Stack spacing={1.75}>
+      {/* ── Category row ── */}
       {categoryChips.length > 0 && (
-        <Box
-          sx={{
-            display: 'flex',
-            gap: 1,
-            overflowX: 'auto',
-            pb: 0.5,
-            '&::-webkit-scrollbar': { height: 4 },
-            '&::-webkit-scrollbar-thumb': { bgcolor: 'action.hover', borderRadius: 2 },
-          }}
-        >
+        <Box sx={scrollRow}>
           <Chip
             label="All"
             color={!categoryId ? 'primary' : 'default'}
@@ -52,7 +52,6 @@ export default function FilterBar({
               <Chip
                 key={c.id}
                 label={isSub ? `# ${c.name}` : c.name}
-                size={isSub ? 'small' : 'medium'}
                 color={selected ? 'primary' : 'default'}
                 variant={selected ? 'filled' : 'outlined'}
                 onClick={() => setCategoryId(selected ? '' : c.id)}
@@ -68,17 +67,15 @@ export default function FilterBar({
         </Box>
       )}
 
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={1.5}
-        alignItems={{ xs: 'stretch', sm: 'center' }}
-        flexWrap="wrap"
-        useFlexGap
-      >
-        <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap sx={{ flex: 1 }}>
+      {/* ── Price row ── */}
+      <Stack spacing={0.5}>
+        <Typography variant="caption" color="text.secondary" sx={{ px: 0.25, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+          Price
+        </Typography>
+        <Box sx={scrollRow}>
           {(
             [
-              ['ALL', 'All Pods'],
+              ['ALL', 'All'],
               ['FREE', 'Free'],
               ['PAID', 'Paid'],
               ['PREMIUM', 'Premium'],
@@ -87,13 +84,21 @@ export default function FilterBar({
             <Chip
               key={val}
               label={lbl}
-              size="small"
               color={priceFilter === val ? 'primary' : 'default'}
               variant={priceFilter === val ? 'filled' : 'outlined'}
               onClick={() => setPriceFilter(val)}
+              sx={{ flexShrink: 0 }}
             />
           ))}
-          <Box sx={{ width: 8 }} />
+        </Box>
+      </Stack>
+
+      {/* ── Date row ── */}
+      <Stack spacing={0.5}>
+        <Typography variant="caption" color="text.secondary" sx={{ px: 0.25, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+          When
+        </Typography>
+        <Box sx={scrollRow}>
           {(
             [
               ['ALL', 'Any time'],
@@ -106,32 +111,33 @@ export default function FilterBar({
             <Chip
               key={val}
               label={lbl}
-              size="small"
               color={dateFilter === val ? 'secondary' : 'default'}
               variant={dateFilter === val ? 'filled' : 'outlined'}
               onClick={() => setDateFilter(val)}
+              sx={{ flexShrink: 0 }}
             />
           ))}
-        </Stack>
-        <TextField
-          select
-          size="small"
-          label="Sort by"
-          value={sortBy}
-          onChange={(e) => setSortBy(e.target.value as SortBy)}
-          sx={{ minWidth: 200 }}
-          InputProps={{
-            startAdornment: (
-              <SortIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-            ),
-          }}
-        >
-          <MenuItem value="DATE_ASC">Date · Earliest first</MenuItem>
-          <MenuItem value="DATE_DESC">Date · Latest first</MenuItem>
-          <MenuItem value="PRICE_ASC">Price · Low to High</MenuItem>
-          <MenuItem value="PRICE_DESC">Price · High to Low</MenuItem>
-        </TextField>
+        </Box>
       </Stack>
+
+      {/* ── Sort row ── */}
+      <TextField
+        select
+        size="small"
+        label="Sort by"
+        value={sortBy}
+        onChange={(e) => setSortBy(e.target.value as SortBy)}
+        InputProps={{
+          startAdornment: (
+            <SortIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+          ),
+        }}
+      >
+        <MenuItem value="DATE_ASC">Date · Earliest first</MenuItem>
+        <MenuItem value="DATE_DESC">Date · Latest first</MenuItem>
+        <MenuItem value="PRICE_ASC">Price · Low to High</MenuItem>
+        <MenuItem value="PRICE_DESC">Price · High to Low</MenuItem>
+      </TextField>
     </Stack>
   );
 }

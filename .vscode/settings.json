@@ -11,5 +11,8 @@
     "statusBar.debuggingForeground": "#FBFBEA",
     "statusBar.noFolderBackground": "#4D4D0F",
     "statusBar.noFolderForeground": "#FBFBEA"
-  }
+  },
+  "terminal.integrated.defaultProfile.windows": "Git Bash",
+  "editor.tabSize": 2,
+  "workbench.colorTheme": "Dark Modern",
 }

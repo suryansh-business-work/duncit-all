@@ -1,0 +1,109 @@
+---
+// Shared footer used across all pages.
+---
+<footer class="bg-cream rounded-3xl mt-3 pt-16 pb-8 px-6">
+  <div class="max-w-6xl mx-auto">
+    <div class="grid md:grid-cols-2 gap-8 items-center">
+      <a href="/" class="inline-block">
+        <h2 class="text-5xl sm:text-7xl font-black text-primary text-stroke-sm">Duncit</h2>
+      </a>
+      <div class="md:text-right">
+        <p class="font-head font-bold text-ink mb-3">Get notified when we launch</p>
+        <form class="flex gap-2 md:justify-end" id="footerForm">
+          <input
+            type="email"
+            required
+            placeholder="Email address"
+            class="flex-1 md:flex-none md:w-64 px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm"
+          />
+          <button class="px-4 py-2.5 rounded-lg bg-ink text-white font-bold text-sm inline-flex items-center gap-2">
+            <i class="fa-solid fa-paper-plane"></i> Notify
+          </button>
+        </form>
+        <div class="mt-4 flex md:justify-end gap-3">
+          <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+          <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+          <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+          <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+        </div>
+      </div>
+    </div>
+
+    <hr class="my-10 border-ink/10" />
+
+    <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
+      <div>
+        <h4 class="font-head font-extrabold mb-3">About</h4>
+        <ul class="space-y-2 text-sm text-ink-soft">
+          <li><a href="/about" class="hover:text-primary">About us</a></li>
+          <li><a href="/newsroom" class="hover:text-primary">Newsroom</a></li>
+          <li><a href="/careers" class="hover:text-primary">Careers</a></li>
+          <li><a href="/contact" class="hover:text-primary">Contact us</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-head font-extrabold mb-3">Community</h4>
+        <ul class="space-y-2 text-sm text-ink-soft">
+          <li><a href="/community" class="hover:text-primary">Community</a></li>
+          <li><a href="/guidelines" class="hover:text-primary">Guidelines</a></li>
+          <li><a href="/blog" class="hover:text-primary">Blog</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-head font-extrabold mb-3">Safety Hub</h4>
+        <ul class="space-y-2 text-sm text-ink-soft">
+          <li><a href="/safety/approach" class="hover:text-primary">Our approach</a></li>
+          <li><a href="/safety/advice" class="hover:text-primary">Advice</a></li>
+          <li><a href="/safety/tools" class="hover:text-primary">Safety Tools</a></li>
+          <li><a href="/safety/resources" class="hover:text-primary">Resources</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-head font-extrabold mb-3">Privacy Hub</h4>
+        <ul class="space-y-2 text-sm text-ink-soft">
+          <li><a href="/privacy/policy" class="hover:text-primary">Privacy Policy</a></li>
+          <li><a href="/privacy/cookies" class="hover:text-primary">Cookies Policy</a></li>
+          <li><a href="/privacy/security" class="hover:text-primary">Privacy &amp; Security</a></li>
+          <li><a href="/privacy/tips" class="hover:text-primary">Tips</a></li>
+        </ul>
+      </div>
+      <div>
+        <h4 class="font-head font-extrabold mb-3">Support</h4>
+        <ul class="space-y-2 text-sm text-ink-soft">
+          <li><a href="/help" class="hover:text-primary">Help Center</a></li>
+          <li><a href="/faq" class="hover:text-primary">FAQ</a></li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="mt-10 pt-6 border-t border-ink/10 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-ink-soft">
+      <span>© Duncit 2026 | All Rights Reserved</span>
+      <span class="flex gap-4">
+        <a href="/legal" class="hover:text-primary">Legal Notice</a>
+        <a href="/terms" class="hover:text-primary">Terms &amp; Conditions</a>
+      </span>
+    </div>
+  </div>
+</footer>
+
+<script>
+  const ff = document.getElementById('footerForm') as HTMLFormElement | null;
+  ff?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const input = ff.querySelector('input[type="email"]') as HTMLInputElement;
+    const email = input?.value?.trim();
+    if (!email) return;
+    const list = JSON.parse(localStorage.getItem('duncit_emails') || '[]');
+    if (!list.includes(email)) {
+      list.push(email);
+      localStorage.setItem('duncit_emails', JSON.stringify(list));
+    }
+    input.value = '';
+    const btn = ff.querySelector('button');
+    if (btn) {
+      const orig = btn.innerHTML;
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Got it!';
+      setTimeout(() => { btn.innerHTML = orig; }, 2500);
+    }
+  });
+</script>

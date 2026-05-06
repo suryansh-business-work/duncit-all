@@ -1,0 +1,438 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import Footer from '../components/Footer.astro';
+
+// Real group photos from Unsplash (free to use)
+const heroImg = 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80&auto=format&fit=crop';
+const comingSoonImg = 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80&auto=format&fit=crop';
+const vibesImg = 'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&q=80&auto=format&fit=crop';
+const flow1 = 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=600&q=80&auto=format&fit=crop';
+const flow2 = 'https://images.unsplash.com/photo-1529390079861-591de354faf5?w=600&q=80&auto=format&fit=crop';
+const flow3 = 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=600&q=80&auto=format&fit=crop';
+const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&q=80&auto=format&fit=crop';
+---
+
+<Layout title="Duncit — Coming Soon">
+  <SiteNav />
+  <div class="bg-ink p-3 sm:p-4">
+    <!-- ============== HERO ============== -->
+    <section class="relative overflow-hidden rounded-3xl min-h-[640px] px-6 pt-5 pb-8">
+      <!-- Background image with overlay -->
+      <div class="absolute inset-0 z-0">
+        <img src={heroImg} alt="Group of friends" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-b from-sky-300/40 via-transparent to-ink/30"></div>
+      </div>
+
+      <!-- Nav -->
+      <nav class="relative z-20 flex items-center justify-between">
+        <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Menu">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <div class="flex items-center gap-2">
+          <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ink text-white text-xs font-bold sticker">
+            <i class="fa-solid fa-clock text-tertiary"></i> Coming Soon
+          </span>
+          <a href="#" class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="App Store">
+            <i class="fa-brands fa-apple text-lg"></i>
+          </a>
+          <a href="#" class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Google Play">
+            <i class="fa-brands fa-google-play text-base"></i>
+          </a>
+        </div>
+      </nav>
+
+      <!-- Stage -->
+      <div class="relative z-10 h-[480px] flex flex-col items-center justify-center">
+        <span data-hero-sticker class="absolute top-[12%] left-[8%] sm:left-[18%] px-4 py-1.5 rounded-full bg-primary text-white font-bold sticker -rotate-12 text-sm sm:text-base">
+          <i class="fa-solid fa-hands-holding-circle mr-1"></i> Support
+        </span>
+        <span data-hero-sticker class="absolute top-[14%] right-[8%] sm:right-[20%] px-4 py-1.5 rounded-full bg-tertiary text-ink font-bold sticker rotate-12 text-sm sm:text-base">
+          <i class="fa-solid fa-link mr-1"></i> Connection
+        </span>
+        <span data-hero-sticker class="absolute bottom-[28%] left-[14%] sm:left-[26%] px-4 py-1.5 rounded-full bg-purple-300 text-ink font-bold sticker -rotate-6 text-sm sm:text-base">
+          <i class="fa-solid fa-heart mr-1 text-primary"></i> Love
+        </span>
+        <span data-hero-sticker class="absolute bottom-[30%] right-[14%] sm:right-[26%] px-4 py-1.5 rounded-full bg-secondary text-white font-bold sticker -rotate-3 text-sm sm:text-base inline-flex items-center gap-1.5">
+          <i class="fa-regular fa-face-smile"></i> Happy
+        </span>
+
+        <!-- Extra animated chips -->
+        <span data-hero-sticker class="hidden sm:inline-flex absolute top-[28%] left-[4%] px-3 py-1 rounded-full bg-white text-ink font-bold sticker rotate-6 text-xs items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> 0 bots
+        </span>
+        <span data-hero-sticker class="hidden sm:inline-flex absolute top-[30%] right-[3%] px-3 py-1 rounded-full bg-ink text-white font-bold sticker -rotate-6 text-xs items-center gap-1.5">
+          <i class="fa-solid fa-fire text-tertiary"></i> Vibes only
+        </span>
+        <span data-hero-sticker class="absolute top-[44%] left-[3%] sm:left-[10%] w-12 h-12 rounded-full bg-white sticker inline-flex items-center justify-center rotate-12" data-spin>
+          <i class="fa-solid fa-music text-secondary text-lg"></i>
+        </span>
+        <span data-hero-sticker class="absolute top-[46%] right-[3%] sm:right-[10%] w-12 h-12 rounded-full bg-tertiary sticker inline-flex items-center justify-center -rotate-6">
+          <i class="fa-solid fa-star text-ink text-lg"></i>
+        </span>
+        <span data-hero-sticker class="hidden sm:inline-flex absolute bottom-[14%] left-[18%] px-3 py-1 rounded-full bg-green-400 text-ink font-bold sticker -rotate-12 text-xs items-center gap-1.5">
+          <i class="fa-solid fa-bolt"></i> Real time
+        </span>
+        <span data-hero-sticker class="hidden sm:inline-flex absolute bottom-[16%] right-[18%] px-3 py-1 rounded-full bg-pink-300 text-ink font-bold sticker rotate-6 text-xs items-center gap-1.5">
+          <i class="fa-solid fa-peace"></i> Good vibes
+        </span>
+        <span data-hero-sticker class="absolute bottom-[42%] left-[44%] w-9 h-9 rounded-full bg-white sticker inline-flex items-center justify-center" data-orbit>
+          <i class="fa-solid fa-sparkles text-tertiary-dark text-sm"></i>
+        </span>
+
+        <h1 id="heroWordmark" class="relative z-10 font-head font-black text-primary text-stroke text-7xl sm:text-8xl md:text-[9rem] tracking-tight inline-block">
+          Duncit
+        </h1>
+      </div>
+    </section>
+
+    <!-- ============== STAY TUNED / EMAIL ============== -->
+    <section class="bg-cream py-20 px-6">
+      <div class="max-w-3xl mx-auto text-center">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider mb-6">
+          <i class="fa-solid fa-rocket"></i> Launching Soon
+        </span>
+        <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4">Meet your <span class="text-primary">vibe tribe</span></h2>
+        <p class="text-ink-soft text-lg max-w-xl mx-auto mb-10">
+          Connect instantly with friends who match your energy. Be the first to know when we launch — drop your email and stay tuned!
+        </p>
+
+        <form id="emailForm" class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
+          <div class="relative flex-1">
+            <i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft"></i>
+            <input
+              id="emailInput"
+              type="email"
+              required
+              placeholder="you@example.com"
+              class="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border-2 border-ink/10 focus:border-primary focus:outline-none text-ink placeholder:text-ink-soft/60 font-medium"
+            />
+          </div>
+          <button type="submit" class="px-6 py-3.5 rounded-xl bg-ink text-white font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 whitespace-nowrap">
+            Stay Tuned <i class="fa-solid fa-bell"></i>
+          </button>
+        </form>
+
+        <div id="successMsg" class="hidden mt-6 items-center gap-2 px-5 py-3 rounded-xl bg-green-50 text-green-700 font-semibold border border-green-200">
+          <i class="fa-solid fa-circle-check text-xl"></i>
+          You're on the list! We'll let you know the moment we launch.
+        </div>
+
+        <p class="mt-4 text-xs text-ink-soft">
+          <i class="fa-solid fa-shield-halved mr-1"></i> No spam, ever. Unsubscribe anytime.
+        </p>
+
+        <!-- Countdown -->
+        <div data-reveal-group class="mt-12 grid grid-cols-3 gap-4 max-w-md mx-auto">
+          <div data-reveal class="bg-white rounded-2xl p-4 sticker">
+            <div id="cd-days" class="text-3xl sm:text-4xl font-black font-head text-primary inline-block">--</div>
+            <div class="text-xs uppercase tracking-wider text-ink-soft mt-1">Days</div>
+          </div>
+          <div data-reveal class="bg-white rounded-2xl p-4 sticker">
+            <div id="cd-hours" class="text-3xl sm:text-4xl font-black font-head text-secondary inline-block">--</div>
+            <div class="text-xs uppercase tracking-wider text-ink-soft mt-1">Hours</div>
+          </div>
+          <div data-reveal class="bg-white rounded-2xl p-4 sticker">
+            <div id="cd-mins" class="text-3xl sm:text-4xl font-black font-head text-tertiary-dark inline-block">--</div>
+            <div class="text-xs uppercase tracking-wider text-ink-soft mt-1">Minutes</div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== MOBILE APP - COMING SOON ============== -->
+    <section class="relative overflow-hidden py-20 px-6">
+      <!-- Background image with overlay -->
+      <div class="absolute inset-0 z-0">
+        <img src={comingSoonImg} alt="" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-linear-to-br from-secondary/85 via-ink/80 to-primary/85"></div>
+      </div>
+
+      <div class="relative z-10 max-w-5xl mx-auto text-center">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-tertiary text-ink font-bold text-xs uppercase tracking-wider mb-6 sticker">
+          <i class="fa-solid fa-mobile-screen"></i> Mobile App
+        </span>
+        <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4 text-white">
+          App is <span class="text-tertiary">Coming Soon</span>
+        </h2>
+        <p class="text-white/85 text-lg max-w-xl mx-auto mb-10">
+          Our iOS and Android apps are in the final stages. Get notified when they hit the stores.
+        </p>
+
+        <!-- App store coming soon cards -->
+        <div class="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+          <div class="bg-ink text-white rounded-2xl p-6 sticker relative overflow-hidden">
+            <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-tertiary text-ink text-[10px] font-black uppercase tracking-wider">Soon</span>
+            <i class="fa-brands fa-apple text-5xl mb-3"></i>
+            <div class="text-left">
+              <div class="text-xs opacity-70 uppercase tracking-wide">Coming to the</div>
+              <div class="text-xl font-bold font-head">App Store</div>
+            </div>
+          </div>
+          <div class="bg-ink text-white rounded-2xl p-6 sticker relative overflow-hidden">
+            <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-tertiary text-ink text-[10px] font-black uppercase tracking-wider">Soon</span>
+            <i class="fa-brands fa-google-play text-5xl mb-3"></i>
+            <div class="text-left">
+              <div class="text-xs opacity-70 uppercase tracking-wide">Coming to</div>
+              <div class="text-xl font-bold font-head">Google Play</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Feature checklist -->
+        <div data-reveal-group class="mt-12 grid sm:grid-cols-3 gap-6 max-w-3xl mx-auto text-left">
+          <div data-reveal class="bg-white/95 backdrop-blur rounded-2xl p-5 sticker">
+            <div class="w-10 h-10 rounded-full bg-primary/15 text-primary inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-bolt"></i>
+            </div>
+            <h3 class="text-lg mb-1">Instant matches</h3>
+            <p class="text-sm text-ink-soft">Swipe into vibe-based friend circles in seconds.</p>
+          </div>
+          <div data-reveal class="bg-white/95 backdrop-blur rounded-2xl p-5 sticker">
+            <div class="w-10 h-10 rounded-full bg-secondary/15 text-secondary inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-comments"></i>
+            </div>
+            <h3 class="text-lg mb-1">Real chats</h3>
+            <p class="text-sm text-ink-soft">No pressure, just real talk and laughs.</p>
+          </div>
+          <div data-reveal class="bg-white/95 backdrop-blur rounded-2xl p-5 sticker">
+            <div class="w-10 h-10 rounded-full bg-tertiary/30 text-tertiary-dark inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-shield-heart"></i>
+            </div>
+            <h3 class="text-lg mb-1">Safe space</h3>
+            <p class="text-sm text-ink-soft">Verified profiles and built-in safety tools.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== REAL VIBES ============== -->
+    <section class="bg-lilac py-20 px-6">
+      <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+        <div>
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-secondary/15 text-secondary font-bold text-xs uppercase tracking-wider mb-4">
+            <i class="fa-solid fa-fire"></i> Real Energy
+          </span>
+          <h2 class="text-4xl sm:text-5xl md:text-6xl mb-5">
+            Straight to the<br />
+            <span class="text-secondary">real vibes</span>
+          </h2>
+          <p class="text-ink-soft text-lg max-w-md">
+            Chatting effortless on Duncit. Discover what you share with new
+            friends and dive right into laughs or real talk.
+          </p>
+          <div class="mt-6 flex gap-4 text-ink-soft">
+            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-check text-primary"></i> No bots</span>
+            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-check text-primary"></i> No fakes</span>
+            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-check text-primary"></i> Just vibes</span>
+          </div>
+        </div>
+        <div class="relative">
+          <img src={vibesImg} alt="Friends chatting" class="w-full aspect-[4/5] object-cover rounded-3xl sticker" />
+          <span class="absolute -top-4 -left-4 px-4 py-2 rounded-full bg-tertiary text-ink font-bold sticker -rotate-6">
+            <i class="fa-solid fa-heart text-primary"></i> Authentic
+          </span>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== FLOW ============== -->
+    <section class="bg-tertiary py-20 px-6">
+      <div class="max-w-6xl mx-auto">
+        <div class="grid md:grid-cols-2 gap-10 items-start">
+          <h2 class="text-4xl sm:text-5xl md:text-6xl">
+            Flow with the<br />moment
+          </h2>
+          <p class="text-ink font-medium text-lg max-w-md">
+            Discover new friends without the pressure—see what you have in
+            common, start fun or meaningful conversations, and connect naturally.
+          </p>
+        </div>
+
+        <div data-reveal-group class="mt-12 grid grid-cols-2 md:grid-cols-4 gap-4">
+          <div data-reveal class="relative -translate-y-4 md:-translate-y-8">
+            <img src={flow1} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
+            <span class="absolute -top-2 -left-2 px-3 py-1 rounded-full bg-tertiary text-ink font-bold text-xs sticker -rotate-12">NEON</span>
+          </div>
+          <div data-reveal class="relative">
+            <img src={flow2} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
+            <span class="absolute -top-2 -right-2 px-3 py-1 rounded-full bg-purple-300 text-ink font-bold text-xs sticker rotate-12">YUM</span>
+          </div>
+          <div data-reveal class="relative -translate-y-2 md:-translate-y-6">
+            <img src={flow3} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
+            <span class="absolute -top-3 -right-3 w-11 h-11 rounded-full bg-primary text-white font-bold text-xl inline-flex items-center justify-center sticker rotate-12">
+              <i class="fa-solid fa-bolt"></i>
+            </span>
+          </div>
+          <div data-reveal class="relative">
+            <img src={flow4} alt="" class="w-full aspect-[3/4] object-cover rounded-2xl sticker" />
+            <span class="absolute -bottom-2 -right-2 px-3 py-1 rounded-full bg-secondary text-white font-bold text-xs sticker -rotate-6">CHILL</span>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== FOOTER ============== -->
+    <Footer />
+  </div>
+</Layout>
+
+<script>
+  import { animate, stagger } from 'animejs';
+
+  // ---------- Hero entrance ----------
+  try {
+    const stickers = document.querySelectorAll('[data-hero-sticker]');
+
+    // Pop-in entrance
+    animate(stickers, {
+      opacity: [0, 1],
+      translateY: [30, 0],
+      scale: [0.5, 1],
+      delay: stagger(100, { start: 300 }),
+      duration: 600,
+      ease: 'outElastic(1, .7)',
+    });
+
+    // Wordmark bounce
+    animate('#heroWordmark', {
+      scale: [0.4, 1.05, 1],
+      rotate: [-6, 2, 0],
+      opacity: [0, 1],
+      duration: 900,
+      ease: 'outBack(1.4)',
+    });
+
+    // Floating idle wobble
+    stickers.forEach((el, i) => {
+      animate(el, {
+        translateY: [-7, 7],
+        duration: 2000 + i * 200,
+        ease: 'inOutSine',
+        loop: true,
+        alternate: true,
+        delay: 1400 + i * 150,
+      });
+    });
+
+    // Spin badge (music note)
+    const spinEl = document.querySelector('[data-spin]');
+    if (spinEl) {
+      animate(spinEl, {
+        rotate: [0, 360],
+        duration: 5000,
+        ease: 'linear',
+        loop: true,
+      });
+    }
+
+    // Orbit + pulse sparkle
+    const orbitEl = document.querySelector('[data-orbit]');
+    if (orbitEl) {
+      animate(orbitEl, {
+        scale: [1, 1.3, 1],
+        rotate: [-15, 15, -15],
+        duration: 2200,
+        ease: 'inOutSine',
+        loop: true,
+      });
+    }
+  } catch (e) {
+    // If anime.js fails, chips are still visible (no opacity-0 in HTML)
+    console.warn('Animation init failed:', e);
+  }
+
+  // ---------- Scroll reveals ----------
+  const revealGroups = document.querySelectorAll('[data-reveal-group]');
+  const io = new IntersectionObserver((entries, obs) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return;
+      const items = entry.target.querySelectorAll('[data-reveal]');
+      try {
+        animate(items, {
+          opacity: [0, 1],
+          translateY: [40, 0],
+          scale: [0.92, 1],
+          delay: stagger(90),
+          duration: 600,
+          ease: 'outQuart',
+        });
+      } catch (e) {
+        items.forEach((el) => ((el as HTMLElement).style.opacity = '1'));
+      }
+      obs.unobserve(entry.target);
+    });
+  }, { threshold: 0.15 });
+
+  revealGroups.forEach((g) => {
+    const items = g.querySelectorAll('[data-reveal]');
+    items.forEach((el) => ((el as HTMLElement).style.opacity = '0'));
+    io.observe(g);
+  });
+
+  // ---------- Countdown to launch ----------
+  const launchDate = new Date('2026-06-01T00:00:00').getTime();
+  const lastVals: Record<string, string> = {};
+
+  function setDigit(id: string, value: string) {
+    const el = document.getElementById(id);
+    if (!el) return;
+    if (lastVals[id] === value) return;
+    lastVals[id] = value;
+    el.textContent = value;
+  }
+
+  function tick() {
+    const now = Date.now();
+    const diff = Math.max(0, launchDate - now);
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+    const mins = Math.floor((diff / (1000 * 60)) % 60);
+    setDigit('cd-days', String(days).padStart(2, '0'));
+    setDigit('cd-hours', String(hours).padStart(2, '0'));
+    setDigit('cd-mins', String(mins).padStart(2, '0'));
+  }
+  tick();
+  setInterval(tick, 1000 * 30);
+
+  // Email capture (stores locally — wire to your API later)
+  function handleSubmit(formId: string, inputId?: string) {
+    const form = document.getElementById(formId) as HTMLFormElement | null;
+    if (!form) return;
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const input = inputId
+        ? (document.getElementById(inputId) as HTMLInputElement)
+        : (form.querySelector('input[type="email"]') as HTMLInputElement);
+      const email = input?.value?.trim();
+      if (!email) return;
+      const list = JSON.parse(localStorage.getItem('duncit_emails') || '[]');
+      if (!list.includes(email)) {
+        list.push(email);
+        localStorage.setItem('duncit_emails', JSON.stringify(list));
+      }
+      input.value = '';
+      const ok = document.getElementById('successMsg');
+      if (formId === 'emailForm' && ok) {
+        form.classList.add('hidden');
+        ok.classList.remove('hidden');
+        ok.classList.add('inline-flex');
+        animate(ok, {
+          scale: [0.7, 1.05, 1],
+          opacity: [0, 1],
+          duration: 500,
+          ease: 'outBack(1.4)',
+        });
+      } else {
+        const btn = form.querySelector('button');
+        if (btn) {
+          const orig = btn.innerHTML;
+          btn.innerHTML = '<i class="fa-solid fa-check"></i> Got it!';
+          setTimeout(() => { btn.innerHTML = orig; }, 2500);
+        }
+      }
+    });
+  }
+  handleSubmit('emailForm', 'emailInput');
+  handleSubmit('footerForm');
+</script>

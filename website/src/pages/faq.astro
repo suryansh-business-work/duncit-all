@@ -1,0 +1,38 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+
+const faqs = [
+  { q: 'When is Duncit launching?', a: 'We\'re aiming for summer 2026 in our first 5 cities. Sign up to the waitlist for early access.' },
+  { q: 'Is Duncit free?', a: 'Yes, the core experience is free forever. We\'ll offer an optional Duncit+ plan with extras like advanced filters and travel mode.' },
+  { q: 'Is it a dating app?', a: 'No. Duncit is for friendship — meeting people who match your energy, no swipes, no pressure, no romance unless that naturally happens.' },
+  { q: 'How do you make money without selling data?', a: 'Optional Duncit+ subscriptions and, eventually, partnerships with venues and event hosts. We will never sell your personal data.' },
+  { q: 'What ages can use Duncit?', a: 'Duncit is for users 18 and older.' },
+  { q: 'Which countries will it be available in?', a: 'Launching in select cities in the US, UK, Germany, India, and Australia. More to follow.' },
+  { q: 'How do I delete my account?', a: 'Settings → Account → Delete account. Your data is removed within 30 days, with limited safety-related retention.' },
+  { q: 'Will there be a web version?', a: 'Mobile-first at launch. A lightweight web companion is on the roadmap.' },
+];
+---
+
+<PageLayout
+  title="FAQ"
+  eyebrow="Support"
+  heading="Frequently Asked"
+  intro="Quick answers to the questions we hear most."
+  accent="tertiary"
+  heroImage="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1600&q=80&auto=format&fit=crop"
+>
+  <div class="not-prose space-y-3 my-6">
+    {faqs.map((f, i) => (
+      <details class="group bg-white rounded-2xl p-5 sticker" {...(i === 0 ? { open: true } : {})}>
+        <summary class="flex items-center justify-between cursor-pointer list-none gap-4">
+          <span class="font-head font-bold text-ink">{f.q}</span>
+          <i class="fa-solid fa-plus text-primary transition group-open:rotate-45"></i>
+        </summary>
+        <p class="mt-3 text-ink-soft">{f.a}</p>
+      </details>
+    ))}
+  </div>
+
+  <h2>Didn't find your answer?</h2>
+  <p>Visit the <a href="/help">Help Center</a> or email <a href="mailto:support@duncit.com">support@duncit.com</a>.</p>
+</PageLayout>

@@ -35,12 +35,32 @@ export const userTypeDefs = gql`
     profile_photo: String
     bio: String
 
+    pet_profile: PetProfile
+
     is_first_time_user: Boolean!
 
     status: UserStatus
 
     created_at: String
     updated_at: String
+  }
+
+  type PetProfile {
+    name: String
+    species: String
+    breed: String
+    age: Int
+    photo_url: String
+    bio: String
+  }
+
+  input PetProfileInput {
+    name: String
+    species: String
+    breed: String
+    age: Int
+    photo_url: String
+    bio: String
   }
 
   type AuthPayload {
@@ -97,6 +117,10 @@ export const userTypeDefs = gql`
     password: String!
   }
 
+  input GoogleAuthInput {
+    id_token: String!
+  }
+
   input UsersFilter {
     role: String
     city: String
@@ -120,6 +144,8 @@ export const userTypeDefs = gql`
   extend type Mutation {
     register(input: RegisterInput!): AuthPayload!
     login(input: LoginInput!): AuthPayload!
+    loginWithGoogle(input: GoogleAuthInput!): AuthPayload!
+    updateMyPetProfile(input: PetProfileInput!): User!
     createUser(input: CreateUserInput!): User!
     updateUser(user_id: ID!, input: UpdateUserInput!): User!
     deleteUser(user_id: ID!): Boolean!

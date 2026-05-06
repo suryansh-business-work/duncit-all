@@ -1,0 +1,45 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+---
+
+<PageLayout
+  title="Community"
+  eyebrow="Tribe vibes"
+  heading="The Duncit Community"
+  intro="A growing crew of vibe-seekers, builders, hosts, and friends-of-friends."
+  heroImage="https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=1600&q=80&auto=format&fit=crop"
+>
+  <h2>What's the vibe?</h2>
+  <p>
+    The Duncit community is welcoming, curious, and a little bit weird (in the best way).
+    We celebrate the awkward small talk that becomes real friendship, the random meetups that
+    turn into traditions, and the late-night DMs that change someone's week.
+  </p>
+
+  <h2>Ways to plug in</h2>
+  <ul>
+    <li><strong>Discord.</strong> Hang out, share memes, and meet the team in real time.</li>
+    <li><strong>Beta program.</strong> Get early access and shape the app.</li>
+    <li><strong>Local hosts.</strong> Run small meetups in your city — we'll help.</li>
+    <li><strong>Creator collective.</strong> If you make stuff and want to collaborate, hi.</li>
+  </ul>
+
+  <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
+    <a href="#" class="block p-6 rounded-2xl bg-secondary text-white sticker hover:-translate-y-0.5 transition">
+      <i class="fa-brands fa-discord text-3xl mb-2"></i>
+      <div class="font-head font-bold text-xl">Join Discord</div>
+      <div class="text-sm opacity-90 mt-1">12k+ members and counting</div>
+    </a>
+    <a href="/" class="block p-6 rounded-2xl bg-primary text-white sticker hover:-translate-y-0.5 transition">
+      <i class="fa-solid fa-rocket text-3xl mb-2"></i>
+      <div class="font-head font-bold text-xl">Beta waitlist</div>
+      <div class="text-sm opacity-90 mt-1">Get in before everyone else</div>
+    </a>
+  </div>
+
+  <h2>Read the rules</h2>
+  <p>
+    Before posting, please skim the <a href="/guidelines">community guidelines</a>.
+    They're short and mostly common sense, but they keep the vibe right.
+  </p>
+</PageLayout>

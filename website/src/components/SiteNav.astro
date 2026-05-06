@@ -1,0 +1,172 @@
+---
+// Site-wide side navigation drawer.
+// Toggled by any element with [data-nav-toggle].
+const sections = [
+  {
+    title: 'About',
+    icon: 'fa-circle-info',
+    links: [
+      { href: '/about', label: 'About us' },
+      { href: '/newsroom', label: 'Newsroom' },
+      { href: '/careers', label: 'Careers' },
+      { href: '/contact', label: 'Contact us' },
+    ],
+  },
+  {
+    title: 'Community',
+    icon: 'fa-people-group',
+    links: [
+      { href: '/community', label: 'Community' },
+      { href: '/guidelines', label: 'Guidelines' },
+      { href: '/blog', label: 'Blog' },
+    ],
+  },
+  {
+    title: 'Partners',
+    icon: 'fa-handshake',
+    links: [
+      { href: '/be-a-host', label: 'Register as a Host' },
+      { href: '/register-your-venue', label: 'Register Your Venue' },
+    ],
+  },
+  {
+    title: 'Safety Hub',
+    icon: 'fa-shield-heart',
+    links: [
+      { href: '/safety/approach', label: 'Our approach' },
+      { href: '/safety/advice', label: 'Advice' },
+      { href: '/safety/tools', label: 'Safety Tools' },
+      { href: '/safety/resources', label: 'Resources' },
+    ],
+  },
+  {
+    title: 'Privacy Hub',
+    icon: 'fa-lock',
+    links: [
+      { href: '/privacy/policy', label: 'Privacy Policy' },
+      { href: '/privacy/cookies', label: 'Cookies Policy' },
+      { href: '/privacy/security', label: 'Privacy & Security' },
+      { href: '/privacy/tips', label: 'Tips' },
+    ],
+  },
+  {
+    title: 'Support',
+    icon: 'fa-life-ring',
+    links: [
+      { href: '/help', label: 'Help Center' },
+      { href: '/faq', label: 'FAQ' },
+    ],
+  },
+  {
+    title: 'Legal',
+    icon: 'fa-scale-balanced',
+    links: [
+      { href: '/legal', label: 'Legal Notice' },
+      { href: '/terms', label: 'Terms & Conditions' },
+    ],
+  },
+];
+---
+
+<!-- Backdrop -->
+<div
+  id="navBackdrop"
+  class="fixed inset-0 z-40 bg-ink/60 backdrop-blur-sm opacity-0 pointer-events-none transition-opacity duration-300"
+></div>
+
+<!-- Drawer -->
+<aside
+  id="siteNav"
+  class="fixed top-0 left-0 z-50 h-full w-[88%] max-w-md bg-cream shadow-2xl -translate-x-full transition-transform duration-300 flex flex-col"
+  aria-hidden="true"
+>
+  <div class="flex items-center justify-between p-5 border-b border-ink/10">
+    <a href="/" class="text-3xl font-black font-head text-primary text-stroke-sm">Duncit</a>
+    <button
+      data-nav-close
+      class="w-10 h-10 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition"
+      aria-label="Close menu"
+    >
+      <i class="fa-solid fa-xmark text-lg"></i>
+    </button>
+  </div>
+
+  <nav class="flex-1 overflow-y-auto p-5 space-y-6">
+    {sections.map((section) => (
+      <div>
+        <h4 class="flex items-center gap-2 text-xs uppercase tracking-wider font-extrabold text-ink-soft mb-2">
+          <i class={`fa-solid ${section.icon} text-primary`}></i>
+          {section.title}
+        </h4>
+        <ul class="space-y-1">
+          {section.links.map((link) => (
+            <li>
+              <a
+                href={link.href}
+                class="flex items-center justify-between px-3 py-2.5 rounded-lg text-ink hover:bg-primary/10 hover:text-primary font-semibold transition group"
+              >
+                <span>{link.label}</span>
+                <i class="fa-solid fa-arrow-right text-xs opacity-0 group-hover:opacity-100 transition"></i>
+              </a>
+            </li>
+          ))}
+        </ul>
+      </div>
+    ))}
+  </nav>
+
+  <div class="p-5 border-t border-ink/10 bg-white">
+    <p class="text-xs text-ink-soft mb-3 font-semibold">Follow the vibe</p>
+    <div class="flex gap-2">
+      <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
+      <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
+      <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
+      <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
+    </div>
+  </div>
+</aside>
+
+<script>
+  import { animate, stagger } from 'animejs';
+
+  const nav = document.getElementById('siteNav');
+  const backdrop = document.getElementById('navBackdrop');
+
+  function open() {
+    nav?.classList.remove('-translate-x-full');
+    nav?.setAttribute('aria-hidden', 'false');
+    backdrop?.classList.remove('opacity-0', 'pointer-events-none');
+    backdrop?.classList.add('opacity-100');
+    document.body.style.overflow = 'hidden';
+    if (nav) {
+      const items = nav.querySelectorAll('nav a, nav h4');
+      try {
+        animate(items, {
+          opacity: [0, 1],
+          translateX: [-20, 0],
+          delay: stagger(25, { start: 150 }),
+          duration: 350,
+          ease: 'outQuart',
+        });
+      } catch(e) {}
+    }
+  }
+  function close() {
+    nav?.classList.add('-translate-x-full');
+    nav?.setAttribute('aria-hidden', 'true');
+    backdrop?.classList.add('opacity-0', 'pointer-events-none');
+    backdrop?.classList.remove('opacity-100');
+    document.body.style.overflow = '';
+  }
+
+  document.querySelectorAll('[data-nav-toggle]').forEach((el) =>
+    el.addEventListener('click', open)
+  );
+  document.querySelectorAll('[data-nav-close]').forEach((el) =>
+    el.addEventListener('click', close)
+  );
+  backdrop?.addEventListener('click', close);
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') close();
+  });
+</script>

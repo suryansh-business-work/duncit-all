@@ -4,6 +4,7 @@ import {
   registerSchema,
   createUserSchema,
   updateUserSchema,
+  petProfileSchema,
 } from './user.validator';
 import { validate } from '../../utils/validate';
 import type { GraphQLContext } from '../../context';
@@ -36,6 +37,19 @@ export const userResolvers = {
     login: async (_p: unknown, args: { input: unknown }) => {
       const data = await validate(loginSchema, args.input);
       return userService.login(data);
+    },
+    loginWithGoogle: async (_p: unknown, args: { input: { id_token: string } }) => {
+      return userService.loginWithGoogle(args.input?.id_token);
+    },
+    updateMyPetProfile: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      const data = await validate(petProfileSchema, args.input);
+      return userService.updateMyPetProfile(ctx.user.id, data);
     },
     createUser: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
       requireRole(ctx, MUTATING_ROLES);

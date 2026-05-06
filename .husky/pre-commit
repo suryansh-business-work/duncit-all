@@ -1,5 +1,13 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# Lightweight pre-commit: typecheck only what's relevant + run lint-staged
+# 1) Lint-staged formatters/linters
 npx --no-install lint-staged || exit 1
+
+# 2) Workspace typechecks (server + frontends). Skipped if SKIP_TYPECHECK=1.
+if [ "$SKIP_TYPECHECK" != "1" ]; then
+  npm run typecheck --silent || {
+    echo "✗ pre-commit: typecheck failed. Set SKIP_TYPECHECK=1 to bypass."
+    exit 1
+  }
+fi

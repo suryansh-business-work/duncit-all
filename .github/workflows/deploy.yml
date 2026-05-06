@@ -45,14 +45,14 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             admin:
-              - 'web-ui/admin/**'
+              - 'admin/**'
               - 'package.json'
               - 'package-lock.json'
               - 'tsconfig.base.json'
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             mweb:
-              - 'web-ui/app/**'
+              - 'mweb-app/**'
               - 'package.json'
               - 'package-lock.json'
               - 'tsconfig.base.json'
@@ -122,10 +122,11 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file web-ui/admin/Dockerfile \
+              --file admin/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-admin \
               --cache-to   type=gha,scope=duncit-admin,mode=max \
               --push .
@@ -149,10 +150,11 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file web-ui/app/Dockerfile \
+              --file mweb-app/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-mweb \
               --cache-to   type=gha,scope=duncit-mweb,mode=max \
               --push .
@@ -203,6 +205,8 @@ jobs:
           IMAGEKIT_PRIVATE_KEY:  ${{ secrets.IMAGEKIT_PRIVATE_KEY }}
           IMAGEKIT_URL_ENDPOINT: ${{ secrets.IMAGEKIT_URL_ENDPOINT }}
           PEXELS_API_KEY:        ${{ secrets.PEXELS_API_KEY }}
+          GOOGLE_CLIENT_ID:      ${{ secrets.GOOGLE_CLIENT_ID }}
+          GOOGLE_CLIENT_SECRET:  ${{ secrets.GOOGLE_CLIENT_SECRET }}
         run: |
           envsubst '$DOCKERHUB_USERNAME' < deploy/docker-compose.yml > /tmp/docker-compose.yml
           cat > /tmp/server.env <<EOF
@@ -220,6 +224,8 @@ jobs:
           IMAGEKIT_PRIVATE_KEY=${IMAGEKIT_PRIVATE_KEY}
           IMAGEKIT_URL_ENDPOINT=${IMAGEKIT_URL_ENDPOINT}
           PEXELS_API_KEY=${PEXELS_API_KEY}
+          GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
+          GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
           EOF
 
       - name: Push files to VPS

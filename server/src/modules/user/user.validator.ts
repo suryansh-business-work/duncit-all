@@ -53,7 +53,17 @@ export const updateUserSchema = yup.object({
   assigned_zones: yup.array().of(yup.string()).optional(),
 });
 
+export const petProfileSchema = yup.object({
+  name: yup.string().max(60).optional(),
+  species: yup.string().max(40).optional(),
+  breed: yup.string().max(60).optional(),
+  age: yup.number().min(0).max(100).optional(),
+  photo_url: yup.string().url().optional(),
+  bio: yup.string().max(500).optional(),
+});
+
 export type RegisterDTO = yup.InferType<typeof registerSchema>;
 export type LoginDTO = yup.InferType<typeof loginSchema>;
 export type CreateUserDTO = yup.InferType<typeof createUserSchema>;
 export type UpdateUserDTO = yup.InferType<typeof updateUserSchema>;
+export type PetProfileDTO = yup.InferType<typeof petProfileSchema>;

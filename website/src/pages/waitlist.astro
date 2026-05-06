@@ -1,0 +1,749 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import Footer from '../components/Footer.astro';
+
+// Indian names that will animate as if joining the waitlist live
+const indianNames = [
+  { name: 'Aarav Sharma', city: 'Mumbai', emoji: '🔥' },
+  { name: 'Priya Iyer', city: 'Bengaluru', emoji: '✨' },
+  { name: 'Rohan Kapoor', city: 'Delhi', emoji: '🎉' },
+  { name: 'Ananya Reddy', city: 'Hyderabad', emoji: '💫' },
+  { name: 'Arjun Mehta', city: 'Pune', emoji: '🚀' },
+  { name: 'Diya Patel', city: 'Ahmedabad', emoji: '💖' },
+  { name: 'Kabir Singh', city: 'Chandigarh', emoji: '⚡' },
+  { name: 'Ishita Verma', city: 'Lucknow', emoji: '🌸' },
+  { name: 'Vihaan Joshi', city: 'Jaipur', emoji: '🎵' },
+  { name: 'Saanvi Nair', city: 'Kochi', emoji: '🌊' },
+  { name: 'Aditya Rao', city: 'Chennai', emoji: '🎯' },
+  { name: 'Meera Banerjee', city: 'Kolkata', emoji: '🎨' },
+  { name: 'Yash Agarwal', city: 'Indore', emoji: '🏆' },
+  { name: 'Tara Chowdhury', city: 'Guwahati', emoji: '🌟' },
+  { name: 'Dev Malhotra', city: 'Gurgaon', emoji: '💯' },
+  { name: 'Riya Sengupta', city: 'Bhubaneswar', emoji: '🦋' },
+  { name: 'Aryan Pillai', city: 'Trivandrum', emoji: '🎤' },
+  { name: 'Nisha Gupta', city: 'Noida', emoji: '🌈' },
+  { name: 'Karan Bhatia', city: 'Ludhiana', emoji: '🔮' },
+  { name: 'Kavya Krishnan', city: 'Mysuru', emoji: '🌺' },
+  { name: 'Aditi Desai', city: 'Surat', emoji: '💎' },
+  { name: 'Reyansh Choudhary', city: 'Jodhpur', emoji: '🎊' },
+  { name: 'Sara Mathew', city: 'Coimbatore', emoji: '🌻' },
+  { name: 'Veer Pandey', city: 'Varanasi', emoji: '🕉️' },
+];
+
+// Real Indian friend-group photos from Unsplash
+const heroCollage = [
+  'https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=600&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1529390079861-591de354faf5?w=600&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=600&q=80&auto=format&fit=crop',
+];
+
+// Social-proof avatar faces
+const proofFaces = [
+  'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=120&q=80&auto=format&fit=crop&crop=faces',
+  'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=120&q=80&auto=format&fit=crop&crop=faces',
+  'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=120&q=80&auto=format&fit=crop&crop=faces',
+  'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=120&q=80&auto=format&fit=crop&crop=faces',
+  'https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=120&q=80&auto=format&fit=crop&crop=faces',
+];
+
+// Photo wall gallery
+const wallPhotos = [
+  'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=600&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=600&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=600&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1529390079861-591de354faf5?w=600&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=600&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&q=80&auto=format&fit=crop',
+  'https://images.unsplash.com/photo-1469371670807-013ccf25f16a?w=600&q=80&auto=format&fit=crop',
+];
+
+const cities = [
+  { city: 'Mumbai', count: '2.1k', emoji: '🌊' },
+  { city: 'Delhi', count: '1.8k', emoji: '🏛️' },
+  { city: 'Bengaluru', count: '2.4k', emoji: '🌳' },
+  { city: 'Hyderabad', count: '1.3k', emoji: '💎' },
+  { city: 'Pune', count: '1.1k', emoji: '🎓' },
+  { city: 'Chennai', count: '0.9k', emoji: '🎶' },
+  { city: 'Kolkata', count: '0.8k', emoji: '🎨' },
+  { city: 'Jaipur', count: '0.6k', emoji: '🏰' },
+];
+---
+
+<Layout title="Join the Waitlist — Duncit">
+  <SiteNav />
+  <div class="bg-ink p-3 sm:p-4">
+    <!-- ============== HERO ============== -->
+    <section class="relative overflow-hidden rounded-3xl px-6 pt-5 pb-12 bg-linear-to-br from-secondary-light via-cream to-primary-light">
+      <!-- Background blobs -->
+      <div class="absolute -top-24 -right-20 w-80 h-80 rounded-full bg-tertiary/40 blur-3xl"></div>
+      <div class="absolute -bottom-20 -left-20 w-72 h-72 rounded-full bg-primary/30 blur-3xl"></div>
+      <div class="absolute top-1/2 left-1/3 w-60 h-60 rounded-full bg-secondary/20 blur-3xl"></div>
+
+      <!-- Nav -->
+      <nav class="relative z-20 flex items-center justify-between">
+        <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Menu">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <a href="/" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white sticker hover:-translate-y-0.5 transition">
+          <span class="w-7 h-7 rounded-full bg-primary text-white inline-flex items-center justify-center font-black font-head text-sm">D</span>
+          <span class="font-head font-black text-ink text-lg leading-none">Duncit</span>
+        </a>
+        <a href="/" class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Home">
+          <i class="fa-solid fa-house text-base"></i>
+        </a>
+      </nav>
+
+      <!-- Two-column hero -->
+      <div class="relative z-10 mt-10 grid grid-cols-1 lg:grid-cols-2 gap-10 max-w-6xl mx-auto items-center">
+        <!-- LEFT: copy + form -->
+        <div class="text-center lg:text-left">
+          <span data-eyebrow class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary text-white font-bold text-xs uppercase tracking-wider mb-5 sticker">
+            <i class="fa-solid fa-rocket"></i> Early Access · India First
+          </span>
+          <h1 data-headline class="text-5xl sm:text-6xl md:text-7xl text-ink mb-4">
+            Skip the line. <br/>
+            <span class="text-primary text-stroke-sm">Join the vibe.</span>
+          </h1>
+          <p data-subhead class="text-ink-soft text-base sm:text-lg max-w-xl mx-auto lg:mx-0 mb-6">
+            Be one of the first Indians on Duncit. Lock your handle, grab a founder badge, and meet your tribe before everyone else.
+          </p>
+
+          <!-- Social proof: avatars + rating -->
+          <div data-social class="flex flex-wrap items-center gap-4 justify-center lg:justify-start mb-6">
+            <div class="flex -space-x-3">
+              {proofFaces.map((src) => (
+                <img src={src} alt="" loading="lazy" class="w-10 h-10 rounded-full border-2 border-white object-cover sticker" style="box-shadow: 2px 2px 0 var(--color-ink);" />
+              ))}
+              <span class="w-10 h-10 rounded-full bg-ink text-white inline-flex items-center justify-center text-xs font-bold sticker" style="box-shadow: 2px 2px 0 var(--color-primary);">+12k</span>
+            </div>
+            <div class="text-left">
+              <div class="text-tertiary-dark text-sm">
+                <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+              </div>
+              <div class="text-xs text-ink-soft font-semibold">Loved by <span class="text-ink font-black">12,438+</span> early fans</div>
+            </div>
+          </div>
+
+          <!-- Live counter -->
+          <div data-counter-wrap class="inline-flex items-center gap-3 px-5 py-3 rounded-full bg-white sticker mb-6">
+            <span class="relative flex w-3 h-3">
+              <span class="absolute inline-flex w-full h-full rounded-full bg-green-500 opacity-75 animate-ping"></span>
+              <span class="relative inline-flex rounded-full w-3 h-3 bg-green-500"></span>
+            </span>
+            <span class="font-head font-black text-ink text-lg">
+              <span id="liveCount">12,438</span>
+            </span>
+            <span class="text-ink-soft text-sm font-semibold">already vibing on the list</span>
+          </div>
+
+          <!-- ============== FORM ============== -->
+          <form id="waitlistForm" class="bg-white rounded-3xl sticker p-6 sm:p-8 text-left">
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <label class="block">
+                <span class="block text-xs font-bold uppercase tracking-wider text-ink-soft mb-1.5">Full name</span>
+                <input
+                  type="text"
+                  name="name"
+                  required
+                  placeholder="Aarav Sharma"
+                  class="w-full px-4 py-3 rounded-xl border-2 border-ink/15 focus:border-primary focus:outline-none font-semibold text-ink bg-cream/40"
+                />
+              </label>
+              <label class="block">
+                <span class="block text-xs font-bold uppercase tracking-wider text-ink-soft mb-1.5">City</span>
+                <input
+                  type="text"
+                  name="city"
+                  required
+                  placeholder="Mumbai"
+                  class="w-full px-4 py-3 rounded-xl border-2 border-ink/15 focus:border-primary focus:outline-none font-semibold text-ink bg-cream/40"
+                />
+              </label>
+            </div>
+            <label class="block mt-4">
+              <span class="block text-xs font-bold uppercase tracking-wider text-ink-soft mb-1.5">Email</span>
+              <input
+                type="email"
+                name="email"
+                required
+                placeholder="you@vibetribe.in"
+                class="w-full px-4 py-3 rounded-xl border-2 border-ink/15 focus:border-primary focus:outline-none font-semibold text-ink bg-cream/40"
+              />
+            </label>
+            <label class="block mt-4">
+              <span class="block text-xs font-bold uppercase tracking-wider text-ink-soft mb-1.5">Phone (optional)</span>
+              <input
+                type="tel"
+                name="phone"
+                placeholder="+91 98765 43210"
+                class="w-full px-4 py-3 rounded-xl border-2 border-ink/15 focus:border-primary focus:outline-none font-semibold text-ink bg-cream/40"
+              />
+            </label>
+
+            <button
+              type="submit"
+              class="mt-6 w-full inline-flex items-center justify-center gap-2 px-6 py-4 rounded-full bg-ink text-white font-bold sticker hover:-translate-y-0.5 transition text-base"
+            >
+              <i class="fa-solid fa-rocket"></i>
+              Reserve my spot
+            </button>
+
+            <!-- Form alternative links (right under the button as requested) -->
+            <div class="mt-5 pt-5 border-t-2 border-dashed border-ink/10">
+              <p class="text-xs text-ink-soft text-center mb-3 font-semibold uppercase tracking-wider">
+                Prefer something else? Try these
+              </p>
+              <div class="flex flex-wrap items-center justify-center gap-2">
+                <a
+                  href="https://forms.gle/Duncit-waitlist"
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white sticker text-ink text-xs font-bold hover:-translate-y-0.5 transition"
+                >
+                  <i class="fa-brands fa-google text-secondary"></i> Google Form
+                </a>
+                <a
+                  href="https://tally.so/r/duncit-waitlist"
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white sticker text-ink text-xs font-bold hover:-translate-y-0.5 transition"
+                >
+                  <i class="fa-solid fa-clipboard-list text-primary"></i> Tally Form
+                </a>
+                <a
+                  href="https://typeform.com/to/duncit"
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white sticker text-ink text-xs font-bold hover:-translate-y-0.5 transition"
+                >
+                  <i class="fa-solid fa-pen-to-square text-tertiary-dark"></i> Typeform
+                </a>
+                <a
+                  href="https://wa.me/919999999999?text=I%20want%20to%20join%20Duncit%20waitlist"
+                  target="_blank"
+                  rel="noopener"
+                  class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white sticker text-ink text-xs font-bold hover:-translate-y-0.5 transition"
+                >
+                  <i class="fa-brands fa-whatsapp text-green-500"></i> WhatsApp us
+                </a>
+              </div>
+              <p class="text-[11px] text-ink-soft text-center mt-3">
+                We never spam. Pinky promise.
+              </p>
+            </div>
+          </form>
+        </div>
+
+        <!-- RIGHT: image collage -->
+        <div class="relative h-[480px] sm:h-[560px] lg:h-[640px] hidden md:block">
+          <!-- Floating sticker chips -->
+          <span data-collage-chip class="absolute z-30 top-[2%] left-[8%] px-3 py-1.5 rounded-full bg-primary text-white font-bold sticker -rotate-6 text-xs">
+            <i class="fa-solid fa-fire mr-1 text-tertiary"></i> Trending in India
+          </span>
+          <span data-collage-chip class="absolute z-30 top-[6%] right-[4%] px-3 py-1.5 rounded-full bg-tertiary text-ink font-bold sticker rotate-6 text-xs">
+            <i class="fa-solid fa-bolt mr-1"></i> Limited spots
+          </span>
+          <span data-collage-chip class="absolute z-30 bottom-[14%] left-[2%] px-3 py-1.5 rounded-full bg-secondary text-white font-bold sticker -rotate-3 text-xs inline-flex items-center gap-1.5">
+            <i class="fa-solid fa-heart text-tertiary"></i> Real friends
+          </span>
+          <span data-collage-chip class="absolute z-30 bottom-[4%] right-[8%] px-3 py-1.5 rounded-full bg-white text-ink font-bold sticker rotate-3 text-xs inline-flex items-center gap-1.5">
+            <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> 0 bots
+          </span>
+
+          <!-- Photo 1 -->
+          <div data-collage-img class="absolute top-0 left-[6%] w-[58%] h-[58%] rounded-3xl overflow-hidden sticker -rotate-3 z-10">
+            <img src={heroCollage[0]} alt="Friends hanging out" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+          <!-- Photo 2 -->
+          <div data-collage-img class="absolute top-[8%] right-[2%] w-[44%] h-[42%] rounded-3xl overflow-hidden sticker rotate-6 z-20">
+            <img src={heroCollage[1]} alt="Friend group" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+          <!-- Photo 3 -->
+          <div data-collage-img class="absolute bottom-[2%] left-[2%] w-[46%] h-[44%] rounded-3xl overflow-hidden sticker rotate-2 z-20">
+            <img src={heroCollage[2]} alt="Friends laughing" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+          <!-- Photo 4 -->
+          <div data-collage-img class="absolute bottom-[6%] right-[6%] w-[52%] h-[48%] rounded-3xl overflow-hidden sticker -rotate-2 z-10">
+            <img src={heroCollage[3]} alt="Group photo" loading="lazy" class="w-full h-full object-cover" />
+          </div>
+
+          <!-- Center floating "Live joined" badge -->
+          <div data-collage-chip class="absolute z-40 top-[44%] left-[36%] px-4 py-2 rounded-2xl bg-ink text-white sticker -rotate-3 text-xs flex items-center gap-2">
+            <span class="w-8 h-8 rounded-full bg-primary inline-flex items-center justify-center font-head font-black">P</span>
+            <div class="text-left leading-tight">
+              <div class="font-head font-black">Priya just joined</div>
+              <div class="text-white/70 text-[10px]">from Bengaluru · 2s ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== LIVE JOINING FEED ============== -->
+    <section class="bg-cream rounded-3xl mt-3 px-6 sm:px-10 py-14 relative overflow-hidden">
+      <div class="max-w-4xl mx-auto text-center mb-10">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider mb-4">
+          <i class="fa-solid fa-bolt"></i> Live now
+        </span>
+        <h2 class="text-3xl sm:text-4xl md:text-5xl mb-3">
+          Indians joining <span class="text-primary">right now</span>
+        </h2>
+        <p class="text-ink-soft text-base max-w-xl mx-auto">
+          Real people. Real cities. Reserve your handle before it's gone.
+        </p>
+      </div>
+
+      <!-- Marquee track 1 (left to right) -->
+      <div class="marquee mb-4">
+        <div class="marquee-track marquee-left">
+          {[...indianNames, ...indianNames].map((p) => (
+            <div class="join-card inline-flex items-center gap-3 px-4 py-2.5 rounded-full bg-white sticker mx-2">
+              <span class={`w-9 h-9 rounded-full inline-flex items-center justify-center text-white font-head font-black text-sm avatar-${(p.name.charCodeAt(0) % 4)}`}>
+                {p.name.charAt(0)}
+              </span>
+              <div class="text-left">
+                <div class="font-head font-black text-ink text-sm leading-tight">{p.name} <span>{p.emoji}</span></div>
+                <div class="text-[11px] text-ink-soft font-semibold">joined from {p.city}</div>
+              </div>
+              <span class="ml-2 px-2 py-0.5 rounded-full bg-green-500/15 text-green-700 text-[10px] font-bold uppercase tracking-wider">
+                <i class="fa-solid fa-check"></i> in
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Marquee track 2 (right to left) -->
+      <div class="marquee">
+        <div class="marquee-track marquee-right">
+          {[...indianNames.slice().reverse(), ...indianNames.slice().reverse()].map((p) => (
+            <div class="join-card inline-flex items-center gap-3 px-4 py-2.5 rounded-full bg-white sticker mx-2">
+              <span class={`w-9 h-9 rounded-full inline-flex items-center justify-center text-white font-head font-black text-sm avatar-${(p.name.charCodeAt(1) % 4)}`}>
+                {p.name.charAt(0)}
+              </span>
+              <div class="text-left">
+                <div class="font-head font-black text-ink text-sm leading-tight">{p.name} <span>{p.emoji}</span></div>
+                <div class="text-[11px] text-ink-soft font-semibold">joined from {p.city}</div>
+              </div>
+              <span class="ml-2 px-2 py-0.5 rounded-full bg-primary/15 text-primary text-[10px] font-bold uppercase tracking-wider">
+                <i class="fa-solid fa-fire"></i> hot
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <!-- Toast notifications floating in -->
+      <div id="toastStack" class="fixed bottom-4 left-4 z-30 flex flex-col gap-2 pointer-events-none max-w-xs"></div>
+    </section>
+
+    <!-- ============== PERKS ============== -->
+    <section class="bg-cream rounded-3xl mt-3 px-6 sm:px-10 py-14">
+      <div class="max-w-4xl mx-auto">
+        <div class="text-center mb-10">
+          <h2 class="text-3xl sm:text-4xl mb-3">Why join <span class="text-primary">early?</span></h2>
+        </div>
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+          <div class="p-6 rounded-2xl bg-white sticker">
+            <div class="w-11 h-11 rounded-full bg-primary text-white inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-crown"></i>
+            </div>
+            <div class="font-head font-black text-lg text-ink">Founder badge</div>
+            <p class="text-sm text-ink-soft mt-1">A permanent profile flex for OG members.</p>
+          </div>
+          <div class="p-6 rounded-2xl bg-white sticker">
+            <div class="w-11 h-11 rounded-full bg-secondary text-white inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-at"></i>
+            </div>
+            <div class="font-head font-black text-lg text-ink">First dibs on @handle</div>
+            <p class="text-sm text-ink-soft mt-1">Lock your username before everyone else.</p>
+          </div>
+          <div class="p-6 rounded-2xl bg-white sticker">
+            <div class="w-11 h-11 rounded-full bg-tertiary text-ink inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-gift"></i>
+            </div>
+            <div class="font-head font-black text-lg text-ink">Surprise drops</div>
+            <p class="text-sm text-ink-soft mt-1">Merch, perks, and IRL meetup invites.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== PHOTO WALL ============== -->
+    <section class="bg-ink rounded-3xl mt-3 px-6 sm:px-10 py-16 relative overflow-hidden">
+      <div class="max-w-6xl mx-auto">
+        <div class="text-center mb-10">
+          <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-tertiary font-bold text-xs uppercase tracking-wider mb-4">
+            <i class="fa-solid fa-camera-retro"></i> The Vibe Wall
+          </span>
+          <h2 class="text-3xl sm:text-4xl md:text-5xl text-white mb-3">
+            This is the <span class="text-tertiary">energy</span> you're joining
+          </h2>
+          <p class="text-white/70 text-base max-w-xl mx-auto">
+            Real moments. Real friendships. Real Indians. Coming to a city near you.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+          {wallPhotos.map((src, i) => (
+            <div data-wall-img class={`group relative overflow-hidden rounded-2xl sticker aspect-square ${i % 3 === 0 ? 'sm:aspect-[3/4] sm:row-span-1' : ''}`}>
+              <img src={src} alt="" loading="lazy" class="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110" />
+              <div class="absolute inset-0 bg-linear-to-t from-ink/70 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition"></div>
+              <span class="absolute bottom-2 left-2 right-2 text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition translate-y-2 group-hover:translate-y-0">
+                <i class="fa-solid fa-heart text-primary mr-1"></i> Live moment
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== CITY STATS ============== -->
+    <section class="bg-cream rounded-3xl mt-3 px-6 sm:px-10 py-14">
+      <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-10">
+          <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-secondary/10 text-secondary font-bold text-xs uppercase tracking-wider mb-4">
+            <i class="fa-solid fa-location-dot"></i> India is showing up
+          </span>
+          <h2 class="text-3xl sm:text-4xl md:text-5xl mb-3">
+            Vibing from <span class="text-secondary">every corner</span>
+          </h2>
+        </div>
+
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          {cities.map((c) => (
+            <div data-city class="p-5 rounded-2xl bg-white sticker text-center hover:-translate-y-1 transition">
+              <div class="text-3xl mb-2">{c.emoji}</div>
+              <div class="font-head font-black text-2xl text-primary">{c.count}</div>
+              <div class="text-xs uppercase tracking-wider text-ink-soft font-bold mt-1">{c.city}</div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== TESTIMONIALS ============== -->
+    <section class="bg-cream rounded-3xl mt-3 px-6 sm:px-10 py-14">
+      <div class="max-w-5xl mx-auto">
+        <div class="text-center mb-10">
+          <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-tertiary/30 text-ink font-bold text-xs uppercase tracking-wider mb-4">
+            <i class="fa-solid fa-quote-left"></i> Word on the street
+          </span>
+          <h2 class="text-3xl sm:text-4xl md:text-5xl mb-3">What early fans <span class="text-primary">are saying</span></h2>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div class="p-6 rounded-3xl bg-white sticker">
+            <div class="text-tertiary-dark mb-3">
+              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+            </div>
+            <p class="text-ink-soft text-sm mb-4">"Finally an app made for actual Indian college energy. Locked my handle on day one. Aag laga di."</p>
+            <div class="flex items-center gap-3">
+              <img src={proofFaces[0]} alt="" loading="lazy" class="w-10 h-10 rounded-full object-cover sticker" />
+              <div>
+                <div class="font-head font-black text-ink text-sm">Ananya R.</div>
+                <div class="text-[11px] text-ink-soft">Student · Hyderabad</div>
+              </div>
+            </div>
+          </div>
+          <div class="p-6 rounded-3xl bg-primary text-white sticker">
+            <div class="text-tertiary mb-3">
+              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+            </div>
+            <p class="text-white/90 text-sm mb-4">"No bots, no cringe. Just my squad and the squads I want to vibe with. Worth the wait fr."</p>
+            <div class="flex items-center gap-3">
+              <img src={proofFaces[2]} alt="" loading="lazy" class="w-10 h-10 rounded-full object-cover sticker" />
+              <div>
+                <div class="font-head font-black text-white text-sm">Rohan K.</div>
+                <div class="text-[11px] text-white/70">Designer · Delhi</div>
+              </div>
+            </div>
+          </div>
+          <div class="p-6 rounded-3xl bg-white sticker">
+            <div class="text-tertiary-dark mb-3">
+              <i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i><i class="fa-solid fa-star"></i>
+            </div>
+            <p class="text-ink-soft text-sm mb-4">"Already met 3 IRL friends from the beta meetup in Bengaluru. This is the social app India needed."</p>
+            <div class="flex items-center gap-3">
+              <img src={proofFaces[1]} alt="" loading="lazy" class="w-10 h-10 rounded-full object-cover sticker" />
+              <div>
+                <div class="font-head font-black text-ink text-sm">Priya I.</div>
+                <div class="text-[11px] text-ink-soft">Founder · Bengaluru</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== FINAL CTA ============== -->
+    <section class="relative overflow-hidden rounded-3xl mt-3 px-6 sm:px-10 py-16 bg-linear-to-br from-primary via-primary to-primary-dark">
+      <div class="absolute -top-20 -left-20 w-80 h-80 rounded-full bg-tertiary/30 blur-3xl"></div>
+      <div class="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-secondary/30 blur-3xl"></div>
+
+      <div class="relative z-10 max-w-2xl mx-auto text-center">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white text-ink font-bold text-xs uppercase tracking-wider mb-5 sticker">
+          <i class="fa-solid fa-clock text-primary"></i> Don't sleep on it
+        </span>
+        <h2 class="text-4xl sm:text-5xl md:text-6xl text-white mb-5">
+          Your <span class="text-tertiary text-stroke-sm">tribe</span> is waiting.
+        </h2>
+        <p class="text-white/85 text-base sm:text-lg mb-8 max-w-lg mx-auto">
+          Spots are filling up fast. Lock yours before someone from your college does.
+        </p>
+        <a href="#waitlistForm" class="inline-flex items-center gap-2 px-8 py-4 rounded-full bg-ink text-white font-bold sticker hover:-translate-y-0.5 transition text-base">
+          <i class="fa-solid fa-rocket"></i> Reserve my spot
+        </a>
+      </div>
+    </section>
+
+    <Footer />
+  </div>
+</Layout>
+
+<style>
+  /* Marquee */
+  .marquee {
+    overflow: hidden;
+    width: 100%;
+    mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+  }
+  .marquee-track {
+    display: inline-flex;
+    white-space: nowrap;
+    will-change: transform;
+  }
+  .marquee-left {
+    animation: scroll-left 45s linear infinite;
+  }
+  .marquee-right {
+    animation: scroll-right 50s linear infinite;
+  }
+  .marquee:hover .marquee-track {
+    animation-play-state: paused;
+  }
+  @keyframes scroll-left {
+    from { transform: translateX(0); }
+    to { transform: translateX(-50%); }
+  }
+  @keyframes scroll-right {
+    from { transform: translateX(-50%); }
+    to { transform: translateX(0); }
+  }
+
+  /* Avatar palette */
+  .avatar-0 { background: var(--color-primary); }
+  .avatar-1 { background: var(--color-secondary); }
+  .avatar-2 { background: var(--color-tertiary-dark); }
+  .avatar-3 { background: var(--color-neutral-rose); }
+
+  .toast {
+    background: white;
+    border: 2.5px solid var(--color-ink);
+    box-shadow: 3px 3px 0 var(--color-ink);
+    border-radius: 9999px;
+    padding: 0.5rem 0.9rem 0.5rem 0.55rem;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.6rem;
+    font-size: 0.8rem;
+    color: var(--color-ink);
+  }
+</style>
+
+<script>
+  // @ts-ignore
+  import anime from 'https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.es.js';
+
+  // Hero entrance
+  anime
+    .timeline({ easing: 'easeOutExpo' })
+    .add({ targets: '[data-eyebrow]', opacity: [0, 1], translateY: [-20, 0], duration: 600 })
+    .add({ targets: '[data-headline]', opacity: [0, 1], translateY: [30, 0], duration: 800 }, '-=400')
+    .add({ targets: '[data-subhead]', opacity: [0, 1], translateY: [20, 0], duration: 700 }, '-=500')
+    .add({ targets: '[data-social]', opacity: [0, 1], translateY: [20, 0], duration: 600 }, '-=500')
+    .add({ targets: '[data-counter-wrap]', opacity: [0, 1], scale: [0.7, 1], duration: 700 }, '-=400')
+    .add({ targets: '#waitlistForm', opacity: [0, 1], translateY: [40, 0], duration: 800 }, '-=500');
+
+  // Collage images entrance
+  anime({
+    targets: '[data-collage-img]',
+    opacity: [0, 1],
+    scale: [0.6, 1],
+    rotate: (el: any) => {
+      const current = parseFloat(el.style.transform || '0');
+      return [current - 30, current];
+    },
+    delay: anime.stagger(150, { start: 300 }),
+    duration: 900,
+    easing: 'easeOutBack',
+  });
+
+  // Collage images gentle floating
+  document.querySelectorAll('[data-collage-img]').forEach((el, i) => {
+    anime({
+      targets: el,
+      translateY: [
+        { value: -8, duration: 2200 + i * 200 },
+        { value: 0, duration: 2200 + i * 200 },
+      ],
+      loop: true,
+      direction: 'alternate',
+      easing: 'easeInOutSine',
+      delay: i * 200,
+    });
+  });
+
+  // Floating chip stickers
+  anime({
+    targets: '[data-collage-chip]',
+    opacity: [0, 1],
+    scale: [0.5, 1],
+    delay: anime.stagger(100, { start: 800 }),
+    duration: 600,
+    easing: 'easeOutBack',
+  });
+  anime({
+    targets: '[data-collage-chip]',
+    translateY: [
+      { value: -6, duration: 1600 },
+      { value: 0, duration: 1600 },
+    ],
+    delay: anime.stagger(120, { start: 1500 }),
+    loop: true,
+    direction: 'alternate',
+    easing: 'easeInOutSine',
+  });
+
+  // City cards stagger on scroll into view
+  const cityObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        anime({
+          targets: '[data-city]',
+          opacity: [0, 1],
+          translateY: [30, 0],
+          scale: [0.9, 1],
+          delay: anime.stagger(80),
+          duration: 700,
+          easing: 'easeOutBack',
+        });
+        cityObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.2 });
+  const firstCity = document.querySelector('[data-city]');
+  if (firstCity) cityObserver.observe(firstCity);
+
+  // Wall photos fade in on scroll
+  const wallObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (entry.isIntersecting) {
+        anime({
+          targets: '[data-wall-img]',
+          opacity: [0, 1],
+          scale: [0.85, 1],
+          delay: anime.stagger(60),
+          duration: 700,
+          easing: 'easeOutQuad',
+        });
+        wallObserver.disconnect();
+      }
+    });
+  }, { threshold: 0.15 });
+  const firstWall = document.querySelector('[data-wall-img]');
+  if (firstWall) wallObserver.observe(firstWall);
+
+  // Animated counter
+  const counter: HTMLElement | null = document.getElementById('liveCount');
+  if (counter) {
+    const startVal = 12438;
+    const obj = { v: startVal - 800 };
+    anime({
+      targets: obj,
+      v: startVal,
+      round: 1,
+      duration: 1800,
+      easing: 'easeOutExpo',
+      update: () => { counter.textContent = obj.v.toLocaleString('en-IN'); },
+    });
+
+    // Tick up randomly to feel live
+    setInterval(() => {
+      const inc = Math.floor(Math.random() * 3) + 1;
+      const target = { v: parseInt(counter.textContent!.replace(/,/g, ''), 10) };
+      anime({
+        targets: target,
+        v: target.v + inc,
+        round: 1,
+        duration: 600,
+        easing: 'easeOutQuad',
+        update: () => { counter.textContent = target.v.toLocaleString('en-IN'); },
+      });
+    }, 4500);
+  }
+
+  // Pop-in toasts of "X just joined"
+  const toastNames = [
+    { n: 'Aarav S.', c: 'Mumbai' },
+    { n: 'Priya I.', c: 'Bengaluru' },
+    { n: 'Rohan K.', c: 'Delhi' },
+    { n: 'Ananya R.', c: 'Hyderabad' },
+    { n: 'Diya P.', c: 'Ahmedabad' },
+    { n: 'Kabir S.', c: 'Chandigarh' },
+    { n: 'Meera B.', c: 'Kolkata' },
+    { n: 'Aditya R.', c: 'Chennai' },
+    { n: 'Tara C.', c: 'Guwahati' },
+    { n: 'Vihaan J.', c: 'Jaipur' },
+  ];
+  const stack = document.getElementById('toastStack');
+
+  function spawnToast() {
+    if (!stack) return;
+    const p = toastNames[Math.floor(Math.random() * toastNames.length)];
+    const el = document.createElement('div');
+    el.className = 'toast';
+    el.innerHTML = `
+      <span style="width:1.5rem;height:1.5rem;border-radius:9999px;background:var(--color-primary);color:white;display:inline-flex;align-items:center;justify-content:center;font-weight:900;font-size:0.7rem;">${p.n.charAt(0)}</span>
+      <span><strong>${p.n}</strong> from ${p.c} just joined <span style="color:var(--color-primary)">♥</span></span>
+    `;
+    stack.appendChild(el);
+    anime({
+      targets: el,
+      opacity: [0, 1],
+      translateX: [-30, 0],
+      duration: 500,
+      easing: 'easeOutBack',
+    });
+    setTimeout(() => {
+      anime({
+        targets: el,
+        opacity: [1, 0],
+        translateX: [0, -30],
+        duration: 400,
+        easing: 'easeInQuad',
+        complete: () => el.remove(),
+      });
+    }, 4000);
+  }
+  setTimeout(spawnToast, 1800);
+  setInterval(spawnToast, 5500);
+
+  // Form submit — fake celebrate
+  const form = document.getElementById('waitlistForm') as HTMLFormElement | null;
+  form?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const btn = form.querySelector('button[type="submit"]') as HTMLButtonElement;
+    btn.innerHTML = '<i class="fa-solid fa-check"></i> You\'re in! See you soon ♥';
+    btn.style.background = 'var(--color-primary)';
+    anime({
+      targets: form,
+      scale: [1, 1.02, 1],
+      duration: 600,
+      easing: 'easeOutBack',
+    });
+  });
+</script>

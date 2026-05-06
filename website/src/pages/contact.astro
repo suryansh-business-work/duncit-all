@@ -1,0 +1,60 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+---
+
+<PageLayout
+  title="Contact us"
+  eyebrow="Say hi"
+  heading="Get in touch"
+  intro="Questions, partnerships, press, or just a friendly hello — we'd love to hear from you."
+  accent="secondary"
+  heroImage="https://images.unsplash.com/photo-1573497019418-b400bb3ab074?w=1600&q=80&auto=format&fit=crop"
+>
+  <div class="not-prose grid sm:grid-cols-3 gap-4 my-6">
+    <a href="mailto:hello@duncit.com" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition text-center">
+      <i class="fa-solid fa-envelope text-2xl text-primary mb-2"></i>
+      <div class="font-head font-bold text-ink">General</div>
+      <div class="text-sm text-ink-soft mt-1">hello@duncit.com</div>
+    </a>
+    <a href="mailto:press@duncit.com" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition text-center">
+      <i class="fa-solid fa-newspaper text-2xl text-secondary mb-2"></i>
+      <div class="font-head font-bold text-ink">Press</div>
+      <div class="text-sm text-ink-soft mt-1">press@duncit.com</div>
+    </a>
+    <a href="mailto:support@duncit.com" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition text-center">
+      <i class="fa-solid fa-life-ring text-2xl text-tertiary-dark mb-2"></i>
+      <div class="font-head font-bold text-ink">Support</div>
+      <div class="text-sm text-ink-soft mt-1">support@duncit.com</div>
+    </a>
+  </div>
+
+  <h2>Send us a message</h2>
+  <form class="not-prose grid gap-4 max-w-xl mt-4" id="contactForm">
+    <input required placeholder="Your name" class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none" />
+    <input required type="email" placeholder="Your email" class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none" />
+    <textarea required rows="5" placeholder="What's on your mind?" class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none resize-y"></textarea>
+    <button class="px-6 py-3.5 rounded-xl bg-ink text-white font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
+      Send <i class="fa-solid fa-paper-plane"></i>
+    </button>
+  </form>
+
+  <h2>Follow along</h2>
+  <p>
+    For day-to-day updates, find us on
+    <a href="#">Twitter / X</a>,
+    <a href="#">Instagram</a>,
+    <a href="#">TikTok</a>, and
+    <a href="#">Discord</a>.
+  </p>
+</PageLayout>
+
+<script>
+  document.getElementById('contactForm')?.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const btn = (e.currentTarget as HTMLFormElement).querySelector('button');
+    if (btn) {
+      btn.innerHTML = '<i class="fa-solid fa-check"></i> Message sent!';
+      btn.setAttribute('disabled', 'true');
+    }
+  });
+</script>

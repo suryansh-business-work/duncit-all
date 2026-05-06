@@ -1,0 +1,194 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteNav from '../components/SiteNav.astro';
+import Footer from '../components/Footer.astro';
+---
+
+<Layout title="404 — Lost in the Vibe | Duncit">
+  <SiteNav />
+  <div class="bg-ink p-3 sm:p-4">
+    <!-- ============== HERO 404 ============== -->
+    <section class="relative overflow-hidden rounded-3xl min-h-[640px] px-6 pt-5 pb-10 bg-linear-to-br from-primary-light via-cream to-tertiary/30">
+      <!-- Floating background blobs -->
+      <div class="absolute -top-20 -left-20 w-72 h-72 rounded-full bg-primary/30 blur-3xl"></div>
+      <div class="absolute -bottom-20 -right-20 w-80 h-80 rounded-full bg-secondary/30 blur-3xl"></div>
+      <div class="absolute top-1/3 right-1/4 w-40 h-40 rounded-full bg-tertiary/40 blur-2xl"></div>
+
+      <!-- Nav -->
+      <nav class="relative z-20 flex items-center justify-between">
+        <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Menu">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+        <a href="/" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white sticker hover:-translate-y-0.5 transition">
+          <span class="w-7 h-7 rounded-full bg-primary text-white inline-flex items-center justify-center font-black font-head text-sm">D</span>
+          <span class="font-head font-black text-ink text-lg leading-none">Duncit</span>
+        </a>
+        <a href="/" class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Home">
+          <i class="fa-solid fa-house text-base"></i>
+        </a>
+      </nav>
+
+      <!-- Floating stickers around the 404 -->
+      <div class="relative z-10 flex flex-col items-center justify-center pt-8 pb-4">
+        <span data-float-sticker class="absolute top-[2%] left-[6%] sm:left-[14%] px-4 py-1.5 rounded-full bg-primary text-white font-bold sticker -rotate-12 text-sm">
+          <i class="fa-solid fa-compass mr-1"></i> Lost?
+        </span>
+        <span data-float-sticker class="absolute top-[4%] right-[6%] sm:right-[14%] px-4 py-1.5 rounded-full bg-tertiary text-ink font-bold sticker rotate-12 text-sm">
+          <i class="fa-solid fa-map-location-dot mr-1"></i> Off the map
+        </span>
+        <span data-float-sticker class="hidden sm:inline-flex absolute top-[18%] left-[4%] px-3 py-1 rounded-full bg-white text-ink font-bold sticker rotate-6 text-xs items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse"></span> page missing
+        </span>
+        <span data-float-sticker class="hidden sm:inline-flex absolute top-[20%] right-[3%] px-3 py-1 rounded-full bg-ink text-white font-bold sticker -rotate-6 text-xs items-center gap-1.5">
+          <i class="fa-solid fa-ghost text-tertiary"></i> spooky empty
+        </span>
+
+        <!-- Lottie animation: lost / 404 vibe -->
+        <div class="relative w-full max-w-md mx-auto">
+          <dotlottie-wc
+            src="https://lottie.host/4db68bbb-08fb-4b58-9a30-f5c0d62ed28a/0pJv9MvgGP.lottie"
+            style="width: 100%; height: 320px;"
+            autoplay
+            loop
+          ></dotlottie-wc>
+        </div>
+
+        <!-- 404 text with stroke -->
+        <h1 id="four04" class="relative z-10 font-head font-black text-primary text-stroke text-7xl sm:text-8xl md:text-[9rem] tracking-tight inline-block leading-none">
+          4<span class="inline-block" data-zero>0</span>4
+        </h1>
+
+        <p class="mt-6 text-center max-w-md text-ink-soft text-base sm:text-lg px-4">
+          This page took a wrong turn at the vibe check. Don't worry — the party is still on. Let's get you back home.
+        </p>
+
+        <!-- CTA buttons -->
+        <div class="mt-8 flex flex-col sm:flex-row gap-3 items-center">
+          <a href="/" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-ink text-white font-bold sticker hover:-translate-y-0.5 transition">
+            <i class="fa-solid fa-house"></i> Take me home
+          </a>
+          <a href="/help" class="inline-flex items-center gap-2 px-6 py-3 rounded-full bg-primary text-white font-bold sticker hover:-translate-y-0.5 transition">
+            <i class="fa-solid fa-life-ring"></i> Get help
+          </a>
+        </div>
+
+        <span data-float-sticker class="absolute bottom-[8%] left-[8%] sm:left-[20%] px-4 py-1.5 rounded-full bg-secondary text-white font-bold sticker -rotate-6 text-sm">
+          <i class="fa-solid fa-bolt mr-1 text-tertiary"></i> Try again
+        </span>
+        <span data-float-sticker class="absolute bottom-[10%] right-[8%] sm:right-[20%] px-4 py-1.5 rounded-full bg-purple-300 text-ink font-bold sticker rotate-6 text-sm">
+          <i class="fa-solid fa-heart mr-1 text-primary"></i> We got you
+        </span>
+      </div>
+    </section>
+
+    <!-- ============== QUICK LINKS ============== -->
+    <section class="bg-cream rounded-3xl mt-3 px-6 sm:px-10 py-14">
+      <div class="max-w-3xl mx-auto text-center">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider mb-4">
+          <i class="fa-solid fa-arrow-pointer"></i> Try one of these
+        </span>
+        <h2 class="text-3xl sm:text-4xl mb-8">Where do you want to <span class="text-primary">go?</span></h2>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          <a href="/" class="group p-5 rounded-2xl bg-white sticker text-left hover:-translate-y-1 transition">
+            <div class="w-10 h-10 rounded-full bg-primary text-white inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-house"></i>
+            </div>
+            <div class="font-head font-black text-lg text-ink">Home</div>
+            <div class="text-sm text-ink-soft">The Duncit launch page</div>
+          </a>
+          <a href="/about" class="group p-5 rounded-2xl bg-white sticker text-left hover:-translate-y-1 transition">
+            <div class="w-10 h-10 rounded-full bg-secondary text-white inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-circle-info"></i>
+            </div>
+            <div class="font-head font-black text-lg text-ink">About us</div>
+            <div class="text-sm text-ink-soft">What we're building</div>
+          </a>
+          <a href="/community" class="group p-5 rounded-2xl bg-white sticker text-left hover:-translate-y-1 transition">
+            <div class="w-10 h-10 rounded-full bg-tertiary text-ink inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-people-group"></i>
+            </div>
+            <div class="font-head font-black text-lg text-ink">Community</div>
+            <div class="text-sm text-ink-soft">Join the tribe</div>
+          </a>
+          <a href="/help" class="group p-5 rounded-2xl bg-white sticker text-left hover:-translate-y-1 transition">
+            <div class="w-10 h-10 rounded-full bg-secondary text-white inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-life-ring"></i>
+            </div>
+            <div class="font-head font-black text-lg text-ink">Help Center</div>
+            <div class="text-sm text-ink-soft">Find answers fast</div>
+          </a>
+          <a href="/contact" class="group p-5 rounded-2xl bg-white sticker text-left hover:-translate-y-1 transition">
+            <div class="w-10 h-10 rounded-full bg-primary text-white inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-envelope"></i>
+            </div>
+            <div class="font-head font-black text-lg text-ink">Contact</div>
+            <div class="text-sm text-ink-soft">Talk to a human</div>
+          </a>
+          <a href="/waitlist" class="group p-5 rounded-2xl bg-white sticker text-left hover:-translate-y-1 transition">
+            <div class="w-10 h-10 rounded-full bg-tertiary text-ink inline-flex items-center justify-center mb-3">
+              <i class="fa-solid fa-rocket"></i>
+            </div>
+            <div class="font-head font-black text-lg text-ink">Join Waitlist</div>
+            <div class="text-sm text-ink-soft">Be early. Be vibing.</div>
+          </a>
+        </div>
+      </div>
+    </section>
+
+    <Footer />
+  </div>
+</Layout>
+
+<!-- Lottie web component -->
+<script src="https://unpkg.com/@lottiefiles/dotlottie-wc@0.6.2/dist/dotlottie-wc.js" type="module"></script>
+
+<!-- Anime.js animations -->
+<script>
+  // @ts-ignore
+  import anime from 'https://cdn.jsdelivr.net/npm/animejs@3.2.2/lib/anime.es.js';
+
+  // Float in 404 with bounce
+  anime({
+    targets: '#four04',
+    translateY: [-30, 0],
+    opacity: [0, 1],
+    scale: [0.6, 1],
+    duration: 1100,
+    easing: 'easeOutElastic(1, .6)',
+  });
+
+  // Spin the middle 0
+  anime({
+    targets: '[data-zero]',
+    rotate: '1turn',
+    duration: 4000,
+    loop: true,
+    easing: 'linear',
+    delay: 800,
+  });
+
+  // Floating stickers — gentle bobbing
+  anime({
+    targets: '[data-float-sticker]',
+    translateY: [
+      { value: -10, duration: 1400 },
+      { value: 0, duration: 1400 },
+    ],
+    rotate: (_el: any, i: number) => (i % 2 === 0 ? [-12, -8] : [12, 8]),
+    delay: anime.stagger(120),
+    loop: true,
+    direction: 'alternate',
+    easing: 'easeInOutSine',
+  });
+
+  // Stagger sticker entrance
+  anime({
+    targets: '[data-float-sticker]',
+    opacity: [0, 1],
+    scale: [0.4, 1],
+    duration: 700,
+    delay: anime.stagger(80, { start: 200 }),
+    easing: 'easeOutBack',
+  });
+</script>

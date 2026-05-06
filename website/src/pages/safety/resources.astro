@@ -1,0 +1,41 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+
+const resources = [
+  { region: 'United States', name: 'Crisis Text Line', contact: 'Text HOME to 741741' },
+  { region: 'United States', name: 'National Suicide Prevention Lifeline', contact: 'Call or text 988' },
+  { region: 'United Kingdom', name: 'Samaritans', contact: 'Call 116 123 (free)' },
+  { region: 'EU', name: 'Mental Health Europe Helplines', contact: 'mhe-sme.org/helplines' },
+  { region: 'India', name: 'iCall', contact: '+91 9152987821 (Mon–Sat, 8a–10p)' },
+  { region: 'Worldwide', name: 'Find A Helpline', contact: 'findahelpline.com' },
+];
+---
+
+<PageLayout
+  title="Crisis Resources"
+  eyebrow="Safety Hub"
+  heading="Help is here"
+  intro="If you or someone you know is struggling, these free resources are available 24/7."
+  heroImage="https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=1600&q=80&auto=format&fit=crop"
+>
+  <p>If you're in immediate danger, call your local emergency number first.</p>
+
+  <h2>Helplines</h2>
+  <div class="not-prose space-y-3 my-6">
+    {resources.map((r) => (
+      <div class="p-5 rounded-2xl bg-white sticker flex items-center gap-4">
+        <div class="w-11 h-11 rounded-xl bg-secondary/15 text-secondary inline-flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-phone-volume"></i>
+        </div>
+        <div class="flex-1">
+          <div class="text-xs uppercase tracking-wider text-ink-soft font-bold">{r.region}</div>
+          <div class="font-head font-bold text-ink">{r.name}</div>
+          <div class="text-sm text-primary font-semibold mt-0.5">{r.contact}</div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <h2>On-platform support</h2>
+  <p>For Duncit-specific issues, contact <a href="mailto:safety@duncit.com">safety@duncit.com</a>. We don't replace professional help, but we'll listen and act on what we can.</p>
+</PageLayout>

@@ -5,8 +5,9 @@ WORKDIR /repo
 # Copy root manifests + workspace manifests for cached install
 COPY package.json package-lock.json tsconfig.base.json ./
 COPY server/package.json ./server/
-COPY web-ui/app/package.json ./web-ui/app/
-COPY web-ui/admin/package.json ./web-ui/admin/
+COPY mweb-app/package.json ./mweb-app/
+COPY admin/package.json ./admin/
+COPY website/package.json ./website/
 
 RUN npm ci --no-audit --no-fund
 
@@ -21,8 +22,9 @@ ENV NODE_ENV=production
 
 COPY --from=builder /repo/package.json /repo/package-lock.json ./
 COPY --from=builder /repo/server/package.json ./server/
-COPY --from=builder /repo/web-ui/app/package.json ./web-ui/app/
-COPY --from=builder /repo/web-ui/admin/package.json ./web-ui/admin/
+COPY --from=builder /repo/mweb-app/package.json ./mweb-app/
+COPY --from=builder /repo/admin/package.json ./admin/
+COPY --from=builder /repo/website/package.json ./website/
 
 RUN npm ci --omit=dev --no-audit --no-fund --workspace=server --include-workspace-root=false || \
     npm ci --omit=dev --no-audit --no-fund

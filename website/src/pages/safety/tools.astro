@@ -1,0 +1,40 @@
+---
+import PageLayout from '../../layouts/PageLayout.astro';
+
+const tools = [
+  { icon: 'fa-ban', title: 'Block', desc: 'Instantly remove someone from your world. They won\'t know.' },
+  { icon: 'fa-volume-xmark', title: 'Mute', desc: 'Silence notifications without blocking them.' },
+  { icon: 'fa-flag', title: 'Report', desc: 'Send a flag to our T&S team. Reviewed within hours.' },
+  { icon: 'fa-eye-slash', title: 'Hide profile', desc: 'Pause discoverability without deleting your account.' },
+  { icon: 'fa-image', title: 'Photo verify', desc: 'Optional selfie verification to prove you\'re you.' },
+  { icon: 'fa-key', title: 'Two-factor', desc: 'Lock your account with SMS or authenticator codes.' },
+];
+---
+
+<PageLayout
+  title="Safety Tools"
+  eyebrow="Safety Hub"
+  heading="Tools to stay safe"
+  intro="Every Duncit user gets these tools, free, from day one."
+  accent="secondary"
+  heroImage="https://images.unsplash.com/photo-1563013544-824ae1b704d3?w=1600&q=80&auto=format&fit=crop"
+>
+  <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
+    {tools.map((t) => (
+      <div class="p-5 rounded-2xl bg-white sticker">
+        <div class="w-11 h-11 rounded-xl bg-primary/15 text-primary inline-flex items-center justify-center mb-3">
+          <i class={`fa-solid ${t.icon} text-lg`}></i>
+        </div>
+        <div class="font-head font-bold text-ink mb-1">{t.title}</div>
+        <div class="text-sm text-ink-soft">{t.desc}</div>
+      </div>
+    ))}
+  </div>
+
+  <h2>How reports work</h2>
+  <p>
+    When you report, our team gets a notification immediately. Most reports are reviewed within
+    a few hours. Serious reports (harassment, threats, illegal content) get priority and are
+    actioned in under an hour, 24/7.
+  </p>
+</PageLayout>

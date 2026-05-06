@@ -111,4 +111,33 @@ export const policyService = {
     const r = await PolicyModel.findByIdAndDelete(id);
     return !!r;
   },
+
+  /**
+   * Idempotently seed policies that the app expects to exist (referenced
+   * from UI surfaces such as the "Backout Terms & Conditions" link).
+   */
+  async seedDefaults() {
+    const defaults = [
+      {
+        slug: 'backout-terms',
+        title: 'Backout Terms & Conditions',
+        content:
+          '<h3>Backout Terms &amp; Conditions</h3>' +
+          '<p>By backing out of a pod you acknowledge:</p>' +
+          '<ul>' +
+          '<li>For paid pods, refunds are processed only when the pod reaches the refund threshold ' +
+          '(by default 80% capacity) <em>or</em> a referral you share fills your spot.</li>' +
+          '<li>Until then, your spot will be held open and your refund stays pending.</li>' +
+          '<li>Repeated last-minute backouts may affect your standing on the platform.</li>' +
+          '</ul>' +
+          '<p>Edit this content from <strong>Admin &rsaquo; Policies &rsaquo; backout-terms</strong>.</p>',
+        is_active: true,
+        sort_order: 100,
+      },
+    ];
+    for (const p of defaults) {
+      const existing = await PolicyModel.findOne({ slug: p.slug });
+      if (!existing) await PolicyModel.create(p);
+    }
+  },
 };

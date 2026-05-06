@@ -1,0 +1,54 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+
+const roles = [
+  { title: 'Senior iOS Engineer', team: 'Mobile', loc: 'Remote · Worldwide' },
+  { title: 'Senior Android Engineer', team: 'Mobile', loc: 'Remote · Worldwide' },
+  { title: 'Product Designer', team: 'Design', loc: 'Berlin or Remote' },
+  { title: 'Trust & Safety Lead', team: 'Operations', loc: 'New York' },
+  { title: 'Community Manager', team: 'Community', loc: 'Remote · US/EU' },
+];
+---
+
+<PageLayout
+  title="Careers"
+  eyebrow="We're hiring"
+  heading="Build Duncit with us"
+  intro="Join a small, mission-driven team building the next generation of friendship."
+  accent="tertiary"
+  heroImage="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80&auto=format&fit=crop"
+>
+  <h2>Why Duncit?</h2>
+  <ul>
+    <li>Fully remote-first, with optional hubs in Berlin & NYC</li>
+    <li>Competitive equity and salary</li>
+    <li>Unlimited PTO (with a 4-week minimum)</li>
+    <li>Annual company offsite — last one was in Lisbon</li>
+    <li>Mental health & wellness stipend</li>
+  </ul>
+
+  <h2>Open roles</h2>
+  <div class="not-prose mt-6 space-y-3">
+    {roles.map((r) => (
+      <a href="mailto:careers@duncit.com" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <div class="font-head font-bold text-ink text-lg">{r.title}</div>
+            <div class="text-sm text-ink-soft mt-1">
+              <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-people-group"></i> {r.team}</span>
+              <span class="mx-2">•</span>
+              <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-location-dot"></i> {r.loc}</span>
+            </div>
+          </div>
+          <span class="px-3 py-1.5 rounded-full bg-primary text-white font-bold text-xs uppercase tracking-wider sticker shrink-0">Apply</span>
+        </div>
+      </a>
+    ))}
+  </div>
+
+  <h2>Don't see your role?</h2>
+  <p>
+    We love hearing from talented people. Send us a note at
+    <a href="mailto:careers@duncit.com">careers@duncit.com</a> and tell us what you'd build.
+  </p>
+</PageLayout>

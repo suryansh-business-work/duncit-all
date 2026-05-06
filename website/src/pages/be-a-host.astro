@@ -1,0 +1,164 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+
+const PARTNERS_URL = 'https://partners.duncit.com';
+
+const steps = [
+  {
+    n: '01',
+    icon: 'fa-user-plus',
+    title: 'Sign up as Host',
+    desc: 'Create your free Host profile in under 2 minutes — name, city, vibe, and one good photo.',
+  },
+  {
+    n: '02',
+    icon: 'fa-id-badge',
+    title: 'Verify yourself',
+    desc: 'Quick ID + selfie check so guests know you\'re real. We keep your data encrypted and private.',
+  },
+  {
+    n: '03',
+    icon: 'fa-calendar-plus',
+    title: 'Plan your first hangout',
+    desc: 'Pick a vibe (chill, party, sport, food). Set day, time, group size, and what to expect.',
+  },
+  {
+    n: '04',
+    icon: 'fa-users',
+    title: 'Curate your circle',
+    desc: 'Approve guests, chat in the group, and set the tone. You\'re the vibe-keeper.',
+  },
+  {
+    n: '05',
+    icon: 'fa-champagne-glasses',
+    title: 'Host the moment',
+    desc: 'Show up, light it up. Real laughs, real connections — no awkward silences.',
+  },
+  {
+    n: '06',
+    icon: 'fa-star',
+    title: 'Grow & get rewarded',
+    desc: 'Earn Host badges, unlock perks, get featured. Top hosts join Duncit Partners.',
+  },
+];
+
+const perks = [
+  { icon: 'fa-shield-heart', title: 'Verified guests only', desc: 'Every attendee passes ID checks before they can RSVP.' },
+  { icon: 'fa-coins', title: 'Earn rewards', desc: 'Active hosts get partner perks, venue discounts and Duncit credits.' },
+  { icon: 'fa-bullhorn', title: 'Built-in audience', desc: 'Your hangouts get surfaced to people who actually vibe with what you plan.' },
+  { icon: 'fa-headset', title: 'Host support 24/7', desc: 'A real human on call for anything — from no-shows to safety questions.' },
+];
+---
+
+<PageLayout
+  title="Register as a Host"
+  eyebrow="Become a host"
+  heading="Host real moments. Build your circle."
+  intro="Hosts are the heartbeat of Duncit. Plan hangouts, gather your kind of people, and turn weekends into stories."
+  accent="primary"
+  heroImage="https://images.unsplash.com/photo-1530023367847-a683933f4172?w=1600&q=80&auto=format&fit=crop"
+>
+  <!-- Big CTA -->
+  <div class="not-prose mb-12">
+    <div class="rounded-3xl bg-ink text-white p-8 sm:p-10 sticker">
+      <div class="flex flex-col sm:flex-row sm:items-center gap-6 justify-between">
+        <div>
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary text-white font-bold text-xs uppercase tracking-wider sticker mb-3">
+            <i class="fa-solid fa-bolt"></i> Free to join
+          </div>
+          <h2 class="font-head font-black text-2xl sm:text-3xl text-white m-0">
+            Ready to host? Let's get you set up.
+          </h2>
+          <p class="text-white/70 mt-2 m-0">Hop over to our Partners portal to register.</p>
+        </div>
+        <a
+          href={PARTNERS_URL}
+          target="_blank"
+          rel="noopener"
+          class="inline-flex items-center gap-2 px-6 py-4 rounded-full bg-primary text-white font-head font-bold text-lg sticker hover:-translate-y-0.5 transition shrink-0"
+        >
+          Register as Host
+          <i class="fa-solid fa-arrow-up-right-from-square"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Flow -->
+  <h2>How hosting on Duncit works</h2>
+  <p>Six simple steps from sign-up to your first unforgettable hangout.</p>
+
+  <div class="not-prose mt-8 grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
+    {steps.map((s, i) => (
+      <div class="relative p-6 rounded-2xl bg-white sticker hover:-translate-y-1 transition">
+        <div class="absolute -top-3 -left-3 w-12 h-12 rounded-full bg-primary text-white inline-flex items-center justify-center font-head font-black text-lg sticker">
+          {s.n}
+        </div>
+        <div class="w-12 h-12 rounded-xl bg-cream inline-flex items-center justify-center mb-3 ml-10">
+          <i class={`fa-solid ${s.icon} text-primary text-xl`}></i>
+        </div>
+        <h3 class="font-head font-black text-ink text-lg m-0">{s.title}</h3>
+        <p class="text-ink-soft text-sm mt-2 m-0">{s.desc}</p>
+        {i < steps.length - 1 && (
+          <div class="hidden lg:block absolute top-1/2 -right-3 text-primary text-2xl z-10">
+            <i class="fa-solid fa-arrow-right"></i>
+          </div>
+        )}
+      </div>
+    ))}
+  </div>
+
+  <!-- Visual flow strip -->
+  <div class="not-prose mt-10 p-6 rounded-3xl bg-tertiary/40">
+    <div class="font-head font-bold text-ink text-sm uppercase tracking-wider mb-4 inline-flex items-center gap-2">
+      <i class="fa-solid fa-route text-primary"></i> Your host journey
+    </div>
+    <div class="flex flex-wrap items-center gap-3">
+      <span class="px-4 py-2 rounded-full bg-white sticker font-bold text-ink text-sm"><i class="fa-solid fa-user-plus text-primary mr-1"></i> Sign up</span>
+      <i class="fa-solid fa-arrow-right text-ink/40"></i>
+      <span class="px-4 py-2 rounded-full bg-white sticker font-bold text-ink text-sm"><i class="fa-solid fa-id-badge text-primary mr-1"></i> Verify</span>
+      <i class="fa-solid fa-arrow-right text-ink/40"></i>
+      <span class="px-4 py-2 rounded-full bg-white sticker font-bold text-ink text-sm"><i class="fa-solid fa-calendar-plus text-primary mr-1"></i> Plan</span>
+      <i class="fa-solid fa-arrow-right text-ink/40"></i>
+      <span class="px-4 py-2 rounded-full bg-white sticker font-bold text-ink text-sm"><i class="fa-solid fa-users text-primary mr-1"></i> Invite</span>
+      <i class="fa-solid fa-arrow-right text-ink/40"></i>
+      <span class="px-4 py-2 rounded-full bg-white sticker font-bold text-ink text-sm"><i class="fa-solid fa-champagne-glasses text-primary mr-1"></i> Host</span>
+      <i class="fa-solid fa-arrow-right text-ink/40"></i>
+      <span class="px-4 py-2 rounded-full bg-primary text-white sticker font-bold text-sm"><i class="fa-solid fa-star mr-1"></i> Earn rewards</span>
+    </div>
+  </div>
+
+  <!-- Perks -->
+  <h2 class="mt-16">What you get as a Duncit host</h2>
+  <div class="not-prose mt-6 grid sm:grid-cols-2 gap-4">
+    {perks.map((p) => (
+      <div class="p-5 rounded-2xl bg-white sticker">
+        <div class="flex items-start gap-4">
+          <div class="w-12 h-12 rounded-xl bg-primary/10 inline-flex items-center justify-center shrink-0">
+            <i class={`fa-solid ${p.icon} text-primary text-xl`}></i>
+          </div>
+          <div>
+            <h3 class="font-head font-black text-ink text-base m-0">{p.title}</h3>
+            <p class="text-ink-soft text-sm mt-1 m-0">{p.desc}</p>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+
+  <!-- Final CTA -->
+  <div class="not-prose mt-12">
+    <a
+      href={PARTNERS_URL}
+      target="_blank"
+      rel="noopener"
+      class="block text-center p-8 rounded-3xl bg-primary text-white sticker hover:-translate-y-1 transition"
+    >
+      <div class="font-head font-black text-2xl sm:text-3xl">Start hosting on Duncit</div>
+      <div class="text-white/85 mt-2">Takes 2 minutes. Free forever for hosts.</div>
+      <div class="inline-flex items-center gap-2 mt-4 px-5 py-2.5 rounded-full bg-white text-primary font-bold sticker">
+        Go to Partners Portal <i class="fa-solid fa-arrow-up-right-from-square"></i>
+      </div>
+    </a>
+  </div>
+</PageLayout>

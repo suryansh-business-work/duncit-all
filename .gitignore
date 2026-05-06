@@ -9,3 +9,16 @@ coverage/
 .vite/
 .turbo/
 generated/
+
+# astro build cache (only the root .gitignore is used; inner workspaces inherit)
+.astro/
+
+# tsbuild incremental cache
+*.tsbuildinfo
+
+# per-workspace lockfiles (root npm workspaces is the source of truth)
+admin/package-lock.json
+mweb-app/package-lock.json
+server/package-lock.json
+website/package-lock.json
+

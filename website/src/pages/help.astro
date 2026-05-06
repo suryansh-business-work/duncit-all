@@ -1,0 +1,50 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+
+const topics = [
+  { icon: 'fa-user', title: 'Account & Profile', desc: 'Sign in, edit your profile, manage settings.' },
+  { icon: 'fa-heart', title: 'Matching & Vibes', desc: 'How matching works and how to tune your vibes.' },
+  { icon: 'fa-comments', title: 'Chats & Messaging', desc: 'Sending, blocking, reporting, and chat history.' },
+  { icon: 'fa-shield-heart', title: 'Safety & Reporting', desc: 'Stay safe and report bad actors.' },
+  { icon: 'fa-credit-card', title: 'Subscriptions', desc: 'Duncit+ plans, billing, and refunds.' },
+  { icon: 'fa-mobile', title: 'App & Devices', desc: 'Install, update, and troubleshoot the app.' },
+];
+---
+
+<PageLayout
+  title="Help Center"
+  eyebrow="Support"
+  heading="How can we help?"
+  intro="Browse topics or search for answers. Can't find it? Reach our team directly."
+  accent="secondary"
+  heroImage="https://images.unsplash.com/photo-1521737711867-e3b97375f902?w=1600&q=80&auto=format&fit=crop"
+>
+  <div class="not-prose my-6">
+    <div class="relative">
+      <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft"></i>
+      <input placeholder="Search help articles…" class="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none" />
+    </div>
+  </div>
+
+  <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
+    {topics.map((t) => (
+      <a href="/faq" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition">
+        <div class="flex items-start gap-4">
+          <div class="w-11 h-11 rounded-xl bg-primary/15 text-primary inline-flex items-center justify-center shrink-0">
+            <i class={`fa-solid ${t.icon} text-lg`}></i>
+          </div>
+          <div>
+            <div class="font-head font-bold text-ink mb-0.5">{t.title}</div>
+            <div class="text-sm text-ink-soft">{t.desc}</div>
+          </div>
+        </div>
+      </a>
+    ))}
+  </div>
+
+  <h2>Still need help?</h2>
+  <p>
+    Email <a href="mailto:support@duncit.com">support@duncit.com</a> — we usually reply within
+    24 hours, and within 4 hours for urgent safety issues.
+  </p>
+</PageLayout>

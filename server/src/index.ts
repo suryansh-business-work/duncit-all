@@ -12,6 +12,7 @@ import { rbacService } from './modules/rbac/rbac.service';
 import { settingsService } from './modules/settings/settings.service';
 import { categoryService } from './modules/category/category.service';
 import { notificationService } from './modules/notification/notification.service';
+import { policyService } from './modules/policy/policy.service';
 import { attachChatSocket } from './modules/chat/chat.socket';
 
 async function bootstrap() {
@@ -20,6 +21,7 @@ async function bootstrap() {
   await settingsService.seedDefaults();
   await categoryService.seedDefaults();
   await notificationService.ensureVapid();
+  await policyService.seedDefaults();
 
   const app = express();
   const httpServer = http.createServer(app);

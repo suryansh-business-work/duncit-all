@@ -7,7 +7,9 @@ import type {
   RegisterDTO,
   CreateUserDTO,
   UpdateUserDTO,
+  PetProfileDTO,
 } from './user.validator';
+import { verifyGoogleIdToken } from './user.google';
 import { sendWelcomeEmail, sendAdminCredentialsEmail } from '../../services/email/email.service';
 import { rbacService } from '../rbac/rbac.service';
 import { settingsService } from '../settings/settings.service';
@@ -47,6 +49,16 @@ async function toPublic(u: any) {
     assigned_zones: u.assigned_zones ?? [],
     profile_photo: u.profile_photo ?? null,
     bio: u.bio ?? null,
+    pet_profile: u.pet_profile
+      ? {
+          name: u.pet_profile.name ?? null,
+          species: u.pet_profile.species ?? null,
+          breed: u.pet_profile.breed ?? null,
+          age: u.pet_profile.age ?? null,
+          photo_url: u.pet_profile.photo_url ?? null,
+          bio: u.pet_profile.bio ?? null,
+        }
+      : null,
     is_first_time_user: !!u.is_first_time_user,
     status: u.status ?? 'ACTIVE',
     created_at: u.created_at?.toISOString?.() ?? '',
@@ -93,6 +105,11 @@ export const userService = {
     if (!user) {
       throw new GraphQLError('Invalid credentials', { extensions: { code: 'UNAUTHENTICATED' } });
     }
+    if (!(user as any).password) {
+      throw new GraphQLError('This account uses Google sign-in. Continue with Google.', {
+        extensions: { code: 'UNAUTHENTICATED' },
+      });
+    }
     const ok = await bcrypt.compare(input.password, (user as any).password);
     if (!ok) {
       throw new GraphQLError('Invalid credentials', { extensions: { code: 'UNAUTHENTICATED' } });
@@ -101,6 +118,63 @@ export const userService = {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
     }
     return authPayload(user);
+  },
+
+  async loginWithGoogle(idToken: string) {
+    const info = await verifyGoogleIdToken(idToken);
+    let user = await UserModel.findOne({
+      $or: [{ google_id: info.sub }, { email: info.email.toLowerCase() }],
+    });
+    if (user) {
+      let dirty = false;
+      if (!user.google_id) {
+        user.google_id = info.sub;
+        dirty = true;
+      }
+      if (!user.is_email_verified) {
+        user.is_email_verified = true;
+        dirty = true;
+      }
+      if (!user.profile_photo && info.picture) {
+        user.profile_photo = info.picture;
+        dirty = true;
+      }
+      if (dirty) await user.save();
+    } else {
+      user = await UserModel.create({
+        first_name: info.given_name || info.name?.split(' ')[0] || 'Google',
+        last_name: info.family_name || info.name?.split(' ').slice(1).join(' ') || 'User',
+        email: info.email.toLowerCase(),
+        is_email_verified: true,
+        google_id: info.sub,
+        // Google sign-up has no phone yet — placeholders the user can update later.
+        phone_number: `g_${info.sub.slice(-10)}`,
+        phone_extension: '+91',
+        dob: new Date('1990-01-01'),
+        profile_photo: info.picture || undefined,
+        roles: ['USER'],
+      });
+      if (user.email) {
+        sendWelcomeEmail(user.email, user.first_name).catch((e) =>
+          // eslint-disable-next-line no-console
+          console.error('Email send failed', e)
+        );
+      }
+    }
+    if (user.status !== 'ACTIVE') {
+      throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
+    }
+    return authPayload(user);
+  },
+
+  async updateMyPetProfile(user_id: string, input: PetProfileDTO) {
+    const updated = await UserModel.findByIdAndUpdate(
+      user_id,
+      { pet_profile: input },
+      { new: true }
+    );
+    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPublic(updated);
   },
 
   async me(id: string) {

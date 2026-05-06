@@ -36,6 +36,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
   const { data, loading, error } = useQuery(HOME_DATA, {
     variables: {
       locId: locationId || undefined,
+      superCatSlug: superCategorySlug || undefined,
       podFilter: {
         location_id: locationId || undefined,
         zone_name: zoneName || undefined,

@@ -1,5 +1,6 @@
 import { ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
+import { getOrCreateDuid } from './duid';
 
 const httpLink = new HttpLink({
   uri: import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:4000/graphql',
@@ -7,10 +8,12 @@ const httpLink = new HttpLink({
 
 const authLink = setContext((_op, { headers }) => {
   const token = localStorage.getItem('token');
+  const duid = getOrCreateDuid();
   return {
     headers: {
       ...headers,
       ...(token ? { authorization: `Bearer ${token}` } : {}),
+      ...(duid ? { 'x-duid': duid } : {}),
     },
   };
 });

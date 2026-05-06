@@ -13,6 +13,7 @@ export interface GraphQLContext {
   req: Request;
   res: Response;
   user: AuthUser | null;
+  device_id: string | null;
 }
 
 export async function buildContext({
@@ -33,5 +34,12 @@ export async function buildContext({
       user = null;
     }
   }
-  return { req, res, user };
+  const rawDuid = req.headers['x-duid'];
+  const device_id =
+    typeof rawDuid === 'string' && rawDuid.trim()
+      ? rawDuid.trim().slice(0, 100)
+      : Array.isArray(rawDuid) && rawDuid[0]
+        ? String(rawDuid[0]).trim().slice(0, 100)
+        : null;
+  return { req, res, user, device_id };
 }

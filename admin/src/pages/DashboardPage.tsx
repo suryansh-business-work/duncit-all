@@ -1,88 +1,202 @@
+import { useMemo, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
-import { Box, Card, CardContent, Grid, Stack, Typography } from '@mui/material';
-import { styled } from '@mui/material/styles';
-import PeopleIcon from '@mui/icons-material/People';
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
-import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import StorefrontIcon from '@mui/icons-material/Storefront';
+import {
+  Box,
+  Card,
+  CardContent,
+  CircularProgress,
+  Grid,
+  MenuItem,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
+import CountsBySuperCategoryGrid from './dashboard/CountsBySuperCategoryGrid';
+import RangePicker, { type Granularity } from './dashboard/RangePicker';
+import ActiveUsersChart from './dashboard/ActiveUsersChart';
 
-const StatCard = styled(Card)(({ theme }) => ({
-  height: '100%',
-  transition: 'transform 120ms ease, box-shadow 120ms ease',
-  '&:hover': {
-    transform: 'translateY(-2px)',
-    boxShadow: theme.shadows[2],
-  },
-}));
-
-const IconWrap = styled(Box)(({ theme }) => ({
-  width: 44,
-  height: 44,
-  borderRadius: theme.shape.borderRadius,
-  display: 'grid',
-  placeItems: 'center',
-  backgroundColor: theme.palette.action.hover,
-  color: theme.palette.primary.main,
-}));
-
-const USERS = gql`
-  query DashboardUsers {
-    users {
-      user_id
-      roles
-      status
+const SUPER_CATS = gql`
+  query DashboardSuperCats {
+    categories(filter: { level: SUPER }) {
+      id
+      name
+      slug
     }
   }
 `;
 
+const TOTALS = gql`
+  query DashboardTotals($slug: String) {
+    dashboardTotals(super_category_slug: $slug) {
+      pods {
+        super_category_slug
+        super_category_name
+        count
+      }
+      clubs {
+        super_category_slug
+        super_category_name
+        count
+      }
+      users_total
+      pods_total
+      clubs_total
+      venues_total
+      hosts_total
+    }
+  }
+`;
+
+const ACTIVE = gql`
+  query DashboardActive(
+    $from: String!
+    $to: String!
+    $granularity: AnalyticsGranularity
+    $slug: String
+  ) {
+    activeUserStats(from: $from, to: $to, granularity: $granularity, super_category_slug: $slug) {
+      granularity
+      from
+      to
+      total_unique_devices
+      total_unique_users
+      buckets {
+        bucket
+        unique_devices
+        unique_users
+      }
+    }
+  }
+`;
+
+const ymd = (d: Date) => d.toISOString().slice(0, 10);
+
+const SUMMARY_TILES: Array<{
+  key: 'users_total' | 'pods_total' | 'clubs_total' | 'venues_total' | 'hosts_total';
+  label: string;
+}> = [
+  { key: 'users_total', label: 'Users' },
+  { key: 'pods_total', label: 'Pods' },
+  { key: 'clubs_total', label: 'Clubs' },
+  { key: 'venues_total', label: 'Venues' },
+  { key: 'hosts_total', label: 'Hosts' },
+];
+
 export default function DashboardPage() {
-  const { data, loading } = useQuery(USERS);
-  const users: any[] = data?.users ?? [];
+  const [superSlug, setSuperSlug] = useState('');
+  const initialFrom = useMemo(() => {
+    const d = new Date();
+    d.setDate(d.getDate() - 29);
+    return ymd(d);
+  }, []);
+  const [from, setFrom] = useState<string>(initialFrom);
+  const [to, setTo] = useState<string>(ymd(new Date()));
+  const [granularity, setGranularity] = useState<Granularity>('DAY');
 
-  const total = users.length;
-  const admins = users.filter((u) =>
-    u.roles?.some((r: string) => ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'].includes(r))
-  ).length;
-  const support = users.filter((u) => u.roles?.includes('SUPPORT_USER')).length;
-  const venueOwners = users.filter((u) => u.roles?.includes('VENUE_OWNER')).length;
+  const { data: catsData } = useQuery(SUPER_CATS);
+  const { data: totalsData, loading: totalsLoading } = useQuery(TOTALS, {
+    variables: { slug: superSlug || null },
+    fetchPolicy: 'cache-and-network',
+  });
+  const { data: activeData, loading: activeLoading } = useQuery(ACTIVE, {
+    variables: { from, to, granularity, slug: superSlug || null },
+    fetchPolicy: 'cache-and-network',
+  });
 
-  const stats = [
-    { label: 'Total Users', value: total, icon: <PeopleIcon /> },
-    { label: 'Administrators', value: admins, icon: <VerifiedUserIcon /> },
-    { label: 'Support Users', value: support, icon: <SupportAgentIcon /> },
-    { label: 'Venue Owners', value: venueOwners, icon: <StorefrontIcon /> },
-  ];
+  const totals = totalsData?.dashboardTotals;
+  const active = activeData?.activeUserStats;
 
   return (
-    <Stack spacing={3}>
-      <Box>
-        <Typography variant="h5">Dashboard</Typography>
-        <Typography variant="body2" color="text.secondary">
-          Overview of platform activity.
+    <Stack spacing={3} sx={{ p: 2 }}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={2}
+        alignItems="center"
+        justifyContent="space-between"
+      >
+        <Typography variant="h4" sx={{ fontWeight: 800 }}>
+          Dashboard
         </Typography>
-      </Box>
+        <TextField
+          select
+          size="small"
+          label="Super Category"
+          value={superSlug}
+          onChange={(e) => setSuperSlug(e.target.value)}
+          sx={{ minWidth: 220 }}
+        >
+          <MenuItem value="">All super categories</MenuItem>
+          {(catsData?.categories ?? []).map((c: any) => (
+            <MenuItem key={c.slug} value={c.slug}>
+              {c.name}
+            </MenuItem>
+          ))}
+        </TextField>
+      </Stack>
 
       <Grid container spacing={2}>
-        {stats.map((s) => (
-          <Grid item xs={12} sm={6} md={3} key={s.label}>
-            <StatCard>
+        {SUMMARY_TILES.map((t) => (
+          <Grid item xs={6} sm={4} md={2.4} key={t.key}>
+            <Card>
               <CardContent>
-                <Stack direction="row" spacing={2} alignItems="center">
-                  <IconWrap>{s.icon}</IconWrap>
-                  <Box>
-                    <Typography variant="caption" color="text.secondary">
-                      {s.label}
-                    </Typography>
-                    <Typography variant="h5" fontWeight={700}>
-                      {loading ? '—' : s.value}
-                    </Typography>
-                  </Box>
-                </Stack>
+                <Typography variant="overline" color="text.secondary">
+                  {t.label}
+                </Typography>
+                <Typography variant="h4" sx={{ fontWeight: 800 }}>
+                  {totalsLoading ? '…' : totals?.[t.key] ?? 0}
+                </Typography>
               </CardContent>
-            </StatCard>
+            </Card>
           </Grid>
         ))}
       </Grid>
+
+      <CountsBySuperCategoryGrid
+        title="Pods by super category"
+        counts={totals?.pods ?? []}
+        total={totals?.pods_total ?? 0}
+        color="#FF4D4F"
+      />
+      <CountsBySuperCategoryGrid
+        title="Clubs by super category"
+        counts={totals?.clubs ?? []}
+        total={totals?.clubs_total ?? 0}
+        color="#3b82f6"
+      />
+
+      <Card>
+        <CardContent>
+          <Stack
+            direction="row"
+            justifyContent="space-between"
+            alignItems="center"
+            sx={{ mb: 2 }}
+          >
+            <Typography variant="h6" sx={{ fontWeight: 700 }}>
+              Active users (by device)
+            </Typography>
+            <Typography variant="overline" color="text.secondary">
+              {active
+                ? `${active.total_unique_devices} devices · ${active.total_unique_users} users`
+                : ''}
+            </Typography>
+          </Stack>
+          <RangePicker
+            from={from}
+            to={to}
+            granularity={granularity}
+            onFromChange={setFrom}
+            onToChange={setTo}
+            onGranularityChange={setGranularity}
+          />
+          {activeLoading && (
+            <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>
+              <CircularProgress size={28} />
+            </Box>
+          )}
+          {!activeLoading && <ActiveUsersChart buckets={active?.buckets ?? []} />}
+        </CardContent>
+      </Card>
     </Stack>
   );
 }

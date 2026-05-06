@@ -92,12 +92,18 @@ export default function LoginPage() {
                   value={values.email} onChange={handleChange} onBlur={handleBlur}
                   error={touched.email && !!errors.email}
                   helperText={touched.email && errors.email}
+                  InputLabelProps={{ shrink: true }}
+                  placeholder="you@example.com"
+                  autoComplete="email"
                 />
                 <TextField
                   fullWidth name="password" type="password" label="Password"
                   value={values.password} onChange={handleChange} onBlur={handleBlur}
                   error={touched.password && !!errors.password}
                   helperText={touched.password && errors.password}
+                  InputLabelProps={{ shrink: true }}
+                  placeholder="Your password"
+                  autoComplete="current-password"
                 />
                 <Button type="submit" variant="contained" disabled={loading}>
                   {loading ? 'Signing in…' : 'Login'}

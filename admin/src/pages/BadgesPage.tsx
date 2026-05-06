@@ -65,7 +65,6 @@ const CONDITIONS = [
   { v: 'POD_HOST_COUNT', label: 'Pod host count' },
   { v: 'CLUB_JOIN_COUNT', label: 'Club join count' },
   { v: 'POD_REFERRAL_COUNT', label: 'Pod referral count' },
-  { v: 'MANUAL', label: 'Manual award only' },
 ];
 
 interface BadgeForm {

@@ -1,4 +1,5 @@
 import { faqService } from './faq.service';
+import { faqSubmissionService } from './faqSubmission.service';
 import { CategoryModel } from '../category/category.model';
 import type { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/rbac';
@@ -36,6 +37,10 @@ export const faqResolvers = {
     faqs: (_p: unknown, args: { filter?: any }) => faqService.list(args.filter),
     faq: (_p: unknown, args: { faq_doc_id: string }) => faqService.getById(args.faq_doc_id),
     publicFaqGroups: () => faqService.publicGroups(),
+    faqSubmissions: (_p: unknown, args: { status?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return faqSubmissionService.list(args.status);
+    },
   },
   Mutation: {
     createFaq: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -49,6 +54,15 @@ export const faqResolvers = {
     deleteFaq: (_p: unknown, args: { faq_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return faqService.remove(args.faq_doc_id);
+    },
+    submitFaqQuestion: (_p: unknown, args: { input: any }) => faqSubmissionService.submit(args.input),
+    updateFaqSubmissionStatus: (
+      _p: unknown,
+      args: { faq_submission_id: string; status: any; converted_faq_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return faqSubmissionService.setStatus(args.faq_submission_id, args.status, args.converted_faq_id);
     },
   },
 };

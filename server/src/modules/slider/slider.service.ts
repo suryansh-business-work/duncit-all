@@ -17,6 +17,7 @@ const toPub = (s: ISlider) => ({
   media_type: s.media_type,
   link_url: s.link_url ?? '',
   scope: s.scope,
+  super_category_slug: s.super_category_slug ?? null,
   location_id: s.location_id ? String(s.location_id) : null,
   zone_name: s.zone_name ?? null,
   sort_order: s.sort_order,
@@ -38,9 +39,18 @@ const validateScope = (input: { scope: SliderScope; location_id?: string | null;
 };
 
 export const sliderService = {
-  async list(filter?: { scope?: SliderScope; location_id?: string; zone_name?: string; is_active?: boolean; search?: string }) {
+  async list(filter?: { scope?: SliderScope; super_category_slug?: string | null; location_id?: string; zone_name?: string; is_active?: boolean; search?: string }) {
     const q: any = {};
     if (filter?.scope) q.scope = filter.scope;
+    // super_category_slug filter:
+    //   undefined  → no constraint
+    //   ''/null    → only sliders that target everyone (super_category_slug is null)
+    //   'pets'     → sliders for that super-category OR null (global-by-category)
+    if (filter?.super_category_slug !== undefined) {
+      const slug = filter.super_category_slug;
+      if (!slug) q.super_category_slug = null;
+      else q.$or = [{ super_category_slug: slug }, { super_category_slug: null }];
+    }
     if (filter?.location_id) q.location_id = filter.location_id;
     if (filter?.zone_name) q.zone_name = filter.zone_name;
     if (typeof filter?.is_active === 'boolean') q.is_active = filter.is_active;
@@ -68,6 +78,7 @@ export const sliderService = {
       media_type: input.media_type ?? 'IMAGE',
       link_url: input.link_url ?? '',
       scope: input.scope,
+      super_category_slug: input.super_category_slug ? String(input.super_category_slug).toLowerCase() : null,
       location_id: input.scope === 'GLOBAL' ? null : input.location_id ?? null,
       zone_name: input.scope === 'ZONE' ? input.zone_name : null,
       sort_order: input.sort_order ?? 0,
@@ -100,6 +111,9 @@ export const sliderService = {
     }
     if (input.starts_at !== undefined) doc.starts_at = input.starts_at ? new Date(input.starts_at) : null;
     if (input.ends_at !== undefined) doc.ends_at = input.ends_at ? new Date(input.ends_at) : null;
+    if (input.super_category_slug !== undefined) {
+      doc.super_category_slug = input.super_category_slug ? String(input.super_category_slug).toLowerCase() : null;
+    }
 
     await doc.save();
     return toPub(doc);

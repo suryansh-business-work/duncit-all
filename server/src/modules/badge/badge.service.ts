@@ -68,33 +68,17 @@ async function getMetric(
 }
 
 /**
- * Evaluates all dynamic, active badges for a user given an event hint.
- * Awards any badges whose threshold is now met. Idempotent.
+ * Badges are now computed on-the-fly from raw activity counts. We no longer
+ * persist UserBadge documents on event triggers — eligibility is re-derived
+ * every time `myBadges` or `userBadges` is queried so the UI always reflects
+ * the user's current state and is automatically revoked if a condition no
+ * longer holds (e.g. the user leaves a pod).
+ *
+ * This function is kept as a no-op so existing call sites in pod / payment
+ * flows keep compiling without scattering edits across the codebase.
  */
-export async function evaluateBadgesForUser(userId: string, _event?: BadgeEvent) {
-  const badges = await BadgeModel.find({ is_active: true, condition_type: { $ne: 'MANUAL' } });
-  if (!badges.length) return;
-  const uid = new Types.ObjectId(userId);
-  for (const b of badges) {
-    try {
-      const metric = await getMetric(userId, b.condition_type);
-      if (metric < b.threshold) continue;
-      await UserBadgeModel.updateOne(
-        { user_id: uid, badge_id: b._id },
-        {
-          $setOnInsert: {
-            user_id: uid,
-            badge_id: b._id,
-            awarded_at: new Date(),
-            awarded_reason: `${b.condition_type} reached ${metric}/${b.threshold}`,
-          },
-        },
-        { upsert: true }
-      );
-    } catch {
-      // swallow per-badge errors so one bad rule doesn't block others
-    }
-  }
+export async function evaluateBadgesForUser(_userId: string, _event?: BadgeEvent) {
+  /* no-op: badges are computed live in badgeService.listForUser */
 }
 
 export const badgeService = {
@@ -147,14 +131,34 @@ export const badgeService = {
   },
 
   async listForUser(userId: string) {
-    const docs = await UserBadgeModel.find({ user_id: new Types.ObjectId(userId) })
-      .sort({ awarded_at: -1 })
-      .lean();
-    if (!docs.length) return [];
-    const badgeIds = docs.map((d) => d.badge_id);
-    const badges = await BadgeModel.find({ _id: { $in: badgeIds } });
-    const map = new Map(badges.map((b) => [String(b._id), b]));
-    return docs.map((d: any) => toUserBadge({ ...d, _badge: map.get(String(d.badge_id)) ?? null }));
+    // Compute live: for each active condition badge, check the user's metric.
+    // Manual badges remain in UserBadgeModel for back-compat (not displayed
+    // here unless still present); they are not auto-revoked.
+    const badges = await BadgeModel.find({ is_active: true });
+    if (!badges.length) return [];
+    const out: ReturnType<typeof toUserBadge>[] = [];
+    const uid = new Types.ObjectId(userId);
+    for (const b of badges) {
+      if (b.condition_type === 'MANUAL') {
+        const manual = await UserBadgeModel.findOne({ user_id: uid, badge_id: b._id }).lean();
+        if (!manual) continue;
+        out.push(toUserBadge({ ...(manual as any), _badge: b }));
+        continue;
+      }
+      const metric = await getMetric(userId, b.condition_type);
+      if (metric < b.threshold) continue;
+      out.push(
+        toUserBadge({
+          _id: `${b._id}-${userId}` as any,
+          user_id: uid,
+          badge_id: b._id,
+          awarded_at: new Date(),
+          awarded_reason: `${b.condition_type} ${metric}/${b.threshold}`,
+          _badge: b,
+        } as any)
+      );
+    }
+    return out;
   },
 
   async awardManually(userId: string, badgeId: string, reason?: string) {

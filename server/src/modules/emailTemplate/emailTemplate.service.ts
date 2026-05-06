@@ -76,8 +76,8 @@ async function loadTemplate(slug: string) {
 }
 
 export const emailTemplateService = {
-  list: () => EmailTemplateModel.find().sort({ slug: 1 }),
-  byId: (template_id: string) => EmailTemplateModel.findOne({ template_id }),
+  list: () => EmailTemplateModel.find().sort({ slug: 1 }).exec(),
+  byId: (template_id: string) => EmailTemplateModel.findOne({ template_id }).exec(),
   bySlug: (slug: string) => loadTemplate(slug),
 
   async create(input: any) {

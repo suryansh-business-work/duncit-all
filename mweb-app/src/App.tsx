@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { useMutation, gql } from '@apollo/client';
 import { Box, Container } from '@mui/material';
 import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
@@ -28,12 +29,26 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   return children;
 }
 
+const RECORD_PING = gql`
+  mutation RecordActivePing($slug: String) {
+    recordActivePing(super_category_slug: $slug)
+  }
+`;
+
 export default function App() {
   const isAuthed = !!localStorage.getItem('token');
   const [superCategory, setSuperCategory] = useState('');
   const [locationId, setLocationId] = useState('');
   const [zoneName, setZoneName] = useState('');
   const loc = useLocation();
+  const [recordPing] = useMutation(RECORD_PING);
+
+  // Record an active-user ping (per device + super category) once per page
+  // load and whenever the selected super category changes. Server enforces
+  // daily uniqueness via {device_id, date_ymd, super_category_slug}.
+  useEffect(() => {
+    recordPing({ variables: { slug: superCategory || null } }).catch(() => {});
+  }, [superCategory, recordPing]);
   // Edge-to-edge full-bleed pages (no Container padding); they manage their
   // own scrolling and need the full available viewport height.
   const fullBleed = loc.pathname.startsWith('/explore');

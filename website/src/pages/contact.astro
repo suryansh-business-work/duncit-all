@@ -30,9 +30,11 @@ import PageLayout from '../layouts/PageLayout.astro';
 
   <h2>Send us a message</h2>
   <form class="not-prose grid gap-4 max-w-xl mt-4" id="contactForm">
-    <input required placeholder="Your name" class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none" />
-    <input required type="email" placeholder="Your email" class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none" />
-    <textarea required rows="5" placeholder="What's on your mind?" class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none resize-y"></textarea>
+    <input name="name" required placeholder="Your name" class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none" />
+    <input name="email" required type="email" placeholder="Your email" class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none" />
+    <input name="subject" placeholder="Subject (optional)" class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none" />
+    <textarea name="message" required rows="5" placeholder="What's on your mind?" class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none resize-y"></textarea>
+    <p id="contactErr" class="text-sm text-red-600 hidden"></p>
     <button class="px-6 py-3.5 rounded-xl bg-ink text-white font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
       Send <i class="fa-solid fa-paper-plane"></i>
     </button>
@@ -49,12 +51,56 @@ import PageLayout from '../layouts/PageLayout.astro';
 </PageLayout>
 
 <script>
-  document.getElementById('contactForm')?.addEventListener('submit', (e) => {
+  const GQL_URL = (import.meta as any).env?.PUBLIC_GRAPHQL_URL || 'https://server.duncit.com/graphql';
+  const form = document.getElementById('contactForm') as HTMLFormElement | null;
+  const errBox = document.getElementById('contactErr') as HTMLParagraphElement | null;
+  form?.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const btn = (e.currentTarget as HTMLFormElement).querySelector('button');
+    if (errBox) {
+      errBox.classList.add('hidden');
+      errBox.textContent = '';
+    }
+    const fd = new FormData(form);
+    const payload = {
+      name: String(fd.get('name') || '').trim(),
+      email: String(fd.get('email') || '').trim(),
+      subject: String(fd.get('subject') || '').trim(),
+      message: String(fd.get('message') || '').trim(),
+    };
+    const btn = form.querySelector('button') as HTMLButtonElement | null;
+    const orig = btn?.innerHTML;
     if (btn) {
-      btn.innerHTML = '<i class="fa-solid fa-check"></i> Message sent!';
-      btn.setAttribute('disabled', 'true');
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending';
+    }
+    try {
+      const res = await fetch(GQL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query:
+            'mutation Submit($input: SubmitContactInput!) { submitContactForm(input: $input) { ok message } }',
+          variables: { input: payload },
+        }),
+      });
+      const json = await res.json();
+      if (json?.errors?.length) throw new Error(json.errors[0].message);
+      if (!json?.data?.submitContactForm?.ok) throw new Error('Could not send. Try again.');
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-check"></i> Message sent!';
+      form.reset();
+    } catch (err: any) {
+      if (errBox) {
+        errBox.classList.remove('hidden');
+        errBox.textContent = err?.message || 'Could not send. Please try again.';
+      }
+      if (btn) btn.innerHTML = orig || 'Send';
+    } finally {
+      window.setTimeout(() => {
+        if (btn) {
+          btn.disabled = false;
+          if (!btn.innerHTML.includes('check')) btn.innerHTML = orig || 'Send';
+        }
+      }, 3000);
     }
   });
 </script>

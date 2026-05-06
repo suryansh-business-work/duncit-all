@@ -1,16 +1,36 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
 
-const faqs = [
-  { q: 'When is Duncit launching?', a: 'We\'re aiming for summer 2026 in our first 5 cities. Sign up to the waitlist for early access.' },
-  { q: 'Is Duncit free?', a: 'Yes, the core experience is free forever. We\'ll offer an optional Duncit+ plan with extras like advanced filters and travel mode.' },
-  { q: 'Is it a dating app?', a: 'No. Duncit is for friendship — meeting people who match your energy, no swipes, no pressure, no romance unless that naturally happens.' },
-  { q: 'How do you make money without selling data?', a: 'Optional Duncit+ subscriptions and, eventually, partnerships with venues and event hosts. We will never sell your personal data.' },
-  { q: 'What ages can use Duncit?', a: 'Duncit is for users 18 and older.' },
-  { q: 'Which countries will it be available in?', a: 'Launching in select cities in the US, UK, Germany, India, and Australia. More to follow.' },
-  { q: 'How do I delete my account?', a: 'Settings → Account → Delete account. Your data is removed within 30 days, with limited safety-related retention.' },
-  { q: 'Will there be a web version?', a: 'Mobile-first at launch. A lightweight web companion is on the roadmap.' },
-];
+// FAQs are loaded dynamically from the GraphQL server at build time so that
+// content stays fresh as the admin team publishes new entries. We fall back
+// to an empty list if the server is unreachable.
+const GQL_URL = import.meta.env.PUBLIC_GRAPHQL_URL || 'https://server.duncit.com/graphql';
+
+interface Faq {
+  id: string;
+  question: string;
+  answer: string;
+}
+
+interface FaqGroup {
+  super_category: { id: string; name: string; slug: string } | null;
+  faqs: Faq[];
+}
+
+let groups: FaqGroup[] = [];
+try {
+  const res = await fetch(GQL_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      query: `query { publicFaqGroups { super_category { id name slug } faqs { id question answer } } }`,
+    }),
+  });
+  const json = await res.json();
+  groups = (json?.data?.publicFaqGroups ?? []) as FaqGroup[];
+} catch {
+  groups = [];
+}
 ---
 
 <PageLayout
@@ -21,18 +41,114 @@ const faqs = [
   accent="tertiary"
   heroImage="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=1600&q=80&auto=format&fit=crop"
 >
-  <div class="not-prose space-y-3 my-6">
-    {faqs.map((f, i) => (
-      <details class="group bg-white rounded-2xl p-5 sticker" {...(i === 0 ? { open: true } : {})}>
-        <summary class="flex items-center justify-between cursor-pointer list-none gap-4">
-          <span class="font-head font-bold text-ink">{f.q}</span>
-          <i class="fa-solid fa-plus text-primary transition group-open:rotate-45"></i>
-        </summary>
-        <p class="mt-3 text-ink-soft">{f.a}</p>
-      </details>
-    ))}
-  </div>
+  {groups.length === 0 && (
+    <p class="text-ink-soft my-6">FAQs are coming soon. Submit a question below and we'll add it.</p>
+  )}
+
+  {groups.map((group) => (
+    <section class="my-6">
+      {group.super_category && (
+        <h2 class="font-head font-extrabold text-2xl mt-8 mb-3 text-primary">
+          {group.super_category.name}
+        </h2>
+      )}
+      <div class="not-prose space-y-3">
+        {group.faqs.map((f, i) => (
+          <details
+            class="group bg-white rounded-2xl p-5 sticker"
+            {...(i === 0 ? { open: true } : {})}
+          >
+            <summary class="flex items-center justify-between cursor-pointer list-none gap-4">
+              <span class="font-head font-bold text-ink">{f.question}</span>
+              <i class="fa-solid fa-plus text-primary transition group-open:rotate-45"></i>
+            </summary>
+            <p class="mt-3 text-ink-soft whitespace-pre-line">{f.answer}</p>
+          </details>
+        ))}
+      </div>
+    </section>
+  ))}
 
   <h2>Didn't find your answer?</h2>
-  <p>Visit the <a href="/help">Help Center</a> or email <a href="mailto:support@duncit.com">support@duncit.com</a>.</p>
+  <p>Ask us directly — if it's a common one, we'll add it to this page.</p>
+  <form class="not-prose grid gap-3 max-w-xl mt-4" id="askFaqForm">
+    <textarea
+      name="question"
+      required
+      rows="3"
+      placeholder="Type your question…"
+      class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none resize-y"
+    ></textarea>
+    <input
+      name="email"
+      type="email"
+      placeholder="Email (optional, for a reply)"
+      class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none"
+    />
+    <p id="askFaqErr" class="text-sm text-red-600 hidden"></p>
+    <button class="px-6 py-3 rounded-xl bg-ink text-white font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 self-start">
+      Ask <i class="fa-solid fa-paper-plane"></i>
+    </button>
+  </form>
+  <p class="mt-4">Or email <a href="mailto:support@duncit.com">support@duncit.com</a>.</p>
 </PageLayout>
+
+<script>
+  const GQL_URL = (import.meta as any).env?.PUBLIC_GRAPHQL_URL || 'https://server.duncit.com/graphql';
+  const form = document.getElementById('askFaqForm') as HTMLFormElement | null;
+  const errBox = document.getElementById('askFaqErr') as HTMLParagraphElement | null;
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (errBox) {
+      errBox.classList.add('hidden');
+      errBox.textContent = '';
+    }
+    const fd = new FormData(form);
+    const payload = {
+      question: String(fd.get('question') || '').trim(),
+      email: String(fd.get('email') || '').trim() || null,
+    };
+    if (payload.question.length < 5) {
+      if (errBox) {
+        errBox.classList.remove('hidden');
+        errBox.textContent = 'Please type a longer question.';
+      }
+      return;
+    }
+    const btn = form.querySelector('button') as HTMLButtonElement | null;
+    const orig = btn?.innerHTML;
+    if (btn) {
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending';
+    }
+    try {
+      const res = await fetch(GQL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query:
+            'mutation Ask($input: SubmitFaqQuestionInput!) { submitFaqQuestion(input: $input) { ok message } }',
+          variables: { input: payload },
+        }),
+      });
+      const json = await res.json();
+      if (json?.errors?.length) throw new Error(json.errors[0].message);
+      if (!json?.data?.submitFaqQuestion?.ok) throw new Error('Could not send. Try again.');
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-check"></i> Got it!';
+      form.reset();
+    } catch (err: any) {
+      if (errBox) {
+        errBox.classList.remove('hidden');
+        errBox.textContent = err?.message || 'Could not send. Please try again.';
+      }
+      if (btn) btn.innerHTML = orig || 'Ask';
+    } finally {
+      window.setTimeout(() => {
+        if (btn) {
+          btn.disabled = false;
+          if (!btn.innerHTML.includes('check')) btn.innerHTML = orig || 'Ask';
+        }
+      }, 3000);
+    }
+  });
+</script>

@@ -14,12 +14,22 @@ export const SLIDERS = gql`
       media_type
       link_url
       scope
+      super_category_slug
       location_id
       zone_name
       sort_order
       starts_at
       ends_at
       is_active
+    }
+  }
+`;
+export const SUPER_CATEGORIES = gql`
+  query SuperCategoriesForSlider {
+    categories(filter: { level: SUPER }) {
+      id
+      name
+      slug
     }
   }
 `;
@@ -70,6 +80,7 @@ export interface SliderForm {
   media_type: 'IMAGE' | 'VIDEO';
   link_url: string;
   scope: 'GLOBAL' | 'LOCATION' | 'ZONE';
+  super_category_slug: string;
   location_id: string;
   zone_name: string;
   sort_order: number;
@@ -86,6 +97,7 @@ export const blankForm: SliderForm = {
   media_type: 'IMAGE',
   link_url: '',
   scope: 'GLOBAL',
+  super_category_slug: '',
   location_id: '',
   zone_name: '',
   sort_order: 0,

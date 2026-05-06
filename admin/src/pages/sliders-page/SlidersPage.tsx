@@ -29,6 +29,7 @@ import ViewCarouselIcon from '@mui/icons-material/ViewCarousel';
 import {
   SLIDERS,
   LOCATIONS,
+  SUPER_CATEGORIES,
   CREATE,
   UPDATE,
   DELETE,
@@ -50,6 +51,7 @@ export default function SlidersPage() {
     fetchPolicy: 'cache-and-network',
   });
   const { data: locsData } = useQuery(LOCATIONS);
+  const { data: superCatData } = useQuery(SUPER_CATEGORIES);
 
   const [createMut] = useMutation(CREATE);
   const [updateMut] = useMutation(UPDATE);
@@ -62,6 +64,7 @@ export default function SlidersPage() {
   const [toast, setToast] = useState<string | null>(null);
 
   const locations = locsData?.locations ?? [];
+  const superCategories = superCatData?.categories ?? [];
   const locName = (id?: string | null) =>
     locations.find((l: any) => l.id === id)?.location_name ?? '—';
 
@@ -85,6 +88,7 @@ export default function SlidersPage() {
       media_type: s.media_type,
       link_url: s.link_url ?? '',
       scope: s.scope,
+      super_category_slug: s.super_category_slug ?? '',
       location_id: s.location_id ?? '',
       zone_name: s.zone_name ?? '',
       sort_order: s.sort_order ?? 0,
@@ -114,6 +118,7 @@ export default function SlidersPage() {
         media_type: form.media_type,
         link_url: form.link_url,
         scope: form.scope,
+        super_category_slug: form.super_category_slug || null,
         location_id: form.scope === 'GLOBAL' ? null : form.location_id,
         zone_name: form.scope === 'ZONE' ? form.zone_name : null,
         sort_order: Number(form.sort_order) || 0,
@@ -327,6 +332,7 @@ export default function SlidersPage() {
         onSubmit={submit}
         locations={locations}
         zonesForLocation={zonesForLocation}
+        superCategories={superCategories}
       />
 
       <Snackbar

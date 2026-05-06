@@ -26,6 +26,7 @@ interface Props {
   onSubmit: () => void;
   locations: any[];
   zonesForLocation: any[];
+  superCategories: { id: string; name: string; slug: string }[];
 }
 
 export default function SliderFormDialog({
@@ -38,6 +39,7 @@ export default function SliderFormDialog({
   onSubmit,
   locations,
   zonesForLocation,
+  superCategories,
 }: Props) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
@@ -119,6 +121,22 @@ export default function SliderFormDialog({
             fullWidth
             placeholder="https://… or duncit://club/abc"
           />
+
+          <TextField
+            select
+            label="Super category"
+            value={form.super_category_slug}
+            onChange={(e) => setForm({ ...form, super_category_slug: e.target.value })}
+            helperText="Leave Global to show across all super categories"
+            fullWidth
+          >
+            <MenuItem value="">Global (all super categories)</MenuItem>
+            {superCategories.map((c) => (
+              <MenuItem key={c.slug} value={c.slug}>
+                {c.name}
+              </MenuItem>
+            ))}
+          </TextField>
 
           <TextField
             select

@@ -5,7 +5,7 @@
   <div class="max-w-6xl mx-auto">
     <div class="grid md:grid-cols-2 gap-8 items-center">
       <a href="/" class="inline-block">
-        <h2 class="text-5xl sm:text-7xl font-black text-primary text-stroke-sm">Duncit</h2>
+        <img src="/duncit-logo.svg" alt="Duncit" class="h-16 sm:h-24 w-auto" />
       </a>
       <div class="md:text-right">
         <p class="font-head font-bold text-ink mb-3">Get notified when we launch</p>
@@ -87,23 +87,45 @@
 </footer>
 
 <script>
+  const GQL_URL = (import.meta as any).env?.PUBLIC_GRAPHQL_URL || 'https://server.duncit.com/graphql';
   const ff = document.getElementById('footerForm') as HTMLFormElement | null;
-  ff?.addEventListener('submit', (e) => {
+  ff?.addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = ff.querySelector('input[type="email"]') as HTMLInputElement;
     const email = input?.value?.trim();
     if (!email) return;
-    const list = JSON.parse(localStorage.getItem('duncit_emails') || '[]');
-    if (!list.includes(email)) {
-      list.push(email);
-      localStorage.setItem('duncit_emails', JSON.stringify(list));
-    }
-    input.value = '';
-    const btn = ff.querySelector('button');
+    const btn = ff.querySelector('button') as HTMLButtonElement | null;
+    const orig = btn?.innerHTML;
     if (btn) {
-      const orig = btn.innerHTML;
-      btn.innerHTML = '<i class="fa-solid fa-check"></i> Got it!';
-      setTimeout(() => { btn.innerHTML = orig; }, 2500);
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending';
+    }
+    try {
+      const res = await fetch(GQL_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: 'mutation Sub($input: SubscribeNewsletterInput!) { subscribeNewsletter(input: $input) { ok message } }',
+          variables: { input: { email, source: 'WEBSITE_FOOTER' } },
+        }),
+      });
+      const json = await res.json();
+      const ok = !!json?.data?.subscribeNewsletter?.ok;
+      if (btn) {
+        btn.innerHTML = ok
+          ? '<i class="fa-solid fa-check"></i> Subscribed!'
+          : '<i class="fa-solid fa-xmark"></i> Try again';
+      }
+      if (ok) input.value = '';
+    } catch {
+      if (btn) btn.innerHTML = '<i class="fa-solid fa-xmark"></i> Try again';
+    } finally {
+      window.setTimeout(() => {
+        if (btn) {
+          btn.innerHTML = orig || 'Notify';
+          btn.disabled = false;
+        }
+      }, 2500);
     }
   });
 </script>

@@ -116,6 +116,8 @@ export default function RegisterPage() {
                     value={values.first_name} onChange={handleChange} onBlur={handleBlur}
                     error={touched.first_name && !!errors.first_name}
                     helperText={touched.first_name && errors.first_name}
+                    InputLabelProps={{ shrink: true }}
+                    autoComplete="given-name"
                   />
                 </Grid>
                 <Grid item xs={6}>
@@ -124,6 +126,8 @@ export default function RegisterPage() {
                     value={values.last_name} onChange={handleChange} onBlur={handleBlur}
                     error={touched.last_name && !!errors.last_name}
                     helperText={touched.last_name && errors.last_name}
+                    InputLabelProps={{ shrink: true }}
+                    autoComplete="family-name"
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -132,6 +136,8 @@ export default function RegisterPage() {
                     value={values.email} onChange={handleChange} onBlur={handleBlur}
                     error={touched.email && !!errors.email}
                     helperText={touched.email && errors.email}
+                    InputLabelProps={{ shrink: true }}
+                    autoComplete="email"
                   />
                 </Grid>
                 <Grid item xs={4}>
@@ -140,6 +146,7 @@ export default function RegisterPage() {
                     value={values.phone_extension} onChange={handleChange} onBlur={handleBlur}
                     error={touched.phone_extension && !!errors.phone_extension}
                     helperText={touched.phone_extension && errors.phone_extension}
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={8}>
@@ -148,6 +155,8 @@ export default function RegisterPage() {
                     value={values.phone_number} onChange={handleChange} onBlur={handleBlur}
                     error={touched.phone_number && !!errors.phone_number}
                     helperText={touched.phone_number && errors.phone_number}
+                    InputLabelProps={{ shrink: true }}
+                    autoComplete="tel-national"
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -156,6 +165,8 @@ export default function RegisterPage() {
                     value={values.password} onChange={handleChange} onBlur={handleBlur}
                     error={touched.password && !!errors.password}
                     helperText={touched.password && errors.password}
+                    InputLabelProps={{ shrink: true }}
+                    autoComplete="new-password"
                   />
                 </Grid>
                 <Grid item xs={12}>
@@ -171,12 +182,14 @@ export default function RegisterPage() {
                   <TextField
                     fullWidth name="city" label="City (optional)"
                     value={values.city} onChange={handleChange} onBlur={handleBlur}
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
                 <Grid item xs={6}>
                   <TextField
                     fullWidth name="zone" label="Zone (optional)"
                     value={values.zone} onChange={handleChange} onBlur={handleBlur}
+                    InputLabelProps={{ shrink: true }}
                   />
                 </Grid>
               </Grid>

@@ -31,6 +31,7 @@ export const sliderTypeDefs = /* GraphQL */ `
 
   input SliderFilterInput {
     scope: SliderScope
+    super_category_slug: String
     location_id: ID
     zone_name: String
     is_active: Boolean
@@ -45,6 +46,7 @@ export const sliderTypeDefs = /* GraphQL */ `
     media_type: SliderMediaType
     link_url: String
     scope: SliderScope!
+    super_category_slug: String
     location_id: ID
     zone_name: String
     sort_order: Int
@@ -60,6 +62,7 @@ export const sliderTypeDefs = /* GraphQL */ `
     media_type: SliderMediaType
     link_url: String
     scope: SliderScope
+    super_category_slug: String
     location_id: ID
     zone_name: String
     sort_order: Int

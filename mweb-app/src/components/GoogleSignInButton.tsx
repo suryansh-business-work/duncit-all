@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { Box, Button, CircularProgress, Stack } from '@mui/material';
+import { useEffect, useState } from 'react';
+import { Box, Button, CircularProgress } from '@mui/material';
 
 declare global {
   interface Window {
@@ -43,44 +43,44 @@ function loadGoogleScript(): Promise<void> {
   });
 }
 
+const LABEL_BY_TEXT: Record<NonNullable<Props['text']>, string> = {
+  signin_with: 'Sign in with Google',
+  signup_with: 'Sign up with Google',
+  continue_with: 'Continue with Google',
+  signin: 'Sign in',
+};
+
 export default function GoogleSignInButton({
   onCredential,
   loading,
   text = 'continue_with',
 }: Props) {
-  const ref = useRef<HTMLDivElement | null>(null);
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
+  const [ready, setReady] = useState(false);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (!clientId || !ref.current) return;
+    if (!clientId) return;
     let cancelled = false;
     loadGoogleScript()
       .then(() => {
-        if (cancelled || !window.google?.accounts?.id || !ref.current) return;
+        if (cancelled || !window.google?.accounts?.id) return;
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: (resp: any) => {
+            setBusy(false);
             if (resp?.credential) onCredential(resp.credential);
           },
           ux_mode: 'popup',
           auto_select: false,
         });
-        window.google.accounts.id.renderButton(ref.current, {
-          theme: 'outline',
-          size: 'large',
-          width: Math.min(ref.current.clientWidth || 320, 360),
-          text,
-          shape: 'pill',
-          logo_alignment: 'left',
-        });
+        setReady(true);
       })
-      .catch(() => {
-        /* fallback button below remains */
-      });
+      .catch(() => setReady(false));
     return () => {
       cancelled = true;
     };
-  }, [clientId, onCredential, text]);
+  }, [clientId, onCredential]);
 
   if (!clientId) {
     return (
@@ -90,25 +90,57 @@ export default function GoogleSignInButton({
     );
   }
 
+  const handleClick = () => {
+    if (!ready || !window.google?.accounts?.id) return;
+    setBusy(true);
+    try {
+      window.google.accounts.id.prompt();
+    } catch {
+      setBusy(false);
+    }
+    // If the prompt is dismissed without a credential, allow another try.
+    window.setTimeout(() => setBusy(false), 5000);
+  };
+
+  const disabled = !ready || !!loading || busy;
+  const showSpinner = !!loading || busy;
+
   return (
-    <Stack alignItems="center" sx={{ width: '100%', position: 'relative' }}>
-      <Box
-        ref={ref}
-        sx={{
-          width: '100%',
-          minHeight: 44,
-          display: 'flex',
-          justifyContent: 'center',
-          opacity: loading ? 0.5 : 1,
-          pointerEvents: loading ? 'none' : 'auto',
-        }}
-      />
-      {loading && (
-        <CircularProgress
-          size={20}
-          sx={{ position: 'absolute', top: '50%', mt: '-10px' }}
-        />
-      )}
-    </Stack>
+    <Button
+      type="button"
+      onClick={handleClick}
+      disabled={disabled}
+      fullWidth
+      sx={{
+        height: 44,
+        bgcolor: '#fff',
+        color: '#1f1f1f',
+        border: '1px solid #747775',
+        borderRadius: '24px',
+        textTransform: 'none',
+        fontFamily: '"Roboto","Helvetica","Arial",sans-serif',
+        fontWeight: 500,
+        fontSize: 14,
+        letterSpacing: 0.25,
+        boxShadow: 'none',
+        gap: 1.25,
+        '&:hover': { bgcolor: '#f8f9fa', boxShadow: 'none' },
+        '&.Mui-disabled': { bgcolor: '#fff', color: '#1f1f1f', opacity: 0.6 },
+      }}
+      startIcon={
+        showSpinner ? (
+          <CircularProgress size={18} />
+        ) : (
+          <Box
+            component="img"
+            src="/google-g.svg"
+            alt=""
+            sx={{ width: 20, height: 20 }}
+          />
+        )
+      }
+    >
+      {LABEL_BY_TEXT[text]}
+    </Button>
   );
 }

@@ -1,0 +1,33 @@
+<mjml>
+  <mj-head>
+    <mj-title>We received your question</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-text color="#1f2937" line-height="1.6" font-size="15px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f7f7fb">
+    <mj-section padding="24px 0">
+      <mj-column>
+        <mj-image src="{{logo_url}}" alt="{{app_name}}" width="160px" align="center" padding="0" />
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="32px 24px" border-radius="12px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="700" color="#FF4D4F">Thanks for asking 🙌</mj-text>
+        <mj-text>
+          Your question has been added to the {{app_name}} FAQ queue. If we publish an answer, you'll see
+          it on our help center — and we may also reply to this email.
+        </mj-text>
+        <mj-text font-weight="600" color="#1f2937">Your question</mj-text>
+        <mj-text color="#374151" background-color="#f3f4f6" padding="12px">{{question}}</mj-text>
+        <mj-text color="#6b7280" font-size="12px">Need a faster answer? Email {{support_email}}.</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="16px 0">
+      <mj-column>
+        <mj-text align="center" color="#9ca3af" font-size="12px">© {{app_name}}</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

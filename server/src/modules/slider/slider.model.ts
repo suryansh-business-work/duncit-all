@@ -11,6 +11,7 @@ export interface ISlider extends Document {
   media_type: SliderMediaType;
   link_url?: string;
   scope: SliderScope;
+  super_category_slug?: string | null;
   location_id?: Types.ObjectId | null;
   zone_name?: string | null;
   sort_order: number;
@@ -30,6 +31,7 @@ const sliderSchema = new Schema<ISlider>(
     media_type: { type: String, enum: ['IMAGE', 'VIDEO'], default: 'IMAGE' },
     link_url: { type: String, default: '' },
     scope: { type: String, enum: ['GLOBAL', 'LOCATION', 'ZONE'], required: true, default: 'GLOBAL' },
+    super_category_slug: { type: String, default: null, lowercase: true, trim: true, index: true },
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
     zone_name: { type: String, default: null, trim: true },
     sort_order: { type: Number, default: 0 },

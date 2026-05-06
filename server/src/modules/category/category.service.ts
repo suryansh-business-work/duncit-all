@@ -206,30 +206,7 @@ export const categoryService = {
   },
 
   async seedDefaults() {
-    const supers = [
-      { name: 'Human', icon: '🧑', description: 'Categories for human-focused experiences.' },
-      { name: 'Pet', icon: '🐾', description: 'Categories for pet-focused experiences.' },
-    ];
-    for (const s of supers) {
-      const slug = slugify(s.name);
-      await CategoryModel.updateOne(
-        { parent_id: null, slug },
-        {
-          $setOnInsert: {
-            name: s.name,
-            slug,
-            icon: s.icon,
-            description: s.description,
-            media: [],
-            level: 'SUPER',
-            parent_id: null,
-            is_active: true,
-            is_system: true,
-            sort_order: 0,
-          },
-        },
-        { upsert: true }
-      );
-    }
+    // Super categories are managed entirely through the admin UI.
+    // No automatic seeding — nothing to do here.
   },
 };

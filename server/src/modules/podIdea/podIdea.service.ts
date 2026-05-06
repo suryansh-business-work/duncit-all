@@ -71,8 +71,8 @@ export const podIdeaService = {
       throw new GraphQLError('Description is required', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
-    if (description.length > 4000)
-      throw new GraphQLError('Description too long (max 4000 chars)', {
+    if (description.length > 2001)
+      throw new GraphQLError('Description too long (max 2001 chars)', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     const doc = await PodIdeaModel.create({

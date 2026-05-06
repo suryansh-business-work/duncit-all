@@ -32,7 +32,7 @@ const podIdeaSchema = new Schema<IPodIdea>(
   {
     author_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     title: { type: String, required: true, trim: true, maxlength: 160 },
-    description: { type: String, required: true, trim: true, maxlength: 4000 },
+    description: { type: String, required: true, trim: true, maxlength: 2001 },
     likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     shares_count: { type: Number, default: 0 },
     comments: { type: [commentSchema], default: [] },

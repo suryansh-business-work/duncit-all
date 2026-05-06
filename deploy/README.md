@@ -32,7 +32,7 @@ GHCR push uses the auto `GITHUB_TOKEN` — no extra secret needed.
 
 1. `typecheck` job builds every workspace (`tsc -b`).
 2. `build-and-push` builds 3 Docker images in parallel and pushes to **ghcr.io**:
-   - `duncit-server` (Node 20 — runs `node dist/index.js` on :4000)
+   - `duncit-server` (Node 20 — runs `node dist/index.js` on :2001)
    - `duncit-admin`  (nginx static — admin SPA)
    - `duncit-mweb`   (nginx static — mobile-web SPA)
 3. `deploy` SSHes to the VPS, runs `/opt/duncit/redeploy.sh` and **loops health checks** (24 retries × 15 s) until every container is responding. Job fails only if it never goes green.

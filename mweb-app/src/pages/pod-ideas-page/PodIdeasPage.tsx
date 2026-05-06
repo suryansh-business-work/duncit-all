@@ -233,13 +233,13 @@ export default function PodIdeasPage() {
             <TextField
               label="Description"
               value={description}
-              onChange={(e) => setDescription(e.target.value.slice(0, 4000))}
+              onChange={(e) => setDescription(e.target.value.slice(0, 2001))}
               required
               fullWidth
               multiline
               minRows={4}
               maxRows={10}
-              helperText={`${description.length} / 4000 — describe the vibe, format, location, audience…`}
+              helperText={`${description.length} / 2001 — describe the vibe, format, location, audience…`}
             />
           </Stack>
         </DialogContent>

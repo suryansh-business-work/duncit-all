@@ -3,7 +3,7 @@ import { setContext } from '@apollo/client/link/context';
 import { getOrCreateDuid } from './duid';
 
 const httpLink = new HttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:4000/graphql',
+  uri: import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:2001/graphql',
 });
 
 const authLink = setContext((_op, { headers }) => {

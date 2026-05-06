@@ -22,7 +22,7 @@ duncit/
 ├── web-ui/
 │   ├── app/        # User app (Vite, port 5173)
 │   └── admin/      # Admin app (Vite, port 5174)
-├── server/         # GraphQL API (port 4000)
+├── server/         # GraphQL API (port 2001)
 │   └── src/
 │       ├── modules/<name>/
 │       │   ├── <name>.schema.ts
@@ -48,7 +48,7 @@ npm install
 Copy `server/.env.example` → `server/.env` and edit:
 
 ```
-PORT=4000
+PORT=2001
 MONGO_URI=mongodb://localhost:27017/duncit
 JWT_SECRET=your-secret
 ```
@@ -64,7 +64,7 @@ mongod
 In separate terminals:
 
 ```bash
-# server  → http://localhost:4000/graphql
+# server  → http://localhost:2001/graphql
 npm run dev:server
 
 # user app → http://localhost:5173

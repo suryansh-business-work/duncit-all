@@ -191,7 +191,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website:${{ github.sha }} \
               --cache-from type=gha,scope=duncit-website \
               --cache-to   type=gha,scope=duncit-website,mode=max \
-              --push website
+              --push .
 
   # -----------------------------------------------------------
   # Single deploy job runs after whichever build jobs ran. It only

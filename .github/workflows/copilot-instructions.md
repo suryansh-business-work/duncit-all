@@ -35,3 +35,9 @@ Follow these strict coding guidelines for the project:
    - Use async/await for API calls.
    - Use environment variables for configs.
    - Maintain consistent folder structure.
+
+8. Check linting, build, and formatting, then push the code. Ensure that all GitHub CI checks are green and that everything is up and running:
+https://duncit.com
+https://server.duncit.com/
+https://admin.duncit.com/
+https://mweb.duncit.com/

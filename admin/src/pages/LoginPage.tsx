@@ -1,5 +1,4 @@
 import { Formik, Form } from 'formik';
-import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -18,8 +17,6 @@ import {
 import { styled } from '@mui/material/styles';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LockIcon from '@mui/icons-material/Lock';
-import GoogleSignInButton from '../components/GoogleSignInButton';
 import { loginSchema } from '../validators/auth';
 import { useColorMode } from '../ColorModeContext';
 
@@ -34,21 +31,6 @@ const ADMIN_ROLES = [
 const LOGIN = gql`
   mutation AdminLogin($input: LoginInput!) {
     login(input: $input) {
-      token
-      user {
-        user_id
-        first_name
-        last_name
-        email
-        roles
-      }
-    }
-  }
-`;
-
-const LOGIN_GOOGLE = gql`
-  mutation AdminLoginWithGoogle($input: GoogleAuthInput!) {
-    loginWithGoogle(input: $input) {
       token
       user {
         user_id
@@ -87,42 +69,12 @@ const TopBar = styled(Box)(({ theme }) => ({
   right: theme.spacing(2),
 }));
 
-const BrandMark = styled(Box)(({ theme }) => ({
-  width: 48,
-  height: 48,
-  borderRadius: 12,
-  display: 'grid',
-  placeItems: 'center',
-  margin: '0 auto',
-  color: theme.palette.primary.contrastText,
-  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-}));
-
 export default function LoginPage() {
   const [loginMutation, { loading, error }] = useMutation(LOGIN);
-  const [loginGoogle, { loading: gLoading }] = useMutation(LOGIN_GOOGLE);
-  const [gError, setGError] = useState<string | null>(null);
   const [seedSuperAdmin, { loading: seeding, data: seedData, error: seedError }] =
     useMutation(SEED_SUPER_ADMIN);
   const navigate = useNavigate();
   const { mode, toggle } = useColorMode();
-
-  const handleGoogleCredential = async (idToken: string) => {
-    setGError(null);
-    try {
-      const res = await loginGoogle({ variables: { input: { id_token: idToken } } });
-      const data = res.data?.loginWithGoogle;
-      const roles: string[] = data?.user?.roles ?? [];
-      if (!roles.some((r) => ADMIN_ROLES.includes(r))) {
-        setGError('This Google account does not have admin access.');
-        return;
-      }
-      localStorage.setItem('admin_token', data.token);
-      navigate('/hub');
-    } catch (e: any) {
-      setGError(e.message);
-    }
-  };
 
   return (
     <Page>
@@ -137,9 +89,12 @@ export default function LoginPage() {
       <Card sx={{ width: '100%', maxWidth: 420 }}>
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Stack spacing={1.5} alignItems="center" sx={{ mb: 3 }}>
-            <BrandMark>
-              <LockIcon />
-            </BrandMark>
+            <Box
+              component="img"
+              src="/duncit-logo.svg"
+              alt="Duncit"
+              sx={{ height: 64, width: 'auto', maxWidth: 240, objectFit: 'contain' }}
+            />
             <Typography variant="h5">Admin Sign in</Typography>
             <Typography variant="body2" color="text.secondary" textAlign="center">
               Use your administrator credentials to access the Duncit console.
@@ -211,12 +166,6 @@ export default function LoginPage() {
           <Divider sx={{ my: 3 }}>or</Divider>
 
           <Stack spacing={1.5}>
-            <GoogleSignInButton
-              onCredential={handleGoogleCredential}
-              loading={gLoading}
-              text="signin_with"
-            />
-            {gError && <Alert severity="error">{gError}</Alert>}
             <Button
               variant="outlined"
               color="secondary"

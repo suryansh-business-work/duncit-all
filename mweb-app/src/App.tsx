@@ -22,6 +22,7 @@ import ChatsPage from './pages/ChatsPage';
 import ChatRoomPage from './pages/ChatRoomPage';
 import AppHeader from './components/AppHeader';
 import BottomNav from './components/BottomNav';
+import SplashScreen from './components/SplashScreen';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const isAuthed = !!localStorage.getItem('token');
@@ -44,6 +45,19 @@ export default function App() {
   const loc = useLocation();
   const [recordPing] = useMutation(RECORD_PING);
 
+  // Show splash only on first load per browser session.
+  const [splashOpen, setSplashOpen] = useState(
+    () => typeof window !== 'undefined' && !sessionStorage.getItem('duncit_splash_shown')
+  );
+  useEffect(() => {
+    if (!splashOpen) return;
+    const t = window.setTimeout(() => {
+      sessionStorage.setItem('duncit_splash_shown', '1');
+      setSplashOpen(false);
+    }, 2200);
+    return () => window.clearTimeout(t);
+  }, [splashOpen]);
+
   // Record an active-user ping (per device + super category) once per page
   // load and whenever the selected super category changes. Server enforces
   // daily uniqueness via {device_id, date_ymd, super_category_slug}.
@@ -59,6 +73,7 @@ export default function App() {
 
   return (
     <Box sx={{ height: '100dvh', display: 'flex', flexDirection: 'column' }}>
+      {splashOpen && <SplashScreen />}
       {isAuthed && (
         <AppHeader
           selectedSuperCategory={superCategory}

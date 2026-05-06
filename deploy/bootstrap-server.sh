@@ -65,6 +65,11 @@ services:
     container_name: duncit-mweb
     restart: unless-stopped
     ports: ["127.0.0.1:2003:80"]
+  website:
+    image: ${DOCKERHUB_USERNAME}/duncit-website:latest
+    container_name: duncit-website
+    restart: unless-stopped
+    ports: ["127.0.0.1:2000:80"]
 EOF
 
 echo "[4/6] Install nginx site configs (skipping existing duncit.com)"
@@ -99,8 +104,9 @@ NGINX
 write_site "server.duncit.com" 2001
 write_site "admin.duncit.com"  2002
 write_site "mweb.duncit.com"   2003
-
-# IMPORTANT: do not touch duncit.com (existing website on :2000)
+write_site "duncit.com"        2000
+# Also alias www -> apex
+sed -i 's/server_name duncit.com;/server_name duncit.com www.duncit.com;/' "$SITES_AVAIL/duncit.com" || true
 
 echo "[5/6] nginx -t && reload"
 nginx -t

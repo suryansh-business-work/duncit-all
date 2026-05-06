@@ -1,6 +1,17 @@
 import { useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Box, Snackbar, Stack, Typography } from '@mui/material';
+import {
+  Box,
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+  Snackbar,
+  Stack,
+  Typography,
+} from '@mui/material';
 import CategoryIcon from '@mui/icons-material/Category';
 import {
   CATEGORIES,
@@ -30,6 +41,11 @@ export default function CategoriesPage() {
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [delTarget, setDelTarget] = useState<{ level: Level; item: CatItem } | null>(
+    null
+  );
+  const [delBusy, setDelBusy] = useState(false);
+  const [delError, setDelError] = useState<string | null>(null);
 
   const [createMut] = useMutation(CREATE_CATEGORY);
   const [updateMut] = useMutation(UPDATE_CATEGORY);
@@ -134,18 +150,33 @@ export default function CategoriesPage() {
     }
   };
 
-  const remove = async (level: Level, item: CatItem) => {
-    if (!confirm(`Delete "${item.name}"?`)) return;
+  const remove = (level: Level, item: CatItem) => {
+    setDelError(null);
+    setDelTarget({ level, item });
+  };
+
+  const confirmRemove = async () => {
+    if (!delTarget) return;
+    setDelBusy(true);
+    setDelError(null);
     try {
-      await deleteMut({ variables: { category_id: item.id }, refetchQueries });
-      if (level === 'SUPER' && superSel?.id === item.id) {
+      await deleteMut({
+        variables: { category_id: delTarget.item.id },
+        refetchQueries,
+      });
+      if (delTarget.level === 'SUPER' && superSel?.id === delTarget.item.id) {
         setSuperSel(null);
         setCatSel(null);
       }
-      if (level === 'CATEGORY' && catSel?.id === item.id) setCatSel(null);
+      if (delTarget.level === 'CATEGORY' && catSel?.id === delTarget.item.id) {
+        setCatSel(null);
+      }
       setToast('Deleted');
+      setDelTarget(null);
     } catch (e: any) {
-      alert(e.message);
+      setDelError(e.message);
+    } finally {
+      setDelBusy(false);
     }
   };
 
@@ -215,6 +246,50 @@ export default function CategoriesPage() {
         opError={opError}
         onSubmit={submit}
       />
+
+      <Dialog
+        open={!!delTarget}
+        onClose={() => (delBusy ? undefined : setDelTarget(null))}
+        maxWidth="xs"
+        fullWidth
+      >
+        <DialogTitle>
+          Delete {delTarget?.level === 'SUPER' ? 'Super Category' : delTarget?.level === 'CATEGORY' ? 'Category' : 'Sub-Category'}?
+        </DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You are about to permanently delete <strong>{delTarget?.item.name}</strong>.
+            {delTarget?.level === 'SUPER' && (
+              <>
+                {' '}This will also remove all its categories, sub-categories, clubs,
+                pods, FAQs, sliders and submissions.
+              </>
+            )}
+            {delTarget?.level === 'CATEGORY' && (
+              <> This will also remove its sub-categories, clubs and pods.</>
+            )}
+            {' '}This action cannot be undone.
+          </DialogContentText>
+          {delError && (
+            <Typography color="error" variant="body2" sx={{ mt: 2 }}>
+              {delError}
+            </Typography>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setDelTarget(null)} disabled={delBusy}>
+            Cancel
+          </Button>
+          <Button
+            onClick={confirmRemove}
+            color="error"
+            variant="contained"
+            disabled={delBusy}
+          >
+            {delBusy ? 'Deleting…' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
 
       <Snackbar
         open={!!toast}

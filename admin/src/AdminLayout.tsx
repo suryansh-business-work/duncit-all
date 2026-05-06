@@ -74,17 +74,6 @@ const Brand = styled(Box)(({ theme }) => ({
   padding: theme.spacing(2.5, 2.5),
 }));
 
-const BrandMark = styled(Box)(({ theme }) => ({
-  width: 36,
-  height: 36,
-  borderRadius: 10,
-  display: 'grid',
-  placeItems: 'center',
-  color: theme.palette.primary.contrastText,
-  background: `linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main})`,
-  fontWeight: 700,
-}));
-
 const Main = styled(Box)(({ theme }) => ({
   flexGrow: 1,
   display: 'flex',
@@ -382,11 +371,13 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
       <Brand>
-        <BrandMark>D</BrandMark>
+        <Box
+          component="img"
+          src="/duncit-logo.svg"
+          alt="Duncit"
+          sx={{ height: 40, width: 'auto', maxWidth: 160, objectFit: 'contain' }}
+        />
         <Box>
-          <Typography variant="subtitle1" fontWeight={700} lineHeight={1.1}>
-            Duncit
-          </Typography>
           <Typography variant="caption" color="text.secondary">
             Admin Console
           </Typography>

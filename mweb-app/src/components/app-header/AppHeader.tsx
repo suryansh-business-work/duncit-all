@@ -193,32 +193,19 @@ export default function AppHeader({
           onClick={() => navigate('/')}
         >
           {branding?.logo_url ? (
-            <Avatar
+            <Box
+              component="img"
               src={branding.logo_url}
-              variant="rounded"
-              sx={{
-                width: 36,
-                height: 36,
-                bgcolor: branding?.primary_color || 'primary.main',
-              }}
+              alt={branding?.app_name ?? 'Duncit'}
+              sx={{ height: 36, width: 'auto', maxWidth: 140, objectFit: 'contain' }}
             />
           ) : (
-            <Avatar
-              variant="rounded"
-              sx={{
-                width: 36,
-                height: 36,
-                bgcolor: branding?.primary_color || 'primary.main',
-                fontWeight: 700,
-              }}
-            >
-              {branding?.app_name?.[0] ?? 'D'}
-            </Avatar>
-          )}
-          {!isSmDown && (
-            <Typography variant="h6" sx={{ fontWeight: 700, color: 'text.primary' }}>
-              {branding?.app_name ?? 'Duncit'}
-            </Typography>
+            <Box
+              component="img"
+              src="/duncit-logo.svg"
+              alt="Duncit"
+              sx={{ height: 36, width: 'auto', maxWidth: 140, objectFit: 'contain' }}
+            />
           )}
         </Stack>
 

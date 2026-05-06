@@ -29,3 +29,10 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2003:80"
+
+  website:
+    image: ${DOCKERHUB_USERNAME}/duncit-website:${IMAGE_TAG:-latest}
+    container_name: duncit-website
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2000:80"

@@ -161,7 +161,6 @@ export default function ColumnPanel({
                   </IconButton>
                   <IconButton
                     size="small"
-                    disabled={it.is_system}
                     onClick={(e) => {
                       e.stopPropagation();
                       onDelete(it);

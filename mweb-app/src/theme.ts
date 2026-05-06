@@ -41,18 +41,21 @@ export const theme = createTheme({
     MuiCssBaseline: {
       styleOverrides: {
         html: {
+          width: '100%',
           overflowX: 'hidden',
         },
         body: {
           backgroundColor: BG,
           WebkitFontSmoothing: 'antialiased',
           MozOsxFontSmoothing: 'grayscale',
+          /* position:relative lets overflow:hidden actually clip children */
+          position: 'relative',
           overflowX: 'hidden',
-          maxWidth: '100vw',
+          width: '100%',
         },
         '#root': {
-          overflowX: 'hidden',
-          maxWidth: '100vw',
+          width: '100%',
+          minHeight: '100dvh',
         },
         '*::-webkit-scrollbar': { width: 8, height: 8 },
         '*::-webkit-scrollbar-thumb': {

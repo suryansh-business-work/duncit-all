@@ -85,7 +85,7 @@ export default function App() {
         />
       )}
       <Container
-        maxWidth={fullBleed ? false : 'lg'}
+        maxWidth={fullBleed ? false : 'sm'}
         disableGutters={fullBleed}
         sx={{
           flex: 1,

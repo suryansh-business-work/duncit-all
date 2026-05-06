@@ -285,6 +285,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
       {sliders.length > 0 && (
         <Box
           sx={{
+            overflow: 'hidden',
             '.slick-dots': { bottom: 12 },
             '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },
             '.slick-dots li.slick-active button:before': { opacity: 1 },

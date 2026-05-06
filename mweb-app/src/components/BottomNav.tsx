@@ -42,12 +42,10 @@ export default function BottomNav() {
       <BottomNavigation
         value={active}
         onChange={(_e, value) => navigate(value)}
-        showLabels
       >
         {TABS.map((t) => (
           <BottomNavigationAction
             key={t.value}
-            label={t.label}
             value={t.value}
             icon={t.icon}
           />

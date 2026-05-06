@@ -131,10 +131,12 @@ export default function LoginPage() {
         sx={{
           width: '100%',
           maxWidth: 420,
-          borderRadius: 4,
+          borderRadius: '4px',
           backdropFilter: 'blur(8px)',
           bgcolor: 'rgba(255,255,255,0.92)',
           animation: `${fadeUp} 0.7s cubic-bezier(.2,.7,.2,1.2) both`,
+          '& .MuiOutlinedInput-root': { borderRadius: '4px' },
+          '& .MuiButton-root': { borderRadius: '4px' },
         }}
       >
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>

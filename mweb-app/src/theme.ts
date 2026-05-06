@@ -40,10 +40,19 @@ export const theme = createTheme({
   components: {
     MuiCssBaseline: {
       styleOverrides: {
+        html: {
+          overflowX: 'hidden',
+        },
         body: {
           backgroundColor: BG,
           WebkitFontSmoothing: 'antialiased',
           MozOsxFontSmoothing: 'grayscale',
+          overflowX: 'hidden',
+          maxWidth: '100vw',
+        },
+        '#root': {
+          overflowX: 'hidden',
+          maxWidth: '100vw',
         },
         '*::-webkit-scrollbar': { width: 8, height: 8 },
         '*::-webkit-scrollbar-thumb': {

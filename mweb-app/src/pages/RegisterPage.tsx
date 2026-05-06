@@ -78,7 +78,14 @@ export default function RegisterPage() {
   };
 
   return (
-    <Card elevation={2}>
+    <Card
+      elevation={2}
+      sx={{
+        borderRadius: '4px',
+        '& .MuiOutlinedInput-root': { borderRadius: '4px' },
+        '& .MuiButton-root': { borderRadius: '4px' },
+      }}
+    >
       <CardContent>
         <AuthLogo tagline="Create your account to join pods near you." />
         <Typography variant="h5" textAlign="center" gutterBottom>

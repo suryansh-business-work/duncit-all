@@ -184,7 +184,7 @@ export default function AppHeader({
       elevation={0}
       sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
     >
-      <Toolbar sx={{ gap: 2, py: 1, minHeight: 64 }}>
+      <Toolbar sx={{ gap: 1, py: 0, minHeight: 48, px: 1.5 }}>
         <Stack
           direction="row"
           alignItems="center"
@@ -197,14 +197,14 @@ export default function AppHeader({
               component="img"
               src={branding.logo_url}
               alt={branding?.app_name ?? 'Duncit'}
-              sx={{ height: 36, width: 'auto', maxWidth: 140, objectFit: 'contain' }}
+              sx={{ height: 28, width: 'auto', maxWidth: 110, objectFit: 'contain' }}
             />
           ) : (
             <Box
               component="img"
               src="/duncit-logo.svg"
               alt="Duncit"
-              sx={{ height: 36, width: 'auto', maxWidth: 140, objectFit: 'contain' }}
+              sx={{ height: 28, width: 'auto', maxWidth: 110, objectFit: 'contain' }}
             />
           )}
         </Stack>
@@ -214,8 +214,8 @@ export default function AppHeader({
             variant="outlined"
             size="small"
             sx={{
-              ml: 2,
-              '& .MuiButton-root': { textTransform: 'none', fontWeight: 500, px: 2 },
+              ml: 1,
+              '& .MuiButton-root': { textTransform: 'none', fontWeight: 500, px: 1.5 },
             }}
           >
             {superCats.map((c: any) => (
@@ -234,8 +234,8 @@ export default function AppHeader({
         <Box sx={{ flexGrow: 1 }} />
 
         <Tooltip title="Search pods">
-          <IconButton onClick={(e) => setSearchAnchor(e.currentTarget)}>
-            <SearchIcon />
+          <IconButton size="small" onClick={(e) => setSearchAnchor(e.currentTarget)}>
+            <SearchIcon fontSize="small" />
           </IconButton>
         </Tooltip>
         <PodSearchPopover
@@ -287,9 +287,9 @@ export default function AppHeader({
         />
 
         <Tooltip title="Notifications">
-          <IconButton onClick={(e) => setNotifAnchor(e.currentTarget)}>
+          <IconButton size="small" onClick={(e) => setNotifAnchor(e.currentTarget)}>
             <Badge badgeContent={unreadCount} color="error">
-              <NotificationsIcon />
+              <NotificationsIcon fontSize="small" />
             </Badge>
           </IconButton>
         </Tooltip>
@@ -306,11 +306,10 @@ export default function AppHeader({
         />
 
         <Tooltip title={me?.full_name ?? 'Account'}>
-          <IconButton onClick={(e) => setProfileAnchor(e.currentTarget)} sx={{ p: 0.5 }}>
+          <IconButton onClick={(e) => setProfileAnchor(e.currentTarget)} sx={{ p: 0.25 }}>
             <Avatar
               src={me?.profile_photo || undefined}
-              sx={{ width: 36, height: 36, bgcolor: 'primary.main' }}
-            >
+              sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13 }}>
               {(me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase()}
             </Avatar>
           </IconButton>
@@ -332,9 +331,9 @@ export default function AppHeader({
         <Box
           sx={{
             display: 'flex',
-            gap: 1,
+            gap: 0.75,
             px: 1.5,
-            pb: 1,
+            pb: 0.5,
             overflowX: 'auto',
             scrollbarWidth: 'none',
             '&::-webkit-scrollbar': { display: 'none' },
@@ -351,7 +350,10 @@ export default function AppHeader({
                 whiteSpace: 'nowrap',
                 fontWeight: 500,
                 borderRadius: 999,
-                px: 1.75,
+                px: 1.25,
+                py: 0.25,
+                fontSize: 12,
+                minHeight: 28,
                 flex: '0 0 auto',
               }}
             >

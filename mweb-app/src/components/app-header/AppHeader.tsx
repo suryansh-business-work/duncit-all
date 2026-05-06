@@ -349,7 +349,7 @@ export default function AppHeader({
                 textTransform: 'none',
                 whiteSpace: 'nowrap',
                 fontWeight: 500,
-                borderRadius: 999,
+                borderRadius: 8,
                 px: 1.25,
                 py: 0.25,
                 fontSize: 12,

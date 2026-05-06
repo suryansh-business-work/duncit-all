@@ -6,7 +6,7 @@ export default function SliderCard({ slider }: { slider: any }) {
     if (slider.link_url) window.open(slider.link_url, '_blank', 'noreferrer');
   };
   return (
-    <Card sx={{ position: 'relative', overflow: 'hidden', borderRadius: 2 }}>
+    <Card sx={{ position: 'relative', overflow: 'hidden', borderRadius: 1 }}>
       <CardActionArea onClick={open} disabled={!slider.link_url}>
         {slider.media_type === 'VIDEO' ? (
           <CardMedia

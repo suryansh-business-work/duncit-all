@@ -21,7 +21,7 @@ export const theme = createTheme({
     text: { primary: INK, secondary: MUTED },
     divider: BORDER,
   },
-  shape: { borderRadius: 16 },
+  shape: { borderRadius: 6 },
   typography: {
     fontFamily:
       '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -78,7 +78,7 @@ export const theme = createTheme({
     MuiPaper: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
-        rounded: { borderRadius: 18 },
+        rounded: { borderRadius: 8 },
         outlined: { borderColor: BORDER },
       },
     },
@@ -86,7 +86,7 @@ export const theme = createTheme({
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          borderRadius: 20,
+          borderRadius: 8,
           border: `1px solid ${BORDER}`,
           backgroundColor: SURFACE,
           boxShadow: `0 1px 2px ${alpha(INK, 0.04)}, 0 8px 24px -16px ${alpha(INK, 0.18)}`,
@@ -99,14 +99,14 @@ export const theme = createTheme({
     },
     MuiCardActionArea: {
       styleOverrides: {
-        focusHighlight: { borderRadius: 20 },
+        focusHighlight: { borderRadius: 8 },
       },
     },
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
         root: {
-          borderRadius: 999,
+          borderRadius: 8,
           paddingInline: 18,
           paddingBlock: 9,
           fontWeight: 600,
@@ -127,14 +127,14 @@ export const theme = createTheme({
     },
     MuiIconButton: {
       styleOverrides: {
-        root: { borderRadius: 12 },
+        root: { borderRadius: 6 },
       },
     },
     MuiChip: {
       defaultProps: { size: 'small' },
       styleOverrides: {
         root: {
-          borderRadius: 999,
+          borderRadius: 16,
           fontWeight: 600,
           height: 30,
           paddingInline: 4,
@@ -150,7 +150,7 @@ export const theme = createTheme({
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 14,
+          borderRadius: 6,
           backgroundColor: SURFACE,
           '& fieldset': { borderColor: BORDER },
           '&:hover fieldset': { borderColor: alpha(INK, 0.3) },
@@ -160,7 +160,7 @@ export const theme = createTheme({
     },
     MuiAlert: {
       styleOverrides: {
-        root: { borderRadius: 14 },
+        root: { borderRadius: 6 },
         standardInfo: {
           backgroundColor: alpha(ACCENT, 0.08),
           color: INK,
@@ -178,7 +178,7 @@ export const theme = createTheme({
     MuiToggleButton: {
       styleOverrides: {
         root: {
-          borderRadius: 999,
+          borderRadius: 8,
           textTransform: 'none',
           fontWeight: 600,
           paddingInline: 14,

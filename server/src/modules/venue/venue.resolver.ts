@@ -22,6 +22,7 @@ export const venueResolvers = {
       requireRole(ctx, ADMIN_REVIEW);
       return venueService.getById(args.venue_doc_id);
     },
+    publicVenues: async () => venueService.list({ status: 'APPROVED' }),
   },
   Mutation: {
     submitVenueStep1: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>

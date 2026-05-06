@@ -1,6 +1,5 @@
 import { Link as RouterLink } from 'react-router-dom';
 import {
-  Alert,
   Box,
   Button,
   Dialog,
@@ -18,7 +17,7 @@ interface Props {
   onClose: () => void;
   onConfirm: () => void;
   busy?: boolean;
-  /** Refund threshold (%) sourced from membership state — purely informational. */
+  /** Reserved for future use — refund threshold is now sourced from the live policy. */
   refundThresholdPct?: number | null;
 }
 
@@ -32,19 +31,11 @@ export default function BackoutConfirmDialog({
   onClose,
   onConfirm,
   busy,
-  refundThresholdPct,
 }: Props) {
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 6 }}>Backout from this pod?</DialogTitle>
       <DialogContent dividers>
-        <Alert severity="warning" sx={{ mb: 2 }}>
-          Please review the terms before continuing. For paid pods, refunds are
-          held until the pod reaches{' '}
-          <b>{refundThresholdPct ?? 80}%</b> capacity or someone fills your spot
-          via your referral link.
-        </Alert>
-
         <Box sx={{ maxHeight: 320, overflowY: 'auto', pr: 1 }}>
           <PolicyRenderer slug="backout-terms" hideTitle hideUpdated />
         </Box>

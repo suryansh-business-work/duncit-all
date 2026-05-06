@@ -50,6 +50,7 @@ export const hostTypeDefs = /* GraphQL */ `
     myHost: Host
     hosts(status: HostStatus): [Host!]!
     host(host_doc_id: ID!): Host
+    publicHosts: [Host!]!
   }
 
   extend type Mutation {

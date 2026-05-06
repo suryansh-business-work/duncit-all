@@ -1,5 +1,11 @@
 import { GraphQLError } from 'graphql';
 import { CategoryModel, type CategoryLevel } from './category.model';
+import { ClubModel } from '../club/club.model';
+import { PodModel } from '../pod/pod.model';
+import { FaqModel } from '../faq/faq.model';
+import { FaqSubmissionModel } from '../faq/faqSubmission.model';
+import { SliderModel } from '../slider/slider.model';
+import { ActiveUserPingModel } from '../analytics/activeUser.model';
 
 const slugify = (s: string) =>
   s
@@ -140,16 +146,60 @@ export const categoryService = {
   async remove(id: string) {
     const doc = await CategoryModel.findById(id);
     if (!doc) notFound();
-    if (doc!.is_system) {
-      throw new GraphQLError('System category cannot be deleted', {
-        extensions: { code: 'FORBIDDEN' },
-      });
+
+    // Cascade-delete is fully dynamic — no system/seed protection. Deleting a
+    // SUPER category removes all of its descendant CATEGORY/SUB rows along
+    // with the related business data (clubs, pods, sliders, FAQs, FAQ
+    // submissions, and analytics pings) so the admin doesn't get blocked by
+    // legacy references.
+    const rootId = doc!._id;
+    const isSuper = doc!.level === 'SUPER';
+
+    // Collect every descendant category id (CATEGORY children of a SUPER, plus
+    // SUB children of those CATEGORYs). For non-SUPER deletes we still cascade
+    // through any direct children to keep the tree consistent.
+    const childCats = await CategoryModel.find({ parent_id: rootId });
+    const childCatIds = childCats.map((c) => c._id);
+    const grandChildCats = childCatIds.length
+      ? await CategoryModel.find({ parent_id: { $in: childCatIds } })
+      : [];
+    const grandChildCatIds = grandChildCats.map((c) => c._id);
+    const allCategoryIds = [rootId, ...childCatIds, ...grandChildCatIds];
+
+    // 1. Find clubs that belong to this branch (by super_category_id when
+    //    deleting a SUPER, otherwise by category_id match) so we can also
+    //    remove their pods.
+    const clubMatch: any = isSuper
+      ? { $or: [{ super_category_id: rootId }, { category_id: { $in: allCategoryIds } }] }
+      : { category_id: { $in: allCategoryIds } };
+    const clubs = await ClubModel.find(clubMatch).select('_id');
+    const clubIds = clubs.map((c) => c._id);
+
+    // 2. Delete pods first (depend on clubs).
+    if (clubIds.length) {
+      await PodModel.deleteMany({ club_id: { $in: clubIds } });
+      await ClubModel.deleteMany({ _id: { $in: clubIds } });
     }
-    const childCount = await CategoryModel.countDocuments({ parent_id: doc!._id });
-    if (childCount > 0) {
-      throw new GraphQLError('Delete or reassign child categories first', {
-        extensions: { code: 'CONFLICT' },
-      });
+
+    // 3. FAQs reference super_category_id directly.
+    if (isSuper) {
+      await FaqModel.deleteMany({ super_category_id: rootId });
+    }
+
+    // 4. Slug-based references (sliders, FAQ submissions, active-user pings).
+    const slug = doc!.slug;
+    if (slug) {
+      await SliderModel.deleteMany({ super_category_slug: slug });
+      await FaqSubmissionModel.deleteMany({ super_category_slug: slug });
+      await ActiveUserPingModel.deleteMany({ super_category_slug: slug });
+    }
+
+    // 5. Finally remove descendant categories then the row itself.
+    if (grandChildCatIds.length) {
+      await CategoryModel.deleteMany({ _id: { $in: grandChildCatIds } });
+    }
+    if (childCatIds.length) {
+      await CategoryModel.deleteMany({ _id: { $in: childCatIds } });
     }
     await doc!.deleteOne();
     return true;

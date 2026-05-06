@@ -16,6 +16,8 @@ import {
 } from '@mui/material';
 import PetsIcon from '@mui/icons-material/Pets';
 import EditIcon from '@mui/icons-material/Edit';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import MediaPickerDialog from '../../components/MediaPickerDialog';
 
 const UPDATE_PET = gql`
   mutation UpdateMyPetProfile($input: PetProfileInput!) {
@@ -64,6 +66,7 @@ interface Props {
 export default function PetProfileSection({ pet, onSaved }: Props) {
   const [editing, setEditing] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
   const [updateMut, { loading, error }] = useMutation(UPDATE_PET);
 
   const initial = {
@@ -104,7 +107,19 @@ export default function PetProfileSection({ pet, onSaved }: Props) {
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
               <Avatar
                 src={pet?.photo_url || undefined}
-                sx={{ width: 72, height: 72, bgcolor: 'primary.light' }}
+                imgProps={{
+                  loading: 'lazy',
+                  referrerPolicy: 'no-referrer',
+                  onError: (e) => {
+                    (e.currentTarget as HTMLImageElement).style.display = 'none';
+                  },
+                }}
+                sx={{
+                  width: 96,
+                  height: 96,
+                  bgcolor: 'primary.light',
+                  '& img': { objectFit: 'cover' },
+                }}
               >
                 <PetsIcon />
               </Avatar>
@@ -152,16 +167,62 @@ export default function PetProfileSection({ pet, onSaved }: Props) {
               onSaved?.();
             }}
           >
-            {({ values, errors, touched, handleChange, handleBlur }) => (
+            {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => (
               <Form>
                 <Grid container spacing={2}>
                   <Grid item xs={12}>
-                    <TextField
-                      fullWidth name="photo_url" label="Pet photo URL"
-                      placeholder="https://..."
-                      value={values.photo_url} onChange={handleChange} onBlur={handleBlur}
-                      error={touched.photo_url && !!errors.photo_url}
-                      helperText={(touched.photo_url && errors.photo_url) || 'Optional — link to a square image works best.'}
+                    <Stack direction="row" spacing={2} alignItems="center">
+                      <Avatar
+                        src={values.photo_url || undefined}
+                        imgProps={{
+                          loading: 'lazy',
+                          referrerPolicy: 'no-referrer',
+                          onError: (e) => {
+                            (e.currentTarget as HTMLImageElement).style.display = 'none';
+                          },
+                        }}
+                        sx={{
+                          width: 72,
+                          height: 72,
+                          bgcolor: 'primary.light',
+                          '& img': { objectFit: 'cover' },
+                        }}
+                      >
+                        <PetsIcon />
+                      </Avatar>
+                      <Stack spacing={0.5} sx={{ flex: 1 }}>
+                        <Button
+                          variant="outlined"
+                          size="small"
+                          startIcon={<PhotoCameraIcon />}
+                          onClick={() => setPickerOpen(true)}
+                          sx={{ alignSelf: 'flex-start' }}
+                        >
+                          {values.photo_url ? 'Change photo' : 'Upload photo'}
+                        </Button>
+                        {values.photo_url && (
+                          <Button
+                            size="small"
+                            color="inherit"
+                            onClick={() => setFieldValue('photo_url', '')}
+                            sx={{ alignSelf: 'flex-start' }}
+                          >
+                            Remove
+                          </Button>
+                        )}
+                        {touched.photo_url && errors.photo_url && (
+                          <Typography variant="caption" color="error">
+                            {errors.photo_url as string}
+                          </Typography>
+                        )}
+                      </Stack>
+                    </Stack>
+                    <MediaPickerDialog
+                      open={pickerOpen}
+                      onClose={() => setPickerOpen(false)}
+                      folder="/pets"
+                      title="Upload pet photo"
+                      onPicked={(url) => setFieldValue('photo_url', url)}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>

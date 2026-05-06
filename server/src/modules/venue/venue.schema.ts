@@ -87,6 +87,7 @@ export const venueTypeDefs = /* GraphQL */ `
     myVenue: Venue
     venues(status: VenueStatus): [Venue!]!
     venue(venue_doc_id: ID!): Venue
+    publicVenues: [Venue!]!
   }
 
   extend type Mutation {

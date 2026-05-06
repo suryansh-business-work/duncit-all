@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -39,7 +40,16 @@ export default function DetailsDialog({ id, onClose, onChanged }: DetailsProps) 
   });
   const idea = data?.podIdea;
   const [setStatusMut] = useMutation(SET_STATUS);
-  const [deleteCommentMut] = useMutation(DELETE_COMMENT);
+  const [deleteCommentMut, { loading: deletingComment }] = useMutation(DELETE_COMMENT);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+
+  const handleDeleteComment = async () => {
+    if (!confirmDeleteId) return;
+    await deleteCommentMut({ variables: { id, commentId: confirmDeleteId } });
+    setConfirmDeleteId(null);
+    await refetch();
+    onChanged();
+  };
 
   return (
     <Dialog open onClose={onClose} fullWidth maxWidth="md">
@@ -127,12 +137,7 @@ export default function DetailsDialog({ id, onClose, onChanged }: DetailsProps) 
                   <IconButton
                     size="small"
                     color="error"
-                    onClick={async () => {
-                      if (!window.confirm('Delete this comment?')) return;
-                      await deleteCommentMut({ variables: { id, commentId: c.id } });
-                      await refetch();
-                      onChanged();
-                    }}
+                    onClick={() => setConfirmDeleteId(c.id)}
                   >
                     <DeleteIcon fontSize="small" />
                   </IconButton>
@@ -183,6 +188,31 @@ export default function DetailsDialog({ id, onClose, onChanged }: DetailsProps) 
           <Button onClick={onClose}>Close</Button>
         </DialogActions>
       )}
+      <Dialog
+        open={!!confirmDeleteId}
+        onClose={() => (deletingComment ? undefined : setConfirmDeleteId(null))}
+      >
+        <DialogTitle>Delete this comment?</DialogTitle>
+        <DialogContent>
+          <Typography variant="body2">
+            This permanently removes the comment from the idea. You cannot undo this
+            action.
+          </Typography>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDeleteId(null)} disabled={deletingComment}>
+            Cancel
+          </Button>
+          <Button
+            onClick={handleDeleteComment}
+            color="error"
+            variant="contained"
+            disabled={deletingComment}
+          >
+            {deletingComment ? 'Deleting…' : 'Delete'}
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Dialog>
   );
 }

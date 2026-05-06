@@ -11,6 +11,7 @@ import PodDetailsPage from './pages/PodDetailsPage';
 import ClubDetailsPage from './pages/ClubDetailsPage';
 import BecomeHostPage from './pages/BecomeHostPage';
 import RegisterVenuePage from './pages/RegisterVenuePage';
+import HostsVenuesPage from './pages/HostsVenuesPage';
 import FaqsPage from './pages/FaqsPage';
 import PolicyPage from './pages/PolicyPage';
 import PodIdeasPage from './pages/PodIdeasPage';
@@ -141,6 +142,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <RegisterVenuePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/hosts-venues"
+            element={
+              <RequireAuth>
+                <HostsVenuesPage />
               </RequireAuth>
             }
           />

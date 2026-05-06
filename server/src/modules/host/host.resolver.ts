@@ -21,6 +21,7 @@ export const hostResolvers = {
       requireRole(ctx, ADMIN_REVIEW);
       return hostService.getById(args.host_doc_id);
     },
+    publicHosts: async () => hostService.list({ status: 'APPROVED' }),
   },
   Mutation: {
     submitHostStep1: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>

@@ -142,7 +142,7 @@ export default function ClubsPage() {
                       alignItems="flex-start"
                       spacing={1}
                     >
-                      <Typography variant="subtitle1" fontWeight={700}>
+                      <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.25 }}>
                         {c.club_name}
                       </Typography>
                       <Chip size="small" label={`${count} pods`} />

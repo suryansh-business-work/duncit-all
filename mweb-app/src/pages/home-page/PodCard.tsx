@@ -54,7 +54,7 @@ export default function PodCard({ pod, onOpen }: { pod: any; onOpen: () => void 
               WebkitLineClamp: 2,
               WebkitBoxOrient: 'vertical',
               overflow: 'hidden',
-              minHeight: 40,
+              lineHeight: 1.3,
             }}
           >
             {pod.pod_title}

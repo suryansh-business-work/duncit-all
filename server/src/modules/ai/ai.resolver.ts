@@ -135,8 +135,7 @@ export async function generateDummy(entity: Entity, prompt?: string | null): Pro
 // ---------------------------------------------------------------------------
 // Post-process AI output: swap any free-form image URLs the model invents
 // with real Pexels stock photos that have been imported to ImageKit. This
-// guaconst raw = await generateDummy(args.entity, args.prompt);
-      return enrichImagesWithPexels(args.entity, raws) and stay stable on our CDN.
+// guarantees the URLs resolve (no 404s) and stay stable on our CDN.
 // ---------------------------------------------------------------------------
 
 const IMAGE_FIELDS_BY_ENTITY: Record<Entity, { single: string[]; multiline: string[]; folder: string }> = {
@@ -197,7 +196,8 @@ async function enrichImagesWithPexels(entity: Entity, raw: string, prompt?: stri
 export const aiResolvers = {
   Mutation: {
     aiFillDummyData: async (_: unknown, args: { entity: Entity; prompt?: string | null }) => {
-      return generateDummy(args.entity, args.prompt);
+      const raw = await generateDummy(args.entity, args.prompt);
+      return enrichImagesWithPexels(args.entity, raw, args.prompt);
     },
   },
 };

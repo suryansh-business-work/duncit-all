@@ -34,7 +34,7 @@ export default function FilterBar({
   setSortBy,
 }: Props) {
   return (
-    <Stack spacing={1.75}>
+    <Stack spacing={1.25}>
       {/* ── Category row ── */}
       {categoryChips.length > 0 && (
         <Box sx={scrollRow}>
@@ -68,7 +68,7 @@ export default function FilterBar({
       )}
 
       {/* ── Price row ── */}
-      <Stack spacing={0.5}>
+      <Stack spacing={0.25}>
         <Typography variant="caption" color="text.secondary" sx={{ px: 0.25, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
           Price
         </Typography>
@@ -94,7 +94,7 @@ export default function FilterBar({
       </Stack>
 
       {/* ── Date row ── */}
-      <Stack spacing={0.5}>
+      <Stack spacing={0.25}>
         <Typography variant="caption" color="text.secondary" sx={{ px: 0.25, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
           When
         </Typography>

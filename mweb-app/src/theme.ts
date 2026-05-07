@@ -83,8 +83,9 @@ export const theme = createTheme({
     subtitle1: { fontWeight: 600, lineHeight: 1.3 },
     subtitle2: { fontWeight: 600, lineHeight: 1.3 },
     button: { fontWeight: 600, textTransform: 'none', letterSpacing: 0 },
-    body1: { fontSize: '0.95rem' },
-    body2: { fontSize: '0.875rem' },
+    body1: { fontSize: '0.95rem', lineHeight: 1.4 },
+    body2: { fontSize: '0.875rem', lineHeight: 1.4 },
+    caption: { fontSize: '0.75rem', lineHeight: 1.35 },
   },
   components: {
     MuiCssBaseline: {

@@ -6,8 +6,22 @@ export default function SliderCard({ slider }: { slider: any }) {
     if (slider.link_url) window.open(slider.link_url, '_blank', 'noreferrer');
   };
   return (
-    <Card sx={{ position: 'relative', overflow: 'hidden', borderRadius: 1 }}>
-      <CardActionArea onClick={open} disabled={!slider.link_url}>
+    <Card
+      elevation={0}
+      square
+      sx={{
+        position: 'relative',
+        overflow: 'hidden',
+        borderRadius: 0,
+        width: '100%',
+        height: { xs: 180, sm: 240, md: 280 },
+      }}
+    >
+      <CardActionArea
+        onClick={open}
+        disabled={!slider.link_url}
+        sx={{ display: 'block', width: '100%', height: '100%' }}
+      >
         {slider.media_type === 'VIDEO' ? (
           <CardMedia
             component="video"
@@ -16,14 +30,14 @@ export default function SliderCard({ slider }: { slider: any }) {
             muted
             loop
             playsInline
-            sx={{ height: { xs: 160, sm: 220 }, objectFit: 'cover' }}
+            sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }}
           />
         ) : (
           <CardMedia
             component="img"
             image={slider.media_url}
             alt={slider.title}
-            sx={{ height: { xs: 160, sm: 220 }, objectFit: 'cover' }}
+            sx={{ display: 'block', width: '100%', height: '100%', objectFit: 'cover' }}
           />
         )}
         <Box

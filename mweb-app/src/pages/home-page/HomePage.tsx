@@ -287,11 +287,12 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
   if (error) return <Alert severity="error">{error.message}</Alert>;
 
   return (
-    <Stack spacing={4}>
+    <Stack spacing={3}>
       {sliders.length > 0 && (
         <Box
           sx={{
             overflow: 'hidden',
+            mt: -2,
             // True edge-to-edge: escape any parent gutters/Container.
             position: 'relative',
             left: '50%',
@@ -300,6 +301,12 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
             mr: '-50vw',
             width: '100vw',
             borderRadius: 0,
+            lineHeight: 0,
+            bgcolor: 'background.paper',
+            '.slick-slider, .slick-list': { width: '100%' },
+            '.slick-track': { display: 'flex' },
+            '.slick-slide': { height: 'auto', lineHeight: 0 },
+            '.slick-slide > div': { height: '100%' },
             '.slick-dots': { bottom: 12 },
             '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },
             '.slick-dots li.slick-active button:before': { opacity: 1 },
@@ -317,10 +324,9 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
             speed={500}
             slidesToShow={1}
             slidesToScroll={1}
-            adaptiveHeight
           >
             {sliders.map((s) => (
-              <Box key={s.id}>
+              <Box key={s.id} sx={{ width: '100%', height: '100%' }}>
                 <SliderCard slider={s} />
               </Box>
             ))}

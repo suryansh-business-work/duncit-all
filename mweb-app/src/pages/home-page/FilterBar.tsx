@@ -16,7 +16,7 @@ interface Props {
 
 const scrollRow = {
   display: 'flex',
-  gap: 1,
+  gap: 0.75,
   overflowX: 'auto',
   scrollbarWidth: 'none',
   '&::-webkit-scrollbar': { display: 'none' },
@@ -34,12 +34,13 @@ export default function FilterBar({
   setSortBy,
 }: Props) {
   return (
-    <Stack spacing={1.25}>
+    <Stack spacing={1}>
       {/* ── Category row ── */}
       {categoryChips.length > 0 && (
         <Box sx={scrollRow}>
           <Chip
             label="All"
+            size="small"
             color={!categoryId ? 'primary' : 'default'}
             variant={!categoryId ? 'filled' : 'outlined'}
             onClick={() => setCategoryId('')}
@@ -52,6 +53,7 @@ export default function FilterBar({
               <Chip
                 key={c.id}
                 label={isSub ? `# ${c.name}` : c.name}
+                size="small"
                 color={selected ? 'primary' : 'default'}
                 variant={selected ? 'filled' : 'outlined'}
                 onClick={() => setCategoryId(selected ? '' : c.id)}
@@ -68,8 +70,8 @@ export default function FilterBar({
       )}
 
       {/* ── Price row ── */}
-      <Stack spacing={0.25}>
-        <Typography variant="caption" color="text.secondary" sx={{ px: 0.25, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+      <Stack spacing={0.35}>
+        <Typography variant="caption" color="text.secondary" sx={{ px: 0.25, fontWeight: 700, lineHeight: 1.1, textTransform: 'uppercase' }}>
           Price
         </Typography>
         <Box sx={scrollRow}>
@@ -84,6 +86,7 @@ export default function FilterBar({
             <Chip
               key={val}
               label={lbl}
+              size="small"
               color={priceFilter === val ? 'primary' : 'default'}
               variant={priceFilter === val ? 'filled' : 'outlined'}
               onClick={() => setPriceFilter(val)}
@@ -94,8 +97,8 @@ export default function FilterBar({
       </Stack>
 
       {/* ── Date row ── */}
-      <Stack spacing={0.25}>
-        <Typography variant="caption" color="text.secondary" sx={{ px: 0.25, fontWeight: 600, letterSpacing: '0.04em', textTransform: 'uppercase' }}>
+      <Stack spacing={0.35}>
+        <Typography variant="caption" color="text.secondary" sx={{ px: 0.25, fontWeight: 700, lineHeight: 1.1, textTransform: 'uppercase' }}>
           When
         </Typography>
         <Box sx={scrollRow}>
@@ -111,6 +114,7 @@ export default function FilterBar({
             <Chip
               key={val}
               label={lbl}
+              size="small"
               color={dateFilter === val ? 'secondary' : 'default'}
               variant={dateFilter === val ? 'filled' : 'outlined'}
               onClick={() => setDateFilter(val)}
@@ -127,6 +131,7 @@ export default function FilterBar({
         label="Sort by"
         value={sortBy}
         onChange={(e) => setSortBy(e.target.value as SortBy)}
+        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
         InputProps={{
           startAdornment: (
             <SortIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />

@@ -1,5 +1,6 @@
 import { gql, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
+import { useMemo } from 'react';
 import {
   Alert,
   Avatar,
@@ -25,14 +26,38 @@ const MY_CHAT_ROOMS = gql`
       pod_attendees
       no_of_spots
       cover_url
+      club_id
+    }
+    clubs(filter: { is_active: true }) {
+      id
+      super_category_id
+    }
+    superCategories: categories(filter: { level: SUPER }) {
+      id
+      slug
     }
   }
 `;
 
-export default function ChatsPage() {
+interface ChatsPageProps {
+  superCategorySlug?: string;
+}
+
+export default function ChatsPage({ superCategorySlug }: ChatsPageProps) {
   const { data, loading, error } = useQuery(MY_CHAT_ROOMS, { fetchPolicy: 'cache-and-network' });
   const navigate = useNavigate();
-  const rooms = data?.myChatRooms ?? [];
+
+  const rooms = useMemo(() => {
+    const all = data?.myChatRooms ?? [];
+    const supers = data?.superCategories ?? [];
+    const selectedSuperId = superCategorySlug
+      ? supers.find((s: any) => s.slug === superCategorySlug)?.id
+      : null;
+    if (!selectedSuperId) return all;
+    const clubsById = new Map<string, any>();
+    (data?.clubs ?? []).forEach((c: any) => clubsById.set(c.id, c));
+    return all.filter((r: any) => clubsById.get(r.club_id)?.super_category_id === selectedSuperId);
+  }, [data, superCategorySlug]);
 
   if (loading && !data)
     return (

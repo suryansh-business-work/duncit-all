@@ -30,6 +30,8 @@ import ContentCopyIcon from '@mui/icons-material/ContentCopy';
 import IconButton from '@mui/material/IconButton';
 import { usePricing } from '../hooks/usePricing';
 import BackoutConfirmDialog from './pod-details-page/BackoutConfirmDialog';
+import HeroOverlayActions from './pod-details-page/HeroOverlayActions';
+import PodLocationMap from './pod-details-page/PodLocationMap';
 
 const POD_DETAILS = gql`
   query PodDetails($id: ID!) {
@@ -169,45 +171,12 @@ export default function PodDetailsPage() {
   const media = pod.pod_images_and_videos ?? [];
 
   return (
-    <Stack spacing={3}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <IconButton size="small" onClick={() => navigate(-1)} aria-label="Back">
-          <ArrowBackIcon />
-        </IconButton>
-        <Stack direction="row" spacing={0.5}>
-          <IconButton
-            size="small"
-            aria-label={saved ? 'Saved' : 'Save'}
-            onClick={() => setSaved((v) => !v)}
-          >
-            {saved ? <BookmarkIcon color="primary" /> : <BookmarkBorderIcon />}
-          </IconButton>
-          <IconButton
-            size="small"
-            aria-label="Share"
-            onClick={async () => {
-              const url = window.location.href;
-              const title = pod?.pod_title ?? 'Duncit Pod';
-              try {
-                if (navigator.share) {
-                  await navigator.share({ title, url });
-                } else {
-                  await navigator.clipboard.writeText(url);
-                  setSnack('Link copied');
-                }
-              } catch {
-                /* user cancelled */
-              }
-            }}
-          >
-            <ShareIcon />
-          </IconButton>
-        </Stack>
-      </Stack>
-
+    <Stack spacing={3} sx={{ pt: 0 }}>
       {media.length > 0 ? (
         <Box
           sx={{
+            position: 'relative',
+            mt: -2,
             mx: { xs: -2, sm: -3 },
             overflow: 'hidden',
             '.slick-dots': { bottom: 12 },
@@ -253,12 +222,32 @@ export default function PodDetailsPage() {
               )
             )}
           </Slider>
+          <HeroOverlayActions
+            onBack={() => navigate(-1)}
+            saved={saved}
+            onToggleSave={() => setSaved((v) => !v)}
+            onShare={async () => {
+              const url = window.location.href;
+              const title = pod?.pod_title ?? 'Duncit Pod';
+              try {
+                if (navigator.share) await navigator.share({ title, url });
+                else {
+                  await navigator.clipboard.writeText(url);
+                  setSnack('Link copied');
+                }
+              } catch {
+                /* user cancelled */
+              }
+            }}
+          />
         </Box>
       ) : (
         <Box
           sx={{
+            position: 'relative',
+            mt: -2,
+            mx: { xs: -2, sm: -3 },
             height: 240,
-            borderRadius: 2,
             bgcolor: 'action.hover',
             display: 'flex',
             alignItems: 'center',
@@ -266,6 +255,19 @@ export default function PodDetailsPage() {
           }}
         >
           <EventIcon sx={{ fontSize: 80, color: 'action.disabled' }} />
+          <HeroOverlayActions
+            onBack={() => navigate(-1)}
+            saved={saved}
+            onToggleSave={() => setSaved((v) => !v)}
+            onShare={async () => {
+              try {
+                await navigator.clipboard.writeText(window.location.href);
+                setSnack('Link copied');
+              } catch {
+                /* ignore */
+              }
+            }}
+          />
         </Box>
       )}
 
@@ -336,6 +338,10 @@ export default function PodDetailsPage() {
               )}
             </Row>
           </Stack>
+          <PodLocationMap
+            locationName={location?.location_name}
+            zoneName={pod.zone_name}
+          />
         </CardContent>
       </Card>
 

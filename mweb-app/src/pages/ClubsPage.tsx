@@ -21,10 +21,15 @@ import SearchIcon from '@mui/icons-material/Search';
 
 const ALL_CLUBS = gql`
   query AllClubs {
+    superCategories: categories(filter: { level: SUPER }) {
+      id
+      slug
+    }
     clubs(filter: { is_active: true }) {
       id
       club_name
       club_description
+      super_category_id
       club_feature_images_and_videos {
         url
         type
@@ -37,7 +42,11 @@ const ALL_CLUBS = gql`
   }
 `;
 
-export default function ClubsPage() {
+interface ClubsPageProps {
+  superCategorySlug?: string;
+}
+
+export default function ClubsPage({ superCategorySlug }: ClubsPageProps) {
   const { data, loading, error } = useQuery(ALL_CLUBS, {
     fetchPolicy: 'cache-and-network',
   });
@@ -55,7 +64,12 @@ export default function ClubsPage() {
   const clubs = useMemo(() => {
     const list = (data?.clubs ?? []).slice();
     const term = q.trim().toLowerCase();
+    const supers = data?.superCategories ?? [];
+    const selectedSuperId = superCategorySlug
+      ? supers.find((s: any) => s.slug === superCategorySlug)?.id
+      : null;
     return list
+      .filter((c: any) => !selectedSuperId || c.super_category_id === selectedSuperId)
       .filter(
         (c: any) =>
           !term ||
@@ -63,7 +77,7 @@ export default function ClubsPage() {
           c.club_description?.toLowerCase().includes(term),
       )
       .sort((a: any, b: any) => a.club_name.localeCompare(b.club_name));
-  }, [data, q]);
+  }, [data, q, superCategorySlug]);
 
   if (loading && !data)
     return (

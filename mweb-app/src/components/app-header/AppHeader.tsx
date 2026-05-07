@@ -244,7 +244,9 @@ export default function AppHeader({
               width: 'auto',
               maxWidth: 200,
               objectFit: 'contain',
-              display: 'block',left: '4px', 
+              display: 'block',
+              left: '-20px', 
+              top: '5px',
               position: 'relative'
             }}
           />

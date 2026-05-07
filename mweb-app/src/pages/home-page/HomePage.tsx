@@ -11,12 +11,15 @@ import {
   Card,
   Chip,
   Fab,
+  IconButton,
   Skeleton,
   Stack,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import GroupsIcon from '@mui/icons-material/Groups';
+import SearchIcon from '@mui/icons-material/Search';
 import { HEADER_DATA } from '../../components/app-header/queries';
 import { HOME_DATA, PriceFilter, DateFilter, SortBy } from './queries';
 import SliderCard from './SliderCard';
@@ -35,6 +38,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
   const [priceFilter, setPriceFilter] = useState<PriceFilter>('ALL');
   const [dateFilter, setDateFilter] = useState<DateFilter>('ALL');
   const [sortBy, setSortBy] = useState<SortBy>('DATE_ASC');
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   const { data, loading, error } = useQuery(HOME_DATA, {
     variables: {
@@ -287,13 +291,16 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
   if (error) return <Alert severity="error">{error.message}</Alert>;
 
   return (
-    <Stack spacing={3}>
+    <>
       {sliders.length > 0 && (
+        // Rendered OUTSIDE the Stack so MUI Stack's child-margin reset
+        // (`& > :not(style):not(style) { margin: 0 }`) cannot clobber the
+        // -50vw escape used to break out of the centred Container.
         <Box
           sx={{
             overflow: 'hidden',
             mt: -2,
-            // True edge-to-edge: escape any parent gutters/Container.
+            mb: 3,
             position: 'relative',
             left: '50%',
             right: '50%',
@@ -334,22 +341,41 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
         </Box>
       )}
 
+      <Stack spacing={3}>
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="subtitle2" color="text.secondary">
           Browse pods
         </Typography>
-        <FilterMenu
-          categoryChips={categoryChips}
-          categoryId={categoryId}
-          setCategoryId={setCategoryId}
-          priceFilter={priceFilter}
-          setPriceFilter={setPriceFilter}
-          dateFilter={dateFilter}
-          setDateFilter={setDateFilter}
-          sortBy={sortBy}
-          setSortBy={setSortBy}
-          locationId={locationId}
-        />
+        <Stack direction="row" spacing={1} alignItems="center">
+          <Tooltip title="Search pods">
+            <IconButton
+              onClick={() => setFiltersOpen(true)}
+              aria-label="search pods"
+              sx={{
+                border: 1,
+                borderColor: 'divider',
+                bgcolor: 'background.paper',
+                '&:hover': { bgcolor: 'action.hover' },
+              }}
+            >
+              <SearchIcon />
+            </IconButton>
+          </Tooltip>
+          <FilterMenu
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            categoryChips={categoryChips}
+            categoryId={categoryId}
+            setCategoryId={setCategoryId}
+            priceFilter={priceFilter}
+            setPriceFilter={setPriceFilter}
+            dateFilter={dateFilter}
+            setDateFilter={setDateFilter}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            locationId={locationId}
+          />
+        </Stack>
       </Stack>
 
       {clubs.length === 0 ? (
@@ -449,6 +475,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
           <AddIcon />
         </Fab>
       )}
-    </Stack>
+      </Stack>
+    </>
   );
 }

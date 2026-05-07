@@ -253,7 +253,7 @@ export default function App() {
             path="/explore"
             element={
               <RequireAuth>
-                <ExplorePage />
+                <ExplorePage superCategorySlug={superCategory} />
               </RequireAuth>
             }
           />
@@ -269,7 +269,7 @@ export default function App() {
             path="/clubs"
             element={
               <RequireAuth>
-                <ClubsPage />
+                <ClubsPage superCategorySlug={superCategory} />
               </RequireAuth>
             }
           />
@@ -277,7 +277,7 @@ export default function App() {
             path="/chats"
             element={
               <RequireAuth>
-                <ChatsPage />
+                <ChatsPage superCategorySlug={superCategory} />
               </RequireAuth>
             }
           />

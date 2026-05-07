@@ -47,10 +47,15 @@ const EXPLORE_PODS = gql`
     clubs(filter: { is_active: true }) {
       id
       club_name
+      super_category_id
       club_feature_images_and_videos {
         url
         type
       }
+    }
+    superCategories: categories(filter: { level: SUPER }) {
+      id
+      slug
     }
     locations {
       id
@@ -69,7 +74,11 @@ const TOGGLE_SAVED_POD = gql`
   }
 `;
 
-export default function ExplorePage() {
+interface ExplorePageProps {
+  superCategorySlug?: string;
+}
+
+export default function ExplorePage({ superCategorySlug }: ExplorePageProps) {
   const { data, loading, error } = useQuery(EXPLORE_PODS, {
     fetchPolicy: 'cache-and-network',
   });
@@ -93,13 +102,20 @@ export default function ExplorePage() {
 
   const pods = useMemo(() => {
     const list = (data?.pods ?? []).slice();
-    list.sort(
+    const supers = data?.superCategories ?? [];
+    const selectedSuperId = superCategorySlug
+      ? supers.find((s: any) => s.slug === superCategorySlug)?.id
+      : null;
+    const filtered = selectedSuperId
+      ? list.filter((p: any) => clubsById.get(p.club_id)?.super_category_id === selectedSuperId)
+      : list;
+    filtered.sort(
       (a: any, b: any) =>
         new Date(a.pod_date_time || 0).getTime() -
         new Date(b.pod_date_time || 0).getTime(),
     );
-    return list;
-  }, [data]);
+    return filtered;
+  }, [data, clubsById, superCategorySlug]);
 
   const toggleSave = async (id: string) => {
     const previous = saved;

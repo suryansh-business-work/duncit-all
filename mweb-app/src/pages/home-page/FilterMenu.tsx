@@ -37,6 +37,8 @@ interface Props {
   sortBy: SortBy;
   setSortBy: (v: SortBy) => void;
   locationId?: string;
+  open?: boolean;
+  onOpenChange?: (open: boolean) => void;
 }
 
 const DEFAULT_SORT: SortBy = 'DATE_ASC';
@@ -55,7 +57,12 @@ export default function FilterMenu(props: Props) {
   } = props;
 
   const navigate = useNavigate();
-  const [open, setOpen] = useState(false);
+  const [internalOpen, setInternalOpen] = useState(false);
+  const open = props.open ?? internalOpen;
+  const setOpen = (next: boolean) => {
+    if (props.onOpenChange) props.onOpenChange(next);
+    else setInternalOpen(next);
+  };
   const [search, setSearch] = useState('');
 
   const activeCount =

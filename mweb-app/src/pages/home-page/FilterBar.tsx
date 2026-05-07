@@ -34,7 +34,7 @@ export default function FilterBar({
   setSortBy,
 }: Props) {
   return (
-    <Stack spacing={1}>
+    <Stack spacing={1.25}>
       {/* ── Category row ── */}
       {categoryChips.length > 0 && (
         <Box sx={scrollRow}>
@@ -44,7 +44,7 @@ export default function FilterBar({
             color={!categoryId ? 'primary' : 'default'}
             variant={!categoryId ? 'filled' : 'outlined'}
             onClick={() => setCategoryId('')}
-            sx={{ flexShrink: 0 }}
+            sx={{ flexShrink: 0, height: 30 }}
           />
           {categoryChips.map((c: any) => {
             const selected = categoryId === c.id;
@@ -59,6 +59,7 @@ export default function FilterBar({
                 onClick={() => setCategoryId(selected ? '' : c.id)}
                 sx={{
                   flexShrink: 0,
+                  height: 30,
                   ...(isSub && !selected
                     ? { color: 'text.secondary', borderStyle: 'dashed' }
                     : null),
@@ -90,7 +91,7 @@ export default function FilterBar({
               color={priceFilter === val ? 'primary' : 'default'}
               variant={priceFilter === val ? 'filled' : 'outlined'}
               onClick={() => setPriceFilter(val)}
-              sx={{ flexShrink: 0 }}
+              sx={{ flexShrink: 0, height: 30 }}
             />
           ))}
         </Box>
@@ -118,7 +119,7 @@ export default function FilterBar({
               color={dateFilter === val ? 'secondary' : 'default'}
               variant={dateFilter === val ? 'filled' : 'outlined'}
               onClick={() => setDateFilter(val)}
-              sx={{ flexShrink: 0 }}
+              sx={{ flexShrink: 0, height: 30 }}
             />
           ))}
         </Box>

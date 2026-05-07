@@ -40,7 +40,8 @@ function arrayBufferToBase64(buffer: ArrayBuffer): string {
 export async function registerServiceWorker(): Promise<ServiceWorkerRegistration | null> {
   if (!('serviceWorker' in navigator)) return null;
   try {
-    const reg = await navigator.serviceWorker.register('/sw.js', { scope: '/' });
+    const reg = await navigator.serviceWorker.register('/sw.js?v=20260508-slider', { scope: '/' });
+    await reg.update();
     return reg;
   } catch (e) {
      

@@ -1,8 +1,8 @@
 import { gql } from '@apollo/client';
 
 export const HOME_DATA = gql`
-  query HomeFeed($locId: ID, $podFilter: PodFilterInput, $superCatSlug: String) {
-    sliders(filter: { location_id: $locId, super_category_slug: $superCatSlug, is_active: true }) {
+  query HomeFeed($podFilter: PodFilterInput, $superCatSlug: String) {
+    sliders(filter: { super_category_slug: $superCatSlug, is_active: true }) {
       id
       title
       description
@@ -11,17 +11,8 @@ export const HOME_DATA = gql`
       link_url
       scope
       super_category_slug
-      sort_order
-    }
-    globalSliders: sliders(filter: { scope: GLOBAL, super_category_slug: $superCatSlug, is_active: true }) {
-      id
-      title
-      description
-      media_url
-      media_type
-      link_url
-      scope
-      super_category_slug
+      location_id
+      zone_name
       sort_order
     }
     clubs(filter: { is_active: true }) {

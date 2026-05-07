@@ -1,28 +1,22 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
-  Avatar,
   Badge,
   Box,
   Button,
-  CircularProgress,
   Divider,
   IconButton,
   InputAdornment,
-  ListItemIcon,
-  ListItemText,
-  MenuItem,
   TextField,
   Tooltip,
-  Typography,
 } from '@mui/material';
-import EventIcon from '@mui/icons-material/Event';
 import FilterListIcon from '@mui/icons-material/FilterList';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import SearchIcon from '@mui/icons-material/Search';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
 import FilterBar from './FilterBar';
+import PodSearchResults from './PodSearchResults';
 import { POD_SEARCH } from '../../components/app-header/queries';
 import type { DateFilter, PriceFilter, SortBy } from './queries';
 
@@ -64,6 +58,15 @@ export default function FilterMenu(props: Props) {
     else setInternalOpen(next);
   };
   const [search, setSearch] = useState('');
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    const focusTimer = window.setTimeout(() => {
+      searchInputRef.current?.focus();
+    }, 120);
+    return () => window.clearTimeout(focusTimer);
+  }, [open]);
 
   const activeCount =
     (categoryId ? 1 : 0) +
@@ -115,7 +118,7 @@ export default function FilterMenu(props: Props) {
         open={open}
         onClose={() => setOpen(false)}
         title="Search & Filters"
-        sheetMaxHeight="76dvh"
+        sheetMaxHeight="82dvh"
         actions={
           <>
             <Button size="small" startIcon={<RestartAltIcon />} onClick={handleReset} disabled={activeCount === 0}>
@@ -127,10 +130,10 @@ export default function FilterMenu(props: Props) {
           </>
         }
       >
-        <Box sx={{ mx: -0.5 }}>
-          <Box sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', pb: 1 }}>
+        <Box>
+          <Box sx={{ position: 'sticky', top: 0, zIndex: 1, bgcolor: 'background.paper', pb: 1.25 }}>
             <TextField
-              autoFocus
+              inputRef={searchInputRef}
               fullWidth
               size="small"
               placeholder="Search pods..."
@@ -147,49 +150,18 @@ export default function FilterMenu(props: Props) {
             />
 
             {trimmed.length > 0 && (
-              <Box sx={{ mt: 0.75, maxHeight: 212, overflowY: 'auto', border: 1, borderColor: 'divider', borderRadius: 2 }}>
-                {podsLoading && (
-                  <Box sx={{ display: 'flex', justifyContent: 'center', py: 1.25 }}>
-                    <CircularProgress size={18} />
-                  </Box>
-                )}
-                {!podsLoading && podResults.length === 0 && (
-                  <Typography variant="body2" color="text.secondary" sx={{ py: 1, textAlign: 'center' }}>
-                    No pods found
-                  </Typography>
-                )}
-                {podResults.slice(0, 6).map((p: any) => (
-                  <MenuItem
-                    dense
-                    key={p.id}
-                    onClick={() => {
-                      setOpen(false);
-                      navigate(`/pods/${p.id}`);
-                    }}
-                    sx={{ px: 1, py: 0.75 }}
-                  >
-                    <ListItemIcon sx={{ minWidth: 42 }}>
-                      <Avatar
-                        variant="rounded"
-                        src={p.pod_images_and_videos?.[0]?.url}
-                        sx={{ width: 34, height: 34 }}
-                      >
-                        <EventIcon fontSize="small" />
-                      </Avatar>
-                    </ListItemIcon>
-                    <ListItemText
-                      primaryTypographyProps={{ noWrap: true, sx: { lineHeight: 1.2, fontWeight: 700 } }}
-                      secondaryTypographyProps={{ noWrap: true, sx: { lineHeight: 1.15 } }}
-                      primary={p.pod_title}
-                      secondary={p.pod_date_time ? new Date(p.pod_date_time).toLocaleString() : p.pod_id}
-                    />
-                  </MenuItem>
-                ))}
-              </Box>
+              <PodSearchResults
+                loading={podsLoading}
+                pods={podResults}
+                onSelect={(podId) => {
+                  setOpen(false);
+                  navigate(`/pods/${podId}`);
+                }}
+              />
             )}
           </Box>
 
-          {trimmed.length > 0 && <Divider sx={{ mb: 1 }} />}
+          {trimmed.length > 0 && <Divider sx={{ mt: 0.25, mb: 1.25 }} />}
           <FilterBar {...props} />
         </Box>
       </ResponsiveDialog>

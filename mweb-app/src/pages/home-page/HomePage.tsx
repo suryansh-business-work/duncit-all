@@ -42,7 +42,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
 
   const { data, loading, error } = useQuery(HOME_DATA, {
     variables: {
-      locId: locationId || undefined,
       superCatSlug: superCategorySlug || undefined,
       podFilter: {
         location_id: locationId || undefined,
@@ -91,12 +90,22 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
   }, [data, superCategorySlug]);
 
   const sliders = useMemo(() => {
-    const a = data?.sliders ?? [];
-    const b = data?.globalSliders ?? [];
+    const list = data?.sliders ?? [];
     const map = new Map<string, any>();
-    [...a, ...b].forEach((s) => map.set(s.id, s));
+    list
+      .filter((s: any) => {
+        if (s.scope === 'GLOBAL') return true;
+        if (s.scope === 'LOCATION') return !locationId || s.location_id === locationId;
+        if (s.scope === 'ZONE') {
+          const locationOk = !locationId || s.location_id === locationId;
+          const zoneOk = !zoneName || s.zone_name === zoneName;
+          return locationOk && zoneOk;
+        }
+        return true;
+      })
+      .forEach((s: any) => map.set(s.id, s));
     return [...map.values()].sort((x, y) => (x.sort_order ?? 0) - (y.sort_order ?? 0));
-  }, [data]);
+  }, [data, locationId, zoneName]);
 
   const catParent = useMemo(() => {
     const m = new Map<string, string | null>();

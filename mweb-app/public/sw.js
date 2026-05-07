@@ -1,5 +1,5 @@
 /* Duncit Service Worker */
-const CACHE_NAME = 'duncit-shell-v1';
+const CACHE_NAME = 'duncit-shell-v2';
 const SHELL = ['/', '/index.html', '/manifest.webmanifest'];
 
 self.addEventListener('install', (event) => {

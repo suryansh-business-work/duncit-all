@@ -57,6 +57,7 @@ export const podTypeDefs = /* GraphQL */ `
     zone_name: String
     search: String
     is_active: Boolean
+    host_user_id: ID
   }
 
   input CreatePodInput {

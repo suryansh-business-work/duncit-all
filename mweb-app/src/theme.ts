@@ -73,7 +73,7 @@ export const theme = createTheme({
   shape: { borderRadius: 8 },
   typography: {
     fontFamily:
-      '"Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+      '"Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
     h1: { fontWeight: 800, letterSpacing: '-0.02em' },
     h2: { fontWeight: 800, letterSpacing: '-0.02em' },
     h3: { fontWeight: 700, letterSpacing: '-0.02em' },

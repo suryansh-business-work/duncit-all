@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { notifyError } from '../components/notify';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -157,7 +158,7 @@ export default function RolesPage() {
       await deleteRole({ variables: { role_id: r.id } });
       await refetch();
     } catch (e: any) {
-      alert(e.message);
+      notifyError(e.message);
     }
   };
 

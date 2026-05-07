@@ -11,7 +11,7 @@ const TABS = [
   { value: '/explore', label: 'Explore', icon: <ExploreIcon /> },
   { value: '/clubs', label: 'Clubs', icon: <GroupsIcon /> },
   { value: '/chats', label: 'Chats', icon: <ChatBubbleOutlineIcon /> },
-  { value: '/profile', label: 'Your Profile', icon: <PersonOutlineIcon /> },
+  { value: '/profile', label: 'Profile', icon: <PersonOutlineIcon /> },
 ];
 
 export default function BottomNav() {

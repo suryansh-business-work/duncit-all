@@ -30,9 +30,9 @@ const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=60
           <i class="fa-solid fa-bars text-lg"></i>
         </button>
         <div class="flex items-center gap-2">
-          <span class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-ink text-white text-xs font-bold sticker">
-            <i class="fa-solid fa-clock text-tertiary"></i> Coming Soon
-          </span>
+          <a href="https://mweb.duncit.com/login" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary text-ink text-xs font-bold sticker hover:scale-105 transition">
+            <i class="fa-solid fa-bolt"></i> mWeb is Live
+          </a>
           <a href="#" class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="App Store">
             <i class="fa-brands fa-apple text-lg"></i>
           </a>
@@ -153,11 +153,28 @@ const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=60
           <i class="fa-solid fa-mobile-screen"></i> Mobile App
         </span>
         <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4 text-white">
-          App is <span class="text-tertiary">Coming Soon</span>
+          Native app is <span class="text-tertiary">Coming Soon</span>
         </h2>
-        <p class="text-white/85 text-lg max-w-xl mx-auto mb-10">
-          Our iOS and Android apps are in the final stages. Get notified when they hit the stores.
+        <p class="text-white/85 text-lg max-w-xl mx-auto mb-6">
+          Meanwhile, our Mobile Web app (mWeb) is live — sign in below and
+          launch Duncit right from your browser. iOS &amp; Android apps land soon.
         </p>
+
+        <!-- Live mWeb CTA -->
+        <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mb-10">
+          <a
+            href="https://mweb.duncit.com/login"
+            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-tertiary text-ink font-bold text-base sticker hover:scale-[1.03] transition"
+          >
+            <i class="fa-solid fa-right-to-bracket"></i> Sign in to launch mWeb
+          </a>
+          <a
+            href="https://mweb.duncit.com/register"
+            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/10 backdrop-blur text-white font-bold text-base border border-white/30 hover:bg-white/20 transition"
+          >
+            <i class="fa-solid fa-user-plus"></i> Create an account
+          </a>
+        </div>
 
         <!-- App store coming soon cards -->
         <div class="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">

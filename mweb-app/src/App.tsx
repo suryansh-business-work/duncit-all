@@ -13,6 +13,8 @@ import ClubDetailsPage from './pages/ClubDetailsPage';
 import BecomeHostPage from './pages/BecomeHostPage';
 import RegisterVenuePage from './pages/RegisterVenuePage';
 import HostsVenuesPage from './pages/HostsVenuesPage';
+import HostManagePage from './pages/HostManagePage';
+import VenueManagePage from './pages/VenueManagePage';
 import FaqsPage from './pages/FaqsPage';
 import PolicyPage from './pages/PolicyPage';
 import PodIdeasPage from './pages/PodIdeasPage';
@@ -25,6 +27,7 @@ import ChatRoomPage from './pages/ChatRoomPage';
 import AppHeader from './components/AppHeader';
 import BottomNav from './components/BottomNav';
 import SplashScreen from './components/SplashScreen';
+import { NotifyHost } from './components/notify';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const isAuthed = !!localStorage.getItem('token');
@@ -173,6 +176,22 @@ export default function App() {
             }
           />
           <Route
+            path="/host/manage"
+            element={
+              <RequireAuth>
+                <HostManagePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/venues/manage"
+            element={
+              <RequireAuth>
+                <VenueManagePage />
+              </RequireAuth>
+            }
+          />
+          <Route
             path="/faqs"
             element={
               <RequireAuth>
@@ -258,6 +277,7 @@ export default function App() {
         </Routes>
       </Container>
       {isAuthed && <BottomNav />}
+      <NotifyHost />
     </Box>
   );
 }

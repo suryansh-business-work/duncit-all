@@ -162,7 +162,7 @@ export default function SignupSurveyPage() {
       <Box
         sx={{
           position: 'fixed',
-          bottom: 0,
+          bottom: 'calc(56px + env(safe-area-inset-bottom))',
           left: 0,
           right: 0,
           zIndex: 10,

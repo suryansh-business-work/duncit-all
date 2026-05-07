@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react';
+import { notifyError } from '../../components/notify';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -152,7 +153,7 @@ export default function SlidersPage() {
       setToast('Deleted');
       await refetch();
     } catch (e: any) {
-      alert(e.message);
+      notifyError(e.message);
     }
   };
 

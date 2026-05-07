@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { notifyError } from '../../components/notify';
 import { useMutation, useQuery, type DocumentNode } from '@apollo/client';
 import {
   Alert,
@@ -100,7 +101,7 @@ export function KeyEntityCrudPage(props: KeyEntityCrudPageProps) {
       await deleteMut({ variables: { [idVarName]: row.id } });
       await refetch();
     } catch (e: any) {
-      alert(e.message);
+      notifyError(e.message);
     }
   };
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { notifyError } from '../components/notify';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -162,7 +163,7 @@ export default function FeatureFlagsPage() {
       await deleteFlag({ variables: { flag_id: f.id } });
       await refetch();
     } catch (e: any) {
-      alert(e.message);
+      notifyError(e.message);
     }
   };
 

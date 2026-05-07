@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { notifyError } from '../../components/notify';
 import { useMutation, useQuery } from '@apollo/client';
 import { Link as RouterLink } from 'react-router-dom';
 import {
@@ -131,7 +132,7 @@ export default function ClubsPage() {
       setToast('Deleted');
       await refetch();
     } catch (e: any) {
-      alert(e.message);
+      notifyError(e.message);
     }
   };
 

@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { notifyError } from '../../components/notify';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -55,7 +56,7 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Deta
       await refetch();
       onChanged();
     } catch (e: any) {
-      alert(e.message);
+      notifyError(e.message);
     }
   };
 

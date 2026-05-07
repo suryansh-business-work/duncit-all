@@ -63,6 +63,7 @@ import AppsIcon from '@mui/icons-material/Apps';
 import SearchIcon from '@mui/icons-material/Search';
 import { useColorMode } from './ColorModeContext';
 import AdminBreadcrumbs from './components/AdminBreadcrumbs';
+import { NotifyHost } from './components/notify';
 
 const DRAWER_WIDTH = 264;
 const HEADER_HEIGHT = 48;
@@ -409,7 +410,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   const drawer = (
     <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      <Brand>
+      <Brand sx={{ cursor: 'pointer' }} onClick={() => { closeMobile(); navigate('/hub'); }}>
         <Box
           component="img"
           src="/duncit-logo.svg"
@@ -560,6 +561,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <AdminBreadcrumbs />
         <Content>{children}</Content>
       </Main>
+      <NotifyHost />
     </Root>
   );
 }

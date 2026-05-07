@@ -23,7 +23,7 @@ export const buildTheme = (mode: PaletteMode): Theme =>
     spacing: 6, // tighter (default is 8) — denser, more compact UI
     typography: {
       fontFamily:
-        '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        '"Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       fontSize: 13.5,
       h4: { fontWeight: 700, fontSize: '1.5rem' },
       h5: { fontWeight: 600, fontSize: '1.2rem' },

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { notifyError } from '../../components/notify';
 import { useMutation, useQuery } from '@apollo/client';
 import { useSearchParams } from 'react-router-dom';
 import {
@@ -166,7 +167,7 @@ export default function PodsPage() {
       setToast('Deleted');
       await refetch();
     } catch (e: any) {
-      alert(e.message);
+      notifyError(e.message);
     }
   };
 

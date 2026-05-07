@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { notifyError } from '../components/notify';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -211,7 +212,7 @@ export default function LocationsPage() {
       setToast('Deleted');
       await refetch();
     } catch (e: any) {
-      alert(e.message);
+      notifyError(e.message);
     }
   };
 

@@ -64,6 +64,7 @@ export const podService = {
     zone_name?: string;
     search?: string;
     is_active?: boolean;
+    host_user_id?: string;
   }) {
     const q: any = {};
     if (filter?.club_id) q.club_id = filter.club_id;
@@ -71,6 +72,7 @@ export const podService = {
     if (filter?.zone_name) q.zone_name = filter.zone_name;
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
     if (filter?.search) q.pod_title = new RegExp(filter.search, 'i');
+    if (filter?.host_user_id) q.pod_hosts_id = filter.host_user_id;
     const docs = await PodModel.find(q).sort({ pod_date_time: -1 });
     return docs.map(toPub);
   },

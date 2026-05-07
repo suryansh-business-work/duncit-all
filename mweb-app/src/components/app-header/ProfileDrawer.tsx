@@ -78,10 +78,10 @@ export default function ProfileDrawer({
     { label: 'Saved Items', icon: <BookmarkBorderIcon fontSize="small" />, onClick: go('/saved') },
   ];
   const hostItem: Item = isHost
-    ? { label: 'Hosts Management', icon: <DashboardIcon fontSize="small" />, onClick: go('/host') }
+    ? { label: 'Hosts Management', icon: <DashboardIcon fontSize="small" />, onClick: go('/host/manage') }
     : { label: 'Be a host', icon: <StorefrontIcon fontSize="small" />, onClick: go('/become-host') };
   const venueItem: Item = isVenue
-    ? { label: 'Venue Management', icon: <StorefrontIcon fontSize="small" />, onClick: go('/venues') }
+    ? { label: 'Venue Management', icon: <StorefrontIcon fontSize="small" />, onClick: go('/venues/manage') }
     : {
         label: 'Be a Venue Owner',
         icon: <AddBusinessIcon fontSize="small" />,
@@ -152,12 +152,6 @@ export default function ProfileDrawer({
               <Typography variant="caption" color="text.secondary" noWrap display="block">
                 {me?.email ?? '—'}
               </Typography>
-              {(isHost || isVenue) && (
-                <Stack direction="row" spacing={0.5} sx={{ mt: 0.75, flexWrap: 'wrap', gap: 0.5 }}>
-                  {isHost && <Chip size="small" label="Host" color="secondary" sx={{ height: 22, fontSize: 11 }} />}
-                  {isVenue && <Chip size="small" label="Venue Owner" color="secondary" sx={{ height: 22, fontSize: 11 }} />}
-                </Stack>
-              )}
               {roles.length > 0 && (
                 <Stack
                   direction="row"

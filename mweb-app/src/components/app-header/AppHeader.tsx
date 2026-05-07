@@ -241,7 +241,7 @@ export default function AppHeader({
       elevation={0}
       sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
     >
-      <Toolbar sx={{ gap: 1, py: 0, minHeight: 54, px: 1.5 }}>
+      <Toolbar sx={{ gap: 1.25, py: 0.75, minHeight: 64, px: 2 }}>
         <Stack
           direction="row"
           alignItems="center"
@@ -250,30 +250,17 @@ export default function AppHeader({
           onClick={() => navigate('/')}
         >
           <Box
+            component="img"
+            src={branding?.logo_url || '/duncit-logo.svg'}
+            alt={branding?.app_name ?? 'Duncit'}
             sx={{
-              display: 'inline-flex',
-              alignItems: 'center',
-              px: 1,
-              py: 0.5,
-              borderRadius: 2,
-              background: (t) =>
-                `linear-gradient(135deg, ${t.palette.primary.main}1f, ${t.palette.primary.main}05)`,
-              boxShadow: (t) => `0 0 0 1px ${t.palette.primary.main}33, 0 4px 14px -8px ${t.palette.primary.main}66`,
+              height: 44,
+              width: 'auto',
+              maxWidth: 168,
+              objectFit: 'contain',
+              display: 'block',
             }}
-          >
-            <Box
-              component="img"
-              src={branding?.logo_url || '/duncit-logo.svg'}
-              alt={branding?.app_name ?? 'Duncit'}
-              sx={{
-                height: 42,
-                width: 'auto',
-                maxWidth: 156,
-                objectFit: 'contain',
-                filter: (t) => `drop-shadow(0 2px 6px ${t.palette.primary.main}55)`,
-              }}
-            />
-          </Box>
+          />
         </Stack>
 
         <Box sx={{ flexGrow: 1 }} />

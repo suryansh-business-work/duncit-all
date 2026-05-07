@@ -74,9 +74,11 @@ export const paymentTypeDefs = /* GraphQL */ `
     payment(payment_doc_id: ID!): Payment
     myPayments: [Payment!]!
     checkoutQuote(input: CheckoutQuoteInput!): CheckoutQuote!
+    paymentInvoicePdfBase64(payment_doc_id: ID!): String!
   }
 
   extend type Mutation {
     dummyCheckout(input: DummyCheckoutInput!): Payment!
+    refundPayment(payment_doc_id: ID!, reason: String): Payment!
   }
 `;

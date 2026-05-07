@@ -1,12 +1,17 @@
 import { useMemo, useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { gql, useMutation, useQuery, useApolloClient } from '@apollo/client';
 import {
   Alert,
   Box,
+  Button,
   Card,
   CardContent,
   Chip,
   CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
   IconButton,
   MenuItem,
   Stack,
@@ -19,8 +24,10 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import DownloadIcon from '@mui/icons-material/Download';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import RefreshIcon from '@mui/icons-material/Refresh';
+import UndoIcon from '@mui/icons-material/Undo';
 
 const PAYMENTS = gql`
   query AdminPayments($filter: PaymentFilterInput, $limit: Int) {
@@ -51,6 +58,21 @@ const STATUS_COLORS: Record<string, 'default' | 'warning' | 'info' | 'success' |
   FAILED: 'error',
   REFUNDED: 'info',
 };
+
+const INVOICE_PDF = gql`
+  query InvoicePdf($id: ID!) {
+    paymentInvoicePdfBase64(payment_doc_id: $id)
+  }
+`;
+
+const REFUND_PAYMENT = gql`
+  mutation RefundPayment($id: ID!, $reason: String) {
+    refundPayment(payment_doc_id: $id, reason: $reason) {
+      id
+      status
+    }
+  }
+`;
 
 export default function PaymentLogsPage() {
   const [statusFilter, setStatusFilter] = useState('');
@@ -87,6 +109,57 @@ export default function PaymentLogsPage() {
   }, [items]);
 
   const fmt = (n: number, sym = '₹') => `${sym}${n.toFixed(2)}`;
+
+  const apollo = useApolloClient();
+  const [refundMut, { loading: refundLoading }] = useMutation(REFUND_PAYMENT);
+  const [refundFor, setRefundFor] = useState<any | null>(null);
+  const [refundReason, setRefundReason] = useState('');
+  const [actionError, setActionError] = useState<string | null>(null);
+  const [downloadingId, setDownloadingId] = useState<string | null>(null);
+
+  const handleDownloadInvoice = async (p: any) => {
+    if (!p.invoice_no) return;
+    setActionError(null);
+    setDownloadingId(p.id);
+    try {
+      const { data: pdfData } = await apollo.query({
+        query: INVOICE_PDF,
+        variables: { id: p.id },
+        fetchPolicy: 'network-only',
+      });
+      const b64 = pdfData?.paymentInvoicePdfBase64;
+      if (!b64) throw new Error('Invoice not available');
+      const bin = atob(b64);
+      const arr = new Uint8Array(bin.length);
+      for (let i = 0; i < bin.length; i++) arr[i] = bin.charCodeAt(i);
+      const blob = new Blob([arr], { type: 'application/pdf' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `invoice-${p.invoice_no.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`;
+      document.body.appendChild(a);
+      a.click();
+      a.remove();
+      URL.revokeObjectURL(url);
+    } catch (e: any) {
+      setActionError(e?.message ?? 'Could not download invoice');
+    } finally {
+      setDownloadingId(null);
+    }
+  };
+
+  const handleConfirmRefund = async () => {
+    if (!refundFor) return;
+    setActionError(null);
+    try {
+      await refundMut({ variables: { id: refundFor.id, reason: refundReason || null } });
+      setRefundFor(null);
+      setRefundReason('');
+      refetch();
+    } catch (e: any) {
+      setActionError(e?.message ?? 'Refund failed');
+    }
+  };
 
   return (
     <Box>
@@ -175,6 +248,7 @@ export default function PaymentLogsPage() {
                     <TableCell align="right">Total</TableCell>
                     <TableCell>Status</TableCell>
                     <TableCell>IDs</TableCell>
+                    <TableCell align="right">Actions</TableCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>
@@ -213,6 +287,37 @@ export default function PaymentLogsPage() {
                           </Typography>
                         )}
                       </TableCell>
+                      <TableCell align="right">
+                        <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+                          <Tooltip title={p.invoice_no ? 'Download invoice' : 'No invoice generated'}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                disabled={!p.invoice_no || downloadingId === p.id}
+                                onClick={() => handleDownloadInvoice(p)}
+                              >
+                                {downloadingId === p.id ? (
+                                  <CircularProgress size={16} />
+                                ) : (
+                                  <DownloadIcon fontSize="small" />
+                                )}
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                          <Tooltip title={p.status === 'SUCCESS' ? 'Refund' : 'Only successful payments can be refunded'}>
+                            <span>
+                              <IconButton
+                                size="small"
+                                color="warning"
+                                disabled={p.status !== 'SUCCESS'}
+                                onClick={() => setRefundFor(p)}
+                              >
+                                <UndoIcon fontSize="small" />
+                              </IconButton>
+                            </span>
+                          </Tooltip>
+                        </Stack>
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
@@ -221,6 +326,48 @@ export default function PaymentLogsPage() {
           )}
         </CardContent>
       </Card>
+
+      <Dialog open={!!refundFor} onClose={() => setRefundFor(null)} fullWidth maxWidth="xs">
+        <DialogTitle>Refund payment</DialogTitle>
+        <DialogContent dividers>
+          {refundFor && (
+            <Stack spacing={1.5}>
+              <Typography variant="body2">
+                Refund <b>{fmt(refundFor.total, refundFor.currency_symbol)}</b> to {refundFor.user_name}?
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Payment ID: {refundFor.payment_id}
+              </Typography>
+              <TextField
+                label="Reason (optional)"
+                value={refundReason}
+                onChange={(e) => setRefundReason(e.target.value)}
+                multiline
+                minRows={2}
+                fullWidth
+              />
+              {actionError && <Alert severity="error">{actionError}</Alert>}
+            </Stack>
+          )}
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setRefundFor(null)}>Cancel</Button>
+          <Button
+            color="warning"
+            variant="contained"
+            disabled={refundLoading}
+            onClick={handleConfirmRefund}
+          >
+            {refundLoading ? 'Refunding…' : 'Confirm refund'}
+          </Button>
+        </DialogActions>
+      </Dialog>
+
+      {actionError && !refundFor && (
+        <Alert severity="error" sx={{ mt: 2 }} onClose={() => setActionError(null)}>
+          {actionError}
+        </Alert>
+      )}
     </Box>
   );
 }

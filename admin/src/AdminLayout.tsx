@@ -48,6 +48,7 @@ import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
@@ -209,13 +210,13 @@ export const NAV: NavSection[] = [
       '/policies',
       '/email-templates',
       '/badges',
-      '/faq-submissions',
+      '/support-logs',
     ],
     items: [
       { label: 'Notifications', to: '/notifications', icon: <NotificationsActiveIcon /> },
       { label: 'Interview Requests', to: '/interview-requests', icon: <EventAvailableIcon /> },
       { label: 'FAQs', to: '/faqs', icon: <HelpOutlineIcon /> },
-      { label: 'FAQ Submissions', to: '/faq-submissions', icon: <HelpOutlineIcon /> },
+      { label: 'Support Logs', to: '/support-logs', icon: <SupportAgentIcon /> },
       { label: 'Policies', to: '/policies', icon: <DescriptionIcon /> },
       { label: 'Email Templates', to: '/email-templates', icon: <MarkEmailReadIcon /> },
       { label: 'Badges', to: '/badges', icon: <ShieldIcon /> },
@@ -223,10 +224,11 @@ export const NAV: NavSection[] = [
   },
   {
     heading: 'Website',
-    prefixes: ['/newsletter', '/contact-submissions'],
+    prefixes: ['/newsletter', '/contact-submissions', '/faq-submissions'],
     items: [
       { label: 'Newsletter', to: '/newsletter', icon: <MarkEmailReadIcon /> },
       { label: 'Contact Submissions', to: '/contact-submissions', icon: <MarkEmailReadIcon /> },
+      { label: 'FAQ Submissions', to: '/faq-submissions', icon: <HelpOutlineIcon /> },
     ],
   },
   {

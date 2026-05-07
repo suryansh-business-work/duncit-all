@@ -37,11 +37,19 @@ export const paymentResolvers = {
       requireAuth(ctx);
       return computeQuote(args.input.amount);
     },
+    paymentInvoicePdfBase64: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return paymentService.invoicePdfBase64(args.payment_doc_id);
+    },
   },
   Mutation: {
     dummyCheckout: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
       return paymentService.dummyCheckout(args.input, u.id);
+    },
+    refundPayment: (_p: unknown, args: { payment_doc_id: string; reason?: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return paymentService.refund(args.payment_doc_id, args.reason);
     },
   },
 };

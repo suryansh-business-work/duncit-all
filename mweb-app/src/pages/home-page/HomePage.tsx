@@ -10,11 +10,14 @@ import {
   Box,
   Card,
   Chip,
+  Fab,
   Skeleton,
   Stack,
   Typography,
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { HEADER_DATA } from '../../components/app-header/queries';
 import { HOME_DATA, PriceFilter, DateFilter, SortBy } from './queries';
 import SliderCard from './SliderCard';
 import PodCard from './PodCard';
@@ -45,6 +48,9 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
     },
     fetchPolicy: 'cache-and-network',
   });
+
+  const { data: headerData } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-first' });
+  const isHost = (headerData?.me?.roles ?? []).includes('HOST');
 
   const catSuperMap = useMemo(() => {
     const cats = data?.categories ?? [];
@@ -286,8 +292,13 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
         <Box
           sx={{
             overflow: 'hidden',
-            // Full-bleed: escape parent Container gutters on every breakpoint.
-            mx: { xs: -2, sm: -3 },
+            // True edge-to-edge: escape any parent gutters/Container.
+            position: 'relative',
+            left: '50%',
+            right: '50%',
+            ml: '-50vw',
+            mr: '-50vw',
+            width: '100vw',
             borderRadius: 0,
             '.slick-dots': { bottom: 12 },
             '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },
@@ -309,7 +320,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
             adaptiveHeight
           >
             {sliders.map((s) => (
-              <Box key={s.id} sx={{ px: 0.5 }}>
+              <Box key={s.id}>
                 <SliderCard slider={s} />
               </Box>
             ))}
@@ -331,6 +342,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
           setDateFilter={setDateFilter}
           sortBy={sortBy}
           setSortBy={setSortBy}
+          locationId={locationId}
         />
       </Stack>
 
@@ -364,7 +376,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
                     <GroupsIcon />
                   </Avatar>
                   <Box>
-                    <Typography variant="h6" fontWeight={700}>
+                    <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
                       {club.club_name}
                     </Typography>
                     {club.club_description && (
@@ -415,6 +427,21 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
             </Box>
           );
         })
+      )}
+      {isHost && (
+        <Fab
+          color="primary"
+          aria-label="Create pod"
+          onClick={() => navigate('/host/manage')}
+          sx={{
+            position: 'fixed',
+            bottom: 'calc(72px + env(safe-area-inset-bottom))',
+            right: 16,
+            zIndex: 5,
+          }}
+        >
+          <AddIcon />
+        </Fab>
       )}
     </Stack>
   );

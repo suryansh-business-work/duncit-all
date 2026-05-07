@@ -18,6 +18,7 @@ import VenueManagePage from './pages/VenueManagePage';
 import FaqsPage from './pages/FaqsPage';
 import PolicyPage from './pages/PolicyPage';
 import PodIdeasPage from './pages/PodIdeasPage';
+import SupportPage from './pages/SupportPage';
 import CheckoutPage from './pages/CheckoutPage';
 import ExplorePage from './pages/ExplorePage';
 import SavedItemsPage from './pages/SavedItemsPage';
@@ -33,6 +34,12 @@ function RequireAuth({ children }: { children: JSX.Element }) {
   const isAuthed = !!localStorage.getItem('token');
   const loc = useLocation();
   if (!isAuthed) return <Navigate to="/login" state={{ from: loc }} replace />;
+  return children;
+}
+
+function RedirectIfAuthed({ children }: { children: JSX.Element }) {
+  const isAuthed = !!localStorage.getItem('token');
+  if (isAuthed) return <Navigate to="/" replace />;
   return children;
 }
 
@@ -216,8 +223,16 @@ export default function App() {
               </RequireAuth>
             }
           />
-          <Route path="/register" element={<RegisterPage />} />
-          <Route path="/login" element={<LoginPage />} />
+          <Route
+            path="/support"
+            element={
+              <RequireAuth>
+                <SupportPage />
+              </RequireAuth>
+            }
+          />
+          <Route path="/register" element={<RedirectIfAuthed><RegisterPage /></RedirectIfAuthed>} />
+          <Route path="/login" element={<RedirectIfAuthed><LoginPage /></RedirectIfAuthed>} />
           <Route
             path="/signup-survey"
             element={

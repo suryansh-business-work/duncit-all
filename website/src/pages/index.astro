@@ -13,7 +13,7 @@ const flow3 = 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=60
 const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&q=80&auto=format&fit=crop';
 ---
 
-<Layout title="Duncit — Coming Soon">
+<Layout title="Duncit — Friends who match your energy">
   <SiteNav />
   <div class="bg-ink p-3 sm:p-4">
     <!-- ============== HERO ============== -->
@@ -86,61 +86,37 @@ const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=60
       </div>
     </section>
 
-    <!-- ============== STAY TUNED / EMAIL ============== -->
+    <!-- ============== MOBILE WEB - LIVE NOW ============== -->
     <section class="bg-cream py-20 px-6">
       <div class="max-w-3xl mx-auto text-center">
         <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider mb-6">
-          <i class="fa-solid fa-rocket"></i> Launching Soon
+          <i class="fa-solid fa-bolt"></i> Live now
         </span>
-        <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4">Meet your <span class="text-primary">vibe tribe</span></h2>
-        <p class="text-ink-soft text-lg max-w-xl mx-auto mb-10">
-          Connect instantly with friends who match your energy. Be the first to know when we launch — drop your email and stay tuned!
+        <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4">
+          Mobile Web app is <span class="text-primary">accessible</span>
+        </h2>
+        <p class="text-ink-soft text-lg max-w-xl mx-auto mb-8">
+          Sign in from any browser — no install required. The full Duncit
+          experience runs on your phone right now.
         </p>
-
-        <form id="emailForm" class="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
-          <div class="relative flex-1">
-            <i class="fa-solid fa-envelope absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft"></i>
-            <input
-              id="emailInput"
-              type="email"
-              required
-              placeholder="you@example.com"
-              class="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border-2 border-ink/10 focus:border-primary focus:outline-none text-ink placeholder:text-ink-soft/60 font-medium"
-            />
-          </div>
-          <button type="submit" class="px-6 py-3.5 rounded-xl bg-ink text-white font-bold sticker hover:-translate-y-0.5 transition inline-flex items-center justify-center gap-2 whitespace-nowrap">
-            Stay Tuned <i class="fa-solid fa-bell"></i>
-          </button>
-        </form>
-
-        <div id="successMsg" class="hidden mt-6 items-center gap-2 px-5 py-3 rounded-xl bg-green-50 text-green-700 font-semibold border border-green-200">
-          <i class="fa-solid fa-circle-check text-xl"></i>
-          You're on the list! We'll let you know the moment we launch.
-        </div>
-
-        <p class="mt-4 text-xs text-ink-soft">
-          <i class="fa-solid fa-shield-halved mr-1"></i> No spam, ever. Unsubscribe anytime.
-        </p>
-
-        <!-- Countdown -->
-        <div data-reveal-group class="mt-12 grid grid-cols-3 gap-4 max-w-md mx-auto">
-          <div data-reveal class="bg-white rounded-2xl p-4 sticker">
-            <div id="cd-days" class="text-3xl sm:text-4xl font-black font-head text-primary inline-block">--</div>
-            <div class="text-xs uppercase tracking-wider text-ink-soft mt-1">Days</div>
-          </div>
-          <div data-reveal class="bg-white rounded-2xl p-4 sticker">
-            <div id="cd-hours" class="text-3xl sm:text-4xl font-black font-head text-secondary inline-block">--</div>
-            <div class="text-xs uppercase tracking-wider text-ink-soft mt-1">Hours</div>
-          </div>
-          <div data-reveal class="bg-white rounded-2xl p-4 sticker">
-            <div id="cd-mins" class="text-3xl sm:text-4xl font-black font-head text-tertiary-dark inline-block">--</div>
-            <div class="text-xs uppercase tracking-wider text-ink-soft mt-1">Minutes</div>
-          </div>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
+          <a
+            href="https://mweb.duncit.com/login"
+            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-white font-bold text-base sticker hover:scale-[1.03] transition"
+          >
+            <i class="fa-solid fa-right-to-bracket"></i> Sign in to launch
+          </a>
+          <a
+            href="https://mweb.duncit.com/register"
+            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-ink/5 text-ink font-bold text-base hover:bg-ink/10 transition"
+          >
+            <i class="fa-solid fa-user-plus"></i> Create an account
+          </a>
         </div>
       </div>
     </section>
 
-    <!-- ============== MOBILE APP - COMING SOON ============== -->
+    <!-- ============== MOBILE APPS PREVIEW ============== -->
     <section class="relative overflow-hidden py-20 px-6">
       <!-- Background image with overlay -->
       <div class="absolute inset-0 z-0">
@@ -153,7 +129,7 @@ const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=60
           <i class="fa-solid fa-mobile-screen"></i> Mobile App
         </span>
         <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4 text-white">
-          Native app is <span class="text-tertiary">Coming Soon</span>
+          Native app <span class="text-tertiary">in the works</span>
         </h2>
         <p class="text-white/85 text-lg max-w-xl mx-auto mb-6">
           Meanwhile, our Mobile Web app (mWeb) is live — sign in below and
@@ -176,7 +152,7 @@ const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=60
           </a>
         </div>
 
-        <!-- App store coming soon cards -->
+        <!-- App store preview cards -->
         <div class="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
           <div class="bg-ink text-white rounded-2xl p-6 sticker relative overflow-hidden">
             <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-tertiary text-ink text-[10px] font-black uppercase tracking-wider">Soon</span>
@@ -387,32 +363,7 @@ const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=60
     io.observe(g);
   });
 
-  // ---------- Countdown to launch ----------
-  const launchDate = new Date('2026-06-01T00:00:00').getTime();
-  const lastVals: Record<string, string> = {};
-
-  function setDigit(id: string, value: string) {
-    const el = document.getElementById(id);
-    if (!el) return;
-    if (lastVals[id] === value) return;
-    lastVals[id] = value;
-    el.textContent = value;
-  }
-
-  function tick() {
-    const now = Date.now();
-    const diff = Math.max(0, launchDate - now);
-    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
-    const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
-    const mins = Math.floor((diff / (1000 * 60)) % 60);
-    setDigit('cd-days', String(days).padStart(2, '0'));
-    setDigit('cd-hours', String(hours).padStart(2, '0'));
-    setDigit('cd-mins', String(mins).padStart(2, '0'));
-  }
-  tick();
-  setInterval(tick, 1000 * 30);
-
-  // Email capture (stores locally — wire to your API later)
+  // ---------- Email capture (stores locally — wire to your API later) ----------
   function handleSubmit(formId: string, inputId?: string) {
     const form = document.getElementById(formId) as HTMLFormElement | null;
     if (!form) return;
@@ -450,6 +401,5 @@ const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=60
       }
     });
   }
-  handleSubmit('emailForm', 'emailInput');
   handleSubmit('footerForm');
 </script>

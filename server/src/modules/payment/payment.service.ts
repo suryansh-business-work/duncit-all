@@ -250,4 +250,61 @@ export const paymentService = {
 
     return toPub(doc);
   },
+
+  async refund(paymentDocId: string, reason?: string) {
+    const doc = await PaymentModel.findById(paymentDocId);
+    if (!doc) throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
+    if (doc.status !== 'SUCCESS') {
+      throw new GraphQLError('Only SUCCESS payments can be refunded', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    doc.status = 'REFUNDED';
+    (doc as any).metadata = {
+      ...((doc as any).metadata || {}),
+      refund_reason: reason || null,
+      refunded_at: new Date().toISOString(),
+    };
+    await doc.save();
+    return toPub(doc);
+  },
+
+  async invoicePdfBase64(paymentDocId: string) {
+    const doc = await PaymentModel.findById(paymentDocId);
+    if (!doc) throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
+    if (!doc.invoice_no) {
+      throw new GraphQLError('No invoice generated for this payment', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    const fs = await getFinanceSettings();
+    const pdf = await generateInvoicePdf({
+      invoice_no: doc.invoice_no,
+      invoice_date: doc.paid_at || doc.created_at,
+      customer_name: doc.user_name,
+      customer_email: doc.user_email,
+      customer_phone: doc.user_phone || undefined,
+      business_name: fs.business_name,
+      business_address: fs.business_address,
+      business_gstin: fs.business_gstin,
+      currency_symbol: doc.currency_symbol,
+      items: [
+        {
+          description: doc.description,
+          qty: 1,
+          unit_price: doc.subtotal,
+          amount: doc.subtotal,
+        },
+      ],
+      subtotal: doc.subtotal,
+      platform_fee_amount: doc.platform_fee_amount,
+      platform_fee_pct: doc.platform_fee_pct,
+      gst_amount: doc.gst_amount,
+      gst_pct: doc.gst_pct,
+      total: doc.total,
+      payment_id: doc.payment_id,
+      payment_method: doc.gateway || 'Gateway',
+    });
+    return pdf.toString('base64');
+  },
 };

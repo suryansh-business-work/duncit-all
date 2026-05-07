@@ -24,7 +24,10 @@ import RepeatIcon from '@mui/icons-material/Repeat';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShareIcon from '@mui/icons-material/Share';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import IconButton from '@mui/material/IconButton';
 import { usePricing } from '../hooks/usePricing';
 import BackoutConfirmDialog from './pod-details-page/BackoutConfirmDialog';
 
@@ -136,6 +139,7 @@ export default function PodDetailsPage() {
   const [backout, backoutState] = useMutation(BACKOUT);
   const [redeem, redeemState] = useMutation(REDEEM);
   const [snack, setSnack] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
   const [backoutOpen, setBackoutOpen] = useState(false);
 
   useEffect(() => {
@@ -166,18 +170,45 @@ export default function PodDetailsPage() {
 
   return (
     <Stack spacing={3}>
-      <Button
-        startIcon={<ArrowBackIcon />}
-        onClick={() => navigate(-1)}
-        sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
-      >
-        Back
-      </Button>
+      <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <IconButton size="small" onClick={() => navigate(-1)} aria-label="Back">
+          <ArrowBackIcon />
+        </IconButton>
+        <Stack direction="row" spacing={0.5}>
+          <IconButton
+            size="small"
+            aria-label={saved ? 'Saved' : 'Save'}
+            onClick={() => setSaved((v) => !v)}
+          >
+            {saved ? <BookmarkIcon color="primary" /> : <BookmarkBorderIcon />}
+          </IconButton>
+          <IconButton
+            size="small"
+            aria-label="Share"
+            onClick={async () => {
+              const url = window.location.href;
+              const title = pod?.pod_title ?? 'Duncit Pod';
+              try {
+                if (navigator.share) {
+                  await navigator.share({ title, url });
+                } else {
+                  await navigator.clipboard.writeText(url);
+                  setSnack('Link copied');
+                }
+              } catch {
+                /* user cancelled */
+              }
+            }}
+          >
+            <ShareIcon />
+          </IconButton>
+        </Stack>
+      </Stack>
 
       {media.length > 0 ? (
         <Box
           sx={{
-            borderRadius: 2,
+            mx: { xs: -2, sm: -3 },
             overflow: 'hidden',
             '.slick-dots': { bottom: 12 },
             '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },
@@ -202,7 +233,7 @@ export default function PodDetailsPage() {
                   controls
                   sx={{
                     width: '100%',
-                    height: { xs: 240, md: 400 },
+                    height: { xs: 280, md: 460 },
                     objectFit: 'cover',
                     bgcolor: 'black',
                   }}
@@ -215,7 +246,7 @@ export default function PodDetailsPage() {
                   alt={pod.pod_title}
                   sx={{
                     width: '100%',
-                    height: { xs: 240, md: 400 },
+                    height: { xs: 280, md: 460 },
                     objectFit: 'cover',
                   }}
                 />

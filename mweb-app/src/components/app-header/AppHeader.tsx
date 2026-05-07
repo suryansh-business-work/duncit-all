@@ -20,7 +20,6 @@ import {
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
-import SearchIcon from '@mui/icons-material/Search';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
 import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
@@ -39,7 +38,6 @@ import MuiAlert from '@mui/material/Alert';
 import { ensurePushSubscription, notificationPermission, isPushSupported } from '../../pwa';
 import {
   HEADER_DATA,
-  POD_SEARCH,
   MY_NOTIFS,
   MARK_READ,
   MARK_ALL,
@@ -47,7 +45,6 @@ import {
 } from './queries';
 import LocationDialog from './LocationDialog';
 import NotificationsPopover from './NotificationsPopover';
-import PodSearchPopover from './PodSearchPopover';
 import ProfileDrawer from './ProfileDrawer';
 
 interface AppHeaderProps {
@@ -122,8 +119,6 @@ export default function AppHeader({
   const [draftZone, setDraftZone] = useState('');
   const [notifAnchor, setNotifAnchor] = useState<HTMLElement | null>(null);
   const [profileAnchor, setProfileAnchor] = useState<HTMLElement | null>(null);
-  const [searchAnchor, setSearchAnchor] = useState<HTMLElement | null>(null);
-  const [search, setSearch] = useState('');
   const [policiesOpen, setPoliciesOpen] = useState(false);
 
   const branding = data?.branding;
@@ -217,16 +212,7 @@ export default function AppHeader({
     }
   };
 
-  const { data: podsData, loading: podsLoading } = useQuery(POD_SEARCH, {
-    variables: {
-      filter: {
-        search: search || undefined,
-        location_id: selectedLocationId || undefined,
-      },
-    },
-    skip: !searchAnchor,
-    fetchPolicy: 'cache-and-network',
-  });
+
 
   const logout = () => {
     setProfileAnchor(null);
@@ -239,9 +225,9 @@ export default function AppHeader({
       position="sticky"
       color="inherit"
       elevation={0}
-      sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
+      sx={{ bgcolor: 'background.paper' }}
     >
-      <Toolbar sx={{ gap: 0.5, py: 1, minHeight: 64, px: 2 }}>
+      <Toolbar sx={{ gap: 1, py: 1, minHeight: 64, px: 2 }}>
         <Stack
           direction="row"
           alignItems="center"
@@ -254,37 +240,17 @@ export default function AppHeader({
             src={branding?.logo_url || '/duncit-logo.svg'}
             alt={branding?.app_name ?? 'Duncit'}
             sx={{
-              height: 36,
+              height: 44,
               width: 'auto',
-              maxWidth: 168,
+              maxWidth: 200,
               objectFit: 'contain',
-              display: 'block',
-              top: '4px',
-              left: '-15px',
-              position: 'relative',
+              display: 'block',left: '4px', 
+              position: 'relative'
             }}
           />
         </Stack>
 
         <Box sx={{ flexGrow: 1 }} />
-
-        <Tooltip title="Search pods">
-          <IconButton size="small" onClick={(e) => setSearchAnchor(e.currentTarget)}>
-            <SearchIcon fontSize="small" />
-          </IconButton>
-        </Tooltip>
-        <PodSearchPopover
-          anchor={searchAnchor}
-          onClose={() => setSearchAnchor(null)}
-          search={search}
-          setSearch={setSearch}
-          loading={podsLoading}
-          pods={podsData?.pods ?? []}
-          onSelect={(id) => {
-            setSearchAnchor(null);
-            navigate(`/pods/${id}`);
-          }}
-        />
 
         <Button
           startIcon={<LocationOnIcon />}
@@ -370,9 +336,7 @@ export default function AppHeader({
         <Box
           sx={{
             px: 1.5,
-            pb: 0.75,
-            borderTop: 1,
-            borderColor: 'divider',
+            pb: 0.75
           }}
         >
           <ToggleButtonGroup

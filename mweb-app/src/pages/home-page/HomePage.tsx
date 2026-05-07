@@ -18,7 +18,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import { HOME_DATA, PriceFilter, DateFilter, SortBy } from './queries';
 import SliderCard from './SliderCard';
 import PodCard from './PodCard';
-import FilterBar from './FilterBar';
+import FilterMenu from './FilterMenu';
 
 interface HomePageProps {
   superCategorySlug: string;
@@ -286,6 +286,9 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
         <Box
           sx={{
             overflow: 'hidden',
+            // Full-bleed: escape parent Container gutters on every breakpoint.
+            mx: { xs: -2, sm: -3 },
+            borderRadius: 0,
             '.slick-dots': { bottom: 12 },
             '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },
             '.slick-dots li.slick-active button:before': { opacity: 1 },
@@ -314,17 +317,22 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
         </Box>
       )}
 
-      <FilterBar
-        categoryChips={categoryChips}
-        categoryId={categoryId}
-        setCategoryId={setCategoryId}
-        priceFilter={priceFilter}
-        setPriceFilter={setPriceFilter}
-        dateFilter={dateFilter}
-        setDateFilter={setDateFilter}
-        sortBy={sortBy}
-        setSortBy={setSortBy}
-      />
+      <Stack direction="row" alignItems="center" justifyContent="space-between">
+        <Typography variant="subtitle2" color="text.secondary">
+          Browse pods
+        </Typography>
+        <FilterMenu
+          categoryChips={categoryChips}
+          categoryId={categoryId}
+          setCategoryId={setCategoryId}
+          priceFilter={priceFilter}
+          setPriceFilter={setPriceFilter}
+          dateFilter={dateFilter}
+          setDateFilter={setDateFilter}
+          sortBy={sortBy}
+          setSortBy={setSortBy}
+        />
+      </Stack>
 
       {clubs.length === 0 ? (
         <Alert severity="info">

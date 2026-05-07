@@ -1,23 +1,13 @@
 import { useState } from 'react';
-import { Formik, Form } from 'formik';
 import { gql, useMutation } from '@apollo/client';
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import {
-  Card,
-  CardContent,
-  Typography,
-  TextField,
-  Button,
-  Stack,
-  Alert,
-  Grid,
-  Divider,
-  Link,
-} from '@mui/material';
-import { registerSchema } from '../validators/auth';
+import { useNavigate } from 'react-router-dom';
+import { Alert, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import AuthLogo from '../components/AuthLogo';
 import GoogleSignInButton from '../components/GoogleSignInButton';
-import GoogleSignupPhoneDialog from '../components/GoogleSignupPhoneDialog';
+import RegisterForm, { type RegisterFormValues } from '../forms/register.form';
+import GoogleSignupPhoneForm, {
+  type GoogleSignupPhoneValues,
+} from '../forms/google-signup-phone.form';
 
 const REGISTER = gql`
   mutation Register($input: RegisterInput!) {
@@ -48,18 +38,6 @@ const SIGNUP_GOOGLE = gql`
   }
 `;
 
-const initial = {
-  first_name: '',
-  last_name: '',
-  email: '',
-  phone_number: '',
-  phone_extension: '+91',
-  password: '',
-  dob: '',
-  city: '',
-  zone: '',
-};
-
 export default function RegisterPage() {
   const [registerMutation, { loading, error }] = useMutation(REGISTER);
   const [signupGoogle, { loading: gLoading }] = useMutation(SIGNUP_GOOGLE);
@@ -67,12 +45,25 @@ export default function RegisterPage() {
   const [googleToken, setGoogleToken] = useState<string | null>(null);
   const navigate = useNavigate();
 
+  const handleRegister = async (values: RegisterFormValues) => {
+    const res = await registerMutation({
+      variables: {
+        input: { ...values, dob: new Date(values.dob).toISOString() },
+      },
+    });
+    const token = res.data?.register?.token;
+    if (token) {
+      localStorage.setItem('token', token);
+      navigate('/signup-survey');
+    }
+  };
+
   const handleGoogle = async (idToken: string) => {
     setGError(null);
     setGoogleToken(idToken);
   };
 
-  const submitGoogleSignup = async (values: any) => {
+  const submitGoogleSignup = async (values: GoogleSignupPhoneValues) => {
     try {
       const res = await signupGoogle({
         variables: {
@@ -110,129 +101,21 @@ export default function RegisterPage() {
 
         <Stack spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
           <GoogleSignInButton onCredential={handleGoogle} loading={gLoading} text="signup_with" />
-          {gError && <Alert severity="error" sx={{ width: '100%' }}>{gError}</Alert>}
+          {gError && (
+            <Alert severity="error" sx={{ width: '100%' }}>
+              {gError}
+            </Alert>
+          )}
         </Stack>
         <Divider sx={{ my: 2 }}>or sign up with email</Divider>
 
-        <Formik
-          initialValues={initial}
-          validationSchema={registerSchema}
-          onSubmit={async (values) => {
-            const res = await registerMutation({
-              variables: {
-                input: { ...values, dob: new Date(values.dob).toISOString() },
-              },
-            });
-            const token = res.data?.register?.token;
-            if (token) {
-              localStorage.setItem('token', token);
-              navigate('/signup-survey');
-            }
-          }}
-        >
-          {({ values, errors, touched, handleChange, handleBlur }) => (
-            <Form>
-              <Grid container spacing={2}>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth name="first_name" label="First name"
-                    value={values.first_name} onChange={handleChange} onBlur={handleBlur}
-                    error={touched.first_name && !!errors.first_name}
-                    helperText={touched.first_name && errors.first_name}
-                    InputLabelProps={{ shrink: true }}
-                    autoComplete="given-name"
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth name="last_name" label="Last name"
-                    value={values.last_name} onChange={handleChange} onBlur={handleBlur}
-                    error={touched.last_name && !!errors.last_name}
-                    helperText={touched.last_name && errors.last_name}
-                    InputLabelProps={{ shrink: true }}
-                    autoComplete="family-name"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth name="email" type="email" label="Email"
-                    value={values.email} onChange={handleChange} onBlur={handleBlur}
-                    error={touched.email && !!errors.email}
-                    helperText={touched.email && errors.email}
-                    InputLabelProps={{ shrink: true }}
-                    autoComplete="email"
-                  />
-                </Grid>
-                <Grid item xs={4}>
-                  <TextField
-                    fullWidth name="phone_extension" label="Code"
-                    value={values.phone_extension} onChange={handleChange} onBlur={handleBlur}
-                    error={touched.phone_extension && !!errors.phone_extension}
-                    helperText={touched.phone_extension && errors.phone_extension}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={8}>
-                  <TextField
-                    fullWidth name="phone_number" label="Phone"
-                    value={values.phone_number} onChange={handleChange} onBlur={handleBlur}
-                    error={touched.phone_number && !!errors.phone_number}
-                    helperText={touched.phone_number && errors.phone_number}
-                    InputLabelProps={{ shrink: true }}
-                    autoComplete="tel-national"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth name="password" type="password" label="Password"
-                    value={values.password} onChange={handleChange} onBlur={handleBlur}
-                    error={touched.password && !!errors.password}
-                    helperText={touched.password && errors.password}
-                    InputLabelProps={{ shrink: true }}
-                    autoComplete="new-password"
-                  />
-                </Grid>
-                <Grid item xs={12}>
-                  <TextField
-                    fullWidth name="dob" type="date" label="Date of birth"
-                    InputLabelProps={{ shrink: true }}
-                    value={values.dob} onChange={handleChange} onBlur={handleBlur}
-                    error={touched.dob && !!errors.dob}
-                    helperText={touched.dob && (errors.dob as string)}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth name="city" label="City (optional)"
-                    value={values.city} onChange={handleChange} onBlur={handleBlur}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-                <Grid item xs={6}>
-                  <TextField
-                    fullWidth name="zone" label="Zone (optional)"
-                    value={values.zone} onChange={handleChange} onBlur={handleBlur}
-                    InputLabelProps={{ shrink: true }}
-                  />
-                </Grid>
-              </Grid>
-              <Stack spacing={2} sx={{ mt: 3 }}>
-                <Button type="submit" variant="contained" disabled={loading} fullWidth>
-                  {loading ? 'Creating…' : 'Register'}
-                </Button>
-                {error && <Alert severity="error">{error.message}</Alert>}
-                <Typography variant="body2" color="text.secondary" textAlign="center">
-                  Already have an account?{' '}
-                  <Link component={RouterLink} to="/login" underline="hover">
-                    Sign in
-                  </Link>
-                </Typography>
-              </Stack>
-            </Form>
-          )}
-        </Formik>
+        <RegisterForm
+          loading={loading}
+          errorMessage={error?.message ?? null}
+          onSubmit={handleRegister}
+        />
       </CardContent>
-      <GoogleSignupPhoneDialog
+      <GoogleSignupPhoneForm
         open={!!googleToken}
         loading={gLoading}
         error={gError}

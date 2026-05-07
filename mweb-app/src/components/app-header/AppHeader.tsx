@@ -241,7 +241,7 @@ export default function AppHeader({
       elevation={0}
       sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
     >
-      <Toolbar sx={{ gap: 1.25, py: 0.75, minHeight: 64, px: 2 }}>
+      <Toolbar sx={{ gap: 0.5, py: 1, minHeight: 64, px: 2 }}>
         <Stack
           direction="row"
           alignItems="center"
@@ -254,11 +254,14 @@ export default function AppHeader({
             src={branding?.logo_url || '/duncit-logo.svg'}
             alt={branding?.app_name ?? 'Duncit'}
             sx={{
-              height: 44,
+              height: 36,
               width: 'auto',
               maxWidth: 168,
               objectFit: 'contain',
               display: 'block',
+              top: '4px',
+              left: '-15px',
+              position: 'relative',
             }}
           />
         </Stack>

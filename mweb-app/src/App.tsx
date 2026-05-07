@@ -90,7 +90,8 @@ export default function App() {
         />
       )}
       <Container
-        maxWidth={fullBleed ? false : 'sm'}
+        // Wider canvas on desktop while keeping the mobile feel intact.
+        maxWidth={fullBleed ? false : 'md'}
         disableGutters={fullBleed}
         sx={{
           ...(isAuthed && {

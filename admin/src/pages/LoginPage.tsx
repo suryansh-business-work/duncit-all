@@ -1,24 +1,22 @@
-import { Formik, Form } from 'formik';
 import { gql, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
+  Alert,
   Box,
+  Button,
   Card,
   CardContent,
-  Typography,
-  TextField,
-  Button,
-  Stack,
-  Alert,
   Divider,
   IconButton,
+  Stack,
   Tooltip,
+  Typography,
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
-import { loginSchema } from '../validators/auth';
 import { useColorMode } from '../ColorModeContext';
+import LoginForm, { type LoginFormValues } from '../forms/login.form';
 
 const ADMIN_ROLES = [
   'SUPER_ADMIN',
@@ -70,11 +68,22 @@ const TopBar = styled(Box)(({ theme }) => ({
 }));
 
 export default function LoginPage() {
-  const [loginMutation, { loading, error }] = useMutation(LOGIN);
+  const [loginMutation, { loading }] = useMutation(LOGIN);
   const [seedSuperAdmin, { loading: seeding, data: seedData, error: seedError }] =
     useMutation(SEED_SUPER_ADMIN);
   const navigate = useNavigate();
   const { mode, toggle } = useColorMode();
+
+  const handleLogin = async (values: LoginFormValues) => {
+    const res = await loginMutation({ variables: { input: values } });
+    const data = res.data?.login;
+    const roles: string[] = data?.user?.roles ?? [];
+    if (!roles.some((r) => ADMIN_ROLES.includes(r))) {
+      throw new Error('You do not have admin access.');
+    }
+    localStorage.setItem('admin_token', data.token);
+    navigate('/hub');
+  };
 
   return (
     <Page>
@@ -101,91 +110,32 @@ export default function LoginPage() {
             </Typography>
           </Stack>
 
-          <Formik
-            initialValues={{ email: '', password: '' }}
-            validationSchema={loginSchema}
-            onSubmit={async (values, { setStatus }) => {
-              setStatus(undefined);
-              try {
-                const res = await loginMutation({ variables: { input: values } });
-                const data = res.data?.login;
-                const roles: string[] = data?.user?.roles ?? [];
-                if (!roles.some((r) => ADMIN_ROLES.includes(r))) {
-                  setStatus('You do not have admin access.');
-                  return;
-                }
-                localStorage.setItem('admin_token', data.token);
-                navigate('/hub');
-              } catch (e: any) {
-                setStatus(e.message);
-              }
-            }}
-          >
-            {({ values, errors, touched, status, handleChange, handleBlur }) => (
-              <Form noValidate>
-                <Stack spacing={2}>
-                  <TextField
-                    fullWidth
-                    name="email"
-                    type="email"
-                    label="Email"
-                    autoComplete="email"
-                    value={values.email}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.email && !!errors.email}
-                    helperText={touched.email && errors.email}
-                  />
-                  <TextField
-                    fullWidth
-                    name="password"
-                    type="password"
-                    label="Password"
-                    autoComplete="current-password"
-                    value={values.password}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={touched.password && !!errors.password}
-                    helperText={touched.password && errors.password}
-                  />
-                  <Button
-                    type="submit"
-                    variant="contained"
-                    size="large"
-                    disabled={loading}
-                  >
-                    {loading ? 'Signing in…' : 'Sign in'}
-                  </Button>
-                  {status && <Alert severity="error">{status}</Alert>}
-                  {error && <Alert severity="error">{error.message}</Alert>}
-                </Stack>
-              </Form>
-            )}
-          </Formik>
+          <LoginForm loading={loading} onSubmit={handleLogin} />
 
           <Divider sx={{ my: 3 }}>or</Divider>
 
           <Stack spacing={1.5}>
             <Button
               variant="outlined"
-              color="secondary"
-              size="large"
-              disabled={seeding}
               onClick={() => seedSuperAdmin()}
+              disabled={seeding}
             >
-              {seeding ? 'Sending…' : 'Email Super Admin Credentials'}
+              {seeding ? 'Seeding…' : 'Seed Super Admin'}
             </Button>
+            {seedError && <Alert severity="error">{seedError.message}</Alert>}
             {seedData?.seedSuperAdmin && (
-              <Alert severity={seedData.seedSuperAdmin.emailed ? 'success' : 'warning'}>
+              <Alert severity="success">
                 {seedData.seedSuperAdmin.created
-                  ? 'Super admin created. '
-                  : 'Super admin already exists. '}
+                  ? `Super admin created: ${seedData.seedSuperAdmin.email}`
+                  : `Super admin already exists: ${seedData.seedSuperAdmin.email}`}
                 {seedData.seedSuperAdmin.emailed
-                  ? `Credentials emailed to ${seedData.seedSuperAdmin.email}.`
-                  : 'Email could not be sent — check server SMTP config.'}
+                  ? ' (credentials emailed)'
+                  : ' (email not sent — check SMTP)'}
               </Alert>
             )}
-            {seedError && <Alert severity="error">{seedError.message}</Alert>}
+            <Typography variant="caption" color="text.secondary" textAlign="center">
+              First-time setup helper. Disable in production once seeded.
+            </Typography>
           </Stack>
         </CardContent>
       </Card>

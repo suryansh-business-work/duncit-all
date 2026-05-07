@@ -19,6 +19,17 @@ export const USER = gql`
       assigned_zones
       profile_photo
       bio
+      profile_links {
+        label
+        url
+      }
+      interest_category_ids
+      interest_categories {
+        id
+        name
+        level
+        parent_id
+      }
       status
       roles
       permissions

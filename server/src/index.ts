@@ -37,7 +37,7 @@ async function bootstrap() {
   app.use(
     '/graphql',
     cors<cors.CorsRequest>({ origin: true, credentials: true }),
-    express.json({ limit: '5mb' }),
+    express.json({ limit: '25mb' }),
     expressMiddleware(apollo, { context: buildContext })
   );
 

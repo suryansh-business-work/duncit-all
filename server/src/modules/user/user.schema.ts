@@ -7,6 +7,21 @@ export const userTypeDefs = gql`
     SUSPENDED
   }
 
+  enum AuthProvider {
+    EMAIL
+    GOOGLE
+  }
+
+  type ProfileLink {
+    label: String!
+    url: String!
+  }
+
+  input ProfileLinkInput {
+    label: String!
+    url: String!
+  }
+
   type User {
     user_id: ID!
     first_name: String!
@@ -19,6 +34,10 @@ export const userTypeDefs = gql`
     phone_number: String!
     phone_extension: String!
     is_phone_verified: Boolean
+
+    auth_providers: [AuthProvider!]!
+    last_login_provider: AuthProvider
+    last_login_at: String
 
     dob: String!
 
@@ -34,8 +53,17 @@ export const userTypeDefs = gql`
 
     profile_photo: String
     bio: String
+    profile_links: [ProfileLink!]!
 
     pet_profile: PetProfile
+
+    saved_pod_ids: [ID!]!
+    following_user_ids: [ID!]!
+    followers_count: Int!
+    following_count: Int!
+    interest_category_ids: [ID!]!
+    interest_categories: [Category!]!
+    onboarding_survey_completed: Boolean!
 
     is_first_time_user: Boolean!
 
@@ -121,6 +149,29 @@ export const userTypeDefs = gql`
     id_token: String!
   }
 
+  input GoogleSignupInput {
+    id_token: String!
+    phone_number: String!
+    phone_extension: String!
+    dob: String!
+    city: String
+    zone: String
+  }
+
+  input UpdateMyProfileInput {
+    first_name: String
+    last_name: String
+    bio: String
+    profile_photo: String
+    profile_links: [ProfileLinkInput!]
+  }
+
+  type SavedPodState {
+    pod_id: ID!
+    saved: Boolean!
+    saved_pod_ids: [ID!]!
+  }
+
   input UsersFilter {
     role: String
     city: String
@@ -131,6 +182,7 @@ export const userTypeDefs = gql`
 
   extend type Query {
     me: User
+    mySavedPods: [Pod!]!
     users(filter: UsersFilter): [User!]!
     user(user_id: ID!): User
   }
@@ -145,7 +197,13 @@ export const userTypeDefs = gql`
     register(input: RegisterInput!): AuthPayload!
     login(input: LoginInput!): AuthPayload!
     loginWithGoogle(input: GoogleAuthInput!): AuthPayload!
+    signupWithGoogle(input: GoogleSignupInput!): AuthPayload!
+    updateMyProfile(input: UpdateMyProfileInput!): User!
     updateMyPetProfile(input: PetProfileInput!): User!
+    updateMyInterests(category_ids: [ID!]!): User!
+    toggleSavedPod(pod_doc_id: ID!): SavedPodState!
+    followUser(user_id: ID!): User!
+    unfollowUser(user_id: ID!): User!
     createUser(input: CreateUserInput!): User!
     updateUser(user_id: ID!, input: UpdateUserInput!): User!
     deleteUser(user_id: ID!): Boolean!

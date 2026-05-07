@@ -5,6 +5,7 @@ import { Box, Container } from '@mui/material';
 import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
+import SignupSurveyPage from './pages/SignupSurveyPage';
 import AccountPage from './pages/AccountPage';
 import ProfilePage from './pages/ProfilePage';
 import PodDetailsPage from './pages/PodDetailsPage';
@@ -17,6 +18,7 @@ import PolicyPage from './pages/PolicyPage';
 import PodIdeasPage from './pages/PodIdeasPage';
 import CheckoutPage from './pages/CheckoutPage';
 import ExplorePage from './pages/ExplorePage';
+import SavedItemsPage from './pages/SavedItemsPage';
 import ClubsPage from './pages/ClubsPage';
 import ChatsPage from './pages/ChatsPage';
 import ChatRoomPage from './pages/ChatRoomPage';
@@ -197,6 +199,14 @@ export default function App() {
           <Route path="/register" element={<RegisterPage />} />
           <Route path="/login" element={<LoginPage />} />
           <Route
+            path="/signup-survey"
+            element={
+              <RequireAuth>
+                <SignupSurveyPage />
+              </RequireAuth>
+            }
+          />
+          <Route
             path="/checkout"
             element={
               <RequireAuth>
@@ -209,6 +219,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <ExplorePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/saved"
+            element={
+              <RequireAuth>
+                <SavedItemsPage />
               </RequireAuth>
             }
           />

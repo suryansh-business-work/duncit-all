@@ -50,6 +50,11 @@ function resolveIcon(name: string): SvgIconComponent | null {
   return typeof Comp === 'function' ? Comp : null;
 }
 
+export function isImageIconValue(value: string | null | undefined) {
+  const next = (value ?? '').trim();
+  return /^data:image\//i.test(next) || /^https?:\/\//i.test(next) || next.startsWith('/');
+}
+
 export function renderIconByName(
   name: string | null | undefined,
   fontSize: 'small' | 'medium' | 'large' = 'small'

@@ -8,8 +8,11 @@ import {
   MenuItem,
   Stack,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
 } from '@mui/material';
 import IconPickerField from '../../components/IconPickerField';
+import MediaPickerField from '../../components/MediaPickerField';
 import { Level, FormState } from './queries';
 
 interface DialogState {
@@ -56,13 +59,41 @@ export default function CategoryFormDialog({
               fullWidth
               required
             />
-            <IconPickerField
-              value={dialog.form.icon}
-              onChange={(next) =>
-                setDialog({ ...dialog, form: { ...dialog.form, icon: next } })
-              }
-              helperText="Search Material icons (e.g. Pets, SportsSoccer) or paste an emoji."
-            />
+            <ToggleButtonGroup
+              value={dialog.form.iconMode}
+              exclusive
+              fullWidth
+              size="small"
+              onChange={(_event, nextMode) => {
+                if (!nextMode) return;
+                setDialog({
+                  ...dialog,
+                  form: { ...dialog.form, iconMode: nextMode, icon: '' },
+                });
+              }}
+            >
+              <ToggleButton value="ICON">MUI Icon</ToggleButton>
+              <ToggleButton value="IMAGE">Image</ToggleButton>
+            </ToggleButtonGroup>
+            {dialog.form.iconMode === 'ICON' ? (
+              <IconPickerField
+                value={dialog.form.icon}
+                onChange={(next) =>
+                  setDialog({ ...dialog, form: { ...dialog.form, icon: next } })
+                }
+                helperText="Search Material icons (e.g. Pets, SportsSoccer) or paste an emoji."
+              />
+            ) : (
+              <MediaPickerField
+                label="Category image"
+                value={dialog.form.icon}
+                onChange={(next) =>
+                  setDialog({ ...dialog, form: { ...dialog.form, icon: next } })
+                }
+                folder="/categories/icons"
+                helperText="Upload or pick an image to use as the category visual."
+              />
+            )}
             <TextField
               label="Description"
               value={dialog.form.description}

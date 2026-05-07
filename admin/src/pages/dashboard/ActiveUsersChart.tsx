@@ -1,4 +1,16 @@
-import { Box, Stack, Typography } from '@mui/material';
+import { Typography } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
+import {
+  BarElement,
+  CategoryScale,
+  Chart as ChartJS,
+  Legend,
+  LinearScale,
+  Tooltip,
+} from 'chart.js';
+import { Bar } from 'react-chartjs-2';
+
+ChartJS.register(CategoryScale, LinearScale, BarElement, Tooltip, Legend);
 
 interface Bucket {
   bucket: string;
@@ -11,70 +23,71 @@ interface Props {
 }
 
 export default function ActiveUsersChart({ buckets }: Props) {
+  const theme = useTheme();
+
   if (!buckets.length) {
     return <Typography color="text.secondary">No activity in this range yet.</Typography>;
   }
-  const max = Math.max(1, ...buckets.map((b) => Math.max(b.unique_devices, b.unique_users)));
+
+  const data = {
+    labels: buckets.map((bucket) => bucket.bucket),
+    datasets: [
+      {
+        label: 'Unique devices',
+        data: buckets.map((bucket) => bucket.unique_devices),
+        backgroundColor: '#2563eb',
+        borderRadius: 6,
+        maxBarThickness: 24,
+      },
+      {
+        label: 'Logged-in users',
+        data: buckets.map((bucket) => bucket.unique_users),
+        backgroundColor: '#0f766e',
+        borderRadius: 6,
+        maxBarThickness: 24,
+      },
+    ],
+  };
+
+  const options = {
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: {
+        position: 'top' as const,
+        align: 'end' as const,
+        labels: {
+          boxWidth: 10,
+          boxHeight: 10,
+          useBorderRadius: true,
+          color: theme.palette.text.secondary,
+        },
+      },
+      tooltip: {
+        backgroundColor: theme.palette.background.paper,
+        titleColor: theme.palette.text.primary,
+        bodyColor: theme.palette.text.secondary,
+        borderColor: theme.palette.divider,
+        borderWidth: 1,
+        padding: 10,
+      },
+    },
+    scales: {
+      x: {
+        grid: { display: false },
+        ticks: { color: theme.palette.text.secondary, maxRotation: 0, autoSkip: true },
+      },
+      y: {
+        beginAtZero: true,
+        ticks: { color: theme.palette.text.secondary, precision: 0 },
+        grid: { color: theme.palette.divider },
+      },
+    },
+  };
 
   return (
-    <Stack spacing={1.5}>
-      <Stack direction="row" spacing={2} sx={{ fontSize: 12, color: 'text.secondary' }}>
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          <Box sx={{ width: 10, height: 10, bgcolor: '#FF4D4F', borderRadius: 0.5 }} />
-          <span>Unique devices</span>
-        </Stack>
-        <Stack direction="row" spacing={0.5} alignItems="center">
-          <Box sx={{ width: 10, height: 10, bgcolor: '#1f2937', borderRadius: 0.5 }} />
-          <span>Logged-in users</span>
-        </Stack>
-      </Stack>
-      <Box
-        sx={{
-          display: 'flex',
-          alignItems: 'flex-end',
-          gap: 1,
-          height: 220,
-          overflowX: 'auto',
-          pb: 1,
-        }}
-      >
-        {buckets.map((b) => (
-          <Stack
-            key={b.bucket}
-            spacing={0.5}
-            alignItems="center"
-            sx={{ minWidth: 36, flexShrink: 0 }}
-          >
-            <Stack direction="row" spacing={0.5} alignItems="flex-end" sx={{ height: 180 }}>
-              <Box
-                title={`Devices: ${b.unique_devices}`}
-                sx={{
-                  width: 14,
-                  bgcolor: '#FF4D4F',
-                  borderRadius: 1,
-                  height: `${(b.unique_devices / max) * 100}%`,
-                  transition: 'height 200ms ease',
-                  minHeight: 2,
-                }}
-              />
-              <Box
-                title={`Users: ${b.unique_users}`}
-                sx={{
-                  width: 14,
-                  bgcolor: '#1f2937',
-                  borderRadius: 1,
-                  height: `${(b.unique_users / max) * 100}%`,
-                  transition: 'height 200ms ease',
-                  minHeight: 2,
-                }}
-              />
-            </Stack>
-            <Typography variant="caption" color="text.secondary" sx={{ fontSize: 10 }}>
-              {b.bucket}
-            </Typography>
-          </Stack>
-        ))}
-      </Box>
-    </Stack>
+    <div style={{ height: 280 }}>
+      <Bar data={data} options={options} />
+    </div>
   );
 }

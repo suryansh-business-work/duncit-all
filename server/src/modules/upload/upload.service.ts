@@ -93,6 +93,43 @@ async function uploadToImagekit(opts: {
   };
 }
 
+export async function uploadBase64Image(opts: {
+  fileBase64: string;
+  fileName: string;
+  folder?: string;
+  mimeType?: string;
+}) {
+  const mimeType = (opts.mimeType || '').trim() || 'image/jpeg';
+  if (!/^image\//i.test(mimeType)) {
+    throw new GraphQLError('Only image uploads are allowed', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+
+  const raw = opts.fileBase64.includes(',')
+    ? opts.fileBase64.split(',').pop() || ''
+    : opts.fileBase64;
+  const fileBytes = Buffer.from(raw, 'base64');
+  if (!fileBytes.length) {
+    throw new GraphQLError('Upload file is empty', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  if (fileBytes.length > 15 * 1024 * 1024) {
+    throw new GraphQLError('File is too large (max 15 MB)', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+
+  const safeName = (opts.fileName || `upload-${Date.now()}`)
+    .replace(/[^a-zA-Z0-9_.-]/g, '_')
+    .slice(0, 120);
+
+  return uploadToImagekit({
+    fileBytes,
+    fileName: safeName,
+    folder: opts.folder,
+  });
+}
+
 const ALLOWED_REMOTE_HOSTS = [
   /(^|\.)pexels\.com$/i,
   /(^|\.)imagekit\.io$/i,

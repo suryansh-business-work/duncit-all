@@ -17,6 +17,7 @@ import {
 import { registerSchema } from '../validators/auth';
 import AuthLogo from '../components/AuthLogo';
 import GoogleSignInButton from '../components/GoogleSignInButton';
+import GoogleSignupPhoneDialog from '../components/GoogleSignupPhoneDialog';
 
 const REGISTER = gql`
   mutation Register($input: RegisterInput!) {
@@ -28,18 +29,20 @@ const REGISTER = gql`
         last_name
         email
         roles
+        onboarding_survey_completed
       }
     }
   }
 `;
 
-const LOGIN_GOOGLE = gql`
-  mutation RegisterWithGoogle($input: GoogleAuthInput!) {
-    loginWithGoogle(input: $input) {
+const SIGNUP_GOOGLE = gql`
+  mutation SignupWithGoogle($input: GoogleSignupInput!) {
+    signupWithGoogle(input: $input) {
       token
       user {
         user_id
         email
+        onboarding_survey_completed
       }
     }
   }
@@ -59,18 +62,31 @@ const initial = {
 
 export default function RegisterPage() {
   const [registerMutation, { loading, error }] = useMutation(REGISTER);
-  const [loginGoogle, { loading: gLoading }] = useMutation(LOGIN_GOOGLE);
+  const [signupGoogle, { loading: gLoading }] = useMutation(SIGNUP_GOOGLE);
   const [gError, setGError] = useState<string | null>(null);
+  const [googleToken, setGoogleToken] = useState<string | null>(null);
   const navigate = useNavigate();
 
   const handleGoogle = async (idToken: string) => {
     setGError(null);
+    setGoogleToken(idToken);
+  };
+
+  const submitGoogleSignup = async (values: any) => {
     try {
-      const res = await loginGoogle({ variables: { input: { id_token: idToken } } });
-      const token = res.data?.loginWithGoogle?.token;
+      const res = await signupGoogle({
+        variables: {
+          input: {
+            ...values,
+            id_token: googleToken,
+            dob: new Date(values.dob).toISOString(),
+          },
+        },
+      });
+      const token = res.data?.signupWithGoogle?.token;
       if (token) {
         localStorage.setItem('token', token);
-        navigate('/');
+        navigate('/signup-survey');
       }
     } catch (e: any) {
       setGError(e.message);
@@ -110,7 +126,7 @@ export default function RegisterPage() {
             const token = res.data?.register?.token;
             if (token) {
               localStorage.setItem('token', token);
-              navigate('/');
+              navigate('/signup-survey');
             }
           }}
         >
@@ -216,6 +232,16 @@ export default function RegisterPage() {
           )}
         </Formik>
       </CardContent>
+      <GoogleSignupPhoneDialog
+        open={!!googleToken}
+        loading={gLoading}
+        error={gError}
+        onClose={() => {
+          setGoogleToken(null);
+          setGError(null);
+        }}
+        onSubmit={submitGoogleSignup}
+      />
     </Card>
   );
 }

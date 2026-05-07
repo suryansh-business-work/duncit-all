@@ -1,4 +1,4 @@
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { Link as RouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -8,12 +8,14 @@ import {
   Divider,
   Drawer,
   IconButton,
+  InputAdornment,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Menu,
   MenuItem,
+  TextField,
   Toolbar,
   Tooltip,
   Typography,
@@ -58,9 +60,12 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import ShieldIcon from '@mui/icons-material/Shield';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AppsIcon from '@mui/icons-material/Apps';
+import SearchIcon from '@mui/icons-material/Search';
 import { useColorMode } from './ColorModeContext';
+import AdminBreadcrumbs from './components/AdminBreadcrumbs';
 
 const DRAWER_WIDTH = 264;
+const HEADER_HEIGHT = 48;
 
 const Root = styled(Box)({
   display: 'flex',
@@ -71,7 +76,9 @@ const Brand = styled(Box)(({ theme }) => ({
   display: 'flex',
   alignItems: 'center',
   gap: theme.spacing(1.5),
-  padding: theme.spacing(2.5, 2.5),
+  minHeight: HEADER_HEIGHT,
+  boxSizing: 'border-box',
+  padding: theme.spacing(1, 2),
 }));
 
 const Main = styled(Box)(({ theme }) => ({
@@ -110,31 +117,35 @@ const NavItem = styled(ListItemButton, {
   })
 );
 
-interface NavLeaf {
+export interface NavLeaf {
   label: string;
   to: string;
   icon: ReactNode;
 }
 
-interface NavGroup {
+export interface NavGroup {
   label: string;
   icon: ReactNode;
   matchPrefix?: string;
   children: NavLeaf[];
 }
 
-interface NavSection {
+export interface NavSection {
   heading?: string;
   /** URL-prefix list — section is "active" when current path starts with one of these */
   prefixes?: string[];
   items: (NavLeaf | NavGroup)[];
 }
 
-function isGroup(i: NavLeaf | NavGroup): i is NavGroup {
+export function isNavGroup(i: NavLeaf | NavGroup): i is NavGroup {
   return (i as NavGroup).children !== undefined;
 }
 
-const NAV: NavSection[] = [
+function isGroup(i: NavLeaf | NavGroup): i is NavGroup {
+  return isNavGroup(i);
+}
+
+export const NAV: NavSection[] = [
   {
     heading: 'Dashboard',
     prefixes: ['/dashboard'],
@@ -197,8 +208,6 @@ const NAV: NavSection[] = [
       '/policies',
       '/email-templates',
       '/badges',
-      '/newsletter',
-      '/contact-submissions',
       '/faq-submissions',
     ],
     items: [
@@ -206,11 +215,17 @@ const NAV: NavSection[] = [
       { label: 'Interview Requests', to: '/interview-requests', icon: <EventAvailableIcon /> },
       { label: 'FAQs', to: '/faqs', icon: <HelpOutlineIcon /> },
       { label: 'FAQ Submissions', to: '/faq-submissions', icon: <HelpOutlineIcon /> },
-      { label: 'Newsletter', to: '/newsletter', icon: <MarkEmailReadIcon /> },
-      { label: 'Contact Submissions', to: '/contact-submissions', icon: <MarkEmailReadIcon /> },
       { label: 'Policies', to: '/policies', icon: <DescriptionIcon /> },
       { label: 'Email Templates', to: '/email-templates', icon: <MarkEmailReadIcon /> },
       { label: 'Badges', to: '/badges', icon: <ShieldIcon /> },
+    ],
+  },
+  {
+    heading: 'Website',
+    prefixes: ['/newsletter', '/contact-submissions'],
+    items: [
+      { label: 'Newsletter', to: '/newsletter', icon: <MarkEmailReadIcon /> },
+      { label: 'Contact Submissions', to: '/contact-submissions', icon: <MarkEmailReadIcon /> },
     ],
   },
   {
@@ -260,6 +275,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
+  const [navSearch, setNavSearch] = useState('');
   const { mode, toggle } = useColorMode();
   const location = useLocation();
   const navigate = useNavigate();
@@ -305,17 +321,40 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
   // Filter sidebar to only the active section so each "module" gets its own focused nav.
   // On /hub (or unmatched), show all sections collapsed as section overview.
+  const navQuery = navSearch.trim().toLowerCase();
   const activeSections: NavSection[] =
     location.pathname === '/' || location.pathname.startsWith('/hub')
       ? []
       : NAV.filter(
           (s) => s.prefixes && s.prefixes.some((p) => location.pathname.startsWith(p))
         );
-  const visibleNav: NavSection[] = activeSections.length > 0 ? activeSections : NAV;
+  const visibleNav: NavSection[] = useMemo(() => {
+    if (!navQuery) return activeSections.length > 0 ? activeSections : NAV;
+
+    return NAV.map((section) => {
+      const sectionMatch = section.heading?.toLowerCase().includes(navQuery) ?? false;
+      const items = section.items
+        .map((item) => {
+          if (!isGroup(item)) {
+            return item.label.toLowerCase().includes(navQuery) || sectionMatch ? item : null;
+          }
+
+          const groupMatch = item.label.toLowerCase().includes(navQuery) || sectionMatch;
+          const children = groupMatch
+            ? item.children
+            : item.children.filter((child) => child.label.toLowerCase().includes(navQuery));
+          return groupMatch || children.length ? { ...item, children } : null;
+        })
+        .filter(Boolean) as (NavLeaf | NavGroup)[];
+
+      return items.length ? { ...section, items } : null;
+    }).filter(Boolean) as NavSection[];
+  }, [activeSections, navQuery]);
+  const showModulesItem = !navQuery || 'modules'.includes(navQuery) || 'hub'.includes(navQuery);
 
   const renderItem = (item: NavLeaf | NavGroup) => {
     if (isGroup(item)) {
-      const open = !!openGroups[item.label];
+      const open = navQuery ? true : !!openGroups[item.label];
       const groupActive = isGroupActive(item);
       return (
         <Box key={item.label}>
@@ -375,7 +414,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
           component="img"
           src="/duncit-logo.svg"
           alt="Duncit"
-          sx={{ height: 40, width: 'auto', maxWidth: 160, objectFit: 'contain' }}
+          sx={{ height: 34, width: 'auto', maxWidth: 150, objectFit: 'contain' }}
         />
         <Box>
           <Typography variant="caption" color="text.secondary">
@@ -384,21 +423,39 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         </Box>
       </Brand>
       <Divider />
+      <Box sx={{ p: 1.25 }}>
+        <TextField
+          value={navSearch}
+          onChange={(event) => setNavSearch(event.target.value)}
+          placeholder="Search menu"
+          fullWidth
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
+        />
+      </Box>
+      <Divider />
       <List sx={{ py: 1, flex: 1, overflowY: 'auto' }}>
-        <NavItem
-          component={RouterLink}
-          to="/hub"
-          active={location.pathname === '/hub'}
-          onClick={closeMobile}
-        >
-          <ListItemIcon>
-            <AppsIcon />
-          </ListItemIcon>
-          <ListItemText
-            primary="Modules"
-            primaryTypographyProps={{ fontWeight: 600, fontSize: 14 }}
-          />
-        </NavItem>
+        {showModulesItem && (
+          <NavItem
+            component={RouterLink}
+            to="/hub"
+            active={location.pathname === '/hub'}
+            onClick={closeMobile}
+          >
+            <ListItemIcon>
+              <AppsIcon />
+            </ListItemIcon>
+            <ListItemText
+              primary="Modules"
+              primaryTypographyProps={{ fontWeight: 600, fontSize: 14 }}
+            />
+          </NavItem>
+        )}
         {visibleNav.map((section, idx) => (
           <Box key={section.heading ?? `s-${idx}`} sx={{ mb: 1 }}>
             {section.heading && (
@@ -413,6 +470,11 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             {section.items.map(renderItem)}
           </Box>
         ))}
+        {!showModulesItem && visibleNav.length === 0 && (
+          <Typography variant="body2" color="text.secondary" sx={{ px: 2, py: 1 }}>
+            No menu matches found.
+          </Typography>
+        )}
       </List>
       <Divider />
       <Box sx={{ p: 2 }}>
@@ -456,7 +518,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
 
       <Main>
         <AppBar position="sticky">
-          <Toolbar sx={{ gap: 1 }}>
+          <Toolbar sx={{ gap: 1, minHeight: `${HEADER_HEIGHT}px !important`, px: 2 }}>
             {!isDesktop && (
               <IconButton
                 edge="start"
@@ -474,7 +536,9 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </Tooltip>
             <Tooltip title="Account">
               <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-                <Avatar sx={{ width: 32, height: 32, bgcolor: 'primary.main' }}>A</Avatar>
+                <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13 }}>
+                  A
+                </Avatar>
               </IconButton>
             </Tooltip>
             <Menu
@@ -493,6 +557,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
             </Menu>
           </Toolbar>
         </AppBar>
+        <AdminBreadcrumbs />
         <Content>{children}</Content>
       </Main>
     </Root>

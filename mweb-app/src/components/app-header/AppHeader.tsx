@@ -7,21 +7,33 @@ import {
   Badge,
   Box,
   Button,
-  ButtonGroup,
   Chip,
   CircularProgress,
   IconButton,
+  Skeleton,
   Stack,
+  ToggleButton,
+  ToggleButtonGroup,
   Toolbar,
   Tooltip,
   Typography,
-  useMediaQuery,
-  useTheme,
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import SearchIcon from '@mui/icons-material/Search';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
+import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
+import PersonIcon from '@mui/icons-material/Person';
+import GroupsIcon from '@mui/icons-material/Groups';
+import PetsIcon from '@mui/icons-material/Pets';
+import PetsOutlinedIcon from '@mui/icons-material/PetsOutlined';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
+import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
+import RestaurantIcon from '@mui/icons-material/Restaurant';
+import ParkIcon from '@mui/icons-material/Park';
+import type { SvgIconComponent } from '@mui/icons-material';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
 import { ensurePushSubscription, notificationPermission, isPushSupported } from '../../pwa';
@@ -47,6 +59,52 @@ interface AppHeaderProps {
   onZoneChange: (zone: string) => void;
 }
 
+const isImageIcon = (value: string | null | undefined) => {
+  const next = (value ?? '').trim();
+  return /^data:image\//i.test(next) || /^https?:\/\//i.test(next) || next.startsWith('/');
+};
+
+const MUI_ICON_MAP: Record<string, SvgIconComponent> = {
+  PeopleAlt: PeopleAltIcon,
+  EmojiPeople: EmojiPeopleIcon,
+  Person: PersonIcon,
+  Group: GroupsIcon,
+  Groups: GroupsIcon,
+  Pets: PetsIcon,
+  PetsOutlined: PetsOutlinedIcon,
+  Favorite: FavoriteIcon,
+  FitnessCenter: FitnessCenterIcon,
+  SportsSoccer: SportsSoccerIcon,
+  Restaurant: RestaurantIcon,
+  Park: ParkIcon,
+};
+
+const resolveMuiIcon = (value: string) => {
+  return MUI_ICON_MAP[value] ?? null;
+};
+
+function renderSuperCategoryMark(icon: string | null | undefined) {
+  const next = (icon ?? '').trim();
+  if (!next) return null;
+  if (isImageIcon(next)) {
+    return (
+      <Box
+        component="img"
+        src={next}
+        alt=""
+        sx={{ width: 18, height: 18, objectFit: 'cover', borderRadius: 0.75, flex: '0 0 auto' }}
+      />
+    );
+  }
+  const MuiIcon = resolveMuiIcon(next);
+  if (MuiIcon) return <MuiIcon sx={{ fontSize: 18, flex: '0 0 auto' }} />;
+  return next.length <= 2 ? (
+    <Box component="span" sx={{ lineHeight: 1, flex: '0 0 auto' }}>
+      {next}
+    </Box>
+  ) : null;
+}
+
 export default function AppHeader({
   selectedSuperCategory,
   onSuperCategoryChange,
@@ -55,8 +113,6 @@ export default function AppHeader({
   selectedZoneName,
   onZoneChange,
 }: AppHeaderProps) {
-  const theme = useTheme();
-  const isSmDown = useMediaQuery(theme.breakpoints.down('md'));
   const navigate = useNavigate();
 
   const { data, loading } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
@@ -74,6 +130,7 @@ export default function AppHeader({
   const me = data?.me;
   const superCats = data?.superCategories ?? [];
   const locations = data?.locations ?? [];
+  const superCategoryValue = selectedSuperCategory || superCats[0]?.slug || '';
 
   useEffect(() => {
     if (!selectedLocationId && locations.length > 0) {
@@ -184,7 +241,7 @@ export default function AppHeader({
       elevation={0}
       sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}
     >
-      <Toolbar sx={{ gap: 1, py: 0, minHeight: 48, px: 1.5 }}>
+      <Toolbar sx={{ gap: 1, py: 0, minHeight: 54, px: 1.5 }}>
         <Stack
           direction="row"
           alignItems="center"
@@ -197,39 +254,17 @@ export default function AppHeader({
               component="img"
               src={branding.logo_url}
               alt={branding?.app_name ?? 'Duncit'}
-              sx={{ height: 28, width: 'auto', maxWidth: 110, objectFit: 'contain' }}
+              sx={{ height: 34, width: 'auto', maxWidth: 132, objectFit: 'contain' }}
             />
           ) : (
             <Box
               component="img"
               src="/duncit-logo.svg"
               alt="Duncit"
-              sx={{ height: 28, width: 'auto', maxWidth: 110, objectFit: 'contain' }}
+              sx={{ height: 34, width: 'auto', maxWidth: 132, objectFit: 'contain' }}
             />
           )}
         </Stack>
-
-        {!isSmDown && superCats.length > 0 && (
-          <ButtonGroup
-            variant="outlined"
-            size="small"
-            sx={{
-              ml: 1,
-              '& .MuiButton-root': { textTransform: 'none', fontWeight: 500, px: 1.5 },
-            }}
-          >
-            {superCats.map((c: any) => (
-              <Button
-                key={c.id}
-                variant={selectedSuperCategory === c.slug ? 'contained' : 'outlined'}
-                onClick={() => onSuperCategoryChange(c.slug)}
-              >
-                {c.icon ? `${c.icon} ` : ''}
-                {c.name}
-              </Button>
-            ))}
-          </ButtonGroup>
-        )}
 
         <Box sx={{ flexGrow: 1 }} />
 
@@ -327,42 +362,54 @@ export default function AppHeader({
         {loading && !data && <CircularProgress size={18} sx={{ ml: 1 }} />}
       </Toolbar>
 
-      {isSmDown && superCats.length > 0 && (
+      {loading && superCats.length === 0 ? (
+        <Box sx={{ px: 1.5, pb: 0.75 }}>
+          <Skeleton variant="rounded" height={36} />
+        </Box>
+      ) : superCats.length > 0 ? (
         <Box
           sx={{
-            display: 'flex',
-            gap: 0.75,
             px: 1.5,
-            pb: 0.5,
-            overflowX: 'auto',
-            scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' },
+            pb: 0.75,
+            borderTop: 1,
+            borderColor: 'divider',
           }}
         >
-          {superCats.map((c: any) => (
-            <Button
-              key={c.id}
-              size="small"
-              variant={selectedSuperCategory === c.slug ? 'contained' : 'outlined'}
-              onClick={() => onSuperCategoryChange(c.slug)}
-              sx={{
-                textTransform: 'none',
-                whiteSpace: 'nowrap',
-                fontWeight: 500,
-                borderRadius: 8,
-                px: 1.25,
-                py: 0.25,
+          <ToggleButtonGroup
+            value={superCategoryValue}
+            exclusive
+            fullWidth
+            size="small"
+            onChange={(_event, next) => {
+              if (next) onSuperCategoryChange(next);
+            }}
+            sx={{
+              width: '100%',
+              '& .MuiToggleButton-root': {
+                minWidth: 0,
+                flex: 1,
+                minHeight: 36,
+                px: 0.75,
+                gap: 0.5,
                 fontSize: 12,
-                minHeight: 28,
-                flex: '0 0 auto',
-              }}
-            >
-              {c.icon ? `${c.icon} ` : ''}
-              {c.name}
-            </Button>
-          ))}
+                whiteSpace: 'nowrap',
+              },
+            }}
+          >
+            {superCats.map((c: any) => (
+              <ToggleButton key={c.id} value={c.slug} aria-label={c.name}>
+                {renderSuperCategoryMark(c.icon)}
+                <Box
+                  component="span"
+                  sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+                >
+                  {c.name}
+                </Box>
+              </ToggleButton>
+            ))}
+          </ToggleButtonGroup>
         </Box>
-      )}
+      ) : null}
       <Snackbar
         open={!!toast}
         onClose={() => setToast(null)}

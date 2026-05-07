@@ -10,9 +10,11 @@ import {
 } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PeopleIcon from '@mui/icons-material/People';
+import FollowButton from '../../components/FollowButton';
 
 interface Venue {
   id: string;
+  owner_user_id: string;
   venue_name: string;
   venue_type?: string | null;
   capacity?: number | null;
@@ -23,7 +25,15 @@ interface Venue {
   amenities?: string[] | null;
 }
 
-export default function VenueList({ venues }: { venues: Venue[] }) {
+interface Props {
+  venues: Venue[];
+  meId?: string;
+  followingIds: Set<string>;
+  pendingUserId: string | null;
+  onToggleFollow: (userId: string) => void;
+}
+
+export default function VenueList({ venues, meId, followingIds, pendingUserId, onToggleFollow }: Props) {
   if (!venues.length) {
     return (
       <Card variant="outlined">
@@ -64,9 +74,19 @@ export default function VenueList({ venues }: { venues: Venue[] }) {
               </Box>
             )}
             <CardContent>
-              <Typography variant="subtitle1" fontWeight={700} noWrap>
-                {v.venue_name}
-              </Typography>
+              <Stack direction="row" spacing={1} alignItems="center">
+                <Box sx={{ flex: 1, minWidth: 0 }}>
+                  <Typography variant="subtitle1" fontWeight={700} noWrap>
+                    {v.venue_name}
+                  </Typography>
+                </Box>
+                <FollowButton
+                  following={followingIds.has(v.owner_user_id)}
+                  disabled={v.owner_user_id === meId}
+                  loading={pendingUserId === v.owner_user_id}
+                  onToggle={() => onToggleFollow(v.owner_user_id)}
+                />
+              </Stack>
               {v.venue_type && (
                 <Typography variant="caption" color="text.secondary">
                   {v.venue_type}

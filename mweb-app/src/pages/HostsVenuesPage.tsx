@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link as RouterLink } from 'react-router-dom';
-import { gql, useQuery } from '@apollo/client';
+import { gql, useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
@@ -23,8 +23,13 @@ import VenueList from './hosts-venues-page/VenueList';
 
 const PUBLIC_HOSTS = gql`
   query PublicHosts {
+    me {
+      user_id
+      following_user_ids
+    }
     publicHosts {
       id
+      user_id
       full_name
       email
       passport_photo_url
@@ -38,6 +43,7 @@ const PUBLIC_VENUES = gql`
   query PublicVenues {
     publicVenues {
       id
+      owner_user_id
       venue_name
       venue_type
       capacity
@@ -50,13 +56,48 @@ const PUBLIC_VENUES = gql`
   }
 `;
 
+const FOLLOW_USER = gql`
+  mutation FollowUser($user_id: ID!) {
+    followUser(user_id: $user_id) {
+      user_id
+      following_user_ids
+    }
+  }
+`;
+
+const UNFOLLOW_USER = gql`
+  mutation UnfollowUser($user_id: ID!) {
+    unfollowUser(user_id: $user_id) {
+      user_id
+      following_user_ids
+    }
+  }
+`;
+
 export default function HostsVenuesPage() {
   const [tab, setTab] = useState<'HOSTS' | 'VENUES'>('HOSTS');
   const hostsQ = useQuery(PUBLIC_HOSTS, { fetchPolicy: 'cache-and-network' });
   const venuesQ = useQuery(PUBLIC_VENUES, { fetchPolicy: 'cache-and-network' });
+  const [followUser] = useMutation(FOLLOW_USER);
+  const [unfollowUser] = useMutation(UNFOLLOW_USER);
+  const [pendingFollow, setPendingFollow] = useState<string | null>(null);
 
   const hosts: any[] = hostsQ.data?.publicHosts ?? [];
   const venues: any[] = venuesQ.data?.publicVenues ?? [];
+  const me = hostsQ.data?.me;
+  const followingIds = new Set<string>((me?.following_user_ids ?? []) as string[]);
+
+  const toggleFollow = async (targetUserId: string) => {
+    if (!targetUserId || targetUserId === me?.user_id) return;
+    setPendingFollow(targetUserId);
+    try {
+      const mutation = followingIds.has(targetUserId) ? unfollowUser : followUser;
+      await mutation({ variables: { user_id: targetUserId } });
+      await hostsQ.refetch();
+    } finally {
+      setPendingFollow(null);
+    }
+  };
 
   return (
     <Stack spacing={3} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
@@ -144,7 +185,13 @@ export default function HostsVenuesPage() {
         ) : hostsQ.error ? (
           <Alert severity="error">{hostsQ.error.message}</Alert>
         ) : (
-          <HostList hosts={hosts} />
+          <HostList
+            hosts={hosts}
+            meId={me?.user_id}
+            followingIds={followingIds}
+            pendingUserId={pendingFollow}
+            onToggleFollow={toggleFollow}
+          />
         )
       ) : venuesQ.loading && !venuesQ.data ? (
         <Stack alignItems="center" sx={{ py: 6 }}>
@@ -153,7 +200,13 @@ export default function HostsVenuesPage() {
       ) : venuesQ.error ? (
         <Alert severity="error">{venuesQ.error.message}</Alert>
       ) : (
-        <VenueList venues={venues} />
+        <VenueList
+          venues={venues}
+          meId={me?.user_id}
+          followingIds={followingIds}
+          pendingUserId={pendingFollow}
+          onToggleFollow={toggleFollow}
+        />
       )}
     </Stack>
   );

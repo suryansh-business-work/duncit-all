@@ -5,25 +5,19 @@ import {
   CardActionArea,
   CardContent,
   Container,
+  Stack,
   Typography,
 } from '@mui/material';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import GroupIcon from '@mui/icons-material/Group';
-import CategoryIcon from '@mui/icons-material/Category';
-import GroupsIcon from '@mui/icons-material/Groups';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import SettingsIcon from '@mui/icons-material/Settings';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import type { ReactNode } from 'react';
+import { alpha } from '@mui/material/styles';
+import ModuleIcon, { type ModuleIconKind } from '../components/ModuleIcon';
 
 interface HubCard {
   key: string;
   title: string;
   description: string;
   to: string;
-  icon: ReactNode;
-  gradient: string;
+  icon: ModuleIconKind;
+  accent: string;
 }
 
 const CARDS: HubCard[] = [
@@ -32,64 +26,72 @@ const CARDS: HubCard[] = [
     title: 'Dashboard',
     description: 'Live KPIs, growth charts and platform health.',
     to: '/dashboard',
-    icon: <DashboardIcon sx={{ fontSize: 36 }} />,
-    gradient: 'linear-gradient(135deg,#6366f1,#8b5cf6)',
+    icon: 'dashboard',
+    accent: '#2563eb',
   },
   {
     key: 'users',
     title: 'User Management',
     description: 'Users, roles, permissions and access control.',
     to: '/users',
-    icon: <GroupIcon sx={{ fontSize: 36 }} />,
-    gradient: 'linear-gradient(135deg,#0ea5e9,#22d3ee)',
+    icon: 'users',
+    accent: '#0f766e',
   },
   {
     key: 'catalog',
     title: 'Catalog',
     description: 'Categories, locations and home sliders.',
     to: '/categories',
-    icon: <CategoryIcon sx={{ fontSize: 36 }} />,
-    gradient: 'linear-gradient(135deg,#10b981,#34d399)',
+    icon: 'catalog',
+    accent: '#16a34a',
   },
   {
     key: 'community',
     title: 'Community',
     description: 'Clubs, pods and member-submitted ideas.',
     to: '/clubs',
-    icon: <GroupsIcon sx={{ fontSize: 36 }} />,
-    gradient: 'linear-gradient(135deg,#f59e0b,#fbbf24)',
+    icon: 'community',
+    accent: '#d97706',
   },
   {
     key: 'engagement',
     title: 'Engagement',
-    description: 'Notifications, FAQs, policies, emails and badges.',
+    description: 'Notifications, FAQs, policies, email templates and badges.',
     to: '/notifications',
-    icon: <NotificationsActiveIcon sx={{ fontSize: 36 }} />,
-    gradient: 'linear-gradient(135deg,#ef4444,#f97316)',
+    icon: 'engagement',
+    accent: '#dc2626',
+  },
+  {
+    key: 'website',
+    title: 'Website',
+    description: 'Newsletter subscribers and contact submissions.',
+    to: '/newsletter',
+    icon: 'website',
+    accent: '#0891b2',
   },
   {
     key: 'onboarding',
     title: 'Onboarding',
     description: 'Review and approve venue & host applications.',
     to: '/venues',
-    icon: <StorefrontIcon sx={{ fontSize: 36 }} />,
-    gradient: 'linear-gradient(135deg,#a855f7,#ec4899)',
+    icon: 'onboarding',
+    accent: '#7c3aed',
   },
   {
     key: 'finance',
     title: 'Finance',
     description: 'Payments, fees, GST, invoices and payouts.',
     to: '/finance/dashboard',
-    icon: <AccountBalanceIcon sx={{ fontSize: 36 }} />,
-    gradient: 'linear-gradient(135deg,#14b8a6,#06b6d4)',
+    icon: 'finance',
+    accent: '#059669',
   },
   {
     key: 'system',
     title: 'System',
     description: 'Feature flags, branding and global settings.',
     to: '/feature-flags',
-    icon: <SettingsIcon sx={{ fontSize: 36 }} />,
-    gradient: 'linear-gradient(135deg,#64748b,#475569)',
+    icon: 'system',
+    accent: '#475569',
   },
 ];
 
@@ -123,37 +125,42 @@ export default function HubPage() {
             key={c.key}
             elevation={0}
             sx={{
-              borderRadius: 3,
+              borderRadius: 1,
               border: (t) => `1px solid ${t.palette.divider}`,
               overflow: 'hidden',
               transition: 'transform .18s ease, box-shadow .18s ease',
               '&:hover': {
-                transform: 'translateY(-4px)',
-                boxShadow: 6,
+                transform: 'translateY(-2px)',
+                boxShadow: 3,
               },
             }}
           >
             <CardActionArea
               onClick={() => navigate(c.to)}
-              sx={{ height: '100%' }}
+              sx={{ height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'stretch' }}
             >
-              <Box
+              <Stack
+                direction="row"
+                alignItems="center"
+                spacing={2}
                 sx={{
-                  height: 90,
-                  background: c.gradient,
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'flex-start',
-                  px: 3,
-                  color: '#fff',
+                  minHeight: 118,
+                  backgroundColor: alpha(c.accent, 0.075),
+                  borderBottom: (t) => `1px solid ${t.palette.divider}`,
+                  px: 2,
                 }}
               >
-                {c.icon}
-              </Box>
-              <CardContent>
-                <Typography variant="h6" fontWeight={700} gutterBottom>
-                  {c.title}
-                </Typography>
+                <ModuleIcon kind={c.icon} color={c.accent} />
+                <Box sx={{ minWidth: 0 }}>
+                  <Typography variant="overline" color="text.secondary" sx={{ lineHeight: 1 }}>
+                    Module
+                  </Typography>
+                  <Typography variant="h6" fontWeight={800} sx={{ color: c.accent }}>
+                    {c.title}
+                  </Typography>
+                </Box>
+              </Stack>
+              <CardContent sx={{ flex: 1 }}>
                 <Typography variant="body2" color="text.secondary">
                   {c.description}
                 </Typography>

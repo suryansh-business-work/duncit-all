@@ -44,6 +44,7 @@ import {
 import RolesDialog from './RolesDialog';
 import ProfileForm from './ProfileForm';
 import UserBadgesSection from './UserBadgesSection';
+import UserInterestsSection from './UserInterestsSection';
 
 const Section = styled(Card)({ height: '100%' });
 
@@ -352,6 +353,8 @@ export default function UserDetailsPage() {
                 onSave={save}
               />
             </Section>
+
+            <UserInterestsSection user={user} />
 
             <Section>
               <CardContent>

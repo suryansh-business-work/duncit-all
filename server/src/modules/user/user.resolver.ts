@@ -2,9 +2,12 @@ import { userService } from './user.service';
 import {
   loginSchema,
   registerSchema,
+  googleSignupSchema,
   createUserSchema,
   updateUserSchema,
+  updateMyProfileSchema,
   petProfileSchema,
+  interestCategoryIdsSchema,
 } from './user.validator';
 import { validate } from '../../utils/validate';
 import type { GraphQLContext } from '../../context';
@@ -15,10 +18,23 @@ const MUTATING_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 const ROLE_ASSIGN_ROLES = ['SUPER_ADMIN'];
 
 export const userResolvers = {
+  User: {
+    interest_categories: async (parent: any) =>
+      userService.getInterestCategories(parent.interest_category_ids ?? []),
+  },
   Query: {
     me: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       if (!ctx.user) return null;
       return userService.me(ctx.user.id);
+    },
+    mySavedPods: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.listSavedPods(ctx.user.id);
     },
     users: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
@@ -41,6 +57,20 @@ export const userResolvers = {
     loginWithGoogle: async (_p: unknown, args: { input: { id_token: string } }) => {
       return userService.loginWithGoogle(args.input?.id_token);
     },
+    signupWithGoogle: async (_p: unknown, args: { input: unknown }) => {
+      const data = await validate(googleSignupSchema, args.input);
+      return userService.signupWithGoogle(data);
+    },
+    updateMyProfile: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      const data = await validate(updateMyProfileSchema, args.input);
+      return userService.updateMyProfile(ctx.user.id, data);
+    },
     updateMyPetProfile: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
       if (!ctx.user) {
         const { GraphQLError } = await import('graphql');
@@ -50,6 +80,43 @@ export const userResolvers = {
       }
       const data = await validate(petProfileSchema, args.input);
       return userService.updateMyPetProfile(ctx.user.id, data);
+    },
+    updateMyInterests: async (_p: unknown, args: { category_ids: unknown }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      const categoryIds = await validate(interestCategoryIdsSchema, args.category_ids);
+      return userService.updateMyInterests(ctx.user.id, categoryIds as string[]);
+    },
+    toggleSavedPod: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.toggleSavedPod(ctx.user.id, args.pod_doc_id);
+    },
+    followUser: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.followUser(ctx.user.id, args.user_id);
+    },
+    unfollowUser: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.unfollowUser(ctx.user.id, args.user_id);
     },
     createUser: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
       requireRole(ctx, MUTATING_ROLES);

@@ -1,5 +1,6 @@
 import {
   getImagekitAuth,
+  uploadBase64Image,
   importRemoteImage,
   pexelsSearch,
 } from './upload.service';
@@ -37,6 +38,14 @@ export const uploadResolvers = {
         folder: args.folder,
         fileName: args.fileName,
       });
+    },
+    uploadImageToImagekit: (
+      _p: unknown,
+      args: { fileBase64: string; fileName: string; mimeType?: string; folder?: string },
+      ctx: GraphQLContext
+    ) => {
+      requireAuth(ctx);
+      return uploadBase64Image(args);
     },
   },
 };

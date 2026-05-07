@@ -82,7 +82,8 @@ try {
     <input
       name="email"
       type="email"
-      placeholder="Email (optional, for a reply)"
+      required
+      placeholder="Email for a reply"
       class="px-4 py-3 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none"
     />
     <p id="askFaqErr" class="text-sm text-red-600 hidden"></p>
@@ -106,12 +107,19 @@ try {
     const fd = new FormData(form);
     const payload = {
       question: String(fd.get('question') || '').trim(),
-      email: String(fd.get('email') || '').trim() || null,
+      email: String(fd.get('email') || '').trim(),
     };
     if (payload.question.length < 5) {
       if (errBox) {
         errBox.classList.remove('hidden');
         errBox.textContent = 'Please type a longer question.';
+      }
+      return;
+    }
+    if (!payload.email) {
+      if (errBox) {
+        errBox.classList.remove('hidden');
+        errBox.textContent = 'Please enter your email.';
       }
       return;
     }

@@ -31,6 +31,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 
 interface Props {
   open: boolean;
@@ -74,6 +75,7 @@ export default function ProfileDrawer({
   const baseItems: Item[] = [
     { label: 'Home', icon: <HomeIcon fontSize="small" />, onClick: go('/') },
     { label: 'Profile', icon: <PersonOutlineIcon fontSize="small" />, onClick: go('/profile') },
+    { label: 'Saved Items', icon: <BookmarkBorderIcon fontSize="small" />, onClick: go('/saved') },
   ];
   const hostItem: Item = isHost
     ? { label: 'Host Dashboard', icon: <DashboardIcon fontSize="small" />, onClick: go('/host') }
@@ -150,6 +152,12 @@ export default function ProfileDrawer({
               <Typography variant="caption" color="text.secondary" noWrap display="block">
                 {me?.email ?? '—'}
               </Typography>
+              {(isHost || isVenue) && (
+                <Stack direction="row" spacing={0.5} sx={{ mt: 0.75, flexWrap: 'wrap', gap: 0.5 }}>
+                  {isHost && <Chip size="small" label="Host" color="secondary" sx={{ height: 22, fontSize: 11 }} />}
+                  {isVenue && <Chip size="small" label="Venue Owner" color="secondary" sx={{ height: 22, fontSize: 11 }} />}
+                </Stack>
+              )}
               {roles.length > 0 && (
                 <Stack
                   direction="row"

@@ -25,6 +25,7 @@ import {
 } from './queries';
 import ColumnPanel from './ColumnPanel';
 import CategoryFormDialog from './CategoryFormDialog';
+import { isImageIconValue } from '../../components/IconPickerField';
 
 interface DialogState {
   open: boolean;
@@ -88,6 +89,7 @@ export default function CategoriesPage() {
         id: item.id,
         name: item.name,
         icon: item.icon ?? '',
+        iconMode: isImageIconValue(item.icon) ? 'IMAGE' : 'ICON',
         description: item.description ?? '',
         mediaText: item.media.map((m) => m.url).join('\n'),
         sort_order: item.sort_order,

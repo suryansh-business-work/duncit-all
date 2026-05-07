@@ -25,14 +25,21 @@ import CloseIcon from '@mui/icons-material/Close';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import SearchIcon from '@mui/icons-material/Search';
 
-const IMAGEKIT_AUTH = gql`
-  mutation GetImagekitAuth {
-    getImagekitAuth {
-      token
-      expire
-      signature
-      publicKey
-      urlEndpoint
+const UPLOAD_IMAGE = gql`
+  mutation UploadImageToImagekit(
+    $fileBase64: String!
+    $fileName: String!
+    $mimeType: String
+    $folder: String
+  ) {
+    uploadImageToImagekit(
+      fileBase64: $fileBase64
+      fileName: $fileName
+      mimeType: $mimeType
+      folder: $folder
+    ) {
+      url
+      fileId
     }
   }
 `;
@@ -76,8 +83,6 @@ interface MediaPickerDialogProps {
   accept?: string;
 }
 
-const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
-
 export default function MediaPickerDialog({
   open,
   onClose,
@@ -105,7 +110,7 @@ export default function MediaPickerDialog({
   const [importingId, setImportingId] = useState<string | null>(null);
 
   const client = useApolloClient();
-  const [getAuthMut] = useMutation(IMAGEKIT_AUTH);
+  const [uploadImageMut] = useMutation(UPLOAD_IMAGE);
   const [importMut] = useMutation(IMPORT_REMOTE);
 
   // Reset every time the dialog opens
@@ -176,44 +181,27 @@ export default function MediaPickerDialog({
   const uploadFromDevice = async () => {
     if (!picked) return;
     setUploading(true);
-    setUploadPct(0);
+    setUploadPct(10);
     setError(null);
     try {
-      const auth = (await getAuthMut()).data.getImagekitAuth;
-      const form = new FormData();
-      // Order matches the official ImageKit JS SDK — auth fields first, then
-      // the file body. Some upstream parsers fail signature verification when
-      // the file appears before the signature.
-      form.append('publicKey', auth.publicKey);
-      form.append('signature', auth.signature);
-      form.append('expire', String(auth.expire));
-      form.append('token', auth.token);
-      form.append('fileName', picked.name);
-      form.append('useUniqueFileName', 'true');
-      if (folder) form.append('folder', folder);
-      form.append('file', picked);
-
-      const url: string = await new Promise((resolve, reject) => {
-        const xhr = new XMLHttpRequest();
-        xhr.open('POST', IMAGEKIT_UPLOAD_URL);
-        xhr.upload.onprogress = (ev) => {
-          if (ev.lengthComputable) setUploadPct(Math.round((ev.loaded / ev.total) * 100));
-        };
-        xhr.onload = () => {
-          try {
-            const json = JSON.parse(xhr.responseText);
-            if (xhr.status >= 200 && xhr.status < 300 && json.url) {
-              resolve(json.url);
-            } else {
-              reject(new Error(json?.message || `Upload failed (${xhr.status})`));
-            }
-          } catch {
-            reject(new Error('Invalid response from upload server'));
-          }
-        };
-        xhr.onerror = () => reject(new Error('Network error during upload'));
-        xhr.send(form);
+      const fileBase64: string = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || ''));
+        reader.onerror = () => reject(new Error('Could not read selected file'));
+        reader.readAsDataURL(picked);
       });
+      setUploadPct(55);
+      const res = await uploadImageMut({
+        variables: {
+          fileBase64,
+          fileName: picked.name,
+          mimeType: picked.type,
+          folder,
+        },
+      });
+      const url = res.data?.uploadImageToImagekit?.url;
+      if (!url) throw new Error('No URL returned from ImageKit upload');
+      setUploadPct(100);
       onPicked(url);
       onClose();
     } catch (e: any) {

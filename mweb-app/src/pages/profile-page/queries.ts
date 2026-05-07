@@ -9,6 +9,12 @@ export const ME_AND_POSTS = gql`
       full_name
       profile_photo
       bio
+      profile_links {
+        label
+        url
+      }
+      followers_count
+      following_count
       pet_profile {
         name
         species
@@ -67,6 +73,22 @@ export const CREATE_POST = gql`
   mutation CreatePost($input: CreatePostInput!) {
     createPost(input: $input) {
       id
+    }
+  }
+`;
+export const UPDATE_MY_PROFILE = gql`
+  mutation UpdateMyProfile($input: UpdateMyProfileInput!) {
+    updateMyProfile(input: $input) {
+      user_id
+      first_name
+      last_name
+      full_name
+      bio
+      profile_photo
+      profile_links {
+        label
+        url
+      }
     }
   }
 `;

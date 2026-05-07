@@ -22,13 +22,14 @@ import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
 import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { loginSchema } from '../validators/auth';
+import GoogleAuthNoticeDialog from '../components/GoogleAuthNoticeDialog';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 
 const LOGIN = gql`
   mutation Login($input: LoginInput!) {
     login(input: $input) {
       token
-      user { user_id first_name email roles }
+      user { user_id first_name email roles onboarding_survey_completed }
     }
   }
 `;
@@ -36,7 +37,7 @@ const LOGIN_GOOGLE = gql`
   mutation LoginWithGoogle($input: GoogleAuthInput!) {
     loginWithGoogle(input: $input) {
       token
-      user { user_id first_name email roles }
+      user { user_id first_name email roles onboarding_survey_completed }
     }
   }
 `;
@@ -65,7 +66,13 @@ export default function LoginPage() {
   const [loginMutation, { loading, error }] = useMutation(LOGIN);
   const [loginGoogle, { loading: gLoading }] = useMutation(LOGIN_GOOGLE);
   const [gError, setGError] = useState<string | null>(null);
+  const [gNotice, setGNotice] = useState<{ title: string; message: string; action?: string } | null>(null);
   const [showPwd, setShowPwd] = useState(false);
+
+  const finishLogin = (token: string, user: any) => {
+    localStorage.setItem('token', token);
+    navigate(user?.onboarding_survey_completed === false ? '/signup-survey' : '/');
+  };
 
   const handleGoogle = async (idToken: string) => {
     setGError(null);
@@ -73,11 +80,24 @@ export default function LoginPage() {
       const res = await loginGoogle({ variables: { input: { id_token: idToken } } });
       const token = res.data?.loginWithGoogle?.token;
       if (token) {
-        localStorage.setItem('token', token);
-        navigate('/');
+        finishLogin(token, res.data?.loginWithGoogle?.user);
       }
     } catch (e: any) {
-      setGError(e.message);
+      const code = e.graphQLErrors?.[0]?.extensions?.code;
+      if (code === 'GOOGLE_ACCOUNT_NOT_FOUND') {
+        setGNotice({
+          title: 'Google account not found',
+          message: 'User is not in our system. Please sign up first.',
+          action: 'Sign up',
+        });
+      } else if (code === 'EMAIL_LOGIN_REQUIRED') {
+        setGNotice({
+          title: 'Use email login',
+          message: 'Please login with email. You registered with us using email and password.',
+        });
+      } else {
+        setGError(e.message);
+      }
     }
   };
 
@@ -169,8 +189,7 @@ export default function LoginPage() {
                 const res = await loginMutation({ variables: { input: values } });
                 const token = res.data?.login?.token;
                 if (token) {
-                  localStorage.setItem('token', token);
-                  navigate('/');
+                  finishLogin(token, res.data?.login?.user);
                 }
               } catch (e: any) {
                 setStatus(e.message);
@@ -291,6 +310,14 @@ export default function LoginPage() {
           </Stack>
         </CardContent>
       </Card>
+      <GoogleAuthNoticeDialog
+        open={!!gNotice}
+        title={gNotice?.title ?? ''}
+        message={gNotice?.message ?? ''}
+        actionLabel={gNotice?.action}
+        onAction={() => navigate('/register')}
+        onClose={() => setGNotice(null)}
+      />
     </Box>
   );
 }

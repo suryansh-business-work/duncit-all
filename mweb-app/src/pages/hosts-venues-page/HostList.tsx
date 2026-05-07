@@ -8,16 +8,26 @@ import {
   Typography,
 } from '@mui/material';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import FollowButton from '../../components/FollowButton';
 
 interface Host {
   id: string;
+  user_id: string;
   full_name: string;
   email?: string | null;
   passport_photo_url?: string | null;
   full_address?: string | null;
 }
 
-export default function HostList({ hosts }: { hosts: Host[] }) {
+interface Props {
+  hosts: Host[];
+  meId?: string;
+  followingIds: Set<string>;
+  pendingUserId: string | null;
+  onToggleFollow: (userId: string) => void;
+}
+
+export default function HostList({ hosts, meId, followingIds, pendingUserId, onToggleFollow }: Props) {
   if (!hosts.length) {
     return (
       <Card variant="outlined">
@@ -64,6 +74,12 @@ export default function HostList({ hosts }: { hosts: Host[] }) {
                     </Typography>
                   )}
                 </Box>
+                <FollowButton
+                  following={followingIds.has(h.user_id)}
+                  disabled={h.user_id === meId}
+                  loading={pendingUserId === h.user_id}
+                  onToggle={() => onToggleFollow(h.user_id)}
+                />
               </Stack>
             </CardContent>
           </Card>

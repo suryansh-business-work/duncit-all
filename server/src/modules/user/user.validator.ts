@@ -21,6 +21,15 @@ export const loginSchema = yup.object({
   password: yup.string().min(8).required(),
 });
 
+export const googleSignupSchema = yup.object({
+  id_token: yup.string().min(20).required(),
+  phone_number: yup.string().matches(phoneRegex, 'Invalid phone').required(),
+  phone_extension: yup.string().matches(extRegex, 'Invalid extension').required(),
+  dob: yup.date().max(new Date(), 'DOB must be in the past').required(),
+  city: yup.string().optional(),
+  zone: yup.string().optional(),
+});
+
 export const createUserSchema = yup.object({
   first_name: yup.string().min(1).max(60).required(),
   last_name: yup.string().min(1).max(60).required(),
@@ -53,6 +62,19 @@ export const updateUserSchema = yup.object({
   assigned_zones: yup.array().of(yup.string()).optional(),
 });
 
+const profileLinkSchema = yup.object({
+  label: yup.string().trim().min(1).max(40).required(),
+  url: yup.string().trim().url().max(2048).required(),
+});
+
+export const updateMyProfileSchema = yup.object({
+  first_name: yup.string().min(1).max(60).optional(),
+  last_name: yup.string().min(1).max(60).optional(),
+  bio: yup.string().max(500).optional(),
+  profile_photo: yup.string().url().optional(),
+  profile_links: yup.array().of(profileLinkSchema).max(5).optional(),
+});
+
 export const petProfileSchema = yup.object({
   name: yup.string().max(60).optional(),
   species: yup.string().max(40).optional(),
@@ -62,8 +84,17 @@ export const petProfileSchema = yup.object({
   bio: yup.string().max(500).optional(),
 });
 
+export const interestCategoryIdsSchema = yup
+  .array()
+  .of(yup.string().required())
+  .min(1, 'Select at least one interest')
+  .max(60, 'Select fewer interests')
+  .required();
+
 export type RegisterDTO = yup.InferType<typeof registerSchema>;
 export type LoginDTO = yup.InferType<typeof loginSchema>;
+export type GoogleSignupDTO = yup.InferType<typeof googleSignupSchema>;
 export type CreateUserDTO = yup.InferType<typeof createUserSchema>;
 export type UpdateUserDTO = yup.InferType<typeof updateUserSchema>;
+export type UpdateMyProfileDTO = yup.InferType<typeof updateMyProfileSchema>;
 export type PetProfileDTO = yup.InferType<typeof petProfileSchema>;

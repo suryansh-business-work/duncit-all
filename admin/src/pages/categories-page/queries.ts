@@ -60,6 +60,7 @@ export interface FormState {
   id?: string;
   name: string;
   icon: string;
+  iconMode: 'ICON' | 'IMAGE';
   description: string;
   mediaText: string;
   sort_order: number;
@@ -69,6 +70,7 @@ export interface FormState {
 export const blankForm: FormState = {
   name: '',
   icon: '',
+  iconMode: 'ICON',
   description: '',
   mediaText: '',
   sort_order: 0,

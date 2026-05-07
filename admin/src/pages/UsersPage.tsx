@@ -3,12 +3,14 @@ import { gql, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   Card,
   CardContent,
   Chip,
   CircularProgress,
+  Divider,
   Dialog,
   DialogActions,
   DialogContent,
@@ -22,11 +24,16 @@ import {
   Tooltip,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import CasinoIcon from '@mui/icons-material/Casino';
+import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
+import GoogleIcon from '@mui/icons-material/Google';
+import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 
 const STATUS_OPTIONS = ['', 'ACTIVE', 'INACTIVE', 'SUSPENDED'];
 
@@ -40,6 +47,11 @@ const USERS = gql`
       email
       phone_number
       roles
+      profile_photo
+      is_email_verified
+      auth_providers
+      last_login_provider
+      last_login_at
       city
       zone
       status
@@ -92,6 +104,20 @@ function genPassword() {
   let out = '';
   for (let i = 0; i < 12; i++) out += chars[Math.floor(Math.random() * chars.length)];
   return out;
+}
+
+function initials(user: any) {
+  return `${user.first_name?.[0] ?? ''}${user.last_name?.[0] ?? ''}`.trim().toUpperCase() || 'U';
+}
+
+function loginMeta(user: any) {
+  const provider = user.last_login_provider || (user.auth_providers?.includes('GOOGLE') ? 'GOOGLE' : 'EMAIL');
+  return {
+    provider,
+    label: provider === 'GOOGLE' ? 'Google' : 'Email',
+    icon: provider === 'GOOGLE' ? <GoogleIcon fontSize="small" /> : <EmailOutlinedIcon fontSize="small" />,
+    color: provider === 'GOOGLE' ? '#4285f4' : '#0f766e',
+  };
 }
 
 export default function UsersPage() {
@@ -152,24 +178,102 @@ export default function UsersPage() {
   };
 
   const columns: GridColDef[] = [
-    { field: 'full_name', headerName: 'Name', flex: 1, minWidth: 160 },
-    { field: 'email', headerName: 'Email', flex: 1, minWidth: 180 },
-    { field: 'phone_number', headerName: 'Phone', width: 140 },
+    {
+      field: 'full_name',
+      headerName: 'User',
+      flex: 1.35,
+      minWidth: 260,
+      renderCell: (p) => {
+        const user = p.row as any;
+        return (
+          <Stack direction="row" alignItems="center" spacing={1.25} sx={{ minWidth: 0 }}>
+            <Avatar
+              src={user.profile_photo || undefined}
+              sx={{ width: 40, height: 40, bgcolor: 'primary.main', fontSize: 14, fontWeight: 700 }}
+            >
+              {initials(user)}
+            </Avatar>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="body2" fontWeight={700} noWrap>
+                {user.full_name || 'Unnamed user'}
+              </Typography>
+              <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
+                <EmailOutlinedIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+                <Typography variant="caption" color="text.secondary" noWrap>
+                  {user.email || 'No email'}
+                </Typography>
+              </Stack>
+            </Box>
+          </Stack>
+        );
+      },
+    },
+    {
+      field: 'phone_number',
+      headerName: 'Contact',
+      flex: 0.9,
+      minWidth: 180,
+      renderCell: (p) => {
+        const user = p.row as any;
+        return (
+          <Stack spacing={0.35} sx={{ minWidth: 0 }}>
+            <Stack direction="row" spacing={0.75} alignItems="center">
+              <PhoneOutlinedIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+              <Typography variant="body2" noWrap>
+                {user.phone_number || '—'}
+              </Typography>
+            </Stack>
+            <Stack direction="row" spacing={0.75} alignItems="center">
+              <PlaceOutlinedIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+              <Typography variant="caption" color="text.secondary" noWrap>
+                {[user.city, user.zone].filter(Boolean).join(' · ') || 'No location'}
+              </Typography>
+            </Stack>
+          </Stack>
+        );
+      },
+    },
     {
       field: 'roles',
       headerName: 'Roles',
       flex: 1,
       minWidth: 220,
       renderCell: (p) => (
-        <Stack direction="row" spacing={0.5} flexWrap="wrap">
+        <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap sx={{ py: 1 }}>
           {(p.value as string[])?.map((r) => (
-            <Chip key={r} label={r} size="small" variant="outlined" color="primary" />
+            <Chip key={r} label={r.replace(/_/g, ' ')} size="small" variant="outlined" color="primary" />
           ))}
         </Stack>
       ),
     },
-    { field: 'city', headerName: 'City', width: 120 },
-    { field: 'zone', headerName: 'Zone', width: 120 },
+    {
+      field: 'last_login_provider',
+      headerName: 'Login Method',
+      width: 165,
+      renderCell: (p) => {
+        const meta = loginMeta(p.row);
+        return (
+          <Stack spacing={0.35}>
+            <Chip
+              icon={meta.icon}
+              label={meta.label}
+              size="small"
+              sx={{
+                justifyContent: 'flex-start',
+                color: meta.color,
+                borderColor: alpha(meta.color, 0.35),
+                bgcolor: alpha(meta.color, 0.08),
+                '& .MuiChip-icon': { color: meta.color },
+              }}
+              variant="outlined"
+            />
+            <Typography variant="caption" color="text.secondary">
+              {p.row.last_login_at ? new Date(p.row.last_login_at as string).toLocaleDateString() : 'Not tracked yet'}
+            </Typography>
+          </Stack>
+        );
+      },
+    },
     {
       field: 'status',
       headerName: 'Status',
@@ -201,14 +305,19 @@ export default function UsersPage() {
   return (
     <Stack spacing={2}>
       <Stack direction="row" justifyContent="space-between" alignItems="center">
-        <Typography variant="h5">Users</Typography>
+        <Box>
+          <Typography variant="h5">Users</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Manage accounts, login methods, roles and access state.
+          </Typography>
+        </Box>
         <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
           Create User
         </Button>
       </Stack>
 
       <Card>
-        <CardContent>
+        <CardContent sx={{ pb: 1.5 }}>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
               size="small"
@@ -252,23 +361,50 @@ export default function UsersPage() {
 
       {error && <Alert severity="error">{error.message}</Alert>}
 
-      <Box sx={{ height: 560, width: '100%' }}>
+      <Card>
         {loading ? (
-          <Stack alignItems="center" justifyContent="center" sx={{ height: '100%' }}>
+          <Stack alignItems="center" justifyContent="center" sx={{ height: 360 }}>
             <CircularProgress />
           </Stack>
         ) : (
+          <>
+          <Box sx={{ px: 2, py: 1.5 }}>
+            <Stack direction="row" alignItems="center" justifyContent="space-between">
+              <Typography variant="subtitle2" fontWeight={700}>
+                {(data?.users ?? []).length} users found
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Click a row to open details
+              </Typography>
+            </Stack>
+          </Box>
+          <Divider />
           <DataGrid
             rows={(data?.users ?? []).map((u: any) => ({ id: u.user_id, ...u }))}
             columns={columns}
+            autoHeight
+            getRowHeight={() => 72}
             disableRowSelectionOnClick
             onRowClick={(p) => navigate(`/users/${p.id}`)}
-            sx={{ '& .MuiDataGrid-row': { cursor: 'pointer' } }}
+            sx={{
+              border: 0,
+              '& .MuiDataGrid-columnHeaders': {
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+                borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
+              },
+              '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 800 },
+              '& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' },
+              '& .MuiDataGrid-row': { cursor: 'pointer' },
+              '& .MuiDataGrid-row:hover': {
+                bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),
+              },
+            }}
             initialState={{ pagination: { paginationModel: { pageSize: 10 } } }}
             pageSizeOptions={[10, 25, 50]}
           />
+          </>
         )}
-      </Box>
+      </Card>
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
         <DialogTitle>Create User</DialogTitle>

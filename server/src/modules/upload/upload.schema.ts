@@ -57,5 +57,16 @@ export const uploadTypeDefs = /* GraphQL */ `
       folder: String
       fileName: String
     ): UploadedImage!
+
+    """
+    Server-side ImageKit upload for admin/device files. This avoids browser
+    signature failures by keeping the private-key upload on the API server.
+    """
+    uploadImageToImagekit(
+      fileBase64: String!
+      fileName: String!
+      mimeType: String
+      folder: String
+    ): UploadedImage!
   }
 `;

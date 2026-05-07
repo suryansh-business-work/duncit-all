@@ -1,5 +1,5 @@
-import { useMemo, useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
+import { useEffect, useMemo, useState } from 'react';
+import { gql, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
@@ -22,6 +22,10 @@ import { usePricing } from '../hooks/usePricing';
 
 const EXPLORE_PODS = gql`
   query ExplorePods {
+    me {
+      user_id
+      saved_pod_ids
+    }
     pods(filter: { is_active: true }) {
       id
       pod_id
@@ -55,21 +59,26 @@ const EXPLORE_PODS = gql`
   }
 `;
 
-const SAVED_KEY = 'duncit:savedPods';
-
-function loadSaved(): Set<string> {
-  try {
-    return new Set(JSON.parse(localStorage.getItem(SAVED_KEY) || '[]'));
-  } catch {
-    return new Set();
+const TOGGLE_SAVED_POD = gql`
+  mutation ToggleSavedPod($pod_doc_id: ID!) {
+    toggleSavedPod(pod_doc_id: $pod_doc_id) {
+      pod_id
+      saved
+      saved_pod_ids
+    }
   }
-}
+`;
 
 export default function ExplorePage() {
   const { data, loading, error } = useQuery(EXPLORE_PODS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [saved, setSaved] = useState<Set<string>>(() => loadSaved());
+  const [toggleSavedPod] = useMutation(TOGGLE_SAVED_POD);
+  const [saved, setSaved] = useState<Set<string>>(new Set());
+
+  useEffect(() => {
+    setSaved(new Set(data?.me?.saved_pod_ids ?? []));
+  }, [data?.me?.saved_pod_ids]);
 
   const clubsById = useMemo(() => {
     const m = new Map<string, any>();
@@ -92,14 +101,20 @@ export default function ExplorePage() {
     return list;
   }, [data]);
 
-  const toggleSave = (id: string) => {
+  const toggleSave = async (id: string) => {
+    const previous = saved;
     setSaved((prev) => {
       const next = new Set(prev);
       if (next.has(id)) next.delete(id);
       else next.add(id);
-      localStorage.setItem(SAVED_KEY, JSON.stringify([...next]));
       return next;
     });
+    try {
+      const res = await toggleSavedPod({ variables: { pod_doc_id: id } });
+      setSaved(new Set(res.data?.toggleSavedPod?.saved_pod_ids ?? []));
+    } catch {
+      setSaved(previous);
+    }
   };
 
   if (loading && !data)

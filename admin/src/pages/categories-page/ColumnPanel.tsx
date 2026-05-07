@@ -21,6 +21,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { CATEGORIES, CatItem, Level } from './queries';
+import { isImageIconValue, renderIconByName } from '../../components/IconPickerField';
 
 interface Props {
   title: string;
@@ -101,77 +102,82 @@ export default function ColumnPanel({
           </Box>
         ) : (
           <List dense disablePadding>
-            {items.map((it) => (
-              <ListItemButton
-                key={it.id}
-                selected={selectedId === it.id}
-                onClick={() => onSelect(it)}
-              >
-                <Avatar
-                  sx={{
-                    width: 32,
-                    height: 32,
-                    mr: 1.5,
-                    bgcolor: 'primary.main',
-                    fontSize: 16,
-                  }}
-                  src={it.media[0]?.url}
+            {items.map((it) => {
+              const iconIsImage = isImageIconValue(it.icon);
+              const hasIconValue = !!it.icon?.trim();
+              const materialIcon = iconIsImage ? null : renderIconByName(it.icon, 'small');
+              return (
+                <ListItemButton
+                  key={it.id}
+                  selected={selectedId === it.id}
+                  onClick={() => onSelect(it)}
                 >
-                  {it.icon || it.name[0]}
-                </Avatar>
-                <ListItemText
-                  primary={
-                    <Stack direction="row" alignItems="center" spacing={0.5}>
-                      <Typography variant="body2" fontWeight={500}>
-                        {it.name}
-                      </Typography>
-                      {it.is_system && (
-                        <Chip
-                          label="system"
-                          size="small"
-                          sx={{ height: 16, fontSize: 10 }}
-                        />
-                      )}
-                      {!it.is_active && (
-                        <Chip
-                          label="inactive"
-                          size="small"
-                          color="warning"
-                          sx={{ height: 16, fontSize: 10 }}
-                        />
-                      )}
-                    </Stack>
-                  }
-                  secondary={
-                    it.description
-                      ? it.description.slice(0, 50) +
-                        (it.description.length > 50 ? '…' : '')
-                      : undefined
-                  }
-                />
-                <Stack direction="row">
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onEdit(it);
+                  <Avatar
+                    sx={{
+                      width: 32,
+                      height: 32,
+                      mr: 1.5,
+                      bgcolor: 'primary.main',
+                      fontSize: 16,
                     }}
+                    src={iconIsImage ? it.icon : !hasIconValue ? it.media[0]?.url : undefined}
                   >
-                    <EditIcon fontSize="inherit" />
-                  </IconButton>
-                  <IconButton
-                    size="small"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      onDelete(it);
-                    }}
-                  >
-                    <DeleteIcon fontSize="inherit" />
-                  </IconButton>
-                  {level !== 'SUB' && <ChevronRightIcon fontSize="small" />}
-                </Stack>
-              </ListItemButton>
-            ))}
+                    {materialIcon || (!iconIsImage ? it.icon : '') || it.name[0]}
+                  </Avatar>
+                  <ListItemText
+                    primary={
+                      <Stack direction="row" alignItems="center" spacing={0.5}>
+                        <Typography variant="body2" fontWeight={500}>
+                          {it.name}
+                        </Typography>
+                        {it.is_system && (
+                          <Chip
+                            label="system"
+                            size="small"
+                            sx={{ height: 16, fontSize: 10 }}
+                          />
+                        )}
+                        {!it.is_active && (
+                          <Chip
+                            label="inactive"
+                            size="small"
+                            color="warning"
+                            sx={{ height: 16, fontSize: 10 }}
+                          />
+                        )}
+                      </Stack>
+                    }
+                    secondary={
+                      it.description
+                        ? it.description.slice(0, 50) +
+                          (it.description.length > 50 ? '…' : '')
+                        : undefined
+                    }
+                  />
+                  <Stack direction="row">
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onEdit(it);
+                      }}
+                    >
+                      <EditIcon fontSize="inherit" />
+                    </IconButton>
+                    <IconButton
+                      size="small"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        onDelete(it);
+                      }}
+                    >
+                      <DeleteIcon fontSize="inherit" />
+                    </IconButton>
+                    {level !== 'SUB' && <ChevronRightIcon fontSize="small" />}
+                  </Stack>
+                </ListItemButton>
+              );
+            })}
           </List>
         )}
       </Box>

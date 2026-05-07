@@ -53,8 +53,8 @@ const ME = gql`
 `;
 
 const UPDATE_USER = gql`
-  mutation UpdatePhoto($user_id: ID!, $input: UpdateUserInput!) {
-    updateUser(user_id: $user_id, input: $input) {
+  mutation UpdateMyProfilePhoto($input: UpdateMyProfileInput!) {
+    updateMyProfile(input: $input) {
       user_id
       profile_photo
     }
@@ -66,6 +66,7 @@ export default function AccountPage() {
   const { data, loading, error, refetch } = useQuery(ME, { fetchPolicy: 'cache-and-network' });
   const [pickerOpen, setPickerOpen] = useState(false);
   const [savingPhoto, setSavingPhoto] = useState(false);
+  const [photoError, setPhotoError] = useState<string | null>(null);
   const [updateUser] = useMutation(UPDATE_USER);
 
   const logout = () => {
@@ -222,16 +223,20 @@ export default function AccountPage() {
         title="Update profile photo"
         onPicked={async (url) => {
           setSavingPhoto(true);
+          setPhotoError(null);
           try {
             await updateUser({
-              variables: { user_id: me.user_id, input: { profile_photo: url } },
+              variables: { input: { profile_photo: url } },
             });
             await refetch();
+          } catch (e: any) {
+            setPhotoError(e.message ?? 'Could not update profile photo');
           } finally {
             setSavingPhoto(false);
           }
         }}
       />
+      {photoError && <Alert severity="error" onClose={() => setPhotoError(null)}>{photoError}</Alert>}
     </Stack>
   );
 }

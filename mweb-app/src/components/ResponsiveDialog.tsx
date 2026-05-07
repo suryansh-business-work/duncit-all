@@ -93,7 +93,7 @@ export default function ResponsiveDialog({
             direction="row"
             alignItems="center"
             justifyContent="space-between"
-            sx={{ px: 2, pt: 0.5, pb: 1, flex: '0 0 auto' }}
+            sx={{ px: 2, pt: 0.5, pb: 0.5, flex: '0 0 auto' }}
           >
             <Typography variant="subtitle1" fontWeight={700} sx={{ minWidth: 0 }} noWrap>
               {title}
@@ -103,13 +103,13 @@ export default function ResponsiveDialog({
             </IconButton>
           </Stack>
         )}
-        <Box sx={{ flex: 1, overflowY: 'auto', px: 2, pb: 2 }}>{children}</Box>
+        <Box sx={{ flex: 1, overflowY: 'auto', px: 2, pt: 0.5, pb: 1 }}>{children}</Box>
         {actions && (
           <Box
             sx={{
               flex: '0 0 auto',
               px: 2,
-              py: 1.25,
+              py: 0.75,
               borderTop: 1,
               borderColor: 'divider',
               display: 'flex',
@@ -139,7 +139,7 @@ export default function ResponsiveDialog({
           </IconButton>
         </DialogTitle>
       )}
-      <DialogContent dividers={!!actions}>{children}</DialogContent>
+      <DialogContent dividers={!!actions} sx={{ py: 1.5 }}>{children}</DialogContent>
       {actions && <DialogActions>{actions}</DialogActions>}
     </Dialog>
   );

@@ -46,10 +46,11 @@ export const sliderService = {
     //   undefined  → no constraint
     //   ''/null    → only sliders that target everyone (super_category_slug is null)
     //   'pets'     → sliders for that super-category OR null (global-by-category)
-    if (filter?.super_category_slug !== undefined) {
-      const slug = filter.super_category_slug;
-      if (!slug) q.super_category_slug = null;
-      else q.$or = [{ super_category_slug: slug }, { super_category_slug: null }];
+    // Only apply super_category_slug constraint when a real slug is provided.
+    // null / undefined / "" → no constraint → all sliders are eligible.
+    // "sports" → show sliders targeting that category OR targeting everyone (null).
+    if (filter?.super_category_slug) {
+      q.$or = [{ super_category_slug: filter.super_category_slug }, { super_category_slug: null }];
     }
     if (filter?.location_id) q.location_id = filter.location_id;
     if (filter?.zone_name) q.zone_name = filter.zone_name;

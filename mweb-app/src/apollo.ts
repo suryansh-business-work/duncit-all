@@ -20,5 +20,15 @@ const authLink = setContext((_op, { headers }) => {
 
 export const apolloClient = new ApolloClient({
   link: from([authLink, httpLink]),
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    typePolicies: {
+      Query: {
+        fields: {
+          // Treat each unique argument combination as a distinct cache entry
+          // so aliased calls like `globalSliders: sliders(...)` never collide.
+          sliders: { keyArgs: ['filter'] },
+        },
+      },
+    },
+  }),
 });

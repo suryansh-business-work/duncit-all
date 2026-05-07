@@ -126,24 +126,26 @@ export default function FilterBar({
       </Stack>
 
       {/* ── Sort row ── */}
-      <TextField
-        select
-        size="small"
-        label="Sort by"
-        value={sortBy}
-        onChange={(e) => setSortBy(e.target.value as SortBy)}
-        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
-        InputProps={{
-          startAdornment: (
-            <SortIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
-          ),
-        }}
-      >
-        <MenuItem value="DATE_ASC">Date · Earliest first</MenuItem>
-        <MenuItem value="DATE_DESC">Date · Latest first</MenuItem>
-        <MenuItem value="PRICE_ASC">Price · Low to High</MenuItem>
-        <MenuItem value="PRICE_DESC">Price · High to Low</MenuItem>
-      </TextField>
+        <Box sx={{ pt: 1.25, width: '100%' }}>
+          <TextField
+            select
+            size="small"
+            label="Sort by"
+            value={sortBy}
+            onChange={(e) => setSortBy(e.target.value as SortBy)}
+            sx={{ '& .MuiOutlinedInput-root': { borderRadius: 0 } }}
+            InputProps={{
+              startAdornment: (
+                <SortIcon fontSize="small" sx={{ mr: 1, color: 'text.secondary' }} />
+              ),
+            }}
+          >
+            <MenuItem value="DATE_ASC">Date · Earliest first</MenuItem>
+            <MenuItem value="DATE_DESC">Date · Latest first</MenuItem>
+            <MenuItem value="PRICE_ASC">Price · Low to High</MenuItem>
+            <MenuItem value="PRICE_DESC">Price · High to Low</MenuItem>
+          </TextField>
+        </Box>
     </Stack>
   );
 }

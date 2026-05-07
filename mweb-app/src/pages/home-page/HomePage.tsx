@@ -307,7 +307,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
         // -50vw escape used to break out of the centred Container.
         <Box
           sx={{
-            overflow: 'hidden',
             mt: -2,
             mb: 3,
             position: 'relative',

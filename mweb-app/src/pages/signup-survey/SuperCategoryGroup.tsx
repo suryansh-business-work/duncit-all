@@ -1,6 +1,6 @@
 import { Box, Card, CardContent, Stack, Typography, alpha } from '@mui/material';
 import { SurveyChip } from './SurveyChip';
-import { colorForId } from './surveyPalette';
+import { colorForId, emojiFromIcon } from './surveyPalette';
 
 export interface SurveyCategory {
   id: string;
@@ -24,6 +24,7 @@ export function SuperCategoryGroup({
 }: SuperCategoryGroupProps) {
   const hue = colorForId(superCategory.id);
   const categories = childrenByParent.get(superCategory.id) ?? [];
+  const emoji = emojiFromIcon(superCategory.icon);
 
   return (
     <Card
@@ -44,15 +45,30 @@ export function SuperCategoryGroup({
                 backgroundColor: hue,
               }}
             />
-            <SurveyChip
-              id={superCategory.id}
-              label={superCategory.name}
-              icon={superCategory.icon}
-              selected={selected.has(superCategory.id)}
-              onToggle={onToggle}
-              color={hue}
-              size="large"
-            />
+            <Box
+              sx={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 0.75,
+                px: 1.25,
+                py: 0.5,
+                borderRadius: 999,
+                backgroundColor: alpha(hue, 0.12),
+                color: hue,
+                fontWeight: 800,
+                letterSpacing: 0.2,
+                userSelect: 'none',
+              }}
+            >
+              {emoji && (
+                <Box component="span" sx={{ fontSize: 18, lineHeight: 1 }}>
+                  {emoji}
+                </Box>
+              )}
+              <Typography variant="subtitle2" fontWeight={800} sx={{ color: 'inherit' }}>
+                {superCategory.name}
+              </Typography>
+            </Box>
           </Stack>
 
           {categories.length === 0 && (

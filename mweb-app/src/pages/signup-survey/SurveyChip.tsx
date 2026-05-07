@@ -1,4 +1,5 @@
 import { Box, Chip, alpha } from '@mui/material';
+import CancelIcon from '@mui/icons-material/Cancel';
 import { colorForId, emojiFromIcon } from './surveyPalette';
 
 export interface SurveyChipProps {
@@ -34,6 +35,18 @@ export function SurveyChip({
   return (
     <Chip
       onClick={() => onToggle(id)}
+      onDelete={selected ? () => onToggle(id) : undefined}
+      deleteIcon={
+        selected ? (
+          <CancelIcon
+            sx={{
+              color: '#ffffffd9 !important',
+              '&:hover': { color: '#fff !important' },
+              fontSize: dims.fontSize + 4,
+            }}
+          />
+        ) : undefined
+      }
       label={
         <Box
           component="span"

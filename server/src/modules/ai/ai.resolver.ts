@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { importRemoteImage, pexelsSearch } from '../upload/upload.service';
 
 type Entity = 'CLUB' | 'POD' | 'SLIDER';
 
@@ -129,6 +130,68 @@ export async function generateDummy(entity: Entity, prompt?: string | null): Pro
     });
   }
   return content;
+}
+
+// ---------------------------------------------------------------------------
+// Post-process AI output: swap any free-form image URLs the model invents
+// with real Pexels stock photos that have been imported to ImageKit. This
+// guaconst raw = await generateDummy(args.entity, args.prompt);
+      return enrichImagesWithPexels(args.entity, raws) and stay stable on our CDN.
+// ---------------------------------------------------------------------------
+
+const IMAGE_FIELDS_BY_ENTITY: Record<Entity, { single: string[]; multiline: string[]; folder: string }> = {
+  SLIDER: { single: ['media_url'], multiline: [], folder: '/sliders' },
+  CLUB: { single: [], multiline: ['feature_text', 'moments_text'], folder: '/clubs' },
+  POD: { single: [], multiline: ['media_text'], folder: '/pods' },
+};
+
+async function pickPexelsImageKitUrl(query: string, folder: string, offset = 0): Promise<string | null> {
+  try {
+    const page = 1 + Math.floor(offset / 12);
+    const result = await pexelsSearch({ query, page, perPage: 12 });
+    const photo = result.photos?.[offset % 12] || result.photos?.[0];
+    const remote = photo?.src_large || photo?.src_medium;
+    if (!remote) return null;
+    const imported = await importRemoteImage({ remoteUrl: remote, folder });
+    return imported.url || null;
+  } catch {
+    return null;
+  }
+}
+
+async function enrichImagesWithPexels(entity: Entity, raw: string, prompt?: string | null): Promise<string> {
+  let parsed: any;
+  try {
+    parsed = JSON.parse(raw);
+  } catch {
+    return raw;
+  }
+  const cfg = IMAGE_FIELDS_BY_ENTITY[entity];
+  const titleField =
+    entity === 'SLIDER' ? 'title' : entity === 'POD' ? 'pod_title' : 'club_name';
+  const baseQuery =
+    (typeof parsed[titleField] === 'string' && parsed[titleField].trim()) ||
+    (prompt && prompt.trim()) ||
+    entity.toLowerCase();
+
+  for (const field of cfg.single) {
+    const url = await pickPexelsImageKitUrl(baseQuery, cfg.folder, 0);
+    if (url) parsed[field] = url;
+  }
+
+  for (const field of cfg.multiline) {
+    const original = typeof parsed[field] === 'string' ? parsed[field] : '';
+    const lines = original.split(/\r?\n/).map((s: string) => s.trim()).filter(Boolean);
+    const targetCount = Math.min(Math.max(lines.length || 3, 2), 4);
+    const urls: string[] = [];
+    for (let i = 0; i < targetCount; i++) {
+      const url = await pickPexelsImageKitUrl(baseQuery, cfg.folder, i);
+      if (url) urls.push(url);
+    }
+    if (urls.length) parsed[field] = urls.join('\n');
+  }
+
+  return JSON.stringify(parsed);
 }
 
 export const aiResolvers = {

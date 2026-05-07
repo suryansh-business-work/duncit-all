@@ -232,8 +232,8 @@ export const NAV: NavSection[] = [
     heading: 'Onboarding',
     prefixes: ['/venues', '/hosts'],
     items: [
-      { label: 'Venues', to: '/venues', icon: <StorefrontIcon /> },
-      { label: 'Hosts', to: '/hosts', icon: <PeopleIcon /> },
+      { label: 'Host Onboarding', to: '/hosts', icon: <PeopleIcon /> },
+      { label: 'Venue Onboarding', to: '/venues', icon: <StorefrontIcon /> },
     ],
   },
   {

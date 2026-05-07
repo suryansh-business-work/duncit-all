@@ -63,21 +63,41 @@ export default function SignupSurveyPage() {
 
   const tree: SurveyCategory[] = data?.categoryTree ?? [];
 
-  const { supers, childrenByParent, total } = useMemo(() => {
+  const { supers, childrenByParent, total, superIds } = useMemo(() => {
     const map = new Map<string | null, SurveyCategory[]>();
     const active = tree.filter((c: any) => c.is_active);
     active.forEach((c: SurveyCategory) => {
       const key = c.parent_id ?? null;
       map.set(key, [...(map.get(key) ?? []), c]);
     });
+    const supersArr = map.get(null) ?? [];
     return {
-      supers: map.get(null) ?? [],
+      supers: supersArr,
       childrenByParent: map,
-      total: active.length,
+      total: active.length - supersArr.length,
+      superIds: new Set(supersArr.map((s) => s.id)),
     };
   }, [tree]);
 
+  // Strip any super-category ids from the previously-saved selection so they
+  // don't count toward the picks count (super categories are not selectable).
+  useEffect(() => {
+    if (!superIds.size) return;
+    setSelected((prev) => {
+      let changed = false;
+      const next = new Set(prev);
+      for (const id of prev) {
+        if (superIds.has(id)) {
+          next.delete(id);
+          changed = true;
+        }
+      }
+      return changed ? next : prev;
+    });
+  }, [superIds]);
+
   const toggle = (id: string) => {
+    if (superIds.has(id)) return;
     setOpError(null);
     setSelected((prev) => {
       const next = new Set(prev);
@@ -113,7 +133,7 @@ export default function SignupSurveyPage() {
   const canSubmit = count >= MIN_PICKS && !saving;
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%', pb: 12 }}>
+    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%', pb: 'calc(env(safe-area-inset-bottom) + 180px)' }}>
       <Box sx={{ position: 'sticky', top: 0, zIndex: 5, bgcolor: 'background.default', pt: 1, pb: 1.5 }}>
         <LinearProgress variant="determinate" value={progress} sx={{ borderRadius: 999, height: 8 }} />
       </Box>

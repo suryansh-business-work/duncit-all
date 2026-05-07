@@ -249,21 +249,31 @@ export default function AppHeader({
           sx={{ cursor: 'pointer' }}
           onClick={() => navigate('/')}
         >
-          {branding?.logo_url ? (
+          <Box
+            sx={{
+              display: 'inline-flex',
+              alignItems: 'center',
+              px: 1,
+              py: 0.5,
+              borderRadius: 2,
+              background: (t) =>
+                `linear-gradient(135deg, ${t.palette.primary.main}1f, ${t.palette.primary.main}05)`,
+              boxShadow: (t) => `0 0 0 1px ${t.palette.primary.main}33, 0 4px 14px -8px ${t.palette.primary.main}66`,
+            }}
+          >
             <Box
               component="img"
-              src={branding.logo_url}
+              src={branding?.logo_url || '/duncit-logo.svg'}
               alt={branding?.app_name ?? 'Duncit'}
-              sx={{ height: 34, width: 'auto', maxWidth: 132, objectFit: 'contain' }}
+              sx={{
+                height: 42,
+                width: 'auto',
+                maxWidth: 156,
+                objectFit: 'contain',
+                filter: (t) => `drop-shadow(0 2px 6px ${t.palette.primary.main}55)`,
+              }}
             />
-          ) : (
-            <Box
-              component="img"
-              src="/duncit-logo.svg"
-              alt="Duncit"
-              sx={{ height: 34, width: 'auto', maxWidth: 132, objectFit: 'contain' }}
-            />
-          )}
+          </Box>
         </Stack>
 
         <Box sx={{ flexGrow: 1 }} />

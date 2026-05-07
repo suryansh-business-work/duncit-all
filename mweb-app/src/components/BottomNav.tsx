@@ -40,13 +40,30 @@ export default function BottomNav() {
       }}
     >
       <BottomNavigation
+        showLabels
         value={active}
         onChange={(_e, value) => navigate(value)}
+        sx={{
+          '& .MuiBottomNavigationAction-root': {
+            minWidth: 0,
+            paddingTop: 0.75,
+            paddingBottom: 0.75,
+          },
+          '& .MuiBottomNavigationAction-label': {
+            fontSize: 11,
+            fontWeight: 600,
+            mt: 0.25,
+          },
+          '& .MuiBottomNavigationAction-label.Mui-selected': {
+            fontSize: 11.5,
+          },
+        }}
       >
         {TABS.map((t) => (
           <BottomNavigationAction
             key={t.value}
             value={t.value}
+            label={t.label}
             icon={t.icon}
           />
         ))}

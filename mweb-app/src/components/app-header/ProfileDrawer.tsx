@@ -78,12 +78,12 @@ export default function ProfileDrawer({
     { label: 'Saved Items', icon: <BookmarkBorderIcon fontSize="small" />, onClick: go('/saved') },
   ];
   const hostItem: Item = isHost
-    ? { label: 'Host Dashboard', icon: <DashboardIcon fontSize="small" />, onClick: go('/host') }
+    ? { label: 'Hosts Management', icon: <DashboardIcon fontSize="small" />, onClick: go('/host') }
     : { label: 'Be a host', icon: <StorefrontIcon fontSize="small" />, onClick: go('/become-host') };
   const venueItem: Item = isVenue
-    ? { label: 'My Venues', icon: <StorefrontIcon fontSize="small" />, onClick: go('/venues') }
+    ? { label: 'Venue Management', icon: <StorefrontIcon fontSize="small" />, onClick: go('/venues') }
     : {
-        label: 'Register Your Venue',
+        label: 'Be a Venue Owner',
         icon: <AddBusinessIcon fontSize="small" />,
         onClick: go('/register-venue'),
       };

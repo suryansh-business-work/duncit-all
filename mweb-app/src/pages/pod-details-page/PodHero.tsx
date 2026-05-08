@@ -4,6 +4,7 @@ import 'slick-carousel/slick/slick-theme.css';
 import { Box } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import HeroOverlayActions from './HeroOverlayActions';
+import VideoMedia from '../../components/media/VideoMedia';
 
 interface Props {
   media: { url: string; type: string }[];
@@ -70,18 +71,7 @@ export default function PodHero({
       >
         {media.map((m, i) =>
           m.type === 'VIDEO' ? (
-            <Box
-              key={i}
-              component="video"
-              src={m.url}
-              controls
-              sx={{
-                width: '100%',
-                height: { xs: 280, md: 460 },
-                objectFit: 'cover',
-                bgcolor: 'black',
-              }}
-            />
+            <VideoMedia key={i} src={m.url} height={{ xs: 280, md: 460 }} />
           ) : (
             <Box
               key={i}

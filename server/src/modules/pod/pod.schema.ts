@@ -63,6 +63,7 @@ export const podTypeDefs = /* GraphQL */ `
     payment_terms: String
     place_charges: [PodPlaceCharge!]!
     is_active: Boolean!
+    host_names: [String!]!
     created_at: String!
     updated_at: String!
   }

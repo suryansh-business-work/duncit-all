@@ -46,7 +46,7 @@ export default function RegisterPage() {
   const [gError, setGError] = useState<string | null>(null);
   const [googleToken, setGoogleToken] = useState<string | null>(null);
   const navigate = useNavigate();
-  const whatsappStepEnabled = useFeatureFlag('whatsapp_signup_otp');
+  const whatsappStepEnabled = useFeatureFlag('whatsapp_signup_otp', true);
   const nextRoute = whatsappStepEnabled ? '/signup-whatsapp' : '/signup-survey';
 
   const handleRegister = async (values: RegisterFormValues) => {

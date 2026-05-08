@@ -47,8 +47,8 @@ const UPLOAD_IMAGE = gql`
 `;
 
 const PEXELS_SEARCH = gql`
-  query PexelsSearch($query: String, $page: Int, $perPage: Int) {
-    pexelsSearch(query: $query, page: $page, perPage: $perPage) {
+  query PexelsSearch($query: String, $page: Int, $perPage: Int, $orientation: String) {
+    pexelsSearch(query: $query, page: $page, perPage: $perPage, orientation: $orientation) {
       page
       next_page
       photos {
@@ -139,6 +139,7 @@ export default function MediaPickerDialog({
 
   // Pexels state
   const [pquery, setPquery] = useState('');
+  const [porientation, setPorientation] = useState<'landscape' | 'portrait' | 'square' | ''>('');
   const [psearching, setPsearching] = useState(false);
   const [photos, setPhotos] = useState<any[]>([]);
   const [page, setPage] = useState(1);
@@ -204,7 +205,7 @@ export default function MediaPickerDialog({
     try {
       const res = await client.query({
         query: PEXELS_SEARCH,
-        variables: { query: q || null, page: p, perPage: 24 },
+        variables: { query: q || null, page: p, perPage: 24, orientation: porientation || null },
         fetchPolicy: 'network-only',
       });
       const data = res.data?.pexelsSearch;
@@ -491,6 +492,18 @@ export default function MediaPickerDialog({
                 Search
               </Button>
             </Stack>
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={porientation}
+              onChange={(_e, v) => setPorientation(v ?? '')}
+              sx={{ mb: 2, flexWrap: 'wrap' }}
+            >
+              <ToggleButton value="">All</ToggleButton>
+              <ToggleButton value="landscape">Landscape</ToggleButton>
+              <ToggleButton value="portrait">Portrait</ToggleButton>
+              <ToggleButton value="square">Square</ToggleButton>
+            </ToggleButtonGroup>
             {psearching && photos.length === 0 ? (
               <Box sx={{ textAlign: 'center', py: 6 }}>
                 <CircularProgress />
@@ -646,17 +659,38 @@ export default function MediaPickerDialog({
                       }}
                       onClick={() => !vimportingId && importPexelsVideo(v)}
                     >
-                      <img
-                        src={v.preview || v.image}
-                        alt={v.user_name}
-                        loading="lazy"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: 'cover',
-                          background: '#000',
-                        }}
-                      />
+                      {(() => {
+                        const best = pickBestVideoFile(v);
+                        return best?.link ? (
+                          <video
+                            src={best.link}
+                            poster={v.image}
+                            autoPlay
+                            muted
+                            loop
+                            playsInline
+                            preload="metadata"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              background: '#000',
+                            }}
+                          />
+                        ) : (
+                          <img
+                            src={v.preview || v.image}
+                            alt={v.user_name}
+                            loading="lazy"
+                            style={{
+                              width: '100%',
+                              height: '100%',
+                              objectFit: 'cover',
+                              background: '#000',
+                            }}
+                          />
+                        );
+                      })()}
                       <ImageListItemBar
                         title={v.user_name || 'Pexels'}
                         subtitle={`${v.duration}s · ${v.width}×${v.height}`}

@@ -33,7 +33,9 @@ export default function MomentTile({ url, type, size, aspect, index, total, onCl
           <Box
             component="video"
             src={url}
+            autoPlay
             muted
+            loop
             playsInline
             preload="metadata"
             sx={{ width: '100%', height: '100%', objectFit: 'cover' }}

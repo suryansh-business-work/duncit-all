@@ -232,6 +232,9 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
   }, [data?.publicHosts]);
 
   const hostNameOf = (p: any): string | null => {
+    if (Array.isArray(p.host_names) && p.host_names.length > 0) {
+      return p.host_names.join(', ');
+    }
     const ids: string[] = p.pod_hosts_id ?? [];
     for (const id of ids) {
       const n = hostNameById.get(id);

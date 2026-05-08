@@ -1,11 +1,34 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 
-const KEY = 'duncit_followed_clubs';
+const BASE = 'duncit_followed_clubs';
+
+/**
+ * Derive the current user identifier from the JWT in localStorage.
+ * Returns 'guest' if no token is present so guest follows do not bleed
+ * across signed-in accounts.
+ */
+function currentUserKey(): string {
+  if (typeof window === 'undefined') return 'guest';
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) return 'guest';
+    const payloadB64 = token.split('.')[1];
+    if (!payloadB64) return 'guest';
+    const json = JSON.parse(atob(payloadB64.replace(/-/g, '+').replace(/_/g, '/')));
+    return String(json.sub || json.user_id || json.id || 'guest');
+  } catch {
+    return 'guest';
+  }
+}
+
+function storageKey() {
+  return `${BASE}:${currentUserKey()}`;
+}
 
 const read = (): string[] => {
   if (typeof window === 'undefined') return [];
   try {
-    const raw = localStorage.getItem(KEY);
+    const raw = localStorage.getItem(storageKey());
     return raw ? JSON.parse(raw) : [];
   } catch {
     return [];
@@ -13,20 +36,22 @@ const read = (): string[] => {
 };
 
 const write = (ids: string[]) => {
-  localStorage.setItem(KEY, JSON.stringify(ids));
+  localStorage.setItem(storageKey(), JSON.stringify(ids));
   window.dispatchEvent(new CustomEvent('duncit:followed-clubs-changed'));
 };
 
 /**
- * Lightweight client-side follow store backed by localStorage.
- * Server-side persistence (followers collection + GraphQL mutations) is a
- * follow-up scope; this hook keeps the UX wired so the rest of the
- * platform can integrate against a stable API today.
+ * Lightweight per-user follow store backed by localStorage. The storage
+ * key includes the signed-in user id so each account sees its own
+ * follow list. Server-side persistence is a follow-up scope.
  */
 export function useFollowedClubs() {
   const [ids, setIds] = useState<string[]>(read);
+  // Re-read whenever the active user changes (e.g. logout/login).
+  const userKey = useMemo(() => currentUserKey(), []);
 
   useEffect(() => {
+    setIds(read());
     const onChange = () => setIds(read());
     window.addEventListener('duncit:followed-clubs-changed', onChange);
     window.addEventListener('storage', onChange);
@@ -34,7 +59,7 @@ export function useFollowedClubs() {
       window.removeEventListener('duncit:followed-clubs-changed', onChange);
       window.removeEventListener('storage', onChange);
     };
-  }, []);
+  }, [userKey]);
 
   const isFollowing = useCallback(
     (clubId: string) => ids.includes(clubId),

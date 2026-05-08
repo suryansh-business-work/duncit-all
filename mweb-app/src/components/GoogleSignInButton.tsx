@@ -1,5 +1,5 @@
-import { useEffect, useState } from 'react';
-import { Box, Button, CircularProgress } from '@mui/material';
+import { useEffect, useRef } from 'react';
+import { Box, CircularProgress, Stack } from '@mui/material';
 
 declare global {
   interface Window {
@@ -43,104 +43,86 @@ function loadGoogleScript(): Promise<void> {
   });
 }
 
-const LABEL_BY_TEXT: Record<NonNullable<Props['text']>, string> = {
-  signin_with: 'Sign in with Google',
-  signup_with: 'Sign up with Google',
-  continue_with: 'Continue with Google',
-  signin: 'Sign in',
-};
-
 export default function GoogleSignInButton({
   onCredential,
   loading,
   text = 'continue_with',
 }: Props) {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
-  const [ready, setReady] = useState(false);
-  const [busy, setBusy] = useState(false);
+  const containerRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
-    if (!clientId) return;
+    if (!clientId || !containerRef.current) return;
     let cancelled = false;
     loadGoogleScript()
       .then(() => {
-        if (cancelled || !window.google?.accounts?.id) return;
+        if (cancelled || !window.google?.accounts?.id || !containerRef.current) return;
         window.google.accounts.id.initialize({
           client_id: clientId,
           callback: (resp: any) => {
-            setBusy(false);
             if (resp?.credential) onCredential(resp.credential);
           },
           ux_mode: 'popup',
           auto_select: false,
+          itp_support: true,
         });
-        setReady(true);
+        containerRef.current.innerHTML = '';
+        window.google.accounts.id.renderButton(containerRef.current, {
+          type: 'standard',
+          theme: 'outline',
+          size: 'large',
+          text,
+          shape: 'pill',
+          logo_alignment: 'left',
+          width: containerRef.current.clientWidth || 320,
+        });
       })
-      .catch(() => setReady(false));
+      .catch(() => {
+        // Silently no-op; container stays empty.
+      });
     return () => {
       cancelled = true;
     };
-  }, [clientId, onCredential]);
+  }, [clientId, onCredential, text]);
 
   if (!clientId) {
     return (
-      <Button variant="outlined" disabled fullWidth>
+      <Box
+        sx={{
+          height: 44,
+          border: '1px solid',
+          borderColor: 'divider',
+          borderRadius: '24px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          color: 'text.disabled',
+          fontSize: 14,
+        }}
+      >
         Google sign-in not configured
-      </Button>
+      </Box>
     );
   }
 
-  const handleClick = () => {
-    if (!ready || !window.google?.accounts?.id) return;
-    setBusy(true);
-    try {
-      window.google.accounts.id.prompt();
-    } catch {
-      setBusy(false);
-    }
-    // If the prompt is dismissed without a credential, allow another try.
-    window.setTimeout(() => setBusy(false), 5000);
-  };
-
-  const disabled = !ready || !!loading || busy;
-  const showSpinner = !!loading || busy;
-
   return (
-    <Button
-      type="button"
-      onClick={handleClick}
-      disabled={disabled}
-      fullWidth
-      sx={{
-        height: 44,
-        bgcolor: '#fff',
-        color: '#1f1f1f',
-        border: '1px solid #747775',
-        borderRadius: '24px',
-        textTransform: 'none',
-        fontFamily: '"Roboto","Helvetica","Arial",sans-serif',
-        fontWeight: 500,
-        fontSize: 14,
-        letterSpacing: 0.25,
-        boxShadow: 'none',
-        gap: 1.25,
-        '&:hover': { bgcolor: '#f8f9fa', boxShadow: 'none' },
-        '&.Mui-disabled': { bgcolor: '#fff', color: '#1f1f1f', opacity: 0.6 },
-      }}
-      startIcon={
-        showSpinner ? (
-          <CircularProgress size={18} />
-        ) : (
-          <Box
-            component="img"
-            src="/google-g.svg"
-            alt=""
-            sx={{ width: 20, height: 20 }}
-          />
-        )
-      }
-    >
-      {LABEL_BY_TEXT[text]}
-    </Button>
+    <Stack sx={{ width: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}>
+      <Box ref={containerRef} sx={{ width: '100%', display: 'flex', justifyContent: 'center' }} />
+      {loading && (
+        <Box
+          sx={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'rgba(255,255,255,0.6)',
+            borderRadius: '24px',
+          }}
+        >
+          <CircularProgress size={20} />
+        </Box>
+      )}
+    </Stack>
   );
 }

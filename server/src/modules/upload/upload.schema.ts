@@ -66,7 +66,7 @@ export const uploadTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
-    pexelsSearch(query: String, page: Int, perPage: Int): PexelsSearchResult!
+    pexelsSearch(query: String, page: Int, perPage: Int, orientation: String): PexelsSearchResult!
     pexelsSearchVideos(
       query: String
       page: Int

@@ -107,18 +107,37 @@ export default function MediaListField({
                 p: 1,
               }}
             >
-              <Box
-                component="img"
-                src={url}
-                alt=""
-                sx={{
-                  width: 56,
-                  height: 56,
-                  objectFit: 'cover',
-                  borderRadius: 0.5,
-                  bgcolor: 'action.hover',
-                }}
-              />
+              {/^.+\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url) ? (
+                <Box
+                  component="video"
+                  src={url}
+                  autoPlay
+                  muted
+                  loop
+                  playsInline
+                  preload="metadata"
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    objectFit: 'cover',
+                    borderRadius: 0.5,
+                    bgcolor: 'common.black',
+                  }}
+                />
+              ) : (
+                <Box
+                  component="img"
+                  src={url}
+                  alt=""
+                  sx={{
+                    width: 56,
+                    height: 56,
+                    objectFit: 'cover',
+                    borderRadius: 0.5,
+                    bgcolor: 'action.hover',
+                  }}
+                />
+              )}
               <Box sx={{ flex: 1, minWidth: 0 }}>
                 <Typography
                   variant="caption"

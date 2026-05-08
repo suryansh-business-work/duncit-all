@@ -1,9 +1,6 @@
 import { gql, useQuery } from '@apollo/client';
 import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import Slider from 'react-slick';
-import 'slick-carousel/slick/slick.css';
-import 'slick-carousel/slick/slick-theme.css';
 import {
   Alert,
   Avatar,
@@ -25,17 +22,12 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import ChatIcon from '@mui/icons-material/Chat';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import ShareIcon from '@mui/icons-material/Share';
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useFollowedClubs } from '../hooks/useFollowedClubs';
 import { notify } from '../components/notify';
 import { usePricing } from '../hooks/usePricing';
 import MomentTile from '../components/moments/MomentTile';
 import MomentLightbox from '../components/moments/MomentLightbox';
+import ClubHero from './club-details-page/ClubHero';
 
 const CLUB_DETAILS = gql`
   query ClubDetails($id: ID!) {
@@ -141,146 +133,47 @@ export default function ClubDetailsPage() {
     });
 
   return (
-    <Stack spacing={3}>
-      <Stack
-        direction="row"
-        alignItems="center"
-        spacing={1}
-        sx={{ flexWrap: 'wrap' }}
-      >
-        <Button
-          startIcon={<ArrowBackIcon />}
-          onClick={() => navigate(-1)}
-          sx={{ textTransform: 'none' }}
-        >
-          Back
-        </Button>
-        <Box sx={{ flex: 1 }} />
-        <Button
-          size="small"
-          variant={isFollowing(club.id) ? 'contained' : 'outlined'}
-          color={isFollowing(club.id) ? 'primary' : 'inherit'}
-          startIcon={
-            isFollowing(club.id) ? <FavoriteIcon /> : <FavoriteBorderIcon />
-          }
-          onClick={() => {
-            toggleFollow(club.id);
-            notify(
-              isFollowing(club.id)
-                ? `Unfollowed ${club.club_name}`
-                : `Following ${club.club_name}`,
-              'success'
-            );
-          }}
-        >
-          {isFollowing(club.id) ? 'Following' : 'Follow'}
-        </Button>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={saved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-          onClick={() => {
-            const next = !saved;
-            setSaved(next);
-            const key = 'duncit_saved_clubs';
-            const list: string[] = JSON.parse(localStorage.getItem(key) || '[]');
-            const updated = next
-              ? Array.from(new Set([...list, club.id]))
-              : list.filter((x) => x !== club.id);
-            localStorage.setItem(key, JSON.stringify(updated));
-            notify(next ? 'Saved' : 'Removed from saved', 'success');
-          }}
-        >
-          {saved ? 'Saved' : 'Save'}
-        </Button>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={<ShareIcon />}
-          onClick={async () => {
-            const url = `${window.location.origin}/clubs/${club.id}`;
-            try {
-              if (navigator.share) {
-                await navigator.share({ title: club.club_name, url });
-              } else {
-                await navigator.clipboard.writeText(url);
-                notify('Link copied', 'success');
-              }
-            } catch {
-              /* user cancelled */
+    <Stack spacing={3} sx={{ pt: 0, pb: 6 }}>
+      <ClubHero
+        media={featureMedia}
+        title={club.club_name}
+        saved={saved}
+        following={isFollowing(club.id)}
+        onBack={() => navigate(-1)}
+        onToggleFollow={() => {
+          toggleFollow(club.id);
+          notify(
+            isFollowing(club.id)
+              ? `Unfollowed ${club.club_name}`
+              : `Following ${club.club_name}`,
+            'success'
+          );
+        }}
+        onToggleSave={() => {
+          const next = !saved;
+          setSaved(next);
+          const key = 'duncit_saved_clubs';
+          const list: string[] = JSON.parse(localStorage.getItem(key) || '[]');
+          const updated = next
+            ? Array.from(new Set([...list, club.id]))
+            : list.filter((x) => x !== club.id);
+          localStorage.setItem(key, JSON.stringify(updated));
+          notify(next ? 'Saved' : 'Removed from saved', 'success');
+        }}
+        onShare={async () => {
+          const url = `${window.location.origin}/clubs/${club.id}`;
+          try {
+            if (navigator.share) {
+              await navigator.share({ title: club.club_name, url });
+            } else {
+              await navigator.clipboard.writeText(url);
+              notify('Link copied', 'success');
             }
-          }}
-        >
-          Share
-        </Button>
-      </Stack>
-
-      {featureMedia.length > 0 ? (
-        <Box
-          sx={{
-            borderRadius: 2,
-            overflow: 'hidden',
-            '.slick-dots': { bottom: 12 },
-            '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },
-            '.slick-dots li.slick-active button:before': { opacity: 1 },
-          }}
-        >
-          <Slider
-            dots
-            arrows={featureMedia.length > 1}
-            infinite={featureMedia.length > 1}
-            autoplay={featureMedia.length > 1}
-            autoplaySpeed={5000}
-            slidesToShow={1}
-            slidesToScroll={1}
-          >
-            {featureMedia.map((m: any, i: number) =>
-              m.type === 'VIDEO' ? (
-                <Box
-                  key={i}
-                  component="video"
-                  src={m.url}
-                  autoPlay
-                  muted
-                  loop
-                  playsInline
-                  sx={{
-                    width: '100%',
-                    height: { xs: 220, md: 360 },
-                    objectFit: 'cover',
-                    bgcolor: 'black',
-                  }}
-                />
-              ) : (
-                <Box
-                  key={i}
-                  component="img"
-                  src={m.url}
-                  alt={club.club_name}
-                  sx={{
-                    width: '100%',
-                    height: { xs: 220, md: 360 },
-                    objectFit: 'cover',
-                  }}
-                />
-              )
-            )}
-          </Slider>
-        </Box>
-      ) : (
-        <Box
-          sx={{
-            height: 220,
-            borderRadius: 2,
-            bgcolor: 'action.hover',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-          }}
-        >
-          <GroupsIcon sx={{ fontSize: 80, color: 'action.disabled' }} />
-        </Box>
-      )}
+          } catch {
+            /* user cancelled */
+          }
+        }}
+      />
 
       <Stack direction="row" alignItems="center" spacing={2}>
         <Avatar

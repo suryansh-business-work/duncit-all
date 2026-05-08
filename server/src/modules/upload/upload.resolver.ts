@@ -13,7 +13,7 @@ export const uploadResolvers = {
   Query: {
     pexelsSearch: (
       _p: unknown,
-      args: { query?: string; page?: number; perPage?: number },
+      args: { query?: string; page?: number; perPage?: number; orientation?: string },
       ctx: GraphQLContext
     ) => {
       requireAuth(ctx);
@@ -21,6 +21,7 @@ export const uploadResolvers = {
         query: args.query,
         page: args.page,
         perPage: args.perPage,
+        orientation: args.orientation,
       });
     },
     pexelsSearchVideos: (

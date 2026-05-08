@@ -36,6 +36,7 @@ export const HOME_DATA = gql`
       pod_attendees
       no_of_spots
       pod_hosts_id
+      host_names
       pod_images_and_videos {
         url
         type

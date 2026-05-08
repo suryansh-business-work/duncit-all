@@ -28,11 +28,14 @@ export function SuperCategoryGroup({
 
   return (
     <Card
-      sx={{
+      sx={(t) => ({
         overflow: 'hidden',
         border: `1.5px solid ${alpha(hue, 0.25)}`,
-        background: `linear-gradient(180deg, ${alpha(hue, 0.06)} 0%, #ffffff 60%)`,
-      }}
+        background:
+          t.palette.mode === 'dark'
+            ? t.palette.background.paper
+            : `linear-gradient(180deg, ${alpha(hue, 0.06)} 0%, ${t.palette.background.paper} 60%)`,
+      })}
     >
       <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
         <Stack spacing={2}>

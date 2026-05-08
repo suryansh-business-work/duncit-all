@@ -19,10 +19,13 @@ interface PublicFlag {
  * key is enabled. Defaults to `false` while loading or when the flag is
  * missing on the server.
  */
-export function useFeatureFlag(key: string): boolean {
-  const { data } = useQuery<{ publicFeatureFlags: PublicFlag[] }>(PUBLIC_FLAGS, {
+export function useFeatureFlag(key: string, defaultValue = false): boolean {
+  const { data, loading } = useQuery<{ publicFeatureFlags: PublicFlag[] }>(PUBLIC_FLAGS, {
     fetchPolicy: 'cache-first',
   });
+  if (loading && !data) return defaultValue;
   const list = data?.publicFeatureFlags ?? [];
-  return list.find((f) => f.key === key)?.enabled === true;
+  const flag = list.find((f) => f.key === key);
+  if (!flag) return defaultValue;
+  return flag.enabled === true;
 }

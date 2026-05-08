@@ -210,6 +210,7 @@ export async function pexelsSearch(opts: {
   query?: string;
   page?: number;
   perPage?: number;
+  orientation?: string;
 }) {
   if (!PEXELS_API_KEY) {
     throw new GraphQLError('Pexels is not configured', {
@@ -219,9 +220,13 @@ export async function pexelsSearch(opts: {
   const query = (opts.query || '').trim();
   const page = Math.max(1, opts.page || 1);
   const perPage = Math.min(80, Math.max(1, opts.perPage || 24));
+  const orientationParam =
+    opts.orientation && ['landscape', 'portrait', 'square'].includes(opts.orientation)
+      ? `&orientation=${opts.orientation}`
+      : '';
 
   const url = query
-    ? `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}`
+    ? `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}${orientationParam}`
     : `https://api.pexels.com/v1/curated?per_page=${perPage}&page=${page}`;
 
   const res = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } });

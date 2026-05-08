@@ -168,6 +168,14 @@ export const userTypeDefs = gql`
     bio: String
     profile_photo: String
     profile_links: [ProfileLinkInput!]
+    city: String
+    zone: String
+    country: String
+    dob: String
+    phone_number: String
+    phone_extension: String
+    whatsapp_number: String
+    whatsapp_extension: String
   }
 
   type SavedPodState {

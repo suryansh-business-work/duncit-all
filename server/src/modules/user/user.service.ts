@@ -280,10 +280,31 @@ export const userService = {
 
   async updateMyProfile(user_id: string, input: UpdateMyProfileDTO) {
     const update: any = {};
-    for (const field of ['first_name', 'last_name', 'bio', 'profile_photo'] as const) {
-      if (input[field] !== undefined) update[field] = input[field] || null;
+    const stringFields = [
+      'first_name',
+      'last_name',
+      'bio',
+      'profile_photo',
+      'city',
+      'zone',
+      'country',
+      'phone_number',
+      'phone_extension',
+      'whatsapp_number',
+      'whatsapp_extension',
+    ] as const;
+    for (const field of stringFields) {
+      if ((input as any)[field] !== undefined) update[field] = (input as any)[field] || null;
     }
     if (input.profile_links !== undefined) update.profile_links = cleanProfileLinks(input.profile_links);
+    if ((input as any).dob !== undefined) {
+      const raw = (input as any).dob;
+      const d = raw ? new Date(raw) : null;
+      if (raw && (!d || Number.isNaN(d.getTime()))) {
+        throw new GraphQLError('Invalid date of birth', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      update.dob = d;
+    }
     const updated = await UserModel.findByIdAndUpdate(user_id, update, { new: true });
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     return toPublic(updated);

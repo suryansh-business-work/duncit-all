@@ -1,8 +1,18 @@
-import { Form, Formik } from 'formik';
-import { Alert, Button, Grid, Stack, Typography } from '@mui/material';
+import { Form, Formik, useFormikContext } from 'formik';
+import {
+  Alert,
+  Autocomplete,
+  Button,
+  Grid,
+  Stack,
+  TextField,
+  Typography,
+} from '@mui/material';
 import { googleSignupSchema } from '../validators/auth';
 import FormField from './FormField';
 import ResponsiveDialog from '../components/ResponsiveDialog';
+import PhoneExtensionField from '../components/PhoneExtensionField';
+import { CITY_NAMES, zonesForCity } from '../utils/locations';
 
 export interface GoogleSignupPhoneValues {
   phone_extension: string;
@@ -26,6 +36,61 @@ interface Props {
   error?: string | null;
   onClose: () => void;
   onSubmit: (values: GoogleSignupPhoneValues) => Promise<void>;
+}
+
+function PhoneAndLocation() {
+  const { values, setFieldValue, touched, errors } =
+    useFormikContext<GoogleSignupPhoneValues>();
+  return (
+    <>
+      <Grid item xs={4}>
+        <PhoneExtensionField
+          value={values.phone_extension}
+          onChange={(d) => setFieldValue('phone_extension', d)}
+          error={Boolean(touched.phone_extension && errors.phone_extension)}
+          helperText={touched.phone_extension ? errors.phone_extension : undefined}
+        />
+      </Grid>
+      <Grid item xs={8}>
+        <FormField name="phone_number" label="Phone" />
+      </Grid>
+      <Grid item xs={12}>
+        <FormField
+          name="dob"
+          type="date"
+          label="Date of birth"
+          InputLabelProps={{ shrink: true }}
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <Autocomplete
+          freeSolo
+          options={CITY_NAMES}
+          value={values.city}
+          onChange={(_e, v) => {
+            setFieldValue('city', v ?? '');
+            setFieldValue('zone', '');
+          }}
+          onInputChange={(_e, v) => setFieldValue('city', v)}
+          renderInput={(params) => (
+            <TextField {...params} label="City" size="small" />
+          )}
+        />
+      </Grid>
+      <Grid item xs={6}>
+        <Autocomplete
+          freeSolo
+          options={zonesForCity(values.city)}
+          value={values.zone}
+          onChange={(_e, v) => setFieldValue('zone', v ?? '')}
+          onInputChange={(_e, v) => setFieldValue('zone', v)}
+          renderInput={(params) => (
+            <TextField {...params} label="Zone" size="small" />
+          )}
+        />
+      </Grid>
+    </>
+  );
 }
 
 export default function GoogleSignupPhoneForm({
@@ -69,38 +134,16 @@ export default function GoogleSignupPhoneForm({
             <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
               Add your phone number before your account is created.
             </Typography>
-            <Grid container spacing={1.5}>
-              <Grid item xs={4}>
-                <FormField
-                  name="phone_extension"
-                  label="Code"
-                  hint="Country code, e.g. +91."
-                />
+            <Stack spacing={0}>
+              <Grid container spacing={1.5}>
+                <PhoneAndLocation />
               </Grid>
-              <Grid item xs={8}>
-                <FormField
-                  name="phone_number"
-                  label="Phone"
-                  hint="6–15 digits, no spaces."
-                />
-              </Grid>
-              <Grid item xs={12}>
-                <FormField
-                  name="dob"
-                  type="date"
-                  label="Date of birth"
-                  hint="You must be 18 or older to join."
-                  InputLabelProps={{ shrink: true }}
-                />
-              </Grid>
-              <Grid item xs={6}>
-                <FormField name="city" label="City" hint="Optional." />
-              </Grid>
-              <Grid item xs={6}>
-                <FormField name="zone" label="Zone" hint="Optional." />
-              </Grid>
-            </Grid>
-            {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
+            </Stack>
+            {error && (
+              <Alert severity="error" sx={{ mt: 2 }}>
+                {error}
+              </Alert>
+            )}
           </Form>
         </ResponsiveDialog>
       )}

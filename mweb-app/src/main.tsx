@@ -2,11 +2,10 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { ApolloProvider } from '@apollo/client';
 import { BrowserRouter } from 'react-router-dom';
-import { ThemeProvider, CssBaseline } from '@mui/material';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { apolloClient } from './apollo';
-import { theme } from './theme';
+import { ColorModeProvider } from './ColorModeContext';
 import App from './App';
 import { initPwa } from './pwa';
 
@@ -31,14 +30,13 @@ document.addEventListener(
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ApolloProvider client={apolloClient}>
-      <ThemeProvider theme={theme}>
-        <CssBaseline />
+      <ColorModeProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <BrowserRouter>
             <App />
           </BrowserRouter>
         </LocalizationProvider>
-      </ThemeProvider>
+      </ColorModeProvider>
     </ApolloProvider>
   </React.StrictMode>
 );

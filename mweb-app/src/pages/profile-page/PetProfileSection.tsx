@@ -4,6 +4,7 @@ import * as yup from 'yup';
 import { gql, useMutation } from '@apollo/client';
 import {
   Alert,
+  Autocomplete,
   Avatar,
   Box,
   Button,
@@ -15,6 +16,7 @@ import {
   Typography,
 } from '@mui/material';
 import PetsIcon from '@mui/icons-material/Pets';
+import { PET_SPECIES_OPTIONS, breedsForSpecies } from '../../utils/petBreeds';
 import EditIcon from '@mui/icons-material/Edit';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
@@ -234,12 +236,25 @@ export default function PetProfileSection({ pet, onSaved }: Props) {
                     />
                   </Grid>
                   <Grid item xs={6} sm={3}>
-                    <TextField
-                      fullWidth name="species" label="Species"
-                      placeholder="Dog, Cat, …"
-                      value={values.species} onChange={handleChange} onBlur={handleBlur}
-                      error={touched.species && !!errors.species}
-                      helperText={touched.species && errors.species}
+                    <Autocomplete
+                      freeSolo
+                      options={PET_SPECIES_OPTIONS}
+                      value={values.species}
+                      onChange={(_e, v) => {
+                        setFieldValue('species', v ?? '');
+                        setFieldValue('breed', '');
+                      }}
+                      onInputChange={(_e, v) => setFieldValue('species', v)}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          name="species"
+                          label="Species"
+                          placeholder="Dog, Cat, …"
+                          error={touched.species && !!errors.species}
+                          helperText={touched.species && errors.species}
+                        />
+                      )}
                     />
                   </Grid>
                   <Grid item xs={6} sm={3}>
@@ -251,11 +266,21 @@ export default function PetProfileSection({ pet, onSaved }: Props) {
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>
-                    <TextField
-                      fullWidth name="breed" label="Breed"
-                      value={values.breed} onChange={handleChange} onBlur={handleBlur}
-                      error={touched.breed && !!errors.breed}
-                      helperText={touched.breed && errors.breed}
+                    <Autocomplete
+                      freeSolo
+                      options={breedsForSpecies(values.species)}
+                      value={values.breed}
+                      onChange={(_e, v) => setFieldValue('breed', v ?? '')}
+                      onInputChange={(_e, v) => setFieldValue('breed', v)}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          name="breed"
+                          label="Breed (or type your own)"
+                          error={touched.breed && !!errors.breed}
+                          helperText={touched.breed && errors.breed}
+                        />
+                      )}
                     />
                   </Grid>
                   <Grid item xs={12}>

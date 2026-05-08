@@ -1,4 +1,5 @@
 import { createTheme, alpha } from '@mui/material/styles';
+import type { PaletteMode } from '@mui/material';
 
 // Design-system tokens — keep colors and shape decisions here so every
 // component picks them up via MUI styled().
@@ -46,15 +47,17 @@ export const tokens = {
 const PRIMARY = tokens.brand[500];
 const PRIMARY_HOVER = tokens.brand[600];
 const PRIMARY_ACTIVE = tokens.brand[700];
-const INK = tokens.neutral[900];
-const MUTED = tokens.neutral[500];
-const BORDER = tokens.surface.border;
-const BG = tokens.surface.bg;
-const SURFACE = tokens.surface.paper;
 
-export const theme = createTheme({
+export const buildTheme = (mode: PaletteMode = 'light') => {
+  const isDark = mode === 'dark';
+  const INK = isDark ? '#f4f6fb' : tokens.neutral[900];
+  const MUTED = isDark ? '#9aa3b2' : tokens.neutral[500];
+  const BORDER = isDark ? 'rgba(255,255,255,0.10)' : tokens.surface.border;
+  const BG = isDark ? '#0b1220' : tokens.surface.bg;
+  const SURFACE = isDark ? '#111a2e' : tokens.surface.paper;
+  return createTheme({
   palette: {
-    mode: 'light',
+    mode,
     primary: {
       light: tokens.brand[300],
       main: PRIMARY,
@@ -322,4 +325,7 @@ export const theme = createTheme({
       },
     },
   },
-});
+  });
+};
+
+export const theme = buildTheme('light');

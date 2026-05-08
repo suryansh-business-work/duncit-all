@@ -8,6 +8,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import PhoneExtensionField from '../../components/PhoneExtensionField';
 import SaveIcon from '@mui/icons-material/Save';
 import MediaPickerField from '../../components/MediaPickerField';
 import type { EditForm } from './queries';
@@ -68,10 +69,9 @@ export default function ProfileForm({ form, setForm, busy, dirty, opError, onSav
           />
         </Grid>
         <Grid item xs={4} sm={3}>
-          <TextField
-            label="Ext."
+          <PhoneExtensionField
             value={form.phone_extension}
-            onChange={(e) => setForm({ ...form, phone_extension: e.target.value })}
+            onChange={(d) => setForm({ ...form, phone_extension: d })}
             fullWidth
           />
         </Grid>

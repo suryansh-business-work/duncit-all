@@ -1,5 +1,8 @@
 import { useNavigate } from 'react-router-dom';
 import { useRoleLabels } from '../../hooks/useRoleLabels';
+import { useColorMode } from '../../ColorModeContext';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import {
   Avatar,
   Box,
@@ -57,6 +60,7 @@ export default function ProfileDrawer({
 }: Props) {
   const navigate = useNavigate();
   const { labelFor } = useRoleLabels();
+  const { mode, toggle: toggleMode } = useColorMode();
   const roles: string[] = me?.roles ?? [];
   const isAdmin = roles.some((r) => ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'].includes(r));
   const isHost = roles.includes('HOST');
@@ -250,6 +254,40 @@ export default function ProfileDrawer({
         </Box>
         <Divider />
         <Box sx={{ p: 1.5 }}>
+          <Stack
+            direction="row"
+            alignItems="center"
+            spacing={1}
+            onClick={toggleMode}
+            role="button"
+            aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
+            tabIndex={0}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' || e.key === ' ') toggleMode();
+            }}
+            sx={{
+              cursor: 'pointer',
+              borderRadius: 1.5,
+              p: 1,
+              mb: 1.25,
+              minHeight: 44,
+              border: 1,
+              borderColor: 'divider',
+              '&:hover': { bgcolor: 'action.hover' },
+            }}
+          >
+            {mode === 'dark' ? (
+              <LightModeIcon fontSize="small" />
+            ) : (
+              <DarkModeIcon fontSize="small" />
+            )}
+            <Typography variant="body2" sx={{ flex: 1, fontWeight: 600 }}>
+              {mode === 'dark' ? 'Light mode' : 'Dark mode'}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {mode === 'dark' ? 'On' : 'Off'}
+            </Typography>
+          </Stack>
           <Button
             fullWidth
             variant="outlined"

@@ -336,7 +336,11 @@ export default function MediaPickerDialog({
 
         {tab === 1 && (
           <Box>
-            <Stack direction="row" spacing={1} sx={{ mb: 2 }}>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              sx={{ mb: 2 }}
+            >
               <TextField
                 fullWidth
                 size="small"
@@ -354,7 +358,11 @@ export default function MediaPickerDialog({
                   ),
                 }}
               />
-              <Button variant="contained" onClick={() => runPexels(pquery, 1, false)}>
+              <Button
+                variant="contained"
+                onClick={() => runPexels(pquery, 1, false)}
+                sx={{ width: { xs: '100%', sm: 'auto' }, flexShrink: 0 }}
+              >
                 Search
               </Button>
             </Stack>
@@ -365,7 +373,7 @@ export default function MediaPickerDialog({
             ) : photos.length === 0 ? (
               <Alert severity="info">No results — try a different query.</Alert>
             ) : (
-              <ImageList cols={3} gap={8} rowHeight={160}>
+              <ImageList cols={2} sx={{ gridTemplateColumns: { xs: 'repeat(2, 1fr) !important', sm: 'repeat(3, 1fr) !important' } }} gap={8} rowHeight={140}>
                 {photos.map((p: any) => {
                   const isImporting = importingId === p.id;
                   return (

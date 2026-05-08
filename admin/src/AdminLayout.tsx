@@ -480,9 +480,43 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         )}
       </List>
       <Divider />
-      <Box sx={{ p: 2 }}>
+      <Box sx={{ p: 1.25 }}>
+        <Box
+          role="button"
+          tabIndex={0}
+          aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
+          onClick={toggle}
+          onKeyDown={(e) => {
+            if (e.key === 'Enter' || e.key === ' ') toggle();
+          }}
+          sx={{
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            gap: 1,
+            border: 1,
+            borderColor: 'divider',
+            borderRadius: 1,
+            px: 1.25,
+            py: 1,
+            mb: 1,
+            '&:hover': { bgcolor: 'action.hover' },
+          }}
+        >
+          {mode === 'dark' ? (
+            <LightModeIcon fontSize="small" />
+          ) : (
+            <DarkModeIcon fontSize="small" />
+          )}
+          <Typography variant="body2" sx={{ flex: 1, fontWeight: 600 }}>
+            {mode === 'dark' ? 'Light mode' : 'Dark mode'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {mode === 'dark' ? 'On' : 'Off'}
+          </Typography>
+        </Box>
         <Typography variant="caption" color="text.secondary">
-          v1.0.0 · {mode === 'dark' ? 'Dark' : 'Light'} mode
+          v1.0.0
         </Typography>
       </Box>
     </Box>

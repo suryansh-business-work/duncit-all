@@ -24,21 +24,41 @@ export default function PodClubSection({ club }: Props) {
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" spacing={1.5} alignItems="center">
-        <Avatar src={cover || undefined} sx={{ width: 48, height: 48 }}>
-          {club.club_name?.[0]?.toUpperCase() ?? 'C'}
-        </Avatar>
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="subtitle1" fontWeight={600}>
-            {club.club_name}
-          </Typography>
-          {club.club_description && (
-            <Typography variant="caption" color="text.secondary">
-              {club.club_description}
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        spacing={1.5}
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+      >
+        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ width: '100%', flex: 1 }}>
+          <Avatar src={cover || undefined} sx={{ width: 48, height: 48 }}>
+            {club.club_name?.[0]?.toUpperCase() ?? 'C'}
+          </Avatar>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
+            <Typography variant="subtitle1" fontWeight={600} noWrap>
+              {club.club_name}
             </Typography>
-          )}
-        </Box>
-        <Button size="small" onClick={() => navigate(`/clubs/${club.id}`)} sx={{ minHeight: 36 }}>
+            {club.club_description && (
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 2,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                }}
+              >
+                {club.club_description}
+              </Typography>
+            )}
+          </Box>
+        </Stack>
+        <Button
+          size="small"
+          variant="outlined"
+          onClick={() => navigate(`/clubs/${club.id}`)}
+          sx={{ minHeight: 36, alignSelf: { xs: 'stretch', sm: 'center' } }}
+        >
           Open
         </Button>
       </Stack>

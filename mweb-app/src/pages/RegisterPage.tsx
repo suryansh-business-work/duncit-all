@@ -46,9 +46,10 @@ export default function RegisterPage() {
   const navigate = useNavigate();
 
   const handleRegister = async (values: RegisterFormValues) => {
+    const { country: _country, ...rest } = values;
     const res = await registerMutation({
       variables: {
-        input: { ...values, dob: new Date(values.dob).toISOString() },
+        input: { ...rest, dob: new Date(rest.dob).toISOString() },
       },
     });
     const token = res.data?.register?.token;

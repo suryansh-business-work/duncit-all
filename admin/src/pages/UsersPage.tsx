@@ -34,6 +34,7 @@ import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import GoogleIcon from '@mui/icons-material/Google';
 import PhoneOutlinedIcon from '@mui/icons-material/PhoneOutlined';
 import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
+import PhoneExtensionField from '../components/PhoneExtensionField';
 
 const STATUS_OPTIONS = ['', 'ACTIVE', 'INACTIVE', 'SUSPENDED'];
 
@@ -439,12 +440,10 @@ export default function UsersPage() {
               />
             </Grid>
             <Grid item xs={4} sm={3}>
-              <TextField
-                label="Ext."
+              <PhoneExtensionField
                 value={form.phone_extension}
-                onChange={(e) => setForm((p) => ({ ...p, phone_extension: e.target.value }))}
+                onChange={(d) => setForm((p) => ({ ...p, phone_extension: d }))}
                 fullWidth
-                required
               />
             </Grid>
             <Grid item xs={8} sm={9}>

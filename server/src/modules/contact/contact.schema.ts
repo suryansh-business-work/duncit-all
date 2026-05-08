@@ -12,6 +12,7 @@ export const contactTypeDefs = /* GraphQL */ `
     email: String!
     subject: String!
     message: String!
+    attachments: [String!]!
     status: ContactStatus!
     created_at: String!
     updated_at: String!
@@ -22,6 +23,7 @@ export const contactTypeDefs = /* GraphQL */ `
     email: String!
     subject: String
     message: String!
+    attachments: [String!]
   }
 
   type ContactSubmitResult {

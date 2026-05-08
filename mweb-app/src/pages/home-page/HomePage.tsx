@@ -348,8 +348,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
         </Box>
       )}
 
-      <Stack spacing={3}>
-      <HomeSearch locationId={locationId} />
+      <Stack spacing={2}>
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="subtitle2" color="text.secondary">
           Browse pods
@@ -371,6 +370,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
           />
         </Stack>
       </Stack>
+      <HomeSearch locationId={locationId} />
 
       {clubs.length === 0 ? (
         <Alert severity="info">

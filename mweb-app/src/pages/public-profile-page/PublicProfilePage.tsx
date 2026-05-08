@@ -25,7 +25,7 @@ const PUBLIC_PROFILE = gql`
       zone
     }
     me {
-      id
+      user_id
     }
   }
 `;
@@ -51,7 +51,7 @@ export default function PublicProfilePage() {
   if (error) return <Alert severity="error">{error.message}</Alert>;
   const u = data?.publicUserProfile;
   if (!u) return <Alert severity="warning">User not found.</Alert>;
-  const isOwner = data?.me?.id && data.me.id === u.user_id;
+  const isOwner = data?.me?.user_id && data.me.user_id === u.user_id;
 
   return (
     <Stack spacing={3} sx={{ pt: 1, pb: 4 }}>

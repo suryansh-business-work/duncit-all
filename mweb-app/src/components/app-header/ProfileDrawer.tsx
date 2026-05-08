@@ -1,4 +1,5 @@
 import { useNavigate } from 'react-router-dom';
+import { useRoleLabels } from '../../hooks/useRoleLabels';
 import {
   Avatar,
   Box,
@@ -45,13 +46,6 @@ interface Props {
 
 type Item = { label: string; icon: JSX.Element; onClick: () => void };
 
-const roleLabel = (r: string) =>
-  r
-    .toLowerCase()
-    .split('_')
-    .map((w) => w[0]?.toUpperCase() + w.slice(1))
-    .join(' ');
-
 export default function ProfileDrawer({
   open,
   onClose,
@@ -62,6 +56,7 @@ export default function ProfileDrawer({
   onLogout,
 }: Props) {
   const navigate = useNavigate();
+  const { labelFor } = useRoleLabels();
   const roles: string[] = me?.roles ?? [];
   const isAdmin = roles.some((r) => ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'].includes(r));
   const isHost = roles.includes('HOST');
@@ -155,14 +150,14 @@ export default function ProfileDrawer({
               {roles.length > 0 && (
                 <Stack
                   direction="row"
-                  spacing={0.5}
-                  sx={{ mt: 0.75, flexWrap: 'wrap', gap: 0.5 }}
+                  useFlexGap
+                  sx={{ mt: 0.75, flexWrap: 'wrap', gap: 0.75 }}
                 >
                   {roles.map((r) => (
                     <Chip
                       key={r}
                       size="small"
-                      label={roleLabel(r)}
+                      label={labelFor(r)}
                       color={
                         ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'].includes(r)
                           ? 'primary'

@@ -20,7 +20,7 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import LockIcon from '@mui/icons-material/Lock';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PaymentLottie from '../components/PaymentLottie';
 
 const PUBLIC_FINANCE = gql`
   query PublicFinanceSettings {
@@ -146,8 +146,8 @@ export default function CheckoutPage() {
       <Box sx={{ maxWidth: 540, mx: 'auto', mt: 4 }}>
         <Card>
           <CardContent sx={{ textAlign: 'center', p: 4 }}>
-            <CheckCircleIcon sx={{ fontSize: 64, color: 'success.main', mb: 1 }} />
-            <Typography variant="h5" fontWeight={700} gutterBottom>
+            <PaymentLottie variant="success" size={140} />
+            <Typography variant="h5" fontWeight={700} gutterBottom sx={{ mt: 1 }}>
               Payment Successful
             </Typography>
             <Typography variant="body2" color="text.secondary" gutterBottom>
@@ -305,12 +305,12 @@ export default function CheckoutPage() {
         open={submitting}
         sx={{ color: 'common.white', zIndex: (t) => t.zIndex.modal + 1, flexDirection: 'column', gap: 2 }}
       >
-        <CircularProgress color="inherit" />
+        <PaymentLottie variant="processing" size={140} />
         <Typography variant="subtitle1" fontWeight={600}>
-          Processing your payment\u2026
+          Processing your payment…
         </Typography>
         <Typography variant="caption" sx={{ opacity: 0.8 }}>
-          Please don\u2019t close this tab.
+          Please don’t close this tab.
         </Typography>
       </Backdrop>
     </Box>

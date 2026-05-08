@@ -44,6 +44,7 @@ export default function SupportPage() {
             email: values.email,
             subject: subjectTagged,
             message: values.message,
+            attachments: values.attachments,
           },
         },
       });

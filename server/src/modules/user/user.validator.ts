@@ -76,12 +76,12 @@ export const updateMyProfileSchema = yup.object({
 });
 
 export const petProfileSchema = yup.object({
-  name: yup.string().max(60).optional(),
-  species: yup.string().max(40).optional(),
-  breed: yup.string().max(60).optional(),
-  age: yup.number().min(0).max(100).optional(),
-  photo_url: yup.string().url().optional(),
-  bio: yup.string().max(500).optional(),
+  name: yup.string().max(60).nullable().optional(),
+  species: yup.string().max(40).nullable().optional(),
+  breed: yup.string().max(60).nullable().optional(),
+  age: yup.number().min(0).max(100).nullable().optional(),
+  photo_url: yup.string().url().nullable().optional(),
+  bio: yup.string().max(500).nullable().optional(),
 });
 
 export const interestCategoryIdsSchema = yup

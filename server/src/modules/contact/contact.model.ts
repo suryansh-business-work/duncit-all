@@ -7,6 +7,7 @@ export interface IContactSubmission extends Document {
   email: string;
   subject: string;
   message: string;
+  attachments: string[];
   status: ContactStatus;
   created_at: Date;
   updated_at: Date;
@@ -18,6 +19,7 @@ const schema = new Schema<IContactSubmission>(
     email: { type: String, required: true, trim: true, lowercase: true, index: true },
     subject: { type: String, default: '', trim: true },
     message: { type: String, required: true },
+    attachments: { type: [String], default: [] },
     status: {
       type: String,
       enum: ['NEW', 'IN_PROGRESS', 'RESOLVED', 'ARCHIVED'],

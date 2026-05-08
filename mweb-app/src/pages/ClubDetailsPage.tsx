@@ -1,4 +1,5 @@
 import { gql, useQuery } from '@apollo/client';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
@@ -26,6 +27,8 @@ import CampaignIcon from '@mui/icons-material/Campaign';
 import ChatIcon from '@mui/icons-material/Chat';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { usePricing } from '../hooks/usePricing';
+import MomentTile from '../components/moments/MomentTile';
+import MomentLightbox from '../components/moments/MomentLightbox';
 
 const CLUB_DETAILS = gql`
   query ClubDetails($id: ID!) {
@@ -76,6 +79,7 @@ export default function ClubDetailsPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { format: pricingFormat } = usePricing();
+  const [momentLightbox, setMomentLightbox] = useState<number | null>(null);
   const { data, loading, error } = useQuery(CLUB_DETAILS, {
     variables: { id },
     fetchPolicy: 'cache-and-network',
@@ -381,26 +385,24 @@ export default function ClubDetailsPage() {
               gap: 1,
             }}
           >
-            {moments.map((m: any, i: number) =>
-              m.type === 'VIDEO' ? (
-                <Box
-                  key={i}
-                  component="video"
-                  src={m.url}
-                  controls
-                  sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 1 }}
-                />
-              ) : (
-                <Box
-                  key={i}
-                  component="img"
-                  src={m.url}
-                  alt=""
-                  sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', borderRadius: 1 }}
-                />
-              )
-            )}
+            {moments.map((m: any, i: number) => (
+              <MomentTile
+                key={i}
+                url={m.url}
+                type={m.type}
+                aspect="1 / 1"
+                index={i}
+                total={moments.length}
+                onClick={() => setMomentLightbox(i)}
+              />
+            ))}
           </Box>
+          <MomentLightbox
+            moments={moments}
+            index={momentLightbox}
+            onClose={() => setMomentLightbox(null)}
+            onIndexChange={setMomentLightbox}
+          />
         </Box>
       )}
     </Stack>

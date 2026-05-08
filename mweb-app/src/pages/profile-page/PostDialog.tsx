@@ -27,6 +27,7 @@ import {
   DELETE_POST,
   DELETE_COMMENT,
 } from './queries';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 interface Props {
   postId: string | null;
@@ -48,6 +49,8 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Props) 
   const [deletePost] = useMutation(DELETE_POST);
   const [comment, setComment] = useState('');
   const [submitting, setSubmitting] = useState(false);
+  const [confirmPostOpen, setConfirmPostOpen] = useState(false);
+  const [deletingPost, setDeletingPost] = useState(false);
 
   const post = data?.post;
   const canDelete = post?.author_id === meId;
@@ -85,14 +88,22 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Props) 
     }
   };
 
-  const onDeletePost = async () => {
+  const onDeletePost = () => {
     if (!post) return;
-    if (!window.confirm('Delete this post?')) return;
+    setConfirmPostOpen(true);
+  };
+
+  const performDeletePost = async () => {
+    if (!post) return;
+    setDeletingPost(true);
     try {
       await deletePost({ variables: { id: post.id } });
+      setConfirmPostOpen(false);
       onDeleted();
     } catch {
       /* ignore */
+    } finally {
+      setDeletingPost(false);
     }
   };
 
@@ -299,6 +310,16 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Props) 
           </Stack>
         )}
       </DialogContent>
+      <ConfirmDialog
+        open={confirmPostOpen}
+        title="Delete this post?"
+        message="This will permanently remove the post and all its comments."
+        confirmLabel="Delete"
+        destructive
+        busy={deletingPost}
+        onConfirm={performDeletePost}
+        onClose={() => !deletingPost && setConfirmPostOpen(false)}
+      />
     </Dialog>
   );
 }

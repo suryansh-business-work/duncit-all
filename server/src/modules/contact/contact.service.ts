@@ -9,6 +9,7 @@ const submitSchema = yup.object({
   email: yup.string().required('Email is required').email('Invalid email').max(160),
   subject: yup.string().max(200).default(''),
   message: yup.string().required('Message is required').min(5).max(5000),
+  attachments: yup.array().of(yup.string().url().required()).max(10).default([]),
 });
 
 const toPub = (c: IContactSubmission) => ({
@@ -17,6 +18,7 @@ const toPub = (c: IContactSubmission) => ({
   email: c.email,
   subject: c.subject || '',
   message: c.message,
+  attachments: Array.isArray((c as any).attachments) ? (c as any).attachments : [],
   status: c.status,
   created_at: c.created_at.toISOString(),
   updated_at: c.updated_at.toISOString(),
@@ -30,8 +32,8 @@ export const contactService = {
     return docs.map(toPub);
   },
 
-  async submit(input: { name: string; email: string; subject?: string; message: string }) {
-    let payload: { name: string; email: string; subject: string; message: string };
+  async submit(input: { name: string; email: string; subject?: string; message: string; attachments?: string[] }) {
+    let payload: { name: string; email: string; subject: string; message: string; attachments: string[] };
     try {
       payload = await submitSchema.validate(input, { abortEarly: false });
     } catch (e: any) {

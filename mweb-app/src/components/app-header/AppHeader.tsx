@@ -6,45 +6,23 @@ import {
   Avatar,
   Badge,
   Box,
-  Button,
-  Chip,
   IconButton,
-  Skeleton,
   Stack,
-  ToggleButton,
-  ToggleButtonGroup,
   Toolbar,
   Tooltip,
   Typography,
 } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
-import PersonIcon from '@mui/icons-material/Person';
-import GroupsIcon from '@mui/icons-material/Groups';
-import PetsIcon from '@mui/icons-material/Pets';
-import PetsOutlinedIcon from '@mui/icons-material/PetsOutlined';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import ParkIcon from '@mui/icons-material/Park';
-import type { SvgIconComponent } from '@mui/icons-material';
 import Snackbar from '@mui/material/Snackbar';
 import MuiAlert from '@mui/material/Alert';
-import { ensurePushSubscription, notificationPermission, isPushSupported } from '../../pwa';
-import {
-  HEADER_DATA,
-  MY_NOTIFS,
-  MARK_READ,
-  MARK_ALL,
-  PUBLIC_POLICIES,
-} from './queries';
+import { HEADER_DATA, MY_NOTIFS, MARK_READ, MARK_ALL, PUBLIC_POLICIES } from './queries';
 import LocationDialog from './LocationDialog';
 import NotificationsPopover from './NotificationsPopover';
 import ProfileDrawer from './ProfileDrawer';
+import HeaderLocationButton from './HeaderLocationButton';
+import SuperCategoryTabs from './SuperCategoryTabs';
+import { useHeaderPushNotifications } from './useHeaderPushNotifications';
 
 interface AppHeaderProps {
   selectedSuperCategory: string;
@@ -53,52 +31,6 @@ interface AppHeaderProps {
   onLocationChange: (id: string) => void;
   selectedZoneName: string;
   onZoneChange: (zone: string) => void;
-}
-
-const isImageIcon = (value: string | null | undefined) => {
-  const next = (value ?? '').trim();
-  return /^data:image\//i.test(next) || /^https?:\/\//i.test(next) || next.startsWith('/');
-};
-
-const MUI_ICON_MAP: Record<string, SvgIconComponent> = {
-  PeopleAlt: PeopleAltIcon,
-  EmojiPeople: EmojiPeopleIcon,
-  Person: PersonIcon,
-  Group: GroupsIcon,
-  Groups: GroupsIcon,
-  Pets: PetsIcon,
-  PetsOutlined: PetsOutlinedIcon,
-  Favorite: FavoriteIcon,
-  FitnessCenter: FitnessCenterIcon,
-  SportsSoccer: SportsSoccerIcon,
-  Restaurant: RestaurantIcon,
-  Park: ParkIcon,
-};
-
-const resolveMuiIcon = (value: string) => {
-  return MUI_ICON_MAP[value] ?? null;
-};
-
-function renderSuperCategoryMark(icon: string | null | undefined) {
-  const next = (icon ?? '').trim();
-  if (!next) return null;
-  if (isImageIcon(next)) {
-    return (
-      <Box
-        component="img"
-        src={next}
-        alt=""
-        sx={{ width: 18, height: 18, objectFit: 'cover', borderRadius: 0.75, flex: '0 0 auto' }}
-      />
-    );
-  }
-  const MuiIcon = resolveMuiIcon(next);
-  if (MuiIcon) return <MuiIcon sx={{ fontSize: 18, flex: '0 0 auto' }} />;
-  return next.length <= 2 ? (
-    <Box component="span" sx={{ lineHeight: 1, flex: '0 0 auto' }}>
-      {next}
-    </Box>
-  ) : null;
 }
 
 export default function AppHeader({
@@ -110,9 +42,7 @@ export default function AppHeader({
   onZoneChange,
 }: AppHeaderProps) {
   const navigate = useNavigate();
-
   const { data, loading } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
-
   const [locDialogOpen, setLocDialogOpen] = useState(false);
   const [draftLocationId, setDraftLocationId] = useState('');
   const [draftZone, setDraftZone] = useState('');
@@ -158,35 +88,9 @@ export default function AppHeader({
   const { data: policiesData } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-first' });
   const publicPolicies = policiesData?.publicPolicies ?? [];
 
-  const [perm, setPerm] = useState<NotificationPermission | 'unsupported'>(() =>
-    notificationPermission()
+  const { perm, pushBusy, toast, setToast, enablePush } = useHeaderPushNotifications(
+    () => refetchNotifs() as Promise<unknown>
   );
-  const [pushBusy, setPushBusy] = useState(false);
-  const [toast, setToast] = useState<{ title: string; body: string } | null>(null);
-
-  const enablePush = async () => {
-    setPushBusy(true);
-    try {
-      const ok = await ensurePushSubscription();
-      setPerm(notificationPermission());
-      if (!ok) setToast({ title: 'Notifications', body: 'Permission was not granted.' });
-    } finally {
-      setPushBusy(false);
-    }
-  };
-
-  useEffect(() => {
-    if (!('serviceWorker' in navigator)) return;
-    const handler = (event: MessageEvent) => {
-      const msg = event.data;
-      if (msg?.type === 'PUSH_RECEIVED') {
-        setToast({ title: msg.payload?.title ?? 'Duncit', body: msg.payload?.body ?? '' });
-        refetchNotifs().catch(() => undefined);
-      }
-    };
-    navigator.serviceWorker.addEventListener('message', handler);
-    return () => navigator.serviceWorker.removeEventListener('message', handler);
-  }, [refetchNotifs]);
 
   const onNotifClick = async (n: any) => {
     if (!n.read_at) {
@@ -211,8 +115,6 @@ export default function AppHeader({
     }
   };
 
-
-
   const logout = () => {
     setProfileAnchor(null);
     localStorage.removeItem('token');
@@ -220,12 +122,7 @@ export default function AppHeader({
   };
 
   return (
-    <AppBar
-      position="sticky"
-      color="inherit"
-      elevation={0}
-      sx={{ bgcolor: 'background.paper' }}
-    >
+    <AppBar position="sticky" color="inherit" elevation={0} sx={{ bgcolor: 'background.paper' }}>
       <Toolbar sx={{ gap: 1, py: 1, minHeight: 64, px: 2 }}>
         <Stack
           direction="row"
@@ -233,47 +130,31 @@ export default function AppHeader({
           spacing={1.25}
           sx={{ cursor: 'pointer' }}
           onClick={() => navigate('/')}
+          role="button"
+          tabIndex={0}
+          aria-label="Go to home"
         >
           <Box
             component="img"
             src={branding?.logo_url || '/duncit-logo.svg'}
             alt={branding?.app_name ?? 'Duncit'}
-            sx={{
-              height: 44,
-              width: 'auto',
-              maxWidth: 200,
-              objectFit: 'contain',
-              display: 'block',
-            }}
+            sx={{ height: 44, width: 'auto', maxWidth: 200, objectFit: 'contain', display: 'block' }}
           />
         </Stack>
 
         <Box sx={{ flexGrow: 1 }} />
 
-        {loading && !data ? (
-          <Skeleton variant="rounded" width={90} height={28} sx={{ borderRadius: 1 }} />
-        ) : (
-          <Button
-            startIcon={<LocationOnIcon />}
-            onClick={() => {
-              setDraftLocationId(selectedLocationId);
-              setDraftZone(selectedZoneName);
-              setLocDialogOpen(true);
-            }}
-            sx={{ textTransform: 'none', color: 'text.primary', whiteSpace: 'nowrap' }}
-            size="small"
-          >
-            {selectedLocation?.location_name ?? 'Select city'}
-            {selectedZoneName ? (
-              <Chip
-                size="small"
-                label={selectedZoneName}
-                sx={{ ml: 1, height: 20, fontSize: 11 }}
-                color="primary"
-              />
-            ) : null}
-          </Button>
-        )}
+        <HeaderLocationButton
+          loading={loading}
+          hasData={!!data}
+          selectedLocationName={selectedLocation?.location_name}
+          selectedZoneName={selectedZoneName}
+          onClick={() => {
+            setDraftLocationId(selectedLocationId);
+            setDraftZone(selectedZoneName);
+            setLocDialogOpen(true);
+          }}
+        />
         <LocationDialog
           open={locDialogOpen}
           onClose={() => setLocDialogOpen(false)}
@@ -290,7 +171,12 @@ export default function AppHeader({
         />
 
         <Tooltip title="Notifications">
-          <IconButton size="small" onClick={(e) => setNotifAnchor(e.currentTarget)}>
+          <IconButton
+            size="small"
+            onClick={(e) => setNotifAnchor(e.currentTarget)}
+            aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ''}`}
+            sx={{ minWidth: 44, minHeight: 44 }}
+          >
             <Badge badgeContent={unreadCount} color="error">
               <NotificationsIcon fontSize="small" />
             </Badge>
@@ -309,10 +195,15 @@ export default function AppHeader({
         />
 
         <Tooltip title={me?.full_name ?? 'Account'}>
-          <IconButton onClick={(e) => setProfileAnchor(e.currentTarget)} sx={{ p: 0.25 }}>
+          <IconButton
+            onClick={(e) => setProfileAnchor(e.currentTarget)}
+            sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
+            aria-label="Open account menu"
+          >
             <Avatar
               src={me?.profile_photo || undefined}
-              sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13 }}>
+              sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13 }}
+            >
               {(me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase()}
             </Avatar>
           </IconButton>
@@ -326,56 +217,15 @@ export default function AppHeader({
           setPoliciesOpen={setPoliciesOpen}
           onLogout={logout}
         />
-
-
       </Toolbar>
 
-      {loading && superCats.length === 0 ? (
-        <Box sx={{ px: 1.5, pb: 0.75 }}>
-          <Skeleton variant="rounded" height={36} />
-        </Box>
-      ) : superCats.length > 0 ? (
-        <Box
-          sx={{
-            px: 1.5,
-            pb: 0.75
-          }}
-        >
-          <ToggleButtonGroup
-            value={superCategoryValue}
-            exclusive
-            fullWidth
-            size="small"
-            onChange={(_event, next) => {
-              if (next) onSuperCategoryChange(next);
-            }}
-            sx={{
-              width: '100%',
-              '& .MuiToggleButton-root': {
-                minWidth: 0,
-                flex: 1,
-                minHeight: 36,
-                px: 0.75,
-                gap: 0.5,
-                fontSize: 12,
-                whiteSpace: 'nowrap',
-              },
-            }}
-          >
-            {superCats.map((c: any) => (
-              <ToggleButton key={c.id} value={c.slug} aria-label={c.name}>
-                {renderSuperCategoryMark(c.icon)}
-                <Box
-                  component="span"
-                  sx={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
-                >
-                  {c.name}
-                </Box>
-              </ToggleButton>
-            ))}
-          </ToggleButtonGroup>
-        </Box>
-      ) : null}
+      <SuperCategoryTabs
+        loading={loading}
+        superCats={superCats}
+        value={superCategoryValue}
+        onChange={onSuperCategoryChange}
+      />
+
       <Snackbar
         open={!!toast}
         onClose={() => setToast(null)}

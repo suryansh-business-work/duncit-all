@@ -1,6 +1,7 @@
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useState } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useRoleLabels } from '../hooks/useRoleLabels';
 import {
   Alert,
   Avatar,
@@ -64,6 +65,7 @@ const UPDATE_USER = gql`
 export default function AccountPage() {
   const navigate = useNavigate();
   const { data, loading, error, refetch } = useQuery(ME, { fetchPolicy: 'cache-and-network' });
+  const { labelFor } = useRoleLabels();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [savingPhoto, setSavingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
@@ -128,11 +130,18 @@ export default function AccountPage() {
               )}
               <Stack
                 direction="row"
+                useFlexGap
                 spacing={1}
-                sx={{ mt: 1.5, flexWrap: 'wrap', justifyContent: { xs: 'center', sm: 'flex-start' } }}
+                sx={{ mt: 1.5, flexWrap: 'wrap', rowGap: 1, justifyContent: { xs: 'center', sm: 'flex-start' } }}
               >
                 {me.roles?.map((r: string) => (
-                  <Chip key={r} label={r} size="small" color="primary" variant="outlined" />
+                  <Chip
+                    key={r}
+                    label={labelFor(r)}
+                    size="small"
+                    color="primary"
+                    variant="outlined"
+                  />
                 ))}
                 {me.status && <Chip label={me.status} size="small" />}
               </Stack>

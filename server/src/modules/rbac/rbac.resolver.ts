@@ -27,6 +27,14 @@ export const rbacResolvers = {
       requireRole(ctx, READ_ROLES);
       return rbacService.getRole(args.role_id);
     },
+    publicRoles: async () => {
+      const roles = await rbacService.listRoles();
+      return roles.map((r: any) => ({
+        key: r.key,
+        name: r.name,
+        description: r.description ?? '',
+      }));
+    },
   },
   Mutation: {
     createResource: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

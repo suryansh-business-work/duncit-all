@@ -1,9 +1,11 @@
 import {
+  Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
+  Link,
   MenuItem,
   Stack,
   TextField,
@@ -17,6 +19,7 @@ interface Submission {
   email: string;
   subject: string;
   message: string;
+  attachments?: string[];
   status: string;
   created_at: string;
 }
@@ -48,6 +51,32 @@ export default function ContactDetailsDialog({ submission, onClose, onUpdateStat
             {new Date(submission.created_at).toLocaleString()}
           </Typography>
           <Typography sx={{ whiteSpace: 'pre-wrap' }}>{submission.message}</Typography>
+          {submission.attachments && submission.attachments.length > 0 && (
+            <Box>
+              <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mb: 1 }}>
+                Attachments ({submission.attachments.length})
+              </Typography>
+              <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1 }}>
+                {submission.attachments.map((url, i) => (
+                  <Link
+                    key={url + i}
+                    href={url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    sx={{ display: 'block', width: 96, height: 96, borderRadius: 1, overflow: 'hidden' }}
+                  >
+                    <Box
+                      component="img"
+                      src={url}
+                      alt={`attachment-${i + 1}`}
+                      loading="lazy"
+                      sx={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }}
+                    />
+                  </Link>
+                ))}
+              </Stack>
+            </Box>
+          )}
           <TextField
             select
             label="Status"

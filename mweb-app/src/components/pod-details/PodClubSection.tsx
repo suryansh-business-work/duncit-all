@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
+import MomentTile from '../moments/MomentTile';
+import MomentLightbox from '../moments/MomentLightbox';
 
 interface Props {
   club: any | null;
@@ -7,6 +10,7 @@ interface Props {
 
 export default function PodClubSection({ club }: Props) {
   const navigate = useNavigate();
+  const [lightbox, setLightbox] = useState<number | null>(null);
   if (!club) {
     return (
       <Typography variant="body2" color="text.secondary">
@@ -34,7 +38,7 @@ export default function PodClubSection({ club }: Props) {
             </Typography>
           )}
         </Box>
-        <Button size="small" onClick={() => navigate(`/clubs/${club.id}`)}>
+        <Button size="small" onClick={() => navigate(`/clubs/${club.id}`)} sx={{ minHeight: 36 }}>
           Open
         </Button>
       </Stack>
@@ -45,22 +49,25 @@ export default function PodClubSection({ club }: Props) {
           sx={{ overflowX: 'auto', pb: 0.5, '&::-webkit-scrollbar': { display: 'none' } }}
         >
           {moments.slice(0, 12).map((m: any, i: number) => (
-            <Box
-              key={i}
-              component="img"
-              src={m.url}
-              alt=""
-              sx={{
-                width: 96,
-                height: 96,
-                objectFit: 'cover',
-                borderRadius: 1.5,
-                flex: '0 0 auto',
-              }}
-            />
+            <Box key={i} sx={{ width: 96, height: 96, flex: '0 0 auto' }}>
+              <MomentTile
+                url={m.url}
+                type={m.type}
+                size={96}
+                index={i}
+                total={moments.length}
+                onClick={() => setLightbox(i)}
+              />
+            </Box>
           ))}
         </Stack>
       )}
+      <MomentLightbox
+        moments={moments}
+        index={lightbox}
+        onClose={() => setLightbox(null)}
+        onIndexChange={setLightbox}
+      />
     </Stack>
   );
 }

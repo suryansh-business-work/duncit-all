@@ -30,6 +30,7 @@ const SUBMISSIONS = gql`
       email
       subject
       message
+      attachments
       status
       created_at
     }
@@ -60,6 +61,7 @@ interface Submission {
   email: string;
   subject: string;
   message: string;
+  attachments: string[];
   status: string;
   created_at: string;
 }

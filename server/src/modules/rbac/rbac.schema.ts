@@ -87,6 +87,13 @@ export const rbacTypeDefs = gql`
     permissions: [Permission!]!
     roles: [Role!]!
     role(role_id: ID!): Role
+    publicRoles: [PublicRole!]!
+  }
+
+  type PublicRole {
+    key: String!
+    name: String!
+    description: String
   }
 
   extend type Mutation {

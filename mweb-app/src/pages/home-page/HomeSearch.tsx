@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, ClickAwayListener, Paper, TextField } from '@mui/material';
+import { Box, ClickAwayListener, InputAdornment, Paper, TextField } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import PodSearchResults from './PodSearchResults';
 import { POD_SEARCH } from '../../components/app-header/queries';
 
@@ -39,6 +40,13 @@ export default function HomeSearch({ locationId }: Props) {
             setOpen(true);
           }}
           onFocus={() => setOpen(true)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" color="action" />
+              </InputAdornment>
+            ),
+          }}
           inputProps={{
             'aria-label': 'Search pods',
             enterKeyHint: 'search',

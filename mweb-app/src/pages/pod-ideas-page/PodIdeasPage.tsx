@@ -27,6 +27,7 @@ import {
 } from './queries';
 import IdeaCard from './IdeaCard';
 import IdeaDetailsDialog from './IdeaDetailsDialog';
+import ConfirmDialog from '../../components/ConfirmDialog';
 
 export default function PodIdeasPage() {
   const [search, setSearch] = useState('');
@@ -36,6 +37,8 @@ export default function PodIdeasPage() {
   const [composerErr, setComposerErr] = useState<string | null>(null);
   const [detailsId, setDetailsId] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   const filter = useMemo(() => {
     const f: any = { status: 'APPROVED' };
@@ -113,14 +116,22 @@ export default function PodIdeasPage() {
     }
   };
 
-  const removeIdea = async (id: string) => {
-    if (!window.confirm('Delete this idea?')) return;
+  const removeIdea = (id: string) => {
+    setConfirmDeleteId(id);
+  };
+
+  const performDelete = async () => {
+    if (!confirmDeleteId) return;
+    setDeleting(true);
     try {
-      await deleteMut({ variables: { id } });
+      await deleteMut({ variables: { id: confirmDeleteId } });
       setToast('Deleted');
+      setConfirmDeleteId(null);
       await refetchAll();
     } catch (e: any) {
       setToast(e.message);
+    } finally {
+      setDeleting(false);
     }
   };
 
@@ -267,6 +278,16 @@ export default function PodIdeasPage() {
         autoHideDuration={3500}
         onClose={() => setToast(null)}
         message={toast ?? ''}
+      />
+      <ConfirmDialog
+        open={!!confirmDeleteId}
+        title="Delete this idea?"
+        message="This will permanently remove the idea, its likes, and all comments."
+        confirmLabel="Delete"
+        destructive
+        busy={deleting}
+        onConfirm={performDelete}
+        onClose={() => !deleting && setConfirmDeleteId(null)}
       />
     </Box>
   );

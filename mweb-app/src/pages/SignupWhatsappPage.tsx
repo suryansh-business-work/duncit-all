@@ -107,9 +107,9 @@ export default function SignupWhatsappPage() {
                 Add your WhatsApp number
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5 }}>
-                WhatsApp number profile karne se hum aapko notifications de
-                paayenge aur aap community + groups join kar sakte hai. Aap baad
-                me bhi update kar sakte hai.
+                Add your WhatsApp number to receive pod notifications and join
+                community groups. You can always update this later from your
+                profile settings.
               </Typography>
             </Box>
 

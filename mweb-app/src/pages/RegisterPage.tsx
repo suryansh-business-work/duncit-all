@@ -105,7 +105,7 @@ export default function RegisterPage() {
         </Typography>
 
         <Stack spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
-          <GoogleSignInButton onCredential={handleGoogle} loading={gLoading} text="signup_with" />
+          <GoogleSignInButton onCredential={handleGoogle} loading={gLoading && !googleToken} text="signup_with" />
           {gError && (
             <Alert severity="error" sx={{ width: '100%' }}>
               {gError}

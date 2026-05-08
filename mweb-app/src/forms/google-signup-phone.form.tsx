@@ -8,6 +8,10 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { subYears } from 'date-fns';
 import { googleSignupSchema } from '../validators/auth';
 import FormField from './FormField';
 import ResponsiveDialog from '../components/ResponsiveDialog';
@@ -38,6 +42,44 @@ interface Props {
   onSubmit: (values: GoogleSignupPhoneValues) => Promise<void>;
 }
 
+function DobYearField() {
+  const { values, setFieldValue, touched, errors, setFieldTouched } =
+    useFormikContext<GoogleSignupPhoneValues>();
+  const value = values.dob ? new Date(values.dob) : null;
+  const minDate = subYears(new Date(), 100);
+  const maxDate = subYears(new Date(), 13);
+  return (
+    <LocalizationProvider dateAdapter={AdapterDateFns}>
+      <DatePicker
+        label="Birth year"
+        views={['year']}
+        openTo="year"
+        value={value}
+        minDate={minDate}
+        maxDate={maxDate}
+        onChange={(d) => {
+          setFieldTouched('dob', true, false);
+          if (!d || Number.isNaN((d as Date).getTime())) {
+            setFieldValue('dob', '');
+          } else {
+            const y = (d as Date).getFullYear();
+            setFieldValue('dob', `${y}-01-01`);
+          }
+        }}
+        slotProps={{
+          textField: {
+            size: 'small',
+            fullWidth: true,
+            InputLabelProps: { shrink: true },
+            error: Boolean(touched.dob && errors.dob),
+            helperText: (touched.dob && errors.dob) || ' ',
+          },
+        }}
+      />
+    </LocalizationProvider>
+  );
+}
+
 function PhoneAndLocation() {
   const { values, setFieldValue, touched, errors } =
     useFormikContext<GoogleSignupPhoneValues>();
@@ -55,12 +97,7 @@ function PhoneAndLocation() {
         <FormField name="phone_number" label="Phone" />
       </Grid>
       <Grid item xs={12}>
-        <FormField
-          name="dob"
-          type="date"
-          label="Date of birth"
-          InputLabelProps={{ shrink: true }}
-        />
+        <DobYearField />
       </Grid>
       <Grid item xs={6}>
         <Autocomplete

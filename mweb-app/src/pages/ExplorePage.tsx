@@ -150,11 +150,17 @@ export default function ExplorePage({ superCategorySlug }: ExplorePageProps) {
   if (error) return <Alert severity="error">{error.message}</Alert>;
   if (!pods.length) return <Alert severity="info">No pods to explore yet.</Alert>;
 
+  // Header ~64px + BottomNav ~56px + iOS safe-area
+  const exploreHeight =
+    'calc(100dvh - 64px - 56px - env(safe-area-inset-bottom))';
+
   return (
     <Box
       sx={{
-        height: '100%',
+        height: exploreHeight,
         position: 'relative',
+        overflow: 'hidden',
+        touchAction: 'none',
         '& .slick-slider, & .slick-list, & .slick-track': { height: '100%' },
         '& .slick-slide > div': { height: '100%' },
       }}

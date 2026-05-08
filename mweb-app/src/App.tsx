@@ -111,7 +111,9 @@ export default function App() {
             minHeight: 0,
             display: 'flex',
             flexDirection: 'column',
-            overflowY: 'auto',
+            // Full-bleed pages (Explore) handle their own scrolling via slick;
+            // overflow must be hidden so swipe events reach the slider.
+            overflowY: fullBleed ? 'hidden' : 'auto',
           }),
           py: fullBleed ? 0 : 2,
           // Reserve space for the fixed BottomNav only on padded routes.

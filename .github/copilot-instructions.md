@@ -41,3 +41,5 @@ https://duncit.com
 https://server.duncit.com/
 https://admin.duncit.com/
 https://mweb.duncit.com/
+
+9. Any .tsx file should not exceed 200 lines. If a file grows beyond 200 lines, create a folder with the same component name and refactor it into multiple smaller components/modules inside that folder using an index-based structure. Ensure the refactor introduces no breaking changes and preserves all existing functionality, imports, exports, and behavior.

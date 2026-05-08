@@ -161,7 +161,13 @@ export default function ExplorePage({ superCategorySlug }: ExplorePageProps) {
         position: 'relative',
         overflow: 'hidden',
         touchAction: 'none',
-        '& .slick-slider, & .slick-list, & .slick-track': { height: '100%' },
+        // react-slick vertical mode sets inline height on .slick-list and .slick-track
+        // based on measured slide content (0px when content is absolute).
+        // !important overrides those inline styles.
+        '& .slick-slider': { height: '100%' },
+        '& .slick-list': { height: '100% !important' },
+        '& .slick-track': { height: '100% !important' },
+        '& .slick-slide': { height: '100% !important' },
         '& .slick-slide > div': { height: '100%' },
       }}
     >

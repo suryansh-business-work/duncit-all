@@ -34,6 +34,8 @@ export const analyticsTypeDefs = /* GraphQL */ `
     clubs_total: Int!
     venues_total: Int!
     hosts_total: Int!
+    support_tickets_open: Int!
+    support_tickets_total: Int!
   }
 
   extend type Query {

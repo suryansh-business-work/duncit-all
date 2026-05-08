@@ -36,8 +36,43 @@ export const uploadTypeDefs = /* GraphQL */ `
     photos: [PexelsPhoto!]!
   }
 
+  type PexelsVideoFile {
+    id: ID!
+    quality: String!
+    width: Int!
+    height: Int!
+    link: String!
+  }
+
+  type PexelsVideo {
+    id: ID!
+    width: Int!
+    height: Int!
+    duration: Int!
+    url: String!
+    image: String!
+    preview: String!
+    user_name: String!
+    user_url: String
+    video_files: [PexelsVideoFile!]!
+  }
+
+  type PexelsVideoSearchResult {
+    page: Int!
+    per_page: Int!
+    total_results: Int!
+    next_page: String
+    videos: [PexelsVideo!]!
+  }
+
   extend type Query {
     pexelsSearch(query: String, page: Int, perPage: Int): PexelsSearchResult!
+    pexelsSearchVideos(
+      query: String
+      page: Int
+      perPage: Int
+      orientation: String
+    ): PexelsVideoSearchResult!
   }
 
   extend type Mutation {
@@ -53,6 +88,16 @@ export const uploadTypeDefs = /* GraphQL */ `
     own ImageKit account. Returns the final ImageKit URL.
     """
     importRemoteImageToImagekit(
+      remoteUrl: String!
+      folder: String
+      fileName: String
+    ): UploadedImage!
+
+    """
+    Server-side import of a remote image OR video (e.g. Pexels stock video).
+    Returns the final ImageKit URL.
+    """
+    importRemoteMediaToImagekit(
       remoteUrl: String!
       folder: String
       fileName: String

@@ -13,6 +13,7 @@ export const notificationTypeDefs = /* GraphQL */ `
     image_url: String
     link_url: String
     scope: NotificationScope!
+    silent: Boolean!
     location_id: ID
     zone_name: String
     target_user_ids: [ID!]!
@@ -40,6 +41,7 @@ export const notificationTypeDefs = /* GraphQL */ `
     image_url: String
     link_url: String
     scope: NotificationScope!
+    silent: Boolean
     location_id: ID
     zone_name: String
     target_user_ids: [ID!]

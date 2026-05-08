@@ -8,6 +8,7 @@ export interface INotification extends Document {
   image_url?: string | null;
   link_url?: string | null;
   scope: NotificationScope;
+  silent: boolean;
   location_id?: Types.ObjectId | null;
   zone_name?: string | null;
   target_user_ids: Types.ObjectId[];
@@ -25,6 +26,7 @@ const notificationSchema = new Schema<INotification>(
     image_url: { type: String, default: null },
     link_url: { type: String, default: null },
     scope: { type: String, enum: ['GLOBAL', 'LOCATION', 'ZONE', 'USER'], required: true, default: 'GLOBAL' },
+    silent: { type: Boolean, default: false },
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
     zone_name: { type: String, default: null, trim: true },
     target_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User' }],

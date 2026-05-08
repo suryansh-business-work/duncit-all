@@ -13,10 +13,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   IconButton,
   MenuItem,
   Snackbar,
   Stack,
+  Switch,
   Table,
   TableBody,
   TableCell,
@@ -102,6 +104,7 @@ interface NotifForm {
   image_url: string;
   link_url: string;
   scope: 'GLOBAL' | 'LOCATION' | 'ZONE' | 'USER';
+  silent: boolean;
   location_id: string;
   zone_name: string;
   target_user_ids: string[];
@@ -112,6 +115,7 @@ const blank: NotifForm = {
   image_url: '',
   link_url: '',
   scope: 'GLOBAL',
+  silent: false,
   location_id: '',
   zone_name: '',
   target_user_ids: [],
@@ -164,6 +168,7 @@ export default function NotificationsPage() {
         image_url: form.image_url || null,
         link_url: form.link_url || null,
         scope: form.scope,
+        silent: form.silent,
         location_id: form.scope === 'GLOBAL' || form.scope === 'USER' ? null : form.location_id,
         zone_name: form.scope === 'ZONE' ? form.zone_name : null,
         target_user_ids: form.scope === 'USER' ? form.target_user_ids : [],
@@ -339,6 +344,15 @@ export default function NotificationsPage() {
               value={form.link_url}
               onChange={(e) => setForm((f) => ({ ...f, link_url: e.target.value }))}
               fullWidth
+            />
+            <FormControlLabel
+              control={
+                <Switch
+                  checked={form.silent}
+                  onChange={(e) => setForm((f) => ({ ...f, silent: e.target.checked }))}
+                />
+              }
+              label="Silent (in-app only — no push alert)"
             />
             <TextField
               select

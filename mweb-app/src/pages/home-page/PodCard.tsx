@@ -9,9 +9,19 @@ import {
   Typography,
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
+import PersonIcon from '@mui/icons-material/PersonOutline';
+import GroupIcon from '@mui/icons-material/GroupOutlined';
 import { usePricing } from '../../hooks/usePricing';
 
-export default function PodCard({ pod, onOpen }: { pod: any; onOpen: () => void }) {
+export default function PodCard({
+  pod,
+  onOpen,
+  hostName,
+}: {
+  pod: any;
+  onOpen: () => void;
+  hostName?: string | null;
+}) {
   const isFree = pod.pod_type?.includes('FREE');
   const { format } = usePricing();
   return (
@@ -80,7 +90,7 @@ export default function PodCard({ pod, onOpen }: { pod: any; onOpen: () => void 
                 })
               : '—'}
           </Typography>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5 }}>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5, flexWrap: 'wrap', rowGap: 0.5 }}>
             <Chip
               size="small"
               label={isFree ? 'Free' : format(pod.pod_amount)}
@@ -88,12 +98,31 @@ export default function PodCard({ pod, onOpen }: { pod: any; onOpen: () => void 
               variant={isFree ? 'outlined' : 'filled'}
               sx={{ fontWeight: 600 }}
             />
-            {pod.no_of_spots > 0 && (
+            <Stack direction="row" spacing={0.4} alignItems="center">
+              <GroupIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 500 }}>
-                {pod.pod_attendees?.length ?? 0}/{pod.no_of_spots} spots
+                {pod.pod_attendees?.length ?? 0}
+                {pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''}
               </Typography>
-            )}
+            </Stack>
           </Stack>
+          {hostName && (
+            <Stack
+              direction="row"
+              spacing={0.5}
+              alignItems="center"
+              sx={{ mt: 0.75 }}
+            >
+              <PersonIcon sx={{ fontSize: 14, color: 'text.secondary' }} />
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              >
+                Hosted by {hostName}
+              </Typography>
+            </Stack>
+          )}
         </CardContent>
       </CardActionArea>
     </Card>

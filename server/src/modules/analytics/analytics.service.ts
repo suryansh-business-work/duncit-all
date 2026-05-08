@@ -6,6 +6,7 @@ import { ClubModel } from '../club/club.model';
 import { UserModel } from '../user/user.model';
 import { VenueModel } from '../venue/venue.model';
 import { HostModel } from '../host/host.model';
+import { ContactSubmissionModel } from '../contact/contact.model';
 
 type Granularity = 'DAY' | 'WEEK' | 'MONTH';
 
@@ -153,12 +154,14 @@ export const analyticsService = {
         count: counts.get(String(s._id)) || 0,
       }));
 
-    const [users_total, pods_total, clubs_total, venues_total, hosts_total] = await Promise.all([
+    const [users_total, pods_total, clubs_total, venues_total, hosts_total, support_tickets_open, support_tickets_total] = await Promise.all([
       UserModel.countDocuments({}),
       PodModel.countDocuments({}),
       ClubModel.countDocuments({}),
       VenueModel.countDocuments({}),
       HostModel.countDocuments({}),
+      ContactSubmissionModel.countDocuments({ status: { $in: ['NEW', 'IN_PROGRESS'] } }),
+      ContactSubmissionModel.countDocuments({}),
     ]);
 
     return {
@@ -169,6 +172,8 @@ export const analyticsService = {
       clubs_total,
       venues_total,
       hosts_total,
+      support_tickets_open,
+      support_tickets_total,
     };
   },
 };

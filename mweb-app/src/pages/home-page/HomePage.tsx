@@ -223,6 +223,23 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
     return map;
   }, [filteredPods, sortBy]);
 
+  const hostNameById = useMemo(() => {
+    const map = new Map<string, string>();
+    (data?.publicHosts ?? []).forEach((h: any) => {
+      if (h?.user_id && h.full_name) map.set(h.user_id, h.full_name);
+    });
+    return map;
+  }, [data?.publicHosts]);
+
+  const hostNameOf = (p: any): string | null => {
+    const ids: string[] = p.pod_hosts_id ?? [];
+    for (const id of ids) {
+      const n = hostNameById.get(id);
+      if (n) return n;
+    }
+    return null;
+  };
+
   const categoryChips = useMemo(() => {
     const cats = data?.categories ?? [];
     if (!selectedSuperId) {
@@ -446,7 +463,12 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
                   }}
                 >
                   {clubPods.map((p) => (
-                    <PodCard key={p.id} pod={p} onOpen={() => navigate(`/pods/${p.id}`)} />
+                    <PodCard
+                      key={p.id}
+                      pod={p}
+                      hostName={hostNameOf(p)}
+                      onOpen={() => navigate(`/pods/${p.id}`)}
+                    />
                   ))}
                 </Box>
               )}

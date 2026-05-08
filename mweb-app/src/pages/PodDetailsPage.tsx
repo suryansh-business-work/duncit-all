@@ -10,6 +10,8 @@ import {
   Typography,
 } from '@mui/material';
 import RepeatIcon from '@mui/icons-material/Repeat';
+import EventBusyIcon from '@mui/icons-material/EventBusy';
+import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import { usePricing } from '../hooks/usePricing';
 import BackoutConfirmDialog from './pod-details-page/BackoutConfirmDialog';
@@ -139,6 +141,35 @@ export default function PodDetailsPage() {
             label={isFree ? 'Free' : priceFormat(pod.pod_amount)}
           />
           <Chip icon={<RepeatIcon />} label={pod.pod_occurrence?.replace(/_/g, ' ')} />
+          {pod.pod_date_time && (() => {
+            const ms = new Date(pod.pod_date_time).getTime() - Date.now();
+            if (Number.isNaN(ms)) return null;
+            if (ms < 0) {
+              return (
+                <Chip
+                  color="error"
+                  variant="filled"
+                  icon={<EventBusyIcon />}
+                  label="Pod expired"
+                />
+              );
+            }
+            const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
+            const hours = Math.ceil(ms / (1000 * 60 * 60));
+            const label =
+              days > 1
+                ? `${days} days remaining`
+                : hours > 1
+                  ? `${hours} hours remaining`
+                  : 'Starting soon';
+            return (
+              <Chip
+                color={days <= 1 ? 'warning' : 'info'}
+                icon={<HourglassBottomIcon />}
+                label={label}
+              />
+            );
+          })()}
           <Chip icon={<VisibilityIcon />} label={`${pod.pod_hits} views`} variant="outlined" />
           {pod.no_of_spots > 0 && (
             <Chip

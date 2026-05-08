@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -14,6 +14,7 @@ import FavoriteIcon from '@mui/icons-material/Favorite';
 import { Link as RouterLink } from 'react-router-dom';
 import { useFollowedClubs } from '../hooks/useFollowedClubs';
 import MomentTile from '../components/moments/MomentTile';
+import MomentLightbox from '../components/moments/MomentLightbox';
 
 const FOLLOW_FEED = gql`
   query FollowFeedClubs {
@@ -39,6 +40,7 @@ export default function FollowPage() {
   const { data, loading, error } = useQuery<{ clubs: ClubLite[] }>(FOLLOW_FEED, {
     fetchPolicy: 'cache-and-network',
   });
+  const [lightbox, setLightbox] = useState<{ clubId: string; index: number } | null>(null);
 
   const followed = useMemo(
     () => (data?.clubs ?? []).filter((c) => isFollowing(c.id)),
@@ -122,7 +124,7 @@ export default function FollowPage() {
                       size={110}
                       index={i}
                       total={club.club_moments.length}
-                      onClick={() => undefined}
+                      onClick={() => setLightbox({ clubId: club.id, index: i })}
                     />
                   </Box>
                 ))}
@@ -131,6 +133,16 @@ export default function FollowPage() {
           </CardContent>
         </Card>
       ))}
+      <MomentLightbox
+        moments={
+          (followed.find((c) => c.id === lightbox?.clubId)?.club_moments ?? []) as any
+        }
+        index={lightbox?.index ?? null}
+        onClose={() => setLightbox(null)}
+        onIndexChange={(idx) =>
+          setLightbox((prev) => (prev ? { ...prev, index: idx } : prev))
+        }
+      />
     </Stack>
   );
 }

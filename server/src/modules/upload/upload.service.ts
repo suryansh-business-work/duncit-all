@@ -136,6 +136,12 @@ const ALLOWED_REMOTE_HOSTS = [
   /(^|\.)unsplash\.com$/i,
 ];
 
+const ALLOWED_REMOTE_MEDIA_HOSTS = [
+  /(^|\.)pexels\.com$/i,
+  /(^|\.)imagekit\.io$/i,
+  /(^|\.)unsplash\.com$/i,
+];
+
 /**
  * Fetch a remote image (whitelisted hosts only) and upload it to ImageKit.
  * This is used to "import" a Pexels stock image — the URL we hand back to
@@ -245,4 +251,133 @@ export async function pexelsSearch(opts: {
     next_page: json.next_page ?? null,
     photos,
   };
+}
+
+/**
+ * Search Pexels for stock videos. Wrapped server-side so the API key never
+ * ships to the browser.
+ */
+export async function pexelsSearchVideos(opts: {
+  query?: string;
+  page?: number;
+  perPage?: number;
+  orientation?: string;
+}) {
+  if (!PEXELS_API_KEY) {
+    throw new GraphQLError('Pexels is not configured', {
+      extensions: { code: 'CONFIG_ERROR' },
+    });
+  }
+  const query = (opts.query || '').trim();
+  const page = Math.max(1, opts.page || 1);
+  const perPage = Math.min(80, Math.max(1, opts.perPage || 24));
+  const orientationParam =
+    opts.orientation && ['landscape', 'portrait', 'square'].includes(opts.orientation)
+      ? `&orientation=${opts.orientation}`
+      : '';
+
+  const url = query
+    ? `https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}${orientationParam}`
+    : `https://api.pexels.com/videos/popular?per_page=${perPage}&page=${page}`;
+
+  const res = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } });
+  const json: any = await res.json().catch(() => ({}));
+  if (!res.ok)
+    throw new GraphQLError(`Pexels video search failed: ${json?.error || res.statusText}`, {
+      extensions: { code: 'UPSTREAM_ERROR' },
+    });
+  const videos = (json.videos || []).map((v: any) => {
+    const files = (v.video_files || [])
+      .filter((f: any) => /^video\/mp4$/i.test(f.file_type || ''))
+      .map((f: any) => ({
+        id: String(f.id),
+        quality: f.quality || '',
+        width: f.width || 0,
+        height: f.height || 0,
+        link: f.link,
+      }));
+    const pictures = (v.video_pictures || []).map((p: any) => p.picture).filter(Boolean);
+    return {
+      id: String(v.id),
+      width: v.width,
+      height: v.height,
+      duration: v.duration,
+      url: v.url,
+      image: v.image,
+      user_name: v.user?.name || '',
+      user_url: v.user?.url || '',
+      preview: pictures[0] || v.image,
+      video_files: files,
+    };
+  });
+  return {
+    page: json.page ?? page,
+    per_page: json.per_page ?? perPage,
+    total_results: json.total_results ?? videos.length,
+    next_page: json.next_page ?? null,
+    videos,
+  };
+}
+
+/**
+ * Fetch a remote image OR video (whitelisted hosts) and upload to ImageKit.
+ */
+export async function importRemoteMedia(opts: {
+  remoteUrl: string;
+  folder?: string;
+  fileName?: string;
+  tags?: string[];
+}) {
+  let parsed: URL;
+  try {
+    parsed = new URL(opts.remoteUrl);
+  } catch {
+    throw new GraphQLError('Invalid remote URL', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (!/^https?:$/.test(parsed.protocol)) {
+    throw new GraphQLError('Only http(s) URLs are allowed', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (!ALLOWED_REMOTE_MEDIA_HOSTS.some((re) => re.test(parsed.hostname))) {
+    throw new GraphQLError(
+      `Only Pexels / Unsplash / ImageKit URLs may be imported (got ${parsed.hostname})`,
+      { extensions: { code: 'BAD_USER_INPUT' } }
+    );
+  }
+  const remote = await fetch(parsed.toString());
+  if (!remote.ok)
+    throw new GraphQLError(`Remote fetch failed: ${remote.status} ${remote.statusText}`, {
+      extensions: { code: 'UPSTREAM_ERROR' },
+    });
+  const mime = remote.headers.get('content-type') || 'application/octet-stream';
+  const isImage = /^image\//i.test(mime);
+  const isVideo = /^video\//i.test(mime);
+  if (!isImage && !isVideo)
+    throw new GraphQLError(`Remote URL must be image or video (got ${mime})`, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  const buf = Buffer.from(await remote.arrayBuffer());
+  const cap = isVideo ? 200 * 1024 * 1024 : 15 * 1024 * 1024;
+  if (buf.length > cap)
+    throw new GraphQLError(
+      isVideo ? 'Remote video is too large (max 200 MB)' : 'Remote image is too large (max 15 MB)',
+      { extensions: { code: 'BAD_USER_INPUT' } }
+    );
+  const ext = (mime.split('/')[1] || (isVideo ? 'mp4' : 'jpg'))
+    .replace('jpeg', 'jpg')
+    .split(';')[0];
+  const fileName =
+    (opts.fileName || `import-${Date.now()}-${crypto.randomBytes(4).toString('hex')}`).replace(
+      /[^a-zA-Z0-9_.-]/g,
+      '_'
+    ) + (opts.fileName?.includes('.') ? '' : `.${ext}`);
+  return uploadToImagekit({
+    fileBytes: buf,
+    fileName,
+    folder: opts.folder,
+    tags: opts.tags,
+  });
 }

@@ -126,16 +126,20 @@ export default function LoginPage() {
 
       <Card
         elevation={6}
-        sx={{
+        sx={(theme) => ({
           width: '100%',
           maxWidth: 420,
           borderRadius: '4px',
           backdropFilter: 'blur(8px)',
-          bgcolor: 'rgba(255,255,255,0.92)',
+          bgcolor:
+            theme.palette.mode === 'dark'
+              ? 'rgba(17, 26, 46, 0.92)'
+              : 'rgba(255,255,255,0.92)',
+          color: 'text.primary',
           animation: `${fadeUp} 0.7s cubic-bezier(.2,.7,.2,1.2) both`,
           '& .MuiOutlinedInput-root': { borderRadius: '4px' },
           '& .MuiButton-root': { borderRadius: '4px' },
-        }}
+        })}
       >
         <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
           <Stack alignItems="center" spacing={1.5} sx={{ mb: 3 }}>

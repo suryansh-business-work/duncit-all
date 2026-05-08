@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { gql, useApolloClient, useMutation } from '@apollo/client';
 import {
   Alert,
@@ -19,6 +19,8 @@ import {
   Tab,
   Tabs,
   TextField,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
@@ -72,6 +74,40 @@ const IMPORT_REMOTE = gql`
   }
 `;
 
+const PEXELS_VIDEO_SEARCH = gql`
+  query PexelsVideoSearch($query: String, $page: Int, $perPage: Int, $orientation: String) {
+    pexelsSearchVideos(query: $query, page: $page, perPage: $perPage, orientation: $orientation) {
+      page
+      next_page
+      videos {
+        id
+        width
+        height
+        duration
+        preview
+        image
+        user_name
+        video_files {
+          id
+          quality
+          width
+          height
+          link
+        }
+      }
+    }
+  }
+`;
+
+const IMPORT_REMOTE_MEDIA = gql`
+  mutation ImportRemoteMedia($remoteUrl: String!, $folder: String) {
+    importRemoteMediaToImagekit(remoteUrl: $remoteUrl, folder: $folder) {
+      url
+      fileId
+    }
+  }
+`;
+
 interface MediaPickerDialogProps {
   open: boolean;
   onClose: () => void;
@@ -89,7 +125,7 @@ export default function MediaPickerDialog({
   onPicked,
   folder = '/uploads',
   title = 'Select an image',
-  accept = 'image/*',
+  accept = 'image/*,video/*',
 }: MediaPickerDialogProps) {
   const [tab, setTab] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -109,9 +145,22 @@ export default function MediaPickerDialog({
   const [hasMore, setHasMore] = useState(false);
   const [importingId, setImportingId] = useState<string | null>(null);
 
+  // Pexels video state
+  const [vquery, setVquery] = useState('');
+  const [vorientation, setVorientation] = useState<'landscape' | 'portrait' | 'square' | ''>('');
+  const [vsearching, setVsearching] = useState(false);
+  const [videos, setVideos] = useState<any[]>([]);
+  const [vpage, setVpage] = useState(1);
+  const [vhasMore, setVhasMore] = useState(false);
+  const [vimportingId, setVimportingId] = useState<string | null>(null);
+
   const client = useApolloClient();
   const [uploadImageMut] = useMutation(UPLOAD_IMAGE);
   const [importMut] = useMutation(IMPORT_REMOTE);
+  const [importMediaMut] = useMutation(IMPORT_REMOTE_MEDIA);
+
+  const allowImage = useMemo(() => /image\//.test(accept) || accept === '*', [accept]);
+  const allowVideo = useMemo(() => /video\//.test(accept) || accept === '*', [accept]);
 
   // Reset every time the dialog opens
   useEffect(() => {
@@ -136,8 +185,15 @@ export default function MediaPickerDialog({
 
   // Auto-load curated Pexels photos when the tab opens
   useEffect(() => {
-    if (open && tab === 1 && photos.length === 0) {
+    if (open && tab === 1 && allowImage && photos.length === 0) {
       void runPexels(pquery, 1, false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open, tab]);
+
+  useEffect(() => {
+    if (open && tab === 2 && allowVideo && videos.length === 0) {
+      void runPexelsVideos(vquery, 1, false);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, tab]);
@@ -166,12 +222,17 @@ export default function MediaPickerDialog({
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (!f.type.startsWith('image/')) {
-      setError('Please choose an image file');
+    const isImage = f.type.startsWith('image/');
+    const isVideo = f.type.startsWith('video/');
+    if (!isImage && !isVideo) {
+      setError('Please choose an image or video file');
       return;
     }
-    if (f.size > 15 * 1024 * 1024) {
-      setError('File is too large (max 15 MB)');
+    const maxBytes = isVideo ? 100 * 1024 * 1024 : 15 * 1024 * 1024;
+    if (f.size > maxBytes) {
+      setError(
+        isVideo ? 'Video is too large (max 100 MB)' : 'Image is too large (max 15 MB)'
+      );
       return;
     }
     setError(null);
@@ -231,6 +292,63 @@ export default function MediaPickerDialog({
     }
   };
 
+  const runPexelsVideos = async (q: string, p: number, append: boolean) => {
+    setVsearching(true);
+    setError(null);
+    try {
+      const res = await client.query({
+        query: PEXELS_VIDEO_SEARCH,
+        variables: { query: q || null, page: p, perPage: 24, orientation: vorientation || null },
+        fetchPolicy: 'network-only',
+      });
+      const data = res.data?.pexelsSearchVideos;
+      const next = data?.videos ?? [];
+      setVideos(append ? [...videos, ...next] : next);
+      setVpage(p);
+      setVhasMore(!!data?.next_page);
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setVsearching(false);
+    }
+  };
+
+  const pickBestVideoFile = (v: any) => {
+    const files = (v.video_files || []) as any[];
+    if (!files.length) return null;
+    const sorted = [...files].sort((a, b) => {
+      const aHd = a.quality === 'hd' ? 1 : 0;
+      const bHd = b.quality === 'hd' ? 1 : 0;
+      if (aHd !== bHd) return bHd - aHd;
+      return (b.width || 0) - (a.width || 0);
+    });
+    const reasonable = sorted.find((f) => (f.height || 0) <= 1080) || sorted[0];
+    return reasonable;
+  };
+
+  const importPexelsVideo = async (v: any) => {
+    const file = pickBestVideoFile(v);
+    if (!file?.link) {
+      setError('This video has no downloadable mp4');
+      return;
+    }
+    setVimportingId(v.id);
+    setError(null);
+    try {
+      const res = await importMediaMut({
+        variables: { remoteUrl: file.link, folder },
+      });
+      const url = res.data?.importRemoteMediaToImagekit?.url;
+      if (!url) throw new Error('No URL returned from server');
+      onPicked(url);
+      onClose();
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setVimportingId(null);
+    }
+  };
+
   return (
     <Dialog open={open} onClose={uploading ? undefined : onClose} fullWidth maxWidth="md">
       <DialogTitle sx={{ pr: 6 }}>
@@ -250,7 +368,8 @@ export default function MediaPickerDialog({
         sx={{ px: 3, borderBottom: 1, borderColor: 'divider' }}
       >
         <Tab label="Upload from device" />
-        <Tab label="Pexels stock" />
+        <Tab label="Pexels photos" disabled={!allowImage} />
+        <Tab label="Pexels videos" disabled={!allowVideo} />
       </Tabs>
       <DialogContent dividers sx={{ minHeight: 380 }}>
         {error && (
@@ -278,11 +397,25 @@ export default function MediaPickerDialog({
                   bgcolor: 'action.hover',
                 }}
               >
-                <img
-                  src={previewUrl}
-                  alt="preview"
-                  style={{ width: '100%', display: 'block', maxHeight: 360, objectFit: 'contain' }}
-                />
+                {picked?.type.startsWith('video/') ? (
+                  <video
+                    src={previewUrl}
+                    controls
+                    style={{
+                      width: '100%',
+                      display: 'block',
+                      maxHeight: 360,
+                      objectFit: 'contain',
+                      background: '#000',
+                    }}
+                  />
+                ) : (
+                  <img
+                    src={previewUrl}
+                    alt="preview"
+                    style={{ width: '100%', display: 'block', maxHeight: 360, objectFit: 'contain' }}
+                  />
+                )}
               </Box>
             ) : (
               <Box
@@ -447,6 +580,137 @@ export default function MediaPickerDialog({
                 Pexels
               </a>
               . Selected images are imported into your ImageKit account.
+            </Typography>
+          </Box>
+        )}
+
+        {tab === 2 && (
+          <Box>
+            <Stack
+              direction={{ xs: 'column', sm: 'row' }}
+              spacing={1}
+              sx={{ mb: 2 }}
+              alignItems={{ sm: 'center' }}
+            >
+              <TextField
+                fullWidth
+                size="small"
+                placeholder="Search Pexels videos…"
+                value={vquery}
+                onChange={(e) => setVquery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') void runPexelsVideos(vquery, 1, false);
+                }}
+                InputProps={{
+                  startAdornment: (
+                    <InputAdornment position="start">
+                      <SearchIcon fontSize="small" />
+                    </InputAdornment>
+                  ),
+                }}
+              />
+              <ToggleButtonGroup
+                size="small"
+                exclusive
+                value={vorientation}
+                onChange={(_e, v) => setVorientation(v ?? '')}
+              >
+                <ToggleButton value="">All</ToggleButton>
+                <ToggleButton value="landscape">Landscape</ToggleButton>
+                <ToggleButton value="portrait">Portrait</ToggleButton>
+                <ToggleButton value="square">Square</ToggleButton>
+              </ToggleButtonGroup>
+              <Button variant="contained" onClick={() => runPexelsVideos(vquery, 1, false)}>
+                Search
+              </Button>
+            </Stack>
+            {vsearching && videos.length === 0 ? (
+              <Box sx={{ textAlign: 'center', py: 6 }}>
+                <CircularProgress />
+              </Box>
+            ) : videos.length === 0 ? (
+              <Alert severity="info">No videos — try a different query.</Alert>
+            ) : (
+              <ImageList cols={3} gap={8} rowHeight={160}>
+                {videos.map((v: any) => {
+                  const isImporting = vimportingId === v.id;
+                  return (
+                    <ImageListItem
+                      key={v.id}
+                      sx={{
+                        cursor: 'pointer',
+                        borderRadius: 1,
+                        overflow: 'hidden',
+                        opacity: vimportingId && !isImporting ? 0.5 : 1,
+                        position: 'relative',
+                      }}
+                      onClick={() => !vimportingId && importPexelsVideo(v)}
+                    >
+                      <img
+                        src={v.preview || v.image}
+                        alt={v.user_name}
+                        loading="lazy"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: 'cover',
+                          background: '#000',
+                        }}
+                      />
+                      <ImageListItemBar
+                        title={v.user_name || 'Pexels'}
+                        subtitle={`${v.duration}s · ${v.width}×${v.height}`}
+                        sx={{ background: 'linear-gradient(rgba(0,0,0,.6), transparent)' }}
+                      />
+                      {isImporting && (
+                        <Box
+                          sx={{
+                            position: 'absolute',
+                            inset: 0,
+                            bgcolor: 'rgba(0,0,0,.5)',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            color: 'white',
+                            flexDirection: 'column',
+                            gap: 1,
+                          }}
+                        >
+                          <CircularProgress size={28} sx={{ color: 'white' }} />
+                          <Typography variant="caption">Importing…</Typography>
+                        </Box>
+                      )}
+                    </ImageListItem>
+                  );
+                })}
+              </ImageList>
+            )}
+            {vhasMore && (
+              <Box sx={{ textAlign: 'center', mt: 2 }}>
+                <Button
+                  onClick={() => runPexelsVideos(vquery, vpage + 1, true)}
+                  disabled={vsearching}
+                  startIcon={vsearching ? <CircularProgress size={14} /> : null}
+                >
+                  Load more
+                </Button>
+              </Box>
+            )}
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{ display: 'block', mt: 2, textAlign: 'center' }}
+            >
+              Videos provided by{' '}
+              <a
+                href="https://www.pexels.com"
+                target="_blank"
+                rel="noopener noreferrer"
+                style={{ color: 'inherit' }}
+              >
+                Pexels
+              </a>
+              .
             </Typography>
           </Box>
         )}

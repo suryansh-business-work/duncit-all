@@ -16,6 +16,7 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import GroupsIcon from '@mui/icons-material/Groups';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import BadgeIcon from '@mui/icons-material/Badge';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import type { SvgIconComponent } from '@mui/icons-material';
 import CountsBySuperCategoryGrid from './dashboard/CountsBySuperCategoryGrid';
 import RangePicker, { type Granularity } from './dashboard/RangePicker';
@@ -49,6 +50,8 @@ const TOTALS = gql`
       clubs_total
       venues_total
       hosts_total
+      support_tickets_open
+      support_tickets_total
     }
   }
 `;
@@ -78,7 +81,7 @@ const ACTIVE = gql`
 const ymd = (d: Date) => d.toISOString().slice(0, 10);
 
 const SUMMARY_TILES: Array<{
-  key: 'users_total' | 'pods_total' | 'clubs_total' | 'venues_total' | 'hosts_total';
+  key: 'users_total' | 'pods_total' | 'clubs_total' | 'venues_total' | 'hosts_total' | 'support_tickets_open';
   label: string;
   icon: SvgIconComponent;
   color: string;
@@ -88,6 +91,7 @@ const SUMMARY_TILES: Array<{
   { key: 'clubs_total', label: 'Clubs', icon: GroupsIcon, color: '#0f766e' },
   { key: 'venues_total', label: 'Venues', icon: StorefrontIcon, color: '#d97706' },
   { key: 'hosts_total', label: 'Hosts', icon: BadgeIcon, color: '#dc2626' },
+  { key: 'support_tickets_open', label: 'Support Tickets', icon: SupportAgentIcon, color: '#0891b2' },
 ];
 
 export default function DashboardPage() {

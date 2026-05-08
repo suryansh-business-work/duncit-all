@@ -22,6 +22,7 @@ const toPub = (n: INotification) => ({
   image_url: n.image_url ?? null,
   link_url: n.link_url ?? null,
   scope: n.scope,
+  silent: !!n.silent,
   location_id: n.location_id ? String(n.location_id) : null,
   zone_name: n.zone_name ?? null,
   target_user_ids: (n.target_user_ids ?? []).map(String),
@@ -147,6 +148,7 @@ export const notificationService = {
       image_url: input.image_url || null,
       link_url: input.link_url || null,
       scope: input.scope,
+      silent: !!input.silent,
       location_id: input.scope === 'GLOBAL' || input.scope === 'USER' ? null : input.location_id,
       zone_name: input.scope === 'ZONE' ? input.zone_name : null,
       target_user_ids: input.scope === 'USER' ? input.target_user_ids : [],
@@ -177,9 +179,13 @@ export const notificationService = {
       });
     }
 
-    // Push fan-out (background but we await to record counts)
+    // Push fan-out (background but we await to record counts).
+    // Silent notifications skip web-push entirely — they appear in the
+    // in-app inbox only, with no system alert.
     const pushTargets = input.scope === 'GLOBAL' ? inboxUserIds : userIds;
-    const { delivered, failed } = await this.fanOutPush(doc, pushTargets);
+    const { delivered, failed } = doc.silent
+      ? { delivered: 0, failed: 0 }
+      : await this.fanOutPush(doc, pushTargets);
     doc.delivered_count = delivered;
     doc.failed_count = failed;
     await doc.save();

@@ -135,6 +135,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_MAP_API=${{ secrets.GOOGLE_MAP_API }} \
               --cache-from type=gha,scope=duncit-admin \
               --cache-to   type=gha,scope=duncit-admin,mode=max \
               --push .
@@ -163,6 +164,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_MAP_API=${{ secrets.GOOGLE_MAP_API }} \
               --cache-from type=gha,scope=duncit-mweb \
               --cache-to   type=gha,scope=duncit-mweb,mode=max \
               --push .

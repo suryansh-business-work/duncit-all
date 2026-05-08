@@ -24,6 +24,14 @@ export const PODS = gql`
       pod_occurrence
       no_of_spots
       pod_info
+      what_this_pod_offers
+      available_perks
+      payment_terms
+      place_charges {
+        label
+        amount
+        note
+      }
       is_active
       zone_name
     }
@@ -105,6 +113,12 @@ export const OCCURRENCES = [
   { value: 'WEEKENDS_ONLY', label: 'Weekends only' },
 ];
 
+export interface PodPlaceCharge {
+  label: string;
+  amount: number;
+  note: string;
+}
+
 export interface PodForm {
   id?: string;
   pod_id: string;
@@ -123,6 +137,10 @@ export interface PodForm {
   pod_occurrence: string;
   no_of_spots: number;
   pod_info: string;
+  what_this_pod_offers: string[];
+  available_perks: string[];
+  payment_terms: string;
+  place_charges: PodPlaceCharge[];
   is_active: boolean;
 }
 
@@ -143,6 +161,10 @@ export const blankForm: PodForm = {
   pod_occurrence: 'ONE_TIME',
   no_of_spots: 0,
   pod_info: '',
+  what_this_pod_offers: [],
+  available_perks: [],
+  payment_terms: '',
+  place_charges: [],
   is_active: true,
 };
 

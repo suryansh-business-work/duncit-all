@@ -26,6 +26,18 @@ export const podTypeDefs = /* GraphQL */ `
     type: CategoryMediaType
   }
 
+  type PodPlaceCharge {
+    label: String!
+    amount: Int!
+    note: String
+  }
+
+  input PodPlaceChargeInput {
+    label: String!
+    amount: Int!
+    note: String
+  }
+
   type Pod {
     id: ID!
     pod_id: String!
@@ -46,6 +58,10 @@ export const podTypeDefs = /* GraphQL */ `
     pod_occurrence: PodOccurrence!
     no_of_spots: Int!
     pod_info: String
+    what_this_pod_offers: [String!]!
+    available_perks: [String!]!
+    payment_terms: String
+    place_charges: [PodPlaceCharge!]!
     is_active: Boolean!
     created_at: String!
     updated_at: String!
@@ -78,6 +94,10 @@ export const podTypeDefs = /* GraphQL */ `
     pod_occurrence: PodOccurrence
     no_of_spots: Int
     pod_info: String
+    what_this_pod_offers: [String!]
+    available_perks: [String!]
+    payment_terms: String
+    place_charges: [PodPlaceChargeInput!]
   }
 
   input UpdatePodInput {
@@ -97,6 +117,10 @@ export const podTypeDefs = /* GraphQL */ `
     pod_occurrence: PodOccurrence
     no_of_spots: Int
     pod_info: String
+    what_this_pod_offers: [String!]
+    available_perks: [String!]
+    payment_terms: String
+    place_charges: [PodPlaceChargeInput!]
     is_active: Boolean
   }
 

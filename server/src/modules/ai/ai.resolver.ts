@@ -30,11 +30,17 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
   "pod_occurrence": "ONE_TIME" | "RECURRING",
   "zone_name": string,            // a city zone like "Indiranagar" / "Bandra West" / "Connaught Place"
   "starts_in_days": number,       // 1-21 (client converts to actual datetime)
-  "duration_minutes": number      // 60, 90, 120, 180
+  "duration_minutes": number,     // 60, 90, 120, 180
+  "what_this_pod_offers": string[], // 3-6 short amenity chips e.g. "Free WiFi", "Parking", "Pet Friendly"
+  "available_perks": string[],    // 2-5 short perk chips e.g. "Free Drink", "Early Entry", "VIP Access"
+  "payment_terms": string,        // 2-4 sentences covering refunds, cancellations and tax notes
+  "place_charges": [              // 0-4 venue-side charges; empty array if free venue
+    { "label": string, "amount": number, "note": string }
+  ]
 }`,
     example: '',
     notes:
-      'If pod_type contains FREE, set pod_amount to 0. Otherwise pick a sensible price. Hashtags must each start with # and be lowercase / camelCase, no spaces inside a tag.',
+      'If pod_type contains FREE, set pod_amount to 0 and place_charges to []. Otherwise pick a sensible price. Hashtags must each start with # and be lowercase / camelCase, no spaces inside a tag. Keep amenity & perk chips short (1-3 words each). place_charges amounts are integer rupees, 0-100000.',
   },
   SLIDER: {
     fields: `{

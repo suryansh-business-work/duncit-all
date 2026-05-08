@@ -8,6 +8,12 @@ export interface IPodMedia {
   type: 'IMAGE' | 'VIDEO';
 }
 
+export interface IPodPlaceCharge {
+  label: string;
+  amount: number;
+  note?: string | null;
+}
+
 export interface IPod extends Document {
   pod_id: string;
   pod_title: string;
@@ -27,6 +33,10 @@ export interface IPod extends Document {
   pod_occurrence: PodOccurrence;
   no_of_spots: number;
   pod_info?: string;
+  what_this_pod_offers: string[];
+  available_perks: string[];
+  payment_terms?: string | null;
+  place_charges: IPodPlaceCharge[];
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
@@ -36,6 +46,15 @@ const mediaSchema = new Schema<IPodMedia>(
   {
     url: { type: String, required: true },
     type: { type: String, enum: ['IMAGE', 'VIDEO'], default: 'IMAGE' },
+  },
+  { _id: false }
+);
+
+const placeChargeSchema = new Schema<IPodPlaceCharge>(
+  {
+    label: { type: String, required: true, trim: true, maxlength: 80 },
+    amount: { type: Number, required: true, min: 0, max: 100000 },
+    note: { type: String, default: null, trim: true, maxlength: 200 },
   },
   { _id: false }
 );
@@ -68,6 +87,10 @@ const podSchema = new Schema<IPod>(
     },
     no_of_spots: { type: Number, default: 0 },
     pod_info: { type: String, default: '' },
+    what_this_pod_offers: { type: [String], default: [] },
+    available_perks: { type: [String], default: [] },
+    payment_terms: { type: String, default: null, trim: true, maxlength: 4000 },
+    place_charges: { type: [placeChargeSchema], default: [] },
     is_active: { type: Boolean, default: true },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

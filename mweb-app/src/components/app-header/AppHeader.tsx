@@ -8,7 +8,6 @@ import {
   Box,
   Button,
   Chip,
-  CircularProgress,
   IconButton,
   Skeleton,
   Stack,
@@ -245,35 +244,36 @@ export default function AppHeader({
               maxWidth: 200,
               objectFit: 'contain',
               display: 'block',
-              left: '-20px', 
-              top: '5px',
-              position: 'relative'
             }}
           />
         </Stack>
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <Button
-          startIcon={<LocationOnIcon />}
-          onClick={() => {
-            setDraftLocationId(selectedLocationId);
-            setDraftZone(selectedZoneName);
-            setLocDialogOpen(true);
-          }}
-          sx={{ textTransform: 'none', color: 'text.primary' }}
-          size="small"
-        >
-          {selectedLocation?.location_name ?? 'Select city'}
-          {selectedZoneName ? (
-            <Chip
-              size="small"
-              label={selectedZoneName}
-              sx={{ ml: 1, height: 20, fontSize: 11 }}
-              color="primary"
-            />
-          ) : null}
-        </Button>
+        {loading && !data ? (
+          <Skeleton variant="rounded" width={90} height={28} sx={{ borderRadius: 1 }} />
+        ) : (
+          <Button
+            startIcon={<LocationOnIcon />}
+            onClick={() => {
+              setDraftLocationId(selectedLocationId);
+              setDraftZone(selectedZoneName);
+              setLocDialogOpen(true);
+            }}
+            sx={{ textTransform: 'none', color: 'text.primary', whiteSpace: 'nowrap' }}
+            size="small"
+          >
+            {selectedLocation?.location_name ?? 'Select city'}
+            {selectedZoneName ? (
+              <Chip
+                size="small"
+                label={selectedZoneName}
+                sx={{ ml: 1, height: 20, fontSize: 11 }}
+                color="primary"
+              />
+            ) : null}
+          </Button>
+        )}
         <LocationDialog
           open={locDialogOpen}
           onClose={() => setLocDialogOpen(false)}
@@ -327,7 +327,7 @@ export default function AppHeader({
           onLogout={logout}
         />
 
-        {loading && !data && <CircularProgress size={18} sx={{ ml: 1 }} />}
+
       </Toolbar>
 
       {loading && superCats.length === 0 ? (

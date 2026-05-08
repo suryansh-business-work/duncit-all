@@ -34,6 +34,14 @@ const toPub = (d: any) => {
     pod_occurrence: d.pod_occurrence ?? 'ONE_TIME',
     no_of_spots: d.no_of_spots ?? 0,
     pod_info: d.pod_info ?? '',
+    what_this_pod_offers: d.what_this_pod_offers ?? [],
+    available_perks: d.available_perks ?? [],
+    payment_terms: d.payment_terms ?? null,
+    place_charges: (d.place_charges ?? []).map((c: any) => ({
+      label: c.label,
+      amount: c.amount ?? 0,
+      note: c.note ?? null,
+    })),
     is_active: !!d.is_active,
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
@@ -120,6 +128,10 @@ export const podService = {
       pod_occurrence: input.pod_occurrence ?? 'ONE_TIME',
       no_of_spots: input.no_of_spots ?? 0,
       pod_info: input.pod_info ?? '',
+      what_this_pod_offers: input.what_this_pod_offers ?? [],
+      available_perks: input.available_perks ?? [],
+      payment_terms: input.payment_terms ?? null,
+      place_charges: input.place_charges ?? [],
     });
     return toPub(doc);
   },
@@ -147,6 +159,10 @@ export const podService = {
       'pod_occurrence',
       'no_of_spots',
       'pod_info',
+      'what_this_pod_offers',
+      'available_perks',
+      'payment_terms',
+      'place_charges',
       'is_active',
     ];
     for (const f of fields) {

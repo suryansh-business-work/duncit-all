@@ -180,11 +180,24 @@ export const userTypeDefs = gql`
     search: String
   }
 
+  type PublicProfile {
+    user_id: ID!
+    full_name: String
+    first_name: String
+    last_name: String
+    profile_photo: String
+    bio: String
+    city: String
+    zone: String
+  }
+
   extend type Query {
     me: User
     mySavedPods: [Pod!]!
     users(filter: UsersFilter): [User!]!
     user(user_id: ID!): User
+    publicUsersByIds(user_ids: [ID!]!): [PublicProfile!]!
+    publicUserProfile(user_id: ID!): PublicProfile
   }
 
   type SeedAdminResult {

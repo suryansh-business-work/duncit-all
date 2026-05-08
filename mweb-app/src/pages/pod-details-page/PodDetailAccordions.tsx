@@ -1,31 +1,39 @@
 import { useState } from 'react';
 import { Box } from '@mui/material';
-import EventIcon from '@mui/icons-material/Event';
 import PlaceIcon from '@mui/icons-material/Place';
-import GroupsIcon from '@mui/icons-material/Groups';
 import PersonIcon from '@mui/icons-material/Person';
 import InfoIcon from '@mui/icons-material/Info';
 import StarIcon from '@mui/icons-material/Star';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import PaymentIcon from '@mui/icons-material/Payment';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
+import GroupsIcon from '@mui/icons-material/Groups';
 import PodAccordion from '../../components/pod-details/PodAccordion';
-import PodMapSection from '../../components/pod-details/PodMapSection';
 import PodClubSection from '../../components/pod-details/PodClubSection';
 import PodAboutSection from '../../components/pod-details/PodAboutSection';
 import PodChipList from '../../components/pod-details/PodChipList';
 import PodAttendeesSection from '../../components/pod-details/PodAttendeesSection';
 import PodHostsSection from '../../components/pod-details/PodHostsSection';
 import PodPlaceChargesSection from '../../components/pod-details/PodPlaceChargesSection';
+import PodPaymentDetailsSection from '../../components/pod-details/PodPaymentDetailsSection';
 
 interface Props {
   pod: any;
   club: any | null;
-  locationName?: string | null;
   hosts: any[];
+  attendees: any[];
+  isFree: boolean;
+  priceCompute: any;
 }
 
-export default function PodDetailAccordions({ pod, club, locationName, hosts }: Props) {
+export default function PodDetailAccordions({
+  pod,
+  club,
+  hosts,
+  attendees,
+  isFree,
+  priceCompute,
+}: Props) {
   const [expanded, setExpanded] = useState<string | false>('about');
   const handle = (id: string) => (next: string | false) =>
     setExpanded(next === id ? id : next);
@@ -45,16 +53,6 @@ export default function PodDetailAccordions({ pod, club, locationName, hosts }: 
         onChange={handle('about')}
       >
         <PodAboutSection description={pod.pod_description} info={pod.pod_info} />
-      </PodAccordion>
-
-      <PodAccordion
-        id="map"
-        title="When, where & map"
-        icon={<EventIcon fontSize="small" />}
-        expanded={expanded}
-        onChange={handle('map')}
-      >
-        <PodMapSection pod={pod} locationName={locationName} />
       </PodAccordion>
 
       <PodAccordion
@@ -78,19 +76,6 @@ export default function PodDetailAccordions({ pod, club, locationName, hosts }: 
       </PodAccordion>
 
       <PodAccordion
-        id="attendees"
-        title="Attendees"
-        icon={<GroupsIcon fontSize="small" />}
-        expanded={expanded}
-        onChange={handle('attendees')}
-      >
-        <PodAttendeesSection
-          attendeeIds={pod.pod_attendees ?? []}
-          totalSpots={pod.no_of_spots ?? 0}
-        />
-      </PodAccordion>
-
-      <PodAccordion
         id="hosts"
         title="Hosts"
         icon={<PersonIcon fontSize="small" />}
@@ -101,16 +86,40 @@ export default function PodDetailAccordions({ pod, club, locationName, hosts }: 
       </PodAccordion>
 
       <PodAccordion
+        id="attendees"
+        title="Attendees"
+        icon={<GroupsIcon fontSize="small" />}
+        expanded={expanded}
+        onChange={handle('attendees')}
+      >
+        <PodAttendeesSection
+          attendees={attendees}
+          attendeeIds={pod.pod_attendees ?? []}
+          totalSpots={pod.no_of_spots ?? 0}
+        />
+      </PodAccordion>
+
+      <PodAccordion
         id="perks"
         title="Available perks"
         icon={<CardGiftcardIcon fontSize="small" />}
         expanded={expanded}
         onChange={handle('perks')}
       >
-        <PodChipList
-          items={perks}
-          emptyText="No additional perks listed."
-          color="success"
+        <PodChipList items={perks} emptyText="No additional perks listed." color="success" />
+      </PodAccordion>
+
+      <PodAccordion
+        id="payment"
+        title="Payment details"
+        icon={<PaymentIcon fontSize="small" />}
+        expanded={expanded}
+        onChange={handle('payment')}
+      >
+        <PodPaymentDetailsSection
+          amount={Number(pod.pod_amount) || 0}
+          isFree={isFree}
+          priceCompute={priceCompute}
         />
       </PodAccordion>
 

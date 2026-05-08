@@ -17,6 +17,20 @@ const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER']
 const MUTATING_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 const ROLE_ASSIGN_ROLES = ['SUPER_ADMIN'];
 
+function toPublicProfile(u: any) {
+  if (!u) return null;
+  return {
+    user_id: u.user_id,
+    full_name: u.full_name ?? `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim(),
+    first_name: u.first_name ?? null,
+    last_name: u.last_name ?? null,
+    profile_photo: u.profile_photo ?? null,
+    bio: u.bio ?? null,
+    city: u.city ?? null,
+    zone: u.zone ?? null,
+  };
+}
+
 export const userResolvers = {
   User: {
     interest_categories: async (parent: any) =>
@@ -43,6 +57,16 @@ export const userResolvers = {
     user: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return userService.getById(args.user_id);
+    },
+    publicUsersByIds: async (_p: unknown, args: { user_ids: string[] }) => {
+      const ids = (args.user_ids ?? []).filter(Boolean);
+      if (ids.length === 0) return [];
+      const users = await Promise.all(ids.map((id) => userService.getById(id).catch(() => null)));
+      return users.filter(Boolean).map(toPublicProfile);
+    },
+    publicUserProfile: async (_p: unknown, args: { user_id: string }) => {
+      const u = await userService.getById(args.user_id).catch(() => null);
+      return u ? toPublicProfile(u) : null;
     },
   },
   Mutation: {

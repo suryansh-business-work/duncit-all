@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
@@ -16,8 +16,10 @@ import BackoutConfirmDialog from './pod-details-page/BackoutConfirmDialog';
 import PodHero from './pod-details-page/PodHero';
 import PodActionPanel from './pod-details-page/PodActionPanel';
 import PodDetailAccordions from './pod-details-page/PodDetailAccordions';
+import PodMapSection from '../components/pod-details/PodMapSection';
 import {
   POD_DETAILS,
+  POD_PEOPLE,
   INC_HITS,
   JOIN_FREE,
   BACKOUT,
@@ -35,6 +37,23 @@ export default function PodDetailsPage() {
     variables: { id },
     fetchPolicy: 'cache-and-network',
   });
+
+  const peopleIds = useMemo<string[]>(() => {
+    const pod = data?.pod;
+    if (!pod) return [];
+    const ids = [
+      ...((pod.pod_hosts_id ?? []) as string[]),
+      ...((pod.pod_attendees ?? []) as string[]),
+    ];
+    return Array.from(new Set(ids.filter(Boolean)));
+  }, [data?.pod]);
+
+  const { data: peopleData } = useQuery(POD_PEOPLE, {
+    variables: { ids: peopleIds },
+    skip: peopleIds.length === 0,
+    fetchPolicy: 'cache-and-network',
+  });
+
   const [incHits] = useMutation(INC_HITS);
   const [joinFree, joinState] = useMutation(JOIN_FREE);
   const [backout, backoutState] = useMutation(BACKOUT);
@@ -65,10 +84,23 @@ export default function PodDetailsPage() {
 
   const club = (data?.clubs ?? []).find((c: any) => c.id === pod.club_id) ?? null;
   const location = (data?.locations ?? []).find((l: any) => l.id === pod.location_id);
+  const allPeople: any[] = peopleData?.publicUsersByIds ?? [];
+  const peopleById = new Map(allPeople.map((p) => [p.user_id, p]));
+
+  // Merge: for hosts, prefer publicHosts (passport_photo_url) but fall back to publicUsersByIds
   const allHosts: any[] = data?.publicHosts ?? [];
-  const podHosts = allHosts.filter((h: any) =>
-    (pod.pod_hosts_id ?? []).includes(h.user_id)
-  );
+  const hostsById = new Map(allHosts.map((h) => [h.user_id, h]));
+  const podHosts = (pod.pod_hosts_id ?? []).map((uid: string) => {
+    const h = hostsById.get(uid);
+    const p = peopleById.get(uid);
+    return {
+      user_id: uid,
+      full_name: h?.full_name || p?.full_name || null,
+      passport_photo_url: h?.passport_photo_url || null,
+      profile_photo: p?.profile_photo || null,
+    };
+  });
+
   const isFree = pod.pod_type?.includes('FREE');
   const media = pod.pod_images_and_videos ?? [];
 
@@ -115,23 +147,17 @@ export default function PodDetailsPage() {
             />
           )}
         </Stack>
-        {!isFree && Number(pod.pod_amount) > 0 && (() => {
-          const p = priceCompute(pod.pod_amount);
-          return (
-            <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>
-              Inclusive of Platform Fee ({p.feePct}%) {p.currency}
-              {p.fee.toFixed(2)} + GST ({p.gstPct}%) {p.currency}
-              {p.gst.toFixed(2)}
-            </Typography>
-          );
-        })()}
       </Box>
+
+      <PodMapSection pod={pod} locationName={location?.location_name} />
 
       <PodDetailAccordions
         pod={pod}
         club={club}
-        locationName={location?.location_name}
         hosts={podHosts}
+        attendees={allPeople}
+        isFree={isFree}
+        priceCompute={priceCompute}
       />
 
       {pod.pod_hashtag?.length > 0 && (

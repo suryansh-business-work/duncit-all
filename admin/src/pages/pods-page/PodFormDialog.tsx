@@ -107,7 +107,16 @@ export default function PodFormDialog({
                   onChange={(_, v) => setExpanded(v ? sec.id : false)}
                   disableGutters
                   square
-                  sx={{ '&:before': { display: 'none' } }}
+                  sx={{
+                    '&:before': { display: 'none' },
+                    mb: 1.5,
+                    border: '1px solid',
+                    borderColor: 'divider',
+                    borderRadius: 1.5,
+                    overflow: 'hidden',
+                    boxShadow: 'none',
+                    '&.Mui-expanded': { mb: 1.5 },
+                  }}
                 >
                   <AccordionSummary expandIcon={<ExpandMoreIcon />}>
                     <Typography variant="subtitle1" fontWeight={600}>

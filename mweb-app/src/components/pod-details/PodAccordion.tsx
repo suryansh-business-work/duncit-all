@@ -35,9 +35,14 @@ export default function PodAccordion({
       square
       sx={{
         '&:before': { display: 'none' },
-        borderBottom: '1px solid',
+        mb: 1,
+        border: '1px solid',
         borderColor: 'divider',
+        borderRadius: 1.5,
+        overflow: 'hidden',
+        boxShadow: 'none',
         bgcolor: 'background.paper',
+        '&.Mui-expanded': { mb: 1 },
       }}
     >
       <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ minHeight: 56 }}>

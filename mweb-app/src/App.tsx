@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import SignupSurveyPage from './pages/SignupSurveyPage';
 import AccountPage from './pages/AccountPage';
 import ProfilePage from './pages/ProfilePage';
+import PublicProfilePage from './pages/PublicProfilePage';
 import PodDetailsPage from './pages/PodDetailsPage';
 import ClubDetailsPage from './pages/ClubDetailsPage';
 import BecomeHostPage from './pages/BecomeHostPage';
@@ -148,6 +149,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <PodDetailsPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/u/:userId"
+            element={
+              <RequireAuth>
+                <PublicProfilePage />
               </RequireAuth>
             }
           />

@@ -78,6 +78,16 @@ export const POD_DETAILS = gql`
   }
 `;
 
+export const POD_PEOPLE = gql`
+  query PodPeople($ids: [ID!]!) {
+    publicUsersByIds(user_ids: $ids) {
+      user_id
+      full_name
+      profile_photo
+    }
+  }
+`;
+
 export const INC_HITS = gql`
   mutation IncPodHits($id: ID!) {
     incrementPodHits(pod_doc_id: $id) {

@@ -43,26 +43,45 @@ export default function PodCard({
       }}
     >
       <CardActionArea onClick={onOpen} sx={{ height: '100%' }}>
-        {pod.pod_images_and_videos?.[0]?.url ? (
-          <CardMedia
-            component="img"
-            image={pod.pod_images_and_videos[0].url}
-            alt={pod.pod_title}
-            sx={{ height: 168, objectFit: 'cover' }}
-          />
-        ) : (
-          <Box
-            sx={{
-              height: 168,
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              bgcolor: 'action.hover',
-            }}
-          >
-            <EventIcon fontSize="large" color="action" />
-          </Box>
-        )}
+        {(() => {
+          const first = pod.pod_images_and_videos?.[0];
+          if (!first) {
+            return (
+              <Box
+                sx={{
+                  height: 168,
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  bgcolor: 'action.hover',
+                }}
+              >
+                <EventIcon fontSize="large" color="action" />
+              </Box>
+            );
+          }
+          if (first.type === 'VIDEO') {
+            return (
+              <Box
+                component="video"
+                src={first.url}
+                autoPlay
+                muted
+                loop
+                playsInline
+                sx={{ width: '100%', height: 168, objectFit: 'cover', display: 'block' }}
+              />
+            );
+          }
+          return (
+            <CardMedia
+              component="img"
+              image={first.url}
+              alt={pod.pod_title}
+              sx={{ height: 168, objectFit: 'cover' }}
+            />
+          );
+        })()}
         <CardContent sx={{ p: 2, pb: '16px !important' }}>
           <Typography
             variant="subtitle1"

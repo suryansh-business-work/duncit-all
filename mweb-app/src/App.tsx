@@ -8,6 +8,7 @@ import LoginPage from './pages/LoginPage';
 import SignupSurveyPage from './pages/SignupSurveyPage';
 import AccountPage from './pages/AccountPage';
 import ProfilePage from './pages/ProfilePage';
+import FollowPage from './pages/FollowPage';
 import PublicProfilePage from './pages/PublicProfilePage';
 import PodDetailsPage from './pages/PodDetailsPage';
 import ClubDetailsPage from './pages/ClubDetailsPage';
@@ -133,6 +134,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <ProfilePage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/follow"
+            element={
+              <RequireAuth>
+                <FollowPage />
               </RequireAuth>
             }
           />

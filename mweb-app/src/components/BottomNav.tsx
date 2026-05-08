@@ -3,7 +3,7 @@ import HomeIcon from '@mui/icons-material/Home';
 import ExploreIcon from '@mui/icons-material/Explore';
 import GroupsIcon from '@mui/icons-material/Groups';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useLocation, useNavigate } from 'react-router-dom';
 
 const TABS = [
@@ -11,7 +11,7 @@ const TABS = [
   { value: '/explore', label: 'Explore', icon: <ExploreIcon /> },
   { value: '/clubs', label: 'Clubs', icon: <GroupsIcon /> },
   { value: '/chats', label: 'Chats', icon: <ChatBubbleOutlineIcon /> },
-  { value: '/profile', label: 'Profile', icon: <PersonOutlineIcon /> },
+  { value: '/follow', label: 'Follow', icon: <FavoriteBorderIcon /> },
 ];
 
 export default function BottomNav() {

@@ -1,5 +1,5 @@
 import { gql, useQuery } from '@apollo/client';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
@@ -26,6 +26,13 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import ChatIcon from '@mui/icons-material/Chat';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import ShareIcon from '@mui/icons-material/Share';
+import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import BookmarkIcon from '@mui/icons-material/Bookmark';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import { useFollowedClubs } from '../hooks/useFollowedClubs';
+import { notify } from '../components/notify';
 import { usePricing } from '../hooks/usePricing';
 import MomentTile from '../components/moments/MomentTile';
 import MomentLightbox from '../components/moments/MomentLightbox';
@@ -79,11 +86,25 @@ export default function ClubDetailsPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
   const { format: pricingFormat } = usePricing();
+  const { isFollowing, toggle: toggleFollow } = useFollowedClubs();
   const [momentLightbox, setMomentLightbox] = useState<number | null>(null);
+  const [saved, setSaved] = useState(false);
   const { data, loading, error } = useQuery(CLUB_DETAILS, {
     variables: { id },
     fetchPolicy: 'cache-and-network',
   });
+
+  useEffect(() => {
+    if (!id) return;
+    try {
+      const list: string[] = JSON.parse(
+        localStorage.getItem('duncit_saved_clubs') || '[]'
+      );
+      setSaved(list.includes(id));
+    } catch {
+      /* ignore */
+    }
+  }, [id]);
 
   if (loading && !data) return <ClubSkeleton />;
   if (error) return <Alert severity="error">{error.message}</Alert>;
@@ -121,13 +142,78 @@ export default function ClubDetailsPage() {
 
   return (
     <Stack spacing={3}>
-      <Button
-        startIcon={<ArrowBackIcon />}
-        onClick={() => navigate(-1)}
-        sx={{ alignSelf: 'flex-start', textTransform: 'none' }}
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={1}
+        sx={{ flexWrap: 'wrap' }}
       >
-        Back
-      </Button>
+        <Button
+          startIcon={<ArrowBackIcon />}
+          onClick={() => navigate(-1)}
+          sx={{ textTransform: 'none' }}
+        >
+          Back
+        </Button>
+        <Box sx={{ flex: 1 }} />
+        <Button
+          size="small"
+          variant={isFollowing(club.id) ? 'contained' : 'outlined'}
+          color={isFollowing(club.id) ? 'primary' : 'inherit'}
+          startIcon={
+            isFollowing(club.id) ? <FavoriteIcon /> : <FavoriteBorderIcon />
+          }
+          onClick={() => {
+            toggleFollow(club.id);
+            notify(
+              isFollowing(club.id)
+                ? `Unfollowed ${club.club_name}`
+                : `Following ${club.club_name}`,
+              'success'
+            );
+          }}
+        >
+          {isFollowing(club.id) ? 'Following' : 'Follow'}
+        </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={saved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
+          onClick={() => {
+            const next = !saved;
+            setSaved(next);
+            const key = 'duncit_saved_clubs';
+            const list: string[] = JSON.parse(localStorage.getItem(key) || '[]');
+            const updated = next
+              ? Array.from(new Set([...list, club.id]))
+              : list.filter((x) => x !== club.id);
+            localStorage.setItem(key, JSON.stringify(updated));
+            notify(next ? 'Saved' : 'Removed from saved', 'success');
+          }}
+        >
+          {saved ? 'Saved' : 'Save'}
+        </Button>
+        <Button
+          size="small"
+          variant="outlined"
+          startIcon={<ShareIcon />}
+          onClick={async () => {
+            const url = `${window.location.origin}/clubs/${club.id}`;
+            try {
+              if (navigator.share) {
+                await navigator.share({ title: club.club_name, url });
+              } else {
+                await navigator.clipboard.writeText(url);
+                notify('Link copied', 'success');
+              }
+            } catch {
+              /* user cancelled */
+            }
+          }}
+        >
+          Share
+        </Button>
+      </Stack>
 
       {featureMedia.length > 0 ? (
         <Box

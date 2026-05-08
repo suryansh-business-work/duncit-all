@@ -62,6 +62,7 @@ import ShieldIcon from '@mui/icons-material/Shield';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import AppsIcon from '@mui/icons-material/Apps';
 import SearchIcon from '@mui/icons-material/Search';
+import { Switch, FormControlLabel } from '@mui/material';
 import { useColorMode } from './ColorModeContext';
 import AdminBreadcrumbs from './components/AdminBreadcrumbs';
 import { NotifyHost } from './components/notify';
@@ -481,40 +482,37 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </List>
       <Divider />
       <Box sx={{ p: 1.25 }}>
-        <Box
-          role="button"
-          tabIndex={0}
-          aria-label={`Switch to ${mode === 'dark' ? 'light' : 'dark'} mode`}
-          onClick={toggle}
-          onKeyDown={(e) => {
-            if (e.key === 'Enter' || e.key === ' ') toggle();
-          }}
+        <FormControlLabel
           sx={{
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: 1,
+            mx: 0,
+            width: '100%',
+            justifyContent: 'space-between',
             border: 1,
             borderColor: 'divider',
             borderRadius: 1,
             px: 1.25,
-            py: 1,
+            py: 0.25,
             mb: 1,
-            '&:hover': { bgcolor: 'action.hover' },
           }}
-        >
-          {mode === 'dark' ? (
-            <LightModeIcon fontSize="small" />
-          ) : (
-            <DarkModeIcon fontSize="small" />
-          )}
-          <Typography variant="body2" sx={{ flex: 1, fontWeight: 600 }}>
-            {mode === 'dark' ? 'Light mode' : 'Dark mode'}
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            {mode === 'dark' ? 'On' : 'Off'}
-          </Typography>
-        </Box>
+          labelPlacement="start"
+          control={
+            <Switch
+              size="small"
+              checked={mode === 'dark'}
+              onChange={toggle}
+              color="primary"
+              inputProps={{ 'aria-label': 'Toggle dark mode' }}
+            />
+          }
+          label={
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
+              <DarkModeIcon fontSize="small" />
+              <Typography variant="body2" fontWeight={600}>
+                Dark mode
+              </Typography>
+            </Box>
+          }
+        />
         <Typography variant="caption" color="text.secondary">
           v1.0.0
         </Typography>

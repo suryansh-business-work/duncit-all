@@ -7,11 +7,16 @@ import {
   Card,
   CardContent,
   Divider,
+  IconButton,
   Link,
   Stack,
+  Tooltip,
   Typography,
   keyframes,
 } from '@mui/material';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
+import { useColorMode } from '../ColorModeContext';
 import AuthBackground from '../components/AuthBackground';
 import GoogleAuthNoticeDialog from '../components/GoogleAuthNoticeDialog';
 import GoogleSignInButton from '../components/GoogleSignInButton';
@@ -46,6 +51,7 @@ const logoIn = keyframes`
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const colorMode = useColorMode();
   const [loginMutation, { loading, error }] = useMutation(LOGIN);
   const [loginGoogle, { loading: gLoading }] = useMutation(LOGIN_GOOGLE);
   const [gError, setGError] = useState<string | null>(null);
@@ -94,6 +100,28 @@ export default function LoginPage() {
 
   return (
     <AuthBackground>
+      <Tooltip title={`Switch to ${colorMode.mode === 'dark' ? 'light' : 'dark'} mode`}>
+        <IconButton
+          onClick={colorMode.toggle}
+          sx={{
+            position: 'fixed',
+            top: 12,
+            right: 12,
+            bgcolor: 'background.paper',
+            border: 1,
+            borderColor: 'divider',
+            zIndex: 10,
+            '&:hover': { bgcolor: 'action.hover' },
+          }}
+          aria-label="Toggle dark mode"
+        >
+          {colorMode.mode === 'dark' ? (
+            <LightModeIcon fontSize="small" />
+          ) : (
+            <DarkModeIcon fontSize="small" />
+          )}
+        </IconButton>
+      </Tooltip>
 
       <Card
         elevation={6}

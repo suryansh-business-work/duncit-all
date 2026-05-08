@@ -258,11 +258,21 @@ export default function PetProfileSection({ pet, onSaved }: Props) {
                     />
                   </Grid>
                   <Grid item xs={6} sm={3}>
-                    <TextField
-                      fullWidth name="age" label="Age (yrs)" type="number"
-                      value={values.age} onChange={handleChange} onBlur={handleBlur}
-                      error={touched.age && !!errors.age}
-                      helperText={touched.age && (errors.age as string)}
+                    <Autocomplete
+                      freeSolo
+                      options={Array.from({ length: 31 }, (_, i) => String(i))}
+                      value={values.age != null ? String(values.age) : ''}
+                      onChange={(_e, v) => setFieldValue('age', v ? Number(v) : '')}
+                      onInputChange={(_e, v) => setFieldValue('age', v ? Number(v) : '')}
+                      renderInput={(params) => (
+                        <TextField
+                          {...params}
+                          name="age"
+                          label="Age (yrs)"
+                          error={touched.age && !!errors.age}
+                          helperText={touched.age && (errors.age as string)}
+                        />
+                      )}
                     />
                   </Grid>
                   <Grid item xs={12} sm={6}>

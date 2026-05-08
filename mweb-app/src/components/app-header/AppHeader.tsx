@@ -78,7 +78,7 @@ export default function AppHeader({
 
   const { data: notifData, refetch: refetchNotifs } = useQuery(MY_NOTIFS, {
     fetchPolicy: 'cache-and-network',
-    pollInterval: 60000,
+    pollInterval: 15000,
   });
   const [markReadMut] = useMutation(MARK_READ);
   const [markAllMut] = useMutation(MARK_ALL);

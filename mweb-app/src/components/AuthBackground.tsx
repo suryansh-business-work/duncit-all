@@ -1,4 +1,4 @@
-import { Box, keyframes } from '@mui/material';
+import { Box, keyframes, useTheme } from '@mui/material';
 
 const gradientShift = keyframes`
   0%   { background-position: 0% 50%; }
@@ -16,10 +16,20 @@ interface Props {
 
 /**
  * Animated gradient + floating-blob backdrop used by the auth pages.
- * Extracted into its own component so the page files stay focused on
- * form orchestration and remain under the 200-line cap.
+ * Theme-aware: switches palette in dark mode so form fields stay readable.
  */
 export default function AuthBackground({ children }: Props) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const bg = isDark
+    ? 'linear-gradient(120deg, #0f1626 0%, #131b30 30%, #1a1230 65%, #1a2338 100%)'
+    : 'linear-gradient(120deg, #ffe1e2 0%, #fff 30%, #ffd6d8 65%, #fff0c4 100%)';
+  const blob1 = isDark
+    ? 'radial-gradient(circle at 30% 30%, rgba(255,87,87,0.18), transparent 70%)'
+    : 'radial-gradient(circle at 30% 30%, rgba(255,77,79,0.25), transparent 70%)';
+  const blob2 = isDark
+    ? 'radial-gradient(circle at 60% 40%, rgba(96,165,250,0.18), transparent 70%)'
+    : 'radial-gradient(circle at 60% 40%, rgba(255,200,80,0.28), transparent 70%)';
   return (
     <Box
       sx={{
@@ -29,8 +39,7 @@ export default function AuthBackground({ children }: Props) {
         placeItems: 'center',
         p: 2,
         overflow: 'hidden',
-        background:
-          'linear-gradient(120deg, #ffe1e2 0%, #fff 30%, #ffd6d8 65%, #fff0c4 100%)',
+        background: bg,
         backgroundSize: '300% 300%',
         animation: `${gradientShift} 18s ease infinite`,
       }}
@@ -44,8 +53,7 @@ export default function AuthBackground({ children }: Props) {
           width: 220,
           height: 220,
           borderRadius: '50%',
-          background:
-            'radial-gradient(circle at 30% 30%, rgba(255,77,79,0.25), transparent 70%)',
+          background: blob1,
           animation: `${float} 7s ease-in-out infinite`,
         }}
       />
@@ -58,8 +66,7 @@ export default function AuthBackground({ children }: Props) {
           width: 280,
           height: 280,
           borderRadius: '50%',
-          background:
-            'radial-gradient(circle at 60% 40%, rgba(255,200,80,0.28), transparent 70%)',
+          background: blob2,
           animation: `${float} 9s ease-in-out infinite reverse`,
         }}
       />

@@ -57,13 +57,33 @@ export default function PodsTable({ loading, pods, clubName, locName, onEdit, on
               {pods.map((p) => (
                 <TableRow key={p.id} hover>
                   <TableCell>
-                    <Avatar
-                      variant="rounded"
-                      src={p.pod_images_and_videos?.[0]?.url}
-                      sx={{ width: 40, height: 40 }}
-                    >
-                      {p.pod_title[0]}
-                    </Avatar>
+                    {(() => {
+                      const first = p.pod_images_and_videos?.[0];
+                      if (!first) {
+                        return (
+                          <Avatar variant="rounded" sx={{ width: 40, height: 40 }}>
+                            {p.pod_title[0]}
+                          </Avatar>
+                        );
+                      }
+                      if (first.type === 'VIDEO') {
+                        return (
+                          <Box
+                            component="video"
+                            src={first.url}
+                            muted
+                            playsInline
+                            preload="metadata"
+                            sx={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 1, display: 'block' }}
+                          />
+                        );
+                      }
+                      return (
+                        <Avatar variant="rounded" src={first.url} sx={{ width: 40, height: 40 }}>
+                          {p.pod_title[0]}
+                        </Avatar>
+                      );
+                    })()}
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight={600}>

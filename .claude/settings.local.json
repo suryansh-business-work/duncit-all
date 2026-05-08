@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(powershell -NoProfile -Command \"Get-ChildItem 'mweb-app\\\\src\\\\pages\\\\home-page' -File | Select-Object Name; Write-Host '---'; Get-ChildItem 'admin\\\\src\\\\pages\\\\pods-page' -File | Select-Object Name; Write-Host '---'; Get-ChildItem 'admin\\\\src\\\\pages\\\\user-details-page' -File | Select-Object Name\")",
+      "PowerShell(Get-ChildItem 'admin\\\\src\\\\components\\\\media-picker-dialog' -File | ForEach-Object { $lc = \\(Get-Content $_.FullName | Measure-Object -Line\\).Lines; '{0,5}  {1}' -f $lc, $_.Name }; Write-Host '---'; $lc = \\(Get-Content 'admin\\\\src\\\\components\\\\MediaPickerDialog.tsx' | Measure-Object -Line\\).Lines; '{0,5}  {1}' -f $lc, 'admin/src/components/MediaPickerDialog.tsx \\(re-export\\)')",
+      "PowerShell(Get-ChildItem 'admin\\\\src\\\\components\\\\media-picker-dialog' -File | ForEach-Object { $lc = \\(Get-Content $_.FullName | Measure-Object -Line\\).Lines; '{0,5}  {1}' -f $lc, $_.Name })",
+      "PowerShell($env:PATH; Push-Location admin; npx tsc -b --pretty false; $code = $LASTEXITCODE; Pop-Location; Write-Host \"EXIT=$code\")",
+      "PowerShell(Push-Location 'c:\\\\Users\\\\Suryansh\\\\Desktop\\\\duncit\\\\admin'; npx tsc -b --pretty false 2>&1; $code = $LASTEXITCODE; Pop-Location; Write-Host \"EXIT=$code\")",
+      "Bash(git add *)",
+      "Bash(git commit -m 'refactor\\(admin\\): split MediaPickerDialog into media-picker-dialog/ folder *)",
+      "PowerShell(Get-ChildItem 'admin\\\\src\\\\admin-layout' -File | ForEach-Object { $lc = \\(Get-Content $_.FullName | Measure-Object -Line\\).Lines; '{0,5}  {1}' -f $lc, $_.Name }; Write-Host '---'; $lc = \\(Get-Content 'admin\\\\src\\\\AdminLayout.tsx' | Measure-Object -Line\\).Lines; '{0,5}  {1}' -f $lc, 'AdminLayout.tsx \\(re-export\\)'; Push-Location 'c:\\\\Users\\\\Suryansh\\\\Desktop\\\\duncit\\\\admin'; npx tsc -b --pretty false 2>&1; $code = $LASTEXITCODE; Pop-Location; Write-Host \"EXIT=$code\")",
+      "Bash(git commit -m 'refactor\\(admin\\): split AdminLayout into admin-layout/ folder *)",
+      "PowerShell(Get-ChildItem 'admin\\\\src\\\\pages\\\\users-page' -File | ForEach-Object { $lc = \\(Get-Content $_.FullName | Measure-Object -Line\\).Lines; '{0,5}  {1}' -f $lc, $_.Name }; Write-Host '---'; Push-Location 'c:\\\\Users\\\\Suryansh\\\\Desktop\\\\duncit\\\\admin'; npx tsc -b --pretty false 2>&1; $code = $LASTEXITCODE; Pop-Location; Write-Host \"EXIT=$code\")",
+      "Bash(git commit -m 'refactor\\(admin\\): break user-details-page main file into sections *)",
+      "PowerShell(Get-ChildItem 'admin\\\\src\\\\pages\\\\interview-requests-page' -File | ForEach-Object { $lc = \\(Get-Content $_.FullName | Measure-Object -Line\\).Lines; '{0,5}  {1}' -f $lc, $_.Name }; Write-Host '---'; Push-Location 'c:\\\\Users\\\\Suryansh\\\\Desktop\\\\duncit\\\\admin'; npx tsc -b --pretty false 2>&1; $code = $LASTEXITCODE; Pop-Location; Write-Host \"EXIT=$code\")"
+    ]
+  }
+}

@@ -34,6 +34,9 @@ export const POD_DETAILS = gql`
         amount
         note
       }
+      like_count
+      liked_by_me
+      comment_count
     }
     podMembershipState(pod_doc_id: $id) {
       pod_id
@@ -74,6 +77,10 @@ export const POD_DETAILS = gql`
       user_id
       full_name
       passport_photo_url
+    }
+    me {
+      user_id
+      saved_pod_ids
     }
   }
 `;
@@ -122,6 +129,58 @@ export const REDEEM = gql`
     redeemPodReferral(token: $token) {
       id
       status
+    }
+  }
+`;
+
+export const TOGGLE_POD_LIKE = gql`
+  mutation TogglePodLike($id: ID!) {
+    togglePodLike(pod_doc_id: $id) {
+      id
+      like_count
+      liked_by_me
+    }
+  }
+`;
+
+export const POD_COMMENTS = gql`
+  query PodComments($id: ID!) {
+    podComments(pod_doc_id: $id) {
+      id
+      author_id
+      author_name
+      author_photo
+      text
+      created_at
+    }
+  }
+`;
+
+export const ADD_POD_COMMENT = gql`
+  mutation AddPodComment($id: ID!, $text: String!) {
+    addPodComment(pod_doc_id: $id, text: $text) {
+      id
+      author_id
+      author_name
+      author_photo
+      text
+      created_at
+    }
+  }
+`;
+
+export const DELETE_POD_COMMENT = gql`
+  mutation DeletePodComment($id: ID!, $comment_id: ID!) {
+    deletePodComment(pod_doc_id: $id, comment_id: $comment_id)
+  }
+`;
+
+export const TOGGLE_SAVED_POD_DETAIL = gql`
+  mutation ToggleSavedPodDetail($pod_doc_id: ID!) {
+    toggleSavedPod(pod_doc_id: $pod_doc_id) {
+      pod_id
+      saved
+      saved_pod_ids
     }
   }
 `;

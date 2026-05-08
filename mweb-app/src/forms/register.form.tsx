@@ -110,9 +110,12 @@ function LocationFields() {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="City (optional)"
+              label="City"
+              required
               size="small"
               InputLabelProps={{ shrink: true }}
+              error={Boolean(touched.city && errors.city)}
+              helperText={touched.city ? errors.city : undefined}
             />
           )}
         />
@@ -127,9 +130,12 @@ function LocationFields() {
           renderInput={(params) => (
             <TextField
               {...params}
-              label="Zone (optional)"
+              label="Zone"
+              required
               size="small"
               InputLabelProps={{ shrink: true }}
+              error={Boolean(touched.zone && errors.zone)}
+              helperText={touched.zone ? errors.zone : undefined}
             />
           )}
         />

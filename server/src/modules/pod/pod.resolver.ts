@@ -1,9 +1,12 @@
 import { podService } from './pod.service';
 import type { GraphQLContext } from '../../context';
-import { requireRole } from '../../middleware/rbac';
+import { requireRole, requireAuth } from '../../middleware/rbac';
 import { UserModel } from '../user/user.model';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
+
+const isAdminCtx = (ctx: GraphQLContext) =>
+  !!ctx.user?.roles?.some((r) => ADMIN_WRITE.includes(r));
 
 export const podResolvers = {
   Pod: {
@@ -20,10 +23,17 @@ export const podResolvers = {
       });
       return ids.map((id) => byId.get(id)).filter(Boolean) as string[];
     },
+    liked_by_me: (parent: any, _a: unknown, ctx: GraphQLContext) => {
+      const uid = ctx.user?.id;
+      if (!uid) return false;
+      return (parent.liked_user_ids ?? []).some((x: string) => String(x) === uid);
+    },
   },
   Query: {
     pods: async (_p: unknown, args: { filter?: any }) => podService.list(args.filter),
     pod: async (_p: unknown, args: { pod_doc_id: string }) => podService.getById(args.pod_doc_id),
+    podComments: async (_p: unknown, args: { pod_doc_id: string }) =>
+      podService.listComments(args.pod_doc_id),
   },
   Mutation: {
     createPod: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -44,5 +54,34 @@ export const podResolvers = {
     },
     incrementPodHits: async (_p: unknown, args: { pod_doc_id: string }) =>
       podService.incrementHits(args.pod_doc_id),
+    togglePodLike: async (
+      _p: unknown,
+      args: { pod_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const u = requireAuth(ctx);
+      return podService.toggleLike(args.pod_doc_id, u.id);
+    },
+    addPodComment: async (
+      _p: unknown,
+      args: { pod_doc_id: string; text: string },
+      ctx: GraphQLContext
+    ) => {
+      const u = requireAuth(ctx);
+      return podService.addComment(args.pod_doc_id, u.id, args.text);
+    },
+    deletePodComment: async (
+      _p: unknown,
+      args: { pod_doc_id: string; comment_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const u = requireAuth(ctx);
+      return podService.deleteComment(
+        args.pod_doc_id,
+        args.comment_id,
+        u.id,
+        isAdminCtx(ctx)
+      );
+    },
   },
 };

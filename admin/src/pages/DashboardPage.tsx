@@ -21,6 +21,7 @@ import type { SvgIconComponent } from '@mui/icons-material';
 import CountsBySuperCategoryGrid from './dashboard/CountsBySuperCategoryGrid';
 import RangePicker, { type Granularity } from './dashboard/RangePicker';
 import ActiveUsersChart from './dashboard/ActiveUsersChart';
+import SupportTicketsChart from './dashboard/SupportTicketsChart';
 
 const SUPER_CATS = gql`
   query DashboardSuperCats {
@@ -52,6 +53,10 @@ const TOTALS = gql`
       hosts_total
       support_tickets_open
       support_tickets_total
+      support_tickets_by_status {
+        status
+        count
+      }
     }
   }
 `;
@@ -196,6 +201,12 @@ export default function DashboardPage() {
         counts={totals?.clubs ?? []}
         total={totals?.clubs_total ?? 0}
         color="#3b82f6"
+      />
+
+      <SupportTicketsChart
+        buckets={totals?.support_tickets_by_status ?? []}
+        total={totals?.support_tickets_total ?? 0}
+        open={totals?.support_tickets_open ?? 0}
       />
 
       <Card>

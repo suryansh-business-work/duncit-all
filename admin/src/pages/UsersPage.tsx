@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
+import { useDateFormat } from '../utils/dateFormat';
 import {
   Alert,
   Avatar,
@@ -131,6 +132,7 @@ export default function UsersPage() {
   const [showPwd, setShowPwd] = useState(false);
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
+  const { formatDate, formatDateTime } = useDateFormat();
 
   const filter = useMemo(() => {
     const f: any = {};
@@ -269,7 +271,7 @@ export default function UsersPage() {
               variant="outlined"
             />
             <Typography variant="caption" color="text.secondary">
-              {p.row.last_login_at ? new Date(p.row.last_login_at as string).toLocaleDateString() : 'Not tracked yet'}
+              {p.row.last_login_at ? formatDate(p.row.last_login_at as string) : 'Not tracked yet'}
             </Typography>
           </Stack>
         );
@@ -291,7 +293,7 @@ export default function UsersPage() {
       field: 'created_at',
       headerName: 'Created',
       width: 170,
-      valueFormatter: (v) => (v ? new Date(v as string).toLocaleString() : ''),
+      valueFormatter: (v) => (v ? formatDateTime(v as string) : ''),
     },
   ];
 

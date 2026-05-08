@@ -154,7 +154,7 @@ export const analyticsService = {
         count: counts.get(String(s._id)) || 0,
       }));
 
-    const [users_total, pods_total, clubs_total, venues_total, hosts_total, support_tickets_open, support_tickets_total] = await Promise.all([
+    const [users_total, pods_total, clubs_total, venues_total, hosts_total, support_tickets_open, support_tickets_total, support_status_agg] = await Promise.all([
       UserModel.countDocuments({}),
       PodModel.countDocuments({}),
       ClubModel.countDocuments({}),
@@ -162,7 +162,19 @@ export const analyticsService = {
       HostModel.countDocuments({}),
       ContactSubmissionModel.countDocuments({ status: { $in: ['NEW', 'IN_PROGRESS'] } }),
       ContactSubmissionModel.countDocuments({}),
+      ContactSubmissionModel.aggregate([
+        { $group: { _id: '$status', count: { $sum: 1 } } },
+      ]),
     ]);
+
+    const STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED', 'ARCHIVED'];
+    const statusMap = new Map<string, number>(
+      (support_status_agg as any[]).map((r) => [String(r._id), r.count])
+    );
+    const support_tickets_by_status = STATUSES.map((s) => ({
+      status: s,
+      count: statusMap.get(s) || 0,
+    }));
 
     return {
       pods: buildBuckets(podCountById),
@@ -174,6 +186,7 @@ export const analyticsService = {
       hosts_total,
       support_tickets_open,
       support_tickets_total,
+      support_tickets_by_status,
     };
   },
 };

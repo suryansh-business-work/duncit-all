@@ -18,6 +18,7 @@ import AccountInfoRow from './account-page/AccountInfoRow';
 import AccountProfileHeader from './account-page/AccountProfileHeader';
 import EditAccountDialog from './account-page/EditAccountDialog';
 import HostsVenuesCard from './account-page/HostsVenuesCard';
+import { useDateFormat } from '../utils/dateFormat';
 
 const ME = gql`
   query MeProfile {
@@ -59,6 +60,7 @@ export default function AccountPage() {
   const [savingPhoto, setSavingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
   const [updateUser] = useMutation(UPDATE_USER);
+  const { formatDate } = useDateFormat();
 
   const logout = () => {
     localStorage.removeItem('token');
@@ -110,7 +112,7 @@ export default function AccountPage() {
             <AccountInfoRow
               icon={<CakeIcon fontSize="small" />}
               label="Date of birth"
-              value={me.dob ? new Date(me.dob).toLocaleDateString() : '—'}
+              value={me.dob ? formatDate(me.dob) : '—'}
             />
           </Stack>
         </CardContent>

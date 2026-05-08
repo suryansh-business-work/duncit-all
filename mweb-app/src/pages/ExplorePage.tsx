@@ -1,24 +1,15 @@
 import { useEffect, useMemo, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
-  Chip,
   CircularProgress,
-  IconButton,
   Stack,
-  Typography,
 } from '@mui/material';
-import GroupsIcon from '@mui/icons-material/Groups';
-import EventIcon from '@mui/icons-material/Event';
-import PlaceIcon from '@mui/icons-material/Place';
-import ShareIcon from '@mui/icons-material/Share';
-import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
-import BookmarkIcon from '@mui/icons-material/Bookmark';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
-import HowToRegIcon from '@mui/icons-material/HowToReg';
-import { usePricing } from '../hooks/usePricing';
+import Slider from 'react-slick';
+import 'slick-carousel/slick/slick.css';
+import 'slick-carousel/slick/slick-theme.css';
+import ExplorePodCard from './explore-page/ExplorePodCard';
 
 const EXPLORE_PODS = gql`
   query ExplorePods {
@@ -37,30 +28,21 @@ const EXPLORE_PODS = gql`
       pod_attendees
       no_of_spots
       zone_name
-      pod_images_and_videos {
-        url
-        type
-      }
+      pod_images_and_videos { url type }
       club_id
       location_id
+      like_count
+      liked_by_me
+      comment_count
     }
     clubs(filter: { is_active: true }) {
       id
       club_name
       super_category_id
-      club_feature_images_and_videos {
-        url
-        type
-      }
+      club_feature_images_and_videos { url type }
     }
-    superCategories: categories(filter: { level: SUPER }) {
-      id
-      slug
-    }
-    locations {
-      id
-      location_name
-    }
+    superCategories: categories(filter: { level: SUPER }) { id slug }
+    locations { id location_name }
   }
 `;
 
@@ -83,11 +65,31 @@ export default function ExplorePage({ superCategorySlug }: ExplorePageProps) {
     fetchPolicy: 'cache-and-network',
   });
   const [toggleSavedPod] = useMutation(TOGGLE_SAVED_POD);
-  const [saved, setSaved] = useState<Set<string>>(new Set());
+  const [pendingSave, setPendingSave] = useState<Set<string>>(new Set());
+  // Local optimistic overlay; merged with server saved_pod_ids.
+  const [localSaved, setLocalSaved] = useState<Map<string, boolean>>(new Map());
 
+  const serverSaved = useMemo<Set<string>>(
+    () => new Set<string>(data?.me?.saved_pod_ids ?? []),
+    [data?.me?.saved_pod_ids],
+  );
+
+  // Drop local overrides once server confirms the new state.
   useEffect(() => {
-    setSaved(new Set(data?.me?.saved_pod_ids ?? []));
-  }, [data?.me?.saved_pod_ids]);
+    if (localSaved.size === 0) return;
+    setLocalSaved((prev) => {
+      const next = new Map(prev);
+      for (const [id, want] of prev) {
+        if (pendingSave.has(id)) continue;
+        if (serverSaved.has(id) === want) next.delete(id);
+      }
+      return next;
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [serverSaved, pendingSave]);
+
+  const isSaved = (id: string) =>
+    localSaved.has(id) ? !!localSaved.get(id) : serverSaved.has(id);
 
   const clubsById = useMemo(() => {
     const m = new Map<string, any>();
@@ -118,299 +120,70 @@ export default function ExplorePage({ superCategorySlug }: ExplorePageProps) {
   }, [data, clubsById, superCategorySlug]);
 
   const toggleSave = async (id: string) => {
-    const previous = saved;
-    setSaved((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
+    const want = !isSaved(id);
+    setLocalSaved((prev) => new Map(prev).set(id, want));
+    setPendingSave((prev) => new Set(prev).add(id));
     try {
-      const res = await toggleSavedPod({ variables: { pod_doc_id: id } });
-      setSaved(new Set(res.data?.toggleSavedPod?.saved_pod_ids ?? []));
+      await toggleSavedPod({ variables: { pod_doc_id: id } });
     } catch {
-      setSaved(previous);
+      setLocalSaved((prev) => {
+        const next = new Map(prev);
+        next.delete(id);
+        return next;
+      });
+    } finally {
+      setPendingSave((prev) => {
+        const next = new Set(prev);
+        next.delete(id);
+        return next;
+      });
     }
   };
 
-  if (loading && !data)
+  if (loading && !data) {
     return (
       <Stack alignItems="center" sx={{ p: 6 }}>
         <CircularProgress />
       </Stack>
     );
+  }
   if (error) return <Alert severity="error">{error.message}</Alert>;
   if (!pods.length) return <Alert severity="info">No pods to explore yet.</Alert>;
 
   return (
-    <Box sx={{ height: '100%', display: 'flex', flexDirection: 'column' }}>
-      <Box
-        sx={{
-          // TikTok-like vertical full-height snap feed. The page is rendered
-          // edge-to-edge (no Container padding) so we manage our own bottom
-          // inset to clear the fixed BottomNav.
-          flex: 1,
-          minHeight: 0,
-          overflowY: 'auto',
-          scrollSnapType: 'y mandatory',
-          '&::-webkit-scrollbar': { width: 0 },
-        }}
-      >
-      {pods.map((p: any) => (
-        <ExplorePodCard
-          key={p.id}
-          pod={p}
-          club={clubsById.get(p.club_id)}
-          location={locById.get(p.location_id)}
-          saved={saved.has(p.id)}
-          onToggleSave={() => toggleSave(p.id)}
-        />
-      ))}
-      </Box>
-    </Box>
-  );
-}
-
-function ExplorePodCard({
-  pod,
-  club,
-  location,
-  saved,
-  onToggleSave,
-}: {
-  pod: any;
-  club: any;
-  location: any;
-  saved: boolean;
-  onToggleSave: () => void;
-}) {
-  const navigate = useNavigate();
-  const { format } = usePricing();
-  const isFree = pod.pod_type?.includes('FREE');
-  const media = pod.pod_images_and_videos?.[0];
-  const cover = club?.club_feature_images_and_videos?.[0]?.url;
-
-  const share = async () => {
-    const url = `${window.location.origin}/pods/${pod.id}`;
-    const shareData = {
-      title: pod.pod_title,
-      text: pod.pod_description?.slice(0, 100) ?? pod.pod_title,
-      url,
-    };
-    try {
-      // Web Share API where supported (mobile, https)
-      if (navigator.share) {
-        await navigator.share(shareData);
-      } else {
-        await navigator.clipboard.writeText(url);
-      }
-    } catch {
-      /* user cancelled */
-    }
-  };
-
-  return (
     <Box
       sx={{
-        position: 'relative',
         height: '100%',
-        width: '100%',
-        flexShrink: 0,
-        scrollSnapAlign: 'start',
-        bgcolor: 'common.black',
-        color: 'common.white',
-        overflow: 'hidden',
+        position: 'relative',
+        '& .slick-slider, & .slick-list, & .slick-track': { height: '100%' },
+        '& .slick-slide > div': { height: '100%' },
       }}
     >
-      {media?.type === 'VIDEO' ? (
-        <Box
-          component="video"
-          src={media.url}
-          autoPlay
-          muted
-          loop
-          playsInline
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-          }}
-        />
-      ) : media?.url || cover ? (
-        <Box
-          component="img"
-          src={media?.url || cover}
-          alt={pod.pod_title}
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            width: '100%',
-            height: '100%',
-            objectFit: 'cover',
-          }}
-        />
-      ) : (
-        <Box
-          sx={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            bgcolor: 'grey.900',
-          }}
-        >
-          <EventIcon sx={{ fontSize: 80, color: 'grey.700' }} />
-        </Box>
-      )}
-
-      {/* Bottom gradient with details */}
-      <Box
-        sx={{
-          position: 'absolute',
-          inset: 0,
-          background:
-            'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%)',
-        }}
-      />
-
-      <Stack
-        sx={{
-          position: 'absolute',
-          left: 16,
-          right: 80,
-          bottom: 'calc(72px + env(safe-area-inset-bottom))',
-        }}
-        spacing={1}
+      <Slider
+        vertical
+        verticalSwiping
+        slidesToShow={1}
+        slidesToScroll={1}
+        arrows={false}
+        infinite={false}
+        speed={450}
+        swipeToSlide
+        touchThreshold={12}
+        adaptiveHeight={false}
       >
-        {club && (
-          <Stack
-            direction="row"
-            spacing={1}
-            alignItems="center"
-            sx={{ cursor: 'pointer' }}
-            onClick={() => navigate(`/clubs/${club.id}`)}
-          >
-            <GroupsIcon fontSize="small" />
-            <Typography variant="subtitle2" fontWeight={700}>
-              {club.club_name}
-            </Typography>
-          </Stack>
-        )}
-        <Typography variant="h6" fontWeight={700}>
-          {pod.pod_title}
-        </Typography>
-        {pod.pod_description && (
-          <Typography
-            variant="body2"
-            sx={{
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              opacity: 0.9,
-            }}
-          >
-            {pod.pod_description}
-          </Typography>
-        )}
-        <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
-          <Chip
-            size="small"
-            label={isFree ? 'Free' : format(pod.pod_amount)}
-            color={isFree ? 'success' : 'primary'}
-            sx={{ color: 'common.white' }}
-          />
-          {pod.pod_date_time && (
-            <Chip
-              size="small"
-              icon={<EventIcon sx={{ color: 'common.white !important' }} />}
-              label={new Date(pod.pod_date_time).toLocaleString(undefined, {
-                day: 'numeric',
-                month: 'short',
-                hour: 'numeric',
-                minute: '2-digit',
-              })}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'common.white' }}
+        {pods.map((p: any) => (
+          <Box key={p.id} sx={{ height: '100%' }}>
+            <ExplorePodCard
+              pod={p}
+              club={clubsById.get(p.club_id)}
+              location={locById.get(p.location_id)}
+              saved={isSaved(p.id)}
+              onToggleSave={() => toggleSave(p.id)}
+              viewerId={data?.me?.user_id ?? null}
             />
-          )}
-          {(location?.location_name || pod.zone_name) && (
-            <Chip
-              size="small"
-              icon={<PlaceIcon sx={{ color: 'common.white !important' }} />}
-              label={[location?.location_name, pod.zone_name].filter(Boolean).join(' · ')}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'common.white' }}
-            />
-          )}
-        </Stack>
-      </Stack>
-
-      {/* Right action rail */}
-      <Stack
-        spacing={1.5}
-        alignItems="center"
-        sx={{
-          position: 'absolute',
-          right: 12,
-          bottom: 'calc(80px + env(safe-area-inset-bottom))',
-        }}
-      >
-        <ActionButton
-          icon={<HowToRegIcon />}
-          label={`${pod.pod_attendees?.length ?? 0}${
-            pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''
-          }`}
-          onClick={() => navigate(`/pods/${pod.id}`)}
-          tooltip="Join"
-        />
-        <ActionButton
-          icon={saved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-          label="Save"
-          onClick={onToggleSave}
-          active={saved}
-        />
-        <ActionButton icon={<ShareIcon />} label="Share" onClick={share} />
-        <ActionButton
-          icon={<OpenInNewIcon />}
-          label="Open"
-          onClick={() => navigate(`/pods/${pod.id}`)}
-        />
-      </Stack>
+          </Box>
+        ))}
+      </Slider>
     </Box>
-  );
-}
-
-function ActionButton({
-  icon,
-  label,
-  onClick,
-  active,
-  tooltip,
-}: {
-  icon: React.ReactNode;
-  label: string;
-  onClick: () => void;
-  active?: boolean;
-  tooltip?: string;
-}) {
-  return (
-    <Stack alignItems="center" spacing={0.25}>
-      <IconButton
-        onClick={onClick}
-        title={tooltip}
-        sx={{
-          bgcolor: 'rgba(255,255,255,0.15)',
-          color: active ? 'primary.light' : 'common.white',
-          '&:hover': { bgcolor: 'rgba(255,255,255,0.25)' },
-        }}
-      >
-        {icon}
-      </IconButton>
-      <Typography variant="caption" sx={{ color: 'common.white' }}>
-        {label}
-      </Typography>
-    </Stack>
   );
 }

@@ -14,6 +14,13 @@ export interface IPodPlaceCharge {
   note?: string | null;
 }
 
+export interface IPodComment {
+  _id?: Types.ObjectId;
+  author_id: Types.ObjectId;
+  text: string;
+  created_at: Date;
+}
+
 export interface IPod extends Document {
   pod_id: string;
   pod_title: string;
@@ -37,6 +44,8 @@ export interface IPod extends Document {
   available_perks: string[];
   payment_terms?: string | null;
   place_charges: IPodPlaceCharge[];
+  liked_user_ids: Types.ObjectId[];
+  comments: IPodComment[];
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
@@ -57,6 +66,15 @@ const placeChargeSchema = new Schema<IPodPlaceCharge>(
     note: { type: String, default: null, trim: true, maxlength: 200 },
   },
   { _id: false }
+);
+
+const commentSchema = new Schema<IPodComment>(
+  {
+    author_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    text: { type: String, required: true, trim: true, maxlength: 1000 },
+    created_at: { type: Date, default: () => new Date() },
+  },
+  { _id: true }
 );
 
 const podSchema = new Schema<IPod>(
@@ -91,6 +109,8 @@ const podSchema = new Schema<IPod>(
     available_perks: { type: [String], default: [] },
     payment_terms: { type: String, default: null, trim: true, maxlength: 4000 },
     place_charges: { type: [placeChargeSchema], default: [] },
+    liked_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
+    comments: { type: [commentSchema], default: [] },
     is_active: { type: Boolean, default: true },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

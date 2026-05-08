@@ -31,6 +31,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import DateTimeField from '../components/DateTimeField';
+import { useDateFormat } from '../utils/dateFormat';
 
 const INTERVIEWS = gql`
   query Interviews($filter: InterviewFilterInput) {
@@ -84,16 +85,8 @@ const STATUS_COLORS: Record<string, 'default' | 'warning' | 'info' | 'success' |
   CANCELLED: 'default',
 };
 
-const fmtSlot = (s: { start: string; end: string }) => {
-  const d = new Date(s.start);
-  return `${d.toLocaleDateString(undefined, { day: '2-digit', month: 'short' })} ${d.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
-};
-
-const fmtSlotLong = (s: { start: string; end: string }) => {
-  const a = new Date(s.start);
-  const b = new Date(s.end);
-  return `${a.toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short', year: 'numeric' })} · ${a.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })} – ${b.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}`;
-};
+const slotTime = (iso: string) =>
+  new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
 
 export default function InterviewRequestsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -102,6 +95,11 @@ export default function InterviewRequestsPage() {
   const [error, setError] = useState<string | null>(null);
   const [active, setActive] = useState<any | null>(null);
   const [delTarget, setDelTarget] = useState<any | null>(null);
+  const { formatDate, formatDateTime } = useDateFormat();
+  const fmtSlot = (s: { start: string; end: string }) =>
+    `${formatDate(s.start)} ${slotTime(s.start)}`;
+  const fmtSlotLong = (s: { start: string; end: string }) =>
+    `${formatDateTime(s.start)} \u2013 ${slotTime(s.end)}`;
 
   const filter = useMemo(() => {
     const f: any = {};

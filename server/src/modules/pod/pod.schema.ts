@@ -64,8 +64,20 @@ export const podTypeDefs = /* GraphQL */ `
     place_charges: [PodPlaceCharge!]!
     is_active: Boolean!
     host_names: [String!]!
+    like_count: Int!
+    liked_by_me: Boolean!
+    comment_count: Int!
     created_at: String!
     updated_at: String!
+  }
+
+  type PodComment {
+    id: ID!
+    author_id: ID!
+    author_name: String
+    author_photo: String
+    text: String!
+    created_at: String!
   }
 
   input PodFilterInput {
@@ -128,6 +140,7 @@ export const podTypeDefs = /* GraphQL */ `
   extend type Query {
     pods(filter: PodFilterInput): [Pod!]!
     pod(pod_doc_id: ID!): Pod
+    podComments(pod_doc_id: ID!): [PodComment!]!
   }
 
   extend type Mutation {
@@ -135,5 +148,8 @@ export const podTypeDefs = /* GraphQL */ `
     updatePod(pod_doc_id: ID!, input: UpdatePodInput!): Pod!
     deletePod(pod_doc_id: ID!): Boolean!
     incrementPodHits(pod_doc_id: ID!): Pod!
+    togglePodLike(pod_doc_id: ID!): Pod!
+    addPodComment(pod_doc_id: ID!, text: String!): PodComment!
+    deletePodComment(pod_doc_id: ID!, comment_id: ID!): Boolean!
   }
 `;

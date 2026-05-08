@@ -19,6 +19,7 @@ import PodHero from './pod-details-page/PodHero';
 import PodActionPanel from './pod-details-page/PodActionPanel';
 import PodDetailAccordions from './pod-details-page/PodDetailAccordions';
 import PodMapSection from '../components/pod-details/PodMapSection';
+import PodSocialBar from './pod-details-page/PodSocialBar';
 import {
   POD_DETAILS,
   POD_PEOPLE,
@@ -26,6 +27,7 @@ import {
   JOIN_FREE,
   BACKOUT,
   REDEEM,
+  TOGGLE_SAVED_POD_DETAIL,
   PodDetailsSkeleton,
 } from './pod-details-page/queries';
 
@@ -60,8 +62,8 @@ export default function PodDetailsPage() {
   const [joinFree, joinState] = useMutation(JOIN_FREE);
   const [backout, backoutState] = useMutation(BACKOUT);
   const [redeem] = useMutation(REDEEM);
+  const [toggleSavedPod] = useMutation(TOGGLE_SAVED_POD_DETAIL);
   const [snack, setSnack] = useState<string | null>(null);
-  const [saved, setSaved] = useState(false);
   const [backoutOpen, setBackoutOpen] = useState(false);
 
   useEffect(() => {
@@ -105,6 +107,28 @@ export default function PodDetailsPage() {
 
   const isFree = pod.pod_type?.includes('FREE');
   const media = pod.pod_images_and_videos ?? [];
+  const savedIds: string[] = data?.me?.saved_pod_ids ?? [];
+  const saved = savedIds.includes(pod.id);
+
+  const onToggleSave = async () => {
+    try {
+      await toggleSavedPod({
+        variables: { pod_doc_id: pod.id },
+        optimisticResponse: {
+          toggleSavedPod: {
+            __typename: 'SavedPodState',
+            pod_id: pod.id,
+            saved: !saved,
+            saved_pod_ids: saved
+              ? savedIds.filter((x) => x !== pod.id)
+              : [...savedIds, pod.id],
+          },
+        },
+      });
+    } catch (e: any) {
+      setSnack(e.message);
+    }
+  };
 
   const onShare = async () => {
     const url = window.location.href;
@@ -127,7 +151,7 @@ export default function PodDetailsPage() {
         title={pod.pod_title}
         saved={saved}
         onBack={() => navigate(-1)}
-        onToggleSave={() => setSaved((v) => !v)}
+        onToggleSave={onToggleSave}
         onShare={onShare}
       />
 
@@ -181,6 +205,14 @@ export default function PodDetailsPage() {
       </Box>
 
       <PodMapSection pod={pod} locationName={location?.location_name} />
+
+      <PodSocialBar
+        podId={pod.id}
+        initialLiked={!!pod.liked_by_me}
+        initialLikeCount={pod.like_count ?? 0}
+        initialCommentCount={pod.comment_count ?? 0}
+        viewerId={data?.me?.user_id ?? null}
+      />
 
       <PodDetailAccordions
         pod={pod}

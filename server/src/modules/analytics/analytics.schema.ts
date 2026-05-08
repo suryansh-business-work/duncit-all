@@ -36,6 +36,12 @@ export const analyticsTypeDefs = /* GraphQL */ `
     hosts_total: Int!
     support_tickets_open: Int!
     support_tickets_total: Int!
+    support_tickets_by_status: [StatusCount!]!
+  }
+
+  type StatusCount {
+    status: String!
+    count: Int!
   }
 
   extend type Query {

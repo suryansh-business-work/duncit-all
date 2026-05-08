@@ -235,20 +235,32 @@ export async function pexelsSearch(opts: {
     throw new GraphQLError(`Pexels search failed: ${json?.error || res.statusText}`, {
       extensions: { code: 'UPSTREAM_ERROR' },
     });
-  const photos = (json.photos || []).map((p: any) => ({
-    id: String(p.id),
-    width: p.width,
-    height: p.height,
-    photographer: p.photographer,
-    photographer_url: p.photographer_url,
-    avg_color: p.avg_color,
-    alt: p.alt || '',
-    url: p.url,
-    src_original: p.src?.original,
-    src_large: p.src?.large2x || p.src?.large,
-    src_medium: p.src?.medium,
-    src_tiny: p.src?.tiny,
-  }));
+  const wantOrient = opts.orientation && ['landscape', 'portrait', 'square'].includes(opts.orientation)
+    ? opts.orientation
+    : null;
+  const matchesOrient = (w: number, h: number) => {
+    if (!wantOrient || !w || !h) return true;
+    const ratio = w / h;
+    if (wantOrient === 'landscape') return ratio > 1.1;
+    if (wantOrient === 'portrait') return ratio < 0.9;
+    return ratio >= 0.9 && ratio <= 1.1; // square
+  };
+  const photos = (json.photos || [])
+    .filter((p: any) => matchesOrient(p.width, p.height))
+    .map((p: any) => ({
+      id: String(p.id),
+      width: p.width,
+      height: p.height,
+      photographer: p.photographer,
+      photographer_url: p.photographer_url,
+      avg_color: p.avg_color,
+      alt: p.alt || '',
+      url: p.url,
+      src_original: p.src?.original,
+      src_large: p.src?.large2x || p.src?.large,
+      src_medium: p.src?.medium,
+      src_tiny: p.src?.tiny,
+    }));
   return {
     page: json.page ?? page,
     per_page: json.per_page ?? perPage,
@@ -291,7 +303,19 @@ export async function pexelsSearchVideos(opts: {
     throw new GraphQLError(`Pexels video search failed: ${json?.error || res.statusText}`, {
       extensions: { code: 'UPSTREAM_ERROR' },
     });
-  const videos = (json.videos || []).map((v: any) => {
+  const wantOrientV = opts.orientation && ['landscape', 'portrait', 'square'].includes(opts.orientation)
+    ? opts.orientation
+    : null;
+  const matchesOrientV = (w: number, h: number) => {
+    if (!wantOrientV || !w || !h) return true;
+    const ratio = w / h;
+    if (wantOrientV === 'landscape') return ratio > 1.1;
+    if (wantOrientV === 'portrait') return ratio < 0.9;
+    return ratio >= 0.9 && ratio <= 1.1;
+  };
+  const videos = (json.videos || [])
+    .filter((v: any) => matchesOrientV(v.width, v.height))
+    .map((v: any) => {
     const files = (v.video_files || [])
       .filter((f: any) => /^video\/mp4$/i.test(f.file_type || ''))
       .map((f: any) => ({

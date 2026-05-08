@@ -199,6 +199,21 @@ export default function MediaPickerDialog({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, tab]);
 
+  // Re-run Pexels when orientation filter changes
+  useEffect(() => {
+    if (open && tab === 1 && allowImage) {
+      void runPexels(pquery, 1, false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [porientation]);
+
+  useEffect(() => {
+    if (open && tab === 2 && allowVideo) {
+      void runPexelsVideos(vquery, 1, false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [vorientation]);
+
   const runPexels = async (q: string, p: number, append: boolean) => {
     setPsearching(true);
     setError(null);

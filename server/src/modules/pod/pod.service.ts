@@ -1,5 +1,7 @@
 import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
 import { PodModel, type PodType } from './pod.model';
+import { UserModel } from '../user/user.model';
 
 const slugify = (s: string) =>
   s
@@ -43,6 +45,9 @@ const toPub = (d: any) => {
       note: c.note ?? null,
     })),
     is_active: !!d.is_active,
+    liked_user_ids: (d.liked_user_ids ?? []).map((x: any) => String(x)),
+    like_count: (d.liked_user_ids ?? []).length,
+    comment_count: (d.comments ?? []).length,
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
   };
@@ -190,5 +195,94 @@ export const podService = {
       { new: true }
     );
     return toPub(doc);
+  },
+
+  async toggleLike(id: string, viewerId: string) {
+    if (!Types.ObjectId.isValid(id))
+      throw new GraphQLError('Invalid pod id', { extensions: { code: 'BAD_USER_INPUT' } });
+    const doc = await PodModel.findById(id);
+    if (!doc) notFound();
+    const idx = (doc!.liked_user_ids || []).findIndex((x: any) => String(x) === viewerId);
+    if (idx >= 0) doc!.liked_user_ids.splice(idx, 1);
+    else doc!.liked_user_ids.push(new Types.ObjectId(viewerId) as any);
+    await doc!.save();
+    return toPub(doc);
+  },
+
+  async addComment(id: string, viewerId: string, text: string) {
+    if (!Types.ObjectId.isValid(id))
+      throw new GraphQLError('Invalid pod id', { extensions: { code: 'BAD_USER_INPUT' } });
+    const trimmed = (text || '').trim();
+    if (!trimmed)
+      throw new GraphQLError('Comment cannot be empty', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    if (trimmed.length > 1000)
+      throw new GraphQLError('Comment too long (max 1000 chars)', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    const doc = await PodModel.findById(id);
+    if (!doc) notFound();
+    const created_at = new Date();
+    doc!.comments.push({
+      author_id: new Types.ObjectId(viewerId) as any,
+      text: trimmed,
+      created_at,
+    } as any);
+    await doc!.save();
+    const c = doc!.comments[doc!.comments.length - 1] as any;
+    const u: any = await UserModel.findById(viewerId).select('first_name last_name profile_photo');
+    return {
+      id: String(c._id),
+      author_id: viewerId,
+      author_name: u ? `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() : null,
+      author_photo: u?.profile_photo ?? null,
+      text: trimmed,
+      created_at: created_at.toISOString(),
+    };
+  },
+
+  async deleteComment(id: string, commentId: string, viewerId: string, isAdmin: boolean) {
+    if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(commentId))
+      throw new GraphQLError('Invalid id', { extensions: { code: 'BAD_USER_INPUT' } });
+    const doc = await PodModel.findById(id);
+    if (!doc) notFound();
+    const c: any = (doc!.comments as any).find((x: any) => String(x._id) === commentId);
+    if (!c) throw new GraphQLError('Comment not found', { extensions: { code: 'NOT_FOUND' } });
+    if (!isAdmin && String(c.author_id) !== viewerId)
+      throw new GraphQLError('Not allowed', { extensions: { code: 'FORBIDDEN' } });
+    doc!.comments = (doc!.comments as any).filter(
+      (x: any) => String(x._id) !== commentId
+    );
+    await doc!.save();
+    return true;
+  },
+
+  async listComments(id: string) {
+    if (!Types.ObjectId.isValid(id))
+      throw new GraphQLError('Invalid pod id', { extensions: { code: 'BAD_USER_INPUT' } });
+    const doc = await PodModel.findById(id);
+    if (!doc) notFound();
+    const comments = (doc!.comments ?? []).slice().sort(
+      (a: any, b: any) =>
+        new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+    );
+    const ids = Array.from(new Set(comments.map((c: any) => String(c.author_id))));
+    const users: any[] = await UserModel.find({ _id: { $in: ids } }).select(
+      'first_name last_name profile_photo'
+    );
+    const byId = new Map<string, any>();
+    users.forEach((u) => byId.set(String(u._id), u));
+    return comments.map((c: any) => {
+      const u = byId.get(String(c.author_id));
+      return {
+        id: String(c._id),
+        author_id: String(c.author_id),
+        author_name: u ? `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() : null,
+        author_photo: u?.profile_photo ?? null,
+        text: c.text,
+        created_at: new Date(c.created_at).toISOString(),
+      };
+    });
   },
 };

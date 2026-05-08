@@ -36,6 +36,8 @@ import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import CategoryIcon from '@mui/icons-material/Category';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 interface Props {
   open: boolean;
@@ -91,6 +93,14 @@ export default function ProfileDrawer({
     { label: 'Pod Ideas', icon: <LightbulbIcon fontSize="small" />, onClick: go('/pod-ideas') },
     { label: 'FAQs', icon: <HelpOutlineIcon fontSize="small" />, onClick: go('/faqs') },
   ];
+  const showPodPlans = useFeatureFlag('pod_plans_section');
+  if (showPodPlans) {
+    supportItems.unshift({
+      label: 'Pod Plans',
+      icon: <CategoryIcon fontSize="small" />,
+      onClick: go('/pod-plans'),
+    });
+  }
   const adminItems: Item[] = isAdmin
     ? [
         {

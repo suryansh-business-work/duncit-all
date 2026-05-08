@@ -6,9 +6,11 @@ import HomePage from './pages/HomePage';
 import RegisterPage from './pages/RegisterPage';
 import LoginPage from './pages/LoginPage';
 import SignupSurveyPage from './pages/SignupSurveyPage';
+import SignupWhatsappPage from './pages/SignupWhatsappPage';
 import AccountPage from './pages/AccountPage';
 import ProfilePage from './pages/ProfilePage';
 import FollowPage from './pages/FollowPage';
+import ScrollToTop from './components/ScrollToTop';
 import PublicProfilePage from './pages/PublicProfilePage';
 import PodDetailsPage from './pages/PodDetailsPage';
 import ClubDetailsPage from './pages/ClubDetailsPage';
@@ -20,6 +22,7 @@ import VenueManagePage from './pages/VenueManagePage';
 import FaqsPage from './pages/FaqsPage';
 import PolicyPage from './pages/PolicyPage';
 import PodIdeasPage from './pages/PodIdeasPage';
+import PodPlansPage from './pages/PodPlansPage';
 import SupportPage from './pages/SupportPage';
 import CheckoutPage from './pages/CheckoutPage';
 import ExplorePage from './pages/ExplorePage';
@@ -116,6 +119,7 @@ export default function App() {
           pb: fullBleed ? 0 : isAuthed ? BOTTOM_NAV_OFFSET : 2,
         }}
       >
+        <ScrollToTop />
         <Routes>
           <Route
             path="/"
@@ -242,6 +246,14 @@ export default function App() {
             }
           />
           <Route
+            path="/pod-plans"
+            element={
+              <RequireAuth>
+                <PodPlansPage />
+              </RequireAuth>
+            }
+          />
+          <Route
             path="/support"
             element={
               <RequireAuth>
@@ -256,6 +268,14 @@ export default function App() {
             element={
               <RequireAuth>
                 <SignupSurveyPage />
+              </RequireAuth>
+            }
+          />
+          <Route
+            path="/signup-whatsapp"
+            element={
+              <RequireAuth>
+                <SignupWhatsappPage />
               </RequireAuth>
             }
           />

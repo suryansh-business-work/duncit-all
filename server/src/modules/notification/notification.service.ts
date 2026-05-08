@@ -11,6 +11,7 @@ import {
   PushKeyModel,
 } from './notification.model';
 import { UserModel } from '../user/user.model';
+import { emitNotifyForUsers } from './notification.events';
 
 let vapidReady = false;
 
@@ -168,6 +169,12 @@ export const notificationService = {
         },
       }));
       await UserNotificationModel.bulkWrite(ops);
+      // Real-time SSE fan-out (no client polling required)
+      emitNotifyForUsers(inboxUserIds, {
+        kind: 'new',
+        notification_id: String(doc._id),
+        unread_count: -1,
+      });
     }
 
     // Push fan-out (background but we await to record counts)
@@ -230,6 +237,7 @@ export const notificationService = {
       { _id: userNotificationId, user_id: new Types.ObjectId(userId) },
       { $set: { read_at: new Date() } }
     );
+    emitNotifyForUsers([userId], { kind: 'read', unread_count: -1 });
     return true;
   },
 
@@ -238,6 +246,7 @@ export const notificationService = {
       { user_id: new Types.ObjectId(userId), read_at: null },
       { $set: { read_at: new Date() } }
     );
+    emitNotifyForUsers([userId], { kind: 'read_all', unread_count: 0 });
     return true;
   },
 };

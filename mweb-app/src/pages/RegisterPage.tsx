@@ -3,6 +3,8 @@ import { gql, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Alert, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import AuthLogo from '../components/AuthLogo';
+import LegalLinks from '../components/LegalLinks';
+import { useFeatureFlag } from '../hooks/useFeatureFlag';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import RegisterForm, { type RegisterFormValues } from '../forms/register.form';
 import GoogleSignupPhoneForm, {
@@ -44,6 +46,8 @@ export default function RegisterPage() {
   const [gError, setGError] = useState<string | null>(null);
   const [googleToken, setGoogleToken] = useState<string | null>(null);
   const navigate = useNavigate();
+  const whatsappStepEnabled = useFeatureFlag('whatsapp_signup_otp');
+  const nextRoute = whatsappStepEnabled ? '/signup-whatsapp' : '/signup-survey';
 
   const handleRegister = async (values: RegisterFormValues) => {
     const { country: _country, ...rest } = values;
@@ -55,7 +59,7 @@ export default function RegisterPage() {
     const token = res.data?.register?.token;
     if (token) {
       localStorage.setItem('token', token);
-      navigate('/signup-survey');
+      navigate(nextRoute);
     }
   };
 
@@ -78,7 +82,7 @@ export default function RegisterPage() {
       const token = res.data?.signupWithGoogle?.token;
       if (token) {
         localStorage.setItem('token', token);
-        navigate('/signup-survey');
+        navigate(nextRoute);
       }
     } catch (e: any) {
       setGError(e.message);
@@ -115,6 +119,7 @@ export default function RegisterPage() {
           errorMessage={error?.message ?? null}
           onSubmit={handleRegister}
         />
+        <LegalLinks prefix="By creating an account," />
       </CardContent>
       <GoogleSignupPhoneForm
         open={!!googleToken}

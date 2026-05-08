@@ -79,7 +79,7 @@ interface MediaPickerDialogProps {
   /** ImageKit folder e.g. "/users", "/posts", "/branding" */
   folder?: string;
   title?: string;
-  /** Comma-separated mime list. Defaults to images. */
+  /** Comma-separated mime list. Defaults to images and videos. */
   accept?: string;
 }
 
@@ -88,8 +88,8 @@ export default function MediaPickerDialog({
   onClose,
   onPicked,
   folder = '/uploads',
-  title = 'Select an image',
-  accept = 'image/*',
+  title = 'Select media',
+  accept = 'image/*,video/*',
 }: MediaPickerDialogProps) {
   const [tab, setTab] = useState(0);
   const [error, setError] = useState<string | null>(null);
@@ -166,12 +166,17 @@ export default function MediaPickerDialog({
   const onPickFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     const f = e.target.files?.[0];
     if (!f) return;
-    if (!f.type.startsWith('image/')) {
-      setError('Please choose an image file');
+    const isImage = f.type.startsWith('image/');
+    const isVideo = f.type.startsWith('video/');
+    if (!isImage && !isVideo) {
+      setError('Please choose an image or video file');
       return;
     }
-    if (f.size > 15 * 1024 * 1024) {
-      setError('File is too large (max 15 MB)');
+    const maxBytes = isVideo ? 100 * 1024 * 1024 : 15 * 1024 * 1024;
+    if (f.size > maxBytes) {
+      setError(
+        isVideo ? 'Video is too large (max 100 MB)' : 'Image is too large (max 15 MB)'
+      );
       return;
     }
     setError(null);
@@ -278,11 +283,30 @@ export default function MediaPickerDialog({
                   bgcolor: 'action.hover',
                 }}
               >
-                <img
-                  src={previewUrl}
-                  alt="preview"
-                  style={{ width: '100%', display: 'block', maxHeight: 360, objectFit: 'contain' }}
-                />
+                {picked?.type.startsWith('video/') ? (
+                  <video
+                    src={previewUrl}
+                    controls
+                    style={{
+                      width: '100%',
+                      display: 'block',
+                      maxHeight: 360,
+                      objectFit: 'contain',
+                      background: '#000',
+                    }}
+                  />
+                ) : (
+                  <img
+                    src={previewUrl}
+                    alt="preview"
+                    style={{
+                      width: '100%',
+                      display: 'block',
+                      maxHeight: 360,
+                      objectFit: 'contain',
+                    }}
+                  />
+                )}
               </Box>
             ) : (
               <Box

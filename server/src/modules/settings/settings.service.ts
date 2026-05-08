@@ -32,6 +32,8 @@ const DEFAULT_FLAGS: { key: string; name: string; description: string; enabled: 
   { key: 'venue_booking', name: 'Venue Booking', description: 'Enable venue booking flow.', enabled: true },
   { key: 'pod_creation', name: 'Pod Creation', description: 'Allow hosts to create pods.', enabled: true },
   { key: 'maintenance_mode', name: 'Maintenance Mode', description: 'Show maintenance banner across apps.', enabled: false },
+  { key: 'pod_plans_section', name: 'Pod Plans Section', description: 'Show the Pod Plans nav entry in the mobile web app.', enabled: false },
+  { key: 'whatsapp_signup_otp', name: 'WhatsApp Signup OTP', description: 'Ask the user to verify a WhatsApp number after signup.', enabled: false },
 ];
 
 export const settingsService = {

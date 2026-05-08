@@ -18,6 +18,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import { useColorMode } from '../ColorModeContext';
 import AuthBackground from '../components/AuthBackground';
+import LegalLinks from '../components/LegalLinks';
 import GoogleAuthNoticeDialog from '../components/GoogleAuthNoticeDialog';
 import GoogleSignInButton from '../components/GoogleSignInButton';
 import LoginForm, { type LoginFormValues } from '../forms/login.form';
@@ -182,6 +183,7 @@ export default function LoginPage() {
                 Create an account
               </Link>
             </Typography>
+            <LegalLinks prefix="By signing in," />
           </Stack>
         </CardContent>
       </Card>

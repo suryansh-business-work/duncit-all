@@ -188,7 +188,7 @@ export const NAV: NavSection[] = [
   },
   {
     heading: 'Community',
-    prefixes: ['/clubs', '/pods', '/pod-ideas'],
+    prefixes: ['/clubs', '/pods', '/pod-ideas', '/pod-plans'],
     items: [
       {
         label: 'Clubs',
@@ -198,6 +198,7 @@ export const NAV: NavSection[] = [
           { label: 'All Clubs', to: '/clubs', icon: <GroupsIcon /> },
           { label: 'Pods', to: '/pods', icon: <EventIcon /> },
           { label: 'Pod Ideas', to: '/pod-ideas', icon: <LightbulbIcon /> },
+          { label: 'Pod Plans', to: '/pod-plans', icon: <CategoryIcon /> },
         ],
       },
     ],

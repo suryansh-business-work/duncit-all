@@ -67,6 +67,10 @@ const userSchema = new Schema(
     interest_category_ids: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
     onboarding_survey_completed: { type: Boolean, default: false },
 
+    whatsapp_extension: { type: String, default: '' },
+    whatsapp_number: { type: String, default: '' },
+    whatsapp_verified_at: { type: Date, default: null },
+
     is_first_time_user: { type: Boolean, default: true },
 
     status: {

@@ -12,6 +12,8 @@ import { rbacService } from './modules/rbac/rbac.service';
 import { settingsService } from './modules/settings/settings.service';
 import { categoryService } from './modules/category/category.service';
 import { notificationService } from './modules/notification/notification.service';
+import { notificationEvents, type NotifyEvent } from './modules/notification/notification.events';
+import jwt from 'jsonwebtoken';
 import { policyService } from './modules/policy/policy.service';
 import { attachChatSocket } from './modules/chat/chat.socket';
 
@@ -22,6 +24,8 @@ async function bootstrap() {
   await categoryService.seedDefaults();
   await notificationService.ensureVapid();
   await policyService.seedDefaults();
+  const { podPlanService } = await import('./modules/pod-plan/pod-plan.service');
+  await podPlanService.seedDefaults();
 
   const app = express();
   const httpServer = http.createServer(app);
@@ -42,6 +46,77 @@ async function bootstrap() {
   );
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
+
+  // Server-Sent Events stream for real-time notifications.
+  // EventSource cannot send custom headers, so we accept the JWT via
+  // ?token= query string. The connection emits an initial unread count and
+  // then a `notify` event whenever the user receives a new notification or
+  // marks one as read.
+  app.get(
+    '/notifications/stream',
+    cors<cors.CorsRequest>({ origin: true, credentials: true }),
+    async (req, res) => {
+    const token = String(req.query.token || '');
+    let userId: string | null = null;
+    if (token) {
+      try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as {
+          id?: string;
+        };
+        userId = decoded?.id ?? null;
+      } catch {
+        userId = null;
+      }
+    }
+    if (!userId) {
+      res.status(401).end();
+      return;
+    }
+
+    res.set({
+      'Content-Type': 'text/event-stream',
+      'Cache-Control': 'no-cache, no-transform',
+      Connection: 'keep-alive',
+      'X-Accel-Buffering': 'no',
+    });
+    res.flushHeaders?.();
+
+    const send = (event: string, data: unknown) => {
+      res.write(`event: ${event}\n`);
+      res.write(`data: ${JSON.stringify(data)}\n\n`);
+    };
+
+    try {
+      const unread = await notificationService.unreadCountForUser(userId);
+      send('hello', { unread_count: unread });
+    } catch {
+      send('hello', { unread_count: 0 });
+    }
+
+    const channel = `notify:${userId}`;
+    const onEvent = async (payload: NotifyEvent) => {
+      let unread_count = payload.unread_count;
+      if (unread_count < 0) {
+        try {
+          unread_count = await notificationService.unreadCountForUser(userId!);
+        } catch {
+          unread_count = 0;
+        }
+      }
+      send('notify', { ...payload, unread_count });
+    };
+    notificationEvents.on(channel, onEvent);
+
+    const ping = setInterval(() => {
+      res.write(': ping\n\n');
+    }, 25000);
+
+    req.on('close', () => {
+      clearInterval(ping);
+      notificationEvents.off(channel, onEvent);
+    });
+  }
+  );
 
   // Real-time chat (socket.io) — shares the http server with Apollo.
   attachChatSocket(httpServer);

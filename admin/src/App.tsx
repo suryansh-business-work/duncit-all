@@ -30,6 +30,7 @@ import PodIdeasPage from './pages/PodIdeasPage';
 import BadgesPage from './pages/BadgesPage';
 import VenuesPage from './pages/VenuesPage';
 import HostsPage from './pages/HostsPage';
+import PodPlansPage from './pages/PodPlansPage';
 import FinanceDashboardPage from './pages/finance/FinanceDashboardPage';
 import FinanceSettingsPage from './pages/finance/FinanceSettingsPage';
 import PaymentLogsPage from './pages/finance/PaymentLogsPage';
@@ -80,6 +81,7 @@ export default function App() {
                 <Route path="/badges" element={<BadgesPage />} />
                 <Route path="/venues" element={<VenuesPage />} />
                 <Route path="/hosts" element={<HostsPage />} />
+                <Route path="/pod-plans" element={<PodPlansPage />} />
                 <Route path="/finance/dashboard" element={<FinanceDashboardPage />} />
                 <Route path="/finance/settings" element={<FinanceSettingsPage />} />
                 <Route path="/finance/payment-logs" element={<PaymentLogsPage />} />

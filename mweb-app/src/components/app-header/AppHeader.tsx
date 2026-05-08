@@ -23,6 +23,7 @@ import ProfileDrawer from './ProfileDrawer';
 import HeaderLocationButton from './HeaderLocationButton';
 import SuperCategoryTabs from './SuperCategoryTabs';
 import { useHeaderPushNotifications } from './useHeaderPushNotifications';
+import { useNotificationsSse } from './useNotificationsSse';
 
 interface AppHeaderProps {
   selectedSuperCategory: string;
@@ -78,7 +79,10 @@ export default function AppHeader({
 
   const { data: notifData, refetch: refetchNotifs } = useQuery(MY_NOTIFS, {
     fetchPolicy: 'cache-and-network',
-    pollInterval: 15000,
+  });
+  // Server-Sent Events keep the bell + count live without client polling.
+  useNotificationsSse(() => {
+    void refetchNotifs();
   });
   const [markReadMut] = useMutation(MARK_READ);
   const [markAllMut] = useMutation(MARK_ALL);

@@ -65,6 +65,10 @@ export const userTypeDefs = gql`
     interest_categories: [Category!]!
     onboarding_survey_completed: Boolean!
 
+    whatsapp_extension: String
+    whatsapp_number: String
+    whatsapp_verified_at: String
+
     is_first_time_user: Boolean!
 
     status: UserStatus

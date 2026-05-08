@@ -30,6 +30,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import DateTimeField from '../components/DateTimeField';
 
 const INTERVIEWS = gql`
   query Interviews($filter: InterviewFilterInput) {
@@ -136,11 +137,11 @@ export default function InterviewRequestsPage() {
     setNotes(it.admin_notes || '');
     setPickedSlotIdx(-1);
     if (it.scheduled_slot) {
-      setCustomStart(it.scheduled_slot.start.slice(0, 16));
-      setCustomEnd(it.scheduled_slot.end.slice(0, 16));
+      setCustomStart(it.scheduled_slot.start);
+      setCustomEnd(it.scheduled_slot.end);
     } else if (it.preferred_slots[0]) {
-      setCustomStart(it.preferred_slots[0].start.slice(0, 16));
-      setCustomEnd(it.preferred_slots[0].end.slice(0, 16));
+      setCustomStart(it.preferred_slots[0].start);
+      setCustomEnd(it.preferred_slots[0].end);
       setPickedSlotIdx(0);
     } else {
       setCustomStart('');
@@ -348,8 +349,8 @@ export default function InterviewRequestsPage() {
                       color={pickedSlotIdx === i ? 'primary' : 'default'}
                       onClick={() => {
                         setPickedSlotIdx(i);
-                        setCustomStart(s.start.slice(0, 16));
-                        setCustomEnd(s.end.slice(0, 16));
+                        setCustomStart(s.start);
+                        setCustomEnd(s.end);
                       }}
                       sx={{ justifyContent: 'flex-start' }}
                     />
@@ -373,21 +374,16 @@ export default function InterviewRequestsPage() {
 
               {(newStatus === 'SCHEDULED' || newStatus === 'APPROVED') && (
                 <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-                  <TextField
-                    type="datetime-local"
+                  <DateTimeField
                     label="Start"
-                    InputLabelProps={{ shrink: true }}
                     value={customStart}
-                    onChange={(e) => setCustomStart(e.target.value)}
-                    fullWidth
+                    onChange={setCustomStart}
                   />
-                  <TextField
-                    type="datetime-local"
+                  <DateTimeField
                     label="End"
-                    InputLabelProps={{ shrink: true }}
                     value={customEnd}
-                    onChange={(e) => setCustomEnd(e.target.value)}
-                    fullWidth
+                    onChange={setCustomEnd}
+                    minDateTime={customStart ? new Date(customStart) : null}
                   />
                 </Stack>
               )}

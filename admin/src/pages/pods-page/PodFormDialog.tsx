@@ -8,9 +8,12 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Stack,
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import { Formik, Form } from 'formik';
 import { useState } from 'react';
 import AiFillButton from '../../components/AiFillButton';
@@ -65,8 +68,19 @@ export default function PodFormDialog({
   onSubmit,
   finance,
 }: Props) {
-  const [expanded, setExpanded] = useState<string | false>('basic');
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(['basic']));
   const isEdit = !!initialValues.id;
+  const allOpen = expanded.size === SECTIONS.length;
+  const toggleOne = (id: string, open: boolean) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (open) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  const expandAll = () => setExpanded(new Set(SECTIONS.map((s) => s.id)));
+  const collapseAll = () => setExpanded(new Set());
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -100,11 +114,36 @@ export default function PodFormDialog({
               />
             </DialogTitle>
             <DialogContent dividers>
+              <Stack
+                direction="row"
+                justifyContent="flex-end"
+                spacing={1}
+                sx={{ mb: 1 }}
+              >
+                <Button
+                  size="small"
+                  startIcon={<UnfoldMoreIcon />}
+                  onClick={expandAll}
+                  disabled={allOpen}
+                  aria-label="Expand all sections"
+                >
+                  Expand all
+                </Button>
+                <Button
+                  size="small"
+                  startIcon={<UnfoldLessIcon />}
+                  onClick={collapseAll}
+                  disabled={expanded.size === 0}
+                  aria-label="Collapse all sections"
+                >
+                  Collapse all
+                </Button>
+              </Stack>
               {SECTIONS.map((sec) => (
                 <Accordion
                   key={sec.id}
-                  expanded={expanded === sec.id}
-                  onChange={(_, v) => setExpanded(v ? sec.id : false)}
+                  expanded={expanded.has(sec.id)}
+                  onChange={(_, v) => toggleOne(sec.id, v)}
                   disableGutters
                   square
                   sx={{

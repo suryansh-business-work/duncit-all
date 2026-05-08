@@ -14,17 +14,16 @@ import {
   IconButton,
   Skeleton,
   Stack,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import GroupsIcon from '@mui/icons-material/Groups';
-import SearchIcon from '@mui/icons-material/Search';
 import { HEADER_DATA } from '../../components/app-header/queries';
 import { HOME_DATA, PriceFilter, DateFilter, SortBy } from './queries';
 import SliderCard from './SliderCard';
 import PodCard from './PodCard';
 import FilterMenu from './FilterMenu';
+import HomeSearch from './HomeSearch';
 
 interface HomePageProps {
   superCategorySlug: string;
@@ -350,25 +349,12 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
       )}
 
       <Stack spacing={3}>
+      <HomeSearch locationId={locationId} />
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="subtitle2" color="text.secondary">
           Browse pods
         </Typography>
         <Stack direction="row" spacing={1} alignItems="center">
-          <Tooltip title="Search pods">
-            <IconButton
-              onClick={() => setFiltersOpen(true)}
-              aria-label="search pods"
-              sx={{
-                border: 1,
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-                '&:hover': { bgcolor: 'action.hover' },
-              }}
-            >
-              <SearchIcon />
-            </IconButton>
-          </Tooltip>
           <FilterMenu
             open={filtersOpen}
             onOpenChange={setFiltersOpen}

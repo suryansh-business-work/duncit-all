@@ -33,6 +33,16 @@ export const buildTheme = (mode: PaletteMode): Theme =>
       button: { textTransform: 'none', fontWeight: 600 },
     },
     components: {
+      MuiCssBaseline: {
+        styleOverrides: {
+          'a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [tabindex="0"]:focus-visible':
+            {
+              outline: '2px solid currentColor',
+              outlineOffset: 2,
+              borderRadius: 4,
+            },
+        },
+      },
       MuiAppBar: {
         defaultProps: { elevation: 0, color: 'inherit' },
         styleOverrides: {

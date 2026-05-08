@@ -1,5 +1,7 @@
-import { useState } from 'react';
-import { Box } from '@mui/material';
+import { useMemo, useState } from 'react';
+import { Box, Button, Stack } from '@mui/material';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import PlaceIcon from '@mui/icons-material/Place';
 import PersonIcon from '@mui/icons-material/Person';
 import InfoIcon from '@mui/icons-material/Info';
@@ -34,120 +36,76 @@ export default function PodDetailAccordions({
   isFree,
   priceCompute,
 }: Props) {
-  const [expanded, setExpanded] = useState<string | false>('about');
-  const handle = (id: string) => (next: string | false) =>
-    setExpanded(next === id ? id : next);
-
   const offers: string[] = pod.what_this_pod_offers ?? [];
   const perks: string[] = pod.available_perks ?? [];
   const charges = pod.place_charges ?? [];
   const paymentTerms = pod.payment_terms?.trim();
 
+  const sections = useMemo(
+    () =>
+      [
+        { id: 'about', title: 'About this pod', icon: <InfoIcon fontSize="small" />, render: () => <PodAboutSection description={pod.pod_description} info={pod.pod_info} /> },
+        { id: 'club', title: 'Club details', icon: <PlaceIcon fontSize="small" />, render: () => <PodClubSection club={club} /> },
+        { id: 'offers', title: 'What this pod offers', icon: <StarIcon fontSize="small" />, render: () => <PodChipList items={offers} emptyText="Details coming soon." color="primary" /> },
+        { id: 'hosts', title: 'Hosts', icon: <PersonIcon fontSize="small" />, render: () => <PodHostsSection hosts={hosts} /> },
+        { id: 'attendees', title: 'Attendees', icon: <GroupsIcon fontSize="small" />, render: () => <PodAttendeesSection attendees={attendees} attendeeIds={pod.pod_attendees ?? []} totalSpots={pod.no_of_spots ?? 0} /> },
+        { id: 'perks', title: 'Available perks', icon: <CardGiftcardIcon fontSize="small" />, render: () => <PodChipList items={perks} emptyText="No additional perks listed." color="success" /> },
+        { id: 'payment', title: 'Payment details', icon: <PaymentIcon fontSize="small" />, render: () => <PodPaymentDetailsSection amount={Number(pod.pod_amount) || 0} isFree={isFree} priceCompute={priceCompute} /> },
+        ...(paymentTerms ? [{ id: 'terms', title: 'Payment terms', icon: <PaymentIcon fontSize="small" />, render: () => <Box sx={{ whiteSpace: 'pre-wrap', fontSize: 14, color: 'text.secondary' }}>{paymentTerms}</Box> }] : []),
+        ...(charges.length > 0 ? [{ id: 'charges', title: 'Place charges', icon: <ReceiptLongIcon fontSize="small" />, render: () => <PodPlaceChargesSection charges={charges} /> }] : []),
+      ] as const,
+    [pod, club, hosts, attendees, isFree, priceCompute, offers, perks, charges, paymentTerms]
+  );
+
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(['about']));
+  const allOpen = expanded.size === sections.length;
+  const toggle = (id: string, open: boolean) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (open) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  const expandAll = () => setExpanded(new Set(sections.map((s) => s.id)));
+  const collapseAll = () => setExpanded(new Set());
+
   return (
     <Box>
-      <PodAccordion
-        id="about"
-        title="About this pod"
-        icon={<InfoIcon fontSize="small" />}
-        expanded={expanded}
-        onChange={handle('about')}
-      >
-        <PodAboutSection description={pod.pod_description} info={pod.pod_info} />
-      </PodAccordion>
-
-      <PodAccordion
-        id="club"
-        title="Club details"
-        icon={<PlaceIcon fontSize="small" />}
-        expanded={expanded}
-        onChange={handle('club')}
-      >
-        <PodClubSection club={club} />
-      </PodAccordion>
-
-      <PodAccordion
-        id="offers"
-        title="What this pod offers"
-        icon={<StarIcon fontSize="small" />}
-        expanded={expanded}
-        onChange={handle('offers')}
-      >
-        <PodChipList items={offers} emptyText="Details coming soon." color="primary" />
-      </PodAccordion>
-
-      <PodAccordion
-        id="hosts"
-        title="Hosts"
-        icon={<PersonIcon fontSize="small" />}
-        expanded={expanded}
-        onChange={handle('hosts')}
-      >
-        <PodHostsSection hosts={hosts} />
-      </PodAccordion>
-
-      <PodAccordion
-        id="attendees"
-        title="Attendees"
-        icon={<GroupsIcon fontSize="small" />}
-        expanded={expanded}
-        onChange={handle('attendees')}
-      >
-        <PodAttendeesSection
-          attendees={attendees}
-          attendeeIds={pod.pod_attendees ?? []}
-          totalSpots={pod.no_of_spots ?? 0}
-        />
-      </PodAccordion>
-
-      <PodAccordion
-        id="perks"
-        title="Available perks"
-        icon={<CardGiftcardIcon fontSize="small" />}
-        expanded={expanded}
-        onChange={handle('perks')}
-      >
-        <PodChipList items={perks} emptyText="No additional perks listed." color="success" />
-      </PodAccordion>
-
-      <PodAccordion
-        id="payment"
-        title="Payment details"
-        icon={<PaymentIcon fontSize="small" />}
-        expanded={expanded}
-        onChange={handle('payment')}
-      >
-        <PodPaymentDetailsSection
-          amount={Number(pod.pod_amount) || 0}
-          isFree={isFree}
-          priceCompute={priceCompute}
-        />
-      </PodAccordion>
-
-      {paymentTerms && (
-        <PodAccordion
-          id="terms"
-          title="Payment terms"
-          icon={<PaymentIcon fontSize="small" />}
-          expanded={expanded}
-          onChange={handle('terms')}
+      <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mb: 1 }}>
+        <Button
+          size="small"
+          startIcon={<UnfoldMoreIcon />}
+          onClick={expandAll}
+          disabled={allOpen}
+          aria-label="Expand all sections"
+          sx={{ minHeight: 36 }}
         >
-          <Box sx={{ whiteSpace: 'pre-wrap', fontSize: 14, color: 'text.secondary' }}>
-            {paymentTerms}
-          </Box>
-        </PodAccordion>
-      )}
-
-      {charges.length > 0 && (
-        <PodAccordion
-          id="charges"
-          title="Place charges"
-          icon={<ReceiptLongIcon fontSize="small" />}
-          expanded={expanded}
-          onChange={handle('charges')}
+          Expand all
+        </Button>
+        <Button
+          size="small"
+          startIcon={<UnfoldLessIcon />}
+          onClick={collapseAll}
+          disabled={expanded.size === 0}
+          aria-label="Collapse all sections"
+          sx={{ minHeight: 36 }}
         >
-          <PodPlaceChargesSection charges={charges} />
+          Collapse all
+        </Button>
+      </Stack>
+      {sections.map((sec) => (
+        <PodAccordion
+          key={sec.id}
+          id={sec.id}
+          title={sec.title}
+          icon={sec.icon}
+          expanded={expanded.has(sec.id)}
+          onChange={(open) => toggle(sec.id, open)}
+        >
+          {sec.render()}
         </PodAccordion>
-      )}
+      ))}
     </Box>
   );
 }

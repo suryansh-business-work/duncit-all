@@ -14,8 +14,8 @@ interface Props {
   title: string;
   icon?: ReactNode;
   defaultExpanded?: boolean;
-  expanded: string | false;
-  onChange: (next: string | false) => void;
+  expanded: boolean;
+  onChange: (open: boolean) => void;
   children: ReactNode;
 }
 
@@ -29,8 +29,8 @@ export default function PodAccordion({
 }: Props) {
   return (
     <Accordion
-      expanded={expanded === id}
-      onChange={(_, v) => onChange(v ? id : false)}
+      expanded={expanded}
+      onChange={(_, v) => onChange(v)}
       disableGutters
       square
       sx={{
@@ -45,7 +45,12 @@ export default function PodAccordion({
         '&.Mui-expanded': { mb: 1 },
       }}
     >
-      <AccordionSummary expandIcon={<ExpandMoreIcon />} sx={{ minHeight: 56 }}>
+      <AccordionSummary
+        expandIcon={<ExpandMoreIcon />}
+        sx={{ minHeight: 56 }}
+        aria-controls={`${id}-content`}
+        id={`${id}-header`}
+      >
         <Stack direction="row" alignItems="center" spacing={1.25} sx={{ flex: 1 }}>
           {icon && <Box sx={{ display: 'flex', color: 'primary.main' }}>{icon}</Box>}
           <Typography variant="subtitle1" fontWeight={600}>

@@ -106,7 +106,23 @@ export const theme = createTheme({
           borderRadius: 8,
         },
         '*::-webkit-scrollbar-thumb:hover': { background: alpha(INK, 0.28) },
+        // Accessibility: visible focus ring for keyboard users.
+        'a:focus-visible, button:focus-visible, [role="button"]:focus-visible, [tabindex="0"]:focus-visible':
+          {
+            outline: `2px solid ${PRIMARY}`,
+            outlineOffset: 2,
+            borderRadius: 4,
+          },
+        // Touch target minimum (WCAG 2.5.5 / iOS HIG).
+        '@media (pointer: coarse)': {
+          'button, a[role="button"], [role="button"]': {
+            minHeight: 44,
+          },
+        },
       },
+    },
+    MuiButtonBase: {
+      defaultProps: { disableTouchRipple: false },
     },
     MuiAppBar: {
       defaultProps: { elevation: 0, color: 'default' },

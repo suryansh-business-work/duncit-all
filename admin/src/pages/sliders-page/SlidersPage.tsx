@@ -37,7 +37,6 @@ import {
   SCOPES,
   SliderForm,
   blankForm,
-  toLocalInput,
 } from './queries';
 import SliderFormDialog from './SliderFormDialog';
 
@@ -93,8 +92,8 @@ export default function SlidersPage() {
       location_id: s.location_id ?? '',
       zone_name: s.zone_name ?? '',
       sort_order: s.sort_order ?? 0,
-      starts_at: toLocalInput(s.starts_at),
-      ends_at: toLocalInput(s.ends_at),
+      starts_at: s.starts_at ?? '',
+      ends_at: s.ends_at ?? '',
       is_active: s.is_active,
     });
     setOpError(null);

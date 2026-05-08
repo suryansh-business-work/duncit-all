@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
-import { Box, Card, CardContent, Stack, Typography, Avatar } from '@mui/material';
+import { Box, ButtonBase, Card, CardContent, Stack, Typography, Avatar } from '@mui/material';
 import EmojiEventsIcon from '@mui/icons-material/EmojiEvents';
+import BadgeDetailsSheet from './badges/BadgeDetailsSheet';
 
 const MY_BADGES = gql`
   query MyBadges {
@@ -13,15 +15,18 @@ const MY_BADGES = gql`
         title
         description
         image_url
+        condition_type
+        threshold
       }
     }
   }
 `;
 
 export default function MyBadges() {
-  const { data, loading } = useQuery(MY_BADGES);
+  const { data, loading } = useQuery(MY_BADGES, { fetchPolicy: 'cache-and-network' });
   const badges = data?.myBadges ?? [];
-  if (loading) return null;
+  const [active, setActive] = useState<any | null>(null);
+  if (loading && !data) return null;
 
   return (
     <Card variant="outlined">
@@ -48,10 +53,26 @@ export default function MyBadges() {
             }}
           >
             {badges.map((ub: any) => (
-              <Stack key={ub.id} alignItems="center" spacing={0.5} sx={{ textAlign: 'center' }}>
+              <ButtonBase
+                key={ub.id}
+                focusRipple
+                onClick={() => setActive(ub)}
+                aria-label={`View badge ${ub.badge?.title ?? ''}`}
+                sx={{
+                  borderRadius: 2,
+                  p: 1,
+                  textAlign: 'center',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  alignItems: 'center',
+                  minHeight: 44,
+                  '&:hover': { bgcolor: 'action.hover' },
+                  '&:focus-visible': { outline: '2px solid', outlineColor: 'primary.main' },
+                }}
+              >
                 <Avatar
                   src={ub.badge?.image_url || undefined}
-                  sx={{ width: 56, height: 56, bgcolor: 'primary.light' }}
+                  sx={{ width: 56, height: 56, bgcolor: 'primary.light', mb: 0.5 }}
                 >
                   {!ub.badge?.image_url && <EmojiEventsIcon />}
                 </Avatar>
@@ -61,15 +82,27 @@ export default function MyBadges() {
                 <Typography
                   variant="caption"
                   color="text.secondary"
-                  sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                  sx={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 2,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                  }}
                 >
                   {ub.badge?.description}
                 </Typography>
-              </Stack>
+              </ButtonBase>
             ))}
           </Box>
         )}
       </CardContent>
+      <BadgeDetailsSheet
+        open={!!active}
+        onClose={() => setActive(null)}
+        badge={active?.badge}
+        awardedAt={active?.awarded_at}
+        awardedReason={active?.awarded_reason}
+      />
     </Card>
   );
 }

@@ -1,5 +1,6 @@
 import { useFormikContext } from 'formik';
 import { MenuItem, Stack, TextField } from '@mui/material';
+import DateTimeField from '../../../components/DateTimeField';
 import type { PodForm } from '../queries';
 
 interface Props {
@@ -83,24 +84,19 @@ export default function WhenWhereSection({ clubs, filteredLocations, zoneOptions
         </TextField>
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <TextField
+        <DateTimeField
           label="Start date & time"
-          type="datetime-local"
           value={values.pod_date_time}
-          onChange={(e) => setFieldValue('pod_date_time', e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          fullWidth
+          onChange={(iso) => setFieldValue('pod_date_time', iso)}
           required
           error={err('pod_date_time')}
           helperText={help('pod_date_time')}
         />
-        <TextField
+        <DateTimeField
           label="End date & time"
-          type="datetime-local"
           value={values.pod_end_date_time}
-          onChange={(e) => setFieldValue('pod_end_date_time', e.target.value)}
-          InputLabelProps={{ shrink: true }}
-          fullWidth
+          onChange={(iso) => setFieldValue('pod_end_date_time', iso)}
+          minDateTime={values.pod_date_time ? new Date(values.pod_date_time) : null}
           error={err('pod_end_date_time')}
           helperText={help('pod_end_date_time')}
         />

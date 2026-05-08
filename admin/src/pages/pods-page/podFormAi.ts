@@ -1,11 +1,6 @@
 import type { PodForm, PodPlaceCharge } from './queries';
 
-const fmt = (dt: Date) => {
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${dt.getFullYear()}-${pad(dt.getMonth() + 1)}-${pad(dt.getDate())}T${pad(
-    dt.getHours()
-  )}:${pad(dt.getMinutes())}`;
-};
+const fmt = (dt: Date) => dt.toISOString();
 
 const sanitizeChips = (input: unknown): string[] | undefined => {
   if (!Array.isArray(input)) return undefined;

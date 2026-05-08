@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import AiFillButton from '../../components/AiFillButton';
 import MediaPickerField from '../../components/MediaPickerField';
+import DateTimeField from '../../components/DateTimeField';
 import { SCOPES, SliderForm } from './queries';
 
 interface Props {
@@ -222,21 +223,16 @@ export default function SliderFormDialog({
           </Stack>
 
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
+            <DateTimeField
               label="Starts at (optional)"
-              type="datetime-local"
               value={form.starts_at}
-              onChange={(e) => setForm({ ...form, starts_at: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
+              onChange={(iso) => setForm({ ...form, starts_at: iso })}
             />
-            <TextField
+            <DateTimeField
               label="Ends at (optional)"
-              type="datetime-local"
               value={form.ends_at}
-              onChange={(e) => setForm({ ...form, ends_at: e.target.value })}
-              InputLabelProps={{ shrink: true }}
-              fullWidth
+              onChange={(iso) => setForm({ ...form, ends_at: iso })}
+              minDateTime={form.starts_at ? new Date(form.starts_at) : null}
             />
           </Stack>
 

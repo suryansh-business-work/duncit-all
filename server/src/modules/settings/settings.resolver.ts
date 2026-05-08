@@ -11,6 +11,7 @@ export const settingsResolvers = {
       requireRole(ctx, ADMIN_READ);
       return settingsService.getAppSettings();
     },
+    publicAppSettings: async () => settingsService.getPublicAppSettings(),
     featureFlags: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_READ);
       return settingsService.listFlags();

@@ -4,12 +4,21 @@ export const settingsTypeDefs = gql`
   type AppSettings {
     jwt_expires_in: String
     jwt_no_expiry: Boolean!
+    date_format: String!
+    time_format: String!
     updated_at: String
+  }
+
+  type PublicAppSettings {
+    date_format: String!
+    time_format: String!
   }
 
   input UpdateAppSettingsInput {
     jwt_expires_in: String
     jwt_no_expiry: Boolean
+    date_format: String
+    time_format: String
   }
 
   type FeatureFlag {
@@ -58,6 +67,7 @@ export const settingsTypeDefs = gql`
 
   extend type Query {
     appSettings: AppSettings!
+    publicAppSettings: PublicAppSettings!
     featureFlags: [FeatureFlag!]!
     featureFlag(key: String!): FeatureFlag
     publicFeatureFlags: [PublicFeatureFlag!]!

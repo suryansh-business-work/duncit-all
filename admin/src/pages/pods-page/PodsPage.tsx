@@ -25,7 +25,6 @@ import {
   DELETE,
   blankForm,
   linesToMedia,
-  toLocalInput,
   PodForm,
 } from './queries';
 import PodsTable from './PodsTable';
@@ -43,8 +42,8 @@ function buildEditValues(p: any): PodForm {
     pod_hashtag_text: (p.pod_hashtag ?? []).join(' '),
     media_text: (p.pod_images_and_videos ?? []).map((m: any) => m.url).join('\n'),
     pod_description: p.pod_description ?? '',
-    pod_date_time: toLocalInput(p.pod_date_time),
-    pod_end_date_time: toLocalInput(p.pod_end_date_time),
+    pod_date_time: p.pod_date_time ?? '',
+    pod_end_date_time: p.pod_end_date_time ?? '',
     pod_type: p.pod_type,
     pod_amount: p.pod_amount ?? 0,
     pod_occurrence: p.pod_occurrence ?? 'ONE_TIME',

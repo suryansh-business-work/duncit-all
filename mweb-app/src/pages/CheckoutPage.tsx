@@ -3,6 +3,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
+  Backdrop,
   Box,
   Button,
   Card,
@@ -12,6 +13,7 @@ import {
   Divider,
   IconButton,
   MenuItem,
+  Skeleton,
   Stack,
   TextField,
   Typography,
@@ -126,8 +128,14 @@ export default function CheckoutPage() {
 
   if (financeLoading || !breakup) {
     return (
-      <Box sx={{ p: 6, textAlign: 'center' }}>
-        <CircularProgress />
+      <Box sx={{ maxWidth: 720, mx: 'auto', p: 2 }}>
+        <Stack spacing={2}>
+          <Skeleton variant="text" width="40%" height={40} />
+          <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+            <Skeleton variant="rounded" height={260} sx={{ flex: 1 }} />
+            <Skeleton variant="rounded" height={420} sx={{ flex: 1 }} />
+          </Stack>
+        </Stack>
       </Box>
     );
   }
@@ -272,9 +280,17 @@ export default function CheckoutPage() {
               <Button
                 variant="contained"
                 size="large"
-                startIcon={<LockIcon />}
+                startIcon={
+                  submitting ? (
+                    <CircularProgress size={18} color="inherit" />
+                  ) : (
+                    <LockIcon />
+                  )
+                }
                 onClick={submit}
                 disabled={submitting || amount <= 0}
+                sx={{ minHeight: 48 }}
+                aria-label={submitting ? 'Processing payment' : `Pay ${fmt(breakup.total)}`}
               >
                 {submitting ? 'Processing…' : `Pay ${fmt(breakup.total)}`}
               </Button>
@@ -285,6 +301,18 @@ export default function CheckoutPage() {
           </CardContent>
         </Card>
       </Stack>
+      <Backdrop
+        open={submitting}
+        sx={{ color: 'common.white', zIndex: (t) => t.zIndex.modal + 1, flexDirection: 'column', gap: 2 }}
+      >
+        <CircularProgress color="inherit" />
+        <Typography variant="subtitle1" fontWeight={600}>
+          Processing your payment\u2026
+        </Typography>
+        <Typography variant="caption" sx={{ opacity: 0.8 }}>
+          Please don\u2019t close this tab.
+        </Typography>
+      </Backdrop>
     </Box>
   );
 }

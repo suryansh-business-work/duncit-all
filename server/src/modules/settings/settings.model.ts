@@ -4,6 +4,8 @@ export interface IAppSettings extends Document {
   singleton_key: string;
   jwt_expires_in: string | null;
   jwt_no_expiry: boolean;
+  date_format: string;
+  time_format: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -13,6 +15,8 @@ const appSettingsSchema = new Schema<IAppSettings>(
     singleton_key: { type: String, required: true, unique: true, default: 'app' },
     jwt_expires_in: { type: String, default: '7d' },
     jwt_no_expiry: { type: Boolean, default: false },
+    date_format: { type: String, default: 'dd MMM yyyy' },
+    time_format: { type: String, default: 'hh:mm a' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

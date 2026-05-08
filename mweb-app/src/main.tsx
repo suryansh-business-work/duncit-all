@@ -3,6 +3,8 @@ import ReactDOM from 'react-dom/client';
 import { ApolloProvider } from '@apollo/client';
 import { BrowserRouter } from 'react-router-dom';
 import { ThemeProvider, CssBaseline } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { apolloClient } from './apollo';
 import { theme } from './theme';
 import App from './App';
@@ -31,9 +33,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ApolloProvider client={apolloClient}>
       <ThemeProvider theme={theme}>
         <CssBaseline />
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <BrowserRouter>
+            <App />
+          </BrowserRouter>
+        </LocalizationProvider>
       </ThemeProvider>
     </ApolloProvider>
   </React.StrictMode>

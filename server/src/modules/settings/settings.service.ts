@@ -4,6 +4,8 @@ import { AppSettingsModel, FeatureFlagModel, BrandingModel } from './settings.mo
 const toAppPub = (d: any) => ({
   jwt_expires_in: d?.jwt_expires_in ?? '7d',
   jwt_no_expiry: !!d?.jwt_no_expiry,
+  date_format: d?.date_format ?? 'dd MMM yyyy',
+  time_format: d?.time_format ?? 'hh:mm a',
   updated_at: d?.updated_at?.toISOString?.() ?? '',
 });
 
@@ -39,10 +41,21 @@ export const settingsService = {
     return toAppPub(doc);
   },
 
-  async updateAppSettings(input: { jwt_expires_in?: string | null; jwt_no_expiry?: boolean }) {
+  async getPublicAppSettings() {
+    let doc = await AppSettingsModel.findOne({ singleton_key: 'app' });
+    if (!doc) doc = await AppSettingsModel.create({ singleton_key: 'app' });
+    return {
+      date_format: doc.date_format ?? 'dd MMM yyyy',
+      time_format: doc.time_format ?? 'hh:mm a',
+    };
+  },
+
+  async updateAppSettings(input: { jwt_expires_in?: string | null; jwt_no_expiry?: boolean; date_format?: string; time_format?: string }) {
     const update: any = {};
     if (input.jwt_no_expiry !== undefined) update.jwt_no_expiry = input.jwt_no_expiry;
     if (input.jwt_expires_in !== undefined) update.jwt_expires_in = input.jwt_expires_in;
+    if (input.date_format !== undefined) update.date_format = input.date_format;
+    if (input.time_format !== undefined) update.time_format = input.time_format;
     const doc = await AppSettingsModel.findOneAndUpdate(
       { singleton_key: 'app' },
       { $set: update },

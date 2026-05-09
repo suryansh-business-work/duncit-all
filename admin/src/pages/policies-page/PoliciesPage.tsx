@@ -1,18 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Snackbar,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Snackbar, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DescriptionIcon from '@mui/icons-material/Description';
 import {
@@ -24,6 +12,7 @@ import {
 import { emptyForm, type FormState, slugify } from './helpers';
 import PoliciesTable from './PoliciesTable';
 import PolicyEditDialog from './PolicyEditDialog';
+import PolicyDeleteDialog from './PolicyDeleteDialog';
 
 export default function PoliciesPage() {
   const [search, setSearch] = useState('');
@@ -174,22 +163,12 @@ export default function PoliciesPage() {
         onSubmit={submit}
       />
 
-      <Dialog open={!!delTarget} onClose={() => setDelTarget(null)}>
-        <DialogTitle>Delete policy?</DialogTitle>
-        <DialogContent>
-          <Typography>
-            This will permanently delete <b>{delTarget?.title}</b> ({delTarget?.slug}). Pages in
-            the app using this slug will no longer render.
-          </Typography>
-          {error && <Alert severity="error" sx={{ mt: 2 }}>{error}</Alert>}
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDelTarget(null)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={doDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <PolicyDeleteDialog
+        target={delTarget}
+        error={error}
+        onClose={() => setDelTarget(null)}
+        onConfirm={doDelete}
+      />
 
       <Snackbar
         open={!!toast}

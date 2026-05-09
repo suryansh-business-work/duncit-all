@@ -1,25 +1,14 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Box,
-  Button,
-  Chip,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  MenuItem,
-  Snackbar,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { useDateFormat } from '../../utils/dateFormat';
 import { DELETE_INTERVIEW, INTERVIEWS, UPDATE_INTERVIEW } from './queries';
-import { STATUS_COLORS, STATUS_KEYS, slotTime } from './helpers';
+import { slotTime } from './helpers';
 import InterviewsTable from './InterviewsTable';
 import ManageInterviewDialog from './ManageInterviewDialog';
+import InterviewsToolbar from './InterviewsToolbar';
+import InterviewDeleteDialog from './InterviewDeleteDialog';
 
 export default function InterviewRequestsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -136,30 +125,13 @@ export default function InterviewRequestsPage() {
         </Typography>
       </Stack>
 
-      <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
-        {STATUS_KEYS.map((s) => (
-          <Chip
-            key={s}
-            label={`${s} · ${counts[s] || 0}`}
-            color={statusFilter === s ? STATUS_COLORS[s] : 'default'}
-            variant={statusFilter === s ? 'filled' : 'outlined'}
-            onClick={() => setStatusFilter(statusFilter === s ? '' : s)}
-          />
-        ))}
-        <Box sx={{ flex: 1 }} />
-        <TextField
-          select
-          size="small"
-          label="Type"
-          value={typeFilter}
-          onChange={(e) => setTypeFilter(e.target.value)}
-          sx={{ minWidth: 140 }}
-        >
-          <MenuItem value="">All</MenuItem>
-          <MenuItem value="HOST">Host</MenuItem>
-          <MenuItem value="VENUE">Venue</MenuItem>
-        </TextField>
-      </Stack>
+      <InterviewsToolbar
+        counts={counts}
+        statusFilter={statusFilter}
+        setStatusFilter={setStatusFilter}
+        typeFilter={typeFilter}
+        setTypeFilter={setTypeFilter}
+      />
 
       <InterviewsTable
         loading={loading}
@@ -190,18 +162,11 @@ export default function InterviewRequestsPage() {
         onSubmit={submit}
       />
 
-      <Dialog open={!!delTarget} onClose={() => setDelTarget(null)}>
-        <DialogTitle>Delete this request?</DialogTitle>
-        <DialogContent>
-          <Typography variant="body2">This action cannot be undone.</Typography>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setDelTarget(null)}>Cancel</Button>
-          <Button color="error" variant="contained" onClick={doDelete}>
-            Delete
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <InterviewDeleteDialog
+        open={!!delTarget}
+        onClose={() => setDelTarget(null)}
+        onConfirm={doDelete}
+      />
 
       <Snackbar
         open={!!toast}

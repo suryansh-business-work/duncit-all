@@ -1,16 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Snackbar,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { Alert, Snackbar, Stack } from '@mui/material';
 import { notifyError } from '../../components/notify';
 import {
   CREATE_LOCATION,
@@ -21,6 +11,7 @@ import {
 import { blankForm, type LocForm, type ZoneEdit } from './types';
 import LocationsTable from './LocationsTable';
 import LocationFormDialog from './LocationFormDialog';
+import LocationsToolbar from './LocationsToolbar';
 
 export default function LocationsPage() {
   const [search, setSearch] = useState('');
@@ -144,33 +135,7 @@ export default function LocationsPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-      >
-        <Box>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <LocationOnIcon color="primary" />
-            <Typography variant="h5">Locations</Typography>
-          </Stack>
-          <Typography variant="body2" color="text.secondary">
-            Cities and their zones served by the platform.
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={2}>
-          <TextField
-            size="small"
-            placeholder="Search name, ID, pincode"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            New Location
-          </Button>
-        </Stack>
-      </Stack>
+      <LocationsToolbar search={search} setSearch={setSearch} onCreate={openCreate} />
 
       {error && <Alert severity="error">{error.message}</Alert>}
 

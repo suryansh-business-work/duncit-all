@@ -1,32 +1,7 @@
 import { useMemo, useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Avatar,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  IconButton,
-  MenuItem,
-  Snackbar,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
-import ViewCarouselIcon from '@mui/icons-material/ViewCarousel';
+import { Alert, Snackbar, Stack } from '@mui/material';
 import {
   SLIDERS,
   LOCATIONS,
@@ -34,11 +9,12 @@ import {
   CREATE,
   UPDATE,
   DELETE,
-  SCOPES,
   SliderForm,
   blankForm,
 } from './queries';
 import SliderFormDialog from './SliderFormDialog';
+import SlidersTable from './SlidersTable';
+import SlidersToolbar from './SlidersToolbar';
 
 export default function SlidersPage() {
   const [scopeFilter, setScopeFilter] = useState<string>('');
@@ -65,8 +41,6 @@ export default function SlidersPage() {
 
   const locations = locsData?.locations ?? [];
   const superCategories = superCatData?.categories ?? [];
-  const locName = (id?: string | null) =>
-    locations.find((l: any) => l.id === id)?.location_name ?? '—';
 
   const zonesForLocation = useMemo(() => {
     const loc = locations.find((l: any) => l.id === form.location_id);
@@ -156,171 +130,26 @@ export default function SlidersPage() {
     }
   };
 
-  const scopeChip = (s: any) => {
-    const meta = SCOPES.find((x) => x.value === s.scope);
-    let label = meta?.label ?? s.scope;
-    if (s.scope === 'LOCATION') label = `${meta?.label} · ${locName(s.location_id)}`;
-    if (s.scope === 'ZONE')
-      label = `${meta?.label} · ${locName(s.location_id)} / ${s.zone_name}`;
-    return (
-      <Chip
-        size="small"
-        icon={meta?.icon}
-        label={label}
-        color={
-          s.scope === 'GLOBAL' ? 'primary' : s.scope === 'LOCATION' ? 'info' : 'secondary'
-        }
-        variant="outlined"
-      />
-    );
-  };
-
   return (
     <Stack spacing={3}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-      >
-        <Box>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <ViewCarouselIcon color="primary" />
-            <Typography variant="h5">Sliders</Typography>
-          </Stack>
-          <Typography variant="body2" color="text.secondary">
-            Hub app banners. Target Global, a specific Location, or a Zone inside a Location.
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={2}>
-          <TextField
-            select
-            size="small"
-            label="Scope"
-            value={scopeFilter}
-            onChange={(e) => setScopeFilter(e.target.value)}
-            sx={{ minWidth: 160 }}
-          >
-            <MenuItem value="">All</MenuItem>
-            {SCOPES.map((s) => (
-              <MenuItem key={s.value} value={s.value}>
-                {s.label}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            size="small"
-            placeholder="Search title"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            New Slider
-          </Button>
-        </Stack>
-      </Stack>
+      <SlidersToolbar
+        scopeFilter={scopeFilter}
+        setScopeFilter={setScopeFilter}
+        search={search}
+        setSearch={setSearch}
+        onCreate={openCreate}
+      />
 
       {error && <Alert severity="error">{error.message}</Alert>}
 
-      <Card>
-        <CardContent sx={{ p: 0 }}>
-          {loading && !data ? (
-            <Stack alignItems="center" sx={{ p: 4 }}>
-              <CircularProgress />
-            </Stack>
-          ) : (
-            <Table size="small">
-              <TableHead>
-                <TableRow>
-                  <TableCell>Preview</TableCell>
-                  <TableCell>Title</TableCell>
-                  <TableCell>Scope</TableCell>
-                  <TableCell>Link</TableCell>
-                  <TableCell>Order</TableCell>
-                  <TableCell>Window</TableCell>
-                  <TableCell>Status</TableCell>
-                  <TableCell align="right">Actions</TableCell>
-                </TableRow>
-              </TableHead>
-              <TableBody>
-                {(data?.sliders ?? []).map((s: any) => (
-                  <TableRow key={s.id} hover>
-                    <TableCell>
-                      <Avatar
-                        variant="rounded"
-                        src={s.media_type === 'IMAGE' ? s.media_url : undefined}
-                        sx={{ width: 56, height: 36 }}
-                      >
-                        {s.title[0]}
-                      </Avatar>
-                    </TableCell>
-                    <TableCell>
-                      <Typography variant="body2" fontWeight={600}>
-                        {s.title}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {s.slider_id}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>{scopeChip(s)}</TableCell>
-                    <TableCell>
-                      {s.link_url ? (
-                        <Typography
-                          variant="caption"
-                          sx={{ maxWidth: 220, display: 'inline-block', wordBreak: 'break-all' }}
-                        >
-                          {s.link_url}
-                        </Typography>
-                      ) : (
-                        <Typography variant="caption" color="text.secondary">
-                          —
-                        </Typography>
-                      )}
-                    </TableCell>
-                    <TableCell>{s.sort_order}</TableCell>
-                    <TableCell>
-                      <Typography variant="caption" display="block">
-                        {s.starts_at ? new Date(s.starts_at).toLocaleDateString() : '—'} →{' '}
-                        {s.ends_at ? new Date(s.ends_at).toLocaleDateString() : '∞'}
-                      </Typography>
-                    </TableCell>
-                    <TableCell>
-                      <Chip
-                        size="small"
-                        label={s.is_active ? 'Active' : 'Inactive'}
-                        color={s.is_active ? 'success' : 'default'}
-                      />
-                    </TableCell>
-                    <TableCell align="right">
-                      <Tooltip title="Edit">
-                        <IconButton size="small" onClick={() => openEdit(s)}>
-                          <EditIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                      <Tooltip title="Delete">
-                        <IconButton size="small" onClick={() => remove(s)}>
-                          <DeleteIcon fontSize="small" />
-                        </IconButton>
-                      </Tooltip>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {data?.sliders?.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={8}>
-                      <Box sx={{ p: 3, textAlign: 'center' }}>
-                        <Typography variant="body2" color="text.secondary">
-                          No sliders yet.
-                        </Typography>
-                      </Box>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
-          )}
-        </CardContent>
-      </Card>
+      <SlidersTable
+        loading={loading}
+        hasData={!!data}
+        rows={data?.sliders ?? []}
+        locations={locations}
+        onEdit={openEdit}
+        onRemove={remove}
+      />
 
       <SliderFormDialog
         open={open}

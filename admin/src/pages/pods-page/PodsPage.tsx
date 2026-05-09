@@ -2,18 +2,7 @@ import { useMemo, useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useMutation, useQuery } from '@apollo/client';
 import { useSearchParams } from 'react-router-dom';
-import {
-  Alert,
-  Box,
-  Button,
-  MenuItem,
-  Snackbar,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import EventIcon from '@mui/icons-material/Event';
+import { Alert, Snackbar, Stack } from '@mui/material';
 import {
   PODS,
   CLUBS,
@@ -23,78 +12,12 @@ import {
   CREATE,
   UPDATE,
   DELETE,
-  blankForm,
-  linesToMedia,
   PodForm,
 } from './queries';
+import { blankForm, buildEditValues, buildPayload } from './helpers';
 import PodsTable from './PodsTable';
 import PodFormDialog from './PodFormDialog';
-
-function buildEditValues(p: any): PodForm {
-  return {
-    id: p.id,
-    pod_id: p.pod_id,
-    pod_title: p.pod_title,
-    pod_hosts_id: p.pod_hosts_id ?? [],
-    location_id: p.location_id ?? '',
-    club_id: p.club_id ?? '',
-    zone_name: p.zone_name ?? '',
-    pod_hashtag_text: (p.pod_hashtag ?? []).join(' '),
-    media_text: (p.pod_images_and_videos ?? []).map((m: any) => m.url).join('\n'),
-    pod_description: p.pod_description ?? '',
-    pod_date_time: p.pod_date_time ?? '',
-    pod_end_date_time: p.pod_end_date_time ?? '',
-    pod_type: p.pod_type,
-    pod_amount: p.pod_amount ?? 0,
-    pod_occurrence: p.pod_occurrence ?? 'ONE_TIME',
-    no_of_spots: p.no_of_spots ?? 0,
-    pod_info: p.pod_info ?? '',
-    what_this_pod_offers: p.what_this_pod_offers ?? [],
-    available_perks: p.available_perks ?? [],
-    payment_terms: p.payment_terms ?? '',
-    place_charges: (p.place_charges ?? []).map((c: any) => ({
-      label: c.label ?? '',
-      amount: c.amount ?? 0,
-      note: c.note ?? '',
-    })),
-    is_active: !!p.is_active,
-  };
-}
-
-function buildPayload(form: PodForm) {
-  const tags = form.pod_hashtag_text
-    .split(/[\s,]+/)
-    .map((s) => s.replace(/^#/, '').trim())
-    .filter(Boolean);
-
-  return {
-    pod_title: form.pod_title.trim(),
-    pod_hosts_id: form.pod_hosts_id,
-    location_id: form.location_id,
-    club_id: form.club_id,
-    zone_name: form.zone_name || null,
-    pod_hashtag: tags,
-    pod_images_and_videos: linesToMedia(form.media_text),
-    pod_description: form.pod_description,
-    pod_date_time: new Date(form.pod_date_time).toISOString(),
-    pod_end_date_time: form.pod_end_date_time
-      ? new Date(form.pod_end_date_time).toISOString()
-      : null,
-    pod_type: form.pod_type,
-    pod_amount: Number(form.pod_amount) || 0,
-    pod_occurrence: form.pod_occurrence,
-    no_of_spots: Number(form.no_of_spots) || 0,
-    pod_info: form.pod_info,
-    what_this_pod_offers: form.what_this_pod_offers,
-    available_perks: form.available_perks,
-    payment_terms: form.payment_terms || null,
-    place_charges: form.place_charges.map((c) => ({
-      label: c.label.trim(),
-      amount: Number(c.amount) || 0,
-      note: c.note?.trim() || null,
-    })),
-  };
-}
+import PodsToolbar from './PodsToolbar';
 
 export default function PodsPage() {
   const [params, setParams] = useSearchParams();
@@ -200,52 +123,14 @@ export default function PodsPage() {
 
   return (
     <Stack spacing={3}>
-      <Stack
-        direction={{ xs: 'column', sm: 'row' }}
-        spacing={2}
-        justifyContent="space-between"
-        alignItems={{ xs: 'flex-start', sm: 'center' }}
-      >
-        <Box>
-          <Stack direction="row" alignItems="center" spacing={1}>
-            <EventIcon color="primary" />
-            <Typography variant="h5">Pods</Typography>
-          </Stack>
-          <Typography variant="body2" color="text.secondary">
-            Events organised inside a club. Hosts are attendees by default.
-          </Typography>
-        </Box>
-        <Stack direction="row" spacing={2}>
-          <TextField
-            size="small"
-            select
-            label="Club"
-            value={clubFilter}
-            onChange={(e) => {
-              const v = e.target.value;
-              if (v) setParams({ club_id: v });
-              else setParams({});
-            }}
-            sx={{ minWidth: 200 }}
-          >
-            <MenuItem value="">All clubs</MenuItem>
-            {clubs.map((c: any) => (
-              <MenuItem key={c.id} value={c.id}>
-                {c.club_name}
-              </MenuItem>
-            ))}
-          </TextField>
-          <TextField
-            size="small"
-            placeholder="Search title"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
-          />
-          <Button variant="contained" startIcon={<AddIcon />} onClick={openCreate}>
-            New Pod
-          </Button>
-        </Stack>
-      </Stack>
+      <PodsToolbar
+        clubs={clubs}
+        clubFilter={clubFilter}
+        setClubFilter={(v) => (v ? setParams({ club_id: v }) : setParams({}))}
+        search={search}
+        setSearch={setSearch}
+        onCreate={openCreate}
+      />
 
       {error && <Alert severity="error">{error.message}</Alert>}
 

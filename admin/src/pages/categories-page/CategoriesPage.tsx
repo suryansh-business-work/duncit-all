@@ -15,6 +15,7 @@ import {
 import CategoryFormDialog from './CategoryFormDialog';
 import CategoriesColumns from './CategoriesColumns';
 import CategoryDeleteDialog from './CategoryDeleteDialog';
+import { buildCreateInput, buildMediaFromText, buildUpdateInput } from './helpers';
 import { isImageIconValue } from '../../components/IconPickerField';
 
 interface DialogState {
@@ -81,43 +82,15 @@ export default function CategoriesPage() {
     setBusy(true);
     setOpError(null);
     try {
-      const media = dialog.form.mediaText
-        .split('\n')
-        .map((s) => s.trim())
-        .filter(Boolean)
-        .map((url) => ({
-          url,
-          type: /\.(mp4|mov|webm)$/i.test(url) ? 'VIDEO' : 'IMAGE',
-        }));
-
+      const media = buildMediaFromText(dialog.form.mediaText);
       if (dialog.form.id) {
         await updateMut({
-          variables: {
-            category_id: dialog.form.id,
-            input: {
-              name: dialog.form.name,
-              icon: dialog.form.icon,
-              description: dialog.form.description,
-              media,
-              sort_order: dialog.form.sort_order,
-              is_active: dialog.form.is_active,
-            },
-          },
+          variables: { category_id: dialog.form.id, input: buildUpdateInput(dialog.form, media) },
           refetchQueries,
         });
       } else {
         await createMut({
-          variables: {
-            input: {
-              name: dialog.form.name,
-              level: dialog.level,
-              parent_id: dialog.parentId,
-              icon: dialog.form.icon,
-              description: dialog.form.description,
-              media,
-              sort_order: dialog.form.sort_order,
-            },
-          },
+          variables: { input: buildCreateInput(dialog.form, dialog.level, dialog.parentId, media) },
           refetchQueries,
         });
       }

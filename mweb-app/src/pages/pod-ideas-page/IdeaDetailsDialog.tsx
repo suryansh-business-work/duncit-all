@@ -19,7 +19,6 @@ import {
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
-import DeleteIcon from '@mui/icons-material/Delete';
 import SendIcon from '@mui/icons-material/Send';
 import {
   POD_IDEA_DETAILS,
@@ -28,6 +27,7 @@ import {
   TOGGLE_LIKE,
   formatRelative,
 } from './queries';
+import IdeaCommentsList from './IdeaCommentsList';
 
 interface DetailsProps {
   id: string;
@@ -58,6 +58,18 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Deta
     } catch (e: any) {
       notifyError(e.message);
     }
+  };
+
+  const onDeleteComment = async (commentId: string) => {
+    await deleteCommentMut({ variables: { id, commentId } });
+    await refetch();
+    onChanged();
+  };
+
+  const onToggleLike = async () => {
+    await toggleLikeMut({ variables: { id } });
+    await refetch();
+    onChanged();
   };
 
   return (
@@ -110,11 +122,7 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Deta
                     <FavoriteBorderIcon fontSize="small" />
                   )
                 }
-                onClick={async () => {
-                  await toggleLikeMut({ variables: { id } });
-                  await refetch();
-                  onChanged();
-                }}
+                onClick={onToggleLike}
                 sx={{ color: idea.liked_by_me ? 'error.main' : 'text.secondary' }}
               >
                 {idea.likes_count} like{idea.likes_count === 1 ? '' : 's'}
@@ -127,54 +135,12 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Deta
             <Typography variant="overline" color="text.secondary">
               Comments ({idea.comments_count})
             </Typography>
-            <Stack spacing={1.5} sx={{ mt: 1, maxHeight: 320, overflowY: 'auto' }}>
-              {idea.comments.length === 0 && (
-                <Typography variant="body2" color="text.secondary">
-                  No comments yet — be the first.
-                </Typography>
-              )}
-              {idea.comments.map((c: any) => {
-                const canDelete =
-                  myId && (c.author_id === myId || idea.author_id === myId);
-                return (
-                  <Stack key={c.id} direction="row" spacing={1.5} alignItems="flex-start">
-                    <Avatar
-                      src={c.author?.profile_photo || undefined}
-                      sx={{ width: 32, height: 32 }}
-                    >
-                      {(c.author?.first_name?.[0] ?? 'U').toUpperCase()}
-                    </Avatar>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Stack direction="row" spacing={1} alignItems="baseline">
-                        <Typography variant="body2" fontWeight={600}>
-                          {c.author?.full_name ?? 'Member'}
-                        </Typography>
-                        <Typography variant="caption" color="text.secondary">
-                          {formatRelative(c.created_at)}
-                        </Typography>
-                      </Stack>
-                      <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                        {c.text}
-                      </Typography>
-                    </Box>
-                    {canDelete && (
-                      <IconButton
-                        size="small"
-                        onClick={async () => {
-                          await deleteCommentMut({
-                            variables: { id, commentId: c.id },
-                          });
-                          await refetch();
-                          onChanged();
-                        }}
-                      >
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    )}
-                  </Stack>
-                );
-              })}
-            </Stack>
+            <IdeaCommentsList
+              comments={idea.comments}
+              ideaAuthorId={idea.author_id}
+              myId={myId}
+              onDelete={onDeleteComment}
+            />
           </>
         )}
       </DialogContent>

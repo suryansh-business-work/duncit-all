@@ -1,58 +1,28 @@
 import { useEffect, useMemo, useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import * as yup from 'yup';
 import {
   Alert,
   Box,
-  Button,
   CircularProgress,
   LinearProgress,
   Stack,
   Typography,
 } from '@mui/material';
 import { SuperCategoryGroup, SurveyCategory } from './signup-survey/SuperCategoryGroup';
-
-const SURVEY_DATA = gql`
-  query SignupSurveyData {
-    me {
-      user_id
-      interest_category_ids
-    }
-    categoryTree {
-      id
-      name
-      icon
-      level
-      parent_id
-      is_active
-    }
-  }
-`;
-
-const SAVE_INTERESTS = gql`
-  mutation SaveInterests($category_ids: [ID!]!) {
-    updateMyInterests(category_ids: $category_ids) {
-      user_id
-      onboarding_survey_completed
-      interest_category_ids
-    }
-  }
-`;
-
-const MIN_PICKS = 3;
-
-const surveySchema = yup.object({
-  category_ids: yup
-    .array()
-    .of(yup.string().required())
-    .min(MIN_PICKS, `Pick at least ${MIN_PICKS} interests to find your tribe`)
-    .required(),
-});
+import {
+  MIN_PICKS,
+  SAVE_INTERESTS,
+  SURVEY_DATA,
+  surveySchema,
+} from './signup-survey/queries';
+import SubmitFooter from './signup-survey/SubmitFooter';
 
 export default function SignupSurveyPage() {
   const navigate = useNavigate();
-  const { data, loading, error } = useQuery(SURVEY_DATA, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, error } = useQuery(SURVEY_DATA, {
+    fetchPolicy: 'cache-and-network',
+  });
   const [saveInterests, { loading: saving }] = useMutation(SAVE_INTERESTS);
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [opError, setOpError] = useState<string | null>(null);
@@ -79,8 +49,6 @@ export default function SignupSurveyPage() {
     };
   }, [tree]);
 
-  // Strip any super-category ids from the previously-saved selection so they
-  // don't count toward the picks count (super categories are not selectable).
   useEffect(() => {
     if (!superIds.size) return;
     setSelected((prev) => {
@@ -133,9 +101,30 @@ export default function SignupSurveyPage() {
   const canSubmit = count >= MIN_PICKS && !saving;
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 760, mx: 'auto', width: '100%', pb: 'calc(env(safe-area-inset-bottom) + 180px)' }}>
-      <Box sx={{ position: 'sticky', top: 0, zIndex: 5, bgcolor: 'background.default', pt: 1, pb: 1.5 }}>
-        <LinearProgress variant="determinate" value={progress} sx={{ borderRadius: 999, height: 8 }} />
+    <Stack
+      spacing={2.5}
+      sx={{
+        maxWidth: 760,
+        mx: 'auto',
+        width: '100%',
+        pb: 'calc(env(safe-area-inset-bottom) + 180px)',
+      }}
+    >
+      <Box
+        sx={{
+          position: 'sticky',
+          top: 0,
+          zIndex: 5,
+          bgcolor: 'background.default',
+          pt: 1,
+          pb: 1.5,
+        }}
+      >
+        <LinearProgress
+          variant="determinate"
+          value={progress}
+          sx={{ borderRadius: 999, height: 8 }}
+        />
       </Box>
 
       <Box>
@@ -159,51 +148,13 @@ export default function SignupSurveyPage() {
 
       {opError && <Alert severity="error">{opError}</Alert>}
 
-      <Box
-        sx={{
-          position: 'fixed',
-          bottom: 'calc(56px + env(safe-area-inset-bottom))',
-          left: 0,
-          right: 0,
-          zIndex: 10,
-          px: 2,
-          py: 1.5,
-          backdropFilter: 'blur(12px)',
-          bgcolor: (t) => `${t.palette.background.paper}cc`,
-          borderTop: 1,
-          borderColor: 'divider',
-        }}
-      >
-        <Stack
-          direction="row"
-          spacing={2}
-          alignItems="center"
-          sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}
-        >
-          <Box sx={{ flex: 1 }}>
-            <Typography variant="caption" color="text.secondary">
-              Selected
-            </Typography>
-            <Typography variant="subtitle1" fontWeight={800}>
-              {count}
-              <Box component="span" sx={{ color: 'text.secondary', fontWeight: 600 }}>
-                {' '}
-                / {total}
-              </Box>
-            </Typography>
-          </Box>
-          <Button
-            variant="contained"
-            color="primary"
-            size="large"
-            disabled={!canSubmit}
-            onClick={submit}
-            sx={{ minWidth: 160, fontWeight: 800 }}
-          >
-            {saving ? 'Saving…' : "Let's Go!"}
-          </Button>
-        </Stack>
-      </Box>
+      <SubmitFooter
+        count={count}
+        total={total}
+        saving={saving}
+        canSubmit={canSubmit}
+        onSubmit={submit}
+      />
     </Stack>
   );
 }

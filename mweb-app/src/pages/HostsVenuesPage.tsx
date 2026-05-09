@@ -1,12 +1,7 @@
 import { useState } from 'react';
-import { Link as RouterLink } from 'react-router-dom';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
   Chip,
   CircularProgress,
   Stack,
@@ -15,64 +10,15 @@ import {
   Typography,
 } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
-import GroupAddIcon from '@mui/icons-material/GroupAdd';
-import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import HostList from './hosts-venues-page/HostList';
 import VenueList from './hosts-venues-page/VenueList';
-
-const PUBLIC_HOSTS = gql`
-  query PublicHosts {
-    me {
-      user_id
-      following_user_ids
-    }
-    publicHosts {
-      id
-      user_id
-      full_name
-      email
-      passport_photo_url
-      full_address
-      approved_at
-    }
-  }
-`;
-
-const PUBLIC_VENUES = gql`
-  query PublicVenues {
-    publicVenues {
-      id
-      owner_user_id
-      venue_name
-      venue_type
-      capacity
-      description
-      cover_image_url
-      city
-      state
-      amenities
-    }
-  }
-`;
-
-const FOLLOW_USER = gql`
-  mutation FollowUser($user_id: ID!) {
-    followUser(user_id: $user_id) {
-      user_id
-      following_user_ids
-    }
-  }
-`;
-
-const UNFOLLOW_USER = gql`
-  mutation UnfollowUser($user_id: ID!) {
-    unfollowUser(user_id: $user_id) {
-      user_id
-      following_user_ids
-    }
-  }
-`;
+import {
+  FOLLOW_USER,
+  PUBLIC_HOSTS,
+  PUBLIC_VENUES,
+  UNFOLLOW_USER,
+} from './hosts-venues-page/queries';
+import HostsVenuesIntroCard from './hosts-venues-page/HostsVenuesIntroCard';
 
 export default function HostsVenuesPage() {
   const [tab, setTab] = useState<'HOSTS' | 'VENUES'>('HOSTS');
@@ -108,48 +54,7 @@ export default function HostsVenuesPage() {
         </Typography>
       </Stack>
 
-      <Card variant="outlined">
-        <CardContent>
-          <Stack
-            direction={{ xs: 'column', sm: 'row' }}
-            spacing={2}
-            alignItems={{ xs: 'stretch', sm: 'center' }}
-          >
-            <Stack direction="row" spacing={1.5} sx={{ flex: 1 }} alignItems="center">
-              <VerifiedUserIcon color="success" />
-              <Box>
-                <Typography variant="subtitle1" fontWeight={700}>
-                  Want to host or list a space?
-                </Typography>
-                <Typography variant="body2" color="text.secondary">
-                  Become a Duncit Host or register your venue — onboarding is just a few
-                  steps.
-                </Typography>
-              </Box>
-            </Stack>
-            <Stack direction="row" spacing={1}>
-              <Button
-                component={RouterLink}
-                to="/become-host"
-                variant="contained"
-                size="small"
-                startIcon={<GroupAddIcon />}
-              >
-                Become a Host
-              </Button>
-              <Button
-                component={RouterLink}
-                to="/register-venue"
-                variant="outlined"
-                size="small"
-                startIcon={<AddBusinessIcon />}
-              >
-                Register Venue
-              </Button>
-            </Stack>
-          </Stack>
-        </CardContent>
-      </Card>
+      <HostsVenuesIntroCard />
 
       <Tabs
         value={tab}

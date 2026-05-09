@@ -9,13 +9,8 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   IconButton,
   Stack,
-  TextField,
   Tooltip,
   Typography,
 } from '@mui/material';
@@ -23,14 +18,7 @@ import { DataGrid, type GridColDef } from '@mui/x-data-grid';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import EditIcon from '@mui/icons-material/Edit';
-
-interface Editing {
-  id?: string;
-  key: string;
-  name: string;
-  description: string;
-}
-const blank: Editing = { key: '', name: '', description: '' };
+import KeyEntityEditDialog, { type Editing, blankEditing } from './KeyEntityEditDialog';
 
 export interface KeyEntityCrudPageProps {
   title: string;
@@ -51,14 +39,14 @@ export function KeyEntityCrudPage(props: KeyEntityCrudPageProps) {
   const [updateMut] = useMutation(props.updateMutation);
   const [deleteMut] = useMutation(props.deleteMutation);
   const [open, setOpen] = useState(false);
-  const [editing, setEditing] = useState<Editing>(blank);
+  const [editing, setEditing] = useState<Editing>(blankEditing);
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
 
   const idVarName = `${props.argName}_id`;
 
   const openCreate = () => {
-    setEditing(blank);
+    setEditing(blankEditing);
     setOpError(null);
     setOpen(true);
   };
@@ -178,42 +166,17 @@ export function KeyEntityCrudPage(props: KeyEntityCrudPageProps) {
         </CardContent>
       </Card>
 
-      <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="sm">
-        <DialogTitle>{editing.id ? `Edit ${props.title}` : `New ${props.title}`}</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            <TextField
-              label="Key"
-              value={editing.key}
-              onChange={(e) => setEditing((p) => ({ ...p, key: e.target.value }))}
-              disabled={!!editing.id}
-              helperText={props.keyHelperText}
-              fullWidth
-            />
-            <TextField
-              label="Name"
-              value={editing.name}
-              onChange={(e) => setEditing((p) => ({ ...p, name: e.target.value }))}
-              fullWidth
-            />
-            <TextField
-              label="Description"
-              value={editing.description}
-              onChange={(e) => setEditing((p) => ({ ...p, description: e.target.value }))}
-              fullWidth
-              multiline
-              minRows={2}
-            />
-            {opError && <Alert severity="error">{opError}</Alert>}
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setOpen(false)}>Cancel</Button>
-          <Button variant="contained" onClick={save} disabled={busy || !editing.key || !editing.name}>
-            {busy ? 'Saving…' : 'Save'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+      <KeyEntityEditDialog
+        open={open}
+        title={props.title}
+        editing={editing}
+        setEditing={setEditing}
+        busy={busy}
+        opError={opError}
+        keyHelperText={props.keyHelperText}
+        onClose={() => setOpen(false)}
+        onSave={save}
+      />
     </Stack>
   );
 }

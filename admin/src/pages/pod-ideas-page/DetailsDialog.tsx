@@ -11,12 +11,9 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  Divider,
-  IconButton,
   Stack,
   Typography,
 } from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import ShareIcon from '@mui/icons-material/Share';
@@ -26,6 +23,8 @@ import {
   DELETE_COMMENT,
   statusColor,
 } from './queries';
+import IdeaCommentsList from './IdeaCommentsList';
+import IdeaActionsBar from './IdeaActionsBar';
 
 interface DetailsProps {
   id: string;
@@ -47,6 +46,12 @@ export default function DetailsDialog({ id, onClose, onChanged }: DetailsProps) 
     if (!confirmDeleteId) return;
     await deleteCommentMut({ variables: { id, commentId: confirmDeleteId } });
     setConfirmDeleteId(null);
+    await refetch();
+    onChanged();
+  };
+
+  const setStatus = async (next: string) => {
+    await setStatusMut({ variables: { id, status: next } });
     await refetch();
     onChanged();
   };
@@ -106,88 +111,12 @@ export default function DetailsDialog({ id, onClose, onChanged }: DetailsProps) 
                 <Typography variant="body2">{idea.shares_count} shares</Typography>
               </Stack>
             </Stack>
-            <Divider sx={{ mb: 2 }} />
-            <Typography variant="overline" color="text.secondary">
-              Comments
-            </Typography>
-            <Stack spacing={1.5} sx={{ mt: 1 }}>
-              {idea.comments.length === 0 && (
-                <Typography variant="body2" color="text.secondary">
-                  No comments yet.
-                </Typography>
-              )}
-              {idea.comments.map((c: any) => (
-                <Stack key={c.id} direction="row" spacing={1.5} alignItems="flex-start">
-                  <Avatar sx={{ width: 32, height: 32 }}>
-                    {(c.author?.full_name?.[0] ?? 'U').toUpperCase()}
-                  </Avatar>
-                  <Box sx={{ flex: 1 }}>
-                    <Stack direction="row" spacing={1} alignItems="baseline">
-                      <Typography variant="body2" fontWeight={600}>
-                        {c.author?.full_name ?? 'Member'}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary">
-                        {new Date(c.created_at).toLocaleString()}
-                      </Typography>
-                    </Stack>
-                    <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap' }}>
-                      {c.text}
-                    </Typography>
-                  </Box>
-                  <IconButton
-                    size="small"
-                    color="error"
-                    onClick={() => setConfirmDeleteId(c.id)}
-                  >
-                    <DeleteIcon fontSize="small" />
-                  </IconButton>
-                </Stack>
-              ))}
-            </Stack>
+            <IdeaCommentsList comments={idea.comments} onDelete={setConfirmDeleteId} />
           </>
         )}
       </DialogContent>
-      {idea && (
-        <DialogActions>
-          {idea.status !== 'PENDING' && (
-            <Button
-              onClick={async () => {
-                await setStatusMut({ variables: { id, status: 'PENDING' } });
-                await refetch();
-                onChanged();
-              }}
-            >
-              Reset to Pending
-            </Button>
-          )}
-          {idea.status !== 'REJECTED' && (
-            <Button
-              color="warning"
-              onClick={async () => {
-                await setStatusMut({ variables: { id, status: 'REJECTED' } });
-                await refetch();
-                onChanged();
-              }}
-            >
-              Reject
-            </Button>
-          )}
-          {idea.status !== 'APPROVED' && (
-            <Button
-              variant="contained"
-              color="success"
-              onClick={async () => {
-                await setStatusMut({ variables: { id, status: 'APPROVED' } });
-                await refetch();
-                onChanged();
-              }}
-            >
-              Approve
-            </Button>
-          )}
-          <Button onClick={onClose}>Close</Button>
-        </DialogActions>
-      )}
+      {idea && <IdeaActionsBar status={idea.status} onSetStatus={setStatus} onClose={onClose} />}
+
       <Dialog
         open={!!confirmDeleteId}
         onClose={() => (deletingComment ? undefined : setConfirmDeleteId(null))}
@@ -195,8 +124,7 @@ export default function DetailsDialog({ id, onClose, onChanged }: DetailsProps) 
         <DialogTitle>Delete this comment?</DialogTitle>
         <DialogContent>
           <Typography variant="body2">
-            This permanently removes the comment from the idea. You cannot undo this
-            action.
+            This permanently removes the comment from the idea. You cannot undo this action.
           </Typography>
         </DialogContent>
         <DialogActions>

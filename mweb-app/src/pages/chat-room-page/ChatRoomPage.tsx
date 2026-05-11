@@ -1,0 +1,177 @@
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client';
+import {
+  Alert,
+  Box,
+  CircularProgress,
+  IconButton,
+  Stack,
+  Typography,
+} from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import MediaPickerDialog from '../../components/MediaPickerDialog';
+import EmojiPopover from './EmojiPopover';
+import MessageBubble from './MessageBubble';
+import MessageComposer from './MessageComposer';
+import { POD_MESSAGES, REACT_MSG, SEND_MSG } from './queries';
+import { usePodSocket } from './usePodSocket';
+
+export default function ChatRoomPage() {
+  const { id: podId } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { data, loading, refetch } = useQuery(POD_MESSAGES, {
+    variables: { pod_id: podId, limit: 80 },
+    fetchPolicy: 'cache-and-network',
+  });
+  const [text, setText] = useState('');
+  const [picker, setPicker] = useState(false);
+  const [emojiAnchor, setEmojiAnchor] = useState<HTMLElement | null>(null);
+  const [reactAnchor, setReactAnchor] = useState<{ el: HTMLElement; id: string } | null>(null);
+  const [send] = useMutation(SEND_MSG);
+  const [react] = useMutation(REACT_MSG);
+  const [live, setLive] = useState<any[]>([]);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  const myId = data?.me?.user_id;
+  const messages = useMemo(() => {
+    const initial = data?.podMessages ?? [];
+    const merged = [...initial];
+    const ids = new Set(initial.map((m: any) => m.id));
+    for (const m of live) if (!ids.has(m.id)) merged.push(m);
+    return merged;
+  }, [data, live]);
+
+  const onMessage = useCallback((msg: any) => setLive((p) => [...p, msg]), []);
+  const onReactionUpdate = useCallback(
+    (msg: any) =>
+      setLive((p) => p.map((m) => (m.id === msg.id ? { ...m, reactions: msg.reactions } : m))),
+    []
+  );
+
+  usePodSocket({
+    podId,
+    refetch,
+    onMessage,
+    onReactionUpdate,
+    onError: setError,
+  });
+
+  useEffect(() => {
+    scrollRef.current?.scrollTo({
+      top: scrollRef.current.scrollHeight,
+      behavior: 'smooth',
+    });
+  }, [messages.length]);
+
+  const submit = async (overrideImage?: string) => {
+    const t = text.trim();
+    if (!t && !overrideImage) return;
+    try {
+      await send({
+        variables: {
+          pod_id: podId,
+          type: overrideImage ? 'IMAGE' : 'TEXT',
+          text: overrideImage ? '' : t,
+          image_url: overrideImage || null,
+        },
+      });
+      setText('');
+    } catch (e: any) {
+      setError(e.message);
+    }
+  };
+
+  const insertEmoji = (e: string) => {
+    setText((p) => p + e);
+    setEmojiAnchor(null);
+  };
+
+  const onReact = async (emoji: string) => {
+    if (!reactAnchor) return;
+    try {
+      await react({ variables: { message_id: reactAnchor.id, emoji } });
+    } catch (err: any) {
+      setError(err.message);
+    }
+    setReactAnchor(null);
+  };
+
+  if (loading && !data)
+    return (
+      <Stack alignItems="center" sx={{ p: 6 }}>
+        <CircularProgress />
+      </Stack>
+    );
+
+  return (
+    <Stack sx={{ height: '100%', minHeight: 0 }}>
+      <Stack
+        direction="row"
+        alignItems="center"
+        spacing={1}
+        sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}
+      >
+        <IconButton onClick={() => navigate('/chats')}>
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ flex: 1 }}>
+          {data?.pod?.pod_title || 'Chat'}
+        </Typography>
+      </Stack>
+
+      {error && (
+        <Alert severity="error" onClose={() => setError(null)}>
+          {error}
+        </Alert>
+      )}
+
+      <Box
+        ref={scrollRef}
+        sx={{ flex: 1, overflowY: 'auto', p: 1, bgcolor: 'background.default' }}
+      >
+        {messages.map((m: any) => (
+          <MessageBubble
+            key={m.id}
+            message={m}
+            mine={String(m.user_id) === String(myId)}
+            onOpenReact={(el, id) => setReactAnchor({ el, id })}
+          />
+        ))}
+      </Box>
+
+      <MessageComposer
+        text={text}
+        setText={setText}
+        onSend={() => submit()}
+        onOpenPicker={() => setPicker(true)}
+        onOpenEmoji={setEmojiAnchor}
+      />
+
+      <EmojiPopover
+        anchorEl={emojiAnchor}
+        onClose={() => setEmojiAnchor(null)}
+        onSelect={insertEmoji}
+      />
+
+      <EmojiPopover
+        anchorEl={reactAnchor?.el ?? null}
+        onClose={() => setReactAnchor(null)}
+        onSelect={onReact}
+        fontSize={22}
+      />
+
+      <MediaPickerDialog
+        open={picker}
+        onClose={() => setPicker(false)}
+        onPicked={(url) => {
+          setPicker(false);
+          submit(url);
+        }}
+        folder="/chat"
+        title="Send image"
+      />
+    </Stack>
+  );
+}

@@ -1,33 +1,18 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
+import { Box, Snackbar } from '@mui/material';
 import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  InputAdornment,
-  Snackbar,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
-import AddIcon from '@mui/icons-material/Add';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import SearchIcon from '@mui/icons-material/Search';
-import {
-  POD_IDEAS,
   CREATE_IDEA,
-  TOGGLE_LIKE,
-  SHARE,
   DELETE_IDEA,
+  POD_IDEAS,
+  SHARE,
+  TOGGLE_LIKE,
 } from './queries';
-import IdeaCard from './IdeaCard';
-import IdeaDetailsDialog from './IdeaDetailsDialog';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import IdeaComposerDialog from './IdeaComposerDialog';
+import IdeaDetailsDialog from './IdeaDetailsDialog';
+import IdeasList from './IdeasList';
+import PodIdeasHeader from './PodIdeasHeader';
 
 export default function PodIdeasPage() {
   const [search, setSearch] = useState('');
@@ -116,10 +101,6 @@ export default function PodIdeasPage() {
     }
   };
 
-  const removeIdea = (id: string) => {
-    setConfirmDeleteId(id);
-  };
-
   const performDelete = async () => {
     if (!confirmDeleteId) return;
     setDeleting(true);
@@ -137,132 +118,41 @@ export default function PodIdeasPage() {
 
   return (
     <Box sx={{ maxWidth: 720, mx: 'auto', py: { xs: 1, sm: 2 } }}>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>
-        <LightbulbIcon color="warning" />
-        <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={700}>
-            Pod Ideas
-          </Typography>
-          <Typography variant="caption" color="text.secondary">
-            Suggest a pod, vote on community ideas, and join the conversation.
-          </Typography>
-        </Box>
-        <Button
-          variant="contained"
-          startIcon={<AddIcon />}
-          onClick={() => {
-            if (!me) {
-              setToast('Please sign in to share an idea');
-              return;
-            }
-            setComposerOpen(true);
-          }}
-        >
-          Share idea
-        </Button>
-      </Stack>
-
-      <TextField
-        fullWidth
-        size="small"
-        placeholder="Search ideas…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        sx={{ mb: 2 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
+      <PodIdeasHeader
+        search={search}
+        setSearch={setSearch}
+        onShare={() => {
+          if (!me) {
+            setToast('Please sign in to share an idea');
+            return;
+          }
+          setComposerOpen(true);
         }}
       />
 
-      {myIdeas.length > 0 && (
-        <Box sx={{ mb: 3 }}>
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 600 }}>
-            Your submissions
-          </Typography>
-          <Stack spacing={1.5} sx={{ mt: 1 }}>
-            {myIdeas.map((idea: any) => (
-              <IdeaCard
-                key={idea.id}
-                idea={idea}
-                myId={myId}
-                onOpen={() => setDetailsId(idea.id)}
-                onLike={() => toggleLike(idea.id)}
-                onShare={() => share(idea)}
-                onDelete={() => removeIdea(idea.id)}
-                showStatus
-              />
-            ))}
-          </Stack>
-        </Box>
-      )}
+      <IdeasList
+        loading={loading}
+        hasData={!!data}
+        ideas={ideas}
+        myIdeas={myIdeas}
+        myId={myId}
+        onOpen={setDetailsId}
+        onLike={toggleLike}
+        onShare={share}
+        onDelete={setConfirmDeleteId}
+      />
 
-      {loading && !data ? (
-        <Box sx={{ py: 6, textAlign: 'center' }}>
-          <CircularProgress />
-        </Box>
-      ) : ideas.length === 0 ? (
-        <Alert severity="info">No ideas yet — be the first to share one!</Alert>
-      ) : (
-        <Stack spacing={1.5}>
-          {ideas.map((idea: any) => (
-            <IdeaCard
-              key={idea.id}
-              idea={idea}
-              myId={myId}
-              onOpen={() => setDetailsId(idea.id)}
-              onLike={() => toggleLike(idea.id)}
-              onShare={() => share(idea)}
-              onDelete={() => removeIdea(idea.id)}
-            />
-          ))}
-        </Stack>
-      )}
-
-      <Dialog
+      <IdeaComposerDialog
         open={composerOpen}
-        onClose={() => !creating && setComposerOpen(false)}
-        fullWidth
-        maxWidth="sm"
-      >
-        <DialogTitle>Share a pod idea</DialogTitle>
-        <DialogContent dividers>
-          <Stack spacing={2} sx={{ mt: 1 }}>
-            {composerErr && <Alert severity="error">{composerErr}</Alert>}
-            <TextField
-              autoFocus
-              label="Title"
-              value={title}
-              onChange={(e) => setTitle(e.target.value.slice(0, 160))}
-              required
-              fullWidth
-              helperText={`${title.length} / 160`}
-            />
-            <TextField
-              label="Description"
-              value={description}
-              onChange={(e) => setDescription(e.target.value.slice(0, 2001))}
-              required
-              fullWidth
-              multiline
-              minRows={4}
-              maxRows={10}
-              helperText={`${description.length} / 2001 — describe the vibe, format, location, audience…`}
-            />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setComposerOpen(false)} disabled={creating}>
-            Cancel
-          </Button>
-          <Button variant="contained" onClick={submit} disabled={creating}>
-            {creating ? <CircularProgress size={20} /> : 'Submit'}
-          </Button>
-        </DialogActions>
-      </Dialog>
+        title={title}
+        setTitle={setTitle}
+        description={description}
+        setDescription={setDescription}
+        error={composerErr}
+        creating={creating}
+        onClose={() => setComposerOpen(false)}
+        onSubmit={submit}
+      />
 
       {detailsId && (
         <IdeaDetailsDialog

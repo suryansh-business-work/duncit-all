@@ -1,31 +1,15 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  AppBar,
-  Avatar,
-  Badge,
-  Box,
-  Button,
-  IconButton,
-  Stack,
-  SwipeableDrawer,
-  Toolbar,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import NotificationsIcon from '@mui/icons-material/Notifications';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import Snackbar from '@mui/material/Snackbar';
-import MuiAlert from '@mui/material/Alert';
-import { HEADER_DATA, MY_NOTIFS, MARK_READ, MARK_ALL, PUBLIC_POLICIES } from './queries';
-import LocationDialog from './LocationDialog';
-import NotificationsPopover from './NotificationsPopover';
-import ProfileDrawer from './ProfileDrawer';
+import { AppBar, Avatar, Box, IconButton, Toolbar, Tooltip } from '@mui/material';
+import { HEADER_DATA, PUBLIC_POLICIES } from './queries';
+import HeaderBrand from './HeaderBrand';
 import HeaderLocationButton from './HeaderLocationButton';
+import HeaderNotificationsBell from './HeaderNotificationsBell';
+import HeaderToast from './HeaderToast';
+import LocationDialog from './LocationDialog';
+import ProfileDrawer from './ProfileDrawer';
 import SuperCategoryTabs from './SuperCategoryTabs';
-import { useHeaderPushNotifications } from './useHeaderPushNotifications';
-import { useNotificationsSse } from './useNotificationsSse';
 
 interface AppHeaderProps {
   selectedSuperCategory: string;
@@ -49,10 +33,9 @@ export default function AppHeader({
   const [locDialogOpen, setLocDialogOpen] = useState(false);
   const [draftLocationId, setDraftLocationId] = useState('');
   const [draftZone, setDraftZone] = useState('');
-  const [notifAnchor, setNotifAnchor] = useState<HTMLElement | null>(null);
-  const [notifConfirm, setNotifConfirm] = useState<HTMLElement | null>(null);
   const [profileAnchor, setProfileAnchor] = useState<HTMLElement | null>(null);
   const [policiesOpen, setPoliciesOpen] = useState(false);
+  const [toast, setToast] = useState<{ title?: string; body?: string } | null>(null);
 
   const branding = data?.branding;
   const me = data?.me;
@@ -80,47 +63,8 @@ export default function AppHeader({
     [locations, selectedLocationId]
   );
 
-  const { data: notifData, refetch: refetchNotifs } = useQuery(MY_NOTIFS, {
-    fetchPolicy: 'cache-and-network',
-  });
-  // Server-Sent Events keep the bell + count live without client polling.
-  useNotificationsSse(() => {
-    void refetchNotifs();
-  });
-  const [markReadMut] = useMutation(MARK_READ);
-  const [markAllMut] = useMutation(MARK_ALL);
-  const myNotifs: any[] = notifData?.myNotifications ?? [];
-  const unreadCount: number = notifData?.myUnreadNotificationCount ?? 0;
-
   const { data: policiesData } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-first' });
   const publicPolicies = policiesData?.publicPolicies ?? [];
-
-  const { perm, pushBusy, toast, setToast, enablePush } = useHeaderPushNotifications(
-    () => refetchNotifs() as Promise<unknown>
-  );
-
-  const onNotifClick = async (n: any) => {
-    if (!n.read_at) {
-      try {
-        await markReadMut({ variables: { id: n.id } });
-        await refetchNotifs();
-      } catch {
-        /* ignore */
-      }
-    }
-    const link = n.notification?.link_url;
-    setNotifAnchor(null);
-    if (link) navigate(link);
-  };
-
-  const onMarkAll = async () => {
-    try {
-      await markAllMut();
-      await refetchNotifs();
-    } catch {
-      /* ignore */
-    }
-  };
 
   const logout = () => {
     setProfileAnchor(null);
@@ -128,26 +72,20 @@ export default function AppHeader({
     navigate('/login');
   };
 
+  const handleNotifToast = useCallback(
+    (t: { title?: string; body?: string } | null) => setToast(t),
+    []
+  );
+
   return (
-    <AppBar position="sticky" color="inherit" elevation={0} sx={{ bgcolor: 'background.paper' }}>
+    <AppBar
+      position="sticky"
+      color="inherit"
+      elevation={0}
+      sx={{ bgcolor: 'background.paper' }}
+    >
       <Toolbar sx={{ gap: 1, py: 1, minHeight: 64, px: 2 }}>
-        <Stack
-          direction="row"
-          alignItems="center"
-          spacing={1.25}
-          sx={{ cursor: 'pointer' }}
-          onClick={() => navigate('/')}
-          role="button"
-          tabIndex={0}
-          aria-label="Go to home"
-        >
-          <Box
-            component="img"
-            src={branding?.logo_url || '/duncit-logo.svg'}
-            alt={branding?.app_name ?? 'Duncit'}
-            sx={{ height: 44, width: 'auto', maxWidth: 200, objectFit: 'contain', display: 'block' }}
-          />
-        </Stack>
+        <HeaderBrand logoUrl={branding?.logo_url} appName={branding?.app_name} />
 
         <Box sx={{ flexGrow: 1 }} />
 
@@ -177,66 +115,7 @@ export default function AppHeader({
           }}
         />
 
-        <Tooltip title="Notifications">
-          <IconButton
-            size="small"
-            onClick={(e) => setNotifConfirm(e.currentTarget)}
-            aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ''}`}
-            sx={{ minWidth: 44, minHeight: 44 }}
-          >
-            <Badge badgeContent={unreadCount} color="error">
-              <NotificationsIcon fontSize="small" />
-            </Badge>
-          </IconButton>
-        </Tooltip>
-        <SwipeableDrawer
-          anchor="bottom"
-          open={!!notifConfirm}
-          onOpen={() => undefined}
-          onClose={() => setNotifConfirm(null)}
-          PaperProps={{
-            sx: { borderTopLeftRadius: 16, borderTopRightRadius: 16, p: 2 },
-          }}
-        >
-          <Box sx={{ width: 40, height: 4, bgcolor: 'divider', borderRadius: 2, mx: 'auto', mb: 2 }} />
-          <Stack spacing={1.5}>
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <NotificationsActiveIcon color="primary" />
-              <Typography variant="subtitle1" fontWeight={700}>
-                {unreadCount > 0
-                  ? `You have ${unreadCount} unread notification${unreadCount === 1 ? '' : 's'}`
-                  : 'View notifications'}
-              </Typography>
-            </Stack>
-            <Typography variant="body2" color="text.secondary">
-              Open your inbox to see club updates, new pods and silent moments.
-            </Typography>
-            <Stack direction="row" spacing={1} justifyContent="flex-end" sx={{ pt: 1 }}>
-              <Button onClick={() => setNotifConfirm(null)}>Cancel</Button>
-              <Button
-                variant="contained"
-                onClick={() => {
-                  const anchor = notifConfirm;
-                  setNotifConfirm(null);
-                  setNotifAnchor(anchor);
-                }}
-              >
-                View notifications
-              </Button>
-            </Stack>
-          </Stack>
-        </SwipeableDrawer>
-        <NotificationsPopover
-          anchor={notifAnchor}
-          onClose={() => setNotifAnchor(null)}
-          notifs={myNotifs}
-          unreadCount={unreadCount}
-          perm={perm}
-          pushBusy={pushBusy}
-          onEnablePush={enablePush}
-          onNotifClick={onNotifClick}
-          onMarkAll={onMarkAll}
-        />
+        <HeaderNotificationsBell onToast={handleNotifToast} />
 
         <Tooltip title={me?.full_name ?? 'Account'}>
           <IconButton
@@ -270,23 +149,7 @@ export default function AppHeader({
         onChange={onSuperCategoryChange}
       />
 
-      <Snackbar
-        open={!!toast}
-        onClose={() => setToast(null)}
-        autoHideDuration={5000}
-        anchorOrigin={{ vertical: 'top', horizontal: 'right' }}
-      >
-        <MuiAlert
-          onClose={() => setToast(null)}
-          severity="info"
-          variant="filled"
-          icon={<NotificationsActiveIcon />}
-          sx={{ width: '100%' }}
-        >
-          <Typography variant="subtitle2">{toast?.title}</Typography>
-          <Typography variant="caption">{toast?.body}</Typography>
-        </MuiAlert>
-      </Snackbar>
+      <HeaderToast toast={toast} onClose={() => setToast(null)} />
     </AppBar>
   );
 }

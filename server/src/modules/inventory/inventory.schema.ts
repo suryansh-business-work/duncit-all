@@ -129,6 +129,14 @@ export const inventoryTypeDefs = /* GraphQL */ `
     net_qty: Int!
   }
 
+  type InventoryLinkedPod {
+    id: ID!
+    pod_id: String!
+    pod_title: String!
+    club_id: String!
+    is_active: Boolean!
+  }
+
   input InventoryProductInput {
     product_name: String!
     sku: String
@@ -221,12 +229,14 @@ export const inventoryTypeDefs = /* GraphQL */ `
     inventoryActivityLogs(product_doc_id: ID!, limit: Int): [InventoryActivityLog!]!
     inventoryStockMovements(product_doc_id: ID!, limit: Int): [InventoryStockMovement!]!
     inventoryAnalytics(product_doc_id: ID!, days: Int): [InventoryAnalyticsPoint!]!
+    inventoryProductLinkedPods(product_doc_id: ID!): [InventoryLinkedPod!]!
   }
 
   extend type Mutation {
     createInventoryProduct(input: InventoryProductInput!): InventoryProduct!
     updateInventoryProduct(product_doc_id: ID!, input: UpdateInventoryProductInput!): InventoryProduct!
     deleteInventoryProduct(product_doc_id: ID!): Boolean!
+    permanentlyDeleteInventoryProduct(product_doc_id: ID!): Boolean!
     archiveInventoryProduct(product_doc_id: ID!): InventoryProduct!
     restoreInventoryProduct(product_doc_id: ID!): InventoryProduct!
     duplicateInventoryProduct(product_doc_id: ID!): InventoryProduct!

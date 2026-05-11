@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import type { AuthUser } from '../../context';
+import { PodModel } from '../pod/pod.model';
 import { InventoryProductModel, type IInventoryProduct } from './inventory.model';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
@@ -306,6 +307,30 @@ export const inventoryService = {
     doc.status = 'ARCHIVED';
     await doc.save();
     await logActivity(doc._id, user, 'DELETE', ['status', 'is_active']);
+    return true;
+  },
+
+  async listLinkedPods(productId: string) {
+    const pods = await PodModel.find(
+      { 'product_requests.product_id': productId },
+      { _id: 1, pod_id: 1, pod_title: 1, club_id: 1, is_active: 1 }
+    )
+      .sort({ updated_at: -1 })
+      .limit(200);
+    return pods.map((p: any) => ({
+      id: String(p._id),
+      pod_id: p.pod_id ?? '',
+      pod_title: p.pod_title ?? '',
+      club_id: p.club_id ? String(p.club_id) : '',
+      is_active: !!p.is_active,
+    }));
+  },
+
+  async permanentlyDelete(id: string, user: AuthUser | null) {
+    const doc = await InventoryProductModel.findById(id);
+    if (!doc) throw new GraphQLError('Product not found', { extensions: { code: 'NOT_FOUND' } });
+    await logActivity(doc._id, user, 'DELETE', ['*'], `Hard-deleted ${doc.sku}`);
+    await InventoryProductModel.deleteOne({ _id: doc._id });
     return true;
   },
 

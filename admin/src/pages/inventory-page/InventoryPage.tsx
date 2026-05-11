@@ -1,7 +1,8 @@
 import AddIcon from '@mui/icons-material/Add';
 import EditIcon from '@mui/icons-material/Edit';
 import ArchiveIcon from '@mui/icons-material/Archive';
-import { useMutation, useQuery } from '@apollo/client';
+import DeleteForeverIcon from '@mui/icons-material/DeleteForever';
+import { useQuery } from '@apollo/client';
 import {
   Alert,
   Avatar,
@@ -23,11 +24,11 @@ import {
 } from '@mui/material';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import InventoryDeleteDialog, { type InventoryDeleteIntent } from './InventoryDeleteDialog';
 import StockColorChip from './inventory-product-page/StockColorChip';
 import { STATUS_CHIP_COLOR, STATUS_OPTIONS } from './inventory-product-page/constants';
-import { ARCHIVE_INVENTORY_PRODUCT } from './inventory-product-page/productQueries';
 import type { InventoryStatus } from './inventory-product-page/types';
-import { DELETE_PRODUCT, INVENTORY_PRODUCTS } from './queries';
+import { INVENTORY_PRODUCTS } from './queries';
 
 const money = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });
 
@@ -35,23 +36,16 @@ export default function InventoryPage() {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState<'' | InventoryStatus>('');
+  const [actionTarget, setActionTarget] = useState<{
+    intent: InventoryDeleteIntent;
+    product: { id: string; product_name: string };
+  } | null>(null);
+
   const { data, loading, error, refetch } = useQuery(INVENTORY_PRODUCTS, {
     variables: { search: search || undefined, status: statusFilter || undefined },
     fetchPolicy: 'cache-and-network',
   });
-  const [deleteProduct] = useMutation(DELETE_PRODUCT);
-  const [archiveProduct] = useMutation(ARCHIVE_INVENTORY_PRODUCT);
   const products = data?.inventoryProducts ?? [];
-
-  const archive = async (product: any) => {
-    if (!confirm(`Archive "${product.product_name}"?`)) return;
-    try {
-      await archiveProduct({ variables: { id: product.id } });
-    } catch {
-      await deleteProduct({ variables: { id: product.id } });
-    }
-    await refetch();
-  };
 
   return (
     <Stack spacing={3}>
@@ -165,8 +159,20 @@ export default function InventoryPage() {
                     </IconButton>
                   </Tooltip>
                   <Tooltip title="Archive">
-                    <IconButton size="small" onClick={() => archive(product)}>
+                    <IconButton
+                      size="small"
+                      onClick={() => setActionTarget({ intent: 'archive', product })}
+                    >
                       <ArchiveIcon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                  <Tooltip title="Delete permanently">
+                    <IconButton
+                      size="small"
+                      color="error"
+                      onClick={() => setActionTarget({ intent: 'delete', product })}
+                    >
+                      <DeleteForeverIcon fontSize="small" />
                     </IconButton>
                   </Tooltip>
                 </TableCell>
@@ -175,6 +181,13 @@ export default function InventoryPage() {
           </TableBody>
         </Table>
       )}
+      <InventoryDeleteDialog
+        open={!!actionTarget}
+        intent={actionTarget?.intent ?? 'archive'}
+        product={actionTarget?.product ?? null}
+        onClose={() => setActionTarget(null)}
+        onDone={refetch}
+      />
     </Stack>
   );
 }

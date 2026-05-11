@@ -42,6 +42,14 @@ export const inventoryResolvers = {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.analytics(args.product_doc_id, args.days ?? 30);
     },
+    inventoryProductLinkedPods: async (
+      _p: unknown,
+      args: { product_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.listLinkedPods(args.product_doc_id);
+    },
   },
   Mutation: {
     createInventoryProduct: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -59,6 +67,14 @@ export const inventoryResolvers = {
     deleteInventoryProduct: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.remove(args.product_doc_id, ctx.user);
+    },
+    permanentlyDeleteInventoryProduct: async (
+      _p: unknown,
+      args: { product_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.permanentlyDelete(args.product_doc_id, ctx.user);
     },
     archiveInventoryProduct: async (
       _p: unknown,

@@ -145,6 +145,23 @@ export const DUPLICATE_INVENTORY_PRODUCT = gql`
   }
 `;
 
+export const INVENTORY_LINKED_PODS = gql`
+  query InventoryLinkedPods($id: ID!) {
+    inventoryProductLinkedPods(product_doc_id: $id) {
+      id
+      pod_id
+      pod_title
+      is_active
+    }
+  }
+`;
+
+export const PERMANENT_DELETE_INVENTORY_PRODUCT = gql`
+  mutation PermanentlyDeleteInventoryProduct($id: ID!) {
+    permanentlyDeleteInventoryProduct(product_doc_id: $id)
+  }
+`;
+
 export const AI_DESCRIBE_PRODUCT = gql`
   mutation AiDescribeInventoryProduct($input: AiProductDescribeInput!) {
     aiDescribeInventoryProduct(input: $input)

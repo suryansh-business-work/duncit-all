@@ -66,9 +66,22 @@ async function findStep1Location(input: any) {
 
 async function getOrCreate(userId: string) {
   const uid = new Types.ObjectId(userId);
-  let v = await VenueModel.findOne({ owner_user_id: uid });
+  // Only draft/rejected applications are editable. Approved/submitted venues must not be reused for a new registration.
+  let v = await VenueModel.findOne({ owner_user_id: uid, status: { $in: ['DRAFT', 'REJECTED'] } })
+    .sort({ updated_at: -1, created_at: -1 });
   if (!v) v = await VenueModel.create({ owner_user_id: uid });
   return v;
+}
+
+async function findCurrentUserVenue(userId: string) {
+  const uid = new Types.ObjectId(userId);
+  const activeApplication = await VenueModel.findOne({
+    owner_user_id: uid,
+    status: { $in: ['DRAFT', 'REJECTED', 'SUBMITTED'] },
+  }).sort({ updated_at: -1, created_at: -1 });
+
+  if (activeApplication) return activeApplication;
+  return VenueModel.findOne({ owner_user_id: uid }).sort({ updated_at: -1, created_at: -1 });
 }
 
 async function normalizeStep1Location(input: any) {
@@ -119,7 +132,7 @@ async function assignApprovedVenueRole(userId: Types.ObjectId) {
 
 export const venueService = {
   async getMine(userId: string) {
-    const v = await VenueModel.findOne({ owner_user_id: new Types.ObjectId(userId) });
+    const v = await findCurrentUserVenue(userId);
     return v ? toPub(v) : null;
   },
   async list(filter?: { status?: string }) {
@@ -210,25 +223,40 @@ export const venueService = {
     step3: any;
     submit?: boolean;
   }) {
-    const v = await getOrCreate(opts.ownerUserId);
-    Object.assign(v, await normalizeStep1Location(opts.step1));
-    v.documents = (opts.step2.documents || [])
-      .filter((d: any) => d && d.type && d.url)
-      .map((d: any) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));
-    if (opts.step2.gstin !== undefined) v.gstin = opts.step2.gstin;
-    if (opts.step2.pan !== undefined) v.pan = opts.step2.pan;
-    v.owner_name = opts.step3.owner_name;
-    v.owner_email = opts.step3.owner_email;
-    v.owner_phone = opts.step3.owner_phone;
-    if (opts.step3.owner_dob) v.owner_dob = new Date(opts.step3.owner_dob);
-    if (opts.step3.owner_address !== undefined) v.owner_address = opts.step3.owner_address;
-    if (opts.step1.tags !== undefined) v.tags = opts.step1.tags;
-    v.step_completed = opts.submit ? 4 : 3;
-    if (opts.submit) {
-      v.status = 'SUBMITTED';
-      v.submitted_at = new Date();
+    // Always insert a brand-new venue. An admin may register multiple
+    // venues for the same owner (one user can run several cafes), so we
+    // must not look up and overwrite a pre-existing venue document here.
+    // Doing so silently replaced one of the owner's existing venues — that
+    // was the bug that made "other cafes disappear" after create-on-behalf.
+    if (!opts.ownerUserId || !Types.ObjectId.isValid(opts.ownerUserId)) {
+      throw new GraphQLError('Valid owner_user_id is required', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
     }
-    await v.save();
+    const normalized = await normalizeStep1Location(opts.step1);
+    const documents = (opts.step2.documents || [])
+      .filter((d: any) => d && d.type && d.url)
+      .map((d: any) => ({
+        type: String(d.type).trim(),
+        url: String(d.url).trim(),
+        uploaded_at: new Date(),
+      }));
+    const v = await VenueModel.create({
+      owner_user_id: new Types.ObjectId(opts.ownerUserId),
+      ...normalized,
+      documents,
+      gstin: opts.step2.gstin ?? '',
+      pan: opts.step2.pan ?? '',
+      owner_name: opts.step3.owner_name,
+      owner_email: opts.step3.owner_email,
+      owner_phone: opts.step3.owner_phone,
+      owner_dob: opts.step3.owner_dob ? new Date(opts.step3.owner_dob) : null,
+      owner_address: opts.step3.owner_address ?? '',
+      tags: Array.isArray(opts.step1.tags) ? opts.step1.tags : [],
+      step_completed: opts.submit ? 4 : 3,
+      status: opts.submit ? 'SUBMITTED' : 'DRAFT',
+      submitted_at: opts.submit ? new Date() : null,
+    });
     return toPub(v);
   },
   async adminUpdate(id: string, opts: { step1: any; step2: any; step3: any; status?: string }) {

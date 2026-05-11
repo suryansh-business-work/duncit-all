@@ -20,6 +20,7 @@ import { settingsService } from '../settings/settings.service';
 import type { AuthUser } from '../../context';
 import { CategoryModel } from '../category/category.model';
 import { PodModel } from '../pod/pod.model';
+import { ClubModel } from '../club/club.model';
 import { UserContactActionModel } from './userContactAction.model';
 import { getRuntimeEnvValue } from '../../config/runtimeEnv';
 
@@ -31,13 +32,15 @@ const cleanProfileLinks = (links: UpdateMyProfileDTO['profile_links'] = []) =>
     .filter((link) => link.label && link.url)
     .slice(0, 5);
 
-const podToPublic = (d: any) => ({
+const podToPublic = (d: any, clubSlug = '') => ({
   id: String(d._id),
   pod_id: d.pod_id,
   pod_title: d.pod_title,
   pod_hosts_id: idStrings(d.pod_hosts_id),
   location_id: d.location_id ? String(d.location_id) : null,
+  venue_id: d.venue_id ? String(d.venue_id) : null,
   club_id: d.club_id ? String(d.club_id) : null,
+  club_slug: clubSlug,
   zone_name: d.zone_name ?? null,
   pod_hashtag: d.pod_hashtag ?? [],
   pod_images_and_videos: (d.pod_images_and_videos ?? []).map((m: any) => ({
@@ -54,6 +57,26 @@ const podToPublic = (d: any) => ({
   pod_occurrence: d.pod_occurrence ?? 'ONE_TIME',
   no_of_spots: d.no_of_spots ?? 0,
   pod_info: d.pod_info ?? '',
+  what_this_pod_offers: d.what_this_pod_offers ?? [],
+  available_perks: d.available_perks ?? [],
+  payment_terms: d.payment_terms ?? null,
+  place_charges: (d.place_charges ?? []).map((c: any) => ({
+    label: c.label,
+    amount: c.amount ?? 0,
+    note: c.note ?? null,
+  })),
+  products_enabled: !!d.products_enabled,
+  product_requests: (d.product_requests ?? []).map((item: any) => ({
+    product_id: String(item.product_id),
+    product_name: item.product_name,
+    unit_cost: item.unit_cost ?? 0,
+    quantity: item.quantity ?? 0,
+    total_cost: item.total_cost ?? 0,
+  })),
+  product_cost_total: d.product_cost_total ?? 0,
+  like_count: (d.liked_user_ids ?? []).length,
+  comment_count: (d.comments ?? []).length,
+  liked_user_ids: idStrings(d.liked_user_ids),
   is_active: !!d.is_active,
   created_at: d.created_at?.toISOString?.() ?? '',
   updated_at: d.updated_at?.toISOString?.() ?? '',
@@ -516,8 +539,19 @@ export const userService = {
     const ids = idStrings(user?.saved_pod_ids);
     if (!ids.length) return [];
     const docs = await PodModel.find({ _id: { $in: ids }, is_active: true });
+    // Build club-slug map so club_slug (String!) is never null
+    const clubIds = Array.from(
+      new Set(docs.map((d: any) => d.club_id && String(d.club_id)).filter(Boolean))
+    );
+    const clubs = clubIds.length
+      ? await ClubModel.find({ _id: { $in: clubIds } }, { club_id: 1 })
+      : [];
+    const clubSlugById = new Map((clubs as any[]).map((c) => [String(c._id), c.club_id ?? '']));
     const byId = new Map(docs.map((doc: any) => [String(doc._id), doc]));
-    return ids.map((id) => byId.get(id)).filter(Boolean).map(podToPublic);
+    return ids
+      .map((id) => byId.get(id))
+      .filter(Boolean)
+      .map((doc: any) => podToPublic(doc, clubSlugById.get(String(doc.club_id)) ?? ''));
   },
 
   async followUser(user_id: string, targetUserId: string) {

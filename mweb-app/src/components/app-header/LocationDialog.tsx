@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import {
   Box,
   Button,
@@ -9,6 +10,7 @@ import {
 } from '@mui/material';
 import PlaceIcon from '@mui/icons-material/Place';
 import ResponsiveDialog from '../ResponsiveDialog';
+import GpsLocationPicker from './GpsLocationPicker';
 
 interface Props {
   open: boolean;
@@ -33,6 +35,14 @@ export default function LocationDialog({
 }: Props) {
   const draftLoc = locations.find((l: any) => l.id === draftLocationId);
   const zones: { zone_name: string }[] = draftLoc?.location_zones ?? [];
+
+  const handleAutoSelect = useCallback(
+    (locationId: string, zoneName: string) => {
+      setDraftLocationId(locationId);
+      setDraftZone(zoneName);
+    },
+    [setDraftLocationId, setDraftZone]
+  );
 
   const title = (
     <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
@@ -66,6 +76,8 @@ export default function LocationDialog({
         </>
       }
     >
+      <GpsLocationPicker locations={locations} onAutoSelect={handleAutoSelect} />
+
       <Typography variant="overline" color="text.secondary">
         City
       </Typography>

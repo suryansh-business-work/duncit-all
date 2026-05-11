@@ -27,8 +27,13 @@ export const HEADER_DATA = gql`
       location_id
       location_name
       location_image
+      city
+      state
+      country
+      location_pincode
       location_zones {
         zone_name
+        pincode
       }
     }
   }

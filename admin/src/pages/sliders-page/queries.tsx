@@ -12,6 +12,11 @@ export const SLIDERS = gql`
       description
       media_url
       media_type
+      link_type
+      link_target_kind
+      link_target_id
+      link_target_slug
+      link_target_title
       link_url
       scope
       super_category_slug
@@ -21,6 +26,26 @@ export const SLIDERS = gql`
       starts_at
       ends_at
       is_active
+    }
+  }
+`;
+
+export const SLIDER_POD_OPTIONS = gql`
+  query SliderPodOptions {
+    pods {
+      id
+      pod_id
+      pod_title
+    }
+  }
+`;
+
+export const SLIDER_CLUB_OPTIONS = gql`
+  query SliderClubOptions {
+    clubs {
+      id
+      club_id
+      club_name
     }
   }
 `;
@@ -71,6 +96,9 @@ export const SCOPES = [
   { value: 'ZONE', label: 'Zone', icon: <MapIcon fontSize="small" /> },
 ];
 
+export type SliderLinkType = 'INTERNAL' | 'EXTERNAL';
+export type SliderLinkTargetKind = 'POD' | 'CLUB';
+
 export interface SliderForm {
   id?: string;
   slider_id: string;
@@ -78,6 +106,9 @@ export interface SliderForm {
   description: string;
   media_url: string;
   media_type: 'IMAGE' | 'VIDEO';
+  link_type: SliderLinkType;
+  link_target_kind: SliderLinkTargetKind | '';
+  link_target_id: string;
   link_url: string;
   scope: 'GLOBAL' | 'LOCATION' | 'ZONE';
   super_category_slug: string;
@@ -95,6 +126,9 @@ export const blankForm: SliderForm = {
   description: '',
   media_url: '',
   media_type: 'IMAGE',
+  link_type: 'EXTERNAL',
+  link_target_kind: '',
+  link_target_id: '',
   link_url: '',
   scope: 'GLOBAL',
   super_category_slug: '',

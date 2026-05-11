@@ -1,10 +1,19 @@
 import { Box, Card, CardActionArea, CardMedia, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { useNavigate } from 'react-router-dom';
 
 export default function SliderCard({ slider }: { slider: any }) {
+  const navigate = useNavigate();
+  const target: string = slider.effective_link_url ?? slider.link_url ?? '';
+  const isInternal = slider.link_type === 'INTERNAL' && target.startsWith('/');
+  const clickable = !!target;
+
   const open = () => {
-    if (slider.link_url) window.open(slider.link_url, '_blank', 'noreferrer');
+    if (!clickable) return;
+    if (isInternal) navigate(target);
+    else window.open(target, '_blank', 'noreferrer');
   };
+
   return (
     <Card
       elevation={0}
@@ -19,7 +28,7 @@ export default function SliderCard({ slider }: { slider: any }) {
     >
       <CardActionArea
         onClick={open}
-        disabled={!slider.link_url}
+        disabled={!clickable}
         sx={{ display: 'block', width: '100%', height: '100%' }}
       >
         {slider.media_type === 'VIDEO' ? (
@@ -73,7 +82,7 @@ export default function SliderCard({ slider }: { slider: any }) {
               </Typography>
             )}
           </Box>
-          {slider.link_url && (
+          {clickable && (
             <Box
               component="span"
               sx={{

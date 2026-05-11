@@ -60,6 +60,9 @@ export default function SlidersPage() {
       description: s.description ?? '',
       media_url: s.media_url,
       media_type: s.media_type,
+      link_type: s.link_type ?? (s.link_url ? 'EXTERNAL' : 'EXTERNAL'),
+      link_target_kind: s.link_target_kind ?? '',
+      link_target_id: s.link_target_id ?? '',
       link_url: s.link_url ?? '',
       scope: s.scope,
       super_category_slug: s.super_category_slug ?? '',
@@ -84,13 +87,28 @@ export default function SlidersPage() {
         throw new Error('Pick a location');
       if (form.scope === 'ZONE' && (!form.location_id || !form.zone_name))
         throw new Error('Pick location and zone');
+      if (form.link_type === 'INTERNAL') {
+        if (!form.link_target_kind || !form.link_target_id)
+          throw new Error('Pick a pod or club for the internal link');
+      } else if (form.link_url) {
+        try {
+          const u = new URL(form.link_url);
+          if (!['http:', 'https:'].includes(u.protocol))
+            throw new Error('External link must be http(s)');
+        } catch {
+          throw new Error('External link must be a valid URL');
+        }
+      }
 
       const payload: any = {
         title: form.title,
         description: form.description,
         media_url: form.media_url,
         media_type: form.media_type,
-        link_url: form.link_url,
+        link_type: form.link_type,
+        link_target_kind: form.link_type === 'INTERNAL' ? form.link_target_kind : null,
+        link_target_id: form.link_type === 'INTERNAL' ? form.link_target_id : null,
+        link_url: form.link_type === 'EXTERNAL' ? form.link_url : '',
         scope: form.scope,
         super_category_slug: form.super_category_slug || null,
         location_id: form.scope === 'GLOBAL' ? null : form.location_id,

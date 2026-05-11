@@ -10,6 +10,16 @@ export const sliderTypeDefs = /* GraphQL */ `
     VIDEO
   }
 
+  enum SliderLinkType {
+    INTERNAL
+    EXTERNAL
+  }
+
+  enum SliderLinkTargetKind {
+    POD
+    CLUB
+  }
+
   type Slider {
     id: ID!
     slider_id: String!
@@ -17,7 +27,14 @@ export const sliderTypeDefs = /* GraphQL */ `
     description: String
     media_url: String!
     media_type: SliderMediaType!
+    link_type: SliderLinkType!
+    link_target_kind: SliderLinkTargetKind
+    link_target_id: ID
+    link_target_slug: String
+    link_target_title: String
+    link_target_parent_slug: String
     link_url: String
+    effective_link_url: String!
     scope: SliderScope!
     super_category_slug: String
     location_id: ID
@@ -45,6 +62,9 @@ export const sliderTypeDefs = /* GraphQL */ `
     description: String
     media_url: String!
     media_type: SliderMediaType
+    link_type: SliderLinkType
+    link_target_kind: SliderLinkTargetKind
+    link_target_id: ID
     link_url: String
     scope: SliderScope!
     super_category_slug: String
@@ -61,6 +81,9 @@ export const sliderTypeDefs = /* GraphQL */ `
     description: String
     media_url: String
     media_type: SliderMediaType
+    link_type: SliderLinkType
+    link_target_kind: SliderLinkTargetKind
+    link_target_id: ID
     link_url: String
     scope: SliderScope
     super_category_slug: String

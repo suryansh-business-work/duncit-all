@@ -1,5 +1,6 @@
 import { Box, MenuItem, Stack, TextField } from '@mui/material';
 import MediaPickerField from '../../components/MediaPickerField';
+import SliderLinkField from './SliderLinkField';
 import type { SliderForm } from './queries';
 
 interface Props {
@@ -58,13 +59,7 @@ export default function SliderBasicFields({ form, setForm }: Props) {
           <MenuItem value="VIDEO">Video</MenuItem>
         </TextField>
       </Stack>
-      <TextField
-        label="Tap link / deeplink (optional)"
-        value={form.link_url}
-        onChange={(e) => setForm({ ...form, link_url: e.target.value })}
-        fullWidth
-        placeholder="https://… or duncit://club/abc"
-      />
+      <SliderLinkField form={form} setForm={setForm} />
     </>
   );
 }

@@ -8,7 +8,12 @@ export const HOME_DATA = gql`
       description
       media_url
       media_type
+      link_type
+      link_target_kind
+      link_target_slug
+      link_target_parent_slug
       link_url
+      effective_link_url
       scope
       super_category_slug
       location_id

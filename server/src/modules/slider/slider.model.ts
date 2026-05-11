@@ -2,6 +2,8 @@ import { Schema, model, type Document, Types } from 'mongoose';
 
 export type SliderScope = 'GLOBAL' | 'LOCATION' | 'ZONE';
 export type SliderMediaType = 'IMAGE' | 'VIDEO';
+export type SliderLinkType = 'INTERNAL' | 'EXTERNAL';
+export type SliderLinkTargetKind = 'POD' | 'CLUB';
 
 export interface ISlider extends Document {
   slider_id: string;
@@ -9,6 +11,9 @@ export interface ISlider extends Document {
   description?: string;
   media_url: string;
   media_type: SliderMediaType;
+  link_type: SliderLinkType;
+  link_target_kind?: SliderLinkTargetKind | null;
+  link_target_id?: Types.ObjectId | null;
   link_url?: string;
   scope: SliderScope;
   super_category_slug?: string | null;
@@ -29,6 +34,9 @@ const sliderSchema = new Schema<ISlider>(
     description: { type: String, default: '' },
     media_url: { type: String, required: true },
     media_type: { type: String, enum: ['IMAGE', 'VIDEO'], default: 'IMAGE' },
+    link_type: { type: String, enum: ['INTERNAL', 'EXTERNAL'], default: 'EXTERNAL' },
+    link_target_kind: { type: String, enum: ['POD', 'CLUB', null], default: null },
+    link_target_id: { type: Schema.Types.ObjectId, default: null },
     link_url: { type: String, default: '' },
     scope: { type: String, enum: ['GLOBAL', 'LOCATION', 'ZONE'], required: true, default: 'GLOBAL' },
     super_category_slug: { type: String, default: null, lowercase: true, trim: true, index: true },

@@ -32,7 +32,11 @@ export default function PodOverview({ pod, isFree, priceFormat }: Props) {
         {pod.pod_title}
       </Typography>
       <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
-        <Chip color={isFree ? 'success' : 'primary'} label={isFree ? 'Free' : priceFormat(pod.pod_amount)} />
+        <Chip
+          color={isFree ? 'success' : 'primary'}
+          label={isFree ? 'Free' : priceFormat(pod.pod_amount)}
+          sx={{ fontWeight: 600, fontSize: '1rem', px: 0.5, height: 32 }}
+        />
         <Chip icon={<RepeatIcon />} label={pod.pod_occurrence?.replace(/_/g, ' ')} />
         <TimeChip iso={pod.pod_date_time} />
       </Stack>

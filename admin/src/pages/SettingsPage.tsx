@@ -3,6 +3,7 @@ import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AppearanceSection from './settings-page/AppearanceSection';
 import JwtExpirySection from './settings-page/JwtExpirySection';
 import DisplayFormatsSection from './settings-page/DisplayFormatsSection';
+import EnvironmentVariablesSection from './settings-page/EnvironmentVariablesSection';
 
 export default function SettingsPage() {
   const [toast, setToast] = useState<string | null>(null);
@@ -15,6 +16,7 @@ export default function SettingsPage() {
         </Typography>
       </Box>
       <AppearanceSection />
+      <EnvironmentVariablesSection onToast={setToast} />
       <DisplayFormatsSection onToast={setToast} />
       <JwtExpirySection onToast={setToast} />
       <Snackbar

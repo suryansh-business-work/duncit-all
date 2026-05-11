@@ -2,6 +2,8 @@ import { paymentService, computeQuote } from './payment.service';
 import { PodModel } from '../pod/pod.model';
 import type { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/rbac';
+import { validate } from '../../utils/validate';
+import { dummyCheckoutSchema } from './payment.validator';
 
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN'];
 
@@ -43,9 +45,10 @@ export const paymentResolvers = {
     },
   },
   Mutation: {
-    dummyCheckout: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+    dummyCheckout: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
-      return paymentService.dummyCheckout(args.input, u.id);
+      const input = await validate(dummyCheckoutSchema, args.input);
+      return paymentService.dummyCheckout(input, u.id);
     },
     refundPayment: (_p: unknown, args: { payment_doc_id: string; reason?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);

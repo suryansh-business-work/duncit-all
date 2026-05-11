@@ -96,7 +96,11 @@ export function usePodDetailActions({
 
   const onPaidCheckout = () => {
     if (!pod) return;
-    navigate('/checkout', {
+    const params = new URLSearchParams({
+      title: pod.pod_title || '',
+      amount: String(Number(pod.pod_amount) || 0),
+    });
+    navigate(`/checkout/${pod.id}?${params.toString()}`, {
       state: {
         pod_id: pod.id,
         pod_title: pod.pod_title,

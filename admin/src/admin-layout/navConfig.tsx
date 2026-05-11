@@ -32,6 +32,7 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import ShieldIcon from '@mui/icons-material/Shield';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
+import ArticleIcon from '@mui/icons-material/Article';
 
 export interface NavLeaf {
   label: string;
@@ -136,8 +137,9 @@ export const NAV: NavSection[] = [
   },
   {
     heading: 'Website',
-    prefixes: ['/newsletter', '/contact-submissions', '/faq-submissions'],
+    prefixes: ['/newsletter', '/contact-submissions', '/faq-submissions', '/website-content'],
     items: [
+      { label: 'Website Content', to: '/website-content', icon: <ArticleIcon /> },
       { label: 'Newsletter', to: '/newsletter', icon: <MarkEmailReadIcon /> },
       { label: 'Contact Submissions', to: '/contact-submissions', icon: <MarkEmailReadIcon /> },
       { label: 'FAQ Submissions', to: '/faq-submissions', icon: <HelpOutlineIcon /> },

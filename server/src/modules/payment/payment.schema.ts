@@ -19,6 +19,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     user_name: String!
     user_email: String!
     user_phone: String
+    billing_address: String!
+    checkout_url: String!
     target_type: PaymentTargetType!
     pod_id: ID
     pod: Pod
@@ -58,7 +60,10 @@ export const paymentTypeDefs = /* GraphQL */ `
     pod_id: ID
     amount: Float!
     description: String
+    contact_email: String!
     contact_phone: String
+    billing_address: String!
+    checkout_url: String!
     simulate_failure: Boolean
   }
 

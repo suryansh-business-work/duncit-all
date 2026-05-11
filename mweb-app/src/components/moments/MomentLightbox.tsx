@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Box, Dialog, IconButton, Stack } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
@@ -18,17 +18,42 @@ interface Props {
 
 export default function MomentLightbox({ moments, index, onClose, onIndexChange }: Props) {
   const [current, setCurrent] = useState<number>(index ?? 0);
+  const pushedHistory = useRef(false);
 
   useEffect(() => {
     if (index !== null) setCurrent(index);
   }, [index]);
 
   useEffect(() => {
+    if (index === null || pushedHistory.current) return;
+    window.history.pushState({ ...(window.history.state || {}), duncitLightbox: true }, '');
+    pushedHistory.current = true;
+  }, [index]);
+
+  useEffect(() => {
+    if (index === null) return;
+    const onPop = () => {
+      pushedHistory.current = false;
+      onClose();
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, [index, onClose]);
+
+  const close = () => {
+    if (pushedHistory.current) {
+      window.history.back();
+      return;
+    }
+    onClose();
+  };
+
+  useEffect(() => {
     if (index === null) return;
     const onKey = (e: KeyboardEvent) => {
       if (e.key === 'ArrowRight') next();
       else if (e.key === 'ArrowLeft') prev();
-      else if (e.key === 'Escape') onClose();
+      else if (e.key === 'Escape') close();
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
@@ -52,14 +77,14 @@ export default function MomentLightbox({ moments, index, onClose, onIndexChange 
   return (
     <Dialog
       open={index !== null}
-      onClose={onClose}
+      onClose={close}
       fullScreen
       PaperProps={{ sx: { bgcolor: 'rgba(0,0,0,0.94)' } }}
       aria-label="Moment preview"
     >
       <Box sx={{ position: 'relative', width: '100%', height: '100%' }}>
         <IconButton
-          onClick={onClose}
+          onClick={close}
           aria-label="Close preview"
           sx={{
             position: 'absolute',

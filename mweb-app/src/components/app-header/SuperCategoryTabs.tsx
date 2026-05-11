@@ -11,8 +11,9 @@ interface Props {
 
 export default function SuperCategoryTabs({ loading, superCats, value, onChange }: Props) {
   const { pathname } = useLocation();
+  const canFilter = ['/', '/explore', '/clubs', '/chats', '/follow'].includes(pathname);
 
-  if (pathname !== '/') return null;
+  if (!canFilter) return null;
 
   if (loading && superCats.length === 0) {
     return (

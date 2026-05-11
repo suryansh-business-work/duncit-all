@@ -91,6 +91,23 @@ export const interestCategoryIdsSchema = yup
   .max(60, 'Select fewer interests')
   .required();
 
+export const recordUserContactActionSchema = yup.object({
+  user_id: yup.string().required(),
+  type: yup.string().oneOf(['CALL', 'EMAIL']).required(),
+  target: yup.string().trim().min(3).max(254).required(),
+  subject: yup.string().trim().max(160).default(''),
+  notes: yup.string().trim().max(2000).default(''),
+  status: yup.string().trim().max(40).default('LOGGED'),
+  duration_seconds: yup.number().integer().min(0).default(0),
+  recording_url: yup.string().trim().url().max(2048).default(''),
+});
+
+export const startRecordedUserCallSchema = yup.object({
+  user_id: yup.string().required(),
+  target: yup.string().trim().min(3).max(64).required(),
+  notes: yup.string().trim().max(2000).default(''),
+});
+
 export type RegisterDTO = yup.InferType<typeof registerSchema>;
 export type LoginDTO = yup.InferType<typeof loginSchema>;
 export type GoogleSignupDTO = yup.InferType<typeof googleSignupSchema>;
@@ -98,3 +115,5 @@ export type CreateUserDTO = yup.InferType<typeof createUserSchema>;
 export type UpdateUserDTO = yup.InferType<typeof updateUserSchema>;
 export type UpdateMyProfileDTO = yup.InferType<typeof updateMyProfileSchema>;
 export type PetProfileDTO = yup.InferType<typeof petProfileSchema>;
+export type RecordUserContactActionDTO = yup.InferType<typeof recordUserContactActionSchema>;
+export type StartRecordedUserCallDTO = yup.InferType<typeof startRecordedUserCallSchema>;

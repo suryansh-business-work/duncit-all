@@ -10,6 +10,8 @@ export interface IPayment extends Document {
   user_name: string;
   user_email: string;
   user_phone: string | null;
+  billing_address: string;
+  checkout_url: string;
   target_type: PaymentTargetType;
   pod_id: Types.ObjectId | null;
   description: string;
@@ -37,6 +39,8 @@ const paymentSchema = new Schema<IPayment>(
     user_name: { type: String, required: true },
     user_email: { type: String, required: true },
     user_phone: { type: String, default: null },
+    billing_address: { type: String, default: '' },
+    checkout_url: { type: String, default: '' },
     target_type: { type: String, enum: ['POD', 'OTHER'], default: 'POD' },
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null, index: true },
     description: { type: String, default: '' },

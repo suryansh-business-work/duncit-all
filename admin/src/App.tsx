@@ -24,6 +24,7 @@ import FaqsPage from './pages/FaqsPage';
 import FaqSubmissionsPage from './pages/FaqSubmissionsPage';
 import NewsletterSubscribersPage from './pages/NewsletterSubscribersPage';
 import ContactSubmissionsPage from './pages/ContactSubmissionsPage';
+import WebsiteContentPage from './pages/WebsiteContentPage';
 import SupportLogsPage from './pages/SupportLogsPage';
 import PoliciesPage from './pages/PoliciesPage';
 import EmailTemplatesPage from './pages/EmailTemplatesPage';
@@ -76,6 +77,7 @@ export default function App() {
                 <Route path="/faq-submissions" element={<FaqSubmissionsPage />} />
                 <Route path="/newsletter" element={<NewsletterSubscribersPage />} />
                 <Route path="/contact-submissions" element={<ContactSubmissionsPage />} />
+                <Route path="/website-content" element={<WebsiteContentPage />} />
                 <Route path="/support-logs" element={<SupportLogsPage />} />
                 <Route path="/policies" element={<PoliciesPage />} />
                 <Route path="/email-templates" element={<EmailTemplatesPage />} />

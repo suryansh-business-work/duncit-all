@@ -3,24 +3,30 @@ import path from 'path';
 import mjml2html from 'mjml';
 import nodemailer, { Transporter } from 'nodemailer';
 import { emailTemplateService } from '../../modules/emailTemplate/emailTemplate.service';
+import { getRuntimeEnvValue } from '../../config/runtimeEnv';
 
 let transporter: Transporter | null = null;
+let transporterKey = '';
 
-function getTransporter(): Transporter {
-  if (transporter) return transporter;
-  const host = process.env.SMTP_HOST;
+async function getTransporter(): Promise<Transporter> {
+  const host = await getRuntimeEnvValue('SMTP_HOST');
+  const port = Number((await getRuntimeEnvValue('SMTP_PORT')) || 587);
+  const user = await getRuntimeEnvValue('SMTP_USER');
+  const pass = await getRuntimeEnvValue('SMTP_PASS');
+  const nextKey = [host, port, user, pass ? 'secret' : ''].join('|');
+  if (transporter && transporterKey === nextKey) return transporter;
+  transporterKey = nextKey;
   if (!host) {
-    // JSON transport for dev — does not actually send, just logs.
     transporter = nodemailer.createTransport({ jsonTransport: true });
     return transporter;
   }
   transporter = nodemailer.createTransport({
     host,
-    port: Number(process.env.SMTP_PORT || 587),
-    secure: Number(process.env.SMTP_PORT) === 465,
+    port,
+    secure: port === 465,
     auth:
-      process.env.SMTP_USER && process.env.SMTP_PASS
-        ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+      user && pass
+        ? { user, pass }
         : undefined,
   });
   return transporter;
@@ -68,8 +74,9 @@ export async function sendEmail(opts: {
   attachments?: EmailAttachment[];
 }) {
   const rendered = await renderTemplate(opts.template, opts.vars ?? {});
-  const info = await getTransporter().sendMail({
-    from: process.env.SMTP_FROM || 'Duncit <noreply@duncit.local>',
+  const from = (await getRuntimeEnvValue('SMTP_FROM')) || 'Duncit <noreply@duncit.local>';
+  const info = await (await getTransporter()).sendMail({
+    from,
     to: opts.to,
     subject: rendered.subject || opts.subject,
     html: rendered.html,

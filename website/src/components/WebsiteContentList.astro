@@ -1,0 +1,155 @@
+---
+interface Props {
+  type: 'CAREERS' | 'NEWSROOM' | 'BLOG';
+  variant?: 'jobs' | 'news' | 'cards';
+}
+
+const { type, variant = 'cards' } = Astro.props;
+const graphqlUrl = import.meta.env.PUBLIC_GRAPHQL_URL || '';
+---
+
+<div
+  class="not-prose my-6"
+  data-website-content-list
+  data-type={type}
+  data-variant={variant}
+  data-graphql-url={graphqlUrl}
+>
+  <div class="p-5 rounded-2xl bg-white sticker text-ink-soft">Loading content...</div>
+</div>
+
+<script>
+  const query = `
+    query PublicWebsiteContent($type: WebsitePageType!) {
+      publicWebsiteContent(type: $type) {
+        id
+        title
+        slug
+        summary
+        body
+        category
+        image_url
+        cta_label
+        cta_url
+        published_at
+      }
+    }
+  `;
+
+  const escapeHtml = (value: unknown) => String(value || '')
+    .replaceAll('&', '&amp;')
+    .replaceAll('<', '&lt;')
+    .replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;')
+    .replaceAll("'", '&#039;');
+
+  const safeUrl = (value: unknown) => {
+    const raw = String(value || '').trim();
+    if (!raw) return '#';
+    if (/^(mailto:|tel:)/i.test(raw)) return raw;
+    try {
+      const parsed = new URL(raw);
+      return ['http:', 'https:'].includes(parsed.protocol) ? parsed.toString() : '#';
+    } catch {
+      return '#';
+    }
+  };
+
+  const formatDate = (value: unknown) => {
+    if (!value) return '';
+    try {
+      return new Intl.DateTimeFormat('en', { month: 'short', day: '2-digit', year: 'numeric' })
+        .format(new Date(String(value)));
+    } catch {
+      return '';
+    }
+  };
+
+  const graphQlUrlFor = (root: HTMLElement) => {
+    if (root.dataset.graphqlUrl) return root.dataset.graphqlUrl;
+    return location.hostname === 'localhost' || location.hostname === '127.0.0.1'
+      ? 'http://localhost:2001/graphql'
+      : 'https://server.duncit.com/graphql';
+  };
+
+  const renderJobs = (items: any[]) => `
+    <div class="space-y-3">
+      ${items.map((item) => `
+        <a href="${safeUrl(item.cta_url)}" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition">
+          <div class="flex items-center justify-between gap-4">
+            <div>
+              <div class="font-head font-bold text-ink text-lg">${escapeHtml(item.title)}</div>
+              <div class="text-sm text-ink-soft mt-1">${escapeHtml(item.category || item.summary)}</div>
+              ${item.body ? `<p class="text-sm text-ink-soft mt-2">${escapeHtml(item.body)}</p>` : ''}
+            </div>
+            <span class="px-3 py-1.5 rounded-full bg-primary text-white font-bold text-xs uppercase tracking-wider sticker shrink-0">
+              ${escapeHtml(item.cta_label || 'Open')}
+            </span>
+          </div>
+        </a>
+      `).join('')}
+    </div>`;
+
+  const renderNews = (items: any[]) => `
+    <div class="space-y-4">
+      ${items.map((item) => `
+        <a href="${safeUrl(item.cta_url)}" class="flex items-center gap-4 p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition">
+          <div class="w-12 h-12 rounded-xl bg-secondary/15 text-secondary inline-flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-newspaper text-lg"></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 text-xs text-ink-soft mb-1">
+              <span class="font-bold uppercase tracking-wider text-primary">${escapeHtml(item.category)}</span>
+              <span>${item.category && item.published_at ? '•' : ''}</span>
+              <span>${escapeHtml(formatDate(item.published_at))}</span>
+            </div>
+            <div class="font-head font-bold text-ink">${escapeHtml(item.title)}</div>
+            ${item.summary ? `<p class="text-sm text-ink-soft mt-1">${escapeHtml(item.summary)}</p>` : ''}
+          </div>
+          <i class="fa-solid fa-arrow-right text-ink-soft"></i>
+        </a>
+      `).join('')}
+    </div>`;
+
+  const renderCards = (items: any[]) => `
+    <div class="grid sm:grid-cols-2 gap-5">
+      ${items.map((item) => `
+        <a href="${safeUrl(item.cta_url)}" class="block bg-white rounded-2xl overflow-hidden sticker hover:-translate-y-1 transition">
+          ${item.image_url ? `<img src="${safeUrl(item.image_url)}" alt="" class="w-full aspect-video object-cover" />` : ''}
+          <div class="p-5">
+            <div class="flex items-center gap-2 text-xs text-ink-soft mb-2">
+              <span class="font-bold uppercase tracking-wider text-primary">${escapeHtml(item.category)}</span>
+              <span>${item.category && item.published_at ? '•' : ''}</span>
+              <span>${escapeHtml(formatDate(item.published_at))}</span>
+            </div>
+            <h3 class="font-head font-bold text-ink text-lg leading-snug">${escapeHtml(item.title)}</h3>
+            ${item.summary ? `<p class="text-sm text-ink-soft mt-2">${escapeHtml(item.summary)}</p>` : ''}
+          </div>
+        </a>
+      `).join('')}
+    </div>`;
+
+  document.querySelectorAll<HTMLElement>('[data-website-content-list]').forEach(async (root) => {
+    try {
+      const response = await fetch(graphQlUrlFor(root), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ query, variables: { type: root.dataset.type } }),
+      });
+      const payload = await response.json();
+      if (payload.errors?.length) throw new Error(payload.errors[0].message);
+      const items = payload.data?.publicWebsiteContent || [];
+      if (!items.length) {
+        root.innerHTML = '<div class="p-5 rounded-2xl bg-white sticker text-ink-soft">No published items yet.</div>';
+        return;
+      }
+      root.innerHTML = root.dataset.variant === 'jobs'
+        ? renderJobs(items)
+        : root.dataset.variant === 'news'
+          ? renderNews(items)
+          : renderCards(items);
+    } catch (error) {
+      root.innerHTML = '<div class="p-5 rounded-2xl bg-white sticker text-ink-soft">Content is temporarily unavailable.</div>';
+    }
+  });
+</script>

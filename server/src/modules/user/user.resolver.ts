@@ -8,6 +8,8 @@ import {
   updateMyProfileSchema,
   petProfileSchema,
   interestCategoryIdsSchema,
+  recordUserContactActionSchema,
+  startRecordedUserCallSchema,
 } from './user.validator';
 import { validate } from '../../utils/validate';
 import type { GraphQLContext } from '../../context';
@@ -57,6 +59,10 @@ export const userResolvers = {
     user: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
       return userService.getById(args.user_id);
+    },
+    userContactActions: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return userService.listContactActions(args.user_id);
     },
     publicUsersByIds: async (_p: unknown, args: { user_ids: string[] }) => {
       const ids = (args.user_ids ?? []).filter(Boolean);
@@ -147,6 +153,20 @@ export const userResolvers = {
       const data = await validate(createUserSchema, args.input);
       assertScope(ctx, { city: data.city, zone: data.zone });
       return userService.create(data as any);
+    },
+    recordUserContactAction: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      const data = await validate(recordUserContactActionSchema, args.input);
+      return userService.recordContactAction(data, ctx.user?.id ?? null);
+    },
+    startRecordedUserCall: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      const data = await validate(startRecordedUserCallSchema, args.input);
+      return userService.startRecordedCall(data, ctx.user?.id ?? null);
+    },
+    deleteUserContactAction: async (_p: unknown, args: { action_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return userService.deleteContactAction(args.action_id);
     },
     updateUser: async (
       _p: unknown,

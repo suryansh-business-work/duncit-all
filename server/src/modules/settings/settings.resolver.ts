@@ -22,6 +22,10 @@ export const settingsResolvers = {
     },
     publicFeatureFlags: async () => settingsService.listPublicFlags(),
     branding: async () => settingsService.getBranding(),
+    environmentVariables: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return settingsService.listEnvironmentVariables();
+    },
   },
   Mutation: {
     updateAppSettings: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -55,6 +59,18 @@ export const settingsResolvers = {
     updateBranding: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_WRITE);
       return settingsService.updateBranding(args.input);
+    },
+    updateEnvironmentVariable: async (
+      _p: unknown,
+      args: { key: string; value: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return settingsService.updateEnvironmentVariable(args.key, args.value, ctx.user?.id ?? null);
+    },
+    clearEnvironmentVariable: async (_p: unknown, args: { key: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return settingsService.clearEnvironmentVariable(args.key);
     },
   },
 };

@@ -1,5 +1,11 @@
 import { GraphQLError } from 'graphql';
-import { AppSettingsModel, FeatureFlagModel, BrandingModel } from './settings.model';
+import { getRuntimeEnvDefinition, getRuntimeEnvRows } from '../../config/runtimeEnv';
+import {
+  AppSettingsModel,
+  FeatureFlagModel,
+  BrandingModel,
+  EnvironmentVariableModel,
+} from './settings.model';
 
 const toAppPub = (d: any) => ({
   jwt_expires_in: d?.jwt_expires_in ?? '7d',
@@ -145,6 +151,36 @@ export const settingsService = {
       support_email: doc.support_email,
       updated_at: doc.updated_at?.toISOString?.() ?? '',
     };
+  },
+
+  async listEnvironmentVariables() {
+    return getRuntimeEnvRows();
+  },
+
+  async updateEnvironmentVariable(key: string, value: string, updatedBy?: string | null) {
+    const normalized = key.toUpperCase().trim();
+    if (!getRuntimeEnvDefinition(normalized)) {
+      throw new GraphQLError('Environment variable is not managed', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    await EnvironmentVariableModel.updateOne(
+      { key: normalized },
+      { $set: { value, updated_by: updatedBy || null } },
+      { upsert: true }
+    );
+    return (await getRuntimeEnvRows()).find((row) => row.key === normalized)!;
+  },
+
+  async clearEnvironmentVariable(key: string) {
+    const normalized = key.toUpperCase().trim();
+    if (!getRuntimeEnvDefinition(normalized)) {
+      throw new GraphQLError('Environment variable is not managed', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    await EnvironmentVariableModel.deleteOne({ key: normalized });
+    return (await getRuntimeEnvRows()).find((row) => row.key === normalized)!;
   },
 
   async seedDefaults() {

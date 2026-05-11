@@ -1,0 +1,148 @@
+import { useEffect, useMemo, useState } from 'react';
+import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { useMutation, useQuery } from '@apollo/client';
+import { Alert, Backdrop, Box, Button, Chip, CircularProgress, IconButton, Skeleton, Stack, Typography } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import PaymentLottie from '../../components/PaymentLottie';
+import { checkoutFormSchema } from './validation';
+import { buildBreakup } from './checkoutMath';
+import CheckoutSuccess from './CheckoutSuccess';
+import OrderSummaryCard from './OrderSummaryCard';
+import PaymentDetailsCard from './PaymentDetailsCard';
+import { CHECKOUT_ME, CHECKOUT_POD, DUMMY_CHECKOUT, PUBLIC_FINANCE, type CheckoutForm, type CheckoutState } from './queries';
+
+const blankForm: CheckoutForm = {
+  email: '',
+  phone: '',
+  billing_address: '',
+  method: 'DUMMY_UPI',
+  simulate_failure: false,
+};
+
+export default function CheckoutPage() {
+  const { podId = '' } = useParams();
+  const location = useLocation();
+  const navigate = useNavigate();
+  const state = (location.state || {}) as CheckoutState;
+  const search = new URLSearchParams(location.search);
+  const checkoutPodId = podId || state.pod_id || search.get('pod_id') || '';
+
+  const { data: financeData, loading: financeLoading } = useQuery(PUBLIC_FINANCE);
+  const { data: meData } = useQuery(CHECKOUT_ME);
+  const { data: podData, loading: podLoading, error: podError } = useQuery(CHECKOUT_POD, {
+    variables: { id: checkoutPodId },
+    skip: !checkoutPodId,
+    fetchPolicy: 'cache-and-network',
+  });
+  const [doCheckout] = useMutation(DUMMY_CHECKOUT);
+  const [form, setForm] = useState<CheckoutForm>(blankForm);
+  const [submitting, setSubmitting] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [success, setSuccess] = useState<any>(null);
+
+  useEffect(() => {
+    const me = meData?.me;
+    if (!me) return;
+    setForm((prev) => ({
+      ...prev,
+      email: prev.email || me.email || '',
+      phone: prev.phone || `${me.phone_extension || ''}${me.phone_number || ''}`,
+    }));
+  }, [meData]);
+
+  const pod = podData?.pod;
+  const amount = Number(pod?.pod_amount ?? state.amount ?? search.get('amount') ?? 0);
+  const breakup = useMemo(
+    () => buildBreakup(amount, financeData?.publicFinanceSettings),
+    [amount, financeData]
+  );
+
+  const submit = async () => {
+    setError(null);
+    setSubmitting(true);
+    try {
+      const valid = await checkoutFormSchema.validate(form, { abortEarly: false });
+      const title = pod?.pod_title || state.pod_title || search.get('title') || 'Booking';
+      const res = await doCheckout({
+        variables: {
+          input: {
+            pod_id: checkoutPodId || null,
+            amount,
+            description: state.description || `Pod booking · ${title}`,
+            contact_email: valid.email,
+            contact_phone: valid.phone,
+            billing_address: valid.billing_address,
+            checkout_url: window.location.href,
+            simulate_failure: valid.simulate_failure,
+          },
+        },
+      });
+      const payment = res.data?.dummyCheckout;
+      if (payment?.status === 'SUCCESS') setSuccess(payment);
+      else setError('Payment failed. Please try again.');
+    } catch (submitError: any) {
+      setError(submitError?.errors?.join(', ') || submitError.message || 'Checkout failed');
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  if (success) return <CheckoutSuccess payment={success} onHome={() => navigate('/')} onProfile={() => navigate('/profile')} />;
+
+  if (!checkoutPodId && !state.amount) {
+    return <EmptyCheckout onHome={() => navigate('/')} />;
+  }
+
+  if (financeLoading || podLoading || !breakup) return <CheckoutSkeleton />;
+
+  return (
+    <Box sx={{ maxWidth: 720, mx: 'auto' }}>
+      <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
+        <IconButton onClick={() => navigate(-1)} aria-label="Back"><ArrowBackIcon /></IconButton>
+        <Typography variant="h5" fontWeight={700}>Checkout</Typography>
+        {financeData?.publicFinanceSettings?.dummy_mode && <Chip color="warning" size="small" label="Dummy Mode" />}
+      </Stack>
+      {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
+      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+        <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={breakup} />
+        <PaymentDetailsCard
+          form={form}
+          error={error}
+          submitting={submitting}
+          total={breakup.total}
+          currency={breakup.currency}
+          onChange={setForm}
+          onSubmit={submit}
+        />
+      </Stack>
+      <Backdrop open={submitting} sx={{ color: 'common.white', zIndex: (t) => t.zIndex.modal + 1, flexDirection: 'column', gap: 2 }}>
+        <PaymentLottie variant="processing" size={140} />
+        <Typography variant="subtitle1" fontWeight={600}>Processing your payment...</Typography>
+        <Typography variant="caption" sx={{ opacity: 0.8 }}>Please don't close this tab.</Typography>
+      </Backdrop>
+    </Box>
+  );
+}
+
+function EmptyCheckout({ onHome }: { onHome: () => void }) {
+  return (
+    <Box sx={{ p: 4, textAlign: 'center' }}>
+      <Alert severity="info" sx={{ mb: 2 }}>Nothing to checkout.</Alert>
+      <Button onClick={onHome} variant="contained">Back to Home</Button>
+    </Box>
+  );
+}
+
+function CheckoutSkeleton() {
+  return (
+    <Box sx={{ maxWidth: 720, mx: 'auto', p: 2 }}>
+      <Stack spacing={2}>
+        <Skeleton variant="text" width="40%" height={40} />
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
+          <Skeleton variant="rounded" height={260} sx={{ flex: 1 }} />
+          <Skeleton variant="rounded" height={420} sx={{ flex: 1 }} />
+        </Stack>
+      </Stack>
+    </Box>
+  );
+}

@@ -1,12 +1,6 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
-
-const posts = [
-  { date: 'Apr 12, 2026', title: 'Duncit raises seed round to reimagine friendship', tag: 'Funding' },
-  { date: 'Mar 28, 2026', title: 'Beta opens to 5 launch cities this summer', tag: 'Product' },
-  { date: 'Feb 14, 2026', title: 'Why "vibe-matching" beats interest-matching', tag: 'Research' },
-  { date: 'Jan 09, 2026', title: 'Hello, world — Duncit is officially in build mode', tag: 'Company' },
-];
+import WebsiteContentList from '../components/WebsiteContentList.astro';
 ---
 
 <PageLayout
@@ -18,24 +12,7 @@ const posts = [
   heroImage="https://images.unsplash.com/photo-1495020689067-958852a7765e?w=1600&q=80&auto=format&fit=crop"
 >
   <h2>Latest stories</h2>
-  <div class="not-prose space-y-4 mt-6">
-    {posts.map((p) => (
-      <a href="#" class="flex items-center gap-4 p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition">
-        <div class="w-12 h-12 rounded-xl bg-secondary/15 text-secondary inline-flex items-center justify-center shrink-0">
-          <i class="fa-solid fa-newspaper text-lg"></i>
-        </div>
-        <div class="flex-1">
-          <div class="flex items-center gap-2 text-xs text-ink-soft mb-1">
-            <span class="font-bold uppercase tracking-wider text-primary">{p.tag}</span>
-            <span>•</span>
-            <span>{p.date}</span>
-          </div>
-          <div class="font-head font-bold text-ink">{p.title}</div>
-        </div>
-        <i class="fa-solid fa-arrow-right text-ink-soft"></i>
-      </a>
-    ))}
-  </div>
+  <WebsiteContentList type="NEWSROOM" variant="news" />
 
   <h2>Press inquiries</h2>
   <p>

@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { getRuntimeEnvValue } from '../../config/runtimeEnv';
 
 interface GoogleTokenInfo {
   email: string;
@@ -22,7 +23,7 @@ export async function verifyGoogleIdToken(idToken: string): Promise<GoogleTokenI
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
-  const expectedClientId = process.env.GOOGLE_CLIENT_ID;
+  const expectedClientId = await getRuntimeEnvValue('GOOGLE_CLIENT_ID');
   if (!expectedClientId) {
     throw new GraphQLError('Google sign-in is not configured on the server', {
       extensions: { code: 'NOT_CONFIGURED' },

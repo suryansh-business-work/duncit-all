@@ -1,13 +1,6 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
-
-const roles = [
-  { title: 'Senior iOS Engineer', team: 'Mobile', loc: 'Remote · Worldwide' },
-  { title: 'Senior Android Engineer', team: 'Mobile', loc: 'Remote · Worldwide' },
-  { title: 'Product Designer', team: 'Design', loc: 'Berlin or Remote' },
-  { title: 'Trust & Safety Lead', team: 'Operations', loc: 'New York' },
-  { title: 'Community Manager', team: 'Community', loc: 'Remote · US/EU' },
-];
+import WebsiteContentList from '../components/WebsiteContentList.astro';
 ---
 
 <PageLayout
@@ -28,23 +21,7 @@ const roles = [
   </ul>
 
   <h2>Open roles</h2>
-  <div class="not-prose mt-6 space-y-3">
-    {roles.map((r) => (
-      <a href="mailto:careers@duncit.com" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition">
-        <div class="flex items-center justify-between gap-4">
-          <div>
-            <div class="font-head font-bold text-ink text-lg">{r.title}</div>
-            <div class="text-sm text-ink-soft mt-1">
-              <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-people-group"></i> {r.team}</span>
-              <span class="mx-2">•</span>
-              <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-location-dot"></i> {r.loc}</span>
-            </div>
-          </div>
-          <span class="px-3 py-1.5 rounded-full bg-primary text-white font-bold text-xs uppercase tracking-wider sticker shrink-0">Apply</span>
-        </div>
-      </a>
-    ))}
-  </div>
+  <WebsiteContentList type="CAREERS" variant="jobs" />
 
   <h2>Don't see your role?</h2>
   <p>

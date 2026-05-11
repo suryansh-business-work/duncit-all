@@ -58,6 +58,25 @@ export const settingsTypeDefs = gql`
     updated_at: String
   }
 
+  enum EnvironmentVariableSource {
+    DATABASE
+    ENV
+    EMPTY
+  }
+
+  type EnvironmentVariable {
+    group: String!
+    app: String!
+    key: String!
+    label: String!
+    value: String!
+    is_secret: Boolean!
+    has_override: Boolean!
+    has_fallback: Boolean!
+    source: EnvironmentVariableSource!
+    updated_at: String
+  }
+
   input UpdateBrandingInput {
     app_name: String
     logo_url: String
@@ -72,6 +91,7 @@ export const settingsTypeDefs = gql`
     featureFlag(key: String!): FeatureFlag
     publicFeatureFlags: [PublicFeatureFlag!]!
     branding: Branding!
+    environmentVariables: [EnvironmentVariable!]!
   }
 
   extend type Mutation {
@@ -81,5 +101,7 @@ export const settingsTypeDefs = gql`
     setFeatureFlag(flag_id: ID!, enabled: Boolean!): FeatureFlag!
     deleteFeatureFlag(flag_id: ID!): Boolean!
     updateBranding(input: UpdateBrandingInput!): Branding!
+    updateEnvironmentVariable(key: String!, value: String!): EnvironmentVariable!
+    clearEnvironmentVariable(key: String!): EnvironmentVariable!
   }
 `;

@@ -18,6 +18,8 @@ const toPub = (p: IPayment) => ({
   user_name: p.user_name,
   user_email: p.user_email,
   user_phone: p.user_phone,
+  billing_address: p.billing_address ?? '',
+  checkout_url: p.checkout_url ?? '',
   target_type: p.target_type,
   pod_id: p.pod_id ? String(p.pod_id) : null,
   description: p.description,
@@ -141,12 +143,10 @@ export const paymentService = {
         [(user as any).first_name, (user as any).last_name].filter(Boolean).join(' ').trim() ||
         (user as any).email ||
         'Customer',
-      user_email: (user as any).email || '',
-      user_phone:
-        input.contact_phone ||
-        ((user as any).phone_number
-          ? `${(user as any).phone_extension || ''}${(user as any).phone_number}`
-          : null),
+      user_email: input.contact_email,
+      user_phone: input.contact_phone,
+      billing_address: input.billing_address,
+      checkout_url: input.checkout_url,
       target_type: input.pod_id ? 'POD' : 'OTHER',
       pod_id: input.pod_id ? new Types.ObjectId(input.pod_id) : null,
       description,
@@ -161,7 +161,11 @@ export const paymentService = {
       gateway: 'DUMMY',
       gateway_ref: status === 'SUCCESS' ? `dummy_${Date.now()}` : null,
       paid_at: paidAt,
-      metadata: { source: 'app_checkout' },
+      metadata: {
+        source: 'app_checkout',
+        checkout_url: input.checkout_url,
+        pod_id: input.pod_id || null,
+      },
     });
 
     if (status === 'SUCCESS') {

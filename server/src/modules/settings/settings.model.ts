@@ -68,3 +68,25 @@ const brandingSchema = new Schema<IBranding>(
 );
 
 export const BrandingModel = model<IBranding>('Branding', brandingSchema);
+
+export interface IEnvironmentVariable extends Document {
+  key: string;
+  value: string;
+  updated_by?: Schema.Types.ObjectId | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const environmentVariableSchema = new Schema<IEnvironmentVariable>(
+  {
+    key: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    value: { type: String, default: '' },
+    updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+export const EnvironmentVariableModel = model<IEnvironmentVariable>(
+  'EnvironmentVariable',
+  environmentVariableSchema
+);

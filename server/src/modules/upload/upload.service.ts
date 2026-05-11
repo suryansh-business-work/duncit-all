@@ -1,21 +1,21 @@
 import crypto from 'crypto';
 import { GraphQLError } from 'graphql';
-
-const IMAGEKIT_PUBLIC_KEY = (
-  process.env.IMAGEKIT_PUBLIC_KEY || 'public_kgj5PULxw6pfjeO2IGwEVundBIQ='
-).trim();
-const IMAGEKIT_PRIVATE_KEY = (
-  process.env.IMAGEKIT_PRIVATE_KEY || 'private_n4IdSlg7DbXXn88rRAVqZhCgGVw='
-).trim();
-const IMAGEKIT_URL_ENDPOINT = (
-  process.env.IMAGEKIT_URL_ENDPOINT || 'https://ik.imagekit.io/esdata1'
-).trim();
-const PEXELS_API_KEY = (
-  process.env.PEXELS_API_KEY ||
-  '3rBEfoT7NWCeZxOp9BpvsT8AVf6PTRRYs5vhVDGO7ZYxzt7eWjSUpofK'
-).trim();
+import { getRuntimeEnvValue } from '../../config/runtimeEnv';
 
 const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
+
+async function getImagekitConfig() {
+  const [publicKey, privateKey, urlEndpoint] = await Promise.all([
+    getRuntimeEnvValue('IMAGEKIT_PUBLIC_KEY'),
+    getRuntimeEnvValue('IMAGEKIT_PRIVATE_KEY'),
+    getRuntimeEnvValue('IMAGEKIT_URL_ENDPOINT'),
+  ]);
+  return {
+    publicKey: publicKey.trim(),
+    privateKey: privateKey.trim(),
+    urlEndpoint: urlEndpoint.trim(),
+  };
+}
 
 /**
  * Generate the auth params required by the ImageKit browser-side upload SDK.
@@ -26,8 +26,9 @@ const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
  *   HMAC-SHA1(privateKey, token + expire)  (hex digest)
  * where expire is a Unix timestamp (seconds), at most 1 hour ahead of now.
  */
-export function getImagekitAuth(expireSeconds = 30 * 60) {
-  if (!IMAGEKIT_PRIVATE_KEY) {
+export async function getImagekitAuth(expireSeconds = 30 * 60) {
+  const config = await getImagekitConfig();
+  if (!config.privateKey || !config.publicKey || !config.urlEndpoint) {
     throw new GraphQLError('ImageKit is not configured', {
       extensions: { code: 'CONFIG_ERROR' },
     });
@@ -37,15 +38,15 @@ export function getImagekitAuth(expireSeconds = 30 * 60) {
   const expire = Math.floor(Date.now() / 1000) + expireSeconds;
   // The string concatenation here is what ImageKit re-derives on its side.
   const signature = crypto
-    .createHmac('sha1', IMAGEKIT_PRIVATE_KEY)
+    .createHmac('sha1', config.privateKey)
     .update(`${token}${expire}`)
     .digest('hex');
   return {
     token,
     expire,
     signature,
-    publicKey: IMAGEKIT_PUBLIC_KEY,
-    urlEndpoint: IMAGEKIT_URL_ENDPOINT,
+    publicKey: config.publicKey,
+    urlEndpoint: config.urlEndpoint,
   };
 }
 
@@ -60,7 +61,8 @@ async function uploadToImagekit(opts: {
   folder?: string;
   tags?: string[];
 }): Promise<{ url: string; fileId: string; thumbnailUrl?: string }> {
-  if (!IMAGEKIT_PRIVATE_KEY) {
+  const config = await getImagekitConfig();
+  if (!config.privateKey) {
     throw new GraphQLError('ImageKit is not configured', {
       extensions: { code: 'CONFIG_ERROR' },
     });
@@ -73,7 +75,7 @@ async function uploadToImagekit(opts: {
   if (opts.folder) form.append('folder', opts.folder);
   if (opts.tags?.length) form.append('tags', opts.tags.join(','));
 
-  const auth = 'Basic ' + Buffer.from(IMAGEKIT_PRIVATE_KEY + ':').toString('base64');
+  const auth = 'Basic ' + Buffer.from(config.privateKey + ':').toString('base64');
   const res = await fetch(IMAGEKIT_UPLOAD_URL, {
     method: 'POST',
     headers: { Authorization: auth },
@@ -212,7 +214,8 @@ export async function pexelsSearch(opts: {
   perPage?: number;
   orientation?: string;
 }) {
-  if (!PEXELS_API_KEY) {
+  const pexelsApiKey = (await getRuntimeEnvValue('PEXELS_API_KEY')).trim();
+  if (!pexelsApiKey) {
     throw new GraphQLError('Pexels is not configured', {
       extensions: { code: 'CONFIG_ERROR' },
     });
@@ -229,7 +232,7 @@ export async function pexelsSearch(opts: {
     ? `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}${orientationParam}`
     : `https://api.pexels.com/v1/curated?per_page=${perPage}&page=${page}`;
 
-  const res = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } });
+  const res = await fetch(url, { headers: { Authorization: pexelsApiKey } });
   const json: any = await res.json().catch(() => ({}));
   if (!res.ok)
     throw new GraphQLError(`Pexels search failed: ${json?.error || res.statusText}`, {
@@ -280,7 +283,8 @@ export async function pexelsSearchVideos(opts: {
   perPage?: number;
   orientation?: string;
 }) {
-  if (!PEXELS_API_KEY) {
+  const pexelsApiKey = (await getRuntimeEnvValue('PEXELS_API_KEY')).trim();
+  if (!pexelsApiKey) {
     throw new GraphQLError('Pexels is not configured', {
       extensions: { code: 'CONFIG_ERROR' },
     });
@@ -297,7 +301,7 @@ export async function pexelsSearchVideos(opts: {
     ? `https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}${orientationParam}`
     : `https://api.pexels.com/videos/popular?per_page=${perPage}&page=${page}`;
 
-  const res = await fetch(url, { headers: { Authorization: PEXELS_API_KEY } });
+  const res = await fetch(url, { headers: { Authorization: pexelsApiKey } });
   const json: any = await res.json().catch(() => ({}));
   if (!res.ok)
     throw new GraphQLError(`Pexels video search failed: ${json?.error || res.statusText}`, {

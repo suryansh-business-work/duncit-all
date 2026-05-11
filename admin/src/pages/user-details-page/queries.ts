@@ -84,6 +84,95 @@ export const DELETE_USER = gql`
   }
 `;
 
+export const USER_ACTIVITY_YEAR = gql`
+  query UserActivityYear($user_id: ID!, $year: Int) {
+    userActivityYear(user_id: $user_id, year: $year) {
+      user_id
+      year
+      available_years
+      total_visits
+      days {
+        date
+        count
+        level
+      }
+    }
+  }
+`;
+
+export const DELETE_USER_ACTIVITY_DAY = gql`
+  mutation DeleteUserActivityDay($user_id: ID!, $date: String!) {
+    deleteUserActivityDay(user_id: $user_id, date: $date)
+  }
+`;
+
+export const DELETE_USER_ACTIVITY_YEAR = gql`
+  mutation DeleteUserActivityYear($user_id: ID!, $year: Int!) {
+    deleteUserActivityYear(user_id: $user_id, year: $year)
+  }
+`;
+
+export const USER_CLICKSTREAM = gql`
+  query UserClickstream($user_id: ID!, $date: String!, $limit: Int) {
+    userClickstream(user_id: $user_id, date: $date, limit: $limit) {
+      id
+      event_type
+      path
+      title
+      target_tag
+      target_text
+      target_label
+      target_href
+      super_category_slug
+      checkout_url
+      metadata_json
+      occurred_at
+    }
+  }
+`;
+
+export const USER_CONTACT_ACTIONS = gql`
+  query UserContactActions($user_id: ID!) {
+    userContactActions(user_id: $user_id) {
+      id
+      type
+      target
+      subject
+      notes
+      status
+      duration_seconds
+      twilio_call_sid
+      recording_sid
+      recording_url
+      created_at
+    }
+  }
+`;
+
+export const RECORD_USER_CONTACT_ACTION = gql`
+  mutation RecordUserContactAction($input: RecordUserContactActionInput!) {
+    recordUserContactAction(input: $input) {
+      id
+    }
+  }
+`;
+
+export const START_RECORDED_USER_CALL = gql`
+  mutation StartRecordedUserCall($input: StartRecordedUserCallInput!) {
+    startRecordedUserCall(input: $input) {
+      id
+      status
+      twilio_call_sid
+    }
+  }
+`;
+
+export const DELETE_USER_CONTACT_ACTION = gql`
+  mutation DeleteUserContactAction($action_id: ID!) {
+    deleteUserContactAction(action_id: $action_id)
+  }
+`;
+
 export interface EditForm {
   first_name: string;
   last_name: string;

@@ -16,6 +16,8 @@ import { notificationEvents, type NotifyEvent } from './modules/notification/not
 import jwt from 'jsonwebtoken';
 import { policyService } from './modules/policy/policy.service';
 import { attachChatSocket } from './modules/chat/chat.socket';
+import { websiteContentService } from './modules/websiteContent/websiteContent.service';
+import { userService } from './modules/user/user.service';
 
 async function bootstrap() {
   await connectDB();
@@ -24,6 +26,7 @@ async function bootstrap() {
   await categoryService.seedDefaults();
   await notificationService.ensureVapid();
   await policyService.seedDefaults();
+  await websiteContentService.seedDefaults();
   const { podPlanService } = await import('./modules/pod-plan/pod-plan.service');
   await podPlanService.seedDefaults();
 
@@ -44,6 +47,23 @@ async function bootstrap() {
     express.json({ limit: '25mb' }),
     expressMiddleware(apollo, { context: buildContext })
   );
+
+  app.post('/twilio/recordings', express.urlencoded({ extended: false }), async (req, res) => {
+    try {
+      const rawUrl = String(req.body.RecordingUrl || '');
+      const recordingUrl = rawUrl && !/\.(mp3|wav)$/i.test(rawUrl) ? `${rawUrl}.mp3` : rawUrl;
+      await userService.attachCallRecording({
+        actionId: String(req.query.contactActionId || ''),
+        callSid: String(req.body.CallSid || ''),
+        recordingSid: String(req.body.RecordingSid || ''),
+        recordingUrl,
+        durationSeconds: Number(req.body.RecordingDuration || 0),
+      });
+      res.status(204).end();
+    } catch {
+      res.status(204).end();
+    }
+  });
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
 

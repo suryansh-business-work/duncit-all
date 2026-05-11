@@ -11,6 +11,9 @@ import {
 import RolesDialog from './RolesDialog';
 import ProfileForm from './ProfileForm';
 import UserBadgesSection from './UserBadgesSection';
+import UserActivitySection from './UserActivitySection';
+import ContactActionDialog from './ContactActionDialog';
+import ContactActionsSection from './ContactActionsSection';
 import UserInterestsSection from './UserInterestsSection';
 import UserHeader from './UserHeader';
 import UserSummaryCard from './UserSummaryCard';
@@ -22,6 +25,8 @@ import { useUserDetailsState } from './useUserDetailsState';
 export default function UserDetailsPage() {
   const { user_id } = useParams();
   const [toast, setToast] = useState<string | null>(null);
+  const [contactType, setContactType] = useState<'CALL' | 'EMAIL' | null>(null);
+  const [contactRefresh, setContactRefresh] = useState(0);
   const s = useUserDetailsState(user_id, setToast);
 
   if (s.loading && !s.user) {
@@ -41,6 +46,8 @@ export default function UserDetailsPage() {
         status={s.form.status}
         busy={s.busy}
         setStatus={s.setStatus}
+        onCallClick={() => setContactType('CALL')}
+        onEmailClick={() => setContactType('EMAIL')}
         onDeleteClick={() => s.setDelOpen(true)}
       />
 
@@ -73,9 +80,27 @@ export default function UserDetailsPage() {
             <PermissionsSection user={s.user} />
 
             <UserBadgesSection userId={s.user.user_id || user_id || ''} />
+
+            <UserActivitySection userId={s.user.user_id || user_id || ''} />
+
+            <ContactActionsSection
+              userId={s.user.user_id || user_id || ''}
+              refreshToken={contactRefresh}
+            />
           </Stack>
         </Grid>
       </Grid>
+
+      <ContactActionDialog
+        open={!!contactType}
+        type={contactType ?? 'CALL'}
+        user={s.user}
+        onClose={() => setContactType(null)}
+        onSaved={() => {
+          setToast('Contact log saved');
+          setContactRefresh((value) => value + 1);
+        }}
+      />
 
       <RolesDialog
         open={s.rolesOpen}

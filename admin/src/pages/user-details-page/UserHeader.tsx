@@ -5,6 +5,8 @@ import BlockIcon from '@mui/icons-material/Block';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PauseCircleIcon from '@mui/icons-material/PauseCircle';
 import DeleteIcon from '@mui/icons-material/Delete';
+import CallIcon from '@mui/icons-material/Call';
+import EmailIcon from '@mui/icons-material/Email';
 import type { EditForm } from './queries';
 
 interface Props {
@@ -12,10 +14,20 @@ interface Props {
   status: EditForm['status'];
   busy: boolean;
   setStatus: (status: EditForm['status']) => void;
+  onCallClick: () => void;
+  onEmailClick: () => void;
   onDeleteClick: () => void;
 }
 
-export default function UserHeader({ user, status, busy, setStatus, onDeleteClick }: Props) {
+export default function UserHeader({
+  user,
+  status,
+  busy,
+  setStatus,
+  onCallClick,
+  onEmailClick,
+  onDeleteClick,
+}: Props) {
   const navigate = useNavigate();
   return (
     <Stack direction="row" alignItems="center" spacing={1}>
@@ -32,6 +44,12 @@ export default function UserHeader({ user, status, busy, setStatus, onDeleteClic
         <Typography variant="h5">{user.full_name || user.email || user.user_id}</Typography>
       </Box>
       <Stack direction="row" spacing={1}>
+        <Button size="small" variant="outlined" startIcon={<CallIcon />} onClick={onCallClick}>
+          Call
+        </Button>
+        <Button size="small" variant="outlined" startIcon={<EmailIcon />} onClick={onEmailClick}>
+          Email
+        </Button>
         {status !== 'ACTIVE' && (
           <Button
             size="small"

@@ -5,6 +5,7 @@ export interface IActiveUserPing extends Document {
   user_id: Schema.Types.ObjectId | null;
   date_ymd: string; // YYYY-MM-DD (UTC)
   super_category_slug: string | null;
+  hits: number;
   created_at: Date;
   updated_at: Date;
 }
@@ -15,6 +16,7 @@ const schema = new Schema<IActiveUserPing>(
     user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     date_ymd: { type: String, required: true, index: true },
     super_category_slug: { type: String, default: null, lowercase: true, trim: true, index: true },
+    hits: { type: Number, default: 0, min: 0 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

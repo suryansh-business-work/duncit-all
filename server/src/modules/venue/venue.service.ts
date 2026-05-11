@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { VenueModel, type IVenue } from './venue.model';
 import { LocationModel } from '../location/location.model';
+import { UserModel } from '../user/user.model';
 
 const toPub = (v: IVenue) => ({
   id: String(v._id),
@@ -110,6 +111,12 @@ async function normalizeStep1Location(input: any) {
   };
 }
 
+async function assignApprovedVenueRole(userId: Types.ObjectId) {
+  await UserModel.findByIdAndUpdate(userId, {
+    $addToSet: { roles: { $each: ['USER', 'VENUE_OWNER'] } },
+  });
+}
+
 export const venueService = {
   async getMine(userId: string) {
     const v = await VenueModel.findOne({ owner_user_id: new Types.ObjectId(userId) });
@@ -184,6 +191,7 @@ export const venueService = {
     v.reviewer_notes = notes ?? v.reviewer_notes;
     if (tags) v.tags = tags.map((tag) => tag.trim()).filter(Boolean);
     await v.save();
+    await assignApprovedVenueRole(v.owner_user_id);
     return toPub(v);
   },
   async reject(id: string, notes: string) {
@@ -246,6 +254,7 @@ export const venueService = {
       if (opts.status !== 'REJECTED') v.rejected_at = null;
     }
     await v.save();
+    if (opts.status === 'APPROVED') await assignApprovedVenueRole(v.owner_user_id);
     return toPub(v);
   },
 };

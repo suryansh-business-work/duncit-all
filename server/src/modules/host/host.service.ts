@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { HostModel, type IHost } from './host.model';
+import { UserModel } from '../user/user.model';
 
 const toPub = (h: IHost) => ({
   id: String(h._id),
@@ -30,6 +31,12 @@ async function getOrCreate(userId: string) {
   let h = await HostModel.findOne({ user_id: uid });
   if (!h) h = await HostModel.create({ user_id: uid });
   return h;
+}
+
+async function assignApprovedHostRole(userId: Types.ObjectId) {
+  await UserModel.findByIdAndUpdate(userId, {
+    $addToSet: { roles: { $each: ['USER', 'HOST'] } },
+  });
 }
 
 export const hostService = {
@@ -101,6 +108,7 @@ export const hostService = {
     h.reviewer_notes = notes ?? h.reviewer_notes;
     if (tags) h.tags = tags.map((tag) => tag.trim()).filter(Boolean);
     await h.save();
+    await assignApprovedHostRole(h.user_id);
     return toPub(h);
   },
   async reject(id: string, notes: string) {
@@ -152,6 +160,7 @@ export const hostService = {
       if (opts.status !== 'REJECTED') h.rejected_at = null;
     }
     await h.save();
+    if (opts.status === 'APPROVED') await assignApprovedHostRole(h.user_id);
     return toPub(h);
   },
 };

@@ -18,9 +18,14 @@ import MomentLightbox from '../components/moments/MomentLightbox';
 
 const FOLLOW_FEED = gql`
   query FollowFeedClubs {
+    superCategories: categories(filter: { level: SUPER }) {
+      id
+      slug
+    }
     clubs {
       id
       club_name
+      super_category_id
       club_moments {
         url
         type
@@ -32,20 +37,25 @@ const FOLLOW_FEED = gql`
 interface ClubLite {
   id: string;
   club_name: string;
+  super_category_id?: string | null;
   club_moments: { url: string; type: string }[];
 }
 
-export default function FollowPage() {
+export default function FollowPage({ superCategorySlug }: { superCategorySlug?: string }) {
   const { ids, isFollowing } = useFollowedClubs();
   const { data, loading, error } = useQuery<{ clubs: ClubLite[] }>(FOLLOW_FEED, {
     fetchPolicy: 'cache-and-network',
   });
   const [lightbox, setLightbox] = useState<{ clubId: string; index: number } | null>(null);
 
-  const followed = useMemo(
-    () => (data?.clubs ?? []).filter((c) => isFollowing(c.id)),
-    [data, isFollowing]
-  );
+  const followed = useMemo(() => {
+    const selectedSuperId = superCategorySlug
+      ? (data as any)?.superCategories?.find((category: any) => category.slug === superCategorySlug)?.id
+      : null;
+    return (data?.clubs ?? [])
+      .filter((club) => isFollowing(club.id))
+      .filter((club) => !selectedSuperId || club.super_category_id === selectedSuperId);
+  }, [data, isFollowing, superCategorySlug]);
 
   if (loading && !data) {
     return (

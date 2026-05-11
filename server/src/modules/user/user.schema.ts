@@ -12,6 +12,11 @@ export const userTypeDefs = gql`
     GOOGLE
   }
 
+  enum AdminContactActionType {
+    CALL
+    EMAIL
+  }
+
   type ProfileLink {
     label: String!
     url: String!
@@ -100,6 +105,23 @@ export const userTypeDefs = gql`
     user: User!
   }
 
+  type UserContactAction {
+    id: ID!
+    user_id: ID!
+    created_by: ID
+    type: AdminContactActionType!
+    target: String!
+    subject: String!
+    notes: String!
+    status: String!
+    duration_seconds: Int!
+    twilio_call_sid: String!
+    recording_sid: String!
+    recording_url: String!
+    created_at: String!
+    updated_at: String!
+  }
+
   input CreateUserInput {
     first_name: String!
     last_name: String!
@@ -147,6 +169,23 @@ export const userTypeDefs = gql`
   input LoginInput {
     email: String!
     password: String!
+  }
+
+  input RecordUserContactActionInput {
+    user_id: ID!
+    type: AdminContactActionType!
+    target: String!
+    subject: String
+    notes: String
+    status: String
+    duration_seconds: Int
+    recording_url: String
+  }
+
+  input StartRecordedUserCallInput {
+    user_id: ID!
+    target: String!
+    notes: String
   }
 
   input GoogleAuthInput {
@@ -208,6 +247,7 @@ export const userTypeDefs = gql`
     mySavedPods: [Pod!]!
     users(filter: UsersFilter): [User!]!
     user(user_id: ID!): User
+    userContactActions(user_id: ID!): [UserContactAction!]!
     publicUsersByIds(user_ids: [ID!]!): [PublicProfile!]!
     publicUserProfile(user_id: ID!): PublicProfile
   }
@@ -237,5 +277,8 @@ export const userTypeDefs = gql`
     assignUserRoles(user_id: ID!, role_keys: [String!]!): User!
     addUserRole(user_id: ID!, role_key: String!): User!
     removeUserRole(user_id: ID!, role_key: String!): User!
+    recordUserContactAction(input: RecordUserContactActionInput!): UserContactAction!
+    startRecordedUserCall(input: StartRecordedUserCallInput!): UserContactAction!
+    deleteUserContactAction(action_id: ID!): Boolean!
   }
 `;

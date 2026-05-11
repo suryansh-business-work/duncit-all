@@ -1,6 +1,7 @@
 import { useNavigate } from 'react-router-dom';
 import { Avatar, Box, Card, Chip, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
+import { clubUrl, podUrl } from '../../utils/seoUrls';
 import PodCard from './PodCard';
 
 interface ClubSectionProps {
@@ -24,7 +25,7 @@ export default function ClubSection({ club, clubPods, hostNameOf }: ClubSectionP
           alignItems="center"
           spacing={1.5}
           sx={{ cursor: 'pointer' }}
-          onClick={() => navigate(`/clubs/${club.id}`)}
+          onClick={() => navigate(clubUrl(club.club_id))}
         >
           <Avatar
             src={club.club_feature_images_and_videos?.[0]?.url}
@@ -82,7 +83,7 @@ export default function ClubSection({ club, clubPods, hostNameOf }: ClubSectionP
               key={p.id}
               pod={p}
               hostName={hostNameOf(p)}
-              onOpen={() => navigate(`/pods/${p.id}`)}
+              onOpen={() => navigate(podUrl(p.club_slug, p.pod_id))}
             />
           ))}
         </Box>

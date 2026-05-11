@@ -19,9 +19,9 @@ import ClubSocialLinks from './club-details-page/ClubSocialLinks';
 import ClubSummaryHeader from './club-details-page/ClubSummaryHeader';
 import ClubUpcomingPodsSection from './club-details-page/ClubUpcomingPodsSection';
 
-const CLUB_DETAILS = gql`
-  query ClubDetails($id: ID!) {
-    club(club_doc_id: $id) {
+const CLUB_BY_SLUG = gql`
+  query ClubBySlug($slug: String!) {
+    clubBySlug(club_slug: $slug) {
       id
       club_id
       club_name
@@ -41,6 +41,11 @@ const CLUB_DETAILS = gql`
       category_id
       super_category_id
     }
+  }
+`;
+
+const CLUB_DETAILS_RELATED = gql`
+  query ClubDetailsRelated($id: ID!) {
     clubPods: pods(filter: { club_id: $id, is_active: true }) {
       id
       pod_id
@@ -52,6 +57,7 @@ const CLUB_DETAILS = gql`
       no_of_spots
       place_label
       place_detail
+      club_slug
       pod_images_and_videos {
         url
         type
@@ -74,13 +80,22 @@ const CLUB_DETAILS = gql`
 `;
 
 export default function ClubDetailsPage() {
-  const { id = '' } = useParams();
+  const { clubSlug = '' } = useParams();
   const navigate = useNavigate();
   const { format: pricingFormat } = usePricing();
   const { isFollowing, toggle: toggleFollow } = useFollowedClubs();
   const [saved, setSaved] = useState(false);
-  const { data, loading, error } = useQuery(CLUB_DETAILS, {
+
+  const slugQuery = useQuery(CLUB_BY_SLUG, {
+    variables: { slug: clubSlug },
+    skip: !clubSlug,
+    fetchPolicy: 'cache-and-network',
+  });
+  const id: string = slugQuery.data?.clubBySlug?.id ?? '';
+
+  const { data, loading, error } = useQuery(CLUB_DETAILS_RELATED, {
     variables: { id },
+    skip: !id,
     fetchPolicy: 'cache-and-network',
   });
 
@@ -96,10 +111,10 @@ export default function ClubDetailsPage() {
     }
   }, [id]);
 
-  if (loading && !data) return <ClubDetailsSkeleton />;
+  if (slugQuery.loading || (loading && !data)) return <ClubDetailsSkeleton />;
   if (error) return <Alert severity="error">{error.message}</Alert>;
 
-  const club = data?.club;
+  const club = slugQuery.data?.clubBySlug;
   if (!club) return <Alert severity="warning">Club not found.</Alert>;
 
   const featureMedia = club.club_feature_images_and_videos ?? [];
@@ -137,7 +152,7 @@ export default function ClubDetailsPage() {
           notify(next ? 'Saved' : 'Removed from saved', 'success');
         }}
         onShare={async () => {
-          const url = `${window.location.origin}/clubs/${club.id}`;
+          const url = `${window.location.origin}/club/${club.club_id}`;
           try {
             if (navigator.share) {
               await navigator.share({ title: club.club_name, url });
@@ -178,7 +193,12 @@ export default function ClubDetailsPage() {
       <ClubUpcomingPodsSection
         pods={pods}
         priceFormat={pricingFormat}
-        onOpen={(podId) => navigate(`/pods/${podId}`)}
+        onOpen={(podDocId) => {
+          const pod = pods.find((p: any) => p.id === podDocId);
+          if (pod?.pod_id && club.club_id) {
+            navigate(`/club/${club.club_id}/pod/${pod.pod_id}`);
+          }
+        }}
       />
 
       <ClubMomentsSection moments={moments} />

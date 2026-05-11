@@ -1,6 +1,16 @@
 import { gql } from '@apollo/client';
 export { default as PodDetailsSkeleton } from './PodDetailsSkeleton';
 
+export const POD_ID_BY_SLUGS = gql`
+  query PodIdBySlugs($clubSlug: String!, $podSlug: String!) {
+    podBySlugs(club_slug: $clubSlug, pod_slug: $podSlug) {
+      id
+      pod_id
+      club_slug
+    }
+  }
+`;
+
 export const POD_DETAILS = gql`
   query PodDetails($id: ID!) {
     pod(pod_doc_id: $id) {
@@ -57,6 +67,7 @@ export const POD_DETAILS = gql`
     }
     clubs {
       id
+      club_id
       club_name
       club_description
       club_feature_images_and_videos {

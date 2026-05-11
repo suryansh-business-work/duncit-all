@@ -20,6 +20,8 @@ const SAVED_ITEMS = gql`
   query SavedItems {
     mySavedPods {
       id
+      pod_id
+      club_slug
       pod_title
       pod_description
       pod_date_time
@@ -74,7 +76,13 @@ export default function SavedItemsPage() {
             const media = pod.pod_images_and_videos?.[0];
             return (
               <Card key={pod.id} variant="outlined">
-                <CardActionArea onClick={() => navigate(`/pods/${pod.id}`)}>
+                <CardActionArea
+                  onClick={() =>
+                    pod.club_slug && pod.pod_id
+                      ? navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)
+                      : null
+                  }
+                >
                   <Stack direction="row" alignItems="stretch">
                     {media?.url ? (
                       <CardMedia

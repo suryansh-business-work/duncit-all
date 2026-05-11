@@ -121,6 +121,10 @@ export const podResolvers = {
   Query: {
     pods: async (_p: unknown, args: { filter?: any }) => podService.list(args.filter),
     pod: async (_p: unknown, args: { pod_doc_id: string }) => podService.getById(args.pod_doc_id),
+    podBySlugs: async (
+      _p: unknown,
+      args: { club_slug: string; pod_slug: string }
+    ) => podService.getBySlugs(args.club_slug, args.pod_slug),
     podComments: async (_p: unknown, args: { pod_doc_id: string }) =>
       podService.listComments(args.pod_doc_id),
   },

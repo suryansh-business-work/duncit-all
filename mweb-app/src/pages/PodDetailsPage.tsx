@@ -17,18 +17,28 @@ import PodSocialBar from './pod-details-page/PodSocialBar';
 import { usePodDetailActions } from './pod-details-page/usePodDetailActions';
 import {
   POD_DETAILS,
+  POD_ID_BY_SLUGS,
   POD_PEOPLE,
   PodDetailsSkeleton,
 } from './pod-details-page/queries';
 
 export default function PodDetailsPage() {
-  const { id = '' } = useParams();
+  const { clubSlug = '', podSlug = '' } = useParams();
   const navigate = useNavigate();
   const [search] = useSearchParams();
   const referralFromUrl = search.get('ref');
   const { compute: priceCompute, format: priceFormat } = usePricing();
+
+  const slugResolution = useQuery(POD_ID_BY_SLUGS, {
+    variables: { clubSlug, podSlug },
+    skip: !clubSlug || !podSlug,
+    fetchPolicy: 'cache-and-network',
+  });
+  const id: string = slugResolution.data?.podBySlugs?.id ?? '';
+
   const { data, loading, error, refetch } = useQuery(POD_DETAILS, {
     variables: { id },
+    skip: !id,
     fetchPolicy: 'cache-and-network',
   });
 
@@ -64,8 +74,11 @@ export default function PodDetailsPage() {
     navigate,
   });
 
-  if (loading && !data) return <PodDetailsSkeleton />;
+  if (slugResolution.loading || (loading && !data)) return <PodDetailsSkeleton />;
   if (error) return <Alert severity="error">{error.message}</Alert>;
+  if (!slugResolution.loading && !slugResolution.data?.podBySlugs) {
+    return <Alert severity="warning">Pod not found.</Alert>;
+  }
   if (!pod) return <Alert severity="warning">Pod not found.</Alert>;
 
   const club = (data?.clusters ?? data?.clubs ?? []).find((c: any) => c.id === pod.club_id) ?? null;

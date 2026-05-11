@@ -14,27 +14,21 @@ export default function BasicInfoSection({ users, userName }: Props) {
 
   return (
     <Stack spacing={2}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <TextField
-          label="Pod title"
-          name="pod_title"
-          value={values.pod_title}
-          onChange={handleChange}
-          fullWidth
-          required
-          error={err('pod_title')}
-          helperText={help('pod_title')}
-        />
-        <TextField
-          label="Pod ID"
-          name="pod_id"
-          value={values.pod_id}
-          onChange={handleChange}
-          disabled={!!values.id}
-          helperText={values.id ? 'Locked' : 'Auto if blank'}
-          fullWidth
-        />
-      </Stack>
+      <TextField
+        label="Pod title"
+        name="pod_title"
+        value={values.pod_title}
+        onChange={handleChange}
+        fullWidth
+        required
+        error={err('pod_title')}
+        helperText={
+          help('pod_title') ??
+          (values.id
+            ? `URL slug: ${values.pod_id || '—'}`
+            : 'A URL-friendly slug is auto-generated from this title')
+        }
+      />
       <TextField
         select
         label="Hosts"

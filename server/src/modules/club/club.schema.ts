@@ -65,6 +65,7 @@ export const clubTypeDefs = /* GraphQL */ `
   extend type Query {
     clubs(filter: ClubFilterInput): [Club!]!
     club(club_doc_id: ID!): Club
+    clubBySlug(club_slug: String!): Club
   }
 
   extend type Mutation {

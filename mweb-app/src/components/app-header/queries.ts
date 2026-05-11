@@ -39,6 +39,7 @@ export const POD_SEARCH = gql`
     pods(filter: $filter) {
       id
       pod_id
+      club_slug
       pod_title
       pod_date_time
       no_of_spots

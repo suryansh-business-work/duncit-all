@@ -102,7 +102,8 @@ const commentSchema = new Schema<IPodComment>(
 
 const podSchema = new Schema<IPod>(
   {
-    pod_id: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    // Slug is unique per club via a compound index below, not globally.
+    pod_id: { type: String, required: true, lowercase: true, trim: true, index: true },
     pod_title: { type: String, required: true, trim: true },
     pod_hosts_id: [{ type: Schema.Types.ObjectId, ref: 'User', required: true }],
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
@@ -143,6 +144,8 @@ const podSchema = new Schema<IPod>(
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
+// Slug must be unique inside a club; same title can be reused across clubs.
+podSchema.index({ club_id: 1, pod_id: 1 }, { unique: true });
 podSchema.index({ club_id: 1, pod_date_time: -1 });
 podSchema.index({ location_id: 1, zone_name: 1, pod_date_time: -1 });
 podSchema.index({ venue_id: 1, pod_date_time: -1 });

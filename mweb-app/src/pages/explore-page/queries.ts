@@ -22,6 +22,7 @@ export const EXPLORE_PODS = gql`
         type
       }
       club_id
+      club_slug
       location_id
       venue_id
       place_label
@@ -32,6 +33,7 @@ export const EXPLORE_PODS = gql`
     }
     clubs(filter: { is_active: true }) {
       id
+      club_id
       club_name
       super_category_id
       club_feature_images_and_videos {

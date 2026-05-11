@@ -8,6 +8,8 @@ export const clubResolvers = {
   Query: {
     clubs: async (_p: unknown, args: { filter?: any }) => clubService.list(args.filter),
     club: async (_p: unknown, args: { club_doc_id: string }) => clubService.getById(args.club_doc_id),
+    clubBySlug: async (_p: unknown, args: { club_slug: string }) =>
+      clubService.getBySlug(args.club_slug),
   },
   Mutation: {
     createClub: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

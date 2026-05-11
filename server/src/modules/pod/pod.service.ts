@@ -15,8 +15,19 @@ const slugify = (s: string) =>
     .replace(/^-+|-+$/g, '')
     .slice(0, 60);
 
-const toPub = (d: any) => {
+async function loadClubSlugMap(podDocs: any[]): Promise<Map<string, string>> {
+  const ids = Array.from(
+    new Set(podDocs.map((p) => p?.club_id && String(p.club_id)).filter(Boolean))
+  );
+  if (ids.length === 0) return new Map();
+  const clubs = await ClubModel.find({ _id: { $in: ids } }, { club_id: 1 });
+  return new Map(clubs.map((c: any) => [String(c._id), c.club_id]));
+}
+
+const toPub = (d: any, clubSlugById?: Map<string, string>) => {
   if (!d) return null;
+  const clubId = d.club_id ? String(d.club_id) : null;
+  const clubSlug = clubId ? clubSlugById?.get(clubId) ?? '' : '';
   return {
     id: String(d._id),
     pod_id: d.pod_id,
@@ -24,7 +35,8 @@ const toPub = (d: any) => {
     pod_hosts_id: (d.pod_hosts_id ?? []).map((x: any) => String(x)),
     location_id: d.location_id ? String(d.location_id) : null,
     venue_id: d.venue_id ? String(d.venue_id) : null,
-    club_id: d.club_id ? String(d.club_id) : null,
+    club_id: clubId,
+    club_slug: clubSlug,
     zone_name: d.zone_name ?? null,
     pod_hashtag: d.pod_hashtag ?? [],
     pod_images_and_videos: (d.pod_images_and_videos ?? []).map((m: any) => ({
@@ -252,21 +264,48 @@ export const podService = {
     if (filter?.search) q.pod_title = new RegExp(filter.search, 'i');
     if (filter?.host_user_id) q.pod_hosts_id = filter.host_user_id;
     const docs = await PodModel.find(q).sort({ pod_date_time: -1 });
-    return docs.map(toPub);
+    const slugMap = await loadClubSlugMap(docs);
+    return docs.map((d) => toPub(d, slugMap));
   },
 
   async getById(id: string) {
-    return toPub(await PodModel.findById(id));
+    const doc = await PodModel.findById(id);
+    if (!doc) return null;
+    const slugMap = await loadClubSlugMap([doc]);
+    return toPub(doc, slugMap);
+  },
+
+  async getBySlugs(clubSlug: string, podSlug: string) {
+    const club = await ClubModel.findOne({ club_id: clubSlug });
+    if (!club) return null;
+    const doc = await PodModel.findOne({ club_id: club._id, pod_id: podSlug });
+    if (!doc) return null;
+    const slugMap = new Map([[String(club._id), club.club_id]]);
+    return toPub(doc, slugMap);
   },
 
   async create(input: any) {
-    const pod_id = (input.pod_id?.trim() || `${slugify(input.pod_title)}-${Date.now().toString(36)}`);
-    const dupe = await PodModel.findOne({ pod_id });
-    if (dupe) {
-      throw new GraphQLError('Pod with that ID already exists', {
-        extensions: { code: 'CONFLICT' },
+    if (!input.club_id) {
+      throw new GraphQLError('club_id is required', {
+        extensions: { code: 'BAD_USER_INPUT' },
       });
     }
+    const baseSlug = input.pod_id?.trim()
+      ? slugify(input.pod_id.trim())
+      : slugify(input.pod_title ?? '');
+    if (!baseSlug) {
+      throw new GraphQLError('Pod title is required', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const dupe = await PodModel.findOne({ club_id: input.club_id, pod_id: baseSlug });
+    if (dupe) {
+      throw new GraphQLError(
+        'A pod with this title already exists in this club. Choose a different title.',
+        { extensions: { code: 'CONFLICT' } }
+      );
+    }
+    const pod_id = baseSlug;
     if (!input.pod_hosts_id?.length) {
       throw new GraphQLError('At least one host is required', {
         extensions: { code: 'BAD_USER_INPUT' },
@@ -314,7 +353,8 @@ export const podService = {
       product_requests: productRequests,
       product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
     });
-    return toPub(doc);
+    const slugMap = await loadClubSlugMap([doc]);
+    return toPub(doc, slugMap);
   },
 
   async update(id: string, input: any) {
@@ -386,7 +426,8 @@ export const podService = {
     if (input.pod_end_date_time !== undefined)
       doc.pod_end_date_time = input.pod_end_date_time ? new Date(input.pod_end_date_time) : null;
     await doc.save();
-    return toPub(doc);
+    const slugMap = await loadClubSlugMap([doc]);
+    return toPub(doc, slugMap);
   },
 
   async remove(id: string) {
@@ -403,7 +444,9 @@ export const podService = {
       { $inc: { pod_hits: 1 } },
       { new: true }
     );
-    return toPub(doc);
+    if (!doc) return null;
+    const slugMap = await loadClubSlugMap([doc]);
+    return toPub(doc, slugMap);
   },
 
   async toggleLike(id: string, viewerId: string) {
@@ -415,7 +458,8 @@ export const podService = {
     if (idx >= 0) doc!.liked_user_ids.splice(idx, 1);
     else doc!.liked_user_ids.push(new Types.ObjectId(viewerId) as any);
     await doc!.save();
-    return toPub(doc);
+    const slugMap = await loadClubSlugMap([doc!]);
+    return toPub(doc, slugMap);
   },
 
   async addComment(id: string, viewerId: string, text: string) {

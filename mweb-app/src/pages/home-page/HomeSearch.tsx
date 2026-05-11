@@ -77,7 +77,10 @@ export default function HomeSearch({ locationId }: Props) {
               pods={pods}
               onSelect={(podId) => {
                 setOpen(false);
-                navigate(`/pods/${podId}`);
+                const pod = pods.find((p: any) => p.id === podId);
+                if (pod?.club_slug && pod.pod_id) {
+                  navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`);
+                }
               }}
             />
           </Paper>

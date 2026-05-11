@@ -59,6 +59,7 @@ export const podTypeDefs = /* GraphQL */ `
     location_id: ID
     venue_id: ID
     club_id: ID!
+    club_slug: String!
     zone_name: String
     place_label: String
     place_detail: String
@@ -166,6 +167,7 @@ export const podTypeDefs = /* GraphQL */ `
   extend type Query {
     pods(filter: PodFilterInput): [Pod!]!
     pod(pod_doc_id: ID!): Pod
+    podBySlugs(club_slug: String!, pod_slug: String!): Pod
     podComments(pod_doc_id: ID!): [PodComment!]!
   }
 

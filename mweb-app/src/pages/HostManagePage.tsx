@@ -22,6 +22,7 @@ const HOST_PODS = gql`
       id
       pod_title
       pod_id
+      club_slug
       pod_date_time
       pod_amount
       pod_type
@@ -105,7 +106,7 @@ export default function HostManagePage() {
                 <Box
                   key={p.id}
                   component={RouterLink}
-                  to={`/pods/${p.id}`}
+                  to={p.club_slug && p.pod_id ? `/club/${p.club_slug}/pod/${p.pod_id}` : '#'}
                   sx={{
                     display: 'block',
                     p: 1.25,

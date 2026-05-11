@@ -56,7 +56,7 @@ export default function PodClubSection({ club }: Props) {
         <Button
           size="small"
           variant="outlined"
-          onClick={() => navigate(`/clubs/${club.id}`)}
+          onClick={() => club.club_id && navigate(`/club/${club.club_id}`)}
           sx={{ minHeight: 36, alignSelf: { xs: 'stretch', sm: 'center' } }}
         >
           Open

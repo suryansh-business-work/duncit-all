@@ -27,6 +27,7 @@ const ALL_CLUBS = gql`
     }
     clubs(filter: { is_active: true }) {
       id
+      club_id
       club_name
       club_description
       super_category_id
@@ -124,7 +125,7 @@ export default function ClubsPage({ superCategorySlug }: ClubsPageProps) {
             const count = podCounts.get(c.id) ?? 0;
             return (
               <Card key={c.id} variant="outlined">
-                <CardActionArea onClick={() => navigate(`/clubs/${c.id}`)}>
+                <CardActionArea onClick={() => c.club_id && navigate(`/club/${c.club_id}`)}>
                   {cover?.url ? (
                     <CardMedia
                       component={cover.type === 'VIDEO' ? 'video' : 'img'}

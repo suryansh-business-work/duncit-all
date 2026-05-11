@@ -42,7 +42,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Props) {
             spacing={1}
             alignItems="center"
             sx={{ cursor: 'pointer' }}
-            onClick={() => navigate(`/clubs/${club.id}`)}
+            onClick={() => club.club_id && navigate(`/club/${club.club_id}`)}
           >
             <GroupsIcon fontSize="small" />
             <Typography variant="subtitle2" fontWeight={700}>

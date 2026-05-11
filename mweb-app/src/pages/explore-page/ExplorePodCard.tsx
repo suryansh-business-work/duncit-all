@@ -103,7 +103,7 @@ export default function ExplorePodCard({
         <ExploreActionButton
           icon={<HowToRegIcon />}
           label={`${pod.pod_attendees?.length ?? 0}${pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''}`}
-          onClick={() => navigate(`/pods/${pod.id}`)}
+          onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
           tooltip="Join"
         />
         <ExploreActionButton
@@ -127,7 +127,7 @@ export default function ExplorePodCard({
         <ExploreActionButton
           icon={<OpenInNewIcon />}
           label="Open"
-          onClick={() => navigate(`/pods/${pod.id}`)}
+          onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
         />
       </Stack>
 

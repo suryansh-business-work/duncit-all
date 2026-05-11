@@ -11,10 +11,18 @@ interface Props {
 export default function BasicClubSection({ form, setForm, superCats, subCats }: Props) {
   return (
     <Stack spacing={2}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <TextField label="Club name" value={form.club_name} onChange={(e) => setForm({ ...form, club_name: e.target.value })} fullWidth required />
-        <TextField label="Club ID" value={form.club_id} onChange={(e) => setForm({ ...form, club_id: e.target.value })} disabled={!!form.id} helperText={form.id ? 'ID cannot be changed' : 'Auto from name if blank'} fullWidth />
-      </Stack>
+      <TextField
+        label="Club name"
+        value={form.club_name}
+        onChange={(e) => setForm({ ...form, club_name: e.target.value })}
+        fullWidth
+        required
+        helperText={
+          form.id
+            ? `URL slug: ${form.club_id || '—'}`
+            : 'A URL-friendly slug is auto-generated from this name'
+        }
+      />
       <TextField label="Description" value={form.club_description} onChange={(e) => setForm({ ...form, club_description: e.target.value })} fullWidth multiline minRows={2} />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <TextField label="Super Category" select value={form.super_category_id} onChange={(e) => setForm({ ...form, super_category_id: e.target.value })} fullWidth helperText="Drives the app feed grouping.">

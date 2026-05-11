@@ -22,6 +22,7 @@ export const HOME_DATA = gql`
     }
     clubs(filter: { is_active: true }) {
       id
+      club_id
       club_name
       club_description
       club_feature_images_and_videos {
@@ -47,6 +48,7 @@ export const HOME_DATA = gql`
         type
       }
       club_id
+      club_slug
       location_id
       zone_name
       place_label

@@ -49,9 +49,12 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Props
       <Route path="/profile" element={withAuth(<ProfilePage />)} />
       <Route path="/follow" element={withAuth(<FollowPage superCategorySlug={superCategory} />)} />
       <Route path="/account" element={withAuth(<AccountPage />)} />
-      <Route path="/pods/:id" element={withAuth(<PodDetailsPage />)} />
+      <Route path="/club/:clubSlug" element={withAuth(<ClubDetailsPage />)} />
+      <Route
+        path="/club/:clubSlug/pod/:podSlug"
+        element={withAuth(<PodDetailsPage />)}
+      />
       <Route path="/u/:userId" element={withAuth(<PublicProfilePage />)} />
-      <Route path="/clubs/:id" element={withAuth(<ClubDetailsPage />)} />
       <Route path="/become-host" element={withAuth(<BecomeHostPage />)} />
       <Route path="/register-venue" element={withAuth(<RegisterVenuePage />)} />
       <Route path="/hosts-venues" element={withAuth(<HostsVenuesPage />)} />

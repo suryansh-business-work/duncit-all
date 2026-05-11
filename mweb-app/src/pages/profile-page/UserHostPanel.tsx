@@ -37,6 +37,8 @@ const HOST_PODS = gql`
   query ProfileHostPods($host_user_id: ID!) {
     pods(filter: { host_user_id: $host_user_id }) {
       id
+      pod_id
+      club_slug
       pod_title
       pod_date_time
       pod_images_and_videos {
@@ -119,7 +121,14 @@ export default function UserHostPanel() {
                   (p.pod_images_and_videos ?? []).find((m: any) => m?.type !== 'VIDEO')?.url ||
                   p.pod_images_and_videos?.[0]?.url;
                 return (
-                  <ListItemButton key={p.id} onClick={() => navigate(`/pods/${p.id}`)}>
+                  <ListItemButton
+                    key={p.id}
+                    onClick={() =>
+                      p.club_slug && p.pod_id
+                        ? navigate(`/club/${p.club_slug}/pod/${p.pod_id}`)
+                        : null
+                    }
+                  >
                     <ListItemAvatar>
                       <Avatar src={cover || undefined} variant="rounded">
                         <EventIcon fontSize="small" />

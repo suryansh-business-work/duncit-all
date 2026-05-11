@@ -24,6 +24,7 @@ const FOLLOW_FEED = gql`
     }
     clubs {
       id
+      club_id
       club_name
       super_category_id
       club_moments {
@@ -36,6 +37,7 @@ const FOLLOW_FEED = gql`
 
 interface ClubLite {
   id: string;
+  club_id?: string;
   club_name: string;
   super_category_id?: string | null;
   club_moments: { url: string; type: string }[];
@@ -107,7 +109,7 @@ export default function FollowPage({ superCategorySlug }: { superCategorySlug?: 
               <Button
                 size="small"
                 component={RouterLink}
-                to={`/clubs/${club.id}`}
+                to={club.club_id ? `/club/${club.club_id}` : '#'}
               >
                 Open club
               </Button>

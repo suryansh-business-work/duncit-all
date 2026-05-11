@@ -59,14 +59,25 @@ export const clubService = {
     return toPub(await ClubModel.findById(id));
   },
 
+  async getBySlug(slug: string) {
+    return toPub(await ClubModel.findOne({ club_id: slug }));
+  },
+
   async create(input: any) {
-    const club_id = (input.club_id?.trim() || slugify(input.club_name));
-    const dupe = await ClubModel.findOne({ club_id });
-    if (dupe) {
-      throw new GraphQLError('Club with that ID already exists', {
-        extensions: { code: 'CONFLICT' },
+    const baseSlug = input.club_id?.trim() ? slugify(input.club_id.trim()) : slugify(input.club_name ?? '');
+    if (!baseSlug) {
+      throw new GraphQLError('Club name is required', {
+        extensions: { code: 'BAD_USER_INPUT' },
       });
     }
+    const dupe = await ClubModel.findOne({ club_id: baseSlug });
+    if (dupe) {
+      throw new GraphQLError(
+        'A club with this name already exists. Choose a different name.',
+        { extensions: { code: 'CONFLICT' } }
+      );
+    }
+    const club_id = baseSlug;
     const doc = await ClubModel.create({
       club_id,
       club_name: input.club_name.trim(),

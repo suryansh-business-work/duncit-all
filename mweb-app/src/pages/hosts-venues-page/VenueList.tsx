@@ -20,9 +20,13 @@ interface Venue {
   capacity?: number | null;
   description?: string | null;
   cover_image_url?: string | null;
+  country?: string | null;
   city?: string | null;
   state?: string | null;
+  locality?: string | null;
+  postal_code?: string | null;
   amenities?: string[] | null;
+  tags?: string[] | null;
 }
 
 interface Props {
@@ -100,7 +104,7 @@ export default function VenueList({ venues, meId, followingIds, pendingUserId, o
                 {(v.city || v.state) && (
                   <Stack direction="row" spacing={0.5} alignItems="center">
                     <LocationOnIcon fontSize="inherit" />
-                    <span>{[v.city, v.state].filter(Boolean).join(', ')}</span>
+                    <span>{[v.locality, v.city, v.state].filter(Boolean).join(', ')}</span>
                   </Stack>
                 )}
                 {v.capacity != null && (
@@ -123,6 +127,16 @@ export default function VenueList({ venues, meId, followingIds, pendingUserId, o
                 >
                   {v.description}
                 </Typography>
+              )}
+              {v.postal_code && (
+                <Typography variant="caption" color="text.secondary" display="block" sx={{ mt: 0.5 }}>
+                  PIN: {v.postal_code}
+                </Typography>
+              )}
+              {v.tags && v.tags.length > 0 && (
+                <Stack direction="row" spacing={0.5} sx={{ mt: 1, flexWrap: 'wrap', gap: 0.5 }}>
+                  {v.tags.slice(0, 4).map((tag) => <Chip key={tag} label={tag} size="small" />)}
+                </Stack>
               )}
               {v.amenities && v.amenities.length > 0 && (
                 <Stack direction="row" spacing={0.5} sx={{ mt: 1, flexWrap: 'wrap' }}>

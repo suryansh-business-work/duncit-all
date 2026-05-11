@@ -11,6 +11,26 @@ export const USERS = gql`
   }
 `;
 
+export const LOCATIONS_FOR_VENUE = gql`
+  query LocationsForVenueForm {
+    locations(filter: { is_active: true }) {
+      id
+      country
+      country_code
+      state
+      state_code
+      city
+      location_name
+      location_pincode
+      location_zones {
+        zone_name
+        zone_code
+        pincode
+      }
+    }
+  }
+`;
+
 export const ADMIN_CREATE_VENUE = gql`
   mutation AdminCreateVenue(
     $owner_user_id: ID!
@@ -49,9 +69,15 @@ export interface Step1 {
   cover_image_url: string;
   address_line1: string;
   address_line2: string;
+  location_id: string;
+  country: string;
+  country_code: string;
   city: string;
   state: string;
+  state_code: string;
+  locality: string;
   postal_code: string;
+  tags: string[];
 }
 
 export interface Step3 {
@@ -75,9 +101,15 @@ export const blankS1: Step1 = {
   cover_image_url: '',
   address_line1: '',
   address_line2: '',
+  location_id: '',
+  country: 'India',
+  country_code: 'IN',
   city: '',
   state: '',
+  state_code: '',
+  locality: '',
   postal_code: '',
+  tags: [],
 };
 
 export const blankS3: Step3 = {

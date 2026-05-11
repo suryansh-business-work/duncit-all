@@ -23,12 +23,13 @@ interface Props {
   loading: boolean;
   pods: any[];
   clubName: (id: string) => string;
+  venueName: (id: string) => string;
   locName: (id: string) => string;
   onEdit: (p: any) => void;
   onDelete: (p: any) => void;
 }
 
-export default function PodsTable({ loading, pods, clubName, locName, onEdit, onDelete }: Props) {
+export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onDelete }: Props) {
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>
@@ -43,10 +44,11 @@ export default function PodsTable({ loading, pods, clubName, locName, onEdit, on
                 <TableCell>Cover</TableCell>
                 <TableCell>Title</TableCell>
                 <TableCell>Club</TableCell>
-                <TableCell>Location</TableCell>
+                <TableCell>Venue</TableCell>
                 <TableCell>Date / Time</TableCell>
                 <TableCell>Type</TableCell>
                 <TableCell>Amount</TableCell>
+                <TableCell>Products</TableCell>
                 <TableCell>Spots</TableCell>
                 <TableCell>Hits</TableCell>
                 <TableCell>Status</TableCell>
@@ -94,7 +96,7 @@ export default function PodsTable({ loading, pods, clubName, locName, onEdit, on
                     </Typography>
                   </TableCell>
                   <TableCell>{clubName(p.club_id)}</TableCell>
-                  <TableCell>{locName(p.location_id)}</TableCell>
+                  <TableCell>{p.venue_id ? venueName(p.venue_id) : locName(p.location_id)}</TableCell>
                   <TableCell>
                     <Typography variant="caption">
                       {p.pod_date_time ? new Date(p.pod_date_time).toLocaleString() : '—'}
@@ -108,6 +110,20 @@ export default function PodsTable({ loading, pods, clubName, locName, onEdit, on
                     />
                   </TableCell>
                   <TableCell>{p.pod_amount > 0 ? `₹${p.pod_amount}` : 'Free'}</TableCell>
+                  <TableCell>
+                    {p.product_requests?.length ? (
+                      <Stack spacing={0.25}>
+                        {p.product_requests.map((item: any) => (
+                          <Typography key={item.product_id} variant="caption">
+                            {item.product_name}: {item.quantity}
+                          </Typography>
+                        ))}
+                        <Typography variant="caption" fontWeight={700}>
+                          ₹{p.product_cost_total ?? 0}
+                        </Typography>
+                      </Stack>
+                    ) : '—'}
+                  </TableCell>
                   <TableCell>
                     {p.pod_attendees?.length ?? 0}
                     {p.no_of_spots ? ` / ${p.no_of_spots}` : ''}
@@ -141,7 +157,7 @@ export default function PodsTable({ loading, pods, clubName, locName, onEdit, on
               ))}
               {pods.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={11}>
+                  <TableCell colSpan={12}>
                     <Box sx={{ p: 3, textAlign: 'center' }}>
                       <Typography variant="body2" color="text.secondary">
                         No pods yet.

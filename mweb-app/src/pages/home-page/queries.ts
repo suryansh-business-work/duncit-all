@@ -44,6 +44,8 @@ export const HOME_DATA = gql`
       club_id
       location_id
       zone_name
+      place_label
+      place_detail
     }
     publicHosts {
       user_id

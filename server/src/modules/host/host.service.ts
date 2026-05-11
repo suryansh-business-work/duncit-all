@@ -14,6 +14,7 @@ const toPub = (h: IHost) => ({
   passport_photo_url: h.passport_photo_url ?? '',
   police_verification_url: h.police_verification_url ?? '',
   full_address: h.full_address ?? '',
+  tags: h.tags ?? [],
   step_completed: h.step_completed ?? 0,
   status: h.status,
   reviewer_notes: h.reviewer_notes ?? '',
@@ -76,6 +77,7 @@ export const hostService = {
     }
     h.police_verification_url = input.police_verification_url;
     h.full_address = input.full_address;
+    if (input.tags !== undefined) h.tags = input.tags;
     if (h.step_completed < 3) h.step_completed = 3;
     await h.save();
     return toPub(h);
@@ -91,12 +93,13 @@ export const hostService = {
     await h.save();
     return toPub(h);
   },
-  async approve(id: string, notes?: string) {
+  async approve(id: string, notes?: string, tags?: string[]) {
     const h = await HostModel.findById(id);
     if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
     h.status = 'APPROVED';
     h.approved_at = new Date();
     h.reviewer_notes = notes ?? h.reviewer_notes;
+    if (tags) h.tags = tags.map((tag) => tag.trim()).filter(Boolean);
     await h.save();
     return toPub(h);
   },
@@ -121,10 +124,32 @@ export const hostService = {
     if (opts.step1?.dob) h.dob = new Date(opts.step1.dob);
     Object.assign(h, opts.step2);
     Object.assign(h, opts.step3);
+    if (opts.step3.tags !== undefined) h.tags = opts.step3.tags;
     h.step_completed = opts.submit ? 4 : 3;
     if (opts.submit) {
       h.status = 'SUBMITTED';
       h.submitted_at = new Date();
+    }
+    await h.save();
+    return toPub(h);
+  },
+  async adminUpdate(id: string, opts: { step1: any; step2: any; step3: any; status?: string }) {
+    const h = await HostModel.findById(id);
+    if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
+    h.full_name = opts.step1.full_name;
+    h.email = opts.step1.email;
+    h.phone = opts.step1.phone;
+    h.dob = opts.step1.dob ? new Date(opts.step1.dob) : null;
+    Object.assign(h, opts.step2);
+    h.police_verification_url = opts.step3.police_verification_url;
+    h.full_address = opts.step3.full_address;
+    if (opts.step3.tags !== undefined) h.tags = opts.step3.tags;
+    h.step_completed = Math.max(h.step_completed ?? 0, 3);
+    if (opts.status) {
+      h.status = opts.status as any;
+      if (opts.status === 'APPROVED' && !h.approved_at) h.approved_at = new Date();
+      if (opts.status === 'SUBMITTED' && !h.submitted_at) h.submitted_at = new Date();
+      if (opts.status !== 'REJECTED') h.rejected_at = null;
     }
     await h.save();
     return toPub(h);

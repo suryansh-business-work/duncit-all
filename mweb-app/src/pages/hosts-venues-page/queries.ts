@@ -13,6 +13,7 @@ export const PUBLIC_HOSTS = gql`
       email
       passport_photo_url
       full_address
+      tags
       approved_at
     }
   }
@@ -28,9 +29,13 @@ export const PUBLIC_VENUES = gql`
       capacity
       description
       cover_image_url
+      country
       city
       state
+      locality
+      postal_code
       amenities
+      tags
     }
   }
 `;

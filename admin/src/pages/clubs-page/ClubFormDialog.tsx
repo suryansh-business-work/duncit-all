@@ -5,14 +5,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
-  MenuItem,
-  Stack,
-  Switch,
-  TextField,
-  Typography,
 } from '@mui/material';
+import { useState } from 'react';
 import AiFillButton from '../../components/AiFillButton';
-import MediaListField from '../../components/MediaListField';
+import ClubFormSections, { SECTIONS } from './club-form/ClubFormSections';
 import { ClubForm } from './queries';
 
 interface Props {
@@ -25,6 +21,7 @@ interface Props {
   opError: string | null;
   superCats: any[];
   subCats: any[];
+  venues: any[];
 }
 
 export default function ClubFormDialog({
@@ -37,7 +34,20 @@ export default function ClubFormDialog({
   opError,
   superCats,
   subCats,
+  venues,
 }: Props) {
+  const [expanded, setExpanded] = useState<Set<string>>(new Set(['basic']));
+  const toggleOne = (id: string, open: boolean) => {
+    setExpanded((prev) => {
+      const next = new Set(prev);
+      if (open) next.add(id);
+      else next.delete(id);
+      return next;
+    });
+  };
+  const expandAll = () => setExpanded(new Set(SECTIONS.map((section) => section.id)));
+  const collapseAll = () => setExpanded(new Set());
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
       <DialogTitle
@@ -65,118 +75,19 @@ export default function ClubFormDialog({
           }
         />
       </DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
-              label="Club name"
-              value={form.club_name}
-              onChange={(e) => setForm({ ...form, club_name: e.target.value })}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Club ID"
-              value={form.club_id}
-              onChange={(e) => setForm({ ...form, club_id: e.target.value })}
-              disabled={!!form.id}
-              helperText={form.id ? 'ID cannot be changed' : 'Auto from name if blank'}
-              fullWidth
-            />
-          </Stack>
-          <TextField
-            label="Description"
-            value={form.club_description}
-            onChange={(e) => setForm({ ...form, club_description: e.target.value })}
-            fullWidth
-            multiline
-            minRows={2}
-          />
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
-              label="Super Category"
-              select
-              value={form.super_category_id}
-              onChange={(e) => setForm({ ...form, super_category_id: e.target.value })}
-              fullWidth
-              helperText="e.g. Human / Pet — drives the app feed grouping."
-            >
-              <MenuItem value="">None</MenuItem>
-              {superCats.map((c: any) => (
-                <MenuItem key={c.id} value={c.id}>
-                  {c.name}
-                </MenuItem>
-              ))}
-            </TextField>
-            <TextField
-              label="Category (sub-category)"
-              select
-              value={form.category_id}
-              onChange={(e) => setForm({ ...form, category_id: e.target.value })}
-              fullWidth
-            >
-              <MenuItem value="">None</MenuItem>
-              {subCats.map((c: any) => (
-                <MenuItem key={c.id} value={c.id}>
-                  {c.name}
-                </MenuItem>
-              ))}
-            </TextField>
-            {form.id && (
-              <Stack direction="row" alignItems="center" spacing={1}>
-                <Switch
-                  checked={form.is_active}
-                  onChange={(_, v) => setForm({ ...form, is_active: v })}
-                />
-                <Typography variant="body2">
-                  {form.is_active ? 'Active' : 'Inactive'}
-                </Typography>
-              </Stack>
-            )}
-          </Stack>
-          <MediaListField
-            label="Feature images & videos"
-            value={form.feature_text}
-            onChange={(v) => setForm({ ...form, feature_text: v })}
-            folder="/clubs"
-            helperText="Cover/header media shown on club page."
-          />
-          <MediaListField
-            label="Club moments"
-            value={form.moments_text}
-            onChange={(v) => setForm({ ...form, moments_text: v })}
-            folder="/clubs/moments"
-            helperText="Past event photos."
-          />
-          <TextField
-            label="Meetup venue IDs (one per line)"
-            value={form.meetup_venues_text}
-            onChange={(e) => setForm({ ...form, meetup_venues_text: e.target.value })}
-            fullWidth
-            multiline
-            minRows={2}
-            helperText="Use Location IDs or zone codes."
-          />
-          <TextField
-            label="WhatsApp Community link"
-            value={form.community_link}
-            onChange={(e) => setForm({ ...form, community_link: e.target.value })}
-            fullWidth
-          />
-          <TextField
-            label="WhatsApp Announcement link"
-            value={form.announcement_link}
-            onChange={(e) => setForm({ ...form, announcement_link: e.target.value })}
-            fullWidth
-          />
-          <TextField
-            label="WhatsApp Group link"
-            value={form.group_link}
-            onChange={(e) => setForm({ ...form, group_link: e.target.value })}
-            fullWidth
-          />
-          {opError && <Alert severity="error">{opError}</Alert>}
-        </Stack>
+      <DialogContent dividers>
+        <ClubFormSections
+          form={form}
+          setForm={setForm}
+          expanded={expanded}
+          onToggle={toggleOne}
+          onExpandAll={expandAll}
+          onCollapseAll={collapseAll}
+          superCats={superCats}
+          subCats={subCats}
+          venues={venues}
+        />
+        {opError && <Alert severity="error" sx={{ mt: 2 }}>{opError}</Alert>}
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>

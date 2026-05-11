@@ -6,7 +6,18 @@ export const VENUES = gql`
       id
       venue_name
       venue_type
+      description
+      cover_image_url
+      location_id
+      country
+      country_code
+      address_line1
+      address_line2
       city
+      state
+      state_code
+      locality
+      postal_code
       capacity
       status
       step_completed
@@ -15,8 +26,11 @@ export const VENUES = gql`
       owner_name
       owner_email
       owner_phone
+      owner_dob
+      owner_address
       gstin
       pan
+      tags
       documents {
         type
         url
@@ -26,8 +40,8 @@ export const VENUES = gql`
 `;
 
 export const APPROVE = gql`
-  mutation ApproveVenue($id: ID!, $notes: String) {
-    approveVenue(venue_doc_id: $id, notes: $notes) {
+  mutation ApproveVenue($id: ID!, $notes: String, $tags: [String!]) {
+    approveVenue(venue_doc_id: $id, notes: $notes, tags: $tags) {
       id
     }
   }
@@ -36,6 +50,26 @@ export const APPROVE = gql`
 export const REJECT = gql`
   mutation RejectVenue($id: ID!, $notes: String!) {
     rejectVenue(venue_doc_id: $id, notes: $notes) {
+      id
+    }
+  }
+`;
+
+export const UPDATE_VENUE = gql`
+  mutation UpdateVenue(
+    $id: ID!
+    $step1: VenueStep1Input!
+    $step2: VenueStep2Input!
+    $step3: VenueStep3Input!
+    $status: VenueStatus
+  ) {
+    adminUpdateVenue(
+      venue_doc_id: $id
+      step1: $step1
+      step2: $step2
+      step3: $step3
+      status: $status
+    ) {
       id
     }
   }

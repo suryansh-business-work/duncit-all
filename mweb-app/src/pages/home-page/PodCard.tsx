@@ -11,6 +11,7 @@ import {
 import EventIcon from '@mui/icons-material/Event';
 import PersonIcon from '@mui/icons-material/PersonOutline';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
+import PlaceIcon from '@mui/icons-material/PlaceOutlined';
 import { usePricing } from '../../hooks/usePricing';
 
 export default function PodCard({
@@ -24,6 +25,7 @@ export default function PodCard({
 }) {
   const isFree = pod.pod_type?.includes('FREE');
   const { format } = usePricing();
+  const placeText = [pod.place_label, pod.place_detail].filter(Boolean).join(' - ');
   return (
     <Card
       sx={{
@@ -109,6 +111,18 @@ export default function PodCard({
                 })
               : '—'}
           </Typography>
+          {placeText && (
+            <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.75 }}>
+              <PlaceIcon sx={{ fontSize: 14, color: 'text.secondary', flex: '0 0 auto' }} />
+              <Typography
+                variant="caption"
+                color="text.secondary"
+                sx={{ fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}
+              >
+                {placeText}
+              </Typography>
+            </Stack>
+          )}
           <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1.5, flexWrap: 'wrap', rowGap: 0.5 }}>
             <Chip
               size="small"

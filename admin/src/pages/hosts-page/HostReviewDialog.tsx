@@ -13,6 +13,8 @@ interface Props {
   active: any | null;
   notes: string;
   setNotes: (v: string) => void;
+  tagsText: string;
+  setTagsText: (v: string) => void;
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
@@ -22,6 +24,8 @@ export default function HostReviewDialog({
   active,
   notes,
   setNotes,
+  tagsText,
+  setTagsText,
   onClose,
   onApprove,
   onReject,
@@ -54,6 +58,13 @@ export default function HostReviewDialog({
             onChange={(e) => setNotes(e.target.value)}
             multiline
             minRows={3}
+            fullWidth
+          />
+          <TextField
+            label="Tags"
+            value={tagsText}
+            onChange={(e) => setTagsText(e.target.value)}
+            helperText="Comma separated tags for this approved host."
             fullWidth
           />
         </Stack>

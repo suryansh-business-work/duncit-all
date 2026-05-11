@@ -14,6 +14,14 @@ export interface IPodPlaceCharge {
   note?: string | null;
 }
 
+export interface IPodProductRequest {
+  product_id: Types.ObjectId;
+  product_name: string;
+  unit_cost: number;
+  quantity: number;
+  total_cost: number;
+}
+
 export interface IPodComment {
   _id?: Types.ObjectId;
   author_id: Types.ObjectId;
@@ -25,7 +33,8 @@ export interface IPod extends Document {
   pod_id: string;
   pod_title: string;
   pod_hosts_id: Types.ObjectId[];
-  location_id: Types.ObjectId;
+  location_id?: Types.ObjectId | null;
+  venue_id?: Types.ObjectId | null;
   club_id: Types.ObjectId;
   zone_name?: string | null;
   pod_hashtag: string[];
@@ -44,6 +53,9 @@ export interface IPod extends Document {
   available_perks: string[];
   payment_terms?: string | null;
   place_charges: IPodPlaceCharge[];
+  products_enabled: boolean;
+  product_requests: IPodProductRequest[];
+  product_cost_total: number;
   liked_user_ids: Types.ObjectId[];
   comments: IPodComment[];
   is_active: boolean;
@@ -68,6 +80,17 @@ const placeChargeSchema = new Schema<IPodPlaceCharge>(
   { _id: false }
 );
 
+const productRequestSchema = new Schema<IPodProductRequest>(
+  {
+    product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true },
+    product_name: { type: String, required: true, trim: true },
+    unit_cost: { type: Number, required: true, min: 0 },
+    quantity: { type: Number, required: true, min: 1 },
+    total_cost: { type: Number, required: true, min: 0 },
+  },
+  { _id: false }
+);
+
 const commentSchema = new Schema<IPodComment>(
   {
     author_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
@@ -82,7 +105,8 @@ const podSchema = new Schema<IPod>(
     pod_id: { type: String, required: true, unique: true, lowercase: true, trim: true },
     pod_title: { type: String, required: true, trim: true },
     pod_hosts_id: [{ type: Schema.Types.ObjectId, ref: 'User', required: true }],
-    location_id: { type: Schema.Types.ObjectId, ref: 'Location', required: true },
+    location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
+    venue_id: { type: Schema.Types.ObjectId, ref: 'Venue', default: null, index: true },
     club_id: { type: Schema.Types.ObjectId, ref: 'Club', required: true },
     zone_name: { type: String, default: null, trim: true },
     pod_hashtag: { type: [String], default: [] },
@@ -109,6 +133,9 @@ const podSchema = new Schema<IPod>(
     available_perks: { type: [String], default: [] },
     payment_terms: { type: String, default: null, trim: true, maxlength: 4000 },
     place_charges: { type: [placeChargeSchema], default: [] },
+    products_enabled: { type: Boolean, default: false },
+    product_requests: { type: [productRequestSchema], default: [] },
+    product_cost_total: { type: Number, default: 0, min: 0 },
     liked_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
     comments: { type: [commentSchema], default: [] },
     is_active: { type: Boolean, default: true },
@@ -118,5 +145,6 @@ const podSchema = new Schema<IPod>(
 
 podSchema.index({ club_id: 1, pod_date_time: -1 });
 podSchema.index({ location_id: 1, zone_name: 1, pod_date_time: -1 });
+podSchema.index({ venue_id: 1, pod_date_time: -1 });
 
 export const PodModel = model<IPod>('Pod', podSchema);

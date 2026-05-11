@@ -3,38 +3,41 @@ import { useFormikContext } from 'formik';
 import type { PodForm } from '../queries';
 
 interface Props {
-  filteredLocations: any[];
-  zoneOptions: string[];
+  clubs: any[];
+  venues: any[];
 }
 
 /**
  * Keeps dependent fields consistent inside the Formik tree:
- * - resets location_id when club changes and the prior location is no longer valid
- * - resets zone_name when zone is no longer valid for the selected location
+ * - resets venue_id when club changes and the prior venue is no longer valid
  * - forces pod_amount = 0 for FREE pod types
  */
-export default function CascadeEffect({ filteredLocations, zoneOptions }: Props) {
+export default function CascadeEffect({ clubs, venues }: Props) {
   const { values, setFieldValue } = useFormikContext<PodForm>();
 
   useEffect(() => {
-    if (!values.club_id || !values.location_id) return;
-    if (!filteredLocations.some((l: any) => l.id === values.location_id)) {
+    if (!values.club_id || !values.venue_id) return;
+    const club = clubs.find((item: any) => item.id === values.club_id);
+    const linked = new Set(club?.meetup_venues_id ?? []);
+    const valid = venues.some((venue: any) => venue.id === values.venue_id && linked.has(venue.id));
+    if (!valid) {
+      setFieldValue('venue_id', '');
       setFieldValue('location_id', '');
       setFieldValue('zone_name', '');
     }
-  }, [values.club_id, filteredLocations]); // eslint-disable-line react-hooks/exhaustive-deps
-
-  useEffect(() => {
-    if (values.zone_name && !zoneOptions.includes(values.zone_name)) {
-      setFieldValue('zone_name', '');
-    }
-  }, [values.location_id, zoneOptions]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [values.club_id, venues, clubs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
     if (values.pod_type.includes('FREE') && values.pod_amount !== 0) {
       setFieldValue('pod_amount', 0);
     }
   }, [values.pod_type]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
+    if (!values.products_enabled && values.product_requests.length > 0) {
+      setFieldValue('product_requests', []);
+    }
+  }, [values.products_enabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }

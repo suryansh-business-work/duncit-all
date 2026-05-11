@@ -39,7 +39,7 @@ export default function LocationDialog({
       <PlaceIcon color="primary" fontSize="small" />
       <Box sx={{ minWidth: 0 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>
-          Choose your city{draftZone ? ' \u00b7 zone' : ''}
+          Choose your city{draftZone ? ' / area' : ''}
         </Typography>
         <Typography
           variant="caption"
@@ -121,7 +121,7 @@ export default function LocationDialog({
                     color="text.secondary"
                     sx={{ lineHeight: 1.25 }}
                   >
-                    {l.location_zones?.length ? `${l.location_zones.length} zones` : 'No zones'}
+                    {l.location_zones?.length ? `${l.location_zones.length} areas` : 'No areas'}
                   </Typography>
                 </Box>
               </CardActionArea>
@@ -138,11 +138,11 @@ export default function LocationDialog({
       {draftLoc && (
         <>
           <Typography variant="overline" color="text.secondary">
-            Zone in {draftLoc.location_name}
+            Locality / Area in {draftLoc.location_name}
           </Typography>
           <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mt: 0.5, mb: 1 }}>
             <Chip
-              label="All zones"
+              label="All areas"
               color={!draftZone ? 'primary' : 'default'}
               variant={!draftZone ? 'filled' : 'outlined'}
               onClick={() => setDraftZone('')}
@@ -158,7 +158,7 @@ export default function LocationDialog({
             ))}
             {zones.length === 0 && (
               <Typography variant="body2" color="text.secondary">
-                This city has no zones configured.
+                This city has no localities configured.
               </Typography>
             )}
           </Stack>

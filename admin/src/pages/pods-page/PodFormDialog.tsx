@@ -22,8 +22,8 @@ interface Props {
   busy: boolean;
   opError: string | null;
   clubs: any[];
-  filteredLocations: any[];
-  zoneOptions: string[];
+  venues: any[];
+  inventoryProducts: any[];
   users: any[];
   userName: (id: string) => string;
   onSubmit: (values: PodForm) => Promise<void> | void;
@@ -37,8 +37,8 @@ export default function PodFormDialog({
   busy,
   opError,
   clubs,
-  filteredLocations,
-  zoneOptions,
+  venues,
+  inventoryProducts,
   users,
   userName,
   onSubmit,
@@ -69,8 +69,8 @@ export default function PodFormDialog({
         {(formik) => (
           <Form noValidate>
             <CascadeEffect
-              filteredLocations={filteredLocations}
-              zoneOptions={zoneOptions}
+              clubs={clubs}
+              venues={venues}
             />
             <DialogTitle
               sx={{
@@ -95,8 +95,8 @@ export default function PodFormDialog({
                 onExpandAll={expandAll}
                 onCollapseAll={collapseAll}
                 clubs={clubs}
-                filteredLocations={filteredLocations}
-                zoneOptions={zoneOptions}
+                venues={venues}
+                inventoryProducts={inventoryProducts}
                 users={users}
                 userName={userName}
                 finance={finance}

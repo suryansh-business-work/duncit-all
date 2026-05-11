@@ -145,12 +145,40 @@ export const userService = {
     if (existing) {
       throw new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
     }
-    const hashed = await bcrypt.hash(input.password, 10);
-    const created = await UserModel.create({
-      ...input,
-      password: hashed,
-      roles: ['USER'],
+    const phoneExists = await UserModel.findOne({
+      phone_number: input.phone_number,
+      phone_extension: input.phone_extension,
     });
+    if (phoneExists) {
+      throw new GraphQLError(
+        'This phone number is already registered. Please use a different number or login.',
+        { extensions: { code: 'CONFLICT' } }
+      );
+    }
+    const hashed = await bcrypt.hash(input.password, 10);
+    let created: any;
+    try {
+      created = await UserModel.create({
+        ...input,
+        password: hashed,
+        roles: ['USER'],
+      });
+    } catch (e: any) {
+      if (e?.code === 11000) {
+        const key = Object.keys(e?.keyPattern ?? {})[0] ?? '';
+        if (key.includes('phone')) {
+          throw new GraphQLError(
+            'This phone number is already registered. Please use a different number or login.',
+            { extensions: { code: 'CONFLICT' } }
+          );
+        }
+        if (key.includes('email')) {
+          throw new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
+        }
+        throw new GraphQLError('Account already exists', { extensions: { code: 'CONFLICT' } });
+      }
+      throw e;
+    }
 
     if (created.email) {
       sendWelcomeEmail(created.email, created.first_name).catch((e) =>
@@ -237,6 +265,16 @@ export const userService = {
             : 'Google account already exists. Please login with Google.';
           throw new GraphQLError(message, { extensions: { code: 'CONFLICT' } });
         }
+        const phoneExists = await UserModel.findOne({
+          phone_number: input.phone_number,
+          phone_extension: input.phone_extension,
+        }).session(session);
+        if (phoneExists) {
+          throw new GraphQLError(
+            'This phone number is already registered. Please use a different number or login.',
+            { extensions: { code: 'CONFLICT' } }
+          );
+        }
         const docs = await UserModel.create(
           [
             {
@@ -258,6 +296,24 @@ export const userService = {
         );
         created = docs[0];
       });
+    } catch (e: any) {
+      if (e instanceof GraphQLError) throw e;
+      if (e?.code === 11000) {
+        const key = Object.keys(e?.keyPattern ?? {})[0] ?? '';
+        if (key.includes('phone')) {
+          throw new GraphQLError(
+            'This phone number is already registered. Please use a different number or login.',
+            { extensions: { code: 'CONFLICT' } }
+          );
+        }
+        if (key.includes('email') || key.includes('google')) {
+          throw new GraphQLError('Account already exists. Please login instead.', {
+            extensions: { code: 'CONFLICT' },
+          });
+        }
+        throw new GraphQLError('Account already exists', { extensions: { code: 'CONFLICT' } });
+      }
+      throw e;
     } finally {
       await session.endSession();
     }

@@ -5,6 +5,7 @@ import { Alert, Snackbar, Stack } from '@mui/material';
 import {
   CLUBS,
   CATEGORIES,
+  APPROVED_VENUES,
   CREATE,
   UPDATE,
   DELETE,
@@ -23,6 +24,7 @@ export default function ClubsPage() {
     fetchPolicy: 'cache-and-network',
   });
   const { data: catData } = useQuery(CATEGORIES);
+  const { data: venuesData } = useQuery(APPROVED_VENUES);
   const [createMut] = useMutation(CREATE);
   const [updateMut] = useMutation(UPDATE);
   const [deleteMut] = useMutation(DELETE);
@@ -50,7 +52,7 @@ export default function ClubsPage() {
         .map((m: any) => m.url)
         .join('\n'),
       moments_text: (c.club_moments ?? []).map((m: any) => m.url).join('\n'),
-      meetup_venues_text: (c.meetup_venues_id ?? []).join('\n'),
+      meetup_venues_id: c.meetup_venues_id ?? [],
       community_link: c.club_whats_app_community_link ?? '',
       announcement_link: c.club_whats_app_announcement_link ?? '',
       group_link: c.club_whats_app_group_link ?? '',
@@ -72,10 +74,7 @@ export default function ClubsPage() {
         club_whats_app_community_link: form.community_link,
         club_whats_app_announcement_link: form.announcement_link,
         club_whats_app_group_link: form.group_link,
-        meetup_venues_id: form.meetup_venues_text
-          .split('\n')
-          .map((s) => s.trim())
-          .filter(Boolean),
+        meetup_venues_id: form.meetup_venues_id,
         category_id: form.category_id || null,
         super_category_id: form.super_category_id || null,
       };
@@ -111,6 +110,7 @@ export default function ClubsPage() {
 
   const subCats = (catData?.categories ?? []).filter((c: any) => c.level === 'SUB');
   const superCats = (catData?.categories ?? []).filter((c: any) => c.level === 'SUPER');
+  const venues = venuesData?.venues ?? [];
   const allCats = catData?.categories ?? [];
   const catName = (id: string) => allCats.find((c: any) => c.id === id)?.name ?? '—';
 
@@ -140,6 +140,7 @@ export default function ClubsPage() {
         opError={opError}
         superCats={superCats}
         subCats={subCats}
+        venues={venues}
       />
 
       <Snackbar

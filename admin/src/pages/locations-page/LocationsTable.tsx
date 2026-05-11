@@ -39,10 +39,11 @@ export default function LocationsTable({ loading, hasData, locations, onEdit, on
             <TableHead>
               <TableRow>
                 <TableCell>Image</TableCell>
-                <TableCell>Location</TableCell>
+                <TableCell>City</TableCell>
+                <TableCell>State</TableCell>
                 <TableCell>ID</TableCell>
-                <TableCell>Pincode</TableCell>
-                <TableCell>Zones</TableCell>
+                <TableCell>PIN</TableCell>
+                <TableCell>Localities / Areas</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
@@ -56,12 +57,20 @@ export default function LocationsTable({ loading, hasData, locations, onEdit, on
                       src={loc.location_image}
                       sx={{ width: 48, height: 48 }}
                     >
-                      {loc.location_name[0]}
+                      {(loc.city || loc.location_name || '?')[0]}
                     </Avatar>
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight={600}>
-                      {loc.location_name}
+                      {loc.city || loc.location_name}
+                    </Typography>
+                    <Typography variant="caption" color="text.secondary">
+                      {loc.country}
+                    </Typography>
+                  </TableCell>
+                  <TableCell>
+                    <Typography variant="body2" color="text.secondary">
+                      {loc.state || '—'}
                     </Typography>
                   </TableCell>
                   <TableCell>
@@ -81,7 +90,7 @@ export default function LocationsTable({ loading, hasData, locations, onEdit, on
                       ))}
                       {loc.location_zones.length === 0 && (
                         <Typography variant="caption" color="text.secondary">
-                          —
+                          No areas
                         </Typography>
                       )}
                     </Stack>
@@ -109,7 +118,7 @@ export default function LocationsTable({ loading, hasData, locations, onEdit, on
               ))}
               {locations.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={7}>
+                  <TableCell colSpan={8}>
                     <Box sx={{ p: 3, textAlign: 'center' }}>
                       <Typography variant="body2" color="text.secondary">
                         No locations yet. Click "New Location" to create one.

@@ -16,6 +16,7 @@ export interface IHost extends Document {
   // Step 3: Verification
   police_verification_url: string;
   full_address: string;
+  tags: string[];
   // Step 4: Confirmation handled by submit
   step_completed: number;
   status: HostStatus;
@@ -39,6 +40,7 @@ const hostSchema = new Schema<IHost>(
     passport_photo_url: { type: String, default: '' },
     police_verification_url: { type: String, default: '' },
     full_address: { type: String, default: '' },
+    tags: { type: [String], default: [] },
     step_completed: { type: Number, default: 0, min: 0, max: 4 },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     reviewer_notes: { type: String, default: '' },

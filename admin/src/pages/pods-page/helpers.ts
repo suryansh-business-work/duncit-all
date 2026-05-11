@@ -9,6 +9,7 @@ export function buildEditValues(p: any): PodForm {
     pod_title: p.pod_title,
     pod_hosts_id: p.pod_hosts_id ?? [],
     location_id: p.location_id ?? '',
+    venue_id: p.venue_id ?? '',
     club_id: p.club_id ?? '',
     zone_name: p.zone_name ?? '',
     pod_hashtag_text: (p.pod_hashtag ?? []).join(' '),
@@ -29,6 +30,11 @@ export function buildEditValues(p: any): PodForm {
       amount: c.amount ?? 0,
       note: c.note ?? '',
     })),
+    products_enabled: !!p.products_enabled,
+    product_requests: (p.product_requests ?? []).map((item: any) => ({
+      product_id: item.product_id ?? '',
+      quantity: item.quantity ?? 1,
+    })),
     is_active: !!p.is_active,
   };
 }
@@ -42,9 +48,10 @@ export function buildPayload(form: PodForm) {
   return {
     pod_title: form.pod_title.trim(),
     pod_hosts_id: form.pod_hosts_id,
-    location_id: form.location_id,
+    venue_id: form.venue_id,
+    location_id: form.location_id || null,
     club_id: form.club_id,
-    zone_name: form.zone_name || null,
+    zone_name: null,
     pod_hashtag: tags,
     pod_images_and_videos: linesToMedia(form.media_text),
     pod_description: form.pod_description,
@@ -65,5 +72,11 @@ export function buildPayload(form: PodForm) {
       amount: Number(c.amount) || 0,
       note: c.note?.trim() || null,
     })),
+    products_enabled: form.products_enabled,
+    product_requests: form.products_enabled
+      ? form.product_requests
+          .map((item) => ({ product_id: item.product_id, quantity: Number(item.quantity) || 0 }))
+          .filter((item) => item.product_id && item.quantity > 0)
+      : [],
   };
 }

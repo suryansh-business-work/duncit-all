@@ -1,7 +1,8 @@
-import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Button, FormControlLabel, Stack, Switch, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
+import { useFormikContext } from 'formik';
 import BasicInfoSection from './BasicInfoSection';
 import MediaSection from './MediaSection';
 import WhenWhereSection from './WhenWhereSection';
@@ -9,14 +10,16 @@ import AboutSection from './AboutSection';
 import OffersSection from './OffersSection';
 import PerksSection from './PerksSection';
 import PaymentChargesSection from './PaymentChargesSection';
+import DuncitProductsSection from './DuncitProductsSection';
+import type { PodForm } from '../queries';
 
 export const SECTIONS = [
   { id: 'basic', title: '1. Basic Information', body: 'BasicInfoSection' as const },
-  { id: 'media', title: '2. Media Uploads', body: 'MediaSection' as const },
-  { id: 'when', title: '3. When, Where & Map', body: 'WhenWhereSection' as const },
-  { id: 'about', title: '4. About this Pod', body: 'AboutSection' as const },
-  { id: 'offers', title: '5. What This Pod Offers', body: 'OffersSection' as const },
-  { id: 'perks', title: '6. Available Perks', body: 'PerksSection' as const },
+  { id: 'when', title: '2. When, Where & Map', body: 'WhenWhereSection' as const },
+  { id: 'about', title: '3. About this Pod', body: 'AboutSection' as const },
+  { id: 'offers', title: '4. What This Pod Offers', body: 'OffersSection' as const },
+  { id: 'perks', title: '5. Available Perks', body: 'PerksSection' as const },
+  { id: 'products', title: '6. Duncit Products', body: 'DuncitProductsSection' as const },
   { id: 'payment', title: '7. Payment & Place Charges', body: 'PaymentChargesSection' as const },
 ];
 
@@ -26,8 +29,8 @@ interface Props {
   onExpandAll: () => void;
   onCollapseAll: () => void;
   clubs: any[];
-  filteredLocations: any[];
-  zoneOptions: string[];
+  venues: any[];
+  inventoryProducts: any[];
   users: any[];
   userName: (id: string) => string;
   finance?: { platform_fee_pct: number; gst_pct: number; currency_symbol?: string };
@@ -39,12 +42,13 @@ export default function PodFormSections({
   onExpandAll,
   onCollapseAll,
   clubs,
-  filteredLocations,
-  zoneOptions,
+  venues,
+  inventoryProducts,
   users,
   userName,
   finance,
 }: Props) {
+  const { values, setFieldValue } = useFormikContext<PodForm>();
   const allOpen = expanded.size === SECTIONS.length;
   return (
     <>
@@ -68,11 +72,15 @@ export default function PodFormSections({
           Collapse all
         </Button>
       </Stack>
+      <MediaSection />
       {SECTIONS.map((sec) => (
         <Accordion
           key={sec.id}
-          expanded={expanded.has(sec.id)}
-          onChange={(_, v) => onToggle(sec.id, v)}
+          expanded={sec.id === 'products' ? values.products_enabled && expanded.has(sec.id) : expanded.has(sec.id)}
+          onChange={(_, open) => {
+            if (sec.id === 'products' && !values.products_enabled) return;
+            onToggle(sec.id, open);
+          }}
           disableGutters
           square
           sx={{
@@ -87,27 +95,41 @@ export default function PodFormSections({
           }}
         >
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1" fontWeight={600}>
-              {sec.title}
-            </Typography>
+            <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ width: '100%' }}>
+              <Typography variant="subtitle1" fontWeight={600}>{sec.title}</Typography>
+              {sec.id === 'products' && (
+                <FormControlLabel
+                  onClick={(event) => event.stopPropagation()}
+                  onFocus={(event) => event.stopPropagation()}
+                  control={
+                    <Switch
+                      checked={values.products_enabled}
+                      onChange={(event) => {
+                        setFieldValue('products_enabled', event.target.checked);
+                        onToggle('products', event.target.checked);
+                      }}
+                    />
+                  }
+                  label="Enable"
+                />
+              )}
+            </Stack>
           </AccordionSummary>
           <AccordionDetails>
             {sec.body === 'BasicInfoSection' && (
               <BasicInfoSection users={users} userName={userName} />
             )}
-            {sec.body === 'MediaSection' && <MediaSection />}
             {sec.body === 'WhenWhereSection' && (
-              <WhenWhereSection
-                clubs={clubs}
-                filteredLocations={filteredLocations}
-                zoneOptions={zoneOptions}
-              />
+              <WhenWhereSection clubs={clubs} venues={venues} />
             )}
             {sec.body === 'AboutSection' && <AboutSection />}
             {sec.body === 'OffersSection' && <OffersSection />}
             {sec.body === 'PerksSection' && <PerksSection />}
+            {sec.body === 'DuncitProductsSection' && values.products_enabled && (
+              <DuncitProductsSection products={inventoryProducts} />
+            )}
             {sec.body === 'PaymentChargesSection' && (
-              <PaymentChargesSection finance={finance} />
+              <PaymentChargesSection finance={finance} inventoryProducts={inventoryProducts} />
             )}
           </AccordionDetails>
         </Accordion>

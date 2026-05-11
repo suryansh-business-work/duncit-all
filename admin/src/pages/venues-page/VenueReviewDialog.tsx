@@ -14,6 +14,8 @@ interface Props {
   active: any | null;
   notes: string;
   setNotes: (v: string) => void;
+  tagsText: string;
+  setTagsText: (v: string) => void;
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
@@ -23,6 +25,8 @@ export default function VenueReviewDialog({
   active,
   notes,
   setNotes,
+  tagsText,
+  setTagsText,
   onClose,
   onApprove,
   onReject,
@@ -36,7 +40,10 @@ export default function VenueReviewDialog({
             Type: {active?.venue_type} · Capacity: {active?.capacity}
           </Typography>
           <Typography variant="body2">
-            City: {active?.city} · GSTIN: {active?.gstin || '—'} · PAN: {active?.pan || '—'}
+            {[active?.locality, active?.city, active?.state, active?.country].filter(Boolean).join(', ') || '—'} · PIN {active?.postal_code || '—'}
+          </Typography>
+          <Typography variant="body2">
+            GSTIN: {active?.gstin || '—'} · PAN: {active?.pan || '—'}
           </Typography>
           <Box>
             <Typography variant="caption" color="text.secondary">
@@ -56,6 +63,13 @@ export default function VenueReviewDialog({
             onChange={(e) => setNotes(e.target.value)}
             multiline
             minRows={3}
+            fullWidth
+          />
+          <TextField
+            label="Tags"
+            value={tagsText}
+            onChange={(e) => setTagsText(e.target.value)}
+            helperText="Comma separated tags for this approved venue."
             fullWidth
           />
         </Stack>

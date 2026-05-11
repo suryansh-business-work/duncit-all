@@ -1,325 +1,159 @@
 import { useEffect, useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  IconButton,
-  MenuItem,
-  Step,
-  StepLabel,
-  Stepper,
-  TextField,
-  Typography,
-  Stack,
-} from '@mui/material';
-import DeleteIcon from '@mui/icons-material/Delete';
-import AddIcon from '@mui/icons-material/Add';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
+import { useMutation, useQuery } from '@apollo/client';
+import { Alert, Button, Card, CardContent, Step, StepLabel, Stepper, Stack, Typography } from '@mui/material';
 import MediaPickerDialog from '../components/MediaPickerDialog';
+import DetailsStep from './register-venue-page/DetailsStep';
+import DocumentsStep from './register-venue-page/DocumentsStep';
+import OwnerStep from './register-venue-page/OwnerStep';
+import SubmitStep from './register-venue-page/SubmitStep';
+import { findSelectedLocation } from './register-venue-page/VenueLocationFields';
+import { FINAL, MY_VENUE, STEP1, STEP2, STEP3 } from './register-venue-page/queries';
+import {
+  DOC_TYPES,
+  STEPS,
+  blankStep1,
+  blankStep2,
+  blankStep3,
+  type VenueStep1,
+  type VenueStep2,
+  type VenueStep3,
+} from './register-venue-page/types';
+import { validateStep } from './register-venue-page/validation';
 
-const MY_VENUE = gql`
-  query MyVenue {
-    myVenue {
-      id
-      step_completed
-      status
-      venue_name
-      venue_type
-      capacity
-      description
-      address_line1
-      address_line2
-      city
-      state
-      postal_code
-      cover_image_url
-      gstin
-      pan
-      documents {
-        type
-        url
-      }
-      owner_name
-      owner_email
-      owner_phone
-      owner_dob
-      owner_address
-      reviewer_notes
-    }
-  }
-`;
-const STEP1 = gql`mutation V1($input: VenueStep1Input!) { submitVenueStep1(input: $input) { id step_completed status } }`;
-const STEP2 = gql`mutation V2($input: VenueStep2Input!) { submitVenueStep2(input: $input) { id step_completed } }`;
-const STEP3 = gql`mutation V3($input: VenueStep3Input!) { submitVenueStep3(input: $input) { id step_completed } }`;
-const FINAL = gql`mutation VFinal { submitVenueFinal { id status } }`;
-
-const VENUE_TYPES = ['Cafe', 'Restaurant', 'Sports Turf', 'Studio', 'Banquet', 'Park', 'Other'];
-const DOC_TYPES = ['GST Certificate', 'PAN Card', 'Property Document', 'Trade License', 'Other'];
-const STEPS = ['Details', 'Documents', 'Owner', 'Submit'];
-
-type DocRow = { type: string; url: string };
+const hydrateLocation = (base: VenueStep1, locations: any[]): VenueStep1 => {
+  const location = findSelectedLocation(locations, base);
+  const zones = location?.location_zones ?? [];
+  const zone = zones.find((item: any) => item.zone_name === base.locality || item.zone_code === base.locality);
+  return {
+    ...base,
+    location_id: base.location_id || location?.id || '',
+    country: location?.country || base.country,
+    country_code: location?.country_code || base.country_code,
+    state: location?.state || base.state,
+    state_code: location?.state_code || base.state_code,
+    city: location ? location.city || location.location_name : base.city,
+    locality: zone?.zone_name || base.locality || (location && zones.length === 0 ? location.city || location.location_name : ''),
+    postal_code: zone?.pincode || location?.location_pincode || base.postal_code,
+  };
+};
 
 export default function RegisterVenuePage() {
   const { data, loading, refetch } = useQuery(MY_VENUE);
   const [step, setStep] = useState(0);
-  const [s1, set1] = useState({
-    venue_name: '', venue_type: 'Cafe', capacity: 10, description: '',
-    address_line1: '', address_line2: '', city: '', state: '', postal_code: '',
-    cover_image_url: '',
-  });
-  const [s2, set2] = useState<{ documents: DocRow[]; gstin: string; pan: string }>({
-    documents: [],
-    gstin: '', pan: '',
-  });
-  const [s3, set3] = useState({
-    owner_name: '', owner_email: '', owner_phone: '', owner_dob: '', owner_address: '',
-  });
+  const [step1, setStep1] = useState<VenueStep1>(blankStep1);
+  const [step2, setStep2] = useState<VenueStep2>(blankStep2);
+  const [step3, setStep3] = useState<VenueStep3>(blankStep3);
   const [err, setErr] = useState<string | null>(null);
   const [coverPicker, setCoverPicker] = useState(false);
   const [docPickerIdx, setDocPickerIdx] = useState<number | null>(null);
 
-  const [m1, m1State] = useMutation(STEP1);
-  const [m2, m2State] = useMutation(STEP2);
-  const [m3, m3State] = useMutation(STEP3);
-  const [mFinal, mFinalState] = useMutation(FINAL);
+  const [saveStep1, step1State] = useMutation(STEP1);
+  const [saveStep2, step2State] = useMutation(STEP2);
+  const [saveStep3, step3State] = useMutation(STEP3);
+  const [submitFinal, finalState] = useMutation(FINAL);
+  const locations = data?.locations ?? [];
 
   useEffect(() => {
-    const v = data?.myVenue;
-    if (!v) return;
-    set1({
-      venue_name: v.venue_name || '', venue_type: v.venue_type || 'Cafe',
-      capacity: v.capacity || 10, description: v.description || '',
-      address_line1: v.address_line1 || '', address_line2: v.address_line2 || '',
-      city: v.city || '', state: v.state || '', postal_code: v.postal_code || '',
-      cover_image_url: v.cover_image_url || '',
+    const venue = data?.myVenue;
+    if (!venue) return;
+    const baseStep1 = {
+      venue_name: venue.venue_name || '',
+      venue_type: venue.venue_type || 'Cafe',
+      capacity: venue.capacity || 10,
+      description: venue.description || '',
+      location_id: venue.location_id || '',
+      country: venue.country || 'India',
+      country_code: venue.country_code || 'IN',
+      state: venue.state || '',
+      state_code: venue.state_code || '',
+      city: venue.city || '',
+      locality: venue.locality || '',
+      postal_code: venue.postal_code || '',
+      address_line1: venue.address_line1 || '',
+      address_line2: venue.address_line2 || '',
+      cover_image_url: venue.cover_image_url || '',
+    };
+    setStep1(hydrateLocation(baseStep1, locations));
+    setStep2({
+      documents: venue.documents?.length
+        ? venue.documents.map((doc: any) => ({ type: doc.type, url: doc.url }))
+        : [],
+      gstin: venue.gstin || '',
+      pan: venue.pan || '',
     });
-    set2({
-      documents: v.documents?.length ? v.documents.map((d: any) => ({ type: d.type, url: d.url })) : [],
-      gstin: v.gstin || '', pan: v.pan || '',
+    setStep3({
+      owner_name: venue.owner_name || '',
+      owner_email: venue.owner_email || '',
+      owner_phone: venue.owner_phone || '',
+      owner_dob: venue.owner_dob ? venue.owner_dob.slice(0, 10) : '',
+      owner_address: venue.owner_address || '',
     });
-    set3({
-      owner_name: v.owner_name || '', owner_email: v.owner_email || '',
-      owner_phone: v.owner_phone || '', owner_dob: v.owner_dob ? v.owner_dob.slice(0, 10) : '',
-      owner_address: v.owner_address || '',
-    });
-    setStep(Math.min(v.step_completed || 0, 3));
-  }, [data]);
-
-  const validateStep = (): string | null => {
-    if (step === 0) {
-      if (!s1.venue_name.trim()) return 'Venue name required';
-      if (!s1.address_line1.trim()) return 'Address required';
-      if (!s1.city.trim() || !s1.state.trim() || !s1.postal_code.trim()) return 'City/State/PIN required';
-    } else if (step === 1) {
-      const valid = s2.documents.filter((d) => d.type && d.url);
-      if (valid.length === 0) return 'Upload at least one document';
-    } else if (step === 2) {
-      if (!s3.owner_name.trim() || !s3.owner_email.trim() || !s3.owner_phone.trim())
-        return 'Name, email and phone required';
-    }
-    return null;
-  };
+    setStep(Math.min(venue.step_completed || 0, 3));
+  }, [data?.myVenue, data?.locations]);
 
   const next = async () => {
     setErr(null);
-    const v = validateStep();
-    if (v) { setErr(v); return; }
+    const validationError = await validateStep(step, step1, step2, step3);
+    if (validationError) return setErr(validationError);
+
     try {
-      if (step === 0) await m1({ variables: { input: s1 } });
-      else if (step === 1) {
-        const docs = s2.documents.filter((d) => d.type && d.url);
-        await m2({ variables: { input: { documents: docs, gstin: s2.gstin, pan: s2.pan } } });
-      } else if (step === 2) {
-        await m3({ variables: { input: { ...s3, owner_dob: s3.owner_dob || null } } });
-      } else if (step === 3) {
-        await mFinal();
+      if (step === 0) await saveStep1({ variables: { input: { ...step1, capacity: Number(step1.capacity) || 1 } } });
+      if (step === 1) {
+        const documents = step2.documents.filter((doc) => doc.type && doc.url);
+        await saveStep2({ variables: { input: { documents, gstin: step2.gstin, pan: step2.pan } } });
+      }
+      if (step === 2) await saveStep3({ variables: { input: { ...step3, owner_dob: step3.owner_dob || null } } });
+      if (step === 3) {
+        await submitFinal();
         await refetch();
         return;
       }
-      setStep((s) => Math.min(s + 1, 3));
+      setStep((current) => Math.min(current + 1, 3));
       await refetch();
-    } catch (e: any) { setErr(e.message); }
+    } catch (error: any) {
+      setErr(error.message);
+    }
   };
 
   const status = data?.myVenue?.status;
-  if (loading && !data) return <Typography>Loading…</Typography>;
+  const busy = step1State.loading || step2State.loading || step3State.loading || finalState.loading;
+  if (loading && !data) return <Typography>Loading...</Typography>;
 
   return (
     <Stack spacing={3} sx={{ maxWidth: 720, mx: 'auto', width: '100%', pb: 4 }}>
       <Typography variant="h5" fontWeight={700}>Register your venue</Typography>
       {status === 'SUBMITTED' && <Alert severity="info">Application under review.</Alert>}
-      {status === 'APPROVED' && <Alert severity="success">Approved 🎉</Alert>}
-      {status === 'REJECTED' && (
-        <Alert severity="error">Rejected: {data?.myVenue?.reviewer_notes || 'See notes.'} Update and resubmit.</Alert>
-      )}
+      {status === 'APPROVED' && <Alert severity="success">Approved.</Alert>}
+      {status === 'REJECTED' && <Alert severity="error">Rejected: {data?.myVenue?.reviewer_notes || 'See notes.'} Update and resubmit.</Alert>}
 
-      <Stepper
-        activeStep={step}
-        alternativeLabel
-        sx={{
-          '& .MuiStepLabel-label': { fontSize: 12, mt: 0.5, lineHeight: 1.2 },
-          '& .MuiStepConnector-root': { top: 14 },
-        }}
-      >
-        {STEPS.map((s) => (<Step key={s}><StepLabel>{s}</StepLabel></Step>))}
+      <Stepper activeStep={step} alternativeLabel sx={{ '& .MuiStepLabel-label': { fontSize: 12, mt: 0.5, lineHeight: 1.2 }, '& .MuiStepConnector-root': { top: 14 } }}>
+        {STEPS.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
       </Stepper>
 
       <Card variant="outlined">
         <CardContent>
-          {step === 0 && (
-            <Stack spacing={2}>
-              <TextField label="Venue name" required value={s1.venue_name} onChange={(e) => set1({ ...s1, venue_name: e.target.value })} />
-              <TextField select label="Type" value={s1.venue_type} onChange={(e) => set1({ ...s1, venue_type: e.target.value })}>
-                {VENUE_TYPES.map((t) => <MenuItem key={t} value={t}>{t}</MenuItem>)}
-              </TextField>
-              <TextField type="number" label="Capacity" value={s1.capacity} onChange={(e) => set1({ ...s1, capacity: +e.target.value || 0 })} />
-              <TextField label="Description" multiline minRows={3} value={s1.description} onChange={(e) => set1({ ...s1, description: e.target.value })} />
-
-              <Stack spacing={1}>
-                <Typography variant="body2" color="text.secondary">Cover image</Typography>
-                {s1.cover_image_url && (
-                  <Box component="img" src={s1.cover_image_url} sx={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 1 }} />
-                )}
-                <Button startIcon={<UploadFileIcon />} variant="outlined" onClick={() => setCoverPicker(true)}>
-                  {s1.cover_image_url ? 'Change cover image' : 'Upload cover image'}
-                </Button>
-              </Stack>
-
-              <TextField label="Address line 1" required value={s1.address_line1} onChange={(e) => set1({ ...s1, address_line1: e.target.value })} />
-              <TextField label="Address line 2" value={s1.address_line2} onChange={(e) => set1({ ...s1, address_line2: e.target.value })} />
-              <Stack direction="row" spacing={1}>
-                <TextField label="City" required fullWidth value={s1.city} onChange={(e) => set1({ ...s1, city: e.target.value })} />
-                <TextField label="State" required fullWidth value={s1.state} onChange={(e) => set1({ ...s1, state: e.target.value })} />
-                <TextField label="PIN" required fullWidth value={s1.postal_code} onChange={(e) => set1({ ...s1, postal_code: e.target.value })} />
-              </Stack>
-            </Stack>
-          )}
-
-          {step === 1 && (
-            <Stack spacing={2}>
-              <TextField label="GSTIN (optional)" value={s2.gstin} onChange={(e) => set2({ ...s2, gstin: e.target.value })} />
-              <TextField label="PAN (optional)" value={s2.pan} onChange={(e) => set2({ ...s2, pan: e.target.value })} />
-              <Typography variant="subtitle2">Documents</Typography>
-              {s2.documents.length === 0 && (
-                <Alert severity="info">Upload at least one supporting document (GST, PAN, property paper etc).</Alert>
-              )}
-              {s2.documents.map((d, i) => (
-                <Stack key={i} direction="row" spacing={1} alignItems="flex-start">
-                  <TextField
-                    select
-                    label="Type"
-                    size="small"
-                    value={d.type || DOC_TYPES[0]}
-                    sx={{ minWidth: 160 }}
-                    onChange={(e) => {
-                      const docs = [...s2.documents];
-                      docs[i] = { ...d, type: e.target.value };
-                      set2({ ...s2, documents: docs });
-                    }}
-                  >
-                    {DOC_TYPES.map((t) => <MenuItem key={t} value={t}>{t}</MenuItem>)}
-                  </TextField>
-                  {d.url ? (
-                    <Chip
-                      label="Uploaded ✓"
-                      color="success"
-                      size="small"
-                      onClick={() => window.open(d.url, '_blank')}
-                      onDelete={() => {
-                        const docs = [...s2.documents];
-                        docs[i] = { ...d, url: '' };
-                        set2({ ...s2, documents: docs });
-                      }}
-                    />
-                  ) : (
-                    <Button
-                      size="small"
-                      startIcon={<UploadFileIcon />}
-                      variant="outlined"
-                      onClick={() => setDocPickerIdx(i)}
-                    >
-                      Upload file
-                    </Button>
-                  )}
-                  <IconButton size="small" onClick={() => set2({ ...s2, documents: s2.documents.filter((_, j) => j !== i) })}>
-                    <DeleteIcon />
-                  </IconButton>
-                </Stack>
-              ))}
-              <Button
-                startIcon={<AddIcon />}
-                onClick={() => set2({ ...s2, documents: [...s2.documents, { type: DOC_TYPES[0], url: '' }] })}
-              >
-                Add document
-              </Button>
-            </Stack>
-          )}
-
-          {step === 2 && (
-            <Stack spacing={2}>
-              <TextField label="Owner name" required value={s3.owner_name} onChange={(e) => set3({ ...s3, owner_name: e.target.value })} />
-              <TextField label="Owner email" type="email" required value={s3.owner_email} onChange={(e) => set3({ ...s3, owner_email: e.target.value })} />
-              <TextField label="Owner phone" required value={s3.owner_phone} onChange={(e) => set3({ ...s3, owner_phone: e.target.value })} />
-              <TextField label="Owner DOB" type="date" InputLabelProps={{ shrink: true }} value={s3.owner_dob} onChange={(e) => set3({ ...s3, owner_dob: e.target.value })} />
-              <TextField label="Owner address" multiline minRows={2} value={s3.owner_address} onChange={(e) => set3({ ...s3, owner_address: e.target.value })} />
-            </Stack>
-          )}
-
-          {step === 3 && (
-            <Stack spacing={2}>
-              <Typography variant="body1">Review and submit your venue application.</Typography>
-              <Box>
-                <Typography variant="subtitle2">{s1.venue_name}</Typography>
-                <Typography variant="caption" color="text.secondary">{s1.venue_type} · cap {s1.capacity} · {s1.city}</Typography>
-              </Box>
-              <Typography variant="caption">{s2.documents.filter((d) => d.url).length} documents · Owner: {s3.owner_name}</Typography>
-            </Stack>
-          )}
-
+          {step === 0 && <DetailsStep value={step1} locations={locations} onChange={setStep1} onCoverPick={() => setCoverPicker(true)} />}
+          {step === 1 && <DocumentsStep value={step2} onChange={setStep2} onDocPick={setDocPickerIdx} />}
+          {step === 2 && <OwnerStep value={step3} onChange={setStep3} />}
+          {step === 3 && <SubmitStep step1={step1} step2={step2} step3={step3} />}
           {err && <Alert severity="error" sx={{ mt: 2 }}>{err}</Alert>}
-
           <Stack direction="row" spacing={1} mt={3} justifyContent="space-between">
-            <Button disabled={step === 0} onClick={() => setStep((s) => Math.max(0, s - 1))}>Back</Button>
-            <Button
-              variant="contained"
-              onClick={next}
-              disabled={
-                m1State.loading || m2State.loading || m3State.loading || mFinalState.loading ||
-                status === 'SUBMITTED' || status === 'APPROVED'
-              }
-            >
+            <Button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))}>Back</Button>
+            <Button variant="contained" onClick={next} disabled={busy || status === 'SUBMITTED' || status === 'APPROVED'}>
               {step === 3 ? 'Submit' : 'Next'}
             </Button>
           </Stack>
         </CardContent>
       </Card>
 
-      <MediaPickerDialog
-        open={coverPicker}
-        onClose={() => setCoverPicker(false)}
-        onPicked={(url) => { set1({ ...s1, cover_image_url: url }); setCoverPicker(false); }}
-        folder="/venues/cover"
-        title="Upload cover image"
-      />
-
-      <MediaPickerDialog
-        open={docPickerIdx !== null}
-        onClose={() => setDocPickerIdx(null)}
-        onPicked={(url) => {
-          if (docPickerIdx === null) return;
-          const docs = [...s2.documents];
-          docs[docPickerIdx] = { ...docs[docPickerIdx], url };
-          set2({ ...s2, documents: docs });
-          setDocPickerIdx(null);
-        }}
-        folder="/venues/docs"
-        title="Upload document"
-        accept="image/*,application/pdf"
-      />
+      <MediaPickerDialog open={coverPicker} onClose={() => setCoverPicker(false)} onPicked={(url) => { setStep1({ ...step1, cover_image_url: url }); setCoverPicker(false); }} folder="/venues/cover" title="Upload cover image" />
+      <MediaPickerDialog open={docPickerIdx !== null} onClose={() => setDocPickerIdx(null)} onPicked={(url) => {
+        if (docPickerIdx === null) return;
+        const documents = [...step2.documents];
+        documents[docPickerIdx] = { ...(documents[docPickerIdx] ?? { type: DOC_TYPES[0], url: '' }), url };
+        setStep2({ ...step2, documents });
+        setDocPickerIdx(null);
+      }} folder="/venues/docs" title="Upload document" accept="image/*,application/pdf" />
     </Stack>
   );
 }

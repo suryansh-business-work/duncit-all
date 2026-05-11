@@ -8,6 +8,7 @@ import { useColorMode } from '../../ColorModeContext';
 import AuthBackground from '../../components/AuthBackground';
 import GoogleAuthNoticeDialog from '../../components/GoogleAuthNoticeDialog';
 import { type LoginFormValues } from '../../forms/login.form';
+import { parseApiError } from '../../utils/parseApiError';
 import { LOGIN, LOGIN_GOOGLE } from './queries';
 import LoginCard from './LoginCard';
 
@@ -29,9 +30,13 @@ export default function LoginPage() {
   };
 
   const handleSubmit = async (values: LoginFormValues) => {
-    const res = await loginMutation({ variables: { input: values } });
-    const token = res.data?.login?.token;
-    if (token) finishLogin(token, res.data?.login?.user);
+    try {
+      const res = await loginMutation({ variables: { input: values } });
+      const token = res.data?.login?.token;
+      if (token) finishLogin(token, res.data?.login?.user);
+    } catch (e) {
+      throw new Error(parseApiError(e));
+    }
   };
 
   const handleGoogle = async (idToken: string) => {
@@ -55,7 +60,7 @@ export default function LoginPage() {
             'Please login with email. You registered with us using email and password.',
         });
       } else {
-        setGError(e.message);
+        setGError(parseApiError(e));
       }
     }
   };
@@ -87,7 +92,7 @@ export default function LoginPage() {
 
       <LoginCard
         loading={loading}
-        errorMessage={error?.message ?? null}
+        errorMessage={error ? parseApiError(error) : null}
         onSubmit={handleSubmit}
         gLoading={gLoading}
         gError={gError}

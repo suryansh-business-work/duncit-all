@@ -43,6 +43,8 @@ export const POD_SEARCH = gql`
       pod_date_time
       no_of_spots
       pod_attendees
+      place_label
+      place_detail
       pod_images_and_videos {
         url
       }

@@ -8,6 +8,7 @@ export const PODS = gql`
       pod_title
       pod_hosts_id
       location_id
+      venue_id
       club_id
       pod_hashtag
       pod_images_and_videos {
@@ -32,6 +33,15 @@ export const PODS = gql`
         amount
         note
       }
+      products_enabled
+      product_requests {
+        product_id
+        product_name
+        unit_cost
+        quantity
+        total_cost
+      }
+      product_cost_total
       is_active
       zone_name
     }
@@ -62,9 +72,42 @@ export const LOCATIONS = gql`
       id
       location_id
       location_name
+      city
+      state
       location_zones {
         zone_name
       }
+    }
+  }
+`;
+export const APPROVED_VENUES = gql`
+  query ApprovedVenuesForPods {
+    venues(status: APPROVED) {
+      id
+      venue_name
+      address_line1
+      address_line2
+      country
+      city
+      state
+      locality
+      postal_code
+      lat
+      lng
+    }
+  }
+`;
+export const INVENTORY_PRODUCTS = gql`
+  query InventoryProductsForPods {
+    inventoryProducts(activeOnly: true) {
+      id
+      product_name
+      sku
+      unit_cost
+      inventory_count
+      requested_count
+      available_count
+      is_active
     }
   }
 `;
@@ -119,12 +162,18 @@ export interface PodPlaceCharge {
   note: string;
 }
 
+export interface PodProductRequest {
+  product_id: string;
+  quantity: number;
+}
+
 export interface PodForm {
   id?: string;
   pod_id: string;
   pod_title: string;
   pod_hosts_id: string[];
   location_id: string;
+  venue_id: string;
   club_id: string;
   zone_name: string;
   pod_hashtag_text: string;
@@ -141,6 +190,8 @@ export interface PodForm {
   available_perks: string[];
   payment_terms: string;
   place_charges: PodPlaceCharge[];
+  products_enabled: boolean;
+  product_requests: PodProductRequest[];
   is_active: boolean;
 }
 
@@ -149,6 +200,7 @@ export const blankForm: PodForm = {
   pod_title: '',
   pod_hosts_id: [],
   location_id: '',
+  venue_id: '',
   club_id: '',
   zone_name: '',
   pod_hashtag_text: '',
@@ -165,6 +217,8 @@ export const blankForm: PodForm = {
   available_perks: [],
   payment_terms: '',
   place_charges: [],
+  products_enabled: false,
+  product_requests: [],
   is_active: true,
 };
 

@@ -57,6 +57,8 @@ import { podPlanTypeDefs } from './pod-plan/pod-plan.schema';
 import { podPlanResolvers } from './pod-plan/pod-plan.resolver';
 import { whatsappTypeDefs } from './auth-whatsapp/auth-whatsapp.schema';
 import { whatsappResolvers } from './auth-whatsapp/auth-whatsapp.resolver';
+import { inventoryTypeDefs } from './inventory/inventory.schema';
+import { inventoryResolvers } from './inventory/inventory.resolver';
 
 const rootTypeDefs = gql`
   type Query {
@@ -72,6 +74,6 @@ const rootResolvers = {
   Mutation: { _noop: () => true },
 };
 
-export const typeDefs = [rootTypeDefs, userTypeDefs, rbacTypeDefs, settingsTypeDefs, categoryTypeDefs, locationTypeDefs, clubTypeDefs, podTypeDefs, sliderTypeDefs, notificationTypeDefs, interviewTypeDefs, faqTypeDefs, financeTypeDefs, paymentTypeDefs, aiTypeDefs, postTypeDefs, policyTypeDefs, podIdeaTypeDefs, uploadTypeDefs, emailTemplateTypeDefs, podMemberTypeDefs, badgeTypeDefs, venueTypeDefs, hostTypeDefs, chatTypeDefs, newsletterTypeDefs, contactTypeDefs, analyticsTypeDefs, podPlanTypeDefs, whatsappTypeDefs];
+export const typeDefs = [rootTypeDefs, userTypeDefs, rbacTypeDefs, settingsTypeDefs, categoryTypeDefs, locationTypeDefs, clubTypeDefs, podTypeDefs, sliderTypeDefs, notificationTypeDefs, interviewTypeDefs, faqTypeDefs, financeTypeDefs, paymentTypeDefs, aiTypeDefs, postTypeDefs, policyTypeDefs, podIdeaTypeDefs, uploadTypeDefs, emailTemplateTypeDefs, podMemberTypeDefs, badgeTypeDefs, venueTypeDefs, hostTypeDefs, chatTypeDefs, newsletterTypeDefs, contactTypeDefs, analyticsTypeDefs, podPlanTypeDefs, whatsappTypeDefs, inventoryTypeDefs];
 
-export const resolvers = [rootResolvers, userResolvers, rbacResolvers, settingsResolvers, categoryResolvers, locationResolvers, clubResolvers, podResolvers, sliderResolvers, notificationResolvers, interviewResolvers, faqResolvers, financeResolvers, paymentResolvers, aiResolvers, postResolvers, policyResolvers, podIdeaResolvers, uploadResolvers, emailTemplateResolvers, podMemberResolvers, badgeResolvers, venueResolvers, hostResolvers, chatResolvers, newsletterResolvers, contactResolvers, analyticsResolvers, podPlanResolvers, whatsappResolvers];
+export const resolvers = [rootResolvers, userResolvers, rbacResolvers, settingsResolvers, categoryResolvers, locationResolvers, clubResolvers, podResolvers, sliderResolvers, notificationResolvers, interviewResolvers, faqResolvers, financeResolvers, paymentResolvers, aiResolvers, postResolvers, policyResolvers, podIdeaResolvers, uploadResolvers, emailTemplateResolvers, podMemberResolvers, badgeResolvers, venueResolvers, hostResolvers, chatResolvers, newsletterResolvers, contactResolvers, analyticsResolvers, podPlanResolvers, whatsappResolvers, inventoryResolvers];

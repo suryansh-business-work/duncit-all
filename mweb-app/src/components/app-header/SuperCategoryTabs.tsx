@@ -1,4 +1,5 @@
 import { Box, Skeleton, ToggleButton, ToggleButtonGroup } from '@mui/material';
+import { useLocation } from 'react-router-dom';
 import { renderSuperCategoryMark } from './superCategoryIcon';
 
 interface Props {
@@ -9,6 +10,10 @@ interface Props {
 }
 
 export default function SuperCategoryTabs({ loading, superCats, value, onChange }: Props) {
+  const { pathname } = useLocation();
+
+  if (pathname !== '/') return null;
+
   if (loading && superCats.length === 0) {
     return (
       <Box sx={{ px: 1.5, pb: 0.75 }}>

@@ -10,6 +10,7 @@ import RegisterForm, { type RegisterFormValues } from '../forms/register.form';
 import GoogleSignupPhoneForm, {
   type GoogleSignupPhoneValues,
 } from '../forms/google-signup-phone.form';
+import { parseApiError } from '../utils/parseApiError';
 
 const REGISTER = gql`
   mutation Register($input: RegisterInput!) {
@@ -44,22 +45,28 @@ export default function RegisterPage() {
   const [registerMutation, { loading, error }] = useMutation(REGISTER);
   const [signupGoogle, { loading: gLoading }] = useMutation(SIGNUP_GOOGLE);
   const [gError, setGError] = useState<string | null>(null);
+  const [registerError, setRegisterError] = useState<string | null>(null);
   const [googleToken, setGoogleToken] = useState<string | null>(null);
   const navigate = useNavigate();
   const whatsappStepEnabled = useFeatureFlag('whatsapp_signup_otp', true);
   const nextRoute = whatsappStepEnabled ? '/signup-whatsapp' : '/signup-survey';
 
   const handleRegister = async (values: RegisterFormValues) => {
-    const { country: _country, ...rest } = values;
-    const res = await registerMutation({
-      variables: {
-        input: { ...rest, dob: new Date(rest.dob).toISOString() },
-      },
-    });
-    const token = res.data?.register?.token;
-    if (token) {
-      localStorage.setItem('token', token);
-      navigate(nextRoute);
+    setRegisterError(null);
+    try {
+      const { country: _country, ...rest } = values;
+      const res = await registerMutation({
+        variables: {
+          input: { ...rest, dob: new Date(rest.dob).toISOString() },
+        },
+      });
+      const token = res.data?.register?.token;
+      if (token) {
+        localStorage.setItem('token', token);
+        navigate(nextRoute);
+      }
+    } catch (e) {
+      setRegisterError(parseApiError(e));
     }
   };
 
@@ -85,7 +92,7 @@ export default function RegisterPage() {
         navigate(nextRoute);
       }
     } catch (e: any) {
-      setGError(e.message);
+      setGError(parseApiError(e));
     }
   };
 
@@ -116,7 +123,7 @@ export default function RegisterPage() {
 
         <RegisterForm
           loading={loading}
-          errorMessage={error?.message ?? null}
+          errorMessage={registerError ?? (error ? parseApiError(error) : null)}
           onSubmit={handleRegister}
         />
         <LegalLinks prefix="By creating an account," />

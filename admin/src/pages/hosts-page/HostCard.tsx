@@ -32,6 +32,13 @@ export default function HostCard({ host, onReview }: Props) {
         <Typography variant="caption" color="text.secondary">
           Step {host.step_completed}/4
         </Typography>
+        {host.tags?.length > 0 && (
+          <Stack direction="row" spacing={0.5} sx={{ mt: 1, flexWrap: 'wrap', gap: 0.5 }}>
+            {host.tags.map((tag: string) => (
+              <Chip key={tag} size="small" label={tag} variant="outlined" />
+            ))}
+          </Stack>
+        )}
         {host.reviewer_notes && (
           <Alert severity="info" sx={{ mt: 1 }}>
             {host.reviewer_notes}

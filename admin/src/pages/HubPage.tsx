@@ -40,10 +40,18 @@ const CARDS: HubCard[] = [
   {
     key: 'catalog',
     title: 'Catalog',
-    description: 'Categories, locations and home sliders.',
+    description: 'Categories, locations, inventory and home sliders.',
     to: '/categories',
     icon: 'catalog',
     accent: '#16a34a',
+  },
+  {
+    key: 'inventory',
+    title: 'Inventory',
+    description: 'Duncit products, stock counts and pod product requests.',
+    to: '/inventory',
+    icon: 'inventory',
+    accent: '#9333ea',
   },
   {
     key: 'community',

@@ -7,6 +7,7 @@ import {
   Typography,
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
+import PlaceIcon from '@mui/icons-material/PlaceOutlined';
 
 interface Props {
   loading: boolean;
@@ -35,6 +36,8 @@ const spotsLeftLabel = (pod: any) => {
   const left = Math.max(total - joined, 0);
   return left === 1 ? '1 spot left' : `${left} spots left`;
 };
+
+const placeText = (pod: any) => [pod.place_label, pod.place_detail].filter(Boolean).join(' - ');
 
 export default function PodSearchResults({ loading, pods, onSelect }: Props) {
   return (
@@ -82,6 +85,14 @@ export default function PodSearchResults({ loading, pods, onSelect }: Props) {
                   {spotsLeftLabel(pod)}
                 </Typography>
               </Stack>
+              {placeText(pod) && (
+                <Stack direction="row" spacing={0.4} alignItems="center" sx={{ mt: 0.15 }}>
+                  <PlaceIcon sx={{ fontSize: 13, color: 'text.secondary', flex: '0 0 auto' }} />
+                  <Typography variant="caption" color="text.secondary" noWrap>
+                    {placeText(pod)}
+                  </Typography>
+                </Stack>
+              )}
             </Box>
           </Stack>
         </MenuItem>

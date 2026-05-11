@@ -13,9 +13,9 @@ import { DatePicker } from '@mui/x-date-pickers/DatePicker';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { subYears } from 'date-fns';
 import { googleSignupSchema } from '../validators/auth';
-import FormField from './FormField';
 import ResponsiveDialog from '../components/ResponsiveDialog';
 import PhoneExtensionField from '../components/PhoneExtensionField';
+import PhoneNumberField from '../components/PhoneNumberField';
 import { CITY_NAMES, zonesForCity } from '../utils/locations';
 
 export interface GoogleSignupPhoneValues {
@@ -94,7 +94,7 @@ function PhoneAndLocation() {
         />
       </Grid>
       <Grid item xs={8}>
-        <FormField name="phone_number" label="Phone" />
+        <PhoneNumberField label="Phone" autoComplete="tel-national" />
       </Grid>
       <Grid item xs={12}>
         <DobYearField />

@@ -15,6 +15,11 @@ export const locationTypeDefs = /* GraphQL */ `
     id: ID!
     location_id: String!
     location_name: String!
+    country: String!
+    country_code: String!
+    state: String!
+    state_code: String!
+    city: String!
     location_image: String!
     location_pincode: String!
     location_zones: [LocationZone!]!
@@ -31,6 +36,11 @@ export const locationTypeDefs = /* GraphQL */ `
   input CreateLocationInput {
     location_name: String!
     location_id: String
+    country: String!
+    country_code: String!
+    state: String!
+    state_code: String!
+    city: String!
     location_image: String!
     location_pincode: String!
     location_zones: [LocationZoneInput!]
@@ -38,6 +48,11 @@ export const locationTypeDefs = /* GraphQL */ `
 
   input UpdateLocationInput {
     location_name: String
+    country: String
+    country_code: String
+    state: String
+    state_code: String
+    city: String
     location_image: String
     location_pincode: String
     location_zones: [LocationZoneInput!]

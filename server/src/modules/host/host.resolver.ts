@@ -34,11 +34,11 @@ export const hostResolvers = {
       hostService.submitFinal(uid(ctx)),
     approveHost: async (
       _p: unknown,
-      args: { host_doc_id: string; notes?: string },
+      args: { host_doc_id: string; notes?: string; tags?: string[] },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_REVIEW);
-      return hostService.approve(args.host_doc_id, args.notes);
+      return hostService.approve(args.host_doc_id, args.notes, args.tags);
     },
     rejectHost: async (
       _p: unknown,
@@ -60,6 +60,19 @@ export const hostResolvers = {
         step2: args.step2,
         step3: args.step3,
         submit: args.submit,
+      });
+    },
+    adminUpdateHost: async (
+      _p: unknown,
+      args: { host_doc_id: string; step1: any; step2: any; step3: any; status?: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return hostService.adminUpdate(args.host_doc_id, {
+        step1: args.step1,
+        step2: args.step2,
+        step3: args.step3,
+        status: args.status,
       });
     },
   },

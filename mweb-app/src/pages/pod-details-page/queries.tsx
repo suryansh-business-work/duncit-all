@@ -26,6 +26,7 @@ export const POD_DETAILS = gql`
       zone_name
       club_id
       location_id
+      venue_id
       what_this_pod_offers
       available_perks
       payment_terms
@@ -71,7 +72,13 @@ export const POD_DETAILS = gql`
       id
       location_name
       location_image
+      location_pincode
+      location_zones {
+        zone_name
+        pincode
+      }
     }
+    publicVenues { id venue_name address_line1 address_line2 locality city state country postal_code lat lng }
     publicHosts {
       id
       user_id

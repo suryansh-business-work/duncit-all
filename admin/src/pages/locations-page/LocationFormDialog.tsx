@@ -15,6 +15,7 @@ import {
 import AddIcon from '@mui/icons-material/Add';
 import RemoveCircleOutlineIcon from '@mui/icons-material/RemoveCircleOutline';
 import MediaPickerField from '../../components/MediaPickerField';
+import LocationHierarchyFields from './LocationHierarchyFields';
 import type { LocForm, ZoneEdit } from './types';
 
 interface Props {
@@ -47,30 +48,10 @@ export default function LocationFormDialog({
       <DialogTitle>{form.id ? 'Edit Location' : 'New Location'}</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
+          <LocationHierarchyFields form={form} setForm={setForm} />
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
             <TextField
-              label="Location name"
-              value={form.location_name}
-              onChange={(e) => setForm({ ...form, location_name: e.target.value })}
-              fullWidth
-              required
-            />
-            <TextField
-              label="Location ID"
-              value={form.location_id}
-              onChange={(e) => setForm({ ...form, location_id: e.target.value })}
-              disabled={!!form.id}
-              helperText={
-                form.id
-                  ? 'ID cannot be changed'
-                  : 'Leave blank to auto-generate from name (lowercase slug)'
-              }
-              fullWidth
-            />
-          </Stack>
-          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-            <TextField
-              label="Pincode"
+              label="Primary PIN code"
               value={form.location_pincode}
               onChange={(e) => setForm({ ...form, location_pincode: e.target.value })}
               required
@@ -101,9 +82,9 @@ export default function LocationFormDialog({
               justifyContent="space-between"
               sx={{ mb: 1 }}
             >
-              <Typography variant="subtitle2">Zones</Typography>
+              <Typography variant="subtitle2">Localities / Areas</Typography>
               <Button size="small" startIcon={<AddIcon />} onClick={addZone}>
-                Add Zone
+                Add Area
               </Button>
             </Stack>
             <Stack spacing={1.5}>
@@ -116,21 +97,21 @@ export default function LocationFormDialog({
                 >
                   <TextField
                     size="small"
-                    label="Zone name"
+                    label="Locality / Area"
                     value={z.zone_name}
                     onChange={(e) => updateZone(i, { zone_name: e.target.value })}
                     sx={{ flex: 1 }}
                   />
                   <TextField
                     size="small"
-                    label="Code"
+                    label="Area code"
                     value={z.zone_code}
                     onChange={(e) => updateZone(i, { zone_code: e.target.value })}
                     sx={{ width: { xs: '100%', sm: 140 } }}
                   />
                   <TextField
                     size="small"
-                    label="Pincode"
+                    label="PIN code"
                     value={z.pincode}
                     onChange={(e) => updateZone(i, { pincode: e.target.value })}
                     sx={{ width: { xs: '100%', sm: 140 } }}

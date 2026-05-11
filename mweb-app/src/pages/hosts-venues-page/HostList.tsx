@@ -3,6 +3,7 @@ import {
   Box,
   Card,
   CardContent,
+  Chip,
   Grid,
   Stack,
   Typography,
@@ -17,6 +18,7 @@ interface Host {
   email?: string | null;
   passport_photo_url?: string | null;
   full_address?: string | null;
+  tags?: string[] | null;
 }
 
 interface Props {
@@ -72,6 +74,11 @@ export default function HostList({ hosts, meId, followingIds, pendingUserId, onT
                     <Typography variant="body2" color="text.secondary" noWrap>
                       {h.full_address}
                     </Typography>
+                  )}
+                  {h.tags && h.tags.length > 0 && (
+                    <Stack direction="row" spacing={0.5} sx={{ mt: 0.5, flexWrap: 'wrap', gap: 0.5 }}>
+                      {h.tags.slice(0, 3).map((tag) => <Chip key={tag} label={tag} size="small" />)}
+                    </Stack>
                   )}
                 </Box>
                 <FollowButton

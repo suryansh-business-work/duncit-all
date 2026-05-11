@@ -6,6 +6,11 @@ export const LOCATIONS = gql`
       id
       location_id
       location_name
+      country
+      country_code
+      state
+      state_code
+      city
       location_image
       location_pincode
       location_zones {

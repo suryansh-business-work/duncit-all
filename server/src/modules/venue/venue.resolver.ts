@@ -35,11 +35,11 @@ export const venueResolvers = {
       venueService.submitFinal(uid(ctx)),
     approveVenue: async (
       _p: unknown,
-      args: { venue_doc_id: string; notes?: string },
+      args: { venue_doc_id: string; notes?: string; tags?: string[] },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_REVIEW);
-      return venueService.approve(args.venue_doc_id, args.notes);
+      return venueService.approve(args.venue_doc_id, args.notes, args.tags);
     },
     rejectVenue: async (
       _p: unknown,
@@ -61,6 +61,19 @@ export const venueResolvers = {
         step2: args.step2,
         step3: args.step3,
         submit: args.submit,
+      });
+    },
+    adminUpdateVenue: async (
+      _p: unknown,
+      args: { venue_doc_id: string; step1: any; step2: any; step3: any; status?: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return venueService.adminUpdate(args.venue_doc_id, {
+        step1: args.step1,
+        step2: args.step2,
+        step3: args.step3,
+        status: args.status,
       });
     },
   },

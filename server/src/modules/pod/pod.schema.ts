@@ -38,14 +38,30 @@ export const podTypeDefs = /* GraphQL */ `
     note: String
   }
 
+  type PodProductRequest {
+    product_id: ID!
+    product_name: String!
+    unit_cost: Float!
+    quantity: Int!
+    total_cost: Float!
+  }
+
+  input PodProductRequestInput {
+    product_id: ID!
+    quantity: Int!
+  }
+
   type Pod {
     id: ID!
     pod_id: String!
     pod_title: String!
     pod_hosts_id: [ID!]!
-    location_id: ID!
+    location_id: ID
+    venue_id: ID
     club_id: ID!
     zone_name: String
+    place_label: String
+    place_detail: String
     pod_hashtag: [String!]!
     pod_images_and_videos: [PodMedia!]!
     pod_hits: Int!
@@ -62,6 +78,9 @@ export const podTypeDefs = /* GraphQL */ `
     available_perks: [String!]!
     payment_terms: String
     place_charges: [PodPlaceCharge!]!
+    products_enabled: Boolean!
+    product_requests: [PodProductRequest!]!
+    product_cost_total: Float!
     is_active: Boolean!
     host_names: [String!]!
     like_count: Int!
@@ -82,6 +101,7 @@ export const podTypeDefs = /* GraphQL */ `
 
   input PodFilterInput {
     club_id: ID
+    venue_id: ID
     location_id: ID
     zone_name: String
     search: String
@@ -93,7 +113,8 @@ export const podTypeDefs = /* GraphQL */ `
     pod_id: String
     pod_title: String!
     pod_hosts_id: [ID!]!
-    location_id: ID!
+    location_id: ID
+    venue_id: ID
     club_id: ID!
     zone_name: String
     pod_hashtag: [String!]
@@ -111,12 +132,15 @@ export const podTypeDefs = /* GraphQL */ `
     available_perks: [String!]
     payment_terms: String
     place_charges: [PodPlaceChargeInput!]
+    products_enabled: Boolean
+    product_requests: [PodProductRequestInput!]
   }
 
   input UpdatePodInput {
     pod_title: String
     pod_hosts_id: [ID!]
     location_id: ID
+    venue_id: ID
     club_id: ID
     zone_name: String
     pod_hashtag: [String!]
@@ -134,6 +158,8 @@ export const podTypeDefs = /* GraphQL */ `
     available_perks: [String!]
     payment_terms: String
     place_charges: [PodPlaceChargeInput!]
+    products_enabled: Boolean
+    product_requests: [PodProductRequestInput!]
     is_active: Boolean
   }
 

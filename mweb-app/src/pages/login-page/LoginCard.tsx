@@ -1,7 +1,6 @@
 import { Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
-  Box,
   Card,
   CardContent,
   Divider,
@@ -10,6 +9,7 @@ import {
   Typography,
   keyframes,
 } from '@mui/material';
+import AuthLogo from '../../components/AuthLogo';
 import LegalLinks from '../../components/LegalLinks';
 import GoogleSignInButton from '../../components/GoogleSignInButton';
 import LoginForm, { type LoginFormValues } from '../../forms/login.form';
@@ -17,11 +17,6 @@ import LoginForm, { type LoginFormValues } from '../../forms/login.form';
 const fadeUp = keyframes`
   0%   { opacity: 0; transform: translateY(18px); }
   100% { opacity: 1; transform: translateY(0); }
-`;
-const logoIn = keyframes`
-  0%   { opacity: 0; transform: scale(0.7); }
-  60%  { opacity: 1; transform: scale(1.06); }
-  100% { transform: scale(1); }
 `;
 
 interface Props {
@@ -61,17 +56,7 @@ export default function LoginCard({
     >
       <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
         <Stack alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
-          <Box
-            component="img"
-            src="/duncit-logo.svg"
-            alt="Duncit"
-            sx={{
-              height: 64,
-              width: 'auto',
-              objectFit: 'contain',
-              animation: `${logoIn} 0.9s cubic-bezier(.2,.7,.2,1.4) both`,
-            }}
-          />
+          <AuthLogo />
           <Typography variant="h5" fontWeight={800}>
             Welcome back
           </Typography>

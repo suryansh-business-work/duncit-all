@@ -18,6 +18,7 @@ export const hostTypeDefs = /* GraphQL */ `
     passport_photo_url: String!
     police_verification_url: String!
     full_address: String!
+    tags: [String!]!
     step_completed: Int!
     status: HostStatus!
     reviewer_notes: String!
@@ -44,6 +45,7 @@ export const hostTypeDefs = /* GraphQL */ `
   input HostStep3Input {
     police_verification_url: String!
     full_address: String!
+    tags: [String!]
   }
 
   extend type Query {
@@ -58,7 +60,7 @@ export const hostTypeDefs = /* GraphQL */ `
     submitHostStep2(input: HostStep2Input!): Host!
     submitHostStep3(input: HostStep3Input!): Host!
     submitHostFinal: Host!
-    approveHost(host_doc_id: ID!, notes: String): Host!
+    approveHost(host_doc_id: ID!, notes: String, tags: [String!]): Host!
     rejectHost(host_doc_id: ID!, notes: String!): Host!
     adminCreateHost(
       target_user_id: ID!
@@ -66,6 +68,13 @@ export const hostTypeDefs = /* GraphQL */ `
       step2: HostStep2Input!
       step3: HostStep3Input!
       submit: Boolean
+    ): Host!
+    adminUpdateHost(
+      host_doc_id: ID!
+      step1: HostStep1Input!
+      step2: HostStep2Input!
+      step3: HostStep3Input!
+      status: HostStatus
     ): Host!
   }
 `;

@@ -12,10 +12,14 @@ interface Props {
 }
 
 const overlayBtn = {
-  bgcolor: 'rgba(0,0,0,0.45)',
-  color: 'common.white',
-  backdropFilter: 'blur(6px)',
-  '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' },
+  bgcolor: 'rgba(255,255,255,0.92)',
+  color: '#111827',
+  width: 40,
+  height: 40,
+  border: '1px solid rgba(255,255,255,0.7)',
+  boxShadow: '0 4px 16px rgba(0,0,0,0.35)',
+  backdropFilter: 'blur(10px)',
+  '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
 };
 
 export default function HeroOverlayActions({ onBack, saved, onToggleSave, onShare }: Props) {
@@ -26,10 +30,10 @@ export default function HeroOverlayActions({ onBack, saved, onToggleSave, onShar
       justifyContent="space-between"
       sx={{
         position: 'absolute',
-        top: 'calc(env(safe-area-inset-top) + 8px)',
-        left: 8,
-        right: 8,
-        zIndex: 2,
+        top: 'calc(env(safe-area-inset-top) + 12px)',
+        left: 12,
+        right: 12,
+        zIndex: 3,
         pointerEvents: 'none',
         '& > *': { pointerEvents: 'auto' },
       }}

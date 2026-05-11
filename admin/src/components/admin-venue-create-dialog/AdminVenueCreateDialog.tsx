@@ -13,6 +13,7 @@ import {
 } from '@mui/material';
 import {
   ADMIN_CREATE_VENUE,
+  LOCATIONS_FOR_VENUE,
   USERS,
   blankS1,
   blankS3,
@@ -32,6 +33,7 @@ interface Props {
 
 export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props) {
   const { data: usersData } = useQuery(USERS, { skip: !open });
+  const { data: locationsData } = useQuery(LOCATIONS_FOR_VENUE, { skip: !open });
   const [owner, setOwner] = useState<any | null>(null);
   const [s1, setS1] = useState<Step1>(blankS1);
   const [docs, setDocs] = useState<DocEntry[]>([]);
@@ -58,7 +60,7 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
   const save = async (asDraft: boolean) => {
     setError('');
     if (!owner) return setError('Select an owner user');
-    if (!s1.venue_name || !s1.address_line1 || !s1.city || !s1.state || !s1.postal_code)
+    if (!s1.venue_name || !s1.address_line1 || !s1.location_id || !s1.country_code || !s1.state || !s1.city || !s1.locality || !s1.postal_code)
       return setError('Fill required venue details');
     if (!s3.owner_name || !s3.owner_email || !s3.owner_phone)
       return setError('Fill required owner details');
@@ -99,7 +101,7 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
             onChange={(_, v) => setOwner(v)}
             renderInput={(params) => <TextField {...params} label="Owner user *" size="small" />}
           />
-          <VenueDetailsSection s1={s1} setS1={setS1} />
+          <VenueDetailsSection s1={s1} setS1={setS1} locations={locationsData?.locations ?? []} />
           <VenueDocsSection docs={docs} setDocs={setDocs} s2={s2} setS2={setS2} />
           <VenueOwnerSection s3={s3} setS3={setS3} />
         </Stack>

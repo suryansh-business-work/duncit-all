@@ -36,6 +36,19 @@ export const CATEGORIES = gql`
     }
   }
 `;
+export const APPROVED_VENUES = gql`
+  query ApprovedVenuesForClubs {
+    venues(status: APPROVED) {
+      id
+      venue_name
+      venue_type
+      locality
+      city
+      state
+      postal_code
+    }
+  }
+`;
 export const CREATE = gql`
   mutation CreateClub($input: CreateClubInput!) {
     createClub(input: $input) {
@@ -65,7 +78,7 @@ export interface ClubForm {
   super_category_id: string;
   feature_text: string;
   moments_text: string;
-  meetup_venues_text: string;
+  meetup_venues_id: string[];
   community_link: string;
   announcement_link: string;
   group_link: string;
@@ -79,7 +92,7 @@ export const blankForm: ClubForm = {
   super_category_id: '',
   feature_text: '',
   moments_text: '',
-  meetup_venues_text: '',
+  meetup_venues_id: [],
   community_link: '',
   announcement_link: '',
   group_link: '',

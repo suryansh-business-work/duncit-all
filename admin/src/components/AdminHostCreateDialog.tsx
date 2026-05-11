@@ -59,7 +59,7 @@ export default function AdminHostCreateDialog({
   const [target, setTarget] = useState<any | null>(null);
   const [s1, setS1] = useState({ full_name: '', email: '', phone: '', dob: '' });
   const [s2, setS2] = useState({ aadhar_number: '', pan_number: '', passport_photo_url: '' });
-  const [s3, setS3] = useState({ police_verification_url: '', full_address: '' });
+  const [s3, setS3] = useState({ police_verification_url: '', full_address: '', tags: [] as string[] });
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
   const [submit] = useMutation(ADMIN_CREATE_HOST);
@@ -68,7 +68,7 @@ export default function AdminHostCreateDialog({
     setTarget(null);
     setS1({ full_name: '', email: '', phone: '', dob: '' });
     setS2({ aadhar_number: '', pan_number: '', passport_photo_url: '' });
-    setS3({ police_verification_url: '', full_address: '' });
+    setS3({ police_verification_url: '', full_address: '', tags: [] });
     setError('');
     onClose();
   };
@@ -130,6 +130,13 @@ export default function AdminHostCreateDialog({
           <Typography variant="subtitle2">Verification</Typography>
           <MediaPickerField label="Police verification document *" value={s3.police_verification_url} onChange={(url) => setS3({ ...s3, police_verification_url: url })} folder="/hosts/docs" />
           <TextField label="Full address *" size="small" multiline minRows={2} value={s3.full_address} onChange={(e) => setS3({ ...s3, full_address: e.target.value })} />
+          <TextField
+            label="Tags"
+            size="small"
+            value={s3.tags.join(', ')}
+            onChange={(e) => setS3({ ...s3, tags: e.target.value.split(',').map((tag) => tag.trim()).filter(Boolean) })}
+            helperText="Comma separated host tags."
+          />
         </Stack>
       </DialogContent>
       <DialogActions>

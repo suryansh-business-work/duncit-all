@@ -22,13 +22,13 @@ export default function LocationsToolbar({ search, setSearch, onCreate }: Props)
           <Typography variant="h5">Locations</Typography>
         </Stack>
         <Typography variant="body2" color="text.secondary">
-          Cities and their zones served by the platform.
+          Country, state, city and locality/PIN coverage served by the platform.
         </Typography>
       </Box>
       <Stack direction="row" spacing={2}>
         <TextField
           size="small"
-          placeholder="Search name, ID, pincode"
+          placeholder="Search country, state, city, PIN"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

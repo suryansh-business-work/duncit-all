@@ -2,6 +2,10 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PodModel, type PodType } from './pod.model';
 import { UserModel } from '../user/user.model';
+import { ClubModel } from '../club/club.model';
+import { InventoryProductModel } from '../inventory/inventory.model';
+import { LocationModel } from '../location/location.model';
+import { VenueModel } from '../venue/venue.model';
 
 const slugify = (s: string) =>
   s
@@ -19,6 +23,7 @@ const toPub = (d: any) => {
     pod_title: d.pod_title,
     pod_hosts_id: (d.pod_hosts_id ?? []).map((x: any) => String(x)),
     location_id: d.location_id ? String(d.location_id) : null,
+    venue_id: d.venue_id ? String(d.venue_id) : null,
     club_id: d.club_id ? String(d.club_id) : null,
     zone_name: d.zone_name ?? null,
     pod_hashtag: d.pod_hashtag ?? [],
@@ -44,6 +49,15 @@ const toPub = (d: any) => {
       amount: c.amount ?? 0,
       note: c.note ?? null,
     })),
+    products_enabled: !!d.products_enabled,
+    product_requests: (d.product_requests ?? []).map((item: any) => ({
+      product_id: String(item.product_id),
+      product_name: item.product_name,
+      unit_cost: item.unit_cost ?? 0,
+      quantity: item.quantity ?? 0,
+      total_cost: item.total_cost ?? 0,
+    })),
+    product_cost_total: d.product_cost_total ?? 0,
     is_active: !!d.is_active,
     liked_user_ids: (d.liked_user_ids ?? []).map((x: any) => String(x)),
     like_count: (d.liked_user_ids ?? []).length,
@@ -70,9 +84,159 @@ function validateAmount(type: PodType, amount: number) {
   }
 }
 
+function validateFutureDates(startValue?: string | Date | null, endValue?: string | Date | null) {
+  const now = Date.now();
+  const start = startValue ? new Date(startValue) : null;
+  const end = endValue ? new Date(endValue) : null;
+  if (!start || Number.isNaN(start.getTime()) || start.getTime() <= now) {
+    throw new GraphQLError('Start date/time must be after current date/time', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (end && (Number.isNaN(end.getTime()) || end.getTime() <= now || end.getTime() < start.getTime())) {
+    throw new GraphQLError('End date/time must be after current date/time and start date/time', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+}
+
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+const requestMap = (items: any[] = []) => {
+  const map = new Map<string, number>();
+  for (const item of items) {
+    const productId = String(item.product_id);
+    map.set(productId, (map.get(productId) ?? 0) + (Number(item.quantity) || 0));
+  }
+  return map;
+};
+
+async function resolveVenueLocation(input: any) {
+  const venueId = input.venue_id || null;
+  let locationId = input.location_id || null;
+  if (!venueId) {
+    if (!locationId) {
+      throw new GraphQLError('Select a venue', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    return { venue_id: null, location_id: locationId, zone_name: input.zone_name ?? null };
+  }
+
+  const venue = await VenueModel.findById(venueId);
+  if (!venue) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
+  const club = input.club_id ? await ClubModel.findById(input.club_id) : null;
+  if (club?.meetup_venues_id?.length && !club.meetup_venues_id.includes(String(venue._id))) {
+    throw new GraphQLError('Selected venue is not linked to this club', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (!locationId && (venue as any).location_id) {
+    locationId = String((venue as any).location_id);
+  }
+  if (!locationId && venue.city) {
+    const city = new RegExp(`^${escapeRegex(venue.city)}$`, 'i');
+    const location = await LocationModel.findOne({ $or: [{ city }, { location_name: city }] });
+    locationId = location ? String(location._id) : null;
+  }
+  return { venue_id: venueId, location_id: locationId, zone_name: null };
+}
+
+async function venueIdsForLocationFilter(locationId?: string, zoneName?: string) {
+  const or: any[] = [];
+  const zone = zoneName?.trim();
+  if (locationId) {
+    const location = await LocationModel.findById(locationId).lean();
+    if (!location) return [];
+    const city = location.city || location.location_name;
+    const matchingZone = zone
+      ? (location.location_zones ?? []).find((item: any) => item.zone_name === zone)
+      : null;
+
+    const locationFields: any = {};
+    if (city) locationFields.city = new RegExp(`^${escapeRegex(city)}$`, 'i');
+    if (location.state) locationFields.state = new RegExp(`^${escapeRegex(location.state)}$`, 'i');
+    if (location.country_code) locationFields.country_code = location.country_code;
+
+    if (zone) {
+      const locality = new RegExp(`^${escapeRegex(zone)}$`, 'i');
+      or.push({ location_id: location._id, locality });
+      if (matchingZone?.pincode) or.push({ location_id: location._id, postal_code: matchingZone.pincode });
+      if (Object.keys(locationFields).length > 0) {
+        or.push({ ...locationFields, locality });
+        if (matchingZone?.pincode) or.push({ ...locationFields, postal_code: matchingZone.pincode });
+      }
+    } else {
+      or.push({ location_id: location._id });
+      if (Object.keys(locationFields).length > 0) or.push(locationFields);
+    }
+  } else if (zone) {
+    or.push({ locality: new RegExp(`^${escapeRegex(zone)}$`, 'i') });
+  }
+
+  if (or.length === 0) return [];
+  const venues = await VenueModel.find({ $or: or }).select('_id').lean();
+  return venues.map((venue) => venue._id);
+}
+
+async function buildPodPlaceFilter(filter?: { location_id?: string; zone_name?: string }) {
+  const locationId = filter?.location_id;
+  const zoneName = filter?.zone_name?.trim();
+  if (!locationId && !zoneName) return null;
+
+  const or: any[] = [];
+  if (locationId && zoneName) or.push({ location_id: locationId, zone_name: zoneName });
+  else if (locationId) or.push({ location_id: locationId });
+  else if (zoneName) or.push({ zone_name: zoneName });
+
+  const venueIds = await venueIdsForLocationFilter(locationId, zoneName);
+  if (venueIds.length > 0) or.push({ venue_id: { $in: venueIds } });
+  return or.length > 0 ? { $or: or } : null;
+}
+
+async function buildProductRequests(enabled: boolean, rawItems: any[] = []) {
+  if (!enabled) return [];
+  const compact = Array.from(requestMap(rawItems).entries())
+    .map(([productId, quantity]) => ({ productId, quantity }))
+    .filter((item) => item.quantity > 0);
+  const next = [];
+  for (const item of compact) {
+    const product = await InventoryProductModel.findById(item.productId);
+    if (!product || !product.is_active) {
+      throw new GraphQLError('Selected product is not available', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    next.push({
+      product_id: product._id,
+      product_name: product.product_name,
+      unit_cost: product.unit_cost,
+      quantity: item.quantity,
+      total_cost: product.unit_cost * item.quantity,
+    });
+  }
+  return next;
+}
+
+async function applyProductDeltas(oldItems: any[], nextItems: any[]) {
+  const oldMap = requestMap(oldItems);
+  const nextMap = requestMap(nextItems);
+  const productIds = Array.from(new Set([...oldMap.keys(), ...nextMap.keys()]));
+  for (const productId of productIds) {
+    const delta = (nextMap.get(productId) ?? 0) - (oldMap.get(productId) ?? 0);
+    if (!delta) continue;
+    const product = await InventoryProductModel.findById(productId);
+    if (!product) throw new GraphQLError('Product not found', { extensions: { code: 'NOT_FOUND' } });
+    if (delta > 0 && product.inventory_count - product.requested_count < delta) {
+      throw new GraphQLError(`Not enough inventory for ${product.product_name}`, {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    product.requested_count = Math.max(0, product.requested_count + delta);
+    await product.save();
+  }
+}
+
 export const podService = {
   async list(filter?: {
     club_id?: string;
+    venue_id?: string;
     location_id?: string;
     zone_name?: string;
     search?: string;
@@ -81,8 +245,9 @@ export const podService = {
   }) {
     const q: any = {};
     if (filter?.club_id) q.club_id = filter.club_id;
-    if (filter?.location_id) q.location_id = filter.location_id;
-    if (filter?.zone_name) q.zone_name = filter.zone_name;
+    if (filter?.venue_id) q.venue_id = filter.venue_id;
+    const placeFilter = await buildPodPlaceFilter(filter);
+    if (placeFilter) Object.assign(q, placeFilter);
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
     if (filter?.search) q.pod_title = new RegExp(filter.search, 'i');
     if (filter?.host_user_id) q.pod_hosts_id = filter.host_user_id;
@@ -108,6 +273,13 @@ export const podService = {
       });
     }
     validateAmount(input.pod_type, input.pod_amount ?? 0);
+    validateFutureDates(input.pod_date_time, input.pod_end_date_time);
+    const venueLocation = await resolveVenueLocation(input);
+    const productRequests = await buildProductRequests(
+      !!input.products_enabled,
+      input.product_requests ?? []
+    );
+    await applyProductDeltas([], productRequests);
 
     // Hosts are attendees by default
     const attendees = Array.from(
@@ -118,9 +290,10 @@ export const podService = {
       pod_id,
       pod_title: input.pod_title.trim(),
       pod_hosts_id: input.pod_hosts_id,
-      location_id: input.location_id,
+      location_id: venueLocation.location_id,
+      venue_id: venueLocation.venue_id,
       club_id: input.club_id,
-      zone_name: input.zone_name ?? null,
+      zone_name: venueLocation.zone_name,
       pod_hashtag: input.pod_hashtag ?? [],
       pod_images_and_videos: input.pod_images_and_videos ?? [],
       pod_hits: 0,
@@ -137,6 +310,9 @@ export const podService = {
       available_perks: input.available_perks ?? [],
       payment_terms: input.payment_terms ?? null,
       place_charges: input.place_charges ?? [],
+      products_enabled: !!input.products_enabled,
+      product_requests: productRequests,
+      product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
     });
     return toPub(doc);
   },
@@ -148,13 +324,45 @@ export const podService = {
     if (input.pod_type !== undefined || input.pod_amount !== undefined) {
       validateAmount(input.pod_type ?? doc!.pod_type, input.pod_amount ?? doc!.pod_amount);
     }
+    if (input.pod_date_time !== undefined || input.pod_end_date_time !== undefined) {
+      const nextStart = input.pod_date_time ?? doc.pod_date_time;
+      const nextEnd = input.pod_end_date_time === undefined ? doc.pod_end_date_time : input.pod_end_date_time;
+      const startChanged = input.pod_date_time !== undefined
+        && new Date(input.pod_date_time).getTime() !== doc.pod_date_time?.getTime();
+      const nextEndTime = nextEnd ? new Date(nextEnd).getTime() : null;
+      const docEndTime = doc.pod_end_date_time ? doc.pod_end_date_time.getTime() : null;
+      const endChanged = input.pod_end_date_time !== undefined && nextEndTime !== docEndTime;
+      if (startChanged || endChanged) validateFutureDates(nextStart, nextEnd);
+    }
+
+    if (input.venue_id !== undefined || input.location_id !== undefined || input.club_id !== undefined) {
+      const venueLocation = await resolveVenueLocation({
+        venue_id: input.venue_id ?? (doc.venue_id ? String(doc.venue_id) : null),
+        location_id: input.location_id ?? (doc.location_id ? String(doc.location_id) : null),
+        club_id: input.club_id ?? String(doc.club_id),
+        zone_name: input.zone_name ?? doc.zone_name,
+      });
+      doc.venue_id = venueLocation.venue_id as any;
+      doc.location_id = venueLocation.location_id as any;
+      doc.zone_name = venueLocation.zone_name;
+    }
+
+    if (input.products_enabled !== undefined || input.product_requests !== undefined) {
+      const productsEnabled = input.products_enabled ?? doc.products_enabled;
+      const nextRequests = await buildProductRequests(
+        !!productsEnabled,
+        input.product_requests ?? doc.product_requests ?? []
+      );
+      await applyProductDeltas(doc.product_requests ?? [], nextRequests);
+      doc.products_enabled = !!productsEnabled;
+      doc.product_requests = nextRequests as any;
+      doc.product_cost_total = nextRequests.reduce((sum, item) => sum + item.total_cost, 0);
+    }
 
     const fields = [
       'pod_title',
       'pod_hosts_id',
-      'location_id',
       'club_id',
-      'zone_name',
       'pod_hashtag',
       'pod_images_and_videos',
       'pod_attendees',
@@ -184,6 +392,7 @@ export const podService = {
   async remove(id: string) {
     const doc = await PodModel.findById(id);
     if (!doc) notFound();
+    await applyProductDeltas(doc.product_requests ?? [], []);
     await doc!.deleteOne();
     return true;
   },

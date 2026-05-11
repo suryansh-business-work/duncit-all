@@ -1,13 +1,15 @@
 import { Box, MenuItem, TextField, Typography } from '@mui/material';
 import MediaPickerField from '../MediaPickerField';
 import { VENUE_TYPES, type Step1 } from './queries';
+import VenueLocationFields from './VenueLocationFields';
 
 interface Props {
   s1: Step1;
   setS1: (next: Step1) => void;
+  locations: any[];
 }
 
-export default function VenueDetailsSection({ s1, setS1 }: Props) {
+export default function VenueDetailsSection({ s1, setS1, locations }: Props) {
   const set = (patch: Partial<Step1>) => setS1({ ...s1, ...patch });
   return (
     <>
@@ -26,13 +28,21 @@ export default function VenueDetailsSection({ s1, setS1 }: Props) {
           ))}
         </TextField>
         <TextField label="Capacity" type="number" size="small" value={s1.capacity} onChange={(e) => set({ capacity: Number(e.target.value) })} />
-        <TextField label="City *" size="small" value={s1.city} onChange={(e) => set({ city: e.target.value })} />
-        <TextField label="State *" size="small" value={s1.state} onChange={(e) => set({ state: e.target.value })} />
-        <TextField label="Postal code *" size="small" value={s1.postal_code} onChange={(e) => set({ postal_code: e.target.value })} />
         <TextField sx={{ gridColumn: '1 / -1' }} label="Address line 1 *" size="small" value={s1.address_line1} onChange={(e) => set({ address_line1: e.target.value })} />
         <TextField sx={{ gridColumn: '1 / -1' }} label="Address line 2" size="small" value={s1.address_line2} onChange={(e) => set({ address_line2: e.target.value })} />
         <TextField sx={{ gridColumn: '1 / -1' }} label="Description" size="small" multiline minRows={2} value={s1.description} onChange={(e) => set({ description: e.target.value })} />
+        <TextField
+          sx={{ gridColumn: '1 / -1' }}
+          label="Tags"
+          size="small"
+          value={s1.tags.join(', ')}
+          onChange={(e) =>
+            set({ tags: e.target.value.split(',').map((tag) => tag.trim()).filter(Boolean) })
+          }
+          helperText="Comma separated tags shown on approved venue cards."
+        />
       </Box>
+      <VenueLocationFields s1={s1} locations={locations} set={set} />
       <MediaPickerField
         label="Cover image"
         value={s1.cover_image_url}

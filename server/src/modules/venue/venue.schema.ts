@@ -27,10 +27,15 @@ export const venueTypeDefs = /* GraphQL */ `
     amenities: [String!]!
     cover_image_url: String!
     gallery: [String!]!
+    location_id: ID
+    country: String!
+    country_code: String!
     address_line1: String!
     address_line2: String!
     city: String!
     state: String!
+    state_code: String!
+    locality: String!
     postal_code: String!
     lat: Float
     lng: Float
@@ -42,6 +47,7 @@ export const venueTypeDefs = /* GraphQL */ `
     owner_phone: String!
     owner_dob: String
     owner_address: String!
+    tags: [String!]!
     step_completed: Int!
     status: VenueStatus!
     reviewer_notes: String!
@@ -60,13 +66,19 @@ export const venueTypeDefs = /* GraphQL */ `
     amenities: [String!]
     cover_image_url: String
     gallery: [String!]
+    location_id: ID
+    country: String
+    country_code: String
     address_line1: String!
     address_line2: String
     city: String!
     state: String!
+    state_code: String
+    locality: String
     postal_code: String!
     lat: Float
     lng: Float
+    tags: [String!]
   }
 
   input VenueStep2Input {
@@ -95,7 +107,7 @@ export const venueTypeDefs = /* GraphQL */ `
     submitVenueStep2(input: VenueStep2Input!): Venue!
     submitVenueStep3(input: VenueStep3Input!): Venue!
     submitVenueFinal: Venue!
-    approveVenue(venue_doc_id: ID!, notes: String): Venue!
+    approveVenue(venue_doc_id: ID!, notes: String, tags: [String!]): Venue!
     rejectVenue(venue_doc_id: ID!, notes: String!): Venue!
     adminCreateVenue(
       owner_user_id: ID!
@@ -103,6 +115,13 @@ export const venueTypeDefs = /* GraphQL */ `
       step2: VenueStep2Input!
       step3: VenueStep3Input!
       submit: Boolean
+    ): Venue!
+    adminUpdateVenue(
+      venue_doc_id: ID!
+      step1: VenueStep1Input!
+      step2: VenueStep2Input!
+      step3: VenueStep3Input!
+      status: VenueStatus
     ): Venue!
   }
 `;

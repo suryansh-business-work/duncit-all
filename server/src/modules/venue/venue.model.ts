@@ -18,10 +18,15 @@ export interface IVenue extends Document {
   amenities: string[];
   cover_image_url: string;
   gallery: string[];
+  location_id?: Types.ObjectId | null;
+  country: string;
+  country_code: string;
   address_line1: string;
   address_line2: string;
   city: string;
   state: string;
+  state_code: string;
+  locality: string;
   postal_code: string;
   lat: number | null;
   lng: number | null;
@@ -35,6 +40,7 @@ export interface IVenue extends Document {
   owner_phone: string;
   owner_dob: Date | null;
   owner_address: string;
+  tags: string[];
   // Workflow
   step_completed: number; // 0..4
   status: VenueStatus;
@@ -65,10 +71,15 @@ const venueSchema = new Schema<IVenue>(
     amenities: { type: [String], default: [] },
     cover_image_url: { type: String, default: '' },
     gallery: { type: [String], default: [] },
+    location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null, index: true },
+    country: { type: String, default: 'India', trim: true },
+    country_code: { type: String, default: 'IN', uppercase: true, trim: true },
     address_line1: { type: String, default: '' },
     address_line2: { type: String, default: '' },
     city: { type: String, default: '' },
     state: { type: String, default: '' },
+    state_code: { type: String, default: '', uppercase: true, trim: true },
+    locality: { type: String, default: '' },
     postal_code: { type: String, default: '' },
     lat: { type: Number, default: null },
     lng: { type: Number, default: null },
@@ -80,6 +91,7 @@ const venueSchema = new Schema<IVenue>(
     owner_phone: { type: String, default: '' },
     owner_dob: { type: Date, default: null },
     owner_address: { type: String, default: '' },
+    tags: { type: [String], default: [] },
     step_completed: { type: Number, default: 0, min: 0, max: 4 },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     reviewer_notes: { type: String, default: '' },

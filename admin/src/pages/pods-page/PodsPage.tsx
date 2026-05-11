@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useMutation, useQuery } from '@apollo/client';
 import { useSearchParams } from 'react-router-dom';
@@ -7,6 +7,8 @@ import {
   PODS,
   CLUBS,
   LOCATIONS,
+  APPROVED_VENUES,
+  INVENTORY_PRODUCTS,
   USERS,
   FINANCE_FOR_PODS,
   CREATE,
@@ -35,6 +37,8 @@ export default function PodsPage() {
   });
   const { data: clubsData } = useQuery(CLUBS);
   const { data: locsData } = useQuery(LOCATIONS);
+  const { data: venuesData } = useQuery(APPROVED_VENUES);
+  const { data: inventoryData } = useQuery(INVENTORY_PRODUCTS);
   const { data: usersData } = useQuery(USERS);
   const { data: financeData } = useQuery(FINANCE_FOR_PODS, { fetchPolicy: 'cache-first' });
 
@@ -50,10 +54,13 @@ export default function PodsPage() {
 
   const clubs = clubsData?.clubs ?? [];
   const locations = locsData?.locations ?? [];
+  const approvedVenues = venuesData?.venues ?? [];
+  const inventoryProducts = inventoryData?.inventoryProducts ?? [];
   const users = usersData?.users ?? [];
 
   const clubName = (id: string) => clubs.find((c: any) => c.id === id)?.club_name ?? '—';
   const locName = (id: string) => locations.find((l: any) => l.id === id)?.location_name ?? '—';
+  const venueName = (id: string) => approvedVenues.find((v: any) => v.id === id)?.venue_name ?? '—';
   const userName = (id: string) =>
     users.find((u: any) => u.user_id === id)?.full_name ??
     users.find((u: any) => u.user_id === id)?.email ??
@@ -105,22 +112,6 @@ export default function PodsPage() {
     }
   };
 
-  const filteredLocations = useMemo(() => {
-    const club = clubs.find((c: any) => c.id === initialValues.club_id);
-    if (!club || !club.meetup_venues_id?.length) return locations;
-    const venueSet = new Set(club.meetup_venues_id);
-    return locations.filter(
-      (l: any) => venueSet.has(l.location_id) || venueSet.has(l.id)
-    );
-  }, [locations, clubs, initialValues.club_id]);
-
-  const selectedLocation = useMemo(
-    () => locations.find((l: any) => l.id === initialValues.location_id),
-    [locations, initialValues.location_id]
-  );
-  const zoneOptions: string[] =
-    selectedLocation?.location_zones?.map((z: any) => z.zone_name) ?? [];
-
   return (
     <Stack spacing={3}>
       <PodsToolbar
@@ -138,6 +129,7 @@ export default function PodsPage() {
         loading={loading}
         pods={data?.pods ?? []}
         clubName={clubName}
+        venueName={venueName}
         locName={locName}
         onEdit={openEdit}
         onDelete={remove}
@@ -150,8 +142,8 @@ export default function PodsPage() {
         busy={busy}
         opError={opError}
         clubs={clubs}
-        filteredLocations={filteredLocations}
-        zoneOptions={zoneOptions}
+        venues={approvedVenues}
+        inventoryProducts={inventoryProducts}
         users={users}
         userName={userName}
         onSubmit={submit}

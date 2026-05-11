@@ -4,6 +4,7 @@ import type { PodForm } from '../queries';
 export const podFormSchema: yup.ObjectSchema<Pick<PodForm,
   | 'pod_title'
   | 'club_id'
+  | 'venue_id'
   | 'location_id'
   | 'zone_name'
   | 'pod_hosts_id'
@@ -21,17 +22,26 @@ export const podFormSchema: yup.ObjectSchema<Pick<PodForm,
   | 'what_this_pod_offers'
   | 'available_perks'
   | 'place_charges'
+  | 'products_enabled'
+  | 'product_requests'
 >> = yup.object({
   pod_title: yup.string().trim().min(3, 'Title is too short').max(120).required('Title required'),
   club_id: yup.string().required('Select a club'),
-  location_id: yup.string().required('Select a city'),
+  venue_id: yup.string().required('Select a venue'),
+  location_id: yup.string().default(''),
   zone_name: yup.string().default(''),
   pod_hosts_id: yup
     .array(yup.string().required())
     .min(1, 'Add at least one host')
     .required(),
   pod_description: yup.string().trim().min(10, 'Add a longer description').required('Description required'),
-  pod_date_time: yup.string().required('Start date/time required'),
+  pod_date_time: yup
+    .string()
+    .required('Start date/time required')
+    .test('future-start', 'Start date/time must be after current date/time', (value) => {
+      if (!value) return false;
+      return new Date(value).getTime() > Date.now();
+    }),
   pod_end_date_time: yup
     .string()
     .default('')
@@ -87,4 +97,18 @@ export const podFormSchema: yup.ObjectSchema<Pick<PodForm,
     )
     .max(10)
     .default([]),
+  products_enabled: yup.boolean().default(false),
+  product_requests: yup
+    .array(
+      yup.object({
+        product_id: yup.string().required('Select product'),
+        quantity: yup.number().typeError('Quantity required').min(1).max(10000).required(),
+      })
+    )
+    .default([])
+    .when('products_enabled', {
+      is: true,
+      then: (schema) => schema.min(1, 'Select at least one Duncit product'),
+      otherwise: (schema) => schema.max(0),
+    }),
 });

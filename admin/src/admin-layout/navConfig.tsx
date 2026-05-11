@@ -31,6 +31,7 @@ import MenuBookIcon from '@mui/icons-material/MenuBook';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import ShieldIcon from '@mui/icons-material/Shield';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
 
 export interface NavLeaf {
   label: string;
@@ -87,10 +88,11 @@ export const NAV: NavSection[] = [
   },
   {
     heading: 'Catalog',
-    prefixes: ['/categories', '/locations', '/sliders'],
+    prefixes: ['/categories', '/locations', '/sliders', '/inventory'],
     items: [
       { label: 'Categories', to: '/categories', icon: <AccountTreeIcon /> },
       { label: 'Locations', to: '/locations', icon: <LocationOnIcon /> },
+      { label: 'Inventory', to: '/inventory', icon: <Inventory2Icon /> },
       { label: 'Sliders', to: '/sliders', icon: <ViewCarouselIcon /> },
     ],
   },
@@ -145,8 +147,8 @@ export const NAV: NavSection[] = [
     heading: 'Onboarding',
     prefixes: ['/venues', '/hosts'],
     items: [
-      { label: 'Host Onboarding', to: '/hosts', icon: <PeopleIcon /> },
-      { label: 'Venue Onboarding', to: '/venues', icon: <StorefrontIcon /> },
+      { label: 'Hosts', to: '/hosts', icon: <PeopleIcon /> },
+      { label: 'Registered Venues', to: '/venues', icon: <StorefrontIcon /> },
     ],
   },
   {

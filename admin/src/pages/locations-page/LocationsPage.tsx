@@ -40,6 +40,11 @@ export default function LocationsPage() {
       id: loc.id,
       location_id: loc.location_id,
       location_name: loc.location_name,
+      country: loc.country ?? 'India',
+      country_code: loc.country_code ?? 'IN',
+      state: loc.state ?? '',
+      state_code: loc.state_code ?? '',
+      city: loc.city ?? loc.location_name ?? '',
       location_image: loc.location_image,
       location_pincode: loc.location_pincode,
       is_active: loc.is_active,
@@ -82,18 +87,31 @@ export default function LocationsPage() {
         }))
         .filter((z) => z.zone_name);
 
-      if (cleanZones.length === 0) throw new Error('At least one zone is required');
+      if (!form.country_code.trim()) throw new Error('Country is required');
+      if (!form.state.trim()) throw new Error('State is required');
+      if (!form.city.trim()) throw new Error('City is required');
+      if (cleanZones.length === 0) throw new Error('At least one locality / area is required');
+      if (cleanZones.some((zone) => !zone.pincode)) {
+        throw new Error('PIN code is required for every locality / area');
+      }
       if (!form.location_image.trim()) throw new Error('Location image URL is required');
-      if (!form.location_pincode.trim()) throw new Error('Pincode is required');
+      const primaryPincode = form.location_pincode.trim() || cleanZones[0]?.pincode || '';
+      if (!primaryPincode) throw new Error('PIN code is required');
+      const locationName = form.city.trim();
 
       if (form.id) {
         await updateMut({
           variables: {
             id: form.id,
             input: {
-              location_name: form.location_name,
+              location_name: locationName,
+              country: form.country,
+              country_code: form.country_code,
+              state: form.state,
+              state_code: form.state_code,
+              city: form.city,
               location_image: form.location_image,
-              location_pincode: form.location_pincode,
+              location_pincode: primaryPincode,
               location_zones: cleanZones,
               is_active: form.is_active,
             },
@@ -103,10 +121,15 @@ export default function LocationsPage() {
         await createMut({
           variables: {
             input: {
-              location_name: form.location_name,
+              location_name: locationName,
               location_id: form.location_id || undefined,
+              country: form.country,
+              country_code: form.country_code,
+              state: form.state,
+              state_code: form.state_code,
+              city: form.city,
               location_image: form.location_image,
-              location_pincode: form.location_pincode,
+              location_pincode: primaryPincode,
               location_zones: cleanZones,
             },
           },

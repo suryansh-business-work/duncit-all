@@ -23,6 +23,9 @@ export const EXPLORE_PODS = gql`
       }
       club_id
       location_id
+      venue_id
+      place_label
+      place_detail
       like_count
       liked_by_me
       comment_count

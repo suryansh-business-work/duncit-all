@@ -24,9 +24,13 @@ const MY_VENUE_DETAILS = gql`
       capacity
       description
       cover_image_url
+      country
       city
       state
+      locality
+      postal_code
       amenities
+      tags
       status
       approved_at
     }
@@ -121,8 +125,18 @@ export default function VenueManagePage() {
                   />
                 </Stack>
                 <Typography variant="caption" color="text.secondary" noWrap display="block">
-                  {[venue.venue_type, venue.city, venue.state].filter(Boolean).join(' · ') || '—'}
+                  {[venue.venue_type, venue.locality, venue.city, venue.state].filter(Boolean).join(' - ') || '-'}
                 </Typography>
+                {venue.postal_code && (
+                  <Typography variant="caption" color="text.secondary">
+                    PIN: {venue.postal_code}
+                  </Typography>
+                )}
+                {venue.tags?.length > 0 && (
+                  <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+                    {venue.tags.map((tag: string) => <Chip key={tag} size="small" label={tag} variant="outlined" />)}
+                  </Stack>
+                )}
                 {typeof venue.capacity === 'number' && (
                   <Typography variant="caption" color="text.secondary">
                     Capacity: {venue.capacity}

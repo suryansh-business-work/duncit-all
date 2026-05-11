@@ -1,18 +1,27 @@
 import { useFormikContext } from 'formik';
 import { MenuItem, Stack, TextField } from '@mui/material';
 import DateTimeField from '../../../components/DateTimeField';
+import GoogleMapPreview from '../../../components/GoogleMapPreview';
 import type { PodForm } from '../queries';
 
 interface Props {
   clubs: any[];
-  filteredLocations: any[];
-  zoneOptions: string[];
+  venues: any[];
 }
 
-export default function WhenWhereSection({ clubs, filteredLocations, zoneOptions }: Props) {
-  const { values, errors, touched, handleChange, setFieldValue } = useFormikContext<PodForm>();
+export default function WhenWhereSection({ clubs, venues }: Props) {
+  const { values, errors, touched, setFieldValue } = useFormikContext<PodForm>();
   const err = (k: keyof PodForm) => !!touched[k] && !!errors[k];
   const help = (k: keyof PodForm) => (touched[k] ? (errors[k] as string) : undefined);
+  const linkedVenueIds = new Set(
+    clubs.find((club) => club.id === values.club_id)?.meetup_venues_id ?? []
+  );
+  const clubVenues = venues.filter((venue) => linkedVenueIds.has(venue.id));
+  const selectedVenue = venues.find((venue) => venue.id === values.venue_id);
+  const now = new Date();
+  const endMin = values.pod_date_time && new Date(values.pod_date_time) > now
+    ? new Date(values.pod_date_time)
+    : now;
 
   return (
     <Stack spacing={2}>
@@ -22,11 +31,16 @@ export default function WhenWhereSection({ clubs, filteredLocations, zoneOptions
           label="Club"
           name="club_id"
           value={values.club_id}
-          onChange={handleChange}
+          onChange={(event) => {
+            setFieldValue('club_id', event.target.value);
+            setFieldValue('venue_id', '');
+            setFieldValue('location_id', '');
+            setFieldValue('zone_name', '');
+          }}
           fullWidth
           required
           error={err('club_id')}
-          helperText={help('club_id') || 'Club is the parent — its venues become the cities.'}
+          helperText={help('club_id') || 'Venue list is based on the selected club.'}
         >
           {clubs.map((c) => (
             <MenuItem key={c.id} value={c.id}>
@@ -36,58 +50,56 @@ export default function WhenWhereSection({ clubs, filteredLocations, zoneOptions
         </TextField>
         <TextField
           select
-          label="City (Location)"
-          name="location_id"
-          value={values.location_id}
-          onChange={handleChange}
+          label="Venue"
+          name="venue_id"
+          value={values.venue_id}
+          onChange={(event) => {
+            setFieldValue('venue_id', event.target.value);
+            setFieldValue('location_id', '');
+            setFieldValue('zone_name', '');
+          }}
           fullWidth
           required
           disabled={!values.club_id}
-          error={err('location_id')}
+          error={err('venue_id')}
           helperText={
-            help('location_id') ||
+            help('venue_id') ||
             (!values.club_id
               ? 'Pick a club first'
-              : filteredLocations.length === 0
-                ? 'No venues for this club.'
-                : "Loaded from the selected club's venues.")
+              : clubVenues.length === 0
+                ? 'No approved venues linked to this club.'
+                : 'Only venues linked with this club are shown.')
           }
         >
-          {filteredLocations.map((l) => (
-            <MenuItem key={l.id} value={l.id}>
-              {l.location_name}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          select
-          label="Zone"
-          name="zone_name"
-          value={values.zone_name}
-          onChange={handleChange}
-          fullWidth
-          disabled={!values.location_id || zoneOptions.length === 0}
-          helperText={
-            !values.location_id
-              ? 'Pick a city first'
-              : zoneOptions.length === 0
-                ? 'No zones configured'
-                : 'Pod is scoped to this zone'
-          }
-        >
-          <MenuItem value="">— Any zone —</MenuItem>
-          {zoneOptions.map((z) => (
-            <MenuItem key={z} value={z}>
-              {z}
+          {clubVenues.map((venue) => (
+            <MenuItem key={venue.id} value={venue.id}>
+              {venue.venue_name}
             </MenuItem>
           ))}
         </TextField>
       </Stack>
+      {selectedVenue && (
+        <GoogleMapPreview
+          title={selectedVenue.venue_name}
+          parts={[
+            selectedVenue.venue_name,
+            selectedVenue.address_line1,
+            selectedVenue.locality,
+            selectedVenue.city,
+            selectedVenue.state,
+            selectedVenue.postal_code,
+            selectedVenue.country,
+          ]}
+          lat={selectedVenue.lat}
+          lng={selectedVenue.lng}
+        />
+      )}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <DateTimeField
           label="Start date & time"
           value={values.pod_date_time}
           onChange={(iso) => setFieldValue('pod_date_time', iso)}
+          minDateTime={now}
           required
           error={err('pod_date_time')}
           helperText={help('pod_date_time')}
@@ -96,7 +108,7 @@ export default function WhenWhereSection({ clubs, filteredLocations, zoneOptions
           label="End date & time"
           value={values.pod_end_date_time}
           onChange={(iso) => setFieldValue('pod_end_date_time', iso)}
-          minDateTime={values.pod_date_time ? new Date(values.pod_date_time) : null}
+          minDateTime={endMin}
           error={err('pod_end_date_time')}
           helperText={help('pod_end_date_time')}
         />

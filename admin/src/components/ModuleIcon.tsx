@@ -9,6 +9,7 @@ import LanguageIcon from '@mui/icons-material/Language';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TuneIcon from '@mui/icons-material/Tune';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
 import type { SvgIconComponent } from '@mui/icons-material';
 
 export type ModuleIconKind =
@@ -20,6 +21,7 @@ export type ModuleIconKind =
   | 'website'
   | 'onboarding'
   | 'finance'
+  | 'inventory'
   | 'system';
 
 interface Props {
@@ -36,6 +38,7 @@ const ICONS: Record<ModuleIconKind, SvgIconComponent> = {
   website: LanguageIcon,
   onboarding: StorefrontIcon,
   finance: AccountBalanceWalletIcon,
+  inventory: Inventory2Icon,
   system: TuneIcon,
 };
 

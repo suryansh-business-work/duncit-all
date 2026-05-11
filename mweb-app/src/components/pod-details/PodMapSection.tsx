@@ -1,9 +1,11 @@
 import { Stack, Typography } from '@mui/material';
 import PodLocationMap from '../../pages/pod-details-page/PodLocationMap';
+import VenueMapPreview from '../VenueMapPreview';
 
 interface Props {
   pod: any;
-  locationName?: string | null;
+  location?: any | null;
+  venue?: any | null;
 }
 
 const formatStart = (iso?: string | null) =>
@@ -26,7 +28,25 @@ const formatEnd = (iso?: string | null) =>
       })
     : '';
 
-export default function PodMapSection({ pod, locationName }: Props) {
+const venueParts = (venue: any) => [
+  venue.venue_name,
+  venue.address_line1,
+  venue.address_line2,
+  venue.locality,
+  venue.city,
+  venue.state,
+  venue.postal_code,
+  venue.country,
+];
+
+export default function PodMapSection({ pod, location, venue }: Props) {
+  const locationName = venue?.venue_name ?? location?.location_name ?? null;
+  const zone = (location?.location_zones ?? []).find(
+    (item: any) => item.zone_name === pod.zone_name
+  );
+  const pincode = zone?.pincode || location?.location_pincode || null;
+  const placeText = venue ? venueParts(venue).filter(Boolean).join(', ') : locationName;
+
   return (
     <Stack spacing={1.5}>
       <Stack spacing={0.25}>
@@ -45,11 +65,14 @@ export default function PodMapSection({ pod, locationName }: Props) {
           Where
         </Typography>
         <Typography variant="body2" fontWeight={500}>
-          {locationName ?? '\u2014'}
-          {pod.zone_name ? ` \u00b7 ${pod.zone_name}` : ''}
+          {placeText ?? '\u2014'}
         </Typography>
       </Stack>
-      <PodLocationMap locationName={locationName} zoneName={pod.zone_name} />
+      {venue ? (
+        <VenueMapPreview title={venue.venue_name} parts={venueParts(venue)} lat={venue.lat} lng={venue.lng} />
+      ) : (
+        <PodLocationMap locationName={locationName} zoneName={pod.zone_name} pincode={pincode} />
+      )}
     </Stack>
   );
 }

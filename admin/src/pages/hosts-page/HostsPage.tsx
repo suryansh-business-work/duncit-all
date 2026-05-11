@@ -12,11 +12,12 @@ import {
 } from '@mui/material';
 import AdminHostCreateDialog from '../../components/AdminHostCreateDialog';
 import { APPROVE, HOSTS, REJECT, STATUSES } from './queries';
-import HostCard from './HostCard';
+import HostEditDialog from './HostEditDialog';
 import HostReviewDialog from './HostReviewDialog';
+import HostsTable from './HostsTable';
 
 export default function HostsPage() {
-  const [status, setStatus] = useState('SUBMITTED');
+  const [status, setStatus] = useState('APPROVED');
   const { data, loading, error, refetch } = useQuery(HOSTS, {
     variables: { status: status || null },
   });
@@ -24,12 +25,23 @@ export default function HostsPage() {
   const [reject] = useMutation(REJECT);
   const [active, setActive] = useState<any | null>(null);
   const [notes, setNotes] = useState('');
+  const [tagsText, setTagsText] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
+  const [editing, setEditing] = useState<any | null>(null);
+
+  const parseTags = () =>
+    tagsText.split(',').map((tag) => tag.trim()).filter(Boolean);
+
+  const openReview = (host: any) => {
+    setActive(host);
+    setTagsText((host.tags ?? []).join(', '));
+  };
 
   const doApprove = async () => {
-    await approve({ variables: { id: active.id, notes } });
+    await approve({ variables: { id: active.id, notes, tags: parseTags() } });
     setActive(null);
     setNotes('');
+    setTagsText('');
     refetch();
   };
   const doReject = async () => {
@@ -37,15 +49,19 @@ export default function HostsPage() {
     await reject({ variables: { id: active.id, notes } });
     setActive(null);
     setNotes('');
+    setTagsText('');
     refetch();
   };
 
   return (
     <Box>
       <Stack direction="row" justifyContent="space-between" alignItems="center" mb={2}>
-        <Typography variant="h5" fontWeight={700}>
-          Host Onboarding
-        </Typography>
+        <Stack spacing={0.25}>
+          <Typography variant="h5" fontWeight={700}>Hosts</Typography>
+          <Typography variant="body2" color="text.secondary">
+            Approved hosts who can run pods and represent Duncit communities.
+          </Typography>
+        </Stack>
         <Stack direction="row" spacing={1} alignItems="center">
           <Button variant="contained" onClick={() => setCreateOpen(true)}>
             Create on behalf
@@ -70,22 +86,14 @@ export default function HostsPage() {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
       {loading && !data && <CircularProgress />}
 
-      <Box
-        sx={{
-          display: 'grid',
-          gap: 2,
-          gridTemplateColumns: { xs: '1fr', md: 'repeat(2,1fr)' },
-        }}
-      >
-        {(data?.hosts ?? []).map((h: any) => (
-          <HostCard key={h.id} host={h} onReview={setActive} />
-        ))}
-      </Box>
+      <HostsTable hosts={data?.hosts ?? []} onEdit={setEditing} onReview={openReview} />
 
       <HostReviewDialog
         active={active}
         notes={notes}
         setNotes={setNotes}
+        tagsText={tagsText}
+        setTagsText={setTagsText}
         onClose={() => setActive(null)}
         onApprove={doApprove}
         onReject={doReject}
@@ -96,6 +104,7 @@ export default function HostsPage() {
         onClose={() => setCreateOpen(false)}
         onSaved={() => refetch()}
       />
+      <HostEditDialog host={editing} onClose={() => setEditing(null)} onSaved={() => refetch()} />
     </Box>
   );
 }

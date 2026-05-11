@@ -15,6 +15,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Props) {
   const navigate = useNavigate();
   const { format } = usePricing();
   const isFree = pod.pod_type?.includes('FREE');
+  const placeLabel = pod.place_label || [location?.location_name, pod.zone_name].filter(Boolean).join(' - ');
 
   return (
     <>
@@ -86,11 +87,11 @@ export default function ExplorePodOverlay({ pod, club, location }: Props) {
               sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'common.white' }}
             />
           )}
-          {(location?.location_name || pod.zone_name) && (
+          {placeLabel && (
             <Chip
               size="small"
               icon={<PlaceIcon sx={{ color: 'common.white !important' }} />}
-              label={[location?.location_name, pod.zone_name].filter(Boolean).join(' · ')}
+              label={placeLabel}
               sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'common.white' }}
             />
           )}

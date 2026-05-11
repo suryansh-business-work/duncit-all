@@ -14,6 +14,11 @@ const toPub = (d: any) => {
     id: String(d._id),
     location_id: d.location_id,
     location_name: d.location_name,
+    country: d.country ?? 'India',
+    country_code: d.country_code ?? 'IN',
+    state: d.state ?? '',
+    state_code: d.state_code ?? '',
+    city: d.city ?? d.location_name ?? '',
     location_image: d.location_image,
     location_pincode: d.location_pincode,
     location_zones: (d.location_zones ?? []).map((z: any) => ({
@@ -37,8 +42,13 @@ export const locationService = {
     if (filter?.search) {
       q.$or = [
         { location_name: new RegExp(filter.search, 'i') },
+        { country: new RegExp(filter.search, 'i') },
+        { state: new RegExp(filter.search, 'i') },
+        { city: new RegExp(filter.search, 'i') },
         { location_id: new RegExp(filter.search, 'i') },
         { location_pincode: new RegExp(filter.search, 'i') },
+        { 'location_zones.zone_name': new RegExp(filter.search, 'i') },
+        { 'location_zones.pincode': new RegExp(filter.search, 'i') },
       ];
     }
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
@@ -54,6 +64,11 @@ export const locationService = {
   async create(input: {
     location_name: string;
     location_id?: string;
+    country: string;
+    country_code: string;
+    state: string;
+    state_code: string;
+    city: string;
     location_image: string;
     location_pincode: string;
     location_zones?: { zone_name: string; zone_code?: string; pincode?: string }[];
@@ -68,6 +83,11 @@ export const locationService = {
     const doc = await LocationModel.create({
       location_id,
       location_name: input.location_name.trim(),
+      country: input.country.trim(),
+      country_code: input.country_code.trim().toUpperCase(),
+      state: input.state.trim(),
+      state_code: input.state_code.trim().toUpperCase(),
+      city: input.city.trim(),
       location_image: input.location_image,
       location_pincode: input.location_pincode.trim(),
       location_zones: input.location_zones ?? [],
@@ -79,6 +99,11 @@ export const locationService = {
     id: string,
     input: {
       location_name?: string;
+      country?: string;
+      country_code?: string;
+      state?: string;
+      state_code?: string;
+      city?: string;
       location_image?: string;
       location_pincode?: string;
       location_zones?: { zone_name: string; zone_code?: string; pincode?: string }[];
@@ -88,6 +113,11 @@ export const locationService = {
     const doc = await LocationModel.findById(id);
     if (!doc) notFound();
     if (input.location_name !== undefined) doc.location_name = input.location_name.trim();
+    if (input.country !== undefined) doc.country = input.country.trim();
+    if (input.country_code !== undefined) doc.country_code = input.country_code.trim().toUpperCase();
+    if (input.state !== undefined) doc.state = input.state.trim();
+    if (input.state_code !== undefined) doc.state_code = input.state_code.trim().toUpperCase();
+    if (input.city !== undefined) doc.city = input.city.trim();
     if (input.location_image !== undefined) doc.location_image = input.location_image;
     if (input.location_pincode !== undefined) doc.location_pincode = input.location_pincode.trim();
     if (input.location_zones !== undefined) doc.location_zones = input.location_zones as any;

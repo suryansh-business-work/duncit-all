@@ -1,33 +1,23 @@
-import { useEffect, useMemo, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMemo } from 'react';
+import { useQuery } from '@apollo/client';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Alert,
-  Box,
   Chip,
-  Divider,
   Stack,
-  Typography,
 } from '@mui/material';
-import RepeatIcon from '@mui/icons-material/Repeat';
-import EventBusyIcon from '@mui/icons-material/EventBusy';
-import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import { usePricing } from '../hooks/usePricing';
 import BackoutConfirmDialog from './pod-details-page/BackoutConfirmDialog';
 import PodHero from './pod-details-page/PodHero';
-import PodActionPanel from './pod-details-page/PodActionPanel';
+import PodOverview from './pod-details-page/PodOverview';
+import StickyPodActionPanel from './pod-details-page/StickyPodActionPanel';
 import PodDetailAccordions from './pod-details-page/PodDetailAccordions';
 import PodMapSection from '../components/pod-details/PodMapSection';
 import PodSocialBar from './pod-details-page/PodSocialBar';
+import { usePodDetailActions } from './pod-details-page/usePodDetailActions';
 import {
   POD_DETAILS,
   POD_PEOPLE,
-  INC_HITS,
-  JOIN_FREE,
-  BACKOUT,
-  REDEEM,
-  TOGGLE_SAVED_POD_DETAIL,
   PodDetailsSkeleton,
 } from './pod-details-page/queries';
 
@@ -58,42 +48,35 @@ export default function PodDetailsPage() {
     fetchPolicy: 'cache-and-network',
   });
 
-  const [incHits] = useMutation(INC_HITS);
-  const [joinFree, joinState] = useMutation(JOIN_FREE);
-  const [backout, backoutState] = useMutation(BACKOUT);
-  const [redeem] = useMutation(REDEEM);
-  const [toggleSavedPod] = useMutation(TOGGLE_SAVED_POD_DETAIL);
-  const [snack, setSnack] = useState<string | null>(null);
-  const [backoutOpen, setBackoutOpen] = useState(false);
+  // Derive early so hooks are always called unconditionally (Rules of Hooks).
+  const pod = data?.pod ?? null;
+  const savedIds: string[] = data?.me?.saved_pod_ids ?? [];
+  const saved = pod ? savedIds.includes(pod.id) : false;
 
-  useEffect(() => {
-    if (id) incHits({ variables: { id } }).catch(() => {});
-  }, [id, incHits]);
-
-  useEffect(() => {
-    if (!referralFromUrl || !id) return;
-    redeem({ variables: { token: referralFromUrl } })
-      .then(() => {
-        setSnack('Joined via referral');
-        refetch();
-      })
-      .catch((e) => setSnack(e.message));
-  }, [referralFromUrl, id, redeem, refetch]);
+  // MUST be called before any conditional returns.
+  const actions = usePodDetailActions({
+    id,
+    pod,
+    saved,
+    savedIds,
+    referralFromUrl,
+    refetch,
+    navigate,
+  });
 
   if (loading && !data) return <PodDetailsSkeleton />;
   if (error) return <Alert severity="error">{error.message}</Alert>;
-
-  const pod = data?.pod;
   if (!pod) return <Alert severity="warning">Pod not found.</Alert>;
 
-  const club = (data?.clubs ?? []).find((c: any) => c.id === pod.club_id) ?? null;
+  const club = (data?.clusters ?? data?.clubs ?? []).find((c: any) => c.id === pod.club_id) ?? null;
   const location = (data?.locations ?? []).find((l: any) => l.id === pod.location_id);
+  const venue = (data?.publicVenues ?? []).find((item: any) => item.id === pod.venue_id);
   const allPeople: any[] = peopleData?.publicUsersByIds ?? [];
-  const peopleById = new Map(allPeople.map((p) => [p.user_id, p]));
+  const peopleById = new Map(allPeople.map((p: any) => [p.user_id, p]));
 
   // Merge: for hosts, prefer publicHosts (passport_photo_url) but fall back to publicUsersByIds
   const allHosts: any[] = data?.publicHosts ?? [];
-  const hostsById = new Map(allHosts.map((h) => [h.user_id, h]));
+  const hostsById = new Map(allHosts.map((h: any) => [h.user_id, h]));
   const podHosts = (pod.pod_hosts_id ?? []).map((uid: string) => {
     const h = hostsById.get(uid);
     const p = peopleById.get(uid);
@@ -107,104 +90,21 @@ export default function PodDetailsPage() {
 
   const isFree = pod.pod_type?.includes('FREE');
   const media = pod.pod_images_and_videos ?? [];
-  const savedIds: string[] = data?.me?.saved_pod_ids ?? [];
-  const saved = savedIds.includes(pod.id);
-
-  const onToggleSave = async () => {
-    try {
-      await toggleSavedPod({
-        variables: { pod_doc_id: pod.id },
-        optimisticResponse: {
-          toggleSavedPod: {
-            __typename: 'SavedPodState',
-            pod_id: pod.id,
-            saved: !saved,
-            saved_pod_ids: saved
-              ? savedIds.filter((x) => x !== pod.id)
-              : [...savedIds, pod.id],
-          },
-        },
-      });
-    } catch (e: any) {
-      setSnack(e.message);
-    }
-  };
-
-  const onShare = async () => {
-    const url = window.location.href;
-    const title = pod?.pod_title ?? 'Duncit Pod';
-    try {
-      if (navigator.share) await navigator.share({ title, url });
-      else {
-        await navigator.clipboard.writeText(url);
-        setSnack('Link copied');
-      }
-    } catch {
-      /* user cancelled */
-    }
-  };
 
   return (
-    <Stack spacing={3} sx={{ pt: 0, pb: 10 }}>
+    <Stack spacing={3} sx={{ pt: 0, pb: 'calc(132px + env(safe-area-inset-bottom))' }}>
       <PodHero
         media={media}
         title={pod.pod_title}
         saved={saved}
         onBack={() => navigate(-1)}
-        onToggleSave={onToggleSave}
-        onShare={onShare}
+        onToggleSave={actions.onToggleSave}
+        onShare={actions.onShare}
       />
 
-      <Box>
-        <Typography variant="h4" fontWeight={700}>
-          {pod.pod_title}
-        </Typography>
-        <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
-          <Chip
-            color={isFree ? 'success' : 'primary'}
-            label={isFree ? 'Free' : priceFormat(pod.pod_amount)}
-          />
-          <Chip icon={<RepeatIcon />} label={pod.pod_occurrence?.replace(/_/g, ' ')} />
-          {pod.pod_date_time && (() => {
-            const ms = new Date(pod.pod_date_time).getTime() - Date.now();
-            if (Number.isNaN(ms)) return null;
-            if (ms < 0) {
-              return (
-                <Chip
-                  color="error"
-                  variant="filled"
-                  icon={<EventBusyIcon />}
-                  label="Pod expired"
-                />
-              );
-            }
-            const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
-            const hours = Math.ceil(ms / (1000 * 60 * 60));
-            const label =
-              days > 1
-                ? `${days} days remaining`
-                : hours > 1
-                  ? `${hours} hours remaining`
-                  : 'Starting soon';
-            return (
-              <Chip
-                color={days <= 1 ? 'warning' : 'info'}
-                icon={<HourglassBottomIcon />}
-                label={label}
-              />
-            );
-          })()}
-          <Chip icon={<VisibilityIcon />} label={`${pod.pod_hits} views`} variant="outlined" />
-          {pod.no_of_spots > 0 && (
-            <Chip
-              label={`${pod.pod_attendees?.length ?? 0}/${pod.no_of_spots} spots`}
-              variant="outlined"
-            />
-          )}
-        </Stack>
-      </Box>
+      <PodOverview pod={pod} isFree={isFree} priceFormat={priceFormat} />
 
-      <PodMapSection pod={pod} locationName={location?.location_name} />
+      <PodMapSection pod={pod} location={location} venue={venue} />
 
       <PodSocialBar
         podId={pod.id}
@@ -231,61 +131,29 @@ export default function PodDetailsPage() {
         </Stack>
       )}
 
-      <Divider />
-      <PodActionPanel
+      <StickyPodActionPanel
         pod={pod}
         isFree={isFree}
         priceFormat={priceFormat}
         membershipState={data?.podMembershipState}
-        joining={joinState.loading}
-        backingOut={backoutState.loading}
-        onJoinFree={async () => {
-          try {
-            await joinFree({ variables: { id: pod.id, referral: referralFromUrl } });
-            setSnack('Joined!');
-            await refetch();
-          } catch (e: any) {
-            setSnack(e.message);
-          }
-        }}
-        onBackout={() => setBackoutOpen(true)}
-        onPaidCheckout={() =>
-          navigate('/checkout', {
-            state: {
-              pod_id: pod.id,
-              pod_title: pod.pod_title,
-              amount: Number(pod.pod_amount) || 0,
-              description: `Pod booking · ${pod.pod_title}`,
-            },
-          })
-        }
-        onCopyReferral={(token: string) => {
-          const url = `${window.location.origin}/pods/${pod.id}?ref=${token}`;
-          navigator.clipboard?.writeText(url);
-          setSnack('Referral link copied');
-        }}
+        joining={actions.joinState.loading}
+        backingOut={actions.backoutState.loading}
+        onJoinFree={actions.onJoinFree}
+        onBackout={() => actions.setBackoutOpen(true)}
+        onPaidCheckout={actions.onPaidCheckout}
+        onCopyReferral={actions.onCopyReferral}
       />
-      {snack && (
-        <Alert severity="info" onClose={() => setSnack(null)}>
-          {snack}
+      {actions.snack && (
+        <Alert severity="info" onClose={() => actions.setSnack(null)}>
+          {actions.snack}
         </Alert>
       )}
       <BackoutConfirmDialog
-        open={backoutOpen}
-        onClose={() => setBackoutOpen(false)}
-        busy={backoutState.loading}
+        open={actions.backoutOpen}
+        onClose={() => actions.setBackoutOpen(false)}
+        busy={actions.backoutState.loading}
         refundThresholdPct={data?.podMembershipState?.refund_threshold_pct ?? null}
-        onConfirm={async () => {
-          try {
-            await backout({ variables: { id: pod.id } });
-            setBackoutOpen(false);
-            setSnack('You have backed out.');
-            await refetch();
-          } catch (e: any) {
-            setBackoutOpen(false);
-            setSnack(e.message);
-          }
-        }}
+        onConfirm={actions.onConfirmBackout}
       />
     </Stack>
   );

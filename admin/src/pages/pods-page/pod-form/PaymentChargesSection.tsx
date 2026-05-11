@@ -2,16 +2,21 @@ import { useFormikContext } from 'formik';
 import { MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
 import PodPriceBreakdown from '../PodPriceBreakdown';
 import PlaceChargesField from './PlaceChargesField';
+import { getProductRequestTotal } from './DuncitProductsSection';
 import { OCCURRENCES, POD_TYPES } from '../queries';
 import type { PodForm } from '../queries';
 
 interface Props {
   finance?: { platform_fee_pct: number; gst_pct: number; currency_symbol?: string };
+  inventoryProducts: any[];
 }
 
-export default function PaymentChargesSection({ finance }: Props) {
+export default function PaymentChargesSection({ finance, inventoryProducts }: Props) {
   const { values, errors, touched, handleChange, setFieldValue } = useFormikContext<PodForm>();
   const isFree = values.pod_type.includes('FREE');
+  const productCost = values.products_enabled
+    ? getProductRequestTotal(values.product_requests, inventoryProducts)
+    : 0;
   const err = (k: keyof PodForm) => !!touched[k] && !!errors[k];
   const help = (k: keyof PodForm) => (touched[k] ? (errors[k] as string) : undefined);
 
@@ -88,7 +93,12 @@ export default function PaymentChargesSection({ finance }: Props) {
         )}
       </Stack>
       {!isFree && Number(values.pod_amount) > 0 && finance && (
-        <PodPriceBreakdown amount={values.pod_amount} finance={finance} />
+        <PodPriceBreakdown
+          amount={values.pod_amount}
+          finance={finance}
+          productCost={productCost}
+          spots={values.no_of_spots}
+        />
       )}
       <TextField
         label="Payment terms"

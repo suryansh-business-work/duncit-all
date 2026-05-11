@@ -16,6 +16,8 @@
     "@mui/material": "^5.15.18",
     "@mui/system": "^5.15.18",
     "@mui/x-date-pickers": "^6.20.2",
+    "countries-list": "^3.3.0",
+    "country-region-data": "^4.1.0",
     "date-fns": "^2.30.0",
     "formik": "^2.4.6",
     "graphql": "^16.8.1",

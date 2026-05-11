@@ -16,6 +16,7 @@ import LocationsPage from './pages/LocationsPage';
 import ClubsPage from './pages/ClubsPage';
 import PodsPage from './pages/PodsPage';
 import InventoryPage from './pages/InventoryPage';
+import InventoryProductPage from './pages/inventory-page/inventory-product-page/InventoryProductPage';
 import SlidersPage from './pages/SlidersPage';
 import BrandingPage from './pages/BrandingPage';
 import NotificationsPage from './pages/NotificationsPage';
@@ -70,6 +71,8 @@ export default function App() {
                 <Route path="/clubs" element={<ClubsPage />} />
                 <Route path="/pods" element={<PodsPage />} />
                 <Route path="/inventory" element={<InventoryPage />} />
+                <Route path="/inventory/new" element={<InventoryProductPage />} />
+                <Route path="/inventory/:id/edit" element={<InventoryProductPage />} />
                 <Route path="/sliders" element={<SlidersPage />} />
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/interview-requests" element={<InterviewRequestsPage />} />

@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { importRemoteImage, pexelsSearch } from '../upload/upload.service';
 
-type Entity = 'CLUB' | 'POD' | 'SLIDER';
+type Entity = 'CLUB' | 'POD' | 'SLIDER' | 'INVENTORY_PRODUCT';
 
 const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }> = {
   CLUB: {
@@ -53,6 +53,33 @@ const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }
 }`,
     example: '',
     notes: 'Prefer media_type IMAGE unless prompt says video. media_url must be a working https URL.',
+  },
+  INVENTORY_PRODUCT: {
+    fields: `{
+  "product_name": string,           // catchy product name (2-5 words)
+  "brand_name": string,             // realistic brand name
+  "product_type": "CONSUMABLE" | "MERCHANDISE" | "EQUIPMENT",
+  "unit_type": "BOTTLE" | "PIECE" | "PACKET" | "BOX" | "KG" | "LITRE",
+  "short_description": string,      // <= 140 chars marketing line
+  "description": string,            // 2-4 sentence detailed description
+  "tags": string[],                 // 3-5 short lowercase tags
+  "vendor_name": string,            // plausible supplier
+  "supplier_contact": string,       // +91 phone or email
+  "unit_cost": number,              // integer rupees 10-9999
+  "purchase_price": number,         // unit_cost +/- 10%
+  "selling_price": number,          // 1.2x to 2x purchase_price
+  "tax_percent": number,            // 0, 5, 12, 18 or 28
+  "discount_percent": number,       // 0-25
+  "weight_volume": string,          // e.g. "500 ml", "1 kg", "250 g"
+  "storage_instructions": string,   // 1-2 sentences
+  "min_order_qty": number,          // 1-5
+  "max_order_qty": number,          // 50-500
+  "low_stock_alert": number,        // 5-25
+  "inventory_count": number         // 20-200
+}`,
+    example: '',
+    notes:
+      'Use realistic Indian rupee prices. Tags must be lowercase, no leading #. Pick product_type appropriately for the prompt.',
   },
 };
 
@@ -148,6 +175,7 @@ const IMAGE_FIELDS_BY_ENTITY: Record<Entity, { single: string[]; multiline: stri
   SLIDER: { single: ['media_url'], multiline: [], folder: '/sliders' },
   CLUB: { single: [], multiline: ['feature_text', 'moments_text'], folder: '/clubs' },
   POD: { single: [], multiline: ['media_text'], folder: '/pods' },
+  INVENTORY_PRODUCT: { single: [], multiline: [], folder: '/inventory' },
 };
 
 async function pickPexelsImageKitUrl(query: string, folder: string, offset = 0): Promise<string | null> {
@@ -173,7 +201,13 @@ async function enrichImagesWithPexels(entity: Entity, raw: string, prompt?: stri
   }
   const cfg = IMAGE_FIELDS_BY_ENTITY[entity];
   const titleField =
-    entity === 'SLIDER' ? 'title' : entity === 'POD' ? 'pod_title' : 'club_name';
+    entity === 'SLIDER'
+      ? 'title'
+      : entity === 'POD'
+        ? 'pod_title'
+        : entity === 'INVENTORY_PRODUCT'
+          ? 'product_name'
+          : 'club_name';
   const baseQuery =
     (typeof parsed[titleField] === 'string' && parsed[titleField].trim()) ||
     (prompt && prompt.trim()) ||
@@ -199,11 +233,87 @@ async function enrichImagesWithPexels(entity: Entity, raw: string, prompt?: stri
   return JSON.stringify(parsed);
 }
 
+interface DescribeProductInput {
+  product_name: string;
+  brand_name?: string | null;
+  product_type?: string | null;
+  short_description?: string | null;
+  tags?: string[] | null;
+  tone?: string | null;
+}
+
+async function generateProductDescription(input: DescribeProductInput): Promise<string> {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
+      extensions: { code: 'AI_NOT_CONFIGURED' },
+    });
+  }
+  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const context = [
+    `Product name: ${input.product_name}`,
+    input.brand_name ? `Brand: ${input.brand_name}` : null,
+    input.product_type ? `Type: ${input.product_type}` : null,
+    input.tags?.length ? `Tags: ${input.tags.join(', ')}` : null,
+    input.short_description ? `Existing short description: ${input.short_description}` : null,
+    input.tone ? `Tone: ${input.tone}` : null,
+  ]
+    .filter(Boolean)
+    .join('\n');
+
+  const body = {
+    model,
+    temperature: 0.7,
+    response_format: { type: 'json_object' as const },
+    messages: [
+      {
+        role: 'system',
+        content:
+          'You write concise marketing copy for inventory products in an Indian community-events app called Duncit. Always return strict JSON with two keys: { "short_description": string (<= 140 chars), "description": string (2-4 sentences) }. No markdown, no extra keys.',
+      },
+      {
+        role: 'user',
+        content: `Write marketing copy for this product.\n\n${context}`,
+      },
+    ],
+  };
+
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const txt = await resp.text().catch(() => '');
+    throw new GraphQLError(`OpenAI error (${resp.status}): ${txt.slice(0, 500)}`, {
+      extensions: { code: 'AI_UPSTREAM_ERROR' },
+    });
+  }
+  const json: any = await resp.json();
+  const content: string | undefined = json?.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new GraphQLError('OpenAI returned an empty response', {
+      extensions: { code: 'AI_EMPTY_RESPONSE' },
+    });
+  }
+  try {
+    JSON.parse(content);
+  } catch {
+    throw new GraphQLError('OpenAI did not return valid JSON', {
+      extensions: { code: 'AI_INVALID_JSON' },
+    });
+  }
+  return content;
+}
+
 export const aiResolvers = {
   Mutation: {
     aiFillDummyData: async (_: unknown, args: { entity: Entity; prompt?: string | null }) => {
       const raw = await generateDummy(args.entity, args.prompt);
       return enrichImagesWithPexels(args.entity, raw, args.prompt);
+    },
+    aiDescribeInventoryProduct: async (_: unknown, args: { input: DescribeProductInput }) => {
+      return generateProductDescription(args.input);
     },
   },
 };

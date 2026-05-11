@@ -8,7 +8,7 @@ export const inventoryResolvers = {
   Query: {
     inventoryProducts: async (
       _p: unknown,
-      args: { search?: string; activeOnly?: boolean },
+      args: { search?: string; activeOnly?: boolean; status?: string },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_RW);
@@ -18,11 +18,35 @@ export const inventoryResolvers = {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.getById(args.product_doc_id);
     },
+    inventoryActivityLogs: async (
+      _p: unknown,
+      args: { product_doc_id: string; limit?: number },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.listActivityLogs(args.product_doc_id, args.limit ?? 100);
+    },
+    inventoryStockMovements: async (
+      _p: unknown,
+      args: { product_doc_id: string; limit?: number },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.listStockMovements(args.product_doc_id, args.limit ?? 100);
+    },
+    inventoryAnalytics: async (
+      _p: unknown,
+      args: { product_doc_id: string; days?: number },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.analytics(args.product_doc_id, args.days ?? 30);
+    },
   },
   Mutation: {
     createInventoryProduct: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
-      return inventoryService.create(args.input);
+      return inventoryService.create(args.input, ctx.user);
     },
     updateInventoryProduct: async (
       _p: unknown,
@@ -30,11 +54,47 @@ export const inventoryResolvers = {
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_RW);
-      return inventoryService.update(args.product_doc_id, args.input);
+      return inventoryService.update(args.product_doc_id, args.input, ctx.user);
     },
     deleteInventoryProduct: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
-      return inventoryService.remove(args.product_doc_id);
+      return inventoryService.remove(args.product_doc_id, ctx.user);
+    },
+    archiveInventoryProduct: async (
+      _p: unknown,
+      args: { product_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.archive(args.product_doc_id, ctx.user);
+    },
+    restoreInventoryProduct: async (
+      _p: unknown,
+      args: { product_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.restore(args.product_doc_id, ctx.user);
+    },
+    duplicateInventoryProduct: async (
+      _p: unknown,
+      args: { product_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.duplicate(args.product_doc_id, ctx.user);
+    },
+    recordInventoryStockMovement: async (
+      _p: unknown,
+      args: { product_doc_id: string; input: { type: string; quantity: number; reason?: string } },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.recordStockMovement(args.product_doc_id, args.input, ctx.user);
+    },
+    generateInventorySku: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.generateSku();
     },
   },
 };

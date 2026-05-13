@@ -109,6 +109,22 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
     }
   };
 
+  const updatePhoto = async (profile_photo: string) => {
+    if (!user_id) return;
+    setBusy(true);
+    setOpError(null);
+    try {
+      await updateUser({ variables: { user_id, input: { profile_photo: profile_photo || null } } });
+      setForm((previous) => (previous ? { ...previous, profile_photo } : previous));
+      setToast('Profile photo updated');
+      await refetch();
+    } catch (e: any) {
+      setOpError(e.message);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const openRoles = () => {
     const next = new Set<string>(user?.roles ?? []);
     next.add('USER');
@@ -167,6 +183,7 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
     dirty,
     save,
     setStatus,
+    updatePhoto,
     rolesOpen,
     setRolesOpen,
     selectedRoles,

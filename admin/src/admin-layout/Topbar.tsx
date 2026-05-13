@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
   AppBar,
@@ -15,7 +16,10 @@ import MenuIcon from '@mui/icons-material/Menu';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LogoutIcon from '@mui/icons-material/Logout';
+import PersonIcon from '@mui/icons-material/Person';
+import { ADMIN_ME, getAdminInitials, type AdminSessionUser } from '../adminSession';
 import { useColorMode } from '../ColorModeContext';
+import AdminSearch from './AdminSearch';
 import { HEADER_HEIGHT } from './styled';
 
 interface Props {
@@ -27,6 +31,13 @@ export default function Topbar({ isDesktop, onOpenMobile }: Props) {
   const { mode, toggle } = useColorMode();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const navigate = useNavigate();
+  const { data } = useQuery<{ me: AdminSessionUser | null }>(ADMIN_ME);
+  const admin = data?.me;
+
+  const handleProfile = () => {
+    setAnchorEl(null);
+    navigate('/profile');
+  };
 
   const handleLogout = () => {
     localStorage.removeItem('admin_token');
@@ -42,7 +53,9 @@ export default function Topbar({ isDesktop, onOpenMobile }: Props) {
             <MenuIcon />
           </IconButton>
         )}
-        <Box sx={{ flexGrow: 1 }} />
+        <Box sx={{ flex: 1, minWidth: 0, display: 'flex', justifyContent: 'center' }}>
+          <AdminSearch />
+        </Box>
         <Tooltip title={mode === 'dark' ? 'Switch to light' : 'Switch to dark'}>
           <IconButton onClick={toggle} aria-label="toggle color mode">
             {mode === 'dark' ? <LightModeIcon /> : <DarkModeIcon />}
@@ -50,8 +63,8 @@ export default function Topbar({ isDesktop, onOpenMobile }: Props) {
         </Tooltip>
         <Tooltip title="Account">
           <IconButton onClick={(e) => setAnchorEl(e.currentTarget)}>
-            <Avatar sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13 }}>
-              A
+            <Avatar src={admin?.profile_photo || undefined} sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13 }}>
+              {getAdminInitials(admin)}
             </Avatar>
           </IconButton>
         </Tooltip>
@@ -62,6 +75,12 @@ export default function Topbar({ isDesktop, onOpenMobile }: Props) {
           anchorOrigin={{ vertical: 'bottom', horizontal: 'right' }}
           transformOrigin={{ vertical: 'top', horizontal: 'right' }}
         >
+          <MenuItem onClick={handleProfile}>
+            <ListItemIcon>
+              <PersonIcon fontSize="small" />
+            </ListItemIcon>
+            Profile
+          </MenuItem>
           <MenuItem onClick={handleLogout}>
             <ListItemIcon>
               <LogoutIcon fontSize="small" />

@@ -25,9 +25,10 @@ const toPub = (c: IContactSubmission) => ({
 });
 
 export const contactService = {
-  async list(status?: ContactStatus) {
+  async list(status?: ContactStatus, email?: string | null) {
     const q: any = {};
     if (status) q.status = status;
+    if (email?.trim()) q.email = email.trim().toLowerCase();
     const docs = await ContactSubmissionModel.find(q).sort({ created_at: -1 }).exec();
     return docs.map(toPub);
   },

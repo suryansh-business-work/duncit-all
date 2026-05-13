@@ -6,6 +6,7 @@ import UsersPage from './pages/UsersPage';
 import UserDetailsPage from './pages/UserDetailsPage';
 import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
+import ProfilePage from './pages/ProfilePage';
 import RolesPage from './pages/RolesPage';
 import ResourcesPage from './pages/ResourcesPage';
 import ActionsPage from './pages/ActionsPage';
@@ -34,6 +35,7 @@ import BadgesPage from './pages/BadgesPage';
 import VenuesPage from './pages/VenuesPage';
 import HostsPage from './pages/HostsPage';
 import PodPlansPage from './pages/PodPlansPage';
+import MarketingCampaignsPage from './pages/MarketingCampaignsPage';
 import FinanceDashboardPage from './pages/finance/FinanceDashboardPage';
 import FinanceSettingsPage from './pages/finance/FinanceSettingsPage';
 import PaymentLogsPage from './pages/finance/PaymentLogsPage';
@@ -89,6 +91,8 @@ export default function App() {
                 <Route path="/venues" element={<VenuesPage />} />
                 <Route path="/hosts" element={<HostsPage />} />
                 <Route path="/pod-plans" element={<PodPlansPage />} />
+                <Route path="/marketing/email-campaigns" element={<MarketingCampaignsPage defaultChannel="EMAIL" />} />
+                <Route path="/marketing/whatsapp-campaigns" element={<MarketingCampaignsPage defaultChannel="WHATSAPP" />} />
                 <Route path="/finance/dashboard" element={<FinanceDashboardPage />} />
                 <Route path="/finance/settings" element={<FinanceSettingsPage />} />
                 <Route path="/finance/payment-logs" element={<PaymentLogsPage />} />
@@ -105,6 +109,7 @@ export default function App() {
                 <Route path="/rbac/resources" element={<ResourcesPage />} />
                 <Route path="/rbac/actions" element={<ActionsPage />} />
                 <Route path="/feature-flags" element={<FeatureFlagsPage />} />
+                <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/hub" replace />} />
               </Routes>

@@ -14,6 +14,7 @@ const STATIC_LABELS: Record<string, string> = {
   '/': 'Home',
   '/hub': 'Modules',
   '/login': 'Login',
+  '/profile': 'Profile',
 };
 
 function humanise(segment: string): string {

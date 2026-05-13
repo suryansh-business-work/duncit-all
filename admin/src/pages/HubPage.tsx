@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import ModuleIcon, { type ModuleIconKind } from '../components/ModuleIcon';
+import TypingWelcome from './hub-page/TypingWelcome';
 
 interface HubCard {
   key: string;
@@ -109,9 +110,7 @@ export default function HubPage() {
   return (
     <Container maxWidth="lg" sx={{ py: { xs: 2, md: 4 } }}>
       <Box sx={{ mb: { xs: 3, md: 5 } }}>
-        <Typography variant="h4" fontWeight={700} gutterBottom>
-          Welcome back
-        </Typography>
+        <TypingWelcome />
         <Typography variant="body1" color="text.secondary">
           Pick a module to get started. Each section opens its own focused workspace.
         </Typography>

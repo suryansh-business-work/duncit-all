@@ -6,9 +6,9 @@ const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN'];
 
 export const contactResolvers = {
   Query: {
-    contactSubmissions: (_p: unknown, args: { status?: any }, ctx: GraphQLContext) => {
+    contactSubmissions: (_p: unknown, args: { status?: any; email?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);
-      return contactService.list(args.status);
+      return contactService.list(args.status, args.email);
     },
   },
   Mutation: {

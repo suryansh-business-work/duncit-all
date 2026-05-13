@@ -18,6 +18,7 @@ import { policyService } from './modules/policy/policy.service';
 import { attachChatSocket } from './modules/chat/chat.socket';
 import { websiteContentService } from './modules/websiteContent/websiteContent.service';
 import { userService } from './modules/user/user.service';
+import { marketingService } from './modules/marketing/marketing.service';
 
 async function bootstrap() {
   await connectDB();
@@ -27,6 +28,7 @@ async function bootstrap() {
   await notificationService.ensureVapid();
   await policyService.seedDefaults();
   await websiteContentService.seedDefaults();
+  await marketingService.resumeSchedules();
   const { podPlanService } = await import('./modules/pod-plan/pod-plan.service');
   await podPlanService.seedDefaults();
 

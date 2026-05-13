@@ -4,7 +4,6 @@ import {
   Alert,
   Card,
   CircularProgress,
-  Grid,
   Snackbar,
   Stack,
 } from '@mui/material';
@@ -17,6 +16,8 @@ import ContactActionsSection from './ContactActionsSection';
 import UserInterestsSection from './UserInterestsSection';
 import UserHeader from './UserHeader';
 import UserSummaryCard from './UserSummaryCard';
+import UserDetailsTabs from './UserDetailsTabs';
+import UserSupportTicketsSection from './UserSupportTicketsSection';
 import RolesSection from './RolesSection';
 import PermissionsSection from './PermissionsSection';
 import DeleteUserDialog from './DeleteUserDialog';
@@ -39,6 +40,8 @@ export default function UserDetailsPage() {
   if (s.error) return <Alert severity="error">{s.error.message}</Alert>;
   if (!s.user || !s.form) return <Alert severity="warning">User not found.</Alert>;
 
+  const userId = s.user.user_id || user_id || '';
+
   return (
     <Stack spacing={3}>
       <UserHeader
@@ -51,13 +54,18 @@ export default function UserDetailsPage() {
         onDeleteClick={() => s.setDelOpen(true)}
       />
 
-      <Grid container spacing={3}>
-        <Grid item xs={12} md={4}>
-          <UserSummaryCard user={s.user} form={s.form} />
-        </Grid>
+      <UserSummaryCard
+        user={s.user}
+        form={s.form}
+        busy={s.busy}
+        onPhotoChange={s.updatePhoto}
+      />
 
-        <Grid item xs={12} md={8}>
-          <Stack spacing={3}>
+      <UserDetailsTabs
+        tabs={[
+          {
+            label: 'Profile',
+            content: (
             <Card sx={{ height: '100%' }}>
               <ProfileForm
                 form={s.form}
@@ -66,28 +74,27 @@ export default function UserDetailsPage() {
                 onSave={s.save}
               />
             </Card>
-
-            <UserInterestsSection user={s.user} />
-
-            <RolesSection
-              user={s.user}
-              roleByKey={s.roleByKey}
-              onManageRoles={s.openRoles}
-            />
-
-            <PermissionsSection user={s.user} />
-
-            <UserBadgesSection userId={s.user.user_id || user_id || ''} />
-
-            <UserActivitySection userId={s.user.user_id || user_id || ''} />
-
-            <ContactActionsSection
-              userId={s.user.user_id || user_id || ''}
-              refreshToken={contactRefresh}
-            />
-          </Stack>
-        </Grid>
-      </Grid>
+            ),
+          },
+          { label: 'Interests', content: <UserInterestsSection user={s.user} /> },
+          {
+            label: 'Access',
+            content: (
+              <Stack spacing={2}>
+                <RolesSection user={s.user} roleByKey={s.roleByKey} onManageRoles={s.openRoles} />
+                <PermissionsSection user={s.user} />
+              </Stack>
+            ),
+          },
+          { label: 'Badges', content: <UserBadgesSection userId={userId} /> },
+          { label: 'Activity', content: <UserActivitySection userId={userId} /> },
+          { label: 'Support Tickets', content: <UserSupportTicketsSection email={s.user.email} /> },
+          {
+            label: 'Call & Email Logs',
+            content: <ContactActionsSection userId={userId} refreshToken={contactRefresh} />,
+          },
+        ]}
+      />
 
       <ContactActionDialog
         open={!!contactType}

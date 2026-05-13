@@ -32,7 +32,7 @@ export const contactTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
-    contactSubmissions(status: ContactStatus): [ContactSubmission!]!
+    contactSubmissions(status: ContactStatus, email: String): [ContactSubmission!]!
   }
 
   extend type Mutation {

@@ -149,6 +149,21 @@ export const USER_CONTACT_ACTIONS = gql`
   }
 `;
 
+export const USER_SUPPORT_TICKETS = gql`
+  query UserSupportTickets($email: String, $status: ContactStatus) {
+    contactSubmissions(email: $email, status: $status) {
+      id
+      name
+      email
+      subject
+      message
+      attachments
+      status
+      created_at
+    }
+  }
+`;
+
 export const RECORD_USER_CONTACT_ACTION = gql`
   mutation RecordUserContactAction($input: RecordUserContactActionInput!) {
     recordUserContactAction(input: $input) {

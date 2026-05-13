@@ -87,6 +87,25 @@ export async function sendEmail(opts: {
   return info;
 }
 
+export async function sendHtmlEmail(opts: {
+  to: string | string[];
+  bcc?: string[];
+  subject: string;
+  html: string;
+}) {
+  const from = (await getRuntimeEnvValue('SMTP_FROM')) || 'Duncit <noreply@duncit.local>';
+  const info = await (await getTransporter()).sendMail({
+    from,
+    to: opts.to,
+    bcc: opts.bcc,
+    subject: opts.subject,
+    html: opts.html,
+  });
+  // eslint-disable-next-line no-console
+  console.log(`📧 Campaign email queued (${info.messageId})`);
+  return info;
+}
+
 export function sendWelcomeEmail(to: string, name: string) {
   return sendEmail({
     to,

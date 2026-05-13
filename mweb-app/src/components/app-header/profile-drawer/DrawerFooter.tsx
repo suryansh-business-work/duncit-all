@@ -1,5 +1,6 @@
 import { Box, Button, FormControlLabel, Switch, Typography } from '@mui/material';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
 import { useColorMode } from '../../../ColorModeContext';
 
@@ -8,7 +9,7 @@ interface DrawerFooterProps {
 }
 
 export default function DrawerFooter({ onLogout }: DrawerFooterProps) {
-  const { mode, toggle: toggleMode } = useColorMode();
+  const colorMode = useColorMode();
   return (
     <Box sx={{ p: 1.5 }}>
       <FormControlLabel
@@ -27,17 +28,21 @@ export default function DrawerFooter({ onLogout }: DrawerFooterProps) {
         control={
           <Switch
             size="small"
-            checked={mode === 'dark'}
-            onChange={toggleMode}
+            checked={colorMode.mode === 'dark'}
+            onChange={(_e, checked) => colorMode.set(checked ? 'dark' : 'light')}
             color="primary"
             inputProps={{ 'aria-label': 'Toggle dark mode' }}
           />
         }
         label={
           <Box sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
-            <DarkModeIcon fontSize="small" />
+            {colorMode.mode === 'dark' ? (
+              <DarkModeIcon fontSize="small" />
+            ) : (
+              <LightModeIcon fontSize="small" />
+            )}
             <Typography variant="body2" fontWeight={600}>
-              Dark mode
+              {colorMode.mode === 'dark' ? 'Dark mode' : 'Light mode'}
             </Typography>
           </Box>
         }

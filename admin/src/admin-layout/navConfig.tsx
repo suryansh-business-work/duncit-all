@@ -33,6 +33,8 @@ import ShieldIcon from '@mui/icons-material/Shield';
 import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import ArticleIcon from '@mui/icons-material/Article';
+import CampaignIcon from '@mui/icons-material/Campaign';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 
 export interface NavLeaf {
   label: string;
@@ -133,6 +135,21 @@ export const NAV: NavSection[] = [
       { label: 'Policies', to: '/policies', icon: <DescriptionIcon /> },
       { label: 'Email Templates', to: '/email-templates', icon: <MarkEmailReadIcon /> },
       { label: 'Badges', to: '/badges', icon: <ShieldIcon /> },
+    ],
+  },
+  {
+    heading: 'Marketing',
+    prefixes: ['/marketing'],
+    items: [
+      {
+        label: 'Campaigns',
+        icon: <CampaignIcon />,
+        matchPrefix: '/marketing',
+        children: [
+          { label: 'Email Campaigns', to: '/marketing/email-campaigns', icon: <MarkEmailReadIcon /> },
+          { label: 'WhatsApp Campaigns', to: '/marketing/whatsapp-campaigns', icon: <WhatsAppIcon /> },
+        ],
+      },
     ],
   },
   {

@@ -6,7 +6,6 @@ import {
   MenuItem,
   Stack,
   TextField,
-  Typography,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
 import MediaPickerField from '../MediaPickerField';
@@ -24,12 +23,20 @@ interface Props {
 export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: Props) {
   const err = (path: string) => getVenueError(errors, path);
   return (
-    <>
-      <Typography variant="subtitle2">Documents</Typography>
-      <Stack spacing={0.75}>
+    <Stack spacing={2}>
+      <Stack spacing={1.75}>
         {err('step2.documents') && <FormHelperText error>{err('step2.documents')}</FormHelperText>}
         {docs.map((d, i) => (
-          <Stack key={i} direction="row" spacing={1} alignItems="center">
+          <Box
+            key={i}
+            sx={{
+              display: 'grid',
+              gridTemplateColumns: { xs: '1fr', sm: '180px minmax(0, 1fr) auto' },
+              columnGap: 1.25,
+              rowGap: 1,
+              alignItems: 'flex-start',
+            }}
+          >
             <TextField
               select
               size="small"
@@ -37,7 +44,6 @@ export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: P
               value={d.type}
               error={!!err(`step2.documents[${i}].type`)}
               helperText={err(`step2.documents[${i}].type`) || undefined}
-              sx={{ minWidth: 180 }}
               onChange={(e) =>
                 setDocs(docs.map((x, j) => (j === i ? { ...x, type: e.target.value } : x)))
               }
@@ -60,7 +66,7 @@ export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: P
             <IconButton onClick={() => setDocs(docs.filter((_, j) => j !== i))}>
               <DeleteIcon />
             </IconButton>
-          </Stack>
+          </Box>
         ))}
         <Button onClick={() => setDocs([...docs, { type: 'GST Certificate', url: '' }])}>
           Add document
@@ -84,6 +90,6 @@ export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: P
           onChange={(e) => setS2({ ...s2, pan: e.target.value })}
         />
       </Box>
-    </>
+    </Stack>
   );
 }

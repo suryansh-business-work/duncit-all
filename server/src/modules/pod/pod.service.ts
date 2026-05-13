@@ -221,7 +221,7 @@ async function buildPodPlaceFilter(filter?: { location_id?: string; zone_name?: 
   const zoneName = filter?.zone_name?.trim();
   if (!locationId && !zoneName) return null;
 
-  const or: any[] = [];
+  const or: any[] = [{ pod_mode: 'VIRTUAL' }];
   if (locationId && zoneName) or.push({ location_id: locationId, zone_name: zoneName });
   else if (locationId) or.push({ location_id: locationId });
   else if (zoneName) or.push({ zone_name: zoneName });

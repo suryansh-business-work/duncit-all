@@ -1,4 +1,4 @@
-import { Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Box, MenuItem, Stack, TextField } from '@mui/material';
 import MediaListField from '../MediaListField';
 import MediaPickerField from '../MediaPickerField';
 import { VENUE_TYPES, type Step1 } from './queries';
@@ -17,7 +17,6 @@ export default function VenueDetailsSection({ s1, setS1, locations, errors }: Pr
   const err = (field: keyof Step1) => getVenueError(errors, `step1.${field}`);
   return (
     <Stack spacing={1.5}>
-      <Typography variant="subtitle2">Venue details</Typography>
       <Box
         sx={{
           display: 'grid',

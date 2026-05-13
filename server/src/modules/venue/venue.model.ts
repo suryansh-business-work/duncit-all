@@ -44,6 +44,7 @@ export interface IVenue extends Document {
   // Workflow
   step_completed: number; // 0..4
   status: VenueStatus;
+  is_active: boolean;
   reviewer_notes: string;
   submitted_at: Date | null;
   approved_at: Date | null;
@@ -94,6 +95,7 @@ const venueSchema = new Schema<IVenue>(
     tags: { type: [String], default: [] },
     step_completed: { type: Number, default: 0, min: 0, max: 4 },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
+    is_active: { type: Boolean, default: true },
     reviewer_notes: { type: String, default: '' },
     submitted_at: { type: Date, default: null },
     approved_at: { type: Date, default: null },

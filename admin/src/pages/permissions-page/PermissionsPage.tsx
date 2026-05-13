@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { notifyError } from '../../components/notify';
+import { useConfirm } from '../../components/useConfirm';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -24,6 +25,7 @@ export default function PermissionsPage() {
   const { data, loading, error, refetch } = useQuery(QUERY);
   const [createMut] = useMutation(CREATE_PERMISSION);
   const [deleteMut] = useMutation(DELETE_PERMISSION);
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [resourceKey, setResourceKey] = useState('');
   const [actionKey, setActionKey] = useState('');
@@ -56,7 +58,13 @@ export default function PermissionsPage() {
   };
 
   const remove = async (row: any) => {
-    if (!confirm(`Delete permission "${row.key}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete permission',
+      message: `Delete permission "${row.key}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteMut({ variables: { permission_id: row.id } });
       await refetch();

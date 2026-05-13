@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { notifyError } from '../../components/notify';
+import { useConfirm } from '../../components/useConfirm';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -28,6 +29,7 @@ export default function FeatureFlagsPage() {
   const [createFlag] = useMutation(CREATE_FLAG);
   const [updateFlag] = useMutation(UPDATE_FLAG);
   const [deleteFlag] = useMutation(DELETE_FLAG);
+  const confirm = useConfirm();
 
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<FlagEdit>(blankFlag);
@@ -100,7 +102,13 @@ export default function FeatureFlagsPage() {
   };
 
   const remove = async (f: any) => {
-    if (!confirm(`Delete flag "${f.key}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete flag',
+      message: `Delete flag "${f.key}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteFlag({ variables: { flag_id: f.id } });
       await refetch();

@@ -10,6 +10,10 @@ export const PODS = gql`
       location_id
       venue_id
       club_id
+      pod_mode
+      meeting_platform
+      meeting_url
+      meeting_notes
       pod_hashtag
       pod_images_and_videos {
         url
@@ -155,6 +159,10 @@ export const OCCURRENCES = [
   { value: 'ALTERNATE_DAY', label: 'Alternate day' },
   { value: 'WEEKENDS_ONLY', label: 'Weekends only' },
 ];
+export const POD_MODES = [
+  { value: 'PHYSICAL', label: 'Physical' },
+  { value: 'VIRTUAL', label: 'Virtual' },
+] as const;
 
 export interface PodPlaceCharge {
   label: string;
@@ -176,6 +184,10 @@ export interface PodForm {
   venue_id: string;
   club_id: string;
   zone_name: string;
+  pod_mode: 'PHYSICAL' | 'VIRTUAL';
+  meeting_platform: string;
+  meeting_url: string;
+  meeting_notes: string;
   pod_hashtag_text: string;
   media_text: string;
   pod_description: string;
@@ -203,6 +215,10 @@ export const blankForm: PodForm = {
   venue_id: '',
   club_id: '',
   zone_name: '',
+  pod_mode: 'PHYSICAL',
+  meeting_platform: '',
+  meeting_url: '',
+  meeting_notes: '',
   pod_hashtag_text: '',
   media_text: '',
   pod_description: '',

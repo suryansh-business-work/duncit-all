@@ -14,7 +14,8 @@ export interface FormFieldProps extends Omit<TextFieldProps, Omitted> {
  */
 export default function FormField({ name, hint, ...rest }: FormFieldProps) {
   const [field, meta] = useField(name);
-  const showError = meta.touched && !!meta.error;
+  const hasChanged = meta.value !== meta.initialValue;
+  const showError = Boolean(meta.error && (meta.touched || hasChanged));
   return (
     <TextField
       {...rest}

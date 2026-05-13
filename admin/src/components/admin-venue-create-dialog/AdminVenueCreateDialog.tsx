@@ -1,16 +1,16 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
-  Autocomplete,
   Button,
+  CircularProgress,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
+import * as yup from 'yup';
 import {
   ADMIN_CREATE_VENUE,
   LOCATIONS_FOR_VENUE,
@@ -21,9 +21,8 @@ import {
   type Step1,
   type Step3,
 } from './queries';
-import VenueDetailsSection from './VenueDetailsSection';
-import VenueDocsSection from './VenueDocsSection';
-import VenueOwnerSection from './VenueOwnerSection';
+import VenueAccordionForm from './VenueAccordionForm';
+import { validateVenueCreate } from './venue.form';
 
 interface Props {
   open: boolean;
@@ -53,28 +52,39 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
   };
 
   const close = () => {
+    if (busy) return;
     reset();
     onClose();
   };
 
   const save = async (asDraft: boolean) => {
     setError('');
-    if (!owner) return setError('Select an owner user');
-    if (!s1.venue_name || !s1.address_line1 || !s1.location_id || !s1.country_code || !s1.state || !s1.city || !s1.locality || !s1.postal_code)
-      return setError('Fill required venue details');
-    if (!s3.owner_name || !s3.owner_email || !s3.owner_phone)
-      return setError('Fill required owner details');
+    const step1 = { ...s1, capacity: Number(s1.capacity) || 1 };
+    const step2 = {
+      documents: docs.filter((d) => d.type && d.url),
+      gstin: s2.gstin.trim().toUpperCase(),
+      pan: s2.pan.trim().toUpperCase(),
+    };
+    try {
+      await validateVenueCreate({
+        owner_user_id: owner?.user_id ?? '',
+        step1,
+        step2,
+        step3: s3,
+      });
+    } catch (validationError) {
+      if (validationError instanceof yup.ValidationError) {
+        return setError(validationError.errors[0] ?? 'Check the highlighted fields');
+      }
+      return setError('Check the highlighted fields');
+    }
     setBusy(true);
     try {
       await submit({
         variables: {
           owner_user_id: owner.user_id,
-          step1: { ...s1, capacity: Number(s1.capacity) || 1 },
-          step2: {
-            documents: docs.filter((d) => d.type && d.url),
-            gstin: s2.gstin,
-            pan: s2.pan,
-          },
+          step1,
+          step2,
           step3: s3,
           submit: !asDraft,
         },
@@ -94,22 +104,40 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
           {error && <Typography color="error">{error}</Typography>}
-          <Autocomplete
-            options={usersData?.users ?? []}
-            getOptionLabel={(o: any) => `${o.full_name} · ${o.email || o.phone_number || ''}`}
-            value={owner}
-            onChange={(_, v) => setOwner(v)}
-            renderInput={(params) => <TextField {...params} label="Owner user *" size="small" />}
+          <VenueAccordionForm
+            mode="create"
+            s1={s1}
+            setS1={setS1}
+            docs={docs}
+            setDocs={setDocs}
+            s2={s2}
+            setS2={setS2}
+            s3={s3}
+            setS3={setS3}
+            owner={owner}
+            setOwner={setOwner}
+            ownerOptions={usersData?.users ?? []}
+            locations={locationsData?.locations ?? []}
           />
-          <VenueDetailsSection s1={s1} setS1={setS1} locations={locationsData?.locations ?? []} />
-          <VenueDocsSection docs={docs} setDocs={setDocs} s2={s2} setS2={setS2} />
-          <VenueOwnerSection s3={s3} setS3={setS3} />
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={close}>Cancel</Button>
-        <Button onClick={() => save(true)} disabled={busy}>Save Draft</Button>
-        <Button variant="contained" onClick={() => save(false)} disabled={busy}>
+        <Button onClick={close} disabled={busy}>
+          Cancel
+        </Button>
+        <Button
+          onClick={() => save(true)}
+          disabled={busy}
+          startIcon={busy ? <CircularProgress size={14} /> : undefined}
+        >
+          Save Draft
+        </Button>
+        <Button
+          variant="contained"
+          onClick={() => save(false)}
+          disabled={busy}
+          startIcon={busy ? <CircularProgress size={14} /> : undefined}
+        >
           Submit for Review
         </Button>
       </DialogActions>

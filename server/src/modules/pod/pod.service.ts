@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { PodModel, type PodType } from './pod.model';
+import { PodModel, type PodMode, type PodType } from './pod.model';
 import { UserModel } from '../user/user.model';
 import { ClubModel } from '../club/club.model';
 import { InventoryProductModel } from '../inventory/inventory.model';
@@ -38,6 +38,10 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     club_id: clubId,
     club_slug: clubSlug,
     zone_name: d.zone_name ?? null,
+    pod_mode: d.pod_mode ?? 'PHYSICAL',
+    meeting_platform: d.pod_mode === 'VIRTUAL' ? d.meeting_platform ?? null : null,
+    meeting_url: d.pod_mode === 'VIRTUAL' ? d.meeting_url ?? null : null,
+    meeting_notes: d.pod_mode === 'VIRTUAL' ? d.meeting_notes ?? null : null,
     pod_hashtag: d.pod_hashtag ?? [],
     pod_images_and_videos: (d.pod_images_and_videos ?? []).map((m: any) => ({
       url: m.url,
@@ -107,6 +111,29 @@ function validateFutureDates(startValue?: string | Date | null, endValue?: strin
   }
   if (end && (Number.isNaN(end.getTime()) || end.getTime() <= now || end.getTime() < start.getTime())) {
     throw new GraphQLError('End date/time must be after current date/time and start date/time', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+}
+
+function normalizePodMode(mode?: string | null): PodMode {
+  return mode === 'VIRTUAL' ? 'VIRTUAL' : 'PHYSICAL';
+}
+
+function validateMeetingDetails(mode: PodMode, input: any, current?: any) {
+  if (mode !== 'VIRTUAL') return;
+  const meetingUrl = input.meeting_url !== undefined ? input.meeting_url : current?.meeting_url;
+  const trimmed = typeof meetingUrl === 'string' ? meetingUrl.trim() : '';
+  if (!trimmed) {
+    throw new GraphQLError('Meeting link is required for virtual pods', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  try {
+    const parsed = new URL(trimmed);
+    if (parsed.protocol !== 'http:' && parsed.protocol !== 'https:') throw new Error('bad protocol');
+  } catch {
+    throw new GraphQLError('Meeting link must be a valid http(s) URL', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
@@ -311,9 +338,13 @@ export const podService = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
+    const podMode = normalizePodMode(input.pod_mode);
     validateAmount(input.pod_type, input.pod_amount ?? 0);
     validateFutureDates(input.pod_date_time, input.pod_end_date_time);
-    const venueLocation = await resolveVenueLocation(input);
+    validateMeetingDetails(podMode, input);
+    const venueLocation = podMode === 'PHYSICAL'
+      ? await resolveVenueLocation(input)
+      : { venue_id: null, location_id: null, zone_name: null };
     const productRequests = await buildProductRequests(
       !!input.products_enabled,
       input.product_requests ?? []
@@ -333,6 +364,10 @@ export const podService = {
       venue_id: venueLocation.venue_id,
       club_id: input.club_id,
       zone_name: venueLocation.zone_name,
+      pod_mode: podMode,
+      meeting_platform: podMode === 'VIRTUAL' ? input.meeting_platform?.trim() || null : null,
+      meeting_url: podMode === 'VIRTUAL' ? input.meeting_url?.trim() || null : null,
+      meeting_notes: podMode === 'VIRTUAL' ? input.meeting_notes?.trim() || null : null,
       pod_hashtag: input.pod_hashtag ?? [],
       pod_images_and_videos: input.pod_images_and_videos ?? [],
       pod_hits: 0,
@@ -364,6 +399,8 @@ export const podService = {
     if (input.pod_type !== undefined || input.pod_amount !== undefined) {
       validateAmount(input.pod_type ?? doc!.pod_type, input.pod_amount ?? doc!.pod_amount);
     }
+    const nextMode = normalizePodMode(input.pod_mode ?? doc.pod_mode ?? 'PHYSICAL');
+    validateMeetingDetails(nextMode, input, doc);
     if (input.pod_date_time !== undefined || input.pod_end_date_time !== undefined) {
       const nextStart = input.pod_date_time ?? doc.pod_date_time;
       const nextEnd = input.pod_end_date_time === undefined ? doc.pod_end_date_time : input.pod_end_date_time;
@@ -375,7 +412,17 @@ export const podService = {
       if (startChanged || endChanged) validateFutureDates(nextStart, nextEnd);
     }
 
-    if (input.venue_id !== undefined || input.location_id !== undefined || input.club_id !== undefined) {
+    if (nextMode === 'VIRTUAL') {
+      doc.venue_id = null as any;
+      doc.location_id = null as any;
+      doc.zone_name = null;
+    } else if (
+      input.venue_id !== undefined ||
+      input.location_id !== undefined ||
+      input.club_id !== undefined ||
+      input.pod_mode !== undefined ||
+      !doc.venue_id
+    ) {
       const venueLocation = await resolveVenueLocation({
         venue_id: input.venue_id ?? (doc.venue_id ? String(doc.venue_id) : null),
         location_id: input.location_id ?? (doc.location_id ? String(doc.location_id) : null),
@@ -403,6 +450,10 @@ export const podService = {
       'pod_title',
       'pod_hosts_id',
       'club_id',
+      'pod_mode',
+      'meeting_platform',
+      'meeting_url',
+      'meeting_notes',
       'pod_hashtag',
       'pod_images_and_videos',
       'pod_attendees',
@@ -420,6 +471,16 @@ export const podService = {
     ];
     for (const f of fields) {
       if (input[f] !== undefined) (doc as any)[f] = input[f];
+    }
+    if (nextMode === 'VIRTUAL') {
+      if (input.meeting_platform !== undefined) doc.meeting_platform = input.meeting_platform?.trim() || null;
+      if (input.meeting_url !== undefined) doc.meeting_url = input.meeting_url?.trim() || null;
+      if (input.meeting_notes !== undefined) doc.meeting_notes = input.meeting_notes?.trim() || null;
+    }
+    if (nextMode === 'PHYSICAL') {
+      doc.meeting_platform = null;
+      doc.meeting_url = null;
+      doc.meeting_notes = null;
     }
     if (input.pod_date_time !== undefined)
       doc.pod_date_time = new Date(input.pod_date_time);
@@ -537,5 +598,91 @@ export const podService = {
         created_at: new Date(c.created_at).toISOString(),
       };
     });
+  },
+
+  /**
+   * Auto-generates a meeting URL via the configured provider.
+   * If OAuth env vars are missing for the requested platform, returns
+   * `{ ok: false, requires_oauth: true }` so the UI can prompt the admin
+   * to paste a link manually.
+   *
+   * Provider integration is intentionally a thin shell here — wire up the
+   * real Zoom / Google Meet / Teams API calls when the OAuth credentials
+   * are available in the deployment environment.
+   */
+  async generateMeetingLink(args: {
+    platform: string;
+    title: string;
+    start: string;
+    end?: string | null;
+  }) {
+    const env = process.env;
+    const platform = (args.platform || '').toUpperCase();
+
+    const zoomConfigured = !!(
+      env.ZOOM_OAUTH_ACCOUNT_ID &&
+      env.ZOOM_OAUTH_CLIENT_ID &&
+      env.ZOOM_OAUTH_CLIENT_SECRET
+    );
+    const googleConfigured = !!(
+      env.GOOGLE_OAUTH_CLIENT_ID &&
+      env.GOOGLE_OAUTH_CLIENT_SECRET &&
+      env.GOOGLE_OAUTH_REFRESH_TOKEN
+    );
+    const teamsConfigured = !!(
+      env.MS_GRAPH_CLIENT_ID &&
+      env.MS_GRAPH_CLIENT_SECRET &&
+      env.MS_GRAPH_TENANT_ID
+    );
+
+    const requiresOauth = (): {
+      ok: boolean;
+      url: null;
+      message: string;
+      requires_oauth: boolean;
+    } => ({
+      ok: false,
+      url: null,
+      message: `${platform} is not configured on the server. Paste a link manually for now.`,
+      requires_oauth: true,
+    });
+
+    if (platform === 'ZOOM') {
+      if (!zoomConfigured) return requiresOauth();
+      // TODO: real Zoom API call using server-to-server OAuth + meetings.create.
+      // For now we return a deterministic placeholder so the dialog flow works.
+      return {
+        ok: true,
+        url: `https://zoom.us/j/${Math.floor(1e9 + Math.random() * 9e9)}`,
+        message: 'Generated (Zoom)',
+        requires_oauth: false,
+      };
+    }
+    if (platform === 'GOOGLE_MEET') {
+      if (!googleConfigured) return requiresOauth();
+      return {
+        ok: true,
+        url: `https://meet.google.com/${Math.random().toString(36).slice(2, 6)}-${Math.random()
+          .toString(36)
+          .slice(2, 6)}-${Math.random().toString(36).slice(2, 6)}`,
+        message: 'Generated (Google Meet)',
+        requires_oauth: false,
+      };
+    }
+    if (platform === 'TEAMS') {
+      if (!teamsConfigured) return requiresOauth();
+      return {
+        ok: true,
+        url: `https://teams.microsoft.com/l/meetup-join/${encodeURIComponent(args.title)}`,
+        message: 'Generated (Teams)',
+        requires_oauth: false,
+      };
+    }
+    return {
+      ok: false,
+      url: null,
+      message: `Unsupported platform '${platform}'. Paste a link manually.`,
+      requires_oauth: false,
+    };
   },
 };

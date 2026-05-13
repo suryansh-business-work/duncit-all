@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import { notifyError } from '../../components/notify';
+import { useConfirm } from '../../components/useConfirm';
 import {
   CREATE_LOCATION,
   DELETE_LOCATION,
@@ -22,6 +23,7 @@ export default function LocationsPage() {
   const [createMut] = useMutation(CREATE_LOCATION);
   const [updateMut] = useMutation(UPDATE_LOCATION);
   const [deleteMut] = useMutation(DELETE_LOCATION);
+  const confirm = useConfirm();
 
   const [dialogOpen, setDialogOpen] = useState(false);
   const [form, setForm] = useState<LocForm>(blankForm);
@@ -38,7 +40,7 @@ export default function LocationsPage() {
   const openEdit = (loc: any) => {
     setForm({
       id: loc.id,
-      location_id: loc.location_id,
+      location_id: '',
       location_name: loc.location_name,
       country: loc.country ?? 'India',
       country_code: loc.country_code ?? 'IN',
@@ -46,13 +48,13 @@ export default function LocationsPage() {
       state_code: loc.state_code ?? '',
       city: loc.city ?? loc.location_name ?? '',
       location_image: loc.location_image,
-      location_pincode: loc.location_pincode,
+      location_pincode: '',
       is_active: loc.is_active,
       zones:
         loc.location_zones.length > 0
           ? loc.location_zones.map((z: any) => ({
               zone_name: z.zone_name,
-              zone_code: z.zone_code ?? '',
+              zone_code: '',
               pincode: z.pincode ?? '',
             }))
           : [{ zone_name: '', zone_code: '', pincode: '' }],
@@ -82,7 +84,6 @@ export default function LocationsPage() {
       const cleanZones = form.zones
         .map((z) => ({
           zone_name: z.zone_name.trim(),
-          zone_code: z.zone_code.trim() || undefined,
           pincode: z.pincode.trim() || undefined,
         }))
         .filter((z) => z.zone_name);
@@ -122,7 +123,6 @@ export default function LocationsPage() {
           variables: {
             input: {
               location_name: locationName,
-              location_id: form.location_id || undefined,
               country: form.country,
               country_code: form.country_code,
               state: form.state,
@@ -146,7 +146,13 @@ export default function LocationsPage() {
   };
 
   const remove = async (loc: any) => {
-    if (!confirm(`Delete location "${loc.location_name}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete location',
+      message: `Delete location "${loc.location_name}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteMut({ variables: { id: loc.id } });
       setToast('Deleted');

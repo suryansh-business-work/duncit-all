@@ -29,6 +29,10 @@ export const POD_DETAILS = gql`
       pod_attendees
       pod_date_time
       pod_end_date_time
+      pod_mode
+      meeting_platform
+      meeting_url
+      meeting_notes
       pod_type
       pod_amount
       pod_occurrence

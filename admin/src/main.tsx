@@ -6,6 +6,8 @@ import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { apolloClient } from './apollo';
 import { ColorModeProvider } from './ColorModeContext';
+import { ConfirmProvider } from './components/useConfirm';
+import { NotifyHost } from './components/notify';
 import App from './App';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
@@ -14,7 +16,10 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <ColorModeProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
           <BrowserRouter>
-            <App />
+            <ConfirmProvider>
+              <App />
+              <NotifyHost />
+            </ConfirmProvider>
           </BrowserRouter>
         </LocalizationProvider>
       </ColorModeProvider>

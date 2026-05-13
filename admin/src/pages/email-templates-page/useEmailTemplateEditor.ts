@@ -1,10 +1,12 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { DELETE, RENDER, TEMPLATES, Tpl, UPDATE } from './queries';
+import { useConfirm } from '../../components/useConfirm';
 
 type Snack = { kind: 'success' | 'error'; msg: string };
 
 export function useEmailTemplateEditor() {
+  const confirm = useConfirm();
   const { data, loading, refetch } = useQuery<{ emailTemplates: Tpl[] }>(TEMPLATES, {
     fetchPolicy: 'cache-and-network',
   });
@@ -101,7 +103,13 @@ export function useEmailTemplateEditor() {
 
   const onDelete = async () => {
     if (!draft) return;
-    if (!confirm(`Delete template "${draft.name}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete template',
+      message: `Delete template "${draft.name}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     await deleteTpl({ variables: { id: draft.template_id } });
     setSelected(null);
     await refetch();

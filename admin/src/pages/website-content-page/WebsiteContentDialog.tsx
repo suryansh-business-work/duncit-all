@@ -12,6 +12,7 @@ import {
   TextField,
 } from '@mui/material';
 import MediaPickerField from '../../components/MediaPickerField';
+import DateTimeField from '../../components/DateTimeField';
 import { PAGE_TYPES, type WebsiteContentForm } from './queries';
 
 interface Props {
@@ -84,12 +85,10 @@ export default function WebsiteContentDialog({
               onChange={(event) => setField('category', event.target.value)}
               fullWidth
             />
-            <TextField
+            <DateTimeField
               label="Published at"
-              type="datetime-local"
               value={form.published_at}
-              onChange={(event) => setField('published_at', event.target.value)}
-              InputLabelProps={{ shrink: true }}
+              onChange={(iso) => setField('published_at', iso)}
               fullWidth
             />
           </Stack>

@@ -20,6 +20,8 @@ import {
   USER_ACTIVITY_YEAR,
 } from './queries';
 import ActivityJourneyDialog from './ActivityJourneyDialog';
+import { useConfirm } from '../../components/useConfirm';
+import DateField from '../../components/DateField';
 
 interface Props {
   userId: string;
@@ -61,6 +63,7 @@ export default function UserActivitySection({ userId }: Props) {
   });
   const [deleteDay] = useMutation(DELETE_USER_ACTIVITY_DAY);
   const [deleteYear] = useMutation(DELETE_USER_ACTIVITY_YEAR);
+  const confirm = useConfirm();
 
   const activity = data?.userActivityYear;
   const years = activity?.available_years?.length ? activity.available_years : [year];
@@ -77,7 +80,13 @@ export default function UserActivitySection({ userId }: Props) {
   };
 
   const removeYear = async () => {
-    if (!confirm(`Delete all ${year} activity for this user?`)) return;
+    const ok = await confirm({
+      title: 'Delete activity',
+      message: `Delete all ${year} activity for this user?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     await deleteYear({ variables: { user_id: userId, year } });
     await refetch();
   };
@@ -129,13 +138,12 @@ export default function UserActivitySection({ userId }: Props) {
             />
           </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-            <TextField
+            <DateField
               size="small"
-              type="date"
               label="Delete day"
               value={selectedDate}
-              onChange={(event) => setSelectedDate(event.target.value)}
-              InputLabelProps={{ shrink: true }}
+              onChange={(iso) => setSelectedDate(iso)}
+              maxDate={new Date()}
             />
             <Button variant="outlined" color="error" startIcon={<DeleteIcon />} disabled={!selectedDate} onClick={removeDay}>
               Delete Day

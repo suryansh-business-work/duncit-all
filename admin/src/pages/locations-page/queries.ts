@@ -4,7 +4,6 @@ export const LOCATIONS = gql`
   query Locations($filter: LocationFilterInput) {
     locations(filter: $filter) {
       id
-      location_id
       location_name
       country
       country_code
@@ -12,10 +11,8 @@ export const LOCATIONS = gql`
       state_code
       city
       location_image
-      location_pincode
       location_zones {
         zone_name
-        zone_code
         pincode
       }
       is_active
@@ -43,5 +40,11 @@ export const UPDATE_LOCATION = gql`
 export const DELETE_LOCATION = gql`
   mutation DeleteLocation($id: ID!) {
     deleteLocation(location_doc_id: $id)
+  }
+`;
+
+export const AI_FILL_LOCATION_AREAS = gql`
+  mutation AiFillLocationAreas($input: AiLocationAreasInput!) {
+    aiFillLocationAreas(input: $input)
   }
 `;

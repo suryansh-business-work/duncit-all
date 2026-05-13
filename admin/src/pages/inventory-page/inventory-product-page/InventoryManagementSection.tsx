@@ -1,6 +1,7 @@
 import { Box, Grid, Stack, TextField } from '@mui/material';
 import { useFormikContext } from 'formik';
 import StockColorChip from './StockColorChip';
+import DateField from '../../../components/DateField';
 import type { InventoryProductFormValues } from './types';
 
 const num = (v: any) => (v === '' ? 0 : Number(v));
@@ -114,25 +115,17 @@ export default function InventoryManagementSection() {
         />
       </Grid>
       <Grid item xs={6} sm={3}>
-        <TextField
-          fullWidth
-          name="manufacturing_date"
+        <DateField
           label="Manufacturing date"
-          type="date"
           value={f.values.manufacturing_date}
-          onChange={f.handleChange}
-          InputLabelProps={{ shrink: true }}
+          onChange={(iso) => f.setFieldValue('manufacturing_date', iso)}
         />
       </Grid>
       <Grid item xs={6} sm={3}>
-        <TextField
-          fullWidth
-          name="expiry_date"
+        <DateField
           label="Expiry date"
-          type="date"
           value={f.values.expiry_date}
-          onChange={f.handleChange}
-          InputLabelProps={{ shrink: true }}
+          onChange={(iso) => f.setFieldValue('expiry_date', iso)}
           helperText="Leave empty if non-perishable"
         />
       </Grid>

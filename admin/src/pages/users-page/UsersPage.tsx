@@ -20,6 +20,7 @@ import { blankForm, genPassword, type CreateForm } from './helpers';
 import { getUsersColumns } from './columns';
 import CreateUserDialog from './CreateUserDialog';
 import UsersFilters from './UsersFilters';
+import { createUserSchema, toCreateUserInput } from './create-user.form';
 
 export default function UsersPage() {
   const navigate = useNavigate();
@@ -50,24 +51,14 @@ export default function UsersPage() {
     setOpen(true);
   };
 
-  const submit = async () => {
+  const submit = async (values: CreateForm) => {
     setBusy(true);
     setOpError(null);
     try {
+      const valid = await createUserSchema.validate(values, { abortEarly: false });
       await createUser({
         variables: {
-          input: {
-            first_name: form.first_name.trim(),
-            last_name: form.last_name.trim(),
-            email: form.email.trim() || undefined,
-            phone_extension: form.phone_extension.trim(),
-            phone_number: form.phone_number.trim(),
-            password: form.password,
-            dob: form.dob ? new Date(form.dob).toISOString() : undefined,
-            roles: form.roles,
-            city: form.city || undefined,
-            zone: form.zone || undefined,
-          },
+          input: toCreateUserInput(valid),
         },
       });
       setOpen(false);
@@ -83,14 +74,6 @@ export default function UsersPage() {
     () => getUsersColumns({ formatDate, formatDateTime }),
     [formatDate, formatDateTime]
   );
-
-  const validForm =
-    !!form.first_name &&
-    !!form.last_name &&
-    !!form.phone_number &&
-    form.password.length >= 8 &&
-    !!form.dob &&
-    form.roles.length > 0;
 
   return (
     <Stack spacing={2}>
@@ -167,11 +150,9 @@ export default function UsersPage() {
         open={open}
         onClose={() => setOpen(false)}
         form={form}
-        setForm={setForm}
         showPwd={showPwd}
         setShowPwd={setShowPwd}
         busy={busy}
-        validForm={validForm}
         opError={opError}
         onSubmit={submit}
         roles={data?.roles ?? []}

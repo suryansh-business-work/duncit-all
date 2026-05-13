@@ -14,7 +14,7 @@ export const PUBLIC_FINANCE = gql`
 export const CHECKOUT_ME = gql`
   query CheckoutMe {
     me {
-      id
+      user_id
       first_name
       last_name
       email

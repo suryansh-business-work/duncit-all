@@ -76,5 +76,21 @@ export const venueResolvers = {
         status: args.status,
       });
     },
+    setVenueActive: async (
+      _p: unknown,
+      args: { venue_doc_id: string; active: boolean },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return venueService.setActive(args.venue_doc_id, args.active);
+    },
+    deleteVenue: async (
+      _p: unknown,
+      args: { venue_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return venueService.deleteVenue(args.venue_doc_id);
+    },
   },
 };

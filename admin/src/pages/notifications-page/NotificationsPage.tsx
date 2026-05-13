@@ -21,6 +21,8 @@ import {
 import { blankForm, type NotifForm } from './helpers';
 import NotificationsTable from './NotificationsTable';
 import NotificationFormDialog from './NotificationFormDialog';
+import { useConfirm } from '../../components/useConfirm';
+import { notificationFormSchema, toCreateNotificationInput } from './notification.form';
 
 export default function NotificationsPage() {
   const { data, loading, error, refetch } = useQuery(NOTIFS, {
@@ -32,6 +34,7 @@ export default function NotificationsPage() {
 
   const [createMut] = useMutation(CREATE_NOTIFICATION);
   const [deleteMut] = useMutation(DELETE_NOTIFICATION);
+  const confirm = useConfirm();
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<NotifForm>(blankForm);
@@ -43,8 +46,6 @@ export default function NotificationsPage() {
   const users = usersData?.users ?? [];
   const locName = (id?: string | null) =>
     locations.find((l: any) => l.id === id)?.location_name ?? '—';
-  const selLoc = locations.find((l: any) => l.id === form.location_id);
-  const zones: { zone_name: string }[] = selLoc?.location_zones ?? [];
 
   const openCreate = () => {
     setForm(blankForm);
@@ -52,30 +53,12 @@ export default function NotificationsPage() {
     setOpen(true);
   };
 
-  const submit = async () => {
+  const submit = async (values: NotifForm) => {
     setBusy(true);
     setOpError(null);
     try {
-      if (!form.title.trim()) throw new Error('Title required');
-      if (!form.body.trim()) throw new Error('Body required');
-      if (form.scope === 'LOCATION' && !form.location_id) throw new Error('Pick a location');
-      if (form.scope === 'ZONE' && (!form.location_id || !form.zone_name))
-        throw new Error('Pick location and zone');
-      if (form.scope === 'USER' && form.target_user_ids.length === 0)
-        throw new Error('Pick at least one user');
-
-      const payload: any = {
-        title: form.title,
-        body: form.body,
-        image_url: form.image_url || null,
-        link_url: form.link_url || null,
-        scope: form.scope,
-        silent: form.silent,
-        location_id:
-          form.scope === 'GLOBAL' || form.scope === 'USER' ? null : form.location_id,
-        zone_name: form.scope === 'ZONE' ? form.zone_name : null,
-        target_user_ids: form.scope === 'USER' ? form.target_user_ids : [],
-      };
+      const valid = await notificationFormSchema.validate(values, { abortEarly: false });
+      const payload = toCreateNotificationInput(valid);
       const res = await createMut({ variables: { input: payload } });
       const c = res.data?.createNotification;
       setToast(`Sent · delivered ${c?.delivered_count ?? 0} · failed ${c?.failed_count ?? 0}`);
@@ -89,7 +72,13 @@ export default function NotificationsPage() {
   };
 
   const remove = async (n: any) => {
-    if (!confirm(`Delete notification "${n.title}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete notification',
+      message: `Delete notification "${n.title}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteMut({ variables: { id: n.id } });
       setToast('Deleted');
@@ -135,12 +124,10 @@ export default function NotificationsPage() {
         open={open}
         onClose={() => setOpen(false)}
         form={form}
-        setForm={setForm}
         busy={busy}
         opError={opError}
         onSubmit={submit}
         locations={locations}
-        zones={zones}
         users={users}
       />
 

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { notifyError } from '../../components/notify';
+import { useConfirm } from '../../components/useConfirm';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import {
@@ -28,6 +29,7 @@ export default function ClubsPage() {
   const [createMut] = useMutation(CREATE);
   const [updateMut] = useMutation(UPDATE);
   const [deleteMut] = useMutation(DELETE);
+  const confirm = useConfirm();
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<ClubForm>(blankForm);
@@ -98,7 +100,13 @@ export default function ClubsPage() {
   };
 
   const remove = async (c: any) => {
-    if (!confirm(`Delete club "${c.club_name}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete club',
+      message: `Delete club "${c.club_name}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteMut({ variables: { id: c.id } });
       setToast('Deleted');

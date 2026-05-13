@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { notifyError } from '../../components/notify';
+import { useConfirm } from '../../components/useConfirm';
 import {
   CREATE_ROLE,
   DELETE_ROLE,
@@ -27,6 +28,7 @@ export default function RolesPage() {
   const [updateRole] = useMutation(UPDATE_ROLE);
   const [deleteRole] = useMutation(DELETE_ROLE);
   const [setPerms] = useMutation(SET_ROLE_PERMS);
+  const confirm = useConfirm();
 
   const [editOpen, setEditOpen] = useState(false);
   const [editing, setEditing] = useState<RoleEdit>(blankRole);
@@ -88,7 +90,13 @@ export default function RolesPage() {
   };
 
   const removeRole = async (r: any) => {
-    if (!confirm(`Delete role "${r.key}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete role',
+      message: `Delete role "${r.key}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteRole({ variables: { role_id: r.id } });
       await refetch();

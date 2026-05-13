@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { notifyError } from '../../components/notify';
+import { useConfirm } from '../../components/useConfirm';
 import { useMutation, useQuery } from '@apollo/client';
 import { useSearchParams } from 'react-router-dom';
 import { Alert, Snackbar, Stack } from '@mui/material';
@@ -45,6 +46,7 @@ export default function PodsPage() {
   const [createMut] = useMutation(CREATE);
   const [updateMut] = useMutation(UPDATE);
   const [deleteMut] = useMutation(DELETE);
+  const confirm = useConfirm();
 
   const [open, setOpen] = useState(false);
   const [initialValues, setInitialValues] = useState<PodForm>(blankForm);
@@ -102,7 +104,13 @@ export default function PodsPage() {
   };
 
   const remove = async (p: any) => {
-    if (!confirm(`Delete pod "${p.pod_title}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete pod',
+      message: `Delete pod "${p.pod_title}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteMut({ variables: { id: p.id } });
       setToast('Deleted');

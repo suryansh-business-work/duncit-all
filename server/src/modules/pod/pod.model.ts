@@ -2,6 +2,7 @@ import { Schema, model, Types, type Document } from 'mongoose';
 
 export type PodType = 'NATIVE_FREE' | 'NATIVE_PAID' | 'NATIVE_PAID_PREMIUM' | 'NON_NATIVE_FREE' | 'NON_NATIVE_PAID';
 export type PodOccurrence = 'ONE_TIME' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'ALTERNATE_DAY' | 'WEEKENDS_ONLY';
+export type PodMode = 'PHYSICAL' | 'VIRTUAL';
 
 export interface IPodMedia {
   url: string;
@@ -37,6 +38,10 @@ export interface IPod extends Document {
   venue_id?: Types.ObjectId | null;
   club_id: Types.ObjectId;
   zone_name?: string | null;
+  pod_mode: PodMode;
+  meeting_platform?: string | null;
+  meeting_url?: string | null;
+  meeting_notes?: string | null;
   pod_hashtag: string[];
   pod_images_and_videos: IPodMedia[];
   pod_hits: number;
@@ -110,6 +115,10 @@ const podSchema = new Schema<IPod>(
     venue_id: { type: Schema.Types.ObjectId, ref: 'Venue', default: null, index: true },
     club_id: { type: Schema.Types.ObjectId, ref: 'Club', required: true },
     zone_name: { type: String, default: null, trim: true },
+    pod_mode: { type: String, enum: ['PHYSICAL', 'VIRTUAL'], default: 'PHYSICAL', required: true },
+    meeting_platform: { type: String, default: null, trim: true, maxlength: 80 },
+    meeting_url: { type: String, default: null, trim: true, maxlength: 1000 },
+    meeting_notes: { type: String, default: null, trim: true, maxlength: 1000 },
     pod_hashtag: { type: [String], default: [] },
     pod_images_and_videos: { type: [mediaSchema], default: [] },
     pod_hits: { type: Number, default: 0 },

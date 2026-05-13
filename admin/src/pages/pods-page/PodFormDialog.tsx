@@ -10,7 +10,7 @@ import { Formik, Form } from 'formik';
 import { useState } from 'react';
 import AiFillButton from '../../components/AiFillButton';
 import CascadeEffect from './pod-form/CascadeEffect';
-import PodFormSections, { SECTIONS } from './pod-form/PodFormSections';
+import PodFormSections, { SECTION_IDS } from './pod-form/PodFormSections';
 import { podFormSchema } from './pod-form/schema';
 import { applyAiFillToForm } from './podFormAi';
 import type { PodForm } from './queries';
@@ -54,7 +54,7 @@ export default function PodFormDialog({
       return next;
     });
   };
-  const expandAll = () => setExpanded(new Set(SECTIONS.map((s) => s.id)));
+  const expandAll = () => setExpanded(new Set(SECTION_IDS));
   const collapseAll = () => setExpanded(new Set());
 
   return (

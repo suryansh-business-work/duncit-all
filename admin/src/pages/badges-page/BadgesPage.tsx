@@ -19,6 +19,7 @@ import {
 } from './queries';
 import BadgeCard from './BadgeCard';
 import BadgeFormDialog from './BadgeFormDialog';
+import { useConfirm } from '../../components/useConfirm';
 
 export default function BadgesPage() {
   const { data, loading, error, refetch } = useQuery(BADGES);
@@ -27,6 +28,7 @@ export default function BadgesPage() {
   const [createBadge, createState] = useMutation(CREATE_BADGE);
   const [updateBadge, updateState] = useMutation(UPDATE_BADGE);
   const [deleteBadge] = useMutation(DELETE_BADGE);
+  const confirm = useConfirm();
   const busy = createState.loading || updateState.loading;
 
   const startCreate = () => {
@@ -58,7 +60,13 @@ export default function BadgesPage() {
   };
 
   const remove = async (b: any) => {
-    if (!confirm(`Delete badge "${b.title}"? This also revokes it from all users.`)) return;
+    const ok = await confirm({
+      title: 'Delete badge',
+      message: `Delete badge "${b.title}"? This also revokes it from all users.`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     await deleteBadge({ variables: { id: b.id } });
     await refetch();
   };

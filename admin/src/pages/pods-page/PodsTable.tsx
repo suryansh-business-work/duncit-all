@@ -96,18 +96,27 @@ export default function PodsTable({ loading, pods, clubName, venueName, locName,
                     </Typography>
                   </TableCell>
                   <TableCell>{clubName(p.club_id)}</TableCell>
-                  <TableCell>{p.venue_id ? venueName(p.venue_id) : locName(p.location_id)}</TableCell>
+                  <TableCell>
+                    {p.pod_mode === 'VIRTUAL'
+                      ? p.meeting_platform || 'Virtual'
+                      : p.venue_id
+                        ? venueName(p.venue_id)
+                        : locName(p.location_id)}
+                  </TableCell>
                   <TableCell>
                     <Typography variant="caption">
                       {p.pod_date_time ? new Date(p.pod_date_time).toLocaleString() : '—'}
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip
-                      size="small"
-                      label={p.pod_type.replace(/_/g, ' ')}
-                      color={p.pod_type.includes('FREE') ? 'default' : 'primary'}
-                    />
+                    <Stack direction="row" spacing={0.5} flexWrap="wrap" useFlexGap>
+                      <Chip size="small" label={p.pod_mode === 'VIRTUAL' ? 'Virtual' : 'Physical'} />
+                      <Chip
+                        size="small"
+                        label={p.pod_type.replace(/_/g, ' ')}
+                        color={p.pod_type.includes('FREE') ? 'default' : 'primary'}
+                      />
+                    </Stack>
                   </TableCell>
                   <TableCell>{p.pod_amount > 0 ? `₹${p.pod_amount}` : 'Free'}</TableCell>
                   <TableCell>

@@ -1,4 +1,5 @@
-import { Stack, Typography } from '@mui/material';
+import { Button, Stack, Typography } from '@mui/material';
+import VideocamIcon from '@mui/icons-material/Videocam';
 import PodLocationMap from '../../pages/pod-details-page/PodLocationMap';
 import VenueMapPreview from '../VenueMapPreview';
 
@@ -40,6 +41,7 @@ const venueParts = (venue: any) => [
 ];
 
 export default function PodMapSection({ pod, location, venue }: Props) {
+  const isVirtual = pod.pod_mode === 'VIRTUAL';
   const locationName = venue?.venue_name ?? location?.location_name ?? null;
   const zone = (location?.location_zones ?? []).find(
     (item: any) => item.zone_name === pod.zone_name
@@ -60,18 +62,54 @@ export default function PodMapSection({ pod, location, venue }: Props) {
             : ''}
         </Typography>
       </Stack>
-      <Stack spacing={0.25}>
-        <Typography variant="caption" color="text.secondary">
-          Where
-        </Typography>
-        <Typography variant="body2" fontWeight={500}>
-          {placeText ?? '\u2014'}
-        </Typography>
-      </Stack>
-      {venue ? (
-        <VenueMapPreview title={venue.venue_name} parts={venueParts(venue)} lat={venue.lat} lng={venue.lng} />
+      {isVirtual ? (
+        <Stack spacing={1}>
+          <Stack spacing={0.25}>
+            <Typography variant="caption" color="text.secondary">
+              Meeting
+            </Typography>
+            <Typography variant="body2" fontWeight={500}>
+              {pod.meeting_platform || 'Online'}
+            </Typography>
+          </Stack>
+          {pod.meeting_url ? (
+            <Button
+              variant="contained"
+              startIcon={<VideocamIcon />}
+              href={pod.meeting_url}
+              target="_blank"
+              rel="noreferrer"
+              sx={{ alignSelf: 'flex-start' }}
+            >
+              Join meeting
+            </Button>
+          ) : (
+            <Typography variant="body2" color="text.secondary">
+              Meeting link will be visible after joining this pod.
+            </Typography>
+          )}
+          {pod.meeting_notes && (
+            <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+              {pod.meeting_notes}
+            </Typography>
+          )}
+        </Stack>
       ) : (
-        <PodLocationMap locationName={locationName} zoneName={pod.zone_name} pincode={pincode} />
+        <>
+          <Stack spacing={0.25}>
+            <Typography variant="caption" color="text.secondary">
+              Where
+            </Typography>
+            <Typography variant="body2" fontWeight={500}>
+              {placeText ?? '\u2014'}
+            </Typography>
+          </Stack>
+          {venue ? (
+            <VenueMapPreview title={venue.venue_name} parts={venueParts(venue)} lat={venue.lat} lng={venue.lng} />
+          ) : (
+            <PodLocationMap locationName={locationName} zoneName={pod.zone_name} pincode={pincode} />
+          )}
+        </>
       )}
     </Stack>
   );

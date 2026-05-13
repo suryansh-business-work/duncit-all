@@ -7,6 +7,10 @@ export const podFormSchema: yup.ObjectSchema<Pick<PodForm,
   | 'venue_id'
   | 'location_id'
   | 'zone_name'
+  | 'pod_mode'
+  | 'meeting_platform'
+  | 'meeting_url'
+  | 'meeting_notes'
   | 'pod_hosts_id'
   | 'pod_description'
   | 'pod_date_time'
@@ -27,9 +31,30 @@ export const podFormSchema: yup.ObjectSchema<Pick<PodForm,
 >> = yup.object({
   pod_title: yup.string().trim().min(3, 'Title is too short').max(120).required('Title required'),
   club_id: yup.string().required('Select a club'),
-  venue_id: yup.string().required('Select a venue'),
+  pod_mode: yup.mixed<'PHYSICAL' | 'VIRTUAL'>().oneOf(['PHYSICAL', 'VIRTUAL']).required('Select pod mode'),
+  venue_id: yup.string().default('').when('pod_mode', {
+    is: 'PHYSICAL',
+    then: (schema) => schema.required('Select a venue'),
+  }),
   location_id: yup.string().default(''),
   zone_name: yup.string().default(''),
+  meeting_platform: yup.string().trim().max(80, 'Meeting platform must be 80 characters or fewer').default(''),
+  meeting_url: yup.string().trim().default('').when('pod_mode', {
+    is: 'VIRTUAL',
+    then: (schema) =>
+      schema
+        .required('Meeting link is required')
+        .test('meeting-url', 'Meeting link must be a valid http(s) URL', (value) => {
+          if (!value) return false;
+          try {
+            const parsed = new URL(value);
+            return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+          } catch {
+            return false;
+          }
+        }),
+  }),
+  meeting_notes: yup.string().trim().max(1000, 'Meeting notes must be 1000 characters or fewer').default(''),
   pod_hosts_id: yup
     .array(yup.string().required())
     .min(1, 'Add at least one host')

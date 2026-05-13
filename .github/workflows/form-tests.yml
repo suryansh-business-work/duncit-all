@@ -1,0 +1,85 @@
+name: Form Tests
+
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'admin/**'
+      - 'mweb-app/**'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/form-tests.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'admin/**'
+      - 'mweb-app/**'
+      - 'package.json'
+      - 'package-lock.json'
+  workflow_dispatch:
+
+concurrency:
+  group: form-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test-forms:
+    name: Vitest schema & form tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        workspace: [admin, mweb-app]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Run form tests (${{ matrix.workspace }})
+        working-directory: ${{ matrix.workspace }}
+        run: npx vitest run --reporter=default --reporter=junit --outputFile=../test-results/${{ matrix.workspace }}-junit.xml
+
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: form-tests-${{ matrix.workspace }}
+          path: test-results/${{ matrix.workspace }}-junit.xml
+          if-no-files-found: ignore
+
+  typecheck:
+    name: Typecheck (admin + mweb-app)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck admin
+        working-directory: admin
+        run: npx tsc -b --noEmit
+
+      - name: Typecheck mweb-app
+        working-directory: mweb-app
+        run: npx tsc -b --noEmit

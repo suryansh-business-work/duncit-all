@@ -242,6 +242,12 @@ interface DescribeProductInput {
   tone?: string | null;
 }
 
+interface LocationAreasInput {
+  country: string;
+  state: string;
+  city: string;
+}
+
 async function generateProductDescription(input: DescribeProductInput): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -306,6 +312,95 @@ async function generateProductDescription(input: DescribeProductInput): Promise<
   return content;
 }
 
+function normalizeLocationAreas(content: string): string {
+  let parsed: any;
+  try {
+    parsed = JSON.parse(content);
+  } catch {
+    throw new GraphQLError('OpenAI did not return valid JSON', {
+      extensions: { code: 'AI_INVALID_JSON' },
+    });
+  }
+  const rawZones = Array.isArray(parsed?.zones)
+    ? parsed.zones
+    : Array.isArray(parsed?.areas)
+      ? parsed.areas
+      : [];
+  const seen = new Set<string>();
+  const zones = rawZones
+    .map((zone: any) => ({
+      zone_name: String(zone?.zone_name ?? zone?.area_name ?? zone?.name ?? '').trim(),
+      pincode: String(zone?.pincode ?? zone?.pin_code ?? zone?.postal_code ?? '').trim(),
+    }))
+    .filter((zone: { zone_name: string; pincode: string }) => {
+      const key = `${zone.zone_name.toLowerCase()}|${zone.pincode}`;
+      if (!zone.zone_name || !zone.pincode || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    })
+    .slice(0, 80);
+
+  if (zones.length === 0) {
+    throw new GraphQLError('OpenAI did not return any localities with PIN codes', {
+      extensions: { code: 'AI_INVALID_JSON' },
+    });
+  }
+  return JSON.stringify({ zones });
+}
+
+async function generateLocationAreas(input: LocationAreasInput): Promise<string> {
+  const country = input.country.trim();
+  const state = input.state.trim();
+  const city = input.city.trim();
+  if (!country || !state || !city) {
+    throw new GraphQLError('Country, state and city are required', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
+      extensions: { code: 'AI_NOT_CONFIGURED' },
+    });
+  }
+  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const body = {
+    model,
+    temperature: 0.2,
+    response_format: { type: 'json_object' as const },
+    messages: [
+      {
+        role: 'system',
+        content:
+          'Return strict JSON only. Generate a comprehensive but practical list of localities, neighbourhoods, and areas for the given city. Each item must include zone_name and pincode as strings. Do not include area codes, IDs, markdown, explanations, or extra keys. Shape: { "zones": [{ "zone_name": string, "pincode": string }] }. Prefer official/common postal PIN codes and remove duplicates.',
+      },
+      {
+        role: 'user',
+        content: `Country: ${country}\nState: ${state}\nCity: ${city}`,
+      },
+    ],
+  };
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const txt = await resp.text().catch(() => '');
+    throw new GraphQLError(`OpenAI error (${resp.status}): ${txt.slice(0, 500)}`, {
+      extensions: { code: 'AI_UPSTREAM_ERROR' },
+    });
+  }
+  const json: any = await resp.json();
+  const content: string | undefined = json?.choices?.[0]?.message?.content;
+  if (!content) {
+    throw new GraphQLError('OpenAI returned an empty response', {
+      extensions: { code: 'AI_EMPTY_RESPONSE' },
+    });
+  }
+  return normalizeLocationAreas(content);
+}
+
 export const aiResolvers = {
   Mutation: {
     aiFillDummyData: async (_: unknown, args: { entity: Entity; prompt?: string | null }) => {
@@ -314,6 +409,9 @@ export const aiResolvers = {
     },
     aiDescribeInventoryProduct: async (_: unknown, args: { input: DescribeProductInput }) => {
       return generateProductDescription(args.input);
+    },
+    aiFillLocationAreas: async (_: unknown, args: { input: LocationAreasInput }) => {
+      return generateLocationAreas(args.input);
     },
   },
 };

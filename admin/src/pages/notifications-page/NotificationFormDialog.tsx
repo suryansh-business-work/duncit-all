@@ -11,166 +11,117 @@ import {
   Switch,
   TextField,
 } from '@mui/material';
+import { Form, Formik, type FormikErrors, type FormikTouched } from 'formik';
 import MediaPickerField from '../../components/MediaPickerField';
 import { type NotifForm, SCOPES } from './helpers';
+import { notificationFormSchema } from './notification.form';
 
 interface Props {
   open: boolean;
   onClose: () => void;
   form: NotifForm;
-  setForm: React.Dispatch<React.SetStateAction<NotifForm>>;
   busy: boolean;
   opError: string | null;
-  onSubmit: () => void;
+  onSubmit: (values: NotifForm) => void;
   locations: any[];
-  zones: { zone_name: string }[];
   users: any[];
+}
+
+function fieldError(
+  values: NotifForm,
+  errors: FormikErrors<NotifForm>,
+  touched: FormikTouched<NotifForm>,
+  submitCount: number,
+  key: keyof NotifForm
+) {
+  const error = errors[key];
+  const value = values[key];
+  const hasValue = Array.isArray(value)
+    ? value.length > 0
+    : typeof value === 'boolean' || String(value ?? '').length > 0;
+  return Boolean(error && (submitCount > 0 || touched[key] || hasValue));
 }
 
 export default function NotificationFormDialog({
   open,
   onClose,
   form,
-  setForm,
   busy,
   opError,
   onSubmit,
   locations,
-  zones,
   users,
 }: Props) {
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>New Notification</DialogTitle>
-      <DialogContent dividers>
-        <Stack spacing={2} sx={{ pt: 1 }}>
-          {opError && <Alert severity="error">{opError}</Alert>}
-          <TextField
-            label="Title"
-            value={form.title}
-            onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
-            required
-            fullWidth
-          />
-          <TextField
-            label="Body"
-            value={form.body}
-            onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
-            required
-            multiline
-            minRows={3}
-            fullWidth
-          />
-          <MediaPickerField
-            label="Image URL (optional)"
-            value={form.image_url}
-            onChange={(url) => setForm((f) => ({ ...f, image_url: url }))}
-            folder="/notifications"
-          />
-          <TextField
-            label="Link URL (optional, e.g. /pods/abc)"
-            value={form.link_url}
-            onChange={(e) => setForm((f) => ({ ...f, link_url: e.target.value }))}
-            fullWidth
-          />
-          <FormControlLabel
-            control={
-              <Switch
-                checked={form.silent}
-                onChange={(e) => setForm((f) => ({ ...f, silent: e.target.checked }))}
-              />
-            }
-            label="Silent (in-app only — no push alert)"
-          />
-          <TextField
-            select
-            label="Audience"
-            value={form.scope}
-            onChange={(e) =>
-              setForm((f) => ({
-                ...f,
-                scope: e.target.value as NotifForm['scope'],
-                location_id: '',
-                zone_name: '',
-                target_user_ids: [],
-              }))
-            }
-            fullWidth
-          >
-            {SCOPES.map((s) => (
-              <MenuItem key={s.value} value={s.value}>
-                {s.label}
-              </MenuItem>
-            ))}
-          </TextField>
+    <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
+      <Formik<NotifForm>
+        initialValues={form}
+        enableReinitialize
+        validationSchema={notificationFormSchema}
+        validateOnBlur
+        validateOnChange
+        onSubmit={(values) => onSubmit(values)}
+      >
+        {({ values, errors, touched, submitCount, handleBlur, handleChange, setFieldValue }) => {
+          const err = (key: keyof NotifForm) => fieldError(values, errors, touched, submitCount, key);
+          const help = (key: keyof NotifForm) => (err(key) ? String(errors[key]) : ' ');
+          const location = locations.find((item: any) => item.id === values.location_id);
+          const zones: { zone_name: string }[] = location?.location_zones ?? [];
 
-          {(form.scope === 'LOCATION' || form.scope === 'ZONE') && (
-            <TextField
-              select
-              label="Location"
-              value={form.location_id}
-              onChange={(e) =>
-                setForm((f) => ({ ...f, location_id: e.target.value, zone_name: '' }))
-              }
-              fullWidth
-            >
-              {locations.map((l: any) => (
-                <MenuItem key={l.id} value={l.id}>
-                  {l.location_name}
-                </MenuItem>
-              ))}
-            </TextField>
-          )}
+          return (
+            <Form noValidate>
+              <DialogTitle>New Notification</DialogTitle>
+              <DialogContent dividers>
+                <Stack spacing={2} sx={{ pt: 1 }}>
+                  {opError && <Alert severity="error">{opError}</Alert>}
+                  <TextField label="Title" name="title" value={values.title} onChange={handleChange} onBlur={handleBlur} error={err('title')} helperText={help('title')} required fullWidth />
+                  <TextField label="Body" name="body" value={values.body} onChange={handleChange} onBlur={handleBlur} error={err('body')} helperText={help('body')} required multiline minRows={3} fullWidth />
+                  <MediaPickerField label="Image URL (optional)" value={values.image_url} onChange={(url) => setFieldValue('image_url', url)} folder="/notifications" />
+                  <TextField label="Link URL (optional, e.g. /pods/abc)" name="link_url" value={values.link_url} onChange={handleChange} onBlur={handleBlur} error={err('link_url')} helperText={help('link_url')} fullWidth />
+                  <FormControlLabel control={<Switch checked={values.silent} onChange={(_, checked) => setFieldValue('silent', checked)} />} label="Silent (in-app only — no push alert)" />
+                  <TextField
+                    select
+                    label="Audience"
+                    name="scope"
+                    value={values.scope}
+                    onChange={(event) => {
+                      setFieldValue('scope', event.target.value);
+                      setFieldValue('location_id', '');
+                      setFieldValue('zone_name', '');
+                      setFieldValue('target_user_ids', []);
+                    }}
+                    fullWidth
+                  >
+                    {SCOPES.map((scope) => <MenuItem key={scope.value} value={scope.value}>{scope.label}</MenuItem>)}
+                  </TextField>
 
-          {form.scope === 'ZONE' && (
-            <TextField
-              select
-              label="Zone"
-              value={form.zone_name}
-              onChange={(e) => setForm((f) => ({ ...f, zone_name: e.target.value }))}
-              disabled={!form.location_id}
-              fullWidth
-            >
-              {zones.map((z) => (
-                <MenuItem key={z.zone_name} value={z.zone_name}>
-                  {z.zone_name}
-                </MenuItem>
-              ))}
-            </TextField>
-          )}
+                  {(values.scope === 'LOCATION' || values.scope === 'ZONE') && (
+                    <TextField select label="Location" name="location_id" value={values.location_id} onChange={(event) => { setFieldValue('location_id', event.target.value); setFieldValue('zone_name', ''); }} onBlur={handleBlur} error={err('location_id')} helperText={help('location_id')} fullWidth>
+                      {locations.map((item: any) => <MenuItem key={item.id} value={item.id}>{item.location_name}</MenuItem>)}
+                    </TextField>
+                  )}
 
-          {form.scope === 'USER' && (
-            <TextField
-              select
-              label="Users"
-              value={form.target_user_ids}
-              onChange={(e) =>
-                setForm((f) => ({
-                  ...f,
-                  target_user_ids:
-                    typeof e.target.value === 'string'
-                      ? e.target.value.split(',')
-                      : (e.target.value as string[]),
-                }))
-              }
-              SelectProps={{ multiple: true }}
-              fullWidth
-            >
-              {users.map((u: any) => (
-                <MenuItem key={u.id} value={u.id}>
-                  {u.full_name || u.email || u.phone_number}
-                </MenuItem>
-              ))}
-            </TextField>
-          )}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={onSubmit} disabled={busy}>
-          {busy ? 'Sending…' : 'Send Now'}
-        </Button>
-      </DialogActions>
+                  {values.scope === 'ZONE' && (
+                    <TextField select label="Zone" name="zone_name" value={values.zone_name} onChange={handleChange} onBlur={handleBlur} disabled={!values.location_id} error={err('zone_name')} helperText={help('zone_name')} fullWidth>
+                      {zones.map((zone) => <MenuItem key={zone.zone_name} value={zone.zone_name}>{zone.zone_name}</MenuItem>)}
+                    </TextField>
+                  )}
+
+                  {values.scope === 'USER' && (
+                    <TextField select label="Users" name="target_user_ids" value={values.target_user_ids} onChange={(event) => setFieldValue('target_user_ids', typeof event.target.value === 'string' ? event.target.value.split(',') : event.target.value)} onBlur={handleBlur} SelectProps={{ multiple: true }} error={err('target_user_ids')} helperText={help('target_user_ids')} fullWidth>
+                      {users.map((user: any) => <MenuItem key={user.user_id} value={user.user_id}>{user.full_name || user.email || user.phone_number}</MenuItem>)}
+                    </TextField>
+                  )}
+                </Stack>
+              </DialogContent>
+              <DialogActions>
+                <Button type="button" onClick={onClose} disabled={busy}>Cancel</Button>
+                <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Sending…' : 'Send Now'}</Button>
+              </DialogActions>
+            </Form>
+          );
+        }}
+      </Formik>
     </Dialog>
   );
 }

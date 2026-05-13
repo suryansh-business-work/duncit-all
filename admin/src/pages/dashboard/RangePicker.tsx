@@ -1,4 +1,5 @@
 import { Box, MenuItem, Stack, TextField } from '@mui/material';
+import DateField from '../../components/DateField';
 
 export type Granularity = 'DAY' | 'WEEK' | 'MONTH';
 
@@ -69,22 +70,8 @@ export default function RangePicker({
         ))}
       </Stack>
       <Stack direction="row" spacing={2}>
-        <TextField
-          type="date"
-          label="From"
-          size="small"
-          value={from}
-          onChange={(e) => onFromChange(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
-        <TextField
-          type="date"
-          label="To"
-          size="small"
-          value={to}
-          onChange={(e) => onToChange(e.target.value)}
-          InputLabelProps={{ shrink: true }}
-        />
+        <DateField label="From" size="small" value={from} onChange={onFromChange} />
+        <DateField label="To" size="small" value={to} onChange={onToChange} minDate={from ? new Date(from) : undefined} />
         <TextField
           select
           label="Group by"

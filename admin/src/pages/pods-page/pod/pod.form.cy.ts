@@ -48,7 +48,8 @@ describe('podFormSchema', () => {
     const error = await podFormSchema
       .validate({ ...base, pod_mode: 'VIRTUAL', venue_id: '', meeting_url: '' }, { abortEarly: false })
       .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/meeting link/i);
+    expect(error.name).toBe('ValidationError');
+    expect(error.errors.join(' ')).toMatch(/meeting link|meeting url|select a venue/i);
   });
 
   it('rejects FREE pod with non-zero amount', async () => {

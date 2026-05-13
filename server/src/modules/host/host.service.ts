@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { HostModel, type IHost } from './host.model';
 import { UserModel } from '../user/user.model';
+import { sendEmail } from '../../services/email/email.service';
 
 const toPub = (h: IHost) => ({
   id: String(h._id),
@@ -18,6 +19,7 @@ const toPub = (h: IHost) => ({
   tags: h.tags ?? [],
   step_completed: h.step_completed ?? 0,
   status: h.status,
+  is_active: h.is_active ?? true,
   reviewer_notes: h.reviewer_notes ?? '',
   submitted_at: h.submitted_at ? h.submitted_at.toISOString() : null,
   approved_at: h.approved_at ? h.approved_at.toISOString() : null,
@@ -162,5 +164,41 @@ export const hostService = {
     await h.save();
     if (opts.status === 'APPROVED') await assignApprovedHostRole(h.user_id);
     return toPub(h);
+  },
+
+  async setActive(hostId: string, active: boolean) {
+    const h = await HostModel.findById(hostId);
+    if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
+    h.is_active = active;
+    await h.save();
+
+    // Notify the host via the dynamic /email-templates system.
+    // The template slug is conventional; admin can edit copy from the admin UI.
+    if (h.email) {
+      const slug = active ? 'host-activated' : 'host-deactivated';
+      try {
+        await sendEmail({
+          to: h.email,
+          subject: active ? 'Your host account is now active' : 'Your host account has been deactivated',
+          template: slug,
+          vars: {
+            host_name: h.full_name ?? '',
+            host_email: h.email ?? '',
+            status: active ? 'active' : 'deactivated',
+          },
+        });
+      } catch (err) {
+        // Email failures should not block the status change.
+        // eslint-disable-next-line no-console
+        console.warn(`[host.setActive] email failed for ${slug}:`, (err as Error).message);
+      }
+    }
+
+    return toPub(h);
+  },
+
+  async deleteHost(hostId: string) {
+    const r = await HostModel.deleteOne({ _id: new Types.ObjectId(hostId) });
+    return r.deletedCount > 0;
   },
 };

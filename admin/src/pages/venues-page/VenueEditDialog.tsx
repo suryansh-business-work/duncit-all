@@ -1,12 +1,28 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, Step, StepLabel, Stepper, TextField } from '@mui/material';
+import {
+  Alert,
+  Button,
+  CircularProgress,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogTitle,
+  MenuItem,
+  Stack,
+  TextField,
+} from '@mui/material';
 import * as yup from 'yup';
-import VenueDetailsSection from '../../components/admin-venue-create-dialog/VenueDetailsSection';
-import VenueDocsSection from '../../components/admin-venue-create-dialog/VenueDocsSection';
-import VenueOwnerSection from '../../components/admin-venue-create-dialog/VenueOwnerSection';
+import VenueAccordionForm from '../../components/admin-venue-create-dialog/VenueAccordionForm';
 import { selectedLocation } from '../../components/admin-venue-create-dialog/VenueLocationFields';
-import { LOCATIONS_FOR_VENUE, blankS1, blankS3, type DocEntry, type Step1, type Step3 } from '../../components/admin-venue-create-dialog/queries';
+import {
+  LOCATIONS_FOR_VENUE,
+  blankS1,
+  blankS3,
+  type DocEntry,
+  type Step1,
+  type Step3,
+} from '../../components/admin-venue-create-dialog/queries';
 import { validateVenueEdit } from '../../components/admin-venue-create-dialog/venue.form';
 import { STATUSES, UPDATE_VENUE } from './queries';
 
@@ -16,14 +32,15 @@ interface Props {
   onSaved: () => void;
 }
 
-const steps = ['Venue', 'Documents', 'Owner'];
-
-const dateOnly = (value?: string | null) => value ? new Date(value).toISOString().slice(0, 10) : '';
+const dateOnly = (value?: string | null) =>
+  value ? new Date(value).toISOString().slice(0, 10) : '';
 
 const hydrateLocation = (base: Step1, locations: any[]): Step1 => {
   const location = selectedLocation(locations, base);
   const zones = location?.location_zones ?? [];
-  const zone = zones.find((item: any) => item.zone_name === base.locality || item.zone_code === base.locality);
+  const zone = zones.find(
+    (item: any) => item.zone_name === base.locality || item.zone_code === base.locality,
+  );
   return {
     ...base,
     location_id: base.location_id || location?.id || '',
@@ -32,13 +49,15 @@ const hydrateLocation = (base: Step1, locations: any[]): Step1 => {
     state: location?.state || base.state,
     state_code: location?.state_code || base.state_code,
     city: location ? location.city || location.location_name : base.city,
-    locality: zone?.zone_name || base.locality || (location && zones.length === 0 ? location.city || location.location_name : ''),
+    locality:
+      zone?.zone_name ||
+      base.locality ||
+      (location && zones.length === 0 ? location.city || location.location_name : ''),
     postal_code: zone?.pincode || location?.location_pincode || base.postal_code,
   };
 };
 
 export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
-  const [step, setStep] = useState(0);
   const [s1, setS1] = useState<Step1>(blankS1);
   const [docs, setDocs] = useState<DocEntry[]>([]);
   const [s2, setS2] = useState({ gstin: '', pan: '' });
@@ -51,18 +70,34 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
   useEffect(() => {
     if (!venue) return;
     const locations = locationsData?.locations ?? [];
-    setStep(0);
     const baseS1 = {
-      venue_name: venue.venue_name ?? '', venue_type: venue.venue_type ?? 'Cafe', capacity: venue.capacity ?? 1,
-      description: venue.description ?? '', cover_image_url: venue.cover_image_url ?? '', address_line1: venue.address_line1 ?? '',
-      address_line2: venue.address_line2 ?? '', location_id: venue.location_id ?? '', country: venue.country ?? 'India', country_code: venue.country_code ?? 'IN',
-      city: venue.city ?? '', state: venue.state ?? '', state_code: venue.state_code ?? '', locality: venue.locality ?? '',
-      postal_code: venue.postal_code ?? '', tags: venue.tags ?? [],
+      venue_name: venue.venue_name ?? '',
+      venue_type: venue.venue_type ?? 'Cafe',
+      capacity: venue.capacity ?? 1,
+      description: venue.description ?? '',
+      cover_image_url: venue.cover_image_url ?? '',
+      address_line1: venue.address_line1 ?? '',
+      address_line2: venue.address_line2 ?? '',
+      location_id: venue.location_id ?? '',
+      country: venue.country ?? 'India',
+      country_code: venue.country_code ?? 'IN',
+      city: venue.city ?? '',
+      state: venue.state ?? '',
+      state_code: venue.state_code ?? '',
+      locality: venue.locality ?? '',
+      postal_code: venue.postal_code ?? '',
+      tags: venue.tags ?? [],
     };
     setS1(hydrateLocation(baseS1, locations));
     setDocs((venue.documents ?? []).map((doc: any) => ({ type: doc.type, url: doc.url })));
     setS2({ gstin: venue.gstin ?? '', pan: venue.pan ?? '' });
-    setS3({ owner_name: venue.owner_name ?? '', owner_email: venue.owner_email ?? '', owner_phone: venue.owner_phone ?? '', owner_dob: dateOnly(venue.owner_dob), owner_address: venue.owner_address ?? '' });
+    setS3({
+      owner_name: venue.owner_name ?? '',
+      owner_email: venue.owner_email ?? '',
+      owner_phone: venue.owner_phone ?? '',
+      owner_dob: dateOnly(venue.owner_dob),
+      owner_address: venue.owner_address ?? '',
+    });
     setStatus(venue.status ?? 'APPROVED');
     setError('');
   }, [venue, locationsData]);
@@ -94,26 +129,50 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
   };
 
   return (
-    <Dialog open={!!venue} onClose={onClose} fullWidth maxWidth="md">
+    <Dialog open={!!venue} onClose={state.loading ? undefined : onClose} fullWidth maxWidth="md">
       <DialogTitle>Edit Venue</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          <Stepper activeStep={step} alternativeLabel>{steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}</Stepper>
           {error && <Alert severity="error">{error}</Alert>}
-          {step === 0 && <VenueDetailsSection s1={s1} setS1={setS1} locations={locationsData?.locations ?? []} />}
-          {step === 1 && <VenueDocsSection docs={docs} setDocs={setDocs} s2={s2} setS2={setS2} />}
-          {step === 2 && <Stack spacing={2}>
-            <VenueOwnerSection s3={s3} setS3={setS3} />
-            <TextField select label="Status" value={status} onChange={(e) => setStatus(e.target.value)}>
-              {STATUSES.filter(Boolean).map((item) => <MenuItem key={item} value={item}>{item}</MenuItem>)}
-            </TextField>
-          </Stack>}
+          <VenueAccordionForm
+            mode="edit"
+            s1={s1}
+            setS1={setS1}
+            docs={docs}
+            setDocs={setDocs}
+            s2={s2}
+            setS2={setS2}
+            s3={s3}
+            setS3={setS3}
+            locations={locationsData?.locations ?? []}
+          />
+          <TextField
+            select
+            label="Status"
+            value={status}
+            onChange={(event) => setStatus(event.target.value)}
+            sx={{ maxWidth: 280 }}
+          >
+            {STATUSES.filter(Boolean).map((item) => (
+              <MenuItem key={item} value={item}>
+                {item}
+              </MenuItem>
+            ))}
+          </TextField>
         </Stack>
       </DialogContent>
       <DialogActions>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button onClick={() => setStep(Math.max(0, step - 1))} disabled={step === 0}>Back</Button>
-        {step < steps.length - 1 ? <Button variant="contained" onClick={() => setStep(step + 1)}>Next</Button> : <Button variant="contained" onClick={save} disabled={state.loading}>Save</Button>}
+        <Button onClick={onClose} disabled={state.loading}>
+          Cancel
+        </Button>
+        <Button
+          variant="contained"
+          onClick={save}
+          disabled={state.loading}
+          startIcon={state.loading ? <CircularProgress size={14} /> : undefined}
+        >
+          Save
+        </Button>
       </DialogActions>
     </Dialog>
   );

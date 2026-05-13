@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { notifyError } from '../../components/notify';
+import { useConfirm } from '../../components/useConfirm';
 import { useMutation, useQuery, type DocumentNode } from '@apollo/client';
 import {
   Alert,
@@ -38,6 +39,7 @@ export function KeyEntityCrudPage(props: KeyEntityCrudPageProps) {
   const [createMut] = useMutation(props.createMutation);
   const [updateMut] = useMutation(props.updateMutation);
   const [deleteMut] = useMutation(props.deleteMutation);
+  const confirm = useConfirm();
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState<Editing>(blankEditing);
   const [busy, setBusy] = useState(false);
@@ -84,7 +86,13 @@ export function KeyEntityCrudPage(props: KeyEntityCrudPageProps) {
   };
 
   const remove = async (row: any) => {
-    if (!confirm(`Delete "${row.key}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete entry',
+      message: `Delete "${row.key}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteMut({ variables: { [idVarName]: row.id } });
       await refetch();

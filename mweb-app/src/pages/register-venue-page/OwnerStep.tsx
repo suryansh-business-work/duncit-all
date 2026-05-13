@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { Stack, TextField } from '@mui/material';
+import DateField from '../../components/DateField';
 import type { VenueStep3 } from './types';
 import { getStepErrors, venueStep3Schema } from './register-venue.form';
 
@@ -52,15 +53,14 @@ export default function OwnerStep({ value, onChange }: Props) {
         error={showError('owner_phone')}
         helperText={showError('owner_phone') ? errors.owner_phone : ' '}
       />
-      <TextField
+      <DateField
         label="Owner DOB"
-        type="date"
-        InputLabelProps={{ shrink: true }}
         value={value.owner_dob}
-        onChange={(e) => set({ owner_dob: e.target.value })}
+        onChange={(iso) => set({ owner_dob: iso })}
         onBlur={() => touch('owner_dob')}
         error={showError('owner_dob')}
         helperText={showError('owner_dob') ? errors.owner_dob : ' '}
+        maxDate={new Date()}
       />
       <TextField
         label="Owner address"

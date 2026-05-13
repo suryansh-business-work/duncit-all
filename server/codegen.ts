@@ -3,6 +3,7 @@ import type { CodegenConfig } from '@graphql-codegen/cli';
 const config: CodegenConfig = {
   overwrite: true,
   schema: 'src/modules/**/*.schema.ts',
+  ignoreNoDocuments: true,
   generates: {
     'src/generated/graphql.ts': {
       plugins: ['typescript', 'typescript-resolvers'],
@@ -11,15 +12,19 @@ const config: CodegenConfig = {
         useIndexSignature: true,
       },
     },
-    '../web-ui/app/src/generated/graphql.ts': {
-      schema: 'src/modules/**/*.schema.ts',
-      documents: '../web-ui/app/src/**/*.graphql',
-      plugins: ['typescript', 'typescript-operations', 'typescript-react-apollo'],
+    '../mweb-app/src/generated/graphql/': {
+      documents: ['../mweb-app/src/**/*.{graphql,ts,tsx}', '!../mweb-app/src/generated/**'],
+      preset: 'client',
+      presetConfig: {
+        gqlTagName: 'gql',
+      },
     },
-    '../web-ui/admin/src/generated/graphql.ts': {
-      schema: 'src/modules/**/*.schema.ts',
-      documents: '../web-ui/admin/src/**/*.graphql',
-      plugins: ['typescript', 'typescript-operations', 'typescript-react-apollo'],
+    '../admin/src/generated/graphql/': {
+      documents: ['../admin/src/**/*.{graphql,ts,tsx}', '!../admin/src/generated/**'],
+      preset: 'client',
+      presetConfig: {
+        gqlTagName: 'gql',
+      },
     },
   },
 };

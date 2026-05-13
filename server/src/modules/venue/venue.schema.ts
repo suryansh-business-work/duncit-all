@@ -50,6 +50,7 @@ export const venueTypeDefs = /* GraphQL */ `
     tags: [String!]!
     step_completed: Int!
     status: VenueStatus!
+    is_active: Boolean!
     reviewer_notes: String!
     submitted_at: String
     approved_at: String
@@ -123,5 +124,7 @@ export const venueTypeDefs = /* GraphQL */ `
       step3: VenueStep3Input!
       status: VenueStatus
     ): Venue!
+    setVenueActive(venue_doc_id: ID!, active: Boolean!): Venue!
+    deleteVenue(venue_doc_id: ID!): Boolean!
   }
 `;

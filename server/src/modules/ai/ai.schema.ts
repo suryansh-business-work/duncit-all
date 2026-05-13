@@ -17,6 +17,12 @@ export const aiTypeDefs = gql`
     tone: String
   }
 
+  input AiLocationAreasInput {
+    country: String!
+    state: String!
+    city: String!
+  }
+
   extend type Mutation {
     """
     Generates dummy data for a Club / Pod / Slider / Inventory Product form using OpenAI.
@@ -30,5 +36,11 @@ export const aiTypeDefs = gql`
     { short_description, description }.
     """
     aiDescribeInventoryProduct(input: AiProductDescribeInput!): String!
+
+    """
+    Generates locality / area names with PIN codes for a selected city.
+    Returns JSON with { zones: [{ zone_name, pincode }] }.
+    """
+    aiFillLocationAreas(input: AiLocationAreasInput!): String!
   }
 `;

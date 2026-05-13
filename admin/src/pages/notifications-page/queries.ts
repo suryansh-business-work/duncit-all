@@ -34,7 +34,7 @@ export const LOCATIONS_FOR_NOTIF = gql`
 export const USERS_FOR_NOTIF = gql`
   query UsersForNotif {
     users {
-      id
+      user_id
       full_name
       email
       phone_number

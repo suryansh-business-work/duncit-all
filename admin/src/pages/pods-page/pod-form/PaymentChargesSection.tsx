@@ -110,11 +110,13 @@ export default function PaymentChargesSection({ finance, inventoryProducts }: Pr
         minRows={3}
         helperText="Refund policy, cancellation, tax info."
       />
-      <PlaceChargesField
-        value={values.place_charges}
-        onChange={(next) => setFieldValue('place_charges', next)}
-        helperText="Optional venue-side charges (entry, table, etc.) shown separately to users."
-      />
+      {values.pod_mode === 'PHYSICAL' && (
+        <PlaceChargesField
+          value={values.place_charges}
+          onChange={(next) => setFieldValue('place_charges', next)}
+          helperText="Optional venue-side charges (entry, table, etc.) shown separately to users."
+        />
+      )}
     </Stack>
   );
 }

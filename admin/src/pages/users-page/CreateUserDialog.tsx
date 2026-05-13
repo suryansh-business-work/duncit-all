@@ -17,6 +17,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import VisibilityOffIcon from '@mui/icons-material/VisibilityOff';
 import CasinoIcon from '@mui/icons-material/Casino';
 import PhoneExtensionField from '../../components/PhoneExtensionField';
+import DateField from '../../components/DateField';
 import { type CreateForm, genPassword } from './helpers';
 import { createUserSchema } from './create-user.form';
 
@@ -78,7 +79,17 @@ export default function CreateUserDialog({
                   <Grid item xs={12}><TextField label="Email" name="email" type="email" value={values.email} onChange={handleChange} onBlur={handleBlur} error={err('email')} helperText={help('email', 'Welcome email is sent if provided.')} fullWidth /></Grid>
                   <Grid item xs={4} sm={3}><PhoneExtensionField value={values.phone_extension} onChange={(value) => setFieldValue('phone_extension', value)} error={err('phone_extension')} helperText={help('phone_extension')} fullWidth /></Grid>
                   <Grid item xs={8} sm={9}><TextField label="Phone number" name="phone_number" value={values.phone_number} onChange={handleChange} onBlur={handleBlur} error={err('phone_number')} helperText={help('phone_number')} fullWidth required /></Grid>
-                  <Grid item xs={12}><TextField label="Date of birth" name="dob" type="date" value={values.dob} onChange={handleChange} onBlur={handleBlur} error={err('dob')} helperText={help('dob')} InputLabelProps={{ shrink: true }} fullWidth required /></Grid>
+                  <Grid item xs={12}>
+                    <DateField
+                      label="Date of birth"
+                      value={values.dob}
+                      onChange={(iso) => setFieldValue('dob', iso)}
+                      error={err('dob')}
+                      helperText={help('dob')}
+                      maxDate={new Date()}
+                      required
+                    />
+                  </Grid>
                   <Grid item xs={12}>
                     <TextField label="Temporary password" name="password" type={showPwd ? 'text' : 'password'} value={values.password} onChange={handleChange} onBlur={handleBlur} error={err('password')} helperText={help('password', 'Minimum 8 characters.')} fullWidth required InputProps={{ endAdornment: <InputAdornment position="end"><Tooltip title="Generate"><IconButton size="small" onClick={() => setFieldValue('password', genPassword())}><CasinoIcon fontSize="small" /></IconButton></Tooltip><IconButton size="small" onClick={() => setShowPwd((show) => !show)}>{showPwd ? <VisibilityOffIcon fontSize="small" /> : <VisibilityIcon fontSize="small" />}</IconButton></InputAdornment> }} />
                   </Grid>

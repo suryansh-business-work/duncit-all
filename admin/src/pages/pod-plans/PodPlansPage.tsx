@@ -10,6 +10,7 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import { notifyError, notifySuccess } from '../../components/notify';
+import { useConfirm } from '../../components/useConfirm';
 import PodPlanFormDialog, { type PodPlanFormValues } from './PodPlanFormDialog';
 import PodPlansTable, { type PlanRow } from './PodPlansTable';
 import { CREATE_POD_PLAN, DELETE_POD_PLAN, PLANS, UPDATE_POD_PLAN } from './queries';
@@ -21,6 +22,7 @@ export default function PodPlansPage() {
   const [createMut, createState] = useMutation(CREATE_POD_PLAN);
   const [updateMut, updateState] = useMutation(UPDATE_POD_PLAN);
   const [deleteMut] = useMutation(DELETE_POD_PLAN);
+  const confirm = useConfirm();
   const [editing, setEditing] = useState<PlanRow | null>(null);
   const [open, setOpen] = useState(false);
 
@@ -45,7 +47,13 @@ export default function PodPlansPage() {
   };
 
   const onDelete = async (row: PlanRow) => {
-    if (!window.confirm(`Delete plan "${row.name}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete plan',
+      message: `Delete plan "${row.name}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteMut({ variables: { plan_id: row.id } });
       notifySuccess('Plan deleted');

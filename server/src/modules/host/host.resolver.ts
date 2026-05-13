@@ -75,5 +75,21 @@ export const hostResolvers = {
         status: args.status,
       });
     },
+    setHostActive: async (
+      _p: unknown,
+      args: { host_doc_id: string; active: boolean },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return hostService.setActive(args.host_doc_id, args.active);
+    },
+    deleteHost: async (
+      _p: unknown,
+      args: { host_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return hostService.deleteHost(args.host_doc_id);
+    },
   },
 };

@@ -1,4 +1,5 @@
 import { Box, TextField, Typography } from '@mui/material';
+import DateField from '../DateField';
 import type { Step3 } from './queries';
 
 interface Props {
@@ -15,7 +16,13 @@ export default function VenueOwnerSection({ s3, setS3 }: Props) {
         <TextField label="Owner name *" size="small" value={s3.owner_name} onChange={(e) => set({ owner_name: e.target.value })} />
         <TextField label="Owner email *" size="small" value={s3.owner_email} onChange={(e) => set({ owner_email: e.target.value })} />
         <TextField label="Owner phone *" size="small" value={s3.owner_phone} onChange={(e) => set({ owner_phone: e.target.value })} />
-        <TextField label="DOB" type="date" size="small" InputLabelProps={{ shrink: true }} value={s3.owner_dob} onChange={(e) => set({ owner_dob: e.target.value })} />
+        <DateField
+          label="DOB"
+          size="small"
+          value={s3.owner_dob}
+          onChange={(iso) => set({ owner_dob: iso })}
+          maxDate={new Date()}
+        />
         <TextField sx={{ gridColumn: '1 / -1' }} label="Owner address" size="small" value={s3.owner_address} onChange={(e) => set({ owner_address: e.target.value })} />
       </Box>
     </>

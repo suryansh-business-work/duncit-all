@@ -6,6 +6,7 @@ import { useFormikContext } from 'formik';
 import BasicInfoSection from './BasicInfoSection';
 import MediaSection from './MediaSection';
 import WhenWhereSection from './WhenWhereSection';
+import MeetingSection from './MeetingSection';
 import AboutSection from './AboutSection';
 import OffersSection from './OffersSection';
 import PerksSection from './PerksSection';
@@ -13,15 +14,35 @@ import PaymentChargesSection from './PaymentChargesSection';
 import DuncitProductsSection from './DuncitProductsSection';
 import type { PodForm } from '../queries';
 
-export const SECTIONS = [
-  { id: 'basic', title: '1. Basic Information', body: 'BasicInfoSection' as const },
-  { id: 'when', title: '2. When, Where & Map', body: 'WhenWhereSection' as const },
-  { id: 'about', title: '3. About this Pod', body: 'AboutSection' as const },
-  { id: 'offers', title: '4. What This Pod Offers', body: 'OffersSection' as const },
-  { id: 'perks', title: '5. Available Perks', body: 'PerksSection' as const },
-  { id: 'products', title: '6. Duncit Products', body: 'DuncitProductsSection' as const },
-  { id: 'payment', title: '7. Payment & Place Charges', body: 'PaymentChargesSection' as const },
-];
+type SectionBody =
+  | 'BasicInfoSection'
+  | 'WhenWhereSection'
+  | 'MeetingSection'
+  | 'AboutSection'
+  | 'OffersSection'
+  | 'PerksSection'
+  | 'DuncitProductsSection'
+  | 'PaymentChargesSection';
+
+export const SECTION_IDS = ['basic', 'when', 'meeting', 'about', 'offers', 'perks', 'products', 'payment'];
+
+function getSections(podMode: PodForm['pod_mode']) {
+  const base: { id: string; label: string; body: SectionBody }[] = [
+    { id: 'basic', label: 'Basic Information', body: 'BasicInfoSection' },
+    podMode === 'VIRTUAL'
+      ? { id: 'meeting', label: 'Meeting Details', body: 'MeetingSection' }
+      : { id: 'when', label: 'When, Where & Map', body: 'WhenWhereSection' },
+    { id: 'about', label: 'About this Pod', body: 'AboutSection' },
+    { id: 'offers', label: 'What This Pod Offers', body: 'OffersSection' },
+    { id: 'perks', label: 'Available Perks', body: 'PerksSection' },
+    { id: 'products', label: 'Duncit Products', body: 'DuncitProductsSection' },
+    { id: 'payment', label: 'Payment & Charges', body: 'PaymentChargesSection' },
+  ];
+  return base.map((section, index) => ({
+    ...section,
+    title: `${index + 1}. ${section.label}`,
+  }));
+}
 
 interface Props {
   expanded: Set<string>;
@@ -49,7 +70,9 @@ export default function PodFormSections({
   finance,
 }: Props) {
   const { values, setFieldValue } = useFormikContext<PodForm>();
-  const allOpen = expanded.size === SECTIONS.length;
+  const sections = getSections(values.pod_mode);
+  const expandableSections = sections.filter((section) => section.id !== 'products' || values.products_enabled);
+  const allOpen = expandableSections.every((section) => expanded.has(section.id));
   return (
     <>
       <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mb: 1 }}>
@@ -73,7 +96,7 @@ export default function PodFormSections({
         </Button>
       </Stack>
       <MediaSection />
-      {SECTIONS.map((sec) => (
+      {sections.map((sec) => (
         <Accordion
           key={sec.id}
           expanded={sec.id === 'products' ? values.products_enabled && expanded.has(sec.id) : expanded.has(sec.id)}
@@ -117,11 +140,12 @@ export default function PodFormSections({
           </AccordionSummary>
           <AccordionDetails>
             {sec.body === 'BasicInfoSection' && (
-              <BasicInfoSection users={users} userName={userName} />
+              <BasicInfoSection clubs={clubs} users={users} userName={userName} />
             )}
             {sec.body === 'WhenWhereSection' && (
               <WhenWhereSection clubs={clubs} venues={venues} />
             )}
+            {sec.body === 'MeetingSection' && <MeetingSection />}
             {sec.body === 'AboutSection' && <AboutSection />}
             {sec.body === 'OffersSection' && <OffersSection />}
             {sec.body === 'PerksSection' && <PerksSection />}

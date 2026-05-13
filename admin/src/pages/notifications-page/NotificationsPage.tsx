@@ -21,6 +21,7 @@ import {
 import { blankForm, type NotifForm } from './helpers';
 import NotificationsTable from './NotificationsTable';
 import NotificationFormDialog from './NotificationFormDialog';
+import { useConfirm } from '../../components/useConfirm';
 import { notificationFormSchema, toCreateNotificationInput } from './notification.form';
 
 export default function NotificationsPage() {
@@ -33,6 +34,7 @@ export default function NotificationsPage() {
 
   const [createMut] = useMutation(CREATE_NOTIFICATION);
   const [deleteMut] = useMutation(DELETE_NOTIFICATION);
+  const confirm = useConfirm();
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<NotifForm>(blankForm);
@@ -70,7 +72,13 @@ export default function NotificationsPage() {
   };
 
   const remove = async (n: any) => {
-    if (!confirm(`Delete notification "${n.title}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete notification',
+      message: `Delete notification "${n.title}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteMut({ variables: { id: n.id } });
       setToast('Deleted');

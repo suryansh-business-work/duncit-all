@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { VenueModel, type IVenue } from './venue.model';
 import { LocationModel } from '../location/location.model';
 import { UserModel } from '../user/user.model';
+import { sendEmail } from '../../services/email/email.service';
 
 const toPub = (v: IVenue) => ({
   id: String(v._id),
@@ -41,6 +42,7 @@ const toPub = (v: IVenue) => ({
   tags: v.tags ?? [],
   step_completed: v.step_completed ?? 0,
   status: v.status,
+  is_active: v.is_active ?? true,
   reviewer_notes: v.reviewer_notes ?? '',
   submitted_at: v.submitted_at ? v.submitted_at.toISOString() : null,
   approved_at: v.approved_at ? v.approved_at.toISOString() : null,
@@ -284,5 +286,38 @@ export const venueService = {
     await v.save();
     if (opts.status === 'APPROVED') await assignApprovedVenueRole(v.owner_user_id);
     return toPub(v);
+  },
+
+  async setActive(venueId: string, active: boolean) {
+    const v = await VenueModel.findById(venueId);
+    if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
+    v.is_active = active;
+    await v.save();
+
+    if (v.owner_email) {
+      const slug = active ? 'venue-activated' : 'venue-deactivated';
+      try {
+        await sendEmail({
+          to: v.owner_email,
+          subject: active ? 'Your venue is now active' : 'Your venue has been deactivated',
+          template: slug,
+          vars: {
+            owner_name: v.owner_name ?? '',
+            venue_name: v.venue_name ?? '',
+            status: active ? 'active' : 'deactivated',
+          },
+        });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn(`[venue.setActive] email failed for ${slug}:`, (err as Error).message);
+      }
+    }
+
+    return toPub(v);
+  },
+
+  async deleteVenue(venueId: string) {
+    const r = await VenueModel.deleteOne({ _id: new Types.ObjectId(venueId) });
+    return r.deletedCount > 0;
   },
 };

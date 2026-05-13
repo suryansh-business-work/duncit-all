@@ -43,3 +43,13 @@ https://admin.duncit.com/
 https://mweb.duncit.com/
 
 9. Any .tsx file should not exceed 200 lines. If a file grows beyond 200 lines, create a folder with the same component name and refactor it into multiple smaller components/modules inside that folder using an index-based structure. Ensure the refactor introduces no breaking changes and preserves all existing functionality, imports, exports, and behavior.
+
+10. Before creating any form, first create a dedicated folder with the form name. Inside it, keep these 4 files: <form-name>.form.tsx for the form implementation using Formik and Yup with proper hints, validations, and error handling, <form-name>.form.cy.tsx for Cypress test cases covering validations and user flows, <form-name>.types.tsx for codegen-based shared/common types, and index.tsx to export all required components, types, and utilities from a single entry point. this should be follow in mWeb and Admin both. strictlly use MUI only no HTML Componentss for date and time use MUIX Core date and time 
+
+11. For Date and time use Data FNS and make sure it should be sync based on setting in admin panel. For date and time input use MUIX Core date and time pickers. Always ensure that the date and time are displayed in the user's local timezone and format, which can be configured in the admin panel. Avoid hardcoding any date or time formats; instead, use dynamic formatting based on user settings.
+
+12. No Alert box, Confirm box and Prompt box html/JS Code Use MUI Confirmation/ Alert Only
+
+13. Use GraphQL and GraphQL Code Generator for all API interactions. Ensure that all queries and mutations are properly typed and that the generated code is used throughout the project for type safety and consistency.
+
+14. After completing all changes, make sure to verify the build, check types, run lint checks, apply code formatting, and only then push the code to the repository. Ensure that all GitHub CI checks pass successfully and that the application is fully functional across all environments (https://duncit.com, https://server.duncit.com/, https://admin.duncit.com/, https://mweb.duncit.com/).

@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { notifyError } from '../../components/notify';
+import { useConfirm } from '../../components/useConfirm';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import {
@@ -33,6 +34,7 @@ export default function SlidersPage() {
   const [createMut] = useMutation(CREATE);
   const [updateMut] = useMutation(UPDATE);
   const [deleteMut] = useMutation(DELETE);
+  const confirm = useConfirm();
 
   const [open, setOpen] = useState(false);
   const [form, setForm] = useState<SliderForm>(blankForm);
@@ -97,7 +99,13 @@ export default function SlidersPage() {
   };
 
   const remove = async (s: any) => {
-    if (!confirm(`Delete slider "${s.title}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete slider',
+      message: `Delete slider "${s.title}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     try {
       await deleteMut({ variables: { id: s.id } });
       setToast('Deleted');

@@ -28,28 +28,6 @@ export default function WhenWhereSection({ clubs, venues }: Props) {
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <TextField
           select
-          label="Club"
-          name="club_id"
-          value={values.club_id}
-          onChange={(event) => {
-            setFieldValue('club_id', event.target.value);
-            setFieldValue('venue_id', '');
-            setFieldValue('location_id', '');
-            setFieldValue('zone_name', '');
-          }}
-          fullWidth
-          required
-          error={err('club_id')}
-          helperText={help('club_id') || 'Venue list is based on the selected club.'}
-        >
-          {clubs.map((c) => (
-            <MenuItem key={c.id} value={c.id}>
-              {c.club_name}
-            </MenuItem>
-          ))}
-        </TextField>
-        <TextField
-          select
           label="Venue"
           name="venue_id"
           value={values.venue_id}
@@ -65,7 +43,7 @@ export default function WhenWhereSection({ clubs, venues }: Props) {
           helperText={
             help('venue_id') ||
             (!values.club_id
-              ? 'Pick a club first'
+              ? 'Pick a club in Basic Information first.'
               : clubVenues.length === 0
                 ? 'No approved venues linked to this club.'
                 : 'Only venues linked with this club are shown.')

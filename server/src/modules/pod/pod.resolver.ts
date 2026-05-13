@@ -4,6 +4,7 @@ import { requireRole, requireAuth } from '../../middleware/rbac';
 import { UserModel } from '../user/user.model';
 import { LocationModel } from '../location/location.model';
 import { VenueModel } from '../venue/venue.model';
+import { PodMemberModel } from '../podMember/podMember.model';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 
@@ -31,6 +32,14 @@ const getPlaceCache = (ctx: GraphQLContext) => {
 async function resolvePodPlace(parent: any, ctx: GraphQLContext) {
   if (parent.__podPlace) return parent.__podPlace;
   const cache = getPlaceCache(ctx);
+
+  if ((parent.pod_mode ?? 'PHYSICAL') === 'VIRTUAL') {
+    parent.__podPlace = {
+      label: 'Virtual pod',
+      detail: parent.meeting_platform || 'Online',
+    };
+    return parent.__podPlace;
+  }
 
   if (parent.venue_id) {
     const key = String(parent.venue_id);
@@ -89,8 +98,26 @@ async function resolvePodPlace(parent: any, ctx: GraphQLContext) {
   return parent.__podPlace;
 }
 
+async function canViewMeeting(parent: any, ctx: GraphQLContext) {
+  if ((parent.pod_mode ?? 'PHYSICAL') !== 'VIRTUAL') return false;
+  if (isAdminCtx(ctx)) return true;
+  const userId = ctx.user?.id;
+  if (!userId) return false;
+  const podId = parent.id ?? parent._id;
+  if ((parent.pod_hosts_id ?? []).some((id: string) => String(id) === userId)) return true;
+  if ((parent.pod_attendees ?? []).some((id: string) => String(id) === userId)) return true;
+  return !!(await PodMemberModel.exists({ pod_id: podId, user_id: userId, status: 'JOINED' }));
+}
+
 export const podResolvers = {
   Pod: {
+    pod_mode: (parent: any): string => parent.pod_mode ?? 'PHYSICAL',
+    meeting_url: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<string | null> => {
+      return (await canViewMeeting(parent, ctx)) ? parent.meeting_url ?? null : null;
+    },
+    meeting_notes: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<string | null> => {
+      return (await canViewMeeting(parent, ctx)) ? parent.meeting_notes ?? null : null;
+    },
     place_label: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<string | null> => {
       const place = await resolvePodPlace(parent, ctx);
       return place.label || null;
@@ -175,6 +202,14 @@ export const podResolvers = {
         u.id,
         isAdminCtx(ctx)
       );
+    },
+    generateMeetingLink: async (
+      _p: unknown,
+      args: { platform: string; title: string; start: string; end?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_WRITE);
+      return podService.generateMeetingLink(args);
     },
   },
 };

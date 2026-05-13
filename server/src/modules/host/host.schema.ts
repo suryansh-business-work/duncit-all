@@ -21,6 +21,7 @@ export const hostTypeDefs = /* GraphQL */ `
     tags: [String!]!
     step_completed: Int!
     status: HostStatus!
+    is_active: Boolean!
     reviewer_notes: String!
     submitted_at: String
     approved_at: String
@@ -76,5 +77,7 @@ export const hostTypeDefs = /* GraphQL */ `
       step3: HostStep3Input!
       status: HostStatus
     ): Host!
+    setHostActive(host_doc_id: ID!, active: Boolean!): Host!
+    deleteHost(host_doc_id: ID!): Boolean!
   }
 `;

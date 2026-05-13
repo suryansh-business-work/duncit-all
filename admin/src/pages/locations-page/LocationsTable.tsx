@@ -41,8 +41,6 @@ export default function LocationsTable({ loading, hasData, locations, onEdit, on
                 <TableCell>Image</TableCell>
                 <TableCell>City</TableCell>
                 <TableCell>State</TableCell>
-                <TableCell>ID</TableCell>
-                <TableCell>PIN</TableCell>
                 <TableCell>Localities / Areas</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell align="right">Actions</TableCell>
@@ -73,12 +71,6 @@ export default function LocationsTable({ loading, hasData, locations, onEdit, on
                       {loc.state || '—'}
                     </Typography>
                   </TableCell>
-                  <TableCell>
-                    <Typography variant="body2" color="text.secondary">
-                      {loc.location_id}
-                    </Typography>
-                  </TableCell>
-                  <TableCell>{loc.location_pincode}</TableCell>
                   <TableCell sx={{ maxWidth: 320 }}>
                     <Stack direction="row" sx={{ gap: 0.5 }} flexWrap="wrap">
                       {loc.location_zones.map((z: any, i: number) => (
@@ -118,7 +110,7 @@ export default function LocationsTable({ loading, hasData, locations, onEdit, on
               ))}
               {locations.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={8}>
+                  <TableCell colSpan={6}>
                     <Box sx={{ p: 3, textAlign: 'center' }}>
                       <Typography variant="body2" color="text.secondary">
                         No locations yet. Click "New Location" to create one.

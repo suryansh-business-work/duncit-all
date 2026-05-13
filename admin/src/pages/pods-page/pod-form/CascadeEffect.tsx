@@ -16,6 +16,19 @@ export default function CascadeEffect({ clubs, venues }: Props) {
   const { values, setFieldValue } = useFormikContext<PodForm>();
 
   useEffect(() => {
+    if (values.pod_mode === 'VIRTUAL') {
+      if (values.venue_id) setFieldValue('venue_id', '');
+      if (values.location_id) setFieldValue('location_id', '');
+      if (values.zone_name) setFieldValue('zone_name', '');
+      if (values.place_charges.length > 0) setFieldValue('place_charges', []);
+      return;
+    }
+    if (values.meeting_platform) setFieldValue('meeting_platform', '');
+    if (values.meeting_url) setFieldValue('meeting_url', '');
+    if (values.meeting_notes) setFieldValue('meeting_notes', '');
+  }, [values.pod_mode]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  useEffect(() => {
     if (!values.club_id || !values.venue_id) return;
     const club = clubs.find((item: any) => item.id === values.club_id);
     const linked = new Set(club?.meetup_venues_id ?? []);

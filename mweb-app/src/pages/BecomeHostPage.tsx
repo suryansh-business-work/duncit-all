@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import MediaPickerDialog from '../components/MediaPickerDialog';
+import DateField from '../components/DateField';
 
 const MY_HOST = gql`
   query MyHost {
@@ -116,7 +117,7 @@ export default function BecomeHostPage() {
               <TextField label="Full name" required value={s1.full_name} onChange={(e) => set1({ ...s1, full_name: e.target.value })} />
               <TextField label="Email" type="email" required value={s1.email} onChange={(e) => set1({ ...s1, email: e.target.value })} />
               <TextField label="Phone" required value={s1.phone} onChange={(e) => set1({ ...s1, phone: e.target.value })} />
-              <TextField label="DOB" type="date" InputLabelProps={{ shrink: true }} value={s1.dob} onChange={(e) => set1({ ...s1, dob: e.target.value })} />
+              <DateField label="DOB" value={s1.dob} onChange={(iso) => set1({ ...s1, dob: iso })} maxDate={new Date()} />
             </Stack>
           )}
           {step === 1 && (

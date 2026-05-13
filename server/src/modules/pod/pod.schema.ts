@@ -16,6 +16,11 @@ export const podTypeDefs = /* GraphQL */ `
     WEEKENDS_ONLY
   }
 
+  enum PodMode {
+    PHYSICAL
+    VIRTUAL
+  }
+
   type PodMedia {
     url: String!
     type: CategoryMediaType!
@@ -61,6 +66,10 @@ export const podTypeDefs = /* GraphQL */ `
     club_id: ID!
     club_slug: String!
     zone_name: String
+    pod_mode: PodMode!
+    meeting_platform: String
+    meeting_url: String
+    meeting_notes: String
     place_label: String
     place_detail: String
     pod_hashtag: [String!]!
@@ -118,6 +127,10 @@ export const podTypeDefs = /* GraphQL */ `
     venue_id: ID
     club_id: ID!
     zone_name: String
+    pod_mode: PodMode
+    meeting_platform: String
+    meeting_url: String
+    meeting_notes: String
     pod_hashtag: [String!]
     pod_images_and_videos: [PodMediaInput!]
     pod_attendees: [ID!]
@@ -144,6 +157,10 @@ export const podTypeDefs = /* GraphQL */ `
     venue_id: ID
     club_id: ID
     zone_name: String
+    pod_mode: PodMode
+    meeting_platform: String
+    meeting_url: String
+    meeting_notes: String
     pod_hashtag: [String!]
     pod_images_and_videos: [PodMediaInput!]
     pod_attendees: [ID!]
@@ -179,5 +196,18 @@ export const podTypeDefs = /* GraphQL */ `
     togglePodLike(pod_doc_id: ID!): Pod!
     addPodComment(pod_doc_id: ID!, text: String!): PodComment!
     deletePodComment(pod_doc_id: ID!, comment_id: ID!): Boolean!
+    generateMeetingLink(
+      platform: String!
+      title: String!
+      start: String!
+      end: String
+    ): MeetingLinkResult!
+  }
+
+  type MeetingLinkResult {
+    ok: Boolean!
+    url: String
+    message: String
+    requires_oauth: Boolean
   }
 `;

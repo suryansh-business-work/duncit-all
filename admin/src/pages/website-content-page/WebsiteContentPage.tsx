@@ -4,6 +4,7 @@ import { Alert, Snackbar, Stack } from '@mui/material';
 import WebsiteContentDialog from './WebsiteContentDialog';
 import WebsiteContentTable from './WebsiteContentTable';
 import WebsiteContentToolbar from './WebsiteContentToolbar';
+import { useConfirm } from '../../components/useConfirm';
 import { websiteContentSchema } from './validation';
 import {
   CREATE_CONTENT,
@@ -26,6 +27,7 @@ export default function WebsiteContentPage() {
   const [createContent] = useMutation(CREATE_CONTENT);
   const [updateContent] = useMutation(UPDATE_CONTENT);
   const [deleteContent] = useMutation(DELETE_CONTENT);
+  const confirm = useConfirm();
   const [form, setForm] = useState<WebsiteContentForm>(blankContentForm(activeType));
   const [dialogOpen, setDialogOpen] = useState(false);
   const [busy, setBusy] = useState(false);
@@ -64,7 +66,13 @@ export default function WebsiteContentPage() {
   };
 
   const remove = async (item: any) => {
-    if (!confirm(`Delete "${item.title}"?`)) return;
+    const ok = await confirm({
+      title: 'Delete content',
+      message: `Delete "${item.title}"?`,
+      destructive: true,
+      confirmLabel: 'Delete',
+    });
+    if (!ok) return;
     await deleteContent({ variables: { id: item.id } });
     setToast('Website content deleted');
     await refetch();

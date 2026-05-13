@@ -2,6 +2,8 @@ import { Box, Chip, Stack, Typography } from '@mui/material';
 import RepeatIcon from '@mui/icons-material/Repeat';
 import EventBusyIcon from '@mui/icons-material/EventBusy';
 import HourglassBottomIcon from '@mui/icons-material/HourglassBottom';
+import PlaceIcon from '@mui/icons-material/Place';
+import VideocamIcon from '@mui/icons-material/Videocam';
 import PodQuickStats from './PodQuickStats';
 
 interface Props {
@@ -36,6 +38,10 @@ export default function PodOverview({ pod, isFree, priceFormat }: Props) {
           color={isFree ? 'success' : 'primary'}
           label={isFree ? 'Free' : priceFormat(pod.pod_amount)}
           sx={{ fontWeight: 600, fontSize: '1rem', px: 0.5, height: 32 }}
+        />
+        <Chip
+          icon={pod.pod_mode === 'VIRTUAL' ? <VideocamIcon /> : <PlaceIcon />}
+          label={pod.pod_mode === 'VIRTUAL' ? 'Virtual' : 'Physical'}
         />
         <Chip icon={<RepeatIcon />} label={pod.pod_occurrence?.replace(/_/g, ' ')} />
         <TimeChip iso={pod.pod_date_time} />

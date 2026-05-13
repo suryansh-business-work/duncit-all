@@ -50,14 +50,6 @@ export default function LocationHierarchyFields({ form, setForm }: Props) {
           renderInput={(params) => <TextField {...params} label="Country" required />}
           fullWidth
         />
-        <TextField
-          label="Location ID"
-          value={form.location_id}
-          onChange={(e) => setForm({ ...form, location_id: e.target.value })}
-          disabled={!!form.id}
-          helperText={form.id ? 'ID cannot be changed' : 'Auto from city if blank'}
-          fullWidth
-        />
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <Autocomplete<GeoState | string, false, false, true>

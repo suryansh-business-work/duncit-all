@@ -17,6 +17,7 @@ export const HOSTS = gql`
       tags
       step_completed
       status
+      is_active
       submitted_at
       reviewer_notes
     }

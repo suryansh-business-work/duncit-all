@@ -8,6 +8,7 @@ export const VENUES = gql`
       venue_type
       description
       cover_image_url
+      gallery
       location_id
       country
       country_code

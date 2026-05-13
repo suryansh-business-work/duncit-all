@@ -12,7 +12,6 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
-import * as yup from 'yup';
 import VenueAccordionForm from '../../components/admin-venue-create-dialog/VenueAccordionForm';
 import { selectedLocation } from '../../components/admin-venue-create-dialog/VenueLocationFields';
 import {
@@ -23,7 +22,11 @@ import {
   type Step1,
   type Step3,
 } from '../../components/admin-venue-create-dialog/queries';
-import { validateVenueEdit } from '../../components/admin-venue-create-dialog/venue.form';
+import {
+  collectVenueValidationErrors,
+  validateVenueEdit,
+  type VenueValidationErrors,
+} from '../../components/admin-venue-create-dialog/venue.form';
 import { STATUSES, UPDATE_VENUE } from './queries';
 
 interface Props {
@@ -63,7 +66,8 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
   const [s2, setS2] = useState({ gstin: '', pan: '' });
   const [s3, setS3] = useState<Step3>(blankS3);
   const [status, setStatus] = useState('APPROVED');
-  const [error, setError] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<VenueValidationErrors>({});
   const [updateVenue, state] = useMutation(UPDATE_VENUE);
   const { data: locationsData } = useQuery(LOCATIONS_FOR_VENUE, { skip: !venue });
 
@@ -76,6 +80,7 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
       capacity: venue.capacity ?? 1,
       description: venue.description ?? '',
       cover_image_url: venue.cover_image_url ?? '',
+      gallery: venue.gallery ?? [],
       address_line1: venue.address_line1 ?? '',
       address_line2: venue.address_line2 ?? '',
       location_id: venue.location_id ?? '',
@@ -99,7 +104,8 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
       owner_address: venue.owner_address ?? '',
     });
     setStatus(venue.status ?? 'APPROVED');
-    setError('');
+    setSubmitError('');
+    setFieldErrors({});
   }, [venue, locationsData]);
 
   const save = async () => {
@@ -114,17 +120,15 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
     try {
       await validateVenueEdit(payload);
     } catch (validationError) {
-      if (validationError instanceof yup.ValidationError) {
-        return setError(validationError.errors[0] ?? 'Check the highlighted fields');
-      }
-      return setError('Check the highlighted fields');
+      setFieldErrors(collectVenueValidationErrors(validationError));
+      return;
     }
     try {
       await updateVenue({ variables: { id: venue.id, ...payload } });
       onSaved();
       onClose();
     } catch (err: any) {
-      setError(err.errors?.[0] || err.message || 'Failed');
+      setSubmitError(err.errors?.[0] || err.message || 'Failed');
     }
   };
 
@@ -133,7 +137,7 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
       <DialogTitle>Edit Venue</DialogTitle>
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          {error && <Alert severity="error">{error}</Alert>}
+          {submitError && <Alert severity="error">{submitError}</Alert>}
           <VenueAccordionForm
             mode="edit"
             s1={s1}
@@ -145,6 +149,7 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
             s3={s3}
             setS3={setS3}
             locations={locationsData?.locations ?? []}
+            errors={fieldErrors}
           />
           <TextField
             select

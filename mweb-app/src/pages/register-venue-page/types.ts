@@ -16,6 +16,7 @@ export interface VenueStep1 {
   address_line1: string;
   address_line2: string;
   cover_image_url: string;
+  gallery: string[];
 }
 
 export interface VenueStep2 {
@@ -52,6 +53,7 @@ export const blankStep1: VenueStep1 = {
   address_line1: '',
   address_line2: '',
   cover_image_url: '',
+  gallery: [],
 };
 
 export const blankStep2: VenueStep2 = { documents: [], gstin: '', pan: '' };

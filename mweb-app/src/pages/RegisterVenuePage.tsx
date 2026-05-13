@@ -44,6 +44,7 @@ export default function RegisterVenuePage() {
   const [step2, setStep2] = useState<VenueStep2>(blankStep2);
   const [step3, setStep3] = useState<VenueStep3>(blankStep3);
   const [err, setErr] = useState<string | null>(null);
+  const [submittedSteps, setSubmittedSteps] = useState<Record<number, boolean>>({});
   const [coverPicker, setCoverPicker] = useState(false);
   const [docPickerIdx, setDocPickerIdx] = useState<number | null>(null);
 
@@ -72,6 +73,7 @@ export default function RegisterVenuePage() {
       address_line1: venue.address_line1 || '',
       address_line2: venue.address_line2 || '',
       cover_image_url: venue.cover_image_url || '',
+      gallery: venue.gallery || [],
     };
     setStep1(hydrateLocation(baseStep1, locations));
     setStep2({
@@ -93,8 +95,9 @@ export default function RegisterVenuePage() {
 
   const next = async () => {
     setErr(null);
+    setSubmittedSteps((current) => ({ ...current, [step]: true }));
     const validationError = await validateStep(step, step1, step2, step3);
-    if (validationError) return setErr(validationError);
+    if (validationError) return;
 
     try {
       if (step === 0) await saveStep1({ variables: { input: { ...step1, capacity: Number(step1.capacity) || 1 } } });
@@ -132,9 +135,9 @@ export default function RegisterVenuePage() {
 
       <Card variant="outlined">
         <CardContent>
-          {step === 0 && <DetailsStep value={step1} locations={locations} onChange={setStep1} onCoverPick={() => setCoverPicker(true)} />}
-          {step === 1 && <DocumentsStep value={step2} onChange={setStep2} onDocPick={setDocPickerIdx} />}
-          {step === 2 && <OwnerStep value={step3} onChange={setStep3} />}
+          {step === 0 && <DetailsStep value={step1} locations={locations} onChange={setStep1} onCoverPick={() => setCoverPicker(true)} showAllErrors={submittedSteps[0]} />}
+          {step === 1 && <DocumentsStep value={step2} onChange={setStep2} onDocPick={setDocPickerIdx} showAllErrors={submittedSteps[1]} />}
+          {step === 2 && <OwnerStep value={step3} onChange={setStep3} showAllErrors={submittedSteps[2]} />}
           {step === 3 && <SubmitStep step1={step1} step2={step2} step3={step3} />}
           {err && <Alert severity="error" sx={{ mt: 2 }}>{err}</Alert>}
           <Stack direction="row" spacing={1} mt={3} justifyContent="space-between">

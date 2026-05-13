@@ -67,6 +67,7 @@ export interface Step1 {
   capacity: number;
   description: string;
   cover_image_url: string;
+  gallery: string[];
   address_line1: string;
   address_line2: string;
   location_id: string;
@@ -99,6 +100,7 @@ export const blankS1: Step1 = {
   capacity: 10,
   description: '',
   cover_image_url: '',
+  gallery: [],
   address_line1: '',
   address_line2: '',
   location_id: '',

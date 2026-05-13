@@ -8,6 +8,7 @@ import {
   REDEEM,
   TOGGLE_SAVED_POD_DETAIL,
 } from './queries';
+import { podUrl } from '../../utils/seoUrls';
 
 interface Args {
   id: string;
@@ -112,7 +113,7 @@ export function usePodDetailActions({
 
   const onCopyReferral = (token: string) => {
     if (!pod) return;
-    const url = `${window.location.origin}/pods/${pod.id}?ref=${token}`;
+    const url = `${window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${token}`;
     navigator.clipboard?.writeText(url);
     setSnack('Referral link copied');
   };

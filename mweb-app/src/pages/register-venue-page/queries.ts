@@ -21,6 +21,7 @@ export const MY_VENUE = gql`
       address_line1
       address_line2
       cover_image_url
+      gallery
       gstin
       pan
       documents { type url }

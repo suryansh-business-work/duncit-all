@@ -1,6 +1,9 @@
 import { useState } from 'react';
-import { Box, Card, CardActionArea, CardContent, Stack, Typography } from '@mui/material';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { Box, Button, Card, CardActionArea, CardContent, Stack, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import VenueMapPreview from '../../components/VenueMapPreview';
+import { venueUrl } from '../../utils/seoUrls';
 
 interface Props {
   venues: any[];
@@ -44,12 +47,20 @@ export default function ClubMeetupVenuesSection({ venues }: Props) {
                 </Typography>
               </CardContent>
             </CardActionArea>
+            <Box sx={{ px: 2, pb: 1.5 }}>
+              <Button component={RouterLink} to={venueUrl(venue.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ px: 0 }}>
+                Venue details
+              </Button>
+            </Box>
           </Card>
         ))}
       </Stack>
       <Typography variant="body2" color="text.secondary" sx={{ mt: 1 }}>
         {addressParts(selected).filter(Boolean).join(', ')}
       </Typography>
+      <Button component={RouterLink} to={venueUrl(selected.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ mt: 1 }}>
+        Open venue details
+      </Button>
       <VenueMapPreview
         title={selected.venue_name}
         parts={addressParts(selected)}

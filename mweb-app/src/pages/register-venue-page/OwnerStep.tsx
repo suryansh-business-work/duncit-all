@@ -7,24 +7,22 @@ import { getStepErrors, venueStep3Schema } from './register-venue.form';
 interface Props {
   value: VenueStep3;
   onChange: (next: VenueStep3) => void;
+  showAllErrors?: boolean;
 }
 
-const FIELDS: (keyof VenueStep3)[] = ['owner_name', 'owner_email', 'owner_phone', 'owner_dob', 'owner_address'];
-
-export default function OwnerStep({ value, onChange }: Props) {
+export default function OwnerStep({ value, onChange, showAllErrors }: Props) {
   const [touched, setTouched] = useState<Partial<Record<keyof VenueStep3, boolean>>>({});
   const errors = useMemo(() => getStepErrors(venueStep3Schema, value), [value]);
   const set = (patch: Partial<VenueStep3>) => onChange({ ...value, ...patch });
   const showError = (key: keyof VenueStep3) => {
     if (!errors[key]) return false;
     const hasValue = String(value[key] ?? '').length > 0;
-    return Boolean(touched[key] || hasValue);
+    return Boolean(showAllErrors || touched[key] || hasValue);
   };
-  const touchAll = () => setTouched(Object.fromEntries(FIELDS.map((field) => [field, true])) as Record<keyof VenueStep3, boolean>);
   const touch = (key: keyof VenueStep3) => setTouched((prev) => ({ ...prev, [key]: true }));
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2.5}>
       <TextField
         label="Owner name"
         required
@@ -72,8 +70,6 @@ export default function OwnerStep({ value, onChange }: Props) {
         error={showError('owner_address')}
         helperText={showError('owner_address') ? errors.owner_address : ' '}
       />
-      {/* expose touchAll for parent if needed via key handler; not used directly */}
-      <span hidden onClick={touchAll} />
     </Stack>
   );
 }

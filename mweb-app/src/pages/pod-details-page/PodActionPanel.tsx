@@ -6,6 +6,7 @@ import {
 } from '@mui/material';
 import ShareIcon from '@mui/icons-material/Share';
 import ContentCopyIcon from '@mui/icons-material/ContentCopy';
+import { podUrl } from '../../utils/seoUrls';
 
 interface Props {
   pod: any;
@@ -85,7 +86,7 @@ export default function PodActionPanel({
             onClick={() =>
               (navigator as any).share({
                 title: pod.pod_title,
-                url: `${window.location.origin}/pods/${pod.id}?ref=${referralToken}`,
+                url: `${window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${referralToken}`,
               })
             }
           >

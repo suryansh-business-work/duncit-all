@@ -39,6 +39,7 @@ export const POD_DETAILS = gql`
       no_of_spots
       zone_name
       club_id
+      club_slug
       location_id
       venue_id
       what_this_pod_offers
@@ -94,16 +95,8 @@ export const POD_DETAILS = gql`
       }
     }
     publicVenues { id venue_name address_line1 address_line2 locality city state country postal_code lat lng }
-    publicHosts {
-      id
-      user_id
-      full_name
-      passport_photo_url
-    }
-    me {
-      user_id
-      saved_pod_ids
-    }
+    publicHosts { id user_id full_name passport_photo_url }
+    me { user_id saved_pod_ids }
   }
 `;
 
@@ -119,39 +112,25 @@ export const POD_PEOPLE = gql`
 
 export const INC_HITS = gql`
   mutation IncPodHits($id: ID!) {
-    incrementPodHits(pod_doc_id: $id) {
-      id
-      pod_hits
-    }
+    incrementPodHits(pod_doc_id: $id) { id pod_hits }
   }
 `;
 
 export const JOIN_FREE = gql`
   mutation JoinFreePod($id: ID!, $referral: String) {
-    joinFreePod(pod_doc_id: $id, referral_token: $referral) {
-      id
-      status
-    }
+    joinFreePod(pod_doc_id: $id, referral_token: $referral) { id status }
   }
 `;
 
 export const BACKOUT = gql`
   mutation BackoutPod($id: ID!) {
-    backoutPod(pod_doc_id: $id) {
-      id
-      status
-      referral_token
-      refund_status
-    }
+    backoutPod(pod_doc_id: $id) { id status referral_token refund_status }
   }
 `;
 
 export const REDEEM = gql`
   mutation RedeemReferral($token: String!) {
-    redeemPodReferral(token: $token) {
-      id
-      status
-    }
+    redeemPodReferral(token: $token) { id status }
   }
 `;
 

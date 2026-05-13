@@ -1,10 +1,12 @@
 import { Autocomplete, Box, TextField } from '@mui/material';
 import type { Step1 } from './queries';
+import { getVenueError, type VenueValidationErrors } from './venue.form';
 
 interface Props {
   s1: Step1;
   locations: any[];
   set: (patch: Partial<Step1>) => void;
+  errors?: VenueValidationErrors;
 }
 
 interface NamedOption {
@@ -33,8 +35,9 @@ export const selectedLocation = (locations: any[], s1: Step1) =>
   ) ??
   null;
 
-export default function VenueLocationFields({ s1, locations, set }: Props) {
+export default function VenueLocationFields({ s1, locations, set, errors }: Props) {
   const location = selectedLocation(locations, s1);
+  const err = (field: keyof Step1) => getVenueError(errors, `step1.${field}`);
   const countryOptions = uniqueOptions(
     locations.map((item) => ({ name: item.country || item.country_code, code: item.country_code }))
   );
@@ -65,14 +68,14 @@ export default function VenueLocationFields({ s1, locations, set }: Props) {
   };
 
   return (
-    <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+    <Box sx={{ display: 'grid', columnGap: 1.5, rowGap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
       <Autocomplete
         options={countryOptions}
         value={s1.country_code ? { name: s1.country || s1.country_code, code: s1.country_code } : null}
         getOptionLabel={(option) => option.name}
         isOptionEqualToValue={(a, b) => a.code === b.code}
         onChange={(_, value) => set({ country: value?.name ?? '', country_code: value?.code ?? '', state: '', state_code: '', location_id: '', city: '', locality: '', postal_code: '' })}
-        renderInput={(params) => <TextField {...params} label="Country *" size="small" />}
+        renderInput={(params) => <TextField {...params} label="Country *" size="small" error={!!err('country')} helperText={err('country') || undefined} />}
       />
       <Autocomplete
         options={stateOptions}
@@ -81,7 +84,7 @@ export default function VenueLocationFields({ s1, locations, set }: Props) {
         isOptionEqualToValue={(a, b) => a.code === b.code}
         disabled={!s1.country_code}
         onChange={(_, value) => set({ state: value?.name ?? '', state_code: value?.code ?? '', location_id: '', city: '', locality: '', postal_code: '' })}
-        renderInput={(params) => <TextField {...params} label="State *" size="small" />}
+        renderInput={(params) => <TextField {...params} label="State *" size="small" error={!!err('state')} helperText={err('state') || undefined} />}
       />
       <Autocomplete
         options={cityOptions}
@@ -90,7 +93,7 @@ export default function VenueLocationFields({ s1, locations, set }: Props) {
         isOptionEqualToValue={(a, b) => a.id === b.id}
         disabled={!s1.state}
         onChange={(_, value) => chooseLocation(value)}
-        renderInput={(params) => <TextField {...params} label="City *" size="small" />}
+        renderInput={(params) => <TextField {...params} label="City *" size="small" error={!!err('city')} helperText={err('city') || undefined} />}
       />
       <Autocomplete
         options={zones}
@@ -99,9 +102,9 @@ export default function VenueLocationFields({ s1, locations, set }: Props) {
         isOptionEqualToValue={(a, b) => a.zone_name === b.zone_name}
         disabled={!location || zones.length === 0}
         onChange={(_, value) => set({ locality: value?.zone_name ?? '', postal_code: value?.pincode || location?.location_pincode || '' })}
-        renderInput={(params) => <TextField {...params} label="Locality / Area *" size="small" />}
+        renderInput={(params) => <TextField {...params} label="Locality / Area *" size="small" error={!!err('locality')} helperText={err('locality') || undefined} />}
       />
-      <TextField label="PIN code *" size="small" value={s1.postal_code} InputProps={{ readOnly: true }} />
+      <TextField label="PIN code *" size="small" value={s1.postal_code} InputProps={{ readOnly: true }} error={!!err('postal_code')} helperText={err('postal_code') || undefined} />
     </Box>
   );
 }

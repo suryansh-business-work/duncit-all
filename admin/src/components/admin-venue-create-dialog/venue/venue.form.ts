@@ -30,6 +30,7 @@ export const venueStep1Schema: yup.ObjectSchema<Step1> = yup.object({
     .required('Capacity is required'),
   description: yup.string().trim().max(2000, 'Description must be 2000 characters or fewer').default(''),
   cover_image_url: yup.string().trim().max(1000).default(''),
+  gallery: yup.array(yup.string().trim().max(1000).required()).default([]),
   address_line1: yup
     .string()
     .trim()
@@ -150,6 +151,23 @@ export function validateVenueEdit(input: {
   status: string;
 }) {
   return venueEditSchema.validate(input, { abortEarly: false });
+}
+
+export type VenueValidationErrors = Record<string, string>;
+
+export function collectVenueValidationErrors(error: unknown): VenueValidationErrors {
+  if (!(error instanceof yup.ValidationError)) return {};
+  const errors: VenueValidationErrors = {};
+  const items = error.inner.length ? error.inner : [error];
+  for (const item of items) {
+    if (item.path && !errors[item.path]) errors[item.path] = item.message;
+  }
+  return errors;
+}
+
+export function getVenueError(errors: VenueValidationErrors | undefined, path: string) {
+  if (!errors) return '';
+  return errors[path] ?? '';
 }
 
 // Used by AADHAR-needing flows if reused — re-exported for completeness.

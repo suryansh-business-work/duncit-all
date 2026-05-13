@@ -5,6 +5,8 @@ interface Props {
   value: VenueStep1;
   locations: any[];
   onChange: (next: VenueStep1) => void;
+  errors?: Partial<Record<keyof VenueStep1, string>>;
+  showAllErrors?: boolean;
 }
 
 interface NamedOption {
@@ -33,7 +35,7 @@ export const findSelectedLocation = (locations: any[], value: VenueStep1) =>
   ) ??
   null;
 
-export default function VenueLocationFields({ value, locations, onChange }: Props) {
+export default function VenueLocationFields({ value, locations, onChange, errors, showAllErrors }: Props) {
   const selectedLocation = findSelectedLocation(locations, value);
   const selectedCountry = value.country_code
     ? { name: value.country || value.country_code, code: value.country_code }
@@ -55,6 +57,7 @@ export default function VenueLocationFields({ value, locations, onChange }: Prop
   const selectedZone = zones.find((zone: any) => zone.zone_name === value.locality) ?? null;
 
   const set = (patch: Partial<VenueStep1>) => onChange({ ...value, ...patch });
+  const showError = (key: keyof VenueStep1) => Boolean(errors?.[key] && (showAllErrors || value[key]));
   const chooseLocation = (location: any | null) => {
     if (!location) {
       set({ location_id: '', city: '', locality: '', postal_code: '' });
@@ -73,14 +76,14 @@ export default function VenueLocationFields({ value, locations, onChange }: Prop
   };
 
   return (
-    <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+    <Box sx={{ display: 'grid', columnGap: 1.5, rowGap: 2.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
       <Autocomplete
         options={countryOptions}
         value={selectedCountry}
         getOptionLabel={(option) => option.name}
         isOptionEqualToValue={(a, b) => a.code === b.code}
         onChange={(_, next) => set({ country: next?.name ?? '', country_code: next?.code ?? '', state: '', state_code: '', location_id: '', city: '', locality: '', postal_code: '' })}
-        renderInput={(params) => <TextField {...params} label="Country" required />}
+        renderInput={(params) => <TextField {...params} label="Country" required error={showError('country')} helperText={showError('country') ? errors?.country : ' '} />}
       />
       <Autocomplete
         options={stateOptions}
@@ -89,7 +92,7 @@ export default function VenueLocationFields({ value, locations, onChange }: Prop
         isOptionEqualToValue={(a, b) => a.code === b.code}
         disabled={!value.country_code}
         onChange={(_, next) => set({ state: next?.name ?? '', state_code: next?.code ?? '', location_id: '', city: '', locality: '', postal_code: '' })}
-        renderInput={(params) => <TextField {...params} label="State" required />}
+        renderInput={(params) => <TextField {...params} label="State" required error={showError('state')} helperText={showError('state') ? errors?.state : ' '} />}
       />
       <Autocomplete
         options={cityOptions}
@@ -98,7 +101,7 @@ export default function VenueLocationFields({ value, locations, onChange }: Prop
         isOptionEqualToValue={(a, b) => a.id === b.id}
         disabled={!value.state}
         onChange={(_, next) => chooseLocation(next)}
-        renderInput={(params) => <TextField {...params} label="City" required />}
+        renderInput={(params) => <TextField {...params} label="City" required error={showError('city')} helperText={showError('city') ? errors?.city : ' '} />}
       />
       <Autocomplete
         options={zones}
@@ -107,9 +110,9 @@ export default function VenueLocationFields({ value, locations, onChange }: Prop
         isOptionEqualToValue={(a, b) => a.zone_name === b.zone_name}
         disabled={!selectedLocation || zones.length === 0}
         onChange={(_, next) => set({ locality: next?.zone_name ?? '', postal_code: next?.pincode || selectedLocation?.location_pincode || '' })}
-        renderInput={(params) => <TextField {...params} label="Locality / Area" required={zones.length > 0} />}
+        renderInput={(params) => <TextField {...params} label="Locality / Area" required={zones.length > 0} error={showError('locality')} helperText={showError('locality') ? errors?.locality : ' '} />}
       />
-      <TextField label="PIN code" required value={value.postal_code} InputProps={{ readOnly: true }} />
+      <TextField label="PIN code" required value={value.postal_code} InputProps={{ readOnly: true }} error={showError('postal_code')} helperText={showError('postal_code') ? errors?.postal_code : ' '} />
     </Box>
   );
 }

@@ -17,6 +17,7 @@ import VenueDetailsSection from './VenueDetailsSection';
 import VenueDocsSection from './VenueDocsSection';
 import VenueOwnerSection from './VenueOwnerSection';
 import type { DocEntry, Step1, Step3 } from './queries';
+import { getVenueError, type VenueValidationErrors } from './venue.form';
 
 export type VenueAccordionMode = 'create' | 'edit';
 
@@ -45,6 +46,7 @@ interface Props {
   locations: any[];
   /** Toggle whether the Owner section is rendered (default true). */
   showOwnerSection?: boolean;
+  errors?: VenueValidationErrors;
 }
 
 type PanelKey = 'details' | 'documents' | 'owner';
@@ -74,6 +76,7 @@ export default function VenueAccordionForm({
   ownerOptions,
   locations,
   showOwnerSection = true,
+  errors,
 }: Props) {
   const [expanded, setExpanded] = useState<Set<PanelKey>>(new Set(['details']));
   const allExpanded = useMemo(
@@ -123,7 +126,7 @@ export default function VenueAccordionForm({
           <Typography variant="subtitle1">Venue details</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <VenueDetailsSection s1={s1} setS1={setS1} locations={locations} />
+          <VenueDetailsSection s1={s1} setS1={setS1} locations={locations} errors={errors} />
         </AccordionDetails>
       </Accordion>
 
@@ -132,7 +135,7 @@ export default function VenueAccordionForm({
           <Typography variant="subtitle1">Documents</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <VenueDocsSection docs={docs} setDocs={setDocs} s2={s2} setS2={setS2} />
+          <VenueDocsSection docs={docs} setDocs={setDocs} s2={s2} setS2={setS2} errors={errors} />
         </AccordionDetails>
       </Accordion>
 
@@ -157,13 +160,17 @@ export default function VenueAccordionForm({
                       {...params}
                       label="Pick an existing user as owner"
                       size="small"
-                      helperText="Admin auto-fills the owner from the selected user — you don't need to retype these details."
+                      error={!!getVenueError(errors, 'owner_user_id')}
+                      helperText={
+                        getVenueError(errors, 'owner_user_id') ||
+                        "Admin auto-fills the owner from the selected user — you don't need to retype these details."
+                      }
                     />
                   )}
                 />
               )}
               {s3 && setS3 ? (
-                <VenueOwnerSection s3={s3} setS3={setS3} />
+                <VenueOwnerSection s3={s3} setS3={setS3} errors={errors} />
               ) : (
                 <Box>
                   <Typography variant="body2" color="text.secondary">

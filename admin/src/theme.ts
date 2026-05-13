@@ -78,9 +78,43 @@ export const buildTheme = (mode: PaletteMode): Theme =>
       MuiCardContent: {
         styleOverrides: { root: { padding: 14, '&:last-child': { paddingBottom: 14 } } },
       },
+      MuiAccordion: {
+        defaultProps: { elevation: 0, disableGutters: true },
+        styleOverrides: {
+          root: ({ theme }) => ({
+            border: `1px solid ${theme.palette.divider}`,
+            borderRadius: 8,
+            overflow: 'hidden',
+            '&:before': { display: 'none' },
+            '& + &': { marginTop: theme.spacing(1.5) },
+            '&.Mui-expanded': { margin: 0, marginTop: theme.spacing(1.5) },
+            '&:first-of-type': { marginTop: 0 },
+          }),
+        },
+      },
+      MuiAccordionSummary: {
+        styleOverrides: { root: { minHeight: 46, '&.Mui-expanded': { minHeight: 46 } }, content: { margin: '10px 0', '&.Mui-expanded': { margin: '10px 0' } } },
+      },
+      MuiAccordionDetails: {
+        styleOverrides: { root: { paddingTop: 12, paddingBottom: 14 } },
+      },
       MuiButton: {
         defaultProps: { disableElevation: true, size: 'small' },
         styleOverrides: { root: { borderRadius: 6, paddingInline: 12 } },
+      },
+      MuiFormControl: {
+        styleOverrides: { root: { minWidth: 0 } },
+      },
+      MuiFormHelperText: {
+        styleOverrides: {
+          root: {
+            marginTop: 5,
+            marginBottom: 6,
+            lineHeight: 1.35,
+            minHeight: '1.35em',
+            overflowWrap: 'anywhere',
+          },
+        },
       },
       MuiTextField: { defaultProps: { size: 'small' } },
       MuiSelect: { defaultProps: { size: 'small' } },

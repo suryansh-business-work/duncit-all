@@ -46,6 +46,7 @@ export const venueStep1Schema: yup.ObjectSchema<VenueStep1> = yup.object({
     .required('Address line 1 is required'),
   address_line2: yup.string().trim().max(200).default(''),
   cover_image_url: yup.string().trim().max(1000).default(''),
+  gallery: yup.array(yup.string().trim().max(1000).required()).default([]),
 });
 
 export const venueStep2Schema: yup.ObjectSchema<VenueStep2> = yup.object({

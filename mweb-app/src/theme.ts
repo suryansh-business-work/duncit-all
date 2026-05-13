@@ -224,6 +224,20 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiTextField: {
       defaultProps: { variant: 'outlined', size: 'small' },
     },
+    MuiFormControl: {
+      styleOverrides: { root: { minWidth: 0 } },
+    },
+    MuiFormHelperText: {
+      styleOverrides: {
+        root: {
+          marginTop: 5,
+          marginBottom: 6,
+          lineHeight: 1.35,
+          minHeight: '1.35em',
+          overflowWrap: 'anywhere',
+        },
+      },
+    },
     MuiOutlinedInput: {
       styleOverrides: {
         root: {

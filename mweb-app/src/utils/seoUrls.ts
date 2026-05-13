@@ -17,3 +17,7 @@ export function podUrl(
   if (clubSlug && podSlug) return `/club/${clubSlug}/pod/${podSlug}`;
   return '/';
 }
+
+export function venueUrl(venueId?: string | null): string {
+  return venueId ? `/venue/${venueId}` : '/';
+}

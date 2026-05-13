@@ -19,6 +19,7 @@ interface Props {
 export default function MomentLightbox({ moments, index, onClose, onIndexChange }: Props) {
   const [current, setCurrent] = useState<number>(index ?? 0);
   const pushedHistory = useRef(false);
+  const suppressNextPop = useRef(false);
 
   useEffect(() => {
     if (index !== null) setCurrent(index);
@@ -33,6 +34,10 @@ export default function MomentLightbox({ moments, index, onClose, onIndexChange 
   useEffect(() => {
     if (index === null) return;
     const onPop = () => {
+      if (suppressNextPop.current) {
+        suppressNextPop.current = false;
+        return;
+      }
       pushedHistory.current = false;
       onClose();
     };
@@ -42,6 +47,9 @@ export default function MomentLightbox({ moments, index, onClose, onIndexChange 
 
   const close = () => {
     if (pushedHistory.current) {
+      pushedHistory.current = false;
+      suppressNextPop.current = true;
+      onClose();
       window.history.back();
       return;
     }

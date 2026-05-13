@@ -1,4 +1,5 @@
 import EditIcon from '@mui/icons-material/Edit';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Chip, IconButton, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
 
@@ -7,6 +8,11 @@ interface Props {
   onEdit: (venue: any) => void;
   onReview: (venue: any) => void;
 }
+
+const publicVenueUrl = (venueId: string) => {
+  const baseUrl = (import.meta.env.VITE_MWEB_URL || 'https://mweb.duncit.com').replace(/\/$/, '');
+  return `${baseUrl}/venue/${venueId}`;
+};
 
 export default function VenuesTable({ venues, onEdit, onReview }: Props) {
   return (
@@ -41,6 +47,7 @@ export default function VenuesTable({ venues, onEdit, onReview }: Props) {
             <TableCell><Chip size="small" label={venue.status} /></TableCell>
             <TableCell>{venue.submitted_at ? new Date(venue.submitted_at).toLocaleDateString() : '—'}</TableCell>
             <TableCell align="right">
+              <Tooltip title="Venue details"><IconButton size="small" component="a" href={publicVenueUrl(venue.id)} target="_blank" rel="noreferrer"><OpenInNewIcon fontSize="small" /></IconButton></Tooltip>
               <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(venue)}><EditIcon fontSize="small" /></IconButton></Tooltip>
               <Tooltip title="Review"><IconButton size="small" onClick={() => onReview(venue)}><RateReviewIcon fontSize="small" /></IconButton></Tooltip>
             </TableCell>

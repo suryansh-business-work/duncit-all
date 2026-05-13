@@ -13,7 +13,9 @@ import {
   Typography,
 } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UserVenuePanel from './profile-page/UserVenuePanel';
+import { venueUrl } from '../utils/seoUrls';
 
 const MY_VENUE_DETAILS = gql`
   query MyVenueDetails {
@@ -155,6 +157,11 @@ export default function VenueManagePage() {
             <Button component={RouterLink} to="/register-venue" variant="outlined" size="small">
               Edit venue
             </Button>
+            {venue?.status === 'APPROVED' && (
+              <Button component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewIcon fontSize="small" />}>
+                Public link
+              </Button>
+            )}
           </Stack>
         </CardContent>
       </Card>

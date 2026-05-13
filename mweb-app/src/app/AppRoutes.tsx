@@ -15,6 +15,7 @@ import RegisterVenuePage from '../pages/RegisterVenuePage';
 import HostsVenuesPage from '../pages/HostsVenuesPage';
 import HostManagePage from '../pages/HostManagePage';
 import VenueManagePage from '../pages/VenueManagePage';
+import VenueDetailsPage from '../pages/VenueDetailsPage';
 import FaqsPage from '../pages/FaqsPage';
 import PolicyPage from '../pages/PolicyPage';
 import PodIdeasPage from '../pages/PodIdeasPage';
@@ -50,6 +51,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Props
       <Route path="/follow" element={withAuth(<FollowPage superCategorySlug={superCategory} />)} />
       <Route path="/account" element={withAuth(<AccountPage />)} />
       <Route path="/club/:clubSlug" element={withAuth(<ClubDetailsPage />)} />
+      <Route path="/venue/:venueId" element={<VenueDetailsPage />} />
       <Route
         path="/club/:clubSlug/pod/:podSlug"
         element={withAuth(<PodDetailsPage />)}

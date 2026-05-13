@@ -1,7 +1,10 @@
 import { Button, Stack, Typography } from '@mui/material';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import VideocamIcon from '@mui/icons-material/Videocam';
+import { Link as RouterLink } from 'react-router-dom';
 import PodLocationMap from '../../pages/pod-details-page/PodLocationMap';
 import VenueMapPreview from '../VenueMapPreview';
+import { venueUrl } from '../../utils/seoUrls';
 
 interface Props {
   pod: any;
@@ -105,7 +108,12 @@ export default function PodMapSection({ pod, location, venue }: Props) {
             </Typography>
           </Stack>
           {venue ? (
-            <VenueMapPreview title={venue.venue_name} parts={venueParts(venue)} lat={venue.lat} lng={venue.lng} />
+            <Stack spacing={1}>
+              <Button component={RouterLink} to={venueUrl(venue.id)} size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ alignSelf: 'flex-start' }}>
+                Venue details
+              </Button>
+              <VenueMapPreview title={venue.venue_name} parts={venueParts(venue)} lat={venue.lat} lng={venue.lng} />
+            </Stack>
           ) : (
             <PodLocationMap locationName={locationName} zoneName={pod.zone_name} pincode={pincode} />
           )}

@@ -10,7 +10,6 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import * as yup from 'yup';
 import {
   ADMIN_CREATE_VENUE,
   LOCATIONS_FOR_VENUE,
@@ -22,7 +21,7 @@ import {
   type Step3,
 } from './queries';
 import VenueAccordionForm from './VenueAccordionForm';
-import { validateVenueCreate } from './venue.form';
+import { collectVenueValidationErrors, validateVenueCreate, type VenueValidationErrors } from './venue.form';
 
 interface Props {
   open: boolean;
@@ -38,7 +37,8 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
   const [docs, setDocs] = useState<DocEntry[]>([]);
   const [s2, setS2] = useState({ gstin: '', pan: '' });
   const [s3, setS3] = useState<Step3>(blankS3);
-  const [error, setError] = useState('');
+  const [submitError, setSubmitError] = useState('');
+  const [fieldErrors, setFieldErrors] = useState<VenueValidationErrors>({});
   const [submit] = useMutation(ADMIN_CREATE_VENUE);
   const [busy, setBusy] = useState(false);
 
@@ -48,7 +48,8 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
     setDocs([]);
     setS2({ gstin: '', pan: '' });
     setS3(blankS3);
-    setError('');
+    setSubmitError('');
+    setFieldErrors({});
   };
 
   const close = () => {
@@ -58,7 +59,8 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
   };
 
   const save = async (asDraft: boolean) => {
-    setError('');
+    setSubmitError('');
+    setFieldErrors({});
     const step1 = { ...s1, capacity: Number(s1.capacity) || 1 };
     const step2 = {
       documents: docs.filter((d) => d.type && d.url),
@@ -73,10 +75,8 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
         step3: s3,
       });
     } catch (validationError) {
-      if (validationError instanceof yup.ValidationError) {
-        return setError(validationError.errors[0] ?? 'Check the highlighted fields');
-      }
-      return setError('Check the highlighted fields');
+      setFieldErrors(collectVenueValidationErrors(validationError));
+      return;
     }
     setBusy(true);
     try {
@@ -92,7 +92,7 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
       onSaved();
       close();
     } catch (e: any) {
-      setError(e.message || 'Failed');
+      setSubmitError(e.message || 'Failed');
     } finally {
       setBusy(false);
     }
@@ -103,7 +103,7 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
       <DialogTitle>Create Venue (on behalf)</DialogTitle>
       <DialogContent>
         <Stack spacing={2} sx={{ mt: 1 }}>
-          {error && <Typography color="error">{error}</Typography>}
+          {submitError && <Typography color="error">{submitError}</Typography>}
           <VenueAccordionForm
             mode="create"
             s1={s1}
@@ -118,6 +118,7 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
             setOwner={setOwner}
             ownerOptions={usersData?.users ?? []}
             locations={locationsData?.locations ?? []}
+            errors={fieldErrors}
           />
         </Stack>
       </DialogContent>

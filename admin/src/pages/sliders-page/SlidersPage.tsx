@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Snackbar, Stack } from '@mui/material';
@@ -12,6 +12,7 @@ import {
   SliderForm,
   blankForm,
 } from './queries';
+import { toCreateSliderInput, toUpdateSliderInput } from './slider.form';
 import SliderFormDialog from './SliderFormDialog';
 import SlidersTable from './SlidersTable';
 import SlidersToolbar from './SlidersToolbar';
@@ -41,11 +42,6 @@ export default function SlidersPage() {
 
   const locations = locsData?.locations ?? [];
   const superCategories = superCatData?.categories ?? [];
-
-  const zonesForLocation = useMemo(() => {
-    const loc = locations.find((l: any) => l.id === form.location_id);
-    return loc?.location_zones ?? [];
-  }, [locations, form.location_id]);
 
   const openCreate = () => {
     setForm(blankForm);
@@ -77,54 +73,17 @@ export default function SlidersPage() {
     setOpen(true);
   };
 
-  const submit = async () => {
+  const submit = async (values: SliderForm) => {
     setBusy(true);
     setOpError(null);
     try {
-      if (!form.title.trim()) throw new Error('Title required');
-      if (!form.media_url.trim()) throw new Error('Media URL required');
-      if (form.scope === 'LOCATION' && !form.location_id)
-        throw new Error('Pick a location');
-      if (form.scope === 'ZONE' && (!form.location_id || !form.zone_name))
-        throw new Error('Pick location and zone');
-      if (form.link_type === 'INTERNAL') {
-        if (!form.link_target_kind || !form.link_target_id)
-          throw new Error('Pick a pod or club for the internal link');
-      } else if (form.link_url) {
-        try {
-          const u = new URL(form.link_url);
-          if (!['http:', 'https:'].includes(u.protocol))
-            throw new Error('External link must be http(s)');
-        } catch {
-          throw new Error('External link must be a valid URL');
-        }
-      }
-
-      const payload: any = {
-        title: form.title,
-        description: form.description,
-        media_url: form.media_url,
-        media_type: form.media_type,
-        link_type: form.link_type,
-        link_target_kind: form.link_type === 'INTERNAL' ? form.link_target_kind : null,
-        link_target_id: form.link_type === 'INTERNAL' ? form.link_target_id : null,
-        link_url: form.link_type === 'EXTERNAL' ? form.link_url : '',
-        scope: form.scope,
-        super_category_slug: form.super_category_slug || null,
-        location_id: form.scope === 'GLOBAL' ? null : form.location_id,
-        zone_name: form.scope === 'ZONE' ? form.zone_name : null,
-        sort_order: Number(form.sort_order) || 0,
-        starts_at: form.starts_at ? new Date(form.starts_at).toISOString() : null,
-        ends_at: form.ends_at ? new Date(form.ends_at).toISOString() : null,
-      };
-
-      if (form.id) {
+      if (values.id) {
         await updateMut({
-          variables: { id: form.id, input: { ...payload, is_active: form.is_active } },
+          variables: { id: values.id, input: toUpdateSliderInput(values) },
         });
       } else {
         await createMut({
-          variables: { input: { ...payload, slider_id: form.slider_id || undefined } },
+          variables: { input: toCreateSliderInput(values) },
         });
       }
       setToast('Saved');
@@ -173,12 +132,10 @@ export default function SlidersPage() {
         open={open}
         onClose={() => setOpen(false)}
         form={form}
-        setForm={setForm}
         busy={busy}
         opError={opError}
         onSubmit={submit}
         locations={locations}
-        zonesForLocation={zonesForLocation}
         superCategories={superCategories}
       />
 

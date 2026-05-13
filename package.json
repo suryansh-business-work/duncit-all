@@ -20,7 +20,12 @@
     "build:admin": "npm run build --workspace=admin",
     "build:website": "npm run build --workspace=website",
     "typecheck": "npm run build --workspaces --if-present",
+    "test:forms": "npm run test:forms --workspace=admin && npm run test:forms --workspace=mweb-app",
+    "test:forms:admin": "npm run test:forms --workspace=admin",
+    "test:forms:mweb": "npm run test:forms --workspace=mweb-app",
     "codegen": "npm run codegen --workspace=server",
+    "graphql:sync": "npm run codegen",
+    "graphql:sync:watch": "npm run codegen:watch --workspace=server",
     "prepare": "husky || true"
   },
   "devDependencies": {

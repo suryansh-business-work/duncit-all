@@ -9,6 +9,7 @@ import {
   USER,
   type EditForm,
 } from './queries';
+import { toUpdateUserInput, userProfileSchema } from './user-profile.form';
 
 export function useUserDetailsState(user_id: string | undefined, setToast: (m: string | null) => void) {
   const navigate = useNavigate();
@@ -74,30 +75,14 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
     );
   }, [form, user]);
 
-  const save = async () => {
-    if (!user_id || !form) return;
+  const save = async (values?: EditForm) => {
+    const nextForm = values ?? form;
+    if (!user_id || !nextForm) return;
     setBusy(true);
     setOpError(null);
     try {
-      const input: any = {
-        first_name: form.first_name,
-        last_name: form.last_name,
-        phone_extension: form.phone_extension,
-        phone_number: form.phone_number,
-        city: form.city || undefined,
-        zone: form.zone || undefined,
-        assigned_city: form.assigned_city || undefined,
-        assigned_zones: form.assigned_zones
-          ? form.assigned_zones
-              .split(',')
-              .map((s) => s.trim())
-              .filter(Boolean)
-          : [],
-        bio: form.bio || undefined,
-        profile_photo: form.profile_photo || undefined,
-        status: form.status,
-      };
-      if (form.email) input.email = form.email;
+      const valid = await userProfileSchema.validate(nextForm, { abortEarly: false });
+      const input = toUpdateUserInput(valid);
       await updateUser({ variables: { user_id, input } });
       setToast('User updated');
       await refetch();

@@ -24,6 +24,8 @@ import {
 import VenueDetailsSection from './VenueDetailsSection';
 import VenueDocsSection from './VenueDocsSection';
 import VenueOwnerSection from './VenueOwnerSection';
+import { validateVenueCreate } from './venue.form';
+import * as yup from 'yup';
 
 interface Props {
   open: boolean;
@@ -59,22 +61,32 @@ export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props
 
   const save = async (asDraft: boolean) => {
     setError('');
-    if (!owner) return setError('Select an owner user');
-    if (!s1.venue_name || !s1.address_line1 || !s1.location_id || !s1.country_code || !s1.state || !s1.city || !s1.locality || !s1.postal_code)
-      return setError('Fill required venue details');
-    if (!s3.owner_name || !s3.owner_email || !s3.owner_phone)
-      return setError('Fill required owner details');
+    const step1 = { ...s1, capacity: Number(s1.capacity) || 1 };
+    const step2 = {
+      documents: docs.filter((d) => d.type && d.url),
+      gstin: s2.gstin.trim().toUpperCase(),
+      pan: s2.pan.trim().toUpperCase(),
+    };
+    try {
+      await validateVenueCreate({
+        owner_user_id: owner?.user_id ?? '',
+        step1,
+        step2,
+        step3: s3,
+      });
+    } catch (validationError) {
+      if (validationError instanceof yup.ValidationError) {
+        return setError(validationError.errors[0] ?? 'Check the highlighted fields');
+      }
+      return setError('Check the highlighted fields');
+    }
     setBusy(true);
     try {
       await submit({
         variables: {
           owner_user_id: owner.user_id,
-          step1: { ...s1, capacity: Number(s1.capacity) || 1 },
-          step2: {
-            documents: docs.filter((d) => d.type && d.url),
-            gstin: s2.gstin,
-            pan: s2.pan,
-          },
+          step1,
+          step2,
           step3: s3,
           submit: !asDraft,
         },

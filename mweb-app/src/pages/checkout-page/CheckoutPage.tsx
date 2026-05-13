@@ -1,23 +1,16 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
+import { useFormik } from 'formik';
 import { Alert, Backdrop, Box, Button, Chip, CircularProgress, IconButton, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PaymentLottie from '../../components/PaymentLottie';
-import { checkoutFormSchema } from './validation';
+import { checkoutFormSchema, checkoutInitialValues, toCheckoutContact } from './checkout.form';
 import { buildBreakup } from './checkoutMath';
 import CheckoutSuccess from './CheckoutSuccess';
 import OrderSummaryCard from './OrderSummaryCard';
 import PaymentDetailsCard from './PaymentDetailsCard';
-import { CHECKOUT_ME, CHECKOUT_POD, DUMMY_CHECKOUT, PUBLIC_FINANCE, type CheckoutForm, type CheckoutState } from './queries';
-
-const blankForm: CheckoutForm = {
-  email: '',
-  phone: '',
-  billing_address: '',
-  method: 'DUMMY_UPI',
-  simulate_failure: false,
-};
+import { CHECKOUT_ME, CHECKOUT_POD, DUMMY_CHECKOUT, PUBLIC_FINANCE, type CheckoutState } from './queries';
 
 export default function CheckoutPage() {
   const { podId = '' } = useParams();
@@ -35,19 +28,51 @@ export default function CheckoutPage() {
     fetchPolicy: 'cache-and-network',
   });
   const [doCheckout] = useMutation(DUMMY_CHECKOUT);
-  const [form, setForm] = useState<CheckoutForm>(blankForm);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<any>(null);
 
+  const formik = useFormik({
+    initialValues: checkoutInitialValues,
+    validationSchema: checkoutFormSchema,
+    validateOnBlur: true,
+    validateOnChange: true,
+    onSubmit: async (values) => {
+      setError(null);
+      setSubmitting(true);
+      try {
+        const title = pod?.pod_title || state.pod_title || search.get('title') || 'Booking';
+        const contact = toCheckoutContact(values);
+        const res = await doCheckout({
+          variables: {
+            input: {
+              pod_id: checkoutPodId || null,
+              amount,
+              description: state.description || `Pod booking · ${title}`,
+              ...contact,
+              checkout_url: window.location.href,
+            },
+          },
+        });
+        const payment = res.data?.dummyCheckout;
+        if (payment?.status === 'SUCCESS') setSuccess(payment);
+        else setError('Payment failed. Please try again.');
+      } catch (submitError: any) {
+        setError(submitError?.errors?.join(', ') || submitError.message || 'Checkout failed');
+      } finally {
+        setSubmitting(false);
+      }
+    },
+  });
+
   useEffect(() => {
     const me = meData?.me;
     if (!me) return;
-    setForm((prev) => ({
+    formik.setValues((prev) => ({
       ...prev,
       email: prev.email || me.email || '',
       phone: prev.phone || `${me.phone_extension || ''}${me.phone_number || ''}`,
-    }));
+    }), false);
   }, [meData]);
 
   const pod = podData?.pod;
@@ -56,36 +81,6 @@ export default function CheckoutPage() {
     () => buildBreakup(amount, financeData?.publicFinanceSettings),
     [amount, financeData]
   );
-
-  const submit = async () => {
-    setError(null);
-    setSubmitting(true);
-    try {
-      const valid = await checkoutFormSchema.validate(form, { abortEarly: false });
-      const title = pod?.pod_title || state.pod_title || search.get('title') || 'Booking';
-      const res = await doCheckout({
-        variables: {
-          input: {
-            pod_id: checkoutPodId || null,
-            amount,
-            description: state.description || `Pod booking · ${title}`,
-            contact_email: valid.email,
-            contact_phone: valid.phone,
-            billing_address: valid.billing_address,
-            checkout_url: window.location.href,
-            simulate_failure: valid.simulate_failure,
-          },
-        },
-      });
-      const payment = res.data?.dummyCheckout;
-      if (payment?.status === 'SUCCESS') setSuccess(payment);
-      else setError('Payment failed. Please try again.');
-    } catch (submitError: any) {
-      setError(submitError?.errors?.join(', ') || submitError.message || 'Checkout failed');
-    } finally {
-      setSubmitting(false);
-    }
-  };
 
   if (success) return <CheckoutSuccess payment={success} onHome={() => navigate('/')} onProfile={() => navigate('/profile')} />;
 
@@ -106,13 +101,11 @@ export default function CheckoutPage() {
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
         <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={breakup} />
         <PaymentDetailsCard
-          form={form}
+          formik={formik}
           error={error}
           submitting={submitting}
           total={breakup.total}
           currency={breakup.currency}
-          onChange={setForm}
-          onSubmit={submit}
         />
       </Stack>
       <Backdrop open={submitting} sx={{ color: 'common.white', zIndex: (t) => t.zIndex.modal + 1, flexDirection: 'column', gap: 2 }}>

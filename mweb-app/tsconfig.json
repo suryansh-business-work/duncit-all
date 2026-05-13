@@ -9,5 +9,6 @@
     "useDefineForClassFields": true,
     "types": ["vite/client"]
   },
-  "include": ["src"]
+  "include": ["src"],
+  "exclude": ["src/**/*.form.cy.ts", "src/**/*.form.cy.tsx", "vitest.config.ts", "vitest.setup.ts"]
 }

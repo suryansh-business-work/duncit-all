@@ -7,6 +7,7 @@ import VenueDocsSection from '../../components/admin-venue-create-dialog/VenueDo
 import VenueOwnerSection from '../../components/admin-venue-create-dialog/VenueOwnerSection';
 import { selectedLocation } from '../../components/admin-venue-create-dialog/VenueLocationFields';
 import { LOCATIONS_FOR_VENUE, blankS1, blankS3, type DocEntry, type Step1, type Step3 } from '../../components/admin-venue-create-dialog/queries';
+import { validateVenueEdit } from '../../components/admin-venue-create-dialog/venue.form';
 import { STATUSES, UPDATE_VENUE } from './queries';
 
 interface Props {
@@ -16,26 +17,6 @@ interface Props {
 }
 
 const steps = ['Venue', 'Documents', 'Owner'];
-const schema = yup.object({
-  step1: yup.object({
-    venue_name: yup.string().trim().required('Venue name required'),
-    venue_type: yup.string().trim().required('Venue type required'),
-    capacity: yup.number().integer().min(1).required(),
-    address_line1: yup.string().trim().required('Address required'),
-    location_id: yup.string().trim().required('Select a city from locations'),
-    country_code: yup.string().trim().required('Country required'),
-    state: yup.string().trim().required('State required'),
-    city: yup.string().trim().required('City required'),
-    locality: yup.string().trim().required('Locality required'),
-    postal_code: yup.string().trim().required('Postal code required'),
-  }),
-  step2: yup.object({ documents: yup.array().default([]), gstin: yup.string(), pan: yup.string() }),
-  step3: yup.object({
-    owner_name: yup.string().trim().required('Owner name required'),
-    owner_email: yup.string().email().required('Owner email required'),
-    owner_phone: yup.string().trim().required('Owner phone required'),
-  }),
-});
 
 const dateOnly = (value?: string | null) => value ? new Date(value).toISOString().slice(0, 10) : '';
 
@@ -88,11 +69,23 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
 
   const save = async () => {
     if (!venue) return;
-    const step2 = { documents: docs.filter((doc) => doc.type && doc.url), ...s2 };
-    const payload = { step1: { ...s1, capacity: Number(s1.capacity) || 1 }, step2, step3: s3 };
+    const step1 = { ...s1, capacity: Number(s1.capacity) || 1 };
+    const step2 = {
+      documents: docs.filter((doc) => doc.type && doc.url),
+      gstin: s2.gstin.trim().toUpperCase(),
+      pan: s2.pan.trim().toUpperCase(),
+    };
+    const payload = { step1, step2, step3: s3, status };
     try {
-      await schema.validate(payload, { abortEarly: false });
-      await updateVenue({ variables: { id: venue.id, ...payload, status } });
+      await validateVenueEdit(payload);
+    } catch (validationError) {
+      if (validationError instanceof yup.ValidationError) {
+        return setError(validationError.errors[0] ?? 'Check the highlighted fields');
+      }
+      return setError('Check the highlighted fields');
+    }
+    try {
+      await updateVenue({ variables: { id: venue.id, ...payload } });
       onSaved();
       onClose();
     } catch (err: any) {

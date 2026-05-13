@@ -11,7 +11,12 @@ import {
 } from '@mui/material';
 import { useFormik } from 'formik';
 import { useEffect } from 'react';
-import * as yup from 'yup';
+import {
+  accountEditInitialValues,
+  accountEditSchema,
+  toUpdateProfileInput,
+  type AccountEditValues,
+} from './account-edit.form';
 
 const UPDATE_PROFILE = gql`
   mutation UpdateMyProfileFull($input: UpdateMyProfileInput!) {
@@ -32,73 +37,31 @@ const UPDATE_PROFILE = gql`
   }
 `;
 
-const phoneRegex = /^[0-9]{6,15}$/;
-const extRegex = /^\+?[0-9]{1,4}$/;
-
-const schema = yup.object({
-  first_name: yup.string().trim().min(1, 'Required').max(60).required('Required'),
-  last_name: yup.string().trim().max(60).default(''),
-  bio: yup.string().trim().max(500).default(''),
-  city: yup.string().trim().max(80).default(''),
-  zone: yup.string().trim().max(80).default(''),
-  country: yup.string().trim().max(80).default(''),
-  phone_extension: yup
-    .string()
-    .trim()
-    .matches(extRegex, 'Invalid extension')
-    .required('Required'),
-  phone_number: yup
-    .string()
-    .trim()
-    .matches(phoneRegex, 'Digits only (6-15)')
-    .required('Required'),
-  whatsapp_extension: yup
-    .string()
-    .trim()
-    .when('whatsapp_number', {
-      is: (v: string) => !!v,
-      then: (s) => s.matches(extRegex, 'Invalid extension').required('Required'),
-      otherwise: (s) => s.notRequired(),
-    }),
-  whatsapp_number: yup
-    .string()
-    .trim()
-    .matches(/^$|^[0-9]{6,15}$/, 'Digits only (6-15)')
-    .default(''),
-});
-
-type Values = yup.InferType<typeof schema>;
-
 export interface EditAccountDialogProps {
   open: boolean;
   onClose: () => void;
-  initial: Partial<Values>;
+  initial: Partial<AccountEditValues>;
   onSaved: () => void;
 }
 
 export default function EditAccountDialog({ open, onClose, initial, onSaved }: EditAccountDialogProps) {
   const [updateProfile, { loading }] = useMutation(UPDATE_PROFILE);
 
-  const formik = useFormik<Values>({
-    initialValues: {
-      first_name: '',
-      last_name: '',
-      bio: '',
-      city: '',
-      zone: '',
-      country: '',
-      phone_extension: '+91',
-      phone_number: '',
-      whatsapp_extension: '+91',
-      whatsapp_number: '',
-      ...initial,
-    } as Values,
-    validationSchema: schema,
+  const formik = useFormik<AccountEditValues>({
+    initialValues: accountEditInitialValues(initial),
+    validationSchema: accountEditSchema,
     enableReinitialize: true,
-    onSubmit: async (values) => {
-      await updateProfile({ variables: { input: values } });
-      onSaved();
-      onClose();
+    validateOnBlur: true,
+    validateOnChange: true,
+    onSubmit: async (values, { setStatus }) => {
+      setStatus(undefined);
+      try {
+        await updateProfile({ variables: { input: toUpdateProfileInput(values) } });
+        onSaved();
+        onClose();
+      } catch (error: any) {
+        setStatus(error?.message || 'Could not save profile');
+      }
     },
   });
 
@@ -107,16 +70,21 @@ export default function EditAccountDialog({ open, onClose, initial, onSaved }: E
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open]);
 
-  const f = (name: keyof Values) => ({
-    name,
-    value: (formik.values as any)[name] ?? '',
-    onChange: formik.handleChange,
-    onBlur: formik.handleBlur,
-    error: Boolean((formik.touched as any)[name] && (formik.errors as any)[name]),
-    helperText: ((formik.touched as any)[name] && (formik.errors as any)[name]) || ' ',
-    fullWidth: true,
-    size: 'small' as const,
-  });
+  const f = (name: keyof AccountEditValues) => {
+    const value = (formik.values as any)[name] ?? '';
+    const error = (formik.errors as any)[name];
+    const showError = Boolean(error && ((formik.touched as any)[name] || String(value).length > 0));
+    return {
+      name,
+      value,
+      onChange: formik.handleChange,
+      onBlur: formik.handleBlur,
+      error: showError,
+      helperText: showError ? error : ' ',
+      fullWidth: true,
+      size: 'small' as const,
+    };
+  };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">

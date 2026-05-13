@@ -9,6 +9,7 @@ import InterviewsTable from './InterviewsTable';
 import ManageInterviewDialog from './ManageInterviewDialog';
 import InterviewsToolbar from './InterviewsToolbar';
 import InterviewDeleteDialog from './InterviewDeleteDialog';
+import { toUpdateInterviewInput, type InterviewFormValues } from './interview.form';
 
 export default function InterviewRequestsPage() {
   const [statusFilter, setStatusFilter] = useState<string>('');
@@ -50,51 +51,16 @@ export default function InterviewRequestsPage() {
     return map;
   }, [items]);
 
-  const [pickedSlotIdx, setPickedSlotIdx] = useState<number>(-1);
-  const [customStart, setCustomStart] = useState('');
-  const [customEnd, setCustomEnd] = useState('');
-  const [meetingLink, setMeetingLink] = useState('');
-  const [notes, setNotes] = useState('');
-  const [newStatus, setNewStatus] = useState<string>('SCHEDULED');
-
   const openDetails = (it: any) => {
     setActive(it);
-    setNewStatus(it.status === 'PENDING' ? 'SCHEDULED' : it.status);
-    setMeetingLink(it.meeting_link || '');
-    setNotes(it.admin_notes || '');
-    setPickedSlotIdx(-1);
-    if (it.scheduled_slot) {
-      setCustomStart(it.scheduled_slot.start);
-      setCustomEnd(it.scheduled_slot.end);
-    } else if (it.preferred_slots[0]) {
-      setCustomStart(it.preferred_slots[0].start);
-      setCustomEnd(it.preferred_slots[0].end);
-      setPickedSlotIdx(0);
-    } else {
-      setCustomStart('');
-      setCustomEnd('');
-    }
+    setError(null);
   };
 
-  const submit = async () => {
+  const submit = async (values: InterviewFormValues) => {
     if (!active) return;
     setError(null);
     try {
-      const input: any = {
-        status: newStatus,
-        meeting_link: meetingLink || null,
-        admin_notes: notes || null,
-      };
-      if (newStatus === 'SCHEDULED' || newStatus === 'APPROVED') {
-        if (!customStart || !customEnd) {
-          setError('Pick a scheduled time');
-          return;
-        }
-        input.scheduled_slot = {
-          start: new Date(customStart).toISOString(),
-          end: new Date(customEnd).toISOString(),
-        };
-      }
+      const input = toUpdateInterviewInput(values);
       await updateMut({ variables: { interview_doc_id: active.id, input } });
       setToast('Interview updated');
       setActive(null);
@@ -145,18 +111,6 @@ export default function InterviewRequestsPage() {
         active={active}
         saving={saving}
         error={error}
-        newStatus={newStatus}
-        setNewStatus={setNewStatus}
-        pickedSlotIdx={pickedSlotIdx}
-        setPickedSlotIdx={setPickedSlotIdx}
-        customStart={customStart}
-        setCustomStart={setCustomStart}
-        customEnd={customEnd}
-        setCustomEnd={setCustomEnd}
-        meetingLink={meetingLink}
-        setMeetingLink={setMeetingLink}
-        notes={notes}
-        setNotes={setNotes}
         fmtSlotLong={fmtSlotLong}
         onClose={() => setActive(null)}
         onSubmit={submit}

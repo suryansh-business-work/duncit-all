@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import {
   Autocomplete,
+  Alert,
   Box,
   Button,
   Dialog,
@@ -12,7 +13,14 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
+import { Form, Formik, getIn, type FormikErrors, type FormikTouched } from 'formik';
 import MediaPickerField from './MediaPickerField';
+import {
+  hostCreateInitialValues,
+  hostCreateSchema,
+  toHostCreateVariables,
+  type HostCreateValues,
+} from '../forms/host.form';
 
 const USERS = gql`
   query UsersForHostCreate {
@@ -46,6 +54,18 @@ const ADMIN_CREATE_HOST = gql`
   }
 `;
 
+const showError = (
+  values: HostCreateValues,
+  errors: FormikErrors<HostCreateValues>,
+  touched: FormikTouched<HostCreateValues>,
+  submitCount: number,
+  name: string
+) => {
+  const value = getIn(values, name);
+  const hasValue = Array.isArray(value) ? value.length > 0 : String(value ?? '').length > 0;
+  return Boolean(getIn(errors, name) && (submitCount > 0 || getIn(touched, name) || hasValue));
+};
+
 export default function AdminHostCreateDialog({
   open,
   onClose,
@@ -56,94 +76,93 @@ export default function AdminHostCreateDialog({
   onSaved: () => void;
 }) {
   const { data: usersData } = useQuery(USERS, { skip: !open });
-  const [target, setTarget] = useState<any | null>(null);
-  const [s1, setS1] = useState({ full_name: '', email: '', phone: '', dob: '' });
-  const [s2, setS2] = useState({ aadhar_number: '', pan_number: '', passport_photo_url: '' });
-  const [s3, setS3] = useState({ police_verification_url: '', full_address: '', tags: [] as string[] });
   const [error, setError] = useState('');
-  const [busy, setBusy] = useState(false);
-  const [submit] = useMutation(ADMIN_CREATE_HOST);
+  const submitForReviewRef = useRef(false);
+  const [submitHost, { loading }] = useMutation(ADMIN_CREATE_HOST);
 
   const close = () => {
-    setTarget(null);
-    setS1({ full_name: '', email: '', phone: '', dob: '' });
-    setS2({ aadhar_number: '', pan_number: '', passport_photo_url: '' });
-    setS3({ police_verification_url: '', full_address: '', tags: [] });
     setError('');
     onClose();
   };
 
-  const save = async (asDraft: boolean) => {
-    setError('');
-    if (!target) return setError('Select a user');
-    if (!s1.full_name || !s1.email || !s1.phone) return setError('Fill personal details');
-    if (!s2.aadhar_number || !s2.pan_number || !s2.passport_photo_url)
-      return setError('Fill identity & upload passport photo');
-    if (!s3.police_verification_url || !s3.full_address)
-      return setError('Upload police verification & enter address');
-    setBusy(true);
-    try {
-      await submit({
-        variables: {
-          target_user_id: target.user_id,
-          step1: s1,
-          step2: s2,
-          step3: s3,
-          submit: !asDraft,
-        },
-      });
-      onSaved();
-      close();
-    } catch (e: any) {
-      setError(e.message || 'Failed');
-    } finally {
-      setBusy(false);
-    }
-  };
-
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
-      <DialogTitle>Create Host (on behalf)</DialogTitle>
-      <DialogContent>
-        <Stack spacing={2} sx={{ mt: 1 }}>
-          {error && <Typography color="error">{error}</Typography>}
-          <Autocomplete
-            options={usersData?.users ?? []}
-            getOptionLabel={(o: any) => `${o.full_name} · ${o.email || o.phone_number || ''}`}
-            value={target}
-            onChange={(_, v) => setTarget(v)}
-            renderInput={(params) => <TextField {...params} label="User *" size="small" />}
-          />
-          <Typography variant="subtitle2">Personal</Typography>
-          <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-            <TextField label="Full name *" size="small" value={s1.full_name} onChange={(e) => setS1({ ...s1, full_name: e.target.value })} />
-            <TextField label="Email *" size="small" value={s1.email} onChange={(e) => setS1({ ...s1, email: e.target.value })} />
-            <TextField label="Phone *" size="small" value={s1.phone} onChange={(e) => setS1({ ...s1, phone: e.target.value })} />
-            <TextField label="DOB" type="date" size="small" InputLabelProps={{ shrink: true }} value={s1.dob} onChange={(e) => setS1({ ...s1, dob: e.target.value })} />
-          </Box>
-          <Typography variant="subtitle2">Identity</Typography>
-          <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-            <TextField label="Aadhar number *" size="small" value={s2.aadhar_number} onChange={(e) => setS2({ ...s2, aadhar_number: e.target.value })} />
-            <TextField label="PAN number *" size="small" value={s2.pan_number} onChange={(e) => setS2({ ...s2, pan_number: e.target.value })} />
-          </Box>
-          <MediaPickerField label="Passport photo *" value={s2.passport_photo_url} onChange={(url) => setS2({ ...s2, passport_photo_url: url })} folder="/hosts/photo" />
-          <Typography variant="subtitle2">Verification</Typography>
-          <MediaPickerField label="Police verification document *" value={s3.police_verification_url} onChange={(url) => setS3({ ...s3, police_verification_url: url })} folder="/hosts/docs" />
-          <TextField label="Full address *" size="small" multiline minRows={2} value={s3.full_address} onChange={(e) => setS3({ ...s3, full_address: e.target.value })} />
-          <TextField
-            label="Tags"
-            size="small"
-            value={s3.tags.join(', ')}
-            onChange={(e) => setS3({ ...s3, tags: e.target.value.split(',').map((tag) => tag.trim()).filter(Boolean) })}
-            helperText="Comma separated host tags."
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={close}>Cancel</Button>
-        <Button onClick={() => save(true)} disabled={busy}>Save Draft</Button>
-        <Button variant="contained" onClick={() => save(false)} disabled={busy}>Submit for Review</Button>
-      </DialogActions>
+    <Dialog open={open} onClose={loading ? undefined : close} fullWidth maxWidth="sm">
+      <Formik<HostCreateValues>
+        initialValues={hostCreateInitialValues}
+        validationSchema={hostCreateSchema}
+        validateOnBlur
+        validateOnChange
+        onSubmit={async (values, { resetForm }) => {
+          setError('');
+          try {
+            await submitHost({ variables: toHostCreateVariables(values, submitForReviewRef.current) });
+            onSaved();
+            resetForm();
+            close();
+          } catch (err: any) {
+            setError(err?.message || 'Failed to create host');
+          }
+        }}
+      >
+        {({ values, errors, touched, submitCount, handleBlur, handleChange, resetForm, setFieldValue, submitForm }) => {
+          const users = usersData?.users ?? [];
+          const selectedUser = users.find((user: any) => user.user_id === values.target_user_id) ?? null;
+          const hasError = (name: string) => showError(values, errors, touched, submitCount, name);
+          const props = (name: string) => ({
+            name,
+            value: getIn(values, name) ?? '',
+            onChange: handleChange,
+            onBlur: handleBlur,
+            error: hasError(name),
+            helperText: hasError(name) ? getIn(errors, name) : ' ',
+            fullWidth: true,
+            size: 'small' as const,
+          });
+          const submitWithMode = (submitForReview: boolean) => {
+            submitForReviewRef.current = submitForReview;
+            submitForm();
+          };
+          return (
+            <Form noValidate>
+              <DialogTitle>Create Host (on behalf)</DialogTitle>
+              <DialogContent>
+                <Stack spacing={2} sx={{ mt: 1 }}>
+                  {error && <Alert severity="error">{error}</Alert>}
+                  <Autocomplete
+                    options={users}
+                    getOptionLabel={(option: any) => `${option.full_name} · ${option.email || option.phone_number || ''}`}
+                    value={selectedUser}
+                    onChange={(_, value) => setFieldValue('target_user_id', value?.user_id ?? '')}
+                    renderInput={(params) => <TextField {...params} label="User" size="small" error={hasError('target_user_id')} helperText={hasError('target_user_id') ? errors.target_user_id : ' '} required />}
+                  />
+                  <Typography variant="subtitle2">Personal</Typography>
+                  <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+                    <TextField label="Full name" required {...props('step1.full_name')} />
+                    <TextField label="Email" type="email" required {...props('step1.email')} />
+                    <TextField label="Phone" required {...props('step1.phone')} />
+                    <TextField label="DOB" type="date" InputLabelProps={{ shrink: true }} {...props('step1.dob')} />
+                  </Box>
+                  <Typography variant="subtitle2">Identity</Typography>
+                  <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+                    <TextField label="Aadhar number" required {...props('step2.aadhar_number')} />
+                    <TextField label="PAN number" required {...props('step2.pan_number')} />
+                  </Box>
+                  <MediaPickerField label="Passport photo" value={values.step2.passport_photo_url} onChange={(url) => setFieldValue('step2.passport_photo_url', url)} helperText={hasError('step2.passport_photo_url') ? getIn(errors, 'step2.passport_photo_url') : ' '} folder="/hosts/photo" required />
+                  <Typography variant="subtitle2">Verification</Typography>
+                  <MediaPickerField label="Police verification document" value={values.step3.police_verification_url} onChange={(url) => setFieldValue('step3.police_verification_url', url)} helperText={hasError('step3.police_verification_url') ? getIn(errors, 'step3.police_verification_url') : ' '} folder="/hosts/docs" required />
+                  <TextField label="Full address" multiline minRows={2} required {...props('step3.full_address')} />
+                  <TextField label="Tags" value={values.step3.tags.join(', ')} onChange={(event) => setFieldValue('step3.tags', event.target.value.split(',').map((tag) => tag.trim()).filter(Boolean))} helperText="Comma separated host tags." fullWidth size="small" />
+                </Stack>
+              </DialogContent>
+              <DialogActions>
+                <Button type="button" onClick={() => { resetForm(); close(); }} disabled={loading}>Cancel</Button>
+                <Button type="button" onClick={() => submitWithMode(false)} disabled={loading}>Save Draft</Button>
+                <Button type="button" variant="contained" onClick={() => submitWithMode(true)} disabled={loading}>Submit for Review</Button>
+              </DialogActions>
+            </Form>
+          );
+        }}
+      </Formik>
     </Dialog>
   );
 }

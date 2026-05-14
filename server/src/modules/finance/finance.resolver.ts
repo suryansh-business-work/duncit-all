@@ -1,9 +1,11 @@
 import { GraphQLError } from 'graphql';
 import { FinanceSettingsModel, getFinanceSettings, type IFinanceSettings } from './finance.model';
+import { paymentReleaseService } from './paymentRelease.service';
 import type { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/rbac';
 
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN'];
+const ADMIN_POD = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 
 const toPub = (d: IFinanceSettings) => ({
   platform_fee_pct: d.platform_fee_pct,
@@ -33,6 +35,10 @@ export const financeResolvers = {
         dummy_mode: doc.dummy_mode,
       };
     },
+    paymentReleaseRequests: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return paymentReleaseService.list(args.filter);
+    },
   },
   Mutation: {
     updateFinanceSettings: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -48,6 +54,14 @@ export const financeResolvers = {
         { new: true, upsert: true, setDefaultsOnInsert: true }
       );
       return toPub(doc!);
+    },
+    createPaymentReleaseRequest: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_POD);
+      return paymentReleaseService.create(args.input, ctx.user?.id ?? null);
+    },
+    reviewPaymentReleaseRequest: async (_p: unknown, args: { request_id: string; input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return paymentReleaseService.review(args.request_id, args.input, ctx.user?.id ?? null);
     },
   },
 };

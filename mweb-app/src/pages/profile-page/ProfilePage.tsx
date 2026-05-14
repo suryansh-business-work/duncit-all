@@ -1,6 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, CircularProgress, Divider, Snackbar, Stack } from '@mui/material';
 import { ME_AND_POSTS, UPDATE_MY_PROFILE } from './queries';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
@@ -12,6 +12,7 @@ import UploadDialog from './UploadDialog';
 
 export default function ProfilePage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const { data, loading, error, refetch } = useQuery(ME_AND_POSTS, {
     fetchPolicy: 'cache-and-network',
   });
@@ -23,6 +24,13 @@ export default function ProfilePage() {
 
   const me = data?.me;
   const posts = data?.myPosts ?? [];
+
+  useEffect(() => {
+    if (!location.search.includes('verifyEmail')) return;
+    window.requestAnimationFrame(() => {
+      document.getElementById('email-verification')?.scrollIntoView({ block: 'start' });
+    });
+  }, [location.search, me?.is_email_verified]);
 
   if (loading && !data) {
     return (

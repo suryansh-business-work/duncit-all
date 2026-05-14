@@ -27,6 +27,13 @@ const validStep2 = {
 const validStep3 = {
   police_verification_url: 'https://cdn.example.com/police.pdf',
   full_address: '221B Baker Street, London',
+  bank_account: {
+    payout_method: 'IMPS' as const,
+    account_holder_name: 'Jane Doe',
+    account_number: '123456789012',
+    ifsc_code: 'HDFC0001234',
+    upi_id: '',
+  },
   tags: ['premium'],
 };
 

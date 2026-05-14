@@ -5,6 +5,7 @@ import { Alert, Button, Grid, MenuItem, Stack, TextField } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import DateTimeField from '../../../components/DateTimeField';
 import { validationRules } from '../../../forms/validation/rules';
+import CampaignMjmlEditor from './CampaignMjmlEditor';
 import type { MarketingCampaignFormProps, MarketingCampaignFormValues } from './marketing-campaign.types';
 
 const defaultMjml = `<mjml>
@@ -97,7 +98,7 @@ export default function MarketingCampaignForm({
       validateOnChange
       onSubmit={(values) => onSubmit(values)}
     >
-      {({ values, errors, touched, submitCount, handleBlur, handleChange, setFieldValue, isValid }) => {
+      {({ values, errors, touched, submitCount, handleBlur, handleChange, setFieldValue, validateField, isValid }) => {
         const show = (key: keyof MarketingCampaignFormValues) => Boolean(errors[key] && (touched[key] || submitCount > 0));
         const helper = (key: keyof MarketingCampaignFormValues) => (show(key) ? errors[key] : ' ');
         return (
@@ -139,7 +140,7 @@ export default function MarketingCampaignForm({
               </Grid>
               {values.channel === 'WHATSAPP' && <Grid item xs={12}><Alert severity="info">WhatsApp campaigns currently use the email delivery fallback.</Alert></Grid>}
               <Grid item xs={12}>
-                <TextField name="mjml" label="MJML body" value={values.mjml} onChange={handleChange} onBlur={handleBlur} error={show('mjml')} helperText={helper('mjml')} fullWidth multiline minRows={14} />
+                <CampaignMjmlEditor value={values.mjml} error={show('mjml')} helperText={helper('mjml') as string} onChange={(next) => setFieldValue('mjml', next)} onVerify={() => validateField('mjml')} />
               </Grid>
               {errorMessage && <Grid item xs={12}><Alert severity="error">{errorMessage}</Alert></Grid>}
               <Grid item xs={12}>

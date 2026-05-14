@@ -42,6 +42,7 @@ export const venueTypeDefs = /* GraphQL */ `
     documents: [VenueDocument!]!
     gstin: String!
     pan: String!
+    bank_account: BankAccountVerification!
     owner_name: String!
     owner_email: String!
     owner_phone: String!
@@ -94,6 +95,7 @@ export const venueTypeDefs = /* GraphQL */ `
     owner_phone: String!
     owner_dob: String
     owner_address: String
+    bank_account: BankAccountVerificationInput
   }
 
   extend type Query {

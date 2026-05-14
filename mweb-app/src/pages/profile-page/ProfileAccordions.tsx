@@ -12,6 +12,7 @@ import PersonIcon from '@mui/icons-material/Person';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import MyBadges from '../../components/MyBadges';
+import EmailVerificationForm from './email-verification-form';
 import PetProfileSection from './PetProfileSection';
 import ProfileAboutSection from './ProfileAboutSection';
 import UserHostPanel from './UserHostPanel';
@@ -34,7 +35,10 @@ export default function ProfileAccordions({ me, onSaved }: { me: any; onSaved: (
           <Title icon={<PersonIcon color="primary" />} label="Your Profile" />
         </AccordionSummary>
         <AccordionDetails>
+          <Stack spacing={2}>
+            <EmailVerificationForm email={me.email} verified={me.is_email_verified} onVerified={onSaved} />
           <ProfileAboutSection me={me} onSaved={onSaved} />
+          </Stack>
         </AccordionDetails>
       </Accordion>
 

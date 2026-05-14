@@ -33,7 +33,7 @@ export function toPodMutationInput(values: PodForm) {
     what_this_pod_offers: cast.what_this_pod_offers ?? [],
     available_perks: cast.available_perks ?? [],
     place_charges: cast.place_charges ?? [],
-    products_enabled: !!cast.products_enabled,
-    product_requests: cast.product_requests ?? [],
+    products_enabled: cast.pod_mode !== 'VIRTUAL' && !!cast.products_enabled,
+    product_requests: cast.pod_mode !== 'VIRTUAL' ? cast.product_requests ?? [] : [],
   };
 }

@@ -41,10 +41,18 @@ const CARDS: HubCard[] = [
   {
     key: 'catalog',
     title: 'Catalog',
-    description: 'Categories, locations, inventory and home sliders.',
+    description: 'Categories, locations and home sliders.',
     to: '/categories',
     icon: 'catalog',
     accent: '#16a34a',
+  },
+  {
+    key: 'campaign',
+    title: 'Campaign',
+    description: 'Email and WhatsApp campaign workspaces.',
+    to: '/marketing/email-campaigns',
+    icon: 'campaign',
+    accent: '#c2410c',
   },
   {
     key: 'inventory',

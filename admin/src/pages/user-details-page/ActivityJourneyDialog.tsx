@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import {
   Alert,
@@ -8,7 +9,9 @@ import {
   DialogContent,
   DialogTitle,
   Link,
+  MenuItem,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import { USER_CLICKSTREAM } from './queries';
@@ -29,13 +32,33 @@ function metadataSummary(value: string) {
   }
 }
 
+const pageLabel = (event: any) => String(event.title || event.path || 'Untitled page');
+
 export default function ActivityJourneyDialog({ open, userId, date, onClose }: Props) {
+  const [pageFilter, setPageFilter] = useState('');
+  const [actionFilter, setActionFilter] = useState('');
   const { data, loading, error } = useQuery(USER_CLICKSTREAM, {
     variables: { user_id: userId, date, limit: 500 },
     skip: !open || !userId || !date,
     fetchPolicy: 'network-only',
   });
   const events = data?.userClickstream ?? [];
+  const pageOptions = useMemo<string[]>(
+    () => Array.from(new Set<string>(events.map(pageLabel).filter(Boolean))).sort(),
+    [events]
+  );
+  const actionOptions = useMemo<string[]>(
+    () => Array.from(new Set<string>(events.map((event: any) => String(event.event_type || '')).filter(Boolean))).sort(),
+    [events]
+  );
+  const visibleEvents = useMemo(
+    () => events.filter((event: any) => {
+      const matchesPage = !pageFilter || pageLabel(event) === pageFilter;
+      const matchesAction = !actionFilter || event.event_type === actionFilter;
+      return matchesPage && matchesAction;
+    }),
+    [actionFilter, events, pageFilter]
+  );
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -49,7 +72,18 @@ export default function ActivityJourneyDialog({ open, userId, date, onClose }: P
           <Alert severity="info">No clickstream events recorded for this day.</Alert>
         ) : (
           <Stack spacing={1.5}>
-            {events.map((event: any) => {
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+              <TextField select size="small" label="Page" value={pageFilter} onChange={(event) => setPageFilter(event.target.value)} sx={{ minWidth: 220 }}>
+                <MenuItem value="">All pages</MenuItem>
+                {pageOptions.map((page) => <MenuItem key={page} value={page}>{page}</MenuItem>)}
+              </TextField>
+              <TextField select size="small" label="Action" value={actionFilter} onChange={(event) => setActionFilter(event.target.value)} sx={{ minWidth: 180 }}>
+                <MenuItem value="">All actions</MenuItem>
+                {actionOptions.map((action) => <MenuItem key={action} value={action}>{action}</MenuItem>)}
+              </TextField>
+            </Stack>
+            {visibleEvents.length === 0 && <Alert severity="info">No events match the selected filters.</Alert>}
+            {visibleEvents.map((event: any) => {
               const title = event.target_label || event.target_text || event.title || event.path;
               return (
                 <Box key={event.id} sx={{ borderBottom: 1, borderColor: 'divider', pb: 1.25 }}>

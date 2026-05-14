@@ -7,6 +7,8 @@ export const ME_AND_POSTS = gql`
       first_name
       last_name
       full_name
+      email
+      is_email_verified
       profile_photo
       bio
       profile_links {
@@ -83,6 +85,7 @@ export const UPDATE_MY_PROFILE = gql`
       first_name
       last_name
       full_name
+      is_email_verified
       bio
       profile_photo
       profile_links {

@@ -23,11 +23,15 @@ type SectionBody =
   | 'PerksSection'
   | 'DuncitProductsSection'
   | 'PaymentChargesSection';
+type SectionConfig = { id: string; label: string; body: SectionBody };
 
 export const SECTION_IDS = ['basic', 'when', 'meeting', 'about', 'offers', 'perks', 'products', 'payment'];
 
 function getSections(podMode: PodForm['pod_mode']) {
-  const base: { id: string; label: string; body: SectionBody }[] = [
+  const productSections: SectionConfig[] = podMode === 'VIRTUAL'
+    ? []
+    : [{ id: 'products', label: 'Duncit Products', body: 'DuncitProductsSection' }];
+  const base: SectionConfig[] = [
     { id: 'basic', label: 'Basic Information', body: 'BasicInfoSection' },
     podMode === 'VIRTUAL'
       ? { id: 'meeting', label: 'Meeting Details', body: 'MeetingSection' }
@@ -35,7 +39,7 @@ function getSections(podMode: PodForm['pod_mode']) {
     { id: 'about', label: 'About this Pod', body: 'AboutSection' },
     { id: 'offers', label: 'What This Pod Offers', body: 'OffersSection' },
     { id: 'perks', label: 'Available Perks', body: 'PerksSection' },
-    { id: 'products', label: 'Duncit Products', body: 'DuncitProductsSection' },
+    ...productSections,
     { id: 'payment', label: 'Payment & Charges', body: 'PaymentChargesSection' },
   ];
   return base.map((section, index) => ({

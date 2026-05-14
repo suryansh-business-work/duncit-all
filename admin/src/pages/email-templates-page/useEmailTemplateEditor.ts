@@ -49,18 +49,22 @@ export function useEmailTemplateEditor() {
   }, [draft, list, selected]);
 
   const renderPreview = async () => {
-    if (!draft) return;
+    if (!draft) return [];
     try {
       const res = await client.query({
         query: RENDER,
         variables: { mjml: draft.mjml, vars: varsJson },
         fetchPolicy: 'network-only',
       });
+      const errors = res.data?.renderEmailTemplate?.errors ?? [];
       setPreviewHtml(res.data?.renderEmailTemplate?.html ?? '');
-      setPreviewErrors(res.data?.renderEmailTemplate?.errors ?? []);
+      setPreviewErrors(errors);
       setDetected(res.data?.renderEmailTemplate?.detected_variables ?? []);
+      return errors;
     } catch (e: any) {
-      setPreviewErrors([e.message]);
+      const errors = [e.message];
+      setPreviewErrors(errors);
+      return errors;
     }
   };
 
@@ -126,10 +130,10 @@ export function useEmailTemplateEditor() {
   };
 
   const validateMjml = async () => {
-    await renderPreview();
+    const errors = await renderPreview();
     setSnack({
-      kind: previewErrors.length ? 'error' : 'success',
-      msg: previewErrors.length ? `${previewErrors.length} MJML issues` : 'MJML looks good',
+      kind: errors.length ? 'error' : 'success',
+      msg: errors.length ? `${errors.length} MJML issues` : 'MJML looks good',
     });
   };
 

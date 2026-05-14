@@ -1,4 +1,8 @@
 import { gql } from '@apollo/client';
+import {
+  blankBankAccountValues,
+  type BankAccountValues,
+} from '../../forms/validation/bankAccount';
 
 export const USERS = gql`
   query UsersForVenueCreate {
@@ -87,6 +91,7 @@ export interface Step3 {
   owner_phone: string;
   owner_dob: string;
   owner_address: string;
+  bank_account: BankAccountValues;
 }
 
 export interface DocEntry {
@@ -120,4 +125,5 @@ export const blankS3: Step3 = {
   owner_phone: '',
   owner_dob: '',
   owner_address: '',
+  bank_account: blankBankAccountValues(),
 };

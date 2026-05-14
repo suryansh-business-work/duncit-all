@@ -12,12 +12,10 @@ import {
   TableCell,
   TableHead,
   TableRow,
-  Tooltip,
   Typography,
 } from '@mui/material';
-import EditIcon from '@mui/icons-material/Edit';
-import DeleteIcon from '@mui/icons-material/Delete';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import PodActionButtons from './PodActionButtons';
 
 interface Props {
   loading: boolean;
@@ -27,9 +25,10 @@ interface Props {
   locName: (id: string) => string;
   onEdit: (p: any) => void;
   onDelete: (p: any) => void;
+  onComplete: (p: any) => void;
 }
 
-export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onDelete }: Props) {
+export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onDelete, onComplete }: Props) {
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>
@@ -146,21 +145,12 @@ export default function PodsTable({ loading, pods, clubName, venueName, locName,
                   <TableCell>
                     <Chip
                       size="small"
-                      label={p.is_active ? 'Active' : 'Inactive'}
-                      color={p.is_active ? 'success' : 'default'}
+                      label={p.completed_at ? 'Completed' : p.is_active ? 'Active' : 'Inactive'}
+                      color={p.completed_at ? 'info' : p.is_active ? 'success' : 'default'}
                     />
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Edit">
-                      <IconButton size="small" onClick={() => onEdit(p)}>
-                        <EditIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
-                    <Tooltip title="Delete">
-                      <IconButton size="small" onClick={() => onDelete(p)}>
-                        <DeleteIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
+                    <PodActionButtons pod={p} onEdit={onEdit} onDelete={onDelete} onComplete={onComplete} />
                   </TableCell>
                 </TableRow>
               ))}

@@ -39,6 +39,7 @@ import MarketingCampaignsPage from './pages/MarketingCampaignsPage';
 import FinanceDashboardPage from './pages/finance/FinanceDashboardPage';
 import FinanceSettingsPage from './pages/finance/FinanceSettingsPage';
 import PaymentLogsPage from './pages/finance/PaymentLogsPage';
+import PaymentReleasePage from './pages/finance/PaymentReleasePage';
 import PlatformFeesPage from './pages/finance/PlatformFeesPage';
 import GstManagementPage from './pages/finance/GstManagementPage';
 import InvoiceManagementPage from './pages/finance/InvoiceManagementPage';
@@ -46,11 +47,15 @@ import LedgerPage from './pages/finance/LedgerPage';
 import VenueFinancePage from './pages/finance/VenueFinancePage';
 import InsuranceManagementPage from './pages/finance/InsuranceManagementPage';
 import PayoutCyclesPage from './pages/finance/PayoutCyclesPage';
+import { redirectPathFromLocation } from './utils/redirect';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
   const location = useLocation();
   const token = localStorage.getItem('admin_token');
-  if (!token) return <Navigate to="/login" replace state={{ from: location }} />;
+  if (!token) {
+    const redirect = encodeURIComponent(redirectPathFromLocation(location));
+    return <Navigate to={`/login?redirect=${redirect}`} replace state={{ from: location }} />;
+  }
   return children;
 }
 
@@ -96,6 +101,7 @@ export default function App() {
                 <Route path="/finance/dashboard" element={<FinanceDashboardPage />} />
                 <Route path="/finance/settings" element={<FinanceSettingsPage />} />
                 <Route path="/finance/payment-logs" element={<PaymentLogsPage />} />
+                <Route path="/finance/payment-release" element={<PaymentReleasePage />} />
                 <Route path="/finance/platform-fees" element={<PlatformFeesPage />} />
                 <Route path="/finance/gst" element={<GstManagementPage />} />
                 <Route path="/finance/invoices" element={<InvoiceManagementPage />} />

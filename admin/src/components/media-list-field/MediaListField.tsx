@@ -12,6 +12,7 @@ interface Props {
   onChange: (next: string) => void;
   folder?: string;
   helperText?: string;
+  buttonLabel?: string;
 }
 
 export default function MediaListField({
@@ -20,6 +21,7 @@ export default function MediaListField({
   onChange,
   folder,
   helperText,
+  buttonLabel = 'Add image',
 }: Props) {
   const items = value
     .split('\n')
@@ -50,7 +52,7 @@ export default function MediaListField({
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
         <Typography variant="subtitle2">{label}</Typography>
         <Button size="small" startIcon={<AddIcon />} onClick={() => setPickerOpen('new')}>
-          Add image
+          {buttonLabel}
         </Button>
       </Stack>
       {helperText && (

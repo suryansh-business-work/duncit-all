@@ -1,75 +1,45 @@
+import { NAV, isNavGroup } from './navConfig';
+
 export interface AdminSearchItem {
   title: string;
   description: string;
   to: string;
   keywords: string[];
+  section?: string;
 }
 
-export const ADMIN_SEARCH_ITEMS: AdminSearchItem[] = [
-  {
-    title: 'Dashboard',
-    description: 'Live KPIs, charts and platform health overview.',
-    to: '/dashboard',
-    keywords: ['analytics', 'kpi', 'home'],
-  },
-  {
-    title: 'Users',
-    description: 'Manage user accounts, roles, permissions and activity.',
-    to: '/users',
-    keywords: ['members', 'customers', 'roles'],
-  },
-  {
-    title: 'Support Logs',
-    description: 'Review support tickets and contact submissions.',
-    to: '/support-logs',
-    keywords: ['tickets', 'help', 'contact'],
-  },
-  {
-    title: 'Notifications',
-    description: 'Create and review app notifications.',
-    to: '/notifications',
-    keywords: ['push', 'messages', 'engagement'],
-  },
-  {
-    title: 'Marketing Campaigns',
-    description: 'Schedule MJML email and WhatsApp fallback campaigns.',
-    to: '/marketing/email-campaigns',
-    keywords: ['campaigns', 'mjml', 'email', 'whatsapp', 'pods', 'clubs'],
-  },
-  {
-    title: 'Clubs',
-    description: 'Manage community clubs, pods and pod ideas.',
-    to: '/clubs',
-    keywords: ['community', 'pods', 'ideas'],
-  },
-  {
-    title: 'Inventory',
-    description: 'Manage Duncit products, stock and pod requests.',
-    to: '/inventory',
-    keywords: ['products', 'stock', 'catalog'],
-  },
-  {
-    title: 'Finance',
-    description: 'Open payments, fees, GST, invoices and payouts.',
-    to: '/finance/dashboard',
-    keywords: ['payments', 'ledger', 'payouts'],
-  },
-  {
-    title: 'Branding',
-    description: 'Update app identity, colors and support email.',
-    to: '/branding',
-    keywords: ['logo', 'theme', 'identity'],
-  },
-  {
-    title: 'Settings',
-    description: 'Configure global admin and app settings.',
-    to: '/settings',
-    keywords: ['system', 'config', 'preferences'],
-  },
-  {
-    title: 'Profile',
-    description: 'Update your admin profile and account details.',
-    to: '/profile',
-    keywords: ['account', 'me', 'admin'],
-  },
-];
+const EXTRA_KEYWORDS: Record<string, string[]> = {
+  '/users': ['members', 'customers', 'roles', 'user'],
+  '/support-logs': ['tickets', 'help', 'contact'],
+  '/notifications': ['push', 'messages', 'engagement'],
+  '/marketing/email-campaigns': ['campaigns', 'mjml', 'email', 'pods', 'clubs'],
+  '/marketing/whatsapp-campaigns': ['campaigns', 'whatsapp', 'message'],
+  '/inventory': ['products', 'stock', 'catalog', 'management'],
+  '/finance/dashboard': ['payments', 'ledger', 'payouts'],
+  '/branding': ['logo', 'theme', 'identity'],
+  '/settings': ['system', 'config', 'preferences'],
+  '/profile': ['account', 'me', 'admin'],
+};
+
+const words = (value: string) => value.toLowerCase().split(/[^a-z0-9]+/).filter(Boolean);
+
+export const ADMIN_SEARCH_ITEMS: AdminSearchItem[] = NAV.flatMap((section) =>
+  section.items.flatMap((item) => {
+    if (isNavGroup(item)) {
+      return item.children.map((child) => ({
+        title: child.label,
+        description: `${section.heading ?? item.label} / ${item.label}`,
+        to: child.to,
+        section: section.heading,
+        keywords: [...words(child.to), ...words(item.label), ...(EXTRA_KEYWORDS[child.to] ?? [])],
+      }));
+    }
+    return [{
+      title: item.label,
+      description: section.heading ?? 'Admin module',
+      to: item.to,
+      section: section.heading,
+      keywords: [...words(item.to), ...(EXTRA_KEYWORDS[item.to] ?? [])],
+    }];
+  })
+);

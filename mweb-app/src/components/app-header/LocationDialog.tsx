@@ -4,13 +4,13 @@ import {
   Button,
   Card,
   CardActionArea,
-  Chip,
   Stack,
   Typography,
 } from '@mui/material';
 import PlaceIcon from '@mui/icons-material/Place';
 import ResponsiveDialog from '../ResponsiveDialog';
 import GpsLocationPicker from './GpsLocationPicker';
+import LocationAreaPicker from './LocationAreaPicker';
 
 interface Props {
   open: boolean;
@@ -148,33 +148,12 @@ export default function LocationDialog({
       </Box>
 
       {draftLoc && (
-        <>
-          <Typography variant="overline" color="text.secondary">
-            Locality / Area in {draftLoc.location_name}
-          </Typography>
-          <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mt: 0.5, mb: 1 }}>
-            <Chip
-              label="All areas"
-              color={!draftZone ? 'primary' : 'default'}
-              variant={!draftZone ? 'filled' : 'outlined'}
-              onClick={() => setDraftZone('')}
-            />
-            {zones.map((z) => (
-              <Chip
-                key={z.zone_name}
-                label={z.zone_name}
-                color={draftZone === z.zone_name ? 'primary' : 'default'}
-                variant={draftZone === z.zone_name ? 'filled' : 'outlined'}
-                onClick={() => setDraftZone(z.zone_name)}
-              />
-            ))}
-            {zones.length === 0 && (
-              <Typography variant="body2" color="text.secondary">
-                This city has no localities configured.
-              </Typography>
-            )}
-          </Stack>
-        </>
+        <LocationAreaPicker
+          locationName={draftLoc.location_name}
+          zones={zones}
+          draftZone={draftZone}
+          setDraftZone={setDraftZone}
+        />
       )}
     </ResponsiveDialog>
   );

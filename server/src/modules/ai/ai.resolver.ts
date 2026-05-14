@@ -1,7 +1,11 @@
 import { GraphQLError } from 'graphql';
 import { importRemoteImage, pexelsSearch } from '../upload/upload.service';
+import { UserModel } from '../user/user.model';
+import type { GraphQLContext } from '../../context';
+import { requireRole } from '../../middleware/rbac';
 
 type Entity = 'CLUB' | 'POD' | 'SLIDER' | 'INVENTORY_PRODUCT';
+const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
 
 const SCHEMAS: Record<Entity, { fields: string; example: string; notes: string }> = {
   CLUB: {
@@ -248,6 +252,11 @@ interface LocationAreasInput {
   city: string;
 }
 
+interface AiMjmlTemplateInput {
+  prompt: string;
+  current_mjml?: string | null;
+}
+
 async function generateProductDescription(input: DescribeProductInput): Promise<string> {
   const apiKey = process.env.OPENAI_API_KEY;
   if (!apiKey) {
@@ -401,6 +410,141 @@ async function generateLocationAreas(input: LocationAreasInput): Promise<string>
   return normalizeLocationAreas(content);
 }
 
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+
+function promptTerms(prompt: string) {
+  const email = prompt.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]?.toLowerCase() ?? '';
+  const phone = prompt.match(/\+?\d[\d\s-]{5,}\d/)?.[0]?.replace(/\D/g, '') ?? '';
+  const words = prompt
+    .toLowerCase()
+    .split(/[^a-z0-9]+/)
+    .filter((word) => word.length >= 3 && !['user', 'phone', 'profile', 'link'].includes(word))
+    .slice(0, 6);
+  return { email, phone: phone.slice(-10), words };
+}
+
+async function adminUserContext(prompt: string) {
+  const { email, phone, words } = promptTerms(prompt);
+  const or: any[] = [];
+  if (email) or.push({ email: new RegExp(`^${escapeRegex(email)}$`, 'i') });
+  if (phone) or.push({ phone_number: new RegExp(`${escapeRegex(phone)}$`) });
+  for (const word of words) {
+    const regex = new RegExp(escapeRegex(word), 'i');
+    or.push({ first_name: regex }, { last_name: regex });
+  }
+  if (or.length === 0) return [];
+  const users = await UserModel.find({ $or: or })
+    .select('first_name last_name email phone_extension phone_number roles status is_email_verified')
+    .limit(8)
+    .lean();
+  return users.map((user: any) => ({
+    name: [user.first_name, user.last_name].filter(Boolean).join(' '),
+    email: user.email ?? '',
+    phone: `${user.phone_extension ?? ''}${user.phone_number ?? ''}`,
+    roles: user.roles ?? [],
+    status: user.status ?? '',
+    is_email_verified: !!user.is_email_verified,
+    profile_url: `/users/${String(user._id)}`,
+  }));
+}
+
+async function adminAiChat(prompt: string) {
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
+      extensions: { code: 'AI_NOT_CONFIGURED' },
+    });
+  }
+  const context = await adminUserContext(prompt);
+  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const body = {
+    model,
+    temperature: 0.2,
+    messages: [
+      {
+        role: 'system',
+        content: [
+          'You are the Duncit admin assistant. Answer only from the provided admin context and general UI guidance.',
+          'When user context contains profile_url, include that relative admin link exactly.',
+          'If the context is empty or insufficient, say what you could not find and ask for a clearer phone, email, or name.',
+        ].join('\n'),
+      },
+      {
+        role: 'user',
+        content: `Admin question: ${prompt.trim()}\n\nAdmin context JSON:\n${JSON.stringify({ users: context }, null, 2)}`,
+      },
+    ],
+  };
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const txt = await resp.text().catch(() => '');
+    throw new GraphQLError(`OpenAI error (${resp.status}): ${txt.slice(0, 500)}`, {
+      extensions: { code: 'AI_UPSTREAM_ERROR' },
+    });
+  }
+  const json: any = await resp.json();
+  return json?.choices?.[0]?.message?.content || 'No answer returned.';
+}
+
+async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
+  const prompt = input.prompt.trim();
+  if (!prompt) {
+    throw new GraphQLError('Prompt is required', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const apiKey = process.env.OPENAI_API_KEY;
+  if (!apiKey) {
+    throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
+      extensions: { code: 'AI_NOT_CONFIGURED' },
+    });
+  }
+  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const body = {
+    model,
+    temperature: 0.35,
+    response_format: { type: 'json_object' as const },
+    messages: [
+      {
+        role: 'system',
+        content: [
+          'You write production MJML templates for Duncit admin email and WhatsApp fallback campaigns.',
+          'Return strict JSON only with shape { "mjml": string }.',
+          'The MJML must include an <mjml> root and <mj-body>. Preserve useful {{variables}} from existing MJML.',
+          'Use responsive MJML components only. Do not return markdown.',
+        ].join('\n'),
+      },
+      {
+        role: 'user',
+        content: `Instruction: ${prompt}\n\nExisting MJML:\n${(input.current_mjml || '').slice(0, 12000)}`,
+      },
+    ],
+  };
+  const resp = await fetch('https://api.openai.com/v1/chat/completions', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
+    body: JSON.stringify(body),
+  });
+  if (!resp.ok) {
+    const txt = await resp.text().catch(() => '');
+    throw new GraphQLError(`OpenAI error (${resp.status}): ${txt.slice(0, 500)}`, {
+      extensions: { code: 'AI_UPSTREAM_ERROR' },
+    });
+  }
+  const json: any = await resp.json();
+  const content = json?.choices?.[0]?.message?.content;
+  const parsed = JSON.parse(content || '{}');
+  const mjml = String(parsed?.mjml ?? '').trim();
+  if (!/<mjml[\s>]/i.test(mjml)) {
+    throw new GraphQLError('OpenAI did not return valid MJML', {
+      extensions: { code: 'AI_INVALID_JSON' },
+    });
+  }
+  return mjml;
+}
+
 export const aiResolvers = {
   Mutation: {
     aiFillDummyData: async (_: unknown, args: { entity: Entity; prompt?: string | null }) => {
@@ -412,6 +556,17 @@ export const aiResolvers = {
     },
     aiFillLocationAreas: async (_: unknown, args: { input: LocationAreasInput }) => {
       return generateLocationAreas(args.input);
+    },
+    adminAiChat: async (_: unknown, args: { prompt: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      if (!args.prompt.trim()) {
+        throw new GraphQLError('Prompt is required', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      return adminAiChat(args.prompt);
+    },
+    aiCreateOrUpdateMjml: async (_: unknown, args: { input: AiMjmlTemplateInput }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return createOrUpdateMjml(args.input);
     },
   },
 };

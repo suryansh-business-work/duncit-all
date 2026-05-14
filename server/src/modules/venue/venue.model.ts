@@ -1,4 +1,9 @@
 import { Schema, model, Types, type Document } from 'mongoose';
+import {
+  bankAccountSchema,
+  blankBankAccount,
+  type IBankAccountVerification,
+} from '../finance/bankAccount';
 
 export type VenueStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
@@ -34,6 +39,7 @@ export interface IVenue extends Document {
   documents: IVenueDocument[];
   gstin: string;
   pan: string;
+  bank_account: IBankAccountVerification;
   // Step 3: Owner details
   owner_name: string;
   owner_email: string;
@@ -87,6 +93,7 @@ const venueSchema = new Schema<IVenue>(
     documents: { type: [venueDocumentSchema], default: [] },
     gstin: { type: String, default: '' },
     pan: { type: String, default: '' },
+    bank_account: { type: bankAccountSchema, default: blankBankAccount },
     owner_name: { type: String, default: '' },
     owner_email: { type: String, default: '' },
     owner_phone: { type: String, default: '' },

@@ -18,6 +18,7 @@ export const hostTypeDefs = /* GraphQL */ `
     passport_photo_url: String!
     police_verification_url: String!
     full_address: String!
+    bank_account: BankAccountVerification!
     tags: [String!]!
     step_completed: Int!
     status: HostStatus!
@@ -46,6 +47,7 @@ export const hostTypeDefs = /* GraphQL */ `
   input HostStep3Input {
     police_verification_url: String!
     full_address: String!
+    bank_account: BankAccountVerificationInput
     tags: [String!]
   }
 

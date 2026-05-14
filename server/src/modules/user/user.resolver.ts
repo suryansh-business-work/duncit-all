@@ -101,6 +101,24 @@ export const userResolvers = {
       const data = await validate(updateMyProfileSchema, args.input);
       return userService.updateMyProfile(ctx.user.id, data);
     },
+    requestEmailVerificationOtp: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.requestEmailVerificationOtp(ctx.user.id);
+    },
+    verifyEmailVerificationOtp: async (_p: unknown, args: { otp: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.verifyEmailVerificationOtp(ctx.user.id, args.otp);
+    },
     updateMyPetProfile: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
       if (!ctx.user) {
         const { GraphQLError } = await import('graphql');

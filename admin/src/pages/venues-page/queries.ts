@@ -31,6 +31,13 @@ export const VENUES = gql`
       owner_address
       gstin
       pan
+      bank_account {
+        payout_method
+        account_holder_name
+        account_number
+        ifsc_code
+        upi_id
+      }
       tags
       documents {
         type

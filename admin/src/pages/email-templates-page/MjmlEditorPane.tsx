@@ -1,7 +1,10 @@
 import { Box, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import Editor from '@monaco-editor/react';
-import RefreshIcon from '@mui/icons-material/Refresh';
 import CodeIcon from '@mui/icons-material/Code';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
+import FormatAlignLeftIcon from '@mui/icons-material/FormatAlignLeft';
+import MjmlAiButton from '../../components/MjmlAiButton';
+import { formatMjml } from '../../utils/mjmlFormat';
 
 interface Props {
   value: string;
@@ -33,11 +36,17 @@ export default function MjmlEditorPane({ value, onChange, onValidate }: Props) {
         <Typography variant="subtitle2" sx={{ flex: 1 }}>
           MJML source
         </Typography>
-        <Tooltip title="Validate & render">
-          <IconButton size="small" onClick={onValidate}>
-            <RefreshIcon fontSize="small" />
+        <Tooltip title="Format MJML">
+          <IconButton size="small" onClick={() => onChange(formatMjml(value))}>
+            <FormatAlignLeftIcon fontSize="small" />
           </IconButton>
         </Tooltip>
+        <Tooltip title="Verify MJML">
+          <IconButton size="small" onClick={onValidate}>
+            <FactCheckIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
+        <MjmlAiButton iconOnly currentMjml={value} onApply={onChange} />
       </Stack>
       <Box sx={{ flex: 1, minHeight: 0 }}>
         <Editor

@@ -28,6 +28,8 @@ const userSchema = new Schema(
 
     email: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
     is_email_verified: { type: Boolean, default: false },
+    email_verification_otp_hash: { type: String, select: false },
+    email_verification_otp_expires_at: { type: Date, select: false },
 
     phone_number: { type: String, required: true, trim: true },
     phone_extension: { type: String, required: true, trim: true },

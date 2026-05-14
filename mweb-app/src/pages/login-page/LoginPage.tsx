@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { IconButton, Tooltip } from '@mui/material';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
@@ -9,11 +9,17 @@ import AuthBackground from '../../components/AuthBackground';
 import GoogleAuthNoticeDialog from '../../components/GoogleAuthNoticeDialog';
 import { type LoginFormValues } from '../../forms/login.form';
 import { parseApiError } from '../../utils/parseApiError';
+import {
+  getSafeRedirectPath,
+  redirectPathFromLocation,
+  type RedirectLocation,
+} from '../../utils/redirect';
 import { LOGIN, LOGIN_GOOGLE } from './queries';
 import LoginCard from './LoginCard';
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const colorMode = useColorMode();
   const [loginMutation, { loading, error }] = useMutation(LOGIN);
   const [loginGoogle, { loading: gLoading }] = useMutation(LOGIN_GOOGLE);
@@ -26,7 +32,14 @@ export default function LoginPage() {
 
   const finishLogin = (token: string, user: any) => {
     localStorage.setItem('token', token);
-    navigate(user?.onboarding_survey_completed === false ? '/signup-survey' : '/');
+    const params = new URLSearchParams(location.search);
+    const stateFrom = (location.state as { from?: RedirectLocation } | null)?.from;
+    const redirect =
+      getSafeRedirectPath(params.get('redirect')) ||
+      getSafeRedirectPath(stateFrom ? redirectPathFromLocation(stateFrom) : '');
+    navigate(user?.onboarding_survey_completed === false ? '/signup-survey' : redirect || '/', {
+      replace: true,
+    });
   };
 
   const handleSubmit = async (values: LoginFormValues) => {

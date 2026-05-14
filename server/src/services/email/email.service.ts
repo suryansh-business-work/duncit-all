@@ -133,6 +133,15 @@ export function sendAdminCredentialsEmail(opts: {
   });
 }
 
+export function sendEmailVerificationOtpEmail(opts: { to: string; name: string; otp: string; expiresMinutes: string }) {
+  return sendEmail({
+    to: opts.to,
+    subject: 'Verify your Duncit email',
+    template: 'email-verification-otp',
+    vars: opts,
+  });
+}
+
 export function sendInterviewApplicantEmail(opts: {
   to: string;
   name: string;

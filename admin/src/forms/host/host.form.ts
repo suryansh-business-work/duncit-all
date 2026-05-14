@@ -1,5 +1,10 @@
 import * as yup from 'yup';
 import { AADHAR_PATTERN, PAN_PATTERN, validationRules } from '../validation/rules';
+import {
+  bankAccountSchema,
+  blankBankAccountValues,
+  normalizeBankAccountValues,
+} from '../validation/bankAccount';
 
 const hostPhone = yup
   .string()
@@ -42,6 +47,7 @@ export const hostStep2Schema = yup.object({
 export const hostStep3Schema = yup.object({
   police_verification_url: validationRules.requiredText('Police verification', 1, 1000),
   full_address: validationRules.requiredText('Address', 5, 500),
+  bank_account: bankAccountSchema,
   tags: yup.array(yup.string().trim().max(40)).default([]),
 });
 
@@ -84,6 +90,7 @@ export function hostEditInitialValues(host: any | null): HostEditValues {
     step3: {
       police_verification_url: host?.police_verification_url ?? '',
       full_address: host?.full_address ?? '',
+      bank_account: normalizeBankAccountValues(host?.bank_account),
       tags: host?.tags ?? [],
     },
     status: host?.status ?? 'APPROVED',
@@ -104,7 +111,7 @@ export const hostCreateInitialValues: HostCreateValues = {
   target_user_id: '',
   step1: { full_name: '', email: '', phone: '', dob: '' },
   step2: { aadhar_number: '', pan_number: '', passport_photo_url: '' },
-  step3: { police_verification_url: '', full_address: '', tags: [] },
+  step3: { police_verification_url: '', full_address: '', bank_account: blankBankAccountValues(), tags: [] },
 };
 
 export function toHostCreateVariables(values: HostCreateValues, submit: boolean) {

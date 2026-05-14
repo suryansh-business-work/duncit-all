@@ -18,9 +18,11 @@ import {
   PodForm,
 } from './queries';
 import { blankForm, buildEditValues, buildPayload } from './helpers';
+import CompletePodDialog from './complete-pod-dialog';
 import PodsTable from './PodsTable';
 import PodFormDialog from './PodFormDialog';
 import PodsToolbar from './PodsToolbar';
+import usePodReleaseRequest from './usePodReleaseRequest';
 
 export default function PodsPage() {
   const [params, setParams] = useSearchParams();
@@ -53,6 +55,7 @@ export default function PodsPage() {
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const releaseRequest = usePodReleaseRequest({ refetch, setToast });
 
   const clubs = clubsData?.clubs ?? [];
   const locations = locsData?.locations ?? [];
@@ -141,6 +144,18 @@ export default function PodsPage() {
         locName={locName}
         onEdit={openEdit}
         onDelete={remove}
+        onComplete={releaseRequest.openCompletePod}
+      />
+
+      <CompletePodDialog
+        open={!!releaseRequest.completePod}
+        pod={releaseRequest.completePod}
+        users={users}
+        busyKind={releaseRequest.releaseBusy}
+        errorMessage={releaseRequest.releaseError}
+        onClose={() => releaseRequest.setCompletePod(null)}
+        onVenueSubmit={(values) => releaseRequest.requestRelease('VENUE_BILLING', values)}
+        onHostSubmit={(values) => releaseRequest.requestRelease('HOST_PAYMENT', values)}
       />
 
       <PodFormDialog

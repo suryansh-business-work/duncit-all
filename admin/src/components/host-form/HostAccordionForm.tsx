@@ -14,8 +14,10 @@ import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import { useFormikContext, getIn } from 'formik';
-import MediaPickerField from '../MediaPickerField';
 import DateField from '../DateField';
+import HostBankAccountSection from './HostBankAccountSection';
+import HostIdentitySection from './HostIdentitySection';
+import HostVerificationSection from './HostVerificationSection';
 import type { HostCreateValues, HostEditValues } from '../../forms/host.form';
 
 export type HostAccordionMode = 'create' | 'edit';
@@ -32,8 +34,8 @@ interface Props {
   userOptions?: UserOption[];
 }
 
-type PanelKey = 'personal' | 'identity' | 'verification';
-const ALL_PANELS: PanelKey[] = ['personal', 'identity', 'verification'];
+type PanelKey = 'personal' | 'identity' | 'verification' | 'bank';
+const ALL_PANELS: PanelKey[] = ['personal', 'identity', 'verification', 'bank'];
 
 type Values = HostCreateValues & Partial<HostEditValues>;
 
@@ -161,22 +163,7 @@ export default function HostAccordionForm({ mode, userOptions }: Props) {
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={1.5}>
-            <Box sx={{ display: 'grid', gap: 1.5, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
-              <TextField label="Aadhar number" required {...tfProps('step2.aadhar_number')} />
-              <TextField label="PAN number" required {...tfProps('step2.pan_number')} />
-            </Box>
-            <MediaPickerField
-              label="Passport photo"
-              value={values.step2.passport_photo_url}
-              onChange={(url) => setFieldValue('step2.passport_photo_url', url)}
-              helperText={
-                hasError('step2.passport_photo_url')
-                  ? (getIn(errors, 'step2.passport_photo_url') as string)
-                  : ' '
-              }
-              folder="/hosts/photo"
-              required
-            />
+            <HostIdentitySection />
           </Stack>
         </AccordionDetails>
       </Accordion>
@@ -191,38 +178,18 @@ export default function HostAccordionForm({ mode, userOptions }: Props) {
         </AccordionSummary>
         <AccordionDetails>
           <Stack spacing={1.5}>
-            <MediaPickerField
-              label="Police verification document"
-              value={values.step3.police_verification_url}
-              onChange={(url) => setFieldValue('step3.police_verification_url', url)}
-              helperText={
-                hasError('step3.police_verification_url')
-                  ? (getIn(errors, 'step3.police_verification_url') as string)
-                  : ' '
-              }
-              folder="/hosts/docs"
-              required
-            />
-            <TextField
-              label="Full address"
-              multiline
-              minRows={2}
-              required
-              {...tfProps('step3.full_address')}
-            />
-            <TextField
-              label="Tags"
-              value={values.step3.tags.join(', ')}
-              onChange={(event) =>
-                setFieldValue(
-                  'step3.tags',
-                  event.target.value.split(',').map((tag) => tag.trim()).filter(Boolean),
-                )
-              }
-              helperText="Comma separated host tags."
-              fullWidth
-              size="small"
-            />
+            <HostVerificationSection />
+          </Stack>
+        </AccordionDetails>
+      </Accordion>
+
+      <Accordion expanded={expanded.has('bank')} onChange={() => toggle('bank')} disableGutters>
+        <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+          <Typography variant="subtitle1">Bank Account Verification</Typography>
+        </AccordionSummary>
+        <AccordionDetails>
+          <Stack spacing={1.5}>
+            <HostBankAccountSection />
           </Stack>
         </AccordionDetails>
       </Accordion>

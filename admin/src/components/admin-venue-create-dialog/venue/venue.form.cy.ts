@@ -38,6 +38,13 @@ const step3 = {
   owner_phone: '+919876543210',
   owner_dob: '',
   owner_address: '',
+  bank_account: {
+    payout_method: 'NEFT' as const,
+    account_holder_name: 'Owner Name',
+    account_number: '123456789012',
+    ifsc_code: 'HDFC0001234',
+    upi_id: '',
+  },
 };
 
 describe('venue step1', () => {

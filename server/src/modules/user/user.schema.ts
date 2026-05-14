@@ -258,12 +258,19 @@ export const userTypeDefs = gql`
     email: String!
   }
 
+  type OtpRequestResult {
+    ok: Boolean!
+    dev_otp: String
+  }
+
   extend type Mutation {
     register(input: RegisterInput!): AuthPayload!
     login(input: LoginInput!): AuthPayload!
     loginWithGoogle(input: GoogleAuthInput!): AuthPayload!
     signupWithGoogle(input: GoogleSignupInput!): AuthPayload!
     updateMyProfile(input: UpdateMyProfileInput!): User!
+    requestEmailVerificationOtp: OtpRequestResult!
+    verifyEmailVerificationOtp(otp: String!): User!
     updateMyPetProfile(input: PetProfileInput!): User!
     updateMyInterests(category_ids: [ID!]!): User!
     toggleSavedPod(pod_doc_id: ID!): SavedPodState!

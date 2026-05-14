@@ -34,11 +34,13 @@ export function buildEditValues(p: any): PodForm {
       amount: c.amount ?? 0,
       note: c.note ?? '',
     })),
-    products_enabled: !!p.products_enabled,
-    product_requests: (p.product_requests ?? []).map((item: any) => ({
-      product_id: item.product_id ?? '',
-      quantity: item.quantity ?? 1,
-    })),
+    products_enabled: p.pod_mode === 'VIRTUAL' ? false : !!p.products_enabled,
+    product_requests: p.pod_mode === 'VIRTUAL'
+      ? []
+      : (p.product_requests ?? []).map((item: any) => ({
+          product_id: item.product_id ?? '',
+          quantity: item.quantity ?? 1,
+        })),
     is_active: !!p.is_active,
   };
 }
@@ -83,8 +85,8 @@ export function buildPayload(form: PodForm) {
           amount: Number(c.amount) || 0,
           note: c.note?.trim() || null,
         })),
-    products_enabled: form.products_enabled,
-    product_requests: form.products_enabled
+    products_enabled: !isVirtual && form.products_enabled,
+    product_requests: !isVirtual && form.products_enabled
       ? form.product_requests
           .map((item) => ({ product_id: item.product_id, quantity: Number(item.quantity) || 0 }))
           .filter((item) => item.product_id && item.quantity > 0)

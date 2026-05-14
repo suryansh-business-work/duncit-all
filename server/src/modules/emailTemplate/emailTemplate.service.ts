@@ -5,6 +5,11 @@ import mjml2html from 'mjml';
 import { GraphQLError } from 'graphql';
 import { EmailTemplateModel } from './emailTemplate.model';
 
+const DEFAULT_TEMPLATE_SUBJECTS: Record<string, string> = {
+  'email-verification-otp': 'Verify your Duncit email',
+  'payment-release-approved': 'Payment release approved',
+};
+
 /** Walk the MJML source and extract every {{ var }} reference. */
 export function detectVariables(mjml: string): string[] {
   const set = new Set<string>();
@@ -68,7 +73,7 @@ async function loadTemplate(slug: string) {
     template_id: crypto.randomUUID(),
     slug,
     name: slug.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-    subject: `Duncit · ${slug}`,
+    subject: DEFAULT_TEMPLATE_SUBJECTS[slug] ?? `Duncit · ${slug}`,
     mjml,
     variables: detectVariables(mjml).map((key) => ({ key })),
   });

@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { HostModel, type IHost } from './host.model';
 import { UserModel } from '../user/user.model';
 import { sendEmail } from '../../services/email/email.service';
+import { normalizeBankAccountInput, toBankAccountPub } from '../finance/bankAccount';
 
 const toPub = (h: IHost) => ({
   id: String(h._id),
@@ -16,6 +17,7 @@ const toPub = (h: IHost) => ({
   passport_photo_url: h.passport_photo_url ?? '',
   police_verification_url: h.police_verification_url ?? '',
   full_address: h.full_address ?? '',
+  bank_account: toBankAccountPub(h.bank_account),
   tags: h.tags ?? [],
   step_completed: h.step_completed ?? 0,
   status: h.status,
@@ -86,6 +88,7 @@ export const hostService = {
     }
     h.police_verification_url = input.police_verification_url;
     h.full_address = input.full_address;
+    if (input.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(input.bank_account) as any;
     if (input.tags !== undefined) h.tags = input.tags;
     if (h.step_completed < 3) h.step_completed = 3;
     await h.save();
@@ -134,6 +137,7 @@ export const hostService = {
     if (opts.step1?.dob) h.dob = new Date(opts.step1.dob);
     Object.assign(h, opts.step2);
     Object.assign(h, opts.step3);
+    if (opts.step3.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(opts.step3.bank_account) as any;
     if (opts.step3.tags !== undefined) h.tags = opts.step3.tags;
     h.step_completed = opts.submit ? 4 : 3;
     if (opts.submit) {
@@ -153,6 +157,7 @@ export const hostService = {
     Object.assign(h, opts.step2);
     h.police_verification_url = opts.step3.police_verification_url;
     h.full_address = opts.step3.full_address;
+    if (opts.step3.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(opts.step3.bank_account) as any;
     if (opts.step3.tags !== undefined) h.tags = opts.step3.tags;
     h.step_completed = Math.max(h.step_completed ?? 0, 3);
     if (opts.status) {

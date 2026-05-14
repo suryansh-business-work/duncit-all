@@ -16,6 +16,7 @@ export type ModuleIconKind =
   | 'dashboard'
   | 'users'
   | 'catalog'
+  | 'campaign'
   | 'community'
   | 'engagement'
   | 'website'
@@ -33,6 +34,7 @@ const ICONS: Record<ModuleIconKind, SvgIconComponent> = {
   dashboard: DashboardIcon,
   users: ManageAccountsIcon,
   catalog: CategoryIcon,
+  campaign: CampaignIcon,
   community: GroupsIcon,
   engagement: CampaignIcon,
   website: LanguageIcon,

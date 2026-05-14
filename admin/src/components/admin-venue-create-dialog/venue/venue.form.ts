@@ -7,6 +7,7 @@ import {
   PHONE_NUMBER_PATTERN,
   validationRules,
 } from '../../../forms/validation/rules';
+import { bankAccountSchema } from '../../../forms/validation/bankAccount';
 import type { DocEntry, Step1, Step3 } from '../queries';
 
 const POSTAL_CODE_PATTERN = /^[0-9A-Za-z -]{3,12}$/;
@@ -113,6 +114,7 @@ export const venueStep3Schema: yup.ObjectSchema<Step3> = yup.object({
     .trim()
     .max(500, 'Address must be 500 characters or fewer')
     .default(''),
+  bank_account: bankAccountSchema,
 });
 
 export const venueCreateSchema = yup.object({

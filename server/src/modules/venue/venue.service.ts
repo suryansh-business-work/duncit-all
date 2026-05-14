@@ -4,6 +4,7 @@ import { VenueModel, type IVenue } from './venue.model';
 import { LocationModel } from '../location/location.model';
 import { UserModel } from '../user/user.model';
 import { sendEmail } from '../../services/email/email.service';
+import { normalizeBankAccountInput, toBankAccountPub } from '../finance/bankAccount';
 
 const toPub = (v: IVenue) => ({
   id: String(v._id),
@@ -34,6 +35,7 @@ const toPub = (v: IVenue) => ({
   })),
   gstin: v.gstin ?? '',
   pan: v.pan ?? '',
+  bank_account: toBankAccountPub(v.bank_account),
   owner_name: v.owner_name ?? '',
   owner_email: v.owner_email ?? '',
   owner_phone: v.owner_phone ?? '',
@@ -183,6 +185,7 @@ export const venueService = {
     v.owner_phone = input.owner_phone;
     if (input.owner_dob) v.owner_dob = new Date(input.owner_dob);
     if (input.owner_address !== undefined) v.owner_address = input.owner_address;
+    if (input.bank_account !== undefined) v.bank_account = normalizeBankAccountInput(input.bank_account) as any;
     if (v.step_completed < 3) v.step_completed = 3;
     await v.save();
     return toPub(v);
@@ -249,6 +252,7 @@ export const venueService = {
       documents,
       gstin: opts.step2.gstin ?? '',
       pan: opts.step2.pan ?? '',
+      bank_account: normalizeBankAccountInput(opts.step3.bank_account),
       owner_name: opts.step3.owner_name,
       owner_email: opts.step3.owner_email,
       owner_phone: opts.step3.owner_phone,
@@ -270,6 +274,7 @@ export const venueService = {
       .map((d: any) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));
     if (opts.step2.gstin !== undefined) v.gstin = opts.step2.gstin;
     if (opts.step2.pan !== undefined) v.pan = opts.step2.pan;
+    if (opts.step3.bank_account !== undefined) v.bank_account = normalizeBankAccountInput(opts.step3.bank_account) as any;
     v.owner_name = opts.step3.owner_name;
     v.owner_email = opts.step3.owner_email;
     v.owner_phone = opts.step3.owner_phone;

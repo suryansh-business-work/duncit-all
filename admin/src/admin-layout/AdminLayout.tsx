@@ -2,6 +2,7 @@ import { useState, type ReactNode } from 'react';
 import { Box, Drawer, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import AdminBreadcrumbs from '../components/AdminBreadcrumbs';
+import AdminAiChatButton from '../components/AdminAiChatButton';
 import { NotifyHost } from '../components/notify';
 import { Content, DRAWER_WIDTH, Main, Root } from './styled';
 import Sidebar from './Sidebar';
@@ -49,6 +50,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
         <AdminBreadcrumbs />
         <Content>{children}</Content>
       </Main>
+      <AdminAiChatButton />
       <NotifyHost />
     </Root>
   );

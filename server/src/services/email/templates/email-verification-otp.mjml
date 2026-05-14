@@ -1,0 +1,21 @@
+<mjml>
+  <mj-body background-color="#f8fafc">
+    <mj-section padding="28px 20px 8px">
+      <mj-column>
+        <mj-text font-size="24px" line-height="32px" font-weight="700" color="#111827">Verify your Duncit email</mj-text>
+        <mj-text font-size="16px" line-height="24px" color="#4b5563">Hi {{name}}, use this OTP to verify your account.</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" border-radius="12px" padding="24px 20px">
+      <mj-column>
+        <mj-text align="center" font-size="32px" line-height="40px" font-weight="700" letter-spacing="6px" color="#111827">{{otp}}</mj-text>
+        <mj-text align="center" font-size="14px" line-height="22px" color="#6b7280">This OTP expires in {{expiresMinutes}} minutes.</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="8px 20px 28px">
+      <mj-column>
+        <mj-text font-size="13px" line-height="20px" color="#6b7280">If you did not request this, you can ignore this email.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

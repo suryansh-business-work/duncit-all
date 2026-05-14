@@ -96,6 +96,7 @@ export const podTypeDefs = /* GraphQL */ `
     like_count: Int!
     liked_by_me: Boolean!
     comment_count: Int!
+    completed_at: String
     created_at: String!
     updated_at: String!
   }

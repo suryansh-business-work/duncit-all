@@ -27,6 +27,7 @@ import {
   validateVenueEdit,
   type VenueValidationErrors,
 } from '../../components/admin-venue-create-dialog/venue.form';
+import { normalizeBankAccountValues } from '../../forms/validation/bankAccount';
 import { STATUSES, UPDATE_VENUE } from './queries';
 
 interface Props {
@@ -102,6 +103,7 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
       owner_phone: venue.owner_phone ?? '',
       owner_dob: dateOnly(venue.owner_dob),
       owner_address: venue.owner_address ?? '',
+      bank_account: normalizeBankAccountValues(venue.bank_account),
     });
     setStatus(venue.status ?? 'APPROVED');
     setSubmitError('');

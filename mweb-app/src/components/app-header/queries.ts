@@ -12,6 +12,7 @@ export const HEADER_DATA = gql`
       full_name
       first_name
       email
+      is_email_verified
       profile_photo
       city
       roles

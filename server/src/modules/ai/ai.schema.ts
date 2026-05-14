@@ -23,6 +23,11 @@ export const aiTypeDefs = gql`
     city: String!
   }
 
+  input AiMjmlTemplateInput {
+    prompt: String!
+    current_mjml: String
+  }
+
   extend type Mutation {
     """
     Generates dummy data for a Club / Pod / Slider / Inventory Product form using OpenAI.
@@ -42,5 +47,15 @@ export const aiTypeDefs = gql`
     Returns JSON with { zones: [{ zone_name, pincode }] }.
     """
     aiFillLocationAreas(input: AiLocationAreasInput!): String!
+
+    """
+    Admin assistant chat backed by OpenAI with limited internal lookup context.
+    """
+    adminAiChat(prompt: String!): String!
+
+    """
+    Creates or updates MJML source from an admin prompt. Returns MJML only.
+    """
+    aiCreateOrUpdateMjml(input: AiMjmlTemplateInput!): String!
   }
 `;

@@ -1,5 +1,5 @@
 import { gql, useMutation } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -17,6 +17,11 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import { useColorMode } from '../ColorModeContext';
 import LoginForm, { type LoginFormValues } from '../forms/login.form';
+import {
+  getSafeRedirectPath,
+  redirectPathFromLocation,
+  type RedirectLocation,
+} from '../utils/redirect';
 
 const ADMIN_ROLES = [
   'SUPER_ADMIN',
@@ -72,7 +77,18 @@ export default function LoginPage() {
   const [seedSuperAdmin, { loading: seeding, data: seedData, error: seedError }] =
     useMutation(SEED_SUPER_ADMIN);
   const navigate = useNavigate();
+  const location = useLocation();
   const { mode, toggle } = useColorMode();
+
+  const redirectAfterLogin = () => {
+    const params = new URLSearchParams(location.search);
+    const stateFrom = (location.state as { from?: RedirectLocation } | null)?.from;
+    return (
+      getSafeRedirectPath(params.get('redirect')) ||
+      getSafeRedirectPath(stateFrom ? redirectPathFromLocation(stateFrom) : '') ||
+      '/hub'
+    );
+  };
 
   const handleLogin = async (values: LoginFormValues) => {
     const res = await loginMutation({ variables: { input: values } });
@@ -82,7 +98,7 @@ export default function LoginPage() {
       throw new Error('You do not have admin access.');
     }
     localStorage.setItem('admin_token', data.token);
-    navigate('/hub');
+    navigate(redirectAfterLogin(), { replace: true });
   };
 
   return (

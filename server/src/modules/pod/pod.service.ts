@@ -78,6 +78,7 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     liked_user_ids: (d.liked_user_ids ?? []).map((x: any) => String(x)),
     like_count: (d.liked_user_ids ?? []).length,
     comment_count: (d.comments ?? []).length,
+    completed_at: d.completed_at?.toISOString?.() ?? null,
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
   };

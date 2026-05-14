@@ -63,6 +63,7 @@ export interface IPod extends Document {
   product_cost_total: number;
   liked_user_ids: Types.ObjectId[];
   comments: IPodComment[];
+  completed_at?: Date | null;
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
@@ -148,6 +149,7 @@ const podSchema = new Schema<IPod>(
     product_cost_total: { type: Number, default: 0, min: 0 },
     liked_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User', default: [] }],
     comments: { type: [commentSchema], default: [] },
+    completed_at: { type: Date, default: null, index: true },
     is_active: { type: Boolean, default: true },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

@@ -21,6 +21,8 @@ export default function CascadeEffect({ clubs, venues }: Props) {
       if (values.location_id) setFieldValue('location_id', '');
       if (values.zone_name) setFieldValue('zone_name', '');
       if (values.place_charges.length > 0) setFieldValue('place_charges', []);
+      if (values.products_enabled) setFieldValue('products_enabled', false);
+      if (values.product_requests.length > 0) setFieldValue('product_requests', []);
       return;
     }
     if (values.meeting_platform) setFieldValue('meeting_platform', '');

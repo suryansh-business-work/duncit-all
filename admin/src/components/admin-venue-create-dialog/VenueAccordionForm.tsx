@@ -3,11 +3,8 @@ import {
   Accordion,
   AccordionDetails,
   AccordionSummary,
-  Autocomplete,
-  Box,
   Button,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
@@ -15,9 +12,10 @@ import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import VenueDetailsSection from './VenueDetailsSection';
 import VenueDocsSection from './VenueDocsSection';
-import VenueOwnerSection from './VenueOwnerSection';
+import VenueBankAccountSection from './VenueBankAccountSection';
+import VenueOwnerAccordion from './VenueOwnerAccordion';
 import type { DocEntry, Step1, Step3 } from './queries';
-import { getVenueError, type VenueValidationErrors } from './venue.form';
+import { type VenueValidationErrors } from './venue.form';
 
 export type VenueAccordionMode = 'create' | 'edit';
 
@@ -49,9 +47,9 @@ interface Props {
   errors?: VenueValidationErrors;
 }
 
-type PanelKey = 'details' | 'documents' | 'owner';
+type PanelKey = 'details' | 'documents' | 'owner' | 'bank';
 
-const ALL_PANELS: PanelKey[] = ['details', 'documents', 'owner'];
+const ALL_PANELS: PanelKey[] = ['details', 'documents', 'owner', 'bank'];
 
 /**
  * Unified Venue form with accordion sections so Create + Edit share the
@@ -95,20 +93,6 @@ export default function VenueAccordionForm({
   const expandAll = () => setExpanded(new Set(ALL_PANELS));
   const collapseAll = () => setExpanded(new Set());
 
-  // Auto-fill owner details from selected user when admin picks one (create mode).
-  const handleOwnerPick = (next: OwnerUser | null) => {
-    setOwner?.(next);
-    if (next && setS3) {
-      setS3({
-        owner_name: next.full_name ?? '',
-        owner_email: next.email ?? '',
-        owner_phone: next.phone_number ?? '',
-        owner_dob: s3?.owner_dob ?? '',
-        owner_address: s3?.owner_address ?? '',
-      });
-    }
-  };
-
   return (
     <Stack spacing={1.5}>
       <Stack direction="row" justifyContent="flex-end" spacing={1}>
@@ -140,45 +124,26 @@ export default function VenueAccordionForm({
       </Accordion>
 
       {showOwnerSection && (
-        <Accordion expanded={expanded.has('owner')} onChange={() => toggle('owner')} disableGutters>
+        <VenueOwnerAccordion
+          mode={mode}
+          expanded={expanded.has('owner')}
+          onToggle={() => toggle('owner')}
+          s3={s3}
+          setS3={setS3}
+          owner={owner}
+          setOwner={setOwner}
+          ownerOptions={ownerOptions}
+          errors={errors}
+        />
+      )}
+
+      {s3 && setS3 && (
+        <Accordion expanded={expanded.has('bank')} onChange={() => toggle('bank')} disableGutters>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1">Owner details</Typography>
+            <Typography variant="subtitle1">Bank Account Verification</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            <Stack spacing={2}>
-              {mode === 'create' && ownerOptions && setOwner && (
-                <Autocomplete
-                  options={ownerOptions}
-                  getOptionLabel={(option) =>
-                    `${option.full_name ?? ''} · ${option.email ?? option.phone_number ?? ''}`.trim()
-                  }
-                  value={owner ?? null}
-                  isOptionEqualToValue={(a, b) => a.user_id === b.user_id}
-                  onChange={(_event, value) => handleOwnerPick(value)}
-                  renderInput={(params) => (
-                    <TextField
-                      {...params}
-                      label="Pick an existing user as owner"
-                      size="small"
-                      error={!!getVenueError(errors, 'owner_user_id')}
-                      helperText={
-                        getVenueError(errors, 'owner_user_id') ||
-                        "Admin auto-fills the owner from the selected user — you don't need to retype these details."
-                      }
-                    />
-                  )}
-                />
-              )}
-              {s3 && setS3 ? (
-                <VenueOwnerSection s3={s3} setS3={setS3} errors={errors} />
-              ) : (
-                <Box>
-                  <Typography variant="body2" color="text.secondary">
-                    Owner details are managed by the admin and saved automatically.
-                  </Typography>
-                </Box>
-              )}
-            </Stack>
+            <VenueBankAccountSection s3={s3} setS3={setS3} errors={errors} />
           </AccordionDetails>
         </Accordion>
       )}

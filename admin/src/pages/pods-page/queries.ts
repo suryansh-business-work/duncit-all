@@ -47,6 +47,7 @@ export const PODS = gql`
       }
       product_cost_total
       is_active
+      completed_at
       zone_name
     }
   }
@@ -141,6 +142,14 @@ export const UPDATE = gql`
 export const DELETE = gql`
   mutation DeletePod($id: ID!) {
     deletePod(pod_doc_id: $id)
+  }
+`;
+export const CREATE_PAYMENT_RELEASE = gql`
+  mutation CreatePaymentRelease($input: CreatePaymentReleaseInput!) {
+    createPaymentReleaseRequest(input: $input) {
+      id
+      status
+    }
   }
 `;
 

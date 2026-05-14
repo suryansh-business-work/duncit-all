@@ -1,4 +1,5 @@
 import bcrypt from 'bcryptjs';
+import crypto from 'crypto';
 import jwt, { type SignOptions } from 'jsonwebtoken';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
@@ -14,7 +15,11 @@ import type {
   StartRecordedUserCallDTO,
 } from './user.validator';
 import { verifyGoogleIdToken } from './user.google';
-import { sendWelcomeEmail, sendAdminCredentialsEmail } from '../../services/email/email.service';
+import {
+  sendWelcomeEmail,
+  sendAdminCredentialsEmail,
+  sendEmailVerificationOtpEmail,
+} from '../../services/email/email.service';
 import { rbacService } from '../rbac/rbac.service';
 import { settingsService } from '../settings/settings.service';
 import type { AuthUser } from '../../context';
@@ -25,6 +30,11 @@ import { UserContactActionModel } from './userContactAction.model';
 import { getRuntimeEnvValue } from '../../config/runtimeEnv';
 
 const idStrings = (values: unknown[] | undefined | null) => (values ?? []).map((x: any) => String(x));
+const EMAIL_OTP_MINUTES = 10;
+const isDev = (process.env.NODE_ENV || 'development') !== 'production';
+
+const hashOtp = (otp: string) =>
+  crypto.createHash('sha256').update(`${otp}:${process.env.JWT_SECRET || 'dev-secret'}`).digest('hex');
 
 const cleanProfileLinks = (links: UpdateMyProfileDTO['profile_links'] = []) =>
   (links ?? [])
@@ -469,6 +479,51 @@ export const userService = {
     const updated = await UserModel.findByIdAndUpdate(user_id, update, { new: true });
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     return toPublic(updated);
+  },
+
+  async requestEmailVerificationOtp(user_id: string) {
+    const user = await UserModel.findById(user_id).select('+email_verification_otp_hash +email_verification_otp_expires_at');
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    if (!user.email) {
+      throw new GraphQLError('Add an email address before requesting OTP', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    if (user.is_email_verified) return { ok: true, dev_otp: null };
+    const otp = String(crypto.randomInt(100000, 1000000));
+    (user as any).email_verification_otp_hash = hashOtp(otp);
+    (user as any).email_verification_otp_expires_at = new Date(Date.now() + EMAIL_OTP_MINUTES * 60_000);
+    await user.save();
+    await sendEmailVerificationOtpEmail({
+      to: user.email,
+      name: user.first_name,
+      otp,
+      expiresMinutes: String(EMAIL_OTP_MINUTES),
+    });
+    return { ok: true, dev_otp: isDev ? otp : null };
+  },
+
+  async verifyEmailVerificationOtp(user_id: string, otp: string) {
+    const code = String(otp || '').trim();
+    if (!/^\d{6}$/.test(code)) {
+      throw new GraphQLError('Enter the 6 digit OTP', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const user = await UserModel.findById(user_id).select('+email_verification_otp_hash +email_verification_otp_expires_at');
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    if (user.is_email_verified) return toPublic(user);
+    const expiresAt = (user as any).email_verification_otp_expires_at as Date | undefined;
+    const storedHash = (user as any).email_verification_otp_hash as string | undefined;
+    if (!storedHash || !expiresAt || expiresAt.getTime() < Date.now()) {
+      throw new GraphQLError('OTP expired. Request a new OTP.', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (hashOtp(code) !== storedHash) {
+      throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    user.is_email_verified = true;
+    (user as any).email_verification_otp_hash = undefined;
+    (user as any).email_verification_otp_expires_at = undefined;
+    await user.save();
+    return toPublic(user);
   },
 
   async updateMyInterests(user_id: string, categoryIds: string[]) {

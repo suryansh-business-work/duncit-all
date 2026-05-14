@@ -1,40 +1,5 @@
 import type { ReactNode } from 'react';
-import PeopleIcon from '@mui/icons-material/People';
-import GroupIcon from '@mui/icons-material/Group';
-import DashboardIcon from '@mui/icons-material/Dashboard';
-import SettingsIcon from '@mui/icons-material/Settings';
-import SecurityIcon from '@mui/icons-material/Security';
-import VpnKeyIcon from '@mui/icons-material/VpnKey';
-import CategoryIcon from '@mui/icons-material/Category';
-import BoltIcon from '@mui/icons-material/Bolt';
-import FlagIcon from '@mui/icons-material/Flag';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
-import AccountTreeIcon from '@mui/icons-material/AccountTree';
-import LocationOnIcon from '@mui/icons-material/LocationOn';
-import GroupsIcon from '@mui/icons-material/Groups';
-import EventIcon from '@mui/icons-material/Event';
-import LightbulbIcon from '@mui/icons-material/Lightbulb';
-import ViewCarouselIcon from '@mui/icons-material/ViewCarousel';
-import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
-import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
-import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
-import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
-import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
-import PercentIcon from '@mui/icons-material/Percent';
-import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
-import DescriptionIcon from '@mui/icons-material/Description';
-import MenuBookIcon from '@mui/icons-material/MenuBook';
-import StorefrontIcon from '@mui/icons-material/Storefront';
-import ShieldIcon from '@mui/icons-material/Shield';
-import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
-import Inventory2Icon from '@mui/icons-material/Inventory2';
-import ArticleIcon from '@mui/icons-material/Article';
-import CampaignIcon from '@mui/icons-material/Campaign';
-import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import { navIcons } from './navIcons';
 
 export interface NavLeaf {
   label: string;
@@ -64,7 +29,7 @@ export const NAV: NavSection[] = [
   {
     heading: 'Dashboard',
     prefixes: ['/dashboard'],
-    items: [{ label: 'Dashboard', to: '/dashboard', icon: <DashboardIcon /> }],
+    items: [{ label: 'Dashboard', to: '/dashboard', icon: navIcons.dashboard }],
   },
   {
     heading: 'User Management',
@@ -72,31 +37,37 @@ export const NAV: NavSection[] = [
     items: [
       {
         label: 'Users',
-        icon: <GroupIcon />,
+        icon: navIcons.group,
         matchPrefix: '/users',
-        children: [{ label: 'All Users', to: '/users', icon: <PeopleIcon /> }],
+        children: [{ label: 'All Users', to: '/users', icon: navIcons.people }],
       },
       {
         label: 'Access Control',
-        icon: <AdminPanelSettingsIcon />,
+        icon: navIcons.adminPanel,
         matchPrefix: '/rbac',
         children: [
-          { label: 'Roles', to: '/rbac/roles', icon: <SecurityIcon /> },
-          { label: 'Permissions', to: '/rbac/permissions', icon: <VpnKeyIcon /> },
-          { label: 'Resources', to: '/rbac/resources', icon: <CategoryIcon /> },
-          { label: 'Actions', to: '/rbac/actions', icon: <BoltIcon /> },
+          { label: 'Roles', to: '/rbac/roles', icon: navIcons.security },
+          { label: 'Permissions', to: '/rbac/permissions', icon: navIcons.vpnKey },
+          { label: 'Resources', to: '/rbac/resources', icon: navIcons.category },
+          { label: 'Actions', to: '/rbac/actions', icon: navIcons.bolt },
         ],
       },
     ],
   },
   {
     heading: 'Catalog',
-    prefixes: ['/categories', '/locations', '/sliders', '/inventory'],
+    prefixes: ['/categories', '/locations', '/sliders'],
     items: [
-      { label: 'Categories', to: '/categories', icon: <AccountTreeIcon /> },
-      { label: 'Locations', to: '/locations', icon: <LocationOnIcon /> },
-      { label: 'Inventory', to: '/inventory', icon: <Inventory2Icon /> },
-      { label: 'Sliders', to: '/sliders', icon: <ViewCarouselIcon /> },
+      { label: 'Categories', to: '/categories', icon: navIcons.accountTree },
+      { label: 'Locations', to: '/locations', icon: navIcons.location },
+      { label: 'Sliders', to: '/sliders', icon: navIcons.carousel },
+    ],
+  },
+  {
+    heading: 'Inventory Management',
+    prefixes: ['/inventory'],
+    items: [
+      { label: 'Inventory', to: '/inventory', icon: navIcons.inventory },
     ],
   },
   {
@@ -105,13 +76,13 @@ export const NAV: NavSection[] = [
     items: [
       {
         label: 'Clubs',
-        icon: <GroupsIcon />,
+        icon: navIcons.groups,
         matchPrefix: '/clubs',
         children: [
-          { label: 'All Clubs', to: '/clubs', icon: <GroupsIcon /> },
-          { label: 'Pods', to: '/pods', icon: <EventIcon /> },
-          { label: 'Pod Ideas', to: '/pod-ideas', icon: <LightbulbIcon /> },
-          { label: 'Pod Plans', to: '/pod-plans', icon: <CategoryIcon /> },
+          { label: 'All Clubs', to: '/clubs', icon: navIcons.groups },
+          { label: 'Pods', to: '/pods', icon: navIcons.event },
+          { label: 'Pod Ideas', to: '/pod-ideas', icon: navIcons.lightbulb },
+          { label: 'Pod Plans', to: '/pod-plans', icon: navIcons.category },
         ],
       },
     ],
@@ -128,26 +99,26 @@ export const NAV: NavSection[] = [
       '/support-logs',
     ],
     items: [
-      { label: 'Notifications', to: '/notifications', icon: <NotificationsActiveIcon /> },
-      { label: 'Interview Requests', to: '/interview-requests', icon: <EventAvailableIcon /> },
-      { label: 'FAQs', to: '/faqs', icon: <HelpOutlineIcon /> },
-      { label: 'Support Logs', to: '/support-logs', icon: <SupportAgentIcon /> },
-      { label: 'Policies', to: '/policies', icon: <DescriptionIcon /> },
-      { label: 'Email Templates', to: '/email-templates', icon: <MarkEmailReadIcon /> },
-      { label: 'Badges', to: '/badges', icon: <ShieldIcon /> },
+      { label: 'Notifications', to: '/notifications', icon: navIcons.notifications },
+      { label: 'Interview Requests', to: '/interview-requests', icon: navIcons.eventAvailable },
+      { label: 'FAQs', to: '/faqs', icon: navIcons.help },
+      { label: 'Support Logs', to: '/support-logs', icon: navIcons.support },
+      { label: 'Policies', to: '/policies', icon: navIcons.description },
+      { label: 'Email Templates', to: '/email-templates', icon: navIcons.email },
+      { label: 'Badges', to: '/badges', icon: navIcons.shield },
     ],
   },
   {
-    heading: 'Marketing',
+    heading: 'Campaign',
     prefixes: ['/marketing'],
     items: [
       {
         label: 'Campaigns',
-        icon: <CampaignIcon />,
+        icon: navIcons.campaign,
         matchPrefix: '/marketing',
         children: [
-          { label: 'Email Campaigns', to: '/marketing/email-campaigns', icon: <MarkEmailReadIcon /> },
-          { label: 'WhatsApp Campaigns', to: '/marketing/whatsapp-campaigns', icon: <WhatsAppIcon /> },
+          { label: 'Email Campaigns', to: '/marketing/email-campaigns', icon: navIcons.email },
+          { label: 'WhatsApp Campaigns', to: '/marketing/whatsapp-campaigns', icon: navIcons.whatsapp },
         ],
       },
     ],
@@ -156,18 +127,18 @@ export const NAV: NavSection[] = [
     heading: 'Website',
     prefixes: ['/newsletter', '/contact-submissions', '/faq-submissions', '/website-content'],
     items: [
-      { label: 'Website Content', to: '/website-content', icon: <ArticleIcon /> },
-      { label: 'Newsletter', to: '/newsletter', icon: <MarkEmailReadIcon /> },
-      { label: 'Contact Submissions', to: '/contact-submissions', icon: <MarkEmailReadIcon /> },
-      { label: 'FAQ Submissions', to: '/faq-submissions', icon: <HelpOutlineIcon /> },
+      { label: 'Website Content', to: '/website-content', icon: navIcons.article },
+      { label: 'Newsletter', to: '/newsletter', icon: navIcons.email },
+      { label: 'Contact Submissions', to: '/contact-submissions', icon: navIcons.email },
+      { label: 'FAQ Submissions', to: '/faq-submissions', icon: navIcons.help },
     ],
   },
   {
     heading: 'Onboarding',
     prefixes: ['/venues', '/hosts'],
     items: [
-      { label: 'Hosts', to: '/hosts', icon: <PeopleIcon /> },
-      { label: 'Registered Venues', to: '/venues', icon: <StorefrontIcon /> },
+      { label: 'Hosts', to: '/hosts', icon: navIcons.people },
+      { label: 'Registered Venues', to: '/venues', icon: navIcons.storefront },
     ],
   },
   {
@@ -176,19 +147,20 @@ export const NAV: NavSection[] = [
     items: [
       {
         label: 'Finance',
-        icon: <AccountBalanceIcon />,
+        icon: navIcons.finance,
         matchPrefix: '/finance',
         children: [
-          { label: 'Dashboard', to: '/finance/dashboard', icon: <DashboardCustomizeIcon /> },
-          { label: 'Settings', to: '/finance/settings', icon: <SettingsIcon /> },
-          { label: 'Payment Logs', to: '/finance/payment-logs', icon: <ReceiptLongIcon /> },
-          { label: 'Platform Fees', to: '/finance/platform-fees', icon: <PercentIcon /> },
-          { label: 'GST Management', to: '/finance/gst', icon: <RequestQuoteIcon /> },
-          { label: 'Invoices', to: '/finance/invoices', icon: <DescriptionIcon /> },
-          { label: 'Ledger', to: '/finance/ledger', icon: <MenuBookIcon /> },
-          { label: 'Venue Finance', to: '/finance/venue', icon: <StorefrontIcon /> },
-          { label: 'Insurance', to: '/finance/insurance', icon: <ShieldIcon /> },
-          { label: 'Payout Cycles', to: '/finance/payouts', icon: <CalendarMonthIcon /> },
+          { label: 'Dashboard', to: '/finance/dashboard', icon: navIcons.financeDashboard },
+          { label: 'Settings', to: '/finance/settings', icon: navIcons.settings },
+          { label: 'Payment Logs', to: '/finance/payment-logs', icon: navIcons.receipt },
+          { label: 'Payment Release', to: '/finance/payment-release', icon: navIcons.payments },
+          { label: 'Platform Fees', to: '/finance/platform-fees', icon: navIcons.percent },
+          { label: 'GST Management', to: '/finance/gst', icon: navIcons.quote },
+          { label: 'Invoices', to: '/finance/invoices', icon: navIcons.description },
+          { label: 'Ledger', to: '/finance/ledger', icon: navIcons.menuBook },
+          { label: 'Venue Finance', to: '/finance/venue', icon: navIcons.storefront },
+          { label: 'Insurance', to: '/finance/insurance', icon: navIcons.shield },
+          { label: 'Payout Cycles', to: '/finance/payouts', icon: navIcons.calendar },
         ],
       },
     ],
@@ -197,9 +169,9 @@ export const NAV: NavSection[] = [
     heading: 'System',
     prefixes: ['/feature-flags', '/branding', '/settings'],
     items: [
-      { label: 'Feature Flags', to: '/feature-flags', icon: <FlagIcon /> },
-      { label: 'Branding', to: '/branding', icon: <BrandingWatermarkIcon /> },
-      { label: 'Settings', to: '/settings', icon: <SettingsIcon /> },
+      { label: 'Feature Flags', to: '/feature-flags', icon: navIcons.flag },
+      { label: 'Branding', to: '/branding', icon: navIcons.branding },
+      { label: 'Settings', to: '/settings', icon: navIcons.settings },
     ],
   },
 ];

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { AppBar, Avatar, Box, IconButton, Toolbar, Tooltip } from '@mui/material';
+import { Alert, AppBar, Avatar, Box, IconButton, Toolbar, Tooltip } from '@mui/material';
 import { HEADER_DATA, PUBLIC_POLICIES } from './queries';
 import HeaderBrand from './HeaderBrand';
 import HeaderLocationButton from './HeaderLocationButton';
@@ -141,6 +141,16 @@ export default function AppHeader({
           onLogout={logout}
         />
       </Toolbar>
+
+      {me?.email && me.is_email_verified === false && (
+        <Alert
+          severity="info"
+          onClick={() => navigate('/profile?verifyEmail=1')}
+          sx={{ borderRadius: 0, cursor: 'pointer', py: 0.25 }}
+        >
+          Please verify your email
+        </Alert>
+      )}
 
       <SuperCategoryTabs
         loading={loading}

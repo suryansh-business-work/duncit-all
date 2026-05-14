@@ -14,6 +14,13 @@ export const HOSTS = gql`
       passport_photo_url
       police_verification_url
       full_address
+      bank_account {
+        payout_method
+        account_holder_name
+        account_number
+        ifsc_code
+        upi_id
+      }
       tags
       step_completed
       status

@@ -1,0 +1,18 @@
+<mjml>
+  <mj-body background-color="#f8fafc">
+    <mj-section padding="28px 20px 8px">
+      <mj-column>
+        <mj-text font-size="24px" line-height="32px" font-weight="700" color="#111827">Payment release approved</mj-text>
+        <mj-text font-size="16px" line-height="24px" color="#4b5563">Hi {{name}}, your {{release_type}} for {{pod_title}} has been approved.</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" border-radius="12px" padding="20px">
+      <mj-column>
+        <mj-text font-size="14px" line-height="22px" color="#374151">Release type: {{approval_type}}</mj-text>
+        <mj-text font-size="14px" line-height="22px" color="#374151">Requested amount: Rs {{amount_requested}}</mj-text>
+        <mj-text font-size="18px" line-height="26px" font-weight="700" color="#111827">Approved amount: Rs {{approved_amount}}</mj-text>
+        <mj-text font-size="14px" line-height="22px" color="#6b7280">{{reason}}</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

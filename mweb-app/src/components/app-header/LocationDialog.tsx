@@ -2,8 +2,6 @@ import { useCallback } from 'react';
 import {
   Box,
   Button,
-  Card,
-  CardActionArea,
   Stack,
   Typography,
 } from '@mui/material';
@@ -11,6 +9,7 @@ import PlaceIcon from '@mui/icons-material/Place';
 import ResponsiveDialog from '../ResponsiveDialog';
 import GpsLocationPicker from './GpsLocationPicker';
 import LocationAreaPicker from './LocationAreaPicker';
+import LocationCityCard from './LocationCityCard';
 
 interface Props {
   open: boolean;
@@ -34,7 +33,18 @@ export default function LocationDialog({
   onApply,
 }: Props) {
   const draftLoc = locations.find((l: any) => l.id === draftLocationId);
-  const zones: { zone_name: string }[] = draftLoc?.location_zones ?? [];
+  const zones: { zone_name: string; pincode?: string | null }[] = draftLoc?.location_zones ?? [];
+  const popularLocationId = locations.reduce((best: any | null, location: any) => {
+    if (!best) return location;
+    return (location.location_zones?.length ?? 0) > (best.location_zones?.length ?? 0)
+      ? location
+      : best;
+  }, null)?.id;
+  const applyLabel = draftZone
+    ? `Apply - ${draftZone}`
+    : zones.length
+      ? `Apply - ${zones.length} areas`
+      : 'Apply';
 
   const handleAutoSelect = useCallback(
     (locationId: string, zoneName: string) => {
@@ -68,76 +78,56 @@ export default function LocationDialog({
       onClose={onClose}
       title={title}
       actions={
-        <>
-          <Button onClick={onClose}>Cancel</Button>
-          <Button variant="contained" onClick={onApply} disabled={!draftLocationId}>
-            Apply
+        <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }}>
+          <Button color="error" onClick={onClose} sx={{ fontWeight: 800 }}>
+            Cancel
           </Button>
-        </>
+          <Box sx={{ flexGrow: 1 }} />
+          <Button
+            variant="contained"
+            onClick={onApply}
+            disabled={!draftLocationId}
+            sx={{ minWidth: 154, borderRadius: 999, fontWeight: 800 }}
+          >
+            {applyLabel}
+          </Button>
+        </Stack>
       }
+      sheetMaxHeight="92vh"
     >
       <GpsLocationPicker locations={locations} onAutoSelect={handleAutoSelect} />
 
-      <Typography variant="overline" color="text.secondary">
+      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, lineHeight: 1.4 }}>
         City
       </Typography>
       <Box
         sx={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fill, minmax(110px, 1fr))',
-          gap: 1.25,
+          gridAutoFlow: 'column',
+          gridAutoColumns: { xs: 'minmax(84px, 31%)', sm: 'minmax(122px, 1fr)' },
+          gap: 1,
           mt: 0.5,
-          mb: 2,
+          mb: 1.5,
+          pb: 0.5,
+          overflowX: 'auto',
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
         }}
       >
-        {locations.map((l: any) => {
-          const active = l.id === draftLocationId;
+        {locations.map((locationItem: any, index: number) => {
+          const active = locationItem.id === draftLocationId;
           return (
-            <Card
-              key={l.id}
-              elevation={0}
-              sx={{
-                border: 2,
-                borderColor: active ? 'primary.main' : 'divider',
-                borderRadius: 2,
-                overflow: 'hidden',
-                transition: 'border-color .15s',
+            <LocationCityCard
+              key={locationItem.id}
+              location={locationItem}
+              active={active}
+              popular={!active && locationItem.id === popularLocationId}
+              index={index}
+              onSelect={() => {
+                setDraftLocationId(locationItem.id);
+                setDraftZone('');
               }}
-            >
-              <CardActionArea
-                onClick={() => {
-                  setDraftLocationId(l.id);
-                  setDraftZone('');
-                }}
-              >
-                <Box
-                  sx={{
-                    width: '100%',
-                    aspectRatio: '1 / 1',
-                    bgcolor: 'grey.100',
-                    backgroundImage: l.location_image ? `url(${l.location_image})` : undefined,
-                    backgroundSize: 'cover',
-                    backgroundPosition: 'center',
-                  }}
-                />
-                <Box sx={{ px: 1, py: 0.75, textAlign: 'center' }}>
-                  <Typography
-                    variant="body2"
-                    sx={{ fontWeight: active ? 700 : 500, lineHeight: 1.2 }}
-                    noWrap
-                  >
-                    {l.location_name}
-                  </Typography>
-                  <Typography
-                    variant="caption"
-                    color="text.secondary"
-                    sx={{ lineHeight: 1.25 }}
-                  >
-                    {l.location_zones?.length ? `${l.location_zones.length} areas` : 'No areas'}
-                  </Typography>
-                </Box>
-              </CardActionArea>
-            </Card>
+            />
           );
         })}
         {locations.length === 0 && (

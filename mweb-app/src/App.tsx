@@ -20,8 +20,9 @@ export default function App() {
   const [zoneName, setZoneName] = useState('');
   const location = useLocation();
   const fullBleed = location.pathname.startsWith('/explore');
-  const hideAppChrome = location.pathname.startsWith('/signup-survey');
-  const showAppChrome = isAuthed && !hideAppChrome;
+  const isSignupSurvey = location.pathname.startsWith('/signup-survey');
+  const showAppHeader = isAuthed;
+  const showBottomNav = isAuthed && !isSignupSurvey;
 
   const [splashOpen, setSplashOpen] = useState(
     () => typeof window !== 'undefined' && !sessionStorage.getItem('duncit_splash_shown')
@@ -46,8 +47,9 @@ export default function App() {
   return (
     <Box sx={isAuthed ? { height: '100dvh', display: 'flex', flexDirection: 'column' } : undefined}>
       {splashOpen && <SplashScreen />}
-      {showAppChrome && (
+      {showAppHeader && (
         <AppHeader
+          minimal={isSignupSurvey}
           selectedSuperCategory={superCategory}
           onSuperCategoryChange={setSuperCategory}
           selectedLocationId={locationId}
@@ -73,13 +75,13 @@ export default function App() {
             overflowY: fullBleed ? 'hidden' : 'auto',
           }),
           py: fullBleed ? 0 : 2,
-          pb: fullBleed ? 0 : showAppChrome ? BOTTOM_NAV_OFFSET : 2,
+          pb: fullBleed ? 0 : showBottomNav ? BOTTOM_NAV_OFFSET : 2,
         }}
       >
         <ScrollToTop />
         <AppRoutes superCategory={superCategory} locationId={locationId} zoneName={zoneName} />
       </Container>
-      {showAppChrome && <BottomNav />}
+      {showBottomNav && <BottomNav />}
       <NotifyHost />
     </Box>
   );

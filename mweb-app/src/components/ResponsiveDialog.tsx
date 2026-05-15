@@ -8,7 +8,6 @@ import {
   IconButton,
   SwipeableDrawer,
   Stack,
-  Typography,
   useMediaQuery,
 } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
@@ -95,9 +94,7 @@ export default function ResponsiveDialog({
             justifyContent="space-between"
             sx={{ px: 2, pt: 0.5, pb: 0.5, flex: '0 0 auto' }}
           >
-            <Typography variant="subtitle1" fontWeight={700} sx={{ minWidth: 0 }} noWrap>
-              {title}
-            </Typography>
+            <Box sx={{ minWidth: 0, flex: 1 }}>{title}</Box>
             <IconButton size="small" onClick={onClose} aria-label="Close">
               <CloseIcon fontSize="small" />
             </IconButton>

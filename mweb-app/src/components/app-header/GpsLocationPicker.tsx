@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
 import GpsFixedIcon from '@mui/icons-material/GpsFixed';
 import { useGeoLocation, type GeocodedAddress } from './useGeoLocation';
 
@@ -45,27 +45,27 @@ export default function GpsLocationPicker({
   }, [geocoded, matchedLocation, onAutoSelect]);
 
   return (
-    <Box sx={{ mb: 2 }}>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <Button
-          size="small"
-          variant="outlined"
-          startIcon={busy ? <CircularProgress size={14} /> : <GpsFixedIcon fontSize="small" />}
-          onClick={() => {
-            reset();
-            void request();
-          }}
-          disabled={busy}
-        >
-          {busy ? 'Locating…' : 'Use my location'}
-        </Button>
-        {geocoded?.city && (
-          <Typography variant="caption" color="text.secondary">
-            Detected: {geocoded.city}
-            {geocoded.pincode ? ` · ${geocoded.pincode}` : ''}
-          </Typography>
-        )}
-      </Stack>
+    <Box sx={{ mb: 1.5 }}>
+      <Button
+        fullWidth
+        size="small"
+        variant="outlined"
+        startIcon={busy ? <CircularProgress size={14} /> : <GpsFixedIcon fontSize="small" />}
+        onClick={() => {
+          reset();
+          void request();
+        }}
+        disabled={busy}
+        sx={{ minHeight: 40, borderRadius: 2, fontWeight: 800 }}
+      >
+        {busy ? 'Locating…' : 'Use my location'}
+      </Button>
+      {geocoded?.city && (
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', mt: 0.5 }}>
+          Detected: {geocoded.city}
+          {geocoded.pincode ? ` · ${geocoded.pincode}` : ''}
+        </Typography>
+      )}
       {error && (
         <Alert severity="warning" sx={{ mt: 1 }}>
           {error}

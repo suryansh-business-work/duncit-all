@@ -11,8 +11,10 @@ import LocationDialog from './LocationDialog';
 import ProfileDrawer from './ProfileDrawer';
 import SuperCategoryTabs from './SuperCategoryTabs';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
+import AuthModeToggle from '../AuthModeToggle';
 
 interface AppHeaderProps {
+  minimal?: boolean;
   selectedSuperCategory: string;
   onSuperCategoryChange: (slug: string) => void;
   selectedLocationId: string;
@@ -22,6 +24,7 @@ interface AppHeaderProps {
 }
 
 export default function AppHeader({
+  minimal = false,
   selectedSuperCategory,
   onSuperCategoryChange,
   selectedLocationId,
@@ -85,65 +88,71 @@ export default function AppHeader({
       elevation={0}
       sx={{ bgcolor: 'background.paper' }}
     >
-      <Toolbar sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', gap: 1, py: 1, minHeight: 64, px: 2 }}>
+      <Toolbar sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', gap: 1, py: 1, minHeight: minimal ? 58 : 64, px: 2 }}>
         <HeaderBrand logoUrl={branding?.logo_url} appName={branding?.app_name} />
 
         <Box sx={{ flexGrow: 1 }} />
 
-        <HeaderLocationButton
-          loading={loading}
-          hasData={!!data}
-          selectedLocationName={selectedLocation?.location_name}
-          selectedZoneName={selectedZoneName}
-          onClick={() => {
-            setDraftLocationId(selectedLocationId);
-            setDraftZone(selectedZoneName);
-            setLocDialogOpen(true);
-          }}
-        />
-        <LocationDialog
-          open={locDialogOpen}
-          onClose={() => setLocDialogOpen(false)}
-          locations={locations}
-          draftLocationId={draftLocationId}
-          setDraftLocationId={setDraftLocationId}
-          draftZone={draftZone}
-          setDraftZone={setDraftZone}
-          onApply={() => {
-            onLocationChange(draftLocationId);
-            onZoneChange(draftZone);
-            setLocDialogOpen(false);
-          }}
-        />
+        {minimal ? (
+          <AuthModeToggle placement="inline" />
+        ) : (
+          <>
+            <HeaderLocationButton
+              loading={loading}
+              hasData={!!data}
+              selectedLocationName={selectedLocation?.location_name}
+              selectedZoneName={selectedZoneName}
+              onClick={() => {
+                setDraftLocationId(selectedLocationId);
+                setDraftZone(selectedZoneName);
+                setLocDialogOpen(true);
+              }}
+            />
+            <LocationDialog
+              open={locDialogOpen}
+              onClose={() => setLocDialogOpen(false)}
+              locations={locations}
+              draftLocationId={draftLocationId}
+              setDraftLocationId={setDraftLocationId}
+              draftZone={draftZone}
+              setDraftZone={setDraftZone}
+              onApply={() => {
+                onLocationChange(draftLocationId);
+                onZoneChange(draftZone);
+                setLocDialogOpen(false);
+              }}
+            />
 
-        <HeaderNotificationsBell onToast={handleNotifToast} />
+            <HeaderNotificationsBell onToast={handleNotifToast} />
 
-        <Tooltip title={me?.full_name ?? 'Account'}>
-          <IconButton
-            onClick={(e) => setProfileAnchor(e.currentTarget)}
-            sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
-            aria-label="Open account menu"
-          >
-            <Avatar
-              src={me?.profile_photo || undefined}
-              sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13 }}
-            >
-              {(me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase()}
-            </Avatar>
-          </IconButton>
-        </Tooltip>
-        <ProfileDrawer
-          open={!!profileAnchor}
-          onClose={() => setProfileAnchor(null)}
-          me={me}
-          publicPolicies={publicPolicies}
-          policiesOpen={policiesOpen}
-          setPoliciesOpen={setPoliciesOpen}
-          onLogout={logout}
-        />
+            <Tooltip title={me?.full_name ?? 'Account'}>
+              <IconButton
+                onClick={(e) => setProfileAnchor(e.currentTarget)}
+                sx={{ p: 0.25, minWidth: 44, minHeight: 44 }}
+                aria-label="Open account menu"
+              >
+                <Avatar
+                  src={me?.profile_photo || undefined}
+                  sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13 }}
+                >
+                  {(me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase()}
+                </Avatar>
+              </IconButton>
+            </Tooltip>
+            <ProfileDrawer
+              open={!!profileAnchor}
+              onClose={() => setProfileAnchor(null)}
+              me={me}
+              publicPolicies={publicPolicies}
+              policiesOpen={policiesOpen}
+              setPoliciesOpen={setPoliciesOpen}
+              onLogout={logout}
+            />
+          </>
+        )}
       </Toolbar>
 
-      {me?.email && me.is_email_verified === false && (
+      {!minimal && me?.email && me.is_email_verified === false && (
         <Alert
           severity="info"
           onClick={() => navigate('/profile?verifyEmail=1')}
@@ -153,14 +162,16 @@ export default function AppHeader({
         </Alert>
       )}
 
-      <SuperCategoryTabs
-        loading={loading}
-        superCats={superCats}
-        value={superCategoryValue}
-        onChange={onSuperCategoryChange}
-      />
+      {!minimal && (
+        <SuperCategoryTabs
+          loading={loading}
+          superCats={superCats}
+          value={superCategoryValue}
+          onChange={onSuperCategoryChange}
+        />
+      )}
 
-      <HeaderToast toast={toast} onClose={() => setToast(null)} />
+      {!minimal && <HeaderToast toast={toast} onClose={() => setToast(null)} />}
     </AppBar>
   );
 }

@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Button, Card, CardContent, Step, StepLabel, Stepper, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Chip, Step, StepLabel, Stepper, Stack, Typography } from '@mui/material';
+import SendIcon from '@mui/icons-material/Send';
 import MediaPickerDialog from '../components/MediaPickerDialog';
 import DetailsStep from './register-venue-page/DetailsStep';
 import DocumentsStep from './register-venue-page/DocumentsStep';
@@ -120,30 +121,41 @@ export default function RegisterVenuePage() {
 
   const status = data?.myVenue?.status;
   const busy = step1State.loading || step2State.loading || step3State.loading || finalState.loading;
+  const locked = status === 'SUBMITTED' || status === 'APPROVED';
   if (loading && !data) return <Typography>Loading...</Typography>;
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 720, mx: 'auto', width: '100%', pb: 4 }}>
-      <Typography variant="h5" fontWeight={700}>Register your venue</Typography>
+    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%', pb: 2 }}>
+      <Stack direction="row" alignItems="flex-start" spacing={1.25}>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+            Register your venue
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+            4 steps - submit your space for review
+          </Typography>
+        </Box>
+        {status && <Chip size="small" label={status} color={status === 'APPROVED' ? 'success' : 'warning'} sx={{ fontWeight: 900 }} />}
+      </Stack>
       {status === 'SUBMITTED' && <Alert severity="info">Application under review.</Alert>}
       {status === 'APPROVED' && <Alert severity="success">Approved.</Alert>}
       {status === 'REJECTED' && <Alert severity="error">Rejected: {data?.myVenue?.reviewer_notes || 'See notes.'} Update and resubmit.</Alert>}
 
-      <Stepper activeStep={step} alternativeLabel sx={{ '& .MuiStepLabel-label': { fontSize: 12, mt: 0.5, lineHeight: 1.2 }, '& .MuiStepConnector-root': { top: 14 } }}>
+      <Stepper activeStep={step} alternativeLabel sx={{ '& .MuiStepIcon-root': { fontSize: 34, color: 'action.hover' }, '& .MuiStepIcon-root.Mui-active, & .MuiStepIcon-root.Mui-completed': { color: 'primary.main', filter: 'drop-shadow(0 10px 18px rgba(255,79,115,0.28))' }, '& .MuiStepLabel-label': { fontSize: 11, mt: 0.5, lineHeight: 1.2, fontWeight: 950 }, '& .MuiStepConnector-root': { top: 16 }, '& .MuiStepConnector-line': { borderColor: 'primary.main', opacity: 0.45 } }}>
         {STEPS.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
       </Stepper>
 
-      <Card variant="outlined">
-        <CardContent>
+      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+        <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
           {step === 0 && <DetailsStep value={step1} locations={locations} onChange={setStep1} onCoverPick={() => setCoverPicker(true)} showAllErrors={submittedSteps[0]} />}
           {step === 1 && <DocumentsStep value={step2} onChange={setStep2} onDocPick={setDocPickerIdx} showAllErrors={submittedSteps[1]} />}
           {step === 2 && <OwnerStep value={step3} onChange={setStep3} showAllErrors={submittedSteps[2]} />}
           {step === 3 && <SubmitStep step1={step1} step2={step2} step3={step3} />}
           {err && <Alert severity="error" sx={{ mt: 2 }}>{err}</Alert>}
-          <Stack direction="row" spacing={1} mt={3} justifyContent="space-between">
-            <Button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))}>Back</Button>
-            <Button variant="contained" onClick={next} disabled={busy || status === 'SUBMITTED' || status === 'APPROVED'}>
-              {step === 3 ? 'Submit' : 'Next'}
+          <Stack direction="row" spacing={1.25} mt={3} sx={{ position: 'sticky', bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px)', zIndex: 2, p: 0.75, mx: -0.75, borderRadius: 3, bgcolor: 'background.default' }}>
+            <Button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))} variant="outlined" size="large" sx={{ borderRadius: 3, minWidth: 88, fontWeight: 950 }}>Back</Button>
+            <Button variant="contained" onClick={next} disabled={busy || locked} size="large" endIcon={step === 3 ? <SendIcon /> : undefined} sx={{ flex: 1, borderRadius: 3, fontWeight: 950 }}>
+              {step === 3 ? 'Submit for review' : 'Save & continue'}
             </Button>
           </Stack>
         </CardContent>

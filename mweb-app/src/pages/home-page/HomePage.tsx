@@ -147,7 +147,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
             onClick={() => navigate('/host/manage')}
             sx={{
               position: 'fixed',
-              bottom: 'var(--duncit-bottom-nav-offset, 108px)',
+              bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px)',
               right: 16,
               zIndex: 5,
             }}

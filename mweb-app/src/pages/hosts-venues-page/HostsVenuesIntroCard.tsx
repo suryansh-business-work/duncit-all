@@ -6,7 +6,7 @@ import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 
 export default function HostsVenuesIntroCard() {
   return (
-    <Card variant="outlined">
+    <Card variant="outlined" sx={{ borderRadius: 4, bgcolor: 'rgba(255,79,115,0.10)' }}>
       <CardContent>
         <Stack
           direction={{ xs: 'column', sm: 'row' }}
@@ -14,9 +14,11 @@ export default function HostsVenuesIntroCard() {
           alignItems={{ xs: 'stretch', sm: 'center' }}
         >
           <Stack direction="row" spacing={1.5} sx={{ flex: 1 }} alignItems="center">
-            <VerifiedUserIcon color="success" />
+            <Box sx={{ width: 42, height: 42, borderRadius: 3, display: 'grid', placeItems: 'center', bgcolor: 'success.main', color: 'success.contrastText' }}>
+              <VerifiedUserIcon />
+            </Box>
             <Box>
-              <Typography variant="subtitle1" fontWeight={700}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
                 Want to host or list a space?
               </Typography>
               <Typography variant="body2" color="text.secondary">
@@ -24,7 +26,7 @@ export default function HostsVenuesIntroCard() {
               </Typography>
             </Box>
           </Stack>
-          <Stack direction="row" spacing={1}>
+          <Stack direction="row" spacing={1} sx={{ '& .MuiButton-root': { borderRadius: 999, fontWeight: 900 } }}>
             <Button
               component={RouterLink}
               to="/become-host"

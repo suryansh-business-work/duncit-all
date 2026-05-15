@@ -19,6 +19,7 @@ const TABS = [
 
 const NAV_BOTTOM_GAP = 8;
 const NAV_CONTENT_GAP = 56;
+const NAV_OVERLAY_GAP = 10;
 
 export default function BottomNav() {
   const navigate = useNavigate();
@@ -31,9 +32,12 @@ export default function BottomNav() {
     const root = document.documentElement;
     const updateOffset = () => {
       const height = Math.ceil(node.getBoundingClientRect().height);
-      const offset = height + NAV_BOTTOM_GAP + NAV_CONTENT_GAP;
+      const overlayOffset = height + NAV_BOTTOM_GAP + NAV_OVERLAY_GAP;
+      const contentOffset = height + NAV_BOTTOM_GAP + NAV_CONTENT_GAP;
       root.style.setProperty('--duncit-bottom-nav-height', `${height}px`);
-      root.style.setProperty('--duncit-bottom-nav-offset', `${offset}px`);
+      root.style.setProperty('--duncit-bottom-nav-offset', `${overlayOffset}px`);
+      root.style.setProperty('--duncit-bottom-nav-overlay-offset', `${overlayOffset}px`);
+      root.style.setProperty('--duncit-bottom-nav-content-offset', `${contentOffset}px`);
     };
     updateOffset();
     const observer = new ResizeObserver(updateOffset);
@@ -44,6 +48,8 @@ export default function BottomNav() {
       window.removeEventListener('resize', updateOffset);
       root.style.removeProperty('--duncit-bottom-nav-height');
       root.style.removeProperty('--duncit-bottom-nav-offset');
+      root.style.removeProperty('--duncit-bottom-nav-overlay-offset');
+      root.style.removeProperty('--duncit-bottom-nav-content-offset');
     };
   }, []);
 

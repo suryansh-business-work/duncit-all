@@ -21,7 +21,7 @@ export default function StickyPodActionPanel(props: Props) {
         position: 'fixed',
         left: 0,
         right: 0,
-        bottom: 'var(--duncit-bottom-nav-offset, 108px)',
+        bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px)',
         zIndex: (theme) => theme.zIndex.appBar + 1,
         px: { xs: 2, sm: 3 },
         py: 1,

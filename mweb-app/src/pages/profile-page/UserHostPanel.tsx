@@ -14,6 +14,7 @@ import {
   Typography,
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
+import WorkspacePremiumIcon from '@mui/icons-material/WorkspacePremium';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 
 const MY_HOST = gql`
@@ -55,6 +56,8 @@ export default function UserHostPanel() {
   const host = data?.myHost;
   const myUserId: string | undefined = data?.me?.user_id || host?.user_id;
   const isApproved = host?.status === 'APPROVED';
+  const completed = Math.min(host?.step_completed ?? 0, 4);
+  const labels = ['Profile', 'Docs', 'Skills', 'Submit'];
 
   const podsQuery = useQuery(HOST_PODS, {
     variables: { host_user_id: myUserId },
@@ -80,26 +83,45 @@ export default function UserHostPanel() {
 
   return (
     <Stack spacing={1.5}>
-      <Stack direction="row" spacing={1} alignItems="center">
-        <Typography variant="subtitle2">Host application</Typography>
-        <Chip size="small" label={host.status} color={isApproved ? 'success' : 'default'} />
+      <Stack direction="row" spacing={1.25} alignItems="center">
+        <Box sx={{ width: 38, height: 38, borderRadius: 3, bgcolor: 'rgba(255,193,7,0.16)', color: 'warning.main', display: 'grid', placeItems: 'center' }}>
+          <WorkspacePremiumIcon fontSize="small" />
+        </Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>Host application</Typography>
+          <Typography variant="caption" color="text.secondary">
+            {isApproved ? 'Approved host profile' : `Step ${completed} of 4 completed`}
+          </Typography>
+        </Box>
+        <Chip size="small" label={host.status} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 900 }} />
       </Stack>
-      <Typography variant="body2" color="text.secondary">
-        Step {host.step_completed}/4
-        {host.approved_at ? ` · Approved ${new Date(host.approved_at).toLocaleDateString()}` : ''}
-        {!host.approved_at && host.submitted_at
-          ? ` · Submitted ${new Date(host.submitted_at).toLocaleDateString()}`
-          : ''}
-      </Typography>
+      <Stack direction="row" spacing={0.75} alignItems="center">
+        {labels.map((label, index) => {
+          const done = index < completed || isApproved;
+          return (
+            <Box key={label} sx={{ flex: 1, minWidth: 0 }}>
+              <Box sx={{ height: 4, borderRadius: 99, bgcolor: done ? 'primary.main' : 'divider', mb: 0.6 }} />
+              <Typography variant="caption" color={done ? 'primary.main' : 'text.secondary'} sx={{ fontSize: 10, fontWeight: 900 }} noWrap>
+                {label}
+              </Typography>
+            </Box>
+          );
+        })}
+      </Stack>
+      {(host.approved_at || host.submitted_at) && (
+        <Typography variant="caption" color="text.secondary">
+          {host.approved_at ? `Approved ${new Date(host.approved_at).toLocaleDateString()}` : `Submitted ${new Date(host.submitted_at).toLocaleDateString()}`}
+        </Typography>
+      )}
       {host.reviewer_notes && <Alert severity="info">{host.reviewer_notes}</Alert>}
       <Button
         component={RouterLink}
         to="/become-host"
-        variant="outlined"
-        size="small"
-        sx={{ alignSelf: 'flex-start' }}
+        variant="contained"
+        size="large"
+        sx={{ borderRadius: 999, fontWeight: 950 }}
       >
-        Open Host Profile
+        {isApproved ? 'Update host profile' : `Resume - step ${Math.min(completed + 1, 4)} of 4`}
       </Button>
 
       {isApproved && (

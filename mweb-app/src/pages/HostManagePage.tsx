@@ -14,6 +14,7 @@ import {
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import AddIcon from '@mui/icons-material/Add';
 import UserHostPanel from './profile-page/UserHostPanel';
 
 const HOST_PODS = gql`
@@ -58,20 +59,43 @@ export default function HostManagePage() {
     fetchPolicy: 'cache-and-network',
   });
   const pods = data?.pods ?? [];
+  const upcomingPods = pods.filter((p: any) => p.pod_date_time && new Date(p.pod_date_time).getTime() > Date.now()).length;
+  const paidPods = pods.filter((p: any) => !p.pod_type?.includes('FREE')).length;
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 720, mx: 'auto', width: '100%' }}>
+    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1.25}>
-        <DashboardIcon color="primary" />
-        <Typography variant="h5" fontWeight={800}>
-          Hosts Management
-        </Typography>
+        <Box sx={{ width: 38, height: 38, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
+          <DashboardIcon fontSize="small" />
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+            Host Studio
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+            Manage your profile and hosted pods
+          </Typography>
+        </Box>
+        <Button component={RouterLink} to="/become-host" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 950 }}>
+          Profile
+        </Button>
       </Stack>
 
-      <Card variant="outlined">
+      <Stack direction="row" spacing={1}>
+        {[{ label: 'Pods', value: pods.length }, { label: 'Upcoming', value: upcomingPods }, { label: 'Paid', value: paidPods }].map((item) => (
+          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
+            <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
+              <Typography variant="caption" color="primary.main" sx={{ fontWeight: 950 }} noWrap>{item.label}</Typography>
+              <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 950 }}>{item.value}</Typography>
+            </CardContent>
+          </Card>
+        ))}
+      </Stack>
+
+      <Card variant="outlined" sx={{ borderRadius: 4, bgcolor: 'rgba(255,79,115,0.10)' }}>
         <CardContent>
           <Stack spacing={1.5}>
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
               Your host profile
             </Typography>
             <UserHostPanel />
@@ -79,11 +103,11 @@ export default function HostManagePage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined">
+      <Card variant="outlined" sx={{ borderRadius: 4 }}>
         <CardContent>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
             <EventIcon color="primary" />
-            <Typography variant="subtitle1" fontWeight={700} sx={{ flex: 1 }}>
+            <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }}>
               Your pods
             </Typography>
             <Chip size="small" label={pods.length} />
@@ -110,9 +134,10 @@ export default function HostManagePage() {
                   sx={{
                     display: 'block',
                     p: 1.25,
-                    borderRadius: 1.5,
+                    borderRadius: 3,
                     border: 1,
                     borderColor: 'divider',
+                    bgcolor: 'background.paper',
                     textDecoration: 'none',
                     color: 'inherit',
                     transition: 'all 160ms ease',
@@ -142,7 +167,7 @@ export default function HostManagePage() {
           )}
 
           <Stack direction="row" sx={{ mt: 2 }}>
-            <Button component={RouterLink} to="/become-host" variant="outlined" size="small">
+            <Button component={RouterLink} to="/become-host" variant="outlined" size="small" sx={{ borderRadius: 999, fontWeight: 900 }}>
               Edit host profile
             </Button>
           </Stack>

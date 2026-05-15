@@ -8,10 +8,13 @@ import {
   CardContent,
   Chip,
   CircularProgress,
-  Divider,
   Stack,
   Typography,
 } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import ChairIcon from '@mui/icons-material/Chair';
+import EditIcon from '@mui/icons-material/Edit';
+import InsightsIcon from '@mui/icons-material/Insights';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UserVenuePanel from './profile-page/UserVenuePanel';
@@ -44,20 +47,47 @@ export default function VenueManagePage() {
     fetchPolicy: 'cache-and-network',
   });
   const venue = data?.myVenue;
+  const venueCount = venue ? 1 : 0;
+  const capacity = typeof venue?.capacity === 'number' ? venue.capacity : 0;
+  const isApproved = venue?.status === 'APPROVED';
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 720, mx: 'auto', width: '100%' }}>
+    <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1.25}>
-        <StorefrontIcon color="primary" />
-        <Typography variant="h5" fontWeight={800}>
-          Venue Management
-        </Typography>
+        <Box sx={{ width: 38, height: 38, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
+          <StorefrontIcon fontSize="small" />
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+            Venue Studio
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+            List your space, run events, get discovered
+          </Typography>
+        </Box>
+        <Button component={RouterLink} to="/register-venue" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 950 }}>
+          New venue
+        </Button>
       </Stack>
 
-      <Card variant="outlined">
+      <Stack direction="row" spacing={1}>
+        {[{ label: 'Listed', value: venueCount, icon: <StorefrontIcon fontSize="small" /> }, { label: 'Capacity', value: capacity || '-', icon: <ChairIcon fontSize="small" /> }, { label: 'Status', value: venue?.status ?? 'New', icon: <InsightsIcon fontSize="small" /> }].map((item) => (
+          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
+            <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
+              <Stack direction="row" spacing={0.75} alignItems="center" color="primary.main">
+                {item.icon}
+                <Typography variant="caption" sx={{ fontWeight: 950 }} noWrap>{item.label}</Typography>
+              </Stack>
+              <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 950 }} noWrap>{item.value}</Typography>
+            </CardContent>
+          </Card>
+        ))}
+      </Stack>
+
+      <Card variant="outlined" sx={{ borderRadius: 4, bgcolor: 'rgba(255,79,115,0.10)' }}>
         <CardContent>
           <Stack spacing={1.5}>
-            <Typography variant="subtitle1" fontWeight={700}>
+            <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
               Your application
             </Typography>
             <UserVenuePanel />
@@ -65,12 +95,15 @@ export default function VenueManagePage() {
         </CardContent>
       </Card>
 
-      <Card variant="outlined">
+      <Card variant="outlined" sx={{ borderRadius: 4 }}>
         <CardContent>
-          <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-            Your venues
-          </Typography>
-          <Divider sx={{ mb: 1.5 }} />
+          <Stack direction="row" alignItems="center" sx={{ mb: 1.5 }}>
+            <Box sx={{ flex: 1 }}>
+              <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>Your venues</Typography>
+              <Typography variant="caption" color="text.secondary">{venueCount} listed</Typography>
+            </Box>
+            <Chip size="small" label={isApproved ? 'Live' : 'Draft'} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 900 }} />
+          </Stack>
           {loading && !data ? (
             <Stack alignItems="center" sx={{ py: 4 }}>
               <CircularProgress size={22} />
@@ -94,37 +127,20 @@ export default function VenueManagePage() {
           ) : (
             <Box
               sx={{
-                p: 1.5,
-                borderRadius: 2,
+                p: 1.25,
+                borderRadius: 3.5,
                 border: 1,
                 borderColor: 'divider',
-                display: 'flex',
-                gap: 1.5,
+                bgcolor: 'background.paper',
               }}
             >
-              <Box
-                component="img"
-                src={venue.cover_image_url || '/duncit-logo.svg'}
-                alt={venue.venue_name}
-                sx={{
-                  width: 84,
-                  height: 84,
-                  objectFit: 'cover',
-                  borderRadius: 1.5,
-                  bgcolor: 'action.hover',
-                  flex: '0 0 auto',
-                }}
-              />
-              <Stack spacing={0.5} sx={{ flex: 1, minWidth: 0 }}>
+              <Stack direction="row" spacing={1.25}>
+                <Box component="img" src={venue.cover_image_url || '/duncit-logo.svg'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 2.5, bgcolor: 'action.hover', flex: '0 0 auto' }} />
+                <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
                 <Stack direction="row" alignItems="center" spacing={1}>
-                  <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ flex: 1 }}>
+                  <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }} noWrap>
                     {venue.venue_name}
                   </Typography>
-                  <Chip
-                    size="small"
-                    label={venue.status}
-                    color={venue.status === 'APPROVED' ? 'success' : 'default'}
-                  />
                 </Stack>
                 <Typography variant="caption" color="text.secondary" noWrap display="block">
                   {[venue.venue_type, venue.locality, venue.city, venue.state].filter(Boolean).join(' - ') || '-'}
@@ -145,24 +161,24 @@ export default function VenueManagePage() {
                   </Typography>
                 )}
                 {venue.description && (
-                  <Typography variant="body2" sx={{ mt: 0.5 }} color="text.primary">
+                  <Typography variant="body2" sx={{ mt: 0.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} color="text.primary">
                     {venue.description}
                   </Typography>
+                )}
+                </Stack>
+              </Stack>
+              <Stack direction="row" spacing={1} sx={{ mt: 1.25 }}>
+                <Button component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditIcon />} sx={{ flex: 1, borderRadius: 999, fontWeight: 900 }}>
+                  Edit
+                </Button>
+                {venue?.status === 'APPROVED' && (
+                  <Button component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ flex: 1, borderRadius: 999, fontWeight: 900 }}>
+                    Public link
+                  </Button>
                 )}
               </Stack>
             </Box>
           )}
-
-          <Stack direction="row" sx={{ mt: 2 }} spacing={1}>
-            <Button component={RouterLink} to="/register-venue" variant="outlined" size="small">
-              Edit venue
-            </Button>
-            {venue?.status === 'APPROVED' && (
-              <Button component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewIcon fontSize="small" />}>
-                Public link
-              </Button>
-            )}
-          </Stack>
         </CardContent>
       </Card>
     </Stack>

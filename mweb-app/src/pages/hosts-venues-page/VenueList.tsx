@@ -1,5 +1,6 @@
 import {
   Box,
+  Button,
   Card,
   CardContent,
   CardMedia,
@@ -8,9 +9,11 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import PeopleIcon from '@mui/icons-material/People';
 import FollowButton from '../../components/FollowButton';
+import { venueUrl } from '../../utils/seoUrls';
 
 interface Venue {
   id: string;
@@ -54,13 +57,13 @@ export default function VenueList({ venues, meId, followingIds, pendingUserId, o
     <Grid container spacing={2}>
       {venues.map((v) => (
         <Grid item xs={12} sm={6} key={v.id}>
-          <Card variant="outlined" sx={{ height: '100%' }}>
+          <Card variant="outlined" sx={{ height: '100%', borderRadius: 4, overflow: 'hidden', transition: 'transform 180ms ease, border-color 180ms ease', '&:hover': { transform: 'translateY(-2px)', borderColor: 'primary.main' } }}>
             {v.cover_image_url ? (
               <CardMedia
                 component="img"
                 image={v.cover_image_url}
                 alt={v.venue_name}
-                sx={{ height: 160, objectFit: 'cover' }}
+                sx={{ height: 168, objectFit: 'cover' }}
               />
             ) : (
               <Box
@@ -80,7 +83,7 @@ export default function VenueList({ venues, meId, followingIds, pendingUserId, o
             <CardContent>
               <Stack direction="row" spacing={1} alignItems="center">
                 <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="subtitle1" fontWeight={700} noWrap>
+                  <Typography variant="subtitle1" sx={{ fontWeight: 950 }} noWrap>
                     {v.venue_name}
                   </Typography>
                 </Box>
@@ -145,6 +148,9 @@ export default function VenueList({ venues, meId, followingIds, pendingUserId, o
                   ))}
                 </Stack>
               )}
+              <Button component={RouterLink} to={venueUrl(v.id)} fullWidth variant="contained" size="small" sx={{ mt: 1.25, borderRadius: 999, fontWeight: 900 }}>
+                View venue
+              </Button>
             </CardContent>
           </Card>
         </Grid>

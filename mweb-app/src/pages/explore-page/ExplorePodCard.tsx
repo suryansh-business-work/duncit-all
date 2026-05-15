@@ -103,7 +103,7 @@ export default function ExplorePodCard({
         sx={{
           position: 'absolute',
           right: 12,
-          bottom: 'calc(var(--duncit-bottom-nav-offset, 108px) + 110px)',
+          bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 110px)',
         }}
       >
         <ExploreActionButton
@@ -145,7 +145,7 @@ export default function ExplorePodCard({
           position: 'absolute',
           left: 10,
           right: 10,
-          bottom: 'var(--duncit-bottom-nav-offset, 108px)',
+          bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px)',
           p: 0.75,
           borderRadius: 3,
           bgcolor: 'rgba(0,0,0,0.42)',

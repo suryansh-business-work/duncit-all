@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
+  Box,
   Chip,
   CircularProgress,
   Stack,
@@ -46,12 +47,19 @@ export default function HostsVenuesPage() {
   };
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
+    <Stack spacing={2.25} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1.5}>
-        <StorefrontIcon color="primary" />
-        <Typography variant="h5" fontWeight={700} sx={{ flex: 1 }}>
-          Hosts &amp; Venues
-        </Typography>
+        <Box sx={{ width: 40, height: 40, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
+          <StorefrontIcon fontSize="small" />
+        </Box>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+            Hosts &amp; Venues
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+            Meet trusted people and spaces powering pods
+          </Typography>
+        </Box>
       </Stack>
 
       <HostsVenuesIntroCard />
@@ -60,7 +68,8 @@ export default function HostsVenuesPage() {
         value={tab}
         onChange={(_e, v) => setTab(v)}
         textColor="primary"
-        indicatorColor="primary"
+        TabIndicatorProps={{ sx: { display: 'none' } }}
+        sx={{ p: 0.5, borderRadius: 999, bgcolor: 'action.hover', border: 1, borderColor: 'divider', '& .MuiTab-root': { minHeight: 42, borderRadius: 999, fontWeight: 950 }, '& .Mui-selected': { bgcolor: 'background.paper', boxShadow: '0 10px 24px rgba(15,23,42,0.12)' } }}
       >
         <Tab
           value="HOSTS"

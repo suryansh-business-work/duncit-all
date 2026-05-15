@@ -12,7 +12,7 @@ import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
 import { useHapticFeedback } from './app/useHapticFeedback';
 
-const BOTTOM_NAV_OFFSET = 'var(--duncit-bottom-nav-offset, 148px)';
+const BOTTOM_NAV_CONTENT_OFFSET = 'var(--duncit-bottom-nav-content-offset, 148px)';
 
 export default function App() {
   const isAuthed = !!localStorage.getItem('token');
@@ -83,10 +83,10 @@ export default function App() {
             display: 'flex',
             flexDirection: 'column',
             overflowY: fullBleed ? 'hidden' : 'auto',
-            scrollPaddingBottom: showBottomNav ? BOTTOM_NAV_OFFSET : undefined,
+            scrollPaddingBottom: showBottomNav ? BOTTOM_NAV_CONTENT_OFFSET : undefined,
           }),
           py: fullBleed ? 0 : 2,
-          pb: fullBleed ? 0 : showBottomNav ? `calc(${BOTTOM_NAV_OFFSET} + 28px)` : 2,
+          pb: fullBleed ? 0 : 2,
         }}
       >
         <ScrollToTop />
@@ -96,6 +96,9 @@ export default function App() {
         >
           <AppRoutes superCategory={superCategory} locationId={locationId} zoneName={zoneName} />
         </Box>
+        {!fullBleed && showBottomNav && (
+          <Box aria-hidden sx={{ flex: '0 0 auto', height: BOTTOM_NAV_CONTENT_OFFSET }} />
+        )}
       </Container>
       {showBottomNav && <BottomNav />}
       <NotifyHost />

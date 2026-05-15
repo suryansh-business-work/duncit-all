@@ -32,7 +32,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Props) {
           position: 'absolute',
           left: 16,
           right: 80,
-          bottom: 'calc(var(--duncit-bottom-nav-offset, 108px) + 106px)',
+          bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 106px)',
         }}
         spacing={1}
       >

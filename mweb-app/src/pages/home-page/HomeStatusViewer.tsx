@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { Box, Button, Dialog, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
@@ -18,8 +19,43 @@ interface HomeStatusViewerProps {
   onClose: () => void;
 }
 
+const STATUS_DURATION_MS = 6500;
+
 export default function HomeStatusViewer({ item, onClose }: HomeStatusViewerProps) {
   const navigate = useNavigate();
+  const [progress, setProgress] = useState(0);
+  const [paused, setPaused] = useState(false);
+  const frameRef = useRef<number | null>(null);
+  const elapsedRef = useRef(0);
+  const startedAtRef = useRef<number | null>(null);
+  const itemKey = item ? [item.label, item.mediaUrl, item.targetUrl].filter(Boolean).join('|') : '';
+
+  useEffect(() => {
+    setProgress(0);
+    setPaused(false);
+    elapsedRef.current = 0;
+    startedAtRef.current = null;
+    if (frameRef.current) cancelAnimationFrame(frameRef.current);
+  }, [itemKey]);
+
+  useEffect(() => {
+    if (!item || paused) return undefined;
+    startedAtRef.current = performance.now() - elapsedRef.current;
+    const tick = (now: number) => {
+      const startedAt = startedAtRef.current ?? now;
+      const elapsed = now - startedAt;
+      elapsedRef.current = elapsed;
+      const nextProgress = Math.min(1, elapsed / STATUS_DURATION_MS);
+      setProgress(nextProgress);
+      if (nextProgress >= 1) onClose();
+      else frameRef.current = requestAnimationFrame(tick);
+    };
+    frameRef.current = requestAnimationFrame(tick);
+    return () => {
+      if (frameRef.current) cancelAnimationFrame(frameRef.current);
+    };
+  }, [item, onClose, paused]);
+
   if (!item) return null;
 
   const openTarget = () => {
@@ -31,7 +67,13 @@ export default function HomeStatusViewer({ item, onClose }: HomeStatusViewerProp
 
   return (
     <Dialog open={!!item} fullScreen onClose={onClose} PaperProps={{ sx: { bgcolor: '#08070b' } }}>
-      <Box sx={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden', color: '#fff' }}>
+      <Box
+        onPointerDown={() => setPaused(true)}
+        onPointerUp={() => setPaused(false)}
+        onPointerCancel={() => setPaused(false)}
+        onPointerLeave={() => setPaused(false)}
+        sx={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden', color: '#fff', touchAction: 'none' }}
+      >
         {item.mediaType === 'VIDEO' ? (
           <Box component="video" src={item.mediaUrl ?? undefined} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : item.mediaUrl ? (
@@ -41,10 +83,8 @@ export default function HomeStatusViewer({ item, onClose }: HomeStatusViewerProp
         )}
         <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.52) 0%, transparent 30%, rgba(0,0,0,0.82) 100%)' }} />
         <Stack spacing={1.2} sx={{ position: 'absolute', top: 12, left: 12, right: 12 }}>
-          <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 0.5 }}>
-            {[0, 1, 2].map((step) => (
-              <Box key={step} sx={{ height: 3, borderRadius: 999, bgcolor: step === 0 ? '#fff' : 'rgba(255,255,255,0.28)' }} />
-            ))}
+          <Box sx={{ height: 3, borderRadius: 999, bgcolor: 'rgba(255,255,255,0.28)', overflow: 'hidden' }}>
+            <Box sx={{ height: '100%', width: `${progress * 100}%`, borderRadius: 'inherit', bgcolor: '#fff' }} />
           </Box>
           <Stack direction="row" alignItems="center" spacing={1}>
             <Box

@@ -9,7 +9,7 @@ interface UserSummaryProps {
 export default function UserSummary({ me, roles }: UserSummaryProps) {
   const { labelFor } = useRoleLabels();
   return (
-    <Box sx={{ px: 2.5, pb: 2 }}>
+    <Box sx={{ px: 2, pb: 2 }}>
       <Stack direction="row" spacing={1.5} alignItems="center">
         <Avatar
           src={me?.profile_photo || undefined}
@@ -17,7 +17,17 @@ export default function UserSummary({ me, roles }: UserSummaryProps) {
         >
           {(me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase()}
         </Avatar>
-        <Box sx={{ minWidth: 0, flex: 1 }}>
+        <Box
+          sx={{
+            minWidth: 0,
+            flex: 1,
+            p: 1.35,
+            borderRadius: 3,
+            bgcolor: 'action.hover',
+            border: 1,
+            borderColor: 'divider',
+          }}
+        >
           <Typography variant="subtitle1" fontWeight={700} noWrap>
             {me?.full_name ?? 'User'}
           </Typography>

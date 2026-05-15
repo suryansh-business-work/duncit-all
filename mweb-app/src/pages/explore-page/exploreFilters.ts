@@ -1,12 +1,14 @@
 export type ExplorePriceFilter = 'ALL' | 'FREE' | 'PAID' | 'PREMIUM';
 export type ExploreDateFilter = 'ALL' | 'TODAY' | 'TOMORROW' | 'WEEK' | 'MONTH';
 export type ExplorePreset = 'ALL' | 'TRENDING' | 'NEAR' | 'TONIGHT';
+export type ExploreSort = 'SOONEST' | 'TRENDING' | 'PRICE_LOW' | 'PRICE_HIGH';
 
 export interface ExploreFilters {
   preset: ExplorePreset;
   categoryId: string;
   price: ExplorePriceFilter;
   date: ExploreDateFilter;
+  sort: ExploreSort;
   search: string;
 }
 
@@ -98,11 +100,13 @@ export function filterExplorePods({
   });
 
   filtered.sort((a, b) => {
-    if (filters.preset === 'TRENDING') {
+    if (filters.preset === 'TRENDING' || filters.sort === 'TRENDING') {
       const scoreA = (a.like_count ?? 0) * 3 + (a.comment_count ?? 0) * 2 + (a.pod_attendees?.length ?? 0);
       const scoreB = (b.like_count ?? 0) * 3 + (b.comment_count ?? 0) * 2 + (b.pod_attendees?.length ?? 0);
       if (scoreB !== scoreA) return scoreB - scoreA;
     }
+    if (filters.sort === 'PRICE_LOW') return Number(a.pod_amount ?? 0) - Number(b.pod_amount ?? 0);
+    if (filters.sort === 'PRICE_HIGH') return Number(b.pod_amount ?? 0) - Number(a.pod_amount ?? 0);
     return new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime();
   });
 
@@ -110,5 +114,5 @@ export function filterExplorePods({
 }
 
 export function activeExploreFilterCount(filters: ExploreFilters) {
-  return Number(filters.preset !== 'ALL') + Number(!!filters.categoryId) + Number(filters.price !== 'ALL') + Number(filters.date !== 'ALL') + Number(!!filters.search.trim());
+  return Number(filters.preset !== 'ALL') + Number(!!filters.categoryId) + Number(filters.price !== 'ALL') + Number(filters.date !== 'ALL') + Number(filters.sort !== 'SOONEST') + Number(!!filters.search.trim());
 }

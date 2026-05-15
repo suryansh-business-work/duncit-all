@@ -21,6 +21,7 @@ const DEFAULT_FILTERS: ExploreFilters = {
   categoryId: '',
   price: 'ALL',
   date: 'ALL',
+  sort: 'SOONEST',
   search: '',
 };
 

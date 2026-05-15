@@ -1,6 +1,6 @@
 import EventIcon from '@mui/icons-material/Event';
 import PlaceIcon from '@mui/icons-material/PlaceOutlined';
-import { Alert, Box, Card, CardActionArea, CardContent, CardMedia, Chip, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, CardMedia, LinearProgress, Stack, Typography } from '@mui/material';
 
 interface Props {
   pods: any[];
@@ -17,45 +17,41 @@ export default function ClubUpcomingPodsSection({ pods, onOpen, priceFormat }: P
       {pods.length === 0 ? (
         <Alert severity="info">No active pods in this club yet.</Alert>
       ) : (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
-            gap: 2,
-          }}
-        >
+        <Stack spacing={1.25}>
           {pods.map((pod) => {
             const isFree = pod.pod_type?.includes('FREE');
             const placeText = [pod.place_label, pod.place_detail].filter(Boolean).join(' - ');
+            const taken = pod.pod_attendees?.length ?? 0;
+            const capacity = pod.no_of_spots || Math.max(taken, 1);
+            const progress = Math.min(100, (taken / capacity) * 100);
             return (
-              <Card key={pod.id} variant="outlined">
-                <CardActionArea onClick={() => onOpen(pod.id)}>
+              <Card key={pod.id} variant="outlined" sx={{ borderRadius: 4, bgcolor: 'background.paper', overflow: 'hidden' }}>
+                <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
+                  <Stack direction="row" spacing={1.25} alignItems="center">
                   {pod.pod_images_and_videos?.[0]?.url ? (
                     <CardMedia
                       component="img"
                       image={pod.pod_images_and_videos[0].url}
                       alt={pod.pod_title}
-                      sx={{ height: 160, objectFit: 'cover' }}
+                      sx={{ width: 76, height: 76, borderRadius: 3, objectFit: 'cover', flex: '0 0 auto' }}
                     />
                   ) : (
-                    <Box sx={{ height: 160, display: 'grid', placeItems: 'center', bgcolor: 'action.hover' }}>
-                      <EventIcon fontSize="large" color="action" />
+                    <Box sx={{ width: 76, height: 76, borderRadius: 3, display: 'grid', placeItems: 'center', background: 'linear-gradient(145deg, #ff8b5f 0%, #ed4f7a 100%)', flex: '0 0 auto' }}>
+                      <EventIcon sx={{ color: 'common.white' }} />
                     </Box>
                   )}
-                  <CardContent>
+                  <Box sx={{ minWidth: 0, flex: 1 }}>
+                    <Typography variant="caption" color="primary.main" sx={{ fontWeight: 950 }}>
+                      {pod.pod_date_time
+                        ? new Date(pod.pod_date_time).toLocaleString(undefined, { weekday: 'short', day: 'numeric', month: 'short' }).toUpperCase()
+                        : 'UPCOMING'}
+                    </Typography>
                     <Typography
                       variant="subtitle1"
-                      fontWeight={700}
-                      sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}
+                      fontWeight={950}
+                      sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', lineHeight: 1.15 }}
                     >
                       {pod.pod_title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" display="block">
-                      {pod.pod_date_time
-                        ? new Date(pod.pod_date_time).toLocaleString(undefined, {
-                            weekday: 'short', day: 'numeric', month: 'short', hour: 'numeric', minute: '2-digit',
-                          })
-                        : '—'}
                     </Typography>
                     {placeText && (
                       <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
@@ -65,25 +61,22 @@ export default function ClubUpcomingPodsSection({ pods, onOpen, priceFormat }: P
                         </Typography>
                       </Stack>
                     )}
-                    <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 1 }}>
-                      <Chip
-                        size="small"
-                        label={isFree ? 'Free' : priceFormat(pod.pod_amount)}
-                        color={isFree ? 'success' : 'primary'}
-                        variant={isFree ? 'outlined' : 'filled'}
-                      />
-                      {pod.no_of_spots > 0 && (
-                        <Typography variant="caption" color="text.secondary">
-                          {pod.pod_attendees?.length ?? 0}/{pod.no_of_spots} spots
-                        </Typography>
-                      )}
+                    <LinearProgress variant="determinate" value={progress} sx={{ mt: 1, height: 4, borderRadius: 999 }} />
+                    <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 0.75 }}>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>
+                        {isFree ? 'Free' : priceFormat(pod.pod_amount)}
+                      </Typography>
+                      <Button size="small" variant="contained" onClick={() => onOpen(pod.id)} sx={{ borderRadius: 999, fontWeight: 900, minWidth: 66 }}>
+                        Book
+                      </Button>
                     </Stack>
-                  </CardContent>
-                </CardActionArea>
+                  </Box>
+                  </Stack>
+                </CardContent>
               </Card>
             );
           })}
-        </Box>
+        </Stack>
       )}
     </Box>
   );

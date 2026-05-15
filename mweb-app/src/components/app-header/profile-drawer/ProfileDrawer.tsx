@@ -6,6 +6,7 @@ import {
   List,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 import DrawerFooter from './DrawerFooter';
 import MenuItemRow from './MenuItem';
@@ -43,7 +44,15 @@ export default function ProfileDrawer({
       anchor="right"
       open={open}
       onClose={onClose}
-      PaperProps={{ sx: { width: { xs: 300, sm: 340 } } }}
+      PaperProps={{
+        sx: {
+          width: { xs: 318, sm: 360 },
+          borderLeft: 0,
+          bgcolor: 'background.default',
+          background: (theme) => `radial-gradient(circle at 18% 0%, ${alpha(theme.palette.primary.main, 0.22)} 0, transparent 32%), linear-gradient(180deg, ${theme.palette.background.paper} 0%, ${theme.palette.background.default} 100%)`,
+          boxShadow: '-24px 0 50px rgba(0,0,0,0.34)',
+        },
+      }}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
         <Box
@@ -54,10 +63,10 @@ export default function ProfileDrawer({
             justifyContent: 'space-between',
           }}
         >
-          <Typography variant="subtitle2" color="text.secondary">
+          <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 900, letterSpacing: 0.4 }}>
             Account
           </Typography>
-          <IconButton size="small" onClick={onClose}>
+          <IconButton size="small" onClick={onClose} sx={{ bgcolor: 'action.hover' }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>

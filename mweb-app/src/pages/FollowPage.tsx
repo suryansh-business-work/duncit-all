@@ -3,21 +3,25 @@ import { gql, useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
-  Card,
-  CardContent,
+  Button,
+  Chip,
   CircularProgress,
   Stack,
   Typography,
-  Button,
 } from '@mui/material';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { Link as RouterLink } from 'react-router-dom';
 import { useFollowedClubs } from '../hooks/useFollowedClubs';
-import MomentTile from '../components/moments/MomentTile';
 import MomentLightbox from '../components/moments/MomentLightbox';
+import FollowClubCard from './follow-page/FollowClubCard';
+import FollowPersonCard from './follow-page/FollowPersonCard';
 
 const FOLLOW_FEED = gql`
   query FollowFeedClubs {
+    me {
+      user_id
+      following_user_ids
+    }
     superCategories: categories(filter: { level: SUPER }) {
       id
       slug
@@ -26,20 +30,48 @@ const FOLLOW_FEED = gql`
       id
       club_id
       club_name
+      club_description
       super_category_id
+      club_feature_images_and_videos {
+        url
+        type
+      }
       club_moments {
         url
         type
       }
     }
+    publicHosts {
+      id
+      user_id
+      full_name
+      email
+      passport_photo_url
+      full_address
+      tags
+    }
   }
 `;
+
+const FOLLOWED_USERS = gql`
+  query FollowedPeople($userIds: [ID!]!) {
+    publicUsersByIds(user_ids: $userIds) {
+      user_id
+      full_name
+      first_name
+      profile_photo
+    }
+  }
+`;
+
+type FollowTab = 'CLUBS' | 'HOSTS' | 'FRIENDS';
 
 interface ClubLite {
   id: string;
   club_id?: string;
   club_name: string;
   super_category_id?: string | null;
+  club_feature_images_and_videos?: { url: string; type: string }[];
   club_moments: { url: string; type: string }[];
 }
 
@@ -49,6 +81,13 @@ export default function FollowPage({ superCategorySlug }: { superCategorySlug?: 
     fetchPolicy: 'cache-and-network',
   });
   const [lightbox, setLightbox] = useState<{ clubId: string; index: number } | null>(null);
+  const [tab, setTab] = useState<FollowTab>('CLUBS');
+  const followingUserIds: string[] = (data as any)?.me?.following_user_ids ?? [];
+  const usersQuery = useQuery(FOLLOWED_USERS, {
+    variables: { userIds: followingUserIds },
+    skip: followingUserIds.length === 0,
+    fetchPolicy: 'cache-and-network',
+  });
 
   const followed = useMemo(() => {
     const selectedSuperId = superCategorySlug
@@ -58,6 +97,14 @@ export default function FollowPage({ superCategorySlug }: { superCategorySlug?: 
       .filter((club) => isFollowing(club.id))
       .filter((club) => !selectedSuperId || club.super_category_id === selectedSuperId);
   }, [data, isFollowing, superCategorySlug]);
+
+  const followedHosts = useMemo(() => {
+    const userIds = new Set(followingUserIds);
+    return ((data as any)?.publicHosts ?? []).filter((host: any) => userIds.has(host.user_id));
+  }, [data, followingUserIds]);
+  const friends = usersQuery.data?.publicUsersByIds ?? [];
+  const totalMoments = followed.reduce((total, club) => total + (club.club_moments?.length ?? 0), 0);
+  const tabs: Array<[FollowTab, string, number]> = [['CLUBS', 'Clubs', followed.length], ['HOSTS', 'Hosts', followedHosts.length], ['FRIENDS', 'Friends', friends.length]];
 
   if (loading && !data) {
     return (
@@ -71,7 +118,7 @@ export default function FollowPage({ superCategorySlug }: { superCategorySlug?: 
     return <Alert severity="error">{error.message}</Alert>;
   }
 
-  if (ids.length === 0) {
+  if (ids.length === 0 && followingUserIds.length === 0) {
     return (
       <Stack spacing={2} alignItems="center" sx={{ py: 6, textAlign: 'center' }}>
         <FavoriteIcon sx={{ fontSize: 56, color: 'text.disabled' }} />
@@ -89,62 +136,35 @@ export default function FollowPage({ superCategorySlug }: { superCategorySlug?: 
   }
 
   return (
-    <Stack spacing={2} sx={{ p: 2 }}>
-      <Typography variant="h5" fontWeight={700}>
-        Following
-      </Typography>
-      {followed.map((club) => (
-        <Card key={club.id} variant="outlined" sx={{ borderRadius: 2 }}>
-          <CardContent>
-            <Stack
-              direction="row"
-              spacing={1}
-              alignItems="center"
-              justifyContent="space-between"
-              sx={{ mb: 1 }}
-            >
-              <Typography variant="subtitle1" fontWeight={700}>
-                {club.club_name}
-              </Typography>
-              <Button
-                size="small"
-                component={RouterLink}
-                to={club.club_id ? `/club/${club.club_id}` : '#'}
-              >
-                Open club
-              </Button>
-            </Stack>
-            {club.club_moments.length === 0 ? (
-              <Typography variant="body2" color="text.secondary">
-                No moments shared yet.
-              </Typography>
-            ) : (
-              <Stack
-                direction="row"
-                spacing={1}
-                sx={{
-                  overflowX: 'auto',
-                  pb: 0.5,
-                  '&::-webkit-scrollbar': { display: 'none' },
-                }}
-              >
-                {club.club_moments.slice(0, 12).map((m, i) => (
-                  <Box key={i} sx={{ width: 110, height: 110, flex: '0 0 auto' }}>
-                    <MomentTile
-                      url={m.url}
-                      type={m.type as any}
-                      size={110}
-                      index={i}
-                      total={club.club_moments.length}
-                      onClick={() => setLightbox({ clubId: club.id, index: i })}
-                    />
-                  </Box>
-                ))}
-              </Stack>
-            )}
-          </CardContent>
-        </Card>
+    <Stack spacing={2} sx={{ px: 1, py: 1.5 }}>
+      <Box>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+            Following
+          </Typography>
+          <Chip size="small" label={`${totalMoments} moments`} color="error" sx={{ height: 22, fontWeight: 900 }} />
+        </Stack>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.4, fontWeight: 700 }}>
+          Latest from your clubs and hosts
+        </Typography>
+      </Box>
+      <Stack direction="row" spacing={0.75} sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
+        {tabs.map(([value, label, count]) => (
+          <Chip key={value} clickable color={tab === value ? 'primary' : 'default'} variant={tab === value ? 'filled' : 'outlined'} label={`${label} ${count}`} onClick={() => setTab(value)} sx={{ height: 34, fontWeight: 900 }} />
+        ))}
+      </Stack>
+      {tab === 'CLUBS' && followed.map((club) => (
+        <FollowClubCard key={club.id} club={club} onOpenMoment={(index) => setLightbox({ clubId: club.id, index })} />
       ))}
+      {tab === 'HOSTS' && followedHosts.map((host: any) => <FollowPersonCard key={host.id} person={host} kind="HOST" />)}
+      {tab === 'FRIENDS' && friends.map((friend: any) => <FollowPersonCard key={friend.user_id} person={friend} kind="FRIEND" />)}
+      {tabs.find(([value]) => value === tab)?.[2] === 0 && (
+        <Box sx={{ p: 3, borderRadius: 4, bgcolor: 'action.hover', textAlign: 'center' }}>
+          <Typography variant="body2" color="text.secondary">
+            Nothing here yet. Follow more people and clubs to fill this feed.
+          </Typography>
+        </Box>
+      )}
       <MomentLightbox
         moments={
           (followed.find((c) => c.id === lightbox?.clubId)?.club_moments ?? []) as any

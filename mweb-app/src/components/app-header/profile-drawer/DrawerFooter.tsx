@@ -17,11 +17,10 @@ export default function DrawerFooter({ onLogout }: DrawerFooterProps) {
           mx: 0,
           width: '100%',
           justifyContent: 'space-between',
-          border: 1,
-          borderColor: 'divider',
-          borderRadius: 1.5,
+          bgcolor: 'action.hover',
+          borderRadius: 3,
           px: 1.25,
-          py: 0.25,
+          py: 0.5,
           mb: 1.25,
         }}
         labelPlacement="start"
@@ -53,6 +52,7 @@ export default function DrawerFooter({ onLogout }: DrawerFooterProps) {
         color="error"
         startIcon={<LogoutIcon />}
         onClick={onLogout}
+        sx={{ borderRadius: 999, fontWeight: 900 }}
       >
         Logout
       </Button>

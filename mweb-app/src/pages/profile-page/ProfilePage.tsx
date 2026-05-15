@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Alert, CircularProgress, Divider, Snackbar, Stack } from '@mui/material';
+import { Alert, CircularProgress, Snackbar, Stack } from '@mui/material';
 import { ME_AND_POSTS, UPDATE_MY_PROFILE } from './queries';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
 import PostDialog from './PostDialog';
@@ -62,7 +62,7 @@ export default function ProfilePage() {
   };
 
   return (
-    <Stack spacing={3} sx={{ maxWidth: 935, mx: 'auto' }}>
+    <Stack spacing={2.5} sx={{ maxWidth: 935, mx: 'auto', px: { xs: 0.5, sm: 0 }, pb: 6 }}>
       <ProfileHeader
         me={me}
         postsCount={posts.length}
@@ -71,9 +71,7 @@ export default function ProfilePage() {
         onSettings={() => navigate('/account')}
       />
 
-      <Divider />
       <ProfileAccordions me={me} onSaved={() => refetch()} />
-      <Divider />
       <ProfilePostsGrid posts={posts} onOpenPost={setOpenPostId} onNewPost={() => setUploadOpen(true)} />
 
       <PostDialog

@@ -1,7 +1,7 @@
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
-import type { ExploreDateFilter, ExploreFilters, ExplorePreset, ExplorePriceFilter } from './exploreFilters';
+import type { ExploreDateFilter, ExploreFilters, ExplorePreset, ExplorePriceFilter, ExploreSort } from './exploreFilters';
 
 interface ExploreFilterSheetProps {
   open: boolean;
@@ -14,6 +14,7 @@ interface ExploreFilterSheetProps {
 }
 
 const PRESETS: Array<[ExplorePreset, string]> = [['ALL', 'All'], ['TONIGHT', 'Tonight'], ['TRENDING', 'Trending'], ['NEAR', 'Near me']];
+const SORTS: Array<[ExploreSort, string]> = [['SOONEST', 'Soonest'], ['TRENDING', 'Trending'], ['PRICE_LOW', 'Price low'], ['PRICE_HIGH', 'Price high']];
 const PRICES: Array<[ExplorePriceFilter, string]> = [['ALL', 'All'], ['FREE', 'Free'], ['PAID', 'Paid'], ['PREMIUM', 'Premium']];
 const DATES: Array<[ExploreDateFilter, string]> = [['ALL', 'Any time'], ['TODAY', 'Today'], ['TOMORROW', 'Tomorrow'], ['WEEK', 'This week'], ['MONTH', 'This month']];
 
@@ -39,7 +40,7 @@ function ChipRow<T extends string>({ items, value, onChange }: { items: Array<[T
 }
 
 export default function ExploreFilterSheet({ open, filters, setFilters, categories, activeCount, resultCount, onClose }: ExploreFilterSheetProps) {
-  const reset = () => setFilters({ preset: 'ALL', categoryId: '', price: 'ALL', date: 'ALL', search: '' });
+  const reset = () => setFilters({ preset: 'ALL', categoryId: '', price: 'ALL', date: 'ALL', sort: 'SOONEST', search: '' });
 
   return (
     <ResponsiveDialog
@@ -72,6 +73,10 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
         <Stack spacing={0.8}>
           <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>Quick presets</Typography>
           <ChipRow items={PRESETS} value={filters.preset} onChange={(preset) => setFilters({ ...filters, preset })} />
+        </Stack>
+        <Stack spacing={0.8}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>Sort by</Typography>
+          <ChipRow items={SORTS} value={filters.sort} onChange={(sort) => setFilters({ ...filters, sort })} />
         </Stack>
         <Stack spacing={0.8}>
           <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>Vibe</Typography>

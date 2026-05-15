@@ -7,12 +7,12 @@ interface MenuItemRowProps {
 
 export default function MenuItemRow({ item }: MenuItemRowProps) {
   return (
-    <ListItem disablePadding>
-      <ListItemButton onClick={item.onClick} sx={{ px: 2.5, py: 1.25 }}>
-        <ListItemIcon sx={{ minWidth: 36 }}>{item.icon}</ListItemIcon>
+    <ListItem disablePadding sx={{ px: 1.25, py: 0.25 }}>
+      <ListItemButton onClick={item.onClick} sx={{ px: 1.5, py: 1.15, borderRadius: 2.5, '&:hover': { bgcolor: 'action.hover' } }}>
+        <ListItemIcon sx={{ minWidth: 36, color: 'primary.main' }}>{item.icon}</ListItemIcon>
         <ListItemText
           primary={item.label}
-          primaryTypographyProps={{ fontSize: 14, fontWeight: 500 }}
+          primaryTypographyProps={{ fontSize: 14, fontWeight: 800 }}
         />
       </ListItemButton>
     </ListItem>

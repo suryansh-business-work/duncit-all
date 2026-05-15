@@ -1,6 +1,7 @@
 import { useQuery } from '@apollo/client';
+import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
 import { notify } from '../../components/notify';
 import { usePricing } from '../../hooks/usePricing';
@@ -17,6 +18,7 @@ import useSavedClub from './useSavedClub';
 export default function ClubDetailsPage() {
   const { clubSlug = '' } = useParams();
   const navigate = useNavigate();
+  const [tab, setTab] = useState<'UPCOMING' | 'MOMENTS' | 'VENUES'>('UPCOMING');
   const { format: pricingFormat } = usePricing();
   const { isFollowing, toggle: toggleFollow } = useFollowedClubs();
 
@@ -43,6 +45,11 @@ export default function ClubDetailsPage() {
   const pods = data?.clubPods ?? [];
   const venueIds: string[] = club.meetup_venues_id ?? [];
   const venues = (data?.publicVenues ?? []).filter((venue: any) => venueIds.includes(venue.id));
+  const clubTabs = [
+    ['UPCOMING', `Upcoming ${pods.length}`],
+    ['MOMENTS', `Moments ${moments.length}`],
+    ['VENUES', `Venues ${venues.length}`],
+  ] as const;
 
   const toggleClubFollow = () => {
     toggleFollow(club.id);
@@ -64,7 +71,7 @@ export default function ClubDetailsPage() {
   };
 
   return (
-    <Stack spacing={3} sx={{ pt: 0, pb: 6 }}>
+    <Stack spacing={2.25} sx={{ pt: 0, pb: 6 }}>
       <ClubHero
         media={featureMedia}
         title={club.club_name}
@@ -75,7 +82,15 @@ export default function ClubDetailsPage() {
         onToggleSave={toggleSaved}
         onShare={shareClub}
       />
-      <ClubSummaryHeader club={club} featureUrl={featureMedia[0]?.url} podCount={pods.length} venueCount={venues.length} />
+      <ClubSummaryHeader
+        club={club}
+        featureUrl={featureMedia[0]?.url}
+        podCount={pods.length}
+        venueCount={venues.length}
+        following={isFollowing(club.id)}
+        chatUrl={club.club_whats_app_group_link || club.club_whats_app_community_link}
+        onToggleFollow={toggleClubFollow}
+      />
       <ClubSocialLinks club={club} />
       {club.club_description && (
         <Box>
@@ -87,17 +102,23 @@ export default function ClubDetailsPage() {
           </Typography>
         </Box>
       )}
-      <ClubMeetupVenuesSection venues={venues} />
-      <Divider />
-      <ClubUpcomingPodsSection
-        pods={pods}
-        priceFormat={pricingFormat}
-        onOpen={(podDocId) => {
-          const pod = pods.find((podItem: any) => podItem.id === podDocId);
-          if (pod?.pod_id && club.club_id) navigate(`/club/${club.club_id}/pod/${pod.pod_id}`);
-        }}
-      />
-      <ClubMomentsSection moments={moments} />
+      <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
+        {clubTabs.map(([value, label]) => (
+          <Chip key={value} label={label} clickable color={tab === value ? 'primary' : 'default'} variant={tab === value ? 'filled' : 'outlined'} onClick={() => setTab(value)} sx={{ height: 34, fontWeight: 900 }} />
+        ))}
+      </Stack>
+      {tab === 'UPCOMING' && (
+        <ClubUpcomingPodsSection
+          pods={pods}
+          priceFormat={pricingFormat}
+          onOpen={(podDocId) => {
+            const pod = pods.find((podItem: any) => podItem.id === podDocId);
+            if (pod?.pod_id && club.club_id) navigate(`/club/${club.club_id}/pod/${pod.pod_id}`);
+          }}
+        />
+      )}
+      {tab === 'MOMENTS' && <ClubMomentsSection moments={moments} />}
+      {tab === 'VENUES' && <ClubMeetupVenuesSection venues={venues} />}
     </Stack>
   );
 }

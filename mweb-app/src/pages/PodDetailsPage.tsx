@@ -105,7 +105,7 @@ export default function PodDetailsPage() {
   const media = pod.pod_images_and_videos ?? [];
 
   return (
-    <Stack spacing={3} sx={{ pt: 0, pb: 'calc(132px + env(safe-area-inset-bottom))' }}>
+    <Stack spacing={3} sx={{ pt: 0, pb: 'calc(var(--duncit-bottom-nav-offset, 108px) + 96px)' }}>
       <PodHero
         media={media}
         title={pod.pod_title}

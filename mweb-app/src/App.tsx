@@ -11,7 +11,7 @@ import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
 
-const BOTTOM_NAV_OFFSET = 'calc(72px + env(safe-area-inset-bottom) + 12px)';
+const BOTTOM_NAV_OFFSET = 'var(--duncit-bottom-nav-offset, 108px)';
 
 export default function App() {
   const isAuthed = !!localStorage.getItem('token');
@@ -45,7 +45,17 @@ export default function App() {
   });
 
   return (
-    <Box sx={isAuthed ? { height: '100dvh', display: 'flex', flexDirection: 'column' } : undefined}>
+    <Box
+      sx={isAuthed ? {
+        height: '100dvh',
+        display: 'flex',
+        flexDirection: 'column',
+        bgcolor: 'background.default',
+        background: (theme) => theme.palette.mode === 'dark'
+          ? 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.18), transparent 34%), linear-gradient(180deg, #100d18 0%, #08070b 100%)'
+          : 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.12), transparent 34%), linear-gradient(180deg, #fff5f7 0%, #ffffff 62%)',
+      } : undefined}
+    >
       {splashOpen && <SplashScreen />}
       {showAppHeader && (
         <AppHeader
@@ -66,6 +76,7 @@ export default function App() {
           width: '100%',
           maxWidth: APP_SHELL_MAX_WIDTH,
           mx: 'auto',
+          position: 'relative',
           px: fullBleed ? 0 : { xs: 1.25, sm: 2 },
           ...(isAuthed && {
             flex: 1,
@@ -73,9 +84,13 @@ export default function App() {
             display: 'flex',
             flexDirection: 'column',
             overflowY: fullBleed ? 'hidden' : 'auto',
+            scrollPaddingBottom: showBottomNav ? BOTTOM_NAV_OFFSET : undefined,
           }),
           py: fullBleed ? 0 : 2,
-          pb: fullBleed ? 0 : showBottomNav ? BOTTOM_NAV_OFFSET : 2,
+          pb: fullBleed ? 0 : showBottomNav ? `calc(${BOTTOM_NAV_OFFSET} + 12px)` : 2,
+          background: !fullBleed && isAuthed ? ((theme) => theme.palette.mode === 'dark'
+            ? 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.12), transparent 32%)'
+            : 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.08), transparent 32%)') : undefined,
         }}
       >
         <ScrollToTop />

@@ -41,7 +41,7 @@ export function NotifyHost() {
         setItem(null);
       }}
       anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
-      sx={{ bottom: 'calc(64px + env(safe-area-inset-bottom)) !important' }}
+      sx={{ bottom: 'var(--duncit-bottom-nav-offset, 108px) !important' }}
     >
       <Alert
         severity={item?.severity ?? 'info'}

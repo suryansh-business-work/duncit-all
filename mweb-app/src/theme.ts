@@ -55,6 +55,9 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
   const BORDER = isDark ? 'rgba(255,255,255,0.10)' : tokens.surface.border;
   const BG = isDark ? '#0b1220' : tokens.surface.bg;
   const SURFACE = isDark ? '#111a2e' : tokens.surface.paper;
+  const SURFACE_GRADIENT = isDark
+    ? `linear-gradient(180deg, ${alpha('#ffffff', 0.05)} 0%, ${alpha(PRIMARY, 0.06)} 100%)`
+    : `linear-gradient(180deg, #ffffff 0%, ${alpha(PRIMARY, 0.035)} 100%)`;
   return createTheme({
   palette: {
     mode,
@@ -140,7 +143,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiPaper: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
-        rounded: { borderRadius: 12 },
+        rounded: { borderRadius: 16 },
         outlined: { borderColor: BORDER },
       },
     },
@@ -148,13 +151,14 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 16,
           border: `1px solid ${BORDER}`,
           backgroundColor: SURFACE,
-          boxShadow: `0 1px 2px ${alpha(INK, 0.04)}, 0 8px 24px -16px ${alpha(INK, 0.18)}`,
+          backgroundImage: SURFACE_GRADIENT,
+          boxShadow: `0 14px 34px -22px ${alpha(INK, isDark ? 0.72 : 0.28)}`,
           transition: 'transform 180ms ease, box-shadow 180ms ease',
           '&:hover': {
-            boxShadow: `0 2px 4px ${alpha(INK, 0.06)}, 0 16px 32px -16px ${alpha(INK, 0.25)}`,
+            boxShadow: `0 18px 42px -24px ${alpha(PRIMARY, 0.34)}`,
           },
         },
       },
@@ -251,7 +255,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     },
     MuiAlert: {
       styleOverrides: {
-        root: { borderRadius: 10 },
+        root: { borderRadius: 14, border: `1px solid ${BORDER}` },
         standardInfo: { backgroundColor: alpha(tokens.semantic.info, 0.1), color: INK },
         standardSuccess: { backgroundColor: alpha(tokens.semantic.success, 0.12), color: INK },
         standardWarning: { backgroundColor: alpha(tokens.semantic.warning, 0.14), color: INK },
@@ -260,6 +264,27 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     },
     MuiAvatar: { styleOverrides: { root: { fontWeight: 700 } } },
     MuiDivider: { styleOverrides: { root: { borderColor: BORDER } } },
+    MuiAccordion: {
+      styleOverrides: {
+        root: {
+          borderRadius: 16,
+          border: `1px solid ${BORDER}`,
+          backgroundColor: SURFACE,
+          backgroundImage: SURFACE_GRADIENT,
+          boxShadow: 'none',
+          '&:before': { display: 'none' },
+          '&.Mui-expanded': { margin: 0 },
+        },
+      },
+    },
+    MuiListItemButton: {
+      styleOverrides: {
+        root: {
+          borderRadius: 12,
+          '&:hover': { backgroundColor: alpha(PRIMARY, 0.08) },
+        },
+      },
+    },
     MuiToggleButton: {
       styleOverrides: {
         root: {
@@ -302,7 +327,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       },
     },
     MuiSnackbarContent: { styleOverrides: { root: { borderRadius: 14 } } },
-    MuiDialog: { styleOverrides: { paper: { borderRadius: 16 } } },
+    MuiDialog: { styleOverrides: { paper: { borderRadius: 18, backgroundImage: SURFACE_GRADIENT } } },
     MuiMenu: {
       styleOverrides: {
         paper: {

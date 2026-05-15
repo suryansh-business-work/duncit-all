@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import { Box, Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import HomeIcon from '@mui/icons-material/Home';
@@ -16,9 +17,35 @@ const TABS = [
   { value: '/follow', label: 'Following', icon: <FavoriteBorderIcon /> },
 ];
 
+const NAV_BOTTOM_GAP = 8;
+const NAV_CONTENT_GAP = 16;
+
 export default function BottomNav() {
   const navigate = useNavigate();
   const { pathname } = useLocation();
+  const paperRef = useRef<HTMLDivElement | null>(null);
+
+  useEffect(() => {
+    const node = paperRef.current;
+    if (!node || typeof window === 'undefined') return undefined;
+    const root = document.documentElement;
+    const updateOffset = () => {
+      const height = Math.ceil(node.getBoundingClientRect().height);
+      const offset = height + NAV_BOTTOM_GAP + NAV_CONTENT_GAP;
+      root.style.setProperty('--duncit-bottom-nav-height', `${height}px`);
+      root.style.setProperty('--duncit-bottom-nav-offset', `${offset}px`);
+    };
+    updateOffset();
+    const observer = new ResizeObserver(updateOffset);
+    observer.observe(node);
+    window.addEventListener('resize', updateOffset);
+    return () => {
+      observer.disconnect();
+      window.removeEventListener('resize', updateOffset);
+      root.style.removeProperty('--duncit-bottom-nav-height');
+      root.style.removeProperty('--duncit-bottom-nav-offset');
+    };
+  }, []);
 
   // Match the top-level segment so /clubs/:id still highlights "Clubs", etc.
   const active =
@@ -29,6 +56,7 @@ export default function BottomNav() {
 
   return (
     <Paper
+      ref={paperRef}
       elevation={8}
       sx={{
         position: 'fixed',
@@ -36,7 +64,7 @@ export default function BottomNav() {
         transform: 'translateX(-50%)',
         width: { xs: 'calc(100% - 18px)', sm: 'calc(100% - 24px)' },
         maxWidth: APP_SHELL_MAX_WIDTH - 24,
-        bottom: 8,
+        bottom: NAV_BOTTOM_GAP,
         zIndex: (t) => t.zIndex.appBar,
         border: 0,
         borderRadius: 4,
@@ -56,6 +84,7 @@ export default function BottomNav() {
         onChange={(_e, value) => navigate(value)}
         sx={{
           height: 58,
+          border: 0,
           bgcolor: 'transparent',
           '& .MuiBottomNavigationAction-root': {
             minWidth: 0,

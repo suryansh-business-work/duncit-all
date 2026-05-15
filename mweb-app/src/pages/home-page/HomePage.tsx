@@ -69,6 +69,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
         followedClubs={followedClubs}
         followedUsers={followedUsers}
       />
+      <HomeVibeChips categories={categoryChips} selectedId={categoryId} onSelect={setCategoryId} />
       <Stack spacing={1.75}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.25 }}>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
@@ -115,7 +116,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
           </Stack>
         </Stack>
         <HomeFeaturedPods pods={featuredPods} />
-        <HomeVibeChips categories={categoryChips} selectedId={categoryId} onSelect={setCategoryId} />
         <HomeSearch locationId={locationId} zoneName={zoneName} />
 
         {clubs.length === 0 ? (

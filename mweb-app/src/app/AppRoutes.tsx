@@ -71,7 +71,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Props
       <Route path="/signup-whatsapp" element={withAuth(<SignupWhatsappPage />)} />
       <Route path="/checkout" element={withAuth(<CheckoutPage />)} />
       <Route path="/checkout/:podId" element={withAuth(<CheckoutPage />)} />
-      <Route path="/explore" element={withAuth(<ExplorePage superCategorySlug={superCategory} />)} />
+      <Route path="/explore" element={withAuth(<ExplorePage superCategorySlug={superCategory} locationId={locationId} zoneName={zoneName} />)} />
       <Route path="/saved" element={withAuth(<SavedItemsPage />)} />
       <Route path="/clubs" element={withAuth(<ClubsPage superCategorySlug={superCategory} />)} />
       <Route path="/chats" element={withAuth(<ChatsPage superCategorySlug={superCategory} />)} />

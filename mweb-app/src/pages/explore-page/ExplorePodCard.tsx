@@ -1,7 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@apollo/client';
-import { Box, Stack } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
+import FlashOnIcon from '@mui/icons-material/FlashOn';
 import ShareIcon from '@mui/icons-material/Share';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
@@ -15,6 +17,7 @@ import ExploreActionButton from './ExploreActionButton';
 import ExploreMediaCarousel from './ExploreMediaCarousel';
 import ExplorePodOverlay from './ExplorePodOverlay';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
+import { usePricing } from '../../hooks/usePricing';
 
 interface Props {
   pod: any;
@@ -34,6 +37,7 @@ export default function ExplorePodCard({
   viewerId,
 }: Props) {
   const navigate = useNavigate();
+  const { format } = usePricing();
   const cover = club?.club_feature_images_and_videos?.[0]?.url ?? null;
   const [liked, setLiked] = useState<boolean>(!!pod.liked_by_me);
   const [likeCount, setLikeCount] = useState<number>(pod.like_count ?? 0);
@@ -56,7 +60,9 @@ export default function ExplorePodCard({
   };
 
   const share = async () => {
-    const url = `${window.location.origin}/pods/${pod.id}`;
+    const url = pod.club_slug && pod.pod_id
+      ? `${window.location.origin}/club/${pod.club_slug}/pod/${pod.pod_id}`
+      : `${window.location.origin}/explore`;
     const shareData = {
       title: pod.pod_title,
       text: pod.pod_description?.slice(0, 100) ?? pod.pod_title,
@@ -97,7 +103,7 @@ export default function ExplorePodCard({
         sx={{
           position: 'absolute',
           right: 12,
-          bottom: 'calc(80px + env(safe-area-inset-bottom))',
+          bottom: 'calc(122px + env(safe-area-inset-bottom))',
         }}
       >
         <ExploreActionButton
@@ -129,6 +135,44 @@ export default function ExplorePodCard({
           label="Open"
           onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
         />
+      </Stack>
+
+      <Stack
+        direction="row"
+        spacing={1}
+        alignItems="center"
+        sx={{
+          position: 'absolute',
+          left: 10,
+          right: 10,
+          bottom: 'calc(12px + env(safe-area-inset-bottom))',
+          p: 0.75,
+          borderRadius: 3,
+          bgcolor: 'rgba(0,0,0,0.42)',
+          border: '1px solid rgba(255,255,255,0.12)',
+          backdropFilter: 'blur(16px)',
+        }}
+      >
+        <Box sx={{ width: 36, height: 36, borderRadius: 2, bgcolor: 'primary.main', display: 'grid', placeItems: 'center' }}>
+          <FlashOnIcon sx={{ fontSize: 19 }} />
+        </Box>
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Typography variant="subtitle2" sx={{ fontWeight: 900, lineHeight: 1.1 }} noWrap>
+            Join in 2 taps
+          </Typography>
+          <Typography variant="caption" sx={{ opacity: 0.82 }} noWrap>
+            {pod.pod_type?.includes('FREE') ? 'Free spot' : format(pod.pod_amount)} · Confirm with UPI
+          </Typography>
+        </Box>
+        <Button
+          variant="contained"
+          endIcon={<ArrowForwardIcon />}
+          onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
+          sx={{ minWidth: 48, borderRadius: 2.5, px: 1.2 }}
+          aria-label="Open pod details"
+        >
+          Go
+        </Button>
       </Stack>
 
       <PodCommentsSheet

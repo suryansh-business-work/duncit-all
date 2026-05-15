@@ -13,7 +13,7 @@ export default function HeaderBrand({ logoUrl, appName }: HeaderBrandProps) {
       direction="row"
       alignItems="center"
       spacing={1.25}
-      sx={{ cursor: 'pointer' }}
+      sx={{ cursor: 'pointer', minWidth: 0 }}
       onClick={() => navigate('/')}
       role="button"
       tabIndex={0}
@@ -24,9 +24,9 @@ export default function HeaderBrand({ logoUrl, appName }: HeaderBrandProps) {
         src={logoUrl || '/duncit-logo.svg'}
         alt={appName ?? 'Duncit'}
         sx={{
-          height: 44,
+          height: 36,
           width: 'auto',
-          maxWidth: 200,
+          maxWidth: 128,
           objectFit: 'contain',
           display: 'block',
         }}

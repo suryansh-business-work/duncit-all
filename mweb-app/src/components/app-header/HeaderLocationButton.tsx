@@ -27,7 +27,15 @@ export default function HeaderLocationButton({
         textTransform: 'none',
         color: 'text.primary',
         whiteSpace: 'nowrap',
-        minHeight: 44,
+        minHeight: 36,
+        px: 1.15,
+        borderRadius: 999,
+        bgcolor: 'action.hover',
+        border: 1,
+        borderColor: 'divider',
+        fontWeight: 900,
+        '& .MuiButton-startIcon': { mr: 0.5, color: 'primary.main' },
+        '&:hover': { bgcolor: 'action.selected' },
       }}
       size="small"
       aria-label="Change city or zone"

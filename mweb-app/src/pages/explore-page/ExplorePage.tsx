@@ -5,17 +5,32 @@ import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import ExplorePodCard from './ExplorePodCard';
+import ExploreHeader from './ExploreHeader';
+import ExploreFilterSheet from './ExploreFilterSheet';
 import { EXPLORE_PODS, TOGGLE_SAVED_POD } from './queries';
+import { activeExploreFilterCount, filterExplorePods, type ExploreFilters } from './exploreFilters';
 
 interface ExplorePageProps {
   superCategorySlug?: string;
+  locationId?: string;
+  zoneName?: string;
 }
 
-export default function ExplorePage({ superCategorySlug }: ExplorePageProps) {
+const DEFAULT_FILTERS: ExploreFilters = {
+  preset: 'ALL',
+  categoryId: '',
+  price: 'ALL',
+  date: 'ALL',
+  search: '',
+};
+
+export default function ExplorePage({ superCategorySlug, locationId, zoneName }: ExplorePageProps) {
   const { data, loading, error } = useQuery(EXPLORE_PODS, {
     fetchPolicy: 'cache-and-network',
   });
   const [toggleSavedPod] = useMutation(TOGGLE_SAVED_POD);
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [filters, setFilters] = useState<ExploreFilters>(DEFAULT_FILTERS);
   const [pendingSave, setPendingSave] = useState<Set<string>>(new Set());
   // Local optimistic overlay; merged with server saved_pod_ids.
   const [localSaved, setLocalSaved] = useState<Map<string, boolean>>(new Map());
@@ -51,25 +66,42 @@ export default function ExplorePage({ superCategorySlug }: ExplorePageProps) {
     (data?.locations ?? []).forEach((l: any) => m.set(l.id, l));
     return m;
   }, [data]);
-
-  const pods = useMemo(() => {
-    const list = (data?.pods ?? []).slice();
+  const categoryChips = useMemo(() => {
+    const categories = data?.categories ?? [];
     const supers = data?.superCategories ?? [];
     const selectedSuperId = superCategorySlug
-      ? supers.find((s: any) => s.slug === superCategorySlug)?.id
+      ? supers.find((category: any) => category.slug === superCategorySlug)?.id
       : null;
-    const filtered = selectedSuperId
-      ? list.filter(
-          (p: any) => clubsById.get(p.club_id)?.super_category_id === selectedSuperId,
-        )
-      : list;
-    filtered.sort(
-      (a: any, b: any) =>
-        new Date(a.pod_date_time || 0).getTime() -
-        new Date(b.pod_date_time || 0).getTime(),
+    if (!selectedSuperId) return categories.filter((category: any) => category.level !== 'SUPER');
+    const parentById = new Map<string, string | null>(
+      categories.map((category: any) => [category.id, category.parent_id ?? null])
     );
-    return filtered;
-  }, [data, clubsById, superCategorySlug]);
+    const isDescendant = (id: string) => {
+      let current: string | null | undefined = id;
+      let guard = 0;
+      while (current && guard++ < 16) {
+        if (current === selectedSuperId) return true;
+        current = parentById.get(current) ?? null;
+      }
+      return false;
+    };
+    return categories.filter((category: any) => category.level !== 'SUPER' && isDescendant(category.id));
+  }, [data, superCategorySlug]);
+
+  const pods = useMemo(() => {
+    return filterExplorePods({
+      pods: data?.pods ?? [],
+      clubsById,
+      categories: data?.categories ?? [],
+      superCategories: data?.superCategories ?? [],
+      superCategorySlug,
+      locationId,
+      zoneName,
+      filters,
+    });
+  }, [data, clubsById, superCategorySlug, locationId, zoneName, filters]);
+
+  const activeCount = activeExploreFilterCount(filters);
 
   const toggleSave = async (id: string) => {
     const want = !isSaved(id);
@@ -100,7 +132,6 @@ export default function ExplorePage({ superCategorySlug }: ExplorePageProps) {
     );
   }
   if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (!pods.length) return <Alert severity="info">No pods to explore yet.</Alert>;
 
   const exploreHeight = 'calc(100dvh - 64px - 56px - env(safe-area-inset-bottom))';
 
@@ -118,31 +149,47 @@ export default function ExplorePage({ superCategorySlug }: ExplorePageProps) {
         '& .slick-slide > div': { height: '100%' },
       }}
     >
-      <Slider
-        vertical
-        verticalSwiping
-        slidesToShow={1}
-        slidesToScroll={1}
-        arrows={false}
-        infinite={false}
-        speed={450}
-        swipeToSlide
-        touchThreshold={12}
-        adaptiveHeight={false}
-      >
-        {pods.map((p: any) => (
-          <Box key={p.id} sx={{ height: '100%' }}>
-            <ExplorePodCard
-              pod={p}
-              club={clubsById.get(p.club_id)}
-              location={locById.get(p.location_id)}
-              saved={isSaved(p.id)}
-              onToggleSave={() => toggleSave(p.id)}
-              viewerId={data?.me?.user_id ?? null}
-            />
-          </Box>
-        ))}
-      </Slider>
+      <ExploreHeader filters={filters} setFilters={setFilters} activeCount={activeCount} resultCount={pods.length} onOpenFilters={() => setFiltersOpen(true)} />
+      {pods.length === 0 ? (
+        <Stack alignItems="center" justifyContent="center" sx={{ height: '100%', px: 3 }}>
+          <Alert severity="info">No pods match these filters.</Alert>
+        </Stack>
+      ) : (
+        <Slider
+          vertical
+          verticalSwiping
+          slidesToShow={1}
+          slidesToScroll={1}
+          arrows={false}
+          infinite={false}
+          speed={450}
+          swipeToSlide
+          touchThreshold={12}
+          adaptiveHeight={false}
+        >
+          {pods.map((p: any) => (
+            <Box key={p.id} sx={{ height: '100%' }}>
+              <ExplorePodCard
+                pod={p}
+                club={clubsById.get(p.club_id)}
+                location={locById.get(p.location_id)}
+                saved={isSaved(p.id)}
+                onToggleSave={() => toggleSave(p.id)}
+                viewerId={data?.me?.user_id ?? null}
+              />
+            </Box>
+          ))}
+        </Slider>
+      )}
+      <ExploreFilterSheet
+        open={filtersOpen}
+        filters={filters}
+        setFilters={setFilters}
+        categories={categoryChips}
+        activeCount={activeCount}
+        resultCount={pods.length}
+        onClose={() => setFiltersOpen(false)}
+      />
     </Box>
   );
 }

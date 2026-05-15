@@ -1,6 +1,8 @@
+import { useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import HomeStatusTile from './HomeStatusTile';
+import HomeStatusViewer, { type HomeStatusViewerItem } from './HomeStatusViewer';
 
 interface HomeStatusRailProps {
   me?: any;
@@ -24,16 +26,6 @@ function firstMedia(items?: Array<{ url?: string | null; type?: string | null }>
   return (items ?? []).find((item) => !!item?.url) ?? null;
 }
 
-function openSlider(slider: any, navigate: (to: string) => void) {
-  const target: string = slider.effective_link_url ?? slider.link_url ?? '';
-  if (!target) return;
-  if (slider.link_type === 'INTERNAL' && target.startsWith('/')) {
-    navigate(target);
-    return;
-  }
-  window.open(target, '_blank', 'noreferrer');
-}
-
 export default function HomeStatusRail({
   me,
   branding,
@@ -42,25 +34,27 @@ export default function HomeStatusRail({
   followedUsers,
 }: HomeStatusRailProps) {
   const navigate = useNavigate();
+  const [viewer, setViewer] = useState<HomeStatusViewerItem | null>(null);
   const duncitName = branding?.app_name || 'Duncit';
 
   return (
-    <Box
-      sx={{
-        mx: { xs: -1.25, sm: -2 },
-        px: { xs: 1.25, sm: 2 },
-        pt: 0.25,
-        pb: 1,
-        mb: 1.25,
-        minHeight: 96,
-        overflowX: 'auto',
-        overflowY: 'hidden',
-        scrollPaddingInline: 12,
-        scrollbarWidth: 'none',
-        '&::-webkit-scrollbar': { display: 'none' },
-      }}
-    >
-      <Stack direction="row" spacing={1.1} alignItems="flex-start" sx={{ width: 'max-content' }}>
+    <>
+      <Box
+        sx={{
+          mx: { xs: -1.25, sm: -2 },
+          px: { xs: 1.25, sm: 2 },
+          pt: 0.25,
+          pb: 1,
+          mb: 1.25,
+          minHeight: 96,
+          overflowX: 'auto',
+          overflowY: 'hidden',
+          scrollPaddingInline: 12,
+          scrollbarWidth: 'none',
+          '&::-webkit-scrollbar': { display: 'none' },
+        }}
+      >
+        <Stack direction="row" spacing={1.1} alignItems="flex-start" sx={{ width: 'max-content' }}>
         <HomeStatusTile
           label="My status"
           imageUrl={me?.profile_photo}
@@ -75,7 +69,18 @@ export default function HomeStatusRail({
             imageUrl={slider.media_type === 'VIDEO' ? null : slider.media_url}
             videoUrl={slider.media_type === 'VIDEO' ? slider.media_url : null}
             initials={initials(duncitName)}
-            onClick={() => openSlider(slider, navigate)}
+            onClick={() => {
+              const target = slider.effective_link_url ?? slider.link_url ?? '';
+              setViewer({
+                label: duncitName,
+                subLabel: slider.title,
+                avatarUrl: branding?.logo_url,
+                mediaUrl: slider.media_url,
+                mediaType: slider.media_type,
+                targetUrl: target,
+                internal: slider.link_type === 'INTERNAL' && target.startsWith('/'),
+              });
+            }}
           />
         ))}
         {followedClubs.map((club) => {
@@ -87,7 +92,15 @@ export default function HomeStatusRail({
               imageUrl={media?.type === 'VIDEO' ? null : media?.url}
               videoUrl={media?.type === 'VIDEO' ? media?.url : null}
               initials={initials(club.club_name)}
-              onClick={() => club.club_id && navigate(`/club/${club.club_id}`)}
+              onClick={() => setViewer({
+                label: club.club_name,
+                subLabel: 'Club status',
+                avatarUrl: firstMedia(club.club_feature_images_and_videos)?.url,
+                mediaUrl: media?.url,
+                mediaType: media?.type,
+                targetUrl: club.club_id ? `/club/${club.club_id}` : undefined,
+                internal: true,
+              })}
             />
           );
         })}
@@ -97,10 +110,20 @@ export default function HomeStatusRail({
             label={user.first_name || user.full_name || 'User'}
             imageUrl={user.profile_photo}
             initials={initials(user.full_name || user.first_name)}
-            onClick={() => navigate(`/u/${user.user_id}`)}
+            onClick={() => setViewer({
+              label: user.first_name || user.full_name || 'User',
+              subLabel: user.full_name,
+              avatarUrl: user.profile_photo,
+              mediaUrl: user.profile_photo,
+              mediaType: 'IMAGE',
+              targetUrl: `/u/${user.user_id}`,
+              internal: true,
+            })}
           />
         ))}
-      </Stack>
-    </Box>
+        </Stack>
+      </Box>
+      <HomeStatusViewer item={viewer} onClose={() => setViewer(null)} />
+    </>
   );
 }

@@ -36,6 +36,7 @@ export const EXPLORE_PODS = gql`
       club_id
       club_name
       super_category_id
+      category_id
       club_feature_images_and_videos {
         url
         type
@@ -44,6 +45,13 @@ export const EXPLORE_PODS = gql`
     superCategories: categories(filter: { level: SUPER }) {
       id
       slug
+    }
+    categories {
+      id
+      name
+      slug
+      level
+      parent_id
     }
     locations {
       id

@@ -25,7 +25,7 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
   }
   if (superCats.length === 0) return null;
   return (
-    <Box sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', px: 1.5, pb: 0.75 }}>
+    <Box sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', px: 1.5, pb: 1 }}>
       <ToggleButtonGroup
         value={value}
         exclusive
@@ -36,14 +36,31 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
         }}
         sx={{
           width: '100%',
+          p: 0.45,
+          borderRadius: 3.5,
+          bgcolor: 'action.hover',
+          border: 1,
+          borderColor: 'divider',
           '& .MuiToggleButton-root': {
             minWidth: 0,
             flex: 1,
-            minHeight: 44,
+            minHeight: 40,
             px: 0.75,
             gap: 0.5,
             fontSize: 12,
             whiteSpace: 'nowrap',
+            border: 0,
+            borderRadius: '12px !important',
+            fontWeight: 900,
+            color: 'text.secondary',
+          },
+          '& .MuiToggleButton-root.Mui-selected': {
+            color: 'primary.contrastText',
+            background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 58%, #f5337a 100%)',
+            boxShadow: '0 10px 24px rgba(245,51,122,0.28)',
+          },
+          '& .MuiToggleButton-root.Mui-selected:hover': {
+            background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 58%, #f5337a 100%)',
           },
         }}
       >

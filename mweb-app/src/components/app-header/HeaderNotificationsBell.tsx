@@ -71,7 +71,14 @@ export default function HeaderNotificationsBell({ onToast }: HeaderNotifications
           size="small"
           onClick={(e) => setNotifConfirm(e.currentTarget)}
           aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ''}`}
-          sx={{ minWidth: 44, minHeight: 44 }}
+          sx={{
+            minWidth: 40,
+            minHeight: 40,
+            bgcolor: 'action.hover',
+            border: 1,
+            borderColor: 'divider',
+            '&:hover': { bgcolor: 'action.selected' },
+          }}
         >
           <Badge badgeContent={unreadCount} color="error">
             <NotificationsIcon fontSize="small" />

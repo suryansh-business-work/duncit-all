@@ -2,6 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AppBar, Avatar, Box, IconButton, Toolbar, Tooltip } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import { HEADER_DATA, PUBLIC_POLICIES } from './queries';
 import HeaderBrand from './HeaderBrand';
 import HeaderLocationButton from './HeaderLocationButton';
@@ -86,9 +87,16 @@ export default function AppHeader({
       position="sticky"
       color="inherit"
       elevation={0}
-      sx={{ bgcolor: 'background.paper' }}
+      sx={{
+        bgcolor: (theme) => alpha(theme.palette.background.default, theme.palette.mode === 'dark' ? 0.86 : 0.94),
+        backgroundImage: (theme) => theme.palette.mode === 'dark'
+          ? 'radial-gradient(circle at 8% 0%, rgba(255,79,115,0.18), transparent 30%)'
+          : 'radial-gradient(circle at 8% 0%, rgba(255,79,115,0.12), transparent 30%)',
+        borderBottom: 0,
+        backdropFilter: 'blur(18px)',
+      }}
     >
-      <Toolbar sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', gap: 1, py: 1, minHeight: minimal ? 58 : 64, px: 2 }}>
+      <Toolbar sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', gap: 1, py: 0.75, minHeight: minimal ? 56 : 60, px: 1.5 }}>
         <HeaderBrand logoUrl={branding?.logo_url} appName={branding?.app_name} />
 
         <Box sx={{ flexGrow: 1 }} />
@@ -133,7 +141,15 @@ export default function AppHeader({
               >
                 <Avatar
                   src={me?.profile_photo || undefined}
-                  sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 13 }}
+                  sx={{
+                    width: 34,
+                    height: 34,
+                    bgcolor: 'primary.main',
+                    fontSize: 13,
+                    border: 2,
+                    borderColor: 'primary.main',
+                    boxShadow: '0 0 0 3px rgba(255,79,115,0.24)',
+                  }}
                 >
                   {(me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase()}
                 </Avatar>

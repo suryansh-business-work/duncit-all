@@ -23,7 +23,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Props) {
         sx={{
           position: 'absolute',
           inset: 0,
-          background: 'linear-gradient(180deg, rgba(0,0,0,0) 40%, rgba(0,0,0,0.85) 100%)',
+          background: 'linear-gradient(180deg, rgba(0,0,0,0.42) 0%, rgba(0,0,0,0.02) 34%, rgba(0,0,0,0.88) 100%)',
           pointerEvents: 'none',
         }}
       />
@@ -32,7 +32,7 @@ export default function ExplorePodOverlay({ pod, club, location }: Props) {
           position: 'absolute',
           left: 16,
           right: 80,
-          bottom: 'calc(72px + env(safe-area-inset-bottom))',
+          bottom: 'calc(118px + env(safe-area-inset-bottom))',
         }}
         spacing={1}
       >
@@ -44,13 +44,15 @@ export default function ExplorePodOverlay({ pod, club, location }: Props) {
             sx={{ cursor: 'pointer' }}
             onClick={() => club.club_id && navigate(`/club/${club.club_id}`)}
           >
-            <GroupsIcon fontSize="small" />
-            <Typography variant="subtitle2" fontWeight={700}>
+            <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: 'primary.main', display: 'grid', placeItems: 'center' }}>
+              <GroupsIcon sx={{ fontSize: 15 }} />
+            </Box>
+            <Typography variant="subtitle2" fontWeight={900} noWrap>
               {club.club_name}
             </Typography>
           </Stack>
         )}
-        <Typography variant="h6" fontWeight={700}>
+        <Typography variant="h5" fontWeight={900} sx={{ lineHeight: 1.05, textShadow: '0 2px 12px rgba(0,0,0,0.36)' }}>
           {pod.pod_title}
         </Typography>
         {pod.pod_description && (

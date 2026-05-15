@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { Box, CircularProgress, Stack } from '@mui/material';
+import { useEffect, useRef, useState } from 'react';
+import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 
 declare global {
   interface Window {
@@ -50,10 +50,12 @@ export default function GoogleSignInButton({
 }: Props) {
   const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
   const containerRef = useRef<HTMLDivElement | null>(null);
+  const [fallback, setFallback] = useState(false);
 
   useEffect(() => {
     if (!clientId || !containerRef.current) return;
     let cancelled = false;
+    setFallback(false);
     loadGoogleScript()
       .then(() => {
         if (cancelled || !window.google?.accounts?.id || !containerRef.current) return;
@@ -76,31 +78,40 @@ export default function GoogleSignInButton({
           logo_alignment: 'left',
           width: containerRef.current.clientWidth || 320,
         });
+        window.setTimeout(() => {
+          if (!cancelled && containerRef.current?.childElementCount === 0) setFallback(true);
+        }, 900);
       })
       .catch(() => {
-        // Silently no-op; container stays empty.
+        if (!cancelled) setFallback(true);
       });
     return () => {
       cancelled = true;
     };
   }, [clientId, onCredential, text]);
 
-  if (!clientId) {
+  if (!clientId || fallback) {
     return (
       <Box
         sx={{
           height: 44,
           border: '1px solid',
-          borderColor: 'divider',
+          borderColor: 'rgba(255,255,255,0.22)',
           borderRadius: '24px',
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          color: 'text.disabled',
-          fontSize: 14,
+          gap: 1.25,
+          bgcolor: 'rgba(255,255,255,0.92)',
+          color: '#1f1b2e',
         }}
       >
-        Google sign-in not configured
+        <Box sx={{ width: 24, height: 24, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: '#fff', fontWeight: 900 }}>
+          G
+        </Box>
+        <Typography variant="body2" fontWeight={800}>
+          Google sign-in unavailable
+        </Typography>
       </Box>
     );
   }

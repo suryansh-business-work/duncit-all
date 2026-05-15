@@ -1,8 +1,11 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import { Alert, Divider, Stack, Typography } from '@mui/material';
+import AuthBackground from '../components/AuthBackground';
 import AuthLogo from '../components/AuthLogo';
+import AuthModeToggle from '../components/AuthModeToggle';
+import AuthScreenFrame from '../components/AuthScreenFrame';
 import LegalLinks from '../components/LegalLinks';
 import { useFeatureFlag } from '../hooks/useFeatureFlag';
 import GoogleSignInButton from '../components/GoogleSignInButton';
@@ -97,37 +100,36 @@ export default function RegisterPage() {
   };
 
   return (
-    <Card
-      elevation={2}
-      sx={{
-        borderRadius: '4px',
-        '& .MuiOutlinedInput-root': { borderRadius: '4px' },
-        '& .MuiButton-root': { borderRadius: '4px' },
-      }}
-    >
-      <CardContent>
-        <AuthLogo tagline="Create your account to join pods near you." />
-        <Typography variant="h5" textAlign="center" gutterBottom>
-          Create Account
-        </Typography>
+    <AuthBackground>
+      <AuthModeToggle />
+      <AuthScreenFrame>
+        <Stack spacing={1.45}>
+          <Stack alignItems="center" spacing={1.1} sx={{ pt: 0.5 }}>
+            <AuthLogo />
+            <Typography variant="h4" fontWeight={900} textAlign="center" color="text.primary">
+              Join the crew
+            </Typography>
+            <Typography variant="body2" textAlign="center" color="text.secondary">
+              Start where you are and discover pods nearby.
+            </Typography>
+          </Stack>
 
-        <Stack spacing={1.5} alignItems="center" sx={{ mb: 2 }}>
           <GoogleSignInButton onCredential={handleGoogle} loading={gLoading && !googleToken} text="signup_with" />
           {gError && (
             <Alert severity="error" sx={{ width: '100%' }}>
               {gError}
             </Alert>
           )}
-        </Stack>
-        <Divider sx={{ my: 2 }}>or sign up with email</Divider>
+          <Divider>OR EMAIL</Divider>
 
-        <RegisterForm
-          loading={loading}
-          errorMessage={registerError ?? (error ? parseApiError(error) : null)}
-          onSubmit={handleRegister}
-        />
-        <LegalLinks prefix="By creating an account," />
-      </CardContent>
+          <RegisterForm
+            loading={loading}
+            errorMessage={registerError ?? (error ? parseApiError(error) : null)}
+            onSubmit={handleRegister}
+          />
+          <LegalLinks prefix="By creating an account," />
+        </Stack>
+      </AuthScreenFrame>
       <GoogleSignupPhoneForm
         open={!!googleToken}
         loading={gLoading}
@@ -138,6 +140,6 @@ export default function RegisterPage() {
         }}
         onSubmit={submitGoogleSignup}
       />
-    </Card>
+    </AuthBackground>
   );
 }

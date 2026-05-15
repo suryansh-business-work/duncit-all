@@ -107,7 +107,7 @@ export default function SignupSurveyPage() {
         maxWidth: 760,
         mx: 'auto',
         width: '100%',
-        pb: 'calc(env(safe-area-inset-bottom) + 180px)',
+        pb: 'calc(env(safe-area-inset-bottom) + 96px)',
       }}
     >
       <Box
@@ -136,15 +136,17 @@ export default function SignupSurveyPage() {
         </Typography>
       </Box>
 
-      {supers.map((superCategory) => (
-        <SuperCategoryGroup
-          key={superCategory.id}
-          superCategory={superCategory}
-          childrenByParent={childrenByParent}
-          selected={selected}
-          onToggle={toggle}
-        />
-      ))}
+      <Stack spacing={2} sx={{ pb: 1 }}>
+        {supers.map((superCategory) => (
+          <SuperCategoryGroup
+            key={superCategory.id}
+            superCategory={superCategory}
+            childrenByParent={childrenByParent}
+            selected={selected}
+            onToggle={toggle}
+          />
+        ))}
+      </Stack>
 
       {opError && <Alert severity="error">{opError}</Alert>}
 

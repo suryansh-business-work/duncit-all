@@ -8,6 +8,7 @@ import {
   Stack,
   keyframes,
 } from '@mui/material';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
@@ -73,8 +74,9 @@ export default function LoginForm({
               name="email"
               type="email"
               label="Email"
+              placeholder="hello@duncit.com"
               autoComplete="email"
-              hint="We'll send pod updates and receipts here."
+              size="small"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -87,8 +89,9 @@ export default function LoginForm({
               name="password"
               type={showPwd ? 'text' : 'password'}
               label="Password"
+              placeholder="Enter password"
               autoComplete="current-password"
-              hint="At least 8 characters."
+              size="small"
               InputProps={{
                 startAdornment: (
                   <InputAdornment position="start">
@@ -117,6 +120,7 @@ export default function LoginForm({
               type="submit"
               variant="contained"
               size="large"
+              endIcon={<ArrowForwardIcon />}
               disabled={loading}
               sx={{
                 borderRadius: 2,

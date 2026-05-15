@@ -1,38 +1,16 @@
 import { useFormikContext } from 'formik';
-import { Autocomplete, Grid, TextField } from '@mui/material';
+import { Autocomplete, Grid, InputAdornment, TextField } from '@mui/material';
+import PlaceOutlinedIcon from '@mui/icons-material/PlaceOutlined';
 import PhoneExtensionField from '../../components/PhoneExtensionField';
 import PhoneNumberField from '../../components/PhoneNumberField';
-import { COUNTRIES, type Country, findCountryByIso } from '../../utils/countries';
 import { CITY_NAMES, zonesForCity } from '../../utils/locations';
 import type { RegisterFormValues } from './types';
 
 export default function LocationFields() {
   const { values, setFieldValue, touched, errors } = useFormikContext<RegisterFormValues>();
-  const country = findCountryByIso(values.country) ?? null;
   const zoneOptions = zonesForCity(values.city);
   return (
     <>
-      <Grid item xs={12}>
-        <Autocomplete<Country>
-          value={country}
-          onChange={(_e, c) => {
-            setFieldValue('country', c?.iso ?? '');
-            if (c) setFieldValue('phone_extension', c.dial);
-          }}
-          options={COUNTRIES}
-          autoHighlight
-          getOptionLabel={(c) => `${c.flag}  ${c.name}`}
-          isOptionEqualToValue={(a, b) => a.iso === b.iso}
-          renderInput={(params) => (
-            <TextField
-              {...params}
-              label="Country"
-              size="small"
-              InputLabelProps={{ shrink: true }}
-            />
-          )}
-        />
-      </Grid>
       <Grid item xs={4}>
         <PhoneExtensionField
           value={values.phone_extension}
@@ -44,6 +22,7 @@ export default function LocationFields() {
       <Grid item xs={8}>
         <PhoneNumberField
           label="Phone"
+          placeholder="98765 43210"
           autoComplete="tel-national"
           InputLabelProps={{ shrink: true }}
         />
@@ -62,9 +41,15 @@ export default function LocationFields() {
             <TextField
               {...params}
               label="City"
+              placeholder="Ghaziabad"
               required
               size="small"
               InputLabelProps={{ shrink: true }}
+              InputProps={{
+                ...params.InputProps,
+                startAdornment: <InputAdornment position="start"><PlaceOutlinedIcon fontSize="small" /></InputAdornment>,
+              }}
+              inputProps={{ ...params.inputProps, placeholder: 'Ghaziabad' }}
               error={Boolean(touched.city && errors.city)}
               helperText={touched.city ? errors.city : undefined}
             />
@@ -82,9 +67,15 @@ export default function LocationFields() {
             <TextField
               {...params}
               label="Zone"
+              placeholder="Raj Nagar"
               required
               size="small"
               InputLabelProps={{ shrink: true }}
+              InputProps={{
+                ...params.InputProps,
+                startAdornment: <InputAdornment position="start"><PlaceOutlinedIcon fontSize="small" /></InputAdornment>,
+              }}
+              inputProps={{ ...params.inputProps, placeholder: 'Raj Nagar' }}
               error={Boolean(touched.zone && errors.zone)}
               helperText={touched.zone ? errors.zone : undefined}
             />

@@ -1,11 +1,8 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { IconButton, Tooltip } from '@mui/material';
-import DarkModeIcon from '@mui/icons-material/DarkMode';
-import LightModeIcon from '@mui/icons-material/LightMode';
-import { useColorMode } from '../../ColorModeContext';
 import AuthBackground from '../../components/AuthBackground';
+import AuthModeToggle from '../../components/AuthModeToggle';
 import GoogleAuthNoticeDialog from '../../components/GoogleAuthNoticeDialog';
 import { type LoginFormValues } from '../../forms/login.form';
 import { parseApiError } from '../../utils/parseApiError';
@@ -20,7 +17,6 @@ import LoginCard from './LoginCard';
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
-  const colorMode = useColorMode();
   const [loginMutation, { loading, error }] = useMutation(LOGIN);
   const [loginGoogle, { loading: gLoading }] = useMutation(LOGIN_GOOGLE);
   const [gError, setGError] = useState<string | null>(null);
@@ -80,28 +76,7 @@ export default function LoginPage() {
 
   return (
     <AuthBackground>
-      <Tooltip title={`Switch to ${colorMode.mode === 'dark' ? 'light' : 'dark'} mode`}>
-        <IconButton
-          onClick={colorMode.toggle}
-          sx={{
-            position: 'fixed',
-            top: 12,
-            right: 12,
-            bgcolor: 'background.paper',
-            border: 1,
-            borderColor: 'divider',
-            zIndex: 10,
-            '&:hover': { bgcolor: 'action.hover' },
-          }}
-          aria-label="Toggle dark mode"
-        >
-          {colorMode.mode === 'dark' ? (
-            <LightModeIcon fontSize="small" />
-          ) : (
-            <DarkModeIcon fontSize="small" />
-          )}
-        </IconButton>
-      </Tooltip>
+      <AuthModeToggle />
 
       <LoginCard
         loading={loading}

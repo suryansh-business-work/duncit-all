@@ -1,4 +1,4 @@
-import { Box, Card, CardContent, Stack, Typography, alpha } from '@mui/material';
+import { Box, Stack, Typography, alpha } from '@mui/material';
 import { SurveyChip } from './SurveyChip';
 import { colorForId, emojiFromIcon } from './surveyPalette';
 
@@ -27,99 +27,59 @@ export function SuperCategoryGroup({
   const emoji = emojiFromIcon(superCategory.icon);
 
   return (
-    <Card
+    <Box
       sx={(t) => ({
-        overflow: 'hidden',
-        border: `1.5px solid ${alpha(hue, 0.25)}`,
+        borderRadius: 4,
+        p: { xs: 1.5, sm: 2 },
+        border: `1.5px solid ${alpha(hue, 0.22)}`,
         background:
           t.palette.mode === 'dark'
-            ? t.palette.background.paper
-            : `linear-gradient(180deg, ${alpha(hue, 0.06)} 0%, ${t.palette.background.paper} 60%)`,
+            ? `radial-gradient(circle at 20% 15%, ${alpha(hue, 0.18)}, transparent 34%), ${t.palette.background.paper}`
+            : `radial-gradient(circle at 18% 12%, ${alpha(hue, 0.16)}, transparent 34%), linear-gradient(180deg, ${alpha(hue, 0.06)} 0%, ${t.palette.background.paper} 70%)`,
       })}
     >
-      <CardContent sx={{ p: { xs: 2, sm: 2.5 } }}>
-        <Stack spacing={2}>
-          <Stack direction="row" alignItems="center" spacing={1.25}>
-            <Box
-              sx={{
-                width: 8,
-                height: 28,
-                borderRadius: 999,
-                backgroundColor: hue,
-              }}
+      <Stack spacing={1.5}>
+        <Box
+          sx={{
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: 0.75,
+            alignSelf: 'flex-start',
+            px: 1.25,
+            py: 0.5,
+            borderRadius: 999,
+            backgroundColor: alpha(hue, 0.12),
+            color: hue,
+            fontWeight: 800,
+            userSelect: 'none',
+          }}
+        >
+          {emoji && <Box component="span" sx={{ fontSize: 18, lineHeight: 1 }}>{emoji}</Box>}
+          <Typography variant="subtitle2" fontWeight={800} sx={{ color: 'inherit' }}>
+            {superCategory.name}
+          </Typography>
+        </Box>
+
+        {categories.length === 0 && (
+          <Typography variant="caption" color="text.secondary">
+            No interests in this group yet.
+          </Typography>
+        )}
+
+        <Stack direction="row" flexWrap="wrap" justifyContent="center" useFlexGap spacing={1.15}>
+          {categories.flatMap((category) => [category, ...(childrenByParent.get(category.id) ?? [])]).map((item, index) => (
+            <SurveyChip
+              key={item.id}
+              id={item.id}
+              label={item.name}
+              icon={item.icon}
+              selected={selected.has(item.id)}
+              onToggle={onToggle}
+              size={index % 3 === 0 ? 'large' : 'medium'}
             />
-            <Box
-              sx={{
-                display: 'inline-flex',
-                alignItems: 'center',
-                gap: 0.75,
-                px: 1.25,
-                py: 0.5,
-                borderRadius: 999,
-                backgroundColor: alpha(hue, 0.12),
-                color: hue,
-                fontWeight: 800,
-                letterSpacing: 0.2,
-                userSelect: 'none',
-              }}
-            >
-              {emoji && (
-                <Box component="span" sx={{ fontSize: 18, lineHeight: 1 }}>
-                  {emoji}
-                </Box>
-              )}
-              <Typography variant="subtitle2" fontWeight={800} sx={{ color: 'inherit' }}>
-                {superCategory.name}
-              </Typography>
-            </Box>
-          </Stack>
-
-          {categories.length === 0 && (
-            <Typography variant="caption" color="text.secondary">
-              No interests in this group yet.
-            </Typography>
-          )}
-
-          {categories.map((category) => {
-            const subs = childrenByParent.get(category.id) ?? [];
-            return (
-              <Box key={category.id} sx={{ pl: { xs: 1, sm: 1.5 } }}>
-                <Stack direction="row" flexWrap="wrap" useFlexGap spacing={1} sx={{ mb: subs.length ? 1 : 0 }}>
-                  <SurveyChip
-                    id={category.id}
-                    label={category.name}
-                    icon={category.icon}
-                    selected={selected.has(category.id)}
-                    onToggle={onToggle}
-                    size="medium"
-                  />
-                </Stack>
-                {subs.length > 0 && (
-                  <Stack
-                    direction="row"
-                    flexWrap="wrap"
-                    useFlexGap
-                    spacing={0.75}
-                    sx={{ pl: { xs: 1.25, sm: 2 }, borderLeft: `2px dashed ${alpha(hue, 0.3)}`, ml: 0.5, py: 0.5 }}
-                  >
-                    {subs.map((sub) => (
-                      <SurveyChip
-                        key={sub.id}
-                        id={sub.id}
-                        label={sub.name}
-                        icon={sub.icon}
-                        selected={selected.has(sub.id)}
-                        onToggle={onToggle}
-                        size="small"
-                      />
-                    ))}
-                  </Stack>
-                )}
-              </Box>
-            );
-          })}
+          ))}
         </Stack>
-      </CardContent>
-    </Card>
+      </Stack>
+    </Box>
   );
 }

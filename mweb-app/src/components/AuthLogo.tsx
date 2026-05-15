@@ -34,13 +34,13 @@ export default function AuthLogo({ tagline }: Props) {
   return (
     <Stack alignItems="center" spacing={1} sx={{ mb: 1 }}>
       {loading && !b ? (
-        <Skeleton variant="rounded" width={160} height={48} />
+        <Skeleton variant="rounded" width={148} height={48} />
       ) : (
         <Box
           component="img"
           src={logoSrc}
           alt={b?.app_name ?? 'Duncit'}
-          sx={{ height: 56, maxWidth: 220, objectFit: 'contain' }}
+          sx={{ height: 58, width: 'auto', maxWidth: 180, objectFit: 'contain' }}
         />
       )}
       {tagline && (

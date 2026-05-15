@@ -1,5 +1,4 @@
 import { Box, Chip, alpha } from '@mui/material';
-import CancelIcon from '@mui/icons-material/Cancel';
 import { colorForId, emojiFromIcon } from './surveyPalette';
 
 export interface SurveyChipProps {
@@ -14,9 +13,9 @@ export interface SurveyChipProps {
 }
 
 const SIZE_MAP = {
-  small: { height: 30, fontSize: 12.5, paddingX: 1.25 },
-  medium: { height: 36, fontSize: 13.5, paddingX: 1.75 },
-  large: { height: 42, fontSize: 15, paddingX: 2.25 },
+  small: { height: 42, fontSize: 12.5, paddingX: 1.5 },
+  medium: { height: 48, fontSize: 13.5, paddingX: 1.9 },
+  large: { height: 56, fontSize: 15, paddingX: 2.35 },
 } as const;
 
 export function SurveyChip({
@@ -35,18 +34,6 @@ export function SurveyChip({
   return (
     <Chip
       onClick={() => onToggle(id)}
-      onDelete={selected ? () => onToggle(id) : undefined}
-      deleteIcon={
-        selected ? (
-          <CancelIcon
-            sx={{
-              color: '#ffffffd9 !important',
-              '&:hover': { color: '#fff !important' },
-              fontSize: dims.fontSize + 4,
-            }}
-          />
-        ) : undefined
-      }
       label={
         <Box
           component="span"
@@ -66,18 +53,21 @@ export function SurveyChip({
         fontWeight: 700,
         borderRadius: 999,
         px: dims.paddingX,
+        minWidth: size === 'large' ? 112 : 92,
+        touchAction: 'manipulation',
         cursor: 'pointer',
         transition: 'all 180ms ease',
         backgroundColor: selected ? hue : alpha(hue, 0.1),
         color: selected ? '#fff' : hue,
         border: `1.5px solid ${selected ? hue : alpha(hue, 0.4)}`,
         boxShadow: selected
-          ? `0 6px 14px -6px ${alpha(hue, 0.55)}`
-          : 'none',
+          ? `0 10px 24px -10px ${alpha(hue, 0.7)}`
+          : `0 8px 18px -14px ${alpha(hue, 0.5)}`,
         '&:hover': {
           backgroundColor: selected ? hue : alpha(hue, 0.18),
           transform: 'translateY(-1px)',
         },
+        '& .MuiChip-label': { px: 0 },
       }}
     />
   );

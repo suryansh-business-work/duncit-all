@@ -1,23 +1,17 @@
 import { Link as RouterLink } from 'react-router-dom';
 import {
   Alert,
-  Card,
-  CardContent,
+  Box,
   Divider,
   Link,
   Stack,
   Typography,
-  keyframes,
 } from '@mui/material';
 import AuthLogo from '../../components/AuthLogo';
+import AuthScreenFrame from '../../components/AuthScreenFrame';
 import LegalLinks from '../../components/LegalLinks';
 import GoogleSignInButton from '../../components/GoogleSignInButton';
 import LoginForm, { type LoginFormValues } from '../../forms/login.form';
-
-const fadeUp = keyframes`
-  0%   { opacity: 0; transform: translateY(18px); }
-  100% { opacity: 1; transform: translateY(0); }
-`;
 
 interface Props {
   loading: boolean;
@@ -37,39 +31,46 @@ export default function LoginCard({
   onGoogleCredential,
 }: Props) {
   return (
-    <Card
-      elevation={6}
-      sx={(theme) => ({
-        width: '100%',
-        maxWidth: 420,
-        borderRadius: '4px',
-        backdropFilter: 'blur(8px)',
-        bgcolor:
-          theme.palette.mode === 'dark'
-            ? 'rgba(17, 26, 46, 0.92)'
-            : 'rgba(255,255,255,0.92)',
-        color: 'text.primary',
-        animation: `${fadeUp} 0.7s cubic-bezier(.2,.7,.2,1.2) both`,
-        '& .MuiOutlinedInput-root': { borderRadius: '4px' },
-        '& .MuiButton-root': { borderRadius: '4px' },
-      })}
-    >
-      <CardContent sx={{ p: { xs: 3, sm: 4 } }}>
-        <Stack alignItems="center" spacing={1.5} sx={{ mb: 3 }}>
+    <AuthScreenFrame center>
+      <Stack spacing={2.1}>
+        <Stack alignItems="center" spacing={1.2}>
           <AuthLogo />
-          <Typography variant="h5" fontWeight={800}>
-            Welcome back
+          <Typography variant="h4" fontWeight={900} textAlign="center" color="text.primary">
+            Welcome <Box component="span" sx={{ color: '#ff5b72' }}>back.</Box>
           </Typography>
-          <Typography variant="body2" color="text.secondary" textAlign="center">
-            Sign in to discover pods, hosts and venues near you.
+          <Typography variant="body2" textAlign="center" color="text.secondary" sx={{ maxWidth: 300 }}>
+            Pick up where you left off and find pods around you.
           </Typography>
         </Stack>
 
-        <LoginForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} />
+        <Stack
+          direction="row"
+          spacing={1}
+          alignItems="center"
+          sx={{
+            px: 1.25,
+            py: 1,
+            borderRadius: 2,
+            bgcolor: 'action.hover',
+            border: 1,
+            borderColor: 'divider',
+          }}
+        >
+          <Stack direction="row" spacing={-0.7}>
+            {['#ff5b67', '#ff8d47', '#aa4cff'].map((color) => (
+              <Box key={color} sx={{ width: 22, height: 22, borderRadius: '50%', bgcolor: color, border: '2px solid #201529' }} />
+            ))}
+          </Stack>
+          <Typography variant="caption" fontWeight={800} color="text.primary">
+            New pods are waiting for your crew today
+          </Typography>
+        </Stack>
 
-        <Divider sx={{ my: 2.5 }}>or</Divider>
+        <LoginForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} submitLabel="Log me in" />
 
-        <Stack spacing={1.5} alignItems="center">
+        <Divider>OR</Divider>
+
+        <Stack spacing={1.4} alignItems="center">
           <GoogleSignInButton
             onCredential={onGoogleCredential}
             loading={gLoading}
@@ -83,12 +84,12 @@ export default function LoginCard({
           <Typography variant="body2" color="text.secondary">
             New here?{' '}
             <Link component={RouterLink} to="/register" underline="hover">
-              Create an account
+              Create one
             </Link>
           </Typography>
           <LegalLinks prefix="By signing in," />
         </Stack>
-      </CardContent>
-    </Card>
+      </Stack>
+    </AuthScreenFrame>
   );
 }

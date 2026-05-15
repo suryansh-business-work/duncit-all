@@ -21,6 +21,24 @@ interface Props {
   onCopyReferral: (token: string) => void;
 }
 
+const compactButtonSx = {
+  minHeight: 40,
+  px: 1.5,
+  fontSize: 13,
+  fontWeight: 950,
+  whiteSpace: 'nowrap',
+};
+
+const gradientButtonSx = {
+  ...compactButtonSx,
+  background: 'linear-gradient(135deg, #ff4f73 0%, #ff8b5f 54%, #f5337a 100%)',
+  boxShadow: '0 12px 24px rgba(245,51,122,0.28)',
+  '&:hover': {
+    background: 'linear-gradient(135deg, #ef3b63 0%, #f9794d 54%, #db2468 100%)',
+    boxShadow: '0 14px 28px rgba(245,51,122,0.34)',
+  },
+};
+
 export default function PodActionPanel({
   pod,
   isFree,
@@ -42,7 +60,7 @@ export default function PodActionPanel({
     return (
       <Stack spacing={1}>
         <Stack direction="row" spacing={1}>
-          <Button variant="contained" color="success" disabled fullWidth>
+          <Button variant="contained" color="success" disabled fullWidth sx={compactButtonSx}>
             Joined
           </Button>
           <Button
@@ -51,6 +69,7 @@ export default function PodActionPanel({
             onClick={onBackout}
             disabled={backingOut}
             fullWidth
+            sx={compactButtonSx}
           >
             Backout
           </Button>
@@ -76,6 +95,7 @@ export default function PodActionPanel({
           variant="outlined"
           startIcon={<ContentCopyIcon />}
           onClick={() => onCopyReferral(referralToken)}
+          sx={compactButtonSx}
         >
           Copy referral link
         </Button>
@@ -89,6 +109,7 @@ export default function PodActionPanel({
                 url: `${window.location.origin}${podUrl(pod.club_slug, pod.pod_id)}?ref=${referralToken}`,
               })
             }
+            sx={compactButtonSx}
           >
             Share
           </Button>
@@ -102,8 +123,10 @@ export default function PodActionPanel({
       <Button
         variant="contained"
         size="large"
+        fullWidth
         disabled={joining || ms?.can_join === false}
         onClick={onJoinFree}
+        sx={gradientButtonSx}
       >
         {ms?.can_join === false ? 'Pod is full' : 'Join free pod'}
       </Button>
@@ -114,8 +137,10 @@ export default function PodActionPanel({
     <Button
       variant="contained"
       size="large"
+      fullWidth
       disabled={ms?.can_join === false}
       onClick={onPaidCheckout}
+      sx={gradientButtonSx}
     >
       {ms?.can_join === false
         ? 'Pod is full'

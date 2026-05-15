@@ -120,8 +120,8 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           '100%': { backgroundPosition: '100% 0%' },
         },
         '@keyframes duncit-soft-enter': {
-          '0%': { opacity: 0.72, transform: 'translateY(4px)' },
-          '100%': { opacity: 1, transform: 'translateY(0)' },
+          '0%': { opacity: 0.72 },
+          '100%': { opacity: 1 },
         },
         '.MuiPaper-root, .MuiButtonBase-root, .MuiChip-root': {
           transitionDuration: '180ms',
@@ -195,9 +195,15 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           paddingInline: 18,
           paddingBlock: 9,
           fontWeight: 600,
+          lineHeight: 1.1,
+          minWidth: 0,
+          whiteSpace: 'nowrap',
+          '& .MuiButton-startIcon, & .MuiButton-endIcon': {
+            flexShrink: 0,
+          },
         },
-        sizeLarge: { paddingInline: 24, paddingBlock: 12, fontSize: '1rem' },
-        sizeSmall: { paddingInline: 14, paddingBlock: 6 },
+        sizeLarge: { paddingInline: 20, paddingBlock: 11, fontSize: '0.92rem' },
+        sizeSmall: { paddingInline: 12, paddingBlock: 6, fontSize: '0.78rem' },
         containedPrimary: {
           backgroundColor: PRIMARY,
           color: '#ffffff',

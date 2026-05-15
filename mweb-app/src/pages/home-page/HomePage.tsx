@@ -40,9 +40,13 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
     podsByClub,
     categoryChips,
     followedClubs,
+    followedPods,
+    hostPods,
+    followedPosts,
     followedUsers,
     totalPods,
     hostNameOf,
+    refetch,
   } = useHomeData({
     superCategorySlug,
     locationId,
@@ -67,6 +71,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
         pt: 0.25,
         mx: { xs: -1.25, sm: -2 },
         px: { xs: 1.25, sm: 2 },
+        pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 10px)',
         minHeight: '100%',
       }}
     >
@@ -75,7 +80,11 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
         branding={branding}
         sliders={sliders}
         followedClubs={followedClubs}
+        followedPods={followedPods}
+        hostPods={hostPods}
+        followedPosts={followedPosts}
         followedUsers={followedUsers}
+        onStatusUploaded={() => refetch()}
       />
       <HomeVibeChips categories={categoryChips} selectedId={categoryId} onSelect={setCategoryId} />
       <Stack spacing={1.75}>

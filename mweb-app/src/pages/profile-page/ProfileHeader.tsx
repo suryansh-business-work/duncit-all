@@ -95,17 +95,19 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onChangePhoto
           <Stat label="followers" value={me.followers_count ?? 0} />
           <Stat label="following" value={me.following_count ?? 0} />
         </Stack>
-        <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
-          <Button fullWidth variant="contained" size="large" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: 3, fontWeight: 900 }}>
+        <Stack direction="row" spacing={0.75} sx={{ width: '100%' }}>
+          <Button fullWidth variant="contained" size="small" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: 3, fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
             New Post
           </Button>
-          <Button fullWidth variant="outlined" size="large" onClick={onSettings} sx={{ borderRadius: 3, fontWeight: 900 }}>
+          <Button fullWidth variant="outlined" size="small" onClick={onSettings} sx={{ borderRadius: 3, fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
             Edit profile
           </Button>
           <IconButton
             onClick={onSettings}
             sx={{
-              width: 48,
+              width: 44,
+              height: 42,
+              flex: '0 0 44px',
               borderRadius: 3,
               border: 1,
               borderColor: 'divider',

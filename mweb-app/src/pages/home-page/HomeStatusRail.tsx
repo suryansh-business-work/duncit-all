@@ -1,15 +1,19 @@
 import { useState } from 'react';
-import { Box, Stack } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { Box, Snackbar, Stack } from '@mui/material';
 import HomeStatusTile from './HomeStatusTile';
 import HomeStatusViewer, { type HomeStatusViewerItem } from './HomeStatusViewer';
+import MyStatusUploadTile from './MyStatusUploadTile';
 
 interface HomeStatusRailProps {
   me?: any;
   branding?: any;
   sliders: any[];
   followedClubs: any[];
+  followedPods: any[];
+  hostPods: any[];
+  followedPosts: any[];
   followedUsers: any[];
+  onStatusUploaded?: () => void;
 }
 
 function initials(name?: string | null) {
@@ -31,10 +35,15 @@ export default function HomeStatusRail({
   branding,
   sliders,
   followedClubs,
+  followedPods,
+  hostPods,
+  followedPosts,
   followedUsers,
+  onStatusUploaded,
 }: HomeStatusRailProps) {
-  const navigate = useNavigate();
   const [viewer, setViewer] = useState<HomeStatusViewerItem | null>(null);
+  const [errorMsg, setErrorMsg] = useState<string | null>(null);
+  const [okMsg, setOkMsg] = useState<string | null>(null);
   const duncitName = branding?.app_name || 'Duncit';
 
   return (
@@ -55,12 +64,13 @@ export default function HomeStatusRail({
         }}
       >
         <Stack direction="row" spacing={1.1} alignItems="flex-start" sx={{ width: 'max-content' }}>
-        <HomeStatusTile
-          label="My status"
-          imageUrl={me?.profile_photo}
-          initials={initials(me?.full_name || me?.first_name)}
-          add
-          onClick={() => navigate('/profile?newPost=1')}
+        <MyStatusUploadTile
+          me={me}
+          onUploaded={() => {
+            setOkMsg('Status posted!');
+            onStatusUploaded?.();
+          }}
+          onError={(m) => setErrorMsg(m)}
         />
         {sliders.map((slider) => (
           <HomeStatusTile
@@ -84,7 +94,8 @@ export default function HomeStatusRail({
           />
         ))}
         {followedClubs.map((club) => {
-          const media = firstMedia(club.club_moments) ?? firstMedia(club.club_feature_images_and_videos);
+          const moments = (club.club_moments ?? []).filter((item: any) => item?.url);
+          const media = firstMedia(moments) ?? firstMedia(club.club_feature_images_and_videos);
           return (
             <HomeStatusTile
               key={`club-${club.id}`}
@@ -98,32 +109,85 @@ export default function HomeStatusRail({
                 avatarUrl: firstMedia(club.club_feature_images_and_videos)?.url,
                 mediaUrl: media?.url,
                 mediaType: media?.type,
+                slides: moments.map((moment: any, index: number) => ({
+                  mediaUrl: moment.url,
+                  mediaType: moment.type,
+                  subLabel: `Club status ${index + 1}/${moments.length}`,
+                })),
                 targetUrl: club.club_id ? `/club/${club.club_id}` : undefined,
                 internal: true,
               })}
             />
           );
         })}
+        {[...hostPods, ...followedPods].map((pod) => {
+          const media = firstMedia(pod.pod_images_and_videos);
+          return (
+            <HomeStatusTile
+              key={`pod-${pod.id}`}
+              label={pod.pod_title}
+              imageUrl={media?.type === 'VIDEO' ? null : media?.url}
+              videoUrl={media?.type === 'VIDEO' ? media?.url : null}
+              initials={initials(pod.pod_title)}
+              onClick={() => setViewer({
+                label: pod.pod_title,
+                subLabel: hostPods.some((item) => item.id === pod.id) ? 'Your pod status' : 'Followed pod',
+                mediaUrl: media?.url,
+                mediaType: media?.type,
+                slides: (pod.pod_images_and_videos ?? []).map((item: any, index: number) => ({
+                  mediaUrl: item.url,
+                  mediaType: item.type,
+                  subLabel: `Pod status ${index + 1}/${pod.pod_images_and_videos.length}`,
+                })),
+                targetUrl: pod.club_slug && pod.pod_id ? `/club/${pod.club_slug}/pod/${pod.pod_id}` : undefined,
+                internal: true,
+              })}
+            />
+          );
+        })}
         {followedUsers.map((user) => (
+          (() => {
+            const posts = followedPosts.filter((post) => post.author_id === user.user_id);
+            const firstPost = posts[0];
+            return (
           <HomeStatusTile
             key={`user-${user.user_id}`}
             label={user.first_name || user.full_name || 'User'}
-            imageUrl={user.profile_photo}
+            imageUrl={firstPost?.image_url || user.profile_photo}
             initials={initials(user.full_name || user.first_name)}
             onClick={() => setViewer({
               label: user.first_name || user.full_name || 'User',
               subLabel: user.full_name,
               avatarUrl: user.profile_photo,
-              mediaUrl: user.profile_photo,
+              mediaUrl: firstPost?.image_url || user.profile_photo,
               mediaType: 'IMAGE',
+              slides: posts.map((post, index) => ({
+                mediaUrl: post.image_url,
+                mediaType: 'IMAGE',
+                subLabel: post.caption || `Status ${index + 1}/${posts.length}`,
+              })),
               targetUrl: `/u/${user.user_id}`,
               internal: true,
             })}
           />
+            );
+          })()
         ))}
         </Stack>
       </Box>
       <HomeStatusViewer item={viewer} onClose={() => setViewer(null)} />
+      <Snackbar
+        open={!!errorMsg}
+        autoHideDuration={3500}
+        onClose={() => setErrorMsg(null)}
+        message={errorMsg ?? ''}
+      />
+      <Snackbar
+        open={!!okMsg}
+        autoHideDuration={2000}
+        onClose={() => setOkMsg(null)}
+        message={okMsg ?? ''}
+      />
     </>
   );
 }

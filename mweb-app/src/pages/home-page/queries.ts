@@ -62,6 +62,13 @@ export const HOME_DATA = gql`
       user_id
       full_name
     }
+    posts {
+      id
+      author_id
+      image_url
+      caption
+      created_at
+    }
     categories {
       id
       name

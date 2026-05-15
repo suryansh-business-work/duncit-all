@@ -55,6 +55,14 @@ export const settingsTypeDefs = gql`
     logo_url: String!
     primary_color: String!
     support_email: String!
+    mascot_name: String!
+    mascot_description_html: String!
+    mascot_lottie_url: String!
+    mascot_on_chair_lottie_url: String!
+    mascot_winner_lottie_url: String!
+    welcome_lottie_url: String!
+    app_loader_lottie_url: String!
+    confetti_lottie_url: String!
     updated_at: String
   }
 
@@ -82,6 +90,14 @@ export const settingsTypeDefs = gql`
     logo_url: String
     primary_color: String
     support_email: String
+    mascot_name: String
+    mascot_description_html: String
+    mascot_lottie_url: String
+    mascot_on_chair_lottie_url: String
+    mascot_winner_lottie_url: String
+    welcome_lottie_url: String
+    app_loader_lottie_url: String
+    confetti_lottie_url: String
   }
 
   extend type Query {

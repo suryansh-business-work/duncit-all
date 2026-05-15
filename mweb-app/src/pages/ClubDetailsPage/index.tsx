@@ -51,9 +51,13 @@ export default function ClubDetailsPage() {
     ['VENUES', `Venues ${venues.length}`],
   ] as const;
 
-  const toggleClubFollow = () => {
-    toggleFollow(club.id);
-    notify(isFollowing(club.id) ? `Unfollowed ${club.club_name}` : `Following ${club.club_name}`, 'success');
+  const toggleClubFollow = async () => {
+    try {
+      const nextFollowing = await toggleFollow(club.id);
+      notify(nextFollowing ? `Following ${club.club_name}` : `Unfollowed ${club.club_name}`, 'success');
+    } catch (toggleError: any) {
+      notify(toggleError?.message ?? 'Could not update club follow', 'error');
+    }
   };
 
   const shareClub = async () => {
@@ -77,7 +81,7 @@ export default function ClubDetailsPage() {
         mx: { xs: -1.25, sm: -2 },
         px: { xs: 1.25, sm: 2 },
         pt: 0,
-        pb: 6,
+        pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 10px)',
         minHeight: '100%',
       }}
     >

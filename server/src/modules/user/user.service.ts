@@ -227,6 +227,8 @@ async function toPublic(u: any) {
         }
       : null,
     saved_pod_ids: idStrings(u.saved_pod_ids),
+    following_pod_ids: idStrings(u.following_pod_ids),
+    following_club_ids: idStrings(u.following_club_ids),
     following_user_ids: idStrings(u.following_user_ids),
     followers_count: (u.follower_user_ids ?? []).length,
     following_count: (u.following_user_ids ?? []).length,
@@ -607,6 +609,66 @@ export const userService = {
       .map((id) => byId.get(id))
       .filter(Boolean)
       .map((doc: any) => podToPublic(doc, clubSlugById.get(String(doc.club_id)) ?? ''));
+  },
+
+  async followClub(user_id: string, clubId: string) {
+    if (!Types.ObjectId.isValid(clubId)) {
+      throw new GraphQLError('Invalid club', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const club = await ClubModel.findById(clubId).select('_id is_active');
+    if (!club || !club.is_active) {
+      throw new GraphQLError('Club not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    const updated = await UserModel.findByIdAndUpdate(
+      user_id,
+      { $addToSet: { following_club_ids: club._id } },
+      { new: true }
+    ).select('+password');
+    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPublic(updated);
+  },
+
+  async unfollowClub(user_id: string, clubId: string) {
+    if (!Types.ObjectId.isValid(clubId)) {
+      throw new GraphQLError('Invalid club', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const updated = await UserModel.findByIdAndUpdate(
+      user_id,
+      { $pull: { following_club_ids: clubId } },
+      { new: true }
+    ).select('+password');
+    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPublic(updated);
+  },
+
+  async followPod(user_id: string, podId: string) {
+    if (!Types.ObjectId.isValid(podId)) {
+      throw new GraphQLError('Invalid pod', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const pod = await PodModel.findById(podId).select('_id is_active');
+    if (!pod || !pod.is_active) {
+      throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    const updated = await UserModel.findByIdAndUpdate(
+      user_id,
+      { $addToSet: { following_pod_ids: pod._id } },
+      { new: true }
+    ).select('+password');
+    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPublic(updated);
+  },
+
+  async unfollowPod(user_id: string, podId: string) {
+    if (!Types.ObjectId.isValid(podId)) {
+      throw new GraphQLError('Invalid pod', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const updated = await UserModel.findByIdAndUpdate(
+      user_id,
+      { $pull: { following_pod_ids: podId } },
+      { new: true }
+    ).select('+password');
+    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPublic(updated);
   },
 
   async followUser(user_id: string, targetUserId: string) {

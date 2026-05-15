@@ -63,6 +63,8 @@ export const userTypeDefs = gql`
     pet_profile: PetProfile
 
     saved_pod_ids: [ID!]!
+    following_pod_ids: [ID!]!
+    following_club_ids: [ID!]!
     following_user_ids: [ID!]!
     followers_count: Int!
     following_count: Int!
@@ -274,6 +276,10 @@ export const userTypeDefs = gql`
     updateMyPetProfile(input: PetProfileInput!): User!
     updateMyInterests(category_ids: [ID!]!): User!
     toggleSavedPod(pod_doc_id: ID!): SavedPodState!
+    followPod(pod_id: ID!): User!
+    unfollowPod(pod_id: ID!): User!
+    followClub(club_id: ID!): User!
+    unfollowClub(club_id: ID!): User!
     followUser(user_id: ID!): User!
     unfollowUser(user_id: ID!): User!
     createUser(input: CreateUserInput!): User!

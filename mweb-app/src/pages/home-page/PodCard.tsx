@@ -155,7 +155,14 @@ export default function PodCard({
               event.stopPropagation();
               onOpen();
             }}
-            sx={{ mt: 1.5, borderRadius: 999, fontWeight: 900 }}
+            sx={{
+              mt: 1.5,
+              borderRadius: 999,
+              fontWeight: 900,
+              background: 'linear-gradient(135deg, #ff4f73 0%, #ff8b5f 100%)',
+              boxShadow: '0 10px 22px rgba(245,51,122,0.26)',
+              '&:hover': { background: 'linear-gradient(135deg, #ef3b63 0%, #f9794d 100%)' },
+            }}
           >
             Book
           </Button>

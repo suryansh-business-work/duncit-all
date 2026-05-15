@@ -91,11 +91,15 @@ export default function CheckoutPage() {
   if (financeLoading || podLoading || !breakup) return <CheckoutSkeleton />;
 
   return (
-    <Box sx={{ maxWidth: 720, mx: 'auto' }}>
+    <Box sx={{ maxWidth: 720, mx: 'auto', pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 24px)' }}>
+      <Box sx={{ p: 2, borderRadius: 4, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 58%, #111827 100%)', boxShadow: '0 18px 44px rgba(17, 24, 39, 0.22)' }}>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-        <IconButton onClick={() => navigate(-1)} aria-label="Back"><ArrowBackIcon /></IconButton>
-        <Typography variant="h5" fontWeight={700}>Checkout</Typography>
-        {financeData?.publicFinanceSettings?.dummy_mode && <Chip color="warning" size="small" label="Dummy Mode" />}
+        <IconButton onClick={() => navigate(-1)} aria-label="Back" sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.12)' }}><ArrowBackIcon /></IconButton>
+        <Box sx={{ flex: 1, minWidth: 0 }}>
+          <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.62)', letterSpacing: 0, lineHeight: 1 }}>Checkout</Typography>
+          <Typography variant="h5" fontWeight={900} sx={{ lineHeight: 1.1 }}>Confirm your spot</Typography>
+        </Box>
+        {financeData?.publicFinanceSettings?.dummy_mode && <Chip size="small" label="Dummy" sx={{ bgcolor: 'rgba(255,255,255,0.14)', color: '#fff', fontWeight: 800 }} />}
       </Stack>
       {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
@@ -108,6 +112,7 @@ export default function CheckoutPage() {
           currency={breakup.currency}
         />
       </Stack>
+      </Box>
       <Backdrop open={submitting} sx={{ color: 'common.white', zIndex: (t) => t.zIndex.modal + 1, flexDirection: 'column', gap: 2 }}>
         <PaymentLottie variant="processing" size={140} />
         <Typography variant="subtitle1" fontWeight={600}>Processing your payment...</Typography>

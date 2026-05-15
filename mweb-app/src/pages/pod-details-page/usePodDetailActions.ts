@@ -3,10 +3,12 @@ import { useMutation } from '@apollo/client';
 import type { NavigateFunction } from 'react-router-dom';
 import {
   BACKOUT,
+  FOLLOW_POD,
   INC_HITS,
   JOIN_FREE,
   REDEEM,
   TOGGLE_SAVED_POD_DETAIL,
+  UNFOLLOW_POD,
 } from './queries';
 import { podUrl } from '../../utils/seoUrls';
 
@@ -15,6 +17,8 @@ interface Args {
   pod: any;
   saved: boolean;
   savedIds: string[];
+  following: boolean;
+  followingIds: string[];
   referralFromUrl: string | null;
   refetch: () => Promise<unknown>;
   navigate: NavigateFunction;
@@ -25,6 +29,8 @@ export function usePodDetailActions({
   pod,
   saved,
   savedIds,
+  following,
+  followingIds,
   referralFromUrl,
   refetch,
   navigate,
@@ -34,8 +40,11 @@ export function usePodDetailActions({
   const [backout, backoutState] = useMutation(BACKOUT);
   const [redeem] = useMutation(REDEEM);
   const [toggleSavedPod] = useMutation(TOGGLE_SAVED_POD_DETAIL);
+  const [followPod, followState] = useMutation(FOLLOW_POD);
+  const [unfollowPod, unfollowState] = useMutation(UNFOLLOW_POD);
   const [snack, setSnack] = useState<string | null>(null);
   const [backoutOpen, setBackoutOpen] = useState(false);
+  const [confettiOpen, setConfettiOpen] = useState(false);
 
   useEffect(() => {
     if (id) incHits({ variables: { id } }).catch(() => {});
@@ -46,6 +55,7 @@ export function usePodDetailActions({
     redeem({ variables: { token: referralFromUrl } })
       .then(() => {
         setSnack('Joined via referral');
+        setConfettiOpen(true);
         refetch();
       })
       .catch((e) => setSnack(e.message));
@@ -70,6 +80,29 @@ export function usePodDetailActions({
     }
   };
 
+  const onToggleFollow = async () => {
+    if (!pod) return;
+    try {
+      const mutation = following ? unfollowPod : followPod;
+      await mutation({
+        variables: { pod_id: pod.id },
+        optimisticResponse: {
+          [following ? 'unfollowPod' : 'followPod']: {
+            __typename: 'User',
+            user_id: 'me',
+            following_pod_ids: following
+              ? followingIds.filter((x) => x !== pod.id)
+              : [...followingIds, pod.id],
+          },
+        },
+      });
+      setSnack(following ? 'Pod unfollowed' : 'Pod followed');
+      await refetch();
+    } catch (e: any) {
+      setSnack(e.message);
+    }
+  };
+
   const onShare = async () => {
     const url = window.location.href;
     const title = pod?.pod_title ?? 'Duncit Pod';
@@ -88,6 +121,7 @@ export function usePodDetailActions({
     if (!pod) return;
     try {
       await joinFree({ variables: { id: pod.id, referral: referralFromUrl } });
+      setConfettiOpen(true);
       setSnack('Joined!');
       await refetch();
     } catch (e: any) {
@@ -135,7 +169,11 @@ export function usePodDetailActions({
     backoutOpen,
     backoutState,
     joinState,
+    followState,
+    unfollowState,
     snack,
+    confettiOpen,
+    setConfettiOpen,
     setBackoutOpen,
     setSnack,
     onConfirmBackout,
@@ -143,6 +181,7 @@ export function usePodDetailActions({
     onJoinFree,
     onPaidCheckout,
     onShare,
+    onToggleFollow,
     onToggleSave,
   };
 }

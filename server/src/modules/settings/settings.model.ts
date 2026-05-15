@@ -52,6 +52,14 @@ export interface IBranding extends Document {
   logo_url: string;
   primary_color: string;
   support_email: string;
+  mascot_name: string;
+  mascot_description_html: string;
+  mascot_lottie_url: string;
+  mascot_on_chair_lottie_url: string;
+  mascot_winner_lottie_url: string;
+  welcome_lottie_url: string;
+  app_loader_lottie_url: string;
+  confetti_lottie_url: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -63,6 +71,18 @@ const brandingSchema = new Schema<IBranding>(
     logo_url: { type: String, default: '' },
     primary_color: { type: String, default: '#1976d2' },
     support_email: { type: String, default: '' },
+    mascot_name: { type: String, default: 'Dunko' },
+    mascot_description_html: {
+      type: String,
+      default:
+        '<p><strong>Dunko</strong> is the soul of Duncit \u2014 a playful guide who helps you find your tribe, join pods, and celebrate every win together.</p>',
+    },
+    mascot_lottie_url: { type: String, default: '' },
+    mascot_on_chair_lottie_url: { type: String, default: '' },
+    mascot_winner_lottie_url: { type: String, default: '' },
+    welcome_lottie_url: { type: String, default: '' },
+    app_loader_lottie_url: { type: String, default: '' },
+    confetti_lottie_url: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

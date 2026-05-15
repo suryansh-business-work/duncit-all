@@ -1,4 +1,6 @@
 import { Box } from '@mui/material';
+import { alpha } from '@mui/material/styles';
+import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import PodActionPanel from './PodActionPanel';
 
 interface Props {
@@ -21,17 +23,26 @@ export default function StickyPodActionPanel(props: Props) {
         position: 'fixed',
         left: 0,
         right: 0,
-        bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px)',
+        bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 2px)',
         zIndex: (theme) => theme.zIndex.appBar + 1,
-        px: { xs: 2, sm: 3 },
-        py: 1,
-        bgcolor: 'background.paper',
-        borderTop: 1,
-        borderColor: 'divider',
-        boxShadow: '0 -10px 28px rgba(0,0,0,0.16)',
+        px: { xs: 1.25, sm: 2 },
+        pointerEvents: 'none',
       }}
     >
-      <Box sx={{ maxWidth: 900, mx: 'auto' }}>
+      <Box
+        sx={{
+          maxWidth: APP_SHELL_MAX_WIDTH,
+          mx: 'auto',
+          p: 0.75,
+          borderRadius: 3,
+          border: 1,
+          borderColor: 'divider',
+          bgcolor: (theme) => alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.88 : 0.94),
+          backdropFilter: 'blur(18px)',
+          boxShadow: '0 16px 36px rgba(15,23,42,0.22)',
+          pointerEvents: 'auto',
+        }}
+      >
         <PodActionPanel {...props} />
       </Box>
     </Box>

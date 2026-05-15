@@ -115,15 +115,25 @@ export default function SignupSurveyPage() {
           position: 'sticky',
           top: 0,
           zIndex: 5,
-          bgcolor: 'background.default',
-          pt: 1,
-          pb: 1.5,
+          pt: 0.5,
+          pb: 1,
+          px: 0.25,
+          backdropFilter: 'blur(10px)',
         }}
       >
         <LinearProgress
           variant="determinate"
           value={progress}
-          sx={{ borderRadius: 999, height: 8 }}
+          sx={{
+            bgcolor: 'action.hover',
+            borderRadius: 999,
+            height: 6,
+            overflow: 'hidden',
+            '& .MuiLinearProgress-bar': {
+              borderRadius: 999,
+              background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)',
+            },
+          }}
         />
       </Box>
 

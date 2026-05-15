@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom';
 import { Alert, AppBar, Avatar, Box, IconButton, Toolbar, Tooltip } from '@mui/material';
 import { HEADER_DATA, PUBLIC_POLICIES } from './queries';
 import HeaderBrand from './HeaderBrand';
+import HeaderMascotButton from './HeaderMascotButton';
 import HeaderLocationButton from './HeaderLocationButton';
 import HeaderNotificationsBell from './HeaderNotificationsBell';
 import HeaderToast from './HeaderToast';
@@ -96,6 +97,7 @@ export default function AppHeader({
     >
       <Toolbar sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', gap: 1, py: 0.75, minHeight: minimal ? 56 : 60, px: 1.5 }}>
         <HeaderBrand logoUrl={branding?.logo_url} appName={branding?.app_name} />
+        <HeaderMascotButton branding={branding} />
 
         <Box sx={{ flexGrow: 1 }} />
 

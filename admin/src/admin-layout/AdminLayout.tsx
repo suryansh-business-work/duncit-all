@@ -7,6 +7,7 @@ import { NotifyHost } from '../components/notify';
 import { Content, DRAWER_WIDTH, Main, Root } from './styled';
 import Sidebar from './Sidebar';
 import Topbar from './Topbar';
+import ModuleWelcomeOverlay from './ModuleWelcomeOverlay';
 
 export default function AdminLayout({ children }: { children: ReactNode }) {
   const theme = useTheme();
@@ -52,6 +53,7 @@ export default function AdminLayout({ children }: { children: ReactNode }) {
       </Main>
       <AdminAiChatButton />
       <NotifyHost />
+      <ModuleWelcomeOverlay />
     </Root>
   );
 }

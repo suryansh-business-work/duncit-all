@@ -33,6 +33,38 @@ function notFound(what: string): never {
   throw new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
 }
 
+const BRANDING_FIELDS = [
+  'app_name',
+  'logo_url',
+  'primary_color',
+  'support_email',
+  'mascot_name',
+  'mascot_description_html',
+  'mascot_lottie_url',
+  'mascot_on_chair_lottie_url',
+  'mascot_winner_lottie_url',
+  'welcome_lottie_url',
+  'app_loader_lottie_url',
+  'confetti_lottie_url',
+] as const;
+type BrandingField = (typeof BRANDING_FIELDS)[number];
+
+const brandingToPub = (doc: any) => ({
+  app_name: doc.app_name ?? 'Duncit',
+  logo_url: doc.logo_url ?? '',
+  primary_color: doc.primary_color ?? '#1976d2',
+  support_email: doc.support_email ?? '',
+  mascot_name: doc.mascot_name ?? 'Dunko',
+  mascot_description_html: doc.mascot_description_html ?? '',
+  mascot_lottie_url: doc.mascot_lottie_url ?? '',
+  mascot_on_chair_lottie_url: doc.mascot_on_chair_lottie_url ?? '',
+  mascot_winner_lottie_url: doc.mascot_winner_lottie_url ?? '',
+  welcome_lottie_url: doc.welcome_lottie_url ?? '',
+  app_loader_lottie_url: doc.app_loader_lottie_url ?? '',
+  confetti_lottie_url: doc.confetti_lottie_url ?? '',
+  updated_at: doc.updated_at?.toISOString?.() ?? '',
+});
+
 const DEFAULT_FLAGS: { key: string; name: string; description: string; enabled: boolean }[] = [
   { key: 'public_signup', name: 'Public Signup', description: 'Allow new users to register from the web app.', enabled: true },
   { key: 'venue_booking', name: 'Venue Booking', description: 'Enable venue booking flow.', enabled: true },
@@ -125,18 +157,12 @@ export const settingsService = {
   async getBranding() {
     let doc = await BrandingModel.findOne({ singleton_key: 'branding' });
     if (!doc) doc = await BrandingModel.create({ singleton_key: 'branding' });
-    return {
-      app_name: doc.app_name,
-      logo_url: doc.logo_url,
-      primary_color: doc.primary_color,
-      support_email: doc.support_email,
-      updated_at: doc.updated_at?.toISOString?.() ?? '',
-    };
+    return brandingToPub(doc);
   },
 
-  async updateBranding(input: { app_name?: string; logo_url?: string; primary_color?: string; support_email?: string }) {
+  async updateBranding(input: Partial<Record<BrandingField, string>>) {
     const update: any = {};
-    for (const k of ['app_name', 'logo_url', 'primary_color', 'support_email'] as const) {
+    for (const k of BRANDING_FIELDS) {
       if (input[k] !== undefined) update[k] = input[k];
     }
     const doc = await BrandingModel.findOneAndUpdate(
@@ -144,13 +170,7 @@ export const settingsService = {
       { $set: update },
       { new: true, upsert: true }
     );
-    return {
-      app_name: doc.app_name,
-      logo_url: doc.logo_url,
-      primary_color: doc.primary_color,
-      support_email: doc.support_email,
-      updated_at: doc.updated_at?.toISOString?.() ?? '',
-    };
+    return brandingToPub(doc);
   },
 
   async listEnvironmentVariables() {

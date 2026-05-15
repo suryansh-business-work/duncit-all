@@ -64,6 +64,8 @@ const userSchema = new Schema(
     pet_profile: { type: petProfileSchema, default: null },
 
     saved_pod_ids: [{ type: Schema.Types.ObjectId, ref: 'Pod' }],
+    following_pod_ids: [{ type: Schema.Types.ObjectId, ref: 'Pod' }],
+    following_club_ids: [{ type: Schema.Types.ObjectId, ref: 'Club' }],
     following_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     follower_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     interest_category_ids: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
@@ -86,6 +88,8 @@ const userSchema = new Schema(
 
 userSchema.index({ phone_number: 1, phone_extension: 1 }, { unique: true });
 userSchema.index({ saved_pod_ids: 1 });
+userSchema.index({ following_pod_ids: 1 });
+userSchema.index({ following_club_ids: 1 });
 userSchema.index({ following_user_ids: 1 });
 userSchema.index({ interest_category_ids: 1 });
 

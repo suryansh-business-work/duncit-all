@@ -1,4 +1,5 @@
 import { Box, Typography, keyframes } from '@mui/material';
+import LottiePlayer from './LottiePlayer';
 
 const logoBounce = keyframes`
   0%   { transform: scale(0.6) translateY(-12px); opacity: 0; }
@@ -26,11 +27,13 @@ const arrowFloat = keyframes`
 interface SplashProps {
   tagline?: string;
   description?: string;
+  mascotUrl?: string;
 }
 
 export default function SplashScreen({
   tagline = 'Welcome to Duncit',
   description = 'Find your tribe. Join pods, meet locals, share moments.',
+  mascotUrl = '/lotties/mascot.json',
 }: SplashProps) {
   return (
     <Box
@@ -73,18 +76,16 @@ export default function SplashScreen({
           />
         ))}
         <Box
-          component="img"
-          src="/duncit-logo.svg"
-          alt="Duncit"
           sx={{
             position: 'relative',
-            width: 168,
-            height: 'auto',
-            objectFit: 'contain',
+            width: 200,
+            height: 200,
             animation: `${logoBounce} 1.1s cubic-bezier(.2,.7,.2,1.4) both`,
             filter: 'drop-shadow(0 8px 18px rgba(255,77,79,0.25))',
           }}
-        />
+        >
+          <LottiePlayer src={mascotUrl} />
+        </Box>
       </Box>
 
       <Typography

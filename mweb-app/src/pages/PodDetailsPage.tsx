@@ -10,11 +10,13 @@ import { usePricing } from '../hooks/usePricing';
 import BackoutConfirmDialog from './pod-details-page/BackoutConfirmDialog';
 import PodHero from './pod-details-page/PodHero';
 import PodOverview from './pod-details-page/PodOverview';
+import PodCommercePreview from './pod-details-page/PodCommercePreview';
 import StickyPodActionPanel from './pod-details-page/StickyPodActionPanel';
 import PodDetailAccordions from './pod-details-page/PodDetailAccordions';
 import PodMapSection from '../components/pod-details/PodMapSection';
 import PodSocialBar from './pod-details-page/PodSocialBar';
 import { usePodDetailActions } from './pod-details-page/usePodDetailActions';
+import ConfettiOverlay from '../components/ConfettiOverlay';
 import {
   POD_DETAILS,
   POD_ID_BY_SLUGS,
@@ -61,7 +63,9 @@ export default function PodDetailsPage() {
   // Derive early so hooks are always called unconditionally (Rules of Hooks).
   const pod = data?.pod ?? null;
   const savedIds: string[] = data?.me?.saved_pod_ids ?? [];
+  const followingIds: string[] = data?.me?.following_pod_ids ?? [];
   const saved = pod ? savedIds.includes(pod.id) : false;
+  const following = pod ? followingIds.includes(pod.id) : false;
 
   // MUST be called before any conditional returns.
   const actions = usePodDetailActions({
@@ -69,6 +73,8 @@ export default function PodDetailsPage() {
     pod,
     saved,
     savedIds,
+    following,
+    followingIds,
     referralFromUrl,
     refetch,
     navigate,
@@ -102,20 +108,29 @@ export default function PodDetailsPage() {
   });
 
   const isFree = pod.pod_type?.includes('FREE');
+  const isPodHost = (pod.pod_hosts_id ?? []).includes(data?.me?.user_id);
   const media = pod.pod_images_and_videos ?? [];
 
   return (
-    <Stack spacing={3} sx={{ pt: 0, pb: 'calc(var(--duncit-bottom-nav-content-offset, 148px) + 32px)' }}>
+    <Stack
+      spacing={3}
+      sx={{
+        pt: 0,
+        pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 24px)',
+      }}
+    >
       <PodHero
         media={media}
         title={pod.pod_title}
         saved={saved}
+        following={following}
         onBack={() => navigate(-1)}
+        onToggleFollow={actions.onToggleFollow}
         onToggleSave={actions.onToggleSave}
         onShare={actions.onShare}
       />
 
-      <PodOverview pod={pod} isFree={isFree} priceFormat={priceFormat} />
+      <PodOverview pod={pod} isFree={isFree} isHost={isPodHost} priceFormat={priceFormat} onAddStatus={() => navigate('/profile?newPost=1')} />
 
       <PodMapSection pod={pod} location={location} venue={venue} />
 
@@ -126,6 +141,8 @@ export default function PodDetailsPage() {
         initialCommentCount={pod.comment_count ?? 0}
         viewerId={data?.me?.user_id ?? null}
       />
+
+      <PodCommercePreview pod={pod} priceFormat={priceFormat} />
 
       <PodDetailAccordions
         pod={pod}
@@ -167,6 +184,10 @@ export default function PodDetailsPage() {
         busy={actions.backoutState.loading}
         refundThresholdPct={data?.podMembershipState?.refund_threshold_pct ?? null}
         onConfirm={actions.onConfirmBackout}
+      />
+      <ConfettiOverlay
+        open={actions.confettiOpen}
+        onClose={() => actions.setConfettiOpen(false)}
       />
     </Stack>
   );

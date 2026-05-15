@@ -148,6 +148,42 @@ export const userResolvers = {
       }
       return userService.toggleSavedPod(ctx.user.id, args.pod_doc_id);
     },
+    followPod: async (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.followPod(ctx.user.id, args.pod_id);
+    },
+    unfollowPod: async (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.unfollowPod(ctx.user.id, args.pod_id);
+    },
+    followClub: async (_p: unknown, args: { club_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.followClub(ctx.user.id, args.club_id);
+    },
+    unfollowClub: async (_p: unknown, args: { club_id: string }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.unfollowClub(ctx.user.id, args.club_id);
+    },
     followUser: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       if (!ctx.user) {
         const { GraphQLError } = await import('graphql');

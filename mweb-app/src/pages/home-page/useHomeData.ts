@@ -23,7 +23,7 @@ export function useHomeData({
   dateFilter,
   sortBy,
 }: UseHomeDataParams) {
-  const { data, loading, error } = useQuery(HOME_DATA, {
+  const { data, loading, error, refetch } = useQuery(HOME_DATA, {
     variables: {
       superCatSlug: superCategorySlug || undefined,
       podFilter: {
@@ -38,6 +38,7 @@ export function useHomeData({
   const { data: headerData } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-first' });
   const isHost = (headerData?.me?.roles ?? []).includes('HOST');
   const { ids: followedClubIds } = useFollowedClubs();
+  const followingPodIds: string[] = headerData?.me?.following_pod_ids ?? [];
   const followingUserIds: string[] = headerData?.me?.following_user_ids ?? [];
   const { data: followedUsersData } = useQuery(FOLLOWED_USERS, {
     variables: { userIds: followingUserIds },
@@ -292,10 +293,30 @@ export function useHomeData({
       .slice(0, 12);
   }, [data, followedClubSet, selectedSuperId]);
 
+  const followedPodSet = useMemo(() => new Set(followingPodIds), [followingPodIds]);
+  const followedPods = useMemo(
+    () => filteredPods.filter((pod: any) => followedPodSet.has(pod.id)).slice(0, 12),
+    [filteredPods, followedPodSet]
+  );
+
+  const hostPods = useMemo(() => {
+    const meId = headerData?.me?.user_id;
+    if (!meId) return [];
+    return filteredPods
+      .filter((pod: any) => (pod.pod_hosts_id ?? []).includes(meId))
+      .slice(0, 12);
+  }, [filteredPods, headerData?.me?.user_id]);
+
+  const followedPosts = useMemo(() => {
+    const userIds = new Set(followingUserIds);
+    return (data?.posts ?? []).filter((post: any) => userIds.has(post.author_id)).slice(0, 36);
+  }, [data?.posts, followingUserIds]);
+
   return {
     data,
     loading,
     error,
+    refetch,
     branding: headerData?.branding,
     me: headerData?.me,
     isHost,
@@ -305,6 +326,9 @@ export function useHomeData({
     podsByClub,
     categoryChips,
     followedClubs,
+    followedPods,
+    hostPods,
+    followedPosts,
     followedUsers: followedUsersData?.publicUsersByIds ?? [],
     totalPods: filteredPods.length,
     hostNameOf,

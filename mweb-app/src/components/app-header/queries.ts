@@ -6,6 +6,12 @@ export const HEADER_DATA = gql`
       app_name
       logo_url
       primary_color
+      mascot_name
+      mascot_description_html
+      mascot_lottie_url
+      app_loader_lottie_url
+      confetti_lottie_url
+      welcome_lottie_url
     }
     me {
       user_id
@@ -16,6 +22,7 @@ export const HEADER_DATA = gql`
       profile_photo
       city
       roles
+      following_pod_ids
       following_user_ids
     }
     superCategories: categories(filter: { level: SUPER }) {

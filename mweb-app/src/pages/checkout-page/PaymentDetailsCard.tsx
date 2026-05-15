@@ -41,11 +41,18 @@ export default function PaymentDetailsCard({
   };
   const helperText = (key: keyof CheckoutForm, fallback = ' ') =>
     fieldError(key) ? String(errors[key]) : fallback;
+  const fieldSx = {
+    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.66)' },
+    '& .MuiInputLabel-root.Mui-focused': { color: '#ff8b5f' },
+    '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.08)', color: '#fff', borderRadius: 3 },
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.16)' },
+    '& .MuiFormHelperText-root': { color: 'rgba(255,255,255,0.58)' },
+  };
 
   return (
-    <Card sx={{ flex: 1 }}>
+    <Card sx={{ flex: 1, borderRadius: 4, bgcolor: 'rgba(255,255,255,0.08)', color: '#fff', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.12)' }}>
       <CardContent>
-        <Typography variant="subtitle1" fontWeight={700} gutterBottom>Payment Details</Typography>
+        <Typography variant="subtitle1" fontWeight={900} gutterBottom>Payment details</Typography>
         <Stack spacing={2} sx={{ mt: 1 }}>
           <TextField
             label="Email"
@@ -57,6 +64,7 @@ export default function PaymentDetailsCard({
             helperText={helperText('email')}
             fullWidth
             required
+            sx={fieldSx}
           />
           <TextField
             label="Phone"
@@ -68,6 +76,7 @@ export default function PaymentDetailsCard({
             helperText={helperText('phone')}
             fullWidth
             required
+            sx={fieldSx}
           />
           <TextField
             label="Billing address"
@@ -81,8 +90,9 @@ export default function PaymentDetailsCard({
             minRows={3}
             fullWidth
             required
+            sx={fieldSx}
           />
-          <TextField select label="Payment Method" name="method" value={values.method} onChange={(e) => setField('method', e.target.value)} onBlur={handleBlur} fullWidth>
+          <TextField select label="Payment Method" name="method" value={values.method} onChange={(e) => setField('method', e.target.value)} onBlur={handleBlur} fullWidth sx={fieldSx}>
             {CHECKOUT_PAYMENT_METHODS.map((method) => <MenuItem key={method.value} value={method.value}>{method.label}</MenuItem>)}
           </TextField>
           <TextField
@@ -92,6 +102,7 @@ export default function PaymentDetailsCard({
             onChange={(e) => setField('simulate_failure', e.target.value === 'fail')}
             fullWidth
             helperText="Dummy gateway only"
+            sx={fieldSx}
           >
             <MenuItem value="success">Successful Payment</MenuItem>
             <MenuItem value="fail">Failed Payment</MenuItem>
@@ -103,11 +114,11 @@ export default function PaymentDetailsCard({
             startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <LockIcon />}
             onClick={submitForm}
             disabled={submitting || total <= 0}
-            sx={{ minHeight: 48 }}
+            sx={{ minHeight: 48, borderRadius: 3, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
           >
             {submitting ? 'Processing...' : `Pay ${formatMoney(currency, total)}`}
           </Button>
-          <Typography variant="caption" color="text.secondary" sx={{ textAlign: 'center' }}>
+          <Typography variant="caption" sx={{ textAlign: 'center', color: 'rgba(255,255,255,0.62)' }}>
             Receipt and invoice will be sent after successful payment.
           </Typography>
         </Stack>

@@ -92,13 +92,16 @@ export default function App() {
         <ScrollToTop />
         <Box
           key={`${location.pathname}-${superCategory}-${locationId}-${zoneName}`}
-          sx={{ flex: 1, minHeight: 0, animation: 'duncit-soft-enter 180ms ease-out both' }}
+          sx={{
+            flex: 1,
+            minHeight: 0,
+            boxSizing: 'border-box',
+            pb: !fullBleed && showBottomNav ? BOTTOM_NAV_CONTENT_OFFSET : 0,
+            animation: 'duncit-soft-enter 180ms ease-out both',
+          }}
         >
           <AppRoutes superCategory={superCategory} locationId={locationId} zoneName={zoneName} />
         </Box>
-        {!fullBleed && showBottomNav && (
-          <Box aria-hidden sx={{ flex: '0 0 auto', height: BOTTOM_NAV_CONTENT_OFFSET }} />
-        )}
       </Container>
       {showBottomNav && <BottomNav />}
       <NotifyHost />

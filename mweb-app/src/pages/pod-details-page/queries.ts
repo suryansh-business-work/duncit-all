@@ -50,6 +50,15 @@ export const POD_DETAILS = gql`
         amount
         note
       }
+      products_enabled
+      product_requests {
+        product_id
+        product_name
+        unit_cost
+        quantity
+        total_cost
+      }
+      product_cost_total
       like_count
       liked_by_me
       comment_count
@@ -96,7 +105,25 @@ export const POD_DETAILS = gql`
     }
     publicVenues { id venue_name address_line1 address_line2 locality city state country postal_code lat lng }
     publicHosts { id user_id full_name passport_photo_url }
-    me { user_id saved_pod_ids }
+    me { user_id saved_pod_ids following_pod_ids }
+  }
+`;
+
+export const FOLLOW_POD = gql`
+  mutation FollowPod($pod_id: ID!) {
+    followPod(pod_id: $pod_id) {
+      user_id
+      following_pod_ids
+    }
+  }
+`;
+
+export const UNFOLLOW_POD = gql`
+  mutation UnfollowPod($pod_id: ID!) {
+    unfollowPod(pod_id: $pod_id) {
+      user_id
+      following_pod_ids
+    }
   }
 `;
 

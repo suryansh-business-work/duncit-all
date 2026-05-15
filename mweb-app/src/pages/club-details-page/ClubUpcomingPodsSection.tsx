@@ -66,7 +66,19 @@ export default function ClubUpcomingPodsSection({ pods, onOpen, priceFormat }: P
                       <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>
                         {isFree ? 'Free' : priceFormat(pod.pod_amount)}
                       </Typography>
-                      <Button size="small" variant="contained" onClick={() => onOpen(pod.id)} sx={{ borderRadius: 999, fontWeight: 900, minWidth: 66 }}>
+                      <Button
+                        size="small"
+                        variant="contained"
+                        onClick={() => onOpen(pod.id)}
+                        sx={{
+                          borderRadius: 999,
+                          fontWeight: 900,
+                          minWidth: 66,
+                          background: 'linear-gradient(135deg, #ff4f73 0%, #ff8b5f 100%)',
+                          boxShadow: '0 10px 22px rgba(245,51,122,0.22)',
+                          '&:hover': { background: 'linear-gradient(135deg, #ef3b63 0%, #f9794d 100%)' },
+                        }}
+                      >
                         Book
                       </Button>
                     </Stack>

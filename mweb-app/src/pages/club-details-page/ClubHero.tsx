@@ -9,6 +9,8 @@ import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
+import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import VideoMedia from '../../components/media/VideoMedia';
 
 interface Props {
@@ -28,6 +30,37 @@ const overlayBtn = {
   backdropFilter: 'blur(6px)',
   '&:hover': { bgcolor: 'rgba(0,0,0,0.6)' },
 };
+
+const arrowBtn = {
+  position: 'absolute' as const,
+  top: '50%',
+  transform: 'translateY(-50%)',
+  zIndex: 2,
+  bgcolor: 'rgba(17,24,39,0.32)',
+  color: '#fff',
+  width: 40,
+  height: 40,
+  border: '1px solid rgba(255,255,255,0.32)',
+  backdropFilter: 'blur(10px)',
+  WebkitBackdropFilter: 'blur(10px)',
+  '&:hover': { bgcolor: 'rgba(17,24,39,0.48)' },
+};
+
+function PrevArrow({ onClick }: { onClick?: () => void }) {
+  return (
+    <IconButton size="small" onClick={onClick} aria-label="Previous" sx={{ ...arrowBtn, left: 10 }}>
+      <ChevronLeftIcon />
+    </IconButton>
+  );
+}
+
+function NextArrow({ onClick }: { onClick?: () => void }) {
+  return (
+    <IconButton size="small" onClick={onClick} aria-label="Next" sx={{ ...arrowBtn, right: 10 }}>
+      <ChevronRightIcon />
+    </IconButton>
+  );
+}
 
 export default function ClubHero({
   media,
@@ -89,6 +122,8 @@ export default function ClubHero({
           mt: -2,
           mx: { xs: -2, sm: -3 },
           height: 240,
+          borderRadius: { xs: 4, sm: 5 },
+          overflow: 'hidden',
           bgcolor: 'action.hover',
           display: 'flex',
           alignItems: 'center',
@@ -107,6 +142,7 @@ export default function ClubHero({
         position: 'relative',
         mt: -2,
         mx: { xs: -2, sm: -3 },
+        borderRadius: { xs: 4, sm: 5 },
         overflow: 'hidden',
         '.slick-dots': { bottom: 12 },
         '.slick-dots li button:before': { color: 'common.white', opacity: 0.6 },
@@ -116,6 +152,8 @@ export default function ClubHero({
       <Slider
         dots
         arrows={media.length > 1}
+        prevArrow={<PrevArrow />}
+        nextArrow={<NextArrow />}
         infinite={media.length > 1}
         autoplay={media.length > 1}
         autoplaySpeed={5000}

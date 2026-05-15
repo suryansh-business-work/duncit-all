@@ -10,6 +10,7 @@ import HeaderToast from './HeaderToast';
 import LocationDialog from './LocationDialog';
 import ProfileDrawer from './ProfileDrawer';
 import SuperCategoryTabs from './SuperCategoryTabs';
+import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 
 interface AppHeaderProps {
   selectedSuperCategory: string;
@@ -84,7 +85,7 @@ export default function AppHeader({
       elevation={0}
       sx={{ bgcolor: 'background.paper' }}
     >
-      <Toolbar sx={{ gap: 1, py: 1, minHeight: 64, px: 2 }}>
+      <Toolbar sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', gap: 1, py: 1, minHeight: 64, px: 2 }}>
         <HeaderBrand logoUrl={branding?.logo_url} appName={branding?.app_name} />
 
         <Box sx={{ flexGrow: 1 }} />
@@ -146,7 +147,7 @@ export default function AppHeader({
         <Alert
           severity="info"
           onClick={() => navigate('/profile?verifyEmail=1')}
-          sx={{ borderRadius: 0, cursor: 'pointer', py: 0.25 }}
+          sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', borderRadius: 0, cursor: 'pointer', py: 0.25 }}
         >
           Please verify your email
         </Alert>

@@ -145,7 +145,7 @@ export default function PodsTable({ loading, pods, clubName, venueName, locName,
                   <TableCell>
                     <Chip
                       size="small"
-                      label={p.completed_at ? 'Completed' : p.is_active ? 'Active' : 'Inactive'}
+                      label={p.completed_at ? 'Completed' : p.is_active ? 'Active' : 'Draft'}
                       color={p.completed_at ? 'info' : p.is_active ? 'success' : 'default'}
                     />
                   </TableCell>

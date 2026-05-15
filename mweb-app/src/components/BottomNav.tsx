@@ -5,6 +5,7 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import { useLocation, useNavigate } from 'react-router-dom';
+import { APP_SHELL_MAX_WIDTH } from '../app/appLayout';
 
 const TABS = [
   { value: '/', label: 'Home', icon: <HomeIcon /> },
@@ -30,8 +31,10 @@ export default function BottomNav() {
       elevation={8}
       sx={{
         position: 'fixed',
-        left: 0,
-        right: 0,
+        left: '50%',
+        transform: 'translateX(-50%)',
+        width: '100%',
+        maxWidth: APP_SHELL_MAX_WIDTH,
         bottom: 0,
         zIndex: (t) => t.zIndex.appBar,
         borderTop: 1,

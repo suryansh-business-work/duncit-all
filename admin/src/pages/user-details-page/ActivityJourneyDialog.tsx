@@ -15,6 +15,7 @@ import {
   Typography,
 } from '@mui/material';
 import { USER_CLICKSTREAM } from './queries';
+import ActivityJourneyChart from './ActivityJourneyChart';
 
 interface Props {
   open: boolean;
@@ -83,6 +84,7 @@ export default function ActivityJourneyDialog({ open, userId, date, onClose }: P
               </TextField>
             </Stack>
             {visibleEvents.length === 0 && <Alert severity="info">No events match the selected filters.</Alert>}
+            {visibleEvents.length > 0 && <ActivityJourneyChart events={visibleEvents} />}
             {visibleEvents.map((event: any) => {
               const title = event.target_label || event.target_text || event.title || event.path;
               return (

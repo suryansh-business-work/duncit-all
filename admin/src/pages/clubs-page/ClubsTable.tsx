@@ -100,7 +100,7 @@ export default function ClubsTable({
                   <TableCell>
                     <Chip
                       size="small"
-                      label={c.is_active ? 'Active' : 'Inactive'}
+                      label={c.is_active ? 'Active' : 'Draft'}
                       color={c.is_active ? 'success' : 'default'}
                     />
                   </TableCell>

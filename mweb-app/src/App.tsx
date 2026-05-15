@@ -7,6 +7,7 @@ import BottomNav from './components/BottomNav';
 import SplashScreen from './components/SplashScreen';
 import { NotifyHost } from './components/notify';
 import AppRoutes from './app/AppRoutes';
+import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
 
@@ -55,9 +56,13 @@ export default function App() {
       )}
       <Container
         id="main-scroll"
-        maxWidth={fullBleed ? false : 'md'}
-        disableGutters={fullBleed}
+        maxWidth={false}
+        disableGutters
         sx={{
+          width: '100%',
+          maxWidth: APP_SHELL_MAX_WIDTH,
+          mx: 'auto',
+          px: fullBleed ? 0 : { xs: 1.25, sm: 2 },
           ...(isAuthed && {
             flex: 1,
             minHeight: 0,

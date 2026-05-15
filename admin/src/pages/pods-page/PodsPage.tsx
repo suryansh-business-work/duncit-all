@@ -82,10 +82,11 @@ export default function PodsPage() {
     setOpen(true);
   };
 
-  const submit = async (values: PodForm) => {
+  const submit = async (values: PodForm, options?: { draft?: boolean }) => {
     setBusy(true);
     setOpError(null);
     try {
+      const isDraft = !!options?.draft;
       const payload = buildPayload(values);
       if (values.id) {
         await updateMut({
@@ -93,10 +94,10 @@ export default function PodsPage() {
         });
       } else {
         await createMut({
-          variables: { input: { ...payload, pod_id: values.pod_id || undefined } },
+          variables: { input: { ...payload, pod_id: values.pod_id || undefined, is_active: !isDraft } },
         });
       }
-      setToast('Saved');
+      setToast(isDraft ? 'Draft saved' : 'Saved');
       setOpen(false);
       await refetch();
     } catch (e: any) {

@@ -1,5 +1,6 @@
 import { Box, Skeleton, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import { useLocation } from 'react-router-dom';
+import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import { renderSuperCategoryMark } from './superCategoryIcon';
 
 interface Props {
@@ -17,14 +18,14 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
 
   if (loading && superCats.length === 0) {
     return (
-      <Box sx={{ px: 1.5, pb: 0.75 }}>
+      <Box sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', px: 1.5, pb: 0.75 }}>
         <Skeleton variant="rounded" height={36} />
       </Box>
     );
   }
   if (superCats.length === 0) return null;
   return (
-    <Box sx={{ px: 1.5, pb: 0.75 }}>
+    <Box sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', px: 1.5, pb: 0.75 }}>
       <ToggleButtonGroup
         value={value}
         exclusive

@@ -1,0 +1,1 @@
+export const APP_SHELL_MAX_WIDTH = 1023;

@@ -7,7 +7,7 @@ import {
   DialogTitle,
 } from '@mui/material';
 import { Formik, Form } from 'formik';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import AiFillButton from '../../components/AiFillButton';
 import CascadeEffect from './pod-form/CascadeEffect';
 import PodFormSections, { SECTION_IDS } from './pod-form/PodFormSections';
@@ -26,7 +26,7 @@ interface Props {
   inventoryProducts: any[];
   users: any[];
   userName: (id: string) => string;
-  onSubmit: (values: PodForm) => Promise<void> | void;
+  onSubmit: (values: PodForm, options?: { draft?: boolean }) => Promise<void> | void;
   finance?: { platform_fee_pct: number; gst_pct: number; currency_symbol?: string };
 }
 
@@ -45,6 +45,7 @@ export default function PodFormDialog({
   finance,
 }: Props) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['basic']));
+  const submitMode = useRef<'publish' | 'draft'>('publish');
   const isEdit = !!initialValues.id;
   const toggleOne = (id: string, open: boolean) => {
     setExpanded((prev) => {
@@ -64,7 +65,11 @@ export default function PodFormDialog({
         enableReinitialize
         validationSchema={podFormSchema}
         validateOnBlur
-        onSubmit={async (values) => onSubmit(values)}
+        onSubmit={async (values) => {
+          const draft = submitMode.current === 'draft';
+          submitMode.current = 'publish';
+          await onSubmit(values, { draft });
+        }}
       >
         {(formik) => (
           <Form noValidate>
@@ -105,10 +110,26 @@ export default function PodFormDialog({
             </DialogContent>
             <DialogActions>
               <Button onClick={onClose}>Cancel</Button>
+              {!isEdit && (
+                <Button
+                  variant="outlined"
+                  type="button"
+                  disabled={busy || formik.isSubmitting}
+                  onClick={() => {
+                    submitMode.current = 'draft';
+                    formik.submitForm();
+                  }}
+                >
+                  Save as Draft
+                </Button>
+              )}
               <Button
                 variant="contained"
                 type="submit"
                 disabled={busy || formik.isSubmitting}
+                onClick={() => {
+                  submitMode.current = 'publish';
+                }}
               >
                 {busy ? 'Saving…' : 'Save'}
               </Button>

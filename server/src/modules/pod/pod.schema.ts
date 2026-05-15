@@ -149,6 +149,7 @@ export const podTypeDefs = /* GraphQL */ `
     place_charges: [PodPlaceChargeInput!]
     products_enabled: Boolean
     product_requests: [PodProductRequestInput!]
+    is_active: Boolean
   }
 
   input UpdatePodInput {

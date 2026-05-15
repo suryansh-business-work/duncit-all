@@ -64,10 +64,11 @@ export default function ClubsPage() {
     setOpen(true);
   };
 
-  const submit = async () => {
+  const submit = async (options?: { draft?: boolean }) => {
     setBusy(true);
     setOpError(null);
     try {
+      const isDraft = !!options?.draft;
       const payload = {
         club_name: form.club_name,
         club_description: form.club_description,
@@ -86,10 +87,10 @@ export default function ClubsPage() {
         });
       } else {
         await createMut({
-          variables: { input: { ...payload, club_id: form.club_id || undefined } },
+          variables: { input: { ...payload, club_id: form.club_id || undefined, is_active: !isDraft } },
         });
       }
-      setToast('Saved');
+      setToast(isDraft ? 'Draft saved' : 'Saved');
       setOpen(false);
       await refetch();
     } catch (e: any) {
@@ -144,6 +145,7 @@ export default function ClubsPage() {
         setForm={setForm}
         onClose={() => setOpen(false)}
         onSubmit={submit}
+        onSaveDraft={() => submit({ draft: true })}
         busy={busy}
         opError={opError}
         superCats={superCats}

@@ -17,6 +17,7 @@ interface Props {
   setForm: (f: ClubForm | ((prev: ClubForm) => ClubForm)) => void;
   onClose: () => void;
   onSubmit: () => void;
+  onSaveDraft: () => void;
   busy: boolean;
   opError: string | null;
   superCats: any[];
@@ -30,6 +31,7 @@ export default function ClubFormDialog({
   setForm,
   onClose,
   onSubmit,
+  onSaveDraft,
   busy,
   opError,
   superCats,
@@ -91,6 +93,15 @@ export default function ClubFormDialog({
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
+        {!form.id && (
+          <Button
+            variant="outlined"
+            onClick={onSaveDraft}
+            disabled={busy || !form.club_name.trim()}
+          >
+            Save as Draft
+          </Button>
+        )}
         <Button
           variant="contained"
           onClick={onSubmit}

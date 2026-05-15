@@ -46,6 +46,7 @@ export const clubTypeDefs = /* GraphQL */ `
     meetup_venues_id: [String!]
     category_id: ID
     super_category_id: ID
+    is_active: Boolean
   }
 
   input UpdateClubInput {

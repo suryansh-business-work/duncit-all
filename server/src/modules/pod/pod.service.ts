@@ -388,6 +388,7 @@ export const podService = {
       products_enabled: !!input.products_enabled,
       product_requests: productRequests,
       product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
+      is_active: input.is_active ?? true,
     });
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);

@@ -90,6 +90,7 @@ export const clubService = {
       meetup_venues_id: input.meetup_venues_id ?? [],
       category_id: input.category_id || null,
       super_category_id: input.super_category_id || null,
+      is_active: input.is_active ?? true,
     });
     return toPub(doc);
   },

@@ -8,9 +8,10 @@ import { POD_SEARCH } from '../../components/app-header/queries';
 
 interface Props {
   locationId?: string;
+  zoneName?: string;
 }
 
-export default function HomeSearch({ locationId }: Props) {
+export default function HomeSearch({ locationId, zoneName }: Props) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
@@ -18,7 +19,12 @@ export default function HomeSearch({ locationId }: Props) {
 
   const { data, loading } = useQuery(POD_SEARCH, {
     variables: {
-      filter: { search: trimmed || undefined, location_id: locationId || undefined },
+      filter: {
+        search: trimmed || undefined,
+        location_id: locationId || undefined,
+        zone_name: zoneName || undefined,
+        is_active: true,
+      },
     },
     skip: trimmed.length < 1,
     fetchPolicy: 'cache-and-network',

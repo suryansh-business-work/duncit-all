@@ -76,7 +76,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
             />
           </Stack>
         </Stack>
-        <HomeSearch locationId={locationId} />
+        <HomeSearch locationId={locationId} zoneName={zoneName} />
 
         {clubs.length === 0 ? (
           <Alert severity="info">

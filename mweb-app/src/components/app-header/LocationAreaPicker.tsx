@@ -32,7 +32,6 @@ export default function LocationAreaPicker({
   setDraftZone,
 }: Props) {
   const [query, setQuery] = useState('');
-  const isGhaziabad = locationName.trim().toLowerCase() === 'ghaziabad';
   const filteredZones = useMemo(() => {
     const term = query.trim().toLowerCase();
     if (!term) return zones;
@@ -48,8 +47,8 @@ export default function LocationAreaPicker({
       <Typography variant="overline" color="text.secondary">
         Locality / Area in {locationName}
       </Typography>
-      {isGhaziabad ? (
-        <Stack spacing={1} sx={{ mt: 0.5, mb: 1, width: '100%' }}>
+      {zones.length > 0 ? (
+        <Stack spacing={0.75} sx={{ mt: 0.25, mb: 1, width: '100%' }}>
           <TextField
             size="small"
             fullWidth
@@ -63,11 +62,17 @@ export default function LocationAreaPicker({
                 </InputAdornment>
               ),
             }}
+            sx={{ '& .MuiInputBase-root': { minHeight: 38 } }}
           />
-          <Paper variant="outlined" sx={{ width: '100%', maxHeight: 320, overflow: 'auto' }}>
+          <Paper variant="outlined" sx={{ width: '100%', maxHeight: 224, overflow: 'auto' }}>
             <List disablePadding sx={{ width: '100%' }}>
-              <ListItemButton selected={!draftZone} onClick={() => setDraftZone('')} divider>
-                <ListItemText primary="All areas" secondary={`${zones.length} localities`} />
+              <ListItemButton selected={!draftZone} onClick={() => setDraftZone('')} divider sx={{ py: 0.5, px: 1 }}>
+                <ListItemText
+                  primary="All areas"
+                  secondary={`${zones.length} localities`}
+                  primaryTypographyProps={{ variant: 'body2', fontWeight: 700 }}
+                  secondaryTypographyProps={{ variant: 'caption' }}
+                />
               </ListItemButton>
               {filteredZones.map((zone) => (
                 <ListItemButton
@@ -75,8 +80,14 @@ export default function LocationAreaPicker({
                   selected={draftZone === zone.zone_name}
                   onClick={() => setDraftZone(zone.zone_name)}
                   divider
+                  sx={{ py: 0.45, px: 1 }}
                 >
-                  <ListItemText primary={zone.zone_name} secondary={zone.pincode || undefined} />
+                  <ListItemText
+                    primary={zone.zone_name}
+                    secondary={zone.pincode || undefined}
+                    primaryTypographyProps={{ variant: 'body2', noWrap: true }}
+                    secondaryTypographyProps={{ variant: 'caption' }}
+                  />
                 </ListItemButton>
               ))}
             </List>
@@ -88,25 +99,6 @@ export default function LocationAreaPicker({
           )}
         </Stack>
       ) : (
-        <Stack direction="row" flexWrap="wrap" gap={1} sx={{ mt: 0.5, mb: 1 }}>
-          <Chip
-            label="All areas"
-            color={!draftZone ? 'primary' : 'default'}
-            variant={!draftZone ? 'filled' : 'outlined'}
-            onClick={() => setDraftZone('')}
-          />
-          {zones.map((zone) => (
-            <Chip
-              key={zone.zone_name}
-              label={zone.zone_name}
-              color={draftZone === zone.zone_name ? 'primary' : 'default'}
-              variant={draftZone === zone.zone_name ? 'filled' : 'outlined'}
-              onClick={() => setDraftZone(zone.zone_name)}
-            />
-          ))}
-        </Stack>
-      )}
-      {zones.length === 0 && (
         <Typography variant="body2" color="text.secondary">
           This city has no localities configured.
         </Typography>

@@ -71,7 +71,19 @@ export default function ClubDetailsPage() {
   };
 
   return (
-    <Stack spacing={2.25} sx={{ pt: 0, pb: 6 }}>
+    <Stack
+      spacing={2.25}
+      sx={{
+        mx: { xs: -1.25, sm: -2 },
+        px: { xs: 1.25, sm: 2 },
+        pt: 0,
+        pb: 6,
+        minHeight: '100%',
+        background: (theme) => theme.palette.mode === 'dark'
+          ? 'radial-gradient(circle at 8% 0%, rgba(255,79,115,0.20), transparent 34%), linear-gradient(180deg, #100d18 0%, #08070b 100%)'
+          : 'radial-gradient(circle at 8% 0%, rgba(255,79,115,0.14), transparent 34%), linear-gradient(180deg, #fff5f7 0%, #ffffff 58%)',
+      }}
+    >
       <ClubHero
         media={featureMedia}
         title={club.club_name}

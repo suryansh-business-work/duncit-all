@@ -22,19 +22,22 @@ export default function MessageBubble({ message, mine, onOpenReact }: MessageBub
       <Paper
         onDoubleClick={(e) => onOpenReact(e.currentTarget, m.id)}
         sx={{
-          p: 1,
+          p: 1.15,
           px: 1.5,
           maxWidth: '78%',
           bgcolor: mine ? 'primary.main' : 'background.paper',
           color: mine ? 'primary.contrastText' : 'text.primary',
-          borderRadius: 2,
+          borderRadius: mine ? '18px 18px 6px 18px' : '18px 18px 18px 6px',
           cursor: 'pointer',
+          border: mine ? 0 : 1,
+          borderColor: 'divider',
+          boxShadow: mine ? '0 10px 24px rgba(255,79,115,0.22)' : '0 10px 26px rgba(9,7,18,0.12)',
         }}
       >
         {!mine && (
           <Typography
             variant="caption"
-            sx={{ fontWeight: 600, opacity: 0.7, display: 'block' }}
+            sx={{ fontWeight: 900, opacity: 0.78, display: 'block' }}
           >
             {m.user_name || 'User'}
           </Typography>
@@ -58,7 +61,7 @@ export default function MessageBubble({ message, mine, onOpenReact }: MessageBub
             {m.text}
           </Typography>
         )}
-        <Typography variant="caption" sx={{ opacity: 0.6, display: 'block', mt: 0.5 }}>
+        <Typography variant="caption" sx={{ opacity: 0.58, display: 'block', mt: 0.5, fontWeight: 700 }}>
           {new Date(m.createdAt).toLocaleTimeString([], {
             hour: '2-digit',
             minute: '2-digit',

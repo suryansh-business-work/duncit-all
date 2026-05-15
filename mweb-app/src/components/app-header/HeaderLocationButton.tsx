@@ -27,6 +27,9 @@ export default function HeaderLocationButton({
         textTransform: 'none',
         color: 'text.primary',
         whiteSpace: 'nowrap',
+        maxWidth: { xs: selectedZoneName ? 184 : 136, sm: 280 },
+        minWidth: 0,
+        overflow: 'hidden',
         minHeight: 36,
         px: 1.15,
         borderRadius: 999,
@@ -34,18 +37,20 @@ export default function HeaderLocationButton({
         border: 1,
         borderColor: 'divider',
         fontWeight: 900,
-        '& .MuiButton-startIcon': { mr: 0.5, color: 'primary.main' },
+        '& .MuiButton-startIcon': { mr: 0.5, color: 'primary.main', flex: '0 0 auto' },
         '&:hover': { bgcolor: 'action.selected' },
       }}
       size="small"
       aria-label="Change city or zone"
     >
-      {selectedLocationName ?? 'Select city'}
+      <Box component="span" sx={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis' }}>
+        {selectedLocationName ?? 'Select city'}
+      </Box>
       {selectedZoneName ? (
         <Chip
           size="small"
           label={selectedZoneName}
-          sx={{ ml: 1, height: 20, fontSize: 11 }}
+          sx={{ ml: 0.75, height: 20, maxWidth: { xs: 92, sm: 150 }, fontSize: 11, '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
           color="primary"
         />
       ) : (

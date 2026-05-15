@@ -3,21 +3,15 @@ import { gql, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
-  Avatar,
   Box,
-  Card,
-  CardActionArea,
-  CardContent,
-  CardMedia,
-  Chip,
   CircularProgress,
   InputAdornment,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
-import GroupsIcon from '@mui/icons-material/Groups';
 import SearchIcon from '@mui/icons-material/Search';
+import ClubListCard from './clubs-page/ClubListCard';
 
 const ALL_CLUBS = gql`
   query AllClubs {
@@ -89,10 +83,26 @@ export default function ClubsPage({ superCategorySlug }: ClubsPageProps) {
   if (error) return <Alert severity="error">{error.message}</Alert>;
 
   return (
-    <Stack spacing={2}>
-      <Typography variant="h5" fontWeight={700}>
-        All Clubs
-      </Typography>
+    <Stack
+      spacing={2}
+      sx={{
+        mx: { xs: -1.25, sm: -2 },
+        px: { xs: 1.25, sm: 2 },
+        py: 0.5,
+        minHeight: '100%',
+        background: (theme) => theme.palette.mode === 'dark'
+          ? 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.20), transparent 34%), linear-gradient(180deg, #100d18 0%, #08070b 100%)'
+          : 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.14), transparent 34%), linear-gradient(180deg, #fff5f7 0%, #ffffff 58%)',
+      }}
+    >
+      <Box>
+        <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+          Clubs
+        </Typography>
+        <Typography variant="body2" color="text.secondary" sx={{ mt: 0.5, fontWeight: 700 }}>
+          Find communities hosting pods near you
+        </Typography>
+      </Box>
       <TextField
         size="small"
         placeholder="Search clubs"
@@ -105,6 +115,7 @@ export default function ClubsPage({ superCategorySlug }: ClubsPageProps) {
             </InputAdornment>
           ),
         }}
+        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
       />
       {clubs.length === 0 ? (
         <Alert severity="info">No clubs found.</Alert>
@@ -120,68 +131,14 @@ export default function ClubsPage({ superCategorySlug }: ClubsPageProps) {
             gap: 2,
           }}
         >
-          {clubs.map((c: any) => {
-            const cover = c.club_feature_images_and_videos?.[0];
-            const count = podCounts.get(c.id) ?? 0;
-            return (
-              <Card key={c.id} variant="outlined">
-                <CardActionArea onClick={() => c.club_id && navigate(`/club/${c.club_id}`)}>
-                  {cover?.url ? (
-                    <CardMedia
-                      component={cover.type === 'VIDEO' ? 'video' : 'img'}
-                      src={cover.url}
-                      sx={{ height: 140, objectFit: 'cover' }}
-                      {...(cover.type === 'VIDEO'
-                        ? { autoPlay: true, muted: true, loop: true, playsInline: true }
-                        : { alt: c.club_name })}
-                    />
-                  ) : (
-                    <Box
-                      sx={{
-                        height: 140,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        bgcolor: 'action.hover',
-                      }}
-                    >
-                      <Avatar sx={{ bgcolor: 'primary.main' }}>
-                        <GroupsIcon />
-                      </Avatar>
-                    </Box>
-                  )}
-                  <CardContent>
-                    <Stack
-                      direction="row"
-                      justifyContent="space-between"
-                      alignItems="flex-start"
-                      spacing={1}
-                    >
-                      <Typography variant="subtitle1" fontWeight={700} sx={{ lineHeight: 1.25 }}>
-                        {c.club_name}
-                      </Typography>
-                      <Chip size="small" label={`${count} pods`} />
-                    </Stack>
-                    {c.club_description && (
-                      <Typography
-                        variant="body2"
-                        color="text.secondary"
-                        sx={{
-                          display: '-webkit-box',
-                          WebkitLineClamp: 2,
-                          WebkitBoxOrient: 'vertical',
-                          overflow: 'hidden',
-                          mt: 0.5,
-                        }}
-                      >
-                        {c.club_description}
-                      </Typography>
-                    )}
-                  </CardContent>
-                </CardActionArea>
-              </Card>
-            );
-          })}
+          {clubs.map((club: any) => (
+            <ClubListCard
+              key={club.id}
+              club={club}
+              podCount={podCounts.get(club.id) ?? 0}
+              onOpen={() => club.club_id && navigate(`/club/${club.club_id}`)}
+            />
+          ))}
         </Box>
       )}
     </Stack>

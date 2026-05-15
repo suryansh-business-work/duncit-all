@@ -5,12 +5,11 @@ import {
   Alert,
   Box,
   CircularProgress,
-  IconButton,
   Stack,
-  Typography,
 } from '@mui/material';
-import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
+import ChatRoomHeader from './ChatRoomHeader';
+import ChatRoomNotice from './ChatRoomNotice';
 import EmojiPopover from './EmojiPopover';
 import MessageBubble from './MessageBubble';
 import MessageComposer from './MessageComposer';
@@ -106,20 +105,17 @@ export default function ChatRoomPage() {
     );
 
   return (
-    <Stack sx={{ height: '100%', minHeight: 0 }}>
-      <Stack
-        direction="row"
-        alignItems="center"
-        spacing={1}
-        sx={{ p: 1, borderBottom: 1, borderColor: 'divider' }}
-      >
-        <IconButton onClick={() => navigate('/chats')}>
-          <ArrowBackIcon />
-        </IconButton>
-        <Typography variant="subtitle1" fontWeight={700} noWrap sx={{ flex: 1 }}>
-          {data?.pod?.pod_title || 'Chat'}
-        </Typography>
-      </Stack>
+    <Stack
+      sx={{
+        height: '100%',
+        minHeight: 0,
+        mx: { xs: -1.25, sm: -2 },
+        background: (theme) => theme.palette.mode === 'dark'
+          ? 'radial-gradient(circle at 12% 0%, rgba(255,79,115,0.18), transparent 34%), linear-gradient(180deg, #100d18 0%, #08070b 100%)'
+          : 'radial-gradient(circle at 12% 0%, rgba(255,79,115,0.12), transparent 34%), linear-gradient(180deg, #fff5f7 0%, #ffffff 58%)',
+      }}
+    >
+      <ChatRoomHeader title={data?.pod?.pod_title} messageCount={messages.length} onBack={() => navigate('/chats')} />
 
       {error && (
         <Alert severity="error" onClose={() => setError(null)}>
@@ -129,8 +125,9 @@ export default function ChatRoomPage() {
 
       <Box
         ref={scrollRef}
-        sx={{ flex: 1, overflowY: 'auto', p: 1, bgcolor: 'background.default' }}
+        sx={{ flex: 1, overflowY: 'auto', px: { xs: 1.25, sm: 2 }, py: 1.25 }}
       >
+        <ChatRoomNotice />
         {messages.map((m: any) => (
           <MessageBubble
             key={m.id}

@@ -13,6 +13,7 @@ import ProfileDrawer from './ProfileDrawer';
 import SuperCategoryTabs from './SuperCategoryTabs';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import SurveyHeaderActions from './SurveyHeaderActions';
+import AuthModeToggle from '../AuthModeToggle';
 
 interface AppHeaderProps {
   minimal?: boolean;
@@ -131,6 +132,7 @@ export default function AppHeader({
               }}
             />
 
+            <AuthModeToggle placement="inline" />
             <HeaderNotificationsBell onToast={handleNotifToast} />
 
             <Tooltip title={me?.full_name ?? 'Account'}>

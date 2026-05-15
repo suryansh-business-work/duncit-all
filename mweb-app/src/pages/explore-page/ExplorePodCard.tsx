@@ -103,7 +103,7 @@ export default function ExplorePodCard({
         sx={{
           position: 'absolute',
           right: 12,
-          bottom: 'calc(122px + env(safe-area-inset-bottom))',
+          bottom: 'calc(194px + env(safe-area-inset-bottom))',
         }}
       >
         <ExploreActionButton
@@ -145,7 +145,7 @@ export default function ExplorePodCard({
           position: 'absolute',
           left: 10,
           right: 10,
-          bottom: 'calc(12px + env(safe-area-inset-bottom))',
+          bottom: 'calc(84px + env(safe-area-inset-bottom))',
           p: 0.75,
           borderRadius: 3,
           bgcolor: 'rgba(0,0,0,0.42)',

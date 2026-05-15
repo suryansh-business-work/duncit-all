@@ -136,7 +136,18 @@ export default function FollowPage({ superCategorySlug }: { superCategorySlug?: 
   }
 
   return (
-    <Stack spacing={2} sx={{ px: 1, py: 1.5 }}>
+    <Stack
+      spacing={2}
+      sx={{
+        mx: { xs: -1.25, sm: -2 },
+        px: { xs: 1.25, sm: 2 },
+        py: 1.5,
+        minHeight: '100%',
+        background: (theme) => theme.palette.mode === 'dark'
+          ? 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.20), transparent 34%), linear-gradient(180deg, #100d18 0%, #08070b 100%)'
+          : 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.14), transparent 34%), linear-gradient(180deg, #fff5f7 0%, #ffffff 58%)',
+      }}
+    >
       <Box>
         <Stack direction="row" alignItems="center" spacing={1}>
           <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>

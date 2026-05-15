@@ -13,6 +13,8 @@ interface Props {
 export default function SuperCategoryTabs({ loading, superCats, value, onChange }: Props) {
   const { pathname } = useLocation();
   const canFilter = ['/', '/explore', '/clubs', '/chats', '/follow'].includes(pathname);
+  const selectedIndex = Math.max(superCats.findIndex((c: any) => c.slug === value), 0);
+  const selectedWidth = `${100 / Math.max(superCats.length, 1)}%`;
 
   if (!canFilter) return null;
 
@@ -41,6 +43,20 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
           bgcolor: 'action.hover',
           border: 1,
           borderColor: 'divider',
+          position: 'relative',
+          overflow: 'hidden',
+          '&::before': {
+            content: '""',
+            position: 'absolute',
+            insetBlock: 0,
+            left: 0,
+            width: selectedWidth,
+            borderRadius: '14px',
+            background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 58%, #f5337a 100%)',
+            boxShadow: '0 10px 24px rgba(245,51,122,0.24)',
+            transform: `translateX(${selectedIndex * 100}%)`,
+            transition: 'transform 220ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+          },
           '& .MuiToggleButton-root': {
             minWidth: 0,
             flex: 1,
@@ -53,14 +69,16 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
             borderRadius: '14px !important',
             fontWeight: 900,
             color: 'text.secondary',
+            zIndex: 1,
+            transition: 'color 180ms ease, transform 180ms ease',
           },
           '& .MuiToggleButton-root.Mui-selected': {
             color: 'primary.contrastText',
-            background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 58%, #f5337a 100%)',
-            boxShadow: '0 10px 24px rgba(245,51,122,0.28)',
+            background: 'transparent',
+            transform: 'translateY(-0.5px)',
           },
           '& .MuiToggleButton-root.Mui-selected:hover': {
-            background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 58%, #f5337a 100%)',
+            background: 'transparent',
           },
         }}
       >

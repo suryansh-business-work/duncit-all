@@ -119,6 +119,14 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           '50%': { backgroundPosition: '65% 18%' },
           '100%': { backgroundPosition: '100% 0%' },
         },
+        '@keyframes duncit-soft-enter': {
+          '0%': { opacity: 0.72, transform: 'translateY(4px)' },
+          '100%': { opacity: 1, transform: 'translateY(0)' },
+        },
+        '.MuiPaper-root, .MuiButtonBase-root, .MuiChip-root': {
+          transitionDuration: '180ms',
+          transitionTimingFunction: 'ease',
+        },
         '*::-webkit-scrollbar': { width: 8, height: 8 },
         '*::-webkit-scrollbar-thumb': {
           background: alpha(INK, 0.18),

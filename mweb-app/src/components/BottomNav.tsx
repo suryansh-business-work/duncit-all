@@ -18,7 +18,7 @@ const TABS = [
 ];
 
 const NAV_BOTTOM_GAP = 8;
-const NAV_CONTENT_GAP = 28;
+const NAV_CONTENT_GAP = 56;
 
 export default function BottomNav() {
   const navigate = useNavigate();
@@ -76,6 +76,7 @@ export default function BottomNav() {
         boxShadow: (theme) => theme.palette.mode === 'dark'
           ? '0 18px 44px rgba(0,0,0,0.48)'
           : '0 18px 44px rgba(15,23,42,0.16)',
+        transition: 'transform 180ms ease, box-shadow 180ms ease',
       }}
     >
       <BottomNavigation
@@ -98,6 +99,7 @@ export default function BottomNav() {
           '& .MuiBottomNavigationAction-root.Mui-selected': {
             color: 'primary.main',
             bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.1 : 0.08),
+            transform: 'translateY(-1px)',
           },
           '& .nav-icon-wrap': {
             width: 30,

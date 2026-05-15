@@ -12,7 +12,7 @@ import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
 import { useHapticFeedback } from './app/useHapticFeedback';
 
-const BOTTOM_NAV_OFFSET = 'var(--duncit-bottom-nav-offset, 120px)';
+const BOTTOM_NAV_OFFSET = 'var(--duncit-bottom-nav-offset, 148px)';
 
 export default function App() {
   const isAuthed = !!localStorage.getItem('token');
@@ -86,11 +86,16 @@ export default function App() {
             scrollPaddingBottom: showBottomNav ? BOTTOM_NAV_OFFSET : undefined,
           }),
           py: fullBleed ? 0 : 2,
-          pb: fullBleed ? 0 : showBottomNav ? `calc(${BOTTOM_NAV_OFFSET} + 12px)` : 2,
+          pb: fullBleed ? 0 : showBottomNav ? `calc(${BOTTOM_NAV_OFFSET} + 28px)` : 2,
         }}
       >
         <ScrollToTop />
-        <AppRoutes superCategory={superCategory} locationId={locationId} zoneName={zoneName} />
+        <Box
+          key={`${location.pathname}-${superCategory}-${locationId}-${zoneName}`}
+          sx={{ flex: 1, minHeight: 0, animation: 'duncit-soft-enter 180ms ease-out both' }}
+        >
+          <AppRoutes superCategory={superCategory} locationId={locationId} zoneName={zoneName} />
+        </Box>
       </Container>
       {showBottomNav && <BottomNav />}
       <NotifyHost />

@@ -214,6 +214,16 @@ export function useHomeData({
     return map;
   }, [filteredPods, sortBy]);
 
+  const featuredPods = useMemo(() => {
+    return filteredPods
+      .slice()
+      .sort(
+        (a: any, b: any) =>
+          new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime()
+      )
+      .slice(0, 6);
+  }, [filteredPods]);
+
   const hostNameById = useMemo(() => {
     const map = new Map<string, string>();
     (data?.publicHosts ?? []).forEach((h: any) => {
@@ -291,6 +301,7 @@ export function useHomeData({
     isHost,
     sliders,
     clubs,
+    featuredPods,
     podsByClub,
     categoryChips,
     followedClubs,

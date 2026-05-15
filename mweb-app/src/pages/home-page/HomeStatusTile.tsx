@@ -34,7 +34,8 @@ export default function HomeStatusTile({
       spacing={0.6}
       alignItems="center"
       sx={{
-        width: 74,
+        width: 70,
+        minHeight: 90,
         flex: '0 0 auto',
         p: 0,
         border: 0,
@@ -43,12 +44,13 @@ export default function HomeStatusTile({
         cursor: 'pointer',
         font: 'inherit',
         touchAction: 'manipulation',
+        overflow: 'visible',
       }}
     >
       <Box
         sx={{
-          width: 64,
-          height: 64,
+          width: 62,
+          height: 62,
           borderRadius: '50%',
           p: add ? 1.5 : 0.35,
           background: add ? 'transparent' : ring,
@@ -86,7 +88,7 @@ export default function HomeStatusTile({
             sx={{
               position: 'absolute',
               right: 0,
-              bottom: 1,
+              bottom: 0,
               width: 22,
               height: 22,
               borderRadius: '50%',
@@ -102,7 +104,19 @@ export default function HomeStatusTile({
           </Box>
         )}
       </Box>
-      <Typography variant="caption" sx={{ width: '100%', fontWeight: 800, textAlign: 'center' }} noWrap>
+      <Typography
+        variant="caption"
+        sx={{
+          width: '100%',
+          minHeight: 17,
+          fontWeight: 800,
+          lineHeight: 1.15,
+          textAlign: 'center',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+          whiteSpace: 'nowrap',
+        }}
+      >
         {label}
       </Typography>
     </Stack>

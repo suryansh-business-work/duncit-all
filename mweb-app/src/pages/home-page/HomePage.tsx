@@ -1,12 +1,15 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Fab, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, Fab, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import WhatshotIcon from '@mui/icons-material/Whatshot';
 import { PriceFilter, DateFilter, SortBy } from './queries';
 import FilterMenu from './FilterMenu';
 import HomeSearch from './HomeSearch';
 import HomeSkeleton from './HomeSkeleton';
 import HomeStatusRail from './HomeStatusRail';
+import HomeFeaturedPods from './HomeFeaturedPods';
+import HomeVibeChips from './HomeVibeChips';
 import ClubSection from './ClubSection';
 import { useHomeData } from './useHomeData';
 
@@ -33,6 +36,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
     isHost,
     sliders,
     clubs,
+    featuredPods,
     podsByClub,
     categoryChips,
     followedClubs,
@@ -57,7 +61,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
   if (error) return <Alert severity="error">{error.message}</Alert>;
 
   return (
-    <>
+    <Stack spacing={2.25} sx={{ pt: 0.25 }}>
       <HomeStatusRail
         me={me}
         branding={branding}
@@ -65,17 +69,35 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
         followedClubs={followedClubs}
         followedUsers={followedUsers}
       />
-      <Stack spacing={2}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Stack spacing={0.25}>
-            <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.15 }}>
-              Happening nearby
-            </Typography>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-              {totalPods} pods available
-            </Typography>
+      <Stack spacing={1.75}>
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.25 }}>
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+            <Box
+              sx={{
+                width: 34,
+                height: 34,
+                borderRadius: 2.5,
+                display: 'grid',
+                placeItems: 'center',
+                color: 'primary.contrastText',
+                background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
+                boxShadow: '0 10px 22px rgba(255,79,115,0.28)',
+                flex: '0 0 auto',
+              }}
+            >
+              <WhatshotIcon sx={{ fontSize: 20 }} />
+            </Box>
+            <Box sx={{ minWidth: 0 }}>
+              <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.1 }} noWrap>
+                Happening nearby
+              </Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+                Live pods around your selected city
+              </Typography>
+            </Box>
           </Stack>
-          <Stack direction="row" spacing={1} alignItems="center">
+          <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: '0 0 auto' }}>
+            <Chip label={`${totalPods} pods`} color="primary" variant="outlined" sx={{ fontWeight: 900 }} />
             <FilterMenu
               open={filtersOpen}
               onOpenChange={setFiltersOpen}
@@ -92,6 +114,8 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
             />
           </Stack>
         </Stack>
+        <HomeFeaturedPods pods={featuredPods} />
+        <HomeVibeChips categories={categoryChips} selectedId={categoryId} onSelect={setCategoryId} />
         <HomeSearch locationId={locationId} zoneName={zoneName} />
 
         {clubs.length === 0 ? (
@@ -124,6 +148,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
           </Fab>
         )}
       </Stack>
-    </>
+    </Stack>
   );
 }

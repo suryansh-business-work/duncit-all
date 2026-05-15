@@ -1,5 +1,6 @@
 import { useNavigate } from 'react-router-dom';
 import { Avatar, Box, Card, Chip, Stack, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { clubUrl, podUrl } from '../../utils/seoUrls';
 import PodCard from './PodCard';
@@ -13,7 +14,7 @@ interface ClubSectionProps {
 export default function ClubSection({ club, clubPods, hostNameOf }: ClubSectionProps) {
   const navigate = useNavigate();
   return (
-    <Box>
+    <Box sx={{ minWidth: 0 }}>
       <Stack
         direction="row"
         alignItems="center"
@@ -24,18 +25,23 @@ export default function ClubSection({ club, clubPods, hostNameOf }: ClubSectionP
           direction="row"
           alignItems="center"
           spacing={1.5}
-          sx={{ cursor: 'pointer' }}
+          sx={{ minWidth: 0, cursor: 'pointer' }}
           onClick={() => navigate(clubUrl(club.club_id))}
         >
           <Avatar
             src={club.club_feature_images_and_videos?.[0]?.url}
             variant="rounded"
-            sx={{ width: 44, height: 44, bgcolor: 'primary.main' }}
+            sx={{
+              width: 46,
+              height: 46,
+              bgcolor: 'primary.main',
+              boxShadow: '0 10px 22px rgba(255,79,115,0.18)',
+            }}
           >
             <GroupsIcon />
           </Avatar>
-          <Box>
-            <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="subtitle1" fontWeight={900} sx={{ lineHeight: 1.15 }} noWrap>
               {club.club_name}
             </Typography>
             {club.club_description && (
@@ -54,7 +60,7 @@ export default function ClubSection({ club, clubPods, hostNameOf }: ClubSectionP
             )}
           </Box>
         </Stack>
-        <Chip size="small" label={`${clubPods.length} pods`} />
+        <Chip size="small" label={`${clubPods.length} pods`} sx={{ fontWeight: 800, flex: '0 0 auto' }} />
       </Stack>
 
       {clubPods.length === 0 ? (
@@ -67,13 +73,16 @@ export default function ClubSection({ club, clubPods, hostNameOf }: ClubSectionP
         <Box
           sx={{
             display: 'flex',
-            gap: 2,
+            gap: 1.35,
+            mx: { xs: -1.25, sm: 0 },
+            px: { xs: 1.25, sm: 0 },
             overflowX: 'auto',
-            pb: 1.5,
+            pb: 1.75,
             scrollSnapType: 'x mandatory',
-            '&::-webkit-scrollbar': { height: 6 },
+            scrollbarWidth: 'none',
+            '&::-webkit-scrollbar': { display: 'none' },
             '&::-webkit-scrollbar-thumb': {
-              bgcolor: 'action.hover',
+              bgcolor: (theme) => alpha(theme.palette.text.primary, 0.16),
               borderRadius: 3,
             },
           }}

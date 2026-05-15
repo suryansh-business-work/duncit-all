@@ -49,13 +49,18 @@ export default function HomeStatusRail({
       sx={{
         mx: { xs: -1.25, sm: -2 },
         px: { xs: 1.25, sm: 2 },
-        pb: 1.25,
+        pt: 0.25,
+        pb: 1,
+        mb: 1.25,
+        minHeight: 96,
         overflowX: 'auto',
+        overflowY: 'hidden',
+        scrollPaddingInline: 12,
         scrollbarWidth: 'none',
         '&::-webkit-scrollbar': { display: 'none' },
       }}
     >
-      <Stack direction="row" spacing={1.35} alignItems="flex-start">
+      <Stack direction="row" spacing={1.1} alignItems="flex-start" sx={{ width: 'max-content' }}>
         <HomeStatusTile
           label="My status"
           imageUrl={me?.profile_photo}

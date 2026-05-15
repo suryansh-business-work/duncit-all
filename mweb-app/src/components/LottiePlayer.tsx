@@ -36,7 +36,15 @@ export default function LottiePlayer({
     }
     let alive = true;
     fetch(src)
-      .then((r) => r.json())
+      .then(async (r) => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        const ct = r.headers.get('content-type') || '';
+        const text = await r.text();
+        if (ct.includes('text/html') || text.trim().startsWith('<')) {
+          throw new Error('Not a JSON Lottie file');
+        }
+        return JSON.parse(text);
+      })
       .then((j) => {
         cache.set(src, j);
         if (alive) setData(j);

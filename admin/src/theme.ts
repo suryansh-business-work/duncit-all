@@ -43,6 +43,19 @@ export const buildTheme = (mode: PaletteMode): Theme =>
             },
         },
       },
+      MuiTooltip: {
+        styleOverrides: {
+          tooltip: {
+            backgroundColor: 'rgba(15, 23, 42, 0.94)',
+            color: '#ffffff',
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            borderRadius: 8,
+            padding: '6px 10px',
+          },
+          arrow: { color: 'rgba(15, 23, 42, 0.94)' },
+        },
+      },
       MuiAppBar: {
         defaultProps: { elevation: 0, color: 'inherit' },
         styleOverrides: {

@@ -346,10 +346,15 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       styleOverrides: {
         tooltip: {
           backgroundColor: INK,
+          color: '#ffffff',
           borderRadius: 8,
           fontSize: '0.75rem',
+          fontWeight: 600,
           paddingInline: 8,
           paddingBlock: 6,
+        },
+        arrow: {
+          color: INK,
         },
       },
     },

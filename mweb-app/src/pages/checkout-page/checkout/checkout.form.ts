@@ -3,6 +3,8 @@ import { validationRules } from '../../../forms/validation/rules';
 import type { CheckoutForm } from '../queries';
 
 export const CHECKOUT_PAYMENT_METHODS = [
+  { value: 'GOOGLE_PAY', label: 'Google Pay' },
+  { value: 'APPLE_PAY', label: 'Apple Pay' },
   { value: 'DUMMY_UPI', label: 'UPI (Dummy)' },
   { value: 'DUMMY_CARD', label: 'Credit / Debit Card (Dummy)' },
   { value: 'DUMMY_NETBANKING', label: 'Net Banking (Dummy)' },

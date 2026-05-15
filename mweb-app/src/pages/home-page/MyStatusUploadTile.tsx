@@ -7,8 +7,9 @@ import { CREATE_POST } from '../profile-page/queries';
 
 interface Props {
   me?: any;
-  onUploaded?: () => void;
+  onUploaded?: (url: string) => void;
   onError?: (msg: string) => void;
+  onView?: (url: string) => void;
 }
 
 const MAX_BYTES = 15 * 1024 * 1024;
@@ -23,14 +24,24 @@ function initials(name?: string | null) {
     .toUpperCase();
 }
 
-export default function MyStatusUploadTile({ me, onUploaded, onError }: Props) {
+export default function MyStatusUploadTile({ me, onUploaded, onError, onView }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploading, setUploading] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [statusUrl, setStatusUrl] = useState<string | null>(null);
   const [uploadImageMut] = useMutation(UPLOAD_IMAGE);
   const [createPost] = useMutation(CREATE_POST);
 
   const handlePick = () => {
+    if (uploading) return;
+    if (statusUrl && onView) {
+      onView(statusUrl);
+      return;
+    }
+    inputRef.current?.click();
+  };
+
+  const openPicker = () => {
     if (uploading) return;
     inputRef.current?.click();
   };
@@ -65,7 +76,8 @@ export default function MyStatusUploadTile({ me, onUploaded, onError }: Props) {
       setProgress(85);
       await createPost({ variables: { input: { image_url: url, caption: '' } } });
       setProgress(100);
-      onUploaded?.();
+      setStatusUrl(url);
+      onUploaded?.(url);
     } catch (err: any) {
       onError?.(err?.message ?? 'Could not upload status');
     } finally {
@@ -84,12 +96,42 @@ export default function MyStatusUploadTile({ me, onUploaded, onError }: Props) {
         onChange={handleFile}
       />
       <HomeStatusTile
-        label={uploading ? 'Uploading…' : 'My status'}
-        imageUrl={me?.profile_photo}
+        label={uploading ? 'Uploading…' : statusUrl ? 'My status' : 'My status'}
+        imageUrl={statusUrl ?? me?.profile_photo}
         initials={initials(me?.full_name || me?.first_name)}
-        add
+        add={!statusUrl}
+        active={!!statusUrl}
         onClick={handlePick}
       />
+      {statusUrl && !uploading && (
+        <Box
+          onClick={(e) => {
+            e.stopPropagation();
+            openPicker();
+          }}
+          sx={{
+            position: 'absolute',
+            right: 4,
+            bottom: 18,
+            width: 22,
+            height: 22,
+            borderRadius: '50%',
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+            border: 2,
+            borderColor: 'background.paper',
+            display: 'grid',
+            placeItems: 'center',
+            cursor: 'pointer',
+            fontSize: 14,
+            fontWeight: 900,
+            lineHeight: 1,
+          }}
+          aria-label="Add another"
+        >
+          +
+        </Box>
+      )}
       {uploading && (
         <Box
           sx={{

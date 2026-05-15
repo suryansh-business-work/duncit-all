@@ -18,10 +18,13 @@ export default function AuthBackground({ children }: Props) {
       sx={{
         position: 'fixed',
         inset: 0,
-        display: 'grid',
-        placeItems: 'center',
-        p: 2,
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'safe center',
+        py: { xs: 2, sm: 4 },
+        px: 2,
         overflowY: 'auto',
+        WebkitOverflowScrolling: 'touch',
         background:
           isDark
             ? 'linear-gradient(120deg, #100f18 0%, #191326 48%, #25151d 100%)'

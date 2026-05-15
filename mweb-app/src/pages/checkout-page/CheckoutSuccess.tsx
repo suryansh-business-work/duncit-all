@@ -1,5 +1,7 @@
+import { useState } from 'react';
 import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import PaymentLottie from '../../components/PaymentLottie';
+import ConfettiOverlay from '../../components/ConfettiOverlay';
 import { formatMoney } from './checkoutMath';
 
 interface Props {
@@ -9,8 +11,10 @@ interface Props {
 }
 
 export default function CheckoutSuccess({ payment, onHome, onProfile }: Props) {
+  const [confetti, setConfetti] = useState(true);
   return (
     <Box sx={{ maxWidth: 540, mx: 'auto', minHeight: '100%', display: 'grid', alignItems: 'center', p: 1 }}>
+      <ConfettiOverlay open={confetti} onClose={() => setConfetti(false)} />
       <Card sx={{ borderRadius: 5, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)', boxShadow: '0 24px 60px rgba(17,24,39,0.28)' }}>
         <CardContent sx={{ textAlign: 'center', p: 3 }}>
           <PaymentLottie variant="success" size={140} />

@@ -70,6 +70,15 @@ export default function HomeStatusRail({
             setOkMsg('Status posted!');
             onStatusUploaded?.();
           }}
+          onView={(url) => {
+            setViewer({
+              label: me?.full_name || me?.first_name || 'My status',
+              subLabel: 'Just now',
+              avatarUrl: me?.profile_photo,
+              mediaUrl: url,
+              mediaType: 'IMAGE',
+            });
+          }}
           onError={(m) => setErrorMsg(m)}
         />
         {sliders.map((slider) => (

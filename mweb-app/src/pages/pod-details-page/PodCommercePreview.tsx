@@ -3,6 +3,7 @@ import { Box, Button, Checkbox, Chip, Divider, Stack, Typography } from '@mui/ma
 import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import { alpha, useTheme } from '@mui/material/styles';
 
 interface Props {
   pod: any;
@@ -25,6 +26,8 @@ const SPECIAL_ADDONS: SpecialItem[] = [
 ];
 
 export default function PodCommercePreview({ pod, priceFormat }: Props) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
   const perks = (pod.available_perks ?? []).filter(Boolean).slice(0, 3);
   const hasItems = requests.length > 0 || perks.length > 0;
@@ -37,15 +40,25 @@ export default function PodCommercePreview({ pod, priceFormat }: Props) {
     [picked]
   );
   const specialCount = Object.values(picked).filter(Boolean).length;
+  const textColor = isDark ? '#fff' : 'text.primary';
+  const mutedColor = isDark ? 'rgba(255,255,255,0.62)' : 'text.secondary';
+  const itemBg = isDark ? 'rgba(255,255,255,0.05)' : alpha(theme.palette.background.paper, 0.72);
+  const selectedBg = isDark ? 'rgba(255,139,95,0.14)' : alpha(theme.palette.primary.main, 0.1);
+  const borderColor = isDark ? 'rgba(255,255,255,0.1)' : alpha(theme.palette.text.primary, 0.1);
+  const selectedBorder = isDark ? 'rgba(255,139,95,0.6)' : alpha(theme.palette.primary.main, 0.45);
 
   return (
     <Box
       sx={{
         p: 2,
         borderRadius: 4,
-        color: '#fff',
-        background: 'linear-gradient(145deg, #15111c 0%, #2a1926 54%, #111827 100%)',
-        boxShadow: '0 18px 44px rgba(17, 24, 39, 0.24)',
+        color: textColor,
+        background: isDark
+          ? 'linear-gradient(145deg, #15111c 0%, #2a1926 54%, #111827 100%)'
+          : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.16)} 54%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`,
+        boxShadow: isDark ? '0 18px 44px rgba(17, 24, 39, 0.24)' : `0 18px 44px ${alpha(theme.palette.primary.dark, 0.12)}`,
+        border: '1px solid',
+        borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'divider',
         overflow: 'hidden',
       }}
     >
@@ -53,7 +66,7 @@ export default function PodCommercePreview({ pod, priceFormat }: Props) {
         <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
           <StorefrontIcon sx={{ color: '#ff8b5f' }} />
           <Box sx={{ minWidth: 0 }}>
-            <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.62)', letterSpacing: 0, lineHeight: 1 }}>
+            <Typography variant="overline" sx={{ color: mutedColor, letterSpacing: 0, lineHeight: 1 }}>
               Pod Shop
             </Typography>
             <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
@@ -80,7 +93,7 @@ export default function PodCommercePreview({ pod, priceFormat }: Props) {
             </Stack>
           </Box>
         </Stack>
-        <Chip size="small" label={pod.products_enabled ? 'Live' : 'Preview'} sx={{ bgcolor: 'rgba(255,255,255,0.12)', color: '#fff', fontWeight: 800 }} />
+        <Chip size="small" label={pod.products_enabled ? 'Live' : 'Preview'} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.text.primary, 0.08), color: textColor, fontWeight: 800 }} />
       </Stack>
 
       <Stack spacing={0.9} sx={{ mt: 2 }}>
@@ -98,8 +111,8 @@ export default function PodCommercePreview({ pod, priceFormat }: Props) {
                 borderRadius: 3,
                 cursor: 'pointer',
                 border: '1px solid',
-                borderColor: selected ? 'rgba(255,139,95,0.6)' : 'rgba(255,255,255,0.1)',
-                bgcolor: selected ? 'rgba(255,139,95,0.14)' : 'rgba(255,255,255,0.05)',
+                borderColor: selected ? selectedBorder : borderColor,
+                bgcolor: selected ? selectedBg : itemBg,
                 transition: 'all 0.18s ease',
               }}
             >
@@ -109,15 +122,15 @@ export default function PodCommercePreview({ pod, priceFormat }: Props) {
                 onClick={(e) => e.stopPropagation()}
                 sx={{
                   p: 0.5,
-                  color: 'rgba(255,255,255,0.55)',
+                  color: mutedColor,
                   '&.Mui-checked': { color: '#ff8b5f' },
                 }}
               />
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{item.name}</Typography>
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.58)' }} noWrap>{item.hint}</Typography>
+                <Typography variant="caption" sx={{ color: mutedColor }} noWrap>{item.hint}</Typography>
               </Box>
-              <Typography variant="body2" sx={{ fontWeight: 900, color: '#ffe1b8' }}>
+              <Typography variant="body2" sx={{ fontWeight: 900, color: isDark ? '#ffe1b8' : 'primary.dark' }}>
                 +{priceFormat(item.price)}
               </Typography>
             </Stack>
@@ -127,34 +140,34 @@ export default function PodCommercePreview({ pod, priceFormat }: Props) {
 
       {hasItems && (
         <>
-          <Divider sx={{ my: 1.5, borderColor: 'rgba(255,255,255,0.16)' }} />
+          <Divider sx={{ my: 1.5, borderColor: isDark ? 'rgba(255,255,255,0.16)' : 'divider' }} />
           <Stack spacing={1}>
             {requests.map((item: any) => (
-              <Stack key={`${item.product_id}-${item.product_name}`} direction="row" spacing={1.2} alignItems="center" sx={{ p: 1, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.06)' }}>
+              <Stack key={`${item.product_id}-${item.product_name}`} direction="row" spacing={1.2} alignItems="center" sx={{ p: 1, borderRadius: 3, bgcolor: itemBg }}>
                 <Box sx={{ width: 36, height: 36, borderRadius: 2, display: 'grid', placeItems: 'center', bgcolor: 'rgba(255,139,95,0.18)' }}>
                   <AddShoppingCartIcon fontSize="small" />
                 </Box>
                 <Box sx={{ minWidth: 0, flex: 1 }}>
                   <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{item.product_name}</Typography>
-                  <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.58)' }}>Qty {item.quantity || 1}</Typography>
+                  <Typography variant="caption" sx={{ color: mutedColor }}>Qty {item.quantity || 1}</Typography>
                 </Box>
                 <Typography variant="body2" sx={{ fontWeight: 900 }}>{priceFormat(Number(item.total_cost ?? item.unit_cost ?? 0))}</Typography>
               </Stack>
             ))}
             {requests.length === 0 && perks.map((perk: string) => (
-              <Stack key={perk} direction="row" spacing={1.2} alignItems="center" sx={{ p: 1, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.06)' }}>
+              <Stack key={perk} direction="row" spacing={1.2} alignItems="center" sx={{ p: 1, borderRadius: 3, bgcolor: itemBg }}>
                 <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{perk}</Typography>
                 <Box sx={{ flex: 1 }} />
-                <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.7)' }}>Included</Typography>
+                <Typography variant="caption" sx={{ color: mutedColor }}>Included</Typography>
               </Stack>
             ))}
           </Stack>
         </>
       )}
 
-      <Divider sx={{ my: 1.5, borderColor: 'rgba(255,255,255,0.16)' }} />
+      <Divider sx={{ my: 1.5, borderColor: isDark ? 'rgba(255,255,255,0.16)' : 'divider' }} />
       <Stack direction="row" alignItems="center" justifyContent="space-between">
-        <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.64)' }}>
+        <Typography variant="caption" sx={{ color: mutedColor }}>
           {specialCount > 0 ? `${specialCount} special add-on${specialCount === 1 ? '' : 's'}` : 'Add-on total'}
         </Typography>
         <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>

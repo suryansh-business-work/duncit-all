@@ -32,7 +32,7 @@ export default function ConfettiOverlay({
       }}
     >
       <Box sx={{ position: 'fixed', inset: 0, pointerEvents: 'none' }}>
-        <LottiePlayer src={lottieUrl} loop={false} />
+        <LottiePlayer src={lottieUrl} fallbackSrc="/lotties/confetti.json" loop={false} />
       </Box>
     </Backdrop>
   );

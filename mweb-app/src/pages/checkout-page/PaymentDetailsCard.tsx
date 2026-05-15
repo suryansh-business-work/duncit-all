@@ -14,6 +14,7 @@ import {
 import LockIcon from '@mui/icons-material/Lock';
 import GoogleIcon from '@mui/icons-material/Google';
 import AppleIcon from '@mui/icons-material/Apple';
+import { alpha, useTheme } from '@mui/material/styles';
 import type { FormikProps } from 'formik';
 import type { CheckoutForm } from './queries';
 import { CHECKOUT_PAYMENT_METHODS } from './checkout.form';
@@ -34,9 +35,15 @@ export default function PaymentDetailsCard({
   total,
   currency,
 }: Props) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const { values, errors, touched, handleBlur, handleChange, setFieldValue, submitForm } = formik;
   const setField = <Key extends keyof CheckoutForm>(key: Key, value: CheckoutForm[Key]) => {
     setFieldValue(key, value);
+  };
+  const payWith = async (method: CheckoutForm['method']) => {
+    await setFieldValue('method', method);
+    submitForm();
   };
   const fieldError = (key: keyof CheckoutForm) => {
     const value = values[key];
@@ -46,22 +53,24 @@ export default function PaymentDetailsCard({
   const helperText = (key: keyof CheckoutForm, fallback = ' ') =>
     fieldError(key) ? String(errors[key]) : fallback;
   const fieldSx = {
-    '& .MuiInputLabel-root': { color: 'rgba(255,255,255,0.66)' },
+    '& .MuiInputLabel-root': { color: 'text.secondary' },
     '& .MuiInputLabel-root.Mui-focused': { color: '#ff8b5f' },
-    '& .MuiOutlinedInput-root': { bgcolor: 'rgba(255,255,255,0.08)', color: '#fff', borderRadius: 3 },
-    '& .MuiOutlinedInput-notchedOutline': { borderColor: 'rgba(255,255,255,0.16)' },
-    '& .MuiFormHelperText-root': { color: 'rgba(255,255,255,0.58)' },
+    '& .MuiOutlinedInput-root': { bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.84), color: 'text.primary', borderRadius: 3 },
+    '& .MuiInputBase-input, & .MuiSelect-select': { color: 'text.primary' },
+    '& .MuiSelect-icon': { color: 'text.secondary' },
+    '& .MuiOutlinedInput-notchedOutline': { borderColor: isDark ? 'rgba(255,255,255,0.16)' : alpha(theme.palette.text.primary, 0.16) },
+    '& .MuiFormHelperText-root': { color: 'text.secondary' },
   };
 
   return (
-    <Card sx={{ flex: 1, borderRadius: 4, bgcolor: 'rgba(255,255,255,0.08)', color: '#fff', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.12)' }}>
+    <Card sx={{ flex: 1, borderRadius: 4, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
       <CardContent>
         <Typography variant="subtitle1" fontWeight={900} gutterBottom>Payment details</Typography>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} sx={{ mt: 0.5, mb: 1.5 }}>
           <Button
             fullWidth
             startIcon={<GoogleIcon />}
-            onClick={() => { setField('method', 'GOOGLE_PAY'); submitForm(); }}
+            onClick={() => void payWith('GOOGLE_PAY')}
             disabled={submitting || total <= 0}
             sx={{
               minHeight: 46,
@@ -78,7 +87,7 @@ export default function PaymentDetailsCard({
           <Button
             fullWidth
             startIcon={<AppleIcon />}
-            onClick={() => { setField('method', 'APPLE_PAY'); submitForm(); }}
+            onClick={() => void payWith('APPLE_PAY')}
             disabled={submitting || total <= 0}
             sx={{
               minHeight: 46,
@@ -94,7 +103,7 @@ export default function PaymentDetailsCard({
           </Button>
         </Stack>
         <Box sx={{ position: 'relative', my: 1 }}>
-          <Divider sx={{ borderColor: 'rgba(255,255,255,0.18)' }} />
+          <Divider />
           <Typography
             variant="caption"
             sx={{
@@ -103,8 +112,8 @@ export default function PaymentDetailsCard({
               left: '50%',
               transform: 'translateX(-50%)',
               px: 1,
-              bgcolor: 'rgba(15,15,25,0.95)',
-              color: 'rgba(255,255,255,0.7)',
+              bgcolor: isDark ? 'rgba(15,15,25,0.95)' : alpha(theme.palette.background.paper, 0.96),
+              color: 'text.secondary',
               fontWeight: 800,
               letterSpacing: 1,
             }}
@@ -177,7 +186,7 @@ export default function PaymentDetailsCard({
           >
             {submitting ? 'Processing...' : `Pay ${formatMoney(currency, total)}`}
           </Button>
-          <Typography variant="caption" sx={{ textAlign: 'center', color: 'rgba(255,255,255,0.62)' }}>
+          <Typography variant="caption" sx={{ textAlign: 'center', color: 'text.secondary' }}>
             Receipt and invoice will be sent after successful payment.
           </Typography>
         </Stack>

@@ -1,4 +1,5 @@
 import { Box, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import { alpha, useTheme } from '@mui/material/styles';
 import { formatMoney } from './checkoutMath';
 
 interface Props {
@@ -8,13 +9,15 @@ interface Props {
 }
 
 export default function OrderSummaryCard({ pod, stateTitle, breakup }: Props) {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const title = pod?.pod_title || stateTitle || 'Pod booking';
   const when = pod?.pod_date_time ? new Date(pod.pod_date_time).toLocaleString() : '';
   const fmt = (value: number) => formatMoney(breakup.currency, value);
   const media = (pod?.pod_images_and_videos ?? []).find((item: any) => item?.url);
 
   return (
-    <Card sx={{ flex: 1, borderRadius: 4, bgcolor: 'rgba(255,255,255,0.08)', color: '#fff', boxShadow: 'none', border: '1px solid rgba(255,255,255,0.12)' }}>
+    <Card sx={{ flex: 1, borderRadius: 4, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
       <CardContent sx={{ p: 1.25 }}>
         <Box sx={{ height: 150, borderRadius: 3, overflow: 'hidden', position: 'relative', bgcolor: 'rgba(255,255,255,0.08)' }}>
           {media?.url && <Box component={media.type === 'VIDEO' ? 'video' : 'img'} src={media.url} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
@@ -25,12 +28,12 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup }: Props) {
             {when && <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.74)' }}>{when}</Typography>}
           </Box>
         </Box>
-        {pod?.zone_name && <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.66)', mt: 1, display: 'block' }}>{pod.zone_name}</Typography>}
-        <Divider sx={{ my: 1.5, borderColor: 'rgba(255,255,255,0.14)' }} />
+        {pod?.zone_name && <Typography variant="caption" color="text.secondary" sx={{ mt: 1, display: 'block' }}>{pod.zone_name}</Typography>}
+        <Divider sx={{ my: 1.5 }} />
         <Stack spacing={0.75}>
           <Row label="Ticket price" value={fmt(breakup.total)} />
-          <Divider sx={{ my: 1, borderColor: 'rgba(255,255,255,0.14)' }} />
-          <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.62)' }}>Inclusive of:</Typography>
+          <Divider sx={{ my: 1 }} />
+          <Typography variant="caption" color="text.secondary">Inclusive of:</Typography>
           <Row label={`Platform Fee (${breakup.feePct}%)`} value={fmt(breakup.fee)} />
           <Row label={`GST (${breakup.gstPct}%)`} value={fmt(breakup.gst)} />
           <Divider sx={{ my: 1 }} />

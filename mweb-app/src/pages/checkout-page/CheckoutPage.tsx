@@ -4,6 +4,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { useFormik } from 'formik';
 import { Alert, Backdrop, Box, Button, Chip, CircularProgress, IconButton, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import { alpha, useTheme } from '@mui/material/styles';
 import PaymentLottie from '../../components/PaymentLottie';
 import { checkoutFormSchema, checkoutInitialValues, toCheckoutContact } from './checkout.form';
 import { buildBreakup } from './checkoutMath';
@@ -13,6 +14,8 @@ import PaymentDetailsCard from './PaymentDetailsCard';
 import { CHECKOUT_ME, CHECKOUT_POD, DUMMY_CHECKOUT, PUBLIC_FINANCE, type CheckoutState } from './queries';
 
 export default function CheckoutPage() {
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
   const { podId = '' } = useParams();
   const location = useLocation();
   const navigate = useNavigate();
@@ -92,14 +95,14 @@ export default function CheckoutPage() {
 
   return (
     <Box sx={{ maxWidth: 720, mx: 'auto', pb: 'calc(var(--duncit-bottom-nav-height, 72px) + env(safe-area-inset-bottom) + 24px)' }}>
-      <Box sx={{ p: 2, borderRadius: 4, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 58%, #111827 100%)', boxShadow: '0 18px 44px rgba(17, 24, 39, 0.22)' }}>
+      <Box sx={{ p: 2, borderRadius: 4, color: 'text.primary', background: isDark ? 'linear-gradient(145deg, #15111c 0%, #2a1926 58%, #111827 100%)' : `linear-gradient(145deg, ${alpha(theme.palette.background.paper, 0.96)} 0%, ${alpha(theme.palette.primary.light, 0.18)} 58%, ${alpha(theme.palette.background.paper, 0.98)} 100%)`, boxShadow: isDark ? '0 18px 44px rgba(17, 24, 39, 0.22)' : `0 18px 44px ${alpha(theme.palette.primary.dark, 0.12)}`, border: '1px solid', borderColor: 'divider' }}>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 2 }}>
-        <IconButton onClick={() => navigate(-1)} aria-label="Back" sx={{ color: '#fff', bgcolor: 'rgba(255,255,255,0.12)' }}><ArrowBackIcon /></IconButton>
+        <IconButton onClick={() => navigate(-1)} aria-label="Back" sx={{ color: 'text.primary', bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.primary.main, 0.1), '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.18)' : alpha(theme.palette.primary.main, 0.16) } }}><ArrowBackIcon /></IconButton>
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.62)', letterSpacing: 0, lineHeight: 1 }}>Checkout</Typography>
+          <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>Checkout</Typography>
           <Typography variant="h5" fontWeight={900} sx={{ lineHeight: 1.1 }}>Confirm your spot</Typography>
         </Box>
-        {financeData?.publicFinanceSettings?.dummy_mode && <Chip size="small" label="Dummy" sx={{ bgcolor: 'rgba(255,255,255,0.14)', color: '#fff', fontWeight: 800 }} />}
+        {financeData?.publicFinanceSettings?.dummy_mode && <Chip size="small" label="Dummy" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.text.primary, 0.08), color: 'text.primary', fontWeight: 800 }} />}
       </Stack>
       {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

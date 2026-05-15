@@ -14,6 +14,18 @@ const BRANDING_WELCOME = gql`
 `;
 
 const SHOW_MS = 1800;
+const WELCOME_LOTTIE = '/lotties/welcome.json';
+
+async function loadLottieJson(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const contentType = response.headers.get('content-type') || '';
+  const text = await response.text();
+  if (contentType.includes('text/html') || text.trim().startsWith('<')) {
+    throw new Error('Not a JSON Lottie file');
+  }
+  return JSON.parse(text);
+}
 
 function moduleLabelFromPath(pathname: string): string {
   const seg = pathname.split('/').filter(Boolean)[0] ?? '';
@@ -31,12 +43,12 @@ export default function ModuleWelcomeOverlay() {
   const [data, setData] = useState<any>(null);
 
   const { data: brandingData } = useQuery(BRANDING_WELCOME, { fetchPolicy: 'cache-first' });
-  const url = brandingData?.branding?.welcome_lottie_url || '/lotties/welcome.json';
+  const url = brandingData?.branding?.welcome_lottie_url || WELCOME_LOTTIE;
 
   useEffect(() => {
     let alive = true;
-    fetch(url)
-      .then((r) => r.json())
+    loadLottieJson(url)
+      .catch(() => (url !== WELCOME_LOTTIE ? loadLottieJson(WELCOME_LOTTIE) : Promise.reject(new Error('Animation unavailable'))))
       .then((j) => alive && setData(j))
       .catch(() => alive && setData(null));
     return () => {

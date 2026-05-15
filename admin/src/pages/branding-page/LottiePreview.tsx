@@ -9,30 +9,42 @@ interface Props {
   caption?: string;
 }
 
+async function loadLottieJson(url: string) {
+  const response = await fetch(url);
+  if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  const contentType = response.headers.get('content-type') || '';
+  const text = await response.text();
+  if (contentType.includes('text/html') || text.trim().startsWith('<')) {
+    throw new Error('Not a JSON Lottie file');
+  }
+  return JSON.parse(text);
+}
+
 export default function LottiePreview({ src, fallbackPath, height = 140, caption }: Props) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);
 
   useEffect(() => {
-    const url = src || fallbackPath || '';
-    if (!url) {
+    const primaryUrl = src || fallbackPath || '';
+    const fallbackUrl = src && fallbackPath && src !== fallbackPath ? fallbackPath : '';
+    if (!primaryUrl) {
       setData(null);
       return;
     }
     let alive = true;
     setLoading(true);
     setErr(null);
-    fetch(url)
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
+    loadLottieJson(primaryUrl)
+      .catch(() => (fallbackUrl ? loadLottieJson(fallbackUrl) : Promise.reject(new Error('Animation unavailable'))))
       .then((j) => {
         if (alive) setData(j);
       })
       .catch((e) => {
-        if (alive) setErr(e.message);
+        if (alive) {
+          setData(null);
+          setErr(e.message);
+        }
       })
       .finally(() => alive && setLoading(false));
     return () => {

@@ -1,7 +1,8 @@
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client';
 import { HEADER_DATA } from '../../components/app-header/queries';
-import { HOME_DATA, PriceFilter, DateFilter, SortBy } from './queries';
+import { useFollowedClubs } from '../../hooks/useFollowedClubs';
+import { HOME_DATA, FOLLOWED_USERS, PriceFilter, DateFilter, SortBy } from './queries';
 
 interface UseHomeDataParams {
   superCategorySlug: string;
@@ -36,6 +37,13 @@ export function useHomeData({
 
   const { data: headerData } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-first' });
   const isHost = (headerData?.me?.roles ?? []).includes('HOST');
+  const { ids: followedClubIds } = useFollowedClubs();
+  const followingUserIds: string[] = headerData?.me?.following_user_ids ?? [];
+  const { data: followedUsersData } = useQuery(FOLLOWED_USERS, {
+    variables: { userIds: followingUserIds },
+    skip: followingUserIds.length === 0,
+    fetchPolicy: 'cache-and-network',
+  });
 
   const catSuperMap = useMemo(() => {
     const cats = data?.categories ?? [];
@@ -265,15 +273,29 @@ export function useHomeData({
     return all.filter((c: any) => (podsByClub.get(c.id)?.length ?? 0) > 0);
   }, [data, podsByClub]);
 
+  const followedClubSet = useMemo(() => new Set(followedClubIds), [followedClubIds]);
+  const followedClubs = useMemo(() => {
+    const all = data?.clubs ?? [];
+    return all
+      .filter((club: any) => followedClubSet.has(club.id))
+      .filter((club: any) => !selectedSuperId || club.super_category_id === selectedSuperId)
+      .slice(0, 12);
+  }, [data, followedClubSet, selectedSuperId]);
+
   return {
     data,
     loading,
     error,
+    branding: headerData?.branding,
+    me: headerData?.me,
     isHost,
     sliders,
     clubs,
     podsByClub,
     categoryChips,
+    followedClubs,
+    followedUsers: followedUsersData?.publicUsersByIds ?? [],
+    totalPods: filteredPods.length,
     hostNameOf,
   };
 }

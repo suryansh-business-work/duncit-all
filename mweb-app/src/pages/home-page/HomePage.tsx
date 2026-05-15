@@ -6,7 +6,7 @@ import { PriceFilter, DateFilter, SortBy } from './queries';
 import FilterMenu from './FilterMenu';
 import HomeSearch from './HomeSearch';
 import HomeSkeleton from './HomeSkeleton';
-import SliderRail from './SliderRail';
+import HomeStatusRail from './HomeStatusRail';
 import ClubSection from './ClubSection';
 import { useHomeData } from './useHomeData';
 
@@ -28,11 +28,16 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
     data,
     loading,
     error,
+    branding,
+    me,
     isHost,
     sliders,
     clubs,
     podsByClub,
     categoryChips,
+    followedClubs,
+    followedUsers,
+    totalPods,
     hostNameOf,
   } = useHomeData({
     superCategorySlug,
@@ -53,12 +58,23 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
 
   return (
     <>
-      <SliderRail sliders={sliders} />
+      <HomeStatusRail
+        me={me}
+        branding={branding}
+        sliders={sliders}
+        followedClubs={followedClubs}
+        followedUsers={followedUsers}
+      />
       <Stack spacing={2}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
-          <Typography variant="subtitle2" color="text.secondary">
-            Browse pods
-          </Typography>
+          <Stack spacing={0.25}>
+            <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.15 }}>
+              Happening nearby
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+              {totalPods} pods available
+            </Typography>
+          </Stack>
           <Stack direction="row" spacing={1} alignItems="center">
             <FilterMenu
               open={filtersOpen}

@@ -1,4 +1,5 @@
-import { Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
+import { Box, Paper, BottomNavigation, BottomNavigationAction } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import HomeIcon from '@mui/icons-material/Home';
 import ExploreIcon from '@mui/icons-material/Explore';
 import GroupsIcon from '@mui/icons-material/Groups';
@@ -33,13 +34,21 @@ export default function BottomNav() {
         position: 'fixed',
         left: '50%',
         transform: 'translateX(-50%)',
-        width: '100%',
-        maxWidth: APP_SHELL_MAX_WIDTH,
-        bottom: 0,
+        width: { xs: 'calc(100% - 18px)', sm: 'calc(100% - 24px)' },
+        maxWidth: APP_SHELL_MAX_WIDTH - 24,
+        bottom: 8,
         zIndex: (t) => t.zIndex.appBar,
-        borderTop: 1,
+        border: 1,
         borderColor: 'divider',
-        pb: 'env(safe-area-inset-bottom)',
+        borderRadius: 4,
+        overflow: 'hidden',
+        p: 0.5,
+        pb: 'calc(env(safe-area-inset-bottom) + 4px)',
+        bgcolor: (theme) => alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.88 : 0.96),
+        backdropFilter: 'blur(18px)',
+        boxShadow: (theme) => theme.palette.mode === 'dark'
+          ? '0 18px 44px rgba(0,0,0,0.48)'
+          : '0 18px 44px rgba(15,23,42,0.16)',
       }}
     >
       <BottomNavigation
@@ -47,18 +56,42 @@ export default function BottomNav() {
         value={active}
         onChange={(_e, value) => navigate(value)}
         sx={{
+          height: 58,
+          bgcolor: 'transparent',
           '& .MuiBottomNavigationAction-root': {
             minWidth: 0,
-            paddingTop: 0.75,
-            paddingBottom: 0.75,
+            mx: 0.15,
+            px: 0.25,
+            py: 0.4,
+            borderRadius: 3,
+            color: 'text.secondary',
+            transition: 'background-color 160ms ease, color 160ms ease, transform 160ms ease',
+          },
+          '& .MuiBottomNavigationAction-root.Mui-selected': {
+            color: 'primary.main',
+            bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.1 : 0.08),
+          },
+          '& .nav-icon-wrap': {
+            width: 30,
+            height: 30,
+            borderRadius: 2.25,
+            display: 'grid',
+            placeItems: 'center',
+            mb: 0.1,
+            transition: 'background 160ms ease, box-shadow 160ms ease, color 160ms ease',
+          },
+          '& .Mui-selected .nav-icon-wrap': {
+            color: 'primary.contrastText',
+            background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 55%, #f5337a 100%)',
+            boxShadow: '0 8px 18px rgba(245,51,122,0.34)',
           },
           '& .MuiBottomNavigationAction-label': {
             fontSize: 11,
-            fontWeight: 600,
-            mt: 0.25,
+            fontWeight: 800,
+            mt: 0,
           },
           '& .MuiBottomNavigationAction-label.Mui-selected': {
-            fontSize: 11.5,
+            fontSize: 11,
           },
         }}
       >
@@ -67,7 +100,7 @@ export default function BottomNav() {
             key={t.value}
             value={t.value}
             label={t.label}
-            icon={t.icon}
+            icon={<Box className="nav-icon-wrap">{t.icon}</Box>}
           />
         ))}
       </BottomNavigation>

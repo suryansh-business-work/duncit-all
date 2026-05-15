@@ -5,6 +5,7 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import PlaceIcon from '@mui/icons-material/Place';
 import ResponsiveDialog from '../ResponsiveDialog';
 import GpsLocationPicker from './GpsLocationPicker';
@@ -56,9 +57,23 @@ export default function LocationDialog({
 
   const title = (
     <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
-      <PlaceIcon color="primary" fontSize="small" />
+      <Box
+        sx={{
+          width: 34,
+          height: 34,
+          borderRadius: 2,
+          display: 'grid',
+          placeItems: 'center',
+          color: 'primary.main',
+          bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.18 : 0.1),
+          border: 1,
+          borderColor: (theme) => alpha(theme.palette.primary.main, 0.3),
+        }}
+      >
+        <PlaceIcon fontSize="small" />
+      </Box>
       <Box sx={{ minWidth: 0 }}>
-        <Typography variant="subtitle1" sx={{ fontWeight: 700, lineHeight: 1.2 }} noWrap>
+        <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.15 }} noWrap>
           Choose your city{draftZone ? ' / area' : ''}
         </Typography>
         <Typography
@@ -94,57 +109,70 @@ export default function LocationDialog({
         </Stack>
       }
       sheetMaxHeight="92vh"
+      paperSx={{
+        bgcolor: 'background.default',
+        backgroundImage: (theme) => theme.palette.mode === 'dark'
+          ? 'radial-gradient(circle at 14% 0%, rgba(255,79,115,0.22), transparent 28%), linear-gradient(180deg, #130d08 0%, #090a12 20%, #0c0d16 100%)'
+          : 'radial-gradient(circle at 16% 0%, rgba(255,79,115,0.18), transparent 30%), linear-gradient(180deg, #fff7f2 0%, #ffffff 28%, #fff 100%)',
+      }}
+      contentSx={{ px: 0, pt: 0, pb: 0 }}
+      actionsSx={{
+        bgcolor: (theme) => alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.72 : 0.92),
+        backdropFilter: 'blur(16px)',
+      }}
     >
-      <GpsLocationPicker locations={locations} onAutoSelect={handleAutoSelect} />
+      <Box sx={{ px: 2, pt: 0.75, pb: 1.5 }}>
+        <GpsLocationPicker locations={locations} onAutoSelect={handleAutoSelect} />
 
-      <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 800, lineHeight: 1.4 }}>
-        City
-      </Typography>
-      <Box
-        sx={{
-          display: 'grid',
-          gridAutoFlow: 'column',
-          gridAutoColumns: { xs: 'minmax(84px, 31%)', sm: 'minmax(122px, 1fr)' },
-          gap: 1,
-          mt: 0.5,
-          mb: 1.5,
-          pb: 0.5,
-          overflowX: 'auto',
-          scrollbarWidth: 'none',
-          '&::-webkit-scrollbar': { display: 'none' },
-        }}
-      >
-        {locations.map((locationItem: any, index: number) => {
-          const active = locationItem.id === draftLocationId;
-          return (
-            <LocationCityCard
-              key={locationItem.id}
-              location={locationItem}
-              active={active}
-              popular={!active && locationItem.id === popularLocationId}
-              index={index}
-              onSelect={() => {
-                setDraftLocationId(locationItem.id);
-                setDraftZone('');
-              }}
-            />
-          );
-        })}
-        {locations.length === 0 && (
-          <Typography variant="body2" color="text.secondary">
-            No locations available
-          </Typography>
+        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900, lineHeight: 1.4 }}>
+          City
+        </Typography>
+        <Box
+          sx={{
+            display: 'grid',
+            gridAutoFlow: 'column',
+            gridAutoColumns: { xs: 'minmax(94px, 32%)', sm: 'minmax(126px, 1fr)' },
+            gap: 1,
+            mt: 0.5,
+            mb: 1.5,
+            pb: 0.5,
+            overflowX: 'auto',
+            scrollbarWidth: 'none',
+            '&::-webkit-scrollbar': { display: 'none' },
+          }}
+        >
+          {locations.map((locationItem: any, index: number) => {
+            const active = locationItem.id === draftLocationId;
+            return (
+              <LocationCityCard
+                key={locationItem.id}
+                location={locationItem}
+                active={active}
+                popular={!active && locationItem.id === popularLocationId}
+                index={index}
+                onSelect={() => {
+                  setDraftLocationId(locationItem.id);
+                  setDraftZone('');
+                }}
+              />
+            );
+          })}
+          {locations.length === 0 && (
+            <Typography variant="body2" color="text.secondary">
+              No locations available
+            </Typography>
+          )}
+        </Box>
+
+        {draftLoc && (
+          <LocationAreaPicker
+            locationName={draftLoc.location_name}
+            zones={zones}
+            draftZone={draftZone}
+            setDraftZone={setDraftZone}
+          />
         )}
       </Box>
-
-      {draftLoc && (
-        <LocationAreaPicker
-          locationName={draftLoc.location_name}
-          zones={zones}
-          draftZone={draftZone}
-          setDraftZone={setDraftZone}
-        />
-      )}
     </ResponsiveDialog>
   );
 }

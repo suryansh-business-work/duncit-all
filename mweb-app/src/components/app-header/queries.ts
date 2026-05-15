@@ -16,6 +16,7 @@ export const HEADER_DATA = gql`
       profile_photo
       city
       roles
+      following_user_ids
     }
     superCategories: categories(filter: { level: SUPER }) {
       id

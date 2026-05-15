@@ -1,5 +1,6 @@
 import { useEffect, useRef } from 'react';
 import { Alert, Box, Button, CircularProgress, Typography } from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import GpsFixedIcon from '@mui/icons-material/GpsFixed';
 import { useGeoLocation, type GeocodedAddress } from './useGeoLocation';
 
@@ -56,7 +57,21 @@ export default function GpsLocationPicker({
           void request();
         }}
         disabled={busy}
-        sx={{ minHeight: 40, borderRadius: 2, fontWeight: 800 }}
+        sx={{
+          minHeight: 42,
+          borderRadius: 2.25,
+          border: '1px solid transparent',
+          color: 'primary.main',
+          fontWeight: 900,
+          background: (theme) => {
+            const fill = alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.72 : 0.9);
+            return `linear-gradient(${fill}, ${fill}) padding-box, linear-gradient(135deg, ${theme.palette.primary.main}, ${theme.palette.secondary.main}) border-box`;
+          },
+          '&:hover': {
+            border: '1px solid transparent',
+            bgcolor: 'transparent',
+          },
+        }}
       >
         {busy ? 'Locating…' : 'Use my location'}
       </Button>

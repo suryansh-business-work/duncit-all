@@ -11,7 +11,7 @@ import LocationDialog from './LocationDialog';
 import ProfileDrawer from './ProfileDrawer';
 import SuperCategoryTabs from './SuperCategoryTabs';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
-import AuthModeToggle from '../AuthModeToggle';
+import SurveyHeaderActions from './SurveyHeaderActions';
 
 interface AppHeaderProps {
   minimal?: boolean;
@@ -94,7 +94,7 @@ export default function AppHeader({
         <Box sx={{ flexGrow: 1 }} />
 
         {minimal ? (
-          <AuthModeToggle placement="inline" />
+          <SurveyHeaderActions onLogout={logout} />
         ) : (
           <>
             <HeaderLocationButton

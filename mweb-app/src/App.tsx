@@ -11,7 +11,7 @@ import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
 
-const BOTTOM_NAV_OFFSET = 'calc(56px + env(safe-area-inset-bottom) + 8px)';
+const BOTTOM_NAV_OFFSET = 'calc(72px + env(safe-area-inset-bottom) + 12px)';
 
 export default function App() {
   const isAuthed = !!localStorage.getItem('token');

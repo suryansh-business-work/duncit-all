@@ -32,6 +32,14 @@ export default function ProfilePage() {
     });
   }, [location.search, me?.is_email_verified]);
 
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    if (params.get('newPost') !== '1') return;
+    setUploadOpen(true);
+    params.delete('newPost');
+    navigate({ pathname: location.pathname, search: params.toString() }, { replace: true });
+  }, [location.pathname, location.search, navigate]);
+
   if (loading && !data) {
     return (
       <Stack alignItems="center" sx={{ p: 6 }}>

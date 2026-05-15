@@ -29,6 +29,10 @@ export const HOME_DATA = gql`
         url
         type
       }
+      club_moments {
+        url
+        type
+      }
       category_id
       super_category_id
     }
@@ -64,6 +68,17 @@ export const HOME_DATA = gql`
       slug
       level
       parent_id
+    }
+  }
+`;
+
+export const FOLLOWED_USERS = gql`
+  query HomeFollowedUsers($userIds: [ID!]!) {
+    publicUsersByIds(user_ids: $userIds) {
+      user_id
+      full_name
+      first_name
+      profile_photo
     }
   }
 `;

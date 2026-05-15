@@ -10,7 +10,7 @@ import {
   Stack,
   useMediaQuery,
 } from '@mui/material';
-import { useTheme } from '@mui/material/styles';
+import { useTheme, type SxProps, type Theme } from '@mui/material/styles';
 import CloseIcon from '@mui/icons-material/Close';
 
 interface Props {
@@ -26,7 +26,14 @@ interface Props {
   /** Bottom-sheet height (mobile only) — defaults to auto/85vh max. */
   sheetMaxHeight?: string;
   actions?: ReactNode;
+  paperSx?: SxProps<Theme>;
+  contentSx?: SxProps<Theme>;
+  actionsSx?: SxProps<Theme>;
   children: ReactNode;
+}
+
+function mergeSx(base: SxProps<Theme>, extra?: SxProps<Theme>): SxProps<Theme> {
+  return extra ? [base, ...(Array.isArray(extra) ? extra : [extra])] : base;
 }
 
 /**
@@ -44,6 +51,9 @@ export default function ResponsiveDialog({
   fullWidth = true,
   sheetMaxHeight = '85vh',
   actions,
+  paperSx,
+  contentSx,
+  actionsSx,
   children,
 }: Props) {
   const theme = useTheme();
@@ -59,14 +69,14 @@ export default function ResponsiveDialog({
         onOpen={() => {}}
         disableSwipeToOpen
         PaperProps={{
-          sx: {
+          sx: mergeSx({
             borderTopLeftRadius: 16,
             borderTopRightRadius: 16,
             maxHeight: sheetMaxHeight,
             display: 'flex',
             flexDirection: 'column',
             pb: 'env(safe-area-inset-bottom)',
-          },
+          }, paperSx),
         }}
       >
         <Box
@@ -100,10 +110,10 @@ export default function ResponsiveDialog({
             </IconButton>
           </Stack>
         )}
-        <Box sx={{ flex: 1, overflowY: 'auto', px: 2, pt: 0.5, pb: 1 }}>{children}</Box>
+        <Box sx={mergeSx({ flex: 1, overflowY: 'auto', px: 2, pt: 0.5, pb: 1 }, contentSx)}>{children}</Box>
         {actions && (
           <Box
-            sx={{
+            sx={mergeSx({
               flex: '0 0 auto',
               px: 2,
               py: 0.75,
@@ -112,7 +122,7 @@ export default function ResponsiveDialog({
               display: 'flex',
               justifyContent: 'flex-end',
               gap: 1,
-            }}
+            }, actionsSx)}
           >
             {actions}
           </Box>
@@ -122,7 +132,7 @@ export default function ResponsiveDialog({
   }
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth={fullWidth} maxWidth={maxWidth}>
+    <Dialog open={open} onClose={onClose} fullWidth={fullWidth} maxWidth={maxWidth} PaperProps={{ sx: paperSx }}>
       {title && (
         <DialogTitle sx={{ pr: 6 }}>
           {title}
@@ -136,8 +146,8 @@ export default function ResponsiveDialog({
           </IconButton>
         </DialogTitle>
       )}
-      <DialogContent dividers={!!actions} sx={{ py: 1.5 }}>{children}</DialogContent>
-      {actions && <DialogActions>{actions}</DialogActions>}
+      <DialogContent dividers={!!actions} sx={mergeSx({ py: 1.5 }, contentSx)}>{children}</DialogContent>
+      {actions && <DialogActions sx={actionsSx}>{actions}</DialogActions>}
     </Dialog>
   );
 }

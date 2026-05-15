@@ -55,6 +55,9 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
   const BORDER = isDark ? 'rgba(255,255,255,0.10)' : tokens.surface.border;
   const BG = isDark ? '#0b1220' : tokens.surface.bg;
   const SURFACE = isDark ? '#111a2e' : tokens.surface.paper;
+  const APP_BG = isDark
+    ? 'radial-gradient(circle at 8% 0%, rgba(255,79,115,0.20), transparent 34%), radial-gradient(circle at 90% 16%, rgba(139,92,246,0.18), transparent 32%), linear-gradient(180deg, #100d18 0%, #08070b 100%)'
+    : 'radial-gradient(circle at 8% 0%, rgba(255,79,115,0.15), transparent 34%), radial-gradient(circle at 90% 16%, rgba(139,92,246,0.10), transparent 32%), linear-gradient(180deg, #fff5f7 0%, #ffffff 62%)';
   const SURFACE_GRADIENT = isDark
     ? `linear-gradient(180deg, ${alpha('#ffffff', 0.05)} 0%, ${alpha(PRIMARY, 0.06)} 100%)`
     : `linear-gradient(180deg, #ffffff 0%, ${alpha(PRIMARY, 0.035)} 100%)`;
@@ -98,7 +101,12 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       styleOverrides: {
         html: { width: '100%', overflowX: 'hidden' },
         body: {
+          '--duncit-app-bg': APP_BG,
           backgroundColor: BG,
+          backgroundImage: 'var(--duncit-app-bg)',
+          backgroundAttachment: 'fixed',
+          backgroundSize: '180% 180%',
+          animation: 'duncit-bg-drift 36s ease-in-out infinite alternate',
           WebkitFontSmoothing: 'antialiased',
           MozOsxFontSmoothing: 'grayscale',
           position: 'relative',
@@ -106,6 +114,11 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           width: '100%',
         },
         '#root': { width: '100%', minHeight: '100dvh' },
+        '@keyframes duncit-bg-drift': {
+          '0%': { backgroundPosition: '0% 0%' },
+          '50%': { backgroundPosition: '65% 18%' },
+          '100%': { backgroundPosition: '100% 0%' },
+        },
         '*::-webkit-scrollbar': { width: 8, height: 8 },
         '*::-webkit-scrollbar-thumb': {
           background: alpha(INK, 0.18),

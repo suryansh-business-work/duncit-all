@@ -18,7 +18,7 @@ const TABS = [
 ];
 
 const NAV_BOTTOM_GAP = 8;
-const NAV_CONTENT_GAP = 16;
+const NAV_CONTENT_GAP = 28;
 
 export default function BottomNav() {
   const navigate = useNavigate();

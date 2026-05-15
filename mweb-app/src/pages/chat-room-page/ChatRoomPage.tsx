@@ -110,9 +110,6 @@ export default function ChatRoomPage() {
         height: '100%',
         minHeight: 0,
         mx: { xs: -1.25, sm: -2 },
-        background: (theme) => theme.palette.mode === 'dark'
-          ? 'radial-gradient(circle at 12% 0%, rgba(255,79,115,0.18), transparent 34%), linear-gradient(180deg, #100d18 0%, #08070b 100%)'
-          : 'radial-gradient(circle at 12% 0%, rgba(255,79,115,0.12), transparent 34%), linear-gradient(180deg, #fff5f7 0%, #ffffff 58%)',
       }}
     >
       <ChatRoomHeader title={data?.pod?.pod_title} messageCount={messages.length} onBack={() => navigate('/chats')} />

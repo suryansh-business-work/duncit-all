@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { Badge, IconButton, Tooltip } from '@mui/material';
 import NotificationsIcon from '@mui/icons-material/Notifications';
 import { MARK_ALL, MARK_READ, MY_NOTIFS } from './queries';
-import NotificationsConfirmSheet from './NotificationsConfirmSheet';
-import NotificationsPopover from './NotificationsPopover';
+import NotificationsScreen from './NotificationsScreen';
 import { useHeaderPushNotifications } from './useHeaderPushNotifications';
 import { useNotificationsSse } from './useNotificationsSse';
+import { useNavigate } from 'react-router-dom';
 
 interface HeaderNotificationsBellProps {
   onToast: (toast: { title?: string; body?: string } | null) => void;
@@ -15,8 +14,7 @@ interface HeaderNotificationsBellProps {
 
 export default function HeaderNotificationsBell({ onToast }: HeaderNotificationsBellProps) {
   const navigate = useNavigate();
-  const [notifAnchor, setNotifAnchor] = useState<HTMLElement | null>(null);
-  const [notifConfirm, setNotifConfirm] = useState<HTMLElement | null>(null);
+  const [notificationsOpen, setNotificationsOpen] = useState(false);
 
   const { data: notifData, refetch: refetchNotifs } = useQuery(MY_NOTIFS, {
     fetchPolicy: 'cache-and-network',
@@ -51,7 +49,7 @@ export default function HeaderNotificationsBell({ onToast }: HeaderNotifications
       }
     }
     const link = n.notification?.link_url;
-    setNotifAnchor(null);
+    setNotificationsOpen(false);
     if (link) navigate(link);
   };
 
@@ -69,7 +67,7 @@ export default function HeaderNotificationsBell({ onToast }: HeaderNotifications
       <Tooltip title="Notifications">
         <IconButton
           size="small"
-          onClick={(e) => setNotifConfirm(e.currentTarget)}
+          onClick={() => setNotificationsOpen(true)}
           aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ''}`}
           sx={{
             minWidth: 40,
@@ -85,18 +83,9 @@ export default function HeaderNotificationsBell({ onToast }: HeaderNotifications
           </Badge>
         </IconButton>
       </Tooltip>
-      <NotificationsConfirmSheet
-        anchor={notifConfirm}
-        unreadCount={unreadCount}
-        onClose={() => setNotifConfirm(null)}
-        onContinue={(a) => {
-          setNotifConfirm(null);
-          setNotifAnchor(a);
-        }}
-      />
-      <NotificationsPopover
-        anchor={notifAnchor}
-        onClose={() => setNotifAnchor(null)}
+      <NotificationsScreen
+        open={notificationsOpen}
+        onClose={() => setNotificationsOpen(false)}
         notifs={myNotifs}
         unreadCount={unreadCount}
         perm={perm}

@@ -2,7 +2,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Alert, AppBar, Avatar, Box, IconButton, Toolbar, Tooltip } from '@mui/material';
-import { alpha } from '@mui/material/styles';
 import { HEADER_DATA, PUBLIC_POLICIES } from './queries';
 import HeaderBrand from './HeaderBrand';
 import HeaderLocationButton from './HeaderLocationButton';
@@ -89,10 +88,8 @@ export default function AppHeader({
       color="inherit"
       elevation={0}
       sx={{
-        bgcolor: (theme) => alpha(theme.palette.background.default, theme.palette.mode === 'dark' ? 0.86 : 0.94),
-        backgroundImage: (theme) => theme.palette.mode === 'dark'
-          ? 'radial-gradient(circle at 8% 0%, rgba(255,79,115,0.18), transparent 30%)'
-          : 'radial-gradient(circle at 8% 0%, rgba(255,79,115,0.12), transparent 30%)',
+        bgcolor: 'transparent',
+        backgroundImage: 'none',
         borderBottom: 0,
         backdropFilter: 'blur(18px)',
       }}

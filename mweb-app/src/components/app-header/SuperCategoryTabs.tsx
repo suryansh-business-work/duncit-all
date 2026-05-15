@@ -25,7 +25,7 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
   }
   if (superCats.length === 0) return null;
   return (
-    <Box sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', px: 1.5, pb: 1 }}>
+    <Box sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', px: 1.25, pb: 1 }}>
       <ToggleButtonGroup
         value={value}
         exclusive
@@ -36,7 +36,7 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
         }}
         sx={{
           width: '100%',
-          p: 0.45,
+          p: 0,
           borderRadius: 3.5,
           bgcolor: 'action.hover',
           border: 1,
@@ -50,7 +50,7 @@ export default function SuperCategoryTabs({ loading, superCats, value, onChange 
             fontSize: 12,
             whiteSpace: 'nowrap',
             border: 0,
-            borderRadius: '12px !important',
+            borderRadius: '14px !important',
             fontWeight: 900,
             color: 'text.secondary',
           },

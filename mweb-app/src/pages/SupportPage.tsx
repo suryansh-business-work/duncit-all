@@ -3,7 +3,9 @@ import { gql, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
   Alert,
+  Avatar,
   Box,
+  Chip,
   IconButton,
   Paper,
   Snackbar,
@@ -11,6 +13,7 @@ import {
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { HEADER_DATA } from '../components/app-header/queries';
 import SupportForm, { type SupportFormValues } from '../forms/support.form';
@@ -60,25 +63,58 @@ export default function SupportPage() {
   };
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2.25} sx={{ mx: { xs: -0.25, sm: 0 } }}>
       <Stack direction="row" alignItems="center" spacing={1}>
-        <IconButton size="small" onClick={() => navigate(-1)} aria-label="Back">
+        <IconButton size="small" onClick={() => navigate(-1)} aria-label="Back" sx={{ bgcolor: 'action.hover' }}>
           <ArrowBackIcon />
         </IconButton>
-        <SupportAgentIcon color="primary" />
-        <Typography variant="h6" fontWeight={700} sx={{ lineHeight: 1.2 }}>
+        <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1.1 }}>
           Support
         </Typography>
       </Stack>
 
-      <Alert severity="info" variant="outlined">
-        Tell us what's going on. Our team will reach out via email — usually within 24 hours.
-      </Alert>
+      <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 4, bgcolor: 'rgba(255,79,115,0.12)' }}>
+        <Stack direction="row" alignItems="center" spacing={1.25}>
+          <Stack direction="row" spacing={-1} sx={{ flex: '0 0 auto' }}>
+            {['primary.main', 'secondary.main', 'info.main'].map((color) => (
+              <Avatar key={color} sx={{ width: 34, height: 34, bgcolor: color, border: 2, borderColor: 'background.paper' }}>
+                <SupportAgentIcon fontSize="small" />
+              </Avatar>
+            ))}
+          </Stack>
+          <Box sx={{ minWidth: 0, flex: 1 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 950 }} noWrap>
+              Help squad is ready
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+              Average reply within 24 hours
+            </Typography>
+          </Box>
+          <Chip size="small" color="success" label="Live" sx={{ fontWeight: 900 }} />
+        </Stack>
+      </Paper>
 
-      <Paper elevation={0} variant="outlined" sx={{ p: 2 }}>
+      <Paper onClick={() => navigate('/faqs')} variant="outlined" sx={{ p: 1.5, borderRadius: 4, bgcolor: 'rgba(20,184,166,0.10)', borderColor: 'rgba(20,184,166,0.24)', cursor: 'pointer' }}>
+        <Stack direction="row" spacing={1} alignItems="center">
+          <HelpOutlineIcon color="success" />
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>
+              Maybe answered already?
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              Tap to read quick answers before sending a ticket.
+            </Typography>
+          </Box>
+        </Stack>
+      </Paper>
+
+      <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: 4 }}>
         <Box sx={{ mb: 1 }}>
-          <Typography variant="subtitle2" sx={{ lineHeight: 1.3 }}>
-            Send us a message
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
+            Tell us what's going on
+          </Typography>
+          <Typography variant="body2" color="text.secondary">
+            Add the steps, screenshots, and expected result so we can fix it faster.
           </Typography>
         </Box>
         <SupportForm

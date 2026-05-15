@@ -7,8 +7,8 @@ import {
   Alert,
   Box,
   Chip,
-  Container,
   InputAdornment,
+  Paper,
   Skeleton,
   Stack,
   TextField,
@@ -60,37 +60,41 @@ export default function FaqsPage() {
   }, [groups, activeSuper, search]);
 
   return (
-    <Container maxWidth="md" sx={{ py: 4 }}>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 1 }}>
-        <HelpOutlineIcon color="primary" sx={{ fontSize: 32 }} />
+    <Stack spacing={2} sx={{ width: '100%', maxWidth: 760, mx: 'auto' }}>
+      <Stack direction="row" alignItems="center" spacing={1.5}>
+        <Box sx={{ width: 48, height: 48, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)', boxShadow: '0 14px 28px rgba(255,79,115,0.30)' }}>
+          <HelpOutlineIcon />
+        </Box>
         <Box>
-          <Typography variant="h5" fontWeight={700}>
-            Frequently Asked Questions
+          <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
+            Got questions?
           </Typography>
-          <Typography variant="body2" color="text.secondary">
-            Find answers grouped by category. Can't find what you need? Reach out via Support.
+          <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }}>
+            Browse by topic. Can't find it? Support replies within 24h.
           </Typography>
         </Box>
       </Stack>
 
-      <TextField
-        fullWidth
-        size="small"
-        placeholder="Search questions…"
-        value={search}
-        onChange={(e) => setSearch(e.target.value)}
-        sx={{ mt: 3, mb: 2 }}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-        }}
-      />
+      <Paper variant="outlined" sx={{ p: 1, borderRadius: 4 }}>
+        <TextField
+          fullWidth
+          size="small"
+          placeholder="Search questions, e.g. refund, host"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999 } }}
+        />
+      </Paper>
 
       {groups.length > 0 && (
-        <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
+        <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', pb: 0.5, '&::-webkit-scrollbar': { display: 'none' } }}>
           <Chip
             label="All"
             color={activeSuper === 'ALL' ? 'primary' : 'default'}
@@ -116,7 +120,7 @@ export default function FaqsPage() {
       {loading && (
         <Stack spacing={1.5}>
           {[0, 1, 2, 3].map((i) => (
-            <Skeleton key={i} variant="rounded" height={56} />
+            <Skeleton key={i} variant="rounded" height={64} sx={{ borderRadius: 3 }} />
           ))}
         </Stack>
       )}
@@ -128,15 +132,15 @@ export default function FaqsPage() {
       )}
 
       {filteredGroups.map((g) => (
-        <Box key={g.super_category?.id ?? 'GENERIC'} sx={{ mt: 3 }}>
-          <Typography variant="overline" color="text.secondary">
+        <Box key={g.super_category?.id ?? 'GENERIC'}>
+          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
             {g.super_category?.name ?? 'General'}
           </Typography>
           <Stack spacing={1} sx={{ mt: 1 }}>
             {g.faqs.map((f: any) => (
-              <Accordion key={f.id} disableGutters elevation={0} sx={{ border: 1, borderColor: 'divider', borderRadius: 1, '&:before': { display: 'none' } }}>
+              <Accordion key={f.id} disableGutters elevation={0} sx={{ borderRadius: 3, overflow: 'hidden' }}>
                 <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-                  <Typography variant="body2" fontWeight={600}>
+                  <Typography variant="body2" sx={{ fontWeight: 950 }}>
                     {f.question}
                   </Typography>
                 </AccordionSummary>
@@ -144,12 +148,16 @@ export default function FaqsPage() {
                   <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
                     {f.answer}
                   </Typography>
+                  <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
+                    <Chip label="Helpful" variant="outlined" sx={{ fontWeight: 900 }} />
+                    <Chip label="Not really" variant="outlined" sx={{ fontWeight: 900 }} />
+                  </Stack>
                 </AccordionDetails>
               </Accordion>
             ))}
           </Stack>
         </Box>
       ))}
-    </Container>
+    </Stack>
   );
 }

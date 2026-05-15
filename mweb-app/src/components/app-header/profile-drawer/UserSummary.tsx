@@ -10,7 +10,7 @@ export default function UserSummary({ me, roles }: UserSummaryProps) {
   const { labelFor } = useRoleLabels();
   return (
     <Box sx={{ px: 2, pb: 2 }}>
-      <Stack direction="row" spacing={1.5} alignItems="center">
+      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ p: 1.35, borderRadius: 3, bgcolor: 'action.hover', border: 1, borderColor: 'divider' }}>
         <Avatar
           src={me?.profile_photo || undefined}
           sx={{ width: 56, height: 56, bgcolor: 'primary.main', fontSize: 20 }}
@@ -21,11 +21,6 @@ export default function UserSummary({ me, roles }: UserSummaryProps) {
           sx={{
             minWidth: 0,
             flex: 1,
-            p: 1.35,
-            borderRadius: 3,
-            bgcolor: 'action.hover',
-            border: 1,
-            borderColor: 'divider',
           }}
         >
           <Typography variant="subtitle1" fontWeight={700} noWrap>

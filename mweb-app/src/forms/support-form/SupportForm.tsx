@@ -85,7 +85,7 @@ export default function SupportForm({
             />
             <FormField
               name="message"
-              label="Describe your issue or feedback"
+              label="Tell us what's going on"
               multiline
               minRows={4}
             />
@@ -104,6 +104,7 @@ export default function SupportForm({
               variant="contained"
               size="large"
               disabled={loading || isSubmitting}
+              sx={{ borderRadius: 999, fontWeight: 950 }}
             >
               {loading || isSubmitting ? 'Sending…' : 'Send to support'}
             </Button>

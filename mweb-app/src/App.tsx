@@ -10,8 +10,9 @@ import AppRoutes from './app/AppRoutes';
 import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
+import { useHapticFeedback } from './app/useHapticFeedback';
 
-const BOTTOM_NAV_OFFSET = 'var(--duncit-bottom-nav-offset, 108px)';
+const BOTTOM_NAV_OFFSET = 'var(--duncit-bottom-nav-offset, 120px)';
 
 export default function App() {
   const isAuthed = !!localStorage.getItem('token');
@@ -43,6 +44,7 @@ export default function App() {
     path: `${location.pathname}${location.search}`,
     superCategory,
   });
+  useHapticFeedback(isAuthed);
 
   return (
     <Box
@@ -50,10 +52,7 @@ export default function App() {
         height: '100dvh',
         display: 'flex',
         flexDirection: 'column',
-        bgcolor: 'background.default',
-        background: (theme) => theme.palette.mode === 'dark'
-          ? 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.18), transparent 34%), linear-gradient(180deg, #100d18 0%, #08070b 100%)'
-          : 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.12), transparent 34%), linear-gradient(180deg, #fff5f7 0%, #ffffff 62%)',
+        bgcolor: 'transparent',
       } : undefined}
     >
       {splashOpen && <SplashScreen />}
@@ -88,9 +87,6 @@ export default function App() {
           }),
           py: fullBleed ? 0 : 2,
           pb: fullBleed ? 0 : showBottomNav ? `calc(${BOTTOM_NAV_OFFSET} + 12px)` : 2,
-          background: !fullBleed && isAuthed ? ((theme) => theme.palette.mode === 'dark'
-            ? 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.12), transparent 32%)'
-            : 'radial-gradient(circle at 10% 0%, rgba(255,79,115,0.08), transparent 32%)') : undefined,
         }}
       >
         <ScrollToTop />

@@ -36,3 +36,17 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2000:80"
+
+  partners-website:
+    image: ${DOCKERHUB_USERNAME}/duncit-partners-website:${IMAGE_TAG:-latest}
+    container_name: duncit-partners-website
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2004:80"
+
+  partners-app:
+    image: ${DOCKERHUB_USERNAME}/duncit-partners-app:${IMAGE_TAG:-latest}
+    container_name: duncit-partners-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2005:80"

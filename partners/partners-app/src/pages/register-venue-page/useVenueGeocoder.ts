@@ -1,5 +1,11 @@
 import { useState } from 'react';
-import type { GeocodedAddress } from '../../components/app-header/useGeoLocation';
+
+interface GeocodedAddress {
+  city: string;
+  state: string;
+  country: string;
+  pincode: string;
+}
 
 interface GoogleAddressComponent {
   long_name: string;

@@ -9,8 +9,8 @@
 set -euo pipefail
 cd /opt/duncit
 
-SERVICES=(server admin mweb website)
-PORTS=(2001 2002 2003 2000)
+SERVICES=(server admin mweb website partners-website partners-app)
+PORTS=(2001 2002 2003 2000 2004 2005)
 
 remove_containers_publishing_ports() {
   for port in "${PORTS[@]}"; do
@@ -63,7 +63,7 @@ docker compose up -d --remove-orphans --force-recreate
 
 echo ">>> Waiting for containers to become healthy..."
 for i in {1..30}; do
-  if docker ps --format '{{.Names}} {{.Status}}' | grep -E 'duncit-(server|admin|mweb|website)' | grep -vq 'Restarting\|Created'; then
+  if docker ps --format '{{.Names}} {{.Status}}' | grep -E 'duncit-(server|admin|mweb|website|partners-website|partners-app)' | grep -vq 'Restarting\|Created'; then
     break
   fi
   sleep 2

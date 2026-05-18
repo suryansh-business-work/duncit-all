@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import HomePage from '../pages/HomePage';
 import RegisterPage from '../pages/RegisterPage';
@@ -10,8 +11,6 @@ import FollowPage from '../pages/FollowPage';
 import PublicProfilePage from '../pages/PublicProfilePage';
 import PodDetailsPage from '../pages/PodDetailsPage';
 import ClubDetailsPage from '../pages/ClubDetailsPage';
-import BecomeHostPage from '../pages/BecomeHostPage';
-import RegisterVenuePage from '../pages/RegisterVenuePage';
 import HostsVenuesPage from '../pages/HostsVenuesPage';
 import HostManagePage from '../pages/HostManagePage';
 import VenueManagePage from '../pages/VenueManagePage';
@@ -38,6 +37,13 @@ interface Props {
 const withAuth = (element: JSX.Element) => <RequireAuth>{element}</RequireAuth>;
 const redirectIfAuthed = (element: JSX.Element) => <RedirectIfAuthed>{element}</RedirectIfAuthed>;
 
+function PartnerRedirect({ path }: { path: string }) {
+  useEffect(() => {
+    window.location.replace(`https://partners-app.duncit.com${path}`);
+  }, [path]);
+  return null;
+}
+
 export default function AppRoutes({ superCategory, locationId, zoneName }: Props) {
   return (
     <Routes>
@@ -57,8 +63,8 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Props
         element={withAuth(<PodDetailsPage />)}
       />
       <Route path="/u/:userId" element={withAuth(<PublicProfilePage />)} />
-      <Route path="/become-host" element={withAuth(<BecomeHostPage />)} />
-      <Route path="/register-venue" element={withAuth(<RegisterVenuePage />)} />
+      <Route path="/become-host" element={<PartnerRedirect path="/become-host" />} />
+      <Route path="/register-venue" element={<PartnerRedirect path="/register-venue" />} />
       <Route path="/hosts-venues" element={withAuth(<HostsVenuesPage />)} />
       <Route path="/host/manage" element={withAuth(<HostManagePage />)} />
       <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />

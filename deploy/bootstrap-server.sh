@@ -70,6 +70,16 @@ services:
     container_name: duncit-website
     restart: unless-stopped
     ports: ["127.0.0.1:2000:80"]
+  partners-website:
+    image: ${DOCKERHUB_USERNAME}/duncit-partners-website:latest
+    container_name: duncit-partners-website
+    restart: unless-stopped
+    ports: ["127.0.0.1:2004:80"]
+  partners-app:
+    image: ${DOCKERHUB_USERNAME}/duncit-partners-app:latest
+    container_name: duncit-partners-app
+    restart: unless-stopped
+    ports: ["127.0.0.1:2005:80"]
 EOF
 
 echo "[4/6] Install nginx site configs (skipping existing duncit.com)"
@@ -105,6 +115,8 @@ write_site "server.duncit.com" 2001
 write_site "admin.duncit.com"  2002
 write_site "mweb.duncit.com"   2003
 write_site "duncit.com"        2000
+write_site "partners.duncit.com" 2004
+write_site "partners-app.duncit.com" 2005
 # Also alias www -> apex
 sed -i 's/server_name duncit.com;/server_name duncit.com www.duncit.com;/' "$SITES_AVAIL/duncit.com" || true
 

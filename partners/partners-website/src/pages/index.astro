@@ -1,0 +1,114 @@
+---
+import Layout from '../layouts/Layout.astro';
+import { partnerLanding } from '../config/landing';
+
+const venueUrl = `${partnerLanding.appUrl}/register-venue`;
+const hostUrl = `${partnerLanding.appUrl}/become-host`;
+---
+
+<Layout title="Duncit Partners — Host and venue growth">
+  <main class="bg-ink p-3 sm:p-4 min-h-screen">
+    <section class="relative overflow-hidden rounded-3xl min-h-[650px] px-5 sm:px-8 pt-5 pb-10">
+      <div class="absolute inset-0 z-0">
+        <img src={partnerLanding.heroImage} alt="Venue partners planning an event" class="w-full h-full object-cover" />
+        <div class="absolute inset-0 bg-gradient-to-br from-ink/92 via-ink/48 to-primary/45"></div>
+      </div>
+
+      <nav class="relative z-20 flex items-center justify-between gap-4">
+        <a href="https://duncit.com" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white sticker hover:-translate-y-0.5 transition">
+          <span class="w-8 h-8 rounded-full bg-primary text-white inline-flex items-center justify-center font-black font-head">D</span>
+          <span class="font-head font-black text-ink text-lg leading-none">Duncit</span>
+        </a>
+        <a href={partnerLanding.appUrl} class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tertiary text-ink font-bold sticker hover:scale-[1.03] transition">
+          <i class="fa-solid fa-right-to-bracket"></i> Partner login
+        </a>
+      </nav>
+
+      <div class="relative z-10 max-w-6xl mx-auto min-h-[560px] grid lg:grid-cols-[1.08fr_0.92fr] gap-10 items-center">
+        <div data-hero-copy>
+          <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-tertiary text-ink font-bold sticker mb-6">
+            <i class="fa-solid fa-handshake-angle"></i> Duncit Partners
+          </span>
+          <h1 class="font-head font-black text-white text-5xl sm:text-7xl lg:text-[5.8rem] max-w-4xl">
+            Fill the room. Host the moment.
+          </h1>
+          <p class="text-white/86 text-lg sm:text-xl max-w-2xl mt-6 leading-relaxed">
+            A focused partner entry point for venues and hosts who want real groups, clean operations, and Duncit's trust layer behind every plan.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-3 mt-8">
+            <a href={venueUrl} class="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-primary text-white font-head font-black text-lg sticker hover:-translate-y-1 transition">
+              <i class="fa-solid fa-store"></i> Register your venue
+            </a>
+            <a href={hostUrl} class="inline-flex items-center justify-center gap-2 px-7 py-4 rounded-full bg-white text-ink font-head font-black text-lg sticker hover:-translate-y-1 transition">
+              <i class="fa-solid fa-champagne-glasses"></i> Be a host
+            </a>
+          </div>
+        </div>
+
+        <div data-hero-card class="relative">
+          <div class="absolute -top-5 -left-5 rotate-[-7deg] px-4 py-2 rounded-full bg-secondary text-white font-bold sticker">
+            <i class="fa-solid fa-bolt"></i> Launch partners
+          </div>
+          <div class="bg-cream rounded-3xl p-4 sm:p-5 sticker">
+            <img src={partnerLanding.proofImage} alt="Partners reviewing bookings" class="w-full h-72 sm:h-80 object-cover rounded-2xl sticker" />
+            <div class="grid grid-cols-3 gap-3 mt-4">
+              {partnerLanding.stats.map((stat) => (
+                <div class="bg-white rounded-2xl p-3 text-center sticker">
+                  <div class="font-head font-black text-2xl text-primary">{stat.value}</div>
+                  <div class="text-[11px] font-bold text-ink-soft uppercase">{stat.label}</div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="bg-cream rounded-3xl mt-3 px-5 sm:px-8 py-16">
+      <div class="max-w-6xl mx-auto grid lg:grid-cols-[0.85fr_1.15fr] gap-10 items-start">
+        <div>
+          <span class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary font-black text-xs uppercase mb-4">
+            <i class="fa-solid fa-route"></i> One partner funnel
+          </span>
+          <h2 class="text-4xl sm:text-5xl text-ink">Two ways into the same growth engine.</h2>
+        </div>
+        <div class="grid sm:grid-cols-3 gap-4">
+          {partnerLanding.pillars.map((pillar) => (
+            <article class="bg-white rounded-2xl p-5 sticker hover:-translate-y-1 transition">
+              <div class="w-12 h-12 rounded-xl bg-lilac inline-flex items-center justify-center mb-4">
+                <i class={`fa-solid ${pillar.icon} text-secondary text-xl`}></i>
+              </div>
+              <h3 class="text-xl text-ink mb-2">{pillar.title}</h3>
+              <p class="text-sm text-ink-soft leading-relaxed">{pillar.text}</p>
+            </article>
+          ))}
+        </div>
+      </div>
+    </section>
+  </main>
+</Layout>
+
+<script>
+  import { animate, stagger } from 'animejs';
+
+  try {
+    animate('[data-hero-copy] > *', {
+      opacity: [0, 1],
+      translateY: [24, 0],
+      delay: stagger(90, { start: 120 }),
+      duration: 650,
+      ease: 'outQuart',
+    });
+    animate('[data-hero-card]', {
+      opacity: [0, 1],
+      translateY: [30, 0],
+      duration: 750,
+      delay: 260,
+      ease: 'outQuart',
+    });
+  } catch {
+    document.querySelectorAll('[data-hero-copy] > *, [data-hero-card]').forEach((el) => {
+      (el as HTMLElement).style.opacity = '1';
+    });
+  }
+</script>

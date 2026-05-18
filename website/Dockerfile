@@ -7,6 +7,8 @@ COPY server/package.json ./server/
 COPY mweb-app/package.json ./mweb-app/
 COPY admin/package.json ./admin/
 COPY website/package.json ./website/
+COPY partners/partners-app/package.json ./partners/partners-app/
+COPY partners/partners-website/package.json ./partners/partners-website/
 
 RUN npm ci --no-audit --no-fund
 

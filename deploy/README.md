@@ -4,16 +4,17 @@
 
 ```bash
 # from your laptop
-ssh root@148.135.136.107 'GH_OWNER=<your-github-user-or-org> bash -s' < deploy/bootstrap-server.sh
+ssh root@148.135.136.107 'DOCKERHUB_USERNAME=<dockerhub-user> bash -s' < deploy/bootstrap-server.sh
 ```
 
 This installs Docker + nginx, writes `/opt/duncit/docker-compose.yml`,
 adds nginx site configs for **server.duncit.com**, **admin.duncit.com**,
-**mweb.duncit.com**, and reloads nginx.
+**mweb.duncit.com**, **duncit.com**, **partners.duncit.com**, and
+**partners-app.duncit.com**, then reloads nginx.
 
-> The existing `duncit.com` website config is **NOT touched**.
-> DNS is already pointed (per your note) — no SSL/cert config is written here.
-> Add Certbot later if/when you want HTTPS.
+GitHub Actions installs/expands the Certbot nginx certificate for
+`duncit.com`, `www.duncit.com`, `partners.duncit.com`, and
+`partners-app.duncit.com` during deploy.
 
 Edit secrets in `/opt/duncit/server.env` (Mongo URI, JWT_SECRET, etc.)
 and run `cd /opt/duncit && docker compose up -d`.
@@ -26,15 +27,19 @@ and run `cd /opt/duncit && docker compose up -d`.
 | `SSH_USER`         | `root`                               |
 | `SSH_PRIVATE_KEY`  | Contents of `~/.ssh/id_ed25519`      |
 
-GHCR push uses the auto `GITHUB_TOKEN` — no extra secret needed.
+Docker image push uses DockerHub secrets: `DOCKERHUB_USERNAME` and
+`DOCKERHUB_TOKEN`.
 
 ## What happens on `git push`
 
 1. `typecheck` job builds every workspace (`tsc -b`).
-2. `build-and-push` builds 3 Docker images in parallel and pushes to **ghcr.io**:
+2. Workspace-specific Docker jobs build and push images to DockerHub:
    - `duncit-server` (Node 20 — runs `node dist/index.js` on :2001)
    - `duncit-admin`  (nginx static — admin SPA)
    - `duncit-mweb`   (nginx static — mobile-web SPA)
+   - `duncit-website` (nginx static — public website on :2000)
+   - `duncit-partners-website` (nginx static — partners landing on :2004)
+   - `duncit-partners-app` (nginx static — partner React app on :2005)
 3. `deploy` SSHes to the VPS, runs `/opt/duncit/redeploy.sh` and **loops health checks** (24 retries × 15 s) until every container is responding. Job fails only if it never goes green.
 
 ## Local Husky

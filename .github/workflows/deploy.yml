@@ -369,13 +369,15 @@ jobs:
           chmod 600 /opt/duncit/server.env
           chmod +x /opt/duncit/redeploy.sh
           SUDO=$(command -v sudo || echo)
-          $SUDO install -m 644 /opt/duncit/nginx/duncit.com /etc/nginx/sites-available/duncit.com
-          $SUDO ln -sf /etc/nginx/sites-available/duncit.com /etc/nginx/sites-enabled/duncit.com
+          for site in duncit.com admin.duncit.com mweb.duncit.com server.duncit.com; do
+            $SUDO install -m 644 "/opt/duncit/nginx/$site" "/etc/nginx/sites-available/$site"
+            $SUDO ln -sf "/etc/nginx/sites-available/$site" "/etc/nginx/sites-enabled/$site"
+          done
           if ! command -v certbot >/dev/null 2>&1; then
             $SUDO apt-get update -qq
             $SUDO apt-get install -y -qq certbot python3-certbot-nginx
           fi
-          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d partners.duncit.com -d partners-app.duncit.com"
+          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com"
           if ! $SUDO test -d /etc/letsencrypt/live/duncit.com; then
             $SUDO certbot --nginx --non-interactive --agree-tos --redirect --cert-name duncit.com -m admin@duncit.com $CERTBOT_DOMAINS || true
           else

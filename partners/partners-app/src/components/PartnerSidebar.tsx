@@ -1,0 +1,86 @@
+import { gql, useQuery } from '@apollo/client';
+import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { Box, Divider, List, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faBoxOpen, faBuilding, faCircleQuestion, faFileLines, faGaugeHigh, faHeadset, faUserTie } from '@fortawesome/free-solid-svg-icons';
+import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+
+interface NavItem {
+  label: string;
+  to: string;
+  icon: IconDefinition;
+  match: string;
+}
+
+interface Props {
+  onCloseMobile?: () => void;
+}
+
+const sections: { heading: string; items: NavItem[] }[] = [
+  { heading: 'Dashboard', items: [{ label: 'Dashboard', to: '/', icon: faGaugeHigh, match: '/' }] },
+  {
+    heading: 'Partner Tools',
+    items: [
+      { label: 'Venues', to: '/register-venue', icon: faBuilding, match: '/register-venue' },
+      { label: 'Host', to: '/become-host', icon: faUserTie, match: '/become-host' },
+      { label: 'Products', to: '/list-products', icon: faBoxOpen, match: '/list-products' },
+    ],
+  },
+  { heading: 'Help', items: [{ label: 'FAQs', to: '/faqs', icon: faCircleQuestion, match: '/faqs' }, { label: 'Support', to: '/support', icon: faHeadset, match: '/support' }] },
+];
+
+const PUBLIC_POLICIES = gql`
+  query PartnerSidebarPolicies {
+    publicPolicies { id slug title }
+  }
+`;
+
+export default function PartnerSidebar({ onCloseMobile }: Props) {
+  const location = useLocation();
+  const { data } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-first' });
+  const policies = data?.publicPolicies ?? [];
+
+  const isActive = (item: NavItem) => (item.match === '/' ? location.pathname === '/' : location.pathname.startsWith(item.match));
+
+  return (
+    <Box component="aside" sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'background.paper' }}>
+      <Box component={RouterLink} to="/" onClick={onCloseMobile} sx={{ minHeight: 56, px: 2, display: 'flex', alignItems: 'center', gap: 1.25, color: 'inherit', textDecoration: 'none' }}>
+        <Box component="img" src="/duncit-logo.svg" alt="Duncit" sx={{ height: 34, width: 'auto', maxWidth: 150, objectFit: 'contain' }} />
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="caption" color="text.secondary" noWrap>Partner Console</Typography>
+        </Box>
+      </Box>
+      <Divider />
+      <List sx={{ py: 1, flex: 1, overflowY: 'auto' }}>
+        {sections.map((section) => (
+          <Box key={section.heading} sx={{ mb: 1 }}>
+            <Typography variant="overline" sx={{ px: 2.5, color: 'text.secondary', fontWeight: 700, letterSpacing: 0.4, display: 'block', mt: 1 }}>
+              {section.heading}
+            </Typography>
+            {section.items.map((item) => <PartnerNavItem key={item.to} item={item} active={isActive(item)} onClick={onCloseMobile} />)}
+          </Box>
+        ))}
+        {policies.length > 0 && (
+          <Box sx={{ mb: 1 }}>
+            <Typography variant="overline" sx={{ px: 2.5, color: 'text.secondary', fontWeight: 700, letterSpacing: 0.4, display: 'block', mt: 1 }}>Policies</Typography>
+              {policies.map((policy: any) => {
+                const active = location.pathname === `/policies/${policy.slug}`;
+                return (
+                  <PartnerNavItem key={policy.id} item={{ label: policy.title, to: `/policies/${policy.slug}`, icon: faFileLines, match: `/policies/${policy.slug}` }} active={active} onClick={onCloseMobile} />
+                );
+              })}
+          </Box>
+        )}
+      </List>
+    </Box>
+  );
+}
+
+function PartnerNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick?: () => void }) {
+  return (
+    <ListItemButton component={RouterLink} to={item.to} onClick={onClick} sx={{ borderRadius: 1, mx: 1, my: 0.25, color: active ? 'primary.main' : 'text.secondary', bgcolor: active ? 'action.selected' : 'transparent', '&:hover': { bgcolor: 'action.hover' } }}>
+      <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}><FontAwesomeIcon icon={item.icon} fixedWidth /></ListItemIcon>
+      <ListItemText primary={item.label} primaryTypographyProps={{ fontWeight: active ? 800 : 600, fontSize: 14, noWrap: true }} />
+    </ListItemButton>
+  );
+}

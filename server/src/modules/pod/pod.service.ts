@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { PodModel, type PodMode, type PodType } from './pod.model';
 import { UserModel } from '../user/user.model';
 import { ClubModel } from '../club/club.model';
+import { HostModel } from '../host/host.model';
 import { InventoryProductModel } from '../inventory/inventory.model';
 import { LocationModel } from '../location/location.model';
 import { VenueModel } from '../venue/venue.model';
@@ -246,6 +247,21 @@ async function buildPodPlaceFilter(filter?: { location_id?: string; zone_name?: 
   return or.length > 0 ? { $or: or } : null;
 }
 
+function buildPodDateRange(range?: { from?: string | null; to?: string | null }) {
+  const dateRange: any = {};
+  if (range?.from) {
+    const from = new Date(range.from);
+    if (Number.isNaN(from.getTime())) throw new GraphQLError('Invalid from date', { extensions: { code: 'BAD_USER_INPUT' } });
+    dateRange.$gte = from;
+  }
+  if (range?.to) {
+    const to = new Date(range.to);
+    if (Number.isNaN(to.getTime())) throw new GraphQLError('Invalid to date', { extensions: { code: 'BAD_USER_INPUT' } });
+    dateRange.$lte = to;
+  }
+  return Object.keys(dateRange).length > 0 ? dateRange : null;
+}
+
 async function buildProductRequests(enabled: boolean, rawItems: any[] = []) {
   if (!enabled) return [];
   const compact = Array.from(requestMap(rawItems).entries())
@@ -308,6 +324,18 @@ export const podService = {
     if (filter?.search) q.pod_title = new RegExp(filter.search, 'i');
     if (filter?.host_user_id) q.pod_hosts_id = filter.host_user_id;
     const docs = await PodModel.find(q).sort({ pod_date_time: -1 });
+    const slugMap = await loadClubSlugMap(docs);
+    return docs.map((d) => toPub(d, slugMap));
+  },
+
+  async listMyHostPods(userId: string, range?: { from?: string | null; to?: string | null }) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+    }
+    const q: any = { pod_hosts_id: new Types.ObjectId(userId) };
+    const dateRange = buildPodDateRange(range);
+    if (dateRange) q.pod_date_time = dateRange;
+    const docs = await PodModel.find(q).sort({ pod_date_time: -1 }).limit(200);
     const slugMap = await loadClubSlugMap(docs);
     return docs.map((d) => toPub(d, slugMap));
   },
@@ -408,6 +436,24 @@ export const podService = {
     });
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
+  },
+
+  async createForPartner(userId: string, input: any) {
+    const userObjectId = new Types.ObjectId(userId);
+    const host = await HostModel.findOne({ user_id: userObjectId, status: 'APPROVED', is_active: true }).select('_id');
+    if (!host) {
+      throw new GraphQLError('Approved host profile is required before creating pods', { extensions: { code: 'FORBIDDEN' } });
+    }
+    const podMode = normalizePodMode(input.pod_mode);
+    if (podMode === 'PHYSICAL') {
+      const venue = input.venue_id
+        ? await VenueModel.findOne({ _id: input.venue_id, owner_user_id: userObjectId, status: 'APPROVED', is_active: true }).select('_id')
+        : null;
+      if (!venue) {
+        throw new GraphQLError('Select one of your approved venues', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+    }
+    return this.create({ ...input, pod_mode: podMode, pod_hosts_id: [userId], pod_attendees: [userId] });
   },
 
   async update(id: string, input: any) {

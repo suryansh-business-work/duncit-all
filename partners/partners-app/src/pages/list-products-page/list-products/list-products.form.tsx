@@ -110,7 +110,7 @@ export default function ListProductsForm({ product = null, onSaved }: Props) {
   const addImage = (url: string) => formik.setFieldValue('image_urls', Array.from(new Set([...formik.values.image_urls, url])));
 
   return (
-    <Card variant="outlined" sx={{ borderRadius: 4 }}>
+    <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
         <Stack spacing={2.25} component="form" onSubmit={formik.handleSubmit}>
           <Stepper activeStep={activeStep} alternativeLabel sx={{ display: { xs: 'none', sm: 'flex' } }}>

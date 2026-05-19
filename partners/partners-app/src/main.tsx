@@ -7,6 +7,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { apolloClient } from './apollo';
 import { ColorModeProvider } from './ColorModeContext';
 import App from './App';
+import 'react-datepicker/dist/react-datepicker.css';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

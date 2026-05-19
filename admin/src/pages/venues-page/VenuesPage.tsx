@@ -17,7 +17,7 @@ import VenueReviewDialog from './VenueReviewDialog';
 import VenuesTable from './VenuesTable';
 
 export default function VenuesPage() {
-  const [status, setStatus] = useState('APPROVED');
+  const [status, setStatus] = useState('SUBMITTED');
   const { data, loading, error, refetch } = useQuery(VENUES, {
     variables: { status: status || null },
   });
@@ -59,7 +59,7 @@ export default function VenuesPage() {
         <Stack spacing={0.25}>
           <Typography variant="h5" fontWeight={700}>Registered Venues</Typography>
           <Typography variant="body2" color="text.secondary">
-            Registered and approved venues available for clubs, pods and meetups.
+            Review submitted venue requests and manage approved spaces for clubs, pods and meetups.
           </Typography>
         </Stack>
         <Stack direction="row" spacing={1} alignItems="center">

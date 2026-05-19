@@ -32,6 +32,8 @@ export const hostResolvers = {
       hostService.submitStep3(uid(ctx), args.input),
     submitHostFinal: async (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
       hostService.submitFinal(uid(ctx)),
+    withdrawHostApplication: async (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
+      hostService.withdrawMine(uid(ctx)),
     approveHost: async (
       _p: unknown,
       args: { host_doc_id: string; notes?: string; tags?: string[] },

@@ -10,13 +10,13 @@ interface Props {
 export default function SubmitStep({ step1, step2, step3 }: Props) {
   return (
     <Stack spacing={2}>
-      <Box sx={{ p: 1.5, borderRadius: 3, bgcolor: 'rgba(255,79,115,0.10)', border: '1px solid rgba(255,79,115,0.18)' }}>
+      <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'rgba(255,79,115,0.10)', border: '1px solid rgba(255,79,115,0.18)' }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>Review & submit</Typography>
         <Typography variant="caption" color="text.secondary">
           Our team verifies your space within 24 hours.
         </Typography>
       </Box>
-      <Box sx={{ overflow: 'hidden', borderRadius: 4, border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
+      <Box sx={{ overflow: 'hidden', borderRadius: 2, border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
         <Box component="img" src={step1.cover_image_url || '/duncit-logo.svg'} alt={step1.venue_name || 'Venue'} sx={{ width: '100%', height: 116, objectFit: 'cover', display: 'block', bgcolor: 'action.hover' }} />
         <Stack spacing={1} sx={{ p: 1.5 }}>
           <Stack direction="row" spacing={1} alignItems="center">

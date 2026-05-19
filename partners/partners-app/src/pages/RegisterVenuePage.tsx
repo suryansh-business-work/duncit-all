@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
+import { useLocation } from 'react-router-dom';
 import { Alert, Box, Button, Card, CardContent, Chip, Step, StepLabel, Stepper, Stack, Typography } from '@mui/material';
 import SendIcon from '@mui/icons-material/Send';
 import MediaPickerDialog from '../components/MediaPickerDialog';
@@ -40,6 +41,7 @@ const hydrateLocation = (base: VenueStep1, locations: any[]): VenueStep1 => {
 
 export default function RegisterVenuePage() {
   const { data, loading, refetch } = useQuery(MY_VENUE);
+  const location = useLocation();
   const [step, setStep] = useState(0);
   const [step1, setStep1] = useState<VenueStep1>(blankStep1);
   const [step2, setStep2] = useState<VenueStep2>(blankStep2);
@@ -53,11 +55,23 @@ export default function RegisterVenuePage() {
   const [saveStep2, step2State] = useMutation(STEP2);
   const [saveStep3, step3State] = useMutation(STEP3);
   const [submitFinal, finalState] = useMutation(FINAL);
+  const account = data?.me;
+  const accountEmail = account?.email || '';
+  const accountName = account?.full_name || [account?.first_name, account?.last_name].filter(Boolean).join(' ');
   const locations = data?.locations ?? [];
+  const currentVenue = data?.myVenue;
+  const currentMode = location.pathname.endsWith('/current');
+  const hydrateExisting = currentMode || currentVenue?.status === 'DRAFT' || currentVenue?.status === 'REJECTED';
 
   useEffect(() => {
-    const venue = data?.myVenue;
-    if (!venue) return;
+    const venue = currentVenue;
+    if (!venue || !hydrateExisting) {
+      setStep1(blankStep1);
+      setStep2(blankStep2);
+      setStep3({ ...blankStep3, owner_name: accountName, owner_email: accountEmail });
+      setStep(0);
+      return;
+    }
     const baseStep1 = {
       venue_name: venue.venue_name || '',
       venue_type: venue.venue_type || 'Cafe',
@@ -85,19 +99,20 @@ export default function RegisterVenuePage() {
       pan: venue.pan || '',
     });
     setStep3({
-      owner_name: venue.owner_name || '',
-      owner_email: venue.owner_email || '',
+      owner_name: venue.owner_name || accountName,
+      owner_email: accountEmail || venue.owner_email || '',
       owner_phone: venue.owner_phone || '',
       owner_dob: venue.owner_dob ? venue.owner_dob.slice(0, 10) : '',
       owner_address: venue.owner_address || '',
     });
     setStep(Math.min(venue.step_completed || 0, 3));
-  }, [data?.myVenue, data?.locations]);
+  }, [currentVenue, data?.locations, hydrateExisting, accountEmail, accountName]);
 
   const next = async () => {
     setErr(null);
     setSubmittedSteps((current) => ({ ...current, [step]: true }));
-    const validationError = await validateStep(step, step1, step2, step3);
+    const accountOwnerStep = { ...step3, owner_email: accountEmail || step3.owner_email };
+    const validationError = await validateStep(step, step1, step2, accountOwnerStep);
     if (validationError) return;
 
     try {
@@ -106,7 +121,7 @@ export default function RegisterVenuePage() {
         const documents = step2.documents.filter((doc) => doc.type && doc.url);
         await saveStep2({ variables: { input: { documents, gstin: step2.gstin, pan: step2.pan } } });
       }
-      if (step === 2) await saveStep3({ variables: { input: { ...step3, owner_dob: step3.owner_dob || null } } });
+      if (step === 2) await saveStep3({ variables: { input: { ...accountOwnerStep, owner_dob: accountOwnerStep.owner_dob || null } } });
       if (step === 3) {
         await submitFinal();
         await refetch();
@@ -119,14 +134,14 @@ export default function RegisterVenuePage() {
     }
   };
 
-  const status = data?.myVenue?.status;
+  const status = hydrateExisting ? currentVenue?.status : undefined;
   const busy = step1State.loading || step2State.loading || step3State.loading || finalState.loading;
   const locked = status === 'SUBMITTED' || status === 'APPROVED';
   if (loading && !data) return <Typography>Loading...</Typography>;
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%', pb: 'calc(var(--duncit-bottom-nav-height, 72px) + 18px)' }}>
-      <Box sx={{ p: 2.25, borderRadius: 4, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)', boxShadow: '0 18px 48px rgba(17,24,39,0.22)' }}>
+      <Box sx={{ p: 2.25, borderRadius: 2, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)', boxShadow: '0 18px 48px rgba(17,24,39,0.22)' }}>
         <Stack direction="row" alignItems="flex-start" spacing={1.25}>
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.62)', letterSpacing: 0, lineHeight: 1 }}>Host tools</Typography>
@@ -144,20 +159,20 @@ export default function RegisterVenuePage() {
       {status === 'APPROVED' && <Alert severity="success">Approved.</Alert>}
       {status === 'REJECTED' && <Alert severity="error">Rejected: {data?.myVenue?.reviewer_notes || 'See notes.'} Update and resubmit.</Alert>}
 
-      <Stepper activeStep={step} alternativeLabel sx={{ p: 1, borderRadius: 4, bgcolor: 'rgba(17,24,39,0.05)', '& .MuiStepIcon-root': { fontSize: 34, color: 'rgba(17,24,39,0.12)' }, '& .MuiStepIcon-root.Mui-active, & .MuiStepIcon-root.Mui-completed': { color: '#ed4f7a', filter: 'drop-shadow(0 10px 18px rgba(255,79,115,0.28))' }, '& .MuiStepLabel-label': { fontSize: 11, mt: 0.5, lineHeight: 1.2, fontWeight: 950 }, '& .MuiStepConnector-root': { top: 16 }, '& .MuiStepConnector-line': { borderColor: '#ed4f7a', opacity: 0.45 } }}>
+      <Stepper activeStep={step} alternativeLabel sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(17,24,39,0.05)', '& .MuiStepIcon-root': { fontSize: 34, color: 'rgba(17,24,39,0.12)' }, '& .MuiStepIcon-root.Mui-active, & .MuiStepIcon-root.Mui-completed': { color: '#ed4f7a', filter: 'drop-shadow(0 10px 18px rgba(255,79,115,0.28))' }, '& .MuiStepLabel-label': { fontSize: 11, mt: 0.5, lineHeight: 1.2, fontWeight: 950 }, '& .MuiStepConnector-root': { top: 16 }, '& .MuiStepConnector-line': { borderColor: '#ed4f7a', opacity: 0.45 } }}>
         {STEPS.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
       </Stepper>
 
-      <Card variant="outlined" sx={{ borderRadius: 4, bgcolor: 'rgba(255,255,255,0.76)', borderColor: 'rgba(17,24,39,0.08)', boxShadow: '0 18px 42px rgba(17,24,39,0.12)', backdropFilter: 'blur(16px)' }}>
+      <Card variant="outlined" sx={{ borderRadius: 2, bgcolor: 'rgba(255,255,255,0.76)', borderColor: 'rgba(17,24,39,0.08)', boxShadow: '0 18px 42px rgba(17,24,39,0.12)', backdropFilter: 'blur(16px)' }}>
         <CardContent sx={{ p: { xs: 1.5, sm: 2 } }}>
           {step === 0 && <DetailsStep value={step1} locations={locations} onChange={setStep1} onCoverPick={() => setCoverPicker(true)} showAllErrors={submittedSteps[0]} />}
           {step === 1 && <DocumentsStep value={step2} onChange={setStep2} onDocPick={setDocPickerIdx} showAllErrors={submittedSteps[1]} />}
-          {step === 2 && <OwnerStep value={step3} onChange={setStep3} showAllErrors={submittedSteps[2]} />}
+          {step === 2 && <OwnerStep value={step3} onChange={setStep3} showAllErrors={submittedSteps[2]} accountEmail={accountEmail} />}
           {step === 3 && <SubmitStep step1={step1} step2={step2} step3={step3} />}
           {err && <Alert severity="error" sx={{ mt: 2 }}>{err}</Alert>}
-          <Stack direction="row" spacing={1.25} mt={3} sx={{ position: 'sticky', bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px)', zIndex: 2, p: 0.75, mx: -0.75, borderRadius: 3, bgcolor: 'rgba(255,255,255,0.88)', boxShadow: '0 14px 30px rgba(17,24,39,0.16)', backdropFilter: 'blur(16px)' }}>
-            <Button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))} variant="outlined" size="large" sx={{ borderRadius: 3, minWidth: 88, fontWeight: 950 }}>Back</Button>
-            <Button variant="contained" onClick={next} disabled={busy || locked} size="large" endIcon={step === 3 ? <SendIcon /> : undefined} sx={{ flex: 1, borderRadius: 3, fontWeight: 950, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>
+          <Stack direction="row" spacing={1.25} mt={3} sx={{ position: 'sticky', bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px)', zIndex: 2, p: 0.75, mx: -0.75, borderRadius: 2, bgcolor: 'rgba(255,255,255,0.88)', boxShadow: '0 14px 30px rgba(17,24,39,0.16)', backdropFilter: 'blur(16px)' }}>
+            <Button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))} variant="outlined" size="large" sx={{ borderRadius: 1, minWidth: 88, fontWeight: 950 }}>Back</Button>
+            <Button variant="contained" onClick={next} disabled={busy || locked} size="large" endIcon={step === 3 ? <SendIcon /> : undefined} sx={{ flex: 1, borderRadius: 1, fontWeight: 950, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>
               {step === 3 ? 'Submit for review' : 'Save & continue'}
             </Button>
           </Stack>

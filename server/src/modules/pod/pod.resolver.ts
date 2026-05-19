@@ -147,6 +147,10 @@ export const podResolvers = {
   },
   Query: {
     pods: async (_p: unknown, args: { filter?: any }) => podService.list(args.filter),
+    myHostPods: async (_p: unknown, args: { from?: string | null; to?: string | null }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return podService.listMyHostPods(user.id, { from: args.from, to: args.to });
+    },
     pod: async (_p: unknown, args: { pod_doc_id: string }) => podService.getById(args.pod_doc_id),
     podBySlugs: async (
       _p: unknown,
@@ -159,6 +163,10 @@ export const podResolvers = {
     createPod: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_WRITE);
       return podService.create(args.input);
+    },
+    createPartnerPod: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return podService.createForPartner(user.id, args.input);
     },
     updatePod: async (
       _p: unknown,

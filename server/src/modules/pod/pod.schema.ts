@@ -188,6 +188,7 @@ export const podTypeDefs = /* GraphQL */ `
 
   extend type Query {
     pods(filter: PodFilterInput): [Pod!]!
+    myHostPods(from: String, to: String): [Pod!]!
     pod(pod_doc_id: ID!): Pod
     podBySlugs(club_slug: String!, pod_slug: String!): Pod
     podComments(pod_doc_id: ID!): [PodComment!]!
@@ -195,6 +196,7 @@ export const podTypeDefs = /* GraphQL */ `
 
   extend type Mutation {
     createPod(input: CreatePodInput!): Pod!
+    createPartnerPod(input: CreatePodInput!): Pod!
     updatePod(pod_doc_id: ID!, input: UpdatePodInput!): Pod!
     addPodStatus(pod_doc_id: ID!, media: PodMediaInput!): Pod!
     deletePod(pod_doc_id: ID!): Boolean!

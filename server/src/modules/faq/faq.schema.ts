@@ -1,8 +1,21 @@
 export const faqTypeDefs = /* GraphQL */ `
+  enum FaqAudience {
+    APP
+    PARTNERS
+  }
+
+  enum PartnerFaqTopic {
+    VENUE
+    HOST
+    PRODUCTS
+  }
+
   type Faq {
     id: ID!
     super_category_id: ID
     super_category: Category
+    audience: FaqAudience!
+    partner_topic: PartnerFaqTopic
     question: String!
     answer: String!
     is_active: Boolean!
@@ -13,12 +26,16 @@ export const faqTypeDefs = /* GraphQL */ `
 
   input FaqFilterInput {
     super_category_id: ID
+    audience: FaqAudience
+    partner_topic: PartnerFaqTopic
     is_active: Boolean
     search: String
   }
 
   input CreateFaqInput {
     super_category_id: ID
+    audience: FaqAudience
+    partner_topic: PartnerFaqTopic
     question: String!
     answer: String!
     is_active: Boolean
@@ -27,6 +44,8 @@ export const faqTypeDefs = /* GraphQL */ `
 
   input UpdateFaqInput {
     super_category_id: ID
+    audience: FaqAudience
+    partner_topic: PartnerFaqTopic
     question: String
     answer: String
     is_active: Boolean
@@ -70,6 +89,7 @@ export const faqTypeDefs = /* GraphQL */ `
     faqs(filter: FaqFilterInput): [Faq!]!
     faq(faq_doc_id: ID!): Faq
     publicFaqGroups: [FaqGroup!]!
+    publicPartnerFaqs(topic: PartnerFaqTopic): [Faq!]!
     faqSubmissions(status: FaqSubmissionStatus): [FaqSubmission!]!
   }
 

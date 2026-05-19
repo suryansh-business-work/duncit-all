@@ -20,7 +20,7 @@ export default function HostStepContent({ step, s1, s2, s3, set1, set2, set3, op
     return (
       <Stack spacing={2}>
         <TextField label="Full name" required value={s1.full_name} onChange={(e) => set1({ ...s1, full_name: e.target.value })} />
-        <TextField label="Email" type="email" required value={s1.email} onChange={(e) => set1({ ...s1, email: e.target.value })} />
+        <TextField label="Email" type="email" required value={s1.email} disabled helperText="Locked to your Duncit account" InputProps={{ readOnly: true }} />
         <TextField label="Phone" required value={s1.phone} onChange={(e) => set1({ ...s1, phone: e.target.value })} />
         <DateField label="DOB" value={s1.dob} onChange={(iso) => set1({ ...s1, dob: iso })} minDate={getHostDobMinDate()} maxDate={getHostDobMaxDate()} />
       </Stack>

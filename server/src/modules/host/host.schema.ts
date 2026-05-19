@@ -63,6 +63,7 @@ export const hostTypeDefs = /* GraphQL */ `
     submitHostStep2(input: HostStep2Input!): Host!
     submitHostStep3(input: HostStep3Input!): Host!
     submitHostFinal: Host!
+    withdrawHostApplication: Host!
     approveHost(host_doc_id: ID!, notes: String, tags: [String!]): Host!
     rejectHost(host_doc_id: ID!, notes: String!): Host!
     adminCreateHost(

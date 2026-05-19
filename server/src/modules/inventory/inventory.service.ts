@@ -1,10 +1,12 @@
 import { GraphQLError } from 'graphql';
 import type { AuthUser } from '../../context';
 import { PodModel } from '../pod/pod.model';
+import { UserModel } from '../user/user.model';
 import { InventoryProductModel, type IInventoryProduct } from './inventory.model';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
 
+const ECOMM_MANAGER_ROLE = 'ECOMM_MANAGER';
 const SKU_ALPHABET = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
 
 const randomSku = () => {
@@ -268,6 +270,16 @@ async function ownedListing(id: string, user: AuthUser | null) {
   return doc;
 }
 
+async function requireEcommManager(user: AuthUser | null) {
+  if (!user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+  const currentUser = await UserModel.findById(user.id).select('roles').lean();
+  const roles = (currentUser?.roles ?? []) as string[];
+  if (!roles.includes(ECOMM_MANAGER_ROLE)) {
+    throw new GraphQLError('You must be an Ecomm Manager to manage product listings', { extensions: { code: 'FORBIDDEN' } });
+  }
+  return user;
+}
+
 function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser | null) {
   const images = listingImages(input);
   doc.product_name = cleanText(input.product_name, 200);
@@ -334,15 +346,25 @@ export const inventoryService = {
     return docs.map(inventoryProductToPub);
   },
 
+  async listAvailablePodProducts() {
+    const docs = await InventoryProductModel.find({
+      is_active: true,
+      status: 'ACTIVE',
+      pod_available: true,
+      listing_review_status: 'APPROVED',
+    }).sort({ product_name: 1 }).limit(300);
+    return docs.map(inventoryProductToPub);
+  },
+
   async getById(id: string) {
     const doc = await InventoryProductModel.findById(id);
     return doc ? inventoryProductToPub(doc) : null;
   },
 
   async submitProductListing(input: any, user: AuthUser | null) {
-    if (!user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+    const actor = await requireEcommManager(user);
     validateProductListingInput(input);
-    const info = userInfo(user);
+    const info = userInfo(actor);
     const sku = await generateUniqueSku();
     const images = listingImages(input);
     const doc = await InventoryProductModel.create({
@@ -357,7 +379,7 @@ export const inventoryService = {
       purchase_price: Number(input.unit_cost) || 0,
       selling_price: Number(input.unit_cost) || 0,
       vendor_name: info.name,
-      supplier_contact: user.email ?? '',
+      supplier_contact: actor.email ?? '',
       status: 'DRAFT',
       visibility: 'INTERNAL',
       is_active: false,
@@ -377,11 +399,12 @@ export const inventoryService = {
       last_updated_by_id: info.id,
       last_updated_by_name: info.name,
     });
-    await logActivity(doc._id, user, 'CREATE', ['partner_listing'], 'Partner product listing submitted');
+    await logActivity(doc._id, actor, 'CREATE', ['partner_listing'], 'Partner product listing submitted');
     return inventoryProductToPub(doc);
   },
 
   async updateMyProductListing(id: string, input: any, user: AuthUser | null) {
+    await requireEcommManager(user);
     validateProductListingInput(input);
     const doc = await ownedListing(id, user);
     const before = doc.toObject();
@@ -405,6 +428,7 @@ export const inventoryService = {
   },
 
   async updateMyProductListingQuantity(id: string, inventoryCount: number, user: AuthUser | null) {
+    await requireEcommManager(user);
     if (!Number.isInteger(inventoryCount) || inventoryCount < 0) {
       throw new GraphQLError('Quantity must be a whole number', { extensions: { code: 'BAD_USER_INPUT' } });
     }
@@ -429,6 +453,7 @@ export const inventoryService = {
   },
 
   async deleteMyProductListing(id: string, user: AuthUser | null) {
+    await requireEcommManager(user);
     const doc = await ownedListing(id, user);
     doc.is_active = false;
     doc.status = 'ARCHIVED';

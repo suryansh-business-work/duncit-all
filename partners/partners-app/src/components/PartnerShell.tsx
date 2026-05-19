@@ -1,45 +1,75 @@
-import { ReactNode } from 'react';
+import { ReactNode, useState } from 'react';
+import { gql, useQuery } from '@apollo/client';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { Box, Button, Container, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { AppBar, Avatar, Box, Button, Drawer, IconButton, Toolbar, Tooltip, Typography, useMediaQuery } from '@mui/material';
+import { useTheme } from '@mui/material/styles';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
+import MenuIcon from '@mui/icons-material/Menu';
+import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { useColorMode } from '../ColorModeContext';
+import PartnerSidebar from './PartnerSidebar';
+
+const DRAWER_WIDTH = 264;
+const HEADER_HEIGHT = 56;
+
+const PARTNER_ME = gql`
+  query PartnerShellMe {
+    me { full_name first_name last_name email profile_photo }
+  }
+`;
+
+const initials = (user: any) => {
+  const name = user?.full_name || [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || 'P';
+  return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part: string) => part[0]?.toUpperCase()).join('') || 'P';
+};
 
 export default function PartnerShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const colorMode = useColorMode();
+  const theme = useTheme();
+  const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
+  const [mobileOpen, setMobileOpen] = useState(false);
+  const { data } = useQuery(PARTNER_ME, { fetchPolicy: 'cache-first' });
+  const account = data?.me;
   const logout = () => {
     localStorage.removeItem('token');
     navigate('/login', { replace: true });
   };
 
   return (
-    <Box sx={{ minHeight: '100dvh', bgcolor: 'transparent' }}>
-      <Box sx={{ borderBottom: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-        <Container maxWidth="lg" sx={{ py: 1.25 }}>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
-            <Stack component={RouterLink} to="/" direction="row" alignItems="center" spacing={1.25} sx={{ color: 'inherit', textDecoration: 'none' }}>
-              <Box component="img" src="/duncit-logo.svg" alt="Duncit" sx={{ height: 34, width: 'auto' }} />
-              <Box>
-                <Typography variant="subtitle1" fontWeight={900} lineHeight={1}>Partners</Typography>
-                <Typography variant="caption" color="text.secondary" fontWeight={700}>Host and venue console</Typography>
-              </Box>
-            </Stack>
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Tooltip title={`Switch to ${colorMode.mode === 'light' ? 'dark' : 'light'} mode`}>
-                <IconButton onClick={colorMode.toggle} color="primary" sx={{ border: 1, borderColor: 'divider' }}>
-                  {colorMode.mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
-                </IconButton>
-              </Tooltip>
-              <Button onClick={logout} startIcon={<LogoutIcon />} variant="outlined" sx={{ minHeight: 40 }}>Logout</Button>
-            </Stack>
-          </Stack>
-        </Container>
+    <Box sx={{ display: 'flex', minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <Box component="nav" sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }} aria-label="partner navigation">
+        <Drawer variant="temporary" open={mobileOpen} onClose={() => setMobileOpen(false)} ModalProps={{ keepMounted: true }} sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { width: DRAWER_WIDTH } }}>
+          <PartnerSidebar onCloseMobile={() => setMobileOpen(false)} />
+        </Drawer>
+        <Drawer variant="permanent" open sx={{ display: { xs: 'none', md: 'block' }, '& .MuiDrawer-paper': { width: DRAWER_WIDTH, boxSizing: 'border-box' } }}>
+          <PartnerSidebar />
+        </Drawer>
       </Box>
-      <Container maxWidth="md" sx={{ py: { xs: 2, sm: 3 } }}>
-        {children}
-      </Container>
+      <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
+        <AppBar position="sticky" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
+          <Toolbar sx={{ minHeight: `${HEADER_HEIGHT}px !important`, gap: 1, px: { xs: 1.25, sm: 2 } }}>
+            {!isDesktop && <IconButton edge="start" onClick={() => setMobileOpen(true)} aria-label="open navigation"><MenuIcon /></IconButton>}
+            <Box component={RouterLink} to="/" sx={{ color: 'inherit', textDecoration: 'none', minWidth: 0, flex: 1 }}>
+              <Typography variant="subtitle1" fontWeight={900} noWrap>Partners</Typography>
+              <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }} noWrap>Host, venue and product console</Typography>
+            </Box>
+            <Button component={RouterLink} to="/support" startIcon={<SupportAgentIcon />} variant="text" sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>Support</Button>
+            <Tooltip title={`Switch to ${colorMode.mode === 'light' ? 'dark' : 'light'} mode`}>
+              <IconButton onClick={colorMode.toggle} aria-label="toggle color mode">
+                {colorMode.mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+              </IconButton>
+            </Tooltip>
+            <Avatar src={account?.profile_photo || undefined} sx={{ width: 30, height: 30, bgcolor: 'primary.main', fontSize: 13 }}>{initials(account)}</Avatar>
+            <Tooltip title="Logout"><IconButton onClick={logout} aria-label="logout"><LogoutIcon /></IconButton></Tooltip>
+          </Toolbar>
+        </AppBar>
+        <Box component="main" sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 2.25, md: 3 }, pb: { xs: 3, md: 4 } }}>
+          {children}
+        </Box>
+      </Box>
     </Box>
   );
 }

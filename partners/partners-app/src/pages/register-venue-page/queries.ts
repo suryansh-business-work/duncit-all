@@ -2,10 +2,20 @@ import { gql } from '@apollo/client';
 
 export const MY_VENUE = gql`
   query MyVenue {
+    me {
+      user_id
+      full_name
+      first_name
+      last_name
+      email
+    }
     myVenue {
       id
       step_completed
       status
+      created_at
+      updated_at
+      is_active
       venue_name
       venue_type
       capacity
@@ -46,6 +56,23 @@ export const MY_VENUE = gql`
         zone_code
         pincode
       }
+    }
+  }
+`;
+
+export const MY_VENUES = gql`
+  query MyVenues {
+    myVenues {
+      id
+      status
+      created_at
+      updated_at
+      venue_name
+      venue_type
+      capacity
+      cover_image_url
+      city
+      locality
     }
   }
 `;

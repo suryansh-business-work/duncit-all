@@ -36,10 +36,10 @@ export default function FaqsPage() {
   const [toast, setToast] = useState<string | null>(null);
 
   const filter = useMemo(() => {
-    const f: any = {};
+    const f: any = { audience: 'APP' };
     if (filterSuper) f.super_category_id = filterSuper;
     if (search.trim()) f.search = search.trim();
-    return Object.keys(f).length ? f : undefined;
+    return f;
   }, [filterSuper, search]);
 
   const { data, loading, refetch } = useQuery(FAQS, {

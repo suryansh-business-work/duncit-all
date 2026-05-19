@@ -79,7 +79,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     text: { primary: INK, secondary: MUTED },
     divider: BORDER,
   },
-  shape: { borderRadius: 8 },
+  shape: { borderRadius: 6 },
   typography: {
     fontFamily:
       '"Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -164,7 +164,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiPaper: {
       defaultProps: { elevation: 0 },
       styleOverrides: {
-        rounded: { borderRadius: 16 },
+        rounded: { borderRadius: 8 },
         outlined: { borderColor: BORDER },
       },
     },
@@ -172,7 +172,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       defaultProps: { elevation: 0 },
       styleOverrides: {
         root: {
-          borderRadius: 16,
+          borderRadius: 8,
           border: `1px solid ${BORDER}`,
           backgroundColor: SURFACE,
           backgroundImage: SURFACE_GRADIENT,
@@ -185,13 +185,13 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       },
     },
     MuiCardActionArea: {
-      styleOverrides: { focusHighlight: { borderRadius: 12 } },
+      styleOverrides: { focusHighlight: { borderRadius: 8 } },
     },
     MuiButton: {
       defaultProps: { disableElevation: true },
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 6,
           paddingInline: 18,
           paddingBlock: 9,
           fontWeight: 600,
@@ -232,7 +232,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiIconButton: {
       styleOverrides: {
         root: {
-          borderRadius: 8,
+          borderRadius: 6,
           '&.Mui-focusVisible': { outline: `2px solid ${alpha(PRIMARY, 0.4)}` },
         },
       },
@@ -241,7 +241,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
       defaultProps: { size: 'small' },
       styleOverrides: {
         root: {
-          borderRadius: 999,
+          borderRadius: 8,
           fontWeight: 600,
           height: 32,
           paddingInline: 6,
@@ -272,7 +272,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiOutlinedInput: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 6,
           backgroundColor: SURFACE,
           '& fieldset': { borderColor: BORDER },
           '&:hover fieldset': { borderColor: alpha(INK, 0.3) },
@@ -282,7 +282,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     },
     MuiAlert: {
       styleOverrides: {
-        root: { borderRadius: 14, border: `1px solid ${BORDER}` },
+        root: { borderRadius: 8, border: `1px solid ${BORDER}` },
         standardInfo: { backgroundColor: alpha(tokens.semantic.info, 0.1), color: INK },
         standardSuccess: { backgroundColor: alpha(tokens.semantic.success, 0.12), color: INK },
         standardWarning: { backgroundColor: alpha(tokens.semantic.warning, 0.14), color: INK },
@@ -294,7 +294,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiAccordion: {
       styleOverrides: {
         root: {
-          borderRadius: 16,
+          borderRadius: 8,
           border: `1px solid ${BORDER}`,
           backgroundColor: SURFACE,
           backgroundImage: SURFACE_GRADIENT,
@@ -307,7 +307,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiListItemButton: {
       styleOverrides: {
         root: {
-          borderRadius: 12,
+          borderRadius: 6,
           '&:hover': { backgroundColor: alpha(PRIMARY, 0.08) },
         },
       },
@@ -315,7 +315,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiToggleButton: {
       styleOverrides: {
         root: {
-          borderRadius: 10,
+          borderRadius: 6,
           textTransform: 'none',
           fontWeight: 600,
           paddingInline: 14,
@@ -347,7 +347,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         tooltip: {
           backgroundColor: INK,
           color: '#ffffff',
-          borderRadius: 8,
+          borderRadius: 6,
           fontSize: '0.75rem',
           fontWeight: 600,
           paddingInline: 8,
@@ -358,12 +358,12 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
         },
       },
     },
-    MuiSnackbarContent: { styleOverrides: { root: { borderRadius: 14 } } },
-    MuiDialog: { styleOverrides: { paper: { borderRadius: 18, backgroundImage: SURFACE_GRADIENT } } },
+    MuiSnackbarContent: { styleOverrides: { root: { borderRadius: 8 } } },
+    MuiDialog: { styleOverrides: { paper: { borderRadius: 10, backgroundImage: SURFACE_GRADIENT } } },
     MuiMenu: {
       styleOverrides: {
         paper: {
-          borderRadius: 12,
+          borderRadius: 8,
           border: `1px solid ${BORDER}`,
           boxShadow: `0 8px 32px -12px ${alpha(INK, 0.18)}`,
         },
@@ -376,12 +376,12 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     },
     MuiTabs: {
       styleOverrides: {
-        indicator: { backgroundColor: PRIMARY, height: 3, borderRadius: 3 },
+        indicator: { backgroundColor: PRIMARY, height: 3, borderRadius: 2 },
       },
     },
     MuiLinearProgress: {
       styleOverrides: {
-        root: { borderRadius: 999, height: 6, backgroundColor: alpha(PRIMARY, 0.12) },
+        root: { borderRadius: 6, height: 6, backgroundColor: alpha(PRIMARY, 0.12) },
         bar: { backgroundColor: PRIMARY },
       },
     },

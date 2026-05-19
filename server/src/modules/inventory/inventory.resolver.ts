@@ -26,6 +26,10 @@ export const inventoryResolvers = {
       requireAuth(ctx);
       return inventoryService.listMyProductListings(ctx.user);
     },
+    availablePodProducts: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return inventoryService.listAvailablePodProducts();
+    },
     inventoryProduct: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.getById(args.product_doc_id);

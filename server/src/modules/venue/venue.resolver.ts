@@ -14,6 +14,8 @@ export const venueResolvers = {
   Query: {
     myVenue: async (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
       venueService.getMine(uid(ctx)),
+    myVenues: async (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
+      venueService.listMine(uid(ctx)),
     venues: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_REVIEW);
       return venueService.list({ status: args.status });

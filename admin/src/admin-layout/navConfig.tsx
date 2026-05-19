@@ -143,6 +143,13 @@ export const NAV: NavSection[] = [
     ],
   },
   {
+    heading: 'Partners',
+    prefixes: ['/partners'],
+    items: [
+      { label: 'Partner FAQs', to: '/partners/faqs', icon: navIcons.partners },
+    ],
+  },
+  {
     heading: 'Finance',
     prefixes: ['/finance'],
     items: [

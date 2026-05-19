@@ -5,6 +5,7 @@ export const ROLES = [
   'USER',
   'HOST',
   'VENUE_OWNER',
+  'ECOMM_MANAGER',
   'SUPPORT_USER',
   'FINANCE_USER',
 ] as const;
@@ -32,6 +33,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ZONAL_ADMIN: ['MANAGE_USERS', 'MANAGE_ZONE', 'CREATE_POD'],
   SUPPORT_USER: ['MANAGE_USERS'],
   FINANCE_USER: ['VIEW_FINANCE'],
+  ECOMM_MANAGER: [],
   HOST: [],
   VENUE_OWNER: ['MANAGE_VENUES'],
   USER: [],

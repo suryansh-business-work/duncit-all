@@ -35,6 +35,7 @@ import Inventory2Icon from '@mui/icons-material/Inventory2';
 import ArticleIcon from '@mui/icons-material/Article';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import HandshakeIcon from '@mui/icons-material/Handshake';
 
 export const navIcons = {
   people: <PeopleIcon />,
@@ -74,4 +75,5 @@ export const navIcons = {
   article: <ArticleIcon />,
   campaign: <CampaignIcon />,
   whatsapp: <WhatsAppIcon />,
+  partners: <HandshakeIcon />,
 };

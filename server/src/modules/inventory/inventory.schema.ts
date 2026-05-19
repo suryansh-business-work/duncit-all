@@ -266,6 +266,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
     inventoryProducts(search: String, activeOnly: Boolean, status: InventoryStatus): [InventoryProduct!]!
     productListingRequests(status: ProductListingReviewStatus): [InventoryProduct!]!
     myProductListings: [InventoryProduct!]!
+    availablePodProducts: [InventoryProduct!]!
     inventoryProduct(product_doc_id: ID!): InventoryProduct
     inventoryActivityLogs(product_doc_id: ID!, limit: Int): [InventoryActivityLog!]!
     inventoryStockMovements(product_doc_id: ID!, limit: Int): [InventoryStockMovement!]!

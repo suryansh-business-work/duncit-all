@@ -4,6 +4,8 @@ export const FAQS = gql`
   query AdminFaqs($filter: FaqFilterInput) {
     faqs(filter: $filter) {
       id
+      audience
+      partner_topic
       super_category_id
       super_category {
         id

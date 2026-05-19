@@ -17,7 +17,7 @@ import HostReviewDialog from './HostReviewDialog';
 import HostsTable from './HostsTable';
 
 export default function HostsPage() {
-  const [status, setStatus] = useState('APPROVED');
+  const [status, setStatus] = useState('SUBMITTED');
   const { data, loading, error, refetch } = useQuery(HOSTS, {
     variables: { status: status || null },
   });
@@ -59,7 +59,7 @@ export default function HostsPage() {
         <Stack spacing={0.25}>
           <Typography variant="h5" fontWeight={700}>Hosts</Typography>
           <Typography variant="body2" color="text.secondary">
-            Approved hosts who can run pods and represent Duncit communities.
+            Review submitted host requests and manage approved hosts for Duncit communities.
           </Typography>
         </Stack>
         <Stack direction="row" spacing={1} alignItems="center">

@@ -37,6 +37,7 @@ export const faqResolvers = {
     faqs: (_p: unknown, args: { filter?: any }) => faqService.list(args.filter),
     faq: (_p: unknown, args: { faq_doc_id: string }) => faqService.getById(args.faq_doc_id),
     publicFaqGroups: () => faqService.publicGroups(),
+    publicPartnerFaqs: (_p: unknown, args: { topic?: any }) => faqService.publicPartnerFaqs(args.topic),
     faqSubmissions: (_p: unknown, args: { status?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return faqSubmissionService.list(args.status);

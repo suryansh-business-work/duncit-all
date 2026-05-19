@@ -8,9 +8,10 @@ interface Props {
   value: VenueStep3;
   onChange: (next: VenueStep3) => void;
   showAllErrors?: boolean;
+  accountEmail?: string;
 }
 
-export default function OwnerStep({ value, onChange, showAllErrors }: Props) {
+export default function OwnerStep({ value, onChange, showAllErrors, accountEmail }: Props) {
   const [touched, setTouched] = useState<Partial<Record<keyof VenueStep3, boolean>>>({});
   const errors = useMemo(() => getStepErrors(venueStep3Schema, value), [value]);
   const set = (patch: Partial<VenueStep3>) => onChange({ ...value, ...patch });
@@ -37,10 +38,11 @@ export default function OwnerStep({ value, onChange, showAllErrors }: Props) {
         type="email"
         required
         value={value.owner_email}
-        onChange={(e) => set({ owner_email: e.target.value })}
+        disabled
+        InputProps={{ readOnly: true }}
         onBlur={() => touch('owner_email')}
         error={showError('owner_email')}
-        helperText={showError('owner_email') ? errors.owner_email : ' '}
+        helperText={showError('owner_email') ? errors.owner_email : accountEmail ? 'Locked to your Duncit account' : 'Loaded from your Duncit account'}
       />
       <TextField
         label="Owner phone"

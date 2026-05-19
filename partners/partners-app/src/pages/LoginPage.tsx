@@ -1,7 +1,9 @@
 import { gql, useMutation } from '@apollo/client';
+import { useState } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Alert, Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import GoogleSignInButton from '../components/GoogleSignInButton';
 import LoginForm, { type LoginFormValues } from '../forms/login.form';
 import { parseApiError } from '../utils/parseApiError';
 import { getSafeRedirectPath, redirectPathFromLocation, type RedirectLocation } from '../utils/redirect';
@@ -10,6 +12,15 @@ import { urlConfigs } from '../config/url-configs';
 const LOGIN = gql`
   mutation PartnerLogin($input: LoginInput!) {
     login(input: $input) {
+      token
+      user { user_id first_name last_name email roles onboarding_survey_completed }
+    }
+  }
+`;
+
+const LOGIN_GOOGLE = gql`
+  mutation PartnerLoginWithGoogle($input: GoogleAuthInput!) {
+    loginWithGoogle(input: $input) {
       token
       user { user_id first_name last_name email roles onboarding_survey_completed }
     }
@@ -28,6 +39,8 @@ const Page = styled(Box)(({ theme }) => ({
 
 export default function LoginPage() {
   const [loginMutation, { loading, error }] = useMutation(LOGIN);
+  const [loginGoogle, { loading: googleLoading }] = useMutation(LOGIN_GOOGLE);
+  const [googleError, setGoogleError] = useState<string | null>(null);
   const navigate = useNavigate();
   const location = useLocation();
 
@@ -49,6 +62,20 @@ export default function LoginPage() {
     }
   };
 
+  const handleGoogle = async (idToken: string) => {
+    setGoogleError(null);
+    try {
+      const res = await loginGoogle({ variables: { input: { id_token: idToken } } });
+      const token = res.data?.loginWithGoogle?.token;
+      if (!token) throw new Error('Google login failed. Please try again.');
+      localStorage.setItem('token', token);
+      navigate(redirectAfterLogin(), { replace: true });
+    } catch (err: any) {
+      const code = err.graphQLErrors?.[0]?.extensions?.code;
+      setGoogleError(code === 'GOOGLE_ACCOUNT_NOT_FOUND' ? 'Google account not found. Create your Duncit account from mWeb first.' : parseApiError(err));
+    }
+  };
+
   return (
     <Page>
       <Card sx={{ width: '100%', maxWidth: 430 }}>
@@ -61,6 +88,9 @@ export default function LoginPage() {
             </Typography>
           </Stack>
           <LoginForm loading={loading} errorMessage={error ? parseApiError(error) : null} onSubmit={handleLogin} submitLabel="Open partner console" />
+          <Divider sx={{ my: 2 }}>OR</Divider>
+          <GoogleSignInButton onCredential={handleGoogle} loading={googleLoading} text="signin_with" />
+          {googleError && <Alert severity="error" sx={{ mt: 2 }}>{googleError}</Alert>}
           <Alert severity="info" sx={{ mt: 2 }}>
             New users can create an account from mWeb, then return to this partner console.
           </Alert>

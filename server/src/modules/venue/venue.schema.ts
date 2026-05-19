@@ -100,6 +100,7 @@ export const venueTypeDefs = /* GraphQL */ `
 
   extend type Query {
     myVenue: Venue
+    myVenues: [Venue!]!
     venues(status: VenueStatus): [Venue!]!
     venue(venue_doc_id: ID!): Venue
     publicVenues: [Venue!]!

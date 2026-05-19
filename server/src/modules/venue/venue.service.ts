@@ -139,6 +139,11 @@ export const venueService = {
     const v = await findCurrentUserVenue(userId);
     return v ? toPub(v) : null;
   },
+  async listMine(userId: string) {
+    const uid = new Types.ObjectId(userId);
+    const docs = await VenueModel.find({ owner_user_id: uid }).sort({ updated_at: -1, created_at: -1 }).limit(200);
+    return docs.map(toPub);
+  },
   async list(filter?: { status?: string }) {
     const q: any = {};
     if (filter?.status) q.status = filter.status;

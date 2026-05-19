@@ -35,6 +35,7 @@ import PodIdeasPage from './pages/PodIdeasPage';
 import BadgesPage from './pages/BadgesPage';
 import VenuesPage from './pages/VenuesPage';
 import HostsPage from './pages/HostsPage';
+import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
 import MarketingCampaignsPage from './pages/MarketingCampaignsPage';
 import FinanceDashboardPage from './pages/finance/FinanceDashboardPage';
@@ -97,6 +98,7 @@ export default function App() {
                 <Route path="/badges" element={<BadgesPage />} />
                 <Route path="/venues" element={<VenuesPage />} />
                 <Route path="/hosts" element={<HostsPage />} />
+                <Route path="/partners/faqs" element={<PartnerFaqsPage />} />
                 <Route path="/pod-plans" element={<PodPlansPage />} />
                 <Route path="/marketing/email-campaigns" element={<MarketingCampaignsPage defaultChannel="EMAIL" />} />
                 <Route path="/marketing/whatsapp-campaigns" element={<MarketingCampaignsPage defaultChannel="WHATSAPP" />} />

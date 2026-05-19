@@ -136,6 +136,20 @@ export const hostService = {
     await h.save();
     return toPub(h);
   },
+  async withdrawMine(userId: string) {
+    const h = await HostModel.findOne({ user_id: new Types.ObjectId(userId) });
+    if (!h) throw new GraphQLError('Host application not found', { extensions: { code: 'NOT_FOUND' } });
+    if (h.status === 'APPROVED') {
+      throw new GraphQLError('Approved host applications cannot be withdrawn', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    h.status = 'DRAFT';
+    h.submitted_at = null;
+    h.rejected_at = null;
+    h.reviewer_notes = '';
+    h.step_completed = Math.min(h.step_completed ?? 0, 3);
+    await h.save();
+    return toPub(h);
+  },
   async approve(id: string, notes?: string, tags?: string[]) {
     const h = await HostModel.findById(id);
     if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });

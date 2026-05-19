@@ -16,6 +16,7 @@ import PodDetailAccordions from './pod-details-page/PodDetailAccordions';
 import PodMapSection from '../components/pod-details/PodMapSection';
 import PodSocialBar from './pod-details-page/PodSocialBar';
 import { usePodDetailActions } from './pod-details-page/usePodDetailActions';
+import { usePodProductSelection } from './pod-details-page/usePodProductSelection';
 import ConfettiOverlay from '../components/ConfettiOverlay';
 import { useStatusUpload } from '../components/status-upload/StatusUploadProvider';
 import {
@@ -32,14 +33,12 @@ export default function PodDetailsPage() {
   const [search] = useSearchParams();
   const referralFromUrl = search.get('ref');
   const { compute: priceCompute, format: priceFormat } = usePricing();
-
   const slugResolution = useQuery(POD_ID_BY_SLUGS, {
     variables: { clubSlug, podSlug },
     skip: !clubSlug || !podSlug,
     fetchPolicy: 'cache-and-network',
   });
   const id: string = slugResolution.data?.podBySlugs?.id ?? '';
-
   const { data, loading, error, refetch } = useQuery(POD_DETAILS, {
     variables: { id },
     skip: !id,
@@ -55,21 +54,17 @@ export default function PodDetailsPage() {
     ];
     return Array.from(new Set(ids.filter(Boolean)));
   }, [data?.pod]);
-
   const { data: peopleData } = useQuery(POD_PEOPLE, {
     variables: { ids: peopleIds },
     skip: peopleIds.length === 0,
     fetchPolicy: 'cache-and-network',
   });
-
-  // Derive early so hooks are always called unconditionally (Rules of Hooks).
   const pod = data?.pod ?? null;
+  const productSelection = usePodProductSelection(id, pod);
   const savedIds: string[] = data?.me?.saved_pod_ids ?? [];
   const followingIds: string[] = data?.me?.following_pod_ids ?? [];
   const saved = pod ? savedIds.includes(pod.id) : false;
   const following = pod ? followingIds.includes(pod.id) : false;
-
-  // MUST be called before any conditional returns.
   const actions = usePodDetailActions({
     id,
     pod,
@@ -78,6 +73,7 @@ export default function PodDetailsPage() {
     following,
     followingIds,
     referralFromUrl,
+    selectedProducts: productSelection.selectedProductList,
     refetch,
     navigate,
   });
@@ -94,8 +90,6 @@ export default function PodDetailsPage() {
   const venue = (data?.publicVenues ?? []).find((item: any) => item.id === pod.venue_id);
   const allPeople: any[] = peopleData?.publicUsersByIds ?? [];
   const peopleById = new Map(allPeople.map((p: any) => [p.user_id, p]));
-
-  // Merge: for hosts, prefer publicHosts (passport_photo_url) but fall back to publicUsersByIds
   const allHosts: any[] = data?.publicHosts ?? [];
   const hostsById = new Map(allHosts.map((h: any) => [h.user_id, h]));
   const podHosts = (pod.pod_hosts_id ?? []).map((uid: string) => {
@@ -112,7 +106,6 @@ export default function PodDetailsPage() {
   const isFree = pod.pod_type?.includes('FREE');
   const isPodHost = (pod.pod_hosts_id ?? []).includes(data?.me?.user_id);
   const media = pod.pod_images_and_videos ?? [];
-
   return (
     <Stack
       spacing={3}
@@ -145,7 +138,13 @@ export default function PodDetailsPage() {
         viewerId={data?.me?.user_id ?? null}
       />
 
-      <PodCommercePreview pod={pod} priceFormat={priceFormat} />
+      <PodCommercePreview
+        pod={pod}
+        priceFormat={priceFormat}
+        selectedProducts={productSelection.selectedProducts}
+        onSelectionChange={productSelection.setSelectedProducts}
+        onCheckout={actions.onPaidCheckout}
+      />
 
       <PodDetailAccordions
         pod={pod}
@@ -171,6 +170,7 @@ export default function PodDetailsPage() {
         membershipState={data?.podMembershipState}
         joining={actions.joinState.loading}
         backingOut={actions.backoutState.loading}
+        selectedProductTotal={productSelection.selectedProductTotal}
         onJoinFree={actions.onJoinFree}
         onBackout={() => actions.setBackoutOpen(true)}
         onPaidCheckout={actions.onPaidCheckout}

@@ -113,6 +113,8 @@ export const INVENTORY_PRODUCTS = gql`
       requested_count
       available_count
       is_active
+      listing_review_status
+      listing_submitted_by_name
     }
   }
 `;

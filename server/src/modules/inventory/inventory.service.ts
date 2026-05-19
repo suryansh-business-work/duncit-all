@@ -51,6 +51,19 @@ const TRACKED_FIELDS = [
   'host_request_allowed',
   'delivery_available',
   'delivery_charge',
+  'listing_review_status',
+  'listing_review_notes',
+  'listing_submitted_by_id',
+  'listing_submitted_by_name',
+  'listing_reviewed_by_id',
+  'listing_reviewed_by_name',
+  'is_duncit_delivery_partner',
+  'size_label',
+  'height_cm',
+  'weight_kg',
+  'color',
+  'commission_pct',
+  'delivery_target',
   'barcode',
   'is_active',
 ] as const;
@@ -107,6 +120,19 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     host_request_allowed: !!product.host_request_allowed,
     delivery_available: !!product.delivery_available,
     delivery_charge: product.delivery_charge ?? 0,
+    listing_review_status: product.listing_review_status ?? 'APPROVED',
+    listing_review_notes: product.listing_review_notes ?? '',
+    listing_submitted_by_id: product.listing_submitted_by_id ?? null,
+    listing_submitted_by_name: product.listing_submitted_by_name ?? '',
+    listing_reviewed_by_id: product.listing_reviewed_by_id ?? null,
+    listing_reviewed_by_name: product.listing_reviewed_by_name ?? '',
+    is_duncit_delivery_partner: !!product.is_duncit_delivery_partner,
+    size_label: product.size_label ?? '',
+    height_cm: product.height_cm ?? 0,
+    weight_kg: product.weight_kg ?? 0,
+    color: product.color ?? '',
+    commission_pct: product.commission_pct ?? 5,
+    delivery_target: product.delivery_target ?? 'HOST',
     is_active: !!product.is_active,
     last_updated_by_id: product.last_updated_by_id ?? null,
     last_updated_by_name: product.last_updated_by_name ?? '',
@@ -202,6 +228,69 @@ function validateInput(input: any) {
   }
 }
 
+function cleanText(value: unknown, max = 4000) {
+  return String(value ?? '').trim().slice(0, max);
+}
+
+function listingImages(input: any) {
+  const rawImages = Array.isArray(input.images) ? input.images : [];
+  return Array.from(new Set([input.image_url, ...rawImages]
+    .map((value) => cleanText(value))
+    .filter((value) => /^https?:\/\//i.test(value))));
+}
+
+function validateProductListingInput(input: any) {
+  if (!cleanText(input.product_name, 200)) {
+    throw new GraphQLError('Product title is required', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  if (listingImages(input).length === 0) {
+    throw new GraphQLError('Upload at least one product image before submitting', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  if (cleanText(input.description).length < 20) {
+    throw new GraphQLError('Product description must be at least 20 characters', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  if (Number(input.inventory_count) < 1) {
+    throw new GraphQLError('Inventory availability must be at least 1', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  if (Number(input.unit_cost) <= 0) {
+    throw new GraphQLError('Product price must be greater than 0', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const commission = Number(input.commission_pct);
+  if (commission < 5 || commission > 50) {
+    throw new GraphQLError('Commission must be between 5% and 50%', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+}
+
+async function ownedListing(id: string, user: AuthUser | null) {
+  if (!user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+  const doc = await InventoryProductModel.findOne({ _id: id, listing_submitted_by_id: user.id });
+  if (!doc) throw new GraphQLError('Product listing not found', { extensions: { code: 'NOT_FOUND' } });
+  return doc;
+}
+
+function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser | null) {
+  const images = listingImages(input);
+  doc.product_name = cleanText(input.product_name, 200);
+  doc.short_description = cleanText(input.description, 220);
+  doc.description = cleanText(input.description);
+  doc.image_url = images[0] ?? '';
+  doc.images = images;
+  doc.inventory_count = Number(input.inventory_count) || 0;
+  doc.unit_cost = Number(input.unit_cost) || 0;
+  doc.purchase_price = Number(input.unit_cost) || 0;
+  doc.selling_price = Number(input.unit_cost) || 0;
+  doc.is_duncit_delivery_partner = !!input.is_duncit_delivery_partner;
+  doc.size_label = cleanText(input.size_label, 120);
+  doc.height_cm = Number(input.height_cm) || 0;
+  doc.weight_kg = Number(input.weight_kg) || 0;
+  doc.color = cleanText(input.color, 80);
+  doc.commission_pct = Number(input.commission_pct) || 5;
+  doc.delivery_target = input.delivery_target === 'VENUE' ? 'VENUE' : 'HOST';
+  const info = userInfo(user);
+  doc.last_updated_by_id = info.id;
+  doc.last_updated_by_name = info.name;
+}
+
 function applyInput(target: any, input: any) {
   for (const field of TRACKED_FIELDS) {
     if (input[field] === undefined) continue;
@@ -232,9 +321,142 @@ export const inventoryService = {
     return docs.map(inventoryProductToPub);
   },
 
+  async listProductRequests(status?: string | null) {
+    const q: any = { listing_submitted_by_id: { $exists: true, $nin: [null, ''] } };
+    if (status) q.listing_review_status = status;
+    const docs = await InventoryProductModel.find(q).sort({ created_at: -1 }).limit(300);
+    return docs.map(inventoryProductToPub);
+  },
+
+  async listMyProductListings(user: AuthUser | null) {
+    if (!user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+    const docs = await InventoryProductModel.find({ listing_submitted_by_id: user.id }).sort({ updated_at: -1 }).limit(200);
+    return docs.map(inventoryProductToPub);
+  },
+
   async getById(id: string) {
     const doc = await InventoryProductModel.findById(id);
     return doc ? inventoryProductToPub(doc) : null;
+  },
+
+  async submitProductListing(input: any, user: AuthUser | null) {
+    if (!user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+    validateProductListingInput(input);
+    const info = userInfo(user);
+    const sku = await generateUniqueSku();
+    const images = listingImages(input);
+    const doc = await InventoryProductModel.create({
+      product_name: cleanText(input.product_name, 200),
+      sku,
+      short_description: cleanText(input.description, 220),
+      description: cleanText(input.description),
+      image_url: images[0] ?? '',
+      images,
+      inventory_count: Number(input.inventory_count) || 0,
+      unit_cost: Number(input.unit_cost) || 0,
+      purchase_price: Number(input.unit_cost) || 0,
+      selling_price: Number(input.unit_cost) || 0,
+      vendor_name: info.name,
+      supplier_contact: user.email ?? '',
+      status: 'DRAFT',
+      visibility: 'INTERNAL',
+      is_active: false,
+      pod_available: false,
+      host_request_allowed: false,
+      delivery_available: true,
+      listing_review_status: 'PENDING',
+      listing_submitted_by_id: info.id,
+      listing_submitted_by_name: info.name,
+      is_duncit_delivery_partner: !!input.is_duncit_delivery_partner,
+      size_label: cleanText(input.size_label, 120),
+      height_cm: Number(input.height_cm) || 0,
+      weight_kg: Number(input.weight_kg) || 0,
+      color: cleanText(input.color, 80),
+      commission_pct: Number(input.commission_pct) || 5,
+      delivery_target: input.delivery_target === 'VENUE' ? 'VENUE' : 'HOST',
+      last_updated_by_id: info.id,
+      last_updated_by_name: info.name,
+    });
+    await logActivity(doc._id, user, 'CREATE', ['partner_listing'], 'Partner product listing submitted');
+    return inventoryProductToPub(doc);
+  },
+
+  async updateMyProductListing(id: string, input: any, user: AuthUser | null) {
+    validateProductListingInput(input);
+    const doc = await ownedListing(id, user);
+    const before = doc.toObject();
+    const beforeStock = {
+      inventory_count: doc.inventory_count,
+      reserved_count: doc.reserved_count,
+      damaged_count: doc.damaged_count,
+    };
+    applyListingFields(doc, input, user);
+    doc.listing_review_status = 'PENDING';
+    doc.listing_review_notes = '';
+    doc.status = 'DRAFT';
+    doc.visibility = 'INTERNAL';
+    doc.is_active = false;
+    doc.pod_available = false;
+    doc.host_request_allowed = false;
+    await doc.save();
+    await logActivity(doc._id, user, 'UPDATE', changedFields(before, doc.toObject()), 'Partner listing updated for review');
+    await recordStockChanges(doc, beforeStock, user);
+    return inventoryProductToPub(doc);
+  },
+
+  async updateMyProductListingQuantity(id: string, inventoryCount: number, user: AuthUser | null) {
+    if (!Number.isInteger(inventoryCount) || inventoryCount < 0) {
+      throw new GraphQLError('Quantity must be a whole number', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const doc = await ownedListing(id, user);
+    const beforeStock = {
+      inventory_count: doc.inventory_count,
+      reserved_count: doc.reserved_count,
+      damaged_count: doc.damaged_count,
+    };
+    const info = userInfo(user);
+    const committedCount = Number(doc.requested_count || 0) + Number(doc.reserved_count || 0);
+    if (inventoryCount < committedCount) {
+      throw new GraphQLError(`Quantity cannot be less than ${committedCount} committed units`, { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    doc.inventory_count = inventoryCount;
+    doc.last_updated_by_id = info.id;
+    doc.last_updated_by_name = info.name;
+    await doc.save();
+    await logActivity(doc._id, user, 'UPDATE', ['inventory_count'], 'Partner quantity updated');
+    await recordStockChanges(doc, beforeStock, user);
+    return inventoryProductToPub(doc);
+  },
+
+  async deleteMyProductListing(id: string, user: AuthUser | null) {
+    const doc = await ownedListing(id, user);
+    doc.is_active = false;
+    doc.status = 'ARCHIVED';
+    doc.pod_available = false;
+    doc.host_request_allowed = false;
+    await doc.save();
+    await logActivity(doc._id, user, 'DELETE', ['status', 'is_active'], 'Partner listing deleted');
+    return true;
+  },
+
+  async reviewProductListing(id: string, status: string, notes: string | null | undefined, user: AuthUser | null) {
+    const doc = await InventoryProductModel.findById(id);
+    if (!doc) throw new GraphQLError('Product listing request not found', { extensions: { code: 'NOT_FOUND' } });
+    const info = userInfo(user);
+    doc.listing_review_status = status === 'APPROVED' ? 'APPROVED' : 'DENIED';
+    doc.listing_review_notes = cleanText(notes, 1000);
+    doc.listing_reviewed_by_id = info.id;
+    doc.listing_reviewed_by_name = info.name;
+    doc.status = status === 'APPROVED' ? 'ACTIVE' : 'ARCHIVED';
+    doc.visibility = status === 'APPROVED' ? 'PUBLIC' : 'INTERNAL';
+    doc.is_active = status === 'APPROVED';
+    doc.pod_available = status === 'APPROVED';
+    doc.host_request_allowed = status === 'APPROVED';
+    doc.last_updated_by_id = info.id;
+    doc.last_updated_by_name = info.name;
+    await doc.save();
+    await logActivity(doc._id, user, status === 'APPROVED' ? 'RESTORE' : 'ARCHIVE', ['listing_review_status'], doc.listing_review_notes);
+    return inventoryProductToPub(doc);
   },
 
   async create(input: any, user: AuthUser | null) {

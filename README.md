@@ -2,7 +2,7 @@
 
 ## 📌 Overview
 
-Full-stack monorepo using npm workspaces:
+Full-stack monorepo using pnpm workspaces:
 
 - **web-ui/app** — User-facing React + Vite app
 - **web-ui/admin** — Admin React + Vite dashboard
@@ -40,7 +40,7 @@ duncit/
 ### 1. Install dependencies (from repo root)
 
 ```bash
-npm install
+pnpm install
 ```
 
 ### 2. Configure server env
@@ -65,19 +65,31 @@ In separate terminals:
 
 ```bash
 # server  → http://localhost:2001/graphql
-npm run dev:server
+pnpm dev:server
 
-# user app → http://localhost:5173
-npm run dev:app
+# user app → http://localhost:2003
+pnpm dev:app
 
-# admin app → http://localhost:5174
-npm run dev:admin
+# admin app → http://localhost:2002
+pnpm dev:admin
+```
+
+To run every project at once:
+
+```bash
+pnpm run:all
+```
+
+To release all local project ports:
+
+```bash
+pnpm kill-ports:all
 ```
 
 ## 🔄 GraphQL Codegen
 
 ```bash
-npm run codegen
+pnpm codegen
 ```
 
 Generates:
@@ -122,7 +134,7 @@ Use `sendEmail({ to, subject, template, vars })` from `server/src/services/email
 
 - Keep business logic in services; resolvers stay thin
 - Always validate at the GraphQL boundary (Yup)
-- Re-run `npm run codegen` after schema changes
+- Re-run `pnpm codegen` after schema changes
 - Reuse Yup schemas in frontend forms
 
 ## 📦 Scripts
@@ -130,11 +142,16 @@ Use `sendEmail({ to, subject, template, vars })` from `server/src/services/email
 Root:
 
 ```bash
-npm run dev:server   # start API
-npm run dev:app      # start user app
-npm run dev:admin    # start admin app
-npm run build        # build all workspaces
-npm run codegen      # generate GraphQL types
+pnpm dev:server      # start API
+pnpm dev:app         # start user app
+pnpm dev:admin       # start admin app
+pnpm dev:website     # start website
+pnpm dev:partners-app
+pnpm dev:partners-website
+pnpm run:all         # start all projects
+pnpm kill-ports:all  # release all project ports
+pnpm build           # build all workspaces
+pnpm codegen         # generate GraphQL types
 ```
 
 ## 🔮 Future Improvements

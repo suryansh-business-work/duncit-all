@@ -2,6 +2,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import CelebrationIcon from '@mui/icons-material/Celebration';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
 
 const actions = [
   {
@@ -16,6 +17,12 @@ const actions = [
     path: '/become-host',
     icon: <CelebrationIcon />,
   },
+  {
+    title: 'List your products',
+    text: 'Sell your products via Duncit. Hosts can select approved products during pod creation.',
+    path: '/list-products',
+    icon: <Inventory2Icon />,
+  },
 ];
 
 export default function PartnerHomePage() {
@@ -26,7 +33,7 @@ export default function PartnerHomePage() {
         <Typography variant="h4" fontWeight={950}>Choose your partner path</Typography>
         <Typography variant="body2" sx={{ color: 'rgba(255,255,255,0.72)', mt: 1 }}>Use the same Duncit account for venue and host applications.</Typography>
       </Box>
-      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: '1fr 1fr' } }}>
+      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', sm: 'repeat(3, 1fr)' } }}>
         {actions.map((action) => (
           <Card key={action.path} variant="outlined">
             <CardContent>

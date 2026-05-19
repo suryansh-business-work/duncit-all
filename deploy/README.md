@@ -45,7 +45,7 @@ Docker image push uses DockerHub secrets: `DOCKERHUB_USERNAME` and
 ## Local Husky
 
 ```bash
-npm install      # triggers `husky` install via the prepare script
+pnpm install      # triggers `husky` install via the prepare script
 ```
 
 ## Manual redeploy on the VPS

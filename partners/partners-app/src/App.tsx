@@ -3,6 +3,7 @@ import LoginPage from './pages/LoginPage';
 import PartnerHomePage from './pages/PartnerHomePage';
 import RegisterVenuePage from './pages/RegisterVenuePage';
 import BecomeHostPage from './pages/become-host-page/BecomeHostPage';
+import ListProductsPage from './pages/list-products-page/ListProductsPage';
 import PartnerShell from './components/PartnerShell';
 import { redirectPathFromLocation } from './utils/redirect';
 
@@ -29,6 +30,7 @@ export default function App() {
       <Route path="/" element={authed(<PartnerHomePage />)} />
       <Route path="/register-venue" element={authed(<RegisterVenuePage />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
+      <Route path="/list-products" element={authed(<ListProductsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

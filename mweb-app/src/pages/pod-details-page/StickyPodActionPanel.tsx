@@ -10,6 +10,7 @@ interface Props {
   membershipState: any;
   joining: boolean;
   backingOut: boolean;
+  selectedProductTotal: number;
   onJoinFree: () => void;
   onBackout: () => void;
   onPaidCheckout: () => void;

@@ -1,51 +1,43 @@
 import { useMemo, useState } from 'react';
-import { Box, Button, Checkbox, Chip, Divider, Stack, Typography } from '@mui/material';
-import AddShoppingCartIcon from '@mui/icons-material/AddShoppingCart';
+import { Box, Button, Checkbox, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import RemoveIcon from '@mui/icons-material/Remove';
 import StorefrontIcon from '@mui/icons-material/Storefront';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { alpha, useTheme } from '@mui/material/styles';
 
 interface Props {
   pod: any;
   priceFormat: (amount: number) => string;
+  selectedProducts: Record<string, number>;
+  onSelectionChange: (next: Record<string, number>) => void;
+  onCheckout: () => void;
 }
 
-interface SpecialItem {
-  id: string;
-  name: string;
-  hint: string;
-  price: number;
-}
-
-const SPECIAL_ADDONS: SpecialItem[] = [
-  { id: 'cake', name: 'Surprise birthday cake', hint: 'Lit candles + custom message', price: 499 },
-  { id: 'flowers', name: 'Fresh flower bouquet', hint: 'Hand-picked, delivered chilled', price: 299 },
-  { id: 'photographer', name: '15-min photo capture', hint: 'Pro shots of your moment', price: 799 },
-  { id: 'decor', name: 'Mini balloon arch', hint: 'Set up before you arrive', price: 599 },
-  { id: 'champagne', name: 'Bottle of bubbly', hint: 'Sparkling, served chilled', price: 1299 },
-];
-
-export default function PodCommercePreview({ pod, priceFormat }: Props) {
+export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, onCheckout }: Props) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
   const perks = (pod.available_perks ?? []).filter(Boolean).slice(0, 3);
   const hasItems = requests.length > 0 || perks.length > 0;
-  const [picked, setPicked] = useState<Record<string, boolean>>({});
+  const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
-  const togglePick = (id: string) => setPicked((prev) => ({ ...prev, [id]: !prev[id] }));
-
-  const specialTotal = useMemo(
-    () => SPECIAL_ADDONS.reduce((sum, item) => (picked[item.id] ? sum + item.price : sum), 0),
-    [picked]
+  const selectedTotal = useMemo(
+    () => requests.reduce((sum: number, item: any) => sum + (selectedProducts[item.product_id] || 0) * Number(item.unit_cost || 0), 0),
+    [requests, selectedProducts]
   );
-  const specialCount = Object.values(picked).filter(Boolean).length;
+  const selectedCount = Object.values(selectedProducts).filter((quantity) => quantity > 0).length;
   const textColor = isDark ? '#fff' : 'text.primary';
   const mutedColor = isDark ? 'rgba(255,255,255,0.62)' : 'text.secondary';
   const itemBg = isDark ? 'rgba(255,255,255,0.05)' : alpha(theme.palette.background.paper, 0.72);
   const selectedBg = isDark ? 'rgba(255,139,95,0.14)' : alpha(theme.palette.primary.main, 0.1);
   const borderColor = isDark ? 'rgba(255,255,255,0.1)' : alpha(theme.palette.text.primary, 0.1);
   const selectedBorder = isDark ? 'rgba(255,139,95,0.6)' : alpha(theme.palette.primary.main, 0.45);
+  const updateQuantity = (productId: string, quantity: number) => {
+    const next = { ...selectedProducts };
+    if (quantity <= 0) delete next[productId];
+    else next[productId] = quantity;
+    onSelectionChange(next);
+  };
 
   return (
     <Box
@@ -71,38 +63,25 @@ export default function PodCommercePreview({ pod, priceFormat }: Props) {
             </Typography>
             <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
               <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.1 }} noWrap>
-                Add-ons
+                Products
               </Typography>
-              <Box
-                sx={{
-                  display: 'inline-flex',
-                  alignItems: 'center',
-                  gap: 0.5,
-                  px: 1,
-                  py: 0.25,
-                  borderRadius: 999,
-                  background: 'linear-gradient(90deg, rgba(255,79,115,0.22) 0%, rgba(255,139,95,0.22) 100%)',
-                  border: '1px solid rgba(255,139,95,0.4)',
-                }}
-              >
-                <AutoAwesomeIcon sx={{ fontSize: 14, color: '#ffd089' }} />
-                <Typography variant="caption" sx={{ fontWeight: 900, color: '#ffe1b8', whiteSpace: 'nowrap' }}>
-                  make it special
-                </Typography>
-              </Box>
             </Stack>
           </Box>
         </Stack>
-        <Chip size="small" label={pod.products_enabled ? 'Live' : 'Preview'} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.text.primary, 0.08), color: textColor, fontWeight: 800 }} />
+        <Chip size="small" label={pod.products_enabled ? 'Available' : 'Closed'} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.text.primary, 0.08), color: textColor, fontWeight: 800 }} />
       </Stack>
 
-      <Stack spacing={0.9} sx={{ mt: 2 }}>
-        {SPECIAL_ADDONS.map((item) => {
-          const selected = !!picked[item.id];
+      {hasItems && (
+        <Stack spacing={0.9} sx={{ mt: 2 }}>
+          {requests.map((item: any) => {
+          const maxQuantity = Number(item.available_count ?? item.quantity ?? 0);
+          const quantity = selectedProducts[item.product_id] || 0;
+          const selected = quantity > 0;
+          const imageUrl = item.image_url || item.images?.[0] || '';
           return (
             <Stack
-              key={item.id}
-              onClick={() => togglePick(item.id)}
+              key={`${item.product_id}-${item.product_name}`}
+              onClick={() => updateQuantity(item.product_id, selected ? 0 : 1)}
               direction="row"
               spacing={1}
               alignItems="center"
@@ -118,42 +97,32 @@ export default function PodCommercePreview({ pod, priceFormat }: Props) {
             >
               <Checkbox
                 checked={selected}
-                onChange={() => togglePick(item.id)}
-                onClick={(e) => e.stopPropagation()}
+                onChange={() => updateQuantity(item.product_id, selected ? 0 : 1)}
+                onClick={(event) => event.stopPropagation()}
                 sx={{
                   p: 0.5,
                   color: mutedColor,
                   '&.Mui-checked': { color: '#ff8b5f' },
                 }}
               />
+              <Box sx={{ width: 54, height: 54, borderRadius: 2, overflow: 'hidden', flex: '0 0 auto', bgcolor: 'rgba(255,139,95,0.18)' }}>
+                {imageUrl && !imageErrors[item.product_id] && <Box component="img" src={imageUrl} alt={item.product_name} onError={() => setImageErrors((prev) => ({ ...prev, [item.product_id]: true }))} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
+              </Box>
               <Box sx={{ minWidth: 0, flex: 1 }}>
-                <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{item.name}</Typography>
-                <Typography variant="caption" sx={{ color: mutedColor }} noWrap>{item.hint}</Typography>
+                <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{item.product_name}</Typography>
+                <Typography variant="caption" sx={{ color: mutedColor }} noWrap>Available {maxQuantity}</Typography>
+                {selected && <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.75 }} onClick={(event) => event.stopPropagation()}>
+                  <IconButton size="small" onClick={() => updateQuantity(item.product_id, quantity - 1)}><RemoveIcon fontSize="small" /></IconButton>
+                  <Typography variant="body2" fontWeight={900}>{quantity}</Typography>
+                  <IconButton size="small" disabled={quantity >= maxQuantity} onClick={() => updateQuantity(item.product_id, Math.min(maxQuantity, quantity + 1))}><AddIcon fontSize="small" /></IconButton>
+                </Stack>}
               </Box>
               <Typography variant="body2" sx={{ fontWeight: 900, color: isDark ? '#ffe1b8' : 'primary.dark' }}>
-                +{priceFormat(item.price)}
+                +{priceFormat(Number(item.unit_cost ?? 0) * Math.max(quantity, 1))}
               </Typography>
             </Stack>
           );
         })}
-      </Stack>
-
-      {hasItems && (
-        <>
-          <Divider sx={{ my: 1.5, borderColor: isDark ? 'rgba(255,255,255,0.16)' : 'divider' }} />
-          <Stack spacing={1}>
-            {requests.map((item: any) => (
-              <Stack key={`${item.product_id}-${item.product_name}`} direction="row" spacing={1.2} alignItems="center" sx={{ p: 1, borderRadius: 3, bgcolor: itemBg }}>
-                <Box sx={{ width: 36, height: 36, borderRadius: 2, display: 'grid', placeItems: 'center', bgcolor: 'rgba(255,139,95,0.18)' }}>
-                  <AddShoppingCartIcon fontSize="small" />
-                </Box>
-                <Box sx={{ minWidth: 0, flex: 1 }}>
-                  <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{item.product_name}</Typography>
-                  <Typography variant="caption" sx={{ color: mutedColor }}>Qty {item.quantity || 1}</Typography>
-                </Box>
-                <Typography variant="body2" sx={{ fontWeight: 900 }}>{priceFormat(Number(item.total_cost ?? item.unit_cost ?? 0))}</Typography>
-              </Stack>
-            ))}
             {requests.length === 0 && perks.map((perk: string) => (
               <Stack key={perk} direction="row" spacing={1.2} alignItems="center" sx={{ p: 1, borderRadius: 3, bgcolor: itemBg }}>
                 <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{perk}</Typography>
@@ -162,25 +131,25 @@ export default function PodCommercePreview({ pod, priceFormat }: Props) {
               </Stack>
             ))}
           </Stack>
-        </>
       )}
 
       <Divider sx={{ my: 1.5, borderColor: isDark ? 'rgba(255,255,255,0.16)' : 'divider' }} />
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="caption" sx={{ color: mutedColor }}>
-          {specialCount > 0 ? `${specialCount} special add-on${specialCount === 1 ? '' : 's'}` : 'Add-on total'}
+          {selectedCount > 0 ? `${selectedCount} product${selectedCount === 1 ? '' : 's'} selected` : 'Selected product total'}
         </Typography>
         <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
-          {priceFormat(Number(pod.product_cost_total ?? 0) + specialTotal)}
+          {priceFormat(selectedTotal)}
         </Typography>
       </Stack>
       <Button
         fullWidth
         variant="contained"
-        disabled={specialCount === 0 && !pod.products_enabled}
+        disabled={selectedCount === 0}
+        onClick={onCheckout}
         sx={{ mt: 1.5, borderRadius: 3, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
       >
-        {specialCount > 0 ? `Add ${specialCount} to booking` : 'Add to booking'}
+        Add to booking · {priceFormat(Number(pod.pod_amount || 0) + selectedTotal)}
       </Button>
     </Box>
   );

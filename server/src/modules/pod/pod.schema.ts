@@ -46,8 +46,11 @@ export const podTypeDefs = /* GraphQL */ `
   type PodProductRequest {
     product_id: ID!
     product_name: String!
+    image_url: String!
+    images: [String!]!
     unit_cost: Float!
     quantity: Int!
+    available_count: Int!
     total_cost: Float!
   }
 

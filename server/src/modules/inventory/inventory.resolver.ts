@@ -1,5 +1,5 @@
 import type { GraphQLContext } from '../../context';
-import { requireRole } from '../../middleware/rbac';
+import { requireAuth, requireRole } from '../../middleware/rbac';
 import { inventoryService } from './inventory.service';
 
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN'];
@@ -13,6 +13,18 @@ export const inventoryResolvers = {
     ) => {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.list(args);
+    },
+    productListingRequests: async (
+      _p: unknown,
+      args: { status?: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.listProductRequests(args.status ?? null);
+    },
+    myProductListings: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return inventoryService.listMyProductListings(ctx.user);
     },
     inventoryProduct: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
@@ -55,6 +67,38 @@ export const inventoryResolvers = {
     createInventoryProduct: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.create(args.input, ctx.user);
+    },
+    submitProductListing: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return inventoryService.submitProductListing(args.input, ctx.user);
+    },
+    updateMyProductListing: async (
+      _p: unknown,
+      args: { product_doc_id: string; input: any },
+      ctx: GraphQLContext
+    ) => {
+      requireAuth(ctx);
+      return inventoryService.updateMyProductListing(args.product_doc_id, args.input, ctx.user);
+    },
+    updateMyProductListingQuantity: async (
+      _p: unknown,
+      args: { product_doc_id: string; inventory_count: number },
+      ctx: GraphQLContext
+    ) => {
+      requireAuth(ctx);
+      return inventoryService.updateMyProductListingQuantity(args.product_doc_id, args.inventory_count, ctx.user);
+    },
+    deleteMyProductListing: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return inventoryService.deleteMyProductListing(args.product_doc_id, ctx.user);
+    },
+    reviewProductListing: async (
+      _p: unknown,
+      args: { product_doc_id: string; status: string; notes?: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.reviewProductListing(args.product_doc_id, args.status, args.notes, ctx.user);
     },
     updateInventoryProduct: async (
       _p: unknown,

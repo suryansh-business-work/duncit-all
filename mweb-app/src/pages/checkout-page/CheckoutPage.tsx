@@ -52,6 +52,7 @@ export default function CheckoutPage() {
             input: {
               pod_id: checkoutPodId || null,
               amount,
+              selected_products: selectedProducts,
               description: state.description || `Pod booking · ${title}`,
               ...contact,
               checkout_url: window.location.href,
@@ -81,7 +82,13 @@ export default function CheckoutPage() {
   }, [meData]);
 
   const pod = podData?.pod;
-  const amount = Number(pod?.pod_amount ?? state.amount ?? search.get('amount') ?? 0);
+  const selectedProducts = state.selected_products ?? [];
+  const baseAmount = Number(pod?.pod_amount ?? state.amount ?? search.get('amount') ?? 0);
+  const productAmount = selectedProducts.reduce((sum, item) => {
+    const product = (pod?.product_requests ?? []).find((entry: any) => entry.product_id === item.product_id);
+    return sum + Number(product?.unit_cost ?? 0) * Number(item.quantity || 0);
+  }, 0);
+  const amount = baseAmount + productAmount;
   const breakup = useMemo(
     () => buildBreakup(amount, financeData?.publicFinanceSettings),
     [amount, financeData]
@@ -108,7 +115,7 @@ export default function CheckoutPage() {
       </Stack>
       {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
-        <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={breakup} />
+        <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={breakup} selectedProducts={selectedProducts} />
         <PaymentDetailsCard
           formik={formik}
           error={error}

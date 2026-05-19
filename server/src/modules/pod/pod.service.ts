@@ -69,8 +69,11 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     product_requests: (d.product_requests ?? []).map((item: any) => ({
       product_id: String(item.product_id),
       product_name: item.product_name,
+      image_url: item.image_url ?? '',
+      images: Array.isArray(item.images) ? item.images : [],
       unit_cost: item.unit_cost ?? 0,
       quantity: item.quantity ?? 0,
+      available_count: item.quantity ?? 0,
       total_cost: item.total_cost ?? 0,
     })),
     product_cost_total: d.product_cost_total ?? 0,
@@ -257,6 +260,8 @@ async function buildProductRequests(enabled: boolean, rawItems: any[] = []) {
     next.push({
       product_id: product._id,
       product_name: product.product_name,
+      image_url: product.image_url ?? '',
+      images: Array.isArray(product.images) ? product.images : [],
       unit_cost: product.unit_cost,
       quantity: item.quantity,
       total_cost: product.unit_cost * item.quantity,

@@ -35,6 +35,18 @@ export const CHECKOUT_POD = gql`
       pod_end_date_time
       pod_type
       pod_amount
+      products_enabled
+      product_cost_total
+      product_requests {
+        product_id
+        product_name
+        image_url
+        images
+        unit_cost
+        quantity
+        available_count
+        total_cost
+      }
       zone_name
       no_of_spots
       pod_attendees
@@ -68,6 +80,7 @@ export interface CheckoutState {
   pod_id?: string;
   pod_title?: string;
   amount?: number;
+  selected_products?: Array<{ product_id: string; quantity: number }>;
   description?: string;
 }
 

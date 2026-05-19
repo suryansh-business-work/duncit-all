@@ -65,9 +65,10 @@ export const NAV: NavSection[] = [
   },
   {
     heading: 'Inventory Management',
-    prefixes: ['/inventory'],
+    prefixes: ['/inventory', '/ecomm'],
     items: [
       { label: 'Inventory', to: '/inventory', icon: navIcons.inventory },
+      { label: 'Ecomm Requests', to: '/ecomm/product-requests', icon: navIcons.inventory },
     ],
   },
   {

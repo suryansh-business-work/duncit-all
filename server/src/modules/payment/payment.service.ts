@@ -83,6 +83,29 @@ export async function computeQuote(amount: number, opts?: { inclusive?: boolean 
 const newPaymentId = () =>
   `pay_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
 
+function selectedProductTotal(pod: any, selectedProducts: any[] = []) {
+  const allowed = new Map<string, any>((pod.product_requests ?? []).map((item: any) => [String(item.product_id), item]));
+  const selected = new Map<string, number>();
+  for (const item of selectedProducts) {
+    const productId = String(item?.product_id || '');
+    const quantity = Number(item?.quantity) || 0;
+    if (!productId || quantity <= 0) continue;
+    selected.set(productId, (selected.get(productId) ?? 0) + quantity);
+  }
+  let total = 0;
+  for (const [productId, quantity] of selected) {
+    const product = allowed.get(productId);
+    if (!product) {
+      throw new GraphQLError('Selected product is not available for this pod', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (quantity > Number(product.quantity || 0)) {
+      throw new GraphQLError(`Only ${product.quantity} ${product.product_name} available`, { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    total += Number(product.unit_cost || 0) * quantity;
+  }
+  return round2(total);
+}
+
 export const paymentService = {
   async list(filter?: { status?: string; user_id?: string; pod_id?: string; search?: string }, limit = 200) {
     const q: any = {};
@@ -116,21 +139,23 @@ export const paymentService = {
         extensions: { code: 'BAD_REQUEST' },
       });
     }
-    if (!input.amount || input.amount <= 0)
-      throw new GraphQLError('Amount must be greater than 0', { extensions: { code: 'BAD_USER_INPUT' } });
-
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
     let pod: any = null;
+    let payableAmount = Number(input.amount) || 0;
     let description = input.description || 'Booking';
     if (input.pod_id) {
       pod = await PodModel.findById(input.pod_id);
       if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
       description = `Pod booking · ${pod.pod_title}`;
+      payableAmount = round2(Number(pod.pod_amount || 0) + selectedProductTotal(pod, input.selected_products ?? []));
     }
 
-    const quote = await computeQuote(input.amount);
+    if (!payableAmount || payableAmount <= 0)
+      throw new GraphQLError('Amount must be greater than 0', { extensions: { code: 'BAD_USER_INPUT' } });
+
+    const quote = await computeQuote(payableAmount);
 
     const status = input.simulate_failure ? 'FAILED' : 'SUCCESS';
     const paidAt = status === 'SUCCESS' ? new Date() : null;
@@ -167,6 +192,9 @@ export const paymentService = {
         source: 'app_checkout',
         checkout_url: input.checkout_url,
         pod_id: input.pod_id || null,
+        ticket_amount: pod ? Number(pod.pod_amount || 0) : null,
+        product_cost_total: pod ? selectedProductTotal(pod, input.selected_products ?? []) : null,
+        selected_products: input.selected_products ?? [],
       },
     });
 

@@ -54,8 +54,11 @@ export const POD_DETAILS = gql`
       product_requests {
         product_id
         product_name
+        image_url
+        images
         unit_cost
         quantity
+        available_count
         total_cost
       }
       product_cost_total

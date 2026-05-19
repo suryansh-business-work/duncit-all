@@ -56,9 +56,15 @@ export const paymentTypeDefs = /* GraphQL */ `
     amount: Float!
   }
 
+  input CheckoutProductSelectionInput {
+    product_id: ID!
+    quantity: Int!
+  }
+
   input DummyCheckoutInput {
     pod_id: ID
     amount: Float!
+    selected_products: [CheckoutProductSelectionInput!]
     description: String
     contact_email: String!
     contact_phone: String

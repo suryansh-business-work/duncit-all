@@ -9,6 +9,15 @@ export const inventoryTypeDefs = /* GraphQL */ `
     PUBLIC
     INTERNAL
   }
+  enum ProductListingReviewStatus {
+    PENDING
+    APPROVED
+    DENIED
+  }
+  enum ProductListingDeliveryTarget {
+    HOST
+    VENUE
+  }
   enum ProductType {
     CONSUMABLE
     MERCHANDISE
@@ -89,6 +98,20 @@ export const inventoryTypeDefs = /* GraphQL */ `
     host_request_allowed: Boolean!
     delivery_available: Boolean!
     delivery_charge: Float!
+
+    listing_review_status: ProductListingReviewStatus!
+    listing_review_notes: String!
+    listing_submitted_by_id: String
+    listing_submitted_by_name: String!
+    listing_reviewed_by_id: String
+    listing_reviewed_by_name: String!
+    is_duncit_delivery_partner: Boolean!
+    size_label: String!
+    height_cm: Float!
+    weight_kg: Float!
+    color: String!
+    commission_pct: Float!
+    delivery_target: ProductListingDeliveryTarget!
 
     is_active: Boolean!
 
@@ -223,8 +246,26 @@ export const inventoryTypeDefs = /* GraphQL */ `
     reason: String
   }
 
+  input ProductListingInput {
+    is_duncit_delivery_partner: Boolean!
+    product_name: String!
+    image_url: String!
+    images: [String!]
+    description: String!
+    size_label: String
+    height_cm: Float
+    weight_kg: Float
+    color: String
+    inventory_count: Int!
+    unit_cost: Float!
+    commission_pct: Float!
+    delivery_target: ProductListingDeliveryTarget!
+  }
+
   extend type Query {
     inventoryProducts(search: String, activeOnly: Boolean, status: InventoryStatus): [InventoryProduct!]!
+    productListingRequests(status: ProductListingReviewStatus): [InventoryProduct!]!
+    myProductListings: [InventoryProduct!]!
     inventoryProduct(product_doc_id: ID!): InventoryProduct
     inventoryActivityLogs(product_doc_id: ID!, limit: Int): [InventoryActivityLog!]!
     inventoryStockMovements(product_doc_id: ID!, limit: Int): [InventoryStockMovement!]!
@@ -234,6 +275,15 @@ export const inventoryTypeDefs = /* GraphQL */ `
 
   extend type Mutation {
     createInventoryProduct(input: InventoryProductInput!): InventoryProduct!
+    submitProductListing(input: ProductListingInput!): InventoryProduct!
+    updateMyProductListing(product_doc_id: ID!, input: ProductListingInput!): InventoryProduct!
+    updateMyProductListingQuantity(product_doc_id: ID!, inventory_count: Int!): InventoryProduct!
+    deleteMyProductListing(product_doc_id: ID!): Boolean!
+    reviewProductListing(
+      product_doc_id: ID!
+      status: ProductListingReviewStatus!
+      notes: String
+    ): InventoryProduct!
     updateInventoryProduct(product_doc_id: ID!, input: UpdateInventoryProductInput!): InventoryProduct!
     deleteInventoryProduct(product_doc_id: ID!): Boolean!
     permanentlyDeleteInventoryProduct(product_doc_id: ID!): Boolean!

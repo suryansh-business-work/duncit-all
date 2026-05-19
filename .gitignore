@@ -16,9 +16,7 @@ generated/
 # tsbuild incremental cache
 *.tsbuildinfo
 
-# per-workspace lockfiles (root npm workspaces is the source of truth)
-admin/package-lock.json
-mweb-app/package-lock.json
-server/package-lock.json
-website/package-lock.json
+# npm lockfiles (pnpm-lock.yaml is the source of truth)
+package-lock.json
+**/package-lock.json
 

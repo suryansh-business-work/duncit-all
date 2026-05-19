@@ -15,6 +15,7 @@ interface Props {
   membershipState: any;
   joining: boolean;
   backingOut: boolean;
+  selectedProductTotal: number;
   onJoinFree: () => void;
   onBackout: () => void;
   onPaidCheckout: () => void;
@@ -46,6 +47,7 @@ export default function PodActionPanel({
   membershipState,
   joining,
   backingOut,
+  selectedProductTotal,
   onJoinFree,
   onBackout,
   onPaidCheckout,
@@ -144,7 +146,7 @@ export default function PodActionPanel({
     >
       {ms?.can_join === false
         ? 'Pod is full'
-        : `Book & Pay ${priceFormat(pod.pod_amount)}`}
+        : `Book & Pay ${priceFormat(Number(pod.pod_amount || 0) + selectedProductTotal)}`}
     </Button>
   );
 }

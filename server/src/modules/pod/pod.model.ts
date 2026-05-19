@@ -18,6 +18,8 @@ export interface IPodPlaceCharge {
 export interface IPodProductRequest {
   product_id: Types.ObjectId;
   product_name: string;
+  image_url: string;
+  images: string[];
   unit_cost: number;
   quantity: number;
   total_cost: number;
@@ -90,6 +92,8 @@ const productRequestSchema = new Schema<IPodProductRequest>(
   {
     product_id: { type: Schema.Types.ObjectId, ref: 'InventoryProduct', required: true },
     product_name: { type: String, required: true, trim: true },
+    image_url: { type: String, default: '' },
+    images: { type: [String], default: [] },
     unit_cost: { type: Number, required: true, min: 0 },
     quantity: { type: Number, required: true, min: 1 },
     total_cost: { type: Number, required: true, min: 0 },

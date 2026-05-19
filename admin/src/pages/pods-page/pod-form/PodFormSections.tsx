@@ -30,7 +30,7 @@ export const SECTION_IDS = ['basic', 'when', 'meeting', 'about', 'offers', 'perk
 function getSections(podMode: PodForm['pod_mode']) {
   const productSections: SectionConfig[] = podMode === 'VIRTUAL'
     ? []
-    : [{ id: 'products', label: 'Duncit Products', body: 'DuncitProductsSection' }];
+    : [{ id: 'products', label: 'Approved Products', body: 'DuncitProductsSection' }];
   const base: SectionConfig[] = [
     { id: 'basic', label: 'Basic Information', body: 'BasicInfoSection' },
     podMode === 'VIRTUAL'

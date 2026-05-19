@@ -2,7 +2,7 @@
 FROM node:20-alpine AS builder
 WORKDIR /repo
 
-COPY package.json package-lock.json tsconfig.base.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY server/package.json ./server/
 COPY mweb-app/package.json ./mweb-app/
 COPY admin/package.json ./admin/
@@ -10,10 +10,11 @@ COPY website/package.json ./website/
 COPY partners/partners-app/package.json ./partners/partners-app/
 COPY partners/partners-website/package.json ./partners/partners-website/
 
-RUN npm ci --no-audit --no-fund
+RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
+RUN pnpm install --frozen-lockfile
 
 COPY partners/partners-website ./partners/partners-website
-RUN npm run build --workspace=partners-website
+RUN pnpm --filter partners-website build
 
 # --- runner ---
 FROM nginx:alpine AS runner

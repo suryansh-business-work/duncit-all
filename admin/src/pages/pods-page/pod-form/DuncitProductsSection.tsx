@@ -58,7 +58,7 @@ export default function DuncitProductsSection({ products }: Props) {
           <Stack key={index} direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems="flex-start">
             <TextField
               select
-              label="Product"
+              label="Approved product"
               value={item.product_id}
               onChange={(event) => updateRow(index, 'product_id', event.target.value)}
               fullWidth
@@ -99,7 +99,7 @@ export default function DuncitProductsSection({ products }: Props) {
       })}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems={{ sm: 'center' }}>
         <Button startIcon={<AddIcon />} onClick={addRow} disabled={products.length === 0} variant="outlined">
-          Add Product
+          Add approved product
         </Button>
         <Typography variant="subtitle1">Total product price: {currency.format(total)}</Typography>
       </Stack>

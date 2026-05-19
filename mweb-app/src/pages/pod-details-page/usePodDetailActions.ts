@@ -20,6 +20,7 @@ interface Args {
   following: boolean;
   followingIds: string[];
   referralFromUrl: string | null;
+  selectedProducts: Array<{ product_id: string; quantity: number }>;
   refetch: () => Promise<unknown>;
   navigate: NavigateFunction;
 }
@@ -32,6 +33,7 @@ export function usePodDetailActions({
   following,
   followingIds,
   referralFromUrl,
+  selectedProducts,
   refetch,
   navigate,
 }: Args) {
@@ -143,15 +145,19 @@ export function usePodDetailActions({
 
   const onPaidCheckout = () => {
     if (!pod) return;
+    const byId = new Map<string, any>((pod.product_requests ?? []).map((item: any) => [item.product_id, item]));
+    const selectedTotal = selectedProducts.reduce((sum, item) => sum + Number(byId.get(item.product_id)?.unit_cost ?? 0) * item.quantity, 0);
+    const amount = Number(pod.pod_amount) + selectedTotal;
     const params = new URLSearchParams({
       title: pod.pod_title || '',
-      amount: String(Number(pod.pod_amount) || 0),
+      amount: String(amount || 0),
     });
     navigate(`/checkout/${pod.id}?${params.toString()}`, {
       state: {
         pod_id: pod.id,
         pod_title: pod.pod_title,
-        amount: Number(pod.pod_amount) || 0,
+        amount,
+        selected_products: selectedProducts,
         description: `Pod booking · ${pod.pod_title}`,
       },
     });

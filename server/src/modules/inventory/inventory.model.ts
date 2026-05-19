@@ -3,6 +3,8 @@ import { Schema, model, type Document, type Types } from 'mongoose';
 export type InventoryStatus = 'ACTIVE' | 'DRAFT' | 'OUT_OF_STOCK' | 'ARCHIVED';
 export type InventoryVisibility = 'PUBLIC' | 'INTERNAL';
 export type ProductType = 'CONSUMABLE' | 'MERCHANDISE' | 'EQUIPMENT';
+export type ProductListingReviewStatus = 'PENDING' | 'APPROVED' | 'DENIED';
+export type ProductListingDeliveryTarget = 'HOST' | 'VENUE';
 export type UnitType =
   | 'BOTTLE'
   | 'PIECE'
@@ -59,6 +61,20 @@ export interface IInventoryProduct extends Document {
   host_request_allowed: boolean;
   delivery_available: boolean;
   delivery_charge: number;
+
+  listing_review_status: ProductListingReviewStatus;
+  listing_review_notes: string;
+  listing_submitted_by_id: string | null;
+  listing_submitted_by_name: string;
+  listing_reviewed_by_id: string | null;
+  listing_reviewed_by_name: string;
+  is_duncit_delivery_partner: boolean;
+  size_label: string;
+  height_cm: number;
+  weight_kg: number;
+  color: string;
+  commission_pct: number;
+  delivery_target: ProductListingDeliveryTarget;
 
   is_active: boolean;
 
@@ -133,6 +149,25 @@ const productSchema = new Schema<IInventoryProduct>(
     host_request_allowed: { type: Boolean, default: true },
     delivery_available: { type: Boolean, default: false },
     delivery_charge: { type: Number, default: 0, min: 0 },
+
+    listing_review_status: {
+      type: String,
+      enum: ['PENDING', 'APPROVED', 'DENIED'],
+      default: 'APPROVED',
+      index: true,
+    },
+    listing_review_notes: { type: String, default: '', trim: true, maxlength: 1000 },
+    listing_submitted_by_id: { type: String, default: null },
+    listing_submitted_by_name: { type: String, default: '' },
+    listing_reviewed_by_id: { type: String, default: null },
+    listing_reviewed_by_name: { type: String, default: '' },
+    is_duncit_delivery_partner: { type: Boolean, default: false },
+    size_label: { type: String, default: '', trim: true, maxlength: 120 },
+    height_cm: { type: Number, default: 0, min: 0 },
+    weight_kg: { type: Number, default: 0, min: 0 },
+    color: { type: String, default: '', trim: true, maxlength: 80 },
+    commission_pct: { type: Number, default: 5, min: 5, max: 50 },
+    delivery_target: { type: String, enum: ['HOST', 'VENUE'], default: 'HOST' },
 
     is_active: { type: Boolean, default: true },
 

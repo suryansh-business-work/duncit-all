@@ -8,8 +8,8 @@ import {
 } from './settings.model';
 
 const toAppPub = (d: any) => ({
-  jwt_expires_in: d?.jwt_expires_in ?? '7d',
-  jwt_no_expiry: !!d?.jwt_no_expiry,
+  jwt_expires_in: d?.jwt_expires_in ?? null,
+  jwt_no_expiry: true,
   date_format: d?.date_format ?? 'dd MMM yyyy',
   time_format: d?.time_format ?? 'hh:mm a',
   updated_at: d?.updated_at?.toISOString?.() ?? '',
@@ -206,7 +206,7 @@ export const settingsService = {
   async seedDefaults() {
     await AppSettingsModel.updateOne(
       { singleton_key: 'app' },
-      { $setOnInsert: { jwt_expires_in: '7d', jwt_no_expiry: false } },
+      { $setOnInsert: { jwt_expires_in: null, jwt_no_expiry: true } },
       { upsert: true }
     );
     await BrandingModel.updateOne(

@@ -3,30 +3,31 @@
     <mj-title>We received your question</mj-title>
     <mj-attributes>
       <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
-      <mj-text color="#1f2937" line-height="1.6" font-size="15px" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+      <mj-button background-color="#3b82f6" color="#ffffff" border-radius="8px" font-weight="700" />
     </mj-attributes>
   </mj-head>
-  <mj-body background-color="#f7f7fb">
-    <mj-section padding="24px 0">
+  <mj-body background-color="#f4f4f4">
+    <mj-section padding="20px 0 0 0">
       <mj-column>
         <mj-image src="{{logo_url}}" alt="{{app_name}}" width="160px" align="center" padding="0" />
       </mj-column>
     </mj-section>
-    <mj-section background-color="#ffffff" padding="32px 24px" border-radius="12px">
+    <mj-section background-color="#ffffff" padding="20px">
       <mj-column>
-        <mj-text font-size="22px" font-weight="700" color="#FF4D4F">Thanks for asking 🙌</mj-text>
+        <mj-text font-size="22px" font-weight="bold" color="#222222">Thanks for asking</mj-text>
         <mj-text>
           Your question has been added to the {{app_name}} FAQ queue. If we publish an answer, you'll see
-          it on our help center — and we may also reply to this email.
+          it on our help center and we may also reply to this email.
         </mj-text>
-        <mj-text font-weight="600" color="#1f2937">Your question</mj-text>
-        <mj-text color="#374151" background-color="#f3f4f6" padding="12px">{{question}}</mj-text>
-        <mj-text color="#6b7280" font-size="12px">Need a faster answer? Email {{support_email}}.</mj-text>
+        <mj-text font-weight="bold" color="#222222">Your question</mj-text>
+        <mj-text color="#555555" background-color="#f4f4f4" padding="12px">{{question}}</mj-text>
+        <mj-text color="#888888" font-size="12px">Need a faster answer? Email {{support_email}}.</mj-text>
       </mj-column>
     </mj-section>
-    <mj-section padding="16px 0">
+    <mj-section padding="16px 0 24px 0">
       <mj-column>
-        <mj-text align="center" color="#9ca3af" font-size="12px">© {{app_name}}</mj-text>
+        <mj-text align="center" color="#888888" font-size="12px">&copy; {{app_name}}. You're receiving this because you contacted us.</mj-text>
       </mj-column>
     </mj-section>
   </mj-body>

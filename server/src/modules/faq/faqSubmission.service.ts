@@ -3,6 +3,7 @@ import { GraphQLError } from 'graphql';
 import { FaqSubmissionModel, type IFaqSubmission, type FaqSubmissionStatus } from './faqSubmission.model';
 import { sendEmail } from '../../services/email/email.service';
 import { settingsService } from '../settings/settings.service';
+import { getUrlConfigs } from '../../config/url-configs';
 
 const submitSchema = yup.object({
   question: yup.string().required('Question is required').min(5).max(2000),
@@ -46,6 +47,7 @@ export const faqSubmissionService = {
     if (payload.email) {
       try {
         const branding = await settingsService.getBranding();
+        const urlConfigs = await getUrlConfigs();
         await sendEmail({
           to: payload.email,
           subject: `We received your question — ${branding?.app_name || 'Duncit'}`,
@@ -54,8 +56,7 @@ export const faqSubmissionService = {
             question: payload.question,
             app_name: branding?.app_name || 'Duncit',
             logo_url: branding?.logo_url || 'https://duncit.com/duncit-logo.svg',
-            support_email:
-              branding?.support_email || process.env.SUPPORT_EMAIL || 'support@duncit.com',
+            support_email: branding?.support_email || urlConfigs.supportEmail,
           },
         });
       } catch (e) {

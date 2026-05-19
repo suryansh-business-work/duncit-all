@@ -13,6 +13,8 @@
  *   MS_GRAPH_CLIENT_ID, MS_GRAPH_CLIENT_SECRET, MS_GRAPH_TENANT_ID
  */
 
+import { urlConfigs } from '../../config/url-configs';
+
 export const MEETING_PLATFORMS = [
   { value: 'GOOGLE_MEET', label: 'Google Meet' },
   { value: 'ZOOM', label: 'Zoom' },
@@ -52,8 +54,7 @@ interface GenerateMeetingLinkResponse {
 export async function generateMeetingLink(input: GenerateMeetingLinkInput): Promise<string> {
   const endpoint =
     (typeof window !== 'undefined' && (window as any).__GRAPHQL_URL__) ||
-    (import.meta as any).env?.VITE_GRAPHQL_URL ||
-    '/graphql';
+    urlConfigs.graphqlUrl;
 
   const query = /* GraphQL */ `
     mutation GenerateMeetingLink(

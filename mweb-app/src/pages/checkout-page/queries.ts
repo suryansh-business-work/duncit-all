@@ -58,6 +58,8 @@ export const DUMMY_CHECKOUT = gql`
       total
       currency_symbol
       status
+      paid_at
+      created_at
     }
   }
 `;
@@ -71,7 +73,8 @@ export interface CheckoutState {
 
 export interface CheckoutForm {
   email: string;
-  phone: string;
+  phone_extension: string;
+  phone_number: string;
   billing_address: string;
   method: string;
   simulate_failure: boolean;

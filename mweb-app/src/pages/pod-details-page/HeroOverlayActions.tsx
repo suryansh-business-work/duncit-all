@@ -1,4 +1,4 @@
-import { Stack, IconButton } from '@mui/material';
+import { CircularProgress, Stack, IconButton } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShareIcon from '@mui/icons-material/Share';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
@@ -9,6 +9,7 @@ import BookmarkIcon from '@mui/icons-material/Bookmark';
 interface Props {
   onBack: () => void;
   saved: boolean;
+  saveLoading?: boolean;
   following: boolean;
   onToggleFollow: () => void;
   onToggleSave: () => void;
@@ -26,7 +27,7 @@ const overlayBtn = {
   '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
 };
 
-export default function HeroOverlayActions({ onBack, saved, following, onToggleFollow, onToggleSave, onShare }: Props) {
+export default function HeroOverlayActions({ onBack, saved, saveLoading, following, onToggleFollow, onToggleSave, onShare }: Props) {
   return (
     <Stack
       direction="row"
@@ -58,9 +59,10 @@ export default function HeroOverlayActions({ onBack, saved, following, onToggleF
           size="small"
           aria-label={saved ? 'Saved' : 'Save'}
           onClick={onToggleSave}
+          disabled={saveLoading}
           sx={overlayBtn}
         >
-          {saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
+          {saveLoading ? <CircularProgress size={18} color="inherit" /> : saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
         </IconButton>
         <IconButton size="small" aria-label="Share" onClick={onShare} sx={overlayBtn}>
           <ShareIcon fontSize="small" />

@@ -7,6 +7,7 @@ import {
   sendInterviewApplicantEmail,
   sendInterviewScheduledEmail,
 } from '../../services/email/email.service';
+import { getUrlConfigs } from '../../config/url-configs';
 
 const toPub = (i: IInterview) => ({
   id: String(i._id),
@@ -131,6 +132,7 @@ export const interviewService = {
     const adminTo = await adminEmails();
     if (adminTo.length > 0) {
       try {
+        const urlConfigs = await getUrlConfigs();
         await sendInterviewAdminEmail({
           to: adminTo.join(','),
           type: typeLabel,
@@ -140,7 +142,7 @@ export const interviewService = {
           business,
           about: doc.about,
           slots: slotsText,
-          adminLink: `${process.env.ADMIN_URL || 'http://localhost:5174'}/interview-requests`,
+          adminLink: `${urlConfigs.adminUrl}/interview-requests`,
         });
       } catch (e) {
          

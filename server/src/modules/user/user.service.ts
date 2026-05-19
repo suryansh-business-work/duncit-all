@@ -173,12 +173,7 @@ async function startTwilioRecordedBridge(actionId: string, target: string) {
 
 async function signToken(payload: AuthUser): Promise<string> {
   const secret = process.env.JWT_SECRET || 'dev-secret';
-  const settings = await settingsService.getAppSettings();
-  const opts: SignOptions = {};
-  if (!settings.jwt_no_expiry && settings.jwt_expires_in) {
-    opts.expiresIn = settings.jwt_expires_in as SignOptions['expiresIn'];
-  }
-  return jwt.sign(payload, secret, opts);
+  return jwt.sign(payload, secret);
 }
 
 async function toPublic(u: any) {

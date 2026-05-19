@@ -19,6 +19,7 @@ import FaqsPage from '../pages/FaqsPage';
 import PolicyPage from '../pages/PolicyPage';
 import PodIdeasPage from '../pages/PodIdeasPage';
 import PodPlansPage from '../pages/PodPlansPage';
+import PodHistoryPage from '../pages/PodHistoryPage';
 import SupportPage from '../pages/SupportPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import ExplorePage from '../pages/ExplorePage';
@@ -72,6 +73,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Props
       <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />
       <Route path="/pod-ideas" element={withAuth(<PodIdeasPage />)} />
       <Route path="/pod-plans" element={withAuth(<PodPlansPage />)} />
+      <Route path="/pod-history" element={withAuth(<PodHistoryPage />)} />
       <Route path="/support" element={withAuth(<SupportPage />)} />
       <Route path="/signup-survey" element={withAuth(<SignupSurveyPage />)} />
       <Route path="/signup-whatsapp" element={withAuth(<SignupWhatsappPage />)} />

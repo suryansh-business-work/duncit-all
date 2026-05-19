@@ -5,7 +5,8 @@ const base = {
   type: 'HOST' as const,
   applicant_name: 'Jane Doe',
   applicant_email: 'jane@example.com',
-  applicant_phone: '9876543210',
+  applicant_phone_extension: '+91',
+  applicant_phone_number: '9876543210',
   business_name: '',
   business_address: '',
   city: '',
@@ -25,7 +26,7 @@ describe('interviewBookingFormSchema', () => {
   });
   it('rejects phone with letters', async () => {
     const error = await interviewBookingFormSchema
-      .validate({ ...base, applicant_phone: 'abc' }, { abortEarly: false })
+      .validate({ ...base, applicant_phone_number: 'abc' }, { abortEarly: false })
       .catch((e) => e);
     expect(error.errors.join(' ')).toMatch(/digits/i);
   });
@@ -61,6 +62,7 @@ describe('interviewBookingFormSchema', () => {
 describe('toInterviewBookingInput', () => {
   it('serialises slots to ISO strings', () => {
     const input = toInterviewBookingInput(base);
+    expect(input.applicant_phone).toBe('+91 9876543210');
     expect(input.preferred_slots[0].start.endsWith('Z')).toBe(true);
   });
 });

@@ -1,10 +1,14 @@
 import { ReactNode } from 'react';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
-import { Box, Button, Container, Stack, Typography } from '@mui/material';
+import { Box, Button, Container, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
+import { useColorMode } from '../ColorModeContext';
 
 export default function PartnerShell({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
+  const colorMode = useColorMode();
   const logout = () => {
     localStorage.removeItem('token');
     navigate('/login', { replace: true });
@@ -22,7 +26,14 @@ export default function PartnerShell({ children }: { children: ReactNode }) {
                 <Typography variant="caption" color="text.secondary" fontWeight={700}>Host and venue console</Typography>
               </Box>
             </Stack>
-            <Button onClick={logout} startIcon={<LogoutIcon />} variant="outlined">Logout</Button>
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Tooltip title={`Switch to ${colorMode.mode === 'light' ? 'dark' : 'light'} mode`}>
+                <IconButton onClick={colorMode.toggle} color="primary" sx={{ border: 1, borderColor: 'divider' }}>
+                  {colorMode.mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+                </IconButton>
+              </Tooltip>
+              <Button onClick={logout} startIcon={<LogoutIcon />} variant="outlined" sx={{ minHeight: 40 }}>Logout</Button>
+            </Stack>
           </Stack>
         </Container>
       </Box>

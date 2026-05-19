@@ -62,6 +62,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     description: String
     contact_email: String!
     contact_phone: String
+    contact_phone_extension: String!
+    contact_phone_number: String!
     billing_address: String!
     checkout_url: String!
     simulate_failure: Boolean

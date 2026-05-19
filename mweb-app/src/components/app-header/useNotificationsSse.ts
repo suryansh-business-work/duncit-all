@@ -1,4 +1,5 @@
 import { useEffect, useRef } from 'react';
+import { urlConfigs } from '../../config/url-configs';
 
 /**
  * Subscribes to the server's notification SSE channel for the current user
@@ -18,10 +19,7 @@ export function useNotificationsSse(onEvent: () => void) {
     const token = localStorage.getItem('token');
     if (!token) return;
 
-    const graphqlUrl =
-      (import.meta.env.VITE_GRAPHQL_URL as string | undefined) ||
-      'http://localhost:2001/graphql';
-    const apiBase = graphqlUrl.replace(/\/graphql\/?$/, '');
+    const apiBase = urlConfigs.apiBaseUrl;
     const url = `${apiBase.replace(/\/$/, '')}/notifications/stream?token=${encodeURIComponent(
       token
     )}`;

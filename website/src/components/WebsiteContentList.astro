@@ -1,11 +1,13 @@
 ---
+import { urlConfigs } from '../config/url-configs';
+
 interface Props {
   type: 'CAREERS' | 'NEWSROOM' | 'BLOG';
   variant?: 'jobs' | 'news' | 'cards';
 }
 
 const { type, variant = 'cards' } = Astro.props;
-const graphqlUrl = import.meta.env.PUBLIC_GRAPHQL_URL || '';
+const graphqlUrl = urlConfigs.graphqlUrl;
 ---
 
 <div
@@ -19,6 +21,8 @@ const graphqlUrl = import.meta.env.PUBLIC_GRAPHQL_URL || '';
 </div>
 
 <script>
+  import { urlConfigs } from '../config/url-configs';
+
   const query = `
     query PublicWebsiteContent($type: WebsitePageType!) {
       publicWebsiteContent(type: $type) {
@@ -67,9 +71,7 @@ const graphqlUrl = import.meta.env.PUBLIC_GRAPHQL_URL || '';
 
   const graphQlUrlFor = (root: HTMLElement) => {
     if (root.dataset.graphqlUrl) return root.dataset.graphqlUrl;
-    return location.hostname === 'localhost' || location.hostname === '127.0.0.1'
-      ? 'http://localhost:2001/graphql'
-      : 'https://server.duncit.com/graphql';
+    return urlConfigs.graphqlUrl;
   };
 
   const renderJobs = (items: any[]) => `

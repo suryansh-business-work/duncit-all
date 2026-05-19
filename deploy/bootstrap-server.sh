@@ -28,10 +28,18 @@ systemctl enable --now docker
 echo "[2/6] Create /opt/duncit"
 mkdir -p /opt/duncit
 [ -f /opt/duncit/server.env ] || cat > /opt/duncit/server.env <<'EOF'
+IS_DEVELOPMENT=false
 NODE_ENV=production
 PORT=2001
 MONGO_URI=
 JWT_SECRET=
+SERVER_URL=https://server.duncit.com
+GRAPHQL_URL=https://server.duncit.com/graphql
+ADMIN_URL=https://admin.duncit.com
+MWEB_BASE_URL=https://mweb.duncit.com
+PUBLIC_APP_URL=https://mweb.duncit.com
+PUBLIC_SITE_URL=https://duncit.com
+SUPPORT_EMAIL=support@duncit.com
 SMTP_HOST=
 SMTP_PORT=587
 SMTP_USER=

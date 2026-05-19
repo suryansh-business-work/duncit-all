@@ -45,6 +45,12 @@ export function usePodDetailActions({
   const [snack, setSnack] = useState<string | null>(null);
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [confettiOpen, setConfettiOpen] = useState(false);
+  const [savePending, setSavePending] = useState(false);
+  const [localSaved, setLocalSaved] = useState<boolean | null>(null);
+
+  useEffect(() => {
+    if (!savePending) setLocalSaved(null);
+  }, [saved, savePending]);
 
   useEffect(() => {
     if (id) incHits({ variables: { id } }).catch(() => {});
@@ -63,6 +69,9 @@ export function usePodDetailActions({
 
   const onToggleSave = async () => {
     if (!pod) return;
+    const nextSaved = !(localSaved ?? saved);
+    setLocalSaved(nextSaved);
+    setSavePending(true);
     try {
       await toggleSavedPod({
         variables: { pod_doc_id: pod.id },
@@ -70,13 +79,16 @@ export function usePodDetailActions({
           toggleSavedPod: {
             __typename: 'SavedPodState',
             pod_id: pod.id,
-            saved: !saved,
-            saved_pod_ids: saved ? savedIds.filter((x) => x !== pod.id) : [...savedIds, pod.id],
+            saved: nextSaved,
+            saved_pod_ids: nextSaved ? [...savedIds, pod.id] : savedIds.filter((x) => x !== pod.id),
           },
         },
       });
     } catch (e: any) {
+      setLocalSaved(saved);
       setSnack(e.message);
+    } finally {
+      setSavePending(false);
     }
   };
 
@@ -168,7 +180,9 @@ export function usePodDetailActions({
   return {
     backoutOpen,
     backoutState,
+    displaySaved: localSaved ?? saved,
     joinState,
+    savePending,
     followState,
     unfollowState,
     snack,

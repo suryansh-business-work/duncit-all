@@ -13,6 +13,7 @@ function readSavedClubs() {
 
 export default function useSavedClub(clubId: string) {
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
 
   useEffect(() => {
     if (!clubId) return;
@@ -21,6 +22,7 @@ export default function useSavedClub(clubId: string) {
 
   const toggleSaved = () => {
     const nextSaved = !saved;
+    setSaving(true);
     const savedClubs = readSavedClubs();
     const updated = nextSaved
       ? Array.from(new Set([...savedClubs, clubId]))
@@ -28,7 +30,8 @@ export default function useSavedClub(clubId: string) {
     localStorage.setItem(SAVED_CLUBS_KEY, JSON.stringify(updated));
     setSaved(nextSaved);
     notify(nextSaved ? 'Saved' : 'Removed from saved', 'success');
+    window.setTimeout(() => setSaving(false), 180);
   };
 
-  return { saved, toggleSaved };
+  return { saved, saving, toggleSaved };
 }

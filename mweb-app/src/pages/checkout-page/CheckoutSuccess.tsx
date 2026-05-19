@@ -1,20 +1,68 @@
+import { gql, useLazyQuery } from '@apollo/client';
 import { useState } from 'react';
-import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import AppleIcon from '@mui/icons-material/Apple';
+import DownloadIcon from '@mui/icons-material/Download';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import GoogleIcon from '@mui/icons-material/Google';
 import { alpha, useTheme } from '@mui/material/styles';
 import PaymentLottie from '../../components/PaymentLottie';
 import ConfettiOverlay from '../../components/ConfettiOverlay';
+import { notify } from '../../components/notify';
 import { formatMoney } from './checkoutMath';
+import { parseApiError } from '../../utils/parseApiError';
+import { useDateFormat } from '../../utils/dateFormat';
+
+const INVOICE_PDF = gql`
+  query CheckoutInvoicePdf($id: ID!) {
+    paymentInvoicePdfBase64(payment_doc_id: $id)
+  }
+`;
 
 interface Props {
   payment: any;
+  pod?: any;
   onHome: () => void;
   onProfile: () => void;
 }
 
-export default function CheckoutSuccess({ payment, onHome, onProfile }: Props) {
+export default function CheckoutSuccess({ payment, pod, onHome, onProfile }: Props) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const [confetti, setConfetti] = useState(true);
+  const [invoiceError, setInvoiceError] = useState<string | null>(null);
+  const [loadInvoice, { loading: invoiceLoading }] = useLazyQuery(INVOICE_PDF, { fetchPolicy: 'network-only' });
+  const { formatDateTime } = useDateFormat();
+  const paidAt = payment.paid_at || payment.created_at;
+
+  const downloadInvoice = async () => {
+    if (!payment.invoice_no) return;
+    setInvoiceError(null);
+    try {
+      const { data } = await loadInvoice({ variables: { id: payment.id } });
+      const b64 = data?.paymentInvoicePdfBase64;
+      if (!b64) throw new Error('Invoice not available');
+      const link = document.createElement('a');
+      link.href = `data:application/pdf;base64,${b64}`;
+      link.download = `invoice-${String(payment.invoice_no).replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`;
+      link.click();
+    } catch (error) {
+      setInvoiceError(parseApiError(error));
+    }
+  };
+
+  const openGoogleCalendar = () => {
+    const start = pod?.pod_date_time ? new Date(pod.pod_date_time) : new Date();
+    const end = pod?.pod_end_date_time ? new Date(pod.pod_end_date_time) : new Date(start.getTime() + 60 * 60 * 1000);
+    const dates = `${start.toISOString().replace(/[-:]/g, '').replace('.000', '')}/${end.toISOString().replace(/[-:]/g, '').replace('.000', '')}`;
+    const params = new URLSearchParams({ action: 'TEMPLATE', text: pod?.pod_title || 'Duncit Pod', dates, details: 'Your Duncit booking is confirmed.' });
+    window.open(`https://calendar.google.com/calendar/render?${params.toString()}`, '_blank', 'noopener,noreferrer');
+  };
+
+  const requestAppleWallet = () => {
+    notify('Apple Wallet pass is not available yet. Invoice download is separate below.', 'info');
+  };
+
   return (
     <Box sx={{ maxWidth: 540, mx: 'auto', minHeight: '100%', display: 'grid', alignItems: 'center', p: 1 }}>
       <ConfettiOverlay open={confetti} onClose={() => setConfetti(false)} />
@@ -29,11 +77,35 @@ export default function CheckoutSuccess({ payment, onHome, onProfile }: Props) {
           <Box sx={{ mt: 3, p: 2, borderRadius: 4, bgcolor: isDark ? 'rgba(255,255,255,0.09)' : alpha(theme.palette.background.paper, 0.74), textAlign: 'left', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
           <Stack spacing={0.8}>
             <Row label="Amount paid" value={formatMoney(payment.currency_symbol, payment.total)} bold />
+            {paidAt && <Row label="Paid on" value={formatDateTime(paidAt)} />}
             <Row label="Payment ID" value={payment.payment_id} mono />
             {payment.invoice_no && <Row label="Invoice" value={payment.invoice_no} mono />}
           </Stack>
           </Box>
+          {pod && (
+            <Box sx={{ mt: 2, p: 2, borderRadius: 4, bgcolor: isDark ? 'rgba(255,255,255,0.07)' : alpha(theme.palette.primary.light, 0.14), textAlign: 'left', border: '1px solid', borderColor: 'divider' }}>
+              <Stack spacing={1.25}>
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <EventAvailableIcon color="primary" />
+                  <Box sx={{ minWidth: 0 }}>
+                    <Typography fontWeight={900} noWrap>{pod.pod_title}</Typography>
+                    <Typography variant="caption" color="text.secondary">{formatDateTime(pod.pod_date_time)}</Typography>
+                  </Box>
+                </Stack>
+                <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1}>
+                  <Button fullWidth variant="contained" startIcon={<AppleIcon />} onClick={requestAppleWallet} sx={{ bgcolor: '#050505', color: '#fff', borderRadius: 3, '&:hover': { bgcolor: '#171717' } }}>
+                    Add to Apple Wallet
+                  </Button>
+                  <Button fullWidth variant="contained" startIcon={<GoogleIcon />} onClick={openGoogleCalendar} sx={{ bgcolor: '#1f2937', color: '#fff', borderRadius: 3, '&:hover': { bgcolor: '#111827' } }}>
+                    Add to Google Wallet
+                  </Button>
+                </Stack>
+              </Stack>
+            </Box>
+          )}
+          {invoiceError && <Alert severity="error" sx={{ mt: 2 }}>{invoiceError}</Alert>}
           <Stack direction="row" spacing={1.5} sx={{ mt: 4, justifyContent: 'center' }}>
+            <Button variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading} sx={{ borderRadius: 999 }}>Invoice</Button>
             <Button variant="outlined" onClick={onHome} sx={{ borderRadius: 999 }}>Home</Button>
             <Button variant="contained" onClick={onProfile} sx={{ borderRadius: 999, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>My Profile</Button>
           </Stack>

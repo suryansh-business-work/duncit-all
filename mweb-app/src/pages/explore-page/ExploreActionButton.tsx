@@ -1,18 +1,20 @@
-import { IconButton, Stack, Typography } from '@mui/material';
+import { CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 
 interface Props {
   icon: React.ReactNode;
   label: string;
   onClick: () => void;
   active?: boolean;
+  loading?: boolean;
   tooltip?: string;
 }
 
-export default function ExploreActionButton({ icon, label, onClick, active, tooltip }: Props) {
+export default function ExploreActionButton({ icon, label, onClick, active, loading, tooltip }: Props) {
   return (
     <Stack alignItems="center" spacing={0.25}>
       <IconButton
         onClick={onClick}
+        disabled={loading}
         title={tooltip}
         sx={{
           width: 42,
@@ -23,7 +25,7 @@ export default function ExploreActionButton({ icon, label, onClick, active, tool
           '&:hover': { bgcolor: active ? 'rgba(255,79,115,0.94)' : 'rgba(0,0,0,0.5)' },
         }}
       >
-        {icon}
+        {loading ? <CircularProgress size={19} color="inherit" /> : icon}
       </IconButton>
       <Typography variant="caption" sx={{ color: 'common.white', fontWeight: 800, textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>
         {label}

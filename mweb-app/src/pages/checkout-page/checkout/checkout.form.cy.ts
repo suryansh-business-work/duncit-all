@@ -19,7 +19,7 @@ describe('Checkout form schema', () => {
         {
           ...checkoutInitialValues,
           email: 'jane@example.com',
-          phone: '98abcde',
+          phone_number: '98abcde',
           billing_address: '221B Baker Street, London NW1',
         },
         { abortEarly: false },
@@ -35,7 +35,7 @@ describe('Checkout form schema', () => {
         {
           ...checkoutInitialValues,
           email: 'not-an-email',
-          phone: '9876543210',
+          phone_number: '9876543210',
           billing_address: '221B Baker Street, London NW1',
         },
         { abortEarly: false },
@@ -48,7 +48,8 @@ describe('Checkout form schema', () => {
   it('accepts a fully valid payload and normalises through toCheckoutContact', async () => {
     const values = {
       email: ' jane@example.com ',
-      phone: '9876543210',
+      phone_extension: '+91',
+      phone_number: '9876543210',
       billing_address: '221B Baker Street, London NW1',
       method: 'DUMMY_UPI',
       simulate_failure: false,
@@ -57,7 +58,8 @@ describe('Checkout form schema', () => {
     expect(parsed.email).to.equal('jane@example.com');
     const payload = toCheckoutContact(parsed);
     expect(payload.contact_email).to.equal('jane@example.com');
-    expect(payload.contact_phone).to.equal('9876543210');
+    expect(payload.contact_phone_extension).to.equal('+91');
+    expect(payload.contact_phone_number).to.equal('9876543210');
     expect(payload.billing_address).to.equal('221B Baker Street, London NW1');
     expect(payload.simulate_failure).to.equal(false);
   });
@@ -67,7 +69,8 @@ describe('Checkout form schema', () => {
       .validate(
         {
           email: 'jane@example.com',
-          phone: '9876543210',
+          phone_extension: '+91',
+          phone_number: '9876543210',
           billing_address: '221B Baker Street, London NW1',
           method: 'BITCOIN' as any,
           simulate_failure: false,

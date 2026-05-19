@@ -1,15 +1,5 @@
 import { Box } from '@mui/material';
-import PeopleAltIcon from '@mui/icons-material/PeopleAlt';
-import EmojiPeopleIcon from '@mui/icons-material/EmojiPeople';
-import PersonIcon from '@mui/icons-material/Person';
-import GroupsIcon from '@mui/icons-material/Groups';
-import PetsIcon from '@mui/icons-material/Pets';
-import PetsOutlinedIcon from '@mui/icons-material/PetsOutlined';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FitnessCenterIcon from '@mui/icons-material/FitnessCenter';
-import SportsSoccerIcon from '@mui/icons-material/SportsSoccer';
-import RestaurantIcon from '@mui/icons-material/Restaurant';
-import ParkIcon from '@mui/icons-material/Park';
+import * as MuiIcons from '@mui/icons-material';
 import type { SvgIconComponent } from '@mui/icons-material';
 
 const isImageIcon = (value: string | null | undefined) => {
@@ -17,20 +7,8 @@ const isImageIcon = (value: string | null | undefined) => {
   return /^data:image\//i.test(next) || /^https?:\/\//i.test(next) || next.startsWith('/');
 };
 
-const MUI_ICON_MAP: Record<string, SvgIconComponent> = {
-  PeopleAlt: PeopleAltIcon,
-  EmojiPeople: EmojiPeopleIcon,
-  Person: PersonIcon,
-  Group: GroupsIcon,
-  Groups: GroupsIcon,
-  Pets: PetsIcon,
-  PetsOutlined: PetsOutlinedIcon,
-  Favorite: FavoriteIcon,
-  FitnessCenter: FitnessCenterIcon,
-  SportsSoccer: SportsSoccerIcon,
-  Restaurant: RestaurantIcon,
-  Park: ParkIcon,
-};
+const resolveMuiIcon = (name: string) =>
+  (MuiIcons as Record<string, SvgIconComponent>)[name] || null;
 
 export function renderSuperCategoryMark(icon: string | null | undefined) {
   const next = (icon ?? '').trim();
@@ -45,7 +23,7 @@ export function renderSuperCategoryMark(icon: string | null | undefined) {
       />
     );
   }
-  const MuiIcon = MUI_ICON_MAP[next];
+  const MuiIcon = resolveMuiIcon(next);
   if (MuiIcon) return <MuiIcon sx={{ fontSize: 18, flex: '0 0 auto' }} />;
   return next.length <= 2 ? (
     <Box component="span" sx={{ lineHeight: 1, flex: '0 0 auto' }}>

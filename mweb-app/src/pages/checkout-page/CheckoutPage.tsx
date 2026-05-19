@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { useFormik } from 'formik';
-import { Alert, Backdrop, Box, Button, Chip, CircularProgress, IconButton, Skeleton, Stack, Typography } from '@mui/material';
+import { Alert, Backdrop, Box, Button, Chip, IconButton, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { alpha, useTheme } from '@mui/material/styles';
 import PaymentLottie from '../../components/PaymentLottie';
@@ -12,6 +12,7 @@ import CheckoutSuccess from './CheckoutSuccess';
 import OrderSummaryCard from './OrderSummaryCard';
 import PaymentDetailsCard from './PaymentDetailsCard';
 import { CHECKOUT_ME, CHECKOUT_POD, DUMMY_CHECKOUT, PUBLIC_FINANCE, type CheckoutState } from './queries';
+import { parseApiError } from '../../utils/parseApiError';
 
 export default function CheckoutPage() {
   const theme = useTheme();
@@ -61,7 +62,7 @@ export default function CheckoutPage() {
         if (payment?.status === 'SUCCESS') setSuccess(payment);
         else setError('Payment failed. Please try again.');
       } catch (submitError: any) {
-        setError(submitError?.errors?.join(', ') || submitError.message || 'Checkout failed');
+        setError(parseApiError(submitError));
       } finally {
         setSubmitting(false);
       }
@@ -74,7 +75,8 @@ export default function CheckoutPage() {
     formik.setValues((prev) => ({
       ...prev,
       email: prev.email || me.email || '',
-      phone: prev.phone || `${me.phone_extension || ''}${me.phone_number || ''}`,
+      phone_extension: prev.phone_extension || me.phone_extension || '+91',
+      phone_number: prev.phone_number || me.phone_number || '',
     }), false);
   }, [meData]);
 
@@ -85,7 +87,7 @@ export default function CheckoutPage() {
     [amount, financeData]
   );
 
-  if (success) return <CheckoutSuccess payment={success} onHome={() => navigate('/')} onProfile={() => navigate('/profile')} />;
+  if (success) return <CheckoutSuccess payment={success} pod={pod} onHome={() => navigate('/')} onProfile={() => navigate('/profile')} />;
 
   if (!checkoutPodId && !state.amount) {
     return <EmptyCheckout onHome={() => navigate('/')} />;
@@ -116,10 +118,12 @@ export default function CheckoutPage() {
         />
       </Stack>
       </Box>
-      <Backdrop open={submitting} sx={{ color: 'common.white', zIndex: (t) => t.zIndex.modal + 1, flexDirection: 'column', gap: 2 }}>
-        <PaymentLottie variant="processing" size={140} />
-        <Typography variant="subtitle1" fontWeight={600}>Processing your payment...</Typography>
-        <Typography variant="caption" sx={{ opacity: 0.8 }}>Please don't close this tab.</Typography>
+      <Backdrop open={submitting} sx={{ zIndex: (t) => t.zIndex.modal + 1, bgcolor: 'rgba(3,7,18,0.72)', backdropFilter: 'blur(8px)', p: 2 }}>
+        <Box sx={{ width: 'min(360px, calc(100vw - 32px))', px: 3, py: 3, borderRadius: 4, textAlign: 'center', color: '#fff', bgcolor: 'rgba(17,24,39,0.92)', border: '1px solid rgba(255,255,255,0.16)', boxShadow: '0 24px 70px rgba(0,0,0,0.42)' }}>
+          <PaymentLottie variant="processing" size={118} />
+          <Typography variant="subtitle1" fontWeight={900}>Processing your payment...</Typography>
+          <Typography variant="caption" sx={{ mt: 0.75, display: 'block', color: 'rgba(255,255,255,0.74)' }}>Please don't close this tab.</Typography>
+        </Box>
       </Backdrop>
     </Box>
   );

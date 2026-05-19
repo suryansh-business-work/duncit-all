@@ -12,6 +12,7 @@ import {
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import GroupAddIcon from '@mui/icons-material/GroupAdd';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
+import HistoryIcon from '@mui/icons-material/History';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import { Link as RouterLink } from 'react-router-dom';
 
@@ -56,6 +57,15 @@ export default function HostsVenuesCard() {
             startIcon={<AddBusinessIcon />}
           >
             Register Venue
+          </Button>
+          <Button
+            component={RouterLink}
+            to="/pod-history"
+            variant="outlined"
+            size="small"
+            startIcon={<HistoryIcon />}
+          >
+            Pod History
           </Button>
         </Stack>
       </CardContent>

@@ -7,6 +7,7 @@ import {
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import { useNavigate } from 'react-router-dom';
 import DrawerFooter from './DrawerFooter';
 import MenuItemRow from './MenuItem';
 import PoliciesSection from './PoliciesSection';
@@ -32,11 +33,16 @@ export default function ProfileDrawer({
   setPoliciesOpen,
   onLogout,
 }: Props) {
+  const navigate = useNavigate();
   const roles: string[] = me?.roles ?? [];
-  const { baseItems, hostItem, venueItem, supportItems, adminItems } = useMenuItems({
+  const { baseItems, hostItem, venueItem, supportItems } = useMenuItems({
     roles,
     onClose,
   });
+  const openProfile = () => {
+    onClose();
+    navigate('/profile');
+  };
 
   return (
     <Drawer
@@ -71,7 +77,7 @@ export default function ProfileDrawer({
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
-        <UserSummary me={me} roles={roles} />
+        <UserSummary me={me} roles={roles} onClick={openProfile} />
         <Divider />
         <Box sx={{ flex: 1, overflowY: 'auto' }}>
           <List sx={{ py: 1 }}>
@@ -96,25 +102,6 @@ export default function ProfileDrawer({
                 setPoliciesOpen={setPoliciesOpen}
                 onClose={onClose}
               />
-            </>
-          )}
-          {adminItems.length > 0 && (
-            <>
-              <Divider />
-              <Box sx={{ px: 2.5, pt: 1.5 }}>
-                <Typography
-                  variant="overline"
-                  color="text.secondary"
-                  sx={{ fontWeight: 600, letterSpacing: 0.6 }}
-                >
-                  Admin
-                </Typography>
-              </Box>
-              <List sx={{ pt: 0.5, pb: 1 }}>
-                {adminItems.map((it) => (
-                  <MenuItemRow key={it.label} item={it} />
-                ))}
-              </List>
             </>
           )}
         </Box>

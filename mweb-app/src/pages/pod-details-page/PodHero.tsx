@@ -44,6 +44,7 @@ interface Props {
   media: { url: string; type: string }[];
   title: string;
   saved: boolean;
+  saveLoading?: boolean;
   following: boolean;
   onBack: () => void;
   onToggleFollow: () => void;
@@ -55,6 +56,7 @@ export default function PodHero({
   media,
   title,
   saved,
+  saveLoading,
   following,
   onBack,
   onToggleFollow,
@@ -86,6 +88,7 @@ export default function PodHero({
         <HeroOverlayActions
           onBack={onBack}
           saved={saved}
+          saveLoading={saveLoading}
           following={following}
           onToggleFollow={onToggleFollow}
           onToggleSave={onToggleSave}
@@ -150,6 +153,7 @@ export default function PodHero({
       <HeroOverlayActions
         onBack={onBack}
         saved={saved}
+        saveLoading={saveLoading}
         following={following}
         onToggleFollow={onToggleFollow}
         onToggleSave={onToggleSave}

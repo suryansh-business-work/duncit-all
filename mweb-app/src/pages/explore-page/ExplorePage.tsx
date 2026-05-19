@@ -175,6 +175,7 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
                 club={clubsById.get(p.club_id)}
                 location={locById.get(p.location_id)}
                 saved={isSaved(p.id)}
+                savePending={pendingSave.has(p.id)}
                 onToggleSave={() => toggleSave(p.id)}
                 viewerId={data?.me?.user_id ?? null}
               />

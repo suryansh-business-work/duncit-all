@@ -1,9 +1,11 @@
 import { ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { getOrCreateDuid } from './duid';
+import { urlConfigs } from './config/url-configs';
+import { apolloErrorLink } from './utils/apolloErrorLink';
 
 const httpLink = new HttpLink({
-  uri: import.meta.env.VITE_GRAPHQL_URL || 'http://localhost:2001/graphql',
+  uri: urlConfigs.graphqlUrl,
 });
 
 const authLink = setContext((_op, { headers }) => {
@@ -19,6 +21,6 @@ const authLink = setContext((_op, { headers }) => {
 });
 
 export const apolloClient = new ApolloClient({
-  link: from([authLink, httpLink]),
+  link: from([apolloErrorLink, authLink, httpLink]),
   cache: new InMemoryCache(),
 });

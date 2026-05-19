@@ -2,6 +2,7 @@
 import Layout from '../layouts/Layout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import Footer from '../components/Footer.astro';
+import { urlConfigs } from '../config/url-configs';
 
 // Real group photos from Unsplash (free to use)
 const heroImg = 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80&auto=format&fit=crop';
@@ -11,6 +12,22 @@ const flow1 = 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=600&q
 const flow2 = 'https://images.unsplash.com/photo-1529390079861-591de354faf5?w=600&q=80&auto=format&fit=crop';
 const flow3 = 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=600&q=80&auto=format&fit=crop';
 const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&q=80&auto=format&fit=crop';
+const mwebLoginUrl = `${urlConfigs.mwebUrl}/login`;
+const mwebRegisterUrl = `${urlConfigs.mwebUrl}/register`;
+const earningPaths = [
+  {
+    icon: 'fa-store',
+    title: 'Register your venue',
+    text: 'Host the party at your place and Duncit will provide verified bookings for your available slots.',
+    href: '/register-your-venue',
+  },
+  {
+    icon: 'fa-champagne-glasses',
+    title: 'Be a Host',
+    text: 'Host bankar paisa kamao: create pods, bring the right people together, and grow with Duncit.',
+    href: '/be-a-host',
+  },
+];
 ---
 
 <Layout title="Duncit — Friends who match your energy">
@@ -30,7 +47,7 @@ const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=60
           <i class="fa-solid fa-bars text-lg"></i>
         </button>
         <div class="flex items-center gap-2">
-          <a href="https://mweb.duncit.com/login" class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary text-ink text-xs font-bold sticker hover:scale-105 transition">
+          <a href={mwebLoginUrl} class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary text-ink text-xs font-bold sticker hover:scale-105 transition">
             <i class="fa-solid fa-bolt"></i> mWeb is Live
           </a>
           <a href="#" class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="App Store">
@@ -101,13 +118,13 @@ const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=60
         </p>
         <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
           <a
-            href="https://mweb.duncit.com/login"
+            href={mwebLoginUrl}
             class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-white font-bold text-base sticker hover:scale-[1.03] transition"
           >
             <i class="fa-solid fa-right-to-bracket"></i> Sign in to launch
           </a>
           <a
-            href="https://mweb.duncit.com/register"
+            href={mwebRegisterUrl}
             class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-ink/5 text-ink font-bold text-base hover:bg-ink/10 transition"
           >
             <i class="fa-solid fa-user-plus"></i> Create an account
@@ -139,13 +156,13 @@ const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=60
         <!-- Live mWeb CTA -->
         <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mb-10">
           <a
-            href="https://mweb.duncit.com/login"
+            href={mwebLoginUrl}
             class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-tertiary text-ink font-bold text-base sticker hover:scale-[1.03] transition"
           >
             <i class="fa-solid fa-right-to-bracket"></i> Sign in to launch mWeb
           </a>
           <a
-            href="https://mweb.duncit.com/register"
+            href={mwebRegisterUrl}
             class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/10 backdrop-blur text-white font-bold text-base border border-white/30 hover:bg-white/20 transition"
           >
             <i class="fa-solid fa-user-plus"></i> Create an account
@@ -195,6 +212,35 @@ const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=60
             <h3 class="text-lg mb-1">Safe space</h3>
             <p class="text-sm text-ink-soft">Verified profiles and built-in safety tools.</p>
           </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ============== WAY OF EARNINGS ============== -->
+    <section class="bg-cream py-20 px-6">
+      <div class="max-w-6xl mx-auto grid lg:grid-cols-[0.8fr_1.2fr] gap-8 items-start">
+        <div>
+          <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider mb-5">
+            <i class="fa-solid fa-coins"></i> Way of Earnings with Duncit
+          </span>
+          <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4">Earn through real gatherings</h2>
+          <p class="text-ink-soft text-lg max-w-md">
+            Duncit connects earning opportunities to actual local demand: venues get bookings, hosts create experiences.
+          </p>
+        </div>
+        <div class="grid sm:grid-cols-2 gap-4">
+          {earningPaths.map((path) => (
+            <a href={path.href} class="group bg-white rounded-3xl p-6 sticker hover:-translate-y-1 transition block">
+              <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary inline-flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-white transition">
+                <i class={`fa-solid ${path.icon} text-2xl`}></i>
+              </div>
+              <h3 class="text-2xl text-ink mb-2">{path.title}</h3>
+              <p class="text-ink-soft leading-relaxed">{path.text}</p>
+              <span class="inline-flex items-center gap-2 mt-5 font-bold text-primary">
+                Start now <i class="fa-solid fa-arrow-right"></i>
+              </span>
+            </a>
+          ))}
         </div>
       </div>
     </section>

@@ -87,7 +87,9 @@
 </footer>
 
 <script>
-  const GQL_URL = (import.meta as any).env?.PUBLIC_GRAPHQL_URL || 'https://server.duncit.com/graphql';
+  import { urlConfigs } from '../config/url-configs';
+
+  const GQL_URL = urlConfigs.graphqlUrl;
   const ff = document.getElementById('footerForm') as HTMLFormElement | null;
   ff?.addEventListener('submit', async (e) => {
     e.preventDefault();

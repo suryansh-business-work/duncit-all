@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import HomeIcon from '@mui/icons-material/Home';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
+import HistoryIcon from '@mui/icons-material/History';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -10,7 +11,6 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import CategoryIcon from '@mui/icons-material/Category';
-import AdminPanelSettingsIcon from '@mui/icons-material/AdminPanelSettings';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 
 export interface MenuItem {
@@ -28,9 +28,6 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
   const navigate = useNavigate();
   const showPodPlans = useFeatureFlag('pod_plans_section');
 
-  const isAdmin = roles.some((r) =>
-    ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'].includes(r)
-  );
   const isHost = roles.includes('HOST');
   const isVenue = roles.includes('VENUE_OWNER');
 
@@ -50,6 +47,11 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
       label: 'Saved Items',
       icon: <BookmarkBorderIcon fontSize="small" />,
       onClick: go('/saved'),
+    },
+    {
+      label: 'Pod History',
+      icon: <HistoryIcon fontSize="small" />,
+      onClick: go('/pod-history'),
     },
   ];
 
@@ -98,15 +100,5 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
     });
   }
 
-  const adminItems: MenuItem[] = isAdmin
-    ? [
-        {
-          label: 'Admin Console',
-          icon: <AdminPanelSettingsIcon fontSize="small" />,
-          onClick: () => window.open('/admin', '_blank'),
-        },
-      ]
-    : [];
-
-  return { baseItems, hostItem, venueItem, supportItems, adminItems };
+  return { baseItems, hostItem, venueItem, supportItems };
 }

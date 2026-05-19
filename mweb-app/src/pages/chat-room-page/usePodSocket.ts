@@ -1,13 +1,10 @@
 import { useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
+import { urlConfigs } from '../../config/url-configs';
 
 function getSocketUrl() {
-  const apiBase: string =
-    (import.meta as any).env?.VITE_GRAPHQL_URL ||
-    (import.meta as any).env?.VITE_API_URL ||
-    `${window.location.protocol}//${window.location.hostname}:2001/graphql`;
   try {
-    const u = new URL(apiBase);
+    const u = new URL(urlConfigs.graphqlUrl);
     return `${u.protocol}//${u.host}`;
   } catch {
     return window.location.origin;

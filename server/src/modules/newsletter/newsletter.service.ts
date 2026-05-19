@@ -3,6 +3,7 @@ import { GraphQLError } from 'graphql';
 import { NewsletterSubscriberModel, type INewsletterSubscriber } from './newsletter.model';
 import { sendEmail } from '../../services/email/email.service';
 import { settingsService } from '../settings/settings.service';
+import { getUrlConfigs } from '../../config/url-configs';
 
 const subscribeSchema = yup.object({
   email: yup.string().required('Email required').email('Invalid email').max(160),
@@ -48,6 +49,7 @@ export const newsletterService = {
     // Best-effort welcome email; never block the response.
     try {
       const branding = await settingsService.getBranding();
+      const urlConfigs = await getUrlConfigs();
       await sendEmail({
         to: payload.email,
         subject: `Welcome to ${branding?.app_name || 'Duncit'}`,
@@ -56,7 +58,7 @@ export const newsletterService = {
           email: payload.email,
           app_name: branding?.app_name || 'Duncit',
           logo_url: branding?.logo_url || 'https://duncit.com/duncit-logo.svg',
-          site_url: process.env.PUBLIC_SITE_URL || 'https://duncit.com',
+          site_url: urlConfigs.websiteUrl,
         },
       });
     } catch (e) {

@@ -345,8 +345,9 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
     MuiTooltip: {
       styleOverrides: {
         tooltip: {
-          backgroundColor: INK,
+          backgroundColor: isDark ? '#111827' : tokens.neutral[900],
           color: '#ffffff',
+          border: `1px solid ${isDark ? 'rgba(255,255,255,0.14)' : 'transparent'}`,
           borderRadius: 8,
           fontSize: '0.75rem',
           fontWeight: 600,
@@ -354,7 +355,7 @@ export const buildTheme = (mode: PaletteMode = 'light') => {
           paddingBlock: 6,
         },
         arrow: {
-          color: INK,
+          color: isDark ? '#111827' : tokens.neutral[900],
         },
       },
     },

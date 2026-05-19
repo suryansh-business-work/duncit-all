@@ -29,7 +29,7 @@ export default function ClubDetailsPage() {
   });
   const club = slugQuery.data?.clubBySlug;
   const clubId: string = club?.id ?? '';
-  const { saved, toggleSaved } = useSavedClub(clubId);
+  const { saved, saving: savingClub, toggleSaved } = useSavedClub(clubId);
   const { data, loading, error } = useQuery(CLUB_DETAILS_RELATED, {
     variables: { id: clubId },
     skip: !clubId,
@@ -89,6 +89,7 @@ export default function ClubDetailsPage() {
         media={featureMedia}
         title={club.club_name}
         saved={saved}
+        saveLoading={savingClub}
         following={isFollowing(club.id)}
         onBack={() => navigate(-1)}
         onToggleFollow={toggleClubFollow}

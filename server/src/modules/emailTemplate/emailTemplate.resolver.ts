@@ -3,6 +3,7 @@ import { requireRole } from '../../middleware/rbac';
 import { emailTemplateService, renderMjml, detectVariables } from './emailTemplate.service';
 import nodemailer from 'nodemailer';
 import { GraphQLError } from 'graphql';
+import { getMailConfigs } from '../../config/url-configs';
 
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN'];
 
@@ -110,20 +111,21 @@ export const emailTemplateResolvers = {
       const rendered = renderMjml(tpl.mjml, vars);
       if (rendered.errors.length)
         return { ok: false, message: rendered.errors.join('; ') };
-      const transporter = process.env.SMTP_HOST
+      const mailConfigs = await getMailConfigs();
+      const transporter = mailConfigs.host
         ? nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT || 587),
-            secure: Number(process.env.SMTP_PORT) === 465,
+            host: mailConfigs.host,
+            port: mailConfigs.port,
+            secure: mailConfigs.port === 465,
             auth:
-              process.env.SMTP_USER && process.env.SMTP_PASS
-                ? { user: process.env.SMTP_USER, pass: process.env.SMTP_PASS }
+              mailConfigs.user && mailConfigs.pass
+                ? { user: mailConfigs.user, pass: mailConfigs.pass }
                 : undefined,
           })
         : nodemailer.createTransport({ jsonTransport: true });
       try {
         await transporter.sendMail({
-          from: process.env.SMTP_FROM || 'Duncit <noreply@duncit.local>',
+          from: mailConfigs.from,
           to: args.to,
           subject: tpl.subject,
           html: rendered.html,

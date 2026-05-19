@@ -10,6 +10,7 @@ import { settingsService } from '../settings/settings.service';
 import { applyVars, detectVariables, renderMjml } from '../emailTemplate/emailTemplate.service';
 import { sendHtmlEmail } from '../../services/email/email.service';
 import { getRuntimeEnvValue } from '../../config/runtimeEnv';
+import { getMailConfigs } from '../../config/url-configs';
 
 const MAX_TIMER_DELAY = 2_147_483_647;
 const timers = new Map<string, NodeJS.Timeout>();
@@ -229,10 +230,10 @@ async function sendCampaign(campaign_id: string) {
     if (rendered.errors.length) throw new Error(rendered.errors.join('; '));
     const recipients = await recipientsFor(doc.audience);
     if (!recipients.length) throw new Error('No recipients found for selected audience');
+    const mailConfigs = await getMailConfigs();
     const campaignTo =
       (await getRuntimeEnvValue('CAMPAIGN_TO')) ||
-      (await getRuntimeEnvValue('SMTP_FROM')) ||
-      'Duncit <noreply@duncit.local>';
+      mailConfigs.from;
     for (const batch of chunk(recipients, 50)) {
       await sendHtmlEmail({ to: campaignTo, bcc: batch, subject: rendered.subject, html: rendered.html });
     }

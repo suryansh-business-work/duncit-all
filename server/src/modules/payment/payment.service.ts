@@ -7,6 +7,7 @@ import { UserModel } from '../user/user.model';
 import { getFinanceSettings, nextInvoiceNumber } from '../finance/finance.model';
 import { sendEmail } from '../../services/email/email.service';
 import { generateInvoicePdf } from '../../services/invoice/invoice.pdf';
+import { getUrlConfigs } from '../../config/url-configs';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -134,6 +135,7 @@ export const paymentService = {
     const status = input.simulate_failure ? 'FAILED' : 'SUCCESS';
     const paidAt = status === 'SUCCESS' ? new Date() : null;
     const invoice_no = status === 'SUCCESS' ? await nextInvoiceNumber() : null;
+    const contactPhone = `${input.contact_phone_extension} ${input.contact_phone_number}`.trim();
 
     const doc = await PaymentModel.create({
       payment_id: newPaymentId(),
@@ -144,7 +146,7 @@ export const paymentService = {
         (user as any).email ||
         'Customer',
       user_email: input.contact_email,
-      user_phone: input.contact_phone,
+      user_phone: contactPhone,
       billing_address: input.billing_address,
       checkout_url: input.checkout_url,
       target_type: input.pod_id ? 'POD' : 'OTHER',
@@ -223,6 +225,7 @@ export const paymentService = {
           payment_id: doc.payment_id,
           payment_method: 'Dummy Gateway',
         });
+        const urlConfigs = await getUrlConfigs();
 
         await sendEmail({
           to: doc.user_email,
@@ -236,7 +239,7 @@ export const paymentService = {
             invoice_no: invoice_no || '',
             payment_id: doc.payment_id,
             amount: `${fs.currency_symbol}${quote.total.toFixed(2)}`,
-            app_url: process.env.APP_URL || 'http://localhost:5173',
+            app_url: urlConfigs.appUrl,
           },
           attachments: [
             {

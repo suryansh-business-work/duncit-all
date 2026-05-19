@@ -3,6 +3,7 @@ import { GraphQLError } from 'graphql';
 import { ContactSubmissionModel, type IContactSubmission, type ContactStatus } from './contact.model';
 import { sendEmail } from '../../services/email/email.service';
 import { settingsService } from '../settings/settings.service';
+import { getUrlConfigs } from '../../config/url-configs';
 
 const submitSchema = yup.object({
   name: yup.string().required('Name is required').max(120),
@@ -45,7 +46,8 @@ export const contactService = {
     await ContactSubmissionModel.create(payload);
     try {
       const branding = await settingsService.getBranding();
-      const supportEmail = branding?.support_email || process.env.SUPPORT_EMAIL || 'support@duncit.com';
+      const urlConfigs = await getUrlConfigs();
+      const supportEmail = branding?.support_email || urlConfigs.supportEmail;
       await sendEmail({
         to: payload.email,
         subject: `We received your message — ${branding?.app_name || 'Duncit'}`,

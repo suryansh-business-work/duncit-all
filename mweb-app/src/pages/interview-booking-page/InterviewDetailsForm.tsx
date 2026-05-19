@@ -1,4 +1,5 @@
 import { Card, CardContent, Stack, TextField, Typography } from '@mui/material';
+import PhoneExtensionField from '../../components/PhoneExtensionField';
 
 interface InterviewDetailsFormProps {
   isHost: boolean;
@@ -6,8 +7,10 @@ interface InterviewDetailsFormProps {
   setName: (v: string) => void;
   email: string;
   setEmail: (v: string) => void;
-  phone: string;
-  setPhone: (v: string) => void;
+  phoneExtension: string;
+  setPhoneExtension: (v: string) => void;
+  phoneNumber: string;
+  setPhoneNumber: (v: string) => void;
   businessName: string;
   setBusinessName: (v: string) => void;
   businessAddress: string;
@@ -26,8 +29,10 @@ export default function InterviewDetailsForm({
   setName,
   email,
   setEmail,
-  phone,
-  setPhone,
+  phoneExtension,
+  setPhoneExtension,
+  phoneNumber,
+  setPhoneNumber,
   businessName,
   setBusinessName,
   businessAddress,
@@ -39,6 +44,8 @@ export default function InterviewDetailsForm({
   about,
   setAbout,
 }: InterviewDetailsFormProps) {
+  const onlyDigits = (value: string) => value.replace(/\D/g, '').slice(0, 15);
+
   return (
     <Card>
       <CardContent>
@@ -63,13 +70,18 @@ export default function InterviewDetailsForm({
               required
             />
           </Stack>
-          <TextField
-            label="Phone"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            fullWidth
-            required
-          />
+          <Stack direction="row" spacing={2}>
+            <PhoneExtensionField value={phoneExtension} onChange={setPhoneExtension} label="Code" size="medium" />
+            <TextField
+              label="Phone"
+              type="tel"
+              value={phoneNumber}
+              onChange={(e) => setPhoneNumber(onlyDigits(e.target.value))}
+              inputProps={{ inputMode: 'numeric', pattern: '[0-9]*', maxLength: 15 }}
+              fullWidth
+              required
+            />
+          </Stack>
           {!isHost && (
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
               <TextField

@@ -2,6 +2,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Chip, IconButton, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
+import { urlConfigs } from '../../config/url-configs';
 
 interface Props {
   venues: any[];
@@ -10,7 +11,7 @@ interface Props {
 }
 
 const publicVenueUrl = (venueId: string) => {
-  const baseUrl = (import.meta.env.VITE_MWEB_URL || 'https://mweb.duncit.com').replace(/\/$/, '');
+  const baseUrl = urlConfigs.mwebUrl.replace(/\/$/, '');
   return `${baseUrl}/venue/${venueId}`;
 };
 

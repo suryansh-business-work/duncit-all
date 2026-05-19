@@ -12,7 +12,8 @@ export const CHECKOUT_PAYMENT_METHODS = [
 
 export const checkoutInitialValues: CheckoutForm = {
   email: '',
-  phone: '',
+  phone_extension: '+91',
+  phone_number: '',
   billing_address: '',
   method: 'DUMMY_UPI',
   simulate_failure: false,
@@ -20,7 +21,8 @@ export const checkoutInitialValues: CheckoutForm = {
 
 export const checkoutFormSchema: yup.ObjectSchema<CheckoutForm> = yup.object({
   email: validationRules.email('Email'),
-  phone: validationRules.phoneNumber('Phone'),
+  phone_extension: validationRules.phoneExtension('Phone code'),
+  phone_number: validationRules.phoneNumber('Phone'),
   billing_address: validationRules.requiredText('Billing address', 8, 500),
   method: yup
     .string()
@@ -33,7 +35,8 @@ export function toCheckoutContact(values: CheckoutForm) {
   const cast = checkoutFormSchema.cast(values, { stripUnknown: true });
   return {
     contact_email: cast.email,
-    contact_phone: cast.phone,
+    contact_phone_extension: cast.phone_extension,
+    contact_phone_number: cast.phone_number,
     billing_address: cast.billing_address,
     simulate_failure: cast.simulate_failure,
   };

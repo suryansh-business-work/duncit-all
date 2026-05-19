@@ -5,6 +5,7 @@ import { styled } from '@mui/material/styles';
 import LoginForm, { type LoginFormValues } from '../forms/login.form';
 import { parseApiError } from '../utils/parseApiError';
 import { getSafeRedirectPath, redirectPathFromLocation, type RedirectLocation } from '../utils/redirect';
+import { urlConfigs } from '../config/url-configs';
 
 const LOGIN = gql`
   mutation PartnerLogin($input: LoginInput!) {
@@ -63,7 +64,7 @@ export default function LoginPage() {
           <Alert severity="info" sx={{ mt: 2 }}>
             New users can create an account from mWeb, then return to this partner console.
           </Alert>
-          <Button fullWidth href="https://mweb.duncit.com/register" sx={{ mt: 1.5 }} variant="outlined">
+          <Button fullWidth href={`${urlConfigs.mwebUrl}/register`} sx={{ mt: 1.5 }} variant="outlined">
             Create Duncit account
           </Button>
         </CardContent>

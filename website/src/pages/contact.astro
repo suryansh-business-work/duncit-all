@@ -51,7 +51,9 @@ import PageLayout from '../layouts/PageLayout.astro';
 </PageLayout>
 
 <script>
-  const GQL_URL = (import.meta as any).env?.PUBLIC_GRAPHQL_URL || 'https://server.duncit.com/graphql';
+  import { urlConfigs } from '../config/url-configs';
+
+  const GQL_URL = urlConfigs.graphqlUrl;
   const form = document.getElementById('contactForm') as HTMLFormElement | null;
   const errBox = document.getElementById('contactErr') as HTMLParagraphElement | null;
   form?.addEventListener('submit', async (e) => {

@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { podMemberService } from './podMember.service';
+import { podService } from '../pod/pod.service';
 import type { GraphQLContext } from '../../context';
 
 function requireUser(ctx: GraphQLContext) {
@@ -10,6 +11,9 @@ function requireUser(ctx: GraphQLContext) {
 }
 
 export const podMemberResolvers = {
+  PodMember: {
+    pod: async (parent: { pod_id: string }) => podService.getById(parent.pod_id),
+  },
   Query: {
     myPodMemberships: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       const uid = requireUser(ctx);

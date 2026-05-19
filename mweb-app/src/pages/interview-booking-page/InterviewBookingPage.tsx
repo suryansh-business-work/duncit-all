@@ -16,6 +16,8 @@ import { Slot, slotKey } from './slotHelpers';
 import InterviewCalendar from './InterviewCalendar';
 import InterviewDetailsForm from './InterviewDetailsForm';
 import InterviewSuccessCard from './InterviewSuccessCard';
+import { PHONE_EXTENSION_PATTERN, PHONE_NUMBER_PATTERN } from '../../forms/validation/rules';
+import { parseApiError } from '../../utils/parseApiError';
 
 interface Props {
   type: 'HOST' | 'VENUE';
@@ -32,7 +34,8 @@ export default function InterviewBookingPage({ type }: Props) {
 
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
+  const [phoneExtension, setPhoneExtension] = useState('+91');
+  const [phoneNumber, setPhoneNumber] = useState('');
   const [businessName, setBusinessName] = useState('');
   const [businessAddress, setBusinessAddress] = useState('');
   const [city, setCity] = useState('');
@@ -75,7 +78,8 @@ export default function InterviewBookingPage({ type }: Props) {
     setError(null);
     if (!name.trim()) return setError('Your name is required');
     if (!email.trim()) return setError('Email is required');
-    if (!phone.trim()) return setError('Phone number is required');
+    if (!PHONE_EXTENSION_PATTERN.test(phoneExtension)) return setError('Phone code is invalid');
+    if (!PHONE_NUMBER_PATTERN.test(phoneNumber)) return setError('Phone must contain only digits (6-15 digits)');
     if (!about.trim())
       return setError(
         `Tell us briefly about ${isHost ? 'why you want to host' : 'your venue'}`
@@ -90,7 +94,7 @@ export default function InterviewBookingPage({ type }: Props) {
             type,
             applicant_name: name,
             applicant_email: email,
-            applicant_phone: phone,
+            applicant_phone: `${phoneExtension} ${phoneNumber}`,
             about,
             business_name: businessName || null,
             business_address: businessAddress || null,
@@ -104,8 +108,8 @@ export default function InterviewBookingPage({ type }: Props) {
         },
       });
       setSubmittedRef(res.data?.createInterview?.id ?? 'submitted');
-    } catch (e: any) {
-      setError(e.message);
+    } catch (e) {
+      setError(parseApiError(e));
     } finally {
       setBusy(false);
     }
@@ -152,8 +156,10 @@ export default function InterviewBookingPage({ type }: Props) {
           setName={setName}
           email={email}
           setEmail={setEmail}
-          phone={phone}
-          setPhone={setPhone}
+          phoneExtension={phoneExtension}
+          setPhoneExtension={setPhoneExtension}
+          phoneNumber={phoneNumber}
+          setPhoneNumber={setPhoneNumber}
           businessName={businessName}
           setBusinessName={setBusinessName}
           businessAddress={businessAddress}

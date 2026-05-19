@@ -3,16 +3,13 @@ import path from 'path';
 import mjml2html from 'mjml';
 import nodemailer, { Transporter } from 'nodemailer';
 import { emailTemplateService } from '../../modules/emailTemplate/emailTemplate.service';
-import { getRuntimeEnvValue } from '../../config/runtimeEnv';
+import { getMailConfigs } from '../../config/url-configs';
 
 let transporter: Transporter | null = null;
 let transporterKey = '';
 
 async function getTransporter(): Promise<Transporter> {
-  const host = await getRuntimeEnvValue('SMTP_HOST');
-  const port = Number((await getRuntimeEnvValue('SMTP_PORT')) || 587);
-  const user = await getRuntimeEnvValue('SMTP_USER');
-  const pass = await getRuntimeEnvValue('SMTP_PASS');
+  const { host, port, user, pass } = await getMailConfigs();
   const nextKey = [host, port, user, pass ? 'secret' : ''].join('|');
   if (transporter && transporterKey === nextKey) return transporter;
   transporterKey = nextKey;
@@ -74,7 +71,7 @@ export async function sendEmail(opts: {
   attachments?: EmailAttachment[];
 }) {
   const rendered = await renderTemplate(opts.template, opts.vars ?? {});
-  const from = (await getRuntimeEnvValue('SMTP_FROM')) || 'Duncit <noreply@duncit.local>';
+  const { from } = await getMailConfigs();
   const info = await (await getTransporter()).sendMail({
     from,
     to: opts.to,
@@ -93,7 +90,7 @@ export async function sendHtmlEmail(opts: {
   subject: string;
   html: string;
 }) {
-  const from = (await getRuntimeEnvValue('SMTP_FROM')) || 'Duncit <noreply@duncit.local>';
+  const { from } = await getMailConfigs();
   const info = await (await getTransporter()).sendMail({
     from,
     to: opts.to,

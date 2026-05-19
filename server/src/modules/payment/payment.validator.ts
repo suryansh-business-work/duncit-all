@@ -1,11 +1,16 @@
 import * as yup from 'yup';
 
+const phoneNumberRegex = /^\d{6,15}$/;
+const phoneExtensionRegex = /^\+?\d{1,5}$/;
+
 export const dummyCheckoutSchema = yup.object({
   pod_id: yup.string().trim().nullable().default(null),
   amount: yup.number().typeError('Amount must be a number').moreThan(0).required(),
   description: yup.string().trim().max(300).default('Booking'),
   contact_email: yup.string().trim().email().required('Email is required'),
-  contact_phone: yup.string().trim().min(6).max(32).required('Phone is required'),
+  contact_phone: yup.string().trim().max(32).optional(),
+  contact_phone_extension: yup.string().trim().matches(phoneExtensionRegex, 'Phone code is invalid').required('Phone code is required'),
+  contact_phone_number: yup.string().trim().matches(phoneNumberRegex, 'Phone must contain only digits (6-15 digits)').required('Phone is required'),
   billing_address: yup.string().trim().min(8).max(500).required('Address is required'),
   checkout_url: yup
     .string()

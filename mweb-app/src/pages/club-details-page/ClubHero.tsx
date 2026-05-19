@@ -1,7 +1,7 @@
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Box, IconButton, Stack } from '@mui/material';
+import { Box, CircularProgress, IconButton, Stack } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShareIcon from '@mui/icons-material/Share';
@@ -17,6 +17,7 @@ interface Props {
   media: { url: string; type: string }[];
   title: string;
   saved: boolean;
+  saveLoading?: boolean;
   following: boolean;
   onBack: () => void;
   onToggleFollow: () => void;
@@ -66,6 +67,7 @@ export default function ClubHero({
   media,
   title,
   saved,
+  saveLoading,
   following,
   onBack,
   onToggleFollow,
@@ -103,9 +105,10 @@ export default function ClubHero({
           size="small"
           aria-label={saved ? 'Saved' : 'Save'}
           onClick={onToggleSave}
+          disabled={saveLoading}
           sx={overlayBtn}
         >
-          {saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
+          {saveLoading ? <CircularProgress size={18} color="inherit" /> : saved ? <BookmarkIcon fontSize="small" /> : <BookmarkBorderIcon fontSize="small" />}
         </IconButton>
         <IconButton size="small" aria-label="Share" onClick={onShare} sx={overlayBtn}>
           <ShareIcon fontSize="small" />

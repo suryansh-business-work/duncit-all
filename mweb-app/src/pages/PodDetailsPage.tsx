@@ -122,7 +122,8 @@ export default function PodDetailsPage() {
       <PodHero
         media={media}
         title={pod.pod_title}
-        saved={saved}
+        saved={actions.displaySaved}
+        saveLoading={actions.savePending}
         following={following}
         onBack={() => navigate(-1)}
         onToggleFollow={actions.onToggleFollow}

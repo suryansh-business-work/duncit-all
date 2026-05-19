@@ -15,7 +15,7 @@ const ColorModeContext = createContext<ColorModeContextValue>({
   set: () => undefined,
 });
 
-const STORAGE_KEY = 'mweb_color_mode';
+const STORAGE_KEY = 'partners_color_mode';
 
 export function ColorModeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<PaletteMode>(() => {

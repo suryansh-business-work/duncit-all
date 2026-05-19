@@ -24,6 +24,7 @@ interface Props {
   club: any;
   location: any;
   saved: boolean;
+  savePending?: boolean;
   onToggleSave: () => void;
   viewerId?: string | null;
 }
@@ -33,6 +34,7 @@ export default function ExplorePodCard({
   club,
   location,
   saved,
+  savePending,
   onToggleSave,
   viewerId,
 }: Props) {
@@ -128,6 +130,7 @@ export default function ExplorePodCard({
           label="Save"
           onClick={onToggleSave}
           active={saved}
+          loading={savePending}
         />
         <ExploreActionButton icon={<ShareIcon />} label="Share" onClick={share} />
         <ExploreActionButton

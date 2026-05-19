@@ -47,7 +47,7 @@ const UNIQUE_NAMES = Array.from(new Set(ICON_NAMES));
 function resolveIcon(name: string): SvgIconComponent | null {
   if (!name) return null;
   const Comp = (MuiIcons as Record<string, SvgIconComponent>)[name];
-  return typeof Comp === 'function' ? Comp : null;
+  return Comp || null;
 }
 
 export function isImageIconValue(value: string | null | undefined) {

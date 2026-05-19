@@ -194,8 +194,7 @@ export default function HomeStatusRail({
       <Snackbar
         open={!!okMsg}
         autoHideDuration={2000}
-        onClose={() => setOkMsg(null)}
-        message={okMsg ?? ''}
+        onClose={() => setOkMsg(null)} message={okMsg ?? ''}
       />
     </>
   );

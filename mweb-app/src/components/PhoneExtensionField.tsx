@@ -1,4 +1,4 @@
-import { Autocomplete, Box, TextField, Typography } from '@mui/material';
+import { Autocomplete, Box, TextField, Typography, type SxProps, type Theme } from '@mui/material';
 import type { ChangeEvent } from 'react';
 import { COUNTRIES, findCountryByDial, type Country } from '../utils/countries';
 
@@ -13,6 +13,8 @@ interface Props {
   error?: boolean;
   helperText?: string;
   disabled?: boolean;
+  sx?: SxProps<Theme>;
+  textFieldSx?: SxProps<Theme>;
 }
 
 export default function PhoneExtensionField({
@@ -26,6 +28,8 @@ export default function PhoneExtensionField({
   error,
   helperText,
   disabled,
+  sx,
+  textFieldSx,
 }: Props) {
   const selected = findCountryByDial(value) ?? null;
   return (
@@ -34,10 +38,16 @@ export default function PhoneExtensionField({
       onChange={(_e, c) => onChange(c?.dial ?? '')}
       onBlur={onBlur}
       options={COUNTRIES}
+      sx={{
+        '& .MuiAutocomplete-inputRoot': { minHeight: 56, flexWrap: 'nowrap' },
+        '& .MuiAutocomplete-input': { minWidth: '50px !important' },
+        '& .MuiAutocomplete-endAdornment': { right: 10 },
+        ...(Array.isArray(sx) ? {} : sx),
+      }}
       disabled={disabled}
       fullWidth={fullWidth}
       autoHighlight
-      getOptionLabel={(c) => `${c.flag} ${c.dial}`}
+      getOptionLabel={(c) => `${c.iso} ${c.dial}`}
       isOptionEqualToValue={(a, b) => a.iso === b.iso}
       renderOption={(props, c) => (
         <Box component="li" {...props} sx={{ display: 'flex', alignItems: 'center', gap: 1 }}>
@@ -61,6 +71,7 @@ export default function PhoneExtensionField({
           error={error}
           helperText={helperText}
           InputLabelProps={{ shrink: true }}
+          sx={textFieldSx}
         />
       )}
     />

@@ -3,34 +3,33 @@
     <mj-title>Welcome to {{app_name}}</mj-title>
     <mj-attributes>
       <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
-      <mj-text color="#1f2937" line-height="1.6" font-size="15px" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+      <mj-button background-color="#3b82f6" color="#ffffff" border-radius="8px" font-weight="700" />
     </mj-attributes>
   </mj-head>
-  <mj-body background-color="#f7f7fb">
-    <mj-section padding="24px 0">
+  <mj-body background-color="#f4f4f4">
+    <mj-section padding="20px 0 0 0">
       <mj-column>
         <mj-image src="{{logo_url}}" alt="{{app_name}}" width="160px" align="center" padding="0" />
       </mj-column>
     </mj-section>
-    <mj-section background-color="#ffffff" padding="32px 24px" border-radius="12px">
+    <mj-section background-color="#ffffff" padding="20px">
       <mj-column>
-        <mj-text font-size="22px" font-weight="700" color="#FF4D4F">You're in 🎉</mj-text>
+        <mj-text font-size="22px" font-weight="bold" color="#222222">You're in</mj-text>
         <mj-text>
           Hi {{email}}, thanks for joining the {{app_name}} newsletter. We'll send you the freshest pods,
-          clubs, and community happenings — never spam.
+          clubs, and community happenings. Never spam.
         </mj-text>
-        <mj-button background-color="#FF4D4F" border-radius="999px" href="{{site_url}}" padding="20px 0">
-          Explore {{app_name}}
-        </mj-button>
-        <mj-text color="#6b7280" font-size="12px">
+        <mj-button href="{{site_url}}">Explore {{app_name}}</mj-button>
+        <mj-text color="#888888" font-size="12px">
           You can unsubscribe at any time from the link in our future emails.
         </mj-text>
       </mj-column>
     </mj-section>
-    <mj-section padding="16px 0">
+    <mj-section padding="16px 0 24px 0">
       <mj-column>
-        <mj-text align="center" color="#9ca3af" font-size="12px">
-          © {{app_name}} · This message was sent because you subscribed at {{site_url}}.
+        <mj-text align="center" color="#888888" font-size="12px">
+          &copy; {{app_name}}. This message was sent because you subscribed at {{site_url}}.
         </mj-text>
       </mj-column>
     </mj-section>

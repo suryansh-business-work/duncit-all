@@ -143,10 +143,7 @@ export default function PodHero({
       </Slider>
       <Box sx={{ position: 'absolute', inset: 0, pointerEvents: 'none', background: 'linear-gradient(180deg, rgba(5,5,8,0.22) 0%, rgba(5,5,8,0) 38%, rgba(5,5,8,0.72) 100%)' }} />
       <Box sx={{ position: 'absolute', left: 16, right: 90, bottom: 16, zIndex: 2, color: '#fff', pointerEvents: 'none' }}>
-        <Typography variant="overline" sx={{ px: 1, py: 0.35, borderRadius: 999, bgcolor: 'rgba(255,255,255,0.16)', backdropFilter: 'blur(12px)', letterSpacing: 0, lineHeight: 1 }}>
-          Pod drop
-        </Typography>
-        <Typography variant="h5" sx={{ mt: 0.75, fontWeight: 900, lineHeight: 1.05 }}>
+        <Typography variant="h5" sx={{ fontWeight: 900, lineHeight: 1.05 }}>
           {title}
         </Typography>
       </Box>

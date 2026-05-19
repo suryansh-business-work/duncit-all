@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Box, Snackbar, Stack } from '@mui/material';
+import { Box, Stack } from '@mui/material';
 import HomeStatusTile from './HomeStatusTile';
 import HomeStatusViewer, { type HomeStatusViewerItem } from './HomeStatusViewer';
 import MyStatusUploadTile from './MyStatusUploadTile';
@@ -13,7 +13,6 @@ interface HomeStatusRailProps {
   hostPods: any[];
   followedPosts: any[];
   followedUsers: any[];
-  onStatusUploaded?: () => void;
 }
 
 function initials(name?: string | null) {
@@ -39,11 +38,8 @@ export default function HomeStatusRail({
   hostPods,
   followedPosts,
   followedUsers,
-  onStatusUploaded,
 }: HomeStatusRailProps) {
   const [viewer, setViewer] = useState<HomeStatusViewerItem | null>(null);
-  const [errorMsg, setErrorMsg] = useState<string | null>(null);
-  const [okMsg, setOkMsg] = useState<string | null>(null);
   const duncitName = branding?.app_name || 'Duncit';
 
   return (
@@ -66,10 +62,6 @@ export default function HomeStatusRail({
         <Stack direction="row" spacing={1.1} alignItems="flex-start" sx={{ width: 'max-content' }}>
         <MyStatusUploadTile
           me={me}
-          onUploaded={() => {
-            setOkMsg('Status posted!');
-            onStatusUploaded?.();
-          }}
           onView={(url) => {
             setViewer({
               label: me?.full_name || me?.first_name || 'My status',
@@ -79,7 +71,6 @@ export default function HomeStatusRail({
               mediaType: 'IMAGE',
             });
           }}
-          onError={(m) => setErrorMsg(m)}
         />
         {sliders.map((slider) => (
           <HomeStatusTile
@@ -185,17 +176,6 @@ export default function HomeStatusRail({
         </Stack>
       </Box>
       <HomeStatusViewer item={viewer} onClose={() => setViewer(null)} />
-      <Snackbar
-        open={!!errorMsg}
-        autoHideDuration={3500}
-        onClose={() => setErrorMsg(null)}
-        message={errorMsg ?? ''}
-      />
-      <Snackbar
-        open={!!okMsg}
-        autoHideDuration={2000}
-        onClose={() => setOkMsg(null)} message={okMsg ?? ''}
-      />
     </>
   );
 }

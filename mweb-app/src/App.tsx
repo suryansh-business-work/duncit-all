@@ -11,6 +11,7 @@ import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
 import { useHapticFeedback } from './app/useHapticFeedback';
+import { StatusUploadProvider } from './components/status-upload/StatusUploadProvider';
 
 const BOTTOM_NAV_CONTENT_OFFSET = 'var(--duncit-bottom-nav-content-offset, 148px)';
 
@@ -47,6 +48,7 @@ export default function App() {
   useHapticFeedback(isAuthed);
 
   return (
+    <StatusUploadProvider>
     <Box
       sx={isAuthed ? {
         height: '100dvh',
@@ -106,5 +108,6 @@ export default function App() {
       {showBottomNav && <BottomNav />}
       <NotifyHost />
     </Box>
+    </StatusUploadProvider>
   );
 }

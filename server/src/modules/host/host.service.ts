@@ -5,6 +5,37 @@ import { UserModel } from '../user/user.model';
 import { sendEmail } from '../../services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '../finance/bankAccount';
 
+const HOST_DOB_MIN_AGE_YEARS = 18;
+const HOST_DOB_MAX_AGE_YEARS = 100;
+const HOST_DOB_RANGE_ERROR = `Host age must be between ${HOST_DOB_MIN_AGE_YEARS} and ${HOST_DOB_MAX_AGE_YEARS} years`;
+
+function startOfDay(date: Date) {
+  return new Date(date.getFullYear(), date.getMonth(), date.getDate());
+}
+
+function shiftYears(date: Date, years: number) {
+  const next = new Date(date);
+  next.setFullYear(next.getFullYear() + years);
+  return next;
+}
+
+function parseHostDob(value: unknown) {
+  if (!value) return null;
+  const date = new Date(String(value));
+  if (Number.isNaN(date.getTime())) {
+    throw new GraphQLError('Enter a valid date of birth', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+
+  const normalized = startOfDay(date);
+  const today = startOfDay(new Date());
+  const minDate = shiftYears(today, -HOST_DOB_MAX_AGE_YEARS);
+  const maxDate = shiftYears(today, -HOST_DOB_MIN_AGE_YEARS);
+  if (normalized < minDate || normalized > maxDate) {
+    throw new GraphQLError(HOST_DOB_RANGE_ERROR, { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  return normalized;
+}
+
 const toPub = (h: IHost) => ({
   id: String(h._id),
   user_id: String(h.user_id),
@@ -63,7 +94,7 @@ export const hostService = {
     h.full_name = input.full_name;
     h.email = input.email;
     h.phone = input.phone;
-    h.dob = new Date(input.dob);
+    h.dob = parseHostDob(input.dob);
     if (h.step_completed < 1) h.step_completed = 1;
     if (h.status === 'REJECTED') h.status = 'DRAFT';
     await h.save();
@@ -133,8 +164,9 @@ export const hostService = {
     submit?: boolean;
   }) {
     const h = await getOrCreate(opts.targetUserId);
-    Object.assign(h, opts.step1);
-    if (opts.step1?.dob) h.dob = new Date(opts.step1.dob);
+    const { dob, ...step1 } = opts.step1 ?? {};
+    Object.assign(h, step1);
+    h.dob = parseHostDob(dob);
     Object.assign(h, opts.step2);
     Object.assign(h, opts.step3);
     if (opts.step3.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(opts.step3.bank_account) as any;
@@ -153,7 +185,7 @@ export const hostService = {
     h.full_name = opts.step1.full_name;
     h.email = opts.step1.email;
     h.phone = opts.step1.phone;
-    h.dob = opts.step1.dob ? new Date(opts.step1.dob) : null;
+    h.dob = parseHostDob(opts.step1.dob);
     Object.assign(h, opts.step2);
     h.police_verification_url = opts.step3.police_verification_url;
     h.full_address = opts.step3.full_address;

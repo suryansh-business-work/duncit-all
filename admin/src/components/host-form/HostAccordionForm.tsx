@@ -18,6 +18,7 @@ import DateField from '../DateField';
 import HostBankAccountSection from './HostBankAccountSection';
 import HostIdentitySection from './HostIdentitySection';
 import HostVerificationSection from './HostVerificationSection';
+import { getHostDobMaxDate, getHostDobMinDate } from '../../utils/hostDob';
 import type { HostCreateValues, HostEditValues } from '../../forms/host.form';
 
 export type HostAccordionMode = 'create' | 'edit';
@@ -150,7 +151,8 @@ export default function HostAccordionForm({ mode, userOptions }: Props) {
                 onChange={(iso) => setFieldValue('step1.dob', iso)}
                 error={hasError('step1.dob')}
                 helperText={hasError('step1.dob') ? (getIn(errors, 'step1.dob') as string) : ' '}
-                maxDate={new Date()}
+                minDate={getHostDobMinDate()}
+                maxDate={getHostDobMaxDate()}
               />
             </Box>
           </Stack>

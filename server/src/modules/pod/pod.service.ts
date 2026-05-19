@@ -117,6 +117,17 @@ function validateFutureDates(startValue?: string | Date | null, endValue?: strin
   }
 }
 
+function normalizeStatusMedia(media: any) {
+  const url = String(media?.url ?? '').trim();
+  if (!/^https?:\/\//i.test(url)) {
+    throw new GraphQLError('Status media must be uploaded before saving', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  const type = media?.type === 'VIDEO' ? 'VIDEO' : 'IMAGE';
+  return { url, type };
+}
+
 function normalizePodMode(mode?: string | null): PodMode {
   return mode === 'VIRTUAL' ? 'VIRTUAL' : 'PHYSICAL';
 }
@@ -488,6 +499,24 @@ export const podService = {
       doc.pod_date_time = new Date(input.pod_date_time);
     if (input.pod_end_date_time !== undefined)
       doc.pod_end_date_time = input.pod_end_date_time ? new Date(input.pod_end_date_time) : null;
+    await doc.save();
+    const slugMap = await loadClubSlugMap([doc]);
+    return toPub(doc, slugMap);
+  },
+
+  async addStatus(id: string, viewerId: string, media: any, isAdmin = false) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new GraphQLError('Invalid pod id', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const doc = await PodModel.findById(id);
+    if (!doc) notFound();
+    const isHost = (doc.pod_hosts_id ?? []).some((hostId: any) => String(hostId) === viewerId);
+    if (!isAdmin && !isHost) {
+      throw new GraphQLError('Only pod hosts can add status media', {
+        extensions: { code: 'FORBIDDEN' },
+      });
+    }
+    doc.pod_images_and_videos.push(normalizeStatusMedia(media) as any);
     await doc.save();
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);

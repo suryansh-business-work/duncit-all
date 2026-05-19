@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import {
   Alert,
   Avatar,
@@ -29,8 +29,17 @@ const SUBMIT_CONTACT = gql`
 
 export default function SupportPage() {
   const navigate = useNavigate();
+  const location = useLocation();
+  const supportParams = new URLSearchParams(location.search);
   const { data: headerData } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-first' });
   const me = headerData?.me;
+  const supportInitialValues = {
+    name: me?.full_name || me?.first_name || '',
+    email: me?.email || '',
+    ...(supportParams.get('category') ? { category: supportParams.get('category')! } : {}),
+    ...(supportParams.get('subject') ? { subject: supportParams.get('subject')! } : {}),
+    ...(supportParams.get('message') ? { message: supportParams.get('message')! } : {}),
+  };
 
   const [submit, { loading }] = useMutation(SUBMIT_CONTACT);
   const [error, setError] = useState<string | null>(null);
@@ -120,10 +129,7 @@ export default function SupportPage() {
         <SupportForm
           loading={loading}
           errorMessage={error}
-          initialValues={{
-            name: me?.full_name || me?.first_name || '',
-            email: me?.email || '',
-          }}
+          initialValues={supportInitialValues}
           onSubmit={handleSubmit}
         />
       </Paper>

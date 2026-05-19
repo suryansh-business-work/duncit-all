@@ -17,6 +17,7 @@ import PodMapSection from '../components/pod-details/PodMapSection';
 import PodSocialBar from './pod-details-page/PodSocialBar';
 import { usePodDetailActions } from './pod-details-page/usePodDetailActions';
 import ConfettiOverlay from '../components/ConfettiOverlay';
+import { useStatusUpload } from '../components/status-upload/StatusUploadProvider';
 import {
   POD_DETAILS,
   POD_ID_BY_SLUGS,
@@ -27,6 +28,7 @@ import {
 export default function PodDetailsPage() {
   const { clubSlug = '', podSlug = '' } = useParams();
   const navigate = useNavigate();
+  const { openPodPicker } = useStatusUpload();
   const [search] = useSearchParams();
   const referralFromUrl = search.get('ref');
   const { compute: priceCompute, format: priceFormat } = usePricing();
@@ -131,7 +133,7 @@ export default function PodDetailsPage() {
         onShare={actions.onShare}
       />
 
-      <PodOverview pod={pod} isFree={isFree} isHost={isPodHost} priceFormat={priceFormat} onAddStatus={() => navigate('/profile?newPost=1')} />
+      <PodOverview pod={pod} isFree={isFree} isHost={isPodHost} priceFormat={priceFormat} onAddStatus={() => openPodPicker(pod.id)} />
 
       <PodMapSection pod={pod} location={location} venue={venue} />
 

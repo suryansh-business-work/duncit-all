@@ -312,6 +312,11 @@ export function useHomeData({
     return (data?.posts ?? []).filter((post: any) => userIds.has(post.author_id)).slice(0, 36);
   }, [data?.posts, followingUserIds]);
 
+  const myLatestPost = useMemo(() => {
+    const meId = headerData?.me?.user_id;
+    return (data?.posts ?? []).find((post: any) => meId && post.author_id === meId) ?? null;
+  }, [data?.posts, headerData?.me?.user_id]);
+
   return {
     data,
     loading,
@@ -329,6 +334,7 @@ export function useHomeData({
     followedPods,
     hostPods,
     followedPosts,
+    myLatestPost,
     followedUsers: followedUsersData?.publicUsersByIds ?? [],
     totalPods: filteredPods.length,
     hostNameOf,

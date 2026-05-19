@@ -168,6 +168,14 @@ export const podResolvers = {
       requireRole(ctx, ADMIN_WRITE);
       return podService.update(args.pod_doc_id, args.input);
     },
+    addPodStatus: async (
+      _p: unknown,
+      args: { pod_doc_id: string; media: any },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return podService.addStatus(args.pod_doc_id, user.id, args.media, isAdminCtx(ctx));
+    },
     deletePod: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_WRITE);
       return podService.remove(args.pod_doc_id);

@@ -59,9 +59,6 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
     >
       <Stack direction="row" justifyContent="space-between" alignItems="flex-start" spacing={1.5}>
         <Box sx={{ minWidth: 0 }}>
-          <Typography variant="overline" sx={{ color: mutedColor, letterSpacing: 0 }}>
-            Locked in
-          </Typography>
           <Typography variant="h4" fontWeight={900} sx={{ lineHeight: 1.05 }}>
         {pod.pod_title}
       </Typography>

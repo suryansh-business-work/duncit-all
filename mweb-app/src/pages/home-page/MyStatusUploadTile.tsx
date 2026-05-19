@@ -1,14 +1,9 @@
-import { useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import HomeStatusTile from './HomeStatusTile';
-import { UPLOAD_IMAGE } from '../../components/media-picker-dialog/queries';
-import { CREATE_POST } from '../profile-page/queries';
+import { useStatusUpload } from '../../components/status-upload/StatusUploadProvider';
 
 interface Props {
   me?: any;
-  onUploaded?: (url: string) => void;
-  onError?: (msg: string) => void;
   onView?: (url: string) => void;
 }
 
@@ -24,13 +19,12 @@ function initials(name?: string | null) {
     .toUpperCase();
 }
 
-export default function MyStatusUploadTile({ me, onUploaded, onError, onView }: Props) {
-  const inputRef = useRef<HTMLInputElement | null>(null);
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [statusUrl, setStatusUrl] = useState<string | null>(null);
-  const [uploadImageMut] = useMutation(UPLOAD_IMAGE);
-  const [createPost] = useMutation(CREATE_POST);
+export default function MyStatusUploadTile({ me, onView }: Props) {
+  const { upload, openProfilePicker } = useStatusUpload();
+  const latestPost = me?.latest_status ?? null;
+  const statusUrl = upload.profileUrl ?? latestPost?.image_url ?? null;
+  const uploading = upload.active && upload.kind === 'profile';
+  const progress = uploading ? upload.progress : 0;
 
   const handlePick = () => {
     if (uploading) return;
@@ -38,63 +32,16 @@ export default function MyStatusUploadTile({ me, onUploaded, onError, onView }: 
       onView(statusUrl);
       return;
     }
-    inputRef.current?.click();
+    openProfilePicker();
   };
 
   const openPicker = () => {
     if (uploading) return;
-    inputRef.current?.click();
-  };
-
-  const handleFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    e.target.value = '';
-    if (!file) return;
-    if (!file.type.startsWith('image/')) {
-      onError?.('Please choose an image file');
-      return;
-    }
-    if (file.size > MAX_BYTES) {
-      onError?.('Image is too large (max 15 MB)');
-      return;
-    }
-    setUploading(true);
-    setProgress(15);
-    try {
-      const fileBase64: string = await new Promise((resolve, reject) => {
-        const reader = new FileReader();
-        reader.onload = () => resolve(String(reader.result || ''));
-        reader.onerror = () => reject(new Error('Could not read file'));
-        reader.readAsDataURL(file);
-      });
-      setProgress(55);
-      const res = await uploadImageMut({
-        variables: { fileBase64, fileName: file.name, mimeType: file.type, folder: '/posts' },
-      });
-      const url = res.data?.uploadImageToImagekit?.url;
-      if (!url) throw new Error('Upload failed');
-      setProgress(85);
-      await createPost({ variables: { input: { image_url: url, caption: '' } } });
-      setProgress(100);
-      setStatusUrl(url);
-      onUploaded?.(url);
-    } catch (err: any) {
-      onError?.(err?.message ?? 'Could not upload status');
-    } finally {
-      setUploading(false);
-      setProgress(0);
-    }
+    openProfilePicker();
   };
 
   return (
     <Stack alignItems="center" sx={{ position: 'relative' }}>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        hidden
-        onChange={handleFile}
-      />
       <HomeStatusTile
         label={uploading ? 'Uploading…' : statusUrl ? 'My status' : 'My status'}
         imageUrl={statusUrl ?? me?.profile_photo}
@@ -143,6 +90,9 @@ export default function MyStatusUploadTile({ me, onUploaded, onError, onView }: 
             display: 'grid',
             placeItems: 'center',
             pointerEvents: 'none',
+            borderRadius: '50%',
+            bgcolor: 'rgba(0,0,0,0.48)',
+            boxShadow: '0 8px 24px rgba(0,0,0,0.28)',
           }}
         >
           <CircularProgress
@@ -150,11 +100,11 @@ export default function MyStatusUploadTile({ me, onUploaded, onError, onView }: 
             value={progress}
             size={62}
             thickness={3}
-            sx={{ color: 'primary.main' }}
+            sx={{ color: '#fff' }}
           />
           <Typography
             variant="caption"
-            sx={{ position: 'absolute', fontWeight: 700, color: 'primary.main' }}
+            sx={{ position: 'absolute', fontWeight: 900, color: '#fff', textShadow: '0 1px 4px rgba(0,0,0,0.8)' }}
           >
             {progress}%
           </Typography>

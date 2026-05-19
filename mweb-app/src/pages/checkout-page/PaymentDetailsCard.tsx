@@ -66,7 +66,7 @@ export default function PaymentDetailsCard({
     <Card sx={{ flex: 1, borderRadius: 4, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
       <CardContent>
         <Typography variant="subtitle1" fontWeight={900} gutterBottom>Payment details</Typography>
-        <Stack spacing={2} sx={{ mt: 1 }}>
+        <Stack spacing={2} sx={{ mt: 3 }}>
           <CheckoutContactFields formik={formik} fieldSx={fieldSx} />
           <TextField select label="Payment Method" name="method" value={values.method} onChange={(e) => setField('method', e.target.value)} onBlur={handleBlur} fullWidth sx={fieldSx} SelectProps={{ MenuProps: selectMenuProps }}>
             {CHECKOUT_PAYMENT_METHODS.map((method) => <MenuItem key={method.value} value={method.value}>{method.label}</MenuItem>)}

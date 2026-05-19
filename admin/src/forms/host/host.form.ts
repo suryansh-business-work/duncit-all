@@ -5,6 +5,7 @@ import {
   blankBankAccountValues,
   normalizeBankAccountValues,
 } from '../validation/bankAccount';
+import { HOST_DOB_RANGE_ERROR, isValidHostDob } from '../../utils/hostDob';
 
 const hostPhone = yup
   .string()
@@ -16,11 +17,7 @@ const hostDob = yup
   .string()
   .trim()
   .default('')
-  .test('dob', 'Enter a valid date of birth', (value) => {
-    if (!value) return true;
-    const date = new Date(value);
-    return !Number.isNaN(date.getTime()) && date <= new Date();
-  });
+  .test('dob', HOST_DOB_RANGE_ERROR, isValidHostDob);
 
 export const hostStep1Schema = yup.object({
   full_name: validationRules.personName('Full name'),

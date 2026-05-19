@@ -193,6 +193,7 @@ export const podTypeDefs = /* GraphQL */ `
   extend type Mutation {
     createPod(input: CreatePodInput!): Pod!
     updatePod(pod_doc_id: ID!, input: UpdatePodInput!): Pod!
+    addPodStatus(pod_doc_id: ID!, media: PodMediaInput!): Pod!
     deletePod(pod_doc_id: ID!): Boolean!
     incrementPodHits(pod_doc_id: ID!): Pod!
     togglePodLike(pod_doc_id: ID!): Pod!

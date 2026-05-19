@@ -1,5 +1,6 @@
 import * as yup from 'yup';
 import { validationRules } from '../../forms/validation/rules';
+import { HOST_DOB_RANGE_ERROR, isValidHostDob } from '../../utils/hostDob';
 import type { HostStep1, HostStep2, HostStep3 } from './types';
 
 const AADHAR_PATTERN = /^[0-9]{12}$/;
@@ -9,11 +10,7 @@ export const hostStep1Schema: yup.ObjectSchema<HostStep1> = yup.object({
   full_name: validationRules.personName('Full name'),
   email: validationRules.email('Email'),
   phone: validationRules.phoneNumber('Phone'),
-  dob: yup.string().default('').test('valid-dob', 'Enter a valid date of birth', (value) => {
-    if (!value) return true;
-    const date = new Date(value);
-    return !Number.isNaN(date.getTime()) && date <= new Date();
-  }),
+  dob: yup.string().default('').test('valid-dob', HOST_DOB_RANGE_ERROR, isValidHostDob),
 });
 
 export const hostStep2Schema: yup.ObjectSchema<HostStep2> = yup.object({

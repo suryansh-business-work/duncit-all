@@ -102,8 +102,10 @@ export async function uploadBase64Image(opts: {
   mimeType?: string;
 }) {
   const mimeType = (opts.mimeType || '').trim() || 'image/jpeg';
-  if (!/^image\//i.test(mimeType)) {
-    throw new GraphQLError('Only image uploads are allowed', {
+  const isImage = /^image\//i.test(mimeType);
+  const isVideo = /^video\//i.test(mimeType);
+  if (!isImage && !isVideo) {
+    throw new GraphQLError('Only image or video uploads are allowed', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
@@ -115,8 +117,9 @@ export async function uploadBase64Image(opts: {
   if (!fileBytes.length) {
     throw new GraphQLError('Upload file is empty', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  if (fileBytes.length > 15 * 1024 * 1024) {
-    throw new GraphQLError('File is too large (max 15 MB)', {
+  const maxBytes = isVideo ? 100 * 1024 * 1024 : 15 * 1024 * 1024;
+  if (fileBytes.length > maxBytes) {
+    throw new GraphQLError(isVideo ? 'Video is too large (max 100 MB)' : 'Image is too large (max 15 MB)', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }

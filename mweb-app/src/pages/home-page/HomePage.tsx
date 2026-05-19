@@ -43,10 +43,10 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
     followedPods,
     hostPods,
     followedPosts,
+    myLatestPost,
     followedUsers,
     totalPods,
     hostNameOf,
-    refetch,
   } = useHomeData({
     superCategorySlug,
     locationId,
@@ -76,7 +76,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
       }}
     >
       <HomeStatusRail
-        me={me}
+        me={me ? { ...me, latest_status: myLatestPost } : me}
         branding={branding}
         sliders={sliders}
         followedClubs={followedClubs}
@@ -84,7 +84,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Ho
         hostPods={hostPods}
         followedPosts={followedPosts}
         followedUsers={followedUsers}
-        onStatusUploaded={() => refetch()}
       />
       <HomeVibeChips categories={categoryChips} selectedId={categoryId} onSelect={setCategoryId} />
       <Stack spacing={1.75}>

@@ -9,15 +9,13 @@
  *   2001 → server (graphql)
  *   2002 → admin (vite)
  *   2003 → mweb-app (vite)
- *   2004 → partners-app (vite)
- *   2005 → partners-website (astro)
  *
  * Override with: `node scripts/kill-ports.mjs 5173 5174 ...`
  */
 import { execSync, spawnSync } from 'node:child_process';
 import process from 'node:process';
 
-const DEFAULT_PORTS = [2000, 2001, 2002, 2003, 2004, 2005];
+const DEFAULT_PORTS = [2000, 2001, 2002, 2003];
 const argPorts = process.argv
   .slice(2)
   .map((value) => Number(value))

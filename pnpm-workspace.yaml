@@ -3,5 +3,3 @@ packages:
   - 'mweb-app'
   - 'admin'
   - 'website'
-  - 'partners/partners-app'
-  - 'partners/partners-website'

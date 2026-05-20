@@ -4,6 +4,34 @@ import { getRuntimeEnvValue } from '../../config/runtimeEnv';
 
 const IMAGEKIT_UPLOAD_URL = 'https://upload.imagekit.io/api/v1/files/upload';
 
+/**
+ * `fetch` with a hard timeout. Re-throws as a typed GraphQL error so the
+ * client sees a useful message instead of "fetch failed" when the upstream
+ * is unreachable (DNS, TLS, captive portal, regional block, etc.).
+ */
+async function fetchUpstream(
+  url: string,
+  init: RequestInit & { timeoutMs?: number; service: string },
+): Promise<Response> {
+  const { timeoutMs = 15_000, service, ...rest } = init;
+  const controller = new AbortController();
+  const timer = setTimeout(() => controller.abort(), timeoutMs);
+  try {
+    return await fetch(url, { ...rest, signal: controller.signal });
+  } catch (err: any) {
+    const isAbort = err?.name === 'AbortError';
+    const cause = err?.cause?.code || err?.cause?.message || err?.code || err?.message;
+    throw new GraphQLError(
+      isAbort
+        ? `${service} timed out after ${Math.round(timeoutMs / 1000)}s`
+        : `${service} is unreachable${cause ? ` (${cause})` : ''}`,
+      { extensions: { code: 'UPSTREAM_UNREACHABLE' } },
+    );
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
 async function getImagekitConfig() {
   const [publicKey, privateKey, urlEndpoint] = await Promise.all([
     getRuntimeEnvValue('IMAGEKIT_PUBLIC_KEY'),
@@ -232,7 +260,10 @@ export async function pexelsSearch(opts: {
     ? `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}${orientationParam}`
     : `https://api.pexels.com/v1/curated?per_page=${perPage}&page=${page}`;
 
-  const res = await fetch(url, { headers: { Authorization: pexelsApiKey } });
+  const res = await fetchUpstream(url, {
+    headers: { Authorization: pexelsApiKey },
+    service: 'Pexels',
+  });
   const json: any = await res.json().catch(() => ({}));
   if (!res.ok)
     throw new GraphQLError(`Pexels search failed: ${json?.error || res.statusText}`, {
@@ -301,7 +332,10 @@ export async function pexelsSearchVideos(opts: {
     ? `https://api.pexels.com/videos/search?query=${encodeURIComponent(query)}&per_page=${perPage}&page=${page}${orientationParam}`
     : `https://api.pexels.com/videos/popular?per_page=${perPage}&page=${page}`;
 
-  const res = await fetch(url, { headers: { Authorization: pexelsApiKey } });
+  const res = await fetchUpstream(url, {
+    headers: { Authorization: pexelsApiKey },
+    service: 'Pexels',
+  });
   const json: any = await res.json().catch(() => ({}));
   if (!res.ok)
     throw new GraphQLError(`Pexels video search failed: ${json?.error || res.statusText}`, {

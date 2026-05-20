@@ -61,6 +61,8 @@ import { inventoryTypeDefs } from './inventory/inventory.schema';
 import { inventoryResolvers } from './inventory/inventory.resolver';
 import { websiteContentTypeDefs } from './websiteContent/websiteContent.schema';
 import { websiteContentResolvers } from './websiteContent/websiteContent.resolver';
+import { venueTimeslotTypeDefs } from './venueTimeslot/venueTimeslot.schema';
+import { venueTimeslotResolvers } from './venueTimeslot/venueTimeslot.resolver';
 
 const rootTypeDefs = gql`
   type Query {
@@ -76,6 +78,6 @@ const rootResolvers = {
   Mutation: { _noop: () => true },
 };
 
-export const typeDefs = [rootTypeDefs, userTypeDefs, rbacTypeDefs, settingsTypeDefs, categoryTypeDefs, locationTypeDefs, clubTypeDefs, podTypeDefs, sliderTypeDefs, notificationTypeDefs, interviewTypeDefs, faqTypeDefs, financeTypeDefs, paymentTypeDefs, aiTypeDefs, postTypeDefs, policyTypeDefs, podIdeaTypeDefs, uploadTypeDefs, emailTemplateTypeDefs, podMemberTypeDefs, badgeTypeDefs, venueTypeDefs, hostTypeDefs, chatTypeDefs, newsletterTypeDefs, contactTypeDefs, analyticsTypeDefs, podPlanTypeDefs, whatsappTypeDefs, inventoryTypeDefs, websiteContentTypeDefs];
+export const typeDefs = [rootTypeDefs, userTypeDefs, rbacTypeDefs, settingsTypeDefs, categoryTypeDefs, locationTypeDefs, clubTypeDefs, podTypeDefs, sliderTypeDefs, notificationTypeDefs, interviewTypeDefs, faqTypeDefs, financeTypeDefs, paymentTypeDefs, aiTypeDefs, postTypeDefs, policyTypeDefs, podIdeaTypeDefs, uploadTypeDefs, emailTemplateTypeDefs, podMemberTypeDefs, badgeTypeDefs, venueTypeDefs, hostTypeDefs, chatTypeDefs, newsletterTypeDefs, contactTypeDefs, analyticsTypeDefs, podPlanTypeDefs, whatsappTypeDefs, inventoryTypeDefs, websiteContentTypeDefs, venueTimeslotTypeDefs];
 
-export const resolvers = [rootResolvers, userResolvers, rbacResolvers, settingsResolvers, categoryResolvers, locationResolvers, clubResolvers, podResolvers, sliderResolvers, notificationResolvers, interviewResolvers, faqResolvers, financeResolvers, paymentResolvers, aiResolvers, postResolvers, policyResolvers, podIdeaResolvers, uploadResolvers, emailTemplateResolvers, podMemberResolvers, badgeResolvers, venueResolvers, hostResolvers, chatResolvers, newsletterResolvers, contactResolvers, analyticsResolvers, podPlanResolvers, whatsappResolvers, inventoryResolvers, websiteContentResolvers];
+export const resolvers = [rootResolvers, userResolvers, rbacResolvers, settingsResolvers, categoryResolvers, locationResolvers, clubResolvers, podResolvers, sliderResolvers, notificationResolvers, interviewResolvers, faqResolvers, financeResolvers, paymentResolvers, aiResolvers, postResolvers, policyResolvers, podIdeaResolvers, uploadResolvers, emailTemplateResolvers, podMemberResolvers, badgeResolvers, venueResolvers, hostResolvers, chatResolvers, newsletterResolvers, contactResolvers, analyticsResolvers, podPlanResolvers, whatsappResolvers, inventoryResolvers, websiteContentResolvers, venueTimeslotResolvers];

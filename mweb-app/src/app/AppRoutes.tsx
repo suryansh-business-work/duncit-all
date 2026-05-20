@@ -15,6 +15,7 @@ import RegisterVenuePage from '../pages/RegisterVenuePage';
 import HostsVenuesPage from '../pages/HostsVenuesPage';
 import HostManagePage from '../pages/HostManagePage';
 import VenueManagePage from '../pages/VenueManagePage';
+import { VenueTimeslotsPage } from '../pages/venue-timeslots';
 import FaqsPage from '../pages/FaqsPage';
 import PolicyPage from '../pages/PolicyPage';
 import PodIdeasPage from '../pages/PodIdeasPage';
@@ -60,6 +61,8 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Props
       <Route path="/hosts-venues" element={withAuth(<HostsVenuesPage />)} />
       <Route path="/host/manage" element={withAuth(<HostManagePage />)} />
       <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
+      <Route path="/venues/manage/timeslots" element={withAuth(<VenueTimeslotsPage />)} />
+      <Route path="/venues/:venueId/timeslots" element={withAuth(<VenueTimeslotsPage />)} />
       <Route path="/faqs" element={withAuth(<FaqsPage />)} />
       <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />
       <Route path="/pod-ideas" element={withAuth(<PodIdeasPage />)} />

@@ -12,6 +12,8 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
+import EditIcon from '@mui/icons-material/Edit';
+import ScheduleIcon from '@mui/icons-material/Schedule';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import UserVenuePanel from './profile-page/UserVenuePanel';
 
@@ -152,8 +154,17 @@ export default function VenueManagePage() {
           )}
 
           <Stack direction="row" sx={{ mt: 2 }} spacing={1}>
-            <Button component={RouterLink} to="/register-venue" variant="outlined" size="small">
+            <Button component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditIcon />}>
               Edit venue
+            </Button>
+            <Button
+              component={RouterLink}
+              to="/venues/manage/timeslots"
+              variant="outlined"
+              size="small"
+              startIcon={<ScheduleIcon fontSize="small" />}
+            >
+              Manage timeslots
             </Button>
           </Stack>
         </CardContent>

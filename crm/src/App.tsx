@@ -1,6 +1,9 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import DashboardPage from './pages/DashboardPage';
+import VenueLeadsPage from './pages/venue-leads/VenueLeadsPage';
+import VenueLeadEditorPage from './pages/venue-leads/VenueLeadEditorPage';
+import HostLeadsPage from './pages/host-leads/HostLeadsPage';
+import HostLeadEditorPage from './pages/host-leads/HostLeadEditorPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
@@ -24,7 +27,13 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={authed(<DashboardPage />)} />
+      <Route path="/" element={authed(<VenueLeadsPage />)} />
+      <Route path="/venue-leads" element={authed(<VenueLeadsPage />)} />
+      <Route path="/venue-leads/new" element={authed(<VenueLeadEditorPage />)} />
+      <Route path="/venue-leads/:id" element={authed(<VenueLeadEditorPage />)} />
+      <Route path="/host-leads" element={authed(<HostLeadsPage />)} />
+      <Route path="/host-leads/new" element={authed(<HostLeadEditorPage />)} />
+      <Route path="/host-leads/:id" element={authed(<HostLeadEditorPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

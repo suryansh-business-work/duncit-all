@@ -46,6 +46,7 @@ https://partners-app.duncit.com
 https://ads.duncit.com/
 https://crm.duncit.com/
 https://track.duncit.com/
+https://tech.duncit.com/
 
 9. Any .tsx file should not exceed 200 lines. If a file grows beyond 200 lines, create a folder with the same component name and refactor it into multiple smaller components/modules inside that folder using an index-based structure. Ensure the refactor introduces no breaking changes and preserves all existing functionality, imports, exports, and behavior.
 
@@ -57,4 +58,4 @@ https://track.duncit.com/
 
 13. Use GraphQL and GraphQL Code Generator for all API interactions. Ensure that all queries and mutations are properly typed and that the generated code is used throughout the project for type safety and consistency.
 
-14. After completing all changes, make sure to verify the build, check types, run lint checks, apply code formatting, and only then push the code to the repository. Ensure that all GitHub CI checks pass successfully and that the application is fully functional across all environments (https://duncit.com, https://server.duncit.com/, https://admin.duncit.com/, https://mweb.duncit.com/, https://partners.duncit.com, https://partners-app.duncit.com, https://ads.duncit.com/, https://crm.duncit.com/, https://track.duncit.com/).
+14. After completing all changes, make sure to verify the build, check types, run lint checks, apply code formatting, and only then push the code to the repository. Ensure that all GitHub CI checks pass successfully and that the application is fully functional across all environments (https://duncit.com, https://server.duncit.com/, https://admin.duncit.com/, https://mweb.duncit.com/, https://partners.duncit.com, https://partners-app.duncit.com, https://ads.duncit.com/, https://crm.duncit.com/, https://track.duncit.com/, https://tech.duncit.com/).

@@ -4,6 +4,8 @@ import { requireRole } from '../../middleware/rbac';
 
 const ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
 const ADMIN_WRITE = ['SUPER_ADMIN'];
+// Environment variables are managed from the Tech portal (and by super admins).
+const ENV_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
 
 export const settingsResolvers = {
   Query: {
@@ -23,7 +25,7 @@ export const settingsResolvers = {
     publicFeatureFlags: async () => settingsService.listPublicFlags(),
     branding: async () => settingsService.getBranding(),
     environmentVariables: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, ENV_MANAGE);
       return settingsService.listEnvironmentVariables();
     },
   },
@@ -65,11 +67,11 @@ export const settingsResolvers = {
       args: { key: string; value: string },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, ENV_MANAGE);
       return settingsService.updateEnvironmentVariable(args.key, args.value, ctx.user?.id ?? null);
     },
     clearEnvironmentVariable: async (_p: unknown, args: { key: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_WRITE);
+      requireRole(ctx, ENV_MANAGE);
       return settingsService.clearEnvironmentVariable(args.key);
     },
   },

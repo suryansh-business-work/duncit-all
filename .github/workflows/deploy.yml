@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       services:
-        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website,ads,crm,track (or "all")'
+        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website,ads,crm,track,tech (or "all")'
         required: false
         default: 'all'
 
@@ -37,6 +37,7 @@ jobs:
       ads: ${{ steps.filter.outputs.ads }}
       crm: ${{ steps.filter.outputs.crm }}
       track: ${{ steps.filter.outputs.track }}
+      tech: ${{ steps.filter.outputs.tech }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -109,6 +110,14 @@ jobs:
               - '.github/workflows/deploy.yml'
             track:
               - 'track/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            tech:
+              - 'tech/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -386,13 +395,41 @@ jobs:
               --cache-to   type=gha,scope=duncit-track,mode=max \
               --push .
 
+  build-tech:
+    needs: [changes, typecheck]
+    if: needs.changes.outputs.tech == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push tech
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file tech/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-tech:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-tech:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=TECH_MANAGER \
+              --cache-from type=gha,scope=duncit-tech \
+              --cache-to   type=gha,scope=duncit-tech,mode=max \
+              --push .
+
   # -----------------------------------------------------------
   # Single deploy job runs after whichever build jobs ran. It only
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads, build-crm, build-track]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads.result == 'success' || needs.build-crm.result == 'success' || needs.build-track.result == 'success')
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads, build-crm, build-track, build-tech]
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads.result == 'success' || needs.build-crm.result == 'success' || needs.build-track.result == 'success' || needs.build-tech.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -420,6 +457,7 @@ jobs:
           [ "${{ needs.build-ads.result }}" = "success" ] && PARTS+=("ads")
           [ "${{ needs.build-crm.result }}" = "success" ] && PARTS+=("crm")
           [ "${{ needs.build-track.result }}" = "success" ] && PARTS+=("track")
+          [ "${{ needs.build-tech.result }}" = "success" ] && PARTS+=("tech")
           echo "list=${PARTS[*]}" >> "$GITHUB_OUTPUT"
           echo "Restarting: ${PARTS[*]}"
 
@@ -479,6 +517,7 @@ jobs:
             deploy/nginx/ads.duncit.com \
             deploy/nginx/crm.duncit.com \
             deploy/nginx/track.duncit.com \
+            deploy/nginx/tech.duncit.com \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/nginx/
           ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'REMOTE'
@@ -486,7 +525,7 @@ jobs:
           chmod 600 /opt/duncit/server.env
           chmod +x /opt/duncit/redeploy.sh
           SUDO=$(command -v sudo || echo)
-          for site in duncit.com admin.duncit.com mweb.duncit.com server.duncit.com ads.duncit.com crm.duncit.com track.duncit.com; do
+          for site in duncit.com admin.duncit.com mweb.duncit.com server.duncit.com ads.duncit.com crm.duncit.com track.duncit.com tech.duncit.com; do
             $SUDO install -m 644 "/opt/duncit/nginx/$site" "/etc/nginx/sites-available/$site"
             $SUDO ln -sf "/etc/nginx/sites-available/$site" "/etc/nginx/sites-enabled/$site"
           done
@@ -494,7 +533,7 @@ jobs:
             $SUDO apt-get update -qq
             $SUDO apt-get install -y -qq certbot python3-certbot-nginx
           fi
-          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d crm.duncit.com -d track.duncit.com"
+          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d crm.duncit.com -d track.duncit.com -d tech.duncit.com"
           if ! $SUDO test -d /etc/letsencrypt/live/duncit.com; then
             $SUDO certbot --nginx --non-interactive --agree-tos --redirect --cert-name duncit.com -m admin@duncit.com $CERTBOT_DOMAINS || true
           else
@@ -537,4 +576,5 @@ jobs:
               curl -fsSI http://127.0.0.1:2006/ | head -1
               curl -fsSI http://127.0.0.1:2007/ | head -1
               curl -fsSI http://127.0.0.1:2008/ | head -1
+              curl -fsSI http://127.0.0.1:2009/ | head -1
               '

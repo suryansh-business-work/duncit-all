@@ -11,6 +11,7 @@ export const ROLES = [
   'ADS_MANAGER',
   'CRM_MANAGER',
   'TRACK_MANAGER',
+  'TECH_MANAGER',
 ] as const;
 
 export type UserRole = (typeof ROLES)[number];
@@ -40,6 +41,7 @@ export const ROLE_PERMISSIONS: Record<UserRole, Permission[]> = {
   ADS_MANAGER: [],
   CRM_MANAGER: [],
   TRACK_MANAGER: [],
+  TECH_MANAGER: [],
   HOST: [],
   VENUE_OWNER: ['MANAGE_VENUES'],
   USER: [],

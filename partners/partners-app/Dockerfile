@@ -19,6 +19,7 @@ COPY partners/partners-website/package.json ./partners/partners-website/
 COPY ads/package.json ./ads/
 COPY crm/package.json ./crm/
 COPY track/package.json ./track/
+COPY tech/package.json ./tech/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

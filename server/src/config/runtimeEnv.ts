@@ -38,6 +38,11 @@ export const RUNTIME_ENV_DEFINITIONS: RuntimeEnvDefinition[] = [
   { group: 'Twilio', app: 'server', key: 'TWILIO_WEBHOOK_BASE_URL', label: 'Webhook Base URL', is_secret: false },
   { group: 'Twilio', app: 'server', key: 'TWILIO_CALL_RECORDING_ENABLED', label: 'Call Recording Enabled', is_secret: false },
   { group: 'AI', app: 'server', key: 'OPENAI_API_KEY', label: 'OpenAI API Key', is_secret: true },
+  { group: 'Vobiz', app: 'server', key: 'VOBIZ_BASE_URL', label: 'API Base URL', is_secret: false },
+  { group: 'Vobiz', app: 'server', key: 'VOBIZ_API_KEY', label: 'API Key', is_secret: true },
+  { group: 'Vobiz', app: 'server', key: 'VOBIZ_SENDER_EMAIL', label: 'Sender Email', is_secret: false },
+  { group: 'Vobiz', app: 'server', key: 'VOBIZ_SENDER_NAME', label: 'Sender Name', is_secret: false },
+  { group: 'Vobiz', app: 'server', key: 'VOBIZ_CALLER_ID', label: 'Caller ID / From Number', is_secret: false },
   { group: 'Admin', app: 'admin', key: 'VITE_IS_DEVELOPMENT', label: 'Development Mode', is_secret: false },
   { group: 'Admin', app: 'admin', key: 'VITE_GRAPHQL_URL', label: 'GraphQL URL', is_secret: false },
   { group: 'Admin', app: 'admin', key: 'VITE_MWEB_URL', label: 'mWeb URL', is_secret: false },
@@ -54,6 +59,14 @@ export const RUNTIME_ENV_DEFINITIONS: RuntimeEnvDefinition[] = [
   { group: 'Partners', app: 'partners-app', key: 'VITE_PARTNERS_APP_URL', label: 'Partners App URL', is_secret: false },
   { group: 'Partners', app: 'partners-website', key: 'PUBLIC_PARTNERS_SITE_URL', label: 'Partners Website URL', is_secret: false },
   { group: 'Partners', app: 'partners-website', key: 'PUBLIC_PARTNERS_APP_URL', label: 'Partners App URL', is_secret: false },
+  { group: 'Ads', app: 'ads', key: 'VITE_GRAPHQL_URL', label: 'GraphQL URL', is_secret: false },
+  { group: 'Ads', app: 'ads', key: 'VITE_REQUIRED_ROLES', label: 'Allowed Roles', is_secret: false },
+  { group: 'CRM', app: 'crm', key: 'VITE_GRAPHQL_URL', label: 'GraphQL URL', is_secret: false },
+  { group: 'CRM', app: 'crm', key: 'VITE_REQUIRED_ROLES', label: 'Allowed Roles', is_secret: false },
+  { group: 'Track', app: 'track', key: 'VITE_GRAPHQL_URL', label: 'GraphQL URL', is_secret: false },
+  { group: 'Track', app: 'track', key: 'VITE_REQUIRED_ROLES', label: 'Allowed Roles', is_secret: false },
+  { group: 'Tech', app: 'tech', key: 'VITE_GRAPHQL_URL', label: 'GraphQL URL', is_secret: false },
+  { group: 'Tech', app: 'tech', key: 'VITE_REQUIRED_ROLES', label: 'Allowed Roles', is_secret: false },
 ];
 
 const definitionByKey = new Map(RUNTIME_ENV_DEFINITIONS.map((definition) => [definition.key, definition]));

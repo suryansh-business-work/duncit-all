@@ -1,16 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Card,
-  CardContent,
-  CircularProgress,
-  Stack,
-  Tab,
-  Tabs,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Card, CardContent, CircularProgress, Stack, Tab, Tabs, Typography } from '@mui/material';
 import EnvironmentVariableRow from './EnvironmentVariableRow';
 import {
   CLEAR_ENVIRONMENT_VARIABLE,
@@ -25,9 +15,7 @@ interface Props {
 }
 
 export default function EnvironmentVariablesSection({ onToast }: Props) {
-  const { data, loading, error, refetch } = useQuery(ENVIRONMENT_VARIABLES, {
-    fetchPolicy: 'cache-and-network',
-  });
+  const { data, loading, error, refetch } = useQuery(ENVIRONMENT_VARIABLES, { fetchPolicy: 'cache-and-network' });
   const [updateEnv] = useMutation(UPDATE_ENVIRONMENT_VARIABLE);
   const [clearEnv] = useMutation(CLEAR_ENVIRONMENT_VARIABLE);
   const rows = (data?.environmentVariables ?? []) as EnvRow[];
@@ -85,23 +73,12 @@ export default function EnvironmentVariablesSection({ onToast }: Props) {
             <Alert severity="error">{error.message}</Alert>
           ) : (
             <>
-              <Tabs
-                value={selectedGroup}
-                onChange={(_event, value) => setActiveGroup(value)}
-                variant="scrollable"
-                scrollButtons="auto"
-              >
+              <Tabs value={selectedGroup} onChange={(_event, value) => setActiveGroup(value)} variant="scrollable" scrollButtons="auto">
                 {groups.map((group) => <Tab key={group} value={group} label={group} />)}
               </Tabs>
               <Box>
                 {visibleRows.map((row) => (
-                  <EnvironmentVariableRow
-                    key={row.key}
-                    row={row}
-                    busy={busyKey === row.key}
-                    onSave={save}
-                    onClear={clear}
-                  />
+                  <EnvironmentVariableRow key={row.key} row={row} busy={busyKey === row.key} onSave={save} onClear={clear} />
                 ))}
               </Box>
             </>

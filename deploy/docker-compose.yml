@@ -71,3 +71,10 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2008:80"
+
+  tech:
+    image: ${DOCKERHUB_USERNAME}/duncit-tech:${IMAGE_TAG:-latest}
+    container_name: duncit-tech
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2009:80"

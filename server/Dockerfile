@@ -10,6 +10,9 @@ COPY admin/package.json ./admin/
 COPY website/package.json ./website/
 COPY partners/partners-app/package.json ./partners/partners-app/
 COPY partners/partners-website/package.json ./partners/partners-website/
+COPY ads/package.json ./ads/
+COPY crm/package.json ./crm/
+COPY track/package.json ./track/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
@@ -30,6 +33,9 @@ COPY --from=builder /repo/admin/package.json ./admin/
 COPY --from=builder /repo/website/package.json ./website/
 COPY --from=builder /repo/partners/partners-app/package.json ./partners/partners-app/
 COPY --from=builder /repo/partners/partners-website/package.json ./partners/partners-website/
+COPY --from=builder /repo/ads/package.json ./ads/
+COPY --from=builder /repo/crm/package.json ./crm/
+COPY --from=builder /repo/track/package.json ./track/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --prod --frozen-lockfile --filter server

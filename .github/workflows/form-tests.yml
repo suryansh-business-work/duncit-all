@@ -6,6 +6,9 @@ on:
     paths:
       - 'admin/**'
       - 'mweb-app/**'
+      - 'ads/**'
+      - 'crm/**'
+      - 'track/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -15,6 +18,9 @@ on:
     paths:
       - 'admin/**'
       - 'mweb-app/**'
+      - 'ads/**'
+      - 'crm/**'
+      - 'track/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -33,7 +39,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        workspace: [admin, mweb-app]
+        workspace: [admin, mweb-app, ads, crm, track]
 
     steps:
       - name: Checkout
@@ -94,4 +100,16 @@ jobs:
 
       - name: Typecheck mweb-app
         working-directory: mweb-app
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck ads
+        working-directory: ads
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck crm
+        working-directory: crm
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck track
+        working-directory: track
         run: pnpm exec tsc -b --noEmit

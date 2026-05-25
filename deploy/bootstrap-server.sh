@@ -88,6 +88,21 @@ services:
     container_name: duncit-partners-app
     restart: unless-stopped
     ports: ["127.0.0.1:2005:80"]
+  ads:
+    image: ${DOCKERHUB_USERNAME}/duncit-ads:latest
+    container_name: duncit-ads
+    restart: unless-stopped
+    ports: ["127.0.0.1:2006:80"]
+  crm:
+    image: ${DOCKERHUB_USERNAME}/duncit-crm:latest
+    container_name: duncit-crm
+    restart: unless-stopped
+    ports: ["127.0.0.1:2007:80"]
+  track:
+    image: ${DOCKERHUB_USERNAME}/duncit-track:latest
+    container_name: duncit-track
+    restart: unless-stopped
+    ports: ["127.0.0.1:2008:80"]
 EOF
 
 echo "[4/6] Install nginx site configs (skipping existing duncit.com)"
@@ -125,6 +140,9 @@ write_site "mweb.duncit.com"   2003
 write_site "duncit.com"        2000
 write_site "partners.duncit.com" 2004
 write_site "partners-app.duncit.com" 2005
+write_site "ads.duncit.com"     2006
+write_site "crm.duncit.com"     2007
+write_site "track.duncit.com"   2008
 # Also alias www -> apex
 sed -i 's/server_name duncit.com;/server_name duncit.com www.duncit.com;/' "$SITES_AVAIL/duncit.com" || true
 

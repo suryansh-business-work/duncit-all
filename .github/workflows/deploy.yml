@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       services:
-        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website (or "all")'
+        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website,ads,crm,track (or "all")'
         required: false
         default: 'all'
 
@@ -34,6 +34,9 @@ jobs:
       website: ${{ steps.filter.outputs.website }}
       partners_app: ${{ steps.filter.outputs.partners_app }}
       partners_website: ${{ steps.filter.outputs.partners_website }}
+      ads: ${{ steps.filter.outputs.ads }}
+      crm: ${{ steps.filter.outputs.crm }}
+      track: ${{ steps.filter.outputs.track }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -82,6 +85,30 @@ jobs:
               - '.github/workflows/deploy.yml'
             partners_website:
               - 'partners/partners-website/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            ads:
+              - 'ads/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            crm:
+              - 'crm/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            track:
+              - 'track/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -275,13 +302,97 @@ jobs:
               --cache-to   type=gha,scope=duncit-partners-website,mode=max \
               --push .
 
+  build-ads:
+    needs: [changes, typecheck]
+    if: needs.changes.outputs.ads == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push ads
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file ads/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=ADS_MANAGER \
+              --cache-from type=gha,scope=duncit-ads \
+              --cache-to   type=gha,scope=duncit-ads,mode=max \
+              --push .
+
+  build-crm:
+    needs: [changes, typecheck]
+    if: needs.changes.outputs.crm == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push crm
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file crm/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-crm:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-crm:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=CRM_MANAGER \
+              --cache-from type=gha,scope=duncit-crm \
+              --cache-to   type=gha,scope=duncit-crm,mode=max \
+              --push .
+
+  build-track:
+    needs: [changes, typecheck]
+    if: needs.changes.outputs.track == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push track
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file track/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-track:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-track:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=TRACK_MANAGER \
+              --cache-from type=gha,scope=duncit-track \
+              --cache-to   type=gha,scope=duncit-track,mode=max \
+              --push .
+
   # -----------------------------------------------------------
   # Single deploy job runs after whichever build jobs ran. It only
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success')
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads, build-crm, build-track]
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads.result == 'success' || needs.build-crm.result == 'success' || needs.build-track.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -306,6 +417,9 @@ jobs:
           [ "${{ needs.build-website.result }}" = "success" ] && PARTS+=("website")
           [ "${{ needs.build-partners-app.result }}" = "success" ] && PARTS+=("partners-app")
           [ "${{ needs.build-partners-website.result }}" = "success" ] && PARTS+=("partners-website")
+          [ "${{ needs.build-ads.result }}" = "success" ] && PARTS+=("ads")
+          [ "${{ needs.build-crm.result }}" = "success" ] && PARTS+=("crm")
+          [ "${{ needs.build-track.result }}" = "success" ] && PARTS+=("track")
           echo "list=${PARTS[*]}" >> "$GITHUB_OUTPUT"
           echo "Restarting: ${PARTS[*]}"
 
@@ -362,6 +476,9 @@ jobs:
             deploy/nginx/admin.duncit.com \
             deploy/nginx/mweb.duncit.com \
             deploy/nginx/server.duncit.com \
+            deploy/nginx/ads.duncit.com \
+            deploy/nginx/crm.duncit.com \
+            deploy/nginx/track.duncit.com \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/nginx/
           ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'REMOTE'
@@ -369,7 +486,7 @@ jobs:
           chmod 600 /opt/duncit/server.env
           chmod +x /opt/duncit/redeploy.sh
           SUDO=$(command -v sudo || echo)
-          for site in duncit.com admin.duncit.com mweb.duncit.com server.duncit.com; do
+          for site in duncit.com admin.duncit.com mweb.duncit.com server.duncit.com ads.duncit.com crm.duncit.com track.duncit.com; do
             $SUDO install -m 644 "/opt/duncit/nginx/$site" "/etc/nginx/sites-available/$site"
             $SUDO ln -sf "/etc/nginx/sites-available/$site" "/etc/nginx/sites-enabled/$site"
           done
@@ -377,7 +494,7 @@ jobs:
             $SUDO apt-get update -qq
             $SUDO apt-get install -y -qq certbot python3-certbot-nginx
           fi
-          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com"
+          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d crm.duncit.com -d track.duncit.com"
           if ! $SUDO test -d /etc/letsencrypt/live/duncit.com; then
             $SUDO certbot --nginx --non-interactive --agree-tos --redirect --cert-name duncit.com -m admin@duncit.com $CERTBOT_DOMAINS || true
           else
@@ -417,4 +534,7 @@ jobs:
               curl -fsSI http://127.0.0.1:2000/ | head -1
               curl -fsSI http://127.0.0.1:2004/ | head -1
               curl -fsSI http://127.0.0.1:2005/ | head -1
+              curl -fsSI http://127.0.0.1:2006/ | head -1
+              curl -fsSI http://127.0.0.1:2007/ | head -1
+              curl -fsSI http://127.0.0.1:2008/ | head -1
               '

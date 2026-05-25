@@ -50,3 +50,24 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2005:80"
+
+  ads:
+    image: ${DOCKERHUB_USERNAME}/duncit-ads:${IMAGE_TAG:-latest}
+    container_name: duncit-ads
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2006:80"
+
+  crm:
+    image: ${DOCKERHUB_USERNAME}/duncit-crm:${IMAGE_TAG:-latest}
+    container_name: duncit-crm
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2007:80"
+
+  track:
+    image: ${DOCKERHUB_USERNAME}/duncit-track:${IMAGE_TAG:-latest}
+    container_name: duncit-track
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2008:80"

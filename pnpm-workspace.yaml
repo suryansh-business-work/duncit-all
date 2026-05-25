@@ -5,3 +5,6 @@ packages:
   - website
   - partners/partners-app
   - partners/partners-website
+  - ads
+  - crm
+  - track

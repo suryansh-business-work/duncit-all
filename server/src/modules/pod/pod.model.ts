@@ -38,6 +38,7 @@ export interface IPod extends Document {
   pod_hosts_id: Types.ObjectId[];
   location_id?: Types.ObjectId | null;
   venue_id?: Types.ObjectId | null;
+  venue_slot_id?: Types.ObjectId | null;
   club_id: Types.ObjectId;
   zone_name?: string | null;
   pod_mode: PodMode;
@@ -118,6 +119,7 @@ const podSchema = new Schema<IPod>(
     pod_hosts_id: [{ type: Schema.Types.ObjectId, ref: 'User', required: true }],
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
     venue_id: { type: Schema.Types.ObjectId, ref: 'Venue', default: null, index: true },
+    venue_slot_id: { type: Schema.Types.ObjectId, ref: 'VenueSlot', default: null, index: true },
     club_id: { type: Schema.Types.ObjectId, ref: 'Club', required: true },
     zone_name: { type: String, default: null, trim: true },
     pod_mode: { type: String, enum: ['PHYSICAL', 'VIRTUAL'], default: 'PHYSICAL', required: true },

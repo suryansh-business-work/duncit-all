@@ -1,6 +1,6 @@
 import { useEffect, useState, type ReactNode } from 'react';
-import { gql, useQuery } from '@apollo/client';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useUserData } from '@duncit/user-context';
 import {
   AppBar,
   Avatar,
@@ -27,19 +27,6 @@ import AppBreadcrumbs from './AppBreadcrumbs';
 export const DRAWER_WIDTH = 256;
 export const HEADER_HEIGHT = 48;
 
-const SHELL_ME = gql`
-  query ShellMe {
-    me {
-      full_name
-      first_name
-      last_name
-      email
-      roles
-      profile_photo
-    }
-  }
-`;
-
 const initials = (user: any) => {
   const name = user?.full_name || [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || appConfig.name;
   return (
@@ -58,11 +45,13 @@ export default function AppShell({ children }: { children: ReactNode }) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { data, loading } = useQuery(SHELL_ME, { fetchPolicy: 'cache-and-network' });
-  const account = data?.me;
+  const { user: account, loading, logout: ctxLogout } = useUserData();
 
   const logout = () => {
+    // ctxLogout already clears all storage + redirects to /login. We still
+    // call clearToken() so app-specific token-key logic stays in one place.
     clearToken();
+    ctxLogout();
     navigate('/login', { replace: true });
   };
 

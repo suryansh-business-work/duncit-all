@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client';
+import { Link as RouterLink } from 'react-router-dom';
 import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TablePagination, TableRow, Typography } from '@mui/material';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { MY_VENUES } from '../register-venue-page/queries';
 import VenueListingsToolbar from './VenueListingsToolbar';
 
@@ -49,7 +51,21 @@ export default function VenueListingsTable({ onEdit }: Props) {
                     <TableCell>{Number(venue.capacity || 0)}</TableCell>
                     <TableCell><Chip size="small" label={venue.status} color={venue.status === 'APPROVED' ? 'success' : venue.status === 'REJECTED' ? 'error' : venue.status === 'SUBMITTED' ? 'info' : 'warning'} /></TableCell>
                     <TableCell>{formatDate(venue.updated_at || venue.created_at)}</TableCell>
-                    <TableCell align="right"><Button size="small" onClick={onEdit}>{venue.status === 'APPROVED' ? 'View' : 'Continue'}</Button></TableCell>
+                    <TableCell align="right">
+                      <Stack direction="row" spacing={1} justifyContent="flex-end">
+                        {venue.status === 'APPROVED' && (
+                          <Button
+                            size="small"
+                            component={RouterLink}
+                            to={`/venues/${venue.id}/availability`}
+                            startIcon={<EventAvailableIcon />}
+                          >
+                            Availability
+                          </Button>
+                        )}
+                        <Button size="small" onClick={onEdit}>{venue.status === 'APPROVED' ? 'View' : 'Continue'}</Button>
+                      </Stack>
+                    </TableCell>
                   </TableRow>
                 ))}
               </TableBody>

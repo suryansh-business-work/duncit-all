@@ -1,6 +1,6 @@
 import { ReactNode, useState } from 'react';
-import { gql, useQuery } from '@apollo/client';
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { useUserData } from '@duncit/user-context';
 import { AppBar, Avatar, Box, Button, Drawer, IconButton, Toolbar, Tooltip, Typography, useMediaQuery } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
@@ -15,12 +15,6 @@ import AppBreadcrumbs from './AppBreadcrumbs';
 export const DRAWER_WIDTH = 264;
 export const HEADER_HEIGHT = 48;
 
-const PARTNER_ME = gql`
-  query PartnerShellMe {
-    me { full_name first_name last_name email profile_photo }
-  }
-`;
-
 const initials = (user: any) => {
   const name = user?.full_name || [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || 'P';
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part: string) => part[0]?.toUpperCase()).join('') || 'P';
@@ -32,12 +26,11 @@ export default function PartnerShell({ children }: { children: ReactNode }) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const [mobileOpen, setMobileOpen] = useState(false);
-  const { data } = useQuery(PARTNER_ME, { fetchPolicy: 'cache-first' });
-  const account = data?.me;
-  const logout = () => {
-    localStorage.removeItem('token');
-    navigate('/login', { replace: true });
-  };
+  const { user: account, logout } = useUserData();
+  // Note: logout() from the context already wipes all storage + redirects.
+  // We don't navigate here ourselves — `window.location.href = '/login'` is
+  // the cleaner reset for a partner cancelling a long session.
+  void navigate;
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100dvh', bgcolor: 'background.default' }}>

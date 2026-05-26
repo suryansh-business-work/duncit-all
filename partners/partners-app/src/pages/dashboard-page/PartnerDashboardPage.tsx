@@ -5,6 +5,7 @@ import { endOfDay, format, startOfDay, subDays } from 'date-fns';
 import DashboardDateRange from './DashboardDateRange';
 import DashboardMetricCards, { emptyMetrics } from './DashboardMetricCards';
 import DashboardPanels from './DashboardPanels';
+import HealthStrip from './health/HealthStrip';
 import { PARTNER_DASHBOARD } from './dashboard.queries';
 import type { DashboardRange, DashboardTab } from './dashboard.types';
 
@@ -50,6 +51,7 @@ export default function PartnerDashboardPage() {
         </Stack>
       </Box>
       {error && <Alert severity="error">{error.message}</Alert>}
+      <HealthStrip venues={venues} />
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent>
           <Stack spacing={2}>

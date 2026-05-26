@@ -1,10 +1,11 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { ApolloProvider } from '@apollo/client';
+import { ApolloProvider, gql } from '@apollo/client';
 import { BrowserRouter } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import { UserProvider } from '@duncit/user-context';
 import { apolloClient } from './apollo';
 import { ColorModeProvider } from './ColorModeContext';
 import App from './App';
@@ -30,18 +31,47 @@ document.addEventListener(
   true // capture phase — fires before React synthetic events
 );
 
+// Mirrors the fields existing mweb screens read off `me`. Kept here (not in
+// app-header/queries.ts) so the provider doesn't depend on a sibling module.
+const ME_QUERY = gql`
+  query MwebSessionMe {
+    me {
+      user_id
+      full_name
+      first_name
+      last_name
+      email
+      is_email_verified
+      profile_photo
+      city
+      roles
+      following_pod_ids
+      following_user_ids
+    }
+  }
+`;
+
+const isAuthed = () => !!localStorage.getItem('token');
+
+const loadUser = async () => {
+  const { data } = await apolloClient.query({ query: ME_QUERY, fetchPolicy: 'network-only' });
+  return data?.me ?? null;
+};
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ApolloProvider client={apolloClient}>
-      <ColorModeProvider>
-        <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-            <BrowserRouter>
-              <App />
-            </BrowserRouter>
-          </GoogleOAuthProvider>
-        </LocalizationProvider>
-      </ColorModeProvider>
+      <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey="mweb_user">
+        <ColorModeProvider>
+          <LocalizationProvider dateAdapter={AdapterDateFns}>
+            <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+              <BrowserRouter>
+                <App />
+              </BrowserRouter>
+            </GoogleOAuthProvider>
+          </LocalizationProvider>
+        </ColorModeProvider>
+      </UserProvider>
     </ApolloProvider>
   </React.StrictMode>
 );

@@ -1,5 +1,7 @@
-import { Link as RouterLink } from 'react-router-dom';
+import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { gql, useQuery } from '@apollo/client';
+import HealthMeter from '../components/health/HealthMeter';
+import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries';
 import {
   Alert,
   Box,
@@ -43,10 +45,17 @@ const MY_VENUE_DETAILS = gql`
 `;
 
 export default function VenueManagePage() {
+  const navigate = useNavigate();
   const { data, loading, error } = useQuery(MY_VENUE_DETAILS, {
     fetchPolicy: 'cache-and-network',
   });
   const venue = data?.myVenue;
+  const { data: healthData } = useQuery<{ myVenueHealth: HealthScore | null }>(MY_VENUE_HEALTH, {
+    variables: { venue_id: venue?.id ?? '' },
+    skip: !venue?.id,
+    fetchPolicy: 'cache-and-network',
+  });
+  const health = healthData?.myVenueHealth ?? null;
   const venueCount = venue ? 1 : 0;
   const capacity = typeof venue?.capacity === 'number' ? venue.capacity : 0;
   const isApproved = venue?.status === 'APPROVED';
@@ -83,6 +92,41 @@ export default function VenueManagePage() {
           </Card>
         ))}
       </Stack>
+
+      {health && venue?.id && (
+        <Card variant="outlined" sx={{ borderRadius: 4 }}>
+          <CardContent>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+              <HealthMeter
+                score={health.total_score}
+                band={health.band}
+                size={140}
+                label="Venue Health"
+                onClick={() => navigate(`/venues/${venue.id}/health`)}
+                caption="Tap for details"
+              />
+              <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+                  {health.band === 'GREEN' ? 'Venue is in great shape.' : health.band === 'YELLOW' ? 'A few things to polish.' : 'Needs attention.'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Base activity: {health.base_score}
+                  {health.delta_sum !== 0 && (
+                    <>
+                      {' '}· Admin adjustment: {health.delta_sum > 0 ? `+${health.delta_sum}` : health.delta_sum}
+                    </>
+                  )}
+                </Typography>
+                {health.adjustments.length > 0 && (
+                  <Typography variant="caption" color="text.secondary">
+                    {health.adjustments.length} admin remark{health.adjustments.length === 1 ? '' : 's'} — tap the meter to read.
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
 
       <Card variant="outlined" sx={{ borderRadius: 4, bgcolor: 'rgba(255,79,115,0.10)' }}>
         <CardContent>

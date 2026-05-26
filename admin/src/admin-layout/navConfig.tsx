@@ -98,9 +98,11 @@ export const NAV: NavSection[] = [
       '/email-templates',
       '/badges',
       '/support-logs',
+      '/bouncers',
     ],
     items: [
       { label: 'Notifications', to: '/notifications', icon: navIcons.notifications },
+      { label: 'Bouncers', to: '/bouncers', icon: navIcons.bouncers },
       { label: 'Interview Requests', to: '/interview-requests', icon: navIcons.eventAvailable },
       { label: 'FAQs', to: '/faqs', icon: navIcons.help },
       { label: 'Support Logs', to: '/support-logs', icon: navIcons.support },

@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
+import { useUserData } from '@duncit/user-context';
 import { Alert, AppBar, Avatar, Box, IconButton, Toolbar, Tooltip } from '@mui/material';
 import { HEADER_DATA, PUBLIC_POLICIES } from './queries';
 import HeaderBrand from './HeaderBrand';
@@ -11,7 +12,6 @@ import HeaderToast from './HeaderToast';
 import LocationDialog from './LocationDialog';
 import ProfileDrawer from './ProfileDrawer';
 import SuperCategoryTabs from './SuperCategoryTabs';
-import UserDataReloadDialog from './UserDataReloadDialog';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import SurveyHeaderActions from './SurveyHeaderActions';
 import AuthModeToggle from '../AuthModeToggle';
@@ -36,7 +36,8 @@ export default function AppHeader({
   onZoneChange,
 }: AppHeaderProps) {
   const navigate = useNavigate();
-  const { data, loading, error: headerError } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
+  const { logout: ctxLogout } = useUserData();
+  const { data, loading } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
   const [locDialogOpen, setLocDialogOpen] = useState(false);
   const [draftLocationId, setDraftLocationId] = useState('');
   const [draftZone, setDraftZone] = useState('');
@@ -46,7 +47,9 @@ export default function AppHeader({
 
   const branding = data?.branding;
   const me = data?.me;
-  const showUserReloadDialog = !loading && !!localStorage.getItem('token') && (!!headerError || !me);
+  // The shared <UserProvider> auto-mounts a global "User data not loaded"
+  // dialog when the `me` query fails, so we no longer render a local one
+  // here. Keeping `me`/`loading` for the rest of the header's logic.
   const superCats = data?.superCategories ?? [];
   const locations = data?.locations ?? [];
   const superCategoryValue = selectedSuperCategory || superCats[0]?.slug || '';
@@ -76,8 +79,7 @@ export default function AppHeader({
 
   const logout = () => {
     setProfileAnchor(null);
-    localStorage.removeItem('token');
-    navigate('/login');
+    ctxLogout();
   };
 
   const handleNotifToast = useCallback(
@@ -191,7 +193,6 @@ export default function AppHeader({
       )}
 
       {!minimal && <HeaderToast toast={toast} onClose={() => setToast(null)} />}
-      <UserDataReloadDialog open={showUserReloadDialog} />
     </AppBar>
   );
 }

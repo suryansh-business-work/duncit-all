@@ -1,6 +1,6 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
+import { useUserData } from '@duncit/user-context';
 import {
   AppBar,
   Avatar,
@@ -17,7 +17,7 @@ import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LogoutIcon from '@mui/icons-material/Logout';
 import PersonIcon from '@mui/icons-material/Person';
-import { ADMIN_ME, getAdminInitials, type AdminSessionUser } from '../adminSession';
+import { getAdminInitials, type AdminSessionUser } from '../adminSession';
 import { useColorMode } from '../ColorModeContext';
 import AdminSearch from './AdminSearch';
 import { HEADER_HEIGHT } from './styled';
@@ -31,8 +31,8 @@ export default function Topbar({ isDesktop, onOpenMobile }: Props) {
   const { mode, toggle } = useColorMode();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const navigate = useNavigate();
-  const { data } = useQuery<{ me: AdminSessionUser | null }>(ADMIN_ME);
-  const admin = data?.me;
+  const { user, logout } = useUserData<AdminSessionUser>();
+  const admin = user;
 
   const handleProfile = () => {
     setAnchorEl(null);
@@ -40,9 +40,10 @@ export default function Topbar({ isDesktop, onOpenMobile }: Props) {
   };
 
   const handleLogout = () => {
-    localStorage.removeItem('admin_token');
     setAnchorEl(null);
-    navigate('/login');
+    // logout() in the shared context wipes localStorage + sessionStorage AND
+    // redirects to /login. No need to call removeItem('admin_token') first.
+    logout();
   };
 
   return (

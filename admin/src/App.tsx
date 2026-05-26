@@ -29,6 +29,8 @@ import NewsletterSubscribersPage from './pages/NewsletterSubscribersPage';
 import ContactSubmissionsPage from './pages/ContactSubmissionsPage';
 import WebsiteContentPage from './pages/WebsiteContentPage';
 import SupportLogsPage from './pages/SupportLogsPage';
+import BouncersPage from './pages/BouncersPage';
+import VenueDetailsPage from './pages/VenueDetailsPage';
 import PoliciesPage from './pages/PoliciesPage';
 import EmailTemplatesPage from './pages/EmailTemplatesPage';
 import PodIdeasPage from './pages/PodIdeasPage';
@@ -92,11 +94,13 @@ export default function App() {
                 <Route path="/contact-submissions" element={<ContactSubmissionsPage />} />
                 <Route path="/website-content" element={<WebsiteContentPage />} />
                 <Route path="/support-logs" element={<SupportLogsPage />} />
+                <Route path="/bouncers" element={<BouncersPage />} />
                 <Route path="/policies" element={<PoliciesPage />} />
                 <Route path="/email-templates" element={<EmailTemplatesPage />} />
                 <Route path="/pod-ideas" element={<PodIdeasPage />} />
                 <Route path="/badges" element={<BadgesPage />} />
                 <Route path="/venues" element={<VenuesPage />} />
+                <Route path="/venues/:venueId" element={<VenueDetailsPage />} />
                 <Route path="/hosts" element={<HostsPage />} />
                 <Route path="/partners/faqs" element={<PartnerFaqsPage />} />
                 <Route path="/pod-plans" element={<PodPlansPage />} />

@@ -71,6 +71,12 @@ import { commsProviderTypeDefs } from './commsProvider/commsProvider.schema';
 import { commsProviderResolvers } from './commsProvider/commsProvider.resolver';
 import { communicationLogTypeDefs } from './communicationLog/communicationLog.schema';
 import { communicationLogResolvers } from './communicationLog/communicationLog.resolver';
+import { bouncerTypeDefs } from './bouncer/bouncer.schema';
+import { bouncerResolvers } from './bouncer/bouncer.resolver';
+import { venueSlotTypeDefs } from './venueSlot/venueSlot.schema';
+import { venueSlotResolvers } from './venueSlot/venueSlot.resolver';
+import { accountHealthTypeDefs } from './accountHealth/accountHealth.schema';
+import { accountHealthResolvers } from './accountHealth/accountHealth.resolver';
 
 const rootTypeDefs = gql`
   type Query {
@@ -86,6 +92,6 @@ const rootResolvers = {
   Mutation: { _noop: () => true },
 };
 
-export const typeDefs = [rootTypeDefs, userTypeDefs, rbacTypeDefs, settingsTypeDefs, categoryTypeDefs, locationTypeDefs, clubTypeDefs, podTypeDefs, sliderTypeDefs, notificationTypeDefs, interviewTypeDefs, faqTypeDefs, financeTypeDefs, paymentTypeDefs, aiTypeDefs, postTypeDefs, policyTypeDefs, podIdeaTypeDefs, uploadTypeDefs, emailTemplateTypeDefs, podMemberTypeDefs, badgeTypeDefs, venueTypeDefs, hostTypeDefs, chatTypeDefs, newsletterTypeDefs, contactTypeDefs, analyticsTypeDefs, podPlanTypeDefs, whatsappTypeDefs, inventoryTypeDefs, partnerDashboardTypeDefs, websiteContentTypeDefs, marketingTypeDefs, crmTypeDefs, commsProviderTypeDefs, communicationLogTypeDefs];
+export const typeDefs = [rootTypeDefs, userTypeDefs, rbacTypeDefs, settingsTypeDefs, categoryTypeDefs, locationTypeDefs, clubTypeDefs, podTypeDefs, sliderTypeDefs, notificationTypeDefs, interviewTypeDefs, faqTypeDefs, financeTypeDefs, paymentTypeDefs, aiTypeDefs, postTypeDefs, policyTypeDefs, podIdeaTypeDefs, uploadTypeDefs, emailTemplateTypeDefs, podMemberTypeDefs, badgeTypeDefs, venueTypeDefs, hostTypeDefs, chatTypeDefs, newsletterTypeDefs, contactTypeDefs, analyticsTypeDefs, podPlanTypeDefs, whatsappTypeDefs, inventoryTypeDefs, partnerDashboardTypeDefs, websiteContentTypeDefs, marketingTypeDefs, crmTypeDefs, commsProviderTypeDefs, communicationLogTypeDefs, bouncerTypeDefs, venueSlotTypeDefs, accountHealthTypeDefs];
 
-export const resolvers = [rootResolvers, userResolvers, rbacResolvers, settingsResolvers, categoryResolvers, locationResolvers, clubResolvers, podResolvers, sliderResolvers, notificationResolvers, interviewResolvers, faqResolvers, financeResolvers, paymentResolvers, aiResolvers, postResolvers, policyResolvers, podIdeaResolvers, uploadResolvers, emailTemplateResolvers, podMemberResolvers, badgeResolvers, venueResolvers, hostResolvers, chatResolvers, newsletterResolvers, contactResolvers, analyticsResolvers, podPlanResolvers, whatsappResolvers, inventoryResolvers, partnerDashboardResolvers, websiteContentResolvers, marketingResolvers, crmResolvers, commsProviderResolvers, communicationLogResolvers];
+export const resolvers = [rootResolvers, userResolvers, rbacResolvers, settingsResolvers, categoryResolvers, locationResolvers, clubResolvers, podResolvers, sliderResolvers, notificationResolvers, interviewResolvers, faqResolvers, financeResolvers, paymentResolvers, aiResolvers, postResolvers, policyResolvers, podIdeaResolvers, uploadResolvers, emailTemplateResolvers, podMemberResolvers, badgeResolvers, venueResolvers, hostResolvers, chatResolvers, newsletterResolvers, contactResolvers, analyticsResolvers, podPlanResolvers, whatsappResolvers, inventoryResolvers, partnerDashboardResolvers, websiteContentResolvers, marketingResolvers, crmResolvers, commsProviderResolvers, communicationLogResolvers, bouncerResolvers, venueSlotResolvers, accountHealthResolvers];

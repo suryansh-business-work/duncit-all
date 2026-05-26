@@ -7,12 +7,14 @@ import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import PartnerPodProductsField from './PartnerPodProductsField';
+import VenueSlotPicker from './VenueSlotPicker';
 import { OCCURRENCES, POD_TYPES, type PartnerPodFormValues } from './partner-pod.types';
 
 export const partnerPodSchema = yup.object({
   pod_title: yup.string().trim().min(3, 'Title is too short').max(120).required('Title required'),
   club_id: yup.string().required('Select a club'),
   venue_id: yup.string().when('pod_mode', { is: 'PHYSICAL', then: (schema) => schema.required('Select a venue'), otherwise: (schema) => schema.default('') }),
+  venue_slot_id: yup.string().when(['pod_mode', 'venue_id'], { is: (mode: string, venueId: string) => mode === 'PHYSICAL' && !!venueId, then: (schema) => schema.required('Pick an available slot'), otherwise: (schema) => schema.default('') }),
   pod_mode: yup.mixed<'PHYSICAL' | 'VIRTUAL'>().oneOf(['PHYSICAL', 'VIRTUAL']).required(),
   meeting_platform: yup.string().trim().max(80).default(''),
   meeting_url: yup.string().trim().when('pod_mode', { is: 'VIRTUAL', then: (schema) => schema.required('Meeting link is required').url('Meeting link must be valid'), otherwise: (schema) => schema.default('') }),
@@ -73,7 +75,87 @@ function PlaceFields({ clubs, venues }: { clubs: any[]; venues: any[] }) {
   const { values, errors, touched, handleChange, setFieldValue } = useFormikContext<PartnerPodFormValues>();
   const linkedVenueIds = new Set(clubs.find((club) => club.id === values.club_id)?.meetup_venues_id ?? []);
   const clubVenues = venues.filter((venue) => linkedVenueIds.has(venue.id));
-  return <Stack spacing={2}>{values.pod_mode === 'PHYSICAL' ? <TextField select label="Venue" value={values.venue_id} onChange={(event) => setFieldValue('venue_id', event.target.value)} required fullWidth disabled={!values.club_id} error={!!touched.venue_id && !!errors.venue_id} helperText={touched.venue_id ? errors.venue_id : clubVenues.length === 0 ? 'No approved venues linked to this club.' : 'Only your approved venues linked with this club are shown.'}>{clubVenues.map((venue) => <MenuItem key={venue.id} value={venue.id}>{venue.venue_name} - {[venue.locality, venue.city].filter(Boolean).join(', ')}</MenuItem>)}</TextField> : <><TextField label="Meeting platform" name="meeting_platform" value={values.meeting_platform} onChange={handleChange} fullWidth /><TextField label="Meeting link" name="meeting_url" value={values.meeting_url} onChange={handleChange} required fullWidth error={!!touched.meeting_url && !!errors.meeting_url} helperText={touched.meeting_url ? errors.meeting_url : undefined} /><TextField label="Meeting notes" name="meeting_notes" value={values.meeting_notes} onChange={handleChange} fullWidth multiline minRows={2} /></>}<Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}><DateTimePicker label="Start date & time" value={values.pod_date_time} onChange={(date) => setFieldValue('pod_date_time', date)} minDateTime={new Date()} slotProps={{ textField: { fullWidth: true, required: true, error: !!touched.pod_date_time && !!errors.pod_date_time, helperText: touched.pod_date_time ? String(errors.pod_date_time || '') : undefined } }} /><DateTimePicker label="End date & time" value={values.pod_end_date_time} onChange={(date) => setFieldValue('pod_end_date_time', date)} minDateTime={values.pod_date_time || new Date()} slotProps={{ textField: { fullWidth: true, error: !!touched.pod_end_date_time && !!errors.pod_end_date_time, helperText: touched.pod_end_date_time ? String(errors.pod_end_date_time || '') : undefined } }} /></Stack></Stack>;
+
+  const handleVenueChange = (nextVenueId: string) => {
+    setFieldValue('venue_id', nextVenueId);
+    setFieldValue('venue_slot_id', '');
+    setFieldValue('pod_date_time', null);
+    setFieldValue('pod_end_date_time', null);
+  };
+
+  const handleSlotPick = (slot: { id: string; start_at: string; end_at: string } | null) => {
+    if (!slot) {
+      setFieldValue('venue_slot_id', '');
+      setFieldValue('pod_date_time', null);
+      setFieldValue('pod_end_date_time', null);
+      return;
+    }
+    setFieldValue('venue_slot_id', slot.id);
+    setFieldValue('pod_date_time', new Date(slot.start_at));
+    setFieldValue('pod_end_date_time', new Date(slot.end_at));
+  };
+
+  return (
+    <Stack spacing={2}>
+      {values.pod_mode === 'PHYSICAL' ? (
+        <>
+          <TextField
+            select
+            label="Venue"
+            value={values.venue_id}
+            onChange={(event) => handleVenueChange(event.target.value)}
+            required
+            fullWidth
+            disabled={!values.club_id}
+            error={!!touched.venue_id && !!errors.venue_id}
+            helperText={
+              touched.venue_id
+                ? errors.venue_id
+                : clubVenues.length === 0
+                  ? 'No approved venues linked to this club.'
+                  : 'Only your approved venues linked with this club are shown.'
+            }
+          >
+            {clubVenues.map((venue) => (
+              <MenuItem key={venue.id} value={venue.id}>
+                {venue.venue_name} - {[venue.locality, venue.city].filter(Boolean).join(', ')}
+              </MenuItem>
+            ))}
+          </TextField>
+          <VenueSlotPicker
+            venueId={values.venue_id}
+            selectedSlotId={values.venue_slot_id}
+            onSelect={handleSlotPick}
+          />
+          {touched.venue_slot_id && errors.venue_slot_id && (
+            <Alert severity="error">{String(errors.venue_slot_id)}</Alert>
+          )}
+        </>
+      ) : (
+        <>
+          <TextField label="Meeting platform" name="meeting_platform" value={values.meeting_platform} onChange={handleChange} fullWidth />
+          <TextField label="Meeting link" name="meeting_url" value={values.meeting_url} onChange={handleChange} required fullWidth error={!!touched.meeting_url && !!errors.meeting_url} helperText={touched.meeting_url ? errors.meeting_url : undefined} />
+          <TextField label="Meeting notes" name="meeting_notes" value={values.meeting_notes} onChange={handleChange} fullWidth multiline minRows={2} />
+          <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
+            <DateTimePicker
+              label="Start date & time"
+              value={values.pod_date_time}
+              onChange={(date) => setFieldValue('pod_date_time', date)}
+              minDateTime={new Date()}
+              slotProps={{ textField: { fullWidth: true, required: true, error: !!touched.pod_date_time && !!errors.pod_date_time, helperText: touched.pod_date_time ? String(errors.pod_date_time || '') : undefined } }}
+            />
+            <DateTimePicker
+              label="End date & time"
+              value={values.pod_end_date_time}
+              onChange={(date) => setFieldValue('pod_end_date_time', date)}
+              minDateTime={values.pod_date_time || new Date()}
+              slotProps={{ textField: { fullWidth: true, error: !!touched.pod_end_date_time && !!errors.pod_end_date_time, helperText: touched.pod_end_date_time ? String(errors.pod_end_date_time || '') : undefined } }}
+            />
+          </Stack>
+        </>
+      )}
+    </Stack>
+  );
 }
 
 function AboutFields() {
@@ -94,5 +176,5 @@ function PaymentFields() {
 
 export function buildPartnerPodInput(values: PartnerPodFormValues, draft?: boolean) {
   const lines = (text: string) => text.split('\n').map((item) => item.trim()).filter(Boolean);
-  return { pod_title: values.pod_title.trim(), club_id: values.club_id, pod_mode: values.pod_mode, venue_id: values.pod_mode === 'PHYSICAL' ? values.venue_id : null, location_id: null, zone_name: null, meeting_platform: values.pod_mode === 'VIRTUAL' ? values.meeting_platform.trim() || null : null, meeting_url: values.pod_mode === 'VIRTUAL' ? values.meeting_url.trim() : null, meeting_notes: values.pod_mode === 'VIRTUAL' ? values.meeting_notes.trim() || null : null, pod_hosts_id: [], pod_description: values.pod_description, pod_date_time: values.pod_date_time?.toISOString(), pod_end_date_time: values.pod_end_date_time?.toISOString() ?? null, pod_type: values.pod_type, pod_amount: Number(values.pod_amount) || 0, pod_occurrence: values.pod_occurrence, no_of_spots: Number(values.no_of_spots) || 0, pod_info: values.pod_info, pod_hashtag: values.pod_hashtag_text.split(/[\s,]+/).map((item) => item.replace(/^#/, '').trim()).filter(Boolean), pod_images_and_videos: lines(values.media_text).map((url) => ({ url, type: /\.(mp4|mov|webm)$/i.test(url) ? 'VIDEO' : 'IMAGE' })), payment_terms: values.payment_terms || null, what_this_pod_offers: lines(values.what_this_pod_offers_text), available_perks: lines(values.available_perks_text), place_charges: [], products_enabled: values.pod_mode === 'PHYSICAL' && values.products_enabled, product_requests: values.pod_mode === 'PHYSICAL' && values.products_enabled ? values.product_requests : [], is_active: !draft };
+  return { pod_title: values.pod_title.trim(), club_id: values.club_id, pod_mode: values.pod_mode, venue_id: values.pod_mode === 'PHYSICAL' ? values.venue_id : null, venue_slot_id: values.pod_mode === 'PHYSICAL' ? values.venue_slot_id || null : null, location_id: null, zone_name: null, meeting_platform: values.pod_mode === 'VIRTUAL' ? values.meeting_platform.trim() || null : null, meeting_url: values.pod_mode === 'VIRTUAL' ? values.meeting_url.trim() : null, meeting_notes: values.pod_mode === 'VIRTUAL' ? values.meeting_notes.trim() || null : null, pod_hosts_id: [], pod_description: values.pod_description, pod_date_time: values.pod_date_time?.toISOString(), pod_end_date_time: values.pod_end_date_time?.toISOString() ?? null, pod_type: values.pod_type, pod_amount: Number(values.pod_amount) || 0, pod_occurrence: values.pod_occurrence, no_of_spots: Number(values.no_of_spots) || 0, pod_info: values.pod_info, pod_hashtag: values.pod_hashtag_text.split(/[\s,]+/).map((item) => item.replace(/^#/, '').trim()).filter(Boolean), pod_images_and_videos: lines(values.media_text).map((url) => ({ url, type: /\.(mp4|mov|webm)$/i.test(url) ? 'VIDEO' : 'IMAGE' })), payment_terms: values.payment_terms || null, what_this_pod_offers: lines(values.what_this_pod_offers_text), available_perks: lines(values.available_perks_text), place_charges: [], products_enabled: values.pod_mode === 'PHYSICAL' && values.products_enabled, product_requests: values.pod_mode === 'PHYSICAL' && values.products_enabled ? values.product_requests : [], is_active: !draft };
 }

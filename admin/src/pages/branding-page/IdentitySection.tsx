@@ -70,6 +70,14 @@ export default function IdentitySection({ form, setForm }: Props) {
           type="email"
         />
       </Stack>
+      <TextField
+        label="Support phone (Bouncers → Quick Support)"
+        value={form.support_phone}
+        onChange={(e) => update('support_phone', e.target.value)}
+        fullWidth
+        placeholder="+919999999999"
+        helperText="Users tap “Call Now” in Bouncers → Quick Support to dial this number."
+      />
     </Stack>
   );
 }

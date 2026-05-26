@@ -7,6 +7,7 @@ export interface PartnerPodFormValues {
   pod_title: string;
   club_id: string;
   venue_id: string;
+  venue_slot_id: string;
   pod_mode: 'PHYSICAL' | 'VIRTUAL';
   meeting_platform: string;
   meeting_url: string;
@@ -32,6 +33,7 @@ export const blankPartnerPodForm: PartnerPodFormValues = {
   pod_title: '',
   club_id: '',
   venue_id: '',
+  venue_slot_id: '',
   pod_mode: 'PHYSICAL',
   meeting_platform: '',
   meeting_url: '',

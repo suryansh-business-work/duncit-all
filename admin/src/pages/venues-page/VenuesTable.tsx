@@ -1,7 +1,8 @@
 import EditIcon from '@mui/icons-material/Edit';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import RateReviewIcon from '@mui/icons-material/RateReview';
-import { Chip, IconButton, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
+import { Chip, IconButton, Link, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
 import { urlConfigs } from '../../config/url-configs';
 
 interface Props {
@@ -33,8 +34,17 @@ export default function VenuesTable({ venues, onEdit, onReview }: Props) {
         {venues.map((venue) => (
           <TableRow key={venue.id} hover>
             <TableCell>
-              <Typography variant="body2" fontWeight={700}>{venue.venue_name}</Typography>
-              <Typography variant="caption" color="text.secondary">{venue.venue_type}</Typography>
+              <Link
+                component={RouterLink}
+                to={`/venues/${venue.id}`}
+                underline="hover"
+                variant="body2"
+                fontWeight={700}
+                color="inherit"
+              >
+                {venue.venue_name}
+              </Link>
+              <Typography variant="caption" color="text.secondary" display="block">{venue.venue_type}</Typography>
             </TableCell>
             <TableCell>
               <Typography variant="body2">{[venue.locality, venue.city].filter(Boolean).join(', ') || '—'}</Typography>

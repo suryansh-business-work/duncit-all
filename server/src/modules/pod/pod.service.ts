@@ -7,6 +7,8 @@ import { HostModel } from '../host/host.model';
 import { InventoryProductModel } from '../inventory/inventory.model';
 import { LocationModel } from '../location/location.model';
 import { VenueModel } from '../venue/venue.model';
+import { VenueSlotModel } from '../venueSlot/venueSlot.model';
+import { venueSlotService } from '../venueSlot/venueSlot.service';
 
 const slugify = (s: string) =>
   s
@@ -36,6 +38,7 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     pod_hosts_id: (d.pod_hosts_id ?? []).map((x: any) => String(x)),
     location_id: d.location_id ? String(d.location_id) : null,
     venue_id: d.venue_id ? String(d.venue_id) : null,
+    venue_slot_id: d.venue_slot_id ? String(d.venue_slot_id) : null,
     club_id: clubId,
     club_slug: clubSlug,
     zone_name: d.zone_name ?? null,
@@ -385,6 +388,32 @@ export const podService = {
     }
     const podMode = normalizePodMode(input.pod_mode);
     validateAmount(input.pod_type, input.pod_amount ?? 0);
+
+    // A picked slot is the source of truth for the pod's window — overwrite
+    // the incoming date/time so a stale or hand-edited form value can't break
+    // the booking contract. The slot itself is booked atomically *after* the
+    // pod row is created (further down) so we never orphan a slot.
+    let slotDoc: any = null;
+    if (podMode === 'PHYSICAL' && input.venue_slot_id) {
+      slotDoc = await VenueSlotModel.findById(input.venue_slot_id);
+      if (!slotDoc) {
+        throw new GraphQLError('Selected slot not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      if (slotDoc.status !== 'AVAILABLE') {
+        throw new GraphQLError('Selected slot is no longer available', {
+          extensions: { code: 'CONFLICT' },
+        });
+      }
+      if (input.venue_id && String(slotDoc.venue_id) !== String(input.venue_id)) {
+        throw new GraphQLError('Slot does not belong to the selected venue', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+      input.venue_id = String(slotDoc.venue_id);
+      input.pod_date_time = slotDoc.start_at.toISOString();
+      input.pod_end_date_time = slotDoc.end_at.toISOString();
+    }
+
     validateFutureDates(input.pod_date_time, input.pod_end_date_time);
     validateMeetingDetails(podMode, input);
     const venueLocation = podMode === 'PHYSICAL'
@@ -407,6 +436,7 @@ export const podService = {
       pod_hosts_id: input.pod_hosts_id,
       location_id: venueLocation.location_id,
       venue_id: venueLocation.venue_id,
+      venue_slot_id: slotDoc ? slotDoc._id : null,
       club_id: input.club_id,
       zone_name: venueLocation.zone_name,
       pod_mode: podMode,
@@ -434,6 +464,19 @@ export const podService = {
       product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
       is_active: input.is_active ?? true,
     });
+
+    // Atomic book — if a concurrent request snatched the slot between our
+    // status check and now, this throws CONFLICT and we roll the pod back so
+    // the caller can retry with a different slot.
+    if (slotDoc) {
+      try {
+        await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+      } catch (e) {
+        await doc.deleteOne();
+        throw e;
+      }
+    }
+
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
   },
@@ -577,6 +620,7 @@ export const podService = {
     const doc = await PodModel.findById(id);
     if (!doc) notFound();
     await applyProductDeltas(doc.product_requests ?? [], []);
+    await venueSlotService.releaseForPod(String(doc!._id));
     await doc!.deleteOne();
     return true;
   },

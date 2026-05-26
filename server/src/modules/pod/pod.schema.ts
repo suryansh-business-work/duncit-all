@@ -66,6 +66,7 @@ export const podTypeDefs = /* GraphQL */ `
     pod_hosts_id: [ID!]!
     location_id: ID
     venue_id: ID
+    venue_slot_id: ID
     club_id: ID!
     club_slug: String!
     zone_name: String
@@ -129,6 +130,7 @@ export const podTypeDefs = /* GraphQL */ `
     pod_hosts_id: [ID!]!
     location_id: ID
     venue_id: ID
+    venue_slot_id: ID
     club_id: ID!
     zone_name: String
     pod_mode: PodMode

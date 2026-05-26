@@ -55,6 +55,7 @@ export const settingsTypeDefs = gql`
     logo_url: String!
     primary_color: String!
     support_email: String!
+    support_phone: String!
     mascot_name: String!
     mascot_description_html: String!
     mascot_lottie_url: String!
@@ -90,6 +91,7 @@ export const settingsTypeDefs = gql`
     logo_url: String
     primary_color: String
     support_email: String
+    support_phone: String
     mascot_name: String
     mascot_description_html: String
     mascot_lottie_url: String

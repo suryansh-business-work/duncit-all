@@ -35,6 +35,7 @@ export default function BrandingPage() {
         logo_url: b.logo_url ?? '',
         primary_color: b.primary_color ?? '#1976d2',
         support_email: b.support_email ?? '',
+        support_phone: b.support_phone ?? '',
         mascot_name: b.mascot_name ?? 'Dunko',
         mascot_description_html: b.mascot_description_html ?? '',
         mascot_lottie_url: b.mascot_lottie_url ?? '',

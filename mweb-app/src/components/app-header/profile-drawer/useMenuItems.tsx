@@ -11,6 +11,7 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import CategoryIcon from '@mui/icons-material/Category';
+import SecurityIcon from '@mui/icons-material/Security';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 
 export interface MenuItem {
@@ -80,6 +81,11 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
       };
 
   const supportItems: MenuItem[] = [
+    {
+      label: 'Bouncers',
+      icon: <SecurityIcon fontSize="small" />,
+      onClick: go('/bouncers'),
+    },
     {
       label: 'Support',
       icon: <SupportAgentIcon fontSize="small" />,

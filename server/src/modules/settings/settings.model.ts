@@ -52,6 +52,7 @@ export interface IBranding extends Document {
   logo_url: string;
   primary_color: string;
   support_email: string;
+  support_phone: string;
   mascot_name: string;
   mascot_description_html: string;
   mascot_lottie_url: string;
@@ -71,6 +72,7 @@ const brandingSchema = new Schema<IBranding>(
     logo_url: { type: String, default: '' },
     primary_color: { type: String, default: '#1976d2' },
     support_email: { type: String, default: '' },
+    support_phone: { type: String, default: '' },
     mascot_name: { type: String, default: 'Dunko' },
     mascot_description_html: {
       type: String,

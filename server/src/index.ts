@@ -2,6 +2,7 @@ import 'dotenv/config';
 import http from 'http';
 import cors from 'cors';
 import express from 'express';
+import { corsOptions } from './config/cors';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
@@ -15,7 +16,9 @@ import { notificationService } from './modules/notification/notification.service
 import { notificationEvents, type NotifyEvent } from './modules/notification/notification.events';
 import jwt from 'jsonwebtoken';
 import { policyService } from './modules/policy/policy.service';
-import { attachChatSocket } from './modules/chat/chat.socket';
+import { initSocketServer } from './realtime/io';
+import { attachChatHandlers } from './modules/chat/chat.socket';
+import { attachBouncerHandlers } from './modules/bouncer/bouncer.socket';
 import { websiteContentService } from './modules/websiteContent/websiteContent.service';
 import { userService } from './modules/user/user.service';
 import { marketingService } from './modules/marketing/marketing.service';
@@ -30,33 +33,6 @@ async function safeSeed(name: string, fn: () => Promise<void>) {
     console.error(`[bootstrap] ${name} failed:`, err);
   }
 }
-
-// Browser-facing origins we trust. Reflects only matching origins back so
-// `credentials: true` works (browsers reject `*` with credentials).
-const ALLOWED_ORIGIN_PATTERNS: RegExp[] = [
-  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
-  /^https?:\/\/([a-z0-9-]+\.)?duncit\.com$/,
-];
-
-const isAllowedOrigin = (origin: string | undefined): boolean => {
-  if (!origin) return true; // server-to-server, curl, mobile webviews, etc.
-  return ALLOWED_ORIGIN_PATTERNS.some((p) => p.test(origin));
-};
-
-const corsOptions: cors.CorsOptions = {
-  origin: (origin, cb) => cb(null, isAllowedOrigin(origin)),
-  credentials: true,
-  methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE', 'PATCH'],
-  allowedHeaders: [
-    'Authorization',
-    'Content-Type',
-    'X-Requested-With',
-    'Apollo-Require-Preflight',
-    'X-Apollo-Operation-Name',
-  ],
-  maxAge: 600,
-  optionsSuccessStatus: 204,
-};
 
 async function bootstrap() {
   await connectDB();
@@ -186,8 +162,11 @@ async function bootstrap() {
   }
   );
 
-  // Real-time chat (socket.io) — shares the http server with Apollo.
-  attachChatSocket(httpServer);
+  // Real-time: socket.io shares the http server with Apollo. One io instance,
+  // each feature attaches its own handlers + rooms.
+  initSocketServer(httpServer);
+  attachChatHandlers();
+  attachBouncerHandlers();
 
   const port = Number(process.env.PORT || 2001);
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));

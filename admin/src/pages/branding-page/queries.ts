@@ -5,6 +5,7 @@ export const BRANDING_FIELDS = `
   logo_url
   primary_color
   support_email
+  support_phone
   mascot_name
   mascot_description_html
   mascot_lottie_url
@@ -37,6 +38,7 @@ export interface BrandingFormState {
   logo_url: string;
   primary_color: string;
   support_email: string;
+  support_phone: string;
   mascot_name: string;
   mascot_description_html: string;
   mascot_lottie_url: string;
@@ -52,6 +54,7 @@ export const emptyBrandingForm: BrandingFormState = {
   logo_url: '',
   primary_color: '#1976d2',
   support_email: '',
+  support_phone: '',
   mascot_name: 'Dunko',
   mascot_description_html: '',
   mascot_lottie_url: '',

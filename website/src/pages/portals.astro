@@ -1,0 +1,130 @@
+---
+import PageLayout from '../layouts/PageLayout.astro';
+
+interface Portal {
+  name: string;
+  url: string;
+  icon: string;
+  tag: string;
+  desc: string;
+  audience: string;
+  accent: 'primary' | 'secondary' | 'mint' | 'lemon' | 'peach' | 'sky' | 'lilac';
+}
+
+const portals: Portal[] = [
+  {
+    name: 'mWeb App',
+    url: 'https://mweb.duncit.com/',
+    icon: 'fa-mobile-screen',
+    tag: 'For users',
+    desc: 'The mobile web app where you discover clubs, join pods, chat with your tribe, and book hosts.',
+    audience: 'Members & attendees',
+    accent: 'primary',
+  },
+  {
+    name: 'Partners App',
+    url: 'https://partners-app.duncit.com/',
+    icon: 'fa-handshake',
+    tag: 'For hosts & venues',
+    desc: 'Run your venue or host operations — manage availability, accept bookings, and track payouts.',
+    audience: 'Hosts · Venue owners',
+    accent: 'secondary',
+  },
+  {
+    name: 'CRM',
+    url: 'https://crm.duncit.com/',
+    icon: 'fa-people-arrows',
+    tag: 'For sales',
+    desc: 'Leads, contacts, and pipeline tools for the Duncit growth team.',
+    audience: 'Internal · Sales',
+    accent: 'mint',
+  },
+  {
+    name: 'Ads',
+    url: 'https://ads.duncit.com/',
+    icon: 'fa-bullhorn',
+    tag: 'For marketing',
+    desc: 'Plan, launch, and measure paid campaigns across channels.',
+    audience: 'Internal · Marketing',
+    accent: 'lemon',
+  },
+  {
+    name: 'Track',
+    url: 'https://track.duncit.com/',
+    icon: 'fa-chart-line',
+    tag: 'For operators',
+    desc: 'Real-time tracking and operational dashboards across pods and venues.',
+    audience: 'Internal · Operations',
+    accent: 'peach',
+  },
+  {
+    name: 'Tech',
+    url: 'https://tech.duncit.com/',
+    icon: 'fa-code',
+    tag: 'For engineers',
+    desc: 'Engineering console — feature flags, health, deploys, and platform tooling.',
+    audience: 'Internal · Engineering',
+    accent: 'sky',
+  },
+  {
+    name: 'Admin',
+    url: 'https://admin.duncit.com/',
+    icon: 'fa-shield-halved',
+    tag: 'For admins',
+    desc: 'Master control plane — users, RBAC, content, finance, branding, and platform settings.',
+    audience: 'Internal · Admin only',
+    accent: 'lilac',
+  },
+];
+
+const accentClass: Record<Portal['accent'], string> = {
+  primary: 'bg-primary/15 text-primary',
+  secondary: 'bg-secondary/15 text-secondary',
+  mint: 'bg-emerald-100 text-emerald-700',
+  lemon: 'bg-amber-100 text-amber-700',
+  peach: 'bg-orange-100 text-orange-700',
+  sky: 'bg-sky-100 text-sky-700',
+  lilac: 'bg-purple-100 text-purple-700',
+};
+---
+
+<PageLayout
+  title="Duncit Portals"
+  eyebrow="The ecosystem"
+  heading="One Duncit, many doors."
+  intro="Every portal in the Duncit stack — for members, partners, and the team that keeps it humming."
+  accent="primary"
+  heroImage="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80&auto=format&fit=crop"
+>
+  <div class="not-prose grid sm:grid-cols-2 lg:grid-cols-3 gap-5 my-6">
+    {portals.map((p) => (
+      <a
+        href={p.url}
+        target="_blank"
+        rel="noopener noreferrer"
+        class="group block p-6 rounded-3xl bg-white sticker hover:-translate-y-1 transition"
+      >
+        <div class="flex items-start gap-4 mb-4">
+          <div class={`w-12 h-12 rounded-2xl inline-flex items-center justify-center shrink-0 ${accentClass[p.accent]}`}>
+            <i class={`fa-solid ${p.icon} text-xl`}></i>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="text-xs font-bold uppercase tracking-wide text-ink-soft mb-0.5">{p.tag}</div>
+            <div class="font-head font-extrabold text-lg text-ink leading-tight">{p.name}</div>
+          </div>
+          <i class="fa-solid fa-arrow-up-right-from-square text-ink-soft group-hover:text-primary transition shrink-0 mt-1.5"></i>
+        </div>
+        <p class="text-sm text-ink-soft mb-4 leading-relaxed">{p.desc}</p>
+        <div class="flex items-center justify-between text-xs">
+          <span class="text-ink-soft">{p.audience}</span>
+          <span class="font-mono text-ink-soft/80 truncate ml-2">{p.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}</span>
+        </div>
+      </a>
+    ))}
+  </div>
+
+  <p class="text-sm text-ink-soft">
+    Looking for the public site? You're already on it — <a href="/" class="text-primary font-bold">duncit.com</a>.
+    Internal portals require team credentials.
+  </p>
+</PageLayout>

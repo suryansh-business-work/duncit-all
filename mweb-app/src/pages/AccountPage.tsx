@@ -1,13 +1,16 @@
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useUserData } from '@duncit/user-context';
 import {
   Alert,
+  Box,
   Card,
   CardContent,
   CircularProgress,
   Divider,
   Stack,
+  Typography,
 } from '@mui/material';
 import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
@@ -18,6 +21,8 @@ import AccountInfoRow from './account-page/AccountInfoRow';
 import AccountProfileHeader from './account-page/AccountProfileHeader';
 import EditAccountDialog from './account-page/EditAccountDialog';
 import HostsVenuesCard from './account-page/HostsVenuesCard';
+import HealthMeter from '../components/health/HealthMeter';
+import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useDateFormat } from '../utils/dateFormat';
 
 const ME = gql`
@@ -54,7 +59,12 @@ const UPDATE_USER = gql`
 
 export default function AccountPage() {
   const navigate = useNavigate();
+  const { logout: ctxLogout } = useUserData();
   const { data, loading, error, refetch } = useQuery(ME, { fetchPolicy: 'cache-and-network' });
+  const { data: healthData } = useQuery<{ myAccountHealth: HealthScore }>(MY_ACCOUNT_HEALTH, {
+    fetchPolicy: 'cache-and-network',
+  });
+  const health = healthData?.myAccountHealth ?? null;
   const [pickerOpen, setPickerOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
   const [savingPhoto, setSavingPhoto] = useState(false);
@@ -63,8 +73,7 @@ export default function AccountPage() {
   const { formatDate } = useDateFormat();
 
   const logout = () => {
-    localStorage.removeItem('token');
-    navigate('/login');
+    ctxLogout();
   };
 
   if (loading) {
@@ -117,6 +126,42 @@ export default function AccountPage() {
           </Stack>
         </CardContent>
       </Card>
+
+      {health && (
+        <Card>
+          <CardContent>
+            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2} alignItems="center">
+              <HealthMeter
+                score={health.total_score}
+                band={health.band}
+                size={140}
+                label="Account Health"
+                onClick={() => navigate('/account/health')}
+                caption="Tap for details"
+              />
+              <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
+                <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+                  {health.band === 'GREEN' ? 'You’re in great shape.' : health.band === 'YELLOW' ? 'A few things to tighten up.' : 'Needs attention.'}
+                </Typography>
+                <Typography variant="body2" color="text.secondary">
+                  Base score: {health.base_score}
+                  {health.delta_sum !== 0 && (
+                    <>
+                      {' '}· Admin adjustment: {health.delta_sum > 0 ? `+${health.delta_sum}` : health.delta_sum}
+                    </>
+                  )}
+                </Typography>
+                {health.adjustments.length > 0 && (
+                  <Typography variant="caption" color="text.secondary">
+                    {health.adjustments.length} admin remark{health.adjustments.length === 1 ? '' : 's'} — tap the meter to read.
+                  </Typography>
+                )}
+              </Box>
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
+
       <HostsVenuesCard />
       <MediaPickerDialog
         open={pickerOpen}

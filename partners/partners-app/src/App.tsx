@@ -4,6 +4,7 @@ import PartnerDashboardPage from './pages/dashboard-page/PartnerDashboardPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import RegisterVenuePage from './pages/RegisterVenuePage';
 import VenueListingsPage from './pages/venue-listings-page/VenueListingsPage';
+import VenueAvailabilityPage from './pages/venue-availability-page/VenueAvailabilityPage';
 import BecomeHostPage from './pages/become-host-page/BecomeHostPage';
 import ListProductsPage from './pages/list-products-page/ListProductsPage';
 import ProductListingEditorPage from './pages/list-products-page/ProductListingEditorPage';
@@ -37,6 +38,7 @@ export default function App() {
       <Route path="/register-venue" element={authed(<VenueListingsPage />)} />
       <Route path="/register-venue/new" element={authed(<RegisterVenuePage />)} />
       <Route path="/register-venue/current" element={authed(<RegisterVenuePage />)} />
+      <Route path="/venues/:venueId/availability" element={authed(<VenueAvailabilityPage />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
       <Route path="/pods" element={<Navigate to="/become-host" replace />} />
       <Route path="/list-products" element={authed(<ListProductsPage />)} />

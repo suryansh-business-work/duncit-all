@@ -20,10 +20,12 @@ COPY ads/package.json ./ads/
 COPY crm/package.json ./crm/
 COPY track/package.json ./track/
 COPY tech/package.json ./tech/
+COPY packages/user-context/package.json ./packages/user-context/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
 
+COPY packages ./packages
 COPY partners/partners-app ./partners/partners-app
 RUN pnpm --filter partners-app build
 

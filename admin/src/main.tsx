@@ -4,23 +4,28 @@ import { ApolloProvider } from '@apollo/client';
 import { BrowserRouter } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { apolloClient } from './apollo';
 import { ColorModeProvider } from './ColorModeContext';
 import { ConfirmProvider } from './components/useConfirm';
 import { NotifyHost } from './components/notify';
 import App from './App';
 
+const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() || '';
+
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
     <ApolloProvider client={apolloClient}>
       <ColorModeProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <BrowserRouter>
-            <ConfirmProvider>
-              <App />
-              <NotifyHost />
-            </ConfirmProvider>
-          </BrowserRouter>
+          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+            <BrowserRouter>
+              <ConfirmProvider>
+                <App />
+                <NotifyHost />
+              </ConfirmProvider>
+            </BrowserRouter>
+          </GoogleOAuthProvider>
         </LocalizationProvider>
       </ColorModeProvider>
     </ApolloProvider>

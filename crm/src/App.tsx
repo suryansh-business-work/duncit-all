@@ -1,5 +1,6 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
+import DashboardPage from './pages/dashboard';
 import VenueLeadsPage from './pages/venue-leads/VenueLeadsPage';
 import VenueLeadEditorPage from './pages/venue-leads/VenueLeadEditorPage';
 import HostLeadsPage from './pages/host-leads/HostLeadsPage';
@@ -27,7 +28,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={authed(<VenueLeadsPage />)} />
+      <Route path="/" element={authed(<DashboardPage />)} />
       <Route path="/venue-leads" element={authed(<VenueLeadsPage />)} />
       <Route path="/venue-leads/new" element={authed(<VenueLeadEditorPage />)} />
       <Route path="/venue-leads/:id" element={authed(<VenueLeadEditorPage />)} />

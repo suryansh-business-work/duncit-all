@@ -4,10 +4,13 @@ import { ApolloProvider } from '@apollo/client';
 import { BrowserRouter } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { GoogleOAuthProvider } from '@react-oauth/google';
 import { apolloClient } from './apollo';
 import { ColorModeProvider } from './ColorModeContext';
 import App from './App';
 import { initPwa } from './pwa';
+
+const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() || '';
 
 initPwa();
 
@@ -32,9 +35,11 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
     <ApolloProvider client={apolloClient}>
       <ColorModeProvider>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <BrowserRouter>
-            <App />
-          </BrowserRouter>
+          <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+            <BrowserRouter>
+              <App />
+            </BrowserRouter>
+          </GoogleOAuthProvider>
         </LocalizationProvider>
       </ColorModeProvider>
     </ApolloProvider>

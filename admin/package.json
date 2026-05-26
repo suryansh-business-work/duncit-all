@@ -20,6 +20,7 @@
     "@mui/system": "^5.15.18",
     "@mui/x-data-grid": "^7.5.1",
     "@mui/x-date-pickers": "^6.20.2",
+    "@react-oauth/google": "^0.13.5",
     "chart.js": "^4.5.1",
     "countries-list": "^3.3.0",
     "country-region-data": "^4.1.0",

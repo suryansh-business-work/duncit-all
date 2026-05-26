@@ -56,7 +56,8 @@ export const appConfig: AppConfig = {
   colorModeKey: 'crm_color_mode',
   accent: { light: '#a5b4fc', main: '#6366f1', hover: '#4f46e5', active: '#4338ca' },
   nav: [
-    { label: 'Venue Leads', to: '/', icon: 'location' },
+    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Venue Leads', to: '/venue-leads', icon: 'location' },
     { label: 'Host Leads', to: '/host-leads', icon: 'groups' },
   ],
   modules: [],

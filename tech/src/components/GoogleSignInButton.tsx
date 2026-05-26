@@ -1,11 +1,7 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
-
-declare global {
-  interface Window {
-    google?: any;
-  }
-}
+import { useTheme } from '@mui/material/styles';
+import { GoogleLogin } from '@react-oauth/google';
 
 interface Props {
   onCredential: (idToken: string) => void;
@@ -13,80 +9,32 @@ interface Props {
   text?: 'signin_with' | 'signup_with' | 'continue_with' | 'signin';
 }
 
-const SCRIPT_ID = 'google-identity-services';
-
-function loadGoogleScript(): Promise<void> {
-  return new Promise((resolve, reject) => {
-    if (typeof window === 'undefined') return reject(new Error('no window'));
-    if (window.google?.accounts?.id) return resolve();
-    if (document.getElementById(SCRIPT_ID)) {
-      const interval = window.setInterval(() => {
-        if (window.google?.accounts?.id) {
-          window.clearInterval(interval);
-          resolve();
-        }
-      }, 50);
-      window.setTimeout(() => {
-        window.clearInterval(interval);
-        reject(new Error('Google script load timeout'));
-      }, 8000);
-      return;
-    }
-    const script = document.createElement('script');
-    script.id = SCRIPT_ID;
-    script.src = 'https://accounts.google.com/gsi/client';
-    script.async = true;
-    script.defer = true;
-    script.onload = () => resolve();
-    script.onerror = () => reject(new Error('Failed to load Google script'));
-    document.head.appendChild(script);
-  });
-}
-
+/**
+ * Google Sign-In button backed by the official `@react-oauth/google` SDK.
+ *
+ * The package renders the Google-styled button with the G logo and theme
+ * variants — there is nothing to bundle locally. The button automatically
+ * switches between the light and dark Google themes to match MUI's color
+ * mode, and falls back to a plain MUI tile if no `VITE_GOOGLE_CLIENT_ID`
+ * is configured so dev environments fail loud, not silent.
+ */
 export default function GoogleSignInButton({ onCredential, loading, text = 'signin_with' }: Props) {
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined;
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const [fallback, setFallback] = useState(false);
+  const clientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim();
+  const theme = useTheme();
+  const isDark = theme.palette.mode === 'dark';
+  const [width, setWidth] = useState<number>(320);
 
   useEffect(() => {
-    if (!clientId || !containerRef.current) return;
-    let cancelled = false;
-    setFallback(false);
-    loadGoogleScript()
-      .then(() => {
-        if (cancelled || !window.google?.accounts?.id || !containerRef.current) return;
-        window.google.accounts.id.initialize({
-          client_id: clientId,
-          callback: (response: any) => {
-            if (response?.credential) onCredential(response.credential);
-          },
-          ux_mode: 'popup',
-          auto_select: false,
-          itp_support: true,
-        });
-        containerRef.current.innerHTML = '';
-        window.google.accounts.id.renderButton(containerRef.current, {
-          type: 'standard',
-          theme: 'outline',
-          size: 'large',
-          text,
-          shape: 'rectangular',
-          logo_alignment: 'left',
-          width: containerRef.current.clientWidth || 320,
-        });
-        window.setTimeout(() => {
-          if (!cancelled && containerRef.current?.childElementCount === 0) setFallback(true);
-        }, 900);
-      })
-      .catch(() => {
-        if (!cancelled) setFallback(true);
-      });
-    return () => {
-      cancelled = true;
+    const compute = () => {
+      const el = document.getElementById('google-signin-host');
+      if (el) setWidth(Math.min(Math.max(el.clientWidth, 240), 400));
     };
-  }, [clientId, onCredential, text]);
+    compute();
+    window.addEventListener('resize', compute);
+    return () => window.removeEventListener('resize', compute);
+  }, []);
 
-  if (!clientId || fallback) {
+  if (!clientId || clientId === 'your_client_id_here') {
     return (
       <Box
         sx={{
@@ -99,22 +47,31 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
           justifyContent: 'center',
           gap: 1.25,
           bgcolor: 'background.paper',
-          color: 'text.primary',
+          color: 'text.secondary',
         }}
       >
-        <Box sx={{ width: 24, height: 24, borderRadius: 1, display: 'grid', placeItems: 'center', bgcolor: '#fff', fontWeight: 900 }}>
-          G
-        </Box>
-        <Typography variant="body2" fontWeight={800}>
-          Google sign-in unavailable
+        <Typography variant="body2" fontWeight={700}>
+          Google sign-in not configured (VITE_GOOGLE_CLIENT_ID missing)
         </Typography>
       </Box>
     );
   }
 
   return (
-    <Stack sx={{ width: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}>
-      <Box ref={containerRef} sx={{ width: '100%', display: 'flex', justifyContent: 'center' }} />
+    <Stack id="google-signin-host" sx={{ width: '100%', alignItems: 'center', position: 'relative', minHeight: 44 }}>
+      <GoogleLogin
+        onSuccess={(response) => {
+          if (response.credential) onCredential(response.credential);
+        }}
+        onError={() => undefined}
+        useOneTap={false}
+        theme={isDark ? 'filled_black' : 'outline'}
+        text={text}
+        shape="rectangular"
+        size="large"
+        logo_alignment="left"
+        width={width}
+      />
       {loading && (
         <Box
           sx={{
@@ -123,7 +80,7 @@ export default function GoogleSignInButton({ onCredential, loading, text = 'sign
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            bgcolor: 'rgba(255,255,255,0.6)',
+            bgcolor: isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.6)',
             borderRadius: 1,
           }}
         >

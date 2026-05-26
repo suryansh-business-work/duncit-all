@@ -3,7 +3,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { Box, Breadcrumbs, Link, Typography } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import { appConfig } from '../config/app-config';
+import { appConfig, type AppNavItem } from '../config/app-config';
 
 interface Crumb {
   label: string;
@@ -18,18 +18,31 @@ function humanise(segment: string): string {
   return segment.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
-function findBestNavMatch(pathname: string) {
-  let best: { label: string; to: string } | undefined;
-  for (const item of appConfig.nav) {
-    if (item.to === pathname || (item.to !== '/' && pathname.startsWith(item.to + '/'))) {
-      if (!best || item.to.length > best.to.length) {
-        best = { label: item.label, to: item.to };
+interface MatchPath {
+  trail: { label: string; to?: string }[];
+  to: string;
+}
+
+/**
+ * Walks the nav tree to find the deepest item whose `to` matches the
+ * current pathname. Returns the full trail (parent + leaf) so the
+ * breadcrumb can render "Calculators › Pod Profit".
+ */
+function findBestNavMatch(pathname: string): MatchPath | undefined {
+  let best: MatchPath | undefined;
+  const visit = (item: AppNavItem, trail: { label: string; to?: string }[]) => {
+    const nextTrail = [...trail, { label: item.label, to: item.to }];
+    if (item.to) {
+      const matchesExact = item.to === '/' ? pathname === '/' : pathname === item.to || pathname.startsWith(`${item.to}/`);
+      if (matchesExact) {
+        if (!best || item.to.length > best.to.length) {
+          best = { trail: nextTrail, to: item.to };
+        }
       }
     }
-    if (item.to === '/' && pathname === '/') {
-      best = { label: item.label, to: item.to };
-    }
-  }
+    for (const child of item.children ?? []) visit(child, nextTrail);
+  };
+  for (const item of appConfig.nav) visit(item, []);
   return best;
 }
 
@@ -41,7 +54,10 @@ export default function AppBreadcrumbs() {
     const match = findBestNavMatch(pathname);
 
     if (match && match.to !== '/') {
-      list.push({ label: match.label, to: match.to });
+      match.trail.forEach((entry, idx) => {
+        if (idx === 0 && entry.label === appConfig.name) return;
+        list.push({ label: entry.label, to: entry.to });
+      });
       if (pathname !== match.to && pathname.startsWith(match.to + '/')) {
         const rest = pathname.slice(match.to.length + 1).split('/').filter(Boolean);
         rest.forEach((seg) => list.push({ label: humanise(seg) }));

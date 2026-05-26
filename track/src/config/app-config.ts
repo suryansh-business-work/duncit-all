@@ -9,8 +9,11 @@
  */
 export interface AppNavItem {
   label: string;
-  to: string;
+  /** Route the item links to. Optional when the item is purely a group header. */
+  to?: string;
   icon: string;
+  /** Optional nested children (one level deep) — rendered as a collapsible group. */
+  children?: AppNavItem[];
 }
 
 export interface AppModule {
@@ -59,7 +62,16 @@ export const appConfig: AppConfig = {
   tokenKey: 'track_token',
   colorModeKey: 'track_color_mode',
   accent: { light: '#5eead4', main: '#0d9488', hover: '#0f766e', active: '#115e59' },
-  nav: [{ label: 'Dashboard', to: '/', icon: 'dashboard' }],
+  nav: [
+    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    {
+      label: 'Calculators',
+      icon: 'calculator',
+      children: [
+        { label: 'Pod Profit', to: '/calculators/pod-profit', icon: 'analytics' },
+      ],
+    },
+  ],
   modules: [
     { title: 'Orders', description: 'Review incoming orders and their fulfilment status.', icon: 'orders' },
     { title: 'Shipments', description: 'Create, dispatch and manage shipments.', icon: 'shipping' },

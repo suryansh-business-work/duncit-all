@@ -27,7 +27,7 @@
     "dev:crm": "pnpm --filter crm dev",
     "dev:track": "pnpm --filter track dev",
     "dev:tech": "pnpm --filter tech dev",
-    "run:all": "pnpm --parallel --recursive --if-present dev",
+    "run:all": "node scripts/dev-banner.mjs",
     "kill-ports:all": "node scripts/kill-ports.mjs",
     "build": "pnpm --recursive --if-present build",
     "build:server": "pnpm --filter server build",

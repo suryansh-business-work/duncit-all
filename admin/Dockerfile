@@ -1,5 +1,5 @@
 # --- builder ---
-FROM node:20-alpine AS builder
+FROM public.ecr.aws/docker/library/node:20-alpine AS builder
 WORKDIR /repo
 
 ARG VITE_GRAPHQL_URL
@@ -28,7 +28,7 @@ COPY admin ./admin
 RUN pnpm --filter admin build
 
 # --- runner ---
-FROM nginx:alpine AS runner
+FROM public.ecr.aws/docker/library/nginx:alpine AS runner
 COPY --from=builder /repo/admin/dist /usr/share/nginx/html
 COPY admin/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

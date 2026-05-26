@@ -1,5 +1,5 @@
 # --- builder ---
-FROM node:20-alpine AS builder
+FROM public.ecr.aws/docker/library/node:20-alpine AS builder
 WORKDIR /repo
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
@@ -21,7 +21,7 @@ COPY partners/partners-website ./partners/partners-website
 RUN pnpm --filter partners-website build
 
 # --- runner ---
-FROM nginx:alpine AS runner
+FROM public.ecr.aws/docker/library/nginx:alpine AS runner
 COPY --from=builder /repo/partners/partners-website/dist /usr/share/nginx/html
 COPY partners/partners-website/nginx.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

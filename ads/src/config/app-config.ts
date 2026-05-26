@@ -31,6 +31,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  portalLabel: string;
+  loginImage: string;
   requiredRoles: string[];
   tokenKey: string;
   colorModeKey: string;
@@ -49,6 +51,10 @@ export const appConfig: AppConfig = {
   name: 'Ads',
   fullName: 'Duncit Ads',
   tagline: 'Plan campaigns, manage creatives and track ad performance.',
+  portalLabel: 'Ads Portal',
+  loginImage:
+    import.meta.env.VITE_LOGIN_IMAGE ||
+    'https://images.pexels.com/photos/3183153/pexels-photo-3183153.jpeg',
   requiredRoles: envRoles.length ? envRoles : ['ADS_MANAGER'],
   tokenKey: 'ads_token',
   colorModeKey: 'ads_color_mode',

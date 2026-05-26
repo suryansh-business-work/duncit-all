@@ -27,6 +27,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  portalLabel: string;
+  loginImage: string;
   requiredRoles: string[];
   tokenKey: string;
   colorModeKey: string;
@@ -45,6 +47,10 @@ export const appConfig: AppConfig = {
   name: 'CRM',
   fullName: 'Duncit CRM',
   tagline: 'Capture, qualify and convert venue and host leads.',
+  portalLabel: 'CRM Portal',
+  loginImage:
+    import.meta.env.VITE_LOGIN_IMAGE ||
+    'https://images.pexels.com/photos/7658434/pexels-photo-7658434.jpeg',
   requiredRoles: envRoles.length ? envRoles : ['CRM_MANAGER'],
   tokenKey: 'crm_token',
   colorModeKey: 'crm_color_mode',

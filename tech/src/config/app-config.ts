@@ -28,6 +28,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  portalLabel: string;
+  loginImage: string;
   requiredRoles: string[];
   tokenKey: string;
   colorModeKey: string;
@@ -46,6 +48,10 @@ export const appConfig: AppConfig = {
   name: 'Tech',
   fullName: 'Duncit Tech',
   tagline: 'Manage platform configuration and environment variables.',
+  portalLabel: 'Tech Portal',
+  loginImage:
+    import.meta.env.VITE_LOGIN_IMAGE ||
+    'https://images.pexels.com/photos/6804068/pexels-photo-6804068.jpeg',
   requiredRoles: envRoles.length ? envRoles : ['TECH_MANAGER'],
   tokenKey: 'tech_token',
   colorModeKey: 'tech_color_mode',

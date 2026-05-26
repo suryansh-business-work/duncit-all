@@ -31,6 +31,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  portalLabel: string;
+  loginImage: string;
   requiredRoles: string[];
   tokenKey: string;
   colorModeKey: string;
@@ -49,6 +51,10 @@ export const appConfig: AppConfig = {
   name: 'Track',
   fullName: 'Duncit Track',
   tagline: 'Follow orders, shipments and live delivery status end to end.',
+  portalLabel: 'Tracking Portal',
+  loginImage:
+    import.meta.env.VITE_LOGIN_IMAGE ||
+    'https://images.pexels.com/photos/7869097/pexels-photo-7869097.jpeg',
   requiredRoles: envRoles.length ? envRoles : ['TRACK_MANAGER'],
   tokenKey: 'track_token',
   colorModeKey: 'track_color_mode',

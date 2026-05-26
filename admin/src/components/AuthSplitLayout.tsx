@@ -4,8 +4,7 @@ import { alpha, styled } from '@mui/material/styles';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import { useColorMode } from '../ColorModeContext';
-
-const DUNCIT_LOGO = 'https://ik.imagekit.io/esdata1/branding/duncit-logo_Kcj1nn1Vx.png';
+import { useBranding } from '../lib/useBranding';
 
 const Shell = styled(Box)(({ theme }) => ({
   minHeight: '100dvh',
@@ -80,6 +79,7 @@ export default function AuthSplitLayout({
   children,
 }: Props) {
   const { mode, toggle } = useColorMode();
+  const { logoUrl, appName } = useBranding();
   return (
     <Shell>
       <FormPane>
@@ -99,8 +99,8 @@ export default function AuthSplitLayout({
           >
             <Box
               component="img"
-              src="/duncit-logo.svg"
-              alt="Duncit"
+              src={logoUrl}
+              alt={appName}
               sx={{ height: 32, width: 'auto', objectFit: 'contain' }}
             />
             <Chip
@@ -130,9 +130,9 @@ export default function AuthSplitLayout({
           <Stack alignItems="center" spacing={1.5} sx={{ mt: { md: 6, lg: 8 } }}>
             <Box
               component="img"
-              src={DUNCIT_LOGO}
-              alt="Duncit"
-              sx={{ height: 64, width: 'auto', objectFit: 'contain', filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.45))' }}
+              src={logoUrl}
+              alt={appName}
+              sx={{ height: 64, width: 'auto', maxWidth: 220, objectFit: 'contain', filter: 'drop-shadow(0 6px 18px rgba(0,0,0,0.45))' }}
             />
             <Chip
               label={portalLabel}

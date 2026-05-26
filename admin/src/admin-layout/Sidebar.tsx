@@ -15,6 +15,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import AppsIcon from '@mui/icons-material/Apps';
 import SearchIcon from '@mui/icons-material/Search';
 import { useColorMode } from '../ColorModeContext';
+import { useBranding } from '../lib/useBranding';
 import { Brand, NavItem } from './styled';
 import { useNavState } from './useNavState';
 import NavItemView from './NavItemView';
@@ -26,6 +27,7 @@ interface Props {
 export default function Sidebar({ onCloseMobile }: Props) {
   const navigate = useNavigate();
   const { mode, toggle } = useColorMode();
+  const { logoUrl, appName } = useBranding();
   const {
     location,
     navSearch,
@@ -50,9 +52,9 @@ export default function Sidebar({ onCloseMobile }: Props) {
       >
         <Box
           component="img"
-          src="/duncit-logo.svg"
-          alt="Duncit"
-          sx={{ height: 34, width: 'auto', maxWidth: 150, objectFit: 'contain' }}
+          src={logoUrl}
+          alt={appName}
+          sx={{ height: 28, width: 'auto', maxWidth: 130, objectFit: 'contain' }}
         />
         <Box>
           <Typography variant="caption" color="text.secondary">

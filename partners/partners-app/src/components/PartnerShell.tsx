@@ -10,9 +10,10 @@ import MenuIcon from '@mui/icons-material/Menu';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import { useColorMode } from '../ColorModeContext';
 import PartnerSidebar from './PartnerSidebar';
+import AppBreadcrumbs from './AppBreadcrumbs';
 
-const DRAWER_WIDTH = 264;
-const HEADER_HEIGHT = 56;
+export const DRAWER_WIDTH = 264;
+export const HEADER_HEIGHT = 48;
 
 const PARTNER_ME = gql`
   query PartnerShellMe {
@@ -51,21 +52,21 @@ export default function PartnerShell({ children }: { children: ReactNode }) {
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <AppBar position="sticky" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
           <Toolbar sx={{ minHeight: `${HEADER_HEIGHT}px !important`, gap: 1, px: { xs: 1.25, sm: 2 } }}>
-            {!isDesktop && <IconButton edge="start" onClick={() => setMobileOpen(true)} aria-label="open navigation"><MenuIcon /></IconButton>}
+            {!isDesktop && <IconButton size="small" edge="start" onClick={() => setMobileOpen(true)} aria-label="open navigation"><MenuIcon /></IconButton>}
             <Box component={RouterLink} to="/" sx={{ color: 'inherit', textDecoration: 'none', minWidth: 0, flex: 1 }}>
-              <Typography variant="subtitle1" fontWeight={900} noWrap>Partners</Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }} noWrap>Host, venue and product console</Typography>
+              <Typography variant="subtitle2" fontWeight={800} noWrap>Partners</Typography>
             </Box>
-            <Button component={RouterLink} to="/support" startIcon={<SupportAgentIcon />} variant="text" sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>Support</Button>
+            <Button size="small" component={RouterLink} to="/support" startIcon={<SupportAgentIcon />} variant="text" sx={{ display: { xs: 'none', sm: 'inline-flex' } }}>Support</Button>
             <Tooltip title={`Switch to ${colorMode.mode === 'light' ? 'dark' : 'light'} mode`}>
-              <IconButton onClick={colorMode.toggle} aria-label="toggle color mode">
-                {colorMode.mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+              <IconButton size="small" onClick={colorMode.toggle} aria-label="toggle color mode">
+                {colorMode.mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
               </IconButton>
             </Tooltip>
-            <Avatar src={account?.profile_photo || undefined} sx={{ width: 30, height: 30, bgcolor: 'primary.main', fontSize: 13 }}>{initials(account)}</Avatar>
-            <Tooltip title="Logout"><IconButton onClick={logout} aria-label="logout"><LogoutIcon /></IconButton></Tooltip>
+            <Avatar src={account?.profile_photo || undefined} sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 12 }}>{initials(account)}</Avatar>
+            <Tooltip title="Logout"><IconButton size="small" onClick={logout} aria-label="logout"><LogoutIcon fontSize="small" /></IconButton></Tooltip>
           </Toolbar>
         </AppBar>
+        <AppBreadcrumbs />
         <Box component="main" sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 2.25, md: 3 }, pb: { xs: 3, md: 4 } }}>
           {children}
         </Box>

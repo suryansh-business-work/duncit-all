@@ -22,8 +22,10 @@ import { useColorMode } from '../ColorModeContext';
 import { appConfig } from '../config/app-config';
 import { clearToken, hasAppAccess } from '../lib/session';
 import AppSidebar from './AppSidebar';
+import AppBreadcrumbs from './AppBreadcrumbs';
 
-const DRAWER_WIDTH = 256;
+export const DRAWER_WIDTH = 256;
+export const HEADER_HEIGHT = 48;
 
 const SHELL_ME = gql`
   query ShellMe {
@@ -64,7 +66,6 @@ export default function AppShell({ children }: { children: ReactNode }) {
     navigate('/login', { replace: true });
   };
 
-  // Defence in depth: if the signed-in user's role was revoked, sign them out.
   useEffect(() => {
     if (account && !hasAppAccess(account.roles)) {
       clearToken();
@@ -102,35 +103,33 @@ export default function AppShell({ children }: { children: ReactNode }) {
       </Box>
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
         <AppBar position="sticky" color="inherit" elevation={0} sx={{ borderBottom: 1, borderColor: 'divider' }}>
-          <Toolbar sx={{ gap: 1, px: { xs: 1.25, sm: 2 } }}>
+          <Toolbar sx={{ minHeight: `${HEADER_HEIGHT}px !important`, gap: 1, px: { xs: 1.25, sm: 2 } }}>
             {!isDesktop && (
-              <IconButton edge="start" onClick={() => setMobileOpen(true)} aria-label="open navigation">
+              <IconButton size="small" edge="start" onClick={() => setMobileOpen(true)} aria-label="open navigation">
                 <MenuIcon />
               </IconButton>
             )}
             <Box component={RouterLink} to="/" sx={{ color: 'inherit', textDecoration: 'none', minWidth: 0, flex: 1 }}>
-              <Typography variant="subtitle1" fontWeight={900} noWrap>
+              <Typography variant="subtitle2" fontWeight={800} noWrap>
                 {appConfig.fullName}
-              </Typography>
-              <Typography variant="caption" color="text.secondary" sx={{ display: { xs: 'none', sm: 'block' } }} noWrap>
-                {appConfig.tagline}
               </Typography>
             </Box>
             <Tooltip title={`Switch to ${colorMode.mode === 'light' ? 'dark' : 'light'} mode`}>
-              <IconButton onClick={colorMode.toggle} aria-label="toggle color mode">
-                {colorMode.mode === 'light' ? <DarkModeIcon /> : <LightModeIcon />}
+              <IconButton size="small" onClick={colorMode.toggle} aria-label="toggle color mode">
+                {colorMode.mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
               </IconButton>
             </Tooltip>
-            <Avatar src={account?.profile_photo || undefined} sx={{ width: 32, height: 32, bgcolor: 'primary.main', fontSize: 13 }}>
+            <Avatar src={account?.profile_photo || undefined} sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 12 }}>
               {initials(account)}
             </Avatar>
             <Tooltip title="Logout">
-              <IconButton onClick={logout} aria-label="logout">
-                <LogoutIcon />
+              <IconButton size="small" onClick={logout} aria-label="logout">
+                <LogoutIcon fontSize="small" />
               </IconButton>
             </Tooltip>
           </Toolbar>
         </AppBar>
+        <AppBreadcrumbs />
         <Box component="main" sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 2.25, md: 3 } }}>
           {children}
         </Box>

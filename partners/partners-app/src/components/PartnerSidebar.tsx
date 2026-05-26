@@ -1,9 +1,11 @@
 import { gql, useQuery } from '@apollo/client';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
-import { Box, Divider, List, ListItemButton, ListItemIcon, ListItemText, Typography } from '@mui/material';
+import { Box, Divider, List, ListItemButton, ListItemIcon, ListItemText, Skeleton, Typography } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faBoxOpen, faBuilding, faCircleQuestion, faFileLines, faGaugeHigh, faHeadset, faUserTie } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
+import { useBranding } from '../lib/useBranding';
+import { HEADER_HEIGHT } from './PartnerShell';
 
 interface NavItem {
   label: string;
@@ -38,17 +40,20 @@ const PUBLIC_POLICIES = gql`
 export default function PartnerSidebar({ onCloseMobile }: Props) {
   const location = useLocation();
   const { data } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-first' });
+  const { logoUrl, appName, loading } = useBranding();
   const policies = data?.publicPolicies ?? [];
 
   const isActive = (item: NavItem) => (item.match === '/' ? location.pathname === '/' : location.pathname.startsWith(item.match));
 
   return (
     <Box component="aside" sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'background.paper' }}>
-      <Box component={RouterLink} to="/" onClick={onCloseMobile} sx={{ minHeight: 56, px: 2, display: 'flex', alignItems: 'center', gap: 1.25, color: 'inherit', textDecoration: 'none' }}>
-        <Box component="img" src="/duncit-logo.svg" alt="Duncit" sx={{ height: 34, width: 'auto', maxWidth: 150, objectFit: 'contain' }} />
-        <Box sx={{ minWidth: 0 }}>
-          <Typography variant="caption" color="text.secondary" noWrap>Partner Console</Typography>
-        </Box>
+      <Box component={RouterLink} to="/" onClick={onCloseMobile} sx={{ minHeight: HEADER_HEIGHT, px: 2, display: 'flex', alignItems: 'center', gap: 1.25, color: 'inherit', textDecoration: 'none', borderBottom: 1, borderColor: 'divider' }}>
+        {loading ? (
+          <Skeleton variant="rounded" width={96} height={24} />
+        ) : (
+          <Box component="img" src={logoUrl} alt={appName} sx={{ height: 26, width: 'auto', maxWidth: 130, objectFit: 'contain' }} />
+        )}
+        <Typography variant="caption" color="primary" fontWeight={800} sx={{ letterSpacing: 0.3 }} noWrap>Partners</Typography>
       </Box>
       <Divider />
       <List sx={{ py: 1, flex: 1, overflowY: 'auto' }}>

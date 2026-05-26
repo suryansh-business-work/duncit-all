@@ -20,20 +20,63 @@ import { websiteContentService } from './modules/websiteContent/websiteContent.s
 import { userService } from './modules/user/user.service';
 import { marketingService } from './modules/marketing/marketing.service';
 
+async function safeSeed(name: string, fn: () => Promise<void>) {
+  try {
+    await fn();
+  } catch (err) {
+    // A single subsystem failing must not crash the whole API. Nginx would
+    // otherwise return 502s to every client until the container restarts.
+    // eslint-disable-next-line no-console
+    console.error(`[bootstrap] ${name} failed:`, err);
+  }
+}
+
+// Browser-facing origins we trust. Reflects only matching origins back so
+// `credentials: true` works (browsers reject `*` with credentials).
+const ALLOWED_ORIGIN_PATTERNS: RegExp[] = [
+  /^https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/,
+  /^https?:\/\/([a-z0-9-]+\.)?duncit\.com$/,
+];
+
+const isAllowedOrigin = (origin: string | undefined): boolean => {
+  if (!origin) return true; // server-to-server, curl, mobile webviews, etc.
+  return ALLOWED_ORIGIN_PATTERNS.some((p) => p.test(origin));
+};
+
+const corsOptions: cors.CorsOptions = {
+  origin: (origin, cb) => cb(null, isAllowedOrigin(origin)),
+  credentials: true,
+  methods: ['GET', 'POST', 'OPTIONS', 'PUT', 'DELETE', 'PATCH'],
+  allowedHeaders: [
+    'Authorization',
+    'Content-Type',
+    'X-Requested-With',
+    'Apollo-Require-Preflight',
+    'X-Apollo-Operation-Name',
+  ],
+  maxAge: 600,
+  optionsSuccessStatus: 204,
+};
+
 async function bootstrap() {
   await connectDB();
-  await rbacService.seedDefaults();
-  await settingsService.seedDefaults();
-  await categoryService.seedDefaults();
-  await notificationService.ensureVapid();
-  await policyService.seedDefaults();
-  await websiteContentService.seedDefaults();
-  await marketingService.resumeSchedules();
-  const { podPlanService } = await import('./modules/pod-plan/pod-plan.service');
-  await podPlanService.seedDefaults();
+  await safeSeed('rbac', () => rbacService.seedDefaults());
+  await safeSeed('settings', () => settingsService.seedDefaults());
+  await safeSeed('category', () => categoryService.seedDefaults());
+  await safeSeed('vapid', () => notificationService.ensureVapid());
+  await safeSeed('policy', () => policyService.seedDefaults());
+  await safeSeed('websiteContent', () => websiteContentService.seedDefaults());
+  await safeSeed('marketing', () => marketingService.resumeSchedules());
+  await safeSeed('podPlan', async () => {
+    const { podPlanService } = await import('./modules/pod-plan/pod-plan.service');
+    await podPlanService.seedDefaults();
+  });
 
   const app = express();
   const httpServer = http.createServer(app);
+
+  // Trust the nginx reverse proxy so req.ip / X-Forwarded-* are honoured.
+  app.set('trust proxy', 1);
 
   const apollo = new ApolloServer<GraphQLContext>({
     typeDefs,
@@ -43,9 +86,13 @@ async function bootstrap() {
 
   await apollo.start();
 
+  // Global CORS — applied before routes so preflight (OPTIONS) for every
+  // endpoint (graphql, twilio webhook, SSE, health) gets handled uniformly.
+  app.use(cors(corsOptions));
+  app.options('*', cors(corsOptions));
+
   app.use(
     '/graphql',
-    cors<cors.CorsRequest>({ origin: true, credentials: true }),
     express.json({ limit: '25mb' }),
     expressMiddleware(apollo, { context: buildContext })
   );
@@ -76,7 +123,6 @@ async function bootstrap() {
   // marks one as read.
   app.get(
     '/notifications/stream',
-    cors<cors.CorsRequest>({ origin: true, credentials: true }),
     async (req, res) => {
     const token = String(req.query.token || '');
     let userId: string | null = null;

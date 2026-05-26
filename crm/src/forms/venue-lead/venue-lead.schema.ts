@@ -3,13 +3,40 @@ import * as yup from 'yup';
 const numeric = (label: string) =>
   yup.string().trim().matches(/^\d*$/, `${label} must be a whole number`);
 
+const phone = yup.string().trim().matches(/^[0-9+\-\s]{0,20}$/, 'Enter a valid number');
+
+/**
+ * Mark name + mobile required only for the primary contact (index 0).
+ * Yup runs `of(contactSchema)` per element so we need an outer `.test`
+ * to surface the row-level requirement next to the field path Formik
+ * uses (`contacts[0].mobile_number`). Returning a ValidationError with
+ * `path` ensures the inline error appears under the field.
+ */
 const contactSchema = yup.object({
   name: yup.string().trim().max(80, 'Name is too long'),
   role: yup.string().trim().max(80, 'Role is too long'),
-  mobile_number: yup.string().trim().matches(/^[0-9+\-\s]{0,20}$/, 'Enter a valid mobile number'),
-  whatsapp_number: yup.string().trim().matches(/^[0-9+\-\s]{0,20}$/, 'Enter a valid WhatsApp number'),
+  mobile_number: phone,
+  whatsapp_number: phone,
   email: yup.string().trim().email('Enter a valid email'),
 });
+
+const contactsSchema = yup
+  .array()
+  .of(contactSchema)
+  .min(1, 'Add at least one contact')
+  .test('primary-required', 'Primary contact details required', function (arr) {
+    const ctx = this;
+    const primary = arr?.[0];
+    const errors: yup.ValidationError[] = [];
+    if (!primary?.name?.trim()) {
+      errors.push(ctx.createError({ path: 'contacts[0].name', message: 'Primary contact name is required' }));
+    }
+    if (!primary?.mobile_number?.trim()) {
+      errors.push(ctx.createError({ path: 'contacts[0].mobile_number', message: 'Primary contact mobile is required' }));
+    }
+    if (errors.length) return new yup.ValidationError(errors);
+    return true;
+  });
 
 export const venueLeadSchema = yup.object({
   venue_name: yup.string().trim().min(2, 'Venue name is too short').max(120).required('Venue name is required'),
@@ -21,11 +48,7 @@ export const venueLeadSchema = yup.object({
   expected_charges: numeric('Expected charges'),
   security_deposit: numeric('Security deposit'),
   map_link: yup.string().trim().max(2048),
-  contacts: yup
-    .array()
-    .of(contactSchema)
-    .min(1, 'Add at least one contact')
-    .test('primary-mobile', 'Primary contact mobile number is required', (arr) => !!arr?.[0]?.mobile_number?.trim()),
+  contacts: contactsSchema,
   lead_status: yup.string().required('Lead status is required'),
   priority: yup.string().required('Priority is required'),
 });

@@ -1,27 +1,50 @@
-import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMemo, useState } from 'react';
+import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, CircularProgress, Snackbar, Stack } from '@mui/material';
+import { Alert, Snackbar, Stack } from '@mui/material';
 import { DELETE_VENUE_LEAD, VENUE_LEADS } from '../../api/crm.gql';
+import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE, downloadBase64Xlsx } from '../../api/excel.gql';
 import type { VenueLead } from '../../api/crm.types';
+import { useCrmConfig } from '../../api/useCrmConfig';
 import LeadsToolbar from '../../components/LeadsToolbar';
 import ConfirmDialog from '../../components/ConfirmDialog';
+import VobizContactDialog from '../../components/VobizContactDialog';
+import FillWithAiDialog from '../../components/FillWithAiDialog';
+import ExcelImportDialog from '../../components/ExcelImportDialog';
 import VenueLeadsTable from './VenueLeadsTable';
-import VobizContactDialog from './VobizContactDialog';
 import { parseApiError } from '../../utils/parseApiError';
 
 export default function VenueLeadsPage() {
   const navigate = useNavigate();
+  const client = useApolloClient();
+  const { config } = useCrmConfig();
+
   const [search, setSearch] = useState('');
-  const { data, loading, error, refetch } = useQuery(VENUE_LEADS, {
-    variables: { filter: { search } },
+  const [statusFilter, setStatusFilter] = useState('');
+  const [priorityFilter, setPriorityFilter] = useState('');
+  const [toast, setToast] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [showAi, setShowAi] = useState(false);
+  const [showImport, setShowImport] = useState(false);
+  const [toDelete, setToDelete] = useState<VenueLead | null>(null);
+  const [vobiz, setVobiz] = useState<{ mode: 'email' | 'call'; lead: VenueLead } | null>(null);
+
+  const { data, loading, refetch } = useQuery<{ venueLeads: VenueLead[] }>(VENUE_LEADS, {
+    variables: { filter: { search, lead_status: statusFilter || null, priority: priorityFilter || null } },
     fetchPolicy: 'cache-and-network',
   });
   const [deleteLead, { loading: deleting }] = useMutation(DELETE_VENUE_LEAD);
-  const [toDelete, setToDelete] = useState<VenueLead | null>(null);
-  const [vobiz, setVobiz] = useState<{ mode: 'email' | 'call'; lead: VenueLead } | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
-  const leads = (data?.venueLeads ?? []) as VenueLead[];
+
+  const leads = data?.venueLeads ?? [];
+
+  const statusOptions = useMemo(
+    () => (config.venue_lead_statuses ?? []).map((value) => ({ label: value, value })),
+    [config]
+  );
+  const priorityOptions = useMemo(
+    () => (config.priorities ?? []).map((value) => ({ label: value, value })),
+    [config]
+  );
 
   const confirmDelete = async () => {
     if (!toDelete) return;
@@ -31,9 +54,35 @@ export default function VenueLeadsPage() {
       setToDelete(null);
       await refetch();
     } catch (err) {
-      setToast(parseApiError(err));
+      setError(parseApiError(err));
     }
   };
+
+  const fetchExcel = async (kind: 'template' | 'export') => {
+    try {
+      const query = kind === 'template' ? CRM_EXCEL_TEMPLATE : CRM_EXCEL_EXPORT;
+      const res = await client.query<{ crmExcelTemplate?: { filename: string; content_base64: string }; crmExcelExport?: { filename: string; content_base64: string } }>({
+        query,
+        variables: { entity: 'VENUE_LEAD' },
+        fetchPolicy: 'network-only',
+      });
+      const payload = kind === 'template' ? res.data.crmExcelTemplate : res.data.crmExcelExport;
+      if (!payload) throw new Error('Empty response');
+      downloadBase64Xlsx(payload.filename, payload.content_base64);
+      setToast(kind === 'template' ? 'Template downloaded' : `Exported ${leads.length} venue lead${leads.length === 1 ? '' : 's'}`);
+    } catch (err) {
+      setError(parseApiError(err));
+    }
+  };
+
+  const vobizLead = vobiz
+    ? {
+        id: vobiz.lead.id,
+        display_name: vobiz.lead.venue_name,
+        primary_email: vobiz.lead.contacts?.[0]?.email,
+        primary_mobile: vobiz.lead.contacts?.[0]?.mobile_number,
+      }
+    : null;
 
   return (
     <Stack spacing={2}>
@@ -44,20 +93,26 @@ export default function VenueLeadsPage() {
         onSearch={setSearch}
         onCreate={() => navigate('/venue-leads/new')}
         createLabel="New Venue Lead"
+        status={{ selected: statusFilter, options: statusOptions, onChange: setStatusFilter }}
+        priority={{ selected: priorityFilter, options: priorityOptions, onChange: setPriorityFilter }}
+        onFillWithAi={() => setShowAi(true)}
+        onImport={() => setShowImport(true)}
+        onExport={() => fetchExcel('export')}
+        onDownloadTemplate={() => fetchExcel('template')}
       />
-      {error ? (
-        <Alert severity="error">{parseApiError(error)}</Alert>
-      ) : loading && !data ? (
-        <Box sx={{ display: 'grid', placeItems: 'center', py: 6 }}><CircularProgress /></Box>
-      ) : (
-        <VenueLeadsTable
-          leads={leads}
-          onEdit={(lead) => navigate(`/venue-leads/${lead.id}`)}
-          onEmail={(lead) => setVobiz({ mode: 'email', lead })}
-          onCall={(lead) => setVobiz({ mode: 'call', lead })}
-          onDelete={setToDelete}
-        />
-      )}
+
+      {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+
+      <VenueLeadsTable
+        leads={leads}
+        loading={loading && !data}
+        onView={(lead) => navigate(`/venue-leads/${lead.id}/view`)}
+        onEdit={(lead) => navigate(`/venue-leads/${lead.id}`)}
+        onEmail={(lead) => setVobiz({ mode: 'email', lead })}
+        onCall={(lead) => setVobiz({ mode: 'call', lead })}
+        onDelete={setToDelete}
+      />
+
       <ConfirmDialog
         open={!!toDelete}
         title="Delete venue lead"
@@ -67,13 +122,39 @@ export default function VenueLeadsPage() {
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}
       />
+
       <VobizContactDialog
         open={!!vobiz}
         mode={vobiz?.mode ?? 'email'}
-        lead={vobiz?.lead ?? null}
+        entity="VENUE_LEAD"
+        lead={vobizLead}
         onClose={() => setVobiz(null)}
         onResult={(message) => setToast(message)}
       />
+
+      <FillWithAiDialog
+        open={showAi}
+        entity="VENUE_LEAD"
+        title="Fill venue lead with AI"
+        onClose={() => setShowAi(false)}
+        onApply={(parsed) => {
+          setShowAi(false);
+          navigate('/venue-leads/new', { state: { aiPrefill: parsed } });
+        }}
+      />
+
+      <ExcelImportDialog
+        open={showImport}
+        entity="VENUE_LEAD"
+        title="Import venue leads from Excel"
+        onClose={() => setShowImport(false)}
+        onImported={(result) => {
+          setToast(`Imported ${result.inserted} of ${result.inserted + result.failed} rows`);
+          refetch();
+        }}
+        onDownloadTemplate={() => fetchExcel('template')}
+      />
+
       <Snackbar open={!!toast} autoHideDuration={4000} onClose={() => setToast(null)} message={toast ?? ''} />
     </Stack>
   );

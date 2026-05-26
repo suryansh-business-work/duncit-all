@@ -58,6 +58,7 @@ export const appConfig: AppConfig = {
   accent: { light: '#94a3b8', main: '#0ea5e9', hover: '#0284c7', active: '#0369a1' },
   nav: [
     { label: 'Environment', to: '/', icon: 'settings' },
+    { label: 'Comms Providers', to: '/comms-providers', icon: 'forum' },
   ],
   modules: [],
 };

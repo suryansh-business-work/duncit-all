@@ -46,12 +46,30 @@ export const UPDATE_HOST_LEAD = gql`mutation UpdateHostLead($id: ID!, $input: Ho
 export const DELETE_HOST_LEAD = gql`mutation DeleteHostLead($id: ID!) { deleteHostLead(id: $id) }`;
 
 export const EMAIL_VENUE_LEAD = gql`
-  mutation EmailVenueLeadContact($id: ID!, $contact_email: String!, $subject: String!, $body: String!) {
-    emailVenueLeadContact(id: $id, contact_email: $contact_email, subject: $subject, body: $body) { ok message provider }
+  mutation EmailVenueLeadContact($id: ID!, $contact_email: String!, $subject: String!, $body: String!, $provider_id: ID) {
+    emailVenueLeadContact(id: $id, contact_email: $contact_email, subject: $subject, body: $body, provider_id: $provider_id) {
+      ok message provider provider_id external_id
+    }
   }
 `;
 export const CALL_VENUE_LEAD = gql`
-  mutation CallVenueLeadContact($id: ID!, $contact_number: String!) {
-    callVenueLeadContact(id: $id, contact_number: $contact_number) { ok message provider }
+  mutation CallVenueLeadContact($id: ID!, $contact_number: String!, $provider_id: ID) {
+    callVenueLeadContact(id: $id, contact_number: $contact_number, provider_id: $provider_id) {
+      ok message provider provider_id external_id recording_url
+    }
+  }
+`;
+export const EMAIL_HOST_LEAD = gql`
+  mutation EmailHostLeadContact($id: ID!, $contact_email: String!, $subject: String!, $body: String!, $provider_id: ID) {
+    emailHostLeadContact(id: $id, contact_email: $contact_email, subject: $subject, body: $body, provider_id: $provider_id) {
+      ok message provider provider_id external_id
+    }
+  }
+`;
+export const CALL_HOST_LEAD = gql`
+  mutation CallHostLeadContact($id: ID!, $contact_number: String!, $provider_id: ID) {
+    callHostLeadContact(id: $id, contact_number: $contact_number, provider_id: $provider_id) {
+      ok message provider provider_id external_id recording_url
+    }
   }
 `;

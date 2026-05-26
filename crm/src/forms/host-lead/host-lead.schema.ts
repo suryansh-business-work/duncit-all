@@ -2,13 +2,33 @@ import * as yup from 'yup';
 
 const numeric = (label: string) => yup.string().trim().matches(/^\d*$/, `${label} must be a whole number`);
 
+const phone = yup.string().trim().matches(/^[0-9+\-\s]{0,20}$/, 'Enter a valid number');
+
 const contactSchema = yup.object({
   name: yup.string().trim().max(80, 'Name is too long'),
   role: yup.string().trim().max(80, 'Role is too long'),
-  mobile_number: yup.string().trim().matches(/^[0-9+\-\s]{0,20}$/, 'Enter a valid mobile number'),
-  whatsapp_number: yup.string().trim().matches(/^[0-9+\-\s]{0,20}$/, 'Enter a valid WhatsApp number'),
+  mobile_number: phone,
+  whatsapp_number: phone,
   email: yup.string().trim().email('Enter a valid email'),
 });
+
+const contactsSchema = yup
+  .array()
+  .of(contactSchema)
+  .min(1, 'Add at least one contact')
+  .test('primary-required', 'Primary contact details required', function (arr) {
+    const ctx = this;
+    const primary = arr?.[0];
+    const errors: yup.ValidationError[] = [];
+    if (!primary?.name?.trim()) {
+      errors.push(ctx.createError({ path: 'contacts[0].name', message: 'Primary contact name is required' }));
+    }
+    if (!primary?.mobile_number?.trim()) {
+      errors.push(ctx.createError({ path: 'contacts[0].mobile_number', message: 'Primary contact mobile is required' }));
+    }
+    if (errors.length) return new yup.ValidationError(errors);
+    return true;
+  });
 
 export const hostLeadSchema = yup.object({
   host_name: yup.string().trim().min(2, 'Host name is too short').max(120).required('Host name is required'),
@@ -16,11 +36,7 @@ export const hostLeadSchema = yup.object({
   past_attendees: numeric('Past attendees'),
   instagram_link: yup.string().trim().max(2048),
   community_link: yup.string().trim().max(2048),
-  contacts: yup
-    .array()
-    .of(contactSchema)
-    .min(1, 'Add at least one contact')
-    .test('primary-mobile', 'Primary contact mobile number is required', (arr) => !!arr?.[0]?.mobile_number?.trim()),
+  contacts: contactsSchema,
   lead_status: yup.string().required('Lead status is required'),
   priority: yup.string().required('Priority is required'),
 });

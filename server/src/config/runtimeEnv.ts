@@ -38,6 +38,8 @@ export const RUNTIME_ENV_DEFINITIONS: RuntimeEnvDefinition[] = [
   { group: 'Twilio', app: 'server', key: 'TWILIO_WEBHOOK_BASE_URL', label: 'Webhook Base URL', is_secret: false },
   { group: 'Twilio', app: 'server', key: 'TWILIO_CALL_RECORDING_ENABLED', label: 'Call Recording Enabled', is_secret: false },
   { group: 'AI', app: 'server', key: 'OPENAI_API_KEY', label: 'OpenAI API Key', is_secret: true },
+  { group: 'AI', app: 'server', key: 'SERVAM_AI_API_KEY', label: 'Servam AI API Key', is_secret: true },
+  { group: 'AI', app: 'server', key: 'SERVAM_AI_BASE_URL', label: 'Servam AI Base URL', is_secret: false },
   { group: 'Vobiz', app: 'server', key: 'VOBIZ_BASE_URL', label: 'API Base URL', is_secret: false },
   { group: 'Vobiz', app: 'server', key: 'VOBIZ_API_KEY', label: 'API Key', is_secret: true },
   { group: 'Vobiz', app: 'server', key: 'VOBIZ_SENDER_EMAIL', label: 'Sender Email', is_secret: false },

@@ -1,14 +1,19 @@
-import { IconButton, Paper, Stack, Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
+import { useMemo } from 'react';
+import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { DataGrid, type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import EmailIcon from '@mui/icons-material/Email';
 import CallIcon from '@mui/icons-material/Call';
 import DeleteIcon from '@mui/icons-material/Delete';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import { format } from 'date-fns';
 import type { VenueLead } from '../../api/crm.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
 
 interface Props {
   leads: VenueLead[];
+  loading?: boolean;
+  onView: (lead: VenueLead) => void;
   onEdit: (lead: VenueLead) => void;
   onEmail: (lead: VenueLead) => void;
   onCall: (lead: VenueLead) => void;
@@ -21,46 +26,84 @@ const fmt = (value?: string | null) => {
   return Number.isNaN(date.getTime()) ? '—' : format(date, 'dd MMM yyyy');
 };
 
-export default function VenueLeadsTable({ leads, onEdit, onEmail, onCall, onDelete }: Props) {
-  if (leads.length === 0) {
-    return <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>No venue leads yet.</Typography>;
-  }
+export default function VenueLeadsTable({ leads, loading, onView, onEdit, onEmail, onCall, onDelete }: Props) {
+  const columns = useMemo<GridColDef<VenueLead>[]>(
+    () => [
+      {
+        field: 'venue_name',
+        headerName: 'Venue',
+        flex: 1.4,
+        minWidth: 200,
+        renderCell: (params: GridRenderCellParams<VenueLead>) => (
+          <Stack sx={{ py: 0.5 }}>
+            <Typography variant="body2" fontWeight={700} noWrap>{params.row.venue_name}</Typography>
+            <Typography variant="caption" color="text.secondary" noWrap>
+              {params.row.contacts?.[0]?.mobile_number || '—'}
+            </Typography>
+          </Stack>
+        ),
+      },
+      { field: 'city', headerName: 'City', minWidth: 130, flex: 0.7 },
+      {
+        field: 'lead_status',
+        headerName: 'Status',
+        minWidth: 130,
+        flex: 0.7,
+        renderCell: (params) => <StatusChip value={params.row.lead_status} />,
+      },
+      {
+        field: 'priority',
+        headerName: 'Priority',
+        minWidth: 110,
+        flex: 0.5,
+        renderCell: (params) => <PriorityChip value={params.row.priority} />,
+      },
+      {
+        field: 'next_follow_up_date',
+        headerName: 'Follow-up',
+        minWidth: 140,
+        flex: 0.6,
+        valueGetter: (_v, row) => row.next_follow_up_date ?? '',
+        valueFormatter: (value) => fmt(value as string),
+      },
+      {
+        field: 'actions',
+        headerName: 'Actions',
+        sortable: false,
+        filterable: false,
+        disableColumnMenu: true,
+        align: 'right',
+        headerAlign: 'right',
+        minWidth: 220,
+        renderCell: (params) => (
+          <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+            <Tooltip title="Details"><IconButton size="small" onClick={() => onView(params.row)}><VisibilityIcon fontSize="small" /></IconButton></Tooltip>
+            <Tooltip title="Email"><IconButton size="small" onClick={() => onEmail(params.row)}><EmailIcon fontSize="small" /></IconButton></Tooltip>
+            <Tooltip title="Call"><IconButton size="small" onClick={() => onCall(params.row)}><CallIcon fontSize="small" /></IconButton></Tooltip>
+            <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(params.row)}><EditIcon fontSize="small" /></IconButton></Tooltip>
+            <Tooltip title="Delete"><IconButton size="small" color="error" onClick={() => onDelete(params.row)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
+          </Stack>
+        ),
+      },
+    ],
+    [onView, onEdit, onEmail, onCall, onDelete]
+  );
+
   return (
-    <TableContainer component={Paper} variant="outlined">
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>Venue</TableCell>
-            <TableCell>City</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Priority</TableCell>
-            <TableCell>Follow-up</TableCell>
-            <TableCell align="right">Actions</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {leads.map((lead) => (
-            <TableRow key={lead.id} hover>
-              <TableCell>
-                <Typography variant="body2" fontWeight={600}>{lead.venue_name}</Typography>
-                <Typography variant="caption" color="text.secondary">{lead.contacts?.[0]?.mobile_number || '—'}</Typography>
-              </TableCell>
-              <TableCell>{lead.city}</TableCell>
-              <TableCell><StatusChip value={lead.lead_status} /></TableCell>
-              <TableCell><PriorityChip value={lead.priority} /></TableCell>
-              <TableCell>{fmt(lead.next_follow_up_date)}</TableCell>
-              <TableCell align="right">
-                <Stack direction="row" spacing={0.5} justifyContent="flex-end">
-                  <Tooltip title="Email via Vobiz"><IconButton size="small" onClick={() => onEmail(lead)}><EmailIcon fontSize="small" /></IconButton></Tooltip>
-                  <Tooltip title="Call via Vobiz"><IconButton size="small" onClick={() => onCall(lead)}><CallIcon fontSize="small" /></IconButton></Tooltip>
-                  <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(lead)}><EditIcon fontSize="small" /></IconButton></Tooltip>
-                  <Tooltip title="Delete"><IconButton size="small" color="error" onClick={() => onDelete(lead)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
-                </Stack>
-              </TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    </TableContainer>
+    <DataGrid
+      autoHeight
+      rows={leads}
+      columns={columns}
+      loading={loading}
+      getRowId={(row) => row.id}
+      pageSizeOptions={[10, 25, 50, 100]}
+      initialState={{
+        pagination: { paginationModel: { pageSize: 25, page: 0 } },
+        sorting: { sortModel: [{ field: 'next_follow_up_date', sort: 'asc' }] },
+      }}
+      disableRowSelectionOnClick
+      density="compact"
+      sx={{ '& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' } }}
+    />
   );
 }

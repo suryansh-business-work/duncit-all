@@ -1,6 +1,7 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import EnvironmentVariablesPage from './pages/EnvironmentVariablesPage';
+import CommsProvidersPage from './pages/comms-providers';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
@@ -25,6 +26,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<EnvironmentVariablesPage />)} />
+      <Route path="/comms-providers" element={authed(<CommsProvidersPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

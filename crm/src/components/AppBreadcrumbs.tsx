@@ -91,7 +91,7 @@ export default function AppBreadcrumbs() {
                 color="text.secondary"
                 sx={{ display: 'inline-flex', alignItems: 'center', fontSize: 13, fontWeight: 500 }}
               >
-                {isHome && <HomeIcon fontSize="small" sx={{ mr: 0.5 }} />}
+                {/* {isHome && <HomeIcon sx={{ mr: 0.5, fontSize: 16 }} />} */}
                 {crumb.label}
               </Link>
             );
@@ -102,7 +102,7 @@ export default function AppBreadcrumbs() {
               color={isLast ? 'text.primary' : 'text.secondary'}
               sx={{ display: 'inline-flex', alignItems: 'center', fontSize: 13, fontWeight: isLast ? 700 : 500 }}
             >
-              {isHome && <HomeIcon fontSize="small" sx={{ mr: 0.5 }} />}
+              {/* {isHome && <HomeIcon sx={{ mr: 0.5, fontSize: 16 }} />} */}
               {crumb.label}
             </Typography>
           );

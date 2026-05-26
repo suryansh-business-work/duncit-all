@@ -195,6 +195,30 @@ export const crmTypeDefs = gql`
     ok: Boolean!
     message: String!
     provider: String!
+    provider_id: ID
+    external_id: String
+    recording_url: String
+  }
+
+  enum CrmAiEntity {
+    VENUE_LEAD
+    HOST_LEAD
+  }
+
+  type CrmExcelImportError {
+    row: Int!
+    message: String!
+  }
+
+  type CrmExcelImportResult {
+    inserted: Int!
+    failed: Int!
+    errors: [CrmExcelImportError!]!
+  }
+
+  type CrmExcelFile {
+    filename: String!
+    content_base64: String!
   }
 
   extend type Query {
@@ -203,6 +227,8 @@ export const crmTypeDefs = gql`
     venueLead(id: ID!): VenueLead
     hostLeads(filter: CrmLeadFilter): [HostLead!]!
     hostLead(id: ID!): HostLead
+    crmExcelTemplate(entity: CrmAiEntity!): CrmExcelFile!
+    crmExcelExport(entity: CrmAiEntity!): CrmExcelFile!
   }
 
   extend type Mutation {
@@ -212,7 +238,23 @@ export const crmTypeDefs = gql`
     createHostLead(input: HostLeadInput!): HostLead!
     updateHostLead(id: ID!, input: HostLeadInput!): HostLead!
     deleteHostLead(id: ID!): Boolean!
-    emailVenueLeadContact(id: ID!, contact_email: String!, subject: String!, body: String!): VobizActionResult!
-    callVenueLeadContact(id: ID!, contact_number: String!): VobizActionResult!
+    emailVenueLeadContact(
+      id: ID!
+      contact_email: String!
+      subject: String!
+      body: String!
+      provider_id: ID
+    ): VobizActionResult!
+    callVenueLeadContact(id: ID!, contact_number: String!, provider_id: ID): VobizActionResult!
+    emailHostLeadContact(
+      id: ID!
+      contact_email: String!
+      subject: String!
+      body: String!
+      provider_id: ID
+    ): VobizActionResult!
+    callHostLeadContact(id: ID!, contact_number: String!, provider_id: ID): VobizActionResult!
+    aiParseCrmLead(entity: CrmAiEntity!, text: String!): String!
+    crmExcelImport(entity: CrmAiEntity!, content_base64: String!): CrmExcelImportResult!
   }
 `;

@@ -1,9 +1,16 @@
 import { crmService } from './crm.service';
 import { CRM_RW } from './crm.constants';
+import { parseCrmLeadText, type CrmAiEntity } from './crm.ai';
+import { buildTemplateBase64, exportLeadsBase64, importLeads, type CrmExcelEntity } from './crm.excel';
 import type { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/rbac';
 
 const RW = [...CRM_RW];
+
+const templateFilename = (entity: CrmExcelEntity) =>
+  entity === 'VENUE_LEAD' ? 'duncit-venue-leads-template.xlsx' : 'duncit-host-leads-template.xlsx';
+const exportFilename = (entity: CrmExcelEntity) =>
+  entity === 'VENUE_LEAD' ? 'duncit-venue-leads-export.xlsx' : 'duncit-host-leads-export.xlsx';
 
 export const crmResolvers = {
   Query: {
@@ -26,6 +33,14 @@ export const crmResolvers = {
     hostLead: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return crmService.getHostLead(args.id);
+    },
+    crmExcelTemplate: (_p: unknown, args: { entity: CrmExcelEntity }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return { filename: templateFilename(args.entity), content_base64: buildTemplateBase64(args.entity) };
+    },
+    crmExcelExport: async (_p: unknown, args: { entity: CrmExcelEntity }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return { filename: exportFilename(args.entity), content_base64: await exportLeadsBase64(args.entity) };
     },
   },
   Mutation: {
@@ -55,19 +70,51 @@ export const crmResolvers = {
     },
     emailVenueLeadContact: (
       _p: unknown,
-      args: { id: string; contact_email: string; subject: string; body: string },
+      args: { id: string; contact_email: string; subject: string; body: string; provider_id?: string | null },
       ctx: GraphQLContext
     ) => {
       const user = requireRole(ctx, RW);
-      return crmService.emailVenueLeadContact(args.id, args.contact_email, args.subject, args.body, user.id);
+      return crmService.emailVenueLeadContact(args.id, args.contact_email, args.subject, args.body, args.provider_id, user.id);
     },
     callVenueLeadContact: (
       _p: unknown,
-      args: { id: string; contact_number: string },
+      args: { id: string; contact_number: string; provider_id?: string | null },
       ctx: GraphQLContext
     ) => {
       const user = requireRole(ctx, RW);
-      return crmService.callVenueLeadContact(args.id, args.contact_number, user.id);
+      return crmService.callVenueLeadContact(args.id, args.contact_number, args.provider_id, user.id);
+    },
+    emailHostLeadContact: (
+      _p: unknown,
+      args: { id: string; contact_email: string; subject: string; body: string; provider_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, RW);
+      return crmService.emailHostLeadContact(args.id, args.contact_email, args.subject, args.body, args.provider_id, user.id);
+    },
+    callHostLeadContact: (
+      _p: unknown,
+      args: { id: string; contact_number: string; provider_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, RW);
+      return crmService.callHostLeadContact(args.id, args.contact_number, args.provider_id, user.id);
+    },
+    aiParseCrmLead: async (
+      _p: unknown,
+      args: { entity: CrmAiEntity; text: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, RW);
+      return parseCrmLeadText(args.entity, args.text);
+    },
+    crmExcelImport: async (
+      _p: unknown,
+      args: { entity: CrmExcelEntity; content_base64: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, RW);
+      return importLeads(args.entity, args.content_base64);
     },
   },
 };

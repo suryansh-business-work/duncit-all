@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { VenueLeadModel, HostLeadModel } from './crm.model';
 import { vobizService } from '../../services/vobiz/vobiz.service';
+import { communicationLogService } from '../communicationLog/communicationLog.service';
 import * as C from './crm.constants';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : (v ?? null));
@@ -53,6 +54,49 @@ const parseDate = (v?: string | null) => (v ? new Date(v) : null);
 
 function notFound(what: string): never {
   throw new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
+}
+
+async function logAndAttachActivity(opts: {
+  lead: any;
+  type: 'EMAIL' | 'CALL';
+  entity_type: 'VENUE_LEAD' | 'HOST_LEAD';
+  provider_id?: string | null;
+  to: string;
+  subject?: string;
+  body?: string;
+  result: any;
+  by?: string | null;
+  contact_name?: string;
+}) {
+  const status = opts.result.ok
+    ? opts.type === 'EMAIL'
+      ? 'SENT'
+      : 'INITIATED'
+    : 'FAILED';
+  await communicationLogService.create({
+    type: opts.type,
+    entity_type: opts.entity_type,
+    entity_id: String(opts.lead._id),
+    provider_id: opts.result?.provider_id ?? opts.provider_id ?? null,
+    provider_name: opts.result?.provider ?? '',
+    contact_name: opts.contact_name ?? '',
+    contact_value: opts.to,
+    subject: opts.subject ?? '',
+    body: opts.body ?? '',
+    status,
+    error_message: opts.result.ok ? '' : opts.result.message,
+    external_id: opts.result.external_id ?? null,
+    recording_url: opts.result.recording_url ?? null,
+    created_by: opts.by ?? null,
+  });
+  opts.lead.activity_log.push({
+    type: opts.type,
+    summary: opts.type === 'EMAIL' ? opts.subject ?? '' : 'Outbound call',
+    status,
+    target: opts.to,
+    created_by: opts.by ?? null,
+  } as any);
+  await opts.lead.save();
 }
 
 export const crmService = {
@@ -144,21 +188,47 @@ export const crmService = {
     return true;
   },
 
-  // ---- Vobiz actions on venue leads ----
-  async emailVenueLeadContact(id: string, to: string, subject: string, body: string, by?: string | null) {
+  // ---- Vobiz / comms actions ----
+  async emailVenueLeadContact(
+    id: string,
+    to: string,
+    subject: string,
+    body: string,
+    providerId?: string | null,
+    by?: string | null
+  ) {
     const lead = await VenueLeadModel.findById(id);
     if (!lead) notFound('Venue lead');
-    const result = await vobizService.sendEmail({ to, subject, body });
-    lead.activity_log.push({ type: 'EMAIL', summary: subject, status: result.ok ? 'SENT' : 'FAILED', target: to, created_by: by ?? null } as any);
-    await lead.save();
+    const result = await vobizService.sendEmail({ to, subject, body, provider_id: providerId });
+    await logAndAttachActivity({ lead, type: 'EMAIL', entity_type: 'VENUE_LEAD', provider_id: providerId, to, subject, body, result, by });
     return result;
   },
-  async callVenueLeadContact(id: string, to: string, by?: string | null) {
+  async callVenueLeadContact(id: string, to: string, providerId?: string | null, by?: string | null) {
     const lead = await VenueLeadModel.findById(id);
     if (!lead) notFound('Venue lead');
-    const result = await vobizService.call({ to });
-    lead.activity_log.push({ type: 'CALL', summary: 'Outbound call', status: result.ok ? 'INITIATED' : 'FAILED', target: to, created_by: by ?? null } as any);
-    await lead.save();
+    const result = await vobizService.call({ to, provider_id: providerId });
+    await logAndAttachActivity({ lead, type: 'CALL', entity_type: 'VENUE_LEAD', provider_id: providerId, to, result, by });
+    return result;
+  },
+  async emailHostLeadContact(
+    id: string,
+    to: string,
+    subject: string,
+    body: string,
+    providerId?: string | null,
+    by?: string | null
+  ) {
+    const lead = await HostLeadModel.findById(id);
+    if (!lead) notFound('Host lead');
+    const result = await vobizService.sendEmail({ to, subject, body, provider_id: providerId });
+    await logAndAttachActivity({ lead, type: 'EMAIL', entity_type: 'HOST_LEAD', provider_id: providerId, to, subject, body, result, by });
+    return result;
+  },
+  async callHostLeadContact(id: string, to: string, providerId?: string | null, by?: string | null) {
+    const lead = await HostLeadModel.findById(id);
+    if (!lead) notFound('Host lead');
+    const result = await vobizService.call({ to, provider_id: providerId });
+    await logAndAttachActivity({ lead, type: 'CALL', entity_type: 'HOST_LEAD', provider_id: providerId, to, result, by });
     return result;
   },
 };

@@ -14,6 +14,7 @@ export const VENUE_LEAD_FIELDS = `
   pricing_models expected_charges security_deposit gst_applicable invoice_available
   amenities photos videos brochure_url website services_offered { ${SERVICE_FIELDS} }
   linked_host_ids linked_hosts { ${LINKED_HOST_FIELDS} }
+  tags logo_url dynamic_values_json
   lead_source assigned_to lead_status priority
   next_follow_up_date remarks activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
@@ -26,6 +27,7 @@ export const HOST_LEAD_FIELDS = `
   website services_offered { ${SERVICE_FIELDS} }
   instagram_link community_link
   community_size previous_events_hosted past_attendees host_intent_scores
+  tags profile_photo_url dynamic_values_json
   lead_source assigned_to lead_status priority next_follow_up_date notes
   activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
@@ -122,5 +124,43 @@ export const UPDATE_CRM_SERVICE = gql`
 export const DELETE_CRM_SERVICE = gql`
   mutation DeleteCrmService($id: ID!) {
     deleteCrmService(id: $id)
+  }
+`;
+
+const DYNAMIC_FIELD_FIELDS = `id name label kind options applies_to_venue applies_to_host required sort_order is_active created_at updated_at`;
+
+export const CRM_DYNAMIC_FIELDS = gql`
+  query CrmDynamicFields($entity: CrmEntityType, $include_inactive: Boolean) {
+    crmDynamicFields(entity: $entity, include_inactive: $include_inactive) {
+      ${DYNAMIC_FIELD_FIELDS}
+    }
+  }
+`;
+export const CREATE_CRM_DYNAMIC_FIELD = gql`
+  mutation CreateCrmDynamicField($input: CrmDynamicFieldInput!) {
+    createCrmDynamicField(input: $input) { ${DYNAMIC_FIELD_FIELDS} }
+  }
+`;
+export const UPDATE_CRM_DYNAMIC_FIELD = gql`
+  mutation UpdateCrmDynamicField($id: ID!, $input: CrmDynamicFieldInput!) {
+    updateCrmDynamicField(id: $id, input: $input) { ${DYNAMIC_FIELD_FIELDS} }
+  }
+`;
+export const DELETE_CRM_DYNAMIC_FIELD = gql`
+  mutation DeleteCrmDynamicField($id: ID!) {
+    deleteCrmDynamicField(id: $id)
+  }
+`;
+
+export const UPLOAD_IMAGE = gql`
+  mutation CrmUploadImage($fileBase64: String!, $fileName: String!, $mimeType: String, $folder: String) {
+    uploadImageToImagekit(
+      fileBase64: $fileBase64
+      fileName: $fileName
+      mimeType: $mimeType
+      folder: $folder
+    ) {
+      url fileId thumbnailUrl
+    }
   }
 `;

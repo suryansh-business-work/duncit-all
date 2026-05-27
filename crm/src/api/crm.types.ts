@@ -59,6 +59,25 @@ export interface CrmLinkedHost {
   priority: string;
 }
 
+export type CrmDynamicFieldKind = 'text' | 'textarea' | 'number' | 'boolean' | 'date' | 'select';
+
+export interface CrmDynamicField {
+  id: string;
+  name: string;
+  label: string;
+  kind: CrmDynamicFieldKind;
+  options: string[];
+  applies_to_venue: boolean;
+  applies_to_host: boolean;
+  required: boolean;
+  sort_order: number;
+  is_active: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export type CrmDynamicValueMap = Record<string, string | number | boolean | null>;
+
 export interface VenueLead {
   id: string;
   super_category_id?: string | null;
@@ -92,6 +111,10 @@ export interface VenueLead {
   services_offered: CrmServiceOffered[];
   linked_host_ids: string[];
   linked_hosts: CrmLinkedHost[];
+  tags: string[];
+  logo_url?: string | null;
+  /** JSON-stringified `CrmDynamicValueMap` — parse with JSON.parse before use. */
+  dynamic_values_json: string;
   lead_source?: string | null;
   assigned_to?: string | null;
   lead_status: string;
@@ -131,6 +154,9 @@ export interface HostLead {
   previous_events_hosted: boolean;
   past_attendees?: number | null;
   host_intent_scores: string[];
+  tags: string[];
+  profile_photo_url?: string | null;
+  dynamic_values_json: string;
   lead_source?: string | null;
   assigned_to?: string | null;
   lead_status: string;

@@ -78,6 +78,13 @@ export const appConfig: AppConfig = {
         { label: 'Manage Host Services', to: '/host-leads/services', icon: 'analytics' },
       ],
     },
+    {
+      label: 'Settings',
+      icon: 'analytics',
+      children: [
+        { label: 'Dynamic Fields', to: '/settings/dynamic-fields', icon: 'analytics' },
+      ],
+    },
   ],
   modules: [],
 };

@@ -12,6 +12,8 @@ import HostTimelineSection from './sections/HostTimelineSection';
 import HostReachSection from './sections/HostReachSection';
 import HostWebsiteSection from './sections/HostWebsiteSection';
 import HostServicesSection from './sections/HostServicesSection';
+import HostBrandingSection from './sections/HostBrandingSection';
+import HostDynamicSection from './sections/HostDynamicSection';
 import HostTrackingSection from './sections/HostTrackingSection';
 import type { CrmOptionGroup } from '../../api/crm.types';
 
@@ -46,8 +48,10 @@ const SECTIONS = [
   },
   { title: '7. Website', paths: ['website'] },
   { title: '8. Services Offered', paths: ['services_offered'] },
+  { title: '9. Photo & Tags', paths: ['profile_photo_url', 'tags'] },
+  { title: '10. Custom Fields', paths: ['dynamic_values_json'] },
   {
-    title: '9. Internal Tracking',
+    title: '11. Internal Tracking',
     paths: ['lead_source', 'assigned_to', 'lead_status', 'priority', 'next_follow_up_date', 'notes'],
   },
 ];
@@ -118,6 +122,8 @@ function HostSections({ config }: { config: CrmOptionGroup }) {
     <HostReachSection />,
     <HostWebsiteSection />,
     <HostServicesSection config={config} />,
+    <HostBrandingSection />,
+    <HostDynamicSection />,
     <HostTrackingSection config={config} />,
   ];
   return (

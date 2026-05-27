@@ -2,6 +2,7 @@ import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   Card,
@@ -40,6 +41,7 @@ import ServicesGrid from '../../components/ServicesGrid';
 import CommsLogsSection from '../../components/CommsLogsSection';
 import ManualLogsTab from '../../components/ManualLogsTab';
 import ExternalLink from '../../components/ExternalLink';
+import DynamicValuesView from '../../components/DynamicValuesView';
 import { parseApiError } from '../../utils/parseApiError';
 
 const joinList = (values?: string[] | null) => (values && values.length ? values.join(', ') : '—');
@@ -273,6 +275,20 @@ export default function HostLeadDetailPage() {
     },
 
     {
+      value: 'custom-fields',
+      label: 'Custom Fields',
+      icon: <EventNoteIcon fontSize="small" />,
+      render: () => (
+        <LeadDetailCard
+          title="Custom fields"
+          subtitle="Admin-defined fields from Settings → Dynamic Fields."
+        >
+          <DynamicValuesView entity="HOST_LEAD" json={lead.dynamic_values_json} />
+        </LeadDetailCard>
+      ),
+    },
+
+    {
       value: 'manual-logs',
       label: 'Manual Logs',
       icon: <EventNoteIcon fontSize="small" />,
@@ -291,6 +307,13 @@ export default function HostLeadDetailPage() {
 
   return (
     <Stack spacing={2.5}>
+      {/* Back action above the title (per design spec). */}
+      <Box>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/host-leads')} size="small">
+          Back to Host Leads
+        </Button>
+      </Box>
+
       <Card
         sx={(t) => ({
           background: `linear-gradient(135deg, ${alpha(t.palette.info.main, 0.08)} 0%, ${alpha(
@@ -300,15 +323,13 @@ export default function HostLeadDetailPage() {
         })}
       >
         <CardContent>
-          <Stack direction="row" spacing={1.5} alignItems="flex-start" useFlexGap flexWrap="wrap">
-            <Button
-              startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/host-leads')}
-              size="small"
-              sx={{ mt: 0.5 }}
-            >
-              Host Leads
-            </Button>
+          <Stack direction="row" spacing={1.5} alignItems="center" useFlexGap flexWrap="wrap">
+            {lead.profile_photo_url && (
+              <Avatar
+                src={lead.profile_photo_url}
+                sx={{ width: 56, height: 56, bgcolor: 'action.hover' }}
+              />
+            )}
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="h5" fontWeight={800} sx={{ wordBreak: 'break-word' }}>
                 {lead.host_name}
@@ -328,6 +349,20 @@ export default function HostLeadDetailPage() {
                   <Chip size="small" label={`+${(lead.interests?.length ?? 0) - 2} more`} variant="outlined" />
                 )}
               </Stack>
+              {lead.tags.length > 0 && (
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  sx={{ mt: 1 }}
+                  flexWrap="wrap"
+                  useFlexGap
+                  data-testid="host-tags"
+                >
+                  {lead.tags.map((t) => (
+                    <Chip key={t} size="small" label={`#${t}`} variant="outlined" />
+                  ))}
+                </Stack>
+              )}
             </Box>
             <Button startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/host-leads/${lead.id}`)}>
               Edit

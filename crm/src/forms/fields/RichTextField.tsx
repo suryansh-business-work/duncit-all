@@ -81,7 +81,10 @@ function Toolbar({ editor, compact }: { editor: Editor; compact?: boolean }) {
       useFlexGap
       sx={(theme) => ({
         borderBottom: `1px solid ${theme.palette.divider}`,
-        bgcolor: alpha(theme.palette.action.hover, 0.5),
+        // Light tint so the toolbar reads as a continuation of the editor
+        // surface, not a heavy grey bar (previous `alpha 0.5` looked broken
+        // on light theme — see PFA screenshot).
+        bgcolor: alpha(theme.palette.action.hover, 0.08),
         px: 0.75,
         py: compact ? 0.25 : 0.5,
       })}
@@ -107,7 +110,7 @@ function Toolbar({ editor, compact }: { editor: Editor; compact?: boolean }) {
       >
         <FormatStrikethroughIcon fontSize="small" />
       </ToolbarButton>
-      <Box sx={{ width: 1, height: 18, bgcolor: 'divider', mx: 0.5 }} />
+      <Box sx={{ width: '1px', height: 18, bgcolor: 'divider', mx: 0.5 }} />
       <ToolbarButton
         label="Bullet list"
         active={editor.isActive('bulletList')}
@@ -129,7 +132,7 @@ function Toolbar({ editor, compact }: { editor: Editor; compact?: boolean }) {
       >
         <FormatQuoteIcon fontSize="small" />
       </ToolbarButton>
-      <Box sx={{ width: 1, height: 18, bgcolor: 'divider', mx: 0.5 }} />
+      <Box sx={{ width: '1px', height: 18, bgcolor: 'divider', mx: 0.5 }} />
       <ToolbarButton label="Add link" active={editor.isActive('link')} onClick={promptLink}>
         <LinkIcon fontSize="small" />
       </ToolbarButton>
@@ -140,7 +143,7 @@ function Toolbar({ editor, compact }: { editor: Editor; compact?: boolean }) {
       >
         <LinkOffIcon fontSize="small" />
       </ToolbarButton>
-      <Box sx={{ width: 1, height: 18, bgcolor: 'divider', mx: 0.5 }} />
+      <Box sx={{ width: '1px', height: 18, bgcolor: 'divider', mx: 0.5 }} />
       <ToolbarButton label="Undo" onClick={() => editor.chain().focus().undo().run()} disabled={!editor.can().undo()}>
         <UndoIcon fontSize="small" />
       </ToolbarButton>

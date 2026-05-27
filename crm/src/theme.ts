@@ -67,7 +67,9 @@ export const buildTheme = (mode: PaletteMode = 'light', accent: AccentColors = D
       text: { primary: INK, secondary: MUTED },
       divider: BORDER,
     },
-    shape: { borderRadius: 6 },
+    // Tighter corners across the app — user feedback was to dial radius
+    // down. Cards/buttons/cells now feel closer to a flat-table look.
+    shape: { borderRadius: 4 },
     typography: {
       fontFamily:
         '"Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
@@ -125,22 +127,18 @@ export const buildTheme = (mode: PaletteMode = 'light', accent: AccentColors = D
       MuiCard: {
         defaultProps: { elevation: 0 },
         styleOverrides: {
-          // Light mode now wears a clean white surface with just the border
-          // — heavy drop-shadow removed per design feedback. Dark mode keeps
-          // a subtle glow because the dark surface needs that lift.
+          // Flat surface with a thin border — no drop shadow in either mode.
+          // Dark mode keeps a faint gradient for surface lift but the heavy
+          // glow is gone per design feedback.
           root: {
-            borderRadius: 8,
+            borderRadius: 6,
             border: `1px solid ${BORDER}`,
             backgroundColor: SURFACE,
             backgroundImage: isDark ? SURFACE_GRADIENT : 'none',
-            boxShadow: isDark
-              ? `0 14px 34px -22px ${alpha(INK, 0.72)}`
-              : `0 1px 2px ${alpha(INK, 0.04)}`,
-            transition: 'border-color 180ms ease, box-shadow 180ms ease',
+            boxShadow: 'none',
+            transition: 'border-color 180ms ease',
             '&:hover': {
-              boxShadow: isDark
-                ? `0 18px 42px -24px ${alpha(PRIMARY, 0.34)}`
-                : `0 2px 6px ${alpha(INK, 0.06)}`,
+              borderColor: isDark ? alpha(PRIMARY, 0.32) : alpha(PRIMARY, 0.45),
             },
           },
         },
@@ -199,13 +197,39 @@ export const buildTheme = (mode: PaletteMode = 'light', accent: AccentColors = D
       MuiAvatar: { styleOverrides: { root: { fontWeight: 700 } } },
       MuiDivider: { styleOverrides: { root: { borderColor: BORDER } } },
       MuiListItemButton: {
-        styleOverrides: { root: { borderRadius: 6, '&:hover': { backgroundColor: alpha(PRIMARY, 0.08) } } },
+        styleOverrides: {
+          root: {
+            borderRadius: 4,
+            '&:hover': { backgroundColor: alpha(PRIMARY, 0.08) },
+            // Active item already wears `primary.main` as its background +
+            // white text. Hover over it must NOT change either, otherwise
+            // the contrast collapses (white text on light hover wash). Lock
+            // it so the active state stays legible.
+            '&.Mui-selected': {
+              backgroundColor: PRIMARY,
+              color: '#ffffff',
+              '&:hover': { backgroundColor: PRIMARY_HOVER, color: '#ffffff' },
+              '& .MuiListItemIcon-root': { color: 'inherit' },
+            },
+          },
+        },
       },
       MuiDialog: { styleOverrides: { paper: { borderRadius: 10, backgroundImage: SURFACE_GRADIENT } } },
       MuiTooltip: {
         styleOverrides: {
-          tooltip: { backgroundColor: INK, color: '#ffffff', borderRadius: 6, fontSize: '0.75rem', fontWeight: 600 },
-          arrow: { color: INK },
+          // Dark mode bug fix: when both the tooltip bg and the page bg were
+          // INK (#111…), tooltips disappeared. Always use a contrasting
+          // surface — light tooltip in dark mode, dark tooltip in light.
+          tooltip: {
+            backgroundColor: isDark ? '#ffffff' : INK,
+            color: isDark ? INK : '#ffffff',
+            border: isDark ? `1px solid ${BORDER}` : 'none',
+            borderRadius: 4,
+            fontSize: '0.75rem',
+            fontWeight: 600,
+            boxShadow: isDark ? '0 4px 12px rgba(0,0,0,0.3)' : 'none',
+          },
+          arrow: { color: isDark ? '#ffffff' : INK },
         },
       },
       // DataGrid: cleaner light-mode look — white surface, thin border per

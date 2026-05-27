@@ -54,6 +54,42 @@ export const crmTypeDefs = gql`
     HOST_LEAD
   }
 
+  enum CrmDynamicFieldKind {
+    text
+    textarea
+    number
+    boolean
+    date
+    select
+  }
+
+  type CrmDynamicField {
+    id: ID!
+    name: String!
+    label: String!
+    kind: CrmDynamicFieldKind!
+    options: [String!]!
+    applies_to_venue: Boolean!
+    applies_to_host: Boolean!
+    required: Boolean!
+    sort_order: Int!
+    is_active: Boolean!
+    created_at: String
+    updated_at: String
+  }
+
+  input CrmDynamicFieldInput {
+    name: String!
+    label: String!
+    kind: CrmDynamicFieldKind!
+    options: [String!]
+    applies_to_venue: Boolean
+    applies_to_host: Boolean
+    required: Boolean
+    sort_order: Int
+    is_active: Boolean
+  }
+
   input ManualLogInput {
     entity_type: CrmEntityType!
     entity_id: ID!
@@ -124,6 +160,10 @@ export const crmTypeDefs = gql`
     services_offered: [CrmServiceOffered!]!
     linked_host_ids: [ID!]!
     linked_hosts: [CrmLinkedHost!]!
+    tags: [String!]!
+    logo_url: String
+    "Stringified JSON map of dynamic field values. Empty object when none set."
+    dynamic_values_json: String!
     lead_source: String
     assigned_to: String
     lead_status: String!
@@ -163,6 +203,9 @@ export const crmTypeDefs = gql`
     previous_events_hosted: Boolean!
     past_attendees: Int
     host_intent_scores: [String!]!
+    tags: [String!]!
+    profile_photo_url: String
+    dynamic_values_json: String!
     lead_source: String
     assigned_to: String
     lead_status: String!
@@ -227,6 +270,9 @@ export const crmTypeDefs = gql`
     website: String
     services_offered: [CrmServiceOfferedInput!]
     linked_host_ids: [ID!]
+    tags: [String!]
+    logo_url: String
+    dynamic_values_json: String
     lead_source: String
     assigned_to: String
     lead_status: String
@@ -261,6 +307,9 @@ export const crmTypeDefs = gql`
     previous_events_hosted: Boolean
     past_attendees: Int
     host_intent_scores: [String!]
+    tags: [String!]
+    profile_photo_url: String
+    dynamic_values_json: String
     lead_source: String
     assigned_to: String
     lead_status: String
@@ -316,6 +365,7 @@ export const crmTypeDefs = gql`
     crmExcelTemplate(entity: CrmAiEntity!): CrmExcelFile!
     crmExcelExport(entity: CrmAiEntity!): CrmExcelFile!
     crmServices(kind: CrmServiceKind, include_inactive: Boolean): [CrmService!]!
+    crmDynamicFields(entity: CrmEntityType, include_inactive: Boolean): [CrmDynamicField!]!
   }
 
   extend type Mutation {
@@ -347,5 +397,8 @@ export const crmTypeDefs = gql`
     aiParseCrmLead(entity: CrmAiEntity!, text: String!): String!
     crmExcelImport(entity: CrmAiEntity!, content_base64: String!): CrmExcelImportResult!
     addCrmManualLog(input: ManualLogInput!): CrmActivity!
+    createCrmDynamicField(input: CrmDynamicFieldInput!): CrmDynamicField!
+    updateCrmDynamicField(id: ID!, input: CrmDynamicFieldInput!): CrmDynamicField!
+    deleteCrmDynamicField(id: ID!): Boolean!
   }
 `;

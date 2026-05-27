@@ -2,6 +2,7 @@ import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
+  Avatar,
   Box,
   Button,
   Card,
@@ -42,6 +43,8 @@ import ServicesGrid from '../../components/ServicesGrid';
 import CommsLogsSection from '../../components/CommsLogsSection';
 import ManualLogsTab from '../../components/ManualLogsTab';
 import ExternalLink from '../../components/ExternalLink';
+import MapEmbed from '../../components/MapEmbed';
+import DynamicValuesView from '../../components/DynamicValuesView';
 import { parseApiError } from '../../utils/parseApiError';
 
 const joinList = (values?: string[] | null) => (values && values.length ? values.join(', ') : '—');
@@ -102,10 +105,12 @@ export default function VenueLeadDetailPage() {
               <LeadDetailRow label="Area" value={lead.area || '—'} />
               <LeadDetailRow label="Address" value={lead.full_address} />
               <LeadDetailRow label="Landmark" value={lead.landmark || '—'} />
-              <LeadDetailRow
-                label="Map"
-                value={lead.map_link ? <ExternalLink variant="body2" href={lead.map_link}>Open in Maps</ExternalLink> : '—'}
-              />
+              <Box sx={{ mt: 1.5 }}>
+                <MapEmbed
+                  address={[lead.full_address, lead.area, lead.city].filter(Boolean).join(', ')}
+                  mapLink={lead.map_link}
+                />
+              </Box>
             </LeadDetailCard>
 
             <LeadDetailCard title="Availability & suitability" icon={<EventIcon color="primary" />}>
@@ -340,6 +345,20 @@ export default function VenueLeadDetailPage() {
     },
 
     {
+      value: 'custom-fields',
+      label: 'Custom Fields',
+      icon: <EventNoteIcon fontSize="small" />,
+      render: () => (
+        <LeadDetailCard
+          title="Custom fields"
+          subtitle="Admin-defined fields from Settings → Dynamic Fields."
+        >
+          <DynamicValuesView entity="VENUE_LEAD" json={lead.dynamic_values_json} />
+        </LeadDetailCard>
+      ),
+    },
+
+    {
       value: 'manual-logs',
       label: 'Manual Logs',
       icon: <EventNoteIcon fontSize="small" />,
@@ -358,7 +377,16 @@ export default function VenueLeadDetailPage() {
 
   return (
     <Stack spacing={2.5}>
-      {/* ---- Hero card (Host/Venue details on top, per spec) ---- */}
+      {/* Back action above the title (per design spec). Sits outside the
+          hero card so it reads as a navigation breadcrumb, not part of the
+          venue's identity row. */}
+      <Box>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/venue-leads')} size="small">
+          Back to Venue Leads
+        </Button>
+      </Box>
+
+      {/* ---- Hero card (Venue details on top, per spec) ---- */}
       <Card
         sx={(t) => ({
           background: `linear-gradient(135deg, ${alpha(t.palette.primary.main, 0.08)} 0%, ${alpha(
@@ -368,15 +396,14 @@ export default function VenueLeadDetailPage() {
         })}
       >
         <CardContent>
-          <Stack direction="row" spacing={1.5} alignItems="flex-start" useFlexGap flexWrap="wrap">
-            <Button
-              startIcon={<ArrowBackIcon />}
-              onClick={() => navigate('/venue-leads')}
-              size="small"
-              sx={{ mt: 0.5 }}
-            >
-              Venue Leads
-            </Button>
+          <Stack direction="row" spacing={1.5} alignItems="center" useFlexGap flexWrap="wrap">
+            {lead.logo_url && (
+              <Avatar
+                src={lead.logo_url}
+                variant="rounded"
+                sx={{ width: 56, height: 56, bgcolor: 'action.hover' }}
+              />
+            )}
             <Box sx={{ flex: 1, minWidth: 0 }}>
               <Typography variant="h5" fontWeight={800} sx={{ wordBreak: 'break-word' }}>
                 {lead.venue_name}
@@ -402,6 +429,20 @@ export default function VenueLeadDetailPage() {
                   <Chip size="small" label={`+${(lead.venue_types?.length ?? 0) - 2} more`} variant="outlined" />
                 )}
               </Stack>
+              {lead.tags.length > 0 && (
+                <Stack
+                  direction="row"
+                  spacing={0.5}
+                  sx={{ mt: 1 }}
+                  flexWrap="wrap"
+                  useFlexGap
+                  data-testid="venue-tags"
+                >
+                  {lead.tags.map((t) => (
+                    <Chip key={t} size="small" label={`#${t}`} variant="outlined" />
+                  ))}
+                </Stack>
+              )}
             </Box>
             <Button startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/venue-leads/${lead.id}`)}>
               Edit

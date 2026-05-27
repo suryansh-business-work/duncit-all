@@ -84,6 +84,16 @@ const venueLeadSchema = new Schema(
     // page. Stays empty by default; no migration needed for existing rows.
     linked_host_ids: { type: [{ type: Schema.Types.ObjectId, ref: 'HostLead' }], default: [] },
 
+    // Free-text tags / labels — rendered as chips on detail, free-text
+    // autocomplete on edit. Defaults to empty array so existing rows stay
+    // valid without a migration.
+    tags: { type: [String], default: [] },
+    // ImageKit URL for the venue's logo. Optional.
+    logo_url: { type: String, trim: true, default: '' },
+    // Free-form key/value bag for admin-defined dynamic fields. Mongoose's
+    // Mixed lets us store any JSON the CrmDynamicField module surfaces.
+    dynamic_values: { type: Schema.Types.Mixed, default: () => ({}) },
+
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },
     lead_status: { type: String, enum: VENUE_LEAD_STATUSES, default: 'New', index: true },
@@ -129,6 +139,10 @@ const hostLeadSchema = new Schema(
     past_attendees: { type: Number, default: null },
     host_intent_scores: { type: [String], default: [] },
 
+    tags: { type: [String], default: [] },
+    profile_photo_url: { type: String, trim: true, default: '' },
+    dynamic_values: { type: Schema.Types.Mixed, default: () => ({}) },
+
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },
     lead_status: { type: String, enum: HOST_LEAD_STATUSES, default: 'New', index: true },
@@ -157,9 +171,42 @@ const crmServiceCatalogSchema = new Schema(
 
 crmServiceCatalogSchema.index({ kind: 1, name: 1 }, { unique: true });
 
+/**
+ * Admin-defined dynamic fields. A single definition can apply to venue
+ * leads, host leads, or both — letting the team add bespoke fields like
+ * "Vendor GST status" without a code change. Field values live on each
+ * lead's `dynamic_values` map, keyed by `name`.
+ */
+const crmDynamicFieldSchema = new Schema(
+  {
+    // Programmatic key used as the object property on the lead's
+    // dynamic_values map. Lowercase + underscores recommended.
+    name: { type: String, required: true, trim: true, lowercase: true },
+    // Human-friendly label shown on forms / detail pages.
+    label: { type: String, required: true, trim: true },
+    kind: {
+      type: String,
+      enum: ['text', 'textarea', 'number', 'boolean', 'date', 'select'],
+      default: 'text',
+    },
+    // For `select` kind only.
+    options: { type: [String], default: [] },
+    applies_to_venue: { type: Boolean, default: true },
+    applies_to_host: { type: Boolean, default: true },
+    required: { type: Boolean, default: false },
+    sort_order: { type: Number, default: 0 },
+    is_active: { type: Boolean, default: true },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+crmDynamicFieldSchema.index({ name: 1 }, { unique: true });
+
 export type VenueLeadDoc = InferSchemaType<typeof venueLeadSchema> & { _id: any };
 export type HostLeadDoc = InferSchemaType<typeof hostLeadSchema> & { _id: any };
 export type CrmServiceCatalogDoc = InferSchemaType<typeof crmServiceCatalogSchema> & { _id: Types.ObjectId };
+export type CrmDynamicFieldDoc = InferSchemaType<typeof crmDynamicFieldSchema> & { _id: Types.ObjectId };
 export const VenueLeadModel = model('VenueLead', venueLeadSchema);
 export const HostLeadModel = model('HostLead', hostLeadSchema);
 export const CrmServiceCatalogModel = model('CrmServiceCatalog', crmServiceCatalogSchema);
+export const CrmDynamicFieldModel = model('CrmDynamicField', crmDynamicFieldSchema);

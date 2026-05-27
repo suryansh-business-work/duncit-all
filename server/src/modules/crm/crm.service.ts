@@ -1,6 +1,11 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { VenueLeadModel, HostLeadModel, CrmServiceCatalogModel } from './crm.model';
+import {
+  VenueLeadModel,
+  HostLeadModel,
+  CrmServiceCatalogModel,
+  CrmDynamicFieldModel,
+} from './crm.model';
 import { CategoryModel } from '../category/category.model';
 import { vobizService } from '../../services/vobiz/vobiz.service';
 import { communicationLogService } from '../communicationLog/communicationLog.service';
@@ -43,9 +48,32 @@ function pub(doc: any) {
     contacts: (o.contacts ?? []).map(toContact),
     services_offered: (o.services_offered ?? []).map(toServiceOffered),
     linked_host_ids: (o.linked_host_ids ?? []).map((id: any) => String(id)),
+    tags: o.tags ?? [],
+    // GraphQL clients receive the dynamic field map as a JSON string so we
+    // don't have to introduce a custom scalar. Empty object when unset.
+    dynamic_values_json: JSON.stringify(o.dynamic_values ?? {}),
     activity_log: (o.activity_log ?? []).map(toActivity),
     next_follow_up_date: iso(o.next_follow_up_date),
     preferred_event_date: iso(o.preferred_event_date),
+    created_at: iso(o.created_at),
+    updated_at: iso(o.updated_at),
+  };
+}
+
+function pubDynamicField(doc: any) {
+  const o = doc?.toObject ? doc.toObject() : doc;
+  if (!o) return null;
+  return {
+    id: String(o._id),
+    name: o.name,
+    label: o.label,
+    kind: o.kind,
+    options: o.options ?? [],
+    applies_to_venue: o.applies_to_venue !== false,
+    applies_to_host: o.applies_to_host !== false,
+    required: !!o.required,
+    sort_order: o.sort_order ?? 0,
+    is_active: o.is_active !== false,
     created_at: iso(o.created_at),
     updated_at: iso(o.updated_at),
   };
@@ -106,6 +134,20 @@ function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
     out.linked_host_ids = (out.linked_host_ids as any[])
       .map(toObjectIdOrNull)
       .filter((v): v is Types.ObjectId => Boolean(v));
+  }
+  if (Array.isArray(out.tags)) {
+    // Tags are free-text — strip whitespace and drop blanks so we never
+    // persist `[""]` from an accidental empty chip.
+    out.tags = out.tags.map((t: any) => String(t ?? '').trim()).filter(Boolean);
+  }
+  if (typeof out.dynamic_values_json === 'string') {
+    const raw = out.dynamic_values_json.trim();
+    try {
+      out.dynamic_values = raw ? JSON.parse(raw) : {};
+    } catch {
+      out.dynamic_values = {};
+    }
+    delete out.dynamic_values_json;
   }
   return out;
 }
@@ -324,6 +366,62 @@ export const crmService = {
         lead_status: d.lead_status ?? 'New',
         priority: d.priority ?? 'Medium',
       }));
+  },
+
+  // ---- Dynamic fields ----
+  async listDynamicFields(entity?: 'VENUE_LEAD' | 'HOST_LEAD' | null, includeInactive = false) {
+    const q: Record<string, any> = {};
+    if (entity === 'VENUE_LEAD') q.applies_to_venue = true;
+    else if (entity === 'HOST_LEAD') q.applies_to_host = true;
+    if (!includeInactive) q.is_active = { $ne: false };
+    const docs = await CrmDynamicFieldModel.find(q).sort({ sort_order: 1, label: 1 });
+    return docs.map(pubDynamicField);
+  },
+  async createDynamicField(input: any) {
+    const name = (input.name ?? '').trim().toLowerCase().replace(/[^a-z0-9_]+/g, '_');
+    if (!name) {
+      throw new GraphQLError('Field key is required', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const existing = await CrmDynamicFieldModel.findOne({ name });
+    if (existing) {
+      throw new GraphQLError('A dynamic field with that key already exists', {
+        extensions: { code: 'CONFLICT' },
+      });
+    }
+    const doc = await CrmDynamicFieldModel.create({
+      name,
+      label: (input.label ?? name).trim(),
+      kind: input.kind ?? 'text',
+      options: Array.isArray(input.options) ? input.options : [],
+      applies_to_venue: input.applies_to_venue !== false,
+      applies_to_host: input.applies_to_host !== false,
+      required: !!input.required,
+      sort_order: input.sort_order ?? 0,
+      is_active: input.is_active !== false,
+    });
+    return pubDynamicField(doc);
+  },
+  async updateDynamicField(id: string, input: any) {
+    const doc = await CrmDynamicFieldModel.findById(id);
+    if (!doc) notFound('Dynamic field');
+    // `name` is the storage key; renaming it would orphan every existing
+    // value in dynamic_values, so we accept the new label/kind/options but
+    // never the new `name`.
+    if (input.label !== undefined) doc.label = (input.label ?? '').trim();
+    if (input.kind !== undefined) doc.kind = input.kind;
+    if (input.options !== undefined) doc.options = Array.isArray(input.options) ? input.options : [];
+    if (input.applies_to_venue !== undefined) doc.applies_to_venue = input.applies_to_venue;
+    if (input.applies_to_host !== undefined) doc.applies_to_host = input.applies_to_host;
+    if (input.required !== undefined) doc.required = !!input.required;
+    if (input.sort_order !== undefined) doc.sort_order = input.sort_order;
+    if (input.is_active !== undefined) doc.is_active = input.is_active;
+    await doc.save();
+    return pubDynamicField(doc);
+  },
+  async deleteDynamicField(id: string) {
+    const doc = await CrmDynamicFieldModel.findByIdAndDelete(id);
+    if (!doc) notFound('Dynamic field');
+    return true;
   },
 
   /**

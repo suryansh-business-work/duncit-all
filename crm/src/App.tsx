@@ -8,6 +8,7 @@ import HostLeadsPage from './pages/host-leads/HostLeadsPage';
 import HostLeadEditorPage from './pages/host-leads/HostLeadEditorPage';
 import HostLeadDetailPage from './pages/host-leads/HostLeadDetailPage';
 import ManageServicesPage from './pages/ManageServicesPage';
+import ManageDynamicFieldsPage from './pages/ManageDynamicFieldsPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
@@ -42,6 +43,7 @@ export default function App() {
       <Route path="/host-leads/new" element={authed(<HostLeadEditorPage />)} />
       <Route path="/host-leads/:id/view" element={authed(<HostLeadDetailPage />)} />
       <Route path="/host-leads/:id" element={authed(<HostLeadEditorPage />)} />
+      <Route path="/settings/dynamic-fields" element={authed(<ManageDynamicFieldsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

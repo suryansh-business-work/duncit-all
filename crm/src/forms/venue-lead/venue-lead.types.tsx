@@ -31,6 +31,10 @@ export interface VenueLeadFormValues {
   website: string;
   services_offered: CrmServiceOffered[];
   linked_host_ids: string[];
+  tags: string[];
+  logo_url: string;
+  /** JSON-stringified dynamic field values map. */
+  dynamic_values_json: string;
   lead_source: string;
   assigned_to: string;
   lead_status: string;
@@ -69,6 +73,9 @@ export const venueLeadInitialValues: VenueLeadFormValues = {
   website: '',
   services_offered: [],
   linked_host_ids: [],
+  tags: [],
+  logo_url: '',
+  dynamic_values_json: '{}',
   lead_source: '',
   assigned_to: '',
   lead_status: 'New',

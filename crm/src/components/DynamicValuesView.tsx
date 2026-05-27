@@ -1,0 +1,65 @@
+import { useMemo } from 'react';
+import { useQuery } from '@apollo/client';
+import { Box, Stack, Typography } from '@mui/material';
+import { CRM_DYNAMIC_FIELDS } from '../api/crm.gql';
+import type { CrmDynamicField } from '../api/crm.types';
+import { LeadDetailRow } from './LeadDetailCard';
+
+interface Props {
+  entity: 'VENUE_LEAD' | 'HOST_LEAD';
+  /** JSON-stringified value map from the lead. */
+  json: string;
+}
+
+const fmt = (field: CrmDynamicField, raw: unknown): string => {
+  if (raw === null || raw === undefined || raw === '') return '—';
+  if (field.kind === 'boolean') return raw ? 'Yes' : 'No';
+  if (field.kind === 'date') {
+    const d = new Date(String(raw));
+    if (!Number.isNaN(d.getTime())) {
+      return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+    }
+  }
+  return String(raw);
+};
+
+/**
+ * Read-only renderer for an entity's dynamic-field values. Fetches the
+ * applicable field definitions, then prints each as a labelled row. Empty
+ * state (no fields configured) is handled by the caller's tab.
+ */
+export default function DynamicValuesView({ entity, json }: Props) {
+  const { data, loading } = useQuery<{ crmDynamicFields: CrmDynamicField[] }>(CRM_DYNAMIC_FIELDS, {
+    variables: { entity, include_inactive: false },
+    fetchPolicy: 'cache-first',
+  });
+
+  const values = useMemo(() => {
+    try {
+      return JSON.parse(json || '{}') as Record<string, unknown>;
+    } catch {
+      return {};
+    }
+  }, [json]);
+
+  const fields = data?.crmDynamicFields ?? [];
+
+  if (loading && fields.length === 0) return null;
+  if (fields.length === 0) {
+    return (
+      <Typography variant="body2" color="text.secondary">
+        No custom fields defined yet. Open Settings → Dynamic Fields to add some.
+      </Typography>
+    );
+  }
+
+  return (
+    <Box>
+      <Stack spacing={0.25}>
+        {fields.map((f) => (
+          <LeadDetailRow key={f.id} label={f.label} value={fmt(f, values[f.name])} />
+        ))}
+      </Stack>
+    </Box>
+  );
+}

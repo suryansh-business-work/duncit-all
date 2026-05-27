@@ -27,6 +27,9 @@ export interface HostLeadFormValues {
   previous_events_hosted: boolean;
   past_attendees: string;
   host_intent_scores: string[];
+  tags: string[];
+  profile_photo_url: string;
+  dynamic_values_json: string;
   lead_source: string;
   assigned_to: string;
   lead_status: string;
@@ -61,6 +64,9 @@ export const hostLeadInitialValues: HostLeadFormValues = {
   previous_events_hosted: false,
   past_attendees: '',
   host_intent_scores: [],
+  tags: [],
+  profile_photo_url: '',
+  dynamic_values_json: '{}',
   lead_source: '',
   assigned_to: '',
   lead_status: 'New',

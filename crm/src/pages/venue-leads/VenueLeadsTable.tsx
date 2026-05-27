@@ -5,7 +5,6 @@ import EditIcon from '@mui/icons-material/Edit';
 import EmailIcon from '@mui/icons-material/Email';
 import CallIcon from '@mui/icons-material/Call';
 import DeleteIcon from '@mui/icons-material/Delete';
-import VisibilityIcon from '@mui/icons-material/Visibility';
 import { format } from 'date-fns';
 import type { VenueLead } from '../../api/crm.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
@@ -84,7 +83,7 @@ export default function VenueLeadsTable({ leads, loading, onView, onEdit, onEmai
             justifyContent="flex-end"
             onClick={(e) => e.stopPropagation()}
           >
-            <Tooltip title="Details"><IconButton size="small" onClick={() => onView(params.row)}><VisibilityIcon fontSize="small" /></IconButton></Tooltip>
+            {/* "Details" eye icon removed — the entire row is clickable. */}
             <Tooltip title="Email"><IconButton size="small" onClick={() => onEmail(params.row)}><EmailIcon fontSize="small" /></IconButton></Tooltip>
             <Tooltip title="Call"><IconButton size="small" onClick={() => onCall(params.row)}><CallIcon fontSize="small" /></IconButton></Tooltip>
             <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(params.row)}><EditIcon fontSize="small" /></IconButton></Tooltip>
@@ -110,10 +109,12 @@ export default function VenueLeadsTable({ leads, loading, onView, onEdit, onEmai
       }}
       disableRowSelectionOnClick
       onRowClick={(params) => onView(params.row)}
-      density="compact"
+      density="standard"
+      rowHeight={56}
       sx={{
         cursor: 'pointer',
-        '& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' },
+        // Extra breathing room per row (was compact / 32px).
+        '& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center', py: 1 },
         '& .MuiDataGrid-row:hover': { bgcolor: 'action.hover' },
       }}
     />

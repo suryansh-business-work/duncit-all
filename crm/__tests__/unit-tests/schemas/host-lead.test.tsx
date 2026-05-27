@@ -117,6 +117,8 @@ describe('fromHostLead', () => {
       services_offered: [
         { service: 'Other', custom_name: 'Photographer', description: '' },
       ],
+      tags: [],
+      dynamic_values_json: '{}',
       lead_status: 'Contacted',
       priority: 'High',
       activity_log: [],

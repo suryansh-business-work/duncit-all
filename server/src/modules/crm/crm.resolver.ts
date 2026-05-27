@@ -35,6 +35,14 @@ export const crmResolvers = {
       requireRole(ctx, RW);
       return crmService.listServices(args.kind ?? null, !!args.include_inactive);
     },
+    crmDynamicFields: (
+      _p: unknown,
+      args: { entity?: 'VENUE_LEAD' | 'HOST_LEAD' | null; include_inactive?: boolean },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, RW);
+      return crmService.listDynamicFields(args.entity ?? null, !!args.include_inactive);
+    },
     venueLeads: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return crmService.listVenueLeads(args.filter);
@@ -160,6 +168,22 @@ export const crmResolvers = {
     ) => {
       const user = requireRole(ctx, RW);
       return crmService.addManualLog({ ...args.input, by: user.id });
+    },
+    createCrmDynamicField: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.createDynamicField(args.input);
+    },
+    updateCrmDynamicField: (
+      _p: unknown,
+      args: { id: string; input: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, RW);
+      return crmService.updateDynamicField(args.id, args.input);
+    },
+    deleteCrmDynamicField: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.deleteDynamicField(args.id);
     },
   },
 };

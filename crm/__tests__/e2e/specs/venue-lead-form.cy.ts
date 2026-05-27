@@ -39,9 +39,10 @@ describe('Venue lead — create flow', () => {
 
     // Section 2 (Location) is collapsed by default. `CityField` wraps its
     // input in an Autocomplete so the `<input>` has an auto-generated name;
-    // typeIntoField targets it by floating-label text instead.
+    // typeIntoField targets it by floating-label text instead. Passing a
+    // plain string is an exact (asterisk-tolerant) match on the label.
     cy.expandSection(/^\s*2\.\s*Location\s*$/i);
-    cy.typeIntoField(/^city$/i, 'Bengaluru');
+    cy.typeIntoField('City', 'Bengaluru');
     cy.get('textarea[name="full_address"], input[name="full_address"]').first().type('12 Cypress Road');
 
     // Section 3 (Contacts) is also collapsed by default.

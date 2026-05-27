@@ -136,12 +136,19 @@ Cypress.Commands.add('expandSection', (title: RegExp | string) => {
 });
 
 Cypress.Commands.add('typeIntoField', (labelText: RegExp | string, value: string) => {
-  const re = typeof labelText === 'string' ? new RegExp(labelText, 'i') : labelText;
-  // Locate the FormControl wrapping the field by its floating label, then
-  // dive into its first text-typeable input. Covers both plain MUI
-  // TextField and Autocomplete-wrapped TextField — the input always sits
-  // inside `.MuiInputBase-root`.
-  cy.contains('label', re)
+  // MUI floating labels for `required` fields render with a trailing
+  // asterisk (e.g. `City *`), and the asterisk contributes to the label's
+  // `textContent`. Strip that (plus surrounding whitespace) before testing
+  // the caller's matcher so `/^City$/i` still matches a required field.
+  const normalise = (raw: string) => raw.replace(/\s*\*\s*$/, '').trim();
+  const matches = (text: string) =>
+    typeof labelText === 'string'
+      ? text.toLowerCase() === labelText.toLowerCase()
+      : (labelText as RegExp).test(text);
+
+  cy.get('label')
+    .filter((_, el) => matches(normalise(el.textContent ?? '')))
+    .first()
     .parents('.MuiFormControl-root, .MuiTextField-root')
     .first()
     .find('input:not([type="hidden"]), textarea')

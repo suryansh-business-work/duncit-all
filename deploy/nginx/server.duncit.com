@@ -22,7 +22,7 @@ server {
     add_header Access-Control-Allow-Origin      $cors_allow_origin always;
     add_header Access-Control-Allow-Credentials "true"             always;
     add_header Access-Control-Allow-Methods     "GET, POST, OPTIONS, PUT, DELETE, PATCH" always;
-    add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name" always;
+    add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-DUID" always;
     add_header Access-Control-Expose-Headers    "Content-Length, Content-Type" always;
     add_header Access-Control-Max-Age           "600"              always;
     add_header Vary                             "Origin"           always;
@@ -34,7 +34,7 @@ server {
             add_header Access-Control-Allow-Origin      $cors_allow_origin always;
             add_header Access-Control-Allow-Credentials "true"             always;
             add_header Access-Control-Allow-Methods     "GET, POST, OPTIONS, PUT, DELETE, PATCH" always;
-            add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name" always;
+            add_header Access-Control-Allow-Headers     "Authorization, Content-Type, X-Requested-With, Apollo-Require-Preflight, X-Apollo-Operation-Name, X-DUID" always;
             add_header Access-Control-Max-Age           "600"              always;
             add_header Vary                             "Origin"           always;
             add_header Content-Length 0;

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { loginSchema } from './login.form';
-import { loginInitialValues } from './login.types';
+import { loginSchema } from '@/forms/login/login.form';
+import { loginInitialValues } from '@/forms/login/login.types';
 
 const valid = { ...loginInitialValues, email: 'manager@duncit.com', password: 'secret123' };
 

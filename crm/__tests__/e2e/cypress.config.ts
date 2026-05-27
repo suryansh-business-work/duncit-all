@@ -1,0 +1,25 @@
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { defineConfig } from 'cypress';
+
+const here = path.dirname(fileURLToPath(import.meta.url));
+
+export default defineConfig({
+  // All paths in this config are resolved relative to the file's location
+  // (`crm/__tests__/e2e/`). Cypress itself usually treats them as relative
+  // to the project root — passing them via `path.resolve` removes that
+  // ambiguity when this config is run via `--config-file`.
+  e2e: {
+    baseUrl: 'http://localhost:2007',
+    specPattern: path.join(here, 'specs/**/*.cy.{ts,tsx}'),
+    supportFile: path.join(here, 'support/e2e.ts'),
+    fixturesFolder: path.join(here, 'fixtures'),
+    screenshotsFolder: path.join(here, '../../cypress-artifacts/screenshots'),
+    videosFolder: path.join(here, '../../cypress-artifacts/videos'),
+    downloadsFolder: path.join(here, '../../cypress-artifacts/downloads'),
+    screenshotOnRunFailure: true,
+    video: false,
+    viewportWidth: 1280,
+    viewportHeight: 800,
+  },
+});

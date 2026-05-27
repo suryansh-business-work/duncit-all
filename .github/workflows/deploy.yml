@@ -339,8 +339,67 @@ jobs:
               --cache-to   type=gha,scope=duncit-ads,mode=max \
               --push .
 
+  # -----------------------------------------------------------
+  # CRM-specific test gate (decoupled — only runs when crm/ changed).
+  # Vitest unit/component tests + Cypress e2e specs both live under
+  # crm/__tests__/. build-crm waits on this job's success so a red test
+  # prevents the docker image from being pushed.
+  # -----------------------------------------------------------
+  crm-tests:
+    needs: changes
+    if: needs.changes.outputs.crm == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Type-check CRM source
+        working-directory: crm
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Type-check Cypress specs
+        working-directory: crm
+        run: pnpm exec tsc --noEmit -p __tests__/e2e/tsconfig.json
+
+      - name: Run vitest unit + component tests
+        working-directory: crm
+        run: pnpm exec vitest run --reporter=default
+
+      - name: Build CRM bundle for Cypress preview
+        working-directory: crm
+        run: pnpm build
+
+      - name: Run Cypress e2e specs
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: crm
+          install: false
+          config-file: __tests__/e2e/cypress.config.ts
+          start: pnpm preview
+          wait-on: 'http://localhost:2007'
+          wait-on-timeout: 120
+          browser: chrome
+
+      - name: Upload Cypress screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crm-cypress-screenshots
+          path: crm/cypress-artifacts/screenshots
+          if-no-files-found: ignore
+
   build-crm:
-    needs: [changes, typecheck]
+    needs: [changes, typecheck, crm-tests]
     if: needs.changes.outputs.crm == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:

@@ -17,6 +17,7 @@ import { appConfig, type AppNavItem } from '../config/app-config';
 import { useBranding } from '../lib/useBranding';
 import AppIcon from './AppIcon';
 import { HEADER_HEIGHT } from './AppShell';
+import { bestChild, groupActive, matches } from './AppSidebar.helpers';
 
 interface SidebarProps {
   onNavigate?: () => void;
@@ -33,30 +34,6 @@ interface NodeProps {
    * together for the more specific URL.
    */
   forceSelected?: boolean;
-}
-
-const matches = (pathname: string, to?: string) => {
-  if (!to) return false;
-  if (to === '/') return pathname === '/';
-  return pathname === to || pathname.startsWith(`${to}/`);
-};
-
-const groupActive = (pathname: string, item: AppNavItem): boolean =>
-  Boolean(item.children?.some((child) => matches(pathname, child.to) || groupActive(pathname, child)));
-
-/** Returns the child whose `to` is the longest prefix of pathname, or null. */
-function bestChild(pathname: string, children: AppNavItem[]): AppNavItem | null {
-  let winner: AppNavItem | null = null;
-  let winnerLen = -1;
-  for (const child of children) {
-    if (!child.to) continue;
-    if (!matches(pathname, child.to)) continue;
-    if (child.to.length > winnerLen) {
-      winner = child;
-      winnerLen = child.to.length;
-    }
-  }
-  return winner;
 }
 
 function LeafItem({ item, pathname, onNavigate, forceSelected }: NodeProps) {

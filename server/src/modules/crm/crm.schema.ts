@@ -34,8 +34,32 @@ export const crmTypeDefs = gql`
     summary: String
     status: String
     target: String
+    body_html: String
+    body_text: String
     created_by: String
     created_at: String
+  }
+
+  type CrmLinkedHost {
+    id: ID!
+    host_name: String!
+    host_type: String
+    city: String
+    lead_status: String
+    priority: String
+  }
+
+  enum CrmEntityType {
+    VENUE_LEAD
+    HOST_LEAD
+  }
+
+  input ManualLogInput {
+    entity_type: CrmEntityType!
+    entity_id: ID!
+    summary: String
+    body_html: String!
+    body_text: String
   }
 
   enum CrmServiceKind {
@@ -98,6 +122,8 @@ export const crmTypeDefs = gql`
     brochure_url: String
     website: String
     services_offered: [CrmServiceOffered!]!
+    linked_host_ids: [ID!]!
+    linked_hosts: [CrmLinkedHost!]!
     lead_source: String
     assigned_to: String
     lead_status: String!
@@ -200,6 +226,7 @@ export const crmTypeDefs = gql`
     brochure_url: String
     website: String
     services_offered: [CrmServiceOfferedInput!]
+    linked_host_ids: [ID!]
     lead_source: String
     assigned_to: String
     lead_status: String
@@ -319,5 +346,6 @@ export const crmTypeDefs = gql`
     callHostLeadContact(id: ID!, contact_number: String!, provider_id: ID): VobizActionResult!
     aiParseCrmLead(entity: CrmAiEntity!, text: String!): String!
     crmExcelImport(entity: CrmAiEntity!, content_base64: String!): CrmExcelImportResult!
+    addCrmManualLog(input: ManualLogInput!): CrmActivity!
   }
 `;

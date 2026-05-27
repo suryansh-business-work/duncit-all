@@ -30,6 +30,12 @@ const activitySchema = new Schema(
     summary: { type: String, trim: true, default: '' },
     status: { type: String, trim: true, default: '' },
     target: { type: String, trim: true, default: '' },
+    // Manual NOTE entries store the user's WYSIWYG payload as HTML; we also
+    // persist a plaintext fallback so server-side search / dashboards don't
+    // need to parse markup. Both default empty so existing EMAIL/CALL rows
+    // stay backward-compatible.
+    body_html: { type: String, default: '' },
+    body_text: { type: String, default: '' },
     created_by: { type: String, default: null },
     created_at: { type: Date, default: Date.now },
   },
@@ -72,6 +78,11 @@ const venueLeadSchema = new Schema(
 
     website: { type: String, trim: true, default: '' },
     services_offered: { type: [serviceOfferedSchema], default: [] },
+
+    // Optional one-to-many link to host leads who own / host events at
+    // this venue. Used by the new "Linked Hosts" tab on the venue detail
+    // page. Stays empty by default; no migration needed for existing rows.
+    linked_host_ids: { type: [{ type: Schema.Types.ObjectId, ref: 'HostLead' }], default: [] },
 
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },

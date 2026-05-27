@@ -1,5 +1,8 @@
 import { createTheme, alpha } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material';
+// Side-effect import registers DataGrid types on Theme.components so the
+// `MuiDataGrid` override below type-checks.
+import type {} from '@mui/x-data-grid/themeAugmentation';
 import type { AccentColors } from './config/app-config';
 
 // Design-system tokens — keep colors and shape decisions here so every
@@ -122,14 +125,23 @@ export const buildTheme = (mode: PaletteMode = 'light', accent: AccentColors = D
       MuiCard: {
         defaultProps: { elevation: 0 },
         styleOverrides: {
+          // Light mode now wears a clean white surface with just the border
+          // — heavy drop-shadow removed per design feedback. Dark mode keeps
+          // a subtle glow because the dark surface needs that lift.
           root: {
             borderRadius: 8,
             border: `1px solid ${BORDER}`,
             backgroundColor: SURFACE,
-            backgroundImage: SURFACE_GRADIENT,
-            boxShadow: `0 14px 34px -22px ${alpha(INK, isDark ? 0.72 : 0.28)}`,
-            transition: 'transform 180ms ease, box-shadow 180ms ease',
-            '&:hover': { boxShadow: `0 18px 42px -24px ${alpha(PRIMARY, 0.34)}` },
+            backgroundImage: isDark ? SURFACE_GRADIENT : 'none',
+            boxShadow: isDark
+              ? `0 14px 34px -22px ${alpha(INK, 0.72)}`
+              : `0 1px 2px ${alpha(INK, 0.04)}`,
+            transition: 'border-color 180ms ease, box-shadow 180ms ease',
+            '&:hover': {
+              boxShadow: isDark
+                ? `0 18px 42px -24px ${alpha(PRIMARY, 0.34)}`
+                : `0 2px 6px ${alpha(INK, 0.06)}`,
+            },
           },
         },
       },
@@ -194,6 +206,23 @@ export const buildTheme = (mode: PaletteMode = 'light', accent: AccentColors = D
         styleOverrides: {
           tooltip: { backgroundColor: INK, color: '#ffffff', borderRadius: 6, fontSize: '0.75rem', fontWeight: 600 },
           arrow: { color: INK },
+        },
+      },
+      // DataGrid: cleaner light-mode look — white surface, thin border per
+      // cell, no zebra striping, hover gets a faint primary wash.
+      MuiDataGrid: {
+        styleOverrides: {
+          root: {
+            border: `1px solid ${BORDER}`,
+            borderRadius: 8,
+            backgroundColor: SURFACE,
+            '--DataGrid-rowBorderColor': BORDER,
+          },
+          columnHeaders: {
+            backgroundColor: isDark ? alpha(INK, 0.04) : tokens.surface.soft,
+            borderBottom: `1px solid ${BORDER}`,
+          },
+          cell: { borderBottom: `1px solid ${BORDER}` },
         },
       },
     },

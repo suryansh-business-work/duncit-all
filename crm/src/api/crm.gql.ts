@@ -2,8 +2,9 @@ import { gql } from '@apollo/client';
 
 const CONTACT_FIELDS = `name role mobile_number whatsapp_number email`;
 const SERVICE_FIELDS = `service custom_name description`;
-const ACTIVITY_FIELDS = `type summary status target created_by created_at`;
+const ACTIVITY_FIELDS = `type summary status target body_html body_text created_by created_at`;
 const SUPER_CATEGORY_FIELDS = `id name slug icon`;
+const LINKED_HOST_FIELDS = `id host_name host_type city lead_status priority`;
 
 export const VENUE_LEAD_FIELDS = `
   id super_category_id super_category { ${SUPER_CATEGORY_FIELDS} }
@@ -12,6 +13,7 @@ export const VENUE_LEAD_FIELDS = `
   event_suitability available_days available_time_slots booking_notice
   pricing_models expected_charges security_deposit gst_applicable invoice_available
   amenities photos videos brochure_url website services_offered { ${SERVICE_FIELDS} }
+  linked_host_ids linked_hosts { ${LINKED_HOST_FIELDS} }
   lead_source assigned_to lead_status priority
   next_follow_up_date remarks activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
@@ -80,6 +82,14 @@ export const CALL_HOST_LEAD = gql`
   mutation CallHostLeadContact($id: ID!, $contact_number: String!, $provider_id: ID) {
     callHostLeadContact(id: $id, contact_number: $contact_number, provider_id: $provider_id) {
       ok message provider provider_id external_id recording_url
+    }
+  }
+`;
+
+export const ADD_CRM_MANUAL_LOG = gql`
+  mutation AddCrmManualLog($input: ManualLogInput!) {
+    addCrmManualLog(input: $input) {
+      ${ACTIVITY_FIELDS}
     }
   }
 `;

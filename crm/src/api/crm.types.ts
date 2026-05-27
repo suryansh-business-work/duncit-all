@@ -44,8 +44,19 @@ export interface CrmActivity {
   summary?: string | null;
   status?: string | null;
   target?: string | null;
+  body_html?: string | null;
+  body_text?: string | null;
   created_by?: string | null;
   created_at?: string | null;
+}
+
+export interface CrmLinkedHost {
+  id: string;
+  host_name: string;
+  host_type?: string | null;
+  city?: string | null;
+  lead_status: string;
+  priority: string;
 }
 
 export interface VenueLead {
@@ -79,6 +90,8 @@ export interface VenueLead {
   brochure_url?: string | null;
   website?: string | null;
   services_offered: CrmServiceOffered[];
+  linked_host_ids: string[];
+  linked_hosts: CrmLinkedHost[];
   lead_source?: string | null;
   assigned_to?: string | null;
   lead_status: string;

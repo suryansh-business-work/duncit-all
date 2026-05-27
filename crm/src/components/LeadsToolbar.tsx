@@ -49,6 +49,7 @@ interface Props {
   createLabel: string;
   status?: { selected: string; options: ChipOption[]; onChange: (value: string) => void };
   priority?: { selected: string; options: ChipOption[]; onChange: (value: string) => void };
+  superCategory?: { selected: string; options: ChipOption[]; onChange: (value: string) => void };
   onFillWithAi?: () => void;
   onImport?: () => void;
   onExport?: () => void;
@@ -64,6 +65,7 @@ export default function LeadsToolbar({
   createLabel,
   status,
   priority,
+  superCategory,
   onFillWithAi,
   onImport,
   onExport,
@@ -114,8 +116,9 @@ export default function LeadsToolbar({
           </Button>
         </Stack>
       </Stack>
-      {(status || priority) && (
-        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5}>
+      {(status || priority || superCategory) && (
+        <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} flexWrap="wrap" useFlexGap>
+          {superCategory && <ChipGroup label="Super Category" {...superCategory} />}
           {status && <ChipGroup label="Status" {...status} />}
           {priority && <ChipGroup label="Priority" {...priority} />}
         </Stack>

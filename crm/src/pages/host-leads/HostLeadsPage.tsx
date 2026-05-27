@@ -6,6 +6,7 @@ import { DELETE_HOST_LEAD, HOST_LEADS } from '../../api/crm.gql';
 import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE, downloadBase64Xlsx } from '../../api/excel.gql';
 import type { HostLead } from '../../api/crm.types';
 import { useCrmConfig } from '../../api/useCrmConfig';
+import { useSuperCategories } from '../../api/useSuperCategories';
 import LeadsToolbar from '../../components/LeadsToolbar';
 import ConfirmDialog from '../../components/ConfirmDialog';
 import VobizContactDialog from '../../components/VobizContactDialog';
@@ -18,10 +19,12 @@ export default function HostLeadsPage() {
   const navigate = useNavigate();
   const client = useApolloClient();
   const { config } = useCrmConfig();
+  const { options: superCategories } = useSuperCategories();
 
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [priorityFilter, setPriorityFilter] = useState('');
+  const [superCategoryFilter, setSuperCategoryFilter] = useState('');
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [showAi, setShowAi] = useState(false);
@@ -30,7 +33,14 @@ export default function HostLeadsPage() {
   const [vobiz, setVobiz] = useState<{ mode: 'email' | 'call'; lead: HostLead } | null>(null);
 
   const { data, loading, refetch } = useQuery<{ hostLeads: HostLead[] }>(HOST_LEADS, {
-    variables: { filter: { search, lead_status: statusFilter || null, priority: priorityFilter || null } },
+    variables: {
+      filter: {
+        search,
+        lead_status: statusFilter || null,
+        priority: priorityFilter || null,
+        super_category_id: superCategoryFilter || null,
+      },
+    },
     fetchPolicy: 'cache-and-network',
   });
   const [deleteLead, { loading: deleting }] = useMutation(DELETE_HOST_LEAD);
@@ -44,6 +54,10 @@ export default function HostLeadsPage() {
   const priorityOptions = useMemo(
     () => (config.priorities ?? []).map((value) => ({ label: value, value })),
     [config]
+  );
+  const superCategoryOptions = useMemo(
+    () => superCategories.map((c) => ({ label: c.name, value: c.id })),
+    [superCategories]
   );
 
   const confirmDelete = async () => {
@@ -85,7 +99,7 @@ export default function HostLeadsPage() {
     : null;
 
   return (
-    <Stack spacing={2}>
+    <Stack spacing={2.5}>
       <LeadsToolbar
         title="Host Leads"
         subtitle="Capture and qualify host and organizer leads."
@@ -93,6 +107,11 @@ export default function HostLeadsPage() {
         onSearch={setSearch}
         onCreate={() => navigate('/host-leads/new')}
         createLabel="New Host Lead"
+        superCategory={{
+          selected: superCategoryFilter,
+          options: superCategoryOptions,
+          onChange: setSuperCategoryFilter,
+        }}
         status={{ selected: statusFilter, options: statusOptions, onChange: setStatusFilter }}
         priority={{ selected: priorityFilter, options: priorityOptions, onChange: setPriorityFilter }}
         onFillWithAi={() => setShowAi(true)}

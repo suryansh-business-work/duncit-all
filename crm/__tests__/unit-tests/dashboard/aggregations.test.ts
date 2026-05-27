@@ -25,6 +25,8 @@ const baseVenue = (over: Partial<VenueLead>): VenueLead => ({
   photos: [],
   videos: [],
   services_offered: [],
+  linked_host_ids: [],
+  linked_hosts: [],
   lead_status: 'New',
   priority: 'Medium',
   activity_log: [],

@@ -27,6 +27,8 @@ const toActivity = (a: any) => ({
   summary: a.summary ?? '',
   status: a.status ?? '',
   target: a.target ?? '',
+  body_html: a.body_html ?? '',
+  body_text: a.body_text ?? '',
   created_by: a.created_by ?? null,
   created_at: iso(a.created_at),
 });
@@ -40,6 +42,7 @@ function pub(doc: any) {
     super_category_id: o.super_category_id ? String(o.super_category_id) : null,
     contacts: (o.contacts ?? []).map(toContact),
     services_offered: (o.services_offered ?? []).map(toServiceOffered),
+    linked_host_ids: (o.linked_host_ids ?? []).map((id: any) => String(id)),
     activity_log: (o.activity_log ?? []).map(toActivity),
     next_follow_up_date: iso(o.next_follow_up_date),
     preferred_event_date: iso(o.preferred_event_date),
@@ -91,11 +94,18 @@ const parseDate = (v?: string | null) => (v ? new Date(v) : null);
  * Normalise the inbound input so it round-trips cleanly with Mongoose. Right
  * now this just coerces super_category_id (a string from the client) into an
  * ObjectId — passing the raw string causes Mongoose's CastError on the index.
+ * Same treatment for `linked_host_ids` so the venue ↔ host association can
+ * be queried + populated cleanly.
  */
 function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
   const out: any = { ...input };
   if ('super_category_id' in out) {
     out.super_category_id = toObjectIdOrNull(out.super_category_id);
+  }
+  if (Array.isArray(out.linked_host_ids)) {
+    out.linked_host_ids = (out.linked_host_ids as any[])
+      .map(toObjectIdOrNull)
+      .filter((v): v is Types.ObjectId => Boolean(v));
   }
   return out;
 }
@@ -287,6 +297,74 @@ export const crmService = {
       slug: doc.slug,
       icon: doc.icon ?? '',
     };
+  },
+
+  /**
+   * Lightweight host references for VenueLead.linked_hosts. Returns rows in
+   * the same order as `ids` — missing/stale ids are simply skipped (we never
+   * cascade-delete a venue when a host is removed; the venue just stops
+   * pointing at it).
+   */
+  async linkedHostsFor(ids: any[]) {
+    if (!Array.isArray(ids) || ids.length === 0) return [];
+    const oids = ids.map(toObjectIdOrNull).filter((v): v is Types.ObjectId => Boolean(v));
+    if (oids.length === 0) return [];
+    const docs = await HostLeadModel.find({ _id: { $in: oids } })
+      .select('_id host_name host_type city lead_status priority')
+      .lean();
+    const byId = new Map(docs.map((d: any) => [String(d._id), d]));
+    return oids
+      .map((oid) => byId.get(String(oid)))
+      .filter(Boolean)
+      .map((d: any) => ({
+        id: String(d._id),
+        host_name: d.host_name,
+        host_type: d.host_type ?? '',
+        city: d.city ?? '',
+        lead_status: d.lead_status ?? 'New',
+        priority: d.priority ?? 'Medium',
+      }));
+  },
+
+  /**
+   * Append a manual NOTE entry to a lead's activity_log. Used by the
+   * "Manual Logs" tab — the body is the WYSIWYG HTML, body_text is the
+   * stripped plaintext fallback (server doesn't sanitise; the client is
+   * trusted CRM staff and the value is never re-rendered outside the app).
+   */
+  async addManualLog(opts: {
+    entity_type: 'VENUE_LEAD' | 'HOST_LEAD';
+    entity_id: string;
+    summary?: string | null;
+    body_html: string;
+    body_text?: string | null;
+    by?: string | null;
+  }) {
+    const body_html = (opts.body_html ?? '').trim();
+    if (!body_html) {
+      throw new GraphQLError('Log body is required', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    // Casting both models to a permissive shape because their generic doc
+    // types diverge enough that the union of `findById` signatures isn't
+    // directly callable without one. Runtime behaviour is identical.
+    const Model = (opts.entity_type === 'HOST_LEAD'
+      ? HostLeadModel
+      : VenueLeadModel) as unknown as (typeof VenueLeadModel);
+    const lead = await Model.findById(opts.entity_id);
+    if (!lead) notFound(opts.entity_type === 'HOST_LEAD' ? 'Host lead' : 'Venue lead');
+    const entry = {
+      type: 'NOTE' as const,
+      summary: (opts.summary ?? '').trim(),
+      status: '',
+      target: '',
+      body_html,
+      body_text: (opts.body_text ?? '').trim(),
+      created_by: opts.by ?? null,
+      created_at: new Date(),
+    };
+    lead.activity_log.push(entry as any);
+    await lead.save();
+    return toActivity(entry);
   },
 
   // ---- Venue leads ----

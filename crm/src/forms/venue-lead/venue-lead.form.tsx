@@ -14,6 +14,7 @@ import VenueAmenitiesSection from './sections/VenueAmenitiesSection';
 import VenueMediaSection from './sections/VenueMediaSection';
 import VenueWebsiteSection from './sections/VenueWebsiteSection';
 import VenueServicesSection from './sections/VenueServicesSection';
+import VenueLinkedHostsSection from './sections/VenueLinkedHostsSection';
 import VenueTrackingSection from './sections/VenueTrackingSection';
 import type { CrmOptionGroup } from '../../api/crm.types';
 
@@ -44,8 +45,9 @@ const SECTIONS = [
   { title: '8. Media', paths: ['photos', 'videos', 'brochure_url'] },
   { title: '9. Website', paths: ['website'] },
   { title: '10. Services Offered', paths: ['services_offered'] },
+  { title: '11. Linked Host Leads', paths: ['linked_host_ids'] },
   {
-    title: '11. Internal Lead Tracking',
+    title: '12. Internal Lead Tracking',
     paths: ['lead_source', 'assigned_to', 'lead_status', 'priority', 'next_follow_up_date', 'remarks'],
   },
 ];
@@ -118,6 +120,7 @@ function VenueSections({ config }: { config: CrmOptionGroup }) {
     <VenueMediaSection />,
     <VenueWebsiteSection />,
     <VenueServicesSection config={config} />,
+    <VenueLinkedHostsSection />,
     <VenueTrackingSection config={config} />,
   ];
   return (

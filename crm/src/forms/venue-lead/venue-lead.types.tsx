@@ -30,6 +30,7 @@ export interface VenueLeadFormValues {
   brochure_url: string;
   website: string;
   services_offered: CrmServiceOffered[];
+  linked_host_ids: string[];
   lead_source: string;
   assigned_to: string;
   lead_status: string;
@@ -67,6 +68,7 @@ export const venueLeadInitialValues: VenueLeadFormValues = {
   brochure_url: '',
   website: '',
   services_offered: [],
+  linked_host_ids: [],
   lead_source: '',
   assigned_to: '',
   lead_status: 'New',

@@ -76,7 +76,14 @@ export default function VenueLeadsTable({ leads, loading, onView, onEdit, onEmai
         headerAlign: 'right',
         minWidth: 220,
         renderCell: (params) => (
-          <Stack direction="row" spacing={0.5} justifyContent="flex-end">
+          // stopPropagation so action clicks don't bubble to the row's
+          // onRowClick (which navigates to detail view).
+          <Stack
+            direction="row"
+            spacing={0.5}
+            justifyContent="flex-end"
+            onClick={(e) => e.stopPropagation()}
+          >
             <Tooltip title="Details"><IconButton size="small" onClick={() => onView(params.row)}><VisibilityIcon fontSize="small" /></IconButton></Tooltip>
             <Tooltip title="Email"><IconButton size="small" onClick={() => onEmail(params.row)}><EmailIcon fontSize="small" /></IconButton></Tooltip>
             <Tooltip title="Call"><IconButton size="small" onClick={() => onCall(params.row)}><CallIcon fontSize="small" /></IconButton></Tooltip>
@@ -102,8 +109,13 @@ export default function VenueLeadsTable({ leads, loading, onView, onEdit, onEmai
         sorting: { sortModel: [{ field: 'next_follow_up_date', sort: 'asc' }] },
       }}
       disableRowSelectionOnClick
+      onRowClick={(params) => onView(params.row)}
       density="compact"
-      sx={{ '& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' } }}
+      sx={{
+        cursor: 'pointer',
+        '& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' },
+        '& .MuiDataGrid-row:hover': { bgcolor: 'action.hover' },
+      }}
     />
   );
 }

@@ -103,6 +103,8 @@ export const sampleVenueLead = {
   services_offered: [
     { __typename: 'CrmServiceOffered', service: 'Catering', custom_name: '', description: 'Veg + non-veg' },
   ],
+  linked_host_ids: [],
+  linked_hosts: [],
   lead_source: 'Referral',
   assigned_to: 'PM',
   lead_status: 'New',

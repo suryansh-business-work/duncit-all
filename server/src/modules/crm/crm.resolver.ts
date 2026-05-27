@@ -16,6 +16,7 @@ export const crmResolvers = {
   VenueLead: {
     super_category: (parent: any) =>
       parent?.super_category_id ? crmService.superCategoryById(String(parent.super_category_id)) : null,
+    linked_hosts: (parent: any) => crmService.linkedHostsFor(parent?.linked_host_ids ?? []),
   },
   HostLead: {
     super_category: (parent: any) =>
@@ -143,6 +144,22 @@ export const crmResolvers = {
     ) => {
       requireRole(ctx, RW);
       return importLeads(args.entity, args.content_base64);
+    },
+    addCrmManualLog: async (
+      _p: unknown,
+      args: {
+        input: {
+          entity_type: 'VENUE_LEAD' | 'HOST_LEAD';
+          entity_id: string;
+          summary?: string | null;
+          body_html: string;
+          body_text?: string | null;
+        };
+      },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, RW);
+      return crmService.addManualLog({ ...args.input, by: user.id });
     },
   },
 };

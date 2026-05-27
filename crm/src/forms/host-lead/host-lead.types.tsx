@@ -1,7 +1,8 @@
-import type { CrmContact } from '../../api/crm.types';
+import type { CrmContact, CrmServiceOffered } from '../../api/crm.types';
 import { emptyContact } from '../fields/ContactsField';
 
 export interface HostLeadFormValues {
+  super_category_id: string;
   host_name: string;
   host_type: string;
   organization_name: string;
@@ -18,6 +19,8 @@ export interface HostLeadFormValues {
   preferred_event_date: Date | null;
   preferred_day: string;
   preferred_time_slot: string;
+  website: string;
+  services_offered: CrmServiceOffered[];
   instagram_link: string;
   community_link: string;
   community_size: string;
@@ -33,6 +36,7 @@ export interface HostLeadFormValues {
 }
 
 export const hostLeadInitialValues: HostLeadFormValues = {
+  super_category_id: '',
   host_name: '',
   host_type: '',
   organization_name: '',
@@ -49,6 +53,8 @@ export const hostLeadInitialValues: HostLeadFormValues = {
   preferred_event_date: null,
   preferred_day: '',
   preferred_time_slot: '',
+  website: '',
+  services_offered: [],
   instagram_link: '',
   community_link: '',
   community_size: '',

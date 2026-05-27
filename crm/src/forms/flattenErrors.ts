@@ -22,6 +22,9 @@ const LABELS: Record<string, string> = {
   past_attendees: 'Past attendees',
   instagram_link: 'Instagram link',
   community_link: 'Community link',
+  website: 'Website',
+  services_offered: 'Services offered',
+  super_category_id: 'Super category',
 };
 
 /**

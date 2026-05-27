@@ -5,6 +5,7 @@ import { toHostLeadInput } from './host-lead.map';
 
 const valid = {
   ...hostLeadInitialValues,
+  super_category_id: '64a000000000000000000001',
   host_name: 'Ravi Sharma',
   host_type: 'Event Organizer',
   contacts: [{ name: 'Ravi', role: 'Organizer', mobile_number: '9811122233', whatsapp_number: '', email: 'ravi@example.com' }],

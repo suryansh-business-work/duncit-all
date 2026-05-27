@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import http from 'http';
+import cors from 'cors';
 import express from 'express';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
@@ -20,6 +21,7 @@ import { attachBouncerHandlers } from './modules/bouncer/bouncer.socket';
 import { websiteContentService } from './modules/websiteContent/websiteContent.service';
 import { userService } from './modules/user/user.service';
 import { marketingService } from './modules/marketing/marketing.service';
+import { crmService } from './modules/crm/crm.service';
 
 async function safeSeed(name: string, fn: () => Promise<void>) {
   try {
@@ -41,6 +43,7 @@ async function bootstrap() {
   await safeSeed('policy', () => policyService.seedDefaults());
   await safeSeed('websiteContent', () => websiteContentService.seedDefaults());
   await safeSeed('marketing', () => marketingService.resumeSchedules());
+  await safeSeed('crmServices', () => crmService.seedServiceDefaults());
   await safeSeed('podPlan', async () => {
     const { podPlanService } = await import('./modules/pod-plan/pod-plan.service');
     await podPlanService.seedDefaults();
@@ -60,11 +63,11 @@ async function bootstrap() {
 
   await apollo.start();
 
-  // CORS is owned exclusively by nginx (see deploy/nginx/server.duncit.com).
-  // The nginx layer attaches `Access-Control-*` headers with `always` so they
-  // ride along with 5xx / 502 responses too, and it short-circuits OPTIONS
-  // preflight at the proxy. Adding CORS in Express on top of that resulted
-  // in duplicate Allow-Origin headers, which the browser rejects per spec.
+  if (process.env.NODE_ENV !== 'production') {
+    app.use(cors({ origin: true, credentials: true }));
+    app.options('*', cors({ origin: true, credentials: true }));
+  }
+
   app.use(
     '/graphql',
     express.json({ limit: '25mb' }),

@@ -7,6 +7,38 @@ export interface CrmContact {
   email: string;
 }
 
+export interface CrmServiceOffered {
+  service: string;
+  custom_name?: string | null;
+  description?: string | null;
+}
+
+export type CrmServiceKind = 'VENUE' | 'HOST';
+
+export interface CrmService {
+  id: string;
+  name: string;
+  kind: CrmServiceKind;
+  sort_order: number;
+  is_active: boolean;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface CrmSuperCategoryRef {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string | null;
+}
+
+export interface SuperCategoryOption {
+  id: string;
+  name: string;
+  slug: string;
+  icon?: string | null;
+}
+
 export interface CrmActivity {
   type: string;
   summary?: string | null;
@@ -18,6 +50,8 @@ export interface CrmActivity {
 
 export interface VenueLead {
   id: string;
+  super_category_id?: string | null;
+  super_category?: CrmSuperCategoryRef | null;
   venue_name: string;
   venue_types: string[];
   venue_description?: string | null;
@@ -43,6 +77,8 @@ export interface VenueLead {
   photos: string[];
   videos: string[];
   brochure_url?: string | null;
+  website?: string | null;
+  services_offered: CrmServiceOffered[];
   lead_source?: string | null;
   assigned_to?: string | null;
   lead_status: string;
@@ -56,6 +92,8 @@ export interface VenueLead {
 
 export interface HostLead {
   id: string;
+  super_category_id?: string | null;
+  super_category?: CrmSuperCategoryRef | null;
   host_name: string;
   host_type?: string | null;
   organization_name?: string | null;
@@ -72,6 +110,8 @@ export interface HostLead {
   preferred_event_date?: string | null;
   preferred_day?: string | null;
   preferred_time_slot?: string | null;
+  website?: string | null;
+  services_offered: CrmServiceOffered[];
   instagram_link?: string | null;
   community_link?: string | null;
   community_size?: number | null;
@@ -107,4 +147,7 @@ export interface CrmOptionGroup {
   frequencies: string[];
   revenue_models: string[];
   host_intent_scores: string[];
+  services_offered_options: string[];
+  venue_services_offered_options: string[];
+  host_services_offered_options: string[];
 }

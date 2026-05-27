@@ -1,21 +1,28 @@
 import { gql } from '@apollo/client';
 
 const CONTACT_FIELDS = `name role mobile_number whatsapp_number email`;
+const SERVICE_FIELDS = `service custom_name description`;
 const ACTIVITY_FIELDS = `type summary status target created_by created_at`;
+const SUPER_CATEGORY_FIELDS = `id name slug icon`;
 
 export const VENUE_LEAD_FIELDS = `
-  id venue_name venue_types venue_description capacity_min capacity_max space_type
+  id super_category_id super_category { ${SUPER_CATEGORY_FIELDS} }
+  venue_name venue_types venue_description capacity_min capacity_max space_type
   city area full_address landmark map_link contacts { ${CONTACT_FIELDS} }
   event_suitability available_days available_time_slots booking_notice
   pricing_models expected_charges security_deposit gst_applicable invoice_available
-  amenities photos videos brochure_url lead_source assigned_to lead_status priority
+  amenities photos videos brochure_url website services_offered { ${SERVICE_FIELDS} }
+  lead_source assigned_to lead_status priority
   next_follow_up_date remarks activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
 
 export const HOST_LEAD_FIELDS = `
-  id host_name host_type organization_name city area contacts { ${CONTACT_FIELDS} }
+  id super_category_id super_category { ${SUPER_CATEGORY_FIELDS} }
+  host_name host_type organization_name city area contacts { ${CONTACT_FIELDS} }
   interests expected_audience_size frequency budget_range revenue_models need_venue need_vendor
-  preferred_event_date preferred_day preferred_time_slot instagram_link community_link
+  preferred_event_date preferred_day preferred_time_slot
+  website services_offered { ${SERVICE_FIELDS} }
+  instagram_link community_link
   community_size previous_events_hosted past_attendees host_intent_scores
   lead_source assigned_to lead_status priority next_follow_up_date notes
   activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
@@ -27,6 +34,9 @@ export const CRM_LEAD_CONFIG = gql`
       venue_types space_types venue_event_suitability week_days booking_notices
       pricing_models amenities lead_sources venue_lead_statuses host_lead_statuses
       priorities host_types host_interests audience_sizes frequencies revenue_models host_intent_scores
+      services_offered_options
+      venue_services_offered_options
+      host_services_offered_options
     }
   }
 `;
@@ -71,5 +81,36 @@ export const CALL_HOST_LEAD = gql`
     callHostLeadContact(id: $id, contact_number: $contact_number, provider_id: $provider_id) {
       ok message provider provider_id external_id recording_url
     }
+  }
+`;
+
+export const SUPER_CATEGORIES = gql`
+  query SuperCategories {
+    categories(filter: { level: SUPER }) {
+      id name slug icon is_active sort_order
+    }
+  }
+`;
+
+export const CRM_SERVICES = gql`
+  query CrmServices($kind: CrmServiceKind, $include_inactive: Boolean) {
+    crmServices(kind: $kind, include_inactive: $include_inactive) {
+      id name kind sort_order is_active created_at updated_at
+    }
+  }
+`;
+export const CREATE_CRM_SERVICE = gql`
+  mutation CreateCrmService($input: CrmServiceInput!) {
+    createCrmService(input: $input) { id name kind sort_order is_active }
+  }
+`;
+export const UPDATE_CRM_SERVICE = gql`
+  mutation UpdateCrmService($id: ID!, $input: CrmServiceInput!) {
+    updateCrmService(id: $id, input: $input) { id name kind sort_order is_active }
+  }
+`;
+export const DELETE_CRM_SERVICE = gql`
+  mutation DeleteCrmService($id: ID!) {
+    deleteCrmService(id: $id)
   }
 `;

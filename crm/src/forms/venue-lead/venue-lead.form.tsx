@@ -12,6 +12,8 @@ import VenueAvailabilitySection from './sections/VenueAvailabilitySection';
 import VenueCommercialSection from './sections/VenueCommercialSection';
 import VenueAmenitiesSection from './sections/VenueAmenitiesSection';
 import VenueMediaSection from './sections/VenueMediaSection';
+import VenueWebsiteSection from './sections/VenueWebsiteSection';
+import VenueServicesSection from './sections/VenueServicesSection';
 import VenueTrackingSection from './sections/VenueTrackingSection';
 import type { CrmOptionGroup } from '../../api/crm.types';
 
@@ -28,7 +30,7 @@ const SECTIONS = [
   {
     title: '1. Venue Details',
     expanded: true,
-    paths: ['venue_name', 'venue_types', 'venue_description', 'capacity_min', 'capacity_max', 'space_type'],
+    paths: ['super_category_id', 'venue_name', 'venue_types', 'venue_description', 'capacity_min', 'capacity_max', 'space_type'],
   },
   { title: '2. Location', paths: ['city', 'area', 'full_address', 'landmark', 'map_link'] },
   { title: '3. Contacts', paths: ['contacts'] },
@@ -40,8 +42,10 @@ const SECTIONS = [
   },
   { title: '7. Amenities', paths: ['amenities'] },
   { title: '8. Media', paths: ['photos', 'videos', 'brochure_url'] },
+  { title: '9. Website', paths: ['website'] },
+  { title: '10. Services Offered', paths: ['services_offered'] },
   {
-    title: '9. Internal Lead Tracking',
+    title: '11. Internal Lead Tracking',
     paths: ['lead_source', 'assigned_to', 'lead_status', 'priority', 'next_follow_up_date', 'remarks'],
   },
 ];
@@ -112,6 +116,8 @@ function VenueSections({ config }: { config: CrmOptionGroup }) {
     <VenueCommercialSection config={config} />,
     <VenueAmenitiesSection config={config} />,
     <VenueMediaSection />,
+    <VenueWebsiteSection />,
+    <VenueServicesSection config={config} />,
     <VenueTrackingSection config={config} />,
   ];
   return (

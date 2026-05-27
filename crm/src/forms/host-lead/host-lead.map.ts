@@ -1,4 +1,4 @@
-import type { CrmContact, HostLead } from '../../api/crm.types';
+import type { CrmContact, CrmServiceOffered, HostLead } from '../../api/crm.types';
 import { emptyContact } from '../fields/ContactsField';
 import { hostLeadInitialValues, type HostLeadFormValues } from './host-lead.types';
 
@@ -22,9 +22,19 @@ const cleanContacts = (contacts: CrmContact[]) =>
       email: c.email.trim(),
     }));
 
+const cleanServices = (services: CrmServiceOffered[]) =>
+  services
+    .filter((s) => s?.service?.trim())
+    .map((s) => ({
+      service: s.service.trim(),
+      custom_name: (s.custom_name ?? '').trim(),
+      description: (s.description ?? '').trim(),
+    }));
+
 /** Form values → GraphQL HostLeadInput. */
 export function toHostLeadInput(v: HostLeadFormValues) {
   return {
+    super_category_id: v.super_category_id.trim() || null,
     host_name: v.host_name.trim(),
     host_type: v.host_type,
     organization_name: v.organization_name.trim(),
@@ -41,6 +51,8 @@ export function toHostLeadInput(v: HostLeadFormValues) {
     preferred_event_date: v.preferred_event_date ? v.preferred_event_date.toISOString() : null,
     preferred_day: v.preferred_day,
     preferred_time_slot: v.preferred_time_slot.trim(),
+    website: v.website.trim(),
+    services_offered: cleanServices(v.services_offered),
     instagram_link: v.instagram_link.trim(),
     community_link: v.community_link.trim(),
     community_size: toNum(v.community_size),
@@ -60,6 +72,7 @@ export function toHostLeadInput(v: HostLeadFormValues) {
 export function fromHostLead(lead: HostLead): HostLeadFormValues {
   return {
     ...hostLeadInitialValues,
+    super_category_id: lead.super_category_id ?? '',
     host_name: lead.host_name ?? '',
     host_type: lead.host_type ?? '',
     organization_name: lead.organization_name ?? '',
@@ -76,6 +89,12 @@ export function fromHostLead(lead: HostLead): HostLeadFormValues {
     preferred_event_date: lead.preferred_event_date ? new Date(lead.preferred_event_date) : null,
     preferred_day: lead.preferred_day ?? '',
     preferred_time_slot: lead.preferred_time_slot ?? '',
+    website: lead.website ?? '',
+    services_offered: (lead.services_offered ?? []).map((s) => ({
+      service: s.service ?? '',
+      custom_name: s.custom_name ?? '',
+      description: s.description ?? '',
+    })),
     instagram_link: lead.instagram_link ?? '',
     community_link: lead.community_link ?? '',
     community_size: numToStr(lead.community_size),

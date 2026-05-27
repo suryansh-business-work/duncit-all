@@ -6,7 +6,8 @@ const EMPTY: CrmOptionGroup = {
   venue_types: [], space_types: [], venue_event_suitability: [], week_days: [], booking_notices: [],
   pricing_models: [], amenities: [], lead_sources: [], venue_lead_statuses: [], host_lead_statuses: [],
   priorities: [], host_types: [], host_interests: [], audience_sizes: [], frequencies: [],
-  revenue_models: [], host_intent_scores: [],
+  revenue_models: [], host_intent_scores: [], services_offered_options: [],
+  venue_services_offered_options: [], host_services_offered_options: [],
 };
 
 /** Fetches the dynamic CRM option lists from the server (single source of truth). */

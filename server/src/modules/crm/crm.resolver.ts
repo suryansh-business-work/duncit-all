@@ -13,10 +13,26 @@ const exportFilename = (entity: CrmExcelEntity) =>
   entity === 'VENUE_LEAD' ? 'duncit-venue-leads-export.xlsx' : 'duncit-host-leads-export.xlsx';
 
 export const crmResolvers = {
+  VenueLead: {
+    super_category: (parent: any) =>
+      parent?.super_category_id ? crmService.superCategoryById(String(parent.super_category_id)) : null,
+  },
+  HostLead: {
+    super_category: (parent: any) =>
+      parent?.super_category_id ? crmService.superCategoryById(String(parent.super_category_id)) : null,
+  },
   Query: {
     crmLeadConfig: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return crmService.config();
+    },
+    crmServices: (
+      _p: unknown,
+      args: { kind?: 'VENUE' | 'HOST' | null; include_inactive?: boolean },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, RW);
+      return crmService.listServices(args.kind ?? null, !!args.include_inactive);
     },
     venueLeads: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
@@ -44,6 +60,18 @@ export const crmResolvers = {
     },
   },
   Mutation: {
+    createCrmService: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.createService(args.input);
+    },
+    updateCrmService: (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.updateService(args.id, args.input);
+    },
+    deleteCrmService: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.deleteService(args.id);
+    },
     createVenueLead: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return crmService.createVenueLead(args.input);

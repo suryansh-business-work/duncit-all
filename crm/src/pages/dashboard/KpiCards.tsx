@@ -4,12 +4,14 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import GroupsIcon from '@mui/icons-material/Groups';
 import TrendingUpIcon from '@mui/icons-material/TrendingUp';
 import AssessmentIcon from '@mui/icons-material/Assessment';
+import HandymanIcon from '@mui/icons-material/Handyman';
 
 interface Props {
   venueCount: number;
   hostCount: number;
   totalCount: number;
   conversionRate: number;
+  uniqueServices: number;
   loading?: boolean;
 }
 
@@ -17,7 +19,7 @@ interface Tile {
   label: string;
   value: string;
   icon: JSX.Element;
-  color: 'primary' | 'success' | 'info' | 'warning';
+  color: 'primary' | 'success' | 'info' | 'warning' | 'secondary';
 }
 
 const TILE_BG: Record<Tile['color'], string> = {
@@ -25,9 +27,17 @@ const TILE_BG: Record<Tile['color'], string> = {
   success: '#22c55e',
   info: '#0ea5e9',
   warning: '#f59e0b',
+  secondary: '#a855f7',
 };
 
-export default function KpiCards({ venueCount, hostCount, totalCount, conversionRate, loading }: Props) {
+export default function KpiCards({
+  venueCount,
+  hostCount,
+  totalCount,
+  conversionRate,
+  uniqueServices,
+  loading,
+}: Props) {
   const tiles: Tile[] = [
     { label: 'Venue Leads', value: String(venueCount), icon: <LocationOnIcon fontSize="small" />, color: 'primary' },
     { label: 'Host Leads', value: String(hostCount), icon: <GroupsIcon fontSize="small" />, color: 'info' },
@@ -37,6 +47,12 @@ export default function KpiCards({ venueCount, hostCount, totalCount, conversion
       value: `${conversionRate.toFixed(0)}%`,
       icon: <TrendingUpIcon fontSize="small" />,
       color: 'warning',
+    },
+    {
+      label: 'Services Offered',
+      value: String(uniqueServices),
+      icon: <HandymanIcon fontSize="small" />,
+      color: 'secondary',
     },
   ];
 

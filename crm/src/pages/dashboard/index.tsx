@@ -5,6 +5,8 @@ import KpiCards from './KpiCards';
 import RangeFilter from './RangeFilter';
 import StageChart from './StageChart';
 import PriorityChart from './PriorityChart';
+import ServicesChart from './ServicesChart';
+import SuperCategoryChart from './SuperCategoryChart';
 import { rangeToWindow, type DashboardRange, type DateWindow } from './dashboardConfig';
 import { useDashboardData } from './useDashboardData';
 import { parseApiError } from '../../utils/parseApiError';
@@ -44,6 +46,7 @@ export default function DashboardPage() {
         hostCount={data.totals.host}
         totalCount={data.totals.total}
         conversionRate={data.totals.conversionRate}
+        uniqueServices={data.serviceTotals.uniqueServices}
         loading={data.loading && data.totals.total === 0}
       />
 
@@ -55,6 +58,10 @@ export default function DashboardPage() {
           <PriorityChart slices={data.priorities} />
         </Box>
       </Stack>
+
+      <SuperCategoryChart data={data.superCategoryCounts} />
+
+      <ServicesChart data={data.services} />
     </Stack>
   );
 }

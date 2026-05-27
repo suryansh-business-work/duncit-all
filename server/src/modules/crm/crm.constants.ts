@@ -64,5 +64,26 @@ export const HOST_INTENT_SCORES = [
   'Looking for venue only', 'Looking to host & promote', 'Has own audience', 'Wants recurring events', 'Ready to go this month',
 ];
 
+// Service catalogue used by both venue and host leads. The form lets the user
+// pick one of these or "Other" + a free-text name, and always attach a short
+// description. Stored as embedded sub-documents (see crm.model.ts).
+export const SERVICES_OFFERED = [
+  'Event Hosting',
+  'Catering',
+  'Photography / Videography',
+  'Decor & Setup',
+  'Sound & Lighting',
+  'Bouncer / Security',
+  'DJ / Music',
+  'Bartender',
+  'Coaching / Training',
+  'Workshop Facilitation',
+  'Sports Coaching',
+  'Equipment Rental',
+  'Live Streaming',
+  'Ticketing',
+  'Other',
+];
+
 export const ACTIVITY_TYPES = ['EMAIL', 'CALL', 'NOTE'] as const;
 export type ActivityType = (typeof ACTIVITY_TYPES)[number];

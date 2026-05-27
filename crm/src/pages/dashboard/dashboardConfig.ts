@@ -51,3 +51,16 @@ export interface StageCount {
   host: number;
   total: number;
 }
+
+export interface ServiceCount {
+  label: string;
+  count: number;
+}
+
+export interface SuperCategoryCount {
+  super_category_id: string;
+  label: string;
+  venue: number;
+  host: number;
+  total: number;
+}

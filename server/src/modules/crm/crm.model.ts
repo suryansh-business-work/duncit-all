@@ -1,4 +1,4 @@
-import { Schema, model, InferSchemaType } from 'mongoose';
+import { Schema, model, Types, InferSchemaType } from 'mongoose';
 import { VENUE_LEAD_STATUSES, HOST_LEAD_STATUSES, PRIORITIES, ACTIVITY_TYPES } from './crm.constants';
 
 const contactSchema = new Schema(
@@ -8,6 +8,18 @@ const contactSchema = new Schema(
     mobile_number: { type: String, trim: true, default: '' },
     whatsapp_number: { type: String, trim: true, default: '' },
     email: { type: String, trim: true, lowercase: true, default: '' },
+  },
+  { _id: false }
+);
+
+const serviceOfferedSchema = new Schema(
+  {
+    // Catalogue value or "Other". When "Other", `custom_name` carries the
+    // free-text label so dashboard aggregations can still group by display
+    // name without exploding the catalogue.
+    service: { type: String, trim: true, default: '' },
+    custom_name: { type: String, trim: true, default: '' },
+    description: { type: String, trim: true, default: '' },
   },
   { _id: false }
 );
@@ -26,6 +38,7 @@ const activitySchema = new Schema(
 
 const venueLeadSchema = new Schema(
   {
+    super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
     venue_name: { type: String, required: true, trim: true },
     venue_types: { type: [String], default: [] },
     venue_description: { type: String, trim: true, default: '' },
@@ -57,6 +70,9 @@ const venueLeadSchema = new Schema(
     videos: { type: [String], default: [] },
     brochure_url: { type: String, trim: true, default: '' },
 
+    website: { type: String, trim: true, default: '' },
+    services_offered: { type: [serviceOfferedSchema], default: [] },
+
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },
     lead_status: { type: String, enum: VENUE_LEAD_STATUSES, default: 'New', index: true },
@@ -70,6 +86,7 @@ const venueLeadSchema = new Schema(
 
 const hostLeadSchema = new Schema(
   {
+    super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
     host_name: { type: String, required: true, trim: true },
     host_type: { type: String, default: '' },
     organization_name: { type: String, trim: true, default: '' },
@@ -91,6 +108,9 @@ const hostLeadSchema = new Schema(
     preferred_day: { type: String, default: '' },
     preferred_time_slot: { type: String, trim: true, default: '' },
 
+    website: { type: String, trim: true, default: '' },
+    services_offered: { type: [serviceOfferedSchema], default: [] },
+
     instagram_link: { type: String, trim: true, default: '' },
     community_link: { type: String, trim: true, default: '' },
     community_size: { type: Number, default: null },
@@ -109,7 +129,26 @@ const hostLeadSchema = new Schema(
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
+// Catalogue of services offered, managed via the CRM admin UI. Replaces the
+// hard-coded SERVICES_OFFERED constant. There are two separate catalogues —
+// one for the Venue Leads dropdown and one for the Host Leads dropdown — keyed
+// by `kind`. A `name` can collide across kinds (e.g. both could offer
+// "Catering"), so the unique index is compound on `(kind, name)`.
+const crmServiceCatalogSchema = new Schema(
+  {
+    name: { type: String, required: true, trim: true },
+    kind: { type: String, enum: ['VENUE', 'HOST'], default: 'VENUE', index: true },
+    sort_order: { type: Number, default: 0 },
+    is_active: { type: Boolean, default: true },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+crmServiceCatalogSchema.index({ kind: 1, name: 1 }, { unique: true });
+
 export type VenueLeadDoc = InferSchemaType<typeof venueLeadSchema> & { _id: any };
 export type HostLeadDoc = InferSchemaType<typeof hostLeadSchema> & { _id: any };
+export type CrmServiceCatalogDoc = InferSchemaType<typeof crmServiceCatalogSchema> & { _id: Types.ObjectId };
 export const VenueLeadModel = model('VenueLead', venueLeadSchema);
 export const HostLeadModel = model('HostLead', hostLeadSchema);
+export const CrmServiceCatalogModel = model('CrmServiceCatalog', crmServiceCatalogSchema);

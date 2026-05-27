@@ -5,8 +5,11 @@
  */
 export interface AppNavItem {
   label: string;
-  to: string;
+  /** Route the item links to. Optional when the item is purely a group header. */
+  to?: string;
   icon: string;
+  /** Optional nested children (one level deep) — rendered as a collapsible group. */
+  children?: AppNavItem[];
 }
 
 export interface AppModule {
@@ -57,8 +60,24 @@ export const appConfig: AppConfig = {
   accent: { light: '#a5b4fc', main: '#6366f1', hover: '#4f46e5', active: '#4338ca' },
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
-    { label: 'Venue Leads', to: '/venue-leads', icon: 'location' },
-    { label: 'Host Leads', to: '/host-leads', icon: 'groups' },
+    {
+      label: 'Venue Leads',
+      to: '/venue-leads',
+      icon: 'location',
+      children: [
+        { label: 'All Venue Leads', to: '/venue-leads', icon: 'location' },
+        { label: 'Manage Venue Services', to: '/venue-leads/services', icon: 'analytics' },
+      ],
+    },
+    {
+      label: 'Host Leads',
+      to: '/host-leads',
+      icon: 'groups',
+      children: [
+        { label: 'All Host Leads', to: '/host-leads', icon: 'groups' },
+        { label: 'Manage Host Services', to: '/host-leads/services', icon: 'analytics' },
+      ],
+    },
   ],
   modules: [],
 };

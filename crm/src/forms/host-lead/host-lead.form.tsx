@@ -10,6 +10,8 @@ import HostPreferencesSection from './sections/HostPreferencesSection';
 import HostBudgetSection from './sections/HostBudgetSection';
 import HostTimelineSection from './sections/HostTimelineSection';
 import HostReachSection from './sections/HostReachSection';
+import HostWebsiteSection from './sections/HostWebsiteSection';
+import HostServicesSection from './sections/HostServicesSection';
 import HostTrackingSection from './sections/HostTrackingSection';
 import type { CrmOptionGroup } from '../../api/crm.types';
 
@@ -23,7 +25,7 @@ interface Props {
 }
 
 const SECTIONS = [
-  { title: '1. Basic Details', expanded: true, paths: ['host_name', 'host_type', 'organization_name', 'city', 'area'] },
+  { title: '1. Basic Details', expanded: true, paths: ['super_category_id', 'host_name', 'host_type', 'organization_name', 'city', 'area'] },
   { title: '2. Contact Details', paths: ['contacts'] },
   {
     title: '3. Event Preferences',
@@ -42,8 +44,10 @@ const SECTIONS = [
       'host_intent_scores',
     ],
   },
+  { title: '7. Website', paths: ['website'] },
+  { title: '8. Services Offered', paths: ['services_offered'] },
   {
-    title: '7. Internal Tracking',
+    title: '9. Internal Tracking',
     paths: ['lead_source', 'assigned_to', 'lead_status', 'priority', 'next_follow_up_date', 'notes'],
   },
 ];
@@ -112,6 +116,8 @@ function HostSections({ config }: { config: CrmOptionGroup }) {
     <HostBudgetSection config={config} />,
     <HostTimelineSection config={config} />,
     <HostReachSection />,
+    <HostWebsiteSection />,
+    <HostServicesSection config={config} />,
     <HostTrackingSection config={config} />,
   ];
   return (

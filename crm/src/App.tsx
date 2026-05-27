@@ -7,6 +7,7 @@ import VenueLeadDetailPage from './pages/venue-leads/VenueLeadDetailPage';
 import HostLeadsPage from './pages/host-leads/HostLeadsPage';
 import HostLeadEditorPage from './pages/host-leads/HostLeadEditorPage';
 import HostLeadDetailPage from './pages/host-leads/HostLeadDetailPage';
+import ManageServicesPage from './pages/ManageServicesPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
@@ -32,10 +33,12 @@ export default function App() {
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
       <Route path="/venue-leads" element={authed(<VenueLeadsPage />)} />
+      <Route path="/venue-leads/services" element={authed(<ManageServicesPage kind="VENUE" />)} />
       <Route path="/venue-leads/new" element={authed(<VenueLeadEditorPage />)} />
       <Route path="/venue-leads/:id/view" element={authed(<VenueLeadDetailPage />)} />
       <Route path="/venue-leads/:id" element={authed(<VenueLeadEditorPage />)} />
       <Route path="/host-leads" element={authed(<HostLeadsPage />)} />
+      <Route path="/host-leads/services" element={authed(<ManageServicesPage kind="HOST" />)} />
       <Route path="/host-leads/new" element={authed(<HostLeadEditorPage />)} />
       <Route path="/host-leads/:id/view" element={authed(<HostLeadDetailPage />)} />
       <Route path="/host-leads/:id" element={authed(<HostLeadEditorPage />)} />

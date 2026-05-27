@@ -1,20 +1,51 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Button, Card, CardContent, Chip, CircularProgress, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  Divider,
+  Stack,
+  Tooltip,
+  Typography,
+} from '@mui/material';
+import { alpha } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ContactsIcon from '@mui/icons-material/Contacts';
 import GroupsIcon from '@mui/icons-material/Groups';
 import EventIcon from '@mui/icons-material/Event';
+import HandymanIcon from '@mui/icons-material/Handyman';
+import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import LanguageIcon from '@mui/icons-material/Language';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import PhoneIcon from '@mui/icons-material/Phone';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import EmailIcon from '@mui/icons-material/Email';
+import InstagramIcon from '@mui/icons-material/Instagram';
+import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import { HOST_LEAD } from '../../api/crm.gql';
 import type { HostLead } from '../../api/crm.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
 import { LeadDetailCard, LeadDetailRow } from '../../components/LeadDetailCard';
+import LeadStatTile from '../../components/LeadStatTile';
+import ServicesGrid from '../../components/ServicesGrid';
 import CommsLogsSection from '../../components/CommsLogsSection';
 import { parseApiError } from '../../utils/parseApiError';
 
 const joinList = (values?: string[] | null) => (values && values.length ? values.join(', ') : '—');
+
+const formatDate = (iso?: string | null) => {
+  if (!iso) return null;
+  const d = new Date(iso);
+  if (Number.isNaN(d.getTime())) return null;
+  return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+};
 
 export default function HostLeadDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -25,33 +56,142 @@ export default function HostLeadDetailPage() {
   });
   const lead = data?.hostLead;
 
-  if (loading && !lead) return <Stack alignItems="center" sx={{ py: 6 }}><CircularProgress /></Stack>;
+  if (loading && !lead) {
+    return (
+      <Stack alignItems="center" sx={{ py: 6 }}>
+        <CircularProgress />
+      </Stack>
+    );
+  }
   if (error) return <Alert severity="error">{parseApiError(error)}</Alert>;
   if (!lead) return <Alert severity="info">Host lead not found.</Alert>;
 
+  const followUpLabel = formatDate(lead.next_follow_up_date) ?? '—';
+  const preferredDate = formatDate(lead.preferred_event_date);
+
   return (
     <Stack spacing={2}>
-      <Stack direction="row" alignItems="center" spacing={1.5} sx={{ flexWrap: 'wrap' }} useFlexGap>
-        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/host-leads')} size="small">
-          Host Leads
-        </Button>
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" fontWeight={800} noWrap>{lead.host_name}</Typography>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.5 }}>
-            <StatusChip value={lead.lead_status} />
-            <PriorityChip value={lead.priority} />
-            {lead.city && <Chip size="small" label={lead.city} variant="outlined" />}
-            {lead.host_type && <Chip size="small" label={lead.host_type} variant="outlined" />}
+      {/* ---- Header card ---- */}
+      <Card
+        sx={(t) => ({
+          background: `linear-gradient(135deg, ${alpha(t.palette.info.main, 0.08)} 0%, ${alpha(
+            t.palette.background.paper,
+            1
+          )} 60%)`,
+        })}
+      >
+        <CardContent>
+          <Stack direction="row" spacing={1.5} alignItems="flex-start" useFlexGap flexWrap="wrap">
+            <Button
+              startIcon={<ArrowBackIcon />}
+              onClick={() => navigate('/host-leads')}
+              size="small"
+              sx={{ mt: 0.5 }}
+            >
+              Host Leads
+            </Button>
+            <Box sx={{ flex: 1, minWidth: 0 }}>
+              <Typography variant="h5" fontWeight={800} sx={{ wordBreak: 'break-word' }}>
+                {lead.host_name}
+              </Typography>
+              <Stack
+                direction="row"
+                spacing={1}
+                alignItems="center"
+                sx={{ mt: 1 }}
+                flexWrap="wrap"
+                useFlexGap
+              >
+                <StatusChip value={lead.lead_status} />
+                <PriorityChip value={lead.priority} />
+                {lead.city && (
+                  <Chip
+                    size="small"
+                    icon={<LocationOnIcon fontSize="small" />}
+                    label={lead.city}
+                    variant="outlined"
+                  />
+                )}
+                {lead.host_type && <Chip size="small" label={lead.host_type} variant="outlined" />}
+                {lead.super_category?.name && (
+                  <Chip
+                    size="small"
+                    color="primary"
+                    label={lead.super_category.name}
+                    variant="outlined"
+                  />
+                )}
+                {(lead.interests ?? []).slice(0, 2).map((t) => (
+                  <Chip key={t} size="small" label={t} variant="outlined" />
+                ))}
+                {(lead.interests?.length ?? 0) > 2 && (
+                  <Chip
+                    size="small"
+                    label={`+${(lead.interests?.length ?? 0) - 2} more`}
+                    variant="outlined"
+                  />
+                )}
+              </Stack>
+            </Box>
+            <Button
+              startIcon={<EditIcon />}
+              variant="contained"
+              onClick={() => navigate(`/host-leads/${lead.id}`)}
+            >
+              Edit
+            </Button>
           </Stack>
-        </Box>
-        <Button startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/host-leads/${lead.id}`)}>
-          Edit
-        </Button>
+        </CardContent>
+      </Card>
+
+      {/* ---- Stat tiles ---- */}
+      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
+        <LeadStatTile
+          label="Audience"
+          value={lead.expected_audience_size || '—'}
+          hint={lead.frequency ? lead.frequency : 'Frequency not set'}
+          icon={<GroupsIcon fontSize="small" />}
+          accent="info"
+        />
+        <LeadStatTile
+          label="Services"
+          value={lead.services_offered.length}
+          hint={
+            lead.services_offered.length
+              ? lead.services_offered
+                  .slice(0, 2)
+                  .map((s) => (s.service === 'Other' ? s.custom_name || 'Other' : s.service))
+                  .join(', ')
+              : 'None tagged'
+          }
+          icon={<HandymanIcon fontSize="small" />}
+          accent="secondary"
+        />
+        <LeadStatTile
+          label="Community"
+          value={lead.community_size ?? '—'}
+          hint={
+            lead.previous_events_hosted
+              ? `Past events: ${lead.past_attendees ?? '—'} attendees`
+              : 'No past events recorded'
+          }
+          icon={<EventIcon fontSize="small" />}
+          accent="primary"
+        />
+        <LeadStatTile
+          label="Next follow-up"
+          value={followUpLabel}
+          hint={lead.assigned_to ? `Assigned to ${lead.assigned_to}` : 'Unassigned'}
+          icon={<EventAvailableIcon fontSize="small" />}
+          accent="warning"
+        />
       </Stack>
 
+      {/* ---- Main columns ---- */}
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2}>
         <Stack spacing={2} sx={{ flex: 1, minWidth: 0 }}>
           <LeadDetailCard title="Host details" icon={<GroupsIcon color="primary" />}>
+            <LeadDetailRow label="Super category" value={lead.super_category?.name || '—'} />
             <LeadDetailRow label="Type" value={lead.host_type || '—'} />
             <LeadDetailRow label="Organization" value={lead.organization_name || '—'} />
             <LeadDetailRow label="Interests" value={joinList(lead.interests)} />
@@ -69,49 +209,162 @@ export default function HostLeadDetailPage() {
             <LeadDetailRow label="Revenue models" value={joinList(lead.revenue_models)} />
             <LeadDetailRow label="Needs venue" value={lead.need_venue ? 'Yes' : 'No'} />
             <LeadDetailRow label="Needs vendor" value={lead.need_vendor ? 'Yes' : 'No'} />
-            <LeadDetailRow
-              label="Preferred date"
-              value={lead.preferred_event_date ? new Date(lead.preferred_event_date).toLocaleDateString() : '—'}
-            />
+            <LeadDetailRow label="Preferred date" value={preferredDate ?? '—'} />
             <LeadDetailRow label="Preferred day" value={lead.preferred_day || '—'} />
             <LeadDetailRow label="Preferred slot" value={lead.preferred_time_slot || '—'} />
           </LeadDetailCard>
 
-          <LeadDetailCard title="Social / Reach">
+          <LeadDetailCard title="Social / Reach" icon={<InstagramIcon color="primary" />}>
             <LeadDetailRow
               label="Instagram"
-              value={lead.instagram_link ? (
-                <Typography component="a" href={lead.instagram_link} target="_blank" rel="noreferrer" variant="body2" sx={{ color: 'primary.main' }}>
-                  {lead.instagram_link}
-                </Typography>
-              ) : '—'}
+              value={
+                lead.instagram_link ? (
+                  <Typography
+                    component="a"
+                    href={lead.instagram_link}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="body2"
+                    sx={{ color: 'primary.main', display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+                  >
+                    {lead.instagram_link} <OpenInNewIcon fontSize="inherit" />
+                  </Typography>
+                ) : (
+                  '—'
+                )
+              }
             />
             <LeadDetailRow
               label="Community link"
-              value={lead.community_link ? (
-                <Typography component="a" href={lead.community_link} target="_blank" rel="noreferrer" variant="body2" sx={{ color: 'primary.main' }}>
-                  {lead.community_link}
-                </Typography>
-              ) : '—'}
+              value={
+                lead.community_link ? (
+                  <Typography
+                    component="a"
+                    href={lead.community_link}
+                    target="_blank"
+                    rel="noreferrer"
+                    variant="body2"
+                    sx={{ color: 'primary.main', display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+                  >
+                    {lead.community_link} <OpenInNewIcon fontSize="inherit" />
+                  </Typography>
+                ) : (
+                  '—'
+                )
+              }
             />
             <LeadDetailRow label="Community size" value={lead.community_size ?? '—'} />
             <LeadDetailRow label="Previous events" value={lead.previous_events_hosted ? 'Yes' : 'No'} />
             <LeadDetailRow label="Past attendees" value={lead.past_attendees ?? '—'} />
             <LeadDetailRow label="Intent" value={joinList(lead.host_intent_scores)} />
           </LeadDetailCard>
+
+          <LeadDetailCard title="Website" icon={<LanguageIcon color="primary" />}>
+            {lead.website ? (
+              <Typography
+                component="a"
+                href={lead.website}
+                target="_blank"
+                rel="noreferrer"
+                variant="body2"
+                sx={{ color: 'primary.main', display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+              >
+                {lead.website} <OpenInNewIcon fontSize="inherit" />
+              </Typography>
+            ) : (
+              <Typography variant="body2" color="text.secondary">
+                No website on record.
+              </Typography>
+            )}
+          </LeadDetailCard>
+
+          <LeadDetailCard
+            title="Services offered"
+            subtitle={
+              lead.services_offered.length
+                ? `${lead.services_offered.length} service${lead.services_offered.length === 1 ? '' : 's'} tagged`
+                : 'Catalogue managed via Manage Host Services'
+            }
+            icon={<HandymanIcon color="primary" />}
+          >
+            <ServicesGrid services={lead.services_offered} />
+          </LeadDetailCard>
         </Stack>
 
         <Stack spacing={2} sx={{ width: { lg: 360 }, flexShrink: 0 }}>
-          <LeadDetailCard title="Contacts" subtitle={`${lead.contacts.length} contact${lead.contacts.length === 1 ? '' : 's'}`} icon={<ContactsIcon color="primary" />}>
+          <LeadDetailCard
+            title="Contacts"
+            subtitle={`${lead.contacts.length} contact${lead.contacts.length === 1 ? '' : 's'}`}
+            icon={<ContactsIcon color="primary" />}
+          >
             <Stack spacing={1.25}>
-              {lead.contacts.length === 0 && <Typography variant="body2" color="text.secondary">No contacts yet.</Typography>}
+              {lead.contacts.length === 0 && (
+                <Typography variant="body2" color="text.secondary">
+                  No contacts yet.
+                </Typography>
+              )}
               {lead.contacts.map((contact, idx) => (
                 <Card key={`${contact.email}-${idx}`} variant="outlined" sx={{ p: 1.25 }}>
-                  <Typography variant="subtitle2" fontWeight={700}>{contact.name || (idx === 0 ? 'Primary contact' : `Contact ${idx + 1}`)}</Typography>
-                  {contact.role && <Typography variant="caption" color="text.secondary">{contact.role}</Typography>}
-                  {contact.mobile_number && <Typography variant="body2">📱 {contact.mobile_number}</Typography>}
-                  {contact.whatsapp_number && <Typography variant="body2">💬 {contact.whatsapp_number}</Typography>}
-                  {contact.email && <Typography variant="body2">✉️ {contact.email}</Typography>}
+                  <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+                    <Box sx={{ minWidth: 0 }}>
+                      <Typography variant="subtitle2" fontWeight={700} noWrap>
+                        {contact.name || (idx === 0 ? 'Primary contact' : `Contact ${idx + 1}`)}
+                      </Typography>
+                      {contact.role && (
+                        <Typography variant="caption" color="text.secondary" noWrap>
+                          {contact.role}
+                        </Typography>
+                      )}
+                    </Box>
+                    {idx === 0 && <Chip label="Primary" size="small" color="primary" />}
+                  </Stack>
+                  {(contact.mobile_number || contact.whatsapp_number || contact.email) && (
+                    <Stack spacing={0.5} sx={{ mt: 0.75 }}>
+                      {contact.mobile_number && (
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <PhoneIcon fontSize="small" color="action" />
+                          <Tooltip title="Call">
+                            <Typography
+                              component="a"
+                              href={`tel:${contact.mobile_number}`}
+                              variant="body2"
+                              sx={{ color: 'text.primary', textDecoration: 'none' }}
+                            >
+                              {contact.mobile_number}
+                            </Typography>
+                          </Tooltip>
+                        </Stack>
+                      )}
+                      {contact.whatsapp_number && (
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <WhatsAppIcon fontSize="small" sx={{ color: '#25D366' }} />
+                          <Typography
+                            component="a"
+                            href={`https://wa.me/${contact.whatsapp_number.replace(/[^0-9]/g, '')}`}
+                            target="_blank"
+                            rel="noreferrer"
+                            variant="body2"
+                            sx={{ color: 'text.primary', textDecoration: 'none' }}
+                          >
+                            {contact.whatsapp_number}
+                          </Typography>
+                        </Stack>
+                      )}
+                      {contact.email && (
+                        <Stack direction="row" spacing={1} alignItems="center">
+                          <EmailIcon fontSize="small" color="action" />
+                          <Typography
+                            component="a"
+                            href={`mailto:${contact.email}`}
+                            variant="body2"
+                            sx={{ color: 'text.primary', textDecoration: 'none', wordBreak: 'break-all' }}
+                          >
+                            {contact.email}
+                          </Typography>
+                        </Stack>
+                      )}
+                    </Stack>
+                  )}
                 </Card>
               ))}
             </Stack>
@@ -119,13 +372,35 @@ export default function HostLeadDetailPage() {
 
           <Card>
             <CardContent>
-              <Typography variant="subtitle1" fontWeight={800} sx={{ mb: 1 }}>Lead tracking</Typography>
+              <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1.25 }}>
+                <StickyNote2Icon color="primary" />
+                <Typography variant="subtitle1" fontWeight={800}>
+                  Lead tracking
+                </Typography>
+              </Stack>
               <LeadDetailRow label="Source" value={lead.lead_source || '—'} />
               <LeadDetailRow label="Assigned to" value={lead.assigned_to || '—'} />
-              <LeadDetailRow label="Follow-up" value={lead.next_follow_up_date ? new Date(lead.next_follow_up_date).toLocaleDateString() : '—'} />
-              <LeadDetailRow label="Created" value={lead.created_at ? new Date(lead.created_at).toLocaleString() : '—'} />
-              <LeadDetailRow label="Updated" value={lead.updated_at ? new Date(lead.updated_at).toLocaleString() : '—'} />
-              {lead.notes && <LeadDetailRow label="Notes" value={lead.notes} />}
+              <LeadDetailRow label="Follow-up" value={followUpLabel} />
+              <Divider sx={{ my: 1 }} />
+              <LeadDetailRow
+                label="Created"
+                value={lead.created_at ? new Date(lead.created_at).toLocaleString() : '—'}
+              />
+              <LeadDetailRow
+                label="Updated"
+                value={lead.updated_at ? new Date(lead.updated_at).toLocaleString() : '—'}
+              />
+              {lead.notes && (
+                <>
+                  <Divider sx={{ my: 1 }} />
+                  <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
+                    NOTES
+                  </Typography>
+                  <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mt: 0.5 }}>
+                    {lead.notes}
+                  </Typography>
+                </>
+              )}
             </CardContent>
           </Card>
         </Stack>

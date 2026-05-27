@@ -3,11 +3,18 @@ import FormField from '../../FormField';
 import SelectField from '../../fields/SelectField';
 import MultiSelectField from '../../fields/MultiSelectField';
 import FieldGrid from '../../fields/FieldGrid';
+import SuperCategoryField from '../../fields/SuperCategoryField';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
 export default function VenueDetailsSection({ config }: { config: CrmOptionGroup }) {
   return (
     <Stack spacing={1.5}>
+      <SuperCategoryField
+        name="super_category_id"
+        label="Super Category"
+        required
+        hint="Which super category is this venue being added under? Managed via admin."
+      />
       <FieldGrid>
         <FormField name="venue_name" label="Venue Name" required size="small" />
         <SelectField name="space_type" label="Indoor / Outdoor / Both" options={config.space_types} />

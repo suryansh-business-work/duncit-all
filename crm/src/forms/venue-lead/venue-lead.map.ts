@@ -1,4 +1,4 @@
-import type { CrmContact, VenueLead } from '../../api/crm.types';
+import type { CrmContact, CrmServiceOffered, VenueLead } from '../../api/crm.types';
 import { emptyContact } from '../fields/ContactsField';
 import { venueLeadInitialValues, type VenueLeadFormValues } from './venue-lead.types';
 
@@ -24,9 +24,19 @@ const cleanContacts = (contacts: CrmContact[]) =>
       email: c.email.trim(),
     }));
 
+const cleanServices = (services: CrmServiceOffered[]) =>
+  services
+    .filter((s) => s?.service?.trim())
+    .map((s) => ({
+      service: s.service.trim(),
+      custom_name: (s.custom_name ?? '').trim(),
+      description: (s.description ?? '').trim(),
+    }));
+
 /** Form values → GraphQL VenueLeadInput. */
 export function toVenueLeadInput(v: VenueLeadFormValues) {
   return {
+    super_category_id: v.super_category_id.trim() || null,
     venue_name: v.venue_name.trim(),
     venue_types: v.venue_types,
     venue_description: v.venue_description.trim(),
@@ -52,6 +62,8 @@ export function toVenueLeadInput(v: VenueLeadFormValues) {
     photos: linesToArray(v.photos),
     videos: linesToArray(v.videos),
     brochure_url: v.brochure_url.trim(),
+    website: v.website.trim(),
+    services_offered: cleanServices(v.services_offered),
     lead_source: v.lead_source,
     assigned_to: v.assigned_to.trim(),
     lead_status: v.lead_status,
@@ -65,6 +77,7 @@ export function toVenueLeadInput(v: VenueLeadFormValues) {
 export function fromVenueLead(lead: VenueLead): VenueLeadFormValues {
   return {
     ...venueLeadInitialValues,
+    super_category_id: lead.super_category_id ?? '',
     venue_name: lead.venue_name ?? '',
     venue_types: lead.venue_types ?? [],
     venue_description: lead.venue_description ?? '',
@@ -90,6 +103,12 @@ export function fromVenueLead(lead: VenueLead): VenueLeadFormValues {
     photos: arrayToLines(lead.photos),
     videos: arrayToLines(lead.videos),
     brochure_url: lead.brochure_url ?? '',
+    website: lead.website ?? '',
+    services_offered: (lead.services_offered ?? []).map((s) => ({
+      service: s.service ?? '',
+      custom_name: s.custom_name ?? '',
+      description: s.description ?? '',
+    })),
     lead_source: lead.lead_source ?? '',
     assigned_to: lead.assigned_to ?? '',
     lead_status: lead.lead_status ?? 'New',

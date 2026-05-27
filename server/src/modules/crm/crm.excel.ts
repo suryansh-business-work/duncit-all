@@ -5,6 +5,7 @@ import { VenueLeadModel, HostLeadModel } from './crm.model';
 export type CrmExcelEntity = 'VENUE_LEAD' | 'HOST_LEAD';
 
 const VENUE_COLUMNS = [
+  'super_category_id',
   'venue_name',
   'venue_types',
   'venue_description',
@@ -26,6 +27,8 @@ const VENUE_COLUMNS = [
   'gst_applicable',
   'invoice_available',
   'amenities',
+  'website',
+  'services_offered_json',
   'lead_source',
   'assigned_to',
   'lead_status',
@@ -40,6 +43,7 @@ const VENUE_COLUMNS = [
 ] as const;
 
 const HOST_COLUMNS = [
+  'super_category_id',
   'host_name',
   'host_type',
   'organization_name',
@@ -61,6 +65,8 @@ const HOST_COLUMNS = [
   'previous_events_hosted',
   'past_attendees',
   'host_intent_scores',
+  'website',
+  'services_offered_json',
   'lead_source',
   'assigned_to',
   'lead_status',
@@ -80,8 +86,38 @@ const INSTRUCTIONS = [
   ['2. Multi-value columns (venue_types, amenities, etc.) accept comma-separated values, e.g. "Wedding, Birthday".'],
   ['3. Dates use ISO format YYYY-MM-DD. Booleans accept Yes/No, true/false, 1/0.'],
   ['4. Up to 1 primary contact per row. Add additional contacts later from the lead editor.'],
-  ['5. Leave optional cells blank — do NOT type "N/A" or "-".'],
+  ['5. services_offered_json accepts a JSON array, e.g. [{"service":"Catering","custom_name":"","description":"Veg + non-veg"}]. Leave blank for none.'],
+  ['6. Leave optional cells blank — do NOT type "N/A" or "-".'],
 ];
+
+const stringifyServices = (services: any[]): string => {
+  if (!Array.isArray(services) || services.length === 0) return '';
+  return JSON.stringify(
+    services.map((s) => ({
+      service: s?.service ?? '',
+      custom_name: s?.custom_name ?? '',
+      description: s?.description ?? '',
+    }))
+  );
+};
+
+const parseServices = (value: unknown): { service: string; custom_name: string; description: string }[] => {
+  const raw = String(value ?? '').trim();
+  if (!raw) return [];
+  try {
+    const parsed = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .map((item: any) => ({
+        service: String(item?.service ?? '').trim(),
+        custom_name: String(item?.custom_name ?? '').trim(),
+        description: String(item?.description ?? '').trim(),
+      }))
+      .filter((s) => s.service);
+  } catch {
+    return [];
+  }
+};
 
 const splitCsv = (value: unknown): string[] =>
   String(value ?? '')
@@ -169,6 +205,7 @@ export async function exportLeadsBase64(entity: CrmExcelEntity): Promise<string>
       interests: (doc.interests ?? []).join(', '),
       revenue_models: (doc.revenue_models ?? []).join(', '),
       host_intent_scores: (doc.host_intent_scores ?? []).join(', '),
+      services_offered_json: stringifyServices(doc.services_offered ?? []),
       primary_contact_name: c.name ?? '',
       primary_contact_role: c.role ?? '',
       primary_contact_mobile: c.mobile_number ?? '',
@@ -217,6 +254,7 @@ export async function importLeads(entity: CrmExcelEntity, base64: string): Promi
         const address = String(row.full_address ?? '').trim();
         if (!name || !city || !address) throw new Error('venue_name, city and full_address are required');
         await VenueLeadModel.create({
+          super_category_id: String(row.super_category_id ?? '').trim() || null,
           venue_name: name,
           venue_types: splitCsv(row.venue_types),
           venue_description: String(row.venue_description ?? '').trim(),
@@ -239,6 +277,8 @@ export async function importLeads(entity: CrmExcelEntity, base64: string): Promi
           gst_applicable: toBool(row.gst_applicable),
           invoice_available: toBool(row.invoice_available),
           amenities: splitCsv(row.amenities),
+          website: String(row.website ?? '').trim(),
+          services_offered: parseServices(row.services_offered_json),
           lead_source: String(row.lead_source ?? '').trim(),
           assigned_to: String(row.assigned_to ?? '').trim(),
           lead_status: String(row.lead_status ?? 'New').trim() || 'New',
@@ -249,6 +289,7 @@ export async function importLeads(entity: CrmExcelEntity, base64: string): Promi
         const name = String(row.host_name ?? '').trim();
         if (!name) throw new Error('host_name is required');
         await HostLeadModel.create({
+          super_category_id: String(row.super_category_id ?? '').trim() || null,
           host_name: name,
           host_type: String(row.host_type ?? '').trim(),
           organization_name: String(row.organization_name ?? '').trim(),
@@ -270,6 +311,8 @@ export async function importLeads(entity: CrmExcelEntity, base64: string): Promi
           previous_events_hosted: toBool(row.previous_events_hosted),
           past_attendees: toNumber(row.past_attendees),
           host_intent_scores: splitCsv(row.host_intent_scores),
+          website: String(row.website ?? '').trim(),
+          services_offered: parseServices(row.services_offered_json),
           lead_source: String(row.lead_source ?? '').trim(),
           assigned_to: String(row.assigned_to ?? '').trim(),
           lead_status: String(row.lead_status ?? 'New').trim() || 'New',

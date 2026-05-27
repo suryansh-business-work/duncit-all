@@ -17,6 +17,18 @@ export const crmTypeDefs = gql`
     email: String
   }
 
+  type CrmServiceOffered {
+    service: String!
+    custom_name: String
+    description: String
+  }
+
+  input CrmServiceOfferedInput {
+    service: String!
+    custom_name: String
+    description: String
+  }
+
   type CrmActivity {
     type: String!
     summary: String
@@ -26,8 +38,39 @@ export const crmTypeDefs = gql`
     created_at: String
   }
 
+  enum CrmServiceKind {
+    VENUE
+    HOST
+  }
+
+  type CrmService {
+    id: ID!
+    name: String!
+    kind: CrmServiceKind!
+    sort_order: Int!
+    is_active: Boolean!
+    created_at: String
+    updated_at: String
+  }
+
+  input CrmServiceInput {
+    name: String!
+    kind: CrmServiceKind!
+    sort_order: Int
+    is_active: Boolean
+  }
+
+  type CrmSuperCategoryRef {
+    id: ID!
+    name: String!
+    slug: String!
+    icon: String
+  }
+
   type VenueLead {
     id: ID!
+    super_category_id: ID
+    super_category: CrmSuperCategoryRef
     venue_name: String!
     venue_types: [String!]!
     venue_description: String
@@ -53,6 +96,8 @@ export const crmTypeDefs = gql`
     photos: [String!]!
     videos: [String!]!
     brochure_url: String
+    website: String
+    services_offered: [CrmServiceOffered!]!
     lead_source: String
     assigned_to: String
     lead_status: String!
@@ -66,6 +111,8 @@ export const crmTypeDefs = gql`
 
   type HostLead {
     id: ID!
+    super_category_id: ID
+    super_category: CrmSuperCategoryRef
     host_name: String!
     host_type: String
     organization_name: String
@@ -82,6 +129,8 @@ export const crmTypeDefs = gql`
     preferred_event_date: String
     preferred_day: String
     preferred_time_slot: String
+    website: String
+    services_offered: [CrmServiceOffered!]!
     instagram_link: String
     community_link: String
     community_size: Int
@@ -117,9 +166,13 @@ export const crmTypeDefs = gql`
     frequencies: [String!]!
     revenue_models: [String!]!
     host_intent_scores: [String!]!
+    services_offered_options: [String!]!
+    venue_services_offered_options: [String!]!
+    host_services_offered_options: [String!]!
   }
 
   input VenueLeadInput {
+    super_category_id: ID
     venue_name: String!
     venue_types: [String!]
     venue_description: String
@@ -145,6 +198,8 @@ export const crmTypeDefs = gql`
     photos: [String!]
     videos: [String!]
     brochure_url: String
+    website: String
+    services_offered: [CrmServiceOfferedInput!]
     lead_source: String
     assigned_to: String
     lead_status: String
@@ -154,6 +209,7 @@ export const crmTypeDefs = gql`
   }
 
   input HostLeadInput {
+    super_category_id: ID
     host_name: String!
     host_type: String
     organization_name: String
@@ -170,6 +226,8 @@ export const crmTypeDefs = gql`
     preferred_event_date: String
     preferred_day: String
     preferred_time_slot: String
+    website: String
+    services_offered: [CrmServiceOfferedInput!]
     instagram_link: String
     community_link: String
     community_size: Int
@@ -189,6 +247,7 @@ export const crmTypeDefs = gql`
     city: String
     lead_status: String
     priority: String
+    super_category_id: ID
   }
 
   type VobizActionResult {
@@ -229,9 +288,13 @@ export const crmTypeDefs = gql`
     hostLead(id: ID!): HostLead
     crmExcelTemplate(entity: CrmAiEntity!): CrmExcelFile!
     crmExcelExport(entity: CrmAiEntity!): CrmExcelFile!
+    crmServices(kind: CrmServiceKind, include_inactive: Boolean): [CrmService!]!
   }
 
   extend type Mutation {
+    createCrmService(input: CrmServiceInput!): CrmService!
+    updateCrmService(id: ID!, input: CrmServiceInput!): CrmService!
+    deleteCrmService(id: ID!): Boolean!
     createVenueLead(input: VenueLeadInput!): VenueLead!
     updateVenueLead(id: ID!, input: VenueLeadInput!): VenueLead!
     deleteVenueLead(id: ID!): Boolean!

@@ -5,6 +5,7 @@ import { toVenueLeadInput } from './venue-lead.map';
 
 const valid = {
   ...venueLeadInitialValues,
+  super_category_id: '64a000000000000000000001',
   venue_name: 'Sunrise Banquet',
   venue_types: ['Banquet Hall'],
   city: 'Pune',

@@ -30,12 +30,35 @@ const contactsSchema = yup
     return true;
   });
 
+const urlish = (label: string) =>
+  yup
+    .string()
+    .trim()
+    .max(2048, `${label} is too long`)
+    .test('url-shape', `Enter a valid ${label.toLowerCase()}`, (value) => {
+      if (!value) return true;
+      return /^(https?:\/\/|www\.)/i.test(value);
+    });
+
+const serviceOfferedSchema = yup.object({
+  service: yup.string().trim().required('Pick a service'),
+  custom_name: yup.string().trim().when('service', {
+    is: 'Other',
+    then: (s) => s.required('Enter a custom service name').max(80, 'Name is too long'),
+    otherwise: (s) => s.max(80, 'Name is too long'),
+  }),
+  description: yup.string().trim().max(500, 'Description is too long'),
+});
+
 export const hostLeadSchema = yup.object({
+  super_category_id: yup.string().trim().required('Super category is required'),
   host_name: yup.string().trim().min(2, 'Host name is too short').max(120).required('Host name is required'),
   community_size: numeric('Community size'),
   past_attendees: numeric('Past attendees'),
   instagram_link: yup.string().trim().max(2048),
   community_link: yup.string().trim().max(2048),
+  website: urlish('Website'),
+  services_offered: yup.array().of(serviceOfferedSchema),
   contacts: contactsSchema,
   lead_status: yup.string().required('Lead status is required'),
   priority: yup.string().required('Priority is required'),

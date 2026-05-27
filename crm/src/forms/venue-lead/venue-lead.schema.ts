@@ -38,7 +38,30 @@ const contactsSchema = yup
     return true;
   });
 
+const urlish = (label: string) =>
+  yup
+    .string()
+    .trim()
+    .max(2048, `${label} is too long`)
+    .test('url-shape', `Enter a valid ${label.toLowerCase()}`, (value) => {
+      if (!value) return true;
+      return /^(https?:\/\/|www\.)/i.test(value);
+    });
+
+// A "service" row is valid when the catalogue value is picked; when "Other"
+// is picked, a custom_name is required so the row has a meaningful label.
+const serviceOfferedSchema = yup.object({
+  service: yup.string().trim().required('Pick a service'),
+  custom_name: yup.string().trim().when('service', {
+    is: 'Other',
+    then: (s) => s.required('Enter a custom service name').max(80, 'Name is too long'),
+    otherwise: (s) => s.max(80, 'Name is too long'),
+  }),
+  description: yup.string().trim().max(500, 'Description is too long'),
+});
+
 export const venueLeadSchema = yup.object({
+  super_category_id: yup.string().trim().required('Super category is required'),
   venue_name: yup.string().trim().min(2, 'Venue name is too short').max(120).required('Venue name is required'),
   venue_types: yup.array().of(yup.string()).min(1, 'Select at least one venue type'),
   city: yup.string().trim().required('City is required'),
@@ -48,6 +71,8 @@ export const venueLeadSchema = yup.object({
   expected_charges: numeric('Expected charges'),
   security_deposit: numeric('Security deposit'),
   map_link: yup.string().trim().max(2048),
+  website: urlish('Website'),
+  services_offered: yup.array().of(serviceOfferedSchema),
   contacts: contactsSchema,
   lead_status: yup.string().required('Lead status is required'),
   priority: yup.string().required('Priority is required'),

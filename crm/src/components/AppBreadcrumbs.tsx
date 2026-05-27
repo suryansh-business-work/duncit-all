@@ -1,7 +1,6 @@
 import { useMemo } from 'react';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { Box, Breadcrumbs, Link, Typography } from '@mui/material';
-import HomeIcon from '@mui/icons-material/Home';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
 import { appConfig } from '../config/app-config';
 
@@ -19,16 +18,23 @@ function humanise(segment: string): string {
 }
 
 function findBestNavMatch(pathname: string) {
-  let best: { label: string; to: string } | undefined;
+  // Walk both top-level items and their `children` (sidebar groups) so a
+  // nested route like `/venue-leads/services` matches the top-level group
+  // it belongs to, not just the bare `/venue-leads` link.
+  const candidates: { label: string; to: string }[] = [];
   for (const item of appConfig.nav) {
-    if (item.to === pathname || (item.to !== '/' && pathname.startsWith(item.to + '/'))) {
-      if (!best || item.to.length > best.to.length) {
-        best = { label: item.label, to: item.to };
-      }
+    if (item.to) candidates.push({ label: item.label, to: item.to });
+    for (const child of item.children ?? []) {
+      if (child.to) candidates.push({ label: child.label, to: child.to });
     }
-    if (item.to === '/' && pathname === '/') {
-      best = { label: item.label, to: item.to };
+  }
+
+  let best: { label: string; to: string } | undefined;
+  for (const c of candidates) {
+    if (c.to === pathname || (c.to !== '/' && pathname.startsWith(c.to + '/'))) {
+      if (!best || c.to.length > best.to.length) best = c;
     }
+    if (c.to === '/' && pathname === '/') best = c;
   }
   return best;
 }
@@ -80,7 +86,6 @@ export default function AppBreadcrumbs() {
       >
         {crumbs.map((crumb, idx) => {
           const isLast = idx === crumbs.length - 1;
-          const isHome = idx === 0;
           if (crumb.to && !isLast) {
             return (
               <Link

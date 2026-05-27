@@ -1,7 +1,8 @@
-import type { CrmContact } from '../../api/crm.types';
+import type { CrmContact, CrmServiceOffered } from '../../api/crm.types';
 import { emptyContact } from '../fields/ContactsField';
 
 export interface VenueLeadFormValues {
+  super_category_id: string;
   venue_name: string;
   venue_types: string[];
   venue_description: string;
@@ -27,6 +28,8 @@ export interface VenueLeadFormValues {
   photos: string;
   videos: string;
   brochure_url: string;
+  website: string;
+  services_offered: CrmServiceOffered[];
   lead_source: string;
   assigned_to: string;
   lead_status: string;
@@ -36,6 +39,7 @@ export interface VenueLeadFormValues {
 }
 
 export const venueLeadInitialValues: VenueLeadFormValues = {
+  super_category_id: '',
   venue_name: '',
   venue_types: [],
   venue_description: '',
@@ -61,6 +65,8 @@ export const venueLeadInitialValues: VenueLeadFormValues = {
   photos: '',
   videos: '',
   brochure_url: '',
+  website: '',
+  services_offered: [],
   lead_source: '',
   assigned_to: '',
   lead_status: 'New',

@@ -89,7 +89,10 @@ describe('DynamicValuesView', () => {
     expect(await screen.findByText('Budget Band')).toBeTruthy();
     expect(screen.getByText('High')).toBeTruthy();
     expect(screen.getByText('Yes')).toBeTruthy();
-    expect(screen.getByText(/15 May 2026/)).toBeTruthy();
+    // toLocaleDateString swaps "15 May 2026" / "May 15, 2026" depending on the
+    // runner's locale (Windows defaults differ from the en-US Linux CI), so
+    // match any rendering of May + 2026 with the right day number.
+    expect(screen.getByText(/(15.*May.*2026|May.*15.*2026)/i)).toBeTruthy();
   });
 
   it('falls back to em-dashes for missing values and survives bad JSON', async () => {

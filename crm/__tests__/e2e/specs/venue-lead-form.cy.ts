@@ -25,7 +25,7 @@ describe('Venue lead — create flow', () => {
 
   it('blocks submit until Super Category is picked', () => {
     cy.visit('/venue-leads/new');
-    cy.contains('button', /save venue lead/i).click();
+    cy.contains('button', /create venue lead/i).click();
     cy.contains(/super category is required/i, { timeout: 8000 }).should('be.visible');
   });
 
@@ -41,7 +41,7 @@ describe('Venue lead — create flow', () => {
     cy.get('input[name="contacts.0.name"]').type('Asha');
     cy.get('input[name="contacts.0.mobile_number"]').type('9876543210');
 
-    cy.contains('button', /save venue lead/i).click();
+    cy.contains('button', /create venue lead/i).click();
     cy.location('pathname', { timeout: 10000 }).should('not.include', '/new');
   });
 });

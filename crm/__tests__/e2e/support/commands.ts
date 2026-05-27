@@ -1,5 +1,7 @@
 /// <reference types="cypress" />
 
+import { TEST_USER } from '../test.config';
+
 /**
  * Map of GraphQL operationName → response builder. Builders can be either a
  * static GraphQL response or a function that takes the request variables
@@ -91,8 +93,8 @@ Cypress.Commands.add('seedAuth', (token = 'cypress-test-token') => {
 });
 
 Cypress.Commands.add('login', (opts) => {
-  const email = opts?.email ?? 'admin@duncit.com';
-  const password = opts?.password ?? '12345678';
+  const email = opts?.email ?? TEST_USER.email;
+  const password = opts?.password ?? TEST_USER.password;
   cy.visit('/login');
   // The login form uses Formik with MUI TextField fields whose `name`
   // attribute is `email` / `password`. That's a far more reliable selector

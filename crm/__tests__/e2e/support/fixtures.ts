@@ -6,10 +6,20 @@
 export const adminUser = {
   __typename: 'User',
   user_id: 'u-admin',
+  full_name: 'Admin Duncit',
   first_name: 'Admin',
   last_name: 'Duncit',
   email: 'admin@duncit.com',
   roles: ['SUPER_ADMIN', 'CRM_MANAGER'],
+  profile_photo: '',
+};
+
+export const branding = {
+  __typename: 'Branding',
+  app_name: 'Duncit CRM',
+  logo_url: '/duncit-logo.svg',
+  primary_color: '#6366f1',
+  support_email: 'admin@duncit.com',
 };
 
 export const superCategories = [
@@ -153,8 +163,16 @@ export const sampleHostLead = {
   updated_at: '2026-05-20T00:00:00.000Z',
 };
 
-/** Baseline mocks every authenticated test needs — config, super categories, lead lists. */
+/**
+ * Baseline mocks every authenticated test needs. Most important: `SessionMe`
+ * — when missing, the user-context provider treats the session as broken and
+ * pops a global "We couldn't load your account" recovery Dialog that covers
+ * every other element on the page. `AppBranding` is similarly needed by the
+ * shell sidebar's logo loader.
+ */
 export const baseMocks = () => ({
+  SessionMe: { data: { me: adminUser } },
+  AppBranding: { data: { branding } },
   CrmLeadConfig: { data: { crmLeadConfig } },
   SuperCategories: { data: { categories: superCategories } },
   VenueLeads: { data: { venueLeads: [sampleVenueLead] } },

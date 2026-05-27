@@ -31,10 +31,18 @@ describe('Host lead — create flow', () => {
 
   it('creates a host lead with the new required fields filled', () => {
     cy.visit('/host-leads/new');
+
+    // Section 1 (Basic Details) is open by default.
     cy.pickMuiOption(/super category/i, /sports/i);
     cy.get('input[name="host_name"]').type('Cypress Host');
+
+    // Section 2 (Contact Details) is collapsed by default — the
+    // `<Collapse>` wrapper sets `visibility: hidden` on the contact inputs
+    // so cy.type refuses to act on them until we expand the accordion.
+    cy.expandSection(/^\s*2\.\s*Contact Details\s*$/i);
     cy.get('input[name="contacts.0.name"]').type('Ravi');
     cy.get('input[name="contacts.0.mobile_number"]').type('9811122233');
+
     cy.contains('button', /create host lead/i).click();
     cy.location('pathname', { timeout: 10000 }).should('not.include', '/new');
   });

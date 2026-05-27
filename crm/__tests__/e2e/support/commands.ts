@@ -29,6 +29,21 @@ declare global {
        * text, then click an option whose text matches `optionText`.
        */
       pickMuiOption(labelText: RegExp | string, optionText: RegExp | string): Chainable<void>;
+
+      /**
+       * Expand the FormAccordion whose summary text matches `title`. Lead
+       * forms collapse every section except section 1 by default; reach
+       * into a collapsed section before interacting with its fields.
+       */
+      expandSection(title: RegExp | string): Chainable<void>;
+
+      /**
+       * Find a text/textarea/Autocomplete input by its floating label and
+       * type into it. Works for plain MUI TextField (whose `<input>` has a
+       * stable `name` attribute) AND Autocomplete-wrapped TextField (whose
+       * inner `<input>` gets an auto-generated name from MUI).
+       */
+      typeIntoField(labelText: RegExp | string, value: string): Chainable<void>;
     }
   }
 }
@@ -103,6 +118,36 @@ Cypress.Commands.add('login', (opts) => {
   cy.get('input[name="password"]').should('be.visible').clear().type(password, { log: false });
   cy.get('button[type="submit"]').should('not.be.disabled').click();
   cy.location('pathname', { timeout: 10000 }).should('not.eq', '/login');
+});
+
+Cypress.Commands.add('expandSection', (title: RegExp | string) => {
+  // FormAccordion renders the title inside an `<AccordionSummary>` whose
+  // typography lives at `.MuiAccordionSummary-content`. Clicking the
+  // summary toggles `expanded`. We only click when the accordion is
+  // currently collapsed (aria-expanded=false) so re-running the helper
+  // on an already-open section doesn't accidentally close it.
+  cy.contains('.MuiAccordionSummary-content', title)
+    .closest('.MuiAccordionSummary-root')
+    .then(($summary) => {
+      if ($summary.attr('aria-expanded') !== 'true') {
+        cy.wrap($summary).click();
+      }
+    });
+});
+
+Cypress.Commands.add('typeIntoField', (labelText: RegExp | string, value: string) => {
+  const re = typeof labelText === 'string' ? new RegExp(labelText, 'i') : labelText;
+  // Locate the FormControl wrapping the field by its floating label, then
+  // dive into its first text-typeable input. Covers both plain MUI
+  // TextField and Autocomplete-wrapped TextField — the input always sits
+  // inside `.MuiInputBase-root`.
+  cy.contains('label', re)
+    .parents('.MuiFormControl-root, .MuiTextField-root')
+    .first()
+    .find('input:not([type="hidden"]), textarea')
+    .first()
+    .clear()
+    .type(value);
 });
 
 Cypress.Commands.add('pickMuiOption', (labelText: RegExp | string, optionText: RegExp | string) => {

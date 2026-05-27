@@ -1,8 +1,6 @@
 import 'dotenv/config';
 import http from 'http';
-import cors from 'cors';
 import express from 'express';
-import { corsOptions } from './config/cors';
 import { ApolloServer } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
@@ -62,11 +60,11 @@ async function bootstrap() {
 
   await apollo.start();
 
-  // Global CORS — applied before routes so preflight (OPTIONS) for every
-  // endpoint (graphql, twilio webhook, SSE, health) gets handled uniformly.
-  app.use(cors(corsOptions));
-  app.options('*', cors(corsOptions));
-
+  // CORS is owned exclusively by nginx (see deploy/nginx/server.duncit.com).
+  // The nginx layer attaches `Access-Control-*` headers with `always` so they
+  // ride along with 5xx / 502 responses too, and it short-circuits OPTIONS
+  // preflight at the proxy. Adding CORS in Express on top of that resulted
+  // in duplicate Allow-Origin headers, which the browser rejects per spec.
   app.use(
     '/graphql',
     express.json({ limit: '25mb' }),

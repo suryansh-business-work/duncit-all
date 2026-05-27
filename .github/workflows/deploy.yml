@@ -377,7 +377,10 @@ jobs:
 
       - name: Build CRM bundle for Cypress preview
         working-directory: crm
-        run: pnpm build
+        # `build:e2e` forces VITE_GRAPHQL_URL=/graphql (via .env.e2e) so the
+        # bundled app talks same-origin and cy.intercept catches every
+        # GraphQL call without a CORS preflight hitting server.duncit.com.
+        run: pnpm build:e2e
 
       - name: Run Cypress e2e specs
         uses: cypress-io/github-action@v6

@@ -2,7 +2,9 @@
 // false during `vite build`. This means local development always points at
 // localhost and production builds always point at the production server,
 // without needing a per-app .env file. Each URL can still be overridden via
-// VITE_GRAPHQL_URL / VITE_APP_URL for special setups.
+// VITE_GRAPHQL_URL / VITE_APP_URL for special setups (e.g. Cypress builds
+// pass `VITE_GRAPHQL_URL=/graphql` so requests go same-origin and can be
+// short-circuited by `cy.intercept()` without a CORS preflight detour).
 const isDevelopment = import.meta.env.DEV;
 
 const fallback = isDevelopment

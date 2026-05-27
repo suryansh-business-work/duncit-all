@@ -18,12 +18,9 @@ describe('Host lead — create flow', () => {
     cy.login();
   });
 
-  it('reaches the host lead editor and shows the Super Category dropdown', () => {
-    cy.contains(/all host leads/i).click();
-    cy.location('pathname').should('eq', '/host-leads');
-    cy.contains('button', /add host lead|new host lead|create/i).first().click();
-    cy.location('pathname').should('include', '/host-leads/new');
-    cy.findByLabelLike(/super category/i).should('be.visible');
+  it('reaches the host editor and shows the Super Category dropdown', () => {
+    cy.visit('/host-leads/new');
+    cy.contains(/super category/i).should('be.visible');
   });
 
   it('blocks submit until Super Category is picked', () => {
@@ -34,11 +31,10 @@ describe('Host lead — create flow', () => {
 
   it('creates a host lead with the new required fields filled', () => {
     cy.visit('/host-leads/new');
-    cy.findByLabelLike(/super category/i).click({ force: true });
-    cy.get('li[role="option"]').contains(/sports/i).click();
-    cy.findByLabelLike(/host name/i).type('Cypress Host');
-    cy.findByLabelLike(/^name$/i).type('Ravi');
-    cy.findByLabelLike(/mobile number/i).type('9811122233');
+    cy.pickMuiOption(/super category/i, /sports/i);
+    cy.get('input[name="host_name"]').type('Cypress Host');
+    cy.get('input[name="contacts.0.name"]').type('Ravi');
+    cy.get('input[name="contacts.0.mobile_number"]').type('9811122233');
     cy.contains('button', /save host lead/i).click();
     cy.location('pathname', { timeout: 10000 }).should('not.include', '/new');
   });

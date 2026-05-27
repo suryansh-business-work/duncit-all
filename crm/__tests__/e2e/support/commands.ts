@@ -19,27 +19,14 @@ declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Cypress {
     interface Chainable {
-      /**
-       * Register a single `**\/graphql` intercept that dispatches by
-       * `operationName` against the supplied map. Subsequent calls within
-       * the same test merge into the same intercept (last-write-wins per
-       * operation name) so a base mock can be extended per spec.
-       */
       mockGraphql(map: GraphQLMockMap): Chainable<void>;
-
-      /**
-       * Hit `/login`, fill the form with the supplied creds (defaulting to
-       * the test admin), and wait for the redirect away from /login. The
-       * `ConsoleLogin` mutation itself must be intercepted via
-       * `mockGraphql` before this command is called.
-       */
       login(opts?: { email?: string; password?: string }): Chainable<void>;
-
-      /** Seed `localStorage` with a token so the app skips login entirely. */
       seedAuth(token?: string): Chainable<void>;
-
-      /** Mirrors @testing-library's findByLabelText for MUI inputs. */
-      findByLabelLike(label: RegExp | string): Chainable<JQuery<HTMLElement>>;
+      /**
+       * Open a MUI `select` (or multi-select) located by its floating label
+       * text, then click an option whose text matches `optionText`.
+       */
+      pickMuiOption(labelText: RegExp | string, optionText: RegExp | string): Chainable<void>;
     }
   }
 }
@@ -53,8 +40,22 @@ function saveCurrentMap(map: GraphQLMockMap) {
 }
 
 beforeEach(() => {
-  // Reset between tests so the previous spec's mocks don't leak.
   Cypress.env('__gqlMock', {});
+
+  // Always satisfy the CORS preflight that Apollo fires before a cross-origin
+  // POST. The actual POST is intercepted below; we just need OPTIONS not to
+  // hit the real server.duncit.com (which doesn't allow localhost origins).
+  cy.intercept({ method: 'OPTIONS', url: '**/graphql' }, (req) => {
+    req.reply({
+      statusCode: 204,
+      headers: {
+        'access-control-allow-origin': req.headers['origin'] ?? '*',
+        'access-control-allow-methods': 'POST, OPTIONS',
+        'access-control-allow-headers': 'authorization,content-type,x-duid',
+        'access-control-allow-credentials': 'true',
+      },
+    });
+  });
 });
 
 Cypress.Commands.add('mockGraphql', (map: GraphQLMockMap) => {
@@ -83,8 +84,7 @@ Cypress.Commands.add('mockGraphql', (map: GraphQLMockMap) => {
 });
 
 Cypress.Commands.add('seedAuth', (token = 'cypress-test-token') => {
-  // The CRM app reads the token from localStorage[appConfig.tokenKey] which
-  // for CRM is `crm_token`. Seeding it skips the login flow entirely.
+  // CRM stores its auth token at localStorage[`crm_token`] (see appConfig).
   cy.window().then((win) => {
     win.localStorage.setItem('crm_token', token);
   });
@@ -94,24 +94,32 @@ Cypress.Commands.add('login', (opts) => {
   const email = opts?.email ?? 'admin@duncit.com';
   const password = opts?.password ?? '12345678';
   cy.visit('/login');
-  cy.findByLabelLike(/email/i).type(email);
-  cy.findByLabelLike(/password/i).type(password);
-  cy.contains('button', /open crm console/i).click();
+  // The login form uses Formik with MUI TextField fields whose `name`
+  // attribute is `email` / `password`. That's a far more reliable selector
+  // than going via the floating label.
+  cy.get('input[name="email"]').should('be.visible').clear().type(email);
+  cy.get('input[name="password"]').should('be.visible').clear().type(password, { log: false });
+  cy.get('button[type="submit"]').should('not.be.disabled').click();
   cy.location('pathname', { timeout: 10000 }).should('not.eq', '/login');
 });
 
-Cypress.Commands.add('findByLabelLike', (label) => {
-  const re = typeof label === 'string' ? new RegExp(`^${label}$`, 'i') : label;
-  cy.get('label').contains(re).then(($label) => {
-    const forId = $label.attr('for');
-    if (forId) {
-      // Use a chained `.then` rather than returning a Chainable from this
-      // outer .then — Cypress only accepts a single returned Chainable.
-      cy.get(`#${forId}`);
-    } else {
-      cy.wrap($label).siblings('input,textarea').first();
-    }
-  });
+Cypress.Commands.add('pickMuiOption', (labelText: RegExp | string, optionText: RegExp | string) => {
+  // MUI's TextField/Select renders the floating label as a `<label>` whose
+  // sibling MuiFormControl-root contains the actual `[role="combobox"]`
+  // trigger. Locating the field via its visible label is far more robust
+  // than going by `name` (which sits on a hidden inner input) — works
+  // identically for single-select TextField and Select(multiple).
+  const re = typeof labelText === 'string' ? new RegExp(labelText, 'i') : labelText;
+  cy.contains('label', re)
+    .closest('.MuiFormControl-root, .MuiTextField-root')
+    .find('[role="combobox"]')
+    .first()
+    .click({ force: true });
+  cy.get('[role="listbox"]').should('be.visible');
+  cy.get('[role="listbox"] [role="option"]').contains(optionText).click();
+  // For multi-select the menu stays open after picking — pressing Escape
+  // dismisses it so subsequent field interactions aren't blocked.
+  cy.get('body').type('{esc}');
 });
 
 export {};

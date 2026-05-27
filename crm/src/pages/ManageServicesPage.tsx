@@ -239,14 +239,25 @@ export default function ManageServicesPage({
                     <TableCell align="right">
                       <Tooltip title="Save">
                         <span>
-                          <IconButton size="small" color="primary" onClick={saveDraft} disabled={busy}>
+                          <IconButton
+                            aria-label="Save"
+                            size="small"
+                            color="primary"
+                            onClick={saveDraft}
+                            disabled={busy}
+                          >
                             <SaveIcon fontSize="small" />
                           </IconButton>
                         </span>
                       </Tooltip>
                       <Tooltip title="Cancel">
                         <span>
-                          <IconButton size="small" onClick={cancelDraft} disabled={busy}>
+                          <IconButton
+                            aria-label="Cancel"
+                            size="small"
+                            onClick={cancelDraft}
+                            disabled={busy}
+                          >
                             <CloseIcon fontSize="small" />
                           </IconButton>
                         </span>

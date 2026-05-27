@@ -1,0 +1,4 @@
+# Cypress run artifacts (screenshots / videos / downloads) live alongside
+# the specs in `cypress-artifacts/`. Tests should never depend on prior-run
+# output so these are local-only.
+cypress-artifacts/

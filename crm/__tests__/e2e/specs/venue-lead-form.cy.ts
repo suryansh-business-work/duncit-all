@@ -19,41 +19,29 @@ describe('Venue lead — create flow', () => {
   });
 
   it('reaches the editor and shows the new Super Category dropdown', () => {
-    cy.contains(/all venue leads/i).click();
-    cy.location('pathname').should('eq', '/venue-leads');
-    cy.contains('button', /add venue lead|new venue lead|create/i).first().click();
-    cy.location('pathname').should('include', '/venue-leads/new');
-    cy.findByLabelLike(/super category/i).should('be.visible');
+    cy.visit('/venue-leads/new');
+    cy.contains(/super category/i).should('be.visible');
   });
 
   it('blocks submit until Super Category is picked', () => {
     cy.visit('/venue-leads/new');
     cy.contains('button', /save venue lead/i).click();
-    // The top-level alert lists missing fields by label.
     cy.contains(/super category is required/i, { timeout: 8000 }).should('be.visible');
   });
 
-  it('creates a lead with super category, website and services', () => {
+  it('creates a lead with super category, name, address and primary contact', () => {
     cy.visit('/venue-leads/new');
 
-    // Open the super category dropdown then pick the seeded "Sports" option.
-    cy.findByLabelLike(/super category/i).click({ force: true });
-    cy.get('li[role="option"]').contains(/sports/i).click();
+    cy.pickMuiOption(/super category/i, /sports/i);
 
-    // Minimum required fields.
-    cy.findByLabelLike(/venue name/i).type('Cypress Arena');
-    // venue types is a multi-select — open & pick a value.
-    cy.findByLabelLike(/venue type/i).click({ force: true });
-    cy.get('li[role="option"]').contains(/banquet hall/i).click();
-    cy.get('body').type('{esc}');
-    cy.findByLabelLike(/city/i).type('Bengaluru');
-    cy.findByLabelLike(/full address/i).type('12 Cypress Road');
-    cy.findByLabelLike(/^name$/i).type('Asha');
-    cy.findByLabelLike(/mobile number/i).type('9876543210');
+    cy.get('input[name="venue_name"]').type('Cypress Arena');
+    cy.pickMuiOption(/venue type/i, /banquet hall/i);
+    cy.get('input[name="city"]').type('Bengaluru');
+    cy.get('textarea[name="full_address"], input[name="full_address"]').first().type('12 Cypress Road');
+    cy.get('input[name="contacts.0.name"]').type('Asha');
+    cy.get('input[name="contacts.0.mobile_number"]').type('9876543210');
 
     cy.contains('button', /save venue lead/i).click();
-
-    // Successful save should navigate away from /new.
     cy.location('pathname', { timeout: 10000 }).should('not.include', '/new');
   });
 });

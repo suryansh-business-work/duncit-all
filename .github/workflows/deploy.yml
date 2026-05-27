@@ -363,6 +363,15 @@ jobs:
       - name: Install workspace deps
         run: pnpm install --frozen-lockfile
 
+      - name: Install Cypress binary
+        # pnpm sometimes skips Cypress's `postinstall` download under
+        # `--frozen-lockfile`, and `cypress-io/github-action@v6` with
+        # `install: false` only verifies — it doesn't fetch the binary.
+        # Run an explicit install so the runner cache at
+        # `/home/runner/.cache/Cypress/<version>/Cypress` always exists.
+        working-directory: crm
+        run: pnpm exec cypress install
+
       - name: Type-check CRM source
         working-directory: crm
         run: pnpm exec tsc -b --noEmit

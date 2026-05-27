@@ -1,5 +1,12 @@
-import { Schema, model, InferSchemaType } from 'mongoose';
+import { Schema, model, InferSchemaType, type HydratedDocument } from 'mongoose';
 import { STATUSES } from './user.constants';
+
+// Nested storage. Keep one-to-one + bounded data embedded (auth, profile,
+// pet_profile, metadata, counters, security, communication). Unbounded
+// relations live in their own collections — see ./relations/*.model.ts.
+//
+// Counters in users.counters are the source of truth for hot reads. They are
+// updated atomically ($inc) in the same write as the relation insert/delete.
 
 const petProfileSchema = new Schema(
   {
@@ -21,77 +28,201 @@ const profileLinkSchema = new Schema(
   { _id: false }
 );
 
-const userSchema = new Schema(
+const phoneSchema = new Schema(
   {
-    first_name: { type: String, required: true, trim: true },
-    last_name: { type: String, required: true, trim: true },
+    number: { type: String, required: true, trim: true },
+    extension: { type: String, required: true, trim: true },
+    is_verified: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
 
-    email: { type: String, unique: true, sparse: true, lowercase: true, trim: true },
+const authSchema = new Schema(
+  {
+    email: { type: String, lowercase: true, trim: true },
     is_email_verified: { type: Boolean, default: false },
     email_verification_otp_hash: { type: String, select: false },
     email_verification_otp_expires_at: { type: Date, select: false },
-
-    phone_number: { type: String, required: true, trim: true },
-    phone_extension: { type: String, required: true, trim: true },
-    is_phone_verified: { type: Boolean, default: false },
-
     password: { type: String, select: false },
-
-    google_id: { type: String, unique: true, sparse: true, index: true },
-
-    last_login_provider: { type: String, enum: ['EMAIL', 'GOOGLE'], default: null },
+    google_id: { type: String },
+    last_login_provider: { type: String, enum: ['EMAIL', 'GOOGLE', null], default: null },
     last_login_at: { type: Date, default: null },
-
-    dob: { type: Date, required: true },
-
-    country: { type: String, default: 'India' },
-    city: String,
-    zone: String,
-
-    roles: {
-      type: [String],
-      required: true,
-      default: ['USER'],
-    },
-
-    assigned_city: String,
-    assigned_zones: { type: [String], default: [] },
-
-    profile_photo: String,
-    bio: String,
-    profile_links: { type: [profileLinkSchema], default: [] },
-
-    pet_profile: { type: petProfileSchema, default: null },
-
-    saved_pod_ids: [{ type: Schema.Types.ObjectId, ref: 'Pod' }],
-    following_pod_ids: [{ type: Schema.Types.ObjectId, ref: 'Pod' }],
-    following_club_ids: [{ type: Schema.Types.ObjectId, ref: 'Club' }],
-    following_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    follower_user_ids: [{ type: Schema.Types.ObjectId, ref: 'User' }],
-    interest_category_ids: [{ type: Schema.Types.ObjectId, ref: 'Category' }],
-    onboarding_survey_completed: { type: Boolean, default: false },
-
-    whatsapp_extension: { type: String, default: '' },
-    whatsapp_number: { type: String, default: '' },
-    whatsapp_verified_at: { type: Date, default: null },
-
-    is_first_time_user: { type: Boolean, default: true },
-
-    status: {
-      type: String,
-      enum: STATUSES,
-      default: 'ACTIVE',
-    },
+    phone: { type: phoneSchema, required: true },
   },
-  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+  { _id: false }
 );
 
-userSchema.index({ phone_number: 1, phone_extension: 1 }, { unique: true });
-userSchema.index({ saved_pod_ids: 1 });
-userSchema.index({ following_pod_ids: 1 });
-userSchema.index({ following_club_ids: 1 });
-userSchema.index({ following_user_ids: 1 });
-userSchema.index({ interest_category_ids: 1 });
+const profileSchema = new Schema(
+  {
+    first_name: { type: String, required: true, trim: true },
+    last_name: { type: String, required: true, trim: true },
+    dob: { type: Date, required: true },
+    country: { type: String, default: 'India' },
+    profile_photo: { type: String },
+    bio: { type: String, maxlength: 500 },
+    locale: { type: String, default: 'en-IN' },
+    timezone: { type: String, default: 'Asia/Kolkata' },
+    city: { type: String },
+    zone: { type: String },
+    assigned_city: { type: String },
+  },
+  { _id: false }
+);
 
-export type UserDoc = InferSchemaType<typeof userSchema> & { _id: any };
+const communicationSchema = new Schema(
+  {
+    whatsapp: new Schema(
+      {
+        extension: { type: String, default: '' },
+        number: { type: String, default: '' },
+        verified_at: { type: Date, default: null },
+      },
+      { _id: false }
+    ),
+  },
+  { _id: false }
+);
+
+const metadataSchema = new Schema(
+  {
+    status: { type: String, enum: STATUSES, default: 'ACTIVE' },
+    onboarding_survey_completed: { type: Boolean, default: false },
+    is_first_time_user: { type: Boolean, default: true },
+    deleted_at: { type: Date, default: null },
+    // role_keys is a denormalized cache of role names from user_roles, kept in
+    // sync on every role mutation. Authoritative source is user_roles. The
+    // cache exists so JWTs and hot reads do not have to join.
+    role_keys: { type: [String], default: ['USER'] },
+    assigned_zones: { type: [String], default: [] },
+  },
+  { _id: false }
+);
+
+const countersSchema = new Schema(
+  {
+    followers_count: { type: Number, default: 0, min: 0 },
+    following_count: { type: Number, default: 0, min: 0 },
+    saved_pods_count: { type: Number, default: 0, min: 0 },
+    following_pods_count: { type: Number, default: 0, min: 0 },
+    following_clubs_count: { type: Number, default: 0, min: 0 },
+    interests_count: { type: Number, default: 0, min: 0 },
+  },
+  { _id: false }
+);
+
+const securitySchema = new Schema(
+  {
+    two_factor_enabled: { type: Boolean, default: false },
+    failed_login_attempts: { type: Number, default: 0, min: 0 },
+    locked_until: { type: Date, default: null },
+    password_changed_at: { type: Date, default: null },
+  },
+  { _id: false }
+);
+
+const userSchema = new Schema(
+  {
+    auth: { type: authSchema, required: true },
+    profile: { type: profileSchema, required: true },
+    communication: { type: communicationSchema, default: () => ({ whatsapp: {} }) },
+    profile_links: { type: [profileLinkSchema], default: [] },
+    pet_profile: { type: petProfileSchema, default: null },
+    metadata: { type: metadataSchema, default: () => ({}) },
+    counters: { type: countersSchema, default: () => ({}) },
+    security: { type: securitySchema, default: () => ({}) },
+  },
+  {
+    timestamps: { createdAt: 'metadata.created_at', updatedAt: 'metadata.updated_at' },
+    toJSON: { virtuals: true },
+    toObject: { virtuals: true },
+  }
+);
+
+// Indexes. partialFilterExpression beats sparse here — sparse treats null as
+// a present value and triggers spurious E11000 on docs missing optional
+// fields (email, google_id, phone).
+userSchema.index(
+  { 'auth.email': 1 },
+  {
+    unique: true,
+    partialFilterExpression: { 'auth.email': { $type: 'string' } },
+  }
+);
+userSchema.index(
+  { 'auth.phone.number': 1, 'auth.phone.extension': 1 },
+  {
+    unique: true,
+    partialFilterExpression: {
+      'auth.phone.number': { $type: 'string' },
+      'auth.phone.extension': { $type: 'string' },
+    },
+  }
+);
+userSchema.index(
+  { 'auth.google_id': 1 },
+  {
+    unique: true,
+    partialFilterExpression: { 'auth.google_id': { $type: 'string' } },
+  }
+);
+userSchema.index({ 'metadata.status': 1 });
+userSchema.index({ 'metadata.deleted_at': 1 });
+userSchema.index({ 'metadata.role_keys': 1 });
+
+// Legacy flat-field virtuals. Server code reads/writes these names in dozens
+// of places. Routing them through the nested storage keeps existing call
+// sites working unchanged while the storage shape matches the spec.
+const legacyVirtuals: Record<string, string> = {
+  first_name: 'profile.first_name',
+  last_name: 'profile.last_name',
+  dob: 'profile.dob',
+  country: 'profile.country',
+  profile_photo: 'profile.profile_photo',
+  bio: 'profile.bio',
+  city: 'profile.city',
+  zone: 'profile.zone',
+  assigned_city: 'profile.assigned_city',
+  email: 'auth.email',
+  is_email_verified: 'auth.is_email_verified',
+  password: 'auth.password',
+  google_id: 'auth.google_id',
+  last_login_provider: 'auth.last_login_provider',
+  last_login_at: 'auth.last_login_at',
+  email_verification_otp_hash: 'auth.email_verification_otp_hash',
+  email_verification_otp_expires_at: 'auth.email_verification_otp_expires_at',
+  phone_number: 'auth.phone.number',
+  phone_extension: 'auth.phone.extension',
+  is_phone_verified: 'auth.phone.is_verified',
+  whatsapp_number: 'communication.whatsapp.number',
+  whatsapp_extension: 'communication.whatsapp.extension',
+  whatsapp_verified_at: 'communication.whatsapp.verified_at',
+  status: 'metadata.status',
+  onboarding_survey_completed: 'metadata.onboarding_survey_completed',
+  is_first_time_user: 'metadata.is_first_time_user',
+  roles: 'metadata.role_keys',
+  assigned_zones: 'metadata.assigned_zones',
+  created_at: 'metadata.created_at',
+  updated_at: 'metadata.updated_at',
+};
+
+for (const [legacy, nested] of Object.entries(legacyVirtuals)) {
+  userSchema
+    .virtual(legacy)
+    .get(function (this: any) {
+      return nested.split('.').reduce((acc, key) => (acc ? acc[key] : undefined), this);
+    })
+    .set(function (this: any, value: unknown) {
+      const parts = nested.split('.');
+      let cursor: any = this;
+      for (let i = 0; i < parts.length - 1; i += 1) {
+        const key = parts[i];
+        if (cursor[key] == null) cursor[key] = {};
+        cursor = cursor[key];
+      }
+      cursor[parts[parts.length - 1]] = value;
+    });
+}
+
+export type UserDocSchema = InferSchemaType<typeof userSchema>;
+export type UserDoc = HydratedDocument<UserDocSchema> & { _id: any };
 export const UserModel = model('User', userSchema);

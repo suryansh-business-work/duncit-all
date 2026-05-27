@@ -20,3 +20,6 @@ generated/
 package-lock.json
 **/package-lock.json
 
+# Local Claude Code configuration
+.claude/
+

@@ -34,9 +34,11 @@ export const whatsappAuthService = {
     const user = await UserModel.findByIdAndUpdate(
       userId,
       {
-        whatsapp_extension: ext,
-        whatsapp_number: num,
-        whatsapp_verified_at: new Date(),
+        $set: {
+          'communication.whatsapp.extension': ext,
+          'communication.whatsapp.number': num,
+          'communication.whatsapp.verified_at': new Date(),
+        },
       },
       { new: true }
     );

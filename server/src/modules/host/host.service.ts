@@ -69,9 +69,12 @@ async function getOrCreate(userId: string) {
 }
 
 async function assignApprovedHostRole(userId: Types.ObjectId) {
-  await UserModel.findByIdAndUpdate(userId, {
-    $addToSet: { roles: { $each: ['USER', 'HOST'] } },
-  });
+  const { userService } = await import('../user/user.service');
+  const u: any = await UserModel.findById(userId).select('metadata.role_keys');
+  const current = new Set<string>((u?.metadata?.role_keys ?? []) as string[]);
+  current.add('USER');
+  current.add('HOST');
+  await userService.assignRoles(String(userId), Array.from(current));
 }
 
 export const hostService = {

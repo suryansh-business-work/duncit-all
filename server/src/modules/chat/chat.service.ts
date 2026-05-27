@@ -53,12 +53,14 @@ export const chatService = {
     if (type === 'IMAGE' && !opts.imageUrl) {
       throw new GraphQLError('Image URL required', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const u = await UserModel.findById(opts.userId).select('first_name last_name profile_photo').lean();
+    const u: any = await UserModel.findById(opts.userId)
+      .select('profile.first_name profile.last_name profile.profile_photo')
+      .lean();
     const doc = await PodMessageModel.create({
       pod_id: opts.podId,
       user_id: opts.userId,
-      user_name: u ? `${u.first_name || ''} ${u.last_name || ''}`.trim() : '',
-      user_photo: (u as any)?.profile_photo || '',
+      user_name: u ? `${u.profile?.first_name || ''} ${u.profile?.last_name || ''}`.trim() : '',
+      user_photo: u?.profile?.profile_photo || '',
       type,
       text: type === 'TEXT' || type === 'STICKER' ? text : '',
       image_url: type === 'IMAGE' ? opts.imageUrl : '',

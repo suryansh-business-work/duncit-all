@@ -8,7 +8,10 @@
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js",
     "codegen": "graphql-codegen --config codegen.ts",
-    "codegen:watch": "graphql-codegen --config codegen.ts --watch"
+    "codegen:watch": "graphql-codegen --config codegen.ts --watch",
+    "migrate:user-schema": "ts-node --transpile-only scripts/migrate-user-schema.ts",
+    "migrate:user-schema:dry": "ts-node --transpile-only scripts/migrate-user-schema.ts --dry-run",
+    "migrate:user-schema:rollback": "ts-node --transpile-only scripts/migrate-user-schema-rollback.ts"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",

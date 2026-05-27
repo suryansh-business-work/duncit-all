@@ -426,24 +426,26 @@ function promptTerms(prompt: string) {
 async function adminUserContext(prompt: string) {
   const { email, phone, words } = promptTerms(prompt);
   const or: any[] = [];
-  if (email) or.push({ email: new RegExp(`^${escapeRegex(email)}$`, 'i') });
-  if (phone) or.push({ phone_number: new RegExp(`${escapeRegex(phone)}$`) });
+  if (email) or.push({ 'auth.email': new RegExp(`^${escapeRegex(email)}$`, 'i') });
+  if (phone) or.push({ 'auth.phone.number': new RegExp(`${escapeRegex(phone)}$`) });
   for (const word of words) {
     const regex = new RegExp(escapeRegex(word), 'i');
-    or.push({ first_name: regex }, { last_name: regex });
+    or.push({ 'profile.first_name': regex }, { 'profile.last_name': regex });
   }
   if (or.length === 0) return [];
   const users = await UserModel.find({ $or: or })
-    .select('first_name last_name email phone_extension phone_number roles status is_email_verified')
+    .select(
+      'profile.first_name profile.last_name auth.email auth.phone.number auth.phone.extension auth.is_email_verified metadata.role_keys metadata.status'
+    )
     .limit(8)
     .lean();
   return users.map((user: any) => ({
-    name: [user.first_name, user.last_name].filter(Boolean).join(' '),
-    email: user.email ?? '',
-    phone: `${user.phone_extension ?? ''}${user.phone_number ?? ''}`,
-    roles: user.roles ?? [],
-    status: user.status ?? '',
-    is_email_verified: !!user.is_email_verified,
+    name: [user.profile?.first_name, user.profile?.last_name].filter(Boolean).join(' '),
+    email: user.auth?.email ?? '',
+    phone: `${user.auth?.phone?.extension ?? ''}${user.auth?.phone?.number ?? ''}`,
+    roles: user.metadata?.role_keys ?? [],
+    status: user.metadata?.status ?? '',
+    is_email_verified: !!user.auth?.is_email_verified,
     profile_url: `/users/${String(user._id)}`,
   }));
 }

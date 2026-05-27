@@ -35,16 +35,18 @@ function emit(event: string, payload: any, hostId?: string | null) {
 async function buildActor(userId: Types.ObjectId | null | undefined) {
   if (!userId) return null;
   const u = await UserModel.findById(userId).select(
-    'first_name last_name phone_number phone_extension profile_photo'
+    'profile.first_name profile.last_name profile.profile_photo auth.phone.number auth.phone.extension'
   );
   if (!u) return null;
-  const ext = u.phone_extension ? `+${String(u.phone_extension).replace(/^\+/, '')}` : '';
-  const num = u.phone_number || '';
+  const num = u.auth?.phone?.number || '';
+  const ext = u.auth?.phone?.extension
+    ? `+${String(u.auth.phone.extension).replace(/^\+/, '')}`
+    : '';
   return {
     id: String(u._id),
-    name: `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() || 'User',
+    name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'User',
     phone: num ? `${ext}${num}` : null,
-    avatar_url: u.profile_photo ?? null,
+    avatar_url: u.profile?.profile_photo ?? null,
   };
 }
 
@@ -146,11 +148,15 @@ export const bouncerService = {
 
   async raiseSos(userId: string, input: { pod_id: string; message?: string; location?: { lat: number; lng: number; accuracy?: number | null } | null }) {
     const pod = await loadPodOrFail(input.pod_id);
-    const user = await UserModel.findById(userId).select('first_name phone_number phone_extension');
+    const user = await UserModel.findById(userId).select(
+      'profile.first_name auth.phone.number auth.phone.extension'
+    );
     if (!user) fail('UNAUTHENTICATED', 'User not found');
-    const phone = user!.phone_number
-      ? `${user!.phone_extension ? `+${String(user!.phone_extension).replace(/^\+/, '')}` : ''}${user!.phone_number}`
+    const num = user!.auth?.phone?.number || '';
+    const ext = user!.auth?.phone?.extension
+      ? `+${String(user!.auth.phone.extension).replace(/^\+/, '')}`
       : '';
+    const phone = num ? `${ext}${num}` : '';
 
     const hostId = (pod.pod_hosts_id?.[0] as any) ?? null;
 
@@ -230,11 +236,15 @@ export const bouncerService = {
   },
 
   async requestCallback(userId: string, input: { pod_id?: string | null; reason?: string }) {
-    const user = await UserModel.findById(userId).select('first_name phone_number phone_extension');
+    const user = await UserModel.findById(userId).select(
+      'profile.first_name auth.phone.number auth.phone.extension'
+    );
     if (!user) fail('UNAUTHENTICATED', 'User not found');
-    const phone = user!.phone_number
-      ? `${user!.phone_extension ? `+${String(user!.phone_extension).replace(/^\+/, '')}` : ''}${user!.phone_number}`
+    const num = user!.auth?.phone?.number || '';
+    const ext = user!.auth?.phone?.extension
+      ? `+${String(user!.auth.phone.extension).replace(/^\+/, '')}`
       : '';
+    const phone = num ? `${ext}${num}` : '';
     if (!phone) fail('BAD_USER_INPUT', 'No phone number on profile');
 
     let podId: Types.ObjectId | null = null;

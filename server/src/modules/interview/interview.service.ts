@@ -50,11 +50,11 @@ const fmtSlot = (s: { start: Date | string; end: Date | string }) => {
 
 async function adminEmails(): Promise<string[]> {
   const admins = await UserModel.find({
-    roles: { $in: ['SUPER_ADMIN', 'CITY_ADMIN'] },
-    status: 'ACTIVE',
-    email: { $ne: null },
-  }).select('email');
-  return admins.map((u) => (u as any).email).filter(Boolean);
+    'metadata.role_keys': { $in: ['SUPER_ADMIN', 'CITY_ADMIN'] },
+    'metadata.status': 'ACTIVE',
+    'auth.email': { $ne: null },
+  }).select('auth.email');
+  return admins.map((u) => (u as any).auth?.email).filter(Boolean);
 }
 
 export const interviewService = {

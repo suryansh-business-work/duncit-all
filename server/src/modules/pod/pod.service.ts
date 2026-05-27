@@ -671,12 +671,14 @@ export const podService = {
     } as any);
     await doc!.save();
     const c = doc!.comments[doc!.comments.length - 1] as any;
-    const u: any = await UserModel.findById(viewerId).select('first_name last_name profile_photo');
+    const u: any = await UserModel.findById(viewerId).select(
+      'profile.first_name profile.last_name profile.profile_photo'
+    );
     return {
       id: String(c._id),
       author_id: viewerId,
-      author_name: u ? `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() : null,
-      author_photo: u?.profile_photo ?? null,
+      author_name: u ? `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() : null,
+      author_photo: u?.profile?.profile_photo ?? null,
       text: trimmed,
       created_at: created_at.toISOString(),
     };
@@ -709,7 +711,7 @@ export const podService = {
     );
     const ids = Array.from(new Set(comments.map((c: any) => String(c.author_id))));
     const users: any[] = await UserModel.find({ _id: { $in: ids } }).select(
-      'first_name last_name profile_photo'
+      'profile.first_name profile.last_name profile.profile_photo'
     );
     const byId = new Map<string, any>();
     users.forEach((u) => byId.set(String(u._id), u));
@@ -718,8 +720,8 @@ export const podService = {
       return {
         id: String(c._id),
         author_id: String(c.author_id),
-        author_name: u ? `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim() : null,
-        author_photo: u?.profile_photo ?? null,
+        author_name: u ? `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() : null,
+        author_photo: u?.profile?.profile_photo ?? null,
         text: c.text,
         created_at: new Date(c.created_at).toISOString(),
       };

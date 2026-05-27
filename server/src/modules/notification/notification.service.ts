@@ -81,12 +81,12 @@ export const notificationService = {
     if (input.scope === 'USER') {
       return (input.target_user_ids ?? []).filter(Boolean);
     }
-    const q: any = { status: 'ACTIVE' };
+    const q: any = { 'metadata.status': 'ACTIVE' };
     if (input.scope === 'LOCATION' && input.location_id) {
-      q.assigned_city = input.location_id;
+      q['profile.assigned_city'] = input.location_id;
     }
     if (input.scope === 'ZONE' && input.zone_name) {
-      q.assigned_zones = input.zone_name;
+      q['metadata.assigned_zones'] = input.zone_name;
     }
     const users = await UserModel.find(q).select('_id');
     return users.map((u) => String(u._id));
@@ -158,7 +158,7 @@ export const notificationService = {
     // Determine in-app recipient list
     let inboxUserIds: string[] = userIds;
     if (input.scope === 'GLOBAL') {
-      const all = await UserModel.find({ status: 'ACTIVE' }).select('_id');
+      const all = await UserModel.find({ 'metadata.status': 'ACTIVE' }).select('_id');
       inboxUserIds = all.map((u) => String(u._id));
     }
 

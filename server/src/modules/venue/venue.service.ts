@@ -129,9 +129,12 @@ async function normalizeStep1Location(input: any) {
 }
 
 async function assignApprovedVenueRole(userId: Types.ObjectId) {
-  await UserModel.findByIdAndUpdate(userId, {
-    $addToSet: { roles: { $each: ['USER', 'VENUE_OWNER'] } },
-  });
+  const { userService } = await import('../user/user.service');
+  const u: any = await UserModel.findById(userId).select('metadata.role_keys');
+  const current = new Set<string>((u?.metadata?.role_keys ?? []) as string[]);
+  current.add('USER');
+  current.add('VENUE_OWNER');
+  await userService.assignRoles(String(userId), Array.from(current));
 }
 
 export const venueService = {

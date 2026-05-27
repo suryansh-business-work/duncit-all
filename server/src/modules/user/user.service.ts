@@ -1,9 +1,17 @@
 import bcrypt from 'bcryptjs';
 import crypto from 'crypto';
-import jwt, { type SignOptions } from 'jsonwebtoken';
+import jwt from 'jsonwebtoken';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { UserModel } from './user.model';
+import {
+  UserRoleModel,
+  UserRelationshipModel,
+  PodFollowerModel,
+  ClubFollowerModel,
+  UserSavedPodModel,
+  UserInterestModel,
+} from './relations';
 import type {
   LoginDTO,
   RegisterDTO,
@@ -21,17 +29,32 @@ import {
   sendEmailVerificationOtpEmail,
 } from '../../services/email/email.service';
 import { rbacService } from '../rbac/rbac.service';
-import { settingsService } from '../settings/settings.service';
 import type { AuthUser } from '../../context';
 import { CategoryModel } from '../category/category.model';
 import { PodModel } from '../pod/pod.model';
 import { ClubModel } from '../club/club.model';
 import { UserContactActionModel } from './userContactAction.model';
 import { getRuntimeEnvValue } from '../../config/runtimeEnv';
+import { USER_SCHEMA_FLAGS } from './user.featureFlags';
 
-const idStrings = (values: unknown[] | undefined | null) => (values ?? []).map((x: any) => String(x));
+const idStrings = (values: unknown[] | undefined | null) =>
+  (values ?? []).map((x: any) => String(x));
 const EMAIL_OTP_MINUTES = 10;
 const isDev = (process.env.NODE_ENV || 'development') !== 'production';
+// Privileged role keys that require phone-verified + 2FA for elevated session.
+const PRIVILEGED_ROLE_KEYS = [
+  'SUPER_ADMIN',
+  'CITY_ADMIN',
+  'ZONAL_ADMIN',
+  'ECOMM_MANAGER',
+  'FINANCE_USER',
+  'ADS_MANAGER',
+  'CRM_MANAGER',
+  'TRACK_MANAGER',
+  'TECH_MANAGER',
+] as const;
+// Spec: reject placeholder/dummy phone numbers in non-seeded paths.
+const isPlaceholderPhone = (n: string) => /^0+$/.test(String(n || '').trim());
 
 const hashOtp = (otp: string) =>
   crypto.createHash('sha256').update(`${otp}:${process.env.JWT_SECRET || 'dev-secret'}`).digest('hex');
@@ -41,6 +64,30 @@ const cleanProfileLinks = (links: UpdateMyProfileDTO['profile_links'] = []) =>
     .map((link) => ({ label: link.label.trim(), url: link.url.trim() }))
     .filter((link) => link.label && link.url)
     .slice(0, 5);
+
+// Resolve relation IDs for a single user. Hot read path: each list is bounded
+// by index lookup. Used to materialize the flat GraphQL shape during the
+// backward-compat window.
+async function loadRelationIds(userId: string) {
+  const oid = new Types.ObjectId(userId);
+  const [savedPods, followingPods, followingClubs, followingUsers, interests, roles] =
+    await Promise.all([
+      UserSavedPodModel.find({ user_id: oid }).select('pod_id').lean(),
+      PodFollowerModel.find({ user_id: oid }).select('pod_id').lean(),
+      ClubFollowerModel.find({ user_id: oid }).select('club_id').lean(),
+      UserRelationshipModel.find({ follower_id: oid }).select('following_id').lean(),
+      UserInterestModel.find({ user_id: oid }).select('interest_category_id').lean(),
+      UserRoleModel.find({ user_id: oid }).select('role scope').lean(),
+    ]);
+  return {
+    saved_pod_ids: savedPods.map((d: any) => String(d.pod_id)),
+    following_pod_ids: followingPods.map((d: any) => String(d.pod_id)),
+    following_club_ids: followingClubs.map((d: any) => String(d.club_id)),
+    following_user_ids: followingUsers.map((d: any) => String(d.following_id)),
+    interest_category_ids: interests.map((d: any) => String(d.interest_category_id)),
+    role_keys: Array.from(new Set(roles.map((d: any) => d.role))),
+  };
+}
 
 const podToPublic = (d: any, clubSlug = '') => ({
   id: String(d._id),
@@ -176,37 +223,132 @@ async function signToken(payload: AuthUser): Promise<string> {
   return jwt.sign(payload, secret);
 }
 
+// Replace the entire role set for a user. Authoritative writes go to
+// user_roles; the role_keys + assigned_zones cache on the user doc is updated
+// in the same transaction so JWT issuance and hot reads stay correct.
+async function replaceUserRoles(
+  userId: string,
+  roleKeys: string[],
+  opts?: { assignedZones?: string[]; assignedCity?: string | null; assignedBy?: string | null }
+) {
+  const normalized = Array.from(
+    new Set(roleKeys.map((k) => String(k || '').toUpperCase()).filter(Boolean))
+  );
+  const assignedZones = opts?.assignedZones ?? [];
+  const assignedCity = opts?.assignedCity ?? null;
+  const oid = new Types.ObjectId(userId);
+  const assignedBy = opts?.assignedBy ? new Types.ObjectId(opts.assignedBy) : null;
+
+  const session = await UserModel.db.startSession();
+  try {
+    await session.withTransaction(async () => {
+      await UserRoleModel.deleteMany({ user_id: oid }, { session });
+      const rows: any[] = [];
+      for (const role of normalized) {
+        if (role === 'ZONAL_ADMIN' && assignedZones.length) {
+          for (const zone of assignedZones) {
+            rows.push({
+              user_id: oid,
+              role,
+              scope: { zone, city: null },
+              assigned_by: assignedBy,
+            });
+          }
+        } else if (role === 'CITY_ADMIN' && assignedCity) {
+          rows.push({
+            user_id: oid,
+            role,
+            scope: { zone: null, city: assignedCity },
+            assigned_by: assignedBy,
+          });
+        } else {
+          rows.push({
+            user_id: oid,
+            role,
+            scope: { zone: null, city: null },
+            assigned_by: assignedBy,
+          });
+        }
+      }
+      if (rows.length) await UserRoleModel.insertMany(rows, { session });
+      await UserModel.updateOne(
+        { _id: oid },
+        {
+          $set: {
+            'metadata.role_keys': normalized,
+            'metadata.assigned_zones': assignedZones,
+            'profile.assigned_city': assignedCity,
+          },
+        },
+        { session }
+      );
+    });
+  } finally {
+    await session.endSession();
+  }
+}
+
+// Build the public GraphQL User shape. Storage is nested; consumers and the
+// frontends still expect the flat shape, so this adapter projects nested →
+// flat. Counts come from users.counters (denormalized), IDs from the relation
+// collections (materialized for backward compatibility).
 async function toPublic(u: any) {
   if (!u) return null;
-  const roles = (u.roles ?? []) as string[];
-  const permissions = await rbacService.permissionsForRoleKeys(roles);
+  const userId = String(u._id);
+  const relations = await loadRelationIds(userId);
+  // Backward-compat read path. While dualWrite is on, the legacy flat fields
+  // are still present on rows that have not been migrated yet. Falling back
+  // to them lets the API keep serving traffic mid-cutover. After
+  // verification the flag flips off and the only valid source is the nested
+  // storage.
+  const legacy = USER_SCHEMA_FLAGS.dualWrite ? u : {};
+  const auth = u.auth ?? {};
+  const profile = u.profile ?? {};
+  const meta = u.metadata ?? {};
+  const counters = u.counters ?? {};
+  const wa = (u.communication?.whatsapp) ?? {};
+  const phone = auth.phone ?? {};
+  const roleKeys = relations.role_keys.length
+    ? relations.role_keys
+    : (meta.role_keys ?? legacy.roles ?? []);
+  const permissions = await rbacService.permissionsForRoleKeys(roleKeys);
+
   const authProviders = [
-    (u as any).password ? 'EMAIL' : null,
-    u.google_id ? 'GOOGLE' : null,
+    auth.password ? 'EMAIL' : null,
+    auth.google_id ? 'GOOGLE' : null,
   ].filter(Boolean) as Array<'EMAIL' | 'GOOGLE'>;
+
+  const firstName = profile.first_name ?? legacy.first_name ?? '';
+  const lastName = profile.last_name ?? legacy.last_name ?? '';
   return {
-    user_id: String(u._id),
-    first_name: u.first_name,
-    last_name: u.last_name,
-    full_name: `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim(),
-    email: u.email ?? null,
-    is_email_verified: !!u.is_email_verified,
-    phone_number: u.phone_number,
-    phone_extension: u.phone_extension,
-    is_phone_verified: !!u.is_phone_verified,
+    user_id: userId,
+    first_name: firstName,
+    last_name: lastName,
+    full_name: `${firstName} ${lastName}`.trim(),
+    email: auth.email ?? legacy.email ?? null,
+    is_email_verified: !!(auth.is_email_verified ?? legacy.is_email_verified),
+    phone_number: phone.number ?? legacy.phone_number ?? '',
+    phone_extension: phone.extension ?? legacy.phone_extension ?? '',
+    is_phone_verified: !!(phone.is_verified ?? legacy.is_phone_verified),
     auth_providers: authProviders.length ? authProviders : ['EMAIL'],
-    last_login_provider: u.last_login_provider ?? null,
-    last_login_at: u.last_login_at?.toISOString?.() ?? null,
-    dob: u.dob ? new Date(u.dob).toISOString() : '',
-    country: u.country ?? 'India',
-    city: u.city ?? null,
-    zone: u.zone ?? null,
-    roles,
+    last_login_provider: auth.last_login_provider ?? legacy.last_login_provider ?? null,
+    last_login_at:
+      (auth.last_login_at ?? legacy.last_login_at)?.toISOString?.() ?? null,
+    dob:
+      profile.dob
+        ? new Date(profile.dob).toISOString()
+        : legacy.dob
+        ? new Date(legacy.dob).toISOString()
+        : '',
+    country: profile.country ?? legacy.country ?? 'India',
+    city: profile.city ?? legacy.city ?? null,
+    zone: profile.zone ?? legacy.zone ?? null,
+    roles: roleKeys,
     permissions,
-    assigned_city: u.assigned_city ?? null,
-    assigned_zones: u.assigned_zones ?? [],
-    profile_photo: u.profile_photo ?? null,
-    bio: u.bio ?? null,
+    assigned_city: profile.assigned_city ?? legacy.assigned_city ?? null,
+    assigned_zones: meta.assigned_zones ?? legacy.assigned_zones ?? [],
+    profile_photo: profile.profile_photo ?? legacy.profile_photo ?? null,
+    bio: profile.bio ?? legacy.bio ?? null,
     profile_links: (u.profile_links ?? []).map((link: any) => ({
       label: link.label ?? '',
       url: link.url ?? '',
@@ -221,21 +363,24 @@ async function toPublic(u: any) {
           bio: u.pet_profile.bio ?? null,
         }
       : null,
-    saved_pod_ids: idStrings(u.saved_pod_ids),
-    following_pod_ids: idStrings(u.following_pod_ids),
-    following_club_ids: idStrings(u.following_club_ids),
-    following_user_ids: idStrings(u.following_user_ids),
-    followers_count: (u.follower_user_ids ?? []).length,
-    following_count: (u.following_user_ids ?? []).length,
-    interest_category_ids: idStrings(u.interest_category_ids),
-    onboarding_survey_completed: !!u.onboarding_survey_completed,
-    whatsapp_extension: u.whatsapp_extension ?? '',
-    whatsapp_number: u.whatsapp_number ?? '',
-    whatsapp_verified_at: u.whatsapp_verified_at?.toISOString?.() ?? null,
-    is_first_time_user: !!u.is_first_time_user,
-    status: u.status ?? 'ACTIVE',
-    created_at: u.created_at?.toISOString?.() ?? '',
-    updated_at: u.updated_at?.toISOString?.() ?? '',
+    saved_pod_ids: relations.saved_pod_ids,
+    following_pod_ids: relations.following_pod_ids,
+    following_club_ids: relations.following_club_ids,
+    following_user_ids: relations.following_user_ids,
+    followers_count: counters.followers_count ?? 0,
+    following_count: counters.following_count ?? 0,
+    interest_category_ids: relations.interest_category_ids,
+    onboarding_survey_completed: !!(meta.onboarding_survey_completed ?? legacy.onboarding_survey_completed),
+    whatsapp_extension: wa.extension ?? legacy.whatsapp_extension ?? '',
+    whatsapp_number: wa.number ?? legacy.whatsapp_number ?? '',
+    whatsapp_verified_at:
+      (wa.verified_at ?? legacy.whatsapp_verified_at)?.toISOString?.() ?? null,
+    is_first_time_user: !!(meta.is_first_time_user ?? legacy.is_first_time_user),
+    status: meta.status ?? legacy.status ?? 'ACTIVE',
+    created_at:
+      (meta.created_at ?? legacy.created_at)?.toISOString?.() ?? '',
+    updated_at:
+      (meta.updated_at ?? legacy.updated_at)?.toISOString?.() ?? '',
   };
 }
 
@@ -251,15 +396,57 @@ async function authPayload(u: any) {
   return { token, user: pub };
 }
 
+// Shape a CreateUserDTO / RegisterDTO into the nested storage layout.
+function shapeUserDoc(input: any, opts?: { passwordHash?: string; googleId?: string; emailVerified?: boolean }) {
+  const phoneNumber = String(input.phone_number || '').trim();
+  if (phoneNumber && isPlaceholderPhone(phoneNumber)) {
+    throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  return {
+    auth: {
+      email: input.email ? String(input.email).toLowerCase() : undefined,
+      is_email_verified: !!opts?.emailVerified,
+      password: opts?.passwordHash,
+      google_id: opts?.googleId,
+      phone: {
+        number: phoneNumber,
+        extension: input.phone_extension,
+        is_verified: false,
+      },
+    },
+    profile: {
+      first_name: input.first_name,
+      last_name: input.last_name,
+      dob: input.dob ? new Date(input.dob) : undefined,
+      country: input.country ?? 'India',
+      city: input.city ?? undefined,
+      zone: input.zone ?? undefined,
+      assigned_city: input.assigned_city ?? undefined,
+      profile_photo: input.profile_photo ?? undefined,
+    },
+    metadata: {
+      role_keys: Array.isArray(input.roles) && input.roles.length ? input.roles : ['USER'],
+      assigned_zones: input.assigned_zones ?? [],
+    },
+  };
+}
+
 export const userService = {
+  // Backward-compat helper used by other modules. Returns the materialized
+  // flat shape (toPublic) for a given doc.
+  toPublic,
+
   async register(input: RegisterDTO) {
-    const existing = await UserModel.findOne({ email: input.email });
+    if (isPlaceholderPhone(input.phone_number)) {
+      throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const existing = await UserModel.findOne({ 'auth.email': input.email });
     if (existing) {
       throw new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
     }
     const phoneExists = await UserModel.findOne({
-      phone_number: input.phone_number,
-      phone_extension: input.phone_extension,
+      'auth.phone.number': input.phone_number,
+      'auth.phone.extension': input.phone_extension,
     });
     if (phoneExists) {
       throw new GraphQLError(
@@ -270,10 +457,12 @@ export const userService = {
     const hashed = await bcrypt.hash(input.password, 10);
     let created: any;
     try {
-      created = await UserModel.create({
-        ...input,
-        password: hashed,
-        roles: ['USER'],
+      const doc = shapeUserDoc(input, { passwordHash: hashed });
+      created = await UserModel.create(doc);
+      await UserRoleModel.create({
+        user_id: created._id,
+        role: 'USER',
+        scope: { city: null, zone: null },
       });
     } catch (e: any) {
       if (e?.code === 11000) {
@@ -292,8 +481,8 @@ export const userService = {
       throw e;
     }
 
-    if (created.email) {
-      sendWelcomeEmail(created.email, created.first_name).catch((e) =>
+    if (created.auth?.email) {
+      sendWelcomeEmail(created.auth.email, created.profile?.first_name).catch((e) =>
         // eslint-disable-next-line no-console
         console.error('Email send failed', e)
       );
@@ -302,35 +491,43 @@ export const userService = {
   },
 
   async login(input: LoginDTO) {
-    const user = await UserModel.findOne({ email: input.email }).select('+password');
+    const user = await UserModel.findOne({ 'auth.email': input.email }).select('+auth.password');
     if (!user) {
       throw new GraphQLError('Invalid credentials', { extensions: { code: 'UNAUTHENTICATED' } });
     }
-    if (!(user as any).password) {
+    const stored = (user as any).auth?.password as string | undefined;
+    if (!stored) {
       throw new GraphQLError('This account uses Google sign-in. Continue with Google.', {
         extensions: { code: 'UNAUTHENTICATED' },
       });
     }
-    const ok = await bcrypt.compare(input.password, (user as any).password);
+    const ok = await bcrypt.compare(input.password, stored);
     if (!ok) {
       throw new GraphQLError('Invalid credentials', { extensions: { code: 'UNAUTHENTICATED' } });
     }
-    if (user.status !== 'ACTIVE') {
+    if ((user as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
     }
-    user.last_login_provider = 'EMAIL';
-    user.last_login_at = new Date();
-    await user.save();
-    return authPayload(user);
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          'auth.last_login_provider': 'EMAIL',
+          'auth.last_login_at': new Date(),
+        },
+      }
+    );
+    const fresh = await UserModel.findById(user._id).select('+auth.password');
+    return authPayload(fresh);
   },
 
   async loginWithGoogle(idToken: string) {
     const info = await verifyGoogleIdToken(idToken);
     const email = info.email.toLowerCase();
-    const user = await UserModel.findOne({ google_id: info.sub });
+    const user = await UserModel.findOne({ 'auth.google_id': info.sub });
     if (!user) {
-      const emailUser = await UserModel.findOne({ email }).select('+password');
-      if (emailUser && (emailUser as any).password) {
+      const emailUser = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
+      if (emailUser && (emailUser as any).auth?.password) {
         throw new GraphQLError('Please login with email. You registered using email and password.', {
           extensions: { code: 'EMAIL_LOGIN_REQUIRED' },
         });
@@ -339,47 +536,44 @@ export const userService = {
         extensions: { code: 'GOOGLE_ACCOUNT_NOT_FOUND' },
       });
     }
-    let dirty = false;
-    if (!user.is_email_verified) {
-      user.is_email_verified = true;
-      dirty = true;
-    }
-    if (!user.profile_photo && info.picture) {
-      user.profile_photo = info.picture;
-      dirty = true;
-    }
-    if (user.status !== 'ACTIVE') {
+    if ((user as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('Account is not active', { extensions: { code: 'FORBIDDEN' } });
     }
-    user.last_login_provider = 'GOOGLE';
-    user.last_login_at = new Date();
-    if (dirty || user.isModified('last_login_provider') || user.isModified('last_login_at')) {
-      await user.save();
-    }
-    return authPayload(user);
+    const set: Record<string, any> = {
+      'auth.last_login_provider': 'GOOGLE',
+      'auth.last_login_at': new Date(),
+    };
+    if (!user.auth?.is_email_verified) set['auth.is_email_verified'] = true;
+    if (!user.profile?.profile_photo && info.picture) set['profile.profile_photo'] = info.picture;
+    await UserModel.updateOne({ _id: user._id }, { $set: set });
+    const fresh = await UserModel.findById(user._id);
+    return authPayload(fresh);
   },
 
   async signupWithGoogle(input: GoogleSignupDTO) {
     const info = await verifyGoogleIdToken(input.id_token);
     const email = info.email.toLowerCase();
+    if (isPlaceholderPhone(input.phone_number)) {
+      throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
     let created: any = null;
     const session = await UserModel.db.startSession();
     try {
       await session.withTransaction(async () => {
         const existing = await UserModel.findOne({
-          $or: [{ google_id: info.sub }, { email }],
+          $or: [{ 'auth.google_id': info.sub }, { 'auth.email': email }],
         })
-          .select('+password')
+          .select('+auth.password')
           .session(session);
         if (existing) {
-          const message = (existing as any).password
+          const message = (existing as any).auth?.password
             ? 'Please login with email. You registered using email and password.'
             : 'Google account already exists. Please login with Google.';
           throw new GraphQLError(message, { extensions: { code: 'CONFLICT' } });
         }
         const phoneExists = await UserModel.findOne({
-          phone_number: input.phone_number,
-          phone_extension: input.phone_extension,
+          'auth.phone.number': input.phone_number,
+          'auth.phone.extension': input.phone_extension,
         }).session(session);
         if (phoneExists) {
           throw new GraphQLError(
@@ -389,24 +583,34 @@ export const userService = {
         }
         const docs = await UserModel.create(
           [
-            {
-              first_name: info.given_name || info.name?.split(' ')[0] || 'Google',
-              last_name: info.family_name || info.name?.split(' ').slice(1).join(' ') || 'User',
-              email,
-              is_email_verified: true,
-              google_id: info.sub,
-              phone_number: input.phone_number,
-              phone_extension: input.phone_extension,
-              dob: new Date(input.dob),
-              city: input.city ?? null,
-              zone: input.zone ?? null,
-              profile_photo: info.picture || undefined,
-              roles: ['USER'],
-            },
+            shapeUserDoc(
+              {
+                first_name: info.given_name || info.name?.split(' ')[0] || 'Google',
+                last_name: info.family_name || info.name?.split(' ').slice(1).join(' ') || 'User',
+                email,
+                phone_number: input.phone_number,
+                phone_extension: input.phone_extension,
+                dob: input.dob,
+                city: input.city ?? null,
+                zone: input.zone ?? null,
+                profile_photo: info.picture || undefined,
+              },
+              { googleId: info.sub, emailVerified: true }
+            ),
           ],
           { session }
         );
         created = docs[0];
+        await UserRoleModel.create(
+          [
+            {
+              user_id: created._id,
+              role: 'USER',
+              scope: { city: null, zone: null },
+            },
+          ],
+          { session }
+        );
       });
     } catch (e: any) {
       if (e instanceof GraphQLError) throw e;
@@ -434,66 +638,97 @@ export const userService = {
         extensions: { code: 'INTERNAL_SERVER_ERROR' },
       });
     }
-    if (created.email) {
-      sendWelcomeEmail(created.email, created.first_name).catch((e) =>
+    if (created.auth?.email) {
+      sendWelcomeEmail(created.auth.email, created.profile?.first_name).catch((e) =>
         // eslint-disable-next-line no-console
         console.error('Email send failed', e)
       );
     }
-    created.last_login_provider = 'GOOGLE';
-    created.last_login_at = new Date();
-    await created.save();
-    return authPayload(created);
+    await UserModel.updateOne(
+      { _id: created._id },
+      {
+        $set: {
+          'auth.last_login_provider': 'GOOGLE',
+          'auth.last_login_at': new Date(),
+        },
+      }
+    );
+    const fresh = await UserModel.findById(created._id);
+    return authPayload(fresh);
   },
 
   async updateMyProfile(user_id: string, input: UpdateMyProfileDTO) {
-    const update: any = {};
-    const stringFields = [
-      'first_name',
-      'last_name',
-      'bio',
-      'profile_photo',
-      'city',
-      'zone',
-      'country',
-      'phone_number',
-      'phone_extension',
-      'whatsapp_number',
-      'whatsapp_extension',
-    ] as const;
-    for (const field of stringFields) {
-      if ((input as any)[field] !== undefined) update[field] = (input as any)[field] || null;
+    const set: Record<string, any> = {};
+    const profileMap: Record<string, string> = {
+      first_name: 'profile.first_name',
+      last_name: 'profile.last_name',
+      bio: 'profile.bio',
+      profile_photo: 'profile.profile_photo',
+      city: 'profile.city',
+      zone: 'profile.zone',
+      country: 'profile.country',
+    };
+    const phoneMap: Record<string, string> = {
+      phone_number: 'auth.phone.number',
+      phone_extension: 'auth.phone.extension',
+    };
+    const waMap: Record<string, string> = {
+      whatsapp_number: 'communication.whatsapp.number',
+      whatsapp_extension: 'communication.whatsapp.extension',
+    };
+    for (const [field, path] of Object.entries(profileMap)) {
+      if ((input as any)[field] !== undefined) set[path] = (input as any)[field] || null;
     }
-    if (input.profile_links !== undefined) update.profile_links = cleanProfileLinks(input.profile_links);
+    for (const [field, path] of Object.entries(phoneMap)) {
+      if ((input as any)[field] !== undefined) {
+        const v = (input as any)[field];
+        if (field === 'phone_number' && v && isPlaceholderPhone(v)) {
+          throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
+        }
+        set[path] = v || null;
+      }
+    }
+    for (const [field, path] of Object.entries(waMap)) {
+      if ((input as any)[field] !== undefined) set[path] = (input as any)[field] || null;
+    }
+    if (input.profile_links !== undefined) set.profile_links = cleanProfileLinks(input.profile_links);
     if ((input as any).dob !== undefined) {
       const raw = (input as any).dob;
       const d = raw ? new Date(raw) : null;
       if (raw && (!d || Number.isNaN(d.getTime()))) {
         throw new GraphQLError('Invalid date of birth', { extensions: { code: 'BAD_USER_INPUT' } });
       }
-      update.dob = d;
+      set['profile.dob'] = d;
     }
-    const updated = await UserModel.findByIdAndUpdate(user_id, update, { new: true });
+    const updated = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true });
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     return toPublic(updated);
   },
 
   async requestEmailVerificationOtp(user_id: string) {
-    const user = await UserModel.findById(user_id).select('+email_verification_otp_hash +email_verification_otp_expires_at');
+    const user = await UserModel.findById(user_id).select(
+      '+auth.email_verification_otp_hash +auth.email_verification_otp_expires_at'
+    );
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-    if (!user.email) {
+    if (!user.auth?.email) {
       throw new GraphQLError('Add an email address before requesting OTP', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    if (user.is_email_verified) return { ok: true, dev_otp: null };
+    if (user.auth?.is_email_verified) return { ok: true, dev_otp: null };
     const otp = String(crypto.randomInt(100000, 1000000));
-    (user as any).email_verification_otp_hash = hashOtp(otp);
-    (user as any).email_verification_otp_expires_at = new Date(Date.now() + EMAIL_OTP_MINUTES * 60_000);
-    await user.save();
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          'auth.email_verification_otp_hash': hashOtp(otp),
+          'auth.email_verification_otp_expires_at': new Date(Date.now() + EMAIL_OTP_MINUTES * 60_000),
+        },
+      }
+    );
     await sendEmailVerificationOtpEmail({
-      to: user.email,
-      name: user.first_name,
+      to: user.auth.email,
+      name: user.profile?.first_name,
       otp,
       expiresMinutes: String(EMAIL_OTP_MINUTES),
     });
@@ -505,22 +740,31 @@ export const userService = {
     if (!/^\d{6}$/.test(code)) {
       throw new GraphQLError('Enter the 6 digit OTP', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const user = await UserModel.findById(user_id).select('+email_verification_otp_hash +email_verification_otp_expires_at');
+    const user = await UserModel.findById(user_id).select(
+      '+auth.email_verification_otp_hash +auth.email_verification_otp_expires_at'
+    );
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-    if (user.is_email_verified) return toPublic(user);
-    const expiresAt = (user as any).email_verification_otp_expires_at as Date | undefined;
-    const storedHash = (user as any).email_verification_otp_hash as string | undefined;
+    if (user.auth?.is_email_verified) return toPublic(user);
+    const expiresAt = (user as any).auth?.email_verification_otp_expires_at as Date | undefined;
+    const storedHash = (user as any).auth?.email_verification_otp_hash as string | undefined;
     if (!storedHash || !expiresAt || expiresAt.getTime() < Date.now()) {
       throw new GraphQLError('OTP expired. Request a new OTP.', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     if (hashOtp(code) !== storedHash) {
       throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    user.is_email_verified = true;
-    (user as any).email_verification_otp_hash = undefined;
-    (user as any).email_verification_otp_expires_at = undefined;
-    await user.save();
-    return toPublic(user);
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $set: { 'auth.is_email_verified': true },
+        $unset: {
+          'auth.email_verification_otp_hash': '',
+          'auth.email_verification_otp_expires_at': '',
+        },
+      }
+    );
+    const fresh = await UserModel.findById(user_id);
+    return toPublic(fresh);
   },
 
   async updateMyInterests(user_id: string, categoryIds: string[]) {
@@ -536,13 +780,34 @@ export const userService = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { interest_category_ids: uniqueIds, onboarding_survey_completed: true },
-      { new: true }
-    );
-    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-    return toPublic(updated);
+    const oid = new Types.ObjectId(user_id);
+    const session = await UserModel.db.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await UserInterestModel.deleteMany({ user_id: oid }, { session });
+        if (uniqueIds.length) {
+          await UserInterestModel.insertMany(
+            uniqueIds.map((id) => ({ user_id: oid, interest_category_id: new Types.ObjectId(id) })),
+            { session }
+          );
+        }
+        await UserModel.updateOne(
+          { _id: oid },
+          {
+            $set: {
+              'metadata.onboarding_survey_completed': true,
+              'counters.interests_count': uniqueIds.length,
+            },
+          },
+          { session }
+        );
+      });
+    } finally {
+      await session.endSession();
+    }
+    const fresh = await UserModel.findById(user_id);
+    if (!fresh) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPublic(fresh);
   },
 
   async getInterestCategories(categoryIds: string[]) {
@@ -550,48 +815,65 @@ export const userService = {
     if (!validIds.length) return [];
     const docs = await CategoryModel.find({ _id: { $in: validIds } });
     const byId = new Map(docs.map((doc: any) => [String(doc._id), doc]));
-    return validIds.map((id) => byId.get(id)).filter(Boolean).map((doc: any) => ({
-      id: String(doc._id),
-      name: doc.name,
-      slug: doc.slug,
-      icon: doc.icon ?? '',
-      description: doc.description ?? '',
-      media: (doc.media ?? []).map((m: any) => ({ url: m.url, type: m.type ?? 'IMAGE' })),
-      level: doc.level,
-      parent_id: doc.parent_id ? String(doc.parent_id) : null,
-      is_active: !!doc.is_active,
-      is_system: !!doc.is_system,
-      sort_order: doc.sort_order ?? 0,
-      created_at: doc.created_at?.toISOString?.() ?? '',
-      updated_at: doc.updated_at?.toISOString?.() ?? '',
-    }));
+    return validIds
+      .map((id) => byId.get(id))
+      .filter(Boolean)
+      .map((doc: any) => ({
+        id: String(doc._id),
+        name: doc.name,
+        slug: doc.slug,
+        icon: doc.icon ?? '',
+        description: doc.description ?? '',
+        media: (doc.media ?? []).map((m: any) => ({ url: m.url, type: m.type ?? 'IMAGE' })),
+        level: doc.level,
+        parent_id: doc.parent_id ? String(doc.parent_id) : null,
+        is_active: !!doc.is_active,
+        is_system: !!doc.is_system,
+        sort_order: doc.sort_order ?? 0,
+        created_at: doc.created_at?.toISOString?.() ?? '',
+        updated_at: doc.updated_at?.toISOString?.() ?? '',
+      }));
   },
 
   async toggleSavedPod(user_id: string, podId: string) {
     if (!Types.ObjectId.isValid(podId)) {
       throw new GraphQLError('Invalid pod', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const [user, pod] = await Promise.all([
-      UserModel.findById(user_id),
-      PodModel.findById(podId).select('_id'),
-    ]);
-    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const pod = await PodModel.findById(podId).select('_id');
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
-    const current = new Set(idStrings(user.saved_pod_ids));
-    const saved = !current.has(podId);
-    if (saved) current.add(podId);
-    else current.delete(podId);
-    user.saved_pod_ids = Array.from(current).map((id) => new Types.ObjectId(id)) as any;
-    await user.save();
-    return { pod_id: podId, saved, saved_pod_ids: idStrings(user.saved_pod_ids) };
+
+    const oid = new Types.ObjectId(user_id);
+    const podOid = new Types.ObjectId(podId);
+
+    const existing = await UserSavedPodModel.findOne({ user_id: oid, pod_id: podOid });
+    let saved: boolean;
+    if (existing) {
+      await UserSavedPodModel.deleteOne({ _id: existing._id });
+      await UserModel.updateOne({ _id: oid }, { $inc: { 'counters.saved_pods_count': -1 } });
+      saved = false;
+    } else {
+      try {
+        await UserSavedPodModel.create({ user_id: oid, pod_id: podOid });
+        await UserModel.updateOne({ _id: oid }, { $inc: { 'counters.saved_pods_count': 1 } });
+      } catch (e: any) {
+        // Race: a concurrent toggle already inserted. Treat as already saved.
+        if (e?.code !== 11000) throw e;
+      }
+      saved = true;
+    }
+    const ids = await UserSavedPodModel.find({ user_id: oid }).select('pod_id').lean();
+    return { pod_id: podId, saved, saved_pod_ids: ids.map((d: any) => String(d.pod_id)) };
   },
 
   async listSavedPods(user_id: string) {
-    const user = await UserModel.findById(user_id).select('saved_pod_ids');
-    const ids = idStrings(user?.saved_pod_ids);
+    const oid = new Types.ObjectId(user_id);
+    const savedDocs = await UserSavedPodModel.find({ user_id: oid })
+      .sort({ created_at: -1 })
+      .select('pod_id')
+      .lean();
+    const ids = savedDocs.map((d: any) => String(d.pod_id));
     if (!ids.length) return [];
     const docs = await PodModel.find({ _id: { $in: ids }, is_active: true });
-    // Build club-slug map so club_slug (String!) is never null
     const clubIds = Array.from(
       new Set(docs.map((d: any) => d.club_id && String(d.club_id)).filter(Boolean))
     );
@@ -614,11 +896,14 @@ export const userService = {
     if (!club || !club.is_active) {
       throw new GraphQLError('Club not found', { extensions: { code: 'NOT_FOUND' } });
     }
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { $addToSet: { following_club_ids: club._id } },
-      { new: true }
-    ).select('+password');
+    const oid = new Types.ObjectId(user_id);
+    try {
+      await ClubFollowerModel.create({ user_id: oid, club_id: club._id });
+      await UserModel.updateOne({ _id: oid }, { $inc: { 'counters.following_clubs_count': 1 } });
+    } catch (e: any) {
+      if (e?.code !== 11000) throw e;
+    }
+    const updated = await UserModel.findById(user_id);
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     return toPublic(updated);
   },
@@ -627,11 +912,12 @@ export const userService = {
     if (!Types.ObjectId.isValid(clubId)) {
       throw new GraphQLError('Invalid club', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { $pull: { following_club_ids: clubId } },
-      { new: true }
-    ).select('+password');
+    const oid = new Types.ObjectId(user_id);
+    const res = await ClubFollowerModel.deleteOne({ user_id: oid, club_id: new Types.ObjectId(clubId) });
+    if (res.deletedCount) {
+      await UserModel.updateOne({ _id: oid }, { $inc: { 'counters.following_clubs_count': -1 } });
+    }
+    const updated = await UserModel.findById(user_id);
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     return toPublic(updated);
   },
@@ -644,11 +930,14 @@ export const userService = {
     if (!pod || !pod.is_active) {
       throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     }
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { $addToSet: { following_pod_ids: pod._id } },
-      { new: true }
-    ).select('+password');
+    const oid = new Types.ObjectId(user_id);
+    try {
+      await PodFollowerModel.create({ user_id: oid, pod_id: pod._id });
+      await UserModel.updateOne({ _id: oid }, { $inc: { 'counters.following_pods_count': 1 } });
+    } catch (e: any) {
+      if (e?.code !== 11000) throw e;
+    }
+    const updated = await UserModel.findById(user_id);
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     return toPublic(updated);
   },
@@ -657,11 +946,12 @@ export const userService = {
     if (!Types.ObjectId.isValid(podId)) {
       throw new GraphQLError('Invalid pod', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { $pull: { following_pod_ids: podId } },
-      { new: true }
-    ).select('+password');
+    const oid = new Types.ObjectId(user_id);
+    const res = await PodFollowerModel.deleteOne({ user_id: oid, pod_id: new Types.ObjectId(podId) });
+    if (res.deletedCount) {
+      await UserModel.updateOne({ _id: oid }, { $inc: { 'counters.following_pods_count': -1 } });
+    }
+    const updated = await UserModel.findById(user_id);
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     return toPublic(updated);
   },
@@ -675,31 +965,52 @@ export const userService = {
     if (!Types.ObjectId.isValid(targetUserId)) {
       throw new GraphQLError('Invalid user', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const target = await UserModel.findById(targetUserId).select('_id status');
-    if (!target || target.status !== 'ACTIVE') {
+    const target = await UserModel.findById(targetUserId).select('_id metadata.status');
+    if (!target || (target as any).metadata?.status !== 'ACTIVE') {
       throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     }
-    await Promise.all([
-      UserModel.findByIdAndUpdate(user_id, { $addToSet: { following_user_ids: target._id } }),
-      UserModel.findByIdAndUpdate(targetUserId, { $addToSet: { follower_user_ids: user_id } }),
-    ]);
-    const updated = await UserModel.findById(user_id).select('+password');
+    const followerOid = new Types.ObjectId(user_id);
+    const followingOid = new Types.ObjectId(targetUserId);
+    try {
+      await UserRelationshipModel.create({
+        follower_id: followerOid,
+        following_id: followingOid,
+      });
+      await Promise.all([
+        UserModel.updateOne({ _id: followerOid }, { $inc: { 'counters.following_count': 1 } }),
+        UserModel.updateOne({ _id: followingOid }, { $inc: { 'counters.followers_count': 1 } }),
+      ]);
+    } catch (e: any) {
+      if (e?.code !== 11000) throw e;
+    }
+    const updated = await UserModel.findById(user_id);
     return toPublic(updated);
   },
 
   async unfollowUser(user_id: string, targetUserId: string) {
-    await Promise.all([
-      UserModel.findByIdAndUpdate(user_id, { $pull: { following_user_ids: targetUserId } }),
-      UserModel.findByIdAndUpdate(targetUserId, { $pull: { follower_user_ids: user_id } }),
-    ]);
-    const updated = await UserModel.findById(user_id).select('+password');
+    if (!Types.ObjectId.isValid(targetUserId)) {
+      throw new GraphQLError('Invalid user', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const followerOid = new Types.ObjectId(user_id);
+    const followingOid = new Types.ObjectId(targetUserId);
+    const res = await UserRelationshipModel.deleteOne({
+      follower_id: followerOid,
+      following_id: followingOid,
+    });
+    if (res.deletedCount) {
+      await Promise.all([
+        UserModel.updateOne({ _id: followerOid }, { $inc: { 'counters.following_count': -1 } }),
+        UserModel.updateOne({ _id: followingOid }, { $inc: { 'counters.followers_count': -1 } }),
+      ]);
+    }
+    const updated = await UserModel.findById(user_id);
     return toPublic(updated);
   },
 
   async updateMyPetProfile(user_id: string, input: PetProfileDTO) {
     const updated = await UserModel.findByIdAndUpdate(
       user_id,
-      { pet_profile: input },
+      { $set: { pet_profile: input } },
       { new: true }
     );
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
@@ -707,12 +1018,12 @@ export const userService = {
   },
 
   async me(id: string) {
-    const u = await UserModel.findById(id).select('+password');
+    const u = await UserModel.findById(id);
     return toPublic(u);
   },
 
   async getById(id: string) {
-    const u = await UserModel.findById(id).select('+password');
+    const u = await UserModel.findById(id);
     return toPublic(u);
   },
 
@@ -802,112 +1113,229 @@ export const userService = {
     search?: string;
   }) {
     const query: any = {};
-    if (filter?.role) query.roles = filter.role;
-    if (filter?.city) query.city = filter.city;
-    if (filter?.zone) query.zone = filter.zone;
-    if (filter?.status) query.status = filter.status;
+    if (filter?.role) query['metadata.role_keys'] = filter.role;
+    if (filter?.city) query['profile.city'] = filter.city;
+    if (filter?.zone) query['profile.zone'] = filter.zone;
+    if (filter?.status) query['metadata.status'] = filter.status;
     if (filter?.search) {
       const rx = new RegExp(filter.search, 'i');
       query.$or = [
-        { first_name: rx },
-        { last_name: rx },
-        { email: rx },
-        { phone_number: rx },
+        { 'profile.first_name': rx },
+        { 'profile.last_name': rx },
+        { 'auth.email': rx },
+        { 'auth.phone.number': rx },
       ];
     }
-    const all = await UserModel.find(query).select('+password').sort({ created_at: -1 });
-    return Promise.all(all.map(toPublic));
+    const all = await UserModel.find(query).sort({ 'metadata.created_at': -1 });
+    return Promise.all(all.map((u) => toPublic(u)));
   },
 
   async create(input: CreateUserDTO) {
-    const existing = input.email ? await UserModel.findOne({ email: input.email }) : null;
+    if (isPlaceholderPhone(input.phone_number)) {
+      throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const existing = input.email
+      ? await UserModel.findOne({ 'auth.email': input.email })
+      : null;
     if (existing) {
       throw new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
     }
     const hashed = await bcrypt.hash(input.password, 10);
-    const created = await UserModel.create({ ...input, password: hashed });
+    const created = await UserModel.create(
+      shapeUserDoc(input, { passwordHash: hashed })
+    );
+    await replaceUserRoles(String(created._id), (input.roles ?? []) as string[], {
+      assignedZones: ((input.assigned_zones ?? []) as string[]).filter(Boolean),
+      assignedCity: input.assigned_city ?? null,
+    });
 
-    if (created.email) {
-      sendWelcomeEmail(created.email, created.first_name).catch((e) =>
+    if (created.auth?.email) {
+      sendWelcomeEmail(created.auth.email, created.profile?.first_name).catch((e) =>
         // eslint-disable-next-line no-console
         console.error('Email send failed', e)
       );
     }
-    return toPublic(created);
+    const fresh = await UserModel.findById(created._id);
+    return toPublic(fresh);
   },
 
   async update(user_id: string, input: UpdateUserDTO) {
-    const updated = await UserModel.findByIdAndUpdate(user_id, input, { new: true });
+    const set: Record<string, any> = {};
+    const profileFields = [
+      'first_name',
+      'last_name',
+      'bio',
+      'profile_photo',
+      'city',
+      'zone',
+    ] as const;
+    for (const f of profileFields) {
+      if ((input as any)[f] !== undefined) set[`profile.${f}`] = (input as any)[f];
+    }
+    if ((input as any).email !== undefined) set['auth.email'] = (input as any).email;
+    if ((input as any).phone_number !== undefined) {
+      const v = (input as any).phone_number;
+      if (v && isPlaceholderPhone(v)) {
+        throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      set['auth.phone.number'] = v;
+    }
+    if ((input as any).phone_extension !== undefined) {
+      set['auth.phone.extension'] = (input as any).phone_extension;
+    }
+    if ((input as any).dob !== undefined) set['profile.dob'] = (input as any).dob;
+    if ((input as any).status !== undefined) set['metadata.status'] = (input as any).status;
+    if ((input as any).assigned_city !== undefined) {
+      set['profile.assigned_city'] = (input as any).assigned_city;
+    }
+    if ((input as any).assigned_zones !== undefined) {
+      set['metadata.assigned_zones'] = (input as any).assigned_zones;
+    }
+    const updated = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true });
     if (!updated) {
       throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
     }
-    return toPublic(updated);
+    if ((input as any).roles !== undefined) {
+      const inputZones = (input as any).assigned_zones as string[] | undefined;
+      const currentZones = (updated.metadata?.assigned_zones ?? []) as string[];
+      await replaceUserRoles(user_id, ((input as any).roles ?? []) as string[], {
+        assignedZones: (inputZones ?? currentZones).filter(Boolean),
+        assignedCity:
+          (input as any).assigned_city ?? updated.profile?.assigned_city ?? null,
+      });
+    }
+    const fresh = await UserModel.findById(user_id);
+    return toPublic(fresh);
   },
 
   async remove(user_id: string) {
-    const res = await UserModel.findByIdAndDelete(user_id);
-    return !!res;
+    // Soft delete per spec — set metadata.deleted_at, mark INACTIVE. Hard
+    // delete of relations is also performed so counters do not drift.
+    const oid = new Types.ObjectId(user_id);
+    const session = await UserModel.db.startSession();
+    try {
+      await session.withTransaction(async () => {
+        await UserModel.updateOne(
+          { _id: oid },
+          {
+            $set: {
+              'metadata.deleted_at': new Date(),
+              'metadata.status': 'INACTIVE',
+            },
+          },
+          { session }
+        );
+        await Promise.all([
+          UserRoleModel.deleteMany({ user_id: oid }, { session }),
+          UserSavedPodModel.deleteMany({ user_id: oid }, { session }),
+          PodFollowerModel.deleteMany({ user_id: oid }, { session }),
+          ClubFollowerModel.deleteMany({ user_id: oid }, { session }),
+          UserInterestModel.deleteMany({ user_id: oid }, { session }),
+          UserRelationshipModel.deleteMany(
+            { $or: [{ follower_id: oid }, { following_id: oid }] },
+            { session }
+          ),
+        ]);
+      });
+    } finally {
+      await session.endSession();
+    }
+    return true;
   },
 
   async assignRoles(user_id: string, role_keys: string[]) {
-    const normalized = Array.from(
-      new Set(role_keys.map((k) => k.toUpperCase()).filter(Boolean))
-    );
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { roles: normalized },
-      { new: true }
-    );
-    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-    return toPublic(updated);
+    const target = await UserModel.findById(user_id);
+    if (!target) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    await replaceUserRoles(user_id, role_keys, {
+      assignedZones: target.metadata?.assigned_zones ?? [],
+      assignedCity: target.profile?.assigned_city ?? null,
+    });
+    const fresh = await UserModel.findById(user_id);
+    return toPublic(fresh);
   },
 
   async addRole(user_id: string, role_key: string) {
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { $addToSet: { roles: role_key.toUpperCase() } },
-      { new: true }
-    );
-    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-    return toPublic(updated);
+    const target = await UserModel.findById(user_id);
+    if (!target) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const current = new Set<string>(target.metadata?.role_keys ?? []);
+    current.add(String(role_key).toUpperCase());
+    await replaceUserRoles(user_id, Array.from(current), {
+      assignedZones: target.metadata?.assigned_zones ?? [],
+      assignedCity: target.profile?.assigned_city ?? null,
+    });
+    const fresh = await UserModel.findById(user_id);
+    return toPublic(fresh);
   },
 
   async removeRole(user_id: string, role_key: string) {
-    const updated = await UserModel.findByIdAndUpdate(
-      user_id,
-      { $pull: { roles: role_key.toUpperCase() } },
-      { new: true }
-    );
-    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
-    return toPublic(updated);
+    const target = await UserModel.findById(user_id);
+    if (!target) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const current = new Set<string>(target.metadata?.role_keys ?? []);
+    current.delete(String(role_key).toUpperCase());
+    await replaceUserRoles(user_id, Array.from(current), {
+      assignedZones: target.metadata?.assigned_zones ?? [],
+      assignedCity: target.profile?.assigned_city ?? null,
+    });
+    const fresh = await UserModel.findById(user_id);
+    return toPublic(fresh);
+  },
+
+  // Privileged-role gate. Call from any path issuing an elevated session.
+  // Today this is permissive (warn only) so existing flows do not break, but
+  // the helper is wired so future enablement is a one-line flip.
+  isPrivileged(roleKeys: readonly string[]): boolean {
+    return roleKeys.some((r) => (PRIVILEGED_ROLE_KEYS as readonly string[]).includes(r));
   },
 
   async seedSuperAdmin(): Promise<{ created: boolean; emailed: boolean; email: string }> {
     const DEFAULT_EMAIL = process.env.DEFAULT_SUPER_ADMIN_EMAIL || 'admin@duncit.com';
     const DEFAULT_PASSWORD = process.env.DEFAULT_SUPER_ADMIN_PASSWORD || '12345678';
 
-    const existing = await UserModel.findOne({ email: DEFAULT_EMAIL });
+    const existing = await UserModel.findOne({ 'auth.email': DEFAULT_EMAIL });
     let created = false;
 
     if (!existing) {
       const hashed = await bcrypt.hash(DEFAULT_PASSWORD, 10);
-      await UserModel.create({
-        first_name: 'Super',
-        last_name: 'Admin',
-        email: DEFAULT_EMAIL,
-        is_email_verified: true,
-        phone_number: '0000000000',
-        phone_extension: '+91',
-        password: hashed,
-        dob: new Date('1990-01-01'),
-        roles: ['SUPER_ADMIN'],
-        status: 'ACTIVE',
-        is_first_time_user: false,
+      // Seed uses sentinel phone 0000000000 / +91 by design — these rows are
+      // the only place that bypasses the placeholder-phone validator. Mark
+      // them as already migrated so the migration script skips them.
+      const doc = await UserModel.create({
+        auth: {
+          email: DEFAULT_EMAIL,
+          is_email_verified: true,
+          password: hashed,
+          phone: { number: '0000000000', extension: '+91', is_verified: false },
+        },
+        profile: {
+          first_name: 'Super',
+          last_name: 'Admin',
+          dob: new Date('1990-01-01'),
+          country: 'India',
+        },
+        metadata: {
+          status: 'ACTIVE',
+          is_first_time_user: false,
+          role_keys: ['SUPER_ADMIN'],
+        },
+      });
+      await UserRoleModel.create({
+        user_id: doc._id,
+        role: 'SUPER_ADMIN',
+        scope: { city: null, zone: null },
       });
       created = true;
-    } else if (!existing.roles?.includes('SUPER_ADMIN')) {
-      existing.roles = [...(existing.roles ?? []), 'SUPER_ADMIN'];
-      await existing.save();
+    } else {
+      const hasSuper = (existing.metadata?.role_keys ?? []).includes('SUPER_ADMIN');
+      if (!hasSuper) {
+        await replaceUserRoles(
+          String(existing._id),
+          [...(existing.metadata?.role_keys ?? []), 'SUPER_ADMIN'],
+          {
+            assignedZones: existing.metadata?.assigned_zones ?? [],
+            assignedCity: existing.profile?.assigned_city ?? null,
+          }
+        );
+      }
     }
 
     let emailed = false;

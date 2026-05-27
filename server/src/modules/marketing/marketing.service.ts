@@ -200,9 +200,21 @@ function parseSchedule(value?: string | null) {
 async function recipientsFor(audience: 'ALL_USERS' | 'NEWSLETTER_SUBSCRIBERS') {
   const docs =
     audience === 'ALL_USERS'
-      ? await UserModel.find({ status: 'ACTIVE', email: { $exists: true, $ne: '' } }).select('email').lean().exec()
+      ? await UserModel.find({
+          'metadata.status': 'ACTIVE',
+          'auth.email': { $exists: true, $ne: '' },
+        })
+          .select('auth.email')
+          .lean()
+          .exec()
       : await NewsletterSubscriberModel.find({ unsubscribed_at: null }).select('email').lean().exec();
-  return [...new Set(docs.map((doc: any) => String(doc.email || '').toLowerCase().trim()).filter(Boolean))];
+  return [
+    ...new Set(
+      docs
+        .map((doc: any) => String(doc?.auth?.email ?? doc?.email ?? '').toLowerCase().trim())
+        .filter(Boolean)
+    ),
+  ];
 }
 
 function chunk<T>(items: T[], size: number) {

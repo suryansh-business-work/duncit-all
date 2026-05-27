@@ -38,7 +38,7 @@ async function adjustmentsToPub(adjustments: IHealthAdjustment[]) {
   );
   const admins = adminIds.length
     ? await UserModel.find({ _id: { $in: adminIds } }).select(
-        'first_name last_name full_name email'
+        'profile.first_name profile.last_name auth.email'
       )
     : [];
   const adminMap = new Map(
@@ -89,7 +89,7 @@ function userLabel(user: any): string {
 export const accountHealthService = {
   async getMyAccountHealth(userId: string) {
     const user = await UserModel.findById(userId).select(
-      'first_name last_name full_name email'
+      'profile.first_name profile.last_name auth.email'
     );
     if (!user) fail('UNAUTHENTICATED', 'User not found');
     return buildScore('USER', String((user as any)._id), userLabel(user));
@@ -98,7 +98,7 @@ export const accountHealthService = {
   async getUserAccountHealth(userId: string) {
     if (!Types.ObjectId.isValid(userId)) fail('BAD_USER_INPUT', 'Invalid user_id');
     const user = await UserModel.findById(userId).select(
-      'first_name last_name full_name email'
+      'profile.first_name profile.last_name auth.email'
     );
     if (!user) fail('NOT_FOUND', 'User not found');
     return buildScore('USER', String((user as any)._id), userLabel(user));
@@ -139,7 +139,7 @@ export const accountHealthService = {
     let subjectLabel: string;
     if (input.subject_type === 'USER') {
       const user = await UserModel.findById(input.subject_id).select(
-        'first_name last_name full_name email'
+        'profile.first_name profile.last_name auth.email'
       );
       if (!user) fail('NOT_FOUND', 'User not found');
       subjectUserId = (user as any)._id;

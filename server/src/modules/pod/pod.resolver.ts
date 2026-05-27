@@ -130,11 +130,11 @@ export const podResolvers = {
       const ids: string[] = (parent.pod_hosts_id ?? []).filter(Boolean).map(String);
       if (ids.length === 0) return [];
       const users = await UserModel.find({ _id: { $in: ids } }).select(
-        'first_name last_name'
+        'profile.first_name profile.last_name'
       );
       const byId = new Map<string, string>();
       users.forEach((u: any) => {
-        const name = `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim();
+        const name = `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim();
         if (name) byId.set(String(u._id), name);
       });
       return ids.map((id) => byId.get(id)).filter(Boolean) as string[];

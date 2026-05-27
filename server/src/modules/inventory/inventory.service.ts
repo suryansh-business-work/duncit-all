@@ -272,8 +272,8 @@ async function ownedListing(id: string, user: AuthUser | null) {
 
 async function requireEcommManager(user: AuthUser | null) {
   if (!user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
-  const currentUser = await UserModel.findById(user.id).select('roles').lean();
-  const roles = (currentUser?.roles ?? []) as string[];
+  const currentUser: any = await UserModel.findById(user.id).select('metadata.role_keys').lean();
+  const roles = (currentUser?.metadata?.role_keys ?? []) as string[];
   if (!roles.includes(ECOMM_MANAGER_ROLE)) {
     throw new GraphQLError('You must be an Ecomm Manager to manage product listings', { extensions: { code: 'FORBIDDEN' } });
   }

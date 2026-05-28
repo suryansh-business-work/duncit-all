@@ -22,6 +22,7 @@ function findBestNavMatch(pathname: string) {
   let best: { label: string; to: string } | undefined;
   for (const item of appConfig.nav) {
     if (item.to === pathname || (item.to !== '/' && pathname.startsWith(item.to + '/'))) {
+      /* v8 ignore next -- the length tiebreak only matters for overlapping nav prefixes, which this nav never has */
       if (!best || item.to.length > best.to.length) {
         best = { label: item.label, to: item.to };
       }

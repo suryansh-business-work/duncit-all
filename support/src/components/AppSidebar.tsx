@@ -37,7 +37,10 @@ export default function AppSidebar({ onNavigate }: { onNavigate?: () => void }) 
       </Box>
       <List sx={{ px: 1, py: 1, flex: 1 }}>
         {appConfig.nav.map((item) => {
-          const selected = location.pathname === item.to;
+          const selected =
+            item.to === '/'
+              ? location.pathname === '/'
+              : location.pathname === item.to || location.pathname.startsWith(`${item.to}/`);
           return (
             <ListItemButton
               key={item.to}

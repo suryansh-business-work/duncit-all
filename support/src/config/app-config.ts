@@ -56,7 +56,12 @@ export const appConfig: AppConfig = {
   colorModeKey: 'support_color_mode',
   accent: { light: '#6ee7b7', main: '#10b981', hover: '#059669', active: '#047857' },
   nav: [
-    { label: 'Welcome', to: '/', icon: 'dashboard' },
+    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'SOS Alerts', to: '/sos', icon: 'sos' },
+    { label: 'Callback Requests', to: '/callbacks', icon: 'callback' },
+    { label: 'Live Feedback', to: '/feedback', icon: 'feedback' },
+    { label: 'Tickets', to: '/tickets', icon: 'ticket' },
+    { label: 'Live Chat', to: '/live-chat', icon: 'chat' },
   ],
   modules: [],
 };

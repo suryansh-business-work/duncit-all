@@ -1,6 +1,9 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
+import TicketsListPage from './pages/support-tickets/TicketsListPage';
+import TicketDetailPage from './pages/support-tickets/TicketDetailPage';
+import SupportChatPage from './pages/support-chat/SupportChatPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
@@ -25,6 +28,9 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<WelcomePage />)} />
+      <Route path="/tickets" element={authed(<TicketsListPage />)} />
+      <Route path="/tickets/:id" element={authed(<TicketDetailPage />)} />
+      <Route path="/live-chat" element={authed(<SupportChatPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

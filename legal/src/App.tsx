@@ -1,6 +1,9 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import WelcomePage from './pages/WelcomePage';
+import DashboardPage from './pages/DashboardPage';
+import DocumentsListPage from './pages/documents/DocumentsListPage';
+import DocumentDetailPage from './pages/documents/DocumentDetailPage';
+import PoliciesPage from './pages/policies/PoliciesPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
@@ -24,7 +27,10 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={authed(<WelcomePage />)} />
+      <Route path="/" element={authed(<DashboardPage />)} />
+      <Route path="/documents" element={authed(<DocumentsListPage />)} />
+      <Route path="/documents/:id" element={authed(<DocumentDetailPage />)} />
+      <Route path="/policies" element={authed(<PoliciesPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

@@ -18,6 +18,7 @@ import { policyService } from './modules/policy/policy.service';
 import { initSocketServer } from './realtime/io';
 import { attachChatHandlers } from './modules/chat/chat.socket';
 import { attachBouncerHandlers } from './modules/bouncer/bouncer.socket';
+import { attachSupportChatHandlers } from './modules/supportChat/supportChat.socket';
 import { websiteContentService } from './modules/websiteContent/websiteContent.service';
 import { userService } from './modules/user/user.service';
 import { marketingService } from './modules/marketing/marketing.service';
@@ -168,6 +169,7 @@ async function bootstrap() {
   initSocketServer(httpServer);
   attachChatHandlers();
   attachBouncerHandlers();
+  attachSupportChatHandlers();
 
   const port = Number(process.env.PORT || 2001);
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));

@@ -1,0 +1,154 @@
+import { useState } from 'react';
+import { useMutation, useQuery } from '@apollo/client';
+import { useNavigate, useParams } from 'react-router-dom';
+import {
+  Box,
+  Button,
+  Card,
+  CardContent,
+  Chip,
+  CircularProgress,
+  IconButton,
+  Link,
+  Stack,
+  Typography,
+} from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { formatDistanceToNow } from 'date-fns';
+import {
+  ACK_SOS,
+  BOUNCER_SOS_ALERTS,
+  RESOLVE_SOS,
+  type SosAlert,
+} from '../../graphql/bouncer';
+
+const STATUS_COLOR: Record<SosAlert['status'], 'error' | 'warning' | 'success'> = {
+  ACTIVE: 'error',
+  ACKNOWLEDGED: 'warning',
+  RESOLVED: 'success',
+};
+
+export default function SosDetailsPage() {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const { data, loading, refetch } = useQuery<{ bouncerSosAlerts: SosAlert[] }>(BOUNCER_SOS_ALERTS, {
+    variables: { status: null },
+    fetchPolicy: 'cache-and-network',
+  });
+  const [ack] = useMutation(ACK_SOS, { onCompleted: () => refetch() });
+  const [resolve] = useMutation(RESOLVE_SOS, { onCompleted: () => refetch() });
+  const [busy, setBusy] = useState(false);
+
+  const alert = data?.bouncerSosAlerts.find((a) => a.id === id);
+
+  const run = async (fn: () => Promise<any>) => {
+    setBusy(true);
+    try {
+      await fn();
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  return (
+    <Stack spacing={2}>
+      <Stack direction="row" alignItems="center" spacing={1}>
+        <IconButton size="small" onClick={() => navigate('/sos')} aria-label="Back">
+          <ArrowBackIcon />
+        </IconButton>
+        <Typography variant="h5" sx={{ fontWeight: 800 }}>
+          SOS Alert
+        </Typography>
+      </Stack>
+
+      {loading && !alert ? (
+        <Box sx={{ p: 4, textAlign: 'center' }}>
+          <CircularProgress size={24} />
+        </Box>
+      ) : !alert ? (
+        <Typography variant="body2" color="text.secondary">
+          This alert could not be found.
+        </Typography>
+      ) : (
+        <Card variant="outlined" sx={{ borderColor: alert.status === 'ACTIVE' ? 'error.main' : 'divider' }}>
+          <CardContent>
+            <Stack spacing={1.5}>
+              <Stack direction="row" alignItems="center" justifyContent="space-between">
+                <Stack direction="row" spacing={1} alignItems="center">
+                  <Typography variant="h6" sx={{ fontWeight: 800 }}>
+                    {alert.user.name}
+                  </Typography>
+                  <Chip size="small" color={STATUS_COLOR[alert.status]} label={alert.status} />
+                </Stack>
+                <Typography variant="caption" color="text.secondary">
+                  {formatDistanceToNow(new Date(alert.created_at), { addSuffix: true })}
+                </Typography>
+              </Stack>
+
+              <Typography variant="body2">
+                <strong>Pod:</strong> {alert.pod.title}
+                {alert.pod.venue_name ? ` · ${alert.pod.venue_name}` : ''}
+                {alert.pod.club_name ? ` · ${alert.pod.club_name}` : ''}
+              </Typography>
+
+              {alert.message && (
+                <Typography variant="body2" sx={{ fontStyle: 'italic' }}>
+                  "{alert.message}"
+                </Typography>
+              )}
+
+              <Stack direction="row" spacing={2} flexWrap="wrap">
+                {alert.contact_phone && (
+                  <Link href={`tel:${alert.contact_phone}`} variant="body2">
+                    📞 {alert.contact_phone}
+                  </Link>
+                )}
+                {alert.location && (
+                  <Link
+                    href={`https://www.google.com/maps?q=${alert.location.lat},${alert.location.lng}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    variant="body2"
+                    sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5 }}
+                  >
+                    <LocationOnIcon fontSize="inherit" /> Open in Maps
+                  </Link>
+                )}
+                {alert.host && (
+                  <Typography variant="body2" color="text.secondary">
+                    Host: {alert.host.name}
+                    {alert.host.phone ? ` (${alert.host.phone})` : ''}
+                  </Typography>
+                )}
+              </Stack>
+
+              {alert.status !== 'RESOLVED' && (
+                <Stack direction="row" spacing={1}>
+                  {alert.status === 'ACTIVE' && (
+                    <Button
+                      variant="contained"
+                      color="warning"
+                      disabled={busy}
+                      onClick={() => run(() => ack({ variables: { id: alert.id } }))}
+                    >
+                      Acknowledge
+                    </Button>
+                  )}
+                  <Button
+                    variant="contained"
+                    color="success"
+                    disabled={busy}
+                    onClick={() => run(() => resolve({ variables: { id: alert.id } }))}
+                  >
+                    Mark resolved
+                  </Button>
+                </Stack>
+              )}
+            </Stack>
+          </CardContent>
+        </Card>
+      )}
+    </Stack>
+  );
+}

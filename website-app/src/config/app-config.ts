@@ -57,6 +57,8 @@ export const appConfig: AppConfig = {
   accent: { light: '#93c5fd', main: '#2563eb', hover: '#1d4ed8', active: '#1e40af' },
   nav: [
     { label: 'Welcome', to: '/', icon: 'dashboard' },
+    { label: 'My Tickets', to: '/tickets', icon: 'ticket' },
+    { label: 'Live Chat', to: '/live-chat', icon: 'chat' },
   ],
   modules: [],
 };

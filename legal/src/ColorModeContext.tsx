@@ -20,6 +20,7 @@ const STORAGE_KEY = appConfig.colorModeKey;
 
 export function ColorModeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<PaletteMode>(() => {
+    /* v8 ignore next -- SSR guard: these consoles only ever run in the browser */
     if (typeof window === 'undefined') return 'light';
     const saved = localStorage.getItem(STORAGE_KEY);
     if (saved === 'dark' || saved === 'light') return saved;

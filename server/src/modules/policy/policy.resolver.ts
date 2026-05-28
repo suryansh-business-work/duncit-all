@@ -2,7 +2,10 @@ import { policyService } from './policy.service';
 import type { GraphQLContext } from '../../context';
 import { requireRole } from '../../middleware/rbac';
 
-const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN'];
+// Policy management moved from the admin panel to the Legal portal, so writes
+// are gated to legal roles (SUPER_ADMIN retains access). Public read paths
+// (publicPolicies / policyBySlug) stay open for the website + app.
+const ADMIN_RW = ['SUPER_ADMIN', 'LEGAL_MANAGER'];
 
 export const policyResolvers = {
   Query: {

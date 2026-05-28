@@ -56,7 +56,9 @@ export const appConfig: AppConfig = {
   colorModeKey: 'legal_color_mode',
   accent: { light: '#c4b5fd', main: '#7c3aed', hover: '#6d28d9', active: '#5b21b6' },
   nav: [
-    { label: 'Welcome', to: '/', icon: 'dashboard' },
+    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Documents', to: '/documents', icon: 'document' },
+    { label: 'Policies', to: '/policies', icon: 'policy' },
   ],
   modules: [],
 };

@@ -35,6 +35,7 @@ const initials = (user: any) => {
       .filter(Boolean)
       .slice(0, 2)
       .map((part: string) => part[0]?.toUpperCase())
+      /* v8 ignore next -- name is always non-empty here, so the join never falls through */
       .join('') || appConfig.name[0]
   );
 };

@@ -3,6 +3,7 @@ import SettingsIcon from '@mui/icons-material/Settings';
 import TuneIcon from '@mui/icons-material/Tune';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import ForumIcon from '@mui/icons-material/Forum';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 
 const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
@@ -10,6 +11,8 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   tune: TuneIcon,
   dashboard: DashboardIcon,
   forum: ForumIcon,
+  ticket: ConfirmationNumberIcon,
+  chat: ForumIcon,
 };
 
 /** Resolves a config icon name to an MUI icon, falling back to a neutral glyph. */

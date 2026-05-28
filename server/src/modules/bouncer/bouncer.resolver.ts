@@ -2,7 +2,9 @@ import type { GraphQLContext } from '../../context';
 import { requireAuth, requireRole } from '../../middleware/rbac';
 import { bouncerService } from './bouncer.service';
 
-const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN'];
+// Bouncer monitoring now lives in the Support portal, so the agent-side
+// queries/mutations are gated to support roles instead of city admins.
+const ADMIN_ROLES = ['SUPER_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_USER'];
 
 export const bouncerResolvers = {
   Query: {

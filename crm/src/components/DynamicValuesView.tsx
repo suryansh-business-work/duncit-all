@@ -20,6 +20,13 @@ const fmt = (field: CrmDynamicField, raw: unknown): string => {
       return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
     }
   }
+  if (field.kind === 'select') {
+    // Map stored option value(s) back to their human label(s). Handles both
+    // single-select (string) and multi-select (string[]).
+    const labelFor = (v: unknown) => field.options.find((o) => o.value === v)?.label ?? String(v);
+    if (Array.isArray(raw)) return raw.length ? raw.map(labelFor).join(', ') : '—';
+    return labelFor(raw);
+  }
   return String(raw);
 };
 

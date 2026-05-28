@@ -9,7 +9,6 @@ import { useCrmConfig } from '../../api/useCrmConfig';
 import { useSuperCategories } from '../../api/useSuperCategories';
 import LeadsToolbar from '../../components/LeadsToolbar';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import VobizContactDialog from '../../components/VobizContactDialog';
 import FillWithAiDialog from '../../components/FillWithAiDialog';
 import ExcelImportDialog from '../../components/ExcelImportDialog';
 import HostLeadsTable from './HostLeadsTable';
@@ -30,7 +29,6 @@ export default function HostLeadsPage() {
   const [showAi, setShowAi] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [toDelete, setToDelete] = useState<HostLead | null>(null);
-  const [vobiz, setVobiz] = useState<{ mode: 'email' | 'call'; lead: HostLead } | null>(null);
 
   const { data, loading, refetch } = useQuery<{ hostLeads: HostLead[] }>(HOST_LEADS, {
     variables: {
@@ -89,15 +87,6 @@ export default function HostLeadsPage() {
     }
   };
 
-  const vobizLead = vobiz
-    ? {
-        id: vobiz.lead.id,
-        display_name: vobiz.lead.host_name,
-        primary_email: vobiz.lead.contacts?.[0]?.email,
-        primary_mobile: vobiz.lead.contacts?.[0]?.mobile_number,
-      }
-    : null;
-
   return (
     <Stack spacing={2.5}>
       <LeadsToolbar
@@ -107,6 +96,8 @@ export default function HostLeadsPage() {
         onSearch={setSearch}
         onCreate={() => navigate('/host-leads/new')}
         createLabel="New Host Lead"
+        onManageServices={() => navigate('/host-leads/services')}
+        manageServicesLabel="Manage Host Services"
         superCategory={{
           selected: superCategoryFilter,
           options: superCategoryOptions,
@@ -127,8 +118,6 @@ export default function HostLeadsPage() {
         loading={loading && !data}
         onView={(lead) => navigate(`/host-leads/${lead.id}/view`)}
         onEdit={(lead) => navigate(`/host-leads/${lead.id}`)}
-        onEmail={(lead) => setVobiz({ mode: 'email', lead })}
-        onCall={(lead) => setVobiz({ mode: 'call', lead })}
         onDelete={setToDelete}
       />
 
@@ -140,15 +129,6 @@ export default function HostLeadsPage() {
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}
-      />
-
-      <VobizContactDialog
-        open={!!vobiz}
-        mode={vobiz?.mode ?? 'email'}
-        entity="HOST_LEAD"
-        lead={vobizLead}
-        onClose={() => setVobiz(null)}
-        onResult={(message) => setToast(message)}
       />
 
       <FillWithAiDialog

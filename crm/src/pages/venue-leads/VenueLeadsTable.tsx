@@ -2,8 +2,6 @@ import { useMemo } from 'react';
 import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import { DataGrid, type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
-import EmailIcon from '@mui/icons-material/Email';
-import CallIcon from '@mui/icons-material/Call';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { format } from 'date-fns';
 import type { VenueLead } from '../../api/crm.types';
@@ -14,8 +12,6 @@ interface Props {
   loading?: boolean;
   onView: (lead: VenueLead) => void;
   onEdit: (lead: VenueLead) => void;
-  onEmail: (lead: VenueLead) => void;
-  onCall: (lead: VenueLead) => void;
   onDelete: (lead: VenueLead) => void;
 }
 
@@ -25,7 +21,7 @@ const fmt = (value?: string | null) => {
   return Number.isNaN(date.getTime()) ? '—' : format(date, 'dd MMM yyyy');
 };
 
-export default function VenueLeadsTable({ leads, loading, onView, onEdit, onEmail, onCall, onDelete }: Props) {
+export default function VenueLeadsTable({ leads, loading, onView, onEdit, onDelete }: Props) {
   const columns = useMemo<GridColDef<VenueLead>[]>(
     () => [
       {
@@ -73,26 +69,19 @@ export default function VenueLeadsTable({ leads, loading, onView, onEdit, onEmai
         disableColumnMenu: true,
         align: 'right',
         headerAlign: 'right',
-        minWidth: 220,
+        minWidth: 120,
         renderCell: (params) => (
-          // stopPropagation so action clicks don't bubble to the row's
-          // onRowClick (which navigates to detail view).
-          <Stack
-            direction="row"
-            spacing={0.5}
-            justifyContent="flex-end"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* "Details" eye icon removed — the entire row is clickable. */}
-            <Tooltip title="Email"><IconButton size="small" onClick={() => onEmail(params.row)}><EmailIcon fontSize="small" /></IconButton></Tooltip>
-            <Tooltip title="Call"><IconButton size="small" onClick={() => onCall(params.row)}><CallIcon fontSize="small" /></IconButton></Tooltip>
+          // Call / WhatsApp / Email moved to the detail page (under the title).
+          // The list keeps only Edit + Delete. stopPropagation so action clicks
+          // don't bubble to the row's onRowClick (which opens the detail view).
+          <Stack direction="row" spacing={0.5} justifyContent="flex-end" onClick={(e) => e.stopPropagation()}>
             <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(params.row)}><EditIcon fontSize="small" /></IconButton></Tooltip>
             <Tooltip title="Delete"><IconButton size="small" color="error" onClick={() => onDelete(params.row)}><DeleteIcon fontSize="small" /></IconButton></Tooltip>
           </Stack>
         ),
       },
     ],
-    [onView, onEdit, onEmail, onCall, onDelete]
+    [onView, onEdit, onDelete]
   );
 
   return (
@@ -113,7 +102,6 @@ export default function VenueLeadsTable({ leads, loading, onView, onEdit, onEmai
       rowHeight={56}
       sx={{
         cursor: 'pointer',
-        // Extra breathing room per row (was compact / 32px).
         '& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center', py: 1 },
         '& .MuiDataGrid-row:hover': { bgcolor: 'action.hover' },
       }}

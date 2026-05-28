@@ -67,3 +67,10 @@ https://marketing.duncit.com/
 14. After completing all changes, make sure to verify the build, check types, run lint checks, apply code formatting, and only then push the code to the repository. Ensure that all GitHub CI checks pass successfully and that the application is fully functional across all environments (https://duncit.com, https://server.duncit.com/, https://admin.duncit.com/, https://mweb.duncit.com/, https://partners.duncit.com, https://partners-app.duncit.com, https://ads.duncit.com/, https://crm.duncit.com/, https://finance.duncit.com/, https://tech.duncit.com/, https://support.duncit.com/, https://website.duncit.com/, https://legal.duncit.com/, https://ai.duncit.com/, https://products.duncit.com/, https://marketing.duncit.com/).
 
 15. Performance, Security, Accessbility, SEO, Best Practices, Code Quality, Scalability, and Maintainability should be the top priority while writing code. Always follow industry best practices and guidelines to ensure that the codebase remains robust, secure, and maintainable in the long run. Regularly review and refactor code to improve performance, enhance security, and ensure accessibility compliance.
+
+16. Don't overengineer: Simple beats complex
+17. No fallbacks: One correct path, no alternatives
+18. Separation of concerns: Each function should have a single responsibility
+19. Proper Error Handling and Logging: Always handle errors gracefully and log them appropriately for debugging and monitoring purposes.
+20. Consistent Code Style: Follow a consistent code style and formatting guidelines to improve readability and maintainability across the codebase.
+21. Regular Code Reviews: Conduct regular code reviews to ensure code quality, share knowledge, and maintain coding standards across the team.

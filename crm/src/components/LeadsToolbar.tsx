@@ -5,6 +5,7 @@ import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
 import FileDownloadIcon from '@mui/icons-material/FileDownload';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import DescriptionIcon from '@mui/icons-material/Description';
+import HandymanIcon from '@mui/icons-material/Handyman';
 
 interface ChipOption {
   label: string;
@@ -54,6 +55,8 @@ interface Props {
   onImport?: () => void;
   onExport?: () => void;
   onDownloadTemplate?: () => void;
+  onManageServices?: () => void;
+  manageServicesLabel?: string;
 }
 
 export default function LeadsToolbar({
@@ -70,6 +73,8 @@ export default function LeadsToolbar({
   onImport,
   onExport,
   onDownloadTemplate,
+  onManageServices,
+  manageServicesLabel = 'Manage Services',
 }: Props) {
   return (
     <Stack spacing={1.25}>
@@ -87,6 +92,13 @@ export default function LeadsToolbar({
             InputProps={{ startAdornment: (<InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment>) }}
             sx={{ flex: 1, minWidth: 200 }}
           />
+          {onManageServices && (
+            <Tooltip title="Manage the catalogue of services offered">
+              <Button startIcon={<HandymanIcon />} variant="outlined" onClick={onManageServices}>
+                {manageServicesLabel}
+              </Button>
+            </Tooltip>
+          )}
           {onFillWithAi && (
             <Tooltip title="Paste a free-text description and let AI populate the form">
               <Button startIcon={<AutoFixHighIcon />} variant="outlined" color="secondary" onClick={onFillWithAi}>

@@ -189,8 +189,17 @@ const crmDynamicFieldSchema = new Schema(
       enum: ['text', 'textarea', 'number', 'boolean', 'date', 'select'],
       default: 'text',
     },
-    // For `select` kind only.
-    options: { type: [String], default: [] },
+    // For `select` kind only. Stored as `{ value, label }` objects. Legacy
+    // rows that stored plain strings are normalised to objects on read
+    // (see `pubDynamicField`), so no data migration is required.
+    options: { type: [Schema.Types.Mixed], default: [] },
+    // When true a `select` field accepts multiple values (stored as an array
+    // on the lead's dynamic_values map); otherwise a single value.
+    multi: { type: Boolean, default: false },
+    // Optional UX copy shown on the rendered input.
+    placeholder: { type: String, trim: true, default: '' },
+    default_value: { type: String, trim: true, default: '' },
+    hint: { type: String, trim: true, default: '' },
     applies_to_venue: { type: Boolean, default: true },
     applies_to_host: { type: Boolean, default: true },
     required: { type: Boolean, default: false },

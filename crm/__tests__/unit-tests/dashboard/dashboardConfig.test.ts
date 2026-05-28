@@ -20,9 +20,29 @@ describe('rangeToWindow', () => {
     expect(rangeToWindow('all', {})).toEqual({});
   });
 
-  it('honours the custom window verbatim', () => {
-    const custom = { from: new Date('2026-01-01'), to: new Date('2026-01-31') };
-    expect(rangeToWindow('custom', custom)).toEqual(custom);
+  it('snaps the custom window to inclusive full-day bounds', () => {
+    const from = new Date('2026-01-10T09:30:00');
+    const to = new Date('2026-01-20T14:00:00');
+    const w = rangeToWindow('custom', { from, to });
+    // From is pulled back to the start of its day, To pushed to the end of its
+    // day so the picked "To" date is INCLUSIVE.
+    expect(w.from!.getHours()).toBe(0);
+    expect(w.from!.getMinutes()).toBe(0);
+    expect(w.to!.getHours()).toBe(23);
+    expect(w.to!.getMinutes()).toBe(59);
+    // A timestamp late on the "To" day is still inside the window.
+    expect(isInWindow('2026-01-20T23:45:00', w)).toBe(true);
+  });
+
+  it('returns an empty-ish custom window when no dates are picked', () => {
+    expect(rangeToWindow('custom', {})).toEqual({ from: undefined, to: undefined });
+  });
+
+  it('starts "today" at midnight, not 24h ago', () => {
+    const w = rangeToWindow('today', {});
+    expect(w.from!.getHours()).toBe(0);
+    expect(w.from!.getMinutes()).toBe(0);
+    expect(w.from!.toDateString()).toBe(new Date().toDateString());
   });
 
   it('builds a window ending at "now" for each preset range', () => {

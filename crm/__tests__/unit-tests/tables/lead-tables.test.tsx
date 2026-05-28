@@ -33,20 +33,9 @@ describe('VenueLeadsTable', () => {
   it('renders rows and fires onView on row click', () => {
     const onView = vi.fn();
     const onEdit = vi.fn();
-    const onEmail = vi.fn();
-    const onCall = vi.fn();
     const onDelete = vi.fn();
 
-    render(
-      <VenueLeadsTable
-        leads={[venueLead]}
-        onView={onView}
-        onEdit={onEdit}
-        onEmail={onEmail}
-        onCall={onCall}
-        onDelete={onDelete}
-      />
-    );
+    render(<VenueLeadsTable leads={[venueLead]} onView={onView} onEdit={onEdit} onDelete={onDelete} />);
 
     expect(screen.getByText('Grand Hall')).toBeTruthy();
     expect(screen.getByText('Mumbai')).toBeTruthy();
@@ -54,30 +43,21 @@ describe('VenueLeadsTable', () => {
     expect(onView).toHaveBeenCalledWith(expect.objectContaining({ id: 'v1' }));
   });
 
-  it('fires action callbacks without bubbling to onView', () => {
+  it('exposes only Edit + Delete (Call/WhatsApp/Email moved to the detail page)', () => {
     const onView = vi.fn();
     const onEdit = vi.fn();
-    const onEmail = vi.fn();
-    const onCall = vi.fn();
     const onDelete = vi.fn();
-    render(
-      <VenueLeadsTable
-        leads={[venueLead]}
-        onView={onView}
-        onEdit={onEdit}
-        onEmail={onEmail}
-        onCall={onCall}
-        onDelete={onDelete}
-      />
-    );
-    fireEvent.click(screen.getByLabelText(/Email/i));
-    fireEvent.click(screen.getByLabelText(/Call/i));
+    render(<VenueLeadsTable leads={[venueLead]} onView={onView} onEdit={onEdit} onDelete={onDelete} />);
+
+    // Contact actions are no longer in the list.
+    expect(screen.queryByLabelText(/Email/i)).toBeNull();
+    expect(screen.queryByLabelText(/Call/i)).toBeNull();
+
     fireEvent.click(screen.getByLabelText(/Edit/i));
     fireEvent.click(screen.getByLabelText(/Delete/i));
-    expect(onEmail).toHaveBeenCalledTimes(1);
-    expect(onCall).toHaveBeenCalledTimes(1);
     expect(onEdit).toHaveBeenCalledTimes(1);
     expect(onDelete).toHaveBeenCalledTimes(1);
+    // Action clicks must not bubble to the row's onView navigation.
     expect(onView).not.toHaveBeenCalled();
   });
 });
@@ -85,16 +65,7 @@ describe('VenueLeadsTable', () => {
 describe('HostLeadsTable', () => {
   it('renders rows and shows the contact mobile in the host cell', () => {
     const noop = vi.fn();
-    render(
-      <HostLeadsTable
-        leads={[hostLead]}
-        onView={noop}
-        onEdit={noop}
-        onEmail={noop}
-        onCall={noop}
-        onDelete={noop}
-      />
-    );
+    render(<HostLeadsTable leads={[hostLead]} onView={noop} onEdit={noop} onDelete={noop} />);
     expect(screen.getByText('Bob Co')).toBeTruthy();
     expect(screen.getByText('+91-8888888888')).toBeTruthy();
     expect(screen.getByText('Corporate')).toBeTruthy();
@@ -108,8 +79,6 @@ describe('HostLeadsTable', () => {
         leads={[{ ...hostLead, host_type: null, city: null } as any]}
         onView={noop}
         onEdit={noop}
-        onEmail={noop}
-        onCall={noop}
         onDelete={noop}
       />
     );
@@ -119,16 +88,7 @@ describe('HostLeadsTable', () => {
 
   it('renders the empty grid without crashing when leads is []', () => {
     const noop = vi.fn();
-    const { container } = render(
-      <HostLeadsTable
-        leads={[]}
-        onView={noop}
-        onEdit={noop}
-        onEmail={noop}
-        onCall={noop}
-        onDelete={noop}
-      />
-    );
+    const { container } = render(<HostLeadsTable leads={[]} onView={noop} onEdit={noop} onDelete={noop} />);
     expect(container.querySelector('.MuiDataGrid-root')).toBeTruthy();
   });
 });

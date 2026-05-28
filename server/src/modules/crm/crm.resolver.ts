@@ -185,5 +185,9 @@ export const crmResolvers = {
       requireRole(ctx, RW);
       return crmService.deleteDynamicField(args.id);
     },
+    reorderCrmDynamicFields: (_p: unknown, args: { ids: string[] }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.reorderDynamicFields(args.ids);
+    },
   },
 };

@@ -35,6 +35,7 @@ import { HOST_LEAD } from '../../api/crm.gql';
 import type { HostLead } from '../../api/crm.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
 import { LeadDetailCard, LeadDetailRow } from '../../components/LeadDetailCard';
+import LeadContactActions from '../../components/LeadContactActions';
 import LeadStatTile from '../../components/LeadStatTile';
 import LeadTabs, { type LeadTab } from '../../components/LeadTabs';
 import ServicesGrid from '../../components/ServicesGrid';
@@ -363,6 +364,14 @@ export default function HostLeadDetailPage() {
                   ))}
                 </Stack>
               )}
+              <LeadContactActions
+                entity="HOST_LEAD"
+                leadId={lead.id}
+                displayName={lead.host_name}
+                email={lead.contacts?.[0]?.email}
+                mobile={lead.contacts?.[0]?.mobile_number}
+                whatsapp={lead.contacts?.[0]?.whatsapp_number}
+              />
             </Box>
             <Button startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/host-leads/${lead.id}`)}>
               Edit

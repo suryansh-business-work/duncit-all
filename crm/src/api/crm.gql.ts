@@ -127,7 +127,7 @@ export const DELETE_CRM_SERVICE = gql`
   }
 `;
 
-const DYNAMIC_FIELD_FIELDS = `id name label kind options applies_to_venue applies_to_host required sort_order is_active created_at updated_at`;
+const DYNAMIC_FIELD_FIELDS = `id name label kind options { value label } multi placeholder default_value hint applies_to_venue applies_to_host required sort_order is_active created_at updated_at`;
 
 export const CRM_DYNAMIC_FIELDS = gql`
   query CrmDynamicFields($entity: CrmEntityType, $include_inactive: Boolean) {
@@ -149,6 +149,11 @@ export const UPDATE_CRM_DYNAMIC_FIELD = gql`
 export const DELETE_CRM_DYNAMIC_FIELD = gql`
   mutation DeleteCrmDynamicField($id: ID!) {
     deleteCrmDynamicField(id: $id)
+  }
+`;
+export const REORDER_CRM_DYNAMIC_FIELDS = gql`
+  mutation ReorderCrmDynamicFields($ids: [ID!]!) {
+    reorderCrmDynamicFields(ids: $ids) { ${DYNAMIC_FIELD_FIELDS} }
   }
 `;
 

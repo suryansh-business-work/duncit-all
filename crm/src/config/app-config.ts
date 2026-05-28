@@ -61,21 +61,11 @@ export const appConfig: AppConfig = {
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
     {
-      label: 'Venue Leads',
-      to: '/venue-leads',
-      icon: 'location',
-      children: [
-        { label: 'All Venue Leads', to: '/venue-leads', icon: 'location' },
-        { label: 'Manage Venue Services', to: '/venue-leads/services', icon: 'analytics' },
-      ],
-    },
-    {
-      label: 'Host Leads',
-      to: '/host-leads',
+      label: 'Leads',
       icon: 'groups',
       children: [
-        { label: 'All Host Leads', to: '/host-leads', icon: 'groups' },
-        { label: 'Manage Host Services', to: '/host-leads/services', icon: 'analytics' },
+        { label: 'Venue Leads', to: '/venue-leads', icon: 'location' },
+        { label: 'Host Leads', to: '/host-leads', icon: 'groups' },
       ],
     },
     {

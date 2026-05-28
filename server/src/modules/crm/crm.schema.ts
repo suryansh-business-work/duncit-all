@@ -63,12 +63,21 @@ export const crmTypeDefs = gql`
     select
   }
 
+  type CrmDynamicFieldOption {
+    value: String!
+    label: String!
+  }
+
   type CrmDynamicField {
     id: ID!
     name: String!
     label: String!
     kind: CrmDynamicFieldKind!
-    options: [String!]!
+    options: [CrmDynamicFieldOption!]!
+    multi: Boolean!
+    placeholder: String!
+    default_value: String!
+    hint: String!
     applies_to_venue: Boolean!
     applies_to_host: Boolean!
     required: Boolean!
@@ -78,11 +87,20 @@ export const crmTypeDefs = gql`
     updated_at: String
   }
 
+  input CrmDynamicFieldOptionInput {
+    value: String!
+    label: String!
+  }
+
   input CrmDynamicFieldInput {
     name: String!
     label: String!
     kind: CrmDynamicFieldKind!
-    options: [String!]
+    options: [CrmDynamicFieldOptionInput!]
+    multi: Boolean
+    placeholder: String
+    default_value: String
+    hint: String
     applies_to_venue: Boolean
     applies_to_host: Boolean
     required: Boolean
@@ -400,5 +418,6 @@ export const crmTypeDefs = gql`
     createCrmDynamicField(input: CrmDynamicFieldInput!): CrmDynamicField!
     updateCrmDynamicField(id: ID!, input: CrmDynamicFieldInput!): CrmDynamicField!
     deleteCrmDynamicField(id: ID!): Boolean!
+    reorderCrmDynamicFields(ids: [ID!]!): [CrmDynamicField!]!
   }
 `;

@@ -3,9 +3,17 @@ import { useQuery } from '@apollo/client';
 import { useField } from 'formik';
 import {
   Alert,
+  Box,
   Checkbox,
+  Chip,
+  FormControl,
   FormControlLabel,
+  FormHelperText,
+  InputLabel,
+  ListItemText,
   MenuItem,
+  OutlinedInput,
+  Select,
   Skeleton,
   Stack,
   TextField,
@@ -31,30 +39,53 @@ interface CellProps {
   onChange: (next: any) => void;
 }
 
+function MultiSelectCell({ field, value, onChange }: CellProps) {
+  const selected: string[] = Array.isArray(value) ? value : [];
+  return (
+    <FormControl fullWidth size="small" required={field.required}>
+      <InputLabel>{field.label}</InputLabel>
+      <Select
+        multiple
+        value={selected}
+        input={<OutlinedInput label={field.label} />}
+        onChange={(e) => onChange(typeof e.target.value === 'string' ? e.target.value.split(',') : e.target.value)}
+        renderValue={(sel) => (
+          <Box sx={{ display: 'flex', flexWrap: 'wrap', gap: 0.5 }}>
+            {(sel as string[]).map((v) => {
+              const opt = field.options.find((o) => o.value === v);
+              return <Chip key={v} size="small" label={opt?.label ?? v} />;
+            })}
+          </Box>
+        )}
+      >
+        {field.options.map((opt) => (
+          <MenuItem key={opt.value} value={opt.value}>
+            <Checkbox checked={selected.includes(opt.value)} size="small" />
+            <ListItemText primary={opt.label} />
+          </MenuItem>
+        ))}
+      </Select>
+      <FormHelperText>{field.hint || ' '}</FormHelperText>
+    </FormControl>
+  );
+}
+
 const FieldCell = ({ field, value, onChange }: CellProps) => {
+  const hint = field.hint || undefined;
+  const placeholder = field.placeholder || undefined;
+  // Display the configured default until the user enters their own value.
+  const shown = value ?? (field.default_value || '');
   switch (field.kind) {
     case 'textarea':
       return (
-        <TextField
-          fullWidth
-          size="small"
-          multiline
-          minRows={2}
-          label={field.label}
-          value={value ?? ''}
-          onChange={(e) => onChange(e.target.value)}
-        />
+        <TextField fullWidth size="small" multiline minRows={2} label={field.label} placeholder={placeholder}
+          helperText={hint} required={field.required} value={shown} onChange={(e) => onChange(e.target.value)} />
       );
     case 'number':
       return (
-        <TextField
-          fullWidth
-          size="small"
-          type="number"
-          label={field.label}
-          value={value ?? ''}
-          onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
-        />
+        <TextField fullWidth size="small" type="number" label={field.label} placeholder={placeholder}
+          helperText={hint} required={field.required} value={value ?? field.default_value ?? ''}
+          onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))} />
       );
     case 'boolean':
       return (
@@ -65,46 +96,25 @@ const FieldCell = ({ field, value, onChange }: CellProps) => {
       );
     case 'date':
       return (
-        <TextField
-          fullWidth
-          size="small"
-          type="date"
-          label={field.label}
-          InputLabelProps={{ shrink: true }}
-          value={value ?? ''}
-          onChange={(e) => onChange(e.target.value || null)}
-        />
+        <TextField fullWidth size="small" type="date" label={field.label} helperText={hint} required={field.required}
+          InputLabelProps={{ shrink: true }} value={value ?? ''} onChange={(e) => onChange(e.target.value || null)} />
       );
     case 'select':
+      if (field.multi) return <MultiSelectCell field={field} value={value} onChange={onChange} />;
       return (
-        <TextField
-          fullWidth
-          size="small"
-          select
-          label={field.label}
-          value={value ?? ''}
-          onChange={(e) => onChange(e.target.value || null)}
-        >
-          <MenuItem value="">
-            <em>None</em>
-          </MenuItem>
+        <TextField fullWidth size="small" select label={field.label} helperText={hint} required={field.required}
+          value={shown} onChange={(e) => onChange(e.target.value || null)}>
+          <MenuItem value=""><em>None</em></MenuItem>
           {field.options.map((opt) => (
-            <MenuItem key={opt} value={opt}>
-              {opt}
-            </MenuItem>
+            <MenuItem key={opt.value} value={opt.value}>{opt.label}</MenuItem>
           ))}
         </TextField>
       );
     case 'text':
     default:
       return (
-        <TextField
-          fullWidth
-          size="small"
-          label={field.label}
-          value={value ?? ''}
-          onChange={(e) => onChange(e.target.value)}
-        />
+        <TextField fullWidth size="small" label={field.label} placeholder={placeholder} helperText={hint}
+          required={field.required} value={shown} onChange={(e) => onChange(e.target.value)} />
       );
   }
 };

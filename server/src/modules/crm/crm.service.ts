@@ -60,6 +60,26 @@ function pub(doc: any) {
   };
 }
 
+// Normalise a stored/options-input array to `{ value, label }` objects.
+// Accepts legacy plain strings (value === label) and partial objects.
+function normalizeOptions(raw: any): { value: string; label: string }[] {
+  if (!Array.isArray(raw)) return [];
+  return raw
+    .map((entry) => {
+      if (typeof entry === 'string') {
+        const v = entry.trim();
+        return v ? { value: v, label: v } : null;
+      }
+      if (entry && typeof entry === 'object') {
+        const value = String(entry.value ?? entry.label ?? '').trim();
+        const label = String(entry.label ?? entry.value ?? '').trim();
+        return value ? { value, label: label || value } : null;
+      }
+      return null;
+    })
+    .filter((o): o is { value: string; label: string } => o !== null);
+}
+
 function pubDynamicField(doc: any) {
   const o = doc?.toObject ? doc.toObject() : doc;
   if (!o) return null;
@@ -68,7 +88,11 @@ function pubDynamicField(doc: any) {
     name: o.name,
     label: o.label,
     kind: o.kind,
-    options: o.options ?? [],
+    options: normalizeOptions(o.options),
+    multi: !!o.multi,
+    placeholder: o.placeholder ?? '',
+    default_value: o.default_value ?? '',
+    hint: o.hint ?? '',
     applies_to_venue: o.applies_to_venue !== false,
     applies_to_host: o.applies_to_host !== false,
     required: !!o.required,
@@ -392,7 +416,11 @@ export const crmService = {
       name,
       label: (input.label ?? name).trim(),
       kind: input.kind ?? 'text',
-      options: Array.isArray(input.options) ? input.options : [],
+      options: normalizeOptions(input.options),
+      multi: !!input.multi,
+      placeholder: (input.placeholder ?? '').trim(),
+      default_value: (input.default_value ?? '').trim(),
+      hint: (input.hint ?? '').trim(),
       applies_to_venue: input.applies_to_venue !== false,
       applies_to_host: input.applies_to_host !== false,
       required: !!input.required,
@@ -409,7 +437,11 @@ export const crmService = {
     // never the new `name`.
     if (input.label !== undefined) doc.label = (input.label ?? '').trim();
     if (input.kind !== undefined) doc.kind = input.kind;
-    if (input.options !== undefined) doc.options = Array.isArray(input.options) ? input.options : [];
+    if (input.options !== undefined) doc.options = normalizeOptions(input.options);
+    if (input.multi !== undefined) doc.multi = !!input.multi;
+    if (input.placeholder !== undefined) doc.placeholder = (input.placeholder ?? '').trim();
+    if (input.default_value !== undefined) doc.default_value = (input.default_value ?? '').trim();
+    if (input.hint !== undefined) doc.hint = (input.hint ?? '').trim();
     if (input.applies_to_venue !== undefined) doc.applies_to_venue = input.applies_to_venue;
     if (input.applies_to_host !== undefined) doc.applies_to_host = input.applies_to_host;
     if (input.required !== undefined) doc.required = !!input.required;
@@ -422,6 +454,20 @@ export const crmService = {
     const doc = await CrmDynamicFieldModel.findByIdAndDelete(id);
     if (!doc) notFound('Dynamic field');
     return true;
+  },
+  // Persist a new vertical order. `ids` is the full ordered list of field
+  // ids; each field's sort_order is set to its index so the table's
+  // drag-and-drop order survives a refetch.
+  async reorderDynamicFields(ids: string[]) {
+    if (Array.isArray(ids) && ids.length) {
+      await Promise.all(
+        ids.map((id, index) =>
+          CrmDynamicFieldModel.updateOne({ _id: id }, { $set: { sort_order: index } })
+        )
+      );
+    }
+    const docs = await CrmDynamicFieldModel.find({}).sort({ sort_order: 1, label: 1 });
+    return docs.map(pubDynamicField);
   },
 
   /**

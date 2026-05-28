@@ -1,4 +1,4 @@
-import { subDays, startOfMonth, startOfWeek, startOfYear } from 'date-fns';
+import { endOfDay, startOfDay, startOfMonth, startOfWeek, startOfYear } from 'date-fns';
 
 export type DashboardRange = 'today' | 'week' | 'month' | 'year' | 'all' | 'custom';
 
@@ -20,7 +20,8 @@ export function rangeToWindow(range: DashboardRange, custom: DateWindow): DateWi
   const now = new Date();
   switch (range) {
     case 'today':
-      return { from: subDays(now, 1), to: now };
+      // Calendar today (midnight → now), not a rolling 24h window.
+      return { from: startOfDay(now), to: now };
     case 'week':
       return { from: startOfWeek(now, { weekStartsOn: 1 }), to: now };
     case 'month':
@@ -30,7 +31,12 @@ export function rangeToWindow(range: DashboardRange, custom: DateWindow): DateWi
     case 'all':
       return {};
     case 'custom':
-      return { from: custom.from, to: custom.to };
+      // Snap the picked days to full-day bounds so the "To" day is INCLUSIVE
+      // (the picker hands back midnight, which previously excluded that day).
+      return {
+        from: custom.from ? startOfDay(custom.from) : undefined,
+        to: custom.to ? endOfDay(custom.to) : undefined,
+      };
     default:
       return {};
   }

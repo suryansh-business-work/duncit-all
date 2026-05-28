@@ -9,7 +9,6 @@ import { useCrmConfig } from '../../api/useCrmConfig';
 import { useSuperCategories } from '../../api/useSuperCategories';
 import LeadsToolbar from '../../components/LeadsToolbar';
 import ConfirmDialog from '../../components/ConfirmDialog';
-import VobizContactDialog from '../../components/VobizContactDialog';
 import FillWithAiDialog from '../../components/FillWithAiDialog';
 import ExcelImportDialog from '../../components/ExcelImportDialog';
 import VenueLeadsTable from './VenueLeadsTable';
@@ -30,7 +29,6 @@ export default function VenueLeadsPage() {
   const [showAi, setShowAi] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [toDelete, setToDelete] = useState<VenueLead | null>(null);
-  const [vobiz, setVobiz] = useState<{ mode: 'email' | 'call'; lead: VenueLead } | null>(null);
 
   const { data, loading, refetch } = useQuery<{ venueLeads: VenueLead[] }>(VENUE_LEADS, {
     variables: {
@@ -89,15 +87,6 @@ export default function VenueLeadsPage() {
     }
   };
 
-  const vobizLead = vobiz
-    ? {
-        id: vobiz.lead.id,
-        display_name: vobiz.lead.venue_name,
-        primary_email: vobiz.lead.contacts?.[0]?.email,
-        primary_mobile: vobiz.lead.contacts?.[0]?.mobile_number,
-      }
-    : null;
-
   return (
     <Stack spacing={2.5}>
       <LeadsToolbar
@@ -107,6 +96,8 @@ export default function VenueLeadsPage() {
         onSearch={setSearch}
         onCreate={() => navigate('/venue-leads/new')}
         createLabel="New Venue Lead"
+        onManageServices={() => navigate('/venue-leads/services')}
+        manageServicesLabel="Manage Venue Services"
         superCategory={{
           selected: superCategoryFilter,
           options: superCategoryOptions,
@@ -127,8 +118,6 @@ export default function VenueLeadsPage() {
         loading={loading && !data}
         onView={(lead) => navigate(`/venue-leads/${lead.id}/view`)}
         onEdit={(lead) => navigate(`/venue-leads/${lead.id}`)}
-        onEmail={(lead) => setVobiz({ mode: 'email', lead })}
-        onCall={(lead) => setVobiz({ mode: 'call', lead })}
         onDelete={setToDelete}
       />
 
@@ -140,15 +129,6 @@ export default function VenueLeadsPage() {
         loading={deleting}
         onConfirm={confirmDelete}
         onClose={() => setToDelete(null)}
-      />
-
-      <VobizContactDialog
-        open={!!vobiz}
-        mode={vobiz?.mode ?? 'email'}
-        entity="VENUE_LEAD"
-        lead={vobizLead}
-        onClose={() => setVobiz(null)}
-        onResult={(message) => setToast(message)}
       />
 
       <FillWithAiDialog

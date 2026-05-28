@@ -61,12 +61,21 @@ export interface CrmLinkedHost {
 
 export type CrmDynamicFieldKind = 'text' | 'textarea' | 'number' | 'boolean' | 'date' | 'select';
 
+export interface CrmDynamicFieldOption {
+  value: string;
+  label: string;
+}
+
 export interface CrmDynamicField {
   id: string;
   name: string;
   label: string;
   kind: CrmDynamicFieldKind;
-  options: string[];
+  options: CrmDynamicFieldOption[];
+  multi: boolean;
+  placeholder: string;
+  default_value: string;
+  hint: string;
   applies_to_venue: boolean;
   applies_to_host: boolean;
   required: boolean;
@@ -76,7 +85,7 @@ export interface CrmDynamicField {
   updated_at?: string | null;
 }
 
-export type CrmDynamicValueMap = Record<string, string | number | boolean | null>;
+export type CrmDynamicValueMap = Record<string, string | number | boolean | string[] | null>;
 
 export interface VenueLead {
   id: string;

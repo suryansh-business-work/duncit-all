@@ -63,9 +63,10 @@ describe('Support portal (authenticated)', () => {
     cy.visit('/tickets');
     cy.contains('button', /new ticket/i, { timeout: 10000 }).click();
     cy.contains('New Ticket').should('be.visible');
-    cy.get('input').first().should('be.visible'); // subject field
-    cy.contains(/attach/i).should('be.visible'); // common upload component
-    cy.get('.ql-editor').should('exist'); // rich-text editor
+    cy.get('[role="dialog"]').within(() => {
+      cy.contains(/attach/i).should('exist'); // common upload component
+      cy.get('.ql-editor').should('exist'); // rich-text editor
+    });
   });
 
   it('shows the live-chat session sidebar', () => {

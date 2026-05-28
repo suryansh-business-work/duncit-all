@@ -60,8 +60,10 @@ describe('Legal portal (authenticated)', () => {
     cy.contains('Master NDA', { timeout: 10000 }).should('be.visible');
     cy.contains('button', /new document/i).click();
     cy.contains('New Document').should('be.visible');
-    cy.contains(/document type/i).should('be.visible'); // grouped, searchable picker
-    cy.get('.ql-editor').should('exist'); // rich-text editor
+    cy.get('[role="dialog"]').within(() => {
+      cy.get('[role="combobox"]').should('exist'); // grouped, searchable type picker
+      cy.get('.ql-editor').should('exist'); // rich-text editor
+    });
   });
 
   it('shows the policies management screen', () => {

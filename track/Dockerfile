@@ -29,5 +29,5 @@ RUN pnpm --filter track build
 # --- runner ---
 FROM public.ecr.aws/docker/library/nginx:alpine AS runner
 COPY --from=builder /repo/track/dist /usr/share/nginx/html
-COPY track/nginx.conf /etc/nginx/conf.d/default.conf
+COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

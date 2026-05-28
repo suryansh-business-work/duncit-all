@@ -78,3 +78,45 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2009:80"
+
+  support:
+    image: ${DOCKERHUB_USERNAME}/duncit-support:${IMAGE_TAG:-latest}
+    container_name: duncit-support
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2010:80"
+
+  website-app:
+    image: ${DOCKERHUB_USERNAME}/duncit-website-app:${IMAGE_TAG:-latest}
+    container_name: duncit-website-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2011:80"
+
+  legal:
+    image: ${DOCKERHUB_USERNAME}/duncit-legal:${IMAGE_TAG:-latest}
+    container_name: duncit-legal
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2012:80"
+
+  ai:
+    image: ${DOCKERHUB_USERNAME}/duncit-ai:${IMAGE_TAG:-latest}
+    container_name: duncit-ai
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2013:80"
+
+  products:
+    image: ${DOCKERHUB_USERNAME}/duncit-products:${IMAGE_TAG:-latest}
+    container_name: duncit-products
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2014:80"
+
+  marketing:
+    image: ${DOCKERHUB_USERNAME}/duncit-marketing:${IMAGE_TAG:-latest}
+    container_name: duncit-marketing
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2015:80"

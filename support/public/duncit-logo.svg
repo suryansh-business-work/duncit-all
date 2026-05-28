@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 420 120" role="img" aria-label="Duncit">
+  <title>Duncit</title>
+  <text x="210" y="86"
+        font-family="'Poppins','Inter','Helvetica Neue',Arial,sans-serif"
+        font-weight="900"
+        font-size="92"
+        letter-spacing="-3"
+        text-anchor="middle"
+        paint-order="stroke fill"
+        stroke="#0F1419"
+        stroke-width="8"
+        stroke-linejoin="round"
+        fill="#FF4D4F">Duncit</text>
+</svg>

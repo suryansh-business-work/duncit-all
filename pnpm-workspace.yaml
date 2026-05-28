@@ -9,4 +9,10 @@ packages:
   - crm
   - track
   - tech
+  - support
+  - website-app
+  - legal
+  - ai
+  - products
+  - marketing
   - packages/*

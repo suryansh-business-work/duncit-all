@@ -10,6 +10,12 @@ on:
       - 'crm/**'
       - 'track/**'
       - 'tech/**'
+      - 'support/**'
+      - 'website-app/**'
+      - 'legal/**'
+      - 'ai/**'
+      - 'products/**'
+      - 'marketing/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -23,6 +29,12 @@ on:
       - 'crm/**'
       - 'track/**'
       - 'tech/**'
+      - 'support/**'
+      - 'website-app/**'
+      - 'legal/**'
+      - 'ai/**'
+      - 'products/**'
+      - 'marketing/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -41,7 +53,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        workspace: [admin, mweb-app, ads, crm, track, tech]
+        workspace: [admin, mweb-app, ads, crm, track, tech, support, website-app, legal, ai, products, marketing]
 
     steps:
       - name: Checkout
@@ -118,4 +130,28 @@ jobs:
 
       - name: Typecheck tech
         working-directory: tech
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck support
+        working-directory: support
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck website-app
+        working-directory: website-app
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck legal
+        working-directory: legal
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck ai
+        working-directory: ai
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck products
+        working-directory: products
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck marketing
+        working-directory: marketing
         run: pnpm exec tsc -b --noEmit

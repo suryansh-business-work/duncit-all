@@ -11,11 +11,13 @@
 set -euo pipefail
 cd /opt/duncit
 
-ALL_SERVICES=(server admin mweb website partners-website partners-app ads crm track tech)
+ALL_SERVICES=(server admin mweb website partners-website partners-app ads crm track tech support website-app legal ai products marketing)
 declare -A PORT_OF=(
   [server]=2001 [admin]=2002 [mweb]=2003 [website]=2000
   [partners-website]=2004 [partners-app]=2005 [ads]=2006
   [crm]=2007 [track]=2008 [tech]=2009
+  [support]=2010 [website-app]=2011 [legal]=2012
+  [ai]=2013 [products]=2014 [marketing]=2015
 )
 
 requested_raw="${SERVICES:-}"

@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       services:
-        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website,ads,crm,track,tech (or "all")'
+        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website,ads,crm,track,tech,support,website-app,legal,ai,products,marketing (or "all")'
         required: false
         default: 'all'
 
@@ -38,6 +38,12 @@ jobs:
       crm: ${{ steps.filter.outputs.crm }}
       track: ${{ steps.filter.outputs.track }}
       tech: ${{ steps.filter.outputs.tech }}
+      support: ${{ steps.filter.outputs.support }}
+      website_app: ${{ steps.filter.outputs.website_app }}
+      legal: ${{ steps.filter.outputs.legal }}
+      ai: ${{ steps.filter.outputs.ai }}
+      products: ${{ steps.filter.outputs.products }}
+      marketing: ${{ steps.filter.outputs.marketing }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -118,6 +124,54 @@ jobs:
               - '.github/workflows/deploy.yml'
             tech:
               - 'tech/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            support:
+              - 'support/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            website_app:
+              - 'website-app/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            legal:
+              - 'legal/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            ai:
+              - 'ai/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            products:
+              - 'products/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            marketing:
+              - 'marketing/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -494,13 +548,187 @@ jobs:
               --cache-to   type=gha,scope=duncit-tech,mode=max \
               --push .
 
+  build-support:
+    needs: [changes, typecheck]
+    if: needs.changes.outputs.support == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push support
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file support/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=SUPPORT_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-support \
+              --cache-to   type=gha,scope=duncit-support,mode=max \
+              --push .
+
+  build-website-app:
+    needs: [changes, typecheck]
+    if: needs.changes.outputs.website_app == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push website-app
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file website-app/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website-app:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website-app:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=WEBSITE_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-website-app \
+              --cache-to   type=gha,scope=duncit-website-app,mode=max \
+              --push .
+
+  build-legal:
+    needs: [changes, typecheck]
+    if: needs.changes.outputs.legal == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push legal
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file legal/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-legal:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-legal:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=LEGAL_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-legal \
+              --cache-to   type=gha,scope=duncit-legal,mode=max \
+              --push .
+
+  build-ai:
+    needs: [changes, typecheck]
+    if: needs.changes.outputs.ai == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push ai
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file ai/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ai:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ai:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=AI_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-ai \
+              --cache-to   type=gha,scope=duncit-ai,mode=max \
+              --push .
+
+  build-products:
+    needs: [changes, typecheck]
+    if: needs.changes.outputs.products == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push products
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file products/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-products:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-products:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=PRODUCTS_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-products \
+              --cache-to   type=gha,scope=duncit-products,mode=max \
+              --push .
+
+  build-marketing:
+    needs: [changes, typecheck]
+    if: needs.changes.outputs.marketing == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push marketing
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file marketing/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=MARKETING_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-marketing \
+              --cache-to   type=gha,scope=duncit-marketing,mode=max \
+              --push .
+
   # -----------------------------------------------------------
   # Single deploy job runs after whichever build jobs ran. It only
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads, build-crm, build-track, build-tech]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads.result == 'success' || needs.build-crm.result == 'success' || needs.build-track.result == 'success' || needs.build-tech.result == 'success')
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads, build-crm, build-track, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing]
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads.result == 'success' || needs.build-crm.result == 'success' || needs.build-track.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -529,6 +757,12 @@ jobs:
           [ "${{ needs.build-crm.result }}" = "success" ] && PARTS+=("crm")
           [ "${{ needs.build-track.result }}" = "success" ] && PARTS+=("track")
           [ "${{ needs.build-tech.result }}" = "success" ] && PARTS+=("tech")
+          [ "${{ needs.build-support.result }}" = "success" ] && PARTS+=("support")
+          [ "${{ needs.build-website-app.result }}" = "success" ] && PARTS+=("website-app")
+          [ "${{ needs.build-legal.result }}" = "success" ] && PARTS+=("legal")
+          [ "${{ needs.build-ai.result }}" = "success" ] && PARTS+=("ai")
+          [ "${{ needs.build-products.result }}" = "success" ] && PARTS+=("products")
+          [ "${{ needs.build-marketing.result }}" = "success" ] && PARTS+=("marketing")
           echo "list=${PARTS[*]}" >> "$GITHUB_OUTPUT"
           echo "Restarting: ${PARTS[*]}"
 
@@ -582,29 +816,25 @@ jobs:
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/redeploy.sh \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/redeploy.sh
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/nginx/duncit.com \
-            deploy/nginx/admin.duncit.com \
-            deploy/nginx/mweb.duncit.com \
-            deploy/nginx/server.duncit.com \
-            deploy/nginx/ads.duncit.com \
-            deploy/nginx/crm.duncit.com \
-            deploy/nginx/track.duncit.com \
-            deploy/nginx/tech.duncit.com \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/nginx/
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/nginx/duncit.com
           ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'REMOTE'
           set -e
           chmod 600 /opt/duncit/server.env
           chmod +x /opt/duncit/redeploy.sh
           SUDO=$(command -v sudo || echo)
-          for site in duncit.com admin.duncit.com mweb.duncit.com server.duncit.com ads.duncit.com crm.duncit.com track.duncit.com tech.duncit.com; do
-            $SUDO install -m 644 "/opt/duncit/nginx/$site" "/etc/nginx/sites-available/$site"
-            $SUDO ln -sf "/etc/nginx/sites-available/$site" "/etc/nginx/sites-enabled/$site"
+          # Single consolidated vhost. Install duncit.com, then drop any legacy
+          # per-subdomain files so their server_name blocks can't conflict.
+          $SUDO install -m 644 /opt/duncit/nginx/duncit.com /etc/nginx/sites-available/duncit.com
+          $SUDO ln -sf /etc/nginx/sites-available/duncit.com /etc/nginx/sites-enabled/duncit.com
+          for old in admin.duncit.com mweb.duncit.com server.duncit.com ads.duncit.com crm.duncit.com track.duncit.com tech.duncit.com partners.duncit.com partners-app.duncit.com support.duncit.com website.duncit.com legal.duncit.com ai.duncit.com products.duncit.com marketing.duncit.com; do
+            $SUDO rm -f "/etc/nginx/sites-available/$old" "/etc/nginx/sites-enabled/$old"
           done
           if ! command -v certbot >/dev/null 2>&1; then
             $SUDO apt-get update -qq
             $SUDO apt-get install -y -qq certbot python3-certbot-nginx
           fi
-          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d crm.duncit.com -d track.duncit.com -d tech.duncit.com"
+          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d crm.duncit.com -d track.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com"
           if ! $SUDO test -d /etc/letsencrypt/live/duncit.com; then
             $SUDO certbot --nginx --non-interactive --agree-tos --redirect --cert-name duncit.com -m admin@duncit.com $CERTBOT_DOMAINS || true
           else
@@ -648,4 +878,10 @@ jobs:
               curl -fsSI http://127.0.0.1:2007/ | head -1
               curl -fsSI http://127.0.0.1:2008/ | head -1
               curl -fsSI http://127.0.0.1:2009/ | head -1
+              curl -fsSI http://127.0.0.1:2010/ | head -1
+              curl -fsSI http://127.0.0.1:2011/ | head -1
+              curl -fsSI http://127.0.0.1:2012/ | head -1
+              curl -fsSI http://127.0.0.1:2013/ | head -1
+              curl -fsSI http://127.0.0.1:2014/ | head -1
+              curl -fsSI http://127.0.0.1:2015/ | head -1
               '

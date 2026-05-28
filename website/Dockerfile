@@ -13,6 +13,12 @@ COPY ads/package.json ./ads/
 COPY crm/package.json ./crm/
 COPY track/package.json ./track/
 COPY tech/package.json ./tech/
+COPY support/package.json ./support/
+COPY website-app/package.json ./website-app/
+COPY legal/package.json ./legal/
+COPY ai/package.json ./ai/
+COPY products/package.json ./products/
+COPY marketing/package.json ./marketing/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
@@ -23,5 +29,5 @@ RUN pnpm --filter duncit.com build
 # --- runner ---
 FROM public.ecr.aws/docker/library/nginx:alpine AS runner
 COPY --from=builder /repo/website/dist /usr/share/nginx/html
-COPY website/nginx.conf /etc/nginx/conf.d/default.conf
+COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

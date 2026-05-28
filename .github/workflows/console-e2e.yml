@@ -1,0 +1,111 @@
+name: Console E2E
+
+# Cypress end-to-end smoke tests for the login-gated consoles (support,
+# website-app, legal, ai, products, marketing). Runs the e2e build (which
+# forces same-origin /graphql so cy.intercept catches every call), previews
+# it, and drives the login flow. Decoupled from deploy.yml so a flaky e2e
+# never bounces a healthy production service.
+on:
+  push:
+    branches: [main, master]
+    paths:
+      - 'support/**'
+      - 'website-app/**'
+      - 'legal/**'
+      - 'ai/**'
+      - 'products/**'
+      - 'marketing/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/console-e2e.yml'
+  pull_request:
+    branches: [main, master]
+    paths:
+      - 'support/**'
+      - 'website-app/**'
+      - 'legal/**'
+      - 'ai/**'
+      - 'products/**'
+      - 'marketing/**'
+      - 'packages/**'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/console-e2e.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: console-e2e-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - workspace: support
+            port: 2010
+          - workspace: website-app
+            port: 2011
+          - workspace: legal
+            port: 2012
+          - workspace: ai
+            port: 2013
+          - workspace: products
+            port: 2014
+          - workspace: marketing
+            port: 2015
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install workspace deps
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Cypress binary
+        working-directory: ${{ matrix.workspace }}
+        run: pnpm exec cypress install
+
+      - name: Type-check source
+        working-directory: ${{ matrix.workspace }}
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Type-check Cypress specs
+        working-directory: ${{ matrix.workspace }}
+        run: pnpm exec tsc --noEmit -p __tests__/e2e/tsconfig.json
+
+      - name: Run vitest unit tests
+        working-directory: ${{ matrix.workspace }}
+        run: pnpm exec vitest run --reporter=default
+
+      - name: Build e2e bundle
+        working-directory: ${{ matrix.workspace }}
+        run: pnpm build:e2e
+
+      - name: Run Cypress e2e specs
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: ${{ matrix.workspace }}
+          install: false
+          config-file: __tests__/e2e/cypress.config.ts
+          start: pnpm preview
+          wait-on: 'http://localhost:${{ matrix.port }}'
+          wait-on-timeout: 120
+          browser: chrome
+
+      - name: Upload Cypress screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.workspace }}-cypress-screenshots
+          path: ${{ matrix.workspace }}/cypress-artifacts/screenshots
+          if-no-files-found: ignore

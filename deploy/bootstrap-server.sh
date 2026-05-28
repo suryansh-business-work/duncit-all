@@ -1,6 +1,8 @@
 #!/usr/bin/env bash
 # Idempotent server bootstrap. Run ONCE on the VPS as root.
-# Does NOT touch existing duncit.com (website) site config.
+# Installs a single consolidated /etc/nginx/sites-available/duncit.com vhost
+# (apex + every subdomain). The deploy workflow later overwrites it with the
+# repo's deploy/nginx/duncit.com and runs certbot for TLS.
 #
 #   ssh root@148.135.136.107 'DOCKERHUB_USERNAME=<u> bash -s' < deploy/bootstrap-server.sh
 #
@@ -108,16 +110,61 @@ services:
     container_name: duncit-tech
     restart: unless-stopped
     ports: ["127.0.0.1:2009:80"]
+  support:
+    image: ${DOCKERHUB_USERNAME}/duncit-support:latest
+    container_name: duncit-support
+    restart: unless-stopped
+    ports: ["127.0.0.1:2010:80"]
+  website-app:
+    image: ${DOCKERHUB_USERNAME}/duncit-website-app:latest
+    container_name: duncit-website-app
+    restart: unless-stopped
+    ports: ["127.0.0.1:2011:80"]
+  legal:
+    image: ${DOCKERHUB_USERNAME}/duncit-legal:latest
+    container_name: duncit-legal
+    restart: unless-stopped
+    ports: ["127.0.0.1:2012:80"]
+  ai:
+    image: ${DOCKERHUB_USERNAME}/duncit-ai:latest
+    container_name: duncit-ai
+    restart: unless-stopped
+    ports: ["127.0.0.1:2013:80"]
+  products:
+    image: ${DOCKERHUB_USERNAME}/duncit-products:latest
+    container_name: duncit-products
+    restart: unless-stopped
+    ports: ["127.0.0.1:2014:80"]
+  marketing:
+    image: ${DOCKERHUB_USERNAME}/duncit-marketing:latest
+    container_name: duncit-marketing
+    restart: unless-stopped
+    ports: ["127.0.0.1:2015:80"]
 EOF
 
-echo "[4/6] Install nginx site configs (skipping existing duncit.com)"
+echo "[4/6] Install consolidated nginx vhost (single duncit.com)"
 SITES_AVAIL=/etc/nginx/sites-available
 SITES_ENABL=/etc/nginx/sites-enabled
 mkdir -p "$SITES_AVAIL" "$SITES_ENABL"
 
-write_site() {
+# Drop any legacy per-subdomain vhosts so they don't clash with the
+# consolidated file's server_name blocks.
+for old in server.duncit.com admin.duncit.com mweb.duncit.com ads.duncit.com \
+           crm.duncit.com track.duncit.com tech.duncit.com partners.duncit.com \
+           partners-app.duncit.com support.duncit.com website.duncit.com \
+           legal.duncit.com ai.duncit.com products.duncit.com marketing.duncit.com; do
+  rm -f "$SITES_AVAIL/$old" "$SITES_ENABL/$old"
+done
+
+CONF="$SITES_AVAIL/duncit.com"
+: > "$CONF"
+
+# Basic HTTP proxy block. server.duncit.com gets full CORS later when the
+# deploy workflow ships repo deploy/nginx/duncit.com; this is just enough to
+# bring nginx up on a fresh box.
+append_block() {
   local NAME="$1" UPSTREAM="$2"
-  cat > "$SITES_AVAIL/$NAME" <<NGINX
+  cat >> "$CONF" <<NGINX
 server {
     listen 80;
     listen [::]:80;
@@ -135,22 +182,28 @@ server {
         proxy_read_timeout 90s;
     }
 }
+
 NGINX
-  ln -sf "$SITES_AVAIL/$NAME" "$SITES_ENABL/$NAME"
 }
 
-write_site "server.duncit.com" 2001
-write_site "admin.duncit.com"  2002
-write_site "mweb.duncit.com"   2003
-write_site "duncit.com"        2000
-write_site "partners.duncit.com" 2004
-write_site "partners-app.duncit.com" 2005
-write_site "ads.duncit.com"     2006
-write_site "crm.duncit.com"     2007
-write_site "track.duncit.com"   2008
-write_site "tech.duncit.com"    2009
-# Also alias www -> apex
-sed -i 's/server_name duncit.com;/server_name duncit.com www.duncit.com;/' "$SITES_AVAIL/duncit.com" || true
+append_block "duncit.com www.duncit.com" 2000
+append_block "server.duncit.com" 2001
+append_block "admin.duncit.com"  2002
+append_block "mweb.duncit.com"   2003
+append_block "partners.duncit.com" 2004
+append_block "partners-app.duncit.com" 2005
+append_block "ads.duncit.com"     2006
+append_block "crm.duncit.com"     2007
+append_block "track.duncit.com"   2008
+append_block "tech.duncit.com"    2009
+append_block "support.duncit.com"   2010
+append_block "website.duncit.com"   2011
+append_block "legal.duncit.com"     2012
+append_block "ai.duncit.com"        2013
+append_block "products.duncit.com"  2014
+append_block "marketing.duncit.com" 2015
+
+ln -sf "$CONF" "$SITES_ENABL/duncit.com"
 
 echo "[5/6] nginx -t && reload"
 nginx -t

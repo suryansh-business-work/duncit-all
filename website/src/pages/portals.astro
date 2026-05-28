@@ -8,7 +8,7 @@ interface Portal {
   tag: string;
   desc: string;
   audience: string;
-  accent: 'primary' | 'secondary' | 'mint' | 'lemon' | 'peach' | 'sky' | 'lilac';
+  accent: 'primary' | 'secondary' | 'mint' | 'lemon' | 'peach' | 'sky' | 'lilac' | 'teal' | 'blue' | 'violet' | 'fuchsia' | 'orange' | 'rose';
 }
 
 const portals: Portal[] = [
@@ -67,6 +67,60 @@ const portals: Portal[] = [
     accent: 'sky',
   },
   {
+    name: 'Support',
+    url: 'https://support.duncit.com/',
+    icon: 'fa-headset',
+    tag: 'For support',
+    desc: 'Handle customer tickets and support conversations.',
+    audience: 'Internal · Support',
+    accent: 'teal',
+  },
+  {
+    name: 'Website',
+    url: 'https://website.duncit.com/',
+    icon: 'fa-pen-ruler',
+    tag: 'For content',
+    desc: 'Manage website content, pages and publishing.',
+    audience: 'Internal · Content',
+    accent: 'blue',
+  },
+  {
+    name: 'Legal',
+    url: 'https://legal.duncit.com/',
+    icon: 'fa-scale-balanced',
+    tag: 'For legal',
+    desc: 'Manage contracts, policies and compliance.',
+    audience: 'Internal · Legal',
+    accent: 'violet',
+  },
+  {
+    name: 'AI',
+    url: 'https://ai.duncit.com/',
+    icon: 'fa-robot',
+    tag: 'For AI ops',
+    desc: 'Operate AI tools and model configuration.',
+    audience: 'Internal · AI',
+    accent: 'fuchsia',
+  },
+  {
+    name: 'Products',
+    url: 'https://products.duncit.com/',
+    icon: 'fa-box-open',
+    tag: 'For product',
+    desc: 'Manage the product catalog and roadmap.',
+    audience: 'Internal · Product',
+    accent: 'orange',
+  },
+  {
+    name: 'Marketing',
+    url: 'https://marketing.duncit.com/',
+    icon: 'fa-chart-pie',
+    tag: 'For marketing',
+    desc: 'Plan campaigns and brand content.',
+    audience: 'Internal · Marketing',
+    accent: 'rose',
+  },
+  {
     name: 'Admin',
     url: 'https://admin.duncit.com/',
     icon: 'fa-shield-halved',
@@ -85,6 +139,12 @@ const accentClass: Record<Portal['accent'], string> = {
   peach: 'bg-orange-100 text-orange-700',
   sky: 'bg-sky-100 text-sky-700',
   lilac: 'bg-purple-100 text-purple-700',
+  teal: 'bg-teal-100 text-teal-700',
+  blue: 'bg-blue-100 text-blue-700',
+  violet: 'bg-violet-100 text-violet-700',
+  fuchsia: 'bg-fuchsia-100 text-fuchsia-700',
+  orange: 'bg-orange-100 text-orange-700',
+  rose: 'bg-rose-100 text-rose-700',
 };
 ---
 

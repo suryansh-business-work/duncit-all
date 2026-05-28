@@ -20,6 +20,12 @@ COPY ads/package.json ./ads/
 COPY crm/package.json ./crm/
 COPY track/package.json ./track/
 COPY tech/package.json ./tech/
+COPY support/package.json ./support/
+COPY website-app/package.json ./website-app/
+COPY legal/package.json ./legal/
+COPY ai/package.json ./ai/
+COPY products/package.json ./products/
+COPY marketing/package.json ./marketing/
 COPY packages/user-context/package.json ./packages/user-context/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
@@ -32,5 +38,5 @@ RUN pnpm --filter partners-app build
 # --- runner ---
 FROM public.ecr.aws/docker/library/nginx:alpine AS runner
 COPY --from=builder /repo/partners/partners-app/dist /usr/share/nginx/html
-COPY partners/partners-app/nginx.conf /etc/nginx/conf.d/default.conf
+COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

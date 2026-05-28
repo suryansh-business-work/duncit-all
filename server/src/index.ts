@@ -105,7 +105,7 @@ async function bootstrap() {
     let userId: string | null = null;
     if (token) {
       try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret') as {
           id?: string;
         };
         userId = decoded?.id ?? null;

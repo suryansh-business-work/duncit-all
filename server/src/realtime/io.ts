@@ -29,7 +29,7 @@ export function initSocketServer(httpServer: http.Server): Server {
       '';
     if (!token) return next(new Error('UNAUTHENTICATED'));
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret') as {
         id: string;
         roles?: string[];
       };

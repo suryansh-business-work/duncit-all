@@ -28,7 +28,10 @@ export async function buildContext({
   if (auth?.startsWith('Bearer ')) {
     const token = auth.slice(7);
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || '') as AuthUser;
+      // Fallback MUST match `signToken` (user.service.ts). If they diverge, a
+      // server started without JWT_SECRET signs with one secret and verifies
+      // with another — silently rejecting every token (me -> null for all).
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'dev-secret') as AuthUser;
       user = decoded;
     } catch {
       user = null;

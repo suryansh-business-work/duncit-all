@@ -94,9 +94,21 @@ export function UserProvider({
     setError(null);
     try {
       const fresh = await loadUserRef.current();
-      persist(fresh);
+      // Only overwrite the cache when we actually received a user. A `null`
+      // means the server returned no user (token rejected, or a transient edge
+      // during a deploy). We deliberately KEEP any cached user so an active
+      // session is never yanked and the recovery dialog doesn't pop for a
+      // momentary blip. A genuine sign-out goes through `logout()`, which
+      // clears storage explicitly.
+      if (fresh) persist(fresh);
+      setError(null);
       return fresh;
     } catch (e) {
+      // Network/transport failure (e.g. the 502 window while the API container
+      // restarts during a deploy). The Apollo RetryLink has already retried
+      // before this throw, so treat it as transient: keep the cached user and
+      // record the error only — the recovery dialog stays hidden as long as a
+      // cached user exists.
       setError(e instanceof Error ? e : new Error(String(e)));
       return null;
     } finally {
@@ -158,9 +170,13 @@ export function UserProvider({
   }, []);
 
   const hasLoadFailure = useMemo(
-    // Fire when authed, an attempt has finished, we still have no user. This
-    // covers both network failures (error set) and the silent "me returned
-    // null" case (server says the token is no longer valid).
+    // Fire only when authed, the first load attempt has finished, and we have
+    // NO user at all — neither fresh nor cached. Because `refetch` keeps the
+    // cached user on every failure (null or network error), this is now limited
+    // to the genuinely-stuck case: a brand-new session whose very first `me`
+    // could not be loaded even after RetryLink exhausted its retries. An active
+    // session with a cached user never trips this, so the recovery dialog stays
+    // hidden during deploys / transient blips.
     () => isAuthed() && !loading && loadAttempted && !user,
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [loading, user, loadAttempted]

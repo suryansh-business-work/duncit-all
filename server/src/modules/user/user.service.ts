@@ -220,6 +220,9 @@ async function startTwilioRecordedBridge(actionId: string, target: string) {
 
 async function signToken(payload: AuthUser): Promise<string> {
   const secret = process.env.JWT_SECRET || 'dev-secret';
+  // Intentionally NO `expiresIn`: Duncit sessions do not expire on their own.
+  // The same fallback secret is used by every `jwt.verify` site (context.ts,
+  // realtime/io.ts, index.ts) so a token signed here always verifies there.
   return jwt.sign(payload, secret);
 }
 

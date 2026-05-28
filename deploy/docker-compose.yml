@@ -65,9 +65,9 @@ services:
     ports:
       - "127.0.0.1:2007:80"
 
-  track:
-    image: ${DOCKERHUB_USERNAME}/duncit-track:${IMAGE_TAG:-latest}
-    container_name: duncit-track
+  finance:
+    image: ${DOCKERHUB_USERNAME}/duncit-finance:${IMAGE_TAG:-latest}
+    container_name: duncit-finance
     restart: unless-stopped
     ports:
       - "127.0.0.1:2008:80"

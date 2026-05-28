@@ -7,7 +7,7 @@ const isDevelopment = import.meta.env.DEV;
 
 const fallback = isDevelopment
   ? { graphqlUrl: 'http://localhost:2001/graphql', appUrl: 'http://localhost:2008' }
-  : { graphqlUrl: 'https://server.duncit.com/graphql', appUrl: 'https://track.duncit.com' };
+  : { graphqlUrl: 'https://server.duncit.com/graphql', appUrl: 'https://finance.duncit.com' };
 
 export const urlConfigs = {
   isDevelopment,

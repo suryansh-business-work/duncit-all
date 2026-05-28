@@ -100,9 +100,9 @@ services:
     container_name: duncit-crm
     restart: unless-stopped
     ports: ["127.0.0.1:2007:80"]
-  track:
-    image: ${DOCKERHUB_USERNAME}/duncit-track:latest
-    container_name: duncit-track
+  finance:
+    image: ${DOCKERHUB_USERNAME}/duncit-finance:latest
+    container_name: duncit-finance
     restart: unless-stopped
     ports: ["127.0.0.1:2008:80"]
   tech:
@@ -150,7 +150,7 @@ mkdir -p "$SITES_AVAIL" "$SITES_ENABL"
 # Drop any legacy per-subdomain vhosts so they don't clash with the
 # consolidated file's server_name blocks.
 for old in server.duncit.com admin.duncit.com mweb.duncit.com ads.duncit.com \
-           crm.duncit.com track.duncit.com tech.duncit.com partners.duncit.com \
+           crm.duncit.com track.duncit.com finance.duncit.com tech.duncit.com partners.duncit.com \
            partners-app.duncit.com support.duncit.com website.duncit.com \
            legal.duncit.com ai.duncit.com products.duncit.com marketing.duncit.com; do
   rm -f "$SITES_AVAIL/$old" "$SITES_ENABL/$old"
@@ -194,7 +194,7 @@ append_block "partners.duncit.com" 2004
 append_block "partners-app.duncit.com" 2005
 append_block "ads.duncit.com"     2006
 append_block "crm.duncit.com"     2007
-append_block "track.duncit.com"   2008
+append_block "finance.duncit.com" 2008
 append_block "tech.duncit.com"    2009
 append_block "support.duncit.com"   2010
 append_block "website.duncit.com"   2011

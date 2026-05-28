@@ -45,7 +45,7 @@ https://partners.duncit.com
 https://partners-app.duncit.com
 https://ads.duncit.com/
 https://crm.duncit.com/
-https://track.duncit.com/
+https://finance.duncit.com/
 https://tech.duncit.com/
 https://support.duncit.com/
 https://website.duncit.com/
@@ -64,6 +64,6 @@ https://marketing.duncit.com/
 
 13. Use GraphQL and GraphQL Code Generator for all API interactions. Ensure that all queries and mutations are properly typed and that the generated code is used throughout the project for type safety and consistency.
 
-14. After completing all changes, make sure to verify the build, check types, run lint checks, apply code formatting, and only then push the code to the repository. Ensure that all GitHub CI checks pass successfully and that the application is fully functional across all environments (https://duncit.com, https://server.duncit.com/, https://admin.duncit.com/, https://mweb.duncit.com/, https://partners.duncit.com, https://partners-app.duncit.com, https://ads.duncit.com/, https://crm.duncit.com/, https://track.duncit.com/, https://tech.duncit.com/, https://support.duncit.com/, https://website.duncit.com/, https://legal.duncit.com/, https://ai.duncit.com/, https://products.duncit.com/, https://marketing.duncit.com/).
+14. After completing all changes, make sure to verify the build, check types, run lint checks, apply code formatting, and only then push the code to the repository. Ensure that all GitHub CI checks pass successfully and that the application is fully functional across all environments (https://duncit.com, https://server.duncit.com/, https://admin.duncit.com/, https://mweb.duncit.com/, https://partners.duncit.com, https://partners-app.duncit.com, https://ads.duncit.com/, https://crm.duncit.com/, https://finance.duncit.com/, https://tech.duncit.com/, https://support.duncit.com/, https://website.duncit.com/, https://legal.duncit.com/, https://ai.duncit.com/, https://products.duncit.com/, https://marketing.duncit.com/).
 
 15. Performance, Security, Accessbility, SEO, Best Practices, Code Quality, Scalability, and Maintainability should be the top priority while writing code. Always follow industry best practices and guidelines to ensure that the codebase remains robust, secure, and maintainable in the long run. Regularly review and refactor code to improve performance, enhance security, and ensure accessibility compliance.

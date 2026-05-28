@@ -15,7 +15,7 @@ const projects = [
   { label: 'partners/partners-app',    port: 2005 },
   { label: 'ads',                      port: 2006 },
   { label: 'crm',                      port: 2007 },
-  { label: 'track',                    port: 2008 },
+  { label: 'finance',                  port: 2008 },
   { label: 'tech',                     port: 2009 },
   { label: 'support',                  port: 2010 },
   { label: 'website-app',              port: 2011 },

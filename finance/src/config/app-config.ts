@@ -50,17 +50,17 @@ const envRoles = String(import.meta.env.VITE_REQUIRED_ROLES ?? '')
   .filter(Boolean);
 
 export const appConfig: AppConfig = {
-  key: 'track',
-  name: 'Track',
-  fullName: 'Duncit Track',
-  tagline: 'Follow orders, shipments and live delivery status end to end.',
-  portalLabel: 'Tracking Portal',
+  key: 'finance',
+  name: 'Finance',
+  fullName: 'Duncit Finance',
+  tagline: 'Track payouts, invoices and financial reconciliation.',
+  portalLabel: 'Finance Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
     'https://images.pexels.com/photos/7869097/pexels-photo-7869097.jpeg',
-  requiredRoles: envRoles.length ? envRoles : ['TRACK_MANAGER'],
-  tokenKey: 'track_token',
-  colorModeKey: 'track_color_mode',
+  requiredRoles: envRoles.length ? envRoles : ['FINANCE_MANAGER'],
+  tokenKey: 'finance_token',
+  colorModeKey: 'finance_color_mode',
   accent: { light: '#5eead4', main: '#0d9488', hover: '#0f766e', active: '#115e59' },
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
@@ -73,9 +73,9 @@ export const appConfig: AppConfig = {
     },
   ],
   modules: [
-    { title: 'Orders', description: 'Review incoming orders and their fulfilment status.', icon: 'orders' },
-    { title: 'Shipments', description: 'Create, dispatch and manage shipments.', icon: 'shipping' },
-    { title: 'Live Tracking', description: 'Monitor real-time location and delivery ETAs.', icon: 'location' },
-    { title: 'Analytics', description: 'Measure delivery performance and SLAs.', icon: 'analytics' },
+    { title: 'Payouts', description: 'Review and release partner payouts.', icon: 'orders' },
+    { title: 'Invoices', description: 'Generate and track invoices and GST.', icon: 'timeline' },
+    { title: 'Reconciliation', description: 'Match settlements against the ledger.', icon: 'analytics' },
+    { title: 'Reports', description: 'Revenue, fees and financial performance.', icon: 'insights' },
   ],
 };

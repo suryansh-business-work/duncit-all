@@ -12,7 +12,7 @@ COPY partners/partners-app/package.json ./partners/partners-app/
 COPY partners/partners-website/package.json ./partners/partners-website/
 COPY ads/package.json ./ads/
 COPY crm/package.json ./crm/
-COPY track/package.json ./track/
+COPY finance/package.json ./finance/
 COPY tech/package.json ./tech/
 COPY support/package.json ./support/
 COPY website-app/package.json ./website-app/
@@ -42,7 +42,7 @@ COPY --from=builder /repo/partners/partners-app/package.json ./partners/partners
 COPY --from=builder /repo/partners/partners-website/package.json ./partners/partners-website/
 COPY --from=builder /repo/ads/package.json ./ads/
 COPY --from=builder /repo/crm/package.json ./crm/
-COPY --from=builder /repo/track/package.json ./track/
+COPY --from=builder /repo/finance/package.json ./finance/
 COPY --from=builder /repo/tech/package.json ./tech/
 COPY --from=builder /repo/support/package.json ./support/
 COPY --from=builder /repo/website-app/package.json ./website-app/

@@ -4,8 +4,10 @@ WORKDIR /repo
 
 ARG VITE_GRAPHQL_URL
 ARG VITE_REQUIRED_ROLES
+ARG VITE_GOOGLE_CLIENT_ID
 ENV VITE_GRAPHQL_URL=${VITE_GRAPHQL_URL}
 ENV VITE_REQUIRED_ROLES=${VITE_REQUIRED_ROLES}
+ENV VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
 
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY server/package.json ./server/
@@ -16,18 +18,25 @@ COPY partners/partners-app/package.json ./partners/partners-app/
 COPY partners/partners-website/package.json ./partners/partners-website/
 COPY ads/package.json ./ads/
 COPY crm/package.json ./crm/
-COPY track/package.json ./track/
+COPY finance/package.json ./finance/
+COPY tech/package.json ./tech/
+COPY support/package.json ./support/
+COPY website-app/package.json ./website-app/
+COPY legal/package.json ./legal/
+COPY ai/package.json ./ai/
+COPY products/package.json ./products/
+COPY marketing/package.json ./marketing/
 COPY packages/user-context/package.json ./packages/user-context/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
 
 COPY packages ./packages
-COPY track ./track
-RUN pnpm --filter track build
+COPY finance ./finance
+RUN pnpm --filter finance build
 
 # --- runner ---
 FROM public.ecr.aws/docker/library/nginx:alpine AS runner
-COPY --from=builder /repo/track/dist /usr/share/nginx/html
+COPY --from=builder /repo/finance/dist /usr/share/nginx/html
 COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

@@ -11,7 +11,7 @@ COPY partners/partners-app/package.json ./partners/partners-app/
 COPY partners/partners-website/package.json ./partners/partners-website/
 COPY ads/package.json ./ads/
 COPY crm/package.json ./crm/
-COPY track/package.json ./track/
+COPY finance/package.json ./finance/
 COPY tech/package.json ./tech/
 COPY support/package.json ./support/
 COPY website-app/package.json ./website-app/

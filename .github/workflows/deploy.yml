@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       services:
-        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website,ads,crm,track,tech,support,website-app,legal,ai,products,marketing (or "all")'
+        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website,ads,crm,finance,tech,support,website-app,legal,ai,products,marketing (or "all")'
         required: false
         default: 'all'
 
@@ -36,7 +36,7 @@ jobs:
       partners_website: ${{ steps.filter.outputs.partners_website }}
       ads: ${{ steps.filter.outputs.ads }}
       crm: ${{ steps.filter.outputs.crm }}
-      track: ${{ steps.filter.outputs.track }}
+      finance: ${{ steps.filter.outputs.finance }}
       tech: ${{ steps.filter.outputs.tech }}
       support: ${{ steps.filter.outputs.support }}
       website_app: ${{ steps.filter.outputs.website_app }}
@@ -114,8 +114,8 @@ jobs:
               - 'tsconfig.base.json'
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
-            track:
-              - 'track/**'
+            finance:
+              - 'finance/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -492,9 +492,9 @@ jobs:
               --cache-to   type=gha,scope=duncit-crm,mode=max \
               --push .
 
-  build-track:
+  build-finance:
     needs: [changes, typecheck]
-    if: needs.changes.outputs.track == 'true' || github.event_name == 'workflow_dispatch'
+    if: needs.changes.outputs.finance == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -503,7 +503,7 @@ jobs:
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
-      - name: Build & push track
+      - name: Build & push finance
         uses: nick-fields/retry@v3
         with:
           timeout_minutes: 30
@@ -511,13 +511,13 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file track/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-track:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-track:${{ github.sha }} \
+              --file finance/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
-              --build-arg VITE_REQUIRED_ROLES=TRACK_MANAGER \
-              --cache-from type=gha,scope=duncit-track \
-              --cache-to   type=gha,scope=duncit-track,mode=max \
+              --build-arg VITE_REQUIRED_ROLES=FINANCE_MANAGER \
+              --cache-from type=gha,scope=duncit-finance \
+              --cache-to   type=gha,scope=duncit-finance,mode=max \
               --push .
 
   build-tech:
@@ -727,8 +727,8 @@ jobs:
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads, build-crm, build-track, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads.result == 'success' || needs.build-crm.result == 'success' || needs.build-track.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success')
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads, build-crm, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing]
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads.result == 'success' || needs.build-crm.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -755,7 +755,7 @@ jobs:
           [ "${{ needs.build-partners-website.result }}" = "success" ] && PARTS+=("partners-website")
           [ "${{ needs.build-ads.result }}" = "success" ] && PARTS+=("ads")
           [ "${{ needs.build-crm.result }}" = "success" ] && PARTS+=("crm")
-          [ "${{ needs.build-track.result }}" = "success" ] && PARTS+=("track")
+          [ "${{ needs.build-finance.result }}" = "success" ] && PARTS+=("finance")
           [ "${{ needs.build-tech.result }}" = "success" ] && PARTS+=("tech")
           [ "${{ needs.build-support.result }}" = "success" ] && PARTS+=("support")
           [ "${{ needs.build-website-app.result }}" = "success" ] && PARTS+=("website-app")
@@ -827,14 +827,14 @@ jobs:
           # per-subdomain files so their server_name blocks can't conflict.
           $SUDO install -m 644 /opt/duncit/nginx/duncit.com /etc/nginx/sites-available/duncit.com
           $SUDO ln -sf /etc/nginx/sites-available/duncit.com /etc/nginx/sites-enabled/duncit.com
-          for old in admin.duncit.com mweb.duncit.com server.duncit.com ads.duncit.com crm.duncit.com track.duncit.com tech.duncit.com partners.duncit.com partners-app.duncit.com support.duncit.com website.duncit.com legal.duncit.com ai.duncit.com products.duncit.com marketing.duncit.com; do
+          for old in admin.duncit.com mweb.duncit.com server.duncit.com ads.duncit.com crm.duncit.com track.duncit.com finance.duncit.com tech.duncit.com partners.duncit.com partners-app.duncit.com support.duncit.com website.duncit.com legal.duncit.com ai.duncit.com products.duncit.com marketing.duncit.com; do
             $SUDO rm -f "/etc/nginx/sites-available/$old" "/etc/nginx/sites-enabled/$old"
           done
           if ! command -v certbot >/dev/null 2>&1; then
             $SUDO apt-get update -qq
             $SUDO apt-get install -y -qq certbot python3-certbot-nginx
           fi
-          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d crm.duncit.com -d track.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com"
+          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d crm.duncit.com -d finance.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com"
           if ! $SUDO test -d /etc/letsencrypt/live/duncit.com; then
             $SUDO certbot --nginx --non-interactive --agree-tos --redirect --cert-name duncit.com -m admin@duncit.com $CERTBOT_DOMAINS || true
           else

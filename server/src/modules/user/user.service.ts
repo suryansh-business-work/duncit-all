@@ -50,7 +50,7 @@ const PRIVILEGED_ROLE_KEYS = [
   'FINANCE_USER',
   'ADS_MANAGER',
   'CRM_MANAGER',
-  'TRACK_MANAGER',
+  'FINANCE_MANAGER',
   'TECH_MANAGER',
 ] as const;
 // Spec: reject placeholder/dummy phone numbers in non-seeded paths.

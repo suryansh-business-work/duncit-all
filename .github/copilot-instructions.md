@@ -74,3 +74,6 @@ https://marketing.duncit.com/
 19. Proper Error Handling and Logging: Always handle errors gracefully and log them appropriately for debugging and monitoring purposes.
 20. Consistent Code Style: Follow a consistent code style and formatting guidelines to improve readability and maintainability across the codebase.
 21. Regular Code Reviews: Conduct regular code reviews to ensure code quality, share knowledge, and maintain coding standards across the team.
+22. Write Tests: Ensure that all new features and critical code paths are covered by unit tests, integration tests, and end-to-end tests to maintain code quality and prevent regressions.
+23. Documentation: Document your code, especially complex logic and public APIs, to improve maintainability and help other developers understand the codebase quickly.
+24. Use TypeScript: Leverage TypeScript for type safety and improved developer experience. Ensure that all code is properly typed and that type definitions are maintained and updated as needed.

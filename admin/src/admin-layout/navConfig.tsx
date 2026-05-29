@@ -138,30 +138,6 @@ export const NAV: NavSection[] = [
     ],
   },
   {
-    heading: 'Finance',
-    prefixes: ['/finance'],
-    items: [
-      {
-        label: 'Finance',
-        icon: navIcons.finance,
-        matchPrefix: '/finance',
-        children: [
-          { label: 'Dashboard', to: '/finance/dashboard', icon: navIcons.financeDashboard },
-          { label: 'Settings', to: '/finance/settings', icon: navIcons.settings },
-          { label: 'Payment Logs', to: '/finance/payment-logs', icon: navIcons.receipt },
-          { label: 'Payment Release', to: '/finance/payment-release', icon: navIcons.payments },
-          { label: 'Platform Fees', to: '/finance/platform-fees', icon: navIcons.percent },
-          { label: 'GST Management', to: '/finance/gst', icon: navIcons.quote },
-          { label: 'Invoices', to: '/finance/invoices', icon: navIcons.description },
-          { label: 'Ledger', to: '/finance/ledger', icon: navIcons.menuBook },
-          { label: 'Venue Finance', to: '/finance/venue', icon: navIcons.storefront },
-          { label: 'Insurance', to: '/finance/insurance', icon: navIcons.shield },
-          { label: 'Payout Cycles', to: '/finance/payouts', icon: navIcons.calendar },
-        ],
-      },
-    ],
-  },
-  {
     heading: 'System',
     prefixes: ['/feature-flags', '/branding', '/settings'],
     items: [

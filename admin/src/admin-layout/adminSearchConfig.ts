@@ -15,7 +15,6 @@ const EXTRA_KEYWORDS: Record<string, string[]> = {
   '/marketing/email-campaigns': ['campaigns', 'mjml', 'email', 'pods', 'clubs'],
   '/marketing/whatsapp-campaigns': ['campaigns', 'whatsapp', 'message'],
   '/inventory': ['products', 'stock', 'catalog', 'management'],
-  '/finance/dashboard': ['payments', 'ledger', 'payouts'],
   '/branding': ['logo', 'theme', 'identity'],
   '/settings': ['system', 'config', 'preferences'],
   '/profile': ['account', 'me', 'admin'],

@@ -64,6 +64,16 @@ export const appConfig: AppConfig = {
   accent: { light: '#5eead4', main: '#0d9488', hover: '#0f766e', active: '#115e59' },
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Settings', to: '/settings', icon: 'settings' },
+    { label: 'Payment Logs', to: '/payment-logs', icon: 'receipt' },
+    { label: 'Payment Release', to: '/payment-release', icon: 'payments' },
+    { label: 'Platform Fees', to: '/platform-fees', icon: 'percent' },
+    { label: 'GST Management', to: '/gst', icon: 'quote' },
+    { label: 'Invoices', to: '/invoices', icon: 'description' },
+    { label: 'Ledger', to: '/ledger', icon: 'menuBook' },
+    { label: 'Venue Finance', to: '/venue', icon: 'storefront' },
+    { label: 'Insurance', to: '/insurance', icon: 'shield' },
+    { label: 'Payout Cycles', to: '/payouts', icon: 'calendar' },
     {
       label: 'Calculators',
       icon: 'calculator',

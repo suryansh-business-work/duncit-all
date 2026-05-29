@@ -34,17 +34,6 @@ import HostsPage from './pages/HostsPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
 import MarketingCampaignsPage from './pages/MarketingCampaignsPage';
-import FinanceDashboardPage from './pages/finance/FinanceDashboardPage';
-import FinanceSettingsPage from './pages/finance/FinanceSettingsPage';
-import PaymentLogsPage from './pages/finance/PaymentLogsPage';
-import PaymentReleasePage from './pages/finance/PaymentReleasePage';
-import PlatformFeesPage from './pages/finance/PlatformFeesPage';
-import GstManagementPage from './pages/finance/GstManagementPage';
-import InvoiceManagementPage from './pages/finance/InvoiceManagementPage';
-import LedgerPage from './pages/finance/LedgerPage';
-import VenueFinancePage from './pages/finance/VenueFinancePage';
-import InsuranceManagementPage from './pages/finance/InsuranceManagementPage';
-import PayoutCyclesPage from './pages/finance/PayoutCyclesPage';
 import { redirectPathFromLocation } from './utils/redirect';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
@@ -94,17 +83,6 @@ export default function App() {
                 <Route path="/pod-plans" element={<PodPlansPage />} />
                 <Route path="/marketing/email-campaigns" element={<MarketingCampaignsPage defaultChannel="EMAIL" />} />
                 <Route path="/marketing/whatsapp-campaigns" element={<MarketingCampaignsPage defaultChannel="WHATSAPP" />} />
-                <Route path="/finance/dashboard" element={<FinanceDashboardPage />} />
-                <Route path="/finance/settings" element={<FinanceSettingsPage />} />
-                <Route path="/finance/payment-logs" element={<PaymentLogsPage />} />
-                <Route path="/finance/payment-release" element={<PaymentReleasePage />} />
-                <Route path="/finance/platform-fees" element={<PlatformFeesPage />} />
-                <Route path="/finance/gst" element={<GstManagementPage />} />
-                <Route path="/finance/invoices" element={<InvoiceManagementPage />} />
-                <Route path="/finance/ledger" element={<LedgerPage />} />
-                <Route path="/finance/venue" element={<VenueFinancePage />} />
-                <Route path="/finance/insurance" element={<InsuranceManagementPage />} />
-                <Route path="/finance/payouts" element={<PayoutCyclesPage />} />
                 <Route path="/branding" element={<BrandingPage />} />
                 <Route path="/rbac/roles" element={<RolesPage />} />
                 <Route path="/rbac/permissions" element={<PermissionsPage />} />

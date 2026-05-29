@@ -5,7 +5,7 @@ import { requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
 import { dummyCheckoutSchema } from './payment.validator';
 
-const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN'];
+const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 
 export const paymentResolvers = {
   Payment: {

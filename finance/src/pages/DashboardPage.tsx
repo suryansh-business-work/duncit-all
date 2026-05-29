@@ -1,9 +1,9 @@
 import { gql, useQuery } from '@apollo/client';
-import { Alert, Box, Card, CardContent, Chip, CircularProgress, Grid, Stack, Typography } from '@mui/material';
+import { Alert, Box, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import { appConfig } from '../config/app-config';
 import { parseApiError } from '../utils/parseApiError';
-import AppIcon from '../components/AppIcon';
 import AccountSummary from './dashboard/AccountSummary';
+import { FinanceKpis } from './finance/dashboard';
 
 const DASHBOARD_ME = gql`
   query DashboardMe {
@@ -55,35 +55,14 @@ export default function DashboardPage() {
         </Stack>
       </Box>
 
-      <AccountSummary user={me} />
-
       <Box>
-        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1 }}>
-          {appConfig.name} modules
+        <Typography variant="subtitle1" fontWeight={700} sx={{ mb: 1.5 }}>
+          {appConfig.name} overview
         </Typography>
-        <Grid container spacing={2}>
-          {appConfig.modules.map((module) => (
-            <Grid key={module.title} item xs={12} sm={6} md={3}>
-              <Card sx={{ height: '100%' }}>
-                <CardContent>
-                  <Stack spacing={1}>
-                    <Box sx={{ color: 'primary.main' }}>
-                      <AppIcon name={module.icon} />
-                    </Box>
-                    <Typography variant="subtitle2" fontWeight={700}>
-                      {module.title}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary">
-                      {module.description}
-                    </Typography>
-                    <Chip label="Coming soon" size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} />
-                  </Stack>
-                </CardContent>
-              </Card>
-            </Grid>
-          ))}
-        </Grid>
+        <FinanceKpis />
       </Box>
+
+      <AccountSummary user={me} />
     </Stack>
   );
 }

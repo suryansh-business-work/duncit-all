@@ -87,14 +87,6 @@ const CARDS: HubCard[] = [
     accent: '#7c3aed',
   },
   {
-    key: 'finance',
-    title: 'Finance',
-    description: 'Payments, fees, GST, invoices and payouts.',
-    to: '/finance/dashboard',
-    icon: 'finance',
-    accent: '#059669',
-  },
-  {
     key: 'system',
     title: 'System',
     description: 'Feature flags, branding and global settings.',

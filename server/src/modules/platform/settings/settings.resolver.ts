@@ -2,8 +2,9 @@ import { settingsService } from './settings.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
-const ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
-const ADMIN_WRITE = ['SUPER_ADMIN'];
+// Feature flags and app settings (incl. JWT expiry) are managed from the Tech portal.
+const ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER', 'TECH_MANAGER'];
+const ADMIN_WRITE = ['SUPER_ADMIN', 'TECH_MANAGER'];
 // Environment variables are managed from the Tech portal (and by super admins).
 const ENV_MANAGE = ['SUPER_ADMIN', 'TECH_MANAGER'];
 

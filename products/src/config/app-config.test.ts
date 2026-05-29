@@ -13,7 +13,10 @@ describe('Duncit Products app config', () => {
     expect(appConfig.requiredRoles).toContain('PRODUCTS_MANAGER');
   });
 
-  it('exposes a Welcome nav entry', () => {
-    expect(appConfig.nav.some((n) => n.to === '/')).toBe(true);
+  it('exposes the inventory and ecomm nav entries', () => {
+    const targets = appConfig.nav.map((n) => n.to);
+    expect(targets).toEqual(
+      expect.arrayContaining(['/', '/inventory', '/ecomm/product-requests']),
+    );
   });
 });

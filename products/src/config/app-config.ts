@@ -56,7 +56,9 @@ export const appConfig: AppConfig = {
   colorModeKey: 'products_color_mode',
   accent: { light: '#fdba74', main: '#ea580c', hover: '#c2410c', active: '#9a3412' },
   nav: [
-    { label: 'Welcome', to: '/', icon: 'dashboard' },
+    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Inventory', to: '/inventory', icon: 'inventory' },
+    { label: 'Ecomm Requests', to: '/ecomm/product-requests', icon: 'storefront' },
   ],
   modules: [],
 };

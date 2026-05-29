@@ -1,20 +1,18 @@
 import { useState } from 'react';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
-import AppearanceSection from './settings-page/AppearanceSection';
-import DisplayFormatsSection from './settings-page/DisplayFormatsSection';
+import JwtExpirySection from './JwtExpirySection';
 
-export default function SettingsPage() {
+export default function AuthenticationPage() {
   const [toast, setToast] = useState<string | null>(null);
   return (
     <Stack spacing={3}>
       <Box>
-        <Typography variant="h5">Settings</Typography>
+        <Typography variant="h5">Authentication</Typography>
         <Typography variant="body2" color="text.secondary">
-          Personalize your admin experience and configure system behavior.
+          Configure how login sessions and access tokens behave across the platform.
         </Typography>
       </Box>
-      <AppearanceSection />
-      <DisplayFormatsSection onToast={setToast} />
+      <JwtExpirySection onToast={setToast} />
       <Snackbar
         open={!!toast}
         autoHideDuration={3000}

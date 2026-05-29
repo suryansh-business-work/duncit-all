@@ -2,7 +2,10 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import EnvironmentVariablesPage from './pages/EnvironmentVariablesPage';
 import CommsProvidersPage from './pages/comms-providers';
+import FeatureFlagsPage from './pages/feature-flags-page/FeatureFlagsPage';
+import AuthenticationPage from './pages/AuthenticationPage';
 import AppShell from './components/AppShell';
+import { NotifyHost } from './components/notify';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
 
@@ -23,11 +26,16 @@ const authed = (element: JSX.Element) => (
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={authed(<EnvironmentVariablesPage />)} />
-      <Route path="/comms-providers" element={authed(<CommsProvidersPage />)} />
-      <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+    <>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/" element={authed(<EnvironmentVariablesPage />)} />
+        <Route path="/comms-providers" element={authed(<CommsProvidersPage />)} />
+        <Route path="/feature-flags" element={authed(<FeatureFlagsPage />)} />
+        <Route path="/authentication" element={authed(<AuthenticationPage />)} />
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+      <NotifyHost />
+    </>
   );
 }

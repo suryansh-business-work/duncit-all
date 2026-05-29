@@ -47,14 +47,6 @@ const CARDS: HubCard[] = [
     accent: '#16a34a',
   },
   {
-    key: 'inventory',
-    title: 'Inventory',
-    description: 'Duncit products, stock counts and pod product requests.',
-    to: '/inventory',
-    icon: 'inventory',
-    accent: '#9333ea',
-  },
-  {
     key: 'community',
     title: 'Community',
     description: 'Clubs, pods and member-submitted ideas.',
@@ -81,8 +73,8 @@ const CARDS: HubCard[] = [
   {
     key: 'system',
     title: 'System',
-    description: 'Feature flags, branding and global settings.',
-    to: '/feature-flags',
+    description: 'Branding and global settings.',
+    to: '/branding',
     icon: 'system',
     accent: '#475569',
   },

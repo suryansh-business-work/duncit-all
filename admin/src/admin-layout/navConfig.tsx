@@ -64,14 +64,6 @@ export const NAV: NavSection[] = [
     ],
   },
   {
-    heading: 'Inventory Management',
-    prefixes: ['/inventory', '/ecomm'],
-    items: [
-      { label: 'Inventory', to: '/inventory', icon: navIcons.inventory },
-      { label: 'Ecomm Requests', to: '/ecomm/product-requests', icon: navIcons.inventory },
-    ],
-  },
-  {
     heading: 'Community',
     prefixes: ['/clubs', '/pods', '/pod-ideas', '/pod-plans'],
     items: [
@@ -122,9 +114,8 @@ export const NAV: NavSection[] = [
   },
   {
     heading: 'System',
-    prefixes: ['/feature-flags', '/branding', '/settings'],
+    prefixes: ['/branding', '/settings'],
     items: [
-      { label: 'Feature Flags', to: '/feature-flags', icon: navIcons.flag },
       { label: 'Branding', to: '/branding', icon: navIcons.branding },
       { label: 'Settings', to: '/settings', icon: navIcons.settings },
     ],

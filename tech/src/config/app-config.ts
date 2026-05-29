@@ -59,6 +59,8 @@ export const appConfig: AppConfig = {
   nav: [
     { label: 'Environment', to: '/', icon: 'settings' },
     { label: 'Comms Providers', to: '/comms-providers', icon: 'forum' },
+    { label: 'Feature Flags', to: '/feature-flags', icon: 'flag' },
+    { label: 'Authentication', to: '/authentication', icon: 'lock' },
   ],
   modules: [],
 };

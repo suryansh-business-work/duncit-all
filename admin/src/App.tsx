@@ -11,14 +11,10 @@ import RolesPage from './pages/RolesPage';
 import ResourcesPage from './pages/ResourcesPage';
 import ActionsPage from './pages/ActionsPage';
 import PermissionsPage from './pages/PermissionsPage';
-import FeatureFlagsPage from './pages/FeatureFlagsPage';
 import CategoriesPage from './pages/CategoriesPage';
 import LocationsPage from './pages/LocationsPage';
 import ClubsPage from './pages/ClubsPage';
 import PodsPage from './pages/PodsPage';
-import InventoryPage from './pages/InventoryPage';
-import InventoryProductPage from './pages/inventory-page/inventory-product-page/InventoryProductPage';
-import EcommRequestsPage from './pages/ecomm/EcommRequestsPage';
 import SlidersPage from './pages/SlidersPage';
 import BrandingPage from './pages/BrandingPage';
 import InterviewRequestsPage from './pages/InterviewRequestsPage';
@@ -62,10 +58,6 @@ export default function App() {
                 <Route path="/locations" element={<LocationsPage />} />
                 <Route path="/clubs" element={<ClubsPage />} />
                 <Route path="/pods" element={<PodsPage />} />
-                <Route path="/inventory" element={<InventoryPage />} />
-                <Route path="/inventory/new" element={<InventoryProductPage />} />
-                <Route path="/inventory/:id/edit" element={<InventoryProductPage />} />
-                <Route path="/ecomm/product-requests" element={<EcommRequestsPage />} />
                 <Route path="/sliders" element={<SlidersPage />} />
                 <Route path="/interview-requests" element={<InterviewRequestsPage />} />
                 <Route path="/faqs" element={<FaqsPage />} />
@@ -83,7 +75,6 @@ export default function App() {
                 <Route path="/rbac/permissions" element={<PermissionsPage />} />
                 <Route path="/rbac/resources" element={<ResourcesPage />} />
                 <Route path="/rbac/actions" element={<ActionsPage />} />
-                <Route path="/feature-flags" element={<FeatureFlagsPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/hub" replace />} />

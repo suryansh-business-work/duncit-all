@@ -1,16 +1,12 @@
-import { lazy, Suspense, useState } from 'react';
+import { useState } from 'react';
 import { Alert, Box, Chip, Fade, IconButton, Link, Snackbar, Stack, Tooltip, Typography } from '@mui/material';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import { glass } from './glass';
 import LoginForm from './login.form';
 import PromoCard from './PromoCard';
+import OtherPortalsDialog from './OtherPortalsDialog';
 import type { LoginScreenProps } from './login.types';
-
-// Lazy so the Lottie player (lottie-web touches <canvas> at import time) only
-// loads when the dialog opens — keeps the login bundle lean and avoids jsdom
-// canvas errors in unit tests that never open the dialog.
-const OtherPortalsDialog = lazy(() => import('./OtherPortalsDialog'));
 
 const DEFAULT_PRIVACY = 'https://duncit.com/privacy-policy';
 const DEFAULT_TERMS = 'https://duncit.com/terms-of-use';
@@ -140,11 +136,7 @@ export default function LoginScreen({
         </Stack>
       </Fade>
 
-      {portalsOpen && (
-        <Suspense fallback={null}>
-          <OtherPortalsDialog open onClose={() => setPortalsOpen(false)} />
-        </Suspense>
-      )}
+      <OtherPortalsDialog open={portalsOpen} onClose={() => setPortalsOpen(false)} />
 
       <Snackbar
         open={!!snack}

@@ -12,10 +12,8 @@ import {
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import Lottie from 'lottie-react';
 import { glass } from './glass';
 import { PORTALS, resolvePortalUrl } from './portals';
-import portalAnim from '../../assets/portal-anim.json';
 
 interface Props {
   open: boolean;
@@ -35,7 +33,14 @@ export default function OtherPortalsDialog({ open, onClose }: Props) {
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
-      <DialogTitle sx={{ fontWeight: 800, pb: 1 }}>Other portals</DialogTitle>
+      <DialogTitle sx={{ pb: 0.5 }}>
+        <Typography component="span" variant="h6" fontWeight={800}>
+          Other portals
+        </Typography>
+        <Typography variant="body2" color="text.secondary">
+          One Duncit account — jump to any console below.
+        </Typography>
+      </DialogTitle>
       <DialogContent dividers>
         <TextField
           value={query}
@@ -64,19 +69,12 @@ export default function OtherPortalsDialog({ open, onClose }: Props) {
               <CardActionArea onClick={() => window.open(resolvePortalUrl(p), '_self')} sx={{ p: 1.5 }}>
                 <Stack direction="row" spacing={1.5} alignItems="center">
                   <Box
-                    sx={{
-                      width: 56,
-                      height: 56,
-                      flexShrink: 0,
-                      borderRadius: 2,
-                      overflow: 'hidden',
-                      bgcolor: 'action.hover',
-                      display: 'grid',
-                      placeItems: 'center',
-                    }}
-                  >
-                    <Lottie animationData={portalAnim} loop style={{ width: 52, height: 52 }} />
-                  </Box>
+                    component="img"
+                    src={p.image}
+                    alt={p.name}
+                    loading="lazy"
+                    sx={{ width: 56, height: 56, flexShrink: 0, borderRadius: 2, objectFit: 'cover', bgcolor: 'action.hover' }}
+                  />
                   <Box sx={{ minWidth: 0 }}>
                     <Typography variant="subtitle2" fontWeight={800} noWrap>
                       {p.name}

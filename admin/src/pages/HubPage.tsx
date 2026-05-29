@@ -79,14 +79,6 @@ const CARDS: HubCard[] = [
     accent: '#dc2626',
   },
   {
-    key: 'website',
-    title: 'Website',
-    description: 'Newsletter subscribers and contact submissions.',
-    to: '/newsletter',
-    icon: 'website',
-    accent: '#0891b2',
-  },
-  {
     key: 'onboarding',
     title: 'Onboarding',
     description: 'Review and approve venue & host applications.',

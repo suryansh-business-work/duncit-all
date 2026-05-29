@@ -123,16 +123,6 @@ export const NAV: NavSection[] = [
     ],
   },
   {
-    heading: 'Website',
-    prefixes: ['/newsletter', '/contact-submissions', '/faq-submissions', '/website-content'],
-    items: [
-      { label: 'Website Content', to: '/website-content', icon: navIcons.article },
-      { label: 'Newsletter', to: '/newsletter', icon: navIcons.email },
-      { label: 'Contact Submissions', to: '/contact-submissions', icon: navIcons.email },
-      { label: 'FAQ Submissions', to: '/faq-submissions', icon: navIcons.help },
-    ],
-  },
-  {
     heading: 'Onboarding',
     prefixes: ['/venues', '/hosts'],
     items: [

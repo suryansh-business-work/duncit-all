@@ -24,10 +24,6 @@ import BrandingPage from './pages/BrandingPage';
 import NotificationsPage from './pages/NotificationsPage';
 import InterviewRequestsPage from './pages/InterviewRequestsPage';
 import FaqsPage from './pages/FaqsPage';
-import FaqSubmissionsPage from './pages/FaqSubmissionsPage';
-import NewsletterSubscribersPage from './pages/NewsletterSubscribersPage';
-import ContactSubmissionsPage from './pages/ContactSubmissionsPage';
-import WebsiteContentPage from './pages/WebsiteContentPage';
 import SupportLogsPage from './pages/SupportLogsPage';
 import VenueDetailsPage from './pages/VenueDetailsPage';
 import EmailTemplatesPage from './pages/EmailTemplatesPage';
@@ -87,10 +83,6 @@ export default function App() {
                 <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/interview-requests" element={<InterviewRequestsPage />} />
                 <Route path="/faqs" element={<FaqsPage />} />
-                <Route path="/faq-submissions" element={<FaqSubmissionsPage />} />
-                <Route path="/newsletter" element={<NewsletterSubscribersPage />} />
-                <Route path="/contact-submissions" element={<ContactSubmissionsPage />} />
-                <Route path="/website-content" element={<WebsiteContentPage />} />
                 <Route path="/support-logs" element={<SupportLogsPage />} />
                 <Route path="/email-templates" element={<EmailTemplatesPage />} />
                 <Route path="/pod-ideas" element={<PodIdeasPage />} />

@@ -5,6 +5,8 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN'];
+// FAQ submissions are triaged from the Website portal as well as admin.
+const SUBMISSION_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'WEBSITE_MANAGER'];
 
 const toCatPub = (c: any) => ({
   id: String(c._id),
@@ -39,7 +41,7 @@ export const faqResolvers = {
     publicFaqGroups: () => faqService.publicGroups(),
     publicPartnerFaqs: (_p: unknown, args: { topic?: any }) => faqService.publicPartnerFaqs(args.topic),
     faqSubmissions: (_p: unknown, args: { status?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, SUBMISSION_ROLES);
       return faqSubmissionService.list(args.status);
     },
   },
@@ -62,7 +64,7 @@ export const faqResolvers = {
       args: { faq_submission_id: string; status: any; converted_faq_id?: string | null },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_RW);
+      requireRole(ctx, SUBMISSION_ROLES);
       return faqSubmissionService.setStatus(args.faq_submission_id, args.status, args.converted_faq_id);
     },
   },

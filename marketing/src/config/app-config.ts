@@ -56,7 +56,10 @@ export const appConfig: AppConfig = {
   colorModeKey: 'marketing_color_mode',
   accent: { light: '#fda4af', main: '#e11d48', hover: '#be123c', active: '#9f1239' },
   nav: [
-    { label: 'Welcome', to: '/', icon: 'dashboard' },
+    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Email Campaigns', to: '/campaigns/email', icon: 'email' },
+    { label: 'WhatsApp Campaigns', to: '/campaigns/whatsapp', icon: 'whatsapp' },
+    { label: 'Notifications', to: '/notifications', icon: 'notifications' },
   ],
   modules: [],
 };

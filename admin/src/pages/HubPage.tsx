@@ -47,14 +47,6 @@ const CARDS: HubCard[] = [
     accent: '#16a34a',
   },
   {
-    key: 'campaign',
-    title: 'Campaign',
-    description: 'Email and WhatsApp campaign workspaces.',
-    to: '/marketing/email-campaigns',
-    icon: 'campaign',
-    accent: '#c2410c',
-  },
-  {
     key: 'inventory',
     title: 'Inventory',
     description: 'Duncit products, stock counts and pod product requests.',
@@ -73,8 +65,8 @@ const CARDS: HubCard[] = [
   {
     key: 'engagement',
     title: 'Engagement',
-    description: 'Notifications, FAQs, policies, email templates and badges.',
-    to: '/notifications',
+    description: 'Interview requests, FAQs, support logs, email templates and badges.',
+    to: '/interview-requests',
     icon: 'engagement',
     accent: '#dc2626',
   },

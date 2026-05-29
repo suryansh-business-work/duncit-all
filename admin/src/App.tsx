@@ -21,7 +21,6 @@ import InventoryProductPage from './pages/inventory-page/inventory-product-page/
 import EcommRequestsPage from './pages/ecomm/EcommRequestsPage';
 import SlidersPage from './pages/SlidersPage';
 import BrandingPage from './pages/BrandingPage';
-import NotificationsPage from './pages/NotificationsPage';
 import InterviewRequestsPage from './pages/InterviewRequestsPage';
 import FaqsPage from './pages/FaqsPage';
 import SupportLogsPage from './pages/SupportLogsPage';
@@ -33,7 +32,6 @@ import VenuesPage from './pages/VenuesPage';
 import HostsPage from './pages/HostsPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
-import MarketingCampaignsPage from './pages/MarketingCampaignsPage';
 import { redirectPathFromLocation } from './utils/redirect';
 
 function RequireAuth({ children }: { children: JSX.Element }) {
@@ -69,7 +67,6 @@ export default function App() {
                 <Route path="/inventory/:id/edit" element={<InventoryProductPage />} />
                 <Route path="/ecomm/product-requests" element={<EcommRequestsPage />} />
                 <Route path="/sliders" element={<SlidersPage />} />
-                <Route path="/notifications" element={<NotificationsPage />} />
                 <Route path="/interview-requests" element={<InterviewRequestsPage />} />
                 <Route path="/faqs" element={<FaqsPage />} />
                 <Route path="/support-logs" element={<SupportLogsPage />} />
@@ -81,8 +78,6 @@ export default function App() {
                 <Route path="/hosts" element={<HostsPage />} />
                 <Route path="/partners/faqs" element={<PartnerFaqsPage />} />
                 <Route path="/pod-plans" element={<PodPlansPage />} />
-                <Route path="/marketing/email-campaigns" element={<MarketingCampaignsPage defaultChannel="EMAIL" />} />
-                <Route path="/marketing/whatsapp-campaigns" element={<MarketingCampaignsPage defaultChannel="WHATSAPP" />} />
                 <Route path="/branding" element={<BrandingPage />} />
                 <Route path="/rbac/roles" element={<RolesPage />} />
                 <Route path="/rbac/permissions" element={<PermissionsPage />} />

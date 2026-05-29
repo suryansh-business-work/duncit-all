@@ -91,7 +91,6 @@ export const NAV: NavSection[] = [
   {
     heading: 'Engagement',
     prefixes: [
-      '/notifications',
       '/interview-requests',
       '/faqs',
       '/email-templates',
@@ -99,27 +98,11 @@ export const NAV: NavSection[] = [
       '/support-logs',
     ],
     items: [
-      { label: 'Notifications', to: '/notifications', icon: navIcons.notifications },
       { label: 'Interview Requests', to: '/interview-requests', icon: navIcons.eventAvailable },
       { label: 'FAQs', to: '/faqs', icon: navIcons.help },
       { label: 'Support Logs', to: '/support-logs', icon: navIcons.support },
       { label: 'Email Templates', to: '/email-templates', icon: navIcons.email },
       { label: 'Badges', to: '/badges', icon: navIcons.shield },
-    ],
-  },
-  {
-    heading: 'Campaign',
-    prefixes: ['/marketing'],
-    items: [
-      {
-        label: 'Campaigns',
-        icon: navIcons.campaign,
-        matchPrefix: '/marketing',
-        children: [
-          { label: 'Email Campaigns', to: '/marketing/email-campaigns', icon: navIcons.email },
-          { label: 'WhatsApp Campaigns', to: '/marketing/whatsapp-campaigns', icon: navIcons.whatsapp },
-        ],
-      },
     ],
   },
   {

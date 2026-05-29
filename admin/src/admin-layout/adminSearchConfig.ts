@@ -11,9 +11,6 @@ export interface AdminSearchItem {
 const EXTRA_KEYWORDS: Record<string, string[]> = {
   '/users': ['members', 'customers', 'roles', 'user'],
   '/support-logs': ['tickets', 'help', 'contact'],
-  '/notifications': ['push', 'messages', 'engagement'],
-  '/marketing/email-campaigns': ['campaigns', 'mjml', 'email', 'pods', 'clubs'],
-  '/marketing/whatsapp-campaigns': ['campaigns', 'whatsapp', 'message'],
   '/inventory': ['products', 'stock', 'catalog', 'management'],
   '/branding': ['logo', 'theme', 'identity'],
   '/settings': ['system', 'config', 'preferences'],

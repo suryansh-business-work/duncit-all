@@ -1078,7 +1078,7 @@ jobs:
             $SUDO apt-get update -qq
             $SUDO apt-get install -y -qq certbot python3-certbot-nginx
           fi
-          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d crm.duncit.com -d finance.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com"
+          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d crm.duncit.com -d finance.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com -d onboarding.duncit.com -d hr.duncit.com -d employee.duncit.com -d status.duncit.com"
           if ! $SUDO test -d /etc/letsencrypt/live/duncit.com; then
             $SUDO certbot --nginx --non-interactive --agree-tos --redirect --cert-name duncit.com -m admin@duncit.com $CERTBOT_DOMAINS || true
           else
@@ -1128,4 +1128,8 @@ jobs:
               curl -fsSI http://127.0.0.1:2013/ | head -1
               curl -fsSI http://127.0.0.1:2014/ | head -1
               curl -fsSI http://127.0.0.1:2015/ | head -1
+              curl -fsSI http://127.0.0.1:2016/ | head -1
+              curl -fsSI http://127.0.0.1:2017/ | head -1
+              curl -fsSI http://127.0.0.1:2018/ | head -1
+              curl -fsSI http://127.0.0.1:2019/ | head -1
               '

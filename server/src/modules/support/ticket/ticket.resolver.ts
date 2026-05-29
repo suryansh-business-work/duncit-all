@@ -1,0 +1,68 @@
+import type { GraphQLContext } from '@context';
+import { requireAuth, requireRole, hasRole } from '@middleware/rbac';
+import { ticketService } from './ticket.service';
+
+const SUPPORT_ROLES = ['SUPER_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_USER'];
+
+export const ticketResolvers = {
+  Query: {
+    tickets: (
+      _p: unknown,
+      args: { status?: any; assignee_id?: string; search?: string; limit?: number },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, SUPPORT_ROLES);
+      return ticketService.list({
+        status: args.status,
+        assigneeId: args.assignee_id,
+        search: args.search,
+        limit: args.limit,
+      });
+    },
+    ticket: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      const ticket = await ticketService.getById(args.id);
+      if (!ticket) return null;
+      // Agents see any ticket; a regular user only their own.
+      if (!hasRole(user, SUPPORT_ROLES) && ticket.user.id !== user.id) {
+        return null;
+      }
+      return ticket;
+    },
+    myTickets: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return ticketService.listMine(user.id);
+    },
+  },
+  Mutation: {
+    createTicket: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return ticketService.createTicket(user.id, args.input);
+    },
+    replyToTicket: (
+      _p: unknown,
+      args: { ticket_id: string; body_html?: string; body_text: string; attachments?: string[] },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      const isAgent = hasRole(user, SUPPORT_ROLES);
+      return ticketService.replyToTicket(user.id, isAgent, args);
+    },
+    updateTicketStatus: (
+      _p: unknown,
+      args: { ticket_id: string; status: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, SUPPORT_ROLES);
+      return ticketService.updateStatus(args.ticket_id, args.status);
+    },
+    assignTicket: (
+      _p: unknown,
+      args: { ticket_id: string; assignee_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, SUPPORT_ROLES);
+      return ticketService.assign(args.ticket_id, args.assignee_id ?? null);
+    },
+  },
+};

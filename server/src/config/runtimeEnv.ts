@@ -1,4 +1,4 @@
-import { EnvironmentVariableModel } from '../modules/settings/settings.model';
+import { EnvironmentVariableModel } from '@modules/platform/settings/settings.model';
 
 export type RuntimeEnvSource = 'DATABASE' | 'ENV' | 'EMPTY';
 

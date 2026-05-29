@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import type { GraphQLContext, AuthUser } from '../context';
-import { rbacService } from '../modules/rbac/rbac.service';
+import { rbacService } from '@modules/access/rbac/rbac.service';
 
 export function requireAuth(ctx: GraphQLContext): AuthUser {
   if (!ctx.user) {

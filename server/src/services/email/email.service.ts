@@ -2,7 +2,7 @@ import fs from 'fs';
 import path from 'path';
 import mjml2html from 'mjml';
 import nodemailer, { Transporter } from 'nodemailer';
-import { emailTemplateService } from '../../modules/emailTemplate/emailTemplate.service';
+import { emailTemplateService } from '@modules/content/emailTemplate/emailTemplate.service';
 import { getMailConfigs } from '../../config/url-configs';
 
 let transporter: Transporter | null = null;

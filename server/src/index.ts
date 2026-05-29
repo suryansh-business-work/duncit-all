@@ -8,21 +8,21 @@ import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHt
 import { connectDB } from './config/db';
 import { typeDefs, resolvers } from './modules';
 import { buildContext, GraphQLContext } from './context';
-import { rbacService } from './modules/rbac/rbac.service';
-import { settingsService } from './modules/settings/settings.service';
-import { categoryService } from './modules/category/category.service';
-import { notificationService } from './modules/notification/notification.service';
-import { notificationEvents, type NotifyEvent } from './modules/notification/notification.events';
+import { rbacService } from '@modules/access/rbac/rbac.service';
+import { settingsService } from '@modules/platform/settings/settings.service';
+import { categoryService } from '@modules/pods/category/category.service';
+import { notificationService } from '@modules/engagement/notification/notification.service';
+import { notificationEvents, type NotifyEvent } from '@modules/engagement/notification/notification.events';
 import jwt from 'jsonwebtoken';
-import { policyService } from './modules/policy/policy.service';
+import { policyService } from '@modules/content/policy/policy.service';
 import { initSocketServer } from './realtime/io';
-import { attachChatHandlers } from './modules/chat/chat.socket';
-import { attachBouncerHandlers } from './modules/bouncer/bouncer.socket';
-import { attachSupportChatHandlers } from './modules/supportChat/supportChat.socket';
-import { websiteContentService } from './modules/websiteContent/websiteContent.service';
-import { userService } from './modules/user/user.service';
-import { marketingService } from './modules/marketing/marketing.service';
-import { crmService } from './modules/crm/crm.service';
+import { attachChatHandlers } from '@modules/engagement/chat/chat.socket';
+import { attachBouncerHandlers } from '@modules/support/bouncer/bouncer.socket';
+import { attachSupportChatHandlers } from '@modules/support/supportChat/supportChat.socket';
+import { websiteContentService } from '@modules/content/websiteContent/websiteContent.service';
+import { userService } from '@modules/access/user/user.service';
+import { marketingService } from '@modules/crm/marketing/marketing.service';
+import { crmService } from '@modules/crm/crm/crm.service';
 
 async function safeSeed(name: string, fn: () => Promise<void>) {
   try {
@@ -46,7 +46,7 @@ async function bootstrap() {
   await safeSeed('marketing', () => marketingService.resumeSchedules());
   await safeSeed('crmServices', () => crmService.seedServiceDefaults());
   await safeSeed('podPlan', async () => {
-    const { podPlanService } = await import('./modules/pod-plan/pod-plan.service');
+    const { podPlanService } = await import('@modules/pods/pod-plan/pod-plan.service');
     await podPlanService.seedDefaults();
   });
 

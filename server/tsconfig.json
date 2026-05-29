@@ -6,6 +6,16 @@
     "outDir": "dist",
     "rootDir": "src",
     "baseUrl": ".",
+    "paths": {
+      "@config/*": ["src/config/*"],
+      "@services/*": ["src/services/*"],
+      "@utils/*": ["src/utils/*"],
+      "@middleware/*": ["src/middleware/*"],
+      "@realtime/*": ["src/realtime/*"],
+      "@generated/*": ["src/generated/*"],
+      "@modules/*": ["src/modules/*"],
+      "@context": ["src/context.ts"]
+    },
     "types": ["node"]
   },
   "include": ["src/**/*"],

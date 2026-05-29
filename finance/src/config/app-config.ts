@@ -34,6 +34,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  promoTitle: string;
+  promoText: string;
   portalLabel: string;
   loginImage: string;
   requiredRoles: string[];
@@ -54,6 +56,8 @@ export const appConfig: AppConfig = {
   name: 'Finance',
   fullName: 'Duncit Finance',
   tagline: 'Track payouts, invoices and financial reconciliation.',
+  promoTitle: "Numbers, clarified",
+  promoText: "Payouts, invoices and reconciliation — all in one place.",
   portalLabel: 'Finance Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -64,6 +68,16 @@ export const appConfig: AppConfig = {
   accent: { light: '#5eead4', main: '#0d9488', hover: '#0f766e', active: '#115e59' },
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Settings', to: '/settings', icon: 'settings' },
+    { label: 'Payment Logs', to: '/payment-logs', icon: 'receipt' },
+    { label: 'Payment Release', to: '/payment-release', icon: 'payments' },
+    { label: 'Platform Fees', to: '/platform-fees', icon: 'percent' },
+    { label: 'GST Management', to: '/gst', icon: 'quote' },
+    { label: 'Invoices', to: '/invoices', icon: 'description' },
+    { label: 'Ledger', to: '/ledger', icon: 'menuBook' },
+    { label: 'Venue Finance', to: '/venue', icon: 'storefront' },
+    { label: 'Insurance', to: '/insurance', icon: 'shield' },
+    { label: 'Payout Cycles', to: '/payouts', icon: 'calendar' },
     {
       label: 'Calculators',
       icon: 'calculator',

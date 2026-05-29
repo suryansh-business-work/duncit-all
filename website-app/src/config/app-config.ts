@@ -27,6 +27,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  promoTitle: string;
+  promoText: string;
   portalLabel: string;
   loginImage: string;
   requiredRoles: string[];
@@ -47,6 +49,8 @@ export const appConfig: AppConfig = {
   name: 'Website',
   fullName: 'Duncit Website',
   tagline: 'Manage website content, pages and publishing.',
+  promoTitle: "Your site, managed",
+  promoText: "Publish content, careers and updates from one place.",
   portalLabel: 'Website Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -56,9 +60,13 @@ export const appConfig: AppConfig = {
   colorModeKey: 'website_app_color_mode',
   accent: { light: '#93c5fd', main: '#2563eb', hover: '#1d4ed8', active: '#1e40af' },
   nav: [
-    { label: 'Welcome', to: '/', icon: 'dashboard' },
-    { label: 'My Tickets', to: '/tickets', icon: 'ticket' },
-    { label: 'Live Chat', to: '/live-chat', icon: 'chat' },
+    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Career', to: '/careers', icon: 'work' },
+    { label: 'Newsroom', to: '/newsroom', icon: 'newspaper' },
+    { label: 'Blog', to: '/blog', icon: 'article' },
+    { label: 'Newsletter Submission', to: '/newsletter', icon: 'email' },
+    { label: 'Contact Submission', to: '/contact-submissions', icon: 'contactMail' },
+    { label: 'FAQ Submission', to: '/faq-submissions', icon: 'help' },
   ],
   modules: [],
 };

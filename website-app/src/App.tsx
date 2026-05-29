@@ -1,9 +1,14 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
-import WelcomePage from './pages/WelcomePage';
-import TicketsListPage from './pages/support-tickets/TicketsListPage';
-import TicketDetailPage from './pages/support-tickets/TicketDetailPage';
-import SupportChatPage from './pages/support-chat/SupportChatPage';
+import {
+  DashboardPage,
+  CareersPage,
+  NewsroomPage,
+  BlogPage,
+  NewsletterPage,
+  ContactSubmissionsPage,
+  FaqSubmissionsPage,
+} from './pages/website';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
@@ -27,10 +32,13 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
-      <Route path="/" element={authed(<WelcomePage />)} />
-      <Route path="/tickets" element={authed(<TicketsListPage />)} />
-      <Route path="/tickets/:id" element={authed(<TicketDetailPage />)} />
-      <Route path="/live-chat" element={authed(<SupportChatPage />)} />
+      <Route path="/" element={authed(<DashboardPage />)} />
+      <Route path="/careers" element={authed(<CareersPage />)} />
+      <Route path="/newsroom" element={authed(<NewsroomPage />)} />
+      <Route path="/blog" element={authed(<BlogPage />)} />
+      <Route path="/newsletter" element={authed(<NewsletterPage />)} />
+      <Route path="/contact-submissions" element={authed(<ContactSubmissionsPage />)} />
+      <Route path="/faq-submissions" element={authed(<FaqSubmissionsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

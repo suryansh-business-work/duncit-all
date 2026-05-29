@@ -4,8 +4,8 @@ import { paymentReleaseService } from './paymentRelease.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
-const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN'];
-const ADMIN_POD = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
+const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
+const ADMIN_POD = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'FINANCE_MANAGER'];
 
 const toPub = (d: IFinanceSettings) => ({
   platform_fee_pct: d.platform_fee_pct,

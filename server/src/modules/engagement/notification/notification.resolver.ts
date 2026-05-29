@@ -2,7 +2,7 @@ import { notificationService } from './notification.service';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 
-const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN'];
+const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'MARKETING_MANAGER'];
 
 export const notificationResolvers = {
   Query: {

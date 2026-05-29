@@ -31,6 +31,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  promoTitle: string;
+  promoText: string;
   portalLabel: string;
   loginImage: string;
   requiredRoles: string[];
@@ -51,6 +53,8 @@ export const appConfig: AppConfig = {
   name: 'Ads',
   fullName: 'Duncit Ads',
   tagline: 'Plan campaigns, manage creatives and track ad performance.',
+  promoTitle: "Campaigns that convert",
+  promoText: "Plan, launch and measure ad campaigns from one console.",
   portalLabel: 'Ads Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

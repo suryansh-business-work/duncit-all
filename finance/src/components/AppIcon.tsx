@@ -12,6 +12,15 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import CalculateIcon from '@mui/icons-material/Calculate';
+import SettingsIcon from '@mui/icons-material/Settings';
+import PaymentsIcon from '@mui/icons-material/Payments';
+import PercentIcon from '@mui/icons-material/Percent';
+import RequestQuoteIcon from '@mui/icons-material/RequestQuote';
+import DescriptionIcon from '@mui/icons-material/Description';
+import MenuBookIcon from '@mui/icons-material/MenuBook';
+import StorefrontIcon from '@mui/icons-material/Storefront';
+import ShieldIcon from '@mui/icons-material/Shield';
+import CalendarMonthIcon from '@mui/icons-material/CalendarMonth';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 
 const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
@@ -28,6 +37,16 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   location: MyLocationIcon,
   analytics: AnalyticsIcon,
   calculator: CalculateIcon,
+  settings: SettingsIcon,
+  receipt: ReceiptLongIcon,
+  payments: PaymentsIcon,
+  percent: PercentIcon,
+  quote: RequestQuoteIcon,
+  description: DescriptionIcon,
+  menuBook: MenuBookIcon,
+  storefront: StorefrontIcon,
+  shield: ShieldIcon,
+  calendar: CalendarMonthIcon,
 };
 
 /** Resolves a config icon name to an MUI icon, falling back to a neutral glyph. */

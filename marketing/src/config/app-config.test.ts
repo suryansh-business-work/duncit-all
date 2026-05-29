@@ -13,7 +13,10 @@ describe('Duncit Marketing app config', () => {
     expect(appConfig.requiredRoles).toContain('MARKETING_MANAGER');
   });
 
-  it('exposes a Welcome nav entry', () => {
-    expect(appConfig.nav.some((n) => n.to === '/')).toBe(true);
+  it('exposes the campaign and notification nav entries', () => {
+    const targets = appConfig.nav.map((n) => n.to);
+    expect(targets).toEqual(
+      expect.arrayContaining(['/', '/campaigns/email', '/campaigns/whatsapp', '/notifications']),
+    );
   });
 });

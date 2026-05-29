@@ -15,4 +15,8 @@ packages:
   - ai
   - products
   - marketing
+  - onboarding
+  - hr
+  - employee
+  - status
   - packages/*

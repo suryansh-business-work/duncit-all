@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { Box, Snackbar, Stack, Typography } from '@mui/material';
 import AppearanceSection from './settings-page/AppearanceSection';
-import JwtExpirySection from './settings-page/JwtExpirySection';
 import DisplayFormatsSection from './settings-page/DisplayFormatsSection';
 
 export default function SettingsPage() {
@@ -16,7 +15,6 @@ export default function SettingsPage() {
       </Box>
       <AppearanceSection />
       <DisplayFormatsSection onToast={setToast} />
-      <JwtExpirySection onToast={setToast} />
       <Snackbar
         open={!!toast}
         autoHideDuration={3000}

@@ -64,14 +64,6 @@ export const NAV: NavSection[] = [
     ],
   },
   {
-    heading: 'Inventory Management',
-    prefixes: ['/inventory', '/ecomm'],
-    items: [
-      { label: 'Inventory', to: '/inventory', icon: navIcons.inventory },
-      { label: 'Ecomm Requests', to: '/ecomm/product-requests', icon: navIcons.inventory },
-    ],
-  },
-  {
     heading: 'Community',
     prefixes: ['/clubs', '/pods', '/pod-ideas', '/pod-plans'],
     items: [
@@ -91,7 +83,6 @@ export const NAV: NavSection[] = [
   {
     heading: 'Engagement',
     prefixes: [
-      '/notifications',
       '/interview-requests',
       '/faqs',
       '/email-templates',
@@ -99,37 +90,11 @@ export const NAV: NavSection[] = [
       '/support-logs',
     ],
     items: [
-      { label: 'Notifications', to: '/notifications', icon: navIcons.notifications },
       { label: 'Interview Requests', to: '/interview-requests', icon: navIcons.eventAvailable },
       { label: 'FAQs', to: '/faqs', icon: navIcons.help },
       { label: 'Support Logs', to: '/support-logs', icon: navIcons.support },
       { label: 'Email Templates', to: '/email-templates', icon: navIcons.email },
       { label: 'Badges', to: '/badges', icon: navIcons.shield },
-    ],
-  },
-  {
-    heading: 'Campaign',
-    prefixes: ['/marketing'],
-    items: [
-      {
-        label: 'Campaigns',
-        icon: navIcons.campaign,
-        matchPrefix: '/marketing',
-        children: [
-          { label: 'Email Campaigns', to: '/marketing/email-campaigns', icon: navIcons.email },
-          { label: 'WhatsApp Campaigns', to: '/marketing/whatsapp-campaigns', icon: navIcons.whatsapp },
-        ],
-      },
-    ],
-  },
-  {
-    heading: 'Website',
-    prefixes: ['/newsletter', '/contact-submissions', '/faq-submissions', '/website-content'],
-    items: [
-      { label: 'Website Content', to: '/website-content', icon: navIcons.article },
-      { label: 'Newsletter', to: '/newsletter', icon: navIcons.email },
-      { label: 'Contact Submissions', to: '/contact-submissions', icon: navIcons.email },
-      { label: 'FAQ Submissions', to: '/faq-submissions', icon: navIcons.help },
     ],
   },
   {
@@ -148,34 +113,9 @@ export const NAV: NavSection[] = [
     ],
   },
   {
-    heading: 'Finance',
-    prefixes: ['/finance'],
-    items: [
-      {
-        label: 'Finance',
-        icon: navIcons.finance,
-        matchPrefix: '/finance',
-        children: [
-          { label: 'Dashboard', to: '/finance/dashboard', icon: navIcons.financeDashboard },
-          { label: 'Settings', to: '/finance/settings', icon: navIcons.settings },
-          { label: 'Payment Logs', to: '/finance/payment-logs', icon: navIcons.receipt },
-          { label: 'Payment Release', to: '/finance/payment-release', icon: navIcons.payments },
-          { label: 'Platform Fees', to: '/finance/platform-fees', icon: navIcons.percent },
-          { label: 'GST Management', to: '/finance/gst', icon: navIcons.quote },
-          { label: 'Invoices', to: '/finance/invoices', icon: navIcons.description },
-          { label: 'Ledger', to: '/finance/ledger', icon: navIcons.menuBook },
-          { label: 'Venue Finance', to: '/finance/venue', icon: navIcons.storefront },
-          { label: 'Insurance', to: '/finance/insurance', icon: navIcons.shield },
-          { label: 'Payout Cycles', to: '/finance/payouts', icon: navIcons.calendar },
-        ],
-      },
-    ],
-  },
-  {
     heading: 'System',
-    prefixes: ['/feature-flags', '/branding', '/settings'],
+    prefixes: ['/branding', '/settings'],
     items: [
-      { label: 'Feature Flags', to: '/feature-flags', icon: navIcons.flag },
       { label: 'Branding', to: '/branding', icon: navIcons.branding },
       { label: 'Settings', to: '/settings', icon: navIcons.settings },
     ],

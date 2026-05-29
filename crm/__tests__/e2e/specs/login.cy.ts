@@ -9,7 +9,7 @@ describe('CRM login', () => {
 
   it('shows the admin@duncit.com sign-in form', () => {
     cy.visit('/login');
-    cy.contains(/sign in to duncit crm/i).should('be.visible');
+    cy.contains(/log in/i).should('be.visible');
     cy.get('input[name="email"]').should('be.visible');
     cy.get('input[name="password"]').should('be.visible');
     cy.get('button[type="submit"]').should('be.visible');

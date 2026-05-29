@@ -18,6 +18,9 @@ import { requireRole, assertScope } from '@middleware/rbac';
 const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
 const MUTATING_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 const ROLE_ASSIGN_ROLES = ['SUPER_ADMIN'];
+// The user directory is also read by the Marketing portal to target
+// per-user push notifications (read-only — no other user ops are granted).
+const DIRECTORY_ROLES = [...ADMIN_ROLES, 'MARKETING_MANAGER'];
 
 function toPublicProfile(u: any) {
   if (!u) return null;
@@ -53,7 +56,7 @@ export const userResolvers = {
       return userService.listSavedPods(ctx.user.id);
     },
     users: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      requireRole(ctx, DIRECTORY_ROLES);
       return userService.list(args.filter);
     },
     user: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {

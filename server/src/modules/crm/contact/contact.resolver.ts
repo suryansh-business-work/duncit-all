@@ -2,7 +2,7 @@ import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { contactService } from './contact.service';
 
-const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN'];
+const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'WEBSITE_MANAGER'];
 
 export const contactResolvers = {
   Query: {

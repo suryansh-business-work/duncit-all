@@ -27,6 +27,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  promoTitle: string;
+  promoText: string;
   portalLabel: string;
   loginImage: string;
   requiredRoles: string[];
@@ -47,6 +49,8 @@ export const appConfig: AppConfig = {
   name: 'Support',
   fullName: 'Duncit Support',
   tagline: 'Handle customer tickets and support conversations.',
+  promoTitle: 'One unified desk',
+  promoText: 'Every ticket, every conversation — one place. Sign in and get moving.',
   portalLabel: 'Support Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

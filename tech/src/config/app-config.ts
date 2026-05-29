@@ -28,6 +28,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  promoTitle: string;
+  promoText: string;
   portalLabel: string;
   loginImage: string;
   requiredRoles: string[];
@@ -48,6 +50,8 @@ export const appConfig: AppConfig = {
   name: 'Tech',
   fullName: 'Duncit Tech',
   tagline: 'Manage platform configuration and environment variables.',
+  promoTitle: "Ship with control",
+  promoText: "Environment, feature flags and platform config in one console.",
   portalLabel: 'Tech Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||
@@ -59,6 +63,8 @@ export const appConfig: AppConfig = {
   nav: [
     { label: 'Environment', to: '/', icon: 'settings' },
     { label: 'Comms Providers', to: '/comms-providers', icon: 'forum' },
+    { label: 'Feature Flags', to: '/feature-flags', icon: 'flag' },
+    { label: 'Authentication', to: '/authentication', icon: 'lock' },
   ],
   modules: [],
 };

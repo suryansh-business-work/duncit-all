@@ -13,7 +13,18 @@ describe('Duncit Website app config', () => {
     expect(appConfig.requiredRoles).toContain('WEBSITE_MANAGER');
   });
 
-  it('exposes a Welcome nav entry', () => {
-    expect(appConfig.nav.some((n) => n.to === '/')).toBe(true);
+  it('exposes the website management nav entries', () => {
+    const targets = appConfig.nav.map((n) => n.to);
+    expect(targets).toEqual(
+      expect.arrayContaining([
+        '/',
+        '/careers',
+        '/newsroom',
+        '/blog',
+        '/newsletter',
+        '/contact-submissions',
+        '/faq-submissions',
+      ]),
+    );
   });
 });

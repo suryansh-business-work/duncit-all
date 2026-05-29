@@ -120,3 +120,31 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2015:80"
+
+  onboarding:
+    image: ${DOCKERHUB_USERNAME}/duncit-onboarding:${IMAGE_TAG:-latest}
+    container_name: duncit-onboarding
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2016:80"
+
+  hr:
+    image: ${DOCKERHUB_USERNAME}/duncit-hr:${IMAGE_TAG:-latest}
+    container_name: duncit-hr
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2017:80"
+
+  employee:
+    image: ${DOCKERHUB_USERNAME}/duncit-employee:${IMAGE_TAG:-latest}
+    container_name: duncit-employee
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2018:80"
+
+  status:
+    image: ${DOCKERHUB_USERNAME}/duncit-status:${IMAGE_TAG:-latest}
+    container_name: duncit-status
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2019:80"

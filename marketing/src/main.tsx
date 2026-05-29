@@ -8,6 +8,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider } from '@duncit/user-context';
 import { apolloClient } from './apollo';
 import { ColorModeProvider } from './ColorModeContext';
+import { ConfirmProvider } from './components/useConfirm';
 import { appConfig } from './config/app-config';
 import App from './App';
 
@@ -40,11 +41,13 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey={`${appConfig.key}_user`}>
         <ColorModeProvider>
           <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-              <BrowserRouter>
-                <App />
-              </BrowserRouter>
-            </GoogleOAuthProvider>
+            <ConfirmProvider>
+              <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
+                <BrowserRouter>
+                  <App />
+                </BrowserRouter>
+              </GoogleOAuthProvider>
+            </ConfirmProvider>
           </LocalizationProvider>
         </ColorModeProvider>
       </UserProvider>

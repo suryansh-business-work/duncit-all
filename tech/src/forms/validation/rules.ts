@@ -1,5 +1,7 @@
 import * as yup from 'yup';
 
+export const SLUG_KEY_PATTERN = /^[a-z0-9]+(?:[-_][a-z0-9]+)*$/;
+
 /** Shared, reusable Yup field rules so every form validates consistently. */
 export const validationRules = {
   email: (label = 'Email') =>

@@ -4,8 +4,8 @@ import { validate } from '@utils/validate';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
-const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER'];
-const WRITE_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
+const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER', 'WEBSITE_MANAGER'];
+const WRITE_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'WEBSITE_MANAGER'];
 
 export const websiteContentResolvers = {
   Query: {

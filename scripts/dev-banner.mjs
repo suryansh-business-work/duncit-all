@@ -23,6 +23,10 @@ const projects = [
   { label: 'ai',                       port: 2013 },
   { label: 'products',                 port: 2014 },
   { label: 'marketing',                port: 2015 },
+  { label: 'onboarding',               port: 2016 },
+  { label: 'hr',                       port: 2017 },
+  { label: 'employee',                 port: 2018 },
+  { label: 'status',                   port: 2019 },
 ];
 
 const urlOf = (p) => `http://localhost:${p.port}${p.path ?? '/'}`;

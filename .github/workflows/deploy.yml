@@ -44,6 +44,10 @@ jobs:
       ai: ${{ steps.filter.outputs.ai }}
       products: ${{ steps.filter.outputs.products }}
       marketing: ${{ steps.filter.outputs.marketing }}
+      onboarding: ${{ steps.filter.outputs.onboarding }}
+      hr: ${{ steps.filter.outputs.hr }}
+      employee: ${{ steps.filter.outputs.employee }}
+      status: ${{ steps.filter.outputs.status }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -178,34 +182,57 @@ jobs:
               - 'tsconfig.base.json'
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
+            onboarding:
+              - 'onboarding/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            hr:
+              - 'hr/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            employee:
+              - 'employee/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            status:
+              - 'status/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
 
   # -----------------------------------------------------------
-  # Lightweight typecheck. Workspace builds catch TS errors before docker.
-  # -----------------------------------------------------------
-  typecheck:
-    needs: changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --recursive --if-present build
-
-  # -----------------------------------------------------------
-  # Build & push each image only when its sources changed.
+  # Per-portal pipeline: each build job now runs TypeScript -> Test (via the
+  # ./.github/actions/portal-ci composite) -> Build, independently. A red
+  # typecheck/test for one portal stops only that portal's image push, so its
+  # previous :latest image and running container are left untouched while the
+  # other portals continue. (CRM keeps its dedicated crm-tests gate.)
   # -----------------------------------------------------------
   build-server:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.server == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: server
+          typecheck: 'tsc -p tsconfig.json --noEmit'
+          test: 'test'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -227,11 +254,17 @@ jobs:
               --push .
 
   build-admin:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.admin == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: admin
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -256,11 +289,17 @@ jobs:
               --push .
 
   build-mweb:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.mweb == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: mweb-app
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -285,11 +324,16 @@ jobs:
               --push .
 
   build-website:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.website == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: duncit.com
+          typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -311,11 +355,17 @@ jobs:
               --push .
 
   build-partners-app:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.partners_app == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: partners-app
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -340,11 +390,16 @@ jobs:
               --push .
 
   build-partners-website:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.partners_website == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: partners-website
+          typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -366,11 +421,17 @@ jobs:
               --push .
 
   build-ads:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.ads == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: ads
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -465,7 +526,7 @@ jobs:
           if-no-files-found: ignore
 
   build-crm:
-    needs: [changes, typecheck, crm-tests]
+    needs: [changes, crm-tests]
     if: needs.changes.outputs.crm == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -493,11 +554,17 @@ jobs:
               --push .
 
   build-finance:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.finance == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: finance
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -521,11 +588,17 @@ jobs:
               --push .
 
   build-tech:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.tech == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: tech
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -549,11 +622,17 @@ jobs:
               --push .
 
   build-support:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.support == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: support
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -578,11 +657,17 @@ jobs:
               --push .
 
   build-website-app:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.website_app == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: website-app
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -607,11 +692,17 @@ jobs:
               --push .
 
   build-legal:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.legal == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: legal
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -636,11 +727,17 @@ jobs:
               --push .
 
   build-ai:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.ai == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: ai
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -665,11 +762,17 @@ jobs:
               --push .
 
   build-products:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.products == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: products
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -694,11 +797,17 @@ jobs:
               --push .
 
   build-marketing:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.marketing == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: marketing
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -722,12 +831,143 @@ jobs:
               --cache-to   type=gha,scope=duncit-marketing,mode=max \
               --push .
 
+  build-onboarding:
+    needs: changes
+    if: needs.changes.outputs.onboarding == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: onboarding
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push onboarding
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file onboarding/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=ONBOARDING_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-onboarding \
+              --cache-to   type=gha,scope=duncit-onboarding,mode=max \
+              --push .
+
+  build-hr:
+    needs: changes
+    if: needs.changes.outputs.hr == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: hr
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push hr
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file hr/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=HR_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-hr \
+              --cache-to   type=gha,scope=duncit-hr,mode=max \
+              --push .
+
+  build-employee:
+    needs: changes
+    if: needs.changes.outputs.employee == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: employee
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push employee
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file employee/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=EMPLOYEE \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-employee \
+              --cache-to   type=gha,scope=duncit-employee,mode=max \
+              --push .
+
+  build-status:
+    needs: changes
+    if: needs.changes.outputs.status == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push status
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file status/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-status:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-status:${{ github.sha }} \
+              --cache-from type=gha,scope=duncit-status \
+              --cache-to   type=gha,scope=duncit-status,mode=max \
+              --push .
+
   # -----------------------------------------------------------
   # Single deploy job runs after whichever build jobs ran. It only
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads, build-crm, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing]
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads, build-crm, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status]
     if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads.result == 'success' || needs.build-crm.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success')
     runs-on: ubuntu-latest
     steps:
@@ -763,6 +1003,10 @@ jobs:
           [ "${{ needs.build-ai.result }}" = "success" ] && PARTS+=("ai")
           [ "${{ needs.build-products.result }}" = "success" ] && PARTS+=("products")
           [ "${{ needs.build-marketing.result }}" = "success" ] && PARTS+=("marketing")
+          [ "${{ needs.build-onboarding.result }}" = "success" ] && PARTS+=("onboarding")
+          [ "${{ needs.build-hr.result }}" = "success" ] && PARTS+=("hr")
+          [ "${{ needs.build-employee.result }}" = "success" ] && PARTS+=("employee")
+          [ "${{ needs.build-status.result }}" = "success" ] && PARTS+=("status")
           echo "list=${PARTS[*]}" >> "$GITHUB_OUTPUT"
           echo "Restarting: ${PARTS[*]}"
 
@@ -834,7 +1078,7 @@ jobs:
             $SUDO apt-get update -qq
             $SUDO apt-get install -y -qq certbot python3-certbot-nginx
           fi
-          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d crm.duncit.com -d finance.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com"
+          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d crm.duncit.com -d finance.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com -d onboarding.duncit.com -d hr.duncit.com -d employee.duncit.com -d status.duncit.com"
           if ! $SUDO test -d /etc/letsencrypt/live/duncit.com; then
             $SUDO certbot --nginx --non-interactive --agree-tos --redirect --cert-name duncit.com -m admin@duncit.com $CERTBOT_DOMAINS || true
           else
@@ -884,4 +1128,8 @@ jobs:
               curl -fsSI http://127.0.0.1:2013/ | head -1
               curl -fsSI http://127.0.0.1:2014/ | head -1
               curl -fsSI http://127.0.0.1:2015/ | head -1
+              curl -fsSI http://127.0.0.1:2016/ | head -1
+              curl -fsSI http://127.0.0.1:2017/ | head -1
+              curl -fsSI http://127.0.0.1:2018/ | head -1
+              curl -fsSI http://127.0.0.1:2019/ | head -1
               '

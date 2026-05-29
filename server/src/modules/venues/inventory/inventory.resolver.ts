@@ -2,7 +2,7 @@ import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { inventoryService } from './inventory.service';
 
-const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN'];
+const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER'];
 
 export const inventoryResolvers = {
   Query: {

@@ -11,16 +11,20 @@
   "peerDependencies": {
     "@mui/icons-material": ">=5",
     "@mui/material": ">=5",
+    "formik": ">=2",
     "react": ">=18",
-    "react-dom": ">=18"
+    "react-dom": ">=18",
+    "yup": ">=1"
   },
   "devDependencies": {
     "@mui/icons-material": "^5.15.18",
     "@mui/material": "^5.15.18",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
+    "formik": "^2.4.6",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
-    "typescript": "^5.4.5"
+    "typescript": "^5.4.5",
+    "yup": "^1.4.0"
   }
 }

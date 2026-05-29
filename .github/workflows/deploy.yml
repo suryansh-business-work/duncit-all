@@ -44,6 +44,10 @@ jobs:
       ai: ${{ steps.filter.outputs.ai }}
       products: ${{ steps.filter.outputs.products }}
       marketing: ${{ steps.filter.outputs.marketing }}
+      onboarding: ${{ steps.filter.outputs.onboarding }}
+      hr: ${{ steps.filter.outputs.hr }}
+      employee: ${{ steps.filter.outputs.employee }}
+      status: ${{ steps.filter.outputs.status }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -176,6 +180,37 @@ jobs:
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            onboarding:
+              - 'onboarding/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            hr:
+              - 'hr/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            employee:
+              - 'employee/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            status:
+              - 'status/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
 
@@ -796,12 +831,143 @@ jobs:
               --cache-to   type=gha,scope=duncit-marketing,mode=max \
               --push .
 
+  build-onboarding:
+    needs: changes
+    if: needs.changes.outputs.onboarding == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: onboarding
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push onboarding
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file onboarding/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=ONBOARDING_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-onboarding \
+              --cache-to   type=gha,scope=duncit-onboarding,mode=max \
+              --push .
+
+  build-hr:
+    needs: changes
+    if: needs.changes.outputs.hr == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: hr
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push hr
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file hr/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=HR_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-hr \
+              --cache-to   type=gha,scope=duncit-hr,mode=max \
+              --push .
+
+  build-employee:
+    needs: changes
+    if: needs.changes.outputs.employee == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: employee
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push employee
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file employee/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=EMPLOYEE \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-employee \
+              --cache-to   type=gha,scope=duncit-employee,mode=max \
+              --push .
+
+  build-status:
+    needs: changes
+    if: needs.changes.outputs.status == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push status
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file status/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-status:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-status:${{ github.sha }} \
+              --cache-from type=gha,scope=duncit-status \
+              --cache-to   type=gha,scope=duncit-status,mode=max \
+              --push .
+
   # -----------------------------------------------------------
   # Single deploy job runs after whichever build jobs ran. It only
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads, build-crm, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing]
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads, build-crm, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status]
     if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads.result == 'success' || needs.build-crm.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success')
     runs-on: ubuntu-latest
     steps:
@@ -837,6 +1003,10 @@ jobs:
           [ "${{ needs.build-ai.result }}" = "success" ] && PARTS+=("ai")
           [ "${{ needs.build-products.result }}" = "success" ] && PARTS+=("products")
           [ "${{ needs.build-marketing.result }}" = "success" ] && PARTS+=("marketing")
+          [ "${{ needs.build-onboarding.result }}" = "success" ] && PARTS+=("onboarding")
+          [ "${{ needs.build-hr.result }}" = "success" ] && PARTS+=("hr")
+          [ "${{ needs.build-employee.result }}" = "success" ] && PARTS+=("employee")
+          [ "${{ needs.build-status.result }}" = "success" ] && PARTS+=("status")
           echo "list=${PARTS[*]}" >> "$GITHUB_OUTPUT"
           echo "Restarting: ${PARTS[*]}"
 

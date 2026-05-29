@@ -24,6 +24,10 @@ COPY legal/package.json ./legal/
 COPY ai/package.json ./ai/
 COPY products/package.json ./products/
 COPY marketing/package.json ./marketing/
+COPY onboarding/package.json ./onboarding/
+COPY hr/package.json ./hr/
+COPY employee/package.json ./employee/
+COPY status/package.json ./status/
 COPY packages/user-context/package.json ./packages/user-context/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate

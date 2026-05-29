@@ -1,0 +1,149 @@
+---
+import Layout from '../layouts/Layout.astro';
+
+interface Service {
+  name: string;
+  url: string;
+  description: string;
+  /** Optional reachability probe path (defaults to the URL itself). */
+  probe?: string;
+}
+
+const consoles: Service[] = [
+  { name: 'Admin', url: 'https://admin.duncit.com/', description: 'Platform administration' },
+  { name: 'mWeb', url: 'https://mweb.duncit.com/', description: 'Member web app' },
+  { name: 'Partners App', url: 'https://partners-app.duncit.com/', description: 'Host & venue partners' },
+  { name: 'Ads', url: 'https://ads.duncit.com/', description: 'Advertising & campaigns' },
+  { name: 'CRM', url: 'https://crm.duncit.com/', description: 'Customer relationships' },
+  { name: 'Finance', url: 'https://finance.duncit.com/', description: 'Payments & payouts' },
+  { name: 'Tech', url: 'https://tech.duncit.com/', description: 'Platform configuration' },
+  { name: 'Support', url: 'https://support.duncit.com/', description: 'Tickets & live chat' },
+  { name: 'Website', url: 'https://website.duncit.com/', description: 'Site content management' },
+  { name: 'Legal', url: 'https://legal.duncit.com/', description: 'Policies & compliance' },
+  { name: 'AI', url: 'https://ai.duncit.com/', description: 'AI tooling' },
+  { name: 'Products', url: 'https://products.duncit.com/', description: 'Catalog & inventory' },
+  { name: 'Marketing', url: 'https://marketing.duncit.com/', description: 'Campaigns & notifications' },
+  { name: 'Onboarding', url: 'https://onboarding.duncit.com/', description: 'Onboarding & approvals' },
+  { name: 'HR', url: 'https://hr.duncit.com/', description: 'People & HR operations' },
+  { name: 'Employee', url: 'https://employee.duncit.com/', description: 'Employee self-service' },
+];
+
+const platform: Service[] = [
+  { name: 'API Server', url: 'https://server.duncit.com/', description: 'GraphQL API', probe: 'https://server.duncit.com/health' },
+];
+
+const websites: Service[] = [
+  { name: 'duncit.com', url: 'https://duncit.com/', description: 'Public marketing website' },
+  { name: 'Partners Website', url: 'https://partners.duncit.com/', description: 'Partner marketing website' },
+];
+
+const groups = [
+  { title: 'Consoles', items: consoles },
+  { title: 'Platform', items: platform },
+  { title: 'Websites', items: websites },
+];
+
+const allServices = [...consoles, ...platform, ...websites];
+---
+
+<Layout title="Duncit Status">
+  <main class="wrap">
+    <header class="head">
+      <div class="brand">
+        <img src="/duncit-logo.svg" alt="Duncit" width="40" height="40" />
+        <div>
+          <h1>Duncit Status</h1>
+          <p class="sub">Live availability of every Duncit console, the API and our websites.</p>
+        </div>
+      </div>
+      <div class="overall" id="overall">
+        <span class="dot pending" id="overall-dot"></span>
+        <span id="overall-text">Checking services…</span>
+      </div>
+    </header>
+
+    {groups.map((group) => (
+      <section class="group">
+        <h2>{group.title}</h2>
+        <div class="grid">
+          {group.items.map((s) => (
+            <a class="card" href={s.url} target="_blank" rel="noopener" data-url={s.probe ?? s.url}>
+              <div class="row">
+                <span class="name">{s.name}</span>
+                <span class="badge pending"><span class="dot pending"></span><span class="label">Checking</span></span>
+              </div>
+              <span class="desc">{s.description}</span>
+              <span class="host">{new URL(s.url).host}</span>
+            </a>
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <footer class="foot">
+      <span>Refreshes automatically every 60s.</span>
+      <span id="updated"></span>
+    </footer>
+  </main>
+
+  <style>
+    .wrap { max-width: 1040px; margin: 0 auto; padding: clamp(24px, 5vw, 56px) 20px 64px; }
+    .head { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 36px; }
+    .brand { display: flex; align-items: center; gap: 14px; }
+    .brand img { border-radius: 10px; }
+    h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 900; margin: 0; letter-spacing: -0.02em; }
+    .sub { color: var(--muted); margin: 4px 0 0; font-size: 0.95rem; }
+    .overall { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); font-weight: 700; }
+    .group { margin-bottom: 32px; }
+    .group h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin: 0 0 14px; }
+    .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
+    .card { display: flex; flex-direction: column; gap: 6px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--panel); backdrop-filter: blur(8px); transition: transform 0.15s ease, border-color 0.15s ease; }
+    .card:hover { transform: translateY(-2px); border-color: rgba(255, 90, 90, 0.5); }
+    .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+    .name { font-weight: 800; }
+    .desc { color: var(--muted); font-size: 0.85rem; }
+    .host { color: rgba(148, 163, 184, 0.7); font-size: 0.72rem; font-family: ui-monospace, monospace; }
+    .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); }
+    .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+    .dot.ok, .badge.ok { color: var(--ok); } .dot.ok { background: var(--ok); box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18); }
+    .dot.down, .badge.down { color: var(--down); } .dot.down { background: var(--down); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18); }
+    .dot.pending, .badge.pending { color: var(--pending); } .dot.pending { background: var(--pending); animation: pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 50% { opacity: 0.35; } }
+    .foot { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.8rem; margin-top: 28px; border-top: 1px solid var(--border); padding-top: 16px; }
+  </style>
+
+  <script define:vars={{ total: allServices.length }}>
+    const probe = (url) =>
+      new Promise((resolve) => {
+        const ctrl = new AbortController();
+        const t = setTimeout(() => { ctrl.abort(); resolve(false); }, 8000);
+        fetch(url, { mode: 'no-cors', signal: ctrl.signal, cache: 'no-store' })
+          .then(() => { clearTimeout(t); resolve(true); })
+          .catch(() => { clearTimeout(t); resolve(false); });
+      });
+
+    const setBadge = (el, ok) => {
+      el.className = 'badge ' + (ok ? 'ok' : 'down');
+      el.innerHTML = '<span class="dot ' + (ok ? 'ok' : 'down') + '"></span><span class="label">' + (ok ? 'Operational' : 'Unreachable') + '</span>';
+    };
+
+    async function run() {
+      const cards = Array.from(document.querySelectorAll('.card'));
+      let up = 0;
+      await Promise.all(cards.map(async (card) => {
+        const ok = await probe(card.dataset.url);
+        if (ok) up += 1;
+        setBadge(card.querySelector('.badge'), ok);
+      }));
+      const dot = document.getElementById('overall-dot');
+      const text = document.getElementById('overall-text');
+      const allUp = up === total;
+      dot.className = 'dot ' + (allUp ? 'ok' : up === 0 ? 'down' : 'pending');
+      text.textContent = allUp ? 'All systems operational' : up + ' of ' + total + ' services operational';
+      document.getElementById('updated').textContent = 'Last checked ' + new Date().toLocaleTimeString();
+    }
+
+    run();
+    setInterval(run, 60000);
+  </script>
+</Layout>

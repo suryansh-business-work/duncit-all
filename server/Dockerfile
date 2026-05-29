@@ -20,6 +20,10 @@ COPY legal/package.json ./legal/
 COPY ai/package.json ./ai/
 COPY products/package.json ./products/
 COPY marketing/package.json ./marketing/
+COPY onboarding/package.json ./onboarding/
+COPY hr/package.json ./hr/
+COPY employee/package.json ./employee/
+COPY status/package.json ./status/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

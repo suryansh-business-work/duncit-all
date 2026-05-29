@@ -16,6 +16,9 @@ on:
       - 'ai/**'
       - 'products/**'
       - 'marketing/**'
+      - 'onboarding/**'
+      - 'hr/**'
+      - 'employee/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -35,6 +38,9 @@ on:
       - 'ai/**'
       - 'products/**'
       - 'marketing/**'
+      - 'onboarding/**'
+      - 'hr/**'
+      - 'employee/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -53,7 +59,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        workspace: [admin, mweb-app, ads, crm, finance, tech, support, website-app, legal, ai, products, marketing]
+        workspace: [admin, mweb-app, ads, crm, finance, tech, support, website-app, legal, ai, products, marketing, onboarding, hr, employee]
 
     steps:
       - name: Checkout
@@ -154,4 +160,16 @@ jobs:
 
       - name: Typecheck marketing
         working-directory: marketing
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck onboarding
+        working-directory: onboarding
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck hr
+        working-directory: hr
+        run: pnpm exec tsc -b --noEmit
+
+      - name: Typecheck employee
+        working-directory: employee
         run: pnpm exec tsc -b --noEmit

@@ -3,6 +3,7 @@ import {
   Box,
   Card,
   CardActionArea,
+  Chip,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -13,7 +14,7 @@ import {
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
 import { glass } from './glass';
-import { PORTALS, resolvePortalUrl } from './portals';
+import { PORTALS, PORTAL_CATEGORIES, resolvePortalUrl } from './portals';
 
 interface Props {
   open: boolean;
@@ -22,14 +23,17 @@ interface Props {
 
 export default function OtherPortalsDialog({ open, onClose }: Props) {
   const [query, setQuery] = useState('');
+  const [category, setCategory] = useState<string>('All');
 
   const results = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return PORTALS;
-    return PORTALS.filter(
-      (p) => p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q),
-    );
-  }, [query]);
+    return PORTALS.filter((p) => {
+      const matchesCat = category === 'All' || p.category === category;
+      const matchesQuery =
+        !q || p.name.toLowerCase().includes(q) || p.description.toLowerCase().includes(q);
+      return matchesCat && matchesQuery;
+    });
+  }, [query, category]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md" scroll="paper">
@@ -57,6 +61,19 @@ export default function OtherPortalsDialog({ open, onClose }: Props) {
             ),
           }}
         />
+        <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
+          {['All', ...PORTAL_CATEGORIES].map((cat) => (
+            <Chip
+              key={cat}
+              label={cat}
+              size="small"
+              color={category === cat ? 'primary' : 'default'}
+              variant={category === cat ? 'filled' : 'outlined'}
+              onClick={() => setCategory(cat)}
+              sx={{ fontWeight: 700 }}
+            />
+          ))}
+        </Stack>
         <Box
           sx={{
             display: 'grid',

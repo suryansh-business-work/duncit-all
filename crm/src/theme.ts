@@ -72,7 +72,7 @@ export const buildTheme = (mode: PaletteMode = 'light', accent: AccentColors = D
     shape: { borderRadius: 4 },
     typography: {
       fontFamily:
-        '"Quicksand", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+        '"Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
       h1: { fontWeight: 800, letterSpacing: '-0.02em' },
       h2: { fontWeight: 800, letterSpacing: '-0.02em' },
       h3: { fontWeight: 700, letterSpacing: '-0.02em' },

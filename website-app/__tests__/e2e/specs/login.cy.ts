@@ -6,7 +6,7 @@ describe('Duncit Website login', () => {
 
   it('shows the Duncit Website sign-in form', () => {
     cy.visit('/login');
-    cy.contains(/sign in to duncit website/i).should('be.visible');
+    cy.contains(/log in/i).should('be.visible');
     cy.get('input[name="email"]').should('be.visible');
     cy.get('input[name="password"]').should('be.visible');
     cy.get('button[type="submit"]').should('be.visible');

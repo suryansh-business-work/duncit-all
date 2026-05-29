@@ -27,6 +27,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  promoTitle: string;
+  promoText: string;
   portalLabel: string;
   loginImage: string;
   requiredRoles: string[];
@@ -47,6 +49,8 @@ export const appConfig: AppConfig = {
   name: 'AI',
   fullName: 'Duncit AI',
   tagline: 'Operate AI tools and model configuration.',
+  promoTitle: "Intelligence on tap",
+  promoText: "Models, prompts and AI tooling in one workspace.",
   portalLabel: 'AI Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

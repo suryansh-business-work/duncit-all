@@ -27,6 +27,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  promoTitle: string;
+  promoText: string;
   portalLabel: string;
   loginImage: string;
   requiredRoles: string[];
@@ -47,6 +49,8 @@ export const appConfig: AppConfig = {
   name: 'Products',
   fullName: 'Duncit Products',
   tagline: 'Manage the product catalog and roadmap.',
+  promoTitle: "Build what matters",
+  promoText: "Catalog, inventory and roadmap from one console.",
   portalLabel: 'Products Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

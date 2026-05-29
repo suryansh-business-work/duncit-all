@@ -20,7 +20,7 @@ const STORAGE_KEY = 'admin_color_mode';
 export function ColorModeProvider({ children }: { children: ReactNode }) {
   const [mode, setMode] = useState<PaletteMode>(() => {
     const saved = typeof window !== 'undefined' ? localStorage.getItem(STORAGE_KEY) : null;
-    return saved === 'dark' ? 'dark' : 'light';
+    return saved === 'light' ? 'light' : 'dark';
   });
 
   const value = useMemo<ColorModeContextValue>(

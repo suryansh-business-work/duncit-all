@@ -27,6 +27,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  promoTitle: string;
+  promoText: string;
   portalLabel: string;
   loginImage: string;
   requiredRoles: string[];
@@ -47,6 +49,8 @@ export const appConfig: AppConfig = {
   name: 'Legal',
   fullName: 'Duncit Legal',
   tagline: 'Manage contracts, policies and compliance.',
+  promoTitle: "Compliance, organized",
+  promoText: "Policies, agreements and legal records — one place.",
   portalLabel: 'Legal Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

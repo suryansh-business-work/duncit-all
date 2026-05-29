@@ -30,6 +30,8 @@ export interface AppConfig {
   name: string;
   fullName: string;
   tagline: string;
+  promoTitle: string;
+  promoText: string;
   portalLabel: string;
   loginImage: string;
   requiredRoles: string[];
@@ -50,6 +52,8 @@ export const appConfig: AppConfig = {
   name: 'CRM',
   fullName: 'Duncit CRM',
   tagline: 'Capture, qualify and convert venue and host leads.',
+  promoTitle: "Know every customer",
+  promoText: "Leads, contacts and conversations — unified. Sign in to dive in.",
   portalLabel: 'CRM Portal',
   loginImage:
     import.meta.env.VITE_LOGIN_IMAGE ||

@@ -180,32 +180,24 @@ jobs:
               - '.github/workflows/deploy.yml'
 
   # -----------------------------------------------------------
-  # Lightweight typecheck. Workspace builds catch TS errors before docker.
-  # -----------------------------------------------------------
-  typecheck:
-    needs: changes
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-        with:
-          run_install: false
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'pnpm'
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --recursive --if-present build
-
-  # -----------------------------------------------------------
-  # Build & push each image only when its sources changed.
+  # Per-portal pipeline: each build job now runs TypeScript -> Test (via the
+  # ./.github/actions/portal-ci composite) -> Build, independently. A red
+  # typecheck/test for one portal stops only that portal's image push, so its
+  # previous :latest image and running container are left untouched while the
+  # other portals continue. (CRM keeps its dedicated crm-tests gate.)
   # -----------------------------------------------------------
   build-server:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.server == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: server
+          typecheck: 'tsc -p tsconfig.json --noEmit'
+          test: 'test'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -227,11 +219,17 @@ jobs:
               --push .
 
   build-admin:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.admin == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: admin
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -256,11 +254,17 @@ jobs:
               --push .
 
   build-mweb:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.mweb == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: mweb-app
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -285,11 +289,16 @@ jobs:
               --push .
 
   build-website:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.website == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: duncit.com
+          typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -311,11 +320,17 @@ jobs:
               --push .
 
   build-partners-app:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.partners_app == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: partners-app
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -340,11 +355,16 @@ jobs:
               --push .
 
   build-partners-website:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.partners_website == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: partners-website
+          typecheck: 'tsc -b --noEmit'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -366,11 +386,17 @@ jobs:
               --push .
 
   build-ads:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.ads == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: ads
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -465,7 +491,7 @@ jobs:
           if-no-files-found: ignore
 
   build-crm:
-    needs: [changes, typecheck, crm-tests]
+    needs: [changes, crm-tests]
     if: needs.changes.outputs.crm == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
@@ -493,11 +519,17 @@ jobs:
               --push .
 
   build-finance:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.finance == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: finance
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -521,11 +553,17 @@ jobs:
               --push .
 
   build-tech:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.tech == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: tech
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -549,11 +587,17 @@ jobs:
               --push .
 
   build-support:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.support == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: support
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -578,11 +622,17 @@ jobs:
               --push .
 
   build-website-app:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.website_app == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: website-app
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -607,11 +657,17 @@ jobs:
               --push .
 
   build-legal:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.legal == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: legal
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -636,11 +692,17 @@ jobs:
               --push .
 
   build-ai:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.ai == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: ai
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -665,11 +727,17 @@ jobs:
               --push .
 
   build-products:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.products == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: products
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -694,11 +762,17 @@ jobs:
               --push .
 
   build-marketing:
-    needs: [changes, typecheck]
+    needs: changes
     if: needs.changes.outputs.marketing == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: marketing
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:

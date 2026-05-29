@@ -1,0 +1,35 @@
+name: Portal CI
+description: Install workspace deps, typecheck and (optionally) test a single portal before its Docker build.
+
+inputs:
+  workspace:
+    description: pnpm workspace filter (e.g. server, mweb-app, crm)
+    required: true
+  typecheck:
+    description: TypeScript check command, run via `pnpm --filter <workspace> exec <typecheck>`
+    required: true
+  test:
+    description: Optional test script run via `pnpm --filter <workspace> run <test>`. Leave empty to skip.
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - uses: pnpm/action-setup@v4
+      with:
+        run_install: false
+    - uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'pnpm'
+    - name: Install deps
+      shell: bash
+      run: pnpm install --frozen-lockfile
+    - name: TypeScript
+      shell: bash
+      run: pnpm --filter ${{ inputs.workspace }} exec ${{ inputs.typecheck }}
+    - name: Test
+      if: ${{ inputs.test != '' }}
+      shell: bash
+      run: pnpm --filter ${{ inputs.workspace }} run ${{ inputs.test }}

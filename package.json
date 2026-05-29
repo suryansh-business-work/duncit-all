@@ -75,9 +75,12 @@
     "codegen": "pnpm --filter server codegen",
     "graphql:sync": "pnpm codegen",
     "graphql:sync:watch": "pnpm --filter server codegen:watch",
+    "coverage": "node scripts/coverage-report.mjs",
+    "coverage:json": "node scripts/coverage-report.mjs --json",
     "prepare": "husky || true"
   },
   "devDependencies": {
+    "@vitest/coverage-v8": "^1.6.1",
     "husky": "^9.1.6",
     "lint-staged": "^15.2.10",
     "typescript": "^5.4.5"

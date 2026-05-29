@@ -1,0 +1,78 @@
+import { gql } from 'graphql-request';
+import { Types } from 'mongoose';
+import { startTestServer, signToken, type TestServer } from '@test/harness';
+
+let server: TestServer;
+beforeAll(async () => {
+  server = await startTestServer();
+});
+afterAll(async () => {
+  await server.stop();
+});
+
+const START = gql`
+  mutation Start($text: String) {
+    startSupportChat(text: $text) {
+      id
+      status
+    }
+  }
+`;
+const SEND = gql`
+  mutation Send($session_id: ID!, $text: String) {
+    sendSupportChatMessage(session_id: $session_id, text: $text) {
+      id
+      text
+      sender_role
+    }
+  }
+`;
+const MESSAGES = gql`
+  query Messages($session_id: ID!) {
+    supportChatMessages(session_id: $session_id) {
+      id
+      text
+    }
+  }
+`;
+
+describe('supportChat e2e', () => {
+  it('lets a user open a chat, send a message and read it back', async () => {
+    const userId = new Types.ObjectId().toString();
+    const user = server.client(signToken({ id: userId, roles: ['USER'] }));
+
+    const started = await user.request<{ startSupportChat: { id: string; status: string } }>(START, {
+      text: 'I need help',
+    });
+    expect(started.startSupportChat.status).toBe('OPEN');
+    const sessionId = started.startSupportChat.id;
+
+    await user.request(SEND, { session_id: sessionId, text: 'Second message' });
+
+    const msgs = await user.request<{ supportChatMessages: Array<{ text: string }> }>(MESSAGES, {
+      session_id: sessionId,
+    });
+    expect(msgs.supportChatMessages.map((m) => m.text)).toEqual(['I need help', 'Second message']);
+  });
+
+  it('lets an agent list sessions but forbids a regular user', async () => {
+    const userId = new Types.ObjectId().toString();
+    await server.client(signToken({ id: userId, roles: ['USER'] })).request(START, { text: 'hi' });
+
+    const agent = server.client(signToken({ roles: ['SUPPORT_USER'] }));
+    const sessions = await agent.request<{ supportChatSessions: Array<{ id: string }> }>(gql`
+      query {
+        supportChatSessions {
+          id
+          status
+        }
+      }
+    `);
+    expect(sessions.supportChatSessions.length).toBeGreaterThanOrEqual(1);
+
+    const user = server.client(signToken({ roles: ['USER'] }));
+    await expect(
+      user.request(gql`query { supportChatSessions { id } }`)
+    ).rejects.toThrow();
+  });
+});

@@ -84,5 +84,8 @@
   },
   "lint-staged": {
     "*.{ts,tsx,js,jsx,json,md,yml,yaml}": []
+  },
+  "pnpm": {
+    "neverBuiltDependencies": ["mongodb-memory-server"]
   }
 }

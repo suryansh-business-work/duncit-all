@@ -1,11 +1,8 @@
 {
-  "extends": "../tsconfig.base.json",
+  "extends": "./tsconfig.json",
   "compilerOptions": {
-    "module": "CommonJS",
-    "moduleResolution": "Node",
-    "outDir": "dist",
-    "rootDir": "src",
-    "baseUrl": ".",
+    "noEmit": true,
+    "types": ["node", "jest"],
     "paths": {
       "@config/*": ["src/config/*"],
       "@services/*": ["src/services/*"],
@@ -14,10 +11,11 @@
       "@realtime/*": ["src/realtime/*"],
       "@generated/*": ["src/generated/*"],
       "@modules/*": ["src/modules/*"],
-      "@context": ["src/context.ts"]
-    },
-    "types": ["node"]
+      "@modules": ["src/modules/index.ts"],
+      "@context": ["src/context.ts"],
+      "@test/*": ["test/*"]
+    }
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "src/**/__tests__/**"]
+  "include": ["src/**/*", "test/**/*"],
+  "exclude": ["node_modules", "dist"]
 }

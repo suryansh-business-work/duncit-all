@@ -21,11 +21,16 @@ import PodIdeasPage from '../pages/PodIdeasPage';
 import PodPlansPage from '../pages/PodPlansPage';
 import PodHistoryPage from '../pages/PodHistoryPage';
 import PodHistoryDetailsPage from '../pages/PodHistoryDetailsPage';
-import SupportPage from '../pages/SupportPage';
-import TicketsListPage from '../pages/support-tickets/TicketsListPage';
 import TicketDetailPage from '../pages/support-tickets/TicketDetailPage';
 import SupportChatPage from '../pages/support-chat/SupportChatPage';
-import BouncersPage from '../pages/BouncersPage';
+import {
+  SupportHubPage,
+  SosPage,
+  CallbackPage,
+  FeedbackPage,
+  SupportTicketsPage,
+  LiveTicketsPage,
+} from '../pages/support-hub';
 import AccountHealthPage from '../pages/AccountHealthPage';
 import VenueHealthPage from '../pages/VenueHealthPage';
 import CheckoutPage from '../pages/CheckoutPage';
@@ -82,11 +87,16 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Props
       <Route path="/pod-plans" element={withAuth(<PodPlansPage />)} />
       <Route path="/pod-history" element={withAuth(<PodHistoryPage />)} />
       <Route path="/pod-history/:membershipId" element={withAuth(<PodHistoryDetailsPage />)} />
-      <Route path="/support" element={withAuth(<SupportPage />)} />
-      <Route path="/tickets" element={withAuth(<TicketsListPage />)} />
+      <Route path="/support" element={withAuth(<SupportHubPage />)} />
+      <Route path="/support/sos" element={withAuth(<SosPage />)} />
+      <Route path="/support/callback" element={withAuth(<CallbackPage />)} />
+      <Route path="/support/feedback" element={withAuth(<FeedbackPage />)} />
+      <Route path="/support/tickets" element={withAuth(<SupportTicketsPage />)} />
+      <Route path="/support/live" element={withAuth(<LiveTicketsPage />)} />
       <Route path="/tickets/:id" element={withAuth(<TicketDetailPage />)} />
       <Route path="/live-chat" element={withAuth(<SupportChatPage />)} />
-      <Route path="/bouncers" element={withAuth(<BouncersPage />)} />
+      <Route path="/tickets" element={<Navigate to="/support/live" replace />} />
+      <Route path="/bouncers" element={<Navigate to="/support" replace />} />
       <Route path="/account/health" element={withAuth(<AccountHealthPage />)} />
       <Route path="/venues/:venueId/health" element={withAuth(<VenueHealthPage />)} />
       <Route path="/signup-survey" element={withAuth(<SignupSurveyPage />)} />

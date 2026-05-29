@@ -3,11 +3,11 @@ import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Chip, Paper, Stack, TextField, Typography } from '@mui/material';
 import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import type { BouncerPodOption } from './queries';
+import type { SupportPodOption } from './queries';
 import { MY_ACTIVE_SOS, RAISE_SOS } from './queries';
 
 interface Props {
-  selected: BouncerPodOption | null;
+  selected: SupportPodOption | null;
 }
 
 interface GeoSample {
@@ -38,7 +38,7 @@ async function captureLocation(): Promise<GeoSample | null> {
   });
 }
 
-export default function BouncerSosScreen({ selected }: Props) {
+export default function SosContent({ selected }: Props) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
@@ -60,11 +60,7 @@ export default function BouncerSosScreen({ selected }: Props) {
     try {
       await raise({
         variables: {
-          input: {
-            pod_id: selected.podDocId,
-            message: message.trim() || null,
-            location,
-          },
+          input: { pod_id: selected.podDocId, message: message.trim() || null, location },
         },
       });
       setMessage('');
@@ -146,9 +142,7 @@ export default function BouncerSosScreen({ selected }: Props) {
           {error}
         </Alert>
       )}
-      {success && !error && (
-        <Alert severity="success">SOS sent. Hang tight.</Alert>
-      )}
+      {success && !error && <Alert severity="success">SOS sent. Hang tight.</Alert>}
 
       <Button
         variant="contained"

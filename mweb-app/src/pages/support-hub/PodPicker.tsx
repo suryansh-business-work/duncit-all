@@ -1,16 +1,18 @@
 import { FormControl, InputLabel, MenuItem, Paper, Select, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
-import { format } from 'date-fns';
-import type { BouncerPodOption } from './queries';
+import { useDateFormat } from '../../utils/dateFormat';
+import type { SupportPodOption } from './queries';
 
 interface Props {
-  options: BouncerPodOption[];
+  options: SupportPodOption[];
   selectedId: string;
   onChange: (id: string) => void;
   loading: boolean;
 }
 
 export default function PodPicker({ options, selectedId, onChange, loading }: Props) {
+  const { formatDateTime } = useDateFormat();
+
   if (loading && !options.length) {
     return (
       <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3 }}>
@@ -26,7 +28,7 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Pr
         <Stack direction="row" spacing={1} alignItems="center">
           <EventIcon color="action" />
           <Typography variant="body2" sx={{ fontWeight: 700 }}>
-            No upcoming pods. Join a pod first to use Bouncers.
+            No upcoming pods. Join a pod first to use live support.
           </Typography>
         </Stack>
       </Paper>
@@ -35,9 +37,9 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Pr
 
   return (
     <FormControl fullWidth size="small">
-      <InputLabel id="bouncer-pod-picker-label">Pod</InputLabel>
+      <InputLabel id="support-pod-picker-label">Pod</InputLabel>
       <Select
-        labelId="bouncer-pod-picker-label"
+        labelId="support-pod-picker-label"
         label="Pod"
         value={selectedId}
         onChange={(event) => onChange(event.target.value)}
@@ -49,7 +51,7 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Pr
                 {opt.title}
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {format(new Date(opt.startsAt), 'EEE, dd MMM • hh:mm a')}
+                {formatDateTime(opt.startsAt)}
               </Typography>
             </Stack>
           </MenuItem>

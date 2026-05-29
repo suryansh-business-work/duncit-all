@@ -3,15 +3,15 @@ import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Button, Paper, Stack, TextField, Typography } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
-import type { BouncerPodOption } from './queries';
-import { BOUNCER_SUPPORT_TARGET, REQUEST_CALLBACK } from './queries';
+import type { SupportPodOption } from './queries';
+import { SUPPORT_CALL_TARGET, REQUEST_CALLBACK } from './queries';
 
 interface Props {
-  selected: BouncerPodOption | null;
+  selected: SupportPodOption | null;
 }
 
-export default function BouncerSupportScreen({ selected }: Props) {
-  const { data } = useQuery(BOUNCER_SUPPORT_TARGET, { fetchPolicy: 'cache-first' });
+export default function CallbackContent({ selected }: Props) {
+  const { data } = useQuery(SUPPORT_CALL_TARGET, { fetchPolicy: 'cache-first' });
   const target = data?.bouncerSupportTarget;
 
   const [reason, setReason] = useState('');
@@ -29,10 +29,7 @@ export default function BouncerSupportScreen({ selected }: Props) {
     try {
       await requestCallback({
         variables: {
-          input: {
-            pod_id: selected?.podDocId ?? null,
-            reason: reason.trim() || null,
-          },
+          input: { pod_id: selected?.podDocId ?? null, reason: reason.trim() || null },
         },
       });
       setReason('');

@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 
-export const MY_ACTIVE_BOUNCER_PODS = gql`
-  query MyActiveBouncerPods {
+export const MY_ACTIVE_SUPPORT_PODS = gql`
+  query MyActiveSupportPods {
     myPodMemberships(status: JOINED) {
       id
       pod {
@@ -15,8 +15,8 @@ export const MY_ACTIVE_BOUNCER_PODS = gql`
   }
 `;
 
-export const BOUNCER_SUPPORT_TARGET = gql`
-  query BouncerSupportTarget {
+export const SUPPORT_CALL_TARGET = gql`
+  query SupportCallTarget {
     bouncerSupportTarget {
       phone
       available
@@ -68,7 +68,7 @@ export const SUBMIT_FEEDBACK = gql`
   }
 `;
 
-export interface BouncerPodOption {
+export interface SupportPodOption {
   membershipId: string;
   podDocId: string;
   podSlug: string;

@@ -98,7 +98,7 @@ export default function TicketDetailPage() {
   return (
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" spacing={1}>
-        <IconButton size="small" onClick={() => navigate('/tickets')} aria-label="Back" sx={{ bgcolor: 'action.hover' }}>
+        <IconButton size="small" onClick={() => navigate('/support/live')} aria-label="Back" sx={{ bgcolor: 'action.hover' }}>
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h6" sx={{ fontWeight: 900, flex: 1 }} noWrap>

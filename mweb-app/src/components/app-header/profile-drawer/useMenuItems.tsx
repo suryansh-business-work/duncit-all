@@ -8,12 +8,9 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
-import ForumIcon from '@mui/icons-material/Forum';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import CategoryIcon from '@mui/icons-material/Category';
-import SecurityIcon from '@mui/icons-material/Security';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 
 export interface MenuItem {
@@ -84,24 +81,9 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
 
   const supportItems: MenuItem[] = [
     {
-      label: 'Bouncers',
-      icon: <SecurityIcon fontSize="small" />,
-      onClick: go('/bouncers'),
-    },
-    {
       label: 'Support',
       icon: <SupportAgentIcon fontSize="small" />,
       onClick: go('/support'),
-    },
-    {
-      label: 'My Tickets',
-      icon: <ConfirmationNumberIcon fontSize="small" />,
-      onClick: go('/tickets'),
-    },
-    {
-      label: 'Live Chat',
-      icon: <ForumIcon fontSize="small" />,
-      onClick: go('/live-chat'),
     },
     {
       label: 'Pod Ideas',

@@ -35,7 +35,7 @@ const makeSupportPath = (item: PodHistoryItem) => {
     subject: `Refund support - ${title}`,
     message: `I need help with my pod history. Pod: ${title}. Membership: ${item.id}. Refund status: ${refundLabel[item.refund_status]}.`,
   });
-  return `/support?${params.toString()}`;
+  return `/support/tickets?${params.toString()}`;
 };
 
 export default function PodHistoryDetails({ item, backingOut, onBackout }: Props) {

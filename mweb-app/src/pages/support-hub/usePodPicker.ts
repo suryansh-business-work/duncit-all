@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { MY_ACTIVE_BOUNCER_PODS, type BouncerPodOption } from './queries';
+import { MY_ACTIVE_SUPPORT_PODS, type SupportPodOption } from './queries';
 
 const UPCOMING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
 const GRACE_AFTER_END_MS = 6 * 60 * 60 * 1000;
+const DEFAULT_DURATION_MS = 4 * 60 * 60 * 1000;
 
 interface MembershipNode {
   id: string;
@@ -16,16 +17,16 @@ interface MembershipNode {
   } | null;
 }
 
-// Returns pods the user has actively joined and that are either upcoming
-// (within 7 days) or still inside a 6-hour grace window after they ended —
-// i.e. the pods where Bouncers tools are realistically relevant.
+// Pods the user has actively joined that are either upcoming (within 7 days)
+// or still inside a 6-hour grace window after they ended — i.e. the pods where
+// live support tools are realistically relevant.
 export function usePodPicker() {
   const { data, loading } = useQuery<{ myPodMemberships: MembershipNode[] }>(
-    MY_ACTIVE_BOUNCER_PODS,
+    MY_ACTIVE_SUPPORT_PODS,
     { fetchPolicy: 'cache-and-network' }
   );
 
-  const options = useMemo<BouncerPodOption[]>(() => {
+  const options = useMemo<SupportPodOption[]>(() => {
     const now = Date.now();
     return (data?.myPodMemberships ?? [])
       .filter((m) => !!m.pod)
@@ -34,7 +35,7 @@ export function usePodPicker() {
         const start = new Date(pod.pod_date_time).getTime();
         const end = pod.pod_end_date_time
           ? new Date(pod.pod_end_date_time).getTime()
-          : start + 4 * 60 * 60 * 1000;
+          : start + DEFAULT_DURATION_MS;
         return { membershipId: m.id, pod, start, end };
       })
       .filter(({ start, end }) => {

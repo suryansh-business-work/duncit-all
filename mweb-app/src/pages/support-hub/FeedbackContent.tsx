@@ -10,11 +10,11 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import type { BouncerPodOption } from './queries';
+import type { SupportPodOption } from './queries';
 import { SUBMIT_FEEDBACK } from './queries';
 
 interface Props {
-  selected: BouncerPodOption | null;
+  selected: SupportPodOption | null;
 }
 
 const CATEGORIES = [
@@ -25,7 +25,7 @@ const CATEGORIES = [
   { value: 'OTHER', label: 'Other' },
 ];
 
-export default function BouncerFeedbackScreen({ selected }: Props) {
+export default function FeedbackContent({ selected }: Props) {
   const [rating, setRating] = useState<number | null>(0);
   const [category, setCategory] = useState('OTHER');
   const [message, setMessage] = useState('');
@@ -74,12 +74,7 @@ export default function BouncerFeedbackScreen({ selected }: Props) {
           <Typography variant="body2" sx={{ fontWeight: 700 }}>
             Rating
           </Typography>
-          <Rating
-            value={rating}
-            onChange={(_, v) => setRating(v)}
-            size="large"
-            max={5}
-          />
+          <Rating value={rating} onChange={(_, v) => setRating(v)} size="large" max={5} />
         </Stack>
         <TextField
           select

@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Alert, Button, Divider, Stack, Typography } from '@mui/material';
+import { Divider, Stack } from '@mui/material';
 import { LoginScreen, type LoginFormValues, type LoginScreenConfig } from '@duncit/user-context';
 import { useColorMode } from '../ColorModeContext';
 import { useBranding } from '../lib/useBranding';
+import SendAdminCredentials from '../components/SendAdminCredentials';
 import {
   getSafeRedirectPath,
   redirectPathFromLocation,
@@ -26,16 +27,8 @@ const LOGIN = gql`
   }
 `;
 
-const SEED_SUPER_ADMIN = gql`
-  mutation SeedSuperAdmin {
-    seedSuperAdmin { created emailed email }
-  }
-`;
-
 export default function LoginPage() {
   const [loginMutation, { loading }] = useMutation(LOGIN);
-  const [seedSuperAdmin, { loading: seeding, data: seedData, error: seedError }] =
-    useMutation(SEED_SUPER_ADMIN);
   const [error, setError] = useState<string | null>(null);
   const { mode, toggle } = useColorMode();
   const { logoUrl } = useBranding();
@@ -89,21 +82,7 @@ export default function LoginPage() {
       footerSlot={
         <Stack spacing={1.5}>
           <Divider>or</Divider>
-          <Button variant="outlined" onClick={() => seedSuperAdmin()} disabled={seeding}>
-            {seeding ? 'Seeding…' : 'Seed Super Admin'}
-          </Button>
-          {seedError && <Alert severity="error">{seedError.message}</Alert>}
-          {seedData?.seedSuperAdmin && (
-            <Alert severity="success">
-              {seedData.seedSuperAdmin.created
-                ? `Super admin created: ${seedData.seedSuperAdmin.email}`
-                : `Super admin already exists: ${seedData.seedSuperAdmin.email}`}
-              {seedData.seedSuperAdmin.emailed ? ' (credentials emailed)' : ' (email not sent — check SMTP)'}
-            </Alert>
-          )}
-          <Typography variant="caption" color="text.secondary" textAlign="center">
-            First-time setup helper. Disable in production once seeded.
-          </Typography>
+          <SendAdminCredentials />
         </Stack>
       }
     />

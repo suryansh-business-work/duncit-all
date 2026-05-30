@@ -5,6 +5,7 @@ const validPod = {
   pod_title: 'Community breakfast meetup',
   club_id: 'club-1',
   venue_id: 'venue-1',
+  venue_slot_id: 'slot-1',
   pod_mode: 'PHYSICAL',
   meeting_platform: '',
   meeting_url: '',

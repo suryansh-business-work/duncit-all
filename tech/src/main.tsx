@@ -5,7 +5,8 @@ import { BrowserRouter } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { UserProvider } from '@duncit/user-context';
+import { UserProvider, PortalModeGate } from '@duncit/user-context';
+import { urlConfigs } from './config/url-configs';
 import { apolloClient } from './apollo';
 import { ColorModeProvider } from './ColorModeContext';
 import { ConfirmProvider } from './components/useConfirm';
@@ -44,7 +45,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
             <ConfirmProvider>
               <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
                 <BrowserRouter>
-                  <App />
+                  <PortalModeGate portalKey={appConfig.key} graphqlUrl={urlConfigs.graphqlUrl} appName={appConfig.name}>
+                    <App />
+                  </PortalModeGate>
                 </BrowserRouter>
               </GoogleOAuthProvider>
             </ConfirmProvider>

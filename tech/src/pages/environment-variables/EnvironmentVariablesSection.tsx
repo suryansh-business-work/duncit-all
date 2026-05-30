@@ -12,10 +12,14 @@ import {
 
 interface Props {
   onToast: (message: string) => void;
+  scope?: string;
 }
 
-export default function EnvironmentVariablesSection({ onToast }: Props) {
-  const { data, loading, error, refetch } = useQuery(ENVIRONMENT_VARIABLES, { fetchPolicy: 'cache-and-network' });
+export default function EnvironmentVariablesSection({ onToast, scope = 'server' }: Props) {
+  const { data, loading, error, refetch } = useQuery(ENVIRONMENT_VARIABLES, {
+    variables: { scope },
+    fetchPolicy: 'cache-and-network',
+  });
   const [updateEnv] = useMutation(UPDATE_ENVIRONMENT_VARIABLE);
   const [clearEnv] = useMutation(CLEAR_ENVIRONMENT_VARIABLE);
   const rows = (data?.environmentVariables ?? []) as EnvRow[];
@@ -32,7 +36,7 @@ export default function EnvironmentVariablesSection({ onToast }: Props) {
     setOpError(null);
     try {
       await environmentVariableSchema.validate({ key, value });
-      await updateEnv({ variables: { key, value } });
+      await updateEnv({ variables: { scope, key, value } });
       onToast('Environment override saved');
       await refetch();
     } catch (saveError: any) {
@@ -46,7 +50,7 @@ export default function EnvironmentVariablesSection({ onToast }: Props) {
     setBusyKey(key);
     setOpError(null);
     try {
-      await clearEnv({ variables: { key } });
+      await clearEnv({ variables: { scope, key } });
       onToast('Environment override cleared');
       await refetch();
     } catch (clearError: any) {

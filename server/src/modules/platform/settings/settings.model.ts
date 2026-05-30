@@ -92,6 +92,7 @@ const brandingSchema = new Schema<IBranding>(
 export const BrandingModel = model<IBranding>('Branding', brandingSchema);
 
 export interface IEnvironmentVariable extends Document {
+  scope: string;
   key: string;
   value: string;
   updated_by?: Schema.Types.ObjectId | null;
@@ -101,12 +102,18 @@ export interface IEnvironmentVariable extends Document {
 
 const environmentVariableSchema = new Schema<IEnvironmentVariable>(
   {
-    key: { type: String, required: true, unique: true, uppercase: true, trim: true },
+    // Portal/app this override belongs to ('server' for the API's own config).
+    scope: { type: String, required: true, trim: true, default: 'server', index: true },
+    key: { type: String, required: true, uppercase: true, trim: true },
     value: { type: String, default: '' },
     updated_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
+
+// One value per (scope, key) — lets the same key (e.g. VITE_GRAPHQL_URL) hold
+// distinct values across portals without colliding.
+environmentVariableSchema.index({ scope: 1, key: 1 }, { unique: true });
 
 export const EnvironmentVariableModel = model<IEnvironmentVariable>(
   'EnvironmentVariable',

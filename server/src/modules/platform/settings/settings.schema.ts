@@ -74,6 +74,7 @@ export const settingsTypeDefs = gql`
   }
 
   type EnvironmentVariable {
+    scope: String!
     group: String!
     app: String!
     key: String!
@@ -84,6 +85,14 @@ export const settingsTypeDefs = gql`
     has_fallback: Boolean!
     source: EnvironmentVariableSource!
     updated_at: String
+  }
+
+  "A portal/app scope plus how many variables it defines and overrides."
+  type EnvironmentScope {
+    key: String!
+    label: String!
+    total: Int!
+    overrides: Int!
   }
 
   input UpdateBrandingInput {
@@ -109,7 +118,8 @@ export const settingsTypeDefs = gql`
     featureFlag(key: String!): FeatureFlag
     publicFeatureFlags: [PublicFeatureFlag!]!
     branding: Branding!
-    environmentVariables: [EnvironmentVariable!]!
+    environmentScopes: [EnvironmentScope!]!
+    environmentVariables(scope: String): [EnvironmentVariable!]!
   }
 
   extend type Mutation {
@@ -119,7 +129,7 @@ export const settingsTypeDefs = gql`
     setFeatureFlag(flag_id: ID!, enabled: Boolean!): FeatureFlag!
     deleteFeatureFlag(flag_id: ID!): Boolean!
     updateBranding(input: UpdateBrandingInput!): Branding!
-    updateEnvironmentVariable(key: String!, value: String!): EnvironmentVariable!
-    clearEnvironmentVariable(key: String!): EnvironmentVariable!
+    updateEnvironmentVariable(scope: String, key: String!, value: String!): EnvironmentVariable!
+    clearEnvironmentVariable(scope: String, key: String!): EnvironmentVariable!
   }
 `;

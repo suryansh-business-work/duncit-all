@@ -1,7 +1,9 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import EnvironmentVariablesPage from './pages/EnvironmentVariablesPage';
+import IntegrationsPage from './pages/integrations';
 import CommsProvidersPage from './pages/comms-providers';
+import PortalModesPage from './pages/portal-modes';
 import FeatureFlagsPage from './pages/feature-flags-page/FeatureFlagsPage';
 import AuthenticationPage from './pages/AuthenticationPage';
 import AppShell from './components/AppShell';
@@ -30,7 +32,9 @@ export default function App() {
       <Routes>
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={authed(<EnvironmentVariablesPage />)} />
+        <Route path="/integrations" element={authed(<IntegrationsPage />)} />
         <Route path="/comms-providers" element={authed(<CommsProvidersPage />)} />
+        <Route path="/portal-modes" element={authed(<PortalModesPage />)} />
         <Route path="/feature-flags" element={authed(<FeatureFlagsPage />)} />
         <Route path="/authentication" element={authed(<AuthenticationPage />)} />
         <Route path="*" element={<Navigate to="/" replace />} />

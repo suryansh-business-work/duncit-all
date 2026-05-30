@@ -1,5 +1,10 @@
 import { GraphQLError } from 'graphql';
-import { getRuntimeEnvDefinition, getRuntimeEnvRows } from '@config/runtimeEnv';
+import {
+  getRuntimeEnvDefinition,
+  getRuntimeEnvRows,
+  getRuntimeEnvScopeSummary,
+  SERVER_SCOPE,
+} from '@config/runtimeEnv';
 import {
   AppSettingsModel,
   FeatureFlagModel,
@@ -175,34 +180,45 @@ export const settingsService = {
     return brandingToPub(doc);
   },
 
-  async listEnvironmentVariables() {
-    return getRuntimeEnvRows();
+  async listEnvironmentScopes() {
+    return getRuntimeEnvScopeSummary();
   },
 
-  async updateEnvironmentVariable(key: string, value: string, updatedBy?: string | null) {
+  async listEnvironmentVariables(scope: string = SERVER_SCOPE) {
+    return getRuntimeEnvRows(scope);
+  },
+
+  async updateEnvironmentVariable(
+    scope: string,
+    key: string,
+    value: string,
+    updatedBy?: string | null
+  ) {
+    const normalizedScope = scope.trim() || SERVER_SCOPE;
     const normalized = key.toUpperCase().trim();
-    if (!getRuntimeEnvDefinition(normalized)) {
+    if (!getRuntimeEnvDefinition(normalizedScope, normalized)) {
       throw new GraphQLError('Environment variable is not managed', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
     await EnvironmentVariableModel.updateOne(
-      { key: normalized },
+      { scope: normalizedScope, key: normalized },
       { $set: { value, updated_by: updatedBy || null } },
       { upsert: true }
     );
-    return (await getRuntimeEnvRows()).find((row) => row.key === normalized)!;
+    return (await getRuntimeEnvRows(normalizedScope)).find((row) => row.key === normalized)!;
   },
 
-  async clearEnvironmentVariable(key: string) {
+  async clearEnvironmentVariable(scope: string, key: string) {
+    const normalizedScope = scope.trim() || SERVER_SCOPE;
     const normalized = key.toUpperCase().trim();
-    if (!getRuntimeEnvDefinition(normalized)) {
+    if (!getRuntimeEnvDefinition(normalizedScope, normalized)) {
       throw new GraphQLError('Environment variable is not managed', {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    await EnvironmentVariableModel.deleteOne({ key: normalized });
-    return (await getRuntimeEnvRows()).find((row) => row.key === normalized)!;
+    await EnvironmentVariableModel.deleteOne({ scope: normalizedScope, key: normalized });
+    return (await getRuntimeEnvRows(normalizedScope)).find((row) => row.key === normalized)!;
   },
 
   async seedDefaults() {

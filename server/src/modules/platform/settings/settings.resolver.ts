@@ -25,9 +25,17 @@ export const settingsResolvers = {
     },
     publicFeatureFlags: async () => settingsService.listPublicFlags(),
     branding: async () => settingsService.getBranding(),
-    environmentVariables: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+    environmentScopes: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, ENV_MANAGE);
-      return settingsService.listEnvironmentVariables();
+      return settingsService.listEnvironmentScopes();
+    },
+    environmentVariables: async (
+      _p: unknown,
+      args: { scope?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ENV_MANAGE);
+      return settingsService.listEnvironmentVariables(args.scope ?? undefined);
     },
   },
   Mutation: {
@@ -65,15 +73,24 @@ export const settingsResolvers = {
     },
     updateEnvironmentVariable: async (
       _p: unknown,
-      args: { key: string; value: string },
+      args: { scope?: string | null; key: string; value: string },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ENV_MANAGE);
-      return settingsService.updateEnvironmentVariable(args.key, args.value, ctx.user?.id ?? null);
+      return settingsService.updateEnvironmentVariable(
+        args.scope ?? 'server',
+        args.key,
+        args.value,
+        ctx.user?.id ?? null
+      );
     },
-    clearEnvironmentVariable: async (_p: unknown, args: { key: string }, ctx: GraphQLContext) => {
+    clearEnvironmentVariable: async (
+      _p: unknown,
+      args: { scope?: string | null; key: string },
+      ctx: GraphQLContext
+    ) => {
       requireRole(ctx, ENV_MANAGE);
-      return settingsService.clearEnvironmentVariable(args.key);
+      return settingsService.clearEnvironmentVariable(args.scope ?? 'server', args.key);
     },
   },
 };

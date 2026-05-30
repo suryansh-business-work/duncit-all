@@ -5,13 +5,13 @@ import { makeContext } from '@test/harness';
 describe('settings unit', () => {
   it('updateEnvironmentVariable rejects an unmanaged key', async () => {
     await expect(
-      settingsService.updateEnvironmentVariable('NOT_A_REAL_KEY', 'x')
+      settingsService.updateEnvironmentVariable('server', 'NOT_A_REAL_KEY', 'x')
     ).rejects.toThrow(/not managed/i);
   });
 
   it('clearEnvironmentVariable rejects an unmanaged key', async () => {
     await expect(
-      settingsService.clearEnvironmentVariable('NOT_A_REAL_KEY')
+      settingsService.clearEnvironmentVariable('server', 'NOT_A_REAL_KEY')
     ).rejects.toThrow(/not managed/i);
   });
 

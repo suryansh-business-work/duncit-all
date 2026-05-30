@@ -6,3 +6,5 @@ export type { DuncitUser } from './types';
 export { clearAllStorages, readCachedUser, writeCachedUser } from './storage';
 export { LoginScreen, LoginForm, loginSchema, glass, loginInitialValues } from './login-screen';
 export type { LoginFormValues, LoginScreenConfig, LoginScreenProps } from './login-screen';
+export { PortalModeGate, MaintenanceScreen, UnderDevelopmentScreen } from './portal-mode';
+export type { PortalModeGateProps, PortalModeState } from './portal-mode';

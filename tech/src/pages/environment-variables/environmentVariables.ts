@@ -1,9 +1,21 @@
 import { gql } from '@apollo/client';
 import * as yup from 'yup';
 
+export const ENVIRONMENT_SCOPES = gql`
+  query EnvironmentScopes {
+    environmentScopes {
+      key
+      label
+      total
+      overrides
+    }
+  }
+`;
+
 export const ENVIRONMENT_VARIABLES = gql`
-  query EnvironmentVariables {
-    environmentVariables {
+  query EnvironmentVariables($scope: String) {
+    environmentVariables(scope: $scope) {
+      scope
       group
       app
       key
@@ -19,8 +31,8 @@ export const ENVIRONMENT_VARIABLES = gql`
 `;
 
 export const UPDATE_ENVIRONMENT_VARIABLE = gql`
-  mutation UpdateEnvironmentVariable($key: String!, $value: String!) {
-    updateEnvironmentVariable(key: $key, value: $value) {
+  mutation UpdateEnvironmentVariable($scope: String, $key: String!, $value: String!) {
+    updateEnvironmentVariable(scope: $scope, key: $key, value: $value) {
       key
       value
       has_override
@@ -31,8 +43,8 @@ export const UPDATE_ENVIRONMENT_VARIABLE = gql`
 `;
 
 export const CLEAR_ENVIRONMENT_VARIABLE = gql`
-  mutation ClearEnvironmentVariable($key: String!) {
-    clearEnvironmentVariable(key: $key) {
+  mutation ClearEnvironmentVariable($scope: String, $key: String!) {
+    clearEnvironmentVariable(scope: $scope, key: $key) {
       key
       value
       has_override
@@ -42,7 +54,15 @@ export const CLEAR_ENVIRONMENT_VARIABLE = gql`
   }
 `;
 
+export interface EnvironmentScope {
+  key: string;
+  label: string;
+  total: number;
+  overrides: number;
+}
+
 export interface EnvironmentVariableRow {
+  scope: string;
   group: string;
   app: string;
   key: string;

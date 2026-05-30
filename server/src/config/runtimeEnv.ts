@@ -83,10 +83,45 @@ export const RUNTIME_ENV_DEFINITIONS: RuntimeEnvDefinition[] = [
   { group: 'Marketing', app: 'marketing', key: 'VITE_REQUIRED_ROLES', label: 'Allowed Roles', is_secret: false },
 ];
 
-const definitionByKey = new Map(RUNTIME_ENV_DEFINITIONS.map((definition) => [definition.key, definition]));
+/** The scope a server-side consumer reads its own config from. */
+export const SERVER_SCOPE = 'server';
 
-export function getRuntimeEnvDefinition(key: string) {
-  return definitionByKey.get(key.toUpperCase());
+const definitionByScopeKey = new Map(
+  RUNTIME_ENV_DEFINITIONS.map((definition) => [`${definition.app}:${definition.key}`, definition])
+);
+
+/** Friendly labels for each portal/app scope shown in the Tech portal table. */
+const SCOPE_LABELS: Record<string, string> = {
+  server: 'Server (API)',
+  admin: 'Admin',
+  mweb: 'mWeb',
+  website: 'Website',
+  'partners-app': 'Partners App',
+  'partners-website': 'Partners Website',
+  ads: 'Ads',
+  crm: 'CRM',
+  finance: 'Finance',
+  tech: 'Tech',
+  support: 'Support',
+  'website-app': 'Website Console',
+  legal: 'Legal',
+  ai: 'AI',
+  products: 'Products',
+  marketing: 'Marketing',
+};
+
+export interface RuntimeEnvScope {
+  key: string;
+  label: string;
+}
+
+/** Distinct portal/app scopes (in definition order) for the scope picker. */
+export const RUNTIME_ENV_SCOPES: RuntimeEnvScope[] = Array.from(
+  new Set(RUNTIME_ENV_DEFINITIONS.map((definition) => definition.app))
+).map((key) => ({ key, label: SCOPE_LABELS[key] ?? key }));
+
+export function getRuntimeEnvDefinition(scope: string, key: string) {
+  return definitionByScopeKey.get(`${scope}:${key.toUpperCase()}`);
 }
 
 export function maskSecret(value: string) {
@@ -95,20 +130,22 @@ export function maskSecret(value: string) {
   return `${value.slice(0, 3)}••••••${value.slice(-3)}`;
 }
 
-export async function getRuntimeEnvValue(key: string) {
+export async function getRuntimeEnvValue(key: string, scope: string = SERVER_SCOPE) {
   const normalized = key.toUpperCase();
-  const override = await EnvironmentVariableModel.findOne({ key: normalized }).lean();
+  const override = await EnvironmentVariableModel.findOne({ scope, key: normalized }).lean();
   if (override?.value !== undefined && override.value !== '') return override.value;
-  return process.env[normalized] ?? '';
+  // Process env is only the fallback for the server's own scope.
+  if (scope === SERVER_SCOPE) return process.env[normalized] ?? '';
+  return '';
 }
 
-export async function getRuntimeEnvRows() {
-  const overrides = await EnvironmentVariableModel.find().lean();
+export async function getRuntimeEnvRows(scope: string = SERVER_SCOPE) {
+  const overrides = await EnvironmentVariableModel.find({ scope }).lean();
   const overrideByKey = new Map(overrides.map((override) => [override.key, override]));
 
-  return RUNTIME_ENV_DEFINITIONS.map((definition) => {
+  return RUNTIME_ENV_DEFINITIONS.filter((definition) => definition.app === scope).map((definition) => {
     const override = overrideByKey.get(definition.key);
-    const fallback = process.env[definition.key] ?? '';
+    const fallback = scope === SERVER_SCOPE ? process.env[definition.key] ?? '' : '';
     const hasOverride = !!override && override.value !== '';
     const effective = hasOverride ? override!.value : fallback;
     const source: RuntimeEnvSource = hasOverride ? 'DATABASE' : fallback ? 'ENV' : 'EMPTY';
@@ -116,6 +153,7 @@ export async function getRuntimeEnvRows() {
 
     return {
       ...definition,
+      scope,
       value: displayValue,
       has_override: hasOverride,
       has_fallback: !!fallback,
@@ -123,4 +161,20 @@ export async function getRuntimeEnvRows() {
       updated_at: override?.updated_at?.toISOString?.() ?? null,
     };
   });
+}
+
+/** Count of DB overrides per scope, for the portal listing table. */
+export async function getRuntimeEnvScopeSummary() {
+  const overrides = await EnvironmentVariableModel.find({ value: { $ne: '' } }, { scope: 1 }).lean();
+  const counts = new Map<string, number>();
+  for (const override of overrides) {
+    const scope = (override as any).scope ?? SERVER_SCOPE;
+    counts.set(scope, (counts.get(scope) ?? 0) + 1);
+  }
+  return RUNTIME_ENV_SCOPES.map((scope) => ({
+    key: scope.key,
+    label: scope.label,
+    total: RUNTIME_ENV_DEFINITIONS.filter((definition) => definition.app === scope.key).length,
+    overrides: counts.get(scope.key) ?? 0,
+  }));
 }

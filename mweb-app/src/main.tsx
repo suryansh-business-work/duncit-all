@@ -5,8 +5,9 @@ import { BrowserRouter } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { GoogleOAuthProvider } from '@react-oauth/google';
-import { UserProvider } from '@duncit/user-context';
+import { UserProvider, PortalModeGate } from '@duncit/user-context';
 import { apolloClient } from './apollo';
+import { urlConfigs } from './config/url-configs';
 import { ColorModeProvider } from './ColorModeContext';
 import App from './App';
 import { initPwa } from './pwa';
@@ -66,7 +67,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
           <LocalizationProvider dateAdapter={AdapterDateFns}>
             <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
               <BrowserRouter>
-                <App />
+                <PortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></PortalModeGate>
               </BrowserRouter>
             </GoogleOAuthProvider>
           </LocalizationProvider>

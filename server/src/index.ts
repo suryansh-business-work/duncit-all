@@ -10,6 +10,7 @@ import { typeDefs, resolvers } from './modules';
 import { buildContext, GraphQLContext } from './context';
 import { rbacService } from '@modules/access/rbac/rbac.service';
 import { settingsService } from '@modules/platform/settings/settings.service';
+import { portalModeService } from '@modules/platform/portalMode/portalMode.service';
 import { categoryService } from '@modules/pods/category/category.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { notificationEvents, type NotifyEvent } from '@modules/engagement/notification/notification.events';

@@ -1,0 +1,40 @@
+import gql from 'graphql-tag';
+
+export const portalModeTypeDefs = gql`
+  enum PortalModeKind {
+    PORTAL
+    WEBSITE
+    APP
+  }
+
+  enum PortalModeState {
+    LIVE
+    MAINTENANCE
+    DEVELOPMENT
+  }
+
+  type PortalMode {
+    id: ID!
+    key: String!
+    name: String!
+    kind: PortalModeKind!
+    mode: PortalModeState!
+    note: String
+    updated_at: String
+  }
+
+  "Minimal shape every app polls publicly on load."
+  type PortalModePublic {
+    key: String!
+    mode: PortalModeState!
+  }
+
+  extend type Query {
+    portalModes: [PortalMode!]!
+    portalMode(key: String!): PortalModePublic!
+  }
+
+  extend type Mutation {
+    setPortalMode(key: String!, mode: PortalModeState!, note: String): PortalMode!
+  }
+`;

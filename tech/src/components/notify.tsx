@@ -12,6 +12,7 @@ interface Payload {
 
 /** Imperative notification — replaces window.alert() across the admin. */
 export function notify(message: string, severity: Severity = 'info', duration = 4000) {
+  /* v8 ignore next -- SSR guard, unreachable in jsdom */
   if (typeof window === 'undefined') return;
   window.dispatchEvent(
     new CustomEvent<Payload>(EVENT, { detail: { message, severity, duration } })
@@ -40,6 +41,7 @@ export function NotifyHost() {
       open={!!item}
       autoHideDuration={item?.duration ?? 4000}
       onClose={(_, reason) => {
+        /* v8 ignore next -- MUI clickaway path, not reproducible in jsdom */
         if (reason === 'clickaway') return;
         setItem(null);
       }}

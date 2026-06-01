@@ -1,0 +1,107 @@
+import { envEntryTests } from '../../envEntry.tests';
+import { envEntryService } from '../../envEntry.service';
+
+const sendMailMock = jest.fn();
+jest.mock('nodemailer', () => ({
+  __esModule: true,
+  default: { createTransport: () => ({ sendMail: (...a: any[]) => sendMailMock(...a) }) },
+}));
+
+const cfg = (pairs: Record<string, any>) => pairs;
+
+describe('envEntry interactive tests', () => {
+  afterEach(() => {
+    delete (global as any).fetch;
+    sendMailMock.mockReset();
+  });
+
+  it('email: sends and stamps last_used_at; validates host + recipient', async () => {
+    const entry = await envEntryService.create({
+      name: 'SMTP', category: 'EMAIL', config: cfg({ host: 'smtp.test', port: 587, user: 'u', password: 'p', from_address: 'a@b.com' }),
+    });
+    sendMailMock.mockResolvedValue({ messageId: 'mid-1' });
+    const res = await envEntryTests.email(entry!.id, 'dest@x.com');
+    expect(res.ok).toBe(true);
+    expect(res.data).toBe('mid-1');
+    expect((await envEntryService.get(entry!.id))?.last_used_at).toBeTruthy();
+
+    expect((await envEntryTests.email(entry!.id, '')).ok).toBe(false); // no recipient
+    const noHost = await envEntryService.create({ name: 'NoHost', category: 'EMAIL', config: cfg({}) });
+    expect((await envEntryTests.email(noHost!.id, 'd@x.com')).ok).toBe(false);
+  });
+
+  it('email: surfaces transport errors', async () => {
+    const entry = await envEntryService.create({ name: 'S2', category: 'EMAIL', config: cfg({ host: 'smtp.test' }) });
+    sendMailMock.mockRejectedValue(new Error('auth failed'));
+    const res = await envEntryTests.email(entry!.id, 'd@x.com');
+    expect(res.ok).toBe(false);
+    expect(res.message).toMatch(/auth failed/);
+  });
+
+  it('imagekit: uploads and returns a url', async () => {
+    const entry = await envEntryService.create({ name: 'IK', category: 'IMAGEKIT', config: cfg({ private_key: 'k' }) });
+    (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ url: 'https://ik.io/test.jpg' }) });
+    const res = await envEntryTests.imagekitUpload(entry!.id, 'data:image/png;base64,QQ==', 'x.png');
+    expect(res.ok).toBe(true);
+    expect(res.url).toBe('https://ik.io/test.jpg');
+  });
+
+  it('imagekit: fails on empty file and upstream error', async () => {
+    const entry = await envEntryService.create({ name: 'IK2', category: 'IMAGEKIT', config: cfg({ private_key: 'k' }) });
+    expect((await envEntryTests.imagekitUpload(entry!.id, '', 'x.png')).ok).toBe(false);
+    (global as any).fetch = jest.fn().mockResolvedValue({ ok: false, statusText: 'Bad', json: async () => ({ message: 'nope' }) });
+    const res = await envEntryTests.imagekitUpload(entry!.id, 'QQ==', 'x.png');
+    expect(res.ok).toBe(false);
+    expect(res.message).toMatch(/nope/);
+  });
+
+  it('pexels: returns photo urls as JSON', async () => {
+    const entry = await envEntryService.create({ name: 'PX', category: 'PEXELS', config: cfg({ api_key: 'k' }) });
+    (global as any).fetch = jest.fn().mockResolvedValue({
+      ok: true, json: async () => ({ photos: [{ src: { medium: 'u1' } }, { src: { medium: 'u2' } }] }),
+    });
+    const res = await envEntryTests.pexels(entry!.id, 'cats');
+    expect(res.ok).toBe(true);
+    expect(JSON.parse(res.data!)).toEqual(['u1', 'u2']);
+  });
+
+  it('twilio: places a call and validates required fields', async () => {
+    const entry = await envEntryService.create({ name: 'TW', category: 'TWILIO', config: cfg({ account_sid: 'AC', auth_token: 't', phone_number: '+1' }) });
+    (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ sid: 'CA1' }) });
+    const res = await envEntryTests.twilioCall(entry!.id, '+919876543210');
+    expect(res.ok).toBe(true);
+    expect(res.data).toBe('CA1');
+    expect((await envEntryTests.twilioCall(entry!.id, '')).ok).toBe(false);
+  });
+
+  it('vobiz: places a call', async () => {
+    const entry = await envEntryService.create({ name: 'VZ', category: 'VOBIZ', config: cfg({ base_url: 'https://v', api_key: 'k', caller_id: '+1' }) });
+    (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ call_id: 'VC1' }) });
+    const res = await envEntryTests.vobizCall(entry!.id, '+919876543210');
+    expect(res.ok).toBe(true);
+    expect(res.data).toBe('VC1');
+  });
+
+  it('ai: runs OpenAI and Gemini prompts', async () => {
+    const entry = await envEntryService.create({ name: 'AI', category: 'AI', config: cfg({ api_key: 'k' }) });
+    (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: 'hi' } }] }) });
+    expect((await envEntryTests.ai(entry!.id, 'OPENAI', 'hello')).data).toBe('hi');
+    (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: 'namaste' }] } }] }) });
+    expect((await envEntryTests.ai(entry!.id, 'GEMINI', 'hello')).data).toBe('namaste');
+  });
+
+  it('ai: surfaces upstream errors and missing key', async () => {
+    const entry = await envEntryService.create({ name: 'AI2', category: 'AI', config: cfg({}) });
+    expect((await envEntryTests.ai(entry!.id, 'OPENAI', 'x')).ok).toBe(false);
+    const ok = await envEntryService.create({ name: 'AI3', category: 'AI', config: cfg({ api_key: 'k' }) });
+    (global as any).fetch = jest.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({ error: { message: 'bad key' } }) });
+    const res = await envEntryTests.ai(ok!.id, 'OPENAI', 'x');
+    expect(res.ok).toBe(false);
+    expect(res.message).toMatch(/bad key/);
+  });
+
+  it('rejects a category mismatch', async () => {
+    const entry = await envEntryService.create({ name: 'PX2', category: 'PEXELS', config: cfg({ api_key: 'k' }) });
+    await expect(envEntryTests.email(entry!.id, 'd@x.com')).rejects.toThrow(/not a EMAIL entry/i);
+  });
+});

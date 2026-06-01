@@ -85,6 +85,19 @@ export const envEntryTypeDefs = gql`
     message: String!
   }
 
+  "Richer result for the interactive per-category tests (returns a URL or data payload)."
+  type EnvTestRichResult {
+    ok: Boolean!
+    message: String!
+    url: String
+    data: String
+  }
+
+  enum AiTestProvider {
+    OPENAI
+    GEMINI
+  }
+
   extend type Query {
     envEntries(filter: EnvEntryFilter): [EnvEntry!]!
     envEntry(id: ID!): EnvEntry
@@ -101,5 +114,13 @@ export const envEntryTypeDefs = gql`
     testEnvEntry(id: ID!): EnvTestResult!
     "Replace the full set of entries assigned to a portal."
     setPortalEnvEntries(portalKey: String!, entryIds: [ID!]!): [EnvEntry!]!
+
+    "Interactive tests — these perform REAL actions (send email, place calls, upload, AI calls)."
+    testEnvEmail(id: ID!, to: String!): EnvTestRichResult!
+    testEnvImagekitUpload(id: ID!, fileBase64: String!, fileName: String!): EnvTestRichResult!
+    testEnvPexels(id: ID!, query: String!): EnvTestRichResult!
+    testEnvTwilioCall(id: ID!, to: String!): EnvTestRichResult!
+    testEnvVobizCall(id: ID!, to: String!): EnvTestRichResult!
+    testEnvAi(id: ID!, provider: AiTestProvider!, prompt: String!): EnvTestRichResult!
   }
 `;

@@ -9,7 +9,6 @@ import {
   ENV_CATEGORIES,
   ENV_ENTRIES,
   SET_DEFAULT_ENV_ENTRY,
-  TEST_ENV_ENTRY,
   UPDATE_ENV_ENTRY,
   type EnvCategory,
   type EnvCategoryDef,
@@ -17,6 +16,7 @@ import {
 } from './queries';
 import EnvEntriesTable from './EnvEntriesTable';
 import { EnvEntryForm, toConfigPairs, type EnvEntryFormValues } from './env-entry';
+import TestDrawer from './test-panels';
 import { notify } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
 import { parseApiError } from '../../utils/parseApiError';
@@ -26,6 +26,7 @@ export default function EnvironmentPage() {
   const [category, setCategory] = useState<EnvCategory>('EMAIL');
   const [editing, setEditing] = useState<EnvEntry | null>(null);
   const [creating, setCreating] = useState(false);
+  const [testing, setTesting] = useState<EnvEntry | null>(null);
 
   const { data: catData } = useQuery<{ envCategories: EnvCategoryDef[] }>(ENV_CATEGORIES, { fetchPolicy: 'cache-first' });
   const { data, loading, refetch } = useQuery<{ envEntries: EnvEntry[] }>(ENV_ENTRIES, {
@@ -36,7 +37,6 @@ export default function EnvironmentPage() {
   const [updateMut, updateState] = useMutation(UPDATE_ENV_ENTRY);
   const [deleteMut] = useMutation(DELETE_ENV_ENTRY);
   const [setDefaultMut] = useMutation(SET_DEFAULT_ENV_ENTRY);
-  const [testMut, testState] = useMutation(TEST_ENV_ENTRY);
 
   const categories = catData?.envCategories ?? [];
   const def = useMemo(() => categories.find((c) => c.category === category), [categories, category]);
@@ -84,16 +84,6 @@ export default function EnvironmentPage() {
     }
   };
 
-  const handleTest = async (e: EnvEntry) => {
-    try {
-      const res = await testMut({ variables: { id: e.id } });
-      const result = res.data?.testEnvEntry;
-      notify(result?.message ?? 'Tested', result?.ok ? 'success' : 'error');
-    } catch (err) {
-      notify(parseApiError(err), 'error');
-    }
-  };
-
   return (
     <Stack spacing={2.5}>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -117,7 +107,7 @@ export default function EnvironmentPage() {
           {loading && !entries.length ? (
             <Box sx={{ py: 6, textAlign: 'center' }}><CircularProgress size={28} /></Box>
           ) : (
-            <EnvEntriesTable entries={entries} onEdit={setEditing} onDelete={handleDelete} onSetDefault={handleSetDefault} onTest={handleTest} />
+            <EnvEntriesTable entries={entries} onEdit={setEditing} onDelete={handleDelete} onSetDefault={handleSetDefault} onTest={setTesting} />
           )}
         </CardContent>
       </Card>
@@ -128,12 +118,13 @@ export default function EnvironmentPage() {
           def={def}
           initial={editing}
           busy={busy}
-          testing={testState.loading}
           onClose={() => { setCreating(false); setEditing(null); }}
           onSubmit={handleSubmit}
-          onTest={handleTest}
+          onTest={(e) => { setEditing(null); setTesting(e); }}
         />
       )}
+
+      <TestDrawer entry={testing} onClose={() => setTesting(null)} />
     </Stack>
   );
 }

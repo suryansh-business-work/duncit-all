@@ -51,6 +51,38 @@ export const TEST_ENV_ENTRY = gql`
   }
 `;
 
+const RICH = `{ ok message url data }`;
+
+export const TEST_ENV_EMAIL = gql`
+  mutation TestEnvEmail($id: ID!, $to: String!) { testEnvEmail(id: $id, to: $to) ${RICH} }
+`;
+export const TEST_ENV_IMAGEKIT = gql`
+  mutation TestEnvImagekit($id: ID!, $fileBase64: String!, $fileName: String!) {
+    testEnvImagekitUpload(id: $id, fileBase64: $fileBase64, fileName: $fileName) ${RICH}
+  }
+`;
+export const TEST_ENV_PEXELS = gql`
+  mutation TestEnvPexels($id: ID!, $query: String!) { testEnvPexels(id: $id, query: $query) ${RICH} }
+`;
+export const TEST_ENV_TWILIO = gql`
+  mutation TestEnvTwilio($id: ID!, $to: String!) { testEnvTwilioCall(id: $id, to: $to) ${RICH} }
+`;
+export const TEST_ENV_VOBIZ = gql`
+  mutation TestEnvVobiz($id: ID!, $to: String!) { testEnvVobizCall(id: $id, to: $to) ${RICH} }
+`;
+export const TEST_ENV_AI = gql`
+  mutation TestEnvAi($id: ID!, $provider: AiTestProvider!, $prompt: String!) {
+    testEnvAi(id: $id, provider: $provider, prompt: $prompt) ${RICH}
+  }
+`;
+
+export interface RichTestResult {
+  ok: boolean;
+  message: string;
+  url?: string | null;
+  data?: string | null;
+}
+
 export type EnvCategory = 'EMAIL' | 'IMAGEKIT' | 'PEXELS' | 'GOOGLE' | 'TWILIO' | 'AI' | 'VOBIZ';
 
 export interface EnvFieldDef {

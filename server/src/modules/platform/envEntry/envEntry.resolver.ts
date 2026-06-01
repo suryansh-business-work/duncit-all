@@ -1,4 +1,5 @@
 import { envEntryService, type EnvEntryConfig } from './envEntry.service';
+import { envEntryTests } from './envEntry.tests';
 import { CATEGORY_FIELDS } from './envEntry.fields';
 import { ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import type { GraphQLContext } from '@context';
@@ -96,6 +97,39 @@ export const envEntryResolvers = {
     ) => {
       requireRole(ctx, TECH_MANAGE);
       return envEntryService.setPortalAssignments(args.portalKey, args.entryIds);
+    },
+
+    testEnvEmail: async (_p: unknown, args: { id: string; to: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return envEntryTests.email(args.id, args.to);
+    },
+    testEnvImagekitUpload: async (
+      _p: unknown,
+      args: { id: string; fileBase64: string; fileName: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, TECH_MANAGE);
+      return envEntryTests.imagekitUpload(args.id, args.fileBase64, args.fileName);
+    },
+    testEnvPexels: async (_p: unknown, args: { id: string; query: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return envEntryTests.pexels(args.id, args.query);
+    },
+    testEnvTwilioCall: async (_p: unknown, args: { id: string; to: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return envEntryTests.twilioCall(args.id, args.to);
+    },
+    testEnvVobizCall: async (_p: unknown, args: { id: string; to: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return envEntryTests.vobizCall(args.id, args.to);
+    },
+    testEnvAi: async (
+      _p: unknown,
+      args: { id: string; provider: 'OPENAI' | 'GEMINI'; prompt: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, TECH_MANAGE);
+      return envEntryTests.ai(args.id, args.provider, args.prompt);
     },
   },
 };

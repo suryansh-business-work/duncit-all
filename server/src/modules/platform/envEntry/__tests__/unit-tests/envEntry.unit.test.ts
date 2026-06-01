@@ -1,8 +1,11 @@
 import { envEntryService, testEnvConnection } from '../../envEntry.service';
 import { envEntryResolvers } from '../../envEntry.resolver';
+import { envEntryTypeDefs } from '../../envEntry.schema';
 import { CATEGORY_FIELDS } from '../../envEntry.fields';
 import { ENV_CATEGORIES } from '../../envEntry.model';
 import { makeContext } from '@test/harness';
+
+const sdl = (envEntryTypeDefs as any).loc?.source?.body ?? String(envEntryTypeDefs);
 
 describe('envEntry unit', () => {
   it('create rejects an unsupported category', async () => {
@@ -15,6 +18,21 @@ describe('envEntry unit', () => {
     for (const category of ENV_CATEGORIES) {
       expect(CATEGORY_FIELDS[category].length).toBeGreaterThan(0);
     }
+  });
+
+  it('SDL enum EnvCategory exactly matches code ENV_CATEGORIES (no drift)', () => {
+    const block = sdl.match(/enum EnvCategory\s*\{([^}]*)\}/);
+    expect(block).toBeTruthy();
+    const sdlValues = block![1].split(/\s+/).filter(Boolean).sort();
+    expect(sdlValues).toEqual([...ENV_CATEGORIES].sort());
+  });
+
+  it('SDL exposes a per-category interactive test mutation for the categories that have one', () => {
+    for (const mutation of ['testEnvEmail', 'testEnvImagekitUpload', 'testEnvPexels', 'testEnvTwilioCall', 'testEnvVobizCall', 'testEnvOpenai', 'testEnvGemini']) {
+      expect(sdl).toContain(mutation);
+    }
+    // The removed provider enum must be gone.
+    expect(sdl).not.toContain('AiTestProvider');
   });
 
   it('gates all mutations + queries to tech-manage roles', async () => {

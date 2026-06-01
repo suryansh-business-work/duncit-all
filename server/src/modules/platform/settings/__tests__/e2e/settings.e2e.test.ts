@@ -43,4 +43,47 @@ describe('settings e2e', () => {
     const user = server.client(signToken({ roles: ['USER'] }));
     await expect(user.request(CREATE_FLAG, { input: { key: 'x', name: 'x' } })).rejects.toThrow();
   });
+
+  it('runs the feature-flag lifecycle (toggle, public read, delete) over HTTP', async () => {
+    const admin = server.client(signToken({ roles: ['SUPER_ADMIN'] }));
+    const created: any = await admin.request(CREATE_FLAG, { input: { key: 'gamma', name: 'Gamma', enabled: false } });
+    const id = created.createFeatureFlag.id;
+
+    const toggled: any = await admin.request(
+      gql`mutation ($id: ID!) { setFeatureFlag(flag_id: $id, enabled: true) { id enabled } }`,
+      { id }
+    );
+    expect(toggled.setFeatureFlag.enabled).toBe(true);
+
+    const pub: any = await server.client().request(gql`query { publicFeatureFlags { key enabled } }`);
+    expect(pub.publicFeatureFlags.find((f: any) => f.key === 'gamma')?.enabled).toBe(true);
+
+    const del: any = await admin.request(gql`mutation ($id: ID!) { deleteFeatureFlag(flag_id: $id) }`, { id });
+    expect(del.deleteFeatureFlag).toBe(true);
+  });
+
+  it('updates app settings + branding and forbids non-admins', async () => {
+    const admin = server.client(signToken({ roles: ['SUPER_ADMIN'] }));
+    const settings: any = await admin.request(
+      gql`mutation ($i: UpdateAppSettingsInput!) { updateAppSettings(input: $i) { date_format } }`,
+      { i: { date_format: 'yyyy-MM-dd' } }
+    );
+    expect(settings.updateAppSettings.date_format).toBe('yyyy-MM-dd');
+
+    const branding: any = await admin.request(
+      gql`mutation ($i: UpdateBrandingInput!) { updateBranding(input: $i) { support_phone } }`,
+      { i: { support_phone: '+911234567890' } }
+    );
+    expect(branding.updateBranding.support_phone).toBe('+911234567890');
+
+    const user = server.client(signToken({ roles: ['USER'] }));
+    await expect(
+      user.request(gql`mutation ($i: UpdateBrandingInput!) { updateBranding(input: $i) { app_name } }`, { i: { app_name: 'Hax' } })
+    ).rejects.toThrow();
+  });
+
+  it('no longer exposes the removed environment-variable fields', async () => {
+    const admin = server.client(signToken({ roles: ['SUPER_ADMIN'] }));
+    await expect(admin.request(gql`query { environmentVariables { key } }`)).rejects.toThrow();
+  });
 });

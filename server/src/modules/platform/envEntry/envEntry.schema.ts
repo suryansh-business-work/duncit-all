@@ -5,9 +5,11 @@ export const envEntryTypeDefs = gql`
     EMAIL
     IMAGEKIT
     PEXELS
-    GOOGLE
+    GOOGLE_OAUTH
+    GOOGLE_MAPS
     TWILIO
-    AI
+    OPENAI
+    GEMINI
     VOBIZ
   }
 

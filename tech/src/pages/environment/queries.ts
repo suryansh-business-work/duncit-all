@@ -95,6 +95,23 @@ export type EnvCategory =
   | 'GEMINI'
   | 'VOBIZ';
 
+/**
+ * Static tab order + labels so the tabs always render, even while the
+ * envCategories query is loading or the API is briefly unavailable (e.g. during
+ * a deploy). Field definitions still come from the server query.
+ */
+export const CATEGORY_TABS: { category: EnvCategory; label: string }[] = [
+  { category: 'EMAIL', label: 'Email (SMTP)' },
+  { category: 'IMAGEKIT', label: 'ImageKit' },
+  { category: 'PEXELS', label: 'Pexels' },
+  { category: 'GOOGLE_OAUTH', label: 'Google OAuth' },
+  { category: 'GOOGLE_MAPS', label: 'Google Map' },
+  { category: 'TWILIO', label: 'Twilio' },
+  { category: 'OPENAI', label: 'OpenAI' },
+  { category: 'GEMINI', label: 'Gemini' },
+  { category: 'VOBIZ', label: 'Vobiz' },
+];
+
 export interface EnvFieldDef {
   name: string;
   label: string;

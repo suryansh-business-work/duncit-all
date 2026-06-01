@@ -4,6 +4,7 @@ import { Box, Button, Card, CardContent, CircularProgress, Stack, Tab, Tabs, Typ
 import AddIcon from '@mui/icons-material/Add';
 import TuneIcon from '@mui/icons-material/Tune';
 import {
+  CATEGORY_TABS,
   CREATE_ENV_ENTRY,
   DELETE_ENV_ENTRY,
   ENV_CATEGORIES,
@@ -102,7 +103,7 @@ export default function EnvironmentPage() {
       <Card>
         <CardContent>
           <Tabs value={category} onChange={(_, v) => setCategory(v)} variant="scrollable" scrollButtons="auto" sx={{ mb: 1.5 }}>
-            {categories.map((c) => <Tab key={c.category} value={c.category} label={c.label} />)}
+            {CATEGORY_TABS.map((c) => <Tab key={c.category} value={c.category} label={c.label} />)}
           </Tabs>
           {loading && !entries.length ? (
             <Box sx={{ py: 6, textAlign: 'center' }}><CircularProgress size={28} /></Box>

@@ -981,7 +981,20 @@ jobs:
           PORT="${{ secrets.SSH_PORT }}"
           PORT="${PORT:-22}"
           echo "SSH_PORT=$PORT" >> "$GITHUB_ENV"
-          ssh-keyscan -p "$PORT" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null
+          # ssh-keyscan occasionally can't reach the host on the first try; retry
+          # a few times so a transient blip doesn't abort the whole deploy. If it
+          # still fails, fall back to accept-new host-key checking below.
+          for i in 1 2 3 4 5; do
+            if ssh-keyscan -p "$PORT" -H "${{ secrets.SSH_HOST }}" >> ~/.ssh/known_hosts 2>/dev/null; then
+              break
+            fi
+            echo "ssh-keyscan attempt $i failed; retrying in 5s..."
+            sleep 5
+          done
+          # Don't hard-fail the pipeline on host-key prescan; accept-new lets the
+          # first real ssh connection record the key.
+          printf 'Host *\n  StrictHostKeyChecking accept-new\n' >> ~/.ssh/config
+          chmod 600 ~/.ssh/config
 
       - name: Decide which services to restart
         id: which

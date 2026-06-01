@@ -1,0 +1,128 @@
+import { useMemo, useState } from 'react';
+import { useMutation, useQuery } from '@apollo/client';
+import { Box, Button, Card, CardContent, CircularProgress, Stack, Tab, Tabs } from '@mui/material';
+import AddIcon from '@mui/icons-material/Add';
+import {
+  CATEGORY_DEFS,
+  CREATE_ENV_ENTRY,
+  DELETE_ENV_ENTRY,
+  ENV_CATEGORIES,
+  ENV_ENTRIES,
+  SET_DEFAULT_ENV_ENTRY,
+  UPDATE_ENV_ENTRY,
+  type EnvCategory,
+  type EnvCategoryDef,
+  type EnvEntry,
+} from './queries';
+import EnvEntriesTable from './EnvEntriesTable';
+import { EnvEntryForm, toConfigPairs, type EnvEntryFormValues } from './env-entry';
+import TestDrawer from './test-panels';
+import { notify } from '../../components/notify';
+import { useConfirm } from '../../components/useConfirm';
+import { parseApiError } from '../../utils/parseApiError';
+
+/** Manage the named entries within each environment category. */
+export default function EnvVariablesTab() {
+  const confirm = useConfirm();
+  const [category, setCategory] = useState<EnvCategory>('EMAIL');
+  const [editing, setEditing] = useState<EnvEntry | null>(null);
+  const [creating, setCreating] = useState(false);
+  const [testing, setTesting] = useState<EnvEntry | null>(null);
+
+  const { data: catData } = useQuery<{ envCategories: EnvCategoryDef[] }>(ENV_CATEGORIES, { fetchPolicy: 'cache-first' });
+  const { data, loading, refetch } = useQuery<{ envEntries: EnvEntry[] }>(ENV_ENTRIES, {
+    variables: { filter: { category } },
+    fetchPolicy: 'cache-and-network',
+  });
+  const [createMut, createState] = useMutation(CREATE_ENV_ENTRY);
+  const [updateMut, updateState] = useMutation(UPDATE_ENV_ENTRY);
+  const [deleteMut] = useMutation(DELETE_ENV_ENTRY);
+  const [setDefaultMut] = useMutation(SET_DEFAULT_ENV_ENTRY);
+
+  // Prefer the server definition (authoritative); fall back to the static one so
+  // the tabs, Add button and form always work even if the query hasn't loaded.
+  const categories = catData?.envCategories ?? [];
+  const def = useMemo(
+    () => categories.find((c) => c.category === category) ?? CATEGORY_DEFS.find((c) => c.category === category),
+    [categories, category]
+  );
+  const entries = data?.envEntries ?? [];
+  const busy = createState.loading || updateState.loading;
+
+  const handleSubmit = async (values: EnvEntryFormValues) => {
+    if (!def) return;
+    try {
+      const config = toConfigPairs(def, values);
+      const base = { name: values.name.trim(), description: values.description.trim(), is_default: values.is_default, is_active: values.is_active, config };
+      if (editing) {
+        await updateMut({ variables: { id: editing.id, input: base } });
+        notify(`${values.name} updated`, 'success');
+      } else {
+        await createMut({ variables: { input: { ...base, category } } });
+        notify(`${values.name} created`, 'success');
+      }
+      setEditing(null);
+      setCreating(false);
+      await refetch();
+    } catch (err) {
+      notify(parseApiError(err), 'error');
+    }
+  };
+
+  const handleDelete = async (e: EnvEntry) => {
+    if (!(await confirm({ title: 'Delete entry', message: `Delete "${e.name}"?`, destructive: true }))) return;
+    try {
+      await deleteMut({ variables: { id: e.id } });
+      notify(`${e.name} deleted`, 'success');
+      await refetch();
+    } catch (err) {
+      notify(parseApiError(err), 'error');
+    }
+  };
+
+  const handleSetDefault = async (e: EnvEntry) => {
+    try {
+      await setDefaultMut({ variables: { id: e.id } });
+      notify(`${e.name} is now the default`, 'success');
+      await refetch();
+    } catch (err) {
+      notify(parseApiError(err), 'error');
+    }
+  };
+
+  return (
+    <Stack spacing={2}>
+      <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
+        <Button startIcon={<AddIcon />} variant="contained" onClick={() => setCreating(true)}>
+          Add {def?.label ?? ''}
+        </Button>
+      </Box>
+      <Card>
+        <CardContent>
+          <Tabs value={category} onChange={(_, v) => setCategory(v)} variant="scrollable" scrollButtons="auto" sx={{ mb: 1.5 }}>
+            {CATEGORY_DEFS.map((c) => <Tab key={c.category} value={c.category} label={c.label} />)}
+          </Tabs>
+          {loading && !entries.length ? (
+            <Box sx={{ py: 6, textAlign: 'center' }}><CircularProgress size={28} /></Box>
+          ) : (
+            <EnvEntriesTable entries={entries} onEdit={setEditing} onDelete={handleDelete} onSetDefault={handleSetDefault} onTest={setTesting} />
+          )}
+        </CardContent>
+      </Card>
+
+      {def && (
+        <EnvEntryForm
+          open={creating || !!editing}
+          def={def}
+          initial={editing}
+          busy={busy}
+          onClose={() => { setCreating(false); setEditing(null); }}
+          onSubmit={handleSubmit}
+          onTest={(e) => { setEditing(null); setTesting(e); }}
+        />
+      )}
+
+      <TestDrawer entry={testing} onClose={() => setTesting(null)} />
+    </Stack>
+  );
+}

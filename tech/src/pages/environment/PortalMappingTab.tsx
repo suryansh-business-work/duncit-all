@@ -9,17 +9,16 @@ import {
   List,
   ListItemButton,
   ListItemText,
-  Stack,
   Typography,
 } from '@mui/material';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
-import HubIcon from '@mui/icons-material/Hub';
-import { PORTAL_LIST, type PortalListItem } from './queries';
+import { PORTAL_LIST, type PortalListItem } from './portal-env-queries';
 import PortalEnvDrawer from './PortalEnvDrawer';
 
 const KIND_LABEL: Record<string, string> = { PORTAL: 'Portal', WEBSITE: 'Website', APP: 'App' };
 
-export default function PortalEnvMappingPage() {
+/** Assign environment entries to each portal via a multi-select drawer. */
+export default function PortalMappingTab() {
   const { data, loading, refetch } = useQuery<{ portalModes: PortalListItem[] }>(PORTAL_LIST, {
     fetchPolicy: 'cache-and-network',
   });
@@ -27,17 +26,10 @@ export default function PortalEnvMappingPage() {
   const portals = data?.portalModes ?? [];
 
   return (
-    <Stack spacing={2.5}>
-      <Stack direction="row" alignItems="center" spacing={1}>
-        <HubIcon color="primary" />
-        <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" fontWeight={800}>Portal → Environment Mapping</Typography>
-          <Typography variant="body2" color="text.secondary">
-            Click a portal to open its panel and multi-select which environment entries it uses.
-          </Typography>
-        </Box>
-      </Stack>
-
+    <>
+      <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
+        Click a portal to open its panel and multi-select which environment entries it uses.
+      </Typography>
       <Card>
         <CardContent sx={{ p: 0 }}>
           {loading && !portals.length ? (
@@ -57,6 +49,6 @@ export default function PortalEnvMappingPage() {
       </Card>
 
       <PortalEnvDrawer portal={active} onClose={() => setActive(null)} onSaved={() => refetch()} />
-    </Stack>
+    </>
   );
 }

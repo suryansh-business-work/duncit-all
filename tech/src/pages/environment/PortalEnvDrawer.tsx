@@ -14,8 +14,8 @@ import {
   Stack,
   Typography,
 } from '@mui/material';
-import { ENV_ENTRIES, type EnvEntry } from '../environment/queries';
-import { SET_PORTAL_ENV_ENTRIES, type PortalListItem } from './queries';
+import { ENV_ENTRIES, type EnvEntry } from './queries';
+import { SET_PORTAL_ENV_ENTRIES, type PortalListItem } from './portal-env-queries';
 import { notify } from '../../components/notify';
 import { parseApiError } from '../../utils/parseApiError';
 

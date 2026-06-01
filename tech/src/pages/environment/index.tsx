@@ -4,7 +4,7 @@ import { Box, Button, Card, CardContent, CircularProgress, Stack, Tab, Tabs, Typ
 import AddIcon from '@mui/icons-material/Add';
 import TuneIcon from '@mui/icons-material/Tune';
 import {
-  CATEGORY_TABS,
+  CATEGORY_DEFS,
   CREATE_ENV_ENTRY,
   DELETE_ENV_ENTRY,
   ENV_CATEGORIES,
@@ -39,8 +39,15 @@ export default function EnvironmentPage() {
   const [deleteMut] = useMutation(DELETE_ENV_ENTRY);
   const [setDefaultMut] = useMutation(SET_DEFAULT_ENV_ENTRY);
 
+  // Prefer the server definition (authoritative); fall back to the static one so
+  // the tabs, Add button and form always work even if the query hasn't loaded.
   const categories = catData?.envCategories ?? [];
-  const def = useMemo(() => categories.find((c) => c.category === category), [categories, category]);
+  const def = useMemo(
+    () =>
+      categories.find((c) => c.category === category) ??
+      CATEGORY_DEFS.find((c) => c.category === category),
+    [categories, category]
+  );
   const entries = data?.envEntries ?? [];
   const busy = createState.loading || updateState.loading;
 
@@ -95,7 +102,7 @@ export default function EnvironmentPage() {
             Add multiple entries per category (e.g. several Email or ImageKit accounts). Pick a default and assign them to portals from Portal Mapping.
           </Typography>
         </Box>
-        <Button startIcon={<AddIcon />} variant="contained" disabled={!def} onClick={() => setCreating(true)}>
+        <Button startIcon={<AddIcon />} variant="contained" onClick={() => setCreating(true)}>
           Add {def?.label ?? ''}
         </Button>
       </Stack>
@@ -103,7 +110,7 @@ export default function EnvironmentPage() {
       <Card>
         <CardContent>
           <Tabs value={category} onChange={(_, v) => setCategory(v)} variant="scrollable" scrollButtons="auto" sx={{ mb: 1.5 }}>
-            {CATEGORY_TABS.map((c) => <Tab key={c.category} value={c.category} label={c.label} />)}
+            {CATEGORY_DEFS.map((c) => <Tab key={c.category} value={c.category} label={c.label} />)}
           </Tabs>
           {loading && !entries.length ? (
             <Box sx={{ py: 6, textAlign: 'center' }}><CircularProgress size={28} /></Box>

@@ -95,23 +95,6 @@ export type EnvCategory =
   | 'GEMINI'
   | 'VOBIZ';
 
-/**
- * Static tab order + labels so the tabs always render, even while the
- * envCategories query is loading or the API is briefly unavailable (e.g. during
- * a deploy). Field definitions still come from the server query.
- */
-export const CATEGORY_TABS: { category: EnvCategory; label: string }[] = [
-  { category: 'EMAIL', label: 'Email (SMTP)' },
-  { category: 'IMAGEKIT', label: 'ImageKit' },
-  { category: 'PEXELS', label: 'Pexels' },
-  { category: 'GOOGLE_OAUTH', label: 'Google OAuth' },
-  { category: 'GOOGLE_MAPS', label: 'Google Map' },
-  { category: 'TWILIO', label: 'Twilio' },
-  { category: 'OPENAI', label: 'OpenAI' },
-  { category: 'GEMINI', label: 'Gemini' },
-  { category: 'VOBIZ', label: 'Vobiz' },
-];
-
 export interface EnvFieldDef {
   name: string;
   label: string;
@@ -125,6 +108,76 @@ export interface EnvCategoryDef {
   label: string;
   fields: EnvFieldDef[];
 }
+
+const f = (name: string, label: string, extra: Partial<EnvFieldDef> = {}): EnvFieldDef => ({
+  name,
+  label,
+  secret: false,
+  number: false,
+  bool: false,
+  ...extra,
+});
+
+/**
+ * Static category definitions (tabs + form fields) mirroring the server's
+ * CATEGORY_FIELDS. Used so the tabs, the Add button and the form ALWAYS work,
+ * even while the envCategories query is loading or the API is briefly
+ * unavailable (e.g. during a deploy). The query, when present, overrides this.
+ */
+export const CATEGORY_DEFS: EnvCategoryDef[] = [
+  {
+    category: 'EMAIL',
+    label: 'Email (SMTP)',
+    fields: [
+      f('host', 'SMTP Host'),
+      f('port', 'Port', { number: true }),
+      f('user', 'Username'),
+      f('password', 'Password', { secret: true }),
+      f('secure', 'Use TLS', { bool: true }),
+      f('from_address', 'From Address'),
+      f('from_name', 'From Name'),
+      f('reply_to', 'Reply-To'),
+    ],
+  },
+  {
+    category: 'IMAGEKIT',
+    label: 'ImageKit',
+    fields: [f('public_key', 'Public Key'), f('private_key', 'Private Key', { secret: true }), f('url_endpoint', 'URL Endpoint')],
+  },
+  { category: 'PEXELS', label: 'Pexels', fields: [f('api_key', 'API Key', { secret: true })] },
+  {
+    category: 'GOOGLE_OAUTH',
+    label: 'Google OAuth',
+    fields: [f('client_id', 'OAuth Client ID'), f('client_secret', 'OAuth Client Secret', { secret: true })],
+  },
+  { category: 'GOOGLE_MAPS', label: 'Google Map', fields: [f('maps_api_key', 'Maps API Key', { secret: true })] },
+  {
+    category: 'TWILIO',
+    label: 'Twilio',
+    fields: [f('account_sid', 'Account SID'), f('auth_token', 'Auth Token', { secret: true }), f('phone_number', 'Phone Number')],
+  },
+  {
+    category: 'OPENAI',
+    label: 'OpenAI',
+    fields: [f('base_url', 'Base URL (optional)'), f('model', 'Model (default gpt-4o-mini)'), f('api_key', 'API Key', { secret: true })],
+  },
+  {
+    category: 'GEMINI',
+    label: 'Gemini',
+    fields: [f('model', 'Model (default gemini-1.5-flash)'), f('api_key', 'API Key', { secret: true })],
+  },
+  {
+    category: 'VOBIZ',
+    label: 'Vobiz',
+    fields: [
+      f('base_url', 'API Base URL'),
+      f('api_key', 'API Key', { secret: true }),
+      f('sender_email', 'Sender Email'),
+      f('sender_name', 'Sender Name'),
+      f('caller_id', 'Caller ID / From Number'),
+    ],
+  },
+];
 
 export interface EnvEntry {
   id: string;

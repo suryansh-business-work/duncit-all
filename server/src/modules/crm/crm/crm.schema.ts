@@ -344,7 +344,7 @@ export const crmTypeDefs = gql`
     super_category_id: ID
   }
 
-  type VobizActionResult {
+  type LeadContactActionResult {
     ok: Boolean!
     message: String!
     provider: String!
@@ -402,16 +402,16 @@ export const crmTypeDefs = gql`
       subject: String!
       body: String!
       provider_id: ID
-    ): VobizActionResult!
-    callVenueLeadContact(id: ID!, contact_number: String!, provider_id: ID): VobizActionResult!
+    ): LeadContactActionResult!
+    callVenueLeadContact(id: ID!, contact_number: String!, provider_id: ID): LeadContactActionResult!
     emailHostLeadContact(
       id: ID!
       contact_email: String!
       subject: String!
       body: String!
       provider_id: ID
-    ): VobizActionResult!
-    callHostLeadContact(id: ID!, contact_number: String!, provider_id: ID): VobizActionResult!
+    ): LeadContactActionResult!
+    callHostLeadContact(id: ID!, contact_number: String!, provider_id: ID): LeadContactActionResult!
     aiParseCrmLead(entity: CrmAiEntity!, text: String!): String!
     crmExcelImport(entity: CrmAiEntity!, content_base64: String!): CrmExcelImportResult!
     addCrmManualLog(input: ManualLogInput!): CrmActivity!

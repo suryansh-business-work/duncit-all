@@ -1,5 +1,22 @@
 import { GraphQLError } from 'graphql';
 import { CommsProviderModel, COMMS_PROVIDER_TYPES, type CommsProviderType } from './commsProvider.model';
+import { envEntryService } from '@modules/platform/envEntry/envEntry.service';
+import type { EnvCategory } from '@modules/platform/envEntry/envEntry.model';
+
+/**
+ * The Tech portal now manages comms credentials as Environment Variables
+ * (env entries), so the CRM provider picker lists those entries. SMTP maps to
+ * the EMAIL category; Vobiz email/call both map to the VOBIZ category.
+ */
+const TYPE_TO_CATEGORY: Record<CommsProviderType, EnvCategory> = {
+  SMTP: 'EMAIL',
+  TWILIO_CALL: 'TWILIO',
+};
+
+const EMPTY_OPTION_CONFIG = {
+  host: '', port: null, user: '', secure: false, from_address: '', from_name: '', reply_to: '',
+  base_url: '', sender_email: '', sender_name: '', caller_id: '', has_password: false, has_api_key: false,
+};
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
@@ -92,9 +109,26 @@ export const commsProviderService = {
     return docs.map(pub);
   },
 
+  /**
+   * Provider options for the CRM call/email pickers, sourced from the Tech
+   * portal's active env entries (not the legacy CommsProvider collection).
+   */
   async options(type: CommsProviderType) {
-    const docs = await CommsProviderModel.find({ type, is_active: true }).sort({ is_default: -1, name: 1 });
-    return docs.map(pub);
+    const entries = await envEntryService.list({ category: TYPE_TO_CATEGORY[type], is_active: true });
+    return entries
+      .filter((e): e is NonNullable<typeof e> => Boolean(e))
+      .map((e) => ({
+        id: e.id,
+        name: e.name,
+        type,
+        description: e.description ?? '',
+        is_default: e.is_default,
+        is_active: e.is_active,
+        config: EMPTY_OPTION_CONFIG,
+        last_used_at: e.last_used_at,
+        created_at: e.created_at,
+        updated_at: e.updated_at,
+      }));
   },
 
   async get(id: string) {

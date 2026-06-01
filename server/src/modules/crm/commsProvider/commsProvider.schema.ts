@@ -3,15 +3,14 @@ import gql from 'graphql-tag';
 export const commsProviderTypeDefs = gql`
   enum CommsProviderType {
     SMTP
-    VOBIZ_EMAIL
-    VOBIZ_CALL
+    TWILIO_CALL
   }
 
   """
-  Shared shape for both SMTP and Vobiz providers. SMTP uses host/port/user/
-  pass/from_address/from_name. Vobiz uses base_url/api_key/sender_email/
-  sender_name/caller_id. Fields that don't apply for a given type are simply
-  ignored — the server only reads the keys relevant to the provider type.
+  Shared shape for email (SMTP) and call (Twilio) providers. SMTP uses host/
+  port/user/pass/from_address/from_name. Fields that don't apply for a given
+  type are simply ignored — the server only reads the keys relevant to the
+  provider type.
   """
   type CommsProviderConfig {
     host: String

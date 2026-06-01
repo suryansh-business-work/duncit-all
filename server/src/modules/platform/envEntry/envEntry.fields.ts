@@ -52,13 +52,6 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'model', label: 'Model (default gemini-1.5-flash)', hint: 'e.g. gemini-1.5-flash' },
     { name: 'api_key', label: 'API Key', secret: true, hint: 'AIzaSy... (39 chars)' },
   ],
-  VOBIZ: [
-    { name: 'base_url', label: 'API Base URL', hint: 'https://api.vobiz.example' },
-    { name: 'api_key', label: 'API Key', secret: true, hint: 'Vobiz API key' },
-    { name: 'sender_email', label: 'Sender Email', hint: 'sender@yourdomain.com' },
-    { name: 'sender_name', label: 'Sender Name' },
-    { name: 'caller_id', label: 'Caller ID / From Number', phone: true, hint: 'E.164, e.g. +14155552671' },
-  ],
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -71,7 +64,6 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   TWILIO: 'https://console.twilio.com/',
   OPENAI: 'https://platform.openai.com/api-keys',
   GEMINI: 'https://aistudio.google.com/app/apikey',
-  VOBIZ: 'https://www.vobiz.in/',
 };
 
 const secretSet = new Set<string>();
@@ -105,11 +97,6 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   OPENAI_API_KEY: { category: 'OPENAI', field: 'api_key' },
   SERVAM_AI_API_KEY: { category: 'OPENAI', field: 'api_key' },
   SERVAM_AI_BASE_URL: { category: 'OPENAI', field: 'base_url' },
-  VOBIZ_BASE_URL: { category: 'VOBIZ', field: 'base_url' },
-  VOBIZ_API_KEY: { category: 'VOBIZ', field: 'api_key' },
-  VOBIZ_SENDER_EMAIL: { category: 'VOBIZ', field: 'sender_email' },
-  VOBIZ_SENDER_NAME: { category: 'VOBIZ', field: 'sender_name' },
-  VOBIZ_CALLER_ID: { category: 'VOBIZ', field: 'caller_id' },
 };
 
 export function maskSecret(value: string) {

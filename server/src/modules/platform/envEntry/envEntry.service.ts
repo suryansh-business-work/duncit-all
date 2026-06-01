@@ -124,11 +124,6 @@ export async function testEnvConnection(
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(str('api_key'))}`);
       return res.ok ? { ok: true, message: 'Gemini key is valid' } : { ok: false, message: `Gemini rejected the key (HTTP ${res.status})` };
     }
-    if (category === 'VOBIZ') {
-      if (!str('base_url') || !str('api_key')) return { ok: false, message: 'Base URL and API key are required' };
-      const res = await fetch(`${str('base_url').replace(/\/$/, '')}/ping`, { headers: { Authorization: `Bearer ${str('api_key')}` } });
-      return res.ok ? { ok: true, message: 'Vobiz endpoint reachable' } : { ok: false, message: `Vobiz returned HTTP ${res.status}` };
-    }
     // EMAIL (SMTP) — no cheap unauthenticated probe; validate required fields.
     if (!str('host')) return { ok: false, message: 'SMTP host is required' };
     return { ok: true, message: `SMTP host ${str('host')} looks configured` };

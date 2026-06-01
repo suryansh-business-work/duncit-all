@@ -45,12 +45,12 @@ export default defineConfig({
         'src/api/crm.gql.ts',
         'src/api/excel.gql.ts',
         'src/api/comms.gql.ts',
-        // Comms dialogs require ImageKit / Vobiz / Google credentials and
-        // window.google globals — covered by the cypress e2e flows that boot
-        // a real browser with those stubs in place.
+        // Comms dialogs require ImageKit / SMTP / Twilio / Google credentials
+        // and window.google globals — covered by the cypress e2e flows that
+        // boot a real browser with those stubs in place.
         'src/components/AppShell.tsx',
         'src/components/GoogleSignInButton.tsx',
-        'src/components/VobizContactDialog.tsx',
+        'src/components/ContactComposeDialog.tsx',
         'src/components/FillWithAiDialog.tsx',
         'src/components/ExcelImportDialog.tsx',
         'src/components/CommsProviderSelect.tsx',

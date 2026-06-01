@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { Button, Stack, TextField, Typography } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
-import { TEST_ENV_TWILIO, TEST_ENV_VOBIZ, type EnvEntry, type RichTestResult } from '../queries';
+import { TEST_ENV_TWILIO, type EnvEntry, type RichTestResult } from '../queries';
 import { PHONE_RE } from '../env-entry/env-entry.types';
 import ResultAlert from './ResultAlert';
 import { useConfirm } from '../../../components/useConfirm';
@@ -11,15 +11,14 @@ import { parseApiError } from '../../../utils/parseApiError';
 /** Digits-only extension dialed after the call connects (optional). */
 const EXT_RE = /^\d{1,6}$/;
 
-/** Shared call tester for Twilio and Vobiz — places a REAL call after confirm. */
+/** Twilio call tester — places a REAL call after confirm. */
 export default function CallTestPanel({ entry }: { entry: EnvEntry }) {
   const confirm = useConfirm();
   const [to, setTo] = useState('');
   const [ext, setExt] = useState('');
   const [result, setResult] = useState<RichTestResult | null>(null);
-  const mutation = entry.category === 'TWILIO' ? TEST_ENV_TWILIO : TEST_ENV_VOBIZ;
-  const resultKey = entry.category === 'TWILIO' ? 'testEnvTwilioCall' : 'testEnvVobizCall';
-  const [run, { loading }] = useMutation(mutation);
+  const [run, { loading }] = useMutation(TEST_ENV_TWILIO);
+  const resultKey = 'testEnvTwilioCall';
 
   const trimmedTo = to.trim();
   const phoneValid = PHONE_RE.test(trimmedTo);
@@ -47,7 +46,7 @@ export default function CallTestPanel({ entry }: { entry: EnvEntry }) {
   return (
     <Stack spacing={1.5}>
       <Typography variant="body2" color="text.secondary">
-        Places a real test call from this {entry.category === 'TWILIO' ? 'Twilio' : 'Vobiz'} entry.
+        Places a real test call from this Twilio entry.
       </Typography>
       <TextField
         label="Number to call"

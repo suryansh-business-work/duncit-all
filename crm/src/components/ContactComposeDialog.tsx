@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, Stack, TextField } from '@mui/material';
+import { Alert, Button, Stack, TextField } from '@mui/material';
+import PhoneIcon from '@mui/icons-material/Phone';
+import EmailIcon from '@mui/icons-material/Email';
 import {
   CALL_HOST_LEAD,
   CALL_VENUE_LEAD,
@@ -9,6 +11,7 @@ import {
 } from '../api/crm.gql';
 import { parseApiError } from '../utils/parseApiError';
 import CommsProviderSelect from './CommsProviderSelect';
+import ComposeWindow from './compose/ComposeWindow';
 
 type Mode = 'email' | 'call';
 
@@ -40,7 +43,7 @@ const responseKey = (entity: EntityKind, mode: Mode) => {
   return entity === 'VENUE_LEAD' ? 'callVenueLeadContact' : 'callHostLeadContact';
 };
 
-export default function VobizContactDialog({ open, mode, entity, lead, onClose, onResult }: Props) {
+export default function ContactComposeDialog({ open, mode, entity, lead, onClose, onResult }: Props) {
   const [target, setTarget] = useState('');
   const [subject, setSubject] = useState('');
   const [body, setBody] = useState('');
@@ -78,36 +81,41 @@ export default function VobizContactDialog({ open, mode, entity, lead, onClose, 
     }
   };
 
-  const providerType: 'VOBIZ_EMAIL' | 'VOBIZ_CALL' = mode === 'email' ? 'VOBIZ_EMAIL' : 'VOBIZ_CALL';
+  const providerType: 'SMTP' | 'TWILIO_CALL' = mode === 'email' ? 'SMTP' : 'TWILIO_CALL';
+  const disabled = loading || !target.trim() || (mode === 'email' && !subject.trim());
 
   return (
-    <Dialog open={open} onClose={onClose} maxWidth="sm" fullWidth>
-      <DialogTitle>{mode === 'email' ? 'Send email' : 'Place call'}</DialogTitle>
-      <DialogContent>
-        <Stack spacing={1.5} sx={{ mt: 0.5 }}>
-          {error && <Alert severity="error">{error}</Alert>}
-          <CommsProviderSelect type={providerType} value={providerId} onChange={setProviderId} />
-          <TextField
-            size="small"
-            label={mode === 'email' ? 'To (email)' : 'To (number)'}
-            value={target}
-            onChange={(event) => setTarget(event.target.value)}
-            fullWidth
-          />
-          {mode === 'email' && (
-            <>
-              <TextField size="small" label="Subject" value={subject} onChange={(event) => setSubject(event.target.value)} fullWidth />
-              <TextField size="small" label="Message" value={body} onChange={(event) => setBody(event.target.value)} fullWidth multiline minRows={4} />
-            </>
-          )}
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose} disabled={loading}>Cancel</Button>
-        <Button variant="contained" onClick={submit} disabled={loading || !target.trim() || (mode === 'email' && !subject.trim())}>
-          {loading ? 'Sending…' : mode === 'email' ? 'Send email' : 'Start call'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <ComposeWindow
+      open={open}
+      title={mode === 'email' ? `Email · ${lead?.display_name ?? ''}` : `Call · ${lead?.display_name ?? ''}`}
+      icon={mode === 'email' ? <EmailIcon fontSize="small" /> : <PhoneIcon fontSize="small" />}
+      onClose={onClose}
+      actions={
+        <>
+          <Button onClick={onClose} disabled={loading}>Cancel</Button>
+          <Button variant="contained" onClick={submit} disabled={disabled}>
+            {loading ? 'Sending…' : mode === 'email' ? 'Send email' : 'Start call'}
+          </Button>
+        </>
+      }
+    >
+      <Stack spacing={1.5}>
+        {error && <Alert severity="error">{error}</Alert>}
+        <CommsProviderSelect type={providerType} value={providerId} onChange={setProviderId} />
+        <TextField
+          size="small"
+          label={mode === 'email' ? 'To (email)' : 'To (number)'}
+          value={target}
+          onChange={(event) => setTarget(event.target.value)}
+          fullWidth
+        />
+        {mode === 'email' && (
+          <>
+            <TextField size="small" label="Subject" value={subject} onChange={(event) => setSubject(event.target.value)} fullWidth />
+            <TextField size="small" label="Message" value={body} onChange={(event) => setBody(event.target.value)} fullWidth multiline minRows={4} />
+          </>
+        )}
+      </Stack>
+    </ComposeWindow>
   );
 }

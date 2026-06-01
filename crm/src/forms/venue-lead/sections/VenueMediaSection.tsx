@@ -1,11 +1,24 @@
 import { Stack } from '@mui/material';
 import FormField from '../../FormField';
+import MediaUploadField from '../../fields/MediaUploadField';
 
 export default function VenueMediaSection() {
   return (
-    <Stack spacing={1.5}>
-      <FormField name="photos" label="Venue Photos (one URL per line)" size="small" multiline minRows={2} hint="Paste image URLs, one per line." />
-      <FormField name="videos" label="Videos (one URL per line)" size="small" multiline minRows={2} hint="Paste video URLs, one per line." />
+    <Stack spacing={2}>
+      <MediaUploadField
+        name="photos"
+        label="Venue Photos"
+        kind="image"
+        folder="crm/venue-photos"
+        helperText="Upload to ImageKit — JPG/PNG up to 8MB each. Multiple allowed."
+      />
+      <MediaUploadField
+        name="videos"
+        label="Venue Videos"
+        kind="video"
+        folder="crm/venue-videos"
+        helperText="Upload to ImageKit — MP4 up to 100MB each. Multiple allowed."
+      />
       <FormField name="brochure_url" label="Brochure / Rate Card URL" size="small" />
     </Stack>
   );

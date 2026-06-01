@@ -16,7 +16,6 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   TWILIO: 'Twilio',
   OPENAI: 'OpenAI',
   GEMINI: 'Gemini',
-  VOBIZ: 'Vobiz',
 };
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */
@@ -123,10 +122,6 @@ export const envEntryResolvers = {
     testEnvTwilioCall: async (_p: unknown, args: { id: string; to: string }, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);
       return envEntryTests.twilioCall(args.id, args.to);
-    },
-    testEnvVobizCall: async (_p: unknown, args: { id: string; to: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, TECH_MANAGE);
-      return envEntryTests.vobizCall(args.id, args.to);
     },
     testEnvOpenai: async (_p: unknown, args: { id: string; prompt: string }, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);

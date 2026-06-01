@@ -58,7 +58,7 @@ export default function CommsLogsSection({ entityType, entityId }: Props) {
           <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="h6" fontWeight={800}>Communication Log</Typography>
             <Typography variant="caption" color="text.secondary">
-              Calls + emails sent via Vobiz/SMTP. Transcripts are fetched from Servam AI for recorded calls.
+              Calls via Twilio, emails via SMTP. Transcripts are fetched from Servam AI for recorded calls.
             </Typography>
           </Box>
         </Stack>

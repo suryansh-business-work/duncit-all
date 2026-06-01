@@ -68,9 +68,6 @@ export const TEST_ENV_PEXELS = gql`
 export const TEST_ENV_TWILIO = gql`
   mutation TestEnvTwilio($id: ID!, $to: String!) { testEnvTwilioCall(id: $id, to: $to) ${RICH} }
 `;
-export const TEST_ENV_VOBIZ = gql`
-  mutation TestEnvVobiz($id: ID!, $to: String!) { testEnvVobizCall(id: $id, to: $to) ${RICH} }
-`;
 export const TEST_ENV_OPENAI = gql`
   mutation TestEnvOpenai($id: ID!, $prompt: String!) { testEnvOpenai(id: $id, prompt: $prompt) ${RICH} }
 `;
@@ -93,8 +90,7 @@ export type EnvCategory =
   | 'GOOGLE_MAPS'
   | 'TWILIO'
   | 'OPENAI'
-  | 'GEMINI'
-  | 'VOBIZ';
+  | 'GEMINI';
 
 export interface EnvFieldDef {
   name: string;
@@ -202,18 +198,6 @@ export const CATEGORY_DEFS: EnvCategoryDef[] = [
     fields: [
       f('model', 'Model (default gemini-1.5-flash)', { hint: 'e.g. gemini-1.5-flash' }),
       f('api_key', 'API Key', { secret: true, hint: 'AIzaSy... (39 chars)' }),
-    ],
-  },
-  {
-    category: 'VOBIZ',
-    label: 'Vobiz',
-    docUrl: 'https://www.vobiz.in/',
-    fields: [
-      f('base_url', 'API Base URL', { hint: 'https://api.vobiz.example' }),
-      f('api_key', 'API Key', { secret: true, hint: 'Vobiz API key' }),
-      f('sender_email', 'Sender Email', { hint: 'sender@yourdomain.com' }),
-      f('sender_name', 'Sender Name'),
-      f('caller_id', 'Caller ID / From Number', { phone: true, hint: 'E.164, e.g. +14155552671' }),
     ],
   },
 ];

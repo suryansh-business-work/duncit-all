@@ -11,7 +11,6 @@ import {
   CircularProgress,
   Divider,
   Stack,
-  Tooltip,
   Typography,
 } from '@mui/material';
 import { alpha } from '@mui/material/styles';
@@ -24,9 +23,6 @@ import EventIcon from '@mui/icons-material/Event';
 import HandymanIcon from '@mui/icons-material/Handyman';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import LanguageIcon from '@mui/icons-material/Language';
-import PhoneIcon from '@mui/icons-material/Phone';
-import WhatsAppIcon from '@mui/icons-material/WhatsApp';
-import EmailIcon from '@mui/icons-material/Email';
 import InstagramIcon from '@mui/icons-material/Instagram';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import EventNoteIcon from '@mui/icons-material/EventNote';
@@ -36,6 +32,7 @@ import type { HostLead } from '../../api/crm.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
 import { LeadDetailCard, LeadDetailRow } from '../../components/LeadDetailCard';
 import LeadContactActions from '../../components/LeadContactActions';
+import ContactsTab from '../../components/contacts-tab';
 import LeadStatTile from '../../components/LeadStatTile';
 import LeadTabs, { type LeadTab } from '../../components/LeadTabs';
 import ServicesGrid from '../../components/ServicesGrid';
@@ -152,79 +149,7 @@ export default function HostLeadDetailPage() {
       label: `Contacts (${lead.contacts.length})`,
       icon: <ContactsIcon fontSize="small" />,
       render: () => (
-        <LeadDetailCard title="Contacts" icon={<ContactsIcon color="primary" />}>
-          <Stack sx={{ display: 'grid', gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)' }, gap: 1.5 }}>
-            {lead.contacts.length === 0 && (
-              <Typography variant="body2" color="text.secondary">
-                No contacts on file yet.
-              </Typography>
-            )}
-            {lead.contacts.map((contact, idx) => (
-              <Card key={`${contact.email}-${idx}`} variant="outlined" sx={{ p: 1.5 }}>
-                <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1} sx={{ mb: 0.75 }}>
-                  <Box sx={{ minWidth: 0 }}>
-                    <Typography variant="subtitle2" fontWeight={700} noWrap>
-                      {contact.name || (idx === 0 ? 'Primary contact' : `Contact ${idx + 1}`)}
-                    </Typography>
-                    {contact.role && (
-                      <Typography variant="caption" color="text.secondary" noWrap>
-                        {contact.role}
-                      </Typography>
-                    )}
-                  </Box>
-                  {idx === 0 && <Chip label="Primary" size="small" color="primary" />}
-                </Stack>
-                <Stack spacing={0.5}>
-                  {contact.mobile_number && (
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <PhoneIcon fontSize="small" color="action" />
-                      <Tooltip title="Call">
-                        <Typography
-                          component="a"
-                          href={`tel:${contact.mobile_number}`}
-                          variant="body2"
-                          sx={{ color: 'text.primary', textDecoration: 'none' }}
-                        >
-                          {contact.mobile_number}
-                        </Typography>
-                      </Tooltip>
-                    </Stack>
-                  )}
-                  {contact.whatsapp_number && (
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <WhatsAppIcon fontSize="small" sx={{ color: '#25D366' }} />
-                      <Typography
-                        component="a"
-                        href={`https://wa.me/${contact.whatsapp_number.replace(/[^0-9]/g, '')}`}
-                        target="_blank"
-                        rel="noreferrer noopener"
-                        variant="body2"
-                        sx={{ color: 'text.primary', textDecoration: 'none' }}
-                      >
-                        {contact.whatsapp_number}
-                      </Typography>
-                    </Stack>
-                  )}
-                  {contact.email && (
-                    <Stack direction="row" spacing={1} alignItems="center">
-                      <EmailIcon fontSize="small" color="action" />
-                      <Tooltip title="Open in mail client">
-                        <Typography
-                          component="a"
-                          href={`mailto:${contact.email}`}
-                          variant="body2"
-                          sx={{ color: 'text.primary', textDecoration: 'none', wordBreak: 'break-all' }}
-                        >
-                          {contact.email}
-                        </Typography>
-                      </Tooltip>
-                    </Stack>
-                  )}
-                </Stack>
-              </Card>
-            ))}
-          </Stack>
-        </LeadDetailCard>
+        <ContactsTab entity="HOST_LEAD" leadId={lead.id} leadName={lead.host_name} contacts={lead.contacts} />
       ),
     },
 

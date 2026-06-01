@@ -21,7 +21,6 @@ function Panel({ entry }: { entry: EnvEntry }) {
     case 'GOOGLE_OAUTH':
       return <GoogleOAuthTab entry={entry} />;
     case 'TWILIO':
-    case 'VOBIZ':
       return <CallTestPanel entry={entry} />;
     case 'OPENAI':
     case 'GEMINI':

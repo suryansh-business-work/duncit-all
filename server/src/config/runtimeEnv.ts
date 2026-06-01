@@ -5,7 +5,7 @@ import { ENV_KEY_MAP } from '@modules/platform/envEntry/envEntry.fields';
  * Resolve a server-side config value for a legacy env key.
  *
  * For keys that map to a managed category (Email/ImageKit/Pexels/Google/Twilio/
- * AI/Vobiz) the value comes EXCLUSIVELY from the active default EnvEntry — there
+ * AI) the value comes EXCLUSIVELY from the active default EnvEntry — there
  * is no `.env` fallback, since those credentials are owned by the Tech portal.
  *
  * Keys NOT mapped to a category (URLs, dev flags, JWT secret, etc.) still read

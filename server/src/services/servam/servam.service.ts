@@ -22,7 +22,7 @@ async function loadConfig() {
 
 /**
  * Wrapper around the Servam (Sarvam) AI speech-to-text API used to fetch
- * call transcripts. Vobiz hands us a recording URL when a call completes;
+ * call transcripts. Twilio hands us a recording URL when a call completes;
  * we POST it to Servam and store the resulting transcript on the
  * CommunicationLog so the CRM timeline can render it.
  *

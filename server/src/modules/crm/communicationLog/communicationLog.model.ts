@@ -22,7 +22,7 @@ export const COMMS_LOG_STATUSES = [
 
 /**
  * One record per outbound email or call from CRM. The transcript / recording
- * URL is filled asynchronously by the Servam AI pipeline after Vobiz signals
+ * URL is filled asynchronously by the Servam AI pipeline after Twilio signals
  * call completion; for emails, transcript stays null and `body` holds the
  * HTML the user composed.
  */

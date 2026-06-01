@@ -10,7 +10,7 @@ describe('communicationLogService integration', () => {
       entity_type: 'VENUE_LEAD',
       entity_id: entityId,
       contact_value: '+919999999999',
-      provider_name: 'Vobiz',
+      provider_name: 'twilio',
     });
     expect(created!.type).toBe('CALL');
     expect(created!.transcript_status).toBe('PENDING');

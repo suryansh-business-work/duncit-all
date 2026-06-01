@@ -10,7 +10,6 @@ export const envEntryTypeDefs = gql`
     TWILIO
     OPENAI
     GEMINI
-    VOBIZ
   }
 
   type EnvConfigPair {
@@ -123,7 +122,6 @@ export const envEntryTypeDefs = gql`
     testEnvImagekitUpload(id: ID!, fileBase64: String!, fileName: String!): EnvTestRichResult!
     testEnvPexels(id: ID!, query: String!): EnvTestRichResult!
     testEnvTwilioCall(id: ID!, to: String!): EnvTestRichResult!
-    testEnvVobizCall(id: ID!, to: String!): EnvTestRichResult!
     testEnvOpenai(id: ID!, prompt: String!): EnvTestRichResult!
     testEnvGemini(id: ID!, prompt: String!): EnvTestRichResult!
   }

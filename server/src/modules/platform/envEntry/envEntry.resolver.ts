@@ -1,6 +1,6 @@
 import { envEntryService, type EnvEntryConfig } from './envEntry.service';
 import { envEntryTests } from './envEntry.tests';
-import { CATEGORY_FIELDS } from './envEntry.fields';
+import { CATEGORY_FIELDS, CATEGORY_DOCS } from './envEntry.fields';
 import { ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
@@ -49,12 +49,15 @@ export const envEntryResolvers = {
       return ENV_CATEGORIES.map((category) => ({
         category,
         label: CATEGORY_LABELS[category],
+        docUrl: CATEGORY_DOCS[category] ?? null,
         fields: CATEGORY_FIELDS[category].map((f) => ({
           name: f.name,
           label: f.label,
           secret: !!f.secret,
           number: !!f.number,
           bool: !!f.bool,
+          phone: !!f.phone,
+          hint: f.hint ?? null,
         })),
       }));
     },

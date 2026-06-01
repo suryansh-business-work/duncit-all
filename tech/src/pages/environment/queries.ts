@@ -12,7 +12,8 @@ export const ENV_CATEGORIES = gql`
     envCategories {
       category
       label
-      fields { name label secret number bool }
+      docUrl
+      fields { name label secret number bool phone hint }
     }
   }
 `;
@@ -101,12 +102,15 @@ export interface EnvFieldDef {
   secret: boolean;
   number: boolean;
   bool: boolean;
+  phone?: boolean;
+  hint?: string | null;
 }
 
 export interface EnvCategoryDef {
   category: EnvCategory;
   label: string;
   fields: EnvFieldDef[];
+  docUrl?: string | null;
 }
 
 const f = (name: string, label: string, extra: Partial<EnvFieldDef> = {}): EnvFieldDef => ({
@@ -128,13 +132,14 @@ export const CATEGORY_DEFS: EnvCategoryDef[] = [
   {
     category: 'EMAIL',
     label: 'Email (SMTP)',
+    docUrl: 'https://support.google.com/a/answer/176600',
     fields: [
-      f('host', 'SMTP Host'),
-      f('port', 'Port', { number: true }),
-      f('user', 'Username'),
-      f('password', 'Password', { secret: true }),
+      f('host', 'SMTP Host', { hint: 'e.g. smtp.gmail.com' }),
+      f('port', 'Port', { number: true, hint: '465 (SSL) or 587 (TLS)' }),
+      f('user', 'Username', { hint: 'Full mailbox address' }),
+      f('password', 'Password', { secret: true, hint: 'SMTP password or app password' }),
       f('secure', 'Use TLS', { bool: true }),
-      f('from_address', 'From Address'),
+      f('from_address', 'From Address', { hint: 'no-reply@yourdomain.com' }),
       f('from_name', 'From Name'),
       f('reply_to', 'Reply-To'),
     ],
@@ -142,39 +147,73 @@ export const CATEGORY_DEFS: EnvCategoryDef[] = [
   {
     category: 'IMAGEKIT',
     label: 'ImageKit',
-    fields: [f('public_key', 'Public Key'), f('private_key', 'Private Key', { secret: true }), f('url_endpoint', 'URL Endpoint')],
+    docUrl: 'https://imagekit.io/dashboard/developer/api-keys',
+    fields: [
+      f('public_key', 'Public Key', { hint: 'public_xxxxxxxxxxxxxxxx' }),
+      f('private_key', 'Private Key', { secret: true, hint: 'private_xxxxxxxxxxxxxxxx' }),
+      f('url_endpoint', 'URL Endpoint', { hint: 'https://ik.imagekit.io/your_id' }),
+    ],
   },
-  { category: 'PEXELS', label: 'Pexels', fields: [f('api_key', 'API Key', { secret: true })] },
+  {
+    category: 'PEXELS',
+    label: 'Pexels',
+    docUrl: 'https://www.pexels.com/api/',
+    fields: [f('api_key', 'API Key', { secret: true, hint: '56-char alphanumeric key' })],
+  },
   {
     category: 'GOOGLE_OAUTH',
     label: 'Google OAuth',
-    fields: [f('client_id', 'OAuth Client ID'), f('client_secret', 'OAuth Client Secret', { secret: true })],
+    docUrl: 'https://console.cloud.google.com/apis/credentials',
+    fields: [
+      f('client_id', 'OAuth Client ID', { hint: 'xxxxxx.apps.googleusercontent.com' }),
+      f('client_secret', 'OAuth Client Secret', { secret: true, hint: 'GOCSPX-xxxxxxxxxxxxxxxx' }),
+    ],
   },
-  { category: 'GOOGLE_MAPS', label: 'Google Map', fields: [f('maps_api_key', 'Maps API Key', { secret: true })] },
+  {
+    category: 'GOOGLE_MAPS',
+    label: 'Google Map',
+    docUrl: 'https://console.cloud.google.com/google/maps-apis/credentials',
+    fields: [f('maps_api_key', 'Maps API Key', { secret: true, hint: 'AIzaSy... (39 chars)' })],
+  },
   {
     category: 'TWILIO',
     label: 'Twilio',
-    fields: [f('account_sid', 'Account SID'), f('auth_token', 'Auth Token', { secret: true }), f('phone_number', 'Phone Number')],
+    docUrl: 'https://console.twilio.com/',
+    fields: [
+      f('account_sid', 'Account SID', { hint: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' }),
+      f('auth_token', 'Auth Token', { secret: true, hint: '32-char hex token' }),
+      f('phone_number', 'Phone Number', { phone: true, hint: 'E.164, e.g. +14155552671' }),
+    ],
   },
   {
     category: 'OPENAI',
     label: 'OpenAI',
-    fields: [f('base_url', 'Base URL (optional)'), f('model', 'Model (default gpt-4o-mini)'), f('api_key', 'API Key', { secret: true })],
+    docUrl: 'https://platform.openai.com/api-keys',
+    fields: [
+      f('base_url', 'Base URL (optional)', { hint: 'https://api.openai.com/v1' }),
+      f('model', 'Model (default gpt-4o-mini)', { hint: 'e.g. gpt-4o-mini' }),
+      f('api_key', 'API Key', { secret: true, hint: 'sk-proj-... or sk-...' }),
+    ],
   },
   {
     category: 'GEMINI',
     label: 'Gemini',
-    fields: [f('model', 'Model (default gemini-1.5-flash)'), f('api_key', 'API Key', { secret: true })],
+    docUrl: 'https://aistudio.google.com/app/apikey',
+    fields: [
+      f('model', 'Model (default gemini-1.5-flash)', { hint: 'e.g. gemini-1.5-flash' }),
+      f('api_key', 'API Key', { secret: true, hint: 'AIzaSy... (39 chars)' }),
+    ],
   },
   {
     category: 'VOBIZ',
     label: 'Vobiz',
+    docUrl: 'https://www.vobiz.in/',
     fields: [
-      f('base_url', 'API Base URL'),
-      f('api_key', 'API Key', { secret: true }),
-      f('sender_email', 'Sender Email'),
+      f('base_url', 'API Base URL', { hint: 'https://api.vobiz.example' }),
+      f('api_key', 'API Key', { secret: true, hint: 'Vobiz API key' }),
+      f('sender_email', 'Sender Email', { hint: 'sender@yourdomain.com' }),
       f('sender_name', 'Sender Name'),
-      f('caller_id', 'Caller ID / From Number'),
+      f('caller_id', 'Caller ID / From Number', { phone: true, hint: 'E.164, e.g. +14155552671' }),
     ],
   },
 ];

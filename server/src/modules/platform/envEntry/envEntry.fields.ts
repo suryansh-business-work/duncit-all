@@ -1,58 +1,77 @@
 import type { EnvCategory } from './envEntry.model';
 
-/** A config field for a category. `secret` fields are masked on read. */
+/**
+ * A config field for a category. `secret` fields are rendered as masked inputs
+ * (eye-toggle on the client) but their values ARE returned so they can be
+ * reviewed/edited in the Tech portal. `hint` shows the expected key format.
+ */
 export interface EnvFieldDef {
   name: string;
   label: string;
   secret?: boolean;
   number?: boolean;
   bool?: boolean;
+  hint?: string;
+  phone?: boolean;
 }
 
 /** Field layout per category. Keys match the stored `config`. */
 export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
   EMAIL: [
-    { name: 'host', label: 'SMTP Host' },
-    { name: 'port', label: 'Port', number: true },
-    { name: 'user', label: 'Username' },
-    { name: 'password', label: 'Password', secret: true },
+    { name: 'host', label: 'SMTP Host', hint: 'e.g. smtp.gmail.com' },
+    { name: 'port', label: 'Port', number: true, hint: '465 (SSL) or 587 (TLS)' },
+    { name: 'user', label: 'Username', hint: 'Full mailbox address' },
+    { name: 'password', label: 'Password', secret: true, hint: 'SMTP password or app password' },
     { name: 'secure', label: 'Use TLS', bool: true },
-    { name: 'from_address', label: 'From Address' },
+    { name: 'from_address', label: 'From Address', hint: 'no-reply@yourdomain.com' },
     { name: 'from_name', label: 'From Name' },
     { name: 'reply_to', label: 'Reply-To' },
   ],
   IMAGEKIT: [
-    { name: 'public_key', label: 'Public Key' },
-    { name: 'private_key', label: 'Private Key', secret: true },
-    { name: 'url_endpoint', label: 'URL Endpoint' },
+    { name: 'public_key', label: 'Public Key', hint: 'public_xxxxxxxxxxxxxxxx' },
+    { name: 'private_key', label: 'Private Key', secret: true, hint: 'private_xxxxxxxxxxxxxxxx' },
+    { name: 'url_endpoint', label: 'URL Endpoint', hint: 'https://ik.imagekit.io/your_id' },
   ],
-  PEXELS: [{ name: 'api_key', label: 'API Key', secret: true }],
+  PEXELS: [{ name: 'api_key', label: 'API Key', secret: true, hint: '56-char alphanumeric key' }],
   GOOGLE_OAUTH: [
-    { name: 'client_id', label: 'OAuth Client ID' },
-    { name: 'client_secret', label: 'OAuth Client Secret', secret: true },
+    { name: 'client_id', label: 'OAuth Client ID', hint: 'xxxxxx.apps.googleusercontent.com' },
+    { name: 'client_secret', label: 'OAuth Client Secret', secret: true, hint: 'GOCSPX-xxxxxxxxxxxxxxxx' },
   ],
-  GOOGLE_MAPS: [{ name: 'maps_api_key', label: 'Maps API Key', secret: true }],
+  GOOGLE_MAPS: [{ name: 'maps_api_key', label: 'Maps API Key', secret: true, hint: 'AIzaSy... (39 chars)' }],
   TWILIO: [
-    { name: 'account_sid', label: 'Account SID' },
-    { name: 'auth_token', label: 'Auth Token', secret: true },
-    { name: 'phone_number', label: 'Phone Number' },
+    { name: 'account_sid', label: 'Account SID', hint: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' },
+    { name: 'auth_token', label: 'Auth Token', secret: true, hint: '32-char hex token' },
+    { name: 'phone_number', label: 'Phone Number', phone: true, hint: 'E.164, e.g. +14155552671' },
   ],
   OPENAI: [
-    { name: 'base_url', label: 'Base URL (optional)' },
-    { name: 'model', label: 'Model (default gpt-4o-mini)' },
-    { name: 'api_key', label: 'API Key', secret: true },
+    { name: 'base_url', label: 'Base URL (optional)', hint: 'https://api.openai.com/v1' },
+    { name: 'model', label: 'Model (default gpt-4o-mini)', hint: 'e.g. gpt-4o-mini' },
+    { name: 'api_key', label: 'API Key', secret: true, hint: 'sk-proj-... or sk-...' },
   ],
   GEMINI: [
-    { name: 'model', label: 'Model (default gemini-1.5-flash)' },
-    { name: 'api_key', label: 'API Key', secret: true },
+    { name: 'model', label: 'Model (default gemini-1.5-flash)', hint: 'e.g. gemini-1.5-flash' },
+    { name: 'api_key', label: 'API Key', secret: true, hint: 'AIzaSy... (39 chars)' },
   ],
   VOBIZ: [
-    { name: 'base_url', label: 'API Base URL' },
-    { name: 'api_key', label: 'API Key', secret: true },
-    { name: 'sender_email', label: 'Sender Email' },
+    { name: 'base_url', label: 'API Base URL', hint: 'https://api.vobiz.example' },
+    { name: 'api_key', label: 'API Key', secret: true, hint: 'Vobiz API key' },
+    { name: 'sender_email', label: 'Sender Email', hint: 'sender@yourdomain.com' },
     { name: 'sender_name', label: 'Sender Name' },
-    { name: 'caller_id', label: 'Caller ID / From Number' },
+    { name: 'caller_id', label: 'Caller ID / From Number', phone: true, hint: 'E.164, e.g. +14155552671' },
   ],
+};
+
+/** Where an operator obtains each category's credentials (shown in the Add dialog). */
+export const CATEGORY_DOCS: Record<EnvCategory, string> = {
+  EMAIL: 'https://support.google.com/a/answer/176600',
+  IMAGEKIT: 'https://imagekit.io/dashboard/developer/api-keys',
+  PEXELS: 'https://www.pexels.com/api/',
+  GOOGLE_OAUTH: 'https://console.cloud.google.com/apis/credentials',
+  GOOGLE_MAPS: 'https://console.cloud.google.com/google/maps-apis/credentials',
+  TWILIO: 'https://console.twilio.com/',
+  OPENAI: 'https://platform.openai.com/api-keys',
+  GEMINI: 'https://aistudio.google.com/app/apikey',
+  VOBIZ: 'https://www.vobiz.in/',
 };
 
 const secretSet = new Set<string>();

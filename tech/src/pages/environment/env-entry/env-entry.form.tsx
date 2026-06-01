@@ -6,14 +6,17 @@ import {
   DialogContent,
   DialogTitle,
   FormControlLabel,
+  Link,
   Stack,
   Switch,
   TextField,
   Typography,
 } from '@mui/material';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import ScienceIcon from '@mui/icons-material/Science';
-import type { EnvCategoryDef, EnvEntry } from '../queries';
+import type { EnvCategoryDef, EnvEntry, EnvFieldDef } from '../queries';
 import { emptyValues, envEntrySchema, valuesFromEntry, type EnvEntryFormValues } from './env-entry.types';
+import ConfigField from './ConfigField';
 
 interface Props {
   open: boolean;
@@ -45,12 +48,27 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
       : 'Required';
   };
 
+  const fieldHelper = (field: EnvFieldDef) => {
+    if (field.hint) return field.hint;
+    if (field.secret) return secretHelper(field.name);
+    return ' ';
+  };
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{isEdit ? `Edit ${initial!.name}` : `New ${def.label} entry`}</DialogTitle>
       <form onSubmit={formik.handleSubmit} noValidate>
         <DialogContent dividers>
           <Stack spacing={1.5}>
+            {def.docUrl && (
+              <Typography variant="body2" color="text.secondary">
+                Where to find these?{' '}
+                <Link href={def.docUrl} target="_blank" rel="noopener noreferrer" sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}>
+                  Open {def.label} dashboard
+                  <OpenInNewIcon sx={{ fontSize: 14 }} />
+                </Link>
+              </Typography>
+            )}
             <TextField
               label="Name"
               name="name"
@@ -85,38 +103,18 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
             </Stack>
 
             <Typography variant="overline" color="text.secondary" sx={{ pt: 1 }}>{def.label} config</Typography>
-            {def.fields.map((field) => {
-              if (field.bool) {
-                return (
-                  <FormControlLabel
-                    key={field.name}
-                    control={
-                      <Switch
-                        checked={formik.values.config[field.name] === 'true'}
-                        onChange={(e) => formik.setFieldValue(`config.${field.name}`, e.target.checked ? 'true' : 'false')}
-                      />
-                    }
-                    label={field.label}
-                  />
-                );
-              }
-              return (
-                <TextField
-                  key={field.name}
-                  label={field.label}
-                  name={`config.${field.name}`}
-                  type={field.secret ? 'password' : field.number ? 'number' : 'text'}
-                  value={formik.values.config[field.name] ?? ''}
-                  onChange={formik.handleChange}
-                  onBlur={formik.handleBlur}
-                  error={Boolean(configError(field.name))}
-                  helperText={configError(field.name) || (field.secret ? secretHelper(field.name) : ' ')}
-                  fullWidth
-                  autoComplete={field.secret ? 'new-password' : 'off'}
-                  inputProps={{ autoComplete: field.secret ? 'new-password' : 'off', 'data-1p-ignore': true, 'data-lpignore': true }}
-                />
-              );
-            })}
+            {def.fields.map((field) => (
+              <ConfigField
+                key={field.name}
+                field={field}
+                value={formik.values.config[field.name] ?? ''}
+                error={configError(field.name)}
+                helperText={fieldHelper(field)}
+                onChange={formik.handleChange}
+                onBlur={formik.handleBlur}
+                onToggleBool={(name, checked) => formik.setFieldValue(`config.${name}`, checked ? 'true' : 'false')}
+              />
+            ))}
           </Stack>
         </DialogContent>
         <DialogActions sx={{ justifyContent: 'space-between' }}>

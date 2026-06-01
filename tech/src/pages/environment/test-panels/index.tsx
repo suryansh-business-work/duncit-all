@@ -1,4 +1,4 @@
-import { Box, Divider, Drawer, Stack, Typography } from '@mui/material';
+import { Alert, Box, Divider, Drawer, Stack, Typography } from '@mui/material';
 import type { EnvEntry } from '../queries';
 import EmailTestPanel from './EmailTestPanel';
 import ImagekitTestPanel from './ImagekitTestPanel';
@@ -17,7 +17,7 @@ function Panel({ entry }: { entry: EnvEntry }) {
     case 'PEXELS':
       return <PexelsTestPanel entry={entry} />;
     case 'GOOGLE_MAPS':
-      return <GoogleMapsTest />;
+      return <GoogleMapsTest entry={entry} />;
     case 'GOOGLE_OAUTH':
       return <GoogleOAuthTab entry={entry} />;
     case 'TWILIO':
@@ -48,6 +48,10 @@ export default function TestDrawer({ entry, onClose }: Props) {
           </Box>
           <Divider />
           <Box sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
+            <Alert severity="info" sx={{ mb: 2 }}>
+              This test is running using config: <strong>{entry.name}</strong>
+              {entry.is_default ? ' (default)' : ''}. Keys are read from the saved config — you don't enter them here.
+            </Alert>
             <Panel entry={entry} />
           </Box>
         </Stack>

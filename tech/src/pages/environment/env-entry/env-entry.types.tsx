@@ -40,17 +40,40 @@ export const toConfigPairs = (def: EnvCategoryDef, values: EnvEntryFormValues) =
   return pairs;
 };
 
-/** Validation: name required; first secret field required on create. */
+/** E.164 phone number: leading +, country code, up to 15 digits total. */
+export const PHONE_RE = /^\+[1-9]\d{6,14}$/;
+
+/**
+ * Validation:
+ *  - name required;
+ *  - first secret field required on create;
+ *  - any `phone` field, when filled, must be a valid E.164 number.
+ */
 export const envEntrySchema = (def: EnvCategoryDef, isEdit: boolean) =>
   yup.object({
     name: yup.string().trim().required('Name is required'),
-    config: yup.object().test('required-secret', 'Credentials required', function (config) {
-      if (isEdit) return true;
-      const secret = def.fields.find((f) => f.secret);
-      if (!secret) return true;
-      const value = (config as Record<string, string>)?.[secret.name];
-      return value && value.trim()
-        ? true
-        : this.createError({ path: `config.${secret.name}`, message: `${secret.label} is required` });
-    }),
+    config: yup
+      .object()
+      .test('required-secret', 'Credentials required', function (config) {
+        if (isEdit) return true;
+        const secret = def.fields.find((f) => f.secret);
+        if (!secret) return true;
+        const value = (config as Record<string, string>)?.[secret.name];
+        return value && value.trim()
+          ? true
+          : this.createError({ path: `config.${secret.name}`, message: `${secret.label} is required` });
+      })
+      .test('phone-format', 'Invalid phone number', function (config) {
+        const c = (config ?? {}) as Record<string, string>;
+        for (const field of def.fields.filter((f) => f.phone)) {
+          const value = (c[field.name] ?? '').toString().trim();
+          if (value && !PHONE_RE.test(value)) {
+            return this.createError({
+              path: `config.${field.name}`,
+              message: `${field.label} must be E.164, e.g. +14155552671`,
+            });
+          }
+        }
+        return true;
+      }),
   });

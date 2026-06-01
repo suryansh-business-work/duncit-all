@@ -30,12 +30,16 @@ export const envEntryTypeDefs = gql`
     secret: Boolean!
     number: Boolean!
     bool: Boolean!
+    phone: Boolean!
+    hint: String
   }
 
   type EnvCategoryDef {
     category: EnvCategory!
     label: String!
     fields: [EnvFieldDef!]!
+    "Link to where an operator obtains these credentials."
+    docUrl: String
   }
 
   type EnvEntry {

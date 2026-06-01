@@ -20,6 +20,7 @@ export const portalModeTypeDefs = gql`
     kind: PortalModeKind!
     mode: PortalModeState!
     note: String
+    url: String
     updated_at: String
   }
 

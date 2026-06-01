@@ -6,17 +6,19 @@ const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
 export type EnvEntryConfig = Record<string, string | number | boolean>;
 
-/** Public projection: non-secret values shown, secrets replaced by has_<field>. */
+/**
+ * Public projection. The Tech portal is the single, role-gated place to manage
+ * credentials, so it shows every value (incl. secrets) behind a client-side
+ * eye-toggle — nothing is masked. `secrets` still flags which fields hold a
+ * value so the UI can mark presence even when a value is blank.
+ */
 const toPublicConfig = (category: EnvCategory, config: EnvEntryConfig = {}) => {
   const fields = CATEGORY_FIELDS[category] ?? [];
   const values: Record<string, string | number | boolean | null> = {};
   const secrets: Record<string, boolean> = {};
   for (const field of fields) {
-    if (field.secret) {
-      secrets[`has_${field.name}`] = Boolean(config[field.name]);
-    } else {
-      values[field.name] = (config[field.name] as any) ?? null;
-    }
+    values[field.name] = (config[field.name] as any) ?? null;
+    if (field.secret) secrets[`has_${field.name}`] = Boolean(config[field.name]);
   }
   return { values, secrets };
 };

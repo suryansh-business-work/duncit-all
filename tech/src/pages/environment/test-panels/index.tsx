@@ -5,7 +5,8 @@ import ImagekitTestPanel from './ImagekitTestPanel';
 import PexelsTestPanel from './PexelsTestPanel';
 import CallTestPanel from './CallTestPanel';
 import AiTestPanel from './AiTestPanel';
-import GoogleTestPanel from './GoogleTestPanel';
+import GoogleMapsTest from './GoogleMapsTest';
+import GoogleOAuthTab from './GoogleOAuthTab';
 
 function Panel({ entry }: { entry: EnvEntry }) {
   switch (entry.category) {
@@ -15,12 +16,15 @@ function Panel({ entry }: { entry: EnvEntry }) {
       return <ImagekitTestPanel entry={entry} />;
     case 'PEXELS':
       return <PexelsTestPanel entry={entry} />;
-    case 'GOOGLE':
-      return <GoogleTestPanel entry={entry} />;
+    case 'GOOGLE_MAPS':
+      return <GoogleMapsTest />;
+    case 'GOOGLE_OAUTH':
+      return <GoogleOAuthTab entry={entry} />;
     case 'TWILIO':
     case 'VOBIZ':
       return <CallTestPanel entry={entry} />;
-    case 'AI':
+    case 'OPENAI':
+    case 'GEMINI':
       return <AiTestPanel entry={entry} />;
     default:
       return null;

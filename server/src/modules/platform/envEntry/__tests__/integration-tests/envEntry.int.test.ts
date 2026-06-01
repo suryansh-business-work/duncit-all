@@ -42,8 +42,8 @@ describe('envEntryService integration', () => {
   });
 
   it('maps entries to a portal (add + remove) idempotently', async () => {
-    const x = await envEntryService.create({ name: 'X', category: 'AI', config: cfg({ api_key: 'k' }) });
-    const y = await envEntryService.create({ name: 'Y', category: 'GOOGLE', config: cfg({ maps_api_key: 'k' }) });
+    const x = await envEntryService.create({ name: 'X', category: 'OPENAI', config: cfg({ api_key: 'k' }) });
+    const y = await envEntryService.create({ name: 'Y', category: 'GOOGLE_MAPS', config: cfg({ maps_api_key: 'k' }) });
     await envEntryService.setPortalAssignments('crm', [x!.id, y!.id]);
     expect((await envEntryService.listForPortal('crm')).length).toBe(2);
     // Removing y from the set unassigns it but keeps x.
@@ -83,14 +83,14 @@ describe('envEntryService integration', () => {
   });
 
   it('resolveForPortal uses the assigned entry, else the category default', async () => {
-    const def = await envEntryService.create({ name: 'Default AI', category: 'AI', is_default: true, config: cfg({ api_key: 'def' }) });
-    const special = await envEntryService.create({ name: 'CRM AI', category: 'AI', config: cfg({ api_key: 'crm' }) });
+    const def = await envEntryService.create({ name: 'Default AI', category: 'OPENAI', is_default: true, config: cfg({ api_key: 'def' }) });
+    const special = await envEntryService.create({ name: 'CRM AI', category: 'OPENAI', config: cfg({ api_key: 'crm' }) });
     await envEntryService.setPortalAssignments('crm', [special!.id]);
 
     // crm has its own assigned entry
-    expect((await envEntryService.resolveForPortal('crm', 'AI'))?.id).toBe(special!.id);
+    expect((await envEntryService.resolveForPortal('crm', 'OPENAI'))?.id).toBe(special!.id);
     // a portal with nothing assigned falls back to the default
-    expect((await envEntryService.resolveForPortal('finance', 'AI'))?.id).toBe(def!.id);
+    expect((await envEntryService.resolveForPortal('finance', 'OPENAI'))?.id).toBe(def!.id);
     await EnvEntryModel.deleteMany({});
   });
 

@@ -3,9 +3,20 @@ import { Schema, model, InferSchemaType } from 'mongoose';
 /**
  * Environment categories the Tech portal manages. Each category can hold
  * MULTIPLE named entries (e.g. two ImageKit accounts, three SMTP mailboxes).
- * "Email" is SMTP. Vobiz, Twilio, Google, Pexels, AI round out the set.
+ * "Email" is SMTP. Google is split into OAuth vs Maps, and AI into OpenAI vs
+ * Gemini, since each side has distinct fields + its own test.
  */
-export const ENV_CATEGORIES = ['EMAIL', 'IMAGEKIT', 'PEXELS', 'GOOGLE', 'TWILIO', 'AI', 'VOBIZ'] as const;
+export const ENV_CATEGORIES = [
+  'EMAIL',
+  'IMAGEKIT',
+  'PEXELS',
+  'GOOGLE_OAUTH',
+  'GOOGLE_MAPS',
+  'TWILIO',
+  'OPENAI',
+  'GEMINI',
+  'VOBIZ',
+] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 
 /**

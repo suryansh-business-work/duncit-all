@@ -70,10 +70,11 @@ export const TEST_ENV_TWILIO = gql`
 export const TEST_ENV_VOBIZ = gql`
   mutation TestEnvVobiz($id: ID!, $to: String!) { testEnvVobizCall(id: $id, to: $to) ${RICH} }
 `;
-export const TEST_ENV_AI = gql`
-  mutation TestEnvAi($id: ID!, $provider: AiTestProvider!, $prompt: String!) {
-    testEnvAi(id: $id, provider: $provider, prompt: $prompt) ${RICH}
-  }
+export const TEST_ENV_OPENAI = gql`
+  mutation TestEnvOpenai($id: ID!, $prompt: String!) { testEnvOpenai(id: $id, prompt: $prompt) ${RICH} }
+`;
+export const TEST_ENV_GEMINI = gql`
+  mutation TestEnvGemini($id: ID!, $prompt: String!) { testEnvGemini(id: $id, prompt: $prompt) ${RICH} }
 `;
 
 export interface RichTestResult {
@@ -83,7 +84,16 @@ export interface RichTestResult {
   data?: string | null;
 }
 
-export type EnvCategory = 'EMAIL' | 'IMAGEKIT' | 'PEXELS' | 'GOOGLE' | 'TWILIO' | 'AI' | 'VOBIZ';
+export type EnvCategory =
+  | 'EMAIL'
+  | 'IMAGEKIT'
+  | 'PEXELS'
+  | 'GOOGLE_OAUTH'
+  | 'GOOGLE_MAPS'
+  | 'TWILIO'
+  | 'OPENAI'
+  | 'GEMINI'
+  | 'VOBIZ';
 
 export interface EnvFieldDef {
   name: string;

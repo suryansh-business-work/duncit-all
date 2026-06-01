@@ -82,20 +82,25 @@ describe('envEntry interactive tests', () => {
     expect(res.data).toBe('VC1');
   });
 
-  it('ai: runs OpenAI and Gemini prompts', async () => {
-    const entry = await envEntryService.create({ name: 'AI', category: 'AI', config: cfg({ api_key: 'k' }) });
+  it('openai + gemini run prompts against their own categories', async () => {
+    const openai = await envEntryService.create({ name: 'OAI', category: 'OPENAI', config: cfg({ api_key: 'k' }) });
     (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: 'hi' } }] }) });
-    expect((await envEntryTests.ai(entry!.id, 'OPENAI', 'hello')).data).toBe('hi');
+    expect((await envEntryTests.openai(openai!.id, 'hello')).data).toBe('hi');
+
+    const gemini = await envEntryService.create({ name: 'GEM', category: 'GEMINI', config: cfg({ api_key: 'k' }) });
     (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ candidates: [{ content: { parts: [{ text: 'namaste' }] } }] }) });
-    expect((await envEntryTests.ai(entry!.id, 'GEMINI', 'hello')).data).toBe('namaste');
+    expect((await envEntryTests.gemini(gemini!.id, 'hello')).data).toBe('namaste');
+
+    // category guard: openai test on a gemini entry throws
+    await expect(envEntryTests.openai(gemini!.id, 'x')).rejects.toThrow(/not a OPENAI entry/i);
   });
 
-  it('ai: surfaces upstream errors and missing key', async () => {
-    const entry = await envEntryService.create({ name: 'AI2', category: 'AI', config: cfg({}) });
-    expect((await envEntryTests.ai(entry!.id, 'OPENAI', 'x')).ok).toBe(false);
-    const ok = await envEntryService.create({ name: 'AI3', category: 'AI', config: cfg({ api_key: 'k' }) });
+  it('openai: surfaces upstream errors and missing key', async () => {
+    const noKey = await envEntryService.create({ name: 'OAI2', category: 'OPENAI', config: cfg({}) });
+    expect((await envEntryTests.openai(noKey!.id, 'x')).ok).toBe(false);
+    const ok = await envEntryService.create({ name: 'OAI3', category: 'OPENAI', config: cfg({ api_key: 'k' }) });
     (global as any).fetch = jest.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({ error: { message: 'bad key' } }) });
-    const res = await envEntryTests.ai(ok!.id, 'OPENAI', 'x');
+    const res = await envEntryTests.openai(ok!.id, 'x');
     expect(res.ok).toBe(false);
     expect(res.message).toMatch(/bad key/);
   });

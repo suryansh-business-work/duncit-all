@@ -11,9 +11,11 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   EMAIL: 'Email (SMTP)',
   IMAGEKIT: 'ImageKit',
   PEXELS: 'Pexels',
-  GOOGLE: 'Google',
+  GOOGLE_OAUTH: 'Google OAuth',
+  GOOGLE_MAPS: 'Google Map',
   TWILIO: 'Twilio',
-  AI: 'AI Provider',
+  OPENAI: 'OpenAI',
+  GEMINI: 'Gemini',
   VOBIZ: 'Vobiz',
 };
 
@@ -123,13 +125,13 @@ export const envEntryResolvers = {
       requireRole(ctx, TECH_MANAGE);
       return envEntryTests.vobizCall(args.id, args.to);
     },
-    testEnvAi: async (
-      _p: unknown,
-      args: { id: string; provider: 'OPENAI' | 'GEMINI'; prompt: string },
-      ctx: GraphQLContext
-    ) => {
+    testEnvOpenai: async (_p: unknown, args: { id: string; prompt: string }, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);
-      return envEntryTests.ai(args.id, args.provider, args.prompt);
+      return envEntryTests.openai(args.id, args.prompt);
+    },
+    testEnvGemini: async (_p: unknown, args: { id: string; prompt: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, TECH_MANAGE);
+      return envEntryTests.gemini(args.id, args.prompt);
     },
   },
 };

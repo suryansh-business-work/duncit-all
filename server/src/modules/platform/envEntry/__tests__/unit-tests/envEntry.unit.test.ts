@@ -30,7 +30,7 @@ describe('envEntry unit', () => {
     const badFetch = (status = 401) => jest.fn().mockResolvedValue({ ok: false, status, json: async () => ({}) });
     afterEach(() => { delete (global as any).fetch; });
 
-    it.each(['IMAGEKIT', 'PEXELS', 'TWILIO', 'AI', 'VOBIZ'] as const)('requires credentials for %s', async (c) => {
+    it.each(['IMAGEKIT', 'PEXELS', 'TWILIO', 'OPENAI', 'GEMINI', 'VOBIZ'] as const)('requires credentials for %s', async (c) => {
       const res = await testEnvConnection(c, {});
       expect(res.ok).toBe(false);
     });
@@ -40,22 +40,28 @@ describe('envEntry unit', () => {
       expect((await testEnvConnection('EMAIL', { host: 'smtp.test' })).ok).toBe(true);
     });
 
-    it('passes IMAGEKIT/PEXELS/TWILIO/AI/VOBIZ on a 200', async () => {
+    it('GOOGLE_OAUTH passes on a client_id without a network call', async () => {
+      expect((await testEnvConnection('GOOGLE_OAUTH', {})).ok).toBe(false);
+      expect((await testEnvConnection('GOOGLE_OAUTH', { client_id: 'cid' })).ok).toBe(true);
+    });
+
+    it('passes IMAGEKIT/PEXELS/TWILIO/OPENAI/GEMINI/VOBIZ on a 200', async () => {
       (global as any).fetch = okFetch();
       expect((await testEnvConnection('IMAGEKIT', { private_key: 'k' })).ok).toBe(true);
       expect((await testEnvConnection('PEXELS', { api_key: 'k' })).ok).toBe(true);
       expect((await testEnvConnection('TWILIO', { account_sid: 's', auth_token: 't' })).ok).toBe(true);
-      expect((await testEnvConnection('AI', { api_key: 'k', base_url: 'https://x/v1/' })).ok).toBe(true);
+      expect((await testEnvConnection('OPENAI', { api_key: 'k', base_url: 'https://x/v1/' })).ok).toBe(true);
+      expect((await testEnvConnection('GEMINI', { api_key: 'k' })).ok).toBe(true);
       expect((await testEnvConnection('VOBIZ', { base_url: 'https://v', api_key: 'k' })).ok).toBe(true);
     });
 
-    it('fails on a non-200 and on Google REQUEST_DENIED', async () => {
+    it('fails on a non-200 and on Google Maps REQUEST_DENIED', async () => {
       (global as any).fetch = badFetch(403);
       expect((await testEnvConnection('IMAGEKIT', { private_key: 'k' })).ok).toBe(false);
       (global as any).fetch = okFetch({ status: 'REQUEST_DENIED', error_message: 'bad' });
-      expect((await testEnvConnection('GOOGLE', { maps_api_key: 'k' })).ok).toBe(false);
+      expect((await testEnvConnection('GOOGLE_MAPS', { maps_api_key: 'k' })).ok).toBe(false);
       (global as any).fetch = okFetch({ status: 'OK' });
-      expect((await testEnvConnection('GOOGLE', { maps_api_key: 'k' })).ok).toBe(true);
+      expect((await testEnvConnection('GOOGLE_MAPS', { maps_api_key: 'k' })).ok).toBe(true);
     });
 
     it('reports a network failure as not-ok', async () => {

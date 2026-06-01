@@ -172,28 +172,13 @@ const impl = {
     }
   },
 
-  /** Run a tiny prompt against OpenAI or Gemini using the entry's API key. */
-  async ai(id: string, provider: string, prompt: string): Promise<EnvTestRichResult> {
-    const config = await rawConfig(id, 'AI');
+  /** Run a tiny prompt against an OpenAI entry's API key. */
+  async openai(id: string, prompt: string): Promise<EnvTestRichResult> {
+    const config = await rawConfig(id, 'OPENAI');
     const apiKey = str(config, 'api_key');
     if (!apiKey) return { ok: false, message: 'API key is not configured' };
     const text = prompt.trim() || 'Say hello in one short sentence.';
     try {
-      if (provider === 'GEMINI') {
-        const model = str(config, 'model') || 'gemini-1.5-flash';
-        const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
-        const res = await fetch(url, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ contents: [{ parts: [{ text }] }] }),
-        });
-        const json: any = await res.json().catch(() => ({}));
-        if (!res.ok) return { ok: false, message: json?.error?.message || `Gemini error (HTTP ${res.status})` };
-        const reply = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
-        await touch(id);
-        return { ok: true, message: 'Gemini responded', data: reply };
-      }
-      // OpenAI (default)
       const base = (str(config, 'base_url') || 'https://api.openai.com/v1').replace(/\/$/, '');
       const model = str(config, 'model') || 'gpt-4o-mini';
       const res = await fetch(`${base}/chat/completions`, {
@@ -207,7 +192,31 @@ const impl = {
       await touch(id);
       return { ok: true, message: 'OpenAI responded', data: reply };
     } catch (err: any) {
-      return { ok: false, message: err?.message || 'AI request failed' };
+      return { ok: false, message: err?.message || 'OpenAI request failed' };
+    }
+  },
+
+  /** Run a tiny prompt against a Gemini entry's API key. */
+  async gemini(id: string, prompt: string): Promise<EnvTestRichResult> {
+    const config = await rawConfig(id, 'GEMINI');
+    const apiKey = str(config, 'api_key');
+    if (!apiKey) return { ok: false, message: 'API key is not configured' };
+    const text = prompt.trim() || 'Say hello in one short sentence.';
+    try {
+      const model = str(config, 'model') || 'gemini-1.5-flash';
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${encodeURIComponent(apiKey)}`;
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ contents: [{ parts: [{ text }] }] }),
+      });
+      const json: any = await res.json().catch(() => ({}));
+      if (!res.ok) return { ok: false, message: json?.error?.message || `Gemini error (HTTP ${res.status})` };
+      const reply = json?.candidates?.[0]?.content?.parts?.[0]?.text ?? '';
+      await touch(id);
+      return { ok: true, message: 'Gemini responded', data: reply };
+    } catch (err: any) {
+      return { ok: false, message: err?.message || 'Gemini request failed' };
     }
   },
 };
@@ -224,5 +233,6 @@ export const envEntryTests = {
   pexels: (id: string, query: string) => tracked(id, () => impl.pexels(id, query)),
   twilioCall: (id: string, to: string) => tracked(id, () => impl.twilioCall(id, to)),
   vobizCall: (id: string, to: string) => tracked(id, () => impl.vobizCall(id, to)),
-  ai: (id: string, provider: string, prompt: string) => tracked(id, () => impl.ai(id, provider, prompt)),
+  openai: (id: string, prompt: string) => tracked(id, () => impl.openai(id, prompt)),
+  gemini: (id: string, prompt: string) => tracked(id, () => impl.gemini(id, prompt)),
 };

@@ -92,7 +92,7 @@ export async function testEnvConnection(
       const res = await fetch('https://api.pexels.com/v1/curated?per_page=1', { headers: { Authorization: str('api_key') } });
       return res.ok ? { ok: true, message: 'Pexels API key is valid' } : { ok: false, message: `Pexels rejected the key (HTTP ${res.status})` };
     }
-    if (category === 'GOOGLE') {
+    if (category === 'GOOGLE_MAPS') {
       if (!str('maps_api_key')) return { ok: false, message: 'Maps API key is required' };
       const url = `https://maps.googleapis.com/maps/api/geocode/json?address=test&key=${encodeURIComponent(str('maps_api_key'))}`;
       const res = await fetch(url);
@@ -100,17 +100,27 @@ export async function testEnvConnection(
       if (json?.status === 'REQUEST_DENIED') return { ok: false, message: json.error_message || 'Google denied the request' };
       return { ok: true, message: 'Google Maps API key is valid' };
     }
+    if (category === 'GOOGLE_OAUTH') {
+      if (!str('client_id')) return { ok: false, message: 'OAuth Client ID is required' };
+      // Client ID is public; the real test is the interactive browser sign-in.
+      return { ok: true, message: 'Client ID set — run the OAuth sign-in test to verify' };
+    }
     if (category === 'TWILIO') {
       if (!str('account_sid') || !str('auth_token')) return { ok: false, message: 'Account SID and auth token are required' };
       const auth = 'Basic ' + Buffer.from(`${str('account_sid')}:${str('auth_token')}`).toString('base64');
       const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(str('account_sid'))}.json`, { headers: { Authorization: auth } });
       return res.ok ? { ok: true, message: 'Twilio credentials are valid' } : { ok: false, message: `Twilio rejected the credentials (HTTP ${res.status})` };
     }
-    if (category === 'AI') {
+    if (category === 'OPENAI') {
       if (!str('api_key')) return { ok: false, message: 'API key is required' };
       const base = (str('base_url') || 'https://api.openai.com/v1').replace(/\/$/, '');
       const res = await fetch(`${base}/models`, { headers: { Authorization: `Bearer ${str('api_key')}` } });
-      return res.ok ? { ok: true, message: 'AI provider key is valid' } : { ok: false, message: `AI provider rejected the key (HTTP ${res.status})` };
+      return res.ok ? { ok: true, message: 'OpenAI key is valid' } : { ok: false, message: `OpenAI rejected the key (HTTP ${res.status})` };
+    }
+    if (category === 'GEMINI') {
+      if (!str('api_key')) return { ok: false, message: 'API key is required' };
+      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(str('api_key'))}`);
+      return res.ok ? { ok: true, message: 'Gemini key is valid' } : { ok: false, message: `Gemini rejected the key (HTTP ${res.status})` };
     }
     if (category === 'VOBIZ') {
       if (!str('base_url') || !str('api_key')) return { ok: false, message: 'Base URL and API key are required' };

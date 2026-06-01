@@ -95,11 +95,6 @@ export const envEntryTypeDefs = gql`
     data: String
   }
 
-  enum AiTestProvider {
-    OPENAI
-    GEMINI
-  }
-
   extend type Query {
     envEntries(filter: EnvEntryFilter): [EnvEntry!]!
     envEntry(id: ID!): EnvEntry
@@ -123,6 +118,7 @@ export const envEntryTypeDefs = gql`
     testEnvPexels(id: ID!, query: String!): EnvTestRichResult!
     testEnvTwilioCall(id: ID!, to: String!): EnvTestRichResult!
     testEnvVobizCall(id: ID!, to: String!): EnvTestRichResult!
-    testEnvAi(id: ID!, provider: AiTestProvider!, prompt: String!): EnvTestRichResult!
+    testEnvOpenai(id: ID!, prompt: String!): EnvTestRichResult!
+    testEnvGemini(id: ID!, prompt: String!): EnvTestRichResult!
   }
 `;

@@ -33,6 +33,8 @@ export default function EmailTestPanel({ entry }: { entry: EnvEntry }) {
         onChange={(e) => setTo(e.target.value)}
         placeholder="someone@example.com"
         fullWidth
+        autoComplete="off"
+        inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }}
       />
       <Button startIcon={<SendIcon />} variant="contained" onClick={send} disabled={loading || !to.trim()}>
         {loading ? 'Sending…' : 'Send test email'}

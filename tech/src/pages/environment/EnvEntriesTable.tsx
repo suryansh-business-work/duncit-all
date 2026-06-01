@@ -16,7 +16,22 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import StarIcon from '@mui/icons-material/Star';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import ScienceIcon from '@mui/icons-material/Science';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CancelIcon from '@mui/icons-material/Cancel';
+import RemoveIcon from '@mui/icons-material/Remove';
 import type { EnvEntry } from './queries';
+
+function LastTested({ entry }: { entry: EnvEntry }) {
+  if (entry.last_test_ok == null || !entry.last_tested_at) {
+    return <Tooltip title="Not tested yet"><RemoveIcon fontSize="small" color="disabled" /></Tooltip>;
+  }
+  const when = new Date(entry.last_tested_at).toLocaleString();
+  return entry.last_test_ok ? (
+    <Tooltip title={`Passed · ${when}`}><CheckCircleIcon fontSize="small" color="success" /></Tooltip>
+  ) : (
+    <Tooltip title={`Failed · ${when}`}><CancelIcon fontSize="small" color="error" /></Tooltip>
+  );
+}
 
 interface Props {
   entries: EnvEntry[];
@@ -41,6 +56,7 @@ export default function EnvEntriesTable({ entries, onEdit, onDelete, onSetDefaul
           <TableRow>
             <TableCell>Name</TableCell>
             <TableCell>Status</TableCell>
+            <TableCell align="center">Last tested</TableCell>
             <TableCell>Assigned portals</TableCell>
             <TableCell align="right">Actions</TableCell>
           </TableRow>
@@ -58,6 +74,7 @@ export default function EnvEntriesTable({ entries, onEdit, onDelete, onSetDefaul
                   <Chip size="small" variant="outlined" color={e.is_active ? 'success' : 'default'} label={e.is_active ? 'Active' : 'Off'} />
                 </Stack>
               </TableCell>
+              <TableCell align="center"><LastTested entry={e} /></TableCell>
               <TableCell>
                 {e.assigned_portals.length
                   ? <Typography variant="caption">{e.assigned_portals.join(', ')}</Typography>

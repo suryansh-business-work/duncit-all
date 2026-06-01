@@ -104,4 +104,16 @@ describe('envEntry interactive tests', () => {
     const entry = await envEntryService.create({ name: 'PX2', category: 'PEXELS', config: cfg({ api_key: 'k' }) });
     await expect(envEntryTests.email(entry!.id, 'd@x.com')).rejects.toThrow(/not a EMAIL entry/i);
   });
+
+  it('records pass/fail outcome on the entry after a test', async () => {
+    const entry = await envEntryService.create({ name: 'PXrec', category: 'PEXELS', config: cfg({ api_key: 'k' }) });
+    (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ photos: [] }) });
+    await envEntryTests.pexels(entry!.id, 'x');
+    expect((await envEntryService.get(entry!.id))?.last_test_ok).toBe(true);
+    (global as any).fetch = jest.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({}) });
+    await envEntryTests.pexels(entry!.id, 'x');
+    const after = await envEntryService.get(entry!.id);
+    expect(after?.last_test_ok).toBe(false);
+    expect(after?.last_tested_at).toBeTruthy();
+  });
 });

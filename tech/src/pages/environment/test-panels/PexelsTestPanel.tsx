@@ -31,7 +31,7 @@ export default function PexelsTestPanel({ entry }: { entry: EnvEntry }) {
         Searches Pexels with this API key and previews the results.
       </Typography>
       <Stack direction="row" spacing={1}>
-        <TextField label="Search query" value={query} onChange={(e) => setQuery(e.target.value)} fullWidth size="small" />
+        <TextField label="Search query" value={query} onChange={(e) => setQuery(e.target.value)} fullWidth size="small" autoComplete="off" inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }} />
         <Button startIcon={<SearchIcon />} variant="contained" onClick={search} disabled={loading}>
           {loading ? '…' : 'Load'}
         </Button>

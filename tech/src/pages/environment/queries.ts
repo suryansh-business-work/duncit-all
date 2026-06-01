@@ -4,7 +4,7 @@ export const ENV_ENTRY_FIELDS = `
   id name category description is_default is_active assigned_portals
   config { key value }
   secrets { key present }
-  last_used_at created_at updated_at
+  last_used_at last_tested_at last_test_ok created_at updated_at
 `;
 
 export const ENV_CATEGORIES = gql`
@@ -110,6 +110,8 @@ export interface EnvEntry {
   config: { key: string; value: string }[];
   secrets: { key: string; present: boolean }[];
   last_used_at: string | null;
+  last_tested_at: string | null;
+  last_test_ok: boolean | null;
   created_at: string | null;
   updated_at: string | null;
 }

@@ -24,6 +24,8 @@ const envEntrySchema = new Schema(
     config: { type: Schema.Types.Mixed, default: {} },
     assigned_portals: { type: [String], default: [], index: true },
     last_used_at: { type: Date, default: null },
+    last_tested_at: { type: Date, default: null },
+    last_test_ok: { type: Boolean, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

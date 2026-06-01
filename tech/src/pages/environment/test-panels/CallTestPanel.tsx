@@ -38,7 +38,7 @@ export default function CallTestPanel({ entry }: { entry: EnvEntry }) {
       <Typography variant="body2" color="text.secondary">
         Places a real test call from this {entry.category === 'TWILIO' ? 'Twilio' : 'Vobiz'} entry.
       </Typography>
-      <TextField label="Number to call" value={to} onChange={(e) => setTo(e.target.value)} placeholder="+919876543210" fullWidth />
+      <TextField label="Number to call" value={to} onChange={(e) => setTo(e.target.value)} placeholder="+919876543210" fullWidth autoComplete="off" inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }} />
       <Button startIcon={<CallIcon />} variant="contained" color="warning" onClick={call} disabled={loading || !to.trim()}>
         {loading ? 'Calling…' : 'Place test call'}
       </Button>

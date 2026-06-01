@@ -61,20 +61,47 @@ describe('envEntryService integration', () => {
     await expect(envEntryService.test(id)).rejects.toThrow(/not found/i);
   });
 
-  it('resolveRuntime + getRuntimeEnvValue read the default entry, else process.env', async () => {
+  it('resolveRuntime + getRuntimeEnvValue read the default entry; no .env fallback for managed keys', async () => {
     await envEntryService.create({
       name: 'Default IK', category: 'IMAGEKIT', is_default: true,
       config: cfg({ public_key: 'pub', private_key: 'priv', url_endpoint: 'https://ik' }),
     });
     expect((await envEntryService.resolveRuntime('IMAGEKIT'))?.config.private_key).toBe('priv');
-    // Legacy key resolves through the category default.
     expect(await getRuntimeEnvValue('IMAGEKIT_PRIVATE_KEY')).toBe('priv');
     expect(await getRuntimeEnvValue('IMAGEKIT_PUBLIC_KEY')).toBe('pub');
-    // Unmapped key falls through to process.env.
+
+    // A managed key with NO entry must NOT read process.env.
+    process.env.PEXELS_API_KEY = 'leak-from-env';
+    expect(await getRuntimeEnvValue('PEXELS_API_KEY')).toBe('');
+    delete process.env.PEXELS_API_KEY;
+
+    // Unmapped key still falls through to process.env.
     process.env.SOME_UNMAPPED_KEY = 'env-val';
     expect(await getRuntimeEnvValue('SOME_UNMAPPED_KEY')).toBe('env-val');
     delete process.env.SOME_UNMAPPED_KEY;
     await EnvEntryModel.deleteMany({});
+  });
+
+  it('resolveForPortal uses the assigned entry, else the category default', async () => {
+    const def = await envEntryService.create({ name: 'Default AI', category: 'AI', is_default: true, config: cfg({ api_key: 'def' }) });
+    const special = await envEntryService.create({ name: 'CRM AI', category: 'AI', config: cfg({ api_key: 'crm' }) });
+    await envEntryService.setPortalAssignments('crm', [special!.id]);
+
+    // crm has its own assigned entry
+    expect((await envEntryService.resolveForPortal('crm', 'AI'))?.id).toBe(special!.id);
+    // a portal with nothing assigned falls back to the default
+    expect((await envEntryService.resolveForPortal('finance', 'AI'))?.id).toBe(def!.id);
+    await EnvEntryModel.deleteMany({});
+  });
+
+  it('test() stamps last_tested_at + last_test_ok', async () => {
+    (global as any).fetch = jest.fn().mockResolvedValue({ ok: false, status: 401, json: async () => ({}) });
+    const created = await envEntryService.create({ name: 'IKx', category: 'IMAGEKIT', config: cfg({ private_key: 'bad' }) });
+    await envEntryService.test(created!.id);
+    const after = await envEntryService.get(created!.id);
+    expect(after?.last_tested_at).toBeTruthy();
+    expect(after?.last_test_ok).toBe(false);
+    delete (global as any).fetch;
   });
 
   it('records last_used_at on a successful test()', async () => {

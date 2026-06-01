@@ -47,6 +47,8 @@ export const envEntryTypeDefs = gql`
     config: [EnvConfigPair!]!
     secrets: [EnvSecretFlag!]!
     last_used_at: String
+    last_tested_at: String
+    last_test_ok: Boolean
     created_at: String
     updated_at: String
   }

@@ -26,7 +26,19 @@ async function touch(id: string) {
   await EnvEntryModel.updateOne({ _id: id }, { $set: { last_used_at: new Date() } });
 }
 
-export const envEntryTests = {
+/** Stamp the test outcome (green check / red) shown in the entries table. */
+async function record(id: string, ok: boolean) {
+  await EnvEntryModel.updateOne({ _id: id }, { $set: { last_tested_at: new Date(), last_test_ok: ok } });
+}
+
+/** Run a test fn and persist its pass/fail outcome before returning it. */
+async function tracked(id: string, fn: () => Promise<EnvTestRichResult>): Promise<EnvTestRichResult> {
+  const result = await fn();
+  await record(id, result.ok);
+  return result;
+}
+
+const impl = {
   /** Send a real email through the entry's SMTP config. */
   async email(id: string, to: string): Promise<EnvTestRichResult> {
     const config = await rawConfig(id, 'EMAIL');
@@ -198,4 +210,19 @@ export const envEntryTests = {
       return { ok: false, message: err?.message || 'AI request failed' };
     }
   },
+};
+
+/**
+ * Public interface — every test records its pass/fail outcome on the entry
+ * (last_tested_at + last_test_ok) so the table can show a green check.
+ * `rawConfig` throwing (not-found / category mismatch) propagates unchanged.
+ */
+export const envEntryTests = {
+  email: (id: string, to: string) => tracked(id, () => impl.email(id, to)),
+  imagekitUpload: (id: string, fileBase64: string, fileName: string) =>
+    tracked(id, () => impl.imagekitUpload(id, fileBase64, fileName)),
+  pexels: (id: string, query: string) => tracked(id, () => impl.pexels(id, query)),
+  twilioCall: (id: string, to: string) => tracked(id, () => impl.twilioCall(id, to)),
+  vobizCall: (id: string, to: string) => tracked(id, () => impl.vobizCall(id, to)),
+  ai: (id: string, provider: string, prompt: string) => tracked(id, () => impl.ai(id, provider, prompt)),
 };

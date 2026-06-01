@@ -40,10 +40,17 @@ const pub = (doc: any) => {
     })),
     secrets: Object.entries(secrets).map(([key, present]) => ({ key, present })),
     last_used_at: iso(o.last_used_at),
+    last_tested_at: iso(o.last_tested_at),
+    last_test_ok: o.last_test_ok ?? null,
     created_at: iso(o.created_at),
     updated_at: iso(o.updated_at),
   };
 };
+
+/** Record the outcome of any interactive/credential test on the entry. */
+export async function recordTestResult(id: string, ok: boolean) {
+  await EnvEntryModel.updateOne({ _id: id }, { $set: { last_tested_at: new Date(), last_test_ok: ok } });
+}
 
 function notFound(): never {
   throw new GraphQLError('Environment entry not found', { extensions: { code: 'NOT_FOUND' } });
@@ -214,7 +221,9 @@ export const envEntryService = {
     const doc = await EnvEntryModel.findById(id);
     if (!doc) notFound();
     const result = await testEnvConnection(doc.category as EnvCategory, (doc.config ?? {}) as EnvEntryConfig);
-    if (result.ok) await EnvEntryModel.updateOne({ _id: doc._id }, { $set: { last_used_at: new Date() } });
+    const set: any = { last_tested_at: new Date(), last_test_ok: result.ok };
+    if (result.ok) set.last_used_at = new Date();
+    await EnvEntryModel.updateOne({ _id: doc._id }, { $set: set });
     return result;
   },
 
@@ -250,6 +259,22 @@ export const envEntryService = {
     const fallback = await EnvEntryModel.findOne({ category, is_active: true, is_default: true });
     if (fallback) return { id: String(fallback._id), name: fallback.name, config: (fallback.config ?? {}) as EnvEntryConfig };
     return null;
+  },
+
+  /**
+   * Resolve the entry a given portal should use for a category:
+   *   1. an active entry of that category assigned to the portal,
+   *   2. else the category's active default (so every portal gets the default
+   *      when nothing else is assigned).
+   */
+  async resolveForPortal(portalKey: string, category: EnvCategory) {
+    const assigned = await EnvEntryModel.findOne({
+      category,
+      is_active: true,
+      assigned_portals: portalKey.trim(),
+    }).sort({ is_default: -1, name: 1 });
+    if (assigned) return { id: String(assigned._id), name: assigned.name, config: (assigned.config ?? {}) as EnvEntryConfig };
+    return this.resolveRuntime(category);
   },
 };
 

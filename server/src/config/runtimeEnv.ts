@@ -2,13 +2,16 @@ import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 import { ENV_KEY_MAP } from '@modules/platform/envEntry/envEntry.fields';
 
 /**
- * Resolve a server-side config value for a legacy env key. Order:
- *   1. The active default EnvEntry for the key's category (Tech portal),
- *   2. process.env fallback.
+ * Resolve a server-side config value for a legacy env key.
  *
- * Keys not mapped to a category (URLs, dev flags, etc.) read straight from
- * process.env. Keeping this signature means every existing caller
- * (upload/twilio/vobiz/servam/url-configs/google) works unchanged.
+ * For keys that map to a managed category (Email/ImageKit/Pexels/Google/Twilio/
+ * AI/Vobiz) the value comes EXCLUSIVELY from the active default EnvEntry — there
+ * is no `.env` fallback, since those credentials are owned by the Tech portal.
+ *
+ * Keys NOT mapped to a category (URLs, dev flags, JWT secret, etc.) still read
+ * from process.env, because they aren't part of the env-entry system.
+ *
+ * Signature is unchanged so every existing caller works as before.
  */
 export async function getRuntimeEnvValue(key: string): Promise<string> {
   const normalized = key.toUpperCase();
@@ -20,7 +23,7 @@ export async function getRuntimeEnvValue(key: string): Promise<string> {
       is_default: true,
     }).lean();
     const raw = (entry?.config as Record<string, unknown> | undefined)?.[mapping.field];
-    if (raw !== undefined && raw !== null && raw !== '') return String(raw);
+    return raw !== undefined && raw !== null ? String(raw) : '';
   }
   return process.env[normalized] ?? '';
 }

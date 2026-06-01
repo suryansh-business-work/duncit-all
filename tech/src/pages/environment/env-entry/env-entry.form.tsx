@@ -61,6 +61,8 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
               helperText={(formik.touched.name && formik.errors.name) || 'A label to tell entries apart'}
               fullWidth
               required
+              autoComplete="off"
+              inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }}
             />
             <TextField
               label="Description"
@@ -110,6 +112,8 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
                   error={Boolean(configError(field.name))}
                   helperText={configError(field.name) || (field.secret ? secretHelper(field.name) : ' ')}
                   fullWidth
+                  autoComplete={field.secret ? 'new-password' : 'off'}
+                  inputProps={{ autoComplete: field.secret ? 'new-password' : 'off', 'data-1p-ignore': true, 'data-lpignore': true }}
                 />
               );
             })}

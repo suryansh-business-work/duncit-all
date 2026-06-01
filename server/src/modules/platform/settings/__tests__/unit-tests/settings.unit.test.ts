@@ -3,18 +3,6 @@ import { settingsResolvers } from '../../settings.resolver';
 import { makeContext } from '@test/harness';
 
 describe('settings unit', () => {
-  it('updateEnvironmentVariable rejects an unmanaged key', async () => {
-    await expect(
-      settingsService.updateEnvironmentVariable('server', 'NOT_A_REAL_KEY', 'x')
-    ).rejects.toThrow(/not managed/i);
-  });
-
-  it('clearEnvironmentVariable rejects an unmanaged key', async () => {
-    await expect(
-      settingsService.clearEnvironmentVariable('server', 'NOT_A_REAL_KEY')
-    ).rejects.toThrow(/not managed/i);
-  });
-
   it('appSettings query is gated to admin read roles', async () => {
     await expect(
       (settingsResolvers.Query as any).appSettings({}, {}, makeContext({ roles: ['USER'] }))

@@ -1,4 +1,4 @@
-import { getRuntimeEnvValue } from '../../config/runtimeEnv';
+import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { commsProviderService, type CommsProviderRuntimeConfig } from '@modules/crm/commsProvider/commsProvider.service';
 
 export interface VobizResult {

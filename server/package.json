@@ -15,7 +15,6 @@
     "test:integration": "jest --selectProjects integration --runInBand",
     "test:e2e": "jest --selectProjects e2e --runInBand",
     "test:coverage": "jest --coverage --runInBand",
-    "migrate:env-scope": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-env-scope.ts",
     "migrate:user-schema": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-user-schema.ts",
     "migrate:user-schema:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-user-schema.ts --dry-run",
     "migrate:user-schema:rollback": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-user-schema-rollback.ts"

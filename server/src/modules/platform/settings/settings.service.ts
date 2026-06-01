@@ -1,15 +1,8 @@
 import { GraphQLError } from 'graphql';
 import {
-  getRuntimeEnvDefinition,
-  getRuntimeEnvRows,
-  getRuntimeEnvScopeSummary,
-  SERVER_SCOPE,
-} from '@config/runtimeEnv';
-import {
   AppSettingsModel,
   FeatureFlagModel,
   BrandingModel,
-  EnvironmentVariableModel,
 } from './settings.model';
 
 const toAppPub = (d: any) => ({
@@ -178,47 +171,6 @@ export const settingsService = {
       { new: true, upsert: true }
     );
     return brandingToPub(doc);
-  },
-
-  async listEnvironmentScopes() {
-    return getRuntimeEnvScopeSummary();
-  },
-
-  async listEnvironmentVariables(scope: string = SERVER_SCOPE) {
-    return getRuntimeEnvRows(scope);
-  },
-
-  async updateEnvironmentVariable(
-    scope: string,
-    key: string,
-    value: string,
-    updatedBy?: string | null
-  ) {
-    const normalizedScope = scope.trim() || SERVER_SCOPE;
-    const normalized = key.toUpperCase().trim();
-    if (!getRuntimeEnvDefinition(normalizedScope, normalized)) {
-      throw new GraphQLError('Environment variable is not managed', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-    await EnvironmentVariableModel.updateOne(
-      { scope: normalizedScope, key: normalized },
-      { $set: { value, updated_by: updatedBy || null } },
-      { upsert: true }
-    );
-    return (await getRuntimeEnvRows(normalizedScope)).find((row) => row.key === normalized)!;
-  },
-
-  async clearEnvironmentVariable(scope: string, key: string) {
-    const normalizedScope = scope.trim() || SERVER_SCOPE;
-    const normalized = key.toUpperCase().trim();
-    if (!getRuntimeEnvDefinition(normalizedScope, normalized)) {
-      throw new GraphQLError('Environment variable is not managed', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-    await EnvironmentVariableModel.deleteOne({ scope: normalizedScope, key: normalized });
-    return (await getRuntimeEnvRows(normalizedScope)).find((row) => row.key === normalized)!;
   },
 
   async seedDefaults() {

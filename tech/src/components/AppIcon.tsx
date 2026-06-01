@@ -5,8 +5,8 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ForumIcon from '@mui/icons-material/Forum';
 import FlagIcon from '@mui/icons-material/Flag';
 import LockIcon from '@mui/icons-material/Lock';
-import ExtensionIcon from '@mui/icons-material/Extension';
 import ConstructionIcon from '@mui/icons-material/Construction';
+import HubIcon from '@mui/icons-material/Hub';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 
 const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
@@ -16,8 +16,8 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   forum: ForumIcon,
   flag: FlagIcon,
   lock: LockIcon,
-  extension: ExtensionIcon,
   construction: ConstructionIcon,
+  hub: HubIcon,
 };
 
 /** Resolves a config icon name to an MUI icon, falling back to a neutral glyph. */

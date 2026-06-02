@@ -20,12 +20,9 @@ import BrandingPage from './pages/BrandingPage';
 import InterviewRequestsPage from './pages/InterviewRequestsPage';
 import FaqsPage from './pages/FaqsPage';
 import SupportLogsPage from './pages/SupportLogsPage';
-import VenueDetailsPage from './pages/VenueDetailsPage';
 import EmailTemplatesPage from './pages/EmailTemplatesPage';
 import PodIdeasPage from './pages/PodIdeasPage';
 import BadgesPage from './pages/BadgesPage';
-import VenuesPage from './pages/VenuesPage';
-import HostsPage from './pages/HostsPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
 import { redirectPathFromLocation } from './utils/redirect';
@@ -65,9 +62,6 @@ export default function App() {
                 <Route path="/email-templates" element={<EmailTemplatesPage />} />
                 <Route path="/pod-ideas" element={<PodIdeasPage />} />
                 <Route path="/badges" element={<BadgesPage />} />
-                <Route path="/venues" element={<VenuesPage />} />
-                <Route path="/venues/:venueId" element={<VenueDetailsPage />} />
-                <Route path="/hosts" element={<HostsPage />} />
                 <Route path="/partners/faqs" element={<PartnerFaqsPage />} />
                 <Route path="/pod-plans" element={<PodPlansPage />} />
                 <Route path="/branding" element={<BrandingPage />} />

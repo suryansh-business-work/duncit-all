@@ -6,11 +6,20 @@
 const isDevelopment = import.meta.env.DEV;
 
 const fallback = isDevelopment
-  ? { graphqlUrl: 'http://localhost:2001/graphql', appUrl: 'http://localhost:2006' }
-  : { graphqlUrl: 'https://server.duncit.com/graphql', appUrl: 'https://ads.duncit.com' };
+  ? {
+      graphqlUrl: 'http://localhost:2001/graphql',
+      appUrl: 'http://localhost:2006',
+      mwebUrl: 'http://localhost:2003',
+    }
+  : {
+      graphqlUrl: 'https://server.duncit.com/graphql',
+      appUrl: 'https://ads.duncit.com',
+      mwebUrl: 'https://mweb.duncit.com',
+    };
 
 export const urlConfigs = {
   isDevelopment,
   graphqlUrl: import.meta.env.VITE_GRAPHQL_URL || fallback.graphqlUrl,
   appUrl: import.meta.env.VITE_APP_URL || fallback.appUrl,
+  mwebUrl: import.meta.env.VITE_MWEB_URL || fallback.mwebUrl,
 };

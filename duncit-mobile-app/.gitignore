@@ -1,0 +1,27 @@
+# This app is standalone (npm-based), not part of the pnpm workspace.
+# Re-include the npm lockfile that the root .gitignore excludes.
+!package-lock.json
+
+node_modules/
+.expo/
+dist/
+web-build/
+coverage/
+
+# Native build artefacts
+android/
+ios/
+*.apk
+*.aab
+*.ipa
+
+# Env
+.env
+.env.local
+
+# Logs / OS
+*.log
+.DS_Store
+
+# Expo
+expo-env.d.ts

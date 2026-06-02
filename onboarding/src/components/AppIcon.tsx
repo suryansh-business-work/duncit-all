@@ -11,6 +11,8 @@ import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
+import PeopleIcon from '@mui/icons-material/People';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 
 const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
@@ -26,6 +28,8 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   orders: ReceiptLongIcon,
   location: MyLocationIcon,
   analytics: AnalyticsIcon,
+  people: PeopleIcon,
+  storefront: StorefrontIcon,
 };
 
 /** Resolves a config icon name to an MUI icon, falling back to a neutral glyph. */

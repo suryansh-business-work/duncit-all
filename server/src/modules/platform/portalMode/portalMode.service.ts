@@ -4,6 +4,9 @@ import { PORTAL_REGISTRY } from './portalMode.registry';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
+/** Public URL per portal key — kept in the registry (single source of truth). */
+const URL_BY_KEY = new Map(PORTAL_REGISTRY.map((e) => [e.key, e.url]));
+
 const pub = (doc: any) => ({
   id: String(doc._id),
   key: doc.key,
@@ -11,6 +14,7 @@ const pub = (doc: any) => ({
   kind: doc.kind ?? 'PORTAL',
   mode: (doc.mode ?? 'LIVE') as PortalMode,
   note: doc.note ?? '',
+  url: URL_BY_KEY.get(doc.key) ?? null,
   updated_at: iso(doc.updated_at),
 });
 

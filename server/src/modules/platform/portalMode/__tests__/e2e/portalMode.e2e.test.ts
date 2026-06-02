@@ -33,8 +33,11 @@ describe('portalMode e2e', () => {
     const tech = server.client(signToken({ roles: ['TECH_MANAGER'] }));
     const anon = server.client();
 
-    const list: any = await tech.request(gql`query { portalModes { key mode } }`);
+    const list: any = await tech.request(gql`query { portalModes { key mode url } }`);
     expect(list.portalModes.length).toBeGreaterThan(10);
+    // Every portal exposes a public URL (shown as a link on the Maintenance page).
+    expect(list.portalModes.every((p: any) => /^https?:\/\//.test(p.url))).toBe(true);
+    expect(list.portalModes.find((p: any) => p.key === 'tech').url).toContain('tech.duncit.com');
 
     let res: any = await tech.request(SET, { key: 'crm', mode: 'MAINTENANCE', note: 'db migration' });
     expect(res.setPortalMode.mode).toBe('MAINTENANCE');

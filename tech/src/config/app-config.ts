@@ -61,7 +61,7 @@ export const appConfig: AppConfig = {
   colorModeKey: 'tech_color_mode',
   accent: { light: '#94a3b8', main: '#0ea5e9', hover: '#0284c7', active: '#0369a1' },
   nav: [
-    { label: 'Environment', to: '/', icon: 'settings' },
+    { label: 'Environment Variables', to: '/', icon: 'settings' },
     { label: 'Maintenance', to: '/portal-modes', icon: 'construction' },
     { label: 'Feature Flags', to: '/feature-flags', icon: 'flag' },
     { label: 'Authentication', to: '/authentication', icon: 'lock' },

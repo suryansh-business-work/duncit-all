@@ -74,14 +74,6 @@ describe('envEntry interactive tests', () => {
     expect((await envEntryTests.twilioCall(entry!.id, '')).ok).toBe(false);
   });
 
-  it('vobiz: places a call', async () => {
-    const entry = await envEntryService.create({ name: 'VZ', category: 'VOBIZ', config: cfg({ base_url: 'https://v', api_key: 'k', caller_id: '+1' }) });
-    (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ call_id: 'VC1' }) });
-    const res = await envEntryTests.vobizCall(entry!.id, '+919876543210');
-    expect(res.ok).toBe(true);
-    expect(res.data).toBe('VC1');
-  });
-
   it('openai + gemini run prompts against their own categories', async () => {
     const openai = await envEntryService.create({ name: 'OAI', category: 'OPENAI', config: cfg({ api_key: 'k' }) });
     (global as any).fetch = jest.fn().mockResolvedValue({ ok: true, json: async () => ({ choices: [{ message: { content: 'hi' } }] }) });

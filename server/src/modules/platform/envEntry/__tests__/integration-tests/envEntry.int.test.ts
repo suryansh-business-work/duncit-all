@@ -5,7 +5,7 @@ import { getRuntimeEnvValue } from '@config/runtimeEnv';
 const cfg = (pairs: Record<string, any>) => pairs;
 
 describe('envEntryService integration', () => {
-  it('creates a multi-field EMAIL entry and masks the password', async () => {
+  it('creates a multi-field EMAIL entry and returns the password (revealable in UI)', async () => {
     const created = await envEntryService.create({
       name: 'Sales SMTP',
       category: 'EMAIL',
@@ -14,7 +14,7 @@ describe('envEntryService integration', () => {
     const config = Object.fromEntries(created!.config.map((p) => [p.key, p.value]));
     expect(config.host).toBe('smtp.test');
     expect(config.port).toBe('587');
-    expect(config.password).toBeUndefined(); // secrets never in config[]
+    expect(config.password).toBe('secret'); // secrets are now returned for the Tech portal
     expect(created!.secrets.find((s) => s.key === 'has_password')?.present).toBe(true);
     expect(created!.is_default).toBe(true); // first in category
   });

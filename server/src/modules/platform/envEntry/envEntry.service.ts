@@ -6,17 +6,19 @@ const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
 export type EnvEntryConfig = Record<string, string | number | boolean>;
 
-/** Public projection: non-secret values shown, secrets replaced by has_<field>. */
+/**
+ * Public projection. The Tech portal is the single, role-gated place to manage
+ * credentials, so it shows every value (incl. secrets) behind a client-side
+ * eye-toggle — nothing is masked. `secrets` still flags which fields hold a
+ * value so the UI can mark presence even when a value is blank.
+ */
 const toPublicConfig = (category: EnvCategory, config: EnvEntryConfig = {}) => {
   const fields = CATEGORY_FIELDS[category] ?? [];
   const values: Record<string, string | number | boolean | null> = {};
   const secrets: Record<string, boolean> = {};
   for (const field of fields) {
-    if (field.secret) {
-      secrets[`has_${field.name}`] = Boolean(config[field.name]);
-    } else {
-      values[field.name] = (config[field.name] as any) ?? null;
-    }
+    values[field.name] = (config[field.name] as any) ?? null;
+    if (field.secret) secrets[`has_${field.name}`] = Boolean(config[field.name]);
   }
   return { values, secrets };
 };
@@ -121,11 +123,6 @@ export async function testEnvConnection(
       if (!str('api_key')) return { ok: false, message: 'API key is required' };
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(str('api_key'))}`);
       return res.ok ? { ok: true, message: 'Gemini key is valid' } : { ok: false, message: `Gemini rejected the key (HTTP ${res.status})` };
-    }
-    if (category === 'VOBIZ') {
-      if (!str('base_url') || !str('api_key')) return { ok: false, message: 'Base URL and API key are required' };
-      const res = await fetch(`${str('base_url').replace(/\/$/, '')}/ping`, { headers: { Authorization: `Bearer ${str('api_key')}` } });
-      return res.ok ? { ok: true, message: 'Vobiz endpoint reachable' } : { ok: false, message: `Vobiz returned HTTP ${res.status}` };
     }
     // EMAIL (SMTP) — no cheap unauthenticated probe; validate required fields.
     if (!str('host')) return { ok: false, message: 'SMTP host is required' };

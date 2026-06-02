@@ -15,6 +15,7 @@ import {
 import UploadIcon from '@mui/icons-material/Upload';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { UPLOAD_IMAGE } from '../../api/crm.gql';
+import { fileToBase64 } from '../../utils/fileToBase64';
 import { parseApiError } from '../../utils/parseApiError';
 
 interface Props {
@@ -26,19 +27,6 @@ interface Props {
   /** Render as a circular avatar (host profile photo) vs. a square preview. */
   shape?: 'circle' | 'square';
 }
-
-const fileToBase64 = (file: File): Promise<string> =>
-  new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result || '');
-      // strip the `data:<mime>;base64,` prefix the server doesn't want
-      const comma = result.indexOf(',');
-      resolve(comma >= 0 ? result.slice(comma + 1) : result);
-    };
-    reader.onerror = () => reject(reader.error ?? new Error('Read failed'));
-    reader.readAsDataURL(file);
-  });
 
 /**
  * Upload-an-image field bound to Formik. Stores the resulting ImageKit URL.

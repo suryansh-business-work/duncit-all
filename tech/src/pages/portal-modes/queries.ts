@@ -9,6 +9,7 @@ export const PORTAL_MODES = gql`
       kind
       mode
       note
+      url
       updated_at
     }
   }
@@ -35,5 +36,6 @@ export interface PortalModeRow {
   kind: PortalModeKind;
   mode: PortalModeState;
   note: string | null;
+  url: string | null;
   updated_at: string | null;
 }

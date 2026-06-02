@@ -150,28 +150,6 @@ const impl = {
     }
   },
 
-  /** Place a real Vobiz call to `to` using the entry's credentials. */
-  async vobizCall(id: string, to: string): Promise<EnvTestRichResult> {
-    const config = await rawConfig(id, 'VOBIZ');
-    const baseUrl = str(config, 'base_url').replace(/\/$/, '');
-    const apiKey = str(config, 'api_key');
-    if (!baseUrl || !apiKey) return { ok: false, message: 'Base URL and API key are required' };
-    if (!to.trim()) return { ok: false, message: 'Recipient number is required' };
-    try {
-      const res = await fetch(`${baseUrl}/calls/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${apiKey}` },
-        body: JSON.stringify({ from: str(config, 'caller_id'), to: to.trim(), record: false }),
-      });
-      const json: any = await res.json().catch(() => ({}));
-      if (!res.ok) return { ok: false, message: `Vobiz call failed (HTTP ${res.status})` };
-      await touch(id);
-      return { ok: true, message: `Call initiated to ${to.trim()}`, data: String(json?.call_id ?? json?.id ?? '') };
-    } catch (err: any) {
-      return { ok: false, message: err?.message || 'Vobiz call failed' };
-    }
-  },
-
   /** Run a tiny prompt against an OpenAI entry's API key. */
   async openai(id: string, prompt: string): Promise<EnvTestRichResult> {
     const config = await rawConfig(id, 'OPENAI');
@@ -232,7 +210,6 @@ export const envEntryTests = {
     tracked(id, () => impl.imagekitUpload(id, fileBase64, fileName)),
   pexels: (id: string, query: string) => tracked(id, () => impl.pexels(id, query)),
   twilioCall: (id: string, to: string) => tracked(id, () => impl.twilioCall(id, to)),
-  vobizCall: (id: string, to: string) => tracked(id, () => impl.vobizCall(id, to)),
   openai: (id: string, prompt: string) => tracked(id, () => impl.openai(id, prompt)),
   gemini: (id: string, prompt: string) => tracked(id, () => impl.gemini(id, prompt)),
 };

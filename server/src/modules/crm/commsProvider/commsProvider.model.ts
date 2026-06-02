@@ -1,16 +1,13 @@
 import { Schema, model, InferSchemaType } from 'mongoose';
 
-export const COMMS_PROVIDER_TYPES = ['SMTP', 'VOBIZ_EMAIL', 'VOBIZ_CALL'] as const;
+export const COMMS_PROVIDER_TYPES = ['SMTP', 'TWILIO_CALL'] as const;
 export type CommsProviderType = (typeof COMMS_PROVIDER_TYPES)[number];
 
 /**
- * A named configuration for sending email or placing calls. Each lead
- * action in CRM can pick which provider to use, so the platform can have
- * multiple SMTP boxes (sales / support / marketing) and multiple Vobiz
- * accounts (e.g. per-city numbers) running side by side.
- *
- * `config` is intentionally untyped (Mixed) so SMTP and Vobiz fields can
- * live in the same model. The service layer validates the keys per type.
+ * A named configuration for sending email (SMTP) or placing calls (Twilio).
+ * The CRM provider picker now lists Tech-portal Environment Variables entries
+ * (EMAIL for SMTP, TWILIO for calls); this legacy model is retained only for
+ * backward compatibility. `config` is Mixed so each type stores its own keys.
  */
 const commsProviderSchema = new Schema(
   {

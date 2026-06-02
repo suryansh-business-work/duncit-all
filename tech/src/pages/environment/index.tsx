@@ -14,7 +14,7 @@ export default function EnvironmentPage() {
       <Stack direction="row" alignItems="center" spacing={1}>
         <TuneIcon color="primary" />
         <Box sx={{ flex: 1, minWidth: 0 }}>
-          <Typography variant="h5" fontWeight={800}>Environment</Typography>
+          <Typography variant="h5" fontWeight={800}>Environment Variables</Typography>
           <Typography variant="body2" color="text.secondary">
             Manage credential entries per category, then map which entries each portal uses.
           </Typography>

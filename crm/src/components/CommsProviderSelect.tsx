@@ -4,7 +4,7 @@ import { MenuItem, TextField } from '@mui/material';
 import { COMMS_PROVIDER_OPTIONS, type CommsProviderOption } from '../api/comms.gql';
 
 interface Props {
-  type: 'SMTP' | 'VOBIZ_EMAIL' | 'VOBIZ_CALL';
+  type: 'SMTP' | 'TWILIO_CALL';
   value: string;
   onChange: (id: string) => void;
   label?: string;
@@ -12,19 +12,23 @@ interface Props {
 }
 
 /**
- * Selects which configured comms provider to use for an email or call.
- * On first mount it auto-selects the active default for the requested
- * type so the user doesn't have to make a choice every time.
+ * Selects which configured comms provider to use for an email or call. Only
+ * ACTIVE providers from the Tech portal are listed (disabled ones never show).
+ * It auto-selects the active default when nothing is chosen — and if the
+ * current selection is no longer active (e.g. disabled in the Tech portal), it
+ * falls back to the default so a disabled provider is never left selected.
  */
 export default function CommsProviderSelect({ type, value, onChange, label = 'Provider', size = 'small' }: Props) {
   const { data, loading } = useQuery<{ commsProviderOptions: CommsProviderOption[] }>(COMMS_PROVIDER_OPTIONS, {
     variables: { type },
-    fetchPolicy: 'cache-first',
+    fetchPolicy: 'cache-and-network',
   });
   const options = data?.commsProviderOptions ?? [];
 
   useEffect(() => {
-    if (!value && options.length) {
+    if (!options.length) return;
+    const selectable = !value || !options.some((opt) => opt.id === value);
+    if (selectable) {
       const def = options.find((opt) => opt.is_default) ?? options[0];
       onChange(def.id);
     }

@@ -3,7 +3,7 @@ import { Button, Snackbar, Stack, Tooltip } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import EmailIcon from '@mui/icons-material/Email';
-import VobizContactDialog from './VobizContactDialog';
+import ContactComposeDialog from './ContactComposeDialog';
 
 interface Props {
   entity: 'VENUE_LEAD' | 'HOST_LEAD';
@@ -16,7 +16,7 @@ interface Props {
 
 /**
  * Quick Call / WhatsApp / Email actions for a lead, rendered beneath the
- * detail-page title. Call & Email open the Vobiz contact dialog (which logs
+ * detail-page title. Call & Email open the contact compose window (which logs
  * the communication); WhatsApp deep-links to wa.me. Buttons disable when the
  * underlying contact detail is missing so users never hit a dead action.
  */
@@ -55,7 +55,7 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
         </span>
       </Tooltip>
 
-      <VobizContactDialog
+      <ContactComposeDialog
         open={mode !== null}
         mode={mode ?? 'email'}
         entity={entity}

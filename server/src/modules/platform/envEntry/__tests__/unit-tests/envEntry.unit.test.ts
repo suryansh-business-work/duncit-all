@@ -28,9 +28,12 @@ describe('envEntry unit', () => {
   });
 
   it('SDL exposes a per-category interactive test mutation for the categories that have one', () => {
-    for (const mutation of ['testEnvEmail', 'testEnvImagekitUpload', 'testEnvPexels', 'testEnvTwilioCall', 'testEnvVobizCall', 'testEnvOpenai', 'testEnvGemini']) {
+    for (const mutation of ['testEnvEmail', 'testEnvImagekitUpload', 'testEnvPexels', 'testEnvTwilioCall', 'testEnvOpenai', 'testEnvGemini']) {
       expect(sdl).toContain(mutation);
     }
+    // Vobiz was removed — its category, test mutation and field map are gone.
+    expect(sdl).not.toContain('VOBIZ');
+    expect(sdl).not.toContain('testEnvVobizCall');
     // The removed provider enum must be gone.
     expect(sdl).not.toContain('AiTestProvider');
   });
@@ -48,7 +51,7 @@ describe('envEntry unit', () => {
     const badFetch = (status = 401) => jest.fn().mockResolvedValue({ ok: false, status, json: async () => ({}) });
     afterEach(() => { delete (global as any).fetch; });
 
-    it.each(['IMAGEKIT', 'PEXELS', 'TWILIO', 'OPENAI', 'GEMINI', 'VOBIZ'] as const)('requires credentials for %s', async (c) => {
+    it.each(['IMAGEKIT', 'PEXELS', 'TWILIO', 'OPENAI', 'GEMINI'] as const)('requires credentials for %s', async (c) => {
       const res = await testEnvConnection(c, {});
       expect(res.ok).toBe(false);
     });
@@ -70,7 +73,6 @@ describe('envEntry unit', () => {
       expect((await testEnvConnection('TWILIO', { account_sid: 's', auth_token: 't' })).ok).toBe(true);
       expect((await testEnvConnection('OPENAI', { api_key: 'k', base_url: 'https://x/v1/' })).ok).toBe(true);
       expect((await testEnvConnection('GEMINI', { api_key: 'k' })).ok).toBe(true);
-      expect((await testEnvConnection('VOBIZ', { base_url: 'https://v', api_key: 'k' })).ok).toBe(true);
     });
 
     it('fails on a non-200 and on Google Maps REQUEST_DENIED', async () => {

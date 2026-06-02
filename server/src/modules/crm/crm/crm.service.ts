@@ -7,7 +7,7 @@ import {
   CrmDynamicFieldModel,
 } from './crm.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
-import { vobizService } from '@services/vobiz/vobiz.service';
+import { commsService } from '@services/comms/comms.service';
 import { communicationLogService } from '@modules/crm/communicationLog/communicationLog.service';
 import * as C from './crm.constants';
 
@@ -581,7 +581,7 @@ export const crmService = {
     return true;
   },
 
-  // ---- Vobiz / comms actions ----
+  // ---- Comms actions (email via SMTP, call via Twilio) ----
   async emailVenueLeadContact(
     id: string,
     to: string,
@@ -592,14 +592,14 @@ export const crmService = {
   ) {
     const lead = await VenueLeadModel.findById(id);
     if (!lead) notFound('Venue lead');
-    const result = await vobizService.sendEmail({ to, subject, body, provider_id: providerId });
+    const result = await commsService.sendEmail({ to, subject, body, provider_id: providerId });
     await logAndAttachActivity({ lead, type: 'EMAIL', entity_type: 'VENUE_LEAD', provider_id: providerId, to, subject, body, result, by });
     return result;
   },
   async callVenueLeadContact(id: string, to: string, providerId?: string | null, by?: string | null) {
     const lead = await VenueLeadModel.findById(id);
     if (!lead) notFound('Venue lead');
-    const result = await vobizService.call({ to, provider_id: providerId });
+    const result = await commsService.call({ to, provider_id: providerId });
     await logAndAttachActivity({ lead, type: 'CALL', entity_type: 'VENUE_LEAD', provider_id: providerId, to, result, by });
     return result;
   },
@@ -613,14 +613,14 @@ export const crmService = {
   ) {
     const lead = await HostLeadModel.findById(id);
     if (!lead) notFound('Host lead');
-    const result = await vobizService.sendEmail({ to, subject, body, provider_id: providerId });
+    const result = await commsService.sendEmail({ to, subject, body, provider_id: providerId });
     await logAndAttachActivity({ lead, type: 'EMAIL', entity_type: 'HOST_LEAD', provider_id: providerId, to, subject, body, result, by });
     return result;
   },
   async callHostLeadContact(id: string, to: string, providerId?: string | null, by?: string | null) {
     const lead = await HostLeadModel.findById(id);
     if (!lead) notFound('Host lead');
-    const result = await vobizService.call({ to, provider_id: providerId });
+    const result = await commsService.call({ to, provider_id: providerId });
     await logAndAttachActivity({ lead, type: 'CALL', entity_type: 'HOST_LEAD', provider_id: providerId, to, result, by });
     return result;
   },

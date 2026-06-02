@@ -65,7 +65,7 @@ export const commsProviderResolvers = {
       }
       const target = args.recipient.trim();
       if (!target) return { ok: false, message: 'Recipient is required' };
-      const isEmail = provider.type === 'SMTP' || provider.type === 'VOBIZ_EMAIL';
+      const isEmail = provider.type === 'SMTP';
       return {
         ok: true,
         message: isEmail

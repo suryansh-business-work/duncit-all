@@ -32,10 +32,17 @@ describe('envEntry e2e — access control', () => {
     ).rejects.toThrow();
   });
 
-  it('exposes the category catalogue to a tech manager', async () => {
-    const res: any = await tech.request(gql`query { envCategories { category label fields { name secret } } }`);
+  it('exposes the category catalogue (with doc links + field hints) to a tech manager', async () => {
+    const res: any = await tech.request(
+      gql`query { envCategories { category label docUrl fields { name secret phone hint } } }`
+    );
     const cats = res.envCategories.map((c: any) => c.category).sort();
     expect(cats).toEqual([...ENV_CATEGORIES].sort());
+    const openai = res.envCategories.find((c: any) => c.category === 'OPENAI');
+    expect(openai.docUrl).toMatch(/^https?:\/\//);
+    expect(openai.fields.find((f: any) => f.name === 'api_key').hint).toContain('sk-');
+    const twilio = res.envCategories.find((c: any) => c.category === 'TWILIO');
+    expect(twilio.fields.find((f: any) => f.name === 'phone_number').phone).toBe(true);
   });
 });
 
@@ -60,10 +67,12 @@ describe('envEntry e2e — lifecycle', () => {
     const a = idOf(await tech.request(CREATE, { i: { name: 'IK A', category: 'IMAGEKIT', config: [{ key: 'private_key', value: 'sa' }] } }));
     const b = idOf(await tech.request(CREATE, { i: { name: 'IK B', category: 'IMAGEKIT', config: [{ key: 'private_key', value: 'sb' }] } }));
 
-    // Secrets are never echoed back; only has_* flags.
-    const list: any = await tech.request(gql`query { envEntries(filter: { category: IMAGEKIT }) { id name is_default secrets { key present } config { key } } }`);
+    // Secrets are returned now — the Tech portal reveals them behind an eye toggle.
+    const list: any = await tech.request(gql`query { envEntries(filter: { category: IMAGEKIT }) { id name is_default secrets { key present } config { key value } } }`);
     expect(list.envEntries).toHaveLength(2);
-    expect(list.envEntries[0].config.find((c: any) => c.key === 'private_key')).toBeUndefined();
+    const privateKey = list.envEntries[0].config.find((c: any) => c.key === 'private_key');
+    expect(privateKey?.value).toBe('sa');
+    expect(list.envEntries[0].secrets.find((s: any) => s.key === 'has_private_key')?.present).toBe(true);
 
     // Switch the default to B.
     await tech.request(gql`mutation ($id: ID!) { setDefaultEnvEntry(id: $id) { id is_default } }`, { id: b });

@@ -1,6 +1,7 @@
 import {
   Box,
   Chip,
+  Link,
   Stack,
   Switch,
   Table,
@@ -10,6 +11,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import type { PortalModeRow, PortalModeState } from './queries';
 
 interface Props {
@@ -27,6 +29,7 @@ export default function PortalModesTable({ rows, busyKey, onChange }: Props) {
         <TableHead>
           <TableRow>
             <TableCell>Portal name</TableCell>
+            <TableCell>Link</TableCell>
             <TableCell align="center">Maintenance</TableCell>
             <TableCell align="center">Development</TableCell>
             <TableCell align="right">Status</TableCell>
@@ -45,6 +48,22 @@ export default function PortalModesTable({ rows, busyKey, onChange }: Props) {
                     <Typography variant="caption" color="text.secondary">{row.key}</Typography>
                     <Chip size="small" variant="outlined" label={KIND_LABEL[row.kind] ?? row.kind} />
                   </Stack>
+                </TableCell>
+                <TableCell>
+                  {row.url ? (
+                    <Link
+                      href={row.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      variant="body2"
+                      sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.25 }}
+                    >
+                      {row.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+                      <OpenInNewIcon sx={{ fontSize: 14 }} />
+                    </Link>
+                  ) : (
+                    <Typography variant="caption" color="text.secondary">—</Typography>
+                  )}
                 </TableCell>
                 <TableCell align="center">
                   <Switch

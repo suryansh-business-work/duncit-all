@@ -8,12 +8,15 @@ import {
   CircularProgress,
   Divider,
   Drawer,
+  InputAdornment,
   List,
   ListItemButton,
   ListItemText,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
+import SearchIcon from '@mui/icons-material/Search';
 import { ENV_ENTRIES, type EnvEntry } from './queries';
 import { SET_PORTAL_ENV_ENTRIES, type PortalListItem } from './portal-env-queries';
 import { notify } from '../../components/notify';
@@ -33,24 +36,28 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Props) {
   });
   const [setMut, setState] = useMutation(SET_PORTAL_ENV_ENTRIES);
   const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [search, setSearch] = useState('');
 
   const entries = data?.envEntries ?? [];
 
   useEffect(() => {
     if (!portal) return;
+    setSearch('');
     const preselected = entries.filter((e) => e.assigned_portals.includes(portal.key)).map((e) => e.id);
     setSelected(new Set(preselected));
     // Re-run when the entry list arrives for this portal.
   }, [portal, data]);
 
   const grouped = useMemo(() => {
+    const term = search.trim().toLowerCase();
     const map = new Map<string, EnvEntry[]>();
     for (const e of entries) {
+      if (term && !e.name.toLowerCase().includes(term) && !e.category.toLowerCase().includes(term)) continue;
       if (!map.has(e.category)) map.set(e.category, []);
       map.get(e.category)!.push(e);
     }
     return Array.from(map.entries());
-  }, [entries]);
+  }, [entries, search]);
 
   const toggle = (id: string) =>
     setSelected((prev) => {
@@ -81,6 +88,22 @@ export default function PortalEnvDrawer({ portal, onClose, onSaved }: Props) {
           </Typography>
         </Box>
         <Divider />
+        <Box sx={{ px: 2, pt: 1.5 }}>
+          <TextField
+            size="small"
+            fullWidth
+            placeholder="Search configs…"
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            InputProps={{
+              startAdornment: (
+                <InputAdornment position="start">
+                  <SearchIcon fontSize="small" />
+                </InputAdornment>
+              ),
+            }}
+          />
+        </Box>
         <Box sx={{ flex: 1, overflowY: 'auto' }}>
           {loading && !entries.length ? (
             <Box sx={{ py: 6, textAlign: 'center' }}><CircularProgress size={26} /></Box>

@@ -10,7 +10,6 @@ export const envEntryTypeDefs = gql`
     TWILIO
     OPENAI
     GEMINI
-    VOBIZ
   }
 
   type EnvConfigPair {
@@ -30,12 +29,16 @@ export const envEntryTypeDefs = gql`
     secret: Boolean!
     number: Boolean!
     bool: Boolean!
+    phone: Boolean!
+    hint: String
   }
 
   type EnvCategoryDef {
     category: EnvCategory!
     label: String!
     fields: [EnvFieldDef!]!
+    "Link to where an operator obtains these credentials."
+    docUrl: String
   }
 
   type EnvEntry {
@@ -119,7 +122,6 @@ export const envEntryTypeDefs = gql`
     testEnvImagekitUpload(id: ID!, fileBase64: String!, fileName: String!): EnvTestRichResult!
     testEnvPexels(id: ID!, query: String!): EnvTestRichResult!
     testEnvTwilioCall(id: ID!, to: String!): EnvTestRichResult!
-    testEnvVobizCall(id: ID!, to: String!): EnvTestRichResult!
     testEnvOpenai(id: ID!, prompt: String!): EnvTestRichResult!
     testEnvGemini(id: ID!, prompt: String!): EnvTestRichResult!
   }

@@ -1,6 +1,6 @@
 import { envEntryService, type EnvEntryConfig } from './envEntry.service';
 import { envEntryTests } from './envEntry.tests';
-import { CATEGORY_FIELDS } from './envEntry.fields';
+import { CATEGORY_FIELDS, CATEGORY_DOCS } from './envEntry.fields';
 import { ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
@@ -16,7 +16,6 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   TWILIO: 'Twilio',
   OPENAI: 'OpenAI',
   GEMINI: 'Gemini',
-  VOBIZ: 'Vobiz',
 };
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */
@@ -49,12 +48,15 @@ export const envEntryResolvers = {
       return ENV_CATEGORIES.map((category) => ({
         category,
         label: CATEGORY_LABELS[category],
+        docUrl: CATEGORY_DOCS[category] ?? null,
         fields: CATEGORY_FIELDS[category].map((f) => ({
           name: f.name,
           label: f.label,
           secret: !!f.secret,
           number: !!f.number,
           bool: !!f.bool,
+          phone: !!f.phone,
+          hint: f.hint ?? null,
         })),
       }));
     },
@@ -120,10 +122,6 @@ export const envEntryResolvers = {
     testEnvTwilioCall: async (_p: unknown, args: { id: string; to: string }, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);
       return envEntryTests.twilioCall(args.id, args.to);
-    },
-    testEnvVobizCall: async (_p: unknown, args: { id: string; to: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, TECH_MANAGE);
-      return envEntryTests.vobizCall(args.id, args.to);
     },
     testEnvOpenai: async (_p: unknown, args: { id: string; prompt: string }, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);

@@ -12,8 +12,8 @@ export const tooltip = (c: ThemeCtx): Components<Theme>['MuiTooltip'] => {
   return {
     styleOverrides: {
       tooltip: {
-        backgroundColor: fill,
-        color: text,
+        backgroundColor:  c.isDark ? `#000` : '#ddd',
+        color: c.isDark ? `#fff` : '#000',
         border: c.isDark ? `1px solid ${c.border}` : 'none',
         borderRadius: c.t.radius.sm,
         fontSize: c.t.font.size.tooltip,

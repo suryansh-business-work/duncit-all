@@ -98,14 +98,6 @@ export const NAV: NavSection[] = [
     ],
   },
   {
-    heading: 'Onboarding',
-    prefixes: ['/venues', '/hosts'],
-    items: [
-      { label: 'Hosts', to: '/hosts', icon: navIcons.people },
-      { label: 'Registered Venues', to: '/venues', icon: navIcons.storefront },
-    ],
-  },
-  {
     heading: 'Partners',
     prefixes: ['/partners'],
     items: [

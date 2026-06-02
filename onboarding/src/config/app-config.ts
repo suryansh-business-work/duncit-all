@@ -43,6 +43,10 @@ export const appConfig: AppConfig = {
   tokenKey: 'onboarding_token',
   colorModeKey: 'onboarding_color_mode',
   accent: { light: '#a5b4fc', main: '#6366f1', hover: '#4f46e5', active: '#4338ca' },
-  nav: [{ label: 'Dashboard', to: '/', icon: 'dashboard' }],
+  nav: [
+    { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Hosts', to: '/hosts', icon: 'people' },
+    { label: 'Registered Venues', to: '/venues', icon: 'storefront' },
+  ],
   modules: [],
 };

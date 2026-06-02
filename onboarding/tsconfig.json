@@ -10,5 +10,14 @@
     "types": ["vite/client"]
   },
   "include": ["src"],
-  "exclude": ["src/**/*.cy.ts", "src/**/*.cy.tsx", "vitest.config.ts", "vitest.setup.ts"]
+  "exclude": [
+    "src/**/*.cy.ts",
+    "src/**/*.cy.tsx",
+    "src/**/*.test.ts",
+    "src/**/*.test.tsx",
+    "src/**/*.spec.ts",
+    "src/**/*.spec.tsx",
+    "vitest.config.ts",
+    "vitest.setup.ts"
+  ]
 }

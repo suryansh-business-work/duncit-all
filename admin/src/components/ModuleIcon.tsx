@@ -6,7 +6,6 @@ import CategoryIcon from '@mui/icons-material/Category';
 import GroupsIcon from '@mui/icons-material/Groups';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import LanguageIcon from '@mui/icons-material/Language';
-import StorefrontIcon from '@mui/icons-material/Storefront';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import TuneIcon from '@mui/icons-material/Tune';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
@@ -20,7 +19,6 @@ export type ModuleIconKind =
   | 'community'
   | 'engagement'
   | 'website'
-  | 'onboarding'
   | 'finance'
   | 'inventory'
   | 'system';
@@ -38,7 +36,6 @@ const ICONS: Record<ModuleIconKind, SvgIconComponent> = {
   community: GroupsIcon,
   engagement: CampaignIcon,
   website: LanguageIcon,
-  onboarding: StorefrontIcon,
   finance: AccountBalanceWalletIcon,
   inventory: Inventory2Icon,
   system: TuneIcon,

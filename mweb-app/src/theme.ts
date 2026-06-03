@@ -1,48 +1,11 @@
 import { createTheme, alpha } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material';
+import { brand, neutral, semantic, surface } from '@duncit/auth-tokens';
 
-// Design-system tokens — keep colors and shape decisions here so every
-// component picks them up via MUI styled().
-export const tokens = {
-  brand: {
-    50: '#fff1f1',
-    100: '#ffe1e1',
-    200: '#ffc7c7',
-    300: '#ff9e9e',
-    400: '#ff7575',
-    500: '#ff5757',
-    600: '#f03e3e',
-    700: '#d92d2d',
-    800: '#b42323',
-    900: '#8f1d1d',
-  },
-  neutral: {
-    50: '#fafafa',
-    100: '#f5f5f5',
-    200: '#e5e7eb',
-    300: '#d1d5db',
-    400: '#9ca3af',
-    500: '#6b7280',
-    600: '#4b5563',
-    700: '#374151',
-    800: '#1f2937',
-    900: '#111827',
-  },
-  semantic: {
-    success: '#22c55e',
-    warning: '#f59e0b',
-    error: '#ef4444',
-    info: '#3b82f6',
-    secondary: '#8b5cf6',
-    accent: '#06b6d4',
-  },
-  surface: {
-    bg: '#f8fafc',
-    paper: '#ffffff',
-    soft: '#f1f5f9',
-    border: '#e5e7eb',
-  },
-};
+// Design-system tokens now come from the shared @duncit/auth-tokens package so
+// the mobile app (NativeWind) and mWeb (MUI) draw from one source. Re-exported
+// here under the same shape used across the app — no visual change.
+export const tokens = { brand, neutral, semantic, surface };
 
 const PRIMARY = tokens.brand[500];
 const PRIMARY_HOVER = tokens.brand[600];

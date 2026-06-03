@@ -9,10 +9,7 @@ import AuthScreenFrame from '../components/AuthScreenFrame';
 import LegalLinks from '../components/LegalLinks';
 import { useFeatureFlag } from '../hooks/useFeatureFlag';
 import GoogleSignInButton from '../components/GoogleSignInButton';
-import RegisterForm, { type RegisterFormValues } from '../forms/register.form';
-import GoogleSignupPhoneForm, {
-  type GoogleSignupPhoneValues,
-} from '../forms/google-signup-phone.form';
+import { RegisterForm, type RegisterFormValues } from '../forms/register';
 import { parseApiError } from '../utils/parseApiError';
 
 const REGISTER = gql`
@@ -44,12 +41,17 @@ const SIGNUP_GOOGLE = gql`
   }
 `;
 
+/** Split a single "Name" into first/last; surname may be empty. */
+function splitName(name: string): { first_name: string; last_name?: string } {
+  const [first, ...rest] = name.trim().split(/\s+/).filter(Boolean);
+  return { first_name: first ?? '', last_name: rest.length ? rest.join(' ') : undefined };
+}
+
 export default function RegisterPage() {
   const [registerMutation, { loading, error }] = useMutation(REGISTER);
   const [signupGoogle, { loading: gLoading }] = useMutation(SIGNUP_GOOGLE);
   const [gError, setGError] = useState<string | null>(null);
   const [registerError, setRegisterError] = useState<string | null>(null);
-  const [googleToken, setGoogleToken] = useState<string | null>(null);
   const navigate = useNavigate();
   const whatsappStepEnabled = useFeatureFlag('whatsapp_signup_otp', true);
   const nextRoute = whatsappStepEnabled ? '/signup-whatsapp' : '/signup-survey';
@@ -57,10 +59,16 @@ export default function RegisterPage() {
   const handleRegister = async (values: RegisterFormValues) => {
     setRegisterError(null);
     try {
-      const { country: _country, ...rest } = values;
+      const { first_name, last_name } = splitName(values.name);
       const res = await registerMutation({
         variables: {
-          input: { ...rest, dob: new Date(rest.dob).toISOString() },
+          input: {
+            first_name,
+            last_name,
+            email: values.email,
+            password: values.password,
+            dob: new Date(values.dob).toISOString(),
+          },
         },
       });
       const token = res.data?.register?.token;
@@ -73,28 +81,17 @@ export default function RegisterPage() {
     }
   };
 
+  // Token-only Google signup: no extra form — straight to the survey.
   const handleGoogle = async (idToken: string) => {
     setGError(null);
-    setGoogleToken(idToken);
-  };
-
-  const submitGoogleSignup = async (values: GoogleSignupPhoneValues) => {
     try {
-      const res = await signupGoogle({
-        variables: {
-          input: {
-            ...values,
-            id_token: googleToken,
-            dob: new Date(values.dob).toISOString(),
-          },
-        },
-      });
+      const res = await signupGoogle({ variables: { input: { id_token: idToken } } });
       const token = res.data?.signupWithGoogle?.token;
       if (token) {
         localStorage.setItem('token', token);
-        navigate(nextRoute);
+        navigate('/signup-survey');
       }
-    } catch (e: any) {
+    } catch (e) {
       setGError(parseApiError(e));
     }
   };
@@ -114,7 +111,7 @@ export default function RegisterPage() {
             </Typography>
           </Stack>
 
-          <GoogleSignInButton onCredential={handleGoogle} loading={gLoading && !googleToken} text="signup_with" />
+          <GoogleSignInButton onCredential={handleGoogle} loading={gLoading} text="signup_with" />
           {gError && (
             <Alert severity="error" sx={{ width: '100%' }}>
               {gError}
@@ -130,16 +127,6 @@ export default function RegisterPage() {
           <LegalLinks prefix="By creating an account," />
         </Stack>
       </AuthScreenFrame>
-      <GoogleSignupPhoneForm
-        open={!!googleToken}
-        loading={gLoading}
-        error={gError}
-        onClose={() => {
-          setGoogleToken(null);
-          setGError(null);
-        }}
-        onSubmit={submitGoogleSignup}
-      />
     </AuthBackground>
   );
 }

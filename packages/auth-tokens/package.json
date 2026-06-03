@@ -1,0 +1,22 @@
+{
+  "name": "@duncit/auth-tokens",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Framework-agnostic design tokens (light + dark) shared by the mWeb MUI theme and the mobile NativeWind/tailwind config.",
+  "main": "./tokens.cjs",
+  "module": "./tokens.mjs",
+  "types": "./tokens.d.ts",
+  "exports": {
+    ".": {
+      "types": "./tokens.d.ts",
+      "import": "./tokens.mjs",
+      "require": "./tokens.cjs"
+    }
+  },
+  "files": [
+    "tokens.json",
+    "tokens.cjs",
+    "tokens.mjs",
+    "tokens.d.ts"
+  ]
+}

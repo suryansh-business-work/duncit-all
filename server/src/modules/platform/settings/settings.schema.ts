@@ -1,4 +1,4 @@
-import gql from 'graphql-tag';
+import gql from "graphql-tag";
 
 export const settingsTypeDefs = gql`
   type AppSettings {
@@ -58,6 +58,7 @@ export const settingsTypeDefs = gql`
     support_phone: String!
     mascot_name: String!
     mascot_description_html: String!
+    mascot_image_url: String!
     mascot_lottie_url: String!
     mascot_on_chair_lottie_url: String!
     mascot_winner_lottie_url: String!
@@ -75,6 +76,7 @@ export const settingsTypeDefs = gql`
     support_phone: String
     mascot_name: String
     mascot_description_html: String
+    mascot_image_url: String
     mascot_lottie_url: String
     mascot_on_chair_lottie_url: String
     mascot_winner_lottie_url: String
@@ -95,7 +97,10 @@ export const settingsTypeDefs = gql`
   extend type Mutation {
     updateAppSettings(input: UpdateAppSettingsInput!): AppSettings!
     createFeatureFlag(input: CreateFeatureFlagInput!): FeatureFlag!
-    updateFeatureFlag(flag_id: ID!, input: UpdateFeatureFlagInput!): FeatureFlag!
+    updateFeatureFlag(
+      flag_id: ID!
+      input: UpdateFeatureFlagInput!
+    ): FeatureFlag!
     setFeatureFlag(flag_id: ID!, enabled: Boolean!): FeatureFlag!
     deleteFeatureFlag(flag_id: ID!): Boolean!
     updateBranding(input: UpdateBrandingInput!): Branding!

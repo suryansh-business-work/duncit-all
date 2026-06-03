@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "scheme": "duncit",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": false,
+    "newArchEnabled": true,
     "splash": {
       "resizeMode": "contain",
       "backgroundColor": "#0B1120"
@@ -30,10 +30,9 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "static"
+      "output": "single"
     },
     "plugins": [
-      "expo-router",
       "expo-secure-store",
       [
         "expo-location",
@@ -56,11 +55,9 @@
             "kotlinVersion": "1.9.25"
           }
         }
-      ]
+      ],
+      "expo-web-browser"
     ],
-    "experiments": {
-      "typedRoutes": true
-    },
     "extra": {
       "eas": {
         "projectId": "00000000-0000-0000-0000-000000000000"

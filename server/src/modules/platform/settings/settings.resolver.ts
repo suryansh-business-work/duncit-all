@@ -1,10 +1,16 @@
-import { settingsService } from './settings.service';
-import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { settingsService } from "./settings.service";
+import type { GraphQLContext } from "@context";
+import { requireRole } from "@middleware/rbac";
 
 // Feature flags and app settings (incl. JWT expiry) are managed from the Tech portal.
-const ADMIN_READ = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER', 'TECH_MANAGER'];
-const ADMIN_WRITE = ['SUPER_ADMIN', 'TECH_MANAGER'];
+const ADMIN_READ = [
+  "SUPER_ADMIN",
+  "CITY_ADMIN",
+  "ZONAL_ADMIN",
+  "SUPPORT_USER",
+  "TECH_MANAGER",
+];
+const ADMIN_WRITE = ["SUPER_ADMIN", "TECH_MANAGER"];
 
 export const settingsResolvers = {
   Query: {
@@ -17,7 +23,11 @@ export const settingsResolvers = {
       requireRole(ctx, ADMIN_READ);
       return settingsService.listFlags();
     },
-    featureFlag: async (_p: unknown, args: { key: string }, ctx: GraphQLContext) => {
+    featureFlag: async (
+      _p: unknown,
+      args: { key: string },
+      ctx: GraphQLContext,
+    ) => {
       requireRole(ctx, ADMIN_READ);
       return settingsService.getFlag(args.key);
     },
@@ -25,18 +35,26 @@ export const settingsResolvers = {
     branding: async () => settingsService.getBranding(),
   },
   Mutation: {
-    updateAppSettings: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+    updateAppSettings: async (
+      _p: unknown,
+      args: { input: any },
+      ctx: GraphQLContext,
+    ) => {
       requireRole(ctx, ADMIN_WRITE);
       return settingsService.updateAppSettings(args.input);
     },
-    createFeatureFlag: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+    createFeatureFlag: async (
+      _p: unknown,
+      args: { input: any },
+      ctx: GraphQLContext,
+    ) => {
       requireRole(ctx, ADMIN_WRITE);
       return settingsService.createFlag(args.input);
     },
     updateFeatureFlag: async (
       _p: unknown,
       args: { flag_id: string; input: any },
-      ctx: GraphQLContext
+      ctx: GraphQLContext,
     ) => {
       requireRole(ctx, ADMIN_WRITE);
       return settingsService.updateFlag(args.flag_id, args.input);
@@ -44,16 +62,24 @@ export const settingsResolvers = {
     setFeatureFlag: async (
       _p: unknown,
       args: { flag_id: string; enabled: boolean },
-      ctx: GraphQLContext
+      ctx: GraphQLContext,
     ) => {
       requireRole(ctx, ADMIN_WRITE);
       return settingsService.setFlagEnabled(args.flag_id, args.enabled);
     },
-    deleteFeatureFlag: async (_p: unknown, args: { flag_id: string }, ctx: GraphQLContext) => {
+    deleteFeatureFlag: async (
+      _p: unknown,
+      args: { flag_id: string },
+      ctx: GraphQLContext,
+    ) => {
       requireRole(ctx, ADMIN_WRITE);
       return settingsService.deleteFlag(args.flag_id);
     },
-    updateBranding: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+    updateBranding: async (
+      _p: unknown,
+      args: { input: any },
+      ctx: GraphQLContext,
+    ) => {
       requireRole(ctx, ADMIN_WRITE);
       return settingsService.updateBranding(args.input);
     },

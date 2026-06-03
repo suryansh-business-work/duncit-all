@@ -11,7 +11,7 @@ import AuthLogo from '../../components/AuthLogo';
 import AuthScreenFrame from '../../components/AuthScreenFrame';
 import LegalLinks from '../../components/LegalLinks';
 import GoogleSignInButton from '../../components/GoogleSignInButton';
-import LoginForm, { type LoginFormValues } from '../../forms/login.form';
+import { LoginForm, type LoginFormValues } from '../../forms/login';
 
 interface Props {
   loading: boolean;

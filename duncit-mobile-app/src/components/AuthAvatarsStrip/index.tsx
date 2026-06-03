@@ -1,0 +1,1 @@
+export { AuthAvatarsStrip } from './AuthAvatarsStrip';

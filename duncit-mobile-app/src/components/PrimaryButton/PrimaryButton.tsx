@@ -1,4 +1,4 @@
-import { ActivityIndicator, Pressable, Text } from 'react-native';
+import { Spinner, Text, XStack } from 'tamagui';
 
 export interface PrimaryButtonProps {
   label: string;
@@ -19,21 +19,31 @@ export function PrimaryButton({
   const isDisabled = disabled || loading;
 
   return (
-    <Pressable
+    <XStack
       testID={testID}
       accessibilityRole="button"
       accessibilityState={{ disabled: isDisabled, busy: loading }}
       disabled={isDisabled}
-      onPress={onPress}
-      className={`w-full items-center rounded-xl px-5 py-4 ${
-        isDisabled ? 'bg-brand-dark/50' : 'bg-brand active:bg-brand-dark'
-      }`}
+      onPress={() => {
+        if (!isDisabled) onPress();
+      }}
+      alignItems="center"
+      justifyContent="center"
+      width="100%"
+      height={52}
+      borderRadius={12}
+      paddingHorizontal={20}
+      backgroundColor="$primary"
+      opacity={isDisabled ? 0.5 : 1}
+      pressStyle={{ opacity: 0.85 }}
     >
       {loading ? (
-        <ActivityIndicator color="#FFFFFF" testID={`${testID ?? 'primary-button'}-spinner`} />
+        <Spinner color="$onPrimary" testID={`${testID ?? 'primary-button'}-spinner`} />
       ) : (
-        <Text className="text-base font-semibold text-white">{label}</Text>
+        <Text color="$onPrimary" fontSize={16} fontWeight="600">
+          {label}
+        </Text>
       )}
-    </Pressable>
+    </XStack>
   );
 }

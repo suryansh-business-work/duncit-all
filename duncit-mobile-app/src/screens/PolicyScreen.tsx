@@ -1,0 +1,72 @@
+import { ScrollView } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
+
+import { usePolicy } from '@/hooks/usePolicies';
+import { useThemeColors } from '@/hooks/useThemeColors';
+import type { RootStackParamList } from '@/navigation/types';
+import { toErrorMessage } from '@/utils/errors';
+
+/** Strip HTML tags from the stored policy body for plain text rendering. */
+function stripHtml(html?: string | null): string {
+  return (html ?? '')
+    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n\n')
+    .replace(/<[^>]+>/g, '')
+    .replace(/&nbsp;/gi, ' ')
+    .replace(/\n{3,}/g, '\n\n')
+    .trim();
+}
+
+/** Reader for a single public policy, opened from the sidebar's Policies group. */
+export function PolicyScreen() {
+  const navigation = useNavigation();
+  const route = useRoute<RouteProp<RootStackParamList, 'Policy'>>();
+  const slug = route.params?.slug ?? '';
+  const { data, isLoading, error } = usePolicy(slug);
+  const { color: ink } = useThemeColors();
+  const policy = data?.policyBySlug;
+
+  return (
+    <YStack flex={1} backgroundColor="$background" testID="policy-screen">
+      <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+        <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
+          <XStack
+            testID="policy-back"
+            accessibilityRole="button"
+            accessibilityLabel="Go back"
+            onPress={() => navigation.goBack()}
+            width={40}
+            height={40}
+            alignItems="center"
+            justifyContent="center"
+            borderRadius={20}
+            pressStyle={{ opacity: 0.7 }}
+          >
+            <MaterialIcons name="arrow-back" size={22} color={ink} />
+          </XStack>
+          <Text numberOfLines={1} flex={1} fontSize={18} fontWeight="800" color="$color">
+            {policy?.title ?? 'Policy'}
+          </Text>
+        </XStack>
+
+        {isLoading ? (
+          <YStack flex={1} alignItems="center" justifyContent="center">
+            <Spinner testID="policy-loading" color="$primary" />
+          </YStack>
+        ) : error ? (
+          <Text testID="policy-error" paddingHorizontal={24} paddingVertical={32} color="$danger">
+            {toErrorMessage(error)}
+          </Text>
+        ) : (
+          <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
+            <Text fontSize={15} lineHeight={24} color="$color">
+              {stripHtml(policy?.content) || 'This policy has no content yet.'}
+            </Text>
+          </ScrollView>
+        )}
+      </SafeAreaView>
+    </YStack>
+  );
+}

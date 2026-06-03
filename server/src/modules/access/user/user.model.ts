@@ -47,7 +47,10 @@ const authSchema = new Schema(
     google_id: { type: String },
     last_login_provider: { type: String, enum: ['EMAIL', 'GOOGLE', null], default: null },
     last_login_at: { type: Date, default: null },
-    phone: { type: phoneSchema, required: true },
+    // Optional: phone is no longer collected at signup. When present, the
+    // phoneSchema still requires number+extension. Absent docs are excluded
+    // from the unique phone index via its partialFilterExpression.
+    phone: { type: phoneSchema, required: false },
   },
   { _id: false }
 );
@@ -55,8 +58,10 @@ const authSchema = new Schema(
 const profileSchema = new Schema(
   {
     first_name: { type: String, required: true, trim: true },
-    last_name: { type: String, required: true, trim: true },
-    dob: { type: Date, required: true },
+    // Optional: simplified signup collects a single "Name"; surname may be empty.
+    last_name: { type: String, required: false, trim: true },
+    // Optional: token-only Google signup creates the account before dob is known.
+    dob: { type: Date, required: false },
     country: { type: String, default: 'India' },
     profile_photo: { type: String },
     bio: { type: String, maxlength: 500 },

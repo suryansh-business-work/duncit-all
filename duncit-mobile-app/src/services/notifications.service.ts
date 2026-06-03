@@ -6,7 +6,8 @@ import { ApiError } from '@/utils/errors';
 /** Foreground presentation behaviour for incoming notifications. */
 export async function handleNotification(): Promise<Notifications.NotificationBehavior> {
   return {
-    shouldShowAlert: true,
+    shouldShowBanner: true,
+    shouldShowList: true,
     shouldPlaySound: true,
     shouldSetBadge: false,
   };

@@ -65,6 +65,10 @@ describe('notifications.service', () => {
 
   it('exposes a notification handler that shows banners', async () => {
     const behavior = await handleNotification();
-    expect(behavior).toMatchObject({ shouldShowAlert: true, shouldPlaySound: true });
+    expect(behavior).toMatchObject({
+      shouldShowBanner: true,
+      shouldShowList: true,
+      shouldPlaySound: true,
+    });
   });
 });

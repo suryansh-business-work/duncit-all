@@ -9,25 +9,25 @@ import {
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import LottiePlayer from '../LottiePlayer';
 
 interface BrandingMascot {
   mascot_name?: string | null;
   mascot_description_html?: string | null;
-  mascot_lottie_url?: string | null;
+  mascot_image_url?: string | null;
 }
 
 interface Props {
   branding?: BrandingMascot | null;
 }
 
+/** Mascot is an uploaded image (branding.mascot_image_url) — no longer a Lottie. */
 export default function HeaderMascotButton({ branding }: Props) {
   const [open, setOpen] = useState(false);
-  const lottieUrl = branding?.mascot_lottie_url || '/lotties/mascot.json';
-  const name = branding?.mascot_name || 'Dunko';
-  const html =
-    branding?.mascot_description_html ||
-    '<p><strong>Dunko</strong> is the mascot of this app — your friendly companion who guides you through pods, plans and celebrations.</p>';
+  const imageUrl = branding?.mascot_image_url;
+  const name = branding?.mascot_name || 'Duncit';
+  const html = branding?.mascot_description_html || '';
+
+  if (!imageUrl) return null;
 
   return (
     <>
@@ -37,9 +37,12 @@ export default function HeaderMascotButton({ branding }: Props) {
           aria-label="About mascot"
           sx={{ p: 0.25, width: 44, height: 44 }}
         >
-          <Box sx={{ width: 36, height: 36 }}>
-            <LottiePlayer src={lottieUrl} />
-          </Box>
+          <Box
+            component="img"
+            src={imageUrl}
+            alt={name}
+            sx={{ width: 36, height: 36, objectFit: 'contain' }}
+          />
         </IconButton>
       </Tooltip>
 
@@ -67,17 +70,22 @@ export default function HeaderMascotButton({ branding }: Props) {
               mb: 2,
             }}
           >
-            <Box sx={{ width: 200, height: 200 }}>
-              <LottiePlayer src={lottieUrl} />
-            </Box>
+            <Box
+              component="img"
+              src={imageUrl}
+              alt={name}
+              sx={{ maxWidth: 200, maxHeight: 200, objectFit: 'contain' }}
+            />
           </Box>
-          <Typography
-            variant="body2"
-            color="text.secondary"
-            component="div"
-            sx={{ '& p': { m: 0, mb: 1 } }}
-            dangerouslySetInnerHTML={{ __html: html }}
-          />
+          {html && (
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              component="div"
+              sx={{ '& p': { m: 0, mb: 1 } }}
+              dangerouslySetInnerHTML={{ __html: html }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </>

@@ -158,10 +158,10 @@ export const userTypeDefs = gql`
 
   input RegisterInput {
     first_name: String!
-    last_name: String!
+    last_name: String
     email: String!
-    phone_number: String!
-    phone_extension: String!
+    phone_number: String
+    phone_extension: String
     password: String!
     dob: String!
     city: String
@@ -196,9 +196,9 @@ export const userTypeDefs = gql`
 
   input GoogleSignupInput {
     id_token: String!
-    phone_number: String!
-    phone_extension: String!
-    dob: String!
+    phone_number: String
+    phone_extension: String
+    dob: String
     city: String
     zone: String
   }

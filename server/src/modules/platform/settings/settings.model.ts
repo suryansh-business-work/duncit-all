@@ -1,4 +1,4 @@
-import { Schema, model, type Document } from 'mongoose';
+import { Schema, model, type Document } from "mongoose";
 
 export interface IAppSettings extends Document {
   singleton_key: string;
@@ -12,16 +12,24 @@ export interface IAppSettings extends Document {
 
 const appSettingsSchema = new Schema<IAppSettings>(
   {
-    singleton_key: { type: String, required: true, unique: true, default: 'app' },
-    jwt_expires_in: { type: String, default: '7d' },
+    singleton_key: {
+      type: String,
+      required: true,
+      unique: true,
+      default: "app",
+    },
+    jwt_expires_in: { type: String, default: "7d" },
     jwt_no_expiry: { type: Boolean, default: false },
-    date_format: { type: String, default: 'dd MMM yyyy' },
-    time_format: { type: String, default: 'hh:mm a' },
+    date_format: { type: String, default: "dd MMM yyyy" },
+    time_format: { type: String, default: "hh:mm a" },
   },
-  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+  { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );
 
-export const AppSettingsModel = model<IAppSettings>('AppSettings', appSettingsSchema);
+export const AppSettingsModel = model<IAppSettings>(
+  "AppSettings",
+  appSettingsSchema,
+);
 
 export interface IFeatureFlag extends Document {
   key: string;
@@ -35,16 +43,25 @@ export interface IFeatureFlag extends Document {
 
 const featureFlagSchema = new Schema<IFeatureFlag>(
   {
-    key: { type: String, required: true, unique: true, lowercase: true, trim: true },
+    key: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
     name: { type: String, required: true },
-    description: { type: String, default: '' },
+    description: { type: String, default: "" },
     enabled: { type: Boolean, default: false },
     is_system: { type: Boolean, default: false },
   },
-  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+  { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );
 
-export const FeatureFlagModel = model<IFeatureFlag>('FeatureFlag', featureFlagSchema);
+export const FeatureFlagModel = model<IFeatureFlag>(
+  "FeatureFlag",
+  featureFlagSchema,
+);
 
 export interface IBranding extends Document {
   singleton_key: string;
@@ -55,6 +72,7 @@ export interface IBranding extends Document {
   support_phone: string;
   mascot_name: string;
   mascot_description_html: string;
+  mascot_image_url: string;
   mascot_lottie_url: string;
   mascot_on_chair_lottie_url: string;
   mascot_winner_lottie_url: string;
@@ -67,26 +85,29 @@ export interface IBranding extends Document {
 
 const brandingSchema = new Schema<IBranding>(
   {
-    singleton_key: { type: String, required: true, unique: true, default: 'branding' },
-    app_name: { type: String, default: 'Duncit' },
-    logo_url: { type: String, default: '' },
-    primary_color: { type: String, default: '#1976d2' },
-    support_email: { type: String, default: '' },
-    support_phone: { type: String, default: '' },
-    mascot_name: { type: String, default: 'Dunko' },
-    mascot_description_html: {
+    singleton_key: {
       type: String,
-      default:
-        '<p><strong>Dunko</strong> is the soul of Duncit \u2014 a playful guide who helps you find your tribe, join pods, and celebrate every win together.</p>',
+      required: true,
+      unique: true,
+      default: "branding",
     },
-    mascot_lottie_url: { type: String, default: '' },
-    mascot_on_chair_lottie_url: { type: String, default: '' },
-    mascot_winner_lottie_url: { type: String, default: '' },
-    welcome_lottie_url: { type: String, default: '' },
-    app_loader_lottie_url: { type: String, default: '' },
-    confetti_lottie_url: { type: String, default: '' },
+    app_name: { type: String, default: "Duncit" },
+    logo_url: { type: String, default: "" },
+    primary_color: { type: String, default: "#1976d2" },
+    support_email: { type: String, default: "" },
+    support_phone: { type: String, default: "" },
+    mascot_name: { type: String, default: "Duncit" },
+    mascot_description_html: { type: String, default: "" },
+    // Uploaded mascot image (transparent PNG). Replaces the Lottie mascot.
+    mascot_image_url: { type: String, default: "" },
+    mascot_lottie_url: { type: String, default: "" },
+    mascot_on_chair_lottie_url: { type: String, default: "" },
+    mascot_winner_lottie_url: { type: String, default: "" },
+    welcome_lottie_url: { type: String, default: "" },
+    app_loader_lottie_url: { type: String, default: "" },
+    confetti_lottie_url: { type: String, default: "" },
   },
-  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+  { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );
 
-export const BrandingModel = model<IBranding>('Branding', brandingSchema);
+export const BrandingModel = model<IBranding>("Branding", brandingSchema);

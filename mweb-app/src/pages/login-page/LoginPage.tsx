@@ -4,7 +4,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import AuthBackground from '../../components/AuthBackground';
 import AuthModeToggle from '../../components/AuthModeToggle';
 import GoogleAuthNoticeDialog from '../../components/GoogleAuthNoticeDialog';
-import { type LoginFormValues } from '../../forms/login.form';
+import { type LoginFormValues } from '../../forms/login';
 import { parseApiError } from '../../utils/parseApiError';
 import {
   getSafeRedirectPath,

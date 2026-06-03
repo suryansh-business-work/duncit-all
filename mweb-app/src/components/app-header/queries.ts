@@ -8,6 +8,7 @@ export const HEADER_DATA = gql`
       primary_color
       mascot_name
       mascot_description_html
+      mascot_image_url
       mascot_lottie_url
       app_loader_lottie_url
       confetti_lottie_url

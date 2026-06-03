@@ -411,11 +411,18 @@ function shapeUserDoc(input: any, opts?: { passwordHash?: string; googleId?: str
       is_email_verified: !!opts?.emailVerified,
       password: opts?.passwordHash,
       google_id: opts?.googleId,
-      phone: {
-        number: phoneNumber,
-        extension: input.phone_extension,
-        is_verified: false,
-      },
+      // Only attach the phone subdocument when a number is supplied — the
+      // schema requires number+extension when present, and omitting it keeps
+      // the doc out of the unique phone index (partial on $type: string).
+      ...(phoneNumber
+        ? {
+            phone: {
+              number: phoneNumber,
+              extension: input.phone_extension,
+              is_verified: false,
+            },
+          }
+        : {}),
     },
     profile: {
       first_name: input.first_name,
@@ -440,22 +447,26 @@ export const userService = {
   toPublic,
 
   async register(input: RegisterDTO) {
-    if (isPlaceholderPhone(input.phone_number)) {
+    if (input.phone_number && isPlaceholderPhone(input.phone_number)) {
       throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const existing = await UserModel.findOne({ 'auth.email': input.email });
     if (existing) {
       throw new GraphQLError('Email already in use', { extensions: { code: 'CONFLICT' } });
     }
-    const phoneExists = await UserModel.findOne({
-      'auth.phone.number': input.phone_number,
-      'auth.phone.extension': input.phone_extension,
-    });
-    if (phoneExists) {
-      throw new GraphQLError(
-        'This phone number is already registered. Please use a different number or login.',
-        { extensions: { code: 'CONFLICT' } }
-      );
+    // Only enforce phone uniqueness when a phone was supplied — otherwise the
+    // query would match the many users that have no phone at all.
+    if (input.phone_number) {
+      const phoneExists = await UserModel.findOne({
+        'auth.phone.number': input.phone_number,
+        'auth.phone.extension': input.phone_extension,
+      });
+      if (phoneExists) {
+        throw new GraphQLError(
+          'This phone number is already registered. Please use a different number or login.',
+          { extensions: { code: 'CONFLICT' } }
+        );
+      }
     }
     const hashed = await bcrypt.hash(input.password, 10);
     let created: any;
@@ -556,7 +567,7 @@ export const userService = {
   async signupWithGoogle(input: GoogleSignupDTO) {
     const info = await verifyGoogleIdToken(input.id_token);
     const email = info.email.toLowerCase();
-    if (isPlaceholderPhone(input.phone_number)) {
+    if (input.phone_number && isPlaceholderPhone(input.phone_number)) {
       throw new GraphQLError('Invalid phone number', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     let created: any = null;
@@ -574,15 +585,17 @@ export const userService = {
             : 'Google account already exists. Please login with Google.';
           throw new GraphQLError(message, { extensions: { code: 'CONFLICT' } });
         }
-        const phoneExists = await UserModel.findOne({
-          'auth.phone.number': input.phone_number,
-          'auth.phone.extension': input.phone_extension,
-        }).session(session);
-        if (phoneExists) {
-          throw new GraphQLError(
-            'This phone number is already registered. Please use a different number or login.',
-            { extensions: { code: 'CONFLICT' } }
-          );
+        if (input.phone_number) {
+          const phoneExists = await UserModel.findOne({
+            'auth.phone.number': input.phone_number,
+            'auth.phone.extension': input.phone_extension,
+          }).session(session);
+          if (phoneExists) {
+            throw new GraphQLError(
+              'This phone number is already registered. Please use a different number or login.',
+              { extensions: { code: 'CONFLICT' } }
+            );
+          }
         }
         const docs = await UserModel.create(
           [

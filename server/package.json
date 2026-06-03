@@ -17,6 +17,8 @@
     "test:coverage": "jest --coverage --runInBand",
     "migrate:user-schema": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-user-schema.ts",
     "migrate:user-schema:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-user-schema.ts --dry-run",
+    "sync:user-indexes": "ts-node -r tsconfig-paths/register --transpile-only scripts/sync-user-indexes.ts",
+    "sync:user-indexes:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/sync-user-indexes.ts --dry-run",
     "migrate:user-schema:rollback": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-user-schema-rollback.ts"
   },
   "dependencies": {

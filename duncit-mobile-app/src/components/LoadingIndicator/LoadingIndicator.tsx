@@ -1,4 +1,4 @@
-import { ActivityIndicator, Text, View } from 'react-native';
+import { Spinner, Text, YStack } from 'tamagui';
 
 export interface LoadingIndicatorProps {
   label?: string;
@@ -8,9 +8,13 @@ export interface LoadingIndicatorProps {
 /** Centered spinner with an optional label. */
 export function LoadingIndicator({ label, testID }: LoadingIndicatorProps) {
   return (
-    <View className="items-center gap-2" testID={testID}>
-      <ActivityIndicator color="#2563EB" />
-      {label ? <Text className="text-sm text-slate-300">{label}</Text> : null}
-    </View>
+    <YStack alignItems="center" gap={8} testID={testID}>
+      <Spinner color="$primary" />
+      {label ? (
+        <Text fontSize={14} color="$muted">
+          {label}
+        </Text>
+      ) : null}
+    </YStack>
   );
 }

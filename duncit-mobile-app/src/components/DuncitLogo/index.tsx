@@ -1,0 +1,1 @@
+export { DuncitLogo } from './DuncitLogo';

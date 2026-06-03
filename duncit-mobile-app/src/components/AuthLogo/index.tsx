@@ -1,0 +1,1 @@
+export { AuthLogo } from './AuthLogo';

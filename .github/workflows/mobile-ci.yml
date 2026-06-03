@@ -1,0 +1,51 @@
+name: Mobile CI
+
+# The Expo app `duncit-mobile-app` is a standalone npm project (NOT a pnpm
+# workspace member), so it has its own lint + typecheck + jest pipeline here,
+# separate from the pnpm-workspace form-tests / console-e2e jobs.
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'duncit-mobile-app/**'
+      - 'packages/auth-tokens/**'
+      - '.github/workflows/mobile-ci.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'duncit-mobile-app/**'
+      - 'packages/auth-tokens/**'
+      - '.github/workflows/mobile-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: mobile-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mobile-ci:
+    name: Lint, typecheck & tests (duncit-mobile-app)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: duncit-mobile-app/package-lock.json
+
+      # Standalone npm install; the `@duncit/auth-tokens` file: dep resolves to
+      # ../packages/auth-tokens in the checkout (plain JS/JSON, no build step).
+      - name: Install dependencies
+        working-directory: duncit-mobile-app
+        run: npm ci
+
+      # lint (eslint --max-warnings 0) + tsc --noEmit + jest --coverage (90% gate).
+      - name: Lint, typecheck & tests with coverage
+        working-directory: duncit-mobile-app
+        run: npm run ci

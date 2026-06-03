@@ -45,6 +45,12 @@ jobs:
         working-directory: duncit-mobile-app
         run: npm ci
 
+      # src/generated/** is gitignored — regenerate the typed GraphQL operations
+      # from the server schemas (tracked in the checkout) before typecheck/tests.
+      - name: Generate GraphQL types
+        working-directory: duncit-mobile-app
+        run: npm run codegen
+
       # lint (eslint --max-warnings 0) + tsc --noEmit + jest --coverage (90% gate).
       - name: Lint, typecheck & tests with coverage
         working-directory: duncit-mobile-app

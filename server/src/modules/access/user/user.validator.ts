@@ -6,10 +6,19 @@ const extRegex = /^\+?[0-9]{1,5}$/;
 
 export const registerSchema = yup.object({
   first_name: yup.string().min(1).max(60).required(),
-  last_name: yup.string().min(1).max(60).required(),
+  // last_name is optional: the simplified signup collects a single "Name" that
+  // may be a single word, so the surname can be empty.
+  last_name: yup.string().min(1).max(60).optional(),
   email: yup.string().email().required(),
-  phone_number: yup.string().matches(phoneRegex, 'Invalid phone').required(),
-  phone_extension: yup.string().matches(extRegex, 'Invalid extension').required(),
+  // Phone is no longer collected at signup; it is gathered later (profile).
+  phone_number: yup
+    .string()
+    .matches(phoneRegex, { message: 'Invalid phone', excludeEmptyString: true })
+    .optional(),
+  phone_extension: yup
+    .string()
+    .matches(extRegex, { message: 'Invalid extension', excludeEmptyString: true })
+    .optional(),
   password: yup.string().min(8).max(100).required(),
   dob: yup.date().max(new Date(), 'DOB must be in the past').required(),
   city: yup.string().optional(),
@@ -23,9 +32,18 @@ export const loginSchema = yup.object({
 
 export const googleSignupSchema = yup.object({
   id_token: yup.string().min(20).required(),
-  phone_number: yup.string().matches(phoneRegex, 'Invalid phone').required(),
-  phone_extension: yup.string().matches(extRegex, 'Invalid extension').required(),
-  dob: yup.date().max(new Date(), 'DOB must be in the past').required(),
+  // Token-only Google signup: the account is created from the verified Google
+  // profile and the user lands straight on the survey. Phone/dob are optional
+  // and collected later.
+  phone_number: yup
+    .string()
+    .matches(phoneRegex, { message: 'Invalid phone', excludeEmptyString: true })
+    .optional(),
+  phone_extension: yup
+    .string()
+    .matches(extRegex, { message: 'Invalid extension', excludeEmptyString: true })
+    .optional(),
+  dob: yup.date().max(new Date(), 'DOB must be in the past').optional(),
   city: yup.string().optional(),
   zone: yup.string().optional(),
 });

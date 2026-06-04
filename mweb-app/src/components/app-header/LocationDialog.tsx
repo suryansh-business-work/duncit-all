@@ -1,21 +1,19 @@
-import { useCallback } from 'react';
-import {
-  Box,
-  Button,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { useCallback, useEffect, useMemo, useState } from 'react';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import { alpha } from '@mui/material/styles';
 import PlaceIcon from '@mui/icons-material/Place';
 import ResponsiveDialog from '../ResponsiveDialog';
 import GpsLocationPicker from './GpsLocationPicker';
+import CountryStatePicker from './CountryStatePicker';
+import LocationCityGrid from './LocationCityGrid';
 import LocationAreaPicker from './LocationAreaPicker';
-import LocationCityCard from './LocationCityCard';
+import LocationMapPreview from './LocationMapPreview';
+import { buildLocationTree, type LocationLike } from '../../utils/location-tree';
 
 interface Props {
   open: boolean;
   onClose: () => void;
-  locations: any[];
+  locations: LocationLike[];
   draftLocationId: string;
   setDraftLocationId: (id: string) => void;
   draftZone: string;
@@ -33,27 +31,53 @@ export default function LocationDialog({
   setDraftZone,
   onApply,
 }: Props) {
-  const draftLoc = locations.find((l: any) => l.id === draftLocationId);
-  const zones: { zone_name: string; pincode?: string | null }[] = draftLoc?.location_zones ?? [];
-  const popularLocationId = locations.reduce((best: any | null, location: any) => {
-    if (!best) return location;
-    return (location.location_zones?.length ?? 0) > (best.location_zones?.length ?? 0)
-      ? location
-      : best;
-  }, null)?.id;
-  const applyLabel = draftZone
-    ? `Apply - ${draftZone}`
-    : zones.length
-      ? `Apply - ${zones.length} areas`
-      : 'Apply';
+  const tree = useMemo(() => buildLocationTree(locations), [locations]);
+  const draftLoc = locations.find((l) => l.id === draftLocationId);
+  const [country, setCountry] = useState('');
+  const [state, setState] = useState('');
+
+  // Sync the drilldown to the active selection whenever the dialog (re)opens.
+  useEffect(() => {
+    if (!open) return;
+    setCountry(draftLoc?.country?.trim() || tree[0]?.country || '');
+    setState(draftLoc?.state?.trim() || tree[0]?.states[0]?.state || '');
+  }, [open, draftLocationId]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const activeCountry = tree.find((c) => c.country === country) ?? tree[0];
+  const activeState =
+    activeCountry?.states.find((s) => s.state === state) ?? activeCountry?.states[0];
+  const cities = activeState?.cities ?? [];
+  const zones = draftLoc?.location_zones ?? [];
+
+  const handleCountry = (next: string) => {
+    setCountry(next);
+    const first = tree.find((c) => c.country === next)?.states[0];
+    setState(first?.state ?? '');
+  };
+
+  const handleCity = (id: string) => {
+    setDraftLocationId(id);
+    setDraftZone('');
+  };
 
   const handleAutoSelect = useCallback(
     (locationId: string, zoneName: string) => {
+      const loc = locations.find((l) => l.id === locationId);
+      if (loc) {
+        setCountry(loc.country?.trim() || '');
+        setState(loc.state?.trim() || '');
+      }
       setDraftLocationId(locationId);
       setDraftZone(zoneName);
     },
-    [setDraftLocationId, setDraftZone]
+    [locations, setDraftLocationId, setDraftZone]
   );
+
+  const applyLabel = draftZone
+    ? `Apply · ${draftZone}`
+    : zones.length
+      ? `Apply · ${zones.length} areas`
+      : 'Apply';
 
   const title = (
     <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>
@@ -65,7 +89,8 @@ export default function LocationDialog({
           display: 'grid',
           placeItems: 'center',
           color: 'primary.main',
-          bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.18 : 0.1),
+          bgcolor: (theme) =>
+            alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.18 : 0.1),
           border: 1,
           borderColor: (theme) => alpha(theme.palette.primary.main, 0.3),
         }}
@@ -74,14 +99,10 @@ export default function LocationDialog({
       </Box>
       <Box sx={{ minWidth: 0 }}>
         <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.15 }} noWrap>
-          Choose your city{draftZone ? ' / area' : ''}
+          Choose your location
         </Typography>
-        <Typography
-          variant="caption"
-          color="text.secondary"
-          sx={{ display: 'block', lineHeight: 1.25 }}
-        >
-          Pods and clubs are filtered by this selection.
+        <Typography variant="caption" color="text.secondary" sx={{ display: 'block', lineHeight: 1.25 }}>
+          Country, state, city &amp; area — pods are filtered by this.
         </Typography>
       </Box>
     </Stack>
@@ -111,59 +132,28 @@ export default function LocationDialog({
       sheetMaxHeight="92vh"
       paperSx={{
         bgcolor: 'background.default',
-        backgroundImage: (theme) => theme.palette.mode === 'dark'
-          ? 'radial-gradient(circle at 14% 0%, rgba(255,79,115,0.22), transparent 28%), linear-gradient(180deg, #130d08 0%, #090a12 20%, #0c0d16 100%)'
-          : 'radial-gradient(circle at 16% 0%, rgba(255,79,115,0.18), transparent 30%), linear-gradient(180deg, #fff7f2 0%, #ffffff 28%, #fff 100%)',
+        backgroundImage: (theme) =>
+          theme.palette.mode === 'dark'
+            ? 'radial-gradient(circle at 14% 0%, rgba(255,79,115,0.22), transparent 28%), linear-gradient(180deg, #130d08 0%, #090a12 20%, #0c0d16 100%)'
+            : 'radial-gradient(circle at 16% 0%, rgba(255,79,115,0.18), transparent 30%), linear-gradient(180deg, #fff7f2 0%, #ffffff 28%, #fff 100%)',
       }}
       contentSx={{ px: 0, pt: 0, pb: 0 }}
       actionsSx={{
-        bgcolor: (theme) => alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.72 : 0.92),
+        bgcolor: (theme) =>
+          alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.72 : 0.92),
         backdropFilter: 'blur(16px)',
       }}
     >
       <Box sx={{ px: 2, pt: 0.75, pb: 1.5 }}>
         <GpsLocationPicker locations={locations} onAutoSelect={handleAutoSelect} />
-
-        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900, lineHeight: 1.4 }}>
-          City
-        </Typography>
-        <Box
-          sx={{
-            display: 'grid',
-            gridAutoFlow: 'column',
-            gridAutoColumns: { xs: 'minmax(94px, 32%)', sm: 'minmax(126px, 1fr)' },
-            gap: 1,
-            mt: 0.5,
-            mb: 1.5,
-            pb: 0.5,
-            overflowX: 'auto',
-            scrollbarWidth: 'none',
-            '&::-webkit-scrollbar': { display: 'none' },
-          }}
-        >
-          {locations.map((locationItem: any, index: number) => {
-            const active = locationItem.id === draftLocationId;
-            return (
-              <LocationCityCard
-                key={locationItem.id}
-                location={locationItem}
-                active={active}
-                popular={!active && locationItem.id === popularLocationId}
-                index={index}
-                onSelect={() => {
-                  setDraftLocationId(locationItem.id);
-                  setDraftZone('');
-                }}
-              />
-            );
-          })}
-          {locations.length === 0 && (
-            <Typography variant="body2" color="text.secondary">
-              No locations available
-            </Typography>
-          )}
-        </Box>
-
+        <CountryStatePicker
+          tree={tree}
+          country={activeCountry?.country ?? ''}
+          state={activeState?.state ?? ''}
+          onCountry={handleCountry}
+          onState={setState}
+        />
+        <LocationCityGrid cities={cities} draftLocationId={draftLocationId} onSelect={handleCity} />
         {draftLoc && (
           <LocationAreaPicker
             locationName={draftLoc.location_name}
@@ -172,6 +162,12 @@ export default function LocationDialog({
             setDraftZone={setDraftZone}
           />
         )}
+        <LocationMapPreview
+          city={draftLoc?.city || draftLoc?.location_name}
+          zoneName={draftZone}
+          pincode={draftLoc?.location_pincode}
+          country={draftLoc?.country}
+        />
       </Box>
     </ResponsiveDialog>
   );

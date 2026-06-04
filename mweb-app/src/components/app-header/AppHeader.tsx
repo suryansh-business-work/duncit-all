@@ -114,6 +114,7 @@ export default function AppHeader({
               hasData={!!data}
               selectedLocationName={selectedLocation?.location_name}
               selectedZoneName={selectedZoneName}
+              selectedCountryCode={selectedLocation?.country_code}
               onClick={() => {
                 setDraftLocationId(selectedLocationId);
                 setDraftZone(selectedZoneName);

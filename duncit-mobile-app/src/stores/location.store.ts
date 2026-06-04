@@ -14,6 +14,8 @@ interface LocationState {
   selectedId: string;
   zoneName: string;
   cityLabel: string;
+  countryCode: string;
+  countryName: string;
   fetch: () => Promise<void>;
   select: (location: LocationItem, zoneName?: string) => void;
   clear: () => void;
@@ -25,9 +27,18 @@ export const useLocationStore = create<LocationState>((set, get) => ({
   selectedId: '',
   zoneName: '',
   cityLabel: '',
+  countryCode: '',
+  countryName: '',
   select: (location, zoneName = '') =>
-    set({ selectedId: location.id, cityLabel: location.city || location.location_name, zoneName }),
-  clear: () => set({ selectedId: '', zoneName: '', cityLabel: '' }),
+    set({
+      selectedId: location.id,
+      cityLabel: location.city || location.location_name,
+      countryCode: location.country_code ?? '',
+      countryName: location.country ?? '',
+      zoneName,
+    }),
+  clear: () =>
+    set({ selectedId: '', zoneName: '', cityLabel: '', countryCode: '', countryName: '' }),
   fetch: async () => {
     if (get().isLoading || get().data) return;
     set({ isLoading: true, error: undefined });

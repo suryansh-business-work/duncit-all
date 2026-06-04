@@ -1,11 +1,13 @@
 import { Box, Button, Chip, Skeleton } from '@mui/material';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
+import { countryFlagUrl } from '../../utils/location-tree';
 
 interface Props {
   loading: boolean;
   hasData: boolean;
   selectedLocationName?: string;
   selectedZoneName?: string;
+  selectedCountryCode?: string;
   onClick: () => void;
 }
 
@@ -14,14 +16,22 @@ export default function HeaderLocationButton({
   hasData,
   selectedLocationName,
   selectedZoneName,
+  selectedCountryCode,
   onClick,
 }: Props) {
   if (loading && !hasData) {
     return <Skeleton variant="rounded" width={90} height={28} sx={{ borderRadius: 1 }} />;
   }
+  const flag = countryFlagUrl(selectedCountryCode);
   return (
     <Button
-      startIcon={<LocationOnIcon />}
+      startIcon={
+        flag ? (
+          <Box component="img" src={flag} alt="" sx={{ width: 20, height: 14, borderRadius: 0.5 }} />
+        ) : (
+          <LocationOnIcon />
+        )
+      }
       onClick={onClick}
       sx={{
         textTransform: 'none',

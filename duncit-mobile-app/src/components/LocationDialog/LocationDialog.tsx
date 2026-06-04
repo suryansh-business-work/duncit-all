@@ -1,65 +1,27 @@
-import { useState } from 'react';
-import { Image, Modal } from 'react-native';
+import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import * as Location from 'expo-location';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
-import { useLocations } from '@/hooks/useLocations';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import type { LocationItem } from '@/stores/location.store';
 
-/** Bottom-sheet location picker — a "use my location" GPS button + the list of
- * active cities. RN port of mWeb's GpsLocationPicker + city selector. */
+import { AreaList } from './AreaList';
+import { CityList } from './CityList';
+import { CountryStateChips } from './CountryStateChips';
+import { LocationMap } from './LocationMap';
+import { useLocationDraft } from './useLocationDraft';
+
+/** Bottom-sheet location picker: GPS + country → state → city → area drilldown
+ * with an interactive map. RN port of mWeb's LocationDialog (apply-on-confirm). */
 export function LocationDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
-  const { locations, select, selectedId } = useLocations();
-  const { color, primary } = useThemeColors();
-  const [busy, setBusy] = useState(false);
-  const [detected, setDetected] = useState('');
-  const [error, setError] = useState('');
-
-  const matchCity = (city: string) =>
-    locations.find(
-      (l) =>
-        l.city.toLowerCase() === city.toLowerCase() ||
-        l.location_name.toLowerCase() === city.toLowerCase(),
-    );
-
-  const detect = async () => {
-    setError('');
-    setBusy(true);
-    try {
-      const perm = await Location.requestForegroundPermissionsAsync();
-      if (perm.status !== 'granted') {
-        setError('Location permission is needed to detect your city.');
-        return;
-      }
-      const pos = await Location.getCurrentPositionAsync({});
-      const [geo] = await Location.reverseGeocodeAsync({
-        latitude: pos.coords.latitude,
-        longitude: pos.coords.longitude,
-      });
-      const city = geo?.city ?? geo?.subregion ?? '';
-      setDetected(city);
-      const match = matchCity(city);
-      if (match) {
-        select(match);
-        onClose();
-      } else {
-        setError(`Duncit isn't in ${city || 'your area'} yet. Pick a city below.`);
-      }
-    } catch {
-      setError('Could not detect your location.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
-  const pick = (loc: LocationItem) => {
-    select(loc);
-    onClose();
-  };
+  const draft = useLocationDraft(open, onClose);
+  const { color, primary, onPrimary } = useThemeColors();
+  const applyLabel = draft.draftZone
+    ? `Apply · ${draft.draftZone}`
+    : draft.zones.length
+      ? `Apply · ${draft.zones.length} areas`
+      : 'Apply';
 
   return (
     <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
@@ -82,16 +44,16 @@ export function LocationDialog({ open, onClose }: { open: boolean; onClose: () =
             left={0}
             right={0}
             bottom={0}
-            maxHeight="82%"
+            maxHeight="88%"
             backgroundColor="$background"
             borderTopLeftRadius={20}
             borderTopRightRadius={20}
           >
             <SafeAreaView edges={['bottom']}>
-              <YStack padding={16} gap={12}>
+              <YStack paddingHorizontal={16} paddingTop={16} gap={12}>
                 <XStack alignItems="center" justifyContent="space-between">
                   <Text fontSize={18} fontWeight="900" color="$color">
-                    Choose location
+                    Choose your location
                   </Text>
                   <XStack
                     testID="location-close"
@@ -110,7 +72,7 @@ export function LocationDialog({ open, onClose }: { open: boolean; onClose: () =
                   testID="location-gps"
                   role="button"
                   aria-label="Use my location"
-                  onPress={() => void detect()}
+                  onPress={() => void draft.detect()}
                   alignItems="center"
                   justifyContent="center"
                   gap={8}
@@ -120,69 +82,93 @@ export function LocationDialog({ open, onClose }: { open: boolean; onClose: () =
                   borderColor="$primary"
                   pressStyle={{ opacity: 0.85 }}
                 >
-                  {busy ? (
+                  {draft.busy ? (
                     <Spinner color="$primary" />
                   ) : (
                     <MaterialIcons name="my-location" size={18} color={primary} />
                   )}
                   <Text fontSize={14} fontWeight="900" color="$primary">
-                    {busy ? 'Locating…' : 'Use my location'}
+                    {draft.busy ? 'Locating…' : 'Use my location'}
                   </Text>
                 </XStack>
-                {detected ? (
+                {draft.detected ? (
                   <Text fontSize={12} color="$muted">
-                    Detected: {detected}
+                    Detected: {draft.detected}
                   </Text>
                 ) : null}
-                {error ? (
+                {draft.error ? (
                   <Text testID="location-error" fontSize={12} color="$danger">
-                    {error}
+                    {draft.error}
                   </Text>
                 ) : null}
-                <ScrollView style={{ maxHeight: 360 }} showsVerticalScrollIndicator={false}>
-                  <YStack gap={8}>
-                    {locations.map((loc) => (
-                      <XStack
-                        key={loc.id}
-                        testID={`location-${loc.id}`}
-                        role="button"
-                        aria-label={loc.location_name}
-                        aria-selected={selectedId === loc.id}
-                        onPress={() => pick(loc)}
-                        alignItems="center"
-                        gap={12}
-                        padding={10}
-                        borderRadius={14}
-                        borderWidth={1}
-                        borderColor={selectedId === loc.id ? '$primary' : '$borderColor'}
-                        backgroundColor="$surface"
-                        pressStyle={{ opacity: 0.85 }}
-                      >
-                        {loc.location_image ? (
-                          <Image
-                            source={{ uri: loc.location_image }}
-                            style={{ width: 44, height: 44, borderRadius: 10 }}
-                            resizeMode="cover"
-                          />
-                        ) : (
-                          <MaterialIcons name="location-city" size={28} color={primary} />
-                        )}
-                        <YStack flex={1}>
-                          <Text fontSize={14.5} fontWeight="800" color="$color" numberOfLines={1}>
-                            {loc.location_name}
-                          </Text>
-                          <Text fontSize={12} color="$muted" numberOfLines={1}>
-                            {[loc.city, loc.state].filter(Boolean).join(', ')}
-                          </Text>
-                        </YStack>
-                        {selectedId === loc.id ? (
-                          <MaterialIcons name="check-circle" size={20} color={primary} />
-                        ) : null}
-                      </XStack>
-                    ))}
-                  </YStack>
-                </ScrollView>
               </YStack>
+
+              <ScrollView style={{ maxHeight: 420 }} showsVerticalScrollIndicator={false}>
+                <YStack paddingHorizontal={16} paddingVertical={12} gap={16}>
+                  <CountryStateChips
+                    tree={draft.tree}
+                    country={draft.country}
+                    state={draft.state}
+                    onCountry={draft.pickCountry}
+                    onState={draft.setState}
+                  />
+                  <CityList cities={draft.cities} draftId={draft.draftId} onPick={draft.pickCity} />
+                  {draft.draftLoc ? (
+                    <AreaList
+                      locationName={draft.draftLoc.location_name}
+                      zones={draft.zones}
+                      draftZone={draft.draftZone}
+                      onZone={draft.setDraftZone}
+                    />
+                  ) : null}
+                  <LocationMap
+                    city={draft.draftLoc?.city || draft.draftLoc?.location_name}
+                    zoneName={draft.draftZone}
+                    pincode={draft.draftLoc?.location_pincode}
+                    country={draft.draftLoc?.country}
+                  />
+                </YStack>
+              </ScrollView>
+
+              <XStack paddingHorizontal={16} paddingVertical={12} gap={12}>
+                <XStack
+                  testID="location-cancel"
+                  role="button"
+                  aria-label="Cancel"
+                  onPress={onClose}
+                  flex={1}
+                  height={48}
+                  alignItems="center"
+                  justifyContent="center"
+                  borderRadius={12}
+                  borderWidth={1}
+                  borderColor="$borderColor"
+                  pressStyle={{ opacity: 0.85 }}
+                >
+                  <Text fontSize={14} fontWeight="800" color="$color">
+                    Cancel
+                  </Text>
+                </XStack>
+                <XStack
+                  testID="location-apply"
+                  role="button"
+                  aria-label="Apply location"
+                  aria-disabled={!draft.draftId}
+                  onPress={draft.apply}
+                  flex={2}
+                  height={48}
+                  alignItems="center"
+                  justifyContent="center"
+                  borderRadius={12}
+                  backgroundColor={draft.draftId ? '$primary' : '$borderColor'}
+                  opacity={draft.draftId ? 1 : 0.6}
+                  pressStyle={{ opacity: 0.85 }}
+                >
+                  <Text fontSize={14} fontWeight="900" color={draft.draftId ? onPrimary : color}>
+                    {applyLabel}
+                  </Text>
+                </XStack>
+              </XStack>
             </SafeAreaView>
           </YStack>
         </YStack>

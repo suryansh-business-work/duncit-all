@@ -41,7 +41,7 @@ export function HomeFeed() {
         <RefreshControl refreshing={isLoading && hasData} onRefresh={refetch} tintColor={primary} />
       }
     >
-      <YStack gap={20} paddingTop={12} paddingBottom={110} testID="home-feed">
+      <YStack gap={20} paddingTop={12} paddingBottom={124} testID="home-feed">
         <StatusRail userName={userName} userPhoto={userPhoto} />
         <HomeVibeChips
           categories={categoryChips}

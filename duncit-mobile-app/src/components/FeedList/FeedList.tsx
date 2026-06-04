@@ -41,7 +41,7 @@ export function FeedList({
           <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={primary} />
         ) : undefined
       }
-      contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 110 }}
+      contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 124 }}
     >
       {isEmpty ? (
         <Text

@@ -32,6 +32,9 @@ export function SuperCategoryTabs() {
   return (
     <ScrollView
       horizontal
+      flexGrow={0}
+      flexShrink={0}
+      maxHeight={56}
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 8 }}
     >

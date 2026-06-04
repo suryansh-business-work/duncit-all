@@ -1,7 +1,8 @@
 import type { ReactNode } from 'react';
 import { RefreshControl } from 'react-native';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { ScrollView, Text } from 'tamagui';
 
+import { ListSkeleton } from '@/components/Skeleton';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface FeedListProps {
@@ -13,8 +14,8 @@ interface FeedListProps {
   children: ReactNode;
 }
 
-/** Vertical feed scaffold shared by the tab screens: a centred spinner while the
- * first load is in flight, an empty message, or the scrollable content with
+/** Vertical feed scaffold shared by the tab screens: a skeleton while the first
+ * load is in flight, an empty message, or the scrollable content with
  * pull-to-refresh and room for the floating bottom nav. */
 export function FeedList({
   isLoading,
@@ -27,11 +28,7 @@ export function FeedList({
   const { primary } = useThemeColors();
 
   if (isLoading && isEmpty) {
-    return (
-      <YStack flex={1} alignItems="center" justifyContent="center" testID={`${testID}-loading`}>
-        <Spinner color="$primary" size="large" />
-      </YStack>
-    );
+    return <ListSkeleton testID={`${testID}-loading`} />;
   }
 
   return (

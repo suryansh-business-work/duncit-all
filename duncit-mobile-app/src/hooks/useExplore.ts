@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from 'react';
 
+import { useLocations } from '@/hooks/useLocations';
+import { useSuperCategories } from '@/hooks/useSuperCategories';
 import {
   useExploreStore,
   type ExploreClub,
@@ -17,6 +19,8 @@ export function useExplore() {
   const fetch = useExploreStore((s) => s.fetch);
   const toggleSave = useExploreStore((s) => s.toggleSave);
   const toggleLike = useExploreStore((s) => s.toggleLike);
+  const { selectedSuperId } = useSuperCategories();
+  const { selectedId: selectedLocationId } = useLocations();
 
   useEffect(() => {
     void fetch();
@@ -27,6 +31,16 @@ export function useExplore() {
     (data?.clubs ?? []).forEach((club) => map.set(club.id, club));
     return map;
   }, [data?.clubs]);
+
+  const pods = useMemo(() => {
+    return (data?.pods ?? []).filter((p) => {
+      if (selectedSuperId && clubsById.get(p.club_id)?.super_category_id !== selectedSuperId) {
+        return false;
+      }
+      if (selectedLocationId && p.location_id !== selectedLocationId) return false;
+      return true;
+    });
+  }, [data?.pods, clubsById, selectedSuperId, selectedLocationId]);
 
   const serverSaved = useMemo(
     () => new Set(data?.me?.saved_pod_ids ?? []),
@@ -39,7 +53,7 @@ export function useExplore() {
     likeOverride[pod.id] ?? { liked_by_me: pod.liked_by_me, like_count: pod.like_count };
 
   return {
-    pods: data?.pods ?? [],
+    pods,
     clubsById,
     isLoading,
     hasData: !!data,

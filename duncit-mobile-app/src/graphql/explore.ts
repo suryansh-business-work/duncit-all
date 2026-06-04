@@ -14,6 +14,7 @@ export const ExplorePodsDocument = gql(`
       id
       club_id
       club_name
+      super_category_id
       club_feature_images_and_videos {
         url
         type
@@ -36,6 +37,7 @@ export const ExplorePodsDocument = gql(`
       }
       club_id
       club_slug
+      location_id
       place_label
       place_detail
       zone_name

@@ -7,7 +7,6 @@ import { HostManageScreen } from '@/screens/HostManageScreen';
 import { PodHistoryScreen } from '@/screens/PodHistoryScreen';
 import { PodIdeasScreen } from '@/screens/PodIdeasScreen';
 import { PodPlansScreen } from '@/screens/PodPlansScreen';
-import { ProfileScreen } from '@/screens/ProfileScreen';
 import { RegisterVenueScreen } from '@/screens/RegisterVenueScreen';
 import { SavedScreen } from '@/screens/SavedScreen';
 import { SupportScreen } from '@/screens/SupportScreen';
@@ -17,7 +16,6 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ goBack: jest.fn() }) }));
 
 const SCREENS: [string, ComponentType][] = [
-  ['Profile', ProfileScreen],
   ['Saved Items', SavedScreen],
   ['Pod History', PodHistoryScreen],
   ['Be a host', BecomeHostScreen],

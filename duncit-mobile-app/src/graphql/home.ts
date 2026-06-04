@@ -42,6 +42,7 @@ export const HomeFeedDocument = gql(`
       }
       club_id
       club_slug
+      location_id
       place_label
       place_detail
     }

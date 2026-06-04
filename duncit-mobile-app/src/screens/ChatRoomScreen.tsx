@@ -1,10 +1,11 @@
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { ChatMessageBubble } from '@/components/chat/ChatMessageBubble';
+import { ListSkeleton } from '@/components/Skeleton';
 import { useMe } from '@/hooks/useMe';
 import { usePodMessages } from '@/hooks/useChat';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -45,9 +46,7 @@ export function ChatRoomScreen() {
         </XStack>
 
         {isLoading && messages.length === 0 ? (
-          <YStack flex={1} alignItems="center" justifyContent="center" testID="chat-room-loading">
-            <Spinner color="$primary" size="large" />
-          </YStack>
+          <ListSkeleton testID="chat-room-loading" count={5} />
         ) : (
           <ScrollView flex={1} contentContainerStyle={{ paddingVertical: 12, gap: 8 }}>
             {messages.length === 0 ? (

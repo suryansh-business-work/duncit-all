@@ -1,11 +1,12 @@
 import { useWindowDimensions } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { ClubBody } from '@/components/details/ClubBody';
 import { DetailHero } from '@/components/details/DetailHero';
+import { DetailSkeleton } from '@/components/Skeleton';
 import { useClubDetails } from '@/hooks/useDetails';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -23,9 +24,7 @@ export function ClubDetailsScreen() {
     <YStack flex={1} testID="club-details-screen">
       <AppBackground />
       {isLoading && !club ? (
-        <YStack flex={1} alignItems="center" justifyContent="center" testID="club-details-loading">
-          <Spinner color="$primary" size="large" />
-        </YStack>
+        <DetailSkeleton testID="club-details-loading" />
       ) : !club ? (
         <YStack flex={1} alignItems="center" justifyContent="center" gap={12} padding={24}>
           <Text color="$muted" testID="club-details-error">

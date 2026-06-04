@@ -17,7 +17,7 @@ jest.mock('@/hooks/useDetails', () => ({
 
 const mockGoBack = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: mockGoBack }),
+  useNavigation: () => ({ goBack: mockGoBack, navigate: jest.fn() }),
   useRoute: () => ({ params: { podId: 'p1', title: 'Pod 1' } }),
 }));
 
@@ -45,6 +45,10 @@ const pod = {
   place_detail: null,
   what_this_pod_offers: ['Music'],
   available_perks: [],
+  payment_terms: null,
+  pod_hits: 12,
+  pod_occurrence: 'ONE_TIME',
+  place_charges: [],
   like_count: 3,
   liked_by_me: false,
   comment_count: 1,
@@ -70,6 +74,9 @@ describe('PodDetailsScreen', () => {
     renderWithProviders(<PodDetailsScreen />);
     expect(screen.getByText('Sunset Jam')).toBeOnTheScreen();
     expect(screen.getByTestId('pod-save')).toBeOnTheScreen();
+    expect(screen.getByTestId('accordion-about')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('pod-expand-all'));
+    fireEvent.press(screen.getByTestId('pod-view-club'));
     fireEvent.press(screen.getByTestId('detail-back'));
     expect(mockGoBack).toHaveBeenCalled();
   });

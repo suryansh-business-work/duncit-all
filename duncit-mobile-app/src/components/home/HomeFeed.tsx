@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { RefreshControl } from 'react-native';
-import { ScrollView, Spinner, Text, YStack } from 'tamagui';
+import { ScrollView, Text, YStack } from 'tamagui';
+
+import { HomeSkeleton } from '@/components/Skeleton';
 
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
@@ -28,11 +30,7 @@ export function HomeFeed() {
   const isEmpty = hasData && featuredPods.length === 0 && clubsWithPods.length === 0;
 
   if (isLoading && !hasData) {
-    return (
-      <YStack flex={1} alignItems="center" justifyContent="center" testID="home-loading">
-        <Spinner color="$primary" size="large" />
-      </YStack>
-    );
+    return <HomeSkeleton />;
   }
 
   return (

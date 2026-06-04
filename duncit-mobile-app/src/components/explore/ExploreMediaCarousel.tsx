@@ -13,6 +13,7 @@ interface ExploreMediaCarouselProps {
   fallbackUrl?: string | null;
   width: number;
   height: number;
+  dotsBottom?: number;
 }
 
 /** Full-bleed horizontal image carousel behind a reel. Videos are skipped for
@@ -22,6 +23,7 @@ export function ExploreMediaCarousel({
   fallbackUrl,
   width,
   height,
+  dotsBottom = 150,
 }: ExploreMediaCarouselProps) {
   const images = media.filter((m) => m.type === 'IMAGE' && !!m.url).map((m) => m.url);
   const items = images.length > 0 ? images : fallbackUrl ? [fallbackUrl] : [];
@@ -55,7 +57,14 @@ export function ExploreMediaCarousel({
         )}
       />
       {items.length > 1 ? (
-        <XStack position="absolute" bottom={150} left={0} right={0} justifyContent="center" gap={6}>
+        <XStack
+          position="absolute"
+          bottom={dotsBottom}
+          left={0}
+          right={0}
+          justifyContent="center"
+          gap={6}
+        >
           {items.map((url, i) => (
             <YStack
               key={`${i}-${url}`}

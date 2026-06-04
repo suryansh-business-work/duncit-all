@@ -1,5 +1,7 @@
 import { renderHook } from '@testing-library/react-native';
 
+import { useLocations } from '@/hooks/useLocations';
+import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { useHomeData, useHomeFeed } from '@/hooks/useHomeFeed';
 
 const mockHomeState: { data: unknown; isLoading: boolean; fetch: jest.Mock } = {
@@ -10,6 +12,12 @@ const mockHomeState: { data: unknown; isLoading: boolean; fetch: jest.Mock } = {
 jest.mock('@/stores/home.store', () => ({
   useHomeStore: (selector: (s: unknown) => unknown) => selector(mockHomeState),
 }));
+jest.mock('@/hooks/useSuperCategories', () => ({
+  useSuperCategories: jest.fn(() => ({ selectedSuperId: null })),
+}));
+jest.mock('@/hooks/useLocations', () => ({ useLocations: jest.fn(() => ({ selectedId: '' })) }));
+const mockedSuper = useSuperCategories as jest.Mock;
+const mockedLoc = useLocations as jest.Mock;
 
 const pod = (id: string, clubId: string, date: string) =>
   ({
@@ -29,6 +37,8 @@ const pod = (id: string, clubId: string, date: string) =>
   }) as never;
 
 beforeEach(() => {
+  mockedSuper.mockReturnValue({ selectedSuperId: null });
+  mockedLoc.mockReturnValue({ selectedId: '' });
   mockHomeState.data = {
     clubs: [
       {
@@ -58,6 +68,16 @@ describe('useHomeFeed', () => {
   it('filters by the selected vibe category', () => {
     expect(renderHook(() => useHomeFeed('cat1')).result.current.totalPods).toBe(2);
     expect(renderHook(() => useHomeFeed('other')).result.current.clubsWithPods).toHaveLength(0);
+  });
+
+  it('filters out pods when a super-category or location is selected', () => {
+    mockedSuper.mockReturnValue({ selectedSuperId: 'super-x' });
+    expect(renderHook(() => useHomeFeed('')).result.current.totalPods).toBe(0);
+
+    mockedSuper.mockReturnValue({ selectedSuperId: null });
+    mockedLoc.mockReturnValue({ selectedId: 'loc-y' });
+    expect(renderHook(() => useHomeFeed('')).result.current.totalPods).toBe(0);
+    expect(renderHook(() => useHomeData()).result.current.pods).toHaveLength(0);
   });
 });
 

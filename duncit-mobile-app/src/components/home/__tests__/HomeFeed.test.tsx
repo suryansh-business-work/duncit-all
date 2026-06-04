@@ -75,9 +75,9 @@ describe('HomeFeed', () => {
     expect(screen.getByTestId('home-empty')).toBeOnTheScreen();
   });
 
-  it('shows the loading state on first load', () => {
+  it('shows the skeleton on first load', () => {
     mockedFeed.mockReturnValue({ ...base, isLoading: true, hasData: false });
     renderWithProviders(<HomeFeed />);
-    expect(screen.getByTestId('home-loading')).toBeOnTheScreen();
+    expect(screen.getByTestId('home-skeleton')).toBeOnTheScreen();
   });
 });

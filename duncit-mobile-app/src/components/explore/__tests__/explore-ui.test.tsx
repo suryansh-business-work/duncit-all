@@ -100,4 +100,11 @@ describe('ExploreReels', () => {
     layout();
     expect(screen.getByTestId('explore-empty')).toBeOnTheScreen();
   });
+
+  it('shows the skeleton while loading', () => {
+    mockedExplore.mockReturnValue({ ...base, pods: [], isLoading: true, hasData: false });
+    renderWithProviders(<ExploreReels />);
+    layout();
+    expect(screen.getByTestId('explore-loading')).toBeOnTheScreen();
+  });
 });

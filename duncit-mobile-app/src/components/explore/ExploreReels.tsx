@@ -2,8 +2,9 @@ import { useState } from 'react';
 import { FlatList, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Spinner, Text, YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
+import { DetailSkeleton } from '@/components/Skeleton';
 import { useExplore } from '@/hooks/useExplore';
 import type { ExplorePod } from '@/stores/explore.store';
 import type { RootStackParamList } from '@/navigation/types';
@@ -25,9 +26,7 @@ export function ExploreReels() {
   return (
     <YStack flex={1} onLayout={onLayout} testID="explore-reels">
       {height === 0 ? null : isLoading && !hasData ? (
-        <YStack flex={1} alignItems="center" justifyContent="center" testID="explore-loading">
-          <Spinner color="$primary" size="large" />
-        </YStack>
+        <DetailSkeleton testID="explore-loading" />
       ) : pods.length === 0 ? (
         <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
           <Text color="$muted" textAlign="center" testID="explore-empty">

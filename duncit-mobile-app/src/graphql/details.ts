@@ -32,6 +32,14 @@ export const PodDetailsDocument = gql(`
       place_detail
       what_this_pod_offers
       available_perks
+      payment_terms
+      pod_hits
+      pod_occurrence
+      place_charges {
+        label
+        amount
+        note
+      }
       like_count
       liked_by_me
       comment_count

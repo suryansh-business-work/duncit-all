@@ -2,7 +2,7 @@ import { useEffect, useMemo } from 'react';
 import { useField, useFormikContext } from 'formik';
 import { useQuery } from '@apollo/client';
 import { Autocomplete, Skeleton, Stack, TextField } from '@mui/material';
-import { CATEGORIES_BY_PARENT, type CategoryOption } from '../../api/data.gql';
+import { CATEGORIES_BY_PARENT, CATEGORIES_BY_LEVEL, type CategoryOption } from '../../api/data.gql';
 
 interface Props {
   superName?: string;
@@ -34,10 +34,10 @@ export default function CategorySelectors({
     skip: !superId,
     fetchPolicy: 'cache-and-network',
   });
-  // All sub-categories; filtered client-side to the selected categories (the
-  // categories query takes a single parent, but we allow several categories).
-  const subs = useQuery<{ categories: CategoryOption[] }>(CATEGORIES_BY_PARENT, {
-    variables: { level: 'SUB', parent_id: null },
+  // All sub-categories (no parent filter — passing parent_id: null matches none),
+  // then narrowed client-side to the selected categories.
+  const subs = useQuery<{ categories: CategoryOption[] }>(CATEGORIES_BY_LEVEL, {
+    variables: { level: 'SUB' },
     skip: categoryIds.length === 0,
     fetchPolicy: 'cache-and-network',
   });

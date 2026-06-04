@@ -16,6 +16,25 @@ export const CATEGORIES_BY_PARENT = gql`
   }
 `;
 
+/**
+ * All categories at a level (no parent filter) — needed for sub-categories,
+ * which span several selected parent categories. Filtered client-side by the
+ * chosen category ids. (Passing parent_id: null would wrongly match only
+ * parentless rows.)
+ */
+export const CATEGORIES_BY_LEVEL = gql`
+  query CategoriesByLevel($level: CategoryLevel!) {
+    categories(filter: { level: $level }) {
+      id
+      name
+      slug
+      parent_id
+      is_active
+      sort_order
+    }
+  }
+`;
+
 export const CRM_SERVICES_OFFERED = gql`
   query CrmServicesOffered($filter: CrmServiceOfferedFilter) {
     crmServicesOffered(filter: $filter) { ${SERVICE_OFFERED_FIELDS} }

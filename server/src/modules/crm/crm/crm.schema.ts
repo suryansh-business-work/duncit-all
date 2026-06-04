@@ -403,6 +403,8 @@ export const crmTypeDefs = gql`
     crmExcelExport(entity: CrmAiEntity!): CrmExcelFile!
     crmServices(kind: CrmServiceKind, include_inactive: Boolean): [CrmService!]!
     crmDynamicFields(entity: CrmEntityType, include_inactive: Boolean): [CrmDynamicField!]!
+    "The configured Twilio caller-ID (From) number, shown on call dialogs."
+    crmCallFromNumber: String
   }
 
   extend type Mutation {

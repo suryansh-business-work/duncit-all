@@ -1,11 +1,12 @@
 import { Router, type Request, type Response } from 'express';
 import express from 'express';
+import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { communicationLogService } from '@modules/crm/communicationLog/communicationLog.service';
 import { callService } from './call.service';
 import { audioCache } from './audioCache';
 import { emitCallStatus } from './call.socket';
 import { getWebhookBaseUrl } from './webhookBase';
-import { buildPortalDialTwiml, buildSayHangupTwiml, escapeXml } from './call.twiml';
+import { buildPortalDialTwiml, buildSayHangupTwiml } from './call.twiml';
 
 const xml = (res: Response, body: string) => res.type('text/xml').send(body);
 const EMPTY_TWIML = '<?xml version="1.0" encoding="UTF-8"?><Response></Response>';
@@ -18,34 +19,20 @@ export function buildCallWebhookRouter(): Router {
   const router = Router();
   router.use(express.urlencoded({ extended: false }));
 
-  // Portal call: the agent's phone answered → Servam connect clip, then bridge to customer.
+  // Portal call: the agent's phone answered → bridge to the customer (plain
+  // Twilio <Say>, no Servam dependency, so a normal call can't fail on TTS).
   router.post('/voice/portal', async (req: Request, res: Response) => {
     const logId = String(req.query.logId || '').trim();
     const userId = String(req.query.userId || '').trim();
     const to = String(req.query.to || '').trim();
     if (!to) return xml(res, buildSayHangupTwiml('No customer number. Goodbye.'));
-    const base = await getWebhookBaseUrl();
+    const [base, callerId] = await Promise.all([getWebhookBaseUrl(), getRuntimeEnvValue('TWILIO_PHONE_NUMBER')]);
     const qs = `logId=${logId}&userId=${encodeURIComponent(userId)}&mode=PORTAL`;
-    const audioUrl = await callService.synthAudioUrl('Connecting your Duncit call now.', undefined, 'en-IN', base);
-    if (!audioUrl) {
-      return xml(
-        res,
-        [
-          '<?xml version="1.0" encoding="UTF-8"?>',
-          '<Response>',
-          '<Say>Connecting your Duncit call now.</Say>',
-          `<Dial answerOnBridge="true" action="${escapeXml(`${base}/twilio/call-status?${qs}`)}" method="POST" record="record-from-answer-dual" recordingStatusCallback="${escapeXml(`${base}/twilio/call-status?${qs}&kind=recording`)}" recordingStatusCallbackMethod="POST">`,
-          `<Number>${escapeXml(to)}</Number>`,
-          '</Dial>',
-          '</Response>',
-        ].join('')
-      );
-    }
     return xml(
       res,
       buildPortalDialTwiml({
         customer: to,
-        connectAudioUrl: audioUrl,
+        callerId: (callerId || '').trim(),
         actionUrl: `${base}/twilio/call-status?${qs}`,
         recordingCallbackUrl: `${base}/twilio/call-status?${qs}&kind=recording`,
       })

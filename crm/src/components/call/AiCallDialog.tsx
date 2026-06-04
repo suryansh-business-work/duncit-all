@@ -15,6 +15,7 @@ import {
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import {
   CRM_CALL_PROMPTS,
+  CRM_CALL_FROM_NUMBER,
   START_CRM_AI_CALL,
   type CrmCallPrompt,
   type CrmAiCallResult,
@@ -59,6 +60,11 @@ export default function AiCallDialog({ open, lead, onClose }: Props) {
     fetchPolicy: 'cache-and-network',
   });
   const prompts = data?.crmCallPrompts ?? [];
+  const { data: fromData } = useQuery<{ crmCallFromNumber: string | null }>(CRM_CALL_FROM_NUMBER, {
+    skip: !open,
+    fetchPolicy: 'cache-first',
+  });
+  const fromNumber = fromData?.crmCallFromNumber ?? '';
 
   const [start, { loading: starting }] = useMutation<{ startCrmAiCall: CrmAiCallResult }>(START_CRM_AI_CALL);
 
@@ -160,7 +166,8 @@ export default function AiCallDialog({ open, lead, onClose }: Props) {
             </>
           ) : (
             <CallStage
-              number={lead?.to ?? ''}
+              fromNumber={fromNumber}
+              toNumber={lead?.to ?? ''}
               statusLabel={callStatusView(status ?? 'INITIATED').label}
               tone={callStatusView(status ?? 'INITIATED').tone}
               active={!ended}

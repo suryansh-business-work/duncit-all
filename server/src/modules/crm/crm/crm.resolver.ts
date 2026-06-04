@@ -2,6 +2,7 @@ import { crmService } from './crm.service';
 import { CRM_RW } from './crm.constants';
 import { parseCrmLeadText, type CrmAiEntity } from './crm.ai';
 import { callService } from '@modules/crm/call/call.service';
+import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import type { CommsLogEntity } from '@modules/crm/communicationLog/communicationLog.model';
 import { buildTemplateBase64, exportLeadsBase64, importLeads, type CrmExcelEntity } from './crm.excel';
 import type { GraphQLContext } from '@context';
@@ -68,6 +69,10 @@ export const crmResolvers = {
     crmExcelExport: async (_p: unknown, args: { entity: CrmExcelEntity }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return { filename: exportFilename(args.entity), content_base64: await exportLeadsBase64(args.entity) };
+    },
+    crmCallFromNumber: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return (await getRuntimeEnvValue('TWILIO_PHONE_NUMBER')) || null;
     },
   },
   Mutation: {

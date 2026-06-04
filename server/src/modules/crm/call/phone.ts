@@ -10,8 +10,10 @@ export function toE164(raw: string, defaultDial = '+91'): string {
   const s0 = String(raw || '').trim();
   if (!s0) return '';
   if (s0.startsWith('+')) return '+' + s0.slice(1).replace(/\D/g, '');
-  const digits = s0.replace(/\D/g, '');
+  let digits = s0.replace(/\D/g, '');
   if (digits.startsWith('00')) return '+' + digits.slice(2);
+  // Strip a national trunk prefix (e.g. "06397202382" → "6397202382").
+  digits = digits.replace(/^0+/, '');
   const code = String(defaultDial).replace(/\D/g, '') || '91';
   // Already includes the country code (e.g. 919876543210)?
   if (digits.startsWith(code) && digits.length > 10) return '+' + digits;

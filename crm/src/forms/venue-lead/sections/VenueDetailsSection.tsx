@@ -6,7 +6,6 @@ import MultiSelectField from '../../fields/MultiSelectField';
 import FieldGrid from '../../fields/FieldGrid';
 import SuperCategoryField from '../../fields/SuperCategoryField';
 import CategorySelectors from '../../fields/CategorySelectors';
-import ServicesOfferedPicker from '../../fields/ServicesOfferedPicker';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
 export default function VenueDetailsSection({ config }: { config: CrmOptionGroup }) {
@@ -35,7 +34,6 @@ export default function VenueDetailsSection({ config }: { config: CrmOptionGroup
           hint="You selected Other; describe the venue type."
         />
       )}
-      <ServicesOfferedPicker />
       <FormField name="venue_description" label="Venue Description" size="small" multiline minRows={2} />
       <FieldGrid>
         <FormField name="capacity_min" label="Capacity Min" size="small" inputProps={{ inputMode: 'numeric' }} />

@@ -47,24 +47,27 @@ const TTS_LANG = (language?: string | null) => {
 };
 
 /**
- * Portal (human) call: the agent's phone has answered — greet with the Servam
- * connect clip, then bridge to the customer. `action` reports the dial outcome
- * so the CRM can mark the call "over" live.
+ * Portal (human) call: the agent's phone has answered — a short spoken notice,
+ * then bridge to the customer. Uses plain Twilio `<Say>` (NOT Servam/`<Play>`)
+ * so a normal call never depends on TTS / audio hosting. `callerId` is the
+ * Twilio number shown to the customer; `action` reports the dial outcome so the
+ * CRM can mark the call "over" live.
  */
 export function buildPortalDialTwiml(opts: {
   customer: string;
-  connectAudioUrl: string;
+  callerId?: string;
   actionUrl: string;
   recordingCallbackUrl?: string;
 }): string {
   const record = opts.recordingCallbackUrl
     ? ` record="record-from-answer-dual" recordingStatusCallback="${escapeXml(opts.recordingCallbackUrl)}" recordingStatusCallbackMethod="POST"`
     : '';
+  const caller = opts.callerId ? ` callerId="${escapeXml(opts.callerId)}"` : '';
   return [
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<Response>',
-    `<Play>${escapeXml(opts.connectAudioUrl)}</Play>`,
-    `<Dial answerOnBridge="true" action="${escapeXml(opts.actionUrl)}" method="POST"${record}>`,
+    '<Say>Connecting your Duncit call now.</Say>',
+    `<Dial answerOnBridge="true"${caller} action="${escapeXml(opts.actionUrl)}" method="POST"${record}>`,
     `<Number>${escapeXml(opts.customer)}</Number>`,
     '</Dial>',
     '</Response>',

@@ -11,17 +11,26 @@ import { getWebhookBaseUrl } from './webhookBase';
 import { toE164, defaultDialCode, isValidPhone } from './phone';
 import { buildAiPlayGatherTwiml, buildSayHangupTwiml, mapTwilioStatus, isTerminalStatus } from './call.twiml';
 
-/** Agent leg for portal calls: the logged-in user's own phone, else the Tech-portal fallback. */
+/**
+ * Agent leg for portal calls: the predefined number from the Twilio config
+ * (`agent_phone_number` on the TWILIO entry) is used first; the logged-in
+ * user's own profile phone is the fallback. Twilio rings this number and
+ * bridges it to the customer so the agent talks to the lead.
+ */
 async function resolveAgentNumber(userId: string): Promise<string | null> {
+  const candidates: string[] = [];
+  const configured = (await getRuntimeEnvValue('TWILIO_AGENT_PHONE_NUMBER')).trim();
+  if (configured) candidates.push(toE164(configured));
   try {
     const u: any = await UserModel.findById(userId).lean();
     const ph = u?.auth?.phone;
-    if (ph?.number) return toE164(String(ph.number), String(ph.extension || '+91'));
+    if (ph?.number) candidates.push(toE164(String(ph.number), String(ph.extension || '+91')));
   } catch {
-    /* fall through to the configured fallback */
+    /* no profile phone */
   }
-  const fallback = await getRuntimeEnvValue('TWILIO_AGENT_PHONE_NUMBER');
-  return fallback ? toE164(fallback) : null;
+  // First *valid* number wins, so a placeholder config (+00000000) doesn't block
+  // a real profile number.
+  return candidates.find(isValidPhone) ?? candidates[0] ?? null;
 }
 
 interface TwilioCreds {
@@ -136,14 +145,14 @@ export const callService = {
     if (!creds) {
       return { ok: false, message: 'Twilio is not configured. Set the TWILIO account SID, auth token and phone number in the Tech portal.', log: null };
     }
-    // Prefer the number the agent typed in the dialog; else their profile / Tech-portal fallback.
+    // Predefined Twilio-config agent number (or the agent's profile phone).
     const typed = (input.agent_number ?? '').trim();
     const agent = typed ? toE164(typed, await defaultDialCode()) : await resolveAgentNumber(input.user_id);
     if (!agent) {
-      return { ok: false, message: 'Enter the phone number we should ring to connect you (or add one to your profile).', log: null };
+      return { ok: false, message: 'No agent number configured. Set "Agent Phone Number" on the TWILIO entry in the Tech portal.', log: null };
     }
     if (!isValidPhone(agent)) {
-      return { ok: false, message: `The number to ring (${agent}) is not valid. Enter your phone number in the call dialog (e.g. 9876543210).`, log: null };
+      return { ok: false, message: `The configured agent number (${agent}) is not valid. Fix "Agent Phone Number" on the TWILIO entry in the Tech portal.`, log: null };
     }
     const to = toE164(input.to, await defaultDialCode());
     if (!isValidPhone(to)) {

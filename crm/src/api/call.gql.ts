@@ -32,6 +32,12 @@ export const DELETE_CRM_CALL_PROMPT = gql`
   }
 `;
 
+export const CRM_CALL_FROM_NUMBER = gql`
+  query CrmCallFromNumber {
+    crmCallFromNumber
+  }
+`;
+
 export const START_CRM_AI_CALL = gql`
   mutation StartCrmAiCall(
     $entity: CrmAiEntity!

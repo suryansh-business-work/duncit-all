@@ -59,7 +59,7 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
         <span>
           <ButtonGroup variant="outlined" size="small" ref={anchorRef} disabled={!mobile} aria-label="Call options" sx={{ height: CALL_HEIGHT }}>
             <Button startIcon={<PhoneIcon />} onClick={() => setPortalOpen(true)} sx={BTN_SX}>
-              Call Through Portal
+              Call
             </Button>
             <Button size="small" onClick={() => setMenuOpen((v) => !v)} aria-label="More options" sx={{ px: 0.5, height: CALL_HEIGHT, minHeight: CALL_HEIGHT }}>
               <ArrowDropDownIcon fontSize="small" />
@@ -74,7 +74,7 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
               <ClickAwayListener onClickAway={() => setMenuOpen(false)}>
                 <MenuList autoFocusItem={menuOpen} dense>
                   <MenuItem onClick={() => { setMenuOpen(false); setPortalOpen(true); }}>
-                    <PhoneIcon fontSize="small" sx={{ mr: 1 }} /> Call Through Portal
+                    <PhoneIcon fontSize="small" sx={{ mr: 1 }} /> Call
                   </MenuItem>
                   <MenuItem onClick={() => { setMenuOpen(false); setAiOpen(true); }}>
                     <SmartToyIcon fontSize="small" sx={{ mr: 1 }} /> AI Call

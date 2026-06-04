@@ -34,13 +34,9 @@ export const PORTAL_ACCESS: PortalAccess[] = [
     key: 'admin',
     name: 'Admin',
     url: url('admin'),
-    roles: [
-      { key: 'SUPER_ADMIN', name: 'Super Admin' },
-      { key: 'CITY_ADMIN', name: 'City Admin' },
-      { key: 'ZONAL_ADMIN', name: 'Zonal Admin' },
-      { key: 'SUPPORT_USER', name: 'Support Agent' },
-      { key: 'FINANCE_USER', name: 'Finance Analyst' },
-    ],
+    // Admin access = Super Admin only. Granting/revoking admins (with emails) is
+    // managed from the dedicated Super Admins panel on the Roles page.
+    roles: [{ key: 'SUPER_ADMIN', name: 'Super Admin' }],
   },
   { key: 'ads', name: 'Ads', url: url('ads'), roles: [{ key: 'ADS_MANAGER', name: 'Ads Manager' }] },
   { key: 'crm', name: 'CRM', url: url('crm'), roles: [{ key: 'CRM_MANAGER', name: 'CRM Manager' }] },

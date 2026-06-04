@@ -130,6 +130,24 @@ export function sendAdminCredentialsEmail(opts: {
   });
 }
 
+export function sendAdminAccessGrantedEmail(opts: { to: string; name: string }) {
+  return sendEmail({
+    to: opts.to,
+    subject: 'Welcome to Duncit as an Admin',
+    template: 'admin-access-granted',
+    vars: { name: opts.name },
+  });
+}
+
+export function sendAdminAccessRevokedEmail(opts: { to: string; name: string }) {
+  return sendEmail({
+    to: opts.to,
+    subject: 'Your Duncit admin access was removed',
+    template: 'admin-access-revoked',
+    vars: { name: opts.name },
+  });
+}
+
 export function sendEmailVerificationOtpEmail(opts: { to: string; name: string; otp: string; expiresMinutes: string }) {
   return sendEmail({
     to: opts.to,

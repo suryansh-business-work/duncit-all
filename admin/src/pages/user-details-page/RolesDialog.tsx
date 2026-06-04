@@ -40,10 +40,15 @@ function PortalCard({
     <Card variant="outlined">
       <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.5 }}>
-          <Typography variant="subtitle2" fontWeight={700}>
-            {portal.name}
-          </Typography>
-          <Tooltip title={portal.url}>
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="subtitle2" fontWeight={700}>
+              {portal.name}
+            </Typography>
+            <Typography variant="caption" color="text.secondary">
+              {portal.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
+            </Typography>
+          </Box>
+          <Tooltip title={`Open ${portal.url}`}>
             <IconButton size="small" component="a" href={portal.url} target="_blank" rel="noopener">
               <OpenInNewIcon fontSize="small" />
             </IconButton>

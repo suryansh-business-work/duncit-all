@@ -27,6 +27,8 @@ import {
   sendWelcomeEmail,
   sendAdminCredentialsEmail,
   sendEmailVerificationOtpEmail,
+  sendAdminAccessGrantedEmail,
+  sendAdminAccessRevokedEmail,
 } from '@services/email/email.service';
 import type { AuthUser } from '@context';
 import { CategoryModel } from '@modules/pods/category/category.model';
@@ -1289,6 +1291,60 @@ export const userService = {
       assignedZones: target.metadata?.assigned_zones ?? [],
       assignedCity: target.profile?.assigned_city ?? null,
     });
+    const fresh = await UserModel.findById(user_id);
+    return toPublic(fresh);
+  },
+
+  // Grant SUPER_ADMIN ("admin") access to a user + email them a security
+  // warning. Idempotent: re-granting an existing admin only re-sends nothing.
+  async grantAdmin(user_id: string) {
+    const target = await UserModel.findById(user_id);
+    if (!target) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const current = new Set<string>(target.metadata?.role_keys ?? []);
+    if (!current.has('SUPER_ADMIN')) {
+      current.add('SUPER_ADMIN');
+      await replaceUserRoles(user_id, Array.from(current), {
+        assignedZones: target.metadata?.assigned_zones ?? [],
+        assignedCity: target.profile?.assigned_city ?? null,
+      });
+      const email = target.auth?.email;
+      if (email) {
+        sendAdminAccessGrantedEmail({ to: email, name: target.profile?.first_name || 'there' }).catch(
+          // eslint-disable-next-line no-console
+          (e) => console.error('Admin granted email failed', e)
+        );
+      }
+    }
+    const fresh = await UserModel.findById(user_id);
+    return toPublic(fresh);
+  },
+
+  // Revoke SUPER_ADMIN access + email the user. The seeded root admin
+  // (DEFAULT_SUPER_ADMIN_EMAIL) is protected and cannot be revoked.
+  async revokeAdmin(user_id: string) {
+    const target = await UserModel.findById(user_id);
+    if (!target) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const rootEmail = (process.env.DEFAULT_SUPER_ADMIN_EMAIL || 'admin@duncit.com').toLowerCase();
+    if ((target.auth?.email ?? '').toLowerCase() === rootEmail) {
+      throw new GraphQLError('The root super admin cannot be revoked', {
+        extensions: { code: 'FORBIDDEN' },
+      });
+    }
+    const current = new Set<string>(target.metadata?.role_keys ?? []);
+    if (current.has('SUPER_ADMIN')) {
+      current.delete('SUPER_ADMIN');
+      await replaceUserRoles(user_id, Array.from(current), {
+        assignedZones: target.metadata?.assigned_zones ?? [],
+        assignedCity: target.profile?.assigned_city ?? null,
+      });
+      const email = target.auth?.email;
+      if (email) {
+        sendAdminAccessRevokedEmail({ to: email, name: target.profile?.first_name || 'there' }).catch(
+          // eslint-disable-next-line no-console
+          (e) => console.error('Admin revoked email failed', e)
+        );
+      }
+    }
     const fresh = await UserModel.findById(user_id);
     return toPublic(fresh);
   },

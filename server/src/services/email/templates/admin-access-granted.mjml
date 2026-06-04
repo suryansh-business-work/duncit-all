@@ -1,0 +1,35 @@
+<mjml>
+  <mj-head>
+    <mj-title>You're now a Duncit Admin</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+      <mj-button background-color="#3b82f6" color="#ffffff" border-radius="8px" font-weight="700" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <mj-section padding="20px 0 0 0">
+      <mj-column>
+        <mj-image src="https://duncit.com/duncit-logo.svg" alt="Duncit" width="160px" align="center" padding="0" />
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="bold" color="#222222">Welcome to Duncit as an Admin, {{name}}</mj-text>
+        <mj-text color="#555555">You've been granted <strong>Admin</strong> access. You now have full access to the Duncit admin console.</mj-text>
+        <mj-button href="https://admin.duncit.com">Open Admin Console</mj-button>
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#fff7ed" padding="16px 20px" border-left="4px solid #f97316">
+      <mj-column>
+        <mj-text font-size="15px" font-weight="bold" color="#9a3412">⚠️ Keep your account safe</mj-text>
+        <mj-text color="#7c2d12">Do not give your account access to anyone. Never share your password or login link. Admin access carries full control of the platform, so sharing it is risky and can compromise every Duncit user. If you ever suspect your account is compromised, contact the team immediately.</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="16px 0 24px 0">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. You're receiving this because your Duncit account was granted admin access.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

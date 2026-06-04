@@ -5,6 +5,8 @@ jest.mock("@services/email/email.service", () => ({
   sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
   sendAdminCredentialsEmail: jest.fn().mockResolvedValue(undefined),
   sendEmailVerificationOtpEmail: jest.fn().mockResolvedValue(undefined),
+  sendAdminAccessGrantedEmail: jest.fn().mockResolvedValue(undefined),
+  sendAdminAccessRevokedEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
 import { userService } from "../../user.service";
@@ -155,5 +157,16 @@ describe("userService integration", () => {
         dob: new Date("1990-01-01").toISOString(),
       } as any),
     ).rejects.toThrow();
+  });
+
+  it("protects the root super admin from revocation", async () => {
+    await userService.register({
+      first_name: "Root",
+      email: "admin@duncit.com",
+      password: "StrongPass123",
+      dob: new Date("1990-01-01").toISOString(),
+    } as any);
+    const root = await userService.list({ search: "admin@duncit.com" });
+    await expect(userService.revokeAdmin(root[0]!.user_id)).rejects.toThrow(/root super admin/i);
   });
 });

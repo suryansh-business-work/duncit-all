@@ -33,3 +33,41 @@ export const DELETE_ROLE = gql`
     deleteRole(role_id: $role_id)
   }
 `;
+
+export const ADMINS = gql`
+  query Admins {
+    users(filter: { role: "SUPER_ADMIN" }) {
+      user_id
+      full_name
+      email
+    }
+  }
+`;
+
+export const SEARCH_USERS = gql`
+  query SearchUsers($search: String) {
+    users(filter: { search: $search }) {
+      user_id
+      full_name
+      email
+    }
+  }
+`;
+
+export const GRANT_ADMIN = gql`
+  mutation GrantAdminAccess($user_id: ID!) {
+    grantAdminAccess(user_id: $user_id) {
+      user_id
+      roles
+    }
+  }
+`;
+
+export const REVOKE_ADMIN = gql`
+  mutation RevokeAdminAccess($user_id: ID!) {
+    revokeAdminAccess(user_id: $user_id) {
+      user_id
+      roles
+    }
+  }
+`;

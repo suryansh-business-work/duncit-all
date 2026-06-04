@@ -289,6 +289,8 @@ export const userTypeDefs = gql`
     assignUserRoles(user_id: ID!, role_keys: [String!]!): User!
     addUserRole(user_id: ID!, role_key: String!): User!
     removeUserRole(user_id: ID!, role_key: String!): User!
+    grantAdminAccess(user_id: ID!): User!
+    revokeAdminAccess(user_id: ID!): User!
     recordUserContactAction(input: RecordUserContactActionInput!): UserContactAction!
     startRecordedUserCall(input: StartRecordedUserCallInput!): UserContactAction!
     deleteUserContactAction(action_id: ID!): Boolean!

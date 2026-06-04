@@ -52,6 +52,9 @@ export const config = {
   // OAuth client id for Google sign-in. Must match the server's GOOGLE_CLIENT_ID
   // so the verified id_token audience lines up.
   googleClientId: process.env.EXPO_PUBLIC_GOOGLE_CLIENT_ID ?? '',
+  // Google Maps key for the interactive location map (Maps Embed API). Mirrors
+  // mWeb's VITE_GOOGLE_MAP_API; the map degrades to nothing when unset.
+  googleMapApiKey: process.env.EXPO_PUBLIC_GOOGLE_MAP_API ?? '',
   requestTimeoutMs: 15_000,
 } as const;
 

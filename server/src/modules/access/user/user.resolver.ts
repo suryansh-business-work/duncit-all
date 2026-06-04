@@ -270,5 +270,13 @@ export const userResolvers = {
       requireRole(ctx, ROLE_ASSIGN_ROLES);
       return userService.removeRole(args.user_id, args.role_key);
     },
+    grantAdminAccess: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ROLE_ASSIGN_ROLES);
+      return userService.grantAdmin(args.user_id);
+    },
+    revokeAdminAccess: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ROLE_ASSIGN_ROLES);
+      return userService.revokeAdmin(args.user_id);
+    },
   },
 };

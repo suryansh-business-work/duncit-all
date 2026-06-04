@@ -8,6 +8,7 @@ import { CREATE_ROLE, DELETE_ROLE, ROLES_QUERY, UPDATE_ROLE } from './queries';
 import { blankRole, type RoleEdit } from './types';
 import RolesTable from './RolesTable';
 import RoleEditDialog from './RoleEditDialog';
+import SuperAdminsManager from './SuperAdminsManager';
 
 export default function RolesPage() {
   const { data, loading, error, refetch } = useQuery(ROLES_QUERY);
@@ -90,6 +91,8 @@ export default function RolesPage() {
       </Stack>
 
       {error && <Alert severity="error">{error.message}</Alert>}
+
+      <SuperAdminsManager />
 
       <RolesTable
         loading={loading}

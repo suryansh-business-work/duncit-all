@@ -12,8 +12,8 @@ export function LogoutButton() {
   return (
     <XStack
       testID="logout-button"
-      accessibilityRole="button"
-      accessibilityLabel="Logout"
+      role="button"
+      aria-label="Logout"
       onPress={() => void onLogout()}
       width={40}
       height={40}

@@ -17,8 +17,12 @@ module.exports = {
     '!src/utils/test-utils.tsx',
     // Codegen output — not hand-written, validated by the compiler.
     '!src/generated/**',
-    // Pure navigation wiring + side-effects — exercised at runtime, not in unit tests.
+    // Pure navigation wiring — exercised at runtime, not in unit tests (typechecked).
     '!src/navigation/RootNavigator.tsx',
+    '!src/navigation/MainTabs.tsx',
+    // Platform `.web` variants — jest runs the native platform, so these shims
+    // (which mirror their tested native counterparts) are never loaded here.
+    '!src/**/*.web.{ts,tsx}',
   ],
   coverageThreshold: {
     global: {

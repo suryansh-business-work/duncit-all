@@ -1,4 +1,4 @@
-import * as SecureStore from 'expo-secure-store';
+import { getItem, setItem, removeItem } from '@/services/secure-storage';
 
 /**
  * Auth token persistence. Mobile analogue of mWeb's `localStorage` token:
@@ -8,13 +8,13 @@ import * as SecureStore from 'expo-secure-store';
 const TOKEN_KEY = 'duncit.auth.token';
 
 export async function getAuthToken(): Promise<string | null> {
-  return SecureStore.getItemAsync(TOKEN_KEY);
+  return getItem(TOKEN_KEY);
 }
 
 export async function setAuthToken(token: string): Promise<void> {
-  await SecureStore.setItemAsync(TOKEN_KEY, token);
+  await setItem(TOKEN_KEY, token);
 }
 
 export async function clearAuthToken(): Promise<void> {
-  await SecureStore.deleteItemAsync(TOKEN_KEY);
+  await removeItem(TOKEN_KEY);
 }

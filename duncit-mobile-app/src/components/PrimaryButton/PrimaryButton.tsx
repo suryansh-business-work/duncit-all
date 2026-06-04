@@ -21,8 +21,9 @@ export function PrimaryButton({
   return (
     <XStack
       testID={testID}
-      accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled, busy: loading }}
+      role="button"
+      aria-disabled={isDisabled}
+      aria-busy={loading}
       disabled={isDisabled}
       onPress={() => {
         if (!isDisabled) onPress();

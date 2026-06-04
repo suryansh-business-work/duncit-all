@@ -32,8 +32,8 @@ export function SidebarPolicies({
   return (
     <YStack testID="sidebar-policies">
       <XStack
-        accessibilityRole="button"
-        accessibilityLabel="Policies"
+        role="button"
+        aria-label="Policies"
         onPress={toggle}
         marginHorizontal={8}
         marginVertical={2}
@@ -54,8 +54,8 @@ export function SidebarPolicies({
             <XStack
               key={p.id}
               testID={`sidebar-policy-${p.slug}`}
-              accessibilityRole="button"
-              accessibilityLabel={p.title}
+              role="button"
+              aria-label={p.title}
               onPress={() => onSelect(p.slug)}
               marginHorizontal={8}
               alignItems="center"

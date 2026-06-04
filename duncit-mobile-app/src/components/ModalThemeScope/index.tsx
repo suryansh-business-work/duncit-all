@@ -1,0 +1,1 @@
+export { ModalThemeScope } from './ModalThemeScope';

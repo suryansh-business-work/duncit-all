@@ -53,8 +53,9 @@ export function SurveyFooter({ count, total, saving, canSubmit, onSubmit }: Surv
         </YStack>
         <XStack
           testID="survey-submit"
-          accessibilityRole="button"
-          accessibilityState={{ disabled: !canSubmit, busy: saving }}
+          role="button"
+          aria-disabled={!canSubmit}
+          aria-busy={saving}
           disabled={!canSubmit}
           onPress={() => {
             if (canSubmit) onSubmit();

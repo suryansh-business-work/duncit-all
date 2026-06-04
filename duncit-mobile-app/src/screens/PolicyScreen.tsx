@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { usePolicy } from '@/hooks/usePolicies';
+import { AppBackground } from '@/components/AppBackground';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
@@ -29,13 +30,14 @@ export function PolicyScreen() {
   const policy = data?.policyBySlug;
 
   return (
-    <YStack flex={1} backgroundColor="$background" testID="policy-screen">
+    <YStack flex={1} testID="policy-screen">
+      <AppBackground />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
           <XStack
             testID="policy-back"
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
+            role="button"
+            aria-label="Go back"
             onPress={() => navigation.goBack()}
             width={40}
             height={40}

@@ -1,6 +1,7 @@
 import { defaultConfig } from '@tamagui/config/v4';
+import { Platform } from 'react-native';
 import { createTamagui } from 'tamagui';
-import { dark, light, semantic } from '@duncit/auth-tokens';
+import { dark, light, semantic, typography } from '@duncit/auth-tokens';
 
 /**
  * Brand themes layered on top of Tamagui's default config. We keep the default
@@ -52,8 +53,20 @@ const brandDark: typeof brandLight = {
   danger: semantic.error,
 };
 
+// Brand typeface. On web we use the SAME Quicksand stack mWeb loads via Google
+// Fonts (see web-fonts.web.ts) so type matches across surfaces; native keeps
+// Tamagui's resolved system family until a Quicksand asset is bundled, so RN
+// falls back cleanly to the platform font instead of an unknown family.
+const brandFamily = Platform.OS === 'web' ? typography.fontFamily : defaultConfig.fonts.body.family;
+const fonts = {
+  ...defaultConfig.fonts,
+  body: { ...defaultConfig.fonts.body, family: brandFamily },
+  heading: { ...defaultConfig.fonts.heading, family: brandFamily },
+};
+
 export const config = createTamagui({
   ...defaultConfig,
+  fonts,
   // Allow long-form React Native style props (alignItems, paddingHorizontal, …)
   // and raw colour values (hex/rgba), not just shorthands + tokens — the app
   // uses RN-style prop names and dynamic per-category hues.

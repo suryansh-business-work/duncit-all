@@ -43,7 +43,7 @@ describe('SurveyChip', () => {
   });
   it('reflects the selected state', () => {
     renderWithProviders(<SurveyChip id="c2" label="Music" selected onToggle={jest.fn()} />);
-    expect(screen.getByTestId('chip-c2').props.accessibilityState.selected).toBe(true);
+    expect(screen.getByTestId('chip-c2').props['aria-selected']).toBe(true);
   });
 });
 

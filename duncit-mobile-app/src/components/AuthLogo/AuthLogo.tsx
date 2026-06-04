@@ -34,8 +34,8 @@ export function AuthLogo({ size = 58 }: { size?: number }) {
         testID="auth-logo-image"
         source={{ uri: branding.logo_url }}
         resizeMode="contain"
-        accessibilityRole="image"
-        accessibilityLabel={name}
+        role="img"
+        aria-label={name}
         style={{ height: size, width: size * 3 }}
       />
     );

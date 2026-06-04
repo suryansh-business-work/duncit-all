@@ -17,10 +17,16 @@ export type RootStackParamList = {
   Faqs: undefined;
   PodPlans: undefined;
   Policy: { slug: string };
+  ChatRoom: { podId: string; title: string };
+  PodDetails: { podId: string; title: string };
+  ClubDetails: { clubId: string; title: string };
 };
 
 /** Param-less destinations reachable from the account drawer menu. */
-export type MenuRoute = Exclude<keyof RootStackParamList, 'Policy' | 'Login' | 'Signup' | 'Survey'>;
+export type MenuRoute = Exclude<
+  keyof RootStackParamList,
+  'Policy' | 'Login' | 'Signup' | 'Survey' | 'ChatRoom' | 'PodDetails' | 'ClubDetails'
+>;
 
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace

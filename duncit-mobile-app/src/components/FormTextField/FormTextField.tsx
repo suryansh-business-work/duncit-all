@@ -48,7 +48,7 @@ export function FormTextField<T extends FieldValues>({
         value={(field.value as string) ?? ''}
         onChangeText={field.onChange}
         onBlur={field.onBlur}
-        accessibilityLabel={label}
+        aria-label={label}
         {...inputProps}
       />
       {hasError ? (

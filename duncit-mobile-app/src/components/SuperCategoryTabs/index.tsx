@@ -1,0 +1,1 @@
+export { SuperCategoryTabs } from './SuperCategoryTabs';

@@ -28,43 +28,14 @@ function Chip({ icon, label, primary }: { icon: IconName; label: string; primary
   );
 }
 
-function Section({
-  title,
-  items,
-  icon,
-  tint,
-}: {
-  title: string;
-  items: string[];
-  icon: IconName;
-  tint: string;
-}) {
-  if (items.length === 0) return null;
-  return (
-    <YStack gap={8}>
-      <Text fontSize={15} fontWeight="900" color="$color">
-        {title}
-      </Text>
-      {items.map((item) => (
-        <XStack key={item} alignItems="center" gap={8}>
-          <MaterialIcons name={icon} size={16} color={tint} />
-          <Text flex={1} fontSize={13.5} color="$color">
-            {item}
-          </Text>
-        </XStack>
-      ))}
-    </YStack>
-  );
-}
-
-/** The pod-details body — title, key chips, host/place, description and the
- * "what this pod offers" / perks lists. */
+/** Pod overview — title, key chips, host/place and the quick-stats row (spots
+ * left · views · likes · comments). The detailed sections live in PodAccordions. */
 export function PodInfo({ pod }: { pod: PodDetail }) {
   const { primary, muted } = useThemeColors();
   const host = pod.host_names.join(', ');
   const place = podPlaceLabel(pod) || pod.zone_name || '';
   const attendees = pod.pod_attendees.length;
-  const going = `${attendees}${pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''} going`;
+  const remaining = pod.no_of_spots > 0 ? Math.max(pod.no_of_spots - attendees, 0) : null;
 
   return (
     <YStack padding={16} gap={14}>
@@ -74,7 +45,10 @@ export function PodInfo({ pod }: { pod: PodDetail }) {
       <XStack gap={8} flexWrap="wrap">
         <Chip icon="event" label={podDateLabel(pod)} />
         <Chip icon="payments" label={podPriceLabel(pod)} primary />
-        <Chip icon="group" label={going} />
+        <Chip
+          icon="group"
+          label={`${attendees}${pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''} going`}
+        />
       </XStack>
       {host ? (
         <XStack alignItems="center" gap={8}>
@@ -92,18 +66,14 @@ export function PodInfo({ pod }: { pod: PodDetail }) {
           </Text>
         </XStack>
       ) : null}
-      {pod.pod_description ? (
-        <Text fontSize={14} color="$color" lineHeight={20}>
-          {pod.pod_description}
-        </Text>
-      ) : null}
-      <Section
-        title="What this pod offers"
-        items={pod.what_this_pod_offers}
-        icon="check-circle"
-        tint={primary}
-      />
-      <Section title="Perks" items={pod.available_perks} icon="star" tint="#f5a623" />
+      <XStack gap={8} flexWrap="wrap">
+        {remaining !== null ? (
+          <Chip icon="confirmation-number" label={`${remaining} spots left`} />
+        ) : null}
+        <Chip icon="visibility" label={`${pod.pod_hits ?? 0} views`} />
+        <Chip icon="favorite" label={`${pod.like_count} likes`} />
+        <Chip icon="chat-bubble-outline" label={`${pod.comment_count} comments`} />
+      </XStack>
     </YStack>
   );
 }

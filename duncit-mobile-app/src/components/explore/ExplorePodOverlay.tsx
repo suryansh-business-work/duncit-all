@@ -24,9 +24,15 @@ function Chip({ icon, label, tint }: { icon?: string; label: string; tint?: stri
   );
 }
 
+interface ExplorePodOverlayProps {
+  pod: ExplorePod;
+  clubName?: string;
+  bottom?: number;
+}
+
 /** The dark gradient scrim + pod info (club, title, description, chips) anchored
- * to the bottom-left of a reel. RN port of mWeb's ExplorePodOverlay. */
-export function ExplorePodOverlay({ pod, clubName }: { pod: ExplorePod; clubName?: string }) {
+ * above the CTA bar of a reel. RN port of mWeb's ExplorePodOverlay. */
+export function ExplorePodOverlay({ pod, clubName, bottom = 150 }: ExplorePodOverlayProps) {
   const isFree = pod.pod_type.includes('FREE');
   const place =
     [pod.place_label, pod.place_detail].filter(Boolean).join(' · ') || pod.zone_name || '';
@@ -39,7 +45,7 @@ export function ExplorePodOverlay({ pod, clubName }: { pod: ExplorePod; clubName
         style={StyleSheet.absoluteFill}
         pointerEvents="none"
       />
-      <YStack position="absolute" left={16} right={80} bottom={150} gap={8}>
+      <YStack position="absolute" left={16} right={80} bottom={bottom} gap={8}>
         {clubName ? (
           <XStack alignItems="center" gap={8}>
             <YStack

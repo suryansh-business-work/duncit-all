@@ -36,6 +36,8 @@ export const linking: LinkingOptions<RootStackParamList> = {
       PodIdeas: 'pod-ideas',
       Faqs: 'faqs',
       PodPlans: 'pod-plans',
+      Policies: 'policies',
+      SupportTickets: 'support/tickets',
       Policy: 'policy/:slug',
       ChatRoom: 'chats/:podId',
       PodDetails: 'pod/:podId',

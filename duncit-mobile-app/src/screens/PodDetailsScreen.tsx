@@ -1,17 +1,20 @@
 import { Share } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
-import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
+import { PodAccordions } from '@/components/details/PodAccordions';
 import { PodInfo } from '@/components/details/PodInfo';
+import { DetailSkeleton } from '@/components/Skeleton';
 import { usePodActions, usePodDetails } from '@/hooks/useDetails';
 import type { RootStackParamList } from '@/navigation/types';
 
-/** Pod details — opened from the reels and pod cards. Hero gallery + actions
- * (like/save/share) over the pod overview. */
+/** Pod details — hero gallery + overview + the full accordion stack. Opened from
+ * the reels and pod cards. */
 export function PodDetailsScreen() {
-  const navigation = useNavigation();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'PodDetails'>>();
   const { podId } = route.params;
   const { pod, savedInitially, isLoading } = usePodDetails(podId);
@@ -30,9 +33,7 @@ export function PodDetailsScreen() {
     <YStack flex={1} testID="pod-details-screen">
       <AppBackground />
       {isLoading && !pod ? (
-        <YStack flex={1} alignItems="center" justifyContent="center" testID="pod-details-loading">
-          <Spinner color="$primary" size="large" />
-        </YStack>
+        <DetailSkeleton testID="pod-details-loading" />
       ) : !pod ? (
         <YStack flex={1} alignItems="center" justifyContent="center" gap={12} padding={24}>
           <Text color="$muted" testID="pod-details-error">
@@ -62,6 +63,12 @@ export function PodDetailsScreen() {
             <HeroButton testID="pod-share" icon="share" onPress={share} />
           </DetailHero>
           <PodInfo pod={pod} />
+          <PodAccordions
+            pod={pod}
+            onOpenClub={() =>
+              navigation.navigate('ClubDetails', { clubId: pod.club_id, title: 'Club' })
+            }
+          />
         </ScrollView>
       )}
     </YStack>

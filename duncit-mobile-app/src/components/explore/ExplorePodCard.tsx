@@ -35,9 +35,9 @@ export function ExplorePodCard({
   onOpen,
 }: ExplorePodCardProps) {
   const insets = useSafeAreaInsets();
-  // Clear the floating bottom nav (≈ insets.bottom + 70).
+  // Stack bottom→top: floating nav · CTA bar · (info overlay + action rail).
   const ctaBottom = insets.bottom + 80;
-  const railBottom = ctaBottom + 72;
+  const contentBottom = ctaBottom + 84; // clears the CTA bar above
   const cover = club?.club_feature_images_and_videos.find((m) => !!m.url)?.url ?? null;
   const attendees = pod.pod_attendees.length;
   const joinLabel = `${attendees}${pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''}`;
@@ -57,10 +57,11 @@ export function ExplorePodCard({
         fallbackUrl={cover}
         width={width}
         height={height}
+        dotsBottom={ctaBottom + 56}
       />
-      <ExplorePodOverlay pod={pod} clubName={club?.club_name} />
+      <ExplorePodOverlay pod={pod} clubName={club?.club_name} bottom={contentBottom} />
 
-      <YStack position="absolute" right={12} bottom={railBottom} gap={14} alignItems="center">
+      <YStack position="absolute" right={12} bottom={contentBottom} gap={14} alignItems="center">
         <ExploreActionButton
           testID={`reel-join-${pod.pod_id}`}
           icon="how-to-reg"

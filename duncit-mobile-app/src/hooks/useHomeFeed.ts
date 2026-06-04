@@ -1,5 +1,7 @@
 import { useEffect, useMemo } from 'react';
 
+import { useLocations } from '@/hooks/useLocations';
+import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { useHomeStore, type HomeFeed } from '@/stores/home.store';
 
 export type HomeCategory = HomeFeed['categories'][number];
@@ -17,15 +19,24 @@ const byDateAsc = (a: HomePod, b: HomePod) =>
 /** Derives the home shell sections from the raw feed. A selected vibe chip keeps
  * only pods whose club matches that category (direct match — the deep
  * ancestor/price/date filtering from mWeb is a follow-up). */
-function deriveHome(data: HomeFeed | undefined, selectedCategoryId: string) {
+function deriveHome(
+  data: HomeFeed | undefined,
+  selectedCategoryId: string,
+  selectedSuperId: string | null,
+  selectedLocationId: string,
+) {
   const clubs = data?.clubs ?? [];
   const allPods = data?.pods ?? [];
   const categoryChips = data?.categories ?? [];
 
   const clubsById = new Map(clubs.map((c) => [c.id, c]));
-  const pods = selectedCategoryId
-    ? allPods.filter((p) => clubsById.get(p.club_id)?.category_id === selectedCategoryId)
-    : allPods;
+  const pods = allPods.filter((p) => {
+    const club = clubsById.get(p.club_id);
+    if (selectedSuperId && club?.super_category_id !== selectedSuperId) return false;
+    if (selectedCategoryId && club?.category_id !== selectedCategoryId) return false;
+    if (selectedLocationId && p.location_id !== selectedLocationId) return false;
+    return true;
+  });
 
   const podsByClub = new Map<string, HomePod[]>();
   pods.forEach((p) => {
@@ -50,17 +61,35 @@ export function useHomeData() {
   const data = useHomeStore((s) => s.data);
   const isLoading = useHomeStore((s) => s.isLoading);
   const fetch = useHomeStore((s) => s.fetch);
+  const { selectedSuperId } = useSuperCategories();
+  const { selectedId: selectedLocationId } = useLocations();
 
   useEffect(() => {
     void fetch();
   }, [fetch]);
 
+  const { clubs, pods } = useMemo(() => {
+    const allClubs = data?.clubs ?? [];
+    const byLocation = (p: { location_id?: string | null }) =>
+      !selectedLocationId || p.location_id === selectedLocationId;
+    if (!selectedSuperId) {
+      return { clubs: allClubs, pods: (data?.pods ?? []).filter(byLocation) };
+    }
+    const matchClubIds = new Set(
+      allClubs.filter((c) => c.super_category_id === selectedSuperId).map((c) => c.id),
+    );
+    return {
+      clubs: allClubs.filter((c) => matchClubIds.has(c.id)),
+      pods: (data?.pods ?? []).filter((p) => matchClubIds.has(p.club_id) && byLocation(p)),
+    };
+  }, [data, selectedSuperId, selectedLocationId]);
+
   return {
     isLoading,
     hasData: !!data,
     refetch: () => fetch(true),
-    clubs: data?.clubs ?? [],
-    pods: data?.pods ?? [],
+    clubs,
+    pods,
     categories: data?.categories ?? [],
   };
 }
@@ -71,12 +100,17 @@ export function useHomeFeed(selectedCategoryId: string) {
   const isLoading = useHomeStore((s) => s.isLoading);
   const error = useHomeStore((s) => s.error);
   const fetch = useHomeStore((s) => s.fetch);
+  const { selectedSuperId } = useSuperCategories();
+  const { selectedId: selectedLocationId } = useLocations();
 
   useEffect(() => {
     void fetch();
   }, [fetch]);
 
-  const derived = useMemo(() => deriveHome(data, selectedCategoryId), [data, selectedCategoryId]);
+  const derived = useMemo(
+    () => deriveHome(data, selectedCategoryId, selectedSuperId, selectedLocationId),
+    [data, selectedCategoryId, selectedSuperId, selectedLocationId],
+  );
 
   return { isLoading, error, hasData: !!data, refetch: () => fetch(true), ...derived };
 }

@@ -4,6 +4,7 @@ import { ChatRoomCard } from '@/components/chat/ChatRoomCard';
 import { ExploreActionButton } from '@/components/explore/ExploreActionButton';
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
 import { ClubCard } from '@/components/home/ClubCard';
+import { ClubSection } from '@/components/home/ClubSection';
 import { PodCard } from '@/components/home/PodCard';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -52,6 +53,22 @@ describe('component branch variants', () => {
     } as never;
     renderWithProviders(<ClubCard club={club} />);
     expect(screen.getByTestId('club-card-cl-1')).toBeOnTheScreen();
+  });
+
+  it('ClubSection renders without a description or image', () => {
+    const club = {
+      id: 'c1',
+      club_id: 'cl-1',
+      club_name: 'Runners',
+      club_description: '',
+      club_feature_images_and_videos: [],
+      category_id: null,
+      super_category_id: null,
+    } as never;
+    renderWithProviders(
+      <ClubSection club={club} pods={[] as never} onOpenPod={jest.fn()} onOpenClub={jest.fn()} />,
+    );
+    expect(screen.getByTestId('club-section-cl-1')).toBeOnTheScreen();
   });
 
   it('ChatRoomCard with a cover and a single member', () => {

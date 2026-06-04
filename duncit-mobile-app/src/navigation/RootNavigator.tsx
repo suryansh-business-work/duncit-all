@@ -11,12 +11,14 @@ import { PodDetailsScreen } from '@/screens/PodDetailsScreen';
 import { PodHistoryScreen } from '@/screens/PodHistoryScreen';
 import { PodIdeasScreen } from '@/screens/PodIdeasScreen';
 import { PodPlansScreen } from '@/screens/PodPlansScreen';
+import { PoliciesScreen } from '@/screens/PoliciesScreen';
 import { PolicyScreen } from '@/screens/PolicyScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { RegisterVenueScreen } from '@/screens/RegisterVenueScreen';
 import { SavedScreen } from '@/screens/SavedScreen';
 import { SignupScreen } from '@/screens/SignupScreen';
 import { SupportScreen } from '@/screens/SupportScreen';
+import { SupportTicketsScreen } from '@/screens/SupportTicketsScreen';
 import { SurveyScreen } from '@/screens/SurveyScreen';
 import { VenueManageScreen } from '@/screens/VenueManageScreen';
 import { useAuthStore } from '@/stores/auth.store';
@@ -59,6 +61,8 @@ export function RootNavigator() {
           <Stack.Screen name="PodIdeas" component={PodIdeasScreen} />
           <Stack.Screen name="Faqs" component={FaqsScreen} />
           <Stack.Screen name="PodPlans" component={PodPlansScreen} />
+          <Stack.Screen name="Policies" component={PoliciesScreen} />
+          <Stack.Screen name="SupportTickets" component={SupportTicketsScreen} />
           <Stack.Screen name="Policy" component={PolicyScreen} />
           <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
           <Stack.Screen name="PodDetails" component={PodDetailsScreen} />

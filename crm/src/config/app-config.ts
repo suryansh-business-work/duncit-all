@@ -73,6 +73,20 @@ export const appConfig: AppConfig = {
       ],
     },
     {
+      label: 'Data',
+      icon: 'analytics',
+      children: [
+        { label: 'Services Offered', to: '/data/services-offered', icon: 'contacts' },
+      ],
+    },
+    {
+      label: 'AI Call Prompts',
+      icon: 'ai',
+      children: [
+        { label: 'Static Content', to: '/call-prompts', icon: 'phone' },
+      ],
+    },
+    {
       label: 'Settings',
       icon: 'analytics',
       children: [

@@ -90,9 +90,12 @@ export type CrmDynamicValueMap = Record<string, string | number | boolean | stri
 export interface VenueLead {
   id: string;
   super_category_id?: string | null;
+  category_ids?: string[];
+  sub_category_ids?: string[];
   super_category?: CrmSuperCategoryRef | null;
   venue_name: string;
   venue_types: string[];
+  venue_type_other?: string | null;
   venue_description?: string | null;
   capacity_min?: number | null;
   capacity_max?: number | null;
@@ -138,6 +141,8 @@ export interface VenueLead {
 export interface HostLead {
   id: string;
   super_category_id?: string | null;
+  category_ids?: string[];
+  sub_category_ids?: string[];
   super_category?: CrmSuperCategoryRef | null;
   host_name: string;
   host_type?: string | null;

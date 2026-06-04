@@ -20,6 +20,8 @@ import { initSocketServer } from './realtime/io';
 import { attachChatHandlers } from '@modules/engagement/chat/chat.socket';
 import { attachBouncerHandlers } from '@modules/support/bouncer/bouncer.socket';
 import { attachSupportChatHandlers } from '@modules/support/supportChat/supportChat.socket';
+import { attachCallHandlers } from '@modules/crm/call/call.socket';
+import { buildCallWebhookRouter } from '@modules/crm/call/call.webhook';
 import { websiteContentService } from '@modules/content/websiteContent/websiteContent.service';
 import { userService } from '@modules/access/user/user.service';
 import { marketingService } from '@modules/crm/marketing/marketing.service';
@@ -92,6 +94,9 @@ async function bootstrap() {
       res.status(204).end();
     }
   });
+
+  // CRM softphone + AI call Twilio webhooks (parses its own urlencoded bodies).
+  app.use('/twilio', buildCallWebhookRouter());
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
 
@@ -171,6 +176,7 @@ async function bootstrap() {
   attachChatHandlers();
   attachBouncerHandlers();
   attachSupportChatHandlers();
+  attachCallHandlers();
 
   const port = Number(process.env.PORT || 2001);
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));

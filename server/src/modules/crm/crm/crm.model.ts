@@ -45,8 +45,11 @@ const activitySchema = new Schema(
 const venueLeadSchema = new Schema(
   {
     super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
+    category_ids: { type: [Schema.Types.ObjectId], ref: 'Category', default: [], index: true },
+    sub_category_ids: { type: [Schema.Types.ObjectId], ref: 'Category', default: [], index: true },
     venue_name: { type: String, required: true, trim: true },
     venue_types: { type: [String], default: [] },
+    venue_type_other: { type: String, default: '' },
     venue_description: { type: String, trim: true, default: '' },
     capacity_min: { type: Number, default: null },
     capacity_max: { type: Number, default: null },
@@ -108,6 +111,8 @@ const venueLeadSchema = new Schema(
 const hostLeadSchema = new Schema(
   {
     super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
+    category_ids: { type: [Schema.Types.ObjectId], ref: 'Category', default: [], index: true },
+    sub_category_ids: { type: [Schema.Types.ObjectId], ref: 'Category', default: [], index: true },
     host_name: { type: String, required: true, trim: true },
     host_type: { type: String, default: '' },
     organization_name: { type: String, trim: true, default: '' },

@@ -148,9 +148,12 @@ export const crmTypeDefs = gql`
   type VenueLead {
     id: ID!
     super_category_id: ID
+    category_ids: [ID!]!
+    sub_category_ids: [ID!]!
     super_category: CrmSuperCategoryRef
     venue_name: String!
     venue_types: [String!]!
+    venue_type_other: String
     venue_description: String
     capacity_min: Int
     capacity_max: Int
@@ -196,6 +199,8 @@ export const crmTypeDefs = gql`
   type HostLead {
     id: ID!
     super_category_id: ID
+    category_ids: [ID!]!
+    sub_category_ids: [ID!]!
     super_category: CrmSuperCategoryRef
     host_name: String!
     host_type: String
@@ -260,8 +265,11 @@ export const crmTypeDefs = gql`
 
   input VenueLeadInput {
     super_category_id: ID
+    category_ids: [ID!]
+    sub_category_ids: [ID!]
     venue_name: String!
     venue_types: [String!]
+    venue_type_other: String
     venue_description: String
     capacity_min: Int
     capacity_max: Int
@@ -301,6 +309,8 @@ export const crmTypeDefs = gql`
 
   input HostLeadInput {
     super_category_id: ID
+    category_ids: [ID!]
+    sub_category_ids: [ID!]
     host_name: String!
     host_type: String
     organization_name: String
@@ -358,6 +368,15 @@ export const crmTypeDefs = gql`
     HOST_LEAD
   }
 
+  "Result of placing a CRM call (AI or portal/agent-bridge)."
+  type CrmAiCallResult {
+    ok: Boolean!
+    message: String!
+    log_id: ID
+    external_id: String
+    status: String
+  }
+
   type CrmExcelImportError {
     row: Int!
     message: String!
@@ -412,6 +431,25 @@ export const crmTypeDefs = gql`
       provider_id: ID
     ): LeadContactActionResult!
     callHostLeadContact(id: ID!, contact_number: String!, provider_id: ID): LeadContactActionResult!
+    "Place an outbound AI call (Servam-driven) using a Static Content prompt and Servam voice."
+    startCrmAiCall(
+      entity: CrmAiEntity!
+      id: ID!
+      contact_number: String!
+      prompt_id: ID!
+      voice: String
+      contact_name: String
+    ): CrmAiCallResult!
+    "Place a portal call: Twilio rings the agent leg (agent_number, else the user's profile phone), then bridges to the customer."
+    startCrmPortalCall(
+      entity: CrmAiEntity!
+      id: ID!
+      contact_number: String!
+      agent_number: String
+      contact_name: String
+    ): CrmAiCallResult!
+    "Re-sync a non-terminal call's status from Twilio (fallback when the async callback is missed)."
+    reconcileCrmCall(log_id: ID!): CrmAiCallResult!
     aiParseCrmLead(entity: CrmAiEntity!, text: String!): String!
     crmExcelImport(entity: CrmAiEntity!, content_base64: String!): CrmExcelImportResult!
     addCrmManualLog(input: ManualLogInput!): CrmActivity!

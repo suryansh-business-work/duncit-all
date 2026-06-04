@@ -12,6 +12,8 @@ import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import MyLocationIcon from '@mui/icons-material/MyLocation';
 import AnalyticsIcon from '@mui/icons-material/Analytics';
 import WidgetsIcon from '@mui/icons-material/Widgets';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
+import PhoneInTalkIcon from '@mui/icons-material/PhoneInTalk';
 
 const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   dashboard: DashboardIcon,
@@ -26,6 +28,8 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   orders: ReceiptLongIcon,
   location: MyLocationIcon,
   analytics: AnalyticsIcon,
+  ai: SmartToyIcon,
+  phone: PhoneInTalkIcon,
 };
 
 /** Resolves a config icon name to an MUI icon, falling back to a neutral glyph. */

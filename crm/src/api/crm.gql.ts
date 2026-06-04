@@ -7,8 +7,8 @@ const SUPER_CATEGORY_FIELDS = `id name slug icon`;
 const LINKED_HOST_FIELDS = `id host_name host_type city lead_status priority`;
 
 export const VENUE_LEAD_FIELDS = `
-  id super_category_id super_category { ${SUPER_CATEGORY_FIELDS} }
-  venue_name venue_types venue_description capacity_min capacity_max space_type
+  id super_category_id category_ids sub_category_ids super_category { ${SUPER_CATEGORY_FIELDS} }
+  venue_name venue_types venue_type_other venue_description capacity_min capacity_max space_type
   city area full_address landmark map_link contacts { ${CONTACT_FIELDS} }
   event_suitability available_days available_time_slots booking_notice
   pricing_models expected_charges security_deposit gst_applicable invoice_available
@@ -20,7 +20,7 @@ export const VENUE_LEAD_FIELDS = `
 `;
 
 export const HOST_LEAD_FIELDS = `
-  id super_category_id super_category { ${SUPER_CATEGORY_FIELDS} }
+  id super_category_id category_ids sub_category_ids super_category { ${SUPER_CATEGORY_FIELDS} }
   host_name host_type organization_name city area contacts { ${CONTACT_FIELDS} }
   interests expected_audience_size frequency budget_range revenue_models need_venue need_vendor
   preferred_event_date preferred_day preferred_time_slot

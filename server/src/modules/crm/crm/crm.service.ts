@@ -45,6 +45,8 @@ function pub(doc: any) {
     ...o,
     id: String(o._id),
     super_category_id: o.super_category_id ? String(o.super_category_id) : null,
+    category_ids: (o.category_ids ?? []).map((id: any) => String(id)),
+    sub_category_ids: (o.sub_category_ids ?? []).map((id: any) => String(id)),
     contacts: (o.contacts ?? []).map(toContact),
     services_offered: (o.services_offered ?? []).map(toServiceOffered),
     linked_host_ids: (o.linked_host_ids ?? []).map((id: any) => String(id)),
@@ -154,6 +156,11 @@ function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
   if ('super_category_id' in out) {
     out.super_category_id = toObjectIdOrNull(out.super_category_id);
   }
+  for (const key of ['category_ids', 'sub_category_ids']) {
+    if (Array.isArray(out[key])) {
+      out[key] = (out[key] as any[]).map(toObjectIdOrNull).filter((v): v is Types.ObjectId => Boolean(v));
+    }
+  }
   if (Array.isArray(out.linked_host_ids)) {
     out.linked_host_ids = (out.linked_host_ids as any[])
       .map(toObjectIdOrNull)
@@ -178,6 +185,35 @@ function normaliseLeadInput<T extends Record<string, any>>(input: T): T {
 
 function notFound(what: string): never {
   throw new GraphQLError(`${what} not found`, { extensions: { code: 'NOT_FOUND' } });
+}
+
+/** Last-10 significant digits of a phone, ignoring spaces / country code formatting. */
+const last10Digits = (v: any): string => {
+  const d = String(v ?? '').replace(/\D/g, '');
+  return d.length > 10 ? d.slice(-10) : d;
+};
+
+/**
+ * Reject a lead whose contact phone already exists on another lead of the same
+ * kind — each lead must be uniquely identified by its phone so the same lead
+ * can't be created twice. Matches on the trailing 10 digits so "+91 87912..."
+ * and "87912..." are treated as the same number regardless of stored format.
+ */
+async function assertUniqueLeadPhone(model: any, input: any, kindLabel: string, excludeId?: string) {
+  const contacts = Array.isArray(input?.contacts) ? input.contacts : [];
+  const mobiles = Array.from(
+    new Set(contacts.map((c: any) => last10Digits(c?.mobile_number)).filter((d: string) => d.length >= 7))
+  );
+  if (mobiles.length === 0) return;
+  const query: any = { $or: mobiles.map((d) => ({ 'contacts.mobile_number': { $regex: `${d}$` } })) };
+  if (excludeId) query._id = { $ne: new Types.ObjectId(excludeId) };
+  const existing = await model.findOne(query).select('_id').lean();
+  if (existing) {
+    throw new GraphQLError(
+      `A ${kindLabel} with this phone number already exists. Each lead must have a unique phone number.`,
+      { extensions: { code: 'DUPLICATE_LEAD' } }
+    );
+  }
 }
 
 async function logAndAttachActivity(opts: {
@@ -522,11 +558,13 @@ export const crmService = {
   },
   async createVenueLead(input: any) {
     const safe = normaliseLeadInput(input);
+    await assertUniqueLeadPhone(VenueLeadModel, safe, 'venue lead');
     const created = await VenueLeadModel.create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
     return pub(created);
   },
   async updateVenueLead(id: string, input: any) {
     const safe = normaliseLeadInput(input);
+    await assertUniqueLeadPhone(VenueLeadModel, safe, 'venue lead', id);
     const updated = await VenueLeadModel.findByIdAndUpdate(
       id,
       { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },
@@ -552,6 +590,7 @@ export const crmService = {
   },
   async createHostLead(input: any) {
     const safe = normaliseLeadInput(input);
+    await assertUniqueLeadPhone(HostLeadModel, safe, 'host lead');
     const created = await HostLeadModel.create({
       ...safe,
       preferred_event_date: parseDate(safe.preferred_event_date),
@@ -561,6 +600,7 @@ export const crmService = {
   },
   async updateHostLead(id: string, input: any) {
     const safe = normaliseLeadInput(input);
+    await assertUniqueLeadPhone(HostLeadModel, safe, 'host lead', id);
     const updated = await HostLeadModel.findByIdAndUpdate(
       id,
       {

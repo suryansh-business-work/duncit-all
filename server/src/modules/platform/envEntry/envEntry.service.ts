@@ -124,6 +124,14 @@ export async function testEnvConnection(
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(str('api_key'))}`);
       return res.ok ? { ok: true, message: 'Gemini key is valid' } : { ok: false, message: `Gemini rejected the key (HTTP ${res.status})` };
     }
+    if (category === 'SERVAM') {
+      if (!str('api_key')) return { ok: false, message: 'API key is required' };
+      const base = (str('base_url') || 'https://api.sarvam.ai').replace(/\/$/, '');
+      const res = await fetch(`${base}/v1/models`, { headers: { Authorization: `Bearer ${str('api_key')}` } });
+      // Sarvam may not expose /models; any non-auth error still means the key was accepted.
+      if (res.status === 401 || res.status === 403) return { ok: false, message: `Servam rejected the key (HTTP ${res.status})` };
+      return { ok: true, message: 'Servam API key is set' };
+    }
     // EMAIL (SMTP) — no cheap unauthenticated probe; validate required fields.
     if (!str('host')) return { ok: false, message: 'SMTP host is required' };
     return { ok: true, message: `SMTP host ${str('host')} looks configured` };

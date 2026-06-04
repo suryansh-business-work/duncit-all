@@ -35,6 +35,8 @@ const cleanServices = (services: CrmServiceOffered[]) =>
 export function toHostLeadInput(v: HostLeadFormValues) {
   return {
     super_category_id: v.super_category_id.trim() || null,
+    category_ids: v.category_ids,
+    sub_category_ids: v.sub_category_ids,
     host_name: v.host_name.trim(),
     host_type: v.host_type,
     organization_name: v.organization_name.trim(),
@@ -76,6 +78,8 @@ export function fromHostLead(lead: HostLead): HostLeadFormValues {
   return {
     ...hostLeadInitialValues,
     super_category_id: lead.super_category_id ?? '',
+    category_ids: lead.category_ids ?? [],
+    sub_category_ids: lead.sub_category_ids ?? [],
     host_name: lead.host_name ?? '',
     host_type: lead.host_type ?? '',
     organization_name: lead.organization_name ?? '',

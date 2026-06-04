@@ -15,6 +15,7 @@ export const ENV_CATEGORIES = [
   'TWILIO',
   'OPENAI',
   'GEMINI',
+  'SERVAM',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

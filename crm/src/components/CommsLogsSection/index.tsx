@@ -4,6 +4,7 @@ import { Alert, Box, Card, CardContent, Chip, CircularProgress, Stack, Typograph
 import ForumIcon from '@mui/icons-material/Forum';
 import { COMMUNICATION_LOGS, REQUEST_COMMUNICATION_TRANSCRIPT, type CommunicationLogItem } from '../../api/comms.gql';
 import { parseApiError } from '../../utils/parseApiError';
+import { useCallSocket } from '../../hooks/useCallSocket';
 import LogRow from './LogRow';
 
 type Filter = 'ALL' | 'EMAIL' | 'CALL';
@@ -28,6 +29,13 @@ export default function CommsLogsSection({ entityType, entityId }: Props) {
     }
   );
   const [requestTranscript, { loading: requesting }] = useMutation(REQUEST_COMMUNICATION_TRANSCRIPT);
+
+  // Live-refresh the log when a call for this lead changes state (e.g. the
+  // customer hangs up → the call is marked "over" here in real time).
+  useCallSocket((payload) => {
+    if (payload.entity_id && payload.entity_id !== entityId) return;
+    refetch();
+  });
 
   const logs = data?.communicationLogs?.items ?? [];
   const total = data?.communicationLogs?.total ?? 0;

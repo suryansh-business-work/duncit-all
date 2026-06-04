@@ -3,6 +3,8 @@ import FormField from '../../FormField';
 import SelectField from '../../fields/SelectField';
 import FieldGrid from '../../fields/FieldGrid';
 import SuperCategoryField from '../../fields/SuperCategoryField';
+import CategorySelectors from '../../fields/CategorySelectors';
+import ServicesOfferedPicker from '../../fields/ServicesOfferedPicker';
 import { AreaField, CityField } from '../../fields/LocationField';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
@@ -15,6 +17,8 @@ export default function HostBasicSection({ config }: { config: CrmOptionGroup })
         required
         hint="Which super category is this host being added under? Managed via admin."
       />
+      <CategorySelectors />
+      <ServicesOfferedPicker />
       <FieldGrid>
         <FormField name="host_name" label="Host Name" required size="small" />
         <SelectField name="host_type" label="Host Type" options={config.host_types} />

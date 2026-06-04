@@ -230,6 +230,58 @@ export interface ImportResult {
   errors: { row: number; message: string }[];
 }
 
+/**
+ * Turn a raw Mongoose / BSON error into an actionable message that tells the
+ * admin exactly which column is wrong and how to fix it — instead of leaking
+ * "BSONError: input must be a 24 character hex string" to the UI.
+ */
+function humanizeImportError(err: any): string {
+  const raw = String(err?.message ?? '');
+  // Invalid ObjectId (BSON) — almost always a category name typed where an ID is expected.
+  if (
+    err?.name === 'BSONError' ||
+    /24 character hex|24-character hex|hex string|ObjectId/i.test(raw)
+  ) {
+    const path = err?.path ? `Column "${err.path}"` : 'An ID column (e.g. super_category_id)';
+    return `${path} has an invalid ID. It must be a 24-character category ID (copy it from the Categories page) — or leave the cell blank. Do not type the category name.`;
+  }
+  // Mongoose validation — list each offending field + why.
+  if (err?.name === 'ValidationError' && err?.errors) {
+    const parts = Object.values(err.errors as Record<string, any>).map((e: any) => {
+      if (e?.kind === 'required') return `"${e.path}" is required`;
+      if (e?.kind === 'Number') return `"${e.path}" must be a number`;
+      if (e?.kind === 'enum') return `"${e.path}" has a value that isn't allowed`;
+      return `"${e?.path}" is invalid`;
+    });
+    return `Fix these fields: ${parts.join('; ')}.`;
+  }
+  // Single-field cast (number/date/etc).
+  if (err?.name === 'CastError') {
+    const want =
+      err?.kind === 'Number' ? 'a number'
+      : err?.kind === 'Date' ? 'a date in YYYY-MM-DD format'
+      : `a valid ${err?.kind ?? 'value'}`;
+    return `Column "${err?.path}" has an invalid value "${err?.value}" — it must be ${want}, or leave it blank.`;
+  }
+  if (err?.extensions?.code === 'DUPLICATE_LEAD' || /already exists/i.test(raw)) {
+    return raw || 'A lead with this phone number already exists. Each lead needs a unique phone number.';
+  }
+  return raw || 'Unknown error in this row.';
+}
+
+const last10 = (v: any) => {
+  const d = String(v ?? '').replace(/\D/g, '');
+  return d.length > 10 ? d.slice(-10) : d;
+};
+
+/** True when another lead of this kind already has this contact phone. */
+async function phoneExists(model: any, mobile: string): Promise<boolean> {
+  const d = last10(mobile);
+  if (d.length < 7) return false;
+  const found = await model.findOne({ 'contacts.mobile_number': { $regex: `${d}$` } }).select('_id').lean();
+  return Boolean(found);
+}
+
 export async function importLeads(entity: CrmExcelEntity, base64: string): Promise<ImportResult> {
   if (!base64) throw new GraphQLError('No file content provided', { extensions: { code: 'BAD_USER_INPUT' } });
   let wb: XLSX.WorkBook;
@@ -247,7 +299,14 @@ export async function importLeads(entity: CrmExcelEntity, base64: string): Promi
     const row = rows[idx];
     const contact = rowToContact(row);
     const contacts = contact ? [contact] : [];
+    const model = entity === 'VENUE_LEAD' ? VenueLeadModel : HostLeadModel;
     try {
+      // No duplicate entries — each lead is keyed by a unique contact phone.
+      if (contact?.mobile_number && (await phoneExists(model, contact.mobile_number))) {
+        throw new Error(
+          `A lead with phone "${contact.mobile_number}" already exists — skipped to avoid a duplicate. Remove this row or use a different phone number.`
+        );
+      }
       if (entity === 'VENUE_LEAD') {
         const name = String(row.venue_name ?? '').trim();
         const city = String(row.city ?? '').trim();
@@ -323,7 +382,7 @@ export async function importLeads(entity: CrmExcelEntity, base64: string): Promi
       result.inserted += 1;
     } catch (err: any) {
       result.failed += 1;
-      result.errors.push({ row: idx + 2, message: err?.message ?? 'Unknown error' });
+      result.errors.push({ row: idx + 2, message: humanizeImportError(err) });
     }
   }
   return result;

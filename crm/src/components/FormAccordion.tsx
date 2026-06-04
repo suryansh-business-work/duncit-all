@@ -26,11 +26,24 @@ interface Props {
    * issues even when the section is collapsed.
    */
   fieldPaths?: string[];
+  /**
+   * Expand-All / Collapse-All control. The parent bumps `expandSignal` (a
+   * nonce) and sets `expandSignalValue`; each accordion then opens/closes while
+   * still being individually toggleable afterwards.
+   */
+  expandSignal?: number;
+  expandSignalValue?: boolean;
 }
 
-export default function FormAccordion({ title, children, defaultExpanded, fieldPaths }: Props) {
+export default function FormAccordion({ title, children, defaultExpanded, fieldPaths, expandSignal, expandSignalValue }: Props) {
   const ctx = useFormikContext<Record<string, unknown>>();
   const [expanded, setExpanded] = useState(!!defaultExpanded);
+
+  // Respond to Expand All / Collapse All from the parent.
+  useEffect(() => {
+    if (expandSignal === undefined) return;
+    setExpanded(!!expandSignalValue);
+  }, [expandSignal, expandSignalValue]);
 
   const errorCount = useMemo(() => {
     if (!ctx || !fieldPaths || fieldPaths.length === 0) return 0;

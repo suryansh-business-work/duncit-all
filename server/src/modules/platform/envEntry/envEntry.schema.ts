@@ -10,6 +10,7 @@ export const envEntryTypeDefs = gql`
     TWILIO
     OPENAI
     GEMINI
+    SERVAM
   }
 
   type EnvConfigPair {

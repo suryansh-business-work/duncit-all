@@ -9,7 +9,10 @@ import HostLeadEditorPage from './pages/host-leads/HostLeadEditorPage';
 import HostLeadDetailPage from './pages/host-leads/HostLeadDetailPage';
 import ManageServicesPage from './pages/ManageServicesPage';
 import ManageDynamicFieldsPage from './pages/ManageDynamicFieldsPage';
+import CallPromptsPage from './pages/call-prompts';
+import ServicesOfferedPage from './pages/data/services-offered';
 import AppShell from './components/AppShell';
+import ErrorBoundary from './components/ErrorBoundary';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
 
@@ -24,7 +27,9 @@ function RequireAuth({ children }: { children: JSX.Element }) {
 
 const authed = (element: JSX.Element) => (
   <RequireAuth>
-    <AppShell>{element}</AppShell>
+    <AppShell>
+      <ErrorBoundary>{element}</ErrorBoundary>
+    </AppShell>
   </RequireAuth>
 );
 
@@ -43,6 +48,8 @@ export default function App() {
       <Route path="/host-leads/new" element={authed(<HostLeadEditorPage />)} />
       <Route path="/host-leads/:id/view" element={authed(<HostLeadDetailPage />)} />
       <Route path="/host-leads/:id" element={authed(<HostLeadEditorPage />)} />
+      <Route path="/call-prompts" element={authed(<CallPromptsPage />)} />
+      <Route path="/data/services-offered" element={authed(<ServicesOfferedPage />)} />
       <Route path="/settings/dynamic-fields" element={authed(<ManageDynamicFieldsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

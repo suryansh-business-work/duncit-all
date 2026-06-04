@@ -90,7 +90,8 @@ export type EnvCategory =
   | 'GOOGLE_MAPS'
   | 'TWILIO'
   | 'OPENAI'
-  | 'GEMINI';
+  | 'GEMINI'
+  | 'SERVAM';
 
 export interface EnvFieldDef {
   name: string;
@@ -178,7 +179,8 @@ export const CATEGORY_DEFS: EnvCategoryDef[] = [
     fields: [
       f('account_sid', 'Account SID', { hint: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' }),
       f('auth_token', 'Auth Token', { secret: true, hint: '32-char hex token' }),
-      f('phone_number', 'Phone Number', { phone: true, hint: 'E.164, e.g. +14155552671' }),
+      f('phone_number', 'Phone Number', { phone: true, hint: 'E.164, e.g. +14155552671 — caller ID for outbound calls' }),
+      f('agent_phone_number', 'Agent Phone Number (optional)', { phone: true, hint: 'Fallback agent leg for Call Through Portal; the logged-in user’s own phone is used first' }),
     ],
   },
   {
@@ -198,6 +200,17 @@ export const CATEGORY_DEFS: EnvCategoryDef[] = [
     fields: [
       f('model', 'Model (default gemini-1.5-flash)', { hint: 'e.g. gemini-1.5-flash' }),
       f('api_key', 'API Key', { secret: true, hint: 'AIzaSy... (39 chars)' }),
+    ],
+  },
+  {
+    category: 'SERVAM',
+    label: 'Servam AI (Sarvam)',
+    docUrl: 'https://dashboard.sarvam.ai/admin',
+    fields: [
+      f('api_key', 'API Key', { secret: true, hint: 'Sarvam subscription key (sk_...)' }),
+      f('base_url', 'Base URL (optional)', { hint: 'https://api.sarvam.ai' }),
+      f('tts_model', 'TTS Model (default bulbul:v2)', { hint: 'e.g. bulbul:v2' }),
+      f('default_voice', 'Default Voice', { hint: 'e.g. anushka, manisha, vidya, arya, abhilash, karun, hitesh' }),
     ],
   },
 ];

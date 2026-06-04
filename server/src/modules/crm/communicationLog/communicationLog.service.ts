@@ -103,6 +103,32 @@ export const communicationLogService = {
     return doc ? pub(doc) : null;
   },
 
+  /** Patch a log's call lifecycle fields (used by the Twilio status webhook). */
+  async update(
+    id: string,
+    patch: {
+      status?: string;
+      external_id?: string | null;
+      duration_seconds?: number | null;
+      recording_url?: string | null;
+      error_message?: string | null;
+      direction?: string | null;
+      metadata?: Record<string, unknown> | null;
+    }
+  ) {
+    const doc = await CommunicationLogModel.findById(id);
+    if (!doc) return null;
+    if (patch.status != null) doc.status = patch.status as any;
+    if (patch.external_id != null && patch.external_id !== '') doc.external_id = patch.external_id;
+    if (patch.duration_seconds != null) doc.duration_seconds = patch.duration_seconds;
+    if (patch.recording_url != null && patch.recording_url !== '') doc.recording_url = patch.recording_url;
+    if (patch.error_message != null) doc.error_message = patch.error_message;
+    if (patch.direction != null) doc.direction = patch.direction as any;
+    if (patch.metadata != null) doc.metadata = { ...(doc.metadata as any), ...patch.metadata };
+    await doc.save();
+    return pub(doc);
+  },
+
   async create(input: CreateLogInput) {
     const doc = await CommunicationLogModel.create({
       type: input.type,

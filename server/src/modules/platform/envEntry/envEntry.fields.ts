@@ -41,7 +41,8 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
   TWILIO: [
     { name: 'account_sid', label: 'Account SID', hint: 'ACxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx' },
     { name: 'auth_token', label: 'Auth Token', secret: true, hint: '32-char hex token' },
-    { name: 'phone_number', label: 'Phone Number', phone: true, hint: 'E.164, e.g. +14155552671' },
+    { name: 'phone_number', label: 'Phone Number', phone: true, hint: 'E.164, e.g. +14155552671 — caller ID for outbound calls' },
+    { name: 'agent_phone_number', label: 'Agent Phone Number', phone: true, hint: 'E.164 — agent leg dialled for "Call Through Portal"' },
   ],
   OPENAI: [
     { name: 'base_url', label: 'Base URL (optional)', hint: 'https://api.openai.com/v1' },
@@ -51,6 +52,12 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
   GEMINI: [
     { name: 'model', label: 'Model (default gemini-1.5-flash)', hint: 'e.g. gemini-1.5-flash' },
     { name: 'api_key', label: 'API Key', secret: true, hint: 'AIzaSy... (39 chars)' },
+  ],
+  SERVAM: [
+    { name: 'api_key', label: 'API Key', secret: true, hint: 'Sarvam subscription key (sk_...)' },
+    { name: 'base_url', label: 'Base URL (optional)', hint: 'https://api.sarvam.ai' },
+    { name: 'tts_model', label: 'TTS Model (default bulbul:v2)', hint: 'e.g. bulbul:v2' },
+    { name: 'default_voice', label: 'Default Voice', hint: 'e.g. anushka, manisha, vidya, arya, abhilash, karun, hitesh' },
   ],
 };
 
@@ -64,6 +71,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   TWILIO: 'https://console.twilio.com/',
   OPENAI: 'https://platform.openai.com/api-keys',
   GEMINI: 'https://aistudio.google.com/app/apikey',
+  SERVAM: 'https://dashboard.sarvam.ai/admin',
 };
 
 const secretSet = new Set<string>();
@@ -94,9 +102,14 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   TWILIO_ACCOUNT_SID: { category: 'TWILIO', field: 'account_sid' },
   TWILIO_AUTH_TOKEN: { category: 'TWILIO', field: 'auth_token' },
   TWILIO_PHONE_NUMBER: { category: 'TWILIO', field: 'phone_number' },
+  TWILIO_AGENT_PHONE_NUMBER: { category: 'TWILIO', field: 'agent_phone_number' },
   OPENAI_API_KEY: { category: 'OPENAI', field: 'api_key' },
-  SERVAM_AI_API_KEY: { category: 'OPENAI', field: 'api_key' },
-  SERVAM_AI_BASE_URL: { category: 'OPENAI', field: 'base_url' },
+  OPENAI_BASE_URL: { category: 'OPENAI', field: 'base_url' },
+  OPENAI_MODEL: { category: 'OPENAI', field: 'model' },
+  SERVAM_AI_API_KEY: { category: 'SERVAM', field: 'api_key' },
+  SERVAM_AI_BASE_URL: { category: 'SERVAM', field: 'base_url' },
+  SERVAM_AI_TTS_MODEL: { category: 'SERVAM', field: 'tts_model' },
+  SERVAM_AI_VOICE: { category: 'SERVAM', field: 'default_voice' },
 };
 
 export function maskSecret(value: string) {

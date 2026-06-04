@@ -3,6 +3,8 @@ import { emptyContact } from '../fields/ContactsField';
 
 export interface HostLeadFormValues {
   super_category_id: string;
+  category_ids: string[];
+  sub_category_ids: string[];
   host_name: string;
   host_type: string;
   organization_name: string;
@@ -40,6 +42,8 @@ export interface HostLeadFormValues {
 
 export const hostLeadInitialValues: HostLeadFormValues = {
   super_category_id: '',
+  category_ids: [],
+  sub_category_ids: [],
   host_name: '',
   host_type: '',
   organization_name: '',

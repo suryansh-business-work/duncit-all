@@ -16,6 +16,7 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   TWILIO: 'Twilio',
   OPENAI: 'OpenAI',
   GEMINI: 'Gemini',
+  SERVAM: 'Servam AI (Sarvam)',
 };
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */

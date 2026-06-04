@@ -1,5 +1,8 @@
+import { useState } from 'react';
 import { Form, Formik } from 'formik';
 import { Alert, AlertTitle, Box, Button, Stack, Typography } from '@mui/material';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import { flattenErrors } from '../flattenErrors';
 import FormAccordion from '../../components/FormAccordion';
 import { venueLeadSchema } from './venue-lead.schema';
@@ -113,6 +116,12 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
 }
 
 function VenueSections({ config }: { config: CrmOptionGroup }) {
+  const [signal, setSignal] = useState(0);
+  const [signalValue, setSignalValue] = useState(true);
+  const toggleAll = (open: boolean) => {
+    setSignalValue(open);
+    setSignal((s) => s + 1);
+  };
   const components = [
     <VenueDetailsSection config={config} />,
     <VenueLocationSection />,
@@ -131,12 +140,22 @@ function VenueSections({ config }: { config: CrmOptionGroup }) {
   ];
   return (
     <>
+      <Stack direction="row" spacing={1} justifyContent="flex-end">
+        <Button size="small" startIcon={<UnfoldMoreIcon />} onClick={() => toggleAll(true)}>
+          Expand all
+        </Button>
+        <Button size="small" startIcon={<UnfoldLessIcon />} onClick={() => toggleAll(false)}>
+          Collapse all
+        </Button>
+      </Stack>
       {SECTIONS.map((section, idx) => (
         <FormAccordion
           key={section.title}
           title={section.title}
           defaultExpanded={section.expanded}
           fieldPaths={section.paths}
+          expandSignal={signal}
+          expandSignalValue={signalValue}
         >
           {components[idx]}
         </FormAccordion>

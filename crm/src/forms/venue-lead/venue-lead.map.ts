@@ -37,8 +37,11 @@ const cleanServices = (services: CrmServiceOffered[]) =>
 export function toVenueLeadInput(v: VenueLeadFormValues) {
   return {
     super_category_id: v.super_category_id.trim() || null,
+    category_ids: v.category_ids,
+    sub_category_ids: v.sub_category_ids,
     venue_name: v.venue_name.trim(),
     venue_types: v.venue_types,
+    venue_type_other: v.venue_types.includes('Other') ? v.venue_type_other.trim() : '',
     venue_description: v.venue_description.trim(),
     capacity_min: toNum(v.capacity_min),
     capacity_max: toNum(v.capacity_max),
@@ -82,8 +85,11 @@ export function fromVenueLead(lead: VenueLead): VenueLeadFormValues {
   return {
     ...venueLeadInitialValues,
     super_category_id: lead.super_category_id ?? '',
+    category_ids: lead.category_ids ?? [],
+    sub_category_ids: lead.sub_category_ids ?? [],
     venue_name: lead.venue_name ?? '',
     venue_types: lead.venue_types ?? [],
+    venue_type_other: lead.venue_type_other ?? '',
     venue_description: lead.venue_description ?? '',
     capacity_min: numToStr(lead.capacity_min),
     capacity_max: numToStr(lead.capacity_max),

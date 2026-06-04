@@ -3,8 +3,11 @@ import { emptyContact } from '../fields/ContactsField';
 
 export interface VenueLeadFormValues {
   super_category_id: string;
+  category_ids: string[];
+  sub_category_ids: string[];
   venue_name: string;
   venue_types: string[];
+  venue_type_other: string;
   venue_description: string;
   capacity_min: string;
   capacity_max: string;
@@ -45,8 +48,11 @@ export interface VenueLeadFormValues {
 
 export const venueLeadInitialValues: VenueLeadFormValues = {
   super_category_id: '',
+  category_ids: [],
+  sub_category_ids: [],
   venue_name: '',
   venue_types: [],
+  venue_type_other: '',
   venue_description: '',
   capacity_min: '',
   capacity_max: '',

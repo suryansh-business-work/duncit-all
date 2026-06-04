@@ -64,6 +64,11 @@ export const venueLeadSchema = yup.object({
   super_category_id: yup.string().trim().required('Super category is required'),
   venue_name: yup.string().trim().min(2, 'Venue name is too short').max(120).required('Venue name is required'),
   venue_types: yup.array().of(yup.string()).min(1, 'Select at least one venue type'),
+  venue_type_other: yup.string().when('venue_types', {
+    is: (v: string[]) => Array.isArray(v) && v.includes('Other'),
+    then: (s) => s.trim().required('Please specify the "Other" venue type'),
+    otherwise: (s) => s,
+  }),
   city: yup.string().trim().required('City is required'),
   full_address: yup.string().trim().min(5, 'Address is too short').required('Full address is required'),
   capacity_min: numeric('Minimum capacity'),

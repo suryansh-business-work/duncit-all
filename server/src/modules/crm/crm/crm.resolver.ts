@@ -1,6 +1,8 @@
 import { crmService } from './crm.service';
 import { CRM_RW } from './crm.constants';
 import { parseCrmLeadText, type CrmAiEntity } from './crm.ai';
+import { callService } from '@modules/crm/call/call.service';
+import type { CommsLogEntity } from '@modules/crm/communicationLog/communicationLog.model';
 import { buildTemplateBase64, exportLeadsBase64, importLeads, type CrmExcelEntity } from './crm.excel';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
@@ -136,6 +138,65 @@ export const crmResolvers = {
     ) => {
       const user = requireRole(ctx, RW);
       return crmService.callHostLeadContact(args.id, args.contact_number, args.provider_id, user.id);
+    },
+    startCrmAiCall: async (
+      _p: unknown,
+      args: {
+        entity: CrmAiEntity;
+        id: string;
+        contact_number: string;
+        prompt_id: string;
+        voice?: string | null;
+        contact_name?: string | null;
+      },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, RW);
+      const result = await callService.startAiCall({
+        entity_type: args.entity as CommsLogEntity,
+        entity_id: args.id,
+        to: args.contact_number,
+        prompt_id: args.prompt_id,
+        voice: args.voice ?? null,
+        contact_name: args.contact_name ?? null,
+        user_id: user.id,
+      });
+      return {
+        ok: result.ok,
+        message: result.message,
+        log_id: result.log?.id ?? null,
+        external_id: result.log?.external_id ?? null,
+      };
+    },
+    startCrmPortalCall: async (
+      _p: unknown,
+      args: { entity: CrmAiEntity; id: string; contact_number: string; agent_number?: string | null; contact_name?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, RW);
+      const result = await callService.startPortalCall({
+        entity_type: args.entity as CommsLogEntity,
+        entity_id: args.id,
+        to: args.contact_number,
+        agent_number: args.agent_number ?? null,
+        contact_name: args.contact_name ?? null,
+        user_id: user.id,
+      });
+      return {
+        ok: result.ok,
+        message: result.message,
+        log_id: result.log?.id ?? null,
+        external_id: result.log?.external_id ?? null,
+      };
+    },
+    reconcileCrmCall: async (_p: unknown, args: { log_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      try {
+        const r = await callService.reconcile(args.log_id);
+        return { ok: r.ok, message: r.message, log_id: args.log_id, external_id: null, status: r.status ?? null };
+      } catch (err: any) {
+        return { ok: false, message: err?.message || 'Could not sync call status', log_id: args.log_id, external_id: null, status: null };
+      }
     },
     aiParseCrmLead: async (
       _p: unknown,

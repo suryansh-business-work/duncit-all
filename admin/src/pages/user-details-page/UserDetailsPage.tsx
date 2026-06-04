@@ -110,7 +110,6 @@ export default function UserDetailsPage() {
       <RolesDialog
         open={s.rolesOpen}
         onClose={() => s.setRolesOpen(false)}
-        allRoles={s.allRoles}
         selectedRoles={s.selectedRoles}
         toggleRole={s.toggleRole}
         saveRoles={s.saveRoles}

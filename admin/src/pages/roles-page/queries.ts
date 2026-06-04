@@ -1,20 +1,13 @@
 import { gql } from '@apollo/client';
 
-export const ROLES_AND_PERMS = gql`
-  query RolesAndPerms {
+export const ROLES_QUERY = gql`
+  query Roles {
     roles {
       id
       key
       name
       description
       is_system
-      permission_keys
-    }
-    permissions {
-      id
-      key
-      resource_key
-      action_key
     }
   }
 `;
@@ -38,14 +31,5 @@ export const UPDATE_ROLE = gql`
 export const DELETE_ROLE = gql`
   mutation DeleteRole($role_id: ID!) {
     deleteRole(role_id: $role_id)
-  }
-`;
-
-export const SET_ROLE_PERMS = gql`
-  mutation SetRolePermissions($role_id: ID!, $permission_keys: [String!]!) {
-    setRolePermissions(role_id: $role_id, permission_keys: $permission_keys) {
-      id
-      permission_keys
-    }
   }
 `;

@@ -19,7 +19,6 @@ import UserSummaryCard from './UserSummaryCard';
 import UserDetailsTabs from './UserDetailsTabs';
 import UserSupportTicketsSection from './UserSupportTicketsSection';
 import RolesSection from './RolesSection';
-import PermissionsSection from './PermissionsSection';
 import DeleteUserDialog from './DeleteUserDialog';
 import UserHealthSection from './UserHealthSection';
 import { useUserDetailsState } from './useUserDetailsState';
@@ -83,7 +82,6 @@ export default function UserDetailsPage() {
             content: (
               <Stack spacing={2}>
                 <RolesSection user={s.user} roleByKey={s.roleByKey} onManageRoles={s.openRoles} />
-                <PermissionsSection user={s.user} />
               </Stack>
             ),
           },

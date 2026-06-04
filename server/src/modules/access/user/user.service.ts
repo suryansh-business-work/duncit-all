@@ -28,7 +28,6 @@ import {
   sendAdminCredentialsEmail,
   sendEmailVerificationOtpEmail,
 } from '@services/email/email.service';
-import { rbacService } from '@modules/access/rbac/rbac.service';
 import type { AuthUser } from '@context';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -314,7 +313,6 @@ async function toPublic(u: any) {
   const roleKeys = relations.role_keys.length
     ? relations.role_keys
     : (meta.role_keys ?? legacy.roles ?? []);
-  const permissions = await rbacService.permissionsForRoleKeys(roleKeys);
 
   const authProviders = [
     auth.password ? 'EMAIL' : null,
@@ -347,7 +345,6 @@ async function toPublic(u: any) {
     city: profile.city ?? legacy.city ?? null,
     zone: profile.zone ?? legacy.zone ?? null,
     roles: roleKeys,
-    permissions,
     assigned_city: profile.assigned_city ?? legacy.assigned_city ?? null,
     assigned_zones: meta.assigned_zones ?? legacy.assigned_zones ?? [],
     profile_photo: profile.profile_photo ?? legacy.profile_photo ?? null,

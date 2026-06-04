@@ -51,7 +51,6 @@ export const userTypeDefs = gql`
     zone: String
 
     roles: [String!]!
-    permissions: [String!]!
 
     assigned_city: String
     assigned_zones: [String!]

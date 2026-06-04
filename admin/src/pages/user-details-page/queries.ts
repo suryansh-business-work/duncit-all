@@ -32,7 +32,6 @@ export const USER = gql`
       }
       status
       roles
-      permissions
       dob
       created_at
       updated_at
@@ -73,7 +72,6 @@ export const ASSIGN_ROLES = gql`
     assignUserRoles(user_id: $user_id, role_keys: $role_keys) {
       user_id
       roles
-      permissions
     }
   }
 `;

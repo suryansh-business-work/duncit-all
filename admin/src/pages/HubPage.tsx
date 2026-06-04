@@ -33,7 +33,7 @@ const CARDS: HubCard[] = [
   {
     key: 'users',
     title: 'User Management',
-    description: 'Users, roles, permissions and access control.',
+    description: 'Users and portal access roles.',
     to: '/users',
     icon: 'users',
     accent: '#0f766e',

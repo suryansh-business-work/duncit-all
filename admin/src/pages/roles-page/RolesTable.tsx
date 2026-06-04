@@ -15,17 +15,15 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
-import SecurityIcon from '@mui/icons-material/Security';
 
 interface Props {
   loading: boolean;
   roles: any[];
   onEdit: (r: any) => void;
   onDelete: (r: any) => void;
-  onPerms: (r: any) => void;
 }
 
-export default function RolesTable({ loading, roles, onEdit, onDelete, onPerms }: Props) {
+export default function RolesTable({ loading, roles, onEdit, onDelete }: Props) {
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>
@@ -40,7 +38,6 @@ export default function RolesTable({ loading, roles, onEdit, onDelete, onPerms }
                 <TableCell>Key</TableCell>
                 <TableCell>Name</TableCell>
                 <TableCell>Description</TableCell>
-                <TableCell>Permissions</TableCell>
                 <TableCell>Type</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
@@ -60,9 +57,6 @@ export default function RolesTable({ loading, roles, onEdit, onDelete, onPerms }
                     </Typography>
                   </TableCell>
                   <TableCell>
-                    <Chip size="small" label={`${r.permission_keys?.length ?? 0} perms`} />
-                  </TableCell>
-                  <TableCell>
                     {r.is_system ? (
                       <Chip size="small" label="System" color="info" />
                     ) : (
@@ -70,11 +64,6 @@ export default function RolesTable({ loading, roles, onEdit, onDelete, onPerms }
                     )}
                   </TableCell>
                   <TableCell align="right">
-                    <Tooltip title="Permissions">
-                      <IconButton size="small" onClick={() => onPerms(r)}>
-                        <SecurityIcon fontSize="small" />
-                      </IconButton>
-                    </Tooltip>
                     <Tooltip title="Edit">
                       <IconButton size="small" onClick={() => onEdit(r)}>
                         <EditIcon fontSize="small" />

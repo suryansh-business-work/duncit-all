@@ -8,9 +8,13 @@ describe('rbac unit', () => {
     ).rejects.toThrow(/access denied/i);
   });
 
-  it('createResource is gated to super admin', () => {
+  it('createRole is gated to super admin', () => {
     expect(() =>
-      (rbacResolvers.Mutation as any).createResource({}, { input: { key: 'x', name: 'X' } }, makeContext({ roles: ['CITY_ADMIN'] }))
+      (rbacResolvers.Mutation as any).createRole(
+        {},
+        { input: { key: 'X', name: 'X' } },
+        makeContext({ roles: ['CITY_ADMIN'] })
+      )
     ).toThrow(/access denied/i);
   });
 });

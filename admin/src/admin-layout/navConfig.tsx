@@ -41,17 +41,7 @@ export const NAV: NavSection[] = [
         matchPrefix: '/users',
         children: [{ label: 'All Users', to: '/users', icon: navIcons.people }],
       },
-      {
-        label: 'Access Control',
-        icon: navIcons.adminPanel,
-        matchPrefix: '/rbac',
-        children: [
-          { label: 'Roles', to: '/rbac/roles', icon: navIcons.security },
-          { label: 'Permissions', to: '/rbac/permissions', icon: navIcons.vpnKey },
-          { label: 'Resources', to: '/rbac/resources', icon: navIcons.category },
-          { label: 'Actions', to: '/rbac/actions', icon: navIcons.bolt },
-        ],
-      },
+      { label: 'Roles', to: '/rbac/roles', icon: navIcons.security },
     ],
   },
   {

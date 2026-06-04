@@ -19,7 +19,9 @@
     "migrate:user-schema:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-user-schema.ts --dry-run",
     "sync:user-indexes": "ts-node -r tsconfig-paths/register --transpile-only scripts/sync-user-indexes.ts",
     "sync:user-indexes:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/sync-user-indexes.ts --dry-run",
-    "migrate:user-schema:rollback": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-user-schema-rollback.ts"
+    "migrate:user-schema:rollback": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-user-schema-rollback.ts",
+    "migrate:rbac-roles": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-rbac-roles.ts",
+    "migrate:rbac-roles:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-rbac-roles.ts --dry-run"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",

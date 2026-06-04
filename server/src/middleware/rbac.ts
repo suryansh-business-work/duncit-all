@@ -1,6 +1,5 @@
 import { GraphQLError } from 'graphql';
 import type { GraphQLContext, AuthUser } from '../context';
-import { rbacService } from '@modules/access/rbac/rbac.service';
 
 export function requireAuth(ctx: GraphQLContext): AuthUser {
   if (!ctx.user) {
@@ -19,21 +18,6 @@ export function requireRole(ctx: GraphQLContext, allowed: readonly string[]): Au
   const user = requireAuth(ctx);
   if (!hasRole(user, allowed)) {
     throw new GraphQLError('Access Denied', { extensions: { code: 'FORBIDDEN' } });
-  }
-  return user;
-}
-
-export async function requirePermission(
-  ctx: GraphQLContext,
-  perm: string
-): Promise<AuthUser> {
-  const user = requireAuth(ctx);
-  if (user.roles.includes('SUPER_ADMIN')) return user;
-  const perms = await rbacService.permissionsForRoleKeys(user.roles);
-  if (!perms.includes(perm)) {
-    throw new GraphQLError(`Missing permission: ${perm}`, {
-      extensions: { code: 'FORBIDDEN' },
-    });
   }
   return user;
 }

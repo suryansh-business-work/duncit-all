@@ -8,9 +8,6 @@ import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
 import ProfilePage from './pages/ProfilePage';
 import RolesPage from './pages/RolesPage';
-import ResourcesPage from './pages/ResourcesPage';
-import ActionsPage from './pages/ActionsPage';
-import PermissionsPage from './pages/PermissionsPage';
 import CategoriesPage from './pages/CategoriesPage';
 import LocationsPage from './pages/LocationsPage';
 import ClubsPage from './pages/ClubsPage';
@@ -66,9 +63,6 @@ export default function App() {
                 <Route path="/pod-plans" element={<PodPlansPage />} />
                 <Route path="/branding" element={<BrandingPage />} />
                 <Route path="/rbac/roles" element={<RolesPage />} />
-                <Route path="/rbac/permissions" element={<PermissionsPage />} />
-                <Route path="/rbac/resources" element={<ResourcesPage />} />
-                <Route path="/rbac/actions" element={<ActionsPage />} />
                 <Route path="/profile" element={<ProfilePage />} />
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/hub" replace />} />

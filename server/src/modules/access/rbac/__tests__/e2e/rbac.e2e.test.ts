@@ -9,9 +9,9 @@ afterAll(async () => {
   await server.stop();
 });
 
-const CREATE_RESOURCE = gql`
-  mutation Create($input: CreateResourceInput!) {
-    createResource(input: $input) {
+const CREATE_ROLE = gql`
+  mutation Create($input: CreateRoleInput!) {
+    createRole(input: $input) {
       id
       key
     }
@@ -19,19 +19,19 @@ const CREATE_RESOURCE = gql`
 `;
 
 describe('rbac e2e', () => {
-  it('lets a super admin create a resource and read roles', async () => {
+  it('lets a super admin create a role and read roles', async () => {
     const admin = server.client(signToken({ roles: ['SUPER_ADMIN'] }));
-    const created = await admin.request<{ createResource: { key: string } }>(CREATE_RESOURCE, {
-      input: { key: 'analytics', name: 'Analytics' },
+    const created = await admin.request<{ createRole: { key: string } }>(CREATE_ROLE, {
+      input: { key: 'ANALYTICS_MANAGER', name: 'Analytics Manager' },
     });
-    expect(created.createResource.key).toBe('analytics');
+    expect(created.createRole.key).toBe('ANALYTICS_MANAGER');
 
     const roles = await admin.request<{ roles: unknown[] }>(gql`query { roles { id key } }`);
     expect(Array.isArray(roles.roles)).toBe(true);
   });
 
-  it('forbids a normal user from creating a resource', async () => {
+  it('forbids a normal user from creating a role', async () => {
     const user = server.client(signToken({ roles: ['USER'] }));
-    await expect(user.request(CREATE_RESOURCE, { input: { key: 'x', name: 'X' } })).rejects.toThrow();
+    await expect(user.request(CREATE_ROLE, { input: { key: 'X', name: 'X' } })).rejects.toThrow();
   });
 });

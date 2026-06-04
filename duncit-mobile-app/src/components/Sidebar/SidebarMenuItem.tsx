@@ -11,8 +11,8 @@ export function SidebarMenuItem({ item, onPress }: { item: MenuItem; onPress: ()
   return (
     <XStack
       testID={`sidebar-item-${item.label}`}
-      accessibilityRole="button"
-      accessibilityLabel={item.label}
+      role="button"
+      aria-label={item.label}
       onPress={onPress}
       marginHorizontal={8}
       marginVertical={2}

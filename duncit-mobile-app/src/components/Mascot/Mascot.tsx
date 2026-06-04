@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Image, Modal } from 'react-native';
 import { Text, YStack } from 'tamagui';
 
+import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useBranding } from '@/hooks/useBranding';
 
 /** Strip tags from the admin's rich-text mascot blurb for plain text. */
@@ -31,8 +32,8 @@ export function Mascot() {
     <>
       <YStack
         testID="mascot-button"
-        accessibilityRole="button"
-        accessibilityLabel={`Meet ${name}`}
+        role="button"
+        aria-label={`Meet ${name}`}
         onPress={() => setOpen(true)}
         width={40}
         height={40}
@@ -43,49 +44,51 @@ export function Mascot() {
           testID="mascot-image"
           source={{ uri: url }}
           resizeMode="contain"
-          accessibilityLabel={name}
+          aria-label={name}
           style={{ width: 36, height: 36 }}
         />
       </YStack>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={() => setOpen(false)}>
-        <YStack
-          testID="mascot-backdrop"
-          flex={1}
-          alignItems="center"
-          justifyContent="center"
-          paddingHorizontal={24}
-          backgroundColor="rgba(0,0,0,0.5)"
-          onPress={() => setOpen(false)}
-        >
+        <ModalThemeScope>
           <YStack
-            testID="mascot-sheet"
-            width="100%"
-            maxWidth={360}
-            gap={12}
-            borderRadius={16}
-            borderWidth={1}
-            borderColor="$borderColor"
-            backgroundColor="$surface"
-            padding={20}
+            testID="mascot-backdrop"
+            flex={1}
+            alignItems="center"
+            justifyContent="center"
+            paddingHorizontal={24}
+            backgroundColor="rgba(0,0,0,0.5)"
+            onPress={() => setOpen(false)}
           >
-            <Text textAlign="center" fontSize={20} fontWeight="800" color="$color">
-              Meet {name}
-            </Text>
-            <YStack alignItems="center">
-              <Image
-                source={{ uri: url }}
-                resizeMode="contain"
-                style={{ width: 180, height: 180 }}
-              />
-            </YStack>
-            {description ? (
-              <Text textAlign="center" fontSize={14} color="$muted">
-                {description}
+            <YStack
+              testID="mascot-sheet"
+              width="100%"
+              maxWidth={360}
+              gap={12}
+              borderRadius={16}
+              borderWidth={1}
+              borderColor="$borderColor"
+              backgroundColor="$surface"
+              padding={20}
+            >
+              <Text textAlign="center" fontSize={20} fontWeight="800" color="$color">
+                Meet {name}
               </Text>
-            ) : null}
+              <YStack alignItems="center">
+                <Image
+                  source={{ uri: url }}
+                  resizeMode="contain"
+                  style={{ width: 180, height: 180 }}
+                />
+              </YStack>
+              {description ? (
+                <Text textAlign="center" fontSize={14} color="$muted">
+                  {description}
+                </Text>
+              ) : null}
+            </YStack>
           </YStack>
-        </YStack>
+        </ModalThemeScope>
       </Modal>
     </>
   );

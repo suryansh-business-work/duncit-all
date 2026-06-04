@@ -26,7 +26,7 @@ export function SidebarUserSummary({
   return (
     <XStack
       testID="sidebar-user-summary"
-      accessibilityRole="button"
+      role="button"
       onPress={onPress}
       marginHorizontal={16}
       marginBottom={12}

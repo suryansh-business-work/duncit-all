@@ -1,10 +1,13 @@
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
+import { MainTabs } from '@/navigation/MainTabs';
 import { BecomeHostScreen } from '@/screens/BecomeHostScreen';
+import { ChatRoomScreen } from '@/screens/ChatRoomScreen';
+import { ClubDetailsScreen } from '@/screens/ClubDetailsScreen';
 import { FaqsScreen } from '@/screens/FaqsScreen';
-import { HomeScreen } from '@/screens/HomeScreen';
 import { HostManageScreen } from '@/screens/HostManageScreen';
 import { LoginScreen } from '@/screens/LoginScreen';
+import { PodDetailsScreen } from '@/screens/PodDetailsScreen';
 import { PodHistoryScreen } from '@/screens/PodHistoryScreen';
 import { PodIdeasScreen } from '@/screens/PodIdeasScreen';
 import { PodPlansScreen } from '@/screens/PodPlansScreen';
@@ -44,7 +47,7 @@ export function RootNavigator() {
         <Stack.Screen name="Survey" component={SurveyScreen} />
       ) : (
         <>
-          <Stack.Screen name="Home" component={HomeScreen} />
+          <Stack.Screen name="Home" component={MainTabs} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="Saved" component={SavedScreen} />
           <Stack.Screen name="PodHistory" component={PodHistoryScreen} />
@@ -57,6 +60,9 @@ export function RootNavigator() {
           <Stack.Screen name="Faqs" component={FaqsScreen} />
           <Stack.Screen name="PodPlans" component={PodPlansScreen} />
           <Stack.Screen name="Policy" component={PolicyScreen} />
+          <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
+          <Stack.Screen name="PodDetails" component={PodDetailsScreen} />
+          <Stack.Screen name="ClubDetails" component={ClubDetailsScreen} />
         </>
       )}
     </Stack.Navigator>

@@ -48,8 +48,8 @@ export function GoogleAuthButton({
   return (
     <XStack
       testID="google-auth-button"
-      accessibilityRole="button"
-      accessibilityState={{ disabled: isDisabled }}
+      role="button"
+      aria-disabled={isDisabled}
       disabled={isDisabled}
       onPress={() => {
         if (!isDisabled) void promptAsync();

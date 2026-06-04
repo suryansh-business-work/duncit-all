@@ -12,8 +12,8 @@ export function DuncitLogo({ size = 56 }: { size?: number }) {
       width={size}
       height={size}
       viewBox="0 0 64 64"
-      accessibilityRole="image"
-      accessibilityLabel="Duncit"
+      role="img"
+      aria-label="Duncit"
       testID="auth-logo-mark"
     >
       <Rect width={64} height={64} rx={15} fill="#FF5A5A" />

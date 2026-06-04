@@ -17,8 +17,8 @@ export function ThemeToggle() {
   return (
     <XStack
       testID="theme-toggle"
-      accessibilityRole="button"
-      accessibilityLabel={`Switch to ${isDark ? 'light' : 'dark'} mode`}
+      role="button"
+      aria-label={`Switch to ${isDark ? 'light' : 'dark'} mode`}
       onPress={toggle}
       width={40}
       height={40}

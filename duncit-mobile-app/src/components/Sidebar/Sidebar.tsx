@@ -6,6 +6,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Separator, Text, XStack } from 'tamagui';
 
+import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useLogout } from '@/hooks/useLogout';
 import { useMe } from '@/hooks/useMe';
 import { useMenuItems } from '@/hooks/useMenuItems';
@@ -63,81 +64,83 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
 
   return (
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose}>
-      <Animated.View style={{ flex: 1, opacity: fade, backgroundColor: 'rgba(0,0,0,0.5)' }}>
-        <Pressable testID="sidebar-backdrop" style={{ flex: 1 }} onPress={onClose} />
-      </Animated.View>
-      <Animated.View
-        testID="sidebar-panel"
-        style={{
-          position: 'absolute',
-          top: 0,
-          bottom: 0,
-          right: 0,
-          width: panelWidth,
-          backgroundColor: background,
-          transform: [{ translateX: tx }],
-        }}
-      >
-        <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
-          <XStack
-            alignItems="center"
-            justifyContent="space-between"
-            paddingHorizontal={16}
-            paddingVertical={12}
-          >
-            <Text fontSize={12} fontWeight="800" textTransform="uppercase" color="$muted">
-              Account
-            </Text>
+      <ModalThemeScope>
+        <Animated.View style={{ flex: 1, opacity: fade, backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <Pressable testID="sidebar-backdrop" style={{ flex: 1 }} onPress={onClose} />
+        </Animated.View>
+        <Animated.View
+          testID="sidebar-panel"
+          style={{
+            position: 'absolute',
+            top: 0,
+            bottom: 0,
+            right: 0,
+            width: panelWidth,
+            backgroundColor: background,
+            transform: [{ translateX: tx }],
+          }}
+        >
+          <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
             <XStack
-              testID="sidebar-close"
-              accessibilityRole="button"
-              accessibilityLabel="Close menu"
-              onPress={onClose}
-              width={36}
-              height={36}
               alignItems="center"
-              justifyContent="center"
-              borderRadius={18}
-              backgroundColor="$surface"
-              pressStyle={{ opacity: 0.7 }}
+              justifyContent="space-between"
+              paddingHorizontal={16}
+              paddingVertical={12}
             >
-              <MaterialIcons name="close" size={18} color={ink} />
+              <Text fontSize={12} fontWeight="800" textTransform="uppercase" color="$muted">
+                Account
+              </Text>
+              <XStack
+                testID="sidebar-close"
+                role="button"
+                aria-label="Close menu"
+                onPress={onClose}
+                width={36}
+                height={36}
+                alignItems="center"
+                justifyContent="center"
+                borderRadius={18}
+                backgroundColor="$surface"
+                pressStyle={{ opacity: 0.7 }}
+              >
+                <MaterialIcons name="close" size={18} color={ink} />
+              </XStack>
             </XStack>
-          </XStack>
 
-          <SidebarUserSummary me={me} onPress={() => go('Profile')} />
+            <SidebarUserSummary me={me} onPress={() => go('Profile')} />
 
-          <ScrollView
-            showsVerticalScrollIndicator={false}
-            contentContainerStyle={{ paddingVertical: 4 }}
-          >
-            {baseItems.map((it) => (
-              <SidebarMenuItem key={it.label} item={it} onPress={() => go(it.route)} />
-            ))}
-            <SidebarMenuItem item={hostItem} onPress={() => go(hostItem.route)} />
-            <SidebarMenuItem item={venueItem} onPress={() => go(venueItem.route)} />
-            <Separator marginVertical={6} borderColor="$borderColor" />
-            {supportItems.map((it) => (
-              <SidebarMenuItem key={it.label} item={it} onPress={() => go(it.route)} />
-            ))}
-            <Separator marginVertical={6} borderColor="$borderColor" />
-            <SidebarPolicies
-              policies={policiesData?.publicPolicies ?? []}
-              onSelect={(slug) => {
+            <ScrollView
+              showsVerticalScrollIndicator={false}
+              contentContainerStyle={{ paddingVertical: 4 }}
+            >
+              {baseItems.map((it) => (
+                <SidebarMenuItem key={it.label} item={it} onPress={() => go(it.route)} />
+              ))}
+              <SidebarMenuItem item={hostItem} onPress={() => go(hostItem.route)} />
+              <SidebarMenuItem item={venueItem} onPress={() => go(venueItem.route)} />
+              <Separator marginVertical={6} borderColor="$borderColor" />
+              {supportItems.map((it) => (
+                <SidebarMenuItem key={it.label} item={it} onPress={() => go(it.route)} />
+              ))}
+              <Separator marginVertical={6} borderColor="$borderColor" />
+              <SidebarPolicies
+                policies={policiesData?.publicPolicies ?? []}
+                onSelect={(slug) => {
+                  onClose();
+                  navigation.navigate('Policy', { slug });
+                }}
+              />
+            </ScrollView>
+
+            <SidebarFooter
+              onLogout={() => {
                 onClose();
-                navigation.navigate('Policy', { slug });
+                void logout();
               }}
             />
-          </ScrollView>
-
-          <SidebarFooter
-            onLogout={() => {
-              onClose();
-              void logout();
-            }}
-          />
-        </SafeAreaView>
-      </Animated.View>
+          </SafeAreaView>
+        </Animated.View>
+      </ModalThemeScope>
     </Modal>
   );
 }

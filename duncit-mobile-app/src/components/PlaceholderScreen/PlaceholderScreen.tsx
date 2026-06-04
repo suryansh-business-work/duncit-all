@@ -4,6 +4,7 @@ import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { AppBackground } from '@/components/AppBackground';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
@@ -26,13 +27,14 @@ export function PlaceholderScreen({
   const { color: ink, primary } = useThemeColors();
 
   return (
-    <YStack flex={1} backgroundColor="$background" testID="placeholder-screen">
+    <YStack flex={1} testID="placeholder-screen">
+      <AppBackground />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
           <XStack
             testID="placeholder-back"
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
+            role="button"
+            aria-label="Go back"
             onPress={() => navigation.goBack()}
             width={40}
             height={40}

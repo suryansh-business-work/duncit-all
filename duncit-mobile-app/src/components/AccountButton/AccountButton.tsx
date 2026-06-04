@@ -19,8 +19,8 @@ export function AccountButton() {
     <>
       <XStack
         testID="account-button"
-        accessibilityRole="button"
-        accessibilityLabel="Open account menu"
+        role="button"
+        aria-label="Open account menu"
         onPress={() => setOpen(true)}
         width={40}
         height={40}

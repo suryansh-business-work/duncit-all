@@ -1,0 +1,68 @@
+import { useState } from 'react';
+import { FlatList, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Spinner, Text, YStack } from 'tamagui';
+
+import { useExplore } from '@/hooks/useExplore';
+import type { ExplorePod } from '@/stores/explore.store';
+import type { RootStackParamList } from '@/navigation/types';
+import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
+
+/** Vertical full-screen pager of pods — the Reels experience. Measures its own
+ * height so each pod snaps to the viewport below the header. */
+export function ExploreReels() {
+  const { width } = useWindowDimensions();
+  const [height, setHeight] = useState(0);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { pods, clubsById, isLoading, hasData, isSaved, likeStateFor, toggleSave, toggleLike } =
+    useExplore();
+
+  const onLayout = (e: LayoutChangeEvent) => setHeight(e.nativeEvent.layout.height);
+  const openPod = (pod: ExplorePod) =>
+    navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title });
+
+  return (
+    <YStack flex={1} onLayout={onLayout} testID="explore-reels">
+      {height === 0 ? null : isLoading && !hasData ? (
+        <YStack flex={1} alignItems="center" justifyContent="center" testID="explore-loading">
+          <Spinner color="$primary" size="large" />
+        </YStack>
+      ) : pods.length === 0 ? (
+        <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
+          <Text color="$muted" textAlign="center" testID="explore-empty">
+            No pods to explore yet.
+          </Text>
+        </YStack>
+      ) : (
+        <FlatList
+          data={pods}
+          keyExtractor={(pod) => pod.id}
+          pagingEnabled
+          showsVerticalScrollIndicator={false}
+          snapToInterval={height}
+          snapToAlignment="start"
+          decelerationRate="fast"
+          getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
+          renderItem={({ item }) => {
+            const like = likeStateFor(item);
+            const saved = isSaved(item.id);
+            return (
+              <ExplorePodCard
+                pod={item}
+                club={clubsById.get(item.club_id)}
+                width={width}
+                height={height}
+                saved={saved}
+                like={like}
+                onOpen={() => openPod(item)}
+                onToggleSave={() => toggleSave(item.id, saved)}
+                onToggleLike={() => toggleLike(item.id, like)}
+              />
+            );
+          }}
+        />
+      )}
+    </YStack>
+  );
+}

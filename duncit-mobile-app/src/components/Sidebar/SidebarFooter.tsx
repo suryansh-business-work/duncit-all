@@ -8,8 +8,8 @@ export function SidebarFooter({ onLogout }: { onLogout: () => void }) {
     <YStack borderTopWidth={1} borderColor="$borderColor" padding={12}>
       <XStack
         testID="sidebar-logout"
-        accessibilityRole="button"
-        accessibilityLabel="Logout"
+        role="button"
+        aria-label="Logout"
         onPress={onLogout}
         alignItems="center"
         justifyContent="center"

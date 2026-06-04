@@ -19,9 +19,9 @@ export function SurveyChip({ id, label, icon, selected, onToggle, large }: Surve
   return (
     <XStack
       testID={`chip-${id}`}
-      accessibilityRole="button"
-      accessibilityState={{ selected }}
-      accessibilityLabel={label}
+      role="button"
+      aria-selected={selected}
+      aria-label={label}
       onPress={() => onToggle(id)}
       alignItems="center"
       justifyContent="center"

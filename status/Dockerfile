@@ -24,6 +24,7 @@ COPY hr/package.json ./hr/
 COPY employee/package.json ./employee/
 COPY status/package.json ./status/
 COPY packages/user-context/package.json ./packages/user-context/
+COPY packages/theme/package.json ./packages/theme/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

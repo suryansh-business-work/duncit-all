@@ -22,6 +22,7 @@ import { attachBouncerHandlers } from '@modules/support/bouncer/bouncer.socket';
 import { attachSupportChatHandlers } from '@modules/support/supportChat/supportChat.socket';
 import { attachCallHandlers } from '@modules/crm/call/call.socket';
 import { buildCallWebhookRouter } from '@modules/crm/call/call.webhook';
+import { startNgrokTunnel } from '@config/ngrok';
 import { websiteContentService } from '@modules/content/websiteContent/websiteContent.service';
 import { userService } from '@modules/access/user/user.service';
 import { marketingService } from '@modules/crm/marketing/marketing.service';
@@ -182,6 +183,11 @@ async function bootstrap() {
   await new Promise<void>((resolve) => httpServer.listen({ port }, resolve));
   // eslint-disable-next-line no-console
   console.log(`🚀 Server ready at http://localhost:${port}/graphql`);
+
+  // Local dev: open a free ngrok tunnel so Twilio can reach the /twilio webhooks.
+  if (process.env.NODE_ENV !== 'production') {
+    await startNgrokTunnel(port);
+  }
 }
 
 bootstrap().catch((err) => {

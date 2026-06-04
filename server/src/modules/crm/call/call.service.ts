@@ -229,8 +229,7 @@ export const callService = {
 
   /** Build the next TwiML turn of an AI call from the customer's speech. */
   async handleAiTurn(input: { log_id: string; speech?: string | null; base_url: string }): Promise<string> {
-    const log = await communicationLogService.get(input.log_id);
-    const meta = (log as any)?.metadata ?? {};
+    const meta = (await communicationLogService.getMetadata(input.log_id)) ?? {};
     const promptId = meta.prompt_id as string | undefined;
     const voice = (meta.voice as string | undefined) || undefined;
     const prompt = promptId ? await callPromptService.resolveContext(promptId) : null;

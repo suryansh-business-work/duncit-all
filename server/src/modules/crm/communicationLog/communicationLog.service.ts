@@ -103,6 +103,19 @@ export const communicationLogService = {
     return doc ? pub(doc) : null;
   },
 
+  /**
+   * Raw `metadata` map for a log (the public `pub()` shape omits it). Used by
+   * the AI-call webhook to read the chosen prompt_id / voice / running history.
+   */
+  async getMetadata(id: string): Promise<Record<string, any> | null> {
+    try {
+      const doc = await CommunicationLogModel.findById(id).lean();
+      return doc ? ((doc as any).metadata ?? {}) : null;
+    } catch {
+      return null;
+    }
+  },
+
   /** Patch a log's call lifecycle fields (used by the Twilio status webhook). */
   async update(
     id: string,

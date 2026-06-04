@@ -35,12 +35,7 @@ export const NAV: NavSection[] = [
     heading: 'User Management',
     prefixes: ['/users', '/rbac'],
     items: [
-      {
-        label: 'Users',
-        icon: navIcons.group,
-        matchPrefix: '/users',
-        children: [{ label: 'All Users', to: '/users', icon: navIcons.people }],
-      },
+      { label: 'All Users', to: '/users', icon: navIcons.people },
       { label: 'Roles', to: '/rbac/roles', icon: navIcons.security },
     ],
   },

@@ -4,6 +4,7 @@ import {
   Chip,
   CircularProgress,
   IconButton,
+  Link,
   Stack,
   Table,
   TableBody,
@@ -15,6 +16,8 @@ import {
 } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
+import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { portalForRole } from '../../constants/portalAccess';
 
 interface Props {
   loading: boolean;
@@ -37,6 +40,7 @@ export default function RolesTable({ loading, roles, onEdit, onDelete }: Props) 
               <TableRow>
                 <TableCell>Key</TableCell>
                 <TableCell>Name</TableCell>
+                <TableCell>Portal</TableCell>
                 <TableCell>Description</TableCell>
                 <TableCell>Type</TableCell>
                 <TableCell align="right">Actions</TableCell>
@@ -51,6 +55,24 @@ export default function RolesTable({ loading, roles, onEdit, onDelete }: Props) 
                     </Typography>
                   </TableCell>
                   <TableCell>{r.name}</TableCell>
+                  <TableCell>
+                    {portalForRole(r.key) ? (
+                      <Link
+                        href={portalForRole(r.key)!.url}
+                        target="_blank"
+                        rel="noopener"
+                        underline="hover"
+                        sx={{ display: 'inline-flex', alignItems: 'center', gap: 0.5, fontSize: 13 }}
+                      >
+                        {portalForRole(r.key)!.portalName}
+                        <OpenInNewIcon sx={{ fontSize: 14 }} />
+                      </Link>
+                    ) : (
+                      <Typography variant="body2" color="text.secondary">
+                        —
+                      </Typography>
+                    )}
+                  </TableCell>
                   <TableCell sx={{ maxWidth: 280 }}>
                     <Typography variant="body2" color="text.secondary" noWrap>
                       {r.description || '—'}

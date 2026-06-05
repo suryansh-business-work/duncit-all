@@ -10,6 +10,7 @@ import { ProfilePanels } from '@/components/profile/ProfilePanels';
 import { ProfilePostsGrid } from '@/components/profile/ProfilePostsGrid';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useProfile } from '@/hooks/useProfile';
+import { useStatusUpload } from '@/hooks/useStatusUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -17,10 +18,16 @@ import type { RootStackParamList } from '@/navigation/types';
  * user's posts grid. RN port of mWeb's ProfilePage (core). */
 export function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { me, posts, isLoading } = useProfile();
+  const { me, posts, isLoading, refetch } = useProfile();
   const { color: ink } = useThemeColors();
+  const { uploading, pickAndUpload } = useStatusUpload();
   const isHost = me?.roles.includes('HOST') ?? false;
   const isVenue = me?.roles.includes('VENUE_OWNER') ?? false;
+
+  const addPost = async () => {
+    await pickAndUpload();
+    await refetch();
+  };
 
   return (
     <YStack flex={1} testID="profile-screen">
@@ -41,9 +48,23 @@ export function ProfileScreen() {
           >
             <MaterialIcons name="arrow-back" size={22} color={ink} />
           </XStack>
-          <Text fontSize={18} fontWeight="800" color="$color">
+          <Text flex={1} fontSize={18} fontWeight="800" color="$color">
             Profile
           </Text>
+          <XStack
+            testID="profile-settings"
+            role="button"
+            aria-label="Profile settings"
+            onPress={() => navigation.navigate('Account')}
+            width={40}
+            height={40}
+            alignItems="center"
+            justifyContent="center"
+            borderRadius={20}
+            pressStyle={{ opacity: 0.7 }}
+          >
+            <MaterialIcons name="settings" size={22} color={ink} />
+          </XStack>
         </XStack>
 
         {isLoading && !me ? (
@@ -62,7 +83,11 @@ export function ProfileScreen() {
               onOpenHost={() => navigation.navigate(isHost ? 'HostManage' : 'BecomeHost')}
               onOpenVenue={() => navigation.navigate(isVenue ? 'VenueManage' : 'RegisterVenue')}
             />
-            <ProfilePostsGrid posts={posts} />
+            <ProfilePostsGrid
+              posts={posts}
+              onAddPost={() => void addPost()}
+              uploading={uploading}
+            />
           </ScrollView>
         )}
       </SafeAreaView>

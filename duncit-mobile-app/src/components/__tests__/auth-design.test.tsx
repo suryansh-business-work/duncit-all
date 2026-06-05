@@ -117,14 +117,35 @@ describe('AuthLogo', () => {
     expect(screen.getByTestId('auth-logo-loading')).toBeTruthy();
   });
 
-  it('renders a remote raster logo as an image', () => {
+  it('renders a remote raster logo as an image and follows its aspect ratio on load', () => {
     mockedUseBranding.mockReturnValue(
       brandingResult({
         data: { branding: { app_name: 'Duncit', logo_url: 'https://cdn.duncit.com/logo.png' } },
       }),
     );
-    renderWithProviders(<AuthLogo />);
-    expect(screen.getByTestId('auth-logo-image')).toBeTruthy();
+    renderWithProviders(<AuthLogo size={40} />);
+    const img = screen.getByTestId('auth-logo-image');
+    expect(img).toBeTruthy();
+    // Defaults to a square box (no gap) before the natural size is known.
+    expect(img.props.style).toMatchObject({ height: 40, width: 40 });
+    // After load, width tracks the intrinsic aspect ratio (clamped to 4×).
+    fireEvent(img, 'load', { nativeEvent: { source: { width: 200, height: 100 } } });
+    expect(screen.getByTestId('auth-logo-image').props.style).toMatchObject({
+      height: 40,
+      width: 80,
+    });
+    // Very wide marks are clamped to 4× the height.
+    fireEvent(img, 'load', { nativeEvent: { source: { width: 1000, height: 100 } } });
+    expect(screen.getByTestId('auth-logo-image').props.style).toMatchObject({
+      height: 40,
+      width: 160,
+    });
+    // A load event without usable dimensions keeps the last known aspect.
+    fireEvent(img, 'load', { nativeEvent: { source: { width: 0, height: 0 } } });
+    expect(screen.getByTestId('auth-logo-image').props.style).toMatchObject({
+      height: 40,
+      width: 160,
+    });
   });
 
   it('falls back to the bundled Duncit mark for an SVG/empty logo', () => {

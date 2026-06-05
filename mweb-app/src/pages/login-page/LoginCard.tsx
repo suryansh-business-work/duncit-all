@@ -68,6 +68,12 @@ export default function LoginCard({
 
         <LoginForm loading={loading} errorMessage={errorMessage} onSubmit={onSubmit} submitLabel="Log me in" />
 
+        <Stack alignItems="flex-end" sx={{ mt: -1 }}>
+          <Link component={RouterLink} to="/forgot-password" underline="hover" variant="body2">
+            Forgot password?
+          </Link>
+        </Stack>
+
         <Divider>OR</Divider>
 
         <Stack spacing={1.4} alignItems="center">

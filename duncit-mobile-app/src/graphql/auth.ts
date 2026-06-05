@@ -33,6 +33,21 @@ export const LoginDocument = gql(`
   }
 `);
 
+export const RequestPasswordResetOtpDocument = gql(`
+  mutation MobileRequestPasswordResetOtp($email: String!) {
+    requestPasswordResetOtp(email: $email) {
+      ok
+      dev_otp
+    }
+  }
+`);
+
+export const ResetPasswordWithOtpDocument = gql(`
+  mutation MobileResetPasswordWithOtp($input: ResetPasswordInput!) {
+    resetPasswordWithOtp(input: $input)
+  }
+`);
+
 export const SignupWithGoogleDocument = gql(`
   mutation MobileSignupWithGoogle($input: GoogleSignupInput!) {
     signupWithGoogle(input: $input) {

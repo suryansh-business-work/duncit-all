@@ -1,4 +1,9 @@
-import { registerSchema, googleSignupSchema } from '../../user.validator';
+import {
+  registerSchema,
+  googleSignupSchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema,
+} from '../../user.validator';
 
 describe('auth validators — simplified signup contract', () => {
   it('registerSchema accepts a payload with no phone and no last_name', async () => {
@@ -41,5 +46,31 @@ describe('auth validators — simplified signup contract', () => {
 
   it('googleSignupSchema still requires the id_token', async () => {
     await expect(googleSignupSchema.validate({})).rejects.toThrow();
+  });
+
+  it('requestPasswordResetSchema requires a valid email', async () => {
+    await expect(
+      requestPasswordResetSchema.validate({ email: 'riya@duncit.com' }),
+    ).resolves.toMatchObject({ email: 'riya@duncit.com' });
+    await expect(requestPasswordResetSchema.validate({ email: 'nope' })).rejects.toThrow();
+    await expect(requestPasswordResetSchema.validate({})).rejects.toThrow();
+  });
+
+  it('resetPasswordSchema requires email, a 6-digit OTP and an 8+ char password', async () => {
+    await expect(
+      resetPasswordSchema.validate({
+        email: 'riya@duncit.com',
+        otp: '123456',
+        new_password: 'StrongPass123',
+      }),
+    ).resolves.toMatchObject({ otp: '123456' });
+
+    await expect(
+      resetPasswordSchema.validate({ email: 'riya@duncit.com', otp: '12', new_password: 'StrongPass123' }),
+    ).rejects.toThrow(/6 digit/i);
+
+    await expect(
+      resetPasswordSchema.validate({ email: 'riya@duncit.com', otp: '123456', new_password: 'short' }),
+    ).rejects.toThrow();
   });
 });

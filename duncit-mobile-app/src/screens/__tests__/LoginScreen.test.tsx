@@ -87,4 +87,10 @@ describe('LoginScreen', () => {
     fireEvent.press(screen.getByTestId('go-signup'));
     expect(mockNavigate).toHaveBeenCalledWith('Signup');
   });
+
+  it('navigates to forgot password', () => {
+    renderWithProviders(<LoginScreen />);
+    fireEvent.press(screen.getByTestId('go-forgot-password'));
+    expect(mockNavigate).toHaveBeenCalledWith('ForgotPassword');
+  });
 });

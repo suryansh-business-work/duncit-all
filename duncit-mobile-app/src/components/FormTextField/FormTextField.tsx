@@ -13,6 +13,8 @@ type PassthroughProps = Pick<
   | 'textContentType'
   | 'secureTextEntry'
   | 'maxLength'
+  | 'multiline'
+  | 'numberOfLines'
 >;
 
 export interface FormTextFieldProps<T extends FieldValues> extends PassthroughProps {

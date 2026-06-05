@@ -54,6 +54,17 @@ export function LoginScreen() {
     >
       <AuthAvatarsStrip caption="New pods are waiting for your crew today" />
       <LoginForm loading={loading} errorMessage={error} onSubmit={handleSubmit} />
+      <XStack justifyContent="flex-end">
+        <Text
+          testID="go-forgot-password"
+          fontSize={14}
+          fontWeight="600"
+          color="$primary"
+          onPress={() => navigation.navigate('ForgotPassword')}
+        >
+          Forgot password?
+        </Text>
+      </XStack>
       <AuthDivider />
       <GoogleAuthButton label="Sign in with Google" onIdToken={handleGoogle} onError={setError} />
       <XStack justifyContent="center" gap={4}>

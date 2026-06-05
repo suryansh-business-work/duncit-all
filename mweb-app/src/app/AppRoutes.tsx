@@ -1,8 +1,11 @@
 import { useEffect } from 'react';
 import { Navigate, Route, Routes } from 'react-router-dom';
 import HomePage from '../pages/HomePage';
+import NotFoundPage from '../pages/NotFoundPage';
 import RegisterPage from '../pages/RegisterPage';
 import LoginPage from '../pages/LoginPage';
+import ForgotPasswordPage from '../pages/ForgotPasswordPage';
+import ResetPasswordPage from '../pages/ResetPasswordPage';
 import SignupSurveyPage from '../pages/SignupSurveyPage';
 import SignupWhatsappPage from '../pages/SignupWhatsappPage';
 import AccountPage from '../pages/AccountPage';
@@ -112,7 +115,9 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Props
       <Route path="/chats/:id" element={withAuth(<ChatRoomPage />)} />
       <Route path="/register" element={redirectIfAuthed(<RegisterPage />)} />
       <Route path="/login" element={redirectIfAuthed(<LoginPage />)} />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route path="/forgot-password" element={redirectIfAuthed(<ForgotPasswordPage />)} />
+      <Route path="/reset-password" element={redirectIfAuthed(<ResetPasswordPage />)} />
+      <Route path="*" element={<NotFoundPage />} />
     </Routes>
   );
 }

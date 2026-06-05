@@ -5,6 +5,8 @@ import ScrollToTop from './components/ScrollToTop';
 import AppHeader from './components/AppHeader';
 import BottomNav from './components/BottomNav';
 import SplashScreen from './components/SplashScreen';
+import OfflineBanner from './components/OfflineBanner';
+import ErrorBoundary from './components/ErrorBoundary';
 import { NotifyHost } from './components/notify';
 import AppRoutes from './app/AppRoutes';
 import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
@@ -58,6 +60,7 @@ export default function App() {
       } : undefined}
     >
       {splashOpen && <SplashScreen />}
+      <OfflineBanner />
       {showAppHeader && (
         <AppHeader
           minimal={isSignupSurvey}
@@ -102,7 +105,9 @@ export default function App() {
             animation: 'duncit-soft-enter 180ms ease-out both',
           }}
         >
-          <AppRoutes superCategory={superCategory} locationId={locationId} zoneName={zoneName} />
+          <ErrorBoundary>
+            <AppRoutes superCategory={superCategory} locationId={locationId} zoneName={zoneName} />
+          </ErrorBoundary>
         </Box>
       </Container>
       {showBottomNav && <BottomNav />}

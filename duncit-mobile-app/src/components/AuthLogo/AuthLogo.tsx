@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Image } from 'react-native';
 import { Spinner, YStack } from 'tamagui';
 
@@ -19,6 +20,10 @@ export function AuthLogo({ size = 58 }: { size?: number }) {
   const { data, isLoading } = useBranding();
   const branding = data?.branding;
   const name = branding?.app_name ?? 'Duncit';
+  // Track the logo's intrinsic aspect ratio so the image width follows the art
+  // (mWeb uses width:auto) instead of a fixed box that leaves a gap. Defaults to
+  // square so there's no gap before the remote size is known.
+  const [aspect, setAspect] = useState(1);
 
   if (isLoading && !branding) {
     return (
@@ -29,6 +34,8 @@ export function AuthLogo({ size = 58 }: { size?: number }) {
   }
 
   if (isRasterUrl(branding?.logo_url)) {
+    // Cap width at 4× height (matches mWeb's maxWidth clamp) for very wide marks.
+    const width = Math.min(size * aspect, size * 4);
     return (
       <Image
         testID="auth-logo-image"
@@ -36,7 +43,11 @@ export function AuthLogo({ size = 58 }: { size?: number }) {
         resizeMode="contain"
         role="img"
         aria-label={name}
-        style={{ height: size, width: size * 3 }}
+        onLoad={(e) => {
+          const src = e.nativeEvent.source;
+          if (src?.width && src?.height) setAspect(src.width / src.height);
+        }}
+        style={{ height: size, width }}
       />
     );
   }

@@ -21,12 +21,15 @@ import type {
   UpdateMyProfileDTO,
   PetProfileDTO,
   StartRecordedUserCallDTO,
+  RequestPasswordResetDTO,
+  ResetPasswordDTO,
 } from './user.validator';
 import { verifyGoogleIdToken } from './user.google';
 import {
   sendWelcomeEmail,
   sendAdminCredentialsEmail,
   sendEmailVerificationOtpEmail,
+  sendPasswordResetOtpEmail,
   sendAdminAccessGrantedEmail,
   sendAdminAccessRevokedEmail,
 } from '@services/email/email.service';
@@ -780,6 +783,67 @@ export const userService = {
     );
     const fresh = await UserModel.findById(user_id);
     return toPublic(fresh);
+  },
+
+  // Public: email a password-reset OTP. Always returns ok to avoid leaking which
+  // emails are registered; the OTP is only generated/sent for a real account
+  // that has a password (Google-only accounts have none).
+  async requestPasswordResetOtp(input: RequestPasswordResetDTO) {
+    const email = String(input.email || '').trim().toLowerCase();
+    const user = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
+    if (!user || !user.auth?.password) return { ok: true, dev_otp: null };
+    const otp = String(crypto.randomInt(100000, 1000000));
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          'auth.password_reset_otp_hash': hashOtp(otp),
+          'auth.password_reset_otp_expires_at': new Date(Date.now() + EMAIL_OTP_MINUTES * 60_000),
+        },
+      }
+    );
+    await sendPasswordResetOtpEmail({
+      to: email,
+      name: user.profile?.first_name || 'there',
+      otp,
+      expiresMinutes: String(EMAIL_OTP_MINUTES),
+    });
+    return { ok: true, dev_otp: isDev ? otp : null };
+  },
+
+  // Public: verify the OTP and set a new password. Generic errors prevent email
+  // enumeration. On success the reset OTP is cleared and password_changed_at set.
+  async resetPasswordWithOtp(input: ResetPasswordDTO) {
+    const email = String(input.email || '').trim().toLowerCase();
+    const code = String(input.otp || '').trim();
+    const user = await UserModel.findOne({ 'auth.email': email }).select(
+      '+auth.password_reset_otp_hash +auth.password_reset_otp_expires_at'
+    );
+    if (!user) {
+      throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const expiresAt = (user as any).auth?.password_reset_otp_expires_at as Date | undefined;
+    const storedHash = (user as any).auth?.password_reset_otp_hash as string | undefined;
+    if (!storedHash || !expiresAt || expiresAt.getTime() < Date.now()) {
+      throw new GraphQLError('OTP expired. Request a new OTP.', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    if (hashOtp(code) !== storedHash) {
+      throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const hashed = await bcrypt.hash(input.new_password, 10);
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $set: { 'auth.password': hashed, 'auth.password_changed_at': new Date() },
+        $unset: {
+          'auth.password_reset_otp_hash': '',
+          'auth.password_reset_otp_expires_at': '',
+        },
+      }
+    );
+    return true;
   },
 
   async updateMyInterests(user_id: string, categoryIds: string[]) {

@@ -5,6 +5,7 @@ jest.mock("@services/email/email.service", () => ({
   sendWelcomeEmail: jest.fn().mockResolvedValue(undefined),
   sendAdminCredentialsEmail: jest.fn().mockResolvedValue(undefined),
   sendEmailVerificationOtpEmail: jest.fn().mockResolvedValue(undefined),
+  sendPasswordResetOtpEmail: jest.fn().mockResolvedValue(undefined),
   sendAdminAccessGrantedEmail: jest.fn().mockResolvedValue(undefined),
   sendAdminAccessRevokedEmail: jest.fn().mockResolvedValue(undefined),
 }));
@@ -168,5 +169,84 @@ describe("userService integration", () => {
     } as any);
     const root = await userService.list({ search: "admin@duncit.com" });
     await expect(userService.revokeAdmin(root[0]!.user_id)).rejects.toThrow(/root super admin/i);
+  });
+
+  describe("password reset", () => {
+    it("resets the password end-to-end via OTP and logs in with the new one", async () => {
+      await userService.register({
+        first_name: "Reset",
+        email: "reset-ok@duncit.com",
+        password: "OldPass123",
+        dob: new Date("1991-01-01").toISOString(),
+      } as any);
+
+      const req = await userService.requestPasswordResetOtp({ email: "reset-ok@duncit.com" } as any);
+      expect(req.ok).toBe(true);
+      expect(req.dev_otp).toMatch(/^\d{6}$/);
+
+      const done = await userService.resetPasswordWithOtp({
+        email: "reset-ok@duncit.com",
+        otp: req.dev_otp as string,
+        new_password: "BrandNew123",
+      } as any);
+      expect(done).toBe(true);
+
+      const res = await userService.login({
+        email: "reset-ok@duncit.com",
+        password: "BrandNew123",
+      } as any);
+      expect(res.token).toBeTruthy();
+      await expect(
+        userService.login({ email: "reset-ok@duncit.com", password: "OldPass123" } as any),
+      ).rejects.toThrow(/invalid credentials/i);
+    });
+
+    it("returns ok without an OTP for an unknown email (no enumeration)", async () => {
+      const req = await userService.requestPasswordResetOtp({ email: "ghost@duncit.com" } as any);
+      expect(req).toEqual({ ok: true, dev_otp: null });
+    });
+
+    it("rejects a wrong OTP", async () => {
+      await userService.register({
+        first_name: "WrongOtp",
+        email: "reset-wrong@duncit.com",
+        password: "OldPass123",
+        dob: new Date("1991-01-01").toISOString(),
+      } as any);
+      await userService.requestPasswordResetOtp({ email: "reset-wrong@duncit.com" } as any);
+      await expect(
+        userService.resetPasswordWithOtp({
+          email: "reset-wrong@duncit.com",
+          otp: "000000",
+          new_password: "BrandNew123",
+        } as any),
+      ).rejects.toThrow(/invalid otp/i);
+    });
+
+    it("rejects a reset when no OTP was requested", async () => {
+      await userService.register({
+        first_name: "NoOtp",
+        email: "reset-none@duncit.com",
+        password: "OldPass123",
+        dob: new Date("1991-01-01").toISOString(),
+      } as any);
+      await expect(
+        userService.resetPasswordWithOtp({
+          email: "reset-none@duncit.com",
+          otp: "123456",
+          new_password: "BrandNew123",
+        } as any),
+      ).rejects.toThrow(/otp expired/i);
+    });
+
+    it("rejects a reset for an unknown email", async () => {
+      await expect(
+        userService.resetPasswordWithOtp({
+          email: "ghost2@duncit.com",
+          otp: "123456",
+          new_password: "BrandNew123",
+        } as any),
+      ).rejects.toThrow(/invalid otp/i);
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { ProfileDocument } from '@/graphql/profile';
@@ -14,16 +14,20 @@ export function useProfile() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
+  const refetch = useCallback(async () => {
+    const result = await graphqlRequest(ProfileDocument, undefined, { auth: true });
+    setData(result);
+  }, []);
+
   useEffect(() => {
     let active = true;
-    graphqlRequest(ProfileDocument, undefined, { auth: true })
-      .then((result) => active && setData(result))
+    refetch()
       .catch((err) => active && setError(err))
       .finally(() => active && setIsLoading(false));
     return () => {
       active = false;
     };
-  }, []);
+  }, [refetch]);
 
-  return { me: data?.me ?? null, posts: data?.myPosts ?? [], isLoading, error };
+  return { me: data?.me ?? null, posts: data?.myPosts ?? [], isLoading, error, refetch };
 }

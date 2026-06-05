@@ -10,16 +10,33 @@ import type { RootStackParamList } from '@/navigation/types';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
+type CardRoute = 'SupportTickets' | 'Faqs' | 'Policies' | 'Sos' | 'Callback' | 'Feedback';
+
 interface Card {
   id: string;
   title: string;
   desc: string;
   icon: IconName;
-  route?: 'SupportTickets' | 'Faqs' | 'Policies';
+  route?: CardRoute;
   soon?: boolean;
 }
 
 const CARDS: Card[] = [
+  { id: 'sos', title: 'SOS', desc: 'Emergency help at your live pod', icon: 'sos', route: 'Sos' },
+  {
+    id: 'callback',
+    title: 'Request a Callback',
+    desc: 'Call us or get a callback',
+    icon: 'phone-callback',
+    route: 'Callback',
+  },
+  {
+    id: 'feedback',
+    title: 'Live Feedback',
+    desc: 'Rate the pod while it is on',
+    icon: 'rate-review',
+    route: 'Feedback',
+  },
   {
     id: 'tickets',
     title: 'Support Tickets',
@@ -41,31 +58,10 @@ const CARDS: Card[] = [
     icon: 'description',
     route: 'Policies',
   },
-  { id: 'sos', title: 'SOS Alert', desc: 'Urgent help at a pod', icon: 'sos', soon: true },
-  {
-    id: 'callback',
-    title: 'Request a Callback',
-    desc: 'We will call you back',
-    icon: 'phone-callback',
-    soon: true,
-  },
-  {
-    id: 'feedback',
-    title: 'Live Feedback',
-    desc: 'Share feedback about a pod',
-    icon: 'rate-review',
-    soon: true,
-  },
-  {
-    id: 'chat',
-    title: 'Live Chat',
-    desc: 'Chat with our support team',
-    icon: 'support-agent',
-    soon: true,
-  },
 ];
 
-/** Support hub — cards linking to tickets/FAQs (the rest are coming soon). */
+/** Support hub — cards linking to SOS, callback, feedback, tickets, FAQs, policies.
+ * RN twin of mWeb's SupportHubPage. */
 export function SupportScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { muted } = useThemeColors();
@@ -79,7 +75,7 @@ export function SupportScreen() {
             testID={`support-${card.id}`}
             role="button"
             aria-label={card.title}
-            onPress={card.route ? () => navigation.navigate(card.route as 'Faqs') : undefined}
+            onPress={() => card.route && navigation.navigate(card.route as 'Faqs')}
             alignItems="center"
             gap={14}
             padding={14}
@@ -87,7 +83,6 @@ export function SupportScreen() {
             borderWidth={1}
             borderColor="$borderColor"
             backgroundColor="$surface"
-            opacity={card.soon ? 0.7 : 1}
             pressStyle={{ opacity: 0.85 }}
           >
             <YStack
@@ -101,21 +96,14 @@ export function SupportScreen() {
               <MaterialIcons name={card.icon} size={22} color="#ffffff" />
             </YStack>
             <YStack flex={1} gap={2}>
-              <XStack alignItems="center" gap={6}>
-                <Text fontSize={15} fontWeight="900" color="$color">
-                  {card.title}
-                </Text>
-                {card.soon ? (
-                  <Text fontSize={10} fontWeight="900" color="$muted">
-                    SOON
-                  </Text>
-                ) : null}
-              </XStack>
+              <Text fontSize={15} fontWeight="900" color="$color">
+                {card.title}
+              </Text>
               <Text fontSize={12.5} color="$muted">
                 {card.desc}
               </Text>
             </YStack>
-            {card.soon ? null : <MaterialIcons name="chevron-right" size={22} color={muted} />}
+            <MaterialIcons name="chevron-right" size={22} color={muted} />
           </XStack>
         ))}
       </ScrollView>

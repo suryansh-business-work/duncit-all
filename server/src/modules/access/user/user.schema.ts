@@ -172,6 +172,12 @@ export const userTypeDefs = gql`
     password: String!
   }
 
+  input ResetPasswordInput {
+    email: String!
+    otp: String!
+    new_password: String!
+  }
+
   input RecordUserContactActionInput {
     user_id: ID!
     type: AdminContactActionType!
@@ -272,6 +278,8 @@ export const userTypeDefs = gql`
     updateMyProfile(input: UpdateMyProfileInput!): User!
     requestEmailVerificationOtp: OtpRequestResult!
     verifyEmailVerificationOtp(otp: String!): User!
+    requestPasswordResetOtp(email: String!): OtpRequestResult!
+    resetPasswordWithOtp(input: ResetPasswordInput!): Boolean!
     updateMyPetProfile(input: PetProfileInput!): User!
     updateMyInterests(category_ids: [ID!]!): User!
     toggleSavedPod(pod_doc_id: ID!): SavedPodState!

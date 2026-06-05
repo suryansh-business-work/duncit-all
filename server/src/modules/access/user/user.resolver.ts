@@ -2,6 +2,8 @@ import { userService } from './user.service';
 import {
   loginSchema,
   registerSchema,
+  requestPasswordResetSchema,
+  resetPasswordSchema,
   googleSignupSchema,
   createUserSchema,
   updateUserSchema,
@@ -86,6 +88,14 @@ export const userResolvers = {
     login: async (_p: unknown, args: { input: unknown }) => {
       const data = await validate(loginSchema, args.input);
       return userService.login(data);
+    },
+    requestPasswordResetOtp: async (_p: unknown, args: { email: string }) => {
+      const data = await validate(requestPasswordResetSchema, { email: args.email });
+      return userService.requestPasswordResetOtp(data);
+    },
+    resetPasswordWithOtp: async (_p: unknown, args: { input: unknown }) => {
+      const data = await validate(resetPasswordSchema, args.input);
+      return userService.resetPasswordWithOtp(data);
     },
     loginWithGoogle: async (_p: unknown, args: { input: { id_token: string } }) => {
       return userService.loginWithGoogle(args.input?.id_token);

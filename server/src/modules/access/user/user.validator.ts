@@ -30,6 +30,19 @@ export const loginSchema = yup.object({
   password: yup.string().min(8).required(),
 });
 
+export const requestPasswordResetSchema = yup.object({
+  email: yup.string().email().required(),
+});
+
+export const resetPasswordSchema = yup.object({
+  email: yup.string().email().required(),
+  otp: yup
+    .string()
+    .matches(/^\d{6}$/, 'Enter the 6 digit OTP')
+    .required(),
+  new_password: yup.string().min(8).max(100).required(),
+});
+
 export const googleSignupSchema = yup.object({
   id_token: yup.string().min(20).required(),
   // Token-only Google signup: the account is created from the verified Google
@@ -128,6 +141,8 @@ export const startRecordedUserCallSchema = yup.object({
 
 export type RegisterDTO = yup.InferType<typeof registerSchema>;
 export type LoginDTO = yup.InferType<typeof loginSchema>;
+export type RequestPasswordResetDTO = yup.InferType<typeof requestPasswordResetSchema>;
+export type ResetPasswordDTO = yup.InferType<typeof resetPasswordSchema>;
 export type GoogleSignupDTO = yup.InferType<typeof googleSignupSchema>;
 export type CreateUserDTO = yup.InferType<typeof createUserSchema>;
 export type UpdateUserDTO = yup.InferType<typeof updateUserSchema>;

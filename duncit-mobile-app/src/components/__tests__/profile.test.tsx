@@ -108,4 +108,19 @@ describe('ProfilePostsGrid', () => {
     rerender(<ProfilePostsGrid posts={[] as never} />);
     expect(screen.getByTestId('profile-no-posts')).toBeOnTheScreen();
   });
+
+  it('shows the add-post action and fires it (header + empty state)', () => {
+    const onAddPost = jest.fn();
+    const { rerender } = renderWithProviders(
+      <ProfilePostsGrid posts={[] as never} onAddPost={onAddPost} />,
+    );
+    fireEvent.press(screen.getByTestId('profile-add-post'));
+    fireEvent.press(screen.getByTestId('profile-add-post-empty'));
+    expect(onAddPost).toHaveBeenCalledTimes(2);
+
+    rerender(<ProfilePostsGrid posts={[] as never} onAddPost={onAddPost} uploading />);
+    expect(screen.getByText('Uploading…')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('profile-add-post'));
+    expect(onAddPost).toHaveBeenCalledTimes(2); // disabled while uploading
+  });
 });

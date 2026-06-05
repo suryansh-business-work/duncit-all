@@ -8,22 +8,79 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfilePost } from '@/hooks/useProfile';
 
-/** A 3-column grid of the user's posts; tapping opens a full-screen viewer. */
-export function ProfilePostsGrid({ posts }: { posts: ProfilePost[] }) {
+/** A 3-column grid of the user's posts; tapping opens a full-screen viewer.
+ * An optional add-post action mirrors mWeb's "New post" entry. */
+export function ProfilePostsGrid({
+  posts,
+  onAddPost,
+  uploading,
+}: {
+  posts: ProfilePost[];
+  onAddPost?: () => void;
+  uploading?: boolean;
+}) {
   const { width } = useWindowDimensions();
-  const { muted } = useThemeColors();
+  const { muted, primary } = useThemeColors();
   const size = (width - 32 - 8) / 3;
   const [active, setActive] = useState<ProfilePost | null>(null);
 
   return (
     <YStack paddingHorizontal={16} gap={10} paddingBottom={24}>
-      <Text fontSize={16} fontWeight="900" color="$color">
-        Posts
-      </Text>
-      {posts.length === 0 ? (
-        <Text testID="profile-no-posts" fontSize={13} color="$muted">
-          No posts yet.
+      <XStack alignItems="center" justifyContent="space-between">
+        <Text fontSize={16} fontWeight="900" color="$color">
+          Posts
         </Text>
+        {onAddPost ? (
+          <XStack
+            testID="profile-add-post"
+            role="button"
+            aria-label="Add post"
+            aria-disabled={uploading}
+            onPress={uploading ? undefined : onAddPost}
+            alignItems="center"
+            gap={5}
+            paddingHorizontal={12}
+            paddingVertical={7}
+            borderRadius={999}
+            backgroundColor="$primary"
+            opacity={uploading ? 0.6 : 1}
+            pressStyle={{ opacity: 0.85 }}
+          >
+            <MaterialIcons name={uploading ? 'hourglass-top' : 'add'} size={16} color="#ffffff" />
+            <Text fontSize={13} fontWeight="900" color="#ffffff">
+              {uploading ? 'Uploading…' : 'Add post'}
+            </Text>
+          </XStack>
+        ) : null}
+      </XStack>
+      {posts.length === 0 ? (
+        <YStack testID="profile-no-posts" alignItems="center" gap={8} paddingVertical={20}>
+          <Text fontSize={13} color="$muted">
+            No posts yet.
+          </Text>
+          {onAddPost ? (
+            <XStack
+              testID="profile-add-post-empty"
+              role="button"
+              aria-label="Add your first post"
+              aria-disabled={uploading}
+              onPress={uploading ? undefined : onAddPost}
+              alignItems="center"
+              gap={6}
+              paddingHorizontal={14}
+              paddingVertical={9}
+              borderRadius={999}
+              borderWidth={1}
+              borderColor="$primary"
+              pressStyle={{ opacity: 0.85 }}
+            >
+              <MaterialIcons name="add-a-photo" size={16} color={primary} />
+              <Text fontSize={13} fontWeight="900" color="$primary">
+                Add your first post
+              </Text>
+            </XStack>
+          ) : null}
+        </YStack>
       ) : (
         <XStack flexWrap="wrap" gap={4}>
           {posts.map((post) => (

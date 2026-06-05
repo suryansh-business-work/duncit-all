@@ -157,6 +157,20 @@ export function sendEmailVerificationOtpEmail(opts: { to: string; name: string; 
   });
 }
 
+export function sendPasswordResetOtpEmail(opts: {
+  to: string;
+  name: string;
+  otp: string;
+  expiresMinutes: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: 'Reset your Duncit password',
+    template: 'password-reset-otp',
+    vars: opts,
+  });
+}
+
 export function sendInterviewApplicantEmail(opts: {
   to: string;
   name: string;

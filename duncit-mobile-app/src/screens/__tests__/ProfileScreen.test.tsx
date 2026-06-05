@@ -1,10 +1,12 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { useProfile } from '@/hooks/useProfile';
+import { useStatusUpload } from '@/hooks/useStatusUpload';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useProfile', () => ({ useProfile: jest.fn() }));
+jest.mock('@/hooks/useStatusUpload', () => ({ useStatusUpload: jest.fn() }));
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
 jest.mock('@react-navigation/native', () => ({
@@ -12,6 +14,9 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 const mockedProfile = useProfile as jest.Mock;
+const mockedUpload = useStatusUpload as jest.Mock;
+const refetch = jest.fn().mockResolvedValue(undefined);
+const pickAndUpload = jest.fn().mockResolvedValue(undefined);
 
 const me = {
   user_id: 'u',
@@ -31,37 +36,55 @@ const me = {
 beforeEach(() => {
   mockNavigate.mockClear();
   mockGoBack.mockClear();
+  refetch.mockClear();
+  pickAndUpload.mockClear();
+  mockedUpload.mockReturnValue({ uploading: false, pickAndUpload });
 });
 
 describe('ProfileScreen', () => {
   it('shows the skeleton while loading', () => {
-    mockedProfile.mockReturnValue({ me: null, posts: [], isLoading: true });
+    mockedProfile.mockReturnValue({ me: null, posts: [], isLoading: true, refetch });
     renderWithProviders(<ProfileScreen />);
     expect(screen.getByTestId('profile-loading')).toBeOnTheScreen();
   });
 
   it('renders the profile, navigates to host, and goes back', () => {
-    mockedProfile.mockReturnValue({ me, posts: [], isLoading: false });
+    mockedProfile.mockReturnValue({ me, posts: [], isLoading: false, refetch });
     renderWithProviders(<ProfileScreen />);
     expect(screen.getByText('Sam Lee')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('profile-host'));
     expect(mockNavigate).toHaveBeenCalledWith('HostManage');
+    fireEvent.press(screen.getByTestId('profile-settings'));
+    expect(mockNavigate).toHaveBeenCalledWith('Account');
     fireEvent.press(screen.getByTestId('profile-back'));
     expect(mockGoBack).toHaveBeenCalled();
   });
 
   it('shows the error state when the profile is missing', () => {
-    mockedProfile.mockReturnValue({ me: null, posts: [], isLoading: false });
+    mockedProfile.mockReturnValue({ me: null, posts: [], isLoading: false, refetch });
     renderWithProviders(<ProfileScreen />);
     expect(screen.getByTestId('profile-error')).toBeOnTheScreen();
   });
 
   it('routes to become-host / register-venue for users without those roles', () => {
-    mockedProfile.mockReturnValue({ me: { ...me, roles: [] }, posts: [], isLoading: false });
+    mockedProfile.mockReturnValue({
+      me: { ...me, roles: [] },
+      posts: [],
+      isLoading: false,
+      refetch,
+    });
     renderWithProviders(<ProfileScreen />);
     fireEvent.press(screen.getByTestId('profile-host'));
     expect(mockNavigate).toHaveBeenCalledWith('BecomeHost');
     fireEvent.press(screen.getByTestId('profile-venue'));
     expect(mockNavigate).toHaveBeenCalledWith('RegisterVenue');
+  });
+
+  it('adds a post (pick + upload, then refetch)', async () => {
+    mockedProfile.mockReturnValue({ me, posts: [], isLoading: false, refetch });
+    renderWithProviders(<ProfileScreen />);
+    fireEvent.press(screen.getByTestId('profile-add-post'));
+    await waitFor(() => expect(pickAndUpload).toHaveBeenCalled());
+    await waitFor(() => expect(refetch).toHaveBeenCalled());
   });
 });

@@ -5,6 +5,7 @@ import { AuthLogo } from '@/components/AuthLogo';
 import { LocationButton } from '@/components/LocationButton';
 import { LogoutButton } from '@/components/LogoutButton';
 import { Mascot } from '@/components/Mascot';
+import { NotificationsBell } from '@/components/notifications';
 import { ThemeToggle } from '@/components/ThemeToggle';
 
 /**
@@ -29,6 +30,7 @@ export function AppHeader({ minimal = false }: { minimal?: boolean }) {
       </XStack>
       <XStack alignItems="center" gap={8}>
         {minimal ? null : <LocationButton />}
+        {minimal ? null : <NotificationsBell />}
         <ThemeToggle />
         {minimal ? <LogoutButton /> : <AccountButton />}
       </XStack>

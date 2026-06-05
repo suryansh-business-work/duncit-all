@@ -1,7 +1,7 @@
 import { StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
-import { ScrollView, Text, XStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 
 import { Skeleton } from '@/components/Skeleton';
 import { useSuperCategories } from '@/hooks/useSuperCategories';
@@ -13,15 +13,16 @@ interface Tab {
   icon?: string | null;
 }
 
-/** Header super-category filter — a scrollable segmented control with a gradient
- * active pill. RN port of mWeb's SuperCategoryTabs. */
+/** Header super-category filter — a full-width segmented control with a gradient
+ * active pill (e.g. All · For You · For Your Pet). RN port of mWeb's full-width
+ * SuperCategoryTabs (ToggleButtonGroup fullWidth). */
 export function SuperCategoryTabs() {
   const { superCats, selectedSlug, select, isLoading } = useSuperCategories();
 
   if (isLoading && superCats.length === 0) {
     return (
       <XStack paddingHorizontal={16} paddingBottom={8}>
-        <Skeleton width="100%" height={38} radius={14} />
+        <Skeleton width="100%" height={40} radius={14} />
       </XStack>
     );
   }
@@ -30,14 +31,7 @@ export function SuperCategoryTabs() {
   const tabs: Tab[] = [{ id: 'all', slug: '', name: 'All' }, ...superCats];
 
   return (
-    <ScrollView
-      horizontal
-      flexGrow={0}
-      flexShrink={0}
-      maxHeight={56}
-      showsHorizontalScrollIndicator={false}
-      contentContainerStyle={{ gap: 8, paddingHorizontal: 16, paddingBottom: 8 }}
-    >
+    <XStack width="100%" gap={6} paddingHorizontal={16} paddingBottom={8} testID="super-cat-tabs">
       {tabs.map((tab) => {
         const selected = selectedSlug === tab.slug;
         return (
@@ -48,12 +42,14 @@ export function SuperCategoryTabs() {
             aria-label={tab.name}
             aria-selected={selected}
             onPress={() => select(tab.slug)}
-            height={38}
-            paddingHorizontal={14}
+            flex={1}
+            height={40}
+            paddingHorizontal={8}
             borderRadius={14}
             overflow="hidden"
             alignItems="center"
-            gap={6}
+            justifyContent="center"
+            gap={5}
             borderWidth={1}
             borderColor={selected ? 'transparent' : '$borderColor'}
             backgroundColor={selected ? 'transparent' : '$surface'}
@@ -72,12 +68,17 @@ export function SuperCategoryTabs() {
             ) : tab.slug === '' ? (
               <MaterialIcons name="apps" size={15} color={selected ? '#ffffff' : '#9aa0aa'} />
             ) : null}
-            <Text fontSize={13} fontWeight="900" color={selected ? '#ffffff' : '$color'}>
+            <Text
+              numberOfLines={1}
+              fontSize={12.5}
+              fontWeight="900"
+              color={selected ? '#ffffff' : '$color'}
+            >
               {tab.name}
             </Text>
           </XStack>
         );
       })}
-    </ScrollView>
+    </XStack>
   );
 }

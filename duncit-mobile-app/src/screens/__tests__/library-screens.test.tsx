@@ -1,7 +1,6 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { FaqsScreen } from '@/screens/FaqsScreen';
-import { PodHistoryScreen } from '@/screens/PodHistoryScreen';
 import { PoliciesScreen } from '@/screens/PoliciesScreen';
 import { SavedScreen } from '@/screens/SavedScreen';
 import { useFaqs, useMyPods } from '@/hooks/useLibrary';
@@ -71,8 +70,8 @@ describe('FaqsScreen', () => {
   });
 });
 
-describe('SavedScreen + PodHistoryScreen', () => {
-  it('opens a saved pod and shows the empty state', () => {
+describe('SavedScreen', () => {
+  it('opens a saved pod and shows the empty + loading states', () => {
     mockedMyPods.mockReturnValue({ savedPods: [pod('1')], historyPods: [], isLoading: false });
     const { rerender } = renderWithProviders(<SavedScreen />);
     fireEvent.press(screen.getByTestId('pod-card-p-1'));
@@ -85,12 +84,6 @@ describe('SavedScreen + PodHistoryScreen', () => {
     mockedMyPods.mockReturnValue({ savedPods: [], historyPods: [], isLoading: true });
     rerender(<SavedScreen />);
     expect(screen.getByTestId('saved-list-loading')).toBeOnTheScreen();
-  });
-
-  it('renders pod history', () => {
-    mockedMyPods.mockReturnValue({ savedPods: [], historyPods: [pod('2')], isLoading: false });
-    renderWithProviders(<PodHistoryScreen />);
-    expect(screen.getByTestId('pod-card-p-2')).toBeOnTheScreen();
   });
 });
 

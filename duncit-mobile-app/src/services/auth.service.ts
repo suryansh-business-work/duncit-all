@@ -1,6 +1,8 @@
 import {
   RegisterDocument,
   LoginDocument,
+  RequestPasswordResetOtpDocument,
+  ResetPasswordWithOtpDocument,
   SignupWithGoogleDocument,
   LoginWithGoogleDocument,
 } from '@/graphql/auth';
@@ -60,6 +62,30 @@ export async function login(values: LoginValues): Promise<AuthOutcome> {
   });
   await setAuthToken(data.login.token);
   return { token: data.login.token, surveyCompleted: data.login.user.onboarding_survey_completed };
+}
+
+/** Request a password-reset OTP by email (mirrors mWeb). The server always
+ * reports ok to avoid email enumeration. */
+export async function requestPasswordResetOtp(email: string): Promise<void> {
+  await graphqlRequest(RequestPasswordResetOtpDocument, { email: email.trim().toLowerCase() });
+}
+
+export interface ResetPasswordValues {
+  email: string;
+  otp: string;
+  new_password: string;
+}
+
+/** Verify the OTP and set a new password. Returns true on success. */
+export async function resetPasswordWithOtp(values: ResetPasswordValues): Promise<boolean> {
+  const data = await graphqlRequest(ResetPasswordWithOtpDocument, {
+    input: {
+      email: values.email.trim().toLowerCase(),
+      otp: values.otp.trim(),
+      new_password: values.new_password,
+    },
+  });
+  return data.resetPasswordWithOtp;
 }
 
 /** Token-only Google signup: account created server-side, land on survey. */

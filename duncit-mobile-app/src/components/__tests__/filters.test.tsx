@@ -32,6 +32,23 @@ describe('SuperCategoryTabs', () => {
     expect(select).toHaveBeenCalledWith('');
   });
 
+  it('lays the category tabs out full width (All + super categories)', () => {
+    mockedSuper.mockReturnValue({
+      superCats: [
+        { id: 's1', slug: 'for-you', name: 'For You', icon: null },
+        { id: 's2', slug: 'for-your-pet', name: 'For Your Pet', icon: null },
+      ],
+      selectedSlug: '',
+      select: jest.fn(),
+      isLoading: false,
+    });
+    renderWithProviders(<SuperCategoryTabs />);
+    expect(screen.getByTestId('super-cat-tabs')).toBeOnTheScreen();
+    expect(screen.getByTestId('super-cat-all')).toBeOnTheScreen();
+    expect(screen.getByTestId('super-cat-for-you')).toBeOnTheScreen();
+    expect(screen.getByText('For Your Pet')).toBeOnTheScreen();
+  });
+
   it('renders a skeleton (no tabs) while loading', () => {
     mockedSuper.mockReturnValue({
       superCats: [],

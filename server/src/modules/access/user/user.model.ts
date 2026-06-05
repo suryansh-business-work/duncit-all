@@ -43,6 +43,8 @@ const authSchema = new Schema(
     is_email_verified: { type: Boolean, default: false },
     email_verification_otp_hash: { type: String, select: false },
     email_verification_otp_expires_at: { type: Date, select: false },
+    password_reset_otp_hash: { type: String, select: false },
+    password_reset_otp_expires_at: { type: Date, select: false },
     password: { type: String, select: false },
     google_id: { type: String },
     last_login_provider: { type: String, enum: ['EMAIL', 'GOOGLE', null], default: null },

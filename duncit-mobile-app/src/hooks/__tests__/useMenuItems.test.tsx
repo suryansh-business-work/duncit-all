@@ -18,6 +18,13 @@ describe('useMenuItems', () => {
     ]);
   });
 
+  it('does not list Pod Plans in the support items', () => {
+    const { result } = renderHook(() => useMenuItems([]));
+    const routes = result.current.supportItems.map((i) => i.route);
+    expect(routes).toEqual(['Support', 'PodIdeas', 'Faqs']);
+    expect(routes).not.toContain('PodPlans');
+  });
+
   it('swaps to management entries for hosts and venue owners', () => {
     const { result } = renderHook(() => useMenuItems(['HOST', 'VENUE_OWNER']));
     expect(result.current.hostItem).toMatchObject({

@@ -9,16 +9,7 @@ import { AppBackground } from '@/components/AppBackground';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
-
-/** Strip HTML tags from the stored policy body for plain text rendering. */
-function stripHtml(html?: string | null): string {
-  return (html ?? '')
-    .replace(/<\/(p|div|li|h[1-6])>/gi, '\n\n')
-    .replace(/<[^>]+>/g, '')
-    .replace(/&nbsp;/gi, ' ')
-    .replace(/\n{3,}/g, '\n\n')
-    .trim();
-}
+import { stripHtml } from '@/utils/html';
 
 /** Reader for a single public policy, opened from the sidebar's Policies group. */
 export function PolicyScreen() {

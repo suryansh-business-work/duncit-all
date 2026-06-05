@@ -36,7 +36,6 @@ export function useMenuItems(roles: string[]) {
     : { label: 'Be a Venue Owner', icon: 'add-business', route: 'RegisterVenue' };
 
   const supportItems: MenuItem[] = [
-    { label: 'Pod Plans', icon: 'category', route: 'PodPlans' },
     { label: 'Support', icon: 'support-agent', route: 'Support' },
     { label: 'Pod Ideas', icon: 'lightbulb-outline', route: 'PodIdeas' },
     { label: 'FAQs', icon: 'help-outline', route: 'Faqs' },

@@ -7,8 +7,10 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { TamaguiProvider, Theme } from 'tamagui';
+import { TamaguiProvider, Theme, YStack } from 'tamagui';
 
+import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { OfflineBanner } from '@/components/OfflineBanner';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { linking } from '@/navigation/linking';
 import { loadWebFonts } from '@/services/web-fonts';
@@ -50,10 +52,15 @@ export default function App() {
       <TamaguiProvider config={config} defaultTheme={scheme}>
         <Theme name={scheme}>
           <SafeAreaProvider>
-            <NavigationContainer theme={navThemeFor(scheme === 'dark')} linking={linking}>
-              <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-              <RootNavigator />
-            </NavigationContainer>
+            <ErrorBoundary>
+              <OfflineBanner />
+              <YStack flex={1}>
+                <NavigationContainer theme={navThemeFor(scheme === 'dark')} linking={linking}>
+                  <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
+                  <RootNavigator />
+                </NavigationContainer>
+              </YStack>
+            </ErrorBoundary>
           </SafeAreaProvider>
         </Theme>
       </TamaguiProvider>

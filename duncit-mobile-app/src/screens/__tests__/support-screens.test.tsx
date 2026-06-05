@@ -15,17 +15,20 @@ const mockedTickets = useTickets as jest.Mock;
 beforeEach(() => mockNavigate.mockClear());
 
 describe('SupportScreen', () => {
-  it('navigates to tickets and FAQs from the hub', () => {
+  it('navigates to every support tool from the hub', () => {
     renderWithProviders(<SupportScreen />);
+    fireEvent.press(screen.getByTestId('support-sos'));
+    expect(mockNavigate).toHaveBeenCalledWith('Sos');
+    fireEvent.press(screen.getByTestId('support-callback'));
+    expect(mockNavigate).toHaveBeenCalledWith('Callback');
+    fireEvent.press(screen.getByTestId('support-feedback'));
+    expect(mockNavigate).toHaveBeenCalledWith('Feedback');
     fireEvent.press(screen.getByTestId('support-tickets'));
     expect(mockNavigate).toHaveBeenCalledWith('SupportTickets');
     fireEvent.press(screen.getByTestId('support-faqs'));
     expect(mockNavigate).toHaveBeenCalledWith('Faqs');
     fireEvent.press(screen.getByTestId('support-policies'));
     expect(mockNavigate).toHaveBeenCalledWith('Policies');
-    // "coming soon" cards do nothing
-    fireEvent.press(screen.getByTestId('support-sos'));
-    expect(mockNavigate).toHaveBeenCalledTimes(3);
   });
 });
 

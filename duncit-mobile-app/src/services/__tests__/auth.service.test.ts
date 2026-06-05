@@ -6,6 +6,8 @@ import {
   loginWithGoogle,
   logout,
   register,
+  requestPasswordResetOtp,
+  resetPasswordWithOtp,
   signupWithGoogle,
   splitName,
 } from '@/services/auth.service';
@@ -113,5 +115,27 @@ describe('auth.service mutations', () => {
   it('logout clears the token', async () => {
     await logout();
     expect(mockedClearToken).toHaveBeenCalledTimes(1);
+  });
+
+  it('requestPasswordResetOtp lowercases the email (no token persisted)', async () => {
+    mockedRequest.mockResolvedValue({
+      requestPasswordResetOtp: { ok: true, dev_otp: null },
+    } as never);
+    await requestPasswordResetOtp('  Hello@Duncit.com ');
+    expect(mockedRequest.mock.calls[0]?.[1]).toEqual({ email: 'hello@duncit.com' });
+    expect(mockedSetToken).not.toHaveBeenCalled();
+  });
+
+  it('resetPasswordWithOtp maps the input and returns the boolean result', async () => {
+    mockedRequest.mockResolvedValue({ resetPasswordWithOtp: true } as never);
+    const ok = await resetPasswordWithOtp({
+      email: 'Hello@Duncit.com',
+      otp: ' 123456 ',
+      new_password: 'BrandNew123',
+    });
+    expect(mockedRequest.mock.calls[0]?.[1]).toEqual({
+      input: { email: 'hello@duncit.com', otp: '123456', new_password: 'BrandNew123' },
+    });
+    expect(ok).toBe(true);
   });
 });

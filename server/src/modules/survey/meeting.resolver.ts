@@ -1,0 +1,29 @@
+import { meetingService, type MeetingFilter } from './meeting.service';
+import type { SurveyKind } from './survey.model';
+import type { GraphQLContext } from '@context';
+import { requireAuth, requireRole } from '@middleware/rbac';
+
+const ONBOARDING_RW = ['SUPER_ADMIN', 'ONBOARDING_MANAGER'];
+
+export const meetingResolvers = {
+  Query: {
+    myMeeting: (_p: unknown, args: { kind: SurveyKind }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return meetingService.myMeeting(user.id, args.kind);
+    },
+    onboardingMeetings: (_p: unknown, args: { filter?: MeetingFilter | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, ONBOARDING_RW);
+      return meetingService.list(args.filter ?? {});
+    },
+  },
+  Mutation: {
+    requestMeeting: (_p: unknown, args: { kind: SurveyKind; input: any }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return meetingService.request(user.id, args.kind, args.input);
+    },
+    updateMeeting: (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, ONBOARDING_RW);
+      return meetingService.update(args.id, args.input, user.id);
+    },
+  },
+};

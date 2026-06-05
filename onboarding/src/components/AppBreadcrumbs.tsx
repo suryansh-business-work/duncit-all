@@ -3,7 +3,7 @@ import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { Box, Breadcrumbs, Link, Typography } from '@mui/material';
 import HomeIcon from '@mui/icons-material/Home';
 import NavigateNextIcon from '@mui/icons-material/NavigateNext';
-import { appConfig } from '../config/app-config';
+import { appConfig, type AppNavItem } from '../config/app-config';
 
 interface Crumb {
   label: string;
@@ -18,9 +18,19 @@ function humanise(segment: string): string {
   return segment.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/** Flatten nav (groups + leaves) to routable {label, to} entries. */
+function navLeaves(items: AppNavItem[]): { label: string; to: string }[] {
+  const out: { label: string; to: string }[] = [];
+  for (const item of items) {
+    if (item.to) out.push({ label: item.label, to: item.to });
+    if (item.children) out.push(...navLeaves(item.children));
+  }
+  return out;
+}
+
 function findBestNavMatch(pathname: string) {
   let best: { label: string; to: string } | undefined;
-  for (const item of appConfig.nav) {
+  for (const item of navLeaves(appConfig.nav)) {
     if (item.to === pathname || (item.to !== '/' && pathname.startsWith(item.to + '/'))) {
       if (!best || item.to.length > best.to.length) {
         best = { label: item.label, to: item.to };

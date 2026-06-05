@@ -42,7 +42,7 @@ export default function HostsVenuesCard() {
         <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
           <Button
             component={RouterLink}
-            to="/become-host"
+            to="/survey/host"
             variant="outlined"
             size="small"
             startIcon={<GroupAddIcon />}
@@ -51,7 +51,7 @@ export default function HostsVenuesCard() {
           </Button>
           <Button
             component={RouterLink}
-            to="/register-venue"
+            to="/survey/venue"
             variant="outlined"
             size="small"
             startIcon={<AddBusinessIcon />}

@@ -85,6 +85,13 @@ export default defineConfig({
         'src/components/MediaListField.tsx',
         'src/components/media-picker-dialog/**',
         'src/components/media-list-field/**',
+        // Survey-builder: the Apollo container (queries + mutations) and its
+        // MUI-Select-driven QuestionCard editor — same class of form UI as the
+        // excluded venue/host create sections; exercised by console e2e flows.
+        'src/pages/surveys/**',
+        // Meeting calendar + schedule tables: Apollo containers (queries +
+        // mutations) with date-picker/calendar UI; exercised by e2e flows.
+        'src/pages/meetings/**',
       ],
       thresholds: {
         lines: 100,

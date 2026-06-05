@@ -104,7 +104,7 @@ describe('venue form sections (smoke render)', () => {
     expect(container).toBeTruthy();
   });
   it('renders VenueServicesSection', () => {
-    const { container } = wrap(<VenueServicesSection config={emptyConfig} />);
+    const { container } = wrap(<VenueServicesSection />);
     expect(container).toBeTruthy();
   });
   it('renders VenueLinkedHostsSection', () => {

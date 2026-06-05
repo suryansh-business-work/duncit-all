@@ -10,9 +10,17 @@ import { Schema, model, InferSchemaType } from 'mongoose';
 const serviceOfferedSchema = new Schema(
   {
     title: { type: String, required: true, trim: true },
+    // Normalised slug of `title` ("Sound & Lighting" → "sound-lighting"). The
+    // duplicate check runs on this so casing/spacing/punctuation variants of the
+    // same title collide within a hierarchy slot.
+    slug: { type: String, required: true, trim: true, index: true },
     super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', required: true, index: true },
     category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
     sub_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
+    // Which lead form(s) this title shows up in. Both default to true so legacy
+    // rows keep appearing on both Venue and Host lead pickers.
+    applies_to_venue: { type: Boolean, default: true, index: true },
+    applies_to_host: { type: Boolean, default: true, index: true },
     is_active: { type: Boolean, default: true, index: true },
     sort_order: { type: Number, default: 0 },
     created_by: { type: String, default: null },
@@ -20,9 +28,10 @@ const serviceOfferedSchema = new Schema(
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
-// One title per exact hierarchy slot — prevents duplicate offerings.
+// One slug per exact hierarchy slot — prevents duplicate offerings regardless of
+// title casing/spacing.
 serviceOfferedSchema.index(
-  { super_category_id: 1, category_id: 1, sub_category_id: 1, title: 1 },
+  { super_category_id: 1, category_id: 1, sub_category_id: 1, slug: 1 },
   { unique: true }
 );
 

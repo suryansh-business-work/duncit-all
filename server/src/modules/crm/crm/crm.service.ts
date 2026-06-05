@@ -274,9 +274,12 @@ async function loadServiceNames(kind: ServiceKind): Promise<string[]> {
 
 export const crmService = {
   async config() {
-    const [venueServices, hostServices] = await Promise.all([
+    const { managedOptionService } = await import('@modules/crm/managedOption/managedOption.service');
+    const [venueServices, hostServices, amenities, eventSuitability] = await Promise.all([
       loadServiceNames('VENUE'),
       loadServiceNames('HOST'),
+      managedOptionService.activeNames('AMENITY'),
+      managedOptionService.activeNames('EVENT_SUITABILITY'),
     ]);
     // services_offered_options stays around as the union of both — kept for
     // older callers / dashboard widgets that aggregate venue + host together.
@@ -285,11 +288,11 @@ export const crmService = {
     return {
       venue_types: C.VENUE_TYPES,
       space_types: C.SPACE_TYPES,
-      venue_event_suitability: C.VENUE_EVENT_SUITABILITY,
+      venue_event_suitability: eventSuitability,
       week_days: C.WEEK_DAYS,
       booking_notices: C.BOOKING_NOTICES,
       pricing_models: C.PRICING_MODELS,
-      amenities: C.AMENITIES,
+      amenities,
       lead_sources: C.LEAD_SOURCES,
       venue_lead_statuses: C.VENUE_LEAD_STATUSES,
       host_lead_statuses: C.HOST_LEAD_STATUSES,

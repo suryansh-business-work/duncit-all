@@ -77,6 +77,14 @@ export const appConfig: AppConfig = {
       icon: 'analytics',
       children: [
         { label: 'Services Offered', to: '/data/services-offered', icon: 'contacts' },
+        {
+          label: 'Venues',
+          icon: 'location',
+          children: [
+            { label: 'Amenities management', to: '/data/venues/amenities', icon: 'analytics' },
+            { label: 'Event Suitability management', to: '/data/venues/event-suitability', icon: 'analytics' },
+          ],
+        },
       ],
     },
     {

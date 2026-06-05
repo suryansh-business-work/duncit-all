@@ -39,6 +39,7 @@ import ServicesGrid from '../../components/ServicesGrid';
 import CommsLogsSection from '../../components/CommsLogsSection';
 import ManualLogsTab from '../../components/ManualLogsTab';
 import ExternalLink from '../../components/ExternalLink';
+import WebsitePagesTab from '../../components/website-pages-tab';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import { parseApiError } from '../../utils/parseApiError';
 
@@ -175,29 +176,25 @@ export default function HostLeadDetailPage() {
       label: `Services (${lead.services_offered.length})`,
       icon: <HandymanIcon fontSize="small" />,
       render: () => (
-        <Stack spacing={2.5}>
-          <LeadDetailCard title="Website" icon={<LanguageIcon color="primary" />}>
-            {lead.website ? (
-              <ExternalLink variant="body2" href={lead.website} />
-            ) : (
-              <Typography variant="body2" color="text.secondary">
-                No website on record.
-              </Typography>
-            )}
-          </LeadDetailCard>
-          <LeadDetailCard
-            title="Services offered"
-            subtitle={
-              lead.services_offered.length
-                ? `${lead.services_offered.length} service${lead.services_offered.length === 1 ? '' : 's'} tagged`
-                : 'Catalogue managed via Manage Host Services'
-            }
-            icon={<HandymanIcon color="primary" />}
-          >
-            <ServicesGrid services={lead.services_offered} />
-          </LeadDetailCard>
-        </Stack>
+        <LeadDetailCard
+          title="Services offered"
+          subtitle={
+            lead.services_offered.length
+              ? `${lead.services_offered.length} service${lead.services_offered.length === 1 ? '' : 's'} tagged`
+              : 'Catalogue managed via Manage Host Services'
+          }
+          icon={<HandymanIcon color="primary" />}
+        >
+          <ServicesGrid services={lead.services_offered} />
+        </LeadDetailCard>
       ),
+    },
+
+    {
+      value: 'website',
+      label: 'Website',
+      icon: <LanguageIcon fontSize="small" />,
+      render: () => <WebsitePagesTab entity="HOST_LEAD" leadId={lead.id} website={lead.website} />,
     },
 
     {

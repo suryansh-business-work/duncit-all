@@ -15,7 +15,16 @@ export const serviceOfferedResolvers = {
   Mutation: {
     createCrmServicesOffered: (
       _p: unknown,
-      args: { input: { super_category_id: string; category_id?: string | null; sub_category_id?: string | null; titles: string[] } },
+      args: {
+        input: {
+          super_category_id: string;
+          category_id?: string | null;
+          sub_category_id?: string | null;
+          applies_to_venue?: boolean | null;
+          applies_to_host?: boolean | null;
+          titles: string[];
+        };
+      },
       ctx: GraphQLContext
     ) => {
       const user = requireRole(ctx, RW);
@@ -23,7 +32,16 @@ export const serviceOfferedResolvers = {
     },
     updateCrmServiceOffered: (
       _p: unknown,
-      args: { id: string; input: { title?: string | null; is_active?: boolean | null; sort_order?: number | null } },
+      args: {
+        id: string;
+        input: {
+          title?: string | null;
+          is_active?: boolean | null;
+          sort_order?: number | null;
+          applies_to_venue?: boolean | null;
+          applies_to_host?: boolean | null;
+        };
+      },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, RW);

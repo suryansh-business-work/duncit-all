@@ -19,19 +19,19 @@ export function buildCallWebhookRouter(): Router {
   const router = Router();
   router.use(express.urlencoded({ extended: false }));
 
-  // Portal call: the agent's phone answered → bridge to the customer (plain
-  // Twilio <Say>, no Servam dependency, so a normal call can't fail on TTS).
+  // Portal call: the customer answered → bridge in the agent (plain Twilio
+  // <Say>, no Servam dependency, so a normal call can't fail on TTS).
   router.post('/voice/portal', async (req: Request, res: Response) => {
     const logId = String(req.query.logId || '').trim();
     const userId = String(req.query.userId || '').trim();
-    const to = String(req.query.to || '').trim();
-    if (!to) return xml(res, buildSayHangupTwiml('No customer number. Goodbye.'));
+    const agent = String(req.query.agent || '').trim();
+    if (!agent) return xml(res, buildSayHangupTwiml('No agent number to connect. Goodbye.'));
     const [base, callerId] = await Promise.all([getWebhookBaseUrl(), getRuntimeEnvValue('TWILIO_PHONE_NUMBER')]);
     const qs = `logId=${logId}&userId=${encodeURIComponent(userId)}&mode=PORTAL`;
     return xml(
       res,
       buildPortalDialTwiml({
-        customer: to,
+        dialTo: agent,
         callerId: (callerId || '').trim(),
         actionUrl: `${base}/twilio/call-status?${qs}`,
         recordingCallbackUrl: `${base}/twilio/call-status?${qs}&kind=recording`,

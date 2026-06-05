@@ -132,7 +132,7 @@ export const callService = {
     }
   },
 
-  /** Portal call: Twilio rings the agent leg, then bridges to the customer. */
+  /** Normal portal call: Twilio dials the customer (From = config number), then bridges in the agent. Pure two-way, no AI. */
   async startPortalCall(input: {
     entity_type: CommsLogEntity;
     entity_id: string;
@@ -172,11 +172,13 @@ export const callService = {
       metadata: { mode: 'PORTAL', user_id: input.user_id },
     });
 
+    // Dial the CUSTOMER first (From = config number) — the same leg the AI call
+    // uses and which is proven to ring — then bridge the agent when answered.
     const qs = `logId=${log!.id}&userId=${encodeURIComponent(input.user_id)}`;
     const body = new URLSearchParams({
-      To: agent,
+      To: to,
       From: creds.fromNumber,
-      Url: `${creds.baseUrl}/twilio/voice/portal?${qs}&to=${encodeURIComponent(to)}`,
+      Url: `${creds.baseUrl}/twilio/voice/portal?${qs}&agent=${encodeURIComponent(agent)}`,
       Method: 'POST',
       StatusCallback: `${creds.baseUrl}/twilio/call-status?${qs}&mode=PORTAL`,
       StatusCallbackMethod: 'POST',
@@ -190,7 +192,7 @@ export const callService = {
         return { ok: false, message: json?.message || `Twilio call failed (HTTP ${status})`, log: null };
       }
       const updated = await communicationLogService.update(log!.id, { external_id: String(json?.sid ?? '') });
-      return { ok: true, message: `Calling your phone to connect ${to}`, log: updated ?? log };
+      return { ok: true, message: `Calling ${to} — you'll be bridged in when they answer`, log: updated ?? log };
     } catch (err: any) {
       await communicationLogService.update(log!.id, { status: 'FAILED', error_message: err?.message || 'Call failed' });
       return { ok: false, message: err?.message || 'Twilio call request failed', log: null };

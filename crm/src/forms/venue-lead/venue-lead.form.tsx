@@ -132,7 +132,7 @@ function VenueSections({ config }: { config: CrmOptionGroup }) {
     <VenueAmenitiesSection config={config} />,
     <VenueMediaSection />,
     <VenueWebsiteSection />,
-    <VenueServicesSection config={config} />,
+    <VenueServicesSection />,
     <VenueLinkedHostsSection />,
     <VenueBrandingSection />,
     <VenueDynamicSection />,

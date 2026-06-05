@@ -5,9 +5,15 @@ export const serviceOfferedTypeDefs = gql`
   type CrmServiceOffered {
     id: ID!
     title: String!
+    slug: String!
     super_category_id: ID
     category_id: ID
     sub_category_id: ID
+    super_category_name: String
+    category_name: String
+    sub_category_name: String
+    applies_to_venue: Boolean!
+    applies_to_host: Boolean!
     is_active: Boolean!
     sort_order: Int!
     created_at: String
@@ -19,6 +25,8 @@ export const serviceOfferedTypeDefs = gql`
     category_id: ID
     sub_category_id: ID
     is_active: Boolean
+    applies_to_venue: Boolean
+    applies_to_host: Boolean
     search: String
   }
 
@@ -26,6 +34,8 @@ export const serviceOfferedTypeDefs = gql`
     super_category_id: ID!
     category_id: ID
     sub_category_id: ID
+    applies_to_venue: Boolean
+    applies_to_host: Boolean
     titles: [String!]!
   }
 
@@ -33,6 +43,8 @@ export const serviceOfferedTypeDefs = gql`
     title: String
     is_active: Boolean
     sort_order: Int
+    applies_to_venue: Boolean
+    applies_to_host: Boolean
   }
 
   extend type Query {

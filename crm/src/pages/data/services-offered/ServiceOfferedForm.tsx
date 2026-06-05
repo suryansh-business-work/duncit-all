@@ -1,11 +1,14 @@
 import { useState } from 'react';
-import { Autocomplete, Chip, MenuItem, Stack, TextField } from '@mui/material';
+import { Autocomplete, Chip, Divider, MenuItem, Stack, TextField } from '@mui/material';
 import { useCategoriesByParent } from '../../../api/useCategoryTree';
+import ServiceTargetSwitches from './ServiceTargetSwitches';
 
 export interface ServiceOfferedDraft {
   super_category_id: string;
   category_id: string;
   sub_category_id: string;
+  applies_to_venue: boolean;
+  applies_to_host: boolean;
   titles: string[];
 }
 
@@ -98,6 +101,13 @@ export default function ServiceOfferedForm({ value, onChange }: Props) {
             helperText="Add one or more (e.g. Catering, Decor, Sound)"
           />
         )}
+      />
+
+      <Divider flexItem />
+      <ServiceTargetSwitches
+        venue={value.applies_to_venue}
+        host={value.applies_to_host}
+        onChange={({ venue, host }) => set({ applies_to_venue: venue, applies_to_host: host })}
       />
     </Stack>
   );

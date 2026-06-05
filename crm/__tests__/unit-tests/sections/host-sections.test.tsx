@@ -85,7 +85,7 @@ describe('host form sections (smoke render)', () => {
     expect(container).toBeTruthy();
   });
   it('renders HostServicesSection', () => {
-    const { container } = wrap(<HostServicesSection config={emptyConfig} />);
+    const { container } = wrap(<HostServicesSection />);
     expect(container).toBeTruthy();
   });
   it('renders HostBrandingSection', () => {

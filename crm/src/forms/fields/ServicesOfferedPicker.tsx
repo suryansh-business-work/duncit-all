@@ -10,6 +10,8 @@ interface Props {
   categoryName?: string;
   subName?: string;
   servicesName?: string;
+  /** Restrict the catalogue to titles flagged for this lead side. */
+  appliesTo?: 'VENUE' | 'HOST';
 }
 
 /**
@@ -23,6 +25,7 @@ export default function ServicesOfferedPicker({
   categoryName = 'category_ids',
   subName = 'sub_category_ids',
   servicesName = 'services_offered',
+  appliesTo,
 }: Props) {
   const [superField] = useField<string>(superName);
   const [catField] = useField<string[]>(categoryName);
@@ -33,7 +36,14 @@ export default function ServicesOfferedPicker({
   const subIds = subField.value ?? [];
 
   const { data, loading } = useQuery<{ crmServicesOffered: CrmServiceOffered[] }>(CRM_SERVICES_OFFERED, {
-    variables: { filter: { super_category_id: superId, is_active: true } },
+    variables: {
+      filter: {
+        super_category_id: superId,
+        is_active: true,
+        ...(appliesTo === 'VENUE' ? { applies_to_venue: true } : {}),
+        ...(appliesTo === 'HOST' ? { applies_to_host: true } : {}),
+      },
+    },
     skip: !superId,
     fetchPolicy: 'cache-and-network',
   });

@@ -11,6 +11,8 @@ import ManageServicesPage from './pages/ManageServicesPage';
 import ManageDynamicFieldsPage from './pages/ManageDynamicFieldsPage';
 import CallPromptsPage from './pages/call-prompts';
 import ServicesOfferedPage from './pages/data/services-offered';
+import AmenitiesPage from './pages/data/venues/AmenitiesPage';
+import EventSuitabilityPage from './pages/data/venues/EventSuitabilityPage';
 import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
 import { getToken } from './lib/session';
@@ -50,6 +52,8 @@ export default function App() {
       <Route path="/host-leads/:id" element={authed(<HostLeadEditorPage />)} />
       <Route path="/call-prompts" element={authed(<CallPromptsPage />)} />
       <Route path="/data/services-offered" element={authed(<ServicesOfferedPage />)} />
+      <Route path="/data/venues/amenities" element={authed(<AmenitiesPage />)} />
+      <Route path="/data/venues/event-suitability" element={authed(<EventSuitabilityPage />)} />
       <Route path="/settings/dynamic-fields" element={authed(<ManageDynamicFieldsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

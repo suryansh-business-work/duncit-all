@@ -121,7 +121,7 @@ function HostSections({ config }: { config: CrmOptionGroup }) {
     <HostTimelineSection config={config} />,
     <HostReachSection />,
     <HostWebsiteSection />,
-    <HostServicesSection config={config} />,
+    <HostServicesSection />,
     <HostBrandingSection />,
     <HostDynamicSection />,
     <HostTrackingSection config={config} />,

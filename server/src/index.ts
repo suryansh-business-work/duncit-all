@@ -49,6 +49,14 @@ async function bootstrap() {
   await safeSeed('websiteContent', () => websiteContentService.seedDefaults());
   await safeSeed('marketing', () => marketingService.resumeSchedules());
   await safeSeed('crmServices', () => crmService.seedServiceDefaults());
+  await safeSeed('crmServicesOfferedSlugs', async () => {
+    const { serviceOfferedService } = await import('@modules/crm/serviceOffered/serviceOffered.service');
+    await serviceOfferedService.backfillSlugs();
+  });
+  await safeSeed('crmManagedOptions', async () => {
+    const { managedOptionService } = await import('@modules/crm/managedOption/managedOption.service');
+    await managedOptionService.seedDefaults();
+  });
   await safeSeed('podPlan', async () => {
     const { podPlanService } = await import('@modules/pods/pod-plan/pod-plan.service');
     await podPlanService.seedDefaults();

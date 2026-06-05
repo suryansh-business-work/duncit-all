@@ -54,7 +54,7 @@ const TTS_LANG = (language?: string | null) => {
  * CRM can mark the call "over" live.
  */
 export function buildPortalDialTwiml(opts: {
-  customer: string;
+  dialTo: string;
   callerId?: string;
   actionUrl: string;
   recordingCallbackUrl?: string;
@@ -68,7 +68,7 @@ export function buildPortalDialTwiml(opts: {
     '<Response>',
     '<Say>Connecting your Duncit call now.</Say>',
     `<Dial answerOnBridge="true"${caller} action="${escapeXml(opts.actionUrl)}" method="POST"${record}>`,
-    `<Number>${escapeXml(opts.customer)}</Number>`,
+    `<Number>${escapeXml(opts.dialTo)}</Number>`,
     '</Dial>',
     '</Response>',
   ].join('');

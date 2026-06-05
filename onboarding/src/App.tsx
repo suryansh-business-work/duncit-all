@@ -4,6 +4,9 @@ import DashboardPage from './pages/DashboardPage';
 import HostsPage from './pages/hosts-page/HostsPage';
 import VenuesPage from './pages/venues-page/VenuesPage';
 import VenueDetailsPage from './pages/venue-details-page/VenueDetailsPage';
+import SurveyBuilderPage from './pages/surveys/SurveyBuilderPage';
+import MeetingCalendarPage from './pages/meetings/MeetingCalendarPage';
+import MeetingSchedulePage from './pages/meetings/MeetingSchedulePage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
@@ -31,6 +34,9 @@ export default function App() {
       <Route path="/hosts" element={authed(<HostsPage />)} />
       <Route path="/venues" element={authed(<VenuesPage />)} />
       <Route path="/venues/:venueId" element={authed(<VenueDetailsPage />)} />
+      <Route path="/surveys/:kind" element={authed(<SurveyBuilderPage />)} />
+      <Route path="/meetings/calendar" element={authed(<MeetingCalendarPage />)} />
+      <Route path="/meetings/:kind" element={authed(<MeetingSchedulePage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

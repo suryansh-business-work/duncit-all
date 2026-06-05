@@ -12,6 +12,7 @@ import PublicProfilePage from '../pages/PublicProfilePage';
 import PodDetailsPage from '../pages/PodDetailsPage';
 import ClubDetailsPage from '../pages/ClubDetailsPage';
 import HostsVenuesPage from '../pages/HostsVenuesPage';
+import SurveyGatePage from '../pages/survey-gate';
 import HostManagePage from '../pages/HostManagePage';
 import VenueManagePage from '../pages/VenueManagePage';
 import VenueDetailsPage from '../pages/VenueDetailsPage';
@@ -78,6 +79,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Props
       <Route path="/u/:userId" element={withAuth(<PublicProfilePage />)} />
       <Route path="/become-host" element={<PartnerRedirect path="/become-host" />} />
       <Route path="/register-venue" element={<PartnerRedirect path="/register-venue" />} />
+      <Route path="/survey/:kind" element={withAuth(<SurveyGatePage />)} />
       <Route path="/hosts-venues" element={withAuth(<HostsVenuesPage />)} />
       <Route path="/host/manage" element={withAuth(<HostManagePage />)} />
       <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />

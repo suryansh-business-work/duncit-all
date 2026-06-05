@@ -64,7 +64,7 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
     : {
         label: 'Be a host',
         icon: <StorefrontIcon fontSize="small" />,
-        onClick: go('/become-host'),
+        onClick: go('/survey/host'),
       };
 
   const venueItem: MenuItem = isVenue
@@ -76,7 +76,7 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
     : {
         label: 'Be a Venue Owner',
         icon: <AddBusinessIcon fontSize="small" />,
-        onClick: go('/register-venue'),
+        onClick: go('/survey/venue'),
       };
 
   const supportItems: MenuItem[] = [

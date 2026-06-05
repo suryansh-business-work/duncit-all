@@ -2,7 +2,7 @@
  * Per-app configuration for the Duncit Onboarding console. Reusable configuration only —
  * no dynamic business data. `requiredRoles` is overridable via `VITE_REQUIRED_ROLES`.
  */
-export interface AppNavItem { label: string; to: string; icon: string; }
+export interface AppNavItem { label: string; to?: string; icon: string; children?: AppNavItem[]; }
 export interface AppModule { title: string; description: string; icon: string; }
 export interface AccentColors { light: string; main: string; hover: string; active: string; }
 
@@ -45,8 +45,31 @@ export const appConfig: AppConfig = {
   accent: { light: '#a5b4fc', main: '#6366f1', hover: '#4f46e5', active: '#4338ca' },
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
-    { label: 'Hosts', to: '/hosts', icon: 'people' },
-    { label: 'Registered Venues', to: '/venues', icon: 'storefront' },
+    {
+      label: 'Survey',
+      icon: 'survey',
+      children: [
+        { label: 'Venue Survey', to: '/surveys/venue', icon: 'survey' },
+        { label: 'Host Survey', to: '/surveys/host', icon: 'survey' },
+      ],
+    },
+    {
+      label: 'Meeting',
+      icon: 'calendar',
+      children: [
+        { label: 'Calendar', to: '/meetings/calendar', icon: 'calendar' },
+        { label: 'Venue Meeting Schedule', to: '/meetings/venue', icon: 'storefront' },
+        { label: 'Host Meeting Schedule', to: '/meetings/host', icon: 'people' },
+      ],
+    },
+    {
+      label: 'Onboarding',
+      icon: 'people',
+      children: [
+        { label: 'Onboarded Hosts', to: '/hosts', icon: 'people' },
+        { label: 'Onboarded Venues', to: '/venues', icon: 'storefront' },
+      ],
+    },
   ],
   modules: [],
 };

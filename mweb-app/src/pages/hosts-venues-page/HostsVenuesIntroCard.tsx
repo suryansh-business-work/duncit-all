@@ -29,7 +29,7 @@ export default function HostsVenuesIntroCard() {
           <Stack direction="row" spacing={1} sx={{ '& .MuiButton-root': { borderRadius: 999, fontWeight: 900 } }}>
             <Button
               component={RouterLink}
-              to="/become-host"
+              to="/survey/host"
               variant="contained"
               size="small"
               startIcon={<GroupAddIcon />}
@@ -38,7 +38,7 @@ export default function HostsVenuesIntroCard() {
             </Button>
             <Button
               component={RouterLink}
-              to="/register-venue"
+              to="/survey/venue"
               variant="outlined"
               size="small"
               startIcon={<AddBusinessIcon />}

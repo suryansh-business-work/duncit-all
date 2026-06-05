@@ -14,6 +14,8 @@ import AnalyticsIcon from '@mui/icons-material/Analytics';
 import PeopleIcon from '@mui/icons-material/People';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import WidgetsIcon from '@mui/icons-material/Widgets';
+import AssignmentIcon from '@mui/icons-material/Assignment';
+import EventIcon from '@mui/icons-material/Event';
 
 const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   dashboard: DashboardIcon,
@@ -30,6 +32,8 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   analytics: AnalyticsIcon,
   people: PeopleIcon,
   storefront: StorefrontIcon,
+  survey: AssignmentIcon,
+  calendar: EventIcon,
 };
 
 /** Resolves a config icon name to an MUI icon, falling back to a neutral glyph. */

@@ -21,6 +21,7 @@ import UserSupportTicketsSection from './UserSupportTicketsSection';
 import RolesSection from './RolesSection';
 import DeleteUserDialog from './DeleteUserDialog';
 import UserHealthSection from './UserHealthSection';
+import UserSurveysSection from './UserSurveysSection';
 import { useUserDetailsState } from './useUserDetailsState';
 
 export default function UserDetailsPage() {
@@ -86,6 +87,7 @@ export default function UserDetailsPage() {
             ),
           },
           { label: 'Badges', content: <UserBadgesSection userId={userId} /> },
+          { label: 'Surveys', content: <UserSurveysSection userId={userId} /> },
           { label: 'Health', content: <UserHealthSection userId={userId} /> },
           { label: 'Activity', content: <UserActivitySection userId={userId} /> },
           { label: 'Support Tickets', content: <UserSupportTicketsSection email={s.user.email} /> },

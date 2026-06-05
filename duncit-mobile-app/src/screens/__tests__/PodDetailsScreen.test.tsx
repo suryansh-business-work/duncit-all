@@ -16,8 +16,9 @@ jest.mock('@/hooks/useDetails', () => ({
 }));
 
 const mockGoBack = jest.fn();
+const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: mockGoBack, navigate: jest.fn() }),
+  useNavigation: () => ({ goBack: mockGoBack, navigate: mockNavigate }),
   useRoute: () => ({ params: { podId: 'p1', title: 'Pod 1' } }),
 }));
 
@@ -54,7 +55,10 @@ const pod = {
   comment_count: 1,
 };
 
-beforeEach(() => mockGoBack.mockClear());
+beforeEach(() => {
+  mockGoBack.mockClear();
+  mockNavigate.mockClear();
+});
 
 describe('PodDetailsScreen', () => {
   it('shows the spinner while loading', () => {
@@ -79,6 +83,14 @@ describe('PodDetailsScreen', () => {
     fireEvent.press(screen.getByTestId('pod-view-club'));
     fireEvent.press(screen.getByTestId('detail-back'));
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it('books a (free) pod via the footer CTA', () => {
+    mockedPod.mockReturnValue({ pod, savedInitially: false, isLoading: false });
+    renderWithProviders(<PodDetailsScreen />);
+    expect(screen.getByText('Join')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('pod-book'));
+    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1' });
   });
 
   it('shares the pod', () => {

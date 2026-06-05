@@ -54,6 +54,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       HostsVenues: 'hosts-venues',
       PublicProfile: 'u/:userId',
       VenueDetails: 'venue/:venueId',
+      Checkout: 'checkout/:podId',
       NotFound: '*',
     },
   },

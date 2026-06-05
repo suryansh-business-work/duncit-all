@@ -10,6 +10,7 @@ import { ClubDetailsScreen } from '@/screens/ClubDetailsScreen';
 import { HostsVenuesScreen } from '@/screens/HostsVenuesScreen';
 import { PublicProfileScreen } from '@/screens/PublicProfileScreen';
 import { VenueDetailsScreen } from '@/screens/VenueDetailsScreen';
+import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { FaqsScreen } from '@/screens/FaqsScreen';
 import { HostManageScreen } from '@/screens/HostManageScreen';
 import { LoginScreen } from '@/screens/LoginScreen';
@@ -92,6 +93,7 @@ export function RootNavigator() {
           <Stack.Screen name="HostsVenues" component={HostsVenuesScreen} />
           <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
           <Stack.Screen name="VenueDetails" component={VenueDetailsScreen} />
+          <Stack.Screen name="Checkout" component={CheckoutScreen} />
           <Stack.Screen name="NotFound" component={NotFoundScreen} />
         </>
       )}

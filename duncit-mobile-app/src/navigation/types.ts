@@ -31,6 +31,7 @@ export type RootStackParamList = {
   ChatRoom: { podId: string; title: string };
   PodDetails: { podId: string; title: string };
   ClubDetails: { clubId: string; title: string };
+  Checkout: { podId: string };
   HostsVenues: undefined;
   PublicProfile: { userId: string };
   VenueDetails: { venueId: string };
@@ -53,6 +54,7 @@ export type MenuRoute = Exclude<
   | 'VenueHealth'
   | 'PublicProfile'
   | 'VenueDetails'
+  | 'Checkout'
 >;
 
 declare global {

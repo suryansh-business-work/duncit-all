@@ -1,10 +1,10 @@
 import { crmService } from './crm.service';
 import { CRM_RW } from './crm.constants';
-import { parseCrmLeadText, type CrmAiEntity } from './crm.ai';
+import { parseCrmLeadText, parseCrmLeadsText, leadAiChat, type CrmAiEntity, type ChatMessage } from './crm.ai';
 import { callService } from '@modules/crm/call/call.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import type { CommsLogEntity } from '@modules/crm/communicationLog/communicationLog.model';
-import { buildTemplateBase64, exportLeadsBase64, importLeads, type CrmExcelEntity } from './crm.excel';
+import { buildTemplateBase64, exportLeadsBase64, importLeads, inspectImport, type CrmExcelEntity, type ImportColumnMapping } from './crm.excel';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
@@ -70,6 +70,10 @@ export const crmResolvers = {
       requireRole(ctx, RW);
       return { filename: exportFilename(args.entity), content_base64: await exportLeadsBase64(args.entity) };
     },
+    crmExcelInspect: (_p: unknown, args: { content_base64: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return inspectImport(args.content_base64);
+    },
     crmCallFromNumber: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return (await getRuntimeEnvValue('TWILIO_PHONE_NUMBER')) || null;
@@ -114,11 +118,11 @@ export const crmResolvers = {
     },
     emailVenueLeadContact: (
       _p: unknown,
-      args: { id: string; contact_email: string; subject: string; body: string; provider_id?: string | null },
+      args: { id: string; contact_email: string; subject: string; body: string; provider_id?: string | null; attachments?: { url: string; name?: string | null }[] | null },
       ctx: GraphQLContext
     ) => {
       const user = requireRole(ctx, RW);
-      return crmService.emailVenueLeadContact(args.id, args.contact_email, args.subject, args.body, args.provider_id, user.id);
+      return crmService.emailVenueLeadContact(args.id, args.contact_email, args.subject, args.body, args.provider_id, user.id, args.attachments);
     },
     callVenueLeadContact: (
       _p: unknown,
@@ -130,11 +134,11 @@ export const crmResolvers = {
     },
     emailHostLeadContact: (
       _p: unknown,
-      args: { id: string; contact_email: string; subject: string; body: string; provider_id?: string | null },
+      args: { id: string; contact_email: string; subject: string; body: string; provider_id?: string | null; attachments?: { url: string; name?: string | null }[] | null },
       ctx: GraphQLContext
     ) => {
       const user = requireRole(ctx, RW);
-      return crmService.emailHostLeadContact(args.id, args.contact_email, args.subject, args.body, args.provider_id, user.id);
+      return crmService.emailHostLeadContact(args.id, args.contact_email, args.subject, args.body, args.provider_id, user.id, args.attachments);
     },
     callHostLeadContact: (
       _p: unknown,
@@ -211,13 +215,21 @@ export const crmResolvers = {
       requireRole(ctx, RW);
       return parseCrmLeadText(args.entity, args.text);
     },
+    aiParseCrmLeads: async (_p: unknown, args: { entity: CrmAiEntity; text: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return parseCrmLeadsText(args.entity, args.text);
+    },
+    crmLeadAiChat: async (_p: unknown, args: { entity: CrmAiEntity; lead_id: string; messages: ChatMessage[] }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return leadAiChat(args.entity, args.lead_id, args.messages);
+    },
     crmExcelImport: async (
       _p: unknown,
-      args: { entity: CrmExcelEntity; content_base64: string },
+      args: { entity: CrmExcelEntity; content_base64: string; mapping?: ImportColumnMapping[] | null },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, RW);
-      return importLeads(args.entity, args.content_base64);
+      return importLeads(args.entity, args.content_base64, args.mapping);
     },
     addCrmManualLog: async (
       _p: unknown,

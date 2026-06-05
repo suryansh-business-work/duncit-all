@@ -10,6 +10,9 @@ import HostLeadDetailPage from './pages/host-leads/HostLeadDetailPage';
 import ManageServicesPage from './pages/ManageServicesPage';
 import ManageDynamicFieldsPage from './pages/ManageDynamicFieldsPage';
 import CallPromptsPage from './pages/call-prompts';
+import EmailTemplatesPage from './pages/email-templates';
+import EmailTemplateEditorPage from './pages/email-templates/EditorPage';
+import RemindersPage from './pages/reminders';
 import ServicesOfferedPage from './pages/data/services-offered';
 import AmenitiesPage from './pages/data/venues/AmenitiesPage';
 import EventSuitabilityPage from './pages/data/venues/EventSuitabilityPage';
@@ -51,6 +54,9 @@ export default function App() {
       <Route path="/host-leads/:id/view" element={authed(<HostLeadDetailPage />)} />
       <Route path="/host-leads/:id" element={authed(<HostLeadEditorPage />)} />
       <Route path="/call-prompts" element={authed(<CallPromptsPage />)} />
+      <Route path="/email-templates" element={authed(<EmailTemplatesPage />)} />
+      <Route path="/email-templates/:id" element={authed(<EmailTemplateEditorPage />)} />
+      <Route path="/reminders" element={authed(<RemindersPage />)} />
       <Route path="/data/services-offered" element={authed(<ServicesOfferedPage />)} />
       <Route path="/data/venues/amenities" element={authed(<AmenitiesPage />)} />
       <Route path="/data/venues/event-suitability" element={authed(<EventSuitabilityPage />)} />

@@ -13,9 +13,11 @@ import {
 } from '@mui/material';
 import LanguageIcon from '@mui/icons-material/Language';
 import TravelExploreIcon from '@mui/icons-material/TravelExplore';
+import DownloadIcon from '@mui/icons-material/Download';
 import {
   CRM_WEBSITE_PAGES,
   DELETE_CRM_WEBSITE_PAGE,
+  FETCH_CRM_WEBSITE_PAGE_CONTENT,
   SCRAPE_CRM_WEBSITE_PAGES,
   type CrmEntityType,
   type CrmWebsitePage,
@@ -47,12 +49,15 @@ export default function WebsitePagesTab({ entity, leadId, website }: Props) {
     refetchQueries: [{ query: CRM_WEBSITE_PAGES, variables }],
   });
 
+  const [fetchContent] = useMutation(FETCH_CRM_WEBSITE_PAGE_CONTENT);
   const [scrapeOpen, setScrapeOpen] = useState(false);
   const [viewing, setViewing] = useState<CrmWebsitePage | null>(null);
   const [removing, setRemoving] = useState<CrmWebsitePage | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
+  const [fetchProgress, setFetchProgress] = useState<{ done: number; total: number } | null>(null);
 
   const pages = data?.crmWebsitePages ?? [];
+  const unfetched = pages.filter((p) => p.status !== 'FETCHED');
 
   if (!website) {
     return (
@@ -70,6 +75,22 @@ export default function WebsitePagesTab({ entity, leadId, website }: Props) {
     } catch (err) {
       setActionError(parseApiError(err));
     }
+  };
+
+  /** Fetch content for every not-yet-fetched page, sequentially (kind to the site). */
+  const fetchAll = async () => {
+    setActionError(null);
+    const targets = unfetched;
+    setFetchProgress({ done: 0, total: targets.length });
+    for (let i = 0; i < targets.length; i += 1) {
+      try {
+        await fetchContent({ variables: { id: targets[i].id } });
+      } catch (err) {
+        setActionError(parseApiError(err));
+      }
+      setFetchProgress({ done: i + 1, total: targets.length });
+    }
+    setFetchProgress(null);
   };
 
   const confirmDelete = async () => {
@@ -93,6 +114,14 @@ export default function WebsitePagesTab({ entity, leadId, website }: Props) {
               <ExternalLink variant="body2" href={website} />
             </Box>
             <Chip size="small" variant="outlined" label={`${pages.length} page${pages.length === 1 ? '' : 's'} saved`} />
+            <Button
+              variant="outlined"
+              startIcon={fetchProgress ? <CircularProgress size={16} /> : <DownloadIcon />}
+              onClick={fetchAll}
+              disabled={!!fetchProgress || unfetched.length === 0}
+            >
+              {fetchProgress ? `Fetching ${fetchProgress.done}/${fetchProgress.total}` : `Fetch all (${unfetched.length})`}
+            </Button>
             <Button variant="contained" startIcon={<TravelExploreIcon />} onClick={() => { setActionError(null); setScrapeOpen(true); }}>
               Scrape pages
             </Button>

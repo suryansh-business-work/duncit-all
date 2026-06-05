@@ -72,6 +72,7 @@ export const appConfig: AppConfig = {
         { label: 'Host Leads', to: '/host-leads', icon: 'groups' },
       ],
     },
+    { label: 'Reminders', to: '/reminders', icon: 'calendar' },
     {
       label: 'Data',
       icon: 'analytics',
@@ -85,6 +86,13 @@ export const appConfig: AppConfig = {
             { label: 'Event Suitability management', to: '/data/venues/event-suitability', icon: 'analytics' },
           ],
         },
+      ],
+    },
+    {
+      label: 'Email Templates',
+      icon: 'email',
+      children: [
+        { label: 'Templates', to: '/email-templates', icon: 'email' },
       ],
     },
     {

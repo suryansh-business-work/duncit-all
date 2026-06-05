@@ -12,6 +12,7 @@ import {
 import { parseApiError } from '../utils/parseApiError';
 import CommsProviderSelect from './CommsProviderSelect';
 import ComposeWindow from './compose/ComposeWindow';
+import EmailComposeFields, { type EmailPayload } from './compose/EmailComposeFields';
 
 type Mode = 'email' | 'call';
 
@@ -29,6 +30,8 @@ interface Props {
   mode: Mode;
   entity: EntityKind;
   lead: BasicLead | null;
+  /** Slug → value map from the full lead, used to auto-fill template variables. */
+  variableValues?: Record<string, string>;
   onClose: () => void;
   onResult: (message: string, ok: boolean) => void;
 }
@@ -43,10 +46,10 @@ const responseKey = (entity: EntityKind, mode: Mode) => {
   return entity === 'VENUE_LEAD' ? 'callVenueLeadContact' : 'callHostLeadContact';
 };
 
-export default function ContactComposeDialog({ open, mode, entity, lead, onClose, onResult }: Props) {
+export default function ContactComposeDialog({ open, mode, entity, lead, variableValues, onClose, onResult }: Props) {
   const [target, setTarget] = useState('');
-  const [subject, setSubject] = useState('');
-  const [body, setBody] = useState('');
+  const [defaultSubject, setDefaultSubject] = useState('');
+  const [emailPayload, setEmailPayload] = useState<EmailPayload>({ subject: '', body: '', valid: false, attachments: [] });
   const [providerId, setProviderId] = useState('');
   const [error, setError] = useState<string | null>(null);
 
@@ -56,8 +59,8 @@ export default function ContactComposeDialog({ open, mode, entity, lead, onClose
     if (!open || !lead) return;
     setError(null);
     setTarget(mode === 'email' ? lead.primary_email ?? '' : lead.primary_mobile ?? '');
-    setSubject(`Regarding ${lead.display_name}`);
-    setBody('');
+    setDefaultSubject(`Regarding ${lead.display_name}`);
+    setEmailPayload({ subject: '', body: '', valid: false, attachments: [] });
   }, [open, mode, lead]);
 
   const submit = async () => {
@@ -67,8 +70,9 @@ export default function ContactComposeDialog({ open, mode, entity, lead, onClose
       const variables: Record<string, unknown> = { id: lead.id, provider_id: providerId || null };
       if (mode === 'email') {
         variables.contact_email = target;
-        variables.subject = subject;
-        variables.body = body;
+        variables.subject = emailPayload.subject || defaultSubject;
+        variables.body = emailPayload.body;
+        variables.attachments = emailPayload.attachments.map(({ url, name }) => ({ url, name }));
       } else {
         variables.contact_number = target;
       }
@@ -82,7 +86,7 @@ export default function ContactComposeDialog({ open, mode, entity, lead, onClose
   };
 
   const providerType: 'SMTP' | 'TWILIO_CALL' = mode === 'email' ? 'SMTP' : 'TWILIO_CALL';
-  const disabled = loading || !target.trim() || (mode === 'email' && !subject.trim());
+  const disabled = loading || !target.trim() || (mode === 'email' && !emailPayload.valid);
 
   return (
     <ComposeWindow
@@ -110,10 +114,14 @@ export default function ContactComposeDialog({ open, mode, entity, lead, onClose
           fullWidth
         />
         {mode === 'email' && (
-          <>
-            <TextField size="small" label="Subject" value={subject} onChange={(event) => setSubject(event.target.value)} fullWidth />
-            <TextField size="small" label="Message" value={body} onChange={(event) => setBody(event.target.value)} fullWidth multiline minRows={4} />
-          </>
+          <EmailComposeFields
+            entity={entity}
+            leadName={lead?.display_name ?? ''}
+            leadEmail={target}
+            variableValues={variableValues ?? {}}
+            defaultSubject={defaultSubject}
+            onChange={setEmailPayload}
+          />
         )}
       </Stack>
     </ComposeWindow>

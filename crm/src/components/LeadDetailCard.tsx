@@ -5,19 +5,22 @@ interface SimpleProps {
   title: string;
   subtitle?: string;
   icon?: ReactNode;
+  /** Optional control rendered at the right of the header (e.g. an Add button). */
+  action?: ReactNode;
   children: ReactNode;
 }
 
-export function LeadDetailCard({ title, subtitle, icon, children }: SimpleProps) {
+export function LeadDetailCard({ title, subtitle, icon, action, children }: SimpleProps) {
   return (
     <Card>
       <CardContent>
         <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1.25 }}>
           {icon}
-          <Box>
+          <Box sx={{ flex: 1, minWidth: 0 }}>
             <Typography variant="subtitle1" fontWeight={800}>{title}</Typography>
             {subtitle && <Typography variant="caption" color="text.secondary">{subtitle}</Typography>}
           </Box>
+          {action}
         </Stack>
         {children}
       </CardContent>

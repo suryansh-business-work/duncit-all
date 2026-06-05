@@ -27,8 +27,12 @@ import AppBreadcrumbs from './AppBreadcrumbs';
 export const DRAWER_WIDTH = 256;
 export const HEADER_HEIGHT = 48;
 
+const accountName = (user: any): string =>
+  user?.full_name || [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || appConfig.name;
+const accountEmail = (user: any): string => user?.email || '';
+
 const initials = (user: any) => {
-  const name = user?.full_name || [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || appConfig.name;
+  const name = accountName(user);
   return (
     name
       .split(/\s+/)
@@ -105,6 +109,16 @@ export default function AppShell({ children }: { children: ReactNode }) {
               <IconButton size="small" onClick={colorMode.toggle} aria-label="toggle color mode">
                 {colorMode.mode === 'light' ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
               </IconButton>
+            </Tooltip>
+            <Tooltip title={accountEmail(account) || 'Signed in'}>
+              <Box sx={{ display: { xs: 'none', sm: 'block' }, textAlign: 'right', minWidth: 0, maxWidth: 200 }}>
+                <Typography variant="caption" fontWeight={700} noWrap sx={{ display: 'block', lineHeight: 1.2 }}>
+                  {accountName(account)}
+                </Typography>
+                <Typography variant="caption" color="text.secondary" noWrap sx={{ display: 'block', lineHeight: 1.2 }}>
+                  {accountEmail(account) || appConfig.portalLabel}
+                </Typography>
+              </Box>
             </Tooltip>
             <Avatar src={account?.profile_photo || undefined} sx={{ width: 28, height: 28, bgcolor: 'primary.main', fontSize: 12 }}>
               {initials(account)}

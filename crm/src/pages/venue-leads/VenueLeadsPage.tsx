@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Snackbar, Stack } from '@mui/material';
+import { Alert, Button, Snackbar, Stack, Typography } from '@mui/material';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { DELETE_VENUE_LEAD, VENUE_LEADS } from '../../api/crm.gql';
 import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE, downloadBase64Xlsx } from '../../api/excel.gql';
 import type { VenueLead } from '../../api/crm.types';
@@ -29,6 +30,9 @@ export default function VenueLeadsPage() {
   const [showAi, setShowAi] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [toDelete, setToDelete] = useState<VenueLead | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const { data, loading, refetch } = useQuery<{ venueLeads: VenueLead[] }>(VENUE_LEADS, {
     variables: {
@@ -67,6 +71,21 @@ export default function VenueLeadsPage() {
       await refetch();
     } catch (err) {
       setError(parseApiError(err));
+    }
+  };
+
+  const bulkDelete = async () => {
+    setBulkBusy(true);
+    try {
+      await Promise.all(selectedIds.map((id) => deleteLead({ variables: { id } })));
+      setToast(`Deleted ${selectedIds.length} venue lead${selectedIds.length === 1 ? '' : 's'}`);
+      setSelectedIds([]);
+      setBulkOpen(false);
+      await refetch();
+    } catch (err) {
+      setError(parseApiError(err));
+    } finally {
+      setBulkBusy(false);
     }
   };
 
@@ -113,12 +132,23 @@ export default function VenueLeadsPage() {
 
       {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
 
+      {selectedIds.length > 0 && (
+        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: 1 }}>
+          <Typography variant="body2" color="text.secondary">{selectedIds.length} selected</Typography>
+          <Button size="small" color="error" variant="outlined" startIcon={<DeleteSweepIcon />} onClick={() => setBulkOpen(true)}>
+            Delete selected
+          </Button>
+        </Stack>
+      )}
+
       <VenueLeadsTable
         leads={leads}
         loading={loading && !data}
         onView={(lead) => navigate(`/venue-leads/${lead.id}/view`)}
         onEdit={(lead) => navigate(`/venue-leads/${lead.id}`)}
         onDelete={setToDelete}
+        selectionModel={selectedIds}
+        onSelectionChange={setSelectedIds}
       />
 
       <ConfirmDialog
@@ -131,14 +161,24 @@ export default function VenueLeadsPage() {
         onClose={() => setToDelete(null)}
       />
 
+      <ConfirmDialog
+        open={bulkOpen}
+        title="Delete selected venue leads"
+        message={`Delete ${selectedIds.length} selected venue lead${selectedIds.length === 1 ? '' : 's'}? This cannot be undone.`}
+        confirmLabel="Delete all"
+        loading={bulkBusy}
+        onConfirm={bulkDelete}
+        onClose={() => setBulkOpen(false)}
+      />
+
       <FillWithAiDialog
         open={showAi}
         entity="VENUE_LEAD"
-        title="Fill venue lead with AI"
+        title="Fill venue leads with AI"
         onClose={() => setShowAi(false)}
-        onApply={(parsed) => {
-          setShowAi(false);
-          navigate('/venue-leads/new', { state: { aiPrefill: parsed } });
+        onSaved={(count) => {
+          setToast(`Created ${count} venue lead${count === 1 ? '' : 's'}`);
+          refetch();
         }}
       />
 

@@ -27,6 +27,8 @@ interface Props {
   email?: string | null;
   mobile?: string | null;
   whatsapp?: string | null;
+  /** Slug → value map from the full lead for email-template auto-fill. */
+  variableValues?: Record<string, string>;
 }
 
 // Compact, uniform-height action buttons (fixes the split-button height drift).
@@ -40,7 +42,7 @@ const BTN_SX = { textTransform: 'none', height: CALL_HEIGHT, minHeight: CALL_HEI
  * Static Content prompt + Servam voice). WhatsApp deep-links; Email opens the
  * compose/log window. Buttons disable when the contact detail is missing.
  */
-export default function LeadContactActions({ entity, leadId, displayName, email, mobile, whatsapp }: Props) {
+export default function LeadContactActions({ entity, leadId, displayName, email, mobile, whatsapp, variableValues }: Props) {
   const [emailOpen, setEmailOpen] = useState(false);
   const [portalOpen, setPortalOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);
@@ -115,6 +117,7 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
         mode="email"
         entity={entity}
         lead={{ id: leadId, display_name: displayName, primary_email: email, primary_mobile: mobile }}
+        variableValues={variableValues}
         onClose={() => setEmailOpen(false)}
         onResult={(message) => setToast(message)}
       />

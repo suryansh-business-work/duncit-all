@@ -282,7 +282,45 @@ async function phoneExists(model: any, mobile: string): Promise<boolean> {
   return Boolean(found);
 }
 
-export async function importLeads(entity: CrmExcelEntity, base64: string): Promise<ImportResult> {
+export interface ImportColumnMapping {
+  /** Canonical lead field (e.g. venue_name). */
+  field: string;
+  /** Source column header in the uploaded sheet. */
+  header: string;
+}
+
+/** Read the first data sheet and return its column headers + a few sample rows. */
+export function inspectImport(base64: string): { headers: string[]; sample_rows: string[] } {
+  if (!base64) throw new GraphQLError('No file content provided', { extensions: { code: 'BAD_USER_INPUT' } });
+  let wb: XLSX.WorkBook;
+  try {
+    wb = XLSX.read(base64, { type: 'base64' });
+  } catch {
+    throw new GraphQLError('Could not read the uploaded file', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const sheetName = wb.SheetNames.find((n) => /template|lead/i.test(n)) ?? wb.SheetNames[0];
+  const sheet = wb.Sheets[sheetName];
+  const matrix = XLSX.utils.sheet_to_json<any[]>(sheet, { header: 1, defval: '' });
+  const headers = (matrix[0] ?? []).map((h) => String(h ?? '').trim()).filter(Boolean);
+  const objRows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+  const sample_rows = objRows.slice(0, 3).map((r) => JSON.stringify(r));
+  return { headers, sample_rows };
+}
+
+/** Remap a raw row's keys from sheet headers to canonical fields. */
+function applyMapping(row: Record<string, any>, mapping: ImportColumnMapping[]): Record<string, any> {
+  const out: Record<string, any> = {};
+  for (const m of mapping) {
+    if (m.header && row[m.header] !== undefined) out[m.field] = row[m.header];
+  }
+  return out;
+}
+
+export async function importLeads(
+  entity: CrmExcelEntity,
+  base64: string,
+  mapping?: ImportColumnMapping[] | null
+): Promise<ImportResult> {
   if (!base64) throw new GraphQLError('No file content provided', { extensions: { code: 'BAD_USER_INPUT' } });
   let wb: XLSX.WorkBook;
   try {
@@ -292,7 +330,10 @@ export async function importLeads(entity: CrmExcelEntity, base64: string): Promi
   }
   const sheetName = wb.SheetNames.find((name) => name.toLowerCase().includes('template') || name.toLowerCase().includes('lead')) ?? wb.SheetNames[0];
   const sheet = wb.Sheets[sheetName];
-  const rows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+  const rawRows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
+  // When a mapping is supplied, translate each row's sheet-header keys to the
+  // canonical field names the importer expects; otherwise assume template headers.
+  const rows = mapping && mapping.length ? rawRows.map((r) => applyMapping(r, mapping)) : rawRows;
 
   const result: ImportResult = { inserted: 0, failed: 0, errors: [] };
   for (let idx = 0; idx < rows.length; idx += 1) {

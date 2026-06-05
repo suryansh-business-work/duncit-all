@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -16,6 +17,7 @@ import {
 import { alpha } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ContactsIcon from '@mui/icons-material/Contacts';
 import EventIcon from '@mui/icons-material/Event';
@@ -41,9 +43,12 @@ import ServicesGrid from '../../components/ServicesGrid';
 import CommsLogsSection from '../../components/CommsLogsSection';
 import ManualLogsTab from '../../components/ManualLogsTab';
 import WebsitePagesTab from '../../components/website-pages-tab';
+import RemindersTab from '../../components/reminders-tab';
+import AskAiDrawer, { ASK_AI_WIDTH } from '../../components/ask-ai/AskAiDrawer';
 import MapEmbed from '../../components/MapEmbed';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import { parseApiError } from '../../utils/parseApiError';
+import { venueVariableValues } from '../../config/leadVariables';
 
 const joinList = (values?: string[] | null) => (values && values.length ? values.join(', ') : '—');
 
@@ -63,6 +68,7 @@ const formatCapacity = (min?: number | null, max?: number | null) => {
 export default function VenueLeadDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [aiOpen, setAiOpen] = useState(false);
   const { data, loading, error } = useQuery<{ venueLead: VenueLead | null }>(VENUE_LEAD, {
     variables: { id },
     fetchPolicy: 'cache-and-network',
@@ -204,6 +210,13 @@ export default function VenueLeadDetailPage() {
     },
 
     {
+      value: 'reminders',
+      label: 'Reminders',
+      icon: <EventAvailableIcon fontSize="small" />,
+      render: () => <RemindersTab entity="VENUE_LEAD" leadId={lead.id} />,
+    },
+
+    {
       value: 'linked-hosts',
       label: `Linked Hosts (${lead.linked_hosts.length})`,
       icon: <LinkIcon fontSize="small" />,
@@ -292,7 +305,7 @@ export default function VenueLeadDetailPage() {
   ];
 
   return (
-    <Stack spacing={2.5}>
+    <Stack spacing={2.5} sx={{ transition: 'margin 0.2s ease', mr: aiOpen ? { xs: 0, sm: `${ASK_AI_WIDTH}px` } : 0 }}>
       {/* Back action above the title (per design spec). Sits outside the
           hero card so it reads as a navigation breadcrumb, not part of the
           venue's identity row. */}
@@ -366,8 +379,12 @@ export default function VenueLeadDetailPage() {
                 email={lead.contacts?.[0]?.email}
                 mobile={lead.contacts?.[0]?.mobile_number}
                 whatsapp={lead.contacts?.[0]?.whatsapp_number}
+                variableValues={venueVariableValues(lead)}
               />
             </Box>
+            <Button startIcon={<SmartToyIcon />} color="secondary" variant="outlined" onClick={() => setAiOpen(true)}>
+              Ask AI
+            </Button>
             <Button startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/venue-leads/${lead.id}`)}>
               Edit
             </Button>
@@ -416,6 +433,8 @@ export default function VenueLeadDetailPage() {
 
       {/* ---- Tabs (non-details sections) ---- */}
       <LeadTabs tabs={tabs} data-testid="venue-lead-tabs" />
+
+      <AskAiDrawer open={aiOpen} entity="VENUE_LEAD" leadId={lead.id} leadName={lead.venue_name} onClose={() => setAiOpen(false)} />
     </Stack>
   );
 }

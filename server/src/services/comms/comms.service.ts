@@ -35,7 +35,14 @@ async function resolve(category: EnvCategory, providerId?: string | null) {
 
 export const commsService = {
   /** Send an email via the selected/default EMAIL (SMTP) env entry. */
-  async sendEmail(input: { to: string; subject: string; body: string; provider_id?: string | null }): Promise<CommsResult> {
+  async sendEmail(input: {
+    to: string;
+    subject: string;
+    body: string;
+    provider_id?: string | null;
+    /** Optional file attachments addressed by URL (e.g. ImageKit links). */
+    attachments?: { url: string; name?: string | null }[] | null;
+  }): Promise<CommsResult> {
     const entry = await resolve('EMAIL', input.provider_id);
     if (!entry) return notConfigured('smtp', 'email');
     const cfg = entry.config as Record<string, unknown>;
@@ -52,12 +59,16 @@ export const commsService = {
         secure: port === 465 || str(cfg, 'secure') === 'true',
         auth: user && pass ? { user, pass } : undefined,
       });
+      const attachments = (input.attachments ?? [])
+        .filter((a) => a && a.url)
+        .map((a) => ({ filename: a.name || a.url.split('/').pop() || 'attachment', path: a.url }));
       const info = await transporter.sendMail({
         from: str(cfg, 'from_name') ? `${str(cfg, 'from_name')} <${from}>` : from,
         to: input.to,
         replyTo: str(cfg, 'reply_to') || undefined,
         subject: input.subject,
         html: input.body,
+        attachments: attachments.length ? attachments : undefined,
       });
       return {
         ok: true,

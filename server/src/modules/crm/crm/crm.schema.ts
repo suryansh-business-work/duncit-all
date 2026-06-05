@@ -393,6 +393,22 @@ export const crmTypeDefs = gql`
     content_base64: String!
   }
 
+  type CrmExcelInspectResult {
+    headers: [String!]!
+    "First few rows as JSON strings (for the mapping preview)."
+    sample_rows: [String!]!
+  }
+
+  input CrmImportMappingInput {
+    field: String!
+    header: String!
+  }
+
+  input CrmChatMessageInput {
+    role: String!
+    content: String!
+  }
+
   extend type Query {
     crmLeadConfig: CrmOptionGroup!
     venueLeads(filter: CrmLeadFilter): [VenueLead!]!
@@ -401,6 +417,8 @@ export const crmTypeDefs = gql`
     hostLead(id: ID!): HostLead
     crmExcelTemplate(entity: CrmAiEntity!): CrmExcelFile!
     crmExcelExport(entity: CrmAiEntity!): CrmExcelFile!
+    "Read an uploaded spreadsheet's headers + sample rows for column mapping."
+    crmExcelInspect(content_base64: String!): CrmExcelInspectResult!
     crmServices(kind: CrmServiceKind, include_inactive: Boolean): [CrmService!]!
     crmDynamicFields(entity: CrmEntityType, include_inactive: Boolean): [CrmDynamicField!]!
     "The configured Twilio caller-ID (From) number, shown on call dialogs."
@@ -423,6 +441,7 @@ export const crmTypeDefs = gql`
       subject: String!
       body: String!
       provider_id: ID
+      attachments: [CrmEmailAssetInput!]
     ): LeadContactActionResult!
     callVenueLeadContact(id: ID!, contact_number: String!, provider_id: ID): LeadContactActionResult!
     emailHostLeadContact(
@@ -431,6 +450,7 @@ export const crmTypeDefs = gql`
       subject: String!
       body: String!
       provider_id: ID
+      attachments: [CrmEmailAssetInput!]
     ): LeadContactActionResult!
     callHostLeadContact(id: ID!, contact_number: String!, provider_id: ID): LeadContactActionResult!
     "Place an outbound AI call (Servam-driven) using a Static Content prompt and Servam voice."
@@ -453,7 +473,11 @@ export const crmTypeDefs = gql`
     "Re-sync a non-terminal call's status from Twilio (fallback when the async callback is missed)."
     reconcileCrmCall(log_id: ID!): CrmAiCallResult!
     aiParseCrmLead(entity: CrmAiEntity!, text: String!): String!
-    crmExcelImport(entity: CrmAiEntity!, content_base64: String!): CrmExcelImportResult!
+    "Extract multiple leads from text — returns JSON { records: [...] }."
+    aiParseCrmLeads(entity: CrmAiEntity!, text: String!): String!
+    "Chat about one lead, grounded in its CRM data + scraped website content. Returns HTML."
+    crmLeadAiChat(entity: CrmAiEntity!, lead_id: ID!, messages: [CrmChatMessageInput!]!): String!
+    crmExcelImport(entity: CrmAiEntity!, content_base64: String!, mapping: [CrmImportMappingInput!]): CrmExcelImportResult!
     addCrmManualLog(input: ManualLogInput!): CrmActivity!
     createCrmDynamicField(input: CrmDynamicFieldInput!): CrmDynamicField!
     updateCrmDynamicField(id: ID!, input: CrmDynamicFieldInput!): CrmDynamicField!

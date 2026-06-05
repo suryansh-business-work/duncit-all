@@ -2,16 +2,19 @@ import { useMemo, useState } from 'react';
 import {
   Box,
   Collapse,
+  InputAdornment,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
   Skeleton,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import SearchIcon from '@mui/icons-material/Search';
 import { NavLink, useLocation } from 'react-router-dom';
 import { appConfig, type AppNavItem } from '../config/app-config';
 import { useBranding } from '../lib/useBranding';
@@ -34,6 +37,8 @@ interface NodeProps {
    * together for the more specific URL.
    */
   forceSelected?: boolean;
+  /** When a search is active, groups are force-expanded so matches are visible. */
+  searching?: boolean;
 }
 
 function LeafItem({ item, pathname, onNavigate, forceSelected }: NodeProps) {
@@ -65,10 +70,11 @@ function LeafItem({ item, pathname, onNavigate, forceSelected }: NodeProps) {
   );
 }
 
-function GroupItem({ item, pathname, onNavigate }: NodeProps) {
+function GroupItem({ item, pathname, onNavigate, searching }: NodeProps) {
   const active = useMemo(() => groupActive(pathname, item), [pathname, item]);
   const winner = useMemo(() => bestChild(pathname, item.children ?? []), [pathname, item.children]);
   const [open, setOpen] = useState(active);
+  const isOpen = searching ? true : open;
   return (
     <Box sx={{ mb: 0.25 }}>
       <ListItemButton onClick={() => setOpen((v) => !v)} sx={{ py: 0.75 }}>
@@ -83,9 +89,9 @@ function GroupItem({ item, pathname, onNavigate }: NodeProps) {
             color: active ? 'primary.main' : 'inherit',
           }}
         />
-        {open ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
+        {isOpen ? <ExpandLessIcon fontSize="small" /> : <ExpandMoreIcon fontSize="small" />}
       </ListItemButton>
-      <Collapse in={open} timeout="auto" unmountOnExit>
+      <Collapse in={isOpen} timeout="auto" unmountOnExit>
         <List disablePadding sx={{ pl: 2 }}>
           {(item.children ?? []).map((child) => (
             <NavNode
@@ -93,6 +99,7 @@ function GroupItem({ item, pathname, onNavigate }: NodeProps) {
               item={child}
               pathname={pathname}
               onNavigate={onNavigate}
+              searching={searching}
               forceSelected={winner ? winner === child : undefined}
             />
           ))}
@@ -102,18 +109,31 @@ function GroupItem({ item, pathname, onNavigate }: NodeProps) {
   );
 }
 
-function NavNode({ item, pathname, onNavigate, forceSelected }: NodeProps) {
+function NavNode({ item, pathname, onNavigate, forceSelected, searching }: NodeProps) {
   if (item.children && item.children.length > 0) {
-    return <GroupItem item={item} pathname={pathname} onNavigate={onNavigate} />;
+    return <GroupItem item={item} pathname={pathname} onNavigate={onNavigate} searching={searching} />;
   }
   return (
     <LeafItem item={item} pathname={pathname} onNavigate={onNavigate} forceSelected={forceSelected} />
   );
 }
 
+/** Filter nav by query: keep a group if its label matches (whole subtree) or any descendant matches. */
+function filterNav(items: AppNavItem[], q: string): AppNavItem[] {
+  if (!q) return items;
+  const ql = q.toLowerCase();
+  return items.flatMap((item) => {
+    if (item.label.toLowerCase().includes(ql)) return [item];
+    const kids = filterNav(item.children ?? [], ql);
+    return kids.length ? [{ ...item, children: kids }] : [];
+  });
+}
+
 export default function AppSidebar({ onNavigate }: SidebarProps) {
   const location = useLocation();
   const { logoUrl, appName, loading } = useBranding();
+  const [query, setQuery] = useState('');
+  const nav = useMemo(() => filterNav(appConfig.nav, query.trim()), [query]);
   return (
     <Stack sx={{ height: '100%' }}>
       <Box
@@ -141,10 +161,24 @@ export default function AppSidebar({ onNavigate }: SidebarProps) {
           {appConfig.name}
         </Typography>
       </Box>
-      <List sx={{ px: 1, py: 1, flex: 1 }}>
-        {appConfig.nav.map((item) => (
-          <NavNode key={item.label} item={item} pathname={location.pathname} onNavigate={onNavigate} />
-        ))}
+      <Box sx={{ px: 1.5, pt: 1.5, pb: 0.5 }}>
+        <TextField
+          size="small"
+          fullWidth
+          placeholder="Search menu…"
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
+        />
+      </Box>
+      <List sx={{ px: 1, py: 1, flex: 1, overflowY: 'auto' }}>
+        {nav.length === 0 ? (
+          <Typography variant="caption" color="text.secondary" sx={{ px: 1.5 }}>No menu items match.</Typography>
+        ) : (
+          nav.map((item) => (
+            <NavNode key={item.label} item={item} pathname={location.pathname} onNavigate={onNavigate} searching={!!query.trim()} />
+          ))
+        )}
       </List>
       <Box sx={{ px: 2, py: 1.25, borderTop: 1, borderColor: 'divider' }}>
         <Typography variant="caption" color="text.secondary" noWrap>

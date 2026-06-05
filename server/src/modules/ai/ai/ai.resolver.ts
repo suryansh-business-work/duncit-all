@@ -567,7 +567,8 @@ export const aiResolvers = {
       return adminAiChat(args.prompt);
     },
     aiCreateOrUpdateMjml: async (_: unknown, args: { input: AiMjmlTemplateInput }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
+      // CRM managers compose MJML email templates from the CRM portal too.
+      requireRole(ctx, [...ADMIN_ROLES, 'CRM_MANAGER']);
       return createOrUpdateMjml(args.input);
     },
   },

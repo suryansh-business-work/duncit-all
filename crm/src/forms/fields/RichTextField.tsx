@@ -26,6 +26,8 @@ interface Props {
   disabled?: boolean;
   /** Read-only mode renders the rich text without the toolbar. */
   readOnly?: boolean;
+  /** Borderless, auto-height rendering (for inline/chat display). */
+  bare?: boolean;
 }
 
 const ToolbarButton = ({
@@ -167,6 +169,7 @@ export default function RichTextField({
   compact,
   disabled,
   readOnly,
+  bare,
 }: Props) {
   const theme = useTheme();
   const editor = useEditor({
@@ -210,13 +213,13 @@ export default function RichTextField({
   return (
     <Box
       sx={(t) => ({
-        border: `1px solid ${t.palette.divider}`,
-        borderRadius: 1,
-        bgcolor: t.palette.background.paper,
+        border: bare ? 'none' : `1px solid ${t.palette.divider}`,
+        borderRadius: bare ? 0 : 1,
+        bgcolor: bare ? 'transparent' : t.palette.background.paper,
         // Style the prosemirror surface from outside.
         '& .ProseMirror': {
-          minHeight: compact ? 80 : 140,
-          padding: t.spacing(1.25),
+          minHeight: bare ? 0 : compact ? 80 : 140,
+          padding: bare ? t.spacing(1, 1.25) : t.spacing(1.25),
           outline: 'none',
           fontFamily: t.typography.body2.fontFamily,
           fontSize: t.typography.body2.fontSize,
@@ -241,6 +244,8 @@ export default function RichTextField({
           margin: 0,
         },
         '& .ProseMirror ul, & .ProseMirror ol': { paddingLeft: t.spacing(2.5) },
+        '& .ProseMirror > :first-of-type': { marginTop: 0 },
+        '& .ProseMirror > :last-of-type': { marginBottom: 0 },
       })}
     >
       {!readOnly && <Toolbar editor={editor} compact={compact} />}

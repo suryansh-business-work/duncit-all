@@ -631,11 +631,12 @@ export const crmService = {
     subject: string,
     body: string,
     providerId?: string | null,
-    by?: string | null
+    by?: string | null,
+    attachments?: { url: string; name?: string | null }[] | null
   ) {
     const lead = await VenueLeadModel.findById(id);
     if (!lead) notFound('Venue lead');
-    const result = await commsService.sendEmail({ to, subject, body, provider_id: providerId });
+    const result = await commsService.sendEmail({ to, subject, body, provider_id: providerId, attachments });
     await logAndAttachActivity({ lead, type: 'EMAIL', entity_type: 'VENUE_LEAD', provider_id: providerId, to, subject, body, result, by });
     return result;
   },
@@ -652,11 +653,12 @@ export const crmService = {
     subject: string,
     body: string,
     providerId?: string | null,
-    by?: string | null
+    by?: string | null,
+    attachments?: { url: string; name?: string | null }[] | null
   ) {
     const lead = await HostLeadModel.findById(id);
     if (!lead) notFound('Host lead');
-    const result = await commsService.sendEmail({ to, subject, body, provider_id: providerId });
+    const result = await commsService.sendEmail({ to, subject, body, provider_id: providerId, attachments });
     await logAndAttachActivity({ lead, type: 'EMAIL', entity_type: 'HOST_LEAD', provider_id: providerId, to, subject, body, result, by });
     return result;
   },

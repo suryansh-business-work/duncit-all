@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { IconButton, Stack, Tooltip, Typography } from '@mui/material';
-import { DataGrid, type GridColDef, type GridRenderCellParams } from '@mui/x-data-grid';
+import { DataGrid, type GridColDef, type GridRenderCellParams, type GridRowSelectionModel } from '@mui/x-data-grid';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteIcon from '@mui/icons-material/Delete';
 import { format } from 'date-fns';
@@ -13,6 +13,9 @@ interface Props {
   onView: (lead: HostLead) => void;
   onEdit: (lead: HostLead) => void;
   onDelete: (lead: HostLead) => void;
+  /** Selected row ids for bulk actions (checkbox column). */
+  selectionModel?: GridRowSelectionModel;
+  onSelectionChange?: (ids: string[]) => void;
 }
 
 const fmt = (value?: string | null) => {
@@ -21,7 +24,7 @@ const fmt = (value?: string | null) => {
   return Number.isNaN(date.getTime()) ? '—' : format(date, 'dd MMM yyyy');
 };
 
-export default function HostLeadsTable({ leads, loading, onView, onEdit, onDelete }: Props) {
+export default function HostLeadsTable({ leads, loading, onView, onEdit, onDelete, selectionModel, onSelectionChange }: Props) {
   const columns = useMemo<GridColDef<HostLead>[]>(
     () => [
       {
@@ -97,6 +100,9 @@ export default function HostLeadsTable({ leads, loading, onView, onEdit, onDelet
         pagination: { paginationModel: { pageSize: 25, page: 0 } },
         sorting: { sortModel: [{ field: 'next_follow_up_date', sort: 'asc' }] },
       }}
+      checkboxSelection
+      rowSelectionModel={selectionModel}
+      onRowSelectionModelChange={(model) => onSelectionChange?.(model as string[])}
       disableRowSelectionOnClick
       onRowClick={(params) => onView(params.row)}
       density="standard"

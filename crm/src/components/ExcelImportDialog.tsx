@@ -1,30 +1,32 @@
 import { useRef, useState } from 'react';
-import { gql, useMutation } from '@apollo/client';
+import { gql, useApolloClient, useMutation } from '@apollo/client';
 import {
   Alert,
-  Box,
   Button,
   Dialog,
   DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
-  List,
-  ListItem,
-  ListItemText,
   Stack,
   Typography,
 } from '@mui/material';
 import FileUploadIcon from '@mui/icons-material/FileUpload';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import { parseApiError } from '../utils/parseApiError';
+import { autoMatch, importFieldsFor } from '../config/importFields';
+import ColumnMappingStep from './import/ColumnMappingStep';
+import ImportResultView, { type ImportResult } from './import/ImportResultView';
 
+const CRM_EXCEL_INSPECT = gql`
+  query CrmExcelInspect($content_base64: String!) {
+    crmExcelInspect(content_base64: $content_base64) { headers sample_rows }
+  }
+`;
 const CRM_EXCEL_IMPORT = gql`
-  mutation CrmExcelImport($entity: CrmAiEntity!, $content_base64: String!) {
-    crmExcelImport(entity: $entity, content_base64: $content_base64) {
-      inserted
-      failed
-      errors { row message }
+  mutation CrmExcelImport($entity: CrmAiEntity!, $content_base64: String!, $mapping: [CrmImportMappingInput!]) {
+    crmExcelImport(entity: $entity, content_base64: $content_base64, mapping: $mapping) {
+      inserted failed errors { row message }
     }
   }
 `;
@@ -38,7 +40,7 @@ interface Props {
   onDownloadTemplate?: () => void;
 }
 
-async function fileToBase64(file: File): Promise<string> {
+function fileToBase64(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onload = () => {
@@ -51,110 +53,113 @@ async function fileToBase64(file: File): Promise<string> {
   });
 }
 
+type Step = 'file' | 'map' | 'done';
+
 export default function ExcelImportDialog({ open, entity, title, onClose, onImported, onDownloadTemplate }: Props) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const [file, setFile] = useState<File | null>(null);
+  const [step, setStep] = useState<Step>('file');
+  const [base64, setBase64] = useState('');
+  const [fileName, setFileName] = useState('');
+  const [headers, setHeaders] = useState<string[]>([]);
+  const [mapping, setMapping] = useState<Record<string, string>>({});
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<{ inserted: number; failed: number; errors: { row: number; message: string }[] } | null>(null);
-  const [importMut, { loading }] = useMutation<{
-    crmExcelImport: { inserted: number; failed: number; errors: { row: number; message: string }[] };
-  }>(CRM_EXCEL_IMPORT);
+  const [result, setResult] = useState<ImportResult | null>(null);
+  const fields = importFieldsFor(entity);
+
+  const client = useApolloClient();
+  const [inspecting, setInspecting] = useState(false);
+  const [importMut, { loading: importing }] = useMutation<{ crmExcelImport: ImportResult }>(CRM_EXCEL_IMPORT);
 
   const close = () => {
-    setFile(null);
-    setError(null);
-    setResult(null);
+    setStep('file'); setBase64(''); setFileName(''); setHeaders([]); setMapping({}); setError(null); setResult(null);
     onClose();
   };
 
-  const submit = async () => {
+  const onFile = async (file: File | null) => {
+    if (!file) return;
     setError(null);
-    setResult(null);
-    if (!file) {
-      setError('Pick an Excel file (.xlsx) to upload.');
-      return;
-    }
+    setInspecting(true);
     try {
-      const base64 = await fileToBase64(file);
-      const res = await importMut({ variables: { entity, content_base64: base64 } });
+      const b64 = await fileToBase64(file);
+      setBase64(b64);
+      setFileName(file.name);
+      const res = await client.query<{ crmExcelInspect: { headers: string[]; sample_rows: string[] } }>({
+        query: CRM_EXCEL_INSPECT,
+        variables: { content_base64: b64 },
+        fetchPolicy: 'network-only',
+      });
+      const found = res.data?.crmExcelInspect?.headers ?? [];
+      if (found.length === 0) throw new Error('No column headers found in the first row.');
+      setHeaders(found);
+      setMapping(autoMatch(fields, found));
+      setStep('map');
+    } catch (err) {
+      setError(parseApiError(err));
+    } finally {
+      setInspecting(false);
+    }
+  };
+
+  const requiredOk = fields.filter((f) => f.required).every((f) => mapping[f.field]);
+
+  const doImport = async () => {
+    setError(null);
+    try {
+      const mappingArg = Object.entries(mapping)
+        .filter(([, header]) => header)
+        .map(([field, header]) => ({ field, header }));
+      const res = await importMut({ variables: { entity, content_base64: base64, mapping: mappingArg } });
       const payload = res.data?.crmExcelImport;
       if (!payload) throw new Error('Import returned no payload');
       setResult(payload);
+      setStep('done');
       onImported({ inserted: payload.inserted, failed: payload.failed });
-    } catch (err: any) {
+    } catch (err) {
       setError(parseApiError(err));
     }
   };
 
   return (
-    <Dialog open={open} onClose={close} fullWidth maxWidth="sm">
+    <Dialog open={open} onClose={close} fullWidth maxWidth={step === 'map' ? 'md' : 'sm'}>
       <DialogTitle>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <FileUploadIcon color="primary" />
-          <span>{title}</span>
-        </Stack>
+        <Stack direction="row" spacing={1} alignItems="center"><FileUploadIcon color="primary" /><span>{title}</span></Stack>
       </DialogTitle>
       <DialogContent dividers>
-        <Stack spacing={1.5}>
-          <Typography variant="body2" color="text.secondary">
-            Upload an Excel file matching the template columns. Each row becomes one lead;
-            failed rows are reported below with their reason. Multi-value columns accept
-            comma-separated values.
-          </Typography>
-          {onDownloadTemplate && (
+        {error && <Alert severity="error" sx={{ mb: 1.5 }}>{error}</Alert>}
+
+        {step === 'file' && (
+          <Stack spacing={1.5}>
+            <Typography variant="body2" color="text.secondary">
+              Upload an Excel (.xlsx) or CSV file. Next you'll map your columns to lead fields.
+              Multi-value columns accept comma-separated values.
+            </Typography>
+            {onDownloadTemplate && (
+              <Button size="small" variant="outlined" sx={{ alignSelf: 'flex-start' }} onClick={onDownloadTemplate}>Download template</Button>
+            )}
+            <Divider />
+            <input ref={inputRef} type="file" accept=".xlsx,.xls,.csv,text/csv" hidden onChange={(e) => onFile(e.target.files?.[0] ?? null)} />
             <Stack direction="row" spacing={1.25} alignItems="center">
-              <Button size="small" variant="outlined" onClick={onDownloadTemplate}>
-                Download template
+              <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => inputRef.current?.click()} disabled={inspecting}>
+                {inspecting ? 'Reading…' : 'Choose file'}
               </Button>
-              <Typography variant="caption" color="text.secondary">
-                Contains a sample row + the instructions sheet.
-              </Typography>
+              <Typography variant="body2" color="text.secondary" noWrap>{fileName || 'No file selected'}</Typography>
             </Stack>
-          )}
-          <Divider />
-          <input
-            ref={inputRef}
-            type="file"
-            accept=".xlsx,.xls,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-            hidden
-            onChange={(e) => setFile(e.target.files?.[0] ?? null)}
-          />
-          <Stack direction="row" spacing={1.25} alignItems="center">
-            <Button variant="outlined" startIcon={<CloudUploadIcon />} onClick={() => inputRef.current?.click()}>
-              {file ? 'Replace file' : 'Choose file'}
-            </Button>
-            <Typography variant="body2" color="text.secondary" noWrap>{file?.name ?? 'No file selected'}</Typography>
           </Stack>
-          {error && <Alert severity="error">{error}</Alert>}
-          {result && (
-            <Alert severity={result.failed === 0 ? 'success' : 'warning'}>
-              <Typography variant="body2" fontWeight={700}>
-                Imported {result.inserted} of {result.inserted + result.failed} rows
-              </Typography>
-              {result.errors.length > 0 && (
-                <Box sx={{ mt: 1 }}>
-                  <Typography variant="caption" color="text.secondary">Errors:</Typography>
-                  <List dense disablePadding>
-                    {result.errors.slice(0, 8).map((entry) => (
-                      <ListItem key={`${entry.row}-${entry.message}`} sx={{ py: 0 }}>
-                        <ListItemText primary={`Row ${entry.row}: ${entry.message}`} primaryTypographyProps={{ variant: 'caption' }} />
-                      </ListItem>
-                    ))}
-                  </List>
-                  {result.errors.length > 8 && (
-                    <Typography variant="caption" color="text.secondary">+ {result.errors.length - 8} more rows…</Typography>
-                  )}
-                </Box>
-              )}
-            </Alert>
-          )}
-        </Stack>
+        )}
+
+        {step === 'map' && (
+          <ColumnMappingStep fields={fields} headers={headers} mapping={mapping} onChange={setMapping} />
+        )}
+
+        {step === 'done' && result && <ImportResultView result={result} />}
       </DialogContent>
       <DialogActions>
-        <Button onClick={close} disabled={loading}>Close</Button>
-        <Button variant="contained" onClick={submit} disabled={loading || !file}>
-          {loading ? 'Uploading…' : 'Upload & import'}
-        </Button>
+        <Button onClick={close} disabled={inspecting || importing}>Close</Button>
+        {step === 'map' && (
+          <Button variant="contained" onClick={doImport} disabled={importing || !requiredOk}>
+            {importing ? 'Importing…' : 'Import'}
+          </Button>
+        )}
       </DialogActions>
     </Dialog>
   );

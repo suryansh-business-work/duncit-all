@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
@@ -16,6 +17,7 @@ import {
 import { alpha } from '@mui/material/styles';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
+import SmartToyIcon from '@mui/icons-material/SmartToy';
 import LocationOnIcon from '@mui/icons-material/LocationOn';
 import ContactsIcon from '@mui/icons-material/Contacts';
 import GroupsIcon from '@mui/icons-material/Groups';
@@ -40,8 +42,11 @@ import CommsLogsSection from '../../components/CommsLogsSection';
 import ManualLogsTab from '../../components/ManualLogsTab';
 import ExternalLink from '../../components/ExternalLink';
 import WebsitePagesTab from '../../components/website-pages-tab';
+import RemindersTab from '../../components/reminders-tab';
+import AskAiDrawer, { ASK_AI_WIDTH } from '../../components/ask-ai/AskAiDrawer';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import { parseApiError } from '../../utils/parseApiError';
+import { hostVariableValues } from '../../config/leadVariables';
 
 const joinList = (values?: string[] | null) => (values && values.length ? values.join(', ') : '—');
 
@@ -55,6 +60,7 @@ const formatDate = (iso?: string | null) => {
 export default function HostLeadDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [aiOpen, setAiOpen] = useState(false);
   const { data, loading, error } = useQuery<{ hostLead: HostLead | null }>(HOST_LEAD, {
     variables: { id },
     fetchPolicy: 'cache-and-network',
@@ -198,6 +204,13 @@ export default function HostLeadDetailPage() {
     },
 
     {
+      value: 'reminders',
+      label: 'Reminders',
+      icon: <EventAvailableIcon fontSize="small" />,
+      render: () => <RemindersTab entity="HOST_LEAD" leadId={lead.id} />,
+    },
+
+    {
       value: 'custom-fields',
       label: 'Custom Fields',
       icon: <EventNoteIcon fontSize="small" />,
@@ -229,7 +242,7 @@ export default function HostLeadDetailPage() {
   ];
 
   return (
-    <Stack spacing={2.5}>
+    <Stack spacing={2.5} sx={{ transition: 'margin 0.2s ease', mr: aiOpen ? { xs: 0, sm: `${ASK_AI_WIDTH}px` } : 0 }}>
       {/* Back action above the title (per design spec). */}
       <Box>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/host-leads')} size="small">
@@ -293,8 +306,12 @@ export default function HostLeadDetailPage() {
                 email={lead.contacts?.[0]?.email}
                 mobile={lead.contacts?.[0]?.mobile_number}
                 whatsapp={lead.contacts?.[0]?.whatsapp_number}
+                variableValues={hostVariableValues(lead)}
               />
             </Box>
+            <Button startIcon={<SmartToyIcon />} color="secondary" variant="outlined" onClick={() => setAiOpen(true)}>
+              Ask AI
+            </Button>
             <Button startIcon={<EditIcon />} variant="contained" onClick={() => navigate(`/host-leads/${lead.id}`)}>
               Edit
             </Button>
@@ -345,6 +362,8 @@ export default function HostLeadDetailPage() {
       </Stack>
 
       <LeadTabs tabs={tabs} data-testid="host-lead-tabs" />
+
+      <AskAiDrawer open={aiOpen} entity="HOST_LEAD" leadId={lead.id} leadName={lead.host_name} onClose={() => setAiOpen(false)} />
     </Stack>
   );
 }

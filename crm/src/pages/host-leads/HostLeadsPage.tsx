@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { useApolloClient, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Snackbar, Stack } from '@mui/material';
+import { Alert, Button, Snackbar, Stack, Typography } from '@mui/material';
+import DeleteSweepIcon from '@mui/icons-material/DeleteSweep';
 import { DELETE_HOST_LEAD, HOST_LEADS } from '../../api/crm.gql';
 import { CRM_EXCEL_EXPORT, CRM_EXCEL_TEMPLATE, downloadBase64Xlsx } from '../../api/excel.gql';
 import type { HostLead } from '../../api/crm.types';
@@ -29,6 +30,9 @@ export default function HostLeadsPage() {
   const [showAi, setShowAi] = useState(false);
   const [showImport, setShowImport] = useState(false);
   const [toDelete, setToDelete] = useState<HostLead | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [bulkOpen, setBulkOpen] = useState(false);
+  const [bulkBusy, setBulkBusy] = useState(false);
 
   const { data, loading, refetch } = useQuery<{ hostLeads: HostLead[] }>(HOST_LEADS, {
     variables: {
@@ -67,6 +71,21 @@ export default function HostLeadsPage() {
       await refetch();
     } catch (err) {
       setError(parseApiError(err));
+    }
+  };
+
+  const bulkDelete = async () => {
+    setBulkBusy(true);
+    try {
+      await Promise.all(selectedIds.map((id) => deleteLead({ variables: { id } })));
+      setToast(`Deleted ${selectedIds.length} host lead${selectedIds.length === 1 ? '' : 's'}`);
+      setSelectedIds([]);
+      setBulkOpen(false);
+      await refetch();
+    } catch (err) {
+      setError(parseApiError(err));
+    } finally {
+      setBulkBusy(false);
     }
   };
 
@@ -113,12 +132,23 @@ export default function HostLeadsPage() {
 
       {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
 
+      {selectedIds.length > 0 && (
+        <Stack direction="row" alignItems="center" spacing={1.5} sx={{ px: 1 }}>
+          <Typography variant="body2" color="text.secondary">{selectedIds.length} selected</Typography>
+          <Button size="small" color="error" variant="outlined" startIcon={<DeleteSweepIcon />} onClick={() => setBulkOpen(true)}>
+            Delete selected
+          </Button>
+        </Stack>
+      )}
+
       <HostLeadsTable
         leads={leads}
         loading={loading && !data}
         onView={(lead) => navigate(`/host-leads/${lead.id}/view`)}
         onEdit={(lead) => navigate(`/host-leads/${lead.id}`)}
         onDelete={setToDelete}
+        selectionModel={selectedIds}
+        onSelectionChange={setSelectedIds}
       />
 
       <ConfirmDialog
@@ -131,14 +161,24 @@ export default function HostLeadsPage() {
         onClose={() => setToDelete(null)}
       />
 
+      <ConfirmDialog
+        open={bulkOpen}
+        title="Delete selected host leads"
+        message={`Delete ${selectedIds.length} selected host lead${selectedIds.length === 1 ? '' : 's'}? This cannot be undone.`}
+        confirmLabel="Delete all"
+        loading={bulkBusy}
+        onConfirm={bulkDelete}
+        onClose={() => setBulkOpen(false)}
+      />
+
       <FillWithAiDialog
         open={showAi}
         entity="HOST_LEAD"
-        title="Fill host lead with AI"
+        title="Fill host leads with AI"
         onClose={() => setShowAi(false)}
-        onApply={(parsed) => {
-          setShowAi(false);
-          navigate('/host-leads/new', { state: { aiPrefill: parsed } });
+        onSaved={(count) => {
+          setToast(`Created ${count} host lead${count === 1 ? '' : 's'}`);
+          refetch();
         }}
       />
 

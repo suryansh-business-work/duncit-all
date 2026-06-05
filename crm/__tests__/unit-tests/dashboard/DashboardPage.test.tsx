@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
+import { MemoryRouter } from 'react-router-dom';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import DashboardPage from '@/pages/dashboard';
@@ -8,9 +9,11 @@ import DashboardPage from '@/pages/dashboard';
 const wrap = () =>
   render(
     <MockedProvider mocks={[]}>
-      <LocalizationProvider dateAdapter={AdapterDateFns}>
-        <DashboardPage />
-      </LocalizationProvider>
+      <MemoryRouter>
+        <LocalizationProvider dateAdapter={AdapterDateFns}>
+          <DashboardPage />
+        </LocalizationProvider>
+      </MemoryRouter>
     </MockedProvider>
   );
 

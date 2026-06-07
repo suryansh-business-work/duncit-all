@@ -65,6 +65,13 @@ services:
     ports:
       - "127.0.0.1:2020:80"
 
+  native:
+    image: ${DOCKERHUB_USERNAME}/duncit-native:${IMAGE_TAG:-latest}
+    container_name: duncit-native
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2022:80"
+
   crm:
     image: ${DOCKERHUB_USERNAME}/duncit-crm:${IMAGE_TAG:-latest}
     container_name: duncit-crm

@@ -13,7 +13,7 @@ const consoles: Service[] = [
   { name: 'Admin', url: 'https://admin.duncit.com/', description: 'Platform administration' },
   { name: 'mWeb', url: 'https://mweb.duncit.com/', description: 'Member web app' },
   { name: 'Partners App', url: 'https://partners-app.duncit.com/', description: 'Host & venue partners' },
-  { name: 'Ads', url: 'https://ads.duncit.com/', description: 'Advertising & campaigns' },
+  { name: 'Ads Portal', url: 'https://ads-portal.duncit.com/', description: 'Advertising & campaigns' },
   { name: 'CRM', url: 'https://crm.duncit.com/', description: 'Customer relationships' },
   { name: 'Finance', url: 'https://finance.duncit.com/', description: 'Payments & payouts' },
   { name: 'Tech', url: 'https://tech.duncit.com/', description: 'Platform configuration' },
@@ -30,11 +30,14 @@ const consoles: Service[] = [
 
 const platform: Service[] = [
   { name: 'API Server', url: 'https://server.duncit.com/', description: 'GraphQL API', probe: 'https://server.duncit.com/health' },
+  { name: 'SignOz', url: 'https://signoz.duncit.com/', description: 'Observability & monitoring' },
 ];
 
 const websites: Service[] = [
   { name: 'duncit.com', url: 'https://duncit.com/', description: 'Public marketing website' },
   { name: 'Partners Website', url: 'https://partners.duncit.com/', description: 'Partner marketing website' },
+  { name: 'Ads', url: 'https://ads.duncit.com/', description: 'Advertising marketing site' },
+  { name: 'Native Web', url: 'https://native.duncit.com/', description: 'Mobile web app' },
 ];
 
 const groups = [

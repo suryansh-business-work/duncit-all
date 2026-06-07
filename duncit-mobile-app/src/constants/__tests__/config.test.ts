@@ -21,17 +21,17 @@ afterEach(() => {
 describe('config.apiUrl resolution', () => {
   it('uses a non-loopback EXPO_PUBLIC_API_URL verbatim (production)', () => {
     process.env.EXPO_PUBLIC_API_URL = 'https://server.duncit.com';
-    expect(loadConfig('192.168.1.5:2021').apiUrl).toBe('https://server.duncit.com');
+    expect(loadConfig('192.168.1.5:2022').apiUrl).toBe('https://server.duncit.com');
   });
 
   it('swaps a localhost env for the Metro LAN host on port 2001 (Expo on device)', () => {
     process.env.EXPO_PUBLIC_API_URL = 'http://localhost:2001';
-    expect(loadConfig('192.168.1.50:2021').apiUrl).toBe('http://192.168.1.50:2001');
+    expect(loadConfig('192.168.1.50:2022').apiUrl).toBe('http://192.168.1.50:2001');
   });
 
   it('keeps localhost when the Metro host is also localhost (iOS simulator)', () => {
     process.env.EXPO_PUBLIC_API_URL = 'http://localhost:2001';
-    expect(loadConfig('localhost:2021').apiUrl).toBe('http://localhost:2001');
+    expect(loadConfig('localhost:2022').apiUrl).toBe('http://localhost:2001');
   });
 
   it('falls back to localhost:2001 with no env and no Metro host', () => {

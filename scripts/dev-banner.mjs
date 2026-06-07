@@ -13,7 +13,7 @@ const projects = [
   { label: 'mweb-app',                 port: 2003 },
   { label: 'partners/partners-website', port: 2004 },
   { label: 'partners/partners-app',    port: 2005 },
-  { label: 'ads',                      port: 2006 },
+  { label: 'ads-portal',               port: 2006 },
   { label: 'crm',                      port: 2007 },
   { label: 'finance',                  port: 2008 },
   { label: 'tech',                     port: 2009 },
@@ -27,7 +27,15 @@ const projects = [
   { label: 'hr',                       port: 2017 },
   { label: 'employee',                 port: 2018 },
   { label: 'status',                   port: 2019 },
+  { label: 'ads-website',              port: 2020 },
+  // External: not a pnpm workspace, so `pnpm --recursive dev` doesn't start it.
+  // Listed for reference; excluded from the "all ready" gate. Run via `pnpm dev:mobile`.
+  { label: 'native (mobile web)',      port: 2022, external: true },
 ];
+
+// Only workspace projects are launched by the parallel runner; externals are
+// informational, so the ready-gate counts non-external projects only.
+const expectedReady = projects.filter((p) => !p.external).length;
 
 const urlOf = (p) => `http://localhost:${p.port}${p.path ?? '/'}`;
 
@@ -58,9 +66,9 @@ function detectReady(line) {
   if (!m) return;
   const port = Number(m[1]);
   const proj = projects.find((p) => p.port === port);
-  if (!proj || ready.has(proj.port)) return;
+  if (!proj || proj.external || ready.has(proj.port)) return;
   ready.add(proj.port);
-  if (ready.size === projects.length) setTimeout(printBanner, 250);
+  if (ready.size === expectedReady) setTimeout(printBanner, 250);
 }
 
 // Node 22+ on Windows refuses to spawn `.cmd`/`.bat` directly without a

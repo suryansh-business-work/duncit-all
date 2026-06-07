@@ -12,10 +12,10 @@ Production-ready React Native app built with **Expo SDK 52**, **TypeScript**, **
 | Purpose         | Port   |
 | --------------- | ------ |
 | Backend API     | `2020` |
-| Expo dev server | `2021` |
+| Expo dev server | `2022` |
 
 `EXPO_PUBLIC_API_URL` defaults to `http://localhost:2020`. The `start`/`android`/`ios`/`web`
-scripts launch Expo on port `2021`.
+scripts launch Expo on port `2022`.
 
 ## Getting started
 
@@ -23,7 +23,7 @@ scripts launch Expo on port `2021`.
 cd duncit-mobile-app
 cp .env.example .env      # set EXPO_PUBLIC_API_URL
 npm install
-npm run start             # Expo dev server on :2021
+npm run start             # Expo dev server on :2022
 ```
 
 ## Project structure
@@ -48,7 +48,7 @@ scripts/            # Slack upload utility
 
 | Command                              | Description                     |
 | ------------------------------------ | ------------------------------- |
-| `npm run start`                      | Expo dev server (port 2021)     |
+| `npm run start`                      | Expo dev server (port 2022)     |
 | `npm run android` / `ios` / `web`    | Platform targets                |
 | `npm run lint` / `lint:fix`          | ESLint                          |
 | `npm run format`                     | Prettier                        |

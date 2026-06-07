@@ -525,7 +525,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-native:${{ github.sha }} \
               --cache-from type=gha,scope=duncit-native \
               --cache-to   type=gha,scope=duncit-native,mode=max \
-              --push duncit-mobile-app
+              --push .
 
   # -----------------------------------------------------------
   # CRM-specific test gate (decoupled — only runs when crm/ changed).

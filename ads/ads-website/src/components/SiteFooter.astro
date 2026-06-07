@@ -1,0 +1,24 @@
+---
+import { siteConfig } from '../config/site-config';
+const { brand, footer } = siteConfig;
+const year = new Date().getFullYear();
+---
+
+<footer class="border-t border-black/5">
+  <div class="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-10 sm:flex-row sm:items-center sm:justify-between">
+    <div>
+      <div class="flex items-center gap-2 font-head text-base font-extrabold text-ink">
+        <img src="/duncit-logo.svg" alt="Duncit" width="24" height="24" />
+        {brand.name}
+      </div>
+      <p class="mt-2 text-sm text-ink-soft">{footer.tagline}</p>
+    </div>
+    <nav class="flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-ink-soft">
+      {footer.links.map((link) => <a href={link.href} class="hover:text-ink">{link.label}</a>)}
+      <a href={`mailto:${footer.email}`} class="hover:text-ink">{footer.email}</a>
+    </nav>
+  </div>
+  <div class="border-t border-black/5 py-5 text-center text-xs text-ink-soft">
+    © {year} Duncit. All rights reserved.
+  </div>
+</footer>

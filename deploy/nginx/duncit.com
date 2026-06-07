@@ -175,6 +175,25 @@ server {
     client_max_body_size 25m;
 
     location / {
+        proxy_pass         http://127.0.0.1:2020;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ads-portal.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
         proxy_pass         http://127.0.0.1:2006;
         proxy_http_version 1.1;
         proxy_set_header   Host              $host;
@@ -431,5 +450,30 @@ server {
         proxy_set_header   Upgrade           $http_upgrade;
         proxy_set_header   Connection        "upgrade";
         proxy_read_timeout 90s;
+    }
+}
+
+# --- SignOz (self-hosted observability UI on :2021) --------------------------
+# Runs from its own compose stack at /opt/signoz on the host (NOT part of the
+# duncit docker-compose). Larger body + longer timeouts for the query API and
+# websocket headers for live tail / streaming views.
+server {
+    listen 80;
+    listen [::]:80;
+    server_name signoz.duncit.com;
+    client_max_body_size 50m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2021;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_connect_timeout 30s;
+        proxy_send_timeout    300s;
+        proxy_read_timeout    300s;
     }
 }

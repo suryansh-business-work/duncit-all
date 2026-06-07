@@ -28,11 +28,11 @@ COPY status/package.json ./status/
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
 
-COPY website ./website
-RUN pnpm --filter duncit.com build
+COPY ads/ads-website ./ads/ads-website
+RUN pnpm --filter ads-website build
 
 # --- runner ---
 FROM public.ecr.aws/docker/library/nginx:alpine AS runner
-COPY --from=builder /repo/website/dist /usr/share/nginx/html
+COPY --from=builder /repo/ads/ads-website/dist /usr/share/nginx/html
 COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

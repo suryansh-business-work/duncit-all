@@ -5,7 +5,8 @@ packages:
   - website
   - partners/partners-app
   - partners/partners-website
-  - ads
+  - ads/ads-portal
+  - ads/ads-website
   - crm
   - finance
   - tech

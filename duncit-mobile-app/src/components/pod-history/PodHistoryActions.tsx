@@ -63,10 +63,12 @@ export interface PodHistoryActionsProps {
   item: PodMembership;
   backingOut: boolean;
   invoiceBusy: boolean;
+  ticketBusy: boolean;
   onPodDetails: () => void;
   onBackout: () => void;
   onRefundStatus: () => void;
   onInvoice: () => void;
+  onTicket: () => void;
   onSupport: () => void;
 }
 
@@ -75,10 +77,12 @@ export function PodHistoryActions({
   item,
   backingOut,
   invoiceBusy,
+  ticketBusy,
   onPodDetails,
   onBackout,
   onRefundStatus,
   onInvoice,
+  onTicket,
   onSupport,
 }: PodHistoryActionsProps) {
   return (
@@ -104,6 +108,14 @@ export function PodHistoryActions({
         icon="receipt-long"
         label={`Refund: ${refundLabel(item.refund_status)}`}
         onPress={onRefundStatus}
+      />
+      <ActionButton
+        testID="ph-ticket"
+        icon="confirmation-number"
+        label={ticketBusy ? 'Downloading…' : 'Ticket'}
+        variant="contained"
+        disabled={item.status !== 'JOINED' || !item.pod?.id || ticketBusy}
+        onPress={onTicket}
       />
       <ActionButton
         testID="ph-invoice"

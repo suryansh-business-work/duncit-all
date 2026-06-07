@@ -16,8 +16,17 @@ export function ExploreReels() {
   const { width } = useWindowDimensions();
   const [height, setHeight] = useState(0);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { pods, clubsById, isLoading, hasData, isSaved, likeStateFor, toggleSave, toggleLike } =
-    useExplore();
+  const {
+    pods,
+    clubsById,
+    isLoading,
+    hasData,
+    isSaved,
+    isSavePending,
+    likeStateFor,
+    toggleSave,
+    toggleLike,
+  } = useExplore();
 
   const onLayout = (e: LayoutChangeEvent) => setHeight(e.nativeEvent.layout.height);
   const openPod = (pod: ExplorePod) =>
@@ -53,6 +62,7 @@ export function ExploreReels() {
                 width={width}
                 height={height}
                 saved={saved}
+                savePending={isSavePending(item.id)}
                 like={like}
                 onOpen={() => openPod(item)}
                 onToggleSave={() => toggleSave(item.id, saved)}

@@ -1,18 +1,32 @@
 import { useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
-import { ClubDetailsDocument, PodDetailsDocument } from '@/graphql/details';
+import {
+  AddPodCommentDocument,
+  ClubDetailsDocument,
+  DeletePodCommentDocument,
+  PodCommentsDocument,
+  PodDetailsDocument,
+} from '@/graphql/details';
 import { TogglePodLikeDocument, ToggleSavedPodDocument } from '@/graphql/explore';
 import { graphqlRequest } from '@/services/graphql.client';
 
-export type PodDetail = NonNullable<ResultOf<typeof PodDetailsDocument>['pod']>;
+export type PodComment = ResultOf<typeof PodCommentsDocument>['podComments'][number];
+type PodDetailsResult = ResultOf<typeof PodDetailsDocument>;
+export type PodDetail = NonNullable<PodDetailsResult['pod']>;
+export type PodVenue = PodDetailsResult['publicVenues'][number];
+export type PodLocation = PodDetailsResult['locations'][number];
 type ClubDetailsResult = ResultOf<typeof ClubDetailsDocument>;
 export type ClubDetail = NonNullable<ClubDetailsResult['club']>;
 export type ClubPod = ClubDetailsResult['pods'][number];
 
-/** Fetches a single pod (auth). The viewer's saved set rides along for the Save button. */
+/** Fetches a single pod (auth) plus the venue/location it resolves to (for the
+ * map + "Where") and the viewer id (for comments). Saved set rides along too. */
 export function usePodDetails(podId: string) {
   const [pod, setPod] = useState<PodDetail | null>(null);
+  const [venue, setVenue] = useState<PodVenue | null>(null);
+  const [location, setLocation] = useState<PodLocation | null>(null);
+  const [viewerId, setViewerId] = useState<string | null>(null);
   const [savedInitially, setSavedInitially] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
@@ -23,8 +37,12 @@ export function usePodDetails(podId: string) {
     graphqlRequest(PodDetailsDocument, { podId }, { auth: true })
       .then((data) => {
         if (!active) return;
-        setPod(data.pod ?? null);
-        setSavedInitially((data.me?.saved_pod_ids ?? []).includes(data.pod?.id ?? ''));
+        const nextPod = data.pod ?? null;
+        setPod(nextPod);
+        setViewerId(data.me?.user_id ?? null);
+        setVenue(data.publicVenues.find((v) => v.id === nextPod?.venue_id) ?? null);
+        setLocation(data.locations.find((l) => l.id === nextPod?.location_id) ?? null);
+        setSavedInitially((data.me?.saved_pod_ids ?? []).includes(nextPod?.id ?? ''));
       })
       .catch((err) => active && setError(err))
       .finally(() => active && setIsLoading(false));
@@ -33,7 +51,7 @@ export function usePodDetails(podId: string) {
     };
   }, [podId]);
 
-  return { pod, savedInitially, isLoading, error };
+  return { pod, venue, location, viewerId, savedInitially, isLoading, error };
 }
 
 /** Fetches a club + its active pods (auth). */
@@ -62,6 +80,7 @@ export function usePodActions(pod: PodDetail | null, savedInitially: boolean) {
   const [liked, setLiked] = useState(false);
   const [likeCount, setLikeCount] = useState(0);
   const [saved, setSaved] = useState(savedInitially);
+  const [savePending, setSavePending] = useState(false);
 
   useEffect(() => {
     setSaved(savedInitially);
@@ -89,9 +108,10 @@ export function usePodActions(pod: PodDetail | null, savedInitially: boolean) {
   };
 
   const toggleSave = async () => {
-    if (!pod) return;
+    if (!pod || savePending) return;
     const prev = saved;
     setSaved(!prev);
+    setSavePending(true);
     try {
       const res = await graphqlRequest(
         ToggleSavedPodDocument,
@@ -101,8 +121,48 @@ export function usePodActions(pod: PodDetail | null, savedInitially: boolean) {
       setSaved(res.toggleSavedPod.saved);
     } catch {
       setSaved(prev);
+    } finally {
+      setSavePending(false);
     }
   };
 
-  return { liked, likeCount, saved, toggleLike, toggleSave };
+  return { liked, likeCount, saved, savePending, toggleLike, toggleSave };
+}
+
+/** Pod comments thread (auth): loads on demand, plus add/delete. Reports count
+ * deltas so the social bar can keep its badge in sync. */
+export function usePodComments(podId: string, open: boolean) {
+  const [comments, setComments] = useState<PodComment[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!open) return;
+    let active = true;
+    setIsLoading(true);
+    setError(null);
+    graphqlRequest(PodCommentsDocument, { podId }, { auth: true })
+      .then((data) => active && setComments(data.podComments))
+      .catch((err) => active && setError((err as Error).message))
+      .finally(() => active && setIsLoading(false));
+    return () => {
+      active = false;
+    };
+  }, [podId, open]);
+
+  const add = async (text: string) => {
+    const created = await graphqlRequest(
+      AddPodCommentDocument,
+      { podId, text: text.trim() },
+      { auth: true },
+    );
+    setComments((prev) => [created.addPodComment, ...prev]);
+  };
+
+  const remove = async (commentId: string) => {
+    setComments((prev) => prev.filter((c) => c.id !== commentId));
+    await graphqlRequest(DeletePodCommentDocument, { podId, commentId }, { auth: true });
+  };
+
+  return { comments, isLoading, error, add, remove };
 }

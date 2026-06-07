@@ -11,7 +11,11 @@ import RolesPage from './pages/RolesPage';
 import CategoriesPage from './pages/CategoriesPage';
 import LocationsPage from './pages/LocationsPage';
 import ClubsPage from './pages/ClubsPage';
+import ClubDetailsPage from './pages/ClubDetailsPage';
 import PodsPage from './pages/PodsPage';
+import PodDetailsPage from './pages/PodDetailsPage';
+import CouponsPage from './pages/CouponsPage';
+import EventTicketsPage from './pages/EventTicketsPage';
 import SlidersPage from './pages/SlidersPage';
 import BrandingPage from './pages/BrandingPage';
 import InterviewRequestsPage from './pages/InterviewRequestsPage';
@@ -51,7 +55,11 @@ export default function App() {
                 <Route path="/categories" element={<CategoriesPage />} />
                 <Route path="/locations" element={<LocationsPage />} />
                 <Route path="/clubs" element={<ClubsPage />} />
+                <Route path="/clubs/:id" element={<ClubDetailsPage />} />
                 <Route path="/pods" element={<PodsPage />} />
+                <Route path="/pods/:id" element={<PodDetailsPage />} />
+                <Route path="/coupons" element={<CouponsPage />} />
+                <Route path="/event-tickets" element={<EventTicketsPage />} />
                 <Route path="/sliders" element={<SlidersPage />} />
                 <Route path="/interview-requests" element={<InterviewRequestsPage />} />
                 <Route path="/faqs" element={<FaqsPage />} />

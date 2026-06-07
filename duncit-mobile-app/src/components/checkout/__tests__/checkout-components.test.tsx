@@ -91,4 +91,36 @@ describe('CheckoutSuccess', () => {
       expect(screen.getByTestId('invoice-error')).toHaveTextContent('no invoice'),
     );
   });
+
+  it('downloads the ticket when provided and surfaces a failure', async () => {
+    const onDownloadTicket = jest
+      .fn()
+      .mockResolvedValueOnce(undefined)
+      .mockRejectedValueOnce(new Error('no ticket'));
+    renderWithProviders(
+      <CheckoutSuccess
+        payment={payment}
+        onDownloadInvoice={jest.fn().mockResolvedValue(undefined)}
+        onDownloadTicket={onDownloadTicket}
+        onHome={jest.fn()}
+        onProfile={jest.fn()}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('download-ticket'));
+    await waitFor(() => expect(onDownloadTicket).toHaveBeenCalled());
+    fireEvent.press(screen.getByTestId('download-ticket'));
+    await waitFor(() => expect(screen.getByTestId('invoice-error')).toHaveTextContent('no ticket'));
+  });
+
+  it('hides the ticket button when no ticket handler is given', () => {
+    renderWithProviders(
+      <CheckoutSuccess
+        payment={payment}
+        onDownloadInvoice={jest.fn()}
+        onHome={jest.fn()}
+        onProfile={jest.fn()}
+      />,
+    );
+    expect(screen.queryByTestId('download-ticket')).toBeNull();
+  });
 });

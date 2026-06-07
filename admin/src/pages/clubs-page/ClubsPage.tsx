@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
 import { useMutation, useQuery } from '@apollo/client';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import {
   CLUBS,
@@ -19,6 +20,9 @@ import ClubsTable from './ClubsTable';
 import ClubsToolbar from './ClubsToolbar';
 
 export default function ClubsPage() {
+  const navigate = useNavigate();
+  const [params] = useSearchParams();
+  const editId = params.get('edit') ?? '';
   const [search, setSearch] = useState('');
   const { data, loading, error, refetch } = useQuery(CLUBS, {
     variables: { filter: { search: search || undefined } },
@@ -63,6 +67,14 @@ export default function ClubsPage() {
     setOpError(null);
     setOpen(true);
   };
+
+  // Deep-link from the Club details page: /clubs?edit=<id> opens the edit dialog.
+  useEffect(() => {
+    if (!editId || open) return;
+    const club = (data?.clubs ?? []).find((c: any) => c.id === editId);
+    if (club) openEdit(club);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId, data?.clubs]);
 
   const submit = async (options?: { draft?: boolean }) => {
     setBusy(true);
@@ -137,6 +149,7 @@ export default function ClubsPage() {
         onCreate={openCreate}
         onEdit={openEdit}
         onRemove={remove}
+        onView={(c) => navigate(`/clubs/${c.id}`)}
       />
 
       <ClubFormDialog

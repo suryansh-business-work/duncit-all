@@ -1,6 +1,6 @@
 import { gql } from '@/generated/graphql';
 
-/** Public finance settings (fee/GST/currency) — mWeb's PUBLIC_FINANCE. */
+/** Public finance settings (fee/GST/currency/gateway) — mWeb's PUBLIC_FINANCE. */
 export const MobilePublicFinanceDocument = gql(`
   query MobilePublicFinanceSettings {
     publicFinanceSettings {
@@ -8,6 +8,7 @@ export const MobilePublicFinanceDocument = gql(`
       gst_pct
       currency_symbol
       dummy_mode
+      razorpay_enabled
     }
   }
 `);
@@ -49,6 +50,68 @@ export const MobileCheckoutPodDocument = gql(`
 export const MobileDummyCheckoutDocument = gql(`
   mutation MobileDummyCheckout($input: DummyCheckoutInput!) {
     dummyCheckout(input: $input) {
+      id
+      payment_id
+      invoice_no
+      total
+      currency_symbol
+      status
+      paid_at
+      created_at
+    }
+  }
+`);
+
+/** Preview a coupon on the payment step — drives the strikethrough / Pay X UI. */
+export const MobilePreviewCouponDocument = gql(`
+  query MobilePreviewCoupon($input: CouponPreviewInput!) {
+    previewCoupon(input: $input) {
+      ok
+      message
+      code
+      discount_pct
+      original_total
+      discount_amount
+      final_total
+      currency_symbol
+    }
+  }
+`);
+
+/** Live checkout step 1 — create a Razorpay order + PENDING payment. */
+export const MobileCreateRazorpayOrderDocument = gql(`
+  mutation MobileCreateRazorpayOrder($input: RazorpayOrderInput!) {
+    createRazorpayOrder(input: $input) {
+      payment_doc_id
+      key_id
+      order_id
+      amount
+      currency
+      name
+      description
+      prefill_email
+      prefill_contact
+      currency_symbol
+      total
+      free
+      payment {
+        id
+        payment_id
+        invoice_no
+        total
+        currency_symbol
+        status
+        paid_at
+        created_at
+      }
+    }
+  }
+`);
+
+/** Live checkout step 2 — verify the signature, finalize the payment. */
+export const MobileVerifyRazorpayDocument = gql(`
+  mutation MobileVerifyRazorpayPayment($input: VerifyRazorpayInput!) {
+    verifyRazorpayPayment(input: $input) {
       id
       payment_id
       invoice_no

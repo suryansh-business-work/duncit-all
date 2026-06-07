@@ -3,7 +3,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 import { graphqlRequest } from '@/services/graphql.client';
-import { usePodBackout, usePodHistory, usePodInvoice } from '@/hooks/usePodHistory';
+import { usePodBackout, usePodHistory, usePodInvoice, usePodTicket } from '@/hooks/usePodHistory';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 jest.mock('expo-file-system/legacy', () => ({
@@ -117,5 +117,30 @@ describe('usePodInvoice', () => {
       await expect(result.current.download('pay1')).rejects.toThrow('Sharing is not available');
     });
     expect(share).not.toHaveBeenCalled();
+  });
+});
+
+describe('usePodTicket', () => {
+  it('resolves the ticket then writes the PDF and shares it', async () => {
+    mockRequest
+      .mockResolvedValueOnce({ myEventTicketForPod: { id: 't1', ticket_code: 'TKT-9' } })
+      .mockResolvedValueOnce({ eventTicketPdfBase64: 'TBASE64' });
+    const { result } = renderHook(() => usePodTicket());
+    await act(async () => {
+      await result.current.download('pod1');
+    });
+    expect(writeFile).toHaveBeenCalledWith('file:///cache/ticket-TKT-9.pdf', 'TBASE64', {
+      encoding: 'base64',
+    });
+    expect(share).toHaveBeenCalled();
+  });
+
+  it('throws when there is no ticket for the pod', async () => {
+    mockRequest.mockResolvedValueOnce({ myEventTicketForPod: null });
+    const { result } = renderHook(() => usePodTicket());
+    await act(async () => {
+      await expect(result.current.download('pod1')).rejects.toThrow('Ticket not available');
+    });
+    expect(writeFile).not.toHaveBeenCalled();
   });
 });

@@ -32,6 +32,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     gst_amount: Float!
     total: Float!
     currency_symbol: String!
+    coupon_code: String
+    coupon_discount: Float!
     status: PaymentStatus!
     gateway: String!
     gateway_ref: String
@@ -72,6 +74,7 @@ export const paymentTypeDefs = /* GraphQL */ `
     contact_phone_number: String!
     billing_address: String!
     checkout_url: String!
+    coupon_code: String
     simulate_failure: Boolean
   }
 
@@ -80,6 +83,49 @@ export const paymentTypeDefs = /* GraphQL */ `
     user_id: ID
     pod_id: ID
     search: String
+  }
+
+  "Live checkout — same contact/billing fields as the dummy flow (no simulate_failure)."
+  input RazorpayOrderInput {
+    pod_id: ID
+    amount: Float!
+    selected_products: [CheckoutProductSelectionInput!]
+    description: String
+    contact_email: String!
+    contact_phone: String
+    contact_phone_extension: String!
+    contact_phone_number: String!
+    billing_address: String!
+    checkout_url: String!
+    coupon_code: String
+  }
+
+  """
+  Everything the client needs to open the Razorpay checkout sheet. When a coupon
+  makes the total zero, free=true + payment is the completed (free) booking and the
+  sheet is skipped.
+  """
+  type RazorpayOrder {
+    payment_doc_id: ID!
+    key_id: String!
+    order_id: String!
+    amount: Int!
+    currency: String!
+    name: String!
+    description: String!
+    prefill_email: String!
+    prefill_contact: String!
+    currency_symbol: String!
+    total: Float!
+    free: Boolean!
+    payment: Payment
+  }
+
+  input VerifyRazorpayInput {
+    payment_doc_id: ID!
+    razorpay_order_id: String!
+    razorpay_payment_id: String!
+    razorpay_signature: String!
   }
 
   extend type Query {
@@ -92,6 +138,8 @@ export const paymentTypeDefs = /* GraphQL */ `
 
   extend type Mutation {
     dummyCheckout(input: DummyCheckoutInput!): Payment!
+    createRazorpayOrder(input: RazorpayOrderInput!): RazorpayOrder!
+    verifyRazorpayPayment(input: VerifyRazorpayInput!): Payment!
     refundPayment(payment_doc_id: ID!, reason: String): Payment!
   }
 `;

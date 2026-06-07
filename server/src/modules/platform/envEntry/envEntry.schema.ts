@@ -11,6 +11,7 @@ export const envEntryTypeDefs = gql`
     OPENAI
     GEMINI
     SERVAM
+    RAZORPAY
   }
 
   type EnvConfigPair {

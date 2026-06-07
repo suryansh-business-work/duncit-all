@@ -48,4 +48,10 @@ describe('CheckoutForm', () => {
     expect(screen.getByTestId('checkout-error')).toHaveTextContent('Payment failed');
     expect(screen.getByTestId('checkout-submit')).toBeOnTheScreen();
   });
+
+  it('hides the simulate toggle in live (Razorpay) mode', () => {
+    renderWithProviders(<CheckoutForm onSubmit={jest.fn()} dummyMode={false} />);
+    expect(screen.queryByTestId('simulate-failure')).toBeNull();
+    expect(screen.getByText('Payments secured by Razorpay.')).toBeOnTheScreen();
+  });
 });

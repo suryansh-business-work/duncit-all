@@ -6,8 +6,11 @@ import {
   MobileCheckoutInvoiceDocument,
   MobileCheckoutMeDocument,
   MobileCheckoutPodDocument,
+  MobileCreateRazorpayOrderDocument,
   MobileDummyCheckoutDocument,
+  MobilePreviewCouponDocument,
   MobilePublicFinanceDocument,
+  MobileVerifyRazorpayDocument,
 } from '@/graphql/checkout';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useCheckout } from '@/hooks/useCheckout';
@@ -63,8 +66,47 @@ function route(doc: unknown) {
         status: 'SUCCESS',
       },
     });
+  if (doc === MobilePreviewCouponDocument)
+    return Promise.resolve({
+      previewCoupon: {
+        ok: true,
+        message: null,
+        code: 'TEN',
+        discount_pct: 10,
+        original_total: 500,
+        discount_amount: 50,
+        final_total: 450,
+        currency_symbol: '₹',
+      },
+    });
   if (doc === MobileCheckoutInvoiceDocument)
     return Promise.resolve({ paymentInvoicePdfBase64: 'B64' });
+  if (doc === MobileCreateRazorpayOrderDocument)
+    return Promise.resolve({
+      createRazorpayOrder: {
+        payment_doc_id: 'd1',
+        key_id: 'rzp',
+        order_id: 'order_1',
+        amount: 59000,
+        currency: 'INR',
+        name: 'Duncit',
+        description: 'desc',
+        prefill_email: 'r@d.com',
+        prefill_contact: '9876543210',
+        currency_symbol: '₹',
+        total: 590,
+      },
+    });
+  if (doc === MobileVerifyRazorpayDocument)
+    return Promise.resolve({
+      verifyRazorpayPayment: {
+        id: 'pay2',
+        invoice_no: 'INV-2',
+        total: 590,
+        currency_symbol: '₹',
+        status: 'SUCCESS',
+      },
+    });
   return Promise.resolve({});
 }
 
@@ -114,6 +156,76 @@ describe('useCheckout', () => {
           simulate_failure: false,
         }),
       }),
+      { auth: true },
+    );
+  });
+
+  it('creates a Razorpay order then verifies the signature', async () => {
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    let createdOrder;
+    await act(async () => {
+      createdOrder = await result.current.createRazorpayOrder(values, 590);
+    });
+    expect(createdOrder).toMatchObject({ order_id: 'order_1', key_id: 'rzp' });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileCreateRazorpayOrderDocument,
+      expect.objectContaining({
+        input: expect.objectContaining({ pod_id: 'p1', amount: 590, contact_email: 'r@d.com' }),
+      }),
+      { auth: true },
+    );
+
+    let verified;
+    await act(async () => {
+      verified = await result.current.verifyRazorpay('d1', {
+        razorpay_order_id: 'order_1',
+        razorpay_payment_id: 'pay_1',
+        razorpay_signature: 'sig_1',
+      });
+    });
+    expect(verified).toMatchObject({ status: 'SUCCESS', invoice_no: 'INV-2' });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileVerifyRazorpayDocument,
+      expect.objectContaining({
+        input: expect.objectContaining({ payment_doc_id: 'd1', razorpay_payment_id: 'pay_1' }),
+      }),
+      { auth: true },
+    );
+  });
+
+  it('previews a coupon for the payment step', async () => {
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    let preview;
+    await act(async () => {
+      preview = await result.current.previewCoupon('TEN', 500);
+    });
+    expect(preview).toMatchObject({ ok: true, discount_amount: 50, final_total: 450 });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobilePreviewCouponDocument,
+      expect.objectContaining({ input: expect.objectContaining({ code: 'TEN', amount: 500 }) }),
+      { auth: true },
+    );
+  });
+
+  it('threads the coupon code into the dummy + razorpay inputs', async () => {
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.pay(values, 450, 'TEN');
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileDummyCheckoutDocument,
+      expect.objectContaining({ input: expect.objectContaining({ coupon_code: 'TEN' }) }),
+      { auth: true },
+    );
+    await act(async () => {
+      await result.current.createRazorpayOrder(values, 450, 'TEN');
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileCreateRazorpayOrderDocument,
+      expect.objectContaining({ input: expect.objectContaining({ coupon_code: 'TEN' }) }),
       { auth: true },
     );
   });

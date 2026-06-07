@@ -22,6 +22,7 @@ interface ExploreState {
   isLoading: boolean;
   error?: unknown;
   savedOverride: Record<string, boolean>;
+  savePending: Record<string, boolean>;
   likeOverride: Record<string, LikeState>;
   fetch: (force?: boolean) => Promise<void>;
   toggleSave: (podId: string, currentlySaved: boolean) => Promise<void>;
@@ -32,6 +33,7 @@ interface ExploreState {
 export const useExploreStore = create<ExploreState>((set, get) => ({
   isLoading: false,
   savedOverride: {},
+  savePending: {},
   likeOverride: {},
   fetch: async (force = false) => {
     if (get().isLoading) return;
@@ -45,7 +47,10 @@ export const useExploreStore = create<ExploreState>((set, get) => ({
     }
   },
   toggleSave: async (podId, currentlySaved) => {
-    set((s) => ({ savedOverride: { ...s.savedOverride, [podId]: !currentlySaved } }));
+    set((s) => ({
+      savedOverride: { ...s.savedOverride, [podId]: !currentlySaved },
+      savePending: { ...s.savePending, [podId]: true },
+    }));
     try {
       const res = await graphqlRequest(ToggleSavedPodDocument, { podDocId: podId }, { auth: true });
       set((s) => ({ savedOverride: { ...s.savedOverride, [podId]: res.toggleSavedPod.saved } }));
@@ -54,6 +59,12 @@ export const useExploreStore = create<ExploreState>((set, get) => ({
         const next = { ...s.savedOverride };
         delete next[podId];
         return { savedOverride: next };
+      });
+    } finally {
+      set((s) => {
+        const next = { ...s.savePending };
+        delete next[podId];
+        return { savePending: next };
       });
     }
   },

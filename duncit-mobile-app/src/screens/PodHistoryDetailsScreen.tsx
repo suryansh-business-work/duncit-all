@@ -6,7 +6,7 @@ import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 
 import { BackoutConfirmDialog, PodHistoryDetails } from '@/components/pod-history';
 import { StackScreen } from '@/components/StackScreen';
-import { usePodBackout, usePodHistory, usePodInvoice } from '@/hooks/usePodHistory';
+import { usePodBackout, usePodHistory, usePodInvoice, usePodTicket } from '@/hooks/usePodHistory';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { refundLabel } from '@/utils/pod-history';
@@ -22,6 +22,7 @@ export function PodHistoryDetailsScreen() {
   const { items, isLoading, error, refetch } = usePodHistory();
   const { backout, busy: backingOut } = usePodBackout();
   const { download, busy: invoiceBusy } = usePodInvoice();
+  const { download: downloadTicketPdf, busy: ticketBusy } = usePodTicket();
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
@@ -49,6 +50,15 @@ export function PodHistoryDetailsScreen() {
     }
   };
 
+  const downloadTicket = async () => {
+    if (!selected?.pod?.id) return;
+    try {
+      await downloadTicketPdf(selected.pod.id);
+    } catch (ticketError) {
+      setNotice(toErrorMessage(ticketError));
+    }
+  };
+
   return (
     <StackScreen title={title} testID="pod-history-details-screen">
       {isLoading && items.length === 0 ? (
@@ -69,6 +79,7 @@ export function PodHistoryDetailsScreen() {
             item={selected}
             backingOut={backingOut}
             invoiceBusy={invoiceBusy}
+            ticketBusy={ticketBusy}
             notice={notice}
             onPodDetails={() =>
               selected.pod?.id &&
@@ -82,6 +93,7 @@ export function PodHistoryDetailsScreen() {
               setNotice(`Refund status: ${refundLabel(selected.refund_status)}`)
             }
             onInvoice={downloadInvoice}
+            onTicket={downloadTicket}
             onSupport={() => navigation.navigate('SupportTickets')}
             onBackoutTerms={() => navigation.navigate('Policy', { slug: 'backout-terms' })}
             onGeneralTerms={() => void Linking.openURL(GENERAL_TERMS_URL)}

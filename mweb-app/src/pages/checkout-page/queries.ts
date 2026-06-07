@@ -7,6 +7,7 @@ export const PUBLIC_FINANCE = gql`
       gst_pct
       currency_symbol
       dummy_mode
+      razorpay_enabled
     }
   }
 `;
@@ -75,6 +76,76 @@ export const DUMMY_CHECKOUT = gql`
     }
   }
 `;
+
+export const PREVIEW_COUPON = gql`
+  query PreviewCoupon($input: CouponPreviewInput!) {
+    previewCoupon(input: $input) {
+      ok
+      message
+      code
+      discount_pct
+      original_total
+      discount_amount
+      final_total
+      currency_symbol
+    }
+  }
+`;
+
+export const CREATE_RAZORPAY_ORDER = gql`
+  mutation CreateRazorpayOrder($input: RazorpayOrderInput!) {
+    createRazorpayOrder(input: $input) {
+      payment_doc_id
+      key_id
+      order_id
+      amount
+      currency
+      name
+      description
+      prefill_email
+      prefill_contact
+      currency_symbol
+      total
+      free
+      payment {
+        id
+        payment_id
+        invoice_no
+        total
+        currency_symbol
+        status
+        paid_at
+        created_at
+      }
+    }
+  }
+`;
+
+export const VERIFY_RAZORPAY_PAYMENT = gql`
+  mutation VerifyRazorpayPayment($input: VerifyRazorpayInput!) {
+    verifyRazorpayPayment(input: $input) {
+      id
+      payment_id
+      invoice_no
+      total
+      currency_symbol
+      status
+      paid_at
+      created_at
+    }
+  }
+`;
+
+export interface CouponPreview {
+  ok: boolean;
+  message: string | null;
+  code: string | null;
+  discount_pct: number | null;
+  original_total: number;
+  discount_amount: number;
+  final_total: number;
+  currency_symbol: string;
+}
 
 export interface CheckoutState {
   pod_id?: string;

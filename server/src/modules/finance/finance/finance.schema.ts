@@ -38,6 +38,7 @@ export const financeTypeDefs = /* GraphQL */ `
     gst_pct: Float!
     currency_symbol: String!
     dummy_mode: Boolean!
+    razorpay_enabled: Boolean!
   }
 
   input UpdateFinanceSettingsInput {

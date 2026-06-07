@@ -15,6 +15,7 @@ interface ExplorePodCardProps {
   width: number;
   height: number;
   saved: boolean;
+  savePending?: boolean;
   like: LikeState;
   onToggleSave: () => void;
   onToggleLike: () => void;
@@ -29,6 +30,7 @@ export function ExplorePodCard({
   width,
   height,
   saved,
+  savePending,
   like,
   onToggleSave,
   onToggleLike,
@@ -85,6 +87,7 @@ export function ExplorePodCard({
           icon={saved ? 'bookmark' : 'bookmark-border'}
           label="Save"
           active={saved}
+          loading={savePending}
           onPress={onToggleSave}
         />
         <ExploreActionButton icon="share" label="Share" onPress={share} />

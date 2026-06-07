@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Linking } from 'react-native';
 
 import { PodHistoryDetailsScreen } from '@/screens/PodHistoryDetailsScreen';
-import { usePodBackout, usePodHistory, usePodInvoice } from '@/hooks/usePodHistory';
+import { usePodBackout, usePodHistory, usePodInvoice, usePodTicket } from '@/hooks/usePodHistory';
 import { usePolicy } from '@/hooks/usePolicies';
 import { renderWithProviders } from '@/utils/test-utils';
 import type { PodMembership } from '@/utils/pod-history';
@@ -11,6 +11,7 @@ jest.mock('@/hooks/usePodHistory', () => ({
   usePodHistory: jest.fn(),
   usePodBackout: jest.fn(),
   usePodInvoice: jest.fn(),
+  usePodTicket: jest.fn(),
 }));
 jest.mock('@/hooks/usePolicies', () => ({ usePolicy: jest.fn() }));
 const mockNavigate = jest.fn();
@@ -22,6 +23,7 @@ jest.mock('@react-navigation/native', () => ({
 const mockedHistory = usePodHistory as jest.Mock;
 const mockedBackout = usePodBackout as jest.Mock;
 const mockedInvoice = usePodInvoice as jest.Mock;
+const mockedTicket = usePodTicket as jest.Mock;
 const mockedPolicy = usePolicy as jest.Mock;
 
 const pod = {
@@ -73,6 +75,7 @@ beforeEach(() => {
   refetch.mockResolvedValue(undefined);
   mockedBackout.mockReturnValue({ backout, busy: false });
   mockedInvoice.mockReturnValue({ download, busy: false });
+  mockedTicket.mockReturnValue({ download: jest.fn().mockResolvedValue(undefined), busy: false });
   mockedPolicy.mockReturnValue({
     isLoading: false,
     data: { policyBySlug: { content: '<p>terms</p>' } },

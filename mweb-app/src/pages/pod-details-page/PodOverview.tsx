@@ -7,6 +7,7 @@ import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import PodQuickStats from './PodQuickStats';
+import { podOccurrenceLabel } from '../../utils/podOccurrence';
 
 interface Props {
   pod: any;
@@ -80,7 +81,7 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
           label={pod.pod_mode === 'VIRTUAL' ? 'Virtual' : 'Physical'}
           sx={{ bgcolor: chipBg, color: textColor, '& .MuiChip-icon': { color: textColor } }}
         />
-        <Chip icon={<RepeatIcon />} label={pod.pod_occurrence?.replace(/_/g, ' ')} sx={{ bgcolor: chipBg, color: textColor, '& .MuiChip-icon': { color: textColor } }} />
+        <Chip icon={<RepeatIcon />} label={podOccurrenceLabel(pod.pod_occurrence)} sx={{ bgcolor: chipBg, color: textColor, '& .MuiChip-icon': { color: textColor } }} />
         <TimeChip iso={pod.pod_date_time} />
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>

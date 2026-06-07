@@ -56,3 +56,20 @@ export const PodInvoicePdfDocument = gql(`
     paymentInvoicePdfBase64(payment_doc_id: $id)
   }
 `);
+
+/** The current user's event ticket for a pod (id + code for download). */
+export const MyEventTicketForPodDocument = gql(`
+  query MobileMyEventTicketForPod($podId: ID!) {
+    myEventTicketForPod(pod_doc_id: $podId) {
+      id
+      ticket_code
+    }
+  }
+`);
+
+/** Base64 PDF for an event ticket. */
+export const EventTicketPdfDocument = gql(`
+  query MobileEventTicketPdf($id: ID!) {
+    eventTicketPdfBase64(ticket_doc_id: $id)
+  }
+`);

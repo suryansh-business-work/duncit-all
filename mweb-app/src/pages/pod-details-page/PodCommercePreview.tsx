@@ -17,8 +17,6 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
-  const perks = (pod.available_perks ?? []).filter(Boolean).slice(0, 3);
-  const hasItems = requests.length > 0 || perks.length > 0;
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
 
   const selectedTotal = useMemo(
@@ -71,7 +69,13 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
         <Chip size="small" label={pod.products_enabled ? 'Available' : 'Closed'} sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.12)' : alpha(theme.palette.text.primary, 0.08), color: textColor, fontWeight: 800 }} />
       </Stack>
 
-      {hasItems && (
+      {requests.length === 0 ? (
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 2 }}>
+          <Typography variant="body2" sx={{ color: mutedColor }}>
+            No products available yet.
+          </Typography>
+        </Stack>
+      ) : (
         <Stack spacing={0.9} sx={{ mt: 2 }}>
           {requests.map((item: any) => {
           const maxQuantity = Number(item.available_count ?? item.quantity ?? 0);
@@ -123,14 +127,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
             </Stack>
           );
         })}
-            {requests.length === 0 && perks.map((perk: string) => (
-              <Stack key={perk} direction="row" spacing={1.2} alignItems="center" sx={{ p: 1, borderRadius: 3, bgcolor: itemBg }}>
-                <Typography variant="body2" sx={{ fontWeight: 800 }} noWrap>{perk}</Typography>
-                <Box sx={{ flex: 1 }} />
-                <Typography variant="caption" sx={{ color: mutedColor }}>Included</Typography>
-              </Stack>
-            ))}
-          </Stack>
+        </Stack>
       )}
 
       <Divider sx={{ my: 1.5, borderColor: isDark ? 'rgba(255,255,255,0.16)' : 'divider' }} />

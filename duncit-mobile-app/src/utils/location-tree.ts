@@ -72,14 +72,14 @@ export function locationMapQuery(
     .join(', ');
 }
 
-/** Builds the Google Maps Embed URL for the selection, or '' when unusable. */
+/** Builds the Google Maps embed URL for a place query, or '' when there is no
+ * query. With an API key it uses the official Embed API; without one it falls
+ * back to the keyless `output=embed` map so the preview still renders (no env
+ * setup required). Same contract on mWeb + mobile. */
 export function locationMapEmbedUrl(apiKey: string, query: string): string {
-  if (!apiKey || !query) return '';
-  return (
-    'https://www.google.com/maps/embed/v1/place?key=' +
-    encodeURIComponent(apiKey) +
-    '&q=' +
-    encodeURIComponent(query) +
-    '&zoom=12'
-  );
+  if (!query) return '';
+  const q = encodeURIComponent(query);
+  return apiKey
+    ? `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(apiKey)}&q=${q}&zoom=14`
+    : `https://maps.google.com/maps?q=${q}&z=14&output=embed`;
 }

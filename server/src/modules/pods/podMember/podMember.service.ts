@@ -140,6 +140,12 @@ export const podMemberService = {
 
     await addAttendee(pod, userId);
     evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
+    try {
+      const { ticketService } = await import('@modules/pods/ticket/ticket.service');
+      await ticketService.ensureForMembership(String(doc._id));
+    } catch (e) {
+      console.warn('Ticket issue (free join) failed', e);
+    }
     return toPub(doc);
   },
 
@@ -274,6 +280,12 @@ export const podMemberService = {
       payment_id: new Types.ObjectId(paymentId),
       refund_status: 'NONE',
     });
+    try {
+      const { ticketService } = await import('@modules/pods/ticket/ticket.service');
+      await ticketService.ensureForMembership(String(doc._id));
+    } catch (e) {
+      console.warn('Ticket issue (paid join) failed', e);
+    }
     return doc;
   },
 };

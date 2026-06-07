@@ -70,6 +70,7 @@ describe('ExploreReels', () => {
     isLoading: false,
     hasData: true,
     isSaved: () => false,
+    isSavePending: () => false,
     likeStateFor: () => ({ liked_by_me: false, like_count: 3 }),
     toggleSave: jest.fn(),
     toggleLike: jest.fn(),

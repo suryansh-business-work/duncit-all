@@ -92,6 +92,7 @@ describe('explore store', () => {
     });
     await useExploreStore.getState().toggleSave('p1', false);
     expect(useExploreStore.getState().savedOverride.p1).toBe(true);
+    expect('p1' in useExploreStore.getState().savePending).toBe(false);
   });
 
   it('toggleSave reverts on error', async () => {

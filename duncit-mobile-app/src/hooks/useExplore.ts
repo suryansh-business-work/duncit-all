@@ -15,6 +15,7 @@ export function useExplore() {
   const data = useExploreStore((s) => s.data);
   const isLoading = useExploreStore((s) => s.isLoading);
   const savedOverride = useExploreStore((s) => s.savedOverride);
+  const savePending = useExploreStore((s) => s.savePending);
   const likeOverride = useExploreStore((s) => s.likeOverride);
   const fetch = useExploreStore((s) => s.fetch);
   const toggleSave = useExploreStore((s) => s.toggleSave);
@@ -48,6 +49,7 @@ export function useExplore() {
   );
 
   const isSaved = (podId: string) => savedOverride[podId] ?? serverSaved.has(podId);
+  const isSavePending = (podId: string) => !!savePending[podId];
 
   const likeStateFor = (pod: ExplorePod): LikeState =>
     likeOverride[pod.id] ?? { liked_by_me: pod.liked_by_me, like_count: pod.like_count };
@@ -58,6 +60,7 @@ export function useExplore() {
     isLoading,
     hasData: !!data,
     isSaved,
+    isSavePending,
     likeStateFor,
     toggleSave,
     toggleLike,

@@ -26,9 +26,10 @@ interface Props {
   onEdit: (p: any) => void;
   onDelete: (p: any) => void;
   onComplete: (p: any) => void;
+  onView?: (p: any) => void;
 }
 
-export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onDelete, onComplete }: Props) {
+export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onDelete, onComplete, onView }: Props) {
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>
@@ -56,7 +57,12 @@ export default function PodsTable({ loading, pods, clubName, venueName, locName,
             </TableHead>
             <TableBody>
               {pods.map((p) => (
-                <TableRow key={p.id} hover>
+                <TableRow
+                  key={p.id}
+                  hover
+                  onClick={() => onView?.(p)}
+                  sx={{ cursor: onView ? 'pointer' : 'default' }}
+                >
                   <TableCell>
                     {(() => {
                       const first = p.pod_images_and_videos?.[0];
@@ -149,7 +155,7 @@ export default function PodsTable({ loading, pods, clubName, venueName, locName,
                       color={p.completed_at ? 'info' : p.is_active ? 'success' : 'default'}
                     />
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                     <PodActionButtons pod={p} onEdit={onEdit} onDelete={onDelete} onComplete={onComplete} />
                   </TableCell>
                 </TableRow>

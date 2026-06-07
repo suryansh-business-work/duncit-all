@@ -4,7 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { podPriceLabel } from '@/utils/pod-format';
+import { podOccurrenceLabel, podPriceLabel } from '@/utils/pod-format';
 import { Accordion } from '@/components/details/Accordion';
 import {
   AboutSection,
@@ -100,7 +100,7 @@ export function PodAccordions({ pod, onOpenClub }: { pod: PodDetail; onOpenClub:
               {podPriceLabel(pod)}
             </Text>
             <Text fontSize={12.5} color="$muted">
-              Occurrence: {pod.pod_occurrence}
+              Occurrence: {podOccurrenceLabel(pod.pod_occurrence)}
             </Text>
           </YStack>
         ),

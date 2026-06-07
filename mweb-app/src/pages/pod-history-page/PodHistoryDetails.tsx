@@ -7,13 +7,19 @@ import EventIcon from '@mui/icons-material/Event';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import RuleIcon from '@mui/icons-material/Rule';
+import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { notify } from '../../components/notify';
 import { usePricing } from '../../hooks/usePricing';
 import { parseApiError } from '../../utils/parseApiError';
 import { podUrl } from '../../utils/seoUrls';
 import { useDateFormat } from '../../utils/dateFormat';
 import PodHistoryTimeline from './PodHistoryTimeline';
-import { POD_HISTORY_INVOICE_PDF, type PodHistoryItem } from './queries';
+import {
+  POD_HISTORY_INVOICE_PDF,
+  POD_HISTORY_TICKET_FOR_POD,
+  POD_HISTORY_TICKET_PDF,
+  type PodHistoryItem,
+} from './queries';
 
 interface Props {
   item: PodHistoryItem;
@@ -42,6 +48,8 @@ export default function PodHistoryDetails({ item, backingOut, onBackout }: Props
   const { formatDateTime } = useDateFormat();
   const { format } = usePricing();
   const [loadInvoice, invoiceState] = useLazyQuery(POD_HISTORY_INVOICE_PDF, { fetchPolicy: 'network-only' });
+  const [loadTicketForPod] = useLazyQuery(POD_HISTORY_TICKET_FOR_POD, { fetchPolicy: 'network-only' });
+  const [loadTicketPdf, ticketState] = useLazyQuery(POD_HISTORY_TICKET_PDF, { fetchPolicy: 'network-only' });
   const pod = item.pod;
   const imageUrl = pod?.pod_images_and_videos?.[0]?.url;
   const podDetailsPath = pod?.club_slug && pod?.pod_id ? podUrl(pod.club_slug, pod.pod_id) : '';
@@ -55,6 +63,24 @@ export default function PodHistoryDetails({ item, backingOut, onBackout }: Props
       const link = document.createElement('a');
       link.href = `data:application/pdf;base64,${b64}`;
       link.download = `pod-invoice-${item.payment_id}.pdf`;
+      link.click();
+    } catch (error) {
+      notify(parseApiError(error), 'error');
+    }
+  };
+
+  const downloadTicket = async () => {
+    if (!pod?.id) return;
+    try {
+      const { data: tData } = await loadTicketForPod({ variables: { podId: pod.id } });
+      const ticket = tData?.myEventTicketForPod;
+      if (!ticket?.id) throw new Error('Ticket not available for this booking');
+      const { data } = await loadTicketPdf({ variables: { id: ticket.id } });
+      const b64 = data?.eventTicketPdfBase64;
+      if (!b64) throw new Error('Ticket not available');
+      const link = document.createElement('a');
+      link.href = `data:application/pdf;base64,${b64}`;
+      link.download = `ticket-${ticket.ticket_code}.pdf`;
       link.click();
     } catch (error) {
       notify(parseApiError(error), 'error');
@@ -101,6 +127,11 @@ export default function PodHistoryDetails({ item, backingOut, onBackout }: Props
             <Button variant="outlined" startIcon={<ReceiptLongIcon />} onClick={() => notify(`Refund status: ${refundLabel[item.refund_status]}`, 'info')}>
               Refund Status: {refundLabel[item.refund_status]}
             </Button>
+            {item.status === 'JOINED' && (
+              <Button onClick={downloadTicket} disabled={!pod?.id || ticketState.loading} variant="contained" startIcon={<ConfirmationNumberIcon />} sx={{ background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)', fontWeight: 900 }}>
+                {ticketState.loading ? 'Downloading...' : 'Ticket'}
+              </Button>
+            )}
             <Button onClick={downloadInvoice} disabled={!item.payment_id || invoiceState.loading} variant="outlined" startIcon={<ReceiptLongIcon />}>
               {invoiceState.loading ? 'Downloading...' : 'Invoice'}
             </Button>

@@ -48,6 +48,7 @@ const handlers = () => ({
   onBackout: jest.fn(),
   onRefundStatus: jest.fn(),
   onInvoice: jest.fn(),
+  onTicket: jest.fn(),
   onSupport: jest.fn(),
   onBackoutTerms: jest.fn(),
   onGeneralTerms: jest.fn(),
@@ -106,17 +107,25 @@ describe('PodHistoryActions', () => {
   it('fires each enabled action', () => {
     const h = handlers();
     renderWithProviders(
-      <PodHistoryActions item={membership()} backingOut={false} invoiceBusy={false} {...h} />,
+      <PodHistoryActions
+        item={membership()}
+        backingOut={false}
+        invoiceBusy={false}
+        ticketBusy={false}
+        {...h}
+      />,
     );
     fireEvent.press(screen.getByTestId('ph-pod-details'));
     fireEvent.press(screen.getByTestId('ph-backout'));
     fireEvent.press(screen.getByTestId('ph-refund'));
     fireEvent.press(screen.getByTestId('ph-invoice'));
+    fireEvent.press(screen.getByTestId('ph-ticket'));
     fireEvent.press(screen.getByTestId('ph-support'));
     expect(h.onPodDetails).toHaveBeenCalled();
     expect(h.onBackout).toHaveBeenCalled();
     expect(h.onRefundStatus).toHaveBeenCalled();
     expect(h.onInvoice).toHaveBeenCalled();
+    expect(h.onTicket).toHaveBeenCalled();
     expect(h.onSupport).toHaveBeenCalled();
   });
 
@@ -127,6 +136,7 @@ describe('PodHistoryActions', () => {
         item={membership({ status: 'BACKED_OUT', pod: null, payment_id: null })}
         backingOut
         invoiceBusy
+        ticketBusy={false}
         {...h}
       />,
     );
@@ -149,6 +159,7 @@ describe('PodHistoryDetails', () => {
         item={membership()}
         backingOut={false}
         invoiceBusy={false}
+        ticketBusy={false}
         notice={null}
         {...h}
       />,
@@ -175,6 +186,7 @@ describe('PodHistoryDetails', () => {
         })}
         backingOut={false}
         invoiceBusy={false}
+        ticketBusy={false}
         notice="Refund status: Criteria pending"
         {...handlers()}
       />,
@@ -191,6 +203,7 @@ describe('PodHistoryDetails', () => {
         item={membership({ pod: null })}
         backingOut={false}
         invoiceBusy={false}
+        ticketBusy={false}
         notice={null}
         {...handlers()}
       />,

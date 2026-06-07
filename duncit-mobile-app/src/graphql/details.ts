@@ -1,6 +1,7 @@
 import { gql } from '@/generated/graphql';
 
-/** Full pod for the details screen — core fields (mWeb's POD_DETAILS subset). */
+/** Full pod for the details screen — mirrors mWeb's POD_DETAILS so the mobile
+ * screen reaches feature parity (mode, meeting, products, venue/location). */
 export const PodDetailsDocument = gql(`
   query MobilePodDetails($podId: ID!) {
     me {
@@ -22,12 +23,18 @@ export const PodDetailsDocument = gql(`
       pod_attendees
       pod_date_time
       pod_end_date_time
+      pod_mode
+      meeting_platform
+      meeting_url
+      meeting_notes
       pod_type
       pod_amount
       no_of_spots
       zone_name
       club_id
       club_slug
+      location_id
+      venue_id
       place_label
       place_detail
       what_this_pod_offers
@@ -40,10 +47,78 @@ export const PodDetailsDocument = gql(`
         amount
         note
       }
+      products_enabled
+      product_requests {
+        product_id
+        product_name
+        image_url
+        images
+        unit_cost
+        quantity
+        available_count
+        total_cost
+      }
       like_count
       liked_by_me
       comment_count
     }
+    locations {
+      id
+      location_name
+      location_pincode
+      location_zones {
+        zone_name
+        pincode
+      }
+    }
+    publicVenues {
+      id
+      venue_name
+      address_line1
+      address_line2
+      locality
+      city
+      state
+      country
+      postal_code
+      lat
+      lng
+    }
+  }
+`);
+
+/** Comments thread for a pod (auth) — mirrors mWeb's POD_COMMENTS. */
+export const PodCommentsDocument = gql(`
+  query MobilePodComments($podId: ID!) {
+    podComments(pod_doc_id: $podId) {
+      id
+      author_id
+      author_name
+      author_photo
+      text
+      created_at
+    }
+  }
+`);
+
+/** Add a comment to a pod (auth). */
+export const AddPodCommentDocument = gql(`
+  mutation MobileAddPodComment($podId: ID!, $text: String!) {
+    addPodComment(pod_doc_id: $podId, text: $text) {
+      id
+      author_id
+      author_name
+      author_photo
+      text
+      created_at
+    }
+  }
+`);
+
+/** Delete one of the viewer's own comments (auth). */
+export const DeletePodCommentDocument = gql(`
+  mutation MobileDeletePodComment($podId: ID!, $commentId: ID!) {
+    deletePodComment(pod_doc_id: $podId, comment_id: $commentId)
   }
 `);
 

@@ -13,11 +13,13 @@ export interface PodHistoryDetailsProps {
   item: PodMembership;
   backingOut: boolean;
   invoiceBusy: boolean;
+  ticketBusy: boolean;
   notice: string | null;
   onPodDetails: () => void;
   onBackout: () => void;
   onRefundStatus: () => void;
   onInvoice: () => void;
+  onTicket: () => void;
   onSupport: () => void;
   onBackoutTerms: () => void;
   onGeneralTerms: () => void;

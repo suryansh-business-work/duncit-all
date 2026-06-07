@@ -23,6 +23,7 @@ beforeEach(() => {
     },
     isLoading: false,
     savedOverride: { p1: true },
+    savePending: { p1: true },
     likeOverride: {},
     fetch: jest.fn(),
     toggleSave: jest.fn(),
@@ -36,6 +37,8 @@ describe('useExplore', () => {
     expect(result.current.isSaved('p1')).toBe(true); // from override
     expect(result.current.isSaved('p9')).toBe(true); // from server
     expect(result.current.isSaved('p0')).toBe(false);
+    expect(result.current.isSavePending('p1')).toBe(true);
+    expect(result.current.isSavePending('p0')).toBe(false);
   });
 
   it('falls back to the pod like state when no override exists', () => {

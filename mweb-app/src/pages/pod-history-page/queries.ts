@@ -50,6 +50,21 @@ export const POD_HISTORY_INVOICE_PDF = gql`
   }
 `;
 
+export const POD_HISTORY_TICKET_FOR_POD = gql`
+  query PodHistoryTicketForPod($podId: ID!) {
+    myEventTicketForPod(pod_doc_id: $podId) {
+      id
+      ticket_code
+    }
+  }
+`;
+
+export const POD_HISTORY_TICKET_PDF = gql`
+  query PodHistoryTicketPdf($id: ID!) {
+    eventTicketPdfBase64(ticket_doc_id: $id)
+  }
+`;
+
 export interface PodHistoryItem {
   id: string;
   pod_id?: string | null;

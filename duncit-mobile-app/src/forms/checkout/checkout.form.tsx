@@ -17,6 +17,7 @@ export interface CheckoutFormProps {
   initialValues?: Partial<CheckoutFormValues>;
   loading?: boolean;
   errorMessage?: string | null;
+  dummyMode?: boolean;
   onSubmit: (values: CheckoutFormValues) => void | Promise<void>;
 }
 
@@ -25,6 +26,7 @@ export function CheckoutForm({
   initialValues,
   loading,
   errorMessage,
+  dummyMode = true,
   onSubmit,
 }: CheckoutFormProps) {
   const { primary, color } = useThemeColors();
@@ -103,24 +105,26 @@ export function CheckoutForm({
         </XStack>
       </YStack>
 
-      <XStack
-        testID="simulate-failure"
-        role="switch"
-        aria-checked={simulate.field.value}
-        onPress={() => simulate.field.onChange(!simulate.field.value)}
-        alignItems="center"
-        gap={10}
-        pressStyle={{ opacity: 0.8 }}
-      >
-        <MaterialIcons
-          name={simulate.field.value ? 'check-box' : 'check-box-outline-blank'}
-          size={22}
-          color={simulate.field.value ? primary : color}
-        />
-        <Text fontSize={13} color="$muted">
-          Simulate a payment failure (testing)
-        </Text>
-      </XStack>
+      {dummyMode ? (
+        <XStack
+          testID="simulate-failure"
+          role="switch"
+          aria-checked={simulate.field.value}
+          onPress={() => simulate.field.onChange(!simulate.field.value)}
+          alignItems="center"
+          gap={10}
+          pressStyle={{ opacity: 0.8 }}
+        >
+          <MaterialIcons
+            name={simulate.field.value ? 'check-box' : 'check-box-outline-blank'}
+            size={22}
+            color={simulate.field.value ? primary : color}
+          />
+          <Text fontSize={13} color="$muted">
+            Simulate a payment failure (testing)
+          </Text>
+        </XStack>
+      ) : null}
 
       {errorMessage ? (
         <Text testID="checkout-error" fontSize={14} color="$danger">
@@ -135,7 +139,7 @@ export function CheckoutForm({
         onPress={handleSubmit(onSubmit)}
       />
       <Text fontSize={11} color="$muted" textAlign="center">
-        Dummy gateway — no real money is charged.
+        {dummyMode ? 'Dummy gateway — no real money is charged.' : 'Payments secured by Razorpay.'}
       </Text>
     </YStack>
   );

@@ -50,7 +50,7 @@ export const NAV: NavSection[] = [
   },
   {
     heading: 'Community',
-    prefixes: ['/clubs', '/pods', '/pod-ideas', '/pod-plans'],
+    prefixes: ['/clubs', '/pods', '/pod-ideas', '/pod-plans', '/coupons', '/event-tickets'],
     items: [
       {
         label: 'Clubs',
@@ -61,6 +61,8 @@ export const NAV: NavSection[] = [
           { label: 'Pods', to: '/pods', icon: navIcons.event },
           { label: 'Pod Ideas', to: '/pod-ideas', icon: navIcons.lightbulb },
           { label: 'Pod Plans', to: '/pod-plans', icon: navIcons.category },
+          { label: 'Coupons', to: '/coupons', icon: navIcons.percent },
+          { label: 'Event Tickets', to: '/event-tickets', icon: navIcons.receipt },
         ],
       },
     ],

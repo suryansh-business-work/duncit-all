@@ -1,5 +1,6 @@
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { Box, Button, Stack, Typography } from '@mui/material';
+import { mapEmbedUrl, mapSearchUrl } from '../utils/mapEmbed';
 
 interface Props {
   title?: string;
@@ -9,15 +10,13 @@ interface Props {
 }
 
 export default function VenueMapPreview({ title = 'Map preview', parts, lat, lng }: Props) {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAP_API as string | undefined;
   const query = lat != null && lng != null
     ? `${lat},${lng}`
     : parts.map((part) => part?.trim()).filter(Boolean).join(', ');
-  if (!apiKey || !query) return null;
+  if (!query) return null;
 
-  const encoded = encodeURIComponent(query);
-  const src = `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(apiKey)}&q=${encoded}&zoom=15`;
-  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encoded}`;
+  const src = mapEmbedUrl(query);
+  const mapUrl = mapSearchUrl(query);
 
   return (
     <Box sx={{ mt: 1.5 }}>

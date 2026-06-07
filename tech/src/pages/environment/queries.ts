@@ -91,7 +91,8 @@ export type EnvCategory =
   | 'TWILIO'
   | 'OPENAI'
   | 'GEMINI'
-  | 'SERVAM';
+  | 'SERVAM'
+  | 'RAZORPAY';
 
 export interface EnvFieldDef {
   name: string;
@@ -211,6 +212,16 @@ export const CATEGORY_DEFS: EnvCategoryDef[] = [
       f('base_url', 'Base URL (optional)', { hint: 'https://api.sarvam.ai' }),
       f('tts_model', 'TTS Model (default bulbul:v2)', { hint: 'e.g. bulbul:v2' }),
       f('default_voice', 'Default Voice', { hint: 'e.g. anushka, manisha, vidya, arya, abhilash, karun, hitesh' }),
+    ],
+  },
+  {
+    category: 'RAZORPAY',
+    label: 'Razorpay',
+    docUrl: 'https://dashboard.razorpay.com/app/keys',
+    fields: [
+      f('key_id', 'Key ID', { hint: 'Test: rzp_test_xxxxxxxx · Live: rzp_live_xxxxxxxx (public)' }),
+      f('key_secret', 'Key Secret', { secret: true, hint: 'Razorpay API key secret (test or live)' }),
+      f('webhook_secret', 'Webhook Secret (optional)', { secret: true, hint: 'Used to verify Razorpay webhooks' }),
     ],
   },
 ];

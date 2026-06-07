@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { FinanceSettingsModel, getFinanceSettings, type IFinanceSettings } from './finance.model';
 import { paymentReleaseService } from './paymentRelease.service';
+import { isRazorpayConfigured } from '@modules/finance/payment/razorpay.gateway';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
@@ -33,6 +34,7 @@ export const financeResolvers = {
         gst_pct: doc.gst_pct,
         currency_symbol: doc.currency_symbol,
         dummy_mode: doc.dummy_mode,
+        razorpay_enabled: await isRazorpayConfigured(),
       };
     },
     paymentReleaseRequests: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {

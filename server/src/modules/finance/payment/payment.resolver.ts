@@ -3,7 +3,11 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
-import { dummyCheckoutSchema } from './payment.validator';
+import {
+  dummyCheckoutSchema,
+  razorpayOrderSchema,
+  verifyRazorpaySchema,
+} from './payment.validator';
 
 const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 
@@ -49,6 +53,16 @@ export const paymentResolvers = {
       const u = requireAuth(ctx);
       const input = await validate(dummyCheckoutSchema, args.input);
       return paymentService.dummyCheckout(input, u.id);
+    },
+    createRazorpayOrder: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      const input = await validate(razorpayOrderSchema, args.input);
+      return paymentService.createRazorpayCheckout(input, u.id);
+    },
+    verifyRazorpayPayment: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      const input = await validate(verifyRazorpaySchema, args.input);
+      return paymentService.verifyRazorpayCheckout(input, u.id);
     },
     refundPayment: (_p: unknown, args: { payment_doc_id: string; reason?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);

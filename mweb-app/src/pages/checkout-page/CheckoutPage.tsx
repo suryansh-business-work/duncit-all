@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useMutation, useQuery } from '@apollo/client';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import { useFormik } from 'formik';
 import { Alert, Backdrop, Box, Button, Chip, IconButton, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -11,7 +11,22 @@ import { buildBreakup } from './checkoutMath';
 import CheckoutSuccess from './CheckoutSuccess';
 import OrderSummaryCard from './OrderSummaryCard';
 import PaymentDetailsCard from './PaymentDetailsCard';
-import { CHECKOUT_ME, CHECKOUT_POD, DUMMY_CHECKOUT, PUBLIC_FINANCE, type CheckoutState } from './queries';
+import {
+  CHECKOUT_ME,
+  CHECKOUT_POD,
+  CREATE_RAZORPAY_ORDER,
+  DUMMY_CHECKOUT,
+  PREVIEW_COUPON,
+  PUBLIC_FINANCE,
+  VERIFY_RAZORPAY_PAYMENT,
+  type CheckoutState,
+  type CouponPreview,
+} from './queries';
+import {
+  openRazorpayCheckout,
+  type RazorpayOrderData,
+  type RazorpaySignature,
+} from './razorpayCheckout';
 import { parseApiError } from '../../utils/parseApiError';
 
 export default function CheckoutPage() {
@@ -32,9 +47,60 @@ export default function CheckoutPage() {
     fetchPolicy: 'cache-and-network',
   });
   const [doCheckout] = useMutation(DUMMY_CHECKOUT);
+  const [doRazorpayOrder] = useMutation(CREATE_RAZORPAY_ORDER);
+  const [doVerifyRazorpay] = useMutation(VERIFY_RAZORPAY_PAYMENT);
+  const [runPreviewCoupon] = useLazyQuery(PREVIEW_COUPON, { fetchPolicy: 'no-cache' });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<any>(null);
+  const [couponCode, setCouponCode] = useState('');
+  const [coupon, setCoupon] = useState<CouponPreview | null>(null);
+  const [couponError, setCouponError] = useState<string | null>(null);
+  const [applyingCoupon, setApplyingCoupon] = useState(false);
+
+  const applyCoupon = async () => {
+    const code = couponCode.trim();
+    if (!code) return;
+    setApplyingCoupon(true);
+    setCouponError(null);
+    try {
+      const res = await runPreviewCoupon({
+        variables: { input: { code, pod_id: checkoutPodId || null, amount } },
+      });
+      const preview = res.data?.previewCoupon as CouponPreview | undefined;
+      if (preview?.ok) setCoupon(preview);
+      else {
+        setCoupon(null);
+        setCouponError(preview?.message ?? 'Invalid coupon code');
+      }
+    } catch (e: any) {
+      setCoupon(null);
+      setCouponError(parseApiError(e));
+    } finally {
+      setApplyingCoupon(false);
+    }
+  };
+  const removeCoupon = () => {
+    setCoupon(null);
+    setCouponCode('');
+    setCouponError(null);
+  };
+
+  const verifyRazorpay = async (paymentDocId: string, sig: RazorpaySignature) => {
+    setSubmitting(true);
+    try {
+      const res = await doVerifyRazorpay({
+        variables: { input: { payment_doc_id: paymentDocId, ...sig } },
+      });
+      const payment = res.data?.verifyRazorpayPayment;
+      if (payment?.status === 'SUCCESS') setSuccess(payment);
+      else setError('Payment could not be verified.');
+    } catch (e: any) {
+      setError(parseApiError(e));
+    } finally {
+      setSubmitting(false);
+    }
+  };
 
   const formik = useFormik({
     initialValues: checkoutInitialValues,
@@ -44,24 +110,48 @@ export default function CheckoutPage() {
     onSubmit: async (values) => {
       setError(null);
       setSubmitting(true);
+      const finance = financeData?.publicFinanceSettings;
+      const title = pod?.pod_title || state.pod_title || search.get('title') || 'Booking';
+      const { simulate_failure, ...contact } = toCheckoutContact(values);
+      const input = {
+        pod_id: checkoutPodId || null,
+        amount,
+        selected_products: selectedProducts,
+        description: state.description || `Pod booking · ${title}`,
+        ...contact,
+        checkout_url: window.location.href,
+        coupon_code: coupon?.ok ? coupon.code : null,
+      };
       try {
-        const title = pod?.pod_title || state.pod_title || search.get('title') || 'Booking';
-        const contact = toCheckoutContact(values);
-        const res = await doCheckout({
-          variables: {
-            input: {
-              pod_id: checkoutPodId || null,
-              amount,
-              selected_products: selectedProducts,
-              description: state.description || `Pod booking · ${title}`,
-              ...contact,
-              checkout_url: window.location.href,
-            },
-          },
-        });
-        const payment = res.data?.dummyCheckout;
-        if (payment?.status === 'SUCCESS') setSuccess(payment);
-        else setError('Payment failed. Please try again.');
+        // Razorpay is the live gateway and takes precedence whenever its keys are
+        // configured in the Tech portal. The dummy gateway is only a local fallback.
+        if (finance?.razorpay_enabled) {
+          const orderRes = await doRazorpayOrder({ variables: { input } });
+          const order = orderRes.data?.createRazorpayOrder;
+          if (!order) {
+            setError('Could not start the payment. Please try again.');
+            return;
+          }
+          // 100%-off coupon → already completed server-side, no gateway sheet.
+          if (order.free && order.payment) {
+            setSuccess(order.payment);
+            return;
+          }
+          setSubmitting(false);
+          await openRazorpayCheckout(order as RazorpayOrderData, {
+            onSuccess: (sig) => verifyRazorpay(order.payment_doc_id, sig),
+            onDismiss: () => setError('Payment was cancelled.'),
+          });
+          return;
+        }
+        if (finance?.dummy_mode) {
+          const res = await doCheckout({ variables: { input: { ...input, simulate_failure } } });
+          const payment = res.data?.dummyCheckout;
+          if (payment?.status === 'SUCCESS') setSuccess(payment);
+          else setError('Payment failed. Please try again.');
+          return;
+        }
+        setError('Online payments are not configured yet. Please try again later.');
       } catch (submitError: any) {
         setError(parseApiError(submitError));
       } finally {
@@ -111,7 +201,11 @@ export default function CheckoutPage() {
           <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>Checkout</Typography>
           <Typography variant="h5" fontWeight={900} sx={{ lineHeight: 1.1 }}>Confirm your spot</Typography>
         </Box>
-        {financeData?.publicFinanceSettings?.dummy_mode && <Chip size="small" label="Dummy" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.text.primary, 0.08), color: 'text.primary', fontWeight: 800 }} />}
+        {financeData?.publicFinanceSettings?.razorpay_enabled ? (
+          <Chip size="small" label="Razorpay" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.primary.main, 0.12), color: 'text.primary', fontWeight: 800 }} />
+        ) : financeData?.publicFinanceSettings?.dummy_mode ? (
+          <Chip size="small" label="Dummy" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.text.primary, 0.08), color: 'text.primary', fontWeight: 800 }} />
+        ) : null}
       </Stack>
       {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
@@ -121,7 +215,19 @@ export default function CheckoutPage() {
           error={error}
           submitting={submitting}
           total={breakup.total}
+          effectiveTotal={coupon?.ok ? coupon.final_total : breakup.total}
           currency={breakup.currency}
+          dummyMode={
+            !!financeData?.publicFinanceSettings?.dummy_mode &&
+            !financeData?.publicFinanceSettings?.razorpay_enabled
+          }
+          coupon={coupon}
+          couponCode={couponCode}
+          setCouponCode={setCouponCode}
+          couponError={couponError}
+          applyingCoupon={applyingCoupon}
+          onApplyCoupon={applyCoupon}
+          onRemoveCoupon={removeCoupon}
         />
       </Stack>
       </Box>

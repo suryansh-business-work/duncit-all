@@ -4,6 +4,8 @@ import * as Sharing from 'expo-sharing';
 
 import {
   BackoutPodDocument,
+  EventTicketPdfDocument,
+  MyEventTicketForPodDocument,
   MyPodMembershipsDocument,
   PodInvoicePdfDocument,
 } from '@/graphql/pod-history';
@@ -68,6 +70,41 @@ export function usePodInvoice() {
       const base64 = data.paymentInvoicePdfBase64;
       if (!base64) throw new Error('Invoice not available');
       const uri = `${FileSystem.cacheDirectory}pod-invoice-${paymentId}.pdf`;
+      await FileSystem.writeAsStringAsync(uri, base64, {
+        encoding: FileSystem.EncodingType.Base64,
+      });
+      if (!(await Sharing.isAvailableAsync()))
+        throw new Error('Sharing is not available on this device');
+      await Sharing.shareAsync(uri, { mimeType: 'application/pdf' });
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  return { download, busy };
+}
+
+/**
+ * Event-ticket download by pod — resolves the viewer's ticket for the pod, then
+ * fetches the PDF and opens the native share sheet.
+ */
+export function usePodTicket() {
+  const [busy, setBusy] = useState(false);
+
+  const download = useCallback(async (podDocId: string) => {
+    setBusy(true);
+    try {
+      const t = await graphqlRequest(
+        MyEventTicketForPodDocument,
+        { podId: podDocId },
+        { auth: true },
+      );
+      const ticket = t.myEventTicketForPod;
+      if (!ticket?.id) throw new Error('Ticket not available for this booking');
+      const data = await graphqlRequest(EventTicketPdfDocument, { id: ticket.id }, { auth: true });
+      const base64 = data.eventTicketPdfBase64;
+      if (!base64) throw new Error('Ticket not available');
+      const uri = `${FileSystem.cacheDirectory}ticket-${ticket.ticket_code}.pdf`;
       await FileSystem.writeAsStringAsync(uri, base64, {
         encoding: FileSystem.EncodingType.Base64,
       });

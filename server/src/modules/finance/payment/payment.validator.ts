@@ -21,7 +21,18 @@ export const dummyCheckoutSchema = yup.object({
       if (!val) return false;
       try { new URL(val); return true; } catch { return false; }
     }),
+  coupon_code: yup.string().trim().max(40).nullable().default(null),
   simulate_failure: yup.boolean().default(false),
 });
 
 export type DummyCheckoutDTO = yup.InferType<typeof dummyCheckoutSchema>;
+
+/** Live Razorpay order — same contact/billing fields as the dummy flow. */
+export const razorpayOrderSchema = dummyCheckoutSchema.omit(['simulate_failure']);
+
+export const verifyRazorpaySchema = yup.object({
+  payment_doc_id: yup.string().trim().required('Payment is required'),
+  razorpay_order_id: yup.string().trim().required('Order id is required'),
+  razorpay_payment_id: yup.string().trim().required('Payment id is required'),
+  razorpay_signature: yup.string().trim().required('Signature is required'),
+});

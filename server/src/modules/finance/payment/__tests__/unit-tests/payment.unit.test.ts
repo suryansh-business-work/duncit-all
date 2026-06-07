@@ -13,4 +13,22 @@ describe('payment unit', () => {
       (async () => (paymentResolvers.Query as any).myPayments({}, {}, makeContext(null)))()
     ).rejects.toThrow();
   });
+
+  it('createRazorpayOrder requires authentication', async () => {
+    await expect(
+      (async () =>
+        (paymentResolvers.Mutation as any).createRazorpayOrder({}, { input: {} }, makeContext(null)))()
+    ).rejects.toThrow();
+  });
+
+  it('verifyRazorpayPayment requires authentication', async () => {
+    await expect(
+      (async () =>
+        (paymentResolvers.Mutation as any).verifyRazorpayPayment(
+          {},
+          { input: {} },
+          makeContext(null)
+        ))()
+    ).rejects.toThrow();
+  });
 });

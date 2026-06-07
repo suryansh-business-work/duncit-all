@@ -22,6 +22,8 @@ export interface IPayment extends Document {
   gst_amount: number;
   total: number;
   currency_symbol: string;
+  coupon_code: string | null;
+  coupon_discount: number;
   status: PaymentStatus;
   gateway: string;
   gateway_ref: string | null;
@@ -51,6 +53,8 @@ const paymentSchema = new Schema<IPayment>(
     gst_amount: { type: Number, default: 0 },
     total: { type: Number, required: true, min: 0 },
     currency_symbol: { type: String, default: '₹' },
+    coupon_code: { type: String, default: null, index: true },
+    coupon_discount: { type: Number, default: 0, min: 0 },
     status: { type: String, enum: ['PENDING', 'SUCCESS', 'FAILED', 'REFUNDED'], default: 'PENDING' },
     gateway: { type: String, default: 'DUMMY' },
     gateway_ref: { type: String, default: null },

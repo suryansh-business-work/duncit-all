@@ -12,9 +12,10 @@ import {
 import LockIcon from '@mui/icons-material/Lock';
 import { alpha, useTheme } from '@mui/material/styles';
 import type { FormikProps } from 'formik';
-import type { CheckoutForm } from './queries';
+import type { CheckoutForm, CouponPreview } from './queries';
 import { CHECKOUT_PAYMENT_METHODS } from './checkout.form';
 import CheckoutContactFields from './CheckoutContactFields';
+import CouponField from './CouponField';
 import { formatMoney } from './checkoutMath';
 
 interface Props {
@@ -23,6 +24,15 @@ interface Props {
   submitting: boolean;
   total: number;
   currency: string;
+  dummyMode: boolean;
+  effectiveTotal: number;
+  coupon: CouponPreview | null;
+  couponCode: string;
+  setCouponCode: (value: string) => void;
+  couponError: string | null;
+  applyingCoupon: boolean;
+  onApplyCoupon: () => void;
+  onRemoveCoupon: () => void;
 }
 
 export default function PaymentDetailsCard({
@@ -31,7 +41,17 @@ export default function PaymentDetailsCard({
   submitting,
   total,
   currency,
+  dummyMode,
+  effectiveTotal,
+  coupon,
+  couponCode,
+  setCouponCode,
+  couponError,
+  applyingCoupon,
+  onApplyCoupon,
+  onRemoveCoupon,
 }: Props) {
+  const discounted = effectiveTotal < total;
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const { values, handleBlur, setFieldValue, submitForm } = formik;
@@ -71,20 +91,38 @@ export default function PaymentDetailsCard({
           <TextField select label="Payment Method" name="method" value={values.method} onChange={(e) => setField('method', e.target.value)} onBlur={handleBlur} fullWidth sx={fieldSx} SelectProps={{ MenuProps: selectMenuProps }}>
             {CHECKOUT_PAYMENT_METHODS.map((method) => <MenuItem key={method.value} value={method.value}>{method.label}</MenuItem>)}
           </TextField>
-          <TextField
-            select
-            label="Simulate"
-            value={values.simulate_failure ? 'fail' : 'success'}
-            onChange={(e) => setField('simulate_failure', e.target.value === 'fail')}
-            fullWidth
-            helperText="Dummy gateway only"
-            sx={fieldSx}
-            SelectProps={{ MenuProps: selectMenuProps }}
-          >
-            <MenuItem value="success">Successful Payment</MenuItem>
-            <MenuItem value="fail">Failed Payment</MenuItem>
-          </TextField>
+          {dummyMode && (
+            <TextField
+              select
+              label="Simulate"
+              value={values.simulate_failure ? 'fail' : 'success'}
+              onChange={(e) => setField('simulate_failure', e.target.value === 'fail')}
+              fullWidth
+              helperText="Dummy gateway only"
+              sx={fieldSx}
+              SelectProps={{ MenuProps: selectMenuProps }}
+            >
+              <MenuItem value="success">Successful Payment</MenuItem>
+              <MenuItem value="fail">Failed Payment</MenuItem>
+            </TextField>
+          )}
+          <CouponField
+            code={couponCode}
+            setCode={setCouponCode}
+            applied={coupon}
+            error={couponError}
+            applying={applyingCoupon}
+            currency={currency}
+            onApply={onApplyCoupon}
+            onRemove={onRemoveCoupon}
+          />
           {error && <Alert severity="error">{error}</Alert>}
+          {discounted && (
+            <Typography variant="caption" sx={{ color: 'text.secondary', textAlign: 'center' }}>
+              <s>{formatMoney(currency, total)}</s> &nbsp;you save{' '}
+              {formatMoney(currency, total - effectiveTotal)}
+            </Typography>
+          )}
           <Button
             variant="contained"
             size="large"
@@ -93,7 +131,7 @@ export default function PaymentDetailsCard({
             disabled={submitting || total <= 0}
             sx={{ minHeight: 48, borderRadius: 3, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
           >
-            {submitting ? 'Processing...' : `Pay ${formatMoney(currency, total)}`}
+            {submitting ? 'Processing...' : `Pay ${formatMoney(currency, effectiveTotal)}`}
           </Button>
           <Typography variant="caption" sx={{ textAlign: 'center', color: 'text.secondary' }}>
             Receipt and invoice will be sent after successful payment.

@@ -59,10 +59,22 @@ describe('locationMapQuery / locationMapEmbedUrl', () => {
     expect(locationMapQuery('', '', '', '')).toBe('');
   });
 
-  it('builds an embed url only with a key and query', () => {
-    expect(locationMapEmbedUrl('key', 'Mumbai')).toContain('key=key');
-    expect(locationMapEmbedUrl('key', 'Mumbai')).toContain('q=Mumbai');
-    expect(locationMapEmbedUrl('', 'Mumbai')).toBe('');
+  it('uses the keyed Embed API when a key is present', () => {
+    const url = locationMapEmbedUrl('key', 'Mumbai');
+    expect(url).toContain('maps/embed/v1/place');
+    expect(url).toContain('key=key');
+    expect(url).toContain('q=Mumbai');
+  });
+
+  it('falls back to a keyless embed when there is no key', () => {
+    const url = locationMapEmbedUrl('', 'Mumbai');
+    expect(url).toContain('output=embed');
+    expect(url).toContain('q=Mumbai');
+    expect(url).not.toContain('key=');
+  });
+
+  it('returns empty without a query, regardless of key', () => {
     expect(locationMapEmbedUrl('key', '')).toBe('');
+    expect(locationMapEmbedUrl('', '')).toBe('');
   });
 });

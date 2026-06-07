@@ -29,6 +29,7 @@ interface Props {
   onCreate: () => void;
   onEdit: (c: any) => void;
   onRemove: (c: any) => void;
+  onView?: (c: any) => void;
 }
 
 export default function ClubsTable({
@@ -39,6 +40,7 @@ export default function ClubsTable({
   onCreate,
   onEdit,
   onRemove,
+  onView,
 }: Props) {
   return (
     <Card>
@@ -62,7 +64,12 @@ export default function ClubsTable({
             </TableHead>
             <TableBody>
               {clubs.map((c: any) => (
-                <TableRow key={c.id} hover>
+                <TableRow
+                  key={c.id}
+                  hover
+                  onClick={() => onView?.(c)}
+                  sx={{ cursor: onView ? 'pointer' : 'default' }}
+                >
                   <TableCell>
                     <Avatar
                       variant="rounded"
@@ -104,7 +111,7 @@ export default function ClubsTable({
                       color={c.is_active ? 'success' : 'default'}
                     />
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                     <Tooltip title="View Pods">
                       <IconButton
                         size="small"

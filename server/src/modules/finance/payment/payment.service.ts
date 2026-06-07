@@ -8,6 +8,12 @@ import { getFinanceSettings, nextInvoiceNumber } from '@modules/finance/finance/
 import { sendEmail } from '@services/email/email.service';
 import { generateInvoicePdf } from '@services/invoice/invoice.pdf';
 import { getUrlConfigs } from '@config/url-configs';
+import {
+  createRazorpayOrder,
+  getRazorpayKeys,
+  verifyRazorpaySignature,
+} from './razorpay.gateway';
+import { couponService } from '@modules/finance/coupon/coupon.service';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
@@ -31,6 +37,8 @@ const toPub = (p: IPayment) => ({
   gst_amount: p.gst_amount,
   total: p.total,
   currency_symbol: p.currency_symbol,
+  coupon_code: p.coupon_code ?? null,
+  coupon_discount: p.coupon_discount ?? 0,
   status: p.status,
   gateway: p.gateway,
   gateway_ref: p.gateway_ref,
@@ -106,6 +114,149 @@ function selectedProductTotal(pod: any, selectedProducts: any[] = []) {
   return round2(total);
 }
 
+const userDisplayName = (user: any) =>
+  [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.email || 'Customer';
+
+/** The metadata blob recorded on every payment doc (source + pod breakdown). */
+const paymentMetadata = (input: any, pod: any) => ({
+  source: 'app_checkout',
+  checkout_url: input.checkout_url,
+  pod_id: input.pod_id || null,
+  ticket_amount: pod ? Number(pod.pod_amount || 0) : null,
+  product_cost_total: pod ? selectedProductTotal(pod, input.selected_products ?? []) : null,
+  selected_products: input.selected_products ?? [],
+});
+
+/** Apply an optional coupon to the gross payable, returning the priced quote, the
+ * undiscounted original total (for strikethrough/records) and the coupon meta.
+ * Throws when a supplied coupon is invalid — never silently ignores it. */
+async function applyCoupon(input: any, payableAmount: number, userId: string) {
+  const originalQuote = await computeQuote(payableAmount);
+  const code = (input.coupon_code || '').trim();
+  if (!code) {
+    return {
+      quote: originalQuote,
+      originalTotal: originalQuote.total,
+      couponCode: null as string | null,
+      couponDiscount: 0,
+    };
+  }
+  const result = await couponService.evaluate(code, input.pod_id ?? null, payableAmount, userId);
+  if (!result.ok)
+    throw new GraphQLError(result.message ?? 'Invalid coupon', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  const quote = await computeQuote(result.final_total);
+  return {
+    quote,
+    originalTotal: originalQuote.total,
+    couponCode: result.coupon!.code,
+    couponDiscount: round2(originalQuote.total - quote.total),
+  };
+}
+
+/** Resolve what the user actually pays (pod ticket + selected products, or a raw
+ * amount) plus the human description. Shared by the dummy + Razorpay flows. */
+async function resolvePayable(input: any) {
+  let pod: any = null;
+  let payableAmount = Number(input.amount) || 0;
+  let description = input.description || 'Booking';
+  if (input.pod_id) {
+    pod = await PodModel.findById(input.pod_id);
+    if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    description = `Pod booking · ${pod.pod_title}`;
+    payableAmount = round2(
+      Number(pod.pod_amount || 0) + selectedProductTotal(pod, input.selected_products ?? [])
+    );
+  }
+  if (!payableAmount || payableAmount <= 0)
+    throw new GraphQLError('Amount must be greater than 0', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  return { pod, payableAmount, description };
+}
+
+/** Books the slot + records the PodMember row + evaluates badges for a paid pod. */
+async function bookPodForPayment(pod: any, userId: any, paymentDocId: string) {
+  if (!pod) return;
+  try {
+    if (!pod.pod_attendees.some((u: any) => String(u) === String(userId))) {
+      pod.pod_attendees.push(userId);
+      await pod.save();
+    }
+  } catch (e) {
+    console.warn('Pod attendee update failed', e);
+  }
+  try {
+    const { podMemberService } = await import('@modules/pods/podMember/podMember.service');
+    await podMemberService.recordPaidJoin(String(pod._id), String(userId), paymentDocId);
+  } catch (e) {
+    console.warn('PodMember record failed', e);
+  }
+  try {
+    const { evaluateBadgesForUser } = await import('@modules/engagement/badge/badge.service');
+    evaluateBadgesForUser(String(userId), 'POD_JOIN').catch(() => {});
+  } catch {
+    /* noop */
+  }
+}
+
+/** Post-success side effects shared by every gateway: book the pod, generate the
+ * invoice PDF and email the receipt. The payment doc must already be SUCCESS with
+ * an invoice number + paid_at set. Best-effort — failures here never fail payment. */
+async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) {
+  const pod = doc.pod_id ? await PodModel.findById(doc.pod_id) : null;
+  await bookPodForPayment(pod, doc.user_id, String(doc._id));
+  try {
+    const pdf = await generateInvoicePdf({
+      invoice_no: doc.invoice_no!,
+      invoice_date: doc.paid_at!,
+      customer_name: doc.user_name,
+      customer_email: doc.user_email,
+      customer_phone: doc.user_phone || undefined,
+      business_name: fs.business_name,
+      business_address: fs.business_address,
+      business_gstin: fs.business_gstin,
+      currency_symbol: fs.currency_symbol,
+      items: [{ description: doc.description, qty: 1, unit_price: doc.subtotal, amount: doc.subtotal }],
+      subtotal: doc.subtotal,
+      platform_fee_amount: doc.platform_fee_amount,
+      platform_fee_pct: doc.platform_fee_pct,
+      gst_amount: doc.gst_amount,
+      gst_pct: doc.gst_pct,
+      total: doc.total,
+      payment_id: doc.payment_id,
+      payment_method: methodLabel,
+    });
+    const urlConfigs = await getUrlConfigs();
+    await sendEmail({
+      to: doc.user_email,
+      subject: `Payment Receipt — ${doc.invoice_no}`,
+      template: 'payment-receipt',
+      vars: {
+        name: doc.user_name,
+        summary:
+          pod && (pod as any).pod_date_time
+            ? `${(pod as any).pod_title} — ${new Date((pod as any).pod_date_time).toLocaleString('en-IN')}`
+            : doc.description,
+        invoice_no: doc.invoice_no || '',
+        payment_id: doc.payment_id,
+        amount: `${fs.currency_symbol}${doc.total.toFixed(2)}`,
+        app_url: urlConfigs.appUrl,
+      },
+      attachments: [
+        {
+          filename: `invoice-${doc.invoice_no!.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`,
+          content: pdf,
+          contentType: 'application/pdf',
+        },
+      ],
+    });
+  } catch (e) {
+    console.warn('Receipt/invoice email failed', e);
+  }
+}
+
 export const paymentService = {
   async list(filter?: { status?: string; user_id?: string; pod_id?: string; search?: string }, limit = 200) {
     const q: any = {};
@@ -142,20 +293,12 @@ export const paymentService = {
     const user = await UserModel.findById(userId);
     if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-    let pod: any = null;
-    let payableAmount = Number(input.amount) || 0;
-    let description = input.description || 'Booking';
-    if (input.pod_id) {
-      pod = await PodModel.findById(input.pod_id);
-      if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
-      description = `Pod booking · ${pod.pod_title}`;
-      payableAmount = round2(Number(pod.pod_amount || 0) + selectedProductTotal(pod, input.selected_products ?? []));
-    }
-
-    if (!payableAmount || payableAmount <= 0)
-      throw new GraphQLError('Amount must be greater than 0', { extensions: { code: 'BAD_USER_INPUT' } });
-
-    const quote = await computeQuote(payableAmount);
+    const { pod, payableAmount, description } = await resolvePayable(input);
+    const { quote, originalTotal, couponCode, couponDiscount } = await applyCoupon(
+      input,
+      payableAmount,
+      userId
+    );
 
     const status = input.simulate_failure ? 'FAILED' : 'SUCCESS';
     const paidAt = status === 'SUCCESS' ? new Date() : null;
@@ -166,10 +309,7 @@ export const paymentService = {
       payment_id: newPaymentId(),
       invoice_no,
       user_id: user._id,
-      user_name:
-        [(user as any).first_name, (user as any).last_name].filter(Boolean).join(' ').trim() ||
-        (user as any).email ||
-        'Customer',
+      user_name: userDisplayName(user),
       user_email: input.contact_email,
       user_phone: contactPhone,
       billing_address: input.billing_address,
@@ -184,105 +324,161 @@ export const paymentService = {
       gst_amount: quote.gst_amount,
       total: quote.total,
       currency_symbol: quote.currency_symbol,
+      coupon_code: couponCode,
+      coupon_discount: couponDiscount,
       status,
       gateway: 'DUMMY',
       gateway_ref: status === 'SUCCESS' ? `dummy_${Date.now()}` : null,
       paid_at: paidAt,
-      metadata: {
-        source: 'app_checkout',
-        checkout_url: input.checkout_url,
-        pod_id: input.pod_id || null,
-        ticket_amount: pod ? Number(pod.pod_amount || 0) : null,
-        product_cost_total: pod ? selectedProductTotal(pod, input.selected_products ?? []) : null,
-        selected_products: input.selected_products ?? [],
-      },
+      metadata: { ...paymentMetadata(input, pod), original_total: originalTotal },
     });
 
     if (status === 'SUCCESS') {
-      // Add user to pod attendees (slot booking) + record PodMember row
-      if (pod) {
-        try {
-          if (!pod.pod_attendees.some((u: any) => String(u) === String(user._id))) {
-            pod.pod_attendees.push(user._id as any);
-            await pod.save();
-          }
-        } catch (e) {
-           
-          console.warn('Pod attendee update failed', e);
-        }
-        try {
-          const { podMemberService } = await import('@modules/pods/podMember/podMember.service');
-          await podMemberService.recordPaidJoin(String(pod._id), String(user._id), String(doc._id));
-        } catch (e) {
-          console.warn('PodMember record failed', e);
-        }
-        try {
-          const { evaluateBadgesForUser } = await import('@modules/engagement/badge/badge.service');
-          evaluateBadgesForUser(String(user._id), 'POD_JOIN').catch(() => {});
-        } catch {
-          /* noop */
-        }
-      }
+      await finalizePaidPayment(doc, fs, 'Dummy Gateway');
+      if (couponCode) await couponService.recordRedemption(couponCode);
+    }
+    return toPub(doc);
+  },
 
-      // Generate invoice PDF + send receipt email
-      try {
-        const pdf = await generateInvoicePdf({
-          invoice_no: invoice_no!,
-          invoice_date: paidAt!,
-          customer_name: doc.user_name,
-          customer_email: doc.user_email,
-          customer_phone: doc.user_phone || undefined,
-          business_name: fs.business_name,
-          business_address: fs.business_address,
-          business_gstin: fs.business_gstin,
-          currency_symbol: fs.currency_symbol,
-          items: [
-            {
-              description,
-              qty: 1,
-              unit_price: quote.subtotal,
-              amount: quote.subtotal,
-            },
-          ],
-          subtotal: quote.subtotal,
-          platform_fee_amount: quote.platform_fee_amount,
-          platform_fee_pct: quote.platform_fee_pct,
-          gst_amount: quote.gst_amount,
-          gst_pct: quote.gst_pct,
-          total: quote.total,
-          payment_id: doc.payment_id,
-          payment_method: 'Dummy Gateway',
-        });
-        const urlConfigs = await getUrlConfigs();
+  /** Step 1 of live checkout: create a Razorpay order + a PENDING payment row,
+   * and return everything the client needs to open the Razorpay sheet. */
+  async createRazorpayCheckout(input: any, userId: string) {
+    const fs = await getFinanceSettings();
+    const { keyId } = await getRazorpayKeys();
+    const user = await UserModel.findById(userId);
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
 
-        await sendEmail({
-          to: doc.user_email,
-          subject: `Payment Receipt — ${invoice_no}`,
-          template: 'payment-receipt',
-          vars: {
-            name: doc.user_name,
-            summary: pod
-              ? `${pod.pod_title} — ${new Date(pod.pod_date_time).toLocaleString('en-IN')}`
-              : description,
-            invoice_no: invoice_no || '',
-            payment_id: doc.payment_id,
-            amount: `${fs.currency_symbol}${quote.total.toFixed(2)}`,
-            app_url: urlConfigs.appUrl,
-          },
-          attachments: [
-            {
-              filename: `invoice-${invoice_no!.replace(/[^A-Za-z0-9_-]+/g, '-')}.pdf`,
-              content: pdf,
-              contentType: 'application/pdf',
-            },
-          ],
-        });
-      } catch (e) {
-         
-        console.warn('Receipt/invoice email failed', e);
-      }
+    const { pod, payableAmount, description } = await resolvePayable(input);
+    const { quote, originalTotal, couponCode, couponDiscount } = await applyCoupon(
+      input,
+      payableAmount,
+      userId
+    );
+    const payment_id = newPaymentId();
+    const contactPhone = `${input.contact_phone_extension} ${input.contact_phone_number}`.trim();
+    const base = {
+      payment_id,
+      user_id: user._id,
+      user_name: userDisplayName(user),
+      user_email: input.contact_email,
+      user_phone: contactPhone,
+      billing_address: input.billing_address,
+      checkout_url: input.checkout_url,
+      target_type: input.pod_id ? 'POD' : 'OTHER',
+      pod_id: input.pod_id ? new Types.ObjectId(input.pod_id) : null,
+      description,
+      subtotal: quote.subtotal,
+      platform_fee_pct: quote.platform_fee_pct,
+      platform_fee_amount: quote.platform_fee_amount,
+      gst_pct: quote.gst_pct,
+      gst_amount: quote.gst_amount,
+      total: quote.total,
+      currency_symbol: quote.currency_symbol,
+      coupon_code: couponCode,
+      coupon_discount: couponDiscount,
+    };
+
+    // 100%-off coupon → nothing to charge: finalize immediately, skip the gateway.
+    if (quote.total <= 0) {
+      const freeDoc = await PaymentModel.create({
+        ...base,
+        invoice_no: await nextInvoiceNumber(),
+        status: 'SUCCESS',
+        gateway: 'COUPON',
+        gateway_ref: `coupon_${Date.now()}`,
+        paid_at: new Date(),
+        metadata: { ...paymentMetadata(input, pod), original_total: originalTotal },
+      });
+      await finalizePaidPayment(freeDoc, fs, 'Coupon (100% off)');
+      if (couponCode) await couponService.recordRedemption(couponCode);
+      return {
+        payment_doc_id: String(freeDoc._id),
+        key_id: keyId,
+        order_id: '',
+        amount: 0,
+        currency: 'INR',
+        name: fs.business_name,
+        description,
+        prefill_email: input.contact_email,
+        prefill_contact: input.contact_phone_number,
+        currency_symbol: quote.currency_symbol,
+        total: 0,
+        free: true,
+        payment: toPub(freeDoc),
+      };
     }
 
+    const amountPaise = Math.round(quote.total * 100);
+    const order = await createRazorpayOrder({
+      amountPaise,
+      currency: 'INR',
+      receipt: payment_id,
+      notes: { pod_id: input.pod_id || '', user_id: String(user._id) },
+    });
+
+    const doc = await PaymentModel.create({
+      ...base,
+      invoice_no: null,
+      status: 'PENDING',
+      gateway: 'RAZORPAY',
+      gateway_ref: order.id,
+      paid_at: null,
+      metadata: { ...paymentMetadata(input, pod), original_total: originalTotal, razorpay_order_id: order.id },
+    });
+
+    return {
+      payment_doc_id: String(doc._id),
+      key_id: keyId,
+      order_id: order.id,
+      amount: amountPaise,
+      currency: 'INR',
+      name: fs.business_name,
+      description,
+      prefill_email: input.contact_email,
+      prefill_contact: input.contact_phone_number,
+      currency_symbol: quote.currency_symbol,
+      total: quote.total,
+      free: false,
+      payment: null,
+    };
+  },
+
+  /** Step 2 of live checkout: verify the signature, then finalize the payment. */
+  async verifyRazorpayCheckout(input: any, userId: string) {
+    const doc = await PaymentModel.findById(input.payment_doc_id);
+    if (!doc) throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
+    if (String(doc.user_id) !== String(userId))
+      throw new GraphQLError('Not your payment', { extensions: { code: 'FORBIDDEN' } });
+    if (doc.gateway !== 'RAZORPAY' || doc.gateway_ref !== input.razorpay_order_id)
+      throw new GraphQLError('Payment/order mismatch', { extensions: { code: 'BAD_USER_INPUT' } });
+    if (doc.status === 'SUCCESS') return toPub(doc);
+
+    const ok = await verifyRazorpaySignature({
+      orderId: input.razorpay_order_id,
+      paymentId: input.razorpay_payment_id,
+      signature: input.razorpay_signature,
+    });
+    if (!ok) {
+      doc.status = 'FAILED';
+      await doc.save();
+      throw new GraphQLError('Payment signature verification failed', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+
+    const fs = await getFinanceSettings();
+    doc.status = 'SUCCESS';
+    doc.paid_at = new Date();
+    doc.invoice_no = await nextInvoiceNumber();
+    doc.gateway_ref = input.razorpay_payment_id;
+    (doc as any).metadata = {
+      ...((doc as any).metadata || {}),
+      razorpay_order_id: input.razorpay_order_id,
+      razorpay_payment_id: input.razorpay_payment_id,
+    };
+    await doc.save();
+    await finalizePaidPayment(doc, fs, 'Razorpay');
+    if (doc.coupon_code) await couponService.recordRedemption(doc.coupon_code);
     return toPub(doc);
   },
 

@@ -1,5 +1,14 @@
 import type { HomePod } from '@/hooks/useHomeFeed';
-import { podDateLabel, podImageUrl, podPlaceLabel, podPriceLabel } from '@/utils/pod-format';
+import {
+  podDateLabel,
+  podImageUrl,
+  podModeLabel,
+  podOccurrenceLabel,
+  podPlaceLabel,
+  podPriceLabel,
+  podScheduleLabel,
+  podTimeChip,
+} from '@/utils/pod-format';
 
 const base = {
   id: '1',
@@ -53,5 +62,42 @@ describe('pod-format', () => {
     expect(podDateLabel(withPod({ pod_date_time: '2026-06-07T18:30:00.000Z' }))).toContain('·');
     expect(podDateLabel(base)).toBe('Date pending');
     expect(podDateLabel(withPod({ pod_date_time: 'not-a-date' }))).toBe('Date pending');
+  });
+
+  it('labels the pod mode', () => {
+    expect(podModeLabel('VIRTUAL')).toBe('Virtual');
+    expect(podModeLabel('PHYSICAL')).toBe('Physical');
+    expect(podModeLabel(null)).toBe('Physical');
+  });
+
+  it('labels the occurrence from the enum', () => {
+    expect(podOccurrenceLabel('ONE_TIME')).toBe('One time');
+    expect(podOccurrenceLabel('WEEKENDS_ONLY')).toBe('Weekends only');
+    expect(podOccurrenceLabel('CUSTOM_THING')).toBe('CUSTOM THING');
+    expect(podOccurrenceLabel(null)).toBe('');
+  });
+
+  it('builds the countdown chip across all tones', () => {
+    expect(podTimeChip(null)).toBeNull();
+    expect(podTimeChip('not-a-date')).toBeNull();
+    expect(podTimeChip('2000-01-01T00:00:00.000Z')).toEqual({
+      label: 'Pod expired',
+      tone: 'error',
+    });
+    const inDays = new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString();
+    expect(podTimeChip(inDays)).toEqual({ label: '5 days remaining', tone: 'info' });
+    const inHours = new Date(Date.now() + 5 * 60 * 60 * 1000).toISOString();
+    expect(podTimeChip(inHours)).toEqual({ label: '5 hours remaining', tone: 'warning' });
+    const soon = new Date(Date.now() + 30 * 1000).toISOString();
+    expect(podTimeChip(soon)).toEqual({ label: 'Starting soon', tone: 'warning' });
+  });
+
+  it('formats the long schedule label with and without an end', () => {
+    expect(podScheduleLabel(null)).toBe('Date pending');
+    expect(podScheduleLabel('not-a-date')).toBe('Date pending');
+    const start = podScheduleLabel('2026-06-02T13:30:00.000Z', '2026-06-02T15:30:00.000Z');
+    expect(start).toContain('2026');
+    expect(start).toContain('→');
+    expect(podScheduleLabel('2026-06-02T13:30:00.000Z', 'not-a-date')).not.toContain('→');
   });
 });

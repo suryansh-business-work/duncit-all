@@ -12,20 +12,23 @@ import { toErrorMessage } from '@/utils/errors';
 export interface CheckoutSuccessProps {
   payment: NonNullable<CheckoutPayment>;
   onDownloadInvoice: () => Promise<void>;
+  onDownloadTicket?: () => Promise<void>;
   onHome: () => void;
   onProfile: () => void;
 }
 
-/** Payment success view — invoice download + navigation. RN twin of mWeb's
- * CheckoutSuccess. */
+/** Payment success view — ticket + invoice download + navigation. RN twin of
+ * mWeb's CheckoutSuccess. */
 export function CheckoutSuccess({
   payment,
   onDownloadInvoice,
+  onDownloadTicket,
   onHome,
   onProfile,
 }: CheckoutSuccessProps) {
   const { onPrimary, primary } = useThemeColors();
   const [busy, setBusy] = useState(false);
+  const [ticketBusy, setTicketBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const download = async () => {
@@ -37,6 +40,19 @@ export function CheckoutSuccess({
       setError(toErrorMessage(e, 'Could not download invoice.'));
     } finally {
       setBusy(false);
+    }
+  };
+
+  const downloadTicket = async () => {
+    if (!onDownloadTicket) return;
+    setTicketBusy(true);
+    setError(null);
+    try {
+      await onDownloadTicket();
+    } catch (e) {
+      setError(toErrorMessage(e, 'Could not download ticket.'));
+    } finally {
+      setTicketBusy(false);
     }
   };
 
@@ -64,6 +80,34 @@ export function CheckoutSuccess({
         <Text testID="invoice-error" fontSize={13} color="$danger">
           {error}
         </Text>
+      ) : null}
+
+      {onDownloadTicket ? (
+        <XStack
+          testID="download-ticket"
+          role="button"
+          aria-label="Download ticket"
+          aria-disabled={ticketBusy}
+          onPress={ticketBusy ? undefined : () => void downloadTicket()}
+          alignItems="center"
+          justifyContent="center"
+          gap={8}
+          alignSelf="stretch"
+          height={46}
+          borderRadius={999}
+          backgroundColor="$primary"
+          opacity={ticketBusy ? 0.6 : 1}
+          pressStyle={{ opacity: 0.85 }}
+        >
+          {ticketBusy ? (
+            <Spinner size="small" color={onPrimary} />
+          ) : (
+            <MaterialIcons name="confirmation-number" size={18} color={onPrimary} />
+          )}
+          <Text fontSize={14} fontWeight="900" color={onPrimary}>
+            {ticketBusy ? 'Preparing…' : 'Download ticket'}
+          </Text>
+        </XStack>
       ) : null}
 
       <XStack

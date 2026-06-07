@@ -19,6 +19,21 @@ const INVOICE_PDF = gql`
   }
 `;
 
+const MY_TICKET_FOR_POD = gql`
+  query CheckoutTicketForPod($podId: ID!) {
+    myEventTicketForPod(pod_doc_id: $podId) {
+      id
+      ticket_code
+    }
+  }
+`;
+
+const TICKET_PDF = gql`
+  query CheckoutTicketPdf($id: ID!) {
+    eventTicketPdfBase64(ticket_doc_id: $id)
+  }
+`;
+
 interface Props {
   payment: any;
   pod?: any;
@@ -32,8 +47,29 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile }: Pro
   const [confetti, setConfetti] = useState(true);
   const [invoiceError, setInvoiceError] = useState<string | null>(null);
   const [loadInvoice, { loading: invoiceLoading }] = useLazyQuery(INVOICE_PDF, { fetchPolicy: 'network-only' });
+  const [loadTicketForPod] = useLazyQuery(MY_TICKET_FOR_POD, { fetchPolicy: 'network-only' });
+  const [loadTicketPdf, { loading: ticketLoading }] = useLazyQuery(TICKET_PDF, { fetchPolicy: 'network-only' });
   const { formatDateTime } = useDateFormat();
   const paidAt = payment.paid_at || payment.created_at;
+
+  const downloadTicket = async () => {
+    if (!pod?.id) return;
+    setInvoiceError(null);
+    try {
+      const { data: tData } = await loadTicketForPod({ variables: { podId: pod.id } });
+      const ticket = tData?.myEventTicketForPod;
+      if (!ticket?.id) throw new Error('Ticket not ready yet — check your email shortly.');
+      const { data } = await loadTicketPdf({ variables: { id: ticket.id } });
+      const b64 = data?.eventTicketPdfBase64;
+      if (!b64) throw new Error('Ticket not available');
+      const link = document.createElement('a');
+      link.href = `data:application/pdf;base64,${b64}`;
+      link.download = `ticket-${ticket.ticket_code}.pdf`;
+      link.click();
+    } catch (error) {
+      setInvoiceError(parseApiError(error));
+    }
+  };
 
   const downloadInvoice = async () => {
     if (!payment.invoice_no) return;
@@ -105,6 +141,9 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile }: Pro
           )}
           {invoiceError && <Alert severity="error" sx={{ mt: 2 }}>{invoiceError}</Alert>}
           <Stack direction="row" spacing={1.5} sx={{ mt: 4, justifyContent: 'center' }}>
+            {pod?.id && (
+              <Button variant="contained" startIcon={<DownloadIcon />} onClick={downloadTicket} disabled={ticketLoading} sx={{ borderRadius: 999, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>Ticket</Button>
+            )}
             <Button variant="outlined" startIcon={<DownloadIcon />} onClick={downloadInvoice} disabled={!payment.invoice_no || invoiceLoading} sx={{ borderRadius: 999 }}>Invoice</Button>
             <Button variant="outlined" onClick={onHome} sx={{ borderRadius: 999 }}>Home</Button>
             <Button variant="contained" onClick={onProfile} sx={{ borderRadius: 999, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}>My Profile</Button>

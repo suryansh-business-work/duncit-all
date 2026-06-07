@@ -1,5 +1,6 @@
 import { Box, Button, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import { mapEmbedUrl, mapSearchUrl } from '../../utils/mapEmbed';
 
 interface Props {
   locationName?: string | null;
@@ -8,20 +9,14 @@ interface Props {
 }
 
 // Embeds a Google Maps Place card based on the human-readable location name.
-// Reads the API key from the build-time env var; renders nothing when the
-// key is missing or the location is unknown so the card stays clean.
+// Renders nothing only when the location is unknown; the map itself falls back
+// to a keyless embed when no API key is configured.
 export default function PodLocationMap({ locationName, zoneName, pincode }: Props) {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAP_API as string | undefined;
-  if (!apiKey || !locationName?.trim()) return null;
+  if (!locationName?.trim()) return null;
 
   const query = [zoneName, locationName, pincode, 'India'].filter(Boolean).join(', ');
-  const src =
-    'https://www.google.com/maps/embed/v1/place?key=' +
-    encodeURIComponent(apiKey) +
-    '&q=' +
-    encodeURIComponent(query) +
-    '&zoom=15';
-  const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
+  const src = mapEmbedUrl(query);
+  const mapUrl = mapSearchUrl(query);
 
   return (
     <Box sx={{ mt: 1.5 }}>

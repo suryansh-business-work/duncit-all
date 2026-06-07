@@ -51,9 +51,16 @@ describe('envEntry unit', () => {
     const badFetch = (status = 401) => jest.fn().mockResolvedValue({ ok: false, status, json: async () => ({}) });
     afterEach(() => { delete (global as any).fetch; });
 
-    it.each(['IMAGEKIT', 'PEXELS', 'TWILIO', 'OPENAI', 'GEMINI'] as const)('requires credentials for %s', async (c) => {
+    it.each(['IMAGEKIT', 'PEXELS', 'TWILIO', 'OPENAI', 'GEMINI', 'RAZORPAY'] as const)('requires credentials for %s', async (c) => {
       const res = await testEnvConnection(c, {});
       expect(res.ok).toBe(false);
+    });
+
+    it('RAZORPAY passes on a 200 and fails on a non-200', async () => {
+      (global as any).fetch = okFetch();
+      expect((await testEnvConnection('RAZORPAY', { key_id: 'rzp', key_secret: 's' })).ok).toBe(true);
+      (global as any).fetch = badFetch(401);
+      expect((await testEnvConnection('RAZORPAY', { key_id: 'rzp', key_secret: 's' })).ok).toBe(false);
     });
 
     it('EMAIL validates host presence without a network call', async () => {

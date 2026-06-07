@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
 import { useMutation, useQuery } from '@apollo/client';
-import { useSearchParams } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import {
   PODS,
@@ -26,7 +26,9 @@ import usePodReleaseRequest from './usePodReleaseRequest';
 
 export default function PodsPage() {
   const [params, setParams] = useSearchParams();
+  const navigate = useNavigate();
   const clubFilter = params.get('club_id') ?? '';
+  const editId = params.get('edit') ?? '';
   const [search, setSearch] = useState('');
 
   const { data, loading, error, refetch } = useQuery(PODS, {
@@ -81,6 +83,14 @@ export default function PodsPage() {
     setOpError(null);
     setOpen(true);
   };
+
+  // Deep-link from the Pod details page: /pods?edit=<id> opens the edit dialog.
+  useEffect(() => {
+    if (!editId || open) return;
+    const pod = (data?.pods ?? []).find((p: any) => p.id === editId);
+    if (pod) openEdit(pod);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId, data?.pods]);
 
   const submit = async (values: PodForm, options?: { draft?: boolean }) => {
     setBusy(true);
@@ -146,6 +156,7 @@ export default function PodsPage() {
         onEdit={openEdit}
         onDelete={remove}
         onComplete={releaseRequest.openCompletePod}
+        onView={(p) => navigate(`/pods/${p.id}`)}
       />
 
       <CompletePodDialog

@@ -1,0 +1,47 @@
+<mjml>
+  <mj-head>
+    <mj-title>Your Duncit event ticket</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+      <mj-button background-color="#ff4f73" color="#ffffff" border-radius="8px" font-weight="700" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <mj-section padding="20px 0 0 0">
+      <mj-column>
+        <mj-image src="https://duncit.com/duncit-logo.svg" alt="Duncit" width="160px" align="center" padding="0" />
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="bold" color="#222">
+          You're in, {{name}}! 🎟️
+        </mj-text>
+        <mj-text font-size="14px" color="#555">
+          Your ticket for <strong>{{event_title}}</strong> is attached as a PDF. Show the QR code at entry.
+        </mj-text>
+        <mj-divider border-color="#e5e5e5" />
+        <mj-text font-size="13px" color="#333" font-weight="bold">Event</mj-text>
+        <mj-text font-size="13px" color="#555">
+          {{event_title}}<br/>
+          {{date_label}}<br/>
+          {{venue_line}}
+        </mj-text>
+        <mj-text font-size="13px" color="#333" font-weight="bold">Ticket</mj-text>
+        <mj-text font-size="13px" color="#555">
+          Code: {{ticket_code}}
+        </mj-text>
+        <mj-button href="{{app_url}}">View My Bookings</mj-button>
+        <mj-text font-size="12px" color="#888">
+          Keep this ticket safe — the QR code is your entry pass.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="16px 0 24px 0">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. You're receiving this because you booked a Duncit event.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

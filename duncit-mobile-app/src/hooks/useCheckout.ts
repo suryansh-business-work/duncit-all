@@ -7,8 +7,11 @@ import {
   MobileCheckoutInvoiceDocument,
   MobileCheckoutMeDocument,
   MobileCheckoutPodDocument,
+  MobileCreateRazorpayOrderDocument,
   MobileDummyCheckoutDocument,
+  MobilePreviewCouponDocument,
   MobilePublicFinanceDocument,
+  MobileVerifyRazorpayDocument,
 } from '@/graphql/checkout';
 import { graphqlRequest } from '@/services/graphql.client';
 import type { CheckoutFormValues } from '@/forms/checkout';
@@ -17,6 +20,17 @@ export type FinanceSettings = ResultOf<typeof MobilePublicFinanceDocument>['publ
 export type CheckoutPod = ResultOf<typeof MobileCheckoutPodDocument>['pod'];
 export type CheckoutMe = ResultOf<typeof MobileCheckoutMeDocument>['me'];
 export type CheckoutPayment = ResultOf<typeof MobileDummyCheckoutDocument>['dummyCheckout'];
+export type RazorpayOrder = ResultOf<
+  typeof MobileCreateRazorpayOrderDocument
+>['createRazorpayOrder'];
+export type CouponPreview = ResultOf<typeof MobilePreviewCouponDocument>['previewCoupon'];
+
+/** The signature triple Razorpay returns on a successful payment. */
+export interface RazorpaySignature {
+  razorpay_order_id: string;
+  razorpay_payment_id: string;
+  razorpay_signature: string;
+}
 
 const CHECKOUT_URL = 'duncit-mobile://checkout';
 
@@ -50,25 +64,72 @@ export function useCheckout(podId: string) {
     };
   }, [podId]);
 
-  const pay = async (values: CheckoutFormValues, amount: number): Promise<CheckoutPayment> => {
+  const contactInput = (
+    values: CheckoutFormValues,
+    amount: number,
+    couponCode?: string | null,
+  ) => ({
+    pod_id: podId || null,
+    amount,
+    description: `Pod booking · ${pod?.pod_title ?? 'Booking'}`,
+    contact_email: values.email,
+    contact_phone_extension: values.phone_extension,
+    contact_phone_number: values.phone_number,
+    billing_address: values.billing_address,
+    checkout_url: CHECKOUT_URL,
+    coupon_code: couponCode || null,
+  });
+
+  const pay = async (
+    values: CheckoutFormValues,
+    amount: number,
+    couponCode?: string | null,
+  ): Promise<CheckoutPayment> => {
     const data = await graphqlRequest(
       MobileDummyCheckoutDocument,
       {
         input: {
-          pod_id: podId || null,
-          amount,
-          description: `Pod booking · ${pod?.pod_title ?? 'Booking'}`,
-          contact_email: values.email,
-          contact_phone_extension: values.phone_extension,
-          contact_phone_number: values.phone_number,
-          billing_address: values.billing_address,
-          checkout_url: CHECKOUT_URL,
+          ...contactInput(values, amount, couponCode),
           simulate_failure: values.simulate_failure,
         },
       },
       { auth: true },
     );
     return data.dummyCheckout;
+  };
+
+  const createRazorpayOrder = async (
+    values: CheckoutFormValues,
+    amount: number,
+    couponCode?: string | null,
+  ): Promise<RazorpayOrder> => {
+    const data = await graphqlRequest(
+      MobileCreateRazorpayOrderDocument,
+      { input: contactInput(values, amount, couponCode) },
+      { auth: true },
+    );
+    return data.createRazorpayOrder;
+  };
+
+  const previewCoupon = async (code: string, amount: number): Promise<CouponPreview> => {
+    const data = await graphqlRequest(
+      MobilePreviewCouponDocument,
+      { input: { code: code.trim(), pod_id: podId || null, amount } },
+      { auth: true },
+    );
+    return data.previewCoupon;
+  };
+
+  const verifyRazorpay = async (
+    paymentDocId: string,
+    sig: RazorpaySignature,
+  ): Promise<CheckoutPayment> => {
+    const data = await graphqlRequest(
+      MobileVerifyRazorpayDocument,
+      { input: { payment_doc_id: paymentDocId, ...sig } },
+      { auth: true },
+    );
+    return data.verifyRazorpayPayment;
   };
 
   const downloadInvoice = async (paymentDocId: string, invoiceNo: string) => {
@@ -87,5 +148,15 @@ export function useCheckout(podId: string) {
     await Sharing.shareAsync(uri, { mimeType: 'application/pdf' });
   };
 
-  return { finance, pod, me, isLoading, pay, downloadInvoice };
+  return {
+    finance,
+    pod,
+    me,
+    isLoading,
+    pay,
+    createRazorpayOrder,
+    verifyRazorpay,
+    previewCoupon,
+    downloadInvoice,
+  };
 }

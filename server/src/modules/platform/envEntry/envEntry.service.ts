@@ -132,6 +132,17 @@ export async function testEnvConnection(
       if (res.status === 401 || res.status === 403) return { ok: false, message: `Servam rejected the key (HTTP ${res.status})` };
       return { ok: true, message: 'Servam API key is set' };
     }
+    if (category === 'RAZORPAY') {
+      if (!str('key_id') || !str('key_secret'))
+        return { ok: false, message: 'Key ID and key secret are required' };
+      const auth = 'Basic ' + Buffer.from(`${str('key_id')}:${str('key_secret')}`).toString('base64');
+      const res = await fetch('https://api.razorpay.com/v1/payments?count=1', {
+        headers: { Authorization: auth },
+      });
+      return res.ok
+        ? { ok: true, message: 'Razorpay credentials are valid' }
+        : { ok: false, message: `Razorpay rejected the credentials (HTTP ${res.status})` };
+    }
     // EMAIL (SMTP) — no cheap unauthenticated probe; validate required fields.
     if (!str('host')) return { ok: false, message: 'SMTP host is required' };
     return { ok: true, message: `SMTP host ${str('host')} looks configured` };

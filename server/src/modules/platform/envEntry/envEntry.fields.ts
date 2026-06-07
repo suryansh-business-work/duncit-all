@@ -59,6 +59,16 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
     { name: 'tts_model', label: 'TTS Model (default bulbul:v2)', hint: 'e.g. bulbul:v2' },
     { name: 'default_voice', label: 'Default Voice', hint: 'e.g. anushka, manisha, vidya, arya, abhilash, karun, hitesh' },
   ],
+  RAZORPAY: [
+    { name: 'key_id', label: 'Key ID', hint: 'rzp_live_xxxxxxxx or rzp_test_xxxxxxxx (public)' },
+    { name: 'key_secret', label: 'Key Secret', secret: true, hint: 'Razorpay API key secret' },
+    {
+      name: 'webhook_secret',
+      label: 'Webhook Secret (optional)',
+      secret: true,
+      hint: 'Used to verify Razorpay webhooks',
+    },
+  ],
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -72,6 +82,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   OPENAI: 'https://platform.openai.com/api-keys',
   GEMINI: 'https://aistudio.google.com/app/apikey',
   SERVAM: 'https://dashboard.sarvam.ai/admin',
+  RAZORPAY: 'https://dashboard.razorpay.com/app/keys',
 };
 
 const secretSet = new Set<string>();
@@ -110,6 +121,9 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   SERVAM_AI_BASE_URL: { category: 'SERVAM', field: 'base_url' },
   SERVAM_AI_TTS_MODEL: { category: 'SERVAM', field: 'tts_model' },
   SERVAM_AI_VOICE: { category: 'SERVAM', field: 'default_voice' },
+  RAZORPAY_KEY_ID: { category: 'RAZORPAY', field: 'key_id' },
+  RAZORPAY_KEY_SECRET: { category: 'RAZORPAY', field: 'key_secret' },
+  RAZORPAY_WEBHOOK_SECRET: { category: 'RAZORPAY', field: 'webhook_secret' },
 };
 
 export function maskSecret(value: string) {

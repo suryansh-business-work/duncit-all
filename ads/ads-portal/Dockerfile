@@ -14,7 +14,8 @@ COPY admin/package.json ./admin/
 COPY website/package.json ./website/
 COPY partners/partners-app/package.json ./partners/partners-app/
 COPY partners/partners-website/package.json ./partners/partners-website/
-COPY ads/package.json ./ads/
+COPY ads/ads-portal/package.json ./ads/ads-portal/
+COPY ads/ads-website/package.json ./ads/ads-website/
 COPY crm/package.json ./crm/
 COPY finance/package.json ./finance/
 COPY tech/package.json ./tech/
@@ -35,11 +36,11 @@ RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
 
 COPY packages ./packages
-COPY ads ./ads
-RUN pnpm --filter ads build
+COPY ads/ads-portal ./ads/ads-portal
+RUN pnpm --filter ads-portal build
 
 # --- runner ---
 FROM public.ecr.aws/docker/library/nginx:alpine AS runner
-COPY --from=builder /repo/ads/dist /usr/share/nginx/html
+COPY --from=builder /repo/ads/ads-portal/dist /usr/share/nginx/html
 COPY deploy/nginx/spa.conf /etc/nginx/conf.d/default.conf
 EXPOSE 80

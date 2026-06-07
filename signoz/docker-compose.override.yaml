@@ -1,0 +1,23 @@
+# Duncit memory caps for the self-hosted SignOz stack.
+#
+# SignOz is cloned from upstream at /opt/signoz on the VPS (it is NOT part of the
+# duncit docker-compose stack). Docker Compose auto-merges this file when it is
+# placed next to the upstream compose as
+#   /opt/signoz/deploy/docker/docker-compose.override.yaml
+# and you run `docker compose up -d` from that directory.
+#
+# Why only mem_limit here: this box is a shared 2-vCPU / ~8 GB VPS already
+# running ~35 containers across several projects. These caps stop ClickHouse and
+# friends from starving the other production services. Port rebinding (UI ->
+# 127.0.0.1:2021, OTLP -> 127.0.0.1) is applied directly to the base compose
+# instead of here because Compose *concatenates* `ports` across files rather
+# than replacing them — see README.md.
+services:
+  clickhouse:
+    mem_limit: 2g
+  signoz:
+    mem_limit: 1g
+  otel-collector:
+    mem_limit: 768m
+  zookeeper-1:
+    mem_limit: 512m

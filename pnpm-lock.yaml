@@ -139,17 +139,17 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  ads:
+  ads/ads-portal:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/theme':
         specifier: workspace:*
-        version: link:../packages/theme
+        version: link:../../packages/theme
       '@duncit/user-context':
         specifier: workspace:*
-        version: link:../packages/user-context
+        version: link:../../packages/user-context
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -223,6 +223,18 @@ importers:
       vitest:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+
+  ads/ads-website:
+    dependencies:
+      '@tailwindcss/vite':
+        specifier: ^4.2.2
+        version: 4.3.0(vite@6.4.2(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+      astro:
+        specifier: ^5.7.10
+        version: 5.18.1(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
+      tailwindcss:
+        specifier: ^4.2.2
+        version: 4.3.0
 
   ai:
     dependencies:

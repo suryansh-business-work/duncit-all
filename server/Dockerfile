@@ -10,7 +10,8 @@ COPY admin/package.json ./admin/
 COPY website/package.json ./website/
 COPY partners/partners-app/package.json ./partners/partners-app/
 COPY partners/partners-website/package.json ./partners/partners-website/
-COPY ads/package.json ./ads/
+COPY ads/ads-portal/package.json ./ads/ads-portal/
+COPY ads/ads-website/package.json ./ads/ads-website/
 COPY crm/package.json ./crm/
 COPY finance/package.json ./finance/
 COPY tech/package.json ./tech/
@@ -44,7 +45,8 @@ COPY --from=builder /repo/admin/package.json ./admin/
 COPY --from=builder /repo/website/package.json ./website/
 COPY --from=builder /repo/partners/partners-app/package.json ./partners/partners-app/
 COPY --from=builder /repo/partners/partners-website/package.json ./partners/partners-website/
-COPY --from=builder /repo/ads/package.json ./ads/
+COPY --from=builder /repo/ads/ads-portal/package.json ./ads/ads-portal/
+COPY --from=builder /repo/ads/ads-website/package.json ./ads/ads-website/
 COPY --from=builder /repo/crm/package.json ./crm/
 COPY --from=builder /repo/finance/package.json ./finance/
 COPY --from=builder /repo/tech/package.json ./tech/

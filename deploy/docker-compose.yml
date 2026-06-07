@@ -51,12 +51,19 @@ services:
     ports:
       - "127.0.0.1:2005:80"
 
-  ads:
-    image: ${DOCKERHUB_USERNAME}/duncit-ads:${IMAGE_TAG:-latest}
-    container_name: duncit-ads
+  ads-portal:
+    image: ${DOCKERHUB_USERNAME}/duncit-ads-portal:${IMAGE_TAG:-latest}
+    container_name: duncit-ads-portal
     restart: unless-stopped
     ports:
       - "127.0.0.1:2006:80"
+
+  ads-website:
+    image: ${DOCKERHUB_USERNAME}/duncit-ads-website:${IMAGE_TAG:-latest}
+    container_name: duncit-ads-website
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2020:80"
 
   crm:
     image: ${DOCKERHUB_USERNAME}/duncit-crm:${IMAGE_TAG:-latest}

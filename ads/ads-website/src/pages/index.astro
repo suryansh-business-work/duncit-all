@@ -1,0 +1,19 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Hero from '../components/Hero.astro';
+import Features from '../components/Features.astro';
+import CtaBand from '../components/CtaBand.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { siteConfig } from '../config/site-config';
+---
+
+<Layout title={siteConfig.brand.title}>
+  <SiteHeader />
+  <main>
+    <Hero />
+    <Features />
+    <CtaBand />
+  </main>
+  <SiteFooter />
+</Layout>

@@ -6,7 +6,7 @@ on:
     paths:
       - 'admin/**'
       - 'mweb-app/**'
-      - 'ads/**'
+      - 'ads/ads-portal/**'
       - 'crm/**'
       - 'finance/**'
       - 'tech/**'
@@ -28,7 +28,7 @@ on:
     paths:
       - 'admin/**'
       - 'mweb-app/**'
-      - 'ads/**'
+      - 'ads/ads-portal/**'
       - 'crm/**'
       - 'finance/**'
       - 'tech/**'
@@ -59,7 +59,22 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        workspace: [admin, mweb-app, ads, crm, finance, tech, support, website-app, legal, ai, products, marketing, onboarding, hr, employee]
+        include:
+          - { name: admin, dir: admin }
+          - { name: mweb-app, dir: mweb-app }
+          - { name: ads-portal, dir: ads/ads-portal }
+          - { name: crm, dir: crm }
+          - { name: finance, dir: finance }
+          - { name: tech, dir: tech }
+          - { name: support, dir: support }
+          - { name: website-app, dir: website-app }
+          - { name: legal, dir: legal }
+          - { name: ai, dir: ai }
+          - { name: products, dir: products }
+          - { name: marketing, dir: marketing }
+          - { name: onboarding, dir: onboarding }
+          - { name: hr, dir: hr }
+          - { name: employee, dir: employee }
 
     steps:
       - name: Checkout
@@ -79,16 +94,16 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Run form tests (${{ matrix.workspace }})
-        working-directory: ${{ matrix.workspace }}
-        run: pnpm exec vitest run --reporter=default --reporter=junit --outputFile=../test-results/${{ matrix.workspace }}-junit.xml
+      - name: Run form tests (${{ matrix.name }})
+        working-directory: ${{ matrix.dir }}
+        run: pnpm exec vitest run --reporter=default --reporter=junit --outputFile=${{ github.workspace }}/test-results/${{ matrix.name }}-junit.xml
 
       - name: Upload JUnit report
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: form-tests-${{ matrix.workspace }}
-          path: test-results/${{ matrix.workspace }}-junit.xml
+          name: form-tests-${{ matrix.name }}
+          path: test-results/${{ matrix.name }}-junit.xml
           if-no-files-found: ignore
 
   typecheck:
@@ -122,8 +137,8 @@ jobs:
         working-directory: mweb-app
         run: pnpm exec tsc -b --noEmit
 
-      - name: Typecheck ads
-        working-directory: ads
+      - name: Typecheck ads-portal
+        working-directory: ads/ads-portal
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck crm

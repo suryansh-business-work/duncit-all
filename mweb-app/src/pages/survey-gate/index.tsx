@@ -1,9 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import {
-  ACTIVE_SURVEY,
+  ACTIVE_SURVEY_FOR,
   MY_MEETING,
   MY_SURVEY_RESPONSE,
   PARTNER_PATH,
@@ -12,15 +12,16 @@ import {
   type ActiveSurvey,
   type SurveyKind,
 } from './queries';
+import CategoryStep, { type CategoryScope } from './CategoryStep';
 import SurveyForm, { type SurveyAnswerInput } from './SurveyForm';
 import MeetingForm, { type MeetingInput } from './MeetingForm';
 
-type Step = 'loading' | 'survey' | 'meeting' | 'proceed';
+type Step = 'loading' | 'category' | 'survey' | 'meeting' | 'proceed';
 
 /**
- * Gate before "Register a Venue" / "Become a Host": first the survey, then an
- * onboarding meeting request. Each is asked only once; once both are done the
- * user is forwarded straight to the (partner) registration route.
+ * Gate before "Register a Venue" / "Become a Host": first pick the Super →
+ * Category → Sub, then the matching survey (skipped when none), then an
+ * onboarding meeting. Forwards to the (partner) registration route when done.
  */
 export default function SurveyGatePage() {
   const params = useParams<{ kind: string }>();
@@ -29,32 +30,51 @@ export default function SurveyGatePage() {
   const valid = kind === 'VENUE' || kind === 'HOST';
   const next = PARTNER_PATH[kind] ?? '/hosts-venues';
   const [step, setStep] = useState<Step>('loading');
+  const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
+  const [resolving, setResolving] = useState(false);
 
   const proceed = () => navigate(next, { replace: true });
 
-  const { data: resp, loading: respLoading } = useQuery<{ mySurveyResponse: { kind: string } | null }>(MY_SURVEY_RESPONSE, { variables: { kind }, skip: !valid, fetchPolicy: 'network-only' });
   const { data: meet, loading: meetLoading } = useQuery<{ myMeeting: { id: string } | null }>(MY_MEETING, { variables: { kind }, skip: !valid, fetchPolicy: 'network-only' });
-  const { data: surveyData, loading: surveyLoading } = useQuery<{ activeSurvey: ActiveSurvey | null }>(ACTIVE_SURVEY, { variables: { kind }, skip: !valid, fetchPolicy: 'cache-and-network' });
+  const [resolveSurvey] = useLazyQuery<{ activeSurveyFor: ActiveSurvey | null }>(ACTIVE_SURVEY_FOR, { fetchPolicy: 'network-only' });
+  const [checkResponse] = useLazyQuery<{ mySurveyResponse: { survey_id: string } | null }>(MY_SURVEY_RESPONSE, { fetchPolicy: 'network-only' });
   const [submitSurvey, { loading: submittingSurvey }] = useMutation(SUBMIT_SURVEY_RESPONSE);
   const [requestMeeting, { loading: requesting }] = useMutation(REQUEST_MEETING);
 
-  const survey = surveyData?.activeSurvey ?? null;
-  const surveyDone = !!resp?.mySurveyResponse || !survey;
   const meetingDone = !!meet?.myMeeting;
 
   useEffect(() => {
     if (!valid) { navigate('/hosts-venues', { replace: true }); return; }
-    if (respLoading || meetLoading || surveyLoading) return;
-    if (!surveyDone) setStep('survey');
-    else if (!meetingDone) setStep('meeting');
-    else proceed();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [valid, respLoading, meetLoading, surveyLoading, surveyDone, meetingDone]);
+    if (meetLoading) return;
+    setStep('category');
+  }, [valid, meetLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  const afterSurvey = () => {
+    if (meetingDone) proceed();
+    else setStep('meeting');
+  };
+
+  const onCategory = async (scope: CategoryScope) => {
+    setResolving(true);
+    try {
+      const { data } = await resolveSurvey({ variables: { kind, ...scope } });
+      const s = data?.activeSurveyFor ?? null;
+      setSurvey(s);
+      if (s) {
+        const { data: r } = await checkResponse({ variables: { survey_id: s.id } });
+        if (!r?.mySurveyResponse) { setStep('survey'); return; }
+      }
+      afterSurvey();
+    } finally {
+      setResolving(false);
+    }
+  };
 
   const onSurvey = async (answers: SurveyAnswerInput[]) => {
-    try { await submitSurvey({ variables: { kind, answers } }); } catch { /* don't block */ }
-    setStep(meetingDone ? 'proceed' : 'meeting');
-    if (meetingDone) proceed();
+    if (survey) {
+      try { await submitSurvey({ variables: { survey_id: survey.id, answers } }); } catch { /* don't block */ }
+    }
+    afterSurvey();
   };
 
   const onMeeting = async (input: MeetingInput) => {
@@ -66,23 +86,26 @@ export default function SurveyGatePage() {
     return <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
   }
 
+  const heading =
+    step === 'category' ? (kind === 'VENUE' ? 'Register your venue' : 'Become a host')
+    : step === 'survey' ? (survey?.title || (kind === 'VENUE' ? 'Register your venue' : 'Become a host'))
+    : 'Schedule your onboarding meeting';
+  const subtitle =
+    step === 'category' ? 'Tell us your category so we can ask the right questions.'
+    : step === 'survey' ? 'A few quick questions before you continue.'
+    : 'Last step before registration.';
+
   return (
     <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 } }}>
       <Card variant="outlined" sx={{ borderRadius: 4 }}>
         <CardContent>
           <Stack spacing={0.5} sx={{ mb: 1.5 }}>
-            <Typography variant="h6" fontWeight={950}>
-              {step === 'survey' ? (survey?.title || (kind === 'VENUE' ? 'Register your venue' : 'Become a host')) : 'Schedule your onboarding meeting'}
-            </Typography>
-            <Typography variant="body2" color="text.secondary">
-              {step === 'survey' ? 'A few quick questions before you continue.' : 'Last step before registration.'}
-            </Typography>
+            <Typography variant="h6" fontWeight={950}>{heading}</Typography>
+            <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
           </Stack>
-          {step === 'survey' && survey ? (
-            <SurveyForm survey={survey} submitting={submittingSurvey} onSubmit={onSurvey} />
-          ) : (
-            <MeetingForm submitting={requesting} onSubmit={onMeeting} />
-          )}
+          {step === 'category' && <CategoryStep submitting={resolving} onContinue={onCategory} />}
+          {step === 'survey' && survey && <SurveyForm survey={survey} submitting={submittingSurvey} onSubmit={onSurvey} />}
+          {step === 'meeting' && <MeetingForm submitting={requesting} onSubmit={onMeeting} />}
         </CardContent>
       </Card>
     </Box>

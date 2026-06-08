@@ -31,6 +31,7 @@ import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import ForumIcon from '@mui/icons-material/Forum';
 import LinkIcon from '@mui/icons-material/Link';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import { VENUE_LEAD } from '../../api/crm.gql';
 import type { VenueLead } from '../../api/crm.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
@@ -47,6 +48,7 @@ import RemindersTab from '../../components/reminders-tab';
 import AskAiDrawer, { ASK_AI_WIDTH } from '../../components/ask-ai/AskAiDrawer';
 import MapEmbed from '../../components/MapEmbed';
 import DynamicValuesView from '../../components/DynamicValuesView';
+import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
 import { parseApiError } from '../../utils/parseApiError';
 import { venueVariableValues } from '../../config/leadVariables';
 
@@ -200,6 +202,13 @@ export default function VenueLeadDetailPage() {
           <ServicesGrid services={lead.services_offered} />
         </LeadDetailCard>
       ),
+    },
+
+    {
+      value: 'survey',
+      label: 'Survey',
+      icon: <AssignmentIcon fontSize="small" />,
+      render: () => <LeadSurveyTab entity="VENUE_LEAD" leadId={lead.id} />,
     },
 
     {

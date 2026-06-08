@@ -1,49 +1,51 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { useParams } from 'react-router-dom';
+import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Alert,
-  Box,
-  Button,
-  CircularProgress,
-  MenuItem,
-  Snackbar,
-  Stack,
-  TextField,
-  Typography,
+  Alert, Box, Button, Card, CardContent, CircularProgress, FormControlLabel,
+  MenuItem, Snackbar, Stack, Switch, TextField, Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import SaveIcon from '@mui/icons-material/Save';
-import AssignmentIcon from '@mui/icons-material/Assignment';
-import { SURVEY, UPSERT_SURVEY, type QuestionType, type Survey, type SurveyKind } from './queries';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
+import {
+  CREATE_SURVEY, SURVEY_BY_ID, UPDATE_SURVEY,
+  type QuestionType, type Survey, type SurveyKind,
+} from './queries';
 import QuestionCard, { type DraftQuestion } from './QuestionCard';
+import ScopePicker, { type Scope } from './ScopePicker';
 
-const KINDS: SurveyKind[] = ['VENUE', 'HOST'];
 const blankByType = (type: QuestionType): DraftQuestion => ({ type, label: '', help: '', required: false, multi: false, options: type === 'MCQ' ? [''] : [] });
+const emptyScope: Scope = { super_category_id: '', category_id: '', sub_category_id: '' };
 
-/** Onboarding survey builder for a venue/host survey (one per kind). */
+/** Create / edit a single onboarding survey scoped to a taxonomy slot. */
 export default function SurveyBuilderPage() {
-  const params = useParams<{ kind: string }>();
-  const kind = (params.kind?.toUpperCase() as SurveyKind) || 'VENUE';
-  const valid = KINDS.includes(kind);
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  const isNew = !id;
 
-  const { data, loading, refetch } = useQuery<{ survey: Survey | null }>(SURVEY, { variables: { kind }, skip: !valid, fetchPolicy: 'cache-and-network' });
-  const [upsert, { loading: saving }] = useMutation(UPSERT_SURVEY);
+  const { data, loading } = useQuery<{ surveyById: Survey | null }>(SURVEY_BY_ID, { variables: { id }, skip: isNew, fetchPolicy: 'cache-and-network' });
+  const [createSurvey, { loading: creating }] = useMutation(CREATE_SURVEY);
+  const [updateSurvey, { loading: updating }] = useMutation(UPDATE_SURVEY);
+
+  const [kind, setKind] = useState<SurveyKind>('VENUE');
+  const [scope, setScope] = useState<Scope>(emptyScope);
   const [title, setTitle] = useState('');
+  const [isActive, setIsActive] = useState(true);
   const [questions, setQuestions] = useState<DraftQuestion[]>([]);
   const [addType, setAddType] = useState<QuestionType>('TEXT');
   const [snack, setSnack] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const s = data?.survey;
-    setTitle(s?.title ?? '');
-    setQuestions((s?.questions ?? []).map((q) => ({ qid: q.qid, type: q.type, label: q.label, help: q.help ?? '', required: q.required, multi: q.multi, options: q.options ?? [] })));
+    const s = data?.surveyById;
+    if (!s) return;
+    setKind(s.kind);
+    setScope({ super_category_id: s.super_category_id ?? '', category_id: s.category_id ?? '', sub_category_id: s.sub_category_id ?? '' });
+    setTitle(s.title ?? '');
+    setIsActive(s.is_active);
+    setQuestions((s.questions ?? []).map((q) => ({ qid: q.qid, type: q.type, label: q.label, help: q.help ?? '', required: q.required, multi: q.multi, options: q.options ?? [] })));
   }, [data]);
-
-  const heading = useMemo(() => (kind === 'VENUE' ? 'Venue Survey' : 'Host Survey'), [kind]);
-
-  if (!valid) return <Alert severity="error">Unknown survey kind.</Alert>;
 
   const move = (i: number, dir: -1 | 1) => {
     const j = i + dir;
@@ -55,30 +57,40 @@ export default function SurveyBuilderPage() {
 
   const save = async () => {
     setError(null);
+    const input = {
+      super_category_id: scope.super_category_id || null,
+      category_id: scope.category_id || null,
+      sub_category_id: scope.sub_category_id || null,
+      title,
+      is_active: isActive,
+      questions: questions.map((q) => ({ qid: q.qid, type: q.type, label: q.label, help: q.help, required: q.required, multi: q.multi, options: q.options })),
+    };
     try {
-      await upsert({
-        variables: {
-          kind,
-          input: {
-            title,
-            questions: questions.map((q) => ({ qid: q.qid, type: q.type, label: q.label, help: q.help, required: q.required, multi: q.multi, options: q.options })),
-          },
-        },
-      });
-      await refetch();
-      setSnack('Survey saved');
+      if (isNew) {
+        const res = await createSurvey({ variables: { input: { kind, ...input } } });
+        const newId = res.data?.createSurvey?.id;
+        setSnack('Survey created');
+        if (newId) navigate(`/surveys/${newId}/edit`, { replace: true });
+      } else {
+        await updateSurvey({ variables: { id, input } });
+        setSnack('Survey saved');
+      }
     } catch (e: any) {
       setError(e?.message ?? 'Could not save survey');
     }
   };
 
+  const saving = creating || updating;
+
   return (
     <Stack spacing={2.5}>
+      <Box>
+        <Button startIcon={<ArrowBackIcon />} size="small" onClick={() => navigate('/surveys')}>Back to Surveys</Button>
+      </Box>
       <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
-        <AssignmentIcon color="primary" />
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={800}>{heading}</Typography>
-          <Typography variant="body2" color="text.secondary">Shown before a user {kind === 'VENUE' ? 'registers a venue' : 'becomes a host'}. Responses appear in the user's admin profile.</Typography>
+          <Typography variant="h5" fontWeight={800}>{isNew ? 'New survey' : 'Edit survey'}</Typography>
+          <Typography variant="body2" color="text.secondary">Scope a survey to a category slot. Leave categories empty for the kind-level default.</Typography>
         </Box>
         <Button variant="contained" startIcon={<SaveIcon />} onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save survey'}</Button>
       </Stack>
@@ -89,7 +101,20 @@ export default function SurveyBuilderPage() {
         <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
       ) : (
         <>
-          <TextField size="small" label="Survey title" value={title} onChange={(e) => setTitle(e.target.value)} fullWidth />
+          <Card variant="outlined"><CardContent>
+            <Stack spacing={1.75}>
+              <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+                <TextField select size="small" label="Kind" value={kind} onChange={(e) => setKind(e.target.value as SurveyKind)} sx={{ minWidth: 160 }}>
+                  <MenuItem value="VENUE">Venue</MenuItem>
+                  <MenuItem value="HOST">Host</MenuItem>
+                </TextField>
+                <TextField size="small" label="Survey title" value={title} onChange={(e) => setTitle(e.target.value)} sx={{ flex: 1 }} fullWidth />
+                <FormControlLabel control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />} label="Active" />
+              </Stack>
+              <ScopePicker value={scope} onChange={setScope} emptyLabel="— Kind default —" />
+            </Stack>
+          </CardContent></Card>
+
           {questions.map((q, i) => (
             <QuestionCard
               key={q.qid ?? `new-${i}`}

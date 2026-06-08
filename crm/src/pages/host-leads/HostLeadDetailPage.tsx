@@ -29,6 +29,7 @@ import InstagramIcon from '@mui/icons-material/Instagram';
 import StickyNote2Icon from '@mui/icons-material/StickyNote2';
 import EventNoteIcon from '@mui/icons-material/EventNote';
 import ForumIcon from '@mui/icons-material/Forum';
+import AssignmentIcon from '@mui/icons-material/Assignment';
 import { HOST_LEAD } from '../../api/crm.gql';
 import type { HostLead } from '../../api/crm.types';
 import { PriorityChip, StatusChip } from '../../components/StatusChips';
@@ -43,6 +44,7 @@ import ManualLogsTab from '../../components/ManualLogsTab';
 import ExternalLink from '../../components/ExternalLink';
 import WebsitePagesTab from '../../components/website-pages-tab';
 import RemindersTab from '../../components/reminders-tab';
+import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
 import AskAiDrawer, { ASK_AI_WIDTH } from '../../components/ask-ai/AskAiDrawer';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import { parseApiError } from '../../utils/parseApiError';
@@ -194,6 +196,13 @@ export default function HostLeadDetailPage() {
           <ServicesGrid services={lead.services_offered} />
         </LeadDetailCard>
       ),
+    },
+
+    {
+      value: 'survey',
+      label: 'Survey',
+      icon: <AssignmentIcon fontSize="small" />,
+      render: () => <LeadSurveyTab entity="HOST_LEAD" leadId={lead.id} />,
     },
 
     {

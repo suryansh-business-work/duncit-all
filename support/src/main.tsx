@@ -7,6 +7,7 @@ import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider, PortalModeGate } from '@duncit/user-context';
 import { urlConfigs } from './config/url-configs';
+import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
 import { apolloClient } from './apollo';
 import { ColorModeProvider } from './ColorModeContext';
 import { appConfig } from './config/app-config';
@@ -34,6 +35,10 @@ const loadUser = async () => {
   const { data } = await apolloClient.query({ query: ME_QUERY, fetchPolicy: 'network-only' });
   return data?.me ?? null;
 };
+
+// Ship console errors + structured logs to SignOz (via the server /logs ingest).
+configureLogs(httpTransport(urlConfigs.graphqlUrl.replace(/\/graphql$/, '/logs')));
+captureConsole(logs.portal.support);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

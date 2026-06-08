@@ -19,5 +19,10 @@ export const PORTALS = [
   'hr',
   'employee',
   'ads-portal',
+  'partners-app',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
+
+// Public/marketing static sites (Astro). logs.website.<name>.
+export const WEBSITES = ['duncit', 'partners', 'ads', 'status'] as const;
+export type WebsiteKey = (typeof WEBSITES)[number];

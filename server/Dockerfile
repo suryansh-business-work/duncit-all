@@ -65,4 +65,4 @@ COPY --from=builder /repo/server/dist ./server/dist
 ENV PORT=2001
 EXPOSE 2001
 WORKDIR /app/server
-CMD ["node", "dist/index.js"]
+CMD ["node", "-r", "./dist/tracing.js", "dist/index.js"]

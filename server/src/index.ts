@@ -1,5 +1,6 @@
 import 'dotenv/config';
 import './otel'; // OTLP log export to SignOz (gated on OTEL_EXPORTER_OTLP_ENDPOINT)
+import { logs, ingestRemoteLog } from './observability/log';
 import http from 'http';
 import cors from 'cors';
 import express from 'express';
@@ -78,8 +79,11 @@ async function bootstrap() {
         async didEncounterErrors(ctx) {
           for (const err of ctx.errors) {
             const code = (err.extensions?.code as string | undefined) ?? 'GRAPHQL_ERROR';
-            // eslint-disable-next-line no-console
-            console.error(`[graphql] ${ctx.operationName ?? 'anonymous'} ${code}: ${err.message}`);
+            logs.server.error('graphql', ctx.operationName ?? 'anonymous', {
+              code,
+              message: err.message,
+              path: err.path?.join('.'),
+            });
           }
         },
       };
@@ -126,6 +130,13 @@ async function bootstrap() {
   app.use('/twilio', buildCallWebhookRouter());
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
+
+  // Structured log ingest for the frontend apps (@duncit/logs httpTransport).
+  // Defensive + always 204; nginx adds CORS for server.duncit.com.
+  app.post('/logs', express.json({ limit: '256kb' }), (req, res) => {
+    ingestRemoteLog(req.body);
+    res.status(204).end();
+  });
 
   // Server-Sent Events stream for real-time notifications.
   // EventSource cannot send custom headers, so we accept the JWT via

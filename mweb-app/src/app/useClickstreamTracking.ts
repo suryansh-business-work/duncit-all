@@ -1,7 +1,7 @@
 import { useEffect } from 'react';
 import { gql, useMutation } from '@apollo/client';
 
-type EventType = 'PAGE_VIEW' | 'IMPRESSION' | 'CLICK' | 'TOUCH';
+type EventType = 'PAGE_VIEW' | 'IMPRESSION' | 'CLICK';
 
 interface Args {
   enabled: boolean;
@@ -15,15 +15,19 @@ const RECORD_APP_EVENT = gql`
   }
 `;
 
-const trackableSelector = 'a,button,[role="button"],[data-track-impression]';
+// Core-only tracking. To keep request volume low we send:
+//   - one PAGE_VIEW per route change,
+//   - a CLICK only when a real interactive control was clicked,
+//   - an IMPRESSION only for elements explicitly opted in via
+//     [data-track-impression].
+// We deliberately do NOT track raw clicks on non-interactive areas, touch
+// events, auto-impressions on every link/button, or rescan the DOM on every
+// mutation — that was firing dozens of RecordAppEvent calls per interaction.
+const clickSelector = 'a, button, [role="button"]';
+const impressionSelector = '[data-track-impression]';
 
 function textFor(target: Element) {
   return (target.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 240);
-}
-
-function closestTrackable(target: EventTarget | null) {
-  if (!(target instanceof Element)) return null;
-  return target.closest(trackableSelector) || target;
 }
 
 function describeTarget(target: Element | null) {
@@ -72,57 +76,44 @@ export function useClickstreamTracking({ enabled, path, superCategory }: Args) {
     }).catch(() => {});
   };
 
+  // Core: one PAGE_VIEW per route.
   useEffect(() => {
     if (!enabled) return;
     send('PAGE_VIEW', document.body, { source: 'route_change' });
-    send('IMPRESSION', document.body, { source: 'screen' });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, path, superCategory]);
 
+  // CLICK only for real interactive controls (buttons / links / role=button).
   useEffect(() => {
     if (!enabled) return;
     const onClick = (event: MouseEvent) => {
-      send('CLICK', closestTrackable(event.target), {
-        pointer: 'mouse',
-        x: event.clientX,
-        y: event.clientY,
-      });
-    };
-    const onTouch = (event: TouchEvent) => {
-      const touch = event.touches[0];
-      send('TOUCH', closestTrackable(event.target), {
-        pointer: 'touch',
-        x: touch?.clientX ?? 0,
-        y: touch?.clientY ?? 0,
-      });
+      const control = event.target instanceof Element ? event.target.closest(clickSelector) : null;
+      if (!control) return; // ignore non-interactive clicks
+      send('CLICK', control, { pointer: 'mouse' });
     };
     document.addEventListener('click', onClick, true);
-    document.addEventListener('touchstart', onTouch, { capture: true, passive: true });
-    return () => {
-      document.removeEventListener('click', onClick, true);
-      document.removeEventListener('touchstart', onTouch, true);
-    };
+    return () => document.removeEventListener('click', onClick, true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, path, superCategory]);
 
+  // IMPRESSION only for elements explicitly opted in with [data-track-impression].
   useEffect(() => {
     if (!enabled || typeof IntersectionObserver === 'undefined') return;
+    const targets = document.querySelectorAll(impressionSelector);
+    if (targets.length === 0) return;
     const seen = new WeakSet<Element>();
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (!entry.isIntersecting || seen.has(entry.target)) return;
-        seen.add(entry.target);
-        send('IMPRESSION', entry.target, { source: 'element_visible' });
-      });
-    }, { threshold: 0.6 });
-    const scan = () => document.querySelectorAll(trackableSelector).forEach((node) => observer.observe(node));
-    const mutations = new MutationObserver(scan);
-    scan();
-    mutations.observe(document.body, { childList: true, subtree: true });
-    return () => {
-      mutations.disconnect();
-      observer.disconnect();
-    };
+    const observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (!entry.isIntersecting || seen.has(entry.target)) return;
+          seen.add(entry.target);
+          send('IMPRESSION', entry.target, { source: 'element_visible' });
+        });
+      },
+      { threshold: 0.6 },
+    );
+    targets.forEach((node) => observer.observe(node));
+    return () => observer.disconnect();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabled, path, superCategory]);
 }

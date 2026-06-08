@@ -74,6 +74,8 @@ export function UserProvider({
   isAuthedRef.current = isAuthed;
   const onLogoutRef = useRef(onLogout);
   onLogoutRef.current = onLogout;
+  // Timestamp of the last `me` load — used to throttle focus/visibility refreshes.
+  const lastLoadedAtRef = useRef(0);
 
   const persist = useCallback(
     (next: DuncitUser | null) => {
@@ -114,6 +116,7 @@ export function UserProvider({
     } finally {
       setLoading(false);
       setLoadAttempted(true);
+      lastLoadedAtRef.current = Date.now();
     }
   }, [persist]);
 
@@ -161,11 +164,19 @@ export function UserProvider({
   useEffect(() => {
     if (!isAuthed()) return;
     void refetch();
-    const onFocus = () => {
-      if (isAuthedRef.current()) void refetch();
+    // Refresh `me` when the user RETURNS to a tab that's been hidden for a while
+    // (e.g. left open overnight) so roles / profile stay current. Uses
+    // visibilitychange — NOT window 'focus', which mobile taps fire constantly —
+    // and throttles to once per 5 min so ordinary clicks never re-hit the API.
+    const MIN_REFRESH_MS = 5 * 60 * 1000;
+    const onVisible = () => {
+      if (document.visibilityState !== 'visible') return;
+      if (!isAuthedRef.current()) return;
+      if (Date.now() - lastLoadedAtRef.current < MIN_REFRESH_MS) return;
+      void refetch();
     };
-    window.addEventListener('focus', onFocus);
-    return () => window.removeEventListener('focus', onFocus);
+    document.addEventListener('visibilitychange', onVisible);
+    return () => document.removeEventListener('visibilitychange', onVisible);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 

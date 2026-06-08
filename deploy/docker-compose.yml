@@ -7,8 +7,16 @@ services:
     restart: unless-stopped
     env_file:
       - /opt/duncit/server.env
+    environment:
+      # Ship backend logs (console.* + GraphQL errors) to SignOz over the shared
+      # signoz-net. otel.ts is gated on this var; unset = telemetry off.
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4318
+      OTEL_SERVICE_NAME: duncit-server
     ports:
       - "127.0.0.1:2001:2001"
+    networks:
+      - default
+      - signoz-net
     healthcheck:
       test: ["CMD-SHELL", "wget -qO- http://localhost:2001/health || exit 1"]
       interval: 30s
@@ -162,3 +170,12 @@ services:
     restart: unless-stopped
     ports:
       - "127.0.0.1:2019:80"
+
+networks:
+  # Implicit project network for the duncit stack.
+  default:
+  # SignOz's network (created by its own compose at /opt/signoz). The server
+  # joins it to reach signoz-otel-collector:4318 for OTLP log export.
+  signoz-net:
+    external: true
+    name: signoz-net

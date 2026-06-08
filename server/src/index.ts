@@ -1,8 +1,10 @@
 import 'dotenv/config';
+import './otel'; // OTLP log export to SignOz (gated on OTEL_EXPORTER_OTLP_ENDPOINT)
 import http from 'http';
 import cors from 'cors';
 import express from 'express';
 import { ApolloServer } from '@apollo/server';
+import type { ApolloServerPlugin } from '@apollo/server';
 import { expressMiddleware } from '@apollo/server/express4';
 import { ApolloServerPluginDrainHttpServer } from '@apollo/server/plugin/drainHttpServer';
 import { connectDB } from './config/db';
@@ -68,10 +70,26 @@ async function bootstrap() {
   // Trust the nginx reverse proxy so req.ip / X-Forwarded-* are honoured.
   app.set('trust proxy', 1);
 
+  // Surface GraphQL errors (failed queries / INTERNAL_SERVER_ERROR) as ERROR
+  // logs. console.error is forwarded to SignOz by ./otel when telemetry is on.
+  const graphqlErrorLogger: ApolloServerPlugin<GraphQLContext> = {
+    async requestDidStart() {
+      return {
+        async didEncounterErrors(ctx) {
+          for (const err of ctx.errors) {
+            const code = (err.extensions?.code as string | undefined) ?? 'GRAPHQL_ERROR';
+            // eslint-disable-next-line no-console
+            console.error(`[graphql] ${ctx.operationName ?? 'anonymous'} ${code}: ${err.message}`);
+          }
+        },
+      };
+    },
+  };
+
   const apollo = new ApolloServer<GraphQLContext>({
     typeDefs,
     resolvers,
-    plugins: [ApolloServerPluginDrainHttpServer({ httpServer })],
+    plugins: [ApolloServerPluginDrainHttpServer({ httpServer }), graphqlErrorLogger],
   });
 
   await apollo.start();

@@ -109,7 +109,21 @@
       "Bash(echo \"CODEGEN_EXIT=$?\")",
       "Bash(awk -F'\\\\t' '$2!=\"pass\"{print}')",
       "Bash(echo \"CRM_TSC=$?\")",
-      "Bash(echo \"SERVER_TSC=$?\")"
+      "Bash(echo \"SERVER_TSC=$?\")",
+      "PowerShell($env:EXPO_TOKEN = 'rLtL-WTF3IBQ1mzN7MIgu7_ViR0QsZZHkg9thWHe'; Set-Location \"c:\\\\Users\\\\Suryansh\\\\Desktop\\\\Projects\\\\duncit.com\\\\project\\\\duncit-mobile-app\"; npx --yes eas-cli@latest build:view 3fbe3ab1-e613-4f1a-90bc-87d409c3e25d)",
+      "PowerShell($env:EXPO_TOKEN = 'rLtL-WTF3IBQ1mzN7MIgu7_ViR0QsZZHkg9thWHe'; Set-Location \"c:\\\\Users\\\\Suryansh\\\\Desktop\\\\Projects\\\\duncit.com\\\\project\\\\duncit-mobile-app\"; $j = npx --yes eas-cli@latest build:view 3fbe3ab1-e613-4f1a-90bc-87d409c3e25d --json 2>$null | Out-String; $b = $j | ConvertFrom-Json; Write-Output \"=== status ===\"; $b.status; Write-Output \"=== error ===\"; $b.error | ConvertTo-Json -Depth 5; Write-Output \"=== metrics/phase ===\"; $b.metrics | ConvertTo-Json -Depth 3)",
+      "PowerShell($env:EXPO_TOKEN = 'rLtL-WTF3IBQ1mzN7MIgu7_ViR0QsZZHkg9thWHe'; Set-Location \"c:\\\\Users\\\\Suryansh\\\\Desktop\\\\Projects\\\\duncit.com\\\\project\\\\duncit-mobile-app\"; $j = npx --yes eas-cli@latest build:view 3fbe3ab1-e613-4f1a-90bc-87d409c3e25d --json 2>$null | Out-String; $b = $j | ConvertFrom-Json; Write-Output \"=== top-level keys ===\"; $b.PSObject.Properties.Name; Write-Output \"=== logFiles / artifacts ===\"; $b.artifacts | ConvertTo-Json -Depth 4; Write-Output \"=== initiatingActor / project ===\"; $b.project | ConvertTo-Json -Depth 2)",
+      "PowerShell($env:EXPO_TOKEN = 'rLtL-WTF3IBQ1mzN7MIgu7_ViR0QsZZHkg9thWHe'; Set-Location \"c:\\\\Users\\\\Suryansh\\\\Desktop\\\\Projects\\\\duncit.com\\\\project\\\\duncit-mobile-app\"; $j = npx --yes eas-cli@latest build:view 3fbe3ab1-e613-4f1a-90bc-87d409c3e25d --json 2>$null | Out-String; $b = $j | ConvertFrom-Json; Write-Output \"=== logFiles ===\"; $b.logFiles | ConvertTo-Json -Depth 4)",
+      "PowerShell($env:EXPO_TOKEN = 'rLtL-WTF3IBQ1mzN7MIgu7_ViR0QsZZHkg9thWHe'; Set-Location \"c:\\\\Users\\\\Suryansh\\\\Desktop\\\\Projects\\\\duncit.com\\\\project\\\\duncit-mobile-app\"; $j = npx --yes eas-cli@latest build:view 3fbe3ab1-e613-4f1a-90bc-87d409c3e25d --json 2>$null | Out-String; $b = $j | ConvertFrom-Json; $url = $b.logFiles; $log = \\(Invoke-WebRequest -Uri $url -UseBasicParsing\\).Content; $log | Out-File -FilePath \"$env:TEMP\\\\eas-build-3fbe.log\" -Encoding utf8; Write-Output \\(\"log length chars: \" + $log.Length\\); Write-Output \"=== TAIL ===\"; \\($log -split \"`n\" | Select-Object -Last 60\\) -join \"`n\")",
+      "PowerShell($env:EXPO_TOKEN = 'rLtL-WTF3IBQ1mzN7MIgu7_ViR0QsZZHkg9thWHe'; Set-Location \"c:\\\\Users\\\\Suryansh\\\\Desktop\\\\Projects\\\\duncit.com\\\\project\\\\duncit-mobile-app\"; $j = npx --yes eas-cli@latest build:view 3fbe3ab1-e613-4f1a-90bc-87d409c3e25d --json 2>$null | Out-String; $b = $j | ConvertFrom-Json; $url = @\\($b.logFiles\\)[0]; $log = \\(Invoke-WebRequest -Uri $url -UseBasicParsing\\).Content; $log | Out-File -FilePath \"$env:TEMP\\\\eas-build-3fbe.log\" -Encoding utf8; Write-Output \\(\"log length chars: \" + $log.Length\\); Write-Output \"=== TAIL 70 ===\"; \\($log -split \"`n\" | Select-Object -Last 70\\) -join \"`n\")",
+      "Bash(node -e \"const p=require\\('c:/Users/Suryansh/Desktop/Projects/duncit.com/project/server/package.json'\\); console.log\\(JSON.stringify\\(p.scripts,null,1\\)\\)\")",
+      "Bash(git restore *)",
+      "Bash(git ls-tree *)",
+      "Bash(echo \"CODEGEN EXIT: $?\")",
+      "Bash(echo \"CRM TC EXIT: $?\")",
+      "Bash(echo \"MWEB TC EXIT: $?\")",
+      "Bash(echo \"TC EXIT: $?\")",
+      "Bash(npx astro *)"
     ],
     "deny": [],
     "ask": []

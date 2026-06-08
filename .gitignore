@@ -19,7 +19,3 @@ generated/
 # npm lockfiles (pnpm-lock.yaml is the source of truth)
 package-lock.json
 **/package-lock.json
-
-# Local Claude Code configuration
-.claude/
-

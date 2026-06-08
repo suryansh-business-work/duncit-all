@@ -11,6 +11,7 @@
     "export:web": "expo export --platform web --output-dir dist",
     "prebuild": "expo prebuild",
     "codegen": "graphql-codegen --config codegen.ts",
+    "eas-build-post-install": "npm run codegen",
     "lint": "eslint . --ext .ts,.tsx --max-warnings 0",
     "lint:fix": "eslint . --ext .ts,.tsx --fix",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,md}\"",

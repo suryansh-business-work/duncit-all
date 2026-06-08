@@ -113,10 +113,9 @@ async function passCategory() {
 beforeEach(() => mockRequest.mockReset());
 
 describe('OnboardingSurvey', () => {
-  it('shows the placeholder when survey + meeting are already done', async () => {
-    mockApi({ surveyDone: true, meetingDone: true });
+  it('goes straight to done when the meeting is already requested', async () => {
+    mockApi({ meetingDone: true });
     renderSurvey();
-    await passCategory();
     expect(await screen.findByTestId('placeholder-screen')).toBeOnTheScreen();
   });
 
@@ -171,10 +170,11 @@ describe('OnboardingSurvey', () => {
     );
   });
 
-  it('skips to the meeting step when the matched survey is already done', async () => {
+  it('re-prompts the survey even if it was answered before (until meeting is done)', async () => {
     mockApi({ surveyDone: true, meetingDone: false });
     renderSurvey();
     await passCategory();
-    expect(await screen.findByTestId('meeting-when')).toBeOnTheScreen();
+    // The survey is shown again rather than skipped to the meeting.
+    expect(await screen.findByText('About')).toBeOnTheScreen();
   });
 });

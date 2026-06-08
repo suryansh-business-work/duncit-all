@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { MeetingModel, type MeetingStatus } from './meeting.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { leadSurveyService } from './leadSurvey.service';
 import type { SurveyKind } from './survey.model';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
@@ -73,6 +74,15 @@ export const meetingService = {
       },
       { new: true, upsert: true, setDefaultsOnInsert: true },
     );
+    // Completing the gate (meeting requested) is what pushes the survey data
+    // into CRM as a lead. Best-effort — a sync failure must not block the
+    // user's meeting request.
+    try {
+      await leadSurveyService.syncFromGate(userId, kind);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[meeting.request] syncFromGate failed:', err);
+    }
     return pub(doc);
   },
 

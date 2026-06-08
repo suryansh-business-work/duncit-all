@@ -1,42 +1,65 @@
 import { useState } from 'react';
-import { useQuery } from '@apollo/client';
-import { Alert, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { useMutation, useQuery } from '@apollo/client';
+import {
+  Alert, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText,
+  DialogTitle, Divider, Snackbar, Stack,
+} from '@mui/material';
 import AssignmentIcon from '@mui/icons-material/Assignment';
-import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
+import EditNoteIcon from '@mui/icons-material/EditNote';
+import LinkIcon from '@mui/icons-material/Link';
 import { LeadDetailCard } from '../LeadDetailCard';
-import { LEAD_SURVEY, type LeadSurveyEntity, type LeadSurveyResult } from './queries';
+import {
+  DELETE_LEAD_SURVEY_ENTRY,
+  GENERATE_LEAD_SURVEY_LINK,
+  LEAD_SURVEY,
+  REVOKE_LEAD_SURVEY_LINK,
+  surveyLinkUrl,
+  type LeadSurveyAnswer,
+  type LeadSurveyEntity,
+  type LeadSurveyEntry,
+  type LeadSurveyResult,
+} from './queries';
 import LeadSurveyFields from './LeadSurveyFields';
+import LeadSurveyEntriesTable from './LeadSurveyEntriesTable';
+import { parseApiError } from '../../utils/parseApiError';
 
 interface Props {
   entity: LeadSurveyEntity;
   leadId: string;
 }
 
-const formatDate = (iso?: string | null) => {
-  if (!iso) return null;
-  const d = new Date(iso);
-  return Number.isNaN(d.getTime()) ? null : d.toLocaleString();
-};
-
-/**
- * "Survey" tab on a venue/host lead. Generates the onboarding survey matching
- * the lead's Super → Category → Sub and saves the filled response on the lead.
- */
+/** "Survey" tab on a venue/host lead: fill (stepper), share a link, and the full log. */
 export default function LeadSurveyTab({ entity, leadId }: Props) {
-  const [open, setOpen] = useState(false);
+  const [filling, setFilling] = useState(false);
+  const [seed, setSeed] = useState<LeadSurveyAnswer[] | undefined>(undefined);
+  const [snack, setSnack] = useState<string | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+
   const { data, loading, refetch } = useQuery<LeadSurveyResult>(LEAD_SURVEY, {
     variables: { entity, lead_id: leadId },
     fetchPolicy: 'cache-and-network',
   });
+  const [generate, { loading: generating }] = useMutation(GENERATE_LEAD_SURVEY_LINK);
+  const [revoke, { loading: revoking }] = useMutation(REVOKE_LEAD_SURVEY_LINK);
+  const [del, { loading: deleting }] = useMutation(DELETE_LEAD_SURVEY_ENTRY);
 
   const survey = data?.leadSurvey?.survey ?? null;
-  const response = data?.leadSurvey?.response ?? null;
-  const savedAt = formatDate(response?.submitted_at);
-  const showForm = open || !!response;
+  const entries = data?.leadSurvey?.entries ?? [];
 
-  if (loading && !data) {
-    return <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>;
-  }
+  const run = async (fn: () => Promise<unknown>, ok?: string) => {
+    setError(null);
+    try { await fn(); if (ok) setSnack(ok); await refetch(); } catch (e) { setError(parseApiError(e)); }
+  };
+
+  const openFill = (entry?: LeadSurveyEntry) => { setSeed(entry?.answers); setFilling(true); };
+  const onGenerateLink = () => survey && run(async () => {
+    const res = await generate({ variables: { entity, lead_id: leadId, survey_id: survey.id } });
+    const token = res.data?.generateLeadSurveyLink?.token as string | undefined;
+    if (token) await navigator.clipboard?.writeText(surveyLinkUrl(token)).catch(() => undefined);
+  }, 'Link generated & copied to clipboard');
+
+  if (loading && !data) return <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>;
 
   if (!survey) {
     return (
@@ -52,21 +75,55 @@ export default function LeadSurveyTab({ entity, leadId }: Props) {
   return (
     <LeadDetailCard
       title={survey.title || 'Survey'}
-      subtitle={savedAt ? `Last saved ${savedAt}${response?.submitted_by ? ` by ${response.submitted_by}` : ''}` : 'Generated from the matching onboarding survey'}
+      subtitle="Fill it as a stepper, share a public link, or click a row to fill/edit — every generation is logged."
       icon={<AssignmentIcon color="primary" />}
-    >
-      {showForm ? (
-        <LeadSurveyFields entity={entity} leadId={leadId} survey={survey} response={response} onSaved={() => refetch()} />
-      ) : (
-        <Stack spacing={1.5} alignItems="flex-start">
-          <Typography variant="body2" color="text.secondary">
-            A {survey.questions.length}-question survey is available for this lead's category.
-          </Typography>
-          <Button variant="contained" startIcon={<AutoAwesomeIcon />} onClick={() => setOpen(true)}>
-            Generate survey
+      action={
+        <Stack direction="row" spacing={1}>
+          <Button size="small" startIcon={<EditNoteIcon />} variant={filling ? 'contained' : 'outlined'} onClick={() => (filling ? setFilling(false) : openFill())}>
+            {filling ? 'Close form' : 'Fill manually'}
+          </Button>
+          <Button size="small" startIcon={<LinkIcon />} variant="outlined" disabled={generating} onClick={onGenerateLink}>
+            Generate link
           </Button>
         </Stack>
-      )}
+      }
+    >
+      <Stack spacing={2}>
+        {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
+        {filling && (
+          <>
+            <LeadSurveyFields
+              entity={entity}
+              leadId={leadId}
+              survey={survey}
+              initialAnswers={seed}
+              onSaved={() => { setFilling(false); setSnack('Survey saved'); refetch(); }}
+            />
+            <Divider />
+          </>
+        )}
+        <LeadSurveyEntriesTable
+          entries={entries}
+          survey={survey}
+          onRevoke={(id) => run(() => revoke({ variables: { entry_id: id } }))}
+          onDelete={(id) => setConfirmDelete(id)}
+          onFill={openFill}
+          revoking={revoking}
+          deleting={deleting}
+        />
+      </Stack>
+
+      <Dialog open={!!confirmDelete} onClose={() => setConfirmDelete(null)}>
+        <DialogTitle>Delete survey entry?</DialogTitle>
+        <DialogContent><DialogContentText>This permanently removes this generation/response from the log.</DialogContentText></DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDelete(null)}>Cancel</Button>
+          <Button color="error" variant="contained" disabled={deleting} onClick={() => { const id = confirmDelete!; setConfirmDelete(null); run(() => del({ variables: { entry_id: id } })); }}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
+      <Snackbar open={!!snack} autoHideDuration={3000} onClose={() => setSnack(null)} message={snack ?? ''} />
     </LeadDetailCard>
   );
 }

@@ -30,6 +30,7 @@ import { websiteContentService } from '@modules/content/websiteContent/websiteCo
 import { userService } from '@modules/access/user/user.service';
 import { marketingService } from '@modules/crm/marketing/marketing.service';
 import { crmService } from '@modules/crm/crm/crm.service';
+import { surveyService } from '@modules/survey/survey.service';
 
 async function safeSeed(name: string, fn: () => Promise<void>) {
   try {
@@ -52,6 +53,7 @@ async function bootstrap() {
   await safeSeed('websiteContent', () => websiteContentService.seedDefaults());
   await safeSeed('marketing', () => marketingService.resumeSchedules());
   await safeSeed('crmServices', () => crmService.seedServiceDefaults());
+  await safeSeed('surveyIndexes', () => surveyService.syncIndexes());
   await safeSeed('crmServicesOfferedSlugs', async () => {
     const { serviceOfferedService } = await import('@modules/crm/serviceOffered/serviceOffered.service');
     await serviceOfferedService.backfillSlugs();

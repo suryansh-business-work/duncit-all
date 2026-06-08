@@ -45,6 +45,7 @@ import ExternalLink from '../../components/ExternalLink';
 import WebsitePagesTab from '../../components/website-pages-tab';
 import RemindersTab from '../../components/reminders-tab';
 import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
+import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox';
 import AskAiDrawer, { ASK_AI_WIDTH } from '../../components/ask-ai/AskAiDrawer';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import { parseApiError } from '../../utils/parseApiError';
@@ -287,6 +288,7 @@ export default function HostLeadDetailPage() {
                 {lead.super_category?.name && (
                   <Chip size="small" color="primary" label={lead.super_category.name} variant="outlined" />
                 )}
+                {lead.matched_user && <MatchedUserChip matched={lead.matched_user} />}
                 {(lead.interests ?? []).slice(0, 2).map((t) => (
                   <Chip key={t} size="small" label={t} variant="outlined" />
                 ))}
@@ -327,6 +329,8 @@ export default function HostLeadDetailPage() {
           </Stack>
         </CardContent>
       </Card>
+
+      {lead.matched_user && <MatchedUserBox matched={lead.matched_user} />}
 
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
         <LeadStatTile

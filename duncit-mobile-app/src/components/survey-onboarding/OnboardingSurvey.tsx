@@ -1,4 +1,5 @@
 import { type ComponentProps } from 'react';
+import { Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -7,6 +8,7 @@ import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { AppBackground } from '@/components/AppBackground';
 import { PlaceholderScreen } from '@/components/PlaceholderScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useBranding } from '@/hooks/useBranding';
 import type { SurveyKind } from '@/graphql/onboarding-survey';
 import { useOnboardingFlow } from './useOnboardingFlow';
 import { CategoryPhase } from './CategoryPhase';
@@ -26,6 +28,8 @@ interface Props {
 export function OnboardingSurvey({ kind, title, subtitle, icon }: Props) {
   const navigation = useNavigation();
   const { color: ink } = useThemeColors();
+  const { data: brandingData } = useBranding();
+  const logoUrl = brandingData?.branding?.logo_url;
   const flow = useOnboardingFlow(kind);
 
   if (flow.phase === 'loading') {
@@ -53,6 +57,14 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Props) {
     <YStack flex={1} testID="onboarding-survey">
       <AppBackground />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+        {logoUrl ? (
+          <XStack justifyContent="center" paddingTop={8}>
+            <Image
+              source={{ uri: logoUrl }}
+              style={{ height: 28, width: 120, resizeMode: 'contain' }}
+            />
+          </XStack>
+        ) : null}
         <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
           <XStack
             role="button"
@@ -86,6 +98,8 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Props) {
         )}
         {flow.phase === 'meeting' && (
           <MeetingPhase
+            survey={flow.survey}
+            answer={flow.answer}
             when={flow.when}
             setWhen={flow.setWhen}
             notes={flow.notes}

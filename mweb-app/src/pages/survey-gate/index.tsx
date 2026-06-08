@@ -5,7 +5,6 @@ import { Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mu
 import {
   ACTIVE_SURVEY_FOR,
   MY_MEETING,
-  MY_SURVEY_RESPONSE,
   PARTNER_PATH,
   REQUEST_MEETING,
   SUBMIT_SURVEY_RESPONSE,
@@ -13,8 +12,10 @@ import {
   type SurveyKind,
 } from './queries';
 import CategoryStep, { type CategoryScope } from './CategoryStep';
-import SurveyForm, { type SurveyAnswerInput } from './SurveyForm';
+import SurveyStepper, { type SurveyAnswerInput } from './SurveyStepper';
+import SubmittedSummary from './SubmittedSummary';
 import MeetingForm, { type MeetingInput } from './MeetingForm';
+import AuthLogo from '../../components/AuthLogo';
 
 type Step = 'loading' | 'category' | 'survey' | 'meeting' | 'proceed';
 
@@ -31,13 +32,13 @@ export default function SurveyGatePage() {
   const next = PARTNER_PATH[kind] ?? '/hosts-venues';
   const [step, setStep] = useState<Step>('loading');
   const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
+  const [submittedAnswers, setSubmittedAnswers] = useState<SurveyAnswerInput[]>([]);
   const [resolving, setResolving] = useState(false);
 
   const proceed = () => navigate(next, { replace: true });
 
   const { data: meet, loading: meetLoading } = useQuery<{ myMeeting: { id: string } | null }>(MY_MEETING, { variables: { kind }, skip: !valid, fetchPolicy: 'network-only' });
   const [resolveSurvey] = useLazyQuery<{ activeSurveyFor: ActiveSurvey | null }>(ACTIVE_SURVEY_FOR, { fetchPolicy: 'network-only' });
-  const [checkResponse] = useLazyQuery<{ mySurveyResponse: { survey_id: string } | null }>(MY_SURVEY_RESPONSE, { fetchPolicy: 'network-only' });
   const [submitSurvey, { loading: submittingSurvey }] = useMutation(SUBMIT_SURVEY_RESPONSE);
   const [requestMeeting, { loading: requesting }] = useMutation(REQUEST_MEETING);
 
@@ -46,8 +47,11 @@ export default function SurveyGatePage() {
   useEffect(() => {
     if (!valid) { navigate('/hosts-venues', { replace: true }); return; }
     if (meetLoading) return;
+    // Once the meeting is requested the gate is satisfied — proceed without
+    // re-prompting. Otherwise re-ask category → survey → meeting every visit.
+    if (meetingDone) { proceed(); return; }
     setStep('category');
-  }, [valid, meetLoading]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [valid, meetLoading, meetingDone]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const afterSurvey = () => {
     if (meetingDone) proceed();
@@ -60,10 +64,9 @@ export default function SurveyGatePage() {
       const { data } = await resolveSurvey({ variables: { kind, ...scope } });
       const s = data?.activeSurveyFor ?? null;
       setSurvey(s);
-      if (s) {
-        const { data: r } = await checkResponse({ variables: { survey_id: s.id } });
-        if (!r?.mySurveyResponse) { setStep('survey'); return; }
-      }
+      // Re-prompt the survey on every visit until the meeting is requested — we
+      // no longer skip it just because a response was submitted before.
+      if (s) { setStep('survey'); return; }
       afterSurvey();
     } finally {
       setResolving(false);
@@ -71,6 +74,7 @@ export default function SurveyGatePage() {
   };
 
   const onSurvey = async (answers: SurveyAnswerInput[]) => {
+    setSubmittedAnswers(answers);
     if (survey) {
       try { await submitSurvey({ variables: { survey_id: survey.id, answers } }); } catch { /* don't block */ }
     }
@@ -99,13 +103,19 @@ export default function SurveyGatePage() {
     <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 } }}>
       <Card variant="outlined" sx={{ borderRadius: 4 }}>
         <CardContent>
+          <AuthLogo />
           <Stack spacing={0.5} sx={{ mb: 1.5 }}>
             <Typography variant="h6" fontWeight={950}>{heading}</Typography>
             <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
           </Stack>
           {step === 'category' && <CategoryStep submitting={resolving} onContinue={onCategory} />}
-          {step === 'survey' && survey && <SurveyForm survey={survey} submitting={submittingSurvey} onSubmit={onSurvey} />}
-          {step === 'meeting' && <MeetingForm submitting={requesting} onSubmit={onMeeting} />}
+          {step === 'survey' && survey && <SurveyStepper survey={survey} submitting={submittingSurvey} onSubmit={onSurvey} />}
+          {step === 'meeting' && (
+            <>
+              {survey && <SubmittedSummary survey={survey} answers={submittedAnswers} />}
+              <MeetingForm submitting={requesting} onSubmit={onMeeting} />
+            </>
+          )}
         </CardContent>
       </Card>
     </Box>

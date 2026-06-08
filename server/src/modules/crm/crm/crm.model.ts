@@ -24,28 +24,6 @@ const serviceOfferedSchema = new Schema(
   { _id: false }
 );
 
-// A filled response to the onboarding survey matched to this lead's taxonomy.
-// Generated + saved by CRM staff on the venue/host detail page. The survey
-// definition itself lives in the `survey` module; here we only store answers.
-const surveyAnswerSchema = new Schema(
-  {
-    qid: { type: String, required: true },
-    value: { type: String, default: null },
-    values: { type: [String], default: [] },
-  },
-  { _id: false }
-);
-
-const leadSurveyResponseSchema = new Schema(
-  {
-    survey_id: { type: Schema.Types.ObjectId, ref: 'Survey', default: null },
-    answers: { type: [surveyAnswerSchema], default: [] },
-    submitted_at: { type: Date, default: null },
-    submitted_by: { type: String, default: null },
-  },
-  { _id: false }
-);
-
 const activitySchema = new Schema(
   {
     type: { type: String, enum: ACTIVITY_TYPES, required: true },
@@ -118,8 +96,6 @@ const venueLeadSchema = new Schema(
     // Free-form key/value bag for admin-defined dynamic fields. Mongoose's
     // Mixed lets us store any JSON the CrmDynamicField module surfaces.
     dynamic_values: { type: Schema.Types.Mixed, default: () => ({}) },
-    // Filled onboarding survey for this venue (see leadSurvey module).
-    survey_response: { type: leadSurveyResponseSchema, default: null },
 
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },
@@ -171,8 +147,6 @@ const hostLeadSchema = new Schema(
     tags: { type: [String], default: [] },
     profile_photo_url: { type: String, trim: true, default: '' },
     dynamic_values: { type: Schema.Types.Mixed, default: () => ({}) },
-    // Filled onboarding survey for this host (see leadSurvey module).
-    survey_response: { type: leadSurveyResponseSchema, default: null },
 
     lead_source: { type: String, default: '' },
     assigned_to: { type: String, trim: true, default: '' },

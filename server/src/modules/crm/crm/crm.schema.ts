@@ -145,12 +145,23 @@ export const crmTypeDefs = gql`
     icon: String
   }
 
+  "A Duncit user whose email/phone matches one of the lead's contacts (computed live)."
+  type CrmMatchedUser {
+    user_id: ID!
+    full_name: String
+    email: String
+    phone: String
+    profile_photo: String
+    matched_on: String!
+  }
+
   type VenueLead {
     id: ID!
     super_category_id: ID
     category_ids: [ID!]!
     sub_category_ids: [ID!]!
     super_category: CrmSuperCategoryRef
+    matched_user: CrmMatchedUser
     venue_name: String!
     venue_types: [String!]!
     venue_type_other: String
@@ -202,6 +213,7 @@ export const crmTypeDefs = gql`
     category_ids: [ID!]!
     sub_category_ids: [ID!]!
     super_category: CrmSuperCategoryRef
+    matched_user: CrmMatchedUser
     host_name: String!
     host_type: String
     organization_name: String

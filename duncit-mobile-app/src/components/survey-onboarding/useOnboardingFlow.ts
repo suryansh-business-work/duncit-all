@@ -4,13 +4,11 @@ import { toErrorMessage } from '@/utils/errors';
 import {
   ActiveSurveyForDocument,
   MyMeetingDocument,
-  MySurveyResponseDocument,
   RequestMeetingDocument,
   SubmitSurveyResponseDocument,
   type ActiveSurvey,
   type ActiveSurveyResult,
   type MyMeetingResult,
-  type MyResponseResult,
   type SurveyAnswerInput,
   type SurveyKind,
   type SurveyQuestion,
@@ -46,7 +44,9 @@ export function useOnboardingFlow(kind: SurveyKind) {
         );
         if (!alive) return;
         setMeetingDone(!!meet.myMeeting);
-        setPhase('category');
+        // Once the meeting is requested the gate is satisfied — go straight to
+        // done. Otherwise re-ask category → survey → meeting every visit.
+        setPhase(meet.myMeeting ? 'done' : 'category');
       } catch {
         if (alive) setPhase('done'); // never block on a load error
       }
@@ -77,16 +77,11 @@ export function useOnboardingFlow(kind: SurveyKind) {
       );
       const s = res.activeSurveyFor;
       setSurvey(s);
+      // Re-prompt the survey on every visit until the meeting is requested — we
+      // no longer skip it just because a response was submitted before.
       if (s) {
-        const mine = await graphqlRequest<MyResponseResult, { survey_id: string }>(
-          MySurveyResponseDocument,
-          { survey_id: s.id },
-          { auth: true },
-        );
-        if (!mine.mySurveyResponse) {
-          setPhase('survey');
-          return;
-        }
+        setPhase('survey');
+        return;
       }
       afterSurvey(meetingDone);
     } catch (e) {

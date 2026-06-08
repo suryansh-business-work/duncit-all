@@ -1,7 +1,14 @@
 import { Types } from 'mongoose';
 import { surveyService } from '../../survey.service';
 import { leadSurveyService } from '../../leadSurvey.service';
-import { VenueLeadModel } from '../../../crm/crm/crm.model';
+import { VenueLeadModel, HostLeadModel } from '../../../crm/crm/crm.model';
+import { UserModel } from '../../../access/user/user.model';
+
+const mkUser = (email: string, phone?: string) =>
+  UserModel.create({
+    auth: { email, phone: phone ? { number: phone, extension: '+91' } : undefined },
+    profile: { first_name: 'Asha', last_name: 'K' },
+  });
 
 const userId = new Types.ObjectId().toString();
 const superA = new Types.ObjectId().toString();
@@ -87,28 +94,69 @@ describe('surveyService integration', () => {
 });
 
 describe('leadSurveyService integration', () => {
-  it('generates the matching survey for a lead and saves a response on it', async () => {
-    const survey = await surveyService.create({
-      kind: 'VENUE',
-      super_category_id: superA,
-      questions: [{ type: 'TEXT', label: 'Stage size' }],
-    });
-    const lead = await VenueLeadModel.create({
-      super_category_id: new Types.ObjectId(superA),
-      venue_name: 'Test Hall',
-      city: 'Pune',
-      full_address: '1 Road',
-    });
+  const venueWith = async () => {
+    const survey = await surveyService.create({ kind: 'VENUE', super_category_id: superA, questions: [{ type: 'TEXT', label: 'Stage size' }] });
+    const lead = await VenueLeadModel.create({ super_category_id: new Types.ObjectId(superA), venue_name: 'Test Hall', city: 'Pune', full_address: '1 Road' });
+    return { survey: survey!, lead };
+  };
 
+  it('matches the survey and logs a MANUAL entry on manual save', async () => {
+    const { survey, lead } = await venueWith();
     const generated = await leadSurveyService.forLead('VENUE_LEAD', String(lead._id));
-    expect(generated.survey!.id).toBe(survey!.id);
-    expect(generated.response).toBeNull();
+    expect(generated.survey!.id).toBe(survey.id);
+    expect(generated.entries).toHaveLength(0);
 
     const qid = generated.survey!.questions[0].qid;
-    await leadSurveyService.save('VENUE_LEAD', String(lead._id), survey!.id, [{ qid, value: 'Large' }], 'staff-1');
+    await leadSurveyService.saveManual('VENUE_LEAD', String(lead._id), survey.id, [{ qid, value: 'Large' }], 'staff-1');
 
     const after = await leadSurveyService.forLead('VENUE_LEAD', String(lead._id));
-    expect(after.response!.answers[0]).toMatchObject({ qid, value: 'Large' });
-    expect(after.response!.submitted_by).toBe('staff-1');
+    expect(after.entries).toHaveLength(1);
+    expect(after.entries[0]).toMatchObject({ source: 'MANUAL', filled: true, submitted_by: 'staff-1' });
+    expect(after.entries[0].answers[0]).toMatchObject({ qid, value: 'Large' });
+  });
+
+  it('generates a public link, fills it by token, then revoking kills it', async () => {
+    const { survey, lead } = await venueWith();
+    const link = await leadSurveyService.generateLink('VENUE_LEAD', String(lead._id), survey.id, 'staff-1');
+    expect(link.token).toBeTruthy();
+    expect(link.filled).toBe(false);
+
+    const pub = await leadSurveyService.byToken(link.token!);
+    expect(pub.survey!.id).toBe(survey.id);
+    expect(pub.lead_name).toBe('Test Hall');
+    expect(pub.already_filled).toBe(false);
+
+    const qid = pub.survey!.questions[0].qid;
+    await leadSurveyService.submitByToken(link.token!, [{ qid, value: 'Public answer' }]);
+
+    const after = await leadSurveyService.forLead('VENUE_LEAD', String(lead._id));
+    const entry = after.entries.find((e) => e.source === 'LINK')!;
+    expect(entry).toMatchObject({ filled: true, submitted_by: 'external' });
+
+    await leadSurveyService.revokeLink(link.id);
+    await expect(leadSurveyService.byToken(link.token!)).rejects.toThrow(/invalid|revoked/i);
+  });
+
+  it('syncFromGate creates a host lead + APP entry from the user survey response', async () => {
+    const user = await mkUser('host@example.com', '9990001112');
+    const survey = await surveyService.create({ kind: 'HOST', super_category_id: superA, questions: [{ type: 'TEXT', label: 'Org' }] });
+    const qid = survey!.questions[0].qid;
+    await surveyService.submit(String(user._id), survey!.id, [{ qid, value: 'My Org' }]);
+
+    await leadSurveyService.syncFromGate(String(user._id), 'HOST');
+
+    const lead: any = await HostLeadModel.findOne({ 'contacts.email': 'host@example.com' }).lean();
+    expect(lead).toBeTruthy();
+    const forLead = await leadSurveyService.forLead('HOST_LEAD', String(lead._id));
+    expect(forLead.entries).toHaveLength(1);
+    expect(forLead.entries[0]).toMatchObject({ source: 'APP', filled: true });
+    expect(forLead.entries[0].answers[0]).toMatchObject({ qid, value: 'My Org' });
+  });
+
+  it('matchedUserForLead links a lead contact to a Duncit user by email', async () => {
+    const user = await mkUser('lead@example.com');
+    const lead = await VenueLeadModel.create({ venue_name: 'V', city: 'P', full_address: '1', contacts: [{ email: 'lead@example.com' }] });
+    const match = await leadSurveyService.matchedUserForLead(lead.toObject());
+    expect(match).toMatchObject({ user_id: String(user._id), matched_on: 'EMAIL' });
   });
 });

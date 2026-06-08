@@ -177,12 +177,25 @@ export const surveyService = {
       return pubSurvey(doc, await categoryNameMap([doc]));
     } catch (err: any) {
       if (err?.code === 11000) {
-        throw new GraphQLError('A survey already exists for this category slot — edit it instead', {
-          extensions: { code: 'CONFLICT' },
-        });
+        throw new GraphQLError(
+          `A ${input.kind} survey already exists for this exact category slot — edit that one instead of creating a new one.`,
+          { extensions: { code: 'CONFLICT' } }
+        );
       }
       throw err;
     }
+  },
+
+  /**
+   * Reconcile survey indexes with the current schema. Drops the legacy
+   * `kind_1` (surveys) and `user_id_1_kind_1` (responses) unique indexes that
+   * Mongoose leaves behind from the pre-scope schema, then builds the compound
+   * indexes. Run on boot so adding a 2nd survey per kind works without the
+   * manual `migrate:survey-scope` step. Idempotent.
+   */
+  async syncIndexes() {
+    await SurveyModel.syncIndexes();
+    await SurveyResponseModel.syncIndexes();
   },
 
   /** Update an existing survey by id (scope + questions). */

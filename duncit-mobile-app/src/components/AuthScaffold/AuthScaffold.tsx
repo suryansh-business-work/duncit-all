@@ -5,7 +5,6 @@ import { Text, YStack } from 'tamagui';
 import { auth } from '@duncit/auth-tokens';
 
 import { AuthBackground } from '@/components/AuthBackground';
-import { AuthCard } from '@/components/AuthCard';
 import { AuthLogo } from '@/components/AuthLogo';
 
 export interface AuthScaffoldProps {
@@ -18,9 +17,9 @@ export interface AuthScaffoldProps {
 }
 
 /**
- * Shared auth screen layout — gradient backdrop → elevated gradient card →
- * shared brand logo → heading + subtitle → screen content. All brand surfaces
- * resolve from @duncit/auth-tokens.
+ * Shared auth screen layout — full-screen gradient backdrop with the form sitting
+ * directly on it (no card/box) → shared brand logo → heading + subtitle → screen
+ * content. All brand surfaces resolve from @duncit/auth-tokens.
  */
 export function AuthScaffold({ title, accentWord, subtitle, children, testID }: AuthScaffoldProps) {
   return (
@@ -30,12 +29,12 @@ export function AuthScaffold({ title, accentWord, subtitle, children, testID }: 
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: 'center',
-            paddingHorizontal: 20,
+            paddingHorizontal: 24,
             paddingVertical: 40,
           }}
           keyboardShouldPersistTaps="handled"
         >
-          <AuthCard>
+          <YStack width="100%" maxWidth={460} alignSelf="center">
             <YStack alignItems="center" gap={8}>
               <AuthLogo />
               <Text textAlign="center" fontSize={30} fontWeight="900" color="$color">
@@ -49,7 +48,7 @@ export function AuthScaffold({ title, accentWord, subtitle, children, testID }: 
             <YStack marginTop={20} gap={16}>
               {children}
             </YStack>
-          </AuthCard>
+          </YStack>
         </ScrollView>
       </SafeAreaView>
     </AuthBackground>

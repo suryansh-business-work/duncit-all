@@ -1,21 +1,22 @@
-import { useState } from 'react';
+import { useCallback, useRef, useState } from 'react';
 import { Share } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { PodAccordions } from '@/components/details/PodAccordions';
+import { PodBookingBar } from '@/components/details/PodBookingBar';
 import { PodCommentsSheet } from '@/components/details/pod-comments';
 import { PodInfo } from '@/components/details/PodInfo';
 import { PodSchedule } from '@/components/details/PodSchedule';
 import { PodShop } from '@/components/details/PodShop';
 import { PodSocialBar } from '@/components/details/PodSocialBar';
+import { BackoutConfirmDialog } from '@/components/pod-history/BackoutConfirmDialog';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { usePodActions, usePodDetails } from '@/hooks/useDetails';
-import { useThemeColors } from '@/hooks/useThemeColors';
+import { usePodBackout } from '@/hooks/usePodHistory';
 import type { RootStackParamList } from '@/navigation/types';
 
 /** Pod details — hero gallery + overview card + schedule/map + social bar + pod
@@ -24,16 +25,43 @@ export function PodDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'PodDetails'>>();
   const { podId } = route.params;
-  const { pod, venue, location, viewerId, savedInitially, isLoading } = usePodDetails(podId);
+  const { pod, venue, location, viewerId, savedInitially, membershipState, isLoading, refetch } =
+    usePodDetails(podId);
   const { liked, likeCount, saved, savePending, toggleLike, toggleSave } = usePodActions(
     pod,
     savedInitially,
   );
-  const { onPrimary } = useThemeColors();
+  const { backout, busy: backingOut } = usePodBackout();
+  const [backoutOpen, setBackoutOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentDelta, setCommentDelta] = useState(0);
   const isFree = pod?.pod_type?.includes('FREE') ?? false;
   const commentCount = (pod?.comment_count ?? 0) + commentDelta;
+
+  // Re-pull membership when the screen regains focus (e.g. after a successful
+  // checkout) so the bar flips to "Pod Booked" without a manual reload. The hook
+  // already fetched on mount, so skip the first focus.
+  const didFocus = useRef(false);
+  useFocusEffect(
+    useCallback(() => {
+      if (!didFocus.current) {
+        didFocus.current = true;
+        return;
+      }
+      void refetch();
+    }, [refetch]),
+  );
+
+  const onConfirmBackout = async () => {
+    if (!pod) return;
+    try {
+      await backout(pod.id);
+      setBackoutOpen(false);
+      await refetch();
+    } catch {
+      setBackoutOpen(false);
+    }
+  };
 
   const share = async () => {
     if (!pod) return;
@@ -98,45 +126,13 @@ export function PodDetailsScreen() {
       )}
 
       {pod ? (
-        <YStack
-          position="absolute"
-          left={0}
-          right={0}
-          bottom={0}
-          backgroundColor="$background"
-          borderTopWidth={1}
-          borderColor="$borderColor"
-        >
-          <SafeAreaView edges={['bottom']}>
-            <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10}>
-              <YStack flex={1}>
-                <Text fontSize={11} color="$muted">
-                  {isFree ? 'Entry' : 'Price'}
-                </Text>
-                <Text fontSize={18} fontWeight="900" color="$color">
-                  {isFree ? 'Free' : `₹${pod.pod_amount}`}
-                </Text>
-              </YStack>
-              <XStack
-                testID="pod-book"
-                role="button"
-                aria-label={isFree ? 'Join pod' : 'Book pod'}
-                onPress={() => navigation.navigate('Checkout', { podId: pod.id })}
-                alignItems="center"
-                justifyContent="center"
-                paddingHorizontal={28}
-                height={48}
-                borderRadius={999}
-                backgroundColor="$primary"
-                pressStyle={{ opacity: 0.85 }}
-              >
-                <Text fontSize={15} fontWeight="900" color={onPrimary}>
-                  {isFree ? 'Join' : 'Book now'}
-                </Text>
-              </XStack>
-            </XStack>
-          </SafeAreaView>
-        </YStack>
+        <PodBookingBar
+          pod={pod}
+          isFree={isFree}
+          membershipState={membershipState}
+          onCheckout={() => navigation.navigate('Checkout', { podId: pod.id })}
+          onBackout={() => setBackoutOpen(true)}
+        />
       ) : null}
 
       {pod ? (
@@ -146,6 +142,19 @@ export function PodDetailsScreen() {
           viewerId={viewerId}
           onClose={() => setCommentsOpen(false)}
           onCountChange={(delta) => setCommentDelta((prev) => prev + delta)}
+        />
+      ) : null}
+
+      {pod ? (
+        <BackoutConfirmDialog
+          open={backoutOpen}
+          busy={backingOut}
+          onClose={() => setBackoutOpen(false)}
+          onConfirm={onConfirmBackout}
+          onViewTerms={() => {
+            setBackoutOpen(false);
+            navigation.navigate('Policy', { slug: 'backout-terms' });
+          }}
         />
       ) : null}
     </YStack>

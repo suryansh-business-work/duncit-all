@@ -17,6 +17,12 @@ const toPub = (d: IFinanceSettings) => ({
   business_name: d.business_name,
   business_address: d.business_address,
   business_gstin: d.business_gstin,
+  invoice_label: d.invoice_label,
+  invoice_support_email: d.invoice_support_email,
+  invoice_support_phone: d.invoice_support_phone,
+  invoice_footer_note: d.invoice_footer_note,
+  invoice_terms: d.invoice_terms,
+  invoice_logo_url: d.invoice_logo_url,
   updated_at: d.updated_at.toISOString(),
 });
 

@@ -1,7 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { config } from '@/constants/config';
+import { useConfigStore } from '@/stores/config.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { locationMapEmbedUrl } from '@/utils/location-tree';
 
@@ -14,7 +14,8 @@ interface Props {
  * tags through React DOM) so the experience matches mWeb exactly. */
 export function MapEmbed({ query, height = 220 }: Props) {
   const { primary } = useThemeColors();
-  const url = locationMapEmbedUrl(config.googleMapApiKey, query);
+  const apiKey = useConfigStore((s) => s.googleMapApiKey);
+  const url = locationMapEmbedUrl(apiKey, query);
   if (!url) return null;
   const mapUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(query)}`;
 

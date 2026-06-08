@@ -1,5 +1,6 @@
 import { settingsService } from '../../settings.service';
 import { FeatureFlagModel } from '../../settings.model';
+import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
 
 describe('settingsService integration', () => {
   it('creates the app-settings singleton and updates formats', async () => {
@@ -42,6 +43,26 @@ describe('settingsService integration', () => {
 
     const updated = await settingsService.updateBranding({ support_phone: '+911234567890' });
     expect(updated.support_phone).toBe('+911234567890');
+  });
+
+  it('exposes public client config from the active default env entries (Tech portal)', async () => {
+    await EnvEntryModel.create({
+      name: 'web',
+      category: 'GOOGLE_OAUTH',
+      is_active: true,
+      is_default: true,
+      config: { client_id: 'web-client.apps.googleusercontent.com', client_secret: 'x' },
+    });
+    await EnvEntryModel.create({
+      name: 'maps',
+      category: 'GOOGLE_MAPS',
+      is_active: true,
+      is_default: true,
+      config: { maps_api_key: 'maps-key-123' },
+    });
+    const cfg = await settingsService.getPublicClientConfig();
+    expect(cfg.google_client_id).toBe('web-client.apps.googleusercontent.com');
+    expect(cfg.google_maps_api_key).toBe('maps-key-123');
   });
 
   it('seeds default flags idempotently and exposes public flags', async () => {

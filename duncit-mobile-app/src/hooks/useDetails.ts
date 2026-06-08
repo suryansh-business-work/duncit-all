@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
@@ -16,6 +16,7 @@ type PodDetailsResult = ResultOf<typeof PodDetailsDocument>;
 export type PodDetail = NonNullable<PodDetailsResult['pod']>;
 export type PodVenue = PodDetailsResult['publicVenues'][number];
 export type PodLocation = PodDetailsResult['locations'][number];
+export type PodMembershipState = PodDetailsResult['podMembershipState'];
 type ClubDetailsResult = ResultOf<typeof ClubDetailsDocument>;
 export type ClubDetail = NonNullable<ClubDetailsResult['club']>;
 export type ClubPod = ClubDetailsResult['pods'][number];
@@ -28,30 +29,43 @@ export function usePodDetails(podId: string) {
   const [location, setLocation] = useState<PodLocation | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [savedInitially, setSavedInitially] = useState(false);
+  const [membershipState, setMembershipState] = useState<PodMembershipState | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
+
+  const load = useCallback(async () => {
+    const data = await graphqlRequest(PodDetailsDocument, { podId }, { auth: true });
+    const nextPod = data.pod ?? null;
+    setPod(nextPod);
+    setViewerId(data.me?.user_id ?? null);
+    setVenue(data.publicVenues.find((v) => v.id === nextPod?.venue_id) ?? null);
+    setLocation(data.locations.find((l) => l.id === nextPod?.location_id) ?? null);
+    setSavedInitially((data.me?.saved_pod_ids ?? []).includes(nextPod?.id ?? ''));
+    setMembershipState(data.podMembershipState ?? null);
+  }, [podId]);
 
   useEffect(() => {
     let active = true;
     setIsLoading(true);
-    graphqlRequest(PodDetailsDocument, { podId }, { auth: true })
-      .then((data) => {
-        if (!active) return;
-        const nextPod = data.pod ?? null;
-        setPod(nextPod);
-        setViewerId(data.me?.user_id ?? null);
-        setVenue(data.publicVenues.find((v) => v.id === nextPod?.venue_id) ?? null);
-        setLocation(data.locations.find((l) => l.id === nextPod?.location_id) ?? null);
-        setSavedInitially((data.me?.saved_pod_ids ?? []).includes(nextPod?.id ?? ''));
-      })
+    load()
       .catch((err) => active && setError(err))
       .finally(() => active && setIsLoading(false));
     return () => {
       active = false;
     };
-  }, [podId]);
+  }, [load]);
 
-  return { pod, venue, location, viewerId, savedInitially, isLoading, error };
+  return {
+    pod,
+    venue,
+    location,
+    viewerId,
+    savedInitially,
+    membershipState,
+    isLoading,
+    error,
+    refetch: load,
+  };
 }
 
 /** Fetches a club + its active pods (auth). */

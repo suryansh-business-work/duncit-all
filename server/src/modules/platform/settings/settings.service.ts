@@ -4,6 +4,7 @@ import {
   FeatureFlagModel,
   BrandingModel,
 } from "./settings.model";
+import { getRuntimeEnvValue } from "@config/runtimeEnv";
 
 const toAppPub = (d: any) => ({
   jwt_expires_in: d?.jwt_expires_in ?? null,
@@ -126,6 +127,23 @@ export const settingsService = {
     return {
       date_format: doc.date_format ?? "dd MMM yyyy",
       time_format: doc.time_format ?? "hh:mm a",
+    };
+  },
+
+  /**
+   * Public, non-secret client config the web/native apps need before login
+   * (Google OAuth client id + Maps key). Sourced from the Tech portal's
+   * GOOGLE_OAUTH / GOOGLE_MAPS env categories so nothing is hardcoded in the
+   * frontends. Both values are inherently public (already exposed to browsers).
+   */
+  async getPublicClientConfig() {
+    const [googleClientId, googleMapsApiKey] = await Promise.all([
+      getRuntimeEnvValue("GOOGLE_CLIENT_ID"),
+      getRuntimeEnvValue("GOOGLE_MAP_API"),
+    ]);
+    return {
+      google_client_id: googleClientId ?? "",
+      google_maps_api_key: googleMapsApiKey ?? "",
     };
   },
 

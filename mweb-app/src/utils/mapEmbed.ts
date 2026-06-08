@@ -1,13 +1,15 @@
+import { getGoogleMapsApiKey } from '../config/runtimeConfig';
+
 /**
  * Google Maps embed helpers — single source of truth shared by every map
- * preview (pod location + venue). With `VITE_GOOGLE_MAP_API` set it uses the
- * official Embed API; without one it falls back to the keyless `output=embed`
- * map so the preview always renders (no env setup required). Same contract as
- * the mobile app's `locationMapEmbedUrl`.
+ * preview (pod location + venue). With a Maps key (from the Tech portal via the
+ * server) it uses the official Embed API; without one it falls back to the
+ * keyless `output=embed` map so the preview always renders. Same contract as the
+ * mobile app's `locationMapEmbedUrl`.
  */
 export function mapEmbedUrl(query: string): string {
   if (!query) return '';
-  const apiKey = import.meta.env.VITE_GOOGLE_MAP_API as string | undefined;
+  const apiKey = getGoogleMapsApiKey();
   const q = encodeURIComponent(query);
   return apiKey
     ? `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(apiKey)}&q=${q}&zoom=14`

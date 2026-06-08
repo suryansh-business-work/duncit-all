@@ -30,6 +30,12 @@ export const financeTypeDefs = /* GraphQL */ `
     business_name: String!
     business_address: String!
     business_gstin: String!
+    invoice_label: String!
+    invoice_support_email: String!
+    invoice_support_phone: String!
+    invoice_footer_note: String!
+    invoice_terms: String!
+    invoice_logo_url: String!
     updated_at: String!
   }
 
@@ -50,6 +56,12 @@ export const financeTypeDefs = /* GraphQL */ `
     business_name: String
     business_address: String
     business_gstin: String
+    invoice_label: String
+    invoice_support_email: String
+    invoice_support_phone: String
+    invoice_footer_note: String
+    invoice_terms: String
+    invoice_logo_url: String
   }
 
   enum PaymentReleaseKind {

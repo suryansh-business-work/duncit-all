@@ -1,10 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Modal, Pressable, ScrollView, useWindowDimensions } from 'react-native';
+import { Animated, Modal, ScrollView, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Separator, Text, XStack } from 'tamagui';
+import { Separator, Text, XStack, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useLogout } from '@/hooks/useLogout';
@@ -66,7 +66,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose}>
       <ModalThemeScope>
         <Animated.View style={{ flex: 1, opacity: fade, backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <Pressable testID="sidebar-backdrop" style={{ flex: 1 }} onPress={onClose} />
+          <YStack testID="sidebar-backdrop" flex={1} onPress={onClose} />
         </Animated.View>
         <Animated.View
           testID="sidebar-panel"

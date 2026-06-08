@@ -62,6 +62,22 @@ export const PodDetailsDocument = gql(`
       liked_by_me
       comment_count
     }
+    podMembershipState(pod_doc_id: $podId) {
+      pod_id
+      is_member
+      status
+      can_join
+      can_backout
+      spots_taken
+      spots_total
+      refund_threshold_pct
+      membership {
+        id
+        status
+        referral_token
+        refund_status
+      }
+    }
     locations {
       id
       location_name

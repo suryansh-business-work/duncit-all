@@ -164,10 +164,21 @@ export const ticketService = {
   },
 
   async forPodAndUser(podDocId: string, userId: string) {
-    const t = await TicketModel.findOne({
+    let t: ITicket | null = await TicketModel.findOne({
       pod_id: new Types.ObjectId(podDocId),
       user_id: new Types.ObjectId(userId),
     });
+    // Issue-on-demand: a JOINED member always has a ticket. This covers the case
+    // where the membership pre-existed the paid join (so recordPaidJoin skipped
+    // issuance) and any post-payment race before the email side-effect runs.
+    if (!t) {
+      const membership = await PodMemberModel.findOne({
+        pod_id: new Types.ObjectId(podDocId),
+        user_id: new Types.ObjectId(userId),
+        status: 'JOINED',
+      });
+      if (membership) t = await this.ensureForMembership(String(membership._id));
+    }
     return t ? toPub(t) : null;
   },
 

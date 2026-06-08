@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { getGoogleMapsApiKey } from '../../config/runtimeConfig';
 
 export interface GeocodedAddress {
   city: string;
@@ -62,7 +63,7 @@ export function useGeoLocation(): UseGeoLocationResult {
     setBusy(true);
     setError(null);
     try {
-      const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAP_API as string | undefined;
+      const apiKey = getGoogleMapsApiKey();
       if (!apiKey) throw new Error('Map API key is not configured');
       if (!('geolocation' in navigator)) throw new Error('Geolocation is not supported in this browser');
 

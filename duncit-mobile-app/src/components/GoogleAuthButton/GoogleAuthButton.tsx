@@ -1,9 +1,17 @@
 import { useEffect } from 'react';
+import { Image } from 'react-native';
 import * as Google from 'expo-auth-session/providers/google';
 import * as WebBrowser from 'expo-web-browser';
 import { Text, XStack } from 'tamagui';
 
-import { config } from '@/constants/config';
+import { useConfigStore } from '@/stores/config.store';
+import { useThemeStore } from '@/stores/theme.store';
+
+// Official Google "G" marks (from the Google sign-in branding kit). The light
+// mark sits on a white tile, the dark mark on a dark tile, so each blends into
+// our themed button surface — keeping the logo on-brand without altering it.
+const GOOGLE_G_LIGHT = require('../../assets/google-signin-assets/google-g-light.png');
+const GOOGLE_G_DARK = require('../../assets/google-signin-assets/google-g-dark.png');
 
 // Finishes the auth session if the app was opened via the OAuth redirect.
 WebBrowser.maybeCompleteAuthSession();
@@ -26,8 +34,10 @@ export function GoogleAuthButton({
   onIdToken,
   onError,
 }: GoogleAuthButtonProps) {
+  const scheme = useThemeStore((s) => s.scheme);
+  const googleClientId = useConfigStore((s) => s.googleClientId);
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({
-    clientId: config.googleClientId,
+    clientId: googleClientId,
   });
 
   useEffect(() => {
@@ -66,6 +76,13 @@ export function GoogleAuthButton({
       opacity={isDisabled ? 0.6 : 1}
       pressStyle={{ opacity: 0.85 }}
     >
+      <Image
+        testID="google-auth-icon"
+        source={scheme === 'dark' ? GOOGLE_G_DARK : GOOGLE_G_LIGHT}
+        style={{ width: 20, height: 20 }}
+        resizeMode="contain"
+        accessibilityIgnoresInvertColors
+      />
       <Text fontSize={16} fontWeight="600" color="$color">
         {label}
       </Text>

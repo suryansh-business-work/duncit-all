@@ -227,6 +227,12 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
       total: doc.total,
       payment_id: doc.payment_id,
       payment_method: methodLabel,
+      invoice_label: fs.invoice_label,
+      invoice_support_email: fs.invoice_support_email,
+      invoice_support_phone: fs.invoice_support_phone,
+      invoice_footer_note: fs.invoice_footer_note,
+      invoice_terms: fs.invoice_terms,
+      invoice_logo_url: fs.invoice_logo_url,
     });
     const urlConfigs = await getUrlConfigs();
     await sendEmail({
@@ -535,6 +541,12 @@ export const paymentService = {
       total: doc.total,
       payment_id: doc.payment_id,
       payment_method: doc.gateway || 'Gateway',
+      invoice_label: fs.invoice_label,
+      invoice_support_email: fs.invoice_support_email,
+      invoice_support_phone: fs.invoice_support_phone,
+      invoice_footer_note: fs.invoice_footer_note,
+      invoice_terms: fs.invoice_terms,
+      invoice_logo_url: fs.invoice_logo_url,
     });
     return pdf.toString('base64');
   },

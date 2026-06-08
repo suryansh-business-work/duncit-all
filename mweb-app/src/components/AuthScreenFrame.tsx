@@ -23,40 +23,16 @@ export default function AuthScreenFrame({ children, center }: Props) {
         zIndex: 1,
         width: '100%',
         maxWidth: center ? 480 : 760,
-        px: { xs: 1.5, sm: 2 },
+        px: { xs: 2, sm: 2 },
         animation: `${rise} 0.55s cubic-bezier(.2,.7,.2,1) both`,
       }}
     >
+      {/* No card/box: the form sits directly on the full-screen auth gradient. */}
       <Box
         sx={{
           position: 'relative',
           width: '100%',
-          borderRadius: { xs: 3, sm: 4 },
-          overflow: 'visible',
-          p: { xs: 2.25, sm: center ? 4 : 3.5 },
-          bgcolor: isDark ? alpha('#14111f', 0.94) : alpha('#ffffff', 0.96),
-          background:
-            isDark
-              ? 'linear-gradient(150deg, rgba(44,28,74,0.96) 0%, rgba(20,17,31,0.98) 48%, rgba(48,22,30,0.94) 100%)'
-              : 'linear-gradient(150deg, rgba(255,255,255,0.98) 0%, rgba(255,246,247,0.96) 52%, rgba(255,236,239,0.94) 100%)',
-          border: '1px solid',
-          borderColor: isDark ? 'rgba(255,255,255,0.1)' : 'rgba(20,17,31,0.08)',
-          boxShadow: isDark
-            ? '0 28px 90px rgba(0,0,0,0.48)'
-            : '0 24px 70px rgba(96,56,52,0.16)',
-          '&:before': {
-            content: '""',
-            position: 'absolute',
-            inset: 0,
-            background:
-              isDark
-                ? 'linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px), linear-gradient(0deg, rgba(255,255,255,0.025) 1px, transparent 1px)'
-                : 'linear-gradient(90deg, rgba(38,24,20,0.035) 1px, transparent 1px), linear-gradient(0deg, rgba(38,24,20,0.035) 1px, transparent 1px)',
-            backgroundSize: '28px 28px',
-            borderRadius: 'inherit',
-            opacity: 0.5,
-            pointerEvents: 'none',
-          },
+          p: { xs: 0.5, sm: 1 },
         }}
       >
         <Box

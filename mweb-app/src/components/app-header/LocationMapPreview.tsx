@@ -1,6 +1,7 @@
 import { Box, Button, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { locationMapQuery } from '../../utils/location-tree';
+import { getGoogleMapsApiKey } from '../../config/runtimeConfig';
 
 interface Props {
   city?: string | null;
@@ -13,7 +14,7 @@ interface Props {
 // Renders nothing when the API key is missing or no city is chosen, so the
 // dialog stays clean — same graceful behaviour as the pod-details map.
 export default function LocationMapPreview({ city, zoneName, pincode, country }: Props) {
-  const apiKey = import.meta.env.VITE_GOOGLE_MAP_API as string | undefined;
+  const apiKey = getGoogleMapsApiKey();
   const query = locationMapQuery(city, zoneName, pincode, country);
   if (!apiKey || !query) return null;
 

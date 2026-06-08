@@ -3,7 +3,13 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 
-import { CheckoutSuccess, CouponField, OrderSummary, RazorpayWebView } from '@/components/checkout';
+import {
+  CheckoutSuccess,
+  CouponField,
+  OrderSummary,
+  ProcessingOverlay,
+  RazorpayWebView,
+} from '@/components/checkout';
 import { StackScreen } from '@/components/StackScreen';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import {
@@ -134,6 +140,7 @@ export function CheckoutScreen() {
         <ScrollView contentContainerStyle={{ padding: 16 }}>
           <CheckoutSuccess
             payment={payment}
+            pod={pod}
             onDownloadInvoice={() => downloadInvoice(payment.id, payment.invoice_no ?? 'invoice')}
             onDownloadTicket={podId ? () => downloadTicket(podId) : undefined}
             onHome={() => navigation.navigate('Home')}
@@ -185,6 +192,7 @@ export function CheckoutScreen() {
           setError('Payment was cancelled.');
         }}
       />
+      <ProcessingOverlay open={submitting} />
     </StackScreen>
   );
 }

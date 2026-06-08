@@ -15,6 +15,7 @@ import { RootNavigator } from '@/navigation/RootNavigator';
 import { linking } from '@/navigation/linking';
 import { loadWebFonts } from '@/services/web-fonts';
 import { useAuthStore } from '@/stores/auth.store';
+import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
 import config from './tamagui.config';
 import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
@@ -45,11 +46,15 @@ export default function App() {
   const hydrateTheme = useThemeStore((s) => s.hydrate);
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const ready = useAuthStore((s) => s.ready);
+  const loadConfig = useConfigStore((s) => s.load);
 
   useEffect(() => {
     void hydrateTheme();
     void bootstrap();
-  }, [hydrateTheme, bootstrap]);
+    // Pull Google/Maps config from the server (Tech portal source); best-effort,
+    // the env fallback applies until it resolves.
+    void loadConfig();
+  }, [hydrateTheme, bootstrap, loadConfig]);
 
   if (!ready) return null;
 

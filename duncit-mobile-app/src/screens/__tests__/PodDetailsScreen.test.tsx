@@ -23,11 +23,20 @@ jest.mock('@/hooks/useDetails', () => ({
   }),
 }));
 
+const mockBackout = jest.fn().mockResolvedValue(undefined);
+jest.mock('@/hooks/usePodHistory', () => ({
+  usePodBackout: () => ({ backout: mockBackout, busy: false }),
+}));
+jest.mock('@/hooks/usePolicies', () => ({
+  usePolicy: () => ({ data: null, isLoading: false }),
+}));
+
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ goBack: mockGoBack, navigate: mockNavigate }),
   useRoute: () => ({ params: { podId: 'p1', title: 'Pod 1' } }),
+  useFocusEffect: (cb: () => void) => cb(),
 }));
 
 const mockedPod = usePodDetails as jest.Mock;
@@ -71,11 +80,19 @@ const pod = {
   comment_count: 1,
 };
 
-const podData = { pod, venue: null, location: null, viewerId: 'me' };
+const podData = {
+  pod,
+  venue: null,
+  location: null,
+  viewerId: 'me',
+  membershipState: null,
+  refetch: jest.fn().mockResolvedValue(undefined),
+};
 
 beforeEach(() => {
   mockGoBack.mockClear();
   mockNavigate.mockClear();
+  mockBackout.mockClear();
 });
 
 describe('PodDetailsScreen', () => {
@@ -119,6 +136,22 @@ describe('PodDetailsScreen', () => {
     expect(screen.getByText('Join')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-book'));
     expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1' });
+  });
+
+  it('shows "Pod Booked" for an existing member and backs out instead of paying again', async () => {
+    mockedPod.mockReturnValue({
+      ...podData,
+      membershipState: { is_member: true, can_join: false, can_backout: true },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    expect(screen.getByTestId('pod-booked-label')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-book')).toBeNull();
+    fireEvent.press(screen.getByTestId('pod-backout'));
+    fireEvent.press(screen.getByTestId('backout-confirm'));
+    await screen.findByTestId('backout-dialog');
+    expect(mockBackout).toHaveBeenCalledWith('p1');
   });
 
   it('shares the pod', () => {

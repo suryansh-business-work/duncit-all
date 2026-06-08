@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
 import { useTheme } from '@mui/material/styles';
 import { GoogleLogin } from '@react-oauth/google';
+import { getGoogleClientId } from '../config/runtimeConfig';
 
 interface Props {
   onCredential: (idToken: string) => void;
@@ -19,7 +20,7 @@ interface Props {
  * is configured so dev environments fail loud, not silent.
  */
 export default function GoogleSignInButton({ onCredential, loading, text = 'signin_with' }: Props) {
-  const clientId = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim();
+  const clientId = getGoogleClientId();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const [width, setWidth] = useState<number>(320);

@@ -14,6 +14,11 @@ export const settingsTypeDefs = gql`
     time_format: String!
   }
 
+  type PublicClientConfig {
+    google_client_id: String!
+    google_maps_api_key: String!
+  }
+
   input UpdateAppSettingsInput {
     jwt_expires_in: String
     jwt_no_expiry: Boolean
@@ -88,6 +93,7 @@ export const settingsTypeDefs = gql`
   extend type Query {
     appSettings: AppSettings!
     publicAppSettings: PublicAppSettings!
+    publicClientConfig: PublicClientConfig!
     featureFlags: [FeatureFlag!]!
     featureFlag(key: String!): FeatureFlag
     publicFeatureFlags: [PublicFeatureFlag!]!

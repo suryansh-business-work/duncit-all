@@ -3,14 +3,16 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
+import { ConfirmationPodCard } from '@/components/checkout/ConfirmationPodCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import type { CheckoutPayment } from '@/hooks/useCheckout';
+import type { CheckoutPayment, CheckoutPod } from '@/hooks/useCheckout';
 import { formatMoney } from '@/utils/checkout-math';
 import { formatDateTime } from '@/utils/date-format';
 import { toErrorMessage } from '@/utils/errors';
 
 export interface CheckoutSuccessProps {
   payment: NonNullable<CheckoutPayment>;
+  pod?: CheckoutPod;
   onDownloadInvoice: () => Promise<void>;
   onDownloadTicket?: () => Promise<void>;
   onHome: () => void;
@@ -21,6 +23,7 @@ export interface CheckoutSuccessProps {
  * mWeb's CheckoutSuccess. */
 export function CheckoutSuccess({
   payment,
+  pod,
   onDownloadInvoice,
   onDownloadTicket,
   onHome,
@@ -75,6 +78,8 @@ export function CheckoutSuccess({
         <Row label="Amount paid" value={formatMoney(payment.currency_symbol, payment.total)} />
         <Row label="Paid on" value={formatDateTime(payment.paid_at ?? payment.created_at)} />
       </YStack>
+
+      {pod ? <ConfirmationPodCard pod={pod} /> : null}
 
       {error ? (
         <Text testID="invoice-error" fontSize={13} color="$danger">

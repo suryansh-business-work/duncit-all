@@ -11,6 +11,14 @@ export interface IFinanceSettings extends Document {
   business_name: string;
   business_address: string;
   business_gstin: string;
+  // Invoice / ticket branding — all configurable from the Finance portal's
+  // Invoice Management page; never hardcode these in the PDF generators.
+  invoice_label: string;
+  invoice_support_email: string;
+  invoice_support_phone: string;
+  invoice_footer_note: string;
+  invoice_terms: string;
+  invoice_logo_url: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -24,9 +32,18 @@ const financeSettingsSchema = new Schema<IFinanceSettings>(
     invoice_prefix: { type: String, default: 'DUN' },
     invoice_counter: { type: Number, default: 0 },
     dummy_mode: { type: Boolean, default: true },
-    business_name: { type: String, default: 'Duncit Technologies Pvt. Ltd.' },
+    business_name: { type: String, default: 'Duncit' },
     business_address: { type: String, default: '' },
     business_gstin: { type: String, default: '' },
+    invoice_label: { type: String, default: 'TAX INVOICE' },
+    invoice_support_email: { type: String, default: '' },
+    invoice_support_phone: { type: String, default: '' },
+    invoice_footer_note: {
+      type: String,
+      default: 'This is a computer-generated invoice and does not require a signature.',
+    },
+    invoice_terms: { type: String, default: '' },
+    invoice_logo_url: { type: String, default: '' },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

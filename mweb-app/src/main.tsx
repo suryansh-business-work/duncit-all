@@ -12,8 +12,19 @@ import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs
 import { ColorModeProvider } from './ColorModeContext';
 import App from './App';
 import { initPwa } from './pwa';
+import { setRuntimeConfig, getGoogleClientId } from './config/runtimeConfig';
 
-const GOOGLE_CLIENT_ID = (import.meta.env.VITE_GOOGLE_CLIENT_ID as string | undefined)?.trim() || '';
+// Public client config (Google OAuth client id + Maps key) — fetched from the
+// server, which sources it from the Tech portal. The bundled Vite env is only a
+// local-dev fallback (see config/runtimeConfig.ts).
+const PUBLIC_CLIENT_CONFIG = gql`
+  query MwebPublicClientConfig {
+    publicClientConfig {
+      google_client_id
+      google_maps_api_key
+    }
+  }
+`;
 
 initPwa();
 
@@ -64,20 +75,33 @@ const loadUser = async () => {
 configureLogs(httpTransport(urlConfigs.graphqlUrl.replace(/\/graphql$/, '/logs')));
 captureConsole(logs.mWeb);
 
-ReactDOM.createRoot(document.getElementById('root')!).render(
-  <React.StrictMode>
-    <ApolloProvider client={apolloClient}>
-      <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey="mweb_user">
-        <ColorModeProvider>
-          <LocalizationProvider dateAdapter={AdapterDateFns}>
-            <GoogleOAuthProvider clientId={GOOGLE_CLIENT_ID}>
-              <BrowserRouter>
-                <PortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></PortalModeGate>
-              </BrowserRouter>
-            </GoogleOAuthProvider>
-          </LocalizationProvider>
-        </ColorModeProvider>
-      </UserProvider>
-    </ApolloProvider>
-  </React.StrictMode>
-);
+function mount() {
+  ReactDOM.createRoot(document.getElementById('root')!).render(
+    <React.StrictMode>
+      <ApolloProvider client={apolloClient}>
+        <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey="mweb_user">
+          <ColorModeProvider>
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <GoogleOAuthProvider clientId={getGoogleClientId()}>
+                <BrowserRouter>
+                  <PortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></PortalModeGate>
+                </BrowserRouter>
+              </GoogleOAuthProvider>
+            </LocalizationProvider>
+          </ColorModeProvider>
+        </UserProvider>
+      </ApolloProvider>
+    </React.StrictMode>
+  );
+}
+
+// Pull the public client config before first render so GoogleOAuthProvider gets
+// the Tech-portal client id. Render regardless on failure (env fallback applies).
+apolloClient
+  .query({ query: PUBLIC_CLIENT_CONFIG, fetchPolicy: 'network-only' })
+  .then(({ data }) => {
+    const c = data?.publicClientConfig;
+    if (c) setRuntimeConfig({ googleClientId: c.google_client_id, googleMapsApiKey: c.google_maps_api_key });
+  })
+  .catch(() => undefined)
+  .finally(mount);

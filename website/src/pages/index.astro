@@ -55,7 +55,7 @@ const earningPaths = [
       <!-- Marquee ribbon running around the banner border (transparent, 12px bold) -->
       <svg
         id="bannerMarquee"
-        class="absolute inset-0 z-10 pointer-events-none overflow-visible"
+        class="absolute inset-0 w-full h-full z-10 pointer-events-none overflow-visible"
         preserveAspectRatio="none"
         aria-hidden="true"
       >
@@ -448,8 +448,12 @@ const earningPaths = [
         try { build(); } catch (e) {}
       }
 
+      // Observe the banner section itself so the ribbon re-fits whenever the
+      // actual banner height changes (responsive breakpoints, font/video load).
       if (window.ResizeObserver) {
-        new ResizeObserver(rebuild).observe(svg);
+        var ro = new ResizeObserver(rebuild);
+        ro.observe(svg);
+        if (svg.parentElement) ro.observe(svg.parentElement);
       }
       if (document.fonts && document.fonts.ready) {
         document.fonts.ready.then(rebuild);
@@ -457,6 +461,7 @@ const earningPaths = [
       rebuild();
       requestAnimationFrame(tick);
       window.addEventListener('resize', rebuild);
+      window.addEventListener('load', rebuild);
     } catch (e) {}
   })();
 </script>

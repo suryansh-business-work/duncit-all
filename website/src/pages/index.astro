@@ -5,7 +5,6 @@ import Footer from '../components/Footer.astro';
 import { urlConfigs } from '../config/url-configs';
 
 // Real group photos from Unsplash (free to use)
-const heroImg = 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80&auto=format&fit=crop';
 const comingSoonImg = 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80&auto=format&fit=crop';
 const vibesImg = 'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&q=80&auto=format&fit=crop';
 const flow1 = 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=600&q=80&auto=format&fit=crop';
@@ -35,9 +34,20 @@ const earningPaths = [
   <div class="bg-ink p-3 sm:p-4">
     <!-- ============== HERO ============== -->
     <section class="relative overflow-hidden rounded-3xl min-h-[640px] px-6 pt-5 pb-8">
-      <!-- Background image with overlay -->
+      <!-- Background reel (muted, looping, autoplay) with overlay -->
       <div class="absolute inset-0 z-0">
-        <img src={heroImg} alt="Group of friends" class="w-full h-full object-cover" />
+        <video
+          class="w-full h-full object-cover"
+          poster="/media/duncit-reel-poster.jpg"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          aria-hidden="true"
+        >
+          <source src="/media/duncit-reel.mp4" type="video/mp4" />
+        </video>
         <div class="absolute inset-0 bg-gradient-to-b from-sky-300/40 via-transparent to-ink/30"></div>
       </div>
 
@@ -100,6 +110,65 @@ const earningPaths = [
         <h1 id="heroWordmark" class="relative z-10 font-head font-black text-primary text-stroke text-7xl sm:text-8xl md:text-[9rem] tracking-tight inline-block">
           Duncit
         </h1>
+      </div>
+    </section>
+
+    <!-- ============== BRAND REEL ============== -->
+    <section class="bg-ink py-16 sm:py-20 px-6">
+      <div class="max-w-5xl mx-auto text-center">
+        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/10 text-tertiary font-bold text-xs uppercase tracking-wider mb-6">
+          <i class="fa-solid fa-film"></i> The Reel
+        </span>
+        <h2 class="text-4xl sm:text-5xl md:text-6xl text-white mb-4">
+          Real people. <span class="text-primary">Real energy.</span>
+        </h2>
+        <p class="text-white/70 text-lg max-w-xl mx-auto mb-10">
+          Sports, live music, nightlife, the outdoors — see what happens when
+          the right people match your energy.
+        </p>
+
+        <div class="relative rounded-3xl overflow-hidden sticker ring-1 ring-white/10 aspect-video bg-black">
+          <video
+            id="brandReel"
+            class="w-full h-full object-cover"
+            poster="/media/duncit-reel-poster.jpg"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="metadata"
+            aria-label="Duncit brand reel"
+          >
+            <source src="/media/duncit-reel.mp4" type="video/mp4" />
+          </video>
+          <!-- cinematic vignette to blend the reel into the dark band -->
+          <div class="pointer-events-none absolute inset-0 bg-linear-to-t from-ink/55 via-transparent to-ink/15"></div>
+          <!-- tap for sound (browsers require muted autoplay) -->
+          <button
+            id="reelSound"
+            type="button"
+            class="absolute bottom-4 right-4 z-10 inline-flex items-center gap-2 px-4 py-2 rounded-full bg-ink/70 backdrop-blur text-white text-sm font-bold border border-white/20 hover:bg-ink/90 transition"
+            aria-label="Toggle reel sound"
+          >
+            <i class="fa-solid fa-volume-xmark" data-sound-icon></i>
+            <span data-sound-label>Tap for sound</span>
+          </button>
+        </div>
+
+        <div class="mt-10 flex flex-col sm:flex-row gap-3 justify-center items-center">
+          <a
+            href={mwebRegisterUrl}
+            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-white font-bold text-base sticker hover:scale-[1.03] transition"
+          >
+            <i class="fa-solid fa-bolt"></i> Join the energy
+          </a>
+          <a
+            href={mwebLoginUrl}
+            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/10 backdrop-blur text-white font-bold text-base border border-white/20 hover:bg-white/20 transition"
+          >
+            <i class="fa-solid fa-right-to-bracket"></i> Sign in
+          </a>
+        </div>
       </div>
     </section>
 
@@ -448,4 +517,19 @@ const earningPaths = [
     });
   }
   handleSubmit('footerForm');
+
+  // ---------- Brand reel sound toggle ----------
+  const reel = document.getElementById('brandReel') as HTMLVideoElement | null;
+  const reelBtn = document.getElementById('reelSound');
+  if (reel && reelBtn) {
+    const icon = reelBtn.querySelector('[data-sound-icon]');
+    const label = reelBtn.querySelector('[data-sound-label]');
+    reelBtn.addEventListener('click', () => {
+      reel.muted = !reel.muted;
+      // a user gesture is required before audio can play
+      void reel.play().catch(() => {});
+      if (icon) icon.className = reel.muted ? 'fa-solid fa-volume-xmark' : 'fa-solid fa-volume-high';
+      if (label) label.textContent = reel.muted ? 'Tap for sound' : 'Sound on';
+    });
+  }
 </script>

@@ -16,6 +16,7 @@ ENV CI=1
 # Shared design-token package (file: dep + metro watchFolders) and the server
 # GraphQL SDL that codegen reads (self-contained `export const … = gql\`…\``).
 COPY packages/auth-tokens ./packages/auth-tokens
+COPY packages/logs ./packages/logs
 COPY server/src/modules ./server/src/modules
 
 WORKDIR /repo/duncit-mobile-app

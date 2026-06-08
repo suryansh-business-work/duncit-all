@@ -17,6 +17,8 @@ import { loadWebFonts } from '@/services/web-fonts';
 import { useAuthStore } from '@/stores/auth.store';
 import { useThemeStore } from '@/stores/theme.store';
 import config from './tamagui.config';
+import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
+import { config as appConfig } from '@/constants/config';
 
 // Base navigator background = the gradient's base colour, so there's no white
 // flash between/behind screens. Each screen paints the full gradient itself.
@@ -28,6 +30,10 @@ const navThemeFor = (dark: boolean): NavTheme => ({
 // Inject the brand web font (Quicksand) on web; no-op on native. Runs once at
 // module load so the stylesheet is requested before first paint.
 loadWebFonts();
+
+// Ship console errors + structured logs to SignOz (via the server /logs ingest).
+configureLogs(httpTransport(`${appConfig.apiUrl}/logs`));
+captureConsole(logs.mobileApp);
 
 /**
  * App root: Tamagui theming + SafeArea + React Navigation. The theme store and

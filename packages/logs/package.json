@@ -5,6 +5,7 @@
   "description": "Global structured logger shipped to SignOz — logs.<app>.<level>(page, component, object).",
   "main": "./dist/index.js",
   "module": "./src/index.ts",
+  "react-native": "./src/index.ts",
   "types": "./src/index.ts",
   "exports": {
     ".": {

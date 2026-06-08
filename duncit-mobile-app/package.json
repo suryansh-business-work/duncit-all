@@ -29,6 +29,7 @@
   },
   "dependencies": {
     "@duncit/auth-tokens": "file:../packages/auth-tokens",
+    "@duncit/logs": "file:../packages/logs",
     "@expo/vector-icons": "^15.0.3",
     "@graphql-typed-document-node/core": "^3.2.0",
     "@hookform/resolvers": "^3.9.1",

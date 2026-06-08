@@ -8,6 +8,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider, PortalModeGate } from '@duncit/user-context';
 import { apolloClient } from './apollo';
 import { urlConfigs } from './config/url-configs';
+import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
 import { ColorModeProvider } from './ColorModeContext';
 import App from './App';
 import { initPwa } from './pwa';
@@ -58,6 +59,10 @@ const loadUser = async () => {
   const { data } = await apolloClient.query({ query: ME_QUERY, fetchPolicy: 'network-only' });
   return data?.me ?? null;
 };
+
+// Ship console errors + structured logs to SignOz (via the server /logs ingest).
+configureLogs(httpTransport(urlConfigs.graphqlUrl.replace(/\/graphql$/, '/logs')));
+captureConsole(logs.mWeb);
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

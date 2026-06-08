@@ -1,0 +1,181 @@
+{
+  "title": "Duncit — Logs & Errors",
+  "description": "Error-focused view of all Duncit logs (server + per-app via @duncit/logs). Import in SignOz → Dashboards → New → Import JSON.",
+  "tags": ["duncit", "logs", "errors"],
+  "version": "v4",
+  "variables": {},
+  "widgets": [
+    {
+      "id": "w-total-errors",
+      "title": "Total errors",
+      "description": "Count of ERROR logs in the selected range.",
+      "panelTypes": "value",
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "columnUnits": {},
+      "query": {
+        "queryType": "clickhouse_sql",
+        "builder": { "queryData": [], "queryFormulas": [] },
+        "promql": [],
+        "id": "q-total-errors",
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "errors",
+            "disabled": false,
+            "query": "SELECT toFloat64(count()) AS value FROM signoz_logs.distributed_logs_v2 WHERE severity_text = 'ERROR' AND timestamp BETWEEN {{.start_timestamp_nano}} AND {{.end_timestamp_nano}}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-total-logs",
+      "title": "Total logs",
+      "description": "All log records in range.",
+      "panelTypes": "value",
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "columnUnits": {},
+      "query": {
+        "queryType": "clickhouse_sql",
+        "builder": { "queryData": [], "queryFormulas": [] },
+        "promql": [],
+        "id": "q-total-logs",
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "logs",
+            "disabled": false,
+            "query": "SELECT toFloat64(count()) AS value FROM signoz_logs.distributed_logs_v2 WHERE timestamp BETWEEN {{.start_timestamp_nano}} AND {{.end_timestamp_nano}}"
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-errors-over-time",
+      "title": "Errors over time",
+      "description": "ERROR logs per minute.",
+      "panelTypes": "graph",
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "isStacked": false,
+      "fillSpans": false,
+      "columnUnits": {},
+      "query": {
+        "queryType": "clickhouse_sql",
+        "builder": { "queryData": [], "queryFormulas": [] },
+        "promql": [],
+        "id": "q-errors-over-time",
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "errors/min",
+            "disabled": false,
+            "query": "SELECT toStartOfInterval(fromUnixTimestamp64Nano(timestamp), INTERVAL 1 MINUTE) AS ts, toFloat64(count()) AS value FROM signoz_logs.distributed_logs_v2 WHERE severity_text = 'ERROR' AND timestamp BETWEEN {{.start_timestamp_nano}} AND {{.end_timestamp_nano}} GROUP BY ts ORDER BY ts"
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-by-app",
+      "title": "Logs by app / service",
+      "description": "Volume per app (attribute) and service.name.",
+      "panelTypes": "table",
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "columnUnits": {},
+      "query": {
+        "queryType": "clickhouse_sql",
+        "builder": { "queryData": [], "queryFormulas": [] },
+        "promql": [],
+        "id": "q-by-app",
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "",
+            "disabled": false,
+            "query": "SELECT multiIf(attributes_string['app'] != '', attributes_string['app'], resources_string['service.name']) AS app, countIf(severity_text = 'ERROR') AS errors, count() AS total FROM signoz_logs.distributed_logs_v2 WHERE timestamp BETWEEN {{.start_timestamp_nano}} AND {{.end_timestamp_nano}} GROUP BY app ORDER BY errors DESC, total DESC"
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-by-portal",
+      "title": "Errors by portal",
+      "description": "ERROR logs grouped by portal.",
+      "panelTypes": "table",
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "columnUnits": {},
+      "query": {
+        "queryType": "clickhouse_sql",
+        "builder": { "queryData": [], "queryFormulas": [] },
+        "promql": [],
+        "id": "q-by-portal",
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "",
+            "disabled": false,
+            "query": "SELECT attributes_string['portal'] AS portal, count() AS errors FROM signoz_logs.distributed_logs_v2 WHERE severity_text = 'ERROR' AND attributes_string['portal'] != '' AND timestamp BETWEEN {{.start_timestamp_nano}} AND {{.end_timestamp_nano}} GROUP BY portal ORDER BY errors DESC"
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-top-errors",
+      "title": "Top error messages",
+      "description": "Most frequent ERROR bodies.",
+      "panelTypes": "table",
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "columnUnits": {},
+      "query": {
+        "queryType": "clickhouse_sql",
+        "builder": { "queryData": [], "queryFormulas": [] },
+        "promql": [],
+        "id": "q-top-errors",
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "",
+            "disabled": false,
+            "query": "SELECT substring(body, 1, 160) AS message, count() AS count FROM signoz_logs.distributed_logs_v2 WHERE severity_text = 'ERROR' AND timestamp BETWEEN {{.start_timestamp_nano}} AND {{.end_timestamp_nano}} GROUP BY message ORDER BY count DESC LIMIT 25"
+          }
+        ]
+      }
+    },
+    {
+      "id": "w-by-location",
+      "title": "Errors by page / component",
+      "description": "Where errors come from (page + component).",
+      "panelTypes": "table",
+      "nullZeroValues": "zero",
+      "opacity": "1",
+      "columnUnits": {},
+      "query": {
+        "queryType": "clickhouse_sql",
+        "builder": { "queryData": [], "queryFormulas": [] },
+        "promql": [],
+        "id": "q-by-location",
+        "clickhouse_sql": [
+          {
+            "name": "A",
+            "legend": "",
+            "disabled": false,
+            "query": "SELECT multiIf(attributes_string['app'] != '', attributes_string['app'], 'server') AS app, attributes_string['page'] AS page, attributes_string['component'] AS component, count() AS errors FROM signoz_logs.distributed_logs_v2 WHERE severity_text = 'ERROR' AND timestamp BETWEEN {{.start_timestamp_nano}} AND {{.end_timestamp_nano}} GROUP BY app, page, component ORDER BY errors DESC LIMIT 25"
+          }
+        ]
+      }
+    }
+  ],
+  "layout": [
+    { "i": "w-total-errors", "x": 0, "y": 0, "w": 3, "h": 3 },
+    { "i": "w-total-logs", "x": 3, "y": 0, "w": 3, "h": 3 },
+    { "i": "w-errors-over-time", "x": 6, "y": 0, "w": 6, "h": 3 },
+    { "i": "w-by-app", "x": 0, "y": 3, "w": 6, "h": 4 },
+    { "i": "w-by-portal", "x": 6, "y": 3, "w": 6, "h": 4 },
+    { "i": "w-top-errors", "x": 0, "y": 7, "w": 6, "h": 5 },
+    { "i": "w-by-location", "x": 6, "y": 7, "w": 6, "h": 5 }
+  ]
+}

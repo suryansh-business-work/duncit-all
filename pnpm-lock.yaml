@@ -26,6 +26,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -144,6 +147,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -241,6 +247,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -332,6 +341,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -471,6 +483,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -556,6 +571,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -641,6 +659,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -726,6 +747,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -823,6 +847,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -920,6 +947,9 @@ importers:
       '@duncit/auth-tokens':
         specifier: workspace:*
         version: link:../packages/auth-tokens
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/user-context':
         specifier: workspace:*
         version: link:../packages/user-context
@@ -1041,6 +1071,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -1188,6 +1221,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -1300,6 +1336,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -1554,6 +1593,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -1654,6 +1696,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -1760,6 +1805,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../packages/logs
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme

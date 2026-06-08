@@ -56,7 +56,12 @@ export async function createRazorpayOrder(args: {
   });
   const json: any = await res.json().catch(() => ({}));
   if (!res.ok || !json?.id) {
-    const msg = json?.error?.description || `Razorpay order failed (HTTP ${res.status})`;
+    // Make a 401 unmistakably about the gateway keys, not the user's session.
+    const detail = json?.error?.description || `HTTP ${res.status}`;
+    const msg =
+      res.status === 401
+        ? `Razorpay authentication failed — check the Key ID / Key Secret in the Tech portal (${detail})`
+        : `Razorpay order failed: ${detail}`;
     throw new GraphQLError(msg, { extensions: { code: 'BAD_GATEWAY' } });
   }
   return { id: String(json.id) };

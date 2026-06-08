@@ -1,4 +1,4 @@
-import { PORTALS, type PortalKey } from './config';
+import { PORTALS, WEBSITES, type PortalKey, type WebsiteKey } from './config';
 import { consoleTransport } from './transport';
 import type { LevelFns, LogLevel, LogRecord, Transport } from './types';
 
@@ -33,7 +33,7 @@ function levelFns(base: Pick<LogRecord, 'app' | 'portal'>): LevelFns {
   };
 }
 
-// logs.portal.<name> — built dynamically from the global PORTALS list.
+// logs.portal.<name> / logs.website.<name> — built from the global lists.
 const portal = PORTALS.reduce(
   (acc, key) => {
     acc[key] = levelFns({ app: 'portal', portal: key });
@@ -42,16 +42,26 @@ const portal = PORTALS.reduce(
   {} as Record<PortalKey, LevelFns>,
 );
 
+const website = WEBSITES.reduce(
+  (acc, key) => {
+    acc[key] = levelFns({ app: 'website', portal: key });
+    return acc;
+  },
+  {} as Record<WebsiteKey, LevelFns>,
+);
+
 /**
  * Global structured logger.
  *   logs.server.error(page, component, { ...context })
  *   logs.mWeb.info(page, component, { ...context })
  *   logs.mobileApp.error(page, component, { ...context })
  *   logs.portal.crm.error(page, component, { ...context })
+ *   logs.website.duncit.error(page, component, { ...context })
  */
 export const logs = {
   server: levelFns({ app: 'server' }),
   mWeb: levelFns({ app: 'mWeb' }),
   mobileApp: levelFns({ app: 'mobileApp' }),
   portal,
+  website,
 };

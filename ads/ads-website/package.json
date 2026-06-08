@@ -10,6 +10,7 @@
     "astro": "astro"
   },
   "dependencies": {
+    "@duncit/logs": "workspace:*",
     "@tailwindcss/vite": "^4.2.2",
     "astro": "^5.7.10",
     "tailwindcss": "^4.2.2"

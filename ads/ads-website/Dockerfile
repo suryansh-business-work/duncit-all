@@ -25,10 +25,13 @@ COPY hr/package.json ./hr/
 COPY employee/package.json ./employee/
 COPY status/package.json ./status/
 
+COPY packages/logs/package.json ./packages/logs/
+
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
 
 COPY ads/ads-website ./ads/ads-website
+COPY packages/logs ./packages/logs
 RUN pnpm --filter ads-website build
 
 # --- runner ---

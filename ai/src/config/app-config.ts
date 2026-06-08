@@ -61,6 +61,13 @@ export const appConfig: AppConfig = {
   accent: { light: '#d8b4fe', main: '#9333ea', hover: '#7e22ce', active: '#6b21a8' },
   nav: [
     { label: 'Welcome', to: '/', icon: 'dashboard' },
+    { label: 'AI Library', to: '/library', icon: 'library' },
   ],
-  modules: [],
+  modules: [
+    {
+      title: 'Prompt Library',
+      description: 'Curate reusable AI prompts and track their token size.',
+      icon: 'library',
+    },
+  ],
 };

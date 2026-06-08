@@ -1,6 +1,7 @@
 ---
 // Site-wide side navigation drawer.
 // Toggled by any element with [data-nav-toggle].
+import BrandLogo from './BrandLogo.astro';
 const sections = [
   {
     title: 'About',
@@ -81,7 +82,7 @@ const sections = [
   aria-hidden="true"
 >
   <div class="flex items-center justify-between p-5 border-b border-ink/10">
-    <a href="/" class="text-3xl font-black font-head text-primary text-stroke-sm">Duncit</a>
+    <BrandLogo height={38} />
     <button
       data-nav-close
       class="w-10 h-10 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition"
@@ -159,13 +160,18 @@ const sections = [
     document.body.style.overflow = '';
   }
 
-  document.querySelectorAll('[data-nav-toggle]').forEach((el) =>
-    el.addEventListener('click', open)
-  );
-  document.querySelectorAll('[data-nav-close]').forEach((el) =>
-    el.addEventListener('click', close)
-  );
-  backdrop?.addEventListener('click', close);
+  // Delegated so it works no matter when/where a [data-nav-toggle] renders
+  // (the homepage hero, sub-page headers, etc.).
+  document.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement | null;
+    if (!t) return;
+    if (t.closest('[data-nav-toggle]')) {
+      e.preventDefault();
+      open();
+    } else if (t.closest('[data-nav-close]') || t === backdrop) {
+      close();
+    }
+  });
   document.addEventListener('keydown', (e) => {
     if (e.key === 'Escape') close();
   });

@@ -2,6 +2,7 @@
 import Layout from './Layout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import Footer from '../components/Footer.astro';
+import BrandLogo from '../components/BrandLogo.astro';
 
 interface Props {
   title: string;
@@ -52,10 +53,7 @@ const accentBg = {
         >
           <i class="fa-solid fa-bars text-lg"></i>
         </button>
-        <a href="/" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white sticker hover:-translate-y-0.5 transition">
-          <span class="w-7 h-7 rounded-full bg-primary text-white inline-flex items-center justify-center font-black font-head text-sm">D</span>
-          <span class="font-head font-black text-ink text-lg leading-none">Duncit</span>
-        </a>
+        <BrandLogo height={40} />
         <a href="/" class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Home">
           <i class="fa-solid fa-house text-base"></i>
         </a>

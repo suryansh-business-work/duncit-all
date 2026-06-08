@@ -3,6 +3,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { VenueLeadModel, HostLeadModel } from '@modules/crm/crm/crm.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { CategoryModel } from '@modules/pods/category/category.model';
 import { surveyService } from './survey.service';
 import { SurveyModel, SurveyResponseModel, type SurveyKind } from './survey.model';
 import { LeadSurveyEntryModel, type LeadSurveyEntity } from './leadSurveyEntry.model';
@@ -39,13 +40,33 @@ const leadScope = (lead: any) => ({
 });
 
 export const leadSurveyService = {
-  /** Matched onboarding survey for a lead + the full generation/response log. */
-  async forLead(entity: LeadSurveyEntity, leadId: string) {
+  /**
+   * Matched onboarding survey for a lead + the full generation/response log +
+   * the lead's category / sub-category options. When the lead has multiple
+   * categories/subs, the CRM asks which one a link is for; `override` resolves
+   * the survey for that chosen scope (defaults to the lead's first cat/sub).
+   */
+  async forLead(
+    entity: LeadSurveyEntity,
+    leadId: string,
+    override?: { category_id?: string | null; sub_category_id?: string | null }
+  ) {
     const lead: any = await modelFor(entity).findById(leadId).lean();
     if (!lead) throw new GraphQLError('Lead not found', { extensions: { code: 'NOT_FOUND' } });
-    const survey = await surveyService.activeFor({ kind: kindFor(entity), ...leadScope(lead) });
+    const base = leadScope(lead);
+    const scope = {
+      super_category_id: base.super_category_id,
+      category_id: override?.category_id ?? base.category_id,
+      sub_category_id: override?.sub_category_id ?? base.sub_category_id,
+    };
+    const survey = await surveyService.activeFor({ kind: kindFor(entity), ...scope });
     const entries = await LeadSurveyEntryModel.find({ entity, lead_id: leadId }).sort({ created_at: -1 }).lean();
-    return { survey, entries: entries.map(pubEntry) };
+    return {
+      survey,
+      entries: entries.map(pubEntry),
+      categories: await resolveCategoryRefs(lead.category_ids),
+      sub_categories: await resolveCategoryRefs(lead.sub_category_ids),
+    };
   },
 
   /** Staff filled the survey inside CRM — append a MANUAL entry. */
@@ -176,6 +197,15 @@ export const leadSurveyService = {
 async function assertSurvey(surveyId: string) {
   const s = await SurveyModel.findById(surveyId).select('_id').lean();
   if (!s) throw new GraphQLError('Survey not found', { extensions: { code: 'NOT_FOUND' } });
+}
+
+/** Resolve a list of category ObjectIds to [{ id, name }], preserving order. */
+async function resolveCategoryRefs(ids: any[] = []): Promise<{ id: string; name: string }[]> {
+  const list = (ids ?? []).map((x) => String(x)).filter(Boolean);
+  if (list.length === 0) return [];
+  const cats = await CategoryModel.find({ _id: { $in: list } }).select('name').lean();
+  const byId = new Map(cats.map((c: any) => [String(c._id), c.name as string]));
+  return list.filter((id) => byId.has(id)).map((id) => ({ id, name: byId.get(id) as string }));
 }
 
 async function findLeadByContact(Model: any, email: string, phone: string) {

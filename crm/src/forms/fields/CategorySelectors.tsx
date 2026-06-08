@@ -58,9 +58,13 @@ export default function CategorySelectors({
     if (!superId && categoryIds.length) setFieldValue(categoryName, []);
   }, [superId, categoryIds.length, categoryName, setFieldValue]);
   useEffect(() => {
+    // Don't prune while the sub options are still loading — otherwise editing a
+    // lead wipes its saved sub-categories before the options arrive (the saved
+    // subs then never persist on the next save).
+    if (subs.loading || (categoryIds.length > 0 && (subs.data?.categories ?? undefined) === undefined)) return;
     const valid = subIds.filter((id) => subOptions.some((s) => s.id === id));
     if (valid.length !== subIds.length) setFieldValue(subName, valid);
-  }, [subOptions, subIds, subName, setFieldValue]);
+  }, [subOptions, subIds, subName, setFieldValue, subs.loading, subs.data, categoryIds.length]);
 
   if (!superId) return null;
 

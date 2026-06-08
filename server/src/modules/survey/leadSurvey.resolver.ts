@@ -8,9 +8,16 @@ const RW = [...CRM_RW];
 
 export const leadSurveyResolvers = {
   Query: {
-    leadSurvey: (_p: unknown, args: { entity: LeadSurveyEntity; lead_id: string }, ctx: GraphQLContext) => {
+    leadSurvey: (
+      _p: unknown,
+      args: { entity: LeadSurveyEntity; lead_id: string; category_id?: string | null; sub_category_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
       requireRole(ctx, RW);
-      return leadSurveyService.forLead(args.entity, args.lead_id);
+      return leadSurveyService.forLead(args.entity, args.lead_id, {
+        category_id: args.category_id ?? null,
+        sub_category_id: args.sub_category_id ?? null,
+      });
     },
     // Public — the share link is the capability; no auth.
     leadSurveyByToken: (_p: unknown, args: { token: string }) => leadSurveyService.byToken(args.token),

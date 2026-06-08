@@ -36,17 +36,28 @@ export interface LeadSurveyEntry {
   submitted_by?: string | null;
   created_at?: string | null;
 }
+export interface LeadCategoryRef {
+  id: string;
+  name: string;
+}
 export interface LeadSurveyResult {
-  leadSurvey: { survey: LeadSurveyDef | null; entries: LeadSurveyEntry[] };
+  leadSurvey: {
+    survey: LeadSurveyDef | null;
+    entries: LeadSurveyEntry[];
+    categories: LeadCategoryRef[];
+    sub_categories: LeadCategoryRef[];
+  };
 }
 
 const ENTRY_FIELDS = `id survey_id source token token_revoked generated_by filled submitted_at submitted_by created_at answers { qid value values }`;
 
 export const LEAD_SURVEY = gql`
-  query LeadSurvey($entity: LeadSurveyEntity!, $lead_id: ID!) {
-    leadSurvey(entity: $entity, lead_id: $lead_id) {
+  query LeadSurvey($entity: LeadSurveyEntity!, $lead_id: ID!, $category_id: ID, $sub_category_id: ID) {
+    leadSurvey(entity: $entity, lead_id: $lead_id, category_id: $category_id, sub_category_id: $sub_category_id) {
       survey { id title questions { qid type label help required multi options } }
       entries { ${ENTRY_FIELDS} }
+      categories { id name }
+      sub_categories { id name }
     }
   }
 `;

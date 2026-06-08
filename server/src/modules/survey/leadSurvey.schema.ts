@@ -31,10 +31,18 @@ export const leadSurveyTypeDefs = gql`
     created_at: String
   }
 
+  type LeadSurveyCategoryRef {
+    id: ID!
+    name: String!
+  }
+
   "The survey matched to a lead's taxonomy + the full generation/response log."
   type LeadSurvey {
     survey: Survey
     entries: [LeadSurveyEntry!]!
+    "The lead's category / sub-category options — for the 'which one?' picker."
+    categories: [LeadSurveyCategoryRef!]!
+    sub_categories: [LeadSurveyCategoryRef!]!
   }
 
   "Public payload for the mWeb /s/:token fill page."
@@ -45,7 +53,8 @@ export const leadSurveyTypeDefs = gql`
   }
 
   extend type Query {
-    leadSurvey(entity: LeadSurveyEntity!, lead_id: ID!): LeadSurvey!
+    "Optional category_id/sub_category_id resolve the survey for a chosen scope (multi-category leads)."
+    leadSurvey(entity: LeadSurveyEntity!, lead_id: ID!, category_id: ID, sub_category_id: ID): LeadSurvey!
     "Public — resolve a survey from a share token (no auth)."
     leadSurveyByToken(token: String!): PublicLeadSurvey!
   }

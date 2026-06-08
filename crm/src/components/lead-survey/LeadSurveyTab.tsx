@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert, Button, CircularProgress, Dialog, DialogActions, DialogContent, DialogContentText,
-  DialogTitle, Divider, Snackbar, Stack,
+  DialogTitle, Divider, MenuItem, Snackbar, Stack, TextField, Typography,
 } from '@mui/material';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import EditNoteIcon from '@mui/icons-material/EditNote';
@@ -35,9 +35,11 @@ export default function LeadSurveyTab({ entity, leadId }: Props) {
   const [snack, setSnack] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null);
+  const [categoryId, setCategoryId] = useState('');
+  const [subCategoryId, setSubCategoryId] = useState('');
 
   const { data, loading, refetch } = useQuery<LeadSurveyResult>(LEAD_SURVEY, {
-    variables: { entity, lead_id: leadId },
+    variables: { entity, lead_id: leadId, category_id: categoryId || null, sub_category_id: subCategoryId || null },
     fetchPolicy: 'cache-and-network',
   });
   const [generate, { loading: generating }] = useMutation(GENERATE_LEAD_SURVEY_LINK);
@@ -46,12 +48,14 @@ export default function LeadSurveyTab({ entity, leadId }: Props) {
 
   const survey = data?.leadSurvey?.survey ?? null;
   const entries = data?.leadSurvey?.entries ?? [];
+  const categories = data?.leadSurvey?.categories ?? [];
+  const subCategories = data?.leadSurvey?.sub_categories ?? [];
+  const showPicker = categories.length > 1 || subCategories.length > 1;
 
   const run = async (fn: () => Promise<unknown>, ok?: string) => {
     setError(null);
     try { await fn(); if (ok) setSnack(ok); await refetch(); } catch (e) { setError(parseApiError(e)); }
   };
-
   const openFill = (entry?: LeadSurveyEntry) => { setSeed(entry?.answers); setFilling(true); };
   const onGenerateLink = () => survey && run(async () => {
     const res = await generate({ variables: { entity, lead_id: leadId, survey_id: survey.id } });
@@ -61,23 +65,32 @@ export default function LeadSurveyTab({ entity, leadId }: Props) {
 
   if (loading && !data) return <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>;
 
-  if (!survey) {
-    return (
-      <LeadDetailCard title="Survey" icon={<AssignmentIcon color="primary" />}>
-        <Alert severity="info">
-          No onboarding survey matches this lead's category yet. Create one in the Onboarding portal scoped to this
-          Super → Category → Sub, then reopen this tab.
-        </Alert>
-      </LeadDetailCard>
-    );
-  }
+  const picker = showPicker && (
+    <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
+      <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 600 }}>
+        Multiple categories — pick which survey to use:
+      </Typography>
+      {categories.length > 0 && (
+        <TextField select size="small" label="Category" value={categoryId || categories[0]?.id || ''} sx={{ minWidth: 180 }}
+          onChange={(e) => { setCategoryId(e.target.value); setSubCategoryId(''); }}>
+          {categories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+        </TextField>
+      )}
+      {subCategories.length > 0 && (
+        <TextField select size="small" label="Sub-category" value={subCategoryId || subCategories[0]?.id || ''} sx={{ minWidth: 180 }}
+          onChange={(e) => setSubCategoryId(e.target.value)}>
+          {subCategories.map((c) => <MenuItem key={c.id} value={c.id}>{c.name}</MenuItem>)}
+        </TextField>
+      )}
+    </Stack>
+  );
 
   return (
     <LeadDetailCard
-      title={survey.title || 'Survey'}
+      title={survey?.title || 'Survey'}
       subtitle="Fill it as a stepper, share a public link, or click a row to fill/edit — every generation is logged."
       icon={<AssignmentIcon color="primary" />}
-      action={
+      action={survey && (
         <Stack direction="row" spacing={1}>
           <Button size="small" startIcon={<EditNoteIcon />} variant={filling ? 'contained' : 'outlined'} onClick={() => (filling ? setFilling(false) : openFill())}>
             {filling ? 'Close form' : 'Fill manually'}
@@ -86,19 +99,21 @@ export default function LeadSurveyTab({ entity, leadId }: Props) {
             Generate link
           </Button>
         </Stack>
-      }
+      )}
     >
       <Stack spacing={2}>
         {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
-        {filling && (
+        {picker}
+        {!survey && (
+          <Alert severity="info">
+            No onboarding survey matches {showPicker ? 'the selected category' : "this lead's category"} yet. Create one in
+            the Onboarding portal scoped to that Super → Category → Sub, then reopen this tab.
+          </Alert>
+        )}
+        {survey && filling && (
           <>
-            <LeadSurveyFields
-              entity={entity}
-              leadId={leadId}
-              survey={survey}
-              initialAnswers={seed}
-              onSaved={() => { setFilling(false); setSnack('Survey saved'); refetch(); }}
-            />
+            <LeadSurveyFields entity={entity} leadId={leadId} survey={survey} initialAnswers={seed}
+              onSaved={() => { setFilling(false); setSnack('Survey saved'); refetch(); }} />
             <Divider />
           </>
         )}

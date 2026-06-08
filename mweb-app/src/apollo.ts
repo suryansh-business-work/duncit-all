@@ -45,6 +45,11 @@ export const apolloClient = new ApolloClient({
   link: from([apolloErrorLink, retryLink, authLink, httpLink]),
   cache: new InMemoryCache({
     typePolicies: {
+      // The API identifies users by `user_id` (not `id`/`_id`), so Apollo can't
+      // normalize User objects on its own. Without this it can't merge the `me`
+      // result with other User-returning queries and warns about possible data
+      // loss (Apollo error #15). Normalising on user_id fixes the merge.
+      User: { keyFields: ['user_id'] },
       Query: {
         fields: {
           // Treat each unique argument combination as a distinct cache entry

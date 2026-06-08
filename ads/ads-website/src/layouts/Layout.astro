@@ -34,5 +34,11 @@ const { title, description = siteConfig.brand.description } = Astro.props;
   </head>
   <body>
     <slot />
+      <script>
+      // Ship console errors to SignOz (via the server /logs ingest).
+      import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
+      configureLogs(httpTransport(import.meta.env.PROD ? 'https://server.duncit.com/logs' : 'http://localhost:2001/logs'));
+      captureConsole(logs.website.ads);
+    </script>
   </body>
 </html>

@@ -27,10 +27,13 @@ COPY status/package.json ./status/
 COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/theme/package.json ./packages/theme/
 
+COPY packages/logs/package.json ./packages/logs/
+
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
 
 COPY status ./status
+COPY packages/logs ./packages/logs
 RUN pnpm --filter status build
 
 # --- runner ---

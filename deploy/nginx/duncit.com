@@ -467,6 +467,12 @@ server {
     # senders ship to https://signoz.duncit.com over the existing TLS, with no
     # extra public port. The UI is served by `location /` below.
     location ~ ^/v1/(logs|traces|metrics)$ {
+        # Optional ingestion-key guard. The key lives in a server-only snippet
+        # (/etc/nginx/signoz-otlp-auth.conf, NOT in the repo); the wildcard means
+        # nginx -t still passes if the snippet is absent (guard simply off).
+        # Senders pass header `signoz-ingestion-key`. The in-cluster server uses
+        # the internal collector and bypasses this path entirely.
+        include /etc/nginx/signoz-otlp-auth*.conf;
         proxy_pass         http://127.0.0.1:4318;
         proxy_http_version 1.1;
         proxy_set_header   Host $host;

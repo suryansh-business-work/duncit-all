@@ -463,6 +463,17 @@ server {
     server_name signoz.duncit.com;
     client_max_body_size 50m;
 
+    # OTLP HTTP ingestion (logs/traces/metrics) → collector. Lets external
+    # senders ship to https://signoz.duncit.com over the existing TLS, with no
+    # extra public port. The UI is served by `location /` below.
+    location ~ ^/v1/(logs|traces|metrics)$ {
+        proxy_pass         http://127.0.0.1:4318;
+        proxy_http_version 1.1;
+        proxy_set_header   Host $host;
+        client_max_body_size 50m;
+        proxy_read_timeout 30s;
+    }
+
     location / {
         proxy_pass         http://127.0.0.1:2021;
         proxy_http_version 1.1;

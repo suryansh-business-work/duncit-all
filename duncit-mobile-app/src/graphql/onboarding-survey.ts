@@ -2,11 +2,14 @@ import { parse } from 'graphql';
 
 /**
  * Venue/Host onboarding survey shown before "Be a host" / "Register a venue".
- * Uses raw DocumentNodes (server schema, no codegen needed) via graphqlRequest.
- * Distinct from the signup-interest survey in `survey.ts`.
+ * The user first picks Super → Category → Sub; the matching survey (most
+ * specific) is then resolved via `activeSurveyFor`. Uses raw DocumentNodes
+ * (server schema, no codegen) via graphqlRequest. Distinct from the
+ * signup-interest survey in `survey.ts`.
  */
 export type SurveyKind = 'VENUE' | 'HOST';
 export type SurveyQuestionType = 'SECTION' | 'MCQ' | 'TEXT' | 'TEXTAREA';
+export type CategoryLevel = 'SUPER' | 'CATEGORY' | 'SUB';
 
 export interface SurveyQuestion {
   qid: string;
@@ -17,14 +20,28 @@ export interface SurveyQuestion {
   multi: boolean;
   options: string[];
 }
+export interface ActiveSurvey {
+  id: string;
+  kind: SurveyKind;
+  title: string;
+  questions: SurveyQuestion[];
+}
+export interface CategoryOption {
+  id: string;
+  name: string;
+  level: CategoryLevel;
+  parent_id?: string | null;
+  is_active?: boolean;
+  sort_order?: number;
+}
+export interface CategoriesResult {
+  categories: CategoryOption[];
+}
 export interface ActiveSurveyResult {
-  activeSurvey: { kind: SurveyKind; title: string; questions: SurveyQuestion[] } | null;
+  activeSurveyFor: ActiveSurvey | null;
 }
 export interface MyResponseResult {
-  mySurveyResponse: { kind: SurveyKind } | null;
-}
-export interface SubmitResult {
-  submitSurveyResponse: { kind: SurveyKind } | null;
+  mySurveyResponse: { survey_id: string } | null;
 }
 export interface MyMeetingResult {
   myMeeting: { id: string } | null;
@@ -39,9 +56,18 @@ export interface SurveyAnswerInput {
   values?: string[];
 }
 
-export const ActiveSurveyDocument = parse(`
-  query ActiveSurvey($kind: SurveyKind!) {
-    activeSurvey(kind: $kind) {
+export const CategoriesDocument = parse(`
+  query SurveyOnboardingCategories($level: CategoryLevel!, $parent_id: ID) {
+    categories(filter: { level: $level, parent_id: $parent_id }) {
+      id name level parent_id is_active sort_order
+    }
+  }
+`);
+
+export const ActiveSurveyForDocument = parse(`
+  query ActiveSurveyFor($kind: SurveyKind!, $super_category_id: ID, $category_id: ID, $sub_category_id: ID) {
+    activeSurveyFor(kind: $kind, super_category_id: $super_category_id, category_id: $category_id, sub_category_id: $sub_category_id) {
+      id
       kind
       title
       questions { qid type label help required multi options }
@@ -50,14 +76,14 @@ export const ActiveSurveyDocument = parse(`
 `);
 
 export const MySurveyResponseDocument = parse(`
-  query MySurveyResponse($kind: SurveyKind!) {
-    mySurveyResponse(kind: $kind) { kind }
+  query MySurveyResponse($survey_id: ID!) {
+    mySurveyResponse(survey_id: $survey_id) { survey_id }
   }
 `);
 
 export const SubmitSurveyResponseDocument = parse(`
-  mutation SubmitSurveyResponse($kind: SurveyKind!, $answers: [SurveyAnswerInput!]!) {
-    submitSurveyResponse(kind: $kind, answers: $answers) { kind }
+  mutation SubmitSurveyResponse($survey_id: ID!, $answers: [SurveyAnswerInput!]!) {
+    submitSurveyResponse(survey_id: $survey_id, answers: $answers) { survey_id }
   }
 `);
 

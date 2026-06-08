@@ -2,10 +2,10 @@
 import Layout from '../layouts/Layout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import Footer from '../components/Footer.astro';
+import BrandLogo from '../components/BrandLogo.astro';
 import { urlConfigs } from '../config/url-configs';
 
 // Real group photos from Unsplash (free to use)
-const heroImg = 'https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80&auto=format&fit=crop';
 const comingSoonImg = 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80&auto=format&fit=crop';
 const vibesImg = 'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&q=80&auto=format&fit=crop';
 const flow1 = 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=600&q=80&auto=format&fit=crop';
@@ -35,17 +35,47 @@ const earningPaths = [
   <div class="bg-ink p-3 sm:p-4">
     <!-- ============== HERO ============== -->
     <section class="relative overflow-hidden rounded-3xl min-h-[640px] px-6 pt-5 pb-8">
-      <!-- Background image with overlay -->
+      <!-- Background reel (muted, looping, autoplay) with overlay -->
       <div class="absolute inset-0 z-0">
-        <img src={heroImg} alt="Group of friends" class="w-full h-full object-cover" />
+        <video
+          class="w-full h-full object-cover"
+          poster="/media/duncit-reel-poster.jpg"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="metadata"
+          aria-hidden="true"
+        >
+          <source src="/media/duncit-reel.mp4" type="video/mp4" />
+        </video>
         <div class="absolute inset-0 bg-gradient-to-b from-sky-300/40 via-transparent to-ink/30"></div>
       </div>
 
+      <!-- Marquee ribbon running around the banner border (transparent, 12px bold) -->
+      <svg
+        id="bannerMarquee"
+        class="absolute inset-0 z-10 pointer-events-none overflow-visible"
+        preserveAspectRatio="none"
+        aria-hidden="true"
+      >
+        <defs><path id="bannerMarqueePath" fill="none"></path></defs>
+        <text
+          id="bannerMarqueeText"
+          style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;fill:rgba(255,255,255,0.92);"
+        >
+          <textPath id="bannerMarqueeTextPath" href="#bannerMarqueePath" startOffset="0"></textPath>
+        </text>
+      </svg>
+
       <!-- Nav -->
       <nav class="relative z-20 flex items-center justify-between">
-        <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Menu">
-          <i class="fa-solid fa-bars text-lg"></i>
-        </button>
+        <div class="flex items-center gap-3">
+          <button data-nav-toggle class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Menu">
+            <i class="fa-solid fa-bars text-lg"></i>
+          </button>
+          <BrandLogo height={40} />
+        </div>
         <div class="flex items-center gap-2">
           <a href={mwebLoginUrl} class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary text-ink text-xs font-bold sticker hover:scale-105 transition">
             <i class="fa-solid fa-bolt"></i> mWeb is Live
@@ -59,47 +89,20 @@ const earningPaths = [
         </div>
       </nav>
 
-      <!-- Stage -->
-      <div class="relative z-10 h-[480px] flex flex-col items-center justify-center">
-        <span data-hero-sticker class="absolute top-[12%] left-[8%] sm:left-[18%] px-4 py-1.5 rounded-full bg-primary text-white font-bold sticker -rotate-12 text-sm sm:text-base">
-          <i class="fa-solid fa-hands-holding-circle mr-1"></i> Support
-        </span>
-        <span data-hero-sticker class="absolute top-[14%] right-[8%] sm:right-[20%] px-4 py-1.5 rounded-full bg-tertiary text-ink font-bold sticker rotate-12 text-sm sm:text-base">
-          <i class="fa-solid fa-link mr-1"></i> Connection
-        </span>
-        <span data-hero-sticker class="absolute bottom-[28%] left-[14%] sm:left-[26%] px-4 py-1.5 rounded-full bg-purple-300 text-ink font-bold sticker -rotate-6 text-sm sm:text-base">
-          <i class="fa-solid fa-heart mr-1 text-primary"></i> Love
-        </span>
-        <span data-hero-sticker class="absolute bottom-[30%] right-[14%] sm:right-[26%] px-4 py-1.5 rounded-full bg-secondary text-white font-bold sticker -rotate-3 text-sm sm:text-base inline-flex items-center gap-1.5">
-          <i class="fa-regular fa-face-smile"></i> Happy
-        </span>
-
-        <!-- Extra animated chips -->
-        <span data-hero-sticker class="hidden sm:inline-flex absolute top-[28%] left-[4%] px-3 py-1 rounded-full bg-white text-ink font-bold sticker rotate-6 text-xs items-center gap-1.5">
-          <span class="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse"></span> 0 bots
-        </span>
-        <span data-hero-sticker class="hidden sm:inline-flex absolute top-[30%] right-[3%] px-3 py-1 rounded-full bg-ink text-white font-bold sticker -rotate-6 text-xs items-center gap-1.5">
-          <i class="fa-solid fa-fire text-tertiary"></i> Vibes only
-        </span>
-        <span data-hero-sticker class="absolute top-[44%] left-[3%] sm:left-[10%] w-12 h-12 rounded-full bg-white sticker inline-flex items-center justify-center rotate-12" data-spin>
-          <i class="fa-solid fa-music text-secondary text-lg"></i>
-        </span>
-        <span data-hero-sticker class="absolute top-[46%] right-[3%] sm:right-[10%] w-12 h-12 rounded-full bg-tertiary sticker inline-flex items-center justify-center -rotate-6">
-          <i class="fa-solid fa-star text-ink text-lg"></i>
-        </span>
-        <span data-hero-sticker class="hidden sm:inline-flex absolute bottom-[14%] left-[18%] px-3 py-1 rounded-full bg-green-400 text-ink font-bold sticker -rotate-12 text-xs items-center gap-1.5">
-          <i class="fa-solid fa-bolt"></i> Real time
-        </span>
-        <span data-hero-sticker class="hidden sm:inline-flex absolute bottom-[16%] right-[18%] px-3 py-1 rounded-full bg-pink-300 text-ink font-bold sticker rotate-6 text-xs items-center gap-1.5">
-          <i class="fa-solid fa-peace"></i> Good vibes
-        </span>
-        <span data-hero-sticker class="absolute bottom-[42%] left-[44%] w-9 h-9 rounded-full bg-white sticker inline-flex items-center justify-center" data-orbit>
-          <i class="fa-solid fa-sparkles text-tertiary-dark text-sm"></i>
-        </span>
-
-        <h1 id="heroWordmark" class="relative z-10 font-head font-black text-primary text-stroke text-7xl sm:text-8xl md:text-[9rem] tracking-tight inline-block">
-          Duncit
-        </h1>
+      <!-- Stage: the looping reel speaks for itself — just the calls to action. -->
+      <div class="relative z-10 h-[480px] flex flex-col items-center justify-end pb-6 gap-3 sm:flex-row">
+        <a
+          href={mwebRegisterUrl}
+          class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-white font-bold text-base sticker hover:scale-[1.03] transition"
+        >
+          <i class="fa-solid fa-bolt"></i> Join the energy
+        </a>
+        <a
+          href={mwebLoginUrl}
+          class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/90 backdrop-blur text-ink font-bold text-base sticker hover:scale-[1.03] transition"
+        >
+          <i class="fa-solid fa-right-to-bracket"></i> Sign in
+        </a>
       </div>
     </section>
 
@@ -319,68 +322,6 @@ const earningPaths = [
 <script>
   import { animate, stagger } from 'animejs';
 
-  // ---------- Hero entrance ----------
-  try {
-    const stickers = document.querySelectorAll('[data-hero-sticker]');
-
-    // Pop-in entrance
-    animate(stickers, {
-      opacity: [0, 1],
-      translateY: [30, 0],
-      scale: [0.5, 1],
-      delay: stagger(100, { start: 300 }),
-      duration: 600,
-      ease: 'outElastic(1, .7)',
-    });
-
-    // Wordmark bounce
-    animate('#heroWordmark', {
-      scale: [0.4, 1.05, 1],
-      rotate: [-6, 2, 0],
-      opacity: [0, 1],
-      duration: 900,
-      ease: 'outBack(1.4)',
-    });
-
-    // Floating idle wobble
-    stickers.forEach((el, i) => {
-      animate(el, {
-        translateY: [-7, 7],
-        duration: 2000 + i * 200,
-        ease: 'inOutSine',
-        loop: true,
-        alternate: true,
-        delay: 1400 + i * 150,
-      });
-    });
-
-    // Spin badge (music note)
-    const spinEl = document.querySelector('[data-spin]');
-    if (spinEl) {
-      animate(spinEl, {
-        rotate: [0, 360],
-        duration: 5000,
-        ease: 'linear',
-        loop: true,
-      });
-    }
-
-    // Orbit + pulse sparkle
-    const orbitEl = document.querySelector('[data-orbit]');
-    if (orbitEl) {
-      animate(orbitEl, {
-        scale: [1, 1.3, 1],
-        rotate: [-15, 15, -15],
-        duration: 2200,
-        ease: 'inOutSine',
-        loop: true,
-      });
-    }
-  } catch (e) {
-    // If anime.js fails, chips are still visible (no opacity-0 in HTML)
-    console.warn('Animation init failed:', e);
-  }
-
   // ---------- Scroll reveals ----------
   const revealGroups = document.querySelectorAll('[data-reveal-group]');
   const io = new IntersectionObserver((entries, obs) => {
@@ -448,4 +389,61 @@ const earningPaths = [
     });
   }
   handleSubmit('footerForm');
+
+  // ---------- Banner perimeter marquee ----------
+  (function bannerMarquee() {
+    const svg = document.getElementById('bannerMarquee') as unknown as SVGSVGElement | null;
+    const path = document.getElementById('bannerMarqueePath') as unknown as SVGPathElement | null;
+    const textEl = document.getElementById('bannerMarqueeText') as unknown as SVGTextElement | null;
+    const tp = document.getElementById('bannerMarqueeTextPath');
+    if (!svg || !path || !textEl || !tp) return;
+
+    const MSG =
+      'Real people. Real energy.  Sports, live music, nightlife, the outdoors — see what happens when the right people match your energy.  •  ';
+    let unitLen = 0;
+    let offset = 0;
+    let raf = 0;
+
+    function build() {
+      const r = svg!.getBoundingClientRect();
+      const w = Math.round(r.width);
+      const h = Math.round(r.height);
+      if (!w || !h) return;
+      svg!.setAttribute('viewBox', `0 0 ${w} ${h}`);
+      const i = 9;
+      const rad = 22;
+      path!.setAttribute(
+        'd',
+        `M ${i + rad},${i} H ${w - i - rad} A ${rad},${rad} 0 0 1 ${w - i},${i + rad} V ${h - i - rad} A ${rad},${rad} 0 0 1 ${w - i - rad},${h - i} H ${i + rad} A ${rad},${rad} 0 0 1 ${i},${h - i - rad} V ${i + rad} A ${rad},${rad} 0 0 1 ${i + rad},${i} Z`,
+      );
+      const pathLen = path!.getTotalLength();
+      tp!.textContent = MSG;
+      unitLen = textEl!.getComputedTextLength() || MSG.length * 7;
+      const copies = Math.max(2, Math.ceil((pathLen + unitLen) / unitLen) + 1);
+      tp!.textContent = MSG.repeat(copies);
+    }
+
+    function tick() {
+      offset -= 0.5; // px/frame — slow, ambient drift
+      if (unitLen && offset <= -unitLen) offset += unitLen; // seamless wrap
+      tp!.setAttribute('startOffset', String(offset));
+      raf = requestAnimationFrame(tick);
+    }
+
+    function start() {
+      build();
+      cancelAnimationFrame(raf);
+      raf = requestAnimationFrame(tick);
+    }
+
+    const fonts = (document as any).fonts;
+    if (fonts?.ready) fonts.ready.then(start);
+    else start();
+
+    let rt: ReturnType<typeof setTimeout>;
+    window.addEventListener('resize', () => {
+      clearTimeout(rt);
+      rt = setTimeout(build, 150);
+    });
+  })();
 </script>

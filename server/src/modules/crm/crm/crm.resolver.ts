@@ -1,4 +1,5 @@
 import { crmService } from './crm.service';
+import { leadSurveyService } from '@modules/survey/leadSurvey.service';
 import { CRM_RW } from './crm.constants';
 import { parseCrmLeadText, parseCrmLeadsText, leadAiChat, type CrmAiEntity, type ChatMessage } from './crm.ai';
 import { callService } from '@modules/crm/call/call.service';
@@ -20,10 +21,12 @@ export const crmResolvers = {
     super_category: (parent: any) =>
       parent?.super_category_id ? crmService.superCategoryById(String(parent.super_category_id)) : null,
     linked_hosts: (parent: any) => crmService.linkedHostsFor(parent?.linked_host_ids ?? []),
+    matched_user: (parent: any) => leadSurveyService.matchedUserForLead(parent),
   },
   HostLead: {
     super_category: (parent: any) =>
       parent?.super_category_id ? crmService.superCategoryById(String(parent.super_category_id)) : null,
+    matched_user: (parent: any) => leadSurveyService.matchedUserForLead(parent),
   },
   Query: {
     crmLeadConfig: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {

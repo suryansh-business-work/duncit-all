@@ -9,6 +9,7 @@ jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 
 const survey = {
+  id: 'sv1',
   kind: 'VENUE',
   title: 'Venue onboarding',
   questions: [
@@ -60,6 +61,15 @@ const survey = {
   ],
 };
 
+const SUPER = {
+  id: 'super1',
+  name: 'Weddings',
+  level: 'SUPER',
+  parent_id: null,
+  is_active: true,
+  sort_order: 0,
+};
+
 /** Route the mocked client by GraphQL operation name. */
 function mockApi({
   surveyDone = false,
@@ -68,17 +78,19 @@ function mockApi({
   surveyDone?: boolean;
   meetingDone?: boolean;
 }) {
-  mockRequest.mockImplementation((doc: any) => {
+  mockRequest.mockImplementation((doc: any, variables: any) => {
     const op = doc?.definitions?.[0]?.name?.value;
     switch (op) {
-      case 'MySurveyResponse':
-        return Promise.resolve({ mySurveyResponse: surveyDone ? { kind: 'VENUE' } : null });
-      case 'ActiveSurvey':
-        return Promise.resolve({ activeSurvey: survey });
       case 'MyMeeting':
         return Promise.resolve({ myMeeting: meetingDone ? { id: 'm1' } : null });
+      case 'SurveyOnboardingCategories':
+        return Promise.resolve({ categories: variables?.level === 'SUPER' ? [SUPER] : [] });
+      case 'ActiveSurveyFor':
+        return Promise.resolve({ activeSurveyFor: survey });
+      case 'MySurveyResponse':
+        return Promise.resolve({ mySurveyResponse: surveyDone ? { survey_id: 'sv1' } : null });
       case 'SubmitSurveyResponse':
-        return Promise.resolve({ submitSurveyResponse: { kind: 'VENUE' } });
+        return Promise.resolve({ submitSurveyResponse: { survey_id: 'sv1' } });
       case 'RequestMeeting':
         return Promise.resolve({ requestMeeting: { id: 'm1' } });
       default:
@@ -92,24 +104,32 @@ const renderSurvey = () =>
     <OnboardingSurvey kind="VENUE" title="Be a host" subtitle="Sub" icon="storefront" />,
   );
 
+/** Pick the super category and continue past the category step. */
+async function passCategory() {
+  fireEvent.press(await screen.findByTestId('cat-super1'));
+  fireEvent.press(screen.getByTestId('primary-action'));
+}
+
 beforeEach(() => mockRequest.mockReset());
 
 describe('OnboardingSurvey', () => {
-  it('shows the placeholder when survey + meeting are already done', async () => {
-    mockApi({ surveyDone: true, meetingDone: true });
+  it('goes straight to done when the meeting is already requested', async () => {
+    mockApi({ meetingDone: true });
     renderSurvey();
     expect(await screen.findByTestId('placeholder-screen')).toBeOnTheScreen();
   });
 
-  it('falls back to the placeholder if loading fails', async () => {
+  it('falls back to the placeholder if the initial load fails', async () => {
     mockRequest.mockRejectedValue(new Error('network'));
     renderSurvey();
     expect(await screen.findByTestId('placeholder-screen')).toBeOnTheScreen();
   });
 
-  it('validates required questions, then survey -> meeting -> done', async () => {
+  it('category -> survey (validates) -> meeting -> done', async () => {
     mockApi({ surveyDone: false, meetingDone: false });
     renderSurvey();
+    await passCategory();
+
     // Survey rendered (section help + question labels).
     expect(await screen.findByText('About')).toBeOnTheScreen();
     expect(screen.getByText('Tell us more')).toBeOnTheScreen();
@@ -144,15 +164,17 @@ describe('OnboardingSurvey', () => {
     await waitFor(() =>
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ definitions: expect.anything() }),
-        expect.objectContaining({ kind: 'VENUE', answers: expect.any(Array) }),
+        expect.objectContaining({ survey_id: 'sv1', answers: expect.any(Array) }),
         { auth: true },
       ),
     );
   });
 
-  it('starts at the meeting step when only the survey is done', async () => {
+  it('re-prompts the survey even if it was answered before (until meeting is done)', async () => {
     mockApi({ surveyDone: true, meetingDone: false });
     renderSurvey();
-    expect(await screen.findByTestId('meeting-when')).toBeOnTheScreen();
+    await passCategory();
+    // The survey is shown again rather than skipped to the meeting.
+    expect(await screen.findByText('About')).toBeOnTheScreen();
   });
 });

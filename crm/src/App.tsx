@@ -14,6 +14,7 @@ import EmailTemplatesPage from './pages/email-templates';
 import EmailTemplateEditorPage from './pages/email-templates/EditorPage';
 import RemindersPage from './pages/reminders';
 import ServicesOfferedPage from './pages/data/services-offered';
+import PublicSurveyPage from './pages/public-survey';
 import AmenitiesPage from './pages/data/venues/AmenitiesPage';
 import EventSuitabilityPage from './pages/data/venues/EventSuitabilityPage';
 import AppShell from './components/AppShell';
@@ -42,6 +43,8 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      {/* Public, no-login survey fill page reached via a generated share link. */}
+      <Route path="/s/:token" element={<PublicSurveyPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
       <Route path="/venue-leads" element={authed(<VenueLeadsPage />)} />
       <Route path="/venue-leads/services" element={authed(<ManageServicesPage kind="VENUE" />)} />

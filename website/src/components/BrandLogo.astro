@@ -1,0 +1,24 @@
+---
+// The Duncit brand logo — a red rounded badge with the white "duncit" wordmark.
+// Rendered inline (not an <img>) so it always uses the brand font and stays
+// crisp at any size. Used site-wide so every page shows the same new logo.
+interface Props {
+  class?: string;
+  height?: number;
+}
+const { class: className = '', height = 40 } = Astro.props;
+---
+
+<a href="/" class:list={['inline-flex items-center', className]} aria-label="Duncit — home">
+  <span
+    class="inline-flex items-center justify-center rounded-xl bg-primary"
+    style={`height:${height}px; padding-inline:${Math.round(height * 0.34)}px`}
+  >
+    <span
+      class="font-head font-black text-white lowercase"
+      style={`font-size:${Math.round(height * 0.5)}px; letter-spacing:-0.04em; line-height:1`}
+    >
+      duncit
+    </span>
+  </span>
+</a>

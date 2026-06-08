@@ -24,7 +24,14 @@ export const surveyTypeDefs = gql`
   }
 
   type Survey {
+    id: ID!
     kind: SurveyKind!
+    super_category_id: ID
+    category_id: ID
+    sub_category_id: ID
+    super_category_name: String
+    category_name: String
+    sub_category_name: String
     title: String!
     is_active: Boolean!
     questions: [SurveyQuestion!]!
@@ -40,7 +47,19 @@ export const surveyTypeDefs = gql`
     multi: Boolean
     options: [String!]
   }
-  input UpsertSurveyInput {
+  input CreateSurveyInput {
+    kind: SurveyKind!
+    super_category_id: ID
+    category_id: ID
+    sub_category_id: ID
+    title: String
+    is_active: Boolean
+    questions: [SurveyQuestionInput!]!
+  }
+  input UpdateSurveyInput {
+    super_category_id: ID
+    category_id: ID
+    sub_category_id: ID
     title: String
     is_active: Boolean
     questions: [SurveyQuestionInput!]!
@@ -58,6 +77,7 @@ export const surveyTypeDefs = gql`
   }
   type SurveyResponse {
     kind: SurveyKind!
+    survey_id: ID
     answers: [SurveyAnswer!]!
     submitted_at: String
   }
@@ -71,23 +91,30 @@ export const surveyTypeDefs = gql`
   }
   type UserSurveyResponse {
     kind: SurveyKind!
+    title: String
     submitted_at: String
     items: [SurveyResponseItem!]!
   }
 
   extend type Query {
-    "Builder read of the survey for a kind (may be empty)."
-    survey(kind: SurveyKind!): Survey
-    "Active survey for gating registration — null when none/empty."
+    "Onboarding list — surveys for a kind, optionally narrowed by taxonomy/search."
+    surveys(kind: SurveyKind, super_category_id: ID, category_id: ID, sub_category_id: ID, search: String): [Survey!]!
+    "Builder read of a single survey by id."
+    surveyById(id: ID!): Survey
+    "Kind-level default survey (all scope null) — back-compat."
     activeSurvey(kind: SurveyKind!): Survey
-    "Current user's submitted response for a kind (drives 'required once')."
-    mySurveyResponse(kind: SurveyKind!): SurveyResponse
+    "Most-specific active survey for a chosen taxonomy slot — null when none."
+    activeSurveyFor(kind: SurveyKind!, super_category_id: ID, category_id: ID, sub_category_id: ID): Survey
+    "Current user's submitted response for a survey (drives 'asked once')."
+    mySurveyResponse(survey_id: ID!): SurveyResponse
     "All survey responses for a user (admin)."
     userSurveyResponses(user_id: ID!): [UserSurveyResponse!]!
   }
 
   extend type Mutation {
-    upsertSurvey(kind: SurveyKind!, input: UpsertSurveyInput!): Survey!
-    submitSurveyResponse(kind: SurveyKind!, answers: [SurveyAnswerInput!]!): SurveyResponse!
+    createSurvey(input: CreateSurveyInput!): Survey!
+    updateSurvey(id: ID!, input: UpdateSurveyInput!): Survey!
+    deleteSurvey(id: ID!): Boolean!
+    submitSurveyResponse(survey_id: ID!, answers: [SurveyAnswerInput!]!): SurveyResponse!
   }
 `;

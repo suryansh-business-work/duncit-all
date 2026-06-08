@@ -1,10 +1,16 @@
 import { Schema, model, InferSchemaType, Types } from 'mongoose';
 
 /**
- * Onboarding surveys: one survey per `kind` (VENUE | HOST), authored in the
- * Onboarding portal and shown before a user registers a venue / becomes a host
- * in mWeb + mobile. Responses are stored per user (one per kind) and surfaced
- * in the Admin user-details page.
+ * Onboarding surveys: many surveys per `kind` (VENUE | HOST), each scoped to a
+ * slot in the Super → Category → Sub taxonomy. `super_category_id` is the only
+ * required scope field; `category_id` / `sub_category_id` are optional and act
+ * as wildcards when null. A survey with all three null is the kind-level
+ * default. The consuming flows (mWeb / mobile / CRM) resolve the *most specific*
+ * matching survey for the user's chosen category — see `survey.service.activeFor`.
+ *
+ * Authored in the Onboarding portal and shown before a user registers a venue /
+ * becomes a host. Responses are stored per user per survey and surfaced in the
+ * Admin user-details page.
  */
 export const SURVEY_KINDS = ['VENUE', 'HOST'] as const;
 export const QUESTION_TYPES = ['SECTION', 'MCQ', 'TEXT', 'TEXTAREA'] as const;
@@ -27,13 +33,25 @@ const questionSchema = new Schema(
 
 const surveySchema = new Schema(
   {
-    kind: { type: String, enum: SURVEY_KINDS, required: true, unique: true, index: true },
+    kind: { type: String, enum: SURVEY_KINDS, required: true, index: true },
+    // Taxonomy scope. super is required for category-specific surveys; legacy /
+    // default surveys keep all three null. null = wildcard when matching.
+    super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
+    category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
+    sub_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
     title: { type: String, default: '' },
     questions: { type: [questionSchema], default: [] },
     is_active: { type: Boolean, default: true },
     updated_by: { type: String, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+// One survey per exact taxonomy slot per kind — editing replaces it; a second
+// survey for the same slot would be ambiguous for most-specific matching.
+surveySchema.index(
+  { kind: 1, super_category_id: 1, category_id: 1, sub_category_id: 1 },
+  { unique: true }
 );
 
 const answerSchema = new Schema(
@@ -48,6 +66,7 @@ const answerSchema = new Schema(
 const surveyResponseSchema = new Schema(
   {
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    survey_id: { type: Schema.Types.ObjectId, ref: 'Survey', required: true, index: true },
     kind: { type: String, enum: SURVEY_KINDS, required: true, index: true },
     answers: { type: [answerSchema], default: [] },
     submitted_at: { type: Date, default: Date.now },
@@ -55,8 +74,8 @@ const surveyResponseSchema = new Schema(
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
-// One response per user per kind — re-submitting upserts.
-surveyResponseSchema.index({ user_id: 1, kind: 1 }, { unique: true });
+// One response per user per survey — re-submitting upserts.
+surveyResponseSchema.index({ user_id: 1, survey_id: 1 }, { unique: true });
 
 export type SurveyDoc = InferSchemaType<typeof surveySchema> & { _id: Types.ObjectId };
 export type SurveyResponseDoc = InferSchemaType<typeof surveyResponseSchema> & { _id: Types.ObjectId };

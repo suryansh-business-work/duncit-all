@@ -45,14 +45,7 @@ export const appConfig: AppConfig = {
   accent: { light: '#a5b4fc', main: '#6366f1', hover: '#4f46e5', active: '#4338ca' },
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
-    {
-      label: 'Survey',
-      icon: 'survey',
-      children: [
-        { label: 'Venue Survey', to: '/surveys/venue', icon: 'survey' },
-        { label: 'Host Survey', to: '/surveys/host', icon: 'survey' },
-      ],
-    },
+    { label: 'Surveys', to: '/surveys', icon: 'survey' },
     {
       label: 'Meeting',
       icon: 'calendar',

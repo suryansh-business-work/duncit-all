@@ -48,13 +48,14 @@ export const CRM_LEAD_CONFIG = gql`
 export const VENUE_LEADS = gql`
   query VenueLeads($filter: CrmLeadFilter) { venueLeads(filter: $filter) { ${VENUE_LEAD_FIELDS} } }
 `;
-export const VENUE_LEAD = gql`query VenueLead($id: ID!) { venueLead(id: $id) { ${VENUE_LEAD_FIELDS} } }`;
+const MATCHED_USER_FIELDS = `matched_user { user_id full_name email phone profile_photo matched_on }`;
+export const VENUE_LEAD = gql`query VenueLead($id: ID!) { venueLead(id: $id) { ${VENUE_LEAD_FIELDS} ${MATCHED_USER_FIELDS} } }`;
 export const CREATE_VENUE_LEAD = gql`mutation CreateVenueLead($input: VenueLeadInput!) { createVenueLead(input: $input) { ${VENUE_LEAD_FIELDS} } }`;
 export const UPDATE_VENUE_LEAD = gql`mutation UpdateVenueLead($id: ID!, $input: VenueLeadInput!) { updateVenueLead(id: $id, input: $input) { ${VENUE_LEAD_FIELDS} } }`;
 export const DELETE_VENUE_LEAD = gql`mutation DeleteVenueLead($id: ID!) { deleteVenueLead(id: $id) }`;
 
 export const HOST_LEADS = gql`query HostLeads($filter: CrmLeadFilter) { hostLeads(filter: $filter) { ${HOST_LEAD_FIELDS} } }`;
-export const HOST_LEAD = gql`query HostLead($id: ID!) { hostLead(id: $id) { ${HOST_LEAD_FIELDS} } }`;
+export const HOST_LEAD = gql`query HostLead($id: ID!) { hostLead(id: $id) { ${HOST_LEAD_FIELDS} ${MATCHED_USER_FIELDS} } }`;
 export const CREATE_HOST_LEAD = gql`mutation CreateHostLead($input: HostLeadInput!) { createHostLead(input: $input) { ${HOST_LEAD_FIELDS} } }`;
 export const UPDATE_HOST_LEAD = gql`mutation UpdateHostLead($id: ID!, $input: HostLeadInput!) { updateHostLead(id: $id, input: $input) { ${HOST_LEAD_FIELDS} } }`;
 export const DELETE_HOST_LEAD = gql`mutation DeleteHostLead($id: ID!) { deleteHostLead(id: $id) }`;

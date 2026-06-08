@@ -14,6 +14,7 @@ import ArrowUpwardIcon from '@mui/icons-material/ArrowUpward';
 import ArrowDownwardIcon from '@mui/icons-material/ArrowDownward';
 import DeleteIcon from '@mui/icons-material/Delete';
 import type { QuestionType, SurveyQuestion } from './queries';
+import OptionsEditor from './OptionsEditor';
 
 export type DraftQuestion = Omit<SurveyQuestion, 'qid' | 'sort_order'> & { qid?: string };
 
@@ -56,16 +57,7 @@ export default function QuestionCard({ question, index, total, onChange, onMove,
           <TextField size="small" label="Help text (optional)" value={question.help ?? ''} onChange={(e) => set({ help: e.target.value })} fullWidth />
           {question.type === 'MCQ' && (
             <>
-              <TextField
-                size="small"
-                label="Options (one per line)"
-                value={(question.options ?? []).join('\n')}
-                onChange={(e) => set({ options: e.target.value.split('\n').map((o) => o.trimStart()).filter((o, i, arr) => o !== '' || i === arr.length - 1) })}
-                onBlur={(e) => set({ options: e.target.value.split('\n').map((o) => o.trim()).filter(Boolean) })}
-                multiline
-                minRows={3}
-                fullWidth
-              />
+              <OptionsEditor options={question.options ?? []} onChange={(options) => set({ options })} />
               <FormControlLabel control={<Switch checked={!!question.multi} onChange={(e) => set({ multi: e.target.checked })} />} label="Allow multiple answers" />
             </>
           )}

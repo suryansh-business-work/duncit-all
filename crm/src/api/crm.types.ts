@@ -87,12 +87,22 @@ export interface CrmDynamicField {
 
 export type CrmDynamicValueMap = Record<string, string | number | boolean | string[] | null>;
 
+export interface CrmMatchedUser {
+  user_id: string;
+  full_name?: string | null;
+  email?: string | null;
+  phone?: string | null;
+  profile_photo?: string | null;
+  matched_on: 'EMAIL' | 'PHONE';
+}
+
 export interface VenueLead {
   id: string;
   super_category_id?: string | null;
   category_ids?: string[];
   sub_category_ids?: string[];
   super_category?: CrmSuperCategoryRef | null;
+  matched_user?: CrmMatchedUser | null;
   venue_name: string;
   venue_types: string[];
   venue_type_other?: string | null;
@@ -144,6 +154,7 @@ export interface HostLead {
   category_ids?: string[];
   sub_category_ids?: string[];
   super_category?: CrmSuperCategoryRef | null;
+  matched_user?: CrmMatchedUser | null;
   host_name: string;
   host_type?: string | null;
   organization_name?: string | null;

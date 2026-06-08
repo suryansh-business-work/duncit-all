@@ -43,5 +43,9 @@ const retryLink = new RetryLink({
 
 export const apolloClient = new ApolloClient({
   link: from([apolloErrorLink, retryLink, authLink, httpLink]),
-  cache: new InMemoryCache(),
+  cache: new InMemoryCache({
+    // Normalize User by its `user_id` (the API's id field) so Apollo can merge
+    // the `me` result with other User queries instead of warning about data loss.
+    typePolicies: { User: { keyFields: ['user_id'] } },
+  }),
 });

@@ -62,7 +62,7 @@ const earningPaths = [
         <defs><path id="bannerMarqueePath" fill="none"></path></defs>
         <text
           id="bannerMarqueeText"
-          style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12px;font-weight:700;letter-spacing:0.06em;fill:rgba(255,255,255,0.92);"
+          style="font-family:'Plus Jakarta Sans',system-ui,sans-serif;font-size:12px;font-weight:600;letter-spacing:0.08em;fill:rgba(250,246,240,0.85);"
         >
           <textPath id="bannerMarqueeTextPath" href="#bannerMarqueePath" startOffset="0"></textPath>
         </text>
@@ -410,8 +410,8 @@ const earningPaths = [
       const h = Math.round(r.height);
       if (!w || !h) return;
       svg!.setAttribute('viewBox', `0 0 ${w} ${h}`);
-      const i = 9;
-      const rad = 22;
+      const i = 20; // 20px inside the banner edge
+      const rad = 26;
       path!.setAttribute(
         'd',
         `M ${i + rad},${i} H ${w - i - rad} A ${rad},${rad} 0 0 1 ${w - i},${i + rad} V ${h - i - rad} A ${rad},${rad} 0 0 1 ${w - i - rad},${h - i} H ${i + rad} A ${rad},${rad} 0 0 1 ${i},${h - i - rad} V ${i + rad} A ${rad},${rad} 0 0 1 ${i + rad},${i} Z`,

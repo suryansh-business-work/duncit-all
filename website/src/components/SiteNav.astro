@@ -127,52 +127,46 @@ const sections = [
   </div>
 </aside>
 
-<script>
-  import { animate, stagger } from 'animejs';
-
-  const nav = document.getElementById('siteNav');
-  const backdrop = document.getElementById('navBackdrop');
-
-  function open() {
-    nav?.classList.remove('-translate-x-full');
-    nav?.setAttribute('aria-hidden', 'false');
-    backdrop?.classList.remove('opacity-0', 'pointer-events-none');
-    backdrop?.classList.add('opacity-100');
-    document.body.style.overflow = 'hidden';
-    if (nav) {
-      const items = nav.querySelectorAll('nav a, nav h4');
-      try {
-        animate(items, {
-          opacity: [0, 1],
-          translateX: [-20, 0],
-          delay: stagger(25, { start: 150 }),
-          duration: 350,
-          ease: 'outQuart',
-        });
-      } catch(e) {}
+<!--
+  Inline + dependency-free on purpose: the drawer toggle must never break if
+  another bundled script on the page throws. Delegated click handling so any
+  [data-nav-toggle] (homepage hero, sub-page headers) opens it.
+-->
+<script is:inline>
+  (function () {
+    var nav = document.getElementById('siteNav');
+    var backdrop = document.getElementById('navBackdrop');
+    if (!nav) return;
+    function open() {
+      nav.classList.remove('-translate-x-full');
+      nav.setAttribute('aria-hidden', 'false');
+      if (backdrop) {
+        backdrop.classList.remove('opacity-0', 'pointer-events-none');
+        backdrop.classList.add('opacity-100');
+      }
+      document.body.style.overflow = 'hidden';
     }
-  }
-  function close() {
-    nav?.classList.add('-translate-x-full');
-    nav?.setAttribute('aria-hidden', 'true');
-    backdrop?.classList.add('opacity-0', 'pointer-events-none');
-    backdrop?.classList.remove('opacity-100');
-    document.body.style.overflow = '';
-  }
-
-  // Delegated so it works no matter when/where a [data-nav-toggle] renders
-  // (the homepage hero, sub-page headers, etc.).
-  document.addEventListener('click', (e) => {
-    const t = e.target as HTMLElement | null;
-    if (!t) return;
-    if (t.closest('[data-nav-toggle]')) {
-      e.preventDefault();
-      open();
-    } else if (t.closest('[data-nav-close]') || t === backdrop) {
-      close();
+    function close() {
+      nav.classList.add('-translate-x-full');
+      nav.setAttribute('aria-hidden', 'true');
+      if (backdrop) {
+        backdrop.classList.add('opacity-0', 'pointer-events-none');
+        backdrop.classList.remove('opacity-100');
+      }
+      document.body.style.overflow = '';
     }
-  });
-  document.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close();
-  });
+    document.addEventListener('click', function (e) {
+      var t = e.target;
+      if (!t || !t.closest) return;
+      if (t.closest('[data-nav-toggle]')) {
+        e.preventDefault();
+        open();
+      } else if (t.closest('[data-nav-close]') || t === backdrop) {
+        close();
+      }
+    });
+    document.addEventListener('keydown', function (e) {
+      if (e.key === 'Escape') close();
+    });
+  })();
 </script>

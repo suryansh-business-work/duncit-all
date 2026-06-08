@@ -389,61 +389,74 @@ const earningPaths = [
     });
   }
   handleSubmit('footerForm');
+</script>
 
-  // ---------- Banner perimeter marquee ----------
-  (function bannerMarquee() {
-    const svg = document.getElementById('bannerMarquee') as unknown as SVGSVGElement | null;
-    const path = document.getElementById('bannerMarqueePath') as unknown as SVGPathElement | null;
-    const textEl = document.getElementById('bannerMarqueeText') as unknown as SVGTextElement | null;
-    const tp = document.getElementById('bannerMarqueeTextPath');
-    if (!svg || !path || !textEl || !tp) return;
+<!--
+  Banner marquee: isolated + dependency-free so it always runs (and can't be
+  broken by the bundled animejs script). ResizeObserver rebuilds the rounded-rect
+  textPath once the SVG actually has a size, which is what makes it reliably show.
+-->
+<script is:inline>
+  (function () {
+    try {
+      var svg = document.getElementById('bannerMarquee');
+      var path = document.getElementById('bannerMarqueePath');
+      var textEl = document.getElementById('bannerMarqueeText');
+      var tp = document.getElementById('bannerMarqueeTextPath');
+      if (!svg || !path || !textEl || !tp) return;
 
-    const MSG =
-      'Real people. Real energy.  Sports, live music, nightlife, the outdoors — see what happens when the right people match your energy.  •  ';
-    let unitLen = 0;
-    let offset = 0;
-    let raf = 0;
+      var MSG =
+        'Real people. Real energy.  Sports, live music, nightlife, the outdoors — see what happens when the right people match your energy.  •  ';
+      var unitLen = 0;
+      var offset = 0;
+      var ready = false;
 
-    function build() {
-      const r = svg!.getBoundingClientRect();
-      const w = Math.round(r.width);
-      const h = Math.round(r.height);
-      if (!w || !h) return;
-      svg!.setAttribute('viewBox', `0 0 ${w} ${h}`);
-      const i = 20; // 20px inside the banner edge
-      const rad = 26;
-      path!.setAttribute(
-        'd',
-        `M ${i + rad},${i} H ${w - i - rad} A ${rad},${rad} 0 0 1 ${w - i},${i + rad} V ${h - i - rad} A ${rad},${rad} 0 0 1 ${w - i - rad},${h - i} H ${i + rad} A ${rad},${rad} 0 0 1 ${i},${h - i - rad} V ${i + rad} A ${rad},${rad} 0 0 1 ${i + rad},${i} Z`,
-      );
-      const pathLen = path!.getTotalLength();
-      tp!.textContent = MSG;
-      unitLen = textEl!.getComputedTextLength() || MSG.length * 7;
-      const copies = Math.max(2, Math.ceil((pathLen + unitLen) / unitLen) + 1);
-      tp!.textContent = MSG.repeat(copies);
-    }
+      function build() {
+        var r = svg.getBoundingClientRect();
+        var w = Math.round(r.width);
+        var h = Math.round(r.height);
+        if (!w || !h) return;
+        svg.setAttribute('viewBox', '0 0 ' + w + ' ' + h);
+        var i = 20; // 20px inside the banner edge
+        var rad = 26;
+        path.setAttribute(
+          'd',
+          'M ' + (i + rad) + ',' + i + ' H ' + (w - i - rad) +
+          ' A ' + rad + ',' + rad + ' 0 0 1 ' + (w - i) + ',' + (i + rad) +
+          ' V ' + (h - i - rad) + ' A ' + rad + ',' + rad + ' 0 0 1 ' + (w - i - rad) + ',' + (h - i) +
+          ' H ' + (i + rad) + ' A ' + rad + ',' + rad + ' 0 0 1 ' + i + ',' + (h - i - rad) +
+          ' V ' + (i + rad) + ' A ' + rad + ',' + rad + ' 0 0 1 ' + (i + rad) + ',' + i + ' Z',
+        );
+        var pathLen = path.getTotalLength();
+        tp.textContent = MSG;
+        unitLen = textEl.getComputedTextLength() || MSG.length * 7;
+        var copies = Math.max(2, Math.ceil((pathLen + unitLen) / unitLen) + 1);
+        tp.textContent = MSG.repeat(copies);
+        ready = true;
+      }
 
-    function tick() {
-      offset -= 0.5; // px/frame — slow, ambient drift
-      if (unitLen && offset <= -unitLen) offset += unitLen; // seamless wrap
-      tp!.setAttribute('startOffset', String(offset));
-      raf = requestAnimationFrame(tick);
-    }
+      function tick() {
+        if (ready) {
+          offset -= 0.5; // slow, ambient drift
+          if (unitLen && offset <= -unitLen) offset += unitLen; // seamless wrap
+          tp.setAttribute('startOffset', String(offset));
+        }
+        requestAnimationFrame(tick);
+      }
 
-    function start() {
-      build();
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(tick);
-    }
+      function rebuild() {
+        try { build(); } catch (e) {}
+      }
 
-    const fonts = (document as any).fonts;
-    if (fonts?.ready) fonts.ready.then(start);
-    else start();
-
-    let rt: ReturnType<typeof setTimeout>;
-    window.addEventListener('resize', () => {
-      clearTimeout(rt);
-      rt = setTimeout(build, 150);
-    });
+      if (window.ResizeObserver) {
+        new ResizeObserver(rebuild).observe(svg);
+      }
+      if (document.fonts && document.fonts.ready) {
+        document.fonts.ready.then(rebuild);
+      }
+      rebuild();
+      requestAnimationFrame(tick);
+      window.addEventListener('resize', rebuild);
+    } catch (e) {}
   })();
 </script>

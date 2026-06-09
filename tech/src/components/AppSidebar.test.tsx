@@ -46,4 +46,20 @@ describe('AppSidebar', () => {
     fireEvent.click(screen.getByText('Feature Flags'));
     expect(onNavigate).toHaveBeenCalled();
   });
+
+  it('auto-expands the Server group when a child route is active', () => {
+    renderSidebar([], '/server/info');
+    // Group header + both children are visible because the group is open.
+    expect(screen.getByText('Server')).toBeInTheDocument();
+    expect(screen.getByText('Info')).toBeInTheDocument();
+    expect(screen.getByText('Docker')).toBeInTheDocument();
+  });
+
+  it('expands the Server group when its header is clicked', () => {
+    renderSidebar([], '/');
+    // Collapsed by default on an unrelated route.
+    expect(screen.queryByText('Docker')).toBeNull();
+    fireEvent.click(screen.getByText('Server'));
+    expect(screen.getByText('Docker')).toBeInTheDocument();
+  });
 });

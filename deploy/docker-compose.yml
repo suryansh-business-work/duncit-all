@@ -14,6 +14,11 @@ services:
       OTEL_SERVICE_NAME: duncit-server
     ports:
       - "127.0.0.1:2001:2001"
+    volumes:
+      # Read-only Docker socket so the Tech portal's Server > Docker page can
+      # list host containers (techDockerInfo). The endpoint is gated to
+      # SUPER_ADMIN/TECH_MANAGER; without this mount it degrades to "unavailable".
+      - /var/run/docker.sock:/var/run/docker.sock:ro
     networks:
       - default
       - signoz-net

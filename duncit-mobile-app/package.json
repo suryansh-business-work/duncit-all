@@ -26,6 +26,8 @@
     "build:android:apk": "eas build --platform android --profile preview --non-interactive",
     "build:android:aab": "eas build --platform android --profile production --non-interactive",
     "build:ios": "eas build --platform ios --profile production",
+    "build:local:apk": "node scripts/build-local-android.js",
+    "build:local:aab": "node scripts/build-local-android.js --aab",
     "upload:slack": "node scripts/upload-slack.js",
     "ci": "npm run lint && npm run typecheck && npm run test:coverage"
   },

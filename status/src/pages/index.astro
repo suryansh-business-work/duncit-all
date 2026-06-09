@@ -1,52 +1,6 @@
 ---
 import Layout from '../layouts/Layout.astro';
-
-interface Service {
-  name: string;
-  url: string;
-  description: string;
-  /** Optional reachability probe path (defaults to the URL itself). */
-  probe?: string;
-}
-
-const consoles: Service[] = [
-  { name: 'Admin', url: 'https://admin.duncit.com/', description: 'Platform administration' },
-  { name: 'mWeb', url: 'https://mweb.duncit.com/', description: 'Member web app' },
-  { name: 'Partners App', url: 'https://partners-app.duncit.com/', description: 'Host & venue partners' },
-  { name: 'Ads Portal', url: 'https://ads-portal.duncit.com/', description: 'Advertising & campaigns' },
-  { name: 'CRM', url: 'https://crm.duncit.com/', description: 'Customer relationships' },
-  { name: 'Finance', url: 'https://finance.duncit.com/', description: 'Payments & payouts' },
-  { name: 'Tech', url: 'https://tech.duncit.com/', description: 'Platform configuration' },
-  { name: 'Support', url: 'https://support.duncit.com/', description: 'Tickets & live chat' },
-  { name: 'Website', url: 'https://website.duncit.com/', description: 'Site content management' },
-  { name: 'Legal', url: 'https://legal.duncit.com/', description: 'Policies & compliance' },
-  { name: 'AI', url: 'https://ai.duncit.com/', description: 'AI tooling' },
-  { name: 'Products', url: 'https://products.duncit.com/', description: 'Catalog & inventory' },
-  { name: 'Marketing', url: 'https://marketing.duncit.com/', description: 'Campaigns & notifications' },
-  { name: 'Onboarding', url: 'https://onboarding.duncit.com/', description: 'Onboarding & approvals' },
-  { name: 'HR', url: 'https://hr.duncit.com/', description: 'People & HR operations' },
-  { name: 'Employee', url: 'https://employee.duncit.com/', description: 'Employee self-service' },
-];
-
-const platform: Service[] = [
-  { name: 'API Server', url: 'https://server.duncit.com/', description: 'GraphQL API', probe: 'https://server.duncit.com/health' },
-  { name: 'SignOz', url: 'https://signoz.duncit.com/', description: 'Observability & monitoring' },
-];
-
-const websites: Service[] = [
-  { name: 'duncit.com', url: 'https://duncit.com/', description: 'Public marketing website' },
-  { name: 'Partners Website', url: 'https://partners.duncit.com/', description: 'Partner marketing website' },
-  { name: 'Ads', url: 'https://ads.duncit.com/', description: 'Advertising marketing site' },
-  { name: 'Native Web', url: 'https://native.duncit.com/', description: 'Mobile web app' },
-];
-
-const groups = [
-  { title: 'Consoles', items: consoles },
-  { title: 'Platform', items: platform },
-  { title: 'Websites', items: websites },
-];
-
-const allServices = [...consoles, ...platform, ...websites];
+import { groups } from '../data/services';
 ---
 
 <Layout title="Duncit Status">
@@ -70,14 +24,23 @@ const allServices = [...consoles, ...platform, ...websites];
         <h2>{group.title}</h2>
         <div class="grid">
           {group.items.map((s) => (
-            <a class="card" href={s.url} target="_blank" rel="noopener" data-url={s.probe ?? s.url}>
+            <div class="card" data-url={s.probe ?? s.url}>
               <div class="row">
-                <span class="name">{s.name}</span>
+                <a class="name" href={s.url} target="_blank" rel="noopener">{s.name}</a>
                 <span class="badge pending"><span class="dot pending"></span><span class="label">Checking</span></span>
               </div>
               <span class="desc">{s.description}</span>
-              <span class="host">{new URL(s.url).host}</span>
-            </a>
+              <div class="card-foot">
+                <span class="host">{new URL(s.url).host}</span>
+                <button
+                  type="button"
+                  class="info-btn"
+                  data-name={s.name}
+                  data-url={s.url}
+                  aria-label={`Show HTTP status and SSL details for ${s.name}`}
+                >ⓘ Details</button>
+              </div>
+            </div>
           ))}
         </div>
       </section>
@@ -88,6 +51,14 @@ const allServices = [...consoles, ...platform, ...websites];
       <span id="updated"></span>
     </footer>
   </main>
+
+  <dialog id="detail" class="detail">
+    <div class="detail-head">
+      <h3 id="detail-title">Service</h3>
+      <button type="button" class="close" id="detail-close" aria-label="Close details">×</button>
+    </div>
+    <div id="detail-body" class="detail-body"></div>
+  </dialog>
 
   <style>
     .wrap { max-width: 1040px; margin: 0 auto; padding: clamp(24px, 5vw, 56px) 20px 64px; }
@@ -104,8 +75,12 @@ const allServices = [...consoles, ...platform, ...websites];
     .card:hover { transform: translateY(-2px); border-color: rgba(255, 90, 90, 0.5); }
     .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
     .name { font-weight: 800; }
+    .name:hover { text-decoration: underline; }
     .desc { color: var(--muted); font-size: 0.85rem; }
+    .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
     .host { color: rgba(148, 163, 184, 0.7); font-size: 0.72rem; font-family: ui-monospace, monospace; }
+    .info-btn { cursor: pointer; font: inherit; font-size: 0.72rem; font-weight: 800; color: var(--ink); background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; transition: background 0.15s ease, border-color 0.15s ease; }
+    .info-btn:hover { background: rgba(255, 90, 90, 0.16); border-color: rgba(255, 90, 90, 0.5); }
     .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); }
     .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
     .dot.ok, .badge.ok { color: var(--ok); } .dot.ok { background: var(--ok); box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18); }
@@ -113,40 +88,27 @@ const allServices = [...consoles, ...platform, ...websites];
     .dot.pending, .badge.pending { color: var(--pending); } .dot.pending { background: var(--pending); animation: pulse 1.2s ease-in-out infinite; }
     @keyframes pulse { 50% { opacity: 0.35; } }
     .foot { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.8rem; margin-top: 28px; border-top: 1px solid var(--border); padding-top: 16px; }
+
+    .detail { width: min(440px, 92vw); border: 1px solid var(--border); border-radius: 18px; background: #11151f; color: var(--ink); padding: 0; }
+    .detail::backdrop { background: rgba(5, 8, 14, 0.66); backdrop-filter: blur(3px); }
+    .detail-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); }
+    .detail-head h3 { margin: 0; font-size: 1.1rem; font-weight: 900; }
+    .close { cursor: pointer; background: transparent; border: 0; color: var(--muted); font-size: 1.5rem; line-height: 1; padding: 0 4px; }
+    .close:hover { color: var(--ink); }
+    .detail-body { padding: 14px 20px 22px; display: flex; flex-direction: column; gap: 2px; }
+    .d-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 9px 0; border-bottom: 1px dashed rgba(255,255,255,0.07); font-size: 0.9rem; }
+    .d-row:last-child { border-bottom: 0; }
+    .d-label { color: var(--muted); font-weight: 700; }
+    .d-value { text-align: right; word-break: break-word; }
+    .pill { font-size: 0.78rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); }
+    .pill.ok { color: var(--ok); background: rgba(34, 197, 94, 0.14); }
+    .pill.down { color: var(--down); background: rgba(239, 68, 68, 0.14); }
+    .d-loading { color: var(--muted); padding: 12px 0; }
+    .d-error { color: var(--down); padding: 12px 0; font-weight: 700; }
   </style>
 
-  <script define:vars={{ total: allServices.length }}>
-    const probe = (url) =>
-      new Promise((resolve) => {
-        const ctrl = new AbortController();
-        const t = setTimeout(() => { ctrl.abort(); resolve(false); }, 8000);
-        fetch(url, { mode: 'no-cors', signal: ctrl.signal, cache: 'no-store' })
-          .then(() => { clearTimeout(t); resolve(true); })
-          .catch(() => { clearTimeout(t); resolve(false); });
-      });
-
-    const setBadge = (el, ok) => {
-      el.className = 'badge ' + (ok ? 'ok' : 'down');
-      el.innerHTML = '<span class="dot ' + (ok ? 'ok' : 'down') + '"></span><span class="label">' + (ok ? 'Operational' : 'Unreachable') + '</span>';
-    };
-
-    async function run() {
-      const cards = Array.from(document.querySelectorAll('.card'));
-      let up = 0;
-      await Promise.all(cards.map(async (card) => {
-        const ok = await probe(card.dataset.url);
-        if (ok) up += 1;
-        setBadge(card.querySelector('.badge'), ok);
-      }));
-      const dot = document.getElementById('overall-dot');
-      const text = document.getElementById('overall-text');
-      const allUp = up === total;
-      dot.className = 'dot ' + (allUp ? 'ok' : up === 0 ? 'down' : 'pending');
-      text.textContent = allUp ? 'All systems operational' : up + ' of ' + total + ' services operational';
-      document.getElementById('updated').textContent = 'Last checked ' + new Date().toLocaleTimeString();
-    }
-
-    run();
-    setInterval(run, 60000);
+  <script>
+    import { runStatusPage } from '../scripts/client';
+    runStatusPage();
   </script>
 </Layout>

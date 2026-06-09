@@ -18,9 +18,21 @@ function humanise(segment: string): string {
   return segment.replace(/[-_]+/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 }
 
+/** Flatten the nav (incl. nested children) to the routable leaf items. */
+function navLeaves(): { label: string; to: string }[] {
+  const leaves: { label: string; to: string }[] = [];
+  for (const item of appConfig.nav) {
+    if (item.to) leaves.push({ label: item.label, to: item.to });
+    for (const child of item.children ?? []) {
+      if (child.to) leaves.push({ label: child.label, to: child.to });
+    }
+  }
+  return leaves;
+}
+
 function findBestNavMatch(pathname: string) {
   let best: { label: string; to: string } | undefined;
-  for (const item of appConfig.nav) {
+  for (const item of navLeaves()) {
     if (item.to === pathname || (item.to !== '/' && pathname.startsWith(item.to + '/'))) {
       if (!best || item.to.length > best.to.length) {
         best = { label: item.label, to: item.to };

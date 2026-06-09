@@ -58,6 +58,10 @@ module.exports = {
     '!src/**/index.ts',
     '!src/**/__tests__/**',
     '!src/**/*.socket.ts',
+    // Host-metrics gatherer: os / fs.statfs / Docker-socket I/O bound to the
+    // runtime environment (like the *.socket.ts files); validated via its
+    // role-gated resolver below, not unit coverage.
+    '!src/modules/platform/tech/tech.service.ts',
   ],
   coveragePathIgnorePatterns: ['/node_modules/', '/dist/', '/generated/'],
   coverageDirectory: '<rootDir>/coverage',

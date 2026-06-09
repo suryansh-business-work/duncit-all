@@ -8,6 +8,9 @@ import LockIcon from '@mui/icons-material/Lock';
 import ConstructionIcon from '@mui/icons-material/Construction';
 import HubIcon from '@mui/icons-material/Hub';
 import WidgetsIcon from '@mui/icons-material/Widgets';
+import DnsIcon from '@mui/icons-material/Dns';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import ViewInArIcon from '@mui/icons-material/ViewInAr';
 
 const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   settings: SettingsIcon,
@@ -18,6 +21,9 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   lock: LockIcon,
   construction: ConstructionIcon,
   hub: HubIcon,
+  dns: DnsIcon,
+  info: InfoOutlinedIcon,
+  docker: ViewInArIcon,
 };
 
 /** Resolves a config icon name to an MUI icon, falling back to a neutral glyph. */

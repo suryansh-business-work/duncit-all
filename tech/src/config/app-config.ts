@@ -6,8 +6,10 @@
  */
 export interface AppNavItem {
   label: string;
-  to: string;
+  /** Leaf items link to a route; group headers (with children) omit `to`. */
+  to?: string;
   icon: string;
+  children?: AppNavItem[];
 }
 
 export interface AppModule {
@@ -65,6 +67,14 @@ export const appConfig: AppConfig = {
     { label: 'Maintenance', to: '/portal-modes', icon: 'construction' },
     { label: 'Feature Flags', to: '/feature-flags', icon: 'flag' },
     { label: 'Authentication', to: '/authentication', icon: 'lock' },
+    {
+      label: 'Server',
+      icon: 'dns',
+      children: [
+        { label: 'Info', to: '/server/info', icon: 'info' },
+        { label: 'Docker', to: '/server/docker', icon: 'docker' },
+      ],
+    },
   ],
   modules: [],
 };

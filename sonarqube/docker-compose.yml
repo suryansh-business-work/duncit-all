@@ -1,0 +1,71 @@
+# SonarQube (Community Build) — self-hosted code-quality & security analysis.
+#
+# Runs as its OWN compose stack at /opt/sonarqube on the VPS (like SignOz at
+# /opt/signoz). It is NOT part of deploy/docker-compose.yml and is NOT touched
+# by the GitHub deploy pipeline. nginx (deploy/nginx/duncit.com) reverse-proxies
+# sonarqube.duncit.com -> 127.0.0.1:9000, and certbot (deploy.yml) issues TLS.
+#
+# Host prerequisite (SonarQube's embedded Elasticsearch):
+#   sudo sysctl -w vm.max_map_count=262144
+#   echo 'vm.max_map_count=262144' | sudo tee -a /etc/sysctl.conf
+#
+# First login: admin / admin  (SonarQube forces a password change immediately).
+name: sonarqube
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: sonarqube-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: sonar
+      POSTGRES_PASSWORD: ${SONAR_DB_PASSWORD:-sonar}
+      POSTGRES_DB: sonarqube
+    volumes:
+      - postgresql_data:/var/lib/postgresql/data
+    networks:
+      - sonarnet
+    mem_limit: 512m
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U sonar -d sonarqube']
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      SONAR_JDBC_URL: jdbc:postgresql://db:5432/sonarqube
+      SONAR_JDBC_USERNAME: sonar
+      SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD:-sonar}
+      # Served behind the nginx TLS proxy; this is the public base URL.
+      SONAR_CORE_SERVERBASEURL: https://sonarqube.duncit.com
+    # Bind to loopback only — public access is exclusively via the nginx vhost.
+    # Host port 2023 (duncit 20xx scheme) → SonarQube's internal 9000.
+    ports:
+      - '127.0.0.1:2023:9000'
+    volumes:
+      - sonarqube_data:/opt/sonarqube/data
+      - sonarqube_extensions:/opt/sonarqube/extensions
+      - sonarqube_logs:/opt/sonarqube/logs
+    networks:
+      - sonarnet
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    mem_limit: 3g
+
+volumes:
+  postgresql_data:
+  sonarqube_data:
+  sonarqube_extensions:
+  sonarqube_logs:
+
+networks:
+  sonarnet:

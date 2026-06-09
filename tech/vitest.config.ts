@@ -52,6 +52,11 @@ export default defineConfig({
         'src/pages/environment/PortalEnvDrawer.tsx',
         'src/pages/feature-flags-page/FeatureFlagsPage.tsx',
         'src/pages/portal-modes/index.tsx',
+        // Server > Info / Docker are Apollo query containers; their
+        // presentational children (StatCard, InfoList, ServerInfoDetails) and
+        // helpers (format, queries) ARE unit-tested.
+        'src/pages/server/ServerInfoPage.tsx',
+        'src/pages/server/DockerPage.tsx',
         // Interactive test panels: real Apollo mutations, Google OAuth/Maps
         // SDKs and <script> injection — exercised by the e2e console flows.
         'src/pages/environment/test-panels/**',

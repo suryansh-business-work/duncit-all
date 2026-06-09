@@ -1,6 +1,7 @@
 import 'dotenv/config';
 import './otel'; // OTLP log export to SignOz (gated on OTEL_EXPORTER_OTLP_ENDPOINT)
 import { logs, ingestRemoteLog } from './observability/log';
+import { buildStatusProbeRouter } from './observability/statusProbe';
 import http from 'http';
 import cors from 'cors';
 import express from 'express';
@@ -132,6 +133,10 @@ async function bootstrap() {
   app.use('/twilio', buildCallWebhookRouter());
 
   app.get('/health', (_req, res) => res.json({ ok: true }));
+
+  // Status-page probe: real HTTP status + TLS cert for the status.duncit.com
+  // "Details" dialog (the static page can't read either client-side).
+  app.use('/status', buildStatusProbeRouter());
 
   // Structured log ingest for the frontend apps (@duncit/logs httpTransport).
   // Defensive + always 204; nginx adds CORS for server.duncit.com.

@@ -11,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#0B1120"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.duncit.mobile",
@@ -63,6 +61,7 @@
           }
         }
       ],
+      "./plugins/withNdkVersion",
       "expo-web-browser"
     ],
     "owner": "duncit",

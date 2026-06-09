@@ -12,7 +12,9 @@ jest.mock('@/hooks/useHostsVenues', () => ({
   useVenueDetails: jest.fn(),
 }));
 jest.mock('@/hooks/usePublicProfile', () => ({ usePublicProfile: jest.fn() }));
-jest.mock('@/hooks/useMyMeeting', () => ({ useMyMeeting: () => ({ meeting: null, isLoading: false }) }));
+jest.mock('@/hooks/useMyMeeting', () => ({
+  useMyMeeting: () => ({ meeting: null, isLoading: false }),
+}));
 const mockNavigate = jest.fn();
 let mockRouteParams: Record<string, string> | undefined = { userId: 'h1', venueId: 'v1' };
 jest.mock('@react-navigation/native', () => ({

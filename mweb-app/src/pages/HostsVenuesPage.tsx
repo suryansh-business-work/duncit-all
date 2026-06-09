@@ -20,6 +20,7 @@ import {
   UNFOLLOW_USER,
 } from './hosts-venues-page/queries';
 import HostsVenuesIntroCard from './hosts-venues-page/HostsVenuesIntroCard';
+import MeetingStatusCard from './hosts-venues-page/MeetingStatusCard';
 
 export default function HostsVenuesPage() {
   const [tab, setTab] = useState<'HOSTS' | 'VENUES'>('HOSTS');
@@ -63,6 +64,9 @@ export default function HostsVenuesPage() {
       </Stack>
 
       <HostsVenuesIntroCard />
+
+      <MeetingStatusCard kind="HOST" />
+      <MeetingStatusCard kind="VENUE" />
 
       <Tabs
         value={tab}

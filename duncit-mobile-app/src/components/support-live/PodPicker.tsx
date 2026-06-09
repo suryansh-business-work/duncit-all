@@ -22,7 +22,7 @@ export function PodPicker({ options, selectedId, onChange }: PodPickerProps) {
         backgroundColor="$surface"
       >
         <Text fontSize={13} color="$muted">
-          No active or upcoming pods. These tools unlock around a pod you’ve joined.
+          You haven’t joined any pods yet. Join a pod to use live support.
         </Text>
       </YStack>
     );

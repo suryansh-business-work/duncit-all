@@ -19,7 +19,7 @@ const membership = (id: string, over: Record<string, unknown> = {}) =>
   }) as never;
 
 describe('filterSupportPods', () => {
-  it('keeps upcoming pods within 7 days and sorts by start', () => {
+  it('keeps every joined pod and sorts upcoming pods soonest-first', () => {
     const items = [
       membership('a', { pod_date_time: iso(3 * DAY) }),
       membership('b', { pod_date_time: iso(1 * DAY) }),
@@ -29,15 +29,34 @@ describe('filterSupportPods', () => {
     expect(result[0]?.podDocId).toBe('pod-b');
   });
 
-  it('drops pods more than 7 days out and pods past the 6h grace window', () => {
-    const items = [
-      membership('far', { pod_date_time: iso(10 * DAY) }),
-      membership('old', { pod_date_time: iso(-2 * DAY), pod_end_date_time: iso(-2 * DAY + HOUR) }),
-    ];
-    expect(filterSupportPods(items, NOW)).toEqual([]);
+  it('keeps far-future and long-past pods, ordering active/upcoming before ended', () => {
+    const old = membership('old', {
+      pod_date_time: iso(-2 * DAY),
+      pod_end_date_time: iso(-2 * DAY + HOUR),
+    });
+    const far = membership('far', { pod_date_time: iso(10 * DAY) });
+    // Both input orders so the active-before-ended comparison is exercised either
+    // way the engine invokes the comparator.
+    expect(filterSupportPods([old, far], NOW).map((p) => p.membershipId)).toEqual(['far', 'old']);
+    expect(filterSupportPods([far, old], NOW).map((p) => p.membershipId)).toEqual(['far', 'old']);
   });
 
-  it('keeps a pod still inside the grace window and skips null pods', () => {
+  it('orders ended pods most-recently-ended first', () => {
+    const items = [
+      membership('older', {
+        pod_date_time: iso(-5 * DAY),
+        pod_end_date_time: iso(-5 * DAY + HOUR),
+      }),
+      membership('recent', {
+        pod_date_time: iso(-1 * DAY),
+        pod_end_date_time: iso(-1 * DAY + HOUR),
+      }),
+    ];
+    const result = filterSupportPods(items, NOW);
+    expect(result.map((p) => p.membershipId)).toEqual(['recent', 'older']);
+  });
+
+  it('keeps a pod still inside its window and skips null pods', () => {
     const items = [
       membership('live', { pod_date_time: iso(-3 * HOUR), pod_end_date_time: iso(-1 * HOUR) }),
       { id: 'nopod', pod: null } as never,

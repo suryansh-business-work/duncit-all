@@ -43,8 +43,16 @@ export interface ActiveSurveyResult {
 export interface MyResponseResult {
   mySurveyResponse: { survey_id: string } | null;
 }
+export type MeetingStatus = 'REQUESTED' | 'SCHEDULED' | 'DONE' | 'CANCELLED';
+export interface MyMeeting {
+  id: string;
+  status: MeetingStatus;
+  requested_at: string;
+  scheduled_at?: string | null;
+  meeting_link?: string | null;
+}
 export interface MyMeetingResult {
-  myMeeting: { id: string } | null;
+  myMeeting: MyMeeting | null;
 }
 export interface RequestMeetingInput {
   requested_at: string;
@@ -89,7 +97,13 @@ export const SubmitSurveyResponseDocument = parse(`
 
 export const MyMeetingDocument = parse(`
   query MyMeeting($kind: SurveyKind!) {
-    myMeeting(kind: $kind) { id }
+    myMeeting(kind: $kind) {
+      id
+      status
+      requested_at
+      scheduled_at
+      meeting_link
+    }
   }
 `);
 

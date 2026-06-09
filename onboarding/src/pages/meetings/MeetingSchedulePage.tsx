@@ -12,6 +12,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Link,
   MenuItem,
   Stack,
   Table,
@@ -48,6 +49,7 @@ export default function MeetingSchedulePage() {
   const [updateMeeting, { loading: saving }] = useMutation(UPDATE_MEETING);
   const [editing, setEditing] = useState<OnboardingMeeting | null>(null);
   const [when, setWhen] = useState('');
+  const [link, setLink] = useState('');
   const [status, setStatus] = useState<MeetingStatus>('SCHEDULED');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
@@ -56,13 +58,13 @@ export default function MeetingSchedulePage() {
   const meetings = data?.onboardingMeetings ?? [];
 
   const openEdit = (m: OnboardingMeeting) => {
-    setEditing(m); setWhen(toLocalInput(m.scheduled_at)); setStatus(m.status === 'REQUESTED' ? 'SCHEDULED' : m.status); setNotes(m.notes ?? ''); setError(null);
+    setEditing(m); setWhen(toLocalInput(m.scheduled_at)); setLink(m.meeting_link ?? ''); setStatus(m.status === 'REQUESTED' ? 'SCHEDULED' : m.status); setNotes(m.notes ?? ''); setError(null);
   };
   const save = async () => {
     if (!editing) return;
     setError(null);
     try {
-      await updateMeeting({ variables: { id: editing.id, input: { status, scheduled_at: when ? new Date(when).toISOString() : null, notes } } });
+      await updateMeeting({ variables: { id: editing.id, input: { status, scheduled_at: when ? new Date(when).toISOString() : null, meeting_link: link.trim() || null, notes } } });
       setEditing(null);
       await refetch();
     } catch (e: any) {
@@ -92,6 +94,7 @@ export default function MeetingSchedulePage() {
                 <TableCell>Requester</TableCell>
                 <TableCell>Requested for</TableCell>
                 <TableCell>Scheduled</TableCell>
+                <TableCell>Link</TableCell>
                 <TableCell>Status</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
@@ -105,6 +108,11 @@ export default function MeetingSchedulePage() {
                   </TableCell>
                   <TableCell><Typography variant="body2">{fmt(m.requested_at)}</Typography></TableCell>
                   <TableCell><Typography variant="body2">{fmt(m.scheduled_at)}</Typography></TableCell>
+                  <TableCell>
+                    {m.meeting_link
+                      ? <Link href={m.meeting_link} target="_blank" rel="noopener" variant="body2">Join</Link>
+                      : <Typography variant="body2" color="text.secondary">—</Typography>}
+                  </TableCell>
                   <TableCell><Chip size="small" color={STATUS_COLORS[m.status]} label={m.status} /></TableCell>
                   <TableCell align="right"><Button size="small" onClick={() => openEdit(m)}>Schedule</Button></TableCell>
                 </TableRow>
@@ -121,6 +129,7 @@ export default function MeetingSchedulePage() {
             {error && <Alert severity="error">{error}</Alert>}
             <Typography variant="caption" color="text.secondary">Requested for {fmt(editing?.requested_at)}{editing?.notes ? ` · ${editing.notes}` : ''}</Typography>
             <TextField size="small" type="datetime-local" label="Scheduled date & time" value={when} onChange={(e) => setWhen(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
+            <TextField size="small" type="url" label="Meeting link" placeholder="https://meet.google.com/…" value={link} onChange={(e) => setLink(e.target.value)} fullWidth />
             <TextField select size="small" label="Status" value={status} onChange={(e) => setStatus(e.target.value as MeetingStatus)} fullWidth>
               {STATUSES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
             </TextField>

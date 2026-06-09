@@ -4,6 +4,10 @@ import { MeetingModel, type MeetingStatus } from './meeting.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { leadSurveyService } from './leadSurvey.service';
 import type { SurveyKind } from './survey.model';
+import {
+  sendMeetingScheduledEmail,
+  sendMeetingScheduledAdminEmail,
+} from '@services/email/email.service';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
@@ -19,6 +23,7 @@ const pub = (doc: any, names?: Map<string, { name: string; email: string }>) => 
     user_email: u?.email ?? null,
     requested_at: iso(o.requested_at),
     scheduled_at: iso(o.scheduled_at),
+    meeting_link: o.meeting_link ?? null,
     status: o.status ?? 'REQUESTED',
     notes: o.notes ?? null,
     contact_name: o.contact_name ?? null,
@@ -42,6 +47,50 @@ async function userMap(ids: string[]): Promise<Map<string, { name: string; email
       },
     ]),
   );
+}
+
+/** Active onboarding staff who should be CC'd when a meeting is scheduled. */
+async function onboardingAdminEmails(): Promise<string[]> {
+  const admins = await UserModel.find({
+    'metadata.role_keys': { $in: ['SUPER_ADMIN', 'ONBOARDING_MANAGER'] },
+    'metadata.status': 'ACTIVE',
+    'auth.email': { $ne: null },
+  })
+    .select('auth.email')
+    .lean();
+  return admins.map((u: any) => u.auth?.email).filter(Boolean);
+}
+
+const slotLabel = (value?: string | null) =>
+  value
+    ? `${new Date(value).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short', timeZone: 'UTC' })} UTC`
+    : 'To be confirmed';
+
+/** Email the applicant + onboarding staff that a meeting was scheduled. */
+async function notifyScheduled(doc: any) {
+  const kindLabel = doc.kind === 'VENUE' ? 'Venue' : 'Host';
+  const slot = slotLabel(iso(doc.scheduled_at));
+  const link = doc.meeting_link || '';
+  const notes = doc.notes || '';
+  const [names, adminTo] = await Promise.all([
+    userMap([String(doc.user_id)]),
+    onboardingAdminEmails(),
+  ]);
+  const host = names.get(String(doc.user_id));
+  if (host?.email) {
+    await sendMeetingScheduledEmail({ to: host.email, name: host.name, kind: kindLabel, slot, link, notes });
+  }
+  if (adminTo.length > 0) {
+    await sendMeetingScheduledAdminEmail({
+      to: adminTo.join(','),
+      name: host?.name ?? 'Applicant',
+      email: host?.email ?? '',
+      kind: kindLabel,
+      slot,
+      link,
+      notes,
+    });
+  }
 }
 
 export interface MeetingFilter {
@@ -104,15 +153,37 @@ export const meetingService = {
     return docs.map((d) => pub(d, names));
   },
 
-  /** Onboarding staff schedule/track a meeting. */
-  async update(id: string, input: { status?: MeetingStatus | null; scheduled_at?: string | null; notes?: string | null }, by?: string | null) {
+  /** Onboarding staff schedule/track a meeting (date, link, status, notes). */
+  async update(
+    id: string,
+    input: {
+      status?: MeetingStatus | null;
+      scheduled_at?: string | null;
+      meeting_link?: string | null;
+      notes?: string | null;
+    },
+    by?: string | null,
+  ) {
     const doc = await MeetingModel.findById(id);
     if (!doc) throw notFound();
+    const touchedSchedule =
+      input.scheduled_at !== undefined || input.meeting_link !== undefined || input.status != null;
     if (input.status != null) doc.status = input.status;
     if (input.scheduled_at !== undefined) doc.scheduled_at = input.scheduled_at ? new Date(input.scheduled_at) : null;
+    if (input.meeting_link !== undefined) doc.meeting_link = input.meeting_link || null;
     if (input.notes !== undefined) doc.notes = input.notes;
     doc.created_by = doc.created_by ?? by ?? null;
     await doc.save();
+    // Notify the applicant + onboarding staff when the meeting is (re)scheduled.
+    // Best-effort — an email failure must not fail the staff's update.
+    if (doc.status === 'SCHEDULED' && touchedSchedule) {
+      try {
+        await notifyScheduled(doc);
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[meeting.update] notifyScheduled failed:', err);
+      }
+    }
     return pub(doc);
   },
 };

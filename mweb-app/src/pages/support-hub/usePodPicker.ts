@@ -2,8 +2,6 @@ import { useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { MY_ACTIVE_SUPPORT_PODS, type SupportPodOption } from './queries';
 
-const UPCOMING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-const GRACE_AFTER_END_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_DURATION_MS = 4 * 60 * 60 * 1000;
 
 interface MembershipNode {
@@ -17,9 +15,9 @@ interface MembershipNode {
   } | null;
 }
 
-// Pods the user has actively joined that are either upcoming (within 7 days)
-// or still inside a 6-hour grace window after they ended — i.e. the pods where
-// live support tools are realistically relevant.
+// Every pod the user has joined, ordered so the most relevant for live support
+// comes first: still-active or upcoming pods (soonest first), then ended pods
+// (most recently ended first). Kept in sync with mobile's filterSupportPods.
 export function usePodPicker() {
   const { data, loading } = useQuery<{ myPodMemberships: MembershipNode[] }>(
     MY_ACTIVE_SUPPORT_PODS,
@@ -38,11 +36,12 @@ export function usePodPicker() {
           : start + DEFAULT_DURATION_MS;
         return { membershipId: m.id, pod, start, end };
       })
-      .filter(({ start, end }) => {
-        if (now < start) return start - now <= UPCOMING_WINDOW_MS;
-        return now <= end + GRACE_AFTER_END_MS;
+      .sort((a, b) => {
+        const aEnded = now > a.end;
+        const bEnded = now > b.end;
+        if (aEnded !== bEnded) return aEnded ? 1 : -1;
+        return aEnded ? b.end - a.end : a.start - b.start;
       })
-      .sort((a, b) => a.start - b.start)
       .map(({ membershipId, pod, start, end }) => ({
         membershipId,
         podDocId: pod.id,

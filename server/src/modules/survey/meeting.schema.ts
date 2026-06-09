@@ -16,6 +16,7 @@ export const meetingTypeDefs = gql`
     user_email: String
     requested_at: String!
     scheduled_at: String
+    meeting_link: String
     status: MeetingStatus!
     notes: String
     contact_name: String
@@ -33,6 +34,7 @@ export const meetingTypeDefs = gql`
   input UpdateMeetingInput {
     status: MeetingStatus
     scheduled_at: String
+    meeting_link: String
     notes: String
   }
   input MeetingFilter {

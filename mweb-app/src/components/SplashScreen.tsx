@@ -1,5 +1,4 @@
 import { Box, Typography, keyframes } from '@mui/material';
-import LottiePlayer from './LottiePlayer';
 
 const logoBounce = keyframes`
   0%   { transform: scale(0.6) translateY(-12px); opacity: 0; }
@@ -9,7 +8,7 @@ const logoBounce = keyframes`
 `;
 
 const ripple = keyframes`
-  0%   { transform: scale(0.4); opacity: 0.55; }
+  0%   { transform: scale(0.4); opacity: 0.5; }
   80%  { opacity: 0; }
   100% { transform: scale(2.6); opacity: 0; }
 `;
@@ -19,21 +18,19 @@ const fadeUp = keyframes`
   100% { opacity: 1; transform: translateY(0); }
 `;
 
-const arrowFloat = keyframes`
-  0%, 100% { transform: translateX(0); }
-  50%      { transform: translateX(6px); }
-`;
-
 interface SplashProps {
   tagline?: string;
   description?: string;
-  mascotUrl?: string;
+  /** Brand logo shown on the splash — defaults to the Duncit wordmark. */
+  logoUrl?: string;
 }
 
+/** Brand splash — the Duncit logo on the brand red (#F82C2E), matching the
+ * native iOS/Android and web app icons. */
 export default function SplashScreen({
   tagline = 'Welcome to Duncit',
   description = 'Find your tribe. Join pods, meet locals, share moments.',
-  mascotUrl = '/lotties/mascot.json',
+  logoUrl = '/new-duncit-logo.png',
 }: SplashProps) {
   return (
     <Box
@@ -47,9 +44,8 @@ export default function SplashScreen({
         flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
-        bgcolor: '#fff',
-        background:
-          'radial-gradient(circle at 50% 38%, #fff 0%, #fff5f5 55%, #ffe9ea 100%)',
+        bgcolor: '#F82C2E',
+        background: 'radial-gradient(circle at 50% 38%, #ff5658 0%, #F82C2E 55%, #d81f21 100%)',
         px: 3,
       }}
     >
@@ -70,22 +66,24 @@ export default function SplashScreen({
               inset: 0,
               borderRadius: '50%',
               border: '1.5px solid',
-              borderColor: 'rgba(255,77,79,0.35)',
+              borderColor: 'rgba(255,255,255,0.4)',
               animation: `${ripple} 2.6s ease-out ${delay}s infinite`,
             }}
           />
         ))}
         <Box
+          component="img"
+          src={logoUrl}
+          alt="Duncit"
           sx={{
             position: 'relative',
-            width: 200,
-            height: 200,
+            width: 188,
+            height: 188,
+            objectFit: 'contain',
             animation: `${logoBounce} 1.1s cubic-bezier(.2,.7,.2,1.4) both`,
-            filter: 'drop-shadow(0 8px 18px rgba(255,77,79,0.25))',
+            filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.25))',
           }}
-        >
-          <LottiePlayer src={mascotUrl} />
-        </Box>
+        />
       </Box>
 
       <Typography
@@ -93,7 +91,7 @@ export default function SplashScreen({
         sx={{
           mt: 5,
           fontWeight: 800,
-          color: '#0F1419',
+          color: '#fff',
           textAlign: 'center',
           opacity: 0,
           animation: `${fadeUp} 0.6s ease-out 0.5s forwards`,
@@ -106,7 +104,7 @@ export default function SplashScreen({
         sx={{
           mt: 1,
           maxWidth: 320,
-          color: 'text.secondary',
+          color: 'rgba(255,255,255,0.88)',
           textAlign: 'center',
           opacity: 0,
           animation: `${fadeUp} 0.6s ease-out 0.75s forwards`,
@@ -114,25 +112,6 @@ export default function SplashScreen({
       >
         {description}
       </Typography>
-
-      <Box
-        aria-hidden
-        sx={{
-          mt: 5,
-          width: 44,
-          height: 44,
-          borderRadius: '50%',
-          bgcolor: '#0F1419',
-          color: '#fff',
-          display: 'grid',
-          placeItems: 'center',
-          fontSize: 20,
-          opacity: 0,
-          animation: `${fadeUp} 0.6s ease-out 1s forwards, ${arrowFloat} 1.4s ease-in-out 1.6s infinite`,
-        }}
-      >
-        →
-      </Box>
     </Box>
   );
 }

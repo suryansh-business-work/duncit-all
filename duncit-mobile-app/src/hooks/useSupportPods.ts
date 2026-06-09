@@ -4,7 +4,7 @@ import { MobileActiveSupportPodsDocument } from '@/graphql/bouncer';
 import { graphqlRequest } from '@/services/graphql.client';
 import { filterSupportPods, type SupportPodOption } from '@/utils/support-pods';
 
-/** Loads the user's active/upcoming joined pods and tracks the selected one —
+/** Loads every pod the user has joined and tracks the selected one —
  * RN port of mWeb's usePodPicker. */
 export function useSupportPods() {
   const [options, setOptions] = useState<SupportPodOption[]>([]);

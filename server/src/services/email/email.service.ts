@@ -221,3 +221,36 @@ export function sendInterviewScheduledEmail(opts: {
     vars: opts,
   });
 }
+
+export function sendMeetingScheduledEmail(opts: {
+  to: string;
+  name: string;
+  kind: string;
+  slot: string;
+  link: string;
+  notes: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `Your Duncit ${opts.kind} onboarding meeting is scheduled`,
+    template: 'meeting-scheduled',
+    vars: opts,
+  });
+}
+
+export function sendMeetingScheduledAdminEmail(opts: {
+  to: string;
+  name: string;
+  email: string;
+  kind: string;
+  slot: string;
+  link: string;
+  notes: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `${opts.kind} onboarding meeting scheduled — ${opts.name}`,
+    template: 'meeting-scheduled-admin',
+    vars: opts,
+  });
+}

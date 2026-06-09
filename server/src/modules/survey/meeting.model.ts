@@ -17,6 +17,8 @@ const meetingSchema = new Schema(
     requested_at: { type: Date, required: true },
     /** When onboarding actually scheduled it (set by staff). */
     scheduled_at: { type: Date, default: null, index: true },
+    /** Video-call / meeting URL added by onboarding staff when scheduling. */
+    meeting_link: { type: String, default: null },
     status: { type: String, enum: MEETING_STATUSES, default: 'REQUESTED', index: true },
     notes: { type: String, default: null },
     contact_name: { type: String, default: null },

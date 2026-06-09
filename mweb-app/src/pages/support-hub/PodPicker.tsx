@@ -28,7 +28,7 @@ export default function PodPicker({ options, selectedId, onChange, loading }: Pr
         <Stack direction="row" spacing={1} alignItems="center">
           <EventIcon color="action" />
           <Typography variant="body2" sx={{ fontWeight: 700 }}>
-            No upcoming pods. Join a pod first to use live support.
+            You haven’t joined any pods yet. Join a pod to use live support.
           </Typography>
         </Stack>
       </Paper>

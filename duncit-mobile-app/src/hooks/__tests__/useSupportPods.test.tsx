@@ -41,7 +41,7 @@ describe('useSupportPods', () => {
     expect(result.current.selected).toBeNull();
   });
 
-  it('defaults to an empty selection when all pods are filtered out', async () => {
+  it('keeps a far-future joined pod and selects it', async () => {
     const far = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString();
     mockRequest.mockReset().mockResolvedValue({
       myPodMemberships: [
@@ -57,6 +57,14 @@ describe('useSupportPods', () => {
         },
       ],
     });
+    const { result } = renderHook(() => useSupportPods());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.options).toHaveLength(1);
+    expect(result.current.selectedId).toBe('p1');
+  });
+
+  it('defaults to an empty selection when there are no joined pods', async () => {
+    mockRequest.mockReset().mockResolvedValue({ myPodMemberships: [] });
     const { result } = renderHook(() => useSupportPods());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.options).toEqual([]);

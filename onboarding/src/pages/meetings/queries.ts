@@ -10,6 +10,7 @@ export interface OnboardingMeeting {
   user_email?: string | null;
   requested_at: string;
   scheduled_at?: string | null;
+  meeting_link?: string | null;
   status: MeetingStatus;
   notes?: string | null;
   contact_name?: string | null;
@@ -17,7 +18,7 @@ export interface OnboardingMeeting {
 }
 
 const FIELDS = `
-  id kind user_name user_email requested_at scheduled_at status notes contact_name contact_phone
+  id kind user_name user_email requested_at scheduled_at meeting_link status notes contact_name contact_phone
 `;
 
 export const ONBOARDING_MEETINGS = gql`

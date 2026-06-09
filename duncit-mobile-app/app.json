@@ -1,26 +1,29 @@
 {
   "expo": {
-    "name": "Duncit Mobile",
+    "name": "Duncit",
     "slug": "duncit-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "scheme": "duncit",
     "userInterfaceStyle": "automatic",
-    "newArchEnabled": true,
-    "splash": {
-      "resizeMode": "contain",
-      "backgroundColor": "#0B1120"
-    },
-    "assetBundlePatterns": ["**/*"],
+    "icon": "./assets/icon.png",
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.duncit.mobile",
       "infoPlist": {
-        "NSLocationWhenInUseUsageDescription": "Allow location access to fetch your current coordinates."
+        "NSLocationWhenInUseUsageDescription": "Allow location access to fetch your current coordinates.",
+        "ITSAppUsesNonExemptEncryption": false
       }
     },
     "android": {
       "package": "com.duncit.mobile",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#F82C2E"
+      },
       "permissions": [
         "android.permission.ACCESS_COARSE_LOCATION",
         "android.permission.ACCESS_FINE_LOCATION",
@@ -29,38 +32,40 @@
     },
     "web": {
       "bundler": "metro",
-      "output": "single"
+      "output": "single",
+      "favicon": "./assets/favicon.png"
     },
     "plugins": [
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 220,
+          "resizeMode": "contain",
+          "backgroundColor": "#F82C2E"
+        }
+      ],
       "expo-secure-store",
       [
         "expo-image-picker",
         {
-          "photosPermission": "Allow Duncit Mobile to access your photos to post a status."
+          "photosPermission": "Allow Duncit to access your photos to post a status."
         }
       ],
       [
         "expo-location",
         {
-          "locationAlwaysAndWhenInUsePermission": "Allow Duncit Mobile to use your location."
+          "locationAlwaysAndWhenInUsePermission": "Allow Duncit to use your location."
         }
       ],
       [
         "expo-notifications",
         {
-          "color": "#0B1120"
+          "color": "#F82C2E"
         }
       ],
       "expo-asset",
       "expo-font",
-      [
-        "expo-build-properties",
-        {
-          "android": {
-            "kotlinVersion": "1.9.25"
-          }
-        }
-      ],
       "./plugins/withNdkVersion",
       "expo-web-browser"
     ],

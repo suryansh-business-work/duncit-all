@@ -4,6 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { HostCard, VenueCard } from '@/components/hosts-venues';
+import { MeetingStatusCard } from '@/components/hosts-venues/MeetingStatusCard';
 import { StackScreen } from '@/components/StackScreen';
 import { useHostsVenues } from '@/hooks/useHostsVenues';
 import type { RootStackParamList } from '@/navigation/types';
@@ -59,6 +60,8 @@ export function HostsVenuesScreen() {
         </Text>
       ) : (
         <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 10 }}>
+          <MeetingStatusCard kind="HOST" />
+          <MeetingStatusCard kind="VENUE" />
           {tab === 'HOSTS' ? (
             hosts.length === 0 ? (
               <Text testID="hosts-empty" color="$muted">

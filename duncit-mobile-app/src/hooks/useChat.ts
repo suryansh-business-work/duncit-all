@@ -1,8 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { PodMessagesDocument } from '@/graphql/chat';
-import { graphqlRequest } from '@/services/graphql.client';
 import { useChatStore } from '@/stores/chat.store';
 
 export type ChatMessage = ResultOf<typeof PodMessagesDocument>['podMessages'][number];
@@ -23,25 +22,4 @@ export function useChatRooms() {
     hasData: !!data,
     refetch: () => fetch(true),
   };
-}
-
-/** Recent messages for a single room (read-only view). */
-export function usePodMessages(podId: string) {
-  const [messages, setMessages] = useState<ChatMessage[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState<unknown>();
-
-  useEffect(() => {
-    let active = true;
-    setIsLoading(true);
-    graphqlRequest(PodMessagesDocument, { podId, limit: 50 }, { auth: true })
-      .then((data) => active && setMessages(data.podMessages))
-      .catch((err) => active && setError(err))
-      .finally(() => active && setIsLoading(false));
-    return () => {
-      active = false;
-    };
-  }, [podId]);
-
-  return { messages, isLoading, error };
 }

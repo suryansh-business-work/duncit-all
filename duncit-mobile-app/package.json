@@ -25,7 +25,7 @@
     "e2e:test": "detox test --configuration android.emu.debug",
     "build:android:apk": "eas build --platform android --profile preview --non-interactive",
     "build:android:aab": "eas build --platform android --profile production --non-interactive",
-    "build:ios": "eas build --platform ios --profile production --non-interactive",
+    "build:ios": "eas build --platform ios --profile production",
     "upload:slack": "node scripts/upload-slack.js",
     "ci": "npm run lint && npm run typecheck && npm run test:coverage"
   },
@@ -56,6 +56,7 @@
     "expo-notifications": "~0.32.17",
     "expo-secure-store": "~15.0.8",
     "expo-sharing": "~14.0.8",
+    "expo-splash-screen": "~31.0.13",
     "expo-status-bar": "~3.0.9",
     "expo-web-browser": "~15.0.11",
     "graphql": "^16.14.1",
@@ -73,6 +74,7 @@
     "react-native-web": "^0.21.0",
     "react-native-webview": "13.15.0",
     "react-refresh": "^0.18.0",
+    "socket.io-client": "^4.8.3",
     "tamagui": "^2.1.0",
     "zod": "^3.24.1",
     "zustand": "^5.0.14"

@@ -61,7 +61,13 @@ export const SUBMIT_SURVEY_RESPONSE = gql`
 
 export const MY_MEETING = gql`
   query MyMeeting($kind: SurveyKind!) {
-    myMeeting(kind: $kind) { id }
+    myMeeting(kind: $kind) {
+      id
+      status
+      requested_at
+      scheduled_at
+      meeting_link
+    }
   }
 `;
 

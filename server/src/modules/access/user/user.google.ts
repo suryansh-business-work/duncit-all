@@ -12,6 +12,35 @@ interface GoogleTokenInfo {
   aud: string;
 }
 
+const TOKENINFO_TIMEOUT_MS = 8000;
+const TOKENINFO_MAX_ATTEMPTS = 2; // initial try + one retry for transient blips
+
+/**
+ * Fetch Google's tokeninfo with a hard timeout and a single retry. A raw
+ * network failure from `fetch` (DNS / connection / TLS / timeout) otherwise
+ * propagates to the client as an opaque "fetch failed" and can hang the login.
+ * The request is an idempotent GET, so retrying the transient case is safe; if
+ * it still fails we surface a clear, retryable error.
+ */
+async function fetchGoogleTokenInfo(url: string): Promise<Response> {
+  let lastError: unknown;
+  for (let attempt = 1; attempt <= TOKENINFO_MAX_ATTEMPTS; attempt += 1) {
+    const controller = new AbortController();
+    const timer = setTimeout(() => controller.abort(), TOKENINFO_TIMEOUT_MS);
+    try {
+      return await fetch(url, { signal: controller.signal });
+    } catch (err) {
+      lastError = err;
+    } finally {
+      clearTimeout(timer);
+    }
+  }
+  throw new GraphQLError('Could not reach Google to verify your sign-in. Please try again.', {
+    extensions: { code: 'UPSTREAM_UNAVAILABLE' },
+    originalError: lastError instanceof Error ? lastError : undefined,
+  });
+}
+
 /**
  * Verify a Google ID token by calling Google's tokeninfo endpoint.
  * Avoids adding `google-auth-library` as a runtime dep — the endpoint
@@ -31,7 +60,7 @@ export async function verifyGoogleIdToken(idToken: string): Promise<GoogleTokenI
   }
 
   const url = `https://oauth2.googleapis.com/tokeninfo?id_token=${encodeURIComponent(idToken)}`;
-  const res = await fetch(url);
+  const res = await fetchGoogleTokenInfo(url);
   if (!res.ok) {
     throw new GraphQLError('Invalid Google credential', {
       extensions: { code: 'UNAUTHENTICATED' },

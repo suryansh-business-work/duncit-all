@@ -13,14 +13,13 @@ export interface SupportPodOption {
   endsAt: string | null;
 }
 
-const UPCOMING_WINDOW_MS = 7 * 24 * 60 * 60 * 1000;
-const GRACE_AFTER_END_MS = 6 * 60 * 60 * 1000;
 const DEFAULT_DURATION_MS = 4 * 60 * 60 * 1000;
 
 /**
- * Joined pods that are upcoming (within 7 days) or still in the 6h grace window
- * after ending — i.e. where live support tools are relevant. RN port of mWeb's
- * usePodPicker filter; pure so it's unit-testable.
+ * Every pod the user has joined, ordered so the most relevant for live support
+ * comes first: still-active or upcoming pods (soonest first), then ended pods
+ * (most recently ended first). Pure so it's unit-testable. Kept in sync with
+ * mWeb's usePodPicker ordering.
  */
 export function filterSupportPods(memberships: Membership[], now = Date.now()): SupportPodOption[] {
   return memberships
@@ -33,10 +32,12 @@ export function filterSupportPods(memberships: Membership[], now = Date.now()): 
         : start + DEFAULT_DURATION_MS;
       return { membershipId: m.id, pod, start, end };
     })
-    .filter(({ start, end }) =>
-      now < start ? start - now <= UPCOMING_WINDOW_MS : now <= end + GRACE_AFTER_END_MS,
-    )
-    .sort((a, b) => a.start - b.start)
+    .sort((a, b) => {
+      const aEnded = now > a.end;
+      const bEnded = now > b.end;
+      if (aEnded !== bEnded) return aEnded ? 1 : -1;
+      return aEnded ? b.end - a.end : a.start - b.start;
+    })
     .map(({ membershipId, pod, start, end }) => ({
       membershipId,
       podDocId: pod.id,

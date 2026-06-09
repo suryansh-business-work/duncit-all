@@ -3,6 +3,7 @@ import './otel'; // OTLP log export to SignOz (gated on OTEL_EXPORTER_OTLP_ENDPO
 import { logs, ingestRemoteLog } from './observability/log';
 import { buildStatusProbeRouter } from './observability/statusProbe';
 import { buildHealth } from './observability/health';
+import { LANDING_HTML } from './observability/landing';
 import http from 'http';
 import cors from 'cors';
 import express from 'express';
@@ -132,6 +133,9 @@ async function bootstrap() {
 
   // CRM softphone + AI call Twilio webhooks (parses its own urlencoded bodies).
   app.use('/twilio', buildCallWebhookRouter());
+
+  // Branded notice at the API root instead of Express's default "Cannot GET /".
+  app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));
 
   // Rich health report (status, version, uptime, memory, DB check). Always 200
   // while the process is up; powers the Docker healthcheck + the status page.

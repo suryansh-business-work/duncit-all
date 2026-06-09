@@ -66,7 +66,9 @@ function setBadge(el: Element, ok: boolean): void {
 }
 
 async function runBadges(): Promise<void> {
-  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-url]'));
+  // Only the service cards — `[data-card]` excludes the Details buttons, which
+  // also carry a data-url (those were doubling the total before).
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-card]'));
   let up = 0;
   await Promise.all(
     cards.map(async (card) => {
@@ -205,7 +207,38 @@ async function openDetails(name: string, url: string, healthUrl: string): Promis
   }
 }
 
+/** Pull the live brand (logo, name, accent) from admin settings so the status
+ *  page reflects whatever branding is configured, not a hard-coded asset. */
+async function loadBranding(): Promise<void> {
+  try {
+    const res = await fetch(`${SERVER_BASE}/graphql`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ query: '{ branding { app_name logo_url primary_color } }' }),
+    });
+    const branding = (await res.json())?.data?.branding as
+      | { app_name?: string; logo_url?: string; primary_color?: string }
+      | undefined;
+    if (!branding) return;
+    const logo = document.getElementById('brand-logo') as HTMLImageElement | null;
+    if (logo && branding.logo_url) {
+      logo.src = branding.logo_url;
+      if (branding.app_name) logo.alt = branding.app_name;
+    }
+    if (branding.app_name) {
+      const name = document.getElementById('brand-name');
+      if (name) name.textContent = `${branding.app_name} Status`;
+      document.title = `${branding.app_name} Status`;
+    }
+    if (branding.primary_color)
+      document.documentElement.style.setProperty('--color-brand', branding.primary_color);
+  } catch {
+    /* keep the static fallback logo/name */
+  }
+}
+
 export function runStatusPage(): void {
+  void loadBranding();
   document.querySelectorAll<HTMLButtonElement>('button[data-name]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();

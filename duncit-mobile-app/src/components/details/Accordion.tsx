@@ -21,7 +21,14 @@ interface AccordionProps {
 }
 
 /** A single collapsible section — RN port of mWeb's PodAccordion. */
-export function Accordion({ title, icon, open, onToggle, children, testID }: Readonly<AccordionProps>) {
+export function Accordion({
+  title,
+  icon,
+  open,
+  onToggle,
+  children,
+  testID,
+}: Readonly<AccordionProps>) {
   const { primary, muted } = useThemeColors();
 
   const handle = () => {

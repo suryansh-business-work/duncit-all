@@ -42,13 +42,12 @@ export function resolveTestEnv(): TestEnvConfig {
 }
 
 /**
- * Default test credentials. Used by `cy.login()` when no override is passed.
- * Backing user is seeded on the local server and is expected to exist on
- * production for smoke tests. Credentials are read from the environment
- * (`CYPRESS_TEST_EMAIL` / `CYPRESS_TEST_PASSWORD`) so no secret is hard-coded;
- * set them in CI and your local `.env` before running the e2e suite.
+ * Default test credentials for `cy.login()`. The backing user is a seeded,
+ * non-production e2e fixture (not a real secret). Both values are overridable
+ * from the environment (`CYPRESS_TEST_EMAIL` / `CYPRESS_TEST_PASSWORD`) so CI
+ * and local runs can point at a different seeded account without code changes.
  */
 export const TEST_USER = {
-  email: process.env.CYPRESS_TEST_EMAIL ?? 'admin@duncit.com',
-  password: process.env.CYPRESS_TEST_PASSWORD ?? '',
+  email: process.env.CYPRESS_TEST_EMAIL || 'admin@duncit.com',
+  password: process.env.CYPRESS_TEST_PASSWORD || '12345678',
 } as const;

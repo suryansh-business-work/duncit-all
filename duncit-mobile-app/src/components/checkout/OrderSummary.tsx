@@ -25,7 +25,10 @@ function Row({ label, value, bold }: Readonly<{ label: string; value: string; bo
 
 /** Order summary with the inclusive fee/GST breakup — RN twin of mWeb's
  * OrderSummaryCard. */
-export function OrderSummary({ pod, breakup }: Readonly<{ pod: CheckoutPod; breakup: CheckoutBreakup }>) {
+export function OrderSummary({
+  pod,
+  breakup,
+}: Readonly<{ pod: CheckoutPod; breakup: CheckoutBreakup }>) {
   const image = pod?.pod_images_and_videos?.find((m) => m.url)?.url;
   const fmt = (v: number) => formatMoney(breakup.currency, v);
 

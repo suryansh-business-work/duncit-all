@@ -41,19 +41,19 @@ console.log(`  Output     : ${outputDir}\n`);
 // 1. Build the Docker image (all stages up to the artifact runner)
 run('docker', [
   'build',
-  '-f', dockerfile,
-  '--build-arg', `BUILD_TYPE=${buildType}`,
-  '--progress', 'plain',
-  '-t', imageTag,
+  '-f',
+  dockerfile,
+  '--build-arg',
+  `BUILD_TYPE=${buildType}`,
+  '--progress',
+  'plain',
+  '-t',
+  imageTag,
   repoRoot,
 ]);
 
 // 2. Run the container with the host build/ folder mounted as /output
-run('docker', [
-  'run', '--rm',
-  '--mount', `type=bind,source=${outputDir},target=/output`,
-  imageTag,
-]);
+run('docker', ['run', '--rm', '--mount', `type=bind,source=${outputDir},target=/output`, imageTag]);
 
 const artifact = isAab
   ? path.join(outputDir, 'duncit-release.aab')

@@ -14,7 +14,10 @@ import { useLocationDraft } from './useLocationDraft';
 
 /** Bottom-sheet location picker: GPS + country → state → city → area drilldown
  * with an interactive map. RN port of mWeb's LocationDialog (apply-on-confirm). */
-export function LocationDialog({ open, onClose }: Readonly<{ open: boolean; onClose: () => void }>) {
+export function LocationDialog({
+  open,
+  onClose,
+}: Readonly<{ open: boolean; onClose: () => void }>) {
   const draft = useLocationDraft(open, onClose);
   const { color, primary, onPrimary } = useThemeColors();
   const zonesLabel = draft.zones.length ? `Apply · ${draft.zones.length} areas` : 'Apply';

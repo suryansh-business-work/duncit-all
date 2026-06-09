@@ -21,7 +21,13 @@ export interface AuthScaffoldProps {
  * directly on it (no card/box) → shared brand logo → heading + subtitle → screen
  * content. All brand surfaces resolve from @duncit/auth-tokens.
  */
-export function AuthScaffold({ title, accentWord, subtitle, children, testID }: Readonly<AuthScaffoldProps>) {
+export function AuthScaffold({
+  title,
+  accentWord,
+  subtitle,
+  children,
+  testID,
+}: Readonly<AuthScaffoldProps>) {
   return (
     <AuthBackground>
       <SafeAreaView style={{ flex: 1 }} testID={testID}>

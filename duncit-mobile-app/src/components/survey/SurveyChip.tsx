@@ -12,7 +12,14 @@ export interface SurveyChipProps {
 }
 
 /** Pill-shaped interest chip — RN port of mWeb's <SurveyChip/> (same hue map). */
-export function SurveyChip({ id, label, icon, selected, onToggle, large }: Readonly<SurveyChipProps>) {
+export function SurveyChip({
+  id,
+  label,
+  icon,
+  selected,
+  onToggle,
+  large,
+}: Readonly<SurveyChipProps>) {
   const hue = colorForId(id);
   const emoji = emojiFromIcon(icon);
 

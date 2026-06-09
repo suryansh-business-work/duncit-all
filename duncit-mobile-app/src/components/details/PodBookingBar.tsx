@@ -19,7 +19,13 @@ interface Props {
  * already booked shows "Pod Booked" (+ Backout) instead of offering to pay again
  * — matching mWeb's PodActionPanel. Full pods show a disabled "Pod is full".
  */
-export function PodBookingBar({ pod, isFree, membershipState, onCheckout, onBackout }: Readonly<Props>) {
+export function PodBookingBar({
+  pod,
+  isFree,
+  membershipState,
+  onCheckout,
+  onBackout,
+}: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
   const isMember = !!membershipState?.is_member;
   const canBackout = !!membershipState?.can_backout;

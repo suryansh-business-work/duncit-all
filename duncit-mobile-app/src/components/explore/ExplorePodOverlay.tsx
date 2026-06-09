@@ -32,7 +32,11 @@ interface ExplorePodOverlayProps {
 
 /** The dark gradient scrim + pod info (club, title, description, chips) anchored
  * above the CTA bar of a reel. RN port of mWeb's ExplorePodOverlay. */
-export function ExplorePodOverlay({ pod, clubName, bottom = 150 }: Readonly<ExplorePodOverlayProps>) {
+export function ExplorePodOverlay({
+  pod,
+  clubName,
+  bottom = 150,
+}: Readonly<ExplorePodOverlayProps>) {
   const isFree = pod.pod_type.includes('FREE');
   const place =
     [pod.place_label, pod.place_detail].filter(Boolean).join(' · ') || pod.zone_name || '';

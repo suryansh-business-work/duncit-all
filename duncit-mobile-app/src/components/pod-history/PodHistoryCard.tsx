@@ -7,7 +7,10 @@ import type { PodMembership } from '@/utils/pod-history';
 import { formatDateTime } from '@/utils/date-format';
 
 /** A joined-pod row in the history list — RN twin of mWeb's PodHistoryPage card. */
-export function PodHistoryCard({ item, onPress }: Readonly<{ item: PodMembership; onPress: () => void }>) {
+export function PodHistoryCard({
+  item,
+  onPress,
+}: Readonly<{ item: PodMembership; onPress: () => void }>) {
   const { muted, onPrimary } = useThemeColors();
   const image = item.pod?.pod_images_and_videos?.[0]?.url;
 

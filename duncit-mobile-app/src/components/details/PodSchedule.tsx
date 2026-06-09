@@ -51,9 +51,14 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
     : location?.location_name || pod.zone_name || '';
   let mapQuery: string;
   if (venue) {
-    mapQuery = venue.lat != null && venue.lng != null ? `${venue.lat},${venue.lng}` : venueParts(venue).join(', ');
+    mapQuery =
+      venue.lat != null && venue.lng != null
+        ? `${venue.lat},${venue.lng}`
+        : venueParts(venue).join(', ');
   } else {
-    mapQuery = [pod.zone_name, location?.location_name, pincode, 'India'].filter(Boolean).join(', ');
+    mapQuery = [pod.zone_name, location?.location_name, pincode, 'India']
+      .filter(Boolean)
+      .join(', ');
   }
 
   return (

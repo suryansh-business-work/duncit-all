@@ -17,6 +17,17 @@ describe('useChat', () => {
     expect(renderHook(() => useChatRooms()).result.current.rooms).toHaveLength(1);
   });
 
+  it('useChatRooms refetches with force and copes with an empty store', () => {
+    const first = renderHook(() => useChatRooms());
+    first.result.current.refetch();
+    expect(mockChatState.fetch).toHaveBeenCalledWith(true);
+
+    mockChatState.data = undefined as never;
+    const second = renderHook(() => useChatRooms());
+    expect(second.result.current.rooms).toEqual([]);
+    expect(second.result.current.hasData).toBe(false);
+  });
+
   it('usePodMessages loads messages', async () => {
     mockRequest.mockResolvedValueOnce({ podMessages: [{ id: 'm1' }] });
     const { result } = renderHook(() => usePodMessages('pod1'));

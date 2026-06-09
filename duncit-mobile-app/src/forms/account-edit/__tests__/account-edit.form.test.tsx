@@ -73,4 +73,10 @@ describe('AccountEditForm', () => {
     );
     expect(screen.getByTestId('account-edit-error')).toHaveTextContent('Save failed');
   });
+
+  it('switches the button label while saving', () => {
+    renderWithProviders(<AccountEditForm me={me} onSubmit={jest.fn()} loading />);
+    expect(screen.getByTestId('account-edit-submit')).toBeOnTheScreen();
+    expect(screen.queryByText('Save')).toBeNull();
+  });
 });

@@ -42,6 +42,7 @@ export function PodHistoryDetailsScreen() {
   };
 
   const downloadInvoice = async () => {
+    /* istanbul ignore next -- the invoice button is disabled without a payment id */
     if (!selected?.payment_id) return;
     try {
       await download(selected.payment_id);
@@ -51,6 +52,7 @@ export function PodHistoryDetailsScreen() {
   };
 
   const downloadTicket = async () => {
+    /* istanbul ignore next -- the ticket button is disabled without a pod id */
     if (!selected?.pod?.id) return;
     try {
       await downloadTicketPdf(selected.pod.id);

@@ -143,4 +143,27 @@ describe('usePodTicket', () => {
     });
     expect(writeFile).not.toHaveBeenCalled();
   });
+
+  it('throws when the resolved ticket PDF is empty', async () => {
+    mockRequest
+      .mockResolvedValueOnce({ myEventTicketForPod: { id: 't1', ticket_code: 'TKT-9' } })
+      .mockResolvedValueOnce({ eventTicketPdfBase64: '' });
+    const { result } = renderHook(() => usePodTicket());
+    await act(async () => {
+      await expect(result.current.download('pod1')).rejects.toThrow('Ticket not available');
+    });
+    expect(writeFile).not.toHaveBeenCalled();
+  });
+
+  it('throws when sharing is unavailable for a ticket', async () => {
+    mockRequest
+      .mockResolvedValueOnce({ myEventTicketForPod: { id: 't1', ticket_code: 'TKT-9' } })
+      .mockResolvedValueOnce({ eventTicketPdfBase64: 'TBASE64' });
+    isAvailable.mockResolvedValueOnce(false);
+    const { result } = renderHook(() => usePodTicket());
+    await act(async () => {
+      await expect(result.current.download('pod1')).rejects.toThrow('Sharing is not available');
+    });
+    expect(share).not.toHaveBeenCalled();
+  });
 });

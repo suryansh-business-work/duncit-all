@@ -96,4 +96,59 @@ describe('useHomeData', () => {
     expect(result.current.hasData).toBe(false);
     expect(result.current.clubs).toHaveLength(0);
   });
+
+  it('narrows clubs + pods to the selected super-category and location', () => {
+    mockHomeState.data = {
+      clubs: [
+        { id: 'c1', super_category_id: 's1' },
+        { id: 'c2', super_category_id: 's2' },
+      ],
+      pods: [
+        { id: '1', club_id: 'c1', location_id: 'l1' },
+        { id: '2', club_id: 'c2', location_id: 'l1' },
+        { id: '3', club_id: 'c1', location_id: 'l2' },
+      ],
+      categories: [],
+    } as never;
+    mockedSuper.mockReturnValue({ selectedSuperId: 's1' });
+    mockedLoc.mockReturnValue({ selectedId: 'l1' });
+    const { result } = renderHook(() => useHomeData());
+    expect(result.current.clubs.map((c) => c.id)).toEqual(['c1']);
+    expect(result.current.pods.map((p) => p.id)).toEqual(['1']);
+  });
+
+  it('forwards forced refetches from both home hooks', () => {
+    renderHook(() => useHomeData()).result.current.refetch();
+    renderHook(() => useHomeFeed('')).result.current.refetch();
+    expect(mockHomeState.fetch).toHaveBeenCalledWith(true);
+  });
+
+  it('coalesces an absent pod list to empty under a super-category filter', () => {
+    mockHomeState.data = {
+      clubs: [{ id: 'c1', super_category_id: 's1' }],
+      categories: [],
+    } as never;
+    mockedSuper.mockReturnValue({ selectedSuperId: 's1' });
+    const { result } = renderHook(() => useHomeData());
+    expect(result.current.pods).toEqual([]);
+  });
+});
+
+describe('deriveHome edge cases', () => {
+  it('skips clubs with no pods and treats missing pod dates as epoch zero', () => {
+    mockHomeState.data = {
+      clubs: [
+        { id: 'c1', category_id: 'cat1', super_category_id: null },
+        { id: 'c2', category_id: 'cat1', super_category_id: null },
+      ],
+      pods: [
+        { id: '1', club_id: 'c1', pod_date_time: null, location_id: null },
+        { id: '2', club_id: 'c1', pod_date_time: '', location_id: null },
+      ],
+      categories: [],
+    } as never;
+    const { result } = renderHook(() => useHomeFeed(''));
+    expect(result.current.clubsWithPods).toHaveLength(1); // c2 has no pods → dropped
+    expect(result.current.featuredPods).toHaveLength(2); // both dateless → epoch 0
+  });
 });

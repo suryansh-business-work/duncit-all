@@ -62,4 +62,28 @@ describe('GoogleAuthButton', () => {
     renderWithProviders(<GoogleAuthButton onIdToken={jest.fn()} onError={onError} />);
     await waitFor(() => expect(onError).toHaveBeenCalledWith('popup blocked'));
   });
+
+  it('uses a generic message when the error carries no detail', async () => {
+    mockHook({ type: 'error' });
+    const onError = jest.fn();
+    renderWithProviders(<GoogleAuthButton onIdToken={jest.fn()} onError={onError} />);
+    await waitFor(() => expect(onError).toHaveBeenCalledWith('Google sign-in failed.'));
+  });
+
+  it('ignores a dismissed (neither success nor error) response', async () => {
+    const onError = jest.fn();
+    const onIdToken = jest.fn();
+    mockHook({ type: 'dismiss' });
+    renderWithProviders(<GoogleAuthButton onIdToken={onIdToken} onError={onError} />);
+    await waitFor(() => expect(screen.getByTestId('google-auth-button')).toBeTruthy());
+    expect(onError).not.toHaveBeenCalled();
+    expect(onIdToken).not.toHaveBeenCalled();
+  });
+
+  it('does not prompt while disabled', () => {
+    const promptAsync = mockHook(null);
+    renderWithProviders(<GoogleAuthButton disabled onIdToken={jest.fn()} />);
+    fireEvent.press(screen.getByTestId('google-auth-button'));
+    expect(promptAsync).not.toHaveBeenCalled();
+  });
 });

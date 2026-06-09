@@ -24,6 +24,13 @@ describe('useAccountHealth', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.error).toBeDefined();
   });
+
+  it('coalesces a missing account score to null', async () => {
+    mockRequest.mockResolvedValueOnce({ myAccountHealth: null });
+    const { result } = renderHook(() => useAccountHealth());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.health).toBeNull();
+  });
 });
 
 describe('useVenueHealth', () => {
@@ -47,5 +54,12 @@ describe('useVenueHealth', () => {
     const { result } = renderHook(() => useVenueHealth('v1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.error).toBeDefined();
+  });
+
+  it('coalesces a missing venue score to null', async () => {
+    mockRequest.mockResolvedValueOnce({ myVenueHealth: null });
+    const { result } = renderHook(() => useVenueHealth('v1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.health).toBeNull();
   });
 });

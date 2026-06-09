@@ -64,5 +64,15 @@ describe('ClubDetailsScreen', () => {
     expect(screen.getByText('Morning Run')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Morning Run' });
+    fireEvent.press(screen.getByTestId('detail-back')); // DetailHero onBack
+    expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it('shows the unavailable state and goes back', () => {
+    mockedClub.mockReturnValue({ club: null, pods: [], isLoading: false });
+    renderWithProviders(<ClubDetailsScreen />);
+    expect(screen.getByTestId('club-details-error')).toBeOnTheScreen();
+    fireEvent.press(screen.getByLabelText('Go back'));
+    expect(mockGoBack).toHaveBeenCalled();
   });
 });

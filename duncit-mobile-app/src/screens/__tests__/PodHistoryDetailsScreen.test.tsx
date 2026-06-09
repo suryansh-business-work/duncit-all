@@ -15,9 +15,10 @@ jest.mock('@/hooks/usePodHistory', () => ({
 }));
 jest.mock('@/hooks/usePolicies', () => ({ usePolicy: jest.fn() }));
 const mockNavigate = jest.fn();
+let mockRouteParams: { membershipId: string } | undefined = { membershipId: 'm1' };
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate, goBack: jest.fn() }),
-  useRoute: () => ({ params: { membershipId: 'm1' } }),
+  useRoute: () => ({ params: mockRouteParams }),
 }));
 
 const mockedHistory = usePodHistory as jest.Mock;
@@ -70,6 +71,7 @@ function setHistory(over: Record<string, unknown> = {}) {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockRouteParams = { membershipId: 'm1' };
   backout.mockResolvedValue(undefined);
   download.mockResolvedValue(undefined);
   refetch.mockResolvedValue(undefined);
@@ -160,5 +162,38 @@ describe('PodHistoryDetailsScreen actions', () => {
     fireEvent.press(screen.getByTestId('ph-backout'));
     fireEvent.press(screen.getByTestId('backout-view-terms'));
     expect(mockNavigate).toHaveBeenCalledWith('Policy', { slug: 'backout-terms' });
+  });
+
+  it('closes the backout dialog via cancel', () => {
+    renderWithProviders(<PodHistoryDetailsScreen />);
+    fireEvent.press(screen.getByTestId('ph-backout'));
+    fireEvent.press(screen.getByTestId('backout-cancel'));
+    expect(screen.getByTestId('pod-history-details-screen')).toBeOnTheScreen();
+  });
+
+  it('ignores a backout confirmation when the pod has no id', () => {
+    setHistory({ items: [membership({ pod: { ...pod, id: undefined } })] });
+    renderWithProviders(<PodHistoryDetailsScreen />);
+    fireEvent.press(screen.getByTestId('ph-backout'));
+    fireEvent.press(screen.getByTestId('backout-confirm'));
+    expect(backout).not.toHaveBeenCalled();
+  });
+
+  it('downloads the ticket and surfaces a failure as a notice', async () => {
+    const ticketDownload = jest.fn().mockResolvedValue(undefined);
+    mockedTicket.mockReturnValue({ download: ticketDownload, busy: false });
+    renderWithProviders(<PodHistoryDetailsScreen />);
+    fireEvent.press(screen.getByTestId('ph-ticket'));
+    await waitFor(() => expect(ticketDownload).toHaveBeenCalledWith('pod1'));
+
+    ticketDownload.mockRejectedValueOnce(new Error('no ticket'));
+    fireEvent.press(screen.getByTestId('ph-ticket'));
+    await waitFor(() => expect(screen.getByTestId('ph-notice')).toHaveTextContent('no ticket'));
+  });
+
+  it('shows the not-found state when no membership id is in the route', () => {
+    mockRouteParams = undefined;
+    renderWithProviders(<PodHistoryDetailsScreen />);
+    expect(screen.getByTestId('pod-history-details-missing')).toBeOnTheScreen();
   });
 });

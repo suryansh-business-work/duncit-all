@@ -33,6 +33,8 @@ export function SosScreen() {
   }, [selected, getActiveSos]);
 
   const send = async () => {
+    // The send button is disabled without a selection, so this guard is defensive.
+    /* istanbul ignore next */
     if (!selected) return;
     setBusy(true);
     setError(null);

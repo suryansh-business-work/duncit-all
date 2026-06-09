@@ -49,6 +49,16 @@ describe('buildLocationTree', () => {
     expect(tree[0]!.country).toBe('Other');
     expect(tree[0]!.states[0]!.state).toBe('Other');
   });
+
+  it('coalesces null country/state/codes to empty before defaulting', () => {
+    const tree = buildLocationTree([
+      loc({ country: null, country_code: null, state: null, state_code: null } as never),
+    ]);
+    expect(tree[0]!.country).toBe('Other');
+    expect(tree[0]!.country_code).toBe('');
+    expect(tree[0]!.states[0]!.state).toBe('Other');
+    expect(tree[0]!.states[0]!.state_code).toBe('');
+  });
 });
 
 describe('locationMapQuery / locationMapEmbedUrl', () => {

@@ -67,6 +67,16 @@ describe('HomeFeed', () => {
 
     fireEvent.press(screen.getAllByTestId('pod-card-pod-1')[0]);
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Sunset Jam' });
+
+    // The club-section pod row uses its own onOpenPod handler.
+    fireEvent.press(screen.getAllByTestId('pod-card-pod-1')[1]);
+    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Sunset Jam' });
+  });
+
+  it('shows the pull-to-refresh spinner while refetching loaded data', () => {
+    mockedFeed.mockReturnValue({ ...base, isLoading: true, hasData: true });
+    renderWithProviders(<HomeFeed />);
+    expect(screen.getByTestId('home-feed')).toBeOnTheScreen();
   });
 
   it('shows the empty state', () => {

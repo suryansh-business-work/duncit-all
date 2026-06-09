@@ -42,6 +42,20 @@ describe('usePodDetails / useClubDetails', () => {
     expect(result.current.club?.id).toBe('c1');
     expect(result.current.pods).toHaveLength(1);
   });
+
+  it('usePodDetails surfaces a load error', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('boom'));
+    const { result } = renderHook(() => usePodDetails('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.error).toBeDefined();
+  });
+
+  it('useClubDetails surfaces a load error', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('boom'));
+    const { result } = renderHook(() => useClubDetails('c1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.error).toBeDefined();
+  });
 });
 
 describe('usePodActions', () => {
@@ -71,6 +85,18 @@ describe('usePodActions', () => {
       await result.current.toggleLike();
     });
     expect(result.current.liked).toBe(false);
+  });
+
+  it('decrements the count when unliking an already-liked pod', async () => {
+    const likedPod = { id: 'p1', liked_by_me: true, like_count: 5 } as never;
+    mockRequest.mockResolvedValueOnce({ togglePodLike: { liked_by_me: false, like_count: 4 } });
+    const { result } = renderHook(() => usePodActions(likedPod, false));
+    await waitFor(() => expect(result.current.liked).toBe(true));
+    await act(async () => {
+      await result.current.toggleLike();
+    });
+    expect(result.current.liked).toBe(false);
+    expect(result.current.likeCount).toBe(4);
   });
 
   it('reverts save on error', async () => {

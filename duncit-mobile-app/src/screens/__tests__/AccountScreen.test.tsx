@@ -97,10 +97,12 @@ describe('AccountScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('PodHistory');
   });
 
-  it('opens the edit dialog', async () => {
+  it('opens and closes the edit dialog', async () => {
     renderWithProviders(<AccountScreen />);
     fireEvent.press(screen.getByTestId('account-edit'));
     await waitFor(() => expect(screen.getByTestId('account-edit-submit')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('edit-account-close'));
+    await waitFor(() => expect(screen.queryByTestId('account-edit-submit')).toBeNull());
   });
 
   it('routes hosts/venue owners to management and hides health when absent', () => {
@@ -113,9 +115,17 @@ describe('AccountScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('VenueManage');
   });
 
-  it('renders the dob/phone fallbacks when fields are empty', () => {
-    setAccount({ me: { ...me, phone_number: '', city: '', zone: '', country: '', dob: '' } });
+  it('renders the email/dob/phone fallbacks when fields are empty', () => {
+    setAccount({
+      me: { ...me, email: '', phone_number: '', city: '', zone: '', country: '', dob: '' },
+    });
     renderWithProviders(<AccountScreen />);
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);
+  });
+
+  it('trims an empty phone extension', () => {
+    setAccount({ me: { ...me, phone_extension: '' } });
+    renderWithProviders(<AccountScreen />);
+    expect(screen.getByText('9876543210')).toBeOnTheScreen();
   });
 });

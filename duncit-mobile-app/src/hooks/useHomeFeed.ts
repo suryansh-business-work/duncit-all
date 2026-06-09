@@ -47,8 +47,8 @@ function deriveHome(
   podsByClub.forEach((list) => list.sort(byDateAsc));
 
   const clubsWithPods: ClubWithPods[] = clubs
-    .filter((c) => (podsByClub.get(c.id)?.length ?? 0) > 0)
-    .map((club) => ({ club, pods: podsByClub.get(club.id) ?? [] }));
+    .map((club) => ({ club, pods: podsByClub.get(club.id) ?? [] }))
+    .filter((entry) => entry.pods.length > 0);
 
   const featuredPods = pods.slice().sort(byDateAsc).slice(0, 6);
 

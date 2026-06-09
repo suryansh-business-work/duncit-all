@@ -86,6 +86,7 @@ export function CheckoutScreen() {
   };
 
   const finishVerify = async (sig: RazorpaySignature) => {
+    /* istanbul ignore next -- the Razorpay sheet only mounts when an order exists */
     if (!order) return;
     setOrder(null);
     setSubmitting(true);

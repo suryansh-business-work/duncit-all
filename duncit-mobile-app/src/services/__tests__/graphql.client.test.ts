@@ -32,6 +32,8 @@ beforeEach(() => {
   ctorCalls.length = 0;
 });
 
+afterEach(() => jest.useRealTimers());
+
 describe('graphqlRequest', () => {
   it('returns data on a successful response', async () => {
     mockRequest.mockResolvedValue({ hello: 'world' });
@@ -71,6 +73,30 @@ describe('graphqlRequest', () => {
     } finally {
       (global as { DOMException?: unknown }).DOMException = original;
     }
+  });
+
+  it('falls back to a generic message when a ClientError carries no errors', async () => {
+    mockRequest.mockRejectedValue(
+      new ClientError({ status: 500, errors: undefined } as never, { query: 'q' } as never),
+    );
+    await expect(graphqlRequest(DOC)).rejects.toThrow('Request failed.');
+  });
+
+  it('fires the timeout guard and maps the abort to a timeout error', async () => {
+    jest.useFakeTimers();
+    let rejectRequest: (error: unknown) => void = () => undefined;
+    mockRequest.mockImplementation(
+      () =>
+        new Promise((_resolve, reject) => {
+          rejectRequest = reject;
+        }),
+    );
+
+    const promise = graphqlRequest(DOC);
+    jest.runOnlyPendingTimers(); // fires the timeout → controller.abort()
+    rejectRequest(Object.assign(new Error('aborted'), { name: 'AbortError' }));
+
+    await expect(promise).rejects.toThrow(/timed out/i);
   });
 
   it('attaches the bearer token when auth is requested', async () => {

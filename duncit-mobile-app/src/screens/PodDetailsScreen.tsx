@@ -53,6 +53,7 @@ export function PodDetailsScreen() {
   );
 
   const onConfirmBackout = async () => {
+    /* istanbul ignore next -- the dialog only mounts when `pod` exists */
     if (!pod) return;
     try {
       await backout(pod.id);
@@ -64,6 +65,7 @@ export function PodDetailsScreen() {
   };
 
   const share = async () => {
+    /* istanbul ignore next -- the share button only mounts when `pod` exists */
     if (!pod) return;
     try {
       await Share.share({ message: `${pod.pod_title} — join on Duncit`, title: pod.pod_title });

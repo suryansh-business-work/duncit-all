@@ -1,3 +1,4 @@
+import { FlatList } from 'react-native';
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
@@ -93,6 +94,18 @@ describe('ExploreReels', () => {
     expect(screen.getByTestId('reel-p-1')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('reel-go-p-1'));
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: '1', title: 'Pod 1' });
+  });
+
+  it('wires the per-reel save/like handlers and item layout', () => {
+    renderWithProviders(<ExploreReels />);
+    layout();
+    fireEvent.press(screen.getByTestId('reel-save-p-1'));
+    expect(base.toggleSave).toHaveBeenCalledWith('1', false);
+    fireEvent.press(screen.getByTestId('reel-like-p-1'));
+    expect(base.toggleLike).toHaveBeenCalledWith('1', { liked_by_me: false, like_count: 3 });
+
+    const list = screen.UNSAFE_getByType(FlatList);
+    expect(list.props.getItemLayout(null, 2)).toEqual({ length: 700, offset: 1400, index: 2 });
   });
 
   it('shows the empty state with no pods', () => {

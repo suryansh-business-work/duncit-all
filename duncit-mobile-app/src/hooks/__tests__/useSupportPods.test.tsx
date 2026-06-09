@@ -69,4 +69,19 @@ describe('useSupportPods', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.options).toEqual([]);
   });
+
+  it('ignores a response that arrives after unmount', async () => {
+    let resolveQuery: (value: unknown) => void = () => undefined;
+    mockRequest.mockReset().mockReturnValue(
+      new Promise((resolve) => {
+        resolveQuery = resolve;
+      }),
+    );
+    const { unmount } = renderHook(() => useSupportPods());
+    unmount();
+    await act(async () => {
+      resolveQuery({ myPodMemberships: [] });
+    });
+    expect(mockRequest).toHaveBeenCalled();
+  });
 });

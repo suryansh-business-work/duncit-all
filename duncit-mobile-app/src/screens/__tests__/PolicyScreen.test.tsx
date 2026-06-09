@@ -5,17 +5,28 @@ import { usePolicy } from '@/hooks/usePolicies';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockBack = jest.fn();
+let mockRouteParams: { slug: string } | undefined = { slug: 'terms' };
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ goBack: mockBack }),
-  useRoute: () => ({ params: { slug: 'terms' } }),
+  useRoute: () => ({ params: mockRouteParams }),
 }));
 jest.mock('@/hooks/usePolicies', () => ({ usePolicy: jest.fn() }));
 
 const mockedUsePolicy = jest.mocked(usePolicy);
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  mockRouteParams = { slug: 'terms' };
+});
 
 describe('PolicyScreen', () => {
+  it('defaults the slug to empty when no route params are present', () => {
+    mockRouteParams = undefined;
+    mockedUsePolicy.mockReturnValue({ isLoading: true } as never);
+    renderWithProviders(<PolicyScreen />);
+    expect(mockedUsePolicy).toHaveBeenCalledWith('');
+  });
+
   it('shows a loader while fetching', () => {
     mockedUsePolicy.mockReturnValue({ isLoading: true } as never);
     renderWithProviders(<PolicyScreen />);

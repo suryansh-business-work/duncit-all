@@ -256,4 +256,57 @@ describe('useCheckout', () => {
       );
     });
   });
+
+  it('tolerates a load failure and still settles', async () => {
+    mockRequest
+      .mockReset()
+      .mockImplementation((doc) =>
+        doc === MobileCheckoutMeDocument ? Promise.reject(new Error('down')) : route(doc),
+      );
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.me).toBeNull();
+  });
+
+  it('maps a null pod id and the default description when no pod is loaded', async () => {
+    const { result } = renderHook(() => useCheckout(''));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.pay(values, 100);
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileDummyCheckoutDocument,
+      expect.objectContaining({
+        input: expect.objectContaining({
+          pod_id: null,
+          description: 'Pod booking · Booking',
+        }),
+      }),
+      { auth: true },
+    );
+  });
+
+  it('previews a coupon with a null pod id when none is set', async () => {
+    const { result } = renderHook(() => useCheckout(''));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.previewCoupon('TEN', 100);
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobilePreviewCouponDocument,
+      expect.objectContaining({ input: expect.objectContaining({ pod_id: null }) }),
+      { auth: true },
+    );
+  });
+
+  it('throws when sharing is unavailable for the invoice', async () => {
+    isAvailable.mockResolvedValueOnce(false);
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await expect(result.current.downloadInvoice('pay1', 'INV-1')).rejects.toThrow(
+        'Sharing is not available',
+      );
+    });
+  });
 });

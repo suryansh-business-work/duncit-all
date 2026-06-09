@@ -80,6 +80,18 @@ describe('ProfileScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('RegisterVenue');
   });
 
+  it('routes a venue owner to venue management', () => {
+    mockedProfile.mockReturnValue({
+      me: { ...me, roles: ['VENUE_OWNER'] },
+      posts: [],
+      isLoading: false,
+      refetch,
+    });
+    renderWithProviders(<ProfileScreen />);
+    fireEvent.press(screen.getByTestId('profile-venue'));
+    expect(mockNavigate).toHaveBeenCalledWith('VenueManage');
+  });
+
   it('adds a post (pick + upload, then refetch)', async () => {
     mockedProfile.mockReturnValue({ me, posts: [], isLoading: false, refetch });
     renderWithProviders(<ProfileScreen />);

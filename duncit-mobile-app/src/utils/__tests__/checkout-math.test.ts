@@ -30,6 +30,13 @@ describe('buildBreakup', () => {
     })!;
     expect(b.total).toBe(0);
   });
+
+  it('falls back to the gross when the divisor collapses to zero', () => {
+    // platform_fee_pct = -100 → feeRate = -1 → divisor = 0, so subtotal = gross.
+    const b = buildBreakup(100, { platform_fee_pct: -100, gst_pct: 18, currency_symbol: '₹' })!;
+    expect(b.subtotal).toBe(100);
+    expect(b.total).toBe(100);
+  });
 });
 
 describe('formatMoney', () => {

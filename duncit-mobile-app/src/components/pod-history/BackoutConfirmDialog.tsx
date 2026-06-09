@@ -25,7 +25,7 @@ export function BackoutConfirmDialog({
   onConfirm,
   onViewTerms,
 }: BackoutConfirmDialogProps) {
-  const { color, onPrimary, danger } = useThemeColors();
+  const { color, onPrimary } = useThemeColors();
   const { data, isLoading } = usePolicy(open ? 'backout-terms' : '');
   const terms = stripHtml(data?.policyBySlug?.content);
 
@@ -143,7 +143,7 @@ export function BackoutConfirmDialog({
                   pressStyle={{ opacity: 0.85 }}
                 >
                   {busy ? <Spinner size="small" color={onPrimary} /> : null}
-                  <Text fontSize={14} fontWeight="900" color={onPrimary ?? danger}>
+                  <Text fontSize={14} fontWeight="900" color={onPrimary}>
                     {busy ? 'Backing out…' : 'Confirm Backout'}
                   </Text>
                 </XStack>

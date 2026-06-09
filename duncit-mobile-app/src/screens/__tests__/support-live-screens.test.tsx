@@ -121,6 +121,18 @@ describe('CallbackScreen', () => {
     await waitFor(() => expect(screen.getByTestId('callback-error')).toHaveTextContent('failed'));
   });
 
+  it('requests a callback with a null pod when none is selected', async () => {
+    mockedPods.mockReturnValue({
+      options: [],
+      selected: null,
+      selectedId: '',
+      setSelectedId: jest.fn(),
+    });
+    renderWithProviders(<CallbackScreen />);
+    fireEvent.press(screen.getByTestId('callback-request'));
+    await waitFor(() => expect(requestCallback).toHaveBeenCalledWith(null, ''));
+  });
+
   it('tolerates a support-target fetch failure (call-now disabled)', async () => {
     loadSupportTarget.mockRejectedValueOnce(new Error('down'));
     const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);

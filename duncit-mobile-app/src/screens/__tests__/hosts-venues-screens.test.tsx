@@ -176,4 +176,23 @@ describe('VenueDetailsScreen', () => {
     expect(screen.getByTestId('venue-address')).toHaveTextContent('Address not provided');
     expect(screen.queryAllByTestId('venue-gallery-image').length).toBe(0);
   });
+
+  it('coalesces absent gallery/tags and a missing venue id', () => {
+    mockRouteParams = undefined; // route.params?.venueId ?? ''
+    mockedVenue.mockReturnValue({
+      venue: {
+        id: 'v9',
+        venue_name: 'Sparse Venue',
+        venue_type: 'HALL',
+        capacity: null,
+        cover_image_url: 'http://cover',
+        // gallery + tags intentionally undefined → `?? []`
+        amenities: undefined,
+      },
+      isLoading: false,
+    });
+    renderWithProviders(<VenueDetailsScreen />);
+    expect(mockedVenue).toHaveBeenCalledWith('');
+    expect(screen.getAllByText('Sparse Venue').length).toBeGreaterThan(0);
+  });
 });

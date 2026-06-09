@@ -101,4 +101,16 @@ describe('useBouncer', () => {
       { auth: true },
     );
   });
+
+  it('nulls out a blank callback reason and an unknown pod', async () => {
+    const { result } = renderHook(() => useBouncer());
+    await act(async () => {
+      await result.current.requestCallback(null, '   ');
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileRequestCallbackDocument,
+      { input: { pod_id: null, reason: null } },
+      { auth: true },
+    );
+  });
 });

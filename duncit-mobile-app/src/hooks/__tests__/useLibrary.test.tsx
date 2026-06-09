@@ -58,4 +58,22 @@ describe('useMyPods', () => {
     expect(result.current.savedPods.map((p) => p.id)).toEqual(['1']);
     expect(result.current.historyPods.map((p) => p.id).sort()).toEqual(['2', '3']);
   });
+
+  it('captures a fetch error', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('x'));
+    const { result } = renderHook(() => useMyPods());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.error).toBeDefined();
+  });
+
+  it('yields no saved/history pods when there is no signed-in user', async () => {
+    mockRequest.mockResolvedValueOnce({
+      me: null,
+      pods: [pod('1', { pod_attendees: ['someone'] })],
+    });
+    const { result } = renderHook(() => useMyPods());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.savedPods).toEqual([]);
+    expect(result.current.historyPods).toEqual([]);
+  });
 });

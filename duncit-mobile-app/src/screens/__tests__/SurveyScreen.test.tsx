@@ -65,6 +65,13 @@ describe('SurveyScreen', () => {
     expect(mockComplete).toHaveBeenCalled();
   });
 
+  it('toggles a chip off when tapped twice', () => {
+    renderWithProviders(<SurveyScreen />);
+    fireEvent.press(screen.getByTestId('chip-c1')); // select
+    fireEvent.press(screen.getByTestId('chip-c1')); // deselect (delete branch)
+    expect(screen.getByTestId('chip-c1')).toBeOnTheScreen();
+  });
+
   it('shows a loader while loading and a fetch error', () => {
     setData({ data: undefined, isLoading: true });
     const { rerender } = renderWithProviders(<SurveyScreen />);

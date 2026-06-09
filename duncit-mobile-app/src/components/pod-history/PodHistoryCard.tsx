@@ -8,7 +8,7 @@ import { formatDateTime } from '@/utils/date-format';
 
 /** A joined-pod row in the history list — RN twin of mWeb's PodHistoryPage card. */
 export function PodHistoryCard({ item, onPress }: { item: PodMembership; onPress: () => void }) {
-  const { color, muted, onPrimary } = useThemeColors();
+  const { muted, onPrimary } = useThemeColors();
   const image = item.pod?.pod_images_and_videos?.[0]?.url;
 
   return (
@@ -53,7 +53,7 @@ export function PodHistoryCard({ item, onPress }: { item: PodMembership; onPress
           Joined {formatDateTime(item.joined_at)}
         </Text>
       </YStack>
-      <MaterialIcons name="arrow-forward" size={18} color={muted ?? color} />
+      <MaterialIcons name="arrow-forward" size={18} color={muted} />
     </XStack>
   );
 }

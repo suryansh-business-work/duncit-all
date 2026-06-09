@@ -61,6 +61,32 @@ describe('useAccount', () => {
     expect(result.current.error).toBeDefined();
   });
 
+  it('coalesces a missing account record and health to null', async () => {
+    mockRequest.mockReset().mockImplementation((doc: unknown) => {
+      if (doc === MobileAccountHealthDocument) return Promise.resolve({ myAccountHealth: null });
+      if (doc === MobileAccountDocument) return Promise.resolve({ me: null });
+      return Promise.resolve({});
+    });
+    const { result } = renderHook(() => useAccount());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.me).toBeNull();
+    expect(result.current.health).toBeNull();
+  });
+
+  it('changePhoto derives the mime type and file name when the asset omits them', async () => {
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValue({ canceled: false, assets: [{ base64: 'abc' }] });
+    const { result } = renderHook(() => useAccount());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.changePhoto();
+    });
+    const uploadCall = mockRequest.mock.calls.find((c) => c[0] === UploadImageDocument)!;
+    expect(uploadCall[1].mimeType).toBe('image/jpeg');
+    expect(uploadCall[1].fileName).toMatch(/^avatar-\d+\.jpg$/);
+    expect(uploadCall[1].fileBase64).toContain('data:image/jpeg;base64,abc');
+  });
+
   it('updateProfile saves then refreshes me + account', async () => {
     const { result } = renderHook(() => useAccount());
     await waitFor(() => expect(result.current.isLoading).toBe(false));

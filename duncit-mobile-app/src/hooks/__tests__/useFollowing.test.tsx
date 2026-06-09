@@ -27,4 +27,11 @@ describe('useFollowing', () => {
     result.current.refetch();
     expect(mockFollowingState.fetch).toHaveBeenCalled();
   });
+
+  it('treats absent following data as no followed pods', () => {
+    mockFollowingState.data = undefined;
+    const { result } = renderHook(() => useFollowing());
+    expect(result.current.followedPods).toEqual([]);
+    expect(result.current.hasData).toBe(false);
+  });
 });

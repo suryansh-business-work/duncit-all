@@ -60,6 +60,34 @@ describe('FollowingScreen', () => {
     renderWithProviders(<FollowingScreen />);
     expect(screen.getByTestId('following-list-empty')).toBeOnTheScreen();
   });
+
+  it('lists followed pods and opens one', () => {
+    mockedFollowing.mockReturnValue({
+      followedPods: [
+        {
+          id: 'p1',
+          pod_id: 'pod-1',
+          pod_title: 'Pod',
+          pod_date_time: '2026-06-10T18:30:00.000Z',
+          pod_type: 'NATIVE_FREE',
+          pod_amount: 0,
+          pod_attendees: [],
+          no_of_spots: 4,
+          host_names: [],
+          pod_images_and_videos: [],
+          club_id: 'c1',
+          club_slug: 's',
+          place_label: null,
+          place_detail: null,
+        },
+      ],
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+    renderWithProviders(<FollowingScreen />);
+    fireEvent.press(screen.getByTestId('pod-card-pod-1'));
+    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Pod' });
+  });
 });
 
 describe('ChatsScreen', () => {

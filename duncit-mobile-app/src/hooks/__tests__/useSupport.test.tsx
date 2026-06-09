@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { graphqlRequest } from '@/services/graphql.client';
 import { createTicket, useTickets } from '@/hooks/useSupport';
@@ -29,6 +29,14 @@ describe('useTickets', () => {
     const bad = renderHook(() => useTickets());
     await waitFor(() => expect(bad.result.current.isLoading).toBe(false));
     expect(bad.result.current.error).toBeDefined();
+  });
+
+  it('reload bumps the key and re-runs the query', async () => {
+    mockRequest.mockResolvedValue({ myTickets: [] });
+    const { result } = renderHook(() => useTickets());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    act(() => result.current.reload());
+    await waitFor(() => expect(mockRequest).toHaveBeenCalledTimes(2));
   });
 });
 

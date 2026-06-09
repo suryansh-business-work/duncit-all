@@ -38,4 +38,25 @@ describe('config.apiUrl resolution', () => {
     delete process.env.EXPO_PUBLIC_API_URL;
     expect(loadConfig(undefined).apiUrl).toBe('http://localhost:2001');
   });
+
+  it('falls back when the Expo config object itself is absent', () => {
+    delete process.env.EXPO_PUBLIC_API_URL;
+    jest.resetModules();
+    jest.doMock('expo-constants', () => ({ __esModule: true, default: {} }));
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { config } = require('@/constants/config') as { config: { apiUrl: string } };
+    expect(config.apiUrl).toBe('http://localhost:2001');
+  });
+
+  it('skips the dev origin log outside development', () => {
+    const g = global as unknown as { __DEV__: boolean };
+    const dev = g.__DEV__;
+    g.__DEV__ = false;
+    try {
+      process.env.EXPO_PUBLIC_API_URL = 'https://server.duncit.com';
+      expect(loadConfig('192.168.1.5:2022').apiUrl).toBe('https://server.duncit.com');
+    } finally {
+      g.__DEV__ = dev;
+    }
+  });
 });

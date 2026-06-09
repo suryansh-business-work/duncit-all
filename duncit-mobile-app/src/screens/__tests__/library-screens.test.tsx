@@ -59,6 +59,8 @@ describe('FaqsScreen', () => {
     const { rerender } = renderWithProviders(<FaqsScreen />);
     expect(screen.getByText('How?')).toBeOnTheScreen();
     expect(screen.getByText('Why?')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('faq-f1-header')); // open
+    fireEvent.press(screen.getByTestId('faq-f1-header')); // close (id === faq.id → null)
 
     mockedFaqs.mockReturnValue({ groups: [], isLoading: false });
     rerender(<FaqsScreen />);

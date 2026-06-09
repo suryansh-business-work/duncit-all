@@ -1,4 +1,4 @@
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { MobilePublicProfileDocument, MobileUserBadgesDocument } from '@/graphql/public-profile';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -72,6 +72,35 @@ describe('usePublicProfile', () => {
     const { result } = renderHook(() => usePublicProfile('h1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.error).toBeDefined();
+  });
+
+  it('coalesces a missing public profile to null', async () => {
+    mockRequest.mockReset().mockImplementation((doc) => {
+      if (doc === MobilePublicProfileDocument)
+        return Promise.resolve({ publicUserProfile: null, me: { user_id: 'x' } });
+      return Promise.resolve({ userBadges: [] });
+    });
+    const { result } = renderHook(() => usePublicProfile('h1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.user).toBeNull();
+    expect(result.current.isOwner).toBe(false);
+  });
+
+  it('ignores a profile response that resolves after unmount', async () => {
+    let resolveProfile: (value: unknown) => void = () => undefined;
+    mockRequest.mockReset().mockImplementation((doc) => {
+      if (doc === MobilePublicProfileDocument)
+        return new Promise((resolve) => {
+          resolveProfile = resolve;
+        });
+      return new Promise(() => undefined); // badges never settle
+    });
+    const { unmount } = renderHook(() => usePublicProfile('h1'));
+    unmount();
+    await act(async () => {
+      resolveProfile({ publicUserProfile: { user_id: 'h1' }, me: { user_id: 'h1' } });
+    });
+    expect(mockRequest).toHaveBeenCalled();
   });
 
   it('tolerates a badges fetch failure (profile still loads)', async () => {

@@ -1,4 +1,4 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { SupportScreen } from '@/screens/SupportScreen';
 import { SupportTicketsScreen } from '@/screens/SupportTicketsScreen';
@@ -50,6 +50,18 @@ describe('SupportTicketsScreen', () => {
     expect(screen.getByTestId('ticket-t1')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('ticket-toggle'));
     expect(screen.getByTestId('ticket-form')).toBeOnTheScreen();
+  });
+
+  it('hides the form and reloads after creating a ticket', async () => {
+    const reload = jest.fn();
+    mockedTickets.mockReturnValue({ tickets: [], isLoading: false, reload });
+    renderWithProviders(<SupportTicketsScreen />);
+    fireEvent.press(screen.getByTestId('ticket-toggle'));
+    fireEvent.changeText(screen.getByTestId('ticket-subject'), 'Help');
+    fireEvent.changeText(screen.getByTestId('ticket-message'), 'It broke');
+    fireEvent.press(screen.getByTestId('ticket-submit'));
+    await waitFor(() => expect(reload).toHaveBeenCalled());
+    expect(screen.queryByTestId('ticket-form')).toBeNull();
   });
 
   it('shows empty and loading states', () => {

@@ -69,4 +69,15 @@ describe('useStatusUpload', () => {
     });
     expect(result.current.error).toBe('upload failed');
   });
+
+  it('falls back to a generic message when the failure is not an Error', async () => {
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValue({ canceled: false, assets: [{ base64: 'abc' }] });
+    mockPublish.mockRejectedValue('weird');
+    const { result } = renderHook(() => useStatusUpload());
+    await act(async () => {
+      await result.current.pickAndUpload();
+    });
+    expect(result.current.error).toBe('Could not post status.');
+  });
 });

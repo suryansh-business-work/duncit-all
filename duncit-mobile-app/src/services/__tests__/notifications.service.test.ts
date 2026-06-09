@@ -63,6 +63,16 @@ describe('notifications.service', () => {
     await expect(scheduleLocalNotification('Hi', 'Body', 0)).rejects.toBeInstanceOf(ApiError);
   });
 
+  it('defaults the delay to one second when omitted', async () => {
+    mockedNotifications.scheduleNotificationAsync.mockResolvedValue('notif_default' as never);
+
+    await expect(scheduleLocalNotification('Hi', 'Body')).resolves.toBe('notif_default');
+    const arg = mockedNotifications.scheduleNotificationAsync.mock.calls[0]![0] as {
+      trigger: { seconds: number };
+    };
+    expect(arg.trigger.seconds).toBe(1);
+  });
+
   it('exposes a notification handler that shows banners', async () => {
     const behavior = await handleNotification();
     expect(behavior).toMatchObject({

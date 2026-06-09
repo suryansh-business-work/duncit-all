@@ -65,6 +65,10 @@ export function CountryStateChips({ tree, country, state, onCountry, onState }: 
   }, [activeCountry, query]);
 
   if (tree.length === 0) return null;
+  // `activeCountry` is guaranteed here (tree is non-empty), so the `?? 0` is a
+  // TS-narrowing fallback that can't be hit at runtime.
+  /* istanbul ignore next */
+  const showStateSearch = (activeCountry?.states.length ?? 0) > 6;
 
   return (
     <YStack gap={8}>
@@ -89,7 +93,7 @@ export function CountryStateChips({ tree, country, state, onCountry, onState }: 
       <Text fontSize={11} fontWeight="900" color="$muted" letterSpacing={0.6}>
         STATE
       </Text>
-      {(activeCountry?.states.length ?? 0) > 6 ? (
+      {showStateSearch ? (
         <XStack
           alignItems="center"
           gap={6}

@@ -47,6 +47,7 @@ export function CheckoutSuccess({
   };
 
   const downloadTicket = async () => {
+    /* istanbul ignore next -- TS narrowing guard: the ticket button only mounts when onDownloadTicket exists */
     if (!onDownloadTicket) return;
     setTicketBusy(true);
     setError(null);

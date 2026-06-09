@@ -82,6 +82,14 @@ describe('LoginScreen', () => {
     expect(mockAuthenticate).not.toHaveBeenCalled();
   });
 
+  it('does not authenticate when Google sign-in fails', async () => {
+    mockedGoogle.mockRejectedValue(new Error('google down'));
+    renderWithProviders(<LoginScreen />);
+    fireEvent.press(screen.getByTestId('google-btn'));
+    await waitFor(() => expect(mockedGoogle).toHaveBeenCalled());
+    expect(mockAuthenticate).not.toHaveBeenCalled();
+  });
+
   it('navigates to signup', () => {
     renderWithProviders(<LoginScreen />);
     fireEvent.press(screen.getByTestId('go-signup'));

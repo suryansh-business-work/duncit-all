@@ -19,3 +19,5 @@ generated/
 # npm lockfiles (pnpm-lock.yaml is the source of truth)
 package-lock.json
 **/package-lock.json
+# ...except duncit-mobile-app, a standalone npm app (EAS needs its lockfile to pick npm)
+!duncit-mobile-app/package-lock.json

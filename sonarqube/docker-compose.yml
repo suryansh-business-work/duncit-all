@@ -45,10 +45,12 @@ services:
       SONAR_JDBC_PASSWORD: ${SONAR_DB_PASSWORD:-sonar}
       # Served behind the nginx TLS proxy; this is the public base URL.
       SONAR_CORE_SERVERBASEURL: https://sonarqube.duncit.com
-    # Bind to loopback only — public access is exclusively via the nginx vhost.
-    # Host port 2023 (duncit 20xx scheme) → SonarQube's internal 9000.
+      # SonarQube itself listens on 2023 (duncit 20xx scheme) — no port remap.
+      SONAR_WEB_PORT: 2023
+    # Bind to loopback only — public access is exclusively via the nginx vhost
+    # (nginx owns 80/443 + the shared duncit.com TLS cert).
     ports:
-      - '127.0.0.1:2023:9000'
+      - '127.0.0.1:2023:2023'
     volumes:
       - sonarqube_data:/opt/sonarqube/data
       - sonarqube_extensions:/opt/sonarqube/extensions

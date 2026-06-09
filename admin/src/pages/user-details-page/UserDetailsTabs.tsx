@@ -7,7 +7,7 @@ export interface UserDetailsTabItem {
   content: ReactNode;
 }
 
-export default function UserDetailsTabs({ tabs }: { tabs: UserDetailsTabItem[] }) {
+export default function UserDetailsTabs({ tabs }: Readonly<{ tabs: UserDetailsTabItem[] }>) {
   const [value, setValue] = useState(0);
   return (
     <Box sx={{ minWidth: 0 }}>

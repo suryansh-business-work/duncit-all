@@ -16,7 +16,7 @@ interface Props {
   onSaved: () => void;
 }
 
-export default function ContactActionDialog({ open, type, user, onClose, onSaved }: Props) {
+export default function ContactActionDialog({ open, type, user, onClose, onSaved }: Readonly<Props>) {
   const [recordAction] = useMutation(RECORD_USER_CONTACT_ACTION);
   const [startRecordedCall] = useMutation(START_RECORDED_USER_CALL);
   const [busy, setBusy] = useState(false);

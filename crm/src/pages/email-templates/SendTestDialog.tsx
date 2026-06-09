@@ -24,7 +24,7 @@ interface Props {
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
-export default function SendTestDialog({ open, templateId, varsJson, onClose, onResult }: Props) {
+export default function SendTestDialog({ open, templateId, varsJson, onClose, onResult }: Readonly<Props>) {
   const [to, setTo] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [sendTest, { loading }] = useMutation(SEND_TEST);

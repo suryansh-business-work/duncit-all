@@ -16,7 +16,7 @@ interface Props {
   onRemove: (b: any) => void;
 }
 
-export default function BadgeCard({ badge, onEdit, onRemove }: Props) {
+export default function BadgeCard({ badge, onEdit, onRemove }: Readonly<Props>) {
   return (
     <Card variant="outlined">
       <CardContent>

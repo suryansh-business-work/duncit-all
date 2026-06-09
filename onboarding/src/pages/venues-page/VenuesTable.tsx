@@ -16,7 +16,7 @@ const publicVenueUrl = (venueId: string) => {
   return `${baseUrl}/venue/${venueId}`;
 };
 
-export default function VenuesTable({ venues, onEdit, onReview }: Props) {
+export default function VenuesTable({ venues, onEdit, onReview }: Readonly<Props>) {
   return (
     <Table size="small">
       <TableHead>

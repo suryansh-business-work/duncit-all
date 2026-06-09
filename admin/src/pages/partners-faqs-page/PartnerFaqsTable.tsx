@@ -11,7 +11,7 @@ interface Props {
   onDelete: (item: any) => void;
 }
 
-export default function PartnerFaqsTable({ loading, items, onEdit, onDelete }: Props) {
+export default function PartnerFaqsTable({ loading, items, onEdit, onDelete }: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>

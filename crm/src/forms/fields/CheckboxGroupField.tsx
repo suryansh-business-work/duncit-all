@@ -8,7 +8,7 @@ interface Props {
 }
 
 /** Checkbox grid bound to Formik (value is string[]). */
-export default function CheckboxGroupField({ name, label, options }: Props) {
+export default function CheckboxGroupField({ name, label, options }: Readonly<Props>) {
   const [field, , helpers] = useField<string[]>(name);
   const value = field.value ?? [];
   const toggle = (option: string) => {

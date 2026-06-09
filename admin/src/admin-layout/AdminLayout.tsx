@@ -9,7 +9,7 @@ import Sidebar from './Sidebar';
 import Topbar from './Topbar';
 import ModuleWelcomeOverlay from './ModuleWelcomeOverlay';
 
-export default function AdminLayout({ children }: { children: ReactNode }) {
+export default function AdminLayout({ children }: Readonly<{ children: ReactNode }>) {
   const theme = useTheme();
   const isDesktop = useMediaQuery(theme.breakpoints.up('md'));
   const [mobileOpen, setMobileOpen] = useState(false);

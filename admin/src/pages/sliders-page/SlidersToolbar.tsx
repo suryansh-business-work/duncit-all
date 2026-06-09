@@ -24,7 +24,7 @@ export default function SlidersToolbar({
   search,
   setSearch,
   onCreate,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}

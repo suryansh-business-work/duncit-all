@@ -35,7 +35,7 @@ export default function AdjustHealthDialog({
   currentScore,
   onClose,
   onSaved,
-}: Props) {
+}: Readonly<Props>) {
   const [direction, setDirection] = useState<'plus' | 'minus'>('plus');
   const [magnitude, setMagnitude] = useState<number>(5);
   const [remark, setRemark] = useState('');

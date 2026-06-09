@@ -9,7 +9,7 @@ interface Props {
 }
 
 /** Edit select options as `{ value, label }` rows — never as one-per-line text. */
-export default function DynamicFieldOptionsEditor({ options, onChange }: Props) {
+export default function DynamicFieldOptionsEditor({ options, onChange }: Readonly<Props>) {
   const update = (index: number, patch: Partial<CrmDynamicFieldOption>) =>
     onChange(options.map((opt, i) => (i === index ? { ...opt, ...patch } : opt)));
   const remove = (index: number) => onChange(options.filter((_, i) => i !== index));

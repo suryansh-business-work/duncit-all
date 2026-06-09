@@ -66,7 +66,7 @@ export default function PodPlanFormDialog({
   loading,
   onClose,
   onSubmit,
-}: Props) {
+}: Readonly<Props>) {
   const formik = useFormik<PodPlanFormValues>({
     initialValues: editing ?? empty,
     enableReinitialize: true,

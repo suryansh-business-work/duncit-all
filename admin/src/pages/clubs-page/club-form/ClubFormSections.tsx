@@ -25,7 +25,7 @@ interface Props {
   venues: any[];
 }
 
-export default function ClubFormSections(props: Props) {
+export default function ClubFormSections(props: Readonly<Props>) {
   const allOpen = props.expanded.size === SECTIONS.length;
   return (
     <>

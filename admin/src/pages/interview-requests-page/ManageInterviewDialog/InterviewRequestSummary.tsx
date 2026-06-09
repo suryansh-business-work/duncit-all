@@ -8,7 +8,7 @@ interface Props {
   setFieldValue: (field: string, value: any) => void;
 }
 
-export default function InterviewRequestSummary({ active, values, fmtSlotLong, setFieldValue }: Props) {
+export default function InterviewRequestSummary({ active, values, fmtSlotLong, setFieldValue }: Readonly<Props>) {
   return (
     <>
       <Box>

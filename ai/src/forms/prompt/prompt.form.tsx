@@ -29,7 +29,7 @@ export const promptSchema = yup.object({
  * Create / edit a Prompt Library entry. The token size of `content` is shown live
  * (same estimator the server uses) so authors see the budget as they type.
  */
-export default function PromptForm({ initialValues, submitting, submitLabel = 'Save', onSubmit, onCancel }: PromptFormProps) {
+export default function PromptForm({ initialValues, submitting, submitLabel = 'Save', onSubmit, onCancel }: Readonly<PromptFormProps>) {
   return (
     <Formik
       initialValues={{ ...promptInitialValues, ...initialValues } as PromptFormValues}

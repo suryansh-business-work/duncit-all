@@ -23,7 +23,7 @@ interface Props {
   color?: string;
 }
 
-export default function CountsBySuperCategoryGrid({ title, counts, total, color = '#FF4D4F' }: Props) {
+export default function CountsBySuperCategoryGrid({ title, counts, total, color = '#FF4D4F' }: Readonly<Props>) {
   const theme = useTheme();
   const palette = ['#2563eb', '#0f766e', '#d97706', '#7c3aed', '#dc2626', '#0891b2'];
   const labels = counts.map((c) => c.super_category_name || c.super_category_slug || 'Uncategorised');

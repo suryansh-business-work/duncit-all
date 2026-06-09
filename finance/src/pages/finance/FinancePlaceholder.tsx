@@ -9,7 +9,7 @@ interface Props {
   features?: string[];
 }
 
-export default function FinancePlaceholder({ icon, title, description, features = [] }: Props) {
+export default function FinancePlaceholder({ icon, title, description, features = [] }: Readonly<Props>) {
   return (
     <Box>
       <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 3 }}>

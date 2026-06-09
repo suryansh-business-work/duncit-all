@@ -22,7 +22,7 @@ interface Props {
   buckets: Bucket[];
 }
 
-export default function ActiveUsersChart({ buckets }: Props) {
+export default function ActiveUsersChart({ buckets }: Readonly<Props>) {
   const theme = useTheme();
 
   if (!buckets.length) {

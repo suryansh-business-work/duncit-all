@@ -24,7 +24,7 @@ interface Props {
   refreshToken: number;
 }
 
-export default function ContactActionsSection({ userId, refreshToken }: Props) {
+export default function ContactActionsSection({ userId, refreshToken }: Readonly<Props>) {
   const [typeFilter, setTypeFilter] = useState('');
   const [statusFilter, setStatusFilter] = useState('');
   const [search, setSearch] = useState('');

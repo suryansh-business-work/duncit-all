@@ -29,7 +29,7 @@ interface Props {
 const ENTITY_LABEL: Record<string, string> = { VENUE_LEAD: 'Venue lead', HOST_LEAD: 'Host lead', GENERAL: 'General' };
 
 /** Side drawer showing a calendar event's details + a jump to its lead. */
-export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDelete }: Props) {
+export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDelete }: Readonly<Props>) {
   const navigate = useNavigate();
   const isReminder = event?.kind === 'reminder';
   const done = event?.status === 'DONE';

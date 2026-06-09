@@ -25,7 +25,7 @@ const toValue = (list: string[]): string => list.join('\n');
  * pushed to ImageKit via the server `uploadImageToImagekit` mutation — there is
  * NO raw URL paste. Used for venue/host photos and videos.
  */
-export default function MediaUploadField({ name, label, kind, folder = 'crm/media', helperText }: Props) {
+export default function MediaUploadField({ name, label, kind, folder = 'crm/media', helperText }: Readonly<Props>) {
   const [field, , helpers] = useField<string>(name);
   const list = toList(field.value);
   const inputRef = useRef<HTMLInputElement | null>(null);

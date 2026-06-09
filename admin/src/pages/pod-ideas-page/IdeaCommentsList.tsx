@@ -13,7 +13,7 @@ interface Props {
   onDelete: (commentId: string) => void;
 }
 
-export default function IdeaCommentsList({ comments, onDelete }: Props) {
+export default function IdeaCommentsList({ comments, onDelete }: Readonly<Props>) {
   return (
     <>
       <Divider sx={{ mb: 2 }} />

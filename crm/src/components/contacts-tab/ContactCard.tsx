@@ -19,7 +19,7 @@ const Row = ({ icon, children }: { icon: React.ReactNode; children: React.ReactN
 );
 
 /** One contact card with Call / WhatsApp / Email actions (call & email open the compose window). */
-export default function ContactCard({ contact, index, onCall, onEmail }: Props) {
+export default function ContactCard({ contact, index, onCall, onEmail }: Readonly<Props>) {
   const waNumber = (contact.whatsapp_number || '').replace(/[^0-9]/g, '');
   return (
     <Card variant="outlined" sx={{ p: 1.5 }}>

@@ -20,7 +20,7 @@ type Active = { mode: 'call' | 'email'; contact: CrmContact } | null;
  * shared Gmail-style compose window (draggable, minimize/maximize) — the same
  * behaviour as the hero contact actions.
  */
-export default function ContactsTab({ entity, leadId, leadName, contacts }: Props) {
+export default function ContactsTab({ entity, leadId, leadName, contacts }: Readonly<Props>) {
   const [active, setActive] = useState<Active>(null);
   const [toast, setToast] = useState<string | null>(null);
 

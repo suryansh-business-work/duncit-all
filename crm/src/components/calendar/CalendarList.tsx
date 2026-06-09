@@ -12,7 +12,7 @@ interface Props {
 }
 
 /** Day-grouped event list — used by Day, Week, Upcoming and Year (agenda) views. */
-export default function CalendarList({ days, events, onEvent, emptyHint }: Props) {
+export default function CalendarList({ days, events, onEvent, emptyHint }: Readonly<Props>) {
   const rows = days
     .map((day) => ({ day, items: events.filter((e) => isSameDay(e.date, day)) }))
     .filter((r) => r.items.length > 0);

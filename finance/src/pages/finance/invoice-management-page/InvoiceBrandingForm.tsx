@@ -8,7 +8,7 @@ interface Props {
 }
 
 /** Grouped MUI text fields for every invoice/ticket branding value. */
-export default function InvoiceBrandingForm({ value, onChange, emailError }: Props) {
+export default function InvoiceBrandingForm({ value, onChange, emailError }: Readonly<Props>) {
   const set = (field: InvoiceField) => (e: React.ChangeEvent<HTMLInputElement>) =>
     onChange(field, e.target.value);
 

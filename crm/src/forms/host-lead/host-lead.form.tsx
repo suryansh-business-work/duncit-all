@@ -56,7 +56,7 @@ const SECTIONS = [
   },
 ];
 
-export default function HostLeadForm({ config, initialValues, submitting, submitLabel = 'Save host lead', onSubmit, onCancel }: Props) {
+export default function HostLeadForm({ config, initialValues, submitting, submitLabel = 'Save host lead', onSubmit, onCancel }: Readonly<Props>) {
   return (
     <Formik
       initialValues={initialValues ?? hostLeadInitialValues}
@@ -112,7 +112,7 @@ export default function HostLeadForm({ config, initialValues, submitting, submit
   );
 }
 
-function HostSections({ config }: { config: CrmOptionGroup }) {
+function HostSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
   const components = [
     <HostBasicSection config={config} />,
     <HostContactsSection />,

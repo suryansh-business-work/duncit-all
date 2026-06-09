@@ -29,7 +29,7 @@ interface Props {
 }
 
 /** "Survey" tab on a venue/host lead: fill (stepper), share a link, and the full log. */
-export default function LeadSurveyTab({ entity, leadId }: Props) {
+export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
   const [filling, setFilling] = useState(false);
   const [seed, setSeed] = useState<LeadSurveyAnswer[] | undefined>(undefined);
   const [snack, setSnack] = useState<string | null>(null);

@@ -29,7 +29,7 @@ interface Props {
   onSubmit: (values: InterviewFormValues) => Promise<void> | void;
 }
 
-export default function ManageInterviewDialog({ active, saving, error, fmtSlotLong, onClose, onSubmit }: Props) {
+export default function ManageInterviewDialog({ active, saving, error, fmtSlotLong, onClose, onSubmit }: Readonly<Props>) {
   return (
     <Dialog open={!!active} onClose={saving ? undefined : onClose} fullWidth maxWidth="sm">
       <Formik<InterviewFormValues>

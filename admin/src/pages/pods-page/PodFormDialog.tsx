@@ -43,7 +43,7 @@ export default function PodFormDialog({
   userName,
   onSubmit,
   finance,
-}: Props) {
+}: Readonly<Props>) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['basic']));
   const submitMode = useRef<'publish' | 'draft'>('publish');
   const isEdit = !!initialValues.id;

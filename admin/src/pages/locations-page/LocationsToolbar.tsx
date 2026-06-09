@@ -8,7 +8,7 @@ interface Props {
   onCreate: () => void;
 }
 
-export default function LocationsToolbar({ search, setSearch, onCreate }: Props) {
+export default function LocationsToolbar({ search, setSearch, onCreate }: Readonly<Props>) {
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}

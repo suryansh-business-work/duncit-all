@@ -7,7 +7,7 @@ interface Props {
   onSelect: (id: string) => void;
 }
 
-export default function TemplateList({ list, selected, onSelect }: Props) {
+export default function TemplateList({ list, selected, onSelect }: Readonly<Props>) {
   return (
     <Box
       sx={{

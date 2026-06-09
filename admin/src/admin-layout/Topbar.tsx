@@ -27,7 +27,7 @@ interface Props {
   onOpenMobile: () => void;
 }
 
-export default function Topbar({ isDesktop, onOpenMobile }: Props) {
+export default function Topbar({ isDesktop, onOpenMobile }: Readonly<Props>) {
   const { mode, toggle } = useColorMode();
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const navigate = useNavigate();

@@ -36,7 +36,7 @@ export default function CategoryFormDialog({
   busy,
   opError,
   onSubmit,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={!!dialog?.open} onClose={() => setDialog(null)} fullWidth maxWidth="sm">
       <DialogTitle>

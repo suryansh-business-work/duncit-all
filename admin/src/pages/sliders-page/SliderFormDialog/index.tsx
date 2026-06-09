@@ -16,7 +16,7 @@ interface Props {
   superCategories: { id: string; name: string; slug: string }[];
 }
 
-export default function SliderFormDialog({ open, onClose, form, busy, opError, onSubmit, locations, superCategories }: Props) {
+export default function SliderFormDialog({ open, onClose, form, busy, opError, onSubmit, locations, superCategories }: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <Formik<SliderForm>

@@ -35,7 +35,7 @@ export default function SlidersTable({
   locations,
   onEdit,
   onRemove,
-}: Props) {
+}: Readonly<Props>) {
   const locName = (id?: string | null) =>
     locations.find((l: any) => l.id === id)?.location_name ?? '—';
 

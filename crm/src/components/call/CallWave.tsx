@@ -9,7 +9,7 @@ import RecordPlugin from 'wavesurfer.js/dist/plugins/record.esm.js';
  * real time (no recording is kept). Mic permission is optional — if denied, the
  * wave simply stays flat instead of erroring.
  */
-export default function CallWave({ active, color = '#6366f1' }: { active: boolean; color?: string }) {
+export default function CallWave({ active, color = '#6366f1' }: Readonly<{ active: boolean; color?: string }>) {
   const containerRef = useRef<HTMLDivElement>(null);
   const { wavesurfer } = useWavesurfer({
     container: containerRef,

@@ -10,7 +10,7 @@ interface Props {
   onComplete: (pod: any) => void;
 }
 
-export default function PodActionButtons({ pod, onEdit, onDelete, onComplete }: Props) {
+export default function PodActionButtons({ pod, onEdit, onDelete, onComplete }: Readonly<Props>) {
   return (
     <Stack direction="row" spacing={0.25} justifyContent="flex-end">
       <Tooltip title="Complete this pod">

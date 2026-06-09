@@ -20,7 +20,7 @@ interface Props {
   onChange: (products: ProductRow[]) => void;
 }
 
-export default function ProductsCard({ products, onChange }: Props) {
+export default function ProductsCard({ products, onChange }: Readonly<Props>) {
   const updateOne = (id: string, patch: Partial<ProductRow>) => {
     onChange(products.map((p) => (p.id === id ? { ...p, ...patch } : p)));
   };

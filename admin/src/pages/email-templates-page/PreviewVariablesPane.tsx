@@ -39,7 +39,7 @@ export default function PreviewVariablesPane({
   varsJson,
   setVarsJson,
   onImportDetected,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Box
       sx={{

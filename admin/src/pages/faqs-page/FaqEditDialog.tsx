@@ -33,7 +33,7 @@ export default function FaqEditDialog({
   supers,
   onClose,
   onSubmit,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={!!editing} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{editing?.id ? 'Edit FAQ' : 'New FAQ'}</DialogTitle>

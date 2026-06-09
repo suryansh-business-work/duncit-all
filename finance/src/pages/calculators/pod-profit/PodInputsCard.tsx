@@ -9,7 +9,7 @@ interface Props {
   onChange: <K extends keyof PodProfitInputs>(key: K, value: PodProfitInputs[K]) => void;
 }
 
-export default function PodInputsCard({ inputs, onChange }: Props) {
+export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
   return (
     <Card>
       <CardContent>

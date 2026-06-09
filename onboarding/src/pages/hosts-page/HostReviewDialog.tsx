@@ -29,7 +29,7 @@ export default function HostReviewDialog({
   onClose,
   onApprove,
   onReject,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={!!active} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Review · {active?.full_name}</DialogTitle>

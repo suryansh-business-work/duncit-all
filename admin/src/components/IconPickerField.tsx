@@ -70,7 +70,7 @@ export default function IconPickerField({
   onChange,
   label = 'Icon',
   helperText = 'Pick a Material icon, or paste an emoji.',
-}: Props) {
+}: Readonly<Props>) {
   const known = useMemo(() => UNIQUE_NAMES, []);
   const isKnown = !!resolveIcon(value);
 

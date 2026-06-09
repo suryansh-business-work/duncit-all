@@ -78,3 +78,52 @@
 23. Documentation: Document your code, especially complex logic and public APIs, to improve maintainability and help other developers understand the codebase quickly.
 24. Use TypeScript: Leverage TypeScript for type safety and improved developer experience. Ensure that all code is properly typed and that type definitions are maintained and updated as needed.
 25. All test-related files under the __tests__ directory and organize them into separate e2e and unit-tests folders. All existing tests should be moved into their respective folders accordingly.
+
+26. Code-quality rules (SonarQube clean-code). Write code that does NOT trip these — they are enforced by SonarQube on every push.
+
+26a. React / TSX —
+
+- Mark component props read-only: type the props parameter as `Readonly<Props>` (or `({ a, b }: Readonly<{ a: string }>)` for inline types). (S6759)
+- Never use an array index as a React `key`; use a stable unique id from the item. Always provide a `key` for elements rendered in an array/`.map`. (S6479, S6477)
+- Do not define a component inside another component; hoist it to module scope and pass data via props. (S6478)
+- Only use ARIA attributes valid for the element's role (e.g. `aria-selected` needs role `tab`/`option`, not `button`). (S6811)
+- Remove unused PropTypes and unused imports. (S6767, S1128)
+
+26b. Conditionals & expressions —
+
+- No nested ternaries: extract the inner ternary into a named `const` or an `if/else` above the expression. (S3358)
+- No negated condition with an `else`: write `if (x) { B } else { A }` instead of `if (!x) { A } else { B }`. (S7735)
+- Prefer optional chaining `a?.b?.c` over `a && a.b && a.b.c` (only when operands are object-nullables, not 0/""/false). (S6582)
+- Prefer nullish coalescing: `a ?? b` instead of `a != null ? a : b` or `a ? a : b`. (S6606, S6644)
+- Add `{ }` braces around multi-line `if`/`for` bodies — never rely on a single unbraced statement. (S2681)
+- A conditional whose branches return the same value is a bug — make the branches differ or remove the condition. (S3923)
+
+26c. Functions & complexity —
+
+- Keep Cognitive Complexity ≤ 15: extract cohesive blocks into well-named helpers and use early-return guard clauses. (S3776)
+- Do not nest functions more than 4 levels deep; extract inner functions to a higher scope. (S2004)
+
+26d. Strings, numbers, modules (Node/TS) —
+
+- Import Node builtins with the `node:` protocol: `from 'node:crypto'`, `require('node:fs')`. (S7772)
+- Use `Number.parseInt` / `Number.parseFloat`, not the bare globals. (S7773)
+- Use `str.startsWith(x)` / `str.endsWith(x)` instead of `indexOf(x) === 0` / `slice`/`lastIndexOf` checks. (S6557)
+- Use `String.raw` for strings full of backslashes; never nest template literals (hoist the inner template to a const). (S7780, S4624)
+- Use `replaceAll` only when a global replace is intended (`replace('x', y)` replaces only the first match). (S7781)
+- Pass `String` directly to `.map(String)` instead of `x => String(x)`. (S7770)
+- Prefer `globalThis` over `window` for truly-global access (keep `window` only for DOM-only APIs). (S7764)
+- Batch `Array#push`: `a.push(x, y)` instead of consecutive `a.push(x); a.push(y);`. (S7778)
+- Use a hoisted `Set` + `.has()` instead of `array.includes()` for membership lookups on constant lists. (S7776)
+- Do not stringify objects that fall back to `[object Object]` — stringify a field or `JSON.stringify`. (S6551)
+- `arr.sort()` mutates: use `arr.toSorted()` when you only need a sorted copy in an expression. (S4043)
+
+26e. Types & fire-and-forget —
+
+- Do not leave a useless `void` operator: a fire-and-forget promise must use `promise().catch((e) => log(e))` (never silently drop errors); `void 0` → `undefined`. (S3735)
+- Remove type assertions (`as X`, non-null `!`) that don't change the type. (S4325)
+- Mark class members that are never reassigned as `readonly`. (S2933)
+- Extract a repeated union into a `type X = A | B` alias. (S4323)
+
+26f. Security (NEVER hard-code) —
+
+- No hard-coded passwords / secrets / credentials in source — read them from environment variables / config (`process.env`). This includes test credentials. (S2068)

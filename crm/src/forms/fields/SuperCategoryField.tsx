@@ -19,7 +19,7 @@ export default function SuperCategoryField({
   label = 'Super Category',
   hint,
   required,
-}: Props) {
+}: Readonly<Props>) {
   const [field, meta] = useField<string>(name);
   const { options, loading } = useSuperCategories();
   const showError = Boolean(meta.error && (meta.touched || meta.value !== meta.initialValue));

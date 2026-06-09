@@ -13,7 +13,7 @@ interface Props {
 }
 
 /** Renders a single survey question input (TEXT / TEXTAREA / MCQ single|multi). */
-export default function SurveyQuestionField({ question: q, answer, onChange }: Props) {
+export default function SurveyQuestionField({ question: q, answer, onChange }: Readonly<Props>) {
   const toggle = (opt: string) => {
     const cur = answer.values;
     onChange({ values: cur.includes(opt) ? cur.filter((v) => v !== opt) : [...cur, opt] });

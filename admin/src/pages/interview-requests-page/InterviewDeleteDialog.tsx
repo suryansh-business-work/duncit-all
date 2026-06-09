@@ -13,7 +13,7 @@ interface Props {
   onConfirm: () => void;
 }
 
-export default function InterviewDeleteDialog({ open, onClose, onConfirm }: Props) {
+export default function InterviewDeleteDialog({ open, onClose, onConfirm }: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Delete this request?</DialogTitle>

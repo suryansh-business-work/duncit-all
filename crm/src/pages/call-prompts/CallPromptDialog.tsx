@@ -17,7 +17,7 @@ interface Props {
 }
 
 /** Create / edit a Static Content prompt, wrapping the RHF+Zod form with GraphQL. */
-export default function CallPromptDialog({ open, prompt, onClose, onSaved }: Props) {
+export default function CallPromptDialog({ open, prompt, onClose, onSaved }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
   const [createPrompt, { loading: creating }] = useMutation(CREATE_CRM_CALL_PROMPT);
   const [updatePrompt, { loading: updating }] = useMutation(UPDATE_CRM_CALL_PROMPT);

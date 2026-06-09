@@ -12,7 +12,7 @@ interface Props {
 const clampPct = (value: number, max: number) => Math.min(Math.max(value, 0), max);
 
 /** Percentage slider + synced number input. Identical UX across the form. */
-export default function PercentSlider({ label, value, onChange, hint, max = 100, step = 1 }: Props) {
+export default function PercentSlider({ label, value, onChange, hint, max = 100, step = 1 }: Readonly<Props>) {
   const marks = max === 100
     ? [
         { value: 0, label: '0' },

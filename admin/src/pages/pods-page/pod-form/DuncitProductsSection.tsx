@@ -25,7 +25,7 @@ export function getProductRequestTotal(requests: PodForm['product_requests'], pr
   }, 0);
 }
 
-export default function DuncitProductsSection({ products }: Props) {
+export default function DuncitProductsSection({ products }: Readonly<Props>) {
   const { values, setFieldValue, errors, touched } = useFormikContext<PodForm>();
   const productErrors = errors.product_requests as any[] | undefined;
   const productTouched = touched.product_requests as any[] | undefined;

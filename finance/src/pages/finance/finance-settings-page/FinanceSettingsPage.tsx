@@ -21,7 +21,7 @@ interface Props {
   focus?: 'fees' | 'gst' | 'all';
 }
 
-export default function FinanceSettingsPage({ focus = 'all' }: Props) {
+export default function FinanceSettingsPage({ focus = 'all' }: Readonly<Props>) {
   const { data, loading, refetch } = useQuery(FINANCE_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });

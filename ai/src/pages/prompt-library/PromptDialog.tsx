@@ -13,7 +13,7 @@ interface Props {
 }
 
 /** Create / edit a Prompt Library entry, wrapping the Formik form with GraphQL. */
-export default function PromptDialog({ open, prompt, onClose, onSaved }: Props) {
+export default function PromptDialog({ open, prompt, onClose, onSaved }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
   const [createPrompt, { loading: creating }] = useMutation(CREATE_AI_PROMPT);
   const [updatePrompt, { loading: updating }] = useMutation(UPDATE_AI_PROMPT);

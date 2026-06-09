@@ -32,7 +32,7 @@ export default function SendTestDialog({
   varsJson,
   onClose,
   onResult,
-}: Props) {
+}: Readonly<Props>) {
   const [sendTest, { loading }] = useMutation(SEND_TEST);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 

@@ -62,7 +62,7 @@ const ToolbarButton = ({
   </Tooltip>
 );
 
-function Toolbar({ editor, compact }: { editor: Editor; compact?: boolean }) {
+function Toolbar({ editor, compact }: Readonly<{ editor: Editor; compact?: boolean }>) {
   const promptLink = () => {
     const current = editor.getAttributes('link').href ?? '';
     const url = window.prompt('Link URL', current);
@@ -170,7 +170,7 @@ export default function RichTextField({
   disabled,
   readOnly,
   bare,
-}: Props) {
+}: Readonly<Props>) {
   const theme = useTheme();
   const editor = useEditor({
     extensions: [

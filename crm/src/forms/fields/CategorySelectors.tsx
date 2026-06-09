@@ -20,7 +20,7 @@ export default function CategorySelectors({
   superName = 'super_category_id',
   categoryName = 'category_ids',
   subName = 'sub_category_ids',
-}: Props) {
+}: Readonly<Props>) {
   const { setFieldValue } = useFormikContext<Record<string, unknown>>();
   const [superField] = useField<string>(superName);
   const [catField] = useField<string[]>(categoryName);

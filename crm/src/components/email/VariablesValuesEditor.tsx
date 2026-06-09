@@ -18,7 +18,7 @@ interface Props {
  * Array-of-inputs editor for template variable sample/send values — one labelled
  * field per declared variable (replaces the old raw-JSON textarea).
  */
-export default function VariablesValuesEditor({ variables, values, onChange, emptyHint }: Props) {
+export default function VariablesValuesEditor({ variables, values, onChange, emptyHint }: Readonly<Props>) {
   if (variables.length === 0) {
     return (
       <Typography variant="caption" color="text.secondary">

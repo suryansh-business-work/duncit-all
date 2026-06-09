@@ -29,7 +29,7 @@ export default function RefundDialog({
   actionError,
   onClose,
   onConfirm,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={!!refundFor} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>Refund payment</DialogTitle>

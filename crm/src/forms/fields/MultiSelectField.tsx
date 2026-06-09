@@ -10,7 +10,7 @@ interface Props {
 }
 
 /** Multi-select with chips bound to Formik (value is string[]). */
-export default function MultiSelectField({ name, label, options, hint, required }: Props) {
+export default function MultiSelectField({ name, label, options, hint, required }: Readonly<Props>) {
   const [field, meta, helpers] = useField<string[]>(name);
   const value = field.value ?? [];
   const showError = Boolean(meta.error && (meta.touched || value.length > 0));

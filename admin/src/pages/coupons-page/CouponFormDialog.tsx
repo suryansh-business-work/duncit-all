@@ -32,7 +32,7 @@ interface Props {
 
 const toDateInput = (iso?: string | null) => (iso ? iso.slice(0, 10) : '');
 
-export default function CouponFormDialog({ open, onClose, onSaved, initial, lockedPod, pods }: Props) {
+export default function CouponFormDialog({ open, onClose, onSaved, initial, lockedPod, pods }: Readonly<Props>) {
   const [createCoupon] = useMutation(CREATE_COUPON);
   const [updateCoupon] = useMutation(UPDATE_COUPON);
 

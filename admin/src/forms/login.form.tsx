@@ -22,7 +22,7 @@ export default function LoginForm({
   errorMessage,
   onSubmit,
   submitLabel = 'Sign in',
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Formik
       initialValues={DEFAULTS}

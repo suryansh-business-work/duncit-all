@@ -22,7 +22,7 @@ export default function MediaListField({
   folder,
   helperText,
   buttonLabel = 'Add image',
-}: Props) {
+}: Readonly<Props>) {
   const items = value
     .split('\n')
     .map((s) => s.trim())

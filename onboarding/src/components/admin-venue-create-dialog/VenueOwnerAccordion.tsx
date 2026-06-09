@@ -44,7 +44,7 @@ export default function VenueOwnerAccordion({
   setOwner,
   ownerOptions,
   errors,
-}: Props) {
+}: Readonly<Props>) {
   const handleOwnerPick = (next: OwnerUser | null) => {
     setOwner?.(next);
     if (next && setS3) {

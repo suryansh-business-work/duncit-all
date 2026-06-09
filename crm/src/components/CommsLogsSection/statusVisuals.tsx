@@ -46,7 +46,7 @@ const ACTIVE = new Set(['INITIATED', 'IN_PROGRESS', 'RINGING', 'QUEUED']);
  * mascot_lottie_url etc. — the fallback CSS animation keeps the UI
  * usable without that asset.
  */
-export default function StatusVisual({ type, status }: Props) {
+export default function StatusVisual({ type, status }: Readonly<Props>) {
   const color = COLOURS[status] ?? '#6366f1';
   const animate = ACTIVE.has(status);
   const isCall = type === 'CALL';

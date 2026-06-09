@@ -35,7 +35,7 @@ interface Props {
   expandSignalValue?: boolean;
 }
 
-export default function FormAccordion({ title, children, defaultExpanded, fieldPaths, expandSignal, expandSignalValue }: Props) {
+export default function FormAccordion({ title, children, defaultExpanded, fieldPaths, expandSignal, expandSignalValue }: Readonly<Props>) {
   const ctx = useFormikContext<Record<string, unknown>>();
   const [expanded, setExpanded] = useState(!!defaultExpanded);
 

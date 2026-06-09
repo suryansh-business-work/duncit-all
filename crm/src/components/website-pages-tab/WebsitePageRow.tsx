@@ -25,7 +25,7 @@ interface Props {
 }
 
 /** One website-page row with its own "Fetch content" action + view/delete. */
-export default function WebsitePageRow({ page, onView, onDelete, onError }: Props) {
+export default function WebsitePageRow({ page, onView, onDelete, onError }: Readonly<Props>) {
   const [fetchContent, { loading }] = useMutation(FETCH_CRM_WEBSITE_PAGE_CONTENT);
   const fetched = page.status === 'FETCHED';
 

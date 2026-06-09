@@ -17,7 +17,7 @@ interface UserSurvey { kind: 'VENUE' | 'HOST'; submitted_at?: string | null; ite
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '');
 
 /** Read-only view of a user's venue/host onboarding survey answers. */
-export default function UserSurveysSection({ userId }: { userId: string }) {
+export default function UserSurveysSection({ userId }: Readonly<{ userId: string }>) {
   const { data, loading } = useQuery<{ userSurveyResponses: UserSurvey[] }>(USER_SURVEYS, {
     variables: { user_id: userId }, skip: !userId, fetchPolicy: 'cache-and-network',
   });

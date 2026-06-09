@@ -11,7 +11,7 @@ interface Props {
 }
 
 /** MUI confirmation dialog — replaces window.confirm across the app. */
-export default function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', loading, onConfirm, onClose }: Props) {
+export default function ConfirmDialog({ open, title, message, confirmLabel = 'Confirm', loading, onConfirm, onClose }: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={onClose} maxWidth="xs" fullWidth>
       <DialogTitle>{title}</DialogTitle>

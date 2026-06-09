@@ -33,7 +33,7 @@ export default function DateField({
   maxDate,
   disabled,
   size,
-}: Props) {
+}: Readonly<Props>) {
   const { dateFormat } = useDateFormat();
   const dateValue = value ? new Date(value) : null;
   const valid = dateValue && !isNaN(dateValue.getTime()) ? dateValue : null;

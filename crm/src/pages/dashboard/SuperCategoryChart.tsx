@@ -24,7 +24,7 @@ interface Props {
  * visually so the dashboard reads consistently — uses the admin-managed
  * SUPER category list as the X axis.
  */
-export default function SuperCategoryChart({ data, title = 'Leads by Super Category' }: Props) {
+export default function SuperCategoryChart({ data, title = 'Leads by Super Category' }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 

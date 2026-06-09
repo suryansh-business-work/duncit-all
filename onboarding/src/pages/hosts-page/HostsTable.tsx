@@ -8,7 +8,7 @@ interface Props {
   onReview: (host: any) => void;
 }
 
-export default function HostsTable({ hosts, onEdit, onReview }: Props) {
+export default function HostsTable({ hosts, onEdit, onReview }: Readonly<Props>) {
   return (
     <Table size="small">
       <TableHead>

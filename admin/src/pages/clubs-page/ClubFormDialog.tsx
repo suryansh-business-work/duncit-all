@@ -37,7 +37,7 @@ export default function ClubFormDialog({
   superCats,
   subCats,
   venues,
-}: Props) {
+}: Readonly<Props>) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['basic']));
   const toggleOne = (id: string, open: boolean) => {
     setExpanded((prev) => {

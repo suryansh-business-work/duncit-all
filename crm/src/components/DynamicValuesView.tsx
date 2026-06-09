@@ -35,7 +35,7 @@ const fmt = (field: CrmDynamicField, raw: unknown): string => {
  * applicable field definitions, then prints each as a labelled row. Empty
  * state (no fields configured) is handled by the caller's tab.
  */
-export default function DynamicValuesView({ entity, json }: Props) {
+export default function DynamicValuesView({ entity, json }: Readonly<Props>) {
   const { data, loading } = useQuery<{ crmDynamicFields: CrmDynamicField[] }>(CRM_DYNAMIC_FIELDS, {
     variables: { entity, include_inactive: false },
     fetchPolicy: 'cache-first',

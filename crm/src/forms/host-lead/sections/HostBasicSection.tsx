@@ -7,7 +7,7 @@ import CategorySelectors from '../../fields/CategorySelectors';
 import { AreaField, CityField } from '../../fields/LocationField';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
-export default function HostBasicSection({ config }: { config: CrmOptionGroup }) {
+export default function HostBasicSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
   return (
     <Stack spacing={1.5}>
       <SuperCategoryField

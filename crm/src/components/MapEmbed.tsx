@@ -19,7 +19,7 @@ interface Props {
  * perf. When `mapLink` is also set, we surface it as an "Open in Maps"
  * deeplink so the user can jump to a curated pin.
  */
-export default function MapEmbed({ address, mapLink, height = 220 }: Props) {
+export default function MapEmbed({ address, mapLink, height = 220 }: Readonly<Props>) {
   const q = (address || '').trim();
   if (!q) {
     return (

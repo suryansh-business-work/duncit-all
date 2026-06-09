@@ -30,7 +30,7 @@ interface Props {
   refreshing?: boolean;
 }
 
-export default function LogRow({ log, onRequestTranscript, refreshing }: Props) {
+export default function LogRow({ log, onRequestTranscript, refreshing }: Readonly<Props>) {
   const transcriptReady = log.transcript_status === 'READY' && log.transcript;
   return (
     <Stack

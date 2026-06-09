@@ -37,7 +37,7 @@ interface Props {
   onRemoveVariable: (slug: string) => void;
 }
 
-export default function PreviewVariablesPane(p: Props) {
+export default function PreviewVariablesPane(p: Readonly<Props>) {
   const { draft, setDraft, tab, setTab, previewHtml, previewErrors, detected, onImportDetected, onAddVariable, onRemoveVariable } = p;
   const [fullscreen, setFullscreen] = useState(false);
   const declared = new Set(draft.variables.map((v) => v.key));

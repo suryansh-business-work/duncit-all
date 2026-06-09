@@ -10,7 +10,7 @@ interface SimpleProps {
   children: ReactNode;
 }
 
-export function LeadDetailCard({ title, subtitle, icon, action, children }: SimpleProps) {
+export function LeadDetailCard({ title, subtitle, icon, action, children }: Readonly<SimpleProps>) {
   return (
     <Card>
       <CardContent>
@@ -33,7 +33,7 @@ interface RowProps {
   value?: ReactNode;
 }
 
-export function LeadDetailRow({ label, value }: RowProps) {
+export function LeadDetailRow({ label, value }: Readonly<RowProps>) {
   const display = value === '' || value === null || value === undefined ? '—' : value;
   return (
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={0.5} sx={{ py: 0.5 }}>

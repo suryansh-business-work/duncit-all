@@ -15,7 +15,7 @@ export interface FormFieldProps extends Omit<TextFieldProps, Omitted> {
  * validation error after the field is touched, otherwise renders the
  * supplied `hint` so every input has guidance underneath it.
  */
-export default function FormField({ name, hint, ...rest }: FormFieldProps) {
+export default function FormField({ name, hint, ...rest }: Readonly<FormFieldProps>) {
   const [field, meta] = useField(name);
   const hasChanged = meta.value !== meta.initialValue;
   const showError = Boolean(meta.error && (meta.touched || hasChanged));

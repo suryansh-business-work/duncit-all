@@ -46,7 +46,7 @@ const responseKey = (entity: EntityKind, mode: Mode) => {
   return entity === 'VENUE_LEAD' ? 'callVenueLeadContact' : 'callHostLeadContact';
 };
 
-export default function ContactComposeDialog({ open, mode, entity, lead, variableValues, onClose, onResult }: Props) {
+export default function ContactComposeDialog({ open, mode, entity, lead, variableValues, onClose, onResult }: Readonly<Props>) {
   const [target, setTarget] = useState('');
   const [defaultSubject, setDefaultSubject] = useState('');
   const [emailPayload, setEmailPayload] = useState<EmailPayload>({ subject: '', body: '', valid: false, attachments: [] });

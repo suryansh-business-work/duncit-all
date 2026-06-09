@@ -13,7 +13,7 @@ interface Props {
   onConfirm: () => void;
 }
 
-export default function IdeaDeleteDialog({ target, onClose, onConfirm }: Props) {
+export default function IdeaDeleteDialog({ target, onClose, onConfirm }: Readonly<Props>) {
   return (
     <Dialog open={!!target} onClose={onClose}>
       <DialogTitle>Delete idea?</DialogTitle>

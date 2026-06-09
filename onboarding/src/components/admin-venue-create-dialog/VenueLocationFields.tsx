@@ -35,7 +35,7 @@ export const selectedLocation = (locations: any[], s1: Step1) =>
   ) ??
   null;
 
-export default function VenueLocationFields({ s1, locations, set, errors }: Props) {
+export default function VenueLocationFields({ s1, locations, set, errors }: Readonly<Props>) {
   const location = selectedLocation(locations, s1);
   const err = (field: keyof Step1) => getVenueError(errors, `step1.${field}`);
   const countryOptions = uniqueOptions(

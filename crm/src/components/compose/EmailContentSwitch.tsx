@@ -11,7 +11,7 @@ interface Props {
 }
 
 /** Chooses how the email body is composed: saved template, plain text, or rich text. */
-export default function EmailContentSwitch({ value, onChange }: Props) {
+export default function EmailContentSwitch({ value, onChange }: Readonly<Props>) {
   return (
     <ToggleButtonGroup
       size="small"

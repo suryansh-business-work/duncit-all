@@ -13,7 +13,7 @@ interface Props {
   opError: string | null;
 }
 
-export default function SliderSections({ locations, superCategories, opError }: Props) {
+export default function SliderSections({ locations, superCategories, opError }: Readonly<Props>) {
   const { values, errors, touched, submitCount, handleBlur, setValues, setFieldValue } =
     useFormikContext<SliderForm>();
   const selectedLocation = locations.find((item: any) => item.id === values.location_id);

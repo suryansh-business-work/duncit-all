@@ -11,7 +11,7 @@ interface Props {
   onCustomChange: (window: DateWindow) => void;
 }
 
-export default function RangeFilter({ range, custom, onRangeChange, onCustomChange }: Props) {
+export default function RangeFilter({ range, custom, onRangeChange, onCustomChange }: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>

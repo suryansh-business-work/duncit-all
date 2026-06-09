@@ -28,7 +28,7 @@ export default function RoleEditDialog({
   opError,
   onClose,
   onSave,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{editing.id ? 'Edit Role' : 'New Role'}</DialogTitle>

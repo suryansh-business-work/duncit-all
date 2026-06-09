@@ -21,7 +21,7 @@ import PodCouponsSection from './PodCouponsSection';
 const fmtDateTime = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
-function Row({ label, value }: { label: string; value: React.ReactNode }) {
+function Row({ label, value }: Readonly<{ label: string; value: React.ReactNode }>) {
   return (
     <Stack direction="row" justifyContent="space-between" spacing={2} sx={{ py: 0.75 }}>
       <Typography variant="body2" color="text.secondary">

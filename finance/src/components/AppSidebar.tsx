@@ -37,7 +37,7 @@ const matches = (pathname: string, to?: string) => {
 const groupActive = (pathname: string, item: AppNavItem): boolean =>
   Boolean(item.children?.some((child) => matches(pathname, child.to) || groupActive(pathname, child)));
 
-function LeafItem({ item, pathname, onNavigate }: NodeProps) {
+function LeafItem({ item, pathname, onNavigate }: Readonly<NodeProps>) {
   const selected = matches(pathname, item.to);
   return (
     <ListItemButton
@@ -63,7 +63,7 @@ function LeafItem({ item, pathname, onNavigate }: NodeProps) {
   );
 }
 
-function GroupItem({ item, pathname, onNavigate }: NodeProps) {
+function GroupItem({ item, pathname, onNavigate }: Readonly<NodeProps>) {
   const active = useMemo(() => groupActive(pathname, item), [pathname, item]);
   const [open, setOpen] = useState(active);
   return (
@@ -89,14 +89,14 @@ function GroupItem({ item, pathname, onNavigate }: NodeProps) {
   );
 }
 
-function NavNode({ item, pathname, onNavigate }: NodeProps) {
+function NavNode({ item, pathname, onNavigate }: Readonly<NodeProps>) {
   if (item.children && item.children.length > 0) {
     return <GroupItem item={item} pathname={pathname} onNavigate={onNavigate} />;
   }
   return <LeafItem item={item} pathname={pathname} onNavigate={onNavigate} />;
 }
 
-export default function AppSidebar({ onNavigate }: SidebarProps) {
+export default function AppSidebar({ onNavigate }: Readonly<SidebarProps>) {
   const location = useLocation();
   const { logoUrl, appName, loading } = useBranding();
   return (

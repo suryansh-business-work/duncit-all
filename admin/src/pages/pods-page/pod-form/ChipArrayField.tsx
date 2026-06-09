@@ -19,7 +19,7 @@ export default function ChipArrayField({
   placeholder = 'Type and press Enter',
   max = 20,
   error,
-}: Props) {
+}: Readonly<Props>) {
   const [draft, setDraft] = useState('');
 
   const commit = () => {

@@ -75,7 +75,7 @@ export default function VenueAccordionForm({
   locations,
   showOwnerSection = true,
   errors,
-}: Props) {
+}: Readonly<Props>) {
   const [expanded, setExpanded] = useState<Set<PanelKey>>(new Set(['details']));
   const allExpanded = useMemo(
     () => ALL_PANELS.every((p) => expanded.has(p)),

@@ -13,7 +13,7 @@ interface Props {
   onDelete: () => void;
 }
 
-export default function EditorActionsBar({ dirty, busy, isActive, onToggleActive, onSave, onSendTest, onDelete }: Props) {
+export default function EditorActionsBar({ dirty, busy, isActive, onToggleActive, onSave, onSendTest, onDelete }: Readonly<Props>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
       <Button variant="contained" startIcon={<SaveIcon />} onClick={onSave} disabled={!dirty || busy}>

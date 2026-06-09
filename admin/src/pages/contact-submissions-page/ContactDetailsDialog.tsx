@@ -32,7 +32,7 @@ interface Props {
 
 const STATUSES = ['NEW', 'IN_PROGRESS', 'RESOLVED', 'ARCHIVED'] as const;
 
-export default function ContactDetailsDialog({ submission, onClose, onUpdateStatus }: Props) {
+export default function ContactDetailsDialog({ submission, onClose, onUpdateStatus }: Readonly<Props>) {
   const [status, setStatus] = useState<string>('NEW');
 
   useEffect(() => {

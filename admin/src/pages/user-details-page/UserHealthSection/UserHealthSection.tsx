@@ -8,7 +8,7 @@ interface Props {
   userId: string;
 }
 
-export default function UserHealthSection({ userId }: Props) {
+export default function UserHealthSection({ userId }: Readonly<Props>) {
   const { data, loading, error } = useQuery<{ userAccountHealth: AdminHealthScore }>(
     USER_ACCOUNT_HEALTH,
     { variables: { user_id: userId }, fetchPolicy: 'cache-and-network', skip: !userId }

@@ -26,7 +26,7 @@ interface Props {
   onSendTest: () => void;
 }
 
-export default function TemplateEditorPanel(p: Props) {
+export default function TemplateEditorPanel(p: Readonly<Props>) {
   const { draft, setDraft } = p;
   return (
     <Stack spacing={2} sx={{ flex: 1, minHeight: 0 }}>

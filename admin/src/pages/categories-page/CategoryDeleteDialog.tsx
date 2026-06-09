@@ -17,7 +17,7 @@ interface Props {
   onConfirm: () => void;
 }
 
-export default function CategoryDeleteDialog({ target, busy, error, onClose, onConfirm }: Props) {
+export default function CategoryDeleteDialog({ target, busy, error, onClose, onConfirm }: Readonly<Props>) {
   const levelLabel =
     target?.level === 'SUPER'
       ? 'Super Category'

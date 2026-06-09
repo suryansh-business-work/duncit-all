@@ -10,7 +10,7 @@ interface Props {
   loading?: boolean;
 }
 
-export default function StatCard({ label, value, hint, icon, color = 'primary', loading }: Props) {
+export default function StatCard({ label, value, hint, icon, color = 'primary', loading }: Readonly<Props>) {
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, flex: '1 1 220px', minWidth: 220 }}>
       <CardContent>

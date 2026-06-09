@@ -29,7 +29,7 @@ const statusChip = (e: LeadSurveyEntry) => {
 };
 
 /** Per-lead log of every survey generation/response (manual, link, app). */
-export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDelete, onFill, revoking, deleting }: Props) {
+export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDelete, onFill, revoking, deleting }: Readonly<Props>) {
   const [view, setView] = useState<LeadSurveyEntry | null>(null);
   const labelFor = (qid: string) => survey?.questions.find((q) => q.qid === qid)?.label ?? qid;
   const copy = (token: string) => navigator.clipboard?.writeText(surveyLinkUrl(token));

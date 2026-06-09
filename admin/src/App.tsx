@@ -28,7 +28,7 @@ import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
 import { redirectPathFromLocation } from './utils/redirect';
 
-function RequireAuth({ children }: { children: JSX.Element }) {
+function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
   const location = useLocation();
   const token = localStorage.getItem('admin_token');
   if (!token) {

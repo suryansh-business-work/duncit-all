@@ -22,7 +22,7 @@ interface Props {
 }
 
 /** Files attached to every send of this template (test send + lead emails). */
-export default function AttachmentsSection({ attachments, onChange }: Props) {
+export default function AttachmentsSection({ attachments, onChange }: Readonly<Props>) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

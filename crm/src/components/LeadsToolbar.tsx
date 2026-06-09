@@ -19,7 +19,7 @@ interface ChipGroupProps {
   onChange: (value: string) => void;
 }
 
-function ChipGroup({ label, selected, options, onChange }: ChipGroupProps) {
+function ChipGroup({ label, selected, options, onChange }: Readonly<ChipGroupProps>) {
   if (!options.length) return null;
   return (
     <Stack direction="row" spacing={0.5} alignItems="center" flexWrap="wrap" useFlexGap>
@@ -75,7 +75,7 @@ export default function LeadsToolbar({
   onDownloadTemplate,
   onManageServices,
   manageServicesLabel = 'Manage Services',
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Stack spacing={1.25}>
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.5} alignItems={{ md: 'center' }} justifyContent="space-between">

@@ -35,7 +35,7 @@ interface Props {
   onChange: (next: ServicesFilterState) => void;
 }
 
-export default function ServicesOfferedFilters({ value, onChange }: Props) {
+export default function ServicesOfferedFilters({ value, onChange }: Readonly<Props>) {
   const set = (patch: Partial<ServicesFilterState>) => onChange({ ...value, ...patch });
   return (
     <Stack direction="row" spacing={1.5} flexWrap="wrap" useFlexGap>

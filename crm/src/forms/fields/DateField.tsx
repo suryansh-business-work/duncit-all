@@ -8,7 +8,7 @@ interface Props {
 }
 
 /** MUIX date picker bound to Formik (value is Date | null). */
-export default function DateField({ name, label, hint }: Props) {
+export default function DateField({ name, label, hint }: Readonly<Props>) {
   const [field, meta, helpers] = useField<Date | null>(name);
   const showError = Boolean(meta.error && meta.touched);
   return (

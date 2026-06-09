@@ -26,7 +26,7 @@ interface Props {
   onDelete: (r: any) => void;
 }
 
-export default function RolesTable({ loading, roles, onEdit, onDelete }: Props) {
+export default function RolesTable({ loading, roles, onEdit, onDelete }: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>

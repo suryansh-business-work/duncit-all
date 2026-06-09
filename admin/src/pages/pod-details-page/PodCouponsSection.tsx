@@ -16,7 +16,7 @@ interface Props {
 
 /** Per-pod offer codes — list of global + pod-scoped coupons, with create/edit/
  * delete locked to this pod. Reuses the global coupons table + dialog. */
-export default function PodCouponsSection({ podId, podTitle }: Props) {
+export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) {
   const { data, loading, refetch } = useQuery(COUPONS_FOR_POD, {
     variables: { pod_id: podId },
     fetchPolicy: 'cache-and-network',

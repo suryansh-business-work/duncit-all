@@ -42,7 +42,7 @@ export default function ResponsiveDialog({
   sheetMaxHeight = '85vh',
   actions,
   children,
-}: Props) {
+}: Readonly<Props>) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const useSheet = bottomSheetOnly || (!desktopOnly && isMobile);

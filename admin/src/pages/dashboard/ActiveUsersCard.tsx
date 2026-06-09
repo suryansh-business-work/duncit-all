@@ -29,7 +29,7 @@ export default function ActiveUsersCard({
   setFrom,
   setTo,
   setGranularity,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Card>
       <CardContent>

@@ -14,7 +14,7 @@ interface Props {
 }
 
 /** Section-stepped survey fill inside CRM; appends a MANUAL entry on submit. */
-export default function LeadSurveyFields({ entity, leadId, survey, initialAnswers, onSaved }: Props) {
+export default function LeadSurveyFields({ entity, leadId, survey, initialAnswers, onSaved }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
   const [save, { loading: saving }] = useMutation(SAVE_LEAD_SURVEY_RESPONSE);

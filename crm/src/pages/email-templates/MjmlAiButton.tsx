@@ -23,7 +23,7 @@ interface Props {
 }
 
 /** Generate or refine MJML from a natural-language prompt via aiCreateOrUpdateMjml. */
-export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: Props) {
+export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: Readonly<Props>) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);

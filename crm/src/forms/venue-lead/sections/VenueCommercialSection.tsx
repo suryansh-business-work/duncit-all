@@ -5,7 +5,7 @@ import SwitchField from '../../fields/SwitchField';
 import FieldGrid from '../../fields/FieldGrid';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
-export default function VenueCommercialSection({ config }: { config: CrmOptionGroup }) {
+export default function VenueCommercialSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
   return (
     <Stack spacing={1.5}>
       <MultiSelectField name="pricing_models" label="Pricing Model" options={config.pricing_models} />

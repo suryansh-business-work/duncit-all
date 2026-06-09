@@ -35,7 +35,7 @@ function metadataSummary(value: string) {
 
 const pageLabel = (event: any) => String(event.title || event.path || 'Untitled page');
 
-export default function ActivityJourneyDialog({ open, userId, date, onClose }: Props) {
+export default function ActivityJourneyDialog({ open, userId, date, onClose }: Readonly<Props>) {
   const [pageFilter, setPageFilter] = useState('');
   const [actionFilter, setActionFilter] = useState('');
   const { data, loading, error } = useQuery(USER_CLICKSTREAM, {

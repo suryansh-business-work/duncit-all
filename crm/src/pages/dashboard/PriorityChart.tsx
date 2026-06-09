@@ -16,7 +16,7 @@ interface Props {
   title?: string;
 }
 
-export default function PriorityChart({ slices, title = 'Leads by Priority' }: Props) {
+export default function PriorityChart({ slices, title = 'Leads by Priority' }: Readonly<Props>) {
   const theme = useTheme();
   const palette = useMemo(
     () => [

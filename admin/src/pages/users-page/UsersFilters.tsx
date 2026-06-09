@@ -19,7 +19,7 @@ export default function UsersFilters({
   status,
   setStatus,
   roles,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ pb: 1.5 }}>

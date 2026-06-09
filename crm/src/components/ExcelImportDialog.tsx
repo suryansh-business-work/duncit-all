@@ -55,7 +55,7 @@ function fileToBase64(file: File): Promise<string> {
 
 type Step = 'file' | 'map' | 'done';
 
-export default function ExcelImportDialog({ open, entity, title, onClose, onImported, onDownloadTemplate }: Props) {
+export default function ExcelImportDialog({ open, entity, title, onClose, onImported, onDownloadTemplate }: Readonly<Props>) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [step, setStep] = useState<Step>('file');
   const [base64, setBase64] = useState('');

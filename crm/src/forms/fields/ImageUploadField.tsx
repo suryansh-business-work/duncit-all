@@ -40,7 +40,7 @@ export default function ImageUploadField({
   helperText,
   folder = 'crm',
   shape = 'square',
-}: Props) {
+}: Readonly<Props>) {
   const [field, , helpers] = useField<string>(name);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);

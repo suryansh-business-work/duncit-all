@@ -14,7 +14,7 @@ interface Props {
   onPick: (video: any) => void;
 }
 
-export default function PexelsVideoCard({ video, importing, anyImporting, onPick }: Props) {
+export default function PexelsVideoCard({ video, importing, anyImporting, onPick }: Readonly<Props>) {
   const best = pickBestVideoFile(video);
   return (
     <ImageListItem

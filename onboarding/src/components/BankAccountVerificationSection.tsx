@@ -10,7 +10,7 @@ interface Props {
   errorFor?: (field: keyof BankAccountValues) => string | undefined;
 }
 
-export default function BankAccountVerificationSection({ value, onChange, errorFor }: Props) {
+export default function BankAccountVerificationSection({ value, onChange, errorFor }: Readonly<Props>) {
   const set = (patch: Partial<BankAccountValues>) => onChange({ ...value, ...patch });
   const isUpi = value.payout_method === 'UPI';
   const showBankRails = value.payout_method === 'IMPS' || value.payout_method === 'NEFT';

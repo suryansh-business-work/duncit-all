@@ -10,7 +10,7 @@ interface Props {
   total: number;
 }
 
-function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+function Row({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
   return (
     <Stack direction="row" justifyContent="space-between">
       <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 700 : 500}>
@@ -31,7 +31,7 @@ export default function PreviewCard({
   gst,
   gstAmt,
   total,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Card variant="outlined">
       <CardContent>

@@ -39,7 +39,7 @@ interface CellProps {
   onChange: (next: any) => void;
 }
 
-function MultiSelectCell({ field, value, onChange }: CellProps) {
+function MultiSelectCell({ field, value, onChange }: Readonly<CellProps>) {
   const selected: string[] = Array.isArray(value) ? value : [];
   return (
     <FormControl fullWidth size="small" required={field.required}>
@@ -124,7 +124,7 @@ const FieldCell = ({ field, value, onChange }: CellProps) => {
  * writes the JSON-stringified value bag at `name` so the parent form's
  * Formik state stays untouched aside from this one string field.
  */
-export default function DynamicFieldsRenderer({ entity, name }: Props) {
+export default function DynamicFieldsRenderer({ entity, name }: Readonly<Props>) {
   const [field, , helpers] = useField<string>(name);
   const { data, loading } = useQuery<{ crmDynamicFields: CrmDynamicField[] }>(CRM_DYNAMIC_FIELDS, {
     variables: { entity, include_inactive: false },

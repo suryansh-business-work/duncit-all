@@ -28,7 +28,7 @@ export default function RangePicker({
   onFromChange,
   onToChange,
   onGranularityChange,
-}: Props) {
+}: Readonly<Props>) {
   const applyPreset = (days: number, g: Granularity) => {
     const end = new Date();
     const start = new Date();

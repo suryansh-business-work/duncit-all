@@ -42,7 +42,7 @@ export default function MediaPickerField({
   showPreview = true,
   buttonOnly = false,
   buttonLabel = 'Choose image',
-}: Props) {
+}: Readonly<Props>) {
   const [open, setOpen] = useState(false);
 
   if (buttonOnly) {

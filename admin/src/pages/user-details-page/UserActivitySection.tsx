@@ -52,7 +52,7 @@ function buildYearData(year: number, days: any[]) {
   return result;
 }
 
-export default function UserActivitySection({ userId }: Props) {
+export default function UserActivitySection({ userId }: Readonly<Props>) {
   const [year, setYear] = useState(new Date().getFullYear());
   const [selectedDate, setSelectedDate] = useState('');
   const [journeyDate, setJourneyDate] = useState('');

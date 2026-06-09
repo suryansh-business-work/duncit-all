@@ -24,7 +24,7 @@ interface Props {
   onCloseMobile: () => void;
 }
 
-export default function Sidebar({ onCloseMobile }: Props) {
+export default function Sidebar({ onCloseMobile }: Readonly<Props>) {
   const navigate = useNavigate();
   const { mode, toggle } = useColorMode();
   const { logoUrl, appName } = useBranding();

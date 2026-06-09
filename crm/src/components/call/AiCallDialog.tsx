@@ -47,7 +47,7 @@ interface Props {
  * Servam-driven AI call to the customer. Live call status streams back over the
  * socket so the dialog reflects RINGING → IN_PROGRESS → call over in real time.
  */
-export default function AiCallDialog({ open, lead, onClose }: Props) {
+export default function AiCallDialog({ open, lead, onClose }: Readonly<Props>) {
   const [promptId, setPromptId] = useState('');
   const [voice, setVoice] = useState('');
   const [logId, setLogId] = useState<string | null>(null);

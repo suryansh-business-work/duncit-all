@@ -5,7 +5,7 @@ import DateField from '../../fields/DateField';
 import FieldGrid from '../../fields/FieldGrid';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
-export default function HostTimelineSection({ config }: { config: CrmOptionGroup }) {
+export default function HostTimelineSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
   return (
     <FieldGrid cols={3}>
       <DateField name="preferred_event_date" label="Preferred Event Date" />

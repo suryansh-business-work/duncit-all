@@ -31,7 +31,7 @@ const QUILL_FORMATS = [
   'link',
 ];
 
-export default function MascotSection({ form, setForm }: Props) {
+export default function MascotSection({ form, setForm }: Readonly<Props>) {
   const set = (k: keyof BrandingFormState, v: string) => setForm({ ...form, [k]: v });
 
   return (

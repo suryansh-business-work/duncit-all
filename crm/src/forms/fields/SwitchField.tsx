@@ -7,7 +7,7 @@ interface Props {
 }
 
 /** Boolean switch bound to Formik. */
-export default function SwitchField({ name, label }: Props) {
+export default function SwitchField({ name, label }: Readonly<Props>) {
   const [field] = useField<boolean>(name);
   const { value, ...rest } = field;
   return (

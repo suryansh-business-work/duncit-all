@@ -10,7 +10,7 @@ import { HEADER_HEIGHT } from './AppShell';
 
 const matches = (pathname: string, to?: string) => !!to && (to === '/' ? pathname === '/' : pathname === to || pathname.startsWith(`${to}/`));
 
-function NavLeaf({ item, onNavigate, nested }: { item: AppNavItem; onNavigate?: () => void; nested?: boolean }) {
+function NavLeaf({ item, onNavigate, nested }: Readonly<{ item: AppNavItem; onNavigate?: () => void; nested?: boolean }>) {
   const location = useLocation();
   return (
     <ListItemButton
@@ -31,7 +31,7 @@ function NavLeaf({ item, onNavigate, nested }: { item: AppNavItem; onNavigate?: 
   );
 }
 
-function NavGroup({ item, onNavigate }: { item: AppNavItem; onNavigate?: () => void }) {
+function NavGroup({ item, onNavigate }: Readonly<{ item: AppNavItem; onNavigate?: () => void }>) {
   const location = useLocation();
   const active = (item.children ?? []).some((c) => matches(location.pathname, c.to));
   const [open, setOpen] = useState(active);
@@ -51,7 +51,7 @@ function NavGroup({ item, onNavigate }: { item: AppNavItem; onNavigate?: () => v
   );
 }
 
-export default function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
+export default function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>) {
   const { logoUrl, appName, loading } = useBranding();
   return (
     <Stack sx={{ height: '100%' }}>

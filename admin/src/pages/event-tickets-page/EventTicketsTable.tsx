@@ -33,7 +33,7 @@ const STATUS_COLOR: Record<string, 'success' | 'warning' | 'default'> = {
 const fmt = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
-export default function EventTicketsTable({ loading, tickets, onDownload, onCheckIn }: Props) {
+export default function EventTicketsTable({ loading, tickets, onDownload, onCheckIn }: Readonly<Props>) {
   if (loading && tickets.length === 0)
     return (
       <Stack alignItems="center" sx={{ p: 4 }}>

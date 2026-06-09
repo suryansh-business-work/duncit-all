@@ -28,7 +28,7 @@ const escapeHtml = (s: string) => s.replace(/&/g, '&amp;').replace(/</g, '&lt;')
 const textToHtml = (s: string) => escapeHtml(s).replace(/\r?\n/g, '<br/>');
 
 /** Email body composer with a Template | Simple Text | Rich Text switch. */
-export default function EmailComposeFields({ entity, leadName, leadEmail, variableValues, defaultSubject, onChange }: Props) {
+export default function EmailComposeFields({ entity, leadName, leadEmail, variableValues, defaultSubject, onChange }: Readonly<Props>) {
   const [type, setType] = useState<EmailContentType>('text');
   const [subject, setSubject] = useState(defaultSubject);
   const [text, setText] = useState('');

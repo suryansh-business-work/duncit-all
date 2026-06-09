@@ -16,7 +16,7 @@ export interface ImportResult {
 }
 
 /** Full, scrollable result: summary + every failed row with a parsed reason. */
-export default function ImportResultView({ result }: { result: ImportResult }) {
+export default function ImportResultView({ result }: Readonly<{ result: ImportResult }>) {
   return (
     <Box>
       <Alert severity={result.failed === 0 ? 'success' : 'warning'} sx={{ mb: result.errors.length ? 1.5 : 0 }}>

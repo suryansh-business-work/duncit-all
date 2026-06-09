@@ -45,7 +45,7 @@ export function toAdminProfileInput(values: AdminProfileFormValues) {
   };
 }
 
-export default function AdminProfileForm({ initialValues, busy, errorMessage, onSubmit }: AdminProfileFormProps) {
+export default function AdminProfileForm({ initialValues, busy, errorMessage, onSubmit }: Readonly<AdminProfileFormProps>) {
   return (
     <Formik<AdminProfileFormValues>
       initialValues={initialValues}

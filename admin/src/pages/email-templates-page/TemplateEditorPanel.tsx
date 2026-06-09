@@ -23,7 +23,7 @@ interface Props {
   onSendTest: () => void;
 }
 
-export default function TemplateEditorPanel(p: Props) {
+export default function TemplateEditorPanel(p: Readonly<Props>) {
   const {
     draft,
     setDraft,

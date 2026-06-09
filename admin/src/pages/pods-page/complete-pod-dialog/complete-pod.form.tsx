@@ -65,7 +65,7 @@ export default function CompletePodDialog({
   onClose,
   onVenueSubmit,
   onHostSubmit,
-}: CompletePodDialogProps) {
+}: Readonly<CompletePodDialogProps>) {
   const hostIds = (pod?.pod_hosts_id ?? []) as string[];
   const hostOptions = hostIds.map((id) => users.find((user) => user.user_id === id) ?? { user_id: id, full_name: id });
   const venueAmount = (pod?.place_charges ?? []).reduce((sum: number, item: any) => sum + (Number(item.amount) || 0), 0);

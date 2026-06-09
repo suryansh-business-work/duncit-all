@@ -6,7 +6,7 @@ interface Props {
   onClose: () => void;
 }
 
-export default function IdeaActionsBar({ status, onSetStatus, onClose }: Props) {
+export default function IdeaActionsBar({ status, onSetStatus, onClose }: Readonly<Props>) {
   return (
     <DialogActions>
       {status !== 'PENDING' && (

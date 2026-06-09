@@ -32,7 +32,7 @@ interface Props {
   refetchQueries?: any[];
 }
 
-export default function ReminderFormDialog({ open, entity, leadId, reminder, onClose, onSaved, refetchQueries }: Props) {
+export default function ReminderFormDialog({ open, entity, leadId, reminder, onClose, onSaved, refetchQueries }: Readonly<Props>) {
   const [title, setTitle] = useState('');
   const [dueAt, setDueAt] = useState<Date | null>(null);
   const [notes, setNotes] = useState('');

@@ -37,7 +37,7 @@ interface Props {
   open: number;
 }
 
-export default function SupportTicketsChart({ buckets, total, open }: Props) {
+export default function SupportTicketsChart({ buckets, total, open }: Readonly<Props>) {
   const theme = useTheme();
   const labels = buckets.map((b) => STATUS_LABELS[b.status] || b.status);
   const data = {

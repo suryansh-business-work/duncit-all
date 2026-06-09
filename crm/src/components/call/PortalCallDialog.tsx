@@ -39,7 +39,7 @@ interface Props {
  * lead. The call is placed only on Start Call. Live status streams from the
  * socket (with a reconcile poll fallback).
  */
-export default function PortalCallDialog({ open, lead, onClose }: Props) {
+export default function PortalCallDialog({ open, lead, onClose }: Readonly<Props>) {
   const [logId, setLogId] = useState<string | null>(null);
   const [status, setStatus] = useState<CallStatus | null>(null);
   const [error, setError] = useState<string | null>(null);

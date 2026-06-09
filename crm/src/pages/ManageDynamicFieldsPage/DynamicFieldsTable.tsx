@@ -37,7 +37,7 @@ export default function DynamicFieldsTable({
   onDelete,
   onToggleActive,
   onReorder,
-}: Props) {
+}: Readonly<Props>) {
   const [dragIndex, setDragIndex] = useState<number | null>(null);
 
   const handleDrop = (to: number) => {

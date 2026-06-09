@@ -23,7 +23,7 @@ interface Props {
 }
 
 /** Editable grid of AI-parsed leads. Confirm in the dialog bulk-creates them. */
-export default function AiRecordsTable({ entity, rows, onChange }: Props) {
+export default function AiRecordsTable({ entity, rows, onChange }: Readonly<Props>) {
   const columns: GridColDef<AiRow>[] = [
     { field: 'name', headerName: entity === 'VENUE_LEAD' ? 'Venue name' : 'Host name', flex: 1.2, minWidth: 160, editable: true },
     { field: 'city', headerName: 'City', flex: 0.8, minWidth: 110, editable: true },

@@ -10,7 +10,7 @@ interface Props {
 const venueLabel = (venue: any) =>
   [venue.venue_name, venue.locality, venue.city].filter(Boolean).join(' - ');
 
-export default function ClubVenueLinksSection({ form, setForm, venues }: Props) {
+export default function ClubVenueLinksSection({ form, setForm, venues }: Readonly<Props>) {
   const selected = venues.filter((venue) => form.meetup_venues_id.includes(venue.id));
 
   return (

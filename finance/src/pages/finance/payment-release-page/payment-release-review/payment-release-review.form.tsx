@@ -23,7 +23,7 @@ export function toReviewInput(values: PaymentReleaseReviewValues, requestedAmoun
   };
 }
 
-export default function PaymentReleaseReviewForm({ request, busy, errorMessage, onClose, onSubmit }: PaymentReleaseReviewFormProps) {
+export default function PaymentReleaseReviewForm({ request, busy, errorMessage, onClose, onSubmit }: Readonly<PaymentReleaseReviewFormProps>) {
   const requestedAmount = Number(request?.amount_requested || 0);
   return (
     <Dialog open={!!request} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">

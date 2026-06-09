@@ -41,7 +41,7 @@ const ICONS: Record<ModuleIconKind, SvgIconComponent> = {
   system: TuneIcon,
 };
 
-export default function ModuleIcon({ kind, color }: Props) {
+export default function ModuleIcon({ kind, color }: Readonly<Props>) {
   const theme = useTheme();
   const Icon = ICONS[kind];
 

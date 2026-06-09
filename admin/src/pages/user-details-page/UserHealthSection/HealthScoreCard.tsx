@@ -32,7 +32,7 @@ interface Props {
   onUpdated: (next: AdminHealthScore) => void;
 }
 
-export default function HealthScoreCard({ score, onUpdated }: Props) {
+export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
 
   return (

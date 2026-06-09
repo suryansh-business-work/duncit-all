@@ -15,7 +15,7 @@ export default function SliderScopeFields({
   locations,
   zonesForLocation,
   superCategories,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <>
       <TextField

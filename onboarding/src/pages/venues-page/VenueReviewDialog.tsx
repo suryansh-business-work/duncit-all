@@ -30,7 +30,7 @@ export default function VenueReviewDialog({
   onClose,
   onApprove,
   onReject,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={!!active} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Review · {active?.venue_name}</DialogTitle>

@@ -7,7 +7,7 @@ const levelLabel: Record<string, string> = {
   SUB: 'Subcategory',
 };
 
-export default function UserInterestsSection({ user }: { user: any }) {
+export default function UserInterestsSection({ user }: Readonly<{ user: any }>) {
   const interests = user.interest_categories ?? [];
   return (
     <Card>

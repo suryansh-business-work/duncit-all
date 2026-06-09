@@ -66,7 +66,7 @@ interface Props {
   children: ReactNode;
 }
 
-export default function AuthSplitLayout({ title, subtitle, children }: Props) {
+export default function AuthSplitLayout({ title, subtitle, children }: Readonly<Props>) {
   const { mode, toggle } = useColorMode();
   const { logoUrl, appName } = useBranding();
   return (

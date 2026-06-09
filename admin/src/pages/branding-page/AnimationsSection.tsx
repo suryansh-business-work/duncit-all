@@ -7,7 +7,7 @@ interface Props {
   setForm: (next: BrandingFormState) => void;
 }
 
-export default function AnimationsSection({ form, setForm }: Props) {
+export default function AnimationsSection({ form, setForm }: Readonly<Props>) {
   const set = (k: keyof BrandingFormState, v: string) => setForm({ ...form, [k]: v });
 
   return (

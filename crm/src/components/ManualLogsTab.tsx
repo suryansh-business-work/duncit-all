@@ -69,7 +69,7 @@ const startOfWindow = (g: Granularity): Date | null => {
  * Activity log viewer + manual NOTE composer. The composer uses a Tiptap
  * RichTextField; the list is grouped by day with the most recent first.
  */
-export default function ManualLogsTab({ entityType, entityId, activities }: Props) {
+export default function ManualLogsTab({ entityType, entityId, activities }: Readonly<Props>) {
   const [openComposer, setOpenComposer] = useState(false);
   const [summary, setSummary] = useState('');
   const [body, setBody] = useState<{ html: string; text: string }>({ html: '', text: '' });

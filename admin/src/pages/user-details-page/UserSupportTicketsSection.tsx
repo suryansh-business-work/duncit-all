@@ -10,7 +10,7 @@ interface Props {
   email?: string | null;
 }
 
-export default function UserSupportTicketsSection({ email }: Props) {
+export default function UserSupportTicketsSection({ email }: Readonly<Props>) {
   const [status, setStatus] = useState<string>('');
   const [open, setOpen] = useState<Submission | null>(null);
   const { data, loading, error, refetch } = useQuery<{ contactSubmissions: Submission[] }>(

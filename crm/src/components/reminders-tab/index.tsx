@@ -33,7 +33,7 @@ interface Props {
 }
 
 /** Reminders tab for a lead — list + add/edit/done/delete, dated to-dos. */
-export default function RemindersTab({ entity, leadId }: Props) {
+export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
   const variables = { filter: { entity_type: entity, lead_id: leadId } };
   const { data, loading, error } = useQuery<{ crmReminders: CrmReminder[] }>(CRM_REMINDERS, { variables, fetchPolicy: 'cache-and-network' });
   const refetchQueries = [{ query: CRM_REMINDERS, variables }];

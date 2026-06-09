@@ -16,7 +16,7 @@ interface Props {
   onReview: (v: any) => void;
 }
 
-export default function VenueCard({ venue, onReview }: Props) {
+export default function VenueCard({ venue, onReview }: Readonly<Props>) {
   return (
     <Card variant="outlined">
       <CardContent>

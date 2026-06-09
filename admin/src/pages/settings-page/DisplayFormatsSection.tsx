@@ -48,7 +48,7 @@ interface Props {
   onToast: (msg: string) => void;
 }
 
-export default function DisplayFormatsSection({ onToast }: Props) {
+export default function DisplayFormatsSection({ onToast }: Readonly<Props>) {
   const { data, loading, refetch } = useQuery(APP_SETTINGS_FORMATS, {
     fetchPolicy: 'cache-and-network',
   });

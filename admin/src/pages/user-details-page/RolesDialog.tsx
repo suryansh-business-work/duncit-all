@@ -31,11 +31,11 @@ function PortalCard({
   portal,
   selectedRoles,
   toggleRole,
-}: {
+}: Readonly<{
   portal: PortalAccess;
   selectedRoles: Set<string>;
   toggleRole: (key: string) => void;
-}) {
+}>) {
   return (
     <Card variant="outlined">
       <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
@@ -95,7 +95,7 @@ export default function RolesDialog({
   toggleRole,
   saveRoles,
   busy,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Portal Access</DialogTitle>

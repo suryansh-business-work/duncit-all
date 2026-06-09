@@ -26,7 +26,7 @@ const ACCENTS: Record<NonNullable<Props['accent']>, string> = {
  * with the dashboard KPI tiles without duplicating that component (which is
  * coupled to dashboard-specific props).
  */
-export default function LeadStatTile({ label, value, hint, icon, accent = 'primary' }: Props) {
+export default function LeadStatTile({ label, value, hint, icon, accent = 'primary' }: Readonly<Props>) {
   const colour = ACCENTS[accent];
   return (
     <Card sx={{ flex: 1, minWidth: 0 }}>

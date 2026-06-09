@@ -14,7 +14,7 @@ interface Props {
  * add / remove / reorder controls. No multiline textarea, no newline-splitting:
  * options are always a plain string array.
  */
-export default function OptionsEditor({ options, onChange }: Props) {
+export default function OptionsEditor({ options, onChange }: Readonly<Props>) {
   const list = options.length ? options : [''];
   const set = (i: number, val: string) => onChange(list.map((o, idx) => (idx === i ? val : o)));
   const add = () => onChange([...list, '']);

@@ -8,7 +8,7 @@ import SuperCategoryField from '../../fields/SuperCategoryField';
 import CategorySelectors from '../../fields/CategorySelectors';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
-export default function VenueDetailsSection({ config }: { config: CrmOptionGroup }) {
+export default function VenueDetailsSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
   const [typesField] = useField<string[]>('venue_types');
   const showOther = (typesField.value ?? []).includes('Other');
   return (

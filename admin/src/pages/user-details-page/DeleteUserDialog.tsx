@@ -14,7 +14,7 @@ interface Props {
   onConfirm: () => void;
 }
 
-export default function DeleteUserDialog({ open, busy, onClose, onConfirm }: Props) {
+export default function DeleteUserDialog({ open, busy, onClose, onConfirm }: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={onClose}>
       <DialogTitle>Delete this user?</DialogTitle>

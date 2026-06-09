@@ -26,7 +26,7 @@ interface Props {
   onDelete: (loc: any) => void;
 }
 
-export default function LocationsTable({ loading, hasData, locations, onEdit, onDelete }: Props) {
+export default function LocationsTable({ loading, hasData, locations, onEdit, onDelete }: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>

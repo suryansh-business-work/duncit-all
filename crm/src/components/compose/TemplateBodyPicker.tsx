@@ -49,7 +49,7 @@ function seedValue(slug: string, sample: string | null | undefined, vv: Record<s
 }
 
 /** Template send mode: pick a template, auto-fill EVERY placeholder from the lead, render. */
-export default function TemplateBodyPicker({ entity, variableValues, leadName, leadEmail, onChange }: Props) {
+export default function TemplateBodyPicker({ entity, variableValues, leadName, leadEmail, onChange }: Readonly<Props>) {
   const client = useApolloClient();
   const { data, loading } = useQuery<{ emailTemplates: EmailTemplate[] }>(TEMPLATES, { fetchPolicy: 'cache-and-network' });
   const wanted = entity === 'VENUE_LEAD' ? 'VENUE' : 'HOST';

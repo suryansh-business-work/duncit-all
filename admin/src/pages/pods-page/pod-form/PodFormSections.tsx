@@ -72,7 +72,7 @@ export default function PodFormSections({
   users,
   userName,
   finance,
-}: Props) {
+}: Readonly<Props>) {
   const { values, setFieldValue } = useFormikContext<PodForm>();
   const sections = getSections(values.pod_mode);
   const expandableSections = sections.filter((section) => section.id !== 'products' || values.products_enabled);

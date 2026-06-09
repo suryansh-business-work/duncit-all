@@ -5,7 +5,7 @@ import type { CrmMatchedUser } from '../api/crm.types';
 const matchLabel = (m: CrmMatchedUser) => `Also a Duncit user · ${m.matched_on === 'EMAIL' ? 'Email' : 'Phone'} match`;
 
 /** Small chip for the lead hero row when the lead is also a Duncit user. */
-export function MatchedUserChip({ matched }: { matched: CrmMatchedUser }) {
+export function MatchedUserChip({ matched }: Readonly<{ matched: CrmMatchedUser }>) {
   return (
     <Chip
       size="small"
@@ -18,7 +18,7 @@ export function MatchedUserChip({ matched }: { matched: CrmMatchedUser }) {
 }
 
 /** Separate box surfacing the matched Duncit user's details on a lead. */
-export default function MatchedUserBox({ matched }: { matched: CrmMatchedUser }) {
+export default function MatchedUserBox({ matched }: Readonly<{ matched: CrmMatchedUser }>) {
   return (
     <Card variant="outlined" sx={{ borderColor: 'success.main' }} data-testid="matched-user-box">
       <CardContent>

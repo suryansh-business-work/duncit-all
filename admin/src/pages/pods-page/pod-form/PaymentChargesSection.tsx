@@ -11,7 +11,7 @@ interface Props {
   inventoryProducts: any[];
 }
 
-export default function PaymentChargesSection({ finance, inventoryProducts }: Props) {
+export default function PaymentChargesSection({ finance, inventoryProducts }: Readonly<Props>) {
   const { values, errors, touched, handleChange, setFieldValue } = useFormikContext<PodForm>();
   const isFree = values.pod_type.includes('FREE');
   const productCost = values.products_enabled

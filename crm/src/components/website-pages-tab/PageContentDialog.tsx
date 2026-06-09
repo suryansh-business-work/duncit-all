@@ -17,7 +17,7 @@ interface Props {
 }
 
 /** Read-only viewer for a page's fetched title + extracted text. */
-export default function PageContentDialog({ page, onClose }: Props) {
+export default function PageContentDialog({ page, onClose }: Readonly<Props>) {
   return (
     <Dialog open={!!page} onClose={onClose} maxWidth="md" fullWidth>
       <DialogTitle sx={{ pb: 0.5 }}>

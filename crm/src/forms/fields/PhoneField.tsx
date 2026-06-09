@@ -33,7 +33,7 @@ interface Props {
 }
 
 /** Combines a country-code dropdown with the phone field on a single line. */
-export default function PhoneField({ name, label, size = 'small', required }: Props) {
+export default function PhoneField({ name, label, size = 'small', required }: Readonly<Props>) {
   const [numberField, numberMeta] = useField<string>(name);
   const extName = `${name}_ext`;
   const [extField] = useField<string>(extName);

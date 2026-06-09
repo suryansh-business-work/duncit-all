@@ -21,7 +21,7 @@ interface Props {
 }
 
 /** Prompt Library table — name/category/model/token size/status with row actions. */
-export default function PromptsTable({ prompts, onEdit, onDelete }: Props) {
+export default function PromptsTable({ prompts, onEdit, onDelete }: Readonly<Props>) {
   return (
     <Table size="small">
       <TableHead>

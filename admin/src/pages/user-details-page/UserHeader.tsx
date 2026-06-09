@@ -27,7 +27,7 @@ export default function UserHeader({
   onCallClick,
   onEmailClick,
   onDeleteClick,
-}: Props) {
+}: Readonly<Props>) {
   const navigate = useNavigate();
   return (
     <Stack direction="row" alignItems="center" spacing={1}>

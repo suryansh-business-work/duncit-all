@@ -24,7 +24,7 @@ const fmt = (value?: string | null) => {
   return Number.isNaN(date.getTime()) ? '—' : format(date, 'dd MMM yyyy');
 };
 
-export default function HostLeadsTable({ leads, loading, onView, onEdit, onDelete, selectionModel, onSelectionChange }: Props) {
+export default function HostLeadsTable({ leads, loading, onView, onEdit, onDelete, selectionModel, onSelectionChange }: Readonly<Props>) {
   const columns = useMemo<GridColDef<HostLead>[]>(
     () => [
       {

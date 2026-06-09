@@ -10,7 +10,7 @@ interface Props {
   userName: (id: string) => string;
 }
 
-export default function BasicInfoSection({ clubs, users, userName }: Props) {
+export default function BasicInfoSection({ clubs, users, userName }: Readonly<Props>) {
   const { values, errors, touched, handleChange, setFieldValue } = useFormikContext<PodForm>();
   const err = (k: keyof PodForm) => !!touched[k] && !!errors[k];
   const help = (k: keyof PodForm) => (touched[k] ? (errors[k] as string) : undefined);

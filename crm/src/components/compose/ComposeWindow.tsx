@@ -22,7 +22,7 @@ interface Props {
  * controls. It is non-blocking — no backdrop — so the rest of the page stays
  * usable while composing, exactly like Gmail's compose panel.
  */
-export default function ComposeWindow({ open, title, icon, onClose, actions, children }: Props) {
+export default function ComposeWindow({ open, title, icon, onClose, actions, children }: Readonly<Props>) {
   const [minimized, setMinimized] = useState(false);
   const [maximized, setMaximized] = useState(false);
   const { offset, onPointerDown, reset } = useDraggable(!maximized);

@@ -9,7 +9,7 @@ import { LANGUAGE_OPTIONS, type CallPromptFormProps, type CallPromptFormValues }
  * validation and error handling; MUI inputs only. The `context` field is the
  * reusable context block the AI agent speaks in during an AI Call.
  */
-export default function CallPromptForm({ defaultValues, submitting, submitLabel = 'Save', onSubmit, onCancel }: CallPromptFormProps) {
+export default function CallPromptForm({ defaultValues, submitting, submitLabel = 'Save', onSubmit, onCancel }: Readonly<CallPromptFormProps>) {
   const {
     control,
     handleSubmit,

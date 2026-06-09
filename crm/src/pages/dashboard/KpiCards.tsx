@@ -37,7 +37,7 @@ export default function KpiCards({
   conversionRate,
   uniqueServices,
   loading,
-}: Props) {
+}: Readonly<Props>) {
   const tiles: Tile[] = [
     { label: 'Venue Leads', value: String(venueCount), icon: <LocationOnIcon fontSize="small" />, color: 'primary' },
     { label: 'Host Leads', value: String(hostCount), icon: <GroupsIcon fontSize="small" />, color: 'info' },

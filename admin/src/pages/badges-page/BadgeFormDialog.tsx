@@ -22,7 +22,7 @@ interface Props {
   onSave: () => void;
 }
 
-export default function BadgeFormDialog({ open, form, setForm, busy, onClose, onSave }: Props) {
+export default function BadgeFormDialog({ open, form, setForm, busy, onClose, onSave }: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{form.id ? 'Edit Badge' : 'New Badge'}</DialogTitle>

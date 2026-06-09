@@ -5,7 +5,7 @@ import MultiSelectField from '../../fields/MultiSelectField';
 import FieldGrid from '../../fields/FieldGrid';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
-export default function VenueAvailabilitySection({ config }: { config: CrmOptionGroup }) {
+export default function VenueAvailabilitySection({ config }: Readonly<{ config: CrmOptionGroup }>) {
   return (
     <Stack spacing={1.5}>
       <MultiSelectField name="available_days" label="Available Days" options={config.week_days} />

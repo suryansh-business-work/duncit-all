@@ -18,7 +18,7 @@ interface Props {
  * current selection is no longer active (e.g. disabled in the Tech portal), it
  * falls back to the default so a disabled provider is never left selected.
  */
-export default function CommsProviderSelect({ type, value, onChange, label = 'Provider', size = 'small' }: Props) {
+export default function CommsProviderSelect({ type, value, onChange, label = 'Provider', size = 'small' }: Readonly<Props>) {
   const { data, loading } = useQuery<{ commsProviderOptions: CommsProviderOption[] }>(COMMS_PROVIDER_OPTIONS, {
     variables: { type },
     fetchPolicy: 'cache-and-network',

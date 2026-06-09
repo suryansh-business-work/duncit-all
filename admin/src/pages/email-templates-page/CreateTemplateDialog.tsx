@@ -10,7 +10,7 @@ interface Props {
   onError: (message: string) => void;
 }
 
-export default function CreateTemplateDialog({ open, onClose, onCreated, onError }: Props) {
+export default function CreateTemplateDialog({ open, onClose, onCreated, onError }: Readonly<Props>) {
   const [createTpl] = useMutation(CREATE);
 
   return (

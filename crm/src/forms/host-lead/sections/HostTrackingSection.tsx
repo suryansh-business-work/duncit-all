@@ -6,7 +6,7 @@ import DateField from '../../fields/DateField';
 import FieldGrid from '../../fields/FieldGrid';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
-export default function HostTrackingSection({ config }: { config: CrmOptionGroup }) {
+export default function HostTrackingSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
   return (
     <Stack spacing={1.5}>
       <MultiSelectField name="host_intent_scores" label="Host Intent Score" options={config.host_intent_scores} />

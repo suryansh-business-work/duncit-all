@@ -17,7 +17,7 @@ export default function EditorActionsBar({
   onSave,
   onSendTest,
   onDelete,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center">
       <Button

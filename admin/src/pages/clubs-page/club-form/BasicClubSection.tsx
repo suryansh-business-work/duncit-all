@@ -8,7 +8,7 @@ interface Props {
   subCats: any[];
 }
 
-export default function BasicClubSection({ form, setForm, superCats, subCats }: Props) {
+export default function BasicClubSection({ form, setForm, superCats, subCats }: Readonly<Props>) {
   return (
     <Stack spacing={2}>
       <TextField

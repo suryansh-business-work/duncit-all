@@ -47,7 +47,7 @@ type Values = HostCreateValues & Partial<HostEditValues>;
  * In create-on-behalf mode the admin picks an existing user and the personal
  * details auto-fill from that user's profile.
  */
-export default function HostAccordionForm({ mode, userOptions }: Props) {
+export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>) {
   const formik = useFormikContext<Values>();
   const { values, errors, touched, submitCount, handleBlur, handleChange, setFieldValue } = formik;
 

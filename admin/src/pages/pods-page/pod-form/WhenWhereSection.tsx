@@ -9,7 +9,7 @@ interface Props {
   venues: any[];
 }
 
-export default function WhenWhereSection({ clubs, venues }: Props) {
+export default function WhenWhereSection({ clubs, venues }: Readonly<Props>) {
   const { values, errors, touched, setFieldValue } = useFormikContext<PodForm>();
   const err = (k: keyof PodForm) => !!touched[k] && !!errors[k];
   const help = (k: keyof PodForm) => (touched[k] ? (errors[k] as string) : undefined);

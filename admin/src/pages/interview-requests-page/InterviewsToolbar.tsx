@@ -15,7 +15,7 @@ export default function InterviewsToolbar({
   setStatusFilter,
   typeFilter,
   setTypeFilter,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Stack direction="row" spacing={1} sx={{ mb: 2, flexWrap: 'wrap', gap: 1 }}>
       {STATUS_KEYS.map((s) => (

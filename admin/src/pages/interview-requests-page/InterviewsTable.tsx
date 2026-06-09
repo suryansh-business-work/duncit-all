@@ -29,7 +29,7 @@ interface Props {
   onDelete: (it: any) => void;
 }
 
-export default function InterviewsTable({ loading, items, fmtSlot, onManage, onDelete }: Props) {
+export default function InterviewsTable({ loading, items, fmtSlot, onManage, onDelete }: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>

@@ -9,7 +9,7 @@ interface Props {
   onError: (msg: string) => void;
 }
 
-export default function WebsitePagesTable({ pages, onView, onDelete, onError }: Props) {
+export default function WebsitePagesTable({ pages, onView, onDelete, onError }: Readonly<Props>) {
   return (
     <Table size="small">
       <TableHead>

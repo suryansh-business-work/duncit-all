@@ -41,7 +41,7 @@ export default function IdeasTable({
   onView,
   onSetStatus,
   onDelete,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>

@@ -23,7 +23,7 @@ interface Props {
   setBizGstin: (v: string) => void;
 }
 
-export default function BusinessDetailsCard(p: Props) {
+export default function BusinessDetailsCard(p: Readonly<Props>) {
   return (
     <Card variant="outlined">
       <CardContent>

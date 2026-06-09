@@ -21,7 +21,7 @@ interface Props {
   onView: (s: Submission) => void;
 }
 
-export default function SupportLogsTable({ loading, hasData, rows, onView }: Props) {
+export default function SupportLogsTable({ loading, hasData, rows, onView }: Readonly<Props>) {
   if (loading && !hasData) {
     return (
       <Box sx={{ display: 'flex', justifyContent: 'center', py: 4 }}>

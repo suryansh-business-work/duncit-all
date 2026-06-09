@@ -30,7 +30,7 @@ interface Props {
  * what's missing. Click the body to select/deselect; click the icon to copy
  * the {{ slug }} placeholder.
  */
-export default function VariableChips({ title, items, declared, onToggle, knownSlugs, emptyHint }: Props) {
+export default function VariableChips({ title, items, declared, onToggle, knownSlugs, emptyHint }: Readonly<Props>) {
   const [copied, setCopied] = useState<string | null>(null);
 
   const copy = async (slug: string) => {

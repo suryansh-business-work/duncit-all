@@ -12,7 +12,7 @@ interface Props {
   onValidate: () => void;
 }
 
-export default function MjmlEditorPane({ value, onChange, onValidate }: Props) {
+export default function MjmlEditorPane({ value, onChange, onValidate }: Readonly<Props>) {
   return (
     <Box
       sx={{

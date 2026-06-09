@@ -36,7 +36,7 @@ interface Props {
 }
 
 /** Website tab: scrape a lead's site into a saved page list, fetch per-page content. */
-export default function WebsitePagesTab({ entity, leadId, website }: Props) {
+export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Props>) {
   const variables = { entity_type: entity, lead_id: leadId };
   const { data, loading, error } = useQuery<{ crmWebsitePages: CrmWebsitePage[] }>(CRM_WEBSITE_PAGES, {
     variables,

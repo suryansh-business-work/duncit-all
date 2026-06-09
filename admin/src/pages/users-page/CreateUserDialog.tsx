@@ -55,7 +55,7 @@ export default function CreateUserDialog({
   opError,
   onSubmit,
   roles,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <Formik<CreateForm>

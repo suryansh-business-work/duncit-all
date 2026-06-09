@@ -9,7 +9,7 @@ interface Props {
   errors?: VenueValidationErrors;
 }
 
-export default function VenueBankAccountSection({ s3, setS3, errors }: Props) {
+export default function VenueBankAccountSection({ s3, setS3, errors }: Readonly<Props>) {
   const errorFor = (field: keyof BankAccountValues) =>
     getVenueError(errors, `step3.bank_account.${field}`) || undefined;
 

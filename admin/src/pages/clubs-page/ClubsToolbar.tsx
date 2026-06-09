@@ -8,7 +8,7 @@ interface Props {
   onCreate: () => void;
 }
 
-export default function ClubsToolbar({ search, setSearch, onCreate }: Props) {
+export default function ClubsToolbar({ search, setSearch, onCreate }: Readonly<Props>) {
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}

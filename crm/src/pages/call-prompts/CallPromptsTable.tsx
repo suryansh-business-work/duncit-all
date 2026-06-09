@@ -21,7 +21,7 @@ interface Props {
 }
 
 /** Read-only table of Static Content prompts with edit / delete actions. */
-export default function CallPromptsTable({ prompts, onEdit, onDelete }: Props) {
+export default function CallPromptsTable({ prompts, onEdit, onDelete }: Readonly<Props>) {
   return (
     <Table size="small">
       <TableHead>

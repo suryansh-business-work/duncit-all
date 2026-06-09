@@ -19,7 +19,7 @@ interface Props {
 }
 
 /** The add / inline-edit row shared by the managed-option list table. */
-export default function ManagedOptionEditRow({ draft, setDraft, onSave, onCancel, busy, placeholder }: Props) {
+export default function ManagedOptionEditRow({ draft, setDraft, onSave, onCancel, busy, placeholder }: Readonly<Props>) {
   return (
     <TableRow>
       <TableCell>

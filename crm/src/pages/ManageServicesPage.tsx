@@ -59,7 +59,7 @@ export default function ManageServicesPage({
   subtitle = kind === 'HOST'
     ? 'Edit the catalogue used by the "Services Offered" dropdown on Host Leads. Independent from the Venue catalogue.'
     : 'Edit the catalogue used by the "Services Offered" dropdown on Venue Leads. Independent from the Host catalogue.',
-}: Props) {
+}: Readonly<Props>) {
   const queryVars = { kind, include_inactive: true };
   const { data, loading, error } = useQuery<{ crmServices: CrmService[] }>(CRM_SERVICES, {
     variables: queryVars,

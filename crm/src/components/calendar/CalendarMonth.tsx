@@ -22,7 +22,7 @@ interface Props {
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
 /** Month grid (6 weeks). Each cell lists that day's events. */
-export default function CalendarMonth({ cursor, events, onEvent }: Props) {
+export default function CalendarMonth({ cursor, events, onEvent }: Readonly<Props>) {
   const days = eachDayOfInterval({
     start: startOfWeek(startOfMonth(cursor)),
     end: endOfWeek(endOfMonth(cursor)),

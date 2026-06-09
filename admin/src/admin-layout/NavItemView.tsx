@@ -23,7 +23,7 @@ export default function NavItemView({
   isPathActive,
   isGroupActive,
   onCloseMobile,
-}: Props) {
+}: Readonly<Props>) {
   if (isNavGroup(item)) {
     const open = navQuery ? true : !!openGroups[item.label];
     const groupActive = isGroupActive(item);

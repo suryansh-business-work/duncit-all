@@ -13,7 +13,7 @@ interface Props {
 }
 
 /** Read-only row of the managed-option table (active toggle + edit/delete). */
-export default function ManagedOptionRow({ row, busy, disableActions, onToggleActive, onEdit, onDelete }: Props) {
+export default function ManagedOptionRow({ row, busy, disableActions, onToggleActive, onEdit, onDelete }: Readonly<Props>) {
   return (
     <TableRow hover>
       <TableCell>{row.sort_order}</TableCell>

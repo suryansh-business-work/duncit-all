@@ -22,7 +22,7 @@ interface Props {
  * (each scopes the next) plus a free-entry multi-title input so several titles
  * can be added at once under one hierarchy slot.
  */
-export default function ServiceOfferedForm({ value, onChange }: Props) {
+export default function ServiceOfferedForm({ value, onChange }: Readonly<Props>) {
   const [titleInput, setTitleInput] = useState('');
   const supers = useCategoriesByParent('SUPER');
   const cats = useCategoriesByParent('CATEGORY', value.super_category_id || null);

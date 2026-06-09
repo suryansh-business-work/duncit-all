@@ -31,7 +31,7 @@ export default function ConfirmDialog({
   busy,
   onConfirm,
   onClose,
-}: ConfirmDialogProps) {
+}: Readonly<ConfirmDialogProps>) {
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="xs">
       <DialogTitle>{title}</DialogTitle>

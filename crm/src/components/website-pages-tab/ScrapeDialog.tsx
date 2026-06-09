@@ -23,7 +23,7 @@ const MIN = 1;
 const MAX = 200;
 
 /** Asks how many pages to discover, then triggers the scrape. */
-export default function ScrapeDialog({ open, website, loading, onClose, onConfirm }: Props) {
+export default function ScrapeDialog({ open, website, loading, onClose, onConfirm }: Readonly<Props>) {
   const [value, setValue] = useState('20');
   const parsed = Number.parseInt(value, 10);
   const valid = Number.isFinite(parsed) && parsed >= MIN && parsed <= MAX;

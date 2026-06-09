@@ -42,7 +42,7 @@ interface TargetOption {
   slug: string;
 }
 
-export default function SliderLinkField({ form, setForm }: SliderLinkFieldProps) {
+export default function SliderLinkField({ form, setForm }: Readonly<SliderLinkFieldProps>) {
   const isInternal = form.link_type === 'INTERNAL';
   const isPodKind = form.link_target_kind === 'POD';
 

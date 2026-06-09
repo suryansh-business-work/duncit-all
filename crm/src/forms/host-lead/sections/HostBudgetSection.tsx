@@ -5,7 +5,7 @@ import SwitchField from '../../fields/SwitchField';
 import FieldGrid from '../../fields/FieldGrid';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
-export default function HostBudgetSection({ config }: { config: CrmOptionGroup }) {
+export default function HostBudgetSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
   return (
     <Stack spacing={1.5}>
       <FormField name="budget_range" label="Budget Range (₹)" size="small" />

@@ -44,7 +44,7 @@ function actionColor(action: string): 'success' | 'info' | 'warning' | 'default'
   return 'default';
 }
 
-export default function ActivityJourneyChart({ events }: Props) {
+export default function ActivityJourneyChart({ events }: Readonly<Props>) {
   const theme = useTheme();
   const { hourly, topPages, steps } = useMemo(() => {
     const hours = Array.from({ length: 24 }, (_, hour) => ({

@@ -57,7 +57,7 @@ interface Props {
   onSaved: () => void;
 }
 
-export default function AdminHostCreateDialog({ open, onClose, onSaved }: Props) {
+export default function AdminHostCreateDialog({ open, onClose, onSaved }: Readonly<Props>) {
   const { data: usersData } = useQuery(USERS, { skip: !open });
   const [error, setError] = useState('');
   const submitForReviewRef = useRef(false);

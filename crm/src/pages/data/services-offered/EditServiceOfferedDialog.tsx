@@ -27,7 +27,7 @@ interface Props {
 }
 
 /** Edit a single Service Offered title / active state. Hierarchy stays fixed. */
-export default function EditServiceOfferedDialog({ service, onClose }: Props) {
+export default function EditServiceOfferedDialog({ service, onClose }: Readonly<Props>) {
   const [title, setTitle] = useState('');
   const [isActive, setIsActive] = useState(true);
   const [venue, setVenue] = useState(true);

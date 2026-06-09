@@ -38,7 +38,7 @@ interface CityProps {
  * yet — important because the CRM team often picks up leads ahead of
  * Admin onboarding the city.
  */
-export function CityField({ name, label, required }: CityProps) {
+export function CityField({ name, label, required }: Readonly<CityProps>) {
   const [field, meta] = useField<string>(name);
   const formik = useFormikContext<Record<string, unknown>>();
   const { data, loading } = useQuery<{ locations: LocationDoc[] }>(LOCATIONS, { fetchPolicy: 'cache-first' });
@@ -91,7 +91,7 @@ interface AreaProps {
  * currently selected by `cityField`. Free-text typing is allowed so the
  * field stays useful for new cities that don't have zones in admin yet.
  */
-export function AreaField({ name, cityField, label }: AreaProps) {
+export function AreaField({ name, cityField, label }: Readonly<AreaProps>) {
   const [field, meta] = useField<string>(name);
   const formik = useFormikContext<Record<string, any>>();
   const city = (formik.values[cityField] ?? '') as string;

@@ -9,7 +9,7 @@ interface Props {
   setFieldValue: (field: string, value: any) => void;
 }
 
-export default function InterviewScheduleFields({ values, showError, helperText, setFieldValue }: Props) {
+export default function InterviewScheduleFields({ values, showError, helperText, setFieldValue }: Readonly<Props>) {
   return (
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
       <Stack flex={1}>

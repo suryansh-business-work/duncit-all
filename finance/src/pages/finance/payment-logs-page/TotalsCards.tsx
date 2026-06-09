@@ -8,7 +8,7 @@ interface Totals {
   gst: number;
 }
 
-export default function TotalsCards({ totals }: { totals: Totals }) {
+export default function TotalsCards({ totals }: Readonly<{ totals: Totals }>) {
   return (
     <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} sx={{ mb: 2 }}>
       <Card variant="outlined" sx={{ flex: 1 }}>

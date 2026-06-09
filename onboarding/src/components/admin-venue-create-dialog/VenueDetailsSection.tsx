@@ -12,7 +12,7 @@ interface Props {
   errors?: VenueValidationErrors;
 }
 
-export default function VenueDetailsSection({ s1, setS1, locations, errors }: Props) {
+export default function VenueDetailsSection({ s1, setS1, locations, errors }: Readonly<Props>) {
   const set = (patch: Partial<Step1>) => setS1({ ...s1, ...patch });
   const err = (field: keyof Step1) => getVenueError(errors, `step1.${field}`);
   return (

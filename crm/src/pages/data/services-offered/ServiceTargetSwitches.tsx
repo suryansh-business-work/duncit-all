@@ -11,7 +11,7 @@ interface Props {
  * (venue && host) — turning it on enables both sides; turning it off clears
  * both. At least one side must stay on (enforced by the parent on submit).
  */
-export default function ServiceTargetSwitches({ venue, host, onChange }: Props) {
+export default function ServiceTargetSwitches({ venue, host, onChange }: Readonly<Props>) {
   const both = venue && host;
   return (
     <Stack spacing={0.5}>

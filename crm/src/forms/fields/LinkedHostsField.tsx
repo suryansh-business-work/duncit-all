@@ -17,7 +17,7 @@ interface Props {
  * it ever balloons we can switch to a server-side `search` filter). Stays
  * optional — empty selection = no association.
  */
-export default function LinkedHostsField({ name, label = 'Linked Host Leads' }: Props) {
+export default function LinkedHostsField({ name, label = 'Linked Host Leads' }: Readonly<Props>) {
   const [field, , helpers] = useField<string[]>(name);
   const selectedIds = field.value ?? [];
 

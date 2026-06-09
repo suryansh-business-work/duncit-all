@@ -7,7 +7,7 @@ interface Props {
   onManageRoles: () => void;
 }
 
-export default function RolesSection({ user, roleByKey, onManageRoles }: Props) {
+export default function RolesSection({ user, roleByKey, onManageRoles }: Readonly<Props>) {
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent>

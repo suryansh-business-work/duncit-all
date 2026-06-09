@@ -30,7 +30,7 @@ interface Props {
   onDelete: (row: PlanRow) => void;
 }
 
-export default function PodPlansTable({ loading, hasData, error, rows, onEdit, onDelete }: Props) {
+export default function PodPlansTable({ loading, hasData, error, rows, onEdit, onDelete }: Readonly<Props>) {
   if (loading && !hasData) {
     return (
       <Stack alignItems="center" sx={{ py: 4 }}>

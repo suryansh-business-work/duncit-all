@@ -32,7 +32,7 @@ interface Props {
   label?: string;
 }
 
-export default function AiFillButton({ entity, onFill, iconOnly, label }: Props) {
+export default function AiFillButton({ entity, onFill, iconOnly, label }: Readonly<Props>) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);

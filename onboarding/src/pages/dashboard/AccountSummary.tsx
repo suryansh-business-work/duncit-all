@@ -17,7 +17,7 @@ const formatDate = (value?: string | null) => {
   return Number.isNaN(date.getTime()) ? '—' : format(date, 'PP');
 };
 
-function Detail({ label, value }: { label: string; value: string }) {
+function Detail({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <Grid item xs={12} sm={6} md={3}>
       <Typography variant="caption" color="text.secondary">
@@ -31,7 +31,7 @@ function Detail({ label, value }: { label: string; value: string }) {
 }
 
 /** Renders the signed-in user's account details — fully driven by the `me` query. */
-export default function AccountSummary({ user }: { user?: AccountUser | null }) {
+export default function AccountSummary({ user }: Readonly<{ user?: AccountUser | null }>) {
   const name = user?.full_name || [user?.first_name, user?.last_name].filter(Boolean).join(' ') || '—';
   const phone = user?.phone_number ? `${user?.phone_extension ?? ''} ${user.phone_number}`.trim() : '—';
   return (

@@ -36,7 +36,7 @@ const TARGETS: { value: EmailTemplateTarget; label: string; hint: string; icon: 
 ];
 
 /** New CRM email template: first pick a target (card choice), then the basics. */
-export default function CreateTemplateDialog({ open, onClose, onCreated }: Props) {
+export default function CreateTemplateDialog({ open, onClose, onCreated }: Readonly<Props>) {
   const [target, setTarget] = useState<EmailTemplateTarget | null>(null);
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');

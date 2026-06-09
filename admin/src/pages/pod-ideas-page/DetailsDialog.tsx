@@ -32,7 +32,7 @@ interface DetailsProps {
   onChanged: () => void;
 }
 
-export default function DetailsDialog({ id, onClose, onChanged }: DetailsProps) {
+export default function DetailsDialog({ id, onClose, onChanged }: Readonly<DetailsProps>) {
   const { data, loading, refetch } = useQuery(POD_IDEA_DETAILS, {
     variables: { id },
     fetchPolicy: 'cache-and-network',

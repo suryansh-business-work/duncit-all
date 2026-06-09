@@ -6,7 +6,7 @@ const SAMPLE = { subtotal: 1000, fee: 50, gst: 189, total: 1239 };
 
 /** A faithful, lightweight mirror of the generated invoice PDF so admins see the
  * effect of their edits live — uses sample figures, real branding values. */
-export default function InvoicePreview({ value }: { value: InvoiceSettingsForm }) {
+export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSettingsForm }>) {
   const c = value.currency_symbol || '₹';
   const money = (n: number) => `${c}${n.toFixed(2)}`;
 
@@ -77,7 +77,7 @@ export default function InvoicePreview({ value }: { value: InvoiceSettingsForm }
   );
 }
 
-function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+function Row({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
   return (
     <Stack direction="row" justifyContent="space-between">
       <Typography variant="body2" fontWeight={bold ? 900 : 500} color={bold ? 'text.primary' : 'text.secondary'}>{label}</Typography>

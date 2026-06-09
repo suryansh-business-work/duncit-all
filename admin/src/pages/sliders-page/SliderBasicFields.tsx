@@ -8,7 +8,7 @@ interface Props {
   setForm: React.Dispatch<React.SetStateAction<SliderForm>>;
 }
 
-export default function SliderBasicFields({ form, setForm }: Props) {
+export default function SliderBasicFields({ form, setForm }: Readonly<Props>) {
   return (
     <>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

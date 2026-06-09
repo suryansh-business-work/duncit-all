@@ -5,7 +5,7 @@ import DateField from '../../fields/DateField';
 import FieldGrid from '../../fields/FieldGrid';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
-export default function VenueTrackingSection({ config }: { config: CrmOptionGroup }) {
+export default function VenueTrackingSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
   return (
     <Stack spacing={1.5}>
       <FieldGrid>

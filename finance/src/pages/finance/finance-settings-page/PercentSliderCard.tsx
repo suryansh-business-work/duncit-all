@@ -18,7 +18,7 @@ export default function PercentSliderCard({
   chipColor,
   max,
   marks,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Card variant="outlined">
       <CardContent>

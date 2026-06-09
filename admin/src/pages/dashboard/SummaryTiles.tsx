@@ -6,7 +6,7 @@ interface Props {
   loading: boolean;
 }
 
-export default function SummaryTiles({ totals, loading }: Props) {
+export default function SummaryTiles({ totals, loading }: Readonly<Props>) {
   return (
     <Grid container spacing={2}>
       {SUMMARY_TILES.map((t) => (

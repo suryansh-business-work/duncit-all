@@ -17,7 +17,7 @@ interface Props {
  * tokens on add and lower-cases for de-duplication. Optional `suggestions`
  * power the dropdown but `freeSolo` lets the user create new tags too.
  */
-export default function TagsField({ name, label = 'Tags', helperText, suggestions = [] }: Props) {
+export default function TagsField({ name, label = 'Tags', helperText, suggestions = [] }: Readonly<Props>) {
   const [field, , helpers] = useField<string[]>(name);
   const value = field.value ?? [];
 

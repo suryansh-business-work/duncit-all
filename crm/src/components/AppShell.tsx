@@ -43,7 +43,7 @@ const initials = (user: any) => {
   );
 };
 
-export default function AppShell({ children }: { children: ReactNode }) {
+export default function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   const navigate = useNavigate();
   const colorMode = useColorMode();
   const theme = useTheme();

@@ -14,7 +14,7 @@ const displayName = (s: CrmServiceOffered) =>
  * column on narrow screens. An empty state mirrors the rest of the detail
  * page's visual language so the section never feels broken.
  */
-export default function ServicesGrid({ services }: Props) {
+export default function ServicesGrid({ services }: Readonly<Props>) {
   if (services.length === 0) {
     return (
       <Stack

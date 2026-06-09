@@ -26,7 +26,7 @@ const seed = (initial?: LeadSurveyAnswer[]): State => {
 };
 
 /** Section-stepped survey form — one step per SECTION; final step submits. */
-export default function SurveyStepper({ survey, initialAnswers, submitting, onSubmit, submitLabel = 'Submit' }: Props) {
+export default function SurveyStepper({ survey, initialAnswers, submitting, onSubmit, submitLabel = 'Submit' }: Readonly<Props>) {
   const sections = useMemo(() => splitSections(survey.questions, survey.title || 'Survey'), [survey]);
   const [answers, setAnswers] = useState<State>(() => seed(initialAnswers));
   const [step, setStep] = useState(0);

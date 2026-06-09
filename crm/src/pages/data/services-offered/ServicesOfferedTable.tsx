@@ -25,7 +25,7 @@ const targetLabel = (s: CrmServiceOffered) =>
   s.applies_to_venue && s.applies_to_host ? 'Both' : s.applies_to_venue ? 'Venue' : s.applies_to_host ? 'Host' : '—';
 
 /** Services Offered listing — Title plus the Super → Category → Sub it belongs to. */
-export default function ServicesOfferedTable({ services, onEdit, onDelete }: Props) {
+export default function ServicesOfferedTable({ services, onEdit, onDelete }: Readonly<Props>) {
   return (
     <Table size="small">
       <TableHead>

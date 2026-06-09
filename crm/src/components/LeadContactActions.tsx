@@ -42,7 +42,7 @@ const BTN_SX = { textTransform: 'none', height: CALL_HEIGHT, minHeight: CALL_HEI
  * Static Content prompt + Servam voice). WhatsApp deep-links; Email opens the
  * compose/log window. Buttons disable when the contact detail is missing.
  */
-export default function LeadContactActions({ entity, leadId, displayName, email, mobile, whatsapp, variableValues }: Props) {
+export default function LeadContactActions({ entity, leadId, displayName, email, mobile, whatsapp, variableValues }: Readonly<Props>) {
   const [emailOpen, setEmailOpen] = useState(false);
   const [portalOpen, setPortalOpen] = useState(false);
   const [aiOpen, setAiOpen] = useState(false);

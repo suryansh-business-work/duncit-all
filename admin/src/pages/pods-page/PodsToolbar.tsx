@@ -18,7 +18,7 @@ export default function PodsToolbar({
   search,
   setSearch,
   onCreate,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Stack
       direction={{ xs: 'column', sm: 'row' }}

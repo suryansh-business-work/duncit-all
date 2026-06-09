@@ -21,7 +21,7 @@ interface Props {
 }
 
 /** Repeatable contact rows (index 0 is the primary contact). */
-export default function ContactsField({ name }: Props) {
+export default function ContactsField({ name }: Readonly<Props>) {
   const [field] = useField<CrmContact[]>(name);
   const contacts = field.value ?? [];
   return (

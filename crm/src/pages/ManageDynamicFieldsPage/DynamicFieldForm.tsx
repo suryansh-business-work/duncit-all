@@ -26,7 +26,7 @@ interface Props {
 
 /** Create / edit form for a dynamic field. The storage key is auto-derived
  *  from the label (no Key input) and ordering is handled by the table. */
-export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSave }: Props) {
+export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSave }: Readonly<Props>) {
   const set = (patch: Partial<DraftState>) => onChange({ ...draft, ...patch });
   return (
     <Card variant="outlined" sx={{ p: 2 }}>

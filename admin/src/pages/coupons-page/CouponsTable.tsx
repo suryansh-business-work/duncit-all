@@ -26,7 +26,7 @@ interface Props {
 const fmtDate = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: '2-digit' }) : '—';
 
-export default function CouponsTable({ loading, coupons, onEdit, onDelete }: Props) {
+export default function CouponsTable({ loading, coupons, onEdit, onDelete }: Readonly<Props>) {
   if (loading && coupons.length === 0)
     return (
       <Stack alignItems="center" sx={{ p: 4 }}>

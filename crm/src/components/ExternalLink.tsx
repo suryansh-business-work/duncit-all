@@ -17,7 +17,7 @@ interface Props extends Omit<LinkProps, 'href' | 'children'> {
  * Typography component="a") because polymorphic Typography types don't
  * cleanly accept anchor-specific props like href/target.
  */
-export default function ExternalLink({ href, children, withIcon = true, sx, ...rest }: Props) {
+export default function ExternalLink({ href, children, withIcon = true, sx, ...rest }: Readonly<Props>) {
   return (
     <Link
       {...rest}

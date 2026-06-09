@@ -53,7 +53,7 @@ export const toPartnerFaqInput = (values: PartnerFaqFormValues) => {
   };
 };
 
-export default function PartnerFaqForm({ open, editing, initialValues, saving, error, onClose, onSubmit }: Props) {
+export default function PartnerFaqForm({ open, editing, initialValues, saving, error, onClose, onSubmit }: Readonly<Props>) {
   return (
     <Formik initialValues={initialValues} enableReinitialize validationSchema={partnerFaqSchema} onSubmit={onSubmit}>
       {({ values, errors, touched, handleChange, setFieldValue, submitForm }) => (

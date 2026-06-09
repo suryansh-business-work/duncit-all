@@ -28,7 +28,7 @@ interface Props {
   onSaved: () => void;
 }
 
-export default function HostEditDialog({ host, onClose, onSaved }: Props) {
+export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Props>) {
   const [error, setError] = useState('');
   const [updateHost, state] = useMutation(UPDATE_HOST);
 

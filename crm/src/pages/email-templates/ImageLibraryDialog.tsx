@@ -35,7 +35,7 @@ interface Props {
 }
 
 /** Per-template image library: upload (saved immediately), browse, copy or insert. */
-export default function ImageLibraryDialog({ open, templateId, images, onClose, onChangeImages, onInsert }: Props) {
+export default function ImageLibraryDialog({ open, templateId, images, onClose, onChangeImages, onInsert }: Readonly<Props>) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);

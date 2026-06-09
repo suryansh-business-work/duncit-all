@@ -47,7 +47,7 @@ export default function LocationFormDialog({
   updateZone,
   addZone,
   removeZone,
-}: Props) {
+}: Readonly<Props>) {
   const [aiError, setAiError] = useState<string | null>(null);
   const [fillAreas, { loading: fillingAreas }] = useMutation(AI_FILL_LOCATION_AREAS);
 

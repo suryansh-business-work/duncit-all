@@ -41,7 +41,7 @@ interface NodeProps {
   searching?: boolean;
 }
 
-function LeafItem({ item, pathname, onNavigate, forceSelected }: NodeProps) {
+function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<NodeProps>) {
   const selected = forceSelected ?? matches(pathname, item.to);
   return (
     <ListItemButton
@@ -70,7 +70,7 @@ function LeafItem({ item, pathname, onNavigate, forceSelected }: NodeProps) {
   );
 }
 
-function GroupItem({ item, pathname, onNavigate, searching }: NodeProps) {
+function GroupItem({ item, pathname, onNavigate, searching }: Readonly<NodeProps>) {
   const active = useMemo(() => groupActive(pathname, item), [pathname, item]);
   const winner = useMemo(() => bestChild(pathname, item.children ?? []), [pathname, item.children]);
   const [open, setOpen] = useState(active);
@@ -109,7 +109,7 @@ function GroupItem({ item, pathname, onNavigate, searching }: NodeProps) {
   );
 }
 
-function NavNode({ item, pathname, onNavigate, forceSelected, searching }: NodeProps) {
+function NavNode({ item, pathname, onNavigate, forceSelected, searching }: Readonly<NodeProps>) {
   if (item.children && item.children.length > 0) {
     return <GroupItem item={item} pathname={pathname} onNavigate={onNavigate} searching={searching} />;
   }
@@ -129,7 +129,7 @@ function filterNav(items: AppNavItem[], q: string): AppNavItem[] {
   });
 }
 
-export default function AppSidebar({ onNavigate }: SidebarProps) {
+export default function AppSidebar({ onNavigate }: Readonly<SidebarProps>) {
   const location = useLocation();
   const { logoUrl, appName, loading } = useBranding();
   const [query, setQuery] = useState('');

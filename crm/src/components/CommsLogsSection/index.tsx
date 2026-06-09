@@ -14,7 +14,7 @@ interface Props {
   entityId: string;
 }
 
-export default function CommsLogsSection({ entityType, entityId }: Props) {
+export default function CommsLogsSection({ entityType, entityId }: Readonly<Props>) {
   const [filter, setFilter] = useState<Filter>('ALL');
   const [transcriptError, setTranscriptError] = useState<string | null>(null);
   const { data, loading, error, refetch } = useQuery<{ communicationLogs: { items: CommunicationLogItem[]; total: number } }>(

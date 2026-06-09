@@ -59,7 +59,7 @@ const SECTIONS = [
   },
 ];
 
-export default function VenueLeadForm({ config, initialValues, submitting, submitLabel = 'Save venue lead', onSubmit, onCancel }: Props) {
+export default function VenueLeadForm({ config, initialValues, submitting, submitLabel = 'Save venue lead', onSubmit, onCancel }: Readonly<Props>) {
   return (
     <Formik
       initialValues={initialValues ?? venueLeadInitialValues}
@@ -115,7 +115,7 @@ export default function VenueLeadForm({ config, initialValues, submitting, submi
   );
 }
 
-function VenueSections({ config }: { config: CrmOptionGroup }) {
+function VenueSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
   const [signal, setSignal] = useState(0);
   const [signalValue, setSignalValue] = useState(true);
   const toggleAll = (open: boolean) => {

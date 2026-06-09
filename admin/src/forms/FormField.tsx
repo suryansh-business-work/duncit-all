@@ -12,7 +12,7 @@ export interface FormFieldProps extends Omit<TextFieldProps, Omitted> {
  * MUI `TextField` bound to Formik with real-time validation and a
  * persistent helper hint underneath the field.
  */
-export default function FormField({ name, hint, ...rest }: FormFieldProps) {
+export default function FormField({ name, hint, ...rest }: Readonly<FormFieldProps>) {
   const [field, meta] = useField(name);
   const hasChanged = meta.value !== meta.initialValue;
   const showError = Boolean(meta.error && (meta.touched || hasChanged));

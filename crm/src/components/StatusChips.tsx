@@ -16,10 +16,10 @@ const PRIORITY_COLOR: Record<string, 'default' | 'info' | 'warning' | 'error'> =
   High: 'error',
 };
 
-export function StatusChip({ value }: { value: string }) {
+export function StatusChip({ value }: Readonly<{ value: string }>) {
   return <Chip size="small" label={value} color={STATUS_COLOR[value] ?? 'default'} variant="outlined" />;
 }
 
-export function PriorityChip({ value }: { value: string }) {
+export function PriorityChip({ value }: Readonly<{ value: string }>) {
   return <Chip size="small" label={value} color={PRIORITY_COLOR[value] ?? 'default'} />;
 }

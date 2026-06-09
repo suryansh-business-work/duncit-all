@@ -40,7 +40,7 @@ function buildPalette(theme: Theme) {
   ];
 }
 
-export default function ServicesChart({ data, title = 'Services Mix' }: Props) {
+export default function ServicesChart({ data, title = 'Services Mix' }: Readonly<Props>) {
   const theme = useTheme();
   const palette = useMemo(() => buildPalette(theme), [theme]);
 

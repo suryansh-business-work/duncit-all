@@ -20,7 +20,7 @@ export default function CategoriesColumns({
   openCreate,
   openEdit,
   remove,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Box
       sx={{

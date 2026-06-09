@@ -20,7 +20,7 @@ function urgencyBg(date: Date, done: boolean): string {
 }
 
 /** Compact clickable event chip; colour encodes urgency (and done state). */
-export default function EventPill({ event, onClick, showTime }: Props) {
+export default function EventPill({ event, onClick, showTime }: Readonly<Props>) {
   const done = event.status === 'DONE';
   const bg = urgencyBg(event.date, done);
   return (

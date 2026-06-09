@@ -42,7 +42,7 @@ interface Props {
 const blank: ManagedEditRow = { name: '', sort_order: '0', is_active: true };
 
 /** Inline-editable flat list for one managed-option group (Amenity / Suitability). */
-export default function ManagedOptionList({ group, addLabel, placeholder, searchPlaceholder }: Props) {
+export default function ManagedOptionList({ group, addLabel, placeholder, searchPlaceholder }: Readonly<Props>) {
   const queryVars = { group, include_inactive: true };
   const { data, loading, error } = useQuery<{ crmManagedOptions: CrmManagedOption[] }>(CRM_MANAGED_OPTIONS, {
     variables: queryVars,

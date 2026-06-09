@@ -39,7 +39,7 @@ interface Props {
 const SUGGESTIONS = ['Summarise this lead', 'Draft a follow-up email', 'Any upcoming reminders?'];
 
 /** Persistent right drawer (below the header, no backdrop) — chat grounded in this lead. */
-export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }: Props) {
+export default function AskAiDrawer({ open, entity, leadId, leadName, onClose }: Readonly<Props>) {
   const [messages, setMessages] = useState<ChatMsg[]>([]);
   const [input, setInput] = useState('');
   const [error, setError] = useState<string | null>(null);

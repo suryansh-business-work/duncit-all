@@ -21,7 +21,7 @@ interface Props {
 }
 
 /** Left pane: Monaco MJML editor with Format / Verify / AI / Image-library actions. */
-export default function MjmlEditorPane({ value, onChange, onValidate, templateId, images, onImagesChange }: Props) {
+export default function MjmlEditorPane({ value, onChange, onValidate, templateId, images, onImagesChange }: Readonly<Props>) {
   const [libOpen, setLibOpen] = useState(false);
   return (
     <Box sx={{ flex: 1, minWidth: 0, border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>

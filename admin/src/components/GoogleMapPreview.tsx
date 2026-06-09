@@ -8,7 +8,7 @@ interface Props {
   lng?: number | null;
 }
 
-export default function GoogleMapPreview({ title = 'Map preview', parts, lat, lng }: Props) {
+export default function GoogleMapPreview({ title = 'Map preview', parts, lat, lng }: Readonly<Props>) {
   const apiKey = import.meta.env.VITE_GOOGLE_MAP_API as string | undefined;
   const query = lat != null && lng != null
     ? `${lat},${lng}`

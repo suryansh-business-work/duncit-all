@@ -61,7 +61,7 @@ const hydrateLocation = (base: Step1, locations: any[]): Step1 => {
   };
 };
 
-export default function VenueEditDialog({ venue, onClose, onSaved }: Props) {
+export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Props>) {
   const [s1, setS1] = useState<Step1>(blankS1);
   const [docs, setDocs] = useState<DocEntry[]>([]);
   const [s2, setS2] = useState({ gstin: '', pan: '' });

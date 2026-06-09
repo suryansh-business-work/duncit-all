@@ -17,7 +17,7 @@ interface Props {
   onStartRecorded: (notes: string) => void;
 }
 
-export default function ContactActionFormContent({ type, user, target, statusOptions, error, busy, onClose, onOpenNativeAction, onStartRecorded }: Props) {
+export default function ContactActionFormContent({ type, user, target, statusOptions, error, busy, onClose, onOpenNativeAction, onStartRecorded }: Readonly<Props>) {
   const { values, errors, touched, submitCount, handleBlur, handleChange, setFieldValue, submitForm } =
     useFormikContext<ContactActionValues>();
   const showError = (key: keyof ContactActionValues) => shouldShowContactError(values, errors, touched, submitCount, key);

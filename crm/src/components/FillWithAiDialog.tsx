@@ -33,7 +33,7 @@ interface Props {
 }
 
 /** Paste free-form text → AI extracts MULTIPLE leads → edit → confirm → bulk create. */
-export default function FillWithAiDialog({ open, entity, title, onClose, onSaved }: Props) {
+export default function FillWithAiDialog({ open, entity, title, onClose, onSaved }: Readonly<Props>) {
   const [text, setText] = useState('');
   const [step, setStep] = useState<'input' | 'review'>('input');
   const [rows, setRows] = useState<AiRow[]>([]);

@@ -33,7 +33,7 @@ function showError(
   return Boolean(errors[key] && (submitCount > 0 || touched[key] || String(value ?? '').length > 0));
 }
 
-export default function ProfileForm({ form, busy, opError, onSave }: Props) {
+export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Props>) {
   return (
     <Formik<EditForm>
       initialValues={form}

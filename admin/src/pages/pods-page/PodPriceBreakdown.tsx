@@ -8,7 +8,7 @@ interface Props {
 }
 
 /** Live breakdown of platform fee + GST + per-person payout for a paid pod. */
-export default function PodPriceBreakdown({ amount, finance, productCost = 0, spots = 0 }: Props) {
+export default function PodPriceBreakdown({ amount, finance, productCost = 0, spots = 0 }: Readonly<Props>) {
   const cur = finance.currency_symbol || '\u20b9';
   const f = finance.platform_fee_pct / 100;
   const g = finance.gst_pct / 100;

@@ -17,7 +17,7 @@ const USER_BADGES = gql`
   }
 `;
 
-export default function UserBadgesSection({ userId }: { userId: string }) {
+export default function UserBadgesSection({ userId }: Readonly<{ userId: string }>) {
   const { data, loading } = useQuery(USER_BADGES, { variables: { user_id: userId }, skip: !userId });
   if (loading) return null;
   const badges = data?.userBadges ?? [];

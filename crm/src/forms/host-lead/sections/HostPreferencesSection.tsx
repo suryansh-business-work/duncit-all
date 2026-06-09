@@ -4,7 +4,7 @@ import MultiSelectField from '../../fields/MultiSelectField';
 import FieldGrid from '../../fields/FieldGrid';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
-export default function HostPreferencesSection({ config }: { config: CrmOptionGroup }) {
+export default function HostPreferencesSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
   return (
     <Stack spacing={1.5}>
       <MultiSelectField name="interests" label="Interested In Hosting" options={config.host_interests} />

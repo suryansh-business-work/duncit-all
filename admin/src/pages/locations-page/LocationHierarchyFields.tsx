@@ -20,7 +20,7 @@ interface Props {
 const label = (option: string | { name: string }) =>
   typeof option === 'string' ? option : option.name;
 
-export default function LocationHierarchyFields({ form, setForm }: Props) {
+export default function LocationHierarchyFields({ form, setForm }: Readonly<Props>) {
   const country = findCountry(form.country_code) ?? null;
   const states = getStatesForCountry(form.country_code);
   const state = findState(form.country_code, form.state_code, form.state) ?? form.state;

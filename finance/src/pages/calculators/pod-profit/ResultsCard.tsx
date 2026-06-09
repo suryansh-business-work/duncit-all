@@ -28,7 +28,7 @@ const COLORS: Record<NonNullable<RowProps['emphasis']>, string> = {
   default: 'text.primary',
 };
 
-function Row({ label, value, emphasis = 'default', detail }: RowProps) {
+function Row({ label, value, emphasis = 'default', detail }: Readonly<RowProps>) {
   return (
     <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ py: 0.75 }}>
       <Box sx={{ flex: 1, minWidth: 0 }}>
@@ -44,7 +44,7 @@ function Row({ label, value, emphasis = 'default', detail }: RowProps) {
   );
 }
 
-export default function ResultsCard({ results }: Props) {
+export default function ResultsCard({ results }: Readonly<Props>) {
   const margin = Math.min(Math.max(results.effective_duncit_margin_percent, 0), 100);
   return (
     <Card sx={{ position: { lg: 'sticky' }, top: { lg: 84 } }}>

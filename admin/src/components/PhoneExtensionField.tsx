@@ -23,7 +23,7 @@ export default function PhoneExtensionField({
   error,
   helperText,
   disabled,
-}: Props) {
+}: Readonly<Props>) {
   const selected = findCountryByDial(value) ?? null;
   return (
     <Autocomplete<Country>

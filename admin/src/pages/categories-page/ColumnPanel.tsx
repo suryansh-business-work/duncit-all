@@ -45,7 +45,7 @@ export default function ColumnPanel({
   onCreate,
   onEdit,
   onDelete,
-}: Props) {
+}: Readonly<Props>) {
   const enabled = level === 'SUPER' || !!parentId;
   const { data, loading, error } = useQuery(CATEGORIES, {
     variables: { filter: { level, parent_id: parentId ?? null } },

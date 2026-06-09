@@ -11,7 +11,7 @@ interface Props {
   onCreate: (input: { slug: string; name: string; subject: string }) => void;
 }
 
-export default function CreateTemplateForm({ onCancel, onCreate }: Props) {
+export default function CreateTemplateForm({ onCancel, onCreate }: Readonly<Props>) {
   const [slug, setSlug] = useState('');
   const [name, setName] = useState('');
   const [subject, setSubject] = useState('');

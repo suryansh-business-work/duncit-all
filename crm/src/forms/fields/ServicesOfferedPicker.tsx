@@ -26,7 +26,7 @@ export default function ServicesOfferedPicker({
   subName = 'sub_category_ids',
   servicesName = 'services_offered',
   appliesTo,
-}: Props) {
+}: Readonly<Props>) {
   const [superField] = useField<string>(superName);
   const [catField] = useField<string[]>(categoryName);
   const [subField] = useField<string[]>(subName);

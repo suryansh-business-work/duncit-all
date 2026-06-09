@@ -34,7 +34,7 @@ interface Props {
   onDelete: () => void;
 }
 
-export default function QuestionCard({ question, index, total, onChange, onMove, onDelete }: Props) {
+export default function QuestionCard({ question, index, total, onChange, onMove, onDelete }: Readonly<Props>) {
   const set = (patch: Partial<DraftQuestion>) => onChange({ ...question, ...patch });
   const isSection = question.type === 'SECTION';
 

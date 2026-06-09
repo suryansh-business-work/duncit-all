@@ -29,7 +29,7 @@ interface Props {
   onView?: (p: any) => void;
 }
 
-export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onDelete, onComplete, onView }: Props) {
+export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onDelete, onComplete, onView }: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>

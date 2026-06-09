@@ -22,7 +22,7 @@ export default function MediaListRow({
   onReplace,
   onMove,
   onRemove,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Stack
       direction="row"

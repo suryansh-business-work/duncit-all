@@ -20,7 +20,7 @@ async function loadLottieJson(url: string) {
   return JSON.parse(text);
 }
 
-export default function LottiePreview({ src, fallbackPath, height = 140, caption }: Props) {
+export default function LottiePreview({ src, fallbackPath, height = 140, caption }: Readonly<Props>) {
   const [data, setData] = useState<any>(null);
   const [loading, setLoading] = useState(false);
   const [err, setErr] = useState<string | null>(null);

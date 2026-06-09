@@ -24,7 +24,7 @@ const fmt = (raw: string): string => {
   return `+91 ${digits}`;
 };
 
-function Leg({ label, value }: { label: string; value: string }) {
+function Leg({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <Box sx={{ textAlign: 'center', minWidth: 0 }}>
       <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>
@@ -42,7 +42,7 @@ function Leg({ label, value }: { label: string; value: string }) {
  * To (customer), with an AI badge in the middle for AI calls. Below: a pulsing
  * call avatar, live status chip and the speech wave (animated while active).
  */
-export default function CallStage({ fromNumber, toNumber, statusLabel, tone, active, ai }: Props) {
+export default function CallStage({ fromNumber, toNumber, statusLabel, tone, active, ai }: Readonly<Props>) {
   return (
     <Stack spacing={2} alignItems="center" sx={{ py: 1 }}>
       <Stack direction="row" alignItems="center" spacing={1} sx={{ width: '100%' }} justifyContent="center">

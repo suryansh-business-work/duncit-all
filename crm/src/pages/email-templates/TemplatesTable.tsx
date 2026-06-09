@@ -23,7 +23,7 @@ const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleDateString() :
 
 const TARGET_LABEL: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', STATIC: 'Static' };
 
-export default function TemplatesTable({ templates, onEdit, onDelete }: Props) {
+export default function TemplatesTable({ templates, onEdit, onDelete }: Readonly<Props>) {
   return (
     <Table size="small">
       <TableHead>

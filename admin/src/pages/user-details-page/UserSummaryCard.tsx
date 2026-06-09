@@ -25,7 +25,7 @@ interface Props {
 
 const empty = '—';
 
-export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Props) {
+export default function UserSummaryCard({ user, form, busy, onPhotoChange }: Readonly<Props>) {
   const statusMeta = STATUS_META[form.status];
   const rows = [
     { label: 'Email', value: user.email ?? empty },

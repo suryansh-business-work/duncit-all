@@ -39,7 +39,7 @@ function displayName(row: CrmServiceOffered): string {
  * — see ManageServicesPage). Free-text entries land as `{ service: "Other",
  * custom_name: typedValue }` so dashboard aggregations still group cleanly.
  */
-export default function ServicesField({ name, options }: Props) {
+export default function ServicesField({ name, options }: Readonly<Props>) {
   const [field] = useField<CrmServiceOffered[]>(name);
   const rows = field.value ?? [];
 

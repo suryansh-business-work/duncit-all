@@ -20,7 +20,7 @@ interface Props {
   errors?: VenueValidationErrors;
 }
 
-export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: Props) {
+export default function VenueDocsSection({ docs, setDocs, s2, setS2, errors }: Readonly<Props>) {
   const err = (path: string) => getVenueError(errors, path);
   return (
     <Stack spacing={2}>

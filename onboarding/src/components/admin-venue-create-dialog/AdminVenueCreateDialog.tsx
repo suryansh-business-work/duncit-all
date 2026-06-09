@@ -29,7 +29,7 @@ interface Props {
   onSaved: () => void;
 }
 
-export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Props) {
+export default function AdminVenueCreateDialog({ open, onClose, onSaved }: Readonly<Props>) {
   const { data: usersData } = useQuery(USERS, { skip: !open });
   const { data: locationsData } = useQuery(LOCATIONS_FOR_VENUE, { skip: !open });
   const [owner, setOwner] = useState<any | null>(null);

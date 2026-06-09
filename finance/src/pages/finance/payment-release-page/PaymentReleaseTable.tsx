@@ -20,7 +20,7 @@ interface Props {
   onReview: (row: any) => void;
 }
 
-export default function PaymentReleaseTable({ rows, loading, onReview }: Props) {
+export default function PaymentReleaseTable({ rows, loading, onReview }: Readonly<Props>) {
   if (loading && rows.length === 0) {
     return <Stack alignItems="center" sx={{ p: 4 }}><CircularProgress /></Stack>;
   }

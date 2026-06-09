@@ -11,7 +11,7 @@ interface Props {
 
 const blank: PodPlaceCharge = { label: '', amount: 0, note: '' };
 
-export default function PlaceChargesField({ value, onChange, helperText }: Props) {
+export default function PlaceChargesField({ value, onChange, helperText }: Readonly<Props>) {
   const update = (idx: number, patch: Partial<PodPlaceCharge>) => {
     const next = value.map((row, i) => (i === idx ? { ...row, ...patch } : row));
     onChange(next);

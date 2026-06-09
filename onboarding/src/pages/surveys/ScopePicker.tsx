@@ -33,7 +33,7 @@ const useLevel = (level: CategoryLevel, parentId: string) => {
  * Cascading Super → Category → Sub single-select picker. Selecting a narrower
  * level clears stale deeper picks. Shared by the survey list filter and builder.
  */
-export default function ScopePicker({ value, onChange, emptyLabel = 'All', disabled }: Props) {
+export default function ScopePicker({ value, onChange, emptyLabel = 'All', disabled }: Readonly<Props>) {
   const supers = useLevel('SUPER', '');
   const cats = useLevel('CATEGORY', value.super_category_id);
   const subs = useLevel('SUB', value.category_id);

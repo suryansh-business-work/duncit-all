@@ -19,7 +19,7 @@ interface Props {
   title?: string;
 }
 
-export default function StageChart({ data, title = 'Leads by Stage' }: Props) {
+export default function StageChart({ data, title = 'Leads by Stage' }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 

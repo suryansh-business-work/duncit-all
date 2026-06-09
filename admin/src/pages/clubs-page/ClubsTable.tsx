@@ -41,7 +41,7 @@ export default function ClubsTable({
   onEdit,
   onRemove,
   onView,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>

@@ -11,7 +11,7 @@ interface Props {
 const IGNORE = '';
 
 /** One row per canonical field → a Select of detected spreadsheet headers. */
-export default function ColumnMappingStep({ fields, headers, mapping, onChange }: Props) {
+export default function ColumnMappingStep({ fields, headers, mapping, onChange }: Readonly<Props>) {
   const set = (field: string, header: string) => onChange({ ...mapping, [field]: header });
   return (
     <Stack spacing={1.25}>

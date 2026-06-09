@@ -35,7 +35,7 @@ export default function PaymentsTable({
   downloadingId,
   onDownload,
   onRefund,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 0, '&:last-child': { pb: 0 } }}>

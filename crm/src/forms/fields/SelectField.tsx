@@ -11,7 +11,7 @@ interface Props {
 }
 
 /** Single-select dropdown bound to Formik. */
-export default function SelectField({ name, label, options, hint, required, allowEmpty = true }: Props) {
+export default function SelectField({ name, label, options, hint, required, allowEmpty = true }: Readonly<Props>) {
   const [field, meta] = useField(name);
   const showError = Boolean(meta.error && (meta.touched || meta.value !== meta.initialValue));
   return (

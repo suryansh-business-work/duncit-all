@@ -7,7 +7,7 @@ interface Props {
   setForm: (next: BrandingFormState) => void;
 }
 
-export default function IdentitySection({ form, setForm }: Props) {
+export default function IdentitySection({ form, setForm }: Readonly<Props>) {
   const update = <K extends keyof BrandingFormState>(k: K, v: BrandingFormState[K]) =>
     setForm({ ...form, [k]: v });
 

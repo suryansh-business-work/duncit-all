@@ -23,7 +23,7 @@ interface Props {
  * single divider underneath (no heavy shadow). The active panel sits inside
  * a thin-bordered Card so the whole strip feels like one piece.
  */
-export default function LeadTabs({ tabs, defaultValue, ...rest }: Props) {
+export default function LeadTabs({ tabs, defaultValue, ...rest }: Readonly<Props>) {
   const [value, setValue] = useState(defaultValue ?? tabs[0]?.value);
   const active = tabs.find((t) => t.value === value) ?? tabs[0];
 

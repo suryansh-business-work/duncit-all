@@ -18,7 +18,7 @@ describe('roleFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/name/i);
   });
   it('accepts valid input', async () => {
-    await roleFormSchema.validate(base);
+    await expect(roleFormSchema.validate(base)).resolves.toBeTruthy();
   });
 });
 

@@ -65,6 +65,6 @@ describe('podFormSchema', () => {
   });
 
   it('accepts a fully valid pod', async () => {
-    await podFormSchema.validate(base);
+    await expect(podFormSchema.validate(base)).resolves.toBeTruthy();
   });
 });

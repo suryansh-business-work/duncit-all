@@ -22,7 +22,7 @@ describe('badgeFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/threshold/i);
   });
   it('allows missing threshold when condition is MANUAL', async () => {
-    await badgeFormSchema.validate({ ...base, condition_type: 'MANUAL' as const, threshold: 0 });
+    await expect(badgeFormSchema.validate({ ...base, condition_type: 'MANUAL' as const, threshold: 0 })).resolves.toBeTruthy();
   });
   it('rejects negative threshold', async () => {
     const error = await badgeFormSchema.validate({ ...base, threshold: -1 }, { abortEarly: false }).catch((e) => e);

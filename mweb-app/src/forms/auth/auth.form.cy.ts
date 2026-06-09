@@ -22,13 +22,15 @@ describe('googleSignupSchema', () => {
     expect(error.errors.join(' ')).toMatch(/phone/i);
   });
   it('accepts a fully valid google signup payload', async () => {
-    await googleSignupSchema.validate({
-      phone_number: '9876543210',
-      phone_extension: '+91',
-      dob: minus18,
-      city: 'Bengaluru',
-      zone: 'HSR',
-    });
+    await expect(
+      googleSignupSchema.validate({
+        phone_number: '9876543210',
+        phone_extension: '+91',
+        dob: minus18,
+        city: 'Bengaluru',
+        zone: 'HSR',
+      }),
+    ).resolves.toBeTruthy();
   });
 });
 
@@ -49,7 +51,7 @@ describe('whatsAppOtpVerifySchema', () => {
     expect(error.errors.join(' ')).toMatch(/otp/i);
   });
   it('accepts 4-8 digit OTP', async () => {
-    await whatsAppOtpVerifySchema.validate({ otp: '1234' });
-    await whatsAppOtpVerifySchema.validate({ otp: '12345678' });
+    await expect(whatsAppOtpVerifySchema.validate({ otp: '1234' })).resolves.toBeTruthy();
+    await expect(whatsAppOtpVerifySchema.validate({ otp: '12345678' })).resolves.toBeTruthy();
   });
 });

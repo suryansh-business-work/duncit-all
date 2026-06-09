@@ -21,7 +21,9 @@ describe('podIdeaFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/description/i);
   });
   it('accepts a valid idea', async () => {
-    await podIdeaFormSchema.validate({ title: 'Sunday hike', description: 'A monthly Sunday hike around the city.' });
+    await expect(
+      podIdeaFormSchema.validate({ title: 'Sunday hike', description: 'A monthly Sunday hike around the city.' }),
+    ).resolves.toBeTruthy();
   });
 });
 

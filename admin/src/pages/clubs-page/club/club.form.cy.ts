@@ -32,7 +32,7 @@ describe('clubFormSchema', () => {
   });
 
   it('accepts a fully valid club', async () => {
-    await clubFormSchema.validate(base);
+    await expect(clubFormSchema.validate(base)).resolves.toBeTruthy();
   });
 });
 

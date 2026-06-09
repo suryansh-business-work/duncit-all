@@ -15,7 +15,7 @@ describe('commentFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/1000/);
   });
   it('accepts a valid comment', async () => {
-    await commentFormSchema.validate({ text: 'Looks great!' });
+    await expect(commentFormSchema.validate({ text: 'Looks great!' })).resolves.toBeTruthy();
   });
 });
 

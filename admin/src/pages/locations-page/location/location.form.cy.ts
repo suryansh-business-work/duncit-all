@@ -34,7 +34,7 @@ describe('locationFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/pin/i);
   });
   it('accepts fully valid input', async () => {
-    await locationFormSchema.validate(base);
+    await expect(locationFormSchema.validate(base)).resolves.toBeTruthy();
   });
 });
 

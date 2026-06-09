@@ -41,7 +41,7 @@ describe('supportSchema', () => {
     expect(error.errors.join(' ')).toMatch(/url/i);
   });
   it('accepts valid input', async () => {
-    await supportSchema.validate(valid);
+    await expect(supportSchema.validate(valid)).resolves.toBeTruthy();
   });
 });
 

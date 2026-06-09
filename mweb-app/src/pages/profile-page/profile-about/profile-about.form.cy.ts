@@ -27,10 +27,12 @@ describe('profileAboutFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/10/);
   });
   it('accepts valid input', async () => {
-    await profileAboutFormSchema.validate({
-      bio: 'hello',
-      links: [{ label: 'IG', url: 'https://instagram.com/me' }],
-    });
+    await expect(
+      profileAboutFormSchema.validate({
+        bio: 'hello',
+        links: [{ label: 'IG', url: 'https://instagram.com/me' }],
+      }),
+    ).resolves.toBeTruthy();
   });
 });
 

@@ -83,7 +83,7 @@ describe('validateStep helper', () => {
 
 describe('validateAllSteps', () => {
   it('accepts a fully valid 3-step payload', async () => {
-    await validateAllSteps(step1, step2, step3);
+    await expect(validateAllSteps(step1, step2, step3)).resolves.toBeTruthy();
   });
 });
 

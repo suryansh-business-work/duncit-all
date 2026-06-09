@@ -24,7 +24,7 @@ describe('loginSchema', () => {
   });
 
   it('accepts a valid email + password', async () => {
-    await loginSchema.validate({ email: 'a@duncit.com', password: 'secret' });
+    await expect(loginSchema.validate({ email: 'a@duncit.com', password: 'secret' })).resolves.toBeTruthy();
   });
 
   it('ships dev admin credentials for the temp helper', () => {

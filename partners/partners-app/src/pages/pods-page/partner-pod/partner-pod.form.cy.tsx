@@ -40,6 +40,6 @@ describe('partnerPodSchema', () => {
   });
 
   it('accepts a complete pod', async () => {
-    await partnerPodSchema.validate(validPod, { abortEarly: false });
+    await expect(partnerPodSchema.validate(validPod, { abortEarly: false })).resolves.toBeTruthy();
   });
 });

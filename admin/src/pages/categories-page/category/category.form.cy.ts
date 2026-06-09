@@ -27,7 +27,7 @@ describe('categoryFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/sort order/i);
   });
   it('accepts a fully valid category', async () => {
-    await categoryFormSchema.validate(base);
+    await expect(categoryFormSchema.validate(base)).resolves.toBeTruthy();
   });
 });
 

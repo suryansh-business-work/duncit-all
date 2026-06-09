@@ -24,7 +24,9 @@ describe('signupSurveySchema', () => {
     expect(error.errors.join(' ')).toMatch(/notes/i);
   });
   it('accepts a valid survey', async () => {
-    await signupSurveySchema.validate({ interest_category_ids: ['c1'], other_interests: 'Anything outdoor' });
+    await expect(
+      signupSurveySchema.validate({ interest_category_ids: ['c1'], other_interests: 'Anything outdoor' }),
+    ).resolves.toBeTruthy();
   });
 });
 

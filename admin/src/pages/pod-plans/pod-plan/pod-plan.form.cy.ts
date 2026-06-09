@@ -27,7 +27,7 @@ describe('podPlanFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/sort/i);
   });
   it('accepts a valid plan', async () => {
-    await podPlanFormSchema.validate(base);
+    await expect(podPlanFormSchema.validate(base)).resolves.toBeTruthy();
   });
 });
 

@@ -19,7 +19,7 @@ describe('faqFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/answer/i);
   });
   it('accepts a valid FAQ', async () => {
-    await faqFormSchema.validate(base);
+    await expect(faqFormSchema.validate(base)).resolves.toBeTruthy();
   });
 });
 

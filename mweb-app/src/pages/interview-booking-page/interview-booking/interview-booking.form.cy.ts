@@ -55,7 +55,7 @@ describe('interviewBookingFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/end must be after start/i);
   });
   it('accepts a valid booking', async () => {
-    await interviewBookingFormSchema.validate(base);
+    await expect(interviewBookingFormSchema.validate(base)).resolves.toBeTruthy();
   });
 });
 

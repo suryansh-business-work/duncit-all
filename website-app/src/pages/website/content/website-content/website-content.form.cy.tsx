@@ -39,11 +39,11 @@ describe('websiteContentSchema', () => {
   });
 
   it('accepts a valid mailto CTA link', async () => {
-    await websiteContentSchema.validate({ ...base, cta_url: 'mailto:hi@duncit.com' });
+    await expect(websiteContentSchema.validate({ ...base, cta_url: 'mailto:hi@duncit.com' })).resolves.toBeTruthy();
   });
 
   it('accepts valid input', async () => {
-    await websiteContentSchema.validate(base);
+    await expect(websiteContentSchema.validate(base)).resolves.toBeTruthy();
   });
 });
 

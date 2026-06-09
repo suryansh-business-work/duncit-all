@@ -18,7 +18,7 @@ describe('featureFlagFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/name/i);
   });
   it('accepts valid input', async () => {
-    await featureFlagFormSchema.validate(base);
+    await expect(featureFlagFormSchema.validate(base)).resolves.toBeTruthy();
   });
 });
 

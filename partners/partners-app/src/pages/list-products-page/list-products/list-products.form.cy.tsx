@@ -33,6 +33,6 @@ describe('productListingSchema', () => {
   });
 
   it('accepts a complete product listing', async () => {
-    await productListingSchema.validate(validListing, { abortEarly: false });
+    await expect(productListingSchema.validate(validListing, { abortEarly: false })).resolves.toBeTruthy();
   });
 });

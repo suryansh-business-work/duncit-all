@@ -38,6 +38,6 @@ describe('CallPromptForm', () => {
     render(<CallPromptForm onSubmit={vi.fn()} />);
     fireEvent.change(screen.getByLabelText(/name/i), { target: { value: 'X' } });
     fireEvent.change(screen.getByLabelText(/static content/i), { target: { value: 'short' } });
-    await screen.findByText(/at least 10 characters/i);
+    expect(await screen.findByText(/at least 10 characters/i)).toBeInTheDocument();
   });
 });

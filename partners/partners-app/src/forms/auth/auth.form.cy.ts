@@ -61,7 +61,7 @@ describe('registerSchema', () => {
     expect(error.errors.join(' ')).toMatch(/city/i);
   });
   it('accepts a fully valid register payload', async () => {
-    await registerSchema.validate(validRegister, { abortEarly: false });
+    await expect(registerSchema.validate(validRegister, { abortEarly: false })).resolves.toBeTruthy();
   });
 });
 
@@ -91,7 +91,7 @@ describe('whatsAppOtpVerifySchema', () => {
     expect(error.errors.join(' ')).toMatch(/otp/i);
   });
   it('accepts 4-8 digit OTP', async () => {
-    await whatsAppOtpVerifySchema.validate({ otp: '1234' });
-    await whatsAppOtpVerifySchema.validate({ otp: '12345678' });
+    await expect(whatsAppOtpVerifySchema.validate({ otp: '1234' })).resolves.toBeTruthy();
+    await expect(whatsAppOtpVerifySchema.validate({ otp: '12345678' })).resolves.toBeTruthy();
   });
 });

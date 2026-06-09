@@ -28,7 +28,7 @@ describe('petProfileFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/age/i);
   });
   it('accepts valid input', async () => {
-    await petProfileFormSchema.validate(base);
+    await expect(petProfileFormSchema.validate(base)).resolves.toBeTruthy();
   });
 });
 

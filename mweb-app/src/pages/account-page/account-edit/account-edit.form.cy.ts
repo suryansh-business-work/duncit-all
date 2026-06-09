@@ -36,7 +36,7 @@ describe('accountEditSchema', () => {
   });
 
   it('allows empty whatsapp number', async () => {
-    await accountEditSchema.validate({ ...valid, whatsapp_number: '' });
+    await expect(accountEditSchema.validate({ ...valid, whatsapp_number: '' })).resolves.toBeTruthy();
   });
 
   it('rejects whatsapp number with non-digits', async () => {
@@ -57,7 +57,7 @@ describe('accountEditSchema', () => {
   });
 
   it('accepts a fully valid payload', async () => {
-    await accountEditSchema.validate(valid);
+    await expect(accountEditSchema.validate(valid)).resolves.toBeTruthy();
   });
 });
 

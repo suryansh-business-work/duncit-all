@@ -36,7 +36,7 @@ describe('postFormSchema', () => {
     expect(error.errors.join(' ')).toMatch(/visibility/i);
   });
   it('accepts valid input', async () => {
-    await postFormSchema.validate(valid);
+    await expect(postFormSchema.validate(valid)).resolves.toBeTruthy();
   });
 });
 

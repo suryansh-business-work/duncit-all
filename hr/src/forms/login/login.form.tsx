@@ -24,7 +24,7 @@ interface Props {
   submitLabel?: string;
 }
 
-export default function LoginForm({ loading, initialValues, errorMessage, onSubmit, submitLabel = 'Sign in' }: Props) {
+export default function LoginForm({ loading, initialValues, errorMessage, onSubmit, submitLabel = 'Sign in' }: Readonly<Props>) {
   const [showPwd, setShowPwd] = useState(false);
   return (
     <Formik

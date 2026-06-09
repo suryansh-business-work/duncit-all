@@ -29,7 +29,7 @@ export const emailVerificationSchema: yup.ObjectSchema<EmailVerificationValues> 
   otp: validationRules.otp(),
 });
 
-export default function EmailVerificationForm({ email, verified, onVerified }: EmailVerificationFormProps) {
+export default function EmailVerificationForm({ email, verified, onVerified }: Readonly<EmailVerificationFormProps>) {
   const [requestOtp, requestState] = useMutation(REQUEST_EMAIL_OTP);
   const [verifyOtp, verifyState] = useMutation(VERIFY_EMAIL_OTP);
   const [requested, setRequested] = useState(false);

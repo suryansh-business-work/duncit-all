@@ -22,7 +22,7 @@ interface ProviderProps {
   children: ReactNode;
 }
 
-export function ConfirmProvider({ children }: ProviderProps) {
+export function ConfirmProvider({ children }: Readonly<ProviderProps>) {
   const [options, setOptions] = useState<ConfirmOptions | null>(null);
   const resolverRef = useRef<Resolver | null>(null);
 

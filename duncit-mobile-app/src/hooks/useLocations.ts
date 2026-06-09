@@ -16,7 +16,7 @@ export function useLocations() {
   const clear = useLocationStore((s) => s.clear);
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   return {

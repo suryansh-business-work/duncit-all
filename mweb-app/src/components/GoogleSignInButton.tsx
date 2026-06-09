@@ -19,7 +19,7 @@ interface Props {
  * mode, and falls back to a plain MUI tile if no `VITE_GOOGLE_CLIENT_ID`
  * is configured so dev environments fail loud, not silent.
  */
-export default function GoogleSignInButton({ onCredential, loading, text = 'signin_with' }: Props) {
+export default function GoogleSignInButton({ onCredential, loading, text = 'signin_with' }: Readonly<Props>) {
   const clientId = getGoogleClientId();
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';

@@ -16,7 +16,7 @@ const roleMessages: Record<DashboardTab, string> = {
   products: 'You must be an Ecomm Manager to see this dashboard.',
 };
 
-export default function DashboardPanels({ tab, venues, pods, products, hasRoleAccess }: Props) {
+export default function DashboardPanels({ tab, venues, pods, products, hasRoleAccess }: Readonly<Props>) {
   const rows = tab === 'venue' ? venues : tab === 'host' ? pods : products;
   if (!hasRoleAccess && rows.length === 0) return <Alert severity="warning">{roleMessages[tab]}</Alert>;
   if (tab === 'venue') return <VenuePanel venues={venues} />;
@@ -24,7 +24,7 @@ export default function DashboardPanels({ tab, venues, pods, products, hasRoleAc
   return <ProductsPanel products={products} />;
 }
 
-function VenuePanel({ venues }: { venues: any[] }) {
+function VenuePanel({ venues }: Readonly<{ venues: any[] }>) {
   if (venues.length === 0) return <Alert severity="info">No venue registrations yet.</Alert>;
   return <DataTable headers={['Venue', 'Capacity', 'Status', 'Updated']} rows={venues.map((venue) => [
     <Box><Typography fontWeight={900}>{venue.venue_name || 'Untitled venue'}</Typography><Typography variant="caption" color="text.secondary">{[venue.locality, venue.city].filter(Boolean).join(', ') || 'Location pending'}</Typography></Box>,
@@ -34,7 +34,7 @@ function VenuePanel({ venues }: { venues: any[] }) {
   ])} />;
 }
 
-function HostPanel({ pods }: { pods: any[] }) {
+function HostPanel({ pods }: Readonly<{ pods: any[] }>) {
   if (pods.length === 0) return <Alert severity="info">No hosted pods in this date range.</Alert>;
   return <DataTable headers={['Pod', 'Date', 'Attendees', 'Pod earning']} rows={pods.map((pod) => [
     <Typography fontWeight={900}>{pod.pod_title}</Typography>,
@@ -44,7 +44,7 @@ function HostPanel({ pods }: { pods: any[] }) {
   ])} />;
 }
 
-function ProductsPanel({ products }: { products: any[] }) {
+function ProductsPanel({ products }: Readonly<{ products: any[] }>) {
   if (products.length === 0) return <Alert severity="info">No product listings yet.</Alert>;
   return <DataTable headers={['Product', 'Inventory', 'Price', 'Status']} rows={products.map((product) => [
     <Typography fontWeight={900}>{product.product_name}</Typography>,
@@ -54,7 +54,7 @@ function ProductsPanel({ products }: { products: any[] }) {
   ])} />;
 }
 
-function DataTable({ headers, rows }: { headers: string[]; rows: Array<Array<React.ReactNode>> }) {
+function DataTable({ headers, rows }: Readonly<{ headers: string[]; rows: Array<Array<React.ReactNode>> }>) {
   return (
     <TableContainer sx={{ border: 1, borderColor: 'divider', borderRadius: 1.25 }}>
       <Table size="small">
@@ -65,7 +65,7 @@ function DataTable({ headers, rows }: { headers: string[]; rows: Array<Array<Rea
   );
 }
 
-function StatusChip({ status }: { status: string }) {
+function StatusChip({ status }: Readonly<{ status: string }>) {
   const color = status === 'APPROVED' ? 'success' : status === 'REJECTED' || status === 'DENIED' ? 'error' : status === 'SUBMITTED' ? 'info' : 'warning';
   return <Chip size="small" label={status || 'PENDING'} color={color} />;
 }

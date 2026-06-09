@@ -44,7 +44,7 @@ const makeSupportPath = (item: PodHistoryItem) => {
   return `/support/tickets?${params.toString()}`;
 };
 
-export default function PodHistoryDetails({ item, backingOut, onBackout }: Props) {
+export default function PodHistoryDetails({ item, backingOut, onBackout }: Readonly<Props>) {
   const { formatDateTime } = useDateFormat();
   const { format } = usePricing();
   const [loadInvoice, invoiceState] = useLazyQuery(POD_HISTORY_INVOICE_PDF, { fetchPolicy: 'network-only' });

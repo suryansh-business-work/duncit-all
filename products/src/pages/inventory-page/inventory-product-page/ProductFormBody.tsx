@@ -27,7 +27,7 @@ export default function ProductFormBody({
   onCancel,
   onAfterSave,
   onError,
-}: ProductFormBodyProps) {
+}: Readonly<ProductFormBodyProps>) {
   const f = useFormikContext<InventoryProductFormValues>();
   useUnsavedWarning(f.dirty && !f.isSubmitting);
 

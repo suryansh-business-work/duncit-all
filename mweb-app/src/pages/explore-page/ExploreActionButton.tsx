@@ -9,7 +9,7 @@ interface Props {
   tooltip?: string;
 }
 
-export default function ExploreActionButton({ icon, label, onClick, active, loading, tooltip }: Props) {
+export default function ExploreActionButton({ icon, label, onClick, active, loading, tooltip }: Readonly<Props>) {
   return (
     <Stack alignItems="center" spacing={0.25}>
       <IconButton

@@ -20,7 +20,7 @@ const addressParts = (venue: any) => [
   venue.country,
 ];
 
-export default function ClubMeetupVenuesSection({ venues }: Props) {
+export default function ClubMeetupVenuesSection({ venues }: Readonly<Props>) {
   const [selectedId, setSelectedId] = useState<string | null>(venues[0]?.id ?? null);
   if (venues.length === 0) return null;
   const selected = venues.find((venue) => venue.id === selectedId) ?? venues[0];

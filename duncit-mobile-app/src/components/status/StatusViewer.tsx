@@ -13,7 +13,7 @@ interface StatusViewerProps {
 
 /** Full-screen status viewer — RN port of mWeb's HomeStatusViewer. Opens when a
  * status tile is tapped; tap anywhere or the close button to dismiss. */
-export function StatusViewer({ status, onClose }: StatusViewerProps) {
+export function StatusViewer({ status, onClose }: Readonly<StatusViewerProps>) {
   return (
     <Modal visible={!!status} transparent animationType="fade" onRequestClose={onClose}>
       <ModalThemeScope>

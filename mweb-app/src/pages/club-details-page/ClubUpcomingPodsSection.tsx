@@ -8,7 +8,7 @@ interface Props {
   priceFormat: (value: number) => string;
 }
 
-export default function ClubUpcomingPodsSection({ pods, onOpen, priceFormat }: Props) {
+export default function ClubUpcomingPodsSection({ pods, onOpen, priceFormat }: Readonly<Props>) {
   return (
     <Box>
       <Typography variant="h6" fontWeight={700} gutterBottom>

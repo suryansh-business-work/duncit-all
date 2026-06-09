@@ -19,7 +19,7 @@ interface Props {
 }
 
 /** Read-only dialog listing the env configs a portal currently uses. */
-export default function PortalInfoDialog({ row, onClose }: Props) {
+export default function PortalInfoDialog({ row, onClose }: Readonly<Props>) {
   const groups = new Map<string, PortalRow['entries']>();
   for (const entry of row?.entries ?? []) {
     if (!groups.has(entry.category)) groups.set(entry.category, []);

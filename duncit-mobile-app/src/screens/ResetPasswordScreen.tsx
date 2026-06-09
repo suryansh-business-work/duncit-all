@@ -72,7 +72,7 @@ export function ResetPasswordScreen() {
           fontSize={14}
           fontWeight="600"
           color="$primary"
-          onPress={() => email && void requestPasswordResetOtp(email)}
+          onPress={() => email && requestPasswordResetOtp(email)}
         >
           Resend OTP
         </Text>

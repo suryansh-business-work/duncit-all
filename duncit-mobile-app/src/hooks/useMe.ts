@@ -11,7 +11,7 @@ export function useMe() {
   const fetch = useMeStore((s) => s.fetch);
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   return { data, isLoading, error };
@@ -33,7 +33,7 @@ export function useRoleLabels() {
   const fetch = useRolesStore((s) => s.fetch);
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   const map = useMemo(() => {

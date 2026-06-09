@@ -14,7 +14,7 @@ export default function IdeaCommentsList({
   ideaAuthorId,
   myId,
   onDelete,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Stack spacing={1.5} sx={{ mt: 1, maxHeight: 320, overflowY: 'auto' }}>
       {comments.length === 0 && (

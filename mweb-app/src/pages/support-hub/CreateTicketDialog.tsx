@@ -21,7 +21,7 @@ interface Props {
   onCreated: (id?: string) => void;
 }
 
-export default function CreateTicketDialog({ open, onClose, onCreated }: Props) {
+export default function CreateTicketDialog({ open, onClose, onCreated }: Readonly<Props>) {
   const [subject, setSubject] = useState('');
   const [category, setCategory] = useState<TicketCategory>('GENERAL');
   const [message, setMessage] = useState('');

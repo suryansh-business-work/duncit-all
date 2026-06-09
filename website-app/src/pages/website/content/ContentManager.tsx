@@ -18,7 +18,7 @@ import {
 import type { WebsiteContentInput } from './website-content';
 
 /** Reusable content manager bound to a single website page type. */
-export default function ContentManager({ type }: { type: WebsitePageType }) {
+export default function ContentManager({ type }: Readonly<{ type: WebsitePageType }>) {
   const labels = CONTENT_LABELS[type];
   const { data, loading, error, refetch } = useQuery(WEBSITE_CONTENT, {
     variables: { type },

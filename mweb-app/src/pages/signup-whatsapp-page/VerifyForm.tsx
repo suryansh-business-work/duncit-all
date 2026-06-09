@@ -12,7 +12,7 @@ interface Props {
   onSkip: () => void;
 }
 
-export default function VerifyForm({ form, loading, onChangeNumber, onSkip }: Props) {
+export default function VerifyForm({ form, loading, onChangeNumber, onSkip }: Readonly<Props>) {
   return (
     <form onSubmit={form.handleSubmit} noValidate>
       <TextField

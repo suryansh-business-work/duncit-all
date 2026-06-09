@@ -38,7 +38,7 @@ export function useStatus() {
   const fetch = useStatusStore((s) => s.fetch);
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   const statuses = useMemo(() => groupByAuthor(data?.posts ?? []), [data?.posts]);

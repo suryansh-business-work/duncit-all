@@ -257,10 +257,10 @@ function humanizeImportError(err: any): string {
   }
   // Single-field cast (number/date/etc).
   if (err?.name === 'CastError') {
-    const want =
-      err?.kind === 'Number' ? 'a number'
-      : err?.kind === 'Date' ? 'a date in YYYY-MM-DD format'
-      : `a valid ${err?.kind ?? 'value'}`;
+    let want: string;
+    if (err?.kind === 'Number') want = 'a number';
+    else if (err?.kind === 'Date') want = 'a date in YYYY-MM-DD format';
+    else want = `a valid ${err?.kind ?? 'value'}`;
     return `Column "${err?.path}" has an invalid value "${err?.value}" — it must be ${want}, or leave it blank.`;
   }
   if (err?.extensions?.code === 'DUPLICATE_LEAD' || /already exists/i.test(raw)) {
@@ -333,7 +333,7 @@ export async function importLeads(
   const rawRows = XLSX.utils.sheet_to_json<Record<string, any>>(sheet, { defval: '' });
   // When a mapping is supplied, translate each row's sheet-header keys to the
   // canonical field names the importer expects; otherwise assume template headers.
-  const rows = mapping && mapping.length ? rawRows.map((r) => applyMapping(r, mapping)) : rawRows;
+  const rows = mapping?.length ? rawRows.map((r) => applyMapping(r, mapping)) : rawRows;
 
   const result: ImportResult = { inserted: 0, failed: 0, errors: [] };
   for (let idx = 0; idx < rows.length; idx += 1) {

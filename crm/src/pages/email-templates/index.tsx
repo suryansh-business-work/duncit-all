@@ -49,13 +49,15 @@ export default function EmailTemplatesPage() {
 
       <Card>
         <CardContent>
-          {loading && templates.length === 0 ? (
+          {loading && templates.length === 0 && (
             <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
-          ) : templates.length === 0 ? (
+          )}
+          {!loading && templates.length === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
               No templates yet. Click "New template" to create your first one.
             </Typography>
-          ) : (
+          )}
+          {templates.length > 0 && (
             <TemplatesTable
               templates={templates}
               onEdit={(t) => navigate(`/email-templates/${t.template_id}`)}

@@ -210,6 +210,9 @@ export default function RichTextField({
 
   if (!editor) return null;
 
+  const compactMinHeight = compact ? 80 : 140;
+  const proseMinHeight = bare ? 0 : compactMinHeight;
+
   return (
     <Box
       sx={(t) => ({
@@ -218,7 +221,7 @@ export default function RichTextField({
         bgcolor: bare ? 'transparent' : t.palette.background.paper,
         // Style the prosemirror surface from outside.
         '& .ProseMirror': {
-          minHeight: bare ? 0 : compact ? 80 : 140,
+          minHeight: proseMinHeight,
           padding: bare ? t.spacing(1, 1.25) : t.spacing(1.25),
           outline: 'none',
           fontFamily: t.typography.body2.fontFamily,

@@ -31,7 +31,7 @@ export default function SplashScreen({
   tagline = 'Welcome to Duncit',
   description = 'Find your tribe. Join pods, meet locals, share moments.',
   logoUrl = '/new-duncit-logo.png',
-}: SplashProps) {
+}: Readonly<SplashProps>) {
   return (
     <Box
       role="status"

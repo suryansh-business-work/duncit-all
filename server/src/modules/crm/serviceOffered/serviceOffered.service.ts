@@ -72,7 +72,7 @@ export const serviceOfferedService = {
     if (filter.applies_to_venue) q.applies_to_venue = { $ne: false };
     if (filter.applies_to_host) q.applies_to_host = { $ne: false };
     if (filter.search) {
-      q.title = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      q.title = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
     }
     const docs = await ServiceOfferedModel.find(q).sort({ sort_order: 1, title: 1 }).lean();
     const names = await categoryNameMap(docs);
@@ -173,8 +173,8 @@ export const serviceOfferedService = {
     }
     if (input.is_active != null) doc.is_active = input.is_active;
     if (input.sort_order != null) doc.sort_order = input.sort_order;
-    const nextVenue = input.applies_to_venue != null ? input.applies_to_venue : doc.applies_to_venue !== false;
-    const nextHost = input.applies_to_host != null ? input.applies_to_host : doc.applies_to_host !== false;
+    const nextVenue = input.applies_to_venue ?? doc.applies_to_venue !== false;
+    const nextHost = input.applies_to_host ?? doc.applies_to_host !== false;
     if (input.applies_to_venue != null || input.applies_to_host != null) {
       if (!nextVenue && !nextHost) {
         throw new GraphQLError('Pick at least one of Venue or Host', { extensions: { code: 'BAD_USER_INPUT' } });

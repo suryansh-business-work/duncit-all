@@ -31,7 +31,7 @@ export default function ConfirmDialog({
   busy,
   onConfirm,
   onClose,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog
       open={open}

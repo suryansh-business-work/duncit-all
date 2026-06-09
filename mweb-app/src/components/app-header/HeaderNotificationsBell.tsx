@@ -12,7 +12,7 @@ interface HeaderNotificationsBellProps {
   onToast: (toast: { title?: string; body?: string } | null) => void;
 }
 
-export default function HeaderNotificationsBell({ onToast }: HeaderNotificationsBellProps) {
+export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNotificationsBellProps>) {
   const navigate = useNavigate();
   const [notificationsOpen, setNotificationsOpen] = useState(false);
 

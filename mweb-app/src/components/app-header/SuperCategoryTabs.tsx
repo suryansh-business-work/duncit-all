@@ -10,7 +10,7 @@ interface Props {
   onChange: (slug: string) => void;
 }
 
-export default function SuperCategoryTabs({ loading, superCats, value, onChange }: Props) {
+export default function SuperCategoryTabs({ loading, superCats, value, onChange }: Readonly<Props>) {
   const { pathname } = useLocation();
   const canFilter = ['/', '/explore', '/clubs', '/chats', '/follow'].includes(pathname);
   const selectedIndex = Math.max(superCats.findIndex((c: any) => c.slug === value), 0);

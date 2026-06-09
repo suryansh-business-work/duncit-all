@@ -13,7 +13,7 @@ import { formatDateTime } from '@/utils/date-format';
  * Renders nothing when the user has no meeting for this kind. RN twin of mWeb's
  * MeetingStatusCard.
  */
-export function MeetingStatusCard({ kind }: { kind: SurveyKind }) {
+export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
   const { meeting } = useMyMeeting(kind);
   const { primary } = useThemeColors();
   if (!meeting) return null;

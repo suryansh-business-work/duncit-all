@@ -146,7 +146,7 @@ export default function VenueAvailabilityPage() {
   );
 }
 
-function Legend({ color, label }: { color: string; label: string }) {
+function Legend({ color, label }: Readonly<{ color: string; label: string }>) {
   return (
     <Stack direction="row" spacing={0.75} alignItems="center">
       <Box sx={{ width: 14, height: 14, borderRadius: 0.5, bgcolor: color }} />

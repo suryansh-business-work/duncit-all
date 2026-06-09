@@ -18,7 +18,7 @@ export function Skeleton({
   radius = 8,
   style,
   testID,
-}: SkeletonProps) {
+}: Readonly<SkeletonProps>) {
   const opacity = useRef(new Animated.Value(0.4)).current;
   const { muted } = useThemeColors();
 

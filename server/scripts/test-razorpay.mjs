@@ -7,10 +7,18 @@
  */
 import mongoose from 'mongoose';
 
-const mask = (v) => (!v ? '(missing)' : v.length <= 8 ? '••••' : `${v.slice(0, 8)}…(${v.length} chars)`);
+const mask = (v) => {
+  if (!v) return '(missing)';
+  if (v.length <= 8) return '••••';
+  return `${v.slice(0, 8)}…(${v.length} chars)`;
+};
 
 async function testKeys(keyId, keySecret, label) {
-  console.log(`\nTesting ${label}: key_id=${mask(keyId)}  mode=${keyId.startsWith('rzp_test_') ? 'TEST' : keyId.startsWith('rzp_live_') ? 'LIVE' : '⚠️ unknown prefix'}`);
+  let mode;
+  if (keyId.startsWith('rzp_test_')) mode = 'TEST';
+  else if (keyId.startsWith('rzp_live_')) mode = 'LIVE';
+  else mode = '⚠️ unknown prefix';
+  console.log(`\nTesting ${label}: key_id=${mask(keyId)}  mode=${mode}`);
   const auth = 'Basic ' + Buffer.from(`${keyId}:${keySecret}`).toString('base64');
   const res = await fetch('https://api.razorpay.com/v1/orders', {
     method: 'POST',
@@ -66,7 +74,11 @@ async function main() {
   console.log(`\nActive default entry "${active.name}":`);
   console.log(`  key_id    : ${mask(keyId)}  ${rawId !== keyId ? '⚠️ has surrounding whitespace' : ''}`);
   console.log(`  key_secret: ${keySecret ? `set (${keySecret.length} chars)` : '(missing)'}  ${rawSecret !== keySecret ? '⚠️ has surrounding whitespace' : ''}`);
-  console.log(`  mode      : ${keyId.startsWith('rzp_test_') ? 'TEST' : keyId.startsWith('rzp_live_') ? 'LIVE' : '⚠️ unrecognised prefix'}`);
+  let mode;
+  if (keyId.startsWith('rzp_test_')) mode = 'TEST';
+  else if (keyId.startsWith('rzp_live_')) mode = 'LIVE';
+  else mode = '⚠️ unrecognised prefix';
+  console.log(`  mode      : ${mode}`);
 
   if (!keyId || !keySecret) {
     console.log('\n❌ key_id and/or key_secret missing — payment will fail with "not configured".');

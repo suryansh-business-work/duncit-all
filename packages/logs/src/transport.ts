@@ -24,14 +24,14 @@ export function httpTransport(endpoint: string): Transport {
 export const consoleTransport: Transport = (record: LogRecord) => {
   const tag = record.portal ? `${record.app}:${record.portal}` : record.app;
   const line = `[${tag}] ${record.page}/${record.component}`;
-  // eslint-disable-next-line no-console
-  const sink =
-    record.level === 'error'
-      ? console.error
-      : record.level === 'warn'
-        ? console.warn
-        : record.level === 'debug'
-          ? console.debug
-          : console.info;
+  /* eslint-disable no-console -- structured log transport writes to the console */
+  const byLevel = {
+    error: console.error,
+    warn: console.warn,
+    debug: console.debug,
+    info: console.info,
+  };
+  /* eslint-enable no-console */
+  const sink = byLevel[record.level as keyof typeof byLevel] ?? byLevel.info;
   sink(line, record.data ?? '');
 };

@@ -25,7 +25,7 @@ interface StatCardProps {
   to: string;
 }
 
-function StatCard({ label, count, icon, color, to }: StatCardProps) {
+function StatCard({ label, count, icon, color, to }: Readonly<StatCardProps>) {
   const navigate = useNavigate();
   return (
     <Card variant="outlined" sx={{ flex: '1 1 200px', minWidth: 200 }}>

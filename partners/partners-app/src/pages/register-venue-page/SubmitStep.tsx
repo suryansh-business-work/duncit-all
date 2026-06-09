@@ -7,7 +7,7 @@ interface Props {
   step3: VenueStep3;
 }
 
-export default function SubmitStep({ step1, step2, step3 }: Props) {
+export default function SubmitStep({ step1, step2, step3 }: Readonly<Props>) {
   return (
     <Stack spacing={2}>
       <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'rgba(255,79,115,0.10)', border: '1px solid rgba(255,79,115,0.18)' }}>

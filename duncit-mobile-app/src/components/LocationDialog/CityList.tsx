@@ -11,7 +11,7 @@ interface Props {
   onPick: (loc: LocationItem) => void;
 }
 
-export function CityList({ cities, draftId, onPick }: Props) {
+export function CityList({ cities, draftId, onPick }: Readonly<Props>) {
   const { primary } = useThemeColors();
 
   return (
@@ -32,7 +32,7 @@ export function CityList({ cities, draftId, onPick }: Props) {
             testID={`location-${loc.id}`}
             role="button"
             aria-label={loc.location_name}
-            aria-selected={active}
+            aria-pressed={active}
             onPress={() => onPick(loc)}
             alignItems="center"
             gap={12}

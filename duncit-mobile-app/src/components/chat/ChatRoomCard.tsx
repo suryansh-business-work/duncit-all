@@ -6,7 +6,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ChatRoom } from '@/stores/chat.store';
 
 /** A chat-room row in the Chats thread list — cover, title and member count. */
-export function ChatRoomCard({ room, onPress }: { room: ChatRoom; onPress: () => void }) {
+export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPress: () => void }>) {
   const { onPrimary, muted } = useThemeColors();
   const members = room.pod_attendees.length;
 

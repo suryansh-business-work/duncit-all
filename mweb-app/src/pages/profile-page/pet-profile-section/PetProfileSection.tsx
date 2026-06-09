@@ -11,7 +11,7 @@ interface Props {
   onSaved?: () => void;
 }
 
-export default function PetProfileSection({ pet, onSaved }: Props) {
+export default function PetProfileSection({ pet, onSaved }: Readonly<Props>) {
   const [editing, setEditing] = useState(false);
   const [savedMsg, setSavedMsg] = useState<string | null>(null);
 

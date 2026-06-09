@@ -9,7 +9,7 @@ interface Props {
   selectedProducts?: Array<{ product_id: string; quantity: number }>;
 }
 
-export default function OrderSummaryCard({ pod, stateTitle, breakup, selectedProducts = [] }: Props) {
+export default function OrderSummaryCard({ pod, stateTitle, breakup, selectedProducts = [] }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const title = pod?.pod_title || stateTitle || 'Pod booking';
@@ -55,7 +55,7 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup, selectedPro
   );
 }
 
-function Row({ label, value, bold }: { label: string; value: string; bold?: boolean }) {
+function Row({ label, value, bold }: Readonly<{ label: string; value: string; bold?: boolean }>) {
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={2}>
       <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 900 : 500}>{label}</Typography>

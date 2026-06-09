@@ -1,6 +1,6 @@
 import { Button, Dialog, DialogActions, DialogContent, DialogTitle, Typography } from '@mui/material';
 
-export default function UserDataReloadDialog({ open }: { open: boolean }) {
+export default function UserDataReloadDialog({ open }: Readonly<{ open: boolean }>) {
   return (
     <Dialog open={open} maxWidth="xs" fullWidth>
       <DialogTitle>User data not loaded</DialogTitle>

@@ -23,7 +23,7 @@ export function HostCard({
   pending,
   onOpen,
   onToggleFollow,
-}: HostCardProps) {
+}: Readonly<HostCardProps>) {
   const { onPrimary, primary } = useThemeColors();
   const initial = (host.full_name?.[0] ?? 'H').toUpperCase();
 

@@ -24,7 +24,7 @@ export function BackoutConfirmDialog({
   onClose,
   onConfirm,
   onViewTerms,
-}: BackoutConfirmDialogProps) {
+}: Readonly<BackoutConfirmDialogProps>) {
   const { color, onPrimary } = useThemeColors();
   const { data, isLoading } = usePolicy(open ? 'backout-terms' : '');
   const terms = stripHtml(data?.policyBySlug?.content);

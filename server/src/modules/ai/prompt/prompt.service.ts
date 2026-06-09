@@ -42,7 +42,7 @@ export const aiPromptService = {
     if (filter.is_active !== undefined && filter.is_active !== null) query.is_active = filter.is_active;
     if (filter.category) query.category = filter.category;
     if (filter.search) {
-      const rx = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const rx = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       query.$or = [{ name: rx }, { description: rx }, { content: rx }, { category: rx }];
     }
     const docs = await AiPromptModel.find(query).sort({ is_active: -1, name: 1 });

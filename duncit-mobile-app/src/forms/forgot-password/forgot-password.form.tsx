@@ -17,7 +17,7 @@ export interface ForgotPasswordFormProps {
 }
 
 /** Email entry that requests a password-reset OTP — RN twin of mWeb's form. */
-export function ForgotPasswordForm({ loading, errorMessage, onSubmit }: ForgotPasswordFormProps) {
+export function ForgotPasswordForm({ loading, errorMessage, onSubmit }: Readonly<ForgotPasswordFormProps>) {
   const { control, handleSubmit } = useForm<ForgotPasswordValues>({
     defaultValues: forgotPasswordDefaults,
     resolver: zodResolver(forgotPasswordSchema),

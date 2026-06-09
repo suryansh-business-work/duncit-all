@@ -21,7 +21,7 @@ interface Props {
   onClose: () => void;
 }
 
-export default function OtherPortalsDialog({ open, onClose }: Props) {
+export default function OtherPortalsDialog({ open, onClose }: Readonly<Props>) {
   const [query, setQuery] = useState('');
   const [category, setCategory] = useState<string>('All');
 

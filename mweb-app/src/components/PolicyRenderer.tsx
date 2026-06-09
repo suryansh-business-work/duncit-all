@@ -30,7 +30,7 @@ interface PolicyRendererProps {
  *
  * NOTE: HTML comes from a trusted admin-only authoring surface.
  */
-export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: PolicyRendererProps) {
+export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonly<PolicyRendererProps>) {
   const { data, loading, error } = useQuery(POLICY_BY_SLUG, {
     variables: { slug },
     fetchPolicy: 'cache-and-network',

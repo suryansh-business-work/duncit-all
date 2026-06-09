@@ -8,9 +8,9 @@ interface Props {
 }
 
 /** Read-only recap of the just-submitted survey answers, shown on the meeting step. */
-export default function SubmittedSummary({ survey, answers }: Props) {
+export default function SubmittedSummary({ survey, answers }: Readonly<Props>) {
   const labelFor = (qid: string) => survey.questions.find((q) => q.qid === qid)?.label ?? qid;
-  const items = answers.filter((a) => (a.values && a.values.length) || (a.value ?? '').trim() !== '');
+  const items = answers.filter((a) => a.values?.length || (a.value ?? '').trim() !== '');
   if (items.length === 0) return null;
 
   return (
@@ -22,7 +22,7 @@ export default function SubmittedSummary({ survey, answers }: Props) {
         {items.map((a) => (
           <Stack key={a.qid} spacing={0.1}>
             <Typography variant="caption" color="text.secondary">{labelFor(a.qid)}</Typography>
-            <Typography variant="body2">{a.values && a.values.length ? a.values.join(', ') : a.value}</Typography>
+            <Typography variant="body2">{a.values?.length ? a.values.join(', ') : a.value}</Typography>
           </Stack>
         ))}
       </Stack>

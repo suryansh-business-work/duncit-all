@@ -40,7 +40,7 @@ export function SuperCategoryTabs() {
             testID={`super-cat-${tab.slug || 'all'}`}
             role="button"
             aria-label={tab.name}
-            aria-selected={selected}
+            aria-pressed={selected}
             onPress={() => select(tab.slug)}
             flex={1}
             height={40}

@@ -11,10 +11,10 @@ import { formatRelative } from '@/utils/date-format';
 export function NotificationRow({
   item,
   onPress,
-}: {
+}: Readonly<{
   item: UserNotification;
   onPress: () => void;
-}) {
+}>) {
   const { onPrimary, primary } = useThemeColors();
   const unread = !item.read_at;
   const notification = item.notification;

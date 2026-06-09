@@ -57,7 +57,7 @@ export default function VenueLocationFinder({
   locations,
   value,
   onChange,
-}: VenueLocationFinderProps) {
+}: Readonly<VenueLocationFinderProps>) {
   const { busy, error, result, fromGps, fromSearch, reset } = useVenueGeocoder();
   const [query, setQuery] = useState('');
   const [matched, setMatched] = useState<any | null>(null);

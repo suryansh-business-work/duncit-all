@@ -31,7 +31,7 @@ export default function BackoutConfirmDialog({
   onClose,
   onConfirm,
   busy,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <DialogTitle sx={{ pr: 6 }}>Backout from this pod?</DialogTitle>

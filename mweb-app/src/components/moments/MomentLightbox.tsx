@@ -16,7 +16,7 @@ interface Props {
   onIndexChange: (idx: number) => void;
 }
 
-export default function MomentLightbox({ moments, index, onClose, onIndexChange }: Props) {
+export default function MomentLightbox({ moments, index, onClose, onIndexChange }: Readonly<Props>) {
   const [current, setCurrent] = useState<number>(index ?? 0);
   const pushedHistory = useRef(false);
   const suppressNextPop = useRef(false);

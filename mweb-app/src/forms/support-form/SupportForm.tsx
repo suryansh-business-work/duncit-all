@@ -30,7 +30,7 @@ export default function SupportForm({
   loading,
   errorMessage,
   onSubmit,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Formik
       initialValues={{ ...DEFAULTS, ...(initialValues ?? {}) } as SupportFormValues}

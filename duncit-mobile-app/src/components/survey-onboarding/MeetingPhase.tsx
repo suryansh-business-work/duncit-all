@@ -28,7 +28,7 @@ export function MeetingPhase({
   busy,
   error,
   onSubmit,
-}: Props) {
+}: Readonly<Props>) {
   const { color: ink, primary } = useThemeColors();
   const answered = (survey?.questions ?? [])
     .filter((q) => q.type !== 'SECTION')

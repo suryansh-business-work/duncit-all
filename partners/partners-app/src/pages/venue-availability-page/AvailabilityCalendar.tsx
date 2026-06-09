@@ -38,7 +38,7 @@ function bucketByDay(slots: VenueSlotRow[]): Map<string, Bucket> {
 
 const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 
-export default function AvailabilityCalendar({ month, slots, selectedDate, onSelect }: Props) {
+export default function AvailabilityCalendar({ month, slots, selectedDate, onSelect }: Readonly<Props>) {
   const buckets = bucketByDay(slots);
   const monthStart = startOfMonth(month);
   const monthEnd = endOfMonth(month);

@@ -18,7 +18,7 @@ export default function UserDataNotLoadedDialog({
   errorMessage,
   onReload,
   onLogout,
-}: UserDataNotLoadedDialogProps) {
+}: Readonly<UserDataNotLoadedDialogProps>) {
   return (
     <Dialog
       open={open}

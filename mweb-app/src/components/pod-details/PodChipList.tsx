@@ -12,7 +12,7 @@ export default function PodChipList({
   emptyText,
   color = 'default',
   variant = 'outlined',
-}: Props) {
+}: Readonly<Props>) {
   if (!items || items.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary">

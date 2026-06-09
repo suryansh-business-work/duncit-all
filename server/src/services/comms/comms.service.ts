@@ -60,7 +60,7 @@ export const commsService = {
         auth: user && pass ? { user, pass } : undefined,
       });
       const attachments = (input.attachments ?? [])
-        .filter((a) => a && a.url)
+        .filter((a) => a?.url)
         .map((a) => ({ filename: a.name || a.url.split('/').pop() || 'attachment', path: a.url }));
       const info = await transporter.sendMail({
         from: str(cfg, 'from_name') ? `${str(cfg, 'from_name')} <${from}>` : from,

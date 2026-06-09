@@ -48,8 +48,11 @@ export function useCalendarEvents(entity: EntityFilter, status: StatusFilter) {
 
   const events = useMemo<CalEvent[]>(() => {
     const out: CalEvent[] = [];
-    const nameFor = (ent: string, id?: string | null) =>
-      ent === 'VENUE_LEAD' ? nameMaps.venue.get(id ?? '') ?? null : ent === 'HOST_LEAD' ? nameMaps.host.get(id ?? '') ?? null : null;
+    const nameFor = (ent: string, id?: string | null) => {
+      if (ent === 'VENUE_LEAD') return nameMaps.venue.get(id ?? '') ?? null;
+      if (ent === 'HOST_LEAD') return nameMaps.host.get(id ?? '') ?? null;
+      return null;
+    };
     for (const r of rem?.crmReminders ?? []) {
       const d = valid(r.due_at);
       if (!d) continue;

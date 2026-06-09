@@ -16,7 +16,7 @@ interface StackScreenProps {
 
 /** Shared scaffold for pushed (stack) screens: gradient backdrop + a back-bar
  * with the title (and optional right action). */
-export function StackScreen({ title, testID, children, right }: StackScreenProps) {
+export function StackScreen({ title, testID, children, right }: Readonly<StackScreenProps>) {
   const navigation = useNavigation();
   const { color: ink } = useThemeColors();
 

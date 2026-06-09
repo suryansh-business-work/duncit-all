@@ -30,7 +30,7 @@ export default function PortalModeGate({
   appName,
   pollMs = 60000,
   children,
-}: PortalModeGateProps) {
+}: Readonly<PortalModeGateProps>) {
   const [mode, setMode] = useState<PortalModeState>('LIVE');
 
   useEffect(() => {

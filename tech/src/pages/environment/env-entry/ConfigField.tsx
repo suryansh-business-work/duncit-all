@@ -19,7 +19,7 @@ interface Props {
  * masked field with an eye toggle so the value can be revealed on demand
  * (nothing is hidden from the operator — only obscured by default).
  */
-export default function ConfigField({ field, value, error, helperText, onChange, onBlur, onToggleBool }: Props) {
+export default function ConfigField({ field, value, error, helperText, onChange, onBlur, onToggleBool }: Readonly<Props>) {
   const [reveal, setReveal] = useState(false);
 
   if (field.bool) {

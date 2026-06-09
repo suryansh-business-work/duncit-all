@@ -6,7 +6,7 @@ import { TEST_ENV_EMAIL, type EnvEntry, type RichTestResult } from '../queries';
 import ResultAlert from './ResultAlert';
 import { parseApiError } from '../../../utils/parseApiError';
 
-export default function EmailTestPanel({ entry }: { entry: EnvEntry }) {
+export default function EmailTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
   const [to, setTo] = useState('');
   const [result, setResult] = useState<RichTestResult | null>(null);
   const [run, { loading }] = useMutation(TEST_ENV_EMAIL);

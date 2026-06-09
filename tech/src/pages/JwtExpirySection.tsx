@@ -53,7 +53,7 @@ interface Props {
   onToast: (msg: string) => void;
 }
 
-export default function JwtExpirySection({ onToast }: Props) {
+export default function JwtExpirySection({ onToast }: Readonly<Props>) {
   const { data, loading, error, refetch } = useQuery(APP_SETTINGS, {
     fetchPolicy: 'cache-and-network',
   });

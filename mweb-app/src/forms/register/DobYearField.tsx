@@ -7,7 +7,7 @@ import type { RegisterFormValues } from './register.types';
 
 /** MUIX year-only birth-year picker bound to react-hook-form. Stores the value
  * as a 'YYYY-01-01' string so the page can build an ISO date for the server. */
-export default function DobYearField({ control }: { control: Control<RegisterFormValues> }) {
+export default function DobYearField({ control }: Readonly<{ control: Control<RegisterFormValues> }>) {
   const minDate = subYears(new Date(), 100);
   const maxDate = subYears(new Date(), 13);
   return (

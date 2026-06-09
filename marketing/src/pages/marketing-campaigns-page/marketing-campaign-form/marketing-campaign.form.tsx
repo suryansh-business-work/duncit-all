@@ -88,7 +88,7 @@ export default function MarketingCampaignForm({
   errorMessage,
   onValuesChange,
   onSubmit,
-}: MarketingCampaignFormProps) {
+}: Readonly<MarketingCampaignFormProps>) {
   return (
     <Formik<MarketingCampaignFormValues>
       initialValues={initialValues}

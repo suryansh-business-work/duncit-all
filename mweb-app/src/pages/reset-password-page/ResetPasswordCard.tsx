@@ -23,7 +23,7 @@ export default function ResetPasswordCard({
   resending,
   onSubmit,
   onResend,
-}: Props) {
+}: Readonly<Props>) {
   if (done) {
     return (
       <AuthScreenFrame center>

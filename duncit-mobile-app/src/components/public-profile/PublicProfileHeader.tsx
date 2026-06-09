@@ -6,7 +6,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { PublicProfileUser } from '@/hooks/usePublicProfile';
 
 /** Centered avatar + name + location + bio — RN twin of mWeb's PublicProfileHeader. */
-export function PublicProfileHeader({ user }: { user: PublicProfileUser }) {
+export function PublicProfileHeader({ user }: Readonly<{ user: PublicProfileUser }>) {
   const { onPrimary, muted } = useThemeColors();
   const location = [user.zone, user.city].filter(Boolean).join(', ');
   const initial = (user.full_name?.[0] ?? '?').toUpperCase();

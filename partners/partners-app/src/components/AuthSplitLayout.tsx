@@ -77,7 +77,7 @@ export default function AuthSplitLayout({
   tagline,
   loginImage,
   children,
-}: Props) {
+}: Readonly<Props>) {
   const { mode, toggle } = useColorMode();
   const { logoUrl, appName } = useBranding();
   return (

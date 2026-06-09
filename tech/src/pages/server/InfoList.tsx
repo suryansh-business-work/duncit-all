@@ -7,7 +7,7 @@ export interface InfoRowItem {
 }
 
 /** Compact label/value list used inside the Server detail cards. */
-export default function InfoList({ rows }: { rows: InfoRowItem[] }) {
+export default function InfoList({ rows }: Readonly<{ rows: InfoRowItem[] }>) {
   return (
     <Stack>
       {rows.map((row, i) => (

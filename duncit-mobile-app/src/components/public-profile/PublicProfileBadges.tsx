@@ -10,7 +10,7 @@ import type { UserBadge } from '@/hooks/usePublicProfile';
 import { formatDate } from '@/utils/date-format';
 
 /** Badge grid with a details sheet — RN twin of mWeb's PublicProfileBadges. */
-export function PublicProfileBadges({ badges }: { badges: UserBadge[] }) {
+export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }>) {
   const { onPrimary, primary, color } = useThemeColors();
   const [active, setActive] = useState<UserBadge | null>(null);
   if (badges.length === 0) return null;

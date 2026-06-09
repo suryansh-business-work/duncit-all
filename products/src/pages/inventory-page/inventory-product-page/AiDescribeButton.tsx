@@ -11,7 +11,7 @@ interface AiDescribeButtonProps {
   onError: (msg: string) => void;
 }
 
-export default function AiDescribeButton({ values, onApply, onError }: AiDescribeButtonProps) {
+export default function AiDescribeButton({ values, onApply, onError }: Readonly<AiDescribeButtonProps>) {
   const [busy, setBusy] = useState(false);
   const [describe] = useMutation(AI_DESCRIBE_PRODUCT);
   const disabled = !values.product_name.trim() || busy;

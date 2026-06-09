@@ -9,7 +9,7 @@ interface Props {
 }
 
 /** Right-hand glass promo card (hidden on mobile by the parent). */
-export default function PromoCard({ title, text, brandName }: Props) {
+export default function PromoCard({ title, text, brandName }: Readonly<Props>) {
   const [firstWord, ...rest] = title.split(' ');
   return (
     <Box

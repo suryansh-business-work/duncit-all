@@ -21,7 +21,7 @@ export function HealthMeter({
   size = 168,
   thickness = 14,
   caption,
-}: HealthMeterProps) {
+}: Readonly<HealthMeterProps>) {
   const radius = (size - thickness) / 2;
   const center = size / 2;
   const circumference = Math.PI * radius;

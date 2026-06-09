@@ -43,7 +43,7 @@ const venueParts = (venue: any) => [
   venue.country,
 ];
 
-export default function PodMapSection({ pod, location, venue }: Props) {
+export default function PodMapSection({ pod, location, venue }: Readonly<Props>) {
   const isVirtual = pod.pod_mode === 'VIRTUAL';
   const locationName = venue?.venue_name ?? location?.location_name ?? null;
   const zone = (location?.location_zones ?? []).find(

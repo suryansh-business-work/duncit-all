@@ -51,7 +51,7 @@ export default function ImageField({
   helperText,
   error,
   disabled,
-}: Props) {
+}: Readonly<Props>) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [uploadImage] = useMutation(UPLOAD_IMAGE);
   const [busy, setBusy] = useState(false);

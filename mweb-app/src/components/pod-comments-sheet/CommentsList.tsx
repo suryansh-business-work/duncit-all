@@ -17,7 +17,7 @@ interface Props {
   onDelete: (commentId: string) => void;
 }
 
-export default function CommentsList({ comments, viewerId, onDelete }: Props) {
+export default function CommentsList({ comments, viewerId, onDelete }: Readonly<Props>) {
   return (
     <List>
       {comments.map((c: any) => (

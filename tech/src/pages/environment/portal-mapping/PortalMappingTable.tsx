@@ -30,7 +30,7 @@ interface Props {
 }
 
 /** Tabular view of every portal and how many env entries it has assigned. */
-export default function PortalMappingTable({ rows, onInfo, onAssign }: Props) {
+export default function PortalMappingTable({ rows, onInfo, onAssign }: Readonly<Props>) {
   if (!rows.length) {
     return (
       <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>

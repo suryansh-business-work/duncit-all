@@ -76,11 +76,13 @@ export default function SurveysListPage() {
 
       {error && <Alert severity="error">{error.message}</Alert>}
 
-      {loading && !data ? (
+      {loading && !data && (
         <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
-      ) : rows.length === 0 ? (
+      )}
+      {(!loading || data) && rows.length === 0 && (
         <Alert severity="info">No surveys yet. Create one with “New survey”.</Alert>
-      ) : (
+      )}
+      {(!loading || data) && rows.length > 0 && (
         <Paper variant="outlined">
           <Table size="small">
             <TableHead>

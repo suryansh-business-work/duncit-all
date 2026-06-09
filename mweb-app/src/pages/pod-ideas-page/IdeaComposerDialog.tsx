@@ -32,7 +32,7 @@ export default function IdeaComposerDialog({
   creating,
   onClose,
   onSubmit,
-}: IdeaComposerDialogProps) {
+}: Readonly<IdeaComposerDialogProps>) {
   return (
     <Dialog
       open={open}

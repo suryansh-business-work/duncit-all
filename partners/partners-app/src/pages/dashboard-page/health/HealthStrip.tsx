@@ -17,7 +17,7 @@ interface Props {
 // Compact dashboard strip. Shows the partner's host meter (if they have a
 // host profile) and one meter per approved venue. Tap any meter to open the
 // detail dialog with admin remarks.
-export default function HealthStrip({ venues }: Props) {
+export default function HealthStrip({ venues }: Readonly<Props>) {
   const client = useApolloClient();
   const { data: hostData } = useQuery<{ myAccountHealth: HealthScore | null }>(PARTNER_HEALTH, {
     fetchPolicy: 'cache-and-network',
@@ -91,7 +91,7 @@ interface MeterCardProps {
   onClick: () => void;
 }
 
-function MeterCard({ title, subtitle, score, onClick }: MeterCardProps) {
+function MeterCard({ title, subtitle, score, onClick }: Readonly<MeterCardProps>) {
   // When `score` is null, render a neutral placeholder. The detail dialog
   // fetches the real numbers on demand.
   return (

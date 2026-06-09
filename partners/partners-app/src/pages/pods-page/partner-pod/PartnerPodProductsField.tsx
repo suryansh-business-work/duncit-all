@@ -10,7 +10,7 @@ interface Props {
 
 const currency = new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR' });
 
-export default function PartnerPodProductsField({ products }: Props) {
+export default function PartnerPodProductsField({ products }: Readonly<Props>) {
   const { values, setFieldValue, errors, touched } = useFormikContext<PartnerPodFormValues>();
   const productErrors = errors.product_requests as any[] | undefined;
   const productTouched = touched.product_requests as any[] | undefined;

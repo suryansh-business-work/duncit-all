@@ -201,11 +201,12 @@ export default function CheckoutPage() {
           <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>Checkout</Typography>
           <Typography variant="h5" fontWeight={900} sx={{ lineHeight: 1.1 }}>Confirm your spot</Typography>
         </Box>
-        {financeData?.publicFinanceSettings?.razorpay_enabled ? (
+        {financeData?.publicFinanceSettings?.razorpay_enabled && (
           <Chip size="small" label="Razorpay" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.primary.main, 0.12), color: 'text.primary', fontWeight: 800 }} />
-        ) : financeData?.publicFinanceSettings?.dummy_mode ? (
+        )}
+        {!financeData?.publicFinanceSettings?.razorpay_enabled && financeData?.publicFinanceSettings?.dummy_mode && (
           <Chip size="small" label="Dummy" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.text.primary, 0.08), color: 'text.primary', fontWeight: 800 }} />
-        ) : null}
+        )}
       </Stack>
       {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
@@ -242,7 +243,7 @@ export default function CheckoutPage() {
   );
 }
 
-function EmptyCheckout({ onHome }: { onHome: () => void }) {
+function EmptyCheckout({ onHome }: Readonly<{ onHome: () => void }>) {
   return (
     <Box sx={{ p: 4, textAlign: 'center' }}>
       <Alert severity="info" sx={{ mb: 2 }}>Nothing to checkout.</Alert>

@@ -44,7 +44,7 @@ export default function ProductAccordion({
   analytics,
   activityLoading,
   onError,
-}: ProductAccordionProps) {
+}: Readonly<ProductAccordionProps>) {
   const [expanded, setExpanded] = useState<string>('basic');
   return (
     <>

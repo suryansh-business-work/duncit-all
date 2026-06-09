@@ -9,11 +9,11 @@ export function ChipList({
   items,
   emptyText,
   tint,
-}: {
+}: Readonly<{
   items: string[];
   emptyText: string;
   tint: string;
-}) {
+}>) {
   if (items.length === 0)
     return (
       <Text fontSize={13} color="$muted">
@@ -45,7 +45,7 @@ export function ChipList({
 }
 
 /** About — description + extra info (or a placeholder). */
-export function AboutSection({ pod }: { pod: PodDetail }) {
+export function AboutSection({ pod }: Readonly<{ pod: PodDetail }>) {
   const text = [pod.pod_description, pod.pod_info].filter(Boolean).join('\n\n');
   return (
     <Text fontSize={13.5} color="$color" lineHeight={20}>
@@ -55,7 +55,7 @@ export function AboutSection({ pod }: { pod: PodDetail }) {
 }
 
 /** Hosts — one row per host name. */
-export function HostsSection({ hosts }: { hosts: string[] }) {
+export function HostsSection({ hosts }: Readonly<{ hosts: string[] }>) {
   const { primary } = useThemeColors();
   if (hosts.length === 0)
     return (
@@ -78,7 +78,7 @@ export function HostsSection({ hosts }: { hosts: string[] }) {
 }
 
 /** Attendees — "going / spots" + a progress bar. */
-export function AttendeesSection({ going, spots }: { going: number; spots: number }) {
+export function AttendeesSection({ going, spots }: Readonly<{ going: number; spots: number }>) {
   const pct = spots > 0 ? Math.min(100, Math.round((going / spots) * 100)) : 0;
   return (
     <YStack gap={8}>
@@ -98,9 +98,9 @@ export function AttendeesSection({ going, spots }: { going: number; spots: numbe
 /** Place charges — label · ₹amount (+ note). */
 export function ChargesSection({
   charges,
-}: {
+}: Readonly<{
   charges: { label: string; amount: number; note?: string | null }[];
-}) {
+}>) {
   return (
     <YStack gap={8}>
       {charges.map((c) => (

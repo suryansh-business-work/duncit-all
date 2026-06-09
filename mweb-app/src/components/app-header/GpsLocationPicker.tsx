@@ -31,7 +31,7 @@ function matchZone(location: any, pincode: string) {
 export default function GpsLocationPicker({
   locations,
   onAutoSelect,
-}: GpsLocationPickerProps) {
+}: Readonly<GpsLocationPickerProps>) {
   const { busy, error, geocoded, request, reset } = useGeoLocation();
   const appliedRef = useRef<string | null>(null);
 

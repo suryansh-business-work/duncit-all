@@ -31,7 +31,7 @@ const profileSchema = yup.object({
     .required(),
 });
 
-export default function ProfileAboutSection({ me, onSaved }: { me: any; onSaved: () => void }) {
+export default function ProfileAboutSection({ me, onSaved }: Readonly<{ me: any; onSaved: () => void }>) {
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
   const [updateProfile, { loading, error }] = useMutation(UPDATE_MY_PROFILE);

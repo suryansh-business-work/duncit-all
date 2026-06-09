@@ -45,7 +45,7 @@ interface ChatsPageProps {
   superCategorySlug?: string;
 }
 
-export default function ChatsPage({ superCategorySlug }: ChatsPageProps) {
+export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps>) {
   const { data, loading, error } = useQuery(MY_CHAT_ROOMS, { fetchPolicy: 'cache-and-network' });
   const navigate = useNavigate();
   const [filter, setFilter] = useState<ChatFilter>('ALL');

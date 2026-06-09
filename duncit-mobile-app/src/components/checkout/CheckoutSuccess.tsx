@@ -28,7 +28,7 @@ export function CheckoutSuccess({
   onDownloadTicket,
   onHome,
   onProfile,
-}: CheckoutSuccessProps) {
+}: Readonly<CheckoutSuccessProps>) {
   const { onPrimary, primary } = useThemeColors();
   const [busy, setBusy] = useState(false);
   const [ticketBusy, setTicketBusy] = useState(false);
@@ -184,7 +184,7 @@ export function CheckoutSuccess({
   );
 }
 
-function Row({ label, value }: { label: string; value: string }) {
+function Row({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <XStack justifyContent="space-between">
       <Text fontSize={13} color="$muted">

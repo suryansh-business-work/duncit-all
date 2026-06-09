@@ -13,7 +13,7 @@ interface ClubSectionProps extends ClubWithPods {
 
 /** A club header (avatar + name + description) above a horizontal row of its
  * pods — RN port of mWeb's ClubSection. */
-export function ClubSection({ club, pods, onOpenPod, onOpenClub }: ClubSectionProps) {
+export function ClubSection({ club, pods, onOpenPod, onOpenClub }: Readonly<ClubSectionProps>) {
   const { onPrimary } = useThemeColors();
   const image = club.club_feature_images_and_videos.find((m) => !!m.url)?.url ?? null;
 

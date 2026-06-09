@@ -7,7 +7,7 @@ interface UserSummaryProps {
   onClick: () => void;
 }
 
-export default function UserSummary({ me, roles, onClick }: UserSummaryProps) {
+export default function UserSummary({ me, roles, onClick }: Readonly<UserSummaryProps>) {
   const { labelFor } = useRoleLabels();
   return (
     <Box sx={{ px: 2, pb: 2 }}>

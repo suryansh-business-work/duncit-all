@@ -7,7 +7,7 @@ interface Props {
   moments: any[];
 }
 
-export default function ClubMomentsSection({ moments }: Props) {
+export default function ClubMomentsSection({ moments }: Readonly<Props>) {
   const [active, setActive] = useState<number | null>(null);
   if (moments.length === 0) return null;
 

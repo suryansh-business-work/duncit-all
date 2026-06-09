@@ -101,6 +101,9 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
 
   const editorVars = useMemo(() => keys.map((k) => ({ key: k })), [keys]);
 
+  const pickHint = templates.length ? 'Pick a saved template.' : 'No active templates — create one under Email Templates.';
+  const helperText = loading ? 'Loading templates…' : pickHint;
+
   return (
     <Stack spacing={1.5}>
       <TextField
@@ -109,7 +112,7 @@ export default function TemplateBodyPicker({ entity, variableValues, leadName, l
         label="Template"
         value={selectedId}
         onChange={(e) => onPick(e.target.value)}
-        helperText={loading ? 'Loading templates…' : templates.length ? 'Pick a saved template.' : 'No active templates — create one under Email Templates.'}
+        helperText={helperText}
         fullWidth
       >
         {templates.map((t) => <MenuItem key={t.template_id} value={t.template_id}>{t.name}</MenuItem>)}

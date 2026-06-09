@@ -206,7 +206,7 @@ export const callService = {
    */
   async reconcile(logId: string) {
     const log = await communicationLogService.get(logId);
-    if (!log || log.type !== 'CALL') return { ok: false, message: 'Not a call', status: null };
+    if (log?.type !== 'CALL') return { ok: false, message: 'Not a call', status: null };
     if (isTerminalStatus(log.status)) return { ok: true, message: 'Already ended', status: log.status, terminal: true };
     const sid = log.external_id;
     if (!sid) return { ok: false, message: 'No call id yet', status: log.status };
@@ -249,7 +249,7 @@ export const callService = {
     const actionUrl = `${input.base_url}/twilio/voice/ai?logId=${input.log_id}`;
     if (!prompt) return buildSayHangupTwiml('Sorry, this call could not be set up. Goodbye.');
 
-    if (input.speech && input.speech.trim()) history.push({ role: 'user', content: input.speech.trim() });
+    if (input.speech?.trim()) history.push({ role: 'user', content: input.speech.trim() });
     // Brain = OpenAI agent; voice = Servam TTS; carrier = Twilio.
     const chat = await openaiService.chat({ systemContext: prompt.context, history });
     const reply = chat.ok && chat.reply ? chat.reply : 'I am sorry, could you please repeat that?';

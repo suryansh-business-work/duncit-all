@@ -26,7 +26,7 @@ interface Props {
   userId: string;
 }
 
-export default function PublicProfileBadges({ userId }: Props) {
+export default function PublicProfileBadges({ userId }: Readonly<Props>) {
   const { data, loading } = useQuery(USER_BADGES, {
     variables: { user_id: userId },
     fetchPolicy: 'cache-and-network',

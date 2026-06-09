@@ -17,7 +17,7 @@ function iconFor(event: TimelineEvent): { name: IconName; color: string } {
 }
 
 /** Vertical membership timeline — RN twin of mWeb's PodHistoryTimeline. */
-export function PodHistoryTimeline({ item }: { item: PodMembership }) {
+export function PodHistoryTimeline({ item }: Readonly<{ item: PodMembership }>) {
   const { primary } = useThemeColors();
   const events = buildTimeline(item);
 

@@ -30,7 +30,7 @@ export function HostsVenuesScreen() {
               key={t}
               testID={`hv-tab-${t.toLowerCase()}`}
               role="button"
-              aria-selected={selected}
+              aria-pressed={selected}
               onPress={() => setTab(t)}
               flex={1}
               height={38}

@@ -5,7 +5,7 @@ import type { MenuItem } from '@/hooks/useMenuItems';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 /** A single tappable row in the account drawer — RN port of mWeb's MenuItemRow. */
-export function SidebarMenuItem({ item, onPress }: { item: MenuItem; onPress: () => void }) {
+export function SidebarMenuItem({ item, onPress }: Readonly<{ item: MenuItem; onPress: () => void }>) {
   const { primary } = useThemeColors();
 
   return (

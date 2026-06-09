@@ -10,7 +10,7 @@ export interface PodPickerProps {
 
 /** Horizontal pod selector for the pod-scoped support tools — RN twin of mWeb's
  * PodPicker. */
-export function PodPicker({ options, selectedId, onChange }: PodPickerProps) {
+export function PodPicker({ options, selectedId, onChange }: Readonly<PodPickerProps>) {
   if (options.length === 0) {
     return (
       <YStack
@@ -43,7 +43,7 @@ export function PodPicker({ options, selectedId, onChange }: PodPickerProps) {
             testID={`pod-option-${option.podDocId}`}
             role="button"
             aria-label={option.title}
-            aria-selected={selected}
+            aria-pressed={selected}
             onPress={() => onChange(option.podDocId)}
             paddingHorizontal={14}
             paddingVertical={9}

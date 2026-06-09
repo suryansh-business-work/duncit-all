@@ -3,7 +3,7 @@ import { format } from 'date-fns';
 
 interface Props { loading: boolean; pods: any[]; clubName: (id: string) => string; venueName: (id?: string | null) => string; }
 
-export default function PartnerPodsTable({ loading, pods, clubName, venueName }: Props) {
+export default function PartnerPodsTable({ loading, pods, clubName, venueName }: Readonly<Props>) {
   if (loading) return <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress size={24} /></Stack>;
   if (pods.length === 0) return <Alert severity="info">No pods created from your partner account yet.</Alert>;
   return (

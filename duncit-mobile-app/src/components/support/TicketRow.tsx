@@ -10,7 +10,7 @@ const STATUS_TINT: Record<string, string> = {
 };
 
 /** A support ticket summary row — subject, status badge and category/count. */
-export function TicketRow({ ticket }: { ticket: Ticket }) {
+export function TicketRow({ ticket }: Readonly<{ ticket: Ticket }>) {
   return (
     <YStack
       testID={`ticket-${ticket.id}`}

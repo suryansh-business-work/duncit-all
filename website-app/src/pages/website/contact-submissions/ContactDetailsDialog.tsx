@@ -21,7 +21,7 @@ interface Props {
   onUpdateStatus: (id: string, status: ContactStatus) => void;
 }
 
-export default function ContactDetailsDialog({ submission, onClose, onUpdateStatus }: Props) {
+export default function ContactDetailsDialog({ submission, onClose, onUpdateStatus }: Readonly<Props>) {
   const { formatDateTime } = useDateFormat();
   const [status, setStatus] = useState<ContactStatus>('NEW');
 

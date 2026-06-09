@@ -12,7 +12,7 @@ interface Props {
 
 /** Web variant of the location map — a real DOM <iframe> embed (react-native-web
  * renders intrinsic tags through React DOM), so the experience matches mWeb. */
-export function LocationMap({ city, zoneName, pincode, country }: Props) {
+export function LocationMap({ city, zoneName, pincode, country }: Readonly<Props>) {
   const apiKey = useConfigStore((s) => s.googleMapApiKey);
   const query = locationMapQuery(city, zoneName, pincode, country);
   const url = locationMapEmbedUrl(apiKey, query);

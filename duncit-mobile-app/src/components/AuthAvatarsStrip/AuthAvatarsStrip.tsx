@@ -6,7 +6,7 @@ import { auth } from '@duncit/auth-tokens';
  * colours + ring come from the shared auth tokens; the caption is passed in so
  * the marketing copy stays data-driven.
  */
-export function AuthAvatarsStrip({ caption }: { caption: string }) {
+export function AuthAvatarsStrip({ caption }: Readonly<{ caption: string }>) {
   return (
     <XStack
       testID="auth-avatars-strip"

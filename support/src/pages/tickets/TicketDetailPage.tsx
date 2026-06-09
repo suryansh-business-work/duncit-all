@@ -39,7 +39,7 @@ const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'de
 
 const STATUSES: TicketStatus[] = ['OPEN', 'PENDING', 'RESOLVED', 'CLOSED'];
 
-function MessageBubble({ msg }: { msg: TicketMessage }) {
+function MessageBubble({ msg }: Readonly<{ msg: TicketMessage }>) {
   const isAgent = msg.author_role === 'AGENT';
   return (
     <Stack direction="row" spacing={1.25} sx={{ flexDirection: isAgent ? 'row-reverse' : 'row' }}>

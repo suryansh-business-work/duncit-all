@@ -13,7 +13,7 @@ export interface SurveyFooterProps {
  * Sticky bottom action bar. Rendered OUTSIDE the ScrollView and absolutely
  * positioned, with the scroll content padded to clear it.
  */
-export function SurveyFooter({ count, total, saving, canSubmit, onSubmit }: SurveyFooterProps) {
+export function SurveyFooter({ count, total, saving, canSubmit, onSubmit }: Readonly<SurveyFooterProps>) {
   const insets = useSafeAreaInsets();
   return (
     <YStack

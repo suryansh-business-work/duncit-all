@@ -69,7 +69,7 @@ interface Props {
   onEdit: (product: any) => void;
 }
 
-export default function ProductListingsTable({ refreshKey = 0, canManageProducts = false, onEdit }: Props) {
+export default function ProductListingsTable({ refreshKey = 0, canManageProducts = false, onEdit }: Readonly<Props>) {
   const { data, loading, error, refetch } = useQuery(MY_PRODUCT_LISTINGS, { fetchPolicy: 'cache-and-network' });
   const [updateQuantity, quantityState] = useMutation(UPDATE_QUANTITY);
   const [deleteListing, deleteState] = useMutation(DELETE_LISTING);

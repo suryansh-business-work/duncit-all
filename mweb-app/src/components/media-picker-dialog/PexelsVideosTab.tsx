@@ -33,7 +33,7 @@ export default function PexelsVideosTab({
   onPicked,
   onClose,
   onError,
-}: PexelsVideosTabProps) {
+}: Readonly<PexelsVideosTabProps>) {
   const [vquery, setVquery] = useState('');
   const [vorientation, setVorientation] = useState<Orientation>('');
   const [vsearching, setVsearching] = useState(false);

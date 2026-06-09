@@ -27,7 +27,7 @@ interface Props {
   onSelect: (slot: { id: string; start_at: string; end_at: string } | null) => void;
 }
 
-export default function VenueSlotPicker({ venueId, selectedSlotId, onSelect }: Props) {
+export default function VenueSlotPicker({ venueId, selectedSlotId, onSelect }: Readonly<Props>) {
   const fromIso = useMemo(() => new Date().toISOString(), []);
   const { data, loading, error } = useQuery<{ venueAvailableSlots: Slot[] }>(
     VENUE_AVAILABLE_SLOTS,

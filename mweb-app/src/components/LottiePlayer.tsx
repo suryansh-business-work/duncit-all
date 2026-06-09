@@ -24,7 +24,7 @@ export default function LottiePlayer({
   width = '100%',
   style,
   onComplete,
-}: Props) {
+}: Readonly<Props>) {
   const [data, setData] = useState<any>(cache.get(src) ?? (fallbackSrc ? cache.get(fallbackSrc) : null) ?? null);
 
   useEffect(() => {

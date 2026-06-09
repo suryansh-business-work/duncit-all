@@ -3,7 +3,7 @@ import { XStack, YStack } from 'tamagui';
 import { Skeleton } from '@/components/Skeleton/Skeleton';
 
 /** Loading placeholder for the pod/club details screens (hero + lines + blocks). */
-export function DetailSkeleton({ testID = 'detail-skeleton' }: { testID?: string }) {
+export function DetailSkeleton({ testID = 'detail-skeleton' }: Readonly<{ testID?: string }>) {
   return (
     <YStack flex={1} testID={testID}>
       <Skeleton width="100%" height={300} radius={0} />

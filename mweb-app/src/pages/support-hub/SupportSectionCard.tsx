@@ -7,7 +7,7 @@ interface Props {
   section: SupportSection;
 }
 
-export default function SupportSectionCard({ section }: Props) {
+export default function SupportSectionCard({ section }: Readonly<Props>) {
   const { Icon, color, label, description, path } = section;
 
   return (

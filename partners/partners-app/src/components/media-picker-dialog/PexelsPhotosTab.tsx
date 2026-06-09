@@ -32,7 +32,7 @@ export default function PexelsPhotosTab({
   onPicked,
   onClose,
   onError,
-}: PexelsPhotosTabProps) {
+}: Readonly<PexelsPhotosTabProps>) {
   const [pquery, setPquery] = useState('');
   const [porientation, setPorientation] = useState<Orientation>('');
   const [psearching, setPsearching] = useState(false);

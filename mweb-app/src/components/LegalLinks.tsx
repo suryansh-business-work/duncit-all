@@ -3,7 +3,7 @@ import { Stack, Link, Typography } from '@mui/material';
 const TERMS_URL = 'https://duncit.com/terms';
 const PRIVACY_URL = 'https://duncit.com/privacy/policy';
 
-export default function LegalLinks({ prefix }: { prefix?: string }) {
+export default function LegalLinks({ prefix }: Readonly<{ prefix?: string }>) {
   return (
     <Typography
       variant="caption"

@@ -9,7 +9,7 @@ export function usePublicPolicies() {
   const fetch = usePublicPoliciesStore((s) => s.fetch);
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   return { data, isLoading };

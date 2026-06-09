@@ -33,7 +33,7 @@ const BAND_COLOR: Record<HealthScore['band'], 'error' | 'warning' | 'success'> =
   GREEN: 'success',
 };
 
-export default function HealthDetailDialog({ open, score, onClose }: Props) {
+export default function HealthDetailDialog({ open, score, onClose }: Readonly<Props>) {
   return (
     <Dialog open={open && !!score} onClose={onClose} fullWidth maxWidth="sm" scroll="paper">
       <DialogTitle sx={{ pr: 6, fontWeight: 900 }}>

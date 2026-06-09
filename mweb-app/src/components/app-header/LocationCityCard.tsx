@@ -16,7 +16,7 @@ export default function LocationCityCard({
   popular,
   index,
   onSelect,
-}: LocationCityCardProps) {
+}: Readonly<LocationCityCardProps>) {
   const areaCount = location.location_zones?.length ?? 0;
   const fallback = index % 2 === 0
     ? 'linear-gradient(135deg, #ff7a59 0%, #e9446a 48%, #23172f 100%)'

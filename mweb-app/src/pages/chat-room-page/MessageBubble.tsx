@@ -6,7 +6,7 @@ interface MessageBubbleProps {
   onOpenReact: (el: HTMLElement, id: string) => void;
 }
 
-export default function MessageBubble({ message, mine, onOpenReact }: MessageBubbleProps) {
+export default function MessageBubble({ message, mine, onOpenReact }: Readonly<MessageBubbleProps>) {
   const m = message;
   return (
     <Stack

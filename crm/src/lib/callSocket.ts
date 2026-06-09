@@ -28,8 +28,8 @@ export interface CallStatusPayload {
   mode?: 'PORTAL' | 'AI';
 }
 
-const TERMINAL: CallStatus[] = ['COMPLETED', 'NO_ANSWER', 'BUSY', 'FAILED'];
-export const isTerminalCallStatus = (status: CallStatus) => TERMINAL.includes(status);
+const TERMINAL = new Set<CallStatus>(['COMPLETED', 'NO_ANSWER', 'BUSY', 'FAILED']);
+export const isTerminalCallStatus = (status: CallStatus) => TERMINAL.has(status);
 
 /** socket.io server lives at the API origin (graphqlUrl minus the /graphql path). */
 const serverOrigin = urlConfigs.graphqlUrl.replace(/\/graphql\/?$/, '');

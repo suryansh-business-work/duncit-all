@@ -50,7 +50,7 @@ export default function PaymentDetailsCard({
   applyingCoupon,
   onApplyCoupon,
   onRemoveCoupon,
-}: Props) {
+}: Readonly<Props>) {
   const discounted = effectiveTotal < total;
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';

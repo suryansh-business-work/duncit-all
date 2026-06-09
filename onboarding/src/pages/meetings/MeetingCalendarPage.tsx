@@ -56,9 +56,11 @@ export default function MeetingCalendarPage() {
               {days.map((day) => {
                 const dayMeetings = meetings.filter((m) => isSameDay(eventDate(m), day));
                 const muted = !isSameMonth(day, cursor);
+                const todayColor = isToday(day) ? 'primary.main' : 'text.primary';
+                const labelColor = muted ? 'text.disabled' : todayColor;
                 return (
                   <Box key={day.toISOString()} sx={{ minHeight: 92, borderRight: 1, borderBottom: 1, borderColor: 'divider', p: 0.5, bgcolor: muted ? 'action.hover' : 'background.paper' }}>
-                    <Typography variant="caption" sx={{ fontWeight: isToday(day) ? 800 : 500, color: muted ? 'text.disabled' : isToday(day) ? 'primary.main' : 'text.primary' }}>{format(day, 'd')}</Typography>
+                    <Typography variant="caption" sx={{ fontWeight: isToday(day) ? 800 : 500, color: labelColor }}>{format(day, 'd')}</Typography>
                     <Stack spacing={0.25} sx={{ mt: 0.25 }}>
                       {dayMeetings.slice(0, 3).map((m) => (
                         <Tooltip key={m.id} title={`${m.kind} · ${m.user_name || m.contact_name || 'Applicant'} · ${m.status}`}>

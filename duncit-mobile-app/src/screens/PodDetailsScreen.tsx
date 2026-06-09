@@ -48,7 +48,7 @@ export function PodDetailsScreen() {
         didFocus.current = true;
         return;
       }
-      void refetch();
+      refetch();
     }, [refetch]),
   );
 

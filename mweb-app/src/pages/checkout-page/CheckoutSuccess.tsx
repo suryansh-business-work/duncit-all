@@ -41,7 +41,7 @@ interface Props {
   onProfile: () => void;
 }
 
-export default function CheckoutSuccess({ payment, pod, onHome, onProfile }: Props) {
+export default function CheckoutSuccess({ payment, pod, onHome, onProfile }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const [confetti, setConfetti] = useState(true);
@@ -154,7 +154,7 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile }: Pro
   );
 }
 
-function Row({ label, value, bold, mono }: { label: string; value: string; bold?: boolean; mono?: boolean }) {
+function Row({ label, value, bold, mono }: Readonly<{ label: string; value: string; bold?: boolean; mono?: boolean }>) {
   return (
     <Stack direction="row" justifyContent="space-between" alignItems="center">
       <Typography variant={bold ? 'subtitle1' : 'body2'} fontWeight={bold ? 900 : 500}>{label}</Typography>

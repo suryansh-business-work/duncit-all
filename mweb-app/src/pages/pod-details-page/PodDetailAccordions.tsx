@@ -35,7 +35,7 @@ export default function PodDetailAccordions({
   attendees,
   isFree,
   priceCompute,
-}: Props) {
+}: Readonly<Props>) {
   const offers: string[] = pod.what_this_pod_offers ?? [];
   const perks: string[] = pod.available_perks ?? [];
   const charges = pod.place_charges ?? [];

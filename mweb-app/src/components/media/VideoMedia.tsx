@@ -21,7 +21,7 @@ export default function VideoMedia({
   height = { xs: 220, md: 360 },
   poster,
   showToggles = true,
-}: Props) {
+}: Readonly<Props>) {
   const ref = useRef<HTMLVideoElement | null>(null);
   const [muted, setMuted] = useState(true);
   const [playing, setPlaying] = useState(true);

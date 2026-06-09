@@ -21,7 +21,7 @@ export default function PodSocialBar({
   initialLikeCount,
   initialCommentCount,
   viewerId,
-}: Props) {
+}: Readonly<Props>) {
   const [liked, setLiked] = useState(!!initialLiked);
   const [likeCount, setLikeCount] = useState(initialLikeCount || 0);
   const [commentCount, setCommentCount] = useState(initialCommentCount || 0);

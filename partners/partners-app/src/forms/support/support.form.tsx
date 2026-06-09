@@ -20,7 +20,7 @@ interface Props {
   onSubmit: (values: SupportFormValues) => Promise<void> | void;
 }
 
-export default function SupportForm({ initialValues, loading, errorMessage, onSubmit }: Props) {
+export default function SupportForm({ initialValues, loading, errorMessage, onSubmit }: Readonly<Props>) {
   return (
     <Formik
       initialValues={{ ...supportInitialValues, ...(initialValues ?? {}) } as SupportFormValues}

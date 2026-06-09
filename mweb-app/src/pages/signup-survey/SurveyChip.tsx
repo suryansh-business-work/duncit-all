@@ -26,7 +26,7 @@ export function SurveyChip({
   onToggle,
   size = 'medium',
   color,
-}: SurveyChipProps) {
+}: Readonly<SurveyChipProps>) {
   const hue = color ?? colorForId(id);
   const emoji = emojiFromIcon(icon);
   const dims = SIZE_MAP[size];

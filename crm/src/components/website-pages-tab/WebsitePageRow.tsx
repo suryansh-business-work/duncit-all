@@ -37,6 +37,8 @@ export default function WebsitePageRow({ page, onView, onDelete, onError }: Read
     }
   };
 
+  const fetchIcon = fetched ? <RefreshIcon fontSize="small" /> : <DownloadIcon fontSize="small" />;
+
   return (
     <TableRow hover>
       <TableCell sx={{ maxWidth: 320 }}>
@@ -70,7 +72,7 @@ export default function WebsitePageRow({ page, onView, onDelete, onError }: Read
           <Tooltip title={fetched ? 'Re-fetch content' : 'Fetch content'}>
             <span>
               <IconButton size="small" color="primary" onClick={run} disabled={loading} aria-label="Fetch content">
-                {loading ? <CircularProgress size={16} /> : fetched ? <RefreshIcon fontSize="small" /> : <DownloadIcon fontSize="small" />}
+                {loading ? <CircularProgress size={16} /> : fetchIcon}
               </IconButton>
             </span>
           </Tooltip>

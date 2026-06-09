@@ -32,7 +32,7 @@ export default function DateField({
   disabled,
   size,
   onBlur,
-}: Props) {
+}: Readonly<Props>) {
   const dateValue = value ? new Date(value) : null;
   const valid = dateValue && !isNaN(dateValue.getTime()) ? dateValue : null;
 

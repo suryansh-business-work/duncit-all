@@ -9,7 +9,7 @@ interface Props {
   onSubmit: (values: { text: string }, helpers: any) => Promise<void> | void;
 }
 
-export default function CommentInput({ viewerId, posting, onSubmit }: Props) {
+export default function CommentInput({ viewerId, posting, onSubmit }: Readonly<Props>) {
   return (
     <Formik initialValues={{ text: '' }} validationSchema={commentSchema} onSubmit={onSubmit}>
       {({ values, handleChange, errors, touched }) => (

@@ -15,7 +15,7 @@ export default function PhoneNumberField({
   hint,
   inputProps,
   ...rest
-}: PhoneNumberFieldProps) {
+}: Readonly<PhoneNumberFieldProps>) {
   const [field, meta, helpers] = useField<string>(name);
   const showError = meta.touched && !!meta.error;
 

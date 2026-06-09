@@ -12,7 +12,7 @@ interface Props {
 
 /** Web variant — a real DOM <iframe> embed (react-native-web renders intrinsic
  * tags through React DOM) so the experience matches mWeb exactly. */
-export function MapEmbed({ query, height = 220 }: Props) {
+export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
   const { primary } = useThemeColors();
   const apiKey = useConfigStore((s) => s.googleMapApiKey);
   const url = locationMapEmbedUrl(apiKey, query);

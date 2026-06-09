@@ -39,7 +39,7 @@ export function buildRazorpayHtml(order: RazorpayOrder): string {
 }
 
 /** Full-screen modal hosting the Razorpay checkout WebView. */
-export function RazorpayWebView({ order, open, onSuccess, onDismiss }: Props) {
+export function RazorpayWebView({ order, open, onSuccess, onDismiss }: Readonly<Props>) {
   const onMessage = (event: WebViewMessageEvent) => {
     let data: { type?: string } & Partial<RazorpaySignature>;
     try {

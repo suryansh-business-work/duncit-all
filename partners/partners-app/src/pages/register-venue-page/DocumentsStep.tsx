@@ -13,7 +13,7 @@ interface Props {
   showAllErrors?: boolean;
 }
 
-export default function DocumentsStep({ value, onChange, onDocPick, showAllErrors }: Props) {
+export default function DocumentsStep({ value, onChange, onDocPick, showAllErrors }: Readonly<Props>) {
   const errors = useMemo(() => getStepErrors(venueStep2Schema, value) as Record<string, string>, [value]);
   const docError = showAllErrors ? errors.documents : '';
   const setDoc = (index: number, patch: Partial<DocRow>) => {

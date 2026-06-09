@@ -5,7 +5,7 @@ interface DrawerFooterProps {
   onLogout: () => void;
 }
 
-export default function DrawerFooter({ onLogout }: DrawerFooterProps) {
+export default function DrawerFooter({ onLogout }: Readonly<DrawerFooterProps>) {
   return (
     <Box sx={{ p: 1.5 }}>
       <Button

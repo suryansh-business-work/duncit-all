@@ -11,7 +11,7 @@ interface Props {
 
 /** The bottom input row for adding a comment. Disabled (sign-in hint) when there
  * is no viewer. */
-export function CommentComposer({ value, onChange, onSubmit, disabled, posting }: Props) {
+export function CommentComposer({ value, onChange, onSubmit, disabled, posting }: Readonly<Props>) {
   const canSend = !disabled && !posting && !!value.trim();
   return (
     <XStack

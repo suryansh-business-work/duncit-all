@@ -25,7 +25,7 @@ interface Props {
 }
 
 /** Category → survey → meeting gate before host/venue registration. */
-export function OnboardingSurvey({ kind, title, subtitle, icon }: Props) {
+export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props>) {
   const navigation = useNavigation();
   const { color: ink } = useThemeColors();
   const { data: brandingData } = useBranding();

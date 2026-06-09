@@ -2,7 +2,7 @@ import { useQuery } from '@apollo/client';
 import { Alert, Box, CircularProgress, Skeleton, Stack, Typography } from '@mui/material';
 import { POLICY_BY_SLUG } from './queries';
 
-export default function PartnerPolicyArticle({ slug }: { slug: string }) {
+export default function PartnerPolicyArticle({ slug }: Readonly<{ slug: string }>) {
   const { data, loading, error } = useQuery(POLICY_BY_SLUG, { variables: { slug }, fetchPolicy: 'cache-and-network' });
   if (loading && !data) return <PolicySkeleton />;
   if (error) return <Alert severity="error">Could not load policy: {error.message}</Alert>;

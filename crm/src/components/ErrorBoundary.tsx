@@ -39,7 +39,7 @@ export default class ErrorBoundary extends Component<Props, State> {
                 <Button color="inherit" size="small" startIcon={<RefreshIcon />} onClick={this.reset}>
                   Try again
                 </Button>
-                <Button color="inherit" size="small" onClick={() => window.location.reload()}>
+                <Button color="inherit" size="small" onClick={() => globalThis.location.reload()}>
                   Reload
                 </Button>
               </Stack>

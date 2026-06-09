@@ -8,7 +8,7 @@ import { NotifyHost } from './components/notify';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
 
-function RequireAuth({ children }: { children: JSX.Element }) {
+function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
   const location = useLocation();
   if (!getToken()) {
     const redirect = encodeURIComponent(redirectPathFromLocation(location));

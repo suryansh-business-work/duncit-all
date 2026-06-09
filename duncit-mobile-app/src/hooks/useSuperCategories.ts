@@ -12,7 +12,7 @@ export function useSuperCategories() {
   const fetch = useSuperCategoryStore((s) => s.fetch);
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   const superCats = useMemo(() => data?.categories ?? [], [data?.categories]);

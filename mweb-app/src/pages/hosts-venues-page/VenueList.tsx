@@ -40,7 +40,7 @@ interface Props {
   onToggleFollow: (userId: string) => void;
 }
 
-export default function VenueList({ venues, meId, followingIds, pendingUserId, onToggleFollow }: Props) {
+export default function VenueList({ venues, meId, followingIds, pendingUserId, onToggleFollow }: Readonly<Props>) {
   if (!venues.length) {
     return (
       <Card variant="outlined">

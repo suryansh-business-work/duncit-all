@@ -21,7 +21,7 @@ export function SuperCategoryGroup({
   childrenByParent,
   selected,
   onToggle,
-}: SuperCategoryGroupProps) {
+}: Readonly<SuperCategoryGroupProps>) {
   const hue = colorForId(superCategory.id);
   const categories = childrenByParent.get(superCategory.id) ?? [];
   const emoji = emojiFromIcon(superCategory.icon);

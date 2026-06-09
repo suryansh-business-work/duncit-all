@@ -54,9 +54,9 @@ async function run() {
   }
 
   // 3. Drop the obsolete collections.
-  const existing = (await db.listCollections().toArray()).map((c) => c.name);
+  const existing = new Set((await db.listCollections().toArray()).map((c) => c.name));
   for (const name of DEAD_COLLECTIONS) {
-    if (!existing.includes(name)) {
+    if (!existing.has(name)) {
       log(`collection "${name}" not present — skip`);
       continue;
     }

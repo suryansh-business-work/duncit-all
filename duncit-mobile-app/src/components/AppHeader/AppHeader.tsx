@@ -14,7 +14,7 @@ import { ThemeToggle } from '@/components/ThemeToggle';
  * the account avatar (which opens the sidebar drawer) or — when `minimal`, i.e.
  * the pre-onboarding survey — a plain logout button.
  */
-export function AppHeader({ minimal = false }: { minimal?: boolean }) {
+export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) {
   return (
     <XStack
       testID="app-header"

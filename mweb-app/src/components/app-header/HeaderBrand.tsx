@@ -6,7 +6,7 @@ interface HeaderBrandProps {
   appName?: string | null;
 }
 
-export default function HeaderBrand({ logoUrl, appName }: HeaderBrandProps) {
+export default function HeaderBrand({ logoUrl, appName }: Readonly<HeaderBrandProps>) {
   const navigate = useNavigate();
   return (
     <Stack

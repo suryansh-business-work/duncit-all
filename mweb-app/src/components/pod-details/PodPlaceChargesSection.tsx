@@ -11,7 +11,7 @@ interface Props {
   currency?: string;
 }
 
-export default function PodPlaceChargesSection({ charges, currency = '\u20b9' }: Props) {
+export default function PodPlaceChargesSection({ charges, currency = '\u20b9' }: Readonly<Props>) {
   if (!charges || charges.length === 0) {
     return (
       <Typography variant="body2" color="text.secondary">

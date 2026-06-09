@@ -15,10 +15,10 @@ export interface SidebarUser {
 export function SidebarUserSummary({
   me,
   onPress,
-}: {
+}: Readonly<{
   me?: SidebarUser | null;
   onPress: () => void;
-}) {
+}>) {
   const { labelFor } = useRoleLabels();
   const roles = me?.roles ?? [];
   const initial = (me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase();

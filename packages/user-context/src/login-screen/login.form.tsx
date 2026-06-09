@@ -37,7 +37,7 @@ interface Props {
   onForgotPassword: () => void;
 }
 
-export default function LoginForm({ loading, onSubmit, onForgotPassword }: Props) {
+export default function LoginForm({ loading, onSubmit, onForgotPassword }: Readonly<Props>) {
   const [showPwd, setShowPwd] = useState(false);
   const formik = useFormik<LoginFormValues>({
     initialValues: loginInitialValues,

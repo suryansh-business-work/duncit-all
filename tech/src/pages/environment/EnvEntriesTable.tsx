@@ -21,7 +21,7 @@ import CancelIcon from '@mui/icons-material/Cancel';
 import RemoveIcon from '@mui/icons-material/Remove';
 import type { EnvEntry } from './queries';
 
-function LastTested({ entry }: { entry: EnvEntry }) {
+function LastTested({ entry }: Readonly<{ entry: EnvEntry }>) {
   if (entry.last_test_ok == null || !entry.last_tested_at) {
     return <Tooltip title="Not tested yet"><RemoveIcon fontSize="small" color="disabled" /></Tooltip>;
   }
@@ -41,7 +41,7 @@ interface Props {
   onTest: (e: EnvEntry) => void;
 }
 
-export default function EnvEntriesTable({ entries, onEdit, onDelete, onSetDefault, onTest }: Props) {
+export default function EnvEntriesTable({ entries, onEdit, onDelete, onSetDefault, onTest }: Readonly<Props>) {
   if (!entries.length) {
     return (
       <Typography variant="body2" color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>

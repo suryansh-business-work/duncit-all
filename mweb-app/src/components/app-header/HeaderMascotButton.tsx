@@ -21,7 +21,7 @@ interface Props {
 }
 
 /** Mascot is an uploaded image (branding.mascot_image_url) — no longer a Lottie. */
-export default function HeaderMascotButton({ branding }: Props) {
+export default function HeaderMascotButton({ branding }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   const imageUrl = branding?.mascot_image_url;
   const name = branding?.mascot_name || 'Duncit';

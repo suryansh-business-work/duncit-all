@@ -22,7 +22,7 @@ const startIcon = (icon: React.ReactNode) => ({
   startAdornment: <InputAdornment position="start">{icon}</InputAdornment>,
 });
 
-export default function RegisterForm({ loading, errorMessage, initialValues, onSubmit }: Props) {
+export default function RegisterForm({ loading, errorMessage, initialValues, onSubmit }: Readonly<Props>) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<RegisterFormValues>({
     defaultValues: initialValues ?? registerDefaults,

@@ -69,7 +69,7 @@ interface Props {
   onSaved?: () => void;
 }
 
-export default function ListProductsForm({ product = null, onSaved }: Props) {
+export default function ListProductsForm({ product = null, onSaved }: Readonly<Props>) {
   const [submitProduct, submitState] = useMutation(SUBMIT_PRODUCT_LISTING);
   const [updateProduct, updateState] = useMutation(UPDATE_PRODUCT_LISTING);
   const [activeStep, setActiveStep] = useState(0);

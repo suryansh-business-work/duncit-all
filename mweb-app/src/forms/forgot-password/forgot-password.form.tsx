@@ -18,7 +18,7 @@ interface Props {
   onSubmit: (values: ForgotPasswordValues) => Promise<void> | void;
 }
 
-export default function ForgotPasswordForm({ loading, initialValues, errorMessage, onSubmit }: Props) {
+export default function ForgotPasswordForm({ loading, initialValues, errorMessage, onSubmit }: Readonly<Props>) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<ForgotPasswordValues>({
     defaultValues: initialValues ?? forgotPasswordDefaults,

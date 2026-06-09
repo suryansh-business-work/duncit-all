@@ -14,7 +14,7 @@ export default function TagsInput({
   label = 'Tags',
   helperText = 'Press Enter to add a tag',
   max = 20,
-}: TagsInputProps) {
+}: Readonly<TagsInputProps>) {
   return (
     <Autocomplete
       multiple

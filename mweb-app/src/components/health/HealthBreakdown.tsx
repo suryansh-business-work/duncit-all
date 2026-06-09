@@ -18,7 +18,7 @@ const BAND_COLOR: Record<HealthScore['band'], 'error' | 'warning' | 'success'> =
   GREEN: 'success',
 };
 
-export default function HealthBreakdown({ score }: Props) {
+export default function HealthBreakdown({ score }: Readonly<Props>) {
   return (
     <Stack spacing={2}>
       <Paper variant="outlined" sx={{ p: 2, borderRadius: 3 }}>

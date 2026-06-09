@@ -25,7 +25,7 @@ const DEFAULT_FILTERS: ExploreFilters = {
   search: '',
 };
 
-export default function ExplorePage({ superCategorySlug, locationId, zoneName }: ExplorePageProps) {
+export default function ExplorePage({ superCategorySlug, locationId, zoneName }: Readonly<ExplorePageProps>) {
   const { data, loading, error } = useQuery(EXPLORE_PODS, {
     fetchPolicy: 'cache-and-network',
   });

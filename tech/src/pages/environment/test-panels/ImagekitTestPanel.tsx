@@ -14,7 +14,7 @@ const toBase64 = (file: File) =>
     reader.readAsDataURL(file);
   });
 
-export default function ImagekitTestPanel({ entry }: { entry: EnvEntry }) {
+export default function ImagekitTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
   const [fileName, setFileName] = useState('');
   const [base64, setBase64] = useState('');
   const [result, setResult] = useState<RichTestResult | null>(null);

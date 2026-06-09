@@ -11,7 +11,7 @@ interface Props {
   loading?: boolean;
 }
 
-export default function StatCard({ label, value, hint, icon, to, loading }: Props) {
+export default function StatCard({ label, value, hint, icon, to, loading }: Readonly<Props>) {
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, flex: '1 1 200px', minWidth: 200 }}>
       <CardActionArea component={RouterLink} to={to} sx={{ height: '100%' }}>

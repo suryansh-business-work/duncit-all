@@ -52,7 +52,7 @@ export default function PodActionPanel({
   onBackout,
   onPaidCheckout,
   onCopyReferral,
-}: Props) {
+}: Readonly<Props>) {
   const ms = membershipState;
   const isMember = ms?.is_member;
   const m = ms?.membership;

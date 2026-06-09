@@ -10,7 +10,7 @@ interface Props {
   onSort: (value: string) => void;
 }
 
-export default function VenueListingsToolbar({ search, status, sort, statusOptions, onSearch, onStatus, onSort }: Props) {
+export default function VenueListingsToolbar({ search, status, sort, statusOptions, onSearch, onStatus, onSort }: Readonly<Props>) {
   return (
     <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.25}>
       <TextField label="Search" value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Venue, city, type" sx={{ flex: 1 }} />

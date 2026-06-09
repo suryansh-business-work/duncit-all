@@ -6,7 +6,7 @@ import { useRoleLabels } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfileMe } from '@/hooks/useProfile';
 
-function Stat({ value, label }: { value: number; label: string }) {
+function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
   return (
     <YStack alignItems="center" flex={1}>
       <Text fontSize={18} fontWeight="900" color="$color">
@@ -20,7 +20,7 @@ function Stat({ value, label }: { value: number; label: string }) {
 }
 
 /** Profile identity card — avatar, name, verified email, role chips, stats, bio. */
-export function ProfileHeader({ me }: { me: ProfileMe }) {
+export function ProfileHeader({ me }: Readonly<{ me: ProfileMe }>) {
   const { onPrimary, primary } = useThemeColors();
   const { labelFor } = useRoleLabels();
   const initial = (me.first_name?.[0] ?? me.full_name?.[0] ?? 'U').toUpperCase();

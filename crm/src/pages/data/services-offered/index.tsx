@@ -113,17 +113,20 @@ export default function ServicesOfferedPage() {
         <CardContent>
           <Stack spacing={2}>
             {services.length > 0 && <ServicesOfferedFilters value={filters} onChange={setFilters} />}
-            {loading && !services.length ? (
+            {loading && services.length === 0 && (
               <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
-            ) : services.length === 0 ? (
+            )}
+            {!loading && services.length === 0 && (
               <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
                 No services yet. Click "Add Service Offered" to create your first one.
               </Typography>
-            ) : visible.length === 0 ? (
+            )}
+            {services.length > 0 && visible.length === 0 && (
               <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
                 No services match your search.
               </Typography>
-            ) : (
+            )}
+            {services.length > 0 && visible.length > 0 && (
               <ServicesOfferedTable services={visible} onEdit={setToEdit} onDelete={setToDelete} />
             )}
           </Stack>

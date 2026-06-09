@@ -15,10 +15,10 @@ interface PolicyLink {
 export function SidebarPolicies({
   policies,
   onSelect,
-}: {
+}: Readonly<{
   policies: PolicyLink[];
   onSelect: (slug: string) => void;
-}) {
+}>) {
   const [open, setOpen] = useState(false);
   const { muted } = useThemeColors();
 

@@ -20,7 +20,7 @@ export default function HomeStatusTile({
   add = false,
   active = true,
   onClick,
-}: HomeStatusTileProps) {
+}: Readonly<HomeStatusTileProps>) {
   const theme = useTheme();
   const ring = active
     ? 'linear-gradient(135deg, #ff4f73 0%, #ff8a3d 42%, #13d6b3 72%, #7c5cff 100%)'

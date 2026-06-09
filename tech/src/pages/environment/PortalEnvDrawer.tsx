@@ -28,7 +28,7 @@ interface Props {
   onSaved: () => void;
 }
 
-export default function PortalEnvDrawer({ portal, onClose, onSaved }: Props) {
+export default function PortalEnvDrawer({ portal, onClose, onSaved }: Readonly<Props>) {
   const { data, loading } = useQuery<{ envEntries: EnvEntry[] }>(ENV_ENTRIES, {
     variables: { filter: {} },
     skip: !portal,

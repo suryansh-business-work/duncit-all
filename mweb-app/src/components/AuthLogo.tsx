@@ -20,7 +20,7 @@ interface Props {
  * Renders the active branding logo + app name, sourced from the dynamic
  * `branding` server settings. Used on the Login & Register pages.
  */
-export default function AuthLogo({ tagline }: Props) {
+export default function AuthLogo({ tagline }: Readonly<Props>) {
   const { data, loading } = useQuery(AUTH_BRANDING, {
     fetchPolicy: 'cache-first',
   });

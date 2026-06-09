@@ -19,11 +19,16 @@ interface Props {
  * already booked shows "Pod Booked" (+ Backout) instead of offering to pay again
  * — matching mWeb's PodActionPanel. Full pods show a disabled "Pod is full".
  */
-export function PodBookingBar({ pod, isFree, membershipState, onCheckout, onBackout }: Props) {
+export function PodBookingBar({ pod, isFree, membershipState, onCheckout, onBackout }: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
   const isMember = !!membershipState?.is_member;
   const canBackout = !!membershipState?.can_backout;
   const isFull = !isMember && membershipState?.can_join === false;
+
+  const freeOrBookAria = isFree ? 'Join pod' : 'Book pod';
+  const bookAriaLabel = isFull ? 'Pod is full' : freeOrBookAria;
+  const freeOrBookText = isFree ? 'Join' : 'Book now';
+  const bookText = isFull ? 'Pod is full' : freeOrBookText;
 
   return (
     <YStack
@@ -84,7 +89,7 @@ export function PodBookingBar({ pod, isFree, membershipState, onCheckout, onBack
               <XStack
                 testID="pod-book"
                 role="button"
-                aria-label={isFull ? 'Pod is full' : isFree ? 'Join pod' : 'Book pod'}
+                aria-label={bookAriaLabel}
                 aria-disabled={isFull}
                 onPress={isFull ? undefined : onCheckout}
                 alignItems="center"
@@ -97,7 +102,7 @@ export function PodBookingBar({ pod, isFree, membershipState, onCheckout, onBack
                 pressStyle={{ opacity: 0.85 }}
               >
                 <Text fontSize={15} fontWeight="900" color={onPrimary}>
-                  {isFull ? 'Pod is full' : isFree ? 'Join' : 'Book now'}
+                  {bookText}
                 </Text>
               </XStack>
             </>

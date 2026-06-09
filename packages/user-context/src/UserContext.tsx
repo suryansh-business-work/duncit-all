@@ -56,7 +56,7 @@ export function UserProvider({
   storageKey = DEFAULT_STORAGE_KEY,
   autoMountFailureDialog = true,
   children,
-}: UserProviderProps) {
+}: Readonly<UserProviderProps>) {
   // Hydrate from localStorage synchronously so refreshes don't flash a logged-out shell.
   const [user, setUserState] = useState<DuncitUser | null>(() => readCachedUser(storageKey));
   const [loading, setLoading] = useState<boolean>(false);

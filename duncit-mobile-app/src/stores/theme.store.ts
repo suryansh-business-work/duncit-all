@@ -26,6 +26,6 @@ export const useThemeStore = create<ThemeState>((set, get) => ({
   toggle: () => {
     const next: ThemePref = get().scheme === 'dark' ? 'light' : 'dark';
     set({ scheme: next });
-    void setThemePref(next);
+    setThemePref(next);
   },
 }));

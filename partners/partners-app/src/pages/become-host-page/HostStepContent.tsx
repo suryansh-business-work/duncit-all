@@ -15,7 +15,7 @@ interface Props {
   openPicker: (kind: 'photo' | 'police') => void;
 }
 
-export default function HostStepContent({ step, s1, s2, s3, set1, set2, set3, openPicker }: Props) {
+export default function HostStepContent({ step, s1, s2, s3, set1, set2, set3, openPicker }: Readonly<Props>) {
   if (step === 0) {
     return (
       <Stack spacing={2}>

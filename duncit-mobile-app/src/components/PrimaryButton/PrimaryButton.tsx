@@ -15,7 +15,7 @@ export function PrimaryButton({
   disabled = false,
   loading = false,
   testID,
-}: PrimaryButtonProps) {
+}: Readonly<PrimaryButtonProps>) {
   const isDisabled = disabled || loading;
 
   return (

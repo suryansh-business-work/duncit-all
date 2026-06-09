@@ -10,7 +10,7 @@ interface ExploreHeaderProps {
   onOpenFilters: () => void;
 }
 
-export default function ExploreHeader({ activeCount, resultCount, onOpenFilters }: ExploreHeaderProps) {
+export default function ExploreHeader({ activeCount, resultCount, onOpenFilters }: Readonly<ExploreHeaderProps>) {
   return (
     <Stack spacing={1.1} sx={{ position: 'absolute', top: 10, left: 10, right: 10, zIndex: 3 }}>
       <Stack direction="row" alignItems="center" spacing={1}>

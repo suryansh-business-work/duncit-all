@@ -16,7 +16,7 @@ export function NotificationsBell() {
 
   const onOpen = () => {
     setOpen(true);
-    void refetch();
+    refetch();
   };
 
   const onNotifClick = async (item: UserNotification) => {
@@ -24,7 +24,7 @@ export function NotificationsBell() {
     const link = item.notification.link_url;
     if (link?.startsWith('http')) {
       setOpen(false);
-      void Linking.openURL(link);
+      Linking.openURL(link);
     }
   };
 

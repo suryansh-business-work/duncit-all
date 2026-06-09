@@ -37,7 +37,7 @@ export default function MediaPickerDialog({
   folder = '/uploads',
   title = 'Select an image',
   accept = 'image/*,video/*',
-}: MediaPickerDialogProps) {
+}: Readonly<MediaPickerDialogProps>) {
   const [tab, setTab] = useState(0);
   const [error, setError] = useState<string | null>(null);
 

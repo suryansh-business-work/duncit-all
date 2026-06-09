@@ -15,7 +15,7 @@ export default function PostCommentList({
   meId,
   canDeletePost,
   onDeleteComment,
-}: PostCommentListProps) {
+}: Readonly<PostCommentListProps>) {
   return (
     <Box sx={{ flex: 1, overflowY: 'auto', p: 1.5 }}>
       {post.caption && (

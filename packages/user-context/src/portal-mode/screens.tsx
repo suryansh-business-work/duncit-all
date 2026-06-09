@@ -34,7 +34,7 @@ const Shell = ({
   </Box>
 );
 
-export function MaintenanceScreen({ appName }: ScreenProps) {
+export function MaintenanceScreen({ appName }: Readonly<ScreenProps>) {
   return (
     <Shell
       icon={<BuildCircleIcon sx={{ fontSize: 72 }} color="warning" />}
@@ -44,7 +44,7 @@ export function MaintenanceScreen({ appName }: ScreenProps) {
   );
 }
 
-export function UnderDevelopmentScreen({ appName }: ScreenProps) {
+export function UnderDevelopmentScreen({ appName }: Readonly<ScreenProps>) {
   return (
     <Shell
       icon={<RocketLaunchIcon sx={{ fontSize: 72 }} color="info" />}

@@ -8,7 +8,7 @@ interface Props {
   club: any | null;
 }
 
-export default function PodClubSection({ club }: Props) {
+export default function PodClubSection({ club }: Readonly<Props>) {
   const navigate = useNavigate();
   const [lightbox, setLightbox] = useState<number | null>(null);
   if (!club) {

@@ -14,11 +14,11 @@ export function ProfilePostsGrid({
   posts,
   onAddPost,
   uploading,
-}: {
+}: Readonly<{
   posts: ProfilePost[];
   onAddPost?: () => void;
   uploading?: boolean;
-}) {
+}>) {
   const { width } = useWindowDimensions();
   const { muted, primary } = useThemeColors();
   const size = (width - 32 - 8) / 3;

@@ -7,7 +7,7 @@ export interface AccountInfoRowProps {
   value: string;
 }
 
-export default function AccountInfoRow({ icon, label, value }: AccountInfoRowProps) {
+export default function AccountInfoRow({ icon, label, value }: Readonly<AccountInfoRowProps>) {
   return (
     <Stack direction="row" spacing={2} alignItems="center">
       <Box

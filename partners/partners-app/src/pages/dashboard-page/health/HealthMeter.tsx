@@ -15,7 +15,7 @@ const BAND_COLOR: Record<HealthBand, string> = {
   GREEN: '#43a047',
 };
 
-export default function HealthMeter({ score, band, size = 120, thickness = 12 }: Props) {
+export default function HealthMeter({ score, band, size = 120, thickness = 12 }: Readonly<Props>) {
   const radius = (size - thickness) / 2;
   const cx = size / 2;
   const cy = size / 2;

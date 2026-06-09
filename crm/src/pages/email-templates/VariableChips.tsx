@@ -55,12 +55,10 @@ export default function VariableChips({ title, items, declared, onToggle, knownS
             const foreign = knownSlugs ? !knownSlugs.has(it.slug) : false;
             // Only foreign (detected-but-unavailable) chips are red. Available
             // chips are never red — declared = primary, otherwise neutral.
-            const color = foreign ? 'error' : selected ? 'primary' : 'default';
-            const tip = foreign
-              ? 'Not an available Venue/Host variable'
-              : selected
-                ? 'In template — click to remove'
-                : 'Not in template — click to add';
+            const selectedColor = selected ? 'primary' : 'default';
+            const color = foreign ? 'error' : selectedColor;
+            const selectedTip = selected ? 'In template — click to remove' : 'Not in template — click to add';
+            const tip = foreign ? 'Not an available Venue/Host variable' : selectedTip;
             return (
               <Tooltip key={it.slug} title={tip}>
                 <Chip

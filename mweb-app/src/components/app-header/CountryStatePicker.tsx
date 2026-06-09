@@ -26,14 +26,14 @@ const chipSx = (active: boolean) => ({
   fontWeight: 800,
   border: 1,
   borderColor: active ? 'primary.main' : 'divider',
-  bgcolor: (theme: Theme) =>
-    active
-      ? alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.2 : 0.12)
-      : 'background.paper',
+  bgcolor: (theme: Theme) => {
+    const primaryAlpha = theme.palette.mode === 'dark' ? 0.2 : 0.12;
+    return active ? alpha(theme.palette.primary.main, primaryAlpha) : 'background.paper';
+  },
   color: active ? 'primary.main' : 'text.primary',
 });
 
-export default function CountryStatePicker({ tree, country, state, onCountry, onState }: Props) {
+export default function CountryStatePicker({ tree, country, state, onCountry, onState }: Readonly<Props>) {
   const [stateQuery, setStateQuery] = useState('');
   const activeCountry = tree.find((c) => c.country === country) ?? tree[0];
   const states = useMemo(() => {

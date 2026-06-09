@@ -15,7 +15,7 @@ interface Props {
 /** Interactive Google Maps embed (pan/zoom) for a place query, with an
  * "Open in Maps" shortcut. Renders nothing when the API key or query is
  * missing — graceful, exactly like mWeb's PodMapSection. */
-export function MapEmbed({ query, height = 220 }: Props) {
+export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
   const { primary } = useThemeColors();
   const apiKey = useConfigStore((s) => s.googleMapApiKey);
   const url = locationMapEmbedUrl(apiKey, query);

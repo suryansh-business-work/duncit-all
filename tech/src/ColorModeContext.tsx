@@ -18,7 +18,7 @@ const ColorModeContext = createContext<ColorModeContextValue>({
 
 const STORAGE_KEY = appConfig.colorModeKey;
 
-export function ColorModeProvider({ children }: { children: ReactNode }) {
+export function ColorModeProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [mode, setMode] = useState<PaletteMode>(() => {
     /* v8 ignore next -- SSR guard, unreachable in jsdom */
     if (typeof window === 'undefined') return 'light';

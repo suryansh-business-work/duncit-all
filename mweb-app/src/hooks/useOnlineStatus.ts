@@ -13,11 +13,11 @@ export function useOnlineStatus(): { isOffline: boolean } {
   useEffect(() => {
     const goOnline = () => setIsOffline(false);
     const goOffline = () => setIsOffline(true);
-    window.addEventListener('online', goOnline);
-    window.addEventListener('offline', goOffline);
+    globalThis.addEventListener('online', goOnline);
+    globalThis.addEventListener('offline', goOffline);
     return () => {
-      window.removeEventListener('online', goOnline);
-      window.removeEventListener('offline', goOffline);
+      globalThis.removeEventListener('online', goOnline);
+      globalThis.removeEventListener('offline', goOffline);
     };
   }, []);
 

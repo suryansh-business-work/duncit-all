@@ -12,7 +12,7 @@ interface HomeVibeChipsProps {
 
 /** "What's your vibe today?" category chip rail — RN port of HomeVibeChips.
  * Selecting a chip filters the feed to that category (toggles off when re-tapped). */
-export function HomeVibeChips({ categories, selectedId, onSelect }: HomeVibeChipsProps) {
+export function HomeVibeChips({ categories, selectedId, onSelect }: Readonly<HomeVibeChipsProps>) {
   const { primary } = useThemeColors();
   if (categories.length === 0) return null;
 
@@ -37,7 +37,7 @@ export function HomeVibeChips({ categories, selectedId, onSelect }: HomeVibeChip
               testID={`vibe-chip-${category.id}`}
               role="button"
               aria-label={category.name}
-              aria-selected={selected}
+              aria-pressed={selected}
               onPress={() => onSelect(selected ? '' : category.id)}
               height={42}
               paddingHorizontal={16}

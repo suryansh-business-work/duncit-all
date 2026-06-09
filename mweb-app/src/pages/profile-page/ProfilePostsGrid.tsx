@@ -10,7 +10,7 @@ interface Props {
   onNewPost: () => void;
 }
 
-export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Props) {
+export default function ProfilePostsGrid({ posts, onOpenPost, onNewPost }: Readonly<Props>) {
   return (
     <>
       <Stack direction="row" justifyContent="center" spacing={4}>

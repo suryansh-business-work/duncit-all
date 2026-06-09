@@ -11,12 +11,12 @@ function ActionRow({
   label,
   onPress,
   testID,
-}: {
+}: Readonly<{
   icon: IconName;
   label: string;
   onPress: () => void;
   testID: string;
-}) {
+}>) {
   const { primary, muted } = useThemeColors();
   return (
     <XStack
@@ -56,7 +56,7 @@ export function HostsVenuesCard({
   onHost,
   onVenue,
   onPodHistory,
-}: HostsVenuesCardProps) {
+}: Readonly<HostsVenuesCardProps>) {
   return (
     <YStack
       testID="account-hosts-venues"

@@ -16,7 +16,7 @@ function isRasterUrl(url?: string | null): url is string {
  * raster `logo_url` from the shared server `branding` setting wins; otherwise the
  * bundled Duncit mark renders, so the logo is identical across web and native.
  */
-export function AuthLogo({ size = 58 }: { size?: number }) {
+export function AuthLogo({ size = 58 }: Readonly<{ size?: number }>) {
   const { data, isLoading } = useBranding();
   const branding = data?.branding;
   const name = branding?.app_name ?? 'Duncit';

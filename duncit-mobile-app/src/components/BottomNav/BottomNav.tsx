@@ -9,7 +9,7 @@ import { TAB_CONFIG } from '@/navigation/tabs';
 
 /** Floating pill tab bar — RN port of mWeb's BottomNav (gradient active icon,
  * blurred surface, rounded corners). Used as React Navigation's custom `tabBar`. */
-export function BottomNav({ state, navigation }: BottomTabBarProps) {
+export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
   const insets = useSafeAreaInsets();
   const { muted } = useThemeColors();
 
@@ -58,7 +58,7 @@ export function BottomNav({ state, navigation }: BottomTabBarProps) {
               testID={`tab-bar-${cfg.name}`}
               role="button"
               aria-label={cfg.label}
-              aria-selected={focused}
+              aria-pressed={focused}
               onPress={onPress}
               flex={1}
               alignItems="center"

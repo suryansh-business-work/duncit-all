@@ -13,7 +13,7 @@ interface Props {
   children: (selected: SupportPodOption | null) => ReactNode;
 }
 
-export default function PodScopedPage({ title, subtitle, icon, gradient, children }: Props) {
+export default function PodScopedPage({ title, subtitle, icon, gradient, children }: Readonly<Props>) {
   const { options, selected, selectedId, setSelectedId, loading } = usePodPicker();
 
   return (

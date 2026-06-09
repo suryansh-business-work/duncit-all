@@ -7,7 +7,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 
 type Product = PodDetail['product_requests'][number];
 
-function ProductRow({ product }: { product: Product }) {
+function ProductRow({ product }: Readonly<{ product: Product }>) {
   const image = product.image_url || product.images?.[0] || '';
   return (
     <XStack
@@ -52,7 +52,7 @@ function ProductRow({ product }: { product: Product }) {
 /** Pod Shop preview — lists the pod's real products (name · availability · price)
  * with an explicit empty state. RN port of mWeb's PodCommercePreview; shows only
  * real products, never perks/placeholder data. */
-export function PodShop({ pod }: { pod: PodDetail }) {
+export function PodShop({ pod }: Readonly<{ pod: PodDetail }>) {
   const { primary } = useThemeColors();
   const products = pod.product_requests ?? [];
 

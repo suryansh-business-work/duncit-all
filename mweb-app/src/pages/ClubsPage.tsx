@@ -41,7 +41,7 @@ interface ClubsPageProps {
   superCategorySlug?: string;
 }
 
-export default function ClubsPage({ superCategorySlug }: ClubsPageProps) {
+export default function ClubsPage({ superCategorySlug }: Readonly<ClubsPageProps>) {
   const { data, loading, error } = useQuery(ALL_CLUBS, {
     fetchPolicy: 'cache-and-network',
   });

@@ -13,7 +13,7 @@ interface Props {
 
 /** Interactive Google Maps embed (pan/zoom) for the selected place. Renders
  * nothing when the API key or selection is missing — graceful, like mWeb. */
-export function LocationMap({ city, zoneName, pincode, country }: Props) {
+export function LocationMap({ city, zoneName, pincode, country }: Readonly<Props>) {
   const apiKey = useConfigStore((s) => s.googleMapApiKey);
   const query = locationMapQuery(city, zoneName, pincode, country);
   const url = locationMapEmbedUrl(apiKey, query);

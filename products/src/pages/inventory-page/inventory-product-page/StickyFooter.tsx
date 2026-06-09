@@ -17,7 +17,7 @@ export default function StickyFooter({
   onCancel,
   onSaveAndContinue,
   onSave,
-}: StickyFooterProps) {
+}: Readonly<StickyFooterProps>) {
   const saveLabel = busy
     ? 'Saving…'
     : isEdit

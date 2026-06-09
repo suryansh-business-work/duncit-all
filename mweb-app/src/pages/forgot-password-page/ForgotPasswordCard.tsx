@@ -10,7 +10,7 @@ interface Props {
   onSubmit: (values: ForgotPasswordValues) => Promise<void>;
 }
 
-export default function ForgotPasswordCard({ loading, errorMessage, onSubmit }: Props) {
+export default function ForgotPasswordCard({ loading, errorMessage, onSubmit }: Readonly<Props>) {
   return (
     <AuthScreenFrame center>
       <Stack spacing={2.1}>

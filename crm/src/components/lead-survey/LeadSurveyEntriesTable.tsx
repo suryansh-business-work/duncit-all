@@ -95,7 +95,7 @@ export default function LeadSurveyEntriesTable({ entries, survey, onRevoke, onDe
             {(view?.answers ?? []).map((a) => (
               <Stack key={a.qid} spacing={0.25}>
                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>{labelFor(a.qid)}</Typography>
-                <Typography variant="body2">{(a.values && a.values.length ? a.values.join(', ') : a.value) || '—'}</Typography>
+                <Typography variant="body2">{(a.values?.length ? a.values.join(', ') : a.value) || '—'}</Typography>
               </Stack>
             ))}
             {(view?.answers?.length ?? 0) === 0 && <Typography variant="body2" color="text.secondary">No answers recorded.</Typography>}

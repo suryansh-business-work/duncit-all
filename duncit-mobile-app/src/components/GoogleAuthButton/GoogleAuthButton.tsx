@@ -33,7 +33,7 @@ export function GoogleAuthButton({
   disabled,
   onIdToken,
   onError,
-}: GoogleAuthButtonProps) {
+}: Readonly<GoogleAuthButtonProps>) {
   const scheme = useThemeStore((s) => s.scheme);
   const googleClientId = useConfigStore((s) => s.googleClientId);
   const [request, response, promptAsync] = Google.useIdTokenAuthRequest({

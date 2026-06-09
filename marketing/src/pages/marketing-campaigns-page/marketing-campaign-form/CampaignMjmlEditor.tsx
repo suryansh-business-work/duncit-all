@@ -13,7 +13,7 @@ interface Props {
   onVerify: () => void;
 }
 
-export default function CampaignMjmlEditor({ value, error, helperText, onChange, onVerify }: Props) {
+export default function CampaignMjmlEditor({ value, error, helperText, onChange, onVerify }: Readonly<Props>) {
   return (
     <Stack spacing={0.75}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} alignItems={{ sm: 'center' }} justifyContent="space-between">

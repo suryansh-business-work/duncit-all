@@ -18,7 +18,7 @@ export default function HeaderLocationButton({
   selectedZoneName,
   selectedCountryCode,
   onClick,
-}: Props) {
+}: Readonly<Props>) {
   if (loading && !hasData) {
     return <Skeleton variant="rounded" width={90} height={28} sx={{ borderRadius: 1 }} />;
   }

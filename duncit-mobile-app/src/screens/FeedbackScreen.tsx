@@ -64,7 +64,7 @@ export function FeedbackScreen() {
                 testID={`feedback-cat-${c.value}`}
                 role="button"
                 aria-label={c.label}
-                aria-selected={on}
+                aria-pressed={on}
                 onPress={() => setCategory(c.value)}
                 paddingHorizontal={12}
                 paddingVertical={7}

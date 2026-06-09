@@ -24,7 +24,7 @@ export function useExplore() {
   const { selectedId: selectedLocationId } = useLocations();
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   const clubsById = useMemo(() => {

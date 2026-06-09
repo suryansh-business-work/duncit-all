@@ -28,7 +28,7 @@ export default function AccountProfileHeader({
   onChangePhoto,
   onEdit,
   onLogout,
-}: AccountProfileHeaderProps) {
+}: Readonly<AccountProfileHeaderProps>) {
   const { labelFor } = useRoleLabels();
 
   return (

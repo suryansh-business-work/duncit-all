@@ -13,7 +13,7 @@ interface Props {
   onCheckout: () => void;
 }
 
-export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, onCheckout }: Props) {
+export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, onCheckout }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);

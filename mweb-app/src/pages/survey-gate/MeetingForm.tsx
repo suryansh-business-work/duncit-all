@@ -14,7 +14,7 @@ interface Props {
 }
 
 /** Step 2 of onboarding: propose a date/time for an onboarding meeting. */
-export default function MeetingForm({ submitting, onSubmit }: Props) {
+export default function MeetingForm({ submitting, onSubmit }: Readonly<Props>) {
   const [when, setWhen] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');

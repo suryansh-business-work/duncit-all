@@ -29,7 +29,7 @@ interface Props {
 
 const DEFAULT_SORT: SortBy = 'DATE_ASC';
 
-export default function FilterMenu(props: Props) {
+export default function FilterMenu(props: Readonly<Props>) {
   const {
     categoryId,
     setCategoryId,

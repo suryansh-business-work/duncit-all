@@ -47,7 +47,7 @@ export const POD_OCCURRENCE_LABELS: Record<PodOccurrence, string> = {
 /** Human occurrence label from the enum, e.g. "ONE_TIME" → "One time". */
 export function podOccurrenceLabel(occurrence?: string | null): string {
   if (!occurrence) return '';
-  return POD_OCCURRENCE_LABELS[occurrence as PodOccurrence] ?? occurrence.replace(/_/g, ' ');
+  return POD_OCCURRENCE_LABELS[occurrence as PodOccurrence] ?? occurrence.replaceAll('_', ' ');
 }
 
 export type TimeTone = 'error' | 'warning' | 'info';
@@ -61,8 +61,10 @@ export function podTimeChip(iso?: string | null): { label: string; tone: TimeTon
   if (ms < 0) return { label: 'Pod expired', tone: 'error' };
   const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
   const hours = Math.ceil(ms / (1000 * 60 * 60));
-  const label =
-    days > 1 ? `${days} days remaining` : hours > 1 ? `${hours} hours remaining` : 'Starting soon';
+  let label: string;
+  if (days > 1) label = `${days} days remaining`;
+  else if (hours > 1) label = `${hours} hours remaining`;
+  else label = 'Starting soon';
   return { label, tone: days <= 1 ? 'warning' : 'info' };
 }
 

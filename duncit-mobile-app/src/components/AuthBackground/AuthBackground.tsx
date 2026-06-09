@@ -8,7 +8,7 @@ import { useThemeStore } from '@/stores/theme.store';
  * Full-screen gradient backdrop for the auth screens. Same warm-light / deep-dark
  * gradient as mWeb, pulled from the shared @duncit/auth-tokens source.
  */
-export function AuthBackground({ children }: { children: ReactNode }) {
+export function AuthBackground({ children }: Readonly<{ children: ReactNode }>) {
   const isDark = useThemeStore((s) => s.scheme) === 'dark';
   const colors = isDark ? auth.bgGradient.dark : auth.bgGradient.light;
 

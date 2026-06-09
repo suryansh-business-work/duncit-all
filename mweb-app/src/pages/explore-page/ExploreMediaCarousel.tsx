@@ -13,7 +13,7 @@ interface Props {
   alt?: string;
 }
 
-export default function ExploreMediaCarousel({ media, fallbackUrl, alt }: Props) {
+export default function ExploreMediaCarousel({ media, fallbackUrl, alt }: Readonly<Props>) {
   const items = media && media.length > 0
     ? media
     : fallbackUrl

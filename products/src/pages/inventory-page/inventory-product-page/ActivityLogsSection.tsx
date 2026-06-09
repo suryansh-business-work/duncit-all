@@ -49,7 +49,7 @@ export default function ActivityLogsSection({
   analytics,
   loading,
   isNew,
-}: ActivityLogsSectionProps) {
+}: Readonly<ActivityLogsSectionProps>) {
   if (isNew) {
     return (
       <Alert severity="info">

@@ -7,7 +7,7 @@ interface Props {
   onWithdraw: () => Promise<void> | void;
 }
 
-export default function HostWithdrawApplication({ status, busy, onWithdraw }: Props) {
+export default function HostWithdrawApplication({ status, busy, onWithdraw }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
   if (!status || status === 'APPROVED') return null;
 

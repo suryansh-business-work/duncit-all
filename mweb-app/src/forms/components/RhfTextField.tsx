@@ -22,7 +22,7 @@ export default function RhfTextField<T extends FieldValues>({
   name,
   hint,
   ...rest
-}: RhfTextFieldProps<T>) {
+}: Readonly<RhfTextFieldProps<T>>) {
   return (
     <Controller
       control={control}

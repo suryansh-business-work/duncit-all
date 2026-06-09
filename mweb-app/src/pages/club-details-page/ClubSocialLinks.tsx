@@ -7,7 +7,7 @@ interface Props {
   club: any;
 }
 
-export default function ClubSocialLinks({ club }: Props) {
+export default function ClubSocialLinks({ club }: Readonly<Props>) {
   const social = [
     { label: 'Community', href: club.club_whats_app_community_link, icon: <WhatsAppIcon /> },
     { label: 'Announcements', href: club.club_whats_app_announcement_link, icon: <CampaignIcon /> },

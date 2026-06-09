@@ -13,7 +13,7 @@ interface Props {
   onPick: (photo: any) => void;
 }
 
-export default function PexelsPhotoCard({ photo, importing, anyImporting, onPick }: Props) {
+export default function PexelsPhotoCard({ photo, importing, anyImporting, onPick }: Readonly<Props>) {
   return (
     <ImageListItem
       sx={{

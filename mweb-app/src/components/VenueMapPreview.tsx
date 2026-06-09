@@ -9,7 +9,7 @@ interface Props {
   lng?: number | null;
 }
 
-export default function VenueMapPreview({ title = 'Map preview', parts, lat, lng }: Props) {
+export default function VenueMapPreview({ title = 'Map preview', parts, lat, lng }: Readonly<Props>) {
   const query = lat != null && lng != null
     ? `${lat},${lng}`
     : parts.map((part) => part?.trim()).filter(Boolean).join(', ');

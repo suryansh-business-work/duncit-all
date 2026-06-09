@@ -6,7 +6,7 @@ interface InterviewSuccessCardProps {
   submittedRef: string;
 }
 
-export default function InterviewSuccessCard({ submittedRef }: InterviewSuccessCardProps) {
+export default function InterviewSuccessCard({ submittedRef }: Readonly<InterviewSuccessCardProps>) {
   const navigate = useNavigate();
   return (
     <Container maxWidth="sm" sx={{ py: 6 }}>

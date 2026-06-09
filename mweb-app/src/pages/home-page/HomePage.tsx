@@ -19,7 +19,7 @@ interface HomePageProps {
   zoneName: string;
 }
 
-export default function HomePage({ superCategorySlug, locationId, zoneName }: HomePageProps) {
+export default function HomePage({ superCategorySlug, locationId, zoneName }: Readonly<HomePageProps>) {
   const navigate = useNavigate();
   const [categoryId, setCategoryId] = useState<string>('');
   const [priceFilter, setPriceFilter] = useState<PriceFilter>('ALL');

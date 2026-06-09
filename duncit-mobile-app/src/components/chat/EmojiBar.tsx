@@ -9,7 +9,7 @@ interface EmojiBarProps {
 
 /** Horizontal quick-emoji strip — used both to insert into the composer and to
  * react to a message (RN twin of mWeb's EmojiPopover). */
-export function EmojiBar({ onSelect, testID = 'emoji-bar' }: EmojiBarProps) {
+export function EmojiBar({ onSelect, testID = 'emoji-bar' }: Readonly<EmojiBarProps>) {
   return (
     <XStack
       testID={testID}

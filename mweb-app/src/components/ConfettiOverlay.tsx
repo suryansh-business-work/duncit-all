@@ -14,7 +14,7 @@ export default function ConfettiOverlay({
   onClose,
   lottieUrl = '/lotties/confetti.json',
   durationMs = 3500,
-}: Props) {
+}: Readonly<Props>) {
   useEffect(() => {
     if (!open) return;
     const t = setTimeout(onClose, durationMs);

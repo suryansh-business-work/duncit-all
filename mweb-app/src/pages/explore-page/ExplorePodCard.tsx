@@ -37,7 +37,7 @@ export default function ExplorePodCard({
   savePending,
   onToggleSave,
   viewerId,
-}: Props) {
+}: Readonly<Props>) {
   const navigate = useNavigate();
   const { format } = usePricing();
   const cover = club?.club_feature_images_and_videos?.[0]?.url ?? null;

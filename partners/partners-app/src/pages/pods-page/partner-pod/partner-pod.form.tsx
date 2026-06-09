@@ -38,7 +38,7 @@ export const partnerPodSchema = yup.object({
 
 interface Props { initialValues: PartnerPodFormValues; clubs: any[]; venues: any[]; products: any[]; busy: boolean; onCancel: () => void; onSubmit: (values: PartnerPodFormValues, options?: { draft?: boolean }) => Promise<void> | void; }
 
-export default function PartnerPodForm({ initialValues, clubs, venues, products, busy, onCancel, onSubmit }: Props) {
+export default function PartnerPodForm({ initialValues, clubs, venues, products, busy, onCancel, onSubmit }: Readonly<Props>) {
   const [expanded, setExpanded] = useState('basic');
   const submitMode = useRef<'publish' | 'draft'>('publish');
   return (
@@ -62,16 +62,16 @@ export default function PartnerPodForm({ initialValues, clubs, venues, products,
   );
 }
 
-function PodSection({ id, title, expanded, setExpanded, children }: { id: string; title: string; expanded: string; setExpanded: (id: string) => void; children: React.ReactNode }) {
+function PodSection({ id, title, expanded, setExpanded, children }: Readonly<{ id: string; title: string; expanded: string; setExpanded: (id: string) => void; children: React.ReactNode }>) {
   return <Accordion expanded={expanded === id} onChange={(_, open) => open && setExpanded(id)} disableGutters sx={{ border: 1, borderColor: 'divider', borderRadius: 1.25, '&:before': { display: 'none' } }}><AccordionSummary expandIcon={<ExpandMoreIcon />}><Typography fontWeight={900}>{title}</Typography></AccordionSummary><AccordionDetails>{children}</AccordionDetails></Accordion>;
 }
 
-function BasicFields({ clubs }: { clubs: any[] }) {
+function BasicFields({ clubs }: Readonly<{ clubs: any[] }>) {
   const { values, errors, touched, handleChange, setFieldValue } = useFormikContext<PartnerPodFormValues>();
   return <Stack spacing={2}><TextField label="Pod title" name="pod_title" value={values.pod_title} onChange={handleChange} required fullWidth error={!!touched.pod_title && !!errors.pod_title} helperText={touched.pod_title ? errors.pod_title : 'A URL-friendly slug is generated from this title'} /><ToggleButtonGroup exclusive fullWidth color="primary" value={values.pod_mode} onChange={(_, mode) => mode && setFieldValue('pod_mode', mode)}><ToggleButton value="PHYSICAL"><PlaceIcon fontSize="small" sx={{ mr: 1 }} /> Physical</ToggleButton><ToggleButton value="VIRTUAL"><VideocamIcon fontSize="small" sx={{ mr: 1 }} /> Virtual</ToggleButton></ToggleButtonGroup><TextField select label="Club" value={values.club_id} onChange={(event) => { setFieldValue('club_id', event.target.value); setFieldValue('venue_id', ''); }} required fullWidth error={!!touched.club_id && !!errors.club_id} helperText={touched.club_id ? errors.club_id : undefined}>{clubs.map((club) => <MenuItem key={club.id} value={club.id}>{club.club_name}</MenuItem>)}</TextField><TextField label="Hashtags" name="pod_hashtag_text" value={values.pod_hashtag_text} onChange={handleChange} fullWidth placeholder="#weekend #community" /><TextField label="Media URLs" name="media_text" value={values.media_text} onChange={handleChange} fullWidth multiline minRows={2} helperText="One image or video URL per line." /></Stack>;
 }
 
-function PlaceFields({ clubs, venues }: { clubs: any[]; venues: any[] }) {
+function PlaceFields({ clubs, venues }: Readonly<{ clubs: any[]; venues: any[] }>) {
   const { values, errors, touched, handleChange, setFieldValue } = useFormikContext<PartnerPodFormValues>();
   const linkedVenueIds = new Set(clubs.find((club) => club.id === values.club_id)?.meetup_venues_id ?? []);
   const clubVenues = venues.filter((venue) => linkedVenueIds.has(venue.id));
@@ -163,7 +163,7 @@ function AboutFields() {
   return <Stack spacing={2}><TextField label="Description" name="pod_description" value={values.pod_description} onChange={handleChange} required fullWidth multiline minRows={4} error={!!touched.pod_description && !!errors.pod_description} helperText={touched.pod_description ? errors.pod_description : undefined} /><TextField label="Pod info" name="pod_info" value={values.pod_info} onChange={handleChange} fullWidth multiline minRows={2} /><TextField label="What this pod offers" name="what_this_pod_offers_text" value={values.what_this_pod_offers_text} onChange={handleChange} fullWidth multiline minRows={2} helperText="One offer per line." /><TextField label="Available perks" name="available_perks_text" value={values.available_perks_text} onChange={handleChange} fullWidth multiline minRows={2} helperText="One perk per line." /></Stack>;
 }
 
-function ProductsFields({ products }: { products: any[] }) {
+function ProductsFields({ products }: Readonly<{ products: any[] }>) {
   const { values, setFieldValue } = useFormikContext<PartnerPodFormValues>();
   return <Stack spacing={2}><Stack direction="row" alignItems="center" spacing={1}><Switch checked={values.products_enabled} onChange={(event) => { setFieldValue('products_enabled', event.target.checked); if (!event.target.checked) setFieldValue('product_requests', []); }} /><Typography fontWeight={900}>Enable approved products</Typography></Stack>{values.products_enabled && <PartnerPodProductsField products={products} />}</Stack>;
 }

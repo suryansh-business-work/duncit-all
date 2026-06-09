@@ -19,7 +19,7 @@ export default function PodAttendeesSection({
   attendees,
   attendeeIds,
   totalSpots,
-}: Props) {
+}: Readonly<Props>) {
   const navigate = useNavigate();
   const count = attendeeIds?.length ?? 0;
   const byId = new Map(attendees.map((a) => [a.user_id, a]));

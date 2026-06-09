@@ -12,12 +12,12 @@ function NavRow({
   label,
   onPress,
   testID,
-}: {
+}: Readonly<{
   icon: 'storefront' | 'store';
   label: string;
   onPress: () => void;
   testID: string;
-}) {
+}>) {
   const { primary, muted } = useThemeColors();
   return (
     <XStack
@@ -49,11 +49,11 @@ export function ProfilePanels({
   me,
   onOpenHost,
   onOpenVenue,
-}: {
+}: Readonly<{
   me: ProfileMe;
   onOpenHost: () => void;
   onOpenVenue: () => void;
-}) {
+}>) {
   const { primary } = useThemeColors();
   const [open, setOpen] = useState<Set<string>>(new Set());
   const toggle = (id: string) =>

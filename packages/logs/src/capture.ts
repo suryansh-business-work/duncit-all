@@ -17,11 +17,14 @@ function safeJson(value: unknown): string {
   }
 }
 
+function argToText(a: unknown): string {
+  if (a instanceof Error) return a.stack || `${a.name}: ${a.message}`;
+  if (typeof a === 'string') return a;
+  return safeJson(a);
+}
+
 function argMessage(args: unknown[]): string {
-  return args
-    .map((a) => (a instanceof Error ? a.stack || `${a.name}: ${a.message}` : typeof a === 'string' ? a : safeJson(a)))
-    .join(' ')
-    .slice(0, 4000);
+  return args.map(argToText).join(' ').slice(0, 4000);
 }
 
 function currentPage(page?: string): string {

@@ -29,7 +29,7 @@ export default function LoginForm({
   errorMessage,
   onSubmit,
   submitLabel = 'Login',
-}: Props) {
+}: Readonly<Props>) {
   const [showPwd, setShowPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<LoginFormValues>({

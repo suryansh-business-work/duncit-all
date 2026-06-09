@@ -11,7 +11,7 @@ interface Props {
   };
 }
 
-export default function PublicProfileHeader({ user }: Props) {
+export default function PublicProfileHeader({ user }: Readonly<Props>) {
   return (
     <Stack alignItems="center" spacing={1.5}>
       <Avatar

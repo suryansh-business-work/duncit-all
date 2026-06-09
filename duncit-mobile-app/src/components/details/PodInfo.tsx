@@ -24,13 +24,15 @@ function Chip({
   label,
   primary,
   tone,
-}: {
+}: Readonly<{
   icon?: IconName;
   label: string;
   primary?: boolean;
   tone?: string;
-}) {
+}>) {
   const fg = primary ? '#ffffff' : (tone ?? '#9aa0aa');
+  const toneBg = tone ? `${tone}22` : '$surface';
+  const chipBg = primary ? '$primary' : toneBg;
   return (
     <XStack
       alignItems="center"
@@ -38,19 +40,19 @@ function Chip({
       borderRadius={999}
       paddingHorizontal={11}
       paddingVertical={6}
-      backgroundColor={primary ? '$primary' : tone ? `${tone}22` : '$surface'}
+      backgroundColor={chipBg}
       borderWidth={1}
       borderColor={primary ? '$primary' : (tone ?? '$borderColor')}
     >
       {icon ? <MaterialIcons name={icon} size={14} color={fg} /> : null}
-      <Text fontSize={12} fontWeight="800" color={primary ? '$onPrimary' : tone ? tone : '$color'}>
+      <Text fontSize={12} fontWeight="800" color={primary ? '$onPrimary' : tone || '$color'}>
         {label}
       </Text>
     </XStack>
   );
 }
 
-function StatBox({ label, value }: { label: string; value: number | string }) {
+function StatBox({ label, value }: Readonly<{ label: string; value: number | string }>) {
   return (
     <YStack flex={1} padding={12} borderRadius={14} backgroundColor="$surface">
       <Text fontSize={12} color="$muted">
@@ -66,7 +68,7 @@ function StatBox({ label, value }: { label: string; value: number | string }) {
 /** Pod overview card — title, host, key chips (price · mode · occurrence ·
  * countdown), the People-in / Spots-left boxes and a quick-stats row. RN port of
  * mWeb's PodOverview + PodQuickStats. Detailed sections live in PodAccordions. */
-export function PodInfo({ pod }: { pod: PodDetail }) {
+export function PodInfo({ pod }: Readonly<{ pod: PodDetail }>) {
   const host = pod.host_names.join(', ');
   const isVirtual = pod.pod_mode === 'VIRTUAL';
   const attendees = pod.pod_attendees.length;

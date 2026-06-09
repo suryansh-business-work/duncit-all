@@ -37,7 +37,7 @@ const PUBLIC_POLICIES = gql`
   }
 `;
 
-export default function PartnerSidebar({ onCloseMobile }: Props) {
+export default function PartnerSidebar({ onCloseMobile }: Readonly<Props>) {
   const location = useLocation();
   const { data } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-first' });
   const { logoUrl, appName, loading } = useBranding();
@@ -81,7 +81,7 @@ export default function PartnerSidebar({ onCloseMobile }: Props) {
   );
 }
 
-function PartnerNavItem({ item, active, onClick }: { item: NavItem; active: boolean; onClick?: () => void }) {
+function PartnerNavItem({ item, active, onClick }: Readonly<{ item: NavItem; active: boolean; onClick?: () => void }>) {
   return (
     <ListItemButton component={RouterLink} to={item.to} onClick={onClick} sx={{ borderRadius: 1, mx: 1, my: 0.25, color: active ? 'primary.main' : 'text.secondary', bgcolor: active ? 'action.selected' : 'transparent', '&:hover': { bgcolor: 'action.hover' } }}>
       <ListItemIcon sx={{ minWidth: 36, color: 'inherit' }}><FontAwesomeIcon icon={item.icon} fixedWidth /></ListItemIcon>

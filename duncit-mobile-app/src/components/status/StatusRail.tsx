@@ -13,7 +13,7 @@ interface StatusRailProps {
 
 /** Home status rail — "Your story" upload tile first (tap to pick + post an
  * image), then everyone's latest statuses; tapping one opens the viewer. */
-export function StatusRail({ userName, userPhoto }: StatusRailProps) {
+export function StatusRail({ userName, userPhoto }: Readonly<StatusRailProps>) {
   const { statuses, myLatest } = useStatus();
   const { uploading, pickAndUpload } = useStatusUpload();
   const [active, setActive] = useState<StatusGroup | null>(null);

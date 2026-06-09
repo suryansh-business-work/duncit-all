@@ -32,7 +32,7 @@ export default function PodCommentsSheet({
   onClose,
   viewerId,
   onCountChange,
-}: Props) {
+}: Readonly<Props>) {
   const { data, loading, error, refetch } = useQuery(POD_COMMENTS, {
     variables: { id: podId },
     fetchPolicy: 'cache-and-network',

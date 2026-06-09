@@ -21,10 +21,10 @@ const BAND_MESSAGE: Record<string, string> = {
 export function AccountHealthCard({
   health,
   onPress,
-}: {
+}: Readonly<{
   health: AccountHealth;
   onPress?: () => void;
-}) {
+}>) {
   const bandColor = BAND_COLOR[health.band] ?? semantic.info;
   const remarks = health.adjustments.length;
 

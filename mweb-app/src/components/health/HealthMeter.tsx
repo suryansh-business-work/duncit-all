@@ -29,7 +29,7 @@ export default function HealthMeter({
   thickness = 14,
   onClick,
   caption,
-}: Props) {
+}: Readonly<Props>) {
   const radius = (size - thickness) / 2;
   const cx = size / 2;
   const cy = size / 2;

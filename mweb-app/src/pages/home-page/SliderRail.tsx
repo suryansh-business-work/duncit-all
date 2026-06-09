@@ -8,7 +8,7 @@ interface SliderRailProps {
   sliders: any[];
 }
 
-export default function SliderRail({ sliders }: SliderRailProps) {
+export default function SliderRail({ sliders }: Readonly<SliderRailProps>) {
   if (sliders.length === 0) return null;
   // Rendered OUTSIDE the parent Stack so MUI Stack's child-margin reset
   // cannot clobber the -50vw escape used to break out of the centred Container.

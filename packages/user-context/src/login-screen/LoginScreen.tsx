@@ -20,7 +20,7 @@ export default function LoginScreen({
   errorMessage,
   onSubmit,
   footerSlot,
-}: LoginScreenProps) {
+}: Readonly<LoginScreenProps>) {
   const [snack, setSnack] = useState<string | null>(null);
   const [portalsOpen, setPortalsOpen] = useState(false);
   const dark = mode === 'dark';

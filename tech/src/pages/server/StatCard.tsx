@@ -14,12 +14,12 @@ export default function StatCard({
   value,
   sub,
   percent,
-}: {
+}: Readonly<{
   label: string;
   value: string;
   sub?: string;
   percent?: number;
-}) {
+}>) {
   return (
     <Card variant="outlined" sx={{ height: '100%' }}>
       <CardContent>

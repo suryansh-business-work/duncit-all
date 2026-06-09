@@ -21,7 +21,7 @@ export function ExploreActionButton({
   active,
   loading,
   testID,
-}: ExploreActionButtonProps) {
+}: Readonly<ExploreActionButtonProps>) {
   return (
     <YStack
       testID={testID}

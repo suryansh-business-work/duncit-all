@@ -1,7 +1,7 @@
 import { Navigate, useLocation } from 'react-router-dom';
 import { getSafeRedirectPath, redirectPathFromLocation } from '../utils/redirect';
 
-export function RequireAuth({ children }: { children: JSX.Element }) {
+export function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
   const isAuthed = !!localStorage.getItem('token');
   const location = useLocation();
   if (!isAuthed) {
@@ -11,7 +11,7 @@ export function RequireAuth({ children }: { children: JSX.Element }) {
   return children;
 }
 
-export function RedirectIfAuthed({ children }: { children: JSX.Element }) {
+export function RedirectIfAuthed({ children }: Readonly<{ children: JSX.Element }>) {
   const isAuthed = !!localStorage.getItem('token');
   const location = useLocation();
   if (isAuthed) {

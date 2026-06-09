@@ -6,7 +6,7 @@ import Svg, { Path, Rect } from 'react-native-svg';
  * logo is visually identical on web and native. Used as the auth-screen logo
  * whenever the dynamic branding logo isn't a renderable raster.
  */
-export function DuncitLogo({ size = 56 }: { size?: number }) {
+export function DuncitLogo({ size = 56 }: Readonly<{ size?: number }>) {
   return (
     <Svg
       width={size}

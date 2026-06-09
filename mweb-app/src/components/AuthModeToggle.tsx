@@ -7,7 +7,7 @@ interface AuthModeToggleProps {
   placement?: 'fixed' | 'inline';
 }
 
-export default function AuthModeToggle({ placement = 'fixed' }: AuthModeToggleProps) {
+export default function AuthModeToggle({ placement = 'fixed' }: Readonly<AuthModeToggleProps>) {
   const colorMode = useColorMode();
   const isDark = colorMode.mode === 'dark';
   const fixed = placement === 'fixed';

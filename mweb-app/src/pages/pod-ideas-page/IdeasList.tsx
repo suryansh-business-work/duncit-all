@@ -23,7 +23,7 @@ export default function IdeasList({
   onLike,
   onShare,
   onDelete,
-}: IdeasListProps) {
+}: Readonly<IdeasListProps>) {
   return (
     <>
       {myIdeas.length > 0 && (

@@ -20,7 +20,7 @@ interface Props {
 type State = Record<string, FieldAnswer>;
 
 /** Section-stepped survey — one step per SECTION; final step calls onSubmit. */
-export default function SurveyStepper({ survey, submitting, onSubmit, submitLabel = 'Continue' }: Props) {
+export default function SurveyStepper({ survey, submitting, onSubmit, submitLabel = 'Continue' }: Readonly<Props>) {
   const sections = useMemo(() => splitSections(survey.questions, survey.title || 'Survey'), [survey]);
   const [answers, setAnswers] = useState<State>({});
   const [step, setStep] = useState(0);
@@ -59,7 +59,7 @@ export default function SurveyStepper({ survey, submitting, onSubmit, submitLabe
     <Stack spacing={2}>
       {sections.length > 1 && (
         <Stepper activeStep={step} alternativeLabel>
-          {sections.map((s, i) => <Step key={i}><StepLabel>{s.title}</StepLabel></Step>)}
+          {sections.map((s) => <Step key={s.title}><StepLabel>{s.title}</StepLabel></Step>)}
         </Stepper>
       )}
       <Stack spacing={1.75}>

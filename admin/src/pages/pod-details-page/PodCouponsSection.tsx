@@ -80,7 +80,7 @@ export default function PodCouponsSection({ podId, podTitle }: Readonly<Props>) 
           refetch();
         }}
         initial={editing}
-        lockedPod={editing && editing.scope === 'GLOBAL' ? null : { id: podId, title: podTitle }}
+        lockedPod={editing?.scope === 'GLOBAL' ? null : { id: podId, title: podTitle }}
         pods={[]}
       />
     </Card>

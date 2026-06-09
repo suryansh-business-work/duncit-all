@@ -23,7 +23,7 @@ function addressLine(venue: PublicVenue): string {
     .join(', ');
 }
 
-function Chip({ label }: { label: string }) {
+function Chip({ label }: Readonly<{ label: string }>) {
   return (
     <XStack
       borderRadius={999}

@@ -28,7 +28,7 @@ export function CheckoutForm({
   errorMessage,
   dummyMode = true,
   onSubmit,
-}: CheckoutFormProps) {
+}: Readonly<CheckoutFormProps>) {
   const { primary, color } = useThemeColors();
   const { control, handleSubmit } = useForm<CheckoutFormValues>({
     values: { ...checkoutDefaults, ...initialValues },
@@ -86,7 +86,7 @@ export function CheckoutForm({
                 testID={`pay-method-${m.value}`}
                 role="button"
                 aria-label={m.label}
-                aria-selected={on}
+                aria-pressed={on}
                 onPress={() => method.field.onChange(m.value)}
                 paddingHorizontal={12}
                 paddingVertical={8}

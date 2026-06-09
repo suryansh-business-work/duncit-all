@@ -44,7 +44,7 @@ export interface EditAccountDialogProps {
   onSaved: () => void;
 }
 
-export default function EditAccountDialog({ open, onClose, initial, onSaved }: EditAccountDialogProps) {
+export default function EditAccountDialog({ open, onClose, initial, onSaved }: Readonly<EditAccountDialogProps>) {
   const [updateProfile, { loading }] = useMutation(UPDATE_PROFILE);
 
   const formik = useFormik<AccountEditValues>({

@@ -26,7 +26,7 @@ export default function PodAccordion({
   expanded,
   onChange,
   children,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Accordion
       expanded={expanded}

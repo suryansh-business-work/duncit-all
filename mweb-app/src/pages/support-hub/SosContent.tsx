@@ -38,7 +38,7 @@ async function captureLocation(): Promise<GeoSample | null> {
   });
 }
 
-export default function SosContent({ selected }: Props) {
+export default function SosContent({ selected }: Readonly<Props>) {
   const [message, setMessage] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);

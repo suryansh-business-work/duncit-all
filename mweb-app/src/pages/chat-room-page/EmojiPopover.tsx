@@ -13,7 +13,7 @@ export default function EmojiPopover({
   onClose,
   onSelect,
   fontSize = 24,
-}: EmojiPopoverProps) {
+}: Readonly<EmojiPopoverProps>) {
   return (
     <Popover
       open={!!anchorEl}

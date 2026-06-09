@@ -116,7 +116,7 @@ export const surveyService = {
     if (filter.category_id) q.category_id = oid(filter.category_id);
     if (filter.sub_category_id) q.sub_category_id = oid(filter.sub_category_id);
     if (filter.search) {
-      q.title = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      q.title = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
     }
     const docs = await SurveyModel.find(q).sort({ updated_at: -1 }).lean();
     const names = await categoryNameMap(docs);
@@ -260,7 +260,7 @@ export const surveyService = {
       const qmap = new Map((survey?.questions ?? []).map((q: any) => [q.qid, q]));
       const items = (r.answers ?? []).map((a: any) => {
         const q: any = qmap.get(a.qid);
-        const answer = (a.values && a.values.length ? a.values.join(', ') : a.value) ?? '';
+        const answer = (a.values?.length ? a.values.join(', ') : a.value) ?? '';
         return { qid: a.qid, label: q?.label ?? a.qid, type: q?.type ?? 'TEXT', answer };
       });
       return { kind: r.kind, title: survey?.title ?? '', submitted_at: iso(r.submitted_at), items };

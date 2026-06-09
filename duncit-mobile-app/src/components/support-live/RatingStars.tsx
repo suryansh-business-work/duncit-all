@@ -11,7 +11,7 @@ export interface RatingStarsProps {
 }
 
 /** Tappable 1–N star rating — RN twin of mWeb's <Rating/> for live feedback. */
-export function RatingStars({ value, onChange, max = 5 }: RatingStarsProps) {
+export function RatingStars({ value, onChange, max = 5 }: Readonly<RatingStarsProps>) {
   const { muted } = useThemeColors();
   return (
     <XStack gap={4} testID="rating-stars">
@@ -21,7 +21,7 @@ export function RatingStars({ value, onChange, max = 5 }: RatingStarsProps) {
           testID={`rating-star-${star}`}
           role="button"
           aria-label={`${star} star`}
-          aria-selected={star <= value}
+          aria-pressed={star <= value}
           onPress={() => onChange(star)}
           pressStyle={{ opacity: 0.7 }}
         >

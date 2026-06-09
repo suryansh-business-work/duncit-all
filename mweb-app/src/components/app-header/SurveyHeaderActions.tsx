@@ -7,7 +7,7 @@ interface SurveyHeaderActionsProps {
   onLogout: () => void;
 }
 
-export default function SurveyHeaderActions({ onLogout }: SurveyHeaderActionsProps) {
+export default function SurveyHeaderActions({ onLogout }: Readonly<SurveyHeaderActionsProps>) {
   return (
     <Stack direction="row" spacing={0.75} alignItems="center">
       <AuthModeToggle placement="inline" />

@@ -6,7 +6,7 @@ interface PetSummaryProps {
   pet?: PetProfile | null;
 }
 
-export default function PetSummary({ pet }: PetSummaryProps) {
+export default function PetSummary({ pet }: Readonly<PetSummaryProps>) {
   const hasPet = !!(pet && (pet.name || pet.species || pet.bio || pet.photo_url));
   if (!hasPet) {
     return (

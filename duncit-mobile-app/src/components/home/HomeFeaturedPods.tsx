@@ -9,7 +9,7 @@ interface HomeFeaturedPodsProps {
 }
 
 /** Horizontal strip of the soonest pods — RN port of mWeb's HomeFeaturedPods. */
-export function HomeFeaturedPods({ pods, onOpenPod }: HomeFeaturedPodsProps) {
+export function HomeFeaturedPods({ pods, onOpenPod }: Readonly<HomeFeaturedPodsProps>) {
   if (pods.length === 0) return null;
 
   return (

@@ -32,7 +32,7 @@ export default function ProfileDrawer({
   policiesOpen,
   setPoliciesOpen,
   onLogout,
-}: Props) {
+}: Readonly<Props>) {
   const navigate = useNavigate();
   const roles: string[] = me?.roles ?? [];
   const { baseItems, hostItem, venueItem, supportItems } = useMenuItems({

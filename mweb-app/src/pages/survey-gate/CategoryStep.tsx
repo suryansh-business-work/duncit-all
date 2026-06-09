@@ -28,7 +28,7 @@ const useLevel = (level: CategoryLevel, parentId: string) => {
 };
 
 /** Super → Category → Sub picker shown before the survey; resolves which survey to ask. */
-export default function CategoryStep({ submitting, onContinue }: Props) {
+export default function CategoryStep({ submitting, onContinue }: Readonly<Props>) {
   const [scope, setScope] = useState<CategoryScope>({ super_category_id: '', category_id: '', sub_category_id: '' });
   const supers = useLevel('SUPER', '');
   const cats = useLevel('CATEGORY', scope.super_category_id);

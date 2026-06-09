@@ -20,7 +20,7 @@ interface Props {
 
 /** Comments bottom sheet — list + add/delete. RN port of mWeb's
  * PodCommentsSheet; loads on open via usePodComments. */
-export function PodCommentsSheet({ podId, open, viewerId, onClose, onCountChange }: Props) {
+export function PodCommentsSheet({ podId, open, viewerId, onClose, onCountChange }: Readonly<Props>) {
   const { color } = useThemeColors();
   const { comments, isLoading, error, add, remove } = usePodComments(podId, open);
   const [text, setText] = useState('');

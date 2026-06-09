@@ -8,7 +8,7 @@ import { formatDateTime } from '@/utils/date-format';
 
 /** Pod summary shown on the success screen — image + title + date + location, so
  * the native confirmation mirrors mWeb's pod box. */
-export function ConfirmationPodCard({ pod }: { pod: CheckoutPod }) {
+export function ConfirmationPodCard({ pod }: Readonly<{ pod: CheckoutPod }>) {
   const { muted, primary } = useThemeColors();
   if (!pod) return null;
   const image = pod.pod_images_and_videos?.find((m) => m.url)?.url;

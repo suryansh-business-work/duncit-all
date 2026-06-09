@@ -11,7 +11,7 @@ import { useThemeStore } from '@/stores/theme.store';
  * the browser defaults. Re-apply both here. `display: contents` keeps the
  * modal's own (absolutely positioned) layout untouched.
  */
-export function ModalThemeScope({ children }: { children: ReactNode }) {
+export function ModalThemeScope({ children }: Readonly<{ children: ReactNode }>) {
   const scheme = useThemeStore((s) => s.scheme);
   return (
     <Theme name={scheme}>

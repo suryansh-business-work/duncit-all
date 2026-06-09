@@ -9,7 +9,7 @@ interface Props {
   children: React.ReactNode;
 }
 
-export default function AuthBackground({ children }: Props) {
+export default function AuthBackground({ children }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 

@@ -39,13 +39,15 @@ export default function CalendarMonth({ cursor, events, onEvent }: Readonly<Prop
         {days.map((day) => {
           const dayEvents = events.filter((e) => isSameDay(e.date, day));
           const muted = !isSameMonth(day, cursor);
+          const todayColor = isToday(day) ? 'primary.main' : 'text.primary';
+          const labelColor = muted ? 'text.disabled' : todayColor;
           return (
             <Box key={day.toISOString()} sx={{ minHeight: 96, borderRight: 1, borderBottom: 1, borderColor: 'divider', p: 0.5, bgcolor: muted ? 'action.hover' : 'background.paper' }}>
               <Typography
                 variant="caption"
                 sx={{
                   fontWeight: isToday(day) ? 800 : 500,
-                  color: muted ? 'text.disabled' : isToday(day) ? 'primary.main' : 'text.primary',
+                  color: labelColor,
                   display: 'inline-block',
                   mb: 0.25,
                 }}

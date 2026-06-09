@@ -13,7 +13,7 @@ interface ChatMessageBubbleProps {
 
 /** A single chat bubble: author, text/image, reactions and time. Right-aligned
  * and tinted for my own messages. Long-press opens the reaction picker. */
-export function ChatMessageBubble({ message, mine, onReact }: ChatMessageBubbleProps) {
+export function ChatMessageBubble({ message, mine, onReact }: Readonly<ChatMessageBubbleProps>) {
   const time = formatMessageTime(message.createdAt);
   const reactions = groupReactions(message.reactions);
   const ink = mine ? '$onPrimary' : '$color';

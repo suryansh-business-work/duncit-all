@@ -20,19 +20,19 @@ function Chip({
   onPress,
   testID,
   flag,
-}: {
+}: Readonly<{
   label: string;
   active: boolean;
   onPress: () => void;
   testID: string;
   flag?: string;
-}) {
+}>) {
   return (
     <XStack
       testID={testID}
       role="button"
       aria-label={label}
-      aria-selected={active}
+      aria-pressed={active}
       onPress={onPress}
       alignItems="center"
       gap={6}
@@ -54,7 +54,7 @@ function Chip({
   );
 }
 
-export function CountryStateChips({ tree, country, state, onCountry, onState }: Props) {
+export function CountryStateChips({ tree, country, state, onCountry, onState }: Readonly<Props>) {
   const { muted } = useThemeColors();
   const [query, setQuery] = useState('');
   const activeCountry = tree.find((c) => c.country === country) ?? tree[0];

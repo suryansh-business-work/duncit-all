@@ -15,7 +15,7 @@ interface PodCardScrollProps {
 
 /** A simple vertical scroll of pod cards with skeleton/empty states — shared by
  * Saved Items and Pod History. */
-export function PodCardScroll({ pods, isLoading, emptyText, testID, onOpen }: PodCardScrollProps) {
+export function PodCardScroll({ pods, isLoading, emptyText, testID, onOpen }: Readonly<PodCardScrollProps>) {
   const { width } = useWindowDimensions();
   const cardWidth = Math.min(width - 32, 520);
 

@@ -35,7 +35,7 @@ export const findSelectedLocation = (locations: any[], value: VenueStep1) =>
   ) ??
   null;
 
-export default function VenueLocationFields({ value, locations, onChange, errors, showAllErrors }: Props) {
+export default function VenueLocationFields({ value, locations, onChange, errors, showAllErrors }: Readonly<Props>) {
   const selectedLocation = findSelectedLocation(locations, value);
   const selectedCountry = value.country_code
     ? { name: value.country || value.country_code, code: value.country_code }

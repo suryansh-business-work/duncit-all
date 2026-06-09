@@ -8,7 +8,7 @@ interface MediaBrandingSectionProps {
   onError: (msg: string) => void;
 }
 
-export default function MediaBrandingSection({ onError }: MediaBrandingSectionProps) {
+export default function MediaBrandingSection({ onError }: Readonly<MediaBrandingSectionProps>) {
   const f = useFormikContext<InventoryProductFormValues>();
   return (
     <Grid container spacing={2}>

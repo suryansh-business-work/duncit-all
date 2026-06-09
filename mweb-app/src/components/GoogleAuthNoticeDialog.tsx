@@ -23,7 +23,7 @@ export default function GoogleAuthNoticeDialog({
   actionLabel,
   onAction,
   onClose,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle>{title}</DialogTitle>

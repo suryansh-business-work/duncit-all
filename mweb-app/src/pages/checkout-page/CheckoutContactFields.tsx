@@ -10,7 +10,7 @@ interface Props {
 
 const onlyDigits = (value: string) => value.replace(/\D/g, '').slice(0, 15);
 
-export default function CheckoutContactFields({ formik, fieldSx }: Props) {
+export default function CheckoutContactFields({ formik, fieldSx }: Readonly<Props>) {
   const { values, errors, touched, handleBlur, handleChange, setFieldValue } = formik;
   const fieldError = (key: keyof CheckoutForm) => {
     const value = values[key];

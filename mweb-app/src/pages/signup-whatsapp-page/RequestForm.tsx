@@ -12,7 +12,7 @@ interface Props {
   onSkip: () => void;
 }
 
-export default function RequestForm({ form, loading, onSkip }: Props) {
+export default function RequestForm({ form, loading, onSkip }: Readonly<Props>) {
   return (
     <form onSubmit={form.handleSubmit} noValidate>
       <Stack direction="row" spacing={1.5}>

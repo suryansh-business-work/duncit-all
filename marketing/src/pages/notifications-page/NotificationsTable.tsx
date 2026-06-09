@@ -28,10 +28,10 @@ interface Props {
 function ScopeChip({
   notification,
   locName,
-}: {
+}: Readonly<{
   notification: any;
   locName: (id?: string | null) => string;
-}) {
+}>) {
   const meta = SCOPES.find((s) => s.value === notification.scope);
   let label = meta?.label ?? notification.scope;
   if (notification.scope === 'LOCATION') label = `Location · ${locName(notification.location_id)}`;
@@ -56,7 +56,7 @@ export default function NotificationsTable({
   notifications,
   locName,
   onDelete,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>

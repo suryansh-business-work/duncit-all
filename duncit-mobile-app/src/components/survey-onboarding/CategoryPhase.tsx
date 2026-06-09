@@ -50,7 +50,7 @@ function useCategories(level: CategoryLevel, parentId: string, enabled: boolean)
 }
 
 /** Super → Category → Sub picker; resolves which survey to ask. */
-export function CategoryPhase({ busy, error, onContinue }: Props) {
+export function CategoryPhase({ busy, error, onContinue }: Readonly<Props>) {
   const { color: ink, primary } = useThemeColors();
   const [scope, setScope] = useState<Scope>({
     super_category_id: '',

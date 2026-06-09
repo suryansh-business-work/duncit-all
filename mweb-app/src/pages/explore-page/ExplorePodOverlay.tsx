@@ -11,7 +11,7 @@ interface Props {
   location: any;
 }
 
-export default function ExplorePodOverlay({ pod, club, location }: Props) {
+export default function ExplorePodOverlay({ pod, club, location }: Readonly<Props>) {
   const navigate = useNavigate();
   const { format } = usePricing();
   const isFree = pod.pod_type?.includes('FREE');

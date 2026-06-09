@@ -38,7 +38,7 @@ export default function HomeStatusRail({
   hostPods,
   followedPosts,
   followedUsers,
-}: HomeStatusRailProps) {
+}: Readonly<HomeStatusRailProps>) {
   const [viewer, setViewer] = useState<HomeStatusViewerItem | null>(null);
   const duncitName = branding?.app_name || 'Duncit';
 

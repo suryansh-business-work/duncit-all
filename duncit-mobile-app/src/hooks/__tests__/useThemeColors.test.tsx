@@ -7,7 +7,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import config from '../../../tamagui.config';
 
 /** Wraps the hook in a Tamagui provider pinned to the light brand theme. */
-function LightWrapper({ children }: { children: ReactNode }) {
+function LightWrapper({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <TamaguiProvider config={config} defaultTheme="light">
       {children}
@@ -16,7 +16,7 @@ function LightWrapper({ children }: { children: ReactNode }) {
 }
 
 /** Wraps the hook in a Tamagui provider pinned to the dark brand theme. */
-function DarkWrapper({ children }: { children: ReactNode }) {
+function DarkWrapper({ children }: Readonly<{ children: ReactNode }>) {
   return (
     <TamaguiProvider config={config} defaultTheme="dark">
       {children}

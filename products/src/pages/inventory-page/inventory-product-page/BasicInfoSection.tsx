@@ -13,7 +13,7 @@ interface BasicInfoSectionProps {
   categories: { id: string; name: string }[];
 }
 
-export default function BasicInfoSection({ categories }: BasicInfoSectionProps) {
+export default function BasicInfoSection({ categories }: Readonly<BasicInfoSectionProps>) {
   const f = useFormikContext<InventoryProductFormValues>();
   const showError = (field: keyof InventoryProductFormValues) =>
     !!(f.touched[field] && f.errors[field]);

@@ -56,11 +56,13 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
       action={<Button size="small" variant="contained" startIcon={<AddIcon />} onClick={openNew}>Add reminder</Button>}
     >
       {error && <Alert severity="error" sx={{ mb: 1 }}>{parseApiError(error)}</Alert>}
-      {loading && reminders.length === 0 ? (
+      {loading && reminders.length === 0 && (
         <Stack alignItems="center" sx={{ py: 3 }}><CircularProgress /></Stack>
-      ) : reminders.length === 0 ? (
+      )}
+      {!loading && reminders.length === 0 && (
         <Typography variant="body2" color="text.secondary">No reminders yet.</Typography>
-      ) : (
+      )}
+      {reminders.length > 0 && (
         <Stack spacing={1}>
           {reminders.map((r) => (
             <Stack key={r.id} direction="row" spacing={1} alignItems="center" sx={{ border: 1, borderColor: 'divider', borderRadius: 1, p: 1 }}>

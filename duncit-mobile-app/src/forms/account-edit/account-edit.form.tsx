@@ -20,7 +20,7 @@ export interface AccountEditFormProps {
 
 /** Edit-profile form — name, bio, location and phone/whatsapp. RN twin of mWeb's
  * EditAccountDialog body (React Hook Form + Zod, rule 10). */
-export function AccountEditForm({ me, loading, errorMessage, onSubmit }: AccountEditFormProps) {
+export function AccountEditForm({ me, loading, errorMessage, onSubmit }: Readonly<AccountEditFormProps>) {
   const { control, handleSubmit } = useForm<AccountEditValues>({
     values: accountEditDefaults(me),
     resolver: zodResolver(accountEditSchema),

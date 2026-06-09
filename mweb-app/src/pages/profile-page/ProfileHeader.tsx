@@ -3,7 +3,7 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import SettingsIcon from '@mui/icons-material/Settings';
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
   return (
     <Box sx={{ flex: 1, textAlign: 'center', p: 1, borderRadius: 3, bgcolor: 'action.hover' }}>
       <Typography display="block" fontWeight={950} lineHeight={1}>
@@ -24,7 +24,7 @@ interface Props {
   onSettings: () => void;
 }
 
-export default function ProfileHeader({ me, postsCount, onNewPost, onChangePhoto, onSettings }: Props) {
+export default function ProfileHeader({ me, postsCount, onNewPost, onChangePhoto, onSettings }: Readonly<Props>) {
   const displayName = me.full_name || `${me.first_name} ${me.last_name}`;
 
   return (

@@ -23,21 +23,21 @@ function Row({
   active,
   onPress,
   icon,
-}: {
+}: Readonly<{
   testID: string;
   label: string;
   sub: string;
   active: boolean;
   onPress: () => void;
   icon: keyof typeof MaterialIcons.glyphMap;
-}) {
+}>) {
   const { primary, muted } = useThemeColors();
   return (
     <XStack
       testID={testID}
       role="button"
       aria-label={label}
-      aria-selected={active}
+      aria-pressed={active}
       onPress={onPress}
       alignItems="center"
       gap={10}
@@ -62,7 +62,7 @@ function Row({
   );
 }
 
-export function AreaList({ locationName, zones, draftZone, onZone }: Props) {
+export function AreaList({ locationName, zones, draftZone, onZone }: Readonly<Props>) {
   const { muted } = useThemeColors();
   const [query, setQuery] = useState('');
   const filtered = useMemo(() => {

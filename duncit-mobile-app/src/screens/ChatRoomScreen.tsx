@@ -39,7 +39,7 @@ export function ChatRoomScreen() {
   }, [messages.length]);
 
   const handleSend = () => {
-    void sendText(text);
+    sendText(text);
     setText('');
   };
 

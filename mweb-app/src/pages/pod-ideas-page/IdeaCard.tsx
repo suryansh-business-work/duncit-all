@@ -36,7 +36,7 @@ export default function IdeaCard({
   onShare,
   onDelete,
   showStatus,
-}: IdeaCardProps) {
+}: Readonly<IdeaCardProps>) {
   const author = idea.author;
   const isMine = myId && idea.author_id === myId;
   return (

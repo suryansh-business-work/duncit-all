@@ -17,7 +17,7 @@ export default function MessageComposer({
   onSend,
   onOpenPicker,
   onOpenEmoji,
-}: MessageComposerProps) {
+}: Readonly<MessageComposerProps>) {
   return (
     <Stack
       direction="row"

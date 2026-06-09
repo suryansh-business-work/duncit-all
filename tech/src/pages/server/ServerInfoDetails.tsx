@@ -3,7 +3,7 @@ import InfoList from './InfoList';
 import { formatDate, formatDateTime, formatUptime } from './format';
 import type { ServerInfo } from './queries';
 
-function Panel({ title, children }: { title: string; children: React.ReactNode }) {
+function Panel({ title, children }: Readonly<{ title: string; children: React.ReactNode }>) {
   return (
     <Card variant="outlined">
       <CardContent>
@@ -16,7 +16,7 @@ function Panel({ title, children }: { title: string; children: React.ReactNode }
   );
 }
 
-export default function ServerInfoDetails({ info }: { info: ServerInfo }) {
+export default function ServerInfoDetails({ info }: Readonly<{ info: ServerInfo }>) {
   const { os, cpu, ssl, network } = info;
   const external = network.filter((n) => !n.internal && n.family === 'IPv4');
 

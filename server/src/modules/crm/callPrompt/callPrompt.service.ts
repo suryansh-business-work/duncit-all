@@ -36,7 +36,7 @@ export const callPromptService = {
     const query: any = {};
     if (filter.is_active !== undefined && filter.is_active !== null) query.is_active = filter.is_active;
     if (filter.search) {
-      const rx = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const rx = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       query.$or = [{ name: rx }, { description: rx }, { context: rx }];
     }
     const docs = await CallPromptModel.find(query).sort({ is_active: -1, name: 1 });

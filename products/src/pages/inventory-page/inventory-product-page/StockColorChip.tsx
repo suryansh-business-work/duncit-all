@@ -5,7 +5,7 @@ interface StockColorChipProps {
   lowStockAlert: number;
 }
 
-export default function StockColorChip({ inventory, lowStockAlert }: StockColorChipProps) {
+export default function StockColorChip({ inventory, lowStockAlert }: Readonly<StockColorChipProps>) {
   let color: 'success' | 'warning' | 'error' = 'success';
   let label = `${inventory} in stock`;
   if (inventory <= 0) {

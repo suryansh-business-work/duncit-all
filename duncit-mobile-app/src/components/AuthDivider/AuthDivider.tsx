@@ -1,7 +1,7 @@
 import { Separator, Text, XStack } from 'tamagui';
 
 /** "OR" separator matching mWeb's <Divider>OR</Divider>. */
-export function AuthDivider({ label = 'OR' }: { label?: string }) {
+export function AuthDivider({ label = 'OR' }: Readonly<{ label?: string }>) {
   return (
     <XStack alignItems="center" gap={12} testID="auth-divider">
       <Separator flex={1} borderColor="$borderColor" />

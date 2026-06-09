@@ -55,7 +55,7 @@ export default function ResponsiveDialog({
   contentSx,
   actionsSx,
   children,
-}: Props) {
+}: Readonly<Props>) {
   const theme = useTheme();
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'));
   const useSheet = bottomSheetOnly || (!desktopOnly && isMobile);

@@ -10,7 +10,7 @@ interface Props {
   onEdit: () => void;
 }
 
-export default function VenueListingsTable({ onEdit }: Props) {
+export default function VenueListingsTable({ onEdit }: Readonly<Props>) {
   const { data, loading, error } = useQuery(MY_VENUES, { fetchPolicy: 'cache-and-network' });
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('ALL');

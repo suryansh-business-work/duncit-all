@@ -24,7 +24,7 @@ function mediaOf(pod: any) {
   return pod.pod_images_and_videos?.[0] ?? null;
 }
 
-export default function HomeFeaturedPods({ pods }: HomeFeaturedPodsProps) {
+export default function HomeFeaturedPods({ pods }: Readonly<HomeFeaturedPodsProps>) {
   const navigate = useNavigate();
   if (pods.length === 0) return null;
 

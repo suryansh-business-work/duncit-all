@@ -21,7 +21,7 @@ interface ImagesFieldProps {
   onChange: (images: string[], cover: string) => void;
 }
 
-export default function ImagesField({ images, coverUrl, onChange }: ImagesFieldProps) {
+export default function ImagesField({ images, coverUrl, onChange }: Readonly<ImagesFieldProps>) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
   const handlePicked = (url: string) => {

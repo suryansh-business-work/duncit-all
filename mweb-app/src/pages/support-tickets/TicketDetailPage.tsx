@@ -32,7 +32,7 @@ const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'de
   CLOSED: 'default',
 };
 
-function Bubble({ msg }: { msg: TicketMessage }) {
+function Bubble({ msg }: Readonly<{ msg: TicketMessage }>) {
   const isUser = msg.author_role === 'USER';
   return (
     <Stack direction="row" sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start' }} spacing={1}>

@@ -35,7 +35,7 @@ export default function LocationAreaPicker({
   zones,
   draftZone,
   setDraftZone,
-}: Props) {
+}: Readonly<Props>) {
   const [query, setQuery] = useState('');
   const filteredZones = useMemo(() => {
     const term = query.trim().toLowerCase();

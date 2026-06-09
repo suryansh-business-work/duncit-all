@@ -30,7 +30,7 @@ export default function FlagEditDialog({
   opError,
   onClose,
   onSave,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{editing.id ? 'Edit Flag' : 'New Feature Flag'}</DialogTitle>

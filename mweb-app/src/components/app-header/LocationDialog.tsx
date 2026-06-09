@@ -30,7 +30,7 @@ export default function LocationDialog({
   draftZone,
   setDraftZone,
   onApply,
-}: Props) {
+}: Readonly<Props>) {
   const tree = useMemo(() => buildLocationTree(locations), [locations]);
   const draftLoc = locations.find((l) => l.id === draftLocationId);
   const [country, setCountry] = useState('');
@@ -73,11 +73,8 @@ export default function LocationDialog({
     [locations, setDraftLocationId, setDraftZone]
   );
 
-  const applyLabel = draftZone
-    ? `Apply · ${draftZone}`
-    : zones.length
-      ? `Apply · ${zones.length} areas`
-      : 'Apply';
+  const zonesLabel = zones.length ? `Apply · ${zones.length} areas` : 'Apply';
+  const applyLabel = draftZone ? `Apply · ${draftZone}` : zonesLabel;
 
   const title = (
     <Stack direction="row" alignItems="center" spacing={1} sx={{ minWidth: 0 }}>

@@ -5,7 +5,7 @@ interface QrPreviewProps {
   caption?: string;
 }
 
-export default function QrPreview({ value, caption }: QrPreviewProps) {
+export default function QrPreview({ value, caption }: Readonly<QrPreviewProps>) {
   if (!value) {
     return (
       <Typography variant="caption" color="text.secondary">

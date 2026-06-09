@@ -90,14 +90,15 @@ export default function SurveyGatePage() {
     return <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
   }
 
-  const heading =
-    step === 'category' ? (kind === 'VENUE' ? 'Register your venue' : 'Become a host')
-    : step === 'survey' ? (survey?.title || (kind === 'VENUE' ? 'Register your venue' : 'Become a host'))
-    : 'Schedule your onboarding meeting';
-  const subtitle =
-    step === 'category' ? 'Tell us your category so we can ask the right questions.'
-    : step === 'survey' ? 'A few quick questions before you continue.'
-    : 'Last step before registration.';
+  const kindHeading = kind === 'VENUE' ? 'Register your venue' : 'Become a host';
+  let heading: string;
+  if (step === 'category') heading = kindHeading;
+  else if (step === 'survey') heading = survey?.title || kindHeading;
+  else heading = 'Schedule your onboarding meeting';
+  let subtitle: string;
+  if (step === 'category') subtitle = 'Tell us your category so we can ask the right questions.';
+  else if (step === 'survey') subtitle = 'A few quick questions before you continue.';
+  else subtitle = 'Last step before registration.';
 
   return (
     <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 } }}>

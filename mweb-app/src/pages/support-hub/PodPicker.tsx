@@ -10,7 +10,7 @@ interface Props {
   loading: boolean;
 }
 
-export default function PodPicker({ options, selectedId, onChange, loading }: Props) {
+export default function PodPicker({ options, selectedId, onChange, loading }: Readonly<Props>) {
   const { formatDateTime } = useDateFormat();
 
   if (loading && !options.length) {

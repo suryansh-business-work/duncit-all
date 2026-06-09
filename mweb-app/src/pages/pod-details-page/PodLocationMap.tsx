@@ -11,7 +11,7 @@ interface Props {
 // Embeds a Google Maps Place card based on the human-readable location name.
 // Renders nothing only when the location is unknown; the map itself falls back
 // to a keyless embed when no API key is configured.
-export default function PodLocationMap({ locationName, zoneName, pincode }: Props) {
+export default function PodLocationMap({ locationName, zoneName, pincode }: Readonly<Props>) {
   if (!locationName?.trim()) return null;
 
   const query = [zoneName, locationName, pincode, 'India'].filter(Boolean).join(', ');

@@ -16,7 +16,7 @@ interface PodIdeasHeaderProps {
   onShare: () => void;
 }
 
-export default function PodIdeasHeader({ search, setSearch, onShare }: PodIdeasHeaderProps) {
+export default function PodIdeasHeader({ search, setSearch, onShare }: Readonly<PodIdeasHeaderProps>) {
   return (
     <>
       <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 2 }}>

@@ -13,7 +13,7 @@ export interface LoginFormProps {
 }
 
 /** Email + password login — same fields as the mWeb login. */
-export function LoginForm({ loading, errorMessage, onSubmit }: LoginFormProps) {
+export function LoginForm({ loading, errorMessage, onSubmit }: Readonly<LoginFormProps>) {
   const { control, handleSubmit } = useForm<LoginFormValues>({
     defaultValues: loginDefaults,
     resolver: zodResolver(loginSchema),

@@ -14,7 +14,7 @@ interface PodCardProps {
 
 /** Image-background pod tile — RN port of mWeb's featured/club pod card. Shows the
  * date, title, spots, price and place over a darkening gradient. */
-export function PodCard({ pod, width = 300, onPress }: PodCardProps) {
+export function PodCard({ pod, width = 300, onPress }: Readonly<PodCardProps>) {
   const image = podImageUrl(pod);
   const place = podPlaceLabel(pod);
 

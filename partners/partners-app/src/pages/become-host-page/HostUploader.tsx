@@ -7,7 +7,7 @@ interface Props {
   onPick: () => void;
 }
 
-export default function HostUploader({ label, value, onPick }: Props) {
+export default function HostUploader({ label, value, onPick }: Readonly<Props>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center">
       <Typography variant="body2" sx={{ flex: 1 }}>{label}</Typography>

@@ -192,7 +192,7 @@ export const ticketService = {
     if (filter?.pod_id) q.pod_id = new Types.ObjectId(filter.pod_id);
     if (filter?.status) q.status = filter.status;
     if (filter?.search) {
-      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       q.$or = [{ ticket_code: r }, { 'snapshot.user_name': r }, { 'snapshot.user_email': r }, { 'snapshot.pod_title': r }];
     }
     const docs = await TicketModel.find(q).sort({ created_at: -1 }).limit(500);

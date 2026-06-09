@@ -11,7 +11,7 @@ interface Props {
   zoneName?: string;
 }
 
-export default function HomeSearch({ locationId, zoneName }: Props) {
+export default function HomeSearch({ locationId, zoneName }: Readonly<Props>) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);

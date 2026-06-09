@@ -65,7 +65,7 @@ export function useHomeData() {
   const { selectedId: selectedLocationId } = useLocations();
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   const { clubs, pods } = useMemo(() => {
@@ -104,7 +104,7 @@ export function useHomeFeed(selectedCategoryId: string) {
   const { selectedId: selectedLocationId } = useLocations();
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   const derived = useMemo(

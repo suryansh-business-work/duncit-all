@@ -8,7 +8,7 @@ import type { EnvEntry } from '../queries';
  * config. The key is never re-entered here — it comes from the stored config
  * (Maps API Key), matching how every other category test reads its credentials.
  */
-export default function GoogleMapsTest({ entry }: { entry: EnvEntry }) {
+export default function GoogleMapsTest({ entry }: Readonly<{ entry: EnvEntry }>) {
   const savedKey = entry.config.find((p) => p.key === 'maps_api_key')?.value ?? '';
   const [load, setLoad] = useState(false);
   const [mapError, setMapError] = useState<string | null>(null);

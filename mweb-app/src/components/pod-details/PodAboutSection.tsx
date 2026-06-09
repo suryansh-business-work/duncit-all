@@ -8,7 +8,7 @@ interface Props {
 
 const TRUNCATE = 320;
 
-export default function PodAboutSection({ description, info }: Props) {
+export default function PodAboutSection({ description, info }: Readonly<Props>) {
   const [expanded, setExpanded] = useState(false);
   const text = (description ?? '').trim();
   const isLong = text.length > TRUNCATE;

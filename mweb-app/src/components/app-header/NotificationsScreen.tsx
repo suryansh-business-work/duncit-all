@@ -29,7 +29,7 @@ export default function NotificationsScreen({
   onEnablePush,
   onNotifClick,
   onMarkAll,
-}: NotificationsScreenProps) {
+}: Readonly<NotificationsScreenProps>) {
   const canEnablePush = isPushSupported() && perm !== 'granted' && perm !== 'unsupported';
 
   return (

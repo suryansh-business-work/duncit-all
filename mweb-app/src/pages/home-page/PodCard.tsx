@@ -19,11 +19,11 @@ export default function PodCard({
   pod,
   onOpen,
   hostName,
-}: {
+}: Readonly<{
   pod: any;
   onOpen: () => void;
   hostName?: string | null;
-}) {
+}>) {
   const isFree = pod.pod_type?.includes('FREE');
   const { format } = usePricing();
   const placeText = [pod.place_label, pod.place_detail].filter(Boolean).join(' - ');

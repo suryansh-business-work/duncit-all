@@ -33,7 +33,7 @@ export function usePodSocket({
     let socket: Socket | undefined;
     let cancelled = false;
 
-    void getAuthToken().then((token) => {
+    getAuthToken().then((token) => {
       if (cancelled || !token) return;
       const s = io(config.apiUrl, {
         path: '/socket.io',

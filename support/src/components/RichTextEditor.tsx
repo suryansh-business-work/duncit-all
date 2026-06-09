@@ -19,7 +19,7 @@ const MODULES = {
 };
 
 /** Thin react-quill wrapper used for composing ticket replies. */
-export default function RichTextEditor({ value, onChange, placeholder, minHeight = 140 }: Props) {
+export default function RichTextEditor({ value, onChange, placeholder, minHeight = 140 }: Readonly<Props>) {
   return (
     <Box
       sx={{

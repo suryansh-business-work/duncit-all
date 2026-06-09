@@ -20,7 +20,7 @@ export default function PexelsPhotoGrid({
   searching,
   importingId,
   onImport,
-}: PexelsPhotoGridProps) {
+}: Readonly<PexelsPhotoGridProps>) {
   if (searching && photos.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: 6 }}>

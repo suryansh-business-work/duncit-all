@@ -7,7 +7,7 @@ import config from '../../tamagui.config';
 
 /** Renders a component tree with the providers the app relies on. */
 export function renderWithProviders(ui: ReactElement) {
-  function Wrapper({ children }: { children: ReactNode }) {
+  function Wrapper({ children }: Readonly<{ children: ReactNode }>) {
     return (
       <TamaguiProvider config={config} defaultTheme="light">
         <SafeAreaProvider

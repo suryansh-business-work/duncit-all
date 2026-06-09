@@ -39,7 +39,7 @@ export function FormTextField<T extends FieldValues>({
   label,
   secureTextEntry,
   ...inputProps
-}: FormTextFieldProps<T>) {
+}: Readonly<FormTextFieldProps<T>>) {
   const { field, fieldState } = useController({ control, name });
   const { muted } = useThemeColors();
   const [visible, setVisible] = useState(false);

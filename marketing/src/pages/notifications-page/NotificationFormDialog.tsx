@@ -51,7 +51,7 @@ export default function NotificationFormDialog({
   onSubmit,
   locations,
   users,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <Formik<NotifForm>

@@ -9,7 +9,7 @@ interface Props {
   onToggle: () => void;
 }
 
-export default function FollowButton({ following, disabled, loading, onToggle }: Props) {
+export default function FollowButton({ following, disabled, loading, onToggle }: Readonly<Props>) {
   return (
     <Button
       size="small"

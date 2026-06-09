@@ -91,4 +91,4 @@ export const DELETE_LEAD_SURVEY_ENTRY = gql`
  * open to anyone with the link — no login. Uses the current origin so it works
  * across environments without extra config.
  */
-export const surveyLinkUrl = (token: string) => `${window.location.origin}/s/${token}`;
+export const surveyLinkUrl = (token: string) => `${globalThis.location.origin}/s/${token}`;

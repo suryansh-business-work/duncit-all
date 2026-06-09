@@ -5,7 +5,7 @@ import { useBranding } from '../lib/useBranding';
 import AppIcon from './AppIcon';
 import { HEADER_HEIGHT } from './AppShell';
 
-export default function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
+export default function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>) {
   const location = useLocation();
   const { logoUrl, appName, loading } = useBranding();
   return (

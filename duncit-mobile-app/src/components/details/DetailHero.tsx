@@ -19,13 +19,13 @@ export function HeroButton({
   active,
   loading,
   testID,
-}: {
+}: Readonly<{
   icon: IconName;
   onPress: () => void;
   active?: boolean;
   loading?: boolean;
   testID?: string;
-}) {
+}>) {
   return (
     <XStack
       testID={testID}
@@ -55,12 +55,12 @@ export function DetailHero({
   height = 320,
   onBack,
   children,
-}: {
+}: Readonly<{
   media: Media[];
   height?: number;
   onBack: () => void;
   children?: ReactNode;
-}) {
+}>) {
   const { width } = useWindowDimensions();
   const images = media.filter((m) => m.type === 'IMAGE' && !!m.url).map((m) => m.url);
   const [index, setIndex] = useState(0);

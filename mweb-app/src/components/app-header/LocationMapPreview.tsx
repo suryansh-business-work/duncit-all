@@ -13,7 +13,7 @@ interface Props {
 // Interactive Google Maps embed (pan/zoom) centred on the selected place.
 // Renders nothing when the API key is missing or no city is chosen, so the
 // dialog stays clean — same graceful behaviour as the pod-details map.
-export default function LocationMapPreview({ city, zoneName, pincode, country }: Props) {
+export default function LocationMapPreview({ city, zoneName, pincode, country }: Readonly<Props>) {
   const apiKey = getGoogleMapsApiKey();
   const query = locationMapQuery(city, zoneName, pincode, country);
   if (!apiKey || !query) return null;

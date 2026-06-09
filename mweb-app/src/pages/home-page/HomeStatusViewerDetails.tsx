@@ -19,7 +19,7 @@ export default function HomeStatusViewerDetails({
   index,
   onJumpTo,
   hasOpenButton,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Stack
       spacing={1}

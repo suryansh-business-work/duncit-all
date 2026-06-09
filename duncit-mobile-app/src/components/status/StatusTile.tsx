@@ -15,7 +15,7 @@ interface StatusTileProps {
 
 /** A circular story avatar with a label; an optional "+" badge marks the
  * upload tile and a coloured ring marks an unseen/own status. */
-export function StatusTile({ label, image, ring, badge, onPress, testID }: StatusTileProps) {
+export function StatusTile({ label, image, ring, badge, onPress, testID }: Readonly<StatusTileProps>) {
   const { onPrimary } = useThemeColors();
   const initial = (label[0] ?? '?').toUpperCase();
 

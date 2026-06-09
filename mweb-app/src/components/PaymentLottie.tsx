@@ -26,7 +26,7 @@ const popIn = keyframes`
   100% { transform: scale(1); opacity: 1; }
 `;
 
-function ProcessingDots({ size }: { size: number }) {
+function ProcessingDots({ size }: Readonly<{ size: number }>) {
   const dot = size * 0.18;
   return (
     <Box
@@ -59,7 +59,7 @@ function ProcessingDots({ size }: { size: number }) {
   );
 }
 
-function SuccessCheck({ size }: { size: number }) {
+function SuccessCheck({ size }: Readonly<{ size: number }>) {
   return (
     <Box
       role="img"

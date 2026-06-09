@@ -25,7 +25,7 @@ export interface PodHistoryDetailsProps {
   onGeneralTerms: () => void;
 }
 
-function Chip({ label, tone }: { label: string; tone: 'success' | 'warning' | 'muted' }) {
+function Chip({ label, tone }: Readonly<{ label: string; tone: 'success' | 'warning' | 'muted' }>) {
   const bg = tone === 'success' ? '$primary' : tone === 'warning' ? '$surface' : '$surface';
   return (
     <XStack
@@ -43,7 +43,7 @@ function Chip({ label, tone }: { label: string; tone: 'success' | 'warning' | 'm
   );
 }
 
-function Card({ title, children }: { title?: string; children: ReactNode }) {
+function Card({ title, children }: Readonly<{ title?: string; children: ReactNode }>) {
   return (
     <YStack
       borderRadius={18}
@@ -65,7 +65,7 @@ function Card({ title, children }: { title?: string; children: ReactNode }) {
 
 /** Membership details body — summary, actions, timeline and terms links.
  * RN twin of mWeb's PodHistoryDetails. */
-export function PodHistoryDetails(props: PodHistoryDetailsProps) {
+export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
   const { item, notice, onBackoutTerms, onGeneralTerms } = props;
   const { onPrimary, primary } = useThemeColors();
   const pod = item.pod;

@@ -301,7 +301,15 @@
       "Bash(echo \"ADMIN tsc -b EXIT: $?\")",
       "Bash(node fix-readonly.cjs \"c:/Users/Suryansh/Desktop/Projects/duncit.com/project/crm\")",
       "Bash(node -e \"console.log\\('build:',require\\('./package.json'\\).scripts.build\\)\")",
-      "Bash(echo \"CRM tsc -b EXIT: $?\")"
+      "Bash(echo \"CRM tsc -b EXIT: $?\")",
+      "Bash(break)",
+      "Bash(bash \"c:/tmp/sonarscan/typecheck-all.sh\")",
+      "Bash(node -e \"console.log\\('build:',require\\('./package.json'\\).scripts.build, '| typecheck:', require\\('./package.json'\\).scripts.typecheck||'\\(none\\)'\\)\")",
+      "Bash(echo \"SERVER tsc EXIT: $?\")",
+      "Bash(git -c core.autocrlf=false diff --shortstat)",
+      "Bash(git -c core.autocrlf=false diff --name-only)",
+      "Bash(grep -vc \"^$\")",
+      "Bash(node -e \"console.log\\('test:coverage:', require\\('./package.json'\\).scripts['test:coverage']||'\\(none\\)'\\)\")"
     ],
     "deny": [],
     "ask": [],

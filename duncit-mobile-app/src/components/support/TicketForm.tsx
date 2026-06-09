@@ -6,7 +6,7 @@ import { createTicket } from '@/hooks/useSupport';
 const CATEGORIES = ['GENERAL', 'PAYMENT', 'BOOKING', 'SAFETY', 'TECHNICAL', 'OTHER'];
 
 /** Create-ticket form (subject · category · message). On success calls onCreated. */
-export function TicketForm({ onCreated }: { onCreated: () => void }) {
+export function TicketForm({ onCreated }: Readonly<{ onCreated: () => void }>) {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [category, setCategory] = useState('GENERAL');
@@ -56,7 +56,7 @@ export function TicketForm({ onCreated }: { onCreated: () => void }) {
               testID={`ticket-cat-${c}`}
               role="button"
               aria-label={c}
-              aria-selected={selected}
+              aria-pressed={selected}
               onPress={() => setCategory(c)}
               paddingHorizontal={10}
               paddingVertical={5}

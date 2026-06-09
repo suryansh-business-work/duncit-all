@@ -23,7 +23,7 @@ export default function SupportShell({
   backTo,
   action,
   children,
-}: Props) {
+}: Readonly<Props>) {
   const navigate = useNavigate();
 
   return (

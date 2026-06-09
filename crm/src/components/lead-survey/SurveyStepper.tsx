@@ -63,7 +63,7 @@ export default function SurveyStepper({ survey, initialAnswers, submitting, onSu
     <Stack spacing={2}>
       {sections.length > 1 && (
         <Stepper activeStep={step} alternativeLabel>
-          {sections.map((s, i) => <Step key={i}><StepLabel>{s.title}</StepLabel></Step>)}
+          {sections.map((s) => <Step key={s.title}><StepLabel>{s.title}</StepLabel></Step>)}
         </Stepper>
       )}
       <Stack spacing={1.75}>

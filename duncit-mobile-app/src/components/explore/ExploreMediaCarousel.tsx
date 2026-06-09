@@ -24,7 +24,7 @@ export function ExploreMediaCarousel({
   width,
   height,
   dotsBottom = 150,
-}: ExploreMediaCarouselProps) {
+}: Readonly<ExploreMediaCarouselProps>) {
   const images = media.filter((m) => m.type === 'IMAGE' && !!m.url).map((m) => m.url);
   const items = images.length > 0 ? images : fallbackUrl ? [fallbackUrl] : [];
   const [index, setIndex] = useState(0);

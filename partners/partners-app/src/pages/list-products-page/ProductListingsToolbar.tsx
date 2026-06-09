@@ -12,7 +12,7 @@ interface Props {
   onSort: (value: string) => void;
 }
 
-export default function ProductListingsToolbar({ search, status, target, sort, statusOptions, onSearch, onStatus, onTarget, onSort }: Props) {
+export default function ProductListingsToolbar({ search, status, target, sort, statusOptions, onSearch, onStatus, onTarget, onSort }: Readonly<Props>) {
   return (
     <Stack direction={{ xs: 'column', md: 'row' }} spacing={1.25}>
       <TextField label="Search" value={search} onChange={(event) => onSearch(event.target.value)} placeholder="Product, size, color" sx={{ flex: 1 }} />

@@ -4,7 +4,7 @@ import type { EnvEntry } from '../queries';
 import GoogleOAuthTest from './GoogleOAuthTest';
 
 /** OAuth tab: runs a real sign-in with the entry's client_id. */
-export default function GoogleOAuthTab({ entry }: { entry: EnvEntry }) {
+export default function GoogleOAuthTab({ entry }: Readonly<{ entry: EnvEntry }>) {
   const clientId = entry.config.find((p) => p.key === 'client_id')?.value ?? '';
   return (
     <Stack spacing={1.5}>

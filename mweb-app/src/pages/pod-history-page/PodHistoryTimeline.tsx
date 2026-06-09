@@ -43,7 +43,7 @@ function buildTimeline(item: PodHistoryItem): TimelineEvent[] {
   return events;
 }
 
-export default function PodHistoryTimeline({ item }: { item: PodHistoryItem }) {
+export default function PodHistoryTimeline({ item }: Readonly<{ item: PodHistoryItem }>) {
   const { formatDateTime } = useDateFormat();
   const events = buildTimeline(item);
   return (

@@ -14,7 +14,7 @@ export function useBranding() {
   const fetch = useBrandingStore((s) => s.fetch);
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   return { data, isLoading, error };

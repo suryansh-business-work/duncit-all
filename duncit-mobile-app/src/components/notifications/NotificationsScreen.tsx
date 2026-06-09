@@ -27,7 +27,7 @@ export function NotificationsScreen({
   unreadCount,
   onNotifClick,
   onMarkAll,
-}: NotificationsScreenProps) {
+}: Readonly<NotificationsScreenProps>) {
   const { color, primary } = useThemeColors();
 
   return (

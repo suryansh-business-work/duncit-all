@@ -12,7 +12,7 @@ interface Props {
   center?: boolean;
 }
 
-export default function AuthScreenFrame({ children, center }: Props) {
+export default function AuthScreenFrame({ children, center }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
 

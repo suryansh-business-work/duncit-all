@@ -48,8 +48,9 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
     setDraft({ ...draft, variables: draft.variables.map((v) => ({ ...v, sample: next[v.key] ?? '' })) });
 
   // Available list + "known" slugs follow the template's target.
-  const availableForTarget =
-    draft.target === 'VENUE' ? VENUE_VARIABLES : draft.target === 'HOST' ? HOST_VARIABLES : [];
+  const hostVarsForTarget = draft.target === 'HOST' ? HOST_VARIABLES : [];
+  const availableForTarget = draft.target === 'VENUE' ? VENUE_VARIABLES : hostVarsForTarget;
+  const targetNoun = draft.target === 'VENUE' ? 'Venue' : 'Host';
   const knownSlugs = new Set(availableForTarget.map((v) => v.slug));
   // Detected placeholders that aren't available variables for this target.
   const foreignDetected = detected.filter((s) => !knownSlugs.has(s));
@@ -91,7 +92,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
               <VariableChips title="" items={detected.map((slug) => ({ slug }))} declared={declared} onToggle={toggle} knownSlugs={knownSlugs} emptyHint="No {{ var }} placeholders found." />
               {foreignDetected.length > 0 && (
                 <Alert severity="warning" sx={{ py: 0 }}>
-                  {foreignDetected.length} placeholder{foreignDetected.length === 1 ? '' : 's'} ({foreignDetected.join(', ')}) {foreignDetected.length === 1 ? 'is' : 'are'} not {draft.target === 'STATIC' ? 'expected in a static template' : `an available ${draft.target === 'VENUE' ? 'Venue' : 'Host'} variable`} — they won't be filled from the lead.
+                  {foreignDetected.length} placeholder{foreignDetected.length === 1 ? '' : 's'} ({foreignDetected.join(', ')}) {foreignDetected.length === 1 ? 'is' : 'are'} not {draft.target === 'STATIC' ? 'expected in a static template' : `an available ${targetNoun} variable`} — they won't be filled from the lead.
                 </Alert>
               )}
             </Stack>
@@ -99,7 +100,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
               <Typography variant="caption" color="text.secondary">Static template — no lead variables. Detected placeholders show red.</Typography>
             ) : (
               <VariableChips
-                title={`Available for ${draft.target === 'VENUE' ? 'Venue' : 'Host'}`}
+                title={`Available for ${targetNoun}`}
                 items={availableForTarget}
                 declared={declared}
                 onToggle={toggle}

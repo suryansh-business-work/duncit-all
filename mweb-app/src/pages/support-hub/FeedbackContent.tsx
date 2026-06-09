@@ -25,7 +25,7 @@ const CATEGORIES = [
   { value: 'OTHER', label: 'Other' },
 ];
 
-export default function FeedbackContent({ selected }: Props) {
+export default function FeedbackContent({ selected }: Readonly<Props>) {
   const [rating, setRating] = useState<number | null>(0);
   const [category, setCategory] = useState('OTHER');
   const [message, setMessage] = useState('');

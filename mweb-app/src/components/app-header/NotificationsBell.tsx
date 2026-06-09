@@ -21,7 +21,7 @@ export default function NotificationsBell({
   onEnablePush,
   onNotifClick,
   onMarkAll,
-}: Props) {
+}: Readonly<Props>) {
   const [open, setOpen] = useState(false);
 
   return (

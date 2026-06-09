@@ -13,7 +13,7 @@ export function useChatRooms() {
   const fetch = useChatStore((s) => s.fetch);
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   return {

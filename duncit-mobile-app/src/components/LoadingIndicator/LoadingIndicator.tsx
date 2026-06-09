@@ -6,7 +6,7 @@ export interface LoadingIndicatorProps {
 }
 
 /** Centered spinner with an optional label. */
-export function LoadingIndicator({ label, testID }: LoadingIndicatorProps) {
+export function LoadingIndicator({ label, testID }: Readonly<LoadingIndicatorProps>) {
   return (
     <YStack alignItems="center" gap={8} testID={testID}>
       <Spinner color="$primary" />

@@ -8,7 +8,7 @@ import AiTestPanel from './AiTestPanel';
 import GoogleMapsTest from './GoogleMapsTest';
 import GoogleOAuthTab from './GoogleOAuthTab';
 
-function Panel({ entry }: { entry: EnvEntry }) {
+function Panel({ entry }: Readonly<{ entry: EnvEntry }>) {
   switch (entry.category) {
     case 'EMAIL':
       return <EmailTestPanel entry={entry} />;
@@ -36,7 +36,7 @@ interface Props {
 }
 
 /** Right-side drawer hosting the category-specific interactive test. */
-export default function TestDrawer({ entry, onClose }: Props) {
+export default function TestDrawer({ entry, onClose }: Readonly<Props>) {
   return (
     <Drawer anchor="right" open={!!entry} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 440 } } }}>
       {entry && (

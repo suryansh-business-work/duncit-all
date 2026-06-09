@@ -47,7 +47,7 @@ const arrowBtn = {
   '&:hover': { bgcolor: 'rgba(17,24,39,0.48)' },
 };
 
-function PrevArrow({ onClick }: { onClick?: () => void }) {
+function PrevArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
   return (
     <IconButton size="small" onClick={onClick} aria-label="Previous" sx={{ ...arrowBtn, left: 10 }}>
       <ChevronLeftIcon />
@@ -55,7 +55,7 @@ function PrevArrow({ onClick }: { onClick?: () => void }) {
   );
 }
 
-function NextArrow({ onClick }: { onClick?: () => void }) {
+function NextArrow({ onClick }: Readonly<{ onClick?: () => void }>) {
   return (
     <IconButton size="small" onClick={onClick} aria-label="Next" sx={{ ...arrowBtn, right: 10 }}>
       <ChevronRightIcon />
@@ -73,7 +73,7 @@ export default function ClubHero({
   onToggleFollow,
   onToggleSave,
   onShare,
-}: Props) {
+}: Readonly<Props>) {
   const overlay = (
     <Stack
       direction="row"

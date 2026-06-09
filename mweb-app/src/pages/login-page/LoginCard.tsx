@@ -29,7 +29,7 @@ export default function LoginCard({
   gLoading,
   gError,
   onGoogleCredential,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <AuthScreenFrame center>
       <Stack spacing={2.1}>

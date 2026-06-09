@@ -18,7 +18,7 @@ interface Props {
   showAllErrors?: boolean;
 }
 
-export default function DetailsStep({ value, locations, onChange, onCoverPick, showAllErrors }: Props) {
+export default function DetailsStep({ value, locations, onChange, onCoverPick, showAllErrors }: Readonly<Props>) {
   const [touched, setTouched] = useState<Partial<Record<keyof VenueStep1, boolean>>>({});
   const [galleryPickerOpen, setGalleryPickerOpen] = useState(false);
   const errors = useMemo(() => getStepErrors(venueStep1Schema, value), [value]);

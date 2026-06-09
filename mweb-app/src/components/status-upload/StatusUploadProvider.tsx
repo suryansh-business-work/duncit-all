@@ -47,7 +47,7 @@ function validateFile(file: File, allowVideo: boolean) {
   return null;
 }
 
-export function StatusUploadProvider({ children }: { children: React.ReactNode }) {
+export function StatusUploadProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const pendingRef = useRef<{ kind: StatusUploadKind; podId?: string } | null>(null);
   const [accept, setAccept] = useState('image/*');

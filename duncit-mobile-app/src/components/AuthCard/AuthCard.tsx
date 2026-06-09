@@ -8,7 +8,7 @@ import { useThemeStore } from '@/stores/theme.store';
  * Elevated, rounded gradient card hosting the auth form. Mirrors mWeb's auth
  * surface (gradient + border + soft shadow) using the shared card-gradient tokens.
  */
-export function AuthCard({ children, testID }: { children: ReactNode; testID?: string }) {
+export function AuthCard({ children, testID }: Readonly<{ children: ReactNode; testID?: string }>) {
   const isDark = useThemeStore((s) => s.scheme) === 'dark';
   const colors = isDark ? auth.cardGradient.dark : auth.cardGradient.light;
 

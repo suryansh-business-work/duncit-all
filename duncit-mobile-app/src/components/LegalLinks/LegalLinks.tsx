@@ -6,7 +6,7 @@ import { auth } from '@duncit/auth-tokens';
  * Terms & Privacy footer, mirroring mWeb's <LegalLinks/>. URLs come from the
  * shared auth tokens so both apps point at the same legal pages.
  */
-export function LegalLinks({ prefix = 'By continuing,' }: { prefix?: string }) {
+export function LegalLinks({ prefix = 'By continuing,' }: Readonly<{ prefix?: string }>) {
   return (
     <Text textAlign="center" fontSize={12} lineHeight={20} color="$muted">
       {prefix} you agree to our{' '}

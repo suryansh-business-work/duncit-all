@@ -5,7 +5,7 @@ interface MenuItemRowProps {
   item: MenuItemData;
 }
 
-export default function MenuItemRow({ item }: MenuItemRowProps) {
+export default function MenuItemRow({ item }: Readonly<MenuItemRowProps>) {
   return (
     <ListItem disablePadding sx={{ px: 1.25, py: 0.25 }}>
       <ListItemButton onClick={item.onClick} sx={{ px: 1.5, py: 1.15, borderRadius: 2.5, '&:hover': { bgcolor: 'action.hover' } }}>

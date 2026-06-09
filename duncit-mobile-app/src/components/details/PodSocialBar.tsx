@@ -20,13 +20,13 @@ function SocialButton({
   label,
   active,
   onPress,
-}: {
+}: Readonly<{
   testID: string;
   icon: IconName;
   label: string;
   active?: boolean;
   onPress: () => void;
-}) {
+}>) {
   const { color, danger } = useThemeColors();
   const fg = active ? '#ffffff' : color;
   return (
@@ -61,7 +61,7 @@ export function PodSocialBar({
   commentCount,
   onToggleLike,
   onOpenComments,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <XStack paddingHorizontal={16} gap={12} flexWrap="wrap">
       <SocialButton

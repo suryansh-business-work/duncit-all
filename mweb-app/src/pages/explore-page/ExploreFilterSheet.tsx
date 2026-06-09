@@ -18,7 +18,7 @@ const SORTS: Array<[ExploreSort, string]> = [['SOONEST', 'Soonest'], ['TRENDING'
 const PRICES: Array<[ExplorePriceFilter, string]> = [['ALL', 'All'], ['FREE', 'Free'], ['PAID', 'Paid'], ['PREMIUM', 'Premium']];
 const DATES: Array<[ExploreDateFilter, string]> = [['ALL', 'Any time'], ['TODAY', 'Today'], ['TOMORROW', 'Tomorrow'], ['WEEK', 'This week'], ['MONTH', 'This month']];
 
-function ChipRow<T extends string>({ items, value, onChange }: { items: Array<[T, string]>; value: T; onChange: (value: T) => void }) {
+function ChipRow<T extends string>({ items, value, onChange }: Readonly<{ items: Array<[T, string]>; value: T; onChange: (value: T) => void }>) {
   return (
     <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
       {items.map(([itemValue, label]) => {
@@ -39,7 +39,7 @@ function ChipRow<T extends string>({ items, value, onChange }: { items: Array<[T
   );
 }
 
-export default function ExploreFilterSheet({ open, filters, setFilters, categories, activeCount, resultCount, onClose }: ExploreFilterSheetProps) {
+export default function ExploreFilterSheet({ open, filters, setFilters, categories, activeCount, resultCount, onClose }: Readonly<ExploreFilterSheetProps>) {
   const reset = () => setFilters({ preset: 'ALL', categoryId: '', price: 'ALL', date: 'ALL', sort: 'SOONEST', search: '' });
 
   return (

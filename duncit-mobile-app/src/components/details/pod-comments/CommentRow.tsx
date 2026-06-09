@@ -16,11 +16,11 @@ export function CommentRow({
   comment,
   canDelete,
   onDelete,
-}: {
+}: Readonly<{
   comment: PodComment;
   canDelete: boolean;
   onDelete: () => void;
-}) {
+}>) {
   const { muted } = useThemeColors();
   return (
     <XStack gap={10} paddingVertical={10} alignItems="flex-start">

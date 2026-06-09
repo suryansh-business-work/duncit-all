@@ -22,7 +22,7 @@ export interface EditAccountDialogProps {
 
 /** Edit-profile bottom sheet hosting the RHF+Zod form — RN twin of mWeb's
  * <EditAccountDialog/>. */
-export function EditAccountDialog({ open, me, onClose, onSave }: EditAccountDialogProps) {
+export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAccountDialogProps>) {
   const { color } = useThemeColors();
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);

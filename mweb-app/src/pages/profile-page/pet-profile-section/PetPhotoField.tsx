@@ -11,7 +11,7 @@ interface PetPhotoFieldProps {
   onChange: (url: string) => void;
 }
 
-export default function PetPhotoField({ value, error, touched, onChange }: PetPhotoFieldProps) {
+export default function PetPhotoField({ value, error, touched, onChange }: Readonly<PetPhotoFieldProps>) {
   const [pickerOpen, setPickerOpen] = useState(false);
   return (
     <>

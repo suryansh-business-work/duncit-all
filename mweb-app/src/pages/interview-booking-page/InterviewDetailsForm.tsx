@@ -43,7 +43,7 @@ export default function InterviewDetailsForm({
   setZone,
   about,
   setAbout,
-}: InterviewDetailsFormProps) {
+}: Readonly<InterviewDetailsFormProps>) {
   const onlyDigits = (value: string) => value.replace(/\D/g, '').slice(0, 15);
 
   return (

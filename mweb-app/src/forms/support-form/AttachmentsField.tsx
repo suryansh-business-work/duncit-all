@@ -16,7 +16,7 @@ interface Props {
   setAttachments: (next: string[]) => void;
 }
 
-export default function AttachmentsField({ attachments, setAttachments }: Props) {
+export default function AttachmentsField({ attachments, setAttachments }: Readonly<Props>) {
   const [pickerOpen, setPickerOpen] = useState(false);
   return (
     <Box>

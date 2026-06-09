@@ -94,7 +94,7 @@ interface Props {
   onCancel: () => void;
 }
 
-export default function WebsiteContentForm({ type, item, submitting, errorMessage, onSubmit, onCancel }: Props) {
+export default function WebsiteContentForm({ type, item, submitting, errorMessage, onSubmit, onCancel }: Readonly<Props>) {
   const formik = useFormik<WebsiteContentFormValues>({
     initialValues: item ? toFormValues(item) : blankValues(),
     validationSchema: websiteContentSchema,

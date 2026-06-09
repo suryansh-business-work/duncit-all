@@ -29,7 +29,7 @@ const hints: Record<string, string> = {
   unit_cost: 'Final per-unit selling price shown to users.',
 };
 
-export function StepBody({ step, formik, onImageClick }: { step: number; formik: any; onImageClick: () => void }) {
+export function StepBody({ step, formik, onImageClick }: Readonly<{ step: number; formik: any; onImageClick: () => void }>) {
   if (step === 0) return <RadioField formik={formik} name="is_duncit_delivery_partner" label="Are you a Duncit product delivery partner?" options={[['true', 'Yes, I deliver Duncit products'], ['false', 'No, I am not a delivery partner yet']]} />;
   if (step === 1) return <Stack spacing={2}>{field(formik, 'product_name', 'Product title')}<ImageField formik={formik} onImageClick={onImageClick} />{field(formik, 'description', 'Description', 'text', true)}</Stack>;
   if (step === 2) return <Stack spacing={2}>{field(formik, 'size_label', 'Size')}{field(formik, 'height_cm', 'Height (cm)', 'number')}{field(formik, 'weight_kg', 'Weight (kg)', 'number')}{field(formik, 'color', 'Color')}{field(formik, 'inventory_count', 'Available inventory', 'number')}{field(formik, 'unit_cost', 'Product price', 'number')}</Stack>;
@@ -44,7 +44,7 @@ function field(formik: any, name: string, label: string, type = 'text', multilin
   return <TextField name={name} label={label} type={type} value={formik.values[name]} onChange={formik.handleChange} onBlur={formik.handleBlur} multiline={multiline} minRows={multiline ? 4 : undefined} error={Boolean(error)} helperText={error || hints[name] || ' '} fullWidth />;
 }
 
-function ImageField({ formik, onImageClick }: { formik: any; onImageClick: () => void }) {
+function ImageField({ formik, onImageClick }: Readonly<{ formik: any; onImageClick: () => void }>) {
   const images = formik.values.image_urls ?? [];
   const error = formik.touched.image_urls && formik.errors.image_urls;
   const removeImage = (url: string) => formik.setFieldValue('image_urls', images.filter((item: string) => item !== url));
@@ -68,11 +68,11 @@ function ImageField({ formik, onImageClick }: { formik: any; onImageClick: () =>
   );
 }
 
-function RadioField({ formik, name, label, options }: { formik: any; name: string; label: string; options: string[][] }) {
+function RadioField({ formik, name, label, options }: Readonly<{ formik: any; name: string; label: string; options: string[][] }>) {
   const value = name === 'is_duncit_delivery_partner' ? String(formik.values[name]) : formik.values[name];
   return <FormControl error={Boolean(formik.touched[name] && formik.errors[name])}><FormLabel>{label}</FormLabel><RadioGroup value={value} onChange={(event) => formik.setFieldValue(name, name === 'is_duncit_delivery_partner' ? event.target.value === 'true' : event.target.value)}>{options.map(([optionValue, optionLabel]) => <FormControlLabel key={optionValue} value={optionValue} control={<Radio />} label={optionLabel} />)}</RadioGroup><FormHelperText>{formik.touched[name] && formik.errors[name]}</FormHelperText></FormControl>;
 }
 
-function Preview({ values }: { values: ProductListingValues }) {
+function Preview({ values }: Readonly<{ values: ProductListingValues }>) {
   return <Stack spacing={1.25}><Typography variant="h6" fontWeight={950}>{values.product_name || 'Product preview'}</Typography><Typography color="text.secondary">{values.description}</Typography><Typography>Images: {values.image_urls.length} · Inventory: {values.inventory_count} · Price: ₹{values.unit_cost}</Typography><Typography>Commission: {values.commission_pct}% · Delivery: {values.delivery_target === 'HOST' ? 'Host' : 'Venue'}</Typography></Stack>;
 }

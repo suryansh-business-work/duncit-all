@@ -6,7 +6,7 @@ import { TEST_ENV_PEXELS, type EnvEntry, type RichTestResult } from '../queries'
 import ResultAlert from './ResultAlert';
 import { parseApiError } from '../../../utils/parseApiError';
 
-export default function PexelsTestPanel({ entry }: { entry: EnvEntry }) {
+export default function PexelsTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
   const [query, setQuery] = useState('nature');
   const [photos, setPhotos] = useState<string[]>([]);
   const [result, setResult] = useState<RichTestResult | null>(null);

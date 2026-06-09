@@ -26,7 +26,7 @@ interface Props {
   label?: string;
 }
 
-export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: Props) {
+export default function MjmlAiButton({ currentMjml, onApply, iconOnly, label }: Readonly<Props>) {
   const [anchorEl, setAnchorEl] = useState<HTMLElement | null>(null);
   const [prompt, setPrompt] = useState('');
   const [error, setError] = useState<string | null>(null);

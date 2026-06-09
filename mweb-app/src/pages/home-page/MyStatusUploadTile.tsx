@@ -19,7 +19,7 @@ function initials(name?: string | null) {
     .toUpperCase();
 }
 
-export default function MyStatusUploadTile({ me, onView }: Props) {
+export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
   const { upload, openProfilePicker } = useStatusUpload();
   const latestPost = me?.latest_status ?? null;
   const statusUrl = upload.profileUrl ?? latestPost?.image_url ?? null;

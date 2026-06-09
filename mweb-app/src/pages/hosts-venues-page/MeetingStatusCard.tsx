@@ -17,7 +17,7 @@ interface Meeting {
  * a join link once onboarding staff set them (synced from the Onboarding
  * portal). Renders nothing when the user has no meeting for this kind.
  */
-export default function MeetingStatusCard({ kind }: { kind: SurveyKind }) {
+export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
   const { data } = useQuery<{ myMeeting: Meeting | null }>(MY_MEETING, {
     variables: { kind },
     fetchPolicy: 'cache-and-network',

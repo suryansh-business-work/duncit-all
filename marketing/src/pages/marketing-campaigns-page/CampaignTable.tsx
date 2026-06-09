@@ -31,7 +31,7 @@ const statusColor = (status: string) => {
 
 const formatDate = (value?: string | null) => (value ? new Date(value).toLocaleString() : '—');
 
-export default function CampaignTable({ rows, loading, sending, onSend }: Props) {
+export default function CampaignTable({ rows, loading, sending, onSend }: Readonly<Props>) {
   return (
     <Box sx={{ overflowX: 'auto' }}>
       {loading ? (

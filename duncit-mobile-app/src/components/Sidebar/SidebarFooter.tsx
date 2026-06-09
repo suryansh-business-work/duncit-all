@@ -3,7 +3,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
 /** Logout footer — RN port of mWeb's <DrawerFooter/>. */
-export function SidebarFooter({ onLogout }: { onLogout: () => void }) {
+export function SidebarFooter({ onLogout }: Readonly<{ onLogout: () => void }>) {
   return (
     <YStack borderTopWidth={1} borderColor="$borderColor" padding={12}>
       <XStack

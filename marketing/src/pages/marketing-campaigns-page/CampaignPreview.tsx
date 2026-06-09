@@ -7,7 +7,7 @@ interface Props {
   subject?: string;
 }
 
-export default function CampaignPreview({ html, errors, loading, subject }: Props) {
+export default function CampaignPreview({ html, errors, loading, subject }: Readonly<Props>) {
   return (
     <Card sx={{ height: '100%' }}>
       <CardContent sx={{ height: '100%', display: 'flex', flexDirection: 'column', gap: 1.5 }}>

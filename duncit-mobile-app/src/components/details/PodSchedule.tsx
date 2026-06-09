@@ -15,7 +15,7 @@ interface Props {
   onOpenVenue?: (venueId: string) => void;
 }
 
-function Field({ label, children }: { label: string; children: ReactNode }) {
+function Field({ label, children }: Readonly<{ label: string; children: ReactNode }>) {
   return (
     <YStack gap={3}>
       <Text fontSize={12} color="$muted">
@@ -41,7 +41,7 @@ function venueParts(v: PodVenue): string[] {
 
 /** When · Meeting (virtual) or Where + map (physical). RN port of mWeb's
  * PodMapSection — handles both pod modes and degrades gracefully. */
-export function PodSchedule({ pod, venue, location, onOpenVenue }: Props) {
+export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Props>) {
   const { primary, onPrimary } = useThemeColors();
   const isVirtual = pod.pod_mode === 'VIRTUAL';
   const zone = location?.location_zones.find((z) => z.zone_name === pod.zone_name);
@@ -49,11 +49,12 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Props) {
   const placeText = venue
     ? venueParts(venue).join(', ')
     : location?.location_name || pod.zone_name || '';
-  const mapQuery = venue
-    ? venue.lat != null && venue.lng != null
-      ? `${venue.lat},${venue.lng}`
-      : venueParts(venue).join(', ')
-    : [pod.zone_name, location?.location_name, pincode, 'India'].filter(Boolean).join(', ');
+  let mapQuery: string;
+  if (venue) {
+    mapQuery = venue.lat != null && venue.lng != null ? `${venue.lat},${venue.lng}` : venueParts(venue).join(', ');
+  } else {
+    mapQuery = [pod.zone_name, location?.location_name, pincode, 'India'].filter(Boolean).join(', ');
+  }
 
   return (
     <YStack paddingHorizontal={16} gap={14}>

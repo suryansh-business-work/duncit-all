@@ -14,14 +14,14 @@ function ActionButton({
   onPress,
   variant = 'outlined',
   disabled = false,
-}: {
+}: Readonly<{
   testID: string;
   icon: IconName;
   label: string;
   onPress: () => void;
   variant?: 'contained' | 'outlined' | 'danger';
   disabled?: boolean;
-}) {
+}>) {
   const { onPrimary, color, danger, primary } = useThemeColors();
   const contained = variant === 'contained';
   const tint = variant === 'danger' ? danger : contained ? onPrimary : color;
@@ -84,7 +84,7 @@ export function PodHistoryActions({
   onInvoice,
   onTicket,
   onSupport,
-}: PodHistoryActionsProps) {
+}: Readonly<PodHistoryActionsProps>) {
   return (
     <XStack flexWrap="wrap" gap={8}>
       <ActionButton

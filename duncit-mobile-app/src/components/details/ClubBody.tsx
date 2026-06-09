@@ -6,7 +6,7 @@ import type { ClubDetail, ClubPod } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PodCard } from '@/components/home/PodCard';
 
-function Stat({ value, label }: { value: number; label: string }) {
+function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
   return (
     <YStack flex={1} alignItems="center">
       <Text fontSize={18} fontWeight="900" color="$color">
@@ -26,12 +26,12 @@ export function ClubBody({
   pods,
   cardWidth,
   onOpenPod,
-}: {
+}: Readonly<{
   club: ClubDetail;
   pods: ClubPod[];
   cardWidth: number;
   onOpenPod: (pod: ClubPod) => void;
-}) {
+}>) {
   const { onPrimary } = useThemeColors();
   const moments = club.club_moments.filter((m) => !!m.url);
   const chat = club.club_whats_app_group_link || club.club_whats_app_community_link;

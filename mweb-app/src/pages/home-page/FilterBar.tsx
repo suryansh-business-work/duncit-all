@@ -32,7 +32,7 @@ export default function FilterBar({
   setDateFilter,
   sortBy,
   setSortBy,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Stack spacing={1.25}>
       {/* ── Category row ── */}

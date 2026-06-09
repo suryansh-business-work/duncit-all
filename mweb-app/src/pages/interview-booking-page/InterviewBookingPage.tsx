@@ -23,7 +23,7 @@ interface Props {
   type: 'HOST' | 'VENUE';
 }
 
-export default function InterviewBookingPage({ type }: Props) {
+export default function InterviewBookingPage({ type }: Readonly<Props>) {
   const navigate = useNavigate();
   const [createMut] = useMutation(CREATE_INTERVIEW);
   const isHost = type === 'HOST';

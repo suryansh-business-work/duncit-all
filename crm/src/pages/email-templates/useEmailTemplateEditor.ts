@@ -124,9 +124,10 @@ export function useEmailTemplateEditor(templateId: string) {
 
   const validateMjml = async () => {
     const errors = await renderPreview();
+    const plural = errors.length === 1 ? '' : 's';
     setSnack({
       kind: errors.length ? 'error' : 'success',
-      msg: errors.length ? `${errors.length} MJML issue${errors.length === 1 ? '' : 's'}` : 'MJML looks good',
+      msg: errors.length ? `${errors.length} MJML issue${plural}` : 'MJML looks good',
     });
   };
 

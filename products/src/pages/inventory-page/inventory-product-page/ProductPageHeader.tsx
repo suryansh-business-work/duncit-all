@@ -34,7 +34,7 @@ export default function ProductPageHeader({
   onError,
   onToast,
   onRefetch,
-}: ProductPageHeaderProps) {
+}: Readonly<ProductPageHeaderProps>) {
   const navigate = useNavigate();
   const [archiveProduct] = useMutation(ARCHIVE_INVENTORY_PRODUCT);
   const [restoreProduct] = useMutation(RESTORE_INVENTORY_PRODUCT);

@@ -17,7 +17,7 @@ interface Props {
   onCopyReferral: (token: string) => void;
 }
 
-export default function StickyPodActionPanel(props: Props) {
+export default function StickyPodActionPanel(props: Readonly<Props>) {
   return (
     <Box
       sx={{

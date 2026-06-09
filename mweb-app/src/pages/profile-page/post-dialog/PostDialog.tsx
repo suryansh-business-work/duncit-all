@@ -33,7 +33,7 @@ interface Props {
   onDeleted: () => void;
 }
 
-export default function PostDialog({ postId, meId, onClose, onDeleted }: Props) {
+export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonly<Props>) {
   const open = !!postId;
   const { data, loading } = useQuery(POST_DETAILS, {
     variables: { id: postId },

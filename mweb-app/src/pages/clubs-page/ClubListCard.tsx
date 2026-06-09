@@ -8,7 +8,7 @@ interface ClubListCardProps {
   onOpen: () => void;
 }
 
-export default function ClubListCard({ club, podCount, onOpen }: ClubListCardProps) {
+export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubListCardProps>) {
   const cover = club.club_feature_images_and_videos?.[0];
 
   return (

@@ -29,7 +29,7 @@ interface Props {
   onToggleFollow: (userId: string) => void;
 }
 
-export default function HostList({ hosts, meId, followingIds, pendingUserId, onToggleFollow }: Props) {
+export default function HostList({ hosts, meId, followingIds, pendingUserId, onToggleFollow }: Readonly<Props>) {
   if (!hosts.length) {
     return (
       <Card variant="outlined">

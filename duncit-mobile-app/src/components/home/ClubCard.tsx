@@ -6,7 +6,7 @@ import type { HomeClub } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 /** A full-width club row — avatar, name and description. Used by the Clubs tab. */
-export function ClubCard({ club, onPress }: { club: HomeClub; onPress?: () => void }) {
+export function ClubCard({ club, onPress }: Readonly<{ club: HomeClub; onPress?: () => void }>) {
   const { onPrimary, muted } = useThemeColors();
   const image = club.club_feature_images_and_videos.find((m) => !!m.url)?.url ?? null;
 

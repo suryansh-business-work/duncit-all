@@ -7,7 +7,7 @@ import ResultAlert from './ResultAlert';
 import { parseApiError } from '../../../utils/parseApiError';
 
 /** AI chat test. The provider is fixed by the entry category (OPENAI | GEMINI). */
-export default function AiTestPanel({ entry }: { entry: EnvEntry }) {
+export default function AiTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
   const isGemini = entry.category === 'GEMINI';
   const label = isGemini ? 'Gemini' : 'OpenAI';
   const [prompt, setPrompt] = useState('Say hello in one short sentence.');

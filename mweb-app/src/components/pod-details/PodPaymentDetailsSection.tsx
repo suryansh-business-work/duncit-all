@@ -18,7 +18,7 @@ export default function PodPaymentDetailsSection({
   amount,
   isFree,
   priceCompute,
-}: Props) {
+}: Readonly<Props>) {
   if (isFree || !Number(amount)) {
     return (
       <Typography variant="body2" color="text.secondary">

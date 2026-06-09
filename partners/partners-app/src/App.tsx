@@ -13,7 +13,7 @@ import SupportPage from './pages/support-page/SupportPage';
 import PartnerShell from './components/PartnerShell';
 import { redirectPathFromLocation } from './utils/redirect';
 
-function RequireAuth({ children }: { children: JSX.Element }) {
+function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
   const location = useLocation();
   const token = localStorage.getItem('token');
   if (!token) {

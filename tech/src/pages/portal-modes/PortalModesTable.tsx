@@ -22,7 +22,7 @@ interface Props {
 
 const KIND_LABEL: Record<string, string> = { PORTAL: 'Portal', WEBSITE: 'Website', APP: 'App' };
 
-export default function PortalModesTable({ rows, busyKey, onChange }: Props) {
+export default function PortalModesTable({ rows, busyKey, onChange }: Readonly<Props>) {
   return (
     <Box sx={{ overflowX: 'auto' }}>
       <Table size="small">

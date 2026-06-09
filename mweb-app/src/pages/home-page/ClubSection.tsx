@@ -11,7 +11,7 @@ interface ClubSectionProps {
   hostNameOf: (pod: any) => string | null;
 }
 
-export default function ClubSection({ club, clubPods, hostNameOf }: ClubSectionProps) {
+export default function ClubSection({ club, clubPods, hostNameOf }: Readonly<ClubSectionProps>) {
   const navigate = useNavigate();
   return (
     <Box sx={{ minWidth: 0 }}>

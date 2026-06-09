@@ -3,7 +3,7 @@ import { YStack } from 'tamagui';
 import { Skeleton } from '@/components/Skeleton/Skeleton';
 
 /** A pod/club-card shaped placeholder used in list + feed skeletons. */
-export function SkeletonCard({ height = 200 }: { height?: number }) {
+export function SkeletonCard({ height = 200 }: Readonly<{ height?: number }>) {
   return (
     <YStack
       borderRadius={18}

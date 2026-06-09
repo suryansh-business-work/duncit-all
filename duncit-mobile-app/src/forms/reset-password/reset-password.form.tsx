@@ -17,7 +17,7 @@ export interface ResetPasswordFormProps {
 }
 
 /** OTP + new password (confirmed) — RN twin of mWeb's reset-password form. */
-export function ResetPasswordForm({ loading, errorMessage, onSubmit }: ResetPasswordFormProps) {
+export function ResetPasswordForm({ loading, errorMessage, onSubmit }: Readonly<ResetPasswordFormProps>) {
   const { control, handleSubmit } = useForm<ResetPasswordFormValues>({
     defaultValues: resetPasswordDefaults,
     resolver: zodResolver(resetPasswordSchema),

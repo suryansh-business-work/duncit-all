@@ -29,7 +29,7 @@ interface Props {
   onTest?: (entry: EnvEntry) => void;
 }
 
-export default function EnvEntryForm({ open, def, initial, busy, testing, onClose, onSubmit, onTest }: Props) {
+export default function EnvEntryForm({ open, def, initial, busy, testing, onClose, onSubmit, onTest }: Readonly<Props>) {
   const isEdit = !!initial;
   const formik = useFormik<EnvEntryFormValues>({
     initialValues: initial ? valuesFromEntry(initial) : emptyValues(),

@@ -28,7 +28,7 @@ const selectedSx = {
 
 const labelProps = { fontWeight: 600, variant: 'body2' as const };
 
-function NavLeaf({ item, onNavigate, indent }: { item: AppNavItem; onNavigate?: () => void; indent?: boolean }) {
+function NavLeaf({ item, onNavigate, indent }: Readonly<{ item: AppNavItem; onNavigate?: () => void; indent?: boolean }>) {
   const location = useLocation();
   return (
     <ListItemButton
@@ -51,12 +51,12 @@ function NavGroup({
   icon,
   items,
   onNavigate,
-}: {
+}: Readonly<{
   label: string;
   icon: string;
   items: AppNavItem[];
   onNavigate?: () => void;
-}) {
+}>) {
   const location = useLocation();
   const [open, setOpen] = useState(items.some((c) => location.pathname === c.to));
   return (
@@ -79,7 +79,7 @@ function NavGroup({
   );
 }
 
-export default function AppSidebar({ onNavigate }: { onNavigate?: () => void }) {
+export default function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>) {
   const { logoUrl, appName, loading } = useBranding();
   return (
     <Stack sx={{ height: '100%' }}>

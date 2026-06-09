@@ -42,7 +42,7 @@ export default function LoginForm({
   errorMessage,
   onSubmit,
   submitLabel = 'Login',
-}: Props) {
+}: Readonly<Props>) {
   const [showPwd, setShowPwd] = useState(false);
   return (
     <Formik

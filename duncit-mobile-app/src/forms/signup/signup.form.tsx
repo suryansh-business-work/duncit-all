@@ -13,7 +13,7 @@ export interface SignupFormProps {
 }
 
 /** Email signup form: Name, Birth Year, Email, Password, Confirm Password. */
-export function SignupForm({ loading, errorMessage, onSubmit }: SignupFormProps) {
+export function SignupForm({ loading, errorMessage, onSubmit }: Readonly<SignupFormProps>) {
   const { control, handleSubmit } = useForm<SignupFormValues>({
     defaultValues: signupDefaults,
     resolver: zodResolver(signupSchema),

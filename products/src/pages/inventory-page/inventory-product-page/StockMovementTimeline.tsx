@@ -24,7 +24,7 @@ const movementColor: Record<string, 'success' | 'warning' | 'error' | 'default' 
   ADJUST: 'default',
 };
 
-export default function StockMovementTimeline({ movements, loading }: StockMovementTimelineProps) {
+export default function StockMovementTimeline({ movements, loading }: Readonly<StockMovementTimelineProps>) {
   if (loading && movements.length === 0) {
     return <Typography variant="body2" color="text.secondary">Loading movements…</Typography>;
   }

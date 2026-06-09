@@ -40,6 +40,9 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
     onClose();
   };
 
+  const generalLabel = event?.entity === 'GENERAL' ? 'General reminder (not linked to a lead)' : '—';
+  const fromLabel = event?.leadName ? event.leadName : generalLabel;
+
   return (
     <Drawer anchor="right" open={!!event} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 380 } } }}>
       {event && (
@@ -63,7 +66,7 @@ export default function EventDrawer({ event, onClose, onEdit, onToggleDone, onDe
             <Box>
               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700, letterSpacing: 0.4 }}>FROM</Typography>
               <Typography variant="body2">
-                {event.leadName ? event.leadName : event.entity === 'GENERAL' ? 'General reminder (not linked to a lead)' : '—'}
+                {fromLabel}
               </Typography>
             </Box>
 

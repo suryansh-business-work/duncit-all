@@ -19,7 +19,7 @@ export default function DeviceUploadTab({
   uploadPct,
   uploading,
   onPickFile,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Stack spacing={2} alignItems="center" sx={{ py: 2 }}>
       <input

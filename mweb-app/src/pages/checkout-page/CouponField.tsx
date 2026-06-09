@@ -25,7 +25,7 @@ export default function CouponField({
   currency,
   onApply,
   onRemove,
-}: Props) {
+}: Readonly<Props>) {
   if (applied?.ok) {
     return (
       <Stack

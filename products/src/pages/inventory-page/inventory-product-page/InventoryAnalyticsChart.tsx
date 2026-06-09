@@ -24,7 +24,7 @@ interface InventoryAnalyticsChartProps {
   loading: boolean;
 }
 
-export default function InventoryAnalyticsChart({ points, loading }: InventoryAnalyticsChartProps) {
+export default function InventoryAnalyticsChart({ points, loading }: Readonly<InventoryAnalyticsChartProps>) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const chartRef = useRef<Chart | null>(null);
 

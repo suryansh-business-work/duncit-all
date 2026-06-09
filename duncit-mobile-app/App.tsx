@@ -49,11 +49,11 @@ export default function App() {
   const loadConfig = useConfigStore((s) => s.load);
 
   useEffect(() => {
-    void hydrateTheme();
-    void bootstrap();
+    hydrateTheme();
+    bootstrap();
     // Pull Google/Maps config from the server (Tech portal source); best-effort,
     // the env fallback applies until it resolves.
-    void loadConfig();
+    loadConfig();
   }, [hydrateTheme, bootstrap, loadConfig]);
 
   if (!ready) return null;

@@ -72,17 +72,17 @@ export default function CallPromptsPage() {
 
       <Card>
         <CardContent>
-          {loading && !prompts.length ? (
+          {loading && prompts.length === 0 && (
             <Stack alignItems="center" sx={{ py: 4 }}>
               <CircularProgress />
             </Stack>
-          ) : prompts.length === 0 ? (
+          )}
+          {!loading && prompts.length === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
               No Static Content yet. Click "Add Static Content" to create your first AI Call prompt.
             </Typography>
-          ) : (
-            <CallPromptsTable prompts={prompts} onEdit={openEdit} onDelete={setToDelete} />
           )}
+          {prompts.length > 0 && <CallPromptsTable prompts={prompts} onEdit={openEdit} onDelete={setToDelete} />}
         </CardContent>
       </Card>
 

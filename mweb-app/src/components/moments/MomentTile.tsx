@@ -11,7 +11,7 @@ interface Props {
   onClick: () => void;
 }
 
-export default function MomentTile({ url, type, size, aspect, index, total, onClick }: Props) {
+export default function MomentTile({ url, type, size, aspect, index, total, onClick }: Readonly<Props>) {
   return (
     <ButtonBase
       onClick={onClick}

@@ -28,7 +28,7 @@ const DateInput = forwardRef<HTMLInputElement, DateInputProps>(({ label, value, 
   />
 ));
 
-export default function DashboardDateRange({ range, onChange }: Props) {
+export default function DashboardDateRange({ range, onChange }: Readonly<Props>) {
   const setLast30Days = () => onChange({ from: startOfDay(subDays(new Date(), 29)), to: endOfDay(new Date()) });
   const changeFrom = (date: Date | null) => date && onChange({ from: startOfDay(date), to: range.to < date ? endOfDay(date) : range.to });
   const changeTo = (date: Date | null) => date && onChange({ from: range.from > date ? startOfDay(date) : range.from, to: endOfDay(date) });

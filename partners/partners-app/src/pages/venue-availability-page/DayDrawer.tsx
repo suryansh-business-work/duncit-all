@@ -48,7 +48,7 @@ function combineDateAndTime(date: Date, time: Date): Date {
   });
 }
 
-export default function DayDrawer({ venueId, open, date, slots, onClose, onChanged }: Props) {
+export default function DayDrawer({ venueId, open, date, slots, onClose, onChanged }: Readonly<Props>) {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [notes, setNotes] = useState('');

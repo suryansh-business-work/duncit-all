@@ -34,7 +34,7 @@ if (base) {
     });
     sdk.start();
     process.once('SIGTERM', () => {
-      void sdk.shutdown().catch(() => undefined);
+      sdk.shutdown().catch(() => undefined);
     });
   } catch {
     /* tracing must never crash the API */

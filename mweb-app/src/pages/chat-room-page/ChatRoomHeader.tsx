@@ -8,7 +8,7 @@ interface ChatRoomHeaderProps {
   onBack: () => void;
 }
 
-export default function ChatRoomHeader({ title, messageCount, onBack }: ChatRoomHeaderProps) {
+export default function ChatRoomHeader({ title, messageCount, onBack }: Readonly<ChatRoomHeaderProps>) {
   const label = title || 'Chat';
 
   return (

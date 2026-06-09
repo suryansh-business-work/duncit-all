@@ -33,7 +33,7 @@ export default function InterviewCalendar({
   slots,
   onToggleSlot,
   onRemoveSlot,
-}: InterviewCalendarProps) {
+}: Readonly<InterviewCalendarProps>) {
   const cells = useMemo(() => buildMonth(anchor), [anchor]);
   const monthLabel = anchor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
   const slotList = Array.from(slots.values()).sort((a, b) => +a.start - +b.start);

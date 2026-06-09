@@ -9,7 +9,7 @@ interface FollowClubCardProps {
   onOpenMoment: (index: number) => void;
 }
 
-export default function FollowClubCard({ club, onOpenMoment }: FollowClubCardProps) {
+export default function FollowClubCard({ club, onOpenMoment }: Readonly<FollowClubCardProps>) {
   const cover = club.club_feature_images_and_videos?.[0]?.url;
   const moments = club.club_moments ?? [];
 

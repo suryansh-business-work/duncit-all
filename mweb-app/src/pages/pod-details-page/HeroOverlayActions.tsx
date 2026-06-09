@@ -27,7 +27,7 @@ const overlayBtn = {
   '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
 };
 
-export default function HeroOverlayActions({ onBack, saved, saveLoading, following, onToggleFollow, onToggleSave, onShare }: Props) {
+export default function HeroOverlayActions({ onBack, saved, saveLoading, following, onToggleFollow, onToggleSave, onShare }: Readonly<Props>) {
   return (
     <Stack
       direction="row"

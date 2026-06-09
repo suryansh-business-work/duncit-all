@@ -22,7 +22,7 @@ import { SidebarUserSummary } from './SidebarUserSummary';
  * Account drawer — the RN twin of mWeb's right-anchored <ProfileDrawer/>. Slides
  * in from the right with user summary, role-based menu, policies, and logout.
  */
-export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void }) {
+export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: () => void }>) {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { width } = useWindowDimensions();
   const panelWidth = Math.min(width * 0.84, 360);
@@ -135,7 +135,7 @@ export function Sidebar({ open, onClose }: { open: boolean; onClose: () => void 
             <SidebarFooter
               onLogout={() => {
                 onClose();
-                void logout();
+                logout();
               }}
             />
           </SafeAreaView>

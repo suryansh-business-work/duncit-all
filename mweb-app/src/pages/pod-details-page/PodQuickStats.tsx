@@ -8,7 +8,7 @@ interface Props {
   spotsTotal: number;
 }
 
-export default function PodQuickStats({ views, spotsTaken, spotsTotal }: Props) {
+export default function PodQuickStats({ views, spotsTaken, spotsTotal }: Readonly<Props>) {
   const remaining = spotsTotal > 0 ? Math.max(spotsTotal - spotsTaken, 0) : null;
   const viewLabel = new Intl.NumberFormat(undefined, { notation: 'compact' }).format(views || 0);
 

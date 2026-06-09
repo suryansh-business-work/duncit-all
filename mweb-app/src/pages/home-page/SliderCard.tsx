@@ -2,7 +2,7 @@ import { Box, Card, CardActionArea, CardMedia, Typography } from '@mui/material'
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { useNavigate } from 'react-router-dom';
 
-export default function SliderCard({ slider }: { slider: any }) {
+export default function SliderCard({ slider }: Readonly<{ slider: any }>) {
   const navigate = useNavigate();
   const target: string = slider.effective_link_url ?? slider.link_url ?? '';
   const isInternal = slider.link_type === 'INTERNAL' && target.startsWith('/');

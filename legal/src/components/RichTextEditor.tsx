@@ -22,7 +22,7 @@ const MODULES = {
 };
 
 /** react-quill wrapper used to author document + policy content. */
-export default function RichTextEditor({ value, onChange, placeholder, minHeight = 320 }: Props) {
+export default function RichTextEditor({ value, onChange, placeholder, minHeight = 320 }: Readonly<Props>) {
   return (
     <Box
       sx={{

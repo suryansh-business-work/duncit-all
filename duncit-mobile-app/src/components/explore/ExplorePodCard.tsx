@@ -35,7 +35,7 @@ export function ExplorePodCard({
   onToggleSave,
   onToggleLike,
   onOpen,
-}: ExplorePodCardProps) {
+}: Readonly<ExplorePodCardProps>) {
   const insets = useSafeAreaInsets();
   // Stack bottom→top: floating nav · CTA bar · (info overlay + action rail).
   const ctaBottom = insets.bottom + 80;

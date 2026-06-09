@@ -10,7 +10,7 @@ interface Props {
   selected: SupportPodOption | null;
 }
 
-export default function CallbackContent({ selected }: Props) {
+export default function CallbackContent({ selected }: Readonly<Props>) {
   const { data } = useQuery(SUPPORT_CALL_TARGET, { fetchPolicy: 'cache-first' });
   const target = data?.bouncerSupportTarget;
 

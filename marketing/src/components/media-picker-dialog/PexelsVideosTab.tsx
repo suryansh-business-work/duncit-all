@@ -34,7 +34,7 @@ export default function PexelsVideosTab({
   onPicked,
   onClose,
   setError,
-}: Props) {
+}: Readonly<Props>) {
   const [vquery, setVquery] = useState('');
   const [vorientation, setVorientation] = useState<'landscape' | 'portrait' | 'square' | ''>('');
   const [vsearching, setVsearching] = useState(false);

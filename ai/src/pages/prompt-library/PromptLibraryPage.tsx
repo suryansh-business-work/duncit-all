@@ -92,17 +92,17 @@ export default function PromptLibraryPage() {
 
       <Card>
         <CardContent>
-          {loading && !prompts.length ? (
+          {loading && prompts.length === 0 && (
             <Stack alignItems="center" sx={{ py: 4 }}>
               <CircularProgress />
             </Stack>
-          ) : prompts.length === 0 ? (
+          )}
+          {!loading && prompts.length === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
               {search ? 'No prompts match your search.' : 'No prompts yet. Click "Add prompt" to create your first one.'}
             </Typography>
-          ) : (
-            <PromptsTable prompts={prompts} onEdit={openEdit} onDelete={setToDelete} />
           )}
+          {prompts.length > 0 && <PromptsTable prompts={prompts} onEdit={openEdit} onDelete={setToDelete} />}
         </CardContent>
       </Card>
 

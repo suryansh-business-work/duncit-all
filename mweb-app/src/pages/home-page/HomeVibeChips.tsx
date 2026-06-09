@@ -7,7 +7,7 @@ interface HomeVibeChipsProps {
   onSelect: (id: string) => void;
 }
 
-export default function HomeVibeChips({ categories, selectedId, onSelect }: HomeVibeChipsProps) {
+export default function HomeVibeChips({ categories, selectedId, onSelect }: Readonly<HomeVibeChipsProps>) {
   if (categories.length === 0) return null;
 
   return (

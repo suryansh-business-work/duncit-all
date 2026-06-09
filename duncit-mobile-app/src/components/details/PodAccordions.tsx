@@ -25,7 +25,7 @@ interface Section {
 /** The full pod-details accordion stack (about · club · offers · hosts ·
  * attendees · perks · payment · terms · charges) with expand/collapse-all —
  * RN port of mWeb's PodDetailAccordions. */
-export function PodAccordions({ pod, onOpenClub }: { pod: PodDetail; onOpenClub: () => void }) {
+export function PodAccordions({ pod, onOpenClub }: Readonly<{ pod: PodDetail; onOpenClub: () => void }>) {
   const { primary } = useThemeColors();
 
   const sections: Section[] = useMemo(() => {

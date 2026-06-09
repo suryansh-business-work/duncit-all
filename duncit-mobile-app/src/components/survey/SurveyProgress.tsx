@@ -2,7 +2,7 @@ import { LinearGradient } from 'expo-linear-gradient';
 import { YStack } from 'tamagui';
 
 /** Slim gradient progress bar (0–100) — matches mWeb's survey LinearProgress. */
-export function SurveyProgress({ value }: { value: number }) {
+export function SurveyProgress({ value }: Readonly<{ value: number }>) {
   return (
     <YStack
       testID="survey-progress"

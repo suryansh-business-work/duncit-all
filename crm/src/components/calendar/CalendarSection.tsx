@@ -116,11 +116,13 @@ export default function CalendarSection() {
           {VIEWS.map((v) => <ToggleButton key={v.value} value={v.value}>{v.label}</ToggleButton>)}
         </ToggleButtonGroup>
 
-        {loading && events.length === 0 ? (
+        {loading && events.length === 0 && (
           <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
-        ) : view === 'month' ? (
+        )}
+        {(!loading || events.length > 0) && view === 'month' && (
           <CalendarMonth cursor={cursor} events={events} onEvent={onEvent} />
-        ) : (
+        )}
+        {(!loading || events.length > 0) && view !== 'month' && (
           <CalendarList days={listDays} events={events} onEvent={onEvent} emptyHint="Nothing scheduled in this range." />
         )}
       </CardContent>

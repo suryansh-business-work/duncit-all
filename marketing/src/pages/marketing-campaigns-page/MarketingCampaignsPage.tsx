@@ -24,7 +24,7 @@ interface Props {
   defaultChannel?: 'EMAIL' | 'WHATSAPP';
 }
 
-export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Props) {
+export default function MarketingCampaignsPage({ defaultChannel = 'EMAIL' }: Readonly<Props>) {
   const [draft, setDraft] = useState<MarketingCampaignFormValues>(() => blankMarketingCampaignValues(defaultChannel));
   const [formError, setFormError] = useState<string | null>(null);
   const { data, loading, refetch } = useQuery<{ marketingCampaigns: MarketingCampaignRow[] }>(MARKETING_CAMPAIGNS, { fetchPolicy: 'cache-and-network' });

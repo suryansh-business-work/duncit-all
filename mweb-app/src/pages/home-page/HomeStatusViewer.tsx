@@ -35,7 +35,7 @@ interface HomeStatusViewerProps {
 
 const STATUS_DURATION_MS = 6500;
 
-export default function HomeStatusViewer({ item, onClose }: HomeStatusViewerProps) {
+export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusViewerProps>) {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);

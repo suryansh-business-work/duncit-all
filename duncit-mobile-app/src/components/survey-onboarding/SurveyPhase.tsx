@@ -20,7 +20,7 @@ interface Props {
 }
 
 /** Section-stepped survey — one step per SECTION; final step submits. */
-export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Props) {
+export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<Props>) {
   const { color: ink, primary } = useThemeColors();
   const sections = useMemo(
     () => splitSections(survey.questions, survey.title || 'Survey'),

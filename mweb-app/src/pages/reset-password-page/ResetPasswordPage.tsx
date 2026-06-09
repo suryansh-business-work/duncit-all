@@ -27,7 +27,7 @@ export default function ResetPasswordPage() {
 
   const handleResend = () => {
     if (!email) return;
-    void requestOtp({ variables: { email } });
+    requestOtp({ variables: { email } }).catch(() => undefined);
   };
 
   return (

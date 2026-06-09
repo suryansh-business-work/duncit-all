@@ -27,7 +27,7 @@ export function CouponField({
   currency,
   onApply,
   onRemove,
-}: Props) {
+}: Readonly<Props>) {
   const { primary } = useThemeColors();
 
   if (applied?.ok) {

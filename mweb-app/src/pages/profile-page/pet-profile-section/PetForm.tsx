@@ -18,7 +18,7 @@ interface PetFormProps {
   onSaved: () => void;
 }
 
-export default function PetForm({ pet, onCancel, onSaved }: PetFormProps) {
+export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProps>) {
   const [updateMut, { loading, error }] = useMutation(UPDATE_PET);
 
   const initial = {

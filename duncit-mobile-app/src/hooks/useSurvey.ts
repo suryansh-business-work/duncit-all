@@ -18,7 +18,7 @@ export function useSurveyData() {
   const fetch = useSurveyStore((s) => s.fetch);
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   return { data, isLoading, error };

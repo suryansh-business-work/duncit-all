@@ -4,7 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 /** "Happening nearby" section header with the gradient flame badge and a live
  * pod count — RN port of the mWeb HomePage section heading. */
-export function HappeningNearbyHeader({ totalPods }: { totalPods: number }) {
+export function HappeningNearbyHeader({ totalPods }: Readonly<{ totalPods: number }>) {
   return (
     <XStack alignItems="center" justifyContent="space-between" gap={10} paddingHorizontal={16}>
       <XStack alignItems="center" gap={10} flex={1}>

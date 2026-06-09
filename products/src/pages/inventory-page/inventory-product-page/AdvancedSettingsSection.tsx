@@ -19,7 +19,7 @@ interface AdvancedSettingsSectionProps {
   onError: (msg: string) => void;
 }
 
-export default function AdvancedSettingsSection({ onError }: AdvancedSettingsSectionProps) {
+export default function AdvancedSettingsSection({ onError }: Readonly<AdvancedSettingsSectionProps>) {
   const f = useFormikContext<InventoryProductFormValues>();
   const [generateSku, { loading: generating }] = useMutation(GENERATE_INVENTORY_SKU);
 

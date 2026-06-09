@@ -75,7 +75,7 @@ interface ClubLite {
   club_moments: { url: string; type: string }[];
 }
 
-export default function FollowPage({ superCategorySlug }: { superCategorySlug?: string }) {
+export default function FollowPage({ superCategorySlug }: Readonly<{ superCategorySlug?: string }>) {
   const { ids, isFollowing } = useFollowedClubs();
   const { data, loading, error } = useQuery<{ clubs: ClubLite[] }>(FOLLOW_FEED, {
     fetchPolicy: 'cache-and-network',

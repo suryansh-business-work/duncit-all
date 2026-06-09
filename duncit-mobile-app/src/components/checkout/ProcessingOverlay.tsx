@@ -6,7 +6,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
  * Captures all touches so the form underneath can't be edited once the user has
  * submitted (e.g. after returning from the Razorpay sheet). RN twin of mWeb's
  * <Backdrop> on the checkout page. */
-export function ProcessingOverlay({ open }: { open: boolean }) {
+export function ProcessingOverlay({ open }: Readonly<{ open: boolean }>) {
   const { primary } = useThemeColors();
   if (!open) return null;
 

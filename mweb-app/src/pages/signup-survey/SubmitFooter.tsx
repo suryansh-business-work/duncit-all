@@ -8,7 +8,7 @@ interface Props {
   onSubmit: () => void;
 }
 
-export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit }: Props) {
+export default function SubmitFooter({ count, total, saving, canSubmit, onSubmit }: Readonly<Props>) {
   return (
     <Box
       sx={{

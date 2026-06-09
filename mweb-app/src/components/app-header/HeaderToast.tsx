@@ -8,7 +8,7 @@ interface HeaderToastProps {
   onClose: () => void;
 }
 
-export default function HeaderToast({ toast, onClose }: HeaderToastProps) {
+export default function HeaderToast({ toast, onClose }: Readonly<HeaderToastProps>) {
   return (
     <Snackbar
       open={!!toast}

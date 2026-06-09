@@ -26,7 +26,7 @@ interface Props {
   onDelete: (item: WebsiteContentItem) => void;
 }
 
-export default function ContentTable({ items, loading, onEdit, onDelete }: Props) {
+export default function ContentTable({ items, loading, onEdit, onDelete }: Readonly<Props>) {
   const { formatDate } = useDateFormat();
 
   if (loading && items.length === 0) {

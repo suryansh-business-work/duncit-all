@@ -24,7 +24,7 @@ interface Props {
   onError: (msg: string) => void;
 }
 
-export default function UploadDialog({ open, onClose, onSuccess, onError }: Props) {
+export default function UploadDialog({ open, onClose, onSuccess, onError }: Readonly<Props>) {
   const [pickerOpen, setPickerOpen] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [caption, setCaption] = useState('');

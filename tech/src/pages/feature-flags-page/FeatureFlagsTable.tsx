@@ -31,7 +31,7 @@ export default function FeatureFlagsTable({
   onToggle,
   onEdit,
   onRemove,
-}: Props) {
+}: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>

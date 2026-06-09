@@ -83,11 +83,13 @@ export default function MeetingSchedulePage() {
       </Stack>
 
       <Card>
-        {loading && meetings.length === 0 ? (
+        {loading && meetings.length === 0 && (
           <Stack alignItems="center" sx={{ py: 5 }}><CircularProgress /></Stack>
-        ) : meetings.length === 0 ? (
+        )}
+        {!loading && meetings.length === 0 && (
           <Typography variant="body2" color="text.secondary" sx={{ p: 3, textAlign: 'center' }}>No meeting requests yet.</Typography>
-        ) : (
+        )}
+        {meetings.length > 0 && (
           <Table size="small">
             <TableHead>
               <TableRow>

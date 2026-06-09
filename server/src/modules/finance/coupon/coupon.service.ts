@@ -76,7 +76,7 @@ async function evaluate(
   });
 
   const coupon = await CouponModel.findOne({ code: String(code).toUpperCase().trim() });
-  if (!coupon || !coupon.is_active) return fail('Invalid or inactive coupon code');
+  if (!coupon?.is_active) return fail('Invalid or inactive coupon code');
   if (coupon.scope === 'POD' && String(coupon.pod_id) !== String(podId))
     return fail('This coupon is not valid for this pod');
 
@@ -119,7 +119,7 @@ export const couponService = {
     if (filter?.pod_id) q.pod_id = new Types.ObjectId(filter.pod_id);
     if (filter?.is_active != null) q.is_active = filter.is_active;
     if (filter?.search) {
-      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       q.$or = [{ code: r }, { description: r }];
     }
     const docs = await CouponModel.find(q).sort({ created_at: -1 });

@@ -10,7 +10,7 @@ import { useThemeStore } from '@/stores/theme.store';
  * `document.body` — outside the provider — where theme tokens and the inherited
  * font would otherwise fall back to browser defaults.
  */
-export function ModalThemeScope({ children }: { children: ReactNode }) {
+export function ModalThemeScope({ children }: Readonly<{ children: ReactNode }>) {
   const scheme = useThemeStore((s) => s.scheme);
   return <Theme name={scheme}>{children}</Theme>;
 }

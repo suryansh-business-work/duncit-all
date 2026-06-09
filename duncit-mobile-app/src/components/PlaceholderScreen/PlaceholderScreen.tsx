@@ -18,11 +18,11 @@ export function PlaceholderScreen({
   title,
   subtitle,
   icon = 'auto-awesome',
-}: {
+}: Readonly<{
   title: string;
   subtitle?: string;
   icon?: IconName;
-}) {
+}>) {
   const navigation = useNavigation();
   const { color: ink, primary } = useThemeColors();
 

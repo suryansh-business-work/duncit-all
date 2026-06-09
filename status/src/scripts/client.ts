@@ -83,7 +83,11 @@ async function runBadges(): Promise<void> {
   const total = cards.length;
   const text = document.getElementById('overall-text');
   const updated = document.getElementById('updated');
-  setDot(document.getElementById('overall-dot'), up === total ? 'ok' : up === 0 ? 'down' : 'pending');
+  let overall: 'ok' | 'down' | 'pending';
+  if (up === total) overall = 'ok';
+  else if (up === 0) overall = 'down';
+  else overall = 'pending';
+  setDot(document.getElementById('overall-dot'), overall);
   if (text)
     text.textContent = up === total ? 'All systems operational' : `${up} of ${total} services operational`;
   if (updated) updated.textContent = 'Last checked ' + new Date().toLocaleTimeString();

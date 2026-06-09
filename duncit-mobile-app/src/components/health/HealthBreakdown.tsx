@@ -11,7 +11,7 @@ import { formatDateTime, formatRelative } from '@/utils/date-format';
 import { semantic } from '@duncit/auth-tokens';
 
 /** Score summary + admin remarks list — RN twin of mWeb's <HealthBreakdown/>. */
-export function HealthBreakdown({ score }: { score: HealthScoreLike }) {
+export function HealthBreakdown({ score }: Readonly<{ score: HealthScoreLike }>) {
   const bandColor = healthBandColor(score.band);
 
   return (

@@ -11,7 +11,7 @@ interface Props {
   accountEmail?: string;
 }
 
-export default function OwnerStep({ value, onChange, showAllErrors, accountEmail }: Props) {
+export default function OwnerStep({ value, onChange, showAllErrors, accountEmail }: Readonly<Props>) {
   const [touched, setTouched] = useState<Partial<Record<keyof VenueStep3, boolean>>>({});
   const errors = useMemo(() => getStepErrors(venueStep3Schema, value), [value]);
   const set = (patch: Partial<VenueStep3>) => onChange({ ...value, ...patch });

@@ -34,7 +34,7 @@ export default function AppHeader({
   onLocationChange,
   selectedZoneName,
   onZoneChange,
-}: AppHeaderProps) {
+}: Readonly<AppHeaderProps>) {
   const navigate = useNavigate();
   const { logout: ctxLogout } = useUserData();
   const { data, loading } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-and-network' });

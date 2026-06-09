@@ -21,7 +21,7 @@ export default function ContentDialog({
   errorMessage,
   onClose,
   onSubmit,
-}: Props) {
+}: Readonly<Props>) {
   const label = CONTENT_LABELS[type].title;
   return (
     <Dialog open={open} onClose={submitting ? undefined : onClose} fullWidth maxWidth="md">

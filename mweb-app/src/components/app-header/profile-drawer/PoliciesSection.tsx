@@ -24,7 +24,7 @@ export default function PoliciesSection({
   policiesOpen,
   setPoliciesOpen,
   onClose,
-}: PoliciesSectionProps) {
+}: Readonly<PoliciesSectionProps>) {
   const navigate = useNavigate();
   if (publicPolicies.length === 0) return null;
 

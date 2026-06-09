@@ -17,7 +17,7 @@ const ColorModeContext = createContext<ColorModeContextValue>({
 
 const STORAGE_KEY = 'partners_color_mode';
 
-export function ColorModeProvider({ children }: { children: ReactNode }) {
+export function ColorModeProvider({ children }: Readonly<{ children: ReactNode }>) {
   const [mode, setMode] = useState<PaletteMode>(() => {
     if (typeof window === 'undefined') return 'light';
     const saved = localStorage.getItem(STORAGE_KEY);

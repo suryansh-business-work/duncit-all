@@ -61,7 +61,7 @@ function PartnerRedirect({ path }: { path: string }) {
   return null;
 }
 
-export default function AppRoutes({ superCategory, locationId, zoneName }: Props) {
+export default function AppRoutes({ superCategory, locationId, zoneName }: Readonly<Props>) {
   return (
     <Routes>
       <Route

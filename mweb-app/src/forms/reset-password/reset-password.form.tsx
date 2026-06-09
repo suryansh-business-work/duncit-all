@@ -20,7 +20,7 @@ interface Props {
   onSubmit: (values: ResetPasswordValues) => Promise<void> | void;
 }
 
-export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: Props) {
+export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: Readonly<Props>) {
   const [showPwd, setShowPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<ResetPasswordValues>({

@@ -27,7 +27,7 @@ export default function PostActions({
   onLike,
   onSend,
   submitting,
-}: PostActionsProps) {
+}: Readonly<PostActionsProps>) {
   return (
     <Box sx={{ borderTop: 1, borderColor: 'divider', p: 1 }}>
       <Stack direction="row" spacing={0.5} alignItems="center">

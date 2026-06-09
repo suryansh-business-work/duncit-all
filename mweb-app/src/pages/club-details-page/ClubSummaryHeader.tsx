@@ -14,7 +14,7 @@ interface Props {
   onToggleFollow: () => void;
 }
 
-function Stat({ label, value }: { label: string; value: number }) {
+function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
   return (
     <Box sx={{ flex: 1, textAlign: 'center' }}>
       <Typography display="block" sx={{ fontWeight: 950, lineHeight: 1 }}>
@@ -27,7 +27,7 @@ function Stat({ label, value }: { label: string; value: number }) {
   );
 }
 
-export default function ClubSummaryHeader({ club, featureUrl, podCount, venueCount, following, chatUrl, onToggleFollow }: Props) {
+export default function ClubSummaryHeader({ club, featureUrl, podCount, venueCount, following, chatUrl, onToggleFollow }: Readonly<Props>) {
   const momentsCount = club.club_moments?.length ?? 0;
 
   return (

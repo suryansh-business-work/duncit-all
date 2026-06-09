@@ -11,11 +11,11 @@ export function AccountInfoRow({
   icon,
   label,
   value,
-}: {
+}: Readonly<{
   icon: IconName;
   label: string;
   value: string;
-}) {
+}>) {
   const { color } = useThemeColors();
   return (
     <XStack alignItems="center" gap={14}>

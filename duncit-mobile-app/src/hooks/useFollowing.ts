@@ -12,7 +12,7 @@ export function useFollowing() {
   const home = useHomeData();
 
   useEffect(() => {
-    void fetch();
+    fetch();
   }, [fetch]);
 
   const followedPodIds = useMemo(
@@ -30,7 +30,7 @@ export function useFollowing() {
     hasData: !!data && home.hasData,
     followedPods,
     refetch: () => {
-      void fetch(true);
+      fetch(true);
       home.refetch();
     },
   };

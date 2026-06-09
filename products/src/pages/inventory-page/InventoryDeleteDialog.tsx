@@ -40,7 +40,7 @@ export default function InventoryDeleteDialog({
   product,
   onClose,
   onDone,
-}: InventoryDeleteDialogProps) {
+}: Readonly<InventoryDeleteDialogProps>) {
   const [loadLinkedPods, linkedPodsResult] = useLazyQuery(INVENTORY_LINKED_PODS, {
     fetchPolicy: 'network-only',
   });

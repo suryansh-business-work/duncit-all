@@ -791,7 +791,7 @@ export const userService = {
   async requestPasswordResetOtp(input: RequestPasswordResetDTO) {
     const email = String(input.email || '').trim().toLowerCase();
     const user = await UserModel.findOne({ 'auth.email': email }).select('+auth.password');
-    if (!user || !user.auth?.password) return { ok: true, dev_otp: null };
+    if (!user?.auth?.password) return { ok: true, dev_otp: null };
     const otp = String(crypto.randomInt(100000, 1000000));
     await UserModel.updateOne(
       { _id: user._id },

@@ -53,7 +53,7 @@ export const managedOptionService = {
       name,
       group: input.group,
       sort_order: input.sort_order ?? 0,
-      is_active: input.is_active === false ? false : true,
+      is_active: input.is_active !== false,
     });
     return pub(doc);
   },

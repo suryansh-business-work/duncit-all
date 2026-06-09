@@ -20,7 +20,7 @@ const initials = (user: any) => {
   return name.split(/\s+/).filter(Boolean).slice(0, 2).map((part: string) => part[0]?.toUpperCase()).join('') || 'P';
 };
 
-export default function PartnerShell({ children }: { children: ReactNode }) {
+export default function PartnerShell({ children }: Readonly<{ children: ReactNode }>) {
   const navigate = useNavigate();
   const colorMode = useColorMode();
   const theme = useTheme();

@@ -24,7 +24,7 @@ export function FeedList({
   testID,
   onRefresh,
   children,
-}: FeedListProps) {
+}: Readonly<FeedListProps>) {
   const { primary } = useThemeColors();
 
   if (isLoading && isEmpty) {

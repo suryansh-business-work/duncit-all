@@ -17,7 +17,7 @@ interface Props {
   onAddStatus: () => void;
 }
 
-function TimeChip({ iso }: { iso?: string | null }) {
+function TimeChip({ iso }: Readonly<{ iso?: string | null }>) {
   if (!iso) return null;
   const ms = new Date(iso).getTime() - Date.now();
   if (Number.isNaN(ms)) return null;
@@ -32,7 +32,7 @@ function TimeChip({ iso }: { iso?: string | null }) {
   return <Chip color={days <= 1 ? 'warning' : 'info'} icon={<HourglassBottomIcon />} label={label} />;
 }
 
-export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddStatus }: Props) {
+export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddStatus }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const hostLine = (pod.host_names ?? []).filter(Boolean).join(', ');

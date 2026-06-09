@@ -23,7 +23,7 @@ export function AccountProfileHeader({
   onChangePhoto,
   onEdit,
   onLogout,
-}: AccountProfileHeaderProps) {
+}: Readonly<AccountProfileHeaderProps>) {
   const { onPrimary, color, primary } = useThemeColors();
   const { labelFor } = useRoleLabels();
   const initial = (me.first_name?.[0] ?? 'U').toUpperCase();

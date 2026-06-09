@@ -5,7 +5,7 @@ interface PostMediaPaneProps {
   caption?: string | null;
 }
 
-export default function PostMediaPane({ imageUrl, caption }: PostMediaPaneProps) {
+export default function PostMediaPane({ imageUrl, caption }: Readonly<PostMediaPaneProps>) {
   return (
     <Box
       sx={{

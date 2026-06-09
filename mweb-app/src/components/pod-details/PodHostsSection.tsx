@@ -12,7 +12,7 @@ interface Props {
   hosts: Host[];
 }
 
-export default function PodHostsSection({ hosts }: Props) {
+export default function PodHostsSection({ hosts }: Readonly<Props>) {
   const navigate = useNavigate();
   if (!hosts || hosts.length === 0) {
     return (

@@ -39,7 +39,7 @@ const spotsLeftLabel = (pod: any) => {
 
 const placeText = (pod: any) => [pod.place_label, pod.place_detail].filter(Boolean).join(' - ');
 
-export default function PodSearchResults({ loading, pods, onSelect }: Props) {
+export default function PodSearchResults({ loading, pods, onSelect }: Readonly<Props>) {
   return (
     <Box
       sx={{

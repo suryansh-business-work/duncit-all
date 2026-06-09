@@ -18,7 +18,7 @@ import ProfileAboutSection from './ProfileAboutSection';
 import UserHostPanel from './UserHostPanel';
 import UserVenuePanel from './UserVenuePanel';
 
-function Title({ icon, label }: { icon: JSX.Element; label: string }) {
+function Title({ icon, label }: Readonly<{ icon: JSX.Element; label: string }>) {
   return (
     <Stack direction="row" spacing={1} alignItems="center">
       {icon}
@@ -27,7 +27,7 @@ function Title({ icon, label }: { icon: JSX.Element; label: string }) {
   );
 }
 
-export default function ProfileAccordions({ me, onSaved }: { me: any; onSaved: () => void }) {
+export default function ProfileAccordions({ me, onSaved }: Readonly<{ me: any; onSaved: () => void }>) {
   return (
     <Stack spacing={1}>
       <Accordion defaultExpanded disableGutters>

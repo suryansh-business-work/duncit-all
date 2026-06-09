@@ -6,7 +6,7 @@ interface FollowPersonCardProps {
   kind: 'HOST' | 'FRIEND';
 }
 
-export default function FollowPersonCard({ person, kind }: FollowPersonCardProps) {
+export default function FollowPersonCard({ person, kind }: Readonly<FollowPersonCardProps>) {
   const name = person.full_name || [person.first_name, person.last_name].filter(Boolean).join(' ') || 'Duncit member';
   const photo = person.passport_photo_url || person.profile_photo;
   const meta = person.full_address || person.email || (kind === 'HOST' ? 'Host' : 'Friend');

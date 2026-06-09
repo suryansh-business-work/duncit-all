@@ -19,10 +19,14 @@ interface Props {
   onDelete: (service: CrmServiceOffered) => void;
 }
 
-const dash = (v?: string | null) => (v && v.trim() ? v : '—');
+const dash = (v?: string | null) => (v?.trim() ? v : '—');
 
-const targetLabel = (s: CrmServiceOffered) =>
-  s.applies_to_venue && s.applies_to_host ? 'Both' : s.applies_to_venue ? 'Venue' : s.applies_to_host ? 'Host' : '—';
+const targetLabel = (s: CrmServiceOffered) => {
+  if (s.applies_to_venue && s.applies_to_host) return 'Both';
+  if (s.applies_to_venue) return 'Venue';
+  if (s.applies_to_host) return 'Host';
+  return '—';
+};
 
 /** Services Offered listing — Title plus the Super → Category → Sub it belongs to. */
 export default function ServicesOfferedTable({ services, onEdit, onDelete }: Readonly<Props>) {

@@ -8,7 +8,7 @@ interface Props {
   onSelect: (id: string) => void;
 }
 
-export default function LocationCityGrid({ cities, draftLocationId, onSelect }: Props) {
+export default function LocationCityGrid({ cities, draftLocationId, onSelect }: Readonly<Props>) {
   const popularId = cities.reduce<LocationLike | null>((best, loc) => {
     if (!best) return loc;
     return (loc.location_zones?.length ?? 0) > (best.location_zones?.length ?? 0) ? loc : best;

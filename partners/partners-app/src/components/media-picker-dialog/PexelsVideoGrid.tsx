@@ -21,7 +21,7 @@ export default function PexelsVideoGrid({
   searching,
   importingId,
   onImport,
-}: PexelsVideoGridProps) {
+}: Readonly<PexelsVideoGridProps>) {
   if (searching && videos.length === 0) {
     return (
       <Box sx={{ textAlign: 'center', py: 6 }}>

@@ -134,13 +134,15 @@ export default function WebsitePagesTab({ entity, leadId, website }: Readonly<Pr
 
       <Card>
         <CardContent>
-          {loading && pages.length === 0 ? (
+          {loading && pages.length === 0 && (
             <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
-          ) : pages.length === 0 ? (
+          )}
+          {!loading && pages.length === 0 && (
             <Typography variant="body2" color="text.secondary" sx={{ py: 2, textAlign: 'center' }}>
               No pages yet. Click "Scrape pages" to discover and save this website's pages.
             </Typography>
-          ) : (
+          )}
+          {pages.length > 0 && (
             <WebsitePagesTable pages={pages} onView={setViewing} onDelete={setRemoving} onError={setActionError} />
           )}
         </CardContent>

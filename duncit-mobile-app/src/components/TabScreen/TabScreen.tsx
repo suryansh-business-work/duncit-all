@@ -10,7 +10,7 @@ import { SuperCategoryTabs } from '@/components/SuperCategoryTabs';
  * header + super-category filter above the tab's content (which fills the rest,
  * above the floating bottom nav). The opaque gradient keeps each tab from
  * showing through the others on web (where inactive tabs stay mounted). */
-export function TabScreen({ testID, children }: { testID: string; children: ReactNode }) {
+export function TabScreen({ testID, children }: Readonly<{ testID: string; children: ReactNode }>) {
   return (
     <YStack flex={1} testID={testID}>
       <AppBackground />

@@ -21,7 +21,7 @@ export function ChatComposer({
   onPickImage,
   onToggleEmoji,
   sending,
-}: ChatComposerProps) {
+}: Readonly<ChatComposerProps>) {
   const { muted, onPrimary } = useThemeColors();
   const canSend = value.trim().length > 0;
 

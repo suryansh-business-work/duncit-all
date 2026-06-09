@@ -18,7 +18,7 @@ export const emptyMetrics: DashboardMetrics = {
   product_earning: 0,
 };
 
-export default function DashboardMetricCards({ metrics }: { metrics?: DashboardMetrics }) {
+export default function DashboardMetricCards({ metrics }: Readonly<{ metrics?: DashboardMetrics }>) {
   const data = metrics ?? emptyMetrics;
   return (
     <Stack direction="row" flexWrap="wrap" gap={1.5}>

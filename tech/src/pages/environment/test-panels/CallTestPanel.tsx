@@ -12,7 +12,7 @@ import { parseApiError } from '../../../utils/parseApiError';
 const EXT_RE = /^\d{1,6}$/;
 
 /** Twilio call tester — places a REAL call after confirm. */
-export default function CallTestPanel({ entry }: { entry: EnvEntry }) {
+export default function CallTestPanel({ entry }: Readonly<{ entry: EnvEntry }>) {
   const confirm = useConfirm();
   const [to, setTo] = useState('');
   const [ext, setExt] = useState('');

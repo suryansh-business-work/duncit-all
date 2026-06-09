@@ -17,7 +17,7 @@ export interface VenueCardProps {
 
 /** Venue row in the discovery list — cover, name, type/capacity, location.
  * RN twin of mWeb's VenueList card. */
-export function VenueCard({ venue, onOpen }: VenueCardProps) {
+export function VenueCard({ venue, onOpen }: Readonly<VenueCardProps>) {
   const { onPrimary, muted } = useThemeColors();
   const location = venueLocation(venue);
 

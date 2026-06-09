@@ -40,7 +40,7 @@ export default function BadgeDetailsSheet({
   badge,
   awardedAt,
   awardedReason,
-}: Props) {
+}: Readonly<Props>) {
   if (!badge) return null;
   const conditionLabel =
     CONDITION_LABEL[badge.condition_type ?? ''] ?? badge.condition_type ?? '';

@@ -4,40 +4,44 @@ import { groups } from '../data/services';
 ---
 
 <Layout title="Duncit Status">
-  <main class="wrap">
-    <header class="head">
-      <div class="brand">
-        <img src="/duncit-logo.svg" alt="Duncit" width="40" height="40" />
+  <main class="mx-auto max-w-[1040px] px-5 pb-16 pt-8 sm:pt-14">
+    <header class="mb-9 flex flex-wrap items-center justify-between gap-4">
+      <div class="flex items-center gap-3.5">
+        <img src="/duncit-logo.svg" alt="Duncit" width="40" height="40" class="rounded-lg" />
         <div>
-          <h1>Duncit Status</h1>
-          <p class="sub">Live availability of every Duncit console, the API and our websites.</p>
+          <h1 class="text-2xl font-black tracking-tight sm:text-[2.1rem]">Duncit Status</h1>
+          <p class="mt-1 text-sm text-muted">Live availability of every Duncit console, the API and our websites.</p>
         </div>
       </div>
-      <div class="overall" id="overall">
-        <span class="dot pending" id="overall-dot"></span>
+      <div class="inline-flex items-center gap-2.5 rounded-full border border-line bg-panel px-4 py-2.5 font-bold" id="overall">
+        <span class="dot dot-pending" id="overall-dot"></span>
         <span id="overall-text">Checking services…</span>
       </div>
     </header>
 
     {groups.map((group) => (
-      <section class="group">
-        <h2>{group.title}</h2>
-        <div class="grid">
+      <section class="mb-8">
+        <h2 class="mb-3.5 text-xs font-bold uppercase tracking-[0.12em] text-muted">{group.title}</h2>
+        <div class="grid gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(240px,1fr))]">
           {group.items.map((s) => (
-            <div class="card" data-url={s.probe ?? s.url}>
-              <div class="row">
-                <a class="name" href={s.url} target="_blank" rel="noopener">{s.name}</a>
-                <span class="badge pending"><span class="dot pending"></span><span class="label">Checking</span></span>
+            <div
+              class="flex flex-col gap-1.5 rounded-2xl border border-line bg-panel p-4 transition duration-150 hover:-translate-y-0.5 hover:border-brand/50"
+              data-url={s.probe ?? s.url}
+            >
+              <div class="flex items-center justify-between gap-2">
+                <a class="font-extrabold hover:underline" href={s.url} target="_blank" rel="noopener">{s.name}</a>
+                <span class="badge badge-pending"><span class="dot dot-pending"></span><span class="label">Checking</span></span>
               </div>
-              <span class="desc">{s.description}</span>
-              <div class="card-foot">
-                <span class="host">{new URL(s.url).host}</span>
+              <span class="text-sm text-muted">{s.description}</span>
+              <div class="mt-1 flex items-center justify-between gap-2">
+                <span class="font-mono text-[0.72rem] text-slate-500">{new URL(s.url).host}</span>
                 <button
                   type="button"
-                  class="info-btn"
+                  class="cursor-pointer rounded-full border border-line bg-white/5 px-2.5 py-1 text-[0.72rem] font-extrabold transition hover:border-brand/50 hover:bg-brand/15"
                   data-name={s.name}
                   data-url={s.url}
-                  aria-label={`Show HTTP status and SSL details for ${s.name}`}
+                  data-health={s.health ?? ''}
+                  aria-label={`Show status and details for ${s.name}`}
                 >ⓘ Details</button>
               </div>
             </div>
@@ -46,66 +50,25 @@ import { groups } from '../data/services';
       </section>
     ))}
 
-    <footer class="foot">
+    <footer class="mt-7 flex justify-between border-t border-line pt-4 text-sm text-muted">
       <span>Refreshes automatically every 60s.</span>
       <span id="updated"></span>
     </footer>
   </main>
 
-  <dialog id="detail" class="detail">
-    <div class="detail-head">
-      <h3 id="detail-title">Service</h3>
-      <button type="button" class="close" id="detail-close" aria-label="Close details">×</button>
+  <dialog
+    id="detail"
+    class="m-auto w-[min(480px,92vw)] rounded-2xl border border-line bg-panel p-0 text-ink shadow-2xl backdrop:bg-black/70 backdrop:backdrop-blur-sm"
+  >
+    <div class="flex items-center justify-between border-b border-line px-5 py-4">
+      <div class="flex items-center gap-2.5">
+        <span class="dot dot-pending" id="detail-dot"></span>
+        <h3 class="text-lg font-black" id="detail-title">Service</h3>
+      </div>
+      <button type="button" class="cursor-pointer rounded-md px-1 text-2xl leading-none text-muted hover:text-ink" id="detail-close" aria-label="Close details">×</button>
     </div>
-    <div id="detail-body" class="detail-body"></div>
+    <div id="detail-body" class="px-5 py-4"></div>
   </dialog>
-
-  <style>
-    .wrap { max-width: 1040px; margin: 0 auto; padding: clamp(24px, 5vw, 56px) 20px 64px; }
-    .head { display: flex; flex-wrap: wrap; gap: 16px; align-items: center; justify-content: space-between; margin-bottom: 36px; }
-    .brand { display: flex; align-items: center; gap: 14px; }
-    .brand img { border-radius: 10px; }
-    h1 { font-size: clamp(1.6rem, 4vw, 2.2rem); font-weight: 900; margin: 0; letter-spacing: -0.02em; }
-    .sub { color: var(--muted); margin: 4px 0 0; font-size: 0.95rem; }
-    .overall { display: inline-flex; align-items: center; gap: 10px; padding: 10px 16px; border: 1px solid var(--border); border-radius: 999px; background: var(--panel); font-weight: 700; }
-    .group { margin-bottom: 32px; }
-    .group h2 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.12em; color: var(--muted); margin: 0 0 14px; }
-    .grid { display: grid; gap: 14px; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); }
-    .card { display: flex; flex-direction: column; gap: 6px; padding: 16px; border: 1px solid var(--border); border-radius: 16px; background: var(--panel); backdrop-filter: blur(8px); transition: transform 0.15s ease, border-color 0.15s ease; }
-    .card:hover { transform: translateY(-2px); border-color: rgba(255, 90, 90, 0.5); }
-    .row { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
-    .name { font-weight: 800; }
-    .name:hover { text-decoration: underline; }
-    .desc { color: var(--muted); font-size: 0.85rem; }
-    .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 8px; margin-top: 4px; }
-    .host { color: rgba(148, 163, 184, 0.7); font-size: 0.72rem; font-family: ui-monospace, monospace; }
-    .info-btn { cursor: pointer; font: inherit; font-size: 0.72rem; font-weight: 800; color: var(--ink); background: rgba(255,255,255,0.06); border: 1px solid var(--border); border-radius: 999px; padding: 4px 10px; transition: background 0.15s ease, border-color 0.15s ease; }
-    .info-btn:hover { background: rgba(255, 90, 90, 0.16); border-color: rgba(255, 90, 90, 0.5); }
-    .badge { display: inline-flex; align-items: center; gap: 6px; font-size: 0.72rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); }
-    .dot { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
-    .dot.ok, .badge.ok { color: var(--ok); } .dot.ok { background: var(--ok); box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.18); }
-    .dot.down, .badge.down { color: var(--down); } .dot.down { background: var(--down); box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.18); }
-    .dot.pending, .badge.pending { color: var(--pending); } .dot.pending { background: var(--pending); animation: pulse 1.2s ease-in-out infinite; }
-    @keyframes pulse { 50% { opacity: 0.35; } }
-    .foot { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.8rem; margin-top: 28px; border-top: 1px solid var(--border); padding-top: 16px; }
-
-    .detail { width: min(440px, 92vw); border: 1px solid var(--border); border-radius: 18px; background: #11151f; color: var(--ink); padding: 0; }
-    .detail::backdrop { background: rgba(5, 8, 14, 0.66); backdrop-filter: blur(3px); }
-    .detail-head { display: flex; align-items: center; justify-content: space-between; padding: 18px 20px; border-bottom: 1px solid var(--border); }
-    .detail-head h3 { margin: 0; font-size: 1.1rem; font-weight: 900; }
-    .close { cursor: pointer; background: transparent; border: 0; color: var(--muted); font-size: 1.5rem; line-height: 1; padding: 0 4px; }
-    .close:hover { color: var(--ink); }
-    .detail-body { padding: 14px 20px 22px; display: flex; flex-direction: column; gap: 2px; }
-    .d-row { display: flex; align-items: center; justify-content: space-between; gap: 14px; padding: 9px 0; border-bottom: 1px dashed rgba(255,255,255,0.07); font-size: 0.9rem; }
-    .d-row:last-child { border-bottom: 0; }
-    .d-label { color: var(--muted); font-weight: 700; }
-    .d-value { text-align: right; word-break: break-word; }
-    .pill { font-size: 0.78rem; font-weight: 800; padding: 3px 10px; border-radius: 999px; border: 1px solid var(--border); }
-    .pill.ok { color: var(--ok); background: rgba(34, 197, 94, 0.14); }
-    .pill.down { color: var(--down); background: rgba(239, 68, 68, 0.14); }
-    .d-loading { color: var(--muted); padding: 12px 0; }
-    .d-error { color: var(--down); padding: 12px 0; font-weight: 700; }
-  </style>
 
   <script>
     import { runStatusPage } from '../scripts/client';

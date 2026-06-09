@@ -1,12 +1,11 @@
 /**
  * Client logic for the Duncit status page:
  *  - live reachability badges (opaque no-cors fetch, every 60s)
- *  - an on-demand "Details" dialog showing the real HTTP status code + TLS
- *    certificate, fetched from the API's server-side probe (/status/probe).
+ *  - a Details dialog showing the real HTTP status code + TLS certificate
+ *    (from the API's /status/probe) and, for services that expose one, a rich
+ *    server health report (/health).
  */
-const SERVER_BASE = import.meta.env.PROD
-  ? 'https://server.duncit.com'
-  : 'http://localhost:2001';
+const SERVER_BASE = import.meta.env.PROD ? 'https://server.duncit.com' : 'http://localhost:2001';
 const REFRESH_MS = 60_000;
 const PROBE_TIMEOUT_MS = 8000;
 
@@ -27,6 +26,17 @@ interface ProbeResult {
   ssl: SslInfo | null;
   error?: string;
 }
+interface HealthReport {
+  status: string;
+  version: string;
+  environment: string;
+  node: string;
+  platform: string;
+  hostname: string;
+  uptime: { processSeconds: number; systemSeconds: number };
+  memory: { rssBytes: number; systemTotalBytes: number; systemFreeBytes: number };
+  checks: { database: string };
+}
 
 const reachable = (url: string): Promise<boolean> =>
   new Promise((resolve) => {
@@ -46,18 +56,17 @@ const reachable = (url: string): Promise<boolean> =>
       });
   });
 
+function setDot(el: Element | null, state: 'ok' | 'down' | 'pending'): void {
+  if (el) el.className = `dot dot-${state}`;
+}
+
 function setBadge(el: Element, ok: boolean): void {
-  el.className = 'badge ' + (ok ? 'ok' : 'down');
-  el.innerHTML =
-    '<span class="dot ' +
-    (ok ? 'ok' : 'down') +
-    '"></span><span class="label">' +
-    (ok ? 'Operational' : 'Unreachable') +
-    '</span>';
+  el.className = `badge badge-${ok ? 'ok' : 'down'}`;
+  el.innerHTML = `<span class="dot dot-${ok ? 'ok' : 'down'}"></span><span class="label">${ok ? 'Operational' : 'Unreachable'}</span>`;
 }
 
 async function runBadges(): Promise<void> {
-  const cards = Array.from(document.querySelectorAll<HTMLElement>('.card'));
+  const cards = Array.from(document.querySelectorAll<HTMLElement>('[data-url]'));
   let up = 0;
   await Promise.all(
     cards.map(async (card) => {
@@ -70,61 +79,60 @@ async function runBadges(): Promise<void> {
     }),
   );
   const total = cards.length;
-  const dot = document.getElementById('overall-dot');
   const text = document.getElementById('overall-text');
   const updated = document.getElementById('updated');
-  if (dot)
-    dot.className =
-      'dot ' + (up === total ? 'ok' : up === 0 ? 'down' : 'pending');
+  setDot(document.getElementById('overall-dot'), up === total ? 'ok' : up === 0 ? 'down' : 'pending');
   if (text)
-    text.textContent =
-      up === total
-        ? 'All systems operational'
-        : `${up} of ${total} services operational`;
-  if (updated)
-    updated.textContent = 'Last checked ' + new Date().toLocaleTimeString();
+    text.textContent = up === total ? 'All systems operational' : `${up} of ${total} services operational`;
+  if (updated) updated.textContent = 'Last checked ' + new Date().toLocaleTimeString();
 }
 
 const escapeHtml = (s: string): string =>
-  s.replace(
-    /[&<>"]/g,
-    (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c,
-  );
+  s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c] ?? c);
 
 const fmtDate = (iso: string | null): string =>
-  iso
-    ? new Date(iso).toLocaleDateString(undefined, {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-      })
-    : '—';
+  iso ? new Date(iso).toLocaleDateString(undefined, { year: 'numeric', month: 'short', day: 'numeric' }) : '—';
+
+function fmtBytes(bytes: number): string {
+  if (!bytes || bytes <= 0) return '0 B';
+  const units = ['B', 'KB', 'MB', 'GB', 'TB'];
+  const i = Math.min(units.length - 1, Math.floor(Math.log(bytes) / Math.log(1024)));
+  const value = bytes / 1024 ** i;
+  return `${parseFloat(value.toFixed(i === 0 || value >= 100 ? 0 : 1))} ${units[i]}`;
+}
+
+function fmtUptime(seconds: number): string {
+  const d = Math.floor(seconds / 86400);
+  const h = Math.floor((seconds % 86400) / 3600);
+  const m = Math.floor((seconds % 3600) / 60);
+  const parts: string[] = [];
+  if (d) parts.push(`${d}d`);
+  if (h) parts.push(`${h}h`);
+  if (m && !d) parts.push(`${m}m`);
+  return parts.join(' ') || '<1m';
+}
+
+const pill = (ok: boolean, text: string): string =>
+  `<span class="pill ${ok ? 'pill-ok' : 'pill-down'}">${escapeHtml(text)}</span>`;
 
 const row = (label: string, value: string): string =>
-  `<div class="d-row"><span class="d-label">${label}</span><span class="d-value">${value}</span></div>`;
+  `<div class="flex items-center justify-between gap-3 border-b border-line/60 py-2 text-sm last:border-0"><span class="font-semibold text-muted">${label}</span><span class="max-w-[62%] break-words text-right">${value}</span></div>`;
 
-function renderDetails(result: ProbeResult): string {
+const section = (title: string, body: string): string =>
+  `<section class="mb-4 last:mb-0"><h4 class="mb-1.5 text-xs font-bold uppercase tracking-wider text-muted">${title}</h4><div>${body}</div></section>`;
+
+function renderProbe(r: ProbeResult): string {
   const code =
-    result.statusCode !== null
-      ? `${result.statusCode} ${result.statusText ?? ''}`.trim()
-      : (result.error ?? 'Unreachable');
-  const rows = [
-    row(
-      'HTTP status',
-      `<span class="pill ${result.ok ? 'ok' : 'down'}">${escapeHtml(code)}</span>`,
-    ),
-  ];
-  const ssl = result.ssl;
+    r.statusCode !== null ? `${r.statusCode} ${r.statusText ?? ''}`.trim() : (r.error ?? 'Unreachable');
+  const rows = [row('HTTP status', pill(r.ok, code))];
+  const ssl = r.ssl;
   if (ssl) {
     const expiry =
       ssl.daysRemaining !== null
         ? `${fmtDate(ssl.validTo)} · ${ssl.daysRemaining} days left`
         : fmtDate(ssl.validTo);
     rows.push(
-      row(
-        'SSL',
-        `<span class="pill ${ssl.authorized ? 'ok' : 'down'}">${ssl.authorized ? 'Valid & trusted' : 'Not trusted'}</span>`,
-      ),
+      row('SSL', pill(ssl.authorized, ssl.authorized ? 'Valid & trusted' : 'Not trusted')),
       row('Issuer', escapeHtml(ssl.issuer ?? '—')),
       row('Subject', escapeHtml(ssl.subject ?? '—')),
       row('Protocol', escapeHtml(ssl.protocol ?? '—')),
@@ -132,49 +140,80 @@ function renderDetails(result: ProbeResult): string {
       row('Expires', escapeHtml(expiry)),
     );
   } else {
-    rows.push(row('SSL', '<span class="pill down">No certificate</span>'));
+    rows.push(row('SSL', '<span class="pill pill-down">No certificate</span>'));
   }
   return rows.join('');
+}
+
+function renderHealth(h: HealthReport): string {
+  const used = h.memory.systemTotalBytes - h.memory.systemFreeBytes;
+  const memPct = h.memory.systemTotalBytes > 0 ? Math.round((used / h.memory.systemTotalBytes) * 100) : 0;
+  const rows = [
+    row('Status', pill(h.status === 'ok', h.status)),
+    row('Database', pill(h.checks.database === 'connected', h.checks.database)),
+    row('Version', escapeHtml(h.version)),
+    row('Environment', escapeHtml(h.environment)),
+    row('Process uptime', fmtUptime(h.uptime.processSeconds)),
+    row('System uptime', fmtUptime(h.uptime.systemSeconds)),
+    row('Node', escapeHtml(h.node)),
+    row('Platform', escapeHtml(h.platform)),
+    row('Hostname', escapeHtml(h.hostname)),
+  ];
+  const mem = `<div class="pt-2.5"><div class="mb-1 flex justify-between text-sm"><span class="font-semibold text-muted">Memory</span><span>${fmtBytes(used)} / ${fmtBytes(h.memory.systemTotalBytes)}</span></div><div class="h-1.5 overflow-hidden rounded-full bg-line"><div class="h-full rounded-full bg-ok" style="width:${memPct}%"></div></div></div>`;
+  return rows.join('') + mem;
 }
 
 function dialogParts() {
   return {
     dialog: document.getElementById('detail') as HTMLDialogElement | null,
     title: document.getElementById('detail-title'),
+    dot: document.getElementById('detail-dot'),
     body: document.getElementById('detail-body'),
   };
 }
 
-async function openDetails(name: string, url: string): Promise<void> {
-  const { dialog, title, body } = dialogParts();
+async function fetchProbe(url: string): Promise<ProbeResult> {
+  const res = await fetch(`${SERVER_BASE}/status/probe?url=${encodeURIComponent(url)}`, { cache: 'no-store' });
+  if (!res.ok) throw new Error(`Probe failed (${res.status})`);
+  return (await res.json()) as ProbeResult;
+}
+
+async function openDetails(name: string, url: string, healthUrl: string): Promise<void> {
+  const { dialog, title, dot, body } = dialogParts();
   if (!dialog || !title || !body) return;
   title.textContent = name;
-  body.innerHTML =
-    '<div class="d-loading">Checking status &amp; certificate…</div>';
+  setDot(dot, 'pending');
+  body.innerHTML = '<div class="py-3 text-sm text-muted">Checking status &amp; certificate…</div>';
   dialog.showModal();
   try {
-    const res = await fetch(
-      `${SERVER_BASE}/status/probe?url=${encodeURIComponent(url)}`,
-      { cache: 'no-store' },
-    );
-    if (!res.ok) throw new Error(`Probe failed (${res.status})`);
-    body.innerHTML = renderDetails((await res.json()) as ProbeResult);
+    const probe = await fetchProbe(url);
+    setDot(dot, probe.ok ? 'ok' : 'down');
+    let html = section('Endpoint', renderProbe(probe));
+    if (healthUrl) {
+      try {
+        const res = await fetch(healthUrl, { cache: 'no-store' });
+        if (!res.ok) throw new Error(String(res.status));
+        html += section('Server health', renderHealth((await res.json()) as HealthReport));
+      } catch {
+        html += section('Server health', '<p class="py-1 text-sm text-muted">Health details unavailable.</p>');
+      }
+    }
+    body.innerHTML = html;
   } catch (err) {
-    body.innerHTML = `<div class="d-error">${escapeHtml(err instanceof Error ? err.message : 'Could not load details')}</div>`;
+    setDot(dot, 'down');
+    body.innerHTML = `<div class="py-3 text-sm font-bold text-down">${escapeHtml(err instanceof Error ? err.message : 'Could not load details')}</div>`;
   }
 }
 
 export function runStatusPage(): void {
-  document.querySelectorAll<HTMLButtonElement>('.info-btn').forEach((btn) => {
+  document.querySelectorAll<HTMLButtonElement>('button[data-name]').forEach((btn) => {
     btn.addEventListener('click', (e) => {
       e.preventDefault();
-      void openDetails(btn.dataset.name ?? 'Service', btn.dataset.url ?? '');
+      void openDetails(btn.dataset.name ?? 'Service', btn.dataset.url ?? '', btn.dataset.health ?? '');
     });
   });
   const { dialog } = dialogParts();
-  document
-    .getElementById('detail-close')
-    ?.addEventListener('click', () => dialog?.close());
+  document.getElementById('detail-close')?.addEventListener('click', () => dialog?.close());
   dialog?.addEventListener('click', (e) => {
     if (e.target === dialog) dialog.close(); // backdrop click
   });

@@ -5,6 +5,8 @@ export interface Service {
   description: string;
   /** Optional reachability probe path (defaults to the URL itself). */
   probe?: string;
+  /** Optional rich health endpoint (JSON) surfaced in the Details dialog. */
+  health?: string;
 }
 
 export interface ServiceGroup {
@@ -97,6 +99,7 @@ export const platform: Service[] = [
     url: 'https://server.duncit.com/',
     description: 'GraphQL API',
     probe: 'https://server.duncit.com/health',
+    health: 'https://server.duncit.com/health',
   },
   {
     name: 'SignOz',

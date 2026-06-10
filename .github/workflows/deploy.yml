@@ -65,7 +65,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             admin:
-              - 'admin/**'
+              - 'portals/admin/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -73,7 +73,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             mweb:
-              - 'mweb-app/**'
+              - 'app/mweb/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -81,7 +81,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             website:
-              - 'website/**'
+              - 'website/main-website/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -89,7 +89,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             partners_app:
-              - 'partners/partners-app/**'
+              - 'portals/partners-app/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -97,7 +97,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             partners_website:
-              - 'partners/partners-website/**'
+              - 'website/partners-website/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -105,7 +105,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             ads_portal:
-              - 'ads/ads-portal/**'
+              - 'portals/ads-portal/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -113,7 +113,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             ads_website:
-              - 'ads/ads-website/**'
+              - 'website/ads-website/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -121,11 +121,11 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             native:
-              - 'duncit-mobile-app/**'
+              - 'app/mobile-app/**'
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             crm:
-              - 'crm/**'
+              - 'portals/crm/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -133,7 +133,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             finance:
-              - 'finance/**'
+              - 'portals/finance/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -141,7 +141,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             tech:
-              - 'tech/**'
+              - 'portals/tech/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -149,7 +149,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             support:
-              - 'support/**'
+              - 'portals/support/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -157,7 +157,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             website_app:
-              - 'website-app/**'
+              - 'portals/website-app/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -165,7 +165,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             legal:
-              - 'legal/**'
+              - 'portals/legal/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -173,7 +173,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             ai:
-              - 'ai/**'
+              - 'portals/ai/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -181,7 +181,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             products:
-              - 'products/**'
+              - 'portals/products/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -189,7 +189,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             marketing:
-              - 'marketing/**'
+              - 'portals/marketing/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -197,7 +197,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             onboarding:
-              - 'onboarding/**'
+              - 'portals/onboarding/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -205,7 +205,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             hr:
-              - 'hr/**'
+              - 'portals/hr/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -213,7 +213,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             employee:
-              - 'employee/**'
+              - 'portals/employee/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -221,7 +221,7 @@ jobs:
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             status:
-              - 'status/**'
+              - 'website/status-website/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -292,7 +292,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file admin/Dockerfile \
+              --file portals/admin/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -327,7 +327,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file mweb-app/Dockerfile \
+              --file app/mweb/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -361,7 +361,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file website/Dockerfile \
+              --file website/main-website/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website:${{ github.sha }} \
               --cache-from type=gha,scope=duncit-website \
@@ -393,7 +393,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file partners/partners-app/Dockerfile \
+              --file portals/partners-app/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-app:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-app:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -427,7 +427,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file partners/partners-website/Dockerfile \
+              --file website/partners-website/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-website:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-website:${{ github.sha }} \
               --cache-from type=gha,scope=duncit-partners-website \
@@ -459,7 +459,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file ads/ads-portal/Dockerfile \
+              --file portals/ads-portal/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-portal:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-portal:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -492,7 +492,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file ads/ads-website/Dockerfile \
+              --file website/ads-website/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-website:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-website:${{ github.sha }} \
               --cache-from type=gha,scope=duncit-ads-website \
@@ -520,7 +520,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file duncit-mobile-app/Dockerfile \
+              --file app/mobile-app/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-native:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-native:${{ github.sha }} \
               --cache-from type=gha,scope=duncit-native \
@@ -528,9 +528,9 @@ jobs:
               --push .
 
   # -----------------------------------------------------------
-  # CRM-specific test gate (decoupled — only runs when crm/ changed).
+  # CRM-specific test gate (decoupled — only runs when portals/crm/ changed).
   # Vitest unit/component tests + Cypress e2e specs both live under
-  # crm/__tests__/. build-crm waits on this job's success so a red test
+  # portals/crm/__tests__/. build-crm waits on this job's success so a red test
   # prevents the docker image from being pushed.
   # -----------------------------------------------------------
   crm-tests:
@@ -557,23 +557,23 @@ jobs:
         # `install: false` only verifies — it doesn't fetch the binary.
         # Run an explicit install so the runner cache at
         # `/home/runner/.cache/Cypress/<version>/Cypress` always exists.
-        working-directory: crm
+        working-directory: portals/crm
         run: pnpm exec cypress install
 
       - name: Type-check CRM source
-        working-directory: crm
+        working-directory: portals/crm
         run: pnpm exec tsc -b --noEmit
 
       - name: Type-check Cypress specs
-        working-directory: crm
+        working-directory: portals/crm
         run: pnpm exec tsc --noEmit -p __tests__/e2e/tsconfig.json
 
       - name: Run vitest unit + component tests
-        working-directory: crm
+        working-directory: portals/crm
         run: pnpm exec vitest run --reporter=default
 
       - name: Build CRM bundle for Cypress preview
-        working-directory: crm
+        working-directory: portals/crm
         # `build:e2e` forces VITE_GRAPHQL_URL=/graphql (via .env.e2e) so the
         # bundled app talks same-origin and cy.intercept catches every
         # GraphQL call without a CORS preflight hitting server.duncit.com.
@@ -582,7 +582,7 @@ jobs:
       - name: Run Cypress e2e specs
         uses: cypress-io/github-action@v6
         with:
-          working-directory: crm
+          working-directory: portals/crm
           install: false
           config-file: __tests__/e2e/cypress.config.ts
           start: pnpm preview
@@ -595,7 +595,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: crm-cypress-screenshots
-          path: crm/cypress-artifacts/screenshots
+          path: portals/crm/cypress-artifacts/screenshots
           if-no-files-found: ignore
 
   build-crm:
@@ -617,7 +617,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file crm/Dockerfile \
+              --file portals/crm/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-crm:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-crm:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -651,7 +651,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file finance/Dockerfile \
+              --file portals/finance/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -685,7 +685,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file tech/Dockerfile \
+              --file portals/tech/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-tech:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-tech:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -719,7 +719,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file support/Dockerfile \
+              --file portals/support/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -754,7 +754,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file website-app/Dockerfile \
+              --file portals/website-app/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website-app:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website-app:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -789,7 +789,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file legal/Dockerfile \
+              --file portals/legal/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-legal:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-legal:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -824,7 +824,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file ai/Dockerfile \
+              --file portals/ai/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ai:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ai:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -859,7 +859,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file products/Dockerfile \
+              --file portals/products/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-products:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-products:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -894,7 +894,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file marketing/Dockerfile \
+              --file portals/marketing/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -929,7 +929,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file onboarding/Dockerfile \
+              --file portals/onboarding/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -964,7 +964,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file hr/Dockerfile \
+              --file portals/hr/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -999,7 +999,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file employee/Dockerfile \
+              --file portals/employee/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:${{ github.sha }} \
               --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
@@ -1028,7 +1028,7 @@ jobs:
           retry_wait_seconds: 20
           command: |
             docker buildx build \
-              --file status/Dockerfile \
+              --file website/status-website/Dockerfile \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-status:latest \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-status:${{ github.sha }} \
               --cache-from type=gha,scope=duncit-status \

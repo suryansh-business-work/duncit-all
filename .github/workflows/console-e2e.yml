@@ -9,12 +9,12 @@ on:
   push:
     branches: [main, master]
     paths:
-      - 'support/**'
-      - 'website-app/**'
-      - 'legal/**'
-      - 'ai/**'
-      - 'products/**'
-      - 'marketing/**'
+      - 'portals/support/**'
+      - 'portals/website-app/**'
+      - 'portals/legal/**'
+      - 'portals/ai/**'
+      - 'portals/products/**'
+      - 'portals/marketing/**'
       - 'packages/**'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -22,12 +22,12 @@ on:
   pull_request:
     branches: [main, master]
     paths:
-      - 'support/**'
-      - 'website-app/**'
-      - 'legal/**'
-      - 'ai/**'
-      - 'products/**'
-      - 'marketing/**'
+      - 'portals/support/**'
+      - 'portals/website-app/**'
+      - 'portals/legal/**'
+      - 'portals/ai/**'
+      - 'portals/products/**'
+      - 'portals/marketing/**'
       - 'packages/**'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -46,17 +46,17 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - workspace: support
+          - workspace: portals/support
             port: 2010
-          - workspace: website-app
+          - workspace: portals/website-app
             port: 2011
-          - workspace: legal
+          - workspace: portals/legal
             port: 2012
-          - workspace: ai
+          - workspace: portals/ai
             port: 2013
-          - workspace: products
+          - workspace: portals/products
             port: 2014
-          - workspace: marketing
+          - workspace: portals/marketing
             port: 2015
     steps:
       - uses: actions/checkout@v4

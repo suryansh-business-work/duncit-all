@@ -1,23 +1,23 @@
 packages:
   - server
-  - mweb-app
-  - admin
-  - website
-  - partners/partners-app
-  - partners/partners-website
-  - ads/ads-portal
-  - ads/ads-website
-  - crm
-  - finance
-  - tech
-  - support
-  - website-app
-  - legal
-  - ai
-  - products
-  - marketing
-  - onboarding
-  - hr
-  - employee
-  - status
+  - app/mweb
+  - portals/admin
+  - website/main-website
+  - portals/partners-app
+  - website/partners-website
+  - portals/ads-portal
+  - website/ads-website
+  - portals/crm
+  - portals/finance
+  - portals/tech
+  - portals/support
+  - portals/website-app
+  - portals/legal
+  - portals/ai
+  - portals/products
+  - portals/marketing
+  - portals/onboarding
+  - portals/hr
+  - portals/employee
+  - website/status-website
   - packages/*

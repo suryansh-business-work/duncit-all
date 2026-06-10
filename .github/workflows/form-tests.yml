@@ -4,21 +4,21 @@ on:
   push:
     branches: [main, master, develop]
     paths:
-      - 'admin/**'
-      - 'mweb-app/**'
-      - 'ads/ads-portal/**'
-      - 'crm/**'
-      - 'finance/**'
-      - 'tech/**'
-      - 'support/**'
-      - 'website-app/**'
-      - 'legal/**'
-      - 'ai/**'
-      - 'products/**'
-      - 'marketing/**'
-      - 'onboarding/**'
-      - 'hr/**'
-      - 'employee/**'
+      - 'portals/admin/**'
+      - 'app/mweb/**'
+      - 'portals/ads-portal/**'
+      - 'portals/crm/**'
+      - 'portals/finance/**'
+      - 'portals/tech/**'
+      - 'portals/support/**'
+      - 'portals/website-app/**'
+      - 'portals/legal/**'
+      - 'portals/ai/**'
+      - 'portals/products/**'
+      - 'portals/marketing/**'
+      - 'portals/onboarding/**'
+      - 'portals/hr/**'
+      - 'portals/employee/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -26,21 +26,21 @@ on:
   pull_request:
     branches: [main, master, develop]
     paths:
-      - 'admin/**'
-      - 'mweb-app/**'
-      - 'ads/ads-portal/**'
-      - 'crm/**'
-      - 'finance/**'
-      - 'tech/**'
-      - 'support/**'
-      - 'website-app/**'
-      - 'legal/**'
-      - 'ai/**'
-      - 'products/**'
-      - 'marketing/**'
-      - 'onboarding/**'
-      - 'hr/**'
-      - 'employee/**'
+      - 'portals/admin/**'
+      - 'app/mweb/**'
+      - 'portals/ads-portal/**'
+      - 'portals/crm/**'
+      - 'portals/finance/**'
+      - 'portals/tech/**'
+      - 'portals/support/**'
+      - 'portals/website-app/**'
+      - 'portals/legal/**'
+      - 'portals/ai/**'
+      - 'portals/products/**'
+      - 'portals/marketing/**'
+      - 'portals/onboarding/**'
+      - 'portals/hr/**'
+      - 'portals/employee/**'
       - 'package.json'
       - 'pnpm-lock.yaml'
       - 'pnpm-workspace.yaml'
@@ -130,61 +130,61 @@ jobs:
         run: pnpm install --frozen-lockfile
 
       - name: Typecheck admin
-        working-directory: admin
+        working-directory: portals/admin
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck mweb-app
-        working-directory: mweb-app
+        working-directory: app/mweb
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck ads-portal
-        working-directory: ads/ads-portal
+        working-directory: portals/ads-portal
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck crm
-        working-directory: crm
+        working-directory: portals/crm
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck finance
-        working-directory: finance
+        working-directory: portals/finance
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck tech
-        working-directory: tech
+        working-directory: portals/tech
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck support
-        working-directory: support
+        working-directory: portals/support
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck website-app
-        working-directory: website-app
+        working-directory: portals/website-app
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck legal
-        working-directory: legal
+        working-directory: portals/legal
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck ai
-        working-directory: ai
+        working-directory: portals/ai
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck products
-        working-directory: products
+        working-directory: portals/products
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck marketing
-        working-directory: marketing
+        working-directory: portals/marketing
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck onboarding
-        working-directory: onboarding
+        working-directory: portals/onboarding
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck hr
-        working-directory: hr
+        working-directory: portals/hr
         run: pnpm exec tsc -b --noEmit
 
       - name: Typecheck employee
-        working-directory: employee
+        working-directory: portals/employee
         run: pnpm exec tsc -b --noEmit

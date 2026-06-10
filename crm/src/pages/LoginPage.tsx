@@ -3,7 +3,7 @@ import { gql, useMutation } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LoginScreen, type LoginFormValues, type LoginScreenConfig } from '@duncit/user-context';
 import { appConfig } from '../config/app-config';
-import { useColorMode } from '../ColorModeContext';
+import { useColorMode } from '@duncit/shell';
 import { useBranding } from '../lib/useBranding';
 import { accessDeniedMessage, hasAppAccess, setToken } from '../lib/session';
 import { parseApiError } from '../utils/parseApiError';

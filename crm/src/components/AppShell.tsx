@@ -18,7 +18,7 @@ import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import LogoutIcon from '@mui/icons-material/Logout';
 import MenuIcon from '@mui/icons-material/Menu';
-import { useColorMode } from '../ColorModeContext';
+import { useColorMode } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
 import { clearToken, hasAppAccess } from '../lib/session';
 import AppSidebar from './AppSidebar';

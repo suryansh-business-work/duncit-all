@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
 import { ThemeProvider, CssBaseline } from '@mui/material';
 import { createDuncitTheme } from './createDuncitTheme';
 import { tokens } from './tokens';
+import type { ComponentExtend } from './components';
 import type { AccentColors, ColorMode } from './types';
 
 interface ColorModeContextValue {
@@ -23,6 +24,8 @@ interface Props {
   storageKey?: string;
   /** Mode used on first load when nothing is stored. */
   defaultMode?: ColorMode;
+  /** Per-portal MUI component override needing its own dep (e.g. CRM's MuiDataGrid). */
+  extend?: ComponentExtend;
   children: ReactNode;
 }
 
@@ -38,7 +41,7 @@ const readStored = (key: string, fallback: ColorMode): ColorMode => {
  * applies CssBaseline and exposes a persisted light/dark color mode via
  * `useColorMode`. Pass the portal's brand `accent` and a unique `storageKey`.
  */
-export function DuncitThemeProvider({ accent = tokens.defaultAccent, storageKey = 'duncit_color_mode', defaultMode = 'dark', children }: Props) {
+export function DuncitThemeProvider({ accent = tokens.defaultAccent, storageKey = 'duncit_color_mode', defaultMode = 'dark', extend, children }: Props) {
   const [mode, setMode] = useState<ColorMode>(() => readStored(storageKey, defaultMode));
 
   const value = useMemo<ColorModeContextValue>(
@@ -58,7 +61,7 @@ export function DuncitThemeProvider({ accent = tokens.defaultAccent, storageKey 
     [mode, storageKey]
   );
 
-  const theme = useMemo(() => createDuncitTheme(mode, accent), [mode, accent]);
+  const theme = useMemo(() => createDuncitTheme(mode, accent, extend), [mode, accent, extend]);
 
   return (
     <ColorModeContext.Provider value={value}>

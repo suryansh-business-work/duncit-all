@@ -3,7 +3,7 @@ import { Box, Chip, IconButton, Stack, Tooltip, Typography } from '@mui/material
 import { alpha, styled } from '@mui/material/styles';
 import LightModeIcon from '@mui/icons-material/LightMode';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
-import { useColorMode } from '../ColorModeContext';
+import { useColorMode } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
 import { useBranding } from '../lib/useBranding';
 

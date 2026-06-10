@@ -60,21 +60,21 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - { name: admin, dir: admin }
-          - { name: mweb-app, dir: mweb-app }
-          - { name: ads-portal, dir: ads/ads-portal }
-          - { name: crm, dir: crm }
-          - { name: finance, dir: finance }
-          - { name: tech, dir: tech }
-          - { name: support, dir: support }
-          - { name: website-app, dir: website-app }
-          - { name: legal, dir: legal }
-          - { name: ai, dir: ai }
-          - { name: products, dir: products }
-          - { name: marketing, dir: marketing }
-          - { name: onboarding, dir: onboarding }
-          - { name: hr, dir: hr }
-          - { name: employee, dir: employee }
+          - { name: admin, dir: portals/admin }
+          - { name: mweb-app, dir: app/mweb }
+          - { name: ads-portal, dir: portals/ads-portal }
+          - { name: crm, dir: portals/crm }
+          - { name: finance, dir: portals/finance }
+          - { name: tech, dir: portals/tech }
+          - { name: support, dir: portals/support }
+          - { name: website-app, dir: portals/website-app }
+          - { name: legal, dir: portals/legal }
+          - { name: ai, dir: portals/ai }
+          - { name: products, dir: portals/products }
+          - { name: marketing, dir: portals/marketing }
+          - { name: onboarding, dir: portals/onboarding }
+          - { name: hr, dir: portals/hr }
+          - { name: employee, dir: portals/employee }
 
     steps:
       - name: Checkout

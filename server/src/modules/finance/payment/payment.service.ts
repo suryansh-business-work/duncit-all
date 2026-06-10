@@ -478,7 +478,7 @@ export const paymentService = {
     doc.invoice_no = await nextInvoiceNumber();
     doc.gateway_ref = input.razorpay_payment_id;
     (doc as any).metadata = {
-      ...((doc as any).metadata || {}),
+      ...(doc as any).metadata,
       razorpay_order_id: input.razorpay_order_id,
       razorpay_payment_id: input.razorpay_payment_id,
     };

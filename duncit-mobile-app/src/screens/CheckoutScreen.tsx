@@ -24,6 +24,31 @@ import type { RootStackParamList } from '@/navigation/types';
 import { buildBreakup } from '@/utils/checkout-math';
 import { toErrorMessage } from '@/utils/errors';
 
+/** Strikethrough "You pay …" line shown once a coupon is applied. */
+function CouponTotal({
+  coupon,
+  currency,
+  effectiveTotal,
+  originalTotal,
+}: Readonly<{
+  coupon: CouponPreview | null;
+  currency: string;
+  effectiveTotal: number;
+  originalTotal: number;
+}>) {
+  if (!coupon?.ok) return null;
+  return (
+    <Text testID="coupon-total" fontSize={14} fontWeight="800" color="$color">
+      You pay {currency}
+      {effectiveTotal}{' '}
+      <Text fontSize={13} color="$muted" textDecorationLine="line-through">
+        {currency}
+        {originalTotal}
+      </Text>
+    </Text>
+  );
+}
+
 /** Checkout — order summary + contact/payment form. Uses the dummy gateway when
  * finance dummy_mode is on, else live Razorpay. RN twin of mWeb's CheckoutPage. */
 export function CheckoutScreen() {
@@ -59,6 +84,7 @@ export function CheckoutScreen() {
   const dummyMode = !razorpayEnabled && (finance?.dummy_mode ?? true);
   const appliedCode = coupon?.ok ? coupon.code : null;
   const effectiveTotal = coupon?.ok ? coupon.final_total : (breakup?.total ?? amount);
+  const onDownloadTicket = podId ? () => downloadTicket(podId) : undefined;
 
   const applyCoupon = async () => {
     const code = couponCode.trim();
@@ -143,7 +169,7 @@ export function CheckoutScreen() {
             payment={payment}
             pod={pod}
             onDownloadInvoice={() => downloadInvoice(payment.id, payment.invoice_no ?? 'invoice')}
-            onDownloadTicket={podId ? () => downloadTicket(podId) : undefined}
+            onDownloadTicket={onDownloadTicket}
             onHome={() => navigation.navigate('Home')}
             onProfile={() => navigation.navigate('PodHistory')}
           />
@@ -161,16 +187,12 @@ export function CheckoutScreen() {
             onApply={applyCoupon}
             onRemove={removeCoupon}
           />
-          {coupon?.ok ? (
-            <Text testID="coupon-total" fontSize={14} fontWeight="800" color="$color">
-              You pay {breakup.currency}
-              {effectiveTotal}{' '}
-              <Text fontSize={13} color="$muted" textDecorationLine="line-through">
-                {breakup.currency}
-                {breakup.total}
-              </Text>
-            </Text>
-          ) : null}
+          <CouponTotal
+            coupon={coupon}
+            currency={breakup.currency}
+            effectiveTotal={effectiveTotal}
+            originalTotal={breakup.total}
+          />
           <CheckoutForm
             initialValues={{
               email: me?.email ?? '',

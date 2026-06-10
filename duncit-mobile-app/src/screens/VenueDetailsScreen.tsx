@@ -40,13 +40,102 @@ function Chip({ label }: Readonly<{ label: string }>) {
   );
 }
 
+/** The scrollable venue body — cover, chips, description, location, amenities and
+ * gallery. Split out of the screen so the loading/error chain stays simple. */
+function VenueDetailsContent({
+  venue,
+  gallery,
+}: Readonly<{ venue: PublicVenue; gallery: (string | null | undefined)[] }>) {
+  const { onPrimary, primary } = useThemeColors();
+  return (
+    <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 32 }}>
+      <YStack
+        height={200}
+        borderRadius={16}
+        overflow="hidden"
+        backgroundColor="$primary"
+        alignItems="center"
+        justifyContent="center"
+      >
+        {gallery[0] ? (
+          <Image
+            source={{ uri: gallery[0] as string }}
+            style={{ width: '100%', height: '100%' }}
+            resizeMode="cover"
+          />
+        ) : (
+          <MaterialIcons name="storefront" size={44} color={onPrimary} />
+        )}
+      </YStack>
+
+      <Text fontSize={22} fontWeight="900" color="$color">
+        {venue.venue_name}
+      </Text>
+      <XStack flexWrap="wrap" gap={6}>
+        {venue.venue_type ? <Chip label={venue.venue_type} /> : null}
+        {venue.capacity ? <Chip label={`${venue.capacity} capacity`} /> : null}
+        {(venue.tags ?? []).map((tag) => (
+          <Chip key={tag} label={tag} />
+        ))}
+      </XStack>
+
+      {venue.description ? (
+        <Text fontSize={14} color="$muted" lineHeight={20}>
+          {venue.description}
+        </Text>
+      ) : null}
+
+      <XStack alignItems="center" gap={6}>
+        <MaterialIcons name="place" size={16} color={primary} />
+        <Text fontSize={15} fontWeight="900" color="$color">
+          Location
+        </Text>
+      </XStack>
+      <Text testID="venue-address" fontSize={13} color="$muted">
+        {addressLine(venue) || 'Address not provided'}
+      </Text>
+
+      {venue.amenities && venue.amenities.length > 0 ? (
+        <YStack gap={8}>
+          <Text fontSize={15} fontWeight="900" color="$color">
+            Amenities
+          </Text>
+          <XStack flexWrap="wrap" gap={6}>
+            {venue.amenities.map((item) => (
+              <Chip key={item} label={item} />
+            ))}
+          </XStack>
+        </YStack>
+      ) : null}
+
+      {gallery.length > 1 ? (
+        <YStack gap={8}>
+          <Text fontSize={15} fontWeight="900" color="$color">
+            Images
+          </Text>
+          <XStack flexWrap="wrap" gap={8}>
+            {gallery.slice(1).map((url) => (
+              <Image
+                key={url as string}
+                testID="venue-gallery-image"
+                source={{ uri: url as string }}
+                style={{ width: '31%', aspectRatio: 4 / 3, borderRadius: 10 }}
+                resizeMode="cover"
+              />
+            ))}
+          </XStack>
+        </YStack>
+      ) : null}
+    </ScrollView>
+  );
+}
+
 /** Read-only venue details — cover, chips, description, location, amenities,
  * gallery. RN twin of mWeb's VenueDetailsPage. */
 export function VenueDetailsScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'VenueDetails'>>();
   const venueId = route.params?.venueId ?? '';
   const { venue, isLoading, error } = useVenueDetails(venueId);
-  const { onPrimary, primary } = useThemeColors();
   const gallery = venue ? [venue.cover_image_url, ...(venue.gallery ?? [])].filter(Boolean) : [];
 
   return (
@@ -60,85 +149,7 @@ export function VenueDetailsScreen() {
           This venue is unavailable or not approved yet.
         </Text>
       ) : (
-        <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 32 }}>
-          <YStack
-            height={200}
-            borderRadius={16}
-            overflow="hidden"
-            backgroundColor="$primary"
-            alignItems="center"
-            justifyContent="center"
-          >
-            {gallery[0] ? (
-              <Image
-                source={{ uri: gallery[0] as string }}
-                style={{ width: '100%', height: '100%' }}
-                resizeMode="cover"
-              />
-            ) : (
-              <MaterialIcons name="storefront" size={44} color={onPrimary} />
-            )}
-          </YStack>
-
-          <Text fontSize={22} fontWeight="900" color="$color">
-            {venue.venue_name}
-          </Text>
-          <XStack flexWrap="wrap" gap={6}>
-            {venue.venue_type ? <Chip label={venue.venue_type} /> : null}
-            {venue.capacity ? <Chip label={`${venue.capacity} capacity`} /> : null}
-            {(venue.tags ?? []).map((tag) => (
-              <Chip key={tag} label={tag} />
-            ))}
-          </XStack>
-
-          {venue.description ? (
-            <Text fontSize={14} color="$muted" lineHeight={20}>
-              {venue.description}
-            </Text>
-          ) : null}
-
-          <XStack alignItems="center" gap={6}>
-            <MaterialIcons name="place" size={16} color={primary} />
-            <Text fontSize={15} fontWeight="900" color="$color">
-              Location
-            </Text>
-          </XStack>
-          <Text testID="venue-address" fontSize={13} color="$muted">
-            {addressLine(venue) || 'Address not provided'}
-          </Text>
-
-          {venue.amenities && venue.amenities.length > 0 ? (
-            <YStack gap={8}>
-              <Text fontSize={15} fontWeight="900" color="$color">
-                Amenities
-              </Text>
-              <XStack flexWrap="wrap" gap={6}>
-                {venue.amenities.map((item) => (
-                  <Chip key={item} label={item} />
-                ))}
-              </XStack>
-            </YStack>
-          ) : null}
-
-          {gallery.length > 1 ? (
-            <YStack gap={8}>
-              <Text fontSize={15} fontWeight="900" color="$color">
-                Images
-              </Text>
-              <XStack flexWrap="wrap" gap={8}>
-                {gallery.slice(1).map((url) => (
-                  <Image
-                    key={url as string}
-                    testID="venue-gallery-image"
-                    source={{ uri: url as string }}
-                    style={{ width: '31%', aspectRatio: 4 / 3, borderRadius: 10 }}
-                    resizeMode="cover"
-                  />
-                ))}
-              </XStack>
-            </YStack>
-          ) : null}
-        </ScrollView>
+        <VenueDetailsContent venue={venue} gallery={gallery} />
       )}
     </StackScreen>
   );

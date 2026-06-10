@@ -50,6 +50,29 @@ async function categoryNameMap(docs: any[]): Promise<Map<string, string>> {
   return new Map(cats.map((c: any) => [String(c._id), c.name as string]));
 }
 
+/** Re-title a service doc (in place), enforcing the per-slot unique-slug rule. */
+async function applyTitleUpdate(doc: any, rawTitle: string): Promise<void> {
+  const title = rawTitle.trim();
+  const slug = slugifyTitle(title);
+  if (!slug) throw new GraphQLError('Title is required', { extensions: { code: 'BAD_USER_INPUT' } });
+  if (slug !== doc.slug) {
+    const dupe = await ServiceOfferedModel.findOne({
+      super_category_id: doc.super_category_id,
+      category_id: doc.category_id ?? null,
+      sub_category_id: doc.sub_category_id ?? null,
+      slug,
+      _id: { $ne: doc._id },
+    });
+    if (dupe) {
+      throw new GraphQLError('A service with that title already exists in this category', {
+        extensions: { code: 'CONFLICT' },
+      });
+    }
+  }
+  doc.title = title;
+  doc.slug = slug;
+}
+
 export interface ServiceOfferedFilter {
   super_category_id?: string | null;
   category_id?: string | null;
@@ -150,27 +173,7 @@ export const serviceOfferedService = {
   ) {
     const doc = await ServiceOfferedModel.findById(id);
     if (!doc) throw new GraphQLError('Service not found', { extensions: { code: 'NOT_FOUND' } });
-    if (input.title != null) {
-      const title = input.title.trim();
-      const slug = slugifyTitle(title);
-      if (!slug) throw new GraphQLError('Title is required', { extensions: { code: 'BAD_USER_INPUT' } });
-      if (slug !== doc.slug) {
-        const dupe = await ServiceOfferedModel.findOne({
-          super_category_id: doc.super_category_id,
-          category_id: doc.category_id ?? null,
-          sub_category_id: doc.sub_category_id ?? null,
-          slug,
-          _id: { $ne: doc._id },
-        });
-        if (dupe) {
-          throw new GraphQLError('A service with that title already exists in this category', {
-            extensions: { code: 'CONFLICT' },
-          });
-        }
-      }
-      doc.title = title;
-      doc.slug = slug;
-    }
+    if (input.title != null) await applyTitleUpdate(doc, input.title);
     if (input.is_active != null) doc.is_active = input.is_active;
     if (input.sort_order != null) doc.sort_order = input.sort_order;
     const nextVenue = input.applies_to_venue ?? doc.applies_to_venue !== false;

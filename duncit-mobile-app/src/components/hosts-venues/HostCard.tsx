@@ -24,7 +24,7 @@ export function HostCard({
   onOpen,
   onToggleFollow,
 }: Readonly<HostCardProps>) {
-  const { onPrimary, primary } = useThemeColors();
+  const { onPrimary } = useThemeColors();
   const initial = (host.full_name?.[0] ?? 'H').toUpperCase();
 
   return (
@@ -79,39 +79,64 @@ export function HostCard({
         ) : null}
       </YStack>
       {isMe ? null : (
-        <XStack
-          testID={`host-follow-${host.user_id}`}
-          role="button"
-          aria-label={isFollowing ? 'Unfollow' : 'Follow'}
-          aria-disabled={pending}
-          onPress={() => {
-            if (!pending) onToggleFollow();
-          }}
-          alignItems="center"
-          justifyContent="center"
-          minWidth={92}
-          height={34}
-          borderRadius={999}
-          borderWidth={isFollowing ? 1 : 0}
-          borderColor="$borderColor"
-          backgroundColor={isFollowing ? 'transparent' : '$primary'}
-          opacity={pending ? 0.6 : 1}
-          pressStyle={{ opacity: 0.85 }}
-        >
-          {pending ? (
-            <Spinner size="small" color={isFollowing ? '$primary' : onPrimary} />
-          ) : (
-            <XStack alignItems="center" gap={4}>
-              <MaterialIcons
-                name={isFollowing ? 'check' : 'person-add'}
-                size={14}
-                color={isFollowing ? primary : onPrimary}
-              />
-              <Text fontSize={12} fontWeight="800" color={isFollowing ? '$primary' : onPrimary}>
-                {isFollowing ? 'Following' : 'Follow'}
-              </Text>
-            </XStack>
-          )}
+        <FollowButton
+          userId={host.user_id}
+          isFollowing={isFollowing}
+          pending={pending}
+          onToggleFollow={onToggleFollow}
+        />
+      )}
+    </XStack>
+  );
+}
+
+interface FollowButtonProps {
+  userId: string;
+  isFollowing: boolean;
+  pending: boolean;
+  onToggleFollow: () => void;
+}
+
+/** Follow / Following pill with a busy spinner; no-ops while a toggle is pending. */
+function FollowButton({
+  userId,
+  isFollowing,
+  pending,
+  onToggleFollow,
+}: Readonly<FollowButtonProps>) {
+  const { onPrimary, primary } = useThemeColors();
+  return (
+    <XStack
+      testID={`host-follow-${userId}`}
+      role="button"
+      aria-label={isFollowing ? 'Unfollow' : 'Follow'}
+      aria-disabled={pending}
+      onPress={() => {
+        if (!pending) onToggleFollow();
+      }}
+      alignItems="center"
+      justifyContent="center"
+      minWidth={92}
+      height={34}
+      borderRadius={999}
+      borderWidth={isFollowing ? 1 : 0}
+      borderColor="$borderColor"
+      backgroundColor={isFollowing ? 'transparent' : '$primary'}
+      opacity={pending ? 0.6 : 1}
+      pressStyle={{ opacity: 0.85 }}
+    >
+      {pending ? (
+        <Spinner size="small" color={isFollowing ? '$primary' : onPrimary} />
+      ) : (
+        <XStack alignItems="center" gap={4}>
+          <MaterialIcons
+            name={isFollowing ? 'check' : 'person-add'}
+            size={14}
+            color={isFollowing ? primary : onPrimary}
+          />
+          <Text fontSize={12} fontWeight="800" color={isFollowing ? '$primary' : onPrimary}>
+            {isFollowing ? 'Following' : 'Follow'}
+          </Text>
         </XStack>
       )}
     </XStack>

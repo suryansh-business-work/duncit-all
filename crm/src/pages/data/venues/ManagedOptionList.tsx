@@ -155,7 +155,7 @@ export default function ManagedOptionList({ group, addLabel, placeholder, search
               )}
               {visible.map((row) =>
                 draft?.id === row.id ? (
-                  <ManagedOptionEditRow key={row.id} draft={draft!} setDraft={setDraft} onSave={save} onCancel={() => setDraft(null)} busy={busy} placeholder={placeholder} />
+                  <ManagedOptionEditRow key={row.id} draft={draft} setDraft={setDraft} onSave={save} onCancel={() => setDraft(null)} busy={busy} placeholder={placeholder} />
                 ) : (
                   <ManagedOptionRow
                     key={row.id}

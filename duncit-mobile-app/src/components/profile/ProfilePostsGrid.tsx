@@ -8,6 +8,35 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfilePost } from '@/hooks/useProfile';
 
+/** Header "Add post" pill; shows an uploading state while a post is in flight. */
+function AddPostButton({
+  uploading,
+  onAddPost,
+}: Readonly<{ uploading?: boolean; onAddPost: () => void }>) {
+  return (
+    <XStack
+      testID="profile-add-post"
+      role="button"
+      aria-label="Add post"
+      aria-disabled={uploading}
+      onPress={uploading ? undefined : onAddPost}
+      alignItems="center"
+      gap={5}
+      paddingHorizontal={12}
+      paddingVertical={7}
+      borderRadius={999}
+      backgroundColor="$primary"
+      opacity={uploading ? 0.6 : 1}
+      pressStyle={{ opacity: 0.85 }}
+    >
+      <MaterialIcons name={uploading ? 'hourglass-top' : 'add'} size={16} color="#ffffff" />
+      <Text fontSize={13} fontWeight="900" color="#ffffff">
+        {uploading ? 'Uploading…' : 'Add post'}
+      </Text>
+    </XStack>
+  );
+}
+
 /** A 3-column grid of the user's posts; tapping opens a full-screen viewer.
  * An optional add-post action mirrors mWeb's "New post" entry. */
 export function ProfilePostsGrid({
@@ -30,28 +59,7 @@ export function ProfilePostsGrid({
         <Text fontSize={16} fontWeight="900" color="$color">
           Posts
         </Text>
-        {onAddPost ? (
-          <XStack
-            testID="profile-add-post"
-            role="button"
-            aria-label="Add post"
-            aria-disabled={uploading}
-            onPress={uploading ? undefined : onAddPost}
-            alignItems="center"
-            gap={5}
-            paddingHorizontal={12}
-            paddingVertical={7}
-            borderRadius={999}
-            backgroundColor="$primary"
-            opacity={uploading ? 0.6 : 1}
-            pressStyle={{ opacity: 0.85 }}
-          >
-            <MaterialIcons name={uploading ? 'hourglass-top' : 'add'} size={16} color="#ffffff" />
-            <Text fontSize={13} fontWeight="900" color="#ffffff">
-              {uploading ? 'Uploading…' : 'Add post'}
-            </Text>
-          </XStack>
-        ) : null}
+        {onAddPost ? <AddPostButton uploading={uploading} onAddPost={onAddPost} /> : null}
       </XStack>
       {posts.length === 0 ? (
         <YStack testID="profile-no-posts" alignItems="center" gap={8} paddingVertical={20}>

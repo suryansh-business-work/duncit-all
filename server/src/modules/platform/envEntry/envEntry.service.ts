@@ -76,73 +76,99 @@ async function clearOtherDefaults(category: EnvCategory, exceptId?: string) {
   );
 }
 
+type TestResult = { ok: boolean; message: string };
+type ConfigStr = (k: string) => string;
+
+async function probeImagekit(str: ConfigStr): Promise<TestResult> {
+  if (!str('private_key')) return { ok: false, message: 'Private key is required' };
+  const auth = 'Basic ' + Buffer.from(str('private_key') + ':').toString('base64');
+  const res = await fetch('https://api.imagekit.io/v1/files?limit=1', { headers: { Authorization: auth } });
+  return res.ok ? { ok: true, message: 'ImageKit credentials are valid' } : { ok: false, message: `ImageKit rejected the key (HTTP ${res.status})` };
+}
+
+async function probePexels(str: ConfigStr): Promise<TestResult> {
+  if (!str('api_key')) return { ok: false, message: 'API key is required' };
+  const res = await fetch('https://api.pexels.com/v1/curated?per_page=1', { headers: { Authorization: str('api_key') } });
+  return res.ok ? { ok: true, message: 'Pexels API key is valid' } : { ok: false, message: `Pexels rejected the key (HTTP ${res.status})` };
+}
+
+async function probeGoogleMaps(str: ConfigStr): Promise<TestResult> {
+  if (!str('maps_api_key')) return { ok: false, message: 'Maps API key is required' };
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=test&key=${encodeURIComponent(str('maps_api_key'))}`;
+  const res = await fetch(url);
+  const json: any = await res.json().catch(() => ({}));
+  if (json?.status === 'REQUEST_DENIED') return { ok: false, message: json.error_message || 'Google denied the request' };
+  return { ok: true, message: 'Google Maps API key is valid' };
+}
+
+async function probeGoogleOauth(str: ConfigStr): Promise<TestResult> {
+  if (!str('client_id')) return { ok: false, message: 'OAuth Client ID is required' };
+  // Client ID is public; the real test is the interactive browser sign-in.
+  return { ok: true, message: 'Client ID set — run the OAuth sign-in test to verify' };
+}
+
+async function probeTwilio(str: ConfigStr): Promise<TestResult> {
+  if (!str('account_sid') || !str('auth_token')) return { ok: false, message: 'Account SID and auth token are required' };
+  const auth = 'Basic ' + Buffer.from(`${str('account_sid')}:${str('auth_token')}`).toString('base64');
+  const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(str('account_sid'))}.json`, { headers: { Authorization: auth } });
+  return res.ok ? { ok: true, message: 'Twilio credentials are valid' } : { ok: false, message: `Twilio rejected the credentials (HTTP ${res.status})` };
+}
+
+async function probeOpenai(str: ConfigStr): Promise<TestResult> {
+  if (!str('api_key')) return { ok: false, message: 'API key is required' };
+  const base = (str('base_url') || 'https://api.openai.com/v1').replace(/\/$/, '');
+  const res = await fetch(`${base}/models`, { headers: { Authorization: `Bearer ${str('api_key')}` } });
+  return res.ok ? { ok: true, message: 'OpenAI key is valid' } : { ok: false, message: `OpenAI rejected the key (HTTP ${res.status})` };
+}
+
+async function probeGemini(str: ConfigStr): Promise<TestResult> {
+  if (!str('api_key')) return { ok: false, message: 'API key is required' };
+  const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(str('api_key'))}`);
+  return res.ok ? { ok: true, message: 'Gemini key is valid' } : { ok: false, message: `Gemini rejected the key (HTTP ${res.status})` };
+}
+
+async function probeServam(str: ConfigStr): Promise<TestResult> {
+  if (!str('api_key')) return { ok: false, message: 'API key is required' };
+  const base = (str('base_url') || 'https://api.sarvam.ai').replace(/\/$/, '');
+  const res = await fetch(`${base}/v1/models`, { headers: { Authorization: `Bearer ${str('api_key')}` } });
+  // Sarvam may not expose /models; any non-auth error still means the key was accepted.
+  if (res.status === 401 || res.status === 403) return { ok: false, message: `Servam rejected the key (HTTP ${res.status})` };
+  return { ok: true, message: 'Servam API key is set' };
+}
+
+async function probeRazorpay(str: ConfigStr): Promise<TestResult> {
+  if (!str('key_id') || !str('key_secret'))
+    return { ok: false, message: 'Key ID and key secret are required' };
+  const auth = 'Basic ' + Buffer.from(`${str('key_id')}:${str('key_secret')}`).toString('base64');
+  const res = await fetch('https://api.razorpay.com/v1/payments?count=1', {
+    headers: { Authorization: auth },
+  });
+  return res.ok
+    ? { ok: true, message: 'Razorpay credentials are valid' }
+    : { ok: false, message: `Razorpay rejected the credentials (HTTP ${res.status})` };
+}
+
+const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestResult>>> = {
+  IMAGEKIT: probeImagekit,
+  PEXELS: probePexels,
+  GOOGLE_MAPS: probeGoogleMaps,
+  GOOGLE_OAUTH: probeGoogleOauth,
+  TWILIO: probeTwilio,
+  OPENAI: probeOpenai,
+  GEMINI: probeGemini,
+  SERVAM: probeServam,
+  RAZORPAY: probeRazorpay,
+};
+
 /** Probe a category's credentials against its upstream API. Pure fetch. */
 export async function testEnvConnection(
   category: EnvCategory,
   config: EnvEntryConfig
-): Promise<{ ok: boolean; message: string }> {
+): Promise<TestResult> {
   const str = (k: string) => (config[k] == null ? '' : String(config[k]));
   try {
-    if (category === 'IMAGEKIT') {
-      if (!str('private_key')) return { ok: false, message: 'Private key is required' };
-      const auth = 'Basic ' + Buffer.from(str('private_key') + ':').toString('base64');
-      const res = await fetch('https://api.imagekit.io/v1/files?limit=1', { headers: { Authorization: auth } });
-      return res.ok ? { ok: true, message: 'ImageKit credentials are valid' } : { ok: false, message: `ImageKit rejected the key (HTTP ${res.status})` };
-    }
-    if (category === 'PEXELS') {
-      if (!str('api_key')) return { ok: false, message: 'API key is required' };
-      const res = await fetch('https://api.pexels.com/v1/curated?per_page=1', { headers: { Authorization: str('api_key') } });
-      return res.ok ? { ok: true, message: 'Pexels API key is valid' } : { ok: false, message: `Pexels rejected the key (HTTP ${res.status})` };
-    }
-    if (category === 'GOOGLE_MAPS') {
-      if (!str('maps_api_key')) return { ok: false, message: 'Maps API key is required' };
-      const url = `https://maps.googleapis.com/maps/api/geocode/json?address=test&key=${encodeURIComponent(str('maps_api_key'))}`;
-      const res = await fetch(url);
-      const json: any = await res.json().catch(() => ({}));
-      if (json?.status === 'REQUEST_DENIED') return { ok: false, message: json.error_message || 'Google denied the request' };
-      return { ok: true, message: 'Google Maps API key is valid' };
-    }
-    if (category === 'GOOGLE_OAUTH') {
-      if (!str('client_id')) return { ok: false, message: 'OAuth Client ID is required' };
-      // Client ID is public; the real test is the interactive browser sign-in.
-      return { ok: true, message: 'Client ID set — run the OAuth sign-in test to verify' };
-    }
-    if (category === 'TWILIO') {
-      if (!str('account_sid') || !str('auth_token')) return { ok: false, message: 'Account SID and auth token are required' };
-      const auth = 'Basic ' + Buffer.from(`${str('account_sid')}:${str('auth_token')}`).toString('base64');
-      const res = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${encodeURIComponent(str('account_sid'))}.json`, { headers: { Authorization: auth } });
-      return res.ok ? { ok: true, message: 'Twilio credentials are valid' } : { ok: false, message: `Twilio rejected the credentials (HTTP ${res.status})` };
-    }
-    if (category === 'OPENAI') {
-      if (!str('api_key')) return { ok: false, message: 'API key is required' };
-      const base = (str('base_url') || 'https://api.openai.com/v1').replace(/\/$/, '');
-      const res = await fetch(`${base}/models`, { headers: { Authorization: `Bearer ${str('api_key')}` } });
-      return res.ok ? { ok: true, message: 'OpenAI key is valid' } : { ok: false, message: `OpenAI rejected the key (HTTP ${res.status})` };
-    }
-    if (category === 'GEMINI') {
-      if (!str('api_key')) return { ok: false, message: 'API key is required' };
-      const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models?key=${encodeURIComponent(str('api_key'))}`);
-      return res.ok ? { ok: true, message: 'Gemini key is valid' } : { ok: false, message: `Gemini rejected the key (HTTP ${res.status})` };
-    }
-    if (category === 'SERVAM') {
-      if (!str('api_key')) return { ok: false, message: 'API key is required' };
-      const base = (str('base_url') || 'https://api.sarvam.ai').replace(/\/$/, '');
-      const res = await fetch(`${base}/v1/models`, { headers: { Authorization: `Bearer ${str('api_key')}` } });
-      // Sarvam may not expose /models; any non-auth error still means the key was accepted.
-      if (res.status === 401 || res.status === 403) return { ok: false, message: `Servam rejected the key (HTTP ${res.status})` };
-      return { ok: true, message: 'Servam API key is set' };
-    }
-    if (category === 'RAZORPAY') {
-      if (!str('key_id') || !str('key_secret'))
-        return { ok: false, message: 'Key ID and key secret are required' };
-      const auth = 'Basic ' + Buffer.from(`${str('key_id')}:${str('key_secret')}`).toString('base64');
-      const res = await fetch('https://api.razorpay.com/v1/payments?count=1', {
-        headers: { Authorization: auth },
-      });
-      return res.ok
-        ? { ok: true, message: 'Razorpay credentials are valid' }
-        : { ok: false, message: `Razorpay rejected the credentials (HTTP ${res.status})` };
-    }
+    const probe = ENV_PROBES[category];
+    if (probe) return await probe(str);
     // EMAIL (SMTP) — no cheap unauthenticated probe; validate required fields.
     if (!str('host')) return { ok: false, message: 'SMTP host is required' };
     return { ok: true, message: `SMTP host ${str('host')} looks configured` };

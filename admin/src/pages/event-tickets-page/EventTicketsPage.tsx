@@ -25,7 +25,7 @@ import {
 function downloadPdf(base64: string, filename: string) {
   const bytes = atob(base64);
   const arr = new Uint8Array(bytes.length);
-  for (let i = 0; i < bytes.length; i += 1) arr[i] = bytes.charCodeAt(i);
+  for (let i = 0; i < bytes.length; i += 1) arr[i] = bytes.codePointAt(i) ?? 0;
   const url = URL.createObjectURL(new Blob([arr], { type: 'application/pdf' }));
   const a = document.createElement('a');
   a.href = url;

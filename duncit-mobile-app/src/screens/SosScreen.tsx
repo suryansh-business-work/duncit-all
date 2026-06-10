@@ -9,6 +9,36 @@ import { useBouncer, type ActiveSos } from '@/hooks/useBouncer';
 import { useSupportPods } from '@/hooks/useSupportPods';
 import { toErrorMessage } from '@/utils/errors';
 
+/** Danger SOS button with a busy spinner; disabled until a pod is selected. */
+function SosSendButton({
+  disabled,
+  busy,
+  onSend,
+}: Readonly<{ disabled: boolean; busy: boolean; onSend: () => void }>) {
+  return (
+    <XStack
+      testID="sos-send"
+      role="button"
+      aria-label="Send SOS"
+      aria-disabled={disabled}
+      onPress={disabled ? undefined : onSend}
+      height={52}
+      alignItems="center"
+      justifyContent="center"
+      gap={8}
+      borderRadius={999}
+      backgroundColor="$danger"
+      opacity={disabled ? 0.6 : 1}
+      pressStyle={{ opacity: 0.85 }}
+    >
+      {busy ? <Spinner color="white" /> : null}
+      <Text fontSize={15} fontWeight="900" color="white" letterSpacing={1}>
+        {busy ? 'SENDING SOS…' : 'SEND SOS'}
+      </Text>
+    </XStack>
+  );
+}
+
 /** SOS — emergency help scoped to a live pod. RN twin of mWeb's SosContent. */
 export function SosScreen() {
   const { options, selected, selectedId, setSelectedId } = useSupportPods();
@@ -105,26 +135,7 @@ export function SosScreen() {
                 {error}
               </Text>
             ) : null}
-            <XStack
-              testID="sos-send"
-              role="button"
-              aria-label="Send SOS"
-              aria-disabled={!selected || busy}
-              onPress={!selected || busy ? undefined : () => void send()}
-              height={52}
-              alignItems="center"
-              justifyContent="center"
-              gap={8}
-              borderRadius={999}
-              backgroundColor="$danger"
-              opacity={!selected || busy ? 0.6 : 1}
-              pressStyle={{ opacity: 0.85 }}
-            >
-              {busy ? <Spinner color="white" /> : null}
-              <Text fontSize={15} fontWeight="900" color="white" letterSpacing={1}>
-                {busy ? 'SENDING SOS…' : 'SEND SOS'}
-              </Text>
-            </XStack>
+            <SosSendButton disabled={!selected || busy} busy={busy} onSend={() => void send()} />
           </>
         )}
       </ScrollView>

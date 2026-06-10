@@ -30,6 +30,9 @@ interface NodeProps {
   item: AppNavItem;
   pathname: string;
   onNavigate?: () => void;
+}
+
+interface LeafItemProps extends NodeProps {
   /**
    * When a leaf sits inside a group, the group picks a single "winner" child
    * via longest-prefix match and forces selection on that one. Prevents two
@@ -37,11 +40,16 @@ interface NodeProps {
    * together for the more specific URL.
    */
   forceSelected?: boolean;
+}
+
+interface GroupItemProps extends NodeProps {
   /** When a search is active, groups are force-expanded so matches are visible. */
   searching?: boolean;
 }
 
-function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<NodeProps>) {
+interface NavNodeProps extends LeafItemProps, GroupItemProps {}
+
+function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<LeafItemProps>) {
   const selected = forceSelected ?? matches(pathname, item.to);
   return (
     <ListItemButton
@@ -70,7 +78,7 @@ function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<NodePr
   );
 }
 
-function GroupItem({ item, pathname, onNavigate, searching }: Readonly<NodeProps>) {
+function GroupItem({ item, pathname, onNavigate, searching }: Readonly<GroupItemProps>) {
   const active = useMemo(() => groupActive(pathname, item), [pathname, item]);
   const winner = useMemo(() => bestChild(pathname, item.children ?? []), [pathname, item.children]);
   const [open, setOpen] = useState(active);
@@ -109,7 +117,7 @@ function GroupItem({ item, pathname, onNavigate, searching }: Readonly<NodeProps
   );
 }
 
-function NavNode({ item, pathname, onNavigate, forceSelected, searching }: Readonly<NodeProps>) {
+function NavNode({ item, pathname, onNavigate, forceSelected, searching }: Readonly<NavNodeProps>) {
   if (item.children && item.children.length > 0) {
     return <GroupItem item={item} pathname={pathname} onNavigate={onNavigate} searching={searching} />;
   }

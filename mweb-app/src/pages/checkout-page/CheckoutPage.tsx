@@ -4,7 +4,7 @@ import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import { useFormik } from 'formik';
 import { Alert, Backdrop, Box, Button, Chip, IconButton, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { alpha, useTheme } from '@mui/material/styles';
+import { alpha, useTheme, type Theme } from '@mui/material/styles';
 import PaymentLottie from '../../components/PaymentLottie';
 import { checkoutFormSchema, checkoutInitialValues, toCheckoutContact } from './checkout.form';
 import { buildBreakup } from './checkoutMath';
@@ -28,6 +28,21 @@ import {
   type RazorpaySignature,
 } from './razorpayCheckout';
 import { parseApiError } from '../../utils/parseApiError';
+
+/** The active payment-gateway badge — Razorpay when live, else Dummy when on. */
+function GatewayChip({ finance, isDark, theme }: Readonly<{ finance: any; isDark: boolean; theme: Theme }>) {
+  if (finance?.razorpay_enabled) {
+    return (
+      <Chip size="small" label="Razorpay" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.primary.main, 0.12), color: 'text.primary', fontWeight: 800 }} />
+    );
+  }
+  if (finance?.dummy_mode) {
+    return (
+      <Chip size="small" label="Dummy" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.text.primary, 0.08), color: 'text.primary', fontWeight: 800 }} />
+    );
+  }
+  return null;
+}
 
 export default function CheckoutPage() {
   const theme = useTheme();
@@ -201,12 +216,7 @@ export default function CheckoutPage() {
           <Typography variant="overline" sx={{ color: 'text.secondary', letterSpacing: 0, lineHeight: 1 }}>Checkout</Typography>
           <Typography variant="h5" fontWeight={900} sx={{ lineHeight: 1.1 }}>Confirm your spot</Typography>
         </Box>
-        {financeData?.publicFinanceSettings?.razorpay_enabled && (
-          <Chip size="small" label="Razorpay" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.primary.main, 0.12), color: 'text.primary', fontWeight: 800 }} />
-        )}
-        {!financeData?.publicFinanceSettings?.razorpay_enabled && financeData?.publicFinanceSettings?.dummy_mode && (
-          <Chip size="small" label="Dummy" sx={{ bgcolor: isDark ? 'rgba(255,255,255,0.14)' : alpha(theme.palette.text.primary, 0.08), color: 'text.primary', fontWeight: 800 }} />
-        )}
+        <GatewayChip finance={financeData?.publicFinanceSettings} isDark={isDark} theme={theme} />
       </Stack>
       {podError && <Alert severity="error" sx={{ mb: 2 }}>{podError.message}</Alert>}
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>

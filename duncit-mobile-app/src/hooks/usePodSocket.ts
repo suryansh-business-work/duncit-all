@@ -13,6 +13,34 @@ interface UsePodSocketParams {
   onError: (message: string) => void;
 }
 
+type PodSocketHandlersRef = { current: Omit<UsePodSocketParams, 'podId'> };
+
+/** Connects, joins the pod room and wires message/reaction/deleted/error events.
+ * Hoisted out of the hook so the event handlers don't nest too deeply. */
+function createPodSocket(token: string, podId: string, handlers: PodSocketHandlersRef): Socket {
+  const s = io(config.apiUrl, {
+    path: '/socket.io',
+    auth: { token },
+    transports: ['websocket'],
+  });
+  s.on('connect', () => {
+    s.emit('join_pod', podId, (ok: boolean, err?: string) => {
+      if (!ok) handlers.current.onError(err || 'Cannot join chat');
+    });
+  });
+  s.on('message', (msg: ChatMessage) => {
+    if (msg.pod_id === podId) handlers.current.onMessage(msg);
+  });
+  s.on('reaction', (msg: ChatMessage) => {
+    if (msg.pod_id === podId) handlers.current.onReaction(msg);
+  });
+  s.on('deleted', (msg: ChatMessage) => {
+    if (msg.pod_id === podId) handlers.current.onDeleted(msg);
+  });
+  s.on('connect_error', (e: Error) => handlers.current.onError(e?.message || 'Socket error'));
+  return s;
+}
+
 /**
  * Live pod chat over socket.io — RN twin of mWeb's usePodSocket. Authenticates
  * with the stored JWT, joins the pod room, and forwards `message` / `reaction` /
@@ -35,27 +63,7 @@ export function usePodSocket({
 
     getAuthToken().then((token) => {
       if (cancelled || !token) return;
-      const s = io(config.apiUrl, {
-        path: '/socket.io',
-        auth: { token },
-        transports: ['websocket'],
-      });
-      socket = s;
-      s.on('connect', () => {
-        s.emit('join_pod', podId, (ok: boolean, err?: string) => {
-          if (!ok) handlers.current.onError(err || 'Cannot join chat');
-        });
-      });
-      s.on('message', (msg: ChatMessage) => {
-        if (msg.pod_id === podId) handlers.current.onMessage(msg);
-      });
-      s.on('reaction', (msg: ChatMessage) => {
-        if (msg.pod_id === podId) handlers.current.onReaction(msg);
-      });
-      s.on('deleted', (msg: ChatMessage) => {
-        if (msg.pod_id === podId) handlers.current.onDeleted(msg);
-      });
-      s.on('connect_error', (e: Error) => handlers.current.onError(e?.message || 'Socket error'));
+      socket = createPodSocket(token, podId, handlers);
     });
 
     return () => {

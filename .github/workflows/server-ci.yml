@@ -1,0 +1,69 @@
+name: Server CI
+
+# The GraphQL API server, with the same ordered pipeline as every other group:
+#   Test → Typecheck → Lint → Build
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'server/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/server-ci.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'server/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/server-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: server-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  server:
+    name: server (test → typecheck → lint → build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      # Unit + integration + e2e suites against the in-memory Mongo. Serial
+      # (--runInBand): the suites share that instance and flake in parallel.
+      - name: Test (jest --runInBand)
+        working-directory: server
+        run: pnpm run test:ci
+
+      - name: Typecheck
+        working-directory: server
+        run: pnpm exec tsc --noEmit -p tsconfig.json
+
+      # Runs the package's lint script when one is defined (no-op otherwise),
+      # so wiring ESLint later needs no workflow change.
+      - name: Lint
+        working-directory: server
+        run: pnpm run --if-present lint
+
+      - name: Build (tsc + tsc-alias)
+        working-directory: server
+        run: pnpm run build

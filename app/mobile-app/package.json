@@ -31,7 +31,7 @@
     "build:local:apk": "node scripts/build-local-android.js",
     "build:local:aab": "node scripts/build-local-android.js --aab",
     "upload:slack": "node scripts/upload-slack.js",
-    "ci": "npm run lint && npm run typecheck && npm run test:coverage"
+    "ci": "npm run test:coverage && npm run typecheck && npm run lint"
   },
   "dependencies": {
     "@duncit/auth-tokens": "file:../../packages/auth-tokens",

@@ -1,0 +1,81 @@
+name: Websites CI
+
+# The public Astro sites (duncit.com, partners, ads, status), with the same
+# ordered pipeline as every other group:
+#   Test → Typecheck → Lint → Build
+# The sites currently ship no test/typecheck/lint tooling — those steps run
+# their scripts when present (no-op otherwise), so adding tooling later needs
+# no workflow change; the Astro build is the verification gate today.
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'website/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/websites-ci.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'website/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/websites-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: websites-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  website:
+    name: ${{ matrix.name }} (test → typecheck → lint → build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: main-website, dir: website/main-website }
+          - { name: partners-website, dir: website/partners-website }
+          - { name: ads-website, dir: website/ads-website }
+          - { name: status-website, dir: website/status-website }
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        working-directory: ${{ matrix.dir }}
+        run: pnpm run --if-present test
+
+      - name: Typecheck
+        working-directory: ${{ matrix.dir }}
+        run: pnpm run --if-present typecheck
+
+      - name: Lint
+        working-directory: ${{ matrix.dir }}
+        run: pnpm run --if-present lint
+
+      - name: Build (astro build)
+        working-directory: ${{ matrix.dir }}
+        run: pnpm run build

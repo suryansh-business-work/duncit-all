@@ -1,7 +1,6 @@
 import '@fortawesome/fontawesome-free/css/fontawesome.min.css';
 import '@fortawesome/fontawesome-free/css/solid.min.css';
 import { Box, IconButton, Stack, Tooltip } from '@mui/material';
-import AuthModeToggle from '../AuthModeToggle';
 
 interface SurveyHeaderActionsProps {
   onLogout: () => void;
@@ -10,7 +9,6 @@ interface SurveyHeaderActionsProps {
 export default function SurveyHeaderActions({ onLogout }: Readonly<SurveyHeaderActionsProps>) {
   return (
     <Stack direction="row" spacing={0.75} alignItems="center">
-      <AuthModeToggle placement="inline" />
       <Tooltip title="Logout">
         <IconButton
           size="small"

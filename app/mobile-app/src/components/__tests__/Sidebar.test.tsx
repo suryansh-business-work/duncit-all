@@ -72,4 +72,24 @@ describe('Sidebar', () => {
     fireEvent.press(screen.getByTestId('sidebar-close'));
     expect(onClose).toHaveBeenCalledTimes(2);
   });
+
+  it('renders the dark-mode icon when the dark scheme is active', () => {
+    const { useThemeStore } = jest.requireActual('@/stores/theme.store');
+    const original = useThemeStore.getState();
+    useThemeStore.setState({ ...original, scheme: 'dark' });
+    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    expect(screen.getByTestId('sidebar-theme-switch').props.value).toBe(true);
+    useThemeStore.setState(original);
+  });
+
+  it('toggles dark mode from the sidebar switch', () => {
+    const toggle = jest.fn();
+    const { useThemeStore } = jest.requireActual('@/stores/theme.store');
+    const original = useThemeStore.getState();
+    useThemeStore.setState({ ...original, toggle });
+    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    fireEvent(screen.getByTestId('sidebar-theme-switch'), 'valueChange', true);
+    expect(toggle).toHaveBeenCalled();
+    useThemeStore.setState(original);
+  });
 });

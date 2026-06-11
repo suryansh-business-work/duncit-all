@@ -4,6 +4,7 @@ import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
+import { Reveal } from '@/animations/Reveal';
 import { AppBackground } from '@/components/AppBackground';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { PodAccordions } from '@/components/details/PodAccordions';
@@ -117,28 +118,40 @@ export function PodDetailsScreen() {
             />
             <HeroButton testID="pod-share" icon="share" onPress={share} />
           </DetailHero>
-          <PodInfo pod={pod} />
-          <PodSchedule
-            pod={pod}
-            venue={venue}
-            location={location}
-            onOpenVenue={(venueId) => navigation.navigate('VenueDetails', { venueId })}
-          />
+          <Reveal index={0}>
+            <PodInfo pod={pod} />
+          </Reveal>
+          <Reveal index={1}>
+            <PodSchedule
+              pod={pod}
+              venue={venue}
+              location={location}
+              onOpenVenue={(venueId) => navigation.navigate('VenueDetails', { venueId })}
+            />
+          </Reveal>
           <YStack height={14} />
-          <PodSocialBar
-            liked={liked}
-            likeCount={likeCount}
-            commentCount={commentCount}
-            onToggleLike={toggleLike}
-            onOpenComments={() => setCommentsOpen(true)}
-          />
-          {pod.product_requests?.length ? <PodShop pod={pod} /> : null}
-          <PodAccordions
-            pod={pod}
-            onOpenClub={() =>
-              navigation.navigate('ClubDetails', { clubId: pod.club_id, title: 'Club' })
-            }
-          />
+          <Reveal index={2}>
+            <PodSocialBar
+              liked={liked}
+              likeCount={likeCount}
+              commentCount={commentCount}
+              onToggleLike={toggleLike}
+              onOpenComments={() => setCommentsOpen(true)}
+            />
+          </Reveal>
+          {pod.product_requests?.length ? (
+            <Reveal index={3}>
+              <PodShop pod={pod} />
+            </Reveal>
+          ) : null}
+          <Reveal index={4}>
+            <PodAccordions
+              pod={pod}
+              onOpenClub={() =>
+                navigation.navigate('ClubDetails', { clubId: pod.club_id, title: 'Club' })
+              }
+            />
+          </Reveal>
         </ScrollView>
       )}
 

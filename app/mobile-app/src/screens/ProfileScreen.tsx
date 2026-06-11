@@ -85,6 +85,8 @@ export function ProfileScreen() {
             />
             <ProfilePostsGrid
               posts={posts}
+              meId={me.user_id}
+              onChanged={() => void refetch()}
               onAddPost={() => void addPost()}
               uploading={uploading}
             />

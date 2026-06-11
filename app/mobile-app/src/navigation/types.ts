@@ -21,6 +21,7 @@ export type RootStackParamList = {
   PodHistoryDetails: { membershipId: string };
   BecomeHost: undefined;
   HostManage: undefined;
+  CreatePod: undefined;
   RegisterVenue: undefined;
   VenueManage: undefined;
   Support: undefined;
@@ -50,6 +51,7 @@ export type RootStackParamList = {
 /** Param-less destinations reachable from the account drawer menu. */
 export type MenuRoute = Exclude<
   keyof RootStackParamList,
+  | 'CreatePod'
   | 'Policy'
   | 'TicketDetails'
   | 'Login'

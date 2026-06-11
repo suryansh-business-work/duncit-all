@@ -6,8 +6,9 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/components/status/StatusRail', () => ({ StatusRail: () => null }));
 jest.mock('@/hooks/useHomeFeed', () => ({ useHomeFeed: jest.fn() }));
+let mockRoles: string[] = [];
 jest.mock('@/hooks/useMe', () => ({
-  useMe: () => ({ data: { me: { first_name: 'Sam', profile_photo: null } } }),
+  useMe: () => ({ data: { me: { first_name: 'Sam', profile_photo: null, roles: mockRoles } } }),
 }));
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
@@ -54,6 +55,7 @@ const base = {
 
 beforeEach(() => {
   mockNavigate.mockClear();
+  mockRoles = [];
   mockedFeed.mockReturnValue(base);
 });
 
@@ -104,6 +106,18 @@ describe('HomeFeed', () => {
     mockedFeed.mockReturnValue({ ...base, clubsWithPods: [], featuredPods: [], totalPods: 0 });
     renderWithProviders(<HomeFeed />);
     expect(screen.getByTestId('home-empty')).toBeOnTheScreen();
+  });
+
+  it('shows the create-pod FAB for hosts and opens the Create Pod screen', () => {
+    mockRoles = ['HOST'];
+    renderWithProviders(<HomeFeed />);
+    fireEvent.press(screen.getByTestId('home-create-pod-fab'));
+    expect(mockNavigate).toHaveBeenCalledWith('CreatePod');
+  });
+
+  it('hides the create-pod FAB for non-hosts', () => {
+    renderWithProviders(<HomeFeed />);
+    expect(screen.queryByTestId('home-create-pod-fab')).toBeNull();
   });
 
   it('shows the skeleton on first load', () => {

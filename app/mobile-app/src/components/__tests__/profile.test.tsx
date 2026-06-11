@@ -5,6 +5,28 @@ import { ProfilePanels } from '@/components/profile/ProfilePanels';
 import { ProfilePostsGrid } from '@/components/profile/ProfilePostsGrid';
 import { renderWithProviders } from '@/utils/test-utils';
 
+jest.mock('@/components/profile/post-viewer/PostViewerSheet', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View, Text, Pressable } = require('react-native');
+  return {
+    PostViewerSheet: ({
+      postId,
+      onClose,
+      onDeleted,
+    }: {
+      postId: string;
+      onClose: () => void;
+      onDeleted: () => void;
+    }) => (
+      <View testID="post-viewer-stub">
+        <Text>{postId}</Text>
+        <Pressable testID="post-viewer-close" onPress={onClose} />
+        <Pressable testID="post-viewer-deleted" onPress={onDeleted} />
+      </View>
+    ),
+  };
+});
+
 const me = {
   user_id: 'u',
   first_name: 'Sam',
@@ -84,7 +106,8 @@ describe('ProfilePanels', () => {
 });
 
 describe('ProfilePostsGrid', () => {
-  it('opens a post viewer, and shows the empty state', () => {
+  it('opens the post viewer, closes it, and reports deletions', () => {
+    const onChanged = jest.fn();
     const { rerender } = renderWithProviders(
       <ProfilePostsGrid
         posts={
@@ -99,11 +122,19 @@ describe('ProfilePostsGrid', () => {
             },
           ] as never
         }
+        meId="u"
+        onChanged={onChanged}
       />,
     );
     fireEvent.press(screen.getByTestId('post-p1'));
-    expect(screen.getByTestId('post-viewer-image')).toBeOnTheScreen();
+    expect(screen.getByTestId('post-viewer-stub')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('post-viewer-close'));
+    expect(screen.queryByTestId('post-viewer-stub')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('post-p1'));
+    fireEvent.press(screen.getByTestId('post-viewer-deleted'));
+    expect(onChanged).toHaveBeenCalled();
+    expect(screen.queryByTestId('post-viewer-stub')).toBeNull();
 
     rerender(<ProfilePostsGrid posts={[] as never} />);
     expect(screen.getByTestId('profile-no-posts')).toBeOnTheScreen();

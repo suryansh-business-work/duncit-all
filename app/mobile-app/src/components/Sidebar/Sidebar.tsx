@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Modal, ScrollView, useWindowDimensions } from 'react-native';
+import { Animated, Modal, ScrollView, Switch, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -12,6 +12,7 @@ import { useMe } from '@/hooks/useMe';
 import { useMenuItems } from '@/hooks/useMenuItems';
 import { usePublicPolicies } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useThemeStore } from '@/stores/theme.store';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarMenuItem } from './SidebarMenuItem';
@@ -33,6 +34,9 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
   const me = data?.me;
   const { baseItems, hostItem, venueItem, supportItems } = useMenuItems(me?.roles ?? []);
   const logout = useLogout();
+  const scheme = useThemeStore((s) => s.scheme);
+  const toggleTheme = useThemeStore((s) => s.toggle);
+  const { primary } = useThemeColors();
 
   const [mounted, setMounted] = useState(open);
   const tx = useRef(new Animated.Value(panelWidth)).current;
@@ -122,6 +126,31 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
               {supportItems.map((it) => (
                 <SidebarMenuItem key={it.label} item={it} onPress={() => go(it.route)} />
               ))}
+              <Separator marginVertical={6} borderColor="$borderColor" />
+              <XStack
+                alignItems="center"
+                justifyContent="space-between"
+                paddingHorizontal={16}
+                paddingVertical={10}
+              >
+                <XStack alignItems="center" gap={12}>
+                  <MaterialIcons
+                    name={scheme === 'dark' ? 'dark-mode' : 'light-mode'}
+                    size={20}
+                    color={ink}
+                  />
+                  <Text fontSize={14.5} fontWeight="700" color="$color">
+                    Dark mode
+                  </Text>
+                </XStack>
+                <Switch
+                  testID="sidebar-theme-switch"
+                  aria-label="Toggle dark mode"
+                  value={scheme === 'dark'}
+                  onValueChange={toggleTheme}
+                  trackColor={{ true: primary }}
+                />
+              </XStack>
               <Separator marginVertical={6} borderColor="$borderColor" />
               <SidebarPolicies
                 policies={policiesData?.publicPolicies ?? []}

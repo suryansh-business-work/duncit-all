@@ -70,8 +70,8 @@ describe('ProfilePanels', () => {
   });
 });
 
-describe('ProfilePostsGrid viewer', () => {
-  it('opens posts and closes via request-close and backdrop', () => {
+describe('ProfilePostsGrid tiles', () => {
+  it('renders image tiles and the placeholder tile for posts without media', () => {
     renderWithProviders(
       <ProfilePostsGrid
         posts={[
@@ -80,11 +80,8 @@ describe('ProfilePostsGrid viewer', () => {
         ]}
       />,
     );
-    fireEvent.press(screen.getByTestId('post-1'));
-    fireEvent(screen.UNSAFE_getByType(Modal), 'requestClose');
-    fireEvent.press(screen.getByTestId('post-2'));
-    fireEvent.press(screen.getByTestId('post-viewer'));
     expect(screen.getByTestId('post-1')).toBeOnTheScreen();
+    expect(screen.getByTestId('post-2')).toBeOnTheScreen();
   });
 });
 

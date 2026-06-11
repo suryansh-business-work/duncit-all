@@ -1,10 +1,9 @@
 import { useState } from 'react';
-import { Image, Modal, useWindowDimensions } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import { Image, useWindowDimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { ModalThemeScope } from '@/components/ModalThemeScope';
+import { PostViewerSheet } from '@/components/profile/post-viewer/PostViewerSheet';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfilePost } from '@/hooks/useProfile';
 
@@ -41,11 +40,15 @@ function AddPostButton({
  * An optional add-post action mirrors mWeb's "New post" entry. */
 export function ProfilePostsGrid({
   posts,
+  meId,
   onAddPost,
+  onChanged,
   uploading,
 }: Readonly<{
   posts: ProfilePost[];
+  meId?: string;
   onAddPost?: () => void;
+  onChanged?: () => void;
   uploading?: boolean;
 }>) {
   const { width } = useWindowDimensions();
@@ -121,55 +124,17 @@ export function ProfilePostsGrid({
         </XStack>
       )}
 
-      <Modal
-        visible={!!active}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setActive(null)}
-      >
-        <ModalThemeScope>
-          <YStack
-            testID="post-viewer"
-            flex={1}
-            backgroundColor="rgba(0,0,0,0.94)"
-            onPress={() => setActive(null)}
-          >
-            <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
-              <XStack justifyContent="flex-end" padding={16}>
-                <XStack
-                  testID="post-viewer-close"
-                  role="button"
-                  aria-label="Close"
-                  onPress={() => setActive(null)}
-                  width={36}
-                  height={36}
-                  alignItems="center"
-                  justifyContent="center"
-                  borderRadius={18}
-                  backgroundColor="rgba(255,255,255,0.16)"
-                >
-                  <MaterialIcons name="close" size={20} color="#ffffff" />
-                </XStack>
-              </XStack>
-              <YStack flex={1} alignItems="center" justifyContent="center" paddingHorizontal={12}>
-                {active?.image_url ? (
-                  <Image
-                    testID="post-viewer-image"
-                    source={{ uri: active.image_url }}
-                    style={{ width: '100%', height: '78%', borderRadius: 16 }}
-                    resizeMode="contain"
-                  />
-                ) : null}
-              </YStack>
-              {active?.caption ? (
-                <Text color="#ffffff" fontSize={14} textAlign="center" padding={16}>
-                  {active.caption}
-                </Text>
-              ) : null}
-            </SafeAreaView>
-          </YStack>
-        </ModalThemeScope>
-      </Modal>
+      {active ? (
+        <PostViewerSheet
+          postId={active.id}
+          meId={meId}
+          onClose={() => setActive(null)}
+          onDeleted={() => {
+            setActive(null);
+            onChanged?.();
+          }}
+        />
+      ) : null}
     </YStack>
   );
 }

@@ -6,6 +6,17 @@ import { useStatusUpload } from '@/hooks/useStatusUpload';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useProfile', () => ({ useProfile: jest.fn() }));
+jest.mock('@/components/profile/post-viewer/PostViewerSheet', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Pressable, Text } = require('react-native');
+  return {
+    PostViewerSheet: ({ onDeleted }: { onDeleted: () => void }) => (
+      <Pressable testID="post-viewer-deleted" onPress={onDeleted}>
+        <Text>viewer</Text>
+      </Pressable>
+    ),
+  };
+});
 jest.mock('@/hooks/useStatusUpload', () => ({ useStatusUpload: jest.fn() }));
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
@@ -97,6 +108,28 @@ describe('ProfileScreen', () => {
     renderWithProviders(<ProfileScreen />);
     fireEvent.press(screen.getByTestId('profile-add-post'));
     await waitFor(() => expect(pickAndUpload).toHaveBeenCalled());
+    await waitFor(() => expect(refetch).toHaveBeenCalled());
+  });
+
+  it('refetches the profile after a post is deleted from the viewer', async () => {
+    mockedProfile.mockReturnValue({
+      me,
+      posts: [
+        {
+          id: 'p1',
+          image_url: 'https://i/a.jpg',
+          caption: 'hi',
+          likes_count: 0,
+          comments_count: 0,
+          created_at: '',
+        },
+      ] as never,
+      isLoading: false,
+      refetch,
+    });
+    renderWithProviders(<ProfileScreen />);
+    fireEvent.press(screen.getByTestId('post-p1'));
+    fireEvent.press(screen.getByTestId('post-viewer-deleted'));
     await waitFor(() => expect(refetch).toHaveBeenCalled());
   });
 });

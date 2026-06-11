@@ -15,11 +15,6 @@ jest.mock('@/stores/home.store', () => ({
 // Children are unit-tested on their own; here we just assert composition.
 jest.mock('@/components/AuthLogo', () => ({ AuthLogo: () => null }));
 jest.mock('@/components/Mascot', () => ({ Mascot: () => null }));
-jest.mock('@/components/ThemeToggle', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { View: V } = require('react-native');
-  return { ThemeToggle: () => <V testID="theme-toggle" /> };
-});
 jest.mock('@/components/LogoutButton', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View: V } = require('react-native');
@@ -35,7 +30,6 @@ describe('AppHeader', () => {
   it('renders the brand row with theme toggle and the account avatar', () => {
     renderWithProviders(<AppHeader />);
     expect(screen.getByTestId('app-header')).toBeOnTheScreen();
-    expect(screen.getByTestId('theme-toggle')).toBeOnTheScreen();
     expect(screen.getByTestId('account-button')).toBeOnTheScreen();
     expect(screen.queryByTestId('logout-button')).toBeNull();
   });

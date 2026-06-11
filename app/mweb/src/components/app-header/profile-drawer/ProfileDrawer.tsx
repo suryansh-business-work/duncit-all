@@ -4,10 +4,15 @@ import {
   Drawer,
   IconButton,
   List,
+  Stack,
+  Switch,
   Typography,
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import DarkModeIcon from '@mui/icons-material/DarkMode';
+import LightModeIcon from '@mui/icons-material/LightMode';
 import { useNavigate } from 'react-router-dom';
+import { useColorMode } from '../../../ColorModeContext';
 import DrawerFooter from './DrawerFooter';
 import MenuItemRow from './MenuItem';
 import PoliciesSection from './PoliciesSection';
@@ -34,6 +39,8 @@ export default function ProfileDrawer({
   onLogout,
 }: Readonly<Props>) {
   const navigate = useNavigate();
+  const colorMode = useColorMode();
+  const isDark = colorMode.mode === 'dark';
   const roles: string[] = me?.roles ?? [];
   const { baseItems, hostItem, venueItem, supportItems } = useMenuItems({
     roles,
@@ -93,6 +100,25 @@ export default function ProfileDrawer({
               <MenuItemRow key={it.label} item={it} />
             ))}
           </List>
+          <Divider />
+          <Stack
+            direction="row"
+            alignItems="center"
+            justifyContent="space-between"
+            sx={{ px: 2.5, py: 1.25 }}
+          >
+            <Stack direction="row" alignItems="center" spacing={1.5}>
+              {isDark ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
+              <Typography variant="body2" sx={{ fontWeight: 700 }}>
+                Dark mode
+              </Typography>
+            </Stack>
+            <Switch
+              checked={isDark}
+              onChange={colorMode.toggle}
+              inputProps={{ 'aria-label': 'Toggle dark mode' }}
+            />
+          </Stack>
           {publicPolicies.length > 0 && (
             <>
               <Divider />

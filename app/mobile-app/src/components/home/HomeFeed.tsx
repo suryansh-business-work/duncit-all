@@ -1,6 +1,11 @@
 import { useState } from 'react';
 import { RefreshControl } from 'react-native';
-import { ScrollView, Text, YStack } from 'tamagui';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MaterialIcons } from '@expo/vector-icons';
+import { ScrollView, Text, XStack, YStack } from 'tamagui';
+
+import type { RootStackParamList } from '@/navigation/types';
 
 import { Reveal } from '@/animations/Reveal';
 import { HomeSkeleton } from '@/components/Skeleton';
@@ -32,8 +37,10 @@ export function HomeFeed() {
     refetch,
   } = useHomeFeed(selectedCategoryId);
   const { data: meData } = useMe();
-  const { primary } = useThemeColors();
+  const { primary, onPrimary } = useThemeColors();
   const { openPod, openClub, openPreviousPods, openHappeningNearby } = useDetailNav();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const isHost = meData?.me?.roles?.includes('HOST') ?? false;
 
   const userName = meData?.me?.first_name ?? meData?.me?.full_name ?? 'You';
   const userPhoto = meData?.me?.profile_photo;
@@ -44,68 +51,98 @@ export function HomeFeed() {
   }
 
   return (
-    <ScrollView
-      flex={1}
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl refreshing={isLoading && hasData} onRefresh={refetch} tintColor={primary} />
-      }
-    >
-      <YStack gap={20} paddingTop={12} paddingBottom={124} testID="home-feed">
-        <Reveal index={0}>
-          <StatusRail userName={userName} userPhoto={userPhoto} />
-        </Reveal>
-        <Reveal index={1}>
-          <HomeVibeChips
-            categories={categoryChips}
-            selectedId={selectedCategoryId}
-            onSelect={setSelectedCategoryId}
+    <YStack flex={1}>
+      <ScrollView
+        flex={1}
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isLoading && hasData}
+            onRefresh={refetch}
+            tintColor={primary}
           />
-        </Reveal>
-        <YStack gap={16}>
-          <Reveal index={2}>
-            <HappeningNearbyHeader totalPods={totalPods} onPress={openHappeningNearby} />
+        }
+      >
+        <YStack gap={20} paddingTop={12} paddingBottom={124} testID="home-feed">
+          <Reveal index={0}>
+            <StatusRail userName={userName} userPhoto={userPhoto} />
           </Reveal>
-          <Reveal index={3}>
-            <HomeFeaturedPods
-              pods={featuredPods}
-              onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
+          <Reveal index={1}>
+            <HomeVibeChips
+              categories={categoryChips}
+              selectedId={selectedCategoryId}
+              onSelect={setSelectedCategoryId}
             />
           </Reveal>
-          {isEmpty ? (
-            <Reveal index={4} scale>
-              <Text
-                testID="home-empty"
-                textAlign="center"
-                fontSize={13}
-                color="$muted"
-                paddingHorizontal={24}
-                paddingVertical={32}
-              >
-                No pods here yet. Pull to refresh or pick a different vibe.
-              </Text>
+          <YStack gap={16}>
+            <Reveal index={2}>
+              <HappeningNearbyHeader totalPods={totalPods} onPress={openHappeningNearby} />
             </Reveal>
-          ) : (
-            clubsWithPods.map(({ club, pods }, sectionIndex) => (
-              <Reveal key={club.id} index={4 + sectionIndex}>
-                <ClubSection
-                  club={club}
-                  pods={pods}
-                  onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
-                  onOpenClub={(c) => openClub(c.id, c.club_name)}
-                />
+            <Reveal index={3}>
+              <HomeFeaturedPods
+                pods={featuredPods}
+                onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
+              />
+            </Reveal>
+            {isEmpty ? (
+              <Reveal index={4} scale>
+                <Text
+                  testID="home-empty"
+                  textAlign="center"
+                  fontSize={13}
+                  color="$muted"
+                  paddingHorizontal={24}
+                  paddingVertical={32}
+                >
+                  No pods here yet. Pull to refresh or pick a different vibe.
+                </Text>
               </Reveal>
-            ))
-          )}
-          <Reveal index={5}>
-            <PreviousPodsRail
-              pods={previousPods}
-              onSeeAll={openPreviousPods}
-              onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
-            />
-          </Reveal>
+            ) : (
+              clubsWithPods.map(({ club, pods }, sectionIndex) => (
+                <Reveal key={club.id} index={4 + sectionIndex}>
+                  <ClubSection
+                    club={club}
+                    pods={pods}
+                    onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
+                    onOpenClub={(c) => openClub(c.id, c.club_name)}
+                  />
+                </Reveal>
+              ))
+            )}
+            <Reveal index={5}>
+              <PreviousPodsRail
+                pods={previousPods}
+                onSeeAll={openPreviousPods}
+                onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
+              />
+            </Reveal>
+          </YStack>
         </YStack>
-      </YStack>
-    </ScrollView>
+      </ScrollView>
+      {isHost ? (
+        <XStack
+          testID="home-create-pod-fab"
+          role="button"
+          aria-label="Create pod"
+          onPress={() => navigation.navigate('CreatePod')}
+          position="absolute"
+          right={16}
+          bottom={104}
+          width={56}
+          height={56}
+          borderRadius={28}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="$primary"
+          shadowColor="#000000"
+          shadowOpacity={0.25}
+          shadowRadius={12}
+          shadowOffset={{ width: 0, height: 6 }}
+          pressStyle={{ opacity: 0.85 }}
+        >
+          <MaterialIcons name="add" size={28} color={onPrimary} />
+        </XStack>
+      ) : null}
+    </YStack>
   );
 }

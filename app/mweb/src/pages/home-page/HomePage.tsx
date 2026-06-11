@@ -182,7 +182,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
           <Fab
             color="primary"
             aria-label="Create pod"
-            onClick={() => navigate('/host/manage')}
+            onClick={() => navigate('/create-pod')}
             sx={{
               position: 'fixed',
               bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px)',

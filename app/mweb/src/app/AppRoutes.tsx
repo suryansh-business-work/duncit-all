@@ -41,6 +41,7 @@ import CheckoutPage from '../pages/CheckoutPage';
 import ExplorePage from '../pages/ExplorePage';
 import PreviousPodsPage from '../pages/PreviousPodsPage';
 import HappeningNearbyPage from '../pages/HappeningNearbyPage';
+import CreatePodPage from '../pages/create-pod-page';
 import SavedItemsPage from '../pages/SavedItemsPage';
 import ClubsPage from '../pages/ClubsPage';
 import ChatsPage from '../pages/ChatsPage';
@@ -87,6 +88,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
       <Route path="/survey/:kind" element={withAuth(<SurveyGatePage />)} />
       <Route path="/hosts-venues" element={withAuth(<HostsVenuesPage />)} />
       <Route path="/host/manage" element={withAuth(<HostManagePage />)} />
+      <Route path="/create-pod" element={withAuth(<CreatePodPage />)} />
       <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
       <Route path="/faqs" element={withAuth(<FaqsPage />)} />
       <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />

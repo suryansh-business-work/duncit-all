@@ -3,6 +3,7 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
+import { Reveal } from '@/animations/Reveal';
 import { AppBackground } from '@/components/AppBackground';
 import { ClubBody } from '@/components/details/ClubBody';
 import { DetailHero } from '@/components/details/DetailHero';
@@ -42,14 +43,16 @@ export function ClubDetailsScreen() {
             media={club.club_feature_images_and_videos}
             onBack={() => navigation.goBack()}
           />
-          <ClubBody
-            club={club}
-            pods={pods}
-            cardWidth={cardWidth}
-            onOpenPod={(pod) =>
-              navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title })
-            }
-          />
+          <Reveal>
+            <ClubBody
+              club={club}
+              pods={pods}
+              cardWidth={cardWidth}
+              onOpenPod={(pod) =>
+                navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title })
+              }
+            />
+          </Reveal>
         </ScrollView>
       )}
     </YStack>

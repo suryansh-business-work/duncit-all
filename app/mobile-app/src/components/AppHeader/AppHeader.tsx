@@ -8,7 +8,6 @@ import { LocationButton } from '@/components/LocationButton';
 import { LogoutButton } from '@/components/LogoutButton';
 import { Mascot } from '@/components/Mascot';
 import { NotificationsBell } from '@/components/notifications';
-import { ThemeToggle } from '@/components/ThemeToggle';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useHomeStore } from '@/stores/home.store';
 
@@ -69,7 +68,6 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
         )}
         {minimal ? null : <LocationButton />}
         {minimal ? null : <NotificationsBell />}
-        <ThemeToggle />
         {minimal ? <LogoutButton /> : <AccountButton />}
       </XStack>
     </XStack>

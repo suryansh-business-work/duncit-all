@@ -44,7 +44,9 @@ function deriveHome(
     list.push(p);
     podsByClub.set(p.club_id, list);
   });
-  podsByClub.forEach((list) => list.sort(byDateAsc));
+  podsByClub.forEach((list) => {
+    list.sort(byDateAsc);
+  });
 
   const clubsWithPods: ClubWithPods[] = clubs
     .map((club) => ({ club, pods: podsByClub.get(club.id) ?? [] }))

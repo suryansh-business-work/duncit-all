@@ -4,7 +4,9 @@ import { format, parseISO } from 'date-fns';
 const DATE_FORMAT = 'dd MMM yyyy';
 const DATE_TIME_FORMAT = 'dd MMM yyyy, hh:mm a';
 
-const toDate = (input: string | number | Date | null | undefined): Date | null => {
+type DateInput = string | number | Date | null | undefined;
+
+const toDate = (input: DateInput): Date | null => {
   if (!input) return null;
   if (input instanceof Date) return Number.isNaN(input.getTime()) ? null : input;
   if (typeof input === 'number') return new Date(input);
@@ -17,13 +19,13 @@ const toDate = (input: string | number | Date | null | undefined): Date | null =
 };
 
 /** Local-timezone date label, e.g. "07 Jun 2026". Empty string when unparseable. */
-export function formatDate(input: string | number | Date | null | undefined): string {
+export function formatDate(input: DateInput): string {
   const date = toDate(input);
   return date ? format(date, DATE_FORMAT) : '';
 }
 
 /** Local-timezone date+time label, e.g. "07 Jun 2026, 06:30 PM". Empty when unparseable. */
-export function formatDateTime(input: string | number | Date | null | undefined): string {
+export function formatDateTime(input: DateInput): string {
   const date = toDate(input);
   return date ? format(date, DATE_TIME_FORMAT) : '';
 }

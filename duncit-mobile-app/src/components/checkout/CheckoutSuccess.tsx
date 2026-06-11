@@ -29,7 +29,7 @@ export function CheckoutSuccess({
   onHome,
   onProfile,
 }: Readonly<CheckoutSuccessProps>) {
-  const { onPrimary, primary } = useThemeColors();
+  const { onPrimary } = useThemeColors();
   const [busy, setBusy] = useState(false);
   const [ticketBusy, setTicketBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -89,59 +89,26 @@ export function CheckoutSuccess({
       ) : null}
 
       {onDownloadTicket ? (
-        <XStack
+        <ActionButton
           testID="download-ticket"
-          role="button"
-          aria-label="Download ticket"
-          aria-disabled={ticketBusy}
-          onPress={ticketBusy ? undefined : () => void downloadTicket()}
-          alignItems="center"
-          justifyContent="center"
-          gap={8}
-          alignSelf="stretch"
-          height={46}
-          borderRadius={999}
-          backgroundColor="$primary"
-          opacity={ticketBusy ? 0.6 : 1}
-          pressStyle={{ opacity: 0.85 }}
-        >
-          {ticketBusy ? (
-            <Spinner size="small" color={onPrimary} />
-          ) : (
-            <MaterialIcons name="confirmation-number" size={18} color={onPrimary} />
-          )}
-          <Text fontSize={14} fontWeight="900" color={onPrimary}>
-            {ticketBusy ? 'Preparing…' : 'Download ticket'}
-          </Text>
-        </XStack>
+          ariaLabel="Download ticket"
+          busy={ticketBusy}
+          onPress={() => void downloadTicket()}
+          label="Download ticket"
+          iconName="confirmation-number"
+          variant="filled"
+        />
       ) : null}
 
-      <XStack
+      <ActionButton
         testID="download-invoice"
-        role="button"
-        aria-label="Download invoice"
-        aria-disabled={busy}
-        onPress={busy ? undefined : () => void download()}
-        alignItems="center"
-        justifyContent="center"
-        gap={8}
-        alignSelf="stretch"
-        height={46}
-        borderRadius={999}
-        borderWidth={1}
-        borderColor="$primary"
-        opacity={busy ? 0.6 : 1}
-        pressStyle={{ opacity: 0.85 }}
-      >
-        {busy ? (
-          <Spinner size="small" color="$primary" />
-        ) : (
-          <MaterialIcons name="download" size={18} color={primary} />
-        )}
-        <Text fontSize={14} fontWeight="800" color="$primary">
-          {busy ? 'Preparing…' : 'Download invoice'}
-        </Text>
-      </XStack>
+        ariaLabel="Download invoice"
+        busy={busy}
+        onPress={() => void download()}
+        label="Download invoice"
+        iconName="download"
+        variant="outlined"
+      />
 
       <XStack gap={10} alignSelf="stretch">
         <XStack
@@ -181,6 +148,63 @@ export function CheckoutSuccess({
         </XStack>
       </XStack>
     </YStack>
+  );
+}
+
+interface ActionButtonProps {
+  testID: string;
+  ariaLabel: string;
+  busy: boolean;
+  onPress: () => void;
+  label: string;
+  iconName: keyof typeof MaterialIcons.glyphMap;
+  variant: 'filled' | 'outlined';
+}
+
+/** Stretched pill button with a busy spinner — used for ticket/invoice downloads. */
+function ActionButton({
+  testID,
+  ariaLabel,
+  busy,
+  onPress,
+  label,
+  iconName,
+  variant,
+}: Readonly<ActionButtonProps>) {
+  const { onPrimary, primary } = useThemeColors();
+  const filled = variant === 'filled';
+  return (
+    <XStack
+      testID={testID}
+      role="button"
+      aria-label={ariaLabel}
+      aria-disabled={busy}
+      onPress={busy ? undefined : onPress}
+      alignItems="center"
+      justifyContent="center"
+      gap={8}
+      alignSelf="stretch"
+      height={46}
+      borderRadius={999}
+      borderWidth={filled ? 0 : 1}
+      borderColor="$primary"
+      backgroundColor={filled ? '$primary' : undefined}
+      opacity={busy ? 0.6 : 1}
+      pressStyle={{ opacity: 0.85 }}
+    >
+      {busy ? (
+        <Spinner size="small" color={filled ? onPrimary : '$primary'} />
+      ) : (
+        <MaterialIcons name={iconName} size={18} color={filled ? onPrimary : primary} />
+      )}
+      <Text
+        fontSize={14}
+        fontWeight={filled ? '900' : '800'}
+        color={filled ? onPrimary : '$primary'}
+      >
+        {busy ? 'Preparing…' : label}
+      </Text>
+    </XStack>
   );
 }
 

@@ -88,6 +88,10 @@ async function main() {
   await testKeys(keyId, keySecret, 'active default entry');
 }
 
-main()
-  .catch((e) => console.error('\nDiagnostic error:', e.message))
-  .finally(() => mongoose.disconnect());
+try {
+  await main();
+} catch (e) {
+  console.error('\nDiagnostic error:', e.message);
+} finally {
+  await mongoose.disconnect();
+}

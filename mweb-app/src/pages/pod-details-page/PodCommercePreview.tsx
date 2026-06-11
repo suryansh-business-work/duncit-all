@@ -13,6 +13,12 @@ interface Props {
   onCheckout: () => void;
 }
 
+/** Footer label: a count of selected products, or a neutral total caption. */
+function productCountLabel(count: number): string {
+  if (count === 0) return 'Selected product total';
+  return `${count} product${count === 1 ? '' : 's'} selected`;
+}
+
 export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, onCheckout }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
@@ -133,7 +139,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
       <Divider sx={{ my: 1.5, borderColor: isDark ? 'rgba(255,255,255,0.16)' : 'divider' }} />
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Typography variant="caption" sx={{ color: mutedColor }}>
-          {selectedCount > 0 ? `${selectedCount} product${selectedCount === 1 ? '' : 's'} selected` : 'Selected product total'}
+          {productCountLabel(selectedCount)}
         </Typography>
         <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
           {priceFormat(selectedTotal)}

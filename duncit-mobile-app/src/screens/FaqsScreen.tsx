@@ -11,6 +11,7 @@ export function FaqsScreen() {
   const { groups, isLoading } = useFaqs();
   const [openId, setOpenId] = useState<string | null>(null);
   const total = groups.reduce((n, g) => n + g.faqs.length, 0);
+  const toggleFaq = (id: string) => setOpenId((cur) => (cur === id ? null : id));
 
   return (
     <StackScreen title="FAQs" testID="faqs-screen">
@@ -35,7 +36,7 @@ export function FaqsScreen() {
                   title={faq.question}
                   icon="help-outline"
                   open={openId === faq.id}
-                  onToggle={() => setOpenId((id) => (id === faq.id ? null : faq.id))}
+                  onToggle={() => toggleFaq(faq.id)}
                   testID={`faq-${faq.id}`}
                 >
                   <Text fontSize={13.5} color="$color" lineHeight={20}>

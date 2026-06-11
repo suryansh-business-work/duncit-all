@@ -45,7 +45,10 @@ export const HOST_VARIABLES: LeadVariable[] = [
 export const leadVariablesFor = (entity: 'VENUE_LEAD' | 'HOST_LEAD') =>
   entity === 'HOST_LEAD' ? HOST_VARIABLES : VENUE_VARIABLES;
 
-const s = (v: unknown) => (v == null ? '' : String(v));
+const s = (v: unknown) => {
+  if (v == null) return '';
+  return typeof v === 'object' ? JSON.stringify(v) : String(v);
+};
 
 /** Slug → value map from a venue lead (blank when the field is empty). */
 export function venueVariableValues(lead: VenueLead): Record<string, string> {

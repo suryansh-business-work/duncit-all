@@ -32,7 +32,7 @@ export default function AttachmentsSection({ attachments, onChange }: Readonly<P
     if (!file) return;
     setError(null);
     const mime = file.type || '';
-    if (!/^image\//.test(mime) && !/^video\//.test(mime)) {
+    if (!mime.startsWith('image/') && !mime.startsWith('video/')) {
       setError('Only image or video files are allowed.');
       return;
     }

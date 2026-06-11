@@ -29,6 +29,34 @@ interface Props {
   onView?: (p: any) => void;
 }
 
+function PodCover({ pod }: Readonly<{ pod: any }>) {
+  const first = pod.pod_images_and_videos?.[0];
+  if (!first) {
+    return (
+      <Avatar variant="rounded" sx={{ width: 40, height: 40 }}>
+        {pod.pod_title[0]}
+      </Avatar>
+    );
+  }
+  if (first.type === 'VIDEO') {
+    return (
+      <Box
+        component="video"
+        src={first.url}
+        muted
+        playsInline
+        preload="metadata"
+        sx={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 1, display: 'block' }}
+      />
+    );
+  }
+  return (
+    <Avatar variant="rounded" src={first.url} sx={{ width: 40, height: 40 }}>
+      {pod.pod_title[0]}
+    </Avatar>
+  );
+}
+
 export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onDelete, onComplete, onView }: Readonly<Props>) {
   return (
     <Card>
@@ -64,33 +92,7 @@ export default function PodsTable({ loading, pods, clubName, venueName, locName,
                   sx={{ cursor: onView ? 'pointer' : 'default' }}
                 >
                   <TableCell>
-                    {(() => {
-                      const first = p.pod_images_and_videos?.[0];
-                      if (!first) {
-                        return (
-                          <Avatar variant="rounded" sx={{ width: 40, height: 40 }}>
-                            {p.pod_title[0]}
-                          </Avatar>
-                        );
-                      }
-                      if (first.type === 'VIDEO') {
-                        return (
-                          <Box
-                            component="video"
-                            src={first.url}
-                            muted
-                            playsInline
-                            preload="metadata"
-                            sx={{ width: 40, height: 40, objectFit: 'cover', borderRadius: 1, display: 'block' }}
-                          />
-                        );
-                      }
-                      return (
-                        <Avatar variant="rounded" src={first.url} sx={{ width: 40, height: 40 }}>
-                          {p.pod_title[0]}
-                        </Avatar>
-                      );
-                    })()}
+                    <PodCover pod={p} />
                   </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight={600}>

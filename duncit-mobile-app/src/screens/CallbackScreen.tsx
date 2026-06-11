@@ -10,13 +10,59 @@ import { useSupportPods } from '@/hooks/useSupportPods';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
 
+type SupportTarget = { phone: string; available: boolean } | null;
+
+/** "Call support now" card — dials support directly when a phone is configured. */
+function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
+  const { onPrimary } = useThemeColors();
+  return (
+    <YStack
+      padding={16}
+      borderRadius={16}
+      gap={10}
+      backgroundColor="$surface"
+      borderWidth={1}
+      borderColor="$borderColor"
+    >
+      <Text fontSize={12} fontWeight="900" textTransform="uppercase" color="$muted">
+        Call support now
+      </Text>
+      <Text fontSize={13} color="$muted">
+        {target?.available
+          ? `Dial ${target.phone}. We will answer in seconds.`
+          : 'Support phone is not configured yet — please request a callback below.'}
+      </Text>
+      <XStack
+        testID="callback-call-now"
+        role="button"
+        aria-label="Call now"
+        aria-disabled={!target?.available}
+        onPress={target?.available ? () => void Linking.openURL(`tel:${target.phone}`) : undefined}
+        height={46}
+        alignItems="center"
+        justifyContent="center"
+        gap={8}
+        borderRadius={999}
+        backgroundColor="$primary"
+        opacity={target?.available ? 1 : 0.5}
+        pressStyle={{ opacity: 0.85 }}
+      >
+        <MaterialIcons name="call" size={18} color={onPrimary} />
+        <Text fontSize={14} fontWeight="800" color={onPrimary}>
+          Call Now
+        </Text>
+      </XStack>
+    </YStack>
+  );
+}
+
 /** Callback Request — call support now or request a callback. RN twin of mWeb's
  * CallbackContent. */
 export function CallbackScreen() {
   const { options, selected, selectedId, setSelectedId } = useSupportPods();
   const { loadSupportTarget, requestCallback } = useBouncer();
-  const { onPrimary, primary } = useThemeColors();
-  const [target, setTarget] = useState<{ phone: string; available: boolean } | null>(null);
+  const { primary } = useThemeColors();
+  const [target, setTarget] = useState<SupportTarget>(null);
   const [reason, setReason] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -51,45 +97,7 @@ export function CallbackScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
         <PodPicker options={options} selectedId={selectedId} onChange={setSelectedId} />
 
-        <YStack
-          padding={16}
-          borderRadius={16}
-          gap={10}
-          backgroundColor="$surface"
-          borderWidth={1}
-          borderColor="$borderColor"
-        >
-          <Text fontSize={12} fontWeight="900" textTransform="uppercase" color="$muted">
-            Call support now
-          </Text>
-          <Text fontSize={13} color="$muted">
-            {target?.available
-              ? `Dial ${target.phone}. We will answer in seconds.`
-              : 'Support phone is not configured yet — please request a callback below.'}
-          </Text>
-          <XStack
-            testID="callback-call-now"
-            role="button"
-            aria-label="Call now"
-            aria-disabled={!target?.available}
-            onPress={
-              target?.available ? () => void Linking.openURL(`tel:${target.phone}`) : undefined
-            }
-            height={46}
-            alignItems="center"
-            justifyContent="center"
-            gap={8}
-            borderRadius={999}
-            backgroundColor="$primary"
-            opacity={target?.available ? 1 : 0.5}
-            pressStyle={{ opacity: 0.85 }}
-          >
-            <MaterialIcons name="call" size={18} color={onPrimary} />
-            <Text fontSize={14} fontWeight="800" color={onPrimary}>
-              Call Now
-            </Text>
-          </XStack>
-        </YStack>
+        <CallNowCard target={target} />
 
         <YStack
           padding={16}

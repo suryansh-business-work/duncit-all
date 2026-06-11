@@ -40,8 +40,8 @@ export default function LiveTicketsPage() {
 
   return (
     <SupportShell
-      title="Live Tickets"
-      subtitle="Track your open tickets live"
+      title="Chat with Us"
+      subtitle="Real-time chat with our support team"
       icon={<SensorsIcon fontSize="small" />}
       gradient="linear-gradient(135deg, #4caf50 0%, #2196f3 100%)"
       backTo="/support"

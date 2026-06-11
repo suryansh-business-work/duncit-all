@@ -1,6 +1,10 @@
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole, hasRole } from '@middleware/rbac';
 import { supportChatService } from './supportChat.service';
+import { listMyUnifiedSupportTickets } from './unifiedTickets.service';
+import { userService } from '@modules/access/user/user.service';
+import { registerSchema } from '@modules/access/user/user.validator';
+import { validate } from '@utils/validate';
 
 const SUPPORT_ROLES = ['SUPER_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_USER'];
 
@@ -24,6 +28,10 @@ export const supportChatResolvers = {
     mySupportChat: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return supportChatService.getMine(user.id);
+    },
+    myUnifiedSupportTickets: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return listMyUnifiedSupportTickets(user.id);
     },
   },
   Mutation: {
@@ -52,6 +60,25 @@ export const supportChatResolvers = {
       const user = requireAuth(ctx);
       const isAgent = hasRole(user, SUPPORT_ROLES);
       return supportChatService.markRead(args.session_id, isAgent);
+    },
+    claimSupportChat: (_p: unknown, args: { session_id: string }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, SUPPORT_ROLES);
+      return supportChatService.claim(args.session_id, user.id);
+    },
+    supportCreateUser: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, SUPPORT_ROLES);
+      // Reuses the public signup path (validation, USER role, welcome email);
+      // the agent never receives the session token — only the created profile.
+      const data = await validate(registerSchema, {
+        first_name: args.input.first_name,
+        last_name: args.input.last_name || undefined,
+        email: args.input.email,
+        phone_number: args.input.phone_number || undefined,
+        phone_extension: args.input.phone_extension || undefined,
+        password: args.input.password,
+      });
+      const payload = await userService.register(data);
+      return (payload as any).user;
     },
   },
 };

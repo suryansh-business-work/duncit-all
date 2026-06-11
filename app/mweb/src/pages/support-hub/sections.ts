@@ -1,7 +1,7 @@
 import type { SvgIconComponent } from '@mui/icons-material';
 import SosIcon from '@mui/icons-material/Sos';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
-import RateReviewIcon from '@mui/icons-material/RateReview';
+import HistoryIcon from '@mui/icons-material/History';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import SensorsIcon from '@mui/icons-material/Sensors';
 
@@ -37,18 +37,9 @@ export const SUPPORT_SECTIONS: SupportSection[] = [
     podScoped: true,
   },
   {
-    key: 'feedback',
-    path: '/support/feedback',
-    label: 'Live Feedback',
-    description: 'Rate the pod while it is on',
-    Icon: RateReviewIcon,
-    color: '#ff9800',
-    podScoped: true,
-  },
-  {
     key: 'tickets',
     path: '/support/tickets',
-    label: 'Support Tickets',
+    label: 'Create Support Tickets',
     description: 'Raise an issue with our team',
     Icon: ConfirmationNumberIcon,
     color: '#ff4f73',
@@ -57,10 +48,19 @@ export const SUPPORT_SECTIONS: SupportSection[] = [
   {
     key: 'live',
     path: '/support/live',
-    label: 'Live Tickets',
-    description: 'Track your open tickets live',
+    label: 'Chat with Us',
+    description: 'Real-time chat with our support team',
     Icon: SensorsIcon,
     color: '#4caf50',
+    podScoped: false,
+  },
+  {
+    key: 'all',
+    path: '/support/all',
+    label: 'All Support Tickets',
+    description: 'Every request you have raised, in one list',
+    Icon: HistoryIcon,
+    color: '#7c5cff',
     podScoped: false,
   },
 ];

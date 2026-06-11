@@ -28,8 +28,8 @@ describe('AppSidebar', () => {
   });
 
   it('does not mark the dashboard active on a non-root route', () => {
-    renderWithProviders(<AppSidebar />, { initialEntries: ['/feedback'] });
-    expect(selectedLabel()).toBe('Live Feedback');
+    renderWithProviders(<AppSidebar />, { initialEntries: ['/live-chat'] });
+    expect(selectedLabel()).toBe('Chat with Us');
   });
 
   it('invokes onNavigate when a link is clicked', () => {

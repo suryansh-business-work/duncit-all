@@ -1,22 +1,15 @@
 import { useState } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Alert, Avatar, Box, Chip, Paper, Snackbar, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { HEADER_DATA } from '../../components/app-header/queries';
 import SupportForm, { type SupportFormValues } from '../../forms/support.form';
 import SupportShell from './SupportShell';
+import { CREATE_TICKET } from '../support-tickets/queries';
 
-const SUBMIT_CONTACT = gql`
-  mutation SubmitSupport($input: SubmitContactInput!) {
-    submitContactForm(input: $input) {
-      ok
-      message
-    }
-  }
-`;
 
 export default function SupportTicketsPage() {
   const navigate = useNavigate();
@@ -33,29 +26,39 @@ export default function SupportTicketsPage() {
     ...(params.get('message') ? { message: params.get('message')! } : {}),
   };
 
-  const [submit, { loading }] = useMutation(SUBMIT_CONTACT);
+  const [createTicket, { loading }] = useMutation(CREATE_TICKET);
   const [error, setError] = useState<string | null>(null);
-  const [snack, setSnack] = useState<string | null>(null);
+
+  // The support form categories are user-friendly labels; the Ticket enum is
+  // narrower — map what we can, default to OTHER.
+  const TICKET_CATEGORY: Record<string, string> = {
+    BUG: 'TECHNICAL',
+    QUESTION: 'GENERAL',
+    FEEDBACK: 'OTHER',
+    ACCOUNT: 'GENERAL',
+    PAYMENT: 'PAYMENT',
+    OTHER: 'OTHER',
+  };
 
   const handleSubmit = async (values: SupportFormValues) => {
     setError(null);
-    const subjectTagged = `[${values.category}] ${values.subject}`;
     try {
-      const { data } = await submit({
+      const { data } = await createTicket({
         variables: {
           input: {
-            name: values.name,
-            email: values.email,
-            subject: subjectTagged,
-            message: values.message,
+            subject: values.subject,
+            category: TICKET_CATEGORY[values.category] ?? 'OTHER',
+            body_text: values.message,
             attachments: values.attachments,
           },
         },
       });
-      if (data?.submitContactForm?.ok) {
-        setSnack(data.submitContactForm.message ?? 'Sent. We will get back to you soon.');
+      const id = data?.createTicket?.id;
+      if (id) {
+        // Straight to the ticket details page so the user can track it.
+        navigate(`/tickets/${id}`);
       } else {
-        setError(data?.submitContactForm?.message ?? 'Could not submit. Please try again.');
+        setError('Could not create the ticket. Please try again.');
       }
     } catch (e: any) {
       setError(e?.message ?? 'Network error. Please try again.');
@@ -65,7 +68,7 @@ export default function SupportTicketsPage() {
 
   return (
     <SupportShell
-      title="Support Tickets"
+      title="Create Support Tickets"
       subtitle="Raise an issue with our team"
       icon={<ConfirmationNumberIcon fontSize="small" />}
       backTo="/support"
@@ -136,11 +139,6 @@ export default function SupportTicketsPage() {
           />
         </Paper>
 
-        <Snackbar open={!!snack} autoHideDuration={5000} onClose={() => setSnack(null)}>
-          <Alert severity="success" onClose={() => setSnack(null)}>
-            {snack}
-          </Alert>
-        </Snackbar>
       </Stack>
     </SupportShell>
   );

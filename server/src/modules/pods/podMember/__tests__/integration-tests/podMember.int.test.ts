@@ -36,3 +36,34 @@ describe('podMemberService integration', () => {
     expect(found).not.toBeNull();
   });
 });
+
+describe('expired pod booking guard', () => {
+  const makePod = (over: Record<string, unknown> = {}) => ({
+    pod_id: `p-${Math.random().toString(36).slice(2)}`,
+    pod_title: 'Guard pod',
+    club_id: new Types.ObjectId(),
+    pod_description: 'desc',
+    pod_type: 'NATIVE_FREE',
+    pod_date_time: new Date(Date.now() + 86_400_000),
+    is_active: true,
+    ...over,
+  });
+
+  it('rejects joinFree once the pod date has passed', async () => {
+    const { PodModel } = await import('@modules/pods/pod/pod.model');
+    const past = await PodModel.create(makePod({ pod_date_time: new Date(Date.now() - 3_600_000) }));
+    await expect(
+      podMemberService.joinFree(String(past._id), new Types.ObjectId().toString())
+    ).rejects.toThrow(/already taken place/i);
+  });
+
+  it('still allows joining an upcoming free pod', async () => {
+    const { PodModel } = await import('@modules/pods/pod/pod.model');
+    const upcoming = await PodModel.create(makePod());
+    const member = await podMemberService.joinFree(
+      String(upcoming._id),
+      new Types.ObjectId().toString()
+    );
+    expect(member.status).toBe('JOINED');
+  });
+});

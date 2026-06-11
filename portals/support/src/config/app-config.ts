@@ -63,9 +63,8 @@ export const appConfig: AppConfig = {
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
     { label: 'SOS Alerts', to: '/sos', icon: 'sos' },
     { label: 'Callback Requests', to: '/callbacks', icon: 'callback' },
-    { label: 'Live Feedback', to: '/feedback', icon: 'feedback' },
     { label: 'Tickets', to: '/tickets', icon: 'ticket' },
-    { label: 'Live Chat', to: '/live-chat', icon: 'chat' },
+    { label: 'Chat with Us', to: '/live-chat', icon: 'chat' },
   ],
   modules: [],
 };

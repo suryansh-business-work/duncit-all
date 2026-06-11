@@ -1,19 +1,15 @@
 import { useCallback } from 'react';
 import * as Location from 'expo-location';
-import type { ResultOf, VariablesOf } from '@graphql-typed-document-node/core';
+import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
   MobileActiveSosDocument,
   MobileRaiseSosDocument,
   MobileRequestCallbackDocument,
-  MobileSubmitFeedbackDocument,
   MobileSupportCallTargetDocument,
 } from '@/graphql/bouncer';
 import { graphqlRequest } from '@/services/graphql.client';
 
-export type FeedbackCategory = VariablesOf<
-  typeof MobileSubmitFeedbackDocument
->['input']['category'];
 export type ActiveSos = ResultOf<typeof MobileActiveSosDocument>['myActiveBouncerSos'];
 
 /** Best-effort current location for an SOS — null if permission denied/unavailable. */
@@ -33,7 +29,7 @@ async function captureLocation(): Promise<{
 }
 
 /** Thin action layer over the bouncer/support mutations — RN twin of mWeb's
- * SosContent/CallbackContent/FeedbackContent data calls. */
+ * SosContent/CallbackContent data calls. */
 export function useBouncer() {
   const loadSupportTarget = useCallback(
     () => graphqlRequest(MobileSupportCallTargetDocument, undefined, { auth: true }),
@@ -65,16 +61,5 @@ export function useBouncer() {
     );
   }, []);
 
-  const submitFeedback = useCallback(
-    async (podId: string, rating: number, category: FeedbackCategory, message: string) => {
-      await graphqlRequest(
-        MobileSubmitFeedbackDocument,
-        { input: { pod_id: podId, rating, category, message: message.trim() || null } },
-        { auth: true },
-      );
-    },
-    [],
-  );
-
-  return { loadSupportTarget, getActiveSos, raiseSos, requestCallback, submitFeedback };
+  return { loadSupportTarget, getActiveSos, raiseSos, requestCallback };
 }

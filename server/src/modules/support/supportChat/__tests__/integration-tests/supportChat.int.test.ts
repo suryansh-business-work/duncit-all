@@ -60,3 +60,36 @@ describe('supportChatService integration', () => {
     expect(open).toHaveLength(1);
   });
 });
+
+describe('supportChat claim + system bubble', () => {
+  it('claim assigns the agent and announces it as a SYSTEM message once', async () => {
+    const uid = new Types.ObjectId().toString();
+    const agentId = new Types.ObjectId().toString();
+    const session = await supportChatService.start(uid, 'need help');
+
+    const claimed = await supportChatService.claim(session.id, agentId);
+    expect(claimed.agent_id).toBe(agentId);
+
+    const messages = await supportChatService.listMessages(session.id);
+    const system = messages.filter((m) => m.sender_role === 'SYSTEM');
+    expect(system).toHaveLength(1);
+    expect(system[0].text).toMatch(/picked up by/i);
+
+    // Claiming again is a no-op (no duplicate bubble, agent unchanged).
+    const again = await supportChatService.claim(session.id, new Types.ObjectId().toString());
+    expect(again.agent_id).toBe(agentId);
+    const after = await supportChatService.listMessages(session.id);
+    expect(after.filter((m) => m.sender_role === 'SYSTEM')).toHaveLength(1);
+  });
+
+  it('first agent message auto-claims with the system bubble before the reply', async () => {
+    const uid = new Types.ObjectId().toString();
+    const agentId = new Types.ObjectId().toString();
+    const session = await supportChatService.start(uid, 'hello');
+
+    await supportChatService.sendMessage(agentId, true, { sessionId: session.id, text: 'On it!' });
+    const messages = await supportChatService.listMessages(session.id);
+    const roles = messages.map((m) => m.sender_role);
+    expect(roles).toEqual(['USER', 'SYSTEM', 'AGENT']);
+  });
+});

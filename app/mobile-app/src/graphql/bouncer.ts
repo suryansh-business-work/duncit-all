@@ -62,15 +62,3 @@ export const MobileRequestCallbackDocument = gql(`
     }
   }
 `);
-
-/** Submit live feedback for a pod — mWeb's SUBMIT_FEEDBACK. */
-export const MobileSubmitFeedbackDocument = gql(`
-  mutation MobileSubmitBouncerFeedback($input: SubmitBouncerFeedbackInput!) {
-    submitBouncerFeedback(input: $input) {
-      id
-      rating
-      category
-      created_at
-    }
-  }
-`);

@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface StackScreenProps {
@@ -44,7 +45,7 @@ export function StackScreen({ title, testID, children, right }: Readonly<StackSc
           </Text>
           {right}
         </XStack>
-        {children}
+        <KeyboardScreen>{children}</KeyboardScreen>
       </SafeAreaView>
     </YStack>
   );

@@ -28,11 +28,12 @@ export function useTickets() {
   return { tickets, isLoading, error, reload: () => setReloadKey((k) => k + 1) };
 }
 
-/** Opens a new support ticket. */
+/** Opens a new support ticket and returns its id (for the details redirect). */
 export async function createTicket(subject: string, body: string, category: string) {
-  await graphqlRequest(
+  const data = await graphqlRequest(
     CreateTicketDocument,
     { input: { subject, body_text: body, category: category as never } },
     { auth: true },
   );
+  return data.createTicket.id;
 }

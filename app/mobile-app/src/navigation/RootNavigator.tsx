@@ -32,7 +32,9 @@ import { SignupScreen } from '@/screens/SignupScreen';
 import { SupportScreen } from '@/screens/SupportScreen';
 import { SosScreen } from '@/screens/SosScreen';
 import { CallbackScreen } from '@/screens/CallbackScreen';
-import { FeedbackScreen } from '@/screens/FeedbackScreen';
+import { ChatWithUsScreen } from '@/screens/ChatWithUsScreen';
+import { AllSupportTicketsScreen } from '@/screens/AllSupportTicketsScreen';
+import { TicketDetailsScreen } from '@/screens/TicketDetailsScreen';
 import { SupportTicketsScreen } from '@/screens/SupportTicketsScreen';
 import { SurveyScreen } from '@/screens/SurveyScreen';
 import { VenueManageScreen } from '@/screens/VenueManageScreen';
@@ -81,7 +83,9 @@ export function RootNavigator() {
           <Stack.Screen name="Support" component={SupportScreen} />
           <Stack.Screen name="Sos" component={SosScreen} />
           <Stack.Screen name="Callback" component={CallbackScreen} />
-          <Stack.Screen name="Feedback" component={FeedbackScreen} />
+          <Stack.Screen name="ChatWithUs" component={ChatWithUsScreen} />
+          <Stack.Screen name="AllSupportTickets" component={AllSupportTicketsScreen} />
+          <Stack.Screen name="TicketDetails" component={TicketDetailsScreen} />
           <Stack.Screen name="PodIdeas" component={PodIdeasScreen} />
           <Stack.Screen name="PreviousPods" component={PreviousPodsScreen} />
           <Stack.Screen name="Faqs" component={FaqsScreen} />

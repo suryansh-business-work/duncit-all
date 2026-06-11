@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { usePolicy } from '@/hooks/usePolicies';
+import { usePolicyPdf } from '@/hooks/usePolicyPdf';
 import { AppBackground } from '@/components/AppBackground';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
@@ -17,6 +18,7 @@ export function PolicyScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'Policy'>>();
   const slug = route.params?.slug ?? '';
   const { data, isLoading, error } = usePolicy(slug);
+  const { download, busy } = usePolicyPdf();
   const { color: ink } = useThemeColors();
   const policy = data?.policyBySlug;
 
@@ -42,6 +44,23 @@ export function PolicyScreen() {
           <Text numberOfLines={1} flex={1} fontSize={18} fontWeight="800" color="$color">
             {policy?.title ?? 'Policy'}
           </Text>
+          <XStack
+            testID="policy-pdf"
+            role="button"
+            aria-label="Download PDF"
+            onPress={() => {
+              if (!busy) download(slug).catch(() => undefined);
+            }}
+            width={40}
+            height={40}
+            alignItems="center"
+            justifyContent="center"
+            borderRadius={20}
+            opacity={busy ? 0.5 : 1}
+            pressStyle={{ opacity: 0.7 }}
+          >
+            <MaterialIcons name="picture-as-pdf" size={22} color={ink} />
+          </XStack>
         </XStack>
 
         {isLoading ? (

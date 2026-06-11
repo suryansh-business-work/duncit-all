@@ -12,6 +12,7 @@ import { TamaguiProvider, Theme, YStack } from 'tamagui';
 import { ErrorBoundary } from '@/components/ErrorBoundary';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { RootNavigator } from '@/navigation/RootNavigator';
+import { SplashOverlay } from '@/components/SplashOverlay';
 import { linking } from '@/navigation/linking';
 import { loadWebFonts } from '@/services/web-fonts';
 import { useAuthStore } from '@/stores/auth.store';
@@ -70,6 +71,7 @@ export default function App() {
                   <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
                   <RootNavigator />
                 </NavigationContainer>
+                <SplashOverlay />
               </YStack>
             </ErrorBoundary>
           </SafeAreaProvider>

@@ -36,6 +36,8 @@ export const policyTypeDefs = /* GraphQL */ `
     policy(policy_doc_id: ID!): Policy
     policyBySlug(slug: String!): Policy
     publicPolicies: [Policy!]!
+    "The policy rendered as a downloadable PDF (base64)."
+    policyPdfBase64(slug: String!): String!
   }
 
   extend type Mutation {

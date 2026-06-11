@@ -1,4 +1,6 @@
+import { GraphQLError } from 'graphql';
 import { policyService } from './policy.service';
+import { generatePolicyPdf } from '@services/policy/policy.pdf';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
@@ -14,6 +16,19 @@ export const policyResolvers = {
       policyService.getById(args.policy_doc_id),
     policyBySlug: (_p: unknown, args: { slug: string }) => policyService.getBySlug(args.slug),
     publicPolicies: () => policyService.publicList(),
+    policyPdfBase64: async (_p: unknown, args: { slug: string }) => {
+      const policy: any = await policyService.getBySlug(args.slug);
+      if (!policy) {
+        throw new GraphQLError('Policy not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      const pdf = await generatePolicyPdf({
+        brand: 'Duncit',
+        title: policy.title,
+        content_html: policy.content || '',
+        updated_at: policy.updated_at,
+      });
+      return pdf.toString('base64');
+    },
   },
   Mutation: {
     createPolicy: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

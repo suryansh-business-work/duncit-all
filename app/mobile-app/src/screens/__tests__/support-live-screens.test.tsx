@@ -3,7 +3,6 @@ import { Linking } from 'react-native';
 
 import { SosScreen } from '@/screens/SosScreen';
 import { CallbackScreen } from '@/screens/CallbackScreen';
-import { FeedbackScreen } from '@/screens/FeedbackScreen';
 import { useSupportPods } from '@/hooks/useSupportPods';
 import { useBouncer } from '@/hooks/useBouncer';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -29,7 +28,6 @@ const pod = {
 const getActiveSos = jest.fn();
 const raiseSos = jest.fn();
 const requestCallback = jest.fn();
-const submitFeedback = jest.fn();
 const loadSupportTarget = jest.fn();
 
 beforeEach(() => {
@@ -43,7 +41,6 @@ beforeEach(() => {
   getActiveSos.mockResolvedValue(null);
   raiseSos.mockResolvedValue(undefined);
   requestCallback.mockResolvedValue(undefined);
-  submitFeedback.mockResolvedValue(undefined);
   loadSupportTarget.mockResolvedValue({
     bouncerSupportTarget: { phone: '+91123', available: true },
   });
@@ -52,7 +49,6 @@ beforeEach(() => {
     getActiveSos,
     raiseSos,
     requestCallback,
-    submitFeedback,
   });
 });
 
@@ -110,7 +106,8 @@ describe('CallbackScreen', () => {
 
     fireEvent.changeText(screen.getByTestId('callback-reason'), 'late host');
     fireEvent.press(screen.getByTestId('callback-request'));
-    await waitFor(() => expect(requestCallback).toHaveBeenCalledWith('p1', 'late host'));
+    // Callback requests are no longer tied to a pod.
+    await waitFor(() => expect(requestCallback).toHaveBeenCalledWith(null, 'late host'));
     await waitFor(() => expect(screen.getByTestId('callback-success')).toBeOnTheScreen());
   });
 
@@ -140,46 +137,5 @@ describe('CallbackScreen', () => {
     await waitFor(() => expect(loadSupportTarget).toHaveBeenCalled());
     fireEvent.press(screen.getByTestId('callback-call-now'));
     expect(openURL).not.toHaveBeenCalled();
-  });
-});
-
-describe('FeedbackScreen', () => {
-  it('requires a rating then submits', async () => {
-    renderWithProviders(<FeedbackScreen />);
-    fireEvent.press(screen.getByTestId('feedback-submit'));
-    await waitFor(() =>
-      expect(screen.getByTestId('feedback-error')).toHaveTextContent(/star rating/),
-    );
-
-    fireEvent.press(screen.getByTestId('rating-star-5'));
-    fireEvent.press(screen.getByTestId('feedback-cat-HOST'));
-    fireEvent.changeText(screen.getByTestId('feedback-message'), 'great');
-    fireEvent.press(screen.getByTestId('feedback-submit'));
-    await waitFor(() => expect(submitFeedback).toHaveBeenCalledWith('p1', 5, 'HOST', 'great'));
-    await waitFor(() => expect(screen.getByTestId('feedback-success')).toBeOnTheScreen());
-  });
-
-  it('surfaces a submit error', async () => {
-    submitFeedback.mockRejectedValueOnce(new Error('server busy'));
-    renderWithProviders(<FeedbackScreen />);
-    fireEvent.press(screen.getByTestId('rating-star-3'));
-    fireEvent.press(screen.getByTestId('feedback-submit'));
-    await waitFor(() =>
-      expect(screen.getByTestId('feedback-error')).toHaveTextContent(/server busy/),
-    );
-  });
-
-  it('asks to pick a pod when none is selected', async () => {
-    mockedPods.mockReturnValue({
-      options: [],
-      selected: null,
-      selectedId: '',
-      setSelectedId: jest.fn(),
-    });
-    renderWithProviders(<FeedbackScreen />);
-    fireEvent.press(screen.getByTestId('feedback-submit'));
-    await waitFor(() =>
-      expect(screen.getByTestId('feedback-error')).toHaveTextContent(/Pick a pod/),
-    );
   });
 });

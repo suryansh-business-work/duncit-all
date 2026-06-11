@@ -21,10 +21,12 @@ describe('SupportScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Sos');
     fireEvent.press(screen.getByTestId('support-callback'));
     expect(mockNavigate).toHaveBeenCalledWith('Callback');
-    fireEvent.press(screen.getByTestId('support-feedback'));
-    expect(mockNavigate).toHaveBeenCalledWith('Feedback');
+    fireEvent.press(screen.getByTestId('support-chat'));
+    expect(mockNavigate).toHaveBeenCalledWith('ChatWithUs');
     fireEvent.press(screen.getByTestId('support-tickets'));
     expect(mockNavigate).toHaveBeenCalledWith('SupportTickets');
+    fireEvent.press(screen.getByTestId('support-all'));
+    expect(mockNavigate).toHaveBeenCalledWith('AllSupportTickets');
     fireEvent.press(screen.getByTestId('support-faqs'));
     expect(mockNavigate).toHaveBeenCalledWith('Faqs');
     fireEvent.press(screen.getByTestId('support-policies'));

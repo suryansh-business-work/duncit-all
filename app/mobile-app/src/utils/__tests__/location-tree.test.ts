@@ -69,10 +69,10 @@ describe('locationMapQuery / locationMapEmbedUrl', () => {
     expect(locationMapQuery('', '', '', '')).toBe('');
   });
 
-  it('uses the keyed Embed API when a key is present', () => {
+  it('uses the keyless embed even when a key is present (Embed API not enabled)', () => {
     const url = locationMapEmbedUrl('key', 'Mumbai');
-    expect(url).toContain('maps/embed/v1/place');
-    expect(url).toContain('key=key');
+    expect(url).toContain('output=embed');
+    expect(url).not.toContain('maps/embed/v1/place');
     expect(url).toContain('q=Mumbai');
   });
 

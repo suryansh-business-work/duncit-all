@@ -6,7 +6,7 @@ import { createTicket } from '@/hooks/useSupport';
 const CATEGORIES = ['GENERAL', 'PAYMENT', 'BOOKING', 'SAFETY', 'TECHNICAL', 'OTHER'];
 
 /** Create-ticket form (subject · category · message). On success calls onCreated. */
-export function TicketForm({ onCreated }: Readonly<{ onCreated: () => void }>) {
+export function TicketForm({ onCreated }: Readonly<{ onCreated: (id: string) => void }>) {
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
   const [category, setCategory] = useState('GENERAL');
@@ -21,8 +21,8 @@ export function TicketForm({ onCreated }: Readonly<{ onCreated: () => void }>) {
     setSubmitting(true);
     setError('');
     try {
-      await createTicket(subject.trim(), message.trim(), category);
-      onCreated();
+      const id = await createTicket(subject.trim(), message.trim(), category);
+      onCreated(id);
     } catch {
       setError('Could not create the ticket. Please try again.');
     } finally {

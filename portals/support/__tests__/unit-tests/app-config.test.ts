@@ -19,9 +19,9 @@ describe('Duncit Support app config', () => {
     expect(appConfig.requiredRoles).toEqual(['SUPPORT_MANAGER']);
   });
 
-  it('exposes the six support sections including the dashboard root', () => {
+  it('exposes the five support sections including the dashboard root', () => {
     const targets = appConfig.nav.map((n) => n.to);
-    expect(targets).toEqual(['/', '/sos', '/callbacks', '/feedback', '/tickets', '/live-chat']);
+    expect(targets).toEqual(['/', '/sos', '/callbacks', '/tickets', '/live-chat']);
     expect(appConfig.nav.find((n) => n.to === '/')?.label).toBe('Dashboard');
   });
 

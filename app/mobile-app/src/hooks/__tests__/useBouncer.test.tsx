@@ -5,11 +5,10 @@ import {
   MobileActiveSosDocument,
   MobileRaiseSosDocument,
   MobileRequestCallbackDocument,
-  MobileSubmitFeedbackDocument,
   MobileSupportCallTargetDocument,
 } from '@/graphql/bouncer';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useBouncer, type FeedbackCategory } from '@/hooks/useBouncer';
+import { useBouncer } from '@/hooks/useBouncer';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
@@ -84,20 +83,14 @@ describe('useBouncer', () => {
     );
   });
 
-  it('requests a callback and submits feedback', async () => {
+  it('requests a callback', async () => {
     const { result } = renderHook(() => useBouncer());
     await act(async () => {
       await result.current.requestCallback('p1', 'noise');
-      await result.current.submitFeedback('p1', 4, 'SAFETY' as FeedbackCategory, '');
     });
     expect(mockRequest).toHaveBeenCalledWith(
       MobileRequestCallbackDocument,
       { input: { pod_id: 'p1', reason: 'noise' } },
-      { auth: true },
-    );
-    expect(mockRequest).toHaveBeenCalledWith(
-      MobileSubmitFeedbackDocument,
-      { input: { pod_id: 'p1', rating: 4, category: 'SAFETY', message: null } },
       { auth: true },
     );
   });

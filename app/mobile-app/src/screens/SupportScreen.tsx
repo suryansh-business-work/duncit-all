@@ -10,7 +10,14 @@ import type { RootStackParamList } from '@/navigation/types';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
-type CardRoute = 'SupportTickets' | 'Faqs' | 'Policies' | 'Sos' | 'Callback' | 'Feedback';
+type CardRoute =
+  | 'SupportTickets'
+  | 'Faqs'
+  | 'Policies'
+  | 'Sos'
+  | 'Callback'
+  | 'ChatWithUs'
+  | 'AllSupportTickets';
 
 interface Card {
   id: string;
@@ -31,18 +38,25 @@ const CARDS: Card[] = [
     route: 'Callback',
   },
   {
-    id: 'feedback',
-    title: 'Live Feedback',
-    desc: 'Rate the pod while it is on',
-    icon: 'rate-review',
-    route: 'Feedback',
+    id: 'chat',
+    title: 'Chat with Us',
+    desc: 'Real-time chat with our support team',
+    icon: 'chat',
+    route: 'ChatWithUs',
   },
   {
     id: 'tickets',
-    title: 'Support Tickets',
+    title: 'Create Support Tickets',
     desc: 'Raise and track your tickets',
     icon: 'confirmation-number',
     route: 'SupportTickets',
+  },
+  {
+    id: 'all',
+    title: 'All Support Tickets',
+    desc: 'Every request you have raised, in one list',
+    icon: 'history',
+    route: 'AllSupportTickets',
   },
   {
     id: 'faqs',

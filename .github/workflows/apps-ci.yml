@@ -1,0 +1,117 @@
+name: Apps CI
+
+# mWeb + the Mobile App. Every job runs the same ordered pipeline:
+#   Test → Typecheck → Lint → Build
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'app/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/apps-ci.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'app/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/apps-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: apps-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  mweb:
+    name: mWeb (test → typecheck → lint → build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test
+        working-directory: app/mweb
+        run: pnpm exec vitest run
+
+      - name: Typecheck
+        working-directory: app/mweb
+        run: pnpm exec tsc -b --noEmit
+
+      # Runs the package's lint script when one is defined (no-op otherwise),
+      # so wiring ESLint later needs no workflow change.
+      - name: Lint
+        working-directory: app/mweb
+        run: pnpm run --if-present lint
+
+      - name: Build
+        working-directory: app/mweb
+        run: pnpm run build
+
+  mobile:
+    # The Expo app is a standalone npm project (NOT a pnpm workspace member).
+    name: Mobile App (test → typecheck → lint → build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: app/mobile-app/package-lock.json
+
+      # Standalone npm install; the `@duncit/auth-tokens` file: dep resolves to
+      # ../packages/auth-tokens in the checkout (plain JS/JSON, no build step).
+      - name: Install dependencies
+        working-directory: app/mobile-app
+        run: npm ci
+
+      # src/generated/** is gitignored — regenerate the typed GraphQL operations
+      # from the server schemas (tracked in the checkout) before test/typecheck.
+      - name: Generate GraphQL types
+        working-directory: app/mobile-app
+        run: npm run codegen
+
+      - name: Test (jest, 100% coverage gate)
+        working-directory: app/mobile-app
+        run: npm run test:coverage
+
+      - name: Typecheck
+        working-directory: app/mobile-app
+        run: npm run typecheck
+
+      - name: Lint (eslint --max-warnings 0)
+        working-directory: app/mobile-app
+        run: npm run lint
+
+      # The web export is the app's CI-buildable artifact (native binaries are
+      # built by EAS / the Docker android pipeline, not per-push CI).
+      - name: Build (expo web export)
+        working-directory: app/mobile-app
+        run: npx expo export --platform web --output-dir dist
+        env:
+          CI: '1'

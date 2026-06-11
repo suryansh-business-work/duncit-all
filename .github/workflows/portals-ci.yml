@@ -1,0 +1,100 @@
+name: Portals CI
+
+# All 15 consoles, one matrix job each, with the same ordered pipeline:
+#   Test → Typecheck → Lint → Build
+# (Replaces the old "Form Tests" workflow, which only ran vitest + a separate
+# typecheck job for the same set.)
+on:
+  push:
+    branches: [main, master, develop]
+    paths:
+      - 'portals/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/portals-ci.yml'
+  pull_request:
+    branches: [main, master, develop]
+    paths:
+      - 'portals/**'
+      - 'packages/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.github/workflows/portals-ci.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: portals-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  portal:
+    name: ${{ matrix.name }} (test → typecheck → lint → build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - { name: admin, dir: portals/admin }
+          - { name: ads-portal, dir: portals/ads-portal }
+          - { name: ai, dir: portals/ai }
+          - { name: crm, dir: portals/crm }
+          - { name: employee, dir: portals/employee }
+          - { name: finance, dir: portals/finance }
+          - { name: hr, dir: portals/hr }
+          - { name: legal, dir: portals/legal }
+          - { name: marketing, dir: portals/marketing }
+          - { name: onboarding, dir: portals/onboarding }
+          - { name: products, dir: portals/products }
+          - { name: support, dir: portals/support }
+          - { name: tech, dir: portals/tech }
+          - { name: website-app, dir: portals/website-app }
+          - { name: partners-app, dir: portals/partners-app }
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          run_install: false
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Test (vitest schema/form/unit)
+        working-directory: ${{ matrix.dir }}
+        run: pnpm exec vitest run --reporter=default --reporter=junit --outputFile=${{ github.workspace }}/test-results/${{ matrix.name }}-junit.xml
+
+      - name: Typecheck
+        working-directory: ${{ matrix.dir }}
+        run: pnpm exec tsc -b --noEmit
+
+      # Runs the portal's lint script when one is defined (no-op otherwise),
+      # so wiring ESLint later needs no workflow change.
+      - name: Lint
+        working-directory: ${{ matrix.dir }}
+        run: pnpm run --if-present lint
+
+      - name: Build
+        working-directory: ${{ matrix.dir }}
+        run: pnpm run build
+
+      - name: Upload JUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: portal-tests-${{ matrix.name }}
+          path: test-results/${{ matrix.name }}-junit.xml
+          if-no-files-found: ignore

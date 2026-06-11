@@ -1,0 +1,28 @@
+# What EAS uploads for mobile builds (eas build runs from app/mobile-app).
+# Two jobs:
+#
+# 1. Hide the pnpm workspace markers. The EAS builder resolves the package
+#    manager from lockfiles at the workspace root; this repo's root only has
+#    pnpm-lock.yaml (the mobile app is a standalone npm project, NOT a pnpm
+#    member), which older builder logic treats as "no lockfile" and DEFAULTS TO
+#    YARN — crashing on the app's `"packageManager": "npm@10.9.2"` field.
+#    Without these files in the upload, every builder version sees the app dir's
+#    package-lock.json and installs with npm.
+/package.json
+/pnpm-lock.yaml
+/pnpm-workspace.yaml
+
+# 2. Keep the upload small: the mobile build only needs app/mobile-app itself,
+#    the file:-dep packages, and the server GraphQL schemas for codegen
+#    (eas-build-post-install runs `npm run codegen` against
+#    ../../server/src/modules/**/*.schema.ts).
+/portals/
+/website/
+/app/mweb/
+/deploy/
+/.github/
+/docs/
+/build/
+# (server/ stays in — codegen reads server/src/modules/**/*.schema.ts and the
+# whole server source is only a few MB; EAS's ignore impl doesn't support
+# gitignore-style re-include negations reliably.)

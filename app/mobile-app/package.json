@@ -30,6 +30,7 @@
     "build:ios": "eas build --platform ios --profile production",
     "build:local:apk": "node scripts/build-local-android.js",
     "build:local:aab": "node scripts/build-local-android.js --aab",
+    "build:local:ios": "node scripts/build-local-ios.js",
     "upload:slack": "node scripts/upload-slack.js",
     "ci": "npm run test:coverage && npm run typecheck && npm run lint"
   },

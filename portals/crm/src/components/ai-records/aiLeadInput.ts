@@ -2,7 +2,10 @@ import type { AiRow } from './AiRecordsTable';
 
 type Entity = 'VENUE_LEAD' | 'HOST_LEAD';
 
-const str = (v: unknown) => (v == null ? '' : String(v));
+const str = (v: unknown) => {
+  if (v == null) return '';
+  return typeof v === 'object' ? JSON.stringify(v) : String(v);
+};
 
 /** Parsed AI record → editable grid row (core fields surfaced for editing). */
 export function recordToRow(rec: Record<string, any>, entity: Entity, index: number): AiRow {

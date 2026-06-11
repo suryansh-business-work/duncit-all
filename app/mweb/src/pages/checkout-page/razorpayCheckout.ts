@@ -76,7 +76,7 @@ export async function openRazorpayCheckout(
         razorpay_signature: res.razorpay_signature,
       }),
     modal: { ondismiss: () => handlers.onDismiss() },
-  } as Record<string, unknown>);
+  });
   rzp.on('payment.failed', () => handlers.onDismiss());
   rzp.open();
 }

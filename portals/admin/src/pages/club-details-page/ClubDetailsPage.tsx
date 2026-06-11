@@ -2,7 +2,6 @@ import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
-  Box,
   Button,
   Card,
   CardContent,
@@ -114,19 +113,22 @@ export default function ClubDetailsPage() {
               </Typography>
             ) : (
               <List dense>
-                {pods.map((p: any) => (
-                  <ListItemButton key={p.id} onClick={() => navigate(`/pods/${p.id}`)}>
-                    <ListItemText
-                      primary={p.pod_title}
-                      secondary={`${fmtDate(p.pod_date_time)} · ${(p.pod_type ?? '').includes('FREE') ? 'Free' : `₹${p.pod_amount}`}`}
-                    />
-                    <Chip
-                      size="small"
-                      label={p.is_active ? 'Active' : 'Inactive'}
-                      color={p.is_active ? 'success' : 'default'}
-                    />
-                  </ListItemButton>
-                ))}
+                {pods.map((p: any) => {
+                  const price = (p.pod_type ?? '').includes('FREE') ? 'Free' : `₹${p.pod_amount}`;
+                  return (
+                    <ListItemButton key={p.id} onClick={() => navigate(`/pods/${p.id}`)}>
+                      <ListItemText
+                        primary={p.pod_title}
+                        secondary={`${fmtDate(p.pod_date_time)} · ${price}`}
+                      />
+                      <Chip
+                        size="small"
+                        label={p.is_active ? 'Active' : 'Inactive'}
+                        color={p.is_active ? 'success' : 'default'}
+                      />
+                    </ListItemButton>
+                  );
+                })}
               </List>
             )}
           </CardContent>

@@ -51,49 +51,54 @@ const sameOrigin = (a: string, origin: string) => {
  * (resolving one level of sitemap-index nesting), then falls back to crawling
  * the homepage's internal links. Always includes the homepage itself.
  */
+/** Add same-origin URLs from a nested child sitemap (one index level), up to `limit`. */
+async function addChildSitemapLocs(loc: string, origin: string, limit: number, found: Set<string>): Promise<void> {
+  const child = await fetchText(loc).catch(() => null);
+  if (!child || child.status >= 400) return;
+  for (const u of locMatches(child.body)) {
+    if (found.size >= limit) break;
+    if (sameOrigin(u, origin)) found.add(u);
+  }
+}
+
+/** Populate `found` from `/sitemap.xml` (resolving one level of index nesting). */
+async function collectFromSitemap(origin: string, limit: number, found: Set<string>): Promise<void> {
+  const sm = await fetchText(`${origin}/sitemap.xml`).catch(() => null);
+  if (!sm || sm.status >= 400) return;
+  for (const loc of locMatches(sm.body)) {
+    if (found.size >= limit) break;
+    if (/\.xml(\?|$)/i.test(loc)) {
+      await addChildSitemapLocs(loc, origin, limit, found);
+    } else if (sameOrigin(loc, origin)) {
+      found.add(loc);
+    }
+  }
+}
+
+/** Crawl the homepage's internal links into `found` (same-origin only), up to `limit`. */
+async function collectFromHomepage(site: string, origin: string, limit: number, found: Set<string>): Promise<void> {
+  const home = await fetchText(site).catch(() => null);
+  if (!home || home.status >= 400) return;
+  for (const m of home.body.matchAll(/<a\b[^>]*href=["']([^"'#]+)["']/gi)) {
+    if (found.size >= limit) break;
+    try {
+      const abs = new URL(m[1], site).toString();
+      if (sameOrigin(abs, origin)) found.add(abs.split('#')[0]);
+    } catch {
+      /* skip malformed href */
+    }
+  }
+}
+
 export async function discoverUrls(site: string, limit: number): Promise<string[]> {
   const origin = new URL(site).origin;
   const found = new Set<string>();
 
-  try {
-    const sm = await fetchText(`${origin}/sitemap.xml`);
-    if (sm.status < 400) {
-      for (const loc of locMatches(sm.body)) {
-        if (found.size >= limit) break;
-        if (/\.xml(\?|$)/i.test(loc)) {
-          const child = await fetchText(loc).catch(() => null);
-          if (!child || child.status >= 400) continue;
-          for (const u of locMatches(child.body)) {
-            if (found.size >= limit) break;
-            if (sameOrigin(u, origin)) found.add(u);
-          }
-        } else if (sameOrigin(loc, origin)) {
-          found.add(loc);
-        }
-      }
-    }
-  } catch {
-    // sitemap missing / unreachable — fall through to link crawl
-  }
+  await collectFromSitemap(origin, limit, found);
 
   if (found.size === 0) {
     found.add(site);
-    try {
-      const home = await fetchText(site);
-      if (home.status < 400) {
-        for (const m of home.body.matchAll(/<a\b[^>]*href=["']([^"'#]+)["']/gi)) {
-          if (found.size >= limit) break;
-          try {
-            const abs = new URL(m[1], site).toString();
-            if (sameOrigin(abs, origin)) found.add(abs.split('#')[0]);
-          } catch {
-            /* skip malformed href */
-          }
-        }
-      }
-    } catch {
-      /* homepage unreachable — return just the site root */
-    }
+    await collectFromHomepage(site, origin, limit, found);
   }
 
   return [...found].slice(0, limit);
@@ -101,7 +106,7 @@ export async function discoverUrls(site: string, limit: number): Promise<string[
 
 /** Strip an HTML document down to a page title + collapsed readable text. */
 export function extractContent(html: string): { title: string | null; text: string } {
-  const titleMatch = html.match(/<title[^>]*>([\s\S]*?)<\/title>/i);
+  const titleMatch = /<title[^>]*>([\s\S]*?)<\/title>/i.exec(html);
   const title = titleMatch ? decodeEntities(titleMatch[1].trim()).slice(0, 300) : null;
   const text = decodeEntities(
     html

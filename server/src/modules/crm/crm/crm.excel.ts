@@ -316,6 +316,91 @@ function applyMapping(row: Record<string, any>, mapping: ImportColumnMapping[]):
   return out;
 }
 
+/** Validate one mapped row and create the matching lead (throws on bad/duplicate rows). */
+async function insertLead(entity: CrmExcelEntity, row: Record<string, any>): Promise<void> {
+  const contact = rowToContact(row);
+  const contacts = contact ? [contact] : [];
+  const model = entity === 'VENUE_LEAD' ? VenueLeadModel : HostLeadModel;
+  // No duplicate entries — each lead is keyed by a unique contact phone.
+  if (contact?.mobile_number && (await phoneExists(model, contact.mobile_number))) {
+    throw new Error(
+      `A lead with phone "${contact.mobile_number}" already exists — skipped to avoid a duplicate. Remove this row or use a different phone number.`
+    );
+  }
+  if (entity === 'VENUE_LEAD') {
+    const name = String(row.venue_name ?? '').trim();
+    const city = String(row.city ?? '').trim();
+    const address = String(row.full_address ?? '').trim();
+    if (!name || !city || !address) throw new Error('venue_name, city and full_address are required');
+    await VenueLeadModel.create({
+      super_category_id: String(row.super_category_id ?? '').trim() || null,
+      venue_name: name,
+      venue_types: splitCsv(row.venue_types),
+      venue_description: String(row.venue_description ?? '').trim(),
+      capacity_min: toNumber(row.capacity_min),
+      capacity_max: toNumber(row.capacity_max),
+      space_type: String(row.space_type ?? '').trim(),
+      city,
+      area: String(row.area ?? '').trim(),
+      full_address: address,
+      landmark: String(row.landmark ?? '').trim(),
+      map_link: String(row.map_link ?? '').trim(),
+      contacts,
+      event_suitability: splitCsv(row.event_suitability),
+      available_days: splitCsv(row.available_days),
+      available_time_slots: String(row.available_time_slots ?? '').trim(),
+      booking_notice: String(row.booking_notice ?? '').trim(),
+      pricing_models: splitCsv(row.pricing_models),
+      expected_charges: toNumber(row.expected_charges),
+      security_deposit: toNumber(row.security_deposit),
+      gst_applicable: toBool(row.gst_applicable),
+      invoice_available: toBool(row.invoice_available),
+      amenities: splitCsv(row.amenities),
+      website: String(row.website ?? '').trim(),
+      services_offered: parseServices(row.services_offered_json),
+      lead_source: String(row.lead_source ?? '').trim(),
+      assigned_to: String(row.assigned_to ?? '').trim(),
+      lead_status: String(row.lead_status ?? 'New').trim() || 'New',
+      priority: String(row.priority ?? 'Medium').trim() || 'Medium',
+      remarks: String(row.remarks ?? '').trim(),
+    });
+    return;
+  }
+  const name = String(row.host_name ?? '').trim();
+  if (!name) throw new Error('host_name is required');
+  await HostLeadModel.create({
+    super_category_id: String(row.super_category_id ?? '').trim() || null,
+    host_name: name,
+    host_type: String(row.host_type ?? '').trim(),
+    organization_name: String(row.organization_name ?? '').trim(),
+    city: String(row.city ?? '').trim(),
+    area: String(row.area ?? '').trim(),
+    contacts,
+    interests: splitCsv(row.interests),
+    expected_audience_size: String(row.expected_audience_size ?? '').trim(),
+    frequency: String(row.frequency ?? '').trim(),
+    budget_range: String(row.budget_range ?? '').trim(),
+    revenue_models: splitCsv(row.revenue_models),
+    need_venue: toBool(row.need_venue),
+    need_vendor: toBool(row.need_vendor),
+    preferred_day: String(row.preferred_day ?? '').trim(),
+    preferred_time_slot: String(row.preferred_time_slot ?? '').trim(),
+    instagram_link: String(row.instagram_link ?? '').trim(),
+    community_link: String(row.community_link ?? '').trim(),
+    community_size: toNumber(row.community_size),
+    previous_events_hosted: toBool(row.previous_events_hosted),
+    past_attendees: toNumber(row.past_attendees),
+    host_intent_scores: splitCsv(row.host_intent_scores),
+    website: String(row.website ?? '').trim(),
+    services_offered: parseServices(row.services_offered_json),
+    lead_source: String(row.lead_source ?? '').trim(),
+    assigned_to: String(row.assigned_to ?? '').trim(),
+    lead_status: String(row.lead_status ?? 'New').trim() || 'New',
+    priority: String(row.priority ?? 'Medium').trim() || 'Medium',
+    notes: String(row.notes ?? '').trim(),
+  });
+}
+
 export async function importLeads(
   entity: CrmExcelEntity,
   base64: string,
@@ -337,89 +422,8 @@ export async function importLeads(
 
   const result: ImportResult = { inserted: 0, failed: 0, errors: [] };
   for (let idx = 0; idx < rows.length; idx += 1) {
-    const row = rows[idx];
-    const contact = rowToContact(row);
-    const contacts = contact ? [contact] : [];
-    const model = entity === 'VENUE_LEAD' ? VenueLeadModel : HostLeadModel;
     try {
-      // No duplicate entries — each lead is keyed by a unique contact phone.
-      if (contact?.mobile_number && (await phoneExists(model, contact.mobile_number))) {
-        throw new Error(
-          `A lead with phone "${contact.mobile_number}" already exists — skipped to avoid a duplicate. Remove this row or use a different phone number.`
-        );
-      }
-      if (entity === 'VENUE_LEAD') {
-        const name = String(row.venue_name ?? '').trim();
-        const city = String(row.city ?? '').trim();
-        const address = String(row.full_address ?? '').trim();
-        if (!name || !city || !address) throw new Error('venue_name, city and full_address are required');
-        await VenueLeadModel.create({
-          super_category_id: String(row.super_category_id ?? '').trim() || null,
-          venue_name: name,
-          venue_types: splitCsv(row.venue_types),
-          venue_description: String(row.venue_description ?? '').trim(),
-          capacity_min: toNumber(row.capacity_min),
-          capacity_max: toNumber(row.capacity_max),
-          space_type: String(row.space_type ?? '').trim(),
-          city,
-          area: String(row.area ?? '').trim(),
-          full_address: address,
-          landmark: String(row.landmark ?? '').trim(),
-          map_link: String(row.map_link ?? '').trim(),
-          contacts,
-          event_suitability: splitCsv(row.event_suitability),
-          available_days: splitCsv(row.available_days),
-          available_time_slots: String(row.available_time_slots ?? '').trim(),
-          booking_notice: String(row.booking_notice ?? '').trim(),
-          pricing_models: splitCsv(row.pricing_models),
-          expected_charges: toNumber(row.expected_charges),
-          security_deposit: toNumber(row.security_deposit),
-          gst_applicable: toBool(row.gst_applicable),
-          invoice_available: toBool(row.invoice_available),
-          amenities: splitCsv(row.amenities),
-          website: String(row.website ?? '').trim(),
-          services_offered: parseServices(row.services_offered_json),
-          lead_source: String(row.lead_source ?? '').trim(),
-          assigned_to: String(row.assigned_to ?? '').trim(),
-          lead_status: String(row.lead_status ?? 'New').trim() || 'New',
-          priority: String(row.priority ?? 'Medium').trim() || 'Medium',
-          remarks: String(row.remarks ?? '').trim(),
-        });
-      } else {
-        const name = String(row.host_name ?? '').trim();
-        if (!name) throw new Error('host_name is required');
-        await HostLeadModel.create({
-          super_category_id: String(row.super_category_id ?? '').trim() || null,
-          host_name: name,
-          host_type: String(row.host_type ?? '').trim(),
-          organization_name: String(row.organization_name ?? '').trim(),
-          city: String(row.city ?? '').trim(),
-          area: String(row.area ?? '').trim(),
-          contacts,
-          interests: splitCsv(row.interests),
-          expected_audience_size: String(row.expected_audience_size ?? '').trim(),
-          frequency: String(row.frequency ?? '').trim(),
-          budget_range: String(row.budget_range ?? '').trim(),
-          revenue_models: splitCsv(row.revenue_models),
-          need_venue: toBool(row.need_venue),
-          need_vendor: toBool(row.need_vendor),
-          preferred_day: String(row.preferred_day ?? '').trim(),
-          preferred_time_slot: String(row.preferred_time_slot ?? '').trim(),
-          instagram_link: String(row.instagram_link ?? '').trim(),
-          community_link: String(row.community_link ?? '').trim(),
-          community_size: toNumber(row.community_size),
-          previous_events_hosted: toBool(row.previous_events_hosted),
-          past_attendees: toNumber(row.past_attendees),
-          host_intent_scores: splitCsv(row.host_intent_scores),
-          website: String(row.website ?? '').trim(),
-          services_offered: parseServices(row.services_offered_json),
-          lead_source: String(row.lead_source ?? '').trim(),
-          assigned_to: String(row.assigned_to ?? '').trim(),
-          lead_status: String(row.lead_status ?? 'New').trim() || 'New',
-          priority: String(row.priority ?? 'Medium').trim() || 'Medium',
-          notes: String(row.notes ?? '').trim(),
-        });
-      }
+      await insertLead(entity, rows[idx]);
       result.inserted += 1;
     } catch (err: any) {
       result.failed += 1;

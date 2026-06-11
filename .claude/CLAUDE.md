@@ -115,7 +115,11 @@
 - Batch `Array#push`: `a.push(x, y)` instead of consecutive `a.push(x); a.push(y);`. (S7778)
 - Use a hoisted `Set` + `.has()` instead of `array.includes()` for membership lookups on constant lists. (S7776)
 - Do not stringify objects that fall back to `[object Object]` — stringify a field or `JSON.stringify`. (S6551)
-- `arr.sort()` mutates: use `arr.toSorted()` when you only need a sorted copy in an expression. (S4043)
+- `arr.sort()` mutates: use `arr.toSorted()` when you only need a sorted copy in an expression. A `sort` used purely for in-place mutation inside an arrow must be a statement body (`(l) => { l.sort(); }`), not an expression body. (S4043)
+- For a single (non-global) match use `re.exec(str)`, not `str.match(re)`. (S6594)
+- Prefer `String#codePointAt()` over `charCodeAt()` (handle the `number | undefined` result, e.g. `?? 0`). Only swap when full code points are intended (binary `atob` bytes are 0–255, so it's safe). (S7758)
+- Don't spread a useless empty object: `{ ...(obj || {}) }` → `{ ...obj }` (spreading `null`/`undefined`/primitives in an object literal is already a no-op). (S7744)
+- In ESM modules / `.mjs` scripts, prefer top-level `await` over a `main().then().catch().finally()` chain — wrap in `try/catch/finally` to keep the same error handling. (S7785)
 
 26e. Types & fire-and-forget —
 
@@ -127,3 +131,11 @@
 26f. Security (NEVER hard-code) —
 
 - No hard-coded passwords / secrets / credentials in source — read them from environment variables / config (`process.env`). This includes test credentials. (S2068)
+
+26g. Refactoring to cut Cognitive Complexity (S3776) — keep behavior AND coverage identical —
+
+- Prefer extracting a cohesive JSX block into a __hoisted, module-scope sub-component__ (e.g. a card/button/list) or a long branch into a named helper with early-return guards. Never define the component inside the parent (S6478). Mark every extracted prop type `Readonly<…>` (S6759).
+- A deeply-nested ternary chain (`a ? : b ? : c ? : d`) costs more than the same logic as a sub-component using `if`/early-returns — pull the leaf branches out, or move a single inline `?:` into a top-level `const` so it sits at nesting 0.
+- For a flagged value used in a JSX prop (e.g. `onDownloadTicket={podId ? … : undefined}`), hoist it to a `const` above the `return` — that drops its nesting increment without changing behavior.
+- DO NOT duplicate a shared conditional value (like `const ink = mine ? '$onPrimary' : '$color'`) into multiple conditionally-rendered children: in a 100%-coverage package (duncit-mobile-app, threshold 100/100/100/100) that creates a new branch that only executes in the child's render path, so a test that exercises the value on only one side leaves it uncovered. Compute it __once in the parent__ and pass it as a prop (extract the repeated union into a `type` alias, S4323).
+- After any mobile-app refactor run `npm run typecheck`, `npm run lint` (zero-warning gate, `lint:fix` auto-formats prettier) AND `npm run test:coverage` — a green typecheck is not enough; the branch threshold catches coverage regressions from extracted components.

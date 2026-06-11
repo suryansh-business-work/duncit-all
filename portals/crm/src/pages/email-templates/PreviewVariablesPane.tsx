@@ -37,6 +37,16 @@ interface Props {
   onRemoveVariable: (slug: string) => void;
 }
 
+/** Human-readable warning for placeholders that aren't valid variables for the target. */
+function foreignDetectedMessage(slugs: string[], target: EmailTemplate['target'], targetNoun: string): string {
+  const count = slugs.length;
+  const noun = count === 1 ? 'placeholder' : 'placeholders';
+  const verb = count === 1 ? 'is' : 'are';
+  const reason =
+    target === 'STATIC' ? 'expected in a static template' : `an available ${targetNoun} variable`;
+  return `${count} ${noun} (${slugs.join(', ')}) ${verb} not ${reason} — they won't be filled from the lead.`;
+}
+
 export default function PreviewVariablesPane(p: Readonly<Props>) {
   const { draft, setDraft, tab, setTab, previewHtml, previewErrors, detected, onImportDetected, onAddVariable, onRemoveVariable } = p;
   const [fullscreen, setFullscreen] = useState(false);
@@ -92,7 +102,7 @@ export default function PreviewVariablesPane(p: Readonly<Props>) {
               <VariableChips title="" items={detected.map((slug) => ({ slug }))} declared={declared} onToggle={toggle} knownSlugs={knownSlugs} emptyHint="No {{ var }} placeholders found." />
               {foreignDetected.length > 0 && (
                 <Alert severity="warning" sx={{ py: 0 }}>
-                  {foreignDetected.length} placeholder{foreignDetected.length === 1 ? '' : 's'} ({foreignDetected.join(', ')}) {foreignDetected.length === 1 ? 'is' : 'are'} not {draft.target === 'STATIC' ? 'expected in a static template' : `an available ${targetNoun} variable`} — they won't be filled from the lead.
+                  {foreignDetectedMessage(foreignDetected, draft.target, targetNoun)}
                 </Alert>
               )}
             </Stack>

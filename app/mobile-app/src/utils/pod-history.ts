@@ -76,24 +76,24 @@ export function buildTimeline(item: PodMembership): TimelineEvent[] {
     return events;
   }
 
-  events.push({
-    title: 'Backout requested',
-    date: item.backed_out_at,
-    detail: 'Backout request was recorded.',
-    state: 'done',
-    icon: 'backout',
-    tag: 'Completed',
-  });
-  events.push({
-    title: 'Refund criteria',
-    detail: refundPending
-      ? 'Waiting for refund criteria to be completed.'
-      : 'Refund criteria was checked for this backout.',
-    state: refundPending ? 'current' : 'done',
-    icon: 'wait',
-    tag: refundPending ? 'Waiting' : 'Checked',
-  });
   events.push(
+    {
+      title: 'Backout requested',
+      date: item.backed_out_at,
+      detail: 'Backout request was recorded.',
+      state: 'done',
+      icon: 'backout',
+      tag: 'Completed',
+    },
+    {
+      title: 'Refund criteria',
+      detail: refundPending
+        ? 'Waiting for refund criteria to be completed.'
+        : 'Refund criteria was checked for this backout.',
+      state: refundPending ? 'current' : 'done',
+      icon: 'wait',
+      tag: refundPending ? 'Waiting' : 'Checked',
+    },
     refundProcessed
       ? {
           title: 'Refund initiated',

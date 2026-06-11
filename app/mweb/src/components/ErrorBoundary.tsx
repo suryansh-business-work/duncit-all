@@ -27,7 +27,7 @@ export default class ErrorBoundary extends Component<Props, State> {
     console.error('ErrorBoundary caught an error', error, info.componentStack);
   }
 
-  private reset = () => this.setState({ error: null });
+  private readonly reset = () => this.setState({ error: null });
 
   render() {
     if (!this.state.error) return this.props.children;

@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, Button, Card, CardContent, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
+import { Box, Button, Card, CardContent, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import { DELETE, TEMPLATES, type EmailTemplate } from '../../api/emailTemplates.gql';

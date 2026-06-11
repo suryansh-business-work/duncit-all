@@ -25,3 +25,9 @@ ios/
 
 # Expo
 expo-env.d.ts
+
+# Playwright (web e2e)
+test-results/
+playwright-report/
+playwright/.cache/
+.last-run.json

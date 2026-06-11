@@ -79,6 +79,32 @@ describe('useHomeFeed', () => {
     expect(renderHook(() => useHomeFeed('')).result.current.totalPods).toBe(0);
     expect(renderHook(() => useHomeData()).result.current.pods).toHaveLength(0);
   });
+
+  it('keeps virtual pods on the home feed despite a location filter', () => {
+    mockHomeState.data = {
+      clubs: [{ id: 'c1', category_id: 'cat1', super_category_id: null }],
+      pods: [
+        {
+          id: '1',
+          club_id: 'c1',
+          pod_date_time: '2026-06-10T00:00:00Z',
+          location_id: 'other',
+          pod_mode: 'PHYSICAL',
+        },
+        {
+          id: '2',
+          club_id: 'c1',
+          pod_date_time: '2026-06-10T00:00:00Z',
+          location_id: null,
+          pod_mode: 'VIRTUAL',
+        },
+      ],
+      categories: [],
+    } as never;
+    mockedLoc.mockReturnValue({ selectedId: 'loc-y' });
+    const { result } = renderHook(() => useHomeFeed(''));
+    expect(result.current.featuredPods.map((p) => p.id)).toEqual(['2']);
+  });
 });
 
 describe('useHomeData', () => {
@@ -97,16 +123,17 @@ describe('useHomeData', () => {
     expect(result.current.clubs).toHaveLength(0);
   });
 
-  it('narrows clubs + pods to the selected super-category and location', () => {
+  it('narrows clubs + pods to the super-category and location but keeps virtual pods', () => {
     mockHomeState.data = {
       clubs: [
         { id: 'c1', super_category_id: 's1' },
         { id: 'c2', super_category_id: 's2' },
       ],
       pods: [
-        { id: '1', club_id: 'c1', location_id: 'l1' },
-        { id: '2', club_id: 'c2', location_id: 'l1' },
-        { id: '3', club_id: 'c1', location_id: 'l2' },
+        { id: '1', club_id: 'c1', location_id: 'l1', pod_mode: 'PHYSICAL' },
+        { id: '2', club_id: 'c2', location_id: 'l1', pod_mode: 'PHYSICAL' },
+        { id: '3', club_id: 'c1', location_id: 'l2', pod_mode: 'PHYSICAL' },
+        { id: '4', club_id: 'c1', location_id: null, pod_mode: 'VIRTUAL' },
       ],
       categories: [],
     } as never;
@@ -114,7 +141,8 @@ describe('useHomeData', () => {
     mockedLoc.mockReturnValue({ selectedId: 'l1' });
     const { result } = renderHook(() => useHomeData());
     expect(result.current.clubs.map((c) => c.id)).toEqual(['c1']);
-    expect(result.current.pods.map((p) => p.id)).toEqual(['1']);
+    // p1 matches the city, p3 is a different city (dropped), p4 is virtual (kept).
+    expect(result.current.pods.map((p) => p.id)).toEqual(['1', '4']);
   });
 
   it('forwards forced refetches from both home hooks', () => {

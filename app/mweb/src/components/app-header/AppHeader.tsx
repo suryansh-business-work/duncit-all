@@ -125,6 +125,7 @@ export default function AppHeader({
               open={locDialogOpen}
               onClose={() => setLocDialogOpen(false)}
               locations={locations}
+              activeLocationIds={data?.activePodLocationIds ?? []}
               draftLocationId={draftLocationId}
               setDraftLocationId={setDraftLocationId}
               draftZone={draftZone}
@@ -132,6 +133,13 @@ export default function AppHeader({
               onApply={() => {
                 onLocationChange(draftLocationId);
                 onZoneChange(draftZone);
+                setLocDialogOpen(false);
+              }}
+              onAutoApply={(locationId, zoneName) => {
+                setDraftLocationId(locationId);
+                setDraftZone(zoneName);
+                onLocationChange(locationId);
+                onZoneChange(zoneName);
                 setLocDialogOpen(false);
               }}
             />

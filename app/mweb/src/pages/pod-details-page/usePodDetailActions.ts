@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation } from '@apollo/client';
+import { format } from 'date-fns';
 import type { NavigateFunction } from 'react-router-dom';
 import {
   BACKOUT,
@@ -11,6 +12,19 @@ import {
   UNFOLLOW_POD,
 } from './queries';
 import { podUrl } from '../../utils/seoUrls';
+
+/** Date/time + venue lines for a pod share so recipients get full context. */
+export function buildPodShareText(pod: any): string {
+  if (!pod) return '';
+  const lines: string[] = [];
+  if (pod.pod_date_time) {
+    const date = new Date(pod.pod_date_time);
+    if (!Number.isNaN(date.getTime())) lines.push(`When: ${format(date, "EEE, d MMM yyyy 'at' HH:mm")}`);
+  }
+  const where = [pod.place_label, pod.place_detail].filter(Boolean).join(' · ');
+  if (where) lines.push(`Where: ${where}`);
+  return lines.join('\n');
+}
 
 interface Args {
   id: string;
@@ -120,10 +134,11 @@ export function usePodDetailActions({
   const onShare = async () => {
     const url = window.location.href;
     const title = pod?.pod_title ?? 'Duncit Pod';
+    const text = buildPodShareText(pod);
     try {
-      if (navigator.share) await navigator.share({ title, url });
+      if (navigator.share) await navigator.share({ title, text, url });
       else {
-        await navigator.clipboard.writeText(url);
+        await navigator.clipboard.writeText([title, text, url].filter(Boolean).join('\n'));
         setSnack('Link copied');
       }
     } catch {

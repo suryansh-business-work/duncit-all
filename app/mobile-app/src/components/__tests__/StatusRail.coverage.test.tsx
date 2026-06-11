@@ -15,10 +15,25 @@ beforeEach(() => {
         authorId: 'a1',
         name: 'Asha',
         photo: null,
-        latest: { image_url: 'https://i/s.jpg', caption: 'Hi' },
+        slides: [
+          {
+            id: 's1',
+            imageUrl: 'https://i/s.jpg',
+            mediaType: 'IMAGE',
+            caption: 'Hi',
+            createdAt: '2026-06-09T10:00:00.000Z',
+          },
+        ],
+        cover: {
+          id: 's1',
+          imageUrl: 'https://i/s.jpg',
+          mediaType: 'IMAGE',
+          caption: 'Hi',
+          createdAt: '2026-06-09T10:00:00.000Z',
+        },
       },
     ],
-    myLatest: null,
+    mine: null,
   });
   mockUseStatusUpload.mockReturnValue({ uploading: false, pickAndUpload: jest.fn() });
 });

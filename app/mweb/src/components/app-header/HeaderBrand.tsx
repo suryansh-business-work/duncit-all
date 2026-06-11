@@ -1,23 +1,43 @@
 import { useNavigate } from 'react-router-dom';
 import { Box, Stack } from '@mui/material';
+import { HOME_REFRESH_EVENT } from './queries';
 
 interface HeaderBrandProps {
   logoUrl?: string | null;
   appName?: string | null;
 }
 
+function scrollToTop() {
+  const el = document.getElementById('main-scroll');
+  (el ?? window).scrollTo({ top: 0, left: 0, behavior: 'smooth' });
+}
+
 export default function HeaderBrand({ logoUrl, appName }: Readonly<HeaderBrandProps>) {
   const navigate = useNavigate();
+
+  const goHome = () => {
+    const alreadyHome = window.location.pathname === '/';
+    navigate('/');
+    scrollToTop();
+    if (alreadyHome) window.dispatchEvent(new Event(HOME_REFRESH_EVENT));
+  };
+
   return (
     <Stack
       direction="row"
       alignItems="center"
       spacing={1.25}
       sx={{ cursor: 'pointer', minWidth: 0 }}
-      onClick={() => navigate('/')}
+      onClick={goHome}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          goHome();
+        }
+      }}
       role="button"
       tabIndex={0}
-      aria-label="Go to home"
+      aria-label="Go to home and refresh"
     >
       <Box
         component="img"

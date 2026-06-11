@@ -48,6 +48,7 @@ export const HEADER_DATA = gql`
         pincode
       }
     }
+    activePodLocationIds
   }
 `;
 
@@ -110,6 +111,10 @@ export const PUBLIC_POLICIES = gql`
     }
   }
 `;
+
+/** Dispatched on `window` when the header logo is tapped while already on Home,
+ * so the home feed can re-fetch (a logo tap should refresh, not no-op). */
+export const HOME_REFRESH_EVENT = 'duncit:home-refresh';
 
 export const formatRelative = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();

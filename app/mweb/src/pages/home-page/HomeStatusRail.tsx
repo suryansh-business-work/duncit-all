@@ -62,13 +62,21 @@ export default function HomeStatusRail({
         <Stack direction="row" spacing={1.1} alignItems="flex-start" sx={{ width: 'max-content' }}>
         <MyStatusUploadTile
           me={me}
-          onView={(url) => {
+          onView={() => {
+            const stories = (me?.my_stories ?? []) as any[];
+            if (stories.length === 0) return;
+            const first = stories[0];
             setViewer({
               label: me?.full_name || me?.first_name || 'My status',
-              subLabel: 'Just now',
               avatarUrl: me?.profile_photo,
-              mediaUrl: url,
-              mediaType: 'IMAGE',
+              mediaUrl: first.image_url,
+              mediaType: first.media_type,
+              slides: stories.map((story, storyIndex) => ({
+                mediaUrl: story.image_url,
+                mediaType: story.media_type,
+                subLabel: story.caption || `Story ${storyIndex + 1}/${stories.length}`,
+                createdAt: story.created_at,
+              })),
             });
           }}
         />
@@ -145,34 +153,35 @@ export default function HomeStatusRail({
             />
           );
         })}
-        {followedUsers.map((user) => (
-          (() => {
-            const posts = followedPosts.filter((post) => post.author_id === user.user_id);
-            const firstPost = posts[0];
-            return (
-          <HomeStatusTile
-            key={`user-${user.user_id}`}
-            label={user.first_name || user.full_name || 'User'}
-            imageUrl={firstPost?.image_url || user.profile_photo}
-            initials={initials(user.full_name || user.first_name)}
-            onClick={() => setViewer({
-              label: user.first_name || user.full_name || 'User',
-              subLabel: user.full_name,
-              avatarUrl: user.profile_photo,
-              mediaUrl: firstPost?.image_url || user.profile_photo,
-              mediaType: 'IMAGE',
-              slides: posts.map((post, index) => ({
-                mediaUrl: post.image_url,
-                mediaType: 'IMAGE',
-                subLabel: post.caption || `Status ${index + 1}/${posts.length}`,
-              })),
-              targetUrl: `/u/${user.user_id}`,
-              internal: true,
-            })}
-          />
-            );
-          })()
-        ))}
+        {followedUsers.map((user) => {
+          const posts = followedPosts.filter((post) => post.author_id === user.user_id);
+          const firstPost = posts[0];
+          const firstIsVideo = firstPost?.media_type === 'VIDEO';
+          return (
+            <HomeStatusTile
+              key={`user-${user.user_id}`}
+              label={user.first_name || user.full_name || 'User'}
+              imageUrl={firstIsVideo ? null : firstPost?.image_url || user.profile_photo}
+              videoUrl={firstIsVideo ? firstPost?.image_url : null}
+              initials={initials(user.full_name || user.first_name)}
+              onClick={() => setViewer({
+                label: user.first_name || user.full_name || 'User',
+                subLabel: user.full_name,
+                avatarUrl: user.profile_photo,
+                mediaUrl: firstPost?.image_url || user.profile_photo,
+                mediaType: firstPost?.media_type ?? 'IMAGE',
+                slides: posts.map((post, index) => ({
+                  mediaUrl: post.image_url,
+                  mediaType: post.media_type ?? 'IMAGE',
+                  subLabel: post.caption || `Status ${index + 1}/${posts.length}`,
+                  createdAt: post.created_at,
+                })),
+                targetUrl: `/u/${user.user_id}`,
+                internal: true,
+              })}
+            />
+          );
+        })}
         </Stack>
       </Box>
       <HomeStatusViewer item={viewer} onClose={() => setViewer(null)} />

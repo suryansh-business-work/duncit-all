@@ -108,8 +108,10 @@ describe('component branch variants', () => {
         height={700}
         saved
         like={{ liked_by_me: true, like_count: 9 }}
+        commentCount={3}
         onToggleSave={jest.fn()}
         onToggleLike={jest.fn()}
+        onComment={jest.fn()}
         onOpen={jest.fn()}
       />,
     );

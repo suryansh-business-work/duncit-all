@@ -1,12 +1,13 @@
 import { gql } from '@/generated/graphql';
 
 /**
- * Status (story) feed — everyone's latest status posts plus my own. Mirrors the
- * `posts`/`myPosts` data mWeb's HomeStatusRail reads.
+ * Status (story) feed — everyone's active stories plus my own. Stories are
+ * ephemeral (24h) and never surface on the profile grid. Mirrors the `stories`
+ * /`myStories` data mWeb's HomeStatusRail reads.
  */
 export const StatusFeedDocument = gql(`
   query MobileStatusFeed {
-    posts {
+    stories {
       id
       author_id
       author {
@@ -15,13 +16,15 @@ export const StatusFeedDocument = gql(`
         profile_photo
       }
       image_url
+      media_type
       caption
       created_at
     }
-    myPosts {
+    myStories {
       id
       author_id
       image_url
+      media_type
       caption
       created_at
     }

@@ -29,6 +29,29 @@ export function HomeVibeChips({ categories, selectedId, onSelect }: Readonly<Hom
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
       >
+        <XStack
+          testID="vibe-chip-all"
+          role="button"
+          aria-label="All"
+          aria-pressed={selectedId === ''}
+          onPress={() => onSelect('')}
+          height={42}
+          paddingHorizontal={16}
+          alignItems="center"
+          borderRadius={14}
+          borderWidth={1.5}
+          backgroundColor={selectedId === '' ? '$primary' : '$surface'}
+          borderColor={selectedId === '' ? '$primary' : '$borderColor'}
+          pressStyle={{ opacity: 0.85 }}
+        >
+          <Text
+            fontSize={13.5}
+            fontWeight="800"
+            color={selectedId === '' ? '$onPrimary' : '$color'}
+          >
+            All
+          </Text>
+        </XStack>
         {categories.slice(0, 16).map((category) => {
           const selected = selectedId === category.id;
           return (

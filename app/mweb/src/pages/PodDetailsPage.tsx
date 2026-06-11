@@ -138,13 +138,15 @@ export default function PodDetailsPage() {
         viewerId={data?.me?.user_id ?? null}
       />
 
-      <PodCommercePreview
-        pod={pod}
-        priceFormat={priceFormat}
-        selectedProducts={productSelection.selectedProducts}
-        onSelectionChange={productSelection.setSelectedProducts}
-        onCheckout={actions.onPaidCheckout}
-      />
+      {pod.product_requests?.some((item: any) => item?.product_name) && (
+        <PodCommercePreview
+          pod={pod}
+          priceFormat={priceFormat}
+          selectedProducts={productSelection.selectedProducts}
+          onSelectionChange={productSelection.setSelectedProducts}
+          onCheckout={actions.onPaidCheckout}
+        />
+      )}
 
       <PodDetailAccordions
         pod={pod}

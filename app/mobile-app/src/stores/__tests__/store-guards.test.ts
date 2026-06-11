@@ -104,13 +104,13 @@ describe('status publish derives sensible defaults', () => {
     mockRequest
       .mockResolvedValueOnce({ uploadImageToImagekit: { url: 'https://img/x.jpg', fileId: 'f1' } })
       .mockResolvedValueOnce({ createPost: { id: 'po1', image_url: 'https://img/x.jpg' } })
-      .mockResolvedValueOnce({ posts: [], myPosts: [] });
+      .mockResolvedValueOnce({ stories: [], myStories: [] });
 
     await useStatusStore.getState().publish({ base64: 'abc' });
 
     const uploadVars = mockRequest.mock.calls[0][1];
     expect(uploadVars.mimeType).toBe('image/jpeg');
-    expect(uploadVars.fileName).toMatch(/^status-\d+\.jpg$/);
+    expect(uploadVars.fileName).toMatch(/^story-\d+\.jpg$/);
     expect(uploadVars.fileBase64).toContain('data:image/jpeg;base64,abc');
   });
 });

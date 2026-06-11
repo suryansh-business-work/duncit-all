@@ -8,26 +8,28 @@ jest.mock('@/stores/status.store', () => {
     full_name: name,
     profile_photo: null,
   });
-  const post = (id: string, authorId: string, createdAt: string) => ({
+  const story = (id: string, authorId: string, createdAt: string, mediaType = 'IMAGE') => ({
     id,
     author_id: authorId,
     author: author(authorId, authorId === 'a1' ? 'Asha' : 'Ben'),
     image_url: `img-${id}`,
+    media_type: mediaType,
     caption: '',
     created_at: createdAt,
   });
   const state = {
     data: {
-      posts: [
-        post('p1', 'a1', '2026-06-09T09:00:00.000Z'),
-        post('p2', 'a1', '2026-06-09T11:00:00.000Z'),
-        post('p3', 'a2', '2026-06-09T08:00:00.000Z'),
+      stories: [
+        story('p1', 'a1', '2026-06-09T09:00:00.000Z'),
+        story('p2', 'a1', '2026-06-09T11:00:00.000Z', 'VIDEO'),
+        story('p3', 'a2', '2026-06-09T08:00:00.000Z'),
       ],
-      myPosts: [
+      myStories: [
         {
           id: 'm1',
           author_id: 'me',
           image_url: 'y1',
+          media_type: 'IMAGE',
           caption: '',
           created_at: '2026-06-01T00:00:00.000Z',
         },
@@ -35,6 +37,7 @@ jest.mock('@/stores/status.store', () => {
           id: 'm2',
           author_id: 'me',
           image_url: 'y2',
+          media_type: 'IMAGE',
           caption: '',
           created_at: '2026-06-08T00:00:00.000Z',
         },
@@ -47,13 +50,20 @@ jest.mock('@/stores/status.store', () => {
 });
 
 describe('useStatus', () => {
-  it('groups posts by author keeping the latest, and finds my latest', () => {
+  it('groups stories by author keeping every slide chronologically', () => {
     const { result } = renderHook(() => useStatus());
 
     expect(result.current.statuses).toHaveLength(2);
     const asha = result.current.statuses.find((s) => s.authorId === 'a1');
-    expect(asha?.latest.id).toBe('p2');
+    expect(asha?.slides.map((slide) => slide.id)).toEqual(['p1', 'p2']);
+    expect(asha?.cover.id).toBe('p2');
+    expect(asha?.cover.mediaType).toBe('VIDEO');
     expect(asha?.name).toBe('Asha');
-    expect(result.current.myLatest?.id).toBe('m2');
+  });
+
+  it('builds my own group with the newest slide as the cover', () => {
+    const { result } = renderHook(() => useStatus());
+    expect(result.current.mine?.slides.map((slide) => slide.id)).toEqual(['m1', 'm2']);
+    expect(result.current.mine?.cover.id).toBe('m2');
   });
 });

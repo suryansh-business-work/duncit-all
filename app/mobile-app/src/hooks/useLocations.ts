@@ -21,6 +21,7 @@ export function useLocations() {
 
   return {
     locations: data?.locations ?? [],
+    activeLocationIds: data?.activePodLocationIds ?? [],
     isLoading,
     selectedId,
     zoneName,

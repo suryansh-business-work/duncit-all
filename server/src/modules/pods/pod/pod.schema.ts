@@ -69,6 +69,7 @@ export const podTypeDefs = /* GraphQL */ `
     venue_slot_id: ID
     club_id: ID!
     club_slug: String!
+    club: Club
     zone_name: String
     pod_mode: PodMode!
     meeting_platform: String
@@ -194,6 +195,8 @@ export const podTypeDefs = /* GraphQL */ `
     pod(pod_doc_id: ID!): Pod
     podBySlugs(club_slug: String!, pod_slug: String!): Pod
     podComments(pod_doc_id: ID!): [PodComment!]!
+    "Location ids that currently have at least one live (active, not-yet-passed) pod."
+    activePodLocationIds: [ID!]!
   }
 
   extend type Mutation {

@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Share } from 'react-native';
 import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,6 +17,8 @@ import { BackoutConfirmDialog } from '@/components/pod-history/BackoutConfirmDia
 import { DetailSkeleton } from '@/components/Skeleton';
 import { usePodActions, usePodDetails } from '@/hooks/useDetails';
 import { usePodBackout } from '@/hooks/usePodHistory';
+import { useExploreStore } from '@/stores/explore.store';
+import { podShareMessage } from '@/utils/pod-format';
 import type { RootStackParamList } from '@/navigation/types';
 
 /** Pod details — hero gallery + overview card + schedule/map + social bar + pod
@@ -37,6 +39,18 @@ export function PodDetailsScreen() {
   const [commentDelta, setCommentDelta] = useState(0);
   const isFree = pod?.pod_type?.includes('FREE') ?? false;
   const commentCount = (pod?.comment_count ?? 0) + commentDelta;
+
+  // Mirror like changes to the Explore feed banner so the two stay in sync
+  // (bug 16). Skip the first settled render so we only push real user actions.
+  const didMirrorLike = useRef(false);
+  useEffect(() => {
+    if (!pod) return;
+    if (!didMirrorLike.current) {
+      didMirrorLike.current = true;
+      return;
+    }
+    useExploreStore.getState().setLike(pod.id, { liked_by_me: liked, like_count: likeCount });
+  }, [pod, liked, likeCount]);
 
   // Re-pull membership when the screen regains focus (e.g. after a successful
   // checkout) so the bar flips to "Pod Booked" without a manual reload. The hook
@@ -68,7 +82,8 @@ export function PodDetailsScreen() {
     /* istanbul ignore next -- the share button only mounts when `pod` exists */
     if (!pod) return;
     try {
-      await Share.share({ message: `${pod.pod_title} — join on Duncit`, title: pod.pod_title });
+      const { message, url } = podShareMessage(pod);
+      await Share.share({ message, url, title: pod.pod_title });
     } catch {
       /* user cancelled */
     }
@@ -117,7 +132,7 @@ export function PodDetailsScreen() {
             onToggleLike={toggleLike}
             onOpenComments={() => setCommentsOpen(true)}
           />
-          <PodShop pod={pod} />
+          {pod.product_requests?.length ? <PodShop pod={pod} /> : null}
           <PodAccordions
             pod={pod}
             onOpenClub={() =>
@@ -143,7 +158,10 @@ export function PodDetailsScreen() {
           open={commentsOpen}
           viewerId={viewerId}
           onClose={() => setCommentsOpen(false)}
-          onCountChange={(delta) => setCommentDelta((prev) => prev + delta)}
+          onCountChange={(delta) => {
+            setCommentDelta((prev) => prev + delta);
+            useExploreStore.getState().bumpComment(pod.id, delta);
+          }}
         />
       ) : null}
 

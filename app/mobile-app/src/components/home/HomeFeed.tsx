@@ -1,10 +1,13 @@
 import { useState } from 'react';
 import { RefreshControl } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { ScrollView, Text, YStack } from 'tamagui';
 
 import { HomeSkeleton } from '@/components/Skeleton';
 
 import { useDetailNav } from '@/hooks/useDetailNav';
+import type { TabParamList } from '@/navigation/tabs';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -24,6 +27,7 @@ export function HomeFeed() {
   const { data: meData } = useMe();
   const { primary } = useThemeColors();
   const { openPod, openClub } = useDetailNav();
+  const tabNavigation = useNavigation<BottomTabNavigationProp<TabParamList>>();
 
   const userName = meData?.me?.first_name ?? meData?.me?.full_name ?? 'You';
   const userPhoto = meData?.me?.profile_photo;
@@ -49,7 +53,10 @@ export function HomeFeed() {
           onSelect={setSelectedCategoryId}
         />
         <YStack gap={16}>
-          <HappeningNearbyHeader totalPods={totalPods} />
+          <HappeningNearbyHeader
+            totalPods={totalPods}
+            onPress={() => tabNavigation.navigate('Explore')}
+          />
           <HomeFeaturedPods
             pods={featuredPods}
             onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}

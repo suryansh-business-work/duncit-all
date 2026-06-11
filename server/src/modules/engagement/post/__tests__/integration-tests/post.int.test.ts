@@ -34,4 +34,37 @@ describe('postService integration', () => {
     expect(await postService.remove(post.id, author)).toBe(true);
     expect(await PostModel.countDocuments()).toBe(0);
   });
+
+  it('stories are ephemeral, typed, and kept out of the profile grid', async () => {
+    const story = await postService.create(author, {
+      image_url: 'https://img/clip.mp4',
+      kind: 'STORY',
+      media_type: 'VIDEO',
+    });
+    expect(story.kind).toBe('STORY');
+    expect(story.media_type).toBe('VIDEO');
+    expect(story.expires_at).toBeTruthy();
+
+    // Profile grid (list) excludes stories…
+    expect(await postService.list(author)).toHaveLength(0);
+    // …but the stories feed returns the active story.
+    const active = await postService.listStories(author);
+    expect(active).toHaveLength(1);
+    expect(active[0].id).toBe(story.id);
+  });
+
+  it('hides stories whose 24h window has already closed', async () => {
+    const story = await postService.create(author, { image_url: img, kind: 'STORY' });
+    await PostModel.updateOne({ _id: story.id }, { expires_at: new Date(Date.now() - 1000) });
+    expect(await postService.listStories(author)).toHaveLength(0);
+  });
+
+  it('defaults a plain post to an image kept on the profile grid', async () => {
+    const post = await postService.create(author, { image_url: img });
+    expect(post.kind).toBe('POST');
+    expect(post.media_type).toBe('IMAGE');
+    expect(post.expires_at).toBeNull();
+    expect(await postService.list(author)).toHaveLength(1);
+    expect(await postService.listStories(author)).toHaveLength(0);
+  });
 });

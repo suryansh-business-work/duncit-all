@@ -43,7 +43,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
     followedPods,
     hostPods,
     followedPosts,
-    myLatestPost,
+    myStories,
     followedUsers,
     totalPods,
     hostNameOf,
@@ -76,7 +76,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
       }}
     >
       <HomeStatusRail
-        me={me ? { ...me, latest_status: myLatestPost } : me}
+        me={me ? { ...me, my_stories: myStories } : me}
         branding={branding}
         sliders={sliders}
         followedClubs={followedClubs}
@@ -88,7 +88,19 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
       <HomeVibeChips categories={categoryChips} selectedId={categoryId} onSelect={setCategoryId} />
       <Stack spacing={1.75}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.25 }}>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ minWidth: 0 }}>
+          <Stack
+            direction="row"
+            spacing={1}
+            alignItems="center"
+            onClick={() => navigate('/explore')}
+            role="button"
+            tabIndex={0}
+            aria-label="Open Happening nearby"
+            onKeyDown={(event) => {
+              if (event.key === 'Enter' || event.key === ' ') navigate('/explore');
+            }}
+            sx={{ minWidth: 0, cursor: 'pointer' }}
+          >
             <Box
               sx={{
                 width: 34,

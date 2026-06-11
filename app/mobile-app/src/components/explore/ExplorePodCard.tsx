@@ -17,8 +17,10 @@ interface ExplorePodCardProps {
   saved: boolean;
   savePending?: boolean;
   like: LikeState;
+  commentCount: number;
   onToggleSave: () => void;
   onToggleLike: () => void;
+  onComment: () => void;
   onOpen: () => void;
 }
 
@@ -32,8 +34,10 @@ export function ExplorePodCard({
   saved,
   savePending,
   like,
+  commentCount,
   onToggleSave,
   onToggleLike,
+  onComment,
   onOpen,
 }: Readonly<ExplorePodCardProps>) {
   const insets = useSafeAreaInsets();
@@ -78,9 +82,10 @@ export function ExplorePodCard({
           onPress={onToggleLike}
         />
         <ExploreActionButton
+          testID={`reel-comment-${pod.pod_id}`}
           icon="chat-bubble-outline"
-          label={String(pod.comment_count)}
-          onPress={onOpen}
+          label={String(commentCount)}
+          onPress={onComment}
         />
         <ExploreActionButton
           testID={`reel-save-${pod.pod_id}`}

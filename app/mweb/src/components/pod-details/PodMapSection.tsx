@@ -1,6 +1,7 @@
 import { Button, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import VideocamIcon from '@mui/icons-material/Videocam';
+import EventIcon from '@mui/icons-material/Event';
 import { Link as RouterLink } from 'react-router-dom';
 import PodLocationMap from '../../pages/pod-details-page/PodLocationMap';
 import VenueMapPreview from '../VenueMapPreview';
@@ -54,6 +55,12 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
 
   return (
     <Stack spacing={1.5}>
+      <Stack direction="row" spacing={0.75} alignItems="center">
+        <EventIcon color="primary" sx={{ fontSize: 20 }} />
+        <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
+          Time &amp; Venue
+        </Typography>
+      </Stack>
       <Stack spacing={0.25}>
         <Typography variant="caption" color="text.secondary">
           When

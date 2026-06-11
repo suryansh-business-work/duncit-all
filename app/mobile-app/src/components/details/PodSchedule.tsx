@@ -62,7 +62,22 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
   }
 
   return (
-    <YStack paddingHorizontal={16} gap={14}>
+    <YStack
+      testID="pod-schedule"
+      margin={16}
+      padding={16}
+      gap={14}
+      borderRadius={18}
+      backgroundColor="$background"
+      borderWidth={1}
+      borderColor="$borderColor"
+    >
+      <XStack gap={8} alignItems="center">
+        <MaterialIcons name="event" size={20} color={primary} />
+        <Text fontSize={16} fontWeight="900" color="$color">
+          Time &amp; Venue
+        </Text>
+      </XStack>
       <Field label="When">
         <Text fontSize={14} fontWeight="700" color="$color">
           {podScheduleLabel(pod.pod_date_time, pod.pod_end_date_time)}

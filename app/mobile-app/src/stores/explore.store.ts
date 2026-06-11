@@ -24,9 +24,14 @@ interface ExploreState {
   savedOverride: Record<string, boolean>;
   savePending: Record<string, boolean>;
   likeOverride: Record<string, LikeState>;
+  commentDelta: Record<string, number>;
   fetch: (force?: boolean) => Promise<void>;
   toggleSave: (podId: string, currentlySaved: boolean) => Promise<void>;
   toggleLike: (podId: string, current: LikeState) => Promise<void>;
+  /** Push a like result from elsewhere (e.g. the Pod Detail page) so the feed banner stays in sync. */
+  setLike: (podId: string, state: LikeState) => void;
+  /** Adjust a pod's comment count (e.g. after adding/removing a comment in a sheet). */
+  bumpComment: (podId: string, delta: number) => void;
 }
 
 /** Explore reels feed + optimistic save/like overlays reconciled with the server. */
@@ -35,6 +40,12 @@ export const useExploreStore = create<ExploreState>((set, get) => ({
   savedOverride: {},
   savePending: {},
   likeOverride: {},
+  commentDelta: {},
+  setLike: (podId, state) => set((s) => ({ likeOverride: { ...s.likeOverride, [podId]: state } })),
+  bumpComment: (podId, delta) =>
+    set((s) => ({
+      commentDelta: { ...s.commentDelta, [podId]: (s.commentDelta[podId] ?? 0) + delta },
+    })),
   fetch: async (force = false) => {
     if (get().isLoading) return;
     if (get().data && !force) return;

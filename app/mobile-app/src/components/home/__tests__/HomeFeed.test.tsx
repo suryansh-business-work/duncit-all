@@ -73,6 +73,12 @@ describe('HomeFeed', () => {
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Sunset Jam' });
   });
 
+  it('opens the Explore tab from the "Happening nearby" header', () => {
+    renderWithProviders(<HomeFeed />);
+    fireEvent.press(screen.getByTestId('happening-nearby-header'));
+    expect(mockNavigate).toHaveBeenCalledWith('Explore');
+  });
+
   it('shows the pull-to-refresh spinner while refetching loaded data', () => {
     mockedFeed.mockReturnValue({ ...base, isLoading: true, hasData: true });
     renderWithProviders(<HomeFeed />);

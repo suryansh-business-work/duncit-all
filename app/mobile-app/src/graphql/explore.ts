@@ -38,6 +38,7 @@ export const ExplorePodsDocument = gql(`
       club_id
       club_slug
       location_id
+      pod_mode
       place_label
       place_detail
       zone_name

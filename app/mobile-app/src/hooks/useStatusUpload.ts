@@ -3,8 +3,11 @@ import * as ImagePicker from 'expo-image-picker';
 
 import { useStatusStore } from '@/stores/status.store';
 
-/** Drives the "post a status" flow: pick an image from the library, upload it
- * and publish the post. Mirrors mWeb's StatusUploadProvider (profile kind). */
+// Story videos are short clips — keep them to 30s like the web app.
+const MAX_STORY_VIDEO_SECONDS = 30;
+
+/** Drives the "post a story" flow: pick an image or video from the library,
+ * upload it and publish the story. Mirrors mWeb's StatusUploadProvider. */
 export function useStatusUpload() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | undefined>();
@@ -14,22 +17,36 @@ export function useStatusUpload() {
     setError(undefined);
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      setError('Photo access is needed to post a status.');
+      setError('Photo access is needed to post a story.');
       return;
     }
     const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
+      mediaTypes: ['images', 'videos'],
       base64: true,
       quality: 0.8,
     });
     const asset = result.canceled ? undefined : result.assets[0];
     if (!asset) return;
 
+    const isVideo = asset.type === 'video';
+    const durationMs = asset.duration ?? 0;
+    if (isVideo && durationMs > MAX_STORY_VIDEO_SECONDS * 1000) {
+      setError(
+        `Video is ${Math.round(durationMs / 1000)}s — story videos must be ${MAX_STORY_VIDEO_SECONDS}s or less.`,
+      );
+      return;
+    }
+
     setUploading(true);
     try {
-      await publish({ base64: asset.base64, fileName: asset.fileName, mimeType: asset.mimeType });
+      await publish({
+        base64: asset.base64,
+        fileName: asset.fileName,
+        mimeType: asset.mimeType,
+        mediaType: isVideo ? 'VIDEO' : 'IMAGE',
+      });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Could not post status.');
+      setError(err instanceof Error ? err.message : 'Could not post story.');
     } finally {
       setUploading(false);
     }

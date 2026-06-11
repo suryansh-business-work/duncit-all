@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useMutation } from '@apollo/client';
 import { Box, Button, Stack, Typography } from '@mui/material';
@@ -46,6 +46,14 @@ export default function ExplorePodCard({
   const [commentCount, setCommentCount] = useState<number>(pod.comment_count ?? 0);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [toggleLike] = useMutation(TOGGLE_POD_LIKE);
+
+  // Re-sync to the latest server values when the feed refetches (e.g. after the
+  // user liked/commented on the Pod Detail page) so the banner stays in sync.
+  useEffect(() => {
+    setLiked(!!pod.liked_by_me);
+    setLikeCount(pod.like_count ?? 0);
+    setCommentCount(pod.comment_count ?? 0);
+  }, [pod.liked_by_me, pod.like_count, pod.comment_count]);
 
   const onLike = async () => {
     const prev = liked;

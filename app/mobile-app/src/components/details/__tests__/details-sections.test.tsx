@@ -2,6 +2,7 @@ import { Linking } from 'react-native';
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { MapEmbed } from '@/components/MapEmbed';
+import { PodClubCard } from '@/components/details/PodClubCard';
 import { PodInfo } from '@/components/details/PodInfo';
 import { PodSchedule } from '@/components/details/PodSchedule';
 import { PodShop } from '@/components/details/PodShop';
@@ -231,5 +232,72 @@ describe('MapEmbed', () => {
   it('renders nothing without a query', () => {
     renderWithProviders(<MapEmbed query="" />);
     expect(screen.queryByTestId('pod-map')).toBeNull();
+  });
+});
+
+describe('PodClubCard', () => {
+  it('shows the club logo, name, description and opens the club', () => {
+    const onOpenClub = jest.fn();
+    renderWithProviders(
+      <PodClubCard
+        club={{
+          club_id: 'c1',
+          club_name: 'Jazz Club',
+          club_description: 'Live jazz every weekend',
+          club_feature_images_and_videos: [{ url: 'http://x/logo.jpg' }],
+        }}
+        onOpenClub={onOpenClub}
+      />,
+    );
+    expect(screen.getByText('Jazz Club')).toBeOnTheScreen();
+    expect(screen.getByText('Live jazz every weekend')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('pod-view-club'));
+    expect(onOpenClub).toHaveBeenCalled();
+  });
+
+  it('falls back to an initial and omits an absent description', () => {
+    renderWithProviders(
+      <PodClubCard
+        club={{
+          club_id: 'c2',
+          club_name: 'beats',
+          club_description: null,
+          club_feature_images_and_videos: [],
+        }}
+        onOpenClub={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('B')).toBeOnTheScreen();
+    expect(screen.queryByText('Live jazz every weekend')).toBeNull();
+  });
+
+  it('falls back to the initial when the first media has an empty url', () => {
+    renderWithProviders(
+      <PodClubCard
+        club={{
+          club_id: 'c3',
+          club_name: 'Vibe',
+          club_description: null,
+          club_feature_images_and_videos: [{ url: '' }],
+        }}
+        onOpenClub={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('V')).toBeOnTheScreen();
+  });
+
+  it('uses a "C" placeholder initial when the club name is empty', () => {
+    renderWithProviders(
+      <PodClubCard
+        club={{
+          club_id: 'c4',
+          club_name: '',
+          club_description: null,
+          club_feature_images_and_videos: [],
+        }}
+        onOpenClub={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('C')).toBeOnTheScreen();
   });
 });

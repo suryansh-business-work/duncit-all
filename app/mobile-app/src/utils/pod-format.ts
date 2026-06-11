@@ -81,3 +81,30 @@ export function podScheduleLabel(start?: string | null, end?: string | null): st
   }
   return label;
 }
+
+export const POD_WEB_BASE = 'https://mweb.duncit.com';
+
+export interface PodSharable {
+  pod_id: string;
+  pod_title: string;
+  club_slug?: string | null;
+  pod_date_time?: string | null;
+  pod_end_date_time?: string | null;
+  place_label?: string | null;
+  place_detail?: string | null;
+}
+
+/** Share text for a pod — name + a deep link plus the date/time and venue, so a
+ * recipient lands on the pod detail page with full context (not just the title). */
+export function podShareMessage(pod: PodSharable): { message: string; url: string } {
+  const url = pod.club_slug
+    ? `${POD_WEB_BASE}/club/${pod.club_slug}/pod/${pod.pod_id}`
+    : `${POD_WEB_BASE}/pod/${pod.pod_id}`;
+  const where = [pod.place_label, pod.place_detail].filter(Boolean).join(' · ');
+  const lines = [pod.pod_title];
+  if (pod.pod_date_time)
+    lines.push(`When: ${podScheduleLabel(pod.pod_date_time, pod.pod_end_date_time)}`);
+  if (where) lines.push(`Where: ${where}`);
+  lines.push(`Join on Duncit: ${url}`);
+  return { message: lines.join('\n'), url };
+}

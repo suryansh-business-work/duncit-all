@@ -24,6 +24,7 @@ export const EXPLORE_PODS = gql`
       club_id
       club_slug
       location_id
+      pod_mode
       venue_id
       place_label
       place_detail

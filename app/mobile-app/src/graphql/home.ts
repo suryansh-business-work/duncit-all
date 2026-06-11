@@ -43,6 +43,7 @@ export const HomeFeedDocument = gql(`
       club_id
       club_slug
       location_id
+      pod_mode
       place_label
       place_detail
     }

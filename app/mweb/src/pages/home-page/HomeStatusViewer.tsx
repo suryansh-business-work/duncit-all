@@ -33,7 +33,10 @@ interface HomeStatusViewerProps {
   onClose: () => void;
 }
 
-const STATUS_DURATION_MS = 6500;
+// Each image slide runs 15s before auto-advancing; videos play to their end
+// (capped so a long clip can't hold the story open indefinitely).
+const STATUS_DURATION_MS = 15000;
+const MAX_VIDEO_SECONDS = 30;
 
 export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusViewerProps>) {
   const navigate = useNavigate();
@@ -46,6 +49,7 @@ export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusV
   const itemKey = item ? [item.label, item.mediaUrl, item.targetUrl].filter(Boolean).join('|') : '';
   const slides = item?.slides?.length ? item.slides : item ? [{ mediaUrl: item.mediaUrl, mediaType: item.mediaType, subLabel: item.subLabel }] : [];
   const current = slides[index] ?? slides[0];
+  const isVideo = current?.mediaType === 'VIDEO';
 
   useEffect(() => {
     setProgress(0);
@@ -63,7 +67,8 @@ export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusV
   }, [index]);
 
   useEffect(() => {
-    if (!item || paused) return undefined;
+    // Videos drive their own progress/advance from the <video> element below.
+    if (!item || paused || isVideo) return undefined;
     startedAtRef.current = performance.now() - elapsedRef.current;
     const tick = (now: number) => {
       const startedAt = startedAtRef.current ?? now;
@@ -81,7 +86,7 @@ export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusV
     return () => {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [index, item, onClose, paused, slides.length]);
+  }, [index, item, onClose, paused, slides.length, isVideo]);
 
   if (!item) return null;
 
@@ -91,6 +96,13 @@ export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusV
   const goNext = () => {
     if (index < slides.length - 1) setIndex(index + 1);
     else onClose();
+  };
+
+  const handleVideoTime = (event: React.SyntheticEvent<HTMLVideoElement>) => {
+    const video = event.currentTarget;
+    const cap = Math.min(video.duration || MAX_VIDEO_SECONDS, MAX_VIDEO_SECONDS);
+    if (cap > 0) setProgress(Math.min(1, video.currentTime / cap));
+    if (video.currentTime >= cap) goNext();
   };
 
   const openTarget = () => {
@@ -115,7 +127,17 @@ export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusV
         sx={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden', color: '#fff', touchAction: 'none' }}
       >
         {current?.mediaType === 'VIDEO' ? (
-          <Box component="video" src={current.mediaUrl ?? undefined} autoPlay muted loop playsInline sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+          <Box
+            key={`video-${index}`}
+            component="video"
+            src={current.mediaUrl ?? undefined}
+            autoPlay
+            muted
+            playsInline
+            onTimeUpdate={handleVideoTime}
+            onEnded={goNext}
+            sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
+          />
         ) : current?.mediaUrl ? (
           <Box component="img" src={current.mediaUrl} alt={item.label} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (

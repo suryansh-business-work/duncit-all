@@ -10,6 +10,8 @@ interface StatusTileProps {
   ring?: boolean;
   badge?: boolean;
   onPress?: () => void;
+  /** Press handler for the "+" badge — used to add another story. */
+  onBadgePress?: () => void;
   testID?: string;
 }
 
@@ -21,6 +23,7 @@ export function StatusTile({
   ring,
   badge,
   onPress,
+  onBadgePress,
   testID,
 }: Readonly<StatusTileProps>) {
   const { onPrimary } = useThemeColors();
@@ -62,6 +65,10 @@ export function StatusTile({
       </YStack>
       {badge ? (
         <YStack
+          testID={testID ? `${testID}-badge` : undefined}
+          role="button"
+          aria-label="Add story"
+          onPress={onBadgePress}
           position="absolute"
           top={42}
           right={6}

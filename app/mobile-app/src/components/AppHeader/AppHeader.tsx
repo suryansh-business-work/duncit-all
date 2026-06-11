@@ -1,4 +1,5 @@
-import { XStack } from 'tamagui';
+import { useNavigation } from '@react-navigation/native';
+import { XStack, YStack } from 'tamagui';
 
 import { AccountButton } from '@/components/AccountButton';
 import { AuthLogo } from '@/components/AuthLogo';
@@ -7,6 +8,7 @@ import { LogoutButton } from '@/components/LogoutButton';
 import { Mascot } from '@/components/Mascot';
 import { NotificationsBell } from '@/components/notifications';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useHomeStore } from '@/stores/home.store';
 
 /**
  * In-app header — the two dynamic brand marks (logo + mascot, both from the
@@ -15,6 +17,14 @@ import { ThemeToggle } from '@/components/ThemeToggle';
  * the pre-onboarding survey — a plain logout button.
  */
 export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) {
+  const navigation = useNavigation();
+
+  // Tapping the logo returns to Home and refreshes the feed (bug: logo did nothing).
+  const goHome = () => {
+    void useHomeStore.getState().fetch(true);
+    navigation.navigate('Home');
+  };
+
   return (
     <XStack
       testID="app-header"
@@ -25,7 +35,14 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
       paddingVertical={8}
     >
       <XStack alignItems="center" gap={6}>
-        <AuthLogo size={34} />
+        <YStack
+          testID="header-logo"
+          role="button"
+          aria-label="Go to home and refresh"
+          onPress={goHome}
+        >
+          <AuthLogo size={34} />
+        </YStack>
         <Mascot />
       </XStack>
       <XStack alignItems="center" gap={8}>

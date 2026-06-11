@@ -18,5 +18,6 @@ export const LocationsDocument = gql(`
         pincode
       }
     }
+    activePodLocationIds
   }
 `);

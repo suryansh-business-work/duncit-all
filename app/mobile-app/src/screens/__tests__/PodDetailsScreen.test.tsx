@@ -3,14 +3,17 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { PodDetailsScreen } from '@/screens/PodDetailsScreen';
 import { usePodDetails } from '@/hooks/useDetails';
+import { useExploreStore } from '@/stores/explore.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 let mockSaved = false;
+let mockLiked = false;
+let mockLikeCount = 3;
 jest.mock('@/hooks/useDetails', () => ({
   usePodDetails: jest.fn(),
   usePodActions: () => ({
-    liked: false,
-    likeCount: 3,
+    liked: mockLiked,
+    likeCount: mockLikeCount,
     saved: mockSaved,
     savePending: false,
     toggleLike: jest.fn(),
@@ -96,6 +99,9 @@ beforeEach(() => {
   mockNavigate.mockClear();
   mockBackout.mockClear();
   mockSaved = false;
+  mockLiked = false;
+  mockLikeCount = 3;
+  useExploreStore.setState({ likeOverride: {}, commentDelta: {} });
 });
 
 describe('PodDetailsScreen', () => {
@@ -167,18 +173,51 @@ describe('PodDetailsScreen', () => {
     await waitFor(() => expect(mockBackout).toHaveBeenCalledWith('p1'));
   });
 
-  it('renders the overview, pod shop empty state, social bar and goes back', () => {
+  it('renders the overview, hides the empty pod shop, social bar and goes back', () => {
     mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
     renderWithProviders(<PodDetailsScreen />);
     expect(screen.getByText('Sunset Jam')).toBeOnTheScreen();
     expect(screen.getByText('People in')).toBeOnTheScreen();
-    expect(screen.getByTestId('pod-shop-empty')).toBeOnTheScreen();
+    // No products listed → the Pod Shop section is not rendered at all (bug 12).
+    expect(screen.queryByTestId('pod-shop')).toBeNull();
     expect(screen.getByTestId('pod-save')).toBeOnTheScreen();
     expect(screen.getByTestId('accordion-about')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-expand-all'));
     fireEvent.press(screen.getByTestId('pod-view-club'));
     fireEvent.press(screen.getByTestId('detail-back'));
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it('shows the Pod Shop when the pod has products', () => {
+    mockedPod.mockReturnValue({
+      ...podData,
+      pod: {
+        ...podData.pod,
+        club: {
+          club_id: 'c1',
+          club_name: 'Jazz Club',
+          club_description: 'Live jazz',
+          club_feature_images_and_videos: [{ url: 'http://x/logo.jpg' }],
+        },
+        product_requests: [
+          {
+            product_id: 'pr1',
+            product_name: 'Drum sticks',
+            available_count: 5,
+            unit_cost: 200,
+            image_url: '',
+            images: [],
+          },
+        ],
+      },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    expect(screen.getByTestId('pod-shop')).toBeOnTheScreen();
+    // Club details card (with name) renders instead of just the View-club button.
+    fireEvent.press(screen.getByTestId('pod-expand-all'));
+    expect(screen.getByText('Jazz Club')).toBeOnTheScreen();
   });
 
   it('toggles like and opens the comments sheet', () => {
@@ -220,5 +259,19 @@ describe('PodDetailsScreen', () => {
     fireEvent.press(screen.getByTestId('pod-share'));
     expect(spy).toHaveBeenCalled();
     spy.mockRestore();
+  });
+
+  it('mirrors a like change to the Explore feed override', () => {
+    mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
+    const { rerender } = renderWithProviders(<PodDetailsScreen />);
+    // First settled render is skipped; a subsequent like change is mirrored.
+    expect(useExploreStore.getState().likeOverride.p1).toBeUndefined();
+    mockLiked = true;
+    mockLikeCount = 4;
+    rerender(<PodDetailsScreen />);
+    expect(useExploreStore.getState().likeOverride.p1).toEqual({
+      liked_by_me: true,
+      like_count: 4,
+    });
   });
 });

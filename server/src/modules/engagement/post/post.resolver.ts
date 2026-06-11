@@ -33,6 +33,12 @@ export const postResolvers = {
       const u = requireAuth(ctx);
       return postService.list(u.id, u.id);
     },
+    stories: (_p: unknown, args: { author_id?: string }, ctx: GraphQLContext) =>
+      postService.listStories(args.author_id ?? null, ctx.user?.id ?? null),
+    myStories: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      return postService.listStories(u.id, u.id);
+    },
   },
   Mutation: {
     createPost: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

@@ -1,7 +1,16 @@
-import { screen } from '@testing-library/react-native';
+import { fireEvent, screen } from '@testing-library/react-native';
 
 import { AppHeader } from '@/components/AppHeader';
 import { renderWithProviders } from '@/utils/test-utils';
+
+const mockNavigate = jest.fn();
+const mockFetch = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: mockNavigate }),
+}));
+jest.mock('@/stores/home.store', () => ({
+  useHomeStore: { getState: () => ({ fetch: mockFetch }) },
+}));
 
 // Children are unit-tested on their own; here we just assert composition.
 jest.mock('@/components/AuthLogo', () => ({ AuthLogo: () => null }));
@@ -35,5 +44,14 @@ describe('AppHeader', () => {
     renderWithProviders(<AppHeader minimal />);
     expect(screen.getByTestId('logout-button')).toBeOnTheScreen();
     expect(screen.queryByTestId('account-button')).toBeNull();
+  });
+
+  it('returns to Home and refreshes the feed when the logo is tapped', () => {
+    mockNavigate.mockClear();
+    mockFetch.mockClear();
+    renderWithProviders(<AppHeader />);
+    fireEvent.press(screen.getByTestId('header-logo'));
+    expect(mockNavigate).toHaveBeenCalledWith('Home');
+    expect(mockFetch).toHaveBeenCalledWith(true);
   });
 });

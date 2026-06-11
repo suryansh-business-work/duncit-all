@@ -44,6 +44,15 @@ describe('HomeVibeChips', () => {
     fireEvent.press(screen.getByTestId('vibe-chip-c1'));
     expect(onSelect).toHaveBeenCalledWith('');
   });
+
+  it('clears the category filter via the All chip', () => {
+    const onSelect = jest.fn();
+    renderWithProviders(
+      <HomeVibeChips categories={categories} selectedId="c1" onSelect={onSelect} />,
+    );
+    fireEvent.press(screen.getByTestId('vibe-chip-all'));
+    expect(onSelect).toHaveBeenCalledWith('');
+  });
 });
 
 describe('PodCard', () => {
@@ -60,5 +69,12 @@ describe('HappeningNearbyHeader', () => {
   it('shows the live pod count', () => {
     renderWithProviders(<HappeningNearbyHeader totalPods={7} />);
     expect(screen.getByText('7 pods')).toBeOnTheScreen();
+  });
+
+  it('opens the nearby view when tapped', () => {
+    const onPress = jest.fn();
+    renderWithProviders(<HappeningNearbyHeader totalPods={7} onPress={onPress} />);
+    fireEvent.press(screen.getByTestId('happening-nearby-header'));
+    expect(onPress).toHaveBeenCalled();
   });
 });

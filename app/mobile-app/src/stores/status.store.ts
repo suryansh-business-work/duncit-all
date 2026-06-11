@@ -10,6 +10,7 @@ export interface StatusUploadAsset {
   base64?: string | null;
   fileName?: string | null;
   mimeType?: string | null;
+  mediaType?: 'IMAGE' | 'VIDEO';
 }
 
 interface StatusState {
@@ -36,9 +37,10 @@ export const useStatusStore = create<StatusState>((set, get) => ({
     }
   },
   publish: async (asset) => {
-    if (!asset.base64) throw new Error('No image selected.');
-    const mimeType = asset.mimeType ?? 'image/jpeg';
-    const fileName = asset.fileName ?? `status-${Date.now()}.jpg`;
+    if (!asset.base64) throw new Error('No media selected.');
+    const isVideo = asset.mediaType === 'VIDEO';
+    const mimeType = asset.mimeType ?? (isVideo ? 'video/mp4' : 'image/jpeg');
+    const fileName = asset.fileName ?? `story-${Date.now()}.${isVideo ? 'mp4' : 'jpg'}`;
     const fileBase64 = `data:${mimeType};base64,${asset.base64}`;
     const uploaded = await graphqlRequest(
       UploadImageDocument,
@@ -47,7 +49,14 @@ export const useStatusStore = create<StatusState>((set, get) => ({
     );
     await graphqlRequest(
       CreatePostDocument,
-      { input: { image_url: uploaded.uploadImageToImagekit.url, caption: '' } },
+      {
+        input: {
+          image_url: uploaded.uploadImageToImagekit.url,
+          caption: '',
+          kind: 'STORY',
+          media_type: isVideo ? 'VIDEO' : 'IMAGE',
+        },
+      },
       { auth: true },
     );
     await get().fetch(true);

@@ -6,6 +6,7 @@ import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { podOccurrenceLabel, podPriceLabel } from '@/utils/pod-format';
 import { Accordion } from '@/components/details/Accordion';
+import { PodClubCard } from '@/components/details/PodClubCard';
 import {
   AboutSection,
   AttendeesSection,
@@ -40,7 +41,9 @@ export function PodAccordions({
         id: 'club',
         title: 'Club details',
         icon: 'place',
-        content: (
+        content: pod.club ? (
+          <PodClubCard club={pod.club} onOpenClub={onOpenClub} />
+        ) : (
           <XStack
             testID="pod-view-club"
             role="button"

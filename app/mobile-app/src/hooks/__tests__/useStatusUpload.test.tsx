@@ -26,7 +26,7 @@ describe('useStatusUpload', () => {
     reqPerm.mockResolvedValue({ granted: true });
     launch.mockResolvedValue({
       canceled: false,
-      assets: [{ base64: 'abc', fileName: 'x.jpg', mimeType: 'image/jpeg' }],
+      assets: [{ base64: 'abc', fileName: 'x.jpg', mimeType: 'image/jpeg', type: 'image' }],
     });
     const { result } = renderHook(() => useStatusUpload());
     await act(async () => {
@@ -36,7 +36,55 @@ describe('useStatusUpload', () => {
       base64: 'abc',
       fileName: 'x.jpg',
       mimeType: 'image/jpeg',
+      mediaType: 'IMAGE',
     });
+  });
+
+  it('publishes a short video as a VIDEO story', async () => {
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValue({
+      canceled: false,
+      assets: [
+        { base64: 'vid', fileName: 'c.mp4', mimeType: 'video/mp4', type: 'video', duration: 12000 },
+      ],
+    });
+    const { result } = renderHook(() => useStatusUpload());
+    await act(async () => {
+      await result.current.pickAndUpload();
+    });
+    expect(mockPublish).toHaveBeenCalledWith({
+      base64: 'vid',
+      fileName: 'c.mp4',
+      mimeType: 'video/mp4',
+      mediaType: 'VIDEO',
+    });
+  });
+
+  it('publishes a video with no reported duration as a VIDEO story', async () => {
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValue({
+      canceled: false,
+      assets: [{ base64: 'vid', type: 'video', mimeType: 'video/mp4' }],
+    });
+    const { result } = renderHook(() => useStatusUpload());
+    await act(async () => {
+      await result.current.pickAndUpload();
+    });
+    expect(mockPublish).toHaveBeenCalledWith(expect.objectContaining({ mediaType: 'VIDEO' }));
+  });
+
+  it('rejects a video longer than 30 seconds with a warning', async () => {
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValue({
+      canceled: false,
+      assets: [{ base64: 'vid', type: 'video', duration: 45000 }],
+    });
+    const { result } = renderHook(() => useStatusUpload());
+    await act(async () => {
+      await result.current.pickAndUpload();
+    });
+    expect(result.current.error).toContain('45s');
+    expect(mockPublish).not.toHaveBeenCalled();
   });
 
   it('sets an error when permission is denied', async () => {
@@ -61,7 +109,7 @@ describe('useStatusUpload', () => {
 
   it('surfaces a publish failure as an error', async () => {
     reqPerm.mockResolvedValue({ granted: true });
-    launch.mockResolvedValue({ canceled: false, assets: [{ base64: 'abc' }] });
+    launch.mockResolvedValue({ canceled: false, assets: [{ base64: 'abc', type: 'image' }] });
     mockPublish.mockRejectedValue(new Error('upload failed'));
     const { result } = renderHook(() => useStatusUpload());
     await act(async () => {
@@ -72,12 +120,12 @@ describe('useStatusUpload', () => {
 
   it('falls back to a generic message when the failure is not an Error', async () => {
     reqPerm.mockResolvedValue({ granted: true });
-    launch.mockResolvedValue({ canceled: false, assets: [{ base64: 'abc' }] });
+    launch.mockResolvedValue({ canceled: false, assets: [{ base64: 'abc', type: 'image' }] });
     mockPublish.mockRejectedValue('weird');
     const { result } = renderHook(() => useStatusUpload());
     await act(async () => {
       await result.current.pickAndUpload();
     });
-    expect(result.current.error).toBe('Could not post status.');
+    expect(result.current.error).toBe('Could not post story.');
   });
 });

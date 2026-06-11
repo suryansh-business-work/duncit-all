@@ -14,22 +14,26 @@ interface Props {
   open: boolean;
   onClose: () => void;
   locations: LocationLike[];
+  activeLocationIds?: string[];
   draftLocationId: string;
   setDraftLocationId: (id: string) => void;
   draftZone: string;
   setDraftZone: (z: string) => void;
   onApply: () => void;
+  onAutoApply?: (locationId: string, zoneName: string) => void;
 }
 
 export default function LocationDialog({
   open,
   onClose,
   locations,
+  activeLocationIds,
   draftLocationId,
   setDraftLocationId,
   draftZone,
   setDraftZone,
   onApply,
+  onAutoApply,
 }: Readonly<Props>) {
   const tree = useMemo(() => buildLocationTree(locations), [locations]);
   const draftLoc = locations.find((l) => l.id === draftLocationId);
@@ -142,7 +146,12 @@ export default function LocationDialog({
       }}
     >
       <Box sx={{ px: 2, pt: 0.75, pb: 1.5 }}>
-        <GpsLocationPicker locations={locations} onAutoSelect={handleAutoSelect} />
+        <GpsLocationPicker
+          locations={locations}
+          activeLocationIds={activeLocationIds}
+          onAutoSelect={handleAutoSelect}
+          onAutoApply={onAutoApply}
+        />
         <CountryStatePicker
           tree={tree}
           country={activeCountry?.country ?? ''}

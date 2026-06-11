@@ -42,6 +42,7 @@ export const MyPodsDocument = gql(`
       }
       club_id
       club_slug
+      pod_mode
       place_label
       place_detail
     }

@@ -28,6 +28,15 @@ export default function HomeVibeChips({ categories, selectedId, onSelect }: Read
         }}
       >
         <Stack direction="row" spacing={1} sx={{ width: 'max-content', pb: 0.25 }}>
+          <Chip
+            key="all"
+            label="All"
+            clickable
+            color={selectedId === '' ? 'primary' : 'default'}
+            variant={selectedId === '' ? 'filled' : 'outlined'}
+            onClick={() => onSelect('')}
+            sx={{ height: 42, px: 0.75, fontWeight: 900, borderRadius: 3, flex: '0 0 auto' }}
+          />
           {categories.slice(0, 16).map((category: any) => {
             const selected = selectedId === category.id;
             return (

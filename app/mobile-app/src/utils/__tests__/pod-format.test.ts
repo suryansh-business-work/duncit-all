@@ -7,6 +7,7 @@ import {
   podPlaceLabel,
   podPriceLabel,
   podScheduleLabel,
+  podShareMessage,
   podTimeChip,
 } from '@/utils/pod-format';
 
@@ -99,5 +100,34 @@ describe('pod-format', () => {
     expect(start).toContain('2026');
     expect(start).toContain('→');
     expect(podScheduleLabel('2026-06-02T13:30:00.000Z', 'not-a-date')).not.toContain('→');
+  });
+});
+
+describe('podShareMessage', () => {
+  const sharable = {
+    pod_id: 'p1',
+    pod_title: 'Sunset Jam',
+    club_slug: 'jazz-club',
+    pod_date_time: '2026-06-02T13:30:00.000Z',
+    pod_end_date_time: null,
+    place_label: 'Indiranagar',
+    place_detail: 'Bengaluru',
+  };
+
+  it('includes the title, schedule, venue and a deep link', () => {
+    const { message, url } = podShareMessage(sharable);
+    expect(url).toBe('https://mweb.duncit.com/club/jazz-club/pod/p1');
+    expect(message).toContain('Sunset Jam');
+    expect(message).toContain('When:');
+    expect(message).toContain('Where: Indiranagar · Bengaluru');
+    expect(message).toContain(url);
+  });
+
+  it('falls back to a club-less url and omits absent date/venue', () => {
+    const { message, url } = podShareMessage({ pod_id: 'p2', pod_title: 'Open Mic' });
+    expect(url).toBe('https://mweb.duncit.com/pod/p2');
+    expect(message).not.toContain('When:');
+    expect(message).not.toContain('Where:');
+    expect(message).toContain('Open Mic');
   });
 });

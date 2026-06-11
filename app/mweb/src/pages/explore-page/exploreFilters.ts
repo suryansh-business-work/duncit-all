@@ -81,7 +81,9 @@ export function filterExplorePods({
     const club = clubsById.get(pod.club_id);
     if (selectedSuperId && club?.super_category_id !== selectedSuperId) return false;
     if (!categoryMatches(club, filters.categoryId, parentById)) return false;
-    if (filters.preset === 'NEAR') {
+    // Virtual pods are location-independent — never filtered out by city/zone (bug 10).
+    const isVirtual = (pod as { pod_mode?: string | null }).pod_mode === 'VIRTUAL';
+    if (filters.preset === 'NEAR' && !isVirtual) {
       if (locationId && pod.location_id !== locationId) return false;
       if (zoneName && pod.zone_name !== zoneName) return false;
     }

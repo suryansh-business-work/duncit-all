@@ -34,7 +34,10 @@ function deriveHome(
     const club = clubsById.get(p.club_id);
     if (selectedSuperId && club?.super_category_id !== selectedSuperId) return false;
     if (selectedCategoryId && club?.category_id !== selectedCategoryId) return false;
-    if (selectedLocationId && p.location_id !== selectedLocationId) return false;
+    // Virtual pods are location-independent — keep them under the Super Category
+    // regardless of the selected city (bug 10).
+    const isVirtual = p.pod_mode === 'VIRTUAL';
+    if (selectedLocationId && !isVirtual && p.location_id !== selectedLocationId) return false;
     return true;
   });
 
@@ -70,8 +73,8 @@ export function useHomeData() {
 
   const { clubs, pods } = useMemo(() => {
     const allClubs = data?.clubs ?? [];
-    const byLocation = (p: { location_id?: string | null }) =>
-      !selectedLocationId || p.location_id === selectedLocationId;
+    const byLocation = (p: { location_id?: string | null; pod_mode?: string | null }) =>
+      !selectedLocationId || p.pod_mode === 'VIRTUAL' || p.location_id === selectedLocationId;
     if (!selectedSuperId) {
       return { clubs: allClubs, pods: (data?.pods ?? []).filter(byLocation) };
     }

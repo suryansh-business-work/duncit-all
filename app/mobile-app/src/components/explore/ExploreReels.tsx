@@ -9,21 +9,26 @@ import { useExplore } from '@/hooks/useExplore';
 import type { ExplorePod } from '@/stores/explore.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
+import { PodCommentsSheet } from '@/components/details/pod-comments';
 
 /** Vertical full-screen pager of pods — the Reels experience. Measures its own
  * height so each pod snaps to the viewport below the header. */
 export function ExploreReels() {
   const { width } = useWindowDimensions();
   const [height, setHeight] = useState(0);
+  const [commentsPod, setCommentsPod] = useState<ExplorePod | null>(null);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const {
     pods,
     clubsById,
     isLoading,
     hasData,
+    viewerId,
     isSaved,
     isSavePending,
     likeStateFor,
+    commentCountFor,
+    bumpComment,
     toggleSave,
     toggleLike,
   } = useExplore();
@@ -64,14 +69,25 @@ export function ExploreReels() {
                 saved={saved}
                 savePending={isSavePending(item.id)}
                 like={like}
+                commentCount={commentCountFor(item)}
                 onOpen={() => openPod(item)}
                 onToggleSave={() => toggleSave(item.id, saved)}
                 onToggleLike={() => toggleLike(item.id, like)}
+                onComment={() => setCommentsPod(item)}
               />
             );
           }}
         />
       )}
+      {commentsPod ? (
+        <PodCommentsSheet
+          podId={commentsPod.id}
+          open
+          viewerId={viewerId}
+          onClose={() => setCommentsPod(null)}
+          onCountChange={(delta) => bumpComment(commentsPod.id, delta)}
+        />
+      ) : null}
     </YStack>
   );
 }

@@ -60,9 +60,9 @@ describe('store fetch guards', () => {
 
   it('status fetch populates the feed', async () => {
     useStatusStore.setState({ data: undefined, isLoading: false });
-    mockRequest.mockResolvedValueOnce({ posts: [], myPosts: [] });
+    mockRequest.mockResolvedValueOnce({ stories: [], myStories: [] });
     await useStatusStore.getState().fetch();
-    expect(useStatusStore.getState().data?.posts).toEqual([]);
+    expect(useStatusStore.getState().data?.stories).toEqual([]);
   });
 
   it('chat / following / status skip when already cached', async () => {
@@ -70,7 +70,7 @@ describe('store fetch guards', () => {
     await useChatStore.getState().fetch();
     useFollowingStore.setState({ data: { me: null }, isLoading: false });
     await useFollowingStore.getState().fetch();
-    useStatusStore.setState({ data: { posts: [], myPosts: [] }, isLoading: false });
+    useStatusStore.setState({ data: { stories: [], myStories: [] }, isLoading: false });
     await useStatusStore.getState().fetch();
     expect(mockRequest).not.toHaveBeenCalled();
   });
@@ -83,8 +83,24 @@ describe('explore store', () => {
       isLoading: false,
       savedOverride: {},
       likeOverride: {},
+      commentDelta: {},
     }),
   );
+
+  it('setLike pushes an external like state into the override', () => {
+    useExploreStore.getState().setLike('p1', { liked_by_me: true, like_count: 7 });
+    expect(useExploreStore.getState().likeOverride.p1).toEqual({
+      liked_by_me: true,
+      like_count: 7,
+    });
+  });
+
+  it('bumpComment accumulates the per-pod comment delta', () => {
+    useExploreStore.getState().bumpComment('p1', 1);
+    useExploreStore.getState().bumpComment('p1', 1);
+    useExploreStore.getState().bumpComment('p1', -1);
+    expect(useExploreStore.getState().commentDelta.p1).toBe(1);
+  });
 
   it('toggleSave applies then reconciles with the server', async () => {
     mockRequest.mockResolvedValueOnce({
@@ -129,16 +145,32 @@ describe('status store', () => {
       .mockResolvedValueOnce({
         createPost: { id: 'po1', image_url: 'https://img/x.jpg', caption: '', created_at: '' },
       })
-      .mockResolvedValueOnce({ posts: [], myPosts: [] });
+      .mockResolvedValueOnce({ stories: [], myStories: [] });
     await useStatusStore
       .getState()
       .publish({ base64: 'abc', fileName: 'x.jpg', mimeType: 'image/jpeg' });
     expect(mockRequest).toHaveBeenCalledTimes(3);
+    // The status post is tagged as an ephemeral STORY, not a permanent post.
+    expect(mockRequest.mock.calls[1]?.[1]).toMatchObject({
+      input: { kind: 'STORY', media_type: 'IMAGE' },
+    });
   });
 
-  it('publish throws without an image', async () => {
+  it('publish uploads a video story with a derived mp4 name', async () => {
+    mockRequest
+      .mockResolvedValueOnce({ uploadImageToImagekit: { url: 'https://img/c.mp4', fileId: 'f2' } })
+      .mockResolvedValueOnce({ createPost: { id: 'po2' } })
+      .mockResolvedValueOnce({ stories: [], myStories: [] });
+    await useStatusStore.getState().publish({ base64: 'vid', mediaType: 'VIDEO' });
+    expect(mockRequest.mock.calls[0]?.[1]).toMatchObject({ mimeType: 'video/mp4' });
+    expect(mockRequest.mock.calls[1]?.[1]).toMatchObject({
+      input: { kind: 'STORY', media_type: 'VIDEO' },
+    });
+  });
+
+  it('publish throws without media', async () => {
     await expect(useStatusStore.getState().publish({ base64: null })).rejects.toThrow(
-      'No image selected.',
+      'No media selected.',
     );
   });
 });

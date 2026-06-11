@@ -1,6 +1,6 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo } from 'react';
 import { useQuery } from '@apollo/client';
-import { HEADER_DATA } from '../../components/app-header/queries';
+import { HEADER_DATA, HOME_REFRESH_EVENT } from '../../components/app-header/queries';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
 import { HOME_DATA, FOLLOWED_USERS, PriceFilter, DateFilter, SortBy } from './queries';
 
@@ -34,6 +34,15 @@ export function useHomeData({
     },
     fetchPolicy: 'cache-and-network',
   });
+
+  // A header-logo tap while already on Home re-fetches the feed (bug: logo did nothing).
+  useEffect(() => {
+    const onRefresh = () => {
+      refetch().catch(() => undefined);
+    };
+    window.addEventListener(HOME_REFRESH_EVENT, onRefresh);
+    return () => window.removeEventListener(HOME_REFRESH_EVENT, onRefresh);
+  }, [refetch]);
 
   const { data: headerData } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-first' });
   const isHost = (headerData?.me?.roles ?? []).includes('HOST');
@@ -309,13 +318,15 @@ export function useHomeData({
 
   const followedPosts = useMemo(() => {
     const userIds = new Set(followingUserIds);
-    return (data?.posts ?? []).filter((post: any) => userIds.has(post.author_id)).slice(0, 36);
-  }, [data?.posts, followingUserIds]);
+    return (data?.stories ?? []).filter((post: any) => userIds.has(post.author_id)).slice(0, 36);
+  }, [data?.stories, followingUserIds]);
 
-  const myLatestPost = useMemo(() => {
+  // All of my own active (non-expired) stories, newest first — the rail groups
+  // them as add-on slides instead of letting a new upload overwrite the old one.
+  const myStories = useMemo(() => {
     const meId = headerData?.me?.user_id;
-    return (data?.posts ?? []).find((post: any) => meId && post.author_id === meId) ?? null;
-  }, [data?.posts, headerData?.me?.user_id]);
+    return (data?.stories ?? []).filter((post: any) => meId && post.author_id === meId);
+  }, [data?.stories, headerData?.me?.user_id]);
 
   return {
     data,
@@ -334,7 +345,7 @@ export function useHomeData({
     followedPods,
     hostPods,
     followedPosts,
-    myLatestPost,
+    myStories,
     followedUsers: followedUsersData?.publicUsersByIds ?? [],
     totalPods: filteredPods.length,
     hostNameOf,

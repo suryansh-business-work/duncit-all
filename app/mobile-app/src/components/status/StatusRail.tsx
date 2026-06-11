@@ -14,9 +14,10 @@ interface StatusRailProps {
 /** Home status rail — "Your story" upload tile first (tap to pick + post an
  * image), then everyone's latest statuses; tapping one opens the viewer. */
 export function StatusRail({ userName, userPhoto }: Readonly<StatusRailProps>) {
-  const { statuses, myLatest } = useStatus();
+  const { statuses, mine } = useStatus();
   const { uploading, pickAndUpload } = useStatusUpload();
   const [active, setActive] = useState<StatusGroup | null>(null);
+  const myCoverIsVideo = mine?.cover.mediaType === 'VIDEO';
 
   return (
     <>
@@ -28,10 +29,15 @@ export function StatusRail({ userName, userPhoto }: Readonly<StatusRailProps>) {
         <StatusTile
           testID="status-mine"
           label={uploading ? 'Posting…' : 'Your story'}
-          image={myLatest?.image_url ?? userPhoto}
+          image={myCoverIsVideo ? userPhoto : (mine?.cover.imageUrl ?? userPhoto)}
           ring
           badge
           onPress={() => {
+            if (uploading) return;
+            if (mine) setActive(mine);
+            else void pickAndUpload();
+          }}
+          onBadgePress={() => {
             if (!uploading) void pickAndUpload();
           }}
         />
@@ -40,7 +46,7 @@ export function StatusRail({ userName, userPhoto }: Readonly<StatusRailProps>) {
             key={status.authorId}
             testID={`status-${status.authorId}`}
             label={status.name}
-            image={status.photo ?? status.latest.image_url}
+            image={status.photo ?? status.cover.imageUrl}
             onPress={() => setActive(status)}
           />
         ))}

@@ -64,8 +64,10 @@ describe('ExplorePodCard share', () => {
         height={700}
         saved={false}
         like={{ liked_by_me: false, like_count: 9 }}
+        commentCount={0}
         onToggleSave={jest.fn()}
         onToggleLike={jest.fn()}
+        onComment={jest.fn()}
         onOpen={jest.fn()}
       />,
     );

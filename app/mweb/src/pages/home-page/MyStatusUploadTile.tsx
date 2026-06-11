@@ -4,10 +4,8 @@ import { useStatusUpload } from '../../components/status-upload/StatusUploadProv
 
 interface Props {
   me?: any;
-  onView?: (url: string) => void;
+  onView?: () => void;
 }
-
-const MAX_BYTES = 15 * 1024 * 1024;
 
 function initials(name?: string | null) {
   return (name ?? '')
@@ -21,15 +19,18 @@ function initials(name?: string | null) {
 
 export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
   const { upload, openProfilePicker } = useStatusUpload();
-  const latestPost = me?.latest_status ?? null;
-  const statusUrl = upload.profileUrl ?? latestPost?.image_url ?? null;
+  const stories = (me?.my_stories ?? []) as Array<{ image_url?: string; media_type?: string }>;
+  const latestStory = stories[0] ?? null;
+  const latestIsVideo = latestStory?.media_type === 'VIDEO';
+  const statusUrl = latestStory?.image_url ?? upload.profileUrl ?? null;
+  const hasStories = stories.length > 0;
   const uploading = upload.active && upload.kind === 'profile';
   const progress = uploading ? upload.progress : 0;
 
   const handlePick = () => {
     if (uploading) return;
-    if (statusUrl && onView) {
-      onView(statusUrl);
+    if (hasStories && onView) {
+      onView();
       return;
     }
     openProfilePicker();
@@ -43,14 +44,15 @@ export default function MyStatusUploadTile({ me, onView }: Readonly<Props>) {
   return (
     <Stack alignItems="center" sx={{ position: 'relative' }}>
       <HomeStatusTile
-        label={uploading ? 'Uploading…' : statusUrl ? 'My status' : 'My status'}
-        imageUrl={statusUrl ?? me?.profile_photo}
+        label={uploading ? 'Uploading…' : 'My status'}
+        imageUrl={latestIsVideo ? null : statusUrl ?? me?.profile_photo}
+        videoUrl={latestIsVideo ? statusUrl : null}
         initials={initials(me?.full_name || me?.first_name)}
-        add={!statusUrl}
-        active={!!statusUrl}
+        add={!hasStories}
+        active={hasStories}
         onClick={handlePick}
       />
-      {statusUrl && !uploading && (
+      {hasStories && !uploading && (
         <Box
           onClick={(e) => {
             e.stopPropagation();

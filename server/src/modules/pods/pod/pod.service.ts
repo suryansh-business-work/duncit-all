@@ -331,6 +331,16 @@ export const podService = {
     return docs.map((d) => toPub(d, slugMap));
   },
 
+  async activeLocationIds(): Promise<string[]> {
+    // Locations that currently host at least one live pod (active and not past).
+    const ids = await PodModel.distinct('location_id', {
+      is_active: true,
+      location_id: { $ne: null },
+      pod_date_time: { $gte: new Date() },
+    });
+    return ids.map((id) => String(id));
+  },
+
   async listMyHostPods(userId: string, range?: { from?: string | null; to?: string | null }) {
     if (!Types.ObjectId.isValid(userId)) {
       throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });

@@ -3,12 +3,13 @@ import * as Location from 'expo-location';
 
 import { useLocations } from '@/hooks/useLocations';
 import { buildLocationTree } from '@/utils/location-tree';
+import { matchLocation, matchZone } from '@/utils/location-match';
 import type { LocationItem } from '@/stores/location.store';
 
 /** Draft country/state/city/zone selection + GPS detection for the location
  * picker. Mirrors mWeb's drilldown (apply-on-confirm, GPS sets the draft). */
 export function useLocationDraft(open: boolean, onClose: () => void) {
-  const { locations, select, selectedId } = useLocations();
+  const { locations, activeLocationIds, select, selectedId } = useLocations();
   const tree = useMemo(() => buildLocationTree(locations), [locations]);
 
   const [draftId, setDraftId] = useState('');
@@ -54,13 +55,6 @@ export function useLocationDraft(open: boolean, onClose: () => void) {
     onClose();
   };
 
-  const matchCity = (city: string) =>
-    locations.find(
-      (l) =>
-        l.city?.toLowerCase() === city.toLowerCase() ||
-        l.location_name.toLowerCase() === city.toLowerCase(),
-    );
-
   const detect = async () => {
     setError('');
     setBusy(true);
@@ -77,18 +71,23 @@ export function useLocationDraft(open: boolean, onClose: () => void) {
       });
       const city = geo?.city ?? geo?.subregion ?? '';
       setDetected(city);
-      const match = matchCity(city);
+      const match = matchLocation(locations, city, geo?.postalCode);
       if (!match) {
         setError(`Duncit isn't in ${city || 'your area'} yet. Pick a city below.`);
         return;
       }
-      const zone =
-        match.location_zones?.find((z) => z.pincode && z.pincode === geo?.postalCode)?.zone_name ??
-        '';
+      const zone = matchZone(match, geo?.postalCode);
       setCountry(match.country?.trim() || '');
       setState(match.state?.trim() || '');
       setDraftId(match.id);
       setDraftZone(zone);
+      // Live pods here → commit and go straight to Home; otherwise prompt to pick.
+      if (activeLocationIds.includes(match.id)) {
+        select(match, zone);
+        onClose();
+      } else {
+        setError(`No live pods in ${match.location_name} right now. Pick a city below.`);
+      }
     } catch {
       setError('Could not detect your location.');
     } finally {

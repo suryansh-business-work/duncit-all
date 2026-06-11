@@ -17,9 +17,11 @@ export function useExplore() {
   const savedOverride = useExploreStore((s) => s.savedOverride);
   const savePending = useExploreStore((s) => s.savePending);
   const likeOverride = useExploreStore((s) => s.likeOverride);
+  const commentDelta = useExploreStore((s) => s.commentDelta);
   const fetch = useExploreStore((s) => s.fetch);
   const toggleSave = useExploreStore((s) => s.toggleSave);
   const toggleLike = useExploreStore((s) => s.toggleLike);
+  const bumpComment = useExploreStore((s) => s.bumpComment);
   const { selectedSuperId } = useSuperCategories();
   const { selectedId: selectedLocationId } = useLocations();
 
@@ -38,7 +40,10 @@ export function useExplore() {
       if (selectedSuperId && clubsById.get(p.club_id)?.super_category_id !== selectedSuperId) {
         return false;
       }
-      if (selectedLocationId && p.location_id !== selectedLocationId) return false;
+      // Virtual pods are location-independent — they show under the Super Category
+      // regardless of the selected city (bug: hidden by the location filter).
+      const isVirtual = p.pod_mode === 'VIRTUAL';
+      if (selectedLocationId && !isVirtual && p.location_id !== selectedLocationId) return false;
       return true;
     });
   }, [data?.pods, clubsById, selectedSuperId, selectedLocationId]);
@@ -54,14 +59,20 @@ export function useExplore() {
   const likeStateFor = (pod: ExplorePod): LikeState =>
     likeOverride[pod.id] ?? { liked_by_me: pod.liked_by_me, like_count: pod.like_count };
 
+  const commentCountFor = (pod: ExplorePod): number =>
+    pod.comment_count + (commentDelta[pod.id] ?? 0);
+
   return {
     pods,
     clubsById,
     isLoading,
     hasData: !!data,
+    viewerId: data?.me?.user_id ?? null,
     isSaved,
     isSavePending,
     likeStateFor,
+    commentCountFor,
+    bumpComment,
     toggleSave,
     toggleLike,
     refetch: () => fetch(true),

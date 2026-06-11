@@ -24,6 +24,8 @@ const StatusUploadContext = createContext<StatusUploadContextValue | null>(null)
 const IDLE: StatusUploadState = { active: false, kind: null, progress: 0, message: '' };
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
+// Stories are short clips — keep videos to 30s so they fit the 24h story format.
+const MAX_STORY_VIDEO_SECONDS = 30;
 
 function toBase64(file: File) {
   return new Promise<string>((resolve, reject) => {
@@ -36,6 +38,23 @@ function toBase64(file: File) {
 
 function mediaTypeOf(file: File): MediaType {
   return file.type.startsWith('video/') ? 'VIDEO' : 'IMAGE';
+}
+
+function videoDurationSeconds(file: File) {
+  return new Promise<number>((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const video = document.createElement('video');
+    video.preload = 'metadata';
+    video.onloadedmetadata = () => {
+      URL.revokeObjectURL(url);
+      resolve(video.duration || 0);
+    };
+    video.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error('Could not read the selected video'));
+    };
+    video.src = url;
+  });
 }
 
 function validateFile(file: File, allowVideo: boolean) {
@@ -57,7 +76,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
   const openProfilePicker = () => {
     if (upload.active) return setNotice('Please wait, status upload is in progress.');
     pendingRef.current = { kind: 'profile' };
-    setAccept('image/*');
+    setAccept('image/*,video/*');
     inputRef.current?.click();
   };
 
@@ -74,12 +93,21 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
     const pending = pendingRef.current;
     pendingRef.current = null;
     if (!file || !pending) return;
-    const fileError = validateFile(file, pending.kind === 'pod');
+    const fileError = validateFile(file, true);
     if (fileError) return setNotice(fileError);
+
+    const mediaType = mediaTypeOf(file);
+    if (pending.kind === 'profile' && mediaType === 'VIDEO') {
+      const seconds = await videoDurationSeconds(file).catch(() => 0);
+      if (seconds > MAX_STORY_VIDEO_SECONDS) {
+        return setNotice(
+          `Video is ${Math.round(seconds)}s — story videos must be ${MAX_STORY_VIDEO_SECONDS}s or less.`
+        );
+      }
+    }
 
     setUpload({ active: true, kind: pending.kind, progress: 8, message: 'Preparing status upload...' });
     try {
-      const mediaType = mediaTypeOf(file);
       const fileBase64 = await toBase64(file);
       setUpload((current) => ({ ...current, progress: 45, message: 'Uploading status media...' }));
       const uploaded = await apolloClient.mutate({
@@ -93,7 +121,10 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
       if (pending.kind === 'pod') {
         await apolloClient.mutate({ mutation: ADD_POD_STATUS, variables: { podId: pending.podId, media: { url, type: mediaType } } });
       } else {
-        await apolloClient.mutate({ mutation: CREATE_STATUS_POST, variables: { input: { image_url: url, caption: '' } } });
+        await apolloClient.mutate({
+          mutation: CREATE_STATUS_POST,
+          variables: { input: { image_url: url, caption: '', kind: 'STORY', media_type: mediaType } },
+        });
       }
       await apolloClient.refetchQueries({ include: ['HomeFeed', 'MeAndMyPosts', 'PodDetails'] });
       setUpload({ active: false, kind: null, progress: 100, message: 'Status uploaded.', profileUrl: pending.kind === 'profile' ? url : upload.profileUrl });

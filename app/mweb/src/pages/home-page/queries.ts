@@ -62,10 +62,11 @@ export const HOME_DATA = gql`
       user_id
       full_name
     }
-    posts {
+    stories {
       id
       author_id
       image_url
+      media_type
       caption
       created_at
     }

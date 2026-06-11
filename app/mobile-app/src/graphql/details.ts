@@ -33,6 +33,14 @@ export const PodDetailsDocument = gql(`
       zone_name
       club_id
       club_slug
+      club {
+        club_id
+        club_name
+        club_description
+        club_feature_images_and_videos {
+          url
+        }
+      }
       location_id
       venue_id
       place_label
@@ -175,6 +183,7 @@ export const ClubDetailsDocument = gql(`
       }
       club_id
       club_slug
+      pod_mode
       place_label
       place_detail
     }

@@ -2,10 +2,15 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PostModel, type IPost } from './post.model';
 
+const STORY_TTL_MS = 24 * 60 * 60 * 1000;
+
 const toPub = (p: IPost, viewerId?: string | null) => ({
   id: String(p._id),
   author_id: String(p.author_id),
   image_url: p.image_url,
+  media_type: p.media_type || 'IMAGE',
+  kind: p.kind || 'POST',
+  expires_at: p.expires_at ? p.expires_at.toISOString() : null,
   caption: p.caption || '',
   likes: (p.likes || []).map((x) => String(x)),
   likes_count: p.likes?.length || 0,
@@ -31,26 +36,44 @@ function assertId(id: string, label = 'id') {
     throw new GraphQLError(`Invalid ${label}`, { extensions: { code: 'BAD_USER_INPUT' } });
 }
 
-// Reject anything that isn't a sane image reference. Allow https URLs and
-// inline image data URLs (the client uploads as base64 data URL).
-function validateImage(url: string) {
+// Reject anything that isn't a sane media reference. The URL must be an
+// http(s) ImageKit URL (image or video) — every file goes through the picker.
+function validateMediaUrl(url: string) {
   if (!url || typeof url !== 'string')
     throw new GraphQLError('image_url is required', { extensions: { code: 'BAD_USER_INPUT' } });
   if (!/^https?:\/\//i.test(url))
     throw new GraphQLError(
-      'image_url must be an http(s) URL — please upload through the image picker',
+      'image_url must be an http(s) URL — please upload through the media picker',
       { extensions: { code: 'BAD_USER_INPUT' } }
     );
-  // Reject inline data URLs — every image must go through ImageKit.
+  // Reject inline data URLs — every file must go through ImageKit.
   if (/^data:/i.test(url))
     throw new GraphQLError('Inline data URLs are not allowed; upload via ImageKit', {
       extensions: { code: 'BAD_USER_INPUT' },
     });
 }
 
+function normalizeMediaType(value?: string | null): 'IMAGE' | 'VIDEO' {
+  return String(value || '').toUpperCase() === 'VIDEO' ? 'VIDEO' : 'IMAGE';
+}
+
 export const postService = {
   async list(authorId: string | null | undefined, viewerId?: string | null) {
-    const q: any = {};
+    // Permanent profile posts only — stories never surface on the profile grid.
+    const q: any = { kind: { $ne: 'STORY' } };
+    if (authorId) {
+      assertId(authorId, 'author_id');
+      q.author_id = new Types.ObjectId(authorId);
+    }
+    const docs = await PostModel.find(q).sort({ created_at: -1 });
+    return docs.map((d) => toPub(d, viewerId));
+  },
+
+  async listStories(authorId: string | null | undefined, viewerId?: string | null) {
+    // Active stories only: kind STORY and not yet expired. The TTL monitor
+    // purges old docs lazily, so we also filter by expires_at to hide them
+    // immediately once the 24h window closes.
+    const q: any = { kind: 'STORY', expires_at: { $gt: new Date() } };
     if (authorId) {
       assertId(authorId, 'author_id');
       q.author_id = new Types.ObjectId(authorId);
@@ -65,14 +88,22 @@ export const postService = {
     return doc ? toPub(doc, viewerId) : null;
   },
 
-  async create(authorId: string, input: { image_url: string; caption?: string }) {
-    validateImage(input.image_url);
+  async create(
+    authorId: string,
+    input: { image_url: string; caption?: string; media_type?: string; kind?: string }
+  ) {
+    validateMediaUrl(input.image_url);
+    const kind = String(input.kind || '').toUpperCase() === 'STORY' ? 'STORY' : 'POST';
     const doc = await PostModel.create({
       author_id: new Types.ObjectId(authorId),
       image_url: input.image_url,
+      media_type: normalizeMediaType(input.media_type),
+      kind,
       caption: (input.caption || '').trim(),
       likes: [],
       comments: [],
+      // Stories live for 24h then the TTL index removes them.
+      expires_at: kind === 'STORY' ? new Date(Date.now() + STORY_TTL_MS) : null,
     });
     return toPub(doc, authorId);
   },

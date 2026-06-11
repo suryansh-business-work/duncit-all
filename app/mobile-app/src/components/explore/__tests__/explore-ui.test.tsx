@@ -11,6 +11,31 @@ const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),
 }));
+jest.mock('@/components/details/pod-comments', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View, Text } = require('react-native');
+  return {
+    PodCommentsSheet: ({
+      podId,
+      onClose,
+      onCountChange,
+    }: {
+      podId: string;
+      onClose: () => void;
+      onCountChange: (delta: number) => void;
+    }) => (
+      <View testID="explore-comments-sheet">
+        <Text testID="explore-comments-pod">{podId}</Text>
+        <Text testID="explore-comments-add" onPress={() => onCountChange(1)}>
+          add
+        </Text>
+        <Text testID="explore-comments-close" onPress={onClose}>
+          close
+        </Text>
+      </View>
+    ),
+  };
+});
 
 const mockedExplore = useExplore as jest.Mock;
 
@@ -38,9 +63,10 @@ const pod = (id: string) =>
   }) as never;
 
 describe('ExplorePodCard', () => {
-  it('renders the pod and fires like/save/open actions', () => {
+  it('renders the pod and fires like/save/comment/open actions', () => {
     const onToggleLike = jest.fn();
     const onToggleSave = jest.fn();
+    const onComment = jest.fn();
     const onOpen = jest.fn();
     renderWithProviders(
       <ExplorePodCard
@@ -49,8 +75,10 @@ describe('ExplorePodCard', () => {
         height={700}
         saved={false}
         like={{ liked_by_me: false, like_count: 3 }}
+        commentCount={2}
         onToggleLike={onToggleLike}
         onToggleSave={onToggleSave}
+        onComment={onComment}
         onOpen={onOpen}
       />,
     );
@@ -59,20 +87,26 @@ describe('ExplorePodCard', () => {
     expect(onToggleLike).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('reel-save-p-1'));
     expect(onToggleSave).toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('reel-comment-p-1'));
+    expect(onComment).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('reel-go-p-1'));
     expect(onOpen).toHaveBeenCalled();
   });
 });
 
 describe('ExploreReels', () => {
+  const bumpComment = jest.fn();
   const base = {
     pods: [pod('1')],
     clubsById: new Map(),
     isLoading: false,
     hasData: true,
+    viewerId: 'me',
     isSaved: () => false,
     isSavePending: () => false,
     likeStateFor: () => ({ liked_by_me: false, like_count: 3 }),
+    commentCountFor: () => 2,
+    bumpComment,
     toggleSave: jest.fn(),
     toggleLike: jest.fn(),
     refetch: jest.fn(),
@@ -85,6 +119,7 @@ describe('ExploreReels', () => {
 
   beforeEach(() => {
     mockNavigate.mockClear();
+    bumpComment.mockClear();
     mockedExplore.mockReturnValue(base);
   });
 
@@ -106,6 +141,19 @@ describe('ExploreReels', () => {
 
     const list = screen.UNSAFE_getByType(FlatList);
     expect(list.props.getItemLayout(null, 2)).toEqual({ length: 700, offset: 1400, index: 2 });
+  });
+
+  it('opens comments inline (no redirect) and bumps the count', () => {
+    renderWithProviders(<ExploreReels />);
+    layout();
+    fireEvent.press(screen.getByTestId('reel-comment-p-1'));
+    expect(screen.getByTestId('explore-comments-sheet')).toBeOnTheScreen();
+    expect(screen.getByTestId('explore-comments-pod')).toHaveTextContent('1');
+    expect(mockNavigate).not.toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('explore-comments-add'));
+    expect(bumpComment).toHaveBeenCalledWith('1', 1);
+    fireEvent.press(screen.getByTestId('explore-comments-close'));
+    expect(screen.queryByTestId('explore-comments-sheet')).toBeNull();
   });
 
   it('shows the empty state with no pods', () => {

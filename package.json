@@ -4,29 +4,6 @@
   "private": true,
   "description": "Full Stack Monorepo (React + GraphQL + Node.js)",
   "packageManager": "pnpm@9.15.0",
-  "workspaces": [
-    "server",
-    "mweb-app",
-    "admin",
-    "website",
-    "partners/partners-app",
-    "partners/partners-website",
-    "ads/ads-portal",
-    "ads/ads-website",
-    "crm",
-    "finance",
-    "tech",
-    "support",
-    "website-app",
-    "legal",
-    "ai",
-    "products",
-    "marketing",
-    "onboarding",
-    "hr",
-    "employee",
-    "status"
-  ],
   "scripts": {
     "dev:server": "pnpm --filter server dev",
     "dev:app": "pnpm --filter mweb-app dev",
@@ -125,6 +102,8 @@
     "*.{ts,tsx,js,jsx,json,md,yml,yaml}": []
   },
   "pnpm": {
-    "neverBuiltDependencies": ["mongodb-memory-server"]
+    "neverBuiltDependencies": [
+      "mongodb-memory-server"
+    ]
   }
 }

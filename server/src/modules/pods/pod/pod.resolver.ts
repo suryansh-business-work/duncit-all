@@ -1,4 +1,5 @@
 import { podService } from './pod.service';
+import { clubService } from '@modules/pods/club/club.service';
 import type { GraphQLContext } from '@context';
 import { requireRole, requireAuth } from '@middleware/rbac';
 import { UserModel } from '@modules/access/user/user.model';
@@ -112,6 +113,14 @@ async function canViewMeeting(parent: any, ctx: GraphQLContext) {
 export const podResolvers = {
   Pod: {
     pod_mode: (parent: any): string => parent.pod_mode ?? 'PHYSICAL',
+    club: async (parent: any) => {
+      if (!parent.club_id) return null;
+      try {
+        return await clubService.getById(String(parent.club_id));
+      } catch {
+        return null;
+      }
+    },
     meeting_url: async (parent: any, _a: unknown, ctx: GraphQLContext): Promise<string | null> => {
       return (await canViewMeeting(parent, ctx)) ? parent.meeting_url ?? null : null;
     },
@@ -158,6 +167,7 @@ export const podResolvers = {
     ) => podService.getBySlugs(args.club_slug, args.pod_slug),
     podComments: async (_p: unknown, args: { pod_doc_id: string }) =>
       podService.listComments(args.pod_doc_id),
+    activePodLocationIds: async () => podService.activeLocationIds(),
   },
   Mutation: {
     createPod: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

@@ -5,26 +5,26 @@ WORKDIR /repo
 # Copy root manifests + workspace manifests for cached install
 COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.base.json ./
 COPY server/package.json ./server/
-COPY mweb-app/package.json ./mweb-app/
-COPY admin/package.json ./admin/
-COPY website/package.json ./website/
-COPY partners/partners-app/package.json ./partners/partners-app/
-COPY partners/partners-website/package.json ./partners/partners-website/
-COPY ads/ads-portal/package.json ./ads/ads-portal/
-COPY ads/ads-website/package.json ./ads/ads-website/
-COPY crm/package.json ./crm/
-COPY finance/package.json ./finance/
-COPY tech/package.json ./tech/
-COPY support/package.json ./support/
-COPY website-app/package.json ./website-app/
-COPY legal/package.json ./legal/
-COPY ai/package.json ./ai/
-COPY products/package.json ./products/
-COPY marketing/package.json ./marketing/
-COPY onboarding/package.json ./onboarding/
-COPY hr/package.json ./hr/
-COPY employee/package.json ./employee/
-COPY status/package.json ./status/
+COPY app/mweb/package.json ./app/mweb/
+COPY portals/admin/package.json ./portals/admin/
+COPY website/main-website/package.json ./website/main-website/
+COPY portals/partners-app/package.json ./portals/partners-app/
+COPY website/partners-website/package.json ./website/partners-website/
+COPY portals/ads-portal/package.json ./portals/ads-portal/
+COPY website/ads-website/package.json ./website/ads-website/
+COPY portals/crm/package.json ./portals/crm/
+COPY portals/finance/package.json ./portals/finance/
+COPY portals/tech/package.json ./portals/tech/
+COPY portals/support/package.json ./portals/support/
+COPY portals/website-app/package.json ./portals/website-app/
+COPY portals/legal/package.json ./portals/legal/
+COPY portals/ai/package.json ./portals/ai/
+COPY portals/products/package.json ./portals/products/
+COPY portals/marketing/package.json ./portals/marketing/
+COPY portals/onboarding/package.json ./portals/onboarding/
+COPY portals/hr/package.json ./portals/hr/
+COPY portals/employee/package.json ./portals/employee/
+COPY website/status-website/package.json ./website/status-website/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
@@ -40,22 +40,22 @@ ENV NODE_ENV=production
 
 COPY --from=builder /repo/package.json /repo/pnpm-lock.yaml /repo/pnpm-workspace.yaml ./
 COPY --from=builder /repo/server/package.json ./server/
-COPY --from=builder /repo/mweb-app/package.json ./mweb-app/
-COPY --from=builder /repo/admin/package.json ./admin/
-COPY --from=builder /repo/website/package.json ./website/
-COPY --from=builder /repo/partners/partners-app/package.json ./partners/partners-app/
-COPY --from=builder /repo/partners/partners-website/package.json ./partners/partners-website/
-COPY --from=builder /repo/ads/ads-portal/package.json ./ads/ads-portal/
-COPY --from=builder /repo/ads/ads-website/package.json ./ads/ads-website/
-COPY --from=builder /repo/crm/package.json ./crm/
-COPY --from=builder /repo/finance/package.json ./finance/
-COPY --from=builder /repo/tech/package.json ./tech/
-COPY --from=builder /repo/support/package.json ./support/
-COPY --from=builder /repo/website-app/package.json ./website-app/
-COPY --from=builder /repo/legal/package.json ./legal/
-COPY --from=builder /repo/ai/package.json ./ai/
-COPY --from=builder /repo/products/package.json ./products/
-COPY --from=builder /repo/marketing/package.json ./marketing/
+COPY --from=builder /repo/app/mweb/package.json ./app/mweb/
+COPY --from=builder /repo/portals/admin/package.json ./portals/admin/
+COPY --from=builder /repo/website/main-website/package.json ./website/main-website/
+COPY --from=builder /repo/portals/partners-app/package.json ./portals/partners-app/
+COPY --from=builder /repo/website/partners-website/package.json ./website/partners-website/
+COPY --from=builder /repo/portals/ads-portal/package.json ./portals/ads-portal/
+COPY --from=builder /repo/website/ads-website/package.json ./website/ads-website/
+COPY --from=builder /repo/portals/crm/package.json ./portals/crm/
+COPY --from=builder /repo/portals/finance/package.json ./portals/finance/
+COPY --from=builder /repo/portals/tech/package.json ./portals/tech/
+COPY --from=builder /repo/portals/support/package.json ./portals/support/
+COPY --from=builder /repo/portals/website-app/package.json ./portals/website-app/
+COPY --from=builder /repo/portals/legal/package.json ./portals/legal/
+COPY --from=builder /repo/portals/ai/package.json ./portals/ai/
+COPY --from=builder /repo/portals/products/package.json ./portals/products/
+COPY --from=builder /repo/portals/marketing/package.json ./portals/marketing/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --prod --frozen-lockfile --filter server

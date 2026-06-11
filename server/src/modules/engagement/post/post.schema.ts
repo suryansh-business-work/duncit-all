@@ -12,12 +12,15 @@ export const postTypeDefs = /* GraphQL */ `
     author_id: ID!
     author: User
     image_url: String!
+    media_type: String!
+    kind: String!
     caption: String!
     likes: [ID!]!
     likes_count: Int!
     liked_by_me: Boolean!
     comments: [PostComment!]!
     comments_count: Int!
+    expires_at: String
     created_at: String!
     updated_at: String!
   }
@@ -25,12 +28,18 @@ export const postTypeDefs = /* GraphQL */ `
   input CreatePostInput {
     image_url: String!
     caption: String
+    media_type: String
+    kind: String
   }
 
   extend type Query {
     posts(author_id: ID): [Post!]!
     post(post_doc_id: ID!): Post
     myPosts: [Post!]!
+    "Active (non-expired) stories, newest first. Optionally scoped to one author."
+    stories(author_id: ID): [Post!]!
+    "The signed-in user's own active stories, newest first."
+    myStories: [Post!]!
   }
 
   extend type Mutation {

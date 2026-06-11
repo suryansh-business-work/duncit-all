@@ -21,23 +21,255 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
-  admin:
+  app/mweb:
+    dependencies:
+      '@apollo/client':
+        specifier: ^3.10.4
+        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/auth-tokens':
+        specifier: workspace:*
+        version: link:../../packages/auth-tokens
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../../packages/logs
+      '@duncit/user-context':
+        specifier: workspace:*
+        version: link:../../packages/user-context
+      '@emotion/react':
+        specifier: ^11.11.4
+        version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
+      '@emotion/styled':
+        specifier: ^11.11.5
+        version: 11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@fortawesome/fontawesome-free':
+        specifier: ^7.2.0
+        version: 7.2.0
+      '@graphql-typed-document-node/core':
+        specifier: ^3.2.0
+        version: 3.2.0(graphql@16.14.0)
+      '@hookform/resolvers':
+        specifier: ^3.9.1
+        version: 3.10.0(react-hook-form@7.77.0(react@18.3.1))
+      '@mui/icons-material':
+        specifier: ^5.15.18
+        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/system':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/x-date-pickers':
+        specifier: ^6.20.2
+        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-oauth/google':
+        specifier: ^0.13.5
+        version: 0.13.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      countries-list:
+        specifier: ^3.3.0
+        version: 3.3.0
+      country-region-data:
+        specifier: ^4.1.0
+        version: 4.1.0
+      date-fns:
+        specifier: ^2.30.0
+        version: 2.30.0
+      formik:
+        specifier: ^2.4.6
+        version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
+      graphql:
+        specifier: ^16.8.1
+        version: 16.14.0
+      lottie-react:
+        specifier: ^2.4.1
+        version: 2.4.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-hook-form:
+        specifier: ^7.54.0
+        version: 7.77.0(react@18.3.1)
+      react-quill:
+        specifier: ^2.0.0
+        version: 2.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router:
+        specifier: ^6.23.1
+        version: 6.30.3(react@18.3.1)
+      react-router-dom:
+        specifier: ^6.23.1
+        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-slick:
+        specifier: ^0.31.0
+        version: 0.31.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      slick-carousel:
+        specifier: ^1.8.1
+        version: 1.8.1(jquery@4.0.0)
+      socket.io-client:
+        specifier: ^4.8.3
+        version: 4.8.3
+      yup:
+        specifier: ^1.4.0
+        version: 1.7.1
+      zod:
+        specifier: ^3.24.1
+        version: 3.25.76
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^14.3.1
+        version: 14.3.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      '@types/react-slick':
+        specifier: ^0.23.13
+        version: 0.23.13
+      '@vitejs/plugin-react':
+        specifier: ^4.3.0
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+      jsdom:
+        specifier: ^24.1.3
+        version: 24.1.3
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vite:
+        specifier: ^5.2.11
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+
+  packages/auth-tokens: {}
+
+  packages/logs:
+    devDependencies:
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  packages/shell:
+    dependencies:
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../logs
+      '@duncit/theme':
+        specifier: workspace:*
+        version: link:../theme
+      '@duncit/user-context':
+        specifier: workspace:*
+        version: link:../user-context
+    devDependencies:
+      '@apollo/client':
+        specifier: ^3.10.4
+        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/x-date-pickers':
+        specifier: ^6.20.2
+        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-oauth/google':
+        specifier: ^0.13.5
+        version: 0.13.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      graphql:
+        specifier: ^16.8.1
+        version: 16.14.0
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-router-dom:
+        specifier: ^6.23.1
+        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  packages/theme:
+    devDependencies:
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
+  packages/user-context:
+    devDependencies:
+      '@mui/icons-material':
+        specifier: ^5.15.18
+        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      formik:
+        specifier: ^2.4.6
+        version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      yup:
+        specifier: ^1.4.0
+        version: 1.7.1
+
+  portals/admin:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@duncit/shell':
         specifier: workspace:*
-        version: link:../packages/shell
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
-        version: link:../packages/theme
+        version: link:../../packages/theme
       '@duncit/user-context':
         specifier: workspace:*
-        version: link:../packages/user-context
+        version: link:../../packages/user-context
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -145,7 +377,7 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  ads/ads-portal:
+  portals/ads-portal:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
@@ -236,38 +468,23 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  ads/ads-website:
-    dependencies:
-      '@duncit/logs':
-        specifier: workspace:*
-        version: link:../../packages/logs
-      '@tailwindcss/vite':
-        specifier: ^4.2.2
-        version: 4.3.0(vite@6.4.2(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
-      astro:
-        specifier: ^5.7.10
-        version: 5.18.1(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
-      tailwindcss:
-        specifier: ^4.2.2
-        version: 4.3.0
-
-  ai:
+  portals/ai:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@duncit/shell':
         specifier: workspace:*
-        version: link:../packages/shell
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
-        version: link:../packages/theme
+        version: link:../../packages/theme
       '@duncit/user-context':
         specifier: workspace:*
-        version: link:../packages/user-context
+        version: link:../../packages/user-context
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -348,23 +565,23 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  crm:
+  portals/crm:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@duncit/shell':
         specifier: workspace:*
-        version: link:../packages/shell
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
-        version: link:../packages/theme
+        version: link:../../packages/theme
       '@duncit/user-context':
         specifier: workspace:*
-        version: link:../packages/user-context
+        version: link:../../packages/user-context
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -493,23 +710,23 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  employee:
+  portals/employee:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@duncit/shell':
         specifier: workspace:*
-        version: link:../packages/shell
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
-        version: link:../packages/theme
+        version: link:../../packages/theme
       '@duncit/user-context':
         specifier: workspace:*
-        version: link:../packages/user-context
+        version: link:../../packages/user-context
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -584,23 +801,23 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  finance:
+  portals/finance:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@duncit/shell':
         specifier: workspace:*
-        version: link:../packages/shell
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
-        version: link:../packages/theme
+        version: link:../../packages/theme
       '@duncit/user-context':
         specifier: workspace:*
-        version: link:../packages/user-context
+        version: link:../../packages/user-context
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -675,23 +892,23 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  hr:
+  portals/hr:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@duncit/shell':
         specifier: workspace:*
-        version: link:../packages/shell
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
-        version: link:../packages/theme
+        version: link:../../packages/theme
       '@duncit/user-context':
         specifier: workspace:*
-        version: link:../packages/user-context
+        version: link:../../packages/user-context
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -766,23 +983,23 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  legal:
+  portals/legal:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@duncit/shell':
         specifier: workspace:*
-        version: link:../packages/shell
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
-        version: link:../packages/theme
+        version: link:../../packages/theme
       '@duncit/user-context':
         specifier: workspace:*
-        version: link:../packages/user-context
+        version: link:../../packages/user-context
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -869,23 +1086,23 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  marketing:
+  portals/marketing:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@duncit/shell':
         specifier: workspace:*
-        version: link:../packages/shell
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
-        version: link:../packages/theme
+        version: link:../../packages/theme
       '@duncit/user-context':
         specifier: workspace:*
-        version: link:../packages/user-context
+        version: link:../../packages/user-context
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -969,150 +1186,23 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  mweb-app:
-    dependencies:
-      '@apollo/client':
-        specifier: ^3.10.4
-        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/auth-tokens':
-        specifier: workspace:*
-        version: link:../packages/auth-tokens
-      '@duncit/logs':
-        specifier: workspace:*
-        version: link:../packages/logs
-      '@duncit/user-context':
-        specifier: workspace:*
-        version: link:../packages/user-context
-      '@emotion/react':
-        specifier: ^11.11.4
-        version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
-      '@emotion/styled':
-        specifier: ^11.11.5
-        version: 11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@fortawesome/fontawesome-free':
-        specifier: ^7.2.0
-        version: 7.2.0
-      '@graphql-typed-document-node/core':
-        specifier: ^3.2.0
-        version: 3.2.0(graphql@16.14.0)
-      '@hookform/resolvers':
-        specifier: ^3.9.1
-        version: 3.10.0(react-hook-form@7.77.0(react@18.3.1))
-      '@mui/icons-material':
-        specifier: ^5.15.18
-        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/material':
-        specifier: ^5.15.18
-        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mui/system':
-        specifier: ^5.15.18
-        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/x-date-pickers':
-        specifier: ^6.20.2
-        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@react-oauth/google':
-        specifier: ^0.13.5
-        version: 0.13.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      countries-list:
-        specifier: ^3.3.0
-        version: 3.3.0
-      country-region-data:
-        specifier: ^4.1.0
-        version: 4.1.0
-      date-fns:
-        specifier: ^2.30.0
-        version: 2.30.0
-      formik:
-        specifier: ^2.4.6
-        version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
-      graphql:
-        specifier: ^16.8.1
-        version: 16.14.0
-      lottie-react:
-        specifier: ^2.4.1
-        version: 2.4.1(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      react-hook-form:
-        specifier: ^7.54.0
-        version: 7.77.0(react@18.3.1)
-      react-quill:
-        specifier: ^2.0.0
-        version: 2.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-router:
-        specifier: ^6.23.1
-        version: 6.30.3(react@18.3.1)
-      react-router-dom:
-        specifier: ^6.23.1
-        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-slick:
-        specifier: ^0.31.0
-        version: 0.31.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      slick-carousel:
-        specifier: ^1.8.1
-        version: 1.8.1(jquery@4.0.0)
-      socket.io-client:
-        specifier: ^4.8.3
-        version: 4.8.3
-      yup:
-        specifier: ^1.4.0
-        version: 1.7.1
-      zod:
-        specifier: ^3.24.1
-        version: 3.25.76
-    devDependencies:
-      '@testing-library/jest-dom':
-        specifier: ^6.9.1
-        version: 6.9.1
-      '@testing-library/react':
-        specifier: ^14.3.1
-        version: 14.3.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@types/react':
-        specifier: ^18.3.3
-        version: 18.3.28
-      '@types/react-dom':
-        specifier: ^18.3.0
-        version: 18.3.7(@types/react@18.3.28)
-      '@types/react-slick':
-        specifier: ^0.23.13
-        version: 0.23.13
-      '@vitejs/plugin-react':
-        specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
-      jsdom:
-        specifier: ^24.1.3
-        version: 24.1.3
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-      vite:
-        specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
-      vitest:
-        specifier: ^1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
-
-  onboarding:
+  portals/onboarding:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@duncit/shell':
         specifier: workspace:*
-        version: link:../packages/shell
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
-        version: link:../packages/theme
+        version: link:../../packages/theme
       '@duncit/user-context':
         specifier: workspace:*
-        version: link:../packages/user-context
+        version: link:../../packages/user-context
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -1190,112 +1280,7 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  packages/auth-tokens: {}
-
-  packages/logs:
-    devDependencies:
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-
-  packages/shell:
-    dependencies:
-      '@duncit/logs':
-        specifier: workspace:*
-        version: link:../logs
-      '@duncit/theme':
-        specifier: workspace:*
-        version: link:../theme
-      '@duncit/user-context':
-        specifier: workspace:*
-        version: link:../user-context
-    devDependencies:
-      '@apollo/client':
-        specifier: ^3.10.4
-        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mui/material':
-        specifier: ^5.15.18
-        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mui/x-date-pickers':
-        specifier: ^6.20.2
-        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@react-oauth/google':
-        specifier: ^0.13.5
-        version: 0.13.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@types/react':
-        specifier: ^18.3.3
-        version: 18.3.28
-      '@types/react-dom':
-        specifier: ^18.3.0
-        version: 18.3.7(@types/react@18.3.28)
-      graphql:
-        specifier: ^16.8.1
-        version: 16.14.0
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      react-router-dom:
-        specifier: ^6.23.1
-        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-
-  packages/theme:
-    devDependencies:
-      '@mui/material':
-        specifier: ^5.15.18
-        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@types/react':
-        specifier: ^18.3.3
-        version: 18.3.28
-      '@types/react-dom':
-        specifier: ^18.3.0
-        version: 18.3.7(@types/react@18.3.28)
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-
-  packages/user-context:
-    devDependencies:
-      '@mui/icons-material':
-        specifier: ^5.15.18
-        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/material':
-        specifier: ^5.15.18
-        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@types/react':
-        specifier: ^18.3.3
-        version: 18.3.28
-      '@types/react-dom':
-        specifier: ^18.3.0
-        version: 18.3.7(@types/react@18.3.28)
-      formik:
-        specifier: ^2.4.6
-        version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-      yup:
-        specifier: ^1.4.0
-        version: 1.7.1
-
-  partners/partners-app:
+  portals/partners-app:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
@@ -1395,44 +1380,23 @@ importers:
         specifier: ^1.6.1
         version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
 
-  partners/partners-website:
-    dependencies:
-      '@duncit/logs':
-        specifier: workspace:*
-        version: link:../../packages/logs
-      '@fortawesome/fontawesome-free':
-        specifier: ^7.2.0
-        version: 7.2.0
-      '@tailwindcss/vite':
-        specifier: ^4.2.2
-        version: 4.3.0(vite@6.4.2(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
-      animejs:
-        specifier: ^4.3.6
-        version: 4.4.1
-      astro:
-        specifier: ^5.7.10
-        version: 5.18.1(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
-      tailwindcss:
-        specifier: ^4.2.2
-        version: 4.3.0
-
-  products:
+  portals/products:
     dependencies:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@duncit/shell':
         specifier: workspace:*
-        version: link:../packages/shell
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
-        version: link:../packages/theme
+        version: link:../../packages/theme
       '@duncit/user-context':
         specifier: workspace:*
-        version: link:../packages/user-context
+        version: link:../../packages/user-context
       '@emotion/react':
         specifier: ^11.11.4
         version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
@@ -1478,6 +1442,306 @@ importers:
       react-router-dom:
         specifier: ^6.23.1
         version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      yup:
+        specifier: ^1.4.0
+        version: 1.7.1
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^14.3.1
+        version: 14.3.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/node':
+        specifier: ^20.12.12
+        version: 20.19.41
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.0
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+      cypress:
+        specifier: ^15.16.0
+        version: 15.16.0
+      jsdom:
+        specifier: ^24.1.3
+        version: 24.1.3
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vite:
+        specifier: ^5.2.11
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+
+  portals/support:
+    dependencies:
+      '@apollo/client':
+        specifier: ^3.10.4
+        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../../packages/shell
+      '@duncit/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
+      '@duncit/user-context':
+        specifier: workspace:*
+        version: link:../../packages/user-context
+      '@emotion/react':
+        specifier: ^11.11.4
+        version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
+      '@emotion/styled':
+        specifier: ^11.11.5
+        version: 11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/icons-material':
+        specifier: ^5.15.18
+        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/system':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/x-date-pickers':
+        specifier: ^6.20.2
+        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-oauth/google':
+        specifier: ^0.13.5
+        version: 0.13.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      date-fns:
+        specifier: ^2.30.0
+        version: 2.30.0
+      formik:
+        specifier: ^2.4.6
+        version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
+      graphql:
+        specifier: ^16.8.1
+        version: 16.14.0
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-quill:
+        specifier: ^2.0.0
+        version: 2.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      react-router:
+        specifier: ^6.23.1
+        version: 6.30.3(react@18.3.1)
+      react-router-dom:
+        specifier: ^6.23.1
+        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      socket.io-client:
+        specifier: ^4.8.3
+        version: 4.8.3
+      yup:
+        specifier: ^1.4.0
+        version: 1.7.1
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^14.3.1
+        version: 14.3.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/node':
+        specifier: ^20.12.12
+        version: 20.19.41
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.0
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+      '@vitest/coverage-v8':
+        specifier: ^1.6.1
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
+      cypress:
+        specifier: ^15.16.0
+        version: 15.16.0
+      jsdom:
+        specifier: ^24.1.3
+        version: 24.1.3
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vite:
+        specifier: ^5.2.11
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+
+  portals/tech:
+    dependencies:
+      '@apollo/client':
+        specifier: ^3.10.4
+        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../../packages/shell
+      '@duncit/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
+      '@duncit/user-context':
+        specifier: workspace:*
+        version: link:../../packages/user-context
+      '@emotion/react':
+        specifier: ^11.11.4
+        version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
+      '@emotion/styled':
+        specifier: ^11.11.5
+        version: 11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/icons-material':
+        specifier: ^5.15.18
+        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/system':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/x-date-pickers':
+        specifier: ^6.20.2
+        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-oauth/google':
+        specifier: ^0.13.5
+        version: 0.13.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      date-fns:
+        specifier: ^2.30.0
+        version: 2.30.0
+      formik:
+        specifier: ^2.4.6
+        version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
+      graphql:
+        specifier: ^16.8.1
+        version: 16.14.0
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-router:
+        specifier: ^6.23.1
+        version: 6.30.3(react@18.3.1)
+      react-router-dom:
+        specifier: ^6.23.1
+        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      yup:
+        specifier: ^1.4.0
+        version: 1.7.1
+    devDependencies:
+      '@testing-library/jest-dom':
+        specifier: ^6.9.1
+        version: 6.9.1
+      '@testing-library/react':
+        specifier: ^14.3.1
+        version: 14.3.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      '@vitejs/plugin-react':
+        specifier: ^4.3.0
+        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
+      '@vitest/coverage-v8':
+        specifier: ^1.6.1
+        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
+      jsdom:
+        specifier: ^24.1.3
+        version: 24.1.3
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+      vite:
+        specifier: ^5.2.11
+        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
+      vitest:
+        specifier: ^1.6.1
+        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+
+  portals/website-app:
+    dependencies:
+      '@apollo/client':
+        specifier: ^3.10.4
+        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../../packages/shell
+      '@duncit/theme':
+        specifier: workspace:*
+        version: link:../../packages/theme
+      '@duncit/user-context':
+        specifier: workspace:*
+        version: link:../../packages/user-context
+      '@emotion/react':
+        specifier: ^11.11.4
+        version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
+      '@emotion/styled':
+        specifier: ^11.11.5
+        version: 11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/icons-material':
+        specifier: ^5.15.18
+        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/system':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
+      '@mui/x-date-pickers':
+        specifier: ^6.20.2
+        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-oauth/google':
+        specifier: ^0.13.5
+        version: 0.13.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      date-fns:
+        specifier: ^2.30.0
+        version: 2.30.0
+      formik:
+        specifier: ^2.4.6
+        version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
+      graphql:
+        specifier: ^16.8.1
+        version: 16.14.0
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-router:
+        specifier: ^6.23.1
+        version: 6.30.3(react@18.3.1)
+      react-router-dom:
+        specifier: ^6.23.1
+        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      socket.io-client:
+        specifier: ^4.8.3
+        version: 4.8.3
       yup:
         specifier: ^1.4.0
         version: 1.7.1
@@ -1670,226 +1934,26 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
-  status:
+  website/ads-website:
     dependencies:
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@tailwindcss/vite':
-        specifier: ^4.1.0
+        specifier: ^4.2.2
         version: 4.3.0(vite@6.4.2(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
       astro:
         specifier: ^5.7.10
         version: 5.18.1(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
       tailwindcss:
-        specifier: ^4.1.0
+        specifier: ^4.2.2
         version: 4.3.0
 
-  support:
-    dependencies:
-      '@apollo/client':
-        specifier: ^3.10.4
-        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/logs':
-        specifier: workspace:*
-        version: link:../packages/logs
-      '@duncit/shell':
-        specifier: workspace:*
-        version: link:../packages/shell
-      '@duncit/theme':
-        specifier: workspace:*
-        version: link:../packages/theme
-      '@duncit/user-context':
-        specifier: workspace:*
-        version: link:../packages/user-context
-      '@emotion/react':
-        specifier: ^11.11.4
-        version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
-      '@emotion/styled':
-        specifier: ^11.11.5
-        version: 11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/icons-material':
-        specifier: ^5.15.18
-        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/material':
-        specifier: ^5.15.18
-        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mui/system':
-        specifier: ^5.15.18
-        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/x-date-pickers':
-        specifier: ^6.20.2
-        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@react-oauth/google':
-        specifier: ^0.13.5
-        version: 0.13.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      date-fns:
-        specifier: ^2.30.0
-        version: 2.30.0
-      formik:
-        specifier: ^2.4.6
-        version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
-      graphql:
-        specifier: ^16.8.1
-        version: 16.14.0
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      react-quill:
-        specifier: ^2.0.0
-        version: 2.0.0(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      react-router:
-        specifier: ^6.23.1
-        version: 6.30.3(react@18.3.1)
-      react-router-dom:
-        specifier: ^6.23.1
-        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      socket.io-client:
-        specifier: ^4.8.3
-        version: 4.8.3
-      yup:
-        specifier: ^1.4.0
-        version: 1.7.1
-    devDependencies:
-      '@testing-library/jest-dom':
-        specifier: ^6.9.1
-        version: 6.9.1
-      '@testing-library/react':
-        specifier: ^14.3.1
-        version: 14.3.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@types/node':
-        specifier: ^20.12.12
-        version: 20.19.41
-      '@types/react':
-        specifier: ^18.3.3
-        version: 18.3.28
-      '@types/react-dom':
-        specifier: ^18.3.0
-        version: 18.3.7(@types/react@18.3.28)
-      '@vitejs/plugin-react':
-        specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
-      '@vitest/coverage-v8':
-        specifier: ^1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
-      cypress:
-        specifier: ^15.16.0
-        version: 15.16.0
-      jsdom:
-        specifier: ^24.1.3
-        version: 24.1.3
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-      vite:
-        specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
-      vitest:
-        specifier: ^1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
-
-  tech:
-    dependencies:
-      '@apollo/client':
-        specifier: ^3.10.4
-        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@duncit/logs':
-        specifier: workspace:*
-        version: link:../packages/logs
-      '@duncit/shell':
-        specifier: workspace:*
-        version: link:../packages/shell
-      '@duncit/theme':
-        specifier: workspace:*
-        version: link:../packages/theme
-      '@duncit/user-context':
-        specifier: workspace:*
-        version: link:../packages/user-context
-      '@emotion/react':
-        specifier: ^11.11.4
-        version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
-      '@emotion/styled':
-        specifier: ^11.11.5
-        version: 11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/icons-material':
-        specifier: ^5.15.18
-        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/material':
-        specifier: ^5.15.18
-        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mui/system':
-        specifier: ^5.15.18
-        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/x-date-pickers':
-        specifier: ^6.20.2
-        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@react-oauth/google':
-        specifier: ^0.13.5
-        version: 0.13.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      date-fns:
-        specifier: ^2.30.0
-        version: 2.30.0
-      formik:
-        specifier: ^2.4.6
-        version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
-      graphql:
-        specifier: ^16.8.1
-        version: 16.14.0
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      react-router:
-        specifier: ^6.23.1
-        version: 6.30.3(react@18.3.1)
-      react-router-dom:
-        specifier: ^6.23.1
-        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      yup:
-        specifier: ^1.4.0
-        version: 1.7.1
-    devDependencies:
-      '@testing-library/jest-dom':
-        specifier: ^6.9.1
-        version: 6.9.1
-      '@testing-library/react':
-        specifier: ^14.3.1
-        version: 14.3.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@types/react':
-        specifier: ^18.3.3
-        version: 18.3.28
-      '@types/react-dom':
-        specifier: ^18.3.0
-        version: 18.3.7(@types/react@18.3.28)
-      '@vitejs/plugin-react':
-        specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
-      '@vitest/coverage-v8':
-        specifier: ^1.6.1
-        version: 1.6.1(vitest@1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0))
-      jsdom:
-        specifier: ^24.1.3
-        version: 24.1.3
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-      vite:
-        specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
-      vitest:
-        specifier: ^1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
-
-  website:
+  website/main-website:
     dependencies:
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
+        version: link:../../packages/logs
       '@fortawesome/fontawesome-free':
         specifier: ^7.2.0
         version: 7.2.0
@@ -1906,105 +1970,41 @@ importers:
         specifier: ^4.2.2
         version: 4.3.0
 
-  website-app:
+  website/partners-website:
     dependencies:
-      '@apollo/client':
-        specifier: ^3.10.4
-        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
       '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/logs
-      '@duncit/shell':
+        version: link:../../packages/logs
+      '@fortawesome/fontawesome-free':
+        specifier: ^7.2.0
+        version: 7.2.0
+      '@tailwindcss/vite':
+        specifier: ^4.2.2
+        version: 4.3.0(vite@6.4.2(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+      animejs:
+        specifier: ^4.3.6
+        version: 4.4.1
+      astro:
+        specifier: ^5.7.10
+        version: 5.18.1(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
+      tailwindcss:
+        specifier: ^4.2.2
+        version: 4.3.0
+
+  website/status-website:
+    dependencies:
+      '@duncit/logs':
         specifier: workspace:*
-        version: link:../packages/shell
-      '@duncit/theme':
-        specifier: workspace:*
-        version: link:../packages/theme
-      '@duncit/user-context':
-        specifier: workspace:*
-        version: link:../packages/user-context
-      '@emotion/react':
-        specifier: ^11.11.4
-        version: 11.14.0(@types/react@18.3.28)(react@18.3.1)
-      '@emotion/styled':
-        specifier: ^11.11.5
-        version: 11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/icons-material':
-        specifier: ^5.15.18
-        version: 5.18.0(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/material':
-        specifier: ^5.15.18
-        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@mui/system':
-        specifier: ^5.15.18
-        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1)
-      '@mui/x-date-pickers':
-        specifier: ^6.20.2
-        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@react-oauth/google':
-        specifier: ^0.13.5
-        version: 0.13.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      date-fns:
-        specifier: ^2.30.0
-        version: 2.30.0
-      formik:
-        specifier: ^2.4.6
-        version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
-      graphql:
-        specifier: ^16.8.1
-        version: 16.14.0
-      react:
-        specifier: ^18.3.1
-        version: 18.3.1
-      react-dom:
-        specifier: ^18.3.1
-        version: 18.3.1(react@18.3.1)
-      react-router:
-        specifier: ^6.23.1
-        version: 6.30.3(react@18.3.1)
-      react-router-dom:
-        specifier: ^6.23.1
-        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      socket.io-client:
-        specifier: ^4.8.3
-        version: 4.8.3
-      yup:
-        specifier: ^1.4.0
-        version: 1.7.1
-    devDependencies:
-      '@testing-library/jest-dom':
-        specifier: ^6.9.1
-        version: 6.9.1
-      '@testing-library/react':
-        specifier: ^14.3.1
-        version: 14.3.1(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
-      '@types/node':
-        specifier: ^20.12.12
-        version: 20.19.41
-      '@types/react':
-        specifier: ^18.3.3
-        version: 18.3.28
-      '@types/react-dom':
-        specifier: ^18.3.0
-        version: 18.3.7(@types/react@18.3.28)
-      '@vitejs/plugin-react':
-        specifier: ^4.3.0
-        version: 4.7.0(vite@5.4.21(@types/node@20.19.41)(lightningcss@1.32.0))
-      cypress:
-        specifier: ^15.16.0
-        version: 15.16.0
-      jsdom:
-        specifier: ^24.1.3
-        version: 24.1.3
-      typescript:
-        specifier: ^5.4.5
-        version: 5.9.3
-      vite:
-        specifier: ^5.2.11
-        version: 5.4.21(@types/node@20.19.41)(lightningcss@1.32.0)
-      vitest:
-        specifier: ^1.6.1
-        version: 1.6.1(@types/node@20.19.41)(jsdom@24.1.3)(lightningcss@1.32.0)
+        version: link:../../packages/logs
+      '@tailwindcss/vite':
+        specifier: ^4.1.0
+        version: 4.3.0(vite@6.4.2(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(yaml@2.9.0))
+      astro:
+        specifier: ^5.7.10
+        version: 5.18.1(@types/node@20.19.41)(jiti@2.7.0)(lightningcss@1.32.0)(rollup@4.60.4)(typescript@5.9.3)(yaml@2.9.0)
+      tailwindcss:
+        specifier: ^4.1.0
+        version: 4.3.0
 
 packages:
 
@@ -10337,12 +10337,12 @@ snapshots:
   '@babel/plugin-transform-react-jsx-self@7.27.1(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
-      '@babel/helper-plugin-utils': 7.28.6
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/plugin-transform-react-jsx-source@7.27.1(@babel/core@7.29.0)':
     dependencies:
       '@babel/core': 7.29.0
-      '@babel/helper-plugin-utils': 7.28.6
+      '@babel/helper-plugin-utils': 7.29.7
 
   '@babel/runtime@7.29.2': {}
 

@@ -27,6 +27,10 @@ export default function PodCard({
   const isFree = pod.pod_type?.includes('FREE');
   const { format } = usePricing();
   const placeText = [pod.place_label, pod.place_detail].filter(Boolean).join(' - ');
+  // Pods whose date has passed can no longer be booked, so the "Book" CTA is
+  // hidden (e.g. in the Previous Pods rail) — the detail page shows the
+  // "booking is closed" notice instead.
+  const isExpired = !!pod.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now();
   return (
     <Card
       onClick={onOpen}
@@ -146,26 +150,28 @@ export default function PodCard({
               </Typography>
             </Stack>
           )}
-          <Button
-            fullWidth
-            variant="contained"
-            size="small"
-            endIcon={<ArrowForwardIcon />}
-            onClick={(event) => {
-              event.stopPropagation();
-              onOpen();
-            }}
-            sx={{
-              mt: 1.5,
-              borderRadius: 999,
-              fontWeight: 900,
-              background: 'linear-gradient(135deg, #ff4f73 0%, #ff8b5f 100%)',
-              boxShadow: '0 10px 22px rgba(245,51,122,0.26)',
-              '&:hover': { background: 'linear-gradient(135deg, #ef3b63 0%, #f9794d 100%)' },
-            }}
-          >
-            Book
-          </Button>
+          {!isExpired && (
+            <Button
+              fullWidth
+              variant="contained"
+              size="small"
+              endIcon={<ArrowForwardIcon />}
+              onClick={(event) => {
+                event.stopPropagation();
+                onOpen();
+              }}
+              sx={{
+                mt: 1.5,
+                borderRadius: 999,
+                fontWeight: 900,
+                background: 'linear-gradient(135deg, #ff4f73 0%, #ff8b5f 100%)',
+                boxShadow: '0 10px 22px rgba(245,51,122,0.26)',
+                '&:hover': { background: 'linear-gradient(135deg, #ef3b63 0%, #f9794d 100%)' },
+              }}
+            >
+              Book
+            </Button>
+          )}
           {hostName && (
             <Stack
               direction="row"

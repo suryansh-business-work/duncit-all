@@ -70,6 +70,29 @@ describe('FaqsScreen', () => {
     rerender(<FaqsScreen />);
     expect(screen.getByTestId('faqs-loading')).toBeOnTheScreen();
   });
+
+  it('filters questions by search text and shows the no-match state', () => {
+    mockedFaqs.mockReturnValue({
+      groups: [
+        {
+          super_category: { id: 's', name: 'General' },
+          faqs: [
+            { id: 'f1', question: 'How do refunds work?', answer: 'They are processed fast' },
+            { id: 'f2', question: 'Can I host?', answer: 'Yes, become a host' },
+          ],
+        },
+      ],
+      isLoading: false,
+    });
+    renderWithProviders(<FaqsScreen />);
+
+    fireEvent.changeText(screen.getByTestId('faqs-search'), 'refund');
+    expect(screen.getByText('How do refunds work?')).toBeOnTheScreen();
+    expect(screen.queryByText('Can I host?')).toBeNull();
+
+    fireEvent.changeText(screen.getByTestId('faqs-search'), 'nothing matches this');
+    expect(screen.getByTestId('faqs-no-match')).toBeOnTheScreen();
+  });
 });
 
 describe('SavedScreen', () => {

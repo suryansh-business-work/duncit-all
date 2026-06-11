@@ -8,6 +8,7 @@ import HeaderBrand from './HeaderBrand';
 import HeaderMascotButton from './HeaderMascotButton';
 import HeaderLocationButton from './HeaderLocationButton';
 import HeaderNotificationsBell from './HeaderNotificationsBell';
+import HeaderSearchButton from './HeaderSearchButton';
 import HeaderToast from './HeaderToast';
 import LocationDialog from './LocationDialog';
 import ProfileDrawer from './ProfileDrawer';
@@ -144,6 +145,7 @@ export default function AppHeader({
               }}
             />
 
+            <HeaderSearchButton locationId={selectedLocationId} zoneName={selectedZoneName} />
             <AuthModeToggle placement="inline" />
             <HeaderNotificationsBell onToast={handleNotifToast} />
 

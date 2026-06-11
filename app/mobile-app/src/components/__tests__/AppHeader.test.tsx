@@ -54,4 +54,16 @@ describe('AppHeader', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Home');
     expect(mockFetch).toHaveBeenCalledWith(true);
   });
+
+  it('opens the Search screen when the search icon is tapped', () => {
+    mockNavigate.mockClear();
+    renderWithProviders(<AppHeader />);
+    fireEvent.press(screen.getByTestId('header-search'));
+    expect(mockNavigate).toHaveBeenCalledWith('Search');
+  });
+
+  it('hides the search icon in minimal mode', () => {
+    renderWithProviders(<AppHeader minimal />);
+    expect(screen.queryByTestId('header-search')).toBeNull();
+  });
 });

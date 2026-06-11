@@ -85,4 +85,42 @@ describe('PodBookingBar', () => {
     expect(screen.getByTestId('pod-booked-label')).toBeOnTheScreen();
     expect(screen.queryByTestId('pod-backout')).toBeNull();
   });
+
+  it('replaces the CTA with a closed notice for a past-date pod', () => {
+    const expiredPod = {
+      id: 'p1',
+      pod_amount: 200,
+      pod_date_time: '2020-01-01T10:00:00Z',
+    } as unknown as PodDetail;
+    renderWithProviders(
+      <PodBookingBar
+        pod={expiredPod}
+        isFree={false}
+        membershipState={ms({})}
+        onCheckout={jest.fn()}
+        onBackout={jest.fn()}
+      />,
+    );
+    expect(screen.getByTestId('pod-booking-closed')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-book')).toBeNull();
+  });
+
+  it('still shows Pod Booked for a member even after the pod date passes', () => {
+    const expiredPod = {
+      id: 'p1',
+      pod_amount: 200,
+      pod_date_time: '2020-01-01T10:00:00Z',
+    } as unknown as PodDetail;
+    renderWithProviders(
+      <PodBookingBar
+        pod={expiredPod}
+        isFree={false}
+        membershipState={ms({ is_member: true, can_backout: false })}
+        onCheckout={jest.fn()}
+        onBackout={jest.fn()}
+      />,
+    );
+    expect(screen.getByTestId('pod-booked-label')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-booking-closed')).toBeNull();
+  });
 });

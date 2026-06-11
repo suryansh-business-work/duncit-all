@@ -1,4 +1,5 @@
 import { useNavigation } from '@react-navigation/native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { XStack, YStack } from 'tamagui';
 
 import { AccountButton } from '@/components/AccountButton';
@@ -8,6 +9,7 @@ import { LogoutButton } from '@/components/LogoutButton';
 import { Mascot } from '@/components/Mascot';
 import { NotificationsBell } from '@/components/notifications';
 import { ThemeToggle } from '@/components/ThemeToggle';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { useHomeStore } from '@/stores/home.store';
 
 /**
@@ -18,6 +20,7 @@ import { useHomeStore } from '@/stores/home.store';
  */
 export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) {
   const navigation = useNavigation();
+  const { color: ink } = useThemeColors();
 
   // Tapping the logo returns to Home and refreshes the feed (bug: logo did nothing).
   const goHome = () => {
@@ -46,6 +49,22 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
         <Mascot />
       </XStack>
       <XStack alignItems="center" gap={8}>
+        {minimal ? null : (
+          <XStack
+            testID="header-search"
+            role="button"
+            aria-label="Search pods"
+            onPress={() => navigation.navigate('Search')}
+            width={40}
+            height={40}
+            alignItems="center"
+            justifyContent="center"
+            borderRadius={20}
+            pressStyle={{ opacity: 0.7 }}
+          >
+            <MaterialIcons name="search" size={24} color={ink} />
+          </XStack>
+        )}
         {minimal ? null : <LocationButton />}
         {minimal ? null : <NotificationsBell />}
         <ThemeToggle />

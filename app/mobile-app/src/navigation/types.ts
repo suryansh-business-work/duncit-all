@@ -7,6 +7,7 @@ export type RootStackParamList = {
   ResetPassword: { email: string };
   Survey: undefined;
   Home: undefined;
+  Search: undefined;
   Profile: undefined;
   Account: undefined;
   AccountHealth: undefined;

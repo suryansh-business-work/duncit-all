@@ -28,6 +28,7 @@ import { PolicyScreen } from '@/screens/PolicyScreen';
 import { ProfileScreen } from '@/screens/ProfileScreen';
 import { RegisterVenueScreen } from '@/screens/RegisterVenueScreen';
 import { SavedScreen } from '@/screens/SavedScreen';
+import { SearchScreen } from '@/screens/SearchScreen';
 import { SignupScreen } from '@/screens/SignupScreen';
 import { SupportScreen } from '@/screens/SupportScreen';
 import { SosScreen } from '@/screens/SosScreen';
@@ -69,6 +70,7 @@ export function RootNavigator() {
       ) : (
         <>
           <Stack.Screen name="Home" component={MainTabs} />
+          <Stack.Screen name="Search" component={SearchScreen} />
           <Stack.Screen name="Profile" component={ProfileScreen} />
           <Stack.Screen name="Account" component={AccountScreen} />
           <Stack.Screen name="AccountHealth" component={AccountHealthScreen} />

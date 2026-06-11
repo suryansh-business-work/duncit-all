@@ -29,6 +29,11 @@ export function PodBookingBar({
   const isMember = !!membershipState?.is_member;
   const canBackout = !!membershipState?.can_backout;
   const isFull = !isMember && membershipState?.can_join === false;
+  // Once the pod's date has passed, booking is closed for non-members — the
+  // server enforces the same rule on joinFree + payment order creation, so we
+  // replace the CTA with a notice (mirrors mWeb's PodActionPanel).
+  const isExpired = !!pod.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now();
+  const showClosedNotice = isExpired && !isMember;
 
   return (
     <YStack
@@ -42,19 +47,33 @@ export function PodBookingBar({
     >
       <SafeAreaView edges={['bottom']}>
         <XStack alignItems="center" gap={12} paddingHorizontal={16} paddingVertical={10}>
-          {isMember ? (
+          {showClosedNotice ? <ClosedNotice /> : null}
+          {!showClosedNotice && isMember ? (
             <MemberBar canBackout={canBackout} onBackout={onBackout} />
-          ) : (
+          ) : null}
+          {!showClosedNotice && !isMember ? (
             <BookBar
               isFree={isFree}
               isFull={isFull}
               podAmount={pod.pod_amount}
               onCheckout={onCheckout}
             />
-          )}
+          ) : null}
         </XStack>
       </SafeAreaView>
     </YStack>
+  );
+}
+
+/** Past-date state: booking is closed, no CTA. */
+function ClosedNotice() {
+  return (
+    <XStack flex={1} alignItems="center" gap={8} testID="pod-booking-closed">
+      <MaterialIcons name="event-busy" size={20} color={semantic.warning} />
+      <Text flex={1} fontSize={13.5} fontWeight="800" color="$muted">
+        This pod has already taken place — booking is closed.
+      </Text>
+    </XStack>
   );
 }
 

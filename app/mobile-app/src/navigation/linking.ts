@@ -27,6 +27,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
           Following: 'following',
         },
       },
+      Search: 'search',
       Profile: 'profile',
       Account: 'account',
       AccountHealth: 'account/health',

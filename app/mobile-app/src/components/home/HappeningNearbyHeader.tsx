@@ -4,7 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 interface HappeningNearbyHeaderProps {
   totalPods: number;
-  /** Opens the full "Happening nearby" view (the Explore reels of live pods). */
+  /** Opens the dedicated Happening Nearby page (title or See all tap). */
   onPress?: () => void;
 }
 
@@ -51,6 +51,10 @@ export function HappeningNearbyHeader({
         </YStack>
       </XStack>
       <XStack
+        testID="happening-nearby-see-all"
+        role="button"
+        aria-label="See all live pods"
+        onPress={onPress}
         alignItems="center"
         gap={4}
         borderRadius={999}
@@ -58,9 +62,10 @@ export function HappeningNearbyHeader({
         borderColor="$primary"
         paddingHorizontal={12}
         paddingVertical={6}
+        pressStyle={{ opacity: 0.8 }}
       >
         <Text fontSize={12} fontWeight="900" color="$primary">
-          {totalPods} pods
+          See all · {totalPods} pods
         </Text>
         <MaterialIcons name="chevron-right" size={16} color="#ff4f73" />
       </XStack>

@@ -80,6 +80,7 @@ function deriveHome(
     categoryChips,
     clubsWithPods,
     featuredPods,
+    activePods: activePods.slice().sort(byDateAsc),
     previousPods,
     totalPods: activePods.length,
   };

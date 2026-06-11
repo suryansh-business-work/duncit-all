@@ -70,6 +70,18 @@ export const settingsTypeDefs = gql`
     welcome_lottie_url: String!
     app_loader_lottie_url: String!
     confetti_lottie_url: String!
+    mweb_favicon_url: String!
+    mweb_logo_url: String!
+    mweb_splash_url: String!
+    mweb_splash_type: String!
+    mobile_favicon_url: String!
+    mobile_logo_url: String!
+    mobile_splash_url: String!
+    mobile_splash_type: String!
+    portals_favicon_url: String!
+    portals_logo_url: String!
+    portals_splash_url: String!
+    portals_splash_type: String!
     updated_at: String
   }
 
@@ -88,6 +100,18 @@ export const settingsTypeDefs = gql`
     welcome_lottie_url: String
     app_loader_lottie_url: String
     confetti_lottie_url: String
+    mweb_favicon_url: String
+    mweb_logo_url: String
+    mweb_splash_url: String
+    mweb_splash_type: String
+    mobile_favicon_url: String
+    mobile_logo_url: String
+    mobile_splash_url: String
+    mobile_splash_type: String
+    portals_favicon_url: String
+    portals_logo_url: String
+    portals_splash_url: String
+    portals_splash_type: String
   }
 
   extend type Query {

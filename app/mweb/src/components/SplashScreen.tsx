@@ -1,4 +1,5 @@
 import { Box, Typography, keyframes } from '@mui/material';
+import { useBrandingAssets } from '../hooks/useBrandingAssets';
 
 const logoBounce = keyframes`
   0%   { transform: scale(0.6) translateY(-12px); opacity: 0; }
@@ -21,21 +22,47 @@ const fadeUp = keyframes`
 interface SplashProps {
   tagline?: string;
   description?: string;
-  /** Brand logo shown on the splash — defaults to the Duncit wordmark. */
-  logoUrl?: string;
 }
 
-/** Brand splash — the Duncit logo on the brand red (#F82C2E), matching the
- * native iOS/Android and web app icons. */
+const fullBleedSx = {
+  position: 'fixed',
+  inset: 0,
+  width: '100%',
+  height: '100%',
+  objectFit: 'cover',
+} as const;
+
+/**
+ * Boot splash on the brand red. The media comes from the admin Branding → mWeb
+ * accordion: a full-bleed splash image or video when configured, otherwise the
+ * animated brand logo from the same setting.
+ */
 export default function SplashScreen({
   tagline = 'Welcome to Duncit',
   description = 'Find your tribe. Join pods, meet locals, share moments.',
-  logoUrl = '/new-duncit-logo.png',
 }: Readonly<SplashProps>) {
+  const { appName, logoUrl, splashUrl, splashType } = useBrandingAssets();
+
+  if (splashUrl) {
+    return (
+      <Box
+        role="status"
+        aria-label={`Loading ${appName}`}
+        sx={{ position: 'fixed', inset: 0, zIndex: (t) => t.zIndex.modal + 100, bgcolor: '#F82C2E' }}
+      >
+        {splashType === 'VIDEO' ? (
+          <Box component="video" src={splashUrl} autoPlay muted loop playsInline sx={fullBleedSx} />
+        ) : (
+          <Box component="img" src={splashUrl} alt={appName} sx={fullBleedSx} />
+        )}
+      </Box>
+    );
+  }
+
   return (
     <Box
       role="status"
-      aria-label="Loading Duncit"
+      aria-label={`Loading ${appName}`}
       sx={{
         position: 'fixed',
         inset: 0,
@@ -71,19 +98,33 @@ export default function SplashScreen({
             }}
           />
         ))}
-        <Box
-          component="img"
-          src={logoUrl}
-          alt="Duncit"
-          sx={{
-            position: 'relative',
-            width: 188,
-            height: 188,
-            objectFit: 'contain',
-            animation: `${logoBounce} 1.1s cubic-bezier(.2,.7,.2,1.4) both`,
-            filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.25))',
-          }}
-        />
+        {logoUrl ? (
+          <Box
+            component="img"
+            src={logoUrl}
+            alt={appName}
+            sx={{
+              position: 'relative',
+              width: 188,
+              height: 188,
+              objectFit: 'contain',
+              animation: `${logoBounce} 1.1s cubic-bezier(.2,.7,.2,1.4) both`,
+              filter: 'drop-shadow(0 8px 18px rgba(0,0,0,0.25))',
+            }}
+          />
+        ) : (
+          <Typography
+            sx={{
+              position: 'relative',
+              fontSize: 64,
+              fontWeight: 950,
+              color: '#fff',
+              animation: `${logoBounce} 1.1s cubic-bezier(.2,.7,.2,1.4) both`,
+            }}
+          >
+            {appName}
+          </Typography>
+        )}
       </Box>
 
       <Typography

@@ -1,5 +1,6 @@
 import { ScrollView } from 'tamagui';
 
+import { Reveal } from '@/animations/Reveal';
 import type { HomePod } from '@/hooks/useHomeFeed';
 import { PodCard } from '@/components/home/PodCard';
 
@@ -18,8 +19,10 @@ export function HomeFeaturedPods({ pods, onOpenPod }: Readonly<HomeFeaturedPodsP
       showsHorizontalScrollIndicator={false}
       contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}
     >
-      {pods.map((pod) => (
-        <PodCard key={pod.id} pod={pod} width={300} onPress={() => onOpenPod(pod)} />
+      {pods.map((pod, index) => (
+        <Reveal key={pod.id} index={index} scale>
+          <PodCard pod={pod} width={300} onPress={() => onOpenPod(pod)} />
+        </Reveal>
       ))}
     </ScrollView>
   );

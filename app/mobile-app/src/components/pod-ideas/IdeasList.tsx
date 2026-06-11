@@ -1,5 +1,6 @@
 import { Spinner, Text, YStack } from 'tamagui';
 
+import { Reveal } from '@/animations/Reveal';
 import type { PodIdea } from '@/hooks/usePodIdeas';
 import { IdeaCard } from './IdeaCard';
 
@@ -42,8 +43,10 @@ export function IdeasList({
           <Text fontSize={12} fontWeight="900" color="$muted" textTransform="uppercase">
             Your submissions
           </Text>
-          {myIdeas.map((idea) => (
-            <IdeaCard key={idea.id} idea={idea} myId={myId} showStatus {...cardActions(idea)} />
+          {myIdeas.map((idea, index) => (
+            <Reveal key={idea.id} index={index} scale>
+              <IdeaCard idea={idea} myId={myId} showStatus {...cardActions(idea)} />
+            </Reveal>
           ))}
         </YStack>
       ) : null}
@@ -60,8 +63,10 @@ export function IdeasList({
         </Text>
       ) : null}
 
-      {ideas.map((idea) => (
-        <IdeaCard key={idea.id} idea={idea} myId={myId} {...cardActions(idea)} />
+      {ideas.map((idea, index) => (
+        <Reveal key={idea.id} index={index} scale>
+          <IdeaCard idea={idea} myId={myId} {...cardActions(idea)} />
+        </Reveal>
       ))}
     </YStack>
   );

@@ -4,6 +4,7 @@ import type { TextInputProps } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
+import { Reveal } from '@/animations/Reveal';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 /** The RN TextInput props the auth forms pass through (Tamagui's <Input> styles
@@ -60,6 +61,7 @@ export function FormTextField<T extends FieldValues>({
           color="$color"
           placeholderTextColor="$muted"
           borderColor={hasError ? '$danger' : '$borderColor'}
+          focusStyle={{ borderColor: hasError ? '$danger' : '$primary', borderWidth: 1.5 }}
           paddingRight={isSecure ? 44 : undefined}
           value={(field.value as string) ?? ''}
           onChangeText={field.onChange}
@@ -91,9 +93,11 @@ export function FormTextField<T extends FieldValues>({
         ) : null}
       </XStack>
       {hasError ? (
-        <Text fontSize={12} color="$danger" testID={`${name}-error`}>
-          {fieldState.error?.message}
-        </Text>
+        <Reveal>
+          <Text fontSize={12} color="$danger" testID={`${name}-error`}>
+            {fieldState.error?.message}
+          </Text>
+        </Reveal>
       ) : null}
     </YStack>
   );

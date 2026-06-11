@@ -1,3 +1,4 @@
+import { Reveal } from '@/animations/Reveal';
 import { FeedList } from '@/components/FeedList';
 import { ClubCard } from '@/components/home/ClubCard';
 import { TabScreen } from '@/components/TabScreen';
@@ -18,8 +19,10 @@ export function ClubsScreen() {
         emptyText="No clubs yet. Pull to refresh."
         onRefresh={refetch}
       >
-        {clubs.map((club) => (
-          <ClubCard key={club.id} club={club} onPress={() => openClub(club.id, club.club_name)} />
+        {clubs.map((club, index) => (
+          <Reveal key={club.id} index={index} scale>
+            <ClubCard club={club} onPress={() => openClub(club.id, club.club_name)} />
+          </Reveal>
         ))}
       </FeedList>
     </TabScreen>

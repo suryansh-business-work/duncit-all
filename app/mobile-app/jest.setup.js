@@ -31,3 +31,30 @@ jest.mock('expo-location', () => ({
   requestForegroundPermissionsAsync: jest.fn().mockResolvedValue({ granted: false }),
   getCurrentPositionAsync: jest.fn(),
 }));
+
+// expo-video is a native module; the player setup callback runs synchronously so
+// splash-video specs cover the loop/mute/play wiring without the native runtime.
+jest.mock('expo-video', () => ({
+  __esModule: true,
+  useVideoPlayer: jest.fn((_source, setup) => {
+    const player = { loop: false, muted: false, play: jest.fn() };
+    if (setup) setup(player);
+    return player;
+  }),
+  VideoView: (props) => require('react').createElement(require('react-native').View, props),
+}));
+
+// Reanimated 3: install the official jest helpers (worklets run on the JS
+// thread; animations resolve immediately under fake timers).
+require('react-native-reanimated').setUpTests();
+
+// moti drives decorative state transitions (chevrons, pills); render them as
+// plain host Views in tests so specs assert structure, not animation frames.
+jest.mock('moti', () => {
+  const { View } = require('react-native');
+  return {
+    __esModule: true,
+    MotiView: (props) => require('react').createElement(View, props),
+    AnimatePresence: ({ children }) => children,
+  };
+});

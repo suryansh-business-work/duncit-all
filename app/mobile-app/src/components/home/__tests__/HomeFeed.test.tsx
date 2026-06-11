@@ -74,10 +74,12 @@ describe('HomeFeed', () => {
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Sunset Jam' });
   });
 
-  it('opens the Explore tab from the "Happening nearby" header', () => {
+  it('opens the Happening Nearby page from the header title and the See all chip', () => {
     renderWithProviders(<HomeFeed />);
     fireEvent.press(screen.getByTestId('happening-nearby-header'));
-    expect(mockNavigate).toHaveBeenCalledWith('Explore');
+    expect(mockNavigate).toHaveBeenCalledWith('HappeningNearby');
+    fireEvent.press(screen.getByTestId('happening-nearby-see-all'));
+    expect(mockNavigate).toHaveBeenCalledTimes(2);
   });
 
   it('shows the Previous Pods rail and opens the page or a past pod', () => {

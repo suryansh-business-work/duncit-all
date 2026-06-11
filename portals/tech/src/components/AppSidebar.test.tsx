@@ -11,6 +11,7 @@ const BRANDING_SUMMARY = gql`
     branding {
       app_name
       logo_url
+      portals_logo_url
       primary_color
       support_email
     }
@@ -19,7 +20,7 @@ const BRANDING_SUMMARY = gql`
 
 const brandingMock = {
   request: { query: BRANDING_SUMMARY },
-  result: { data: { branding: { app_name: 'Duncit', logo_url: 'https://x/logo.png', primary_color: '#000', support_email: 's@x.com' } } },
+  result: { data: { branding: { app_name: 'Duncit', logo_url: 'https://x/logo.png', portals_logo_url: '', primary_color: '#000', support_email: 's@x.com' } } },
 };
 
 const renderSidebar = (mocks: any[], path = '/', onNavigate?: () => void) =>

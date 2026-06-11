@@ -4,6 +4,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import type { ClubWithPods, HomeClub, HomePod } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { Reveal } from '@/animations/Reveal';
 import { PodCard } from '@/components/home/PodCard';
 
 interface ClubSectionProps extends ClubWithPods {
@@ -64,8 +65,10 @@ export function ClubSection({ club, pods, onOpenPod, onOpenClub }: Readonly<Club
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}
       >
-        {pods.map((pod) => (
-          <PodCard key={pod.id} pod={pod} width={260} onPress={() => onOpenPod(pod)} />
+        {pods.map((pod, index) => (
+          <Reveal key={pod.id} index={index} scale>
+            <PodCard pod={pod} width={260} onPress={() => onOpenPod(pod)} />
+          </Reveal>
         ))}
       </ScrollView>
     </YStack>

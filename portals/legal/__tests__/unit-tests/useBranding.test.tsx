@@ -10,6 +10,7 @@ const BRANDING = gql`
     branding {
       app_name
       logo_url
+      portals_logo_url
       primary_color
       support_email
     }
@@ -57,7 +58,7 @@ describe('useBranding', () => {
     const { result } = renderHook(() => useBranding(), { wrapper: wrapper(mocks) });
     await waitFor(() => expect(result.current.loading).toBe(false));
     expect(result.current.appName).toBe('Duncit');
-    expect(result.current.logoUrl).toBe('/duncit-logo.svg');
+    expect(result.current.logoUrl).toBe('');
     expect(result.current.primaryColor).toBeUndefined();
   });
 });

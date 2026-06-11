@@ -5,6 +5,7 @@ import { Box, ClickAwayListener, InputAdornment, Paper, TextField } from '@mui/m
 import SearchIcon from '@mui/icons-material/Search';
 import PodSearchResults from './PodSearchResults';
 import { POD_SEARCH } from '../../components/app-header/queries';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 
 interface Props {
   locationId?: string;
@@ -15,7 +16,7 @@ export default function HomeSearch({ locationId, zoneName }: Readonly<Props>) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
-  const trimmed = search.trim();
+  const trimmed = useDebouncedValue(search.trim());
 
   const { data, loading } = useQuery(POD_SEARCH, {
     variables: {

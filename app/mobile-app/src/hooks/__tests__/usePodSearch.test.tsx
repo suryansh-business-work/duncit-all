@@ -1,73 +1,122 @@
-import { renderHook } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 
+import { graphqlRequest } from '@/services/graphql.client';
 import { usePodSearch } from '@/hooks/usePodSearch';
 
-const mockHomeState: { data: unknown; isLoading: boolean; fetch: jest.Mock } = {
-  data: undefined,
-  isLoading: false,
-  fetch: jest.fn(),
-};
-jest.mock('@/stores/home.store', () => ({
-  useHomeStore: (selector: (s: unknown) => unknown) => selector(mockHomeState),
-}));
+jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
+const mockRequest = graphqlRequest as jest.Mock;
 
-const pod = (id: string, title: string, place: string | null) =>
-  ({
-    id,
-    pod_id: `p-${id}`,
-    pod_title: title,
-    pod_date_time: new Date().toISOString(),
-    pod_type: 'NATIVE_FREE',
-    pod_amount: 0,
-    no_of_spots: 4,
-    host_names: [],
-    pod_images_and_videos: [],
-    club_id: 'c1',
-    club_slug: 's',
-    place_label: place,
-    place_detail: null,
-  }) as never;
-
-beforeEach(() => {
-  mockHomeState.fetch.mockClear();
-  mockHomeState.data = {
-    clubs: [],
-    categories: [],
-    pods: [
-      pod('1', 'Sunset Yoga', 'Bandra'),
-      pod('2', 'Chess Club', 'Andheri'),
-      pod('3', 'Morning Run', null),
-    ],
-  };
+const pod = (id: string, title: string) => ({
+  id,
+  pod_id: `p-${id}`,
+  pod_title: title,
+  pod_date_time: '2030-01-01T00:00:00.000Z',
+  pod_type: 'NATIVE_FREE',
+  pod_amount: 0,
+  no_of_spots: 4,
+  host_names: [],
+  pod_images_and_videos: [],
+  club_id: 'c1',
+  club_slug: 's',
+  location_id: null,
+  pod_mode: null,
+  place_label: null,
+  place_detail: null,
 });
 
+beforeEach(() => {
+  jest.useFakeTimers();
+  mockRequest.mockReset();
+});
+afterEach(() => jest.useRealTimers());
+
 describe('usePodSearch', () => {
-  it('loads the feed on mount and returns nothing for an empty query', () => {
+  it('returns nothing and skips the server for an empty query', () => {
     const { result } = renderHook(() => usePodSearch('   '));
-    expect(mockHomeState.fetch).toHaveBeenCalled();
+    act(() => {
+      jest.advanceTimersByTime(500);
+    });
     expect(result.current.hasQuery).toBe(false);
     expect(result.current.results).toEqual([]);
+    expect(mockRequest).not.toHaveBeenCalled();
   });
 
-  it('matches pods by title', () => {
+  it('debounces, then fetches matching pods from the server', async () => {
+    mockRequest.mockResolvedValue({ pods: [pod('1', 'Sunset Yoga')] });
     const { result } = renderHook(() => usePodSearch('yoga'));
-    expect(result.current.hasQuery).toBe(true);
+    expect(result.current.isLoading).toBe(true);
+    expect(mockRequest).not.toHaveBeenCalled(); // still inside the debounce window
+
+    act(() => {
+      jest.advanceTimersByTime(350);
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      { filter: { search: 'yoga', is_active: true } },
+      { auth: true },
+    );
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.results.map((p) => p.id)).toEqual(['1']);
   });
 
-  it('matches pods by place text', () => {
-    const { result } = renderHook(() => usePodSearch('andheri'));
-    expect(result.current.results.map((p) => p.id)).toEqual(['2']);
+  it('only keeps the latest request when the query changes mid-flight', async () => {
+    mockRequest
+      .mockResolvedValueOnce({ pods: [pod('old', 'Old result')] })
+      .mockResolvedValueOnce({ pods: [pod('new', 'New result')] });
+    const { result, rerender } = renderHook((props: { q: string }) => usePodSearch(props.q), {
+      initialProps: { q: 'yo' },
+    });
+    act(() => {
+      jest.advanceTimersByTime(350);
+    });
+    rerender({ q: 'yoga' });
+    act(() => {
+      jest.advanceTimersByTime(350);
+    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.results.map((p) => p.id)).toEqual(['new']);
   });
 
-  it('returns an empty list when nothing matches', () => {
-    const { result } = renderHook(() => usePodSearch('nothing here'));
+  it('ignores a stale failure after the query changes', async () => {
+    mockRequest
+      .mockRejectedValueOnce(new Error('boom'))
+      .mockResolvedValueOnce({ pods: [pod('new', 'New result')] });
+    const { result, rerender } = renderHook((props: { q: string }) => usePodSearch(props.q), {
+      initialProps: { q: 'yo' },
+    });
+    act(() => {
+      jest.advanceTimersByTime(350); // request 1 fires, will reject as stale
+    });
+    rerender({ q: 'yoga' });
+    act(() => {
+      jest.advanceTimersByTime(350); // request 2 fires
+    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.results.map((p) => p.id)).toEqual(['new']);
+  });
+
+  it('clears the results when the search fails', async () => {
+    mockRequest.mockRejectedValue(new Error('boom'));
+    const { result } = renderHook(() => usePodSearch('yoga'));
+    act(() => {
+      jest.advanceTimersByTime(350);
+    });
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.results).toEqual([]);
   });
 
-  it('tolerates an undefined feed', () => {
-    mockHomeState.data = undefined;
-    const { result } = renderHook(() => usePodSearch('yoga'));
+  it('resets to empty when the query is cleared', async () => {
+    mockRequest.mockResolvedValue({ pods: [pod('1', 'Sunset Yoga')] });
+    const { result, rerender } = renderHook((props: { q: string }) => usePodSearch(props.q), {
+      initialProps: { q: 'yoga' },
+    });
+    act(() => {
+      jest.advanceTimersByTime(350);
+    });
+    await waitFor(() => expect(result.current.results).toHaveLength(1));
+
+    rerender({ q: '' });
+    expect(result.current.hasQuery).toBe(false);
     expect(result.current.results).toEqual([]);
   });
 });

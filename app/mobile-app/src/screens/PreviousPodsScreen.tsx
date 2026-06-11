@@ -1,6 +1,7 @@
 import { useWindowDimensions } from 'react-native';
 import { ScrollView, Text, YStack } from 'tamagui';
 
+import { Reveal } from '@/animations/Reveal';
 import { PodCard } from '@/components/home/PodCard';
 import { StackScreen } from '@/components/StackScreen';
 import { useDetailNav } from '@/hooks/useDetailNav';
@@ -22,13 +23,14 @@ export function PreviousPodsScreen() {
       ) : (
         <ScrollView showsVerticalScrollIndicator={false}>
           <YStack gap={12} padding={16} paddingBottom={40}>
-            {previousPods.map((pod) => (
-              <PodCard
-                key={pod.id}
-                pod={pod}
-                width={width - 32}
-                onPress={() => openPod(pod.id, pod.pod_title)}
-              />
+            {previousPods.map((pod, index) => (
+              <Reveal key={pod.id} index={index} scale>
+                <PodCard
+                  pod={pod}
+                  width={width - 32}
+                  onPress={() => openPod(pod.id, pod.pod_title)}
+                />
+              </Reveal>
             ))}
           </YStack>
         </ScrollView>

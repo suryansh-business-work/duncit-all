@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { RefreshControl } from 'react-native';
 import { ScrollView, Text } from 'tamagui';
 
+import { Reveal } from '@/animations/Reveal';
 import { ListSkeleton } from '@/components/Skeleton';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
@@ -44,15 +45,17 @@ export function FeedList({
       contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 124 }}
     >
       {isEmpty ? (
-        <Text
-          testID={`${testID}-empty`}
-          textAlign="center"
-          fontSize={13}
-          color="$muted"
-          paddingVertical={40}
-        >
-          {emptyText}
-        </Text>
+        <Reveal scale>
+          <Text
+            testID={`${testID}-empty`}
+            textAlign="center"
+            fontSize={13}
+            color="$muted"
+            paddingVertical={40}
+          >
+            {emptyText}
+          </Text>
+        </Reveal>
       ) : (
         children
       )}

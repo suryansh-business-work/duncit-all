@@ -390,6 +390,7 @@ export function useHomeData({
     myStories,
     followedUsers: followedUsersData?.publicUsersByIds ?? [],
     totalPods: activePods.length,
+    activePods,
     previousPods,
     hostNameOf,
   };

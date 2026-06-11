@@ -1,13 +1,11 @@
 import { useState } from 'react';
 import { RefreshControl } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
-import type { BottomTabNavigationProp } from '@react-navigation/bottom-tabs';
 import { ScrollView, Text, YStack } from 'tamagui';
 
+import { Reveal } from '@/animations/Reveal';
 import { HomeSkeleton } from '@/components/Skeleton';
 
 import { useDetailNav } from '@/hooks/useDetailNav';
-import type { TabParamList } from '@/navigation/tabs';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -35,8 +33,7 @@ export function HomeFeed() {
   } = useHomeFeed(selectedCategoryId);
   const { data: meData } = useMe();
   const { primary } = useThemeColors();
-  const { openPod, openClub, openPreviousPods } = useDetailNav();
-  const tabNavigation = useNavigation<BottomTabNavigationProp<TabParamList>>();
+  const { openPod, openClub, openPreviousPods, openHappeningNearby } = useDetailNav();
 
   const userName = meData?.me?.first_name ?? meData?.me?.full_name ?? 'You';
   const userPhoto = meData?.me?.profile_photo;
@@ -55,48 +52,58 @@ export function HomeFeed() {
       }
     >
       <YStack gap={20} paddingTop={12} paddingBottom={124} testID="home-feed">
-        <StatusRail userName={userName} userPhoto={userPhoto} />
-        <HomeVibeChips
-          categories={categoryChips}
-          selectedId={selectedCategoryId}
-          onSelect={setSelectedCategoryId}
-        />
+        <Reveal index={0}>
+          <StatusRail userName={userName} userPhoto={userPhoto} />
+        </Reveal>
+        <Reveal index={1}>
+          <HomeVibeChips
+            categories={categoryChips}
+            selectedId={selectedCategoryId}
+            onSelect={setSelectedCategoryId}
+          />
+        </Reveal>
         <YStack gap={16}>
-          <HappeningNearbyHeader
-            totalPods={totalPods}
-            onPress={() => tabNavigation.navigate('Explore')}
-          />
-          <HomeFeaturedPods
-            pods={featuredPods}
-            onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
-          />
+          <Reveal index={2}>
+            <HappeningNearbyHeader totalPods={totalPods} onPress={openHappeningNearby} />
+          </Reveal>
+          <Reveal index={3}>
+            <HomeFeaturedPods
+              pods={featuredPods}
+              onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
+            />
+          </Reveal>
           {isEmpty ? (
-            <Text
-              testID="home-empty"
-              textAlign="center"
-              fontSize={13}
-              color="$muted"
-              paddingHorizontal={24}
-              paddingVertical={32}
-            >
-              No pods here yet. Pull to refresh or pick a different vibe.
-            </Text>
+            <Reveal index={4} scale>
+              <Text
+                testID="home-empty"
+                textAlign="center"
+                fontSize={13}
+                color="$muted"
+                paddingHorizontal={24}
+                paddingVertical={32}
+              >
+                No pods here yet. Pull to refresh or pick a different vibe.
+              </Text>
+            </Reveal>
           ) : (
-            clubsWithPods.map(({ club, pods }) => (
-              <ClubSection
-                key={club.id}
-                club={club}
-                pods={pods}
-                onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
-                onOpenClub={(c) => openClub(c.id, c.club_name)}
-              />
+            clubsWithPods.map(({ club, pods }, sectionIndex) => (
+              <Reveal key={club.id} index={4 + sectionIndex}>
+                <ClubSection
+                  club={club}
+                  pods={pods}
+                  onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
+                  onOpenClub={(c) => openClub(c.id, c.club_name)}
+                />
+              </Reveal>
             ))
           )}
-          <PreviousPodsRail
-            pods={previousPods}
-            onSeeAll={openPreviousPods}
-            onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
-          />
+          <Reveal index={5}>
+            <PreviousPodsRail
+              pods={previousPods}
+              onSeeAll={openPreviousPods}
+              onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
+            />
+          </Reveal>
         </YStack>
       </YStack>
     </ScrollView>

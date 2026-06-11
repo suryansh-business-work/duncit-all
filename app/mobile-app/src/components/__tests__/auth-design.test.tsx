@@ -7,7 +7,6 @@ import { AuthBackground } from '@/components/AuthBackground';
 import { AuthCard } from '@/components/AuthCard';
 import { AuthDivider } from '@/components/AuthDivider';
 import { AuthLogo } from '@/components/AuthLogo';
-import { DuncitLogo } from '@/components/DuncitLogo';
 import { AuthScaffold } from '@/components/AuthScaffold';
 import { LegalLinks } from '@/components/LegalLinks';
 import { useBranding } from '@/hooks/useBranding';
@@ -101,15 +100,6 @@ describe('LegalLinks', () => {
   });
 });
 
-describe('DuncitLogo', () => {
-  it('renders the brand mark at the default and a custom size', () => {
-    const { rerender } = renderWithProviders(<DuncitLogo />);
-    expect(screen.getByTestId('auth-logo-mark')).toBeTruthy();
-    rerender(<DuncitLogo size={80} />);
-    expect(screen.getByTestId('auth-logo-mark')).toBeTruthy();
-  });
-});
-
 describe('AuthLogo', () => {
   it('shows a spinner while branding loads', () => {
     mockedUseBranding.mockReturnValue(brandingResult({ data: undefined, isLoading: true }));
@@ -148,9 +138,36 @@ describe('AuthLogo', () => {
     });
   });
 
-  it('falls back to the bundled Duncit mark for an SVG/empty logo', () => {
+  it('prefers the mobile-specific logo over the global one', () => {
+    mockedUseBranding.mockReturnValue(
+      brandingResult({
+        data: {
+          branding: {
+            app_name: 'Duncit',
+            logo_url: 'https://cdn.duncit.com/global.png',
+            mobile_logo_url: 'https://cdn.duncit.com/mobile.png',
+          },
+        },
+      }),
+    );
+    renderWithProviders(<AuthLogo />);
+    expect(screen.getByTestId('auth-logo-image').props.source).toMatchObject({
+      uri: 'https://cdn.duncit.com/mobile.png',
+    });
+  });
+
+  it('falls back to the app-name monogram for an SVG/empty logo', () => {
     mockedUseBranding.mockReturnValue(
       brandingResult({ data: { branding: { app_name: 'Duncit', logo_url: '/duncit-logo.svg' } } }),
+    );
+    renderWithProviders(<AuthLogo />);
+    expect(screen.getByTestId('auth-logo-mark')).toBeTruthy();
+    expect(screen.getByText('D')).toBeTruthy();
+  });
+
+  it('renders a D monogram even when branding has no app name', () => {
+    mockedUseBranding.mockReturnValue(
+      brandingResult({ data: { branding: { app_name: '', logo_url: '' } } }),
     );
     renderWithProviders(<AuthLogo />);
     expect(screen.getByTestId('auth-logo-mark')).toBeTruthy();

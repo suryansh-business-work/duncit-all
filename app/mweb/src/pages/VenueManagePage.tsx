@@ -179,7 +179,7 @@ export default function VenueManagePage() {
               }}
             >
               <Stack direction="row" spacing={1.25}>
-                <Box component="img" src={venue.cover_image_url || '/duncit-logo.svg'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 2.5, bgcolor: 'action.hover', flex: '0 0 auto' }} />
+                <Box component="img" src={venue.cover_image_url || '/new-duncit-logo.png'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 2.5, bgcolor: 'action.hover', flex: '0 0 auto' }} />
                 <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
                 <Stack direction="row" alignItems="center" spacing={1}>
                   <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }} noWrap>

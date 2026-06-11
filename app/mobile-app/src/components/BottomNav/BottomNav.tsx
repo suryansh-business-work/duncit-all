@@ -1,14 +1,17 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
+import { MotiView } from 'moti';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { durations } from '@/animations/motion';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { TAB_CONFIG } from '@/navigation/tabs';
 
 /** Floating pill tab bar — RN port of mWeb's BottomNav (gradient active icon,
- * blurred surface, rounded corners). Used as React Navigation's custom `tabBar`. */
+ * blurred surface, rounded corners). Used as React Navigation's custom `tabBar`.
+ * The active pill scales in smoothly and tab presses spring (Tamagui driver). */
 export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
   const insets = useSafeAreaInsets();
   const { muted } = useThemeColors();
@@ -64,34 +67,39 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
               alignItems="center"
               gap={2}
               paddingVertical={4}
-              pressStyle={{ opacity: 0.7 }}
+              pressStyle={{ opacity: 0.85 }}
             >
-              {focused ? (
-                <LinearGradient
-                  colors={['#ff4f73', '#f5337a']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={{
-                    width: 34,
-                    height: 34,
-                    borderRadius: 12,
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                  }}
-                >
-                  <MaterialIcons name={cfg.icon} size={20} color="#ffffff" />
-                </LinearGradient>
-              ) : (
-                <YStack
-                  width={34}
-                  height={34}
-                  borderRadius={12}
-                  alignItems="center"
-                  justifyContent="center"
-                >
-                  <MaterialIcons name={cfg.icon} size={20} color={muted} />
-                </YStack>
-              )}
+              <MotiView
+                animate={{ scale: focused ? 1 : 0.9 }}
+                transition={{ type: 'timing', duration: durations.fast }}
+              >
+                {focused ? (
+                  <LinearGradient
+                    colors={['#ff4f73', '#f5337a']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={{
+                      width: 34,
+                      height: 34,
+                      borderRadius: 12,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                  >
+                    <MaterialIcons name={cfg.icon} size={20} color="#ffffff" />
+                  </LinearGradient>
+                ) : (
+                  <YStack
+                    width={34}
+                    height={34}
+                    borderRadius={12}
+                    alignItems="center"
+                    justifyContent="center"
+                  >
+                    <MaterialIcons name={cfg.icon} size={20} color={muted} />
+                  </YStack>
+                )}
+              </MotiView>
               <Text fontSize={11} fontWeight="800" color={focused ? '$primary' : '$muted'}>
                 {cfg.label}
               </Text>

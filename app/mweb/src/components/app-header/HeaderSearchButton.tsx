@@ -13,6 +13,7 @@ import SearchIcon from '@mui/icons-material/Search';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import PodSearchResults from '../../pages/home-page/PodSearchResults';
 import { POD_SEARCH } from './queries';
+import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 
 interface Props {
   locationId: string;
@@ -25,7 +26,7 @@ export default function HeaderSearchButton({ locationId, zoneName }: Readonly<Pr
   const navigate = useNavigate();
   const [open, setOpen] = useState(false);
   const [search, setSearch] = useState('');
-  const trimmed = search.trim();
+  const trimmed = useDebouncedValue(search.trim());
 
   const { data, loading } = useQuery(POD_SEARCH, {
     variables: {

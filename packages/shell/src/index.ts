@@ -8,5 +8,6 @@
  * place instead of a local color-mode context.
  */
 export { mountPortal } from './mountPortal';
+export { PortalBranding } from './PortalBranding';
 export type { MountPortalOptions, PortalBootConfig } from './types';
 export { useColorMode } from '@duncit/theme';

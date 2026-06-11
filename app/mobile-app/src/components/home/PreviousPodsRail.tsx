@@ -2,6 +2,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import type { HomePod } from '@/hooks/useHomeFeed';
+import { Reveal } from '@/animations/Reveal';
 import { PodCard } from '@/components/home/PodCard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
@@ -51,8 +52,10 @@ export function PreviousPodsRail({ pods, onSeeAll, onOpenPod }: Readonly<Props>)
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 12, paddingHorizontal: 16 }}
       >
-        {pods.slice(0, 10).map((pod) => (
-          <PodCard key={pod.id} pod={pod} width={300} onPress={() => onOpenPod(pod)} />
+        {pods.slice(0, 10).map((pod, index) => (
+          <Reveal key={pod.id} index={index} scale>
+            <PodCard pod={pod} width={300} onPress={() => onOpenPod(pod)} />
+          </Reveal>
         ))}
       </ScrollView>
     </YStack>

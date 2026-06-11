@@ -10,6 +10,7 @@ export const APP_BRANDING = gql`
     branding {
       app_name
       logo_url
+      portals_logo_url
       primary_color
       support_email
     }
@@ -24,6 +25,7 @@ export const brandingMock = (overrides: Record<string, unknown> = {}): MockedRes
       branding: {
         app_name: 'Duncit',
         logo_url: '/duncit-logo.svg',
+        portals_logo_url: '',
         primary_color: '#10b981',
         support_email: 'help@duncit.com',
         ...overrides,

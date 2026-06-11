@@ -5,6 +5,7 @@ export const HEADER_DATA = gql`
     branding {
       app_name
       logo_url
+      mweb_logo_url
       primary_color
       mascot_name
       mascot_description_html

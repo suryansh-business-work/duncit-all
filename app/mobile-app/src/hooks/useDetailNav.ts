@@ -11,5 +11,6 @@ export function useDetailNav() {
     openClub: (clubId: string, title: string) =>
       navigation.navigate('ClubDetails', { clubId, title }),
     openPreviousPods: () => navigation.navigate('PreviousPods'),
+    openHappeningNearby: () => navigation.navigate('HappeningNearby'),
   };
 }

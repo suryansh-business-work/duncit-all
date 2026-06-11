@@ -49,6 +49,18 @@ const BRANDING_FIELDS = [
   "welcome_lottie_url",
   "app_loader_lottie_url",
   "confetti_lottie_url",
+  "mweb_favicon_url",
+  "mweb_logo_url",
+  "mweb_splash_url",
+  "mweb_splash_type",
+  "mobile_favicon_url",
+  "mobile_logo_url",
+  "mobile_splash_url",
+  "mobile_splash_type",
+  "portals_favicon_url",
+  "portals_logo_url",
+  "portals_splash_url",
+  "portals_splash_type",
 ] as const;
 type BrandingField = (typeof BRANDING_FIELDS)[number];
 
@@ -67,6 +79,18 @@ const brandingToPub = (doc: any) => ({
   welcome_lottie_url: doc.welcome_lottie_url ?? "",
   app_loader_lottie_url: doc.app_loader_lottie_url ?? "",
   confetti_lottie_url: doc.confetti_lottie_url ?? "",
+  mweb_favicon_url: doc.mweb_favicon_url ?? "",
+  mweb_logo_url: doc.mweb_logo_url ?? "",
+  mweb_splash_url: doc.mweb_splash_url ?? "",
+  mweb_splash_type: doc.mweb_splash_type ?? "IMAGE",
+  mobile_favicon_url: doc.mobile_favicon_url ?? "",
+  mobile_logo_url: doc.mobile_logo_url ?? "",
+  mobile_splash_url: doc.mobile_splash_url ?? "",
+  mobile_splash_type: doc.mobile_splash_type ?? "IMAGE",
+  portals_favicon_url: doc.portals_favicon_url ?? "",
+  portals_logo_url: doc.portals_logo_url ?? "",
+  portals_splash_url: doc.portals_splash_url ?? "",
+  portals_splash_type: doc.portals_splash_type ?? "IMAGE",
   updated_at: doc.updated_at?.toISOString?.() ?? "",
 });
 

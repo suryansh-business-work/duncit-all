@@ -22,10 +22,12 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
   const navigation = useNavigation();
   const { color: ink } = useThemeColors();
 
-  // Tapping the logo returns to Home and refreshes the feed (bug: logo did nothing).
+  // Tapping the logo returns to the Home tab and refreshes the feed. The nested
+  // screen param matters: from another tab (Explore/Clubs/…) the stack is already
+  // on "Home", so a bare navigate('Home') would be a no-op and never switch tabs.
   const goHome = () => {
     void useHomeStore.getState().fetch(true);
-    navigation.navigate('Home');
+    navigation.navigate('Home', { screen: 'HomeTab' });
   };
 
   return (

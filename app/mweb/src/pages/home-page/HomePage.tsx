@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, Chip, Fab, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Chip, Fab, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
 import { PriceFilter, DateFilter, SortBy } from './queries';
 import FilterMenu from './FilterMenu';
@@ -94,12 +95,12 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             direction="row"
             spacing={1}
             alignItems="center"
-            onClick={() => navigate('/explore')}
+            onClick={() => navigate('/happening-nearby')}
             role="button"
             tabIndex={0}
             aria-label="Open Happening nearby"
             onKeyDown={(event) => {
-              if (event.key === 'Enter' || event.key === ' ') navigate('/explore');
+              if (event.key === 'Enter' || event.key === ' ') navigate('/happening-nearby');
             }}
             sx={{ minWidth: 0, cursor: 'pointer' }}
           >
@@ -128,7 +129,21 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             </Box>
           </Stack>
           <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: '0 0 auto' }}>
-            <Chip label={`${totalPods} pods`} color="primary" variant="outlined" sx={{ fontWeight: 900 }} />
+            <Chip
+              label={`${totalPods} pods`}
+              color="primary"
+              variant="outlined"
+              onClick={() => navigate('/happening-nearby')}
+              sx={{ fontWeight: 900 }}
+            />
+            <Button
+              size="small"
+              endIcon={<ArrowForwardIcon />}
+              onClick={() => navigate('/happening-nearby')}
+              sx={{ fontWeight: 800, flex: '0 0 auto' }}
+            >
+              See all
+            </Button>
             <FilterMenu
               open={filtersOpen}
               onOpenChange={setFiltersOpen}

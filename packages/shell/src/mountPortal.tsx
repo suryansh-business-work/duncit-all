@@ -8,6 +8,7 @@ import { GoogleOAuthProvider } from '@react-oauth/google';
 import { UserProvider, PortalModeGate } from '@duncit/user-context';
 import { DuncitThemeProvider } from '@duncit/theme';
 import { configureLogs, httpTransport, captureConsole } from '@duncit/logs';
+import { PortalBranding } from './PortalBranding';
 import type { MountPortalOptions } from './types';
 
 const identity = (node: ReactNode): ReactNode => node;
@@ -47,6 +48,7 @@ export function mountPortal(opts: MountPortalOptions): void {
       <PortalModeGate portalKey={config.key} graphqlUrl={graphqlUrl} appName={config.name}>
         {children}
       </PortalModeGate>
+      <PortalBranding />
       {extras}
     </>
   );

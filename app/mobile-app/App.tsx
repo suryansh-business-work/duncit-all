@@ -10,6 +10,8 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { TamaguiProvider, Theme, YStack } from 'tamagui';
 
 import { ErrorBoundary } from '@/components/ErrorBoundary';
+import { useBranding } from '@/hooks/useBranding';
+import { setWebFavicon } from '@/services/web-favicon';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { SplashOverlay } from '@/components/SplashOverlay';
@@ -48,6 +50,12 @@ export default function App() {
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const ready = useAuthStore((s) => s.ready);
   const loadConfig = useConfigStore((s) => s.load);
+  const { data: brandingData } = useBranding();
+
+  // Web build: swap the favicon to the admin-configured one once branding loads.
+  useEffect(() => {
+    setWebFavicon(brandingData?.branding?.mobile_favicon_url ?? '');
+  }, [brandingData]);
 
   useEffect(() => {
     hydrateTheme();

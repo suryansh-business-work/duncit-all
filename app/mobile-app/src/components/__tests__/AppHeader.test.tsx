@@ -46,12 +46,12 @@ describe('AppHeader', () => {
     expect(screen.queryByTestId('account-button')).toBeNull();
   });
 
-  it('returns to Home and refreshes the feed when the logo is tapped', () => {
+  it('returns to the Home tab and refreshes the feed when the logo is tapped', () => {
     mockNavigate.mockClear();
     mockFetch.mockClear();
     renderWithProviders(<AppHeader />);
     fireEvent.press(screen.getByTestId('header-logo'));
-    expect(mockNavigate).toHaveBeenCalledWith('Home');
+    expect(mockNavigate).toHaveBeenCalledWith('Home', { screen: 'HomeTab' });
     expect(mockFetch).toHaveBeenCalledWith(true);
   });
 

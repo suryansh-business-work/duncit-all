@@ -9,6 +9,7 @@ const BRANDING_SUMMARY = gql`
     branding {
       app_name
       logo_url
+      portals_logo_url
       primary_color
       support_email
     }
@@ -31,7 +32,7 @@ describe('useBranding', () => {
   it('falls back to bundled defaults while loading', () => {
     render(<MockedProvider mocks={[]}><Probe /></MockedProvider>);
     expect(screen.getByTestId('name').textContent).toBe('Duncit');
-    expect(screen.getByTestId('logo').textContent).toBe('/duncit-logo.svg');
+    expect(screen.getByTestId('logo').textContent).toBe('');
     expect(screen.getByTestId('loading').textContent).toBe('true');
   });
 
@@ -40,7 +41,7 @@ describe('useBranding', () => {
       {
         request: { query: BRANDING_SUMMARY },
         result: {
-          data: { branding: { app_name: 'Acme', logo_url: 'https://x/logo.png', primary_color: '#123456', support_email: 's@x.com' } },
+          data: { branding: { app_name: 'Acme', logo_url: 'https://x/logo.png', portals_logo_url: '', primary_color: '#123456', support_email: 's@x.com' } },
         },
       },
     ];

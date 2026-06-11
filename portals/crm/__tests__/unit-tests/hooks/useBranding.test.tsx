@@ -9,6 +9,7 @@ const BRANDING_SUMMARY = gql`
     branding {
       app_name
       logo_url
+      portals_logo_url
       primary_color
       support_email
     }
@@ -23,7 +24,7 @@ const wrapper = (mocks: any[]) =>
 describe('useBranding', () => {
   it('returns sensible defaults while the query is in flight', () => {
     const { result } = renderHook(() => useBranding(), { wrapper: wrapper([]) });
-    expect(result.current.logoUrl).toBe('/duncit-logo.svg');
+    expect(result.current.logoUrl).toBe('');
     expect(result.current.appName).toBe('Duncit');
     expect(result.current.loading).toBe(true);
   });
@@ -37,6 +38,7 @@ describe('useBranding', () => {
             branding: {
               app_name: 'Acme',
               logo_url: 'https://cdn.example/logo.svg',
+              portals_logo_url: '',
               primary_color: '#abcdef',
               support_email: 'help@acme.test',
             },
@@ -61,7 +63,7 @@ describe('useBranding', () => {
     ];
     const { result } = renderHook(() => useBranding(), { wrapper: wrapper(mocks) });
     await waitFor(() => expect(result.current.loading).toBe(false));
-    expect(result.current.logoUrl).toBe('/duncit-logo.svg');
+    expect(result.current.logoUrl).toBe('');
     expect(result.current.appName).toBe('Duncit');
   });
 });

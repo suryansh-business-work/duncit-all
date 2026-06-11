@@ -79,6 +79,20 @@ export interface IBranding extends Document {
   welcome_lottie_url: string;
   app_loader_lottie_url: string;
   confetti_lottie_url: string;
+  // Per-platform assets (admin Branding accordions 1A/1B/1C). Empty string
+  // falls back to the global logo_url / bundled defaults on each client.
+  mweb_favicon_url: string;
+  mweb_logo_url: string;
+  mweb_splash_url: string;
+  mweb_splash_type: string;
+  mobile_favicon_url: string;
+  mobile_logo_url: string;
+  mobile_splash_url: string;
+  mobile_splash_type: string;
+  portals_favicon_url: string;
+  portals_logo_url: string;
+  portals_splash_url: string;
+  portals_splash_type: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -106,6 +120,18 @@ const brandingSchema = new Schema<IBranding>(
     welcome_lottie_url: { type: String, default: "" },
     app_loader_lottie_url: { type: String, default: "" },
     confetti_lottie_url: { type: String, default: "" },
+    mweb_favicon_url: { type: String, default: "" },
+    mweb_logo_url: { type: String, default: "" },
+    mweb_splash_url: { type: String, default: "" },
+    mweb_splash_type: { type: String, default: "IMAGE" },
+    mobile_favicon_url: { type: String, default: "" },
+    mobile_logo_url: { type: String, default: "" },
+    mobile_splash_url: { type: String, default: "" },
+    mobile_splash_type: { type: String, default: "IMAGE" },
+    portals_favicon_url: { type: String, default: "" },
+    portals_logo_url: { type: String, default: "" },
+    portals_splash_url: { type: String, default: "" },
+    portals_splash_type: { type: String, default: "IMAGE" },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

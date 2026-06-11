@@ -33,19 +33,25 @@ describe('SearchScreen', () => {
   beforeEach(() => mockOpenPod.mockClear());
 
   it('shows the prompt before the user types', () => {
-    mockedSearch.mockReturnValue({ results: [], hasQuery: false });
+    mockedSearch.mockReturnValue({ results: [], hasQuery: false, isLoading: false });
     renderWithProviders(<SearchScreen />);
     expect(screen.getByTestId('search-prompt')).toBeOnTheScreen();
   });
 
+  it('shows the spinner while the server search is in flight', () => {
+    mockedSearch.mockReturnValue({ results: [], hasQuery: true, isLoading: true });
+    renderWithProviders(<SearchScreen />);
+    expect(screen.getByTestId('search-loading')).toBeOnTheScreen();
+  });
+
   it('shows the empty state when a query has no matches', () => {
-    mockedSearch.mockReturnValue({ results: [], hasQuery: true });
+    mockedSearch.mockReturnValue({ results: [], hasQuery: true, isLoading: false });
     renderWithProviders(<SearchScreen />);
     expect(screen.getByTestId('search-empty')).toBeOnTheScreen();
   });
 
   it('lists matching pods and opens one, updating the query input', () => {
-    mockedSearch.mockReturnValue({ results: [pod], hasQuery: true });
+    mockedSearch.mockReturnValue({ results: [pod], hasQuery: true, isLoading: false });
     renderWithProviders(<SearchScreen />);
     fireEvent.changeText(screen.getByTestId('search-input'), 'yoga');
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));

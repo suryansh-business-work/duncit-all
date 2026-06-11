@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { useWindowDimensions } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { Reveal } from '@/animations/Reveal';
 import { PodCard } from '@/components/home/PodCard';
 import { StackScreen } from '@/components/StackScreen';
 import { useDetailNav } from '@/hooks/useDetailNav';
@@ -32,7 +33,7 @@ export function SearchScreen() {
   const { width } = useWindowDimensions();
   const { muted } = useThemeColors();
   const [query, setQuery] = useState('');
-  const { results, hasQuery } = usePodSearch(query);
+  const { results, hasQuery, isLoading } = usePodSearch(query);
   const { openPod } = useDetailNav();
 
   return (
@@ -68,19 +69,25 @@ export function SearchScreen() {
       {!hasQuery ? (
         <SearchHint icon="search" text="Search pods by name or place." testID="search-prompt" />
       ) : null}
-      {hasQuery && results.length === 0 ? (
+      {hasQuery && isLoading ? (
+        <YStack flex={1} alignItems="center" justifyContent="center" padding={32}>
+          <Spinner testID="search-loading" color="$primary" />
+        </YStack>
+      ) : null}
+      {hasQuery && !isLoading && results.length === 0 ? (
         <SearchHint icon="search-off" text="No pods match your search." testID="search-empty" />
       ) : null}
-      {hasQuery && results.length > 0 ? (
+      {hasQuery && !isLoading && results.length > 0 ? (
         <ScrollView showsVerticalScrollIndicator={false}>
           <YStack gap={12} padding={16} paddingBottom={40}>
-            {results.map((pod) => (
-              <PodCard
-                key={pod.id}
-                pod={pod}
-                width={width - 32}
-                onPress={() => openPod(pod.id, pod.pod_title)}
-              />
+            {results.map((pod, index) => (
+              <Reveal key={pod.id} index={index} scale>
+                <PodCard
+                  pod={pod}
+                  width={width - 32}
+                  onPress={() => openPod(pod.id, pod.pod_title)}
+                />
+              </Reveal>
             ))}
           </YStack>
         </ScrollView>

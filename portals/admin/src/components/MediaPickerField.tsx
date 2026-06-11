@@ -25,6 +25,8 @@ interface Props {
   /** Render only a button (no underlying TextField). */
   buttonOnly?: boolean;
   buttonLabel?: string;
+  /** Restrict what the picker offers, e.g. 'image/*' (default: images + videos). */
+  accept?: string;
 }
 
 /**
@@ -42,6 +44,7 @@ export default function MediaPickerField({
   showPreview = true,
   buttonOnly = false,
   buttonLabel = 'Choose image',
+  accept,
 }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
 
@@ -61,6 +64,7 @@ export default function MediaPickerField({
           onPicked={onChange}
           folder={folder}
           title={label}
+          accept={accept}
         />
       </>
     );
@@ -132,6 +136,7 @@ export default function MediaPickerField({
         onPicked={onChange}
         folder={folder}
         title={`Choose · ${label}`}
+        accept={accept}
       />
     </Stack>
   );

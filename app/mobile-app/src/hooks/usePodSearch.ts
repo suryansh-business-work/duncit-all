@@ -1,37 +1,55 @@
-import { useEffect, useMemo } from 'react';
+import { useEffect, useRef, useState } from 'react';
+import type { ResultOf } from '@graphql-typed-document-node/core';
 
-import { useHomeStore } from '@/stores/home.store';
-import type { HomePod } from '@/hooks/useHomeFeed';
+import { PodSearchDocument } from '@/graphql/search';
+import { graphqlRequest } from '@/services/graphql.client';
 
-const MAX_RESULTS = 20;
+export type SearchPod = ResultOf<typeof PodSearchDocument>['pods'][number];
 
-const placeText = (pod: HomePod) =>
-  [pod.place_label, pod.place_detail].filter(Boolean).join(' ').toLowerCase();
-
-/** Matches a pod against the query on its title or place text. */
-function matchesQuery(pod: HomePod, q: string): boolean {
-  return pod.pod_title.toLowerCase().includes(q) || placeText(pod).includes(q);
-}
+const DEBOUNCE_MS = 350;
 
 /**
- * Title/place search over the active home feed (the store already holds every
- * active pod), powering the header search screen. Mirrors mWeb's pod search —
- * an empty query returns nothing so the screen shows its prompt.
+ * Server-side pod search with debounce: waits for the user to pause typing,
+ * then asks the server (`pods(filter: { search })`) — mirroring mWeb's
+ * debounced header search. Stale responses are dropped by request sequencing.
  */
 export function usePodSearch(query: string) {
-  const data = useHomeStore((s) => s.data);
-  const isLoading = useHomeStore((s) => s.isLoading);
-  const fetch = useHomeStore((s) => s.fetch);
+  const [results, setResults] = useState<SearchPod[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const seq = useRef(0);
+
+  const trimmed = query.trim();
+  const hasQuery = trimmed.length > 0;
 
   useEffect(() => {
-    fetch();
-  }, [fetch]);
+    const requestId = ++seq.current;
+    if (!trimmed) {
+      setResults([]);
+      setIsLoading(false);
+      return undefined;
+    }
+    setIsLoading(true);
+    const timer = setTimeout(() => {
+      graphqlRequest(
+        PodSearchDocument,
+        { filter: { search: trimmed, is_active: true } },
+        { auth: true },
+      )
+        .then((data) => {
+          if (seq.current === requestId) {
+            setResults(data.pods);
+            setIsLoading(false);
+          }
+        })
+        .catch(() => {
+          if (seq.current === requestId) {
+            setResults([]);
+            setIsLoading(false);
+          }
+        });
+    }, DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [trimmed]);
 
-  const trimmed = query.trim().toLowerCase();
-  const results = useMemo(() => {
-    if (!trimmed) return [];
-    return (data?.pods ?? []).filter((pod) => matchesQuery(pod, trimmed)).slice(0, MAX_RESULTS);
-  }, [data, trimmed]);
-
-  return { results, isLoading, hasQuery: trimmed.length > 0 };
+  return { results, isLoading, hasQuery };
 }

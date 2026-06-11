@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
+  Accordion,
+  AccordionDetails,
+  AccordionSummary,
   Alert,
   Box,
   Button,
-  Card,
-  CardContent,
   CircularProgress,
   Divider,
   Snackbar,
@@ -13,10 +14,38 @@ import {
   Typography,
 } from '@mui/material';
 import BrandingWatermarkIcon from '@mui/icons-material/BrandingWatermark';
+import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import IdentitySection from './IdentitySection';
 import MascotSection from './MascotSection';
 import AnimationsSection from './AnimationsSection';
+import PlatformAssetsSection from './PlatformAssetsSection';
+import { PLATFORM_SECTIONS } from './sizeGuides';
 import { BRANDING, UPDATE_BRANDING, emptyBrandingForm, type BrandingFormState } from './queries';
+
+interface SectionProps {
+  title: string;
+  subtitle: string;
+  defaultExpanded?: boolean;
+  children: React.ReactNode;
+}
+
+function BrandingAccordion({ title, subtitle, defaultExpanded, children }: Readonly<SectionProps>) {
+  return (
+    <Accordion defaultExpanded={defaultExpanded} disableGutters>
+      <AccordionSummary expandIcon={<ExpandMoreIcon />}>
+        <Box>
+          <Typography variant="subtitle1" fontWeight={700}>
+            {title}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {subtitle}
+          </Typography>
+        </Box>
+      </AccordionSummary>
+      <AccordionDetails>{children}</AccordionDetails>
+    </Accordion>
+  );
+}
 
 export default function BrandingPage() {
   const { data, loading, error } = useQuery(BRANDING, { fetchPolicy: 'cache-and-network' });
@@ -30,21 +59,11 @@ export default function BrandingPage() {
   useEffect(() => {
     if (data?.branding) {
       const b = data.branding;
-      setForm({
-        app_name: b.app_name ?? '',
-        logo_url: b.logo_url ?? '',
-        primary_color: b.primary_color ?? '#1976d2',
-        support_email: b.support_email ?? '',
-        support_phone: b.support_phone ?? '',
-        mascot_name: b.mascot_name ?? 'Dunko',
-        mascot_description_html: b.mascot_description_html ?? '',
-        mascot_lottie_url: b.mascot_lottie_url ?? '',
-        mascot_on_chair_lottie_url: b.mascot_on_chair_lottie_url ?? '',
-        mascot_winner_lottie_url: b.mascot_winner_lottie_url ?? '',
-        welcome_lottie_url: b.welcome_lottie_url ?? '',
-        app_loader_lottie_url: b.app_loader_lottie_url ?? '',
-        confetti_lottie_url: b.confetti_lottie_url ?? '',
+      const next = { ...emptyBrandingForm };
+      (Object.keys(next) as (keyof BrandingFormState)[]).forEach((key) => {
+        next[key] = b[key] ?? emptyBrandingForm[key];
       });
+      setForm(next);
     }
   }, [data]);
 
@@ -76,30 +95,49 @@ export default function BrandingPage() {
         <Box>
           <Typography variant="h5">Branding</Typography>
           <Typography variant="body2" color="text.secondary">
-            Logo, mascot and animations used across the apps.
+            Identity, per-platform assets (favicon · logo · splash), mascot and animations — every
+            app reads these live, nothing is hard-coded.
           </Typography>
         </Box>
       </Stack>
 
       {error && <Alert severity="error">{error.message}</Alert>}
 
-      <Card>
-        <CardContent>
+      <Stack>
+        <BrandingAccordion
+          title="Identity"
+          subtitle="App name, default logo, primary color and support contacts."
+          defaultExpanded
+        >
           <IdentitySection form={form} setForm={setForm} />
-        </CardContent>
-      </Card>
+        </BrandingAccordion>
 
-      <Card>
-        <CardContent>
+        {PLATFORM_SECTIONS.map((section) => (
+          <BrandingAccordion
+            key={section.prefix}
+            title={section.title}
+            subtitle={section.subtitle}
+          >
+            <PlatformAssetsSection
+              prefix={section.prefix}
+              sizes={section.sizes}
+              form={form}
+              setForm={setForm}
+            />
+          </BrandingAccordion>
+        ))}
+
+        <BrandingAccordion title="Mascot" subtitle="Name, story and artwork of the app mascot.">
           <MascotSection form={form} setForm={setForm} />
-        </CardContent>
-      </Card>
+        </BrandingAccordion>
 
-      <Card>
-        <CardContent>
+        <BrandingAccordion
+          title="Animations"
+          subtitle="Lottie animations used across loaders and celebrations."
+        >
           <AnimationsSection form={form} setForm={setForm} />
-        </CardContent>
-      </Card>
+        </BrandingAccordion>
+      </Stack>
 
       {opError && <Alert severity="error">{opError}</Alert>}
 

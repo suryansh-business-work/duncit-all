@@ -14,6 +14,18 @@ export const BRANDING_FIELDS = `
   welcome_lottie_url
   app_loader_lottie_url
   confetti_lottie_url
+  mweb_favicon_url
+  mweb_logo_url
+  mweb_splash_url
+  mweb_splash_type
+  mobile_favicon_url
+  mobile_logo_url
+  mobile_splash_url
+  mobile_splash_type
+  portals_favicon_url
+  portals_logo_url
+  portals_splash_url
+  portals_splash_type
   updated_at
 `;
 
@@ -33,6 +45,14 @@ export const UPDATE_BRANDING = gql`
   }
 `;
 
+/** Per-platform asset fields repeated for mweb / mobile / portals. */
+export interface PlatformAssetFields {
+  favicon_url: string;
+  logo_url: string;
+  splash_url: string;
+  splash_type: string;
+}
+
 export interface BrandingFormState {
   app_name: string;
   logo_url: string;
@@ -47,7 +67,21 @@ export interface BrandingFormState {
   welcome_lottie_url: string;
   app_loader_lottie_url: string;
   confetti_lottie_url: string;
+  mweb_favicon_url: string;
+  mweb_logo_url: string;
+  mweb_splash_url: string;
+  mweb_splash_type: string;
+  mobile_favicon_url: string;
+  mobile_logo_url: string;
+  mobile_splash_url: string;
+  mobile_splash_type: string;
+  portals_favicon_url: string;
+  portals_logo_url: string;
+  portals_splash_url: string;
+  portals_splash_type: string;
 }
+
+export type PlatformPrefix = 'mweb' | 'mobile' | 'portals';
 
 export const emptyBrandingForm: BrandingFormState = {
   app_name: '',
@@ -63,4 +97,16 @@ export const emptyBrandingForm: BrandingFormState = {
   welcome_lottie_url: '',
   app_loader_lottie_url: '',
   confetti_lottie_url: '',
+  mweb_favicon_url: '',
+  mweb_logo_url: '',
+  mweb_splash_url: '',
+  mweb_splash_type: 'IMAGE',
+  mobile_favicon_url: '',
+  mobile_logo_url: '',
+  mobile_splash_url: '',
+  mobile_splash_type: 'IMAGE',
+  portals_favicon_url: '',
+  portals_logo_url: '',
+  portals_splash_url: '',
+  portals_splash_type: 'IMAGE',
 };

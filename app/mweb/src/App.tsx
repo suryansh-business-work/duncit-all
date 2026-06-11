@@ -13,6 +13,8 @@ import { APP_SHELL_MAX_WIDTH } from './app/appLayout';
 import { useActivePing } from './app/useActivePing';
 import { useClickstreamTracking } from './app/useClickstreamTracking';
 import { useHapticFeedback } from './app/useHapticFeedback';
+import { useBrandingAssets } from './hooks/useBrandingAssets';
+import { useDynamicFavicon } from './hooks/useDynamicFavicon';
 import { StatusUploadProvider } from './components/status-upload/StatusUploadProvider';
 
 const BOTTOM_NAV_CONTENT_OFFSET = 'var(--duncit-bottom-nav-content-offset, 148px)';
@@ -40,6 +42,9 @@ export default function App() {
     }, 2200);
     return () => window.clearTimeout(timer);
   }, [splashOpen]);
+
+  const { faviconUrl } = useBrandingAssets();
+  useDynamicFavicon(faviconUrl);
 
   useActivePing(location.pathname, superCategory);
   useClickstreamTracking({

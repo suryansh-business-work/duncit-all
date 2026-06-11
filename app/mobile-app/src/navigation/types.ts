@@ -1,3 +1,7 @@
+import type { NavigatorScreenParams } from '@react-navigation/native';
+
+import type { TabParamList } from '@/navigation/tabs';
+
 /** The single React Navigation stack. Auth/Survey/App screens are gated by the
  * auth store, but they share one param list for typed navigation everywhere. */
 export type RootStackParamList = {
@@ -6,7 +10,7 @@ export type RootStackParamList = {
   ForgotPassword: undefined;
   ResetPassword: { email: string };
   Survey: undefined;
-  Home: undefined;
+  Home: NavigatorScreenParams<TabParamList> | undefined;
   Search: undefined;
   Profile: undefined;
   Account: undefined;
@@ -35,6 +39,7 @@ export type RootStackParamList = {
   PodDetails: { podId: string; title: string };
   ClubDetails: { clubId: string; title: string };
   PreviousPods: undefined;
+  HappeningNearby: undefined;
   Checkout: { podId: string };
   HostsVenues: undefined;
   PublicProfile: { userId: string };

@@ -17,7 +17,11 @@ const renderTabBar = (props: BottomTabBarProps) => <BottomNav {...props} />;
  * stack screens pushed on top of this (see RootNavigator). */
 export function MainTabs() {
   return (
-    <Tab.Navigator screenOptions={{ headerShown: false }} tabBar={renderTabBar}>
+    <Tab.Navigator
+      // Tab content cross-fades instead of switching abruptly.
+      screenOptions={{ headerShown: false, animation: 'fade' }}
+      tabBar={renderTabBar}
+    >
       <Tab.Screen name="HomeTab" component={HomeScreen} />
       <Tab.Screen name="Explore" component={ExploreScreen} />
       <Tab.Screen name="Clubs" component={ClubsScreen} />

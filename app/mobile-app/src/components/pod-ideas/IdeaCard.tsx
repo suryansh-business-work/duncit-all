@@ -96,7 +96,13 @@ export function IdeaCard({
         ) : null}
       </XStack>
 
-      <YStack role="button" aria-label={idea.title} onPress={onOpen} gap={4}>
+      <YStack
+        role="button"
+        aria-label={idea.title}
+        onPress={onOpen}
+        gap={4}
+        pressStyle={{ opacity: 0.85 }}
+      >
         <Text fontSize={16} fontWeight="900" color="$color">
           {idea.title}
         </Text>

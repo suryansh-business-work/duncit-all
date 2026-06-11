@@ -101,7 +101,7 @@ export default function AppHeader({
       }}
     >
       <Toolbar sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', gap: 1, py: 0.75, minHeight: minimal ? 56 : 60, px: 1.5 }}>
-        <HeaderBrand logoUrl={branding?.logo_url} appName={branding?.app_name} />
+        <HeaderBrand logoUrl={branding?.mweb_logo_url || branding?.logo_url} appName={branding?.app_name} />
         <HeaderMascotButton branding={branding} />
 
         <Box sx={{ flexGrow: 1 }} />

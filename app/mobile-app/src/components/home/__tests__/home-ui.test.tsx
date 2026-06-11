@@ -67,16 +67,17 @@ describe('PodCard', () => {
 });
 
 describe('HappeningNearbyHeader', () => {
-  it('shows the live pod count', () => {
+  it('shows the live pod count in the See all chip', () => {
     renderWithProviders(<HappeningNearbyHeader totalPods={7} />);
-    expect(screen.getByText('7 pods')).toBeOnTheScreen();
+    expect(screen.getByText('See all · 7 pods')).toBeOnTheScreen();
   });
 
-  it('opens the nearby view when tapped', () => {
+  it('opens the nearby page from the title row and the See all chip', () => {
     const onPress = jest.fn();
     renderWithProviders(<HappeningNearbyHeader totalPods={7} onPress={onPress} />);
     fireEvent.press(screen.getByTestId('happening-nearby-header'));
-    expect(onPress).toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('happening-nearby-see-all'));
+    expect(onPress).toHaveBeenCalledTimes(2);
   });
 });
 

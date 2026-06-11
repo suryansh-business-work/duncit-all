@@ -7,7 +7,9 @@
     "scheme": "duncit",
     "userInterfaceStyle": "automatic",
     "icon": "./assets/icon.png",
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.duncit.mobile",
@@ -66,7 +68,8 @@
       "expo-asset",
       "expo-font",
       "./plugins/withNdkVersion",
-      "expo-web-browser"
+      "expo-web-browser",
+      "expo-video"
     ],
     "owner": "duncit",
     "extra": {

@@ -15,6 +15,10 @@ export const BrandingDocument = gql(`
       mascot_name
       mascot_description_html
       mascot_image_url
+      mobile_favicon_url
+      mobile_logo_url
+      mobile_splash_url
+      mobile_splash_type
     }
   }
 `);

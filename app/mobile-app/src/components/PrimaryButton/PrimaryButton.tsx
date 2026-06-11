@@ -1,5 +1,7 @@
 import { Spinner, Text, XStack } from 'tamagui';
 
+import { PressScale } from '@/animations/PressScale';
+
 export interface PrimaryButtonProps {
   label: string;
   onPress: () => void;
@@ -8,7 +10,8 @@ export interface PrimaryButtonProps {
   testID?: string;
 }
 
-/** Primary call-to-action button with disabled and loading states. */
+/** Primary call-to-action button with disabled and loading states. Presses
+ * scale down and spring back via the shared PressScale wrapper. */
 export function PrimaryButton({
   label,
   onPress,
@@ -19,32 +22,32 @@ export function PrimaryButton({
   const isDisabled = disabled || loading;
 
   return (
-    <XStack
+    <PressScale
       testID={testID}
-      role="button"
-      aria-disabled={isDisabled}
-      aria-busy={loading}
+      accessibilityLabel={label}
       disabled={isDisabled}
-      onPress={() => {
-        if (!isDisabled) onPress();
-      }}
-      alignItems="center"
-      justifyContent="center"
-      width="100%"
-      height={52}
-      borderRadius={12}
-      paddingHorizontal={20}
-      backgroundColor="$primary"
-      opacity={isDisabled ? 0.5 : 1}
-      pressStyle={{ opacity: 0.85 }}
+      onPress={onPress}
+      style={{ width: '100%' }}
     >
-      {loading ? (
-        <Spinner color="$onPrimary" testID={`${testID ?? 'primary-button'}-spinner`} />
-      ) : (
-        <Text color="$onPrimary" fontSize={16} fontWeight="600">
-          {label}
-        </Text>
-      )}
-    </XStack>
+      <XStack
+        aria-busy={loading}
+        alignItems="center"
+        justifyContent="center"
+        width="100%"
+        height={52}
+        borderRadius={12}
+        paddingHorizontal={20}
+        backgroundColor="$primary"
+        opacity={isDisabled ? 0.5 : 1}
+      >
+        {loading ? (
+          <Spinner color="$onPrimary" testID={`${testID ?? 'primary-button'}-spinner`} />
+        ) : (
+          <Text color="$onPrimary" fontSize={16} fontWeight="600">
+            {label}
+          </Text>
+        )}
+      </XStack>
+    </PressScale>
   );
 }

@@ -16,6 +16,13 @@ export function useSuperCategories() {
   }, [fetch]);
 
   const superCats = useMemo(() => data?.categories ?? [], [data?.categories]);
+
+  // No "All" tab (mWeb parity): once the categories load, default to the first
+  // one — mirrors mWeb AppHeader's auto-select effect.
+  useEffect(() => {
+    const first = superCats[0];
+    if (!selectedSlug && first) select(first.slug);
+  }, [selectedSlug, superCats, select]);
   const selectedSuperId = useMemo(
     () => superCats.find((c) => c.slug === selectedSlug)?.id ?? null,
     [superCats, selectedSlug],

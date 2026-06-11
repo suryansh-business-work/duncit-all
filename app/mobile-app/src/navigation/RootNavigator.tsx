@@ -7,6 +7,7 @@ import { VenueHealthScreen } from '@/screens/VenueHealthScreen';
 import { BecomeHostScreen } from '@/screens/BecomeHostScreen';
 import { ChatRoomScreen } from '@/screens/ChatRoomScreen';
 import { ClubDetailsScreen } from '@/screens/ClubDetailsScreen';
+import { HappeningNearbyScreen } from '@/screens/HappeningNearbyScreen';
 import { HostsVenuesScreen } from '@/screens/HostsVenuesScreen';
 import { PublicProfileScreen } from '@/screens/PublicProfileScreen';
 import { VenueDetailsScreen } from '@/screens/VenueDetailsScreen';
@@ -57,7 +58,15 @@ export function RootNavigator() {
   const surveyCompleted = useAuthStore((s) => s.surveyCompleted);
 
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+    <Stack.Navigator
+      screenOptions={{
+        headerShown: false,
+        // Premium screen transitions: pushes slide in from the right (pops
+        // reverse automatically), driven natively at 60fps.
+        animation: 'slide_from_right',
+        animationDuration: 300,
+      }}
+    >
       {!token ? (
         <>
           <Stack.Screen name="Login" component={LoginScreen} />
@@ -90,6 +99,7 @@ export function RootNavigator() {
           <Stack.Screen name="TicketDetails" component={TicketDetailsScreen} />
           <Stack.Screen name="PodIdeas" component={PodIdeasScreen} />
           <Stack.Screen name="PreviousPods" component={PreviousPodsScreen} />
+          <Stack.Screen name="HappeningNearby" component={HappeningNearbyScreen} />
           <Stack.Screen name="Faqs" component={FaqsScreen} />
           <Stack.Screen name="PodPlans" component={PodPlansScreen} />
           <Stack.Screen name="Policies" component={PoliciesScreen} />

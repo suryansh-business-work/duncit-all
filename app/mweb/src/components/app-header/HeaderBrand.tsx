@@ -39,18 +39,37 @@ export default function HeaderBrand({ logoUrl, appName }: Readonly<HeaderBrandPr
       tabIndex={0}
       aria-label="Go to home and refresh"
     >
-      <Box
-        component="img"
-        src={logoUrl || '/duncit-logo.svg'}
-        alt={appName ?? 'Duncit'}
-        sx={{
-          height: 36,
-          width: 'auto',
-          maxWidth: 128,
-          objectFit: 'contain',
-          display: 'block',
-        }}
-      />
+      {logoUrl ? (
+        <Box
+          component="img"
+          src={logoUrl}
+          alt={appName ?? 'Duncit'}
+          sx={{
+            height: 36,
+            width: 'auto',
+            maxWidth: 128,
+            objectFit: 'contain',
+            display: 'block',
+          }}
+        />
+      ) : (
+        <Box
+          aria-label={appName ?? 'Duncit'}
+          sx={{
+            width: 36,
+            height: 36,
+            borderRadius: 1.5,
+            display: 'grid',
+            placeItems: 'center',
+            bgcolor: 'primary.main',
+            color: 'primary.contrastText',
+            fontWeight: 900,
+            fontSize: 18,
+          }}
+        >
+          {(appName ?? 'Duncit')[0]?.toUpperCase()}
+        </Box>
+      )}
     </Stack>
   );
 }

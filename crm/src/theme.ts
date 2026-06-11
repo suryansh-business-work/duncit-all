@@ -11,7 +11,7 @@ import { createDuncitTheme, tokens, type AccentColors, type ThemeCtx } from '@du
 
 export { tokens };
 
-const dataGrid = (c: ThemeCtx) => ({
+export const dataGrid = (c: ThemeCtx) => ({
   MuiDataGrid: {
     styleOverrides: {
       root: {

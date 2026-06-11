@@ -3,7 +3,7 @@ import { render, screen, fireEvent, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
 import { MemoryRouter } from 'react-router-dom';
 import { gql } from '@apollo/client';
-import { ColorModeProvider } from '@/ColorModeContext';
+import { DuncitThemeProvider } from '@duncit/theme';
 import LoginPage from '@/pages/LoginPage';
 import { clearToken, getToken } from '@/lib/session';
 
@@ -20,9 +20,9 @@ const wrap = (mocks: any[], initialEntries: string[] = ['/login']) =>
   render(
     <MockedProvider mocks={mocks} addTypename={false}>
       <MemoryRouter initialEntries={initialEntries}>
-        <ColorModeProvider>
+        <DuncitThemeProvider>
           <LoginPage />
-        </ColorModeProvider>
+        </DuncitThemeProvider>
       </MemoryRouter>
     </MockedProvider>,
   );

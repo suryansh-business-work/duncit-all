@@ -29,6 +29,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -150,6 +153,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -253,6 +259,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -347,6 +356,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -489,6 +501,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -577,6 +592,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -665,6 +683,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -753,6 +774,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -853,6 +877,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -1077,6 +1104,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -1168,6 +1198,52 @@ importers:
         specifier: ^5.4.5
         version: 5.9.3
 
+  packages/shell:
+    dependencies:
+      '@duncit/logs':
+        specifier: workspace:*
+        version: link:../logs
+      '@duncit/theme':
+        specifier: workspace:*
+        version: link:../theme
+      '@duncit/user-context':
+        specifier: workspace:*
+        version: link:../user-context
+    devDependencies:
+      '@apollo/client':
+        specifier: ^3.10.4
+        version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/material':
+        specifier: ^5.15.18
+        version: 5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@mui/x-date-pickers':
+        specifier: ^6.20.2
+        version: 6.20.2(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@mui/material@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react-dom@18.3.1(react@18.3.1))(react@18.3.1))(@mui/system@5.18.0(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@emotion/styled@11.14.1(@emotion/react@11.14.0(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(react@18.3.1))(@types/react@18.3.28)(date-fns@2.30.0)(dayjs@1.11.21)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@react-oauth/google':
+        specifier: ^0.13.5
+        version: 0.13.5(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@types/react':
+        specifier: ^18.3.3
+        version: 18.3.28
+      '@types/react-dom':
+        specifier: ^18.3.0
+        version: 18.3.7(@types/react@18.3.28)
+      graphql:
+        specifier: ^16.8.1
+        version: 16.14.0
+      react:
+        specifier: ^18.3.1
+        version: 18.3.1
+      react-dom:
+        specifier: ^18.3.1
+        version: 18.3.1(react@18.3.1)
+      react-router-dom:
+        specifier: ^6.23.1
+        version: 6.30.3(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      typescript:
+        specifier: ^5.4.5
+        version: 5.9.3
+
   packages/theme:
     devDependencies:
       '@mui/material':
@@ -1227,6 +1303,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../../packages/theme
@@ -1345,6 +1424,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -1611,6 +1693,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -1714,6 +1799,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme
@@ -1826,6 +1914,9 @@ importers:
       '@duncit/logs':
         specifier: workspace:*
         version: link:../packages/logs
+      '@duncit/shell':
+        specifier: workspace:*
+        version: link:../packages/shell
       '@duncit/theme':
         specifier: workspace:*
         version: link:../packages/theme

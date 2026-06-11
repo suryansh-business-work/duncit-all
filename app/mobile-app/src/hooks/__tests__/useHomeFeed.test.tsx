@@ -19,6 +19,9 @@ jest.mock('@/hooks/useLocations', () => ({ useLocations: jest.fn(() => ({ select
 const mockedSuper = useSuperCategories as jest.Mock;
 const mockedLoc = useLocations as jest.Mock;
 
+const future = (days: number) => new Date(Date.now() + days * 86_400_000).toISOString();
+const past = (days: number) => new Date(Date.now() - days * 86_400_000).toISOString();
+
 const pod = (id: string, clubId: string, date: string) =>
   ({
     id,
@@ -51,7 +54,7 @@ beforeEach(() => {
         super_category_id: null,
       },
     ],
-    pods: [pod('1', 'c1', '2026-06-10T00:00:00Z'), pod('2', 'c1', '2026-06-09T00:00:00Z')],
+    pods: [pod('1', 'c1', future(2)), pod('2', 'c1', future(1))],
     categories: [{ id: 'cat1', name: 'Cat', slug: 'cat', level: 'CATEGORY', parent_id: null }],
   };
 });
@@ -68,6 +71,18 @@ describe('useHomeFeed', () => {
   it('filters by the selected vibe category', () => {
     expect(renderHook(() => useHomeFeed('cat1')).result.current.totalPods).toBe(2);
     expect(renderHook(() => useHomeFeed('other')).result.current.clubsWithPods).toHaveLength(0);
+  });
+
+  it('hides vibe chips for categories that have no pods (bug 6)', () => {
+    mockHomeState.data = {
+      ...(mockHomeState.data as Record<string, unknown>),
+      categories: [
+        { id: 'cat1', name: 'Has pods', slug: 'c1', level: 'CATEGORY', parent_id: null },
+        { id: 'cat2', name: 'No pods', slug: 'c2', level: 'CATEGORY', parent_id: null },
+      ],
+    };
+    const { result } = renderHook(() => useHomeFeed(''));
+    expect(result.current.categoryChips.map((c) => c.id)).toEqual(['cat1']);
   });
 
   it('filters out pods when a super-category or location is selected', () => {
@@ -87,14 +102,14 @@ describe('useHomeFeed', () => {
         {
           id: '1',
           club_id: 'c1',
-          pod_date_time: '2026-06-10T00:00:00Z',
+          pod_date_time: future(1),
           location_id: 'other',
           pod_mode: 'PHYSICAL',
         },
         {
           id: '2',
           club_id: 'c1',
-          pod_date_time: '2026-06-10T00:00:00Z',
+          pod_date_time: future(1),
           location_id: null,
           pod_mode: 'VIRTUAL',
         },
@@ -104,6 +119,19 @@ describe('useHomeFeed', () => {
     mockedLoc.mockReturnValue({ selectedId: 'loc-y' });
     const { result } = renderHook(() => useHomeFeed(''));
     expect(result.current.featuredPods.map((p) => p.id)).toEqual(['2']);
+  });
+
+  it('moves past-date pods out of the active feed into previousPods (bug 8)', () => {
+    mockHomeState.data = {
+      clubs: [{ id: 'c1', category_id: 'cat1', super_category_id: null }],
+      pods: [pod('up', 'c1', future(1)), pod('old', 'c1', past(2)), pod('older', 'c1', past(5))],
+      categories: [],
+    } as never;
+    const { result } = renderHook(() => useHomeFeed(''));
+    expect(result.current.featuredPods.map((p) => p.id)).toEqual(['up']);
+    expect(result.current.totalPods).toBe(1);
+    // Newest-first ordering of the previous pods.
+    expect(result.current.previousPods.map((p) => p.id)).toEqual(['old', 'older']);
   });
 });
 

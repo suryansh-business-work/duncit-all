@@ -3,6 +3,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { HappeningNearbyHeader } from '@/components/home/HappeningNearbyHeader';
 import { HomeVibeChips } from '@/components/home/HomeVibeChips';
 import { PodCard } from '@/components/home/PodCard';
+import { PreviousPodsRail } from '@/components/home/PreviousPodsRail';
 import type { HomeCategory, HomePod } from '@/hooks/useHomeFeed';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -76,5 +77,25 @@ describe('HappeningNearbyHeader', () => {
     renderWithProviders(<HappeningNearbyHeader totalPods={7} onPress={onPress} />);
     fireEvent.press(screen.getByTestId('happening-nearby-header'));
     expect(onPress).toHaveBeenCalled();
+  });
+});
+
+describe('PreviousPodsRail', () => {
+  it('renders nothing when there are no previous pods', () => {
+    renderWithProviders(<PreviousPodsRail pods={[]} onSeeAll={jest.fn()} onOpenPod={jest.fn()} />);
+    expect(screen.queryByTestId('previous-pods-see-all')).toBeNull();
+  });
+
+  it('lists previous pods and fires see-all + pod-open', () => {
+    const onSeeAll = jest.fn();
+    const onOpenPod = jest.fn();
+    renderWithProviders(
+      <PreviousPodsRail pods={[pod]} onSeeAll={onSeeAll} onOpenPod={onOpenPod} />,
+    );
+    expect(screen.getByText('Previous Pods')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('previous-pods-see-all'));
+    expect(onSeeAll).toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('pod-card-p1'));
+    expect(onOpenPod).toHaveBeenCalled();
   });
 });

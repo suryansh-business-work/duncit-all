@@ -15,6 +15,7 @@ import { ClubSection } from '@/components/home/ClubSection';
 import { HappeningNearbyHeader } from '@/components/home/HappeningNearbyHeader';
 import { HomeFeaturedPods } from '@/components/home/HomeFeaturedPods';
 import { HomeVibeChips } from '@/components/home/HomeVibeChips';
+import { PreviousPodsRail } from '@/components/home/PreviousPodsRail';
 import { StatusRail } from '@/components/status/StatusRail';
 
 /** Scrollable home body — RN port of mWeb's HomePage. Owns the selected vibe
@@ -22,11 +23,19 @@ import { StatusRail } from '@/components/status/StatusRail';
  * "Happening nearby" section, featured pods and per-club pod rows. */
 export function HomeFeed() {
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
-  const { isLoading, hasData, categoryChips, clubsWithPods, featuredPods, totalPods, refetch } =
-    useHomeFeed(selectedCategoryId);
+  const {
+    isLoading,
+    hasData,
+    categoryChips,
+    clubsWithPods,
+    featuredPods,
+    previousPods,
+    totalPods,
+    refetch,
+  } = useHomeFeed(selectedCategoryId);
   const { data: meData } = useMe();
   const { primary } = useThemeColors();
-  const { openPod, openClub } = useDetailNav();
+  const { openPod, openClub, openPreviousPods } = useDetailNav();
   const tabNavigation = useNavigation<BottomTabNavigationProp<TabParamList>>();
 
   const userName = meData?.me?.first_name ?? meData?.me?.full_name ?? 'You';
@@ -83,6 +92,11 @@ export function HomeFeed() {
               />
             ))
           )}
+          <PreviousPodsRail
+            pods={previousPods}
+            onSeeAll={openPreviousPods}
+            onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
+          />
         </YStack>
       </YStack>
     </ScrollView>

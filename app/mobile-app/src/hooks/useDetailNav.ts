@@ -10,5 +10,6 @@ export function useDetailNav() {
     openPod: (podId: string, title: string) => navigation.navigate('PodDetails', { podId, title }),
     openClub: (clubId: string, title: string) =>
       navigation.navigate('ClubDetails', { clubId, title }),
+    openPreviousPods: () => navigation.navigate('PreviousPods'),
   };
 }

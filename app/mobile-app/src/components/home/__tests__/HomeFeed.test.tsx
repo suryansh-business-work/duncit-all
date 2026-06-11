@@ -47,6 +47,7 @@ const base = {
   categoryChips: [{ id: 'cat1', name: 'Music', slug: 'm', level: 'CATEGORY', parent_id: null }],
   clubsWithPods: [{ club, pods: [pod] }],
   featuredPods: [pod],
+  previousPods: [],
   totalPods: 1,
   refetch: jest.fn(),
 };
@@ -77,6 +78,18 @@ describe('HomeFeed', () => {
     renderWithProviders(<HomeFeed />);
     fireEvent.press(screen.getByTestId('happening-nearby-header'));
     expect(mockNavigate).toHaveBeenCalledWith('Explore');
+  });
+
+  it('shows the Previous Pods rail and opens the page or a past pod', () => {
+    mockedFeed.mockReturnValue({
+      ...base,
+      previousPods: [{ ...pod, id: 'old', pod_id: 'pod-old', pod_title: 'Old Jam' }],
+    });
+    renderWithProviders(<HomeFeed />);
+    fireEvent.press(screen.getByTestId('previous-pods-see-all'));
+    expect(mockNavigate).toHaveBeenCalledWith('PreviousPods');
+    fireEvent.press(screen.getByTestId('pod-card-pod-old'));
+    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'old', title: 'Old Jam' });
   });
 
   it('shows the pull-to-refresh spinner while refetching loaded data', () => {

@@ -16,6 +16,10 @@ export interface ClubWithPods {
 const byDateAsc = (a: HomePod, b: HomePod) =>
   new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime();
 
+// A pod is "previous" once its start date/time has passed (bug 8).
+const isPastPod = (p: HomePod) =>
+  !!p.pod_date_time && new Date(p.pod_date_time).getTime() < Date.now();
+
 /** Derives the home shell sections from the raw feed. A selected vibe chip keeps
  * only pods whose club matches that category (direct match — the deep
  * ancestor/price/date filtering from mWeb is a follow-up). */
@@ -27,22 +31,37 @@ function deriveHome(
 ) {
   const clubs = data?.clubs ?? [];
   const allPods = data?.pods ?? [];
-  const categoryChips = data?.categories ?? [];
+  const allChips = data?.categories ?? [];
 
   const clubsById = new Map(clubs.map((c) => [c.id, c]));
-  const pods = allPods.filter((p) => {
+  // Virtual pods are location-independent — keep them under the Super Category
+  // regardless of the selected city (bug 10).
+  const inScope = (p: HomePod) => {
     const club = clubsById.get(p.club_id);
     if (selectedSuperId && club?.super_category_id !== selectedSuperId) return false;
-    if (selectedCategoryId && club?.category_id !== selectedCategoryId) return false;
-    // Virtual pods are location-independent — keep them under the Super Category
-    // regardless of the selected city (bug 10).
     const isVirtual = p.pod_mode === 'VIRTUAL';
     if (selectedLocationId && !isVirtual && p.location_id !== selectedLocationId) return false;
     return true;
+  };
+  const pods = allPods.filter((p) => {
+    if (!inScope(p)) return false;
+    const club = clubsById.get(p.club_id);
+    if (selectedCategoryId && club?.category_id !== selectedCategoryId) return false;
+    return true;
   });
 
+  // Only show vibe chips for categories that actually have pods here (bug 6).
+  const podCategoryIds = new Set(
+    allPods.filter(inScope).map((p) => clubsById.get(p.club_id)?.category_id),
+  );
+  const categoryChips = allChips.filter((c) => podCategoryIds.has(c.id));
+
+  // Past-date pods leave the main feed and move to the Previous Pods section/page.
+  const activePods = pods.filter((p) => !isPastPod(p));
+  const previousPods = pods.filter(isPastPod).sort((a, b) => byDateAsc(b, a));
+
   const podsByClub = new Map<string, HomePod[]>();
-  pods.forEach((p) => {
+  activePods.forEach((p) => {
     const list = podsByClub.get(p.club_id) ?? [];
     list.push(p);
     podsByClub.set(p.club_id, list);
@@ -53,9 +72,15 @@ function deriveHome(
     .map((club) => ({ club, pods: podsByClub.get(club.id) ?? [] }))
     .filter((entry) => entry.pods.length > 0);
 
-  const featuredPods = pods.slice().sort(byDateAsc).slice(0, 6);
+  const featuredPods = activePods.slice().sort(byDateAsc).slice(0, 6);
 
-  return { categoryChips, clubsWithPods, featuredPods, totalPods: pods.length };
+  return {
+    categoryChips,
+    clubsWithPods,
+    featuredPods,
+    previousPods,
+    totalPods: activePods.length,
+  };
 }
 
 /** Ensures the home feed is loaded and exposes its raw lists — shared by the

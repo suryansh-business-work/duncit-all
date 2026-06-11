@@ -31,6 +31,7 @@ export type RootStackParamList = {
   ChatRoom: { podId: string; title: string };
   PodDetails: { podId: string; title: string };
   ClubDetails: { clubId: string; title: string };
+  PreviousPods: undefined;
   Checkout: { podId: string };
   HostsVenues: undefined;
   PublicProfile: { userId: string };

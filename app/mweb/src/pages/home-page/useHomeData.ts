@@ -195,9 +195,25 @@ export function useHomeData({
     isDescendantOf,
   ]);
 
+  // A pod is "previous" once its start date/time has passed — it leaves the main
+  // feed and moves to the Previous Pods section/page (bug 8).
+  const isPastPod = (p: any) =>
+    !!p.pod_date_time && new Date(p.pod_date_time).getTime() < Date.now();
+  const activePods = useMemo(() => filteredPods.filter((p: any) => !isPastPod(p)), [filteredPods]);
+  const previousPods = useMemo(
+    () =>
+      filteredPods
+        .filter(isPastPod)
+        .sort(
+          (a: any, b: any) =>
+            new Date(b.pod_date_time || 0).getTime() - new Date(a.pod_date_time || 0).getTime()
+        ),
+    [filteredPods]
+  );
+
   const podsByClub = useMemo(() => {
     const map = new Map<string, any[]>();
-    filteredPods.forEach((p: any) => {
+    activePods.forEach((p: any) => {
       const list = map.get(p.club_id) ?? [];
       list.push(p);
       map.set(p.club_id, list);
@@ -222,17 +238,17 @@ export function useHomeData({
     };
     map.forEach((arr) => arr.sort(cmp));
     return map;
-  }, [filteredPods, sortBy]);
+  }, [activePods, sortBy]);
 
   const featuredPods = useMemo(() => {
-    return filteredPods
+    return activePods
       .slice()
       .sort(
         (a: any, b: any) =>
           new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime()
       )
       .slice(0, 6);
-  }, [filteredPods]);
+  }, [activePods]);
 
   const hostNameById = useMemo(() => {
     const map = new Map<string, string>();
@@ -254,11 +270,37 @@ export function useHomeData({
     return null;
   };
 
+  // Category ids that actually have at least one pod in the current location /
+  // super-category context — used to hide vibe chips that would show nothing.
+  const podCategoryIds = useMemo(() => {
+    const clubsById = new Map<string, any>();
+    (data?.clubs ?? []).forEach((c: any) => clubsById.set(c.id, c));
+    const ids = new Set<string>();
+    (data?.pods ?? []).forEach((p: any) => {
+      const club = clubsById.get(p.club_id);
+      if (!club) return;
+      if (selectedSuperId) {
+        const ok = club.super_category_id
+          ? club.super_category_id === selectedSuperId
+          : catSuperMap.get(club.category_id) === superCategorySlug;
+        if (!ok) return;
+      }
+      if (club.category_id) ids.add(club.category_id);
+    });
+    return ids;
+  }, [data, selectedSuperId, catSuperMap, superCategorySlug]);
+
   const categoryChips = useMemo(() => {
     const cats = data?.categories ?? [];
+    const chipHasPods = (chipId: string) => {
+      for (const cid of podCategoryIds) {
+        if (cid === chipId || isDescendantOf(cid, chipId)) return true;
+      }
+      return false;
+    };
     if (!selectedSuperId) {
       return cats
-        .filter((c: any) => c.level === 'CATEGORY' || c.level === 'SUB')
+        .filter((c: any) => (c.level === 'CATEGORY' || c.level === 'SUB') && chipHasPods(c.id))
         .sort((a: any, b: any) => a.name.localeCompare(b.name));
     }
     const descendants = cats.filter(
@@ -285,8 +327,8 @@ export function useHomeData({
       subsByParent.delete(c.id);
     });
     subsByParent.forEach((arr) => arr.forEach((s) => ordered.push(s)));
-    return ordered;
-  }, [data, selectedSuperId, isDescendantOf]);
+    return ordered.filter((c: any) => chipHasPods(c.id));
+  }, [data, selectedSuperId, isDescendantOf, podCategoryIds]);
 
   const clubs = useMemo(() => {
     const all = data?.clubs ?? [];
@@ -347,7 +389,8 @@ export function useHomeData({
     followedPosts,
     myStories,
     followedUsers: followedUsersData?.publicUsersByIds ?? [],
-    totalPods: filteredPods.length,
+    totalPods: activePods.length,
+    previousPods,
     hostNameOf,
   };
 }

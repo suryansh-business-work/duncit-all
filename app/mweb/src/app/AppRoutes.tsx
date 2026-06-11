@@ -39,6 +39,7 @@ import AccountHealthPage from '../pages/AccountHealthPage';
 import VenueHealthPage from '../pages/VenueHealthPage';
 import CheckoutPage from '../pages/CheckoutPage';
 import ExplorePage from '../pages/ExplorePage';
+import PreviousPodsPage from '../pages/PreviousPodsPage';
 import SavedItemsPage from '../pages/SavedItemsPage';
 import ClubsPage from '../pages/ClubsPage';
 import ChatsPage from '../pages/ChatsPage';
@@ -109,6 +110,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
       <Route path="/checkout" element={withAuth(<CheckoutPage />)} />
       <Route path="/checkout/:podId" element={withAuth(<CheckoutPage />)} />
       <Route path="/explore" element={withAuth(<ExplorePage superCategorySlug={superCategory} locationId={locationId} zoneName={zoneName} />)} />
+      <Route path="/previous-pods" element={withAuth(<PreviousPodsPage superCategorySlug={superCategory} locationId={locationId} zoneName={zoneName} />)} />
       <Route path="/saved" element={withAuth(<SavedItemsPage />)} />
       <Route path="/clubs" element={withAuth(<ClubsPage superCategorySlug={superCategory} />)} />
       <Route path="/chats" element={withAuth(<ChatsPage superCategorySlug={superCategory} />)} />

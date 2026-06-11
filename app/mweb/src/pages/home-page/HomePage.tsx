@@ -11,6 +11,7 @@ import HomeStatusRail from './HomeStatusRail';
 import HomeFeaturedPods from './HomeFeaturedPods';
 import HomeVibeChips from './HomeVibeChips';
 import ClubSection from './ClubSection';
+import PreviousPodsRail from './PreviousPodsRail';
 import { useHomeData } from './useHomeData';
 
 interface HomePageProps {
@@ -46,6 +47,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
     myStories,
     followedUsers,
     totalPods,
+    previousPods,
     hostNameOf,
   } = useHomeData({
     superCategorySlug,
@@ -160,6 +162,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             />
           ))
         )}
+        <PreviousPodsRail pods={previousPods} hostNameOf={hostNameOf} />
         {isHost && (
           <Fab
             color="primary"

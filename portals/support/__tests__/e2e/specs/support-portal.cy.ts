@@ -79,7 +79,7 @@ describe('Support portal (authenticated)', () => {
       SupportChatSessions: { data: { supportChatSessions: [session] } },
     });
     cy.visit('/live-chat');
-    cy.contains('Sessions', { timeout: 10000 }).should('be.visible');
+    cy.contains('Chat with Us', { timeout: 10000 }).should('be.visible');
     cy.contains('Riya').should('be.visible');
     cy.contains(/select a session/i).should('be.visible');
   });

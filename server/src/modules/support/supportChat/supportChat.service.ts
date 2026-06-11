@@ -109,6 +109,38 @@ export const supportChatService = {
     return sessionPub(doc);
   },
 
+  /**
+   * Assign an agent to a session the first time they engage, announced as a
+   * SYSTEM chat bubble ("Picked up by <agent>") so the user sees who's helping.
+   * No-op when the session already has an agent.
+   */
+  async claim(sessionId: string, agentId: string) {
+    if (!Types.ObjectId.isValid(sessionId)) fail('BAD_USER_INPUT', 'Invalid session_id');
+    const session = await SupportChatSessionModel.findById(sessionId);
+    if (!session) fail('NOT_FOUND', 'Chat session not found');
+    if (!session!.agent_id) {
+      session!.agent_id = new Types.ObjectId(agentId);
+      const meta = await senderMeta(agentId);
+      const sysMsg = await SupportChatMessageModel.create({
+        session_id: session!._id,
+        sender_id: new Types.ObjectId(agentId),
+        sender_role: 'SYSTEM',
+        sender_name: meta.name,
+        sender_photo: meta.photo,
+        text: `Picked up by ${meta.name || 'a support agent'}`,
+        attachments: [],
+      });
+      session!.last_message_at = new Date();
+      session!.last_message_preview = sysMsg.text;
+      await session!.save();
+      const pubSession = await sessionPub(session!);
+      emitToSupportSession(String(session!._id), 'support_chat:message', messagePub(sysMsg));
+      emitToSupportAgents('support_chat:session_update', pubSession);
+      emitToSupportUser(String(session!.user_id), 'support_chat:session_update', pubSession);
+    }
+    return sessionPub(session!);
+  },
+
   async sendMessage(
     senderId: string,
     isAgent: boolean,
@@ -119,10 +151,17 @@ export const supportChatService = {
     const attachments = input.attachments ?? [];
     if (!text && attachments.length === 0) fail('BAD_USER_INPUT', 'Message text or attachment required');
 
-    const session = await SupportChatSessionModel.findById(input.sessionId);
+    let session = await SupportChatSessionModel.findById(input.sessionId);
     if (!session) fail('NOT_FOUND', 'Chat session not found');
     if (!isAgent && String(session!.user_id) !== String(senderId)) {
       fail('FORBIDDEN', 'Cannot post to another user’s chat');
+    }
+
+    // First agent engagement claims the session and announces "Picked up by …"
+    // as a SYSTEM bubble before the agent's own message lands.
+    if (isAgent && !session!.agent_id) {
+      await this.claim(input.sessionId, senderId);
+      session = (await SupportChatSessionModel.findById(input.sessionId))!;
     }
 
     const meta = await senderMeta(senderId);

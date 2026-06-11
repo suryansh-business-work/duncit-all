@@ -73,13 +73,11 @@ export function locationMapQuery(
 }
 
 /** Builds the Google Maps embed URL for a place query, or '' when there is no
- * query. With an API key it uses the official Embed API; without one it falls
- * back to the keyless `output=embed` map so the preview still renders (no env
- * setup required). Same contract on mWeb + mobile. */
-export function locationMapEmbedUrl(apiKey: string, query: string): string {
+ * query. Always the keyless `output=embed` map: the Embed API needs per-key
+ * enablement (the prod key lacks it — "Google Maps Embed API must be used in
+ * the iframe"), while the keyless embed always renders. Same contract on
+ * mWeb + mobile. The (unused) apiKey parameter is kept for call-site stability. */
+export function locationMapEmbedUrl(_apiKey: string, query: string): string {
   if (!query) return '';
-  const q = encodeURIComponent(query);
-  return apiKey
-    ? `https://www.google.com/maps/embed/v1/place?key=${encodeURIComponent(apiKey)}&q=${q}&zoom=14`
-    : `https://maps.google.com/maps?q=${q}&z=14&output=embed`;
+  return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=14&output=embed`;
 }

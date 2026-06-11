@@ -3,10 +3,8 @@ import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, TextArea, XStack, YStack } from 'tamagui';
 
-import { PodPicker } from '@/components/support-live';
 import { StackScreen } from '@/components/StackScreen';
 import { useBouncer } from '@/hooks/useBouncer';
-import { useSupportPods } from '@/hooks/useSupportPods';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
 
@@ -59,7 +57,6 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
 /** Callback Request — call support now or request a callback. RN twin of mWeb's
  * CallbackContent. */
 export function CallbackScreen() {
-  const { options, selected, selectedId, setSelectedId } = useSupportPods();
   const { loadSupportTarget, requestCallback } = useBouncer();
   const { primary } = useThemeColors();
   const [target, setTarget] = useState<SupportTarget>(null);
@@ -82,7 +79,7 @@ export function CallbackScreen() {
     setBusy(true);
     setError(null);
     try {
-      await requestCallback(selected?.podDocId ?? null, reason);
+      await requestCallback(null, reason);
       setReason('');
       setRequested(true);
     } catch (e) {
@@ -95,8 +92,6 @@ export function CallbackScreen() {
   return (
     <StackScreen title="Callback Request" testID="callback-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
-        <PodPicker options={options} selectedId={selectedId} onChange={setSelectedId} />
-
         <CallNowCard target={target} />
 
         <YStack

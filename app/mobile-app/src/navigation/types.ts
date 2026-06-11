@@ -21,7 +21,9 @@ export type RootStackParamList = {
   Support: undefined;
   Sos: undefined;
   Callback: undefined;
-  Feedback: undefined;
+  ChatWithUs: undefined;
+  AllSupportTickets: undefined;
+  TicketDetails: { ticketId: string };
   PodIdeas: undefined;
   Faqs: undefined;
   PodPlans: undefined;
@@ -43,6 +45,7 @@ export type RootStackParamList = {
 export type MenuRoute = Exclude<
   keyof RootStackParamList,
   | 'Policy'
+  | 'TicketDetails'
   | 'Login'
   | 'Signup'
   | 'ForgotPassword'

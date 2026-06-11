@@ -103,6 +103,11 @@ export const podMemberService = {
   async joinFree(podDocId: string, userId: string, referralToken?: string | null) {
     const pod = await PodModel.findById(podDocId);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    if (pod.pod_date_time && pod.pod_date_time.getTime() < Date.now()) {
+      throw new GraphQLError('This pod has already taken place — booking is closed.', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
     if (!isFreePodType(pod.pod_type)) {
       throw new GraphQLError('This pod is paid. Use checkout to book.', {
         extensions: { code: 'BAD_REQUEST' },

@@ -1,0 +1,78 @@
+import { test, expect } from '@playwright/test';
+import { mockGraphql } from './support/gql';
+import { seedAuth } from './support/auth';
+import { homeFixtures } from './support/data';
+
+const chatFixtures = {
+  ...homeFixtures(),
+  MobileStartSupportChat: { startSupportChat: { id: 's1', status: 'OPEN' } },
+  MobileSupportChatMessages: {
+    supportChatMessages: [
+      {
+        id: 'm1',
+        session_id: 's1',
+        sender_id: 'u2',
+        sender_role: 'SYSTEM',
+        sender_name: 'Agent A',
+        sender_photo: null,
+        text: 'Picked up by Agent A',
+        attachments: [],
+        created_at: new Date().toISOString(),
+      },
+    ],
+  },
+  MobileMarkSupportChatRead: { markSupportChatRead: { id: 's1', unread_for_user: 0 } },
+  MobileUnifiedSupportTickets: {
+    myUnifiedSupportTickets: [
+      { id: 't1', ticket_no: 'ST-AAA111', title: 'Refund issue', status: 'OPEN', source: 'TICKET', created_at: new Date().toISOString() },
+      { id: 'c1', ticket_no: 'CH-BBB222', title: 'Hi there', status: 'OPEN', source: 'CHAT', created_at: new Date().toISOString() },
+    ],
+  },
+};
+
+test.describe('App · Support module', () => {
+  test.beforeEach(async ({ page }) => {
+    await seedAuth(page);
+    await mockGraphql(page, chatFixtures);
+  });
+
+  test('boot shows the branded splash overlay (other bug 1)', async ({ page }) => {
+    // First load warms Metro's bundle (cold compiles outlast the 1.6s splash);
+    // the reload then boots instantly so the splash window is observable.
+    await page.goto('/');
+    await expect(page.getByTestId('home-feed')).toBeVisible({ timeout: 60_000 });
+    await page.reload({ waitUntil: 'commit' });
+    await expect(page.getByTestId('splash-overlay')).toBeVisible();
+    // …and it fades away on its own.
+    await expect(page.getByTestId('splash-overlay')).toBeHidden({ timeout: 5_000 });
+  });
+
+  test('support hub shows Chat with Us + All Support Tickets, no Live Feedback', async ({ page }) => {
+    await page.goto('/support');
+    await expect(page.getByTestId('support-chat')).toBeVisible();
+    await expect(page.getByTestId('support-all')).toBeVisible();
+    await expect(page.getByText('Create Support Tickets')).toBeVisible();
+    await expect(page.getByText('Live Feedback')).toHaveCount(0);
+  });
+
+  test('Chat with Us opens with history incl. the agent pickup bubble (bug 1.3)', async ({ page }) => {
+    await page.goto('/support/chat');
+    await expect(page.getByTestId('chat-with-us-screen')).toBeVisible();
+    await expect(page.getByText('Picked up by Agent A')).toBeVisible();
+    await expect(page.getByTestId('support-chat-input')).toBeVisible();
+  });
+
+  test('All Support Tickets lists prefixed rows from every category (bug 1.6)', async ({ page }) => {
+    await page.goto('/support/all');
+    await expect(page.getByTestId('all-support-tickets-screen')).toBeVisible();
+    await expect(page.getByText('ST-AAA111')).toBeVisible();
+    await expect(page.getByText('CH-BBB222')).toBeVisible();
+  });
+
+  test('callback screen has no pod picker (bug 1.2)', async ({ page }) => {
+    await page.goto('/support');
+    await page.getByTestId('support-callback').click();
+    await expect(page.getByTestId('callback-screen')).toBeVisible();
+    await expect(page.getByText(/select a pod|choose a pod/i)).toHaveCount(0);
+  });
+});

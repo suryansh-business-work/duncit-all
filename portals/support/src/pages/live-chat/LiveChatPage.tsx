@@ -2,25 +2,16 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Avatar,
-  Badge,
   Box,
-  Button,
-  CircularProgress,
   Divider,
   IconButton,
-  List,
-  ListItemAvatar,
-  ListItemButton,
-  ListItemText,
-  Paper,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
-import SendIcon from '@mui/icons-material/Send';
 import CloseIcon from '@mui/icons-material/Close';
-import { format } from 'date-fns';
+import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
 import {
+  CLAIM_SUPPORT_CHAT,
   CLOSE_SUPPORT_CHAT,
   MARK_SUPPORT_CHAT_READ,
   SEND_SUPPORT_CHAT_MESSAGE,
@@ -29,7 +20,10 @@ import {
   type SupportChatMessage,
   type SupportChatSession,
 } from '../../graphql/supportChat';
-import UploadField from '../../components/UploadField';
+import ChatMessages from './ChatMessages';
+import CreateUserDialog from './CreateUserDialog';
+import ChatComposer from './ChatComposer';
+import SessionList from './SessionList';
 import { useSupportSocket } from '../../lib/useSupportSocket';
 
 const LIST_WIDTH = 200;
@@ -55,10 +49,17 @@ export default function LiveChatPage() {
 
   const [sendMessage, { loading: sending }] = useMutation(SEND_SUPPORT_CHAT_MESSAGE);
   const [markRead] = useMutation(MARK_SUPPORT_CHAT_READ);
+  const [claimChat] = useMutation(CLAIM_SUPPORT_CHAT);
+  const [createUserOpen, setCreateUserOpen] = useState(false);
+  // Sessions that arrived live over the socket get highlighted until opened.
+  const [freshIds, setFreshIds] = useState<Set<string>>(new Set());
   const [closeChat] = useMutation(CLOSE_SUPPORT_CHAT, { onCompleted: () => sessionsQuery.refetch() });
 
   const socketRef = useSupportSocket({
-    onChatSessionNew: () => sessionsQuery.refetch(),
+    onChatSessionNew: (sess: SupportChatSession) => {
+      if (sess?.id) setFreshIds((prev) => new Set(prev).add(sess.id));
+      sessionsQuery.refetch();
+    },
     onChatSessionUpdate: () => sessionsQuery.refetch(),
     onChatMessage: (m: SupportChatMessage) => {
       setMessages((prev) => {
@@ -94,6 +95,15 @@ export default function LiveChatPage() {
       if (prev) socket.emit('leave_support_session', prev);
       socket.emit('join_support_session', id);
     }
+    setFreshIds((prev) => {
+      const next = new Set(prev);
+      next.delete(id);
+      return next;
+    });
+    const session = sessions.find((x) => x.id === id);
+    if (session && !session.agent_id) {
+      claimChat({ variables: { session_id: id } }).catch(() => undefined);
+    }
     markRead({ variables: { session_id: id } }).then(() => sessionsQuery.refetch());
   };
 
@@ -111,43 +121,21 @@ export default function LiveChatPage() {
   return (
     <Box sx={{ display: 'flex', height: 'calc(100dvh - 150px)', border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
       <Box sx={{ width: LIST_WIDTH, flexShrink: 0, borderRight: 1, borderColor: 'divider', overflowY: 'auto' }}>
-        <Typography variant="overline" sx={{ px: 1.5, pt: 1, display: 'block', fontWeight: 800 }}>
-          Sessions
-        </Typography>
-        {sessionsQuery.loading && !sessions.length ? (
-          <Box sx={{ p: 2, textAlign: 'center' }}>
-            <CircularProgress size={20} />
-          </Box>
-        ) : !sessions.length ? (
-          <Typography variant="caption" color="text.secondary" sx={{ px: 1.5 }}>
-            No open chats.
+        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 0.5 }}>
+          <Typography variant="overline" sx={{ px: 1.5, pt: 1, display: 'block', fontWeight: 800 }}>
+            Chat with Us
           </Typography>
-        ) : (
-          <List dense sx={{ py: 0 }}>
-            {sessions.map((s) => (
-              <ListItemButton
-                key={s.id}
-                selected={s.id === selectedId}
-                onClick={() => selectSession(s.id)}
-                sx={{ alignItems: 'flex-start' }}
-              >
-                <ListItemAvatar sx={{ minWidth: 40 }}>
-                  <Badge color="error" badgeContent={s.unread_for_agent} max={9}>
-                    <Avatar src={s.user.avatar_url || undefined} sx={{ width: 30, height: 30, fontSize: 13 }}>
-                      {s.user.name?.[0]?.toUpperCase() || '?'}
-                    </Avatar>
-                  </Badge>
-                </ListItemAvatar>
-                <ListItemText
-                  primary={s.user.name}
-                  secondary={s.last_message_preview}
-                  primaryTypographyProps={{ variant: 'body2', fontWeight: 700, noWrap: true }}
-                  secondaryTypographyProps={{ variant: 'caption', noWrap: true }}
-                />
-              </ListItemButton>
-            ))}
-          </List>
-        )}
+          <IconButton size="small" aria-label="Create user account" onClick={() => setCreateUserOpen(true)}>
+            <PersonAddAlt1Icon fontSize="small" />
+          </IconButton>
+        </Stack>
+        <SessionList
+          sessions={sessions}
+          loading={sessionsQuery.loading}
+          selectedId={selectedId}
+          freshIds={freshIds}
+          onSelect={selectSession}
+        />
       </Box>
 
       <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
@@ -186,76 +174,22 @@ export default function LiveChatPage() {
             </Stack>
 
             <Box ref={scrollRef} sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
-              <Stack spacing={1.25}>
-                {messages.map((m) => {
-                  const isAgent = m.sender_role === 'AGENT';
-                  return (
-                    <Stack
-                      key={m.id}
-                      direction="row"
-                      sx={{ justifyContent: isAgent ? 'flex-end' : 'flex-start' }}
-                    >
-                      <Paper
-                        variant="outlined"
-                        sx={{
-                          p: 1,
-                          px: 1.25,
-                          maxWidth: '70%',
-                          bgcolor: isAgent ? 'primary.main' : 'background.paper',
-                          color: isAgent ? 'primary.contrastText' : 'text.primary',
-                          borderColor: isAgent ? 'primary.main' : 'divider',
-                        }}
-                      >
-                        {m.text && <Typography variant="body2">{m.text}</Typography>}
-                        {m.attachments.length > 0 && (
-                          <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 0.5, mt: m.text ? 0.5 : 0 }}>
-                            {m.attachments.map((url, i) => (
-                              <a key={url + i} href={url} target="_blank" rel="noopener noreferrer">
-                                <Avatar variant="rounded" src={url} sx={{ width: 52, height: 52 }} />
-                              </a>
-                            ))}
-                          </Stack>
-                        )}
-                        <Typography variant="caption" sx={{ opacity: 0.7, display: 'block', mt: 0.25 }}>
-                          {format(new Date(m.created_at), 'HH:mm')}
-                        </Typography>
-                      </Paper>
-                    </Stack>
-                  );
-                })}
-              </Stack>
+              <ChatMessages messages={messages} />
             </Box>
 
             <Divider />
-            <Stack spacing={1} sx={{ p: 1.5 }}>
-              <UploadField value={attachments} onChange={setAttachments} folder="/support/chat" label="Attach" max={3} />
-              <Stack direction="row" spacing={1} alignItems="center">
-                <TextField
-                  size="small"
-                  fullWidth
-                  placeholder="Type a message…"
-                  value={text}
-                  onChange={(e) => setText(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && !e.shiftKey) {
-                      e.preventDefault();
-                      send();
-                    }
-                  }}
-                />
-                <Button
-                  variant="contained"
-                  endIcon={<SendIcon />}
-                  disabled={sending || (!text.trim() && attachments.length === 0)}
-                  onClick={send}
-                >
-                  Send
-                </Button>
-              </Stack>
-            </Stack>
+            <ChatComposer
+              text={text}
+              attachments={attachments}
+              sending={sending}
+              onText={setText}
+              onAttachments={setAttachments}
+              onSend={send}
+            />
           </>
         )}
       </Box>
+      <CreateUserDialog open={createUserOpen} onClose={() => setCreateUserOpen(false)} />
     </Box>
   );
 }

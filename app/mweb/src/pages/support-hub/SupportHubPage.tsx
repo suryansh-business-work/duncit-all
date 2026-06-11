@@ -9,7 +9,7 @@ export default function SupportHubPage() {
   return (
     <SupportShell
       title="Support"
-      subtitle="Help, safety and live feedback in one place"
+      subtitle="Help, safety and support in one place"
       icon={<SupportAgentIcon fontSize="small" />}
       backTo="/"
     >
@@ -22,7 +22,7 @@ export default function SupportHubPage() {
                 Your help crew, one tap away
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                Pick what you need — SOS, callbacks and live feedback are scoped to your pod.
+                Pick what you need — SOS and live support tools are scoped to your pod.
               </Typography>
             </Box>
           </Stack>

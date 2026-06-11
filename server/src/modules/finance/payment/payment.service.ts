@@ -164,6 +164,11 @@ async function resolvePayable(input: any) {
   if (input.pod_id) {
     pod = await PodModel.findById(input.pod_id);
     if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    if (pod.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now()) {
+      throw new GraphQLError('This pod has already taken place — booking is closed.', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
     description = `Pod booking · ${pod.pod_title}`;
     payableAmount = round2(
       Number(pod.pod_amount || 0) + selectedProductTotal(pod, input.selected_products ?? [])

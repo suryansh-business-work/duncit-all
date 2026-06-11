@@ -31,9 +31,9 @@ import {
   SupportHubPage,
   SosPage,
   CallbackPage,
-  FeedbackPage,
   SupportTicketsPage,
   LiveTicketsPage,
+  AllTicketsPage,
 } from '../pages/support-hub';
 import AccountHealthPage from '../pages/AccountHealthPage';
 import VenueHealthPage from '../pages/VenueHealthPage';
@@ -96,9 +96,9 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
       <Route path="/support" element={withAuth(<SupportHubPage />)} />
       <Route path="/support/sos" element={withAuth(<SosPage />)} />
       <Route path="/support/callback" element={withAuth(<CallbackPage />)} />
-      <Route path="/support/feedback" element={withAuth(<FeedbackPage />)} />
       <Route path="/support/tickets" element={withAuth(<SupportTicketsPage />)} />
       <Route path="/support/live" element={withAuth(<LiveTicketsPage />)} />
+      <Route path="/support/all" element={withAuth(<AllTicketsPage />)} />
       <Route path="/tickets/:id" element={withAuth(<TicketDetailPage />)} />
       <Route path="/live-chat" element={withAuth(<SupportChatPage />)} />
       <Route path="/tickets" element={<Navigate to="/support/live" replace />} />

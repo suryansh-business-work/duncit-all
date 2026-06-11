@@ -1,4 +1,6 @@
 import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack } from 'tamagui';
 
@@ -8,16 +10,18 @@ import { TicketForm } from '@/components/support/TicketForm';
 import { TicketRow } from '@/components/support/TicketRow';
 import { useTickets } from '@/hooks/useSupport';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import type { RootStackParamList } from '@/navigation/types';
 
 /** Support Tickets — the user's tickets with an inline create form. */
 export function SupportTicketsScreen() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const { tickets, isLoading, reload } = useTickets();
   const [showForm, setShowForm] = useState(false);
   const { color: ink } = useThemeColors();
 
   return (
     <StackScreen
-      title="Support Tickets"
+      title="Create Support Tickets"
       testID="support-tickets-screen"
       right={
         <XStack
@@ -39,9 +43,11 @@ export function SupportTicketsScreen() {
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}>
         {showForm ? (
           <TicketForm
-            onCreated={() => {
+            onCreated={(id) => {
               setShowForm(false);
               reload();
+              // Straight to the ticket details page so the user can track it.
+              navigation.navigate('TicketDetails', { ticketId: id });
             }}
           />
         ) : null}

@@ -42,10 +42,33 @@ export const supportChatTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
+  "One row of the user's unified support history (every category in one list)."
+  type UnifiedSupportTicket {
+    id: ID!
+    "Prefixed human ticket number — ST- (ticket), SOS-, CB- (callback), CH- (chat)."
+    ticket_no: String!
+    title: String!
+    status: String!
+    "TICKET | SOS | CALLBACK | CHAT"
+    source: String!
+    created_at: String!
+  }
+
+  input SupportCreateUserInput {
+    first_name: String!
+    last_name: String
+    email: String!
+    phone_extension: String
+    phone_number: String
+    password: String!
+  }
+
   extend type Query {
     supportChatSessions(status: SupportChatStatus): [SupportChatSession!]!
     supportChatMessages(session_id: ID!, limit: Int, before: String): [SupportChatMessage!]!
     mySupportChat: SupportChatSession
+    "All of the signed-in user's support items (tickets, SOS, callbacks, chats)."
+    myUnifiedSupportTickets: [UnifiedSupportTicket!]!
   }
 
   extend type Mutation {
@@ -57,5 +80,9 @@ export const supportChatTypeDefs = /* GraphQL */ `
     ): SupportChatMessage!
     closeSupportChat(session_id: ID!): SupportChatSession!
     markSupportChatRead(session_id: ID!): SupportChatSession!
+    "Agent picks up an unassigned chat — announced as a SYSTEM bubble."
+    claimSupportChat(session_id: ID!): SupportChatSession!
+    "Support agents can create a user account on a caller's behalf."
+    supportCreateUser(input: SupportCreateUserInput!): User!
   }
 `;

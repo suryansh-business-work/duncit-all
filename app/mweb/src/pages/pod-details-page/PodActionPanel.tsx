@@ -59,6 +59,18 @@ export default function PodActionPanel({
   const m = ms?.membership;
   const referralToken = m?.referral_token as string | null;
 
+  // Once the pod's date has passed, booking is closed — block checkout entirely
+  // (the server enforces the same rule on joinFree + payment order creation).
+  const isExpired =
+    !!pod?.pod_date_time && new Date(pod.pod_date_time).getTime() < Date.now();
+  if (isExpired && !isMember) {
+    return (
+      <Alert severity="warning" sx={{ borderRadius: 2 }}>
+        This pod has already taken place — booking is closed.
+      </Alert>
+    );
+  }
+
   if (isMember) {
     return (
       <Stack spacing={1}>

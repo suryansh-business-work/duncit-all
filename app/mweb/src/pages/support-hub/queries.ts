@@ -76,3 +76,16 @@ export interface SupportPodOption {
   startsAt: string;
   endsAt: string | null;
 }
+
+export const MY_UNIFIED_SUPPORT_TICKETS = gql`
+  query MyUnifiedSupportTickets {
+    myUnifiedSupportTickets {
+      id
+      ticket_no
+      title
+      status
+      source
+      created_at
+    }
+  }
+`;

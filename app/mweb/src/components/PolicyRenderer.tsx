@@ -1,6 +1,7 @@
 import { gql, useQuery } from '@apollo/client';
 import { Alert, Box, CircularProgress, Skeleton, Stack, Typography } from '@mui/material';
 import 'react-quill/dist/quill.snow.css';
+import PolicyPdfButton from './PolicyPdfButton';
 
 const POLICY_BY_SLUG = gql`
   query PolicyBySlug($slug: String!) {
@@ -73,6 +74,7 @@ export default function PolicyRenderer({ slug, hideTitle, hideUpdated }: Readonl
           {policy.title}
         </Typography>
       )}
+      {!hideTitle && <PolicyPdfButton slug={slug} />}
       <Box
         className="ql-snow"
         sx={{

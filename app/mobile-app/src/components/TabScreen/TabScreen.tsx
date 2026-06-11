@@ -3,6 +3,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { AppHeader } from '@/components/AppHeader';
 import { SuperCategoryTabs } from '@/components/SuperCategoryTabs';
 
@@ -17,7 +18,7 @@ export function TabScreen({ testID, children }: Readonly<{ testID: string; child
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         <AppHeader />
         <SuperCategoryTabs />
-        {children}
+        <KeyboardScreen>{children}</KeyboardScreen>
       </SafeAreaView>
     </YStack>
   );

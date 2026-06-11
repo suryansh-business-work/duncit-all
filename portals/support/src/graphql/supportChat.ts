@@ -90,3 +90,23 @@ export interface SupportChatMessage {
   attachments: string[];
   created_at: string;
 }
+
+export const CLAIM_SUPPORT_CHAT = gql`
+  mutation ClaimSupportChat($session_id: ID!) {
+    claimSupportChat(session_id: $session_id) {
+      id
+      agent_id
+      status
+    }
+  }
+`;
+
+export const SUPPORT_CREATE_USER = gql`
+  mutation SupportCreateUser($input: SupportCreateUserInput!) {
+    supportCreateUser(input: $input) {
+      user_id
+      full_name
+      email
+    }
+  }
+`;

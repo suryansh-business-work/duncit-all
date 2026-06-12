@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PodModel, type PodMode, type PodType } from './pod.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { UserRoleModel } from '@modules/access/user/relations';
 import { ClubModel } from '@modules/pods/club/club.model';
 import { HostModel } from '@modules/venues/host/host.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
@@ -493,9 +494,16 @@ export const podService = {
 
   async createForPartner(userId: string, input: any) {
     const userObjectId = new Types.ObjectId(userId);
-    const host = await HostModel.findOne({ user_id: userObjectId, status: 'APPROVED', is_active: true }).select('_id');
-    if (!host) {
-      throw new GraphQLError('Approved host profile is required before creating pods', { extensions: { code: 'FORBIDDEN' } });
+    // Host capability follows the HOST role — granted by the admin role toggle
+    // AND automatically on host-application approval. An approved host profile is
+    // accepted as a fallback so legacy approved hosts (without the cached role)
+    // keep working.
+    const hasHostRole = await UserRoleModel.exists({ user_id: userObjectId, role: 'HOST' });
+    const approvedHost = hasHostRole
+      ? null
+      : await HostModel.findOne({ user_id: userObjectId, status: 'APPROVED', is_active: true }).select('_id');
+    if (!hasHostRole && !approvedHost) {
+      throw new GraphQLError('Host access is required before creating pods', { extensions: { code: 'FORBIDDEN' } });
     }
     const podMode = normalizePodMode(input.pod_mode);
     if (podMode === 'PHYSICAL') {

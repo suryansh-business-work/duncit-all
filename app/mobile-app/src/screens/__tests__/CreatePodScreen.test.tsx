@@ -35,7 +35,7 @@ jest.mock('@/components/create-pod', () => {
 const mockedUse = useCreatePod as jest.Mock;
 
 const api = (over: Record<string, unknown> = {}) => ({
-  isApprovedHost: true,
+  isHost: true,
   clubs: [],
   venues: [],
   products: [],
@@ -58,7 +58,7 @@ describe('CreatePodScreen', () => {
   });
 
   it('gates non-hosts with a become-a-host CTA', () => {
-    mockedUse.mockReturnValue(api({ isApprovedHost: false }));
+    mockedUse.mockReturnValue(api({ isHost: false }));
     renderWithProviders(<CreatePodScreen />);
     expect(screen.getByTestId('create-pod-not-host')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('create-pod-become-host'));

@@ -7,7 +7,7 @@ jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 
 const options = {
-  myHost: { id: 'h1', status: 'APPROVED' },
+  me: { user_id: 'u1', roles: ['HOST'] },
   clubs: [{ id: 'c1', club_name: 'Runners', meetup_venues_id: [] }],
   myVenues: [
     {
@@ -45,7 +45,7 @@ describe('useCreatePod', () => {
     mockRequest.mockResolvedValueOnce(options);
     const { result } = renderHook(() => useCreatePod());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.isApprovedHost).toBe(true);
+    expect(result.current.isHost).toBe(true);
     expect(result.current.clubs).toHaveLength(1);
     expect(result.current.products).toHaveLength(1);
     expect(result.current.venues.map((v) => v.id)).toEqual(['v1']);
@@ -53,10 +53,10 @@ describe('useCreatePod', () => {
   });
 
   it('reports non-hosts and survives a failed load', async () => {
-    mockRequest.mockResolvedValueOnce({ ...options, myHost: null });
+    mockRequest.mockResolvedValueOnce({ ...options, me: { user_id: 'u1', roles: [] } });
     const { result } = renderHook(() => useCreatePod());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.isApprovedHost).toBe(false);
+    expect(result.current.isHost).toBe(false);
 
     mockRequest.mockRejectedValueOnce(new Error('boom'));
     const { result: failed } = renderHook(() => useCreatePod());

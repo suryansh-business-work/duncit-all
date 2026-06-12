@@ -17,7 +17,7 @@ export function CreatePodScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'CreatePod'>>();
   const {
-    isApprovedHost,
+    isHost,
     clubs,
     venues,
     products,
@@ -36,7 +36,7 @@ export function CreatePodScreen() {
           <Spinner testID="create-pod-loading" color="$primary" />
         </YStack>
       ) : null}
-      {!isLoading && !isApprovedHost ? (
+      {!isLoading && !isHost ? (
         <YStack flex={1} alignItems="center" justifyContent="center" gap={14} padding={24}>
           <Text testID="create-pod-not-host" textAlign="center" color="$muted">
             An approved host profile is required before creating pods.
@@ -48,7 +48,7 @@ export function CreatePodScreen() {
           />
         </YStack>
       ) : null}
-      {!isLoading && isApprovedHost ? (
+      {!isLoading && isHost ? (
         <ScrollView showsVerticalScrollIndicator={false}>
           <Reveal>
             <CreatePodStepper

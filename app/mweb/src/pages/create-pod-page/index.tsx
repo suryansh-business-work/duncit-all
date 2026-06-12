@@ -13,7 +13,7 @@ import {
 
 const CREATE_POD_OPTIONS = gql`
   query CreatePodOptions {
-    myHost { id status }
+    me { user_id roles }
     clubs(filter: { is_active: true }) { id club_name meetup_venues_id }
     myVenues {
       id venue_name city locality status is_active
@@ -48,7 +48,7 @@ export default function CreatePodPage() {
   const [saveMut] = useMutation(SAVE_POD_DRAFT);
   const [publishMut] = useMutation(PUBLISH_POD_DRAFT);
 
-  const isApprovedHost = options.data?.myHost?.status === 'APPROVED';
+  const isHost = (options.data?.me?.roles ?? []).includes('HOST');
   const clubs = options.data?.clubs ?? [];
   const products = options.data?.availablePodProducts ?? [];
   const venues = (options.data?.myVenues ?? []).filter(
@@ -78,7 +78,7 @@ export default function CreatePodPage() {
     );
   } else if (options.error) {
     body = <Alert severity="error">{options.error.message}</Alert>;
-  } else if (!isApprovedHost) {
+  } else if (!isHost) {
     body = (
       <Alert
         severity="info"
@@ -88,7 +88,7 @@ export default function CreatePodPage() {
           </Button>
         }
       >
-        An approved host profile is required before creating pods.
+        Host access is required before creating pods.
       </Alert>
     );
   } else {

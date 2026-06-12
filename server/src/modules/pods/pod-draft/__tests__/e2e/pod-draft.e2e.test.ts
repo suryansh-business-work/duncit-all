@@ -1,5 +1,7 @@
 import { gql } from 'graphql-request';
+import { Types } from 'mongoose';
 import { startTestServer, signToken, type TestServer } from '@test/harness';
+import { UserRoleModel } from '@modules/access/user/relations';
 
 let server: TestServer;
 beforeAll(async () => {
@@ -31,6 +33,13 @@ const LIST = gql`
 const DELETE = gql`
   mutation Del($draft_id: ID!) {
     deletePodDraft(draft_id: $draft_id)
+  }
+`;
+const PUBLISH = gql`
+  mutation Publish($draft_id: ID!, $input: CreatePodInput!) {
+    publishPodDraft(draft_id: $draft_id, input: $input) {
+      id
+    }
   }
 `;
 
@@ -75,32 +84,49 @@ describe('pod-draft e2e', () => {
     ).rejects.toThrow();
   });
 
-  it('rejects publishing without an approved host profile', async () => {
-    const host = server.client(signToken({ roles: ['HOST'] }));
-    const created = await host.request<{ savePodDraft: { id: string } }>(SAVE, {
+  it('rejects publishing for a user without host access', async () => {
+    const user = server.client(signToken({ roles: [] }));
+    const created = await user.request<{ savePodDraft: { id: string } }>(SAVE, {
       input: { payload: '{}', pod_title: 'To publish', step: 6 },
     });
     await expect(
-      host.request(
-        gql`
-          mutation Publish($draft_id: ID!, $input: CreatePodInput!) {
-            publishPodDraft(draft_id: $draft_id, input: $input) {
-              id
-            }
-          }
-        `,
-        {
-          draft_id: created.savePodDraft.id,
-          input: {
-            pod_title: 'To publish',
-            club_id: '507f1f77bcf86cd799439011',
-            pod_hosts_id: [],
-            pod_description: 'A valid length description',
-            pod_date_time: new Date(Date.now() + 86_400_000).toISOString(),
-            pod_type: 'NATIVE_FREE',
-          },
-        }
-      )
+      user.request(PUBLISH, {
+        draft_id: created.savePodDraft.id,
+        input: {
+          pod_title: 'To publish',
+          club_id: new Types.ObjectId().toString(),
+          pod_hosts_id: [],
+          pod_description: 'A valid length description',
+          pod_date_time: new Date(Date.now() + 86_400_000).toISOString(),
+          pod_type: 'NATIVE_FREE',
+        },
+      })
     ).rejects.toThrow();
+  });
+
+  it('publishes a virtual pod for a user with the HOST role, then clears the draft', async () => {
+    const userId = new Types.ObjectId();
+    await UserRoleModel.create({ user_id: userId, role: 'HOST' });
+    const host = server.client(signToken({ id: userId.toString(), roles: [] }));
+    const created = await host.request<{ savePodDraft: { id: string } }>(SAVE, {
+      input: { payload: '{}', pod_title: 'Virtual jam', step: 6 },
+    });
+    const published = await host.request<{ publishPodDraft: { id: string } }>(PUBLISH, {
+      draft_id: created.savePodDraft.id,
+      input: {
+        pod_title: `Virtual jam ${Date.now()}`,
+        club_id: new Types.ObjectId().toString(),
+        pod_hosts_id: [],
+        pod_mode: 'VIRTUAL',
+        meeting_url: 'https://meet.duncit.com/x',
+        pod_description: 'A valid length description for the pod',
+        pod_date_time: new Date(Date.now() + 86_400_000).toISOString(),
+        pod_type: 'NATIVE_FREE',
+      },
+    });
+    expect(published.publishPodDraft.id).toBeTruthy();
+
+    const list = await host.request<{ myPodDrafts: { id: string }[] }>(LIST);
+    expect(list.myPodDrafts.map((d) => d.id)).not.toContain(created.savePodDraft.id);
   });
 });

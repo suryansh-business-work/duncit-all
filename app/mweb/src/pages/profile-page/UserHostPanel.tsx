@@ -30,6 +30,7 @@ const MY_HOST = gql`
     }
     me {
       user_id
+      roles
     }
   }
 `;
@@ -55,6 +56,7 @@ export default function UserHostPanel() {
   const { data, loading, error } = useQuery(MY_HOST, { fetchPolicy: 'cache-and-network' });
   const host = data?.myHost;
   const myUserId: string | undefined = data?.me?.user_id || host?.user_id;
+  const isHost = (data?.me?.roles ?? []).includes('HOST');
   const isApproved = host?.status === 'APPROVED';
   const completed = Math.min(host?.step_completed ?? 0, 4);
   const labels = ['Profile', 'Docs', 'Skills', 'Submit'];
@@ -72,10 +74,12 @@ export default function UserHostPanel() {
     return (
       <Stack spacing={1.5}>
         <Typography variant="body2" color="text.secondary">
-          You have not started a host profile yet.
+          {isHost
+            ? "You're a host. Complete your host profile to add payout and verification details."
+            : 'You have not started a host profile yet.'}
         </Typography>
         <Button component={RouterLink} to="/become-host" variant="outlined" size="small">
-          Become a Host
+          {isHost ? 'Complete host profile' : 'Become a Host'}
         </Button>
       </Stack>
     );

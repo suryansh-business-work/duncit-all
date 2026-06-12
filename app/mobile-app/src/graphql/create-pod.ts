@@ -3,9 +3,9 @@ import { gql } from '@/generated/graphql';
 /** Host status + the clubs/venues/products a host can attach a new pod to. */
 export const CreatePodOptionsDocument = gql(`
   query MobileCreatePodOptions {
-    myHost {
-      id
-      status
+    me {
+      user_id
+      roles
     }
     clubs(filter: { is_active: true }) {
       id

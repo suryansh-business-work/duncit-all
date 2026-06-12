@@ -5,6 +5,12 @@ import { useHostDrafts } from '@/hooks/useHostDrafts';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
+// The full app header is unit-tested on its own; stub it here (B4-3).
+jest.mock('@/components/AppHeader', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View: V } = require('react-native');
+  return { AppHeader: () => <V testID="app-header-stub" /> };
+});
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
 }));

@@ -12,19 +12,39 @@ describe('useMenuItems', () => {
     expect(labels).toContain('Earn with Duncit');
     expect(labels).not.toContain('Home');
     expect(labels).not.toContain('Profile');
-    expect(routes('USER')).toEqual(['Saved', 'PodHistory', 'Earn', 'Support', 'PodIdeas', 'Faqs']);
+    expect(routes('USER')).toEqual([
+      'Saved',
+      'PodHistory',
+      'Earn',
+      'Referral',
+      'Support',
+      'PodIdeas',
+      'Faqs',
+    ]);
   });
 
   it('returns the Host studio menu', () => {
-    expect(routes('HOST')).toEqual(['HostManage', 'Support', 'BecomeHost', 'Faqs']);
+    expect(routes('HOST')).toEqual(['HostManage', 'HostManage', 'Support', 'BecomeHost', 'Faqs']);
   });
 
   it('returns the Venue studio menu', () => {
-    expect(routes('VENUE')).toEqual(['VenueManage', 'Support', 'RegisterVenue', 'Faqs']);
+    expect(routes('VENUE')).toEqual([
+      'VenueManage',
+      'VenueManage',
+      'Support',
+      'RegisterVenue',
+      'Faqs',
+    ]);
   });
 
   it('returns the ecomm studio menu', () => {
-    expect(routes('ECOMM')).toEqual(['ProductsManage', 'Support', 'ListProduct', 'Faqs']);
+    expect(routes('ECOMM')).toEqual([
+      'ProductsManage',
+      'ProductsManage',
+      'Support',
+      'ListProduct',
+      'Faqs',
+    ]);
   });
 
   it('defaults to the USER menu', () => {

@@ -19,7 +19,7 @@ export function ProductsManageScreen() {
     .map((p) => ({ label: String(p.product_name).slice(0, 8), value: p.available_count ?? 0 }));
 
   return (
-    <StackScreen title="ecomm Studio" testID="products-manage-screen">
+    <StackScreen header title="ecomm Studio" testID="products-manage-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="ecomm-dashboard-loading" color="$primary" /> : null}

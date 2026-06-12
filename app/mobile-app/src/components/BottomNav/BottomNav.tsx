@@ -13,7 +13,7 @@ import { TAB_CONFIG } from '@/navigation/tabs';
  * mWeb's BottomNav. Used as React Navigation's custom `tabBar`. */
 export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
   const insets = useSafeAreaInsets();
-  const { muted, primary } = useThemeColors();
+  const { muted, onPrimary } = useThemeColors();
 
   return (
     <XStack
@@ -61,11 +61,19 @@ export function BottomNav({ state, navigation }: Readonly<BottomTabBarProps>) {
             pressStyle={{ opacity: 0.85 }}
           >
             <MotiView
-              animate={{ scale: focused ? 1.08 : 0.92 }}
+              animate={{ scale: focused ? 1.1 : 0.92, translateY: focused ? -2 : 0 }}
               transition={{ type: 'timing', duration: durations.fast }}
             >
-              <YStack width={34} height={34} alignItems="center" justifyContent="center">
-                <MaterialIcons name={cfg.icon} size={22} color={focused ? primary : muted} />
+              {/* Selection bubble — the active icon pops inside a primary circle (B4-8). */}
+              <YStack
+                width={38}
+                height={38}
+                alignItems="center"
+                justifyContent="center"
+                borderRadius={19}
+                backgroundColor={focused ? '$primary' : 'transparent'}
+              >
+                <MaterialIcons name={cfg.icon} size={21} color={focused ? onPrimary : muted} />
               </YStack>
             </MotiView>
             <Text fontSize={11} fontWeight="800" color={focused ? '$primary' : '$muted'}>

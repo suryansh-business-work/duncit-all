@@ -127,6 +127,8 @@ export default function AppHeader({
             {/* Studio modes (Host/Venue/ecomm) get a focused header — no location, no search. */}
             {effectiveStudio === 'USER' && (
               <>
+                {/* Search sits first — same order as the native header (B4-6). */}
+                <HeaderSearchButton locationId={selectedLocationId} zoneName={selectedZoneName} />
                 <HeaderLocationButton
                   loading={loading}
                   hasData={!!data}
@@ -162,7 +164,6 @@ export default function AppHeader({
                   }}
                 />
 
-                <HeaderSearchButton locationId={selectedLocationId} zoneName={selectedZoneName} />
               </>
             )}
             <HeaderNotificationsBell onToast={handleNotifToast} />

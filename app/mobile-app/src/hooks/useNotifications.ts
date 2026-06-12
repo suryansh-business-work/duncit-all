@@ -8,6 +8,7 @@ import {
 } from '@/graphql/notification';
 import { graphqlRequest } from '@/services/graphql.client';
 import { displayLocalNotification } from '@/services/local-notifications';
+import { useNotificationPrefsStore } from '@/stores/notification-prefs.store';
 
 export type NotificationsData = ResultOf<typeof MobileNotificationsDocument>;
 export type UserNotification = NotificationsData['myNotifications'][number];
@@ -31,6 +32,8 @@ export function useNotifications() {
     const seen = surfacedIds.current;
     surfacedIds.current = new Set(result.myNotifications.map((item) => item.id));
     if (!seen) return;
+    // Master switch (Notifications screen) gates device notifications (B4-13).
+    if (!useNotificationPrefsStore.getState().enabled) return;
     result.myNotifications
       .filter((item) => !item.read_at && !seen.has(item.id))
       .forEach((item) => {

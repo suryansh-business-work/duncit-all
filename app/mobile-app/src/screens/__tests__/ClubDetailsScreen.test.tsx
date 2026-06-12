@@ -52,24 +52,33 @@ beforeEach(() => {
 
 describe('ClubDetailsScreen', () => {
   it('shows the spinner while loading', () => {
-    mockedClub.mockReturnValue({ club: null, pods: [], isLoading: true });
+    mockedClub.mockReturnValue({ club: null, pods: [], members: [], isLoading: true });
     renderWithProviders(<ClubDetailsScreen />);
     expect(screen.getByTestId('club-details-loading')).toBeOnTheScreen();
   });
 
   it('renders the club, its pod, and opens a pod', () => {
-    mockedClub.mockReturnValue({ club, pods: [pod], isLoading: false });
+    mockedClub.mockReturnValue({
+      club,
+      pods: [pod],
+      members: [{ user_id: 'm1', full_name: 'Asha', profile_photo: null }],
+      isLoading: false,
+    });
     renderWithProviders(<ClubDetailsScreen />);
     expect(screen.getByText('Runners')).toBeOnTheScreen();
     expect(screen.getByText('Morning Run')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Morning Run' });
+    // Members rail → full profile (B4-12).
+    fireEvent.press(screen.getByTestId('attendees-avatar-group'));
+    fireEvent.press(screen.getByTestId('attendee-row-m1'));
+    expect(mockNavigate).toHaveBeenCalledWith('PublicProfile', { userId: 'm1' });
     fireEvent.press(screen.getByTestId('detail-back')); // DetailHero onBack
     expect(mockGoBack).toHaveBeenCalled();
   });
 
   it('shows the unavailable state and goes back', () => {
-    mockedClub.mockReturnValue({ club: null, pods: [], isLoading: false });
+    mockedClub.mockReturnValue({ club: null, pods: [], members: [], isLoading: false });
     renderWithProviders(<ClubDetailsScreen />);
     expect(screen.getByTestId('club-details-error')).toBeOnTheScreen();
     fireEvent.press(screen.getByLabelText('Go back'));

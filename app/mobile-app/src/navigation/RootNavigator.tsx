@@ -24,6 +24,7 @@ import { PreviousPodsScreen } from '@/screens/PreviousPodsScreen';
 import { PodHistoryScreen } from '@/screens/PodHistoryScreen';
 import { PodHistoryDetailsScreen } from '@/screens/PodHistoryDetailsScreen';
 import { PodIdeasScreen } from '@/screens/PodIdeasScreen';
+import { ReferralScreen } from '@/screens/ReferralScreen';
 import { PodPlansScreen } from '@/screens/PodPlansScreen';
 import { PoliciesScreen } from '@/screens/PoliciesScreen';
 import { PolicyScreen } from '@/screens/PolicyScreen';
@@ -106,6 +107,7 @@ export function RootNavigator() {
           <Stack.Screen name="AllSupportTickets" component={AllSupportTicketsScreen} />
           <Stack.Screen name="TicketDetails" component={TicketDetailsScreen} />
           <Stack.Screen name="PodIdeas" component={PodIdeasScreen} />
+          <Stack.Screen name="Referral" component={ReferralScreen} />
           <Stack.Screen name="PreviousPods" component={PreviousPodsScreen} />
           <Stack.Screen name="HappeningNearby" component={HappeningNearbyScreen} />
           <Stack.Screen name="Faqs" component={FaqsScreen} />

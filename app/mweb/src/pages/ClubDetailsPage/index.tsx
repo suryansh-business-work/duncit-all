@@ -11,6 +11,7 @@ import ClubMeetupVenuesSection from '../club-details-page/ClubMeetupVenuesSectio
 import ClubMomentsSection from '../club-details-page/ClubMomentsSection';
 import ClubSocialLinks from '../club-details-page/ClubSocialLinks';
 import ClubSummaryHeader from '../club-details-page/ClubSummaryHeader';
+import ClubMembersSection from '../club-details-page/ClubMembersSection';
 import ClubUpcomingPodsSection from '../club-details-page/ClubUpcomingPodsSection';
 import { CLUB_BY_SLUG, CLUB_DETAILS_RELATED } from './clubDetailsQueries';
 import useSavedClub from './useSavedClub';
@@ -106,6 +107,11 @@ export default function ClubDetailsPage() {
         onToggleFollow={toggleClubFollow}
       />
       <ClubSocialLinks club={club} />
+      <ClubMembersSection
+        memberIds={Array.from(
+          new Set(pods.flatMap((podItem: any) => podItem.pod_attendees ?? []))
+        )}
+      />
       {club.club_description && (
         <Box>
           <Typography variant="h6" fontWeight={700} gutterBottom>

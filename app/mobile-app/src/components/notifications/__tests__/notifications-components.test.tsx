@@ -64,6 +64,18 @@ describe('NotificationsScreen', () => {
     onMarkAll: jest.fn(),
   };
 
+  it('toggles the allow-notifications switch (B4-13)', () => {
+    const { useNotificationPrefsStore } = jest.requireActual<
+      typeof import('@/stores/notification-prefs.store')
+    >('@/stores/notification-prefs.store');
+    useNotificationPrefsStore.setState({ enabled: true });
+    renderWithProviders(<NotificationsScreen {...base} notifs={[]} unreadCount={0} />);
+    const toggle = screen.getByTestId('notifications-allow-switch');
+    fireEvent(toggle, 'valueChange', false);
+    expect(useNotificationPrefsStore.getState().enabled).toBe(false);
+    useNotificationPrefsStore.setState({ enabled: true });
+  });
+
   it('shows the empty state and "All caught up"', () => {
     renderWithProviders(<NotificationsScreen {...base} notifs={[]} unreadCount={0} />);
     expect(screen.getByText('All caught up')).toBeOnTheScreen();

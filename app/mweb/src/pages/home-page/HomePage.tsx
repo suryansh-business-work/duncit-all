@@ -185,7 +185,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             onClick={() => navigate('/create-pod')}
             sx={{
               position: 'fixed',
-              bottom: 'var(--duncit-bottom-nav-overlay-offset, 88px)',
+              bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 16px)',
               right: 16,
               zIndex: 5,
             }}

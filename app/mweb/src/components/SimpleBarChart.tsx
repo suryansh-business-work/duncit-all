@@ -39,21 +39,25 @@ export default function SimpleBarChart({ data, height = 120 }: Readonly<Props>) 
   return (
     <Stack direction="row" spacing={1.25} alignItems="flex-end" sx={{ height, pt: 1 }}>
       {data.map((d) => (
-        <Stack key={d.label} spacing={0.5} alignItems="center" sx={{ flex: 1, height: '100%', justifyContent: 'flex-end' }}>
-          <Typography variant="caption" sx={{ fontWeight: 900, lineHeight: 1 }}>
-            {d.value}
-          </Typography>
-          <Box
-            sx={{
-              width: '100%',
-              maxWidth: 34,
-              height: `${Math.max(4, (d.value / max) * 100)}%`,
-              borderRadius: 1.5,
-              background: d.value > 0 ? 'linear-gradient(180deg, #ff7a59 0%, #ff4f73 100%)' : undefined,
-              bgcolor: d.value > 0 ? undefined : 'action.hover',
-              transition: 'height 300ms cubic-bezier(0.2, 0.8, 0.2, 1)',
-            }}
-          />
+        <Stack key={d.label} spacing={0.5} alignItems="center" sx={{ flex: 1, height: '100%' }}>
+          {/* The bar scales inside this flex track, so the value/label rows can
+              never overflow the card (overlap fix, B4-1). */}
+          <Stack spacing={0.5} alignItems="center" sx={{ flex: 1, width: '100%', justifyContent: 'flex-end' }}>
+            <Typography variant="caption" sx={{ fontWeight: 900, lineHeight: 1 }}>
+              {d.value}
+            </Typography>
+            <Box
+              sx={{
+                width: '100%',
+                maxWidth: 34,
+                height: `${Math.max(4, (d.value / max) * 82)}%`,
+                borderRadius: 1.5,
+                background: d.value > 0 ? 'linear-gradient(180deg, #ff7a59 0%, #ff4f73 100%)' : undefined,
+                bgcolor: d.value > 0 ? undefined : 'action.hover',
+                transition: 'height 300ms cubic-bezier(0.2, 0.8, 0.2, 1)',
+              }}
+            />
+          </Stack>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
             {d.label}
           </Typography>

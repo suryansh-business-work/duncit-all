@@ -84,9 +84,10 @@ export function usePodDetails(podId: string) {
   };
 }
 
-/** Fetches a club + its active pods (auth). */
+/** Fetches a club + its active pods (auth), plus the members who joined them. */
 export function useClubDetails(clubId: string) {
   const [data, setData] = useState<ClubDetailsResult | null>(null);
+  const [members, setMembers] = useState<PodPerson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
@@ -94,7 +95,20 @@ export function useClubDetails(clubId: string) {
     let active = true;
     setIsLoading(true);
     graphqlRequest(ClubDetailsDocument, { clubId }, { auth: true })
-      .then((result) => active && setData(result))
+      .then(async (result) => {
+        if (!active) return;
+        setData(result);
+        // Everyone attending the club's pods — the Members avatar rail (B4-12).
+        const ids = Array.from(new Set(result.pods.flatMap((pod) => pod.pod_attendees)));
+        if (ids.length === 0) {
+          setMembers([]);
+          return;
+        }
+        const people = await graphqlRequest(PodPeopleDocument, { ids }, { auth: true }).catch(
+          () => null,
+        );
+        if (active) setMembers(people ? people.publicUsersByIds : []);
+      })
       .catch((err) => active && setError(err))
       .finally(() => active && setIsLoading(false));
     return () => {
@@ -102,7 +116,7 @@ export function useClubDetails(clubId: string) {
     };
   }, [clubId]);
 
-  return { club: data?.club ?? null, pods: data?.pods ?? [], isLoading, error };
+  return { club: data?.club ?? null, pods: data?.pods ?? [], members, isLoading, error };
 }
 
 /** Optimistic like + save for the pod-details actions, reusing the explore mutations. */

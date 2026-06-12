@@ -1,6 +1,10 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { MobilePublicProfileDocument, MobileUserBadgesDocument } from '@/graphql/public-profile';
+import {
+  MobileFollowUserDocument,
+  MobileUnfollowUserDocument,
+} from '@/graphql/hosts-venues';
 import { graphqlRequest } from '@/services/graphql.client';
 import { usePublicProfile } from '@/hooks/usePublicProfile';
 
@@ -23,8 +27,14 @@ function route(doc: unknown, vars: { user_id: string }, me = 'me') {
         city: 'Pune',
         zone: 'Kothrud',
       },
-      me: { user_id: me },
+      me: { user_id: me, following_user_ids: [] },
     });
+  }
+  if (doc === MobileFollowUserDocument) {
+    return Promise.resolve({ followUser: { user_id: me, following_user_ids: [vars.user_id] } });
+  }
+  if (doc === MobileUnfollowUserDocument) {
+    return Promise.resolve({ unfollowUser: { user_id: me, following_user_ids: [] } });
   }
   if (doc === MobileUserBadgesDocument) return Promise.resolve({ userBadges: [badge] });
   return Promise.resolve({});
@@ -112,5 +122,61 @@ describe('usePublicProfile', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.user?.full_name).toBe('Riya');
     expect(result.current.badges).toEqual([]);
+  });
+});
+
+describe('usePublicProfile → follow (B4-12)', () => {
+  it('follows then unfollows with server confirmation', async () => {
+    mockRequest.mockImplementation((doc: unknown, vars: never) => route(doc, vars));
+    const { result } = renderHook(() => usePublicProfile('u9'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.following).toBe(false);
+
+    await act(async () => {
+      await result.current.toggleFollow();
+    });
+    expect(result.current.following).toBe(true);
+
+    await act(async () => {
+      await result.current.toggleFollow();
+    });
+    expect(result.current.following).toBe(false);
+  });
+
+  it('reverts the optimistic flip when the mutation fails and guards re-entry', async () => {
+    mockRequest.mockImplementation((doc: unknown, vars: never) => {
+      if (doc === MobileFollowUserDocument) return Promise.reject(new Error('down'));
+      return route(doc, vars);
+    });
+    const { result } = renderHook(() => usePublicProfile('u9'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.toggleFollow();
+    });
+    expect(result.current.following).toBe(false);
+  });
+
+  it('ignores toggles while one is in flight', async () => {
+    let resolveFollow!: (value: unknown) => void;
+    mockRequest.mockImplementation((doc: unknown, vars: never) => {
+      if (doc === MobileFollowUserDocument) {
+        return new Promise((r) => {
+          resolveFollow = r;
+        });
+      }
+      return route(doc, vars);
+    });
+    const { result } = renderHook(() => usePublicProfile('u9'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    let first!: Promise<void>;
+    act(() => {
+      first = result.current.toggleFollow();
+    });
+    await act(async () => {
+      await result.current.toggleFollow(); // busy → no-op
+      resolveFollow({ followUser: { user_id: 'me', following_user_ids: ['u9'] } });
+      await first;
+    });
+    expect(result.current.following).toBe(true);
   });
 });

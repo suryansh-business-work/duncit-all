@@ -2,13 +2,14 @@ import { Image, Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
-import type { ClubDetail, ClubPod } from '@/hooks/useDetails';
+import { AttendeesSection, buildAttendeePeople } from '@/components/details/PodSections';
+import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PodCard } from '@/components/home/PodCard';
 
 function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
   return (
-    <YStack flex={1} alignItems="center">
+    <YStack flex={1} alignItems="flex-start">
       <Text fontSize={18} fontWeight="900" color="$color">
         {value}
       </Text>
@@ -24,13 +25,17 @@ function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
 export function ClubBody({
   club,
   pods,
+  members,
   cardWidth,
   onOpenPod,
+  onOpenMember,
 }: Readonly<{
   club: ClubDetail;
   pods: ClubPod[];
+  members: PodPerson[];
   cardWidth: number;
   onOpenPod: (pod: ClubPod) => void;
+  onOpenMember: (userId: string) => void;
 }>) {
   const { onPrimary } = useThemeColors();
   const moments = club.club_moments.filter((m) => !!m.url);
@@ -58,6 +63,22 @@ export function ClubBody({
         <Stat value={moments.length} label="moments" />
         <Stat value={club.meetup_venues_id.length} label="venues" />
       </XStack>
+      {members.length > 0 ? (
+        <YStack gap={8} testID="club-members">
+          <Text fontSize={16} fontWeight="900" color="$color">
+            Members
+          </Text>
+          <AttendeesSection
+            people={buildAttendeePeople(
+              members,
+              members.map((member) => member.user_id),
+              [],
+            )}
+            spots={0}
+            onOpenProfile={onOpenMember}
+          />
+        </YStack>
+      ) : null}
       {chat ? (
         <XStack
           testID="club-chat"

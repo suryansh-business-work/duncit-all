@@ -20,7 +20,7 @@ export function ClubDetailsScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'ClubDetails'>>();
   const { width } = useWindowDimensions();
   const { clubId } = route.params;
-  const { club, pods, isLoading } = useClubDetails(clubId);
+  const { club, pods, members, isLoading } = useClubDetails(clubId);
   const cardWidth = Math.min(width - 32, 520);
 
   return (
@@ -46,10 +46,12 @@ export function ClubDetailsScreen() {
             <ClubBody
               club={club}
               pods={pods}
+              members={members}
               cardWidth={cardWidth}
               onOpenPod={(pod) =>
                 navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title })
               }
+              onOpenMember={(userId) => navigation.navigate('PublicProfile', { userId })}
             />
           </Reveal>
         </ScrollView>

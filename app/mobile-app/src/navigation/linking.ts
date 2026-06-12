@@ -47,6 +47,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       AllSupportTickets: 'support/all',
       TicketDetails: 'tickets/:ticketId',
       PodIdeas: 'pod-ideas',
+      Referral: 'referral',
       HappeningNearby: 'happening-nearby',
       Faqs: 'faqs',
       PodPlans: 'pod-plans',

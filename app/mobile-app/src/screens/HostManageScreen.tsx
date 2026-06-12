@@ -40,7 +40,7 @@ export function HostManageScreen() {
   };
 
   return (
-    <StackScreen title="Hosts Management" testID="host-manage-screen">
+    <StackScreen header title="Hosts Management" testID="host-manage-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={16} padding={16} paddingBottom={48}>
           <PrimaryButton

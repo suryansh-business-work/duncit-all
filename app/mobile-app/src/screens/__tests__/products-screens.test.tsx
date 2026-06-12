@@ -4,6 +4,12 @@ import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
 import { useEcommDashboard } from '@/hooks/useStudioDashboards';
 import { renderWithProviders } from '@/utils/test-utils';
 
+// The full app header is unit-tested on its own; stub it here (B4-3).
+jest.mock('@/components/AppHeader', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View: V } = require('react-native');
+  return { AppHeader: () => <V testID="app-header-stub" /> };
+});
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn() }),
 }));

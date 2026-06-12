@@ -1,4 +1,4 @@
-import { Modal } from 'react-native';
+import { Modal, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
@@ -6,6 +6,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { AppBackground } from '@/components/AppBackground';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { useNotificationPrefsStore } from '@/stores/notification-prefs.store';
 import type { UserNotification } from '@/hooks/useNotifications';
 import { NotificationRow } from './NotificationRow';
 
@@ -29,6 +30,8 @@ export function NotificationsScreen({
   onMarkAll,
 }: Readonly<NotificationsScreenProps>) {
   const { color, primary } = useThemeColors();
+  const notifEnabled = useNotificationPrefsStore((s) => s.enabled);
+  const setNotifEnabled = useNotificationPrefsStore((s) => s.setEnabled);
 
   return (
     <Modal visible={open} animationType="slide" onRequestClose={onClose}>
@@ -111,6 +114,31 @@ export function NotificationsScreen({
                   {notifs.length}
                 </Text>
               </XStack>
+            </XStack>
+
+            <XStack
+              marginHorizontal={12}
+              marginBottom={10}
+              paddingHorizontal={14}
+              paddingVertical={10}
+              borderRadius={16}
+              alignItems="center"
+              gap={12}
+              backgroundColor="$surface"
+              borderWidth={1}
+              borderColor="$borderColor"
+            >
+              <MaterialIcons name="notifications" size={20} color={color} />
+              <Text flex={1} fontSize={13.5} fontWeight="800" color="$color">
+                Allow notifications
+              </Text>
+              <Switch
+                testID="notifications-allow-switch"
+                aria-label="Allow notifications"
+                value={notifEnabled}
+                onValueChange={setNotifEnabled}
+                trackColor={{ true: primary }}
+              />
             </XStack>
 
             <ScrollView

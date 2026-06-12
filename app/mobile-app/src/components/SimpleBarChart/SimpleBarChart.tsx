@@ -45,24 +45,21 @@ export function SimpleBarChart({ data, height = 120, testID = 'bar-chart' }: Rea
   return (
     <XStack testID={testID} gap={10} alignItems="flex-end" height={height} paddingTop={8}>
       {data.map((d) => (
-        <YStack
-          key={d.label}
-          flex={1}
-          height="100%"
-          alignItems="center"
-          justifyContent="flex-end"
-          gap={4}
-        >
-          <Text fontSize={11} fontWeight="900" color="$color">
-            {d.value}
-          </Text>
-          <YStack
-            width="100%"
-            maxWidth={34}
-            height={`${Math.max(4, (d.value / max) * 100)}%`}
-            borderRadius={6}
-            backgroundColor={d.value > 0 ? '$primary' : '$surface'}
-          />
+        <YStack key={d.label} flex={1} height="100%" alignItems="center" gap={4}>
+          {/* The bar scales inside this flex track, so the value/label rows can
+              never be pushed out of the card (overlap fix, B4-1). */}
+          <YStack flex={1} width="100%" alignItems="center" justifyContent="flex-end" gap={4}>
+            <Text fontSize={11} fontWeight="900" color="$color">
+              {d.value}
+            </Text>
+            <YStack
+              width="100%"
+              maxWidth={34}
+              height={`${Math.max(4, (d.value / max) * 82)}%`}
+              borderRadius={6}
+              backgroundColor={d.value > 0 ? '$primary' : '$surface'}
+            />
+          </YStack>
           <Text fontSize={11} fontWeight="800" color="$muted">
             {d.label}
           </Text>

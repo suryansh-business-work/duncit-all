@@ -72,12 +72,42 @@ describe('usePodDetails / useClubDetails', () => {
     expect(result.current.location).toBeNull();
   });
 
-  it('loads the club and its pods', async () => {
-    mockRequest.mockResolvedValueOnce({ club: { id: 'c1' }, pods: [{ id: 'p1' }] });
+  it('loads the club and its pods (no attendees → no member lookup)', async () => {
+    mockRequest.mockResolvedValueOnce({
+      club: { id: 'c1' },
+      pods: [{ id: 'p1', pod_attendees: [] }],
+    });
     const { result } = renderHook(() => useClubDetails('c1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.club?.id).toBe('c1');
     expect(result.current.pods).toHaveLength(1);
+    expect(result.current.members).toEqual([]);
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+  });
+
+  it('loads club members from its pods and tolerates a lookup failure', async () => {
+    mockRequest
+      .mockResolvedValueOnce({
+        club: { id: 'c1' },
+        pods: [{ id: 'p1', pod_attendees: ['u1', 'u2'] }],
+      })
+      .mockResolvedValueOnce({
+        publicUsersByIds: [{ user_id: 'u1', full_name: 'Asha', profile_photo: null }],
+      });
+    const ok = renderHook(() => useClubDetails('c1'));
+    await waitFor(() => expect(ok.result.current.isLoading).toBe(false));
+    await waitFor(() => expect(ok.result.current.members).toHaveLength(1));
+
+    mockRequest
+      .mockResolvedValueOnce({
+        club: { id: 'c1' },
+        pods: [{ id: 'p1', pod_attendees: ['u1'] }],
+      })
+      .mockRejectedValueOnce(new Error('down'));
+    const bad = renderHook(() => useClubDetails('c1'));
+    await waitFor(() => expect(bad.result.current.isLoading).toBe(false));
+    expect(bad.result.current.members).toEqual([]);
+    expect(bad.result.current.error).toBeUndefined();
   });
 
   it('usePodDetails surfaces a load error', async () => {

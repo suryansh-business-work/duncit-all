@@ -15,6 +15,7 @@ import ClubDetailsPage from './pages/ClubDetailsPage';
 import PodsPage from './pages/PodsPage';
 import PodDetailsPage from './pages/PodDetailsPage';
 import CouponsPage from './pages/CouponsPage';
+import ReferralsPage from './pages/referrals-page/ReferralsPage';
 import EventTicketsPage from './pages/EventTicketsPage';
 import SlidersPage from './pages/SlidersPage';
 import BrandingPage from './pages/BrandingPage';
@@ -59,6 +60,7 @@ export default function App() {
                 <Route path="/pods" element={<PodsPage />} />
                 <Route path="/pods/:id" element={<PodDetailsPage />} />
                 <Route path="/coupons" element={<CouponsPage />} />
+                <Route path="/referrals" element={<ReferralsPage />} />
                 <Route path="/event-tickets" element={<EventTicketsPage />} />
                 <Route path="/sliders" element={<SlidersPage />} />
                 <Route path="/interview-requests" element={<InterviewRequestsPage />} />

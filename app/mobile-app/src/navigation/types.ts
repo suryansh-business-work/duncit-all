@@ -34,6 +34,7 @@ export type RootStackParamList = {
   AllSupportTickets: undefined;
   TicketDetails: { ticketId: string };
   PodIdeas: undefined;
+  Referral: undefined;
   Faqs: undefined;
   PodPlans: undefined;
   Policies: undefined;

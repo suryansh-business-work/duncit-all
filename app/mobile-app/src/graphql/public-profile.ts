@@ -15,6 +15,7 @@ export const MobilePublicProfileDocument = gql(`
     }
     me {
       user_id
+      following_user_ids
     }
   }
 `);

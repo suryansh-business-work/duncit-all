@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { MobilePublicProfileDocument, MobileUserBadgesDocument } from '@/graphql/public-profile';
 import { graphqlRequest } from '@/services/graphql.client';
+import { MobileFollowUserDocument, MobileUnfollowUserDocument } from '@/graphql/hosts-venues';
 
 type ProfileData = ResultOf<typeof MobilePublicProfileDocument>;
 export type PublicProfileUser = NonNullable<ProfileData['publicUserProfile']>;
@@ -13,6 +14,8 @@ export type UserBadge = ResultOf<typeof MobileUserBadgesDocument>['userBadges'][
 export function usePublicProfile(userId: string) {
   const [user, setUser] = useState<PublicProfileUser | null>(null);
   const [isOwner, setIsOwner] = useState(false);
+  const [following, setFollowing] = useState(false);
+  const [followBusy, setFollowBusy] = useState(false);
   const [badges, setBadges] = useState<UserBadge[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
@@ -24,6 +27,7 @@ export function usePublicProfile(userId: string) {
         if (!active) return;
         setUser(d.publicUserProfile ?? null);
         setIsOwner(!!d.me?.user_id && d.me.user_id === d.publicUserProfile?.user_id);
+        setFollowing((d.me?.following_user_ids ?? []).includes(userId));
       }),
       graphqlRequest(MobileUserBadgesDocument, { user_id: userId }, { auth: true })
         .then((d) => active && setBadges(d.userBadges))
@@ -36,5 +40,34 @@ export function usePublicProfile(userId: string) {
     };
   }, [userId]);
 
-  return { user, isOwner, badges, isLoading, error };
+  // Follow/unfollow this member (B4-12) — optimistic, reverts on failure.
+  const toggleFollow = async () => {
+    if (followBusy) return;
+    const prev = following;
+    setFollowing(!prev);
+    setFollowBusy(true);
+    try {
+      if (prev) {
+        const res = await graphqlRequest(
+          MobileUnfollowUserDocument,
+          { user_id: userId },
+          { auth: true },
+        );
+        setFollowing((res.unfollowUser.following_user_ids ?? []).includes(userId));
+      } else {
+        const res = await graphqlRequest(
+          MobileFollowUserDocument,
+          { user_id: userId },
+          { auth: true },
+        );
+        setFollowing((res.followUser.following_user_ids ?? []).includes(userId));
+      }
+    } catch {
+      setFollowing(prev);
+    } finally {
+      setFollowBusy(false);
+    }
+  };
+
+  return { user, isOwner, badges, following, followBusy, toggleFollow, isLoading, error };
 }

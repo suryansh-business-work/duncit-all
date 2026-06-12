@@ -106,7 +106,16 @@ describe('ClubBody', () => {
       },
     ] as never;
     const onOpenPod = jest.fn();
-    renderWithProviders(<ClubBody club={club} pods={pods} cardWidth={300} onOpenPod={onOpenPod} />);
+    renderWithProviders(
+      <ClubBody
+        club={club}
+        pods={pods}
+        members={[{ user_id: 'u1', full_name: 'Asha', profile_photo: null }]}
+        cardWidth={300}
+        onOpenPod={onOpenPod}
+        onOpenMember={jest.fn()}
+      />,
+    );
     expect(screen.getByText('Moments')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('club-chat'));
     expect(openSpy).toHaveBeenCalledWith('https://wa.me/1');
@@ -199,7 +208,14 @@ describe('empty / minimal branches', () => {
       meetup_venues_id: [],
     } as never;
     renderWithProviders(
-      <ClubBody club={club} pods={[] as never} cardWidth={300} onOpenPod={jest.fn()} />,
+      <ClubBody
+        club={club}
+        pods={[] as never}
+        members={[]}
+        onOpenMember={jest.fn()}
+        cardWidth={300}
+        onOpenPod={jest.fn()}
+      />,
     );
     expect(screen.getByTestId('club-no-pods')).toBeOnTheScreen();
   });

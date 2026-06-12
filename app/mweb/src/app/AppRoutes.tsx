@@ -22,6 +22,7 @@ import VenueDetailsPage from '../pages/VenueDetailsPage';
 import FaqsPage from '../pages/FaqsPage';
 import PolicyPage from '../pages/PolicyPage';
 import PodIdeasPage from '../pages/PodIdeasPage';
+import ReferralPage from '../pages/ReferralPage';
 import PodPlansPage from '../pages/PodPlansPage';
 import PodHistoryPage from '../pages/PodHistoryPage';
 import PodHistoryDetailsPage from '../pages/PodHistoryDetailsPage';
@@ -98,6 +99,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
       <Route path="/faqs" element={withAuth(<FaqsPage />)} />
       <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />
       <Route path="/pod-ideas" element={withAuth(<PodIdeasPage />)} />
+      <Route path="/referral" element={withAuth(<ReferralPage />)} />
       <Route path="/pod-plans" element={withAuth(<PodPlansPage />)} />
       <Route path="/pod-history" element={withAuth(<PodHistoryPage />)} />
       <Route path="/pod-history/:membershipId" element={withAuth(<PodHistoryDetailsPage />)} />

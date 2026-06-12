@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
+import { AppHeader } from '@/components/AppHeader';
 import { useGoBack } from '@/hooks/useGoBack';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -13,11 +14,20 @@ interface StackScreenProps {
   testID: string;
   children: ReactNode;
   right?: ReactNode;
+  /** Render the full app header (logo · bell · avatar) above the back bar —
+   * used by the studio dashboards so the header shows in every role (B4-3). */
+  header?: boolean;
 }
 
 /** Shared scaffold for pushed (stack) screens: gradient backdrop + a back-bar
  * with the title (and optional right action). */
-export function StackScreen({ title, testID, children, right }: Readonly<StackScreenProps>) {
+export function StackScreen({
+  title,
+  testID,
+  children,
+  right,
+  header = false,
+}: Readonly<StackScreenProps>) {
   const goBack = useGoBack();
   const { color: ink } = useThemeColors();
 
@@ -25,6 +35,7 @@ export function StackScreen({ title, testID, children, right }: Readonly<StackSc
     <YStack flex={1} testID={testID}>
       <AppBackground />
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+        {header ? <AppHeader /> : null}
         <XStack alignItems="center" gap={8} paddingHorizontal={12} paddingVertical={8}>
           <XStack
             testID={`${testID}-back`}

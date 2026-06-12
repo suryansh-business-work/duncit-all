@@ -16,7 +16,7 @@ interface Props {
 
 function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
   return (
-    <Box sx={{ flex: 1, textAlign: 'center' }}>
+    <Box sx={{ flex: 1, textAlign: 'left' }}>
       <Typography display="block" sx={{ fontWeight: 950, lineHeight: 1 }}>
         {value}
       </Typography>

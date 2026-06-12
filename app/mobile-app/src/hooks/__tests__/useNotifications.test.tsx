@@ -123,6 +123,39 @@ describe('useNotifications → device notifications (Notifee)', () => {
     expect(mockDisplay).toHaveBeenCalledWith({ id: 'n2', title: 'Fresh', body: 'New body' });
   });
 
+  it('stays silent when the allow-notifications switch is off', async () => {
+    const { useNotificationPrefsStore } = jest.requireActual<
+      typeof import('@/stores/notification-prefs.store')
+    >('@/stores/notification-prefs.store');
+    useNotificationPrefsStore.setState({ enabled: false });
+    try {
+      const { result } = renderHook(() => useNotifications());
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+      mockRequest.mockImplementation((doc: unknown) => {
+        if (doc === MobileNotificationsDocument) {
+          return Promise.resolve({
+            myNotifications: [
+              {
+                id: 'n7',
+                read_at: null,
+                created_at: '2026-06-02',
+                notification: { id: 'g', title: 'Muted', body: 'No banner' },
+              },
+            ],
+            myUnreadNotificationCount: 1,
+          });
+        }
+        return Promise.resolve(true);
+      });
+      await act(async () => {
+        await result.current.refetch();
+      });
+      expect(mockDisplay).not.toHaveBeenCalled();
+    } finally {
+      useNotificationPrefsStore.setState({ enabled: true });
+    }
+  });
+
   it('swallows a display failure', async () => {
     const { result } = renderHook(() => useNotifications());
     await waitFor(() => expect(result.current.isLoading).toBe(false));

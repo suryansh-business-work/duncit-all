@@ -127,7 +127,7 @@ export function HomeFeed() {
           onPress={() => navigation.navigate('CreatePod')}
           position="absolute"
           right={16}
-          bottom={104}
+          bottom={128}
           width={56}
           height={56}
           borderRadius={28}

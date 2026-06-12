@@ -1,9 +1,9 @@
-import { Avatar, Box, Button, Chip, Dialog, IconButton, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Chip, Dialog, IconButton, Stack, Switch, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import { isPushSupported } from '../../pwa';
+import { isPushSupported, unsubscribePush } from '../../pwa';
 import { formatRelative } from './queries';
 
 interface NotificationsScreenProps {
@@ -29,7 +29,8 @@ export default function NotificationsScreen({
   onNotifClick,
   onMarkAll,
 }: Readonly<NotificationsScreenProps>) {
-  const canEnablePush = isPushSupported() && perm !== 'granted' && perm !== 'unsupported';
+  const pushSupported = isPushSupported() && perm !== 'unsupported';
+  const pushOn = perm === 'granted';
 
   return (
     <Dialog
@@ -82,10 +83,21 @@ export default function NotificationsScreen({
               </Box>
               <Chip color="primary" label={`${notifs.length}`} sx={{ fontWeight: 900 }} />
             </Stack>
-            {canEnablePush && (
-              <Button fullWidth variant="contained" startIcon={<NotificationsActiveIcon />} onClick={onEnablePush} disabled={pushBusy} sx={{ mt: 1.25, borderRadius: 999, fontWeight: 900 }}>
-                {pushBusy ? 'Enabling...' : 'Enable push notifications'}
-              </Button>
+            {pushSupported && (
+              <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mt: 1.25 }}>
+                <Typography variant="body2" sx={{ fontWeight: 800 }}>
+                  Allow notifications
+                </Typography>
+                <Switch
+                  checked={pushOn}
+                  disabled={pushBusy}
+                  onChange={(_e, next) => {
+                    if (next) onEnablePush();
+                    else unsubscribePush().catch(() => undefined);
+                  }}
+                  inputProps={{ 'aria-label': 'Allow notifications' }}
+                />
+              </Stack>
             )}
           </Box>
         </Box>
@@ -130,7 +142,18 @@ export default function NotificationsScreen({
                   </Avatar>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Stack direction="row" spacing={0.75} alignItems="center">
-                      <Typography variant="subtitle2" sx={{ fontWeight: 950, flex: 1, minWidth: 0 }} noWrap>
+                      <Typography
+                        variant="subtitle2"
+                        sx={{
+                          fontWeight: 950,
+                          flex: 1,
+                          minWidth: 0,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
                         {notification?.title ?? 'Notification'}
                       </Typography>
                       <Typography variant="caption" sx={{ fontWeight: 800, opacity: unread ? 0.9 : 0.7 }}>

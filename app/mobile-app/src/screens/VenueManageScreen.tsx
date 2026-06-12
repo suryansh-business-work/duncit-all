@@ -32,7 +32,7 @@ export function VenueManageScreen() {
   const capacity = venues.reduce((sum, venue) => sum + (venue.capacity ?? 0), 0);
 
   return (
-    <StackScreen title="Venue Studio" testID="venue-manage-screen">
+    <StackScreen header title="Venue Studio" testID="venue-manage-screen">
       <ScrollView showsVerticalScrollIndicator={false}>
         <YStack gap={14} padding={16} paddingBottom={48}>
           {isLoading ? <Spinner testID="venue-dashboard-loading" color="$primary" /> : null}

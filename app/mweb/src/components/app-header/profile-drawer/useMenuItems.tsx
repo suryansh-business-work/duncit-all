@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import HistoryIcon from '@mui/icons-material/History';
 import DashboardIcon from '@mui/icons-material/Dashboard';
+import SpaceDashboardIcon from '@mui/icons-material/SpaceDashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
@@ -10,6 +11,7 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import LightbulbIcon from '@mui/icons-material/Lightbulb';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import CategoryIcon from '@mui/icons-material/Category';
+import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 import { useStudioMode } from '../../../StudioModeContext';
@@ -45,7 +47,9 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
   // the user-summary card opens the profile.
   const support: MenuItem = { label: 'Support', icon: <SupportAgentIcon {...sz} />, onClick: go('/support') };
   const faqs: MenuItem = { label: 'FAQs', icon: <HelpOutlineIcon {...sz} />, onClick: go('/faqs') };
-  const studio = (yourX: MenuItem, verifyTo: string): MenuItem[] => [
+  const studio = (yourX: MenuItem, dashboardTo: string, verifyTo: string): MenuItem[] => [
+    // The studio dashboard is the first stop in every role (B4-2).
+    { label: 'Dashboard', icon: <SpaceDashboardIcon {...sz} />, onClick: go(dashboardTo) },
     yourX,
     support,
     { label: 'Verification', icon: <VerifiedUserIcon {...sz} />, onClick: go(verifyTo) },
@@ -53,19 +57,20 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
   ];
 
   if (effectiveMode === 'HOST') {
-    return { items: studio({ label: 'Your Pods', icon: <DashboardIcon {...sz} />, onClick: go('/host/manage') }, '/become-host') };
+    return { items: studio({ label: 'Your Pods', icon: <DashboardIcon {...sz} />, onClick: go('/host/manage') }, '/host/manage', '/become-host') };
   }
   if (effectiveMode === 'VENUE') {
-    return { items: studio({ label: 'Your Venues', icon: <StorefrontIcon {...sz} />, onClick: go('/venues/manage') }, '/survey/venue') };
+    return { items: studio({ label: 'Your Venues', icon: <StorefrontIcon {...sz} />, onClick: go('/venues/manage') }, '/venues/manage', '/survey/venue') };
   }
   if (effectiveMode === 'ECOMM') {
-    return { items: studio({ label: 'Your Products', icon: <Inventory2Icon {...sz} />, onClick: go('/products/manage') }, '/survey/ecomm') };
+    return { items: studio({ label: 'Your Products', icon: <Inventory2Icon {...sz} />, onClick: go('/products/manage') }, '/products/manage', '/survey/ecomm') };
   }
 
   const items: MenuItem[] = [
     { label: 'Saved Items', icon: <BookmarkBorderIcon {...sz} />, onClick: go('/saved') },
     { label: 'Pod History', icon: <HistoryIcon {...sz} />, onClick: go('/pod-history') },
     { label: 'Earn with Duncit', icon: <VolunteerActivismIcon {...sz} />, onClick: go('/earn') },
+    { label: 'Refer & Earn', icon: <CardGiftcardIcon {...sz} />, onClick: go('/referral') },
     support,
     { label: 'Pod Ideas', icon: <LightbulbIcon {...sz} />, onClick: go('/pod-ideas') },
     faqs,

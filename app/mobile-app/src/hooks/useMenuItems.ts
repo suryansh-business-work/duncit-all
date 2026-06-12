@@ -18,6 +18,8 @@ const SUPPORT: MenuItem = { label: 'Support', icon: 'support-agent', route: 'Sup
 const FAQS: MenuItem = { label: 'FAQs', icon: 'help-outline', route: 'Faqs' };
 
 const studio = (yourX: MenuItem, verify: MenuRoute): MenuItem[] => [
+  // The studio dashboard is the first stop in every role (B4-2).
+  { label: 'Dashboard', icon: 'space-dashboard', route: yourX.route },
   yourX,
   SUPPORT,
   { label: 'Verification', icon: 'verified-user', route: verify },
@@ -53,6 +55,7 @@ export function useMenuItems(mode: StudioMode = 'USER'): { items: MenuItem[] } {
       { label: 'Saved Items', icon: 'bookmark-border', route: 'Saved' },
       { label: 'Pod History', icon: 'history', route: 'PodHistory' },
       { label: 'Earn with Duncit', icon: 'volunteer-activism', route: 'Earn' },
+      { label: 'Refer & Earn', icon: 'card-giftcard', route: 'Referral' },
       SUPPORT,
       { label: 'Pod Ideas', icon: 'lightbulb-outline', route: 'PodIdeas' },
       FAQS,

@@ -1,6 +1,9 @@
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 import { PublicProfileBadges, PublicProfileHeader } from '@/components/public-profile';
 import { StackScreen } from '@/components/StackScreen';
@@ -14,7 +17,9 @@ export function PublicProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'PublicProfile'>>();
   const userId = route.params?.userId ?? '';
-  const { user, isOwner, badges, isLoading, error } = usePublicProfile(userId);
+  const { user, isOwner, badges, following, followBusy, toggleFollow, isLoading, error } =
+    usePublicProfile(userId);
+  const { onPrimary, color: ink } = useThemeColors();
 
   return (
     <StackScreen title="Profile" testID="public-profile-screen">
@@ -33,6 +38,35 @@ export function PublicProfileScreen() {
       ) : (
         <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 16 }}>
           <PublicProfileHeader user={user} />
+          {!isOwner ? (
+            <XStack
+              testID="public-profile-follow"
+              role="button"
+              aria-label={following ? 'Unfollow user' : 'Follow user'}
+              aria-disabled={followBusy}
+              onPress={followBusy ? undefined : () => void toggleFollow()}
+              alignSelf="center"
+              alignItems="center"
+              gap={8}
+              paddingHorizontal={20}
+              paddingVertical={10}
+              borderRadius={999}
+              borderWidth={1}
+              borderColor={following ? '$primary' : '$borderColor'}
+              backgroundColor={following ? '$primary' : 'transparent'}
+              opacity={followBusy ? 0.7 : 1}
+              pressStyle={{ opacity: 0.85 }}
+            >
+              <MaterialIcons
+                name={following ? 'how-to-reg' : 'person-add-alt'}
+                size={18}
+                color={following ? onPrimary : ink}
+              />
+              <Text fontSize={14} fontWeight="900" color={following ? '$onPrimary' : '$color'}>
+                {following ? 'Following' : 'Follow'}
+              </Text>
+            </XStack>
+          ) : null}
           {isOwner ? (
             <XStack
               testID="public-profile-edit"

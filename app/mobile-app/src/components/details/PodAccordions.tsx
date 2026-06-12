@@ -160,7 +160,7 @@ export function PodAccordions({
     });
 
   return (
-    <YStack paddingHorizontal={16} paddingBottom={8}>
+    <YStack paddingHorizontal={16} paddingBottom={8} paddingTop={8}>
       <XStack justifyContent="flex-end" gap={18} marginBottom={10}>
         <Text
           testID="pod-expand-all"

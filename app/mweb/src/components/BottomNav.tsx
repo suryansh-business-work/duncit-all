@@ -113,16 +113,20 @@ export default function BottomNav() {
             transform: 'translateY(-1px)',
           },
           '& .nav-icon-wrap': {
-            width: 30,
-            height: 30,
+            width: 36,
+            height: 36,
             display: 'grid',
             placeItems: 'center',
             mb: 0.1,
-            transition: 'color 200ms ease, transform 200ms ease',
+            borderRadius: '50%',
+            transition: 'all 220ms cubic-bezier(0.2, 0.8, 0.2, 1)',
           },
+          // Selection bubble — the active icon pops inside a primary circle (B4-8).
           '& .Mui-selected .nav-icon-wrap': {
-            color: 'primary.main',
-            transform: 'scale(1.08)',
+            color: 'primary.contrastText',
+            bgcolor: 'primary.main',
+            transform: 'scale(1.1) translateY(-2px)',
+            boxShadow: '0 8px 18px rgba(255,79,115,0.35)',
           },
           '& .MuiBottomNavigationAction-label': {
             fontSize: 11,

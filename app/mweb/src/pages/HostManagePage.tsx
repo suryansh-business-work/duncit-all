@@ -16,6 +16,7 @@ import EventIcon from '@mui/icons-material/Event';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddIcon from '@mui/icons-material/Add';
 import UserHostPanel from './profile-page/UserHostPanel';
+import HostDraftsCard from './HostDraftsCard';
 
 const HOST_PODS = gql`
   query MyHostedPods($host_user_id: ID!) {
@@ -102,6 +103,8 @@ export default function HostManagePage() {
           </Stack>
         </CardContent>
       </Card>
+
+      <HostDraftsCard />
 
       <Card variant="outlined" sx={{ borderRadius: 4 }}>
         <CardContent>

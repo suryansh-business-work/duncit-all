@@ -1,4 +1,5 @@
-/** Option lists + form value shape for the host Create Pod screen. */
+/** Option lists + form value shape for the host Create Pod stepper. */
+import type { UseFormReturn } from 'react-hook-form';
 
 export const POD_TYPES = [
   { value: 'NATIVE_FREE', label: 'Free' },
@@ -16,6 +17,17 @@ export const OCCURRENCES = [
   { value: 'ALTERNATE_DAY', label: 'Alternate day' },
   { value: 'WEEKENDS_ONLY', label: 'Weekends only' },
 ] as const;
+
+export interface PodProductRequest {
+  product_id: string;
+  quantity: number;
+}
+
+export interface PodPlaceCharge {
+  label: string;
+  amount: number;
+  note: string;
+}
 
 /** RN inputs are strings; numbers/dates are parsed by the schema + mapper. */
 export interface CreatePodFormValues {
@@ -37,8 +49,11 @@ export interface CreatePodFormValues {
   no_of_spots_text: string;
   pod_hashtag_text: string;
   media_text: string;
-  what_this_pod_offers_text: string;
-  available_perks_text: string;
+  what_this_pod_offers: string[];
+  available_perks: string[];
+  products_enabled: boolean;
+  product_requests: PodProductRequest[];
+  place_charges: PodPlaceCharge[];
   payment_terms: string;
 }
 
@@ -60,7 +75,36 @@ export const blankCreatePodForm: CreatePodFormValues = {
   no_of_spots_text: '0',
   pod_hashtag_text: '',
   media_text: '',
-  what_this_pod_offers_text: '',
-  available_perks_text: '',
+  what_this_pod_offers: [],
+  available_perks: [],
+  products_enabled: false,
+  product_requests: [],
+  place_charges: [],
   payment_terms: '',
 };
+
+export interface CreatePodClub {
+  id: string;
+  club_name: string;
+  meetup_venues_id?: (string | null)[] | null;
+}
+
+export interface CreatePodVenue {
+  id: string;
+  venue_name: string;
+  city?: string | null;
+  locality?: string | null;
+  address_line1?: string | null;
+  state?: string | null;
+  postal_code?: string | null;
+  country?: string | null;
+}
+
+export interface CreatePodProduct {
+  id: string;
+  product_name: string;
+  unit_cost: number;
+  available_count: number;
+}
+
+export type CreatePodForm = UseFormReturn<CreatePodFormValues>;

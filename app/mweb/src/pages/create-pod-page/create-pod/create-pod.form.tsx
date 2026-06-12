@@ -1,16 +1,7 @@
 import { z } from 'zod';
-import { useForm, type UseFormReturn } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Stack } from '@mui/material';
-import CreatePodSections from './CreatePodSections';
-import {
-  blankCreatePodForm,
-  type CreatePodClub,
-  type CreatePodFormValues,
-  type CreatePodVenue,
-} from './create-pod.types';
+import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
 
-/** Zod schema for the host Create Pod form — mirrors the server's
+/** Zod schema for the host Create Pod stepper — mirrors the server's
  * createPartnerPod rules (venue for physical, link for virtual, paid amounts). */
 export const createPodSchema = z
   .object({
@@ -31,8 +22,26 @@ export const createPodSchema = z
     no_of_spots: z.number({ invalid_type_error: 'Spots must be a number' }).min(0).max(10000),
     pod_hashtag_text: z.string().max(500),
     media_text: z.string(),
-    what_this_pod_offers_text: z.string().max(1000),
-    available_perks_text: z.string().max(1000),
+    what_this_pod_offers: z.array(z.string().trim().min(1).max(40)).max(20),
+    available_perks: z.array(z.string().trim().min(1).max(40)).max(20),
+    products_enabled: z.boolean(),
+    product_requests: z
+      .array(
+        z.object({
+          product_id: z.string().min(1, 'Select a product'),
+          quantity: z.number({ invalid_type_error: 'Quantity required' }).min(1).max(10000),
+        })
+      )
+      .max(20),
+    place_charges: z
+      .array(
+        z.object({
+          label: z.string().trim().min(1, 'Label required').max(80),
+          amount: z.number({ invalid_type_error: 'Amount must be a number' }).min(0).max(100000),
+          note: z.string().trim().max(200),
+        })
+      )
+      .max(10),
     payment_terms: z.string().max(4000),
   })
   .superRefine((values, ctx) => {
@@ -40,35 +49,46 @@ export const createPodSchema = z
       ctx.addIssue({ code: 'custom', path: ['venue_id'], message: 'Select a venue' });
     }
     if (values.pod_mode === 'VIRTUAL') {
-      const url = values.meeting_url;
-      if (!url) {
+      if (!values.meeting_url) {
         ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: 'Meeting link is required' });
-      } else if (!/^https?:\/\/\S+$/.test(url)) {
+      } else if (!/^https?:\/\/\S+$/.test(values.meeting_url)) {
         ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: 'Meeting link must be valid' });
       }
     }
     if (values.pod_date_time.getTime() <= Date.now()) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['pod_date_time'],
-        message: 'Start date/time must be in the future',
-      });
+      ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: 'Start date/time must be in the future' });
     }
     if (values.pod_end_date_time && values.pod_end_date_time <= values.pod_date_time) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['pod_end_date_time'],
-        message: 'End must be after start',
-      });
+      ctx.addIssue({ code: 'custom', path: ['pod_end_date_time'], message: 'End must be after start' });
     }
     if (values.pod_type.includes('FREE') && values.pod_amount !== 0) {
-      ctx.addIssue({
-        code: 'custom',
-        path: ['pod_amount'],
-        message: 'Free pods must have amount 0',
-      });
+      ctx.addIssue({ code: 'custom', path: ['pod_amount'], message: 'Free pods must have amount 0' });
+    }
+    if (values.products_enabled && values.product_requests.length === 0) {
+      ctx.addIssue({ code: 'custom', path: ['product_requests'], message: 'Add at least one product' });
     }
   });
+
+/** Fields validated when leaving each stepper step (index aligned with STEPS). */
+export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
+  ['pod_title', 'club_id', 'pod_mode', 'pod_hashtag_text'],
+  ['venue_id', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
+  ['pod_description', 'pod_info', 'media_text'],
+  ['what_this_pod_offers'],
+  ['available_perks'],
+  ['products_enabled', 'product_requests'],
+  ['pod_type', 'pod_occurrence', 'pod_amount', 'no_of_spots', 'place_charges', 'payment_terms'],
+];
+
+export const STEP_TITLES = [
+  'Select Club',
+  'When, Where & Map',
+  'About the Pod',
+  'What This Pod Offers',
+  'Available Perks',
+  'Add Products',
+  'Payment & Charges',
+];
 
 const splitLines = (text: string) =>
   text
@@ -108,47 +128,36 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
       type: /\.(mp4|mov|webm)$/i.test(url) ? 'VIDEO' : 'IMAGE',
     })),
     payment_terms: values.payment_terms || null,
-    what_this_pod_offers: splitLines(values.what_this_pod_offers_text),
-    available_perks: splitLines(values.available_perks_text),
-    place_charges: [],
-    products_enabled: false,
-    product_requests: [],
+    what_this_pod_offers: values.what_this_pod_offers,
+    available_perks: values.available_perks,
+    place_charges: values.place_charges,
+    products_enabled: values.products_enabled,
+    product_requests: values.products_enabled ? values.product_requests : [],
     is_active: true,
   };
 }
 
-export type CreatePodForm = UseFormReturn<CreatePodFormValues>;
-
-interface Props {
-  clubs: CreatePodClub[];
-  venues: CreatePodVenue[];
-  busy: boolean;
-  error: string | null;
-  onSubmit: (values: CreatePodFormValues) => Promise<void> | void;
+/** Serialises the live form state for a server draft (Dates -> ISO strings). */
+export function serializeDraft(values: CreatePodFormValues, step: number) {
+  return {
+    payload: JSON.stringify(values),
+    pod_title: values.pod_title.trim(),
+    pod_mode: values.pod_mode,
+    step,
+  };
 }
 
-/** The host Create Pod form (RHF + Zod, MUI sections, MUIX date pickers). */
-export default function CreatePodFormView({ clubs, venues, busy, error, onSubmit }: Readonly<Props>) {
-  const form = useForm<CreatePodFormValues>({
-    resolver: zodResolver(createPodSchema),
-    defaultValues: blankCreatePodForm,
-    mode: 'onTouched',
-  });
-
-  return (
-    <form noValidate onSubmit={form.handleSubmit((values) => onSubmit(values))}>
-      <Stack spacing={1.5}>
-        <Alert severity="info">
-          Your approved host profile is added as the pod host automatically.
-        </Alert>
-        <CreatePodSections form={form} clubs={clubs} venues={venues} />
-        {error && <Alert severity="error">{error}</Alert>}
-        <Stack direction="row" justifyContent="flex-end" spacing={1}>
-          <Button variant="contained" type="submit" disabled={busy}>
-            {busy ? 'Creating…' : 'Create Pod'}
-          </Button>
-        </Stack>
-      </Stack>
-    </form>
-  );
+/** Rebuilds form values from a stored draft payload, reviving Date fields. */
+export function hydrateDraft(payload: string): CreatePodFormValues {
+  try {
+    const parsed = JSON.parse(payload) as Partial<CreatePodFormValues>;
+    return {
+      ...blankCreatePodForm,
+      ...parsed,
+      pod_date_time: parsed.pod_date_time ? new Date(parsed.pod_date_time) : null,
+      pod_end_date_time: parsed.pod_end_date_time ? new Date(parsed.pod_end_date_time) : null,
+    };
+  } catch {
+    return blankCreatePodForm;
+  }
 }

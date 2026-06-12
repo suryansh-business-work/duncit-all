@@ -21,7 +21,7 @@ export type RootStackParamList = {
   PodHistoryDetails: { membershipId: string };
   BecomeHost: undefined;
   HostManage: undefined;
-  CreatePod: undefined;
+  CreatePod: { draftId?: string } | undefined;
   RegisterVenue: undefined;
   VenueManage: undefined;
   Support: undefined;

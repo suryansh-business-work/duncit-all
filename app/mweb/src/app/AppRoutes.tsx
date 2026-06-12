@@ -89,6 +89,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
       <Route path="/hosts-venues" element={withAuth(<HostsVenuesPage />)} />
       <Route path="/host/manage" element={withAuth(<HostManagePage />)} />
       <Route path="/create-pod" element={withAuth(<CreatePodPage />)} />
+      <Route path="/create-pod/:draftId" element={withAuth(<CreatePodPage />)} />
       <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
       <Route path="/faqs" element={withAuth(<FaqsPage />)} />
       <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />

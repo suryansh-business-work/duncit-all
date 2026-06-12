@@ -33,7 +33,7 @@ const BOXES = [
     role: 'ECOMM_MANAGER',
     title: 'By listing your product',
     description: 'Sell your products to the Duncit community through pods and the shop.',
-    to: '/products/manage',
+    to: '/survey/ecomm',
     icon: <Inventory2Icon />,
   },
 ];

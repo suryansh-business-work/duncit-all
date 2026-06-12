@@ -42,8 +42,8 @@ import { SupportTicketsScreen } from '@/screens/SupportTicketsScreen';
 import { SurveyScreen } from '@/screens/SurveyScreen';
 import { VenueManageScreen } from '@/screens/VenueManageScreen';
 import { EarnScreen } from '@/screens/EarnScreen';
+import { ListProductScreen } from '@/screens/ListProductScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
-import { ProductsVerificationScreen } from '@/screens/ProductsVerificationScreen';
 import { useAuthStore } from '@/stores/auth.store';
 import type { RootStackParamList } from './types';
 
@@ -97,8 +97,8 @@ export function RootNavigator() {
           <Stack.Screen name="RegisterVenue" component={RegisterVenueScreen} />
           <Stack.Screen name="VenueManage" component={VenueManageScreen} />
           <Stack.Screen name="Earn" component={EarnScreen} />
+          <Stack.Screen name="ListProduct" component={ListProductScreen} />
           <Stack.Screen name="ProductsManage" component={ProductsManageScreen} />
-          <Stack.Screen name="ProductsVerification" component={ProductsVerificationScreen} />
           <Stack.Screen name="Support" component={SupportScreen} />
           <Stack.Screen name="Sos" component={SosScreen} />
           <Stack.Screen name="Callback" component={CallbackScreen} />

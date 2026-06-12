@@ -28,7 +28,7 @@ export default function SurveyGatePage() {
   const params = useParams<{ kind: string }>();
   const navigate = useNavigate();
   const kind = (params.kind?.toUpperCase() as SurveyKind) || 'VENUE';
-  const valid = kind === 'VENUE' || kind === 'HOST';
+  const valid = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM';
   const next = PARTNER_PATH[kind] ?? '/hosts-venues';
   const [step, setStep] = useState<Step>('loading');
   const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
@@ -90,7 +90,12 @@ export default function SurveyGatePage() {
     return <Box sx={{ display: 'grid', placeItems: 'center', minHeight: '60vh' }}><CircularProgress /></Box>;
   }
 
-  const kindHeading = kind === 'VENUE' ? 'Register your venue' : 'Become a host';
+  const KIND_HEADINGS: Record<SurveyKind, string> = {
+    VENUE: 'Register your venue',
+    HOST: 'Become a host',
+    ECOMM: 'List your product',
+  };
+  const kindHeading = KIND_HEADINGS[kind];
   let heading: string;
   if (step === 'category') heading = kindHeading;
   else if (step === 'survey') heading = survey?.title || kindHeading;

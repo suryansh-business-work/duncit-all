@@ -25,8 +25,8 @@ export type RootStackParamList = {
   RegisterVenue: undefined;
   VenueManage: undefined;
   Earn: undefined;
+  ListProduct: undefined;
   ProductsManage: undefined;
-  ProductsVerification: undefined;
   Support: undefined;
   Sos: undefined;
   Callback: undefined;

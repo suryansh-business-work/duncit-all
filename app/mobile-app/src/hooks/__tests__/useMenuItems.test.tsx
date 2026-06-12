@@ -36,7 +36,7 @@ describe('useMenuItems', () => {
       'Profile',
       'ProductsManage',
       'Support',
-      'ProductsVerification',
+      'ListProduct',
       'Faqs',
     ]);
   });

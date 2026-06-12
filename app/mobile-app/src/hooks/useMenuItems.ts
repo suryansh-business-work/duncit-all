@@ -44,7 +44,7 @@ export function useMenuItems(mode: StudioMode = 'USER'): { items: MenuItem[] } {
     return {
       items: studio(
         { label: 'Your Products', icon: 'inventory-2', route: 'ProductsManage' },
-        'ProductsVerification',
+        'ListProduct',
       ),
     };
   }

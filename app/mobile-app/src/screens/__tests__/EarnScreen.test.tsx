@@ -29,6 +29,6 @@ describe('EarnScreen', () => {
     renderWithProviders(<EarnScreen />);
     expect(screen.queryByTestId('earn-box-HOST-enabled')).toBeNull();
     fireEvent.press(screen.getByTestId('earn-box-ECOMM_MANAGER'));
-    expect(mockNavigate).toHaveBeenCalledWith('ProductsManage');
+    expect(mockNavigate).toHaveBeenCalledWith('ListProduct');
   });
 });

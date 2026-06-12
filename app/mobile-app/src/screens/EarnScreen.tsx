@@ -27,7 +27,7 @@ const BOXES = [
     title: 'By listing your product',
     description: 'Sell your products to the Duncit community through pods and the shop.',
     icon: 'inventory-2',
-    route: 'ProductsManage',
+    route: 'ListProduct',
   },
 ] as const;
 

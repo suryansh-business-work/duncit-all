@@ -61,7 +61,7 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
     return { items: studio({ label: 'Your Venues', icon: <StorefrontIcon {...sz} />, onClick: go('/venues/manage') }, '/survey/venue') };
   }
   if (effectiveMode === 'ECOMM') {
-    return { items: studio({ label: 'Your Products', icon: <Inventory2Icon {...sz} />, onClick: go('/products/manage') }, '/products/verification') };
+    return { items: studio({ label: 'Your Products', icon: <Inventory2Icon {...sz} />, onClick: go('/products/manage') }, '/survey/ecomm') };
   }
 
   const items: MenuItem[] = [

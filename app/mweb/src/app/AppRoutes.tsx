@@ -44,7 +44,6 @@ import HappeningNearbyPage from '../pages/HappeningNearbyPage';
 import CreatePodPage from '../pages/create-pod-page';
 import EarnPage from '../pages/earn-page';
 import ProductsManagePage from '../pages/products-manage-page';
-import ProductsVerificationPage from '../pages/products-verification-page';
 import SavedItemsPage from '../pages/SavedItemsPage';
 import ClubsPage from '../pages/ClubsPage';
 import ChatsPage from '../pages/ChatsPage';
@@ -95,7 +94,6 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
       <Route path="/create-pod/:draftId" element={withAuth(<CreatePodPage />)} />
       <Route path="/earn" element={withAuth(<EarnPage />)} />
       <Route path="/products/manage" element={withAuth(<ProductsManagePage />)} />
-      <Route path="/products/verification" element={withAuth(<ProductsVerificationPage />)} />
       <Route path="/venues/manage" element={withAuth(<VenueManagePage />)} />
       <Route path="/faqs" element={withAuth(<FaqsPage />)} />
       <Route path="/policies/:slug" element={withAuth(<PolicyPage />)} />

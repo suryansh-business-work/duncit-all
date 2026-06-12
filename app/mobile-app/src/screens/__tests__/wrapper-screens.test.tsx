@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react-native';
 
 import { BecomeHostScreen } from '@/screens/BecomeHostScreen';
 import { ExploreScreen } from '@/screens/ExploreScreen';
+import { ListProductScreen } from '@/screens/ListProductScreen';
 import { RegisterVenueScreen } from '@/screens/RegisterVenueScreen';
 
 const mockSurveyProps = jest.fn();
@@ -39,6 +40,15 @@ describe('survey-gated account screens', () => {
       kind: 'VENUE',
       title: 'Be a Venue Owner',
       icon: 'add-business',
+    });
+  });
+
+  it('ListProductScreen renders the ECOMM onboarding survey with its copy', () => {
+    render(<ListProductScreen />);
+    expect(mockSurveyProps.mock.calls[0]![0]).toMatchObject({
+      kind: 'ECOMM',
+      title: 'List your product',
+      icon: 'inventory-2',
     });
   });
 });

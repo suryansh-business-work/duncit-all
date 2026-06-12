@@ -12,6 +12,8 @@ const mockUseMe = jest.fn();
 jest.mock('@/hooks/useMe', () => ({ useMe: () => mockUseMe() }));
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
+const opName = (doc: { definitions?: { name?: { value?: string } }[] }) =>
+  doc?.definitions?.[0]?.name?.value;
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -79,6 +81,35 @@ describe('EarnScreen', () => {
       expect(
         screen.getByText(/You already have an onboarding meeting scheduled for this\./),
       ).toBeOnTheScreen(),
+    );
+  });
+
+  it('refreshes the meetings after a cancel from the meeting actions', async () => {
+    mockUseMe.mockReturnValue({ data: { me: { roles: [] } } });
+    mockRequest.mockResolvedValue({
+      myMeetings: [
+        {
+          id: 'm1',
+          kind: 'VENUE',
+          status: 'SCHEDULED',
+          requested_at: null,
+          scheduled_at: '2027-01-04T04:30:00.000Z',
+        },
+      ],
+    });
+    renderWithProviders(<EarnScreen />);
+    fireEvent.press(await screen.findByTestId('cancel-VENUE'));
+    fireEvent.press(screen.getByTestId('cancel-confirm'));
+    await waitFor(() => expect(screen.queryByTestId('cancel-dialog')).toBeNull(), {
+      timeout: 5000,
+    });
+    // onChanged → loadMeetings: MyMeetings is fetched again after the cancel.
+    await waitFor(
+      () => {
+        const calls = mockRequest.mock.calls.filter((c) => opName(c[0]) === 'MyMeetings');
+        expect(calls.length).toBeGreaterThanOrEqual(2);
+      },
+      { timeout: 5000 },
     );
   });
 

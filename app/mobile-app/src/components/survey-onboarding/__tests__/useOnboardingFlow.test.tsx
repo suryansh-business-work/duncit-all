@@ -106,6 +106,50 @@ describe('useOnboardingFlow', () => {
     }
   });
 
+  it('leaves the contact fields editable when the profile has no name or phone', async () => {
+    route({ meeting: null, survey: null });
+    const { useMeStore } = jest.requireActual('@/stores/me.store');
+    useMeStore.setState({
+      data: {
+        me: { user_id: 'u2', full_name: '', phone_number: ' ', phone_extension: '', roles: [] },
+      },
+    });
+    try {
+      const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
+      await waitFor(() => expect(result.current.phase).toBe('category'));
+      expect(result.current.name).toBe('');
+      expect(result.current.phone).toBe('');
+      expect(result.current.ext).toBe('+91');
+      expect(result.current.hasProfilePhone).toBe(false);
+      expect(result.current.lockName).toBe(false);
+    } finally {
+      useMeStore.getState().reset();
+    }
+  });
+
+  it('keeps the default extension when the profile phone has none', async () => {
+    route({ meeting: null, survey: null });
+    const { useMeStore } = jest.requireActual('@/stores/me.store');
+    useMeStore.setState({
+      data: {
+        me: {
+          user_id: 'u3',
+          full_name: 'Asha Roy',
+          phone_number: '9876543210',
+          phone_extension: null,
+          roles: [],
+        },
+      },
+    });
+    try {
+      const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
+      await waitFor(() => expect(result.current.phone).toBe('9876543210'));
+      expect(result.current.ext).toBe('+91');
+    } finally {
+      useMeStore.getState().reset();
+    }
+  });
+
   it('skips the survey to the meeting step (and loads slots) when none is configured', async () => {
     route({ meeting: null, survey: null });
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));

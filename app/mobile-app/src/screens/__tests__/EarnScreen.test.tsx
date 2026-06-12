@@ -5,8 +5,17 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
+let focusCallback: (() => void) | undefined;
+const mockAddListener = jest.fn((_event: string, cb: () => void) => {
+  focusCallback = cb;
+  return jest.fn();
+});
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, goBack: jest.fn() }),
+  useNavigation: () => ({
+    navigate: mockNavigate,
+    goBack: jest.fn(),
+    addListener: mockAddListener,
+  }),
 }));
 const mockUseMe = jest.fn();
 jest.mock('@/hooks/useMe', () => ({ useMe: () => mockUseMe() }));
@@ -118,5 +127,13 @@ describe('EarnScreen', () => {
     renderWithProviders(<EarnScreen />);
     fireEvent.press(screen.getByTestId('earn-box-VENUE_OWNER'));
     await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('RegisterVenue'));
+  });
+
+  it('reloads the meetings when the screen regains focus', async () => {
+    renderWithProviders(<EarnScreen />);
+    expect(mockAddListener).toHaveBeenCalledWith('focus', expect.any(Function));
+    const before = mockRequest.mock.calls.length;
+    focusCallback?.();
+    await waitFor(() => expect(mockRequest.mock.calls.length).toBeGreaterThan(before));
   });
 });

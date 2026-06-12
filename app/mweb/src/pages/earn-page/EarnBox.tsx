@@ -18,7 +18,15 @@ interface Props {
 export default function EarnBox({ icon, title, description, to, disabled, disabledLabel = 'Already enabled' }: Readonly<Props>) {
   const navigate = useNavigate();
   return (
-    <Card variant="outlined" sx={{ borderRadius: 4, opacity: disabled ? 0.55 : 1 }}>
+    <Card
+      variant="outlined"
+      sx={{
+        borderRadius: 4,
+        opacity: disabled ? 0.55 : 1,
+        boxShadow: 'none',
+        '&:hover': { boxShadow: 'none' },
+      }}
+    >
       <CardActionArea disabled={disabled} onClick={() => navigate(to)} sx={{ p: 1 }}>
         <CardContent>
           <Stack spacing={1.25} alignItems="flex-start">

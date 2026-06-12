@@ -12,13 +12,14 @@ export interface OnboardingMeeting {
   scheduled_at?: string | null;
   meeting_link?: string | null;
   status: MeetingStatus;
+  cancel_reason?: string | null;
   notes?: string | null;
   contact_name?: string | null;
   contact_phone?: string | null;
 }
 
 const FIELDS = `
-  id kind user_name user_email requested_at scheduled_at meeting_link status notes contact_name contact_phone
+  id kind user_name user_email requested_at scheduled_at meeting_link status cancel_reason notes contact_name contact_phone
 `;
 
 export const ONBOARDING_MEETINGS = gql`
@@ -30,5 +31,11 @@ export const ONBOARDING_MEETINGS = gql`
 export const UPDATE_MEETING = gql`
   mutation UpdateMeeting($id: ID!, $input: UpdateMeetingInput!) {
     updateMeeting(id: $id, input: $input) { ${FIELDS} }
+  }
+`;
+
+export const CANCEL_MEETING = gql`
+  mutation CancelMeeting($id: ID!, $reason: String!) {
+    cancelMeeting(id: $id, reason: $reason) { ${FIELDS} }
   }
 `;

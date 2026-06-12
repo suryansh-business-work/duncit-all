@@ -18,6 +18,8 @@ export const meetingTypeDefs = gql`
     scheduled_at: String
     meeting_link: String
     status: MeetingStatus!
+    "Why onboarding staff cancelled it (null for self-cancels)."
+    cancel_reason: String
     notes: String
     contact_name: String
     contact_phone: String
@@ -92,6 +94,8 @@ export const meetingTypeDefs = gql`
     "Cancel the caller's own pending meeting."
     cancelMyMeeting(kind: SurveyKind!): OnboardingMeeting!
     updateMeeting(id: ID!, input: UpdateMeetingInput!): OnboardingMeeting!
+    "Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again."
+    cancelMeeting(id: ID!, reason: String!): OnboardingMeeting!
     updateMeetingAvailability(input: MeetingAvailabilityInput!): MeetingAvailability!
   }
 `;

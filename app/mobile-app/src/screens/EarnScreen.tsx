@@ -64,9 +64,12 @@ export function EarnScreen() {
 
   useEffect(() => {
     void loadMeetings();
-    // Load once on mount; reschedule/cancel actions re-trigger it explicitly.
+    // Reload whenever the screen regains focus (e.g. returning from the
+    // onboarding gate after booking) so the cards lock/unlock immediately.
+    const unsubscribe = navigation.addListener('focus', () => void loadMeetings());
+    return unsubscribe;
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [navigation]);
 
   return (
     <StackScreen title="Earn with Duncit" testID="earn-screen">

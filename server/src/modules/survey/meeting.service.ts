@@ -27,6 +27,7 @@ const pub = (doc: any, names?: Map<string, { name: string; email: string }>) => 
     scheduled_at: iso(o.scheduled_at),
     meeting_link: o.meeting_link ?? null,
     status: o.status ?? 'REQUESTED',
+    cancel_reason: o.cancel_reason ?? null,
     notes: o.notes ?? null,
     contact_name: o.contact_name ?? null,
     contact_phone: o.contact_phone ?? null,
@@ -163,8 +164,8 @@ async function occupiedInstants(excludeUserId?: string | null): Promise<Set<numb
   );
 }
 
-/** Best-effort applicant notification for self-serve booking actions. */
-async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled') {
+/** Best-effort applicant notification for booking + cancellation actions. */
+async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled', reason?: string) {
   try {
     const names = await userMap([String(doc.user_id)]);
     const who = names.get(String(doc.user_id));
@@ -177,7 +178,7 @@ async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled') {
       notes: doc.notes || '',
     };
     if (kind === 'booked') await sendMeetingBookedEmail(opts);
-    else await sendMeetingCancelledEmail(opts);
+    else await sendMeetingCancelledEmail({ ...opts, reason: reason ?? '' });
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[meeting] applicant email failed:', err);
@@ -261,6 +262,8 @@ export const meetingService = {
     if (taken.has(new Date(input.requested_at).getTime())) {
       throw new GraphQLError('That slot was just booked — please pick another one', { extensions: { code: 'CONFLICT' } });
     }
+    // A fresh booking always restarts the request — a previously CANCELLED or
+    // DONE meeting must come back as REQUESTED so the Earn card locks again.
     const doc = await MeetingModel.findOneAndUpdate(
       { user_id: new Types.ObjectId(userId), kind },
       {
@@ -269,8 +272,11 @@ export const meetingService = {
           notes: input.notes ?? null,
           contact_name: input.contact_name ?? null,
           contact_phone: input.contact_phone ?? null,
+          status: 'REQUESTED',
+          scheduled_at: null,
+          meeting_link: null,
+          cancel_reason: null,
         },
-        $setOnInsert: { status: 'REQUESTED' },
       },
       { new: true, upsert: true, setDefaultsOnInsert: true },
     );
@@ -311,8 +317,29 @@ export const meetingService = {
     const doc = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind });
     if (!doc) throw notFound();
     doc.status = 'CANCELLED';
+    doc.cancel_reason = null;
     await doc.save();
     await notifyApplicant(doc, 'cancelled');
+    return pub(doc);
+  },
+
+  /** Onboarding staff cancel a meeting with a reason (e.g. survey not
+   * satisfying) — the applicant is emailed the reason and asked to fill the
+   * survey again and book a new slot. */
+  async cancelByStaff(id: string, reason: string) {
+    if (!reason?.trim()) {
+      throw new GraphQLError('A cancellation reason is required', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const doc = await MeetingModel.findById(id);
+    if (!doc) throw notFound();
+    doc.status = 'CANCELLED';
+    doc.cancel_reason = reason.trim();
+    await doc.save();
+    await notifyApplicant(
+      doc,
+      'cancelled',
+      `Reason: ${reason.trim()}. Please fill the survey again and book a new slot from Earn with Duncit.`,
+    );
     return pub(doc);
   },
 

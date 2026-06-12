@@ -4,6 +4,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import {
   sendMeetingScheduledEmail,
   sendMeetingScheduledAdminEmail,
+  sendMeetingCancelledEmail,
 } from '@services/email/email.service';
 
 jest.mock('@services/email/email.service', () => ({
@@ -177,6 +178,45 @@ describe('meeting slot booking', () => {
     // The instant is free again for another user.
     await meetingService.request(other, 'ECOMM', { requested_at: '2027-03-01T05:00:00.000Z', contact_phone: '9666666662' });
     await expect(meetingService.cancelMyMeeting(other, 'VENUE')).rejects.toThrow(/not found/i);
+  });
+
+  it('re-booking after a cancel restarts the request (Earn card locks again)', async () => {
+    const me = new Types.ObjectId().toString();
+    await meetingService.request(me, 'VENUE', { requested_at: '2027-04-01T05:00:00.000Z', contact_phone: '9777777771' });
+    await meetingService.cancelMyMeeting(me, 'VENUE');
+
+    const again = await meetingService.request(me, 'VENUE', { requested_at: '2027-04-02T05:00:00.000Z', contact_phone: '9777777771' });
+    expect(again!.status).toBe('REQUESTED');
+    expect(again!.scheduled_at).toBeNull();
+    expect(again!.cancel_reason).toBeNull();
+    const mine = await meetingService.myMeetings(me);
+    expect(mine.filter((m) => m!.kind === 'VENUE')).toHaveLength(1);
+  });
+
+  it('staff cancel a meeting with a required reason and the applicant is emailed it', async () => {
+    (sendMeetingCancelledEmail as jest.Mock).mockClear();
+    const applicant = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: applicant,
+      auth: { email: 'applicant@example.com' },
+      profile: { first_name: 'Appy' },
+    } as never);
+    await meetingService.request(applicant.toString(), 'HOST', { requested_at: '2027-05-01T05:00:00.000Z', contact_phone: '9888888881' });
+    const mine = await meetingService.myMeeting(applicant.toString(), 'HOST');
+
+    await expect(meetingService.cancelByStaff(mine!.id, '  ')).rejects.toThrow(/reason/i);
+
+    const cancelled = await meetingService.cancelByStaff(mine!.id, 'Survey not satisfying');
+    expect(cancelled!.status).toBe('CANCELLED');
+    expect(cancelled!.cancel_reason).toBe('Survey not satisfying');
+    expect(sendMeetingCancelledEmail).toHaveBeenCalledWith(
+      expect.objectContaining({
+        to: 'applicant@example.com',
+        reason: expect.stringMatching(/Survey not satisfying.*fill the survey again/),
+      }),
+    );
+
+    await expect(meetingService.cancelByStaff(new Types.ObjectId().toString(), 'x')).rejects.toThrow(/not found/i);
   });
 
   it('requires a phone number and rejects a slot another user holds', async () => {

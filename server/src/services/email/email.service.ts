@@ -259,12 +259,14 @@ export function sendMeetingCancelledEmail(opts: {
   kind: string;
   slot: string;
   notes: string;
+  /** Staff cancellation reason line; empty for self-cancels. */
+  reason?: string;
 }) {
   return sendEmail({
     to: opts.to,
     subject: `Your Duncit ${opts.kind} onboarding meeting is cancelled`,
     template: 'meeting-cancelled',
-    vars: opts,
+    vars: { ...opts, reason: opts.reason ?? '' },
   });
 }
 

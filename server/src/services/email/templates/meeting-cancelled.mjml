@@ -24,6 +24,9 @@
         <mj-text font-size="16px" color="#3b82f6" font-weight="bold">
           {{slot}}
         </mj-text>
+        <mj-text font-size="14px" color="#d6455f" font-weight="bold">
+          {{reason}}
+        </mj-text>
         <mj-text font-size="13px" color="#555">
           Changed your mind? You can book a new slot anytime from Earn with Duncit.
         </mj-text>

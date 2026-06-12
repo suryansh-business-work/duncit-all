@@ -24,6 +24,7 @@ import {
   Typography,
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
+import CancelMeetingDialog from './CancelMeetingDialog';
 import { ONBOARDING_MEETINGS, UPDATE_MEETING, type MeetingStatus, type OnboardingMeeting, type SurveyKind } from './queries';
 
 const STATUS_COLORS: Record<MeetingStatus, 'default' | 'info' | 'success' | 'error'> = {
@@ -50,6 +51,7 @@ export default function MeetingSchedulePage() {
   const { data, loading, refetch } = useQuery<{ onboardingMeetings: OnboardingMeeting[] }>(ONBOARDING_MEETINGS, { variables: { filter: { kind } }, skip: !valid, fetchPolicy: 'cache-and-network' });
   const [updateMeeting, { loading: saving }] = useMutation(UPDATE_MEETING);
   const [editing, setEditing] = useState<OnboardingMeeting | null>(null);
+  const [cancelling, setCancelling] = useState<OnboardingMeeting | null>(null);
   const [when, setWhen] = useState('');
   const [link, setLink] = useState('');
   const [status, setStatus] = useState<MeetingStatus>('SCHEDULED');
@@ -117,8 +119,18 @@ export default function MeetingSchedulePage() {
                       ? <Link href={m.meeting_link} target="_blank" rel="noopener" variant="body2">Join</Link>
                       : <Typography variant="body2" color="text.secondary">—</Typography>}
                   </TableCell>
-                  <TableCell><Chip size="small" color={STATUS_COLORS[m.status]} label={m.status} /></TableCell>
-                  <TableCell align="right"><Button size="small" onClick={() => openEdit(m)}>Schedule</Button></TableCell>
+                  <TableCell>
+                    <Chip size="small" color={STATUS_COLORS[m.status]} label={m.status} />
+                    {m.status === 'CANCELLED' && m.cancel_reason && (
+                      <Typography variant="caption" color="text.secondary" display="block">{m.cancel_reason}</Typography>
+                    )}
+                  </TableCell>
+                  <TableCell align="right">
+                    <Button size="small" onClick={() => openEdit(m)}>Schedule</Button>
+                    {(m.status === 'REQUESTED' || m.status === 'SCHEDULED') && (
+                      <Button size="small" color="error" onClick={() => setCancelling(m)}>Cancel</Button>
+                    )}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -145,6 +157,8 @@ export default function MeetingSchedulePage() {
           <Button variant="contained" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
         </DialogActions>
       </Dialog>
+
+      <CancelMeetingDialog meeting={cancelling} onClose={() => setCancelling(null)} onCancelled={() => refetch()} />
     </Stack>
   );
 }

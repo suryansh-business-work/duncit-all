@@ -79,7 +79,10 @@ export default function EarnPage() {
   const meetings: EarnMeeting[] = data?.myMeetings ?? [];
 
   return (
-    <Stack spacing={2} sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 } }}>
+    <Stack
+      spacing={2}
+      sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}
+    >
       <Box>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
           Back

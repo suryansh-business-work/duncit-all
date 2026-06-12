@@ -110,13 +110,16 @@ export default function SurveyGatePage() {
     : '';
 
   return (
-    <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 } }}>
+    <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 }, pb: { xs: 10, sm: 8 } }}>
       <Box sx={{ mb: 1 }}>
         <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
           Back
         </Button>
       </Box>
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+      <Card
+        variant="outlined"
+        sx={{ borderRadius: 4, boxShadow: 'none', '&:hover': { boxShadow: 'none' } }}
+      >
         <CardContent>
           <AuthLogo />
           <Stack spacing={0.5} sx={{ mb: 1.5 }}>

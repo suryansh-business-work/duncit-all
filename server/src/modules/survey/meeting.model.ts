@@ -20,6 +20,8 @@ const meetingSchema = new Schema(
     /** Video-call / meeting URL added by onboarding staff when scheduling. */
     meeting_link: { type: String, default: null },
     status: { type: String, enum: MEETING_STATUSES, default: 'REQUESTED', index: true },
+    /** Why onboarding staff cancelled it (e.g. survey not satisfying). */
+    cancel_reason: { type: String, default: null },
     notes: { type: String, default: null },
     contact_name: { type: String, default: null },
     contact_phone: { type: String, default: null },

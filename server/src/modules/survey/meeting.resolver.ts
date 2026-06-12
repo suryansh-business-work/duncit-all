@@ -45,6 +45,10 @@ export const meetingResolvers = {
       const user = requireRole(ctx, ONBOARDING_RW);
       return meetingService.update(args.id, args.input, user.id);
     },
+    cancelMeeting: (_p: unknown, args: { id: string; reason: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ONBOARDING_RW);
+      return meetingService.cancelByStaff(args.id, args.reason);
+    },
     updateMeetingAvailability: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ONBOARDING_RW);
       return meetingService.updateAvailability(args.input);

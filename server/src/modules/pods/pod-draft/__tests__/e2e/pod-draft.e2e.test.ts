@@ -120,6 +120,7 @@ describe('pod-draft e2e', () => {
         pod_mode: 'VIRTUAL',
         meeting_url: 'https://meet.duncit.com/x',
         pod_description: 'A valid length description for the pod',
+        pod_images_and_videos: [{ url: 'https://cdn.example.com/pod.jpg', type: 'IMAGE' }],
         pod_date_time: new Date(Date.now() + 86_400_000).toISOString(),
         pod_type: 'NATIVE_FREE',
       },

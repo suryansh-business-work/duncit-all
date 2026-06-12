@@ -21,7 +21,7 @@ interface Props {
   onExpandAll: () => void;
   onCollapseAll: () => void;
   superCats: any[];
-  subCats: any[];
+  allCats: any[];
   venues: any[];
 }
 
@@ -39,7 +39,7 @@ export default function ClubFormSections(props: Readonly<Props>) {
             <Typography variant="subtitle1" fontWeight={600}>{section.title}</Typography>
           </AccordionSummary>
           <AccordionDetails>
-            {section.id === 'basic' && <BasicClubSection form={props.form} setForm={props.setForm} superCats={props.superCats} subCats={props.subCats} />}
+            {section.id === 'basic' && <BasicClubSection form={props.form} setForm={props.setForm} superCats={props.superCats} allCats={props.allCats} />}
             {section.id === 'media' && <ClubMediaSection form={props.form} setForm={props.setForm} />}
             {section.id === 'venues' && <ClubVenueLinksSection form={props.form} setForm={props.setForm} venues={props.venues} />}
           </AccordionDetails>

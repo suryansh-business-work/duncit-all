@@ -76,6 +76,7 @@ export default function HomeStatusRail({
                 mediaType: story.media_type,
                 subLabel: story.caption || `Story ${storyIndex + 1}/${stories.length}`,
                 createdAt: story.created_at,
+                expiresAt: story.expires_at,
               })),
             });
           }}
@@ -175,6 +176,7 @@ export default function HomeStatusRail({
                   mediaType: post.media_type ?? 'IMAGE',
                   subLabel: post.caption || `Status ${index + 1}/${posts.length}`,
                   createdAt: post.created_at,
+                  expiresAt: post.expires_at,
                 })),
                 targetUrl: `/u/${user.user_id}`,
                 internal: true,

@@ -24,9 +24,22 @@ const intIn = (min: number, max: number) => (text: string) => {
   return Number.isFinite(value) && value >= min && value <= max;
 };
 
+const splitMediaLines = (text: string) =>
+  text
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
+
+/** True when the media list carries at least one image URL (server mirrors this). */
+export const hasImageLine = (mediaText: string) =>
+  splitMediaLines(mediaText).some((url) => !VIDEO_URL_RE.test(url));
+
 /** Zod schema for the host Create Pod stepper — same rules as mWeb's form. */
 export const createPodSchema = z
   .object({
+    location_id: z.string().min(1, 'Select a location'),
     pod_title: z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
     club_id: z.string().min(1, 'Select a club'),
     pod_mode: z.enum(['PHYSICAL', 'VIRTUAL']),
@@ -119,10 +132,18 @@ export const createPodSchema = z
         message: 'Add at least one product',
       });
     }
+    if (!hasImageLine(values.media_text)) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['media_text'],
+        message: 'Add at least one image URL',
+      });
+    }
   });
 
 /** Fields validated when leaving each stepper step (index aligned with STEP_TITLES). */
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
+  ['location_id'],
   ['pod_title', 'club_id', 'pod_mode', 'pod_hashtag_text'],
   [
     'venue_id',
@@ -147,6 +168,7 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
 ];
 
 export const STEP_TITLES = [
+  'Where to Host',
   'Select Club',
   'When, Where & Map',
   'About the Pod',
@@ -155,12 +177,6 @@ export const STEP_TITLES = [
   'Add Products',
   'Payment & Charges',
 ];
-
-const splitLines = (text: string) =>
-  text
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean);
 
 /** Maps validated form values onto the server's CreatePodInput. */
 export function buildCreatePodInput(values: CreatePodFormValues) {
@@ -191,9 +207,9 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
       .split(/[\s,]+/)
       .map((item) => item.replace(/^#/, '').trim())
       .filter(Boolean),
-    pod_images_and_videos: splitLines(values.media_text).map((url) => ({
+    pod_images_and_videos: splitMediaLines(values.media_text).map((url) => ({
       url,
-      type: /\.(mp4|mov|webm)$/i.test(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
+      type: VIDEO_URL_RE.test(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
     })),
     payment_terms: values.payment_terms || null,
     what_this_pod_offers: values.what_this_pod_offers,

@@ -1,6 +1,5 @@
 import { Avatar, Box, Button, Chip, Dialog, IconButton, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
-import CircleIcon from '@mui/icons-material/Circle';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
@@ -102,6 +101,8 @@ export default function NotificationsScreen({
           {notifs.map((item: any) => {
             const unread = !item.read_at;
             const notification = item.notification;
+            // Unread cards get the primary gradient highlight — chat-style rows
+            // (avatar · title + preview · time · NEW badge), like the mobile app.
             return (
               <Box
                 key={item.id}
@@ -109,32 +110,58 @@ export default function NotificationsScreen({
                 sx={{
                   p: 1.35,
                   borderRadius: 4,
-                  bgcolor: unread ? 'rgba(255,79,115,0.14)' : 'background.paper',
-                  border: 1,
-                  borderColor: unread ? 'primary.main' : 'divider',
                   cursor: 'pointer',
-                  boxShadow: unread ? '0 16px 34px rgba(255,79,115,0.16)' : 'none',
+                  color: unread ? 'primary.contrastText' : 'text.primary',
+                  background: unread ? 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' : undefined,
+                  bgcolor: unread ? undefined : 'background.paper',
+                  border: 1,
+                  borderColor: unread ? 'transparent' : 'divider',
+                  boxShadow: unread ? '0 16px 34px rgba(255,79,115,0.28)' : 'none',
+                  transition: 'transform 160ms ease, box-shadow 160ms ease',
+                  '&:hover': { transform: 'translateY(-1px)' },
                 }}
               >
                 <Stack direction="row" spacing={1.25} alignItems="center">
-                  <Avatar src={notification?.image_url || undefined} sx={{ width: 48, height: 48, bgcolor: 'primary.main' }}>
+                  <Avatar
+                    src={notification?.image_url || undefined}
+                    sx={{ width: 48, height: 48, bgcolor: unread ? 'rgba(255,255,255,0.24)' : 'primary.main' }}
+                  >
                     <NotificationsActiveIcon />
                   </Avatar>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Stack direction="row" spacing={0.75} alignItems="center">
-                      {unread && <CircleIcon sx={{ fontSize: 8, color: 'primary.main' }} />}
-                      <Typography variant="subtitle2" sx={{ fontWeight: 950 }} noWrap>
+                      <Typography variant="subtitle2" sx={{ fontWeight: 950, flex: 1, minWidth: 0 }} noWrap>
                         {notification?.title ?? 'Notification'}
                       </Typography>
+                      <Typography variant="caption" sx={{ fontWeight: 800, opacity: unread ? 0.9 : 0.7 }}>
+                        {formatRelative(item.created_at)}
+                      </Typography>
                     </Stack>
-                    <Typography variant="body2" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
-                      {notification?.body}
-                    </Typography>
-                    <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-                      {formatRelative(item.created_at)} ago
-                    </Typography>
+                    <Stack direction="row" spacing={1} alignItems="center">
+                      <Typography
+                        variant="body2"
+                        sx={{
+                          flex: 1,
+                          minWidth: 0,
+                          opacity: unread ? 0.92 : 0.75,
+                          display: '-webkit-box',
+                          WebkitLineClamp: 2,
+                          WebkitBoxOrient: 'vertical',
+                          overflow: 'hidden',
+                        }}
+                      >
+                        {notification?.body}
+                      </Typography>
+                      {unread && (
+                        <Chip
+                          label="NEW"
+                          size="small"
+                          sx={{ height: 20, fontSize: 10.5, fontWeight: 900, color: '#fff', bgcolor: 'rgba(255,255,255,0.26)' }}
+                        />
+                      )}
+                    </Stack>
                   </Box>
-                  {notification?.link_url && <ArrowForwardIcon color="primary" />}
+                  {notification?.link_url && <ArrowForwardIcon sx={{ color: unread ? '#fff' : 'primary.main' }} />}
                 </Stack>
               </Box>
             );

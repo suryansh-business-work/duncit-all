@@ -1,10 +1,10 @@
 import type { ReactNode } from 'react';
-import { useNavigation } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
+import { useGoBack } from '@/hooks/useGoBack';
 import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
@@ -18,7 +18,7 @@ interface StackScreenProps {
 /** Shared scaffold for pushed (stack) screens: gradient backdrop + a back-bar
  * with the title (and optional right action). */
 export function StackScreen({ title, testID, children, right }: Readonly<StackScreenProps>) {
-  const navigation = useNavigation();
+  const goBack = useGoBack();
   const { color: ink } = useThemeColors();
 
   return (
@@ -30,7 +30,7 @@ export function StackScreen({ title, testID, children, right }: Readonly<StackSc
             testID={`${testID}-back`}
             role="button"
             aria-label="Go back"
-            onPress={() => navigation.goBack()}
+            onPress={goBack}
             width={40}
             height={40}
             alignItems="center"

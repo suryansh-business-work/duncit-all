@@ -10,7 +10,7 @@ jest.mock('@/hooks/useLogout', () => ({ useLogout: jest.fn() }));
 jest.mock('@/hooks/useMe', () => ({ useRoleLabels: () => ({ labelFor: (k: string) => k }) }));
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, goBack: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
 }));
 
 const mockedUseAccount = useAccount as jest.Mock;

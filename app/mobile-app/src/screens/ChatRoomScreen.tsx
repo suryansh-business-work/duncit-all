@@ -1,12 +1,13 @@
 import { useEffect, useRef, useState } from 'react';
 import { ScrollView } from 'react-native';
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { useRoute, type RouteProp } from '@react-navigation/native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import * as ImagePicker from 'expo-image-picker';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
+import { useGoBack } from '@/hooks/useGoBack';
 import { ChatComposer } from '@/components/chat/ChatComposer';
 import { ChatMessageBubble } from '@/components/chat/ChatMessageBubble';
 import { EmojiBar } from '@/components/chat/EmojiBar';
@@ -21,7 +22,7 @@ type EmojiTarget = { type: 'compose' } | { type: 'react'; id: string } | null;
 /** Live pod chat — history + realtime messages, with send, image and reactions.
  * RN twin of mWeb's ChatRoomPage. */
 export function ChatRoomScreen() {
-  const navigation = useNavigation();
+  const goBack = useGoBack();
   const { podId, title } = useRoute<RouteProp<RootStackParamList, 'ChatRoom'>>().params;
   const { messages, isLoading, sending, error, setError, sendText, sendImage, react } =
     useChatRoom(podId);
@@ -74,7 +75,7 @@ export function ChatRoomScreen() {
             testID="chat-room-back"
             role="button"
             aria-label="Go back"
-            onPress={() => navigation.goBack()}
+            onPress={goBack}
             width={40}
             height={40}
             alignItems="center"

@@ -9,7 +9,7 @@ jest.mock('@/hooks/useDetails', () => ({ useClubDetails: jest.fn() }));
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: mockGoBack, navigate: mockNavigate }),
+  useNavigation: () => ({ canGoBack: () => true, goBack: mockGoBack, navigate: mockNavigate }),
   useRoute: () => ({ params: { clubId: 'c1', title: 'Runners' } }),
 }));
 

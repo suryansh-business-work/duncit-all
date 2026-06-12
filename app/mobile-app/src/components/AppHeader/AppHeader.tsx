@@ -14,7 +14,7 @@ import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useHomeStore } from '@/stores/home.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
-import { STUDIO_LABEL, resolveMode } from '@/utils/studio-mode';
+import { STUDIO_HOME_ROUTE, STUDIO_LABEL, resolveMode } from '@/utils/studio-mode';
 
 /**
  * In-app header — the two dynamic brand marks (logo + mascot, both from the
@@ -31,6 +31,7 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
   const setStudioMode = useStudioModeStore((s) => s.setMode);
   const effectiveStudio = resolveMode(studioMode, roles);
   const [switchOpen, setSwitchOpen] = useState(false);
+  const showBrowseActions = !minimal && effectiveStudio === 'USER';
 
   // Tapping the logo returns to the Home tab and refreshes the feed. The nested
   // screen param matters: from another tab (Explore/Clubs/…) the stack is already
@@ -81,7 +82,8 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
         ) : null}
       </XStack>
       <XStack alignItems="center" gap={8}>
-        {minimal ? null : (
+        {/* Studio modes (Host/Venue/ecomm) get a focused header — no search, no location. */}
+        {showBrowseActions ? (
           <XStack
             testID="header-search"
             role="button"
@@ -96,8 +98,8 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
           >
             <MaterialIcons name="search" size={24} color={ink} />
           </XStack>
-        )}
-        {minimal ? null : <LocationButton />}
+        ) : null}
+        {showBrowseActions ? <LocationButton /> : null}
         {minimal ? null : <NotificationsBell />}
         {minimal ? <LogoutButton /> : <AccountButton />}
       </XStack>
@@ -109,6 +111,8 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
         onSelect={(next) => {
           setStudioMode(next);
           setSwitchOpen(false);
+          // Jump straight to the selected role's dashboard (B3-2).
+          navigation.navigate(STUDIO_HOME_ROUTE[next] as never);
         }}
       />
     </XStack>

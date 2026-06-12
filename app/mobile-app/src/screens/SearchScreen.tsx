@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { useWindowDimensions } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { useWindowDimensions, type TextInput } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -35,6 +35,18 @@ export function SearchScreen() {
   const [query, setQuery] = useState('');
   const { results, hasQuery, isLoading } = usePodSearch(query);
   const { openPod } = useDetailNav();
+  const inputRef = useRef<TextInput | null>(null);
+
+  // Native-stack screens mount mid-transition, so autoFocus alone can lose the
+  // keyboard — re-focus once the push animation settles.
+  useEffect(() => {
+    const timer = setTimeout(
+      /* istanbul ignore next -- the input stays mounted for the screen's lifetime */
+      () => inputRef.current?.focus(),
+      300,
+    );
+    return () => clearTimeout(timer);
+  }, []);
 
   return (
     <StackScreen title="Search" testID="search-screen">
@@ -52,6 +64,7 @@ export function SearchScreen() {
       >
         <MaterialIcons name="search" size={20} color={muted} />
         <Input
+          ref={inputRef}
           testID="search-input"
           flex={1}
           unstyled

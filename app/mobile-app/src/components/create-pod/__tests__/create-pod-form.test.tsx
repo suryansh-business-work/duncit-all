@@ -25,6 +25,8 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   venue_id: 'venue-1',
   pod_description: 'A relaxed group hike around the lake.',
   pod_date_time_text: futureText,
+  media_text: 'https://cdn/img.jpg',
+  location_id: 'l1',
   ...over,
 });
 
@@ -46,7 +48,8 @@ describe('createPodSchema', () => {
   it('accepts a valid physical pod and exposes a field group per step', () => {
     expect(createPodSchema.safeParse(valid()).success).toBe(true);
     expect(STEP_FIELDS).toHaveLength(STEP_TITLES.length);
-    expect(STEP_TITLES).toHaveLength(7);
+    expect(STEP_TITLES).toHaveLength(8);
+    expect(STEP_TITLES[0]).toBe('Where to Host');
   });
 
   it('requires title, club, description and a venue for physical pods', () => {

@@ -189,6 +189,23 @@ export const podTypeDefs = /* GraphQL */ `
     is_active: Boolean
   }
 
+  "What deleting a pod means for its audience — shown in the host's delete dialog."
+  type HostPodDeleteImpact {
+    "Attendees other than the pod's hosts."
+    other_attendee_count: Int!
+    "SUCCESS payments that will be marked for refund on delete."
+    refundable_payment_count: Int!
+    refund_total: Float!
+    currency_symbol: String!
+  }
+
+  "The only fields a host may edit on their own pod."
+  input HostUpdatePodInput {
+    pod_title: String!
+    pod_description: String!
+    pod_images_and_videos: [PodMediaInput!]!
+  }
+
   extend type Query {
     pods(filter: PodFilterInput): [Pod!]!
     myHostPods(from: String, to: String): [Pod!]!
@@ -197,12 +214,15 @@ export const podTypeDefs = /* GraphQL */ `
     podComments(pod_doc_id: ID!): [PodComment!]!
     "Location ids that currently have at least one live (active, not-yet-passed) pod."
     activePodLocationIds: [ID!]!
+    hostPodDeleteImpact(pod_doc_id: ID!): HostPodDeleteImpact!
   }
 
   extend type Mutation {
     createPod(input: CreatePodInput!): Pod!
     createPartnerPod(input: CreatePodInput!): Pod!
     updatePod(pod_doc_id: ID!, input: UpdatePodInput!): Pod!
+    hostUpdatePod(pod_doc_id: ID!, input: HostUpdatePodInput!): Pod!
+    hostDeletePod(pod_doc_id: ID!, reason_subject: String!, reason_note: String): Boolean!
     addPodStatus(pod_doc_id: ID!, media: PodMediaInput!): Pod!
     deletePod(pod_doc_id: ID!): Boolean!
     incrementPodHits(pod_doc_id: ID!): Pod!

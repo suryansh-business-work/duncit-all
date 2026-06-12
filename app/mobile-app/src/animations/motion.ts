@@ -1,3 +1,4 @@
+import { Platform } from 'react-native';
 import { Easing, ReduceMotion } from 'react-native-reanimated';
 
 /**
@@ -39,3 +40,7 @@ export function staggerDelay(index: number): number {
 }
 
 export { ReduceMotion };
+
+/** RN's core Animated has no native driver on the web — fall back to JS there
+ * (silences the "useNativeDriver is not supported" warning on native web). */
+export const USE_NATIVE_DRIVER = Platform.OS !== 'web';

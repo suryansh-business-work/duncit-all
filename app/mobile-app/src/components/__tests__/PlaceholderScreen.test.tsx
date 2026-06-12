@@ -4,7 +4,9 @@ import { PlaceholderScreen } from '@/components/PlaceholderScreen';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockBack = jest.fn();
-jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ goBack: mockBack }) }));
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ canGoBack: () => true, goBack: mockBack }),
+}));
 
 afterEach(() => jest.clearAllMocks());
 

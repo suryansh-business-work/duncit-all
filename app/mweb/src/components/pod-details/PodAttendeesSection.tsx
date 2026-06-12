@@ -1,5 +1,6 @@
-import { Avatar, Box, Stack, Tooltip, Typography } from '@mui/material';
-import { useNavigate } from 'react-router-dom';
+import { useMemo, useState } from 'react';
+import { Avatar, AvatarGroup, ButtonBase, Stack, Typography } from '@mui/material';
+import PodAttendeesDialog, { type AttendeePerson } from './PodAttendeesDialog';
 
 interface Attendee {
   user_id: string;
@@ -10,23 +11,45 @@ interface Attendee {
 interface Props {
   attendees: Attendee[];
   attendeeIds: string[];
+  hostIds: string[];
   totalSpots: number;
 }
 
 const MAX_PREVIEW = 8;
 
+/** Builds the full attendee list — hosts first, each flagged for highlighting. */
+export function buildAttendeePeople(
+  attendees: Attendee[],
+  attendeeIds: string[],
+  hostIds: string[]
+): AttendeePerson[] {
+  const byId = new Map(attendees.map((a) => [a.user_id, a]));
+  const hosts = new Set(hostIds);
+  const people = (attendeeIds ?? []).map((id) => {
+    const person = byId.get(id);
+    return {
+      user_id: id,
+      full_name: person?.full_name ?? null,
+      profile_photo: person?.profile_photo ?? null,
+      is_host: hosts.has(id),
+    };
+  });
+  return [...people.filter((p) => p.is_host), ...people.filter((p) => !p.is_host)];
+}
+
+/** Attendees — avatar group (hosts highlighted) that opens the full list dialog (3). */
 export default function PodAttendeesSection({
   attendees,
   attendeeIds,
+  hostIds,
   totalSpots,
 }: Readonly<Props>) {
-  const navigate = useNavigate();
-  const count = attendeeIds?.length ?? 0;
-  const byId = new Map(attendees.map((a) => [a.user_id, a]));
-  const previews = (attendeeIds ?? []).slice(0, MAX_PREVIEW).map((id) =>
-    byId.get(id) ?? { user_id: id, full_name: null, profile_photo: null }
+  const [open, setOpen] = useState(false);
+  const people = useMemo(
+    () => buildAttendeePeople(attendees, attendeeIds, hostIds),
+    [attendees, attendeeIds, hostIds]
   );
-  const extra = count - previews.length;
+  const count = people.length;
 
   return (
     <Stack spacing={1.5}>
@@ -40,51 +63,45 @@ export default function PodAttendeesSection({
           Be the first to join!
         </Typography>
       ) : (
-        <Stack direction="row" sx={{ pl: 0.5, flexWrap: 'wrap', rowGap: 1 }}>
-          {previews.map((a, i) => (
-            <Tooltip key={a.user_id} title={a.full_name || 'View profile'}>
-              <Avatar
-                src={a.profile_photo || undefined}
-                onClick={() => navigate(`/u/${a.user_id}`)}
-                sx={{
-                  width: 36,
-                  height: 36,
-                  bgcolor: 'primary.main',
-                  fontSize: 13,
-                  border: '2px solid',
-                  borderColor: 'background.paper',
-                  ml: i === 0 ? 0 : -1,
-                  cursor: 'pointer',
-                  transition: 'transform 120ms',
-                  '&:hover': { transform: 'translateY(-2px)' },
-                }}
-              >
-                {(a.full_name?.[0] ?? '?').toUpperCase()}
-              </Avatar>
-            </Tooltip>
-          ))}
-          {extra > 0 && (
-            <Box
-              sx={{
+        <ButtonBase
+          onClick={() => setOpen(true)}
+          aria-label="View all attendees"
+          sx={{ alignSelf: 'flex-start', borderRadius: 999, p: 0.5 }}
+        >
+          <AvatarGroup
+            max={MAX_PREVIEW}
+            sx={{
+              '& .MuiAvatar-root': {
                 width: 36,
                 height: 36,
-                ml: -1,
-                borderRadius: '50%',
-                bgcolor: 'action.hover',
+                fontSize: 13,
+                bgcolor: 'primary.main',
                 border: '2px solid',
                 borderColor: 'background.paper',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                fontSize: 12,
-                color: 'text.secondary',
-              }}
-            >
-              +{extra}
-            </Box>
-          )}
-        </Stack>
+              },
+            }}
+          >
+            {people.map((person) => (
+              <Avatar
+                key={person.user_id}
+                src={person.profile_photo || undefined}
+                alt={person.full_name || 'Attendee'}
+                sx={
+                  person.is_host
+                    ? { boxShadow: '0 0 0 2px rgba(255,79,115,0.85)', zIndex: 1 }
+                    : undefined
+                }
+              >
+                {(person.full_name?.[0] ?? '?').toUpperCase()}
+              </Avatar>
+            ))}
+          </AvatarGroup>
+          <Typography variant="caption" color="primary.main" sx={{ ml: 1, fontWeight: 800 }}>
+            View all
+          </Typography>
+        </ButtonBase>
       )}
+      <PodAttendeesDialog open={open} people={people} onClose={() => setOpen(false)} />
     </Stack>
   );
 }

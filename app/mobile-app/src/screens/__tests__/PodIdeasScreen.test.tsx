@@ -7,7 +7,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/usePodIdeas', () => ({ usePodIdeas: jest.fn() }));
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: jest.fn(), navigate: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: jest.fn() }),
 }));
 
 // Lightweight stand-ins so the screen's own handlers are what we exercise.

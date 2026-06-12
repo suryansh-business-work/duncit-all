@@ -8,7 +8,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/hooks/useHealth', () => ({ useAccountHealth: jest.fn(), useVenueHealth: jest.fn() }));
 let mockRouteParams: { venueId: string } | undefined = { venueId: 'v1' };
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: jest.fn(), navigate: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: jest.fn() }),
   useRoute: () => ({ params: mockRouteParams }),
 }));
 

@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
+import { useGoBack } from '@/hooks/useGoBack';
 import { AppBackground } from '@/components/AppBackground';
 import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { PodAccordions } from '@/components/details/PodAccordions';
@@ -26,10 +27,20 @@ import type { RootStackParamList } from '@/navigation/types';
  * shop + the accordion stack. Mirrors mWeb's PodDetailsPage. */
 export function PodDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'PodDetails'>>();
   const { podId } = route.params;
-  const { pod, venue, location, viewerId, savedInitially, membershipState, isLoading, refetch } =
-    usePodDetails(podId);
+  const {
+    pod,
+    venue,
+    location,
+    viewerId,
+    savedInitially,
+    membershipState,
+    people,
+    isLoading,
+    refetch,
+  } = usePodDetails(podId);
   const { liked, likeCount, saved, savePending, toggleLike, toggleSave } = usePodActions(
     pod,
     savedInitially,
@@ -100,7 +111,7 @@ export function PodDetailsScreen() {
           <Text color="$muted" testID="pod-details-error">
             This pod is unavailable.
           </Text>
-          <XStack role="button" aria-label="Go back" onPress={() => navigation.goBack()}>
+          <XStack role="button" aria-label="Go back" onPress={goBack}>
             <Text color="$primary" fontWeight="900">
               Go back
             </Text>
@@ -108,7 +119,7 @@ export function PodDetailsScreen() {
         </YStack>
       ) : (
         <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 110 }}>
-          <DetailHero media={pod.pod_images_and_videos} onBack={() => navigation.goBack()}>
+          <DetailHero media={pod.pod_images_and_videos} onBack={goBack}>
             <HeroButton
               testID="pod-save"
               icon={saved ? 'bookmark' : 'bookmark-border'}
@@ -147,9 +158,11 @@ export function PodDetailsScreen() {
           <Reveal index={4}>
             <PodAccordions
               pod={pod}
+              people={people}
               onOpenClub={() =>
                 navigation.navigate('ClubDetails', { clubId: pod.club_id, title: 'Club' })
               }
+              onOpenProfile={(userId) => navigation.navigate('PublicProfile', { userId })}
             />
           </Reveal>
         </ScrollView>

@@ -1,12 +1,14 @@
 import { Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { LinearGradient } from 'expo-linear-gradient';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { UserNotification } from '@/hooks/useNotifications';
 import { formatRelative } from '@/utils/date-format';
 
-/** A single notification card — read/unread styling, avatar, title/body, time.
+/** A single notification card — chat-style row (avatar · title + preview ·
+ * time), with unread cards highlighted by the primary gradient (B3-4).
  * RN twin of the mWeb NotificationsScreen list item. */
 export function NotificationRow({
   item,
@@ -15,30 +17,19 @@ export function NotificationRow({
   item: UserNotification;
   onPress: () => void;
 }>) {
-  const { onPrimary, primary } = useThemeColors();
+  const { onPrimary, primary, muted } = useThemeColors();
   const unread = !item.read_at;
   const notification = item.notification;
+  const ink = unread ? '#ffffff' : undefined;
 
-  return (
-    <XStack
-      testID={`notification-${item.id}`}
-      role="button"
-      onPress={onPress}
-      gap={12}
-      padding={12}
-      borderRadius={16}
-      borderWidth={1}
-      borderColor={unread ? '$primary' : '$borderColor'}
-      backgroundColor="$surface"
-      alignItems="center"
-      pressStyle={{ opacity: 0.85 }}
-    >
+  const body = (
+    <XStack gap={12} padding={12} alignItems="center">
       <YStack
         width={46}
         height={46}
         borderRadius={23}
         overflow="hidden"
-        backgroundColor="$primary"
+        backgroundColor={unread ? 'rgba(255,255,255,0.22)' : '$primary'}
         alignItems="center"
         justifyContent="center"
       >
@@ -54,23 +45,79 @@ export function NotificationRow({
       </YStack>
       <YStack flex={1} gap={2}>
         <XStack alignItems="center" gap={6}>
-          {unread ? (
-            <YStack width={8} height={8} borderRadius={4} backgroundColor="$primary" />
-          ) : null}
-          <Text flex={1} fontSize={15} fontWeight="900" color="$color" numberOfLines={1}>
+          <Text flex={1} fontSize={15} fontWeight="900" color={ink ?? '$color'} numberOfLines={1}>
             {notification.title}
           </Text>
+          <Text fontSize={11} fontWeight="700" color={ink ?? muted} opacity={unread ? 0.9 : 1}>
+            {formatRelative(item.created_at)}
+          </Text>
         </XStack>
-        <Text fontSize={13} color="$muted" numberOfLines={2}>
-          {notification.body}
-        </Text>
-        <Text fontSize={11} fontWeight="700" color="$muted">
-          {formatRelative(item.created_at)} ago
-        </Text>
+        <XStack alignItems="center" gap={8}>
+          <Text
+            flex={1}
+            fontSize={13}
+            color={ink ?? '$muted'}
+            opacity={unread ? 0.92 : 1}
+            numberOfLines={2}
+          >
+            {notification.body}
+          </Text>
+          {unread ? (
+            <YStack
+              testID={`notification-new-${item.id}`}
+              borderRadius={999}
+              backgroundColor="rgba(255,255,255,0.26)"
+              paddingHorizontal={9}
+              paddingVertical={2}
+            >
+              <Text fontSize={10.5} fontWeight="900" color="#ffffff">
+                NEW
+              </Text>
+            </YStack>
+          ) : null}
+          {notification.link_url ? (
+            <MaterialIcons name="chevron-right" size={20} color={ink ?? primary} />
+          ) : null}
+        </XStack>
       </YStack>
-      {notification.link_url ? (
-        <MaterialIcons name="arrow-forward" size={18} color={primary} />
-      ) : null}
+    </XStack>
+  );
+
+  if (unread) {
+    return (
+      <XStack
+        testID={`notification-${item.id}`}
+        role="button"
+        onPress={onPress}
+        borderRadius={16}
+        overflow="hidden"
+        pressStyle={{ opacity: 0.9 }}
+      >
+        <LinearGradient
+          colors={['#ff4f73', '#ff7a59']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={{ flex: 1 }}
+        >
+          {body}
+        </LinearGradient>
+      </XStack>
+    );
+  }
+
+  return (
+    <XStack
+      testID={`notification-${item.id}`}
+      role="button"
+      onPress={onPress}
+      borderRadius={16}
+      borderWidth={1}
+      borderColor="$borderColor"
+      backgroundColor="$surface"
+      overflow="hidden"
+      pressStyle={{ opacity: 0.85 }}
+    >
+      {body}
     </XStack>
   );
 }

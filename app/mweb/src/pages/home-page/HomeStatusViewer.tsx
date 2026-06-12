@@ -12,9 +12,24 @@ export interface HomeStatusViewerSlide {
   subLabel?: string;
   caption?: string;
   createdAt?: string;
+  /** When the status auto-expires (drives the "X remaining" countdown). */
+  expiresAt?: string | null;
   likeCount?: number;
   commentCount?: number;
   thumbnailUrl?: string;
+}
+
+/** "X remaining" until the status auto-expires; null when unknown/expired.
+ * Compact units (45m / 12h / 1d) — identical to the mobile app's label. */
+export function statusRemainingLabel(expiresAt?: string | null, now: Date = new Date()): string | null {
+  if (!expiresAt) return null;
+  const expiry = new Date(expiresAt);
+  if (Number.isNaN(expiry.getTime()) || expiry.getTime() <= now.getTime()) return null;
+  const minutes = Math.ceil((expiry.getTime() - now.getTime()) / 60000);
+  if (minutes < 60) return `${minutes}m remaining`;
+  const hours = Math.floor(minutes / 60);
+  if (hours < 24) return `${hours}h remaining`;
+  return `${Math.floor(hours / 24)}d remaining`;
 }
 
 export interface HomeStatusViewerItem {
@@ -113,9 +128,12 @@ export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusV
   };
 
   const nextPeek = slides.slice(index + 1, index + 3);
-  const timeLabel = current?.createdAt
+  const agoLabel = current?.createdAt
     ? `${formatDistanceToNowStrict(new Date(current.createdAt))} ago`
     : null;
+  // Countdown until the status is auto-removed (recomputed each slide tick).
+  const remainingLabel = statusRemainingLabel(current?.expiresAt);
+  const timeLabel = [agoLabel, remainingLabel].filter(Boolean).join(' · ') || null;
 
   return (
     <Dialog open={!!item} fullScreen onClose={onClose} PaperProps={{ sx: { bgcolor: '#08070b' } }}>

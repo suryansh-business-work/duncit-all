@@ -69,6 +69,7 @@ export const HOME_DATA = gql`
       media_type
       caption
       created_at
+      expires_at
     }
     categories {
       id

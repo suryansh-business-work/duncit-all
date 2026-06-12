@@ -7,6 +7,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { StatusVideo } from '@/components/status/StatusVideo';
 import type { StatusGroup } from '@/hooks/useStatus';
+import { statusRemainingLabel } from '@/utils/date-format';
 
 interface StatusViewerProps {
   status: StatusGroup | null;
@@ -30,6 +31,8 @@ export function StatusViewer({ status, onClose }: Readonly<StatusViewerProps>) {
   const slides = status?.slides ?? [];
   const current = slides[index];
   const isVideo = current?.mediaType === 'VIDEO';
+  // Countdown until the status is auto-removed (recomputed per slide change).
+  const remaining = statusRemainingLabel(current?.expiresAt);
 
   const advanceRef = useRef(NOOP);
   advanceRef.current = () => {
@@ -91,9 +94,21 @@ export function StatusViewer({ status, onClose }: Readonly<StatusViewerProps>) {
               })}
             </XStack>
             <XStack alignItems="center" justifyContent="space-between" padding={16}>
-              <Text color="#ffffff" fontSize={16} fontWeight="900" numberOfLines={1} flex={1}>
-                {status?.name ?? ''}
-              </Text>
+              <YStack flex={1}>
+                <Text color="#ffffff" fontSize={16} fontWeight="900" numberOfLines={1}>
+                  {status?.name ?? ''}
+                </Text>
+                {remaining ? (
+                  <Text
+                    testID="status-remaining"
+                    color="rgba(255,255,255,0.75)"
+                    fontSize={11.5}
+                    fontWeight="700"
+                  >
+                    {remaining}
+                  </Text>
+                ) : null}
+              </YStack>
               <XStack
                 testID="status-viewer-close"
                 role="button"

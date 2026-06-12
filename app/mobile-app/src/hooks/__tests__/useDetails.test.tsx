@@ -25,6 +25,43 @@ describe('usePodDetails / useClubDetails', () => {
     expect(result.current.location?.id).toBe('l1');
   });
 
+  it('loads hosts + attendees public profiles for the avatar group', async () => {
+    mockRequest
+      .mockResolvedValueOnce({
+        me: null,
+        pod: { id: 'p1', pod_hosts_id: ['h1'], pod_attendees: ['h1', 'u1'] },
+        publicVenues: [],
+        locations: [],
+      })
+      .mockResolvedValueOnce({
+        publicUsersByIds: [{ user_id: 'h1', full_name: 'Host', profile_photo: null }],
+      });
+    const { result } = renderHook(() => usePodDetails('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.people).toHaveLength(1);
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+    expect(mockRequest).toHaveBeenLastCalledWith(
+      expect.anything(),
+      { ids: ['h1', 'u1'] },
+      { auth: true },
+    );
+  });
+
+  it('keeps an empty people list when the profile lookup fails', async () => {
+    mockRequest
+      .mockResolvedValueOnce({
+        me: null,
+        pod: { id: 'p1', pod_hosts_id: [], pod_attendees: ['u1'] },
+        publicVenues: [],
+        locations: [],
+      })
+      .mockRejectedValueOnce(new Error('down'));
+    const { result } = renderHook(() => usePodDetails('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.people).toEqual([]);
+    expect(result.current.error).toBeUndefined();
+  });
+
   it('handles a missing pod', async () => {
     mockRequest.mockResolvedValueOnce({ me: null, pod: null, publicVenues: [], locations: [] });
     const { result } = renderHook(() => usePodDetails('x'));

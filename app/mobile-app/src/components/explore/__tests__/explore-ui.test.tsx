@@ -9,7 +9,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/hooks/useExplore');
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
 }));
 jest.mock('@/components/details/pod-comments', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports

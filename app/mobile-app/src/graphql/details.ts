@@ -111,6 +111,17 @@ export const PodDetailsDocument = gql(`
   }
 `);
 
+/** Public profiles for a pod's hosts + attendees — mirrors mWeb's POD_PEOPLE. */
+export const PodPeopleDocument = gql(`
+  query MobilePodPeople($ids: [ID!]!) {
+    publicUsersByIds(user_ids: $ids) {
+      user_id
+      full_name
+      profile_photo
+    }
+  }
+`);
+
 /** Comments thread for a pod (auth) — mirrors mWeb's POD_COMMENTS. */
 export const PodCommentsDocument = gql(`
   query MobilePodComments($podId: ID!) {

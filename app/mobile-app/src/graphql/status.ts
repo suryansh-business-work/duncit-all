@@ -19,6 +19,7 @@ export const StatusFeedDocument = gql(`
       media_type
       caption
       created_at
+      expires_at
     }
     myStories {
       id
@@ -27,6 +28,7 @@ export const StatusFeedDocument = gql(`
       media_type
       caption
       created_at
+      expires_at
     }
   }
 `);

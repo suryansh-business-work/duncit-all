@@ -7,6 +7,7 @@ import {
   DeletePodCommentDocument,
   PodCommentsDocument,
   PodDetailsDocument,
+  PodPeopleDocument,
 } from '@/graphql/details';
 import { TogglePodLikeDocument, ToggleSavedPodDocument } from '@/graphql/explore';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -17,6 +18,7 @@ export type PodDetail = NonNullable<PodDetailsResult['pod']>;
 export type PodVenue = PodDetailsResult['publicVenues'][number];
 export type PodLocation = PodDetailsResult['locations'][number];
 export type PodMembershipState = PodDetailsResult['podMembershipState'];
+export type PodPerson = ResultOf<typeof PodPeopleDocument>['publicUsersByIds'][number];
 type ClubDetailsResult = ResultOf<typeof ClubDetailsDocument>;
 export type ClubDetail = NonNullable<ClubDetailsResult['club']>;
 export type ClubPod = ClubDetailsResult['pods'][number];
@@ -30,6 +32,7 @@ export function usePodDetails(podId: string) {
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [savedInitially, setSavedInitially] = useState(false);
   const [membershipState, setMembershipState] = useState<PodMembershipState | null>(null);
+  const [people, setPeople] = useState<PodPerson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
@@ -42,6 +45,18 @@ export function usePodDetails(podId: string) {
     setLocation(data.locations.find((l) => l.id === nextPod?.location_id) ?? null);
     setSavedInitially((data.me?.saved_pod_ids ?? []).includes(nextPod?.id ?? ''));
     setMembershipState(data.podMembershipState ?? null);
+    // Hosts + attendees public profiles for the avatar group (best-effort).
+    const ids = Array.from(
+      new Set([...(nextPod?.pod_hosts_id ?? []), ...(nextPod?.pod_attendees ?? [])]),
+    );
+    if (ids.length > 0) {
+      const peopleData = await graphqlRequest(PodPeopleDocument, { ids }, { auth: true }).catch(
+        () => null,
+      );
+      setPeople(peopleData?.publicUsersByIds ?? []);
+    } else {
+      setPeople([]);
+    }
   }, [podId]);
 
   useEffect(() => {
@@ -62,6 +77,7 @@ export function usePodDetails(podId: string) {
     viewerId,
     savedInitially,
     membershipState,
+    people,
     isLoading,
     error,
     refetch: load,

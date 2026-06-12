@@ -6,6 +6,8 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Separator, Text, XStack, YStack } from 'tamagui';
 
+import { USE_NATIVE_DRIVER } from '@/animations/motion';
+
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useLogout } from '@/hooks/useLogout';
 import { useMe } from '@/hooks/useMe';
@@ -14,7 +16,7 @@ import { usePublicPolicies } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useThemeStore } from '@/stores/theme.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
-import { STUDIO_LABEL, availableModes, resolveMode } from '@/utils/studio-mode';
+import { STUDIO_HOME_ROUTE, STUDIO_LABEL, availableModes, resolveMode } from '@/utils/studio-mode';
 import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
 import { SidebarFooter } from './SidebarFooter';
@@ -55,13 +57,17 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
     if (open) {
       setMounted(true);
       Animated.parallel([
-        Animated.timing(tx, { toValue: 0, duration: 220, useNativeDriver: true }),
-        Animated.timing(fade, { toValue: 1, duration: 220, useNativeDriver: true }),
+        Animated.timing(tx, { toValue: 0, duration: 220, useNativeDriver: USE_NATIVE_DRIVER }),
+        Animated.timing(fade, { toValue: 1, duration: 220, useNativeDriver: USE_NATIVE_DRIVER }),
       ]).start();
     } else if (mounted) {
       Animated.parallel([
-        Animated.timing(tx, { toValue: panelWidth, duration: 200, useNativeDriver: true }),
-        Animated.timing(fade, { toValue: 0, duration: 200, useNativeDriver: true }),
+        Animated.timing(tx, {
+          toValue: panelWidth,
+          duration: 200,
+          useNativeDriver: USE_NATIVE_DRIVER,
+        }),
+        Animated.timing(fade, { toValue: 0, duration: 200, useNativeDriver: USE_NATIVE_DRIVER }),
       ]).start(() => setMounted(false));
     }
     // Animate only on `open` flips; `mounted`/`panelWidth` are derived.
@@ -210,6 +216,9 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
         onSelect={(next) => {
           setStudioMode(next);
           setSwitchOpen(false);
+          onClose();
+          // Jump straight to the selected role's dashboard (B3-2).
+          navigation.navigate(STUDIO_HOME_ROUTE[next] as never);
         }}
       />
     </Modal>

@@ -20,6 +20,7 @@ const imageSlide = {
   mediaType: 'IMAGE',
   caption: 'Hello',
   createdAt: '2026-06-09T10:00:00.000Z',
+  expiresAt: new Date(Date.now() + 3 * 3_600_000).toISOString(),
 };
 const videoSlide = {
   id: 'p2',
@@ -85,11 +86,13 @@ describe('StatusViewer', () => {
   beforeEach(() => jest.useFakeTimers());
   afterEach(() => jest.useRealTimers());
 
-  it('renders the first image, shows its caption, and closes', () => {
+  it('renders the first image, its caption and the expiry countdown, and closes', () => {
     const onClose = jest.fn();
     renderWithProviders(<StatusViewer status={group as never} onClose={onClose} />);
     expect(screen.getByTestId('status-viewer-image')).toBeOnTheScreen();
     expect(screen.getByText('Hello')).toBeOnTheScreen();
+    // imageSlide expires ~3h from now → the "time remaining" label is visible.
+    expect(screen.getByTestId('status-remaining')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('status-viewer-close'));
     expect(onClose).toHaveBeenCalled();
   });

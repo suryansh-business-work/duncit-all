@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
+import { useGoBack } from '@/hooks/useGoBack';
 import { ProfileHeader } from '@/components/profile/ProfileHeader';
 import { ProfilePanels } from '@/components/profile/ProfilePanels';
 import { ProfilePostsGrid } from '@/components/profile/ProfilePostsGrid';
@@ -18,6 +19,7 @@ import type { RootStackParamList } from '@/navigation/types';
  * user's posts grid. RN port of mWeb's ProfilePage (core). */
 export function ProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const goBack = useGoBack();
   const { me, posts, isLoading, refetch } = useProfile();
   const { color: ink } = useThemeColors();
   const { uploading, pickAndUpload } = useStatusUpload();
@@ -38,7 +40,7 @@ export function ProfileScreen() {
             testID="profile-back"
             role="button"
             aria-label="Go back"
-            onPress={() => navigation.goBack()}
+            onPress={goBack}
             width={40}
             height={40}
             alignItems="center"

@@ -12,7 +12,7 @@ jest.mock('@/hooks/usePodHistory', () => ({
 const mockNavigate = jest.fn();
 let mockRouteParams: { podId: string } | undefined = { podId: 'p1' };
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, goBack: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
   useRoute: () => ({ params: mockRouteParams }),
 }));
 

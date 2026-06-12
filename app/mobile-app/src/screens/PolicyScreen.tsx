@@ -1,10 +1,11 @@
 import { ScrollView } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
+import { useRoute, type RouteProp } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { usePolicy } from '@/hooks/usePolicies';
+import { useGoBack } from '@/hooks/useGoBack';
 import { usePolicyPdf } from '@/hooks/usePolicyPdf';
 import { AppBackground } from '@/components/AppBackground';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -14,7 +15,7 @@ import { stripHtml } from '@/utils/html';
 
 /** Reader for a single public policy, opened from the sidebar's Policies group. */
 export function PolicyScreen() {
-  const navigation = useNavigation();
+  const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'Policy'>>();
   const slug = route.params?.slug ?? '';
   const { data, isLoading, error } = usePolicy(slug);
@@ -31,7 +32,7 @@ export function PolicyScreen() {
             testID="policy-back"
             role="button"
             aria-label="Go back"
-            onPress={() => navigation.goBack()}
+            onPress={goBack}
             width={40}
             height={40}
             alignItems="center"

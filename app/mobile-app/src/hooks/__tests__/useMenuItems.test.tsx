@@ -7,38 +7,24 @@ const menu = (mode?: StudioMode) => renderHook(() => useMenuItems(mode)).result.
 const routes = (mode?: StudioMode) => menu(mode).map((i) => i.route);
 
 describe('useMenuItems', () => {
-  it('returns the full USER menu with Earn with Duncit (no host/venue CTAs)', () => {
+  it('returns the USER menu without Home/Profile (logo + summary card cover those)', () => {
     const labels = menu('USER').map((i) => i.label);
     expect(labels).toContain('Earn with Duncit');
-    expect(labels).not.toContain('Be a host');
-    expect(routes('USER')).toEqual([
-      'Home',
-      'Profile',
-      'Saved',
-      'PodHistory',
-      'Earn',
-      'Support',
-      'PodIdeas',
-      'Faqs',
-    ]);
+    expect(labels).not.toContain('Home');
+    expect(labels).not.toContain('Profile');
+    expect(routes('USER')).toEqual(['Saved', 'PodHistory', 'Earn', 'Support', 'PodIdeas', 'Faqs']);
   });
 
   it('returns the Host studio menu', () => {
-    expect(routes('HOST')).toEqual(['Profile', 'HostManage', 'Support', 'BecomeHost', 'Faqs']);
+    expect(routes('HOST')).toEqual(['HostManage', 'Support', 'BecomeHost', 'Faqs']);
   });
 
   it('returns the Venue studio menu', () => {
-    expect(routes('VENUE')).toEqual(['Profile', 'VenueManage', 'Support', 'RegisterVenue', 'Faqs']);
+    expect(routes('VENUE')).toEqual(['VenueManage', 'Support', 'RegisterVenue', 'Faqs']);
   });
 
   it('returns the ecomm studio menu', () => {
-    expect(routes('ECOMM')).toEqual([
-      'Profile',
-      'ProductsManage',
-      'Support',
-      'ListProduct',
-      'Faqs',
-    ]);
+    expect(routes('ECOMM')).toEqual(['ProductsManage', 'Support', 'ListProduct', 'Faqs']);
   });
 
   it('defaults to the USER menu', () => {

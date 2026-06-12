@@ -1,10 +1,10 @@
 import type { ComponentProps } from 'react';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
+import { useGoBack } from '@/hooks/useGoBack';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
@@ -23,7 +23,7 @@ export function PlaceholderScreen({
   subtitle?: string;
   icon?: IconName;
 }>) {
-  const navigation = useNavigation();
+  const goBack = useGoBack();
   const { color: ink, primary } = useThemeColors();
 
   return (
@@ -35,7 +35,7 @@ export function PlaceholderScreen({
             testID="placeholder-back"
             role="button"
             aria-label="Go back"
-            onPress={() => navigation.goBack()}
+            onPress={goBack}
             width={40}
             height={40}
             alignItems="center"

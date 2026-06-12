@@ -5,7 +5,9 @@ import { useOnboardingFlow } from '@/components/survey-onboarding/useOnboardingF
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockGoBack = jest.fn();
-jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ goBack: mockGoBack }) }));
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ canGoBack: () => true, goBack: mockGoBack }),
+}));
 jest.mock('@/hooks/useBranding', () => ({ useBranding: () => ({ data: undefined }) }));
 jest.mock('@/components/survey-onboarding/useOnboardingFlow', () => ({
   useOnboardingFlow: jest.fn(),

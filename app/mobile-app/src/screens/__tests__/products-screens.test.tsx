@@ -1,14 +1,36 @@
 import { screen } from '@testing-library/react-native';
 
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
+import { useEcommDashboard } from '@/hooks/useStudioDashboards';
 import { renderWithProviders } from '@/utils/test-utils';
 
-jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ goBack: jest.fn() }) }));
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn() }),
+}));
+jest.mock('@/hooks/useStudioDashboards', () => ({ useEcommDashboard: jest.fn() }));
+const mockedUse = useEcommDashboard as jest.Mock;
 
-describe('products studio placeholders', () => {
-  it('renders the Your Products placeholder', () => {
+describe('ProductsManageScreen (ecomm dashboard)', () => {
+  it('shows catalogue stats and the stock chart', () => {
+    mockedUse.mockReturnValue({
+      isLoading: false,
+      products: [
+        { id: 'p1', product_name: 'Water bottle', unit_cost: 100, available_count: 8 },
+        { id: 'p2', product_name: 'Cap', unit_cost: 300, available_count: 2 },
+        { id: 'p3', product_name: 'Sticker', unit_cost: null, available_count: null },
+        { id: 'p4', product_name: 'Badge', unit_cost: null, available_count: null },
+      ],
+    });
     renderWithProviders(<ProductsManageScreen />);
-    expect(screen.getByTestId('placeholder-screen')).toBeOnTheScreen();
-    expect(screen.getAllByText('Your Products').length).toBeGreaterThan(0);
+    expect(screen.getByText('Products')).toBeOnTheScreen();
+    expect(screen.getByText('₹100')).toBeOnTheScreen();
+    expect(screen.getByTestId('ecomm-stock-chart')).toBeOnTheScreen();
+  });
+
+  it('shows the loading and empty states', () => {
+    mockedUse.mockReturnValue({ isLoading: true, products: [] });
+    renderWithProviders(<ProductsManageScreen />);
+    expect(screen.getByTestId('ecomm-dashboard-loading')).toBeOnTheScreen();
+    expect(screen.getByTestId('ecomm-dashboard-empty')).toBeOnTheScreen();
   });
 });

@@ -27,7 +27,7 @@ export function AppBackground() {
         end={{ x: 0, y: 1 }}
         style={StyleSheet.absoluteFill}
       />
-      <Svg style={StyleSheet.absoluteFill} pointerEvents="none">
+      <Svg style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}>
         <Defs>
           <RadialGradient id="glow-pink" cx="8%" cy="0%" r="45%">
             <Stop offset="0" stopColor="#ff4f73" stopOpacity={pinkOpacity} />

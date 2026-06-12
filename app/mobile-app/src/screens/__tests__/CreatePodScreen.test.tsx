@@ -7,7 +7,12 @@ import { renderWithProviders } from '@/utils/test-utils';
 const mockNavigate = jest.fn();
 const mockReplace = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, replace: mockReplace, goBack: jest.fn() }),
+  useNavigation: () => ({
+    canGoBack: () => true,
+    navigate: mockNavigate,
+    replace: mockReplace,
+    goBack: jest.fn(),
+  }),
   useRoute: () => ({ params: { draftId: 'd1' } }),
 }));
 jest.mock('@/hooks/useCreatePod', () => ({ useCreatePod: jest.fn() }));

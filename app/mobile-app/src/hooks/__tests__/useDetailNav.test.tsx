@@ -4,7 +4,7 @@ import { useDetailNav } from '@/hooks/useDetailNav';
 
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
 }));
 
 describe('useDetailNav', () => {

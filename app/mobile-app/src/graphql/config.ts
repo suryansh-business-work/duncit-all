@@ -10,3 +10,14 @@ export const PublicClientConfigDocument = gql(`
     }
   }
 `);
+
+/** Admin-panel display formats (Settings → date/time) — drives every picker
+ * and date label so formatting stays in sync with mWeb. */
+export const PublicAppSettingsDocument = gql(`
+  query MobilePublicAppSettings {
+    publicAppSettings {
+      date_format
+      time_format
+    }
+  }
+`);

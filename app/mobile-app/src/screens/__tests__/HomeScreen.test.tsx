@@ -5,7 +5,9 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 // The header pulls in branding/account data; it's unit-tested on its own.
 jest.mock('@/components/AppHeader', () => ({ AppHeader: () => null }));
-jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ navigate: jest.fn() }) }));
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ canGoBack: () => true, navigate: jest.fn() }),
+}));
 
 // Stub the data hooks so the screen renders deterministically (no network).
 jest.mock('@/hooks/useMe', () => ({ useMe: () => ({ data: undefined }) }));

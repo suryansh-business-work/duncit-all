@@ -49,7 +49,14 @@ describe('Accordion', () => {
 describe('PodAccordions', () => {
   it('expands all, opens the club, then collapses all', () => {
     const onOpenClub = jest.fn();
-    renderWithProviders(<PodAccordions pod={pod as never} onOpenClub={onOpenClub} />);
+    renderWithProviders(
+      <PodAccordions
+        pod={pod as never}
+        people={[]}
+        onOpenClub={onOpenClub}
+        onOpenProfile={jest.fn()}
+      />,
+    );
     expect(screen.getByTestId('accordion-about')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-expand-all'));
     expect(screen.getByText('Place charges')).toBeOnTheScreen();
@@ -61,7 +68,9 @@ describe('PodAccordions', () => {
 
   it('omits terms/charges when absent and toggles a section header', () => {
     const bare = { ...pod, payment_terms: null, place_charges: [] } as never;
-    renderWithProviders(<PodAccordions pod={bare} onOpenClub={jest.fn()} />);
+    renderWithProviders(
+      <PodAccordions pod={bare} people={[]} onOpenClub={jest.fn()} onOpenProfile={jest.fn()} />,
+    );
     expect(screen.queryByText('Place charges')).toBeNull();
     expect(screen.queryByText('Payment terms')).toBeNull();
     fireEvent.press(screen.getByTestId('accordion-about-header')); // collapse the default-open section
@@ -76,8 +85,15 @@ describe('PodSections', () => {
         <ChipList items={[]} emptyText="none-empty" tint="#ffffff" />
         <HostsSection hosts={['Asha']} />
         <HostsSection hosts={[]} />
-        <AttendeesSection going={2} spots={5} />
-        <AttendeesSection going={2} spots={0} />
+        <AttendeesSection
+          people={[
+            { user_id: 'u1', full_name: 'Asha H', profile_photo: null, is_host: true },
+            { user_id: 'u2', full_name: null, profile_photo: 'https://cdn/p.jpg', is_host: false },
+          ]}
+          spots={5}
+          onOpenProfile={jest.fn()}
+        />
+        <AttendeesSection people={[]} spots={0} onOpenProfile={jest.fn()} />
         <ChargesSection charges={[{ label: 'Entry', amount: 100, note: 'x' }]} />
       </>,
     );

@@ -129,7 +129,6 @@ export default function ClubsPage() {
     }
   };
 
-  const subCats = (catData?.categories ?? []).filter((c: any) => c.level === 'SUB');
   const superCats = (catData?.categories ?? []).filter((c: any) => c.level === 'SUPER');
   const venues = venuesData?.venues ?? [];
   const allCats = catData?.categories ?? [];
@@ -162,7 +161,7 @@ export default function ClubsPage() {
         busy={busy}
         opError={opError}
         superCats={superCats}
-        subCats={subCats}
+        allCats={allCats}
         venues={venues}
       />
 

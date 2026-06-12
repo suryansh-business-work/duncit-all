@@ -2,6 +2,8 @@ import { useEffect, useRef, useState } from 'react';
 import { Animated, Image, StyleSheet } from 'react-native';
 import { VideoView, useVideoPlayer } from 'expo-video';
 
+import { USE_NATIVE_DRIVER } from '@/animations/motion';
+
 import { AuthLogo } from '@/components/AuthLogo';
 import { useBranding } from '@/hooks/useBranding';
 
@@ -44,12 +46,14 @@ export function SplashOverlay({ onDone }: Readonly<{ onDone?: () => void }>) {
 
   useEffect(() => {
     const timer = setTimeout(() => {
-      Animated.timing(opacity, { toValue: 0, duration: FADE_MS, useNativeDriver: true }).start(
-        () => {
-          setVisible(false);
-          onDone?.();
-        },
-      );
+      Animated.timing(opacity, {
+        toValue: 0,
+        duration: FADE_MS,
+        useNativeDriver: USE_NATIVE_DRIVER,
+      }).start(() => {
+        setVisible(false);
+        onDone?.();
+      });
     }, displayMs);
     return () => clearTimeout(timer);
   }, [opacity, onDone, displayMs]);
@@ -57,7 +61,10 @@ export function SplashOverlay({ onDone }: Readonly<{ onDone?: () => void }>) {
   if (!visible) return null;
 
   return (
-    <Animated.View testID="splash-overlay" style={[styles.fill, { opacity }]} pointerEvents="none">
+    <Animated.View
+      testID="splash-overlay"
+      style={[styles.fill, { opacity, pointerEvents: 'none' }]}
+    >
       {isVideo ? <SplashVideo url={splashUrl} /> : null}
       {!isVideo && splashUrl ? (
         <Image

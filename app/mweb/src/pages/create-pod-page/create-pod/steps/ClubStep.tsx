@@ -2,6 +2,8 @@ import { Controller } from 'react-hook-form';
 import { Autocomplete, Stack, TextField, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
+import HashtagChipsField from '../fields/HashtagChipsField';
+import ClubPreview from '../ClubPreview';
 import type { CreatePodClub, CreatePodForm } from '../create-pod.types';
 
 interface Props {
@@ -69,7 +71,8 @@ export default function ClubStep({ form, clubs }: Readonly<Props>) {
           />
         )}
       />
-      <TextField label="Hashtags" fullWidth placeholder="#weekend #community" {...register('pod_hashtag_text')} />
+      <ClubPreview club={clubs.find((club) => club.id === form.watch('club_id')) ?? null} />
+      <HashtagChipsField form={form} />
     </Stack>
   );
 }

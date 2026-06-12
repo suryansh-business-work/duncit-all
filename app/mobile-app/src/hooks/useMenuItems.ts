@@ -12,12 +12,12 @@ export interface MenuItem {
   route: MenuRoute;
 }
 
-const PROFILE: MenuItem = { label: 'Profile', icon: 'person-outline', route: 'Profile' };
+// Home + Profile rows were removed on purpose: the logo already goes home and
+// the user-summary card opens the profile — mirrors mWeb's drawer.
 const SUPPORT: MenuItem = { label: 'Support', icon: 'support-agent', route: 'Support' };
 const FAQS: MenuItem = { label: 'FAQs', icon: 'help-outline', route: 'Faqs' };
 
 const studio = (yourX: MenuItem, verify: MenuRoute): MenuItem[] => [
-  PROFILE,
   yourX,
   SUPPORT,
   { label: 'Verification', icon: 'verified-user', route: verify },
@@ -50,8 +50,6 @@ export function useMenuItems(mode: StudioMode = 'USER'): { items: MenuItem[] } {
   }
   return {
     items: [
-      { label: 'Home', icon: 'home', route: 'Home' },
-      PROFILE,
       { label: 'Saved Items', icon: 'bookmark-border', route: 'Saved' },
       { label: 'Pod History', icon: 'history', route: 'PodHistory' },
       { label: 'Earn with Duncit', icon: 'volunteer-activism', route: 'Earn' },

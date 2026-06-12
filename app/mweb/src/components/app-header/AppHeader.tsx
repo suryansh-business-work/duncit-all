@@ -17,7 +17,7 @@ import SuperCategoryTabs from './SuperCategoryTabs';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import SurveyHeaderActions from './SurveyHeaderActions';
 import { useStudioMode } from '../../StudioModeContext';
-import { STUDIO_LABEL, resolveMode } from '../../studio-mode';
+import { STUDIO_HOME_PATH, STUDIO_LABEL, resolveMode } from '../../studio-mode';
 
 interface AppHeaderProps {
   minimal?: boolean;
@@ -124,42 +124,47 @@ export default function AppHeader({
           <SurveyHeaderActions onLogout={logout} />
         ) : (
           <>
-            <HeaderLocationButton
-              loading={loading}
-              hasData={!!data}
-              selectedLocationName={selectedLocation?.location_name}
-              selectedZoneName={selectedZoneName}
-              selectedCountryCode={selectedLocation?.country_code}
-              onClick={() => {
-                setDraftLocationId(selectedLocationId);
-                setDraftZone(selectedZoneName);
-                setLocDialogOpen(true);
-              }}
-            />
-            <LocationDialog
-              open={locDialogOpen}
-              onClose={() => setLocDialogOpen(false)}
-              locations={locations}
-              activeLocationIds={data?.activePodLocationIds ?? []}
-              draftLocationId={draftLocationId}
-              setDraftLocationId={setDraftLocationId}
-              draftZone={draftZone}
-              setDraftZone={setDraftZone}
-              onApply={() => {
-                onLocationChange(draftLocationId);
-                onZoneChange(draftZone);
-                setLocDialogOpen(false);
-              }}
-              onAutoApply={(locationId, zoneName) => {
-                setDraftLocationId(locationId);
-                setDraftZone(zoneName);
-                onLocationChange(locationId);
-                onZoneChange(zoneName);
-                setLocDialogOpen(false);
-              }}
-            />
+            {/* Studio modes (Host/Venue/ecomm) get a focused header — no location, no search. */}
+            {effectiveStudio === 'USER' && (
+              <>
+                <HeaderLocationButton
+                  loading={loading}
+                  hasData={!!data}
+                  selectedLocationName={selectedLocation?.location_name}
+                  selectedZoneName={selectedZoneName}
+                  selectedCountryCode={selectedLocation?.country_code}
+                  onClick={() => {
+                    setDraftLocationId(selectedLocationId);
+                    setDraftZone(selectedZoneName);
+                    setLocDialogOpen(true);
+                  }}
+                />
+                <LocationDialog
+                  open={locDialogOpen}
+                  onClose={() => setLocDialogOpen(false)}
+                  locations={locations}
+                  activeLocationIds={data?.activePodLocationIds ?? []}
+                  draftLocationId={draftLocationId}
+                  setDraftLocationId={setDraftLocationId}
+                  draftZone={draftZone}
+                  setDraftZone={setDraftZone}
+                  onApply={() => {
+                    onLocationChange(draftLocationId);
+                    onZoneChange(draftZone);
+                    setLocDialogOpen(false);
+                  }}
+                  onAutoApply={(locationId, zoneName) => {
+                    setDraftLocationId(locationId);
+                    setDraftZone(zoneName);
+                    onLocationChange(locationId);
+                    onZoneChange(zoneName);
+                    setLocDialogOpen(false);
+                  }}
+                />
 
-            <HeaderSearchButton locationId={selectedLocationId} zoneName={selectedZoneName} />
+                <HeaderSearchButton locationId={selectedLocationId} zoneName={selectedZoneName} />
+              </>
+            )}
             <HeaderNotificationsBell onToast={handleNotifToast} />
 
             <Tooltip title={me?.full_name ?? 'Account'}>
@@ -201,6 +206,8 @@ export default function AppHeader({
               onSelect={(next) => {
                 setStudioMode(next);
                 setStudioSwitchOpen(false);
+                // Jump straight to the selected role's dashboard (B3-2).
+                navigate(STUDIO_HOME_PATH[next]);
               }}
             />
           </>

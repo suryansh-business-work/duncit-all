@@ -1,0 +1,47 @@
+<mjml>
+  <mj-head>
+    <mj-title>A pod you joined was cancelled</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+      <mj-button background-color="#3b82f6" color="#ffffff" border-radius="8px" font-weight="700" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <mj-section padding="20px 0 0 0">
+      <mj-column>
+        <mj-image src="https://duncit.com/duncit-logo.svg" alt="Duncit" width="160px" align="center" padding="0" />
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="bold" color="#222">
+          Pod cancelled, {{name}}
+        </mj-text>
+        <mj-text font-size="14px" color="#555">
+          The host cancelled a pod you joined:
+        </mj-text>
+        <mj-text font-size="16px" color="#3b82f6" font-weight="bold">
+          {{pod_title}}
+        </mj-text>
+        <mj-text font-size="14px" color="#555">
+          Was scheduled for: {{when}}
+        </mj-text>
+        <mj-text font-size="14px" color="#d6455f" font-weight="bold">
+          Reason: {{reason}}
+        </mj-text>
+        <mj-text font-size="13px" color="#555">
+          {{refund_line}}
+        </mj-text>
+        <mj-text font-size="13px" color="#888">
+          Explore other pods near you anytime in the Duncit app.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="16px 0 24px 0">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. You're receiving this because you joined this pod on Duncit.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

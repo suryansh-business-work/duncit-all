@@ -20,7 +20,7 @@ jest.mock('expo-image-picker', () => ({
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, goBack: mockGoBack }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: mockGoBack }),
   useRoute: () => ({ params: { ticketId: 't1' } }),
 }));
 

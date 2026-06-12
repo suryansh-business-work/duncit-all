@@ -15,7 +15,7 @@ jest.mock('@/hooks/useChat');
 
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
 }));
 
 const mockedHomeData = useHomeData as jest.Mock;

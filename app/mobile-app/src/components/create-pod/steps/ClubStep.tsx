@@ -3,6 +3,8 @@ import { YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { ChipSelectField } from '../ChipSelectField';
+import { ClubPreview } from '../ClubPreview';
+import { HashtagChipsField } from '../HashtagChipsField';
 import { ClubSearchField } from '../ClubSearchField';
 import type { CreatePodClub, CreatePodForm } from '../create-pod.types';
 
@@ -50,12 +52,8 @@ export function ClubStep({ form, clubs }: Readonly<Props>) {
           />
         )}
       />
-      <FormTextField
-        control={control}
-        name="pod_hashtag_text"
-        label="Hashtags"
-        placeholder="#weekend #community"
-      />
+      <ClubPreview club={clubs.find((club) => club.id === form.watch('club_id')) ?? null} />
+      <HashtagChipsField form={form} />
     </YStack>
   );
 }

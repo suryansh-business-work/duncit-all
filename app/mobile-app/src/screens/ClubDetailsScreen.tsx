@@ -4,6 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
+import { useGoBack } from '@/hooks/useGoBack';
 import { AppBackground } from '@/components/AppBackground';
 import { ClubBody } from '@/components/details/ClubBody';
 import { DetailHero } from '@/components/details/DetailHero';
@@ -15,6 +16,7 @@ import type { RootStackParamList } from '@/navigation/types';
  * the club's upcoming pods. */
 export function ClubDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'ClubDetails'>>();
   const { width } = useWindowDimensions();
   const { clubId } = route.params;
@@ -31,7 +33,7 @@ export function ClubDetailsScreen() {
           <Text color="$muted" testID="club-details-error">
             This club is unavailable.
           </Text>
-          <XStack role="button" aria-label="Go back" onPress={() => navigation.goBack()}>
+          <XStack role="button" aria-label="Go back" onPress={goBack}>
             <Text color="$primary" fontWeight="900">
               Go back
             </Text>
@@ -39,10 +41,7 @@ export function ClubDetailsScreen() {
         </YStack>
       ) : (
         <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 110 }}>
-          <DetailHero
-            media={club.club_feature_images_and_videos}
-            onBack={() => navigation.goBack()}
-          />
+          <DetailHero media={club.club_feature_images_and_videos} onBack={goBack} />
           <Reveal>
             <ClubBody
               club={club}

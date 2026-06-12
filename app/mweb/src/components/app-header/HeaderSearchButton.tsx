@@ -72,6 +72,9 @@ export default function HeaderSearchButton({ locationId, zoneName }: Readonly<Pr
         onClose={close}
         fullWidth
         maxWidth="sm"
+        // MUI restores focus to the opener by default, which defeats the
+        // TextField's autoFocus — disable it so the input focuses on open.
+        disableRestoreFocus
         sx={{ '& .MuiDialog-container': { alignItems: 'flex-start' } }}
         PaperProps={{ sx: { mt: { xs: 0, sm: 6 }, borderRadius: { xs: 0, sm: 3 } } }}
       >

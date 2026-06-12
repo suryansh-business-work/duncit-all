@@ -39,7 +39,7 @@ jest.mock('@/hooks/usePolicies', () => ({
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: mockGoBack, navigate: mockNavigate }),
+  useNavigation: () => ({ canGoBack: () => true, goBack: mockGoBack, navigate: mockNavigate }),
   useRoute: () => ({ params: { podId: 'p1', title: 'Pod 1' } }),
   useFocusEffect: (cb: () => void) => cb(),
 }));
@@ -56,7 +56,8 @@ const pod = {
   pod_hosts_id: [],
   host_names: ['Asha'],
   pod_attendees: ['u1'],
-  pod_date_time: '2026-06-12T18:30:00.000Z',
+  // Always in the future so the expired-pod checkout guard never trips.
+  pod_date_time: new Date(Date.now() + 86_400_000).toISOString(),
   pod_end_date_time: null,
   pod_mode: 'PHYSICAL',
   meeting_platform: null,
@@ -91,6 +92,7 @@ const podData = {
   location: null,
   viewerId: 'me',
   membershipState: null,
+  people: [],
   refetch: jest.fn().mockResolvedValue(undefined),
 };
 
@@ -226,6 +228,15 @@ describe('PodDetailsScreen', () => {
     fireEvent.press(screen.getByTestId('pod-like-btn'));
     fireEvent.press(screen.getByTestId('pod-comment-btn'));
     expect(screen.getByTestId('pod-comments-sheet')).toBeOnTheScreen();
+  });
+
+  it('opens an attendee profile from the attendees avatar group', () => {
+    mockedPod.mockReturnValue({ ...podData, savedInitially: false, isLoading: false });
+    renderWithProviders(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('accordion-attendees-header'));
+    fireEvent.press(screen.getByTestId('attendees-avatar-group'));
+    fireEvent.press(screen.getByTestId('attendee-row-u1'));
+    expect(mockNavigate).toHaveBeenCalledWith('PublicProfile', { userId: 'u1' });
   });
 
   it('books a (free) pod via the footer CTA', () => {

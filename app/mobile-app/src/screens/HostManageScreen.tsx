@@ -7,6 +7,7 @@ import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StackScreen } from '@/components/StackScreen';
 import { DraftDeleteConfirm } from '@/components/host-manage/DraftDeleteConfirm';
+import { HostPodsSection } from '@/components/host-manage/HostPodsSection';
 import { STEP_TITLES } from '@/components/create-pod';
 import { useHostDrafts } from '@/hooks/useHostDrafts';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -47,6 +48,8 @@ export function HostManageScreen() {
             label="Create a Pod"
             onPress={() => navigation.navigate('CreatePod')}
           />
+
+          <HostPodsSection />
 
           <Text fontSize={16} fontWeight="900" color="$color">
             Draft pods

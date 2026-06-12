@@ -15,7 +15,7 @@ jest.mock('expo-image-picker', () => ({
 
 const mockGoBack = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: mockGoBack }),
+  useNavigation: () => ({ canGoBack: () => true, goBack: mockGoBack }),
   useRoute: () => ({ params: { podId: 'p1', title: 'Coffee Chat' } }),
 }));
 

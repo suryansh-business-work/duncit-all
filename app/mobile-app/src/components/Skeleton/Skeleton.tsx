@@ -1,6 +1,8 @@
 import { useEffect, useRef } from 'react';
 import { Animated, type DimensionValue, type ViewStyle } from 'react-native';
 
+import { USE_NATIVE_DRIVER } from '@/animations/motion';
+
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface SkeletonProps {
@@ -25,8 +27,16 @@ export function Skeleton({
   useEffect(() => {
     const loop = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 0.85, duration: 750, useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 0.35, duration: 750, useNativeDriver: true }),
+        Animated.timing(opacity, {
+          toValue: 0.85,
+          duration: 750,
+          useNativeDriver: USE_NATIVE_DRIVER,
+        }),
+        Animated.timing(opacity, {
+          toValue: 0.35,
+          duration: 750,
+          useNativeDriver: USE_NATIVE_DRIVER,
+        }),
       ]),
     );
     loop.start();

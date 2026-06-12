@@ -1,7 +1,5 @@
 import { JSX } from 'react';
 import { useNavigate } from 'react-router-dom';
-import HomeIcon from '@mui/icons-material/Home';
-import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import HistoryIcon from '@mui/icons-material/History';
 import DashboardIcon from '@mui/icons-material/Dashboard';
@@ -43,11 +41,11 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
     navigate(to);
   };
 
-  const profile: MenuItem = { label: 'Profile', icon: <PersonOutlineIcon {...sz} />, onClick: go('/profile') };
+  // Home + Profile rows were removed on purpose: the logo already goes home and
+  // the user-summary card opens the profile.
   const support: MenuItem = { label: 'Support', icon: <SupportAgentIcon {...sz} />, onClick: go('/support') };
   const faqs: MenuItem = { label: 'FAQs', icon: <HelpOutlineIcon {...sz} />, onClick: go('/faqs') };
   const studio = (yourX: MenuItem, verifyTo: string): MenuItem[] => [
-    profile,
     yourX,
     support,
     { label: 'Verification', icon: <VerifiedUserIcon {...sz} />, onClick: go(verifyTo) },
@@ -65,8 +63,6 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
   }
 
   const items: MenuItem[] = [
-    { label: 'Home', icon: <HomeIcon {...sz} />, onClick: go('/') },
-    profile,
     { label: 'Saved Items', icon: <BookmarkBorderIcon {...sz} />, onClick: go('/saved') },
     { label: 'Pod History', icon: <HistoryIcon {...sz} />, onClick: go('/pod-history') },
     { label: 'Earn with Duncit', icon: <VolunteerActivismIcon {...sz} />, onClick: go('/earn') },

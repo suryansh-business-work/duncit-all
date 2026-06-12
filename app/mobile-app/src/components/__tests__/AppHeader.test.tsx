@@ -7,7 +7,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 const mockNavigate = jest.fn();
 const mockFetch = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
 }));
 jest.mock('@/stores/home.store', () => ({
   useHomeStore: { getState: () => ({ fetch: mockFetch }) },
@@ -78,6 +78,14 @@ describe('AppHeader', () => {
   it('hides the search icon in minimal mode', () => {
     renderWithProviders(<AppHeader minimal />);
     expect(screen.queryByTestId('header-search')).toBeNull();
+  });
+
+  it('hides search + location in a studio mode (focused header)', () => {
+    useStudioModeStore.setState({ mode: 'HOST' });
+    renderWithProviders(<AppHeader />);
+    expect(screen.queryByTestId('header-search')).toBeNull();
+    expect(screen.queryByTestId('location-button')).toBeNull();
+    expect(screen.getByTestId('header-studio-badge')).toBeOnTheScreen();
   });
 
   it('treats a missing user as no roles, so any persisted studio falls back to User', () => {

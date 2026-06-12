@@ -8,7 +8,7 @@ const mockOpenPod = jest.fn();
 jest.mock('@/hooks/useDetailNav', () => ({ useDetailNav: () => ({ openPod: mockOpenPod }) }));
 jest.mock('@/hooks/usePodSearch', () => ({ usePodSearch: jest.fn() }));
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: jest.fn(), goBack: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: jest.fn(), goBack: jest.fn() }),
 }));
 
 const mockedSearch = usePodSearch as jest.Mock;

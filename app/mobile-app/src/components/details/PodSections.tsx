@@ -4,6 +4,8 @@ import { Text, XStack, YStack } from 'tamagui';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
+export { AttendeesSection, buildAttendeePeople } from './AttendeesSection';
+
 /** A wrapped list of pill chips, or an empty hint. */
 export function ChipList({
   items,
@@ -73,24 +75,6 @@ export function HostsSection({ hosts }: Readonly<{ hosts: string[] }>) {
           </Text>
         </XStack>
       ))}
-    </YStack>
-  );
-}
-
-/** Attendees — "going / spots" + a progress bar. */
-export function AttendeesSection({ going, spots }: Readonly<{ going: number; spots: number }>) {
-  const pct = spots > 0 ? Math.min(100, Math.round((going / spots) * 100)) : 0;
-  return (
-    <YStack gap={8}>
-      <Text fontSize={13.5} fontWeight="700" color="$color">
-        {going}
-        {spots > 0 ? ` / ${spots}` : ''} going
-      </Text>
-      {spots > 0 ? (
-        <YStack height={8} borderRadius={4} backgroundColor="$background" overflow="hidden">
-          <YStack height={8} width={`${pct}%`} backgroundColor="$primary" />
-        </YStack>
-      ) : null}
     </YStack>
   );
 }

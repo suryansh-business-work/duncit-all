@@ -13,11 +13,13 @@ const future = (hours = 24) => new Date(Date.now() + hours * 3_600_000);
 
 const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => ({
   ...blankCreatePodForm,
+  location_id: 'loc-1',
   pod_title: 'Sunday community hike',
   club_id: 'club-1',
   venue_id: 'venue-1',
   pod_description: 'A relaxed group hike around the lake.',
   pod_date_time: future(),
+  media_text: 'https://cdn/img.jpg',
   ...over,
 });
 
@@ -74,9 +76,23 @@ describe('createPodSchema', () => {
     ).toBe(true);
   });
 
+  it('requires at least one image URL in the media list', () => {
+    expect(issuesOf(valid({ media_text: '' }))).toContain('media_text');
+    expect(issuesOf(valid({ media_text: 'https://cdn/clip.mp4' }))).toContain('media_text');
+    expect(
+      createPodSchema.safeParse(valid({ media_text: 'https://cdn/clip.mp4\nhttps://cdn/img.jpg' }))
+        .success,
+    ).toBe(true);
+  });
+
+  it('requires a location for step 1', () => {
+    expect(issuesOf(valid({ location_id: '' }))).toContain('location_id');
+  });
+
   it('exposes one field group and title per step', () => {
     expect(STEP_FIELDS).toHaveLength(STEP_TITLES.length);
-    expect(STEP_TITLES).toHaveLength(7);
+    expect(STEP_TITLES).toHaveLength(8);
+    expect(STEP_TITLES[0]).toBe('Where to Host');
   });
 });
 

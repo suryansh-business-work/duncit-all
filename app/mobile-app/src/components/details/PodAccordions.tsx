@@ -2,7 +2,7 @@ import { useMemo, useState, type ComponentProps, type ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import type { PodDetail } from '@/hooks/useDetails';
+import type { PodDetail, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { podOccurrenceLabel, podPriceLabel } from '@/utils/pod-format';
 import { Accordion } from '@/components/details/Accordion';
@@ -10,6 +10,7 @@ import { PodClubCard } from '@/components/details/PodClubCard';
 import {
   AboutSection,
   AttendeesSection,
+  buildAttendeePeople,
   ChargesSection,
   ChipList,
   HostsSection,
@@ -28,13 +29,21 @@ interface Section {
  * RN port of mWeb's PodDetailAccordions. */
 export function PodAccordions({
   pod,
+  people,
   onOpenClub,
-}: Readonly<{ pod: PodDetail; onOpenClub: () => void }>) {
+  onOpenProfile,
+}: Readonly<{
+  pod: PodDetail;
+  people: PodPerson[];
+  onOpenClub: () => void;
+  onOpenProfile: (userId: string) => void;
+}>) {
   const { primary } = useThemeColors();
 
   const sections: Section[] = useMemo(() => {
     const charges = pod.place_charges ?? [];
     const terms = pod.payment_terms?.trim();
+    const attendeePeople = buildAttendeePeople(people, pod.pod_attendees, pod.pod_hosts_id);
     const list: Section[] = [
       { id: 'about', title: 'About this pod', icon: 'info', content: <AboutSection pod={pod} /> },
       {
@@ -82,7 +91,13 @@ export function PodAccordions({
         id: 'attendees',
         title: 'Attendees',
         icon: 'groups',
-        content: <AttendeesSection going={pod.pod_attendees.length} spots={pod.no_of_spots} />,
+        content: (
+          <AttendeesSection
+            people={attendeePeople}
+            spots={pod.no_of_spots}
+            onOpenProfile={onOpenProfile}
+          />
+        ),
       },
       {
         id: 'perks',
@@ -133,7 +148,7 @@ export function PodAccordions({
       });
     }
     return list;
-  }, [pod, onOpenClub, primary]);
+  }, [pod, people, onOpenClub, onOpenProfile, primary]);
 
   const [open, setOpen] = useState<Set<string>>(new Set(['about']));
   const toggle = (id: string) =>

@@ -6,10 +6,13 @@ import {
   MobileNotificationsDocument,
 } from '@/graphql/notification';
 import { graphqlRequest } from '@/services/graphql.client';
+import { displayLocalNotification } from '@/services/local-notifications';
 import { useNotifications } from '@/hooks/useNotifications';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
+jest.mock('@/services/local-notifications', () => ({ displayLocalNotification: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
+const mockDisplay = displayLocalNotification as jest.Mock;
 
 const feed = {
   myNotifications: [
@@ -28,7 +31,10 @@ function routeRequest(doc: unknown) {
   return Promise.resolve(true);
 }
 
-beforeEach(() => mockRequest.mockReset().mockImplementation(routeRequest));
+beforeEach(() => {
+  mockRequest.mockReset().mockImplementation(routeRequest);
+  mockDisplay.mockReset().mockResolvedValue(true);
+});
 
 describe('useNotifications', () => {
   it('loads notifications + unread count', async () => {
@@ -77,5 +83,69 @@ describe('useNotifications', () => {
     expect(mockRequest).toHaveBeenCalledWith(MobileMarkAllNotificationsReadDocument, undefined, {
       auth: true,
     });
+  });
+});
+
+describe('useNotifications → device notifications (Notifee)', () => {
+  it('surfaces only newly arrived unread items, never the first load', async () => {
+    const { result } = renderHook(() => useNotifications());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    // First load only seeds the seen-set.
+    expect(mockDisplay).not.toHaveBeenCalled();
+
+    mockRequest.mockImplementation((doc: unknown) => {
+      if (doc === MobileNotificationsDocument) {
+        return Promise.resolve({
+          myNotifications: [
+            ...feed.myNotifications,
+            {
+              id: 'n2',
+              read_at: null,
+              created_at: '2026-06-02',
+              notification: { id: 'b', title: 'Fresh', body: 'New body' },
+            },
+            {
+              id: 'n3',
+              read_at: '2026-06-02',
+              created_at: '2026-06-02',
+              notification: { id: 'c', title: 'Read', body: 'Old' },
+            },
+          ],
+          myUnreadNotificationCount: 2,
+        });
+      }
+      return Promise.resolve(true);
+    });
+    await act(async () => {
+      await result.current.refetch();
+    });
+    expect(mockDisplay).toHaveBeenCalledTimes(1);
+    expect(mockDisplay).toHaveBeenCalledWith({ id: 'n2', title: 'Fresh', body: 'New body' });
+  });
+
+  it('swallows a display failure', async () => {
+    const { result } = renderHook(() => useNotifications());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    mockDisplay.mockRejectedValue(new Error('no permission'));
+    mockRequest.mockImplementation((doc: unknown) => {
+      if (doc === MobileNotificationsDocument) {
+        return Promise.resolve({
+          myNotifications: [
+            {
+              id: 'n9',
+              read_at: null,
+              created_at: '2026-06-02',
+              notification: { id: 'z', title: 'X', body: 'Y' },
+            },
+          ],
+          myUnreadNotificationCount: 1,
+        });
+      }
+      return Promise.resolve(true);
+    });
+    await act(async () => {
+      await result.current.refetch();
+    });
+    expect(mockDisplay).toHaveBeenCalled();
   });
 });

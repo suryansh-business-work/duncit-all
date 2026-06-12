@@ -97,7 +97,16 @@ export const podFormSchema: yup.ObjectSchema<Pick<PodForm,
     .required(),
   pod_info: yup.string().max(2000).default(''),
   pod_hashtag_text: yup.string().max(500).default(''),
-  media_text: yup.string().default(''),
+  media_text: yup
+    .string()
+    .default('')
+    .test('has-image', 'At least one image is required', (value) =>
+      (value ?? '')
+        .split('\n')
+        .map((line) => line.trim())
+        .filter(Boolean)
+        .some((url) => !/\.(mp4|mov|webm)$/i.test(url))
+    ),
   payment_terms: yup.string().max(4000).default(''),
   what_this_pod_offers: yup
     .array(yup.string().trim().min(1).max(40).required())

@@ -87,8 +87,7 @@ export function DetailHero({
       <LinearGradient
         colors={['rgba(0,0,0,0.5)', 'transparent', 'rgba(0,0,0,0.55)']}
         locations={[0, 0.4, 1]}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
       />
       <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, left: 0, right: 0 }}>
         <XStack justifyContent="space-between" alignItems="center" padding={12}>

@@ -10,6 +10,13 @@ import { LocationModel } from '@modules/platform/location/location.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
+import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { getFinanceSettings } from '@modules/finance/finance/finance.model';
+import {
+  sendPodCancelledEmail,
+  sendPodRefundEmail,
+  sendPodUpdatedEmail,
+} from '@services/email/email.service';
 
 const slugify = (s: string) =>
   s
@@ -157,6 +164,82 @@ function validateMeetingDetails(mode: PodMode, input: any, current?: any) {
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
+}
+
+/** Every pod must carry at least one IMAGE in its media gallery. */
+function validateHasImage(media: any[] | null | undefined) {
+  const hasImage = (media ?? []).some((m: any) => (m?.type ?? 'IMAGE') === 'IMAGE' && m?.url);
+  if (!hasImage) {
+    throw new GraphQLError('At least one pod image is required', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+}
+
+/** Subjects offered in the host's delete-pod reason dropdown (kept in sync with the apps). */
+export const POD_DELETE_REASON_SUBJECTS = [
+  'Event cancelled',
+  'Venue unavailable',
+  'Low attendance',
+  'Rescheduling',
+  'Other',
+] as const;
+
+const POD_DELETE_REASON_SET = new Set<string>(POD_DELETE_REASON_SUBJECTS);
+
+function buildDeleteReason(subject: string, note?: string | null): string {
+  const cleanSubject = (subject ?? '').trim();
+  const cleanNote = (note ?? '').trim();
+  if (!POD_DELETE_REASON_SET.has(cleanSubject)) {
+    throw new GraphQLError('Select a valid delete reason', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  if (cleanSubject === 'Other' && !cleanNote) {
+    throw new GraphQLError('Please describe the reason', {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+  return cleanNote ? `${cleanSubject} — ${cleanNote}` : cleanSubject;
+}
+
+/** Loads a pod and asserts the viewer is one of its hosts. */
+async function findHostedPod(id: string, userId: string) {
+  if (!Types.ObjectId.isValid(id)) {
+    throw new GraphQLError('Invalid pod id', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const doc = await PodModel.findById(id);
+  if (!doc) notFound();
+  const isHost = (doc!.pod_hosts_id ?? []).some((hostId: any) => String(hostId) === userId);
+  if (!isHost) {
+    throw new GraphQLError('Only the pod host can manage this pod', {
+      extensions: { code: 'FORBIDDEN' },
+    });
+  }
+  return doc!;
+}
+
+const podWhenLabel = (doc: any) =>
+  doc.pod_date_time
+    ? new Date(doc.pod_date_time).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })
+    : '—';
+
+/** Attendee users (excluding the acting host) with an email on file. */
+async function podAudience(doc: any, excludeUserId: string) {
+  const ids = (doc.pod_attendees ?? [])
+    .map(String)
+    .filter((id: string) => id !== excludeUserId);
+  if (ids.length === 0) return [];
+  const users = await UserModel.find({ _id: { $in: ids } })
+    .select('profile.first_name profile.last_name auth.email')
+    .lean();
+  return users
+    .map((u: any) => ({
+      user_id: String(u._id),
+      email: u.auth?.email ?? '',
+      name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'there',
+    }))
+    .filter((u: { email: string }) => !!u.email);
 }
 
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
@@ -397,6 +480,7 @@ export const podService = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
+    validateHasImage(input.pod_images_and_videos);
     const podMode = normalizePodMode(input.pod_mode);
     validateAmount(input.pod_type, input.pod_amount ?? 0);
 
@@ -614,6 +698,128 @@ export const podService = {
     await doc.save();
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
+  },
+
+  /** Host self-service edit — only title, description and media (2A). */
+  async hostUpdate(id: string, userId: string, input: any) {
+    const doc = await findHostedPod(id, userId);
+    const title = (input.pod_title ?? '').trim();
+    if (title.length < 3) {
+      throw new GraphQLError('Title is too short', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const description = (input.pod_description ?? '').trim();
+    if (!description) {
+      throw new GraphQLError('Description is required', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    validateHasImage(input.pod_images_and_videos);
+    doc.pod_title = title;
+    doc.pod_description = description;
+    doc.pod_images_and_videos = (input.pod_images_and_videos ?? []).map((m: any) => ({
+      url: m.url,
+      type: m.type === 'VIDEO' ? 'VIDEO' : 'IMAGE',
+    })) as any;
+    await doc.save();
+
+    // Best-effort: tell every attendee the pod changed.
+    try {
+      const audience = await podAudience(doc, userId);
+      const when = podWhenLabel(doc);
+      await Promise.allSettled(
+        audience.map((user) =>
+          sendPodUpdatedEmail({ to: user.email, name: user.name, pod_title: doc.pod_title, when })
+        )
+      );
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[pod] update emails failed:', err);
+    }
+
+    const slugMap = await loadClubSlugMap([doc]);
+    return toPub(doc, slugMap);
+  },
+
+  /** What deleting this pod means: other attendees + refundable paid amount (2B). */
+  async hostDeleteImpact(id: string, userId: string) {
+    const doc = await findHostedPod(id, userId);
+    const hostIds = new Set((doc.pod_hosts_id ?? []).map(String));
+    const others = (doc.pod_attendees ?? []).map(String).filter((uid: string) => !hostIds.has(uid));
+    const payments = await PaymentModel.find({ pod_id: doc._id, status: 'SUCCESS' })
+      .select('total currency_symbol')
+      .lean();
+    const settings = payments.length === 0 ? await getFinanceSettings() : null;
+    return {
+      other_attendee_count: others.length,
+      refundable_payment_count: payments.length,
+      refund_total: payments.reduce((sum: number, p: any) => sum + (p.total ?? 0), 0),
+      currency_symbol: payments[0]?.currency_symbol ?? settings?.currency_symbol ?? '₹',
+    };
+  },
+
+  /**
+   * Host self-service delete (2B): mandatory reason, refunds every SUCCESS
+   * payment (visible in the Finance portal's payment logs), and emails the
+   * audience — a cancellation note to each attendee and a refund note to payers.
+   */
+  async hostRemove(id: string, userId: string, reasonSubject: string, reasonNote?: string | null) {
+    const doc = await findHostedPod(id, userId);
+    const reason = buildDeleteReason(reasonSubject, reasonNote);
+    const when = podWhenLabel(doc);
+    const podTitle = doc.pod_title;
+
+    const payments = await PaymentModel.find({ pod_id: doc._id, status: 'SUCCESS' });
+    const refundedByUser = new Map<string, any>();
+    for (const payment of payments) {
+      payment.status = 'REFUNDED';
+      (payment as any).metadata = {
+        ...((payment as any).metadata || {}),
+        refund_reason: reason,
+        refunded_at: new Date().toISOString(),
+        refund_initiated_by: 'HOST',
+        refund_initiator_id: userId,
+      };
+      payment.markModified('metadata');
+      await payment.save();
+      refundedByUser.set(String(payment.user_id), payment);
+    }
+
+    const audience = await podAudience(doc, userId);
+    await this.remove(id);
+
+    // Best-effort after the delete commits: cancellation + refund emails.
+    try {
+      await Promise.allSettled([
+        ...audience.map((user) => {
+          const payment = refundedByUser.get(user.user_id);
+          const refundLine = payment
+            ? `Your payment of ${payment.currency_symbol}${payment.total} will be refunded.`
+            : '';
+          return sendPodCancelledEmail({
+            to: user.email,
+            name: user.name,
+            pod_title: podTitle,
+            when,
+            reason,
+            refund_line: refundLine,
+          });
+        }),
+        ...payments.map((payment) =>
+          sendPodRefundEmail({
+            to: payment.user_email,
+            name: payment.user_name,
+            pod_title: podTitle,
+            amount: `${payment.currency_symbol}${payment.total}`,
+            reason,
+          })
+        ),
+      ]);
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[pod] delete emails failed:', err);
+    }
+
+    return true;
   },
 
   async addStatus(id: string, viewerId: string, media: any, isAdmin = false) {

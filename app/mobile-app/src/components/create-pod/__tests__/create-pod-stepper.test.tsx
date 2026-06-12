@@ -4,13 +4,24 @@ import { CreatePodStepper } from '@/components/create-pod/CreatePodStepper';
 import { blankCreatePodForm } from '@/components/create-pod/create-pod.types';
 import { renderWithProviders } from '@/utils/test-utils';
 
-const futureText = (() => {
-  const date = new Date(Date.now() + 24 * 3_600_000);
+const toText = (date: Date) => {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
-})();
+};
+const futureText = toText(new Date(Date.now() + 24 * 3_600_000));
+const futureEndText = toText(new Date(Date.now() + 26 * 3_600_000));
 
-const clubs = [{ id: 'c1', club_name: 'Runners', meetup_venues_id: ['v1'] }];
+const clubs = [
+  { id: 'c1', club_name: 'Runners', meetup_venues_id: ['v1'] },
+  // No linked venues — always listed so hosts never hit a dead end.
+  { id: 'c2', club_name: 'Writers', meetup_venues_id: [] },
+  // All venues in another city — filtered out for l1.
+  { id: 'c3', club_name: 'Surfers', meetup_venues_id: ['v9'] },
+  // No meetup_venues_id at all — also always listed.
+  { id: 'c4', club_name: 'Gamers' },
+];
+const locations = [{ id: 'l1', location_name: 'Pune', city: 'Pune' }];
+const venueLocations = [{ id: 'v1', location_id: 'l1' }];
 const venues = [
   {
     id: 'v1',
@@ -34,6 +45,8 @@ const setup = (over: Record<string, unknown> = {}) => {
       initialStep={0}
       initialDraftId={null}
       clubs={clubs}
+      locations={locations}
+      venueLocations={venueLocations}
       venues={venues}
       products={products}
       onSaveDraft={onSaveDraft}
@@ -46,8 +59,12 @@ const setup = (over: Record<string, unknown> = {}) => {
 
 const press = (testID: string) => fireEvent.press(screen.getByTestId(testID));
 
-// Drives steps 1→7. Physical picks a venue; virtual fills the meeting link.
+// Drives steps 1→8. Picks the host city, then the club; physical picks a
+// venue; virtual fills the meeting link.
 async function fillToStep7(mode: 'PHYSICAL' | 'VIRTUAL') {
+  press('create-pod-location-l1');
+  press('create-pod-submit');
+  await screen.findByTestId('field-pod_title');
   fireEvent.changeText(screen.getByTestId('field-pod_title'), 'Sunday community hike');
   press('create-pod-club-c1');
   if (mode === 'VIRTUAL') press('create-pod-mode-VIRTUAL');
@@ -66,6 +83,7 @@ async function fillToStep7(mode: 'PHYSICAL' | 'VIRTUAL') {
     screen.getByTestId('field-pod_description'),
     'A relaxed group hike around the lake.',
   );
+  fireEvent.changeText(screen.getByTestId('field-media_text'), 'https://cdn/img.jpg');
   press('create-pod-submit');
   await screen.findByTestId('create-pod-offers-input');
   press('create-pod-submit');
@@ -81,11 +99,19 @@ describe('CreatePodStepper', () => {
     const { onPublish } = setup();
     expect(screen.getByTestId('create-pod-progress')).toBeOnTheScreen();
 
+    // Step 1: pick the host city (clubs load for it on the next step).
+    press('create-pod-location-l1');
+    press('create-pod-submit');
+    await screen.findByTestId('field-pod_title');
+    // Location filter: c1 (venue in l1) + c2 (no venues) stay; c3 drops out.
+    expect(screen.getByTestId('create-pod-club-c2')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-club-c4')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-club-c3')).toBeNull();
     fireEvent.changeText(screen.getByTestId('field-pod_title'), 'Sunday community hike');
     press('create-pod-club-c1');
     press('create-pod-submit');
     await screen.findByTestId('create-pod-venue-v1');
-    // Back returns to step 1, then forward again.
+    // Back returns to the club step, then forward again.
     press('create-pod-back');
     await screen.findByTestId('field-pod_title');
     press('create-pod-submit');
@@ -93,9 +119,13 @@ describe('CreatePodStepper', () => {
 
     press('create-pod-venue-v1');
     fireEvent.changeText(screen.getByTestId('field-pod_date_time_text'), futureText);
+    // Filling the end shows the live total-duration line (B3-8).
+    fireEvent.changeText(screen.getByTestId('field-pod_end_date_time_text'), futureEndText);
+    expect(screen.getByTestId('pod-duration')).toBeOnTheScreen();
     press('create-pod-submit');
     await screen.findByTestId('field-pod_description');
     fireEvent.changeText(screen.getByTestId('field-pod_description'), 'A relaxed hike.');
+    fireEvent.changeText(screen.getByTestId('field-media_text'), 'https://cdn/img.jpg');
     press('create-pod-submit');
     await screen.findByTestId('create-pod-offers-input');
     press('create-pod-submit');
@@ -127,6 +157,13 @@ describe('CreatePodStepper', () => {
 
   it('blocks Next while the current step is invalid', async () => {
     setup();
+    // Step 1: no location picked yet.
+    press('create-pod-submit');
+    await waitFor(() => expect(screen.getByTestId('create-pod-location-error')).toBeOnTheScreen());
+    press('create-pod-location-l1');
+    press('create-pod-submit');
+    // Step 2: club details missing.
+    await screen.findByTestId('field-pod_title');
     press('create-pod-submit');
     await waitFor(() => expect(screen.getByTestId('pod_title-error')).toBeOnTheScreen());
     expect(screen.getByTestId('create-pod-club-error')).toBeOnTheScreen();
@@ -153,6 +190,9 @@ describe('CreatePodStepper', () => {
 
   it('keeps navigating even when a draft autosave fails', async () => {
     setup({ onSaveDraft: jest.fn().mockRejectedValue(new Error('save failed')) });
+    press('create-pod-location-l1');
+    press('create-pod-submit');
+    await screen.findByTestId('field-pod_title');
     fireEvent.changeText(screen.getByTestId('field-pod_title'), 'Sunday community hike');
     press('create-pod-club-c1');
     press('create-pod-submit');
@@ -166,9 +206,11 @@ describe('CreatePodStepper', () => {
       renderWithProviders(
         <CreatePodStepper
           initialValues={blankCreatePodForm}
-          initialStep={0}
+          initialStep={1}
           initialDraftId={null}
           clubs={clubs}
+          locations={locations}
+          venueLocations={venueLocations}
           venues={venues}
           products={products}
           onSaveDraft={onSaveDraft}
@@ -193,7 +235,7 @@ describe('CreatePodStepper', () => {
   });
 
   it('resumes at the provided step', () => {
-    setup({ initialStep: 2, initialValues: { ...blankCreatePodForm, pod_title: 'Resumed' } });
+    setup({ initialStep: 3, initialValues: { ...blankCreatePodForm, pod_title: 'Resumed' } });
     expect(screen.getByTestId('field-pod_description')).toBeOnTheScreen();
   });
 });

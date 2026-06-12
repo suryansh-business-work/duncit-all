@@ -6,9 +6,15 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, goBack: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
 }));
 jest.mock('@/hooks/useHostDrafts', () => ({ useHostDrafts: jest.fn() }));
+// The hosted-pods section is unit-tested on its own; keep this screen test focused.
+jest.mock('@/components/host-manage/HostPodsSection', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View: V } = require('react-native');
+  return { HostPodsSection: () => <V testID="host-pods-section" /> };
+});
 const mockedUse = useHostDrafts as jest.Mock;
 
 const drafts = [

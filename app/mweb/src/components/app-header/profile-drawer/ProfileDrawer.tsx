@@ -19,7 +19,7 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../../ColorModeContext';
 import { useStudioMode } from '../../../StudioModeContext';
-import { STUDIO_LABEL, availableModes, resolveMode } from '../../../studio-mode';
+import { STUDIO_HOME_PATH, STUDIO_LABEL, availableModes, resolveMode } from '../../../studio-mode';
 import DrawerFooter from './DrawerFooter';
 import MenuItemRow from './MenuItem';
 import PoliciesSection from './PoliciesSection';
@@ -86,10 +86,19 @@ export default function ProfileDrawer({
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
-        <UserSummary me={me} roles={roles} onClick={openProfile} />
+        <UserSummary me={me} onClick={openProfile} />
         {canSwitch && (
           <List sx={{ py: 0.5 }}>
-            <ListItemButton onClick={() => setSwitchOpen(true)} sx={{ mx: 1.25, borderRadius: 2.5 }}>
+            <ListItemButton
+              onClick={() => setSwitchOpen(true)}
+              sx={{
+                mx: 1.25,
+                borderRadius: 2.5,
+                border: 1,
+                borderColor: 'divider',
+                '&:hover': { borderColor: 'primary.main' },
+              }}
+            >
               <ListItemIcon sx={{ minWidth: 36, color: 'primary.main' }}>
                 <SwapHorizIcon fontSize="small" />
               </ListItemIcon>
@@ -141,6 +150,9 @@ export default function ProfileDrawer({
         onSelect={(next) => {
           setMode(next);
           setSwitchOpen(false);
+          onClose();
+          // Jump straight to the selected role's dashboard (B3-2).
+          navigate(STUDIO_HOME_PATH[next]);
         }}
       />
     </Drawer>

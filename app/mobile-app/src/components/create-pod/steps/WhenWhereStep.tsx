@@ -1,9 +1,12 @@
 import { Controller } from 'react-hook-form';
-import { YStack } from 'tamagui';
+import { Text, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { MapEmbed } from '@/components/MapEmbed';
+import { formatDurationBetween } from '@/utils/date-format';
 import { ChipSelectField } from '../ChipSelectField';
+import { DateTimeField } from '../DateTimeField';
+import { parseDateTimeText } from '../create-pod.form';
 import type { CreatePodClub, CreatePodForm, CreatePodVenue } from '../create-pod.types';
 
 interface Props {
@@ -18,6 +21,11 @@ export function WhenWhereStep({ form, clubs, venues }: Readonly<Props>) {
   const mode = watch('pod_mode');
   const clubId = watch('club_id');
   const venueId = watch('venue_id');
+  // Live total duration once both ends are picked — identical to mWeb.
+  const duration = formatDurationBetween(
+    parseDateTimeText(watch('pod_date_time_text')),
+    parseDateTimeText(watch('pod_end_date_time_text')),
+  );
   const linkedVenueIds = new Set(clubs.find((club) => club.id === clubId)?.meetup_venues_id ?? []);
   const clubVenues = venues.filter((venue) => linkedVenueIds.has(venue.id));
   const selectedVenue = venues.find((venue) => venue.id === venueId);
@@ -66,18 +74,37 @@ export function WhenWhereStep({ form, clubs, venues }: Readonly<Props>) {
           <FormTextField control={control} name="meeting_notes" label="Meeting notes" multiline />
         </>
       )}
-      <FormTextField
+      <Controller
         control={control}
         name="pod_date_time_text"
-        label="Start (YYYY-MM-DD HH:mm)"
-        placeholder="2026-07-01 18:30"
+        render={({ field, fieldState }) => (
+          <DateTimeField
+            label="Start date & time"
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+            testID="pod_date_time_text"
+          />
+        )}
       />
-      <FormTextField
+      <Controller
         control={control}
         name="pod_end_date_time_text"
-        label="End (optional)"
-        placeholder="2026-07-01 20:30"
+        render={({ field, fieldState }) => (
+          <DateTimeField
+            label="End date & time (optional)"
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+            testID="pod_end_date_time_text"
+          />
+        )}
       />
+      {duration ? (
+        <Text testID="pod-duration" fontSize={12.5} fontWeight="800" color="$muted">
+          Total duration: {duration}
+        </Text>
+      ) : null}
     </YStack>
   );
 }

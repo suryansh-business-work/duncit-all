@@ -10,6 +10,8 @@ export interface StatusSlide {
   mediaType: string;
   caption?: string | null;
   createdAt: string;
+  /** When the status auto-expires (drives the "X remaining" countdown). */
+  expiresAt?: string | null;
 }
 
 export interface StatusGroup {
@@ -31,6 +33,7 @@ const toSlide = (post: StatusPost): StatusSlide => ({
   mediaType: post.media_type ?? 'IMAGE',
   caption: post.caption,
   createdAt: post.created_at,
+  expiresAt: post.expires_at,
 });
 
 /** Build one group per author, keeping every story as a chronological slide. */

@@ -12,9 +12,12 @@ import {
 import type {
   CreatePodClub,
   CreatePodFormValues,
+  CreatePodLocation,
   CreatePodProduct,
   CreatePodVenue,
+  VenueLocationRef,
 } from './create-pod.types';
+import LocationStep from './steps/LocationStep';
 import ClubStep from './steps/ClubStep';
 import WhenWhereStep from './steps/WhenWhereStep';
 import AboutStep from './steps/AboutStep';
@@ -30,19 +33,23 @@ interface Props {
   initialStep: number;
   initialDraftId: string | null;
   clubs: CreatePodClub[];
+  locations: CreatePodLocation[];
+  venueLocations: VenueLocationRef[];
   venues: CreatePodVenue[];
   products: CreatePodProduct[];
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;
   onPublish: (draftId: string, input: ReturnType<typeof buildCreatePodInput>) => Promise<void>;
 }
 
-/** 7-step host Create Pod stepper: per-step validation gates Next, the draft
+/** 8-step host Create Pod stepper: per-step validation gates Next, the draft
  * autosaves on a timer + every step change, and step 7 publishes the pod. */
 export default function CreatePodStepper({
   initialValues,
   initialStep,
   initialDraftId,
   clubs,
+  locations,
+  venueLocations,
   venues,
   products,
   onSaveDraft,
@@ -97,9 +104,24 @@ export default function CreatePodStepper({
     }
   });
 
+  // Clubs load for the picked location: a club qualifies when any of its
+  // meetup venues sits in that city (virtual pods see every club).
+  const locationId = form.watch('location_id');
+  const podMode = form.watch('pod_mode');
+  const venueLocationById = new Map(venueLocations.map((venue) => [venue.id, venue.location_id]));
+  const clubsForLocation =
+    podMode === 'VIRTUAL' || !locationId
+      ? clubs
+      : clubs.filter((club) => {
+          const venueIds = club.meetup_venues_id ?? [];
+          if (venueIds.length === 0) return true;
+          return venueIds.some((venueId) => venueLocationById.get(venueId) === locationId);
+        });
+
   const steps = [
-    <ClubStep key="club" form={form} clubs={clubs} />,
-    <WhenWhereStep key="when" form={form} clubs={clubs} venues={venues} />,
+    <LocationStep key="location" form={form} locations={locations} />,
+    <ClubStep key="club" form={form} clubs={clubsForLocation} />,
+    <WhenWhereStep key="when" form={form} clubs={clubsForLocation} venues={venues} />,
     <AboutStep key="about" form={form} />,
     <OffersStep key="offers" form={form} />,
     <PerksStep key="perks" form={form} />,

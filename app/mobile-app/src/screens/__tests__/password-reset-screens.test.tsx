@@ -15,7 +15,7 @@ jest.mock('@/hooks/useBranding', () => ({
 const mockNavigate = jest.fn();
 let mockRouteParams: { email: string } | undefined = { email: 'riya@duncit.com' };
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, goBack: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
   useRoute: () => ({ params: mockRouteParams }),
 }));
 

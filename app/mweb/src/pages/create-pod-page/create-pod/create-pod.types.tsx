@@ -30,6 +30,8 @@ export interface PodPlaceCharge {
 }
 
 export interface CreatePodFormValues {
+  /** City the host wants to run the pod in — filters the club list (step 1). */
+  location_id: string;
   pod_title: string;
   club_id: string;
   pod_mode: 'PHYSICAL' | 'VIRTUAL';
@@ -56,6 +58,7 @@ export interface CreatePodFormValues {
 }
 
 export const blankCreatePodForm: CreatePodFormValues = {
+  location_id: '',
   pod_title: '',
   club_id: '',
   pod_mode: 'PHYSICAL',
@@ -85,6 +88,20 @@ export interface CreatePodClub {
   id: string;
   club_name: string;
   meetup_venues_id?: string[] | null;
+  club_description?: string | null;
+  club_feature_images_and_videos?: { url: string; type?: string | null }[] | null;
+}
+
+export interface CreatePodLocation {
+  id: string;
+  location_name: string;
+  city?: string | null;
+}
+
+/** Venue id → location id pairs (from publicVenues) for the club-by-location filter. */
+export interface VenueLocationRef {
+  id: string;
+  location_id?: string | null;
 }
 
 export interface CreatePodVenue {

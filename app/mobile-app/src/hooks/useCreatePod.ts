@@ -79,6 +79,8 @@ export function useCreatePod(draftId?: string) {
   return {
     isHost: (data?.me?.roles ?? []).includes('HOST'),
     clubs: data?.clubs ?? [],
+    locations: data?.locations ?? [],
+    venueLocations: data?.publicVenues ?? [],
     venues: (data?.myVenues ?? []).filter(
       (venue) => venue.status === 'APPROVED' && venue.is_active,
     ),

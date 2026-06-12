@@ -270,6 +270,52 @@ export function sendMeetingCancelledEmail(opts: {
   });
 }
 
+export function sendPodUpdatedEmail(opts: {
+  to: string;
+  name: string;
+  pod_title: string;
+  when: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `Pod updated — ${opts.pod_title}`,
+    template: 'pod-updated',
+    vars: opts,
+  });
+}
+
+export function sendPodCancelledEmail(opts: {
+  to: string;
+  name: string;
+  pod_title: string;
+  when: string;
+  reason: string;
+  /** "Your payment of ₹X will be refunded." line; empty for free attendees. */
+  refund_line?: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `Pod cancelled — ${opts.pod_title}`,
+    template: 'pod-cancelled',
+    vars: { ...opts, refund_line: opts.refund_line ?? '' },
+  });
+}
+
+export function sendPodRefundEmail(opts: {
+  to: string;
+  name: string;
+  pod_title: string;
+  amount: string;
+  reason: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `Refund initiated — ${opts.pod_title}`,
+    template: 'pod-refund',
+    vars: opts,
+  });
+}
+
 export function sendMeetingScheduledAdminEmail(opts: {
   to: string;
   name: string;

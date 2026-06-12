@@ -14,7 +14,15 @@ import {
 const CREATE_POD_OPTIONS = gql`
   query CreatePodOptions {
     me { user_id roles }
-    clubs(filter: { is_active: true }) { id club_name meetup_venues_id }
+    clubs(filter: { is_active: true }) {
+      id
+      club_name
+      meetup_venues_id
+      club_description
+      club_feature_images_and_videos { url type }
+    }
+    locations { id location_name city }
+    publicVenues { id location_id }
     myVenues {
       id venue_name city locality status is_active
       address_line1 state postal_code country lat lng
@@ -50,6 +58,8 @@ export default function CreatePodPage() {
 
   const isHost = (options.data?.me?.roles ?? []).includes('HOST');
   const clubs = options.data?.clubs ?? [];
+  const locations = options.data?.locations ?? [];
+  const venueLocations = options.data?.publicVenues ?? [];
   const products = options.data?.availablePodProducts ?? [];
   const venues = (options.data?.myVenues ?? []).filter(
     (venue: any) => venue.status === 'APPROVED' && venue.is_active
@@ -98,6 +108,8 @@ export default function CreatePodPage() {
         initialStep={initialStep}
         initialDraftId={draft?.id ?? null}
         clubs={clubs}
+        locations={locations}
+        venueLocations={venueLocations}
         venues={venues}
         products={products}
         onSaveDraft={saveDraft}

@@ -1,4 +1,5 @@
 import { Stack, TextField } from '@mui/material';
+import MediaUrlsField from '../fields/MediaUrlsField';
 import type { CreatePodForm } from '../create-pod.types';
 
 interface Props {
@@ -32,14 +33,7 @@ export default function AboutStep({ form }: Readonly<Props>) {
         helperText="Logistics, what to bring, parking notes, etc."
         {...register('pod_info')}
       />
-      <TextField
-        label="Media URLs"
-        fullWidth
-        multiline
-        minRows={2}
-        helperText="One image or video URL per line."
-        {...register('media_text')}
-      />
+      <MediaUrlsField form={form} />
     </Stack>
   );
 }

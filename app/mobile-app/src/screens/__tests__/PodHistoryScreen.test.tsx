@@ -7,7 +7,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/hooks/usePodHistory', () => ({ usePodHistory: jest.fn() }));
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, goBack: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
 }));
 
 const mockedUsePodHistory = usePodHistory as jest.Mock;

@@ -18,7 +18,7 @@ jest.mock('@/hooks/useMyMeeting', () => ({
 const mockNavigate = jest.fn();
 let mockRouteParams: Record<string, string> | undefined = { userId: 'h1', venueId: 'v1' };
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, goBack: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
   useRoute: () => ({ params: mockRouteParams }),
 }));
 

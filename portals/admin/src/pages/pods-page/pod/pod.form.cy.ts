@@ -24,7 +24,7 @@ const base = {
   no_of_spots: 10,
   pod_info: '',
   pod_hashtag_text: '',
-  media_text: '',
+  media_text: 'https://cdn.example.com/pod.jpg',
   payment_terms: '',
   what_this_pod_offers: [],
   available_perks: [],
@@ -50,6 +50,17 @@ describe('podFormSchema', () => {
       .catch((e) => e);
     expect(error.name).toBe('ValidationError');
     expect(error.errors.join(' ')).toMatch(/meeting link|meeting url|select a venue/i);
+  });
+
+  it('requires at least one image in the media list', async () => {
+    const empty = await podFormSchema.validate({ ...base, media_text: '' }, { abortEarly: false }).catch((e) => e);
+    expect(empty.errors.join(' ')).toMatch(/at least one image/i);
+    const videoOnly = await podFormSchema
+      .validate({ ...base, media_text: 'https://cdn.example.com/clip.mp4' }, { abortEarly: false })
+      .catch((e) => e);
+    expect(videoOnly.errors.join(' ')).toMatch(/at least one image/i);
+    const mixed = ['https://cdn.example.com/clip.mp4', 'https://cdn.example.com/a.jpg'].join('\n');
+    await expect(podFormSchema.validate({ ...base, media_text: mixed })).resolves.toBeTruthy();
   });
 
   it('rejects FREE pod with non-zero amount', async () => {

@@ -8,7 +8,7 @@ const mockNavigate = jest.fn();
 const mockLogout = jest.fn();
 
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
 }));
 jest.mock('@/hooks/useLogout', () => ({ useLogout: () => mockLogout }));
 jest.mock('@/hooks/useMe', () => ({

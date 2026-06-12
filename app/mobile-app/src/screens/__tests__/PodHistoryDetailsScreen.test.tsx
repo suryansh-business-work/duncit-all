@@ -17,7 +17,7 @@ jest.mock('@/hooks/usePolicies', () => ({ usePolicy: jest.fn() }));
 const mockNavigate = jest.fn();
 let mockRouteParams: { membershipId: string } | undefined = { membershipId: 'm1' };
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, goBack: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
   useRoute: () => ({ params: mockRouteParams }),
 }));
 

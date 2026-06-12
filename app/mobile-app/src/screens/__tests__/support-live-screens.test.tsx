@@ -10,7 +10,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/hooks/useSupportPods', () => ({ useSupportPods: jest.fn() }));
 jest.mock('@/hooks/useBouncer', () => ({ useBouncer: jest.fn() }));
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: jest.fn(), navigate: jest.fn() }),
+  useNavigation: () => ({ canGoBack: () => true, goBack: jest.fn(), navigate: jest.fn() }),
 }));
 
 const mockedPods = useSupportPods as jest.Mock;

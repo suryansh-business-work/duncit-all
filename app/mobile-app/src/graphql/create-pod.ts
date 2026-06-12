@@ -11,6 +11,20 @@ export const CreatePodOptionsDocument = gql(`
       id
       club_name
       meetup_venues_id
+      club_description
+      club_feature_images_and_videos {
+        url
+        type
+      }
+    }
+    locations {
+      id
+      location_name
+      city
+    }
+    publicVenues {
+      id
+      location_id
     }
     myVenues {
       id

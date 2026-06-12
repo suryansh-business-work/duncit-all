@@ -19,6 +19,8 @@ export function CreatePodScreen() {
   const {
     isHost,
     clubs,
+    locations,
+    venueLocations,
     venues,
     products,
     isLoading,
@@ -56,6 +58,8 @@ export function CreatePodScreen() {
               initialStep={initialStep}
               initialDraftId={initialDraftId}
               clubs={clubs}
+              locations={locations}
+              venueLocations={venueLocations}
               venues={venues}
               products={products}
               onSaveDraft={saveDraft}

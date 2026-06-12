@@ -89,7 +89,9 @@ describe('PodAccordions toggle', () => {
       place_charges: null,
       payment_terms: 'Pay upfront',
     } as never;
-    renderWithProviders(<PodAccordions pod={pod} onOpenClub={jest.fn()} />);
+    renderWithProviders(
+      <PodAccordions pod={pod} people={[]} onOpenClub={jest.fn()} onOpenProfile={jest.fn()} />,
+    );
     fireEvent.press(screen.getByTestId('accordion-about-header')); // open → delete
     fireEvent.press(screen.getByTestId('accordion-club-header')); // closed → add
     expect(screen.getByText('Payment terms')).toBeOnTheScreen();

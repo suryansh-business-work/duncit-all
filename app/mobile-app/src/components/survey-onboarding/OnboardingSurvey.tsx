@@ -1,11 +1,11 @@
 import { type ComponentProps } from 'react';
 import { Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
+import { useGoBack } from '@/hooks/useGoBack';
 import { PlaceholderScreen } from '@/components/PlaceholderScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useBranding } from '@/hooks/useBranding';
@@ -26,7 +26,7 @@ interface Props {
 
 /** Category → survey → meeting gate before host/venue registration. */
 export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props>) {
-  const navigation = useNavigation();
+  const goBack = useGoBack();
   const { color: ink } = useThemeColors();
   const { data: brandingData } = useBranding();
   const logoUrl = brandingData?.branding?.logo_url;
@@ -57,7 +57,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
               testID="thanks-done"
               role="button"
               aria-label="Back to Home"
-              onPress={() => navigation.goBack()}
+              onPress={goBack}
               paddingHorizontal={22}
               paddingVertical={12}
               borderRadius={999}
@@ -97,7 +97,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
           <XStack
             role="button"
             aria-label="Go back"
-            onPress={() => navigation.goBack()}
+            onPress={goBack}
             width={40}
             height={40}
             alignItems="center"

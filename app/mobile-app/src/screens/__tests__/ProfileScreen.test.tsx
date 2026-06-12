@@ -21,7 +21,7 @@ jest.mock('@/hooks/useStatusUpload', () => ({ useStatusUpload: jest.fn() }));
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate, goBack: mockGoBack }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: mockGoBack }),
 }));
 
 const mockedProfile = useProfile as jest.Mock;

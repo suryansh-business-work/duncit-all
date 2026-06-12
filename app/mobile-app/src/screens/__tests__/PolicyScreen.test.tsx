@@ -7,7 +7,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 const mockBack = jest.fn();
 let mockRouteParams: { slug: string } | undefined = { slug: 'terms' };
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ goBack: mockBack }),
+  useNavigation: () => ({ canGoBack: () => true, goBack: mockBack }),
   useRoute: () => ({ params: mockRouteParams }),
 }));
 jest.mock('@/hooks/usePolicies', () => ({ usePolicy: jest.fn() }));

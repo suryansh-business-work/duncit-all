@@ -9,7 +9,9 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useSupport', () => ({ createTicket: jest.fn() }));
 const mockGoBack = jest.fn();
-jest.mock('@react-navigation/native', () => ({ useNavigation: () => ({ goBack: mockGoBack }) }));
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ canGoBack: () => true, goBack: mockGoBack }),
+}));
 
 const mockedCreate = createTicket as jest.Mock;
 beforeEach(() => {

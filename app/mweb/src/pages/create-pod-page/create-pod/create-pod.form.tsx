@@ -1,10 +1,23 @@
 import { z } from 'zod';
 import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
 
+const splitLines = (text: string) =>
+  text
+    .split('\n')
+    .map((item) => item.trim())
+    .filter(Boolean);
+
+const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
+
+/** True when the media list carries at least one image URL (server mirrors this). */
+export const hasImageLine = (mediaText: string) =>
+  splitLines(mediaText).some((url) => !VIDEO_URL_RE.test(url));
+
 /** Zod schema for the host Create Pod stepper — mirrors the server's
  * createPartnerPod rules (venue for physical, link for virtual, paid amounts). */
 export const createPodSchema = z
   .object({
+    location_id: z.string().min(1, 'Select a location'),
     pod_title: z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
     club_id: z.string().min(1, 'Select a club'),
     pod_mode: z.enum(['PHYSICAL', 'VIRTUAL']),
@@ -67,10 +80,14 @@ export const createPodSchema = z
     if (values.products_enabled && values.product_requests.length === 0) {
       ctx.addIssue({ code: 'custom', path: ['product_requests'], message: 'Add at least one product' });
     }
+    if (!hasImageLine(values.media_text)) {
+      ctx.addIssue({ code: 'custom', path: ['media_text'], message: 'Add at least one image URL' });
+    }
   });
 
 /** Fields validated when leaving each stepper step (index aligned with STEPS). */
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
+  ['location_id'],
   ['pod_title', 'club_id', 'pod_mode', 'pod_hashtag_text'],
   ['venue_id', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
   ['pod_description', 'pod_info', 'media_text'],
@@ -81,6 +98,7 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
 ];
 
 export const STEP_TITLES = [
+  'Where to Host',
   'Select Club',
   'When, Where & Map',
   'About the Pod',
@@ -89,12 +107,6 @@ export const STEP_TITLES = [
   'Add Products',
   'Payment & Charges',
 ];
-
-const splitLines = (text: string) =>
-  text
-    .split('\n')
-    .map((item) => item.trim())
-    .filter(Boolean);
 
 /** Maps the validated form values onto the server's CreatePodInput. */
 export function buildCreatePodInput(values: CreatePodFormValues) {

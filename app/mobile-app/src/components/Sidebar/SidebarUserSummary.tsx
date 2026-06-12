@@ -1,7 +1,8 @@
 import { Image } from 'react-native';
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { useRoleLabels } from '@/hooks/useMe';
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 export interface SidebarUser {
   full_name?: string | null;
@@ -11,7 +12,9 @@ export interface SidebarUser {
   roles?: string[] | null;
 }
 
-/** Avatar + name + email + role chips — RN port of mWeb's <UserSummary/>. */
+/** Avatar + name + email card that opens the profile — RN port of mWeb's
+ * <UserSummary/>. Roles intentionally do not appear here — the studio switcher
+ * communicates the active role. */
 export function SidebarUserSummary({
   me,
   onPress,
@@ -19,8 +22,7 @@ export function SidebarUserSummary({
   me?: SidebarUser | null;
   onPress: () => void;
 }>) {
-  const { labelFor } = useRoleLabels();
-  const roles = me?.roles ?? [];
+  const { muted } = useThemeColors();
   const initial = (me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase();
 
   return (
@@ -37,6 +39,7 @@ export function SidebarUserSummary({
       borderColor="$borderColor"
       backgroundColor="$surface"
       padding={12}
+      pressStyle={{ opacity: 0.85, borderColor: '$primary' }}
     >
       {me?.profile_photo ? (
         <Image
@@ -64,24 +67,11 @@ export function SidebarUserSummary({
         <Text numberOfLines={1} fontSize={12} color="$muted">
           {me?.email ?? '—'}
         </Text>
-        {roles.length > 0 ? (
-          <XStack marginTop={6} flexWrap="wrap" gap={6}>
-            {roles.map((r) => (
-              <YStack
-                key={r}
-                borderRadius={999}
-                backgroundColor="$primary"
-                paddingHorizontal={8}
-                paddingVertical={2}
-              >
-                <Text fontSize={11} fontWeight="700" color="$onPrimary">
-                  {labelFor(r)}
-                </Text>
-              </YStack>
-            ))}
-          </XStack>
-        ) : null}
+        <Text fontSize={12} fontWeight="800" color="$primary" paddingTop={2}>
+          View profile
+        </Text>
       </YStack>
+      <MaterialIcons name="chevron-right" size={20} color={muted} />
     </XStack>
   );
 }

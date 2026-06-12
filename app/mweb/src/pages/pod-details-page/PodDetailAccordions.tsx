@@ -48,7 +48,7 @@ export default function PodDetailAccordions({
         { id: 'club', title: 'Club details', icon: <PlaceIcon fontSize="small" />, render: () => <PodClubSection club={club} /> },
         { id: 'offers', title: 'What this pod offers', icon: <StarIcon fontSize="small" />, render: () => <PodChipList items={offers} emptyText="Details coming soon." color="primary" /> },
         { id: 'hosts', title: 'Hosts', icon: <PersonIcon fontSize="small" />, render: () => <PodHostsSection hosts={hosts} /> },
-        { id: 'attendees', title: 'Attendees', icon: <GroupsIcon fontSize="small" />, render: () => <PodAttendeesSection attendees={attendees} attendeeIds={pod.pod_attendees ?? []} totalSpots={pod.no_of_spots ?? 0} /> },
+        { id: 'attendees', title: 'Attendees', icon: <GroupsIcon fontSize="small" />, render: () => <PodAttendeesSection attendees={attendees} attendeeIds={pod.pod_attendees ?? []} hostIds={pod.pod_hosts_id ?? []} totalSpots={pod.no_of_spots ?? 0} /> },
         { id: 'perks', title: 'Available perks', icon: <CardGiftcardIcon fontSize="small" />, render: () => <PodChipList items={perks} emptyText="No additional perks listed." color="success" /> },
         { id: 'payment', title: 'Payment details', icon: <PaymentIcon fontSize="small" />, render: () => <PodPaymentDetailsSection amount={Number(pod.pod_amount) || 0} isFree={isFree} priceCompute={priceCompute} /> },
         ...(paymentTerms ? [{ id: 'terms', title: 'Payment terms', icon: <PaymentIcon fontSize="small" />, render: () => <Box sx={{ whiteSpace: 'pre-wrap', fontSize: 14, color: 'text.secondary' }}>{paymentTerms}</Box> }] : []),

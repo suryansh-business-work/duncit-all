@@ -12,7 +12,7 @@ jest.mock('@/hooks/useMe', () => ({
 }));
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
-  useNavigation: () => ({ navigate: mockNavigate }),
+  useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
 }));
 
 const mockedFeed = useHomeFeed as jest.Mock;

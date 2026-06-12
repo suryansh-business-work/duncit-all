@@ -168,6 +168,14 @@ export const podResolvers = {
     podComments: async (_p: unknown, args: { pod_doc_id: string }) =>
       podService.listComments(args.pod_doc_id),
     activePodLocationIds: async () => podService.activeLocationIds(),
+    hostPodDeleteImpact: async (
+      _p: unknown,
+      args: { pod_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return podService.hostDeleteImpact(args.pod_doc_id, user.id);
+    },
   },
   Mutation: {
     createPod: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -185,6 +193,22 @@ export const podResolvers = {
     ) => {
       requireRole(ctx, ADMIN_WRITE);
       return podService.update(args.pod_doc_id, args.input);
+    },
+    hostUpdatePod: async (
+      _p: unknown,
+      args: { pod_doc_id: string; input: any },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return podService.hostUpdate(args.pod_doc_id, user.id, args.input);
+    },
+    hostDeletePod: async (
+      _p: unknown,
+      args: { pod_doc_id: string; reason_subject: string; reason_note?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return podService.hostRemove(args.pod_doc_id, user.id, args.reason_subject, args.reason_note);
     },
     addPodStatus: async (
       _p: unknown,

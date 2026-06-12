@@ -17,7 +17,7 @@ const TABS = [
   { value: '/follow', label: 'Following', icon: <FavoriteBorderIcon /> },
 ];
 
-const NAV_BOTTOM_GAP = 8;
+const NAV_BOTTOM_GAP = 0;
 const NAV_CONTENT_GAP = 56;
 const NAV_OVERLAY_GAP = 10;
 
@@ -60,28 +60,31 @@ export default function BottomNav() {
       .find((t) => (t.value === '/' ? pathname === '/' : pathname.startsWith(t.value)))
       ?.value ?? '/';
 
+  // Edge-to-edge flat bar — full width, no radius, active tab in primary.
   return (
     <Paper
       ref={paperRef}
       elevation={8}
+      square
       sx={{
         position: 'fixed',
-        left: '50%',
-        transform: 'translateX(-50%)',
-        width: { xs: 'calc(100% - 18px)', sm: 'calc(100% - 24px)' },
-        maxWidth: APP_SHELL_MAX_WIDTH - 24,
-        bottom: NAV_BOTTOM_GAP,
+        left: 0,
+        right: 0,
+        width: '100%',
+        bottom: 0,
         zIndex: (t) => t.zIndex.appBar,
         border: 0,
-        borderRadius: 4,
+        borderTop: 1,
+        borderColor: 'divider',
+        borderRadius: 0,
         overflow: 'hidden',
-        p: 0.5,
-        pb: 'calc(env(safe-area-inset-bottom) + 4px)',
-        bgcolor: (theme) => alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.88 : 0.96),
+        p: 0,
+        pb: 'env(safe-area-inset-bottom)',
+        bgcolor: (theme) => alpha(theme.palette.background.paper, theme.palette.mode === 'dark' ? 0.92 : 0.98),
         backdropFilter: 'blur(18px)',
         boxShadow: (theme) => theme.palette.mode === 'dark'
-          ? '0 18px 44px rgba(0,0,0,0.48)'
-          : '0 18px 44px rgba(15,23,42,0.16)',
+          ? '0 -10px 30px rgba(0,0,0,0.42)'
+          : '0 -10px 30px rgba(15,23,42,0.10)',
         transition: 'transform 180ms ease, box-shadow 180ms ease',
       }}
     >
@@ -90,44 +93,46 @@ export default function BottomNav() {
         value={active}
         onChange={(_e, value) => navigate(value)}
         sx={{
-          height: 58,
+          height: 60,
           border: 0,
+          width: '100%',
+          maxWidth: APP_SHELL_MAX_WIDTH,
+          mx: 'auto',
           bgcolor: 'transparent',
           '& .MuiBottomNavigationAction-root': {
             minWidth: 0,
-            mx: 0.15,
+            mx: 0,
             px: 0.25,
             py: 0.4,
-            borderRadius: 3,
+            borderRadius: 0,
             color: 'text.secondary',
-            transition: 'background-color 160ms ease, color 160ms ease, transform 160ms ease',
+            transition: 'color 200ms ease, transform 200ms ease',
           },
           '& .MuiBottomNavigationAction-root.Mui-selected': {
             color: 'primary.main',
-            bgcolor: (theme) => alpha(theme.palette.primary.main, theme.palette.mode === 'dark' ? 0.1 : 0.08),
             transform: 'translateY(-1px)',
           },
           '& .nav-icon-wrap': {
             width: 30,
             height: 30,
-            borderRadius: 2.25,
             display: 'grid',
             placeItems: 'center',
             mb: 0.1,
-            transition: 'background 160ms ease, box-shadow 160ms ease, color 160ms ease',
+            transition: 'color 200ms ease, transform 200ms ease',
           },
           '& .Mui-selected .nav-icon-wrap': {
-            color: 'primary.contrastText',
-            background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 55%, #f5337a 100%)',
-            boxShadow: '0 8px 18px rgba(245,51,122,0.34)',
+            color: 'primary.main',
+            transform: 'scale(1.08)',
           },
           '& .MuiBottomNavigationAction-label': {
             fontSize: 11,
             fontWeight: 800,
             mt: 0,
+            transition: 'color 200ms ease',
           },
           '& .MuiBottomNavigationAction-label.Mui-selected': {
             fontSize: 11,
+            color: 'primary.main',
           },
         }}
       >

@@ -1,5 +1,6 @@
 import { Link as RouterLink, useNavigate } from 'react-router-dom';
 import { gql, useQuery } from '@apollo/client';
+import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
 import HealthMeter from '../components/health/HealthMeter';
 import { MY_VENUE_HEALTH, type HealthScore } from '../components/health/queries';
 import {
@@ -21,6 +22,15 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UserVenuePanel from './profile-page/UserVenuePanel';
 import { venueUrl } from '../utils/seoUrls';
+
+const PODS_AT_VENUE = gql`
+  query PodsAtMyVenue($venue_id: ID!) {
+    pods(filter: { venue_id: $venue_id, is_active: true }) {
+      id
+      pod_date_time
+    }
+  }
+`;
 
 const MY_VENUE_DETAILS = gql`
   query MyVenueDetails {
@@ -56,6 +66,12 @@ export default function VenueManagePage() {
     fetchPolicy: 'cache-and-network',
   });
   const health = healthData?.myVenueHealth ?? null;
+  const podsQ = useQuery(PODS_AT_VENUE, {
+    variables: { venue_id: venue?.id ?? '' },
+    skip: !venue?.id,
+    fetchPolicy: 'cache-and-network',
+  });
+  const venuePods: any[] = podsQ.data?.pods ?? [];
   const venueCount = venue ? 1 : 0;
   const capacity = typeof venue?.capacity === 'number' ? venue.capacity : 0;
   const isApproved = venue?.status === 'APPROVED';
@@ -92,6 +108,18 @@ export default function VenueManagePage() {
           </Card>
         ))}
       </Stack>
+
+      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+        <CardContent>
+          <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+            Pods at your venue
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+            Bookings over the last 2 and next 3 months
+          </Typography>
+          <SimpleBarChart data={buildMonthlyCounts(venuePods.map((p) => p.pod_date_time))} />
+        </CardContent>
+      </Card>
 
       {health && venue?.id && (
         <Card variant="outlined" sx={{ borderRadius: 4 }}>

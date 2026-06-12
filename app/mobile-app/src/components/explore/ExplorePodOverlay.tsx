@@ -46,8 +46,7 @@ export function ExplorePodOverlay({
       <LinearGradient
         colors={['rgba(0,0,0,0.45)', 'rgba(0,0,0,0.02)', 'rgba(0,0,0,0.9)']}
         locations={[0, 0.34, 1]}
-        style={StyleSheet.absoluteFill}
-        pointerEvents="none"
+        style={[StyleSheet.absoluteFill, { pointerEvents: 'none' }]}
       />
       <YStack position="absolute" left={16} right={80} bottom={bottom} gap={8}>
         {clubName ? (

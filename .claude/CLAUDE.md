@@ -1,5 +1,13 @@
 # Behavioral guidelines to reduce common LLM coding mistakes. Merge with project-specific instructions as needed.
 
+## Tech Stack:
+mWeb & Portals: MUI (Material UI)
+Native Apps: Tamagui
+Website: Astro (Highest Priority)
+
+## Forms & Validation:
+React Hook Form + Zod for form handling and validation.
+
 Tradeoff: These guidelines bias toward caution over speed. For trivial tasks, use judgment.
 
 1. Think Before Coding

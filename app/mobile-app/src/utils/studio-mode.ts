@@ -33,3 +33,11 @@ export function availableModes(roles: string[]): StudioOption[] {
 export function resolveMode(mode: StudioMode, roles: string[]): StudioMode {
   return availableModes(roles).some((option) => option.mode === mode) ? mode : 'USER';
 }
+
+/** Landing screen for each mode — switching roles jumps straight to its dashboard. */
+export const STUDIO_HOME_ROUTE = {
+  USER: 'Home',
+  HOST: 'HostManage',
+  VENUE: 'VenueManage',
+  ECOMM: 'ProductsManage',
+} as const;

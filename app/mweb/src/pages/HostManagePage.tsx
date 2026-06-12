@@ -1,22 +1,12 @@
 import { Link as RouterLink } from 'react-router-dom';
 import { gql, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Divider,
-  Stack,
-  Typography,
-} from '@mui/material';
-import EventIcon from '@mui/icons-material/Event';
+import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddIcon from '@mui/icons-material/Add';
 import UserHostPanel from './profile-page/UserHostPanel';
+import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
 import HostDraftsCard from './HostDraftsCard';
+import HostPodsCard from './host-manage-page/HostPodsCard';
 
 const HOST_PODS = gql`
   query MyHostedPods($host_user_id: ID!) {
@@ -26,6 +16,11 @@ const HOST_PODS = gql`
       pod_id
       club_slug
       pod_date_time
+      pod_description
+      pod_images_and_videos {
+        url
+        type
+      }
       pod_amount
       pod_type
       no_of_spots
@@ -44,17 +39,10 @@ const ME_QUERY = gql`
   }
 `;
 
-function formatDate(value?: string | null) {
-  if (!value) return '—';
-  const d = new Date(value);
-  if (Number.isNaN(d.getTime())) return '—';
-  return d.toLocaleString();
-}
-
 export default function HostManagePage() {
   const meQ = useQuery(ME_QUERY, { fetchPolicy: 'cache-and-network' });
   const userId = meQ.data?.me?.user_id;
-  const { data, loading, error } = useQuery(HOST_PODS, {
+  const { data, loading, error, refetch } = useQuery(HOST_PODS, {
     variables: { host_user_id: userId },
     skip: !userId,
     fetchPolicy: 'cache-and-network',
@@ -93,6 +81,18 @@ export default function HostManagePage() {
         ))}
       </Stack>
 
+      <Card variant="outlined" sx={{ borderRadius: 4 }}>
+        <CardContent>
+          <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
+            Pods by month
+          </Typography>
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
+            Your hosted pods over the last 2 and next 3 months
+          </Typography>
+          <SimpleBarChart data={buildMonthlyCounts(pods.map((p: any) => p.pod_date_time))} />
+        </CardContent>
+      </Card>
+
       <Card variant="outlined" sx={{ borderRadius: 4, bgcolor: 'rgba(255,79,115,0.10)' }}>
         <CardContent>
           <Stack spacing={1.5}>
@@ -106,76 +106,20 @@ export default function HostManagePage() {
 
       <HostDraftsCard />
 
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
-        <CardContent>
-          <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
-            <EventIcon color="primary" />
-            <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }}>
-              Your pods
-            </Typography>
-            <Chip size="small" label={pods.length} />
-          </Stack>
-          <Divider sx={{ mb: 1.5 }} />
+      <HostPodsCard
+        pods={pods}
+        loading={loading && !data}
+        errorMessage={error?.message}
+        onChanged={() => {
+          refetch().catch(() => undefined);
+        }}
+      />
 
-          {loading && !data ? (
-            <Stack alignItems="center" sx={{ py: 4 }}>
-              <CircularProgress size={22} />
-            </Stack>
-          ) : error ? (
-            <Alert severity="error">{error.message}</Alert>
-          ) : pods.length === 0 ? (
-            <Alert severity="info">
-              You don't host any pods yet. New pods you host will show up here.
-            </Alert>
-          ) : (
-            <Stack spacing={1}>
-              {pods.map((p: any) => (
-                <Box
-                  key={p.id}
-                  component={RouterLink}
-                  to={p.club_slug && p.pod_id ? `/club/${p.club_slug}/pod/${p.pod_id}` : '#'}
-                  sx={{
-                    display: 'block',
-                    p: 1.25,
-                    borderRadius: 3,
-                    border: 1,
-                    borderColor: 'divider',
-                    bgcolor: 'background.paper',
-                    textDecoration: 'none',
-                    color: 'inherit',
-                    transition: 'all 160ms ease',
-                    '&:hover': { borderColor: 'primary.main', bgcolor: 'action.hover' },
-                  }}
-                >
-                  <Stack direction="row" alignItems="center" spacing={1}>
-                    <Box sx={{ flex: 1, minWidth: 0 }}>
-                      <Typography variant="subtitle2" fontWeight={700} noWrap>
-                        {p.pod_title}
-                      </Typography>
-                      <Typography variant="caption" color="text.secondary" noWrap display="block">
-                        {formatDate(p.pod_date_time)}
-                        {p.zone_name ? ` · ${p.zone_name}` : ''}
-                      </Typography>
-                    </Box>
-                    <Chip
-                      size="small"
-                      label={p.pod_type?.replace(/_/g, ' ')}
-                      color={p.pod_type?.includes('FREE') ? 'success' : 'primary'}
-                      variant="outlined"
-                    />
-                  </Stack>
-                </Box>
-              ))}
-            </Stack>
-          )}
-
-          <Stack direction="row" sx={{ mt: 2 }}>
-            <Button component={RouterLink} to="/become-host" variant="outlined" size="small" sx={{ borderRadius: 999, fontWeight: 900 }}>
-              Edit host profile
-            </Button>
-          </Stack>
-        </CardContent>
-      </Card>
+      <Stack direction="row">
+        <Button component={RouterLink} to="/become-host" variant="outlined" size="small" sx={{ borderRadius: 999, fontWeight: 900 }}>
+          Edit host profile
+        </Button>
+      </Stack>
     </Stack>
   );
 }

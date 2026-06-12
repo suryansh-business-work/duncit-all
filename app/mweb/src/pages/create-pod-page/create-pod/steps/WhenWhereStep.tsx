@@ -1,7 +1,8 @@
 import { Controller } from 'react-hook-form';
-import { MenuItem, Stack, TextField } from '@mui/material';
+import { MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
+import { formatDurationBetween, useDateFormat } from '../../../../utils/dateFormat';
 import type { CreatePodClub, CreatePodForm, CreatePodVenue } from '../create-pod.types';
 
 interface Props {
@@ -22,6 +23,10 @@ export default function WhenWhereStep({ form, clubs, venues }: Readonly<Props>) 
   const mode = watch('pod_mode');
   const clubId = watch('club_id');
   const venueId = watch('venue_id');
+  // Pickers honour the admin-panel date/time format; the duration line updates live.
+  const { dateFormat, timeFormat } = useDateFormat();
+  const dateTimeFormat = `${dateFormat} ${timeFormat}`;
+  const duration = formatDurationBetween(watch('pod_date_time'), watch('pod_end_date_time'));
   const linkedVenueIds = new Set(clubs.find((club) => club.id === clubId)?.meetup_venues_id ?? []);
   const clubVenues = venues.filter((venue) => linkedVenueIds.has(venue.id));
   const selectedVenue = venues.find((venue) => venue.id === venueId);
@@ -99,6 +104,7 @@ export default function WhenWhereStep({ form, clubs, venues }: Readonly<Props>) 
               label="Start date & time"
               value={field.value}
               onChange={field.onChange}
+              format={dateTimeFormat}
               minDateTime={new Date()}
               slotProps={{
                 textField: {
@@ -119,6 +125,7 @@ export default function WhenWhereStep({ form, clubs, venues }: Readonly<Props>) 
               label="End date & time"
               value={field.value}
               onChange={field.onChange}
+              format={dateTimeFormat}
               minDateTime={getValues('pod_date_time') ?? new Date()}
               slotProps={{
                 textField: {
@@ -131,6 +138,11 @@ export default function WhenWhereStep({ form, clubs, venues }: Readonly<Props>) 
           )}
         />
       </Stack>
+      {duration && (
+        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
+          Total duration: {duration}
+        </Typography>
+      )}
     </Stack>
   );
 }

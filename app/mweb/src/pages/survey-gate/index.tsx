@@ -1,10 +1,9 @@
 import { useEffect, useState } from 'react';
-import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
+import { useLazyQuery, useMutation } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import {
   ACTIVE_SURVEY_FOR,
-  MY_MEETING,
   PARTNER_PATH,
   REQUEST_MEETING,
   SUBMIT_SURVEY_RESPONSE,
@@ -37,26 +36,19 @@ export default function SurveyGatePage() {
 
   const proceed = () => navigate(next, { replace: true });
 
-  const { data: meet, loading: meetLoading } = useQuery<{ myMeeting: { id: string } | null }>(MY_MEETING, { variables: { kind }, skip: !valid, fetchPolicy: 'network-only' });
   const [resolveSurvey] = useLazyQuery<{ activeSurveyFor: ActiveSurvey | null }>(ACTIVE_SURVEY_FOR, { fetchPolicy: 'network-only' });
   const [submitSurvey, { loading: submittingSurvey }] = useMutation(SUBMIT_SURVEY_RESPONSE);
   const [requestMeeting, { loading: requesting }] = useMutation(REQUEST_MEETING);
 
-  const meetingDone = !!meet?.myMeeting;
-
   useEffect(() => {
     if (!valid) { navigate('/hosts-venues', { replace: true }); return; }
-    if (meetLoading) return;
-    // Once the meeting is requested the gate is satisfied — proceed without
-    // re-prompting. Otherwise re-ask category → survey → meeting every visit.
-    if (meetingDone) { proceed(); return; }
+    // Always walk the full gate — category → survey (when one matches) →
+    // meeting — even when a meeting was requested before: requestMeeting
+    // upserts per (user, kind), so re-submitting only updates the request.
     setStep('category');
-  }, [valid, meetLoading, meetingDone]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [valid]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const afterSurvey = () => {
-    if (meetingDone) proceed();
-    else setStep('meeting');
-  };
+  const afterSurvey = () => setStep('meeting');
 
   const onCategory = async (scope: CategoryScope) => {
     setResolving(true);

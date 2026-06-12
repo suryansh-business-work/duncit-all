@@ -113,16 +113,10 @@ async function passCategory() {
 beforeEach(() => mockRequest.mockReset());
 
 describe('OnboardingSurvey', () => {
-  it('goes straight to done when the meeting is already requested', async () => {
+  it('starts at the category step even when the meeting is already requested', async () => {
     mockApi({ meetingDone: true });
     renderSurvey();
-    expect(await screen.findByTestId('placeholder-screen')).toBeOnTheScreen();
-  });
-
-  it('falls back to the placeholder if the initial load fails', async () => {
-    mockRequest.mockRejectedValue(new Error('network'));
-    renderSurvey();
-    expect(await screen.findByTestId('placeholder-screen')).toBeOnTheScreen();
+    expect(await screen.findByTestId('cat-super1')).toBeOnTheScreen();
   });
 
   it('category -> survey (validates) -> meeting -> done', async () => {

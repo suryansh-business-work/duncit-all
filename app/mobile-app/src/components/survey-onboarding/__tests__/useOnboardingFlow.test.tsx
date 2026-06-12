@@ -65,40 +65,6 @@ function route({
 beforeEach(() => mockRequest.mockReset());
 
 describe('useOnboardingFlow', () => {
-  it('ignores the initial meeting load after unmount', async () => {
-    let resolveMeet: (v: unknown) => void = () => undefined;
-    mockRequest.mockImplementation((doc: never) =>
-      opName(doc) === 'MyMeeting'
-        ? new Promise((r) => {
-            resolveMeet = r;
-          })
-        : Promise.resolve({}),
-    );
-    const { unmount } = renderHook(() => useOnboardingFlow('HOST' as never));
-    unmount();
-    await act(async () => {
-      resolveMeet({ myMeeting: null });
-    });
-    expect(mockRequest).toHaveBeenCalled();
-  });
-
-  it('does not set state when the initial load fails after unmount', async () => {
-    let rejectMeet: (e: unknown) => void = () => undefined;
-    mockRequest.mockImplementation((doc: never) =>
-      opName(doc) === 'MyMeeting'
-        ? new Promise((_r, reject) => {
-            rejectMeet = reject;
-          })
-        : Promise.resolve({}),
-    );
-    const { unmount } = renderHook(() => useOnboardingFlow('HOST' as never));
-    unmount();
-    await act(async () => {
-      rejectMeet(new Error('boom'));
-    });
-    expect(mockRequest).toHaveBeenCalled();
-  });
-
   it('skips the survey to the meeting step when none is configured', async () => {
     route({ meeting: null, survey: null });
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
@@ -109,14 +75,14 @@ describe('useOnboardingFlow', () => {
     expect(result.current.phase).toBe('meeting');
   });
 
-  it('goes straight to done when no survey and the meeting is already requested', async () => {
+  it('walks the gate even when a meeting was already requested (request upserts)', async () => {
     route({ meeting: { id: 'm1' }, survey: null });
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
-    await waitFor(() => expect(result.current.phase).toBe('done'));
+    expect(result.current.phase).toBe('category');
     await act(async () => {
       await result.current.chooseCategory(SCOPE);
     });
-    expect(result.current.phase).toBe('done');
+    expect(result.current.phase).toBe('meeting');
   });
 
   it('surfaces a category load error', async () => {

@@ -1,20 +1,18 @@
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
 import {
   ActiveSurveyForDocument,
-  MyMeetingDocument,
   RequestMeetingDocument,
   SubmitSurveyResponseDocument,
   type ActiveSurvey,
   type ActiveSurveyResult,
-  type MyMeetingResult,
   type SurveyAnswerInput,
   type SurveyKind,
   type SurveyQuestion,
 } from '@/graphql/onboarding-survey';
 
-export type Phase = 'loading' | 'category' | 'survey' | 'meeting' | 'done';
+export type Phase = 'category' | 'survey' | 'meeting' | 'done';
 export type Answer = { value: string; values: string[] };
 export interface Scope {
   super_category_id: string;
@@ -24,37 +22,16 @@ export interface Scope {
 
 /** State machine for the category → survey → meeting onboarding gate. */
 export function useOnboardingFlow(kind: SurveyKind) {
-  const [phase, setPhase] = useState<Phase>('loading');
+  // Always walk the full gate — category → survey (when one matches) →
+  // meeting — even when a meeting was requested before: requestMeeting
+  // upserts per (user, kind), so re-submitting only updates the request.
+  const [phase, setPhase] = useState<Phase>('category');
   const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
-  const [meetingDone, setMeetingDone] = useState(false);
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [when, setWhen] = useState('');
   const [notes, setNotes] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
-  useEffect(() => {
-    let alive = true;
-    (async () => {
-      try {
-        const meet = await graphqlRequest<MyMeetingResult, { kind: SurveyKind }>(
-          MyMeetingDocument,
-          { kind },
-          { auth: true },
-        );
-        if (!alive) return;
-        setMeetingDone(!!meet.myMeeting);
-        // Once the meeting is requested the gate is satisfied — go straight to
-        // done. Otherwise re-ask category → survey → meeting every visit.
-        setPhase(meet.myMeeting ? 'done' : 'category');
-      } catch {
-        if (alive) setPhase('done'); // never block on a load error
-      }
-    })();
-    return () => {
-      alive = false;
-    };
-  }, [kind]);
 
   const get = (qid: string): Answer => answers[qid] ?? { value: '', values: [] };
   const set = (qid: string, patch: Partial<Answer>) =>
@@ -64,7 +41,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
     set(q.qid, { values: cur.includes(opt) ? cur.filter((v) => v !== opt) : [...cur, opt] });
   };
 
-  const afterSurvey = (done: boolean) => setPhase(done ? 'done' : 'meeting');
+  const afterSurvey = () => setPhase('meeting');
 
   const chooseCategory = async (scope: Scope) => {
     setError(null);
@@ -77,13 +54,13 @@ export function useOnboardingFlow(kind: SurveyKind) {
       );
       const s = res.activeSurveyFor;
       setSurvey(s);
-      // Re-prompt the survey on every visit until the meeting is requested — we
-      // no longer skip it just because a response was submitted before.
+      // Re-prompt the survey on every visit — never skip it just because a
+      // response was submitted before.
       if (s) {
         setPhase('survey');
         return;
       }
-      afterSurvey(meetingDone);
+      afterSurvey();
     } catch (e) {
       setError(toErrorMessage(e, 'Could not load the survey'));
     } finally {
@@ -93,7 +70,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
 
   const submitSurvey = async () => {
     if (!survey) {
-      afterSurvey(meetingDone);
+      afterSurvey();
       return;
     }
     const inputs = survey.questions.filter((q) => q.type !== 'SECTION');
@@ -119,7 +96,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
         { survey_id: survey.id, answers: payload },
         { auth: true },
       );
-      afterSurvey(meetingDone);
+      afterSurvey();
     } catch (e) {
       setError(toErrorMessage(e, 'Could not submit the survey'));
     } finally {

@@ -3,7 +3,7 @@ import { Image } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { PlaceholderScreen } from '@/components/PlaceholderScreen';
@@ -32,16 +32,6 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
   const logoUrl = brandingData?.branding?.logo_url;
   const flow = useOnboardingFlow(kind);
 
-  if (flow.phase === 'loading') {
-    return (
-      <YStack flex={1}>
-        <AppBackground />
-        <YStack flex={1} alignItems="center" justifyContent="center">
-          <Spinner />
-        </YStack>
-      </YStack>
-    );
-  }
   if (flow.phase === 'done') {
     return <PlaceholderScreen title={title} subtitle={subtitle} icon={icon} />;
   }

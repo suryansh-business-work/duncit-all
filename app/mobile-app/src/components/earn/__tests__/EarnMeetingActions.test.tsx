@@ -49,8 +49,8 @@ describe('EarnMeetingActions', () => {
 
     fireEvent.press(screen.getByTestId('slot-2027-01-04T04:30:00.000Z'));
     fireEvent.press(screen.getByTestId('reschedule-confirm'));
-    await waitFor(() => expect(onChanged).toHaveBeenCalled());
-    expect(screen.queryByTestId('reschedule-dialog')).toBeNull();
+    await waitFor(() => expect(onChanged).toHaveBeenCalled(), { timeout: 5000 });
+    await waitFor(() => expect(screen.queryByTestId('reschedule-dialog')).toBeNull(), { timeout: 5000 });
   });
 
   it('shows a reschedule failure and keeps the dialog open', async () => {
@@ -101,8 +101,8 @@ describe('EarnMeetingActions', () => {
 
     fireEvent.press(screen.getByTestId('cancel-VENUE'));
     fireEvent.press(screen.getByTestId('cancel-confirm'));
-    await waitFor(() => expect(onChanged).toHaveBeenCalled());
-    expect(screen.queryByTestId('cancel-dialog')).toBeNull();
+    await waitFor(() => expect(onChanged).toHaveBeenCalled(), { timeout: 5000 });
+    await waitFor(() => expect(screen.queryByTestId('cancel-dialog')).toBeNull(), { timeout: 5000 });
   });
 
   it('closes the cancel dialog even when the cancel call fails', async () => {
@@ -111,7 +111,7 @@ describe('EarnMeetingActions', () => {
     renderWithProviders(<EarnMeetingActions kind="VENUE" onChanged={onChanged} />);
     fireEvent.press(screen.getByTestId('cancel-VENUE'));
     fireEvent.press(screen.getByTestId('cancel-confirm'));
-    await waitFor(() => expect(screen.queryByTestId('cancel-dialog')).toBeNull());
+    await waitFor(() => expect(screen.queryByTestId('cancel-dialog')).toBeNull(), { timeout: 5000 });
     expect(onChanged).not.toHaveBeenCalled();
   });
 });

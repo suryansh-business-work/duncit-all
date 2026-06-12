@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { useUserData } from '@duncit/user-context';
-import { Alert, AppBar, Avatar, Box, IconButton, Toolbar, Tooltip } from '@mui/material';
+import { Alert, AppBar, Avatar, Box, Chip, IconButton, Toolbar, Tooltip } from '@mui/material';
 import { HEADER_DATA, PUBLIC_POLICIES } from './queries';
 import HeaderBrand from './HeaderBrand';
 import HeaderMascotButton from './HeaderMascotButton';
@@ -12,9 +12,12 @@ import HeaderSearchButton from './HeaderSearchButton';
 import HeaderToast from './HeaderToast';
 import LocationDialog from './LocationDialog';
 import ProfileDrawer from './ProfileDrawer';
+import StudioSwitchDialog from './profile-drawer/StudioSwitchDialog';
 import SuperCategoryTabs from './SuperCategoryTabs';
 import { APP_SHELL_MAX_WIDTH } from '../../app/appLayout';
 import SurveyHeaderActions from './SurveyHeaderActions';
+import { useStudioMode } from '../../StudioModeContext';
+import { STUDIO_LABEL, resolveMode } from '../../studio-mode';
 
 interface AppHeaderProps {
   minimal?: boolean;
@@ -44,9 +47,12 @@ export default function AppHeader({
   const [profileAnchor, setProfileAnchor] = useState<HTMLElement | null>(null);
   const [policiesOpen, setPoliciesOpen] = useState(false);
   const [toast, setToast] = useState<{ title?: string; body?: string } | null>(null);
+  const { mode: studioMode, setMode: setStudioMode } = useStudioMode();
+  const [studioSwitchOpen, setStudioSwitchOpen] = useState(false);
 
   const branding = data?.branding;
   const me = data?.me;
+  const effectiveStudio = resolveMode(studioMode, me?.roles ?? []);
   // The shared <UserProvider> auto-mounts a global "User data not loaded"
   // dialog when the `me` query fails, so we no longer render a local one
   // here. Keeping `me`/`loading` for the rest of the header's logic.
@@ -102,6 +108,15 @@ export default function AppHeader({
       <Toolbar sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', gap: 1, py: 0.75, minHeight: minimal ? 56 : 60, px: 1.5 }}>
         <HeaderBrand logoUrl={branding?.mweb_logo_url || branding?.logo_url} appName={branding?.app_name} />
         <HeaderMascotButton branding={branding} />
+        {!minimal && effectiveStudio !== 'USER' && (
+          <Chip
+            label={STUDIO_LABEL[effectiveStudio]}
+            color="primary"
+            size="small"
+            onClick={() => setStudioSwitchOpen(true)}
+            sx={{ fontWeight: 900, borderRadius: 999 }}
+          />
+        )}
 
         <Box sx={{ flexGrow: 1 }} />
 
@@ -177,6 +192,16 @@ export default function AppHeader({
               policiesOpen={policiesOpen}
               setPoliciesOpen={setPoliciesOpen}
               onLogout={logout}
+            />
+            <StudioSwitchDialog
+              open={studioSwitchOpen}
+              roles={me?.roles ?? []}
+              current={effectiveStudio}
+              onClose={() => setStudioSwitchOpen(false)}
+              onSelect={(next) => {
+                setStudioMode(next);
+                setStudioSwitchOpen(false);
+              }}
             />
           </>
         )}

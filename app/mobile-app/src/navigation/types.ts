@@ -24,6 +24,9 @@ export type RootStackParamList = {
   CreatePod: { draftId?: string } | undefined;
   RegisterVenue: undefined;
   VenueManage: undefined;
+  Earn: undefined;
+  ProductsManage: undefined;
+  ProductsVerification: undefined;
   Support: undefined;
   Sos: undefined;
   Callback: undefined;

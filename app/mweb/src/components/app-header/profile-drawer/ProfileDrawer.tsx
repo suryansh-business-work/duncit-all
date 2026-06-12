@@ -1,9 +1,13 @@
+import { useState } from 'react';
 import {
   Box,
   Divider,
   Drawer,
   IconButton,
   List,
+  ListItemButton,
+  ListItemIcon,
+  ListItemText,
   Stack,
   Switch,
   Typography,
@@ -11,11 +15,15 @@ import {
 import CloseIcon from '@mui/icons-material/Close';
 import DarkModeIcon from '@mui/icons-material/DarkMode';
 import LightModeIcon from '@mui/icons-material/LightMode';
+import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../../ColorModeContext';
+import { useStudioMode } from '../../../StudioModeContext';
+import { STUDIO_LABEL, availableModes, resolveMode } from '../../../studio-mode';
 import DrawerFooter from './DrawerFooter';
 import MenuItemRow from './MenuItem';
 import PoliciesSection from './PoliciesSection';
+import StudioSwitchDialog from './StudioSwitchDialog';
 import UserSummary from './UserSummary';
 import { useMenuItems } from './useMenuItems';
 
@@ -40,12 +48,13 @@ export default function ProfileDrawer({
 }: Readonly<Props>) {
   const navigate = useNavigate();
   const colorMode = useColorMode();
+  const { mode, setMode } = useStudioMode();
+  const [switchOpen, setSwitchOpen] = useState(false);
   const isDark = colorMode.mode === 'dark';
   const roles: string[] = me?.roles ?? [];
-  const { baseItems, hostItem, venueItem, supportItems } = useMenuItems({
-    roles,
-    onClose,
-  });
+  const effectiveMode = resolveMode(mode, roles);
+  const canSwitch = availableModes(roles).length > 1;
+  const { items } = useMenuItems({ roles, onClose });
   const openProfile = () => {
     onClose();
     navigate('/profile');
@@ -69,55 +78,45 @@ export default function ProfileDrawer({
       }}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <Box
-          sx={{
-            p: 2.5,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
+        <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 900, letterSpacing: 0.4 }}>
-            Account
+            {effectiveMode === 'USER' ? 'Account' : STUDIO_LABEL[effectiveMode]}
           </Typography>
           <IconButton size="small" onClick={onClose} sx={{ bgcolor: 'action.hover' }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
         <UserSummary me={me} roles={roles} onClick={openProfile} />
+        {canSwitch && (
+          <List sx={{ py: 0.5 }}>
+            <ListItemButton onClick={() => setSwitchOpen(true)} sx={{ mx: 1.25, borderRadius: 2.5 }}>
+              <ListItemIcon sx={{ minWidth: 36, color: 'primary.main' }}>
+                <SwapHorizIcon fontSize="small" />
+              </ListItemIcon>
+              <ListItemText
+                primary="Switch role"
+                secondary={STUDIO_LABEL[effectiveMode]}
+                primaryTypographyProps={{ fontSize: 14, fontWeight: 800 }}
+              />
+            </ListItemButton>
+          </List>
+        )}
         <Divider />
         <Box sx={{ flex: 1, overflowY: 'auto' }}>
           <List sx={{ py: 1 }}>
-            {baseItems.map((it) => (
-              <MenuItemRow key={it.label} item={it} />
-            ))}
-            <MenuItemRow item={hostItem} />
-            <MenuItemRow item={venueItem} />
-          </List>
-          <Divider />
-          <List sx={{ py: 1 }}>
-            {supportItems.map((it) => (
+            {items.map((it) => (
               <MenuItemRow key={it.label} item={it} />
             ))}
           </List>
           <Divider />
-          <Stack
-            direction="row"
-            alignItems="center"
-            justifyContent="space-between"
-            sx={{ px: 2.5, py: 1.25 }}
-          >
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.5, py: 1.25 }}>
             <Stack direction="row" alignItems="center" spacing={1.5}>
               {isDark ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
               <Typography variant="body2" sx={{ fontWeight: 700 }}>
                 Dark mode
               </Typography>
             </Stack>
-            <Switch
-              checked={isDark}
-              onChange={colorMode.toggle}
-              inputProps={{ 'aria-label': 'Toggle dark mode' }}
-            />
+            <Switch checked={isDark} onChange={colorMode.toggle} inputProps={{ 'aria-label': 'Toggle dark mode' }} />
           </Stack>
           {publicPolicies.length > 0 && (
             <>
@@ -134,6 +133,16 @@ export default function ProfileDrawer({
         <Divider />
         <DrawerFooter onLogout={onLogout} />
       </Box>
+      <StudioSwitchDialog
+        open={switchOpen}
+        roles={roles}
+        current={effectiveMode}
+        onClose={() => setSwitchOpen(false)}
+        onSelect={(next) => {
+          setMode(next);
+          setSwitchOpen(false);
+        }}
+      />
     </Drawer>
   );
 }

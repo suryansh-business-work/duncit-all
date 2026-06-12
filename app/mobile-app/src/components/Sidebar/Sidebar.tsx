@@ -13,6 +13,9 @@ import { useMenuItems } from '@/hooks/useMenuItems';
 import { usePublicPolicies } from '@/hooks/usePolicies';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useThemeStore } from '@/stores/theme.store';
+import { useStudioModeStore } from '@/stores/studio-mode.store';
+import { STUDIO_LABEL, availableModes, resolveMode } from '@/utils/studio-mode';
+import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
 import type { MenuRoute, RootStackParamList } from '@/navigation/types';
 import { SidebarFooter } from './SidebarFooter';
 import { SidebarMenuItem } from './SidebarMenuItem';
@@ -32,12 +35,18 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
   const { data } = useMe();
   const { data: policiesData } = usePublicPolicies();
   const me = data?.me;
-  const { baseItems, hostItem, venueItem, supportItems } = useMenuItems(me?.roles ?? []);
+  const roles = me?.roles ?? [];
+  const studioMode = useStudioModeStore((s) => s.mode);
+  const setStudioMode = useStudioModeStore((s) => s.setMode);
+  const effectiveMode = resolveMode(studioMode, roles);
+  const canSwitch = availableModes(roles).length > 1;
+  const { items } = useMenuItems(effectiveMode);
   const logout = useLogout();
   const scheme = useThemeStore((s) => s.scheme);
   const toggleTheme = useThemeStore((s) => s.toggle);
   const { primary } = useThemeColors();
 
+  const [switchOpen, setSwitchOpen] = useState(false);
   const [mounted, setMounted] = useState(open);
   const tx = useRef(new Animated.Value(panelWidth)).current;
   const fade = useRef(new Animated.Value(0)).current;
@@ -61,7 +70,9 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
 
   const go = (route: MenuRoute) => {
     onClose();
-    navigation.navigate(route);
+    // MenuRoute is a union of param-less screens; RN's navigate overload can't
+    // narrow a dynamic union arg, so cast (safe — none take required params).
+    navigation.navigate(route as never);
   };
 
   if (!mounted) return null;
@@ -92,7 +103,7 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
               paddingVertical={12}
             >
               <Text fontSize={12} fontWeight="800" textTransform="uppercase" color="$muted">
-                Account
+                {effectiveMode === 'USER' ? 'Account' : STUDIO_LABEL[effectiveMode]}
               </Text>
               <XStack
                 testID="sidebar-close"
@@ -112,18 +123,39 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
             </XStack>
 
             <SidebarUserSummary me={me} onPress={() => go('Profile')} />
+            {canSwitch ? (
+              <XStack
+                testID="sidebar-switch-role"
+                role="button"
+                aria-label="Switch role"
+                onPress={() => setSwitchOpen(true)}
+                marginHorizontal={8}
+                marginTop={4}
+                alignItems="center"
+                gap={12}
+                borderRadius={10}
+                paddingHorizontal={12}
+                paddingVertical={10}
+                backgroundColor="$surface"
+                pressStyle={{ opacity: 0.7 }}
+              >
+                <MaterialIcons name="swap-horiz" size={20} color={primary} />
+                <YStack flex={1}>
+                  <Text fontSize={14} fontWeight="800" color="$color">
+                    Switch role
+                  </Text>
+                  <Text fontSize={11.5} color="$muted">
+                    {STUDIO_LABEL[effectiveMode]}
+                  </Text>
+                </YStack>
+              </XStack>
+            ) : null}
 
             <ScrollView
               showsVerticalScrollIndicator={false}
               contentContainerStyle={{ paddingVertical: 4 }}
             >
-              {baseItems.map((it) => (
-                <SidebarMenuItem key={it.label} item={it} onPress={() => go(it.route)} />
-              ))}
-              <SidebarMenuItem item={hostItem} onPress={() => go(hostItem.route)} />
-              <SidebarMenuItem item={venueItem} onPress={() => go(venueItem.route)} />
-              <Separator marginVertical={6} borderColor="$borderColor" />
-              {supportItems.map((it) => (
+              {items.map((it) => (
                 <SidebarMenuItem key={it.label} item={it} onPress={() => go(it.route)} />
               ))}
               <Separator marginVertical={6} borderColor="$borderColor" />
@@ -170,6 +202,16 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
           </SafeAreaView>
         </Animated.View>
       </ModalThemeScope>
+      <StudioSwitchDialog
+        open={switchOpen}
+        roles={roles}
+        current={effectiveMode}
+        onClose={() => setSwitchOpen(false)}
+        onSelect={(next) => {
+          setStudioMode(next);
+          setSwitchOpen(false);
+        }}
+      />
     </Modal>
   );
 }

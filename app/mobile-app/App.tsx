@@ -20,6 +20,7 @@ import { loadWebFonts } from '@/services/web-fonts';
 import { useAuthStore } from '@/stores/auth.store';
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
+import { useStudioModeStore } from '@/stores/studio-mode.store';
 import config from './tamagui.config';
 import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
 import { config as appConfig } from '@/constants/config';
@@ -47,6 +48,7 @@ captureConsole(logs.mobileApp);
 export default function App() {
   const scheme = useThemeStore((s) => s.scheme);
   const hydrateTheme = useThemeStore((s) => s.hydrate);
+  const hydrateStudioMode = useStudioModeStore((s) => s.hydrate);
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const ready = useAuthStore((s) => s.ready);
   const loadConfig = useConfigStore((s) => s.load);
@@ -59,11 +61,12 @@ export default function App() {
 
   useEffect(() => {
     hydrateTheme();
+    hydrateStudioMode();
     bootstrap();
     // Pull Google/Maps config from the server (Tech portal source); best-effort,
     // the env fallback applies until it resolves.
     loadConfig();
-  }, [hydrateTheme, bootstrap, loadConfig]);
+  }, [hydrateTheme, hydrateStudioMode, bootstrap, loadConfig]);
 
   if (!ready) return null;
 

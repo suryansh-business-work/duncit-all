@@ -1,39 +1,47 @@
 import { renderHook } from '@testing-library/react-native';
 
 import { useMenuItems } from '@/hooks/useMenuItems';
+import type { StudioMode } from '@/utils/studio-mode';
+
+const menu = (mode?: StudioMode) => renderHook(() => useMenuItems(mode)).result.current.items;
+const routes = (mode?: StudioMode) => menu(mode).map((i) => i.route);
 
 describe('useMenuItems', () => {
-  it('offers the join CTAs when the user has no host/venue role', () => {
-    const { result } = renderHook(() => useMenuItems([]));
-    expect(result.current.hostItem).toMatchObject({ label: 'Be a host', route: 'BecomeHost' });
-    expect(result.current.venueItem).toMatchObject({
-      label: 'Be a Venue Owner',
-      route: 'RegisterVenue',
-    });
-    expect(result.current.baseItems.map((i) => i.route)).toEqual([
+  it('returns the full USER menu with Earn with Duncit (no host/venue CTAs)', () => {
+    const labels = menu('USER').map((i) => i.label);
+    expect(labels).toContain('Earn with Duncit');
+    expect(labels).not.toContain('Be a host');
+    expect(routes('USER')).toEqual([
       'Home',
       'Profile',
       'Saved',
       'PodHistory',
+      'Earn',
+      'Support',
+      'PodIdeas',
+      'Faqs',
     ]);
   });
 
-  it('does not list Pod Plans in the support items', () => {
-    const { result } = renderHook(() => useMenuItems([]));
-    const routes = result.current.supportItems.map((i) => i.route);
-    expect(routes).toEqual(['Support', 'PodIdeas', 'Faqs']);
-    expect(routes).not.toContain('PodPlans');
+  it('returns the Host studio menu', () => {
+    expect(routes('HOST')).toEqual(['Profile', 'HostManage', 'Support', 'BecomeHost', 'Faqs']);
   });
 
-  it('swaps to management entries for hosts and venue owners', () => {
-    const { result } = renderHook(() => useMenuItems(['HOST', 'VENUE_OWNER']));
-    expect(result.current.hostItem).toMatchObject({
-      label: 'Hosts Management',
-      route: 'HostManage',
-    });
-    expect(result.current.venueItem).toMatchObject({
-      label: 'Venue Management',
-      route: 'VenueManage',
-    });
+  it('returns the Venue studio menu', () => {
+    expect(routes('VENUE')).toEqual(['Profile', 'VenueManage', 'Support', 'RegisterVenue', 'Faqs']);
+  });
+
+  it('returns the ecomm studio menu', () => {
+    expect(routes('ECOMM')).toEqual([
+      'Profile',
+      'ProductsManage',
+      'Support',
+      'ProductsVerification',
+      'Faqs',
+    ]);
+  });
+
+  it('defaults to the USER menu', () => {
+    expect(routes()).toContain('Earn');
   });
 });

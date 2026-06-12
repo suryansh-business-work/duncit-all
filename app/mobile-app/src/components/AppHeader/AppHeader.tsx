@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { AccountButton } from '@/components/AccountButton';
 import { AuthLogo } from '@/components/AuthLogo';
@@ -8,8 +9,12 @@ import { LocationButton } from '@/components/LocationButton';
 import { LogoutButton } from '@/components/LogoutButton';
 import { Mascot } from '@/components/Mascot';
 import { NotificationsBell } from '@/components/notifications';
+import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
+import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useHomeStore } from '@/stores/home.store';
+import { useStudioModeStore } from '@/stores/studio-mode.store';
+import { STUDIO_LABEL, resolveMode } from '@/utils/studio-mode';
 
 /**
  * In-app header — the two dynamic brand marks (logo + mascot, both from the
@@ -19,7 +24,13 @@ import { useHomeStore } from '@/stores/home.store';
  */
 export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) {
   const navigation = useNavigation();
-  const { color: ink } = useThemeColors();
+  const { color: ink, onPrimary } = useThemeColors();
+  const me = useMe().data?.me;
+  const roles = me?.roles ?? [];
+  const studioMode = useStudioModeStore((s) => s.mode);
+  const setStudioMode = useStudioModeStore((s) => s.setMode);
+  const effectiveStudio = resolveMode(studioMode, roles);
+  const [switchOpen, setSwitchOpen] = useState(false);
 
   // Tapping the logo returns to the Home tab and refreshes the feed. The nested
   // screen param matters: from another tab (Explore/Clubs/…) the stack is already
@@ -48,6 +59,26 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
           <AuthLogo size={34} />
         </YStack>
         <Mascot />
+        {!minimal && effectiveStudio !== 'USER' ? (
+          <XStack
+            testID="header-studio-badge"
+            role="button"
+            aria-label="Switch role"
+            onPress={() => setSwitchOpen(true)}
+            alignItems="center"
+            gap={4}
+            paddingHorizontal={10}
+            paddingVertical={5}
+            borderRadius={999}
+            backgroundColor="$primary"
+            pressStyle={{ opacity: 0.85 }}
+          >
+            <Text fontSize={11.5} fontWeight="900" color="$onPrimary">
+              {STUDIO_LABEL[effectiveStudio]}
+            </Text>
+            <MaterialIcons name="swap-horiz" size={14} color={onPrimary} />
+          </XStack>
+        ) : null}
       </XStack>
       <XStack alignItems="center" gap={8}>
         {minimal ? null : (
@@ -70,6 +101,16 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
         {minimal ? null : <NotificationsBell />}
         {minimal ? <LogoutButton /> : <AccountButton />}
       </XStack>
+      <StudioSwitchDialog
+        open={switchOpen}
+        roles={roles}
+        current={effectiveStudio}
+        onClose={() => setSwitchOpen(false)}
+        onSelect={(next) => {
+          setStudioMode(next);
+          setSwitchOpen(false);
+        }}
+      />
     </XStack>
   );
 }

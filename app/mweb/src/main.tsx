@@ -10,6 +10,7 @@ import { apolloClient } from './apollo';
 import { urlConfigs } from './config/url-configs';
 import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
 import { ColorModeProvider } from './ColorModeContext';
+import { StudioModeProvider } from './StudioModeContext';
 import App from './App';
 import { initPwa } from './pwa';
 import { setRuntimeConfig, getGoogleClientId } from './config/runtimeConfig';
@@ -81,13 +82,15 @@ function mount() {
       <ApolloProvider client={apolloClient}>
         <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey="mweb_user">
           <ColorModeProvider>
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <GoogleOAuthProvider clientId={getGoogleClientId()}>
-                <BrowserRouter>
-                  <PortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></PortalModeGate>
-                </BrowserRouter>
-              </GoogleOAuthProvider>
-            </LocalizationProvider>
+            <StudioModeProvider>
+              <LocalizationProvider dateAdapter={AdapterDateFns}>
+                <GoogleOAuthProvider clientId={getGoogleClientId()}>
+                  <BrowserRouter>
+                    <PortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></PortalModeGate>
+                  </BrowserRouter>
+                </GoogleOAuthProvider>
+              </LocalizationProvider>
+            </StudioModeProvider>
           </ColorModeProvider>
         </UserProvider>
       </ApolloProvider>

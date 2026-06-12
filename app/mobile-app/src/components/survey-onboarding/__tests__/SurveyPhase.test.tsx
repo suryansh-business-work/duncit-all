@@ -133,8 +133,12 @@ const meetingProps = {
   setSelectedSlot: jest.fn(),
   name: '',
   setName: jest.fn(),
+  lockName: false,
+  ext: '+91',
+  setExt: jest.fn(),
   phone: '',
   setPhone: jest.fn(),
+  hasProfilePhone: false,
   notes: '',
   setNotes: jest.fn(),
   busy: false,
@@ -166,6 +170,19 @@ describe('MeetingPhase slot picker', () => {
       screen.getByTestId(`slot-day-${new Date('2027-01-05T04:30:00.000Z').toDateString()}`),
     );
     expect(setSelectedSlot).toHaveBeenCalledWith('');
+  });
+
+  it('locks name and phone when they come from the profile', () => {
+    renderWithProviders(
+      <MeetingPhase
+        {...meetingProps}
+        name="Asha Roy"
+        lockName
+        phone="9876543210"
+        hasProfilePhone
+      />,
+    );
+    expect(screen.getAllByText('From your profile.')).toHaveLength(2);
   });
 
   it('shows the loading and empty states', () => {

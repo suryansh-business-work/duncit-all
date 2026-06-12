@@ -8,7 +8,7 @@ const dayKey = (iso: string) => new Date(iso).toDateString();
 const dayLabel = (iso: string) =>
   new Date(iso).toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short' });
 const timeLabel = (iso: string) =>
-  new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+  new Date(iso).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
 
 interface ChipProps {
   label: string;

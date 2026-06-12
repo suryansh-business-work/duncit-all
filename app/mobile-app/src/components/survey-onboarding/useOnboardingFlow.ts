@@ -1,5 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { graphqlRequest } from '@/services/graphql.client';
+import { useMe } from '@/hooks/useMe';
 import { toErrorMessage } from '@/utils/errors';
 import {
   ActiveSurveyForDocument,
@@ -35,11 +36,27 @@ export function useOnboardingFlow(kind: SurveyKind) {
   const [slotsLoading, setSlotsLoading] = useState(false);
   const [selectedSlot, setSelectedSlot] = useState('');
   const [name, setName] = useState('');
+  const [ext, setExt] = useState('+91');
   const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
   const [bookedSlot, setBookedSlot] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+
+  // Prefill the contact fields from the signed-in profile; locked in the UI
+  // when the profile already has them.
+  const me = useMe().data?.me;
+  const hasProfilePhone = !!me?.phone_number?.trim();
+  useEffect(() => {
+    if (!me) return;
+    if (me.full_name) setName(me.full_name);
+    if (me.phone_number?.trim()) {
+      setPhone(me.phone_number);
+      if (me.phone_extension) setExt(me.phone_extension);
+    }
+    // Prefill once when the profile lands.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [me?.user_id]);
 
   const get = (qid: string): Answer => answers[qid] ?? { value: '', values: [] };
   const set = (qid: string, patch: Partial<Answer>) =>
@@ -149,7 +166,7 @@ export function useOnboardingFlow(kind: SurveyKind) {
             requested_at: selectedSlot,
             notes: notes || null,
             contact_name: name.trim() || null,
-            contact_phone: phone.trim(),
+            contact_phone: `${ext.trim()} ${phone.trim()}`.trim(),
           },
         },
         { auth: true },
@@ -175,8 +192,12 @@ export function useOnboardingFlow(kind: SurveyKind) {
     setSelectedSlot,
     name,
     setName,
+    ext,
+    setExt,
     phone,
     setPhone,
+    hasProfilePhone,
+    lockName: !!me?.full_name,
     notes,
     setNotes,
     bookedSlot,

@@ -1,0 +1,41 @@
+<mjml>
+  <mj-head>
+    <mj-title>Your Duncit onboarding meeting is cancelled</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+      <mj-button background-color="#3b82f6" color="#ffffff" border-radius="8px" font-weight="700" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <mj-section padding="20px 0 0 0">
+      <mj-column>
+        <mj-image src="https://duncit.com/duncit-logo.svg" alt="Duncit" width="160px" align="center" padding="0" />
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="bold" color="#222">
+          Your onboarding meeting is cancelled, {{name}}!
+        </mj-text>
+        <mj-text font-size="14px" color="#555">
+          Your {{kind}} onboarding meeting that was booked for the slot below has been cancelled:
+        </mj-text>
+        <mj-text font-size="16px" color="#3b82f6" font-weight="bold">
+          {{slot}}
+        </mj-text>
+        <mj-text font-size="13px" color="#555">
+          Changed your mind? You can book a new slot anytime from Earn with Duncit.
+        </mj-text>
+        <mj-text font-size="13px" color="#888">
+          {{notes}}
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="16px 0 24px 0">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. You're receiving this because you started onboarding on Duncit.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

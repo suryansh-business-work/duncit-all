@@ -134,8 +134,12 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
             setSelectedSlot={flow.setSelectedSlot}
             name={flow.name}
             setName={flow.setName}
+            lockName={flow.lockName}
+            ext={flow.ext}
+            setExt={flow.setExt}
             phone={flow.phone}
             setPhone={flow.setPhone}
+            hasProfilePhone={flow.hasProfilePhone}
             notes={flow.notes}
             setNotes={flow.setNotes}
             busy={flow.busy}

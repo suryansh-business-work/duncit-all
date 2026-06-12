@@ -5,6 +5,8 @@ import { UserModel } from '@modules/access/user/user.model';
 import { leadSurveyService } from './leadSurvey.service';
 import type { SurveyKind } from './survey.model';
 import {
+  sendMeetingBookedEmail,
+  sendMeetingCancelledEmail,
   sendMeetingScheduledEmail,
   sendMeetingScheduledAdminEmail,
 } from '@services/email/email.service';
@@ -161,6 +163,27 @@ async function occupiedInstants(excludeUserId?: string | null): Promise<Set<numb
   );
 }
 
+/** Best-effort applicant notification for self-serve booking actions. */
+async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled') {
+  try {
+    const names = await userMap([String(doc.user_id)]);
+    const who = names.get(String(doc.user_id));
+    if (!who?.email) return;
+    const opts = {
+      to: who.email,
+      name: who.name,
+      kind: MEETING_KIND_LABELS[doc.kind] ?? 'Host',
+      slot: slotLabel(iso(doc.scheduled_at ?? doc.requested_at)),
+      notes: doc.notes || '',
+    };
+    if (kind === 'booked') await sendMeetingBookedEmail(opts);
+    else await sendMeetingCancelledEmail(opts);
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[meeting] applicant email failed:', err);
+  }
+}
+
 export const meetingService = {
   /** Global slot-availability config (singleton; created with defaults on first read). */
   async availability() {
@@ -260,6 +283,7 @@ export const meetingService = {
       // eslint-disable-next-line no-console
       console.error('[meeting.request] syncFromGate failed:', err);
     }
+    await notifyApplicant(doc, 'booked');
     return pub(doc);
   },
 
@@ -278,6 +302,7 @@ export const meetingService = {
     doc.meeting_link = null;
     doc.status = 'REQUESTED';
     await doc.save();
+    await notifyApplicant(doc, 'booked');
     return pub(doc);
   },
 
@@ -287,6 +312,7 @@ export const meetingService = {
     if (!doc) throw notFound();
     doc.status = 'CANCELLED';
     await doc.save();
+    await notifyApplicant(doc, 'cancelled');
     return pub(doc);
   },
 

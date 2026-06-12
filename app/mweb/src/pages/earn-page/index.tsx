@@ -1,5 +1,7 @@
 import { gql, useQuery } from '@apollo/client';
-import { Stack, Typography } from '@mui/material';
+import { useNavigate } from 'react-router-dom';
+import { Box, Button, Stack, Typography } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
@@ -71,12 +73,18 @@ const meetingNotice = (meeting: EarnMeeting) => {
  * user already holds the matching role, or while an onboarding meeting for it
  * is still pending. */
 export default function EarnPage() {
+  const navigate = useNavigate();
   const { data, refetch } = useQuery(EARN_ME, { fetchPolicy: 'cache-and-network' });
   const roles: string[] = data?.me?.roles ?? [];
   const meetings: EarnMeeting[] = data?.myMeetings ?? [];
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 } }}>
+      <Box>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
+          Back
+        </Button>
+      </Box>
       <Stack spacing={0.5}>
         <Typography variant="h5" sx={{ fontWeight: 950 }}>
           Earn with Duncit

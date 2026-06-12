@@ -9,6 +9,8 @@ import {
 jest.mock('@services/email/email.service', () => ({
   sendMeetingScheduledEmail: jest.fn().mockResolvedValue(undefined),
   sendMeetingScheduledAdminEmail: jest.fn().mockResolvedValue(undefined),
+  sendMeetingBookedEmail: jest.fn().mockResolvedValue(undefined),
+  sendMeetingCancelledEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
 const userId = new Types.ObjectId().toString();

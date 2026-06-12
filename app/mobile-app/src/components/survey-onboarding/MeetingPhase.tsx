@@ -1,5 +1,5 @@
 import { ScrollView } from 'react-native';
-import { Button, Input, Spinner, Text, TextArea, YStack } from 'tamagui';
+import { Button, Input, Spinner, Text, TextArea, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ActiveSurvey, MeetingSlot } from '@/graphql/onboarding-survey';
@@ -15,8 +15,12 @@ interface Props {
   setSelectedSlot: (v: string) => void;
   name: string;
   setName: (v: string) => void;
+  lockName: boolean;
+  ext: string;
+  setExt: (v: string) => void;
   phone: string;
   setPhone: (v: string) => void;
+  hasProfilePhone: boolean;
   notes: string;
   setNotes: (v: string) => void;
   busy: boolean;
@@ -35,8 +39,12 @@ export function MeetingPhase({
   setSelectedSlot,
   name,
   setName,
+  lockName,
+  ext,
+  setExt,
   phone,
   setPhone,
+  hasProfilePhone,
   notes,
   setNotes,
   busy,
@@ -89,18 +97,47 @@ export function MeetingPhase({
         ) : null}
 
         <Text fontSize={14} fontWeight="700" color={ink}>
-          Your name (optional)
+          Your name
         </Text>
-        <Input testID="meeting-name" value={name} onChangeText={setName} />
+        <Input
+          testID="meeting-name"
+          value={name}
+          onChangeText={setName}
+          disabled={lockName}
+          opacity={lockName ? 0.6 : 1}
+        />
+        {lockName ? (
+          <Text fontSize={11.5} color={ink} opacity={0.55}>
+            From your profile.
+          </Text>
+        ) : null}
         <Text fontSize={14} fontWeight="700" color={ink}>
           Phone *
         </Text>
-        <Input
-          testID="meeting-phone"
-          value={phone}
-          onChangeText={setPhone}
-          keyboardType="phone-pad"
-        />
+        <XStack gap={8}>
+          <Input
+            testID="meeting-ext"
+            value={ext}
+            onChangeText={setExt}
+            disabled={hasProfilePhone}
+            opacity={hasProfilePhone ? 0.6 : 1}
+            width={84}
+          />
+          <Input
+            testID="meeting-phone"
+            value={phone}
+            onChangeText={setPhone}
+            keyboardType="phone-pad"
+            disabled={hasProfilePhone}
+            opacity={hasProfilePhone ? 0.6 : 1}
+            flex={1}
+          />
+        </XStack>
+        {hasProfilePhone ? (
+          <Text fontSize={11.5} color={ink} opacity={0.55}>
+            From your profile.
+          </Text>
+        ) : null}
         <Text fontSize={14} fontWeight="700" color={ink}>
           Notes (optional)
         </Text>

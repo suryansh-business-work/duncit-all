@@ -45,7 +45,7 @@ const meetingAvailabilitySchema = new Schema(
     /** Working days, JS getDay() numbering: 0=Sun … 6=Sat. */
     week_days: { type: [Number], default: [1, 2, 3, 4, 5, 6] },
     start_time: { type: String, default: '10:00' },
-    end_time: { type: String, default: '19:00' },
+    end_time: { type: String, default: '17:00' },
     slot_minutes: { type: Number, default: 30 },
     /** How many days ahead users can book. */
     horizon_days: { type: Number, default: 7 },

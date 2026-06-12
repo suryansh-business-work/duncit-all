@@ -80,6 +80,32 @@ function route({
 beforeEach(() => mockRequest.mockReset());
 
 describe('useOnboardingFlow', () => {
+  it('prefills name, phone and extension from the signed-in profile', async () => {
+    route({ meeting: null, survey: null });
+    const { useMeStore } = jest.requireActual('@/stores/me.store');
+    useMeStore.setState({
+      data: {
+        me: {
+          user_id: 'u1',
+          full_name: 'Asha Roy',
+          phone_number: '9876543210',
+          phone_extension: '+92',
+          roles: [],
+        },
+      },
+    });
+    try {
+      const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
+      await waitFor(() => expect(result.current.name).toBe('Asha Roy'));
+      expect(result.current.phone).toBe('9876543210');
+      expect(result.current.ext).toBe('+92');
+      expect(result.current.hasProfilePhone).toBe(true);
+      expect(result.current.lockName).toBe(true);
+    } finally {
+      useMeStore.getState().reset();
+    }
+  });
+
   it('skips the survey to the meeting step (and loads slots) when none is configured', async () => {
     route({ meeting: null, survey: null });
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
@@ -187,7 +213,7 @@ describe('useOnboardingFlow', () => {
       expect.objectContaining({
         input: expect.objectContaining({
           requested_at: '2027-01-04T04:30:00.000Z',
-          contact_phone: '9876543210',
+          contact_phone: '+91 9876543210',
           contact_name: null,
           notes: null,
         }),

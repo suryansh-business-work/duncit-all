@@ -218,12 +218,7 @@ export function EarnMeetingActions({ kind, onChanged }: Readonly<Props>) {
         </ModalThemeScope>
       </Modal>
 
-      <Modal
-        visible={cancelOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={closeCancel}
-      >
+      <Modal visible={cancelOpen} transparent animationType="fade" onRequestClose={closeCancel}>
         <ModalThemeScope>
           <YStack flex={1} alignItems="center" justifyContent="center" testID="cancel-dialog">
             <YStack

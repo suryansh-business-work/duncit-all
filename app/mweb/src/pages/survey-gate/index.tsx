@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { useLazyQuery, useMutation } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Button, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
+import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import {
   ACTIVE_SURVEY_FOR,
   REQUEST_MEETING,
@@ -110,6 +111,11 @@ export default function SurveyGatePage() {
 
   return (
     <Box sx={{ maxWidth: 680, mx: 'auto', p: { xs: 1.5, sm: 2 } }}>
+      <Box sx={{ mb: 1 }}>
+        <Button startIcon={<ArrowBackIcon />} onClick={() => navigate(-1)} size="small">
+          Back
+        </Button>
+      </Box>
       <Card variant="outlined" sx={{ borderRadius: 4 }}>
         <CardContent>
           <AuthLogo />

@@ -238,6 +238,36 @@ export function sendMeetingScheduledEmail(opts: {
   });
 }
 
+export function sendMeetingBookedEmail(opts: {
+  to: string;
+  name: string;
+  kind: string;
+  slot: string;
+  notes: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `Your Duncit ${opts.kind} onboarding meeting is booked`,
+    template: 'meeting-booked',
+    vars: opts,
+  });
+}
+
+export function sendMeetingCancelledEmail(opts: {
+  to: string;
+  name: string;
+  kind: string;
+  slot: string;
+  notes: string;
+}) {
+  return sendEmail({
+    to: opts.to,
+    subject: `Your Duncit ${opts.kind} onboarding meeting is cancelled`,
+    template: 'meeting-cancelled',
+    vars: opts,
+  });
+}
+
 export function sendMeetingScheduledAdminEmail(opts: {
   to: string;
   name: string;

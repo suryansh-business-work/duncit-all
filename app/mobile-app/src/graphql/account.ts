@@ -14,6 +14,8 @@ export const MobileMeDocument = gql(`
       email
       is_email_verified
       profile_photo
+      phone_number
+      phone_extension
       roles
     }
   }

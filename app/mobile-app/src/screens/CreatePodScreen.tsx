@@ -1,21 +1,33 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
-import { CreatePodFormView } from '@/components/create-pod';
+import { CreatePodStepper } from '@/components/create-pod';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { StackScreen } from '@/components/StackScreen';
 import { useCreatePod } from '@/hooks/useCreatePod';
 import { useHomeStore } from '@/stores/home.store';
 import type { RootStackParamList } from '@/navigation/types';
 
-/** Host-only Create Pod screen — reached from the Home "+" floating button.
- * Submits via createPartnerPod; on success the feed refreshes and the host
- * lands on Hosts Management. */
+/** Host-only Create Pod screen — reached from the Home "+" button or by resuming
+ * a draft from Host Management. The draft autosaves; finishing step 7 publishes
+ * the pod, refreshes the feed and lands the host on Hosts Management. */
 export function CreatePodScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { isApprovedHost, clubs, venues, isLoading, create } = useCreatePod();
+  const route = useRoute<RouteProp<RootStackParamList, 'CreatePod'>>();
+  const {
+    isApprovedHost,
+    clubs,
+    venues,
+    products,
+    isLoading,
+    initialValues,
+    initialStep,
+    initialDraftId,
+    saveDraft,
+    publish,
+  } = useCreatePod(route.params?.draftId);
 
   return (
     <StackScreen title="Create a Pod" testID="create-pod-screen">
@@ -39,11 +51,16 @@ export function CreatePodScreen() {
       {!isLoading && isApprovedHost ? (
         <ScrollView showsVerticalScrollIndicator={false}>
           <Reveal>
-            <CreatePodFormView
+            <CreatePodStepper
+              initialValues={initialValues}
+              initialStep={initialStep}
+              initialDraftId={initialDraftId}
               clubs={clubs}
               venues={venues}
-              onSubmit={async (values) => {
-                await create(values);
+              products={products}
+              onSaveDraft={saveDraft}
+              onPublish={async (id, input) => {
+                await publish(id, input);
                 void useHomeStore.getState().fetch(true);
                 navigation.replace('HostManage');
               }}

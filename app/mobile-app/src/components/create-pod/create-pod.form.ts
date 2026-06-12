@@ -7,7 +7,7 @@ import {
   type PodOccurrence,
   type PodType,
 } from '@/generated/graphql/graphql';
-import type { CreatePodFormValues } from './create-pod.types';
+import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
 
 const DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
 const DATE_TIME_RE = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}$/;
@@ -24,8 +24,7 @@ const intIn = (min: number, max: number) => (text: string) => {
   return Number.isFinite(value) && value >= min && value <= max;
 };
 
-/** Zod schema for the host Create Pod screen — same rules as mWeb's form
- * (venue for physical, link for virtual, future start, free = amount 0). */
+/** Zod schema for the host Create Pod stepper — same rules as mWeb's form. */
 export const createPodSchema = z
   .object({
     pod_title: z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
@@ -49,8 +48,26 @@ export const createPodSchema = z
     no_of_spots_text: z.string().refine(intIn(0, 10000), 'Spots must be 0–10000'),
     pod_hashtag_text: z.string().max(500),
     media_text: z.string(),
-    what_this_pod_offers_text: z.string().max(1000),
-    available_perks_text: z.string().max(1000),
+    what_this_pod_offers: z.array(z.string().trim().min(1).max(40)).max(20),
+    available_perks: z.array(z.string().trim().min(1).max(40)).max(20),
+    products_enabled: z.boolean(),
+    product_requests: z
+      .array(
+        z.object({
+          product_id: z.string().min(1, 'Select a product'),
+          quantity: z.number().min(1).max(10000),
+        }),
+      )
+      .max(20),
+    place_charges: z
+      .array(
+        z.object({
+          label: z.string().trim().min(1, 'Label required').max(80),
+          amount: z.number().min(0).max(100000),
+          note: z.string().trim().max(200),
+        }),
+      )
+      .max(10),
     payment_terms: z.string().max(4000),
   })
   .superRefine((values, ctx) => {
@@ -95,7 +112,49 @@ export const createPodSchema = z
         message: 'Free pods must have amount 0',
       });
     }
+    if (values.products_enabled && values.product_requests.length === 0) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['product_requests'],
+        message: 'Add at least one product',
+      });
+    }
   });
+
+/** Fields validated when leaving each stepper step (index aligned with STEP_TITLES). */
+export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
+  ['pod_title', 'club_id', 'pod_mode', 'pod_hashtag_text'],
+  [
+    'venue_id',
+    'meeting_platform',
+    'meeting_url',
+    'meeting_notes',
+    'pod_date_time_text',
+    'pod_end_date_time_text',
+  ],
+  ['pod_description', 'pod_info', 'media_text'],
+  ['what_this_pod_offers'],
+  ['available_perks'],
+  ['products_enabled', 'product_requests'],
+  [
+    'pod_type',
+    'pod_occurrence',
+    'pod_amount_text',
+    'no_of_spots_text',
+    'place_charges',
+    'payment_terms',
+  ],
+];
+
+export const STEP_TITLES = [
+  'Select Club',
+  'When, Where & Map',
+  'About the Pod',
+  'What This Pod Offers',
+  'Available Perks',
+  'Add Products',
+  'Payment & Charges',
+];
 
 const splitLines = (text: string) =>
   text
@@ -137,11 +196,30 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
       type: /\.(mp4|mov|webm)$/i.test(url) ? CategoryMediaType.Video : CategoryMediaType.Image,
     })),
     payment_terms: values.payment_terms || null,
-    what_this_pod_offers: splitLines(values.what_this_pod_offers_text),
-    available_perks: splitLines(values.available_perks_text),
-    place_charges: [],
-    products_enabled: false,
-    product_requests: [],
+    what_this_pod_offers: values.what_this_pod_offers,
+    available_perks: values.available_perks,
+    place_charges: values.place_charges,
+    products_enabled: values.products_enabled,
+    product_requests: values.products_enabled ? values.product_requests : [],
     is_active: true,
   };
+}
+
+/** Serialises the live form state for a server draft. */
+export function serializeDraft(values: CreatePodFormValues, step: number) {
+  return {
+    payload: JSON.stringify(values),
+    pod_title: values.pod_title.trim(),
+    pod_mode: values.pod_mode,
+    step,
+  };
+}
+
+/** Rebuilds form values from a stored draft payload. */
+export function hydrateDraft(payload: string): CreatePodFormValues {
+  try {
+    return { ...blankCreatePodForm, ...(JSON.parse(payload) as Partial<CreatePodFormValues>) };
+  } catch {
+    return blankCreatePodForm;
+  }
 }

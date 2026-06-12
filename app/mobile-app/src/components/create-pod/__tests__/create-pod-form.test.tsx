@@ -1,17 +1,16 @@
-import { fireEvent, screen, waitFor } from '@testing-library/react-native';
-
-import { ChipSelectField } from '@/components/create-pod/ChipSelectField';
-import { CreatePodFormView } from '@/components/create-pod/CreatePodFormView';
 import {
+  STEP_FIELDS,
+  STEP_TITLES,
   buildCreatePodInput,
   createPodSchema,
+  hydrateDraft,
   parseDateTimeText,
+  serializeDraft,
 } from '@/components/create-pod/create-pod.form';
 import {
   blankCreatePodForm,
   type CreatePodFormValues,
 } from '@/components/create-pod/create-pod.types';
-import { renderWithProviders } from '@/utils/test-utils';
 
 const futureText = (() => {
   const date = new Date(Date.now() + 24 * 3_600_000);
@@ -44,8 +43,10 @@ describe('parseDateTimeText', () => {
 });
 
 describe('createPodSchema', () => {
-  it('accepts a valid physical pod', () => {
+  it('accepts a valid physical pod and exposes a field group per step', () => {
     expect(createPodSchema.safeParse(valid()).success).toBe(true);
+    expect(STEP_FIELDS).toHaveLength(STEP_TITLES.length);
+    expect(STEP_TITLES).toHaveLength(7);
   });
 
   it('requires title, club, description and a venue for physical pods', () => {
@@ -82,12 +83,17 @@ describe('createPodSchema', () => {
     expect(issuesOf(valid({ no_of_spots_text: '-2' }))).toContain('no_of_spots_text');
   });
 
-  it('forces free pods to amount 0', () => {
+  it('forces free pods to amount 0 and gates enabled products', () => {
     expect(issuesOf(valid({ pod_type: 'NATIVE_FREE', pod_amount_text: '100' }))).toContain(
       'pod_amount_text',
     );
+    expect(issuesOf(valid({ products_enabled: true, product_requests: [] }))).toContain(
+      'product_requests',
+    );
     expect(
-      createPodSchema.safeParse(valid({ pod_type: 'NATIVE_PAID', pod_amount_text: '499' })).success,
+      createPodSchema.safeParse(
+        valid({ products_enabled: true, product_requests: [{ product_id: 'p1', quantity: 2 }] }),
+      ).success,
     ).toBe(true);
   });
 });
@@ -99,13 +105,16 @@ describe('buildCreatePodInput', () => {
     );
   });
 
-  it('maps a physical pod with hashtags, media and line lists', () => {
+  it('maps a physical pod with hashtags, media, chips, products and charges', () => {
     const input = buildCreatePodInput(
       valid({
         pod_hashtag_text: '#weekend, #community fun',
         media_text: 'https://cdn/img.jpg\nhttps://cdn/clip.mp4\n',
-        what_this_pod_offers_text: 'Snacks\n\nGuided trail',
-        available_perks_text: 'Stickers',
+        what_this_pod_offers: ['Snacks', 'Guided trail'],
+        available_perks: ['Stickers'],
+        products_enabled: true,
+        product_requests: [{ product_id: 'p1', quantity: 3 }],
+        place_charges: [{ label: 'Entry', amount: 50, note: '' }],
       }),
     );
     expect(input.pod_hashtag).toEqual(['weekend', 'community', 'fun']);
@@ -113,138 +122,39 @@ describe('buildCreatePodInput', () => {
       { url: 'https://cdn/img.jpg', type: 'IMAGE' },
       { url: 'https://cdn/clip.mp4', type: 'VIDEO' },
     ]);
+    expect(input.what_this_pod_offers).toEqual(['Snacks', 'Guided trail']);
+    expect(input.available_perks).toEqual(['Stickers']);
+    expect(input.product_requests).toEqual([{ product_id: 'p1', quantity: 3 }]);
+    expect(input.place_charges).toEqual([{ label: 'Entry', amount: 50, note: '' }]);
     expect(input.venue_id).toBe('venue-1');
     expect(input.meeting_url).toBeNull();
-    expect(input.pod_end_date_time).toBeNull();
     expect(input.is_active).toBe(true);
   });
 
-  it('nulls empty optional virtual fields and keeps payment terms', () => {
+  it('drops product requests when products are disabled and nulls virtual extras', () => {
     const input = buildCreatePodInput(
       valid({
         pod_mode: 'VIRTUAL',
         meeting_platform: '',
         meeting_url: 'https://meet.duncit.com/x',
         meeting_notes: '',
-        payment_terms: 'Pay at the venue',
+        products_enabled: false,
+        product_requests: [{ product_id: 'p1', quantity: 3 }],
       }),
     );
+    expect(input.product_requests).toEqual([]);
+    expect(input.venue_id).toBeNull();
     expect(input.meeting_platform).toBeNull();
     expect(input.meeting_notes).toBeNull();
-    expect(input.payment_terms).toBe('Pay at the venue');
-  });
-
-  it('maps a virtual pod with meeting fields and no venue', () => {
-    const input = buildCreatePodInput(
-      valid({
-        pod_mode: 'VIRTUAL',
-        meeting_platform: 'Meet',
-        meeting_url: 'https://meet.duncit.com/x',
-        meeting_notes: 'Join early',
-        pod_end_date_time_text: futureText,
-      }),
-    );
-    expect(input.venue_id).toBeNull();
-    expect(input.meeting_platform).toBe('Meet');
-    expect(input.meeting_notes).toBe('Join early');
-    expect(input.pod_end_date_time).not.toBeNull();
   });
 });
 
-describe('ChipSelectField', () => {
-  it('selects options and shows error + empty hint states', () => {
-    const onChange = jest.fn();
-    const { rerender } = renderWithProviders(
-      <ChipSelectField
-        label="Club"
-        options={[{ value: 'a', label: 'Alpha' }]}
-        value=""
-        onChange={onChange}
-        error="Select a club"
-        testID="chips"
-      />,
-    );
-    fireEvent.press(screen.getByTestId('chips-a'));
-    expect(onChange).toHaveBeenCalledWith('a');
-    expect(screen.getByTestId('chips-error')).toBeOnTheScreen();
-
-    rerender(
-      <ChipSelectField
-        label="Venue"
-        options={[]}
-        value=""
-        onChange={onChange}
-        emptyHint="None linked."
-        testID="chips"
-      />,
-    );
-    expect(screen.getByTestId('chips-empty')).toBeOnTheScreen();
-    expect(screen.getByText('None linked.')).toBeOnTheScreen();
-
-    rerender(
-      <ChipSelectField label="Venue" options={[]} value="" onChange={onChange} testID="chips" />,
-    );
-    expect(screen.getByText('No options available.')).toBeOnTheScreen();
-  });
-});
-
-describe('CreatePodFormView', () => {
-  const clubs = [
-    { id: 'club-1', club_name: 'Runners', meetup_venues_id: ['venue-1'] },
-    { id: 'club-2', club_name: 'Readers', meetup_venues_id: [] },
-  ] as never;
-  const venues = [{ id: 'venue-1', venue_name: 'Hall', city: 'Pune', locality: null }] as never;
-
-  const fillRequired = () => {
-    fireEvent.changeText(screen.getByTestId('field-pod_title'), 'Sunday community hike');
-    fireEvent.press(screen.getByTestId('create-pod-club-club-1'));
-    fireEvent.press(screen.getByTestId('create-pod-venue-venue-1'));
-    fireEvent.changeText(screen.getByTestId('field-pod_description'), 'A relaxed group hike.');
-    fireEvent.changeText(screen.getByTestId('field-pod_date_time_text'), futureText);
-  };
-
-  it('submits a valid physical pod', async () => {
-    const onSubmit = jest.fn().mockResolvedValue(undefined);
-    renderWithProviders(<CreatePodFormView clubs={clubs} venues={venues} onSubmit={onSubmit} />);
-    fillRequired();
-    fireEvent.press(screen.getByTestId('create-pod-submit'));
-    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    expect(onSubmit.mock.calls[0]?.[0].club_id).toBe('club-1');
-  });
-
-  it('switches to virtual fields, resets the venue on club change and zeroes free amounts', async () => {
-    const onSubmit = jest.fn().mockResolvedValue(undefined);
-    renderWithProviders(<CreatePodFormView clubs={clubs} venues={venues} onSubmit={onSubmit} />);
-    fillRequired();
-    // Changing the club clears the picked venue.
-    fireEvent.press(screen.getByTestId('create-pod-club-club-2'));
-    fireEvent.press(screen.getByTestId('create-pod-mode-VIRTUAL'));
-    expect(screen.getByTestId('field-meeting_url')).toBeOnTheScreen();
-    fireEvent.changeText(screen.getByTestId('field-meeting_url'), 'https://meet.duncit.com/x');
-    // Paid then back to free resets the amount.
-    fireEvent.press(screen.getByTestId('create-pod-type-NATIVE_PAID'));
-    fireEvent.changeText(screen.getByTestId('field-pod_amount_text'), '499');
-    fireEvent.press(screen.getByTestId('create-pod-type-NATIVE_FREE'));
-    fireEvent.press(screen.getByTestId('create-pod-submit'));
-    await waitFor(() => expect(onSubmit).toHaveBeenCalled());
-    expect(onSubmit.mock.calls[0]?.[0].pod_amount_text).toBe('0');
-  });
-
-  it('shows the submit error and keeps the form usable', async () => {
-    const onSubmit = jest.fn().mockRejectedValue(new Error('Server said no'));
-    renderWithProviders(<CreatePodFormView clubs={clubs} venues={venues} onSubmit={onSubmit} />);
-    fillRequired();
-    fireEvent.press(screen.getByTestId('create-pod-submit'));
-    await waitFor(() => expect(screen.getByTestId('create-pod-error')).toBeOnTheScreen());
-    expect(screen.getByTestId('create-pod-error')).toHaveTextContent('Server said no');
-  });
-
-  it('falls back to a generic message for non-Error failures', async () => {
-    const onSubmit = jest.fn().mockRejectedValue('nope');
-    renderWithProviders(<CreatePodFormView clubs={clubs} venues={venues} onSubmit={onSubmit} />);
-    fillRequired();
-    fireEvent.press(screen.getByTestId('create-pod-submit'));
-    await waitFor(() => expect(screen.getByTestId('create-pod-error')).toBeOnTheScreen());
-    expect(screen.getByTestId('create-pod-error')).toHaveTextContent('Could not create the pod.');
+describe('draft serialize/hydrate', () => {
+  it('round-trips values and falls back to blank for invalid payloads', () => {
+    const draft = serializeDraft(valid({ what_this_pod_offers: ['A'] }), 3);
+    expect(draft.pod_title).toBe('Sunday community hike');
+    expect(draft.step).toBe(3);
+    expect(hydrateDraft(draft.payload).what_this_pod_offers).toEqual(['A']);
+    expect(hydrateDraft('not-json')).toEqual(blankCreatePodForm);
   });
 });

@@ -252,6 +252,8 @@ const crmDynamicFieldSchema = new Schema(
     hint: { type: String, trim: true, default: '' },
     applies_to_venue: { type: Boolean, default: true },
     applies_to_host: { type: Boolean, default: true },
+    // Opt-in (unlike venue/host): existing fields predate ecomm leads.
+    applies_to_ecomm: { type: Boolean, default: false },
     required: { type: Boolean, default: false },
     sort_order: { type: Number, default: 0 },
     is_active: { type: Boolean, default: true },

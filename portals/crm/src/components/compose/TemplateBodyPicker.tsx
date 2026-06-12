@@ -13,7 +13,7 @@ export interface TemplateBody {
 }
 
 interface Props {
-  entity: 'VENUE_LEAD' | 'HOST_LEAD';
+  entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
   /** Slug → value map pulled from the lead (venue/host), used to auto-fill. */
   variableValues: Record<string, string>;
   leadName: string;
@@ -52,7 +52,8 @@ function seedValue(slug: string, sample: string | null | undefined, vv: Record<s
 export default function TemplateBodyPicker({ entity, variableValues, leadName, leadEmail, onChange }: Readonly<Props>) {
   const client = useApolloClient();
   const { data, loading } = useQuery<{ emailTemplates: EmailTemplate[] }>(TEMPLATES, { fetchPolicy: 'cache-and-network' });
-  const wanted = entity === 'VENUE_LEAD' ? 'VENUE' : 'HOST';
+  const TARGET_FOR = { VENUE_LEAD: 'VENUE', HOST_LEAD: 'HOST', ECOMM_LEAD: 'ECOMM' } as const;
+  const wanted = TARGET_FOR[entity];
   const templates = useMemo(
     () => (data?.emailTemplates ?? []).filter((t) => t.is_active && (t.target === 'STATIC' || t.target === wanted)),
     [data, wanted]

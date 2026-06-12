@@ -70,6 +70,7 @@ export const appConfig: AppConfig = {
       children: [
         { label: 'Venue Leads', to: '/venue-leads', icon: 'location' },
         { label: 'Host Leads', to: '/host-leads', icon: 'groups' },
+        { label: 'Ecomm Leads', to: '/ecomm-leads', icon: 'inventory' },
       ],
     },
     { label: 'Reminders', to: '/reminders', icon: 'calendar' },

@@ -11,7 +11,7 @@ interface Props {
   subName?: string;
   servicesName?: string;
   /** Restrict the catalogue to titles flagged for this lead side. */
-  appliesTo?: 'VENUE' | 'HOST';
+  appliesTo?: 'VENUE' | 'HOST' | 'ECOMM';
 }
 
 /**
@@ -42,6 +42,7 @@ export default function ServicesOfferedPicker({
         is_active: true,
         ...(appliesTo === 'VENUE' ? { applies_to_venue: true } : {}),
         ...(appliesTo === 'HOST' ? { applies_to_host: true } : {}),
+        ...(appliesTo === 'ECOMM' ? { applies_to_ecomm: true } : {}),
       },
     },
     skip: !superId,

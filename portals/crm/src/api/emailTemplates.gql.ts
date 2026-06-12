@@ -11,7 +11,7 @@ export interface EmailAsset {
   name?: string | null;
 }
 
-export type EmailTemplateTarget = 'VENUE' | 'HOST' | 'STATIC';
+export type EmailTemplateTarget = 'VENUE' | 'HOST' | 'ECOMM' | 'STATIC';
 
 export interface EmailTemplate {
   template_id: string;

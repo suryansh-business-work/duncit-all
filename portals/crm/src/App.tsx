@@ -5,6 +5,9 @@ import VenueLeadsPage from './pages/venue-leads/VenueLeadsPage';
 import VenueLeadEditorPage from './pages/venue-leads/VenueLeadEditorPage';
 import VenueLeadDetailPage from './pages/venue-leads/VenueLeadDetailPage';
 import HostLeadsPage from './pages/host-leads/HostLeadsPage';
+import EcommLeadsPage from './pages/ecomm-leads/EcommLeadsPage';
+import EcommLeadEditorPage from './pages/ecomm-leads/EcommLeadEditorPage';
+import EcommLeadDetailPage from './pages/ecomm-leads/EcommLeadDetailPage';
 import HostLeadEditorPage from './pages/host-leads/HostLeadEditorPage';
 import HostLeadDetailPage from './pages/host-leads/HostLeadDetailPage';
 import ManageServicesPage from './pages/ManageServicesPage';
@@ -56,6 +59,11 @@ export default function App() {
       <Route path="/host-leads/new" element={authed(<HostLeadEditorPage />)} />
       <Route path="/host-leads/:id/view" element={authed(<HostLeadDetailPage />)} />
       <Route path="/host-leads/:id" element={authed(<HostLeadEditorPage />)} />
+      <Route path="/ecomm-leads" element={authed(<EcommLeadsPage />)} />
+      <Route path="/ecomm-leads/services" element={authed(<ManageServicesPage kind="ECOMM" />)} />
+      <Route path="/ecomm-leads/new" element={authed(<EcommLeadEditorPage />)} />
+      <Route path="/ecomm-leads/:id/view" element={authed(<EcommLeadDetailPage />)} />
+      <Route path="/ecomm-leads/:id" element={authed(<EcommLeadEditorPage />)} />
       <Route path="/call-prompts" element={authed(<CallPromptsPage />)} />
       <Route path="/email-templates" element={authed(<EmailTemplatesPage />)} />
       <Route path="/email-templates/:id" element={authed(<EmailTemplateEditorPage />)} />

@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 
 export type QuestionType = 'SECTION' | 'MCQ' | 'TEXT' | 'TEXTAREA';
-export type SurveyKind = 'VENUE' | 'HOST';
+export type SurveyKind = 'VENUE' | 'HOST' | 'ECOMM';
 export type CategoryLevel = 'SUPER' | 'CATEGORY' | 'SUB';
 
 export interface SurveyQuestion {

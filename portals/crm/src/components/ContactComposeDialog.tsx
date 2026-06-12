@@ -4,8 +4,10 @@ import { Alert, Button, Stack, TextField } from '@mui/material';
 import PhoneIcon from '@mui/icons-material/Phone';
 import EmailIcon from '@mui/icons-material/Email';
 import {
+  CALL_ECOMM_LEAD,
   CALL_HOST_LEAD,
   CALL_VENUE_LEAD,
+  EMAIL_ECOMM_LEAD,
   EMAIL_HOST_LEAD,
   EMAIL_VENUE_LEAD,
 } from '../api/crm.gql';
@@ -16,7 +18,7 @@ import EmailComposeFields, { type EmailPayload } from './compose/EmailComposeFie
 
 type Mode = 'email' | 'call';
 
-type EntityKind = 'VENUE_LEAD' | 'HOST_LEAD';
+type EntityKind = 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
 
 interface BasicLead {
   id: string;
@@ -36,14 +38,19 @@ interface Props {
   onResult: (message: string, ok: boolean) => void;
 }
 
+const EMAIL_MUTATIONS = { VENUE_LEAD: EMAIL_VENUE_LEAD, HOST_LEAD: EMAIL_HOST_LEAD, ECOMM_LEAD: EMAIL_ECOMM_LEAD } as const;
+const CALL_MUTATIONS = { VENUE_LEAD: CALL_VENUE_LEAD, HOST_LEAD: CALL_HOST_LEAD, ECOMM_LEAD: CALL_ECOMM_LEAD } as const;
+const EMAIL_KEYS = { VENUE_LEAD: 'emailVenueLeadContact', HOST_LEAD: 'emailHostLeadContact', ECOMM_LEAD: 'emailEcommLeadContact' } as const;
+const CALL_KEYS = { VENUE_LEAD: 'callVenueLeadContact', HOST_LEAD: 'callHostLeadContact', ECOMM_LEAD: 'callEcommLeadContact' } as const;
+
 const mutationFor = (entity: EntityKind, mode: Mode) => {
-  if (mode === 'email') return entity === 'VENUE_LEAD' ? EMAIL_VENUE_LEAD : EMAIL_HOST_LEAD;
-  return entity === 'VENUE_LEAD' ? CALL_VENUE_LEAD : CALL_HOST_LEAD;
+  if (mode === 'email') return EMAIL_MUTATIONS[entity];
+  return CALL_MUTATIONS[entity];
 };
 
 const responseKey = (entity: EntityKind, mode: Mode) => {
-  if (mode === 'email') return entity === 'VENUE_LEAD' ? 'emailVenueLeadContact' : 'emailHostLeadContact';
-  return entity === 'VENUE_LEAD' ? 'callVenueLeadContact' : 'callHostLeadContact';
+  if (mode === 'email') return EMAIL_KEYS[entity];
+  return CALL_KEYS[entity];
 };
 
 export default function ContactComposeDialog({ open, mode, entity, lead, variableValues, onClose, onResult }: Readonly<Props>) {

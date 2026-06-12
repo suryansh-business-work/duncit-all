@@ -14,6 +14,7 @@ export const serviceOfferedTypeDefs = gql`
     sub_category_name: String
     applies_to_venue: Boolean!
     applies_to_host: Boolean!
+    applies_to_ecomm: Boolean!
     is_active: Boolean!
     sort_order: Int!
     created_at: String
@@ -27,6 +28,7 @@ export const serviceOfferedTypeDefs = gql`
     is_active: Boolean
     applies_to_venue: Boolean
     applies_to_host: Boolean
+    applies_to_ecomm: Boolean
     search: String
   }
 
@@ -36,6 +38,7 @@ export const serviceOfferedTypeDefs = gql`
     sub_category_id: ID
     applies_to_venue: Boolean
     applies_to_host: Boolean
+    applies_to_ecomm: Boolean
     titles: [String!]!
   }
 
@@ -45,6 +48,7 @@ export const serviceOfferedTypeDefs = gql`
     sort_order: Int
     applies_to_venue: Boolean
     applies_to_host: Boolean
+    applies_to_ecomm: Boolean
   }
 
   extend type Query {

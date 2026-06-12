@@ -103,6 +103,7 @@ export default function DynamicFieldsTable({
               <Stack direction="row" spacing={0.5}>
                 {row.applies_to_venue && <Chip size="small" label="Venue" />}
                 {row.applies_to_host && <Chip size="small" label="Host" />}
+                {row.applies_to_ecomm && <Chip size="small" label="Ecomm" />}
               </Stack>
             </TableCell>
             <TableCell>

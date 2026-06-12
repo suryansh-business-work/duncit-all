@@ -18,13 +18,13 @@ import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
 import EventNoteIcon from '@mui/icons-material/EventNote';
-import { ADD_CRM_MANUAL_LOG, HOST_LEAD, VENUE_LEAD } from '../api/crm.gql';
+import { ADD_CRM_MANUAL_LOG, ECOMM_LEAD, HOST_LEAD, VENUE_LEAD } from '../api/crm.gql';
 import type { CrmActivity } from '../api/crm.types';
 import RichTextField from '../forms/fields/RichTextField';
 import { parseApiError } from '../utils/parseApiError';
 
 interface Props {
-  entityType: 'VENUE_LEAD' | 'HOST_LEAD';
+  entityType: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
   entityId: string;
   /** All activity entries; we filter to NOTE here and show others as ambient context. */
   activities: CrmActivity[];
@@ -78,7 +78,7 @@ export default function ManualLogsTab({ entityType, entityId, activities }: Read
 
   const refetchQueries = [
     {
-      query: entityType === 'VENUE_LEAD' ? VENUE_LEAD : HOST_LEAD,
+      query: { VENUE_LEAD, HOST_LEAD, ECOMM_LEAD }[entityType],
       variables: { id: entityId },
     },
   ];

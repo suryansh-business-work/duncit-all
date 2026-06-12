@@ -53,6 +53,7 @@ export const appConfig: AppConfig = {
         { label: 'Calendar', to: '/meetings/calendar', icon: 'calendar' },
         { label: 'Venue Meeting Schedule', to: '/meetings/venue', icon: 'storefront' },
         { label: 'Host Meeting Schedule', to: '/meetings/host', icon: 'people' },
+        { label: 'Seller Meeting Schedule', to: '/meetings/ecomm', icon: 'inventory' },
       ],
     },
     {

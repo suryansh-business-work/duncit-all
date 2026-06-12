@@ -6,7 +6,7 @@ import type { CrmDynamicField } from '../api/crm.types';
 import { LeadDetailRow } from './LeadDetailCard';
 
 interface Props {
-  entity: 'VENUE_LEAD' | 'HOST_LEAD';
+  entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
   /** JSON-stringified value map from the lead. */
   json: string;
 }

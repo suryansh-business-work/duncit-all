@@ -107,6 +107,7 @@ export default function SurveyBuilderPage() {
                 <TextField select size="small" label="Kind" value={kind} onChange={(e) => setKind(e.target.value as SurveyKind)} sx={{ minWidth: 160 }}>
                   <MenuItem value="VENUE">Venue</MenuItem>
                   <MenuItem value="HOST">Host</MenuItem>
+                  <MenuItem value="ECOMM">Ecomm (Seller)</MenuItem>
                 </TextField>
                 <TextField size="small" label="Survey title" value={title} onChange={(e) => setTitle(e.target.value)} sx={{ flex: 1 }} fullWidth />
                 <FormControlLabel control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />} label="Active" />

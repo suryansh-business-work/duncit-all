@@ -70,6 +70,7 @@ export default function SurveysListPage() {
           <ToggleButton value="">All</ToggleButton>
           <ToggleButton value="VENUE">Venue</ToggleButton>
           <ToggleButton value="HOST">Host</ToggleButton>
+          <ToggleButton value="ECOMM">Ecomm</ToggleButton>
         </ToggleButtonGroup>
         <ScopePicker value={scope} onChange={setScope} emptyLabel="All" />
       </Stack>

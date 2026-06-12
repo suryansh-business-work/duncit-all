@@ -81,6 +81,7 @@ export const crmTypeDefs = gql`
     hint: String!
     applies_to_venue: Boolean!
     applies_to_host: Boolean!
+    applies_to_ecomm: Boolean!
     required: Boolean!
     sort_order: Int!
     is_active: Boolean!
@@ -104,6 +105,7 @@ export const crmTypeDefs = gql`
     hint: String
     applies_to_venue: Boolean
     applies_to_host: Boolean
+    applies_to_ecomm: Boolean
     required: Boolean
     sort_order: Int
     is_active: Boolean

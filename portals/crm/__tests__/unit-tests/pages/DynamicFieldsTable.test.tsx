@@ -15,6 +15,7 @@ const mk = (id: string, label: string, sort: number, over: Partial<CrmDynamicFie
   hint: '',
   applies_to_venue: true,
   applies_to_host: true,
+  applies_to_ecomm: false,
   required: false,
   sort_order: sort,
   is_active: true,

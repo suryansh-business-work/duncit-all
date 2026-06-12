@@ -110,6 +110,7 @@ function pubDynamicField(doc: any) {
     hint: o.hint ?? '',
     applies_to_venue: o.applies_to_venue !== false,
     applies_to_host: o.applies_to_host !== false,
+    applies_to_ecomm: o.applies_to_ecomm === true,
     required: !!o.required,
     sort_order: o.sort_order ?? 0,
     is_active: o.is_active !== false,
@@ -124,7 +125,7 @@ function pubService(doc: any) {
   return {
     id: String(o._id),
     name: o.name,
-    kind: (o.kind ?? 'VENUE') as 'VENUE' | 'HOST',
+    kind: (o.kind ?? 'VENUE') as ServiceKind,
     sort_order: o.sort_order ?? 0,
     is_active: o.is_active !== false,
     created_at: iso(o.created_at),
@@ -452,6 +453,7 @@ export const crmService = {
     const q: Record<string, any> = {};
     if (entity === 'VENUE_LEAD') q.applies_to_venue = true;
     else if (entity === 'HOST_LEAD') q.applies_to_host = true;
+    else if (entity === 'ECOMM_LEAD') q.applies_to_ecomm = true;
     if (!includeInactive) q.is_active = { $ne: false };
     const docs = await CrmDynamicFieldModel.find(q).sort({ sort_order: 1, label: 1 });
     return docs.map(pubDynamicField);
@@ -478,6 +480,7 @@ export const crmService = {
       hint: (input.hint ?? '').trim(),
       applies_to_venue: input.applies_to_venue !== false,
       applies_to_host: input.applies_to_host !== false,
+      applies_to_ecomm: input.applies_to_ecomm === true,
       required: !!input.required,
       sort_order: input.sort_order ?? 0,
       is_active: input.is_active !== false,
@@ -499,6 +502,7 @@ export const crmService = {
     if (input.hint !== undefined) doc.hint = (input.hint ?? '').trim();
     if (input.applies_to_venue !== undefined) doc.applies_to_venue = input.applies_to_venue;
     if (input.applies_to_host !== undefined) doc.applies_to_host = input.applies_to_host;
+    if (input.applies_to_ecomm !== undefined) doc.applies_to_ecomm = input.applies_to_ecomm;
     if (input.required !== undefined) doc.required = !!input.required;
     if (input.sort_order !== undefined) doc.sort_order = input.sort_order;
     if (input.is_active !== undefined) doc.is_active = input.is_active;

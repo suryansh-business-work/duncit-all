@@ -105,6 +105,10 @@ export default function DynamicFieldForm({ draft, busy, onChange, onCancel, onSa
             label="Applies to Host leads"
           />
           <FormControlLabel
+            control={<Checkbox checked={draft.applies_to_ecomm} onChange={(e) => set({ applies_to_ecomm: e.target.checked })} />}
+            label="Applies to Ecomm leads"
+          />
+          <FormControlLabel
             control={<Checkbox checked={draft.required} onChange={(e) => set({ required: e.target.checked })} />}
             label="Required"
           />

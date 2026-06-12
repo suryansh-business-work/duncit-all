@@ -15,7 +15,7 @@ export interface EmailPayload {
 }
 
 interface Props {
-  entity: 'VENUE_LEAD' | 'HOST_LEAD';
+  entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
   leadName: string;
   leadEmail: string;
   /** Slug → value map from the lead, used to auto-fill template variables. */

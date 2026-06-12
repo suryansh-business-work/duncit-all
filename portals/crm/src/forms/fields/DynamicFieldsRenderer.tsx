@@ -22,9 +22,11 @@ import {
 import { CRM_DYNAMIC_FIELDS } from '../../api/crm.gql';
 import type { CrmDynamicField } from '../../api/crm.types';
 
+const ENTITY_LABELS = { VENUE_LEAD: 'venue', HOST_LEAD: 'host', ECOMM_LEAD: 'ecomm' } as const;
+
 interface Props {
   /** Limits the dropdown to fields tagged for this entity. */
-  entity: 'VENUE_LEAD' | 'HOST_LEAD';
+  entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
   /**
    * Formik field name holding a JSON-stringified `Record<string, value>`
    * keyed by `CrmDynamicField.name`. We hide the JSON behind helpers and
@@ -158,7 +160,7 @@ export default function DynamicFieldsRenderer({ entity, name }: Readonly<Props>)
   if (!loading && fields.length === 0) {
     return (
       <Alert severity="info">
-        No dynamic fields defined for {entity === 'VENUE_LEAD' ? 'venue' : 'host'} leads yet. Open
+        No dynamic fields defined for {ENTITY_LABELS[entity]} leads yet. Open
         Settings → Dynamic Fields to add some.
       </Alert>
     );

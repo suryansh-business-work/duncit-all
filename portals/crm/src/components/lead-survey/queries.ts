@@ -1,6 +1,6 @@
 import { gql } from '@apollo/client';
 
-export type LeadSurveyEntity = 'VENUE_LEAD' | 'HOST_LEAD';
+export type LeadSurveyEntity = 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
 export type LeadSurveySource = 'MANUAL' | 'LINK' | 'APP';
 export type SurveyQuestionType = 'SECTION' | 'MCQ' | 'TEXT' | 'TEXTAREA';
 

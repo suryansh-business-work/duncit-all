@@ -7,7 +7,7 @@ import ContactCard from './ContactCard';
 import type { CrmContact } from '../../api/crm.types';
 
 interface Props {
-  entity: 'VENUE_LEAD' | 'HOST_LEAD';
+  entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
   leadId: string;
   leadName: string;
   contacts: CrmContact[];

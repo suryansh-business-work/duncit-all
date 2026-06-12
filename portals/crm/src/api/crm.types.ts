@@ -13,7 +13,7 @@ export interface CrmServiceOffered {
   description?: string | null;
 }
 
-export type CrmServiceKind = 'VENUE' | 'HOST';
+export type CrmServiceKind = 'VENUE' | 'HOST' | 'ECOMM';
 
 export interface CrmService {
   id: string;
@@ -78,6 +78,7 @@ export interface CrmDynamicField {
   hint: string;
   applies_to_venue: boolean;
   applies_to_host: boolean;
+  applies_to_ecomm: boolean;
   required: boolean;
   sort_order: number;
   is_active: boolean;
@@ -179,6 +180,44 @@ export interface HostLead {
   previous_events_hosted: boolean;
   past_attendees?: number | null;
   host_intent_scores: string[];
+  tags: string[];
+  profile_photo_url?: string | null;
+  dynamic_values_json: string;
+  lead_source?: string | null;
+  assigned_to?: string | null;
+  lead_status: string;
+  priority: string;
+  next_follow_up_date?: string | null;
+  notes?: string | null;
+  activity_log: CrmActivity[];
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
+export interface EcommLead {
+  id: string;
+  super_category_id?: string | null;
+  category_ids?: string[];
+  sub_category_ids?: string[];
+  super_category?: CrmSuperCategoryRef | null;
+  matched_user?: CrmMatchedUser | null;
+  seller_name: string;
+  brand_name?: string | null;
+  business_type?: string | null;
+  city?: string | null;
+  area?: string | null;
+  contacts: CrmContact[];
+  product_categories: string[];
+  catalog_size?: string | null;
+  price_range?: string | null;
+  fulfilment_mode?: string | null;
+  monthly_orders?: string | null;
+  gst_number?: string | null;
+  gst_applicable: boolean;
+  website?: string | null;
+  instagram_link?: string | null;
+  marketplace_links: string[];
+  services_offered: CrmServiceOffered[];
   tags: string[];
   profile_photo_url?: string | null;
   dynamic_values_json: string;

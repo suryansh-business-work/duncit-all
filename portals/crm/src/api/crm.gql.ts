@@ -32,6 +32,17 @@ export const HOST_LEAD_FIELDS = `
   activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
 `;
 
+export const ECOMM_LEAD_FIELDS = `
+  id super_category_id category_ids sub_category_ids super_category { ${SUPER_CATEGORY_FIELDS} }
+  seller_name brand_name business_type city area contacts { ${CONTACT_FIELDS} }
+  product_categories catalog_size price_range fulfilment_mode monthly_orders
+  gst_number gst_applicable website instagram_link marketplace_links
+  services_offered { ${SERVICE_FIELDS} }
+  tags profile_photo_url dynamic_values_json
+  lead_source assigned_to lead_status priority next_follow_up_date notes
+  activity_log { ${ACTIVITY_FIELDS} } created_at updated_at
+`;
+
 export const CRM_LEAD_CONFIG = gql`
   query CrmLeadConfig {
     crmLeadConfig {
@@ -60,6 +71,12 @@ export const CREATE_HOST_LEAD = gql`mutation CreateHostLead($input: HostLeadInpu
 export const UPDATE_HOST_LEAD = gql`mutation UpdateHostLead($id: ID!, $input: HostLeadInput!) { updateHostLead(id: $id, input: $input) { ${HOST_LEAD_FIELDS} } }`;
 export const DELETE_HOST_LEAD = gql`mutation DeleteHostLead($id: ID!) { deleteHostLead(id: $id) }`;
 
+export const ECOMM_LEADS = gql`query EcommLeads($filter: CrmLeadFilter) { ecommLeads(filter: $filter) { ${ECOMM_LEAD_FIELDS} } }`;
+export const ECOMM_LEAD = gql`query EcommLead($id: ID!) { ecommLead(id: $id) { ${ECOMM_LEAD_FIELDS} ${MATCHED_USER_FIELDS} } }`;
+export const CREATE_ECOMM_LEAD = gql`mutation CreateEcommLead($input: EcommLeadInput!) { createEcommLead(input: $input) { ${ECOMM_LEAD_FIELDS} } }`;
+export const UPDATE_ECOMM_LEAD = gql`mutation UpdateEcommLead($id: ID!, $input: EcommLeadInput!) { updateEcommLead(id: $id, input: $input) { ${ECOMM_LEAD_FIELDS} } }`;
+export const DELETE_ECOMM_LEAD = gql`mutation DeleteEcommLead($id: ID!) { deleteEcommLead(id: $id) }`;
+
 export const EMAIL_VENUE_LEAD = gql`
   mutation EmailVenueLeadContact($id: ID!, $contact_email: String!, $subject: String!, $body: String!, $provider_id: ID, $attachments: [CrmEmailAssetInput!]) {
     emailVenueLeadContact(id: $id, contact_email: $contact_email, subject: $subject, body: $body, provider_id: $provider_id, attachments: $attachments) {
@@ -84,6 +101,21 @@ export const EMAIL_HOST_LEAD = gql`
 export const CALL_HOST_LEAD = gql`
   mutation CallHostLeadContact($id: ID!, $contact_number: String!, $provider_id: ID) {
     callHostLeadContact(id: $id, contact_number: $contact_number, provider_id: $provider_id) {
+      ok message provider provider_id external_id recording_url
+    }
+  }
+`;
+
+export const EMAIL_ECOMM_LEAD = gql`
+  mutation EmailEcommLeadContact($id: ID!, $contact_email: String!, $subject: String!, $body: String!, $provider_id: ID, $attachments: [CrmEmailAssetInput!]) {
+    emailEcommLeadContact(id: $id, contact_email: $contact_email, subject: $subject, body: $body, provider_id: $provider_id, attachments: $attachments) {
+      ok message provider provider_id external_id
+    }
+  }
+`;
+export const CALL_ECOMM_LEAD = gql`
+  mutation CallEcommLeadContact($id: ID!, $contact_number: String!, $provider_id: ID) {
+    callEcommLeadContact(id: $id, contact_number: $contact_number, provider_id: $provider_id) {
       ok message provider provider_id external_id recording_url
     }
   }
@@ -128,7 +160,7 @@ export const DELETE_CRM_SERVICE = gql`
   }
 `;
 
-const DYNAMIC_FIELD_FIELDS = `id name label kind options { value label } multi placeholder default_value hint applies_to_venue applies_to_host required sort_order is_active created_at updated_at`;
+const DYNAMIC_FIELD_FIELDS = `id name label kind options { value label } multi placeholder default_value hint applies_to_venue applies_to_host applies_to_ecomm required sort_order is_active created_at updated_at`;
 
 export const CRM_DYNAMIC_FIELDS = gql`
   query CrmDynamicFields($entity: CrmEntityType, $include_inactive: Boolean) {

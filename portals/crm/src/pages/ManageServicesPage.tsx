@@ -55,10 +55,12 @@ const blankRow: EditRow = { name: '', sort_order: '0', is_active: true };
 
 export default function ManageServicesPage({
   kind,
-  title = kind === 'HOST' ? 'Manage Host Services' : 'Manage Venue Services',
-  subtitle = kind === 'HOST'
-    ? 'Edit the catalogue used by the "Services Offered" dropdown on Host Leads. Independent from the Venue catalogue.'
-    : 'Edit the catalogue used by the "Services Offered" dropdown on Venue Leads. Independent from the Host catalogue.',
+  title = { VENUE: 'Manage Venue Services', HOST: 'Manage Host Services', ECOMM: 'Manage Ecomm Services' }[kind],
+  subtitle = {
+    VENUE: 'Edit the catalogue used by the "Services Offered" dropdown on Venue Leads. Independent from the other catalogues.',
+    HOST: 'Edit the catalogue used by the "Services Offered" dropdown on Host Leads. Independent from the other catalogues.',
+    ECOMM: 'Edit the catalogue used by the "Services Offered" dropdown on Ecomm Leads. Independent from the other catalogues.',
+  }[kind],
 }: Readonly<Props>) {
   const queryVars = { kind, include_inactive: true };
   const { data, loading, error } = useQuery<{ crmServices: CrmService[] }>(CRM_SERVICES, {

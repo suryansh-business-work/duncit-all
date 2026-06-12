@@ -21,6 +21,8 @@ const serviceOfferedSchema = new Schema(
     // rows keep appearing on both Venue and Host lead pickers.
     applies_to_venue: { type: Boolean, default: true, index: true },
     applies_to_host: { type: Boolean, default: true, index: true },
+    // Opt-in (unlike venue/host): existing rows were authored before ecomm existed.
+    applies_to_ecomm: { type: Boolean, default: false, index: true },
     is_active: { type: Boolean, default: true, index: true },
     sort_order: { type: Number, default: 0 },
     created_by: { type: String, default: null },

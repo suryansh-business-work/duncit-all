@@ -30,6 +30,7 @@ const pub = (doc: any, names?: Map<string, string>) => {
     sub_category_name: nameOf(o.sub_category_id),
     applies_to_venue: o.applies_to_venue !== false,
     applies_to_host: o.applies_to_host !== false,
+    applies_to_ecomm: o.applies_to_ecomm === true,
     is_active: o.is_active !== false,
     sort_order: o.sort_order ?? 0,
     created_at: iso(o.created_at),
@@ -80,6 +81,7 @@ export interface ServiceOfferedFilter {
   is_active?: boolean | null;
   applies_to_venue?: boolean | null;
   applies_to_host?: boolean | null;
+  applies_to_ecomm?: boolean | null;
   search?: string | null;
 }
 
@@ -94,6 +96,7 @@ export const serviceOfferedService = {
     // ever requests `true`, so we only constrain when true is asked for.
     if (filter.applies_to_venue) q.applies_to_venue = { $ne: false };
     if (filter.applies_to_host) q.applies_to_host = { $ne: false };
+    if (filter.applies_to_ecomm) q.applies_to_ecomm = true;
     if (filter.search) {
       q.title = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
     }
@@ -110,6 +113,7 @@ export const serviceOfferedService = {
       sub_category_id?: string | null;
       applies_to_venue?: boolean | null;
       applies_to_host?: boolean | null;
+      applies_to_ecomm?: boolean | null;
       titles: string[];
     },
     by?: string | null
@@ -125,8 +129,9 @@ export const serviceOfferedService = {
     }
     const appliesToVenue = input.applies_to_venue !== false;
     const appliesToHost = input.applies_to_host !== false;
-    if (!appliesToVenue && !appliesToHost) {
-      throw new GraphQLError('Pick at least one of Venue or Host', { extensions: { code: 'BAD_USER_INPUT' } });
+    const appliesToEcomm = input.applies_to_ecomm === true;
+    if (!appliesToVenue && !appliesToHost && !appliesToEcomm) {
+      throw new GraphQLError('Pick at least one of Venue, Host or Ecomm', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const base = {
       super_category_id: oid(input.super_category_id),
@@ -134,6 +139,7 @@ export const serviceOfferedService = {
       sub_category_id: oid(input.sub_category_id ?? null),
       applies_to_venue: appliesToVenue,
       applies_to_host: appliesToHost,
+      applies_to_ecomm: appliesToEcomm,
       created_by: by ?? null,
     };
     // Skip slugs that already exist in this exact hierarchy slot so re-adding is
@@ -169,6 +175,7 @@ export const serviceOfferedService = {
       sort_order?: number | null;
       applies_to_venue?: boolean | null;
       applies_to_host?: boolean | null;
+      applies_to_ecomm?: boolean | null;
     }
   ) {
     const doc = await ServiceOfferedModel.findById(id);
@@ -178,12 +185,14 @@ export const serviceOfferedService = {
     if (input.sort_order != null) doc.sort_order = input.sort_order;
     const nextVenue = input.applies_to_venue ?? doc.applies_to_venue !== false;
     const nextHost = input.applies_to_host ?? doc.applies_to_host !== false;
-    if (input.applies_to_venue != null || input.applies_to_host != null) {
-      if (!nextVenue && !nextHost) {
-        throw new GraphQLError('Pick at least one of Venue or Host', { extensions: { code: 'BAD_USER_INPUT' } });
+    const nextEcomm = input.applies_to_ecomm ?? doc.applies_to_ecomm === true;
+    if (input.applies_to_venue != null || input.applies_to_host != null || input.applies_to_ecomm != null) {
+      if (!nextVenue && !nextHost && !nextEcomm) {
+        throw new GraphQLError('Pick at least one of Venue, Host or Ecomm', { extensions: { code: 'BAD_USER_INPUT' } });
       }
       doc.applies_to_venue = nextVenue;
       doc.applies_to_host = nextHost;
+      doc.applies_to_ecomm = nextEcomm;
     }
     await doc.save();
     return pub(doc, await categoryNameMap([doc]));

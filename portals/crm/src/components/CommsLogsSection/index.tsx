@@ -10,7 +10,7 @@ import LogRow from './LogRow';
 type Filter = 'ALL' | 'EMAIL' | 'CALL';
 
 interface Props {
-  entityType: 'VENUE_LEAD' | 'HOST_LEAD';
+  entityType: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
   entityId: string;
 }
 

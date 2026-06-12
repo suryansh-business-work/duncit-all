@@ -40,10 +40,12 @@ const toLocalInput = (iso?: string | null) => {
 };
 
 /** Onboarding → Meeting → Venue/Host Meeting Schedule: table of requests + scheduling. */
+const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
+
 export default function MeetingSchedulePage() {
   const params = useParams<{ kind: string }>();
   const kind = (params.kind?.toUpperCase() as SurveyKind) || 'VENUE';
-  const valid = kind === 'VENUE' || kind === 'HOST';
+  const valid = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM';
 
   const { data, loading, refetch } = useQuery<{ onboardingMeetings: OnboardingMeeting[] }>(ONBOARDING_MEETINGS, { variables: { filter: { kind } }, skip: !valid, fetchPolicy: 'cache-and-network' });
   const [updateMeeting, { loading: saving }] = useMutation(UPDATE_MEETING);
@@ -77,8 +79,8 @@ export default function MeetingSchedulePage() {
       <Stack direction="row" alignItems="center" spacing={1}>
         <EventIcon color="primary" />
         <Box>
-          <Typography variant="h5" fontWeight={800}>{kind === 'VENUE' ? 'Venue' : 'Host'} Meeting Schedule</Typography>
-          <Typography variant="body2" color="text.secondary">Onboarding meeting requests from {kind === 'VENUE' ? 'venue' : 'host'} applicants.</Typography>
+          <Typography variant="h5" fontWeight={800}>{KIND_LABELS[kind]} Meeting Schedule</Typography>
+          <Typography variant="body2" color="text.secondary">Onboarding meeting requests from {KIND_LABELS[kind].toLowerCase()} applicants.</Typography>
         </Box>
       </Stack>
 

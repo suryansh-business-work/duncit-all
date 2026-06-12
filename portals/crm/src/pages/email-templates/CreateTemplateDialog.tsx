@@ -32,6 +32,7 @@ const slugify = (s: string) => s.trim().toLowerCase().replace(/[^a-z0-9]+/g, '-'
 const TARGETS: { value: EmailTemplateTarget; label: string; hint: string; icon: JSX.Element }[] = [
   { value: 'VENUE', label: 'Venue lead emails', hint: 'Use venue lead variables (venue name, city, contact…).', icon: <StorefrontIcon color="primary" /> },
   { value: 'HOST', label: 'Host lead emails', hint: 'Use host lead variables (host name, organization, contact…).', icon: <GroupsIcon color="primary" /> },
+  { value: 'ECOMM', label: 'Ecomm lead emails', hint: 'Use ecomm lead variables (seller name, brand, contact…).', icon: <StorefrontIcon color="primary" /> },
   { value: 'STATIC', label: 'Static / no variables', hint: 'A fixed template with no lead-specific variables.', icon: <DescriptionIcon color="primary" /> },
 ];
 

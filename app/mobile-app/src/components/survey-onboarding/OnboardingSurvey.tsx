@@ -33,14 +33,52 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
   const flow = useOnboardingFlow(kind);
 
   if (flow.phase === 'done') {
-    return <PlaceholderScreen title={title} subtitle={subtitle} icon={icon} />;
+    if (!flow.bookedSlot) {
+      return <PlaceholderScreen title={title} subtitle={subtitle} icon={icon} />;
+    }
+    const slotLabel = new Date(flow.bookedSlot).toLocaleString(undefined, {
+      dateStyle: 'full',
+      timeStyle: 'short',
+    });
+    return (
+      <YStack flex={1} testID="onboarding-thanks">
+        <AppBackground />
+        <SafeAreaView edges={['top']} style={{ flex: 1 }}>
+          <YStack flex={1} alignItems="center" justifyContent="center" gap={14} padding={24}>
+            <MaterialIcons name="event-available" size={56} color={ink} />
+            <Text textAlign="center" fontSize={22} fontWeight="900" color={ink}>
+              You{'’'}re booked!
+            </Text>
+            <Text textAlign="center" fontSize={14.5} color={ink} opacity={0.85}>
+              Thank you for your submission! Your onboarding meeting is booked for {slotLabel}. Our
+              onboarding team will meet you at your selected slot — please join 5 minutes early.
+            </Text>
+            <XStack
+              testID="thanks-done"
+              role="button"
+              aria-label="Back to Home"
+              onPress={() => navigation.goBack()}
+              paddingHorizontal={22}
+              paddingVertical={12}
+              borderRadius={999}
+              backgroundColor="$primary"
+              pressStyle={{ opacity: 0.85 }}
+            >
+              <Text fontSize={14.5} fontWeight="900" color="$onPrimary">
+                Done
+              </Text>
+            </XStack>
+          </YStack>
+        </SafeAreaView>
+      </YStack>
+    );
   }
 
   const headerTitle =
     flow.phase === 'survey'
       ? flow.survey?.title || title
       : flow.phase === 'meeting'
-        ? 'Schedule a meeting'
+        ? 'Book your onboarding meeting'
         : title;
 
   return (
@@ -90,8 +128,14 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
           <MeetingPhase
             survey={flow.survey}
             answer={flow.answer}
-            when={flow.when}
-            setWhen={flow.setWhen}
+            slots={flow.slots}
+            slotsLoading={flow.slotsLoading}
+            selectedSlot={flow.selectedSlot}
+            setSelectedSlot={flow.setSelectedSlot}
+            name={flow.name}
+            setName={flow.setName}
+            phone={flow.phone}
+            setPhone={flow.setPhone}
             notes={flow.notes}
             setNotes={flow.setNotes}
             busy={flow.busy}

@@ -93,6 +93,21 @@ function mockApi({
         return Promise.resolve({ submitSurveyResponse: { survey_id: 'sv1' } });
       case 'RequestMeeting':
         return Promise.resolve({ requestMeeting: { id: 'm1' } });
+      case 'MeetingSlots':
+        return Promise.resolve({
+          meetingSlots: [
+            {
+              start_at: '2027-01-04T04:30:00.000Z',
+              end_at: '2027-01-04T05:00:00.000Z',
+              available: true,
+            },
+            {
+              start_at: '2027-01-04T05:00:00.000Z',
+              end_at: '2027-01-04T05:30:00.000Z',
+              available: false,
+            },
+          ],
+        });
       default:
         return Promise.resolve({});
     }
@@ -142,19 +157,25 @@ describe('OnboardingSurvey', () => {
 
     fireEvent.press(screen.getByTestId('primary-action'));
 
-    // Meeting step appears.
-    const when = await screen.findByTestId('meeting-when');
+    // Meeting step appears with the slot grid.
+    await screen.findByTestId('slot-2027-01-04T04:30:00.000Z');
 
-    // Invalid date -> error.
+    // No slot picked -> error.
     fireEvent.press(screen.getByTestId('primary-action'));
-    expect(await screen.findByText(/Enter a date & time/)).toBeOnTheScreen();
+    expect(await screen.findByText(/Pick an available slot/)).toBeOnTheScreen();
 
-    // Valid date + notes -> requests meeting -> placeholder.
-    fireEvent.changeText(when, '2026-07-01 15:30');
+    // Slot picked but no phone -> error.
+    fireEvent.press(screen.getByTestId('slot-2027-01-04T04:30:00.000Z'));
+    fireEvent.press(screen.getByTestId('primary-action'));
+    expect(await screen.findByText(/Phone number is required/)).toBeOnTheScreen();
+
+    // Phone + notes -> books the slot -> thank-you with the booked time.
+    fireEvent.changeText(screen.getByTestId('meeting-phone'), '9876543210');
     fireEvent.changeText(screen.getByTestId('meeting-notes'), 'Afternoon please');
     fireEvent.press(screen.getByTestId('primary-action'));
 
-    expect(await screen.findByTestId('placeholder-screen')).toBeOnTheScreen();
+    expect(await screen.findByTestId('onboarding-thanks')).toBeOnTheScreen();
+    expect(screen.getByText(/join 5 minutes early/)).toBeOnTheScreen();
     await waitFor(() =>
       expect(mockRequest).toHaveBeenCalledWith(
         expect.objectContaining({ definitions: expect.anything() }),

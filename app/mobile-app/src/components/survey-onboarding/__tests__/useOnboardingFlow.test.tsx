@@ -56,6 +56,21 @@ function route({
         return failMeeting
           ? Promise.reject(new Error('x'))
           : Promise.resolve({ requestMeeting: { id: 'm1' } });
+      case 'MeetingSlots':
+        return Promise.resolve({
+          meetingSlots: [
+            {
+              start_at: '2027-01-04T04:30:00.000Z',
+              end_at: '2027-01-04T05:00:00.000Z',
+              available: true,
+            },
+            {
+              start_at: '2027-01-04T05:00:00.000Z',
+              end_at: '2027-01-04T05:30:00.000Z',
+              available: false,
+            },
+          ],
+        });
       default:
         return Promise.resolve({});
     }
@@ -65,7 +80,7 @@ function route({
 beforeEach(() => mockRequest.mockReset());
 
 describe('useOnboardingFlow', () => {
-  it('skips the survey to the meeting step when none is configured', async () => {
+  it('skips the survey to the meeting step (and loads slots) when none is configured', async () => {
     route({ meeting: null, survey: null });
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
@@ -73,6 +88,8 @@ describe('useOnboardingFlow', () => {
       await result.current.chooseCategory(SCOPE);
     });
     expect(result.current.phase).toBe('meeting');
+    await waitFor(() => expect(result.current.slots).toHaveLength(2));
+    expect(result.current.slots[1]?.available).toBe(false);
   });
 
   it('walks the gate even when a meeting was already requested (request upserts)', async () => {
@@ -140,7 +157,7 @@ describe('useOnboardingFlow', () => {
     expect(result.current.error).toBeTruthy();
   });
 
-  it('validates the meeting date, then requests with empty notes', async () => {
+  it('requires a slot and a phone, then books and keeps the slot for the thank-you', async () => {
     route({ meeting: null, survey: null });
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
@@ -151,31 +168,62 @@ describe('useOnboardingFlow', () => {
     await act(async () => {
       await result.current.submitMeeting();
     });
-    expect(result.current.error).toMatch(/date & time/);
+    expect(result.current.error).toMatch(/slot/i);
 
-    act(() => result.current.setWhen('2026-07-01 15:30'));
+    act(() => result.current.setSelectedSlot('2027-01-04T04:30:00.000Z'));
+    await act(async () => {
+      await result.current.submitMeeting();
+    });
+    expect(result.current.error).toMatch(/phone/i);
+
+    act(() => result.current.setPhone('9876543210'));
     await act(async () => {
       await result.current.submitMeeting();
     });
     expect(result.current.phase).toBe('done');
+    expect(result.current.bookedSlot).toBe('2027-01-04T04:30:00.000Z');
     expect(mockRequest).toHaveBeenCalledWith(
       expect.anything(),
-      expect.objectContaining({ input: expect.objectContaining({ notes: null }) }),
+      expect.objectContaining({
+        input: expect.objectContaining({
+          requested_at: '2027-01-04T04:30:00.000Z',
+          contact_phone: '9876543210',
+          contact_name: null,
+          notes: null,
+        }),
+      }),
       { auth: true },
     );
   });
 
-  it('surfaces a meeting request error', async () => {
+  it('surfaces a booking error and refreshes the slot grid', async () => {
     route({ meeting: null, survey: null, failMeeting: true });
     const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
     await waitFor(() => expect(result.current.phase).toBe('category'));
     await act(async () => {
       await result.current.chooseCategory(SCOPE);
     });
-    act(() => result.current.setWhen('2026-07-01 15:30'));
+    act(() => result.current.setSelectedSlot('2027-01-04T04:30:00.000Z'));
+    act(() => result.current.setPhone('9876543210'));
+    act(() => result.current.setName('Asha'));
     await act(async () => {
       await result.current.submitMeeting();
     });
     expect(result.current.error).toBeTruthy();
+    expect(result.current.phase).toBe('meeting');
+  });
+
+  it('surfaces a slot load failure', async () => {
+    route({ meeting: null, survey: null });
+    mockRequest.mockImplementation((doc: never) => {
+      if (opName(doc) === 'MeetingSlots') return Promise.reject(new Error('slots down'));
+      if (opName(doc) === 'ActiveSurveyFor') return Promise.resolve({ activeSurveyFor: null });
+      return Promise.resolve({});
+    });
+    const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
+    await act(async () => {
+      await result.current.chooseCategory(SCOPE);
+    });
+    await waitFor(() => expect(result.current.error).toMatch(/slots/i));
   });
 });

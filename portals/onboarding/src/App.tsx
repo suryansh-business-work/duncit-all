@@ -8,6 +8,7 @@ import SurveyBuilderPage from './pages/surveys/SurveyBuilderPage';
 import SurveysListPage from './pages/surveys/SurveysListPage';
 import MeetingCalendarPage from './pages/meetings/MeetingCalendarPage';
 import MeetingSchedulePage from './pages/meetings/MeetingSchedulePage';
+import MeetingAvailabilityPage from './pages/meetings/MeetingAvailabilityPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
@@ -39,6 +40,7 @@ export default function App() {
       <Route path="/surveys/new" element={authed(<SurveyBuilderPage />)} />
       <Route path="/surveys/:id/edit" element={authed(<SurveyBuilderPage />)} />
       <Route path="/meetings/calendar" element={authed(<MeetingCalendarPage />)} />
+      <Route path="/meetings/availability" element={authed(<MeetingAvailabilityPage />)} />
       <Route path="/meetings/:kind" element={authed(<MeetingSchedulePage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>

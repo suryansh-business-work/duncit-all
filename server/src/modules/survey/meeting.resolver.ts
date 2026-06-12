@@ -11,9 +11,21 @@ export const meetingResolvers = {
       const user = requireAuth(ctx);
       return meetingService.myMeeting(user.id, args.kind);
     },
+    myMeetings: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return meetingService.myMeetings(user.id);
+    },
     onboardingMeetings: (_p: unknown, args: { filter?: MeetingFilter | null }, ctx: GraphQLContext) => {
       requireRole(ctx, ONBOARDING_RW);
       return meetingService.list(args.filter ?? {});
+    },
+    meetingAvailability: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return meetingService.availability();
+    },
+    meetingSlots: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return meetingService.slots(user.id);
     },
   },
   Mutation: {
@@ -24,6 +36,10 @@ export const meetingResolvers = {
     updateMeeting: (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, ONBOARDING_RW);
       return meetingService.update(args.id, args.input, user.id);
+    },
+    updateMeetingAvailability: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ONBOARDING_RW);
+      return meetingService.updateAvailability(args.input);
     },
   },
 };

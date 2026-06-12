@@ -11,12 +11,20 @@ const EARN_ME = gql`
       user_id
       roles
     }
+    myMeetings {
+      id
+      kind
+      status
+      scheduled_at
+      requested_at
+    }
   }
 `;
 
 const BOXES = [
   {
     role: 'HOST',
+    kind: 'HOST',
     title: 'By hosting a pod',
     description: 'Run meetups and experiences for your community and earn from paid pods.',
     to: '/survey/host',
@@ -24,6 +32,7 @@ const BOXES = [
   },
   {
     role: 'VENUE_OWNER',
+    kind: 'VENUE',
     title: 'By registering your venue',
     description: 'List your space as a Duncit venue and host pods or rent it out.',
     to: '/survey/venue',
@@ -31,6 +40,7 @@ const BOXES = [
   },
   {
     role: 'ECOMM_MANAGER',
+    kind: 'ECOMM',
     title: 'By listing your product',
     description: 'Sell your products to the Duncit community through pods and the shop.',
     to: '/survey/ecomm',
@@ -38,11 +48,31 @@ const BOXES = [
   },
 ];
 
+interface EarnMeeting {
+  id: string;
+  kind: string;
+  status: string;
+  scheduled_at?: string | null;
+  requested_at?: string | null;
+}
+
+const PENDING = new Set(['REQUESTED', 'SCHEDULED']);
+
+const meetingNotice = (meeting: EarnMeeting) => {
+  const at = meeting.scheduled_at ?? meeting.requested_at;
+  const when = at
+    ? new Date(at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
+    : '';
+  return `You already have an onboarding meeting scheduled for this${when ? ` on ${when}` : ''}. Our team will meet you then — this option unlocks once the meeting is done.`;
+};
+
 /** "Earn with Duncit" — three ways to start earning. A box is disabled when the
- * user already holds the matching role. */
+ * user already holds the matching role, or while an onboarding meeting for it
+ * is still pending. */
 export default function EarnPage() {
   const { data } = useQuery(EARN_ME, { fetchPolicy: 'cache-and-network' });
   const roles: string[] = data?.me?.roles ?? [];
+  const meetings: EarnMeeting[] = data?.myMeetings ?? [];
 
   return (
     <Stack spacing={2} sx={{ maxWidth: 720, mx: 'auto', width: '100%', p: { xs: 1.5, sm: 2 } }}>
@@ -55,16 +85,24 @@ export default function EarnPage() {
         </Typography>
       </Stack>
       <Stack spacing={1.5}>
-        {BOXES.map((box) => (
-          <EarnBox
-            key={box.role}
-            icon={box.icon}
-            title={box.title}
-            description={box.description}
-            to={box.to}
-            disabled={roles.includes(box.role)}
-          />
-        ))}
+        {BOXES.map((box) => {
+          const hasRole = roles.includes(box.role);
+          const pendingMeeting = meetings.find(
+            (m) => m.kind === box.kind && PENDING.has(m.status)
+          );
+          const showMeetingNotice = !hasRole && !!pendingMeeting;
+          return (
+            <EarnBox
+              key={box.role}
+              icon={box.icon}
+              title={box.title}
+              description={showMeetingNotice ? meetingNotice(pendingMeeting) : box.description}
+              to={box.to}
+              disabled={hasRole || showMeetingNotice}
+              disabledLabel={showMeetingNotice ? 'Meeting scheduled' : 'Already enabled'}
+            />
+          );
+        })}
       </Stack>
     </Stack>
   );

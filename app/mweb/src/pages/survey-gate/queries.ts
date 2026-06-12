@@ -77,6 +77,22 @@ export const REQUEST_MEETING = gql`
   }
 `;
 
+export const MEETING_SLOTS = gql`
+  query MeetingSlots {
+    meetingSlots {
+      start_at
+      end_at
+      available
+    }
+  }
+`;
+
+export interface MeetingSlot {
+  start_at: string;
+  end_at: string;
+  available: boolean;
+}
+
 /** Internal route to continue to after the gate (PartnerRedirect handles the external jump). */
 export const PARTNER_PATH: Record<SurveyKind, string> = {
   VENUE: '/register-venue',

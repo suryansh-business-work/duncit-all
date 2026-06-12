@@ -11,13 +11,23 @@ interface Props {
   description: string;
   icon: IconName;
   disabled: boolean;
+  /** Label shown when disabled (role held / meeting pending). */
+  disabledLabel?: string;
   onPress: () => void;
   testID: string;
 }
 
 /** A single "earn" path card on the Earn with Duncit screen — disabled when the
  * user already holds the matching role. */
-export function EarnBox({ title, description, icon, disabled, onPress, testID }: Readonly<Props>) {
+export function EarnBox({
+  title,
+  description,
+  icon,
+  disabled,
+  disabledLabel = 'Already enabled',
+  onPress,
+  testID,
+}: Readonly<Props>) {
   const { onPrimary } = useThemeColors();
   const handlePress = () => {
     if (!disabled) onPress();
@@ -57,7 +67,7 @@ export function EarnBox({ title, description, icon, disabled, onPress, testID }:
       </Text>
       {disabled ? (
         <Text testID={`${testID}-enabled`} fontSize={12} fontWeight="800" color="$primary">
-          Already enabled
+          {disabledLabel}
         </Text>
       ) : null}
     </YStack>

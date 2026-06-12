@@ -8,11 +8,14 @@ interface Props {
   description: string;
   to: string;
   disabled: boolean;
+  /** Chip text shown when disabled (role held / meeting pending). */
+  disabledLabel?: string;
 }
 
 /** A single "earn" path card on the Earn with Duncit page. Disabled when the
- * signed-in user already holds the matching role. */
-export default function EarnBox({ icon, title, description, to, disabled }: Readonly<Props>) {
+ * signed-in user already holds the matching role or an onboarding meeting for
+ * it is still pending. */
+export default function EarnBox({ icon, title, description, to, disabled, disabledLabel = 'Already enabled' }: Readonly<Props>) {
   const navigate = useNavigate();
   return (
     <Card variant="outlined" sx={{ borderRadius: 4, opacity: disabled ? 0.55 : 1 }}>
@@ -38,7 +41,7 @@ export default function EarnBox({ icon, title, description, to, disabled }: Read
             <Typography variant="body2" color="text.secondary">
               {description}
             </Typography>
-            {disabled && <Chip size="small" color="success" label="Already enabled" sx={{ fontWeight: 800 }} />}
+            {disabled && <Chip size="small" color="success" label={disabledLabel} sx={{ fontWeight: 800 }} />}
           </Stack>
         </CardContent>
       </CardActionArea>

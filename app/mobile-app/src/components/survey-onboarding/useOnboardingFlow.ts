@@ -3,10 +3,13 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { toErrorMessage } from '@/utils/errors';
 import {
   ActiveSurveyForDocument,
+  MeetingSlotsDocument,
   RequestMeetingDocument,
   SubmitSurveyResponseDocument,
   type ActiveSurvey,
   type ActiveSurveyResult,
+  type MeetingSlot,
+  type MeetingSlotsResult,
   type SurveyAnswerInput,
   type SurveyKind,
   type SurveyQuestion,
@@ -28,8 +31,13 @@ export function useOnboardingFlow(kind: SurveyKind) {
   const [phase, setPhase] = useState<Phase>('category');
   const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
-  const [when, setWhen] = useState('');
+  const [slots, setSlots] = useState<MeetingSlot[]>([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [selectedSlot, setSelectedSlot] = useState('');
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
   const [notes, setNotes] = useState('');
+  const [bookedSlot, setBookedSlot] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -41,7 +49,24 @@ export function useOnboardingFlow(kind: SurveyKind) {
     set(q.qid, { values: cur.includes(opt) ? cur.filter((v) => v !== opt) : [...cur, opt] });
   };
 
-  const afterSurvey = () => setPhase('meeting');
+  const loadSlots = async () => {
+    setSlotsLoading(true);
+    try {
+      const res = await graphqlRequest<MeetingSlotsResult>(MeetingSlotsDocument, undefined, {
+        auth: true,
+      });
+      setSlots(res.meetingSlots);
+    } catch (e) {
+      setError(toErrorMessage(e, 'Could not load the available slots'));
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const afterSurvey = () => {
+    setPhase('meeting');
+    void loadSlots();
+  };
 
   const chooseCategory = async (scope: Scope) => {
     setError(null);
@@ -105,9 +130,12 @@ export function useOnboardingFlow(kind: SurveyKind) {
   };
 
   const submitMeeting = async () => {
-    const date = new Date(when);
-    if (!when || Number.isNaN(date.getTime())) {
-      setError('Enter a date & time like 2026-07-01 15:30');
+    if (!selectedSlot) {
+      setError('Pick an available slot');
+      return;
+    }
+    if (!phone.trim()) {
+      setError('Phone number is required so our team can reach you');
       return;
     }
     setError(null);
@@ -115,12 +143,23 @@ export function useOnboardingFlow(kind: SurveyKind) {
     try {
       await graphqlRequest(
         RequestMeetingDocument,
-        { kind, input: { requested_at: date.toISOString(), notes: notes || null } },
+        {
+          kind,
+          input: {
+            requested_at: selectedSlot,
+            notes: notes || null,
+            contact_name: name.trim() || null,
+            contact_phone: phone.trim(),
+          },
+        },
         { auth: true },
       );
+      setBookedSlot(selectedSlot);
       setPhase('done');
     } catch (e) {
-      setError(toErrorMessage(e, 'Could not request the meeting'));
+      setError(toErrorMessage(e, 'Could not book the slot'));
+      // The slot may have just been taken — refresh the grid.
+      void loadSlots();
     } finally {
       setBusy(false);
     }
@@ -130,10 +169,17 @@ export function useOnboardingFlow(kind: SurveyKind) {
     phase,
     survey,
     answer: { get, set, toggle },
-    when,
-    setWhen,
+    slots,
+    slotsLoading,
+    selectedSlot,
+    setSelectedSlot,
+    name,
+    setName,
+    phone,
+    setPhone,
     notes,
     setNotes,
+    bookedSlot,
     busy,
     error,
     chooseCategory,

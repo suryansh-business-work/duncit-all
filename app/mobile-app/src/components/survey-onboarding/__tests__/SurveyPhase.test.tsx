@@ -119,22 +119,53 @@ describe('SurveyPhase', () => {
   });
 });
 
-describe('MeetingPhase without a survey', () => {
-  it('renders the meeting form with no answer recap', () => {
-    renderWithProviders(
-      <MeetingPhase
-        survey={null}
-        answer={{ get: () => ({ value: '', values: [] }) }}
-        when=""
-        setWhen={jest.fn()}
-        notes=""
-        setNotes={jest.fn()}
-        busy={false}
-        error={null}
-        onSubmit={jest.fn()}
-      />,
-    );
-    expect(screen.getByTestId('meeting-when')).toBeOnTheScreen();
+const meetingProps = {
+  survey: null,
+  answer: { get: () => ({ value: '', values: [] }) },
+  slots: [
+    { start_at: '2027-01-04T04:30:00.000Z', end_at: '2027-01-04T05:00:00.000Z', available: true },
+    { start_at: '2027-01-04T05:00:00.000Z', end_at: '2027-01-04T05:30:00.000Z', available: false },
+    { start_at: '2027-01-05T04:30:00.000Z', end_at: '2027-01-05T05:00:00.000Z', available: true },
+  ],
+  slotsLoading: false,
+  selectedSlot: '',
+  setSelectedSlot: jest.fn(),
+  name: '',
+  setName: jest.fn(),
+  phone: '',
+  setPhone: jest.fn(),
+  notes: '',
+  setNotes: jest.fn(),
+  busy: false,
+  error: null,
+  onSubmit: jest.fn(),
+};
+
+describe('MeetingPhase slot picker', () => {
+  it('renders day + slot chips with booked slots disabled, no answer recap', () => {
+    const setSelectedSlot = jest.fn();
+    renderWithProviders(<MeetingPhase {...meetingProps} setSelectedSlot={setSelectedSlot} />);
     expect(screen.queryByText('YOUR SURVEY ANSWERS')).toBeNull();
+    expect(screen.getByTestId('meeting-phone')).toBeOnTheScreen();
+    // Open slot selects; booked slot is inert.
+    fireEvent.press(screen.getByTestId('slot-2027-01-04T04:30:00.000Z'));
+    expect(setSelectedSlot).toHaveBeenCalledWith('2027-01-04T04:30:00.000Z');
+    setSelectedSlot.mockClear();
+    fireEvent.press(screen.getByTestId('slot-2027-01-04T05:00:00.000Z'));
+    expect(setSelectedSlot).not.toHaveBeenCalled();
+    // Switching day clears the selected slot.
+    fireEvent.press(
+      screen.getByTestId(`slot-day-${new Date('2027-01-05T04:30:00.000Z').toDateString()}`),
+    );
+    expect(setSelectedSlot).toHaveBeenCalledWith('');
+  });
+
+  it('shows the loading and empty states', () => {
+    const { rerender } = renderWithProviders(
+      <MeetingPhase {...meetingProps} slots={[]} slotsLoading />,
+    );
+    expect(screen.getByTestId('slots-loading')).toBeOnTheScreen();
+    rerender(<MeetingPhase {...meetingProps} slots={[]} slotsLoading={false} />);
+    expect(screen.getByTestId('slots-empty')).toBeOnTheScreen();
   });
 });

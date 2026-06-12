@@ -57,6 +57,19 @@ export interface MyMeetingResult {
 export interface RequestMeetingInput {
   requested_at: string;
   notes?: string | null;
+  contact_name?: string | null;
+  contact_phone?: string | null;
+}
+export interface MeetingSlot {
+  start_at: string;
+  end_at: string;
+  available: boolean;
+}
+export interface MeetingSlotsResult {
+  meetingSlots: MeetingSlot[];
+}
+export interface MyMeetingsResult {
+  myMeetings: (MyMeeting & { kind: string })[];
 }
 export interface SurveyAnswerInput {
   qid: string;
@@ -110,5 +123,27 @@ export const MyMeetingDocument = parse(`
 export const RequestMeetingDocument = parse(`
   mutation RequestMeeting($kind: SurveyKind!, $input: RequestMeetingInput!) {
     requestMeeting(kind: $kind, input: $input) { id }
+  }
+`);
+
+export const MeetingSlotsDocument = parse(`
+  query MeetingSlots {
+    meetingSlots {
+      start_at
+      end_at
+      available
+    }
+  }
+`);
+
+export const MyMeetingsDocument = parse(`
+  query MyMeetings {
+    myMeetings {
+      id
+      kind
+      status
+      requested_at
+      scheduled_at
+    }
   }
 `);

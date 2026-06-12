@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Alert, Box, Button, Chip, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material';
+import SlotPicker from './SlotPicker';
 import { MEETING_SLOTS, type MeetingSlot } from './queries';
 
 export interface MeetingInput {
@@ -16,18 +17,11 @@ interface Props {
   onSubmit: (input: MeetingInput) => void;
 }
 
-const dayKey = (iso: string) => new Date(iso).toDateString();
-const dayLabel = (iso: string) =>
-  new Date(iso).toLocaleDateString(undefined, { weekday: 'short', day: '2-digit', month: 'short' });
-const timeLabel = (iso: string) =>
-  new Date(iso).toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
-
 /** Final gate step: pick an open onboarding slot (booked ones are disabled). */
 export default function MeetingForm({ submitting, error: submitError, onSubmit }: Readonly<Props>) {
   const { data, loading, error } = useQuery<{ meetingSlots: MeetingSlot[] }>(MEETING_SLOTS, {
     fetchPolicy: 'network-only',
   });
-  const [day, setDay] = useState('');
   const [slot, setSlot] = useState('');
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
@@ -35,15 +29,6 @@ export default function MeetingForm({ submitting, error: submitError, onSubmit }
   const [formError, setFormError] = useState<string | null>(null);
 
   const slots = useMemo(() => data?.meetingSlots ?? [], [data]);
-  const days = useMemo(() => {
-    const seen = new Map<string, string>();
-    for (const s of slots) {
-      if (!seen.has(dayKey(s.start_at))) seen.set(dayKey(s.start_at), s.start_at);
-    }
-    return [...seen.values()];
-  }, [slots]);
-  const activeDay = day || days[0] || '';
-  const daySlots = slots.filter((s) => dayKey(s.start_at) === dayKey(activeDay));
 
   const submit = () => {
     if (!slot) { setFormError('Pick an available slot.'); return; }
@@ -56,7 +41,7 @@ export default function MeetingForm({ submitting, error: submitError, onSubmit }
     return <Box sx={{ display: 'grid', placeItems: 'center', py: 4 }}><CircularProgress size={24} /></Box>;
   }
   if (error) return <Alert severity="error">{error.message}</Alert>;
-  if (days.length === 0) {
+  if (slots.length === 0) {
     return <Alert severity="info">No slots are open right now — please check back soon.</Alert>;
   }
 
@@ -66,40 +51,7 @@ export default function MeetingForm({ submitting, error: submitError, onSubmit }
         Pick an open slot — our onboarding team will meet you then to take you through the next steps.
       </Typography>
 
-      <Box>
-        <Typography variant="subtitle2" sx={{ mb: 0.75 }}>Day</Typography>
-        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
-          {days.map((d) => (
-            <Chip
-              key={d}
-              label={dayLabel(d)}
-              color={dayKey(d) === dayKey(activeDay) ? 'primary' : 'default'}
-              onClick={() => { setDay(d); setSlot(''); }}
-              sx={{ fontWeight: 800 }}
-            />
-          ))}
-        </Stack>
-      </Box>
-
-      <Box>
-        <Typography variant="subtitle2" sx={{ mb: 0.75 }}>Time slot</Typography>
-        <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
-          {daySlots.map((s) => (
-            <Chip
-              key={s.start_at}
-              label={timeLabel(s.start_at)}
-              disabled={!s.available}
-              color={slot === s.start_at ? 'primary' : 'default'}
-              variant={s.available ? 'filled' : 'outlined'}
-              onClick={() => setSlot(s.start_at)}
-              sx={{ fontWeight: 800 }}
-            />
-          ))}
-        </Stack>
-        <Typography variant="caption" color="text.secondary">
-          Greyed-out slots are already booked.
-        </Typography>
-      </Box>
+      <SlotPicker slots={slots} value={slot} onChange={setSlot} />
 
       <TextField size="small" label="Your name (optional)" value={name} onChange={(e) => setName(e.target.value)} fullWidth />
       <TextField size="small" label="Phone" required value={phone} onChange={(e) => setPhone(e.target.value)} fullWidth />

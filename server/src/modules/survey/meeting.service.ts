@@ -263,6 +263,33 @@ export const meetingService = {
     return pub(doc);
   },
 
+  /** User moves their own meeting to a new open slot. Contact details are kept;
+   * any staff scheduling is reset since the time changed. */
+  async rescheduleMyMeeting(userId: string, kind: SurveyKind, requestedAt: string) {
+    if (!requestedAt) throw new GraphQLError('A new date & time is required', { extensions: { code: 'BAD_USER_INPUT' } });
+    const doc = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind });
+    if (!doc) throw notFound();
+    const taken = await occupiedInstants(userId);
+    if (taken.has(new Date(requestedAt).getTime())) {
+      throw new GraphQLError('That slot was just booked — please pick another one', { extensions: { code: 'CONFLICT' } });
+    }
+    doc.requested_at = new Date(requestedAt);
+    doc.scheduled_at = null;
+    doc.meeting_link = null;
+    doc.status = 'REQUESTED';
+    await doc.save();
+    return pub(doc);
+  },
+
+  /** User cancels their own meeting — frees the slot and unlocks the Earn card. */
+  async cancelMyMeeting(userId: string, kind: SurveyKind) {
+    const doc = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind });
+    if (!doc) throw notFound();
+    doc.status = 'CANCELLED';
+    await doc.save();
+    return pub(doc);
+  },
+
   async myMeeting(userId: string, kind: SurveyKind) {
     return pub(await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind }));
   },

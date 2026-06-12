@@ -4,6 +4,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import EarnBox from './EarnBox';
+import EarnMeetingActions from './EarnMeetingActions';
 
 const EARN_ME = gql`
   query EarnMe {
@@ -70,7 +71,7 @@ const meetingNotice = (meeting: EarnMeeting) => {
  * user already holds the matching role, or while an onboarding meeting for it
  * is still pending. */
 export default function EarnPage() {
-  const { data } = useQuery(EARN_ME, { fetchPolicy: 'cache-and-network' });
+  const { data, refetch } = useQuery(EARN_ME, { fetchPolicy: 'cache-and-network' });
   const roles: string[] = data?.me?.roles ?? [];
   const meetings: EarnMeeting[] = data?.myMeetings ?? [];
 
@@ -92,15 +93,19 @@ export default function EarnPage() {
           );
           const showMeetingNotice = !hasRole && !!pendingMeeting;
           return (
-            <EarnBox
-              key={box.role}
-              icon={box.icon}
-              title={box.title}
-              description={showMeetingNotice ? meetingNotice(pendingMeeting) : box.description}
-              to={box.to}
-              disabled={hasRole || showMeetingNotice}
-              disabledLabel={showMeetingNotice ? 'Meeting scheduled' : 'Already enabled'}
-            />
+            <Stack key={box.role} spacing={0}>
+              <EarnBox
+                icon={box.icon}
+                title={box.title}
+                description={showMeetingNotice ? meetingNotice(pendingMeeting) : box.description}
+                to={box.to}
+                disabled={hasRole || showMeetingNotice}
+                disabledLabel={showMeetingNotice ? 'Meeting scheduled' : 'Already enabled'}
+              />
+              {showMeetingNotice && (
+                <EarnMeetingActions kind={box.kind} onChanged={() => void refetch()} />
+              )}
+            </Stack>
           );
         })}
       </Stack>

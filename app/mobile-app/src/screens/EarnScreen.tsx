@@ -4,6 +4,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, YStack } from 'tamagui';
 
 import { EarnBox } from '@/components/earn/EarnBox';
+import { EarnMeetingActions } from '@/components/earn/EarnMeetingActions';
 import { StackScreen } from '@/components/StackScreen';
 import { useMe } from '@/hooks/useMe';
 import { MyMeetingsDocument, type MyMeetingsResult } from '@/graphql/onboarding-survey';
@@ -56,14 +57,15 @@ export function EarnScreen() {
   const roles = useMe().data?.me?.roles ?? [];
   const [meetings, setMeetings] = useState<EarnMeeting[]>([]);
 
-  useEffect(() => {
-    let active = true;
+  const loadMeetings = () =>
     graphqlRequest<MyMeetingsResult>(MyMeetingsDocument, undefined, { auth: true })
-      .then((res) => active && setMeetings(res.myMeetings))
+      .then((res) => setMeetings(res.myMeetings))
       .catch(() => undefined);
-    return () => {
-      active = false;
-    };
+
+  useEffect(() => {
+    void loadMeetings();
+    // Load once on mount; reschedule/cancel actions re-trigger it explicitly.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   return (
@@ -82,16 +84,20 @@ export function EarnScreen() {
             let disabledLabel = 'Already enabled';
             if (showMeetingNotice) disabledLabel = 'Meeting scheduled';
             return (
-              <EarnBox
-                key={box.role}
-                testID={`earn-box-${box.role}`}
-                title={box.title}
-                description={showMeetingNotice ? meetingNotice(pendingMeeting) : box.description}
-                icon={box.icon}
-                disabled={hasRole || showMeetingNotice}
-                disabledLabel={disabledLabel}
-                onPress={() => navigation.navigate(box.route)}
-              />
+              <YStack key={box.role} gap={8}>
+                <EarnBox
+                  testID={`earn-box-${box.role}`}
+                  title={box.title}
+                  description={showMeetingNotice ? meetingNotice(pendingMeeting) : box.description}
+                  icon={box.icon}
+                  disabled={hasRole || showMeetingNotice}
+                  disabledLabel={disabledLabel}
+                  onPress={() => navigation.navigate(box.route)}
+                />
+                {showMeetingNotice ? (
+                  <EarnMeetingActions kind={box.kind} onChanged={() => void loadMeetings()} />
+                ) : null}
+              </YStack>
             );
           })}
         </YStack>

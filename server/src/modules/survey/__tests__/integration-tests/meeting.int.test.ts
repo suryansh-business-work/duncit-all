@@ -143,6 +143,40 @@ describe('meeting slot booking', () => {
     expect(slotsAfter.find((s) => s.start_at === second.start_at)?.available).toBe(true);
   });
 
+  it('reschedules my meeting to a free slot and resets staff scheduling', async () => {
+    const me = new Types.ObjectId().toString();
+    const other = new Types.ObjectId().toString();
+    await meetingService.request(me, 'VENUE', { requested_at: '2027-02-01T05:00:00.000Z', contact_phone: '9555555551' });
+    const mine = await meetingService.myMeeting(me, 'VENUE');
+    await meetingService.update(mine!.id, { status: 'SCHEDULED', scheduled_at: '2027-02-01T05:00:00.000Z', meeting_link: 'https://meet.example/x' });
+
+    // Taken by someone else → rejected.
+    await meetingService.request(other, 'VENUE', { requested_at: '2027-02-01T06:00:00.000Z', contact_phone: '9555555552' });
+    await expect(
+      meetingService.rescheduleMyMeeting(me, 'VENUE', '2027-02-01T06:00:00.000Z'),
+    ).rejects.toThrow(/just booked/i);
+
+    const moved = await meetingService.rescheduleMyMeeting(me, 'VENUE', '2027-02-01T07:00:00.000Z');
+    expect(moved!.requested_at).toBe('2027-02-01T07:00:00.000Z');
+    expect(moved!.status).toBe('REQUESTED');
+    expect(moved!.scheduled_at).toBeNull();
+    expect(moved!.meeting_link).toBeNull();
+    expect(moved!.contact_phone).toBe('9555555551');
+
+    await expect(meetingService.rescheduleMyMeeting(other, 'HOST', '2027-02-01T08:00:00.000Z')).rejects.toThrow(/not found/i);
+  });
+
+  it('cancels my meeting and frees its slot for others', async () => {
+    const me = new Types.ObjectId().toString();
+    const other = new Types.ObjectId().toString();
+    await meetingService.request(me, 'ECOMM', { requested_at: '2027-03-01T05:00:00.000Z', contact_phone: '9666666661' });
+    const cancelled = await meetingService.cancelMyMeeting(me, 'ECOMM');
+    expect(cancelled!.status).toBe('CANCELLED');
+    // The instant is free again for another user.
+    await meetingService.request(other, 'ECOMM', { requested_at: '2027-03-01T05:00:00.000Z', contact_phone: '9666666662' });
+    await expect(meetingService.cancelMyMeeting(other, 'VENUE')).rejects.toThrow(/not found/i);
+  });
+
   it('requires a phone number and rejects a slot another user holds', async () => {
     const me = new Types.ObjectId().toString();
     const other = new Types.ObjectId().toString();

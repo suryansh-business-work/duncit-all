@@ -1,6 +1,7 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 
 import { MeetingPhase } from '@/components/survey-onboarding/MeetingPhase';
+import { SlotPicker } from '@/components/survey-onboarding/SlotPicker';
 import { SurveyPhase } from '@/components/survey-onboarding/SurveyPhase';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -140,6 +141,13 @@ const meetingProps = {
   error: null,
   onSubmit: jest.fn(),
 };
+
+describe('SlotPicker empty fallback', () => {
+  it('renders without days when no slots exist', () => {
+    renderWithProviders(<SlotPicker slots={[]} value="" onChange={jest.fn()} />);
+    expect(screen.queryByText('Day')).toBeOnTheScreen();
+  });
+});
 
 describe('MeetingPhase slot picker', () => {
   it('renders day + slot chips with booked slots disabled, no answer recap', () => {

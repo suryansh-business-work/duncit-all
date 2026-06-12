@@ -87,6 +87,10 @@ export const meetingTypeDefs = gql`
 
   extend type Mutation {
     requestMeeting(kind: SurveyKind!, input: RequestMeetingInput!): OnboardingMeeting!
+    "Move the caller's own meeting to a new open slot (keeps contact details, resets staff scheduling)."
+    rescheduleMyMeeting(kind: SurveyKind!, requested_at: String!): OnboardingMeeting!
+    "Cancel the caller's own pending meeting."
+    cancelMyMeeting(kind: SurveyKind!): OnboardingMeeting!
     updateMeeting(id: ID!, input: UpdateMeetingInput!): OnboardingMeeting!
     updateMeetingAvailability(input: MeetingAvailabilityInput!): MeetingAvailability!
   }

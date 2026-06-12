@@ -136,6 +136,18 @@ export const MeetingSlotsDocument = parse(`
   }
 `);
 
+export const RescheduleMyMeetingDocument = parse(`
+  mutation RescheduleMyMeeting($kind: SurveyKind!, $requested_at: String!) {
+    rescheduleMyMeeting(kind: $kind, requested_at: $requested_at) { id requested_at status }
+  }
+`);
+
+export const CancelMyMeetingDocument = parse(`
+  mutation CancelMyMeeting($kind: SurveyKind!) {
+    cancelMyMeeting(kind: $kind) { id status }
+  }
+`);
+
 export const MyMeetingsDocument = parse(`
   query MyMeetings {
     myMeetings {

@@ -107,6 +107,38 @@ describe('PublicProfileScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Account');
   });
 
+  it('follows/unfollows a non-owner from the profile (B4-12)', () => {
+    const toggle = jest.fn();
+    mockedProfile.mockReturnValue({
+      user: { user_id: 'h1', full_name: 'Riya', city: 'Pune', zone: 'K' },
+      isOwner: false,
+      badges: [],
+      following: false,
+      followBusy: false,
+      toggleFollow: toggle,
+      isLoading: false,
+    });
+    const { rerender } = renderWithProviders(<PublicProfileScreen />);
+    fireEvent.press(screen.getByTestId('public-profile-follow'));
+    expect(toggle).toHaveBeenCalled();
+
+    // Following + busy variant: the button shows "Following" and goes inert.
+    const busyToggle = jest.fn();
+    mockedProfile.mockReturnValue({
+      user: { user_id: 'h1', full_name: 'Riya', city: 'Pune', zone: 'K' },
+      isOwner: false,
+      badges: [],
+      following: true,
+      followBusy: true,
+      toggleFollow: busyToggle,
+      isLoading: false,
+    });
+    rerender(<PublicProfileScreen />);
+    expect(screen.getByText('Following')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('public-profile-follow'));
+    expect(busyToggle).not.toHaveBeenCalled();
+  });
+
   it('renders a non-owner profile without the edit action (and no route params)', () => {
     mockRouteParams = undefined;
     mockedProfile.mockReturnValue({

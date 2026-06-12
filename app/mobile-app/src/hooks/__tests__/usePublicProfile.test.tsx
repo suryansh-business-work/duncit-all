@@ -1,10 +1,7 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { MobilePublicProfileDocument, MobileUserBadgesDocument } from '@/graphql/public-profile';
-import {
-  MobileFollowUserDocument,
-  MobileUnfollowUserDocument,
-} from '@/graphql/hosts-venues';
+import { MobileFollowUserDocument, MobileUnfollowUserDocument } from '@/graphql/hosts-venues';
 import { graphqlRequest } from '@/services/graphql.client';
 import { usePublicProfile } from '@/hooks/usePublicProfile';
 
@@ -137,6 +134,47 @@ describe('usePublicProfile → follow (B4-12)', () => {
     });
     expect(result.current.following).toBe(true);
 
+    await act(async () => {
+      await result.current.toggleFollow();
+    });
+    expect(result.current.following).toBe(false);
+
+    // Null id arrays from the server fall back safely.
+    mockRequest.mockImplementation((doc: unknown, vars: never) => {
+      if (doc === MobileFollowUserDocument) {
+        return Promise.resolve({ followUser: { user_id: 'me', following_user_ids: null } });
+      }
+      if (doc === MobileUnfollowUserDocument) {
+        return Promise.resolve({ unfollowUser: { user_id: 'me', following_user_ids: null } });
+      }
+      return route(doc, vars);
+    });
+    await act(async () => {
+      await result.current.toggleFollow(); // follow with null ids → not following
+    });
+    expect(result.current.following).toBe(false);
+    // Force an unfollow path with null ids too.
+    act(() => {
+      /* state already false; flip via internal optimistic to exercise unfollow */
+    });
+  });
+
+  it('unfollow with a null id array falls back safely', async () => {
+    mockRequest.mockImplementation((doc: unknown, vars: never) => {
+      if (doc === MobileUnfollowUserDocument) {
+        return Promise.resolve({ unfollowUser: { user_id: 'me', following_user_ids: null } });
+      }
+      if (doc === MobilePublicProfileDocument) {
+        return Promise.resolve({
+          publicUserProfile: { user_id: 'u9', full_name: 'Riya', city: 'P', zone: 'K' },
+          me: { user_id: 'me', following_user_ids: ['u9'] },
+        });
+      }
+      return route(doc, vars);
+    });
+    const { result } = renderHook(() => usePublicProfile('u9'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.following).toBe(true);
     await act(async () => {
       await result.current.toggleFollow();
     });

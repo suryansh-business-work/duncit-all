@@ -89,6 +89,13 @@ describe('ReferralScreen', () => {
     expect(screen.getByTestId('referral-apply-error')).toBeOnTheScreen();
   });
 
+  it('renders placeholders when the referral failed to load', () => {
+    mockedUse.mockReturnValue(api({ referral: null, isLoading: false }));
+    renderWithProviders(<ReferralScreen />);
+    expect(screen.getByTestId('referral-code')).toHaveTextContent('—');
+    expect(screen.getByTestId('referral-empty')).toBeOnTheScreen();
+  });
+
   it('keeps Apply inert while busy or empty', () => {
     const hookApi = api({ applyBusy: true });
     mockedUse.mockReturnValue(hookApi);

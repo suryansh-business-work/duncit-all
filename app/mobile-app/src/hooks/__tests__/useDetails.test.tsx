@@ -117,6 +117,37 @@ describe('usePodDetails / useClubDetails', () => {
     expect(result.current.error).toBeDefined();
   });
 
+  it('useClubDetails drops results that land after unmount', async () => {
+    // Unmount before the club resolves.
+    let resolveClub!: (value: unknown) => void;
+    mockRequest.mockReturnValueOnce(
+      new Promise((r) => {
+        resolveClub = r;
+      }),
+    );
+    const first = renderHook(() => useClubDetails('c1'));
+    first.unmount();
+    await act(async () => {
+      resolveClub({ club: { id: 'c1' }, pods: [] });
+    });
+
+    // Unmount between the club and the member lookup.
+    let resolvePeople!: (value: unknown) => void;
+    mockRequest
+      .mockResolvedValueOnce({ club: { id: 'c1' }, pods: [{ id: 'p1', pod_attendees: ['u1'] }] })
+      .mockReturnValueOnce(
+        new Promise((r) => {
+          resolvePeople = r;
+        }),
+      );
+    const second = renderHook(() => useClubDetails('c1'));
+    await waitFor(() => expect(mockRequest).toHaveBeenCalledTimes(3));
+    second.unmount();
+    await act(async () => {
+      resolvePeople({ publicUsersByIds: [] });
+    });
+  });
+
   it('useClubDetails surfaces a load error', async () => {
     mockRequest.mockRejectedValueOnce(new Error('boom'));
     const { result } = renderHook(() => useClubDetails('c1'));

@@ -14,6 +14,7 @@ export function ReferralScreen() {
   const { onPrimary, primary } = useThemeColors();
   const { referral, isLoading, applyBusy, applyError, applyCode } = useReferral();
   const [draft, setDraft] = useState('');
+  const referredList = referral?.referred ?? [];
 
   const shareCode = async () => {
     /* istanbul ignore next -- the button only mounts once the code loads */
@@ -153,14 +154,14 @@ export function ReferralScreen() {
             ) : null}
 
             <Text fontSize={16} fontWeight="900" color="$color">
-              Friends you referred ({referral?.referred.length ?? 0})
+              Friends you referred ({referredList.length})
             </Text>
-            {(referral?.referred ?? []).length === 0 ? (
+            {referredList.length === 0 ? (
               <Text testID="referral-empty" fontSize={13} color="$muted">
                 No referrals yet — share your code to get started.
               </Text>
             ) : (
-              (referral?.referred ?? []).map((entry) => (
+              referredList.map((entry) => (
                 <XStack
                   key={entry.user_id}
                   testID={`referral-row-${entry.user_id}`}

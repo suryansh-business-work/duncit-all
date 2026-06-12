@@ -7,7 +7,7 @@ import { Schema, model, InferSchemaType, Types } from 'mongoose';
  *  - LINK   — staff generated a public link (mweb /s/:token) for the person to fill
  *  - APP    — synced from the mWeb/mobile onboarding gate on meeting request
  */
-export const LEAD_SURVEY_ENTITIES = ['VENUE_LEAD', 'HOST_LEAD'] as const;
+export const LEAD_SURVEY_ENTITIES = ['VENUE_LEAD', 'HOST_LEAD', 'ECOMM_LEAD'] as const;
 export const LEAD_SURVEY_SOURCES = ['MANUAL', 'LINK', 'APP'] as const;
 export type LeadSurveyEntity = (typeof LEAD_SURVEY_ENTITIES)[number];
 export type LeadSurveySource = (typeof LEAD_SURVEY_SOURCES)[number];

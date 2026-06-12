@@ -12,7 +12,7 @@ import { Schema, model, InferSchemaType, Types } from 'mongoose';
  * becomes a host. Responses are stored per user per survey and surfaced in the
  * Admin user-details page.
  */
-export const SURVEY_KINDS = ['VENUE', 'HOST'] as const;
+export const SURVEY_KINDS = ['VENUE', 'HOST', 'ECOMM'] as const;
 export const QUESTION_TYPES = ['SECTION', 'MCQ', 'TEXT', 'TEXTAREA'] as const;
 export type SurveyKind = (typeof SURVEY_KINDS)[number];
 export type QuestionType = (typeof QUESTION_TYPES)[number];

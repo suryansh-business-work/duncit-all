@@ -159,15 +159,60 @@ const hostLeadSchema = new Schema(
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
 
+// E-commerce / seller lead — mirrors the host lead with product-selling fields
+// instead of event-hosting ones. Fed by the "By Listing your Product" onboarding
+// gate (ECOMM kind) and worked from the CRM Ecomm Leads pages.
+const ecommLeadSchema = new Schema(
+  {
+    super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
+    category_ids: { type: [Schema.Types.ObjectId], ref: 'Category', default: [], index: true },
+    sub_category_ids: { type: [Schema.Types.ObjectId], ref: 'Category', default: [], index: true },
+    seller_name: { type: String, required: true, trim: true },
+    brand_name: { type: String, trim: true, default: '' },
+    business_type: { type: String, default: '' },
+
+    city: { type: String, trim: true, default: '', index: true },
+    area: { type: String, trim: true, default: '' },
+    contacts: { type: [contactSchema], default: [] },
+
+    product_categories: { type: [String], default: [] },
+    catalog_size: { type: String, default: '' },
+    price_range: { type: String, trim: true, default: '' },
+    fulfilment_mode: { type: String, default: '' },
+    monthly_orders: { type: String, default: '' },
+
+    gst_number: { type: String, trim: true, default: '' },
+    gst_applicable: { type: Boolean, default: false },
+
+    website: { type: String, trim: true, default: '' },
+    instagram_link: { type: String, trim: true, default: '' },
+    marketplace_links: { type: [String], default: [] },
+    services_offered: { type: [serviceOfferedSchema], default: [] },
+
+    tags: { type: [String], default: [] },
+    profile_photo_url: { type: String, trim: true, default: '' },
+    dynamic_values: { type: Schema.Types.Mixed, default: () => ({}) },
+
+    lead_source: { type: String, default: '' },
+    assigned_to: { type: String, trim: true, default: '' },
+    lead_status: { type: String, enum: HOST_LEAD_STATUSES, default: 'New', index: true },
+    priority: { type: String, enum: PRIORITIES, default: 'Medium', index: true },
+    next_follow_up_date: { type: Date, default: null },
+    notes: { type: String, trim: true, default: '' },
+    activity_log: { type: [activitySchema], default: [] },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
 // Catalogue of services offered, managed via the CRM admin UI. Replaces the
-// hard-coded SERVICES_OFFERED constant. There are two separate catalogues —
-// one for the Venue Leads dropdown and one for the Host Leads dropdown — keyed
-// by `kind`. A `name` can collide across kinds (e.g. both could offer
-// "Catering"), so the unique index is compound on `(kind, name)`.
+// hard-coded SERVICES_OFFERED constant. There are separate catalogues — one for
+// each lead kind's dropdown — keyed by `kind`. A `name` can collide across kinds
+// (e.g. both could offer "Catering"), so the unique index is compound on
+// `(kind, name)`.
 const crmServiceCatalogSchema = new Schema(
   {
     name: { type: String, required: true, trim: true },
-    kind: { type: String, enum: ['VENUE', 'HOST'], default: 'VENUE', index: true },
+    kind: { type: String, enum: ['VENUE', 'HOST', 'ECOMM'], default: 'VENUE', index: true },
     sort_order: { type: Number, default: 0 },
     is_active: { type: Boolean, default: true },
   },
@@ -218,9 +263,11 @@ crmDynamicFieldSchema.index({ name: 1 }, { unique: true });
 
 export type VenueLeadDoc = InferSchemaType<typeof venueLeadSchema> & { _id: any };
 export type HostLeadDoc = InferSchemaType<typeof hostLeadSchema> & { _id: any };
+export type EcommLeadDoc = InferSchemaType<typeof ecommLeadSchema> & { _id: any };
 export type CrmServiceCatalogDoc = InferSchemaType<typeof crmServiceCatalogSchema> & { _id: Types.ObjectId };
 export type CrmDynamicFieldDoc = InferSchemaType<typeof crmDynamicFieldSchema> & { _id: Types.ObjectId };
 export const VenueLeadModel = model('VenueLead', venueLeadSchema);
 export const HostLeadModel = model('HostLead', hostLeadSchema);
+export const EcommLeadModel = model('EcommLead', ecommLeadSchema);
 export const CrmServiceCatalogModel = model('CrmServiceCatalog', crmServiceCatalogSchema);
 export const CrmDynamicFieldModel = model('CrmDynamicField', crmDynamicFieldSchema);

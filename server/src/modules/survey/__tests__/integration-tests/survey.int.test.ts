@@ -1,7 +1,7 @@
 import { Types } from 'mongoose';
 import { surveyService } from '../../survey.service';
 import { leadSurveyService } from '../../leadSurvey.service';
-import { VenueLeadModel, HostLeadModel } from '../../../crm/crm/crm.model';
+import { VenueLeadModel, HostLeadModel, EcommLeadModel } from '../../../crm/crm/crm.model';
 import { UserModel } from '../../../access/user/user.model';
 
 const mkUser = (email: string, phone?: string) =>
@@ -151,6 +151,23 @@ describe('leadSurveyService integration', () => {
     expect(forLead.entries).toHaveLength(1);
     expect(forLead.entries[0]).toMatchObject({ source: 'APP', filled: true });
     expect(forLead.entries[0].answers[0]).toMatchObject({ qid, value: 'My Org' });
+  });
+
+  it('syncFromGate creates an ecomm lead + APP entry from the user survey response', async () => {
+    const user = await mkUser('seller@example.com', '9990002223');
+    const survey = await surveyService.create({ kind: 'ECOMM', super_category_id: superA, questions: [{ type: 'TEXT', label: 'Brand' }] });
+    const qid = survey!.questions[0].qid;
+    await surveyService.submit(String(user._id), survey!.id, [{ qid, value: 'My Brand' }]);
+
+    await leadSurveyService.syncFromGate(String(user._id), 'ECOMM');
+
+    const lead: any = await EcommLeadModel.findOne({ 'contacts.email': 'seller@example.com' }).lean();
+    expect(lead).toBeTruthy();
+    expect(lead.seller_name).toBeTruthy();
+    const forLead = await leadSurveyService.forLead('ECOMM_LEAD', String(lead._id));
+    expect(forLead.entries).toHaveLength(1);
+    expect(forLead.entries[0]).toMatchObject({ source: 'APP', filled: true });
+    expect(forLead.entries[0].answers[0]).toMatchObject({ qid, value: 'My Brand' });
   });
 
   it('matchedUserForLead links a lead contact to a Duncit user by email', async () => {

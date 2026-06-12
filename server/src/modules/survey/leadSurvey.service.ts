@@ -1,7 +1,7 @@
 import crypto from 'crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { VenueLeadModel, HostLeadModel } from '@modules/crm/crm/crm.model';
+import { VenueLeadModel, HostLeadModel, EcommLeadModel } from '@modules/crm/crm/crm.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { surveyService } from './survey.service';
@@ -9,10 +9,30 @@ import { SurveyModel, SurveyResponseModel, type SurveyKind } from './survey.mode
 import { LeadSurveyEntryModel, type LeadSurveyEntity } from './leadSurveyEntry.model';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
-// Returned as `any` — the two lead models have structurally different docs, so
+// Returned as `any` — the lead models have structurally different docs, so
 // their method signatures don't unify into a callable union otherwise.
-const modelFor = (entity: LeadSurveyEntity): any => (entity === 'HOST_LEAD' ? HostLeadModel : VenueLeadModel);
-const kindFor = (entity: LeadSurveyEntity): SurveyKind => (entity === 'HOST_LEAD' ? 'HOST' : 'VENUE');
+const MODEL_FOR: Record<LeadSurveyEntity, any> = {
+  VENUE_LEAD: VenueLeadModel,
+  HOST_LEAD: HostLeadModel,
+  ECOMM_LEAD: EcommLeadModel,
+};
+const KIND_FOR: Record<LeadSurveyEntity, SurveyKind> = {
+  VENUE_LEAD: 'VENUE',
+  HOST_LEAD: 'HOST',
+  ECOMM_LEAD: 'ECOMM',
+};
+const ENTITY_FOR_KIND: Record<SurveyKind, LeadSurveyEntity> = {
+  VENUE: 'VENUE_LEAD',
+  HOST: 'HOST_LEAD',
+  ECOMM: 'ECOMM_LEAD',
+};
+const NAME_FIELD: Record<LeadSurveyEntity, string> = {
+  VENUE_LEAD: 'venue_name',
+  HOST_LEAD: 'host_name',
+  ECOMM_LEAD: 'seller_name',
+};
+const modelFor = (entity: LeadSurveyEntity): any => MODEL_FOR[entity];
+const kindFor = (entity: LeadSurveyEntity): SurveyKind => KIND_FOR[entity];
 const cleanAnswers = (answers: { qid: string; value?: string | null; values?: string[] | null }[] = []) =>
   answers.map((a) => ({ qid: a.qid, value: a.value ?? null, values: a.values ?? [] }));
 
@@ -30,8 +50,7 @@ const pubEntry = (e: any) => ({
   created_at: iso(e.created_at),
 });
 
-const leadName = (entity: LeadSurveyEntity, lead: any) =>
-  (entity === 'HOST_LEAD' ? lead?.host_name : lead?.venue_name) ?? '';
+const leadName = (entity: LeadSurveyEntity, lead: any) => lead?.[NAME_FIELD[entity]] ?? '';
 
 const leadScope = (lead: any) => ({
   super_category_id: lead?.super_category_id ? String(lead.super_category_id) : null,
@@ -132,7 +151,7 @@ export const leadSurveyService = {
   async syncFromGate(userId: string, kind: SurveyKind) {
     const user: any = await UserModel.findById(userId).lean();
     if (!user) return;
-    const entity: LeadSurveyEntity = kind === 'HOST' ? 'HOST_LEAD' : 'VENUE_LEAD';
+    const entity: LeadSurveyEntity = ENTITY_FOR_KIND[kind];
     const Model = modelFor(entity);
     const email = user.auth?.email || '';
     const phone = user.auth?.phone?.number || '';
@@ -151,9 +170,18 @@ export const leadSurveyService = {
         category_ids: survey?.category_id ? [survey.category_id] : [],
         sub_category_ids: survey?.sub_category_id ? [survey.sub_category_id] : [],
       };
-      lead = entity === 'HOST_LEAD'
-        ? await Model.create({ ...base, host_name: name })
-        : await Model.create({ ...base, venue_name: `${name}'s venue`, city: user.profile?.city || 'Not provided', full_address: 'Provided via app onboarding' });
+      if (entity === 'HOST_LEAD') {
+        lead = await Model.create({ ...base, host_name: name });
+      } else if (entity === 'ECOMM_LEAD') {
+        lead = await Model.create({ ...base, seller_name: name });
+      } else {
+        lead = await Model.create({
+          ...base,
+          venue_name: `${name}'s venue`,
+          city: user.profile?.city || 'Not provided',
+          full_address: 'Provided via app onboarding',
+        });
+      }
     }
 
     if (response) {

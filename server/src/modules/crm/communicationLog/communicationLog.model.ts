@@ -4,7 +4,7 @@ export const COMMS_LOG_TYPES = ['EMAIL', 'CALL'] as const;
 export type CommsLogType = (typeof COMMS_LOG_TYPES)[number];
 
 export const COMMS_LOG_DIRECTIONS = ['OUTBOUND', 'INBOUND'] as const;
-export const COMMS_LOG_ENTITIES = ['VENUE_LEAD', 'HOST_LEAD'] as const;
+export const COMMS_LOG_ENTITIES = ['VENUE_LEAD', 'HOST_LEAD', 'ECOMM_LEAD'] as const;
 export type CommsLogEntity = (typeof COMMS_LOG_ENTITIES)[number];
 
 export const COMMS_LOG_STATUSES = [

@@ -52,6 +52,7 @@ export const crmTypeDefs = gql`
   enum CrmEntityType {
     VENUE_LEAD
     HOST_LEAD
+    ECOMM_LEAD
   }
 
   enum CrmDynamicFieldKind {
@@ -119,6 +120,7 @@ export const crmTypeDefs = gql`
   enum CrmServiceKind {
     VENUE
     HOST
+    ECOMM
   }
 
   type CrmService {
@@ -252,6 +254,44 @@ export const crmTypeDefs = gql`
     updated_at: String
   }
 
+  type EcommLead {
+    id: ID!
+    super_category_id: ID
+    category_ids: [ID!]!
+    sub_category_ids: [ID!]!
+    super_category: CrmSuperCategoryRef
+    matched_user: CrmMatchedUser
+    seller_name: String!
+    brand_name: String
+    business_type: String
+    city: String
+    area: String
+    contacts: [CrmContact!]!
+    product_categories: [String!]!
+    catalog_size: String
+    price_range: String
+    fulfilment_mode: String
+    monthly_orders: String
+    gst_number: String
+    gst_applicable: Boolean!
+    website: String
+    instagram_link: String
+    marketplace_links: [String!]!
+    services_offered: [CrmServiceOffered!]!
+    tags: [String!]!
+    profile_photo_url: String
+    dynamic_values_json: String!
+    lead_source: String
+    assigned_to: String
+    lead_status: String!
+    priority: String!
+    next_follow_up_date: String
+    notes: String
+    activity_log: [CrmActivity!]!
+    created_at: String
+    updated_at: String
+  }
+
   type CrmOptionGroup {
     venue_types: [String!]!
     space_types: [String!]!
@@ -358,6 +398,38 @@ export const crmTypeDefs = gql`
     notes: String
   }
 
+  input EcommLeadInput {
+    super_category_id: ID
+    category_ids: [ID!]
+    sub_category_ids: [ID!]
+    seller_name: String!
+    brand_name: String
+    business_type: String
+    city: String
+    area: String
+    contacts: [CrmContactInput!]
+    product_categories: [String!]
+    catalog_size: String
+    price_range: String
+    fulfilment_mode: String
+    monthly_orders: String
+    gst_number: String
+    gst_applicable: Boolean
+    website: String
+    instagram_link: String
+    marketplace_links: [String!]
+    services_offered: [CrmServiceOfferedInput!]
+    tags: [String!]
+    profile_photo_url: String
+    dynamic_values_json: String
+    lead_source: String
+    assigned_to: String
+    lead_status: String
+    priority: String
+    next_follow_up_date: String
+    notes: String
+  }
+
   input CrmLeadFilter {
     search: String
     city: String
@@ -378,6 +450,7 @@ export const crmTypeDefs = gql`
   enum CrmAiEntity {
     VENUE_LEAD
     HOST_LEAD
+    ECOMM_LEAD
   }
 
   "Result of placing a CRM call (AI or portal/agent-bridge)."
@@ -427,6 +500,8 @@ export const crmTypeDefs = gql`
     venueLead(id: ID!): VenueLead
     hostLeads(filter: CrmLeadFilter): [HostLead!]!
     hostLead(id: ID!): HostLead
+    ecommLeads(filter: CrmLeadFilter): [EcommLead!]!
+    ecommLead(id: ID!): EcommLead
     crmExcelTemplate(entity: CrmAiEntity!): CrmExcelFile!
     crmExcelExport(entity: CrmAiEntity!): CrmExcelFile!
     "Read an uploaded spreadsheet's headers + sample rows for column mapping."
@@ -465,6 +540,18 @@ export const crmTypeDefs = gql`
       attachments: [CrmEmailAssetInput!]
     ): LeadContactActionResult!
     callHostLeadContact(id: ID!, contact_number: String!, provider_id: ID): LeadContactActionResult!
+    createEcommLead(input: EcommLeadInput!): EcommLead!
+    updateEcommLead(id: ID!, input: EcommLeadInput!): EcommLead!
+    deleteEcommLead(id: ID!): Boolean!
+    emailEcommLeadContact(
+      id: ID!
+      contact_email: String!
+      subject: String!
+      body: String!
+      provider_id: ID
+      attachments: [CrmEmailAssetInput!]
+    ): LeadContactActionResult!
+    callEcommLeadContact(id: ID!, contact_number: String!, provider_id: ID): LeadContactActionResult!
     "Place an outbound AI call (Servam-driven) using a Static Content prompt and Servam voice."
     startCrmAiCall(
       entity: CrmAiEntity!

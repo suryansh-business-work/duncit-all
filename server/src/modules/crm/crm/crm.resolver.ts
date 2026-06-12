@@ -28,6 +28,11 @@ export const crmResolvers = {
       parent?.super_category_id ? crmService.superCategoryById(String(parent.super_category_id)) : null,
     matched_user: (parent: any) => leadSurveyService.matchedUserForLead(parent),
   },
+  EcommLead: {
+    super_category: (parent: any) =>
+      parent?.super_category_id ? crmService.superCategoryById(String(parent.super_category_id)) : null,
+    matched_user: (parent: any) => leadSurveyService.matchedUserForLead(parent),
+  },
   Query: {
     crmLeadConfig: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
@@ -35,7 +40,7 @@ export const crmResolvers = {
     },
     crmServices: (
       _p: unknown,
-      args: { kind?: 'VENUE' | 'HOST' | null; include_inactive?: boolean },
+      args: { kind?: 'VENUE' | 'HOST' | 'ECOMM' | null; include_inactive?: boolean },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, RW);
@@ -43,7 +48,7 @@ export const crmResolvers = {
     },
     crmDynamicFields: (
       _p: unknown,
-      args: { entity?: 'VENUE_LEAD' | 'HOST_LEAD' | null; include_inactive?: boolean },
+      args: { entity?: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | null; include_inactive?: boolean },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, RW);
@@ -64,6 +69,14 @@ export const crmResolvers = {
     hostLead: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return crmService.getHostLead(args.id);
+    },
+    ecommLeads: (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.listEcommLeads(args.filter);
+    },
+    ecommLead: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.getEcommLead(args.id);
     },
     crmExcelTemplate: (_p: unknown, args: { entity: CrmExcelEntity }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
@@ -118,6 +131,34 @@ export const crmResolvers = {
     deleteHostLead: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return crmService.deleteHostLead(args.id);
+    },
+    createEcommLead: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.createEcommLead(args.input);
+    },
+    updateEcommLead: (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.updateEcommLead(args.id, args.input);
+    },
+    deleteEcommLead: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return crmService.deleteEcommLead(args.id);
+    },
+    emailEcommLeadContact: (
+      _p: unknown,
+      args: { id: string; contact_email: string; subject: string; body: string; provider_id?: string | null; attachments?: { url: string; name?: string | null }[] | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, RW);
+      return crmService.emailEcommLeadContact(args.id, args.contact_email, args.subject, args.body, args.provider_id, user.id, args.attachments);
+    },
+    callEcommLeadContact: (
+      _p: unknown,
+      args: { id: string; contact_number: string; provider_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireRole(ctx, RW);
+      return crmService.callEcommLeadContact(args.id, args.contact_number, args.provider_id, user.id);
     },
     emailVenueLeadContact: (
       _p: unknown,

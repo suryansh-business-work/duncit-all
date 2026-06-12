@@ -34,7 +34,7 @@ const crmEmailTemplateSchema = new Schema(
     subject: { type: String, required: true, trim: true },
     // Which lead kind this template is meant for — drives the editor's available
     // variables and which templates show in each lead's compose dialog.
-    target: { type: String, enum: ['VENUE', 'HOST', 'STATIC'], default: 'STATIC', index: true },
+    target: { type: String, enum: ['VENUE', 'HOST', 'ECOMM', 'STATIC'], default: 'STATIC', index: true },
     mjml: { type: String, required: true },
     variables: { type: [variableSchema], default: [] },
     // Per-template uploaded image library (shown in the editor's image dialog).

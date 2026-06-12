@@ -25,6 +25,7 @@ export const crmEmailTemplateTypeDefs = gql`
   enum CrmEmailTemplateTarget {
     VENUE
     HOST
+    ECOMM
     STATIC
   }
 

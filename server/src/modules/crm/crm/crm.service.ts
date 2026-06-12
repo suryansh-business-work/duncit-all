@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import {
   VenueLeadModel,
   HostLeadModel,
+  EcommLeadModel,
   CrmServiceCatalogModel,
   CrmDynamicFieldModel,
 } from './crm.model';
@@ -10,6 +11,18 @@ import { CategoryModel } from '@modules/pods/category/category.model';
 import { commsService } from '@services/comms/comms.service';
 import { communicationLogService } from '@modules/crm/communicationLog/communicationLog.service';
 import * as C from './crm.constants';
+
+/** Lead model + human label per CRM entity type (manual logs, comms activity). */
+const LEAD_MODELS = {
+  VENUE_LEAD: VenueLeadModel,
+  HOST_LEAD: HostLeadModel,
+  ECOMM_LEAD: EcommLeadModel,
+} as const;
+const LEAD_LABELS = {
+  VENUE_LEAD: 'Venue lead',
+  HOST_LEAD: 'Host lead',
+  ECOMM_LEAD: 'Ecomm lead',
+} as const;
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : (v ?? null));
 
@@ -219,7 +232,7 @@ async function assertUniqueLeadPhone(model: any, input: any, kindLabel: string, 
 async function logAndAttachActivity(opts: {
   lead: any;
   type: 'EMAIL' | 'CALL';
-  entity_type: 'VENUE_LEAD' | 'HOST_LEAD';
+  entity_type: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
   provider_id?: string | null;
   to: string;
   subject?: string;
@@ -259,7 +272,10 @@ async function logAndAttachActivity(opts: {
   await opts.lead.save();
 }
 
-type ServiceKind = 'VENUE' | 'HOST';
+type ServiceKind = 'VENUE' | 'HOST' | 'ECOMM';
+const SERVICE_KINDS: readonly ServiceKind[] = ['VENUE', 'HOST', 'ECOMM'];
+const asServiceKind = (v: any, fallback: ServiceKind = 'VENUE'): ServiceKind =>
+  SERVICE_KINDS.includes(v) ? v : fallback;
 
 async function loadServiceNames(kind: ServiceKind): Promise<string[]> {
   // Active catalogue names, sort-ordered, with the "Other" sentinel always
@@ -324,7 +340,7 @@ export const crmService = {
     is_active?: boolean | null;
   }) {
     const name = (input.name ?? '').trim();
-    const kind: ServiceKind = input.kind === 'HOST' ? 'HOST' : 'VENUE';
+    const kind = asServiceKind(input.kind);
     if (!name) throw new GraphQLError('Service name is required', { extensions: { code: 'BAD_USER_INPUT' } });
     const existing = await CrmServiceCatalogModel.findOne({ kind, name });
     if (existing) {
@@ -346,7 +362,7 @@ export const crmService = {
   ) {
     const doc = await CrmServiceCatalogModel.findById(id);
     if (!doc) notFound('Service');
-    const nextKind: ServiceKind = input.kind === 'HOST' ? 'HOST' : input.kind === 'VENUE' ? 'VENUE' : (doc.kind as ServiceKind);
+    const nextKind = asServiceKind(input.kind, doc.kind as ServiceKind);
     const name = (input.name ?? '').trim();
     if (name && (name !== doc.name || nextKind !== doc.kind)) {
       const dupe = await CrmServiceCatalogModel.findOne({
@@ -432,7 +448,7 @@ export const crmService = {
   },
 
   // ---- Dynamic fields ----
-  async listDynamicFields(entity?: 'VENUE_LEAD' | 'HOST_LEAD' | null, includeInactive = false) {
+  async listDynamicFields(entity?: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD' | null, includeInactive = false) {
     const q: Record<string, any> = {};
     if (entity === 'VENUE_LEAD') q.applies_to_venue = true;
     else if (entity === 'HOST_LEAD') q.applies_to_host = true;
@@ -516,7 +532,7 @@ export const crmService = {
    * trusted CRM staff and the value is never re-rendered outside the app).
    */
   async addManualLog(opts: {
-    entity_type: 'VENUE_LEAD' | 'HOST_LEAD';
+    entity_type: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
     entity_id: string;
     summary?: string | null;
     body_html: string;
@@ -527,14 +543,12 @@ export const crmService = {
     if (!body_html) {
       throw new GraphQLError('Log body is required', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    // Casting both models to a permissive shape because their generic doc
-    // types diverge enough that the union of `findById` signatures isn't
-    // directly callable without one. Runtime behaviour is identical.
-    const Model = (opts.entity_type === 'HOST_LEAD'
-      ? HostLeadModel
-      : VenueLeadModel) as unknown as (typeof VenueLeadModel);
+    // Casting to a permissive shape because the per-lead generic doc types
+    // diverge enough that the union of `findById` signatures isn't directly
+    // callable without one. Runtime behaviour is identical.
+    const Model = LEAD_MODELS[opts.entity_type] as unknown as (typeof VenueLeadModel);
     const lead = await Model.findById(opts.entity_id);
-    if (!lead) notFound(opts.entity_type === 'HOST_LEAD' ? 'Host lead' : 'Venue lead');
+    if (!lead) notFound(LEAD_LABELS[opts.entity_type]);
     const entry = {
       type: 'NOTE' as const,
       summary: (opts.summary ?? '').trim(),
@@ -624,6 +638,38 @@ export const crmService = {
     return true;
   },
 
+  // ---- Ecomm (seller) leads ----
+  async listEcommLeads(filter: any) {
+    const docs = await EcommLeadModel.find(buildQuery(filter, 'seller_name')).sort({ created_at: -1 });
+    return docs.map(pub);
+  },
+  async getEcommLead(id: string) {
+    const doc = await EcommLeadModel.findById(id);
+    return doc ? pub(doc) : null;
+  },
+  async createEcommLead(input: any) {
+    const safe = normaliseLeadInput(input);
+    await assertUniqueLeadPhone(EcommLeadModel, safe, 'ecomm lead');
+    const created = await EcommLeadModel.create({ ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) });
+    return pub(created);
+  },
+  async updateEcommLead(id: string, input: any) {
+    const safe = normaliseLeadInput(input);
+    await assertUniqueLeadPhone(EcommLeadModel, safe, 'ecomm lead', id);
+    const updated = await EcommLeadModel.findByIdAndUpdate(
+      id,
+      { $set: { ...safe, next_follow_up_date: parseDate(safe.next_follow_up_date) } },
+      { new: true }
+    );
+    if (!updated) notFound('Ecomm lead');
+    return pub(updated);
+  },
+  async deleteEcommLead(id: string) {
+    const doc = await EcommLeadModel.findByIdAndDelete(id);
+    if (!doc) notFound('Ecomm lead');
+    return true;
+  },
+
   // ---- Comms actions (email via SMTP, call via Twilio) ----
   async emailVenueLeadContact(
     id: string,
@@ -667,6 +713,28 @@ export const crmService = {
     if (!lead) notFound('Host lead');
     const result = await commsService.call({ to, provider_id: providerId });
     await logAndAttachActivity({ lead, type: 'CALL', entity_type: 'HOST_LEAD', provider_id: providerId, to, result, by });
+    return result;
+  },
+  async emailEcommLeadContact(
+    id: string,
+    to: string,
+    subject: string,
+    body: string,
+    providerId?: string | null,
+    by?: string | null,
+    attachments?: { url: string; name?: string | null }[] | null
+  ) {
+    const lead = await EcommLeadModel.findById(id);
+    if (!lead) notFound('Ecomm lead');
+    const result = await commsService.sendEmail({ to, subject, body, provider_id: providerId, attachments });
+    await logAndAttachActivity({ lead, type: 'EMAIL', entity_type: 'ECOMM_LEAD', provider_id: providerId, to, subject, body, result, by });
+    return result;
+  },
+  async callEcommLeadContact(id: string, to: string, providerId?: string | null, by?: string | null) {
+    const lead = await EcommLeadModel.findById(id);
+    if (!lead) notFound('Ecomm lead');
+    const result = await commsService.call({ to, provider_id: providerId });
+    await logAndAttachActivity({ lead, type: 'CALL', entity_type: 'ECOMM_LEAD', provider_id: providerId, to, result, by });
     return result;
   },
 };

@@ -67,8 +67,10 @@ const slotLabel = (value?: string | null) =>
     : 'To be confirmed';
 
 /** Email the applicant + onboarding staff that a meeting was scheduled. */
+const MEETING_KIND_LABELS: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
+
 async function notifyScheduled(doc: any) {
-  const kindLabel = doc.kind === 'VENUE' ? 'Venue' : 'Host';
+  const kindLabel = MEETING_KIND_LABELS[doc.kind] ?? 'Host';
   const slot = slotLabel(iso(doc.scheduled_at));
   const link = doc.meeting_link || '';
   const notes = doc.notes || '';

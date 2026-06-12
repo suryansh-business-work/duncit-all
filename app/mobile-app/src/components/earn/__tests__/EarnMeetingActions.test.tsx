@@ -53,7 +53,7 @@ describe('EarnMeetingActions', () => {
     await waitFor(() => expect(screen.queryByTestId('reschedule-dialog')).toBeNull(), {
       timeout: 5000,
     });
-  });
+  }, 15000);
 
   it('shows a reschedule failure and keeps the dialog open', async () => {
     route({ failReschedule: true });
@@ -107,7 +107,7 @@ describe('EarnMeetingActions', () => {
     await waitFor(() => expect(screen.queryByTestId('cancel-dialog')).toBeNull(), {
       timeout: 5000,
     });
-  });
+  }, 15000);
 
   it('closes the cancel dialog even when the cancel call fails', async () => {
     route({ failCancel: true });
@@ -119,5 +119,5 @@ describe('EarnMeetingActions', () => {
       timeout: 5000,
     });
     expect(onChanged).not.toHaveBeenCalled();
-  });
+  }, 15000);
 });

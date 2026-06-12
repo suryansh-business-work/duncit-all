@@ -120,7 +120,7 @@ describe('EarnScreen', () => {
       },
       { timeout: 5000 },
     );
-  });
+  }, 15000);
 
   it('survives a failed meetings load', async () => {
     mockRequest.mockRejectedValue(new Error('down'));

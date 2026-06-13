@@ -11,12 +11,12 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
-type QuickRoute = 'CreatePod' | 'HostManage' | 'BecomeHost' | 'Wallet';
+type QuickRoute = 'CreatePod' | 'HostManage' | 'Verification' | 'Wallet';
 
 const QUICK: { label: string; icon: IconName; route: QuickRoute }[] = [
   { label: 'Create pod', icon: 'add', route: 'CreatePod' },
   { label: 'Your Pods', icon: 'dashboard', route: 'HostManage' },
-  { label: 'Verification', icon: 'verified-user', route: 'BecomeHost' },
+  { label: 'Verification', icon: 'verified-user', route: 'Verification' },
   { label: 'Wallet', icon: 'account-balance-wallet', route: 'Wallet' },
 ];
 

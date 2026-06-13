@@ -48,25 +48,25 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
   // the user-summary card opens the profile.
   const support: MenuItem = { label: 'Support', icon: <SupportAgentIcon {...sz} />, onClick: go('/support') };
   const faqs: MenuItem = { label: 'FAQs', icon: <HelpOutlineIcon {...sz} />, onClick: go('/faqs') };
-  const studio = (yourX: MenuItem, dashboardTo: string, verifyTo: string): MenuItem[] => [
+  const studio = (yourX: MenuItem, dashboardTo: string): MenuItem[] => [
     // The studio dashboard is the first stop in every role (B4-2).
     { label: 'Dashboard', icon: <SpaceDashboardIcon {...sz} />, onClick: go(dashboardTo) },
     yourX,
     support,
-    { label: 'Verification', icon: <VerifiedUserIcon {...sz} />, onClick: go(verifyTo) },
+    { label: 'Verification', icon: <VerifiedUserIcon {...sz} />, onClick: go('/verification') },
     faqs,
   ];
 
   if (effectiveMode === 'HOST') {
-    const items = studio({ label: 'Your Pods', icon: <DashboardIcon {...sz} />, onClick: go('/host/manage') }, '/host/dashboard', '/become-host');
+    const items = studio({ label: 'Your Pods', icon: <DashboardIcon {...sz} />, onClick: go('/host/manage') }, '/host/dashboard');
     items.splice(2, 0, { label: 'Wallet', icon: <AccountBalanceWalletIcon {...sz} />, onClick: go('/host/wallet') });
     return { items };
   }
   if (effectiveMode === 'VENUE') {
-    return { items: studio({ label: 'Your Venues', icon: <StorefrontIcon {...sz} />, onClick: go('/venues/manage') }, '/venues/manage', '/survey/venue') };
+    return { items: studio({ label: 'Your Venues', icon: <StorefrontIcon {...sz} />, onClick: go('/venues/manage') }, '/venues/manage') };
   }
   if (effectiveMode === 'ECOMM') {
-    return { items: studio({ label: 'Your Products', icon: <Inventory2Icon {...sz} />, onClick: go('/products/manage') }, '/products/manage', '/survey/ecomm') };
+    return { items: studio({ label: 'Your Products', icon: <Inventory2Icon {...sz} />, onClick: go('/products/manage') }, '/products/manage') };
   }
 
   const items: MenuItem[] = [
@@ -74,6 +74,7 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
     { label: 'Pod History', icon: <HistoryIcon {...sz} />, onClick: go('/pod-history') },
     { label: 'Earn with Duncit', icon: <VolunteerActivismIcon {...sz} />, onClick: go('/earn') },
     { label: 'Refer & Earn', icon: <CardGiftcardIcon {...sz} />, onClick: go('/referral') },
+    { label: 'Verification', icon: <VerifiedUserIcon {...sz} />, onClick: go('/verification') },
     support,
     { label: 'Pod Ideas', icon: <LightbulbIcon {...sz} />, onClick: go('/pod-ideas') },
     faqs,

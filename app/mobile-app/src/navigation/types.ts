@@ -15,6 +15,7 @@ export type RootStackParamList = {
   Profile: undefined;
   Account: undefined;
   AccountHealth: undefined;
+  Verification: undefined;
   VenueHealth: { venueId: string };
   Saved: undefined;
   PodHistory: undefined;

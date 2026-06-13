@@ -47,7 +47,7 @@ describe('Sidebar navigation handlers', () => {
     fireEvent.press(screen.getByTestId('sidebar-item-Your Venues'));
     expect(mockNavigate).toHaveBeenCalledWith('VenueManage');
     fireEvent.press(screen.getByTestId('sidebar-item-Verification'));
-    expect(mockNavigate).toHaveBeenCalledWith('RegisterVenue');
+    expect(mockNavigate).toHaveBeenCalledWith('Verification');
   });
 
   it('copes with no signed-in user and no policies (no switch button)', () => {

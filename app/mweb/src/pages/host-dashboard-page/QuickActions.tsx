@@ -15,7 +15,7 @@ interface Action {
 const ACTIONS: Action[] = [
   { label: 'Create pod', icon: <AddIcon />, to: '/create-pod' },
   { label: 'Your Pods', icon: <DashboardIcon />, to: '/host/manage' },
-  { label: 'Verification', icon: <VerifiedUserIcon />, to: '/become-host' },
+  { label: 'Verification', icon: <VerifiedUserIcon />, to: '/verification' },
   { label: 'Wallet', icon: <AccountBalanceWalletIcon />, to: '/host/wallet' },
 ];
 

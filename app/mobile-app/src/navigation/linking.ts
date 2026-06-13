@@ -38,6 +38,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       BecomeHost: 'become-host',
       HostManage: 'host-manage',
       HostDashboard: 'host-dashboard',
+      Verification: 'verification',
       Wallet: 'wallet',
       CreatePod: 'create-pod',
       RegisterVenue: 'register-venue',

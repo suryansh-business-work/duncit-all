@@ -7,7 +7,13 @@ describe('ConfirmDialog', () => {
   it('renders the message + default labels and fires confirm', () => {
     const onConfirm = jest.fn();
     renderWithProviders(
-      <ConfirmDialog open title="Sure?" message="Details here" onConfirm={onConfirm} onCancel={jest.fn()} />,
+      <ConfirmDialog
+        open
+        title="Sure?"
+        message="Details here"
+        onConfirm={onConfirm}
+        onCancel={jest.fn()}
+      />,
     );
     expect(screen.getByText('Details here')).toBeOnTheScreen();
     expect(screen.getByText('Confirm')).toBeOnTheScreen();

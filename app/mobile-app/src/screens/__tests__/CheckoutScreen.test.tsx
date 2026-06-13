@@ -48,6 +48,7 @@ const baseHook = (overrides: Record<string, unknown> = {}) => ({
   finance,
   pod,
   me: null,
+  availableCoupons: [],
   isLoading: false,
   pay,
   createRazorpayOrder,
@@ -229,6 +230,38 @@ describe('CheckoutScreen', () => {
     fireEvent.changeText(screen.getByTestId('coupon-input'), 'BAD');
     fireEvent.press(screen.getByTestId('coupon-apply'));
     await waitFor(() => expect(screen.getByTestId('coupon-error')).toHaveTextContent(/expired/i));
+  });
+
+  it('applies a coupon picked from the available list (B2-#3)', async () => {
+    previewCoupon.mockResolvedValue({
+      ok: true,
+      message: null,
+      code: 'SAVE20',
+      discount_pct: 20,
+      original_total: 500,
+      discount_amount: 100,
+      final_total: 400,
+      currency_symbol: '₹',
+    });
+    mockedCheckout.mockReturnValue(
+      baseHook({
+        availableCoupons: [
+          {
+            id: 'c1',
+            code: 'SAVE20',
+            description: '',
+            discount_pct: 20,
+            min_order_amount: 0,
+            scope: 'GLOBAL',
+          },
+        ],
+      }),
+    );
+    renderWithProviders(<CheckoutScreen />);
+    fireEvent.press(screen.getByTestId('coupon-view-available'));
+    fireEvent.press(screen.getByTestId('coupon-pick-SAVE20'));
+    await waitFor(() => expect(previewCoupon).toHaveBeenCalledWith('SAVE20', 500));
+    expect(screen.getByTestId('coupon-applied')).toBeOnTheScreen();
   });
 
   it('downloads invoice/ticket and opens bookings from the success view', async () => {

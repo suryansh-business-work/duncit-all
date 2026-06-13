@@ -3,6 +3,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 import {
+  MobileAvailableCouponsDocument,
   MobileCheckoutInvoiceDocument,
   MobileCheckoutMeDocument,
   MobileCheckoutPodDocument,
@@ -78,6 +79,19 @@ function route(doc: unknown) {
         currency_symbol: '₹',
       },
     });
+  if (doc === MobileAvailableCouponsDocument)
+    return Promise.resolve({
+      availableCouponsForPod: [
+        {
+          id: 'c1',
+          code: 'SAVE20',
+          description: '',
+          discount_pct: 20,
+          min_order_amount: 0,
+          scope: 'GLOBAL',
+        },
+      ],
+    });
   if (doc === MobileCheckoutInvoiceDocument)
     return Promise.resolve({ paymentInvoicePdfBase64: 'B64' });
   if (doc === MobileCreateRazorpayOrderDocument)
@@ -117,11 +131,23 @@ beforeEach(() => {
 });
 
 describe('useCheckout', () => {
-  it('loads finance, me and pod', async () => {
+  it('loads finance, me, pod and available coupons', async () => {
     const { result } = renderHook(() => useCheckout('p1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.finance?.gst_pct).toBe(18);
     expect(result.current.me?.email).toBe('r@d.com');
+    expect(result.current.pod?.pod_title).toBe('Pod');
+    expect(result.current.availableCoupons).toHaveLength(1);
+  });
+
+  it('tolerates an available-coupons fetch failure', async () => {
+    mockRequest.mockReset().mockImplementation((doc: unknown) => {
+      if (doc === MobileAvailableCouponsDocument) return Promise.reject(new Error('down'));
+      return route(doc);
+    });
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.availableCoupons).toEqual([]);
     expect(result.current.pod?.pod_title).toBe('Pod');
   });
 

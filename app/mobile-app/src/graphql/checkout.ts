@@ -78,6 +78,20 @@ export const MobilePreviewCouponDocument = gql(`
   }
 `);
 
+/** Active coupons a shopper can apply (global + this pod) — checkout picker. */
+export const MobileAvailableCouponsDocument = gql(`
+  query MobileAvailableCoupons($pod_id: ID) {
+    availableCouponsForPod(pod_id: $pod_id) {
+      id
+      code
+      description
+      discount_pct
+      min_order_amount
+      scope
+    }
+  }
+`);
+
 /** Live checkout step 1 — create a Razorpay order + PENDING payment. */
 export const MobileCreateRazorpayOrderDocument = gql(`
   mutation MobileCreateRazorpayOrder($input: RazorpayOrderInput!) {

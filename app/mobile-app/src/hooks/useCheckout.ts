@@ -4,6 +4,7 @@ import * as Sharing from 'expo-sharing';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
+  MobileAvailableCouponsDocument,
   MobileCheckoutInvoiceDocument,
   MobileCheckoutMeDocument,
   MobileCheckoutPodDocument,
@@ -24,6 +25,9 @@ export type RazorpayOrder = ResultOf<
   typeof MobileCreateRazorpayOrderDocument
 >['createRazorpayOrder'];
 export type CouponPreview = ResultOf<typeof MobilePreviewCouponDocument>['previewCoupon'];
+export type AvailableCoupon = ResultOf<
+  typeof MobileAvailableCouponsDocument
+>['availableCouponsForPod'][number];
 
 /** The signature triple Razorpay returns on a successful payment. */
 export interface RazorpaySignature {
@@ -40,6 +44,7 @@ export function useCheckout(podId: string) {
   const [finance, setFinance] = useState<FinanceSettings | null>(null);
   const [pod, setPod] = useState<CheckoutPod>(null);
   const [me, setMe] = useState<CheckoutMe>(null);
+  const [availableCoupons, setAvailableCoupons] = useState<AvailableCoupon[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -51,6 +56,9 @@ export function useCheckout(podId: string) {
       graphqlRequest(MobileCheckoutMeDocument, undefined, { auth: true }).then(
         (d) => active && setMe(d.me),
       ),
+      graphqlRequest(MobileAvailableCouponsDocument, { pod_id: podId || null }, { auth: true })
+        .then((d) => active && setAvailableCoupons(d.availableCouponsForPod))
+        .catch(() => undefined),
       podId
         ? graphqlRequest(MobileCheckoutPodDocument, { id: podId }, { auth: true }).then(
             (d) => active && setPod(d.pod),
@@ -152,6 +160,7 @@ export function useCheckout(podId: string) {
     finance,
     pod,
     me,
+    availableCoupons,
     isLoading,
     pay,
     createRazorpayOrder,

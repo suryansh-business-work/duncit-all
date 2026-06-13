@@ -80,6 +80,8 @@ export const couponTypeDefs = /* GraphQL */ `
     coupons(filter: CouponFilterInput): [Coupon!]!
     coupon(id: ID!): Coupon
     couponsForPod(pod_id: ID!): [Coupon!]!
+    "Active, currently-valid coupons a shopper can apply (global + this pod)."
+    availableCouponsForPod(pod_id: ID): [Coupon!]!
     previewCoupon(input: CouponPreviewInput!): CouponPreview!
   }
 

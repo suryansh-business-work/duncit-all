@@ -183,7 +183,7 @@ export function NotificationsScreen({
           confirmLabel={pendingToggle ? 'Enable' : 'Disable'}
           destructive={!pendingToggle}
           onConfirm={() => {
-            if (pendingToggle !== null) setNotifEnabled(pendingToggle);
+            setNotifEnabled(pendingToggle === true);
             setPendingToggle(null);
           }}
           onCancel={() => setPendingToggle(null)}

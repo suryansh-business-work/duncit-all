@@ -59,6 +59,7 @@ export function CheckoutScreen() {
     finance,
     pod,
     me,
+    availableCoupons,
     isLoading,
     pay,
     createRazorpayOrder,
@@ -86,8 +87,8 @@ export function CheckoutScreen() {
   const effectiveTotal = coupon?.ok ? coupon.final_total : (breakup?.total ?? amount);
   const onDownloadTicket = podId ? () => downloadTicket(podId) : undefined;
 
-  const applyCoupon = async () => {
-    const code = couponCode.trim();
+  const applyCoupon = async (codeArg?: string) => {
+    const code = (codeArg ?? couponCode).trim();
     if (!code) return;
     setApplyingCoupon(true);
     setCouponError(null);
@@ -184,6 +185,7 @@ export function CheckoutScreen() {
             error={couponError}
             applying={applyingCoupon}
             currency={breakup.currency}
+            available={availableCoupons}
             onApply={applyCoupon}
             onRemove={removeCoupon}
           />

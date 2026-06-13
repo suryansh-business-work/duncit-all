@@ -92,6 +92,28 @@ export const PREVIEW_COUPON = gql`
   }
 `;
 
+export const AVAILABLE_COUPONS = gql`
+  query AvailableCoupons($pod_id: ID) {
+    availableCouponsForPod(pod_id: $pod_id) {
+      id
+      code
+      description
+      discount_pct
+      min_order_amount
+      scope
+    }
+  }
+`;
+
+export interface AvailableCoupon {
+  id: string;
+  code: string;
+  description: string;
+  discount_pct: number;
+  min_order_amount: number;
+  scope: 'GLOBAL' | 'POD';
+}
+
 export const CREATE_RAZORPAY_ORDER = gql`
   mutation CreateRazorpayOrder($input: RazorpayOrderInput!) {
     createRazorpayOrder(input: $input) {

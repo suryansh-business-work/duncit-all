@@ -12,7 +12,7 @@ import {
 import LockIcon from '@mui/icons-material/Lock';
 import { alpha, useTheme } from '@mui/material/styles';
 import type { FormikProps } from 'formik';
-import type { CheckoutForm, CouponPreview } from './queries';
+import type { AvailableCoupon, CheckoutForm, CouponPreview } from './queries';
 import CheckoutContactFields from './CheckoutContactFields';
 import CouponField from './CouponField';
 import { formatMoney } from './checkoutMath';
@@ -30,7 +30,8 @@ interface Props {
   setCouponCode: (value: string) => void;
   couponError: string | null;
   applyingCoupon: boolean;
-  onApplyCoupon: () => void;
+  availableCoupons: AvailableCoupon[];
+  onApplyCoupon: (code?: string) => void;
   onRemoveCoupon: () => void;
 }
 
@@ -47,6 +48,7 @@ export default function PaymentDetailsCard({
   setCouponCode,
   couponError,
   applyingCoupon,
+  availableCoupons,
   onApplyCoupon,
   onRemoveCoupon,
 }: Readonly<Props>) {
@@ -109,6 +111,7 @@ export default function PaymentDetailsCard({
             error={couponError}
             applying={applyingCoupon}
             currency={currency}
+            available={availableCoupons}
             onApply={onApplyCoupon}
             onRemove={onRemoveCoupon}
           />

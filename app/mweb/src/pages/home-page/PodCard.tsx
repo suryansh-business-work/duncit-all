@@ -19,14 +19,16 @@ export default function PodCard({
   pod,
   onOpen,
   hostName,
+  showPlace = true,
 }: Readonly<{
   pod: any;
   onOpen: () => void;
   hostName?: string | null;
+  showPlace?: boolean;
 }>) {
   const isFree = pod.pod_type?.includes('FREE');
   const { format } = usePricing();
-  const placeText = [pod.place_label, pod.place_detail].filter(Boolean).join(' - ');
+  const placeText = showPlace ? [pod.place_label, pod.place_detail].filter(Boolean).join(' - ') : '';
   // Pods whose date has passed can no longer be booked, so the "Book" CTA is
   // hidden (e.g. in the Previous Pods rail) — the detail page shows the
   // "booking is closed" notice instead.

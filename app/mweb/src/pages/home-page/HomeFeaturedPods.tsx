@@ -1,7 +1,6 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import GroupIcon from '@mui/icons-material/GroupOutlined';
-import PlaceIcon from '@mui/icons-material/PlaceOutlined';
 import { useNavigate } from 'react-router-dom';
 import { podUrl } from '../../utils/seoUrls';
 
@@ -42,7 +41,6 @@ export default function HomeFeaturedPods({ pods }: Readonly<HomeFeaturedPodsProp
         {pods.map((pod) => {
           const media = mediaOf(pod);
           const attendees = pod.pod_attendees?.length ?? 0;
-          const placeText = [pod.place_label, pod.place_detail].filter(Boolean).join(' - ');
           return (
             <Box
               key={pod.id}
@@ -95,12 +93,6 @@ export default function HomeFeaturedPods({ pods }: Readonly<HomeFeaturedPodsProp
                   <Typography variant="caption" sx={{ fontWeight: 800 }} noWrap>
                     {attendees}{pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''} going
                   </Typography>
-                  {placeText && <PlaceIcon sx={{ fontSize: 15, opacity: 0.9, flex: '0 0 auto' }} />}
-                  {placeText && (
-                    <Typography variant="caption" sx={{ fontWeight: 700, opacity: 0.9 }} noWrap>
-                      {placeText}
-                    </Typography>
-                  )}
                 </Stack>
               </Stack>
             </Box>

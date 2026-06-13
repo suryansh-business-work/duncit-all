@@ -10,10 +10,10 @@ function fillValid() {
 }
 
 describe('CheckoutForm', () => {
-  it('renders contact fields and the payment methods', () => {
+  it('renders contact fields', () => {
     renderWithProviders(<CheckoutForm onSubmit={jest.fn()} />);
     expect(screen.getByTestId('field-email')).toBeOnTheScreen();
-    expect(screen.getByTestId('pay-method-DUMMY_UPI')).toBeOnTheScreen();
+    expect(screen.getByTestId('field-billing_address')).toBeOnTheScreen();
   });
 
   it('blocks submit on invalid contact details', async () => {
@@ -24,19 +24,17 @@ describe('CheckoutForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
   });
 
-  it('selects a method, toggles simulate-failure and submits', async () => {
+  it('toggles simulate-failure and submits', async () => {
     const onSubmit = jest.fn();
     renderWithProviders(
       <CheckoutForm onSubmit={onSubmit} initialValues={{ phone_extension: '+91' }} />,
     );
     fillValid();
-    fireEvent.press(screen.getByTestId('pay-method-DUMMY_CARD'));
     fireEvent.press(screen.getByTestId('simulate-failure'));
     fireEvent.press(screen.getByTestId('checkout-submit'));
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toMatchObject({
       email: 'riya@duncit.com',
-      method: 'DUMMY_CARD',
       simulate_failure: true,
     });
   });

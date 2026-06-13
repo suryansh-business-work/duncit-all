@@ -92,6 +92,7 @@ export default function ClubSection({ club, clubPods, hostNameOf }: Readonly<Clu
               key={p.id}
               pod={p}
               hostName={hostNameOf(p)}
+              showPlace={false}
               onOpen={() => navigate(podUrl(p.club_slug, p.pod_id))}
             />
           ))}

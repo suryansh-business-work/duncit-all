@@ -67,7 +67,7 @@ export function ClubSection({ club, pods, onOpenPod, onOpenClub }: Readonly<Club
       >
         {pods.map((pod, index) => (
           <Reveal key={pod.id} index={index} scale>
-            <PodCard pod={pod} width={260} onPress={() => onOpenPod(pod)} />
+            <PodCard pod={pod} width={260} showPlace={false} onPress={() => onOpenPod(pod)} />
           </Reveal>
         ))}
       </ScrollView>

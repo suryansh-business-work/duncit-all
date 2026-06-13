@@ -34,7 +34,6 @@ const values: CheckoutFormValues = {
   phone_extension: '+91',
   phone_number: '9876543210',
   billing_address: '12 Main Street',
-  method: 'DUMMY_UPI',
   simulate_failure: false,
 };
 

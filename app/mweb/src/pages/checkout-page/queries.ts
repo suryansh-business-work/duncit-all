@@ -160,6 +160,5 @@ export interface CheckoutForm {
   phone_extension: string;
   phone_number: string;
   billing_address: string;
-  method: string;
   simulate_failure: boolean;
 }

@@ -15,12 +15,14 @@ export type RootStackParamList = {
   Profile: undefined;
   Account: undefined;
   AccountHealth: undefined;
+  Verification: undefined;
   VenueHealth: { venueId: string };
   Saved: undefined;
   PodHistory: undefined;
   PodHistoryDetails: { membershipId: string };
   BecomeHost: undefined;
   HostManage: undefined;
+  HostDashboard: undefined;
   Wallet: undefined;
   CreatePod: { draftId?: string } | undefined;
   RegisterVenue: undefined;

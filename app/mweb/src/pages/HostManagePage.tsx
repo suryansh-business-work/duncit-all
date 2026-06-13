@@ -1,10 +1,8 @@
 import { Link as RouterLink } from 'react-router-dom';
 import { gql, useQuery } from '@apollo/client';
-import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
+import { Box, Button, Stack, Typography } from '@mui/material';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import AddIcon from '@mui/icons-material/Add';
-import UserHostPanel from './profile-page/UserHostPanel';
-import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
 import HostDraftsCard from './HostDraftsCard';
 import HostPodsCard from './host-manage-page/HostPodsCard';
 import HostShareCard from './host-manage-page/HostShareCard';
@@ -41,6 +39,8 @@ const ME_QUERY = gql`
   }
 `;
 
+/** Your Pods — the host's hosted-pods list + drafts (the dashboard overview now
+ * lives on its own page). B2-#5. */
 export default function HostManagePage() {
   const meQ = useQuery(ME_QUERY, { fetchPolicy: 'cache-and-network' });
   const userId = meQ.data?.me?.user_id;
@@ -50,69 +50,26 @@ export default function HostManagePage() {
     fetchPolicy: 'cache-and-network',
   });
   const pods = data?.pods ?? [];
-  const upcomingPods = pods.filter((p: any) => p.pod_date_time && new Date(p.pod_date_time).getTime() > Date.now()).length;
-  const paidPods = pods.filter((p: any) => !p.pod_type?.includes('FREE')).length;
-  // On a cold cache (direct load / refresh) `me` is still resolving, so HOST_PODS
-  // is skipped and would otherwise flash "0 pods". Treat the whole window as loading.
   const bootLoading = (meQ.loading && !meQ.data) || (!!userId && loading && !data);
-  const stats = [
-    { label: 'Pods', value: bootLoading ? '—' : pods.length },
-    { label: 'Upcoming', value: bootLoading ? '—' : upcomingPods },
-    { label: 'Paid', value: bootLoading ? '—' : paidPods },
-  ];
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1.25}>
-        <Box sx={{ width: 38, height: 38, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'primary.contrastText', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
+        <Box sx={{ width: 38, height: 38, borderRadius: 3, display: 'grid', placeItems: 'center', color: 'common.white', background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)' }}>
           <DashboardIcon fontSize="small" />
         </Box>
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="h4" sx={{ fontWeight: 950, lineHeight: 1 }}>
-            Host Studio
+            Your Pods
           </Typography>
           <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-            Manage your profile and hosted pods
+            Manage the pods you host
           </Typography>
         </Box>
-        <Button component={RouterLink} to="/become-host" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 950 }}>
-          Profile
+        <Button component={RouterLink} to="/create-pod" variant="contained" size="small" startIcon={<AddIcon />} sx={{ borderRadius: 999, fontWeight: 950 }}>
+          Create
         </Button>
       </Stack>
-
-      <Stack direction="row" spacing={1}>
-        {stats.map((item) => (
-          <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
-            <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
-              <Typography variant="caption" color="primary.main" sx={{ fontWeight: 950 }} noWrap>{item.label}</Typography>
-              <Typography variant="h6" sx={{ mt: 0.35, fontWeight: 950 }}>{item.value}</Typography>
-            </CardContent>
-          </Card>
-        ))}
-      </Stack>
-
-      <Card variant="outlined" sx={{ borderRadius: 4 }}>
-        <CardContent>
-          <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
-            Pods by month
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-            Your hosted pods over the last 2 and next 3 months
-          </Typography>
-          <SimpleBarChart data={buildMonthlyCounts(pods.map((p: any) => p.pod_date_time))} />
-        </CardContent>
-      </Card>
-
-      <Card variant="outlined" sx={{ borderRadius: 4, bgcolor: 'rgba(255,79,115,0.10)' }}>
-        <CardContent>
-          <Stack spacing={1.5}>
-            <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
-              Your host profile
-            </Typography>
-            <UserHostPanel />
-          </Stack>
-        </CardContent>
-      </Card>
 
       <HostDraftsCard />
 
@@ -126,12 +83,6 @@ export default function HostManagePage() {
       />
 
       <HostShareCard />
-
-      <Stack direction="row">
-        <Button component={RouterLink} to="/become-host" variant="outlined" size="small" sx={{ borderRadius: 999, fontWeight: 900 }}>
-          Edit host profile
-        </Button>
-      </Stack>
     </Stack>
   );
 }

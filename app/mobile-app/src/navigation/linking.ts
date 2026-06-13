@@ -37,6 +37,8 @@ export const linking: LinkingOptions<RootStackParamList> = {
       PodHistoryDetails: 'pod-history/:membershipId',
       BecomeHost: 'become-host',
       HostManage: 'host-manage',
+      HostDashboard: 'host-dashboard',
+      Verification: 'verification',
       Wallet: 'wallet',
       CreatePod: 'create-pod',
       RegisterVenue: 'register-venue',

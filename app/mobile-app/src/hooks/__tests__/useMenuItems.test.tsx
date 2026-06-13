@@ -17,6 +17,7 @@ describe('useMenuItems', () => {
       'PodHistory',
       'Earn',
       'Referral',
+      'Verification',
       'Support',
       'PodIdeas',
       'Faqs',
@@ -25,11 +26,11 @@ describe('useMenuItems', () => {
 
   it('returns the Host studio menu with the Wallet row', () => {
     expect(routes('HOST')).toEqual([
-      'HostManage',
+      'HostDashboard',
       'HostManage',
       'Wallet',
       'Support',
-      'BecomeHost',
+      'Verification',
       'Faqs',
     ]);
   });
@@ -39,7 +40,7 @@ describe('useMenuItems', () => {
       'VenueManage',
       'VenueManage',
       'Support',
-      'RegisterVenue',
+      'Verification',
       'Faqs',
     ]);
   });
@@ -49,7 +50,7 @@ describe('useMenuItems', () => {
       'ProductsManage',
       'ProductsManage',
       'Support',
-      'ListProduct',
+      'Verification',
       'Faqs',
     ]);
   });

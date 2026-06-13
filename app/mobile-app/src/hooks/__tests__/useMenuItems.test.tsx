@@ -25,7 +25,7 @@ describe('useMenuItems', () => {
 
   it('returns the Host studio menu with the Wallet row', () => {
     expect(routes('HOST')).toEqual([
-      'HostManage',
+      'HostDashboard',
       'HostManage',
       'Wallet',
       'Support',

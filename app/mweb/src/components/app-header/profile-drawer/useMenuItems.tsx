@@ -58,7 +58,7 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
   ];
 
   if (effectiveMode === 'HOST') {
-    const items = studio({ label: 'Your Pods', icon: <DashboardIcon {...sz} />, onClick: go('/host/manage') }, '/host/manage', '/become-host');
+    const items = studio({ label: 'Your Pods', icon: <DashboardIcon {...sz} />, onClick: go('/host/manage') }, '/host/dashboard', '/become-host');
     items.splice(2, 0, { label: 'Wallet', icon: <AccountBalanceWalletIcon {...sz} />, onClick: go('/host/wallet') });
     return { items };
   }

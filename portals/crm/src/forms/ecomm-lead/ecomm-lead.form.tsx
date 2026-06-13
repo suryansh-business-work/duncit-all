@@ -93,13 +93,13 @@ export default function EcommLeadForm({ config, initialValues, submitting, submi
 
 function EcommSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
   const components = [
-    <EcommBasicSection />,
-    <EcommContactsSection />,
-    <EcommCatalogSection />,
-    <EcommPresenceSection />,
-    <EcommServicesSection />,
-    <EcommBrandingSection />,
-    <EcommTrackingSection config={config} />,
+    <EcommBasicSection key="basic" />,
+    <EcommContactsSection key="contacts" />,
+    <EcommCatalogSection key="catalog" />,
+    <EcommPresenceSection key="presence" />,
+    <EcommServicesSection key="services" />,
+    <EcommBrandingSection key="branding" />,
+    <EcommTrackingSection key="tracking" config={config} />,
   ];
   return (
     <>

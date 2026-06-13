@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import { ScrollView as RNScrollView, TextInput } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -60,33 +60,42 @@ export function ChatWithUsScreen() {
     }
   };
 
+  let chatBody: ReactNode;
+  if (isLoading) {
+    chatBody = (
+      <YStack flex={1} alignItems="center" justifyContent="center">
+        <Spinner size="large" testID="support-chat-loading" />
+      </YStack>
+    );
+  } else if (error) {
+    chatBody = (
+      <Text testID="support-chat-error" color="$muted" textAlign="center" padding={24}>
+        {error}
+      </Text>
+    );
+  } else {
+    chatBody = (
+      <ScrollView
+        ref={scrollRef}
+        flex={1}
+        contentContainerStyle={{ padding: 16, gap: 10 }}
+        onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
+      >
+        {messages.length === 0 ? (
+          <Text testID="support-chat-empty" color="$muted" textAlign="center" padding={24}>
+            Say hello — our team replies in real time.
+          </Text>
+        ) : (
+          messages.map((m) => <SupportChatBubble key={m.id} message={m} />)
+        )}
+      </ScrollView>
+    );
+  }
+
   return (
     <StackScreen title="Chat with Us" testID="chat-with-us-screen">
       <YStack flex={1}>
-        {isLoading ? (
-          <YStack flex={1} alignItems="center" justifyContent="center">
-            <Spinner size="large" testID="support-chat-loading" />
-          </YStack>
-        ) : error ? (
-          <Text testID="support-chat-error" color="$muted" textAlign="center" padding={24}>
-            {error}
-          </Text>
-        ) : (
-          <ScrollView
-            ref={scrollRef}
-            flex={1}
-            contentContainerStyle={{ padding: 16, gap: 10 }}
-            onContentSizeChange={() => scrollRef.current?.scrollToEnd({ animated: false })}
-          >
-            {messages.length === 0 ? (
-              <Text testID="support-chat-empty" color="$muted" textAlign="center" padding={24}>
-                Say hello — our team replies in real time.
-              </Text>
-            ) : (
-              messages.map((m) => <SupportChatBubble key={m.id} message={m} />)
-            )}
-          </ScrollView>
-        )}
+        {chatBody}
 
         {sendError ? (
           <Text

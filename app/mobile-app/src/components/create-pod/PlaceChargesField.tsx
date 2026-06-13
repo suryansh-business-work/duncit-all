@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
@@ -20,10 +21,21 @@ const inputStyle = {
 /** Optional venue-side charges (entry, table, etc.) shown separately to users. */
 export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
   const { primary, danger } = useThemeColors();
+  // Stable per-row keys (the rows have no id) so edits don't remount inputs and
+  // a middle-removal can't shuffle the wrong row — never the array index (S6479).
+  const keys = useRef<string[]>([]);
+  const seq = useRef(0);
+  while (keys.current.length < value.length) {
+    seq.current += 1;
+    keys.current.push(`charge-${seq.current}`);
+  }
   const update = (idx: number, patch: Partial<PodPlaceCharge>) =>
     onChange(value.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
   const add = () => onChange([...value, { label: '', amount: 0, note: '' }]);
-  const remove = (idx: number) => onChange(value.filter((_, i) => i !== idx));
+  const remove = (idx: number) => {
+    keys.current.splice(idx, 1);
+    onChange(value.filter((_, i) => i !== idx));
+  };
 
   return (
     <YStack gap={10}>
@@ -32,7 +44,7 @@ export function PlaceChargesField({ value, onChange }: Readonly<Props>) {
       </Text>
       {value.map((row, idx) => (
         <YStack
-          key={idx}
+          key={keys.current[idx]}
           gap={6}
           padding={10}
           borderRadius={10}

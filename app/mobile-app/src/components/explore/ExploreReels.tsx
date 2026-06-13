@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { FlatList, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -37,48 +37,57 @@ export function ExploreReels() {
   const openPod = (pod: ExplorePod) =>
     navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title });
 
+  let reelsBody: ReactNode = null;
+  if (height === 0) {
+    reelsBody = null;
+  } else if (isLoading && !hasData) {
+    reelsBody = <DetailSkeleton testID="explore-loading" />;
+  } else if (pods.length === 0) {
+    reelsBody = (
+      <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
+        <Text color="$muted" textAlign="center" testID="explore-empty">
+          No pods to explore yet.
+        </Text>
+      </YStack>
+    );
+  } else {
+    reelsBody = (
+      <FlatList
+        data={pods}
+        keyExtractor={(pod) => pod.id}
+        pagingEnabled
+        showsVerticalScrollIndicator={false}
+        snapToInterval={height}
+        snapToAlignment="start"
+        decelerationRate="fast"
+        getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
+        renderItem={({ item }) => {
+          const like = likeStateFor(item);
+          const saved = isSaved(item.id);
+          return (
+            <ExplorePodCard
+              pod={item}
+              club={clubsById.get(item.club_id)}
+              width={width}
+              height={height}
+              saved={saved}
+              savePending={isSavePending(item.id)}
+              like={like}
+              commentCount={commentCountFor(item)}
+              onOpen={() => openPod(item)}
+              onToggleSave={() => toggleSave(item.id, saved)}
+              onToggleLike={() => toggleLike(item.id, like)}
+              onComment={() => setCommentsPod(item)}
+            />
+          );
+        }}
+      />
+    );
+  }
+
   return (
     <YStack flex={1} onLayout={onLayout} testID="explore-reels">
-      {height === 0 ? null : isLoading && !hasData ? (
-        <DetailSkeleton testID="explore-loading" />
-      ) : pods.length === 0 ? (
-        <YStack flex={1} alignItems="center" justifyContent="center" padding={24}>
-          <Text color="$muted" textAlign="center" testID="explore-empty">
-            No pods to explore yet.
-          </Text>
-        </YStack>
-      ) : (
-        <FlatList
-          data={pods}
-          keyExtractor={(pod) => pod.id}
-          pagingEnabled
-          showsVerticalScrollIndicator={false}
-          snapToInterval={height}
-          snapToAlignment="start"
-          decelerationRate="fast"
-          getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
-          renderItem={({ item }) => {
-            const like = likeStateFor(item);
-            const saved = isSaved(item.id);
-            return (
-              <ExplorePodCard
-                pod={item}
-                club={clubsById.get(item.club_id)}
-                width={width}
-                height={height}
-                saved={saved}
-                savePending={isSavePending(item.id)}
-                like={like}
-                commentCount={commentCountFor(item)}
-                onOpen={() => openPod(item)}
-                onToggleSave={() => toggleSave(item.id, saved)}
-                onToggleLike={() => toggleLike(item.id, like)}
-                onComment={() => setCommentsPod(item)}
-              />
-            );
-          }}
-        />
-      )}
+      {reelsBody}
       {commentsPod ? (
         <PodCommentsSheet
           podId={commentsPod.id}

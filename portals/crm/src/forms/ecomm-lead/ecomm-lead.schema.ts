@@ -15,14 +15,13 @@ const contactsSchema = yup
   .of(contactSchema)
   .min(1, 'Add at least one contact')
   .test('primary-required', 'Primary contact details required', function (arr) {
-    const ctx = this;
     const primary = arr?.[0];
     const errors: yup.ValidationError[] = [];
     if (!primary?.name?.trim()) {
-      errors.push(ctx.createError({ path: 'contacts[0].name', message: 'Primary contact name is required' }));
+      errors.push(this.createError({ path: 'contacts[0].name', message: 'Primary contact name is required' }));
     }
     if (!primary?.mobile_number?.trim()) {
-      errors.push(ctx.createError({ path: 'contacts[0].mobile_number', message: 'Primary contact mobile is required' }));
+      errors.push(this.createError({ path: 'contacts[0].mobile_number', message: 'Primary contact mobile is required' }));
     }
     if (errors.length) return new yup.ValidationError(errors);
     return true;

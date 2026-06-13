@@ -5,6 +5,8 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Spinner, XStack, YStack } from 'tamagui';
 
+import { ImageViewerModal } from '@/components/ImageViewerModal';
+
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
 interface Media {
@@ -64,6 +66,7 @@ export function DetailHero({
   const { width } = useWindowDimensions();
   const images = media.filter((m) => m.type === 'IMAGE' && !!m.url).map((m) => m.url);
   const [index, setIndex] = useState(0);
+  const [viewerIndex, setViewerIndex] = useState<number | null>(null);
 
   return (
     <YStack width={width} height={height} backgroundColor="$muted">
@@ -75,8 +78,17 @@ export function DetailHero({
           showsHorizontalScrollIndicator={false}
           keyExtractor={(url, i) => `${i}-${url}`}
           onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
-          renderItem={({ item }) => (
-            <Image source={{ uri: item }} style={{ width, height }} resizeMode="cover" />
+          renderItem={({ item, index: i }) => (
+            <XStack
+              testID={`detail-hero-image-${i}`}
+              role="button"
+              aria-label="View image"
+              onPress={() => setViewerIndex(i)}
+              width={width}
+              height={height}
+            >
+              <Image source={{ uri: item }} style={{ width, height }} resizeMode="cover" />
+            </XStack>
           )}
         />
       ) : (
@@ -108,6 +120,7 @@ export function DetailHero({
           ))}
         </XStack>
       ) : null}
+      <ImageViewerModal images={images} index={viewerIndex} onClose={() => setViewerIndex(null)} />
     </YStack>
   );
 }

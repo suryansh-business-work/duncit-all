@@ -1,7 +1,9 @@
+import { useState } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
 import { Box, CircularProgress, IconButton, Stack } from '@mui/material';
+import MomentLightbox from '../../components/moments/MomentLightbox';
 import GroupsIcon from '@mui/icons-material/Groups';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShareIcon from '@mui/icons-material/Share';
@@ -74,6 +76,7 @@ export default function ClubHero({
   onToggleSave,
   onShare,
 }: Readonly<Props>) {
+  const [lightbox, setLightbox] = useState<number | null>(null);
   const overlay = (
     <Stack
       direction="row"
@@ -176,16 +179,26 @@ export default function ClubHero({
               component="img"
               src={m.url}
               alt={title}
+              role="button"
+              aria-label="Open image"
+              onClick={() => setLightbox(i)}
               sx={{
                 width: '100%',
                 height: { xs: 280, md: 460 },
                 objectFit: 'cover',
+                cursor: 'zoom-in',
               }}
             />
           )
         )}
       </Slider>
       {overlay}
+      <MomentLightbox
+        moments={media}
+        index={lightbox}
+        onClose={() => setLightbox(null)}
+        onIndexChange={setLightbox}
+      />
     </Box>
   );
 }

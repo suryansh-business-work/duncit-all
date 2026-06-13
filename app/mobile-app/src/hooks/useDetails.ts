@@ -31,6 +31,7 @@ export function usePodDetails(podId: string) {
   const [location, setLocation] = useState<PodLocation | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
   const [savedInitially, setSavedInitially] = useState(false);
+  const [followingInitially, setFollowingInitially] = useState(false);
   const [membershipState, setMembershipState] = useState<PodMembershipState | null>(null);
   const [people, setPeople] = useState<PodPerson[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -44,6 +45,7 @@ export function usePodDetails(podId: string) {
     setVenue(data.publicVenues.find((v) => v.id === nextPod?.venue_id) ?? null);
     setLocation(data.locations.find((l) => l.id === nextPod?.location_id) ?? null);
     setSavedInitially((data.me?.saved_pod_ids ?? []).includes(nextPod?.id ?? ''));
+    setFollowingInitially((data.me?.following_pod_ids ?? []).includes(nextPod?.id ?? ''));
     setMembershipState(data.podMembershipState ?? null);
     // Hosts + attendees public profiles for the avatar group (best-effort).
     const ids = Array.from(
@@ -76,6 +78,7 @@ export function usePodDetails(podId: string) {
     location,
     viewerId,
     savedInitially,
+    followingInitially,
     membershipState,
     people,
     isLoading,
@@ -116,7 +119,15 @@ export function useClubDetails(clubId: string) {
     };
   }, [clubId]);
 
-  return { club: data?.club ?? null, pods: data?.pods ?? [], members, isLoading, error };
+  const followingInitially = (data?.me?.following_club_ids ?? []).includes(clubId);
+  return {
+    club: data?.club ?? null,
+    pods: data?.pods ?? [],
+    members,
+    followingInitially,
+    isLoading,
+    error,
+  };
 }
 
 /** Optimistic like + save for the pod-details actions, reusing the explore mutations. */

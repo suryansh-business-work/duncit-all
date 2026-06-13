@@ -21,6 +21,7 @@ import AccountInfoRow from './account-page/AccountInfoRow';
 import AccountProfileHeader from './account-page/AccountProfileHeader';
 import EditAccountDialog from './account-page/EditAccountDialog';
 import HostsVenuesCard from './account-page/HostsVenuesCard';
+import PrivacyToggleCard from './account-page/PrivacyToggleCard';
 import HealthMeter from '../components/health/HealthMeter';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useDateFormat } from '../utils/dateFormat';
@@ -43,6 +44,7 @@ const ME = gql`
       dob
       roles
       status
+      profile_visibility
       created_at
     }
   }
@@ -161,6 +163,8 @@ export default function AccountPage() {
           </CardContent>
         </Card>
       )}
+
+      <PrivacyToggleCard visibility={me.profile_visibility} onChanged={() => refetch()} />
 
       <HostsVenuesCard />
       <MediaPickerDialog

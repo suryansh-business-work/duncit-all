@@ -5,6 +5,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 import { AttendeesSection, buildAttendeePeople } from '@/components/details/PodSections';
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { FollowPillButton } from '@/components/FollowPillButton';
 import { PodCard } from '@/components/home/PodCard';
 import { isPodActive } from '@/utils/pod-format';
 
@@ -28,6 +29,9 @@ export function ClubBody({
   pods,
   members,
   cardWidth,
+  following,
+  followBusy,
+  onToggleFollow,
   onOpenPod,
   onOpenMember,
 }: Readonly<{
@@ -35,6 +39,9 @@ export function ClubBody({
   pods: ClubPod[];
   members: PodPerson[];
   cardWidth: number;
+  following: boolean;
+  followBusy: boolean;
+  onToggleFollow: () => void;
   onOpenPod: (pod: ClubPod) => void;
   onOpenMember: (userId: string) => void;
 }>) {
@@ -54,6 +61,12 @@ export function ClubBody({
           {club.club_description}
         </Text>
       ) : null}
+      <FollowPillButton
+        testID="club-follow"
+        following={following}
+        busy={followBusy}
+        onToggle={onToggleFollow}
+      />
       <XStack
         gap={8}
         padding={12}

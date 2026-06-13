@@ -25,16 +25,22 @@ export const postResolvers = {
     },
   },
   Query: {
-    posts: (_p: unknown, args: { author_id?: string }, ctx: GraphQLContext) =>
-      postService.list(args.author_id ?? null, ctx.user?.id ?? null),
+    posts: async (_p: unknown, args: { author_id?: string }, ctx: GraphQLContext) => {
+      const viewerId = ctx.user?.id ?? null;
+      if (args.author_id && !(await userService.canViewContent(args.author_id, viewerId))) return [];
+      return postService.list(args.author_id ?? null, viewerId);
+    },
     post: (_p: unknown, args: { post_doc_id: string }, ctx: GraphQLContext) =>
       postService.getById(args.post_doc_id, ctx.user?.id ?? null),
     myPosts: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
       return postService.list(u.id, u.id);
     },
-    stories: (_p: unknown, args: { author_id?: string }, ctx: GraphQLContext) =>
-      postService.listStories(args.author_id ?? null, ctx.user?.id ?? null),
+    stories: async (_p: unknown, args: { author_id?: string }, ctx: GraphQLContext) => {
+      const viewerId = ctx.user?.id ?? null;
+      if (args.author_id && !(await userService.canViewContent(args.author_id, viewerId))) return [];
+      return postService.listStories(args.author_id ?? null, viewerId);
+    },
     myStories: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
       return postService.listStories(u.id, u.id);

@@ -12,10 +12,29 @@ export const MobilePublicProfileDocument = gql(`
       bio
       city
       zone
+      is_private
+      is_following
+      can_view_content
     }
     me {
       user_id
       following_user_ids
+    }
+  }
+`);
+
+/** A member's permanent posts + active stories for their public profile. The
+ * server returns empty lists when the viewer may not see a private account. */
+export const MobilePublicUserPostsDocument = gql(`
+  query MobilePublicUserPosts($user_id: ID!) {
+    posts(author_id: $user_id) {
+      id
+      image_url
+      caption
+    }
+    stories(author_id: $user_id) {
+      id
+      image_url
     }
   }
 `);

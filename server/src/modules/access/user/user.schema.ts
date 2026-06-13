@@ -12,6 +12,11 @@ export const userTypeDefs = gql`
     GOOGLE
   }
 
+  enum ProfileVisibility {
+    PUBLIC
+    PRIVATE
+  }
+
   enum AdminContactActionType {
     CALL
     EMAIL
@@ -78,6 +83,7 @@ export const userTypeDefs = gql`
     is_first_time_user: Boolean!
 
     status: UserStatus
+    profile_visibility: ProfileVisibility
 
     # Host deduction overrides (two %s): the host's share of the pod net, and
     # the commission Duncit takes from that share. Set from Admin → user details.
@@ -254,6 +260,12 @@ export const userTypeDefs = gql`
     bio: String
     city: String
     zone: String
+    "PRIVATE when this profile hides its posts/stories from non-followers."
+    is_private: Boolean!
+    "Whether the signed-in viewer follows this user."
+    is_following: Boolean!
+    "True when the viewer may see this user's posts/stories (owner, public, or follower)."
+    can_view_content: Boolean!
   }
 
   extend type Query {
@@ -283,6 +295,7 @@ export const userTypeDefs = gql`
     loginWithGoogle(input: GoogleAuthInput!): AuthPayload!
     signupWithGoogle(input: GoogleSignupInput!): AuthPayload!
     updateMyProfile(input: UpdateMyProfileInput!): User!
+    updateMyProfileVisibility(visibility: ProfileVisibility!): User!
     requestEmailVerificationOtp: OtpRequestResult!
     verifyEmailVerificationOtp(otp: String!): User!
     requestPasswordResetOtp(email: String!): OtpRequestResult!

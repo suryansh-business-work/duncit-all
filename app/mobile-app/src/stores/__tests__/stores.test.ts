@@ -68,7 +68,7 @@ describe('store fetch guards', () => {
   it('chat / following / status skip when already cached', async () => {
     useChatStore.setState({ data: { myChatRooms: [] }, isLoading: false });
     await useChatStore.getState().fetch();
-    useFollowingStore.setState({ data: { me: null }, isLoading: false });
+    useFollowingStore.setState({ data: { me: null, clubs: [] }, isLoading: false });
     await useFollowingStore.getState().fetch();
     useStatusStore.setState({ data: { stories: [], myStories: [] }, isLoading: false });
     await useStatusStore.getState().fetch();

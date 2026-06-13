@@ -36,7 +36,13 @@ const club = (id: string) =>
 beforeEach(() => {
   mockNavigate.mockClear();
   mockedHomeData.mockReturnValue({ pods: [], clubs: [], isLoading: false, refetch: jest.fn() });
-  mockedFollowing.mockReturnValue({ followedPods: [], isLoading: false, refetch: jest.fn() });
+  mockedFollowing.mockReturnValue({
+    people: [],
+    followedClubs: [],
+    followedPods: [],
+    isLoading: false,
+    refetch: jest.fn(),
+  });
   mockedChatRooms.mockReturnValue({ rooms: [], isLoading: false, refetch: jest.fn() });
 });
 
@@ -56,35 +62,77 @@ describe('ClubsScreen', () => {
 });
 
 describe('FollowingScreen', () => {
-  it('shows an empty hint with no followed pods', () => {
+  const followedPod = {
+    id: 'p1',
+    pod_id: 'pod-1',
+    pod_title: 'Pod',
+    pod_date_time: '2026-06-10T18:30:00.000Z',
+    pod_type: 'NATIVE_FREE',
+    pod_amount: 0,
+    pod_attendees: [],
+    no_of_spots: 4,
+    host_names: [],
+    pod_images_and_videos: [],
+    club_id: 'c1',
+    club_slug: 's',
+    place_label: null,
+    place_detail: null,
+  };
+
+  it('shows an empty hint on the default People tab', () => {
     renderWithProviders(<FollowingScreen />);
     expect(screen.getByTestId('following-list-empty')).toBeOnTheScreen();
   });
 
-  it('lists followed pods and opens one', () => {
+  it('lists followed people (with + without photo) and opens a profile', () => {
     mockedFollowing.mockReturnValue({
-      followedPods: [
-        {
-          id: 'p1',
-          pod_id: 'pod-1',
-          pod_title: 'Pod',
-          pod_date_time: '2026-06-10T18:30:00.000Z',
-          pod_type: 'NATIVE_FREE',
-          pod_amount: 0,
-          pod_attendees: [],
-          no_of_spots: 4,
-          host_names: [],
-          pod_images_and_videos: [],
-          club_id: 'c1',
-          club_slug: 's',
-          place_label: null,
-          place_detail: null,
-        },
+      people: [
+        { user_id: 'f1', full_name: 'Riya', profile_photo: 'pic.jpg' },
+        { user_id: 'f2', full_name: null, profile_photo: null },
       ],
+      followedClubs: [],
+      followedPods: [],
       isLoading: false,
       refetch: jest.fn(),
     });
     renderWithProviders(<FollowingScreen />);
+    expect(screen.getByTestId('following-person-f2')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('following-person-f1'));
+    expect(mockNavigate).toHaveBeenCalledWith('PublicProfile', { userId: 'f1' });
+  });
+
+  it('switches to Clubs (with + without logo) and opens a club', () => {
+    mockedFollowing.mockReturnValue({
+      people: [],
+      followedClubs: [
+        {
+          id: 'c1',
+          club_name: 'Runners',
+          club_feature_images_and_videos: [{ url: 'x', type: 'IMAGE' }],
+        },
+        { id: 'c2', club_name: 'NoLogo', club_feature_images_and_videos: [] },
+      ],
+      followedPods: [],
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+    renderWithProviders(<FollowingScreen />);
+    fireEvent.press(screen.getByTestId('following-tab-clubs'));
+    expect(screen.getByTestId('following-club-c2')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('following-club-c1'));
+    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: 'c1', title: 'Runners' });
+  });
+
+  it('switches to Pods and opens one', () => {
+    mockedFollowing.mockReturnValue({
+      people: [],
+      followedClubs: [],
+      followedPods: [followedPod],
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+    renderWithProviders(<FollowingScreen />);
+    fireEvent.press(screen.getByTestId('following-tab-pods'));
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Pod' });
   });

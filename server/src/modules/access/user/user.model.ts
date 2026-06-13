@@ -127,6 +127,19 @@ const securitySchema = new Schema(
   { _id: false }
 );
 
+// Partner payout settings (host overrides for "Default Deductions"). Two %s:
+// host_share_pct = this host's slice of the pod net (after venue bill + GST);
+// host_commission_pct = the commission Duncit takes from that slice. Set per
+// host from Admin → user details; 0 on either falls back to the global
+// default_host_share_pct / default_host_commission_pct at settlement time.
+const userFinanceSchema = new Schema(
+  {
+    host_share_pct: { type: Number, default: 0, min: 0, max: 100 },
+    host_commission_pct: { type: Number, default: 0, min: 0, max: 100 },
+  },
+  { _id: false }
+);
+
 const userSchema = new Schema(
   {
     auth: { type: authSchema, required: true },
@@ -137,6 +150,7 @@ const userSchema = new Schema(
     metadata: { type: metadataSchema, default: () => ({}) },
     counters: { type: countersSchema, default: () => ({}) },
     security: { type: securitySchema, default: () => ({}) },
+    finance: { type: userFinanceSchema, default: () => ({}) },
   },
   {
     timestamps: { createdAt: 'metadata.created_at', updatedAt: 'metadata.updated_at' },

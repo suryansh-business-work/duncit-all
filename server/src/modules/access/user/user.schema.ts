@@ -79,6 +79,11 @@ export const userTypeDefs = gql`
 
     status: UserStatus
 
+    # Host deduction overrides (two %s): the host's share of the pod net, and
+    # the commission Duncit takes from that share. Set from Admin → user details.
+    host_share_pct: Float!
+    host_commission_pct: Float!
+
     created_at: String
     updated_at: String
   }
@@ -153,6 +158,8 @@ export const userTypeDefs = gql`
     roles: [String!]
     assigned_city: String
     assigned_zones: [String!]
+    host_share_pct: Float
+    host_commission_pct: Float
   }
 
   input RegisterInput {

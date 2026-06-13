@@ -9,6 +9,20 @@ export interface IPaymentReleaseMedia {
   type: 'IMAGE' | 'VIDEO';
 }
 
+// Snapshot of the settlement waterfall that produced this release's amount, so
+// the payout PDF + Host Share UI can render the exact lines (Venue Bill · GST ·
+// Duncit Taken/Cut · Your Commission/Payout) without recomputing.
+export interface IPaymentReleaseBreakdown {
+  collected_total: number;
+  venue_bill: number;
+  gst_pct: number;
+  gst_amount: number;
+  duncit_pct: number;
+  duncit_amount: number;
+  payout_pct: number;
+  payout_amount: number;
+}
+
 export interface IPaymentRelease extends Document {
   release_id: string;
   kind: PaymentReleaseKind;
@@ -30,6 +44,7 @@ export interface IPaymentRelease extends Document {
   approval_type?: PaymentReleaseApprovalType | null;
   approved_amount?: number | null;
   approval_reason?: string;
+  breakdown?: IPaymentReleaseBreakdown | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -38,6 +53,20 @@ const releaseMediaSchema = new Schema<IPaymentReleaseMedia>(
   {
     url: { type: String, required: true, trim: true },
     type: { type: String, enum: ['IMAGE', 'VIDEO'], default: 'IMAGE' },
+  },
+  { _id: false }
+);
+
+const releaseBreakdownSchema = new Schema<IPaymentReleaseBreakdown>(
+  {
+    collected_total: { type: Number, default: 0 },
+    venue_bill: { type: Number, default: 0 },
+    gst_pct: { type: Number, default: 0 },
+    gst_amount: { type: Number, default: 0 },
+    duncit_pct: { type: Number, default: 0 },
+    duncit_amount: { type: Number, default: 0 },
+    payout_pct: { type: Number, default: 0 },
+    payout_amount: { type: Number, default: 0 },
   },
   { _id: false }
 );
@@ -64,6 +93,7 @@ const paymentReleaseSchema = new Schema<IPaymentRelease>(
     approval_type: { type: String, enum: ['FULL', 'PARTIAL'], default: null },
     approved_amount: { type: Number, default: null, min: 0 },
     approval_reason: { type: String, default: '', trim: true, maxlength: 2000 },
+    breakdown: { type: releaseBreakdownSchema, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

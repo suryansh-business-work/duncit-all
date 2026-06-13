@@ -53,12 +53,17 @@ export default function BottomNav() {
     };
   }, []);
 
-  // Match the top-level segment so /clubs/:id still highlights "Clubs", etc.
-  const active =
-    TABS.slice()
-      .sort((a, b) => b.value.length - a.value.length)
-      .find((t) => (t.value === '/' ? pathname === '/' : pathname.startsWith(t.value)))
-      ?.value ?? '/';
+  // Match the active tab from the path. Club/pod detail (/club/:slug…) maps to
+  // Clubs; pages that don't belong to a tab highlight none (not Home).
+  const matchActive = (): string | false => {
+    if (pathname === '/') return '/';
+    if (pathname.startsWith('/explore')) return '/explore';
+    if (pathname.startsWith('/clubs') || pathname.startsWith('/club/')) return '/clubs';
+    if (pathname.startsWith('/chats')) return '/chats';
+    if (pathname.startsWith('/follow')) return '/follow';
+    return false;
+  };
+  const active = matchActive();
 
   // Edge-to-edge flat bar — full width, no radius, active tab in primary.
   return (

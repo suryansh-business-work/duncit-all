@@ -86,6 +86,14 @@ export const venueResolvers = {
       requireRole(ctx, ADMIN_REVIEW);
       return venueService.setActive(args.venue_doc_id, args.active);
     },
+    setVenueDeductions: async (
+      _p: unknown,
+      args: { venue_doc_id: string; venue_share_pct: number; venue_commission_pct: number },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_REVIEW);
+      return venueService.setDeductions(args.venue_doc_id, args.venue_share_pct, args.venue_commission_pct);
+    },
     deleteVenue: async (
       _p: unknown,
       args: { venue_doc_id: string },

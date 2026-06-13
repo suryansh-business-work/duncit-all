@@ -16,8 +16,10 @@ import {
 import EventIcon from '@mui/icons-material/Event';
 import EditIcon from '@mui/icons-material/Edit';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import TaskAltIcon from '@mui/icons-material/TaskAlt';
 import { PodEditForm, type HostPodSummary } from './pod-edit';
 import { PodDeleteForm } from './pod-delete';
+import { PodCompleteForm, type HostPodForComplete } from './pod-complete';
 
 function formatDate(value?: string | null) {
   if (!value) return '—';
@@ -33,12 +35,13 @@ interface HostPodsCardProps {
   onChanged: () => void;
 }
 
-/** One hosted pod row — link to the pod + the host's Edit/Delete actions. */
+/** One hosted pod row — link to the pod + the host's Complete/Edit/Delete actions. */
 function HostPodRow({
   pod,
+  onComplete,
   onEdit,
   onDelete,
-}: Readonly<{ pod: any; onEdit: () => void; onDelete: () => void }>) {
+}: Readonly<{ pod: any; onComplete: () => void; onEdit: () => void; onDelete: () => void }>) {
   return (
     <Stack
       direction="row"
@@ -73,6 +76,11 @@ function HostPodRow({
         color={pod.pod_type?.includes('FREE') ? 'success' : 'primary'}
         variant="outlined"
       />
+      <Tooltip title="Complete pod">
+        <IconButton size="small" color="success" aria-label="Complete pod" onClick={onComplete}>
+          <TaskAltIcon fontSize="small" />
+        </IconButton>
+      </Tooltip>
       <Tooltip title="Edit pod">
         <IconButton size="small" aria-label="Edit pod" onClick={onEdit}>
           <EditIcon fontSize="small" />
@@ -96,6 +104,7 @@ export default function HostPodsCard({
 }: Readonly<HostPodsCardProps>) {
   const [editPod, setEditPod] = useState<HostPodSummary | null>(null);
   const [deletePod, setDeletePod] = useState<{ id: string; title: string } | null>(null);
+  const [completePod, setCompletePod] = useState<HostPodForComplete | null>(null);
 
   let body;
   if (loading) {
@@ -117,6 +126,7 @@ export default function HostPodsCard({
           <HostPodRow
             key={p.id}
             pod={p}
+            onComplete={() => setCompletePod({ id: p.id, pod_title: p.pod_title, venue_id: p.venue_id })}
             onEdit={() => setEditPod(p)}
             onDelete={() => setDeletePod({ id: p.id, title: p.pod_title })}
           />
@@ -152,6 +162,14 @@ export default function HostPodsCard({
         onClose={() => setDeletePod(null)}
         onDeleted={() => {
           setDeletePod(null);
+          onChanged();
+        }}
+      />
+      <PodCompleteForm
+        pod={completePod}
+        onClose={() => setCompletePod(null)}
+        onCompleted={() => {
+          setCompletePod(null);
           onChanged();
         }}
       />

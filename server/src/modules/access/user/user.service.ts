@@ -382,6 +382,8 @@ async function toPublic(u: any) {
       (wa.verified_at ?? legacy.whatsapp_verified_at)?.toISOString?.() ?? null,
     is_first_time_user: !!(meta.is_first_time_user ?? legacy.is_first_time_user),
     status: meta.status ?? legacy.status ?? 'ACTIVE',
+    host_share_pct: u.finance?.host_share_pct ?? 0,
+    host_commission_pct: u.finance?.host_commission_pct ?? 0,
     created_at:
       (meta.created_at ?? legacy.created_at)?.toISOString?.() ?? '',
     updated_at:
@@ -1269,6 +1271,9 @@ export const userService = {
     }
     if ((input as any).assigned_zones !== undefined) {
       set['metadata.assigned_zones'] = (input as any).assigned_zones;
+    }
+    if ((input as any).host_commission_pct !== undefined) {
+      set['finance.host_commission_pct'] = (input as any).host_commission_pct;
     }
     const updated = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true });
     if (!updated) {

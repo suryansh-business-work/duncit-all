@@ -47,6 +47,10 @@ export function ExplorePodCard({
   const cover = club?.club_feature_images_and_videos.find((m) => !!m.url)?.url ?? null;
   const attendees = pod.pod_attendees.length;
   const joinLabel = `${attendees}${pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''}`;
+  // Free pods need no payment, so the "Confirm with UPI" copy is hidden for them.
+  const ctaSubtitle = pod.pod_type.includes('FREE')
+    ? 'Free spot'
+    : `${podPriceLabel(pod)} · Confirm with UPI`;
 
   const share = async () => {
     try {
@@ -127,7 +131,7 @@ export function ExplorePodCard({
             Join in 2 taps
           </Text>
           <Text color="rgba(255,255,255,0.82)" fontSize={11.5} numberOfLines={1}>
-            {podPriceLabel(pod)} · Confirm with UPI
+            {ctaSubtitle}
           </Text>
         </YStack>
         <XStack

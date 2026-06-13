@@ -19,6 +19,7 @@ export const HostPodsDocument = gql(`
       pod_type
       no_of_spots
       location_id
+      venue_id
       zone_name
     }
   }

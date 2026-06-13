@@ -32,6 +32,8 @@ export const USER = gql`
       }
       status
       roles
+      host_share_pct
+      host_commission_pct
       dob
       created_at
       updated_at
@@ -63,6 +65,8 @@ export const UPDATE_USER = gql`
       status
       assigned_city
       assigned_zones
+      host_share_pct
+      host_commission_pct
     }
   }
 `;

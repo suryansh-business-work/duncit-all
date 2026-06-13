@@ -32,6 +32,9 @@ export function NotificationsScreen({
   const { color, primary } = useThemeColors();
   const notifEnabled = useNotificationPrefsStore((s) => s.enabled);
   const setNotifEnabled = useNotificationPrefsStore((s) => s.setEnabled);
+  // Derive unread from the loaded items so the header can't say "All caught up"
+  // while unread rows are visible; fall back to the count when items lag (BUG-5).
+  const liveUnread = notifs.filter((item) => !item.read_at).length || unreadCount;
 
   return (
     <Modal visible={open} animationType="slide" onRequestClose={onClose}>
@@ -60,8 +63,8 @@ export function NotificationsScreen({
                   Notifications
                 </Text>
                 <Text fontSize={12} fontWeight="800" color="$muted">
-                  {unreadCount > 0
-                    ? `${unreadCount} unread update${unreadCount === 1 ? '' : 's'}`
+                  {liveUnread > 0
+                    ? `${liveUnread} unread update${liveUnread === 1 ? '' : 's'}`
                     : 'All caught up'}
                 </Text>
               </YStack>
@@ -69,15 +72,15 @@ export function NotificationsScreen({
                 testID="notifications-mark-all"
                 role="button"
                 aria-label="Mark all as read"
-                aria-disabled={unreadCount === 0}
-                onPress={unreadCount === 0 ? undefined : onMarkAll}
+                aria-disabled={liveUnread === 0}
+                onPress={liveUnread === 0 ? undefined : onMarkAll}
                 width={40}
                 height={40}
                 alignItems="center"
                 justifyContent="center"
                 borderRadius={20}
                 backgroundColor="$surface"
-                opacity={unreadCount === 0 ? 0.5 : 1}
+                opacity={liveUnread === 0 ? 0.5 : 1}
                 pressStyle={{ opacity: 0.7 }}
               >
                 <MaterialIcons name="done-all" size={20} color={color} />

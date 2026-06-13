@@ -11,6 +11,7 @@ import { urlConfigs } from './config/url-configs';
 import { configureLogs, httpTransport, captureConsole, logs } from '@duncit/logs';
 import { ColorModeProvider } from './ColorModeContext';
 import { StudioModeProvider } from './StudioModeContext';
+import ErrorBoundary from './components/ErrorBoundary';
 import App from './App';
 import { initPwa } from './pwa';
 import { setRuntimeConfig, getGoogleClientId } from './config/runtimeConfig';
@@ -77,34 +78,41 @@ configureLogs(httpTransport(urlConfigs.graphqlUrl.replace(/\/graphql$/, '/logs')
 captureConsole(logs.mWeb);
 
 function mount() {
+  // A top-level ErrorBoundary wraps the WHOLE provider tree (not just the routes)
+  // so a boot-time throw from a provider / gate / failing query shows the
+  // recoverable fallback instead of unmounting React to a blank white screen.
   ReactDOM.createRoot(document.getElementById('root')!).render(
     <React.StrictMode>
-      <ApolloProvider client={apolloClient}>
-        <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey="mweb_user">
-          <ColorModeProvider>
-            <StudioModeProvider>
-              <LocalizationProvider dateAdapter={AdapterDateFns}>
-                <GoogleOAuthProvider clientId={getGoogleClientId()}>
-                  <BrowserRouter>
-                    <PortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></PortalModeGate>
-                  </BrowserRouter>
-                </GoogleOAuthProvider>
-              </LocalizationProvider>
-            </StudioModeProvider>
-          </ColorModeProvider>
-        </UserProvider>
-      </ApolloProvider>
+      <ErrorBoundary>
+        <ApolloProvider client={apolloClient}>
+          <UserProvider isAuthed={isAuthed} loadUser={loadUser} storageKey="mweb_user">
+            <ColorModeProvider>
+              <StudioModeProvider>
+                <LocalizationProvider dateAdapter={AdapterDateFns}>
+                  <GoogleOAuthProvider clientId={getGoogleClientId()}>
+                    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+                      <PortalModeGate portalKey="mweb" graphqlUrl={urlConfigs.graphqlUrl} appName="Duncit"><App /></PortalModeGate>
+                    </BrowserRouter>
+                  </GoogleOAuthProvider>
+                </LocalizationProvider>
+              </StudioModeProvider>
+            </ColorModeProvider>
+          </UserProvider>
+        </ApolloProvider>
+      </ErrorBoundary>
     </React.StrictMode>
   );
 }
 
 // Pull the public client config before first render so GoogleOAuthProvider gets
-// the Tech-portal client id. Render regardless on failure (env fallback applies).
-apolloClient
+// the Tech-portal client id. Render regardless on failure (env fallback applies)
+// — and never block first paint on a hung/slow API: cap the wait at 3s.
+const configReady = apolloClient
   .query({ query: PUBLIC_CLIENT_CONFIG, fetchPolicy: 'network-only' })
   .then(({ data }) => {
     const c = data?.publicClientConfig;
     if (c) setRuntimeConfig({ googleClientId: c.google_client_id, googleMapsApiKey: c.google_maps_api_key });
   })
-  .catch(() => undefined)
-  .finally(mount);
+  .catch(() => undefined);
+
+Promise.race([configReady, new Promise((resolve) => setTimeout(resolve, 3000))]).finally(mount);

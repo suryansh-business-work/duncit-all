@@ -47,6 +47,13 @@ export interface IVenue extends Document {
   owner_dob: Date | null;
   owner_address: string;
   tags: string[];
+  // Venue deduction overrides (two %s for "Default Deductions"): venue_share_pct
+  // = the venue's slice (used for revenue-share venues / planning), and
+  // venue_commission_pct = the commission Duncit takes from the venue's payout,
+  // applied after GST on a completed pod's venue bill. Set on the venue review
+  // page; 0 on either falls back to the global default_venue_* at settlement.
+  venue_share_pct: number;
+  venue_commission_pct: number;
   // Workflow
   step_completed: number; // 0..4
   status: VenueStatus;
@@ -100,6 +107,8 @@ const venueSchema = new Schema<IVenue>(
     owner_dob: { type: Date, default: null },
     owner_address: { type: String, default: '' },
     tags: { type: [String], default: [] },
+    venue_share_pct: { type: Number, default: 0, min: 0, max: 100 },
+    venue_commission_pct: { type: Number, default: 0, min: 0, max: 100 },
     step_completed: { type: Number, default: 0, min: 0, max: 4 },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     is_active: { type: Boolean, default: true },

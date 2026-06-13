@@ -42,6 +42,8 @@ const toPub = (v: IVenue) => ({
   owner_dob: v.owner_dob ? v.owner_dob.toISOString() : null,
   owner_address: v.owner_address ?? '',
   tags: v.tags ?? [],
+  venue_share_pct: v.venue_share_pct ?? 0,
+  venue_commission_pct: v.venue_commission_pct ?? 0,
   step_completed: v.step_completed ?? 0,
   status: v.status,
   is_active: v.is_active ?? true,
@@ -298,6 +300,24 @@ export const venueService = {
     }
     await v.save();
     if (opts.status === 'APPROVED') await assignApprovedVenueRole(v.owner_user_id);
+    return toPub(v);
+  },
+
+  async setDeductions(venueId: string, sharePct: number, commissionPct: number) {
+    const share = Number(sharePct);
+    const commission = Number(commissionPct);
+    const valid = (n: number) => Number.isFinite(n) && n >= 0 && n <= 100;
+    if (!valid(share) || !valid(commission)) {
+      throw new GraphQLError('Venue share and commission must be between 0 and 100', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const v = await VenueModel.findByIdAndUpdate(
+      venueId,
+      { $set: { venue_share_pct: share, venue_commission_pct: commission } },
+      { new: true }
+    );
+    if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
     return toPub(v);
   },
 

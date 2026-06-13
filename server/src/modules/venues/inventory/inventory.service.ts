@@ -464,10 +464,23 @@ export const inventoryService = {
     return true;
   },
 
-  async reviewProductListing(id: string, status: string, notes: string | null | undefined, user: AuthUser | null) {
+  async reviewProductListing(
+    id: string,
+    status: string,
+    notes: string | null | undefined,
+    user: AuthUser | null,
+    commissionPct?: number | null
+  ) {
     const doc = await InventoryProductModel.findById(id);
     if (!doc) throw new GraphQLError('Product listing request not found', { extensions: { code: 'NOT_FOUND' } });
     const info = userInfo(user);
+    if (commissionPct !== undefined && commissionPct !== null) {
+      const commission = Number(commissionPct);
+      if (!Number.isFinite(commission) || commission < 5 || commission > 50) {
+        throw new GraphQLError('Commission must be between 5% and 50%', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      doc.commission_pct = commission;
+    }
     doc.listing_review_status = status === 'APPROVED' ? 'APPROVED' : 'DENIED';
     doc.listing_review_notes = cleanText(notes, 1000);
     doc.listing_reviewed_by_id = info.id;

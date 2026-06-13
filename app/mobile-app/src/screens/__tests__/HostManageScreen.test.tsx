@@ -21,6 +21,11 @@ jest.mock('@/components/host-manage/HostPodsSection', () => {
   const { View: V } = require('react-native');
   return { HostPodsSection: () => <V testID="host-pods-section" /> };
 });
+jest.mock('@/components/host-manage/HostShareSection', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View: V } = require('react-native');
+  return { HostShareSection: () => <V testID="host-share-section" /> };
+});
 const mockedUse = useHostDrafts as jest.Mock;
 
 const drafts = [

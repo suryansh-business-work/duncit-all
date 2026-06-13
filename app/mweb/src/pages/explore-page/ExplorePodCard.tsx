@@ -172,7 +172,7 @@ export default function ExplorePodCard({
             Join in 2 taps
           </Typography>
           <Typography variant="caption" sx={{ opacity: 0.82 }} noWrap>
-            {pod.pod_type?.includes('FREE') ? 'Free spot' : format(pod.pod_amount)} · Confirm with UPI
+            {pod.pod_type?.includes('FREE') ? 'Free spot' : `${format(pod.pod_amount)} · Confirm with UPI`}
           </Typography>
         </Box>
         <Button

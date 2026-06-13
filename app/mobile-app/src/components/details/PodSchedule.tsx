@@ -6,7 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { MapEmbed } from '@/components/MapEmbed';
 import type { PodDetail, PodLocation, PodVenue } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { podScheduleLabel } from '@/utils/pod-format';
+import { formatMeetingPlatform, podScheduleLabel } from '@/utils/pod-format';
 
 interface Props {
   pod: PodDetail;
@@ -88,7 +88,7 @@ export function PodSchedule({ pod, venue, location, onOpenVenue }: Readonly<Prop
         <>
           <Field label="Meeting">
             <Text fontSize={14} fontWeight="700" color="$color">
-              {pod.meeting_platform || 'Online'}
+              {formatMeetingPlatform(pod.meeting_platform)}
             </Text>
           </Field>
           {pod.meeting_url ? (

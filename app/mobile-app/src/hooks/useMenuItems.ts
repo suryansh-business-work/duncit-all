@@ -33,9 +33,12 @@ const studio = (yourX: MenuItem, verify: MenuRoute): MenuItem[] => [
  */
 export function useMenuItems(mode: StudioMode = 'USER'): { items: MenuItem[] } {
   if (mode === 'HOST') {
-    return {
-      items: studio({ label: 'Your Pods', icon: 'dashboard', route: 'HostManage' }, 'BecomeHost'),
-    };
+    const items = studio(
+      { label: 'Your Pods', icon: 'dashboard', route: 'HostManage' },
+      'BecomeHost',
+    );
+    items.splice(2, 0, { label: 'Wallet', icon: 'account-balance-wallet', route: 'Wallet' });
+    return { items };
   }
   if (mode === 'VENUE') {
     return {

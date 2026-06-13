@@ -21,9 +21,50 @@ export const financeTypeDefs = /* GraphQL */ `
     upi_id: String
   }
 
+  enum PayoutMode {
+    IMMEDIATE
+    WEEKLY
+    MONTH_END
+  }
+
+  type PartyInvoiceTemplate {
+    label: String!
+    terms: String!
+    footer: String!
+    note: String!
+  }
+
+  type InvoiceTemplates {
+    venue: PartyInvoiceTemplate!
+    host: PartyInvoiceTemplate!
+    product: PartyInvoiceTemplate!
+  }
+
+  input PartyInvoiceTemplateInput {
+    label: String
+    terms: String
+    footer: String
+    note: String
+  }
+
+  input InvoiceTemplatesInput {
+    venue: PartyInvoiceTemplateInput
+    host: PartyInvoiceTemplateInput
+    product: PartyInvoiceTemplateInput
+  }
+
   type FinanceSettings {
     platform_fee_pct: Float!
     gst_pct: Float!
+    default_host_share_pct: Float!
+    default_host_commission_pct: Float!
+    default_venue_share_pct: Float!
+    default_venue_commission_pct: Float!
+    default_product_commission_pct: Float!
+    venue_payout_mode: PayoutMode!
+    host_payout_mode: PayoutMode!
+    payout_day_of_week: Int!
+    payout_time: String!
     currency_symbol: String!
     invoice_prefix: String!
     dummy_mode: Boolean!
@@ -36,6 +77,7 @@ export const financeTypeDefs = /* GraphQL */ `
     invoice_footer_note: String!
     invoice_terms: String!
     invoice_logo_url: String!
+    invoice_templates: InvoiceTemplates!
     updated_at: String!
   }
 
@@ -50,6 +92,15 @@ export const financeTypeDefs = /* GraphQL */ `
   input UpdateFinanceSettingsInput {
     platform_fee_pct: Float
     gst_pct: Float
+    default_host_share_pct: Float
+    default_host_commission_pct: Float
+    default_venue_share_pct: Float
+    default_venue_commission_pct: Float
+    default_product_commission_pct: Float
+    venue_payout_mode: PayoutMode
+    host_payout_mode: PayoutMode
+    payout_day_of_week: Int
+    payout_time: String
     currency_symbol: String
     invoice_prefix: String
     dummy_mode: Boolean
@@ -62,6 +113,7 @@ export const financeTypeDefs = /* GraphQL */ `
     invoice_footer_note: String
     invoice_terms: String
     invoice_logo_url: String
+    invoice_templates: InvoiceTemplatesInput
   }
 
   enum PaymentReleaseKind {
@@ -90,6 +142,17 @@ export const financeTypeDefs = /* GraphQL */ `
     type: CategoryMediaType
   }
 
+  type PaymentReleaseBreakdown {
+    collected_total: Float!
+    venue_bill: Float!
+    gst_pct: Float!
+    gst_amount: Float!
+    duncit_pct: Float!
+    duncit_amount: Float!
+    payout_pct: Float!
+    payout_amount: Float!
+  }
+
   type PaymentReleaseRequest {
     id: ID!
     release_id: String!
@@ -112,8 +175,51 @@ export const financeTypeDefs = /* GraphQL */ `
     approval_type: PaymentReleaseApprovalType
     approved_amount: Float
     approval_reason: String!
+    breakdown: PaymentReleaseBreakdown
     created_at: String!
     updated_at: String!
+  }
+
+  # One party's reconciled settlement lines for a completed pod.
+  type PodSettlementParty {
+    collected_total: Float!
+    venue_bill: Float!
+    gst_pct: Float!
+    gst_amount: Float!
+    duncit_pct: Float!
+    duncit_amount: Float!
+    payout_pct: Float!
+    payout_amount: Float!
+  }
+
+  type PodSettlement {
+    pod_id: ID!
+    pod_title: String!
+    currency_symbol: String!
+    collected_total: Float!
+    venue_bill: Float!
+    gst_pct: Float!
+    host_share_pct: Float!
+    host_commission_pct: Float!
+    venue_share_pct: Float!
+    venue_commission_pct: Float!
+    host: PodSettlementParty!
+    venue: PodSettlementParty
+    has_venue: Boolean!
+  }
+
+  type PodSettlementResult {
+    settlement: PodSettlement!
+    releases: [PaymentReleaseRequest!]!
+  }
+
+  input CompletePodInput {
+    pod_id: ID!
+    venue_bill_amount: Float!
+    bill_url: String
+    host_user_id: ID
+    evidence_media: [PaymentReleaseMediaInput!]
+    notes: String
   }
 
   input PaymentReleaseFilterInput {
@@ -142,11 +248,18 @@ export const financeTypeDefs = /* GraphQL */ `
     financeSettings: FinanceSettings!
     publicFinanceSettings: PublicFinanceSettings!
     paymentReleaseRequests(filter: PaymentReleaseFilterInput): [PaymentReleaseRequest!]!
+    # Live preview of the host/venue split for a pod given a venue bill.
+    podSettlementPreview(pod_id: ID!, venue_bill_amount: Float!): PodSettlement!
+    # The signed-in host's own completion payouts (Host Share history).
+    myHostPayouts: [PaymentReleaseRequest!]!
   }
 
   extend type Mutation {
     updateFinanceSettings(input: UpdateFinanceSettingsInput!): FinanceSettings!
     createPaymentReleaseRequest(input: CreatePaymentReleaseInput!): PaymentReleaseRequest!
     reviewPaymentReleaseRequest(request_id: ID!, input: ReviewPaymentReleaseInput!): PaymentReleaseRequest!
+    # Host (or admin) completes a pod: enter venue bill + party media, create
+    # the reconciled payout releases for Finance to approve.
+    completePodSettlement(input: CompletePodInput!): PodSettlementResult!
   }
 `;

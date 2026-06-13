@@ -3,15 +3,13 @@ import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import PodProfitCalculatorPage from './pages/calculators/pod-profit';
 import {
-  FinanceSettingsPage,
-  PlatformFeesPage,
-  GstManagementPage,
+  DefaultDeductionsPage,
   PaymentLogsPage,
   PaymentReleasePage,
+  WithdrawalsPage,
   InvoiceManagementPage,
+  InvoiceTemplatePage,
   LedgerPage,
-  VenueFinancePage,
-  InsuranceManagementPage,
   PayoutCyclesPage,
 } from './pages/finance';
 import AppShell from './components/AppShell';
@@ -38,15 +36,15 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
-      <Route path="/settings" element={authed(<FinanceSettingsPage />)} />
-      <Route path="/platform-fees" element={authed(<PlatformFeesPage />)} />
-      <Route path="/gst" element={authed(<GstManagementPage />)} />
+      <Route path="/default-deductions" element={authed(<DefaultDeductionsPage />)} />
       <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
       <Route path="/payment-release" element={authed(<PaymentReleasePage />)} />
+      <Route path="/withdrawals" element={authed(<WithdrawalsPage />)} />
       <Route path="/invoices" element={authed(<InvoiceManagementPage />)} />
+      <Route path="/invoices/venue" element={authed(<InvoiceTemplatePage kind="venue" />)} />
+      <Route path="/invoices/host" element={authed(<InvoiceTemplatePage kind="host" />)} />
+      <Route path="/invoices/product" element={authed(<InvoiceTemplatePage kind="product" />)} />
       <Route path="/ledger" element={authed(<LedgerPage />)} />
-      <Route path="/venue" element={authed(<VenueFinancePage />)} />
-      <Route path="/insurance" element={authed(<InsuranceManagementPage />)} />
       <Route path="/payouts" element={authed(<PayoutCyclesPage />)} />
       <Route path="/calculators/pod-profit" element={authed(<PodProfitCalculatorPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />

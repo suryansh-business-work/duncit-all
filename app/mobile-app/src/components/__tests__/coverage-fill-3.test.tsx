@@ -128,3 +128,17 @@ describe('FormTextField secure toggle', () => {
     expect(screen.getByLabelText('Hide password')).toBeOnTheScreen();
   });
 });
+
+function HintHarness() {
+  const { control } = useForm<{ amount: string }>({ defaultValues: { amount: '0' } });
+  return (
+    <FormTextField control={control} name="amount" label="Amount" hint="Gross price, max 1999." />
+  );
+}
+
+describe('FormTextField hint', () => {
+  it('shows muted helper text when there is no error', () => {
+    renderWithProviders(<HintHarness />);
+    expect(screen.getByTestId('amount-hint')).toHaveTextContent('Gross price, max 1999.');
+  });
+});

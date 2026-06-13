@@ -146,11 +146,39 @@ export const DELETE = gql`
     deletePod(pod_doc_id: $id)
   }
 `;
-export const CREATE_PAYMENT_RELEASE = gql`
-  mutation CreatePaymentRelease($input: CreatePaymentReleaseInput!) {
-    createPaymentReleaseRequest(input: $input) {
-      id
-      status
+export const COMPLETE_POD_SETTLEMENT = gql`
+  mutation AdminCompletePodSettlement($input: CompletePodInput!) {
+    completePodSettlement(input: $input) {
+      settlement {
+        currency_symbol
+        host {
+          payout_amount
+        }
+      }
+      releases {
+        id
+        kind
+        status
+      }
+    }
+  }
+`;
+
+export const POD_SETTLEMENT_PREVIEW = gql`
+  query AdminPodSettlementPreview($pod_id: ID!, $venue_bill_amount: Float!) {
+    podSettlementPreview(pod_id: $pod_id, venue_bill_amount: $venue_bill_amount) {
+      currency_symbol
+      collected_total
+      has_venue
+      host {
+        venue_bill
+        gst_pct
+        gst_amount
+        duncit_pct
+        duncit_amount
+        payout_pct
+        payout_amount
+      }
     }
   }
 `;

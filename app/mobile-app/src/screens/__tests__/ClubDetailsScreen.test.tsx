@@ -32,7 +32,7 @@ const pod = {
   id: 'p1',
   pod_id: 'pod-1',
   pod_title: 'Morning Run',
-  pod_date_time: '2026-06-12T06:30:00.000Z',
+  pod_date_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
   pod_type: 'NATIVE_FREE',
   pod_amount: 0,
   pod_attendees: [],

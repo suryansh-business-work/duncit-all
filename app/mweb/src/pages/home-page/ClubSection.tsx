@@ -60,7 +60,7 @@ export default function ClubSection({ club, clubPods, hostNameOf }: Readonly<Clu
             )}
           </Box>
         </Stack>
-        <Chip size="small" label={`${clubPods.length} pods`} sx={{ fontWeight: 800, flex: '0 0 auto' }} />
+        <Chip size="small" label={`${clubPods.length} pod${clubPods.length === 1 ? '' : 's'}`} sx={{ fontWeight: 800, flex: '0 0 auto' }} />
       </Stack>
 
       {clubPods.length === 0 ? (

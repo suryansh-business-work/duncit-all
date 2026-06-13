@@ -163,11 +163,10 @@ export default function PodsPage() {
         open={!!releaseRequest.completePod}
         pod={releaseRequest.completePod}
         users={users}
-        busyKind={releaseRequest.releaseBusy}
+        busy={releaseRequest.releaseBusy}
         errorMessage={releaseRequest.releaseError}
         onClose={() => releaseRequest.setCompletePod(null)}
-        onVenueSubmit={(values) => releaseRequest.requestRelease('VENUE_BILLING', values)}
-        onHostSubmit={(values) => releaseRequest.requestRelease('HOST_PAYMENT', values)}
+        onSubmit={(values) => releaseRequest.submitComplete(values)}
       />
 
       <PodFormDialog

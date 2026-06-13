@@ -1,5 +1,7 @@
 import type { HomePod } from '@/hooks/useHomeFeed';
 import {
+  formatMeetingPlatform,
+  isPodActive,
   podDateLabel,
   podImageUrl,
   podModeLabel,
@@ -91,6 +93,31 @@ describe('pod-format', () => {
     expect(podTimeChip(inHours)).toEqual({ label: '5 hours remaining', tone: 'warning' });
     const soon = new Date(Date.now() + 30 * 1000).toISOString();
     expect(podTimeChip(soon)).toEqual({ label: 'Starting soon', tone: 'warning' });
+  });
+
+  it('maps meeting-platform enums to human labels with a title-cased fallback', () => {
+    expect(formatMeetingPlatform('GOOGLE_MEET')).toBe('Google Meet');
+    expect(formatMeetingPlatform('ZOOM')).toBe('Zoom');
+    expect(formatMeetingPlatform('TEAMS')).toBe('Microsoft Teams');
+    expect(formatMeetingPlatform('JITSI_MEET')).toBe('Jitsi Meet');
+    // Empty segments (double underscore) keep their blank slot in the fallback.
+    expect(formatMeetingPlatform('TEAM__X')).toBe('Team  X');
+    expect(formatMeetingPlatform(null)).toBe('Online');
+    expect(formatMeetingPlatform('')).toBe('Online');
+  });
+
+  it('treats upcoming/live pods as active and past pods as inactive', () => {
+    expect(isPodActive(null)).toBe(true);
+    expect(isPodActive('not-a-date')).toBe(true);
+    const future = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+    expect(isPodActive(future)).toBe(true);
+    const longPast = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
+    expect(isPodActive(longPast)).toBe(false);
+    const recentStart = new Date(Date.now() - 60 * 1000).toISOString();
+    const futureEnd = new Date(Date.now() + 60 * 60 * 1000).toISOString();
+    expect(isPodActive(recentStart, futureEnd)).toBe(true);
+    const pastEnd = new Date(Date.now() - 30 * 60 * 1000).toISOString();
+    expect(isPodActive(recentStart, pastEnd)).toBe(false);
   });
 
   it('formats the long schedule label with and without an end', () => {

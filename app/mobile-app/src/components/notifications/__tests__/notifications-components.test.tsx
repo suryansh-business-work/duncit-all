@@ -92,7 +92,7 @@ describe('NotificationsScreen', () => {
         onClose={onClose}
         onMarkAll={onMarkAll}
         onNotifClick={onNotifClick}
-        notifs={[notif()]}
+        notifs={[notif({ id: 'n1' }), notif({ id: 'n2' })]}
         unreadCount={2}
       />,
     );
@@ -105,19 +105,21 @@ describe('NotificationsScreen', () => {
     expect(onClose).toHaveBeenCalled();
   });
 
-  it('disables mark-all when nothing is unread', () => {
-    const onMarkAll = jest.fn();
+  it('derives the unread count from the visible items, ignoring read ones (BUG-5)', () => {
     renderWithProviders(
       <NotificationsScreen
-        open
-        onClose={jest.fn()}
-        onMarkAll={onMarkAll}
-        onNotifClick={jest.fn()}
-        notifs={[notif()]}
-        unreadCount={1}
+        {...base}
+        notifs={[notif({ id: 'n1', read_at: '2026-06-01' }), notif({ id: 'n2' })]}
+        unreadCount={9}
       />,
     );
+    // Only n2 is unread, so a stale server count of 9 is overridden to 1.
     expect(screen.getByText('1 unread update')).toBeOnTheScreen();
+  });
+
+  it('falls back to the server unread count when no items are loaded (BUG-5)', () => {
+    renderWithProviders(<NotificationsScreen {...base} notifs={[]} unreadCount={5} />);
+    expect(screen.getByText('5 unread updates')).toBeOnTheScreen();
   });
 });
 

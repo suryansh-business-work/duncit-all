@@ -11,7 +11,7 @@ import {
   TextField,
   Typography,
 } from '@mui/material';
-import { APPROVE, REJECT, STATUSES, VENUES } from './queries';
+import { APPROVE, REJECT, SET_VENUE_DEDUCTIONS, STATUSES, VENUES } from './queries';
 import VenueEditDialog from './VenueEditDialog';
 import VenueReviewDialog from './VenueReviewDialog';
 import VenuesTable from './VenuesTable';
@@ -23,6 +23,7 @@ export default function VenuesPage() {
   });
   const [approve] = useMutation(APPROVE);
   const [reject] = useMutation(REJECT);
+  const [setVenueDeductions, { loading: savingDeductions }] = useMutation(SET_VENUE_DEDUCTIONS);
   const [active, setActive] = useState<any | null>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
@@ -50,6 +51,15 @@ export default function VenuesPage() {
     setActive(null);
     setNotes('');
     setTagsText('');
+    refetch();
+  };
+  const doSaveDeductions = async (sharePct: number, commissionPct: number) => {
+    await setVenueDeductions({
+      variables: { id: active.id, venue_share_pct: sharePct, venue_commission_pct: commissionPct },
+    });
+    setActive((current: any) =>
+      current ? { ...current, venue_share_pct: sharePct, venue_commission_pct: commissionPct } : current
+    );
     refetch();
   };
 
@@ -97,6 +107,8 @@ export default function VenuesPage() {
         onClose={() => setActive(null)}
         onApprove={doApprove}
         onReject={doReject}
+        onSaveDeductions={doSaveDeductions}
+        savingDeductions={savingDeductions}
       />
 
       <AdminVenueCreateDialog

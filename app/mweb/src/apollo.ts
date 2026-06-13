@@ -50,11 +50,16 @@ export const apolloClient = new ApolloClient({
       // result with other User-returning queries and warns about possible data
       // loss (Apollo error #15). Normalising on user_id fixes the merge.
       User: { keyFields: ['user_id'] },
+      // Branding is a single un-id'd config object; without a merge policy Apollo
+      // warns about possible data loss when two queries return different Branding
+      // shapes. Replace the whole field on each fetch (no normalization needed).
+      Branding: { keyFields: false },
       Query: {
         fields: {
           // Treat each unique argument combination as a distinct cache entry
           // so aliased calls like `globalSliders: sliders(...)` never collide.
           sliders: { keyArgs: ['filter'] },
+          branding: { merge: (_existing, incoming) => incoming },
         },
       },
     },

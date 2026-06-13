@@ -23,8 +23,15 @@ describe('useMenuItems', () => {
     ]);
   });
 
-  it('returns the Host studio menu', () => {
-    expect(routes('HOST')).toEqual(['HostManage', 'HostManage', 'Support', 'BecomeHost', 'Faqs']);
+  it('returns the Host studio menu with the Wallet row', () => {
+    expect(routes('HOST')).toEqual([
+      'HostManage',
+      'HostManage',
+      'Wallet',
+      'Support',
+      'BecomeHost',
+      'Faqs',
+    ]);
   });
 
   it('returns the Venue studio menu', () => {

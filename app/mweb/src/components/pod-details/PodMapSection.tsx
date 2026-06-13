@@ -6,6 +6,7 @@ import { Link as RouterLink } from 'react-router-dom';
 import PodLocationMap from '../../pages/pod-details-page/PodLocationMap';
 import VenueMapPreview from '../VenueMapPreview';
 import { venueUrl } from '../../utils/seoUrls';
+import { formatMeetingPlatform } from '../../utils/meetingPlatform';
 
 interface Props {
   pod: any;
@@ -79,7 +80,7 @@ export default function PodMapSection({ pod, location, venue }: Readonly<Props>)
               Meeting
             </Typography>
             <Typography variant="body2" fontWeight={500}>
-              {pod.meeting_platform || 'Online'}
+              {formatMeetingPlatform(pod.meeting_platform)}
             </Typography>
           </Stack>
           {pod.meeting_url ? (

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useController, type Control, type FieldValues, type Path } from 'react-hook-form';
 import type { TextInputProps } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -26,6 +26,8 @@ export interface FormTextFieldProps<T extends FieldValues> extends PassthroughPr
   control: Control<T>;
   name: Path<T>;
   label: string;
+  /** Muted helper text shown below the field when there is no error (mirrors MUI helperText). */
+  hint?: string;
 }
 
 /**
@@ -38,6 +40,7 @@ export function FormTextField<T extends FieldValues>({
   control,
   name,
   label,
+  hint,
   secureTextEntry,
   ...inputProps
 }: Readonly<FormTextFieldProps<T>>) {
@@ -46,6 +49,23 @@ export function FormTextField<T extends FieldValues>({
   const [visible, setVisible] = useState(false);
   const hasError = !!fieldState.error;
   const isSecure = !!secureTextEntry;
+
+  let helper: ReactNode = null;
+  if (hasError) {
+    helper = (
+      <Reveal>
+        <Text fontSize={12} color="$danger" testID={`${name}-error`}>
+          {fieldState.error?.message}
+        </Text>
+      </Reveal>
+    );
+  } else if (hint) {
+    helper = (
+      <Text fontSize={12} color="$muted" testID={`${name}-hint`}>
+        {hint}
+      </Text>
+    );
+  }
 
   return (
     <YStack gap={6}>
@@ -92,13 +112,7 @@ export function FormTextField<T extends FieldValues>({
           </XStack>
         ) : null}
       </XStack>
-      {hasError ? (
-        <Reveal>
-          <Text fontSize={12} color="$danger" testID={`${name}-error`}>
-            {fieldState.error?.message}
-          </Text>
-        </Reveal>
-      ) : null}
+      {helper}
     </YStack>
   );
 }

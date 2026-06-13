@@ -1,0 +1,33 @@
+<mjml>
+  <mj-head>
+    <mj-title>Payout approved</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <mj-section padding="20px 0 0 0">
+      <mj-column>
+        <mj-image src="https://duncit.com/duncit-logo.svg" alt="Duncit" width="160px" align="center" padding="0" />
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="bold" color="#222222">Your payout is approved</mj-text>
+        <mj-text color="#555555">Hi {{name}}, your {{statement_type}} for {{pod_title}} has been approved ({{approval_type}} release). The signed statement PDF is attached.</mj-text>
+        <mj-divider border-color="#eeeeee" border-width="1px" />
+        <mj-text color="#555555">Venue bill: {{venue_bill}}</mj-text>
+        <mj-text color="#555555">GST: {{gst_amount}}</mj-text>
+        <mj-text color="#555555">{{duncit_label}}: {{duncit_amount}}</mj-text>
+        <mj-text font-size="18px" font-weight="bold" color="#222222">{{payout_label}}: {{payout_amount}}</mj-text>
+        <mj-text color="#888888">{{reason}}</mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="16px 0 24px 0">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. You're receiving this because you host or partner with Duncit.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

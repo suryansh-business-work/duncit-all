@@ -49,7 +49,7 @@ export default function ClubListCard({ club, podCount, onOpen }: Readonly<ClubLi
           <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950, lineHeight: 1.15 }} noWrap>
             {club.club_name}
           </Typography>
-          <Chip size="small" label={`${podCount} pods`} color="primary" sx={{ fontWeight: 900 }} />
+          <Chip size="small" label={`${podCount} pod${podCount === 1 ? '' : 's'}`} color="primary" sx={{ fontWeight: 900 }} />
         </Stack>
         {club.club_description && (
           <Typography

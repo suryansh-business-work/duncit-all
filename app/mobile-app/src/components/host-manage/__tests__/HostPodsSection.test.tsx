@@ -48,6 +48,25 @@ jest.mock('@/components/host-manage/PodDeleteDialog', () => {
       ) : null,
   };
 });
+interface MockCompleteProps {
+  pod: unknown;
+  onClose: () => void;
+  onCompleted: () => void;
+}
+jest.mock('@/components/host-manage/PodCompleteDialog', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View: V } = require('react-native');
+  return {
+    PodCompleteDialog: ({ pod, onClose, onCompleted }: Readonly<MockCompleteProps>) =>
+      pod ? (
+        <>
+          <V testID="mock-complete-dialog" />
+          <V testID="mock-complete-close" onTouchEnd={onClose} />
+          <V testID="mock-complete-completed" onTouchEnd={onCompleted} />
+        </>
+      ) : null,
+  };
+});
 
 const mockedUse = useHostPods as jest.Mock;
 
@@ -124,6 +143,20 @@ describe('HostPodsSection', () => {
     expect(screen.queryByTestId('mock-delete-dialog')).toBeNull();
   });
 
+  it('completes a pod, then closes or refetches on submit', () => {
+    const hookApi = api();
+    mockedUse.mockReturnValue(hookApi);
+    renderWithProviders(<HostPodsSection />);
+    fireEvent.press(screen.getByTestId('host-pod-complete-p1'));
+    expect(screen.getByTestId('mock-complete-dialog')).toBeOnTheScreen();
+    fireEvent(screen.getByTestId('mock-complete-completed'), 'touchEnd');
+    expect(hookApi.refetch).toHaveBeenCalled();
+    expect(screen.queryByTestId('mock-complete-dialog')).toBeNull();
+    fireEvent.press(screen.getByTestId('host-pod-complete-p2'));
+    fireEvent(screen.getByTestId('mock-complete-close'), 'touchEnd');
+    expect(screen.queryByTestId('mock-complete-dialog')).toBeNull();
+  });
+
   it('keeps the section visible when a refetch fails', () => {
     const hookApi = api({ refetch: jest.fn().mockRejectedValue(new Error('down')) });
     mockedUse.mockReturnValue(hookApi);
@@ -132,6 +165,8 @@ describe('HostPodsSection', () => {
     fireEvent(screen.getByTestId('mock-edit-saved'), 'touchEnd');
     fireEvent.press(screen.getByTestId('host-pod-delete-p2'));
     fireEvent(screen.getByTestId('mock-delete-deleted'), 'touchEnd');
+    fireEvent.press(screen.getByTestId('host-pod-complete-p3'));
+    fireEvent(screen.getByTestId('mock-complete-completed'), 'touchEnd');
     expect(screen.getByTestId('host-pods-section')).toBeOnTheScreen();
   });
 });

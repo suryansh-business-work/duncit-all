@@ -98,11 +98,17 @@ export const inventoryResolvers = {
     },
     reviewProductListing: async (
       _p: unknown,
-      args: { product_doc_id: string; status: string; notes?: string },
+      args: { product_doc_id: string; status: string; notes?: string; commission_pct?: number },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_RW);
-      return inventoryService.reviewProductListing(args.product_doc_id, args.status, args.notes, ctx.user);
+      return inventoryService.reviewProductListing(
+        args.product_doc_id,
+        args.status,
+        args.notes,
+        ctx.user,
+        args.commission_pct
+      );
     },
     updateInventoryProduct: async (
       _p: unknown,

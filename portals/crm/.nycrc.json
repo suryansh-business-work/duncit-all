@@ -1,0 +1,16 @@
+{
+  "include": ["src/**/*.{ts,tsx}"],
+  "exclude": [
+    "src/main.tsx",
+    "src/**/*.d.ts",
+    "src/types/**",
+    "src/**/*.types.{ts,tsx}",
+    "src/**/types.ts"
+  ],
+  "reporter": ["text", "text-summary", "html"],
+  "check-coverage": true,
+  "branches": 100,
+  "lines": 100,
+  "functions": 100,
+  "statements": 100
+}

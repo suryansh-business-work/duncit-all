@@ -7,6 +7,7 @@ import UserHostPanel from './profile-page/UserHostPanel';
 import SimpleBarChart, { buildMonthlyCounts } from '../components/SimpleBarChart';
 import HostDraftsCard from './HostDraftsCard';
 import HostPodsCard from './host-manage-page/HostPodsCard';
+import HostShareCard from './host-manage-page/HostShareCard';
 
 const HOST_PODS = gql`
   query MyHostedPods($host_user_id: ID!) {
@@ -25,6 +26,7 @@ const HOST_PODS = gql`
       pod_type
       no_of_spots
       location_id
+      venue_id
       zone_name
     }
   }
@@ -50,6 +52,14 @@ export default function HostManagePage() {
   const pods = data?.pods ?? [];
   const upcomingPods = pods.filter((p: any) => p.pod_date_time && new Date(p.pod_date_time).getTime() > Date.now()).length;
   const paidPods = pods.filter((p: any) => !p.pod_type?.includes('FREE')).length;
+  // On a cold cache (direct load / refresh) `me` is still resolving, so HOST_PODS
+  // is skipped and would otherwise flash "0 pods". Treat the whole window as loading.
+  const bootLoading = (meQ.loading && !meQ.data) || (!!userId && loading && !data);
+  const stats = [
+    { label: 'Pods', value: bootLoading ? '—' : pods.length },
+    { label: 'Upcoming', value: bootLoading ? '—' : upcomingPods },
+    { label: 'Paid', value: bootLoading ? '—' : paidPods },
+  ];
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 760, mx: 'auto', width: '100%' }}>
@@ -71,7 +81,7 @@ export default function HostManagePage() {
       </Stack>
 
       <Stack direction="row" spacing={1}>
-        {[{ label: 'Pods', value: pods.length }, { label: 'Upcoming', value: upcomingPods }, { label: 'Paid', value: paidPods }].map((item) => (
+        {stats.map((item) => (
           <Card key={item.label} variant="outlined" sx={{ flex: 1, borderRadius: 3 }}>
             <CardContent sx={{ p: 1.25, '&:last-child': { pb: 1.25 } }}>
               <Typography variant="caption" color="primary.main" sx={{ fontWeight: 950 }} noWrap>{item.label}</Typography>
@@ -108,12 +118,14 @@ export default function HostManagePage() {
 
       <HostPodsCard
         pods={pods}
-        loading={loading && !data}
+        loading={bootLoading}
         errorMessage={error?.message}
         onChanged={() => {
           refetch().catch(() => undefined);
         }}
       />
+
+      <HostShareCard />
 
       <Stack direction="row">
         <Button component={RouterLink} to="/become-host" variant="outlined" size="small" sx={{ borderRadius: 999, fontWeight: 900 }}>

@@ -2,11 +2,11 @@
 import type { UseFormReturn } from 'react-hook-form';
 
 export const POD_TYPES = [
-  { value: 'NATIVE_FREE', label: 'Free' },
-  { value: 'NATIVE_PAID', label: 'Paid' },
-  { value: 'NATIVE_PAID_PREMIUM', label: 'Paid Premium' },
-  { value: 'NON_NATIVE_FREE', label: 'Non-native Free' },
-  { value: 'NON_NATIVE_PAID', label: 'Non-native Paid' },
+  { value: 'NATIVE_FREE', label: 'Native - Free' },
+  { value: 'NATIVE_PAID', label: 'Native - Paid' },
+  { value: 'NATIVE_PAID_PREMIUM', label: 'Native - Paid Premium' },
+  { value: 'NON_NATIVE_FREE', label: 'Non-native - Free' },
+  { value: 'NON_NATIVE_PAID', label: 'Non-native - Paid' },
 ] as const;
 
 export const OCCURRENCES = [

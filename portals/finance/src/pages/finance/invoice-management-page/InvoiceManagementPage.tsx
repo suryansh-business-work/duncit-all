@@ -1,6 +1,18 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, Button, CircularProgress, Snackbar, Stack, Typography } from '@mui/material';
+import {
+  Alert,
+  Box,
+  Button,
+  Card,
+  CardContent,
+  CircularProgress,
+  FormControlLabel,
+  Snackbar,
+  Stack,
+  Switch,
+  Typography,
+} from '@mui/material';
 import DescriptionIcon from '@mui/icons-material/Description';
 import { INVOICE_SETTINGS, UPDATE_INVOICE_SETTINGS } from './queries';
 import { EMPTY_INVOICE_SETTINGS, type InvoiceField, type InvoiceSettingsForm } from './types';
@@ -15,12 +27,14 @@ export default function InvoiceManagementPage() {
   const { data, loading, refetch } = useQuery(INVOICE_SETTINGS, { fetchPolicy: 'cache-and-network' });
   const [updateMut, { loading: saving }] = useMutation(UPDATE_INVOICE_SETTINGS);
   const [form, setForm] = useState<InvoiceSettingsForm>(EMPTY_INVOICE_SETTINGS);
+  const [dummyMode, setDummyMode] = useState(true);
   const [toast, setToast] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const fs = data?.financeSettings;
     if (!fs) return;
+    setDummyMode(fs.dummy_mode ?? true);
     setForm({
       business_name: fs.business_name ?? '',
       business_address: fs.business_address ?? '',
@@ -50,7 +64,7 @@ export default function InvoiceManagementPage() {
       return;
     }
     try {
-      await updateMut({ variables: { input: form } });
+      await updateMut({ variables: { input: { ...form, dummy_mode: dummyMode } } });
       setToast('Invoice settings saved');
       await refetch();
     } catch (e: any) {
@@ -85,7 +99,20 @@ export default function InvoiceManagementPage() {
 
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} alignItems="flex-start">
         <Box sx={{ flex: 1, width: '100%' }}>
-          <InvoiceBrandingForm value={form} onChange={onChange} emailError={emailError} />
+          <Stack spacing={2}>
+            <InvoiceBrandingForm value={form} onChange={onChange} emailError={emailError} />
+            <Card variant="outlined">
+              <CardContent>
+                <Typography variant="subtitle1" fontWeight={700} gutterBottom>
+                  Payment processing
+                </Typography>
+                <FormControlLabel
+                  control={<Switch checked={dummyMode} onChange={(e) => setDummyMode(e.target.checked)} />}
+                  label={dummyMode ? 'Dummy payment mode (no live charges)' : 'Live payment mode (Razorpay)'}
+                />
+              </CardContent>
+            </Card>
+          </Stack>
         </Box>
         <Box sx={{ flex: 1, width: '100%', position: { md: 'sticky' }, top: { md: 16 } }}>
           <Typography variant="overline" color="text.secondary">Live preview</Typography>

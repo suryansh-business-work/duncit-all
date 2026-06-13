@@ -49,6 +49,8 @@ export const venueTypeDefs = /* GraphQL */ `
     owner_dob: String
     owner_address: String!
     tags: [String!]!
+    venue_share_pct: Float!
+    venue_commission_pct: Float!
     step_completed: Int!
     status: VenueStatus!
     is_active: Boolean!
@@ -128,6 +130,7 @@ export const venueTypeDefs = /* GraphQL */ `
       status: VenueStatus
     ): Venue!
     setVenueActive(venue_doc_id: ID!, active: Boolean!): Venue!
+    setVenueDeductions(venue_doc_id: ID!, venue_share_pct: Float!, venue_commission_pct: Float!): Venue!
     deleteVenue(venue_doc_id: ID!): Boolean!
   }
 `;

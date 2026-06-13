@@ -83,6 +83,8 @@ describe('ExplorePodCard', () => {
       />,
     );
     expect(screen.getByText('Pod 1')).toBeOnTheScreen();
+    // Free pods hide the payment copy (BUG-9).
+    expect(screen.getByText('Free spot')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('reel-like-p-1'));
     expect(onToggleLike).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('reel-save-p-1'));
@@ -91,6 +93,30 @@ describe('ExplorePodCard', () => {
     expect(onComment).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('reel-go-p-1'));
     expect(onOpen).toHaveBeenCalled();
+  });
+
+  it('shows the "Confirm with UPI" payment copy for paid pods (BUG-9)', () => {
+    renderWithProviders(
+      <ExplorePodCard
+        pod={
+          {
+            ...(pod('2') as Record<string, unknown>),
+            pod_type: 'NATIVE_PAID',
+            pod_amount: 250,
+          } as never
+        }
+        width={390}
+        height={700}
+        saved={false}
+        like={{ liked_by_me: false, like_count: 0 }}
+        commentCount={0}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('₹250 · Confirm with UPI')).toBeOnTheScreen();
   });
 });
 

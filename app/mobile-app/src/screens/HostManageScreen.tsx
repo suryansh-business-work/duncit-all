@@ -8,6 +8,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { StackScreen } from '@/components/StackScreen';
 import { DraftDeleteConfirm } from '@/components/host-manage/DraftDeleteConfirm';
 import { HostPodsSection } from '@/components/host-manage/HostPodsSection';
+import { HostShareSection } from '@/components/host-manage/HostShareSection';
 import { STEP_TITLES } from '@/components/create-pod';
 import { useHostDrafts } from '@/hooks/useHostDrafts';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -50,6 +51,8 @@ export function HostManageScreen() {
           />
 
           <HostPodsSection />
+
+          <HostShareSection />
 
           <Text fontSize={16} fontWeight="900" color="$color">
             Draft pods

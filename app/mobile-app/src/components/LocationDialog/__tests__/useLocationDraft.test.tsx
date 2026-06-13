@@ -169,6 +169,59 @@ describe('useLocationDraft', () => {
     expect(select).not.toHaveBeenCalled();
   });
 
+  it("resets the city to the new state's first city when the state changes (BUG-3)", () => {
+    mockedLoc.mockReturnValue(
+      useLocationsValue({
+        locations: [
+          loc({ id: 'l1', state: 'Goa', location_name: 'Panaji' }),
+          loc({ id: 'l2', state: 'Goa', location_name: 'Margao' }),
+          loc({ id: 'l3', state: 'Kerala', location_name: 'Kochi', location_zones: [] }),
+        ],
+      }),
+    );
+    const { result } = renderHook(() => useLocationDraft(true, jest.fn()));
+    act(() => result.current.setState('Kerala'));
+    expect(result.current.state).toBe('Kerala');
+    expect(result.current.draftId).toBe('l3');
+    expect(result.current.draftZone).toBe('');
+  });
+
+  it('leaves the draft untouched for a state with no cities (BUG-3)', () => {
+    mockedLoc.mockReturnValue(
+      useLocationsValue({ locations: [loc({ id: 'l1' })], selectedId: 'l1' }),
+    );
+    const { result } = renderHook(() => useLocationDraft(true, jest.fn()));
+    act(() => result.current.setState('Nowhere'));
+    expect(result.current.draftId).toBe('l1');
+  });
+
+  it("selects the new country's first city on country change (BUG-3)", () => {
+    mockedLoc.mockReturnValue(
+      useLocationsValue({
+        locations: [
+          loc({
+            id: 'l1',
+            country: 'India',
+            country_code: 'IN',
+            state: 'Goa',
+            location_name: 'Panaji',
+          }),
+          loc({
+            id: 'l2',
+            country: 'Nepal',
+            country_code: 'NP',
+            state: 'Bagmati',
+            location_name: 'Kathmandu',
+          }),
+        ],
+      }),
+    );
+    const { result } = renderHook(() => useLocationDraft(true, jest.fn()));
+    act(() => result.current.pickCountry('Nepal'));
+    expect(result.current.draftId).toBe('l2');
+    expect(result.current.draftZone).toBe('');
+  });
+
   it('picks a city into the draft and clears the zone', () => {
     mockedLoc.mockReturnValue(useLocationsValue({ locations: [loc({}), loc({ id: 'l2' })] }));
     const { result } = renderHook(() => useLocationDraft(true, jest.fn()));

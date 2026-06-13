@@ -27,7 +27,7 @@ export default function ChatRoomHeader({ title, messageCount, onBack }: Readonly
           {label}
         </Typography>
         <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }} noWrap>
-          {messageCount} messages
+          {messageCount} message{messageCount === 1 ? '' : 's'}
         </Typography>
       </Box>
       <IconButton sx={{ bgcolor: 'action.hover' }} aria-label="Chat info">

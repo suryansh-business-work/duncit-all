@@ -64,7 +64,18 @@ export default function CreatePodStepper({
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const draftIdRef = useRef(initialDraftId);
+  const dupTitleRef = useRef(false);
   const isLast = step === STEP_TITLES.length - 1;
+
+  // A duplicate-title error is shown inline on the title field; clear it as soon
+  // as the host edits the title so the stale message can't linger (DIFF-7).
+  const podTitle = form.watch('pod_title');
+  useEffect(() => {
+    if (dupTitleRef.current) {
+      form.clearErrors('pod_title');
+      dupTitleRef.current = false;
+    }
+  }, [podTitle, form]);
 
   const persist = async (forStep: number) => {
     const id = await onSaveDraft(draftIdRef.current, serializeDraft(form.getValues(), forStep));
@@ -98,7 +109,15 @@ export default function CreatePodStepper({
       const id = await persist(step);
       await onPublish(id, buildCreatePodInput(values));
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'Could not create the pod.');
+      const message = e instanceof Error ? e.message : 'Could not create the pod.';
+      // Surface a duplicate title inline on the title field and jump back to it.
+      if (/already exists/i.test(message)) {
+        dupTitleRef.current = true;
+        form.setError('pod_title', { type: 'duplicate', message });
+        setStep(1);
+      } else {
+        setError(message);
+      }
     } finally {
       setBusy(false);
     }

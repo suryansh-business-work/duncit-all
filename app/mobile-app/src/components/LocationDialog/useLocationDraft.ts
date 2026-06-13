@@ -39,9 +39,26 @@ export function useLocationDraft(open: boolean, onClose: () => void) {
   const cities = activeState?.cities ?? [];
   const zones = draftLoc?.location_zones ?? [];
 
+  // Selecting a fresh city clears the stale locality/area selection (BUG-3).
+  const selectFirstCity = (stateCities: LocationItem[]) => {
+    const first = stateCities[0];
+    if (!first) return;
+    setDraftId(first.id);
+    setDraftZone('');
+  };
+
   const pickCountry = (next: string) => {
     setCountry(next);
-    setState(tree.find((c) => c.country === next)?.states[0]?.state ?? '');
+    const firstState = tree.find((c) => c.country === next)?.states[0];
+    setState(firstState?.state ?? '');
+    selectFirstCity(firstState?.cities ?? []);
+  };
+
+  // Changing the state must reset the city so the area list loads the new
+  // state's localities instead of keeping the previous city's (BUG-3).
+  const pickState = (next: string) => {
+    setState(next);
+    selectFirstCity(activeCountry?.states.find((s) => s.state === next)?.cities ?? []);
   };
 
   const pickCity = (loc: LocationItem) => {
@@ -108,7 +125,7 @@ export function useLocationDraft(open: boolean, onClose: () => void) {
     detected,
     error,
     pickCountry,
-    setState,
+    setState: pickState,
     pickCity,
     setDraftZone,
     detect,

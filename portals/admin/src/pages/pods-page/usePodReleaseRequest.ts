@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { CREATE_PAYMENT_RELEASE } from './queries';
-import { mediaTextToInput, type HostReleaseValues, type VenueReleaseValues } from './complete-pod-dialog';
-
-type ReleaseKind = 'VENUE_BILLING' | 'HOST_PAYMENT';
+import { COMPLETE_POD_SETTLEMENT } from './queries';
+import { buildCompleteInput, type CompletePodValues } from './complete-pod-dialog';
 
 interface Args {
   refetch: () => Promise<any>;
@@ -11,35 +9,24 @@ interface Args {
 }
 
 export default function usePodReleaseRequest({ refetch, setToast }: Args) {
-  const [createRelease] = useMutation(CREATE_PAYMENT_RELEASE);
+  const [completePodSettlement] = useMutation(COMPLETE_POD_SETTLEMENT);
   const [completePod, setCompletePod] = useState<any | null>(null);
-  const [releaseBusy, setReleaseBusy] = useState<ReleaseKind | ''>('');
+  const [releaseBusy, setReleaseBusy] = useState(false);
   const [releaseError, setReleaseError] = useState<string | null>(null);
 
-  const requestRelease = async (kind: ReleaseKind, values: VenueReleaseValues | HostReleaseValues) => {
+  const submitComplete = async (values: CompletePodValues) => {
     if (!completePod) return;
-    setReleaseBusy(kind);
+    setReleaseBusy(true);
     setReleaseError(null);
     try {
-      await createRelease({
-        variables: {
-          input: {
-            pod_id: completePod.id,
-            kind,
-            amount_requested: Number(values.amount_requested),
-            notes: values.notes,
-            bill_url: kind === 'VENUE_BILLING' ? (values as VenueReleaseValues).bill_url : undefined,
-            host_user_id: kind === 'HOST_PAYMENT' ? (values as HostReleaseValues).host_user_id : undefined,
-            evidence_media: kind === 'HOST_PAYMENT' ? mediaTextToInput((values as HostReleaseValues).evidence_media_text) : [],
-          },
-        },
-      });
-      setToast('Payment release request created');
+      await completePodSettlement({ variables: { input: buildCompleteInput(values, completePod.id) } });
+      setToast('Pod completion submitted for approval');
+      setCompletePod(null);
       await refetch();
     } catch (e: any) {
       setReleaseError(e.message);
     } finally {
-      setReleaseBusy('');
+      setReleaseBusy(false);
     }
   };
 
@@ -48,5 +35,5 @@ export default function usePodReleaseRequest({ refetch, setToast }: Args) {
     setReleaseError(null);
   };
 
-  return { completePod, releaseBusy, releaseError, requestRelease, openCompletePod, setCompletePod };
+  return { completePod, releaseBusy, releaseError, submitComplete, openCompletePod, setCompletePod };
 }

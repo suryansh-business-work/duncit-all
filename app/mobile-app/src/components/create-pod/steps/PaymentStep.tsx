@@ -14,6 +14,7 @@ interface Props {
 export function PaymentStep({ form }: Readonly<Props>) {
   const { control, watch, setValue } = form;
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
+  const isFree = watch('pod_type').includes('FREE');
 
   return (
     <YStack gap={14}>
@@ -51,6 +52,7 @@ export function PaymentStep({ form }: Readonly<Props>) {
         name="pod_amount_text"
         label="Amount (₹)"
         keyboardType="numeric"
+        hint={isFree ? 'Free pod amount must be 0.' : 'Gross price, max 1999.'}
       />
       <FormTextField
         control={control}

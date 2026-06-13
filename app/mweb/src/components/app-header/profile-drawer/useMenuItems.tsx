@@ -13,6 +13,7 @@ import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import CategoryIcon from '@mui/icons-material/Category';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
+import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 import { useStudioMode } from '../../../StudioModeContext';
 import { resolveMode } from '../../../studio-mode';
@@ -57,7 +58,9 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
   ];
 
   if (effectiveMode === 'HOST') {
-    return { items: studio({ label: 'Your Pods', icon: <DashboardIcon {...sz} />, onClick: go('/host/manage') }, '/host/manage', '/become-host') };
+    const items = studio({ label: 'Your Pods', icon: <DashboardIcon {...sz} />, onClick: go('/host/manage') }, '/host/manage', '/become-host');
+    items.splice(2, 0, { label: 'Wallet', icon: <AccountBalanceWalletIcon {...sz} />, onClick: go('/host/wallet') });
+    return { items };
   }
   if (effectiveMode === 'VENUE') {
     return { items: studio({ label: 'Your Venues', icon: <StorefrontIcon {...sz} />, onClick: go('/venues/manage') }, '/venues/manage', '/survey/venue') };

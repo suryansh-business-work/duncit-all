@@ -31,6 +31,9 @@ export default function NotificationsScreen({
 }: Readonly<NotificationsScreenProps>) {
   const pushSupported = isPushSupported() && perm !== 'unsupported';
   const pushOn = perm === 'granted';
+  // Derive unread from the actual items so the header never disagrees with the
+  // list / badge (the server count can lag behind the rendered notifications).
+  const liveUnread = notifs.filter((n) => !n.read_at).length || unreadCount;
 
   return (
     <Dialog
@@ -55,10 +58,10 @@ export default function NotificationsScreen({
               Notifications
             </Typography>
             <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-              {unreadCount > 0 ? `${unreadCount} unread update${unreadCount === 1 ? '' : 's'}` : 'All caught up'}
+              {liveUnread > 0 ? `${liveUnread} unread update${liveUnread === 1 ? '' : 's'}` : 'All caught up'}
             </Typography>
           </Box>
-          <IconButton onClick={onMarkAll} disabled={unreadCount === 0} aria-label="Mark all as read" sx={{ bgcolor: 'action.hover' }}>
+          <IconButton onClick={onMarkAll} disabled={liveUnread === 0} aria-label="Mark all as read" sx={{ bgcolor: 'action.hover' }}>
             <DoneAllIcon />
           </IconButton>
         </Stack>

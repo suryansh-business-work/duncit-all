@@ -284,6 +284,7 @@ export const inventoryTypeDefs = /* GraphQL */ `
       product_doc_id: ID!
       status: ProductListingReviewStatus!
       notes: String
+      commission_pct: Float
     ): InventoryProduct!
     updateInventoryProduct(product_doc_id: ID!, input: UpdateInventoryProductInput!): InventoryProduct!
     deleteInventoryProduct(product_doc_id: ID!): Boolean!

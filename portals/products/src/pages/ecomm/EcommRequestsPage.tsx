@@ -45,11 +45,22 @@ const PRODUCT_LISTING_REQUESTS = gql`
 `;
 
 const REVIEW_PRODUCT_LISTING = gql`
-  mutation ReviewProductListing($product_doc_id: ID!, $status: ProductListingReviewStatus!, $notes: String) {
-    reviewProductListing(product_doc_id: $product_doc_id, status: $status, notes: $notes) {
+  mutation ReviewProductListing(
+    $product_doc_id: ID!
+    $status: ProductListingReviewStatus!
+    $notes: String
+    $commission_pct: Float
+  ) {
+    reviewProductListing(
+      product_doc_id: $product_doc_id
+      status: $status
+      notes: $notes
+      commission_pct: $commission_pct
+    ) {
       id
       listing_review_status
       listing_review_notes
+      commission_pct
       status
       is_active
     }
@@ -65,16 +76,21 @@ const statusColors: Record<string, 'default' | 'success' | 'warning' | 'error'> 
 export default function EcommRequestsPage() {
   const [status, setStatus] = useState('PENDING');
   const [notes, setNotes] = useState<Record<string, string>>({});
+  const [commission, setCommission] = useState<Record<string, string>>({});
   const [message, setMessage] = useState<string | null>(null);
   const variables = { status: status === 'ALL' ? null : status };
   const { data, loading, error, refetch } = useQuery(PRODUCT_LISTING_REQUESTS, { variables, fetchPolicy: 'cache-and-network' });
   const [review, { loading: reviewing }] = useMutation(REVIEW_PRODUCT_LISTING);
   const requests = data?.productListingRequests ?? [];
 
-  const submitReview = async (id: string, nextStatus: 'APPROVED' | 'DENIED') => {
+  const submitReview = async (item: any, nextStatus: 'APPROVED' | 'DENIED') => {
     setMessage(null);
     try {
-      await review({ variables: { product_doc_id: id, status: nextStatus, notes: notes[id] || '' } });
+      const raw = commission[item.id];
+      const commissionPct = raw === undefined || raw === '' ? undefined : Number(raw);
+      await review({
+        variables: { product_doc_id: item.id, status: nextStatus, notes: notes[item.id] || '', commission_pct: commissionPct },
+      });
       setMessage(nextStatus === 'APPROVED' ? 'Product approved for pod selection.' : 'Product request denied.');
       await refetch(variables);
     } catch (reviewError: any) {
@@ -133,9 +149,18 @@ export default function EcommRequestsPage() {
                     <TableCell>
                       <Stack spacing={1}>
                         <TextField size="small" label="Admin note" value={notes[item.id] ?? item.listing_review_notes ?? ''} onChange={(event) => setNotes((prev) => ({ ...prev, [item.id]: event.target.value }))} multiline minRows={2} />
+                        <TextField
+                          size="small"
+                          label="Commission %"
+                          type="number"
+                          value={commission[item.id] ?? String(item.commission_pct ?? '')}
+                          onChange={(event) => setCommission((prev) => ({ ...prev, [item.id]: event.target.value }))}
+                          inputProps={{ min: 5, max: 50, step: 1, 'aria-label': 'Product commission percentage' }}
+                          helperText="5–50% Duncit cut. Blank keeps current."
+                        />
                         <Stack direction="row" spacing={1}>
-                          <Button size="small" variant="contained" disabled={reviewing} onClick={() => submitReview(item.id, 'APPROVED')}>Approve</Button>
-                          <Button size="small" color="error" variant="outlined" disabled={reviewing} onClick={() => submitReview(item.id, 'DENIED')}>Deny</Button>
+                          <Button size="small" variant="contained" disabled={reviewing} onClick={() => submitReview(item, 'APPROVED')}>Approve</Button>
+                          <Button size="small" color="error" variant="outlined" disabled={reviewing} onClick={() => submitReview(item, 'DENIED')}>Deny</Button>
                         </Stack>
                       </Stack>
                     </TableCell>

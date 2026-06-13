@@ -93,7 +93,7 @@ describe('ClubBody', () => {
         id: 'p1',
         pod_id: 'pod-1',
         pod_title: 'Run',
-        pod_date_time: '2026-06-10T06:30:00.000Z',
+        pod_date_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
         pod_type: 'NATIVE_FREE',
         pod_amount: 0,
         no_of_spots: 5,
@@ -122,6 +122,47 @@ describe('ClubBody', () => {
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));
     expect(onOpenPod).toHaveBeenCalled();
     openSpy.mockRestore();
+  });
+
+  it('hides past pods from the upcoming list (BUG-4)', () => {
+    const club = {
+      club_name: 'Runners',
+      club_description: '',
+      club_moments: [],
+      club_whats_app_group_link: null,
+      club_whats_app_community_link: null,
+      meetup_venues_id: [],
+    } as never;
+    const pods = [
+      {
+        id: 'p2',
+        pod_id: 'pod-2',
+        pod_title: 'Old Run',
+        pod_date_time: '2026-06-02T06:30:00.000Z',
+        pod_type: 'NATIVE_FREE',
+        pod_amount: 0,
+        no_of_spots: 5,
+        host_names: [],
+        pod_images_and_videos: [],
+        club_id: 'c1',
+        club_slug: 's',
+        place_label: null,
+        place_detail: null,
+      },
+    ] as never;
+    renderWithProviders(
+      <ClubBody
+        club={club}
+        pods={pods}
+        members={[]}
+        cardWidth={300}
+        onOpenPod={jest.fn()}
+        onOpenMember={jest.fn()}
+      />,
+    );
+    // The past pod is filtered out → the empty "no active pods" copy shows.
+    expect(screen.getByTestId('club-no-pods')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-card-pod-2')).toBeNull();
   });
 });
 

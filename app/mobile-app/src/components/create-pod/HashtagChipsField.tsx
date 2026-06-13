@@ -90,7 +90,7 @@ export function HashtagChipsField({ form }: Readonly<Props>) {
               color="$color"
               placeholderTextColor="$muted"
               borderColor="$borderColor"
-              placeholder="Type a tag, then space to add"
+              placeholder="Type a tag and press Enter"
               value={draft}
               onChangeText={onChangeText}
               onSubmitEditing={() => commit(draft)}
@@ -98,6 +98,9 @@ export function HashtagChipsField({ form }: Readonly<Props>) {
               autoCapitalize="none"
               aria-label="Hashtags"
             />
+            <Text fontSize={12} color="$muted">
+              Press Enter, space or comma to add a tag.
+            </Text>
           </YStack>
         );
       }}

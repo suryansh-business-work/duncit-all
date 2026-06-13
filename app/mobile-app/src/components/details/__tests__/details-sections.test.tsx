@@ -70,7 +70,7 @@ describe('PodSchedule', () => {
     } as never;
     renderWithProviders(<PodSchedule pod={pod} venue={null} location={null} />);
     expect(screen.getByText('Meeting')).toBeOnTheScreen();
-    expect(screen.getByText('GOOGLE_MEET')).toBeOnTheScreen();
+    expect(screen.getByText('Google Meet')).toBeOnTheScreen();
     expect(screen.getByText('Bring a mic')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-join-meeting'));
     expect(spy).toHaveBeenCalledWith('https://meet.example');

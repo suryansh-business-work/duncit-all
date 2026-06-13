@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -5,6 +6,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  InputAdornment,
   Stack,
   TextField,
   Typography,
@@ -19,6 +21,8 @@ interface Props {
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
+  onSaveDeductions: (sharePct: number, commissionPct: number) => void;
+  savingDeductions: boolean;
 }
 
 export default function VenueReviewDialog({
@@ -30,7 +34,23 @@ export default function VenueReviewDialog({
   onClose,
   onApprove,
   onReject,
+  onSaveDeductions,
+  savingDeductions,
 }: Readonly<Props>) {
+  const [share, setShare] = useState('0');
+  const [commission, setCommission] = useState('0');
+  useEffect(() => {
+    setShare(String(active?.venue_share_pct ?? 0));
+    setCommission(String(active?.venue_commission_pct ?? 0));
+  }, [active]);
+
+  const valid = (v: string) => {
+    const n = Number(v);
+    return Number.isFinite(n) && n >= 0 && n <= 100;
+  };
+  const saveDeductions = () => {
+    if (valid(share) && valid(commission)) onSaveDeductions(Number(share), Number(commission));
+  };
   return (
     <Dialog open={!!active} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Review · {active?.venue_name}</DialogTitle>
@@ -72,6 +92,35 @@ export default function VenueReviewDialog({
             helperText="Comma separated tags for this approved venue."
             fullWidth
           />
+          <Box>
+            <Typography variant="caption" color="text.secondary">
+              Venue deductions: the venue's share, and the commission Duncit takes from the venue payout (after GST).
+              Leave at 0 to use the global Default Deductions.
+            </Typography>
+            <Stack direction="row" spacing={1.5} alignItems="flex-start" sx={{ mt: 0.5 }}>
+              <TextField
+                label="Venue share"
+                type="number"
+                value={share}
+                onChange={(e) => setShare(e.target.value)}
+                inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Venue share percentage' }}
+                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                sx={{ maxWidth: 150 }}
+              />
+              <TextField
+                label="Commission from venue"
+                type="number"
+                value={commission}
+                onChange={(e) => setCommission(e.target.value)}
+                inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Venue commission percentage' }}
+                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                sx={{ maxWidth: 170 }}
+              />
+              <Button onClick={saveDeductions} disabled={savingDeductions} sx={{ mt: 0.5 }}>
+                Save
+              </Button>
+            </Stack>
+          </Box>
         </Stack>
       </DialogContent>
       <DialogActions>

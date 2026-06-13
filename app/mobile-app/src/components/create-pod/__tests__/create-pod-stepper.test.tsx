@@ -188,6 +188,21 @@ describe('CreatePodStepper', () => {
     );
   });
 
+  it('shows a duplicate title inline, jumps to the title step and clears on edit (DIFF-1/7)', async () => {
+    const message = 'A pod with this title already exists in this club. Choose a different title.';
+    setup({ onPublish: jest.fn().mockRejectedValue(new Error(message)) });
+    await fillToStep7('PHYSICAL');
+    press('create-pod-submit');
+    // Jumps back to the title step and shows the error inline on the title field.
+    await screen.findByTestId('field-pod_title');
+    await waitFor(() =>
+      expect(screen.getByTestId('pod_title-error')).toHaveTextContent(/already exists/),
+    );
+    // Editing the title clears the stale duplicate error (DIFF-7).
+    fireEvent.changeText(screen.getByTestId('field-pod_title'), 'A fresh unique pod title');
+    await waitFor(() => expect(screen.queryByTestId('pod_title-error')).toBeNull());
+  });
+
   it('keeps navigating even when a draft autosave fails', async () => {
     setup({ onSaveDraft: jest.fn().mockRejectedValue(new Error('save failed')) });
     press('create-pod-location-l1');

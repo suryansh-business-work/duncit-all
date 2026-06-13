@@ -29,6 +29,8 @@ export const VENUES = gql`
       owner_phone
       owner_dob
       owner_address
+      venue_share_pct
+      venue_commission_pct
       gstin
       pan
       bank_account {
@@ -79,6 +81,16 @@ export const UPDATE_VENUE = gql`
       status: $status
     ) {
       id
+    }
+  }
+`;
+
+export const SET_VENUE_DEDUCTIONS = gql`
+  mutation SetVenueDeductions($id: ID!, $venue_share_pct: Float!, $venue_commission_pct: Float!) {
+    setVenueDeductions(venue_doc_id: $id, venue_share_pct: $venue_share_pct, venue_commission_pct: $venue_commission_pct) {
+      id
+      venue_share_pct
+      venue_commission_pct
     }
   }
 `;

@@ -10,11 +10,12 @@ interface Props {
   zoneName?: string | null;
   typeLabel: string;
   onOpen: () => void;
+  onComplete: () => void;
   onEdit: () => void;
   onDelete: () => void;
 }
 
-/** One hosted pod row — open the pod + the host's Edit/Delete actions (2). */
+/** One hosted pod row — open the pod + the host's Complete/Edit/Delete actions (2). */
 export function HostPodRow({
   id,
   title,
@@ -22,10 +23,11 @@ export function HostPodRow({
   zoneName,
   typeLabel,
   onOpen,
+  onComplete,
   onEdit,
   onDelete,
 }: Readonly<Props>) {
-  const { color: ink, danger } = useThemeColors();
+  const { color: ink, danger, primary } = useThemeColors();
   return (
     <XStack
       alignItems="center"
@@ -52,6 +54,22 @@ export function HostPodRow({
           {zoneName ? ` · ${zoneName}` : ''} · {typeLabel}
         </Text>
       </YStack>
+      <XStack
+        testID={`host-pod-complete-${id}`}
+        role="button"
+        aria-label="Complete pod"
+        onPress={onComplete}
+        width={40}
+        height={40}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={10}
+        borderWidth={1}
+        borderColor="$borderColor"
+        pressStyle={{ opacity: 0.7 }}
+      >
+        <MaterialIcons name="task-alt" size={18} color={primary} />
+      </XStack>
       <XStack
         testID={`host-pod-edit-${id}`}
         role="button"

@@ -6,6 +6,7 @@ import { AttendeesSection, buildAttendeePeople } from '@/components/details/PodS
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PodCard } from '@/components/home/PodCard';
+import { isPodActive } from '@/utils/pod-format';
 
 function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
   return (
@@ -40,6 +41,8 @@ export function ClubBody({
   const { onPrimary } = useThemeColors();
   const moments = club.club_moments.filter((m) => !!m.url);
   const chat = club.club_whats_app_group_link || club.club_whats_app_community_link;
+  // Past pods must not appear under "Upcoming pods" (BUG-4).
+  const upcomingPods = pods.filter((pod) => isPodActive(pod.pod_date_time));
 
   return (
     <YStack padding={16} gap={18}>
@@ -124,12 +127,12 @@ export function ClubBody({
         <Text fontSize={16} fontWeight="900" color="$color">
           Upcoming pods
         </Text>
-        {pods.length === 0 ? (
+        {upcomingPods.length === 0 ? (
           <Text testID="club-no-pods" fontSize={13} color="$muted">
             No active pods in this club yet.
           </Text>
         ) : (
-          pods.map((pod) => (
+          upcomingPods.map((pod) => (
             <PodCard key={pod.id} pod={pod} width={cardWidth} onPress={() => onOpenPod(pod)} />
           ))
         )}

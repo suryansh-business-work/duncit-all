@@ -9,7 +9,9 @@ import type { RootStackParamList } from '@/navigation/types';
 import { HostPodRow } from './HostPodRow';
 import { PodDeleteDialog } from './PodDeleteDialog';
 import { PodEditDialog } from './PodEditDialog';
+import { PodCompleteDialog } from './PodCompleteDialog';
 import type { HostPodSummary } from './pod-edit.form';
+import type { HostPodForComplete } from './pod-complete.form';
 
 function formatWhen(value?: string | null) {
   if (!value) return '—';
@@ -23,6 +25,7 @@ export function HostPodsSection() {
   const { pods, isLoading, refetch } = useHostPods();
   const [editPod, setEditPod] = useState<HostPodSummary | null>(null);
   const [deletePod, setDeletePod] = useState<{ id: string; title: string } | null>(null);
+  const [completePod, setCompletePod] = useState<HostPodForComplete | null>(null);
 
   const openPod = (pod: HostPod) =>
     navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title });
@@ -66,6 +69,9 @@ export function HostPodsSection() {
           zoneName={pod.zone_name}
           typeLabel={pod.pod_type.replace(/_/g, ' ')}
           onOpen={() => openPod(pod)}
+          onComplete={() =>
+            setCompletePod({ id: pod.id, pod_title: pod.pod_title, venue_id: pod.venue_id })
+          }
           onEdit={() => setEditPod(pod)}
           onDelete={() => setDeletePod({ id: pod.id, title: pod.pod_title })}
         />
@@ -84,6 +90,15 @@ export function HostPodsSection() {
         onClose={() => setDeletePod(null)}
         onDeleted={() => {
           setDeletePod(null);
+          refetch().catch(() => undefined);
+        }}
+      />
+      <PodCompleteDialog
+        key={completePod?.id ?? 'none'}
+        pod={completePod}
+        onClose={() => setCompletePod(null)}
+        onCompleted={() => {
+          setCompletePod(null);
           refetch().catch(() => undefined);
         }}
       />

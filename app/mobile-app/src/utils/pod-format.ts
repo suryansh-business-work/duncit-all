@@ -28,6 +28,30 @@ export function podPlaceLabel(pod: HomePod): string {
   return [pod.place_label, pod.place_detail].filter(Boolean).join(' · ');
 }
 
+const MEETING_PLATFORM_LABELS: Record<string, string> = {
+  GOOGLE_MEET: 'Google Meet',
+  ZOOM: 'Zoom',
+  MICROSOFT_TEAMS: 'Microsoft Teams',
+  TEAMS: 'Microsoft Teams',
+  SKYPE: 'Skype',
+  WEBEX: 'Webex',
+  OTHER: 'Online',
+};
+
+/** Maps a meeting-platform enum (e.g. GOOGLE_MEET) to a human label. Falls back
+ * to a title-cased value, never the raw SCREAMING_SNAKE enum. Mirrors mWeb. */
+export function formatMeetingPlatform(value?: string | null): string {
+  if (!value) return 'Online';
+  return (
+    MEETING_PLATFORM_LABELS[value] ??
+    value
+      .toLowerCase()
+      .split('_')
+      .map((w) => (w ? w.charAt(0).toUpperCase() + w.slice(1) : ''))
+      .join(' ')
+  );
+}
+
 /** "Virtual" / "Physical" from the pod mode. */
 export function podModeLabel(mode?: string | null): string {
   return mode === 'VIRTUAL' ? 'Virtual' : 'Physical';
@@ -48,6 +72,19 @@ export const POD_OCCURRENCE_LABELS: Record<PodOccurrence, string> = {
 export function podOccurrenceLabel(occurrence?: string | null): string {
   if (!occurrence) return '';
   return POD_OCCURRENCE_LABELS[occurrence as PodOccurrence] ?? occurrence.replaceAll('_', ' ');
+}
+
+// When a pod has no explicit end time, treat it as live for this long after start.
+const POD_LIVE_TAIL_MS = 4 * 60 * 60 * 1000;
+
+/** True while a pod has not ended yet (live or upcoming) — used to hide past
+ * pods from "Upcoming" lists. Mirrors mWeb's podStatus/isPodActive. */
+export function isPodActive(start?: string | null, end?: string | null): boolean {
+  if (!start) return true;
+  const startMs = new Date(start).getTime();
+  if (Number.isNaN(startMs)) return true;
+  const endMs = end ? new Date(end).getTime() : startMs + POD_LIVE_TAIL_MS;
+  return Date.now() <= endMs;
 }
 
 export type TimeTone = 'error' | 'warning' | 'info';

@@ -53,10 +53,27 @@ export default function LocationDialog({
   const cities = activeState?.cities ?? [];
   const zones = draftLoc?.location_zones ?? [];
 
+  // Selecting a fresh city clears the stale locality/area selection (BUG-3).
+  const selectFirstCity = (cities: LocationLike[]) => {
+    const firstCity = cities[0];
+    if (firstCity) {
+      setDraftLocationId(firstCity.id);
+      setDraftZone('');
+    }
+  };
+
   const handleCountry = (next: string) => {
     setCountry(next);
     const first = tree.find((c) => c.country === next)?.states[0];
     setState(first?.state ?? '');
+    selectFirstCity(first?.cities ?? []);
+  };
+
+  // Changing the state must reset the city so the area picker loads the new
+  // state's localities instead of keeping the previous city's (BUG-3).
+  const handleState = (next: string) => {
+    setState(next);
+    selectFirstCity(activeCountry?.states.find((s) => s.state === next)?.cities ?? []);
   };
 
   const handleCity = (id: string) => {
@@ -157,7 +174,7 @@ export default function LocationDialog({
           country={activeCountry?.country ?? ''}
           state={activeState?.state ?? ''}
           onCountry={handleCountry}
-          onState={setState}
+          onState={handleState}
         />
         <LocationCityGrid cities={cities} draftLocationId={draftLocationId} onSelect={handleCity} />
         {draftLoc && (

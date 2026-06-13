@@ -91,6 +91,8 @@ export const updateUserSchema = yup.object({
   roles: yup.array().of(yup.string().required()).optional(),
   assigned_city: yup.string().optional(),
   assigned_zones: yup.array().of(yup.string()).optional(),
+  host_share_pct: yup.number().min(0).max(100).optional(),
+  host_commission_pct: yup.number().min(0).max(100).optional(),
 });
 
 const profileLinkSchema = yup.object({

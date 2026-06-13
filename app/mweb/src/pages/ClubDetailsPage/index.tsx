@@ -13,6 +13,7 @@ import ClubSocialLinks from '../club-details-page/ClubSocialLinks';
 import ClubSummaryHeader from '../club-details-page/ClubSummaryHeader';
 import ClubMembersSection from '../club-details-page/ClubMembersSection';
 import ClubUpcomingPodsSection from '../club-details-page/ClubUpcomingPodsSection';
+import { isPodActive } from '../../utils/podStatus';
 import { CLUB_BY_SLUG, CLUB_DETAILS_RELATED } from './clubDetailsQueries';
 import useSavedClub from './useSavedClub';
 
@@ -44,10 +45,11 @@ export default function ClubDetailsPage() {
   const featureMedia = club.club_feature_images_and_videos ?? [];
   const moments = club.club_moments ?? [];
   const pods = data?.clubPods ?? [];
+  const upcomingPods = pods.filter((podItem: any) => isPodActive(podItem.pod_date_time, podItem.pod_end_date_time));
   const venueIds: string[] = club.meetup_venues_id ?? [];
   const venues = (data?.publicVenues ?? []).filter((venue: any) => venueIds.includes(venue.id));
   const clubTabs = [
-    ['UPCOMING', `Upcoming ${pods.length}`],
+    ['UPCOMING', `Upcoming ${upcomingPods.length}`],
     ['MOMENTS', `Moments ${moments.length}`],
     ['VENUES', `Venues ${venues.length}`],
   ] as const;
@@ -129,10 +131,10 @@ export default function ClubDetailsPage() {
       </Stack>
       {tab === 'UPCOMING' && (
         <ClubUpcomingPodsSection
-          pods={pods}
+          pods={upcomingPods}
           priceFormat={pricingFormat}
           onOpen={(podDocId) => {
-            const pod = pods.find((podItem: any) => podItem.id === podDocId);
+            const pod = upcomingPods.find((podItem: any) => podItem.id === podDocId);
             if (pod?.pod_id && club.club_id) navigate(`/club/${club.club_id}/pod/${pod.pod_id}`);
           }}
         />

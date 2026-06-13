@@ -4,6 +4,7 @@ import { gql } from '@apollo/client';
 export const INVOICE_SETTINGS = gql`
   query InvoiceSettings {
     financeSettings {
+      dummy_mode
       currency_symbol
       invoice_prefix
       business_name
@@ -25,6 +26,7 @@ export const UPDATE_INVOICE_SETTINGS = gql`
     updateFinanceSettings(input: $input) {
       business_name
       invoice_label
+      dummy_mode
       updated_at
     }
   }

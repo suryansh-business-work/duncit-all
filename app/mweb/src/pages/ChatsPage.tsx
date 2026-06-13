@@ -16,6 +16,7 @@ import {
 import EventIcon from '@mui/icons-material/Event';
 import GroupsIcon from '@mui/icons-material/Groups';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import { podStatus, podStatusChip } from '../utils/podStatus';
 
 type ChatFilter = 'ALL' | 'PODS' | 'DMS' | 'HOSTS' | 'UNREAD';
 
@@ -98,7 +99,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
           <Chip key={value} clickable label={count ? `${label} ${count}` : label} color={filter === value ? 'primary' : 'default'} variant={filter === value ? 'filled' : 'outlined'} onClick={() => setFilter(value)} sx={{ height: 34, fontWeight: 900 }} />
         ))}
       </Stack>
-      {rooms.length > 0 && (
+      {(filter === 'ALL' || filter === 'PODS') && rooms.length > 0 && (
         <Box sx={{ p: 1.5, borderRadius: 4, bgcolor: 'rgba(20,184,166,0.10)', border: '1px solid rgba(20,184,166,0.22)' }}>
           <Typography variant="caption" color="success.main" sx={{ fontWeight: 950, letterSpacing: 0.6 }}>
             ACTIVE PODS · {rooms.length}
@@ -121,7 +122,9 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
         </Alert>
       ) : (
         <Stack spacing={1.25}>
-          {visibleRooms.map((p: any) => (
+          {visibleRooms.map((p: any) => {
+            const statusChip = podStatusChip(podStatus(p.pod_date_time));
+            return (
             <Card key={p.id} variant="outlined" sx={{ borderRadius: 4, bgcolor: 'background.paper', overflow: 'hidden' }}>
               <CardActionArea onClick={() => navigate(`/chats/${p.id}`)}>
                 <CardContent sx={{ p: 1.5, '&:last-child': { pb: 1.5 } }}>
@@ -139,7 +142,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
                           : 'Pod chat'}
                       </Typography>
                       <Stack direction="row" spacing={0.75} alignItems="center" sx={{ mt: 0.75 }}>
-                        <Chip size="small" label="Live" color="success" sx={{ height: 20, fontSize: 10, fontWeight: 950 }} />
+                        <Chip size="small" label={statusChip.label} color={statusChip.color} sx={{ height: 20, fontSize: 10, fontWeight: 950 }} />
                         <Typography variant="caption" color="text.secondary">
                           {p.pod_attendees?.length || 0}{p.no_of_spots ? `/${p.no_of_spots}` : ''} members
                         </Typography>
@@ -152,7 +155,8 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
                 </CardContent>
               </CardActionArea>
             </Card>
-          ))}
+            );
+          })}
         </Stack>
       )}
     </Stack>

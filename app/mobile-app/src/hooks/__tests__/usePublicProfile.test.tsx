@@ -1,6 +1,10 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 
-import { MobilePublicProfileDocument, MobileUserBadgesDocument } from '@/graphql/public-profile';
+import {
+  MobilePublicProfileDocument,
+  MobilePublicUserPostsDocument,
+  MobileUserBadgesDocument,
+} from '@/graphql/public-profile';
 import { MobileFollowUserDocument, MobileUnfollowUserDocument } from '@/graphql/hosts-venues';
 import { graphqlRequest } from '@/services/graphql.client';
 import { usePublicProfile } from '@/hooks/usePublicProfile';
@@ -23,8 +27,17 @@ function route(doc: unknown, vars: { user_id: string }, me = 'me') {
         full_name: 'Riya',
         city: 'Pune',
         zone: 'Kothrud',
+        is_private: false,
+        is_following: false,
+        can_view_content: true,
       },
       me: { user_id: me, following_user_ids: [] },
+    });
+  }
+  if (doc === MobilePublicUserPostsDocument) {
+    return Promise.resolve({
+      posts: [{ id: 'po1', image_url: 'a.jpg', caption: 'x' }],
+      stories: [{ id: 'st1', image_url: 's.jpg' }],
     });
   }
   if (doc === MobileFollowUserDocument) {
@@ -44,12 +57,46 @@ beforeEach(() =>
 );
 
 describe('usePublicProfile', () => {
-  it('loads the profile, badges and detects a non-owner', async () => {
+  it('loads the profile, badges, posts and detects a non-owner', async () => {
     const { result } = renderHook(() => usePublicProfile('h1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.user?.full_name).toBe('Riya');
     expect(result.current.badges).toHaveLength(1);
     expect(result.current.isOwner).toBe(false);
+    expect(result.current.canView).toBe(true);
+    expect(result.current.posts).toHaveLength(1);
+    expect(result.current.stories).toEqual(['s.jpg']);
+  });
+
+  it('reveals a private account once followed and tolerates a posts failure', async () => {
+    mockRequest.mockReset().mockImplementation((doc, vars) => {
+      if (doc === MobilePublicProfileDocument) {
+        return Promise.resolve({
+          publicUserProfile: {
+            user_id: 'u9',
+            full_name: 'Riya',
+            is_private: true,
+            is_following: false,
+            can_view_content: false,
+          },
+          me: { user_id: 'me', following_user_ids: [] },
+        });
+      }
+      if (doc === MobileFollowUserDocument) {
+        return Promise.resolve({ followUser: { user_id: 'me', following_user_ids: ['u9'] } });
+      }
+      if (doc === MobilePublicUserPostsDocument) return Promise.reject(new Error('locked'));
+      return route(doc, vars as { user_id: string });
+    });
+    const { result } = renderHook(() => usePublicProfile('u9'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.canView).toBe(false);
+    expect(result.current.posts).toEqual([]);
+    await act(async () => {
+      await result.current.toggleFollow();
+    });
+    expect(result.current.following).toBe(true);
+    expect(result.current.canView).toBe(true);
   });
 
   it('flags the viewer as owner when ids match', async () => {

@@ -5,7 +5,11 @@ import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 
-import { PublicProfileBadges, PublicProfileHeader } from '@/components/public-profile';
+import {
+  PublicProfileBadges,
+  PublicProfileHeader,
+  PublicProfilePosts,
+} from '@/components/public-profile';
 import { StackScreen } from '@/components/StackScreen';
 import { usePublicProfile } from '@/hooks/usePublicProfile';
 import type { RootStackParamList } from '@/navigation/types';
@@ -17,8 +21,19 @@ export function PublicProfileScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'PublicProfile'>>();
   const userId = route.params?.userId ?? '';
-  const { user, isOwner, badges, following, followBusy, toggleFollow, isLoading, error } =
-    usePublicProfile(userId);
+  const {
+    user,
+    isOwner,
+    badges,
+    posts,
+    stories,
+    canView,
+    following,
+    followBusy,
+    toggleFollow,
+    isLoading,
+    error,
+  } = usePublicProfile(userId);
   const { onPrimary, color: ink } = useThemeColors();
 
   return (
@@ -89,6 +104,7 @@ export function PublicProfileScreen() {
             </XStack>
           ) : null}
           <PublicProfileBadges badges={badges} />
+          <PublicProfilePosts posts={posts} stories={stories} canView={canView} />
         </ScrollView>
       )}
     </StackScreen>

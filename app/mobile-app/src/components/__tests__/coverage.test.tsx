@@ -112,6 +112,9 @@ describe('ClubBody', () => {
         pods={pods}
         members={[{ user_id: 'u1', full_name: 'Asha', profile_photo: null }]}
         cardWidth={300}
+        following={false}
+        followBusy={false}
+        onToggleFollow={jest.fn()}
         onOpenPod={onOpenPod}
         onOpenMember={jest.fn()}
       />,
@@ -156,6 +159,9 @@ describe('ClubBody', () => {
         pods={pods}
         members={[]}
         cardWidth={300}
+        following={false}
+        followBusy={false}
+        onToggleFollow={jest.fn()}
         onOpenPod={jest.fn()}
         onOpenMember={jest.fn()}
       />,
@@ -255,6 +261,9 @@ describe('empty / minimal branches', () => {
         members={[]}
         onOpenMember={jest.fn()}
         cardWidth={300}
+        following={false}
+        followBusy={false}
+        onToggleFollow={jest.fn()}
         onOpenPod={jest.fn()}
       />,
     );

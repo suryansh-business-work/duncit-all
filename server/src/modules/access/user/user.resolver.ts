@@ -24,17 +24,26 @@ const ROLE_ASSIGN_ROLES = ['SUPER_ADMIN'];
 // per-user push notifications (read-only — no other user ops are granted).
 const DIRECTORY_ROLES = [...ADMIN_ROLES, 'MARKETING_MANAGER'];
 
-function toPublicProfile(u: any) {
+// Shape a public profile and apply privacy. A PRIVATE profile hides its
+// bio/city/zone (and, via can_view_content, its posts/stories) from anyone who
+// is not the owner or a follower. Name + avatar always stay visible.
+function toPublicProfile(u: any, viewerId: string | null = null, isFollowing = false) {
   if (!u) return null;
+  const isPrivate = (u.profile_visibility ?? 'PUBLIC') === 'PRIVATE';
+  const isOwner = !!viewerId && viewerId === u.user_id;
+  const canView = isOwner || !isPrivate || isFollowing;
   return {
     user_id: u.user_id,
     full_name: u.full_name ?? `${u.first_name ?? ''} ${u.last_name ?? ''}`.trim(),
     first_name: u.first_name ?? null,
     last_name: u.last_name ?? null,
     profile_photo: u.profile_photo ?? null,
-    bio: u.bio ?? null,
-    city: u.city ?? null,
-    zone: u.zone ?? null,
+    bio: canView ? (u.bio ?? null) : null,
+    city: canView ? (u.city ?? null) : null,
+    zone: canView ? (u.zone ?? null) : null,
+    is_private: isPrivate,
+    is_following: isFollowing,
+    can_view_content: canView,
   };
 }
 
@@ -69,15 +78,24 @@ export const userResolvers = {
       requireRole(ctx, ADMIN_ROLES);
       return userService.listContactActions(args.user_id);
     },
-    publicUsersByIds: async (_p: unknown, args: { user_ids: string[] }) => {
+    publicUsersByIds: async (_p: unknown, args: { user_ids: string[] }, ctx: GraphQLContext) => {
       const ids = (args.user_ids ?? []).filter(Boolean);
       if (ids.length === 0) return [];
       const users = await Promise.all(ids.map((id) => userService.getById(id).catch(() => null)));
-      return users.filter(Boolean).map(toPublicProfile);
+      const viewerId = ctx.user?.id ?? null;
+      const following = viewerId
+        ? new Set(await userService.listFollowingUserIds(viewerId))
+        : new Set<string>();
+      return users
+        .filter(Boolean)
+        .map((u) => toPublicProfile(u, viewerId, following.has((u as any).user_id)));
     },
-    publicUserProfile: async (_p: unknown, args: { user_id: string }) => {
+    publicUserProfile: async (_p: unknown, args: { user_id: string }, ctx: GraphQLContext) => {
       const u = await userService.getById(args.user_id).catch(() => null);
-      return u ? toPublicProfile(u) : null;
+      if (!u) return null;
+      const viewerId = ctx.user?.id ?? null;
+      const isFollowing = viewerId ? await userService.isFollowing(viewerId, u.user_id) : false;
+      return toPublicProfile(u, viewerId, isFollowing);
     },
   },
   Mutation: {
@@ -113,6 +131,19 @@ export const userResolvers = {
       }
       const data = await validate(updateMyProfileSchema, args.input);
       return userService.updateMyProfile(ctx.user.id, data);
+    },
+    updateMyProfileVisibility: async (
+      _p: unknown,
+      args: { visibility: 'PUBLIC' | 'PRIVATE' },
+      ctx: GraphQLContext
+    ) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.updateMyProfileVisibility(ctx.user.id, args.visibility);
     },
     requestEmailVerificationOtp: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
       if (!ctx.user) {

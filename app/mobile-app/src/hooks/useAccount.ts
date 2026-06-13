@@ -6,7 +6,9 @@ import {
   MobileAccountDocument,
   MobileAccountHealthDocument,
   MobileUpdateProfileDocument,
+  MobileUpdateProfileVisibilityDocument,
 } from '@/graphql/account';
+import { ProfileVisibility } from '@/generated/graphql/graphql';
 import { UploadImageDocument } from '@/graphql/status';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useMeStore } from '@/stores/me.store';
@@ -60,6 +62,18 @@ export function useAccount() {
     [refresh],
   );
 
+  const updateVisibility = useCallback(
+    async (isPrivate: boolean) => {
+      await graphqlRequest(
+        MobileUpdateProfileVisibilityDocument,
+        { visibility: isPrivate ? ProfileVisibility.Private : ProfileVisibility.Public },
+        { auth: true },
+      );
+      await refresh();
+    },
+    [refresh],
+  );
+
   const changePhoto = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) throw new Error('Photo access is needed to update your photo.');
@@ -90,5 +104,14 @@ export function useAccount() {
     }
   }, [updateProfile]);
 
-  return { me, health, isLoading, error, savingPhoto, updateProfile, changePhoto };
+  return {
+    me,
+    health,
+    isLoading,
+    error,
+    savingPhoto,
+    updateProfile,
+    updateVisibility,
+    changePhoto,
+  };
 }

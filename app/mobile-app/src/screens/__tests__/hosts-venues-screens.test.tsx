@@ -100,6 +100,9 @@ describe('PublicProfileScreen', () => {
       user: { user_id: 'me', full_name: 'Me', city: 'Pune', zone: 'K' },
       isOwner: true,
       badges: [],
+      posts: [],
+      stories: [],
+      canView: true,
       isLoading: false,
     });
     rerender(<PublicProfileScreen />);
@@ -113,6 +116,9 @@ describe('PublicProfileScreen', () => {
       user: { user_id: 'h1', full_name: 'Riya', city: 'Pune', zone: 'K' },
       isOwner: false,
       badges: [],
+      posts: [],
+      stories: [],
+      canView: true,
       following: false,
       followBusy: false,
       toggleFollow: toggle,
@@ -128,6 +134,9 @@ describe('PublicProfileScreen', () => {
       user: { user_id: 'h1', full_name: 'Riya', city: 'Pune', zone: 'K' },
       isOwner: false,
       badges: [],
+      posts: [],
+      stories: [],
+      canView: true,
       following: true,
       followBusy: true,
       toggleFollow: busyToggle,
@@ -145,11 +154,15 @@ describe('PublicProfileScreen', () => {
       user: { user_id: 'h1', full_name: 'Riya', city: 'Pune', zone: 'K' },
       isOwner: false,
       badges: [],
+      posts: [],
+      stories: [],
+      canView: false,
       isLoading: false,
     });
     renderWithProviders(<PublicProfileScreen />);
     expect(screen.getByText('Riya')).toBeOnTheScreen();
     expect(screen.queryByTestId('public-profile-edit')).toBeNull();
+    expect(screen.getByTestId('public-profile-private')).toBeOnTheScreen();
   });
 });
 

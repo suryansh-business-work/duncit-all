@@ -12,6 +12,7 @@ import FollowButton from '../../components/FollowButton';
 import PublicProfileHeader from './PublicProfileHeader';
 import PublicProfileOwnerActions from './PublicProfileOwnerActions';
 import PublicProfileBadges from './PublicProfileBadges';
+import PublicProfilePosts from './PublicProfilePosts';
 
 const PUBLIC_PROFILE = gql`
   query PublicProfile($user_id: ID!) {
@@ -24,6 +25,9 @@ const PUBLIC_PROFILE = gql`
       bio
       city
       zone
+      is_private
+      is_following
+      can_view_content
     }
     me {
       user_id
@@ -110,6 +114,11 @@ export default function PublicProfilePage() {
       )}
       {isOwner && <PublicProfileOwnerActions />}
       <PublicProfileBadges userId={u.user_id} />
+      <PublicProfilePosts
+        userId={u.user_id}
+        canView={isOwner || u.can_view_content !== false}
+        meId={data?.me?.user_id ?? ''}
+      />
     </Stack>
   );
 }

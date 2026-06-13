@@ -6,6 +6,11 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useDetails', () => ({ useClubDetails: jest.fn() }));
 
+const mockClubToggle = jest.fn();
+jest.mock('@/hooks/useFollow', () => ({
+  useClubFollow: () => ({ following: false, busy: false, toggle: mockClubToggle }),
+}));
+
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
@@ -62,11 +67,14 @@ describe('ClubDetailsScreen', () => {
       club,
       pods: [pod],
       members: [{ user_id: 'm1', full_name: 'Asha', profile_photo: null }],
+      followingInitially: false,
       isLoading: false,
     });
     renderWithProviders(<ClubDetailsScreen />);
     expect(screen.getByText('Runners')).toBeOnTheScreen();
     expect(screen.getByText('Morning Run')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('club-follow'));
+    expect(mockClubToggle).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Morning Run' });
     // Members rail → full profile (B4-12).

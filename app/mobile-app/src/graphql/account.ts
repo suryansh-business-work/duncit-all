@@ -46,7 +46,18 @@ export const MobileAccountDocument = gql(`
       dob
       roles
       status
+      profile_visibility
       created_at
+    }
+  }
+`);
+
+/** Toggle the signed-in user's profile privacy (public/private). */
+export const MobileUpdateProfileVisibilityDocument = gql(`
+  mutation MobileUpdateProfileVisibility($visibility: ProfileVisibility!) {
+    updateMyProfileVisibility(visibility: $visibility) {
+      user_id
+      profile_visibility
     }
   }
 `);

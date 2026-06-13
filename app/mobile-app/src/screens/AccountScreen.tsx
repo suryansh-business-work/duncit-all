@@ -9,11 +9,13 @@ import {
   AccountProfileHeader,
   EditAccountDialog,
   HostsVenuesCard,
+  PrivacyToggleCard,
 } from '@/components/account';
 import { StackScreen } from '@/components/StackScreen';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useAccount } from '@/hooks/useAccount';
 import { useLogout } from '@/hooks/useLogout';
+import { ProfileVisibility } from '@/generated/graphql/graphql';
 import type { RootStackParamList } from '@/navigation/types';
 import { formatDate } from '@/utils/date-format';
 
@@ -21,7 +23,16 @@ import { formatDate } from '@/utils/date-format';
  * edit/logout, contact + location info, account health, and host/venue shortcuts. */
 export function AccountScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { me, health, isLoading, error, savingPhoto, updateProfile, changePhoto } = useAccount();
+  const {
+    me,
+    health,
+    isLoading,
+    error,
+    savingPhoto,
+    updateProfile,
+    updateVisibility,
+    changePhoto,
+  } = useAccount();
   const logout = useLogout();
   const [editOpen, setEditOpen] = useState(false);
 
@@ -77,6 +88,11 @@ export function AccountScreen() {
               />
             </YStack>
           </YStack>
+
+          <PrivacyToggleCard
+            isPrivate={me.profile_visibility === ProfileVisibility.Private}
+            onChange={updateVisibility}
+          />
 
           {health ? (
             <AccountHealthCard

@@ -382,6 +382,7 @@ async function toPublic(u: any) {
       (wa.verified_at ?? legacy.whatsapp_verified_at)?.toISOString?.() ?? null,
     is_first_time_user: !!(meta.is_first_time_user ?? legacy.is_first_time_user),
     status: meta.status ?? legacy.status ?? 'ACTIVE',
+    profile_visibility: meta.profile_visibility ?? 'PUBLIC',
     host_share_pct: u.finance?.host_share_pct ?? 0,
     host_commission_pct: u.finance?.host_commission_pct ?? 0,
     created_at:
@@ -1052,11 +1053,13 @@ export const userService = {
     }
     const followerOid = new Types.ObjectId(user_id);
     const followingOid = new Types.ObjectId(targetUserId);
+    let created = false;
     try {
       await UserRelationshipModel.create({
         follower_id: followerOid,
         following_id: followingOid,
       });
+      created = true;
       await Promise.all([
         UserModel.updateOne({ _id: followerOid }, { $inc: { 'counters.following_count': 1 } }),
         UserModel.updateOne({ _id: followingOid }, { $inc: { 'counters.followers_count': 1 } }),
@@ -1065,7 +1068,31 @@ export const userService = {
       if (e?.code !== 11000) throw e;
     }
     const updated = await UserModel.findById(user_id);
-    return toPublic(updated);
+    const follower = await toPublic(updated);
+    if (created) await this.notifyNewFollower(targetUserId, follower);
+    return follower;
+  },
+
+  // Best-effort "started following you" notification to the followed user.
+  // A failure here must never break the follow itself.
+  async notifyNewFollower(targetUserId: string, follower: Awaited<ReturnType<typeof toPublic>>) {
+    try {
+      const { notificationService } = await import(
+        '@modules/engagement/notification/notification.service'
+      );
+      const name = follower?.full_name?.trim() || 'Someone';
+      await notificationService.create({
+        title: 'New follower',
+        body: `${name} started following you`,
+        image_url: follower?.profile_photo ?? null,
+        link_url: follower?.user_id ? `/u/${follower.user_id}` : null,
+        scope: 'USER',
+        target_user_ids: [targetUserId],
+      });
+    } catch (err) {
+
+      console.error('notifyNewFollower failed', err);
+    }
   },
 
   async unfollowUser(user_id: string, targetUserId: string) {
@@ -1086,6 +1113,50 @@ export const userService = {
     }
     const updated = await UserModel.findById(user_id);
     return toPublic(updated);
+  },
+
+  async updateMyProfileVisibility(user_id: string, visibility: 'PUBLIC' | 'PRIVATE') {
+    if (visibility !== 'PUBLIC' && visibility !== 'PRIVATE') {
+      throw new GraphQLError('Invalid visibility', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const updated = await UserModel.findByIdAndUpdate(
+      user_id,
+      { $set: { 'metadata.profile_visibility': visibility } },
+      { new: true }
+    );
+    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPublic(updated);
+  },
+
+  // True when `viewerId` already follows `targetId`.
+  async isFollowing(viewerId: string, targetId: string) {
+    if (!Types.ObjectId.isValid(viewerId) || !Types.ObjectId.isValid(targetId)) return false;
+    const edge = await UserRelationshipModel.exists({
+      follower_id: new Types.ObjectId(viewerId),
+      following_id: new Types.ObjectId(targetId),
+    });
+    return !!edge;
+  },
+
+  // The ids of users `viewerId` follows (lean, for batch follow checks).
+  async listFollowingUserIds(viewerId: string) {
+    if (!Types.ObjectId.isValid(viewerId)) return [];
+    const edges = await UserRelationshipModel.find({ follower_id: new Types.ObjectId(viewerId) })
+      .select('following_id')
+      .lean();
+    return edges.map((e: any) => String(e.following_id));
+  },
+
+  // Can `viewerId` see `ownerId`'s posts/stories/private details? Owner always
+  // can; PUBLIC profiles are open; PRIVATE profiles need a follow edge.
+  async canViewContent(ownerId: string, viewerId: string | null) {
+    if (!Types.ObjectId.isValid(ownerId)) return false;
+    if (viewerId && viewerId === ownerId) return true;
+    const owner = await UserModel.findById(ownerId).select('metadata.profile_visibility');
+    if (!owner) return false;
+    const visibility = (owner as any).metadata?.profile_visibility ?? 'PUBLIC';
+    if (visibility === 'PUBLIC') return true;
+    return viewerId ? this.isFollowing(viewerId, ownerId) : false;
   },
 
   async updateMyPetProfile(user_id: string, input: PetProfileDTO) {

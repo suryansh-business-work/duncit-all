@@ -101,6 +101,9 @@ const metadataSchema = new Schema(
     // cache exists so JWTs and hot reads do not have to join.
     role_keys: { type: [String], default: ['USER'] },
     assigned_zones: { type: [String], default: [] },
+    // Profile privacy (Instagram-style). PRIVATE hides posts/stories/details
+    // from non-followers; name + avatar always remain visible.
+    profile_visibility: { type: String, enum: ['PUBLIC', 'PRIVATE'], default: 'PUBLIC' },
   },
   { _id: false }
 );

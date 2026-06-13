@@ -7,6 +7,7 @@ export const PodDetailsDocument = gql(`
     me {
       user_id
       saved_pod_ids
+      following_pod_ids
     }
     pod(pod_doc_id: $podId) {
       id
@@ -160,6 +161,10 @@ export const DeletePodCommentDocument = gql(`
 /** Club + its active pods for the club-details screen. */
 export const ClubDetailsDocument = gql(`
   query MobileClubDetails($clubId: ID!) {
+    me {
+      user_id
+      following_club_ids
+    }
     club(club_doc_id: $clubId) {
       id
       club_id

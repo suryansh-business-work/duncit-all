@@ -5,6 +5,7 @@ import {
   MobileAccountDocument,
   MobileAccountHealthDocument,
   MobileUpdateProfileDocument,
+  MobileUpdateProfileVisibilityDocument,
 } from '@/graphql/account';
 import { UploadImageDocument } from '@/graphql/status';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -127,6 +128,28 @@ describe('useAccount', () => {
     await act(async () => {
       await expect(result.current.changePhoto()).rejects.toThrow('Photo access');
     });
+  });
+
+  it('updateVisibility toggles privacy and refreshes', async () => {
+    const { result } = renderHook(() => useAccount());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.updateVisibility(true);
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileUpdateProfileVisibilityDocument,
+      { visibility: 'PRIVATE' },
+      { auth: true },
+    );
+    await act(async () => {
+      await result.current.updateVisibility(false);
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileUpdateProfileVisibilityDocument,
+      { visibility: 'PUBLIC' },
+      { auth: true },
+    );
+    expect(mockRefetchMe).toHaveBeenCalled();
   });
 
   it('changePhoto is a no-op when cancelled', async () => {

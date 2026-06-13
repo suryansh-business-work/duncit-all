@@ -10,6 +10,7 @@ import { ClubBody } from '@/components/details/ClubBody';
 import { DetailHero } from '@/components/details/DetailHero';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useClubDetails } from '@/hooks/useDetails';
+import { useClubFollow } from '@/hooks/useFollow';
 import type { RootStackParamList } from '@/navigation/types';
 
 /** Club details — opened from club cards/headers. Hero + summary + moments +
@@ -20,7 +21,12 @@ export function ClubDetailsScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'ClubDetails'>>();
   const { width } = useWindowDimensions();
   const { clubId } = route.params;
-  const { club, pods, members, isLoading } = useClubDetails(clubId);
+  const { club, pods, members, isLoading, followingInitially } = useClubDetails(clubId);
+  const {
+    following,
+    busy: followBusy,
+    toggle: toggleFollow,
+  } = useClubFollow(clubId, followingInitially);
   const cardWidth = Math.min(width - 32, 520);
 
   return (
@@ -48,6 +54,9 @@ export function ClubDetailsScreen() {
               pods={pods}
               members={members}
               cardWidth={cardWidth}
+              following={following}
+              followBusy={followBusy}
+              onToggleFollow={() => void toggleFollow()}
               onOpenPod={(pod) =>
                 navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title })
               }

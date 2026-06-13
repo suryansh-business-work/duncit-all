@@ -12,6 +12,7 @@ import CheckoutSuccess from './CheckoutSuccess';
 import OrderSummaryCard from './OrderSummaryCard';
 import PaymentDetailsCard from './PaymentDetailsCard';
 import {
+  AVAILABLE_COUPONS,
   CHECKOUT_ME,
   CHECKOUT_POD,
   CREATE_RAZORPAY_ORDER,
@@ -65,6 +66,10 @@ export default function CheckoutPage() {
   const [doRazorpayOrder] = useMutation(CREATE_RAZORPAY_ORDER);
   const [doVerifyRazorpay] = useMutation(VERIFY_RAZORPAY_PAYMENT);
   const [runPreviewCoupon] = useLazyQuery(PREVIEW_COUPON, { fetchPolicy: 'no-cache' });
+  const { data: couponsData } = useQuery(AVAILABLE_COUPONS, {
+    variables: { pod_id: checkoutPodId || null },
+    fetchPolicy: 'cache-and-network',
+  });
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<any>(null);
@@ -73,8 +78,8 @@ export default function CheckoutPage() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  const applyCoupon = async () => {
-    const code = couponCode.trim();
+  const applyCoupon = async (codeArg?: string) => {
+    const code = (codeArg ?? couponCode).trim();
     if (!code) return;
     setApplyingCoupon(true);
     setCouponError(null);
@@ -237,6 +242,7 @@ export default function CheckoutPage() {
           setCouponCode={setCouponCode}
           couponError={couponError}
           applyingCoupon={applyingCoupon}
+          availableCoupons={couponsData?.availableCouponsForPod ?? []}
           onApplyCoupon={applyCoupon}
           onRemoveCoupon={removeCoupon}
         />

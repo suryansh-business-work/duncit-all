@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -34,10 +35,21 @@ const stepperBox = {
 /** Editable list of Duncit product requests (product + quantity) for a pod. */
 export function ProductRequestsField({ value, onChange, products, error }: Readonly<Props>) {
   const { color, primary, danger } = useThemeColors();
+  // Stable per-row keys (the rows have no id) so edits don't remount inputs and
+  // a middle-removal can't shuffle the wrong row — never the array index (S6479).
+  const keys = useRef<string[]>([]);
+  const seq = useRef(0);
+  while (keys.current.length < value.length) {
+    seq.current += 1;
+    keys.current.push(`product-${seq.current}`);
+  }
   const update = (idx: number, patch: Partial<PodProductRequest>) =>
     onChange(value.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
   const add = () => onChange([...value, { product_id: '', quantity: 1 }]);
-  const remove = (idx: number) => onChange(value.filter((_, i) => i !== idx));
+  const remove = (idx: number) => {
+    keys.current.splice(idx, 1);
+    onChange(value.filter((_, i) => i !== idx));
+  };
   const options = products.map((product) => ({
     value: product.id,
     label: `${product.product_name} (₹${product.unit_cost}, ${product.available_count} left)`,
@@ -47,7 +59,7 @@ export function ProductRequestsField({ value, onChange, products, error }: Reado
     <YStack gap={12}>
       {value.map((row, idx) => (
         <YStack
-          key={idx}
+          key={keys.current[idx]}
           gap={8}
           padding={10}
           borderRadius={10}

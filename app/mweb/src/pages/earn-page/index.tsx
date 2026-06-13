@@ -66,7 +66,8 @@ const meetingNotice = (meeting: EarnMeeting) => {
   const when = at
     ? new Date(at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
     : '';
-  return `You already have an onboarding meeting scheduled for this${when ? ` on ${when}` : ''}. Our team will meet you then — this option unlocks once the meeting is done.`;
+  const whenSuffix = when ? ` on ${when}` : '';
+  return `You already have an onboarding meeting scheduled for this${whenSuffix}. Our team will meet you then — this option unlocks once the meeting is done.`;
 };
 
 /** "Earn with Duncit" — three ways to start earning. A box is disabled when the

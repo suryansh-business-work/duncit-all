@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { Avatar, Box, Chip, Dialog, IconButton, Stack, Switch, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import CloseIcon from '@mui/icons-material/Close';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
+import ConfirmDialog from '../ConfirmDialog';
 import { isPushSupported, unsubscribePush } from '../../pwa';
 import { formatRelative } from './queries';
 
@@ -31,6 +33,14 @@ export default function NotificationsScreen({
 }: Readonly<NotificationsScreenProps>) {
   const pushSupported = isPushSupported() && perm !== 'unsupported';
   const pushOn = perm === 'granted';
+  // Pending allow/deny choice — confirmed before we touch the push subscription.
+  const [pendingToggle, setPendingToggle] = useState<boolean | null>(null);
+
+  const applyToggle = () => {
+    if (pendingToggle) onEnablePush();
+    else unsubscribePush().catch(() => undefined);
+    setPendingToggle(null);
+  };
   // Derive unread from the actual items so the header never disagrees with the
   // list / badge (the server count can lag behind the rendered notifications).
   const liveUnread = notifs.filter((n) => !n.read_at).length || unreadCount;
@@ -94,10 +104,7 @@ export default function NotificationsScreen({
                 <Switch
                   checked={pushOn}
                   disabled={pushBusy}
-                  onChange={(_e, next) => {
-                    if (next) onEnablePush();
-                    else unsubscribePush().catch(() => undefined);
-                  }}
+                  onChange={(_e, next) => setPendingToggle(next)}
                   inputProps={{ 'aria-label': 'Allow notifications' }}
                 />
               </Stack>
@@ -194,6 +201,20 @@ export default function NotificationsScreen({
           })}
         </Stack>
       </Stack>
+      <ConfirmDialog
+        open={pendingToggle !== null}
+        title={pendingToggle ? 'Enable notifications?' : 'Disable notifications?'}
+        message={
+          pendingToggle
+            ? 'Get pod, club, chat and account updates on this device.'
+            : "You won't receive push notifications until you turn them back on."
+        }
+        confirmLabel={pendingToggle ? 'Enable' : 'Disable'}
+        destructive={!pendingToggle}
+        busy={pushBusy}
+        onConfirm={applyToggle}
+        onClose={() => setPendingToggle(null)}
+      />
     </Dialog>
   );
 }

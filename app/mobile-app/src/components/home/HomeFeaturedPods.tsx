@@ -21,7 +21,7 @@ export function HomeFeaturedPods({ pods, onOpenPod }: Readonly<HomeFeaturedPodsP
     >
       {pods.map((pod, index) => (
         <Reveal key={pod.id} index={index} scale>
-          <PodCard pod={pod} width={300} onPress={() => onOpenPod(pod)} />
+          <PodCard pod={pod} width={300} showPlace={false} onPress={() => onOpenPod(pod)} />
         </Reveal>
       ))}
     </ScrollView>

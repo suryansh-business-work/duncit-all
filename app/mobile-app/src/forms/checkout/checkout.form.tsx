@@ -6,12 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import {
-  CHECKOUT_PAYMENT_METHODS,
-  checkoutDefaults,
-  checkoutSchema,
-  type CheckoutFormValues,
-} from './checkout.types';
+import { checkoutDefaults, checkoutSchema, type CheckoutFormValues } from './checkout.types';
 
 export interface CheckoutFormProps {
   initialValues?: Partial<CheckoutFormValues>;
@@ -35,7 +30,6 @@ export function CheckoutForm({
     resolver: zodResolver(checkoutSchema),
     mode: 'onBlur',
   });
-  const method = useController({ control, name: 'method' });
   const simulate = useController({ control, name: 'simulate_failure' });
 
   return (
@@ -72,38 +66,6 @@ export function CheckoutForm({
         multiline
         numberOfLines={2}
       />
-
-      <YStack gap={6}>
-        <Text fontSize={14} fontWeight="500" color="$color">
-          Payment method
-        </Text>
-        <XStack flexWrap="wrap" gap={8}>
-          {CHECKOUT_PAYMENT_METHODS.map((m) => {
-            const on = method.field.value === m.value;
-            return (
-              <XStack
-                key={m.value}
-                testID={`pay-method-${m.value}`}
-                role="button"
-                aria-label={m.label}
-                aria-pressed={on}
-                onPress={() => method.field.onChange(m.value)}
-                paddingHorizontal={12}
-                paddingVertical={8}
-                borderRadius={999}
-                backgroundColor={on ? '$primary' : '$surface'}
-                borderWidth={1}
-                borderColor={on ? '$primary' : '$borderColor'}
-                pressStyle={{ opacity: 0.85 }}
-              >
-                <Text fontSize={12.5} fontWeight="800" color={on ? '$onPrimary' : '$color'}>
-                  {m.label}
-                </Text>
-              </XStack>
-            );
-          })}
-        </XStack>
-      </YStack>
 
       {dummyMode ? (
         <XStack

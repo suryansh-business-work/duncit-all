@@ -83,12 +83,12 @@ export function PortalBranding(): React.ReactElement | null {
   if (!splashOpen || !splashUrl) return null;
 
   return (
-    <div role="status" aria-label={`Loading ${branding?.app_name || 'Duncit'}`} style={splashStyle}>
+    <output aria-label={`Loading ${branding?.app_name || 'Duncit'}`} style={splashStyle}>
       {isVideo ? (
         <video src={splashUrl} autoPlay muted loop playsInline style={splashMediaStyle} />
       ) : (
         <img src={splashUrl} alt={branding?.app_name || 'Duncit'} style={splashMediaStyle} />
       )}
-    </div>
+    </output>
   );
 }

@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { Modal, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useNotificationPrefsStore } from '@/stores/notification-prefs.store';
@@ -32,6 +34,8 @@ export function NotificationsScreen({
   const { color, primary } = useThemeColors();
   const notifEnabled = useNotificationPrefsStore((s) => s.enabled);
   const setNotifEnabled = useNotificationPrefsStore((s) => s.setEnabled);
+  // Confirm before flipping the master notification switch (B2-#8).
+  const [pendingToggle, setPendingToggle] = useState<boolean | null>(null);
   // Derive unread from the loaded items so the header can't say "All caught up"
   // while unread rows are visible; fall back to the count when items lag (BUG-5).
   const liveUnread = notifs.filter((item) => !item.read_at).length || unreadCount;
@@ -139,7 +143,7 @@ export function NotificationsScreen({
                 testID="notifications-allow-switch"
                 aria-label="Allow notifications"
                 value={notifEnabled}
-                onValueChange={setNotifEnabled}
+                onValueChange={(next) => setPendingToggle(next)}
                 trackColor={{ true: primary }}
               />
             </XStack>
@@ -167,6 +171,23 @@ export function NotificationsScreen({
             </ScrollView>
           </SafeAreaView>
         </YStack>
+        <ConfirmDialog
+          testID="notif-toggle-confirm"
+          open={pendingToggle !== null}
+          title={pendingToggle ? 'Enable notifications?' : 'Disable notifications?'}
+          message={
+            pendingToggle
+              ? 'Get pod, club, chat and account updates on this device.'
+              : "You won't receive notifications until you turn them back on."
+          }
+          confirmLabel={pendingToggle ? 'Enable' : 'Disable'}
+          destructive={!pendingToggle}
+          onConfirm={() => {
+            setNotifEnabled(pendingToggle === true);
+            setPendingToggle(null);
+          }}
+          onCancel={() => setPendingToggle(null)}
+        />
       </ModalThemeScope>
     </Modal>
   );

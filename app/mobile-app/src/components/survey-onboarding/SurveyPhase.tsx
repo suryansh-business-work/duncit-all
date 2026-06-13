@@ -48,6 +48,8 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
   };
 
   const isLast = step >= sections.length - 1;
+  const idlePrimaryLabel = isLast ? 'Continue' : 'Next';
+  const primaryLabel = busy ? 'Saving…' : idlePrimaryLabel;
   const onPrimary = () => {
     if (!validate(step)) return;
     if (isLast) onSubmit();
@@ -152,7 +154,7 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
           color="white"
           fontWeight="800"
         >
-          {busy ? 'Saving…' : isLast ? 'Continue' : 'Next'}
+          {primaryLabel}
         </Button>
       </XStack>
     </ScrollView>

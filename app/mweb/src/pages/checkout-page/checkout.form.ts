@@ -1,5 +1,4 @@
 export {
-  CHECKOUT_PAYMENT_METHODS,
   checkoutFormSchema,
   checkoutInitialValues,
   toCheckoutContact,

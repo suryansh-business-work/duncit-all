@@ -1,3 +1,4 @@
+import { useRef } from 'react';
 import { Box, Button, IconButton, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
@@ -13,10 +14,21 @@ const blank: PodPlaceCharge = { label: '', amount: 0, note: '' };
 
 /** Optional venue-side charges (entry, table, etc.) shown separately to users. */
 export default function PlaceChargesField({ value, onChange, helperText }: Readonly<Props>) {
+  // Stable per-row keys (the rows have no id) so edits don't remount inputs and
+  // a middle-removal can't shuffle the wrong row — never the array index (S6479).
+  const keys = useRef<string[]>([]);
+  const seq = useRef(0);
+  while (keys.current.length < value.length) {
+    seq.current += 1;
+    keys.current.push(`charge-${seq.current}`);
+  }
   const update = (idx: number, patch: Partial<PodPlaceCharge>) =>
     onChange(value.map((row, i) => (i === idx ? { ...row, ...patch } : row)));
   const add = () => onChange([...value, { ...blank }]);
-  const remove = (idx: number) => onChange(value.filter((_, i) => i !== idx));
+  const remove = (idx: number) => {
+    keys.current.splice(idx, 1);
+    onChange(value.filter((_, i) => i !== idx));
+  };
 
   return (
     <Box>
@@ -31,7 +43,7 @@ export default function PlaceChargesField({ value, onChange, helperText }: Reado
       <Stack spacing={1.5}>
         {value.map((row, idx) => (
           <Stack
-            key={idx}
+            key={keys.current[idx]}
             direction={{ xs: 'column', sm: 'row' }}
             spacing={1}
             alignItems={{ xs: 'stretch', sm: 'center' }}

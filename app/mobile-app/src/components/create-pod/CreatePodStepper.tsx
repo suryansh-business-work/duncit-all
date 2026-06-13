@@ -69,6 +69,7 @@ export function CreatePodStepper({
   const draftIdRef = useRef(initialDraftId);
   const dupTitleRef = useRef(false);
   const isLast = step === STEP_TITLES.length - 1;
+  const submitLabel = busy ? 'Creating…' : 'Create Pod';
 
   // A duplicate-title error is shown inline on the title field; clear it as soon
   // as the host edits the title so the stale message can't linger (DIFF-7).
@@ -198,7 +199,7 @@ export function CreatePodStepper({
         <YStack flex={2}>
           <PrimaryButton
             testID="create-pod-submit"
-            label={isLast ? (busy ? 'Creating…' : 'Create Pod') : 'Next'}
+            label={isLast ? submitLabel : 'Next'}
             loading={busy}
             onPress={() => (isLast ? void submit() : void next())}
           />

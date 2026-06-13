@@ -64,16 +64,30 @@ describe('NotificationsScreen', () => {
     onMarkAll: jest.fn(),
   };
 
-  it('toggles the allow-notifications switch (B4-13)', () => {
+  it('confirms before disabling notifications, and cancels without changing (B2-#8)', () => {
     const { useNotificationPrefsStore } = jest.requireActual<
       typeof import('@/stores/notification-prefs.store')
     >('@/stores/notification-prefs.store');
     useNotificationPrefsStore.setState({ enabled: true });
     renderWithProviders(<NotificationsScreen {...base} notifs={[]} unreadCount={0} />);
     const toggle = screen.getByTestId('notifications-allow-switch');
+
+    // Flipping off opens a confirmation; cancelling keeps it enabled.
     fireEvent(toggle, 'valueChange', false);
+    expect(screen.getByText('Disable notifications?')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('notif-toggle-confirm-cancel'));
+    expect(useNotificationPrefsStore.getState().enabled).toBe(true);
+
+    // Flipping off then confirming disables it.
+    fireEvent(toggle, 'valueChange', false);
+    fireEvent.press(screen.getByTestId('notif-toggle-confirm-confirm'));
     expect(useNotificationPrefsStore.getState().enabled).toBe(false);
-    useNotificationPrefsStore.setState({ enabled: true });
+
+    // Flipping on then confirming re-enables it.
+    fireEvent(toggle, 'valueChange', true);
+    expect(screen.getByText('Enable notifications?')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('notif-toggle-confirm-confirm'));
+    expect(useNotificationPrefsStore.getState().enabled).toBe(true);
   });
 
   it('shows the empty state and "All caught up"', () => {

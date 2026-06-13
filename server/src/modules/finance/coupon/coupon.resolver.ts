@@ -35,6 +35,8 @@ export const couponResolvers = {
       requireRole(ctx, ADMIN_RW);
       return couponService.listForPod(args.pod_id);
     },
+    availableCouponsForPod: (_p: unknown, args: { pod_id?: string }) =>
+      couponService.listAvailableForPod(args.pod_id ?? null),
     previewCoupon: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
       const input = await validate(couponPreviewSchema, args.input);

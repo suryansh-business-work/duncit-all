@@ -1,7 +1,9 @@
-import { Alert, Button, Chip, Stack, TextField, Typography } from '@mui/material';
+import { useState } from 'react';
+import { Alert, Button, Chip, Link, Stack, TextField, Typography } from '@mui/material';
 import LocalOfferIcon from '@mui/icons-material/LocalOffer';
-import type { CouponPreview } from './queries';
+import type { AvailableCoupon, CouponPreview } from './queries';
 import { formatMoney } from './checkoutMath';
+import CouponsDialog from './CouponsDialog';
 
 interface Props {
   code: string;
@@ -10,7 +12,8 @@ interface Props {
   error: string | null;
   applying: boolean;
   currency: string;
-  onApply: () => void;
+  available: AvailableCoupon[];
+  onApply: (code?: string) => void;
   onRemove: () => void;
 }
 
@@ -23,9 +26,12 @@ export default function CouponField({
   error,
   applying,
   currency,
+  available,
   onApply,
   onRemove,
 }: Readonly<Props>) {
+  const [pickerOpen, setPickerOpen] = useState(false);
+
   if (applied?.ok) {
     return (
       <Stack
@@ -62,11 +68,33 @@ export default function CouponField({
           onChange={(e) => setCode(e.target.value.toUpperCase())}
           inputProps={{ style: { textTransform: 'uppercase' }, 'aria-label': 'Coupon code' }}
         />
-        <Button variant="outlined" onClick={onApply} disabled={applying || !code.trim()}>
+        <Button variant="outlined" onClick={() => onApply()} disabled={applying || !code.trim()}>
           {applying ? 'Applying…' : 'Apply'}
         </Button>
       </Stack>
+      {available.length > 0 && (
+        <Link
+          component="button"
+          type="button"
+          underline="hover"
+          onClick={() => setPickerOpen(true)}
+          sx={{ alignSelf: 'flex-start', fontWeight: 800, fontSize: 13 }}
+        >
+          View {available.length} available coupon{available.length === 1 ? '' : 's'}
+        </Link>
+      )}
       {error && <Alert severity="warning">{error}</Alert>}
+      <CouponsDialog
+        open={pickerOpen}
+        coupons={available}
+        currency={currency}
+        onClose={() => setPickerOpen(false)}
+        onPick={(picked) => {
+          setPickerOpen(false);
+          setCode(picked);
+          onApply(picked);
+        }}
+      />
     </Stack>
   );
 }

@@ -51,7 +51,6 @@ describe('Checkout form schema', () => {
       phone_extension: '+91',
       phone_number: '9876543210',
       billing_address: '221B Baker Street, London NW1',
-      method: 'DUMMY_UPI',
       simulate_failure: false,
     } as const;
     const parsed = await checkoutFormSchema.validate(values, { abortEarly: false });
@@ -62,23 +61,5 @@ describe('Checkout form schema', () => {
     expect(payload.contact_phone_number).to.equal('9876543210');
     expect(payload.billing_address).to.equal('221B Baker Street, London NW1');
     expect(payload.simulate_failure).to.equal(false);
-  });
-
-  it('rejects payment methods outside the allowed enum', async () => {
-    const result = await checkoutFormSchema
-      .validate(
-        {
-          email: 'jane@example.com',
-          phone_extension: '+91',
-          phone_number: '9876543210',
-          billing_address: '221B Baker Street, London NW1',
-          method: 'BITCOIN' as any,
-          simulate_failure: false,
-        },
-        { abortEarly: false },
-      )
-      .catch((error) => error);
-    expect(result.name).to.equal('ValidationError');
-    expect(result.errors.join(' ')).to.match(/payment method/i);
   });
 });

@@ -11,13 +11,15 @@ interface PodCardProps {
   pod: HomePod;
   width?: number;
   onPress?: () => void;
+  /** Show the place/address line. Off in the home feed (addresses are hidden there). */
+  showPlace?: boolean;
 }
 
 /** Image-background pod tile — RN port of mWeb's featured/club pod card. Shows the
  * date, title, spots, price and place over a darkening gradient. */
-export function PodCard({ pod, width = 300, onPress }: Readonly<PodCardProps>) {
+export function PodCard({ pod, width = 300, onPress, showPlace = true }: Readonly<PodCardProps>) {
   const image = podImageUrl(pod);
-  const place = podPlaceLabel(pod);
+  const place = showPlace ? podPlaceLabel(pod) : '';
 
   return (
     <PressScale

@@ -35,10 +35,14 @@ export function PrimaryButton({
         justifyContent="center"
         width="100%"
         height={52}
-        borderRadius={12}
+        borderRadius={999}
         paddingHorizontal={20}
         backgroundColor="$primary"
         opacity={isDisabled ? 0.5 : 1}
+        shadowColor="$primary"
+        shadowOpacity={isDisabled ? 0 : 0.35}
+        shadowRadius={14}
+        shadowOffset={{ width: 0, height: 8 }}
       >
         {loading ? (
           <Spinner color="$onPrimary" testID={`${testID ?? 'primary-button'}-spinner`} />

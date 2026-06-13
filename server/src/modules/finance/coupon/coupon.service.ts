@@ -138,6 +138,25 @@ export const couponService = {
     return docs.map(toPub);
   },
 
+  // Active + currently-valid coupons a shopper can apply: every GLOBAL coupon
+  // plus the ones scoped to this pod. Public (checkout "available coupons").
+  async listAvailableForPod(podId?: string | null) {
+    const now = new Date();
+    const scopes: any[] = [{ scope: 'GLOBAL' }];
+    if (podId && Types.ObjectId.isValid(podId)) {
+      scopes.push({ scope: 'POD', pod_id: new Types.ObjectId(podId) });
+    }
+    const docs = await CouponModel.find({
+      is_active: true,
+      $or: scopes,
+      $and: [
+        { $or: [{ valid_from: null }, { valid_from: { $lte: now } }] },
+        { $or: [{ valid_until: null }, { valid_until: { $gte: now } }] },
+      ],
+    }).sort({ discount_pct: -1 });
+    return docs.map(toPub);
+  },
+
   async create(input: any) {
     const existing = await CouponModel.findOne({ code: String(input.code).toUpperCase().trim() });
     if (existing)

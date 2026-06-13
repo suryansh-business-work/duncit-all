@@ -19,7 +19,7 @@ import LeadSurveyTab from '../../components/lead-survey/LeadSurveyTab';
 import DynamicValuesView from '../../components/DynamicValuesView';
 import type { LeadTab } from '../../components/LeadTabs';
 
-const joinList = (values?: string[] | null) => (values && values.length ? values.join(', ') : '—');
+const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
 
 const formatDate = (iso?: string | null) => {
   if (!iso) return null;
@@ -118,19 +118,22 @@ export function buildEcommLeadTabs(lead: EcommLead): LeadTab[] {
       value: 'services',
       label: `Services (${lead.services_offered.length})`,
       icon: <HandymanIcon fontSize="small" />,
-      render: () => (
+      render: () => {
+        const serviceCount = lead.services_offered.length;
+        const servicePlural = serviceCount === 1 ? '' : 's';
+        const servicesSubtitle = serviceCount
+          ? `${serviceCount} service${servicePlural} tagged`
+          : 'Catalogue managed via Manage Ecomm Services';
+        return (
         <LeadDetailCard
           title="Services offered"
-          subtitle={
-            lead.services_offered.length
-              ? `${lead.services_offered.length} service${lead.services_offered.length === 1 ? '' : 's'} tagged`
-              : 'Catalogue managed via Manage Ecomm Services'
-          }
+          subtitle={servicesSubtitle}
           icon={<HandymanIcon color="primary" />}
         >
           <ServicesGrid services={lead.services_offered} />
         </LeadDetailCard>
-      ),
+        );
+      },
     },
     {
       value: 'survey',

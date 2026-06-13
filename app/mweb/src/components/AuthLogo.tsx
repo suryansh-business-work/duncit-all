@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { Box, Skeleton, Stack, Typography } from '@mui/material';
 
@@ -31,22 +32,29 @@ export default function AuthLogo({ tagline }: Readonly<Props>) {
   // Nothing is bundled — when no logo is configured the app name renders.
   const logoSrc = b?.mweb_logo_url || b?.logo_url || '';
 
+  let logoContent: ReactNode;
+  if (loading && !b) {
+    logoContent = <Skeleton variant="rounded" width={148} height={48} />;
+  } else if (logoSrc) {
+    logoContent = (
+      <Box
+        component="img"
+        src={logoSrc}
+        alt={b?.app_name ?? 'Duncit'}
+        sx={{ height: 58, width: 'auto', maxWidth: 180, objectFit: 'contain' }}
+      />
+    );
+  } else {
+    logoContent = (
+      <Typography variant="h4" sx={{ fontWeight: 950 }}>
+        {b?.app_name ?? 'Duncit'}
+      </Typography>
+    );
+  }
+
   return (
     <Stack alignItems="center" spacing={1} sx={{ mb: 1 }}>
-      {loading && !b ? (
-        <Skeleton variant="rounded" width={148} height={48} />
-      ) : logoSrc ? (
-        <Box
-          component="img"
-          src={logoSrc}
-          alt={b?.app_name ?? 'Duncit'}
-          sx={{ height: 58, width: 'auto', maxWidth: 180, objectFit: 'contain' }}
-        />
-      ) : (
-        <Typography variant="h4" sx={{ fontWeight: 950 }}>
-          {b?.app_name ?? 'Duncit'}
-        </Typography>
-      )}
+      {logoContent}
       {tagline && (
         <Typography variant="body2" color="text.secondary" textAlign="center">
           {tagline}

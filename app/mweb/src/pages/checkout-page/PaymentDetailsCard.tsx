@@ -12,8 +12,7 @@ import {
 import LockIcon from '@mui/icons-material/Lock';
 import { alpha, useTheme } from '@mui/material/styles';
 import type { FormikProps } from 'formik';
-import type { CheckoutForm, CouponPreview } from './queries';
-import { CHECKOUT_PAYMENT_METHODS } from './checkout.form';
+import type { AvailableCoupon, CheckoutForm, CouponPreview } from './queries';
 import CheckoutContactFields from './CheckoutContactFields';
 import CouponField from './CouponField';
 import { formatMoney } from './checkoutMath';
@@ -31,7 +30,8 @@ interface Props {
   setCouponCode: (value: string) => void;
   couponError: string | null;
   applyingCoupon: boolean;
-  onApplyCoupon: () => void;
+  availableCoupons: AvailableCoupon[];
+  onApplyCoupon: (code?: string) => void;
   onRemoveCoupon: () => void;
 }
 
@@ -48,13 +48,14 @@ export default function PaymentDetailsCard({
   setCouponCode,
   couponError,
   applyingCoupon,
+  availableCoupons,
   onApplyCoupon,
   onRemoveCoupon,
 }: Readonly<Props>) {
   const discounted = effectiveTotal < total;
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
-  const { values, handleBlur, setFieldValue, submitForm } = formik;
+  const { values, setFieldValue, submitForm } = formik;
   const setField = <Key extends keyof CheckoutForm>(key: Key, value: CheckoutForm[Key]) => {
     setFieldValue(key, value);
   };
@@ -88,9 +89,6 @@ export default function PaymentDetailsCard({
         <Typography variant="subtitle1" fontWeight={900} gutterBottom>Payment details</Typography>
         <Stack spacing={2} sx={{ mt: 3 }}>
           <CheckoutContactFields formik={formik} fieldSx={fieldSx} />
-          <TextField select label="Payment Method" name="method" value={values.method} onChange={(e) => setField('method', e.target.value)} onBlur={handleBlur} fullWidth sx={fieldSx} SelectProps={{ MenuProps: selectMenuProps }}>
-            {CHECKOUT_PAYMENT_METHODS.map((method) => <MenuItem key={method.value} value={method.value}>{method.label}</MenuItem>)}
-          </TextField>
           {dummyMode && (
             <TextField
               select
@@ -113,6 +111,7 @@ export default function PaymentDetailsCard({
             error={couponError}
             applying={applyingCoupon}
             currency={currency}
+            available={availableCoupons}
             onApply={onApplyCoupon}
             onRemove={onRemoveCoupon}
           />

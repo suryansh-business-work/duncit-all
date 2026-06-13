@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
-import type { CouponPreview } from '@/hooks/useCheckout';
+import type { AvailableCoupon, CouponPreview } from '@/hooks/useCheckout';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { CouponsSheet } from '@/components/checkout/CouponsSheet';
 
 interface Props {
   code: string;
@@ -11,7 +13,8 @@ interface Props {
   error: string | null;
   applying: boolean;
   currency: string;
-  onApply: () => void;
+  available: AvailableCoupon[];
+  onApply: (code?: string) => void;
   onRemove: () => void;
 }
 
@@ -25,10 +28,12 @@ export function CouponField({
   error,
   applying,
   currency,
+  available,
   onApply,
   onRemove,
 }: Readonly<Props>) {
   const { primary } = useThemeColors();
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   if (applied?.ok) {
     return (
@@ -75,13 +80,13 @@ export function CouponField({
           placeholder="Coupon code"
           placeholderTextColor="$muted"
           autoCapitalize="characters"
-          onSubmitEditing={onApply}
+          onSubmitEditing={() => onApply()}
         />
         <XStack
           testID="coupon-apply"
           role="button"
           aria-label="Apply coupon"
-          onPress={onApply}
+          onPress={() => onApply()}
           alignItems="center"
           justifyContent="center"
           paddingHorizontal={16}
@@ -101,11 +106,36 @@ export function CouponField({
           )}
         </XStack>
       </XStack>
+      {available.length > 0 ? (
+        <XStack
+          testID="coupon-view-available"
+          role="button"
+          aria-label="View available coupons"
+          onPress={() => setSheetOpen(true)}
+          alignSelf="flex-start"
+          pressStyle={{ opacity: 0.7 }}
+        >
+          <Text fontSize={13} fontWeight="800" color="$primary">
+            View available coupons ({available.length})
+          </Text>
+        </XStack>
+      ) : null}
       {error ? (
         <Text testID="coupon-error" fontSize={12.5} color="$danger">
           {error}
         </Text>
       ) : null}
+      <CouponsSheet
+        open={sheetOpen}
+        coupons={available}
+        currency={currency}
+        onClose={() => setSheetOpen(false)}
+        onPick={(picked) => {
+          setSheetOpen(false);
+          setCode(picked);
+          onApply(picked);
+        }}
+      />
     </YStack>
   );
 }

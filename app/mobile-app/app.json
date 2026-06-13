@@ -67,6 +67,15 @@
       ],
       "expo-asset",
       "expo-font",
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableProguardInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ],
       "./plugins/withNdkVersion",
       "expo-web-browser",
       "expo-video"

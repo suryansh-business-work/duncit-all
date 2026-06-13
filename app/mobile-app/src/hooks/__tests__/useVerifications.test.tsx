@@ -2,6 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 import { MyVerificationsDocument, SubmitVerificationDocument } from '@/graphql/verification';
+import { VerificationType } from '@/generated/graphql/graphql';
 import { UploadImageDocument } from '@/graphql/status';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useVerifications } from '@/hooks/useVerifications';
@@ -48,7 +49,7 @@ describe('useVerifications', () => {
     const { result } = renderHook(() => useVerifications());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {
-      await result.current.uploadFor('IDENTITY');
+      await result.current.uploadFor(VerificationType.Identity);
     });
     const upload = mockRequest.mock.calls.find((c) => c[0] === UploadImageDocument)!;
     expect(upload[1].mimeType).toBe('image/jpeg');
@@ -70,7 +71,7 @@ describe('useVerifications', () => {
     const { result } = renderHook(() => useVerifications());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {
-      await result.current.uploadFor('SELFIE');
+      await result.current.uploadFor(VerificationType.Selfie);
     });
     const upload = mockRequest.mock.calls.find((c) => c[0] === UploadImageDocument)!;
     expect(upload[1].mimeType).toBe('image/png');
@@ -82,7 +83,9 @@ describe('useVerifications', () => {
     const { result } = renderHook(() => useVerifications());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {
-      await expect(result.current.uploadFor('ADDRESS')).rejects.toThrow('Photo access');
+      await expect(result.current.uploadFor(VerificationType.Address)).rejects.toThrow(
+        'Photo access',
+      );
     });
   });
 
@@ -91,11 +94,11 @@ describe('useVerifications', () => {
     const { result } = renderHook(() => useVerifications());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     await act(async () => {
-      await result.current.uploadFor('POLICE');
+      await result.current.uploadFor(VerificationType.Police);
     });
     launch.mockResolvedValueOnce({ canceled: false, assets: [{}] });
     await act(async () => {
-      await result.current.uploadFor('POLICE');
+      await result.current.uploadFor(VerificationType.Police);
     });
     expect(mockRequest).not.toHaveBeenCalledWith(
       UploadImageDocument,

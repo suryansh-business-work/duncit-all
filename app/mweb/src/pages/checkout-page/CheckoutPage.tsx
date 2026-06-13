@@ -24,6 +24,7 @@ import {
   type CouponPreview,
 } from './queries';
 import {
+  loadRazorpay,
   openRazorpayCheckout,
   type RazorpayOrderData,
   type RazorpaySignature,
@@ -179,6 +180,13 @@ export default function CheckoutPage() {
       }
     },
   });
+
+  // Preload the Razorpay checkout SDK as soon as we know it's the live gateway,
+  // so there's no script-fetch delay after the user presses Pay (B2-#2).
+  const razorpayLive = !!financeData?.publicFinanceSettings?.razorpay_enabled;
+  useEffect(() => {
+    if (razorpayLive) loadRazorpay().catch(() => undefined);
+  }, [razorpayLive]);
 
   useEffect(() => {
     const me = meData?.me;

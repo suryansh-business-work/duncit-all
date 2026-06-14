@@ -32,6 +32,19 @@ describe('apiRequest', () => {
     await expect(apiRequest('/slow')).rejects.toBeInstanceOf(ApiError);
   });
 
+  it('maps an abort to a timeout without the DOMException global (Hermes/RN has none)', async () => {
+    const original = (global as { DOMException?: unknown }).DOMException;
+    delete (global as { DOMException?: unknown }).DOMException;
+    try {
+      jest
+        .spyOn(global, 'fetch')
+        .mockRejectedValue(Object.assign(new Error('Aborted'), { name: 'AbortError' }));
+      await expect(apiRequest('/slow')).rejects.toThrow(/timed out/i);
+    } finally {
+      (global as { DOMException?: unknown }).DOMException = original;
+    }
+  });
+
   it('serialises a JSON body and sends it with the request', async () => {
     const fetchSpy = jest.spyOn(global, 'fetch').mockResolvedValue({
       ok: true,

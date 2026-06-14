@@ -26,6 +26,14 @@ test.describe('Support module', () => {
     await expect(page.getByText('Live Tickets')).toHaveCount(0);
   });
 
+  test('the native /support/chat path resolves instead of 404ing (BUG-02)', async ({ page }) => {
+    await mockGraphql(page, bootFixtures);
+    await page.goto('/support/chat');
+    // Redirects to the canonical Chat-with-Us route rather than the 404 page.
+    await expect(page).toHaveURL(/\/support\/live/);
+    await expect(page.getByText('Page not found')).toHaveCount(0);
+  });
+
   test('callback request needs no pod selection (bug 1.2)', async ({ page }) => {
     await mockGraphql(page, {
       ...bootFixtures,

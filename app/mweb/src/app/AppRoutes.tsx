@@ -140,6 +140,9 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         <Route path="/tickets/:id" element={withAuth(<TicketDetailPage />)} />
         <Route path="/live-chat" element={withAuth(<SupportChatPage />)} />
         <Route path="/tickets" element={<Navigate to="/support/live" replace />} />
+        {/* Native uses /support/chat for the same feature; keep the path working
+            on mWeb instead of 404ing (route parity, BUG-02). */}
+        <Route path="/support/chat" element={<Navigate to="/support/live" replace />} />
         <Route path="/bouncers" element={<Navigate to="/support" replace />} />
         <Route path="/account/health" element={withAuth(<AccountHealthPage />)} />
         <Route path="/venues/:venueId/health" element={withAuth(<VenueHealthPage />)} />

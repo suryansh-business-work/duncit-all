@@ -75,4 +75,36 @@ test.describe('App · Support module', () => {
     await expect(page.getByTestId('callback-screen')).toBeVisible();
     await expect(page.getByText(/select a pod|choose a pod/i)).toHaveCount(0);
   });
+
+  test('support hub labels the callback card "Callback Request" (BUG-14)', async ({ page }) => {
+    await page.goto('/support');
+    await expect(page.getByTestId('support-callback')).toContainText('Callback Request');
+    await expect(page.getByText('Request a Callback')).toHaveCount(0);
+  });
+
+  test('Call Now is disabled when no support phone is configured (BUG-13)', async ({ page }) => {
+    await mockGraphql(page, {
+      ...chatFixtures,
+      MobileSupportCallTarget: { bouncerSupportTarget: { phone: '', available: false } },
+    });
+    await page.goto('/support');
+    await page.getByTestId('support-callback').click();
+    await expect(page.getByTestId('callback-call-now')).toHaveAttribute('aria-disabled', 'true');
+  });
+
+  test('requesting a callback shows a dismissible success alert (BUG-12)', async ({ page }) => {
+    await mockGraphql(page, {
+      ...chatFixtures,
+      MobileSupportCallTarget: { bouncerSupportTarget: { phone: '+91123', available: true } },
+      MobileRequestBouncerCallback: {
+        requestBouncerCallback: { id: 'cb1', status: 'PENDING', created_at: new Date().toISOString() },
+      },
+    });
+    await page.goto('/support');
+    await page.getByTestId('support-callback').click();
+    await page.getByTestId('callback-request').click();
+    await expect(page.getByTestId('callback-success')).toBeVisible();
+    await page.getByTestId('callback-success-close').click();
+    await expect(page.getByTestId('callback-success')).toHaveCount(0);
+  });
 });

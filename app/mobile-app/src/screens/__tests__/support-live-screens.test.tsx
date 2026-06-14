@@ -115,7 +115,25 @@ describe('CallbackScreen', () => {
     requestCallback.mockRejectedValueOnce(new Error('failed'));
     renderWithProviders(<CallbackScreen />);
     fireEvent.press(screen.getByTestId('callback-request'));
-    await waitFor(() => expect(screen.getByTestId('callback-error')).toHaveTextContent('failed'));
+    await waitFor(() => expect(screen.getByText('failed')).toBeOnTheScreen());
+    expect(screen.getByTestId('callback-error')).toBeOnTheScreen();
+  });
+
+  it('dismisses the success alert via its close control', async () => {
+    renderWithProviders(<CallbackScreen />);
+    fireEvent.press(screen.getByTestId('callback-request'));
+    await waitFor(() => expect(screen.getByTestId('callback-success')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('callback-success-close'));
+    expect(screen.queryByTestId('callback-success')).toBeNull();
+  });
+
+  it('dismisses the error alert via its close control', async () => {
+    requestCallback.mockRejectedValueOnce(new Error('failed'));
+    renderWithProviders(<CallbackScreen />);
+    fireEvent.press(screen.getByTestId('callback-request'));
+    await waitFor(() => expect(screen.getByTestId('callback-error')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('callback-error-close'));
+    expect(screen.queryByTestId('callback-error')).toBeNull();
   });
 
   it('requests a callback with a null pod when none is selected', async () => {

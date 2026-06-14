@@ -32,7 +32,7 @@ const CARDS: Card[] = [
   { id: 'sos', title: 'SOS', desc: 'Emergency help at your live pod', icon: 'sos', route: 'Sos' },
   {
     id: 'callback',
-    title: 'Request a Callback',
+    title: 'Callback Request',
     desc: 'Call us or get a callback',
     icon: 'phone-callback',
     route: 'Callback',

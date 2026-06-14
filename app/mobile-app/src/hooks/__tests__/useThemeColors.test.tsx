@@ -31,6 +31,7 @@ const TOKENS = [
   'muted',
   'primary',
   'danger',
+  'success',
   'onPrimary',
   'borderColor',
 ] as const;

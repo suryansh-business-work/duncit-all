@@ -63,6 +63,7 @@ test.describe('App · Support module', () => {
 
   test('support hub shows Chat with Us + All Support Tickets, no Live Feedback', async ({ page }) => {
     await page.goto('/support');
+    await expect(page.getByTestId('support-intro')).toBeVisible();
     await expect(page.getByTestId('support-chat')).toBeVisible();
     await expect(page.getByTestId('support-all')).toBeVisible();
     await expect(page.getByText('Create Support Tickets')).toBeVisible();

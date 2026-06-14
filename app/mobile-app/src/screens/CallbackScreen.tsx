@@ -97,6 +97,9 @@ export function CallbackScreen() {
   return (
     <StackScreen title="Callback Request" testID="callback-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
+        <Text testID="callback-subtitle" fontSize={13} color="$muted">
+          Call us or get a callback
+        </Text>
         <CallNowCard target={target} />
 
         <YStack

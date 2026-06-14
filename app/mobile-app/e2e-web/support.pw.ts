@@ -77,6 +77,7 @@ test.describe('App · Support module', () => {
     await page.goto('/support/chat');
     // Inbox: a live-chat shortcut + the user's tickets (not a single thread).
     await expect(page.getByTestId('chat-with-us-screen')).toBeVisible();
+    await expect(page.getByTestId('chat-inbox-subtitle')).toBeVisible();
     await expect(page.getByTestId('chat-live-card')).toBeVisible();
     await expect(page.getByTestId('chat-inbox-ticket-tk1')).toBeVisible();
 
@@ -90,6 +91,7 @@ test.describe('App · Support module', () => {
   test('All Support Tickets lists prefixed rows from every category (bug 1.6)', async ({ page }) => {
     await page.goto('/support/all');
     await expect(page.getByTestId('all-support-tickets-screen')).toBeVisible();
+    await expect(page.getByTestId('all-tickets-subtitle')).toBeVisible();
     await expect(page.getByText('ST-AAA111')).toBeVisible();
     await expect(page.getByText('CH-BBB222')).toBeVisible();
   });
@@ -98,6 +100,7 @@ test.describe('App · Support module', () => {
     await page.goto('/support');
     await page.getByTestId('support-callback').click();
     await expect(page.getByTestId('callback-screen')).toBeVisible();
+    await expect(page.getByTestId('callback-subtitle')).toBeVisible();
     await expect(page.getByText(/select a pod|choose a pod/i)).toHaveCount(0);
   });
 
@@ -140,6 +143,7 @@ test.describe('App · Support module', () => {
     await page.goto('/support');
     await page.getByTestId('support-sos').click();
     await expect(page.getByTestId('sos-screen')).toBeVisible();
+    await expect(page.getByTestId('sos-subtitle')).toBeVisible();
     await expect(page.getByText('Only tap SOS in a real emergency')).toBeVisible();
     // Pod selector is a dropdown (not a fixed pill) — opens to a list.
     await page.getByTestId('pod-picker').click();

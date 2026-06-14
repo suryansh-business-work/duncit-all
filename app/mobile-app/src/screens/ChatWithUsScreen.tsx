@@ -70,6 +70,9 @@ export function ChatWithUsScreen() {
       }
     >
       <ScrollView contentContainerStyle={{ padding: 16, gap: 12, paddingBottom: 24 }}>
+        <Text testID="chat-inbox-subtitle" fontSize={13} color="$muted">
+          Real-time chat with our support team
+        </Text>
         <XStack
           testID="chat-live-card"
           role="button"

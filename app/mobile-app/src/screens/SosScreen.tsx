@@ -83,6 +83,9 @@ export function SosScreen() {
   return (
     <StackScreen title="SOS" testID="sos-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
+        <Text testID="sos-subtitle" fontSize={13} color="$muted">
+          Emergency help at your live pod
+        </Text>
         <PodPicker options={options} selectedId={selectedId} onChange={setSelectedId} />
 
         {active ? (

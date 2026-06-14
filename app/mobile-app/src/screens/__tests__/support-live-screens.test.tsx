@@ -69,6 +69,12 @@ describe('SosScreen', () => {
     await waitFor(() => expect(screen.getByTestId('sos-error')).toHaveTextContent('no network'));
   });
 
+  it('shows the boxed emergency warning with a bold heading (BUG-11)', () => {
+    renderWithProviders(<SosScreen />);
+    expect(screen.getByTestId('sos-warning')).toBeOnTheScreen();
+    expect(screen.getByText('Only tap SOS in a real emergency')).toBeOnTheScreen();
+  });
+
   it('shows the active card when an SOS already exists', async () => {
     getActiveSos.mockResolvedValue({ id: 's1', status: 'ACKNOWLEDGED' });
     renderWithProviders(<SosScreen />);

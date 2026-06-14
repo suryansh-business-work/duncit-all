@@ -53,6 +53,9 @@ test.describe('App · Support module', () => {
     await expect(page.getByTestId('support-all')).toBeVisible();
     await expect(page.getByText('Create Support Tickets')).toBeVisible();
     await expect(page.getByText('Live Feedback')).toHaveCount(0);
+    // FAQs + Policies are in the account drawer, not the support hub (BUG-06).
+    await expect(page.getByTestId('support-faqs')).toHaveCount(0);
+    await expect(page.getByTestId('support-policies')).toHaveCount(0);
   });
 
   test('Chat with Us opens with history incl. the agent pickup bubble (bug 1.3)', async ({ page }) => {
@@ -92,6 +95,34 @@ test.describe('App · Support module', () => {
     await page.getByTestId('ticket-category').click();
     await expect(page.getByTestId('ticket-category-option-PAYMENT')).toBeVisible();
     await expect(page.getByText('Payment / Refund')).toBeVisible();
+  });
+
+  test('SOS shows a pod dropdown and the boxed emergency warning (BUG-10/11)', async ({ page }) => {
+    await mockGraphql(page, {
+      ...chatFixtures,
+      MobileActiveSupportPods: {
+        myPodMemberships: [
+          {
+            id: 'm1',
+            pod: {
+              id: 'p1',
+              pod_id: 'sp1',
+              pod_title: 'Sunset Jam',
+              pod_date_time: new Date().toISOString(),
+              pod_end_date_time: null,
+            },
+          },
+        ],
+      },
+    });
+    await page.goto('/support');
+    await page.getByTestId('support-sos').click();
+    await expect(page.getByTestId('sos-screen')).toBeVisible();
+    await expect(page.getByText('Only tap SOS in a real emergency')).toBeVisible();
+    // Pod selector is a dropdown (not a fixed pill) — opens to a list.
+    await page.getByTestId('pod-picker').click();
+    await expect(page.getByTestId('pod-picker-options')).toBeVisible();
+    await expect(page.getByTestId('pod-option-p1')).toBeVisible();
   });
 
   test('support hub labels the callback card "Callback Request" (BUG-14)', async ({ page }) => {

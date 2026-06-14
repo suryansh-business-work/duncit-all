@@ -108,24 +108,30 @@ export function SosScreen() {
         ) : (
           <>
             <XStack
+              testID="sos-warning"
               gap={10}
               padding={14}
               borderRadius={14}
-              backgroundColor="$surface"
+              backgroundColor={`${semantic.error}14`}
               borderWidth={1}
-              borderColor="$borderColor"
+              borderColor={`${semantic.error}55`}
             >
               <MaterialIcons name="warning-amber" size={20} color={semantic.error} />
-              <Text flex={1} fontSize={12.5} color="$muted">
-                Only tap SOS in a real emergency. Your live location, phone and pod context are
-                shared with the host & admin.
-              </Text>
+              <YStack flex={1} gap={2}>
+                <Text fontSize={13.5} fontWeight="900" color="$color">
+                  Only tap SOS in a real emergency
+                </Text>
+                <Text fontSize={12} color="$muted">
+                  Your live location, profile phone and pod context will be shared with the host &
+                  admin.
+                </Text>
+              </YStack>
             </XStack>
             <TextArea
               testID="sos-message"
               value={message}
               onChangeText={setMessage}
-              placeholder="Quick note (optional) e.g. medical help needed"
+              placeholder="Quick note (optional)"
               maxLength={500}
               backgroundColor="$surface"
               borderColor="$borderColor"

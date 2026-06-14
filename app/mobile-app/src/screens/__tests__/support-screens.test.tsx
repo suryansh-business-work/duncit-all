@@ -20,22 +20,22 @@ beforeEach(() => {
 });
 
 describe('SupportScreen', () => {
-  it('navigates to every support tool from the hub', () => {
+  it('navigates to every support tool from the hub (mWeb items + order)', () => {
     renderWithProviders(<SupportScreen />);
     fireEvent.press(screen.getByTestId('support-sos'));
     expect(mockNavigate).toHaveBeenCalledWith('Sos');
     fireEvent.press(screen.getByTestId('support-callback'));
     expect(mockNavigate).toHaveBeenCalledWith('Callback');
-    fireEvent.press(screen.getByTestId('support-chat'));
-    expect(mockNavigate).toHaveBeenCalledWith('ChatWithUs');
     fireEvent.press(screen.getByTestId('support-tickets'));
     expect(mockNavigate).toHaveBeenCalledWith('SupportTickets');
+    fireEvent.press(screen.getByTestId('support-chat'));
+    expect(mockNavigate).toHaveBeenCalledWith('ChatWithUs');
     fireEvent.press(screen.getByTestId('support-all'));
     expect(mockNavigate).toHaveBeenCalledWith('AllSupportTickets');
-    fireEvent.press(screen.getByTestId('support-faqs'));
-    expect(mockNavigate).toHaveBeenCalledWith('Faqs');
-    fireEvent.press(screen.getByTestId('support-policies'));
-    expect(mockNavigate).toHaveBeenCalledWith('Policies');
+    // FAQs + Policies are NOT on the support hub (they live in the account
+    // drawer, like mWeb).
+    expect(screen.queryByTestId('support-faqs')).toBeNull();
+    expect(screen.queryByTestId('support-policies')).toBeNull();
   });
 });
 

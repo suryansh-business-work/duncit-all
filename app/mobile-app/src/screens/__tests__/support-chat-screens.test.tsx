@@ -2,13 +2,16 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import * as ImagePicker from 'expo-image-picker';
 
 import { ChatWithUsScreen } from '@/screens/ChatWithUsScreen';
+import { LiveChatScreen } from '@/screens/LiveChatScreen';
 import { AllSupportTicketsScreen } from '@/screens/AllSupportTicketsScreen';
 import { TicketDetailsScreen } from '@/screens/TicketDetailsScreen';
 import { useSupportChat } from '@/hooks/useSupportChat';
+import { useTickets } from '@/hooks/useSupport';
 import { useTicketDetails, useUnifiedTickets } from '@/hooks/useUnifiedTickets';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useSupportChat');
+jest.mock('@/hooks/useSupport', () => ({ useTickets: jest.fn() }));
 jest.mock('@/hooks/useUnifiedTickets', () => ({
   useUnifiedTickets: jest.fn(),
   useTicketDetails: jest.fn(),
@@ -25,6 +28,7 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 const mockedChat = useSupportChat as jest.Mock;
+const mockedTickets = useTickets as jest.Mock;
 const mockedUnified = useUnifiedTickets as jest.Mock;
 const mockedDetails = useTicketDetails as jest.Mock;
 const reqPerm = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
@@ -55,28 +59,68 @@ const chatBase = {
 beforeEach(() => {
   jest.clearAllMocks();
   mockedChat.mockReturnValue({ ...chatBase });
+  mockedTickets.mockReturnValue({ tickets: [], isLoading: false, reload: jest.fn() });
 });
 
-describe('ChatWithUsScreen', () => {
+const ticket = {
+  id: 't1',
+  subject: 'Refund please',
+  category: 'PAYMENT',
+  status: 'OPEN',
+  priority: 'LOW',
+  message_count: 1,
+  last_message_at: '',
+  created_at: '',
+};
+
+describe('ChatWithUsScreen (inbox)', () => {
+  it('shows the live-chat shortcut and the loading state', () => {
+    mockedTickets.mockReturnValue({ tickets: [], isLoading: true, reload: jest.fn() });
+    renderWithProviders(<ChatWithUsScreen />);
+    expect(screen.getByTestId('chat-live-card')).toBeOnTheScreen();
+    expect(screen.getByTestId('chat-inbox-loading')).toBeOnTheScreen();
+  });
+
+  it('shows the empty state when there are no tickets', () => {
+    renderWithProviders(<ChatWithUsScreen />);
+    expect(screen.getByTestId('chat-inbox-empty')).toBeOnTheScreen();
+  });
+
+  it('opens the live chat, a ticket, and the new-ticket form', () => {
+    mockedTickets.mockReturnValue({ tickets: [ticket], isLoading: false, reload: jest.fn() });
+    renderWithProviders(<ChatWithUsScreen />);
+
+    fireEvent.press(screen.getByTestId('chat-live-card'));
+    expect(mockNavigate).toHaveBeenCalledWith('LiveChat');
+
+    fireEvent.press(screen.getByTestId('chat-inbox-ticket-t1'));
+    expect(mockNavigate).toHaveBeenCalledWith('TicketDetails', { ticketId: 't1' });
+
+    fireEvent.press(screen.getByTestId('chat-inbox-new'));
+    expect(mockNavigate).toHaveBeenCalledWith('SupportTickets');
+  });
+});
+
+describe('LiveChatScreen (real-time chat)', () => {
   it('shows the loader, then the empty state', () => {
     mockedChat.mockReturnValue({ ...chatBase, isLoading: true });
-    renderWithProviders(<ChatWithUsScreen />);
+    renderWithProviders(<LiveChatScreen />);
     expect(screen.getByTestId('support-chat-loading')).toBeOnTheScreen();
 
     mockedChat.mockReturnValue({ ...chatBase });
-    renderWithProviders(<ChatWithUsScreen />);
+    renderWithProviders(<LiveChatScreen />);
     expect(screen.getByTestId('support-chat-empty')).toBeOnTheScreen();
   });
 
   it('shows a boot error', () => {
     mockedChat.mockReturnValue({ ...chatBase, error: 'offline' });
-    renderWithProviders(<ChatWithUsScreen />);
+    renderWithProviders(<LiveChatScreen />);
     expect(screen.getByTestId('support-chat-error')).toHaveTextContent('offline');
   });
 
   it('keeps the view pinned to the end as content grows', () => {
     mockedChat.mockReturnValue({ ...chatBase, messages: [chatMsg('1', 'USER')] });
-    renderWithProviders(<ChatWithUsScreen />);
+    renderWithProviders(<LiveChatScreen />);
     fireEvent(screen.getByTestId('support-msg-1').parent!, 'contentSizeChange', 100, 400);
     expect(screen.getByTestId('support-msg-1')).toBeOnTheScreen();
   });
@@ -90,7 +134,7 @@ describe('ChatWithUsScreen', () => {
         chatMsg('3', 'AGENT', { attachments: ['https://img/a.jpg'] }),
       ],
     });
-    renderWithProviders(<ChatWithUsScreen />);
+    renderWithProviders(<LiveChatScreen />);
     expect(screen.getByText('Picked up by Agent A')).toBeOnTheScreen();
     expect(screen.getByText('Agent A')).toBeOnTheScreen();
     expect(screen.getByTestId('support-msg-3')).toBeOnTheScreen();
@@ -99,7 +143,7 @@ describe('ChatWithUsScreen', () => {
   it('sends a typed message', async () => {
     const send = jest.fn().mockResolvedValue(undefined);
     mockedChat.mockReturnValue({ ...chatBase, send });
-    renderWithProviders(<ChatWithUsScreen />);
+    renderWithProviders(<LiveChatScreen />);
     fireEvent.changeText(screen.getByTestId('support-chat-input'), 'hello');
     fireEvent.press(screen.getByTestId('support-chat-send'));
     await waitFor(() => expect(send).toHaveBeenCalledWith('hello', []));
@@ -114,7 +158,7 @@ describe('ChatWithUsScreen', () => {
         }),
     );
     mockedChat.mockReturnValue({ ...chatBase, send });
-    renderWithProviders(<ChatWithUsScreen />);
+    renderWithProviders(<LiveChatScreen />);
     fireEvent.changeText(screen.getByTestId('support-chat-input'), 'hello');
     fireEvent.press(screen.getByTestId('support-chat-send'));
     fireEvent.press(screen.getByTestId('support-chat-send'));
@@ -128,7 +172,7 @@ describe('ChatWithUsScreen', () => {
   it('surfaces a send failure', async () => {
     const send = jest.fn().mockRejectedValue(new Error('server busy'));
     mockedChat.mockReturnValue({ ...chatBase, send });
-    renderWithProviders(<ChatWithUsScreen />);
+    renderWithProviders(<LiveChatScreen />);
     fireEvent.changeText(screen.getByTestId('support-chat-input'), 'hello');
     fireEvent.press(screen.getByTestId('support-chat-send'));
     await waitFor(() =>
@@ -140,7 +184,7 @@ describe('ChatWithUsScreen', () => {
     const send = jest.fn().mockResolvedValue(undefined);
     const uploadImage = jest.fn().mockResolvedValue('https://img/up.jpg');
     mockedChat.mockReturnValue({ ...chatBase, send, uploadImage });
-    renderWithProviders(<ChatWithUsScreen />);
+    renderWithProviders(<LiveChatScreen />);
 
     reqPerm.mockResolvedValueOnce({ granted: false });
     fireEvent.press(screen.getByTestId('support-chat-attach'));
@@ -236,7 +280,7 @@ describe('AllSupportTicketsScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('TicketDetails', { ticketId: 't1' });
 
     fireEvent.press(screen.getByTestId('all-ticket-CH-BBB222'));
-    expect(mockNavigate).toHaveBeenCalledWith('ChatWithUs');
+    expect(mockNavigate).toHaveBeenCalledWith('LiveChat');
 
     mockNavigate.mockClear();
     fireEvent.press(screen.getByTestId('all-ticket-SOS-CCC333'));

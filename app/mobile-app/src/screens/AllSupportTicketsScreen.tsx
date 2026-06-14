@@ -29,7 +29,7 @@ export function AllSupportTicketsScreen() {
 
   const open = (row: UnifiedTicket) => {
     if (row.source === 'TICKET') navigation.navigate('TicketDetails', { ticketId: row.id });
-    else if (row.source === 'CHAT') navigation.navigate('ChatWithUs');
+    else if (row.source === 'CHAT') navigation.navigate('LiveChat');
   };
 
   let body: React.ReactNode;

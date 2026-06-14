@@ -22,6 +22,20 @@ const chatFixtures = {
     ],
   },
   MobileMarkSupportChatRead: { markSupportChatRead: { id: 's1', unread_for_user: 0 } },
+  MobileMyTickets: {
+    myTickets: [
+      {
+        id: 'tk1',
+        subject: 'Refund issue',
+        category: 'PAYMENT',
+        status: 'OPEN',
+        priority: 'LOW',
+        message_count: 1,
+        last_message_at: new Date().toISOString(),
+        created_at: new Date().toISOString(),
+      },
+    ],
+  },
   MobileUnifiedSupportTickets: {
     myUnifiedSupportTickets: [
       { id: 't1', ticket_no: 'ST-AAA111', title: 'Refund issue', status: 'OPEN', source: 'TICKET', created_at: new Date().toISOString() },
@@ -58,9 +72,16 @@ test.describe('App · Support module', () => {
     await expect(page.getByTestId('support-policies')).toHaveCount(0);
   });
 
-  test('Chat with Us opens with history incl. the agent pickup bubble (bug 1.3)', async ({ page }) => {
+  test('Chat with Us is an inbox; the shortcut opens the real-time chat (BUG-04)', async ({ page }) => {
     await page.goto('/support/chat');
+    // Inbox: a live-chat shortcut + the user's tickets (not a single thread).
     await expect(page.getByTestId('chat-with-us-screen')).toBeVisible();
+    await expect(page.getByTestId('chat-live-card')).toBeVisible();
+    await expect(page.getByTestId('chat-inbox-ticket-tk1')).toBeVisible();
+
+    // The shortcut opens the real-time chat with its history (pickup bubble).
+    await page.getByTestId('chat-live-card').click();
+    await expect(page.getByTestId('live-chat-screen')).toBeVisible();
     await expect(page.getByText('Picked up by Agent A')).toBeVisible();
     await expect(page.getByTestId('support-chat-input')).toBeVisible();
   });

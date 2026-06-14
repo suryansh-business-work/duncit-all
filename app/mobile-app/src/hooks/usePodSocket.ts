@@ -21,7 +21,9 @@ function createPodSocket(token: string, podId: string, handlers: PodSocketHandle
   const s = io(config.apiUrl, {
     path: '/socket.io',
     auth: { token },
-    transports: ['websocket'],
+    // Fall back to long-polling when WebSockets are blocked (some mobile/captive
+    // networks) instead of failing to connect. Mirrors mWeb's usePodSocket.
+    transports: ['websocket', 'polling'],
   });
   s.on('connect', () => {
     s.emit('join_pod', podId, (ok: boolean, err?: string) => {

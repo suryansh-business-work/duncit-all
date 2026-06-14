@@ -41,11 +41,27 @@ describe('useTickets', () => {
 });
 
 describe('createTicket', () => {
-  it('calls the mutation with the input', async () => {
+  it('calls the mutation with the input (attachments default to empty)', async () => {
     mockRequest.mockResolvedValueOnce({ createTicket: { id: 't1' } });
     await createTicket('Subject', 'Body', 'PAYMENT');
     expect(mockRequest).toHaveBeenCalled();
     const [, vars] = mockRequest.mock.calls[0];
-    expect(vars).toEqual({ input: { subject: 'Subject', body_text: 'Body', category: 'PAYMENT' } });
+    expect(vars).toEqual({
+      input: { subject: 'Subject', body_text: 'Body', category: 'PAYMENT', attachments: [] },
+    });
+  });
+
+  it('passes through provided attachments', async () => {
+    mockRequest.mockResolvedValueOnce({ createTicket: { id: 't2' } });
+    await createTicket('S', 'B', 'OTHER', ['https://img/1.jpg']);
+    const [, vars] = mockRequest.mock.calls[0];
+    expect(vars).toEqual({
+      input: {
+        subject: 'S',
+        body_text: 'B',
+        category: 'OTHER',
+        attachments: ['https://img/1.jpg'],
+      },
+    });
   });
 });

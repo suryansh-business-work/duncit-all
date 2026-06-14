@@ -4,15 +4,20 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, TextArea, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { SupportAlert } from '@/components/support/SupportAlert';
 import { useBouncer } from '@/hooks/useBouncer';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
 
 type SupportTarget = { phone: string; available: boolean } | null;
 
-/** "Call support now" card — dials support directly when a phone is configured. */
+/** "Call support now" card — dials support directly when a phone is configured.
+ * When no phone is configured the button reads as clearly disabled (muted, not
+ * an active-looking red), matching mWeb's greyed-out disabled button. */
 function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
-  const { onPrimary } = useThemeColors();
+  const { onPrimary, muted } = useThemeColors();
+  const disabled = !target?.available;
+  const fg = disabled ? muted : onPrimary;
   return (
     <YStack
       padding={16}
@@ -34,19 +39,19 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
         testID="callback-call-now"
         role="button"
         aria-label="Call now"
-        aria-disabled={!target?.available}
+        aria-disabled={disabled}
         onPress={target?.available ? () => void Linking.openURL(`tel:${target.phone}`) : undefined}
         height={46}
         alignItems="center"
         justifyContent="center"
         gap={8}
         borderRadius={999}
-        backgroundColor="$primary"
-        opacity={target?.available ? 1 : 0.5}
-        pressStyle={{ opacity: 0.85 }}
+        backgroundColor={disabled ? '$muted' : '$primary'}
+        opacity={disabled ? 0.45 : 1}
+        pressStyle={{ opacity: disabled ? 0.45 : 0.85 }}
       >
-        <MaterialIcons name="call" size={18} color={onPrimary} />
-        <Text fontSize={14} fontWeight="800" color={onPrimary}>
+        <MaterialIcons name="call" size={18} color={fg} />
+        <Text fontSize={14} fontWeight="800" color={fg}>
           Call Now
         </Text>
       </XStack>
@@ -92,6 +97,9 @@ export function CallbackScreen() {
   return (
     <StackScreen title="Callback Request" testID="callback-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 14 }}>
+        <Text testID="callback-subtitle" fontSize={13} color="$muted">
+          Call us or get a callback
+        </Text>
         <CallNowCard target={target} />
 
         <YStack
@@ -118,14 +126,20 @@ export function CallbackScreen() {
             borderColor="$borderColor"
           />
           {error ? (
-            <Text testID="callback-error" fontSize={13} color="$danger">
-              {error}
-            </Text>
+            <SupportAlert
+              testID="callback-error"
+              variant="error"
+              message={error}
+              onClose={() => setError(null)}
+            />
           ) : null}
           {requested ? (
-            <Text testID="callback-success" fontSize={13} color="$primary">
-              Callback requested. We will reach you shortly.
-            </Text>
+            <SupportAlert
+              testID="callback-success"
+              variant="success"
+              message="Callback requested. We will reach you shortly."
+              onClose={() => setRequested(false)}
+            />
           ) : null}
           <XStack
             testID="callback-request"

@@ -34,7 +34,10 @@ export async function apiRequest<TResponse>(
 
     return (await response.json()) as TResponse;
   } catch (error) {
-    if (error instanceof DOMException && error.name === 'AbortError') {
+    // NB: check `Error` + name, NOT `instanceof DOMException` — React Native
+    // (Hermes) has no `DOMException` global, so referencing it throws and the
+    // friendly timeout message is never reached. Mirrors `graphql.client.ts`.
+    if (error instanceof Error && error.name === 'AbortError') {
       throw new ApiError('The request timed out. Please try again.');
     }
     if (error instanceof ApiError) {

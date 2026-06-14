@@ -2,7 +2,8 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { SupportScreen } from '@/screens/SupportScreen';
 import { SupportTicketsScreen } from '@/screens/SupportTicketsScreen';
-import { useTickets } from '@/hooks/useSupport';
+import { createTicket } from '@/hooks/useSupport';
+import { useMeStore } from '@/stores/me.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useSupport', () => ({ useTickets: jest.fn(), createTicket: jest.fn() }));
@@ -11,68 +12,66 @@ jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
 }));
 
-const mockedTickets = useTickets as jest.Mock;
-beforeEach(() => mockNavigate.mockClear());
+const mockedCreate = createTicket as jest.Mock;
+beforeEach(() => {
+  mockNavigate.mockClear();
+  mockedCreate.mockReset();
+  useMeStore.setState({ data: undefined });
+});
 
 describe('SupportScreen', () => {
-  it('navigates to every support tool from the hub', () => {
+  it('navigates to every support tool from the hub (mWeb items + order)', () => {
     renderWithProviders(<SupportScreen />);
     fireEvent.press(screen.getByTestId('support-sos'));
     expect(mockNavigate).toHaveBeenCalledWith('Sos');
     fireEvent.press(screen.getByTestId('support-callback'));
     expect(mockNavigate).toHaveBeenCalledWith('Callback');
-    fireEvent.press(screen.getByTestId('support-chat'));
-    expect(mockNavigate).toHaveBeenCalledWith('ChatWithUs');
     fireEvent.press(screen.getByTestId('support-tickets'));
     expect(mockNavigate).toHaveBeenCalledWith('SupportTickets');
+    fireEvent.press(screen.getByTestId('support-chat'));
+    expect(mockNavigate).toHaveBeenCalledWith('ChatWithUs');
     fireEvent.press(screen.getByTestId('support-all'));
     expect(mockNavigate).toHaveBeenCalledWith('AllSupportTickets');
-    fireEvent.press(screen.getByTestId('support-faqs'));
-    expect(mockNavigate).toHaveBeenCalledWith('Faqs');
-    fireEvent.press(screen.getByTestId('support-policies'));
-    expect(mockNavigate).toHaveBeenCalledWith('Policies');
+    // FAQs + Policies are NOT on the support hub (they live in the account
+    // drawer, like mWeb).
+    expect(screen.queryByTestId('support-faqs')).toBeNull();
+    expect(screen.queryByTestId('support-policies')).toBeNull();
   });
 });
 
 describe('SupportTicketsScreen', () => {
-  const ticket = {
-    id: 't1',
-    subject: 'Help',
-    category: 'GENERAL',
-    status: 'OPEN',
-    priority: 'LOW',
-    message_count: 1,
-    last_message_at: '',
-    created_at: '',
-  };
-
-  it('renders tickets and toggles the create form', () => {
-    mockedTickets.mockReturnValue({ tickets: [ticket], isLoading: false, reload: jest.fn() });
+  it('opens straight onto the form with the subtitle and banners (BUG-05/09)', () => {
     renderWithProviders(<SupportTicketsScreen />);
-    expect(screen.getByTestId('ticket-t1')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('ticket-toggle'));
     expect(screen.getByTestId('ticket-form')).toBeOnTheScreen();
+    expect(screen.getByTestId('tickets-subtitle')).toBeOnTheScreen();
+    expect(screen.getByTestId('tickets-help-banner')).toBeOnTheScreen();
+    expect(screen.getByTestId('tickets-faq-banner')).toBeOnTheScreen();
+    expect(screen.getByText('Send to support')).toBeOnTheScreen();
   });
 
-  it('hides the form and reloads after creating a ticket', async () => {
-    const reload = jest.fn();
-    mockedTickets.mockReturnValue({ tickets: [], isLoading: false, reload });
+  it('the FAQ banner jumps to FAQs', () => {
     renderWithProviders(<SupportTicketsScreen />);
-    fireEvent.press(screen.getByTestId('ticket-toggle'));
+    fireEvent.press(screen.getByTestId('tickets-faq-banner'));
+    expect(mockNavigate).toHaveBeenCalledWith('Faqs');
+  });
+
+  it('auto-fills name and email from the signed-in user (BUG-07)', () => {
+    useMeStore.setState({
+      data: { me: { full_name: 'Asha Rao', email: 'asha@duncit.com' } } as never,
+    });
+    renderWithProviders(<SupportTicketsScreen />);
+    expect(screen.getByTestId('ticket-name').props.value).toBe('Asha Rao');
+    expect(screen.getByTestId('ticket-email').props.value).toBe('asha@duncit.com');
+  });
+
+  it('navigates to the new ticket details after creating one', async () => {
+    mockedCreate.mockResolvedValue('tk1');
+    renderWithProviders(<SupportTicketsScreen />);
     fireEvent.changeText(screen.getByTestId('ticket-subject'), 'Help');
     fireEvent.changeText(screen.getByTestId('ticket-message'), 'It broke');
     fireEvent.press(screen.getByTestId('ticket-submit'));
-    await waitFor(() => expect(reload).toHaveBeenCalled());
-    expect(screen.queryByTestId('ticket-form')).toBeNull();
-  });
-
-  it('shows empty and loading states', () => {
-    mockedTickets.mockReturnValue({ tickets: [], isLoading: false, reload: jest.fn() });
-    const { rerender } = renderWithProviders(<SupportTicketsScreen />);
-    expect(screen.getByTestId('tickets-empty')).toBeOnTheScreen();
-
-    mockedTickets.mockReturnValue({ tickets: [], isLoading: true, reload: jest.fn() });
-    rerender(<SupportTicketsScreen />);
-    expect(screen.getByTestId('tickets-loading')).toBeOnTheScreen();
+    await waitFor(() =>
+      expect(mockNavigate).toHaveBeenCalledWith('TicketDetails', { ticketId: 'tk1' }),
+    );
   });
 });

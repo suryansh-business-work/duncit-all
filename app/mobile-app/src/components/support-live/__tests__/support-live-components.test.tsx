@@ -19,14 +19,31 @@ describe('PodPicker', () => {
     expect(screen.getByTestId('pod-picker-empty')).toBeOnTheScreen();
   });
 
-  it('renders options and selects one', () => {
+  it('shows the selected pod and opens the list to switch pods', () => {
     const onChange = jest.fn();
     renderWithProviders(
       <PodPicker options={[opt('a'), opt('b')]} selectedId="a" onChange={onChange} />,
     );
     expect(screen.getByTestId('pod-picker')).toBeOnTheScreen();
+    expect(screen.getByText('Pod a')).toBeOnTheScreen();
+    // Collapsed by default — the options list is hidden until tapped.
+    expect(screen.queryByTestId('pod-picker-options')).toBeNull();
+
+    fireEvent.press(screen.getByTestId('pod-picker'));
+    expect(screen.getByTestId('pod-picker-options')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-option-b'));
     expect(onChange).toHaveBeenCalledWith('b');
+    // Selecting collapses the dropdown again.
+    expect(screen.queryByTestId('pod-picker-options')).toBeNull();
+  });
+
+  it('prompts to select a pod when none matches, and toggles closed', () => {
+    renderWithProviders(<PodPicker options={[opt('a')]} selectedId="" onChange={jest.fn()} />);
+    expect(screen.getByText('Select a pod')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('pod-picker'));
+    expect(screen.getByTestId('pod-picker-options')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('pod-picker'));
+    expect(screen.queryByTestId('pod-picker-options')).toBeNull();
   });
 });
 

@@ -30,7 +30,9 @@ function createSupportSocket(
   const s = io(config.apiUrl, {
     path: '/socket.io',
     auth: { token },
-    transports: ['websocket'],
+    // Fall back to long-polling when WebSockets are blocked (some mobile/captive
+    // networks) instead of failing to connect. Mirrors mWeb's socket setup.
+    transports: ['websocket', 'polling'],
   });
   s.on('connect', () => {
     s.emit('join_support_session', sessionId);

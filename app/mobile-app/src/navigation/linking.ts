@@ -47,6 +47,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       Sos: 'support/sos',
       Callback: 'support/callback',
       ChatWithUs: 'support/chat',
+      LiveChat: 'live-chat',
       AllSupportTickets: 'support/all',
       TicketDetails: 'tickets/:ticketId',
       PodIdeas: 'pod-ideas',

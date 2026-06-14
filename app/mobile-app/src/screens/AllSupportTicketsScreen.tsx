@@ -29,7 +29,7 @@ export function AllSupportTicketsScreen() {
 
   const open = (row: UnifiedTicket) => {
     if (row.source === 'TICKET') navigation.navigate('TicketDetails', { ticketId: row.id });
-    else if (row.source === 'CHAT') navigation.navigate('ChatWithUs');
+    else if (row.source === 'CHAT') navigation.navigate('LiveChat');
   };
 
   let body: React.ReactNode;
@@ -94,6 +94,9 @@ export function AllSupportTicketsScreen() {
   return (
     <StackScreen title="All Support Tickets" testID="all-support-tickets-screen">
       <ScrollView contentContainerStyle={{ padding: 16, gap: 10, paddingBottom: 24 }}>
+        <Text testID="all-tickets-subtitle" fontSize={13} color="$muted">
+          Every request you have raised, in one list
+        </Text>
         {body}
       </ScrollView>
     </StackScreen>

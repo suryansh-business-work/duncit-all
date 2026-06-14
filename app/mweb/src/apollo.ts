@@ -1,6 +1,7 @@
 import { ApolloClient, InMemoryCache, HttpLink, from } from '@apollo/client';
 import { setContext } from '@apollo/client/link/context';
 import { RetryLink } from '@apollo/client/link/retry';
+import { getMainDefinition } from '@apollo/client/utilities';
 import { getOrCreateDuid } from './duid';
 import { urlConfigs } from './config/url-configs';
 import { apolloErrorLink } from './utils/apolloErrorLink';
@@ -30,8 +31,16 @@ const retryLink = new RetryLink({
   delay: { initial: 400, max: 4000, jitter: true },
   attempts: {
     max: 6,
-    retryIf: (error) => {
+    retryIf: (error, operation) => {
       if (!error) return false;
+      // Never retry mutations. They are not guaranteed idempotent, so a retry
+      // after a transport blip — when the write may already have succeeded on
+      // the server — could duplicate a charge / pod / payout. Only safe,
+      // side-effect-free queries ride out transient failures.
+      const definition = getMainDefinition(operation.query);
+      if (definition.kind === 'OperationDefinition' && definition.operation === 'mutation') {
+        return false;
+      }
       const status =
         (error as { statusCode?: number; response?: { status?: number } }).statusCode ??
         (error as { response?: { status?: number } }).response?.status;

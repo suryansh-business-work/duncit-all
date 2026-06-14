@@ -84,6 +84,7 @@ test.describe('App · Support module', () => {
     await expect(page.getByTestId('ticket-form')).toBeVisible();
     await expect(page.getByTestId('ticket-name')).toBeVisible();
     await expect(page.getByTestId('ticket-email')).toBeVisible();
+    await expect(page.getByTestId('ticket-attach-add')).toBeVisible();
     await expect(page.getByText('Help squad is ready')).toBeVisible();
     await expect(page.getByText('Send to support')).toBeVisible();
     await expect(page.getByText('Submit ticket')).toHaveCount(0);

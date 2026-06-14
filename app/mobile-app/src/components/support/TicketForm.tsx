@@ -3,6 +3,7 @@ import { Button, Input, Text, YStack } from 'tamagui';
 
 import { createTicket } from '@/hooks/useSupport';
 import { CategorySelect } from './CategorySelect';
+import { TicketAttachments } from './TicketAttachments';
 import { DEFAULT_TICKET_CATEGORY, toServerCategory } from './ticketCategories';
 
 interface Props {
@@ -22,6 +23,7 @@ export function TicketForm({ onCreated, initialName = '', initialEmail = '' }: R
   const [category, setCategory] = useState<string>(DEFAULT_TICKET_CATEGORY);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
+  const [attachments, setAttachments] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -33,7 +35,12 @@ export function TicketForm({ onCreated, initialName = '', initialEmail = '' }: R
     setSubmitting(true);
     setError('');
     try {
-      const id = await createTicket(subject.trim(), message.trim(), toServerCategory(category));
+      const id = await createTicket(
+        subject.trim(),
+        message.trim(),
+        toServerCategory(category),
+        attachments,
+      );
       onCreated(id);
     } catch {
       setError('Could not create the ticket. Please try again.');
@@ -86,6 +93,7 @@ export function TicketForm({ onCreated, initialName = '', initialEmail = '' }: R
         numberOfLines={4}
         backgroundColor="$background"
       />
+      <TicketAttachments attachments={attachments} onChange={setAttachments} />
       {error ? (
         <Text testID="ticket-error" color="$danger" fontSize={12}>
           {error}

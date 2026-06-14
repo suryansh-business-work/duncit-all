@@ -29,10 +29,15 @@ export function useTickets() {
 }
 
 /** Opens a new support ticket and returns its id (for the details redirect). */
-export async function createTicket(subject: string, body: string, category: string) {
+export async function createTicket(
+  subject: string,
+  body: string,
+  category: string,
+  attachments: string[] = [],
+) {
   const data = await graphqlRequest(
     CreateTicketDocument,
-    { input: { subject, body_text: body, category: category as never } },
+    { input: { subject, body_text: body, category: category as never, attachments } },
     { auth: true },
   );
   return data.createTicket.id;

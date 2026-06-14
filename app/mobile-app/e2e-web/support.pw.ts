@@ -76,6 +76,23 @@ test.describe('App · Support module', () => {
     await expect(page.getByText(/select a pod|choose a pod/i)).toHaveCount(0);
   });
 
+  test('Create Support Tickets opens onto the mWeb-style form (BUG-05/07/08/09)', async ({ page }) => {
+    await page.goto('/support');
+    await page.getByTestId('support-tickets').click();
+    await expect(page.getByTestId('support-tickets-screen')).toBeVisible();
+    // Form-first (no existing-tickets list), with name/email fields + banners.
+    await expect(page.getByTestId('ticket-form')).toBeVisible();
+    await expect(page.getByTestId('ticket-name')).toBeVisible();
+    await expect(page.getByTestId('ticket-email')).toBeVisible();
+    await expect(page.getByText('Help squad is ready')).toBeVisible();
+    await expect(page.getByText('Send to support')).toBeVisible();
+    await expect(page.getByText('Submit ticket')).toHaveCount(0);
+    // Category is a dropdown with mWeb's friendly options, not chips.
+    await page.getByTestId('ticket-category').click();
+    await expect(page.getByTestId('ticket-category-option-PAYMENT')).toBeVisible();
+    await expect(page.getByText('Payment / Refund')).toBeVisible();
+  });
+
   test('support hub labels the callback card "Callback Request" (BUG-14)', async ({ page }) => {
     await page.goto('/support');
     await expect(page.getByTestId('support-callback')).toContainText('Callback Request');

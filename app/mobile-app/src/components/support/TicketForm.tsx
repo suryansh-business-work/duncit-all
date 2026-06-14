@@ -1,15 +1,27 @@
 import { useState } from 'react';
-import { Button, Input, Text, XStack, YStack } from 'tamagui';
+import { Button, Input, Text, YStack } from 'tamagui';
 
 import { createTicket } from '@/hooks/useSupport';
+import { CategorySelect } from './CategorySelect';
+import { DEFAULT_TICKET_CATEGORY, toServerCategory } from './ticketCategories';
 
-const CATEGORIES = ['GENERAL', 'PAYMENT', 'BOOKING', 'SAFETY', 'TECHNICAL', 'OTHER'];
+interface Props {
+  onCreated: (id: string) => void;
+  initialName?: string;
+  initialEmail?: string;
+}
 
-/** Create-ticket form (subject · category · message). On success calls onCreated. */
-export function TicketForm({ onCreated }: Readonly<{ onCreated: (id: string) => void }>) {
+/**
+ * Create-ticket form — name · email · category · subject · message. Mirrors
+ * mWeb's SupportForm: the same fields (name/email auto-filled), the same
+ * dropdown categories and the same "Send to support" action.
+ */
+export function TicketForm({ onCreated, initialName = '', initialEmail = '' }: Readonly<Props>) {
+  const [name, setName] = useState(initialName);
+  const [email, setEmail] = useState(initialEmail);
+  const [category, setCategory] = useState<string>(DEFAULT_TICKET_CATEGORY);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
-  const [category, setCategory] = useState('GENERAL');
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState('');
 
@@ -21,7 +33,7 @@ export function TicketForm({ onCreated }: Readonly<{ onCreated: (id: string) => 
     setSubmitting(true);
     setError('');
     try {
-      const id = await createTicket(subject.trim(), message.trim(), category);
+      const id = await createTicket(subject.trim(), message.trim(), toServerCategory(category));
       onCreated(id);
     } catch {
       setError('Could not create the ticket. Please try again.');
@@ -41,40 +53,33 @@ export function TicketForm({ onCreated }: Readonly<{ onCreated: (id: string) => 
       backgroundColor="$surface"
     >
       <Input
+        testID="ticket-name"
+        placeholder="Your name"
+        value={name}
+        onChangeText={setName}
+        autoComplete="name"
+        backgroundColor="$background"
+      />
+      <Input
+        testID="ticket-email"
+        placeholder="Email"
+        value={email}
+        onChangeText={setEmail}
+        autoCapitalize="none"
+        keyboardType="email-address"
+        backgroundColor="$background"
+      />
+      <CategorySelect value={category} onChange={setCategory} />
+      <Input
         testID="ticket-subject"
         placeholder="Subject"
         value={subject}
         onChangeText={setSubject}
         backgroundColor="$background"
       />
-      <XStack gap={6} flexWrap="wrap">
-        {CATEGORIES.map((c) => {
-          const selected = category === c;
-          return (
-            <XStack
-              key={c}
-              testID={`ticket-cat-${c}`}
-              role="button"
-              aria-label={c}
-              aria-pressed={selected}
-              onPress={() => setCategory(c)}
-              paddingHorizontal={10}
-              paddingVertical={5}
-              borderRadius={999}
-              borderWidth={1}
-              borderColor={selected ? '$primary' : '$borderColor'}
-              backgroundColor={selected ? '$primary' : 'transparent'}
-            >
-              <Text fontSize={11} fontWeight="800" color={selected ? '$onPrimary' : '$color'}>
-                {c}
-              </Text>
-            </XStack>
-          );
-        })}
-      </XStack>
       <Input
         testID="ticket-message"
-        placeholder="Describe your issue"
+        placeholder="Tell us what's going on"
         value={message}
         onChangeText={setMessage}
         multiline
@@ -94,7 +99,7 @@ export function TicketForm({ onCreated }: Readonly<{ onCreated: (id: string) => 
         color="$onPrimary"
         fontWeight="900"
       >
-        {submitting ? 'Submitting…' : 'Submit ticket'}
+        {submitting ? 'Sending…' : 'Send to support'}
       </Button>
     </YStack>
   );

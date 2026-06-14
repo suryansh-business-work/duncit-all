@@ -73,15 +73,19 @@ describe('TicketForm', () => {
     expect(mockedCreate).not.toHaveBeenCalled();
   });
 
-  it('creates a ticket when filled', async () => {
+  it('creates a ticket when filled (friendly category mapped to server enum)', async () => {
     mockedCreate.mockResolvedValue(undefined);
     const onCreated = jest.fn();
-    renderWithProviders(<TicketForm onCreated={onCreated} />);
+    renderWithProviders(
+      <TicketForm onCreated={onCreated} initialName="Asha" initialEmail="a@b.com" />,
+    );
     fireEvent.changeText(screen.getByTestId('ticket-subject'), 'Sub');
-    fireEvent.press(screen.getByTestId('ticket-cat-PAYMENT'));
+    fireEvent.press(screen.getByTestId('ticket-category'));
+    fireEvent.press(screen.getByTestId('ticket-category-option-BUG'));
     fireEvent.changeText(screen.getByTestId('ticket-message'), 'Body');
     fireEvent.press(screen.getByTestId('ticket-submit'));
     await waitFor(() => expect(onCreated).toHaveBeenCalled());
-    expect(mockedCreate).toHaveBeenCalledWith('Sub', 'Body', 'PAYMENT');
+    // BUG (friendly) → TECHNICAL (server enum).
+    expect(mockedCreate).toHaveBeenCalledWith('Sub', 'Body', 'TECHNICAL');
   });
 });

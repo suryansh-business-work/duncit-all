@@ -11,6 +11,7 @@ export const postTypeDefs = /* GraphQL */ `
     id: ID!
     author_id: ID!
     author: User
+    club_id: ID
     image_url: String!
     media_type: String!
     kind: String!
@@ -30,6 +31,8 @@ export const postTypeDefs = /* GraphQL */ `
     caption: String
     media_type: String
     kind: String
+    "Attach a STORY to a club so it shows on the Club Detail page (Bug 6)."
+    club_id: ID
   }
 
   extend type Query {
@@ -40,6 +43,8 @@ export const postTypeDefs = /* GraphQL */ `
     stories(author_id: ID): [Post!]!
     "The signed-in user's own active stories, newest first."
     myStories: [Post!]!
+    "Active (non-expired) stories attached to a club, newest first (Bug 6)."
+    clubStories(club_id: ID!): [Post!]!
   }
 
   extend type Mutation {

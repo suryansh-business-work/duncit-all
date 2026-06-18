@@ -3,7 +3,7 @@ import { Alert, Box, Button, LinearProgress, Snackbar, Stack, Typography } from 
 import { apolloClient } from '../../apollo';
 import { ADD_POD_STATUS, CREATE_STATUS_POST, UPLOAD_STATUS_MEDIA } from './queries';
 
-type StatusUploadKind = 'profile' | 'pod';
+type StatusUploadKind = 'profile' | 'pod' | 'club';
 type MediaType = 'IMAGE' | 'VIDEO';
 
 interface StatusUploadState {
@@ -18,6 +18,7 @@ interface StatusUploadContextValue {
   upload: StatusUploadState;
   openProfilePicker: () => void;
   openPodPicker: (podId: string) => void;
+  openClubPicker: (clubId: string) => void;
 }
 
 const StatusUploadContext = createContext<StatusUploadContextValue | null>(null);
@@ -68,7 +69,7 @@ function validateFile(file: File, allowVideo: boolean) {
 
 export function StatusUploadProvider({ children }: Readonly<{ children: React.ReactNode }>) {
   const inputRef = useRef<HTMLInputElement | null>(null);
-  const pendingRef = useRef<{ kind: StatusUploadKind; podId?: string } | null>(null);
+  const pendingRef = useRef<{ kind: StatusUploadKind; podId?: string; clubId?: string } | null>(null);
   const [accept, setAccept] = useState('image/*');
   const [upload, setUpload] = useState<StatusUploadState>(IDLE);
   const [notice, setNotice] = useState<string | null>(null);
@@ -87,6 +88,13 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
     inputRef.current?.click();
   };
 
+  const openClubPicker = (clubId: string) => {
+    if (upload.active) return setNotice('Please wait, status upload is in progress.');
+    pendingRef.current = { kind: 'club', clubId };
+    setAccept('image/*,video/*');
+    inputRef.current?.click();
+  };
+
   const handleFile = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     event.target.value = '';
@@ -97,7 +105,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
     if (fileError) return setNotice(fileError);
 
     const mediaType = mediaTypeOf(file);
-    if (pending.kind === 'profile' && mediaType === 'VIDEO') {
+    if (pending.kind !== 'pod' && mediaType === 'VIDEO') {
       const seconds = await videoDurationSeconds(file).catch(() => 0);
       if (seconds > MAX_STORY_VIDEO_SECONDS) {
         return setNotice(
@@ -110,9 +118,10 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
     try {
       const fileBase64 = await toBase64(file);
       setUpload((current) => ({ ...current, progress: 45, message: 'Uploading status media...' }));
+      const folderByKind = { pod: '/pod-status', club: '/club-status', profile: '/posts' } as const;
       const uploaded = await apolloClient.mutate({
         mutation: UPLOAD_STATUS_MEDIA,
-        variables: { fileBase64, fileName: file.name, mimeType: file.type, folder: pending.kind === 'pod' ? '/pod-status' : '/posts' },
+        variables: { fileBase64, fileName: file.name, mimeType: file.type, folder: folderByKind[pending.kind] },
       });
       const url = uploaded.data?.uploadImageToImagekit?.url;
       if (!url) throw new Error('Upload failed');
@@ -123,10 +132,18 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
       } else {
         await apolloClient.mutate({
           mutation: CREATE_STATUS_POST,
-          variables: { input: { image_url: url, caption: '', kind: 'STORY', media_type: mediaType } },
+          variables: {
+            input: {
+              image_url: url,
+              caption: '',
+              kind: 'STORY',
+              media_type: mediaType,
+              ...(pending.kind === 'club' ? { club_id: pending.clubId } : {}),
+            },
+          },
         });
       }
-      await apolloClient.refetchQueries({ include: ['HomeFeed', 'MeAndMyPosts', 'PodDetails'] });
+      await apolloClient.refetchQueries({ include: ['HomeFeed', 'MeAndMyPosts', 'PodDetails', 'ClubStories'] });
       setUpload({ active: false, kind: null, progress: 100, message: 'Status uploaded.', profileUrl: pending.kind === 'profile' ? url : upload.profileUrl });
       setNotice('Status uploaded.');
     } catch (error: any) {
@@ -135,7 +152,7 @@ export function StatusUploadProvider({ children }: Readonly<{ children: React.Re
     }
   };
 
-  const value = useMemo(() => ({ upload, openProfilePicker, openPodPicker }), [upload]);
+  const value = useMemo(() => ({ upload, openProfilePicker, openPodPicker, openClubPicker }), [upload]);
 
   return (
     <StatusUploadContext.Provider value={value}>

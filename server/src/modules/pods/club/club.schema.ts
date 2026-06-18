@@ -9,6 +9,12 @@ export const clubTypeDefs = /* GraphQL */ `
     type: CategoryMediaType
   }
 
+  type ClubActor {
+    id: ID!
+    name: String!
+    avatar_url: String
+  }
+
   type Club {
     id: ID!
     club_id: String!
@@ -20,6 +26,12 @@ export const clubTypeDefs = /* GraphQL */ `
     club_whats_app_group_link: String
     club_moments: [ClubMedia!]!
     meetup_venues_id: [String!]!
+    "Hosts explicitly linked by an admin (Bug 5)."
+    host_ids: [ID!]!
+    "Resolved host profiles — linked hosts, or the hosts of the club's pods as a fallback."
+    hosts: [ClubActor!]!
+    "How many users follow this club."
+    followers_count: Int!
     category_id: ID
     super_category_id: ID
     is_active: Boolean!
@@ -44,6 +56,7 @@ export const clubTypeDefs = /* GraphQL */ `
     club_whats_app_group_link: String
     club_moments: [ClubMediaInput!]
     meetup_venues_id: [String!]
+    host_ids: [ID!]
     category_id: ID
     super_category_id: ID
     is_active: Boolean
@@ -58,6 +71,7 @@ export const clubTypeDefs = /* GraphQL */ `
     club_whats_app_group_link: String
     club_moments: [ClubMediaInput!]
     meetup_venues_id: [String!]
+    host_ids: [ID!]
     category_id: ID
     super_category_id: ID
     is_active: Boolean

@@ -59,6 +59,28 @@ describe('postService integration', () => {
     expect(await postService.listStories(author)).toHaveLength(0);
   });
 
+  it('attaches a story to a club and lists it via clubStories (Bug 6)', async () => {
+    const clubId = new Types.ObjectId().toString();
+    const story = await postService.create(author, {
+      image_url: img,
+      kind: 'STORY',
+      club_id: clubId,
+    });
+    expect(story.club_id).toBe(clubId);
+
+    const clubStories = await postService.listClubStories(clubId);
+    expect(clubStories.map((s) => s.id)).toEqual([story.id]);
+
+    // A different club has none, and a club_id on a non-story is ignored.
+    expect(await postService.listClubStories(new Types.ObjectId().toString())).toHaveLength(0);
+    const plain = await postService.create(author, { image_url: img, club_id: clubId });
+    expect(plain.club_id).toBeNull();
+
+    // Expired club stories drop out.
+    await PostModel.updateOne({ _id: story.id }, { expires_at: new Date(Date.now() - 1000) });
+    expect(await postService.listClubStories(clubId)).toHaveLength(0);
+  });
+
   it('defaults a plain post to an image kept on the profile grid', async () => {
     const post = await postService.create(author, { image_url: img });
     expect(post.kind).toBe('POST');

@@ -5,6 +5,11 @@ import { requireRole } from '@middleware/rbac';
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN'];
 
 export const clubResolvers = {
+  Club: {
+    hosts: (parent: { id: string; host_ids?: string[] }) =>
+      clubService.getHosts(parent.id, parent.host_ids ?? []),
+    followers_count: (parent: { id: string }) => clubService.followersCount(parent.id),
+  },
   Query: {
     clubs: async (_p: unknown, args: { filter?: any }) => clubService.list(args.filter),
     club: async (_p: unknown, args: { club_doc_id: string }) => clubService.getById(args.club_doc_id),

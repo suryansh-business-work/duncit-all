@@ -182,6 +182,28 @@ describe('useSupportChat', () => {
       await expect(result.current.send('hi')).rejects.toThrow('boom');
     });
     expect(result.current.messages.some((m) => m.pending)).toBe(false);
+    expect(result.current.aiThinking).toBe(false);
+  });
+
+  it('shows the assistant thinking while the AI fields the chat, clears on a reply', async () => {
+    const { result, socket } = await bootedHook();
+    await act(async () => {
+      await result.current.send('hi');
+    });
+    expect(result.current.aiThinking).toBe(true);
+    act(() =>
+      socket.fire('support_chat:message', msg('a1', 's1', { sender_role: 'AGENT', is_ai: true })),
+    );
+    expect(result.current.aiThinking).toBe(false);
+  });
+
+  it('does not show thinking once a human agent has joined', async () => {
+    const { result, socket } = await bootedHook();
+    act(() => socket.fire('support_chat:session_update', { id: 's1', agent_id: 'agent1' }));
+    await act(async () => {
+      await result.current.send('hi');
+    });
+    expect(result.current.aiThinking).toBe(false);
   });
 
   it('uploads an attachment from base64, from a uri, and rejects when unreadable', async () => {

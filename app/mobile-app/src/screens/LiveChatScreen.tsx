@@ -30,6 +30,7 @@ export function LiveChatScreen() {
     isLoading,
     error,
     typing,
+    aiThinking,
     send,
     uploadAttachment,
     emitTyping,
@@ -177,7 +178,7 @@ export function LiveChatScreen() {
             </YStack>
           ))
         )}
-        {typing ? (
+        {typing || aiThinking ? (
           <Text
             testID="support-typing"
             fontSize={12}
@@ -185,7 +186,7 @@ export function LiveChatScreen() {
             color="$muted"
             paddingHorizontal={4}
           >
-            Support is typing…
+            {aiThinking ? 'Duncit Assistant is typing…' : 'Support is typing…'}
           </Text>
         ) : null}
       </ScrollView>

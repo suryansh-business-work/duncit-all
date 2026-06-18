@@ -1,6 +1,6 @@
 import { gql, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, Button, Stack, Typography } from '@mui/material';
+import { Box, Button, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import DashboardIcon from '@mui/icons-material/Dashboard';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -75,9 +75,10 @@ const meetingNotice = (meeting: EarnMeeting) => {
  * is still pending. */
 export default function EarnPage() {
   const navigate = useNavigate();
-  const { data, refetch } = useQuery(EARN_ME, { fetchPolicy: 'cache-and-network' });
+  const { data, loading, refetch } = useQuery(EARN_ME, { fetchPolicy: 'cache-and-network' });
   const roles: string[] = data?.me?.roles ?? [];
   const meetings: EarnMeeting[] = data?.myMeetings ?? [];
+  const showSkeleton = loading && !data;
 
   return (
     <Stack
@@ -98,7 +99,12 @@ export default function EarnPage() {
         </Typography>
       </Stack>
       <Stack spacing={1.5}>
-        {BOXES.map((box) => {
+        {showSkeleton
+          ? BOXES.map((box) => (
+              <Skeleton key={box.role} variant="rounded" height={104} sx={{ borderRadius: 3 }} />
+            ))
+          : null}
+        {showSkeleton ? null : BOXES.map((box) => {
           const hasRole = roles.includes(box.role);
           const pendingMeeting = meetings.find(
             (m) => m.kind === box.kind && PENDING.has(m.status)

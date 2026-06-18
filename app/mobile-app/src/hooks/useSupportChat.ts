@@ -44,6 +44,9 @@ export function useSupportChat() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
   const [typing, setTyping] = useState(false);
+  // The AI bot has no socket typing event, so we show "thinking" locally after
+  // the user sends while the assistant is still fielding the chat.
+  const [aiThinking, setAiThinking] = useState(false);
   const socketRef = useRef<Socket | null>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
   const sessionId = session?.id ?? '';
@@ -98,7 +101,10 @@ export function useSupportChat() {
       s.on('support_chat:message', (m: SupportChatMessage) => {
         if (m.session_id !== sessionId) return;
         setMessages((prev) => appendUnique(prev, m));
-        if (m.sender_role !== 'USER') markRead(sessionId);
+        if (m.sender_role !== 'USER') {
+          setAiThinking(false);
+          markRead(sessionId);
+        }
       });
       s.on('support_chat:session_update', (sess: SupportChatSession) => {
         if (sess.id === sessionId) setSession((prev) => ({ ...prev, ...sess }));
@@ -124,7 +130,7 @@ export function useSupportChat() {
 
   const send = useCallback(
     async (text: string, attachments: string[] = []) => {
-      if (!sessionId || (!text.trim() && attachments.length === 0)) return;
+      if (!session || (!text.trim() && attachments.length === 0)) return;
       const tempId = `temp-${Date.now()}`;
       const optimistic: SupportChatMessage = {
         id: tempId,
@@ -140,6 +146,8 @@ export function useSupportChat() {
         pending: true,
       };
       setMessages((prev) => [...prev, optimistic]);
+      // Show the assistant "thinking" while the AI still fields the chat.
+      if (session.ai_active !== false && !session.agent_id) setAiThinking(true);
       try {
         const sent = await graphqlRequest(
           SendSupportChatMessageDocument,
@@ -151,10 +159,11 @@ export function useSupportChat() {
         );
       } catch (e) {
         setMessages((prev) => prev.filter((m) => m.id !== tempId));
+        setAiThinking(false);
         throw e;
       }
     },
-    [sessionId],
+    [session, sessionId],
   );
 
   /** Uploads a picked image/video to ImageKit and returns its URL. */
@@ -229,6 +238,7 @@ export function useSupportChat() {
     isLoading,
     error,
     typing,
+    aiThinking,
     send,
     uploadAttachment,
     emitTyping,

@@ -52,6 +52,15 @@ export const REPLY_TO_TICKET = gql`
   }
 `;
 
+export const REOPEN_TICKET = gql`
+  mutation ReopenMyTicket($ticket_id: ID!) {
+    reopenTicket(ticket_id: $ticket_id) {
+      id
+      status
+    }
+  }
+`;
+
 export type TicketStatus = 'OPEN' | 'PENDING' | 'RESOLVED' | 'CLOSED';
 export type TicketCategory = 'GENERAL' | 'PAYMENT' | 'BOOKING' | 'SAFETY' | 'TECHNICAL' | 'OTHER';
 

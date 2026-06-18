@@ -79,6 +79,24 @@ describe('useTicketDetails', () => {
     expect(mockRequest).toHaveBeenCalledTimes(3);
   });
 
+  it('re-opens the ticket and reloads the thread', async () => {
+    mockRequest.mockImplementation((doc: unknown) => {
+      const body = JSON.stringify(doc);
+      if (body.includes('reopenTicket'))
+        return Promise.resolve({ reopenTicket: { id: 't1', status: 'OPEN' } });
+      return Promise.resolve({ ticket });
+    });
+    const { result } = renderHook(() => useTicketDetails('t1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    await act(async () => {
+      await result.current.reopen();
+    });
+    expect(mockRequest.mock.calls.some((c) => JSON.stringify(c[0]).includes('reopenTicket'))).toBe(
+      true,
+    );
+  });
+
   it('treats a missing ticket as null', async () => {
     mockRequest.mockResolvedValue({ ticket: null });
     const { result } = renderHook(() => useTicketDetails('missing'));

@@ -73,4 +73,32 @@ describe('ticketService integration', () => {
       ticketService.updateStatus(new Types.ObjectId().toString(), 'CLOSED')
     ).rejects.toThrow(/not found/i);
   });
+
+  it('re-opens a resolved/closed ticket when the user replies (Bug 3)', async () => {
+    const t = await ticketService.createTicket(userId, { subject: 'S', body_text: 'B' });
+    await ticketService.updateStatus(t.id, 'RESOLVED');
+
+    const afterUser = await ticketService.replyToTicket(userId, false, {
+      ticket_id: t.id,
+      body_text: 'It is still broken',
+    });
+    expect(afterUser.status).toBe('OPEN');
+  });
+
+  it('lets the owner reopen a closed ticket but forbids another user', async () => {
+    const t = await ticketService.createTicket(userId, { subject: 'S', body_text: 'B' });
+    await ticketService.updateStatus(t.id, 'CLOSED');
+
+    const reopened = await ticketService.reopen(userId, false, t.id);
+    expect(reopened.status).toBe('OPEN');
+
+    await ticketService.updateStatus(t.id, 'CLOSED');
+    await expect(
+      ticketService.reopen(new Types.ObjectId().toString(), false, t.id)
+    ).rejects.toThrow(/another user/i);
+
+    // An agent may reopen any ticket.
+    const byAgent = await ticketService.reopen(new Types.ObjectId().toString(), true, t.id);
+    expect(byAgent.status).toBe('OPEN');
+  });
 });

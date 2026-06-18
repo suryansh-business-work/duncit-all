@@ -72,6 +72,9 @@ export interface IBouncerCallbackRequest extends Document {
   status: BouncerCallbackStatus;
   contacted_by: Types.ObjectId | null;
   contacted_at: Date | null;
+  /** Outcome recorded by the agent on the call: how long it ran and how it ended. */
+  duration_seconds: number | null;
+  conclusion: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -91,6 +94,8 @@ const callbackSchema = new Schema<IBouncerCallbackRequest>(
     },
     contacted_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
     contacted_at: { type: Date, default: null },
+    duration_seconds: { type: Number, default: null },
+    conclusion: { type: String, default: '', trim: true, maxlength: 1000 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

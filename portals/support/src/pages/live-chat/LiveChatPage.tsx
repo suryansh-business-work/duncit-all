@@ -39,7 +39,9 @@ export default function LiveChatPage() {
   const [messages, setMessages] = useState<SupportChatMessage[]>([]);
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
+  const [userTyping, setUserTyping] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const messagesQuery = useQuery<{ supportChatMessages: SupportChatMessage[] }>(SUPPORT_CHAT_MESSAGES, {
     variables: { session_id: selectedId, limit: 100 },
@@ -62,11 +64,18 @@ export default function LiveChatPage() {
     },
     onChatSessionUpdate: () => sessionsQuery.refetch(),
     onChatMessage: (m: SupportChatMessage) => {
-      setMessages((prev) => {
-        if (m.session_id !== selectedIdRef.current) return prev;
-        if (prev.some((p) => p.id === m.id)) return prev;
-        return [...prev, m];
-      });
+      if (m.session_id !== selectedIdRef.current) return;
+      setMessages((prev) => (prev.some((p) => p.id === m.id) ? prev : [...prev, m]));
+      // The agent is viewing the thread, so mark a user reply read → blue tick.
+      if (m.sender_role === 'USER') {
+        markRead({ variables: { session_id: m.session_id } }).catch(() => undefined);
+      }
+    },
+    onChatTyping: (p) => {
+      if (p.session_id !== selectedIdRef.current) return;
+      setUserTyping(true);
+      if (typingTimer.current) clearTimeout(typingTimer.current);
+      typingTimer.current = setTimeout(() => setUserTyping(false), 2500);
     },
   });
 
@@ -175,6 +184,11 @@ export default function LiveChatPage() {
 
             <Box ref={scrollRef} sx={{ flex: 1, overflowY: 'auto', p: 2 }}>
               <ChatMessages messages={messages} />
+              {userTyping && (
+                <Typography variant="caption" color="text.secondary" sx={{ fontStyle: 'italic', pl: 1 }}>
+                  {selected.user.name} is typing…
+                </Typography>
+              )}
             </Box>
 
             <Divider />
@@ -185,6 +199,9 @@ export default function LiveChatPage() {
               onText={setText}
               onAttachments={setAttachments}
               onSend={send}
+              onTyping={() => {
+                if (selectedId) socketRef.current?.emit('support_typing', selectedId);
+              }}
             />
           </>
         )}

@@ -8,6 +8,9 @@ function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
 }
 
+/** Statuses a user reply should re-open back to OPEN (they still have a question). */
+const USER_REOPENS = new Set<TicketStatus>(['PENDING', 'RESOLVED', 'CLOSED']);
+
 async function buildActor(userId: Types.ObjectId | string | null | undefined) {
   if (!userId) return null;
   const u = await UserModel.findById(userId).select(
@@ -135,9 +138,10 @@ export const ticketService = {
     } as any);
     doc!.last_message_at = new Date();
     // An agent reply moves an OPEN ticket to PENDING (waiting on the user);
-    // a user reply re-opens a PENDING ticket.
+    // a user reply re-opens a pending/resolved/closed ticket so they can keep
+    // the conversation going (Bug 3: question a resolved/closed ticket).
     if (isAgent && doc!.status === 'OPEN') doc!.status = 'PENDING';
-    else if (!isAgent && doc!.status === 'PENDING') doc!.status = 'OPEN';
+    else if (!isAgent && USER_REOPENS.has(doc!.status)) doc!.status = 'OPEN';
     await doc!.save();
 
     const pub = await toPub(doc!);
@@ -151,6 +155,22 @@ export const ticketService = {
     const doc = await TicketModel.findById(ticketId);
     if (!doc) fail('NOT_FOUND', 'Ticket not found');
     doc!.status = status;
+    await doc!.save();
+    const pub = await toPub(doc!);
+    emitToSupportAgents('ticket:update', pub);
+    emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
+    return pub;
+  },
+
+  async reopen(actorId: string, isAgent: boolean, ticketId: string) {
+    if (!Types.ObjectId.isValid(ticketId)) fail('BAD_USER_INPUT', 'Invalid ticket_id');
+    const doc = await TicketModel.findById(ticketId);
+    if (!doc) fail('NOT_FOUND', 'Ticket not found');
+    if (!isAgent && String(doc!.user_id) !== String(actorId)) {
+      fail('FORBIDDEN', 'Cannot reopen another user’s ticket');
+    }
+    doc!.status = 'OPEN';
+    doc!.last_message_at = new Date();
     await doc!.save();
     const pub = await toPub(doc!);
     emitToSupportAgents('ticket:update', pub);

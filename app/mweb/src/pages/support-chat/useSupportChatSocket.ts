@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { io, Socket } from 'socket.io-client';
 import { urlConfigs } from '../../config/url-configs';
 
@@ -14,13 +14,23 @@ function getSocketUrl() {
 interface Params {
   sessionId: string | null;
   onMessage: (msg: any) => void;
+  onSession?: (session: any) => void;
+  onTyping?: () => void;
 }
 
-/** Connects the user to their support chat session room for live replies. */
-export function useSupportChatSocket({ sessionId, onMessage }: Params) {
+/**
+ * Connects the user to their support chat session room for live replies,
+ * session updates (read receipts / status) and the agent's typing signal.
+ * Returns an `emitTyping` helper so the agent sees the user typing too.
+ */
+export function useSupportChatSocket({ sessionId, onMessage, onSession, onTyping }: Params) {
   const socketRef = useRef<Socket | null>(null);
   const onMessageRef = useRef(onMessage);
+  const onSessionRef = useRef(onSession);
+  const onTypingRef = useRef(onTyping);
   onMessageRef.current = onMessage;
+  onSessionRef.current = onSession;
+  onTypingRef.current = onTyping;
 
   useEffect(() => {
     if (!sessionId) return;
@@ -38,10 +48,22 @@ export function useSupportChatSocket({ sessionId, onMessage }: Params) {
     s.on('support_chat:message', (msg: any) => {
       if (msg.session_id === sessionId) onMessageRef.current(msg);
     });
+    s.on('support_chat:session_update', (session: any) => {
+      if (session.id === sessionId) onSessionRef.current?.(session);
+    });
+    s.on('support_typing', (payload: any) => {
+      if (payload?.session_id === sessionId) onTypingRef.current?.();
+    });
     return () => {
       s.emit('leave_support_session', sessionId);
       s.disconnect();
       socketRef.current = null;
     };
   }, [sessionId]);
+
+  const emitTyping = useCallback(() => {
+    if (sessionId) socketRef.current?.emit('support_typing', sessionId);
+  }, [sessionId]);
+
+  return { emitTyping };
 }

@@ -2,7 +2,7 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { SupportScreen } from '@/screens/SupportScreen';
 import { SupportTicketsScreen } from '@/screens/SupportTicketsScreen';
-import { createTicket } from '@/hooks/useSupport';
+import { createTicket, useTickets } from '@/hooks/useSupport';
 import { useMeStore } from '@/stores/me.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -13,9 +13,11 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 const mockedCreate = createTicket as jest.Mock;
+const mockedTickets = useTickets as jest.Mock;
 beforeEach(() => {
   mockNavigate.mockClear();
   mockedCreate.mockReset();
+  mockedTickets.mockReturnValue({ tickets: [], isLoading: false, reload: jest.fn() });
   useMeStore.setState({ data: undefined });
 });
 

@@ -1,3 +1,4 @@
+import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole, hasRole } from '@middleware/rbac';
 import { supportChatService } from './supportChat.service';
@@ -33,6 +34,17 @@ export const supportChatResolvers = {
       const user = requireAuth(ctx);
       return listMyUnifiedSupportTickets(user.id);
     },
+    supportChatTranscript: async (
+      _p: unknown,
+      args: { session_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      const isAgent = hasRole(user, SUPPORT_ROLES);
+      const ok = await supportChatService.canAccessSession(args.session_id, user.id, isAgent);
+      if (!ok) throw new GraphQLError('Chat session not found', { extensions: { code: 'NOT_FOUND' } });
+      return supportChatService.transcript(args.session_id);
+    },
   },
   Mutation: {
     startSupportChat: (_p: unknown, args: { text?: string }, ctx: GraphQLContext) => {
@@ -55,6 +67,50 @@ export const supportChatResolvers = {
     closeSupportChat: (_p: unknown, args: { session_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, SUPPORT_ROLES);
       return supportChatService.close(args.session_id);
+    },
+    resolveSupportChat: async (
+      _p: unknown,
+      args: { session_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      const isAgent = hasRole(user, SUPPORT_ROLES);
+      const ok = await supportChatService.canAccessSession(args.session_id, user.id, isAgent);
+      if (!ok) throw new GraphQLError('Chat session not found', { extensions: { code: 'NOT_FOUND' } });
+      return supportChatService.resolve(args.session_id, isAgent ? 'support' : 'the user');
+    },
+    reopenSupportChat: async (
+      _p: unknown,
+      args: { session_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      const isAgent = hasRole(user, SUPPORT_ROLES);
+      const ok = await supportChatService.canAccessSession(args.session_id, user.id, isAgent);
+      if (!ok) throw new GraphQLError('Chat session not found', { extensions: { code: 'NOT_FOUND' } });
+      return supportChatService.reopen(args.session_id, isAgent ? 'support' : 'the user');
+    },
+    submitSupportChatFeedback: (
+      _p: unknown,
+      args: { session_id: string; rating: number; comment?: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return supportChatService.submitFeedback(args.session_id, user.id, {
+        rating: args.rating,
+        comment: args.comment,
+      });
+    },
+    emailSupportChatTranscript: async (
+      _p: unknown,
+      args: { session_id: string; email: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      const isAgent = hasRole(user, SUPPORT_ROLES);
+      const ok = await supportChatService.canAccessSession(args.session_id, user.id, isAgent);
+      if (!ok) throw new GraphQLError('Chat session not found', { extensions: { code: 'NOT_FOUND' } });
+      return supportChatService.emailTranscript(args.session_id, args.email);
     },
     markSupportChatRead: (_p: unknown, args: { session_id: string }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);

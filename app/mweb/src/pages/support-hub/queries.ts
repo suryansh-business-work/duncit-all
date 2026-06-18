@@ -77,6 +77,39 @@ export interface SupportPodOption {
   endsAt: string | null;
 }
 
+export const MY_PENDING_POD_FEEDBACK = gql`
+  query MyPendingPodFeedback {
+    myPendingPodFeedback {
+      id
+      title
+    }
+  }
+`;
+
+export const MY_CALLBACK_REQUESTS = gql`
+  query MyCallbackRequests {
+    myCallbackRequests {
+      id
+      reason
+      status
+      contacted_at
+      duration_seconds
+      conclusion
+      created_at
+    }
+  }
+`;
+
+export interface CallbackHistoryItem {
+  id: string;
+  reason: string;
+  status: 'PENDING' | 'CONTACTED' | 'CLOSED';
+  contacted_at: string | null;
+  duration_seconds: number | null;
+  conclusion: string | null;
+  created_at: string;
+}
+
 export const MY_UNIFIED_SUPPORT_TICKETS = gql`
   query MyUnifiedSupportTickets {
     myUnifiedSupportTickets {

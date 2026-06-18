@@ -84,6 +84,8 @@ export const ticketTypeDefs = /* GraphQL */ `
       attachments: [String!]
     ): Ticket!
     updateTicketStatus(ticket_id: ID!, status: TicketStatus!): Ticket!
+    "Re-open a resolved/closed ticket — allowed for the ticket owner or an agent."
+    reopenTicket(ticket_id: ID!): Ticket!
     assignTicket(ticket_id: ID!, assignee_id: ID): Ticket!
   }
 `;

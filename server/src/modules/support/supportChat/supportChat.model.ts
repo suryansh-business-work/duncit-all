@@ -11,6 +11,16 @@ export interface ISupportChatSession extends Document {
   last_message_preview: string;
   unread_for_agent: number;
   unread_for_user: number;
+  /** When each side last opened the chat — drives the "Seen" (blue tick) state. */
+  user_last_read_at: Date | null;
+  agent_last_read_at: Date | null;
+  /** The AI assistant answers first; cleared once a human takes over. */
+  ai_active: boolean;
+  handed_off: boolean;
+  /** Optional satisfaction feedback once the chat is resolved. */
+  rating: number | null;
+  feedback_comment: string;
+  feedback_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -24,6 +34,13 @@ const sessionSchema = new Schema<ISupportChatSession>(
     last_message_preview: { type: String, default: '' },
     unread_for_agent: { type: Number, default: 0 },
     unread_for_user: { type: Number, default: 0 },
+    user_last_read_at: { type: Date, default: null },
+    agent_last_read_at: { type: Date, default: null },
+    ai_active: { type: Boolean, default: true },
+    handed_off: { type: Boolean, default: false },
+    rating: { type: Number, default: null, min: 1, max: 5 },
+    feedback_comment: { type: String, default: '', maxlength: 1000 },
+    feedback_at: { type: Date, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );
@@ -43,6 +60,8 @@ export interface ISupportChatMessage extends Document {
   sender_photo: string;
   text: string;
   attachments: string[];
+  /** AGENT-role messages authored by the AI assistant rather than a human. */
+  is_ai: boolean;
   created_at: Date;
 }
 
@@ -55,6 +74,7 @@ const messageSchema = new Schema<ISupportChatMessage>(
     sender_photo: { type: String, default: '' },
     text: { type: String, default: '' },
     attachments: { type: [String], default: [] },
+    is_ai: { type: Boolean, default: false },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: false } }
 );

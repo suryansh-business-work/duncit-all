@@ -11,6 +11,7 @@ import {
   IconButton,
   Link,
   Stack,
+  TextField,
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -38,6 +39,8 @@ export default function CallbackDetailsPage() {
   const [markContacted] = useMutation(MARK_CALLBACK_CONTACTED, { onCompleted: () => refetch() });
   const [closeCb] = useMutation(CLOSE_CALLBACK, { onCompleted: () => refetch() });
   const [busy, setBusy] = useState(false);
+  const [durationMin, setDurationMin] = useState('');
+  const [conclusion, setConclusion] = useState('');
 
   const req = data?.bouncerCallbackRequests.find((r) => r.id === id);
 
@@ -48,6 +51,15 @@ export default function CallbackDetailsPage() {
     } finally {
       setBusy(false);
     }
+  };
+
+  // The agent's recorded call outcome — minutes converted to seconds for the API.
+  const outcomeVars = () => {
+    const mins = Number.parseFloat(durationMin);
+    return {
+      duration_seconds: Number.isFinite(mins) && mins > 0 ? Math.round(mins * 60) : null,
+      conclusion: conclusion.trim() || null,
+    };
   };
 
   return (
@@ -96,25 +108,54 @@ export default function CallbackDetailsPage() {
               <Typography variant="body2">
                 <strong>Reason:</strong> {req.reason || '—'}
               </Typography>
+              {(req.duration_seconds || req.conclusion) && (
+                <Typography variant="body2" color="text.secondary">
+                  <strong>Outcome:</strong>{' '}
+                  {req.duration_seconds ? `${Math.round(req.duration_seconds / 60)} min · ` : ''}
+                  {req.conclusion || '—'}
+                </Typography>
+              )}
 
               {req.status !== 'CLOSED' && (
-                <Stack direction="row" spacing={1}>
-                  {req.status === 'PENDING' && (
+                <Stack spacing={1.25}>
+                  <Stack direction="row" spacing={1}>
+                    <TextField
+                      size="small"
+                      type="number"
+                      label="Call duration (min)"
+                      value={durationMin}
+                      onChange={(e) => setDurationMin(e.target.value)}
+                      sx={{ width: 160 }}
+                      inputProps={{ min: 0 }}
+                    />
+                    <TextField
+                      size="small"
+                      fullWidth
+                      label="Conclusion"
+                      value={conclusion}
+                      onChange={(e) => setConclusion(e.target.value)}
+                    />
+                  </Stack>
+                  <Stack direction="row" spacing={1}>
+                    {req.status === 'PENDING' && (
+                      <Button
+                        variant="contained"
+                        disabled={busy}
+                        onClick={() =>
+                          run(() => markContacted({ variables: { id: req.id, ...outcomeVars() } }))
+                        }
+                      >
+                        Mark contacted
+                      </Button>
+                    )}
                     <Button
-                      variant="contained"
+                      variant="outlined"
                       disabled={busy}
-                      onClick={() => run(() => markContacted({ variables: { id: req.id } }))}
+                      onClick={() => run(() => closeCb({ variables: { id: req.id, ...outcomeVars() } }))}
                     >
-                      Mark contacted
+                      Close
                     </Button>
-                  )}
-                  <Button
-                    variant="outlined"
-                    disabled={busy}
-                    onClick={() => run(() => closeCb({ variables: { id: req.id } }))}
-                  >
-                    Close
-                  </Button>
+                  </Stack>
                 </Stack>
               )}
             </Stack>

@@ -18,6 +18,8 @@ const req = (status: CallbackRequest['status'], extras: Partial<CallbackRequest>
   reason: 'Call me about my booking',
   contact_phone: '+919800000000',
   contacted_at: null,
+  duration_seconds: null,
+  conclusion: null,
   created_at: new Date().toISOString(),
   user: { id: 'u1', name: 'Aman', phone: '+919800000000' },
   pod: { id: 'p1', title: 'Sunday Brunch' },
@@ -50,9 +52,9 @@ describe('CallbackDetailsPage', () => {
   it('marks contacted then closes a pending request', async () => {
     renderAt([
       queryMock([req('PENDING')]),
-      { request: { query: MARK_CALLBACK_CONTACTED, variables: { id: ID } }, result: { data: { markBouncerCallbackContacted: { id: ID, status: 'CONTACTED', contacted_at: 'now' } } } },
+      { request: { query: MARK_CALLBACK_CONTACTED, variables: { id: ID, duration_seconds: null, conclusion: null } }, result: { data: { markBouncerCallbackContacted: { id: ID, status: 'CONTACTED', contacted_at: 'now', duration_seconds: null, conclusion: null } } } },
       queryMock([req('CONTACTED')]),
-      { request: { query: CLOSE_CALLBACK, variables: { id: ID } }, result: { data: { closeBouncerCallback: { id: ID, status: 'CLOSED' } } } },
+      { request: { query: CLOSE_CALLBACK, variables: { id: ID, duration_seconds: null, conclusion: null } }, result: { data: { closeBouncerCallback: { id: ID, status: 'CLOSED', duration_seconds: null, conclusion: null } } } },
       queryMock([req('CLOSED')]),
     ]);
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());

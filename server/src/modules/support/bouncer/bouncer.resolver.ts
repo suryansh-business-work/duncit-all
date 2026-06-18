@@ -32,6 +32,14 @@ export const bouncerResolvers = {
       const user = requireAuth(ctx);
       return bouncerService.getMyActiveSos(user.id, args.pod_id);
     },
+    myCallbackRequests: (_p: unknown, args: { limit?: number }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return bouncerService.listMyCallbacks(user.id, args.limit ?? 100);
+    },
+    myPendingPodFeedback: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return bouncerService.getPendingPodFeedback(user.id);
+    },
   },
   Mutation: {
     raiseBouncerSos: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -50,13 +58,27 @@ export const bouncerResolvers = {
       const user = requireAuth(ctx);
       return bouncerService.requestCallback(user.id, args.input);
     },
-    markBouncerCallbackContacted: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+    markBouncerCallbackContacted: (
+      _p: unknown,
+      args: { id: string; duration_seconds?: number | null; conclusion?: string | null },
+      ctx: GraphQLContext
+    ) => {
       const user = requireRole(ctx, ADMIN_ROLES);
-      return bouncerService.markCallbackContacted(user.id, args.id);
+      return bouncerService.markCallbackContacted(user.id, args.id, {
+        duration_seconds: args.duration_seconds,
+        conclusion: args.conclusion,
+      });
     },
-    closeBouncerCallback: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+    closeBouncerCallback: (
+      _p: unknown,
+      args: { id: string; duration_seconds?: number | null; conclusion?: string | null },
+      ctx: GraphQLContext
+    ) => {
       const user = requireRole(ctx, ADMIN_ROLES);
-      return bouncerService.closeCallback(user.id, args.id);
+      return bouncerService.closeCallback(user.id, args.id, {
+        duration_seconds: args.duration_seconds,
+        conclusion: args.conclusion,
+      });
     },
     submitBouncerFeedback: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);

@@ -6,16 +6,24 @@ interface Props {
   pods: any[];
   onOpen: (id: string) => void;
   priceFormat: (value: number) => string;
+  title?: string;
+  emptyText?: string;
 }
 
-export default function ClubUpcomingPodsSection({ pods, onOpen, priceFormat }: Readonly<Props>) {
+export default function ClubUpcomingPodsSection({
+  pods,
+  onOpen,
+  priceFormat,
+  title = 'Upcoming pods',
+  emptyText = 'No active pods in this club yet.',
+}: Readonly<Props>) {
   return (
     <Box>
       <Typography variant="h6" fontWeight={700} gutterBottom>
-        Upcoming pods
+        {title}
       </Typography>
       {pods.length === 0 ? (
-        <Alert severity="info">No active pods in this club yet.</Alert>
+        <Alert severity="info">{emptyText}</Alert>
       ) : (
         <Stack spacing={1.25}>
           {pods.map((pod) => {

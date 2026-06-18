@@ -2,15 +2,15 @@ import { useState } from 'react';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import { Box, CircularProgress, IconButton, Stack } from '@mui/material';
+import { Box, Button, CircularProgress, IconButton, Stack } from '@mui/material';
 import MomentLightbox from '../../components/moments/MomentLightbox';
 import GroupsIcon from '@mui/icons-material/Groups';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShareIcon from '@mui/icons-material/Share';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import CheckIcon from '@mui/icons-material/Check';
+import AddIcon from '@mui/icons-material/Add';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import VideoMedia from '../../components/media/VideoMedia';
@@ -95,15 +95,28 @@ export default function ClubHero({
       <IconButton size="small" onClick={onBack} aria-label="Back" sx={overlayBtn}>
         <ArrowBackIcon fontSize="small" />
       </IconButton>
-      <Stack direction="row" spacing={0.75}>
-        <IconButton
+      <Stack direction="row" spacing={0.75} alignItems="center">
+        <Button
           size="small"
+          variant={following ? 'contained' : 'outlined'}
           aria-label={following ? 'Following' : 'Follow'}
           onClick={onToggleFollow}
-          sx={{ ...overlayBtn, color: following ? 'error.light' : 'common.white' }}
+          startIcon={following ? <CheckIcon sx={{ fontSize: 16 }} /> : <AddIcon sx={{ fontSize: 16 }} />}
+          sx={{
+            borderRadius: 999,
+            fontWeight: 900,
+            textTransform: 'none',
+            minWidth: 0,
+            px: 1.5,
+            color: following ? 'primary.contrastText' : 'common.white',
+            borderColor: 'rgba(255,255,255,0.7)',
+            bgcolor: following ? 'primary.main' : 'rgba(0,0,0,0.45)',
+            backdropFilter: 'blur(6px)',
+            '&:hover': { bgcolor: following ? 'primary.dark' : 'rgba(0,0,0,0.6)', borderColor: 'common.white' },
+          }}
         >
-          {following ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
-        </IconButton>
+          {following ? 'Following' : 'Follow'}
+        </Button>
         <IconButton
           size="small"
           aria-label={saved ? 'Saved' : 'Save'}

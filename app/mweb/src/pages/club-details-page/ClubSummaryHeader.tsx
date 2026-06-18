@@ -1,7 +1,7 @@
 import GroupsIcon from '@mui/icons-material/Groups';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
-import FavoriteIcon from '@mui/icons-material/Favorite';
-import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import CheckIcon from '@mui/icons-material/Check';
+import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
 
 interface Props {
@@ -9,6 +9,7 @@ interface Props {
   featureUrl?: string;
   podCount: number;
   venueCount: number;
+  followersCount: number;
   following: boolean;
   chatUrl?: string | null;
   onToggleFollow: () => void;
@@ -27,7 +28,7 @@ function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
   );
 }
 
-export default function ClubSummaryHeader({ club, featureUrl, podCount, venueCount, following, chatUrl, onToggleFollow }: Readonly<Props>) {
+export default function ClubSummaryHeader({ club, featureUrl, podCount, venueCount, followersCount, following, chatUrl, onToggleFollow }: Readonly<Props>) {
   const momentsCount = club.club_moments?.length ?? 0;
 
   return (
@@ -61,13 +62,14 @@ export default function ClubSummaryHeader({ club, featureUrl, podCount, venueCou
         </Box>
       </Stack>
       <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
+        <Stat label="followers" value={followersCount} />
         <Stat label="pods" value={podCount} />
         <Stat label="moments" value={momentsCount} />
         <Stat label="venues" value={venueCount} />
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-        <Button fullWidth variant="contained" startIcon={following ? <FavoriteIcon /> : <FavoriteBorderIcon />} onClick={onToggleFollow} sx={{ borderRadius: 3, fontWeight: 900 }}>
-          {following ? 'Following' : 'Join Club'}
+        <Button fullWidth variant={following ? 'outlined' : 'contained'} startIcon={following ? <CheckIcon /> : <PersonAddAltIcon />} onClick={onToggleFollow} sx={{ borderRadius: 3, fontWeight: 900 }}>
+          {following ? 'Following' : 'Follow Club'}
         </Button>
         <Button fullWidth variant="outlined" startIcon={<ChatBubbleOutlineIcon />} component={chatUrl ? 'a' : 'button'} href={chatUrl || undefined} target={chatUrl ? '_blank' : undefined} rel={chatUrl ? 'noreferrer' : undefined} disabled={!chatUrl} sx={{ borderRadius: 3, fontWeight: 900 }}>
           Chat

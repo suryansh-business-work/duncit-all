@@ -19,6 +19,12 @@ export const CLUB_BY_SLUG = gql`
       club_whats_app_announcement_link
       club_whats_app_group_link
       meetup_venues_id
+      followers_count
+      hosts {
+        id
+        name
+        avatar_url
+      }
       category_id
       super_category_id
     }
@@ -32,6 +38,7 @@ export const CLUB_DETAILS_RELATED = gql`
       pod_id
       pod_title
       pod_date_time
+      pod_end_date_time
       pod_type
       pod_amount
       pod_attendees
@@ -56,6 +63,23 @@ export const CLUB_DETAILS_RELATED = gql`
       postal_code
       lat
       lng
+    }
+  }
+`;
+
+export const CLUB_STORIES = gql`
+  query ClubStories($id: ID!) {
+    clubStories(club_id: $id) {
+      id
+      image_url
+      media_type
+      caption
+      created_at
+      author {
+        id
+        full_name
+        profile_photo
+      }
     }
   }
 `;

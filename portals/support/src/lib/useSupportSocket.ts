@@ -14,6 +14,7 @@ export interface SupportSocketEvents {
   onChatSessionNew?: (s: any) => void;
   onChatSessionUpdate?: (s: any) => void;
   onChatMessage?: (m: any) => void;
+  onChatTyping?: (p: { session_id: string; user_id: string }) => void;
 }
 
 function socketOrigin(): string {
@@ -87,6 +88,7 @@ export function useSupportSocket(events: SupportSocketEvents) {
     socket.on('support_chat:session_new', (p) => eventsRef.current.onChatSessionNew?.(p));
     socket.on('support_chat:session_update', (p) => eventsRef.current.onChatSessionUpdate?.(p));
     socket.on('support_chat:message', (p) => eventsRef.current.onChatMessage?.(p));
+    socket.on('support_typing', (p) => eventsRef.current.onChatTyping?.(p));
 
     return () => {
       socket.removeAllListeners();

@@ -45,6 +45,8 @@ export const BOUNCER_CALLBACK_REQUESTS = gql`
       reason
       contact_phone
       contacted_at
+      duration_seconds
+      conclusion
       created_at
       user {
         id
@@ -105,20 +107,24 @@ export const RESOLVE_SOS = gql`
 `;
 
 export const MARK_CALLBACK_CONTACTED = gql`
-  mutation MarkBouncerCallbackContacted($id: ID!) {
-    markBouncerCallbackContacted(id: $id) {
+  mutation MarkBouncerCallbackContacted($id: ID!, $duration_seconds: Int, $conclusion: String) {
+    markBouncerCallbackContacted(id: $id, duration_seconds: $duration_seconds, conclusion: $conclusion) {
       id
       status
       contacted_at
+      duration_seconds
+      conclusion
     }
   }
 `;
 
 export const CLOSE_CALLBACK = gql`
-  mutation CloseBouncerCallback($id: ID!) {
-    closeBouncerCallback(id: $id) {
+  mutation CloseBouncerCallback($id: ID!, $duration_seconds: Int, $conclusion: String) {
+    closeBouncerCallback(id: $id, duration_seconds: $duration_seconds, conclusion: $conclusion) {
       id
       status
+      duration_seconds
+      conclusion
     }
   }
 `;
@@ -149,6 +155,8 @@ export interface CallbackRequest {
   reason: string;
   contact_phone: string;
   contacted_at: string | null;
+  duration_seconds: number | null;
+  conclusion: string | null;
   created_at: string;
   user: { id: string; name: string; phone: string | null };
   pod: { id: string; title: string } | null;

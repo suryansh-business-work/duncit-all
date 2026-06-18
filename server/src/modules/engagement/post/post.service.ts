@@ -7,6 +7,7 @@ const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 const toPub = (p: IPost, viewerId?: string | null) => ({
   id: String(p._id),
   author_id: String(p.author_id),
+  club_id: p.club_id ? String(p.club_id) : null,
   image_url: p.image_url,
   media_type: p.media_type || 'IMAGE',
   kind: p.kind || 'POST',
@@ -82,6 +83,16 @@ export const postService = {
     return docs.map((d) => toPub(d, viewerId));
   },
 
+  async listClubStories(clubId: string, viewerId?: string | null) {
+    assertId(clubId, 'club_id');
+    const docs = await PostModel.find({
+      kind: 'STORY',
+      club_id: new Types.ObjectId(clubId),
+      expires_at: { $gt: new Date() },
+    }).sort({ created_at: -1 });
+    return docs.map((d) => toPub(d, viewerId));
+  },
+
   async getById(id: string, viewerId?: string | null) {
     assertId(id);
     const doc = await PostModel.findById(id);
@@ -90,12 +101,19 @@ export const postService = {
 
   async create(
     authorId: string,
-    input: { image_url: string; caption?: string; media_type?: string; kind?: string }
+    input: { image_url: string; caption?: string; media_type?: string; kind?: string; club_id?: string | null }
   ) {
     validateMediaUrl(input.image_url);
     const kind = String(input.kind || '').toUpperCase() === 'STORY' ? 'STORY' : 'POST';
+    // A club can only be attached to a story (Bug 6), and the id must be valid.
+    let clubId: Types.ObjectId | null = null;
+    if (kind === 'STORY' && input.club_id) {
+      assertId(input.club_id, 'club_id');
+      clubId = new Types.ObjectId(input.club_id);
+    }
     const doc = await PostModel.create({
       author_id: new Types.ObjectId(authorId),
+      club_id: clubId,
       image_url: input.image_url,
       media_type: normalizeMediaType(input.media_type),
       kind,

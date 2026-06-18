@@ -1,5 +1,9 @@
 import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
 import { ClubModel } from './club.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
+import { UserModel } from '@modules/access/user/user.model';
+import { ClubFollowerModel } from '@modules/access/user/relations';
 
 const slugify = (s: string) =>
   s
@@ -27,6 +31,7 @@ const toPub = (d: any) => {
       type: m.type ?? 'IMAGE',
     })),
     meetup_venues_id: d.meetup_venues_id ?? [],
+    host_ids: (d.host_ids ?? []).map((x: any) => String(x)),
     category_id: d.category_id ? String(d.category_id) : null,
     super_category_id: d.super_category_id ? String(d.super_category_id) : null,
     is_active: !!d.is_active,
@@ -88,6 +93,7 @@ export const clubService = {
       club_whats_app_group_link: input.club_whats_app_group_link ?? '',
       club_moments: input.club_moments ?? [],
       meetup_venues_id: input.meetup_venues_id ?? [],
+      host_ids: input.host_ids ?? [],
       category_id: input.category_id || null,
       super_category_id: input.super_category_id || null,
       is_active: input.is_active ?? true,
@@ -107,6 +113,7 @@ export const clubService = {
       'club_whats_app_group_link',
       'club_moments',
       'meetup_venues_id',
+      'host_ids',
       'category_id',
       'super_category_id',
       'is_active',
@@ -123,5 +130,35 @@ export const clubService = {
     if (!doc) notFound();
     await doc!.deleteOne();
     return true;
+  },
+
+  /**
+   * Resolved host profiles for a club (Bug 5): the admin-linked hosts, or — when
+   * none are linked — the distinct hosts of the club's pods as a fallback.
+   */
+  async getHosts(clubId: string, hostIds: string[]) {
+    let ids = (hostIds ?? []).filter((x) => Types.ObjectId.isValid(x));
+    if (ids.length === 0 && Types.ObjectId.isValid(clubId)) {
+      const pods = await PodModel.find({ club_id: new Types.ObjectId(clubId) })
+        .select('pod_hosts_id')
+        .lean();
+      ids = Array.from(
+        new Set(pods.flatMap((p: any) => (p.pod_hosts_id ?? []).map((x: any) => String(x))))
+      );
+    }
+    if (ids.length === 0) return [];
+    const users = await UserModel.find({ _id: { $in: ids } }).select(
+      'profile.first_name profile.last_name profile.profile_photo'
+    );
+    return users.map((u: any) => ({
+      id: String(u._id),
+      name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'Host',
+      avatar_url: u.profile?.profile_photo ?? null,
+    }));
+  },
+
+  async followersCount(clubId: string) {
+    if (!Types.ObjectId.isValid(clubId)) return 0;
+    return ClubFollowerModel.countDocuments({ club_id: new Types.ObjectId(clubId) });
   },
 };

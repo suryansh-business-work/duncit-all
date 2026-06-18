@@ -15,6 +15,9 @@ export interface IClub extends Document {
   club_whats_app_group_link?: string;
   club_moments: IMedia[];
   meetup_venues_id: string[];
+  /** Hosts explicitly linked to this club by an admin (Bug 5). When empty the
+   *  Club Detail page falls back to the hosts of the club's pods. */
+  host_ids: Types.ObjectId[];
   category_id: Types.ObjectId | null;
   super_category_id: Types.ObjectId | null;
   is_active: boolean;
@@ -41,6 +44,7 @@ const clubSchema = new Schema<IClub>(
     club_whats_app_group_link: { type: String, default: '' },
     club_moments: { type: [mediaSchema], default: [] },
     meetup_venues_id: { type: [String], default: [] },
+    host_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
     category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     is_active: { type: Boolean, default: true },

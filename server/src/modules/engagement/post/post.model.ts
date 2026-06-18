@@ -12,6 +12,8 @@ export interface IPostComment {
 
 export interface IPost extends Document {
   author_id: Types.ObjectId;
+  /** Optional club a STORY is attached to — powers club-scoped stories (Bug 6). */
+  club_id: Types.ObjectId | null;
   image_url: string;
   media_type: PostMediaType;
   kind: PostKind;
@@ -35,6 +37,7 @@ const commentSchema = new Schema<IPostComment>(
 const postSchema = new Schema<IPost>(
   {
     author_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    club_id: { type: Schema.Types.ObjectId, ref: 'Club', default: null, index: true },
     image_url: { type: String, required: true },
     // The media a story/post points at. Legacy docs are images.
     media_type: { type: String, enum: ['IMAGE', 'VIDEO'], default: 'IMAGE' },

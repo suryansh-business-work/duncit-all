@@ -45,6 +45,8 @@ export const postResolvers = {
       const u = requireAuth(ctx);
       return postService.listStories(u.id, u.id);
     },
+    clubStories: (_p: unknown, args: { club_id: string }, ctx: GraphQLContext) =>
+      postService.listClubStories(args.club_id, ctx.user?.id ?? null),
   },
   Mutation: {
     createPost: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

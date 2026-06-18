@@ -89,6 +89,7 @@ export async function sendHtmlEmail(opts: {
   bcc?: string[];
   subject: string;
   html: string;
+  attachments?: EmailAttachment[];
 }) {
   const { from } = await getMailConfigs();
   const info = await (await getTransporter()).sendMail({
@@ -97,6 +98,7 @@ export async function sendHtmlEmail(opts: {
     bcc: opts.bcc,
     subject: opts.subject,
     html: opts.html,
+    attachments: opts.attachments,
   });
   // eslint-disable-next-line no-console
   console.log(`📧 Campaign email queued (${info.messageId})`);

@@ -10,6 +10,7 @@ import {
 } from './bouncer.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { ClubModel } from '@modules/pods/club/club.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
@@ -20,6 +21,20 @@ const ADMIN_ROOM = 'admin:bouncers';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
+}
+
+/** Record the agent's call outcome (duration + conclusion) when provided. */
+function applyCallbackOutcome(
+  doc: { duration_seconds: number | null; conclusion: string },
+  outcome?: { duration_seconds?: number | null; conclusion?: string | null }
+) {
+  if (!outcome) return;
+  if (typeof outcome.duration_seconds === 'number' && outcome.duration_seconds >= 0) {
+    doc.duration_seconds = Math.round(outcome.duration_seconds);
+  }
+  if (typeof outcome.conclusion === 'string') {
+    doc.conclusion = outcome.conclusion.trim();
+  }
 }
 
 function emit(event: string, payload: any, hostId?: string | null) {
@@ -97,6 +112,8 @@ async function toCallbackPub(doc: any) {
     reason: doc.reason ?? '',
     status: doc.status,
     contacted_at: doc.contacted_at?.toISOString?.() ?? null,
+    duration_seconds: doc.duration_seconds ?? null,
+    conclusion: doc.conclusion ?? '',
     created_at: doc.created_at?.toISOString?.() ?? '',
   };
 }
@@ -271,20 +288,29 @@ export const bouncerService = {
     return pub;
   },
 
-  async markCallbackContacted(adminId: string, id: string) {
+  async markCallbackContacted(
+    adminId: string,
+    id: string,
+    outcome?: { duration_seconds?: number | null; conclusion?: string | null }
+  ) {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid id');
     const doc = await BouncerCallbackRequestModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Callback not found');
     doc!.status = 'CONTACTED';
     doc!.contacted_by = new Types.ObjectId(adminId);
     doc!.contacted_at = new Date();
+    applyCallbackOutcome(doc!, outcome);
     await doc!.save();
     const pub = await toCallbackPub(doc);
     emit('bouncer:callback_update', pub);
     return pub;
   },
 
-  async closeCallback(adminId: string, id: string) {
+  async closeCallback(
+    adminId: string,
+    id: string,
+    outcome?: { duration_seconds?: number | null; conclusion?: string | null }
+  ) {
     if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid id');
     const doc = await BouncerCallbackRequestModel.findById(id);
     if (!doc) fail('NOT_FOUND', 'Callback not found');
@@ -293,6 +319,7 @@ export const bouncerService = {
       doc!.contacted_by = new Types.ObjectId(adminId);
       doc!.contacted_at = new Date();
     }
+    applyCallbackOutcome(doc!, outcome);
     await doc!.save();
     const pub = await toCallbackPub(doc);
     emit('bouncer:callback_update', pub);
@@ -303,6 +330,13 @@ export const bouncerService = {
     const q: any = {};
     if (status) q.status = status;
     const docs = await BouncerCallbackRequestModel.find(q).sort({ created_at: -1 }).limit(limit);
+    return Promise.all(docs.map(toCallbackPub));
+  },
+
+  async listMyCallbacks(userId: string, limit = 100) {
+    const docs = await BouncerCallbackRequestModel.find({ user_id: new Types.ObjectId(userId) })
+      .sort({ created_at: -1 })
+      .limit(Math.min(200, Math.max(1, limit)));
     return Promise.all(docs.map(toCallbackPub));
   },
 
@@ -341,5 +375,32 @@ export const bouncerService = {
   async listFeedback(limit = 100) {
     const docs = await BouncerFeedbackModel.find().sort({ created_at: -1 }).limit(limit);
     return Promise.all(docs.map(toFeedbackPub));
+  },
+
+  /**
+   * The most recently-attended pod the user has NOT yet rated — drives the
+   * "how was the pod?" feedback pop-up shown on next login (Bug 6). A pod is
+   * "attended" once it has been JOINED and its start time is in the past.
+   */
+  async getPendingPodFeedback(userId: string) {
+    const uid = new Types.ObjectId(userId);
+    const memberships = await PodMemberModel.find({ user_id: uid, status: 'JOINED' })
+      .select('pod_id')
+      .lean();
+    if (memberships.length === 0) return null;
+    const podIds = memberships.map((m) => m.pod_id);
+    const fed = await BouncerFeedbackModel.find({ user_id: uid, pod_id: { $in: podIds } })
+      .select('pod_id')
+      .lean();
+    const rated = new Set(fed.map((f) => String(f.pod_id)));
+    const pending = podIds.filter((p) => !rated.has(String(p)));
+    if (pending.length === 0) return null;
+    const pod = await PodModel.findOne({
+      _id: { $in: pending },
+      pod_date_time: { $lt: new Date() },
+    })
+      .sort({ pod_date_time: -1 })
+      .select('_id');
+    return pod ? buildPodInfo(pod._id as Types.ObjectId) : null;
   },
 };

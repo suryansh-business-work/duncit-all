@@ -1,3 +1,8 @@
+const sendHtmlEmailMock = jest.fn().mockResolvedValue({ messageId: 'test' });
+jest.mock('@services/email/email.service', () => ({
+  sendHtmlEmail: (...args: unknown[]) => sendHtmlEmailMock(...args),
+}));
+
 import { Types } from 'mongoose';
 import { supportChatService } from '../../supportChat.service';
 import { SupportChatSessionModel } from '../../supportChat.model';
@@ -91,5 +96,82 @@ describe('supportChat claim + system bubble', () => {
     const messages = await supportChatService.listMessages(session.id);
     const roles = messages.map((m) => m.sender_role);
     expect(roles).toEqual(['USER', 'SYSTEM', 'AGENT']);
+  });
+});
+
+describe('supportChat resolve / reopen / feedback', () => {
+  it('lets the user resolve a chat and re-open it, each announced as a SYSTEM bubble', async () => {
+    const uid = new Types.ObjectId().toString();
+    const session = await supportChatService.start(uid, 'help me');
+
+    const resolved = await supportChatService.resolve(session.id, 'the user');
+    expect(resolved.status).toBe('CLOSED');
+
+    const reopened = await supportChatService.reopen(session.id, 'the user');
+    expect(reopened.status).toBe('OPEN');
+
+    const messages = await supportChatService.listMessages(session.id);
+    const systemTexts = messages.filter((m) => m.sender_role === 'SYSTEM').map((m) => m.text);
+    expect(systemTexts).toEqual([
+      'Chat marked resolved by the user.',
+      'Chat re-opened by the user.',
+    ]);
+  });
+
+  it('stores satisfaction feedback and rejects another user / a bad rating', async () => {
+    const uid = new Types.ObjectId().toString();
+    const session = await supportChatService.start(uid, 'thanks');
+
+    const fed = await supportChatService.submitFeedback(session.id, uid, { rating: 5, comment: 'great' });
+    expect(fed.rating).toBe(5);
+    expect(fed.feedback_comment).toBe('great');
+
+    await expect(
+      supportChatService.submitFeedback(session.id, new Types.ObjectId().toString(), { rating: 4 })
+    ).rejects.toThrow(/not your chat/i);
+    await expect(
+      supportChatService.submitFeedback(session.id, uid, { rating: 9 })
+    ).rejects.toThrow(/1-5/);
+  });
+
+  it('records read timestamps for the seen/blue-tick state', async () => {
+    const uid = new Types.ObjectId().toString();
+    const session = await supportChatService.start(uid, 'hi');
+    const agentId = new Types.ObjectId().toString();
+    await supportChatService.sendMessage(agentId, true, { sessionId: session.id, text: 'hello' });
+
+    const afterUserRead = await supportChatService.markRead(session.id, false);
+    expect(afterUserRead.user_last_read_at).toBeTruthy();
+
+    const afterAgentRead = await supportChatService.markRead(session.id, true);
+    expect(afterAgentRead.agent_last_read_at).toBeTruthy();
+  });
+});
+
+describe('supportChat transcript', () => {
+  it('builds a plain-text transcript with the CH ticket number', async () => {
+    const uid = new Types.ObjectId().toString();
+    const session = await supportChatService.start(uid, 'Where is my refund?');
+
+    const t = await supportChatService.transcript(session.id);
+    expect(t.filename).toMatch(/^support-CH-[0-9A-F]{6}\.txt$/);
+    expect(t.text).toContain('Where is my refund?');
+    expect(Buffer.from(t.content_base64, 'base64').toString('utf8')).toBe(t.text);
+  });
+
+  it('emails the transcript via the email service to a valid address only', async () => {
+    const uid = new Types.ObjectId().toString();
+    const session = await supportChatService.start(uid, 'email me please');
+
+    const ok = await supportChatService.emailTranscript(session.id, 'me@example.com');
+    expect(ok).toBe(true);
+    expect(sendHtmlEmailMock).toHaveBeenCalledTimes(1);
+    const arg = sendHtmlEmailMock.mock.calls[0][0];
+    expect(arg.to).toBe('me@example.com');
+    expect(arg.attachments[0].filename).toMatch(/^support-CH-/);
+
+    await expect(supportChatService.emailTranscript(session.id, 'not-an-email')).rejects.toThrow(
+      /valid email/i
+    );
   });
 });

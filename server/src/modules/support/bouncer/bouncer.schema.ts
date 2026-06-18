@@ -71,6 +71,10 @@ export const bouncerTypeDefs = /* GraphQL */ `
     reason: String!
     status: BouncerCallbackStatus!
     contacted_at: String
+    "Call length in seconds, recorded by the agent."
+    duration_seconds: Int
+    "How the call concluded, recorded by the agent."
+    conclusion: String
     created_at: String!
   }
 
@@ -114,6 +118,10 @@ export const bouncerTypeDefs = /* GraphQL */ `
     bouncerCallbackRequests(status: BouncerCallbackStatus, limit: Int): [BouncerCallbackRequest!]!
     bouncerFeedback(limit: Int): [BouncerFeedback!]!
     myActiveBouncerSos(pod_id: ID!): BouncerSosAlert
+    "The signed-in user's own callback request history, newest first."
+    myCallbackRequests(limit: Int): [BouncerCallbackRequest!]!
+    "An attended (past) pod the user has not yet rated — drives the post-pod feedback pop-up."
+    myPendingPodFeedback: BouncerPodInfo
   }
 
   extend type Mutation {
@@ -121,8 +129,16 @@ export const bouncerTypeDefs = /* GraphQL */ `
     acknowledgeBouncerSos(id: ID!): BouncerSosAlert!
     resolveBouncerSos(id: ID!): BouncerSosAlert!
     requestBouncerCallback(input: RequestCallbackInput!): BouncerCallbackRequest!
-    markBouncerCallbackContacted(id: ID!): BouncerCallbackRequest!
-    closeBouncerCallback(id: ID!): BouncerCallbackRequest!
+    markBouncerCallbackContacted(
+      id: ID!
+      duration_seconds: Int
+      conclusion: String
+    ): BouncerCallbackRequest!
+    closeBouncerCallback(
+      id: ID!
+      duration_seconds: Int
+      conclusion: String
+    ): BouncerCallbackRequest!
     submitBouncerFeedback(input: SubmitBouncerFeedbackInput!): BouncerFeedback!
   }
 `;

@@ -14,11 +14,13 @@ import type { RootStackParamList } from '@/navigation/types';
  * here right after creating a ticket so they can track it immediately. */
 export function TicketDetailsScreen() {
   const route = useRoute<RouteProp<RootStackParamList, 'TicketDetails'>>();
-  const { ticket, isLoading, reply } = useTicketDetails(route.params.ticketId);
+  const { ticket, isLoading, reply, reopen } = useTicketDetails(route.params.ticketId);
   const { muted, onPrimary, color: ink } = useThemeColors();
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  // A resolved/closed ticket can be re-opened so the user can question it (Bug 3).
+  const reopenable = ticket?.status === 'RESOLVED' || ticket?.status === 'CLOSED';
 
   const submit = async () => {
     if (busy || !text.trim()) return;
@@ -29,6 +31,19 @@ export function TicketDetailsScreen() {
       setText('');
     } catch (e) {
       setError(toErrorMessage(e, 'Could not send the reply.'));
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const doReopen = async () => {
+    if (busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      await reopen();
+    } catch (e) {
+      setError(toErrorMessage(e, 'Could not re-open the ticket.'));
     } finally {
       setBusy(false);
     }
@@ -92,6 +107,30 @@ export function TicketDetailsScreen() {
           <Text testID="ticket-reply-error" color="$danger" fontSize={12} paddingHorizontal={16}>
             {error}
           </Text>
+        ) : null}
+        {reopenable ? (
+          <XStack
+            testID="ticket-reopen"
+            role="button"
+            aria-label="Re-open ticket"
+            onPress={() => void doReopen()}
+            margin={12}
+            marginBottom={0}
+            height={42}
+            alignItems="center"
+            justifyContent="center"
+            gap={8}
+            borderRadius={999}
+            borderWidth={1}
+            borderColor="$primary"
+            opacity={busy ? 0.6 : 1}
+            pressStyle={{ opacity: 0.85 }}
+          >
+            <MaterialIcons name="replay" size={18} color={ink} />
+            <Text fontSize={13} fontWeight="800" color="$primary">
+              Re-open ticket
+            </Text>
+          </XStack>
         ) : null}
         <XStack gap={8} padding={12} alignItems="center">
           <XStack

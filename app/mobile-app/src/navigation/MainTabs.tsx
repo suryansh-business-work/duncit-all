@@ -1,6 +1,7 @@
 import { createBottomTabNavigator, type BottomTabBarProps } from '@react-navigation/bottom-tabs';
 
 import { BottomNav } from '@/components/BottomNav';
+import { PodFeedbackPrompt } from '@/components/support/PodFeedbackPrompt';
 import { ChatsScreen } from '@/screens/ChatsScreen';
 import { ClubsScreen } from '@/screens/ClubsScreen';
 import { ExploreScreen } from '@/screens/ExploreScreen';
@@ -17,16 +18,19 @@ const renderTabBar = (props: BottomTabBarProps) => <BottomNav {...props} />;
  * stack screens pushed on top of this (see RootNavigator). */
 export function MainTabs() {
   return (
-    <Tab.Navigator
-      // Tab content cross-fades instead of switching abruptly.
-      screenOptions={{ headerShown: false, animation: 'fade' }}
-      tabBar={renderTabBar}
-    >
-      <Tab.Screen name="HomeTab" component={HomeScreen} />
-      <Tab.Screen name="Explore" component={ExploreScreen} />
-      <Tab.Screen name="Clubs" component={ClubsScreen} />
-      <Tab.Screen name="Chats" component={ChatsScreen} />
-      <Tab.Screen name="Following" component={FollowingScreen} />
-    </Tab.Navigator>
+    <>
+      <Tab.Navigator
+        // Tab content cross-fades instead of switching abruptly.
+        screenOptions={{ headerShown: false, animation: 'fade' }}
+        tabBar={renderTabBar}
+      >
+        <Tab.Screen name="HomeTab" component={HomeScreen} />
+        <Tab.Screen name="Explore" component={ExploreScreen} />
+        <Tab.Screen name="Clubs" component={ClubsScreen} />
+        <Tab.Screen name="Chats" component={ChatsScreen} />
+        <Tab.Screen name="Following" component={FollowingScreen} />
+      </Tab.Navigator>
+      <PodFeedbackPrompt />
+    </>
   );
 }

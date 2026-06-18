@@ -62,3 +62,40 @@ export const MobileRequestCallbackDocument = gql(`
     }
   }
 `);
+
+/** The user's own callback history with call outcome — mWeb's MY_CALLBACK_REQUESTS. */
+export const MobileMyCallbacksDocument = gql(`
+  query MobileMyCallbackRequests {
+    myCallbackRequests {
+      id
+      reason
+      status
+      contacted_at
+      duration_seconds
+      conclusion
+      created_at
+    }
+  }
+`);
+
+/** An attended pod the user has not yet rated — drives the post-pod feedback pop-up. */
+export const MobilePendingPodFeedbackDocument = gql(`
+  query MobilePendingPodFeedback {
+    myPendingPodFeedback {
+      id
+      title
+    }
+  }
+`);
+
+/** Rate an attended pod — mWeb's SUBMIT_FEEDBACK. */
+export const MobileSubmitFeedbackDocument = gql(`
+  mutation MobileSubmitBouncerFeedback($input: SubmitBouncerFeedbackInput!) {
+    submitBouncerFeedback(input: $input) {
+      id
+      rating
+      category
+      created_at
+    }
+  }
+`);

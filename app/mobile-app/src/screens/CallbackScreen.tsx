@@ -5,6 +5,7 @@ import { ScrollView, Text, TextArea, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { SupportAlert } from '@/components/support/SupportAlert';
+import { CallbackHistory } from '@/components/support/CallbackHistory';
 import { useBouncer } from '@/hooks/useBouncer';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { toErrorMessage } from '@/utils/errors';
@@ -69,6 +70,7 @@ export function CallbackScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [requested, setRequested] = useState(false);
+  const [historyKey, setHistoryKey] = useState(0);
 
   useEffect(() => {
     let on = true;
@@ -87,6 +89,7 @@ export function CallbackScreen() {
       await requestCallback(null, reason);
       setReason('');
       setRequested(true);
+      setHistoryKey((k) => k + 1);
     } catch (e) {
       setError(toErrorMessage(e, 'Could not request callback.'));
     } finally {
@@ -163,6 +166,8 @@ export function CallbackScreen() {
             </Text>
           </XStack>
         </YStack>
+
+        <CallbackHistory refreshKey={historyKey} />
       </ScrollView>
     </StackScreen>
   );

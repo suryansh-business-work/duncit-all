@@ -3,8 +3,11 @@ import * as Location from 'expo-location';
 
 import {
   MobileActiveSosDocument,
+  MobileMyCallbacksDocument,
+  MobilePendingPodFeedbackDocument,
   MobileRaiseSosDocument,
   MobileRequestCallbackDocument,
+  MobileSubmitFeedbackDocument,
   MobileSupportCallTargetDocument,
 } from '@/graphql/bouncer';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -103,6 +106,36 @@ describe('useBouncer', () => {
     expect(mockRequest).toHaveBeenCalledWith(
       MobileRequestCallbackDocument,
       { input: { pod_id: null, reason: null } },
+      { auth: true },
+    );
+  });
+
+  it('lists the user’s callback history', async () => {
+    mockRequest.mockResolvedValueOnce({ myCallbackRequests: [{ id: 'c1', status: 'CLOSED' }] });
+    const { result } = renderHook(() => useBouncer());
+    const rows = await result.current.listMyCallbacks();
+    expect(rows[0]?.id).toBe('c1');
+    expect(mockRequest).toHaveBeenCalledWith(MobileMyCallbacksDocument, undefined, { auth: true });
+  });
+
+  it('loads the pending pod for the feedback prompt', async () => {
+    mockRequest.mockResolvedValueOnce({ myPendingPodFeedback: { id: 'p9', title: 'Past Pod' } });
+    const { result } = renderHook(() => useBouncer());
+    const pod = await result.current.getPendingPodFeedback();
+    expect(pod?.title).toBe('Past Pod');
+    expect(mockRequest).toHaveBeenCalledWith(MobilePendingPodFeedbackDocument, undefined, {
+      auth: true,
+    });
+  });
+
+  it('submits pod feedback, nulling a blank message', async () => {
+    const { result } = renderHook(() => useBouncer());
+    await act(async () => {
+      await result.current.submitPodFeedback('p9', 5, 'HOST', '   ');
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileSubmitFeedbackDocument,
+      { input: { pod_id: 'p9', rating: 5, category: 'HOST', message: null } },
       { auth: true },
     );
   });

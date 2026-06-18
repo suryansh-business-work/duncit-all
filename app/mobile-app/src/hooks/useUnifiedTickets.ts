@@ -2,6 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
+  ReopenTicketDocument,
   ReplyToTicketDocument,
   TicketDetailsDocument,
   UnifiedSupportTicketsDocument,
@@ -65,5 +66,10 @@ export function useTicketDetails(ticketId: string) {
     [ticketId, reload],
   );
 
-  return { ticket, isLoading, reply, reload };
+  const reopen = useCallback(async () => {
+    await graphqlRequest(ReopenTicketDocument, { ticketId }, { auth: true });
+    await reload();
+  }, [ticketId, reload]);
+
+  return { ticket, isLoading, reply, reopen, reload };
 }

@@ -29,6 +29,7 @@ const getActiveSos = jest.fn();
 const raiseSos = jest.fn();
 const requestCallback = jest.fn();
 const loadSupportTarget = jest.fn();
+const listMyCallbacks = jest.fn();
 
 beforeEach(() => {
   jest.clearAllMocks();
@@ -41,6 +42,7 @@ beforeEach(() => {
   getActiveSos.mockResolvedValue(null);
   raiseSos.mockResolvedValue(undefined);
   requestCallback.mockResolvedValue(undefined);
+  listMyCallbacks.mockResolvedValue([]);
   loadSupportTarget.mockResolvedValue({
     bouncerSupportTarget: { phone: '+91123', available: true },
   });
@@ -49,6 +51,7 @@ beforeEach(() => {
     getActiveSos,
     raiseSos,
     requestCallback,
+    listMyCallbacks,
   });
 });
 

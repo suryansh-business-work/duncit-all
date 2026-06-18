@@ -1,0 +1,107 @@
+import { useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { Text, XStack, YStack } from 'tamagui';
+
+import { ListSkeleton } from '@/components/Skeleton';
+import { useTickets } from '@/hooks/useSupport';
+import type { RootStackParamList } from '@/navigation/types';
+
+type Filter = 'ALL' | 'OPEN' | 'PENDING' | 'RESOLVED' | 'CLOSED';
+const FILTERS: Filter[] = ['ALL', 'OPEN', 'PENDING', 'RESOLVED', 'CLOSED'];
+const LABEL: Record<Filter, string> = {
+  ALL: 'All',
+  OPEN: 'Open',
+  PENDING: 'Pending',
+  RESOLVED: 'Resolved',
+  CLOSED: 'Closed',
+};
+
+/** Short ticket number derived from the id — matches the server's ST- scheme. */
+function ticketNo(id: string): string {
+  return `ST-${id.slice(-6).toUpperCase()}`;
+}
+
+/**
+ * The user's own support tickets with Open/Pending/Resolved/Closed filter chips
+ * (Bug 4). Mirrors mWeb's MyTicketsList; rows open the ticket detail thread.
+ */
+export function MyTicketsList() {
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { tickets, isLoading } = useTickets();
+  const [filter, setFilter] = useState<Filter>('ALL');
+
+  const items = filter === 'ALL' ? tickets : tickets.filter((t) => t.status === filter);
+
+  return (
+    <YStack gap={10} testID="my-tickets-list">
+      <Text fontSize={12} fontWeight="900" textTransform="uppercase" color="$muted">
+        Your tickets
+      </Text>
+      <XStack gap={6} flexWrap="wrap">
+        {FILTERS.map((f) => {
+          const active = f === filter;
+          return (
+            <XStack
+              key={f}
+              testID={`tickets-filter-${f}`}
+              role="button"
+              aria-label={LABEL[f]}
+              onPress={() => setFilter(f)}
+              paddingHorizontal={12}
+              paddingVertical={6}
+              borderRadius={999}
+              borderWidth={1}
+              borderColor={active ? '$primary' : '$borderColor'}
+              backgroundColor={active ? '$primary' : 'transparent'}
+              pressStyle={{ opacity: 0.85 }}
+            >
+              <Text fontSize={12} fontWeight="800" color={active ? '$onPrimary' : '$muted'}>
+                {LABEL[f]}
+              </Text>
+            </XStack>
+          );
+        })}
+      </XStack>
+
+      {isLoading && tickets.length === 0 ? (
+        <ListSkeleton testID="my-tickets-loading" count={2} />
+      ) : items.length === 0 ? (
+        <Text testID="my-tickets-empty" fontSize={13} color="$muted" paddingVertical={8}>
+          {filter === 'ALL'
+            ? "You haven't raised any tickets yet."
+            : `No ${LABEL[filter].toLowerCase()} tickets.`}
+        </Text>
+      ) : (
+        items.map((t) => (
+          <YStack
+            key={t.id}
+            testID={`my-ticket-${t.id}`}
+            role="button"
+            aria-label={t.subject}
+            onPress={() => navigation.navigate('TicketDetails', { ticketId: t.id })}
+            padding={14}
+            borderRadius={14}
+            borderWidth={1}
+            borderColor="$borderColor"
+            backgroundColor="$surface"
+            gap={3}
+            pressStyle={{ opacity: 0.85 }}
+          >
+            <XStack justifyContent="space-between" alignItems="center" gap={8}>
+              <Text fontSize={14} fontWeight="800" color="$color" flex={1} numberOfLines={1}>
+                {t.subject}
+              </Text>
+              <Text fontSize={11} fontWeight="900" color="$primary">
+                {LABEL[t.status as Filter] ?? t.status}
+              </Text>
+            </XStack>
+            <Text fontSize={11.5} color="$muted">
+              {ticketNo(t.id)} · {t.category}
+            </Text>
+          </YStack>
+        ))
+      )}
+    </YStack>
+  );
+}

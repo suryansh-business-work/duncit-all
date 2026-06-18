@@ -1,15 +1,19 @@
 import { gql } from '@/generated/graphql';
 
-/** The user's open Chat with Us session (if any). */
+/** The user's latest Chat with Us session (any status) — drives the chat header. */
 export const MySupportChatDocument = gql(`
   query MobileMySupportChat {
     mySupportChat {
       id
+      ticket_no
       status
       agent_id
+      ai_active
+      handed_off
+      agent_last_read_at
+      user_last_read_at
+      rating
       unread_for_user
-      last_message_at
-      last_message_preview
     }
   }
 `);
@@ -19,7 +23,11 @@ export const StartSupportChatDocument = gql(`
   mutation MobileStartSupportChat($text: String) {
     startSupportChat(text: $text) {
       id
+      ticket_no
       status
+      ai_active
+      agent_id
+      agent_last_read_at
     }
   }
 `);
@@ -35,6 +43,7 @@ export const SupportChatMessagesDocument = gql(`
       sender_photo
       text
       attachments
+      is_ai
       created_at
     }
   }
@@ -45,9 +54,13 @@ export const SendSupportChatMessageDocument = gql(`
     sendSupportChatMessage(session_id: $sessionId, text: $text, attachments: $attachments) {
       id
       session_id
+      sender_id
       sender_role
+      sender_name
+      sender_photo
       text
       attachments
+      is_ai
       created_at
     }
   }
@@ -58,7 +71,50 @@ export const MarkSupportChatReadDocument = gql(`
     markSupportChatRead(session_id: $sessionId) {
       id
       unread_for_user
+      agent_last_read_at
     }
+  }
+`);
+
+export const ResolveSupportChatDocument = gql(`
+  mutation MobileResolveSupportChat($sessionId: ID!) {
+    resolveSupportChat(session_id: $sessionId) {
+      id
+      status
+    }
+  }
+`);
+
+export const ReopenSupportChatDocument = gql(`
+  mutation MobileReopenSupportChat($sessionId: ID!) {
+    reopenSupportChat(session_id: $sessionId) {
+      id
+      status
+    }
+  }
+`);
+
+export const SubmitSupportChatFeedbackDocument = gql(`
+  mutation MobileSubmitSupportChatFeedback($sessionId: ID!, $rating: Int!, $comment: String) {
+    submitSupportChatFeedback(session_id: $sessionId, rating: $rating, comment: $comment) {
+      id
+      rating
+    }
+  }
+`);
+
+export const SupportChatTranscriptDocument = gql(`
+  query MobileSupportChatTranscript($sessionId: ID!) {
+    supportChatTranscript(session_id: $sessionId) {
+      filename
+      text
+    }
+  }
+`);
+
+export const EmailSupportChatTranscriptDocument = gql(`
+  mutation MobileEmailSupportChatTranscript($sessionId: ID!, $email: String!) {
+    emailSupportChatTranscript(session_id: $sessionId, email: $email)
   }
 `);
 
@@ -101,7 +157,17 @@ export const ReplyToTicketDocument = gql(`
   mutation MobileReplyToTicket($ticketId: ID!, $bodyText: String!) {
     replyToTicket(ticket_id: $ticketId, body_text: $bodyText) {
       id
+      status
       message_count
+    }
+  }
+`);
+
+export const ReopenTicketDocument = gql(`
+  mutation MobileReopenTicket($ticketId: ID!) {
+    reopenTicket(ticket_id: $ticketId) {
+      id
+      status
     }
   }
 `);

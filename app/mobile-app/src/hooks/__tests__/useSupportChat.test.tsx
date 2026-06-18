@@ -1,5 +1,6 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { io } from 'socket.io-client';
+import * as FileSystem from 'expo-file-system/legacy';
 
 import { useSupportChat } from '@/hooks/useSupportChat';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -8,18 +9,21 @@ import { getAuthToken } from '@/services/auth-token';
 jest.mock('socket.io-client', () => ({ io: jest.fn() }));
 jest.mock('@/services/auth-token', () => ({ getAuthToken: jest.fn() }));
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
+jest.mock('expo-file-system/legacy', () => ({
+  readAsStringAsync: jest.fn(),
+  EncodingType: { Base64: 'base64' },
+}));
 
 const mockIo = io as jest.Mock;
 const mockToken = getAuthToken as jest.Mock;
 const mockRequest = graphqlRequest as jest.Mock;
+const mockRead = FileSystem.readAsStringAsync as jest.Mock;
 
 type Handler = (...args: unknown[]) => void;
 function fakeSocket() {
   const handlers = new Map<string, Handler>();
   return {
-    on: jest.fn((event: string, handler: Handler) => {
-      handlers.set(event, handler);
-    }),
+    on: jest.fn((event: string, handler: Handler) => handlers.set(event, handler)),
     emit: jest.fn(),
     disconnect: jest.fn(),
     fire: (event: string, ...args: unknown[]) => handlers.get(event)?.(...args),
@@ -35,22 +39,32 @@ const msg = (id: string, sessionId = 's1', over: Record<string, unknown> = {}) =
   sender_photo: null,
   text: `msg-${id}`,
   attachments: [],
+  is_ai: false,
   created_at: new Date().toISOString(),
   ...over,
 });
 
-/** Boot responses: startSupportChat → messages → markRead. */
 function mockBoot() {
   mockRequest.mockImplementation((doc: unknown, vars: Record<string, unknown> | undefined) => {
     const body = JSON.stringify(doc);
     if (body.includes('startSupportChat')) {
-      return Promise.resolve({ startSupportChat: { id: 's1', status: 'OPEN' } });
+      return Promise.resolve({
+        startSupportChat: {
+          id: 's1',
+          ticket_no: 'CH-AAA111',
+          status: 'OPEN',
+          ai_active: true,
+          agent_id: null,
+          agent_last_read_at: null,
+        },
+      });
     }
-    if (body.includes('supportChatMessages')) {
+    if (body.includes('supportChatMessages'))
       return Promise.resolve({ supportChatMessages: [msg('m1')] });
-    }
     if (body.includes('markSupportChatRead')) {
-      return Promise.resolve({ markSupportChatRead: { id: 's1', unread_for_user: 0 } });
+      return Promise.resolve({
+        markSupportChatRead: { id: 's1', unread_for_user: 0, agent_last_read_at: null },
+      });
     }
     if (body.includes('sendSupportChatMessage')) {
       return Promise.resolve({
@@ -60,8 +74,31 @@ function mockBoot() {
     if (body.includes('uploadImageToImagekit')) {
       return Promise.resolve({ uploadImageToImagekit: { url: 'https://img/up.jpg', fileId: 'f' } });
     }
+    if (body.includes('resolveSupportChat'))
+      return Promise.resolve({ resolveSupportChat: { id: 's1', status: 'CLOSED' } });
+    if (body.includes('reopenSupportChat'))
+      return Promise.resolve({ reopenSupportChat: { id: 's1', status: 'OPEN' } });
+    if (body.includes('submitSupportChatFeedback'))
+      return Promise.resolve({ submitSupportChatFeedback: { id: 's1', rating: 5 } });
+    if (body.includes('supportChatTranscript')) {
+      return Promise.resolve({
+        supportChatTranscript: { filename: 'support-CH-AAA111.txt', text: 'transcript' },
+      });
+    }
+    if (body.includes('emailSupportChatTranscript'))
+      return Promise.resolve({ emailSupportChatTranscript: true });
     return Promise.resolve({});
   });
+}
+
+async function bootedHook() {
+  mockBoot();
+  const socket = fakeSocket();
+  mockIo.mockReturnValue(socket);
+  const hook = renderHook(() => useSupportChat());
+  await waitFor(() => expect(hook.result.current.isLoading).toBe(false));
+  await waitFor(() => expect(mockIo).toHaveBeenCalled());
+  return { ...hook, socket };
 }
 
 beforeEach(() => {
@@ -70,218 +107,289 @@ beforeEach(() => {
 });
 
 describe('useSupportChat', () => {
-  it('boots the session, loads history and joins the socket room', async () => {
-    mockBoot();
-    const socket = fakeSocket();
-    mockIo.mockReturnValue(socket);
-
-    const { result, unmount } = renderHook(() => useSupportChat());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.sessionId).toBe('s1');
+  it('boots, joins the room and streams live messages / session / typing', async () => {
+    const { result, socket, unmount } = await bootedHook();
+    expect(result.current.session?.id).toBe('s1');
     expect(result.current.messages.map((m) => m.id)).toEqual(['m1']);
 
-    await waitFor(() => expect(mockIo).toHaveBeenCalled());
     act(() => socket.fire('connect'));
     expect(socket.emit).toHaveBeenCalledWith('join_support_session', 's1');
 
-    // Live message for this session appends once (duplicates ignored).
-    act(() => socket.fire('support_chat:message', msg('m9')));
-    act(() => socket.fire('support_chat:message', msg('m9')));
+    // Live agent message appends once + triggers a read; duplicate ignored.
+    act(() => socket.fire('support_chat:message', msg('m9', 's1', { sender_role: 'AGENT' })));
+    act(() => socket.fire('support_chat:message', msg('m9', 's1', { sender_role: 'AGENT' })));
     expect(result.current.messages.map((m) => m.id)).toEqual(['m1', 'm9']);
-
+    // A live USER message appends but does not trigger a read.
+    act(() => socket.fire('support_chat:message', msg('m10', 's1', { sender_role: 'USER' })));
+    expect(result.current.messages.map((m) => m.id)).toEqual(['m1', 'm9', 'm10']);
     // A message for another session is ignored.
     act(() => socket.fire('support_chat:message', msg('mx', 'other')));
-    expect(result.current.messages.map((m) => m.id)).toEqual(['m1', 'm9']);
+    expect(result.current.messages.map((m) => m.id)).toEqual(['m1', 'm9', 'm10']);
+
+    // Session update merges (read receipt) + a foreign update is ignored.
+    act(() => socket.fire('support_chat:session_update', { id: 's1', agent_last_read_at: 'NOW' }));
+    expect(result.current.session?.agent_last_read_at).toBe('NOW');
+    act(() => socket.fire('support_chat:session_update', { id: 'other', agent_last_read_at: 'X' }));
+    expect(result.current.session?.agent_last_read_at).toBe('NOW');
+
+    // Typing toggles on then clears, and a foreign typing signal is ignored.
+    jest.useFakeTimers();
+    act(() => socket.fire('support_typing', { session_id: 's1' }));
+    expect(result.current.typing).toBe(true);
+    act(() => socket.fire('support_typing', { session_id: 's1' })); // resets the timer
+    act(() => socket.fire('support_typing', { session_id: 'other' }));
+    act(() => jest.advanceTimersByTime(2500));
+    expect(result.current.typing).toBe(false);
+    jest.useRealTimers();
 
     unmount();
     expect(socket.emit).toHaveBeenCalledWith('leave_support_session', 's1');
     expect(socket.disconnect).toHaveBeenCalled();
   });
 
-  it('sends a text message and appends the response', async () => {
-    mockBoot();
-    mockIo.mockReturnValue(fakeSocket());
-    const { result } = renderHook(() => useSupportChat());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
+  it('sends optimistically and reconciles the server message', async () => {
+    const { result } = await bootedHook();
     await act(async () => {
       await result.current.send('hello');
     });
     expect(result.current.messages.some((m) => m.id === 'm2')).toBe(true);
+    expect(result.current.messages.some((m) => m.pending)).toBe(false);
 
-    // Empty sends are no-ops.
+    // Empty send is a no-op.
     await act(async () => {
       await result.current.send('   ');
     });
     expect(result.current.messages.filter((m) => m.id === 'm2')).toHaveLength(1);
+
+    // Attachment-only → text null.
+    await act(async () => {
+      await result.current.send('', ['https://img/a.jpg']);
+    });
+    const sendVars = mockRequest.mock.calls
+      .filter((c) => JSON.stringify(c[0]).includes('sendSupportChatMessage'))
+      .at(-1)?.[1] as Record<string, unknown>;
+    expect(sendVars.text).toBeNull();
   });
 
-  it('uploads a picked image and returns its URL', async () => {
-    mockBoot();
-    mockIo.mockReturnValue(fakeSocket());
-    const { result } = renderHook(() => useSupportChat());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
+  it('removes the optimistic message and rethrows on a send failure', async () => {
+    const { result } = await bootedHook();
+    mockRequest.mockImplementation((doc: unknown) => {
+      if (JSON.stringify(doc).includes('sendSupportChatMessage'))
+        return Promise.reject(new Error('boom'));
+      return Promise.resolve({});
+    });
+    await act(async () => {
+      await expect(result.current.send('hi')).rejects.toThrow('boom');
+    });
+    expect(result.current.messages.some((m) => m.pending)).toBe(false);
+  });
 
-    const url = await result.current.uploadImage({
+  it('uploads an attachment from base64, from a uri, and rejects when unreadable', async () => {
+    const { result } = await bootedHook();
+
+    const byBase64 = await result.current.uploadAttachment({
       base64: 'abc',
       fileName: 'x.jpg',
       mimeType: 'image/jpeg',
     });
-    expect(url).toBe('https://img/up.jpg');
-    await expect(result.current.uploadImage({ base64: null })).rejects.toThrow(/no image/i);
+    expect(byBase64).toBe('https://img/up.jpg');
+
+    mockRead.mockResolvedValueOnce('vid64');
+    const byUri = await result.current.uploadAttachment({
+      uri: 'file://v.mp4',
+      mimeType: 'video/mp4',
+    });
+    expect(byUri).toBe('https://img/up.jpg');
+    expect(mockRead).toHaveBeenCalledWith('file://v.mp4', { encoding: 'base64' });
+
+    // Default mime + name when absent.
+    await result.current.uploadAttachment({ base64: 'abc' });
+    const upVars = mockRequest.mock.calls
+      .filter((c) => JSON.stringify(c[0]).includes('uploadImageToImagekit'))
+      .at(-1)?.[1] as Record<string, string>;
+    expect(upVars.mimeType).toBe('image/jpeg');
+    expect(upVars.fileName).toMatch(/^chat-\d+$/);
+
+    await expect(result.current.uploadAttachment({})).rejects.toThrow(/could not read/i);
   });
 
-  it('surfaces a boot failure', async () => {
+  it('resolves, reopens, submits feedback, fetches + emails the transcript', async () => {
+    const { result } = await bootedHook();
+
+    await act(async () => {
+      await result.current.resolve();
+    });
+    expect(result.current.session?.status).toBe('CLOSED');
+
+    await act(async () => {
+      await result.current.reopen();
+    });
+    expect(result.current.session?.status).toBe('OPEN');
+
+    await act(async () => {
+      await result.current.submitFeedback(5, 'great');
+      await result.current.submitFeedback(4, '   ');
+    });
+    const fbVars = mockRequest.mock.calls.find((c) =>
+      JSON.stringify(c[0]).includes('submitSupportChatFeedback'),
+    )?.[1] as Record<string, unknown>;
+    expect(fbVars.rating).toBe(5);
+
+    const transcript = await result.current.getTranscript();
+    expect(transcript?.filename).toContain('CH-AAA111');
+
+    await act(async () => {
+      await result.current.emailTranscript('me@x.com');
+    });
+    const emVars = mockRequest.mock.calls.find((c) =>
+      JSON.stringify(c[0]).includes('emailSupportChatTranscript'),
+    )?.[1] as Record<string, unknown>;
+    expect(emVars.email).toBe('me@x.com');
+  });
+
+  it('emits typing through the socket once connected', async () => {
+    const { result, socket } = await bootedHook();
+    act(() => result.current.emitTyping());
+    expect(socket.emit).toHaveBeenCalledWith('support_typing', 's1');
+  });
+
+  it('surfaces boot failures (Error + non-Error) and swallows mark-read errors', async () => {
     mockRequest.mockRejectedValue(new Error('offline'));
-    const { result } = renderHook(() => useSupportChat());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.error).toBe('offline');
-  });
+    const first = renderHook(() => useSupportChat());
+    await waitFor(() => expect(first.result.current.isLoading).toBe(false));
+    expect(first.result.current.error).toBe('offline');
 
-  it('falls back to a generic boot error for non-Error failures', async () => {
     mockRequest.mockRejectedValue('weird');
-    const { result } = renderHook(() => useSupportChat());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.error).toBe('Could not open the chat.');
-  });
+    const second = renderHook(() => useSupportChat());
+    await waitFor(() => expect(second.result.current.isLoading).toBe(false));
+    expect(second.result.current.error).toBe('Could not open the chat.');
 
-  it('swallows a mark-read failure on boot', async () => {
     mockRequest.mockImplementation((doc: unknown) => {
       const body = JSON.stringify(doc);
       if (body.includes('startSupportChat')) {
-        return Promise.resolve({ startSupportChat: { id: 's1', status: 'OPEN' } });
+        return Promise.resolve({
+          startSupportChat: {
+            id: 's1',
+            ticket_no: 'CH',
+            status: 'OPEN',
+            ai_active: true,
+            agent_id: null,
+            agent_last_read_at: null,
+          },
+        });
       }
-      if (body.includes('supportChatMessages')) {
-        return Promise.resolve({ supportChatMessages: [] });
-      }
+      if (body.includes('supportChatMessages')) return Promise.resolve({ supportChatMessages: [] });
       if (body.includes('markSupportChatRead')) return Promise.reject(new Error('nope'));
       return Promise.resolve({});
     });
     mockIo.mockReturnValue(fakeSocket());
-    const { result } = renderHook(() => useSupportChat());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    expect(result.current.error).toBe('');
+    const third = renderHook(() => useSupportChat());
+    await waitFor(() => expect(third.result.current.isLoading).toBe(false));
+    expect(third.result.current.error).toBe('');
   });
 
-  it('send is a no-op before the session exists and upload uses default names', async () => {
-    // Boot fails → sessionId stays empty → send must not call the API.
+  it('no-ops session actions before the session exists and skips the socket without a token', async () => {
+    // Boot fails → no session → guards short-circuit.
     mockRequest.mockRejectedValueOnce(new Error('offline'));
     const { result } = renderHook(() => useSupportChat());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     mockRequest.mockClear();
     await act(async () => {
       await result.current.send('hello');
+      await result.current.resolve();
+      await result.current.reopen();
+      await result.current.submitFeedback(5, 'x');
+      await result.current.emailTranscript('a@b.com');
+      result.current.emitTyping();
+      expect(await result.current.getTranscript()).toBeNull();
     });
     expect(mockRequest).not.toHaveBeenCalled();
 
-    // uploadImage falls back to jpeg + generated name when the asset has none.
-    mockRequest.mockResolvedValue({
-      uploadImageToImagekit: { url: 'https://img/u.jpg', fileId: 'f' },
-    });
-    const url = await result.current.uploadImage({ base64: 'abc' });
-    expect(url).toBe('https://img/u.jpg');
-    const vars = mockRequest.mock.calls[0][1] as Record<string, string>;
-    expect(vars.mimeType).toBe('image/jpeg');
-    expect(vars.fileName).toMatch(/^chat-\d+\.jpg$/);
+    // No token → never opens the socket.
+    mockBoot();
+    mockToken.mockResolvedValue(null);
+    const noToken = renderHook(() => useSupportChat());
+    await waitFor(() => expect(noToken.result.current.isLoading).toBe(false));
+    await act(async () => Promise.resolve());
+    expect(mockIo).not.toHaveBeenCalled();
   });
 
-  it('ignores boot results after unmount', async () => {
+  it('swallows a boot error that lands after unmount', async () => {
+    let rejectStart: (e: unknown) => void = () => undefined;
+    mockRequest.mockImplementation((doc: unknown) => {
+      if (JSON.stringify(doc).includes('startSupportChat')) {
+        return new Promise((_resolve, reject) => {
+          rejectStart = reject;
+        });
+      }
+      return Promise.resolve({});
+    });
+    const { unmount } = renderHook(() => useSupportChat());
+    unmount();
+    await act(async () => {
+      rejectStart(new Error('late boot error'));
+      await Promise.resolve();
+      await Promise.resolve();
+    });
+  });
+
+  it('drops boot results that resolve/reject after unmount', async () => {
     let resolveStart: (v: unknown) => void = () => undefined;
     mockRequest.mockImplementation((doc: unknown) => {
-      const body = JSON.stringify(doc);
-      if (body.includes('startSupportChat')) {
+      if (JSON.stringify(doc).includes('startSupportChat')) {
         return new Promise((resolve) => {
           resolveStart = resolve;
         });
       }
       return Promise.resolve({ supportChatMessages: [] });
     });
-    const { unmount } = renderHook(() => useSupportChat());
-    unmount();
+    const a = renderHook(() => useSupportChat());
+    a.unmount();
     await act(async () => {
-      resolveStart({ startSupportChat: { id: 's1', status: 'OPEN' } });
+      resolveStart({
+        startSupportChat: {
+          id: 's1',
+          ticket_no: 'CH',
+          status: 'OPEN',
+          ai_active: true,
+          agent_id: null,
+          agent_last_read_at: null,
+        },
+      });
       await Promise.resolve();
     });
-    // No throw / no further activity — the cancelled guards swallowed the result.
     expect(mockIo).not.toHaveBeenCalled();
-  });
 
-  it('sends an attachment-only message and skips duplicates already streamed', async () => {
-    mockBoot();
-    mockIo.mockReturnValue(fakeSocket());
-    const { result } = renderHook(() => useSupportChat());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-
-    // Attachment-only → text resolves to null.
-    await act(async () => {
-      await result.current.send('', ['https://img/a.jpg']);
-    });
-    const sendVars = mockRequest.mock.calls.find((c) =>
-      JSON.stringify(c[0]).includes('sendSupportChatMessage'),
-    )?.[1] as Record<string, unknown>;
-    expect(sendVars.text).toBeNull();
-
-    // Sending again returns the same id (already appended) → list unchanged.
-    const before = result.current.messages.length;
-    await act(async () => {
-      await result.current.send('dup');
-    });
-    expect(result.current.messages.length).toBe(before);
-  });
-
-  it('drops boot results that resolve mid-unmount (messages + failure paths)', async () => {
-    // Unmount between the session start and the history fetch.
-    let resolveMessages: (v: unknown) => void = () => undefined;
+    // Unmount between session-start and the messages fetch.
+    let resolveMsgs: (v: unknown) => void = () => undefined;
     mockRequest.mockImplementation((doc: unknown) => {
       const body = JSON.stringify(doc);
       if (body.includes('startSupportChat')) {
-        return Promise.resolve({ startSupportChat: { id: 's1', status: 'OPEN' } });
+        return Promise.resolve({
+          startSupportChat: {
+            id: 's2',
+            ticket_no: 'CH',
+            status: 'OPEN',
+            ai_active: true,
+            agent_id: null,
+            agent_last_read_at: null,
+          },
+        });
       }
       if (body.includes('supportChatMessages')) {
         return new Promise((resolve) => {
-          resolveMessages = resolve;
+          resolveMsgs = resolve;
         });
       }
       return Promise.resolve({});
     });
     mockIo.mockReturnValue(fakeSocket());
-    const first = renderHook(() => useSupportChat());
-    await waitFor(() => expect(first.result.current.sessionId).toBe('s1'));
-    first.unmount();
+    const b = renderHook(() => useSupportChat());
+    await waitFor(() => expect(b.result.current.session?.id).toBe('s2'));
+    b.unmount();
     await act(async () => {
-      resolveMessages({ supportChatMessages: [msg('late')] });
+      resolveMsgs({ supportChatMessages: [msg('late')] });
       await Promise.resolve();
     });
-
-    // And a failure that lands after unmount is swallowed too.
-    let rejectMessages: (e: unknown) => void = () => undefined;
-    mockRequest.mockImplementation((doc: unknown) => {
-      const body = JSON.stringify(doc);
-      if (body.includes('startSupportChat')) {
-        return Promise.resolve({ startSupportChat: { id: 's2', status: 'OPEN' } });
-      }
-      if (body.includes('supportChatMessages')) {
-        return new Promise((_resolve, reject) => {
-          rejectMessages = reject;
-        });
-      }
-      return Promise.resolve({});
-    });
-    const second = renderHook(() => useSupportChat());
-    await waitFor(() => expect(second.result.current.sessionId).toBe('s2'));
-    second.unmount();
-    await act(async () => {
-      rejectMessages(new Error('late failure'));
-      await Promise.resolve();
-    });
-  });
-
-  it('skips the socket when there is no stored token', async () => {
-    mockBoot();
-    mockToken.mockResolvedValue(null);
-    const { result } = renderHook(() => useSupportChat());
-    await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await act(async () => Promise.resolve());
-    expect(mockIo).not.toHaveBeenCalled();
   });
 });

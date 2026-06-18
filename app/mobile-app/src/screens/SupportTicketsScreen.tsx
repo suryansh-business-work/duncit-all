@@ -5,6 +5,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { TicketForm } from '@/components/support/TicketForm';
+import { MyTicketsList } from '@/components/support/MyTicketsList';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { useMeStore } from '@/stores/me.store';
 import type { RootStackParamList } from '@/navigation/types';
@@ -96,6 +97,8 @@ export function SupportTicketsScreen() {
           initialEmail={me?.email || ''}
           onCreated={(id) => navigation.navigate('TicketDetails', { ticketId: id })}
         />
+
+        <MyTicketsList />
       </ScrollView>
     </StackScreen>
   );

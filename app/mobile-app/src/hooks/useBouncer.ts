@@ -4,13 +4,22 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
   MobileActiveSosDocument,
+  MobileMyCallbacksDocument,
+  MobilePendingPodFeedbackDocument,
   MobileRaiseSosDocument,
   MobileRequestCallbackDocument,
+  MobileSubmitFeedbackDocument,
   MobileSupportCallTargetDocument,
 } from '@/graphql/bouncer';
 import { graphqlRequest } from '@/services/graphql.client';
 
 export type ActiveSos = ResultOf<typeof MobileActiveSosDocument>['myActiveBouncerSos'];
+export type CallbackHistoryItem = ResultOf<
+  typeof MobileMyCallbacksDocument
+>['myCallbackRequests'][number];
+export type PendingPodFeedback = ResultOf<
+  typeof MobilePendingPodFeedbackDocument
+>['myPendingPodFeedback'];
 
 /** Best-effort current location for an SOS — null if permission denied/unavailable. */
 async function captureLocation(): Promise<{
@@ -61,5 +70,47 @@ export function useBouncer() {
     );
   }, []);
 
-  return { loadSupportTarget, getActiveSos, raiseSos, requestCallback };
+  const listMyCallbacks = useCallback(
+    (): Promise<CallbackHistoryItem[]> =>
+      graphqlRequest(MobileMyCallbacksDocument, undefined, { auth: true }).then(
+        (d) => d.myCallbackRequests,
+      ),
+    [],
+  );
+
+  const getPendingPodFeedback = useCallback(
+    (): Promise<PendingPodFeedback> =>
+      graphqlRequest(MobilePendingPodFeedbackDocument, undefined, { auth: true }).then(
+        (d) => d.myPendingPodFeedback,
+      ),
+    [],
+  );
+
+  const submitPodFeedback = useCallback(
+    async (podId: string, rating: number, category: string, message: string) => {
+      await graphqlRequest(
+        MobileSubmitFeedbackDocument,
+        {
+          input: {
+            pod_id: podId,
+            rating,
+            category: category as never,
+            message: message.trim() || null,
+          },
+        },
+        { auth: true },
+      );
+    },
+    [],
+  );
+
+  return {
+    loadSupportTarget,
+    getActiveSos,
+    raiseSos,
+    requestCallback,
+    listMyCallbacks,
+    getPendingPodFeedback,
+    submitPodFeedback,
+  };
 }

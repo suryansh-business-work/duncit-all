@@ -1,62 +1,135 @@
 import { gql } from '@apollo/client';
 
+export { UPLOAD_IMAGE } from '../../components/media-picker-dialog/queries';
+
+const SESSION_FIELDS = gql`
+  fragment SupportChatSessionFields on SupportChatSession {
+    id
+    ticket_no
+    status
+    agent_id
+    ai_active
+    handed_off
+    agent_last_read_at
+    user_last_read_at
+    rating
+  }
+`;
+
+const MESSAGE_FIELDS = gql`
+  fragment SupportChatMessageFields on SupportChatMessage {
+    id
+    session_id
+    sender_id
+    sender_role
+    sender_name
+    sender_photo
+    text
+    attachments
+    is_ai
+    created_at
+  }
+`;
+
 export const MY_SUPPORT_CHAT = gql`
   query MySupportChat {
     mySupportChat {
-      id
-      status
+      ...SupportChatSessionFields
     }
   }
+  ${SESSION_FIELDS}
 `;
 
 export const SUPPORT_CHAT_MESSAGES = gql`
   query MySupportChatMessages($session_id: ID!, $limit: Int) {
     supportChatMessages(session_id: $session_id, limit: $limit) {
-      id
-      session_id
-      sender_id
-      sender_role
-      sender_name
-      sender_photo
-      text
-      attachments
-      created_at
+      ...SupportChatMessageFields
     }
   }
+  ${MESSAGE_FIELDS}
 `;
 
 export const START_SUPPORT_CHAT = gql`
   mutation StartSupportChat($text: String) {
     startSupportChat(text: $text) {
-      id
-      status
+      ...SupportChatSessionFields
     }
   }
+  ${SESSION_FIELDS}
 `;
 
 export const SEND_SUPPORT_CHAT_MESSAGE = gql`
   mutation SendMySupportChatMessage($session_id: ID!, $text: String, $attachments: [String!]) {
     sendSupportChatMessage(session_id: $session_id, text: $text, attachments: $attachments) {
-      id
-      session_id
-      sender_id
-      sender_role
-      sender_name
-      sender_photo
-      text
-      attachments
-      created_at
+      ...SupportChatMessageFields
     }
   }
+  ${MESSAGE_FIELDS}
 `;
 
 export const MARK_SUPPORT_CHAT_READ = gql`
   mutation MarkMySupportChatRead($session_id: ID!) {
     markSupportChatRead(session_id: $session_id) {
       id
+      agent_last_read_at
     }
   }
 `;
+
+export const RESOLVE_SUPPORT_CHAT = gql`
+  mutation ResolveMySupportChat($session_id: ID!) {
+    resolveSupportChat(session_id: $session_id) {
+      id
+      status
+    }
+  }
+`;
+
+export const REOPEN_SUPPORT_CHAT = gql`
+  mutation ReopenMySupportChat($session_id: ID!) {
+    reopenSupportChat(session_id: $session_id) {
+      id
+      status
+    }
+  }
+`;
+
+export const SUBMIT_SUPPORT_CHAT_FEEDBACK = gql`
+  mutation SubmitMySupportChatFeedback($session_id: ID!, $rating: Int!, $comment: String) {
+    submitSupportChatFeedback(session_id: $session_id, rating: $rating, comment: $comment) {
+      id
+      rating
+    }
+  }
+`;
+
+export const SUPPORT_CHAT_TRANSCRIPT = gql`
+  query MySupportChatTranscript($session_id: ID!) {
+    supportChatTranscript(session_id: $session_id) {
+      filename
+      text
+      content_base64
+    }
+  }
+`;
+
+export const EMAIL_SUPPORT_CHAT_TRANSCRIPT = gql`
+  mutation EmailMySupportChatTranscript($session_id: ID!, $email: String!) {
+    emailSupportChatTranscript(session_id: $session_id, email: $email)
+  }
+`;
+
+export interface SupportChatSession {
+  id: string;
+  ticket_no: string;
+  status: 'OPEN' | 'CLOSED';
+  agent_id: string | null;
+  ai_active: boolean;
+  handed_off: boolean;
+  agent_last_read_at: string | null;
+  user_last_read_at: string | null;
+  rating: number | null;
+}
 
 export interface SupportChatMessage {
   id: string;
@@ -67,5 +140,8 @@ export interface SupportChatMessage {
   sender_photo: string | null;
   text: string;
   attachments: string[];
+  is_ai: boolean;
   created_at: string;
+  /** Client-only: true while an optimistic message awaits server acknowledgement. */
+  pending?: boolean;
 }

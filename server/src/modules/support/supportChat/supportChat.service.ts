@@ -99,9 +99,10 @@ export const supportChatService = {
   },
 
   async getMine(userId: string) {
+    // The latest thread regardless of status, so a user can re-open a chat they
+    // previously resolved (Bug 12) rather than always starting a fresh one.
     const doc = await SupportChatSessionModel.findOne({
       user_id: new Types.ObjectId(userId),
-      status: 'OPEN',
     }).sort({ last_message_at: -1 });
     return doc ? sessionPub(doc) : null;
   },

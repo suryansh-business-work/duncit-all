@@ -15,9 +15,11 @@ import {
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
+import ReplayIcon from '@mui/icons-material/Replay';
 import { format } from 'date-fns';
 import AttachmentsField from '../../forms/support-form/AttachmentsField';
 import {
+  REOPEN_TICKET,
   REPLY_TO_TICKET,
   TICKET,
   type TicketDetail,
@@ -82,11 +84,13 @@ export default function TicketDetailPage() {
     fetchPolicy: 'cache-and-network',
   });
   const [reply, { loading: replying }] = useMutation(REPLY_TO_TICKET, { onCompleted: () => refetch() });
+  const [reopenTicket, { loading: reopening }] = useMutation(REOPEN_TICKET, { onCompleted: () => refetch() });
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
 
   const ticket = data?.ticket;
-  const closed = ticket?.status === 'CLOSED';
+  // A resolved/closed ticket can be re-opened so the user can question it (Bug 3).
+  const reopenable = ticket?.status === 'CLOSED' || ticket?.status === 'RESOLVED';
 
   const send = async () => {
     if (!message.trim() && attachments.length === 0) return;
@@ -95,10 +99,14 @@ export default function TicketDetailPage() {
     setAttachments([]);
   };
 
+  const reopen = async () => {
+    if (id) await reopenTicket({ variables: { ticket_id: id } });
+  };
+
   return (
     <Stack spacing={2}>
       <Stack direction="row" alignItems="center" spacing={1}>
-        <IconButton size="small" onClick={() => navigate('/support/live')} aria-label="Back" sx={{ bgcolor: 'action.hover' }}>
+        <IconButton size="small" onClick={() => navigate(-1)} aria-label="Back" sx={{ bgcolor: 'action.hover' }}>
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h6" sx={{ fontWeight: 900, flex: 1 }} noWrap>
@@ -123,32 +131,50 @@ export default function TicketDetailPage() {
             ))}
           </Stack>
 
-          {!closed && (
-            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3 }}>
-              <Stack spacing={1}>
-                <AttachmentsField attachments={attachments} setAttachments={setAttachments} />
-                <Stack direction="row" spacing={1} alignItems="center">
-                  <TextField
-                    size="small"
-                    fullWidth
-                    placeholder="Write a reply…"
-                    value={message}
-                    onChange={(e) => setMessage(e.target.value)}
-                    multiline
-                    maxRows={4}
-                  />
-                  <Button
-                    variant="contained"
-                    endIcon={<SendIcon />}
-                    disabled={replying || (!message.trim() && attachments.length === 0)}
-                    onClick={send}
-                  >
-                    Send
-                  </Button>
-                </Stack>
+          {reopenable && (
+            <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3, bgcolor: 'action.hover' }}>
+              <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
+                <Typography variant="body2" color="text.secondary">
+                  This ticket is {ticket.status.toLowerCase()}. Re-open it or just reply to continue.
+                </Typography>
+                <Button
+                  variant="outlined"
+                  size="small"
+                  startIcon={<ReplayIcon />}
+                  disabled={reopening}
+                  onClick={reopen}
+                  sx={{ borderRadius: 99, fontWeight: 800, flexShrink: 0 }}
+                >
+                  Re-open
+                </Button>
               </Stack>
             </Paper>
           )}
+
+          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3 }}>
+            <Stack spacing={1}>
+              <AttachmentsField attachments={attachments} setAttachments={setAttachments} />
+              <Stack direction="row" spacing={1} alignItems="center">
+                <TextField
+                  size="small"
+                  fullWidth
+                  placeholder="Write a reply…"
+                  value={message}
+                  onChange={(e) => setMessage(e.target.value)}
+                  multiline
+                  maxRows={4}
+                />
+                <Button
+                  variant="contained"
+                  endIcon={<SendIcon />}
+                  disabled={replying || (!message.trim() && attachments.length === 0)}
+                  onClick={send}
+                >
+                  Send
+                </Button>
+              </Stack>
+            </Stack>
+          </Paper>
         </>
       )}
     </Stack>

@@ -118,6 +118,15 @@ describe('supportChat resolve / reopen / feedback', () => {
     ]);
   });
 
+  it('getMine returns the latest thread even after it is resolved (Bug 12)', async () => {
+    const uid = new Types.ObjectId().toString();
+    const s = await supportChatService.start(uid, 'hi');
+    await supportChatService.resolve(s.id, 'the user');
+    const mine = await supportChatService.getMine(uid);
+    expect(mine?.id).toBe(s.id);
+    expect(mine?.status).toBe('CLOSED');
+  });
+
   it('stores satisfaction feedback and rejects another user / a bad rating', async () => {
     const uid = new Types.ObjectId().toString();
     const session = await supportChatService.start(uid, 'thanks');

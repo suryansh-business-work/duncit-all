@@ -4,7 +4,8 @@ import { Alert, Button, Paper, Stack, TextField, Typography } from '@mui/materia
 import CallIcon from '@mui/icons-material/Call';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import type { SupportPodOption } from './queries';
-import { SUPPORT_CALL_TARGET, REQUEST_CALLBACK } from './queries';
+import { SUPPORT_CALL_TARGET, REQUEST_CALLBACK, MY_CALLBACK_REQUESTS } from './queries';
+import CallbackHistory from './CallbackHistory';
 
 interface Props {
   selected: SupportPodOption | null;
@@ -17,7 +18,9 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
   const [reason, setReason] = useState('');
   const [requested, setRequested] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  const [requestCallback, { loading }] = useMutation(REQUEST_CALLBACK);
+  const [requestCallback, { loading }] = useMutation(REQUEST_CALLBACK, {
+    refetchQueries: [{ query: MY_CALLBACK_REQUESTS }],
+  });
 
   const handleCallNow = () => {
     if (!target?.available) return;
@@ -104,6 +107,8 @@ export default function CallbackContent({ selected }: Readonly<Props>) {
           </Button>
         </Stack>
       </Paper>
+
+      <CallbackHistory />
     </Stack>
   );
 }

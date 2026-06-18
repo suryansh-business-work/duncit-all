@@ -8,6 +8,7 @@ import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { HEADER_DATA } from '../../components/app-header/queries';
 import SupportForm, { type SupportFormValues } from '../../forms/support.form';
 import SupportShell from './SupportShell';
+import MyTicketsList from '../support-tickets/MyTicketsList';
 import { CREATE_TICKET } from '../support-tickets/queries';
 
 
@@ -139,6 +140,7 @@ export default function SupportTicketsPage() {
           />
         </Paper>
 
+        <MyTicketsList />
       </Stack>
     </SupportShell>
   );

@@ -164,31 +164,68 @@ async function extractCore(
   };
   if (onProgress) await onProgress(counts);
 
+  // Fast path: validate + dedupe in memory, then flush batched bulkWrites.
+  const existingPhones = new Set<string>(
+    (await WaUserLeadModel.distinct('phone', { connection_key: KEY })) as unknown as string[]
+  );
+  const seenJids = new Set<string>();
+  const seenPhones = new Set<string>();
+  let contactOps: any[] = [];
+  let leadOps: any[] = [];
+  const source = conn.phone ?? '';
+  const flush = async () => {
+    if (contactOps.length) {
+      await WaContactModel.bulkWrite(contactOps, { ordered: false });
+      contactOps = [];
+    }
+    if (leadOps.length) {
+      await WaUserLeadModel.bulkWrite(leadOps, { ordered: false });
+      leadOps = [];
+    }
+  };
+
   for (let i = 0; i < contacts.length; i += 1) {
     const c = normaliseContact(contacts[i]);
     const norm = c ? normalizePhone(c.phone) : { valid: false, phone: '' };
     if (!c || !norm.valid) {
       counts.invalid += 1;
     } else {
-      await WaContactModel.updateOne(
-        { connection_key: KEY, contact_jid: c.jid },
-        { $set: { phone: norm.phone, name: c.name, push_name: c.push_name, is_business: c.is_business, raw: c.raw } },
-        { upsert: true }
-      );
-      const { created } = await upsertLead({
-        phone: norm.phone,
-        name: c.name,
-        contact_jid: c.jid,
-        source_account: conn.phone ?? '',
-        raw: c.raw,
-      });
       counts.valid += 1;
-      if (created) counts.leads_created += 1;
-      else counts.duplicates += 1;
+      if (!seenJids.has(c.jid)) {
+        seenJids.add(c.jid);
+        contactOps.push({
+          updateOne: {
+            filter: { connection_key: KEY, contact_jid: c.jid },
+            update: { $set: { phone: norm.phone, name: c.name, push_name: c.push_name, is_business: c.is_business, raw: c.raw } },
+            upsert: true,
+          },
+        });
+      }
+      if (seenPhones.has(norm.phone)) {
+        counts.duplicates += 1;
+      } else {
+        seenPhones.add(norm.phone);
+        if (existingPhones.has(norm.phone)) counts.duplicates += 1;
+        else counts.leads_created += 1;
+        leadOps.push({
+          updateOne: {
+            filter: { connection_key: KEY, phone: norm.phone },
+            update: {
+              $set: { contact_jid: c.jid, source_account: source, ...(c.name ? { name: c.name } : {}) },
+              $setOnInsert: { imported_at: new Date() },
+            },
+            upsert: true,
+          },
+        });
+      }
     }
     counts.processed = i + 1;
-    if (onProgress && i % 25 === 0) await onProgress(counts);
+    if ((i + 1) % 200 === 0) {
+      await flush();
+      if (onProgress) await onProgress(counts); // also the cancellation checkpoint
+    }
   }
+  await flush();
   if (onProgress) await onProgress(counts);
   return counts;
 }
@@ -207,17 +244,60 @@ export const whatsappData = {
     try {
       await save({ phase: 'fetching' });
       const counts = await extractCore(async (c) => {
+        // Stop early if the user cancelled the job from the UI.
+        const current = await WaExtractionJobModel.findById(jobId).select('status').lean();
+        if (current?.status === 'CANCELLED') throw new Error('__CANCELLED__');
         await save({ phase: 'contacts', ...c });
       });
       await save({ status: 'DONE', phase: 'done', finished_at: new Date(), ...counts });
     } catch (error) {
-      await save({
-        status: 'FAILED',
-        phase: 'failed',
-        finished_at: new Date(),
-        error: error instanceof Error ? error.message : 'Extraction failed',
-      });
+      const msg = error instanceof Error ? error.message : 'Extraction failed';
+      if (msg === '__CANCELLED__') {
+        await save({ phase: 'cancelled', finished_at: new Date() }); // status already CANCELLED
+      } else {
+        await save({ status: 'FAILED', phase: 'failed', finished_at: new Date(), error: msg });
+      }
     }
+  },
+
+  /** Cancel the running extraction (the runner stops at its next checkpoint). */
+  async cancelExtraction() {
+    await WaExtractionJobModel.updateOne(
+      { connection_key: KEY, status: 'RUNNING' },
+      { $set: { status: 'CANCELLED' } }
+    );
+    return WaExtractionJobModel.findOne({ connection_key: KEY }).sort({ started_at: -1 }).lean();
+  },
+
+  /** Database-level cleanup: delete invalid-phone leads + contacts and collapse
+   * any duplicate leads by phone (keeping the earliest). Fast, bulk deletes. */
+  async clean() {
+    const leads = await WaUserLeadModel.find({ connection_key: KEY }).select('phone imported_at').lean();
+    const invalidLeadIds = leads.filter((l) => !normalizePhone(l.phone).valid).map((l) => l._id);
+    const removed_invalid = invalidLeadIds.length
+      ? (await WaUserLeadModel.deleteMany({ _id: { $in: invalidLeadIds } })).deletedCount ?? 0
+      : 0;
+
+    const dupGroups = await WaUserLeadModel.aggregate([
+      { $match: { connection_key: KEY } },
+      { $sort: { imported_at: 1 } },
+      { $group: { _id: '$phone', ids: { $push: '$_id' }, n: { $sum: 1 } } },
+      { $match: { n: { $gt: 1 } } },
+    ]);
+    let removed_duplicates = 0;
+    for (const g of dupGroups) {
+      const extra = (g.ids as unknown[]).slice(1);
+      removed_duplicates += (await WaUserLeadModel.deleteMany({ _id: { $in: extra } })).deletedCount ?? 0;
+    }
+
+    const contacts = await WaContactModel.find({ connection_key: KEY }).select('phone').lean();
+    const invalidContactIds = contacts.filter((c) => !normalizePhone(c.phone).valid).map((c) => c._id);
+    const removed_contacts = invalidContactIds.length
+      ? (await WaContactModel.deleteMany({ _id: { $in: invalidContactIds } })).deletedCount ?? 0
+      : 0;
+
+    const remaining = await WaUserLeadModel.countDocuments({ connection_key: KEY });
+    return { removed_invalid, removed_duplicates, removed_contacts, remaining };
   },
 
   /** Start a background extraction (no-op if one is already running). Returns the

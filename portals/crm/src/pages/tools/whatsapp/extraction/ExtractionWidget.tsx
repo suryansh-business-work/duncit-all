@@ -23,7 +23,20 @@ import type { WaExtraction } from '../whatsappQueries';
 
 const spin = keyframes`from { transform: rotate(0deg); } to { transform: rotate(360deg); }`;
 
-const STATUS_COLOR = { RUNNING: 'warning', DONE: 'success', FAILED: 'error' } as const;
+const STATUS_COLOR = { RUNNING: 'warning', DONE: 'success', FAILED: 'error', CANCELLED: 'default' } as const;
+const STATUS_TITLE = {
+  RUNNING: 'Extracting data…',
+  DONE: 'Extraction finished',
+  FAILED: 'Extraction failed',
+  CANCELLED: 'Extraction cancelled',
+} as const;
+
+function barColorFor(status: WaExtraction['status']): 'warning' | 'success' | 'error' | 'inherit' {
+  if (status === 'RUNNING') return 'warning';
+  if (status === 'DONE') return 'success';
+  if (status === 'FAILED') return 'error';
+  return 'inherit';
+}
 
 function StatRow({ job }: Readonly<{ job: WaExtraction }>) {
   const stats: [string, number, string][] = [
@@ -72,17 +85,18 @@ function StatsDialog({ job, open, onClose }: Readonly<{ job: WaExtraction; open:
 
 /** Global, minimizable extraction progress widget (bottom-right). */
 export default function ExtractionWidget() {
-  const { job, open, setOpen } = useExtraction();
+  const { job, open, setOpen, cancel } = useExtraction();
   const [hiddenId, setHiddenId] = useState<string | null>(null);
   const [details, setDetails] = useState(false);
 
   if (!job || job.id === hiddenId) return null;
   const running = job.status === 'RUNNING';
   const pct = job.total > 0 ? Math.round((job.processed / job.total) * 100) : 0;
+  const title = STATUS_TITLE[job.status];
 
   if (!open) {
     return (
-      <Tooltip title={running ? `Extracting… ${pct}%` : 'Extraction finished'}>
+      <Tooltip title={running ? `Extracting… ${pct}%` : title}>
         <Chip
           icon={
             running ? (
@@ -92,7 +106,7 @@ export default function ExtractionWidget() {
             )
           }
           color={STATUS_COLOR[job.status]}
-          label={running ? `Extracting ${pct}%` : 'Extraction done'}
+          label={running ? `Extracting ${pct}%` : title}
           onClick={() => setOpen(true)}
           sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1300, boxShadow: 4, cursor: 'pointer' }}
         />
@@ -112,7 +126,7 @@ export default function ExtractionWidget() {
           <SyncIcon color={job.status === 'FAILED' ? 'error' : 'success'} />
         )}
         <Typography fontWeight={800} sx={{ flex: 1 }} noWrap>
-          {running ? 'Extracting data…' : 'Extraction finished'}
+          {title}
         </Typography>
         <Tooltip title="Details">
           <IconButton size="small" onClick={() => setDetails(true)}><InfoOutlinedIcon fontSize="small" /></IconButton>
@@ -120,18 +134,22 @@ export default function ExtractionWidget() {
         <Tooltip title="Minimize">
           <IconButton size="small" onClick={() => setOpen(false)}><MinimizeIcon fontSize="small" /></IconButton>
         </Tooltip>
-        {!running && (
-          <Tooltip title="Dismiss">
-            <IconButton size="small" onClick={() => setHiddenId(job.id)}><CloseIcon fontSize="small" /></IconButton>
-          </Tooltip>
-        )}
+        <Tooltip title={running ? 'Cancel extraction' : 'Dismiss'}>
+          <IconButton
+            size="small"
+            color={running ? 'error' : 'default'}
+            onClick={() => (running ? void cancel() : setHiddenId(job.id))}
+          >
+            <CloseIcon fontSize="small" />
+          </IconButton>
+        </Tooltip>
       </Stack>
 
       <Box sx={{ px: 1.5 }}>
         {running && job.total === 0 ? (
           <LinearProgress sx={{ borderRadius: 1 }} />
         ) : (
-          <LinearProgress variant="determinate" value={running ? pct : 100} color={STATUS_COLOR[job.status]} sx={{ borderRadius: 1 }} />
+          <LinearProgress variant="determinate" value={running ? pct : 100} color={barColorFor(job.status)} sx={{ borderRadius: 1 }} />
         )}
         <Typography variant="caption" color="text.secondary">
           {running ? `${job.processed} / ${job.total || '…'} contacts (${pct}%)` : `${job.processed} contacts processed`}

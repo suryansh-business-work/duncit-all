@@ -267,9 +267,29 @@ export const WA_START_EXTRACTION = gql`
   }
 `;
 
+export const WA_CANCEL_EXTRACTION = gql`
+  ${EXTRACTION_FIELDS}
+  mutation WaCancelExtraction {
+    waCancelExtraction {
+      ...WaExtractionFields
+    }
+  }
+`;
+
+export const WA_CLEAN_DATA = gql`
+  mutation WaCleanData {
+    waCleanData {
+      removed_invalid
+      removed_duplicates
+      removed_contacts
+      remaining
+    }
+  }
+`;
+
 export interface WaExtraction {
   id: string;
-  status: 'RUNNING' | 'DONE' | 'FAILED';
+  status: 'RUNNING' | 'DONE' | 'FAILED' | 'CANCELLED';
   phase: string;
   total: number;
   processed: number;

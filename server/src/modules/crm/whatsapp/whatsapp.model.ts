@@ -99,7 +99,7 @@ userLeadSchema.index({ connection_key: 1, phone: 1 }, { unique: true });
 export type WaUserLeadDoc = InferSchemaType<typeof userLeadSchema> & { _id: Types.ObjectId };
 export const WaUserLeadModel = model('WaUserLead', userLeadSchema);
 
-export const WA_JOB_STATUSES = ['RUNNING', 'DONE', 'FAILED'] as const;
+export const WA_JOB_STATUSES = ['RUNNING', 'DONE', 'FAILED', 'CANCELLED'] as const;
 export type WaJobStatus = (typeof WA_JOB_STATUSES)[number];
 
 /**

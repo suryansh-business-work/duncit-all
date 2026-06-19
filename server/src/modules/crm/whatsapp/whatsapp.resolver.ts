@@ -157,6 +157,14 @@ export const waLeadsResolvers = {
       requireRole(ctx, RW);
       return toExtraction(await whatsappData.startExtraction());
     },
+    waCancelExtraction: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return toExtraction(await whatsappData.cancelExtraction());
+    },
+    waCleanData: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return whatsappData.clean();
+    },
     waCreateUserLead: async (
       _p: unknown,
       args: { input: { phone: string; name?: string; source_account?: string } },

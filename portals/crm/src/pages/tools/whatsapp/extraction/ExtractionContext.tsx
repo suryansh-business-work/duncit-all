@@ -1,6 +1,11 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { WA_EXTRACTION, WA_START_EXTRACTION, type WaExtraction } from '../whatsappQueries';
+import {
+  WA_CANCEL_EXTRACTION,
+  WA_EXTRACTION,
+  WA_START_EXTRACTION,
+  type WaExtraction,
+} from '../whatsappQueries';
 import { getToken } from '../../../../lib/session';
 
 interface ExtractionCtx {
@@ -9,6 +14,7 @@ interface ExtractionCtx {
   open: boolean;
   setOpen: (v: boolean) => void;
   start: () => Promise<void>;
+  cancel: () => Promise<void>;
   onDone?: () => void;
   setOnDone: (cb: (() => void) | undefined) => void;
 }
@@ -26,6 +32,7 @@ export function ExtractionProvider({ children }: Readonly<{ children: React.Reac
     fetchPolicy: 'network-only',
   });
   const [startMut, { loading: starting }] = useMutation(WA_START_EXTRACTION);
+  const [cancelMut] = useMutation(WA_CANCEL_EXTRACTION);
   const job: WaExtraction | null = data?.waExtraction ?? null;
   const running = job?.status === 'RUNNING';
 
@@ -50,9 +57,14 @@ export function ExtractionProvider({ children }: Readonly<{ children: React.Reac
     startPolling(2000);
   }, [startMut, refetch, startPolling]);
 
+  const cancel = useCallback(async () => {
+    await cancelMut().catch(() => undefined);
+    await refetch();
+  }, [cancelMut, refetch]);
+
   const value = useMemo<ExtractionCtx>(
-    () => ({ job, starting, open, setOpen, start, onDone, setOnDone }),
-    [job, starting, open, start, onDone]
+    () => ({ job, starting, open, setOpen, start, cancel, onDone, setOnDone }),
+    [job, starting, open, start, cancel, onDone]
   );
   return <Ctx.Provider value={value}>{children}</Ctx.Provider>;
 }

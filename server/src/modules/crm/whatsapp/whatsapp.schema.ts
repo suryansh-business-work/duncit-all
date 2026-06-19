@@ -159,6 +159,14 @@ export const waLeadsTypeDefs = gql`
     skipped: Int!
   }
 
+  "Result of a database-level cleanup."
+  type WaCleanResult {
+    removed_invalid: Int!
+    removed_duplicates: Int!
+    removed_contacts: Int!
+    remaining: Int!
+  }
+
   input WaCreateUserLeadInput {
     phone: String!
     name: String
@@ -202,6 +210,10 @@ export const waLeadsTypeDefs = gql`
     waRefresh: WaSyncResult!
     "Start a non-blocking background extraction; poll waExtraction for progress."
     waStartExtraction: WaExtraction!
+    "Cancel the running extraction job."
+    waCancelExtraction: WaExtraction
+    "Database cleanup: drop invalid-phone records + de-duplicate leads."
+    waCleanData: WaCleanResult!
     "Manually create (or upsert) a single user lead."
     waCreateUserLead(input: WaCreateUserLeadInput!): WaUserLead!
     "Import user leads from an uploaded .xlsx/.csv (base64)."

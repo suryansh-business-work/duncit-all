@@ -25,6 +25,7 @@ import { useExtraction } from '../tools/whatsapp/extraction';
 import CreateLeadDialog from './CreateLeadDialog';
 import LeadStatsBar from './LeadStatsBar';
 import LeadsTable from './LeadsTable';
+import CleanDataButton from './CleanDataButton';
 import { fileToBase64, downloadBase64Xlsx } from './leadFiles';
 
 /** User Leads — dashboard + server-side searchable/sortable/paginated table. */
@@ -112,6 +113,7 @@ export default function UserLeadsPage() {
           <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>New</Button>
           <Button size="small" startIcon={<UploadFileIcon />} disabled={importState.loading} onClick={() => fileRef.current?.click()}>Import</Button>
           <Button size="small" startIcon={<DownloadIcon />} onClick={onExport}>Export</Button>
+          <CleanDataButton onCleaned={bumpAll} />
         </Stack>
       </Stack>
 

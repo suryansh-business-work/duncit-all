@@ -266,6 +266,31 @@ describe('whatsappData sync + cache + leads (WA-LeadGen P4/P5)', () => {
     await expect(whatsappData.sync()).rejects.toThrow(/not ready/i);
   });
 
+  it('clean() removes invalid-phone leads + contacts', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    const { WaUserLeadModel, WaContactModel } = await import('../../whatsapp.model');
+    await WaUserLeadModel.create([
+      { connection_key: 'default', phone: '919811112222' },
+      { connection_key: 'default', phone: '123' },
+    ]);
+    await WaContactModel.create([
+      { connection_key: 'default', contact_jid: 'a@c.us', phone: '919811112222' },
+      { connection_key: 'default', contact_jid: 'b@c.us', phone: 'junk' },
+    ]);
+    const res = await whatsappData.clean();
+    expect(res.removed_invalid).toBe(1);
+    expect(res.removed_contacts).toBe(1);
+    expect(res.remaining).toBe(1);
+  });
+
+  it('cancelExtraction() marks the running job CANCELLED', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    const { WaExtractionJobModel } = await import('../../whatsapp.model');
+    await WaExtractionJobModel.create({ connection_key: 'default', status: 'RUNNING' });
+    const job = await whatsappData.cancelExtraction();
+    expect(job?.status).toBe('CANCELLED');
+  });
+
   it('imports group members as leads tagged with the group + community', async () => {
     const { whatsappData } = await import('../../whatsapp.data');
     await whatsappData.sync(); // populate the group + community first

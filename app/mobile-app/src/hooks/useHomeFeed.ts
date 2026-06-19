@@ -3,6 +3,13 @@ import { useEffect, useMemo } from 'react';
 import { useLocations } from '@/hooks/useLocations';
 import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { useHomeStore, type HomeFeed } from '@/stores/home.store';
+import {
+  DEFAULT_HOME_FILTERS,
+  comparePods,
+  matchesDate,
+  matchesPrice,
+  type HomeFilters,
+} from '@/utils/home-filters';
 
 export type HomeCategory = HomeFeed['categories'][number];
 export type HomeClub = HomeFeed['clubs'][number];
@@ -28,6 +35,7 @@ function deriveHome(
   selectedCategoryId: string,
   selectedSuperId: string | null,
   selectedLocationId: string,
+  filters: HomeFilters,
 ) {
   const clubs = data?.clubs ?? [];
   const allPods = data?.pods ?? [];
@@ -47,6 +55,9 @@ function deriveHome(
     if (!inScope(p)) return false;
     const club = clubsById.get(p.club_id);
     if (selectedCategoryId && club?.category_id !== selectedCategoryId) return false;
+    // Price/date filters from the filter sheet (bug 6).
+    if (!matchesPrice(p, filters.price)) return false;
+    if (!matchesDate(p.pod_date_time, filters.date)) return false;
     return true;
   });
 
@@ -67,7 +78,7 @@ function deriveHome(
     podsByClub.set(p.club_id, list);
   });
   podsByClub.forEach((list) => {
-    list.sort(byDateAsc);
+    list.sort((a, b) => comparePods(a, b, filters.sort));
   });
 
   const clubsWithPods: ClubWithPods[] = clubs
@@ -126,7 +137,10 @@ export function useHomeData() {
 }
 
 /** Fetches the home feed (auth) and returns the derived shell sections. */
-export function useHomeFeed(selectedCategoryId: string) {
+export function useHomeFeed(
+  selectedCategoryId: string,
+  filters: HomeFilters = DEFAULT_HOME_FILTERS,
+) {
   const data = useHomeStore((s) => s.data);
   const isLoading = useHomeStore((s) => s.isLoading);
   const error = useHomeStore((s) => s.error);
@@ -139,8 +153,8 @@ export function useHomeFeed(selectedCategoryId: string) {
   }, [fetch]);
 
   const derived = useMemo(
-    () => deriveHome(data, selectedCategoryId, selectedSuperId, selectedLocationId),
-    [data, selectedCategoryId, selectedSuperId, selectedLocationId],
+    () => deriveHome(data, selectedCategoryId, selectedSuperId, selectedLocationId, filters),
+    [data, selectedCategoryId, selectedSuperId, selectedLocationId, filters],
   );
 
   return { isLoading, error, hasData: !!data, refetch: () => fetch(true), ...derived };

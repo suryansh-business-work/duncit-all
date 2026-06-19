@@ -61,18 +61,24 @@ export function SuperCategoryTabs() {
                   locations={[0, 0.58, 1]}
                   start={{ x: 0, y: 0 }}
                   end={{ x: 1, y: 1 }}
-                  style={StyleSheet.absoluteFill}
+                  style={[StyleSheet.absoluteFill, styles.gradient]}
                 />
               ) : null}
-              {cat.icon ? <Text fontSize={14}>{cat.icon}</Text> : null}
-              <Text
-                numberOfLines={1}
-                fontSize={12}
-                fontWeight="900"
-                color={selected ? '#ffffff' : '$muted'}
-              >
-                {cat.name}
-              </Text>
+              {/* Content sits above the absolute gradient. On Native App Web the
+                  DOM paints positioned siblings over static ones, so the label
+                  needs an explicit stacking context (zIndex) or it disappears
+                  behind the selected pill — mWeb gives its buttons the same. */}
+              <XStack alignItems="center" gap={4} zIndex={1}>
+                {cat.icon ? <Text fontSize={14}>{cat.icon}</Text> : null}
+                <Text
+                  numberOfLines={1}
+                  fontSize={12}
+                  fontWeight="900"
+                  color={selected ? '#ffffff' : '$muted'}
+                >
+                  {cat.name}
+                </Text>
+              </XStack>
             </XStack>
           );
         })}
@@ -80,3 +86,8 @@ export function SuperCategoryTabs() {
     </XStack>
   );
 }
+
+const styles = StyleSheet.create({
+  // Keep the selected pill behind the label (web paints positioned nodes last).
+  gradient: { zIndex: 0 },
+});

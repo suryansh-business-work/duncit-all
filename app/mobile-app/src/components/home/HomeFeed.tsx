@@ -1,5 +1,5 @@
-import { useState } from 'react';
-import { RefreshControl } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { RefreshControl, type ScrollView as RNScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -12,20 +12,25 @@ import { HomeSkeleton } from '@/components/Skeleton';
 
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
+import { useHomeStore } from '@/stores/home.store';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { ClubSection } from '@/components/home/ClubSection';
 import { HappeningNearbyHeader } from '@/components/home/HappeningNearbyHeader';
 import { HomeFeaturedPods } from '@/components/home/HomeFeaturedPods';
+import { HomeFilterSheet } from '@/components/home/HomeFilterSheet';
 import { HomeVibeChips } from '@/components/home/HomeVibeChips';
 import { PreviousPodsRail } from '@/components/home/PreviousPodsRail';
 import { StatusRail } from '@/components/status/StatusRail';
+import { DEFAULT_HOME_FILTERS, activeFilterCount, type HomeFilters } from '@/utils/home-filters';
 
 /** Scrollable home body — RN port of mWeb's HomePage. Owns the selected vibe
  * chip, fetches the feed, and renders the status rail, vibe chips, the
  * "Happening nearby" section, featured pods and per-club pod rows. */
 export function HomeFeed() {
   const [selectedCategoryId, setSelectedCategoryId] = useState('');
+  const [filters, setFilters] = useState<HomeFilters>(DEFAULT_HOME_FILTERS);
+  const [filterOpen, setFilterOpen] = useState(false);
   const {
     isLoading,
     hasData,
@@ -35,12 +40,20 @@ export function HomeFeed() {
     previousPods,
     totalPods,
     refetch,
-  } = useHomeFeed(selectedCategoryId);
+  } = useHomeFeed(selectedCategoryId, filters);
+  const filterCount = activeFilterCount(filters, selectedCategoryId);
   const { data: meData } = useMe();
   const { primary, onPrimary } = useThemeColors();
   const { openPod, openClub, openPreviousPods, openHappeningNearby } = useDetailNav();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const isHost = meData?.me?.roles?.includes('HOST') ?? false;
+
+  // A logo tap bumps this nonce; scroll the feed back to the top in response.
+  const scrollRef = useRef<RNScrollView>(null);
+  const scrollTopNonce = useHomeStore((s) => s.scrollTopNonce);
+  useEffect(() => {
+    if (scrollTopNonce > 0) scrollRef.current?.scrollTo({ y: 0, animated: true });
+  }, [scrollTopNonce]);
 
   const userName = meData?.me?.first_name ?? meData?.me?.full_name ?? 'You';
   const userPhoto = meData?.me?.profile_photo;
@@ -53,6 +66,7 @@ export function HomeFeed() {
   return (
     <YStack flex={1}>
       <ScrollView
+        ref={scrollRef}
         flex={1}
         showsVerticalScrollIndicator={false}
         refreshControl={
@@ -76,7 +90,12 @@ export function HomeFeed() {
           </Reveal>
           <YStack gap={16}>
             <Reveal index={2}>
-              <HappeningNearbyHeader totalPods={totalPods} onPress={openHappeningNearby} />
+              <HappeningNearbyHeader
+                totalPods={totalPods}
+                onPress={openHappeningNearby}
+                onOpenFilter={() => setFilterOpen(true)}
+                filterCount={filterCount}
+              />
             </Reveal>
             <Reveal index={3}>
               <HomeFeaturedPods
@@ -143,6 +162,19 @@ export function HomeFeed() {
           <MaterialIcons name="add" size={28} color={onPrimary} />
         </XStack>
       ) : null}
+      <HomeFilterSheet
+        open={filterOpen}
+        onClose={() => setFilterOpen(false)}
+        categoryChips={categoryChips}
+        categoryId={selectedCategoryId}
+        onCategory={setSelectedCategoryId}
+        filters={filters}
+        onChange={setFilters}
+        onReset={() => {
+          setFilters(DEFAULT_HOME_FILTERS);
+          setSelectedCategoryId('');
+        }}
+      />
     </YStack>
   );
 }

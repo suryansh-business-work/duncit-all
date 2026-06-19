@@ -38,6 +38,9 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
   // on "Home", so a bare navigate('Home') would be a no-op and never switch tabs.
   const goHome = () => {
     void useHomeStore.getState().fetch(true);
+    // Mirrors mWeb's HeaderBrand: always land on Home and, if already there,
+    // smooth-scroll the feed back to the top.
+    useHomeStore.getState().requestScrollTop();
     navigation.navigate('Home', { screen: 'HomeTab' });
   };
 

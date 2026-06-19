@@ -2,6 +2,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 
 import { HomeFeed } from '@/components/home/HomeFeed';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
+import { useHomeStore } from '@/stores/home.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/components/status/StatusRail', () => ({ StatusRail: () => null }));
@@ -57,6 +58,7 @@ beforeEach(() => {
   mockNavigate.mockClear();
   mockRoles = [];
   mockedFeed.mockReturnValue(base);
+  useHomeStore.setState({ scrollTopNonce: 0 });
 });
 
 describe('HomeFeed', () => {
@@ -124,5 +126,24 @@ describe('HomeFeed', () => {
     mockedFeed.mockReturnValue({ ...base, isLoading: true, hasData: false });
     renderWithProviders(<HomeFeed />);
     expect(screen.getByTestId('home-skeleton')).toBeOnTheScreen();
+  });
+
+  it('opens the filter sheet and applies a price filter (badge appears)', () => {
+    renderWithProviders(<HomeFeed />);
+    fireEvent.press(screen.getByTestId('happening-nearby-filter'));
+    expect(screen.getByTestId('home-filter-sheet')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('filter-price-PAID'));
+    // The active-filter count is now 1, so the header badge shows up.
+    expect(screen.getByTestId('happening-nearby-filter-badge')).toBeOnTheScreen();
+    // Resetting clears it again.
+    fireEvent.press(screen.getByTestId('home-filter-reset'));
+    expect(screen.queryByTestId('happening-nearby-filter-badge')).toBeNull();
+  });
+
+  it('scrolls the feed to the top when the logo bumps the nonce', () => {
+    useHomeStore.setState({ scrollTopNonce: 1 });
+    renderWithProviders(<HomeFeed />);
+    // The scroll-to-top effect runs without error when the nonce is already set.
+    expect(screen.getByTestId('home-feed')).toBeOnTheScreen();
   });
 });

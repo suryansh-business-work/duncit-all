@@ -75,9 +75,32 @@ describe('HappeningNearbyHeader', () => {
   it('opens the nearby page from the title row and the See all chip', () => {
     const onPress = jest.fn();
     renderWithProviders(<HappeningNearbyHeader totalPods={7} onPress={onPress} />);
-    fireEvent.press(screen.getByTestId('happening-nearby-header'));
+    fireEvent.press(screen.getByText('Happening nearby'));
     fireEvent.press(screen.getByTestId('happening-nearby-see-all'));
     expect(onPress).toHaveBeenCalledTimes(2);
+  });
+
+  it('hides the filter button when no handler is given', () => {
+    renderWithProviders(<HappeningNearbyHeader totalPods={1} />);
+    expect(screen.queryByTestId('happening-nearby-filter')).toBeNull();
+  });
+
+  it('opens the filter sheet and shows the active-filter badge', () => {
+    const onOpenFilter = jest.fn();
+    renderWithProviders(
+      <HappeningNearbyHeader totalPods={1} onOpenFilter={onOpenFilter} filterCount={2} />,
+    );
+    expect(screen.getByTestId('happening-nearby-filter-badge')).toBeOnTheScreen();
+    expect(screen.getByText('2')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('happening-nearby-filter'));
+    expect(onOpenFilter).toHaveBeenCalled();
+  });
+
+  it('omits the badge when no filters are active', () => {
+    renderWithProviders(
+      <HappeningNearbyHeader totalPods={1} onOpenFilter={jest.fn()} filterCount={0} />,
+    );
+    expect(screen.queryByTestId('happening-nearby-filter-badge')).toBeNull();
   });
 });
 

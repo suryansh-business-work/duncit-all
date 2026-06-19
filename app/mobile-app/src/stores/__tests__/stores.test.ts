@@ -26,6 +26,13 @@ describe('home / following / chat stores', () => {
     expect(useHomeStore.getState().error).toBeDefined();
   });
 
+  it('home: requestScrollTop bumps the scroll-to-top nonce (logo tap, bug 4)', () => {
+    useHomeStore.setState({ scrollTopNonce: 0 });
+    useHomeStore.getState().requestScrollTop();
+    useHomeStore.getState().requestScrollTop();
+    expect(useHomeStore.getState().scrollTopNonce).toBe(2);
+  });
+
   it('following + chat: fetch populate data', async () => {
     useFollowingStore.setState({ data: undefined, isLoading: false });
     mockRequest.mockResolvedValueOnce({

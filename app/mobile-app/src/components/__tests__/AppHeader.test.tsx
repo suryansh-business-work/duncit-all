@@ -6,11 +6,14 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
 const mockFetch = jest.fn();
+const mockRequestScrollTop = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
 }));
 jest.mock('@/stores/home.store', () => ({
-  useHomeStore: { getState: () => ({ fetch: mockFetch }) },
+  useHomeStore: {
+    getState: () => ({ fetch: mockFetch, requestScrollTop: mockRequestScrollTop }),
+  },
 }));
 const mockUseMe = jest.fn();
 jest.mock('@/hooks/useMe', () => ({ useMe: () => mockUseMe() }));
@@ -62,11 +65,12 @@ describe('AppHeader', () => {
     expect(screen.queryByTestId('account-button')).toBeNull();
   });
 
-  it('returns to the Home tab and refreshes the feed when the logo is tapped', () => {
+  it('returns to the Home tab, refreshes the feed and scrolls to top on logo tap', () => {
     renderWithProviders(<AppHeader />);
     fireEvent.press(screen.getByTestId('header-logo'));
     expect(mockNavigate).toHaveBeenCalledWith('Home', { screen: 'HomeTab' });
     expect(mockFetch).toHaveBeenCalledWith(true);
+    expect(mockRequestScrollTop).toHaveBeenCalled();
   });
 
   it('opens the Search screen when the search icon is tapped', () => {

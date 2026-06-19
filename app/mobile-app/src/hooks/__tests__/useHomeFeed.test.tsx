@@ -135,6 +135,54 @@ describe('useHomeFeed', () => {
   });
 });
 
+describe('useHomeFeed filters (bug 6)', () => {
+  beforeEach(() => {
+    mockHomeState.data = {
+      clubs: [{ id: 'c1', category_id: 'cat1', super_category_id: null }],
+      pods: [
+        {
+          id: 'free',
+          club_id: 'c1',
+          pod_type: 'NATIVE_FREE',
+          pod_amount: 0,
+          pod_date_time: future(2),
+          location_id: null,
+        },
+        {
+          id: 'paid',
+          club_id: 'c1',
+          pod_type: 'NATIVE_PAID',
+          pod_amount: 500,
+          pod_date_time: future(1),
+          location_id: null,
+        },
+      ],
+      categories: [],
+    } as never;
+  });
+
+  it('keeps only pods matching the selected price', () => {
+    const { result } = renderHook(() =>
+      useHomeFeed('', { price: 'FREE', date: 'ALL', sort: 'DATE_ASC' }),
+    );
+    expect(result.current.featuredPods.map((p) => p.id)).toEqual(['free']);
+  });
+
+  it('orders each club row by the selected sort', () => {
+    const { result } = renderHook(() =>
+      useHomeFeed('', { price: 'ALL', date: 'ALL', sort: 'PRICE_DESC' }),
+    );
+    expect(result.current.clubsWithPods[0]?.pods.map((p) => p.id)).toEqual(['paid', 'free']);
+  });
+
+  it('drops everything when the date window excludes all pods', () => {
+    const { result } = renderHook(() =>
+      useHomeFeed('', { price: 'ALL', date: 'TODAY', sort: 'DATE_ASC' }),
+    );
+    expect(result.current.totalPods).toBe(0);
+  });
+});
+
 describe('useHomeData', () => {
   it('exposes the raw lists', () => {
     const { result } = renderHook(() => useHomeData());

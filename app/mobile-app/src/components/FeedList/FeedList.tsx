@@ -4,6 +4,7 @@ import { ScrollView, Text } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import { ListSkeleton } from '@/components/Skeleton';
+import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface FeedListProps {
@@ -27,6 +28,7 @@ export function FeedList({
   children,
 }: Readonly<FeedListProps>) {
   const { primary } = useThemeColors();
+  const bottomSpace = useBottomNavSpace();
 
   if (isLoading && isEmpty) {
     return <ListSkeleton testID={`${testID}-loading`} />;
@@ -42,7 +44,7 @@ export function FeedList({
           <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={primary} />
         ) : undefined
       }
-      contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: 124 }}
+      contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: bottomSpace }}
     >
       {isEmpty ? (
         <Reveal scale>

@@ -5,6 +5,8 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 // The header pulls in branding/account data; it's unit-tested on its own.
 jest.mock('@/components/AppHeader', () => ({ AppHeader: () => null }));
+// The status rail has its own data graph + unit tests; stub it in this shell test.
+jest.mock('@/components/status/StatusRail', () => ({ StatusRail: () => null }));
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: jest.fn() }),
 }));

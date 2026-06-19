@@ -26,10 +26,28 @@ const me = {
 } as unknown as AccountMe;
 
 describe('AccountEditForm', () => {
-  it('prefills the loaded user values', () => {
+  it('prefills the loaded user values including the date of birth (bug 8)', () => {
     renderWithProviders(<AccountEditForm me={me} onSubmit={jest.fn()} />);
     expect(screen.getByTestId('field-first_name').props.value).toBe('Riya');
     expect(screen.getByTestId('field-city').props.value).toBe('Pune');
+    expect(screen.getByTestId('field-dob').props.value).toBe('1995-01-01');
+  });
+
+  it('validates the date of birth and submits an edited dob (bug 8)', async () => {
+    const onSubmit = jest.fn();
+    renderWithProviders(<AccountEditForm me={me} onSubmit={onSubmit} />);
+
+    fireEvent.changeText(screen.getByTestId('field-dob'), '01/01/1995');
+    fireEvent.press(screen.getByTestId('account-edit-submit'));
+    await waitFor(() =>
+      expect(screen.getByTestId('dob-error')).toHaveTextContent('Use the format YYYY-MM-DD'),
+    );
+    expect(onSubmit).not.toHaveBeenCalled();
+
+    fireEvent.changeText(screen.getByTestId('field-dob'), '1990-12-31');
+    fireEvent.press(screen.getByTestId('account-edit-submit'));
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
+    expect(onSubmit.mock.calls[0][0]).toMatchObject({ dob: '1990-12-31' });
   });
 
   it('requires a first name', async () => {

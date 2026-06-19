@@ -15,10 +15,30 @@ const extension = z
   .regex(/^\+?\d*$/, 'Use a code like +91')
   .max(5, 'Too long');
 
+const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+
+/** Optional birth date — empty (no change) or a valid past YYYY-MM-DD (bug 8). */
+const dob = z
+  .string()
+  .trim()
+  .refine((value) => value === '' || DOB_PATTERN.test(value), 'Use the format YYYY-MM-DD')
+  .refine((value) => {
+    if (!value || !DOB_PATTERN.test(value)) return true;
+    const parsed = new Date(value);
+    return !Number.isNaN(parsed.getTime()) && parsed.getTime() <= Date.now();
+  }, 'Enter a valid past date');
+
+/** ISO/date string → the YYYY-MM-DD the date field expects (empty when unset). */
+export function toDobInput(value?: string | null): string {
+  if (!value) return '';
+  return DOB_PATTERN.test(value.slice(0, 10)) ? value.slice(0, 10) : '';
+}
+
 export const accountEditSchema = z.object({
   first_name: z.string().trim().min(1, 'First name is required').max(60, 'Too long'),
   last_name: z.string().trim().max(60, 'Too long'),
   bio: z.string().trim().max(280, 'Keep it under 280 characters'),
+  dob,
   city: z.string().trim().max(80, 'Too long'),
   zone: z.string().trim().max(80, 'Too long'),
   country: z.string().trim().max(80, 'Too long'),
@@ -36,6 +56,7 @@ export function accountEditDefaults(me: AccountMe | null): AccountEditValues {
     first_name: me?.first_name ?? '',
     last_name: me?.last_name ?? '',
     bio: me?.bio ?? '',
+    dob: toDobInput(me?.dob),
     city: me?.city ?? '',
     zone: me?.zone ?? '',
     country: me?.country ?? '',
@@ -52,6 +73,7 @@ export function toUpdateProfileInput(values: AccountEditValues): UpdateProfileIn
     first_name: values.first_name,
     last_name: values.last_name,
     bio: values.bio,
+    dob: values.dob || undefined,
     city: values.city,
     zone: values.zone,
     country: values.country,

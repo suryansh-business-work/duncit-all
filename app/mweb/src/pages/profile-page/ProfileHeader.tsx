@@ -1,11 +1,28 @@
+import { useState } from 'react';
 import { Avatar, Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import SettingsIcon from '@mui/icons-material/Settings';
+import FollowListDialog from '../../components/FollowListDialog';
 
-function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
+function Stat({
+  label,
+  value,
+  onClick,
+}: Readonly<{ label: string; value: number; onClick?: () => void }>) {
   return (
-    <Box sx={{ flex: 1, textAlign: 'center', p: 1, borderRadius: 3, bgcolor: 'action.hover' }}>
+    <Box
+      onClick={onClick}
+      role={onClick ? 'button' : undefined}
+      sx={{
+        flex: 1,
+        textAlign: 'center',
+        p: 1,
+        borderRadius: 3,
+        bgcolor: 'action.hover',
+        cursor: onClick ? 'pointer' : 'default',
+      }}
+    >
       <Typography display="block" fontWeight={950} lineHeight={1}>
         {new Intl.NumberFormat(undefined, { notation: value > 999 ? 'compact' : 'standard' }).format(value)}
       </Typography>
@@ -26,6 +43,7 @@ interface Props {
 
 export default function ProfileHeader({ me, postsCount, onNewPost, onChangePhoto, onSettings }: Readonly<Props>) {
   const displayName = me.full_name || `${me.first_name} ${me.last_name}`;
+  const [followTab, setFollowTab] = useState<'followers' | 'following' | null>(null);
 
   return (
     <Box
@@ -92,8 +110,16 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onChangePhoto
         </Box>
         <Stack direction="row" spacing={1} sx={{ width: '100%' }}>
           <Stat label="posts" value={postsCount} />
-          <Stat label="followers" value={me.followers_count ?? 0} />
-          <Stat label="following" value={me.following_count ?? 0} />
+          <Stat
+            label="followers"
+            value={me.followers_count ?? 0}
+            onClick={() => setFollowTab('followers')}
+          />
+          <Stat
+            label="following"
+            value={me.following_count ?? 0}
+            onClick={() => setFollowTab('following')}
+          />
         </Stack>
         <Stack direction="row" spacing={0.75} sx={{ width: '100%' }}>
           <Button fullWidth variant="contained" size="small" startIcon={<AddPhotoAlternateIcon />} onClick={onNewPost} sx={{ borderRadius: 3, fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
@@ -118,6 +144,13 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onChangePhoto
           </IconButton>
         </Stack>
       </Stack>
+      <FollowListDialog
+        open={followTab !== null}
+        onClose={() => setFollowTab(null)}
+        userId={me.user_id}
+        initialTab={followTab ?? 'followers'}
+        viewerId={me.user_id}
+      />
     </Box>
   );
 }

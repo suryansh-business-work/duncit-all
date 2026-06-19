@@ -3,37 +3,38 @@ import { fireEvent, screen } from '@testing-library/react-native';
 import { StatusRail } from '@/components/status/StatusRail';
 import { renderWithProviders } from '@/utils/test-utils';
 
-const mockUseStatus = jest.fn();
+const mockUseStoryRail = jest.fn();
 const mockUseStatusUpload = jest.fn();
-jest.mock('@/hooks/useStatus', () => ({ useStatus: () => mockUseStatus() }));
+jest.mock('@/hooks/useStoryRail', () => ({ useStoryRail: () => mockUseStoryRail() }));
 jest.mock('@/hooks/useStatusUpload', () => ({ useStatusUpload: () => mockUseStatusUpload() }));
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: jest.fn() }),
+}));
+
+const slide = {
+  id: 's1',
+  imageUrl: 'https://i/s.jpg',
+  mediaType: 'IMAGE',
+  caption: 'Hi',
+  createdAt: '2026-06-09T10:00:00.000Z',
+  expiresAt: null,
+};
 
 beforeEach(() => {
-  mockUseStatus.mockReturnValue({
-    statuses: [
+  mockUseStoryRail.mockReturnValue({
+    mine: null,
+    items: [
       {
         authorId: 'a1',
+        key: 'user-a1',
         name: 'Asha',
         photo: null,
-        slides: [
-          {
-            id: 's1',
-            imageUrl: 'https://i/s.jpg',
-            mediaType: 'IMAGE',
-            caption: 'Hi',
-            createdAt: '2026-06-09T10:00:00.000Z',
-          },
-        ],
-        cover: {
-          id: 's1',
-          imageUrl: 'https://i/s.jpg',
-          mediaType: 'IMAGE',
-          caption: 'Hi',
-          createdAt: '2026-06-09T10:00:00.000Z',
-        },
+        slides: [slide],
+        cover: slide,
+        target: { kind: 'user', id: 'a1' },
       },
     ],
-    mine: null,
+    isLoading: false,
   });
   mockUseStatusUpload.mockReturnValue({ uploading: false, pickAndUpload: jest.fn() });
 });
@@ -41,7 +42,7 @@ beforeEach(() => {
 describe('StatusRail', () => {
   it('opens and closes the status viewer', () => {
     renderWithProviders(<StatusRail userName="You" />);
-    fireEvent.press(screen.getByTestId('status-a1'));
+    fireEvent.press(screen.getByTestId('status-user-a1'));
     expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('status-viewer-close'));
     expect(screen.queryByTestId('status-viewer')).toBeNull();

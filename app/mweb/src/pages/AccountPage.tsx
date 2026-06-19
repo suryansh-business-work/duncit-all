@@ -20,6 +20,7 @@ import MediaPickerDialog from '../components/MediaPickerDialog';
 import AccountInfoRow from './account-page/AccountInfoRow';
 import AccountProfileHeader from './account-page/AccountProfileHeader';
 import EditAccountDialog from './account-page/EditAccountDialog';
+import { toDobInput } from './account-page/account-edit/account-edit.form';
 import HostsVenuesCard from './account-page/HostsVenuesCard';
 import PrivacyToggleCard from './account-page/PrivacyToggleCard';
 import HealthMeter from '../components/health/HealthMeter';
@@ -195,6 +196,7 @@ export default function AccountPage() {
           first_name: me.first_name || '',
           last_name: me.last_name || '',
           bio: me.bio || '',
+          dob: toDobInput(me.dob),
           city: me.city || '',
           zone: me.zone || '',
           country: me.country || '',

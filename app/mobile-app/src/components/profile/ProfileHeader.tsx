@@ -1,14 +1,30 @@
 import { Image } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useRoleLabels } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfileMe } from '@/hooks/useProfile';
+import type { RootStackParamList } from '@/navigation/types';
 
-function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
+function Stat({
+  value,
+  label,
+  onPress,
+  testID,
+}: Readonly<{ value: number; label: string; onPress: () => void; testID: string }>) {
   return (
-    <YStack alignItems="center" flex={1}>
+    <YStack
+      testID={testID}
+      role="button"
+      aria-label={`${value} ${label}`}
+      onPress={onPress}
+      alignItems="center"
+      flex={1}
+      pressStyle={{ opacity: 0.7 }}
+    >
       <Text fontSize={18} fontWeight="900" color="$color">
         {value}
       </Text>
@@ -19,10 +35,14 @@ function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
   );
 }
 
-/** Profile identity card — avatar, name, verified email, role chips, stats, bio. */
+/** Profile identity card — avatar, name, verified email, role chips, stats, bio.
+ * Tapping the follower/following counts opens the list (bug 9). */
 export function ProfileHeader({ me }: Readonly<{ me: ProfileMe }>) {
   const { onPrimary, primary } = useThemeColors();
   const { labelFor } = useRoleLabels();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const openFollow = (tab: 'followers' | 'following') =>
+    navigation.navigate('Follow', { userId: me.user_id, tab });
   const initial = (me.first_name?.[0] ?? me.full_name?.[0] ?? 'U').toUpperCase();
 
   return (
@@ -91,8 +111,18 @@ export function ProfileHeader({ me }: Readonly<{ me: ProfileMe }>) {
         borderColor="$borderColor"
         backgroundColor="$surface"
       >
-        <Stat value={me.followers_count} label="followers" />
-        <Stat value={me.following_count} label="following" />
+        <Stat
+          testID="profile-followers"
+          value={me.followers_count}
+          label="followers"
+          onPress={() => openFollow('followers')}
+        />
+        <Stat
+          testID="profile-following"
+          value={me.following_count}
+          label="following"
+          onPress={() => openFollow('following')}
+        />
       </XStack>
 
       {me.bio ? (

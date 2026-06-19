@@ -18,6 +18,7 @@ const PUBLIC_PROFILE = gql`
   query PublicProfile($user_id: ID!) {
     publicUserProfile(user_id: $user_id) {
       user_id
+      username
       full_name
       first_name
       last_name
@@ -25,6 +26,8 @@ const PUBLIC_PROFILE = gql`
       bio
       city
       zone
+      followers_count
+      following_count
       is_private
       is_following
       can_view_content
@@ -100,7 +103,7 @@ export default function PublicProfilePage() {
         </Typography>
       </Stack>
 
-      <PublicProfileHeader user={u} />
+      <PublicProfileHeader user={u} viewerId={data?.me?.user_id} />
       {!isOwner && (
         <Stack direction="row" justifyContent="center">
           <FollowButton

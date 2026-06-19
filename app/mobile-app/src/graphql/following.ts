@@ -35,6 +35,34 @@ export const FollowingPeopleDocument = gql(`
   }
 `);
 
+/** Followers / following lists for any profile (bug 9) — opens from the
+ * followers/following counts and shows photo, name, @handle + a follow button. */
+export const FollowersOfDocument = gql(`
+  query MobileFollowersOf($userId: ID!) {
+    followersOf(user_id: $userId) {
+      user_id
+      username
+      full_name
+      first_name
+      profile_photo
+      is_following
+    }
+  }
+`);
+
+export const FollowingOfDocument = gql(`
+  query MobileFollowingOf($userId: ID!) {
+    followingOf(user_id: $userId) {
+      user_id
+      username
+      full_name
+      first_name
+      profile_photo
+      is_following
+    }
+  }
+`);
+
 /** Follow/unfollow a pod — returns the viewer's updated followed-pod ids. */
 export const FollowPodDocument = gql(`
   mutation MobileFollowPod($podId: ID!) {

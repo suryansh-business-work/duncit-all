@@ -46,14 +46,26 @@ export interface HomeStatusViewerItem {
 interface HomeStatusViewerProps {
   item: HomeStatusViewerItem | null;
   onClose: () => void;
+  /** Jump to the next follower's story (end of slides / right tap / swipe left). */
+  onNext?: () => void;
+  /** Jump to the previous follower's story (back tap on slide 1 / swipe right). */
+  onPrev?: () => void;
 }
+
+// A horizontal pointer drag longer than this (px) counts as a story swipe.
+const SWIPE_THRESHOLD = 48;
 
 // Each image slide runs 15s before auto-advancing; videos play to their end
 // (capped so a long clip can't hold the story open indefinitely).
 const STATUS_DURATION_MS = 15000;
 const MAX_VIDEO_SECONDS = 30;
 
-export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusViewerProps>) {
+export default function HomeStatusViewer({
+  item,
+  onClose,
+  onNext,
+  onPrev,
+}: Readonly<HomeStatusViewerProps>) {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
@@ -61,6 +73,9 @@ export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusV
   const frameRef = useRef<number | null>(null);
   const elapsedRef = useRef(0);
   const startedAtRef = useRef<number | null>(null);
+  const pointerStartX = useRef(0);
+  // End of the last slide hands off to the next follower's story (bug 2).
+  const goNextStory = onNext ?? onClose;
   const itemKey = item ? [item.label, item.mediaUrl, item.targetUrl].filter(Boolean).join('|') : '';
   const slides = item?.slides?.length ? item.slides : item ? [{ mediaUrl: item.mediaUrl, mediaType: item.mediaType, subLabel: item.subLabel }] : [];
   const current = slides[index] ?? slides[0];
@@ -93,7 +108,7 @@ export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusV
       setProgress(nextProgress);
       if (nextProgress >= 1) {
         if (index < slides.length - 1) setIndex((value) => value + 1);
-        else onClose();
+        else goNextStory();
       }
       else frameRef.current = requestAnimationFrame(tick);
     };
@@ -101,16 +116,24 @@ export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusV
     return () => {
       if (frameRef.current) cancelAnimationFrame(frameRef.current);
     };
-  }, [index, item, onClose, paused, slides.length, isVideo]);
+  }, [index, item, goNextStory, paused, slides.length, isVideo]);
 
   if (!item) return null;
 
   const goPrev = () => {
     if (index > 0) setIndex(index - 1);
+    else onPrev?.();
   };
   const goNext = () => {
     if (index < slides.length - 1) setIndex(index + 1);
-    else onClose();
+    else goNextStory();
+  };
+
+  // Swipe left → next follower, swipe right → previous (bug 2).
+  const handleSwipeEnd = (clientX: number) => {
+    const dx = clientX - pointerStartX.current;
+    if (dx <= -SWIPE_THRESHOLD) goNextStory();
+    else if (dx >= SWIPE_THRESHOLD) onPrev?.();
   };
 
   const handleVideoTime = (event: React.SyntheticEvent<HTMLVideoElement>) => {
@@ -138,8 +161,14 @@ export default function HomeStatusViewer({ item, onClose }: Readonly<HomeStatusV
   return (
     <Dialog open={!!item} fullScreen onClose={onClose} PaperProps={{ sx: { bgcolor: '#08070b' } }}>
       <Box
-        onPointerDown={() => setPaused(true)}
-        onPointerUp={() => setPaused(false)}
+        onPointerDown={(event) => {
+          setPaused(true);
+          pointerStartX.current = event.clientX;
+        }}
+        onPointerUp={(event) => {
+          setPaused(false);
+          handleSwipeEnd(event.clientX);
+        }}
         onPointerCancel={() => setPaused(false)}
         onPointerLeave={() => setPaused(false)}
         sx={{ position: 'relative', width: '100%', height: '100dvh', overflow: 'hidden', color: '#fff', touchAction: 'none' }}

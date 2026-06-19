@@ -5,6 +5,12 @@ import { ProfilePanels } from '@/components/profile/ProfilePanels';
 import { ProfilePostsGrid } from '@/components/profile/ProfilePostsGrid';
 import { renderWithProviders } from '@/utils/test-utils';
 
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: mockNavigate }),
+}));
+beforeEach(() => mockNavigate.mockClear());
+
 jest.mock('@/components/profile/post-viewer/PostViewerSheet', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View, Text, Pressable } = require('react-native');
@@ -75,6 +81,14 @@ describe('ProfileHeader', () => {
     renderWithProviders(<ProfileHeader me={m2} />);
     expect(screen.getByText('U')).toBeOnTheScreen();
     expect(screen.getByText('—')).toBeOnTheScreen();
+  });
+
+  it('opens the follow lists from the follower/following counts (bug 9)', () => {
+    renderWithProviders(<ProfileHeader me={me as never} />);
+    fireEvent.press(screen.getByTestId('profile-followers'));
+    expect(mockNavigate).toHaveBeenCalledWith('Follow', { userId: 'u', tab: 'followers' });
+    fireEvent.press(screen.getByTestId('profile-following'));
+    expect(mockNavigate).toHaveBeenCalledWith('Follow', { userId: 'u', tab: 'following' });
   });
 });
 

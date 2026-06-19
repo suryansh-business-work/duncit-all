@@ -61,6 +61,14 @@ export function AccountEditForm({
 
       <FormTextField control={control} name="bio" label="Bio" multiline numberOfLines={3} />
 
+      <FormTextField
+        control={control}
+        name="dob"
+        label="Date of birth (YYYY-MM-DD)"
+        placeholder="1995-06-15"
+        autoCapitalize="none"
+      />
+
       <XStack gap={12}>
         <YStack flex={1}>
           <FormTextField control={control} name="city" label="City" />

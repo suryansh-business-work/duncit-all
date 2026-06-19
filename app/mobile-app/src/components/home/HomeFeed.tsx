@@ -10,6 +10,7 @@ import type { RootStackParamList } from '@/navigation/types';
 import { Reveal } from '@/animations/Reveal';
 import { HomeSkeleton } from '@/components/Skeleton';
 
+import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
 import { useHomeStore } from '@/stores/home.store';
@@ -42,6 +43,7 @@ export function HomeFeed() {
     refetch,
   } = useHomeFeed(selectedCategoryId, filters);
   const filterCount = activeFilterCount(filters, selectedCategoryId);
+  const bottomSpace = useBottomNavSpace();
   const { data: meData } = useMe();
   const { primary, onPrimary } = useThemeColors();
   const { openPod, openClub, openPreviousPods, openHappeningNearby } = useDetailNav();
@@ -77,7 +79,7 @@ export function HomeFeed() {
           />
         }
       >
-        <YStack gap={20} paddingTop={12} paddingBottom={124} testID="home-feed">
+        <YStack gap={20} paddingTop={12} paddingBottom={bottomSpace} testID="home-feed">
           <Reveal index={0}>
             <StatusRail userName={userName} userPhoto={userPhoto} />
           </Reveal>
@@ -146,7 +148,7 @@ export function HomeFeed() {
           onPress={() => navigation.navigate('CreatePod')}
           position="absolute"
           right={16}
-          bottom={128}
+          bottom={bottomSpace + 8}
           width={56}
           height={56}
           borderRadius={28}

@@ -12,7 +12,7 @@ interface ClubStory {
   image_url: string;
   media_type: string;
   caption: string;
-  author?: { id: string; full_name?: string | null; profile_photo?: string | null } | null;
+  author?: { user_id: string; full_name?: string | null; profile_photo?: string | null } | null;
 }
 
 interface Props {

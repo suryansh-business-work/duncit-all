@@ -76,7 +76,7 @@ export const CLUB_STORIES = gql`
       caption
       created_at
       author {
-        id
+        user_id
         full_name
         profile_photo
       }

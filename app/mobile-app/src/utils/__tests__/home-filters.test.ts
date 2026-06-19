@@ -22,9 +22,9 @@ describe('home-filters', () => {
     });
 
     it('counts each non-default dimension including the category', () => {
-      expect(
-        activeFilterCount({ price: 'FREE', date: 'TODAY', sort: 'PRICE_ASC' }, 'cat1'),
-      ).toBe(4);
+      expect(activeFilterCount({ price: 'FREE', date: 'TODAY', sort: 'PRICE_ASC' }, 'cat1')).toBe(
+        4,
+      );
     });
   });
 
@@ -83,9 +83,11 @@ describe('home-filters', () => {
       expect(comparePods(early, late, 'PRICE_ASC')).toBeGreaterThan(0);
       expect(comparePods(early, late, 'PRICE_DESC')).toBeLessThan(0);
     });
-    it('treats missing date/amount as zero', () => {
+    it('treats missing date/amount as zero in every mode', () => {
       expect(comparePods({}, {}, 'DATE_ASC')).toBe(0);
+      expect(comparePods({}, {}, 'DATE_DESC')).toBe(0);
       expect(comparePods({}, {}, 'PRICE_ASC')).toBe(0);
+      expect(comparePods({}, {}, 'PRICE_DESC')).toBe(0);
     });
   });
 });

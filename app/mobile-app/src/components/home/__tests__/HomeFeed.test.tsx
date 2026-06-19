@@ -138,6 +138,8 @@ describe('HomeFeed', () => {
     // Resetting clears it again.
     fireEvent.press(screen.getByTestId('home-filter-reset'));
     expect(screen.queryByTestId('happening-nearby-filter-badge')).toBeNull();
+    // Closing the sheet (Done/close) is wired back to the feed.
+    fireEvent.press(screen.getByTestId('home-filter-close'));
   });
 
   it('scrolls the feed to the top when the logo bumps the nonce', () => {

@@ -1,8 +1,12 @@
 import { useMemo, useState } from 'react';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView } from 'tamagui';
 
-import { useStatus } from '@/hooks/useStatus';
+import type { RootStackParamList } from '@/navigation/types';
+import { useDetailNav } from '@/hooks/useDetailNav';
 import { useStatusUpload } from '@/hooks/useStatusUpload';
+import { useStoryRail, type StoryTarget } from '@/hooks/useStoryRail';
 import { StatusTile } from '@/components/status/StatusTile';
 import { StatusViewer } from '@/components/status/StatusViewer';
 
@@ -11,22 +15,31 @@ interface StatusRailProps {
   userPhoto?: string | null;
 }
 
-/** Home status rail — "Your story" upload tile first (tap to pick + post an
- * image), then everyone's latest statuses; tapping one opens the viewer. The
- * viewer walks the whole ordered list so the next/previous author's story is one
- * tap or swipe away (bug 2). */
-export function StatusRail({ userName, userPhoto }: Readonly<StatusRailProps>) {
-  const { statuses, mine } = useStatus();
+/** Home status rail — "Your story" upload tile first, then the same followed
+ * clubs / pods / people mWeb shows (bug 3). Tapping one opens the viewer, which
+ * walks the whole ordered list so the next/previous story is a tap or swipe away
+ * (bug 2) and can deep-link into the club/pod/profile via "Open details". */
+export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
+  const { mine, items } = useStoryRail();
   const { uploading, pickAndUpload } = useStatusUpload();
-  // Index into the ordered list (mine first, then everyone else); null = closed.
+  const { openClub, openPod } = useDetailNav();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  // Index into the ordered list (mine first, then followed content); null = closed.
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const myCoverIsVideo = mine?.cover.mediaType === 'VIDEO';
 
-  const groups = useMemo(() => (mine ? [mine, ...statuses] : statuses), [mine, statuses]);
+  const groups = useMemo(() => (mine ? [mine, ...items] : items), [mine, items]);
   const active = activeIndex != null ? (groups[activeIndex] ?? null) : null;
   const openAt = (groupIndex: number) => setActiveIndex(groupIndex);
   const goNext = () => setActiveIndex((i) => (i != null && i < groups.length - 1 ? i + 1 : null));
   const goPrev = () => setActiveIndex((i) => (i != null && i > 0 ? i - 1 : i));
+
+  const openTarget = (target: StoryTarget) => {
+    setActiveIndex(null);
+    if (target.kind === 'club') openClub(target.id, target.title);
+    else if (target.kind === 'pod') openPod(target.id, target.title);
+    else navigation.navigate('PublicProfile', { userId: target.id });
+  };
 
   return (
     <>
@@ -50,13 +63,13 @@ export function StatusRail({ userName, userPhoto }: Readonly<StatusRailProps>) {
             if (!uploading) void pickAndUpload();
           }}
         />
-        {statuses.map((status, statusIndex) => (
+        {items.map((item, itemIndex) => (
           <StatusTile
-            key={status.authorId}
-            testID={`status-${status.authorId}`}
-            label={status.name}
-            image={status.photo ?? status.cover.imageUrl}
-            onPress={() => openAt(mine ? statusIndex + 1 : statusIndex)}
+            key={item.key}
+            testID={`status-${item.key}`}
+            label={item.name}
+            image={item.photo ?? item.cover.imageUrl}
+            onPress={() => openAt(mine ? itemIndex + 1 : itemIndex)}
           />
         ))}
       </ScrollView>
@@ -65,6 +78,7 @@ export function StatusRail({ userName, userPhoto }: Readonly<StatusRailProps>) {
         onClose={() => setActiveIndex(null)}
         onNext={goNext}
         onPrev={goPrev}
+        onOpenTarget={openTarget}
       />
     </>
   );

@@ -11,6 +11,7 @@ import {
   InvoiceTemplatePage,
   LedgerPage,
   PayoutCyclesPage,
+  StartupDashboardPage,
 } from './pages/finance';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
@@ -36,6 +37,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
+      <Route path="/startup-dashboard" element={authed(<StartupDashboardPage />)} />
       <Route path="/default-deductions" element={authed(<DefaultDeductionsPage />)} />
       <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
       <Route path="/payment-release" element={authed(<PaymentReleasePage />)} />

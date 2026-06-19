@@ -47,6 +47,18 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   storefront: StorefrontIcon,
   shield: ShieldIcon,
   calendar: CalendarMonthIcon,
+  // Founder dashboard category icons
+  revenue: PaymentsIcon,
+  profit: InsightsIcon,
+  expenses: RequestQuoteIcon,
+  customers: GroupsIcon,
+  sales: TimelineIcon,
+  marketing: CampaignIcon,
+  product: AnalyticsIcon,
+  operations: LocalShippingIcon,
+  marketplace: StorefrontIcon,
+  community: GroupsIcon,
+  northstar: InsightsIcon,
 };
 
 /** Resolves a config icon name to an MUI icon, falling back to a neutral glyph. */

@@ -21,5 +21,7 @@ package-lock.json
 **/package-lock.json
 # ...except duncit-mobile-app, a standalone npm app (EAS needs its lockfile to pick npm)
 !duncit-mobile-app/package-lock.json
-# ...and open-wa-server, a standalone npm app (its Docker build runs `npm ci`)
+# ...and open-wa-server (+ its bundled dashboard SPA): its Docker build runs
+# `npm ci` for both, so both lockfiles must be committed.
 !portals/crm/open-wa-server/package-lock.json
+!portals/crm/open-wa-server/dashboard/package-lock.json

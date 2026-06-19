@@ -21,3 +21,5 @@ package-lock.json
 **/package-lock.json
 # ...except duncit-mobile-app, a standalone npm app (EAS needs its lockfile to pick npm)
 !duncit-mobile-app/package-lock.json
+# ...and open-wa-server, a standalone npm app (its Docker build runs `npm ci`)
+!portals/crm/open-wa-server/package-lock.json

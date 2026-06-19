@@ -253,6 +253,8 @@ export const userTypeDefs = gql`
 
   type PublicProfile {
     user_id: ID!
+    "Derived @handle (no real username field exists yet) for the follow lists."
+    username: String!
     full_name: String
     first_name: String
     last_name: String
@@ -260,6 +262,8 @@ export const userTypeDefs = gql`
     bio: String
     city: String
     zone: String
+    followers_count: Int!
+    following_count: Int!
     "PRIVATE when this profile hides its posts/stories from non-followers."
     is_private: Boolean!
     "Whether the signed-in viewer follows this user."
@@ -276,6 +280,10 @@ export const userTypeDefs = gql`
     userContactActions(user_id: ID!): [UserContactAction!]!
     publicUsersByIds(user_ids: [ID!]!): [PublicProfile!]!
     publicUserProfile(user_id: ID!): PublicProfile
+    "People who follow the given user (their public profiles)."
+    followersOf(user_id: ID!): [PublicProfile!]!
+    "People the given user follows (their public profiles)."
+    followingOf(user_id: ID!): [PublicProfile!]!
   }
 
   type SeedAdminResult {

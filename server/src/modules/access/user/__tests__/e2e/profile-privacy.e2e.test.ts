@@ -189,6 +189,60 @@ describe('profile privacy + follow notification e2e', () => {
     expect(res.publicUsersByIds[0].is_following).toBe(true);
   });
 
+  it('lists followers and following with a derived @username (bug 9)', async () => {
+    const starId = await makeUser('Star');
+    const fanId = await makeUser('Fan');
+    const fan = server.client(signToken({ id: fanId, roles: ['USER'] }));
+    await fan.request(FOLLOW, { id: starId });
+
+    const FOLLOW_LISTS = gql`
+      query Lists($id: ID!) {
+        followersOf(user_id: $id) {
+          user_id
+          username
+        }
+        followingOf(user_id: $id) {
+          user_id
+          is_following
+        }
+      }
+    `;
+
+    // Star's followers include the fan (with a non-empty handle).
+    const starLists = await fan.request<{ followersOf: any[]; followingOf: any[] }>(FOLLOW_LISTS, {
+      id: starId,
+    });
+    expect(starLists.followersOf.map((u) => u.user_id)).toContain(fanId);
+    expect(starLists.followersOf[0].username).toMatch(/^[a-z0-9]+$/);
+    expect(starLists.followingOf).toHaveLength(0);
+
+    // The fan's following list includes Star, flagged is_following for the viewer.
+    const fanLists = await fan.request<{ followersOf: any[]; followingOf: any[] }>(FOLLOW_LISTS, {
+      id: fanId,
+    });
+    expect(fanLists.followingOf.map((u) => u.user_id)).toContain(starId);
+    expect(fanLists.followingOf.find((u) => u.user_id === starId)?.is_following).toBe(true);
+  });
+
+  it('returns empty follow lists for an invalid user id (bug 9)', async () => {
+    const viewer = server.client(signToken({ id: new Types.ObjectId().toString(), roles: ['USER'] }));
+    const res = await viewer.request<{ followersOf: any[]; followingOf: any[] }>(
+      gql`
+        query Bad($id: ID!) {
+          followersOf(user_id: $id) {
+            user_id
+          }
+          followingOf(user_id: $id) {
+            user_id
+          }
+        }
+      `,
+      { id: 'not-an-id' },
+    );
+    expect(res.followersOf).toEqual([]);
+    expect(res.followingOf).toEqual([]);
+  });
+
   it('requires auth to change profile visibility', async () => {
     const anon = server.client();
     await expect(anon.request(SET_VISIBILITY, { v: 'PRIVATE' })).rejects.toThrow();

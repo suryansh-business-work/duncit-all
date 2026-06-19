@@ -1147,6 +1147,15 @@ export const userService = {
     return edges.map((e: any) => String(e.following_id));
   },
 
+  // The ids of users who follow `targetId` (powers the Followers list, bug 9).
+  async listFollowerUserIds(targetId: string) {
+    if (!Types.ObjectId.isValid(targetId)) return [];
+    const edges = await UserRelationshipModel.find({ following_id: new Types.ObjectId(targetId) })
+      .select('follower_id')
+      .lean();
+    return edges.map((e: any) => String(e.follower_id));
+  },
+
   // Can `viewerId` see `ownerId`'s posts/stories/private details? Owner always
   // can; PUBLIC profiles are open; PRIVATE profiles need a follow edge.
   async canViewContent(ownerId: string, viewerId: string | null) {

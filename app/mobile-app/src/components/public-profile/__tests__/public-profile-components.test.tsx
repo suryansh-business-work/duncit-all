@@ -4,9 +4,16 @@ import { PublicProfileBadges, PublicProfileHeader } from '@/components/public-pr
 import { renderWithProviders } from '@/utils/test-utils';
 import type { PublicProfileUser, UserBadge } from '@/hooks/usePublicProfile';
 
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: mockNavigate }),
+}));
+beforeEach(() => mockNavigate.mockClear());
+
 const user = (over: Record<string, unknown> = {}): PublicProfileUser =>
   ({
     user_id: 'u1',
+    username: 'riya1',
     full_name: 'Riya Sharma',
     first_name: 'Riya',
     last_name: 'Sharma',
@@ -14,6 +21,8 @@ const user = (over: Record<string, unknown> = {}): PublicProfileUser =>
     bio: 'Pod lover',
     city: 'Pune',
     zone: 'Kothrud',
+    followers_count: 12,
+    following_count: 7,
     ...over,
   }) as unknown as PublicProfileUser;
 
@@ -47,6 +56,15 @@ describe('PublicProfileHeader', () => {
       />,
     );
     expect(screen.getByText('Duncit user')).toBeOnTheScreen();
+  });
+
+  it('opens the follow lists from the counts and shows the @handle (bug 9)', () => {
+    renderWithProviders(<PublicProfileHeader user={user()} />);
+    expect(screen.getByText('@riya1')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('public-followers'));
+    expect(mockNavigate).toHaveBeenCalledWith('Follow', { userId: 'u1', tab: 'followers' });
+    fireEvent.press(screen.getByTestId('public-following'));
+    expect(mockNavigate).toHaveBeenCalledWith('Follow', { userId: 'u1', tab: 'following' });
   });
 });
 

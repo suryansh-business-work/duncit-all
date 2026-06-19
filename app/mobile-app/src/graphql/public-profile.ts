@@ -5,6 +5,7 @@ export const MobilePublicProfileDocument = gql(`
   query MobilePublicProfile($user_id: ID!) {
     publicUserProfile(user_id: $user_id) {
       user_id
+      username
       full_name
       first_name
       last_name
@@ -12,6 +13,8 @@ export const MobilePublicProfileDocument = gql(`
       bio
       city
       zone
+      followers_count
+      following_count
       is_private
       is_following
       can_view_content

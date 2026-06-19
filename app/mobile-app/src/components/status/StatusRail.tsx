@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { ScrollView } from 'tamagui';
 
-import { useStatus, type StatusGroup } from '@/hooks/useStatus';
+import { useStatus } from '@/hooks/useStatus';
 import { useStatusUpload } from '@/hooks/useStatusUpload';
 import { StatusTile } from '@/components/status/StatusTile';
 import { StatusViewer } from '@/components/status/StatusViewer';
@@ -12,12 +12,21 @@ interface StatusRailProps {
 }
 
 /** Home status rail — "Your story" upload tile first (tap to pick + post an
- * image), then everyone's latest statuses; tapping one opens the viewer. */
+ * image), then everyone's latest statuses; tapping one opens the viewer. The
+ * viewer walks the whole ordered list so the next/previous author's story is one
+ * tap or swipe away (bug 2). */
 export function StatusRail({ userName, userPhoto }: Readonly<StatusRailProps>) {
   const { statuses, mine } = useStatus();
   const { uploading, pickAndUpload } = useStatusUpload();
-  const [active, setActive] = useState<StatusGroup | null>(null);
+  // Index into the ordered list (mine first, then everyone else); null = closed.
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
   const myCoverIsVideo = mine?.cover.mediaType === 'VIDEO';
+
+  const groups = useMemo(() => (mine ? [mine, ...statuses] : statuses), [mine, statuses]);
+  const active = activeIndex != null ? (groups[activeIndex] ?? null) : null;
+  const openAt = (groupIndex: number) => setActiveIndex(groupIndex);
+  const goNext = () => setActiveIndex((i) => (i != null && i < groups.length - 1 ? i + 1 : null));
+  const goPrev = () => setActiveIndex((i) => (i != null && i > 0 ? i - 1 : i));
 
   return (
     <>
@@ -34,24 +43,29 @@ export function StatusRail({ userName, userPhoto }: Readonly<StatusRailProps>) {
           badge
           onPress={() => {
             if (uploading) return;
-            if (mine) setActive(mine);
+            if (mine) openAt(0);
             else void pickAndUpload();
           }}
           onBadgePress={() => {
             if (!uploading) void pickAndUpload();
           }}
         />
-        {statuses.map((status) => (
+        {statuses.map((status, statusIndex) => (
           <StatusTile
             key={status.authorId}
             testID={`status-${status.authorId}`}
             label={status.name}
             image={status.photo ?? status.cover.imageUrl}
-            onPress={() => setActive(status)}
+            onPress={() => openAt(mine ? statusIndex + 1 : statusIndex)}
           />
         ))}
       </ScrollView>
-      <StatusViewer status={active} onClose={() => setActive(null)} />
+      <StatusViewer
+        status={active}
+        onClose={() => setActiveIndex(null)}
+        onNext={goNext}
+        onPrev={goPrev}
+      />
     </>
   );
 }

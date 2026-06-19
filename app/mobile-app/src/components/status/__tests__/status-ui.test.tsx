@@ -136,6 +136,54 @@ describe('StatusViewer', () => {
     expect(screen.queryByTestId('status-viewer-image')).toBeNull();
     expect(screen.queryByTestId('status-video')).toBeNull();
   });
+
+  it('jumps to the next author at the end instead of closing (bug 2)', () => {
+    const onNext = jest.fn();
+    const onClose = jest.fn();
+    renderWithProviders(
+      <StatusViewer status={mineGroup as never} onClose={onClose} onNext={onNext} />,
+    );
+    act(() => jest.advanceTimersByTime(15000));
+    expect(onNext).toHaveBeenCalled();
+    expect(onClose).not.toHaveBeenCalled();
+  });
+
+  it('taps to the previous author from the first slide (bug 2)', () => {
+    const onPrev = jest.fn();
+    renderWithProviders(
+      <StatusViewer status={mineGroup as never} onClose={jest.fn()} onPrev={onPrev} />,
+    );
+    fireEvent.press(screen.getByTestId('status-prev'));
+    expect(onPrev).toHaveBeenCalled();
+  });
+
+  it('swipes left to the next author and right to the previous one (bug 2)', () => {
+    const onNext = jest.fn();
+    const onPrev = jest.fn();
+    renderWithProviders(
+      <StatusViewer status={group as never} onClose={jest.fn()} onNext={onNext} onPrev={onPrev} />,
+    );
+    const area = screen.getByTestId('status-swipe');
+    fireEvent(area, 'responderGrant', { nativeEvent: { pageX: 250 } });
+    fireEvent(area, 'responderRelease', { nativeEvent: { pageX: 40 } });
+    expect(onNext).toHaveBeenCalled();
+    fireEvent(area, 'responderGrant', { nativeEvent: { pageX: 40 } });
+    fireEvent(area, 'responderRelease', { nativeEvent: { pageX: 250 } });
+    expect(onPrev).toHaveBeenCalled();
+  });
+
+  it('ignores a swipe shorter than the threshold (bug 2)', () => {
+    const onNext = jest.fn();
+    const onPrev = jest.fn();
+    renderWithProviders(
+      <StatusViewer status={group as never} onClose={jest.fn()} onNext={onNext} onPrev={onPrev} />,
+    );
+    const area = screen.getByTestId('status-swipe');
+    fireEvent(area, 'responderGrant', { nativeEvent: { pageX: 100 } });
+    fireEvent(area, 'responderRelease', { nativeEvent: { pageX: 110 } });
+    expect(onNext).not.toHaveBeenCalled();
+    expect(onPrev).not.toHaveBeenCalled();
+  });
 });
 
 describe('StatusRail', () => {
@@ -196,5 +244,40 @@ describe('StatusRail', () => {
     mockedStatus.mockReturnValue({ statuses: [withPhoto], mine: null });
     renderWithProviders(<StatusRail userName="Sam" />);
     expect(screen.getByTestId('status-a1')).toBeOnTheScreen();
+  });
+
+  it('walks to the next author at the end and closes after the last (bug 2)', () => {
+    const group2 = {
+      authorId: 'a2',
+      name: 'Bina',
+      photo: null,
+      slides: [imageSlide],
+      cover: imageSlide,
+    };
+    mockedStatus.mockReturnValue({ statuses: [group, group2], mine: null });
+    renderWithProviders(<StatusRail userName="Sam" />);
+    fireEvent.press(screen.getByTestId('status-a1'));
+    expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('status-next')); // image → video (author 1)
+    fireEvent.press(screen.getByTestId('status-next')); // last slide → author 2
+    expect(screen.getByTestId('status-viewer-image')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('status-next')); // author 2 last slide → close
+    expect(screen.queryByTestId('status-viewer')).toBeNull();
+  });
+
+  it('walks back to the previous author from the first slide (bug 2)', () => {
+    const group2 = {
+      authorId: 'a2',
+      name: 'Bina',
+      photo: null,
+      slides: [imageSlide],
+      cover: imageSlide,
+    };
+    mockedStatus.mockReturnValue({ statuses: [group, group2], mine: mineGroup });
+    renderWithProviders(<StatusRail userName="Sam" />);
+    fireEvent.press(screen.getByTestId('status-a2')); // open author 2
+    expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('status-prev')); // first slide → previous author
+    expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
   });
 });

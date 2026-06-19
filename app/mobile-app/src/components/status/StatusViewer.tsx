@@ -8,10 +8,17 @@ import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { StatusVideo } from '@/components/status/StatusVideo';
 import type { StatusGroup } from '@/hooks/useStatus';
 import { statusRemainingLabel } from '@/utils/date-format';
+import { resolveSwipe } from '@/utils/swipe';
 
 interface StatusViewerProps {
   status: StatusGroup | null;
   onClose: () => void;
+  /** Jump to the next author's story (auto-advance past the last slide, tap on
+   * the right edge of the last slide, or swipe left). Falls back to onClose. */
+  onNext?: () => void;
+  /** Jump to the previous author's story (tap on the left edge of the first
+   * slide, or swipe right). */
+  onPrev?: () => void;
 }
 
 // Each image slide runs 15s; videos play to their end, capped at 30s so a long
@@ -25,7 +32,7 @@ const NOOP = () => undefined;
 
 /** Full-screen story viewer — multi-slide, auto-advancing (15s per image, video
  * to its end), with tap zones for manual prev/next and a close button. */
-export function StatusViewer({ status, onClose }: Readonly<StatusViewerProps>) {
+export function StatusViewer({ status, onClose, onNext, onPrev }: Readonly<StatusViewerProps>) {
   const [index, setIndex] = useState(0);
   const [progress, setProgress] = useState(0);
   const slides = status?.slides ?? [];
@@ -34,14 +41,27 @@ export function StatusViewer({ status, onClose }: Readonly<StatusViewerProps>) {
   // Countdown until the status is auto-removed (recomputed per slide change).
   const remaining = statusRemainingLabel(current?.expiresAt);
 
+  // Past the last slide, hand off to the next author's story (bug 2); if there
+  // is none, close. A bare onClose is the fallback when no sibling exists.
+  const goNextAuthor = onNext ?? onClose;
+
   const advanceRef = useRef(NOOP);
   advanceRef.current = () => {
     if (index < slides.length - 1) {
       setIndex(index + 1);
       setProgress(0);
     } else {
-      onClose();
+      goNextAuthor();
     }
+  };
+
+  // Horizontal swipe between authors (bug 2): capture the touch start, then on
+  // release decide next/prev from the net x-distance.
+  const swipeStartX = useRef(0);
+  const onSwipeRelease = (endX: number) => {
+    const intent = resolveSwipe(endX - swipeStartX.current);
+    if (intent === 'next') goNextAuthor();
+    else if (intent === 'prev') onPrev?.();
   };
 
   // Reset to the first slide whenever a new author's story opens.
@@ -66,6 +86,9 @@ export function StatusViewer({ status, onClose }: Readonly<StatusViewerProps>) {
     if (index > 0) {
       setIndex(index - 1);
       setProgress(0);
+    } else {
+      // At the first slide, tapping back jumps to the previous author (bug 2).
+      onPrev?.();
     }
   };
 
@@ -124,7 +147,15 @@ export function StatusViewer({ status, onClose }: Readonly<StatusViewerProps>) {
                 <MaterialIcons name="close" size={20} color="#ffffff" />
               </XStack>
             </XStack>
-            <YStack flex={1}>
+            <YStack
+              flex={1}
+              testID="status-swipe"
+              onStartShouldSetResponder={() => true}
+              onResponderGrant={(event) => {
+                swipeStartX.current = event.nativeEvent.pageX;
+              }}
+              onResponderRelease={(event) => onSwipeRelease(event.nativeEvent.pageX)}
+            >
               {isVideo && current?.imageUrl ? (
                 <StatusVideo uri={current.imageUrl} onEnded={() => advanceRef.current()} />
               ) : null}

@@ -68,6 +68,7 @@ export const appConfig: AppConfig = {
   accent: { light: '#5eead4', main: '#0d9488', hover: '#0f766e', active: '#115e59' },
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
+    { label: 'Startup Dashboard', to: '/startup-dashboard', icon: 'insights' },
     { label: 'Default Deductions', to: '/default-deductions', icon: 'percent' },
     { label: 'Payment Logs', to: '/payment-logs', icon: 'receipt' },
     { label: 'Payment Release', to: '/payment-release', icon: 'payments' },

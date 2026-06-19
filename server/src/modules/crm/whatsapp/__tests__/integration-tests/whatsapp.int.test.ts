@@ -151,6 +151,40 @@ describe('whatsappData sync + cache + leads (WA-LeadGen P4/P5)', () => {
   });
 });
 
+describe('whatsapp manual leads + Excel (WA-LeadGen P5)', () => {
+  it('creates a manual lead, normalising the phone', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    const lead = await whatsappData.createLead({ phone: '+91 98765-43210', name: 'Manual Guy' });
+    expect(lead?.phone).toBe('919876543210');
+    expect(lead?.source_account).toBe('Manual');
+  });
+
+  it('rejects a manual lead without a usable phone', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    await expect(whatsappData.createLead({ phone: 'abc' })).rejects.toThrow(/phone/i);
+  });
+
+  it('round-trips an Excel export → import and upserts leads', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    const { buildLeadsWorkbook, parseLeadsWorkbook } = await import('../../whatsapp.excel');
+    const b64 = buildLeadsWorkbook([{ phone: '628999', name: 'Excel Guy' }]);
+    expect(typeof b64).toBe('string');
+    expect(b64.length).toBeGreaterThan(0);
+    const rows = parseLeadsWorkbook(b64);
+    expect(rows).toEqual([{ phone: '628999', name: 'Excel Guy' }]);
+    const res = await whatsappData.importLeads(rows);
+    expect(res.imported).toBe(1);
+    const found = await whatsappData.listUserLeads('628999');
+    expect(found.some((l) => l.phone === '628999')).toBe(true);
+  });
+
+  it('skips rows without a phone on import', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    const res = await whatsappData.importLeads([{ phone: '', name: 'no phone' }, { phone: '628000', name: 'ok' }]);
+    expect(res).toEqual({ imported: 1, skipped: 1 });
+  });
+});
+
 describe('mapSessionStatus', () => {
   it('maps gateway statuses to coarse states', () => {
     expect(mapSessionStatus('READY')).toBe('CONNECTED');

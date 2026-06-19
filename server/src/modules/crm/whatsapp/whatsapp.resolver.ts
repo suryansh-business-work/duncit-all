@@ -1,5 +1,6 @@
 import { whatsappService, type WaConfigInput } from './whatsapp.service';
 import { whatsappData } from './whatsapp.data';
+import { buildLeadsWorkbook, parseLeadsWorkbook } from './whatsapp.excel';
 import { CRM_RW } from '@modules/crm/crm/crm.constants';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
@@ -67,6 +68,11 @@ export const waLeadsResolvers = {
       requireRole(ctx, RW);
       return whatsappData.groupMembers(args.group_jid);
     },
+    waExportUserLeads: async (_p: unknown, args: { search?: string | null }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      const leads = await whatsappData.listUserLeads(args.search ?? null);
+      return buildLeadsWorkbook(leads as any);
+    },
   },
   Mutation: {
     waSaveConfig: async (_p: unknown, args: { input: WaConfigInput }, ctx: GraphQLContext) => {
@@ -84,6 +90,19 @@ export const waLeadsResolvers = {
     waRefresh: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return whatsappData.sync();
+    },
+    waCreateUserLead: async (
+      _p: unknown,
+      args: { input: { phone: string; name?: string; source_account?: string } },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, RW);
+      return toUserLead(await whatsappData.createLead(args.input));
+    },
+    waImportUserLeads: async (_p: unknown, args: { file_base64: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      const rows = parseLeadsWorkbook(args.file_base64);
+      return whatsappData.importLeads(rows);
     },
   },
 };

@@ -84,6 +84,17 @@ export const waLeadsTypeDefs = gql`
     leads: Int!
   }
 
+  type WaImportResult {
+    imported: Int!
+    skipped: Int!
+  }
+
+  input WaCreateUserLeadInput {
+    phone: String!
+    name: String
+    source_account: String
+  }
+
   extend type Query {
     "Stored gateway config + last-known status (no network call)."
     waConnection: WaConnection!
@@ -102,6 +113,8 @@ export const waLeadsTypeDefs = gql`
     waUserLead(id: ID!): WaUserLead
     "Live-fetch a group's members (also imports them as leads)."
     waGroupMembers(group_jid: String!): [WaMember!]!
+    "Export user leads as a base64 .xlsx (optionally filtered by search)."
+    waExportUserLeads(search: String): String!
   }
 
   extend type Mutation {
@@ -111,5 +124,9 @@ export const waLeadsTypeDefs = gql`
     waDisconnect: WaConnection!
     "Pull latest communities/groups/contacts from the gateway into the cache."
     waRefresh: WaSyncResult!
+    "Manually create (or upsert) a single user lead."
+    waCreateUserLead(input: WaCreateUserLeadInput!): WaUserLead!
+    "Import user leads from an uploaded .xlsx/.csv (base64)."
+    waImportUserLeads(file_base64: String!): WaImportResult!
   }
 `;

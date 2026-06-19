@@ -4,6 +4,7 @@ import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { WA_CONNECTION, type WaConnection } from './whatsappQueries';
 import WhatsAppConnectCard from './WhatsAppConnectCard';
 import WhatsAppBrowser from './WhatsAppBrowser';
+import WhatsAppApiKeyHelp from './WhatsAppApiKeyHelp';
 
 /**
  * WhatsApp Lead Generator — connect a WhatsApp account through the OpenWA gateway
@@ -38,7 +39,7 @@ export default function WhatsAppLeadGeneratorPage() {
       ) : connection ? (
         <Stack spacing={2}>
           <WhatsAppConnectCard connection={connection} onChanged={() => void refetch()} />
-          {connection.status === 'CONNECTED' ? <WhatsAppBrowser /> : null}
+          {connection.status === 'CONNECTED' ? <WhatsAppBrowser /> : <WhatsAppApiKeyHelp />}
         </Stack>
       ) : null}
     </Box>

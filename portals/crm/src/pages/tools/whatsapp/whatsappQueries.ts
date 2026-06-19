@@ -174,3 +174,28 @@ export const WA_REFRESH = gql`
     }
   }
 `;
+
+export const WA_CREATE_USER_LEAD = gql`
+  mutation WaCreateUserLead($input: WaCreateUserLeadInput!) {
+    waCreateUserLead(input: $input) {
+      id
+      phone
+      name
+    }
+  }
+`;
+
+export const WA_IMPORT_USER_LEADS = gql`
+  mutation WaImportUserLeads($file_base64: String!) {
+    waImportUserLeads(file_base64: $file_base64) {
+      imported
+      skipped
+    }
+  }
+`;
+
+export const WA_EXPORT_USER_LEADS = gql`
+  query WaExportUserLeads($search: String) {
+    waExportUserLeads(search: $search)
+  }
+`;

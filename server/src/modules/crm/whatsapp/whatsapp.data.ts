@@ -201,6 +201,40 @@ export const whatsappData = {
       .limit(1000)
       .lean(),
   getUserLead: (id: string) => WaUserLeadModel.findById(id).lean(),
+
+  /** Manually create (or update by phone) a single user lead. */
+  async createLead(input: { phone: string; name?: string; source_account?: string }) {
+    const phone = String(input.phone || '').replace(/[^\d]/g, '');
+    if (!phone) throw new Error('A valid phone number is required.');
+    await upsertLead({
+      phone,
+      name: input.name ?? '',
+      contact_jid: '',
+      source_account: input.source_account || 'Manual',
+    });
+    return WaUserLeadModel.findOne({ connection_key: KEY, phone }).lean();
+  },
+
+  /** Bulk import lead rows (from an Excel/CSV upload); upserts by phone. */
+  async importLeads(rows: { phone: string; name?: string }[]) {
+    let imported = 0;
+    let skipped = 0;
+    for (const row of rows) {
+      const phone = String(row.phone || '').replace(/[^\d]/g, '');
+      if (!phone) {
+        skipped += 1;
+        continue;
+      }
+      await upsertLead({
+        phone,
+        name: row.name ?? '',
+        contact_jid: '',
+        source_account: 'Excel Import',
+      });
+      imported += 1;
+    }
+    return { imported, skipped };
+  },
 };
 
 function rx(s: string) {

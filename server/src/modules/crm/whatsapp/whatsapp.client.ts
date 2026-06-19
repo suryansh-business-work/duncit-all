@@ -21,10 +21,16 @@ export interface WaClient {
 type Method = 'GET' | 'POST' | 'DELETE';
 
 export function createWaClient(baseUrl: string, apiKey: string): WaClient {
-  const root = `${(baseUrl || '').replace(/\/+$/, '')}/api`;
+  // Prefer the internal Docker-network URL (e.g. http://open-wa:2024) for
+  // server→gateway calls: the public domain resolves to the host's own IP and
+  // hairpin-NAT loopback from inside a container typically fails ("fetch
+  // failed"). The stored/public `baseUrl` is kept only for display/QR in the UI.
+  const internal = (process.env.OPENWA_INTERNAL_URL || '').trim();
+  const effective = (internal || baseUrl || '').replace(/\/+$/, '');
+  const root = `${effective}/api`;
 
   async function req(method: Method, path: string, body?: unknown): Promise<any> {
-    if (!baseUrl || !apiKey) {
+    if (!effective || !apiKey) {
       throw new Error('WhatsApp gateway is not configured. Set the base URL and API key first.');
     }
     const res = await fetch(`${root}${path}`, {

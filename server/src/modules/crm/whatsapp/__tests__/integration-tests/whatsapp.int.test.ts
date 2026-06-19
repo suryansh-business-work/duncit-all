@@ -85,6 +85,26 @@ describe('whatsappService integration (bug WA-LeadGen P3)', () => {
     expect(calls.some((c) => c.includes('/sessions/duncit-crm/start'))).toBe(true);
   });
 
+  it('routes gateway calls through OPENWA_INTERNAL_URL, ignoring the public base_url', async () => {
+    await whatsappService.saveConfig({ base_url: 'https://open-wa-server.duncit.com', api_key: 'k' });
+    const prev = process.env.OPENWA_INTERNAL_URL;
+    process.env.OPENWA_INTERNAL_URL = 'http://open-wa:2024';
+    const urls: string[] = [];
+    setFetch((url) => {
+      urls.push(url);
+      return { status: 200, body: { status: 'READY' } };
+    });
+    try {
+      await whatsappService.refreshStatus();
+      expect(urls.length).toBeGreaterThan(0);
+      expect(urls.every((u) => u.startsWith('http://open-wa:2024/api'))).toBe(true);
+      expect(urls.some((u) => u.includes('duncit.com'))).toBe(false);
+    } finally {
+      if (prev === undefined) delete process.env.OPENWA_INTERNAL_URL;
+      else process.env.OPENWA_INTERNAL_URL = prev;
+    }
+  });
+
   it('refreshStatus() maps a READY session to CONNECTED and stores the phone', async () => {
     await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
     setFetch(() => ({ status: 200, body: { status: 'READY', phone: '628123', lastError: null } }));

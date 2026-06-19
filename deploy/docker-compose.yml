@@ -12,6 +12,9 @@ services:
       # signoz-net. otel.ts is gated on this var; unset = telemetry off.
       OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4318
       OTEL_SERVICE_NAME: duncit-server
+      # Reach the WhatsApp gateway over the internal Docker network — calling the
+      # public domain from inside the container fails on hairpin NAT.
+      OPENWA_INTERNAL_URL: http://open-wa:2024
     ports:
       - "127.0.0.1:2001:2001"
     volumes:

@@ -92,6 +92,29 @@ services:
     ports:
       - "127.0.0.1:2007:80"
 
+  # WhatsApp gateway for the CRM "WhatsApp Lead Generator" (NestJS + Chromium).
+  # Stateful: session/auth data persists under /app/data so a connected WhatsApp
+  # account survives restarts (and browser refreshes). shm_size keeps Chromium
+  # stable. Env (API_MASTER_KEY etc.) is rendered to /opt/duncit/open-wa.env by
+  # the deploy workflow.
+  open-wa:
+    image: ${DOCKERHUB_USERNAME}/duncit-open-wa-server:${IMAGE_TAG:-latest}
+    container_name: duncit-open-wa
+    restart: unless-stopped
+    env_file:
+      - /opt/duncit/open-wa.env
+    ports:
+      - "127.0.0.1:2024:2024"
+    volumes:
+      - /opt/duncit/open-wa-data:/app/data
+    shm_size: "1gb"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:2024/api/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
   finance:
     image: ${DOCKERHUB_USERNAME}/duncit-finance:${IMAGE_TAG:-latest}
     container_name: duncit-finance

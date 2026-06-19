@@ -38,6 +38,7 @@ jobs:
       ads_website: ${{ steps.filter.outputs.ads_website }}
       native: ${{ steps.filter.outputs.native }}
       crm: ${{ steps.filter.outputs.crm }}
+      open_wa: ${{ steps.filter.outputs.open_wa }}
       finance: ${{ steps.filter.outputs.finance }}
       tech: ${{ steps.filter.outputs.tech }}
       support: ${{ steps.filter.outputs.support }}
@@ -126,10 +127,15 @@ jobs:
               - '.github/workflows/deploy.yml'
             crm:
               - 'portals/crm/**'
+              - '!portals/crm/open-wa-server/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
               - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            open_wa:
+              - 'portals/crm/open-wa-server/**'
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             finance:
@@ -626,6 +632,35 @@ jobs:
               --cache-to   type=gha,scope=duncit-crm,mode=max \
               --push .
 
+  # OpenWA WhatsApp gateway (NestJS, standalone npm project under portals/crm/
+  # open-wa-server). Build context is its own dir (not the repo root) — its
+  # Dockerfile COPYs package*.json relative to itself.
+  build-open-wa:
+    needs: changes
+    if: needs.changes.outputs.open_wa == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push open-wa
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 40
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file portals/crm/open-wa-server/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-open-wa-server:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-open-wa-server:${{ github.sha }} \
+              --cache-from type=gha,scope=duncit-open-wa-server \
+              --cache-to   type=gha,scope=duncit-open-wa-server,mode=max \
+              --push portals/crm/open-wa-server
+
   build-finance:
     needs: changes
     if: needs.changes.outputs.finance == 'true' || github.event_name == 'workflow_dispatch'
@@ -1040,8 +1075,8 @@ jobs:
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success')
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status]
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -1083,6 +1118,7 @@ jobs:
           [ "${{ needs.build-ads-website.result }}" = "success" ] && PARTS+=("ads-website")
           [ "${{ needs.build-native.result }}" = "success" ] && PARTS+=("native")
           [ "${{ needs.build-crm.result }}" = "success" ] && PARTS+=("crm")
+          [ "${{ needs.build-open-wa.result }}" = "success" ] && PARTS+=("open-wa")
           [ "${{ needs.build-finance.result }}" = "success" ] && PARTS+=("finance")
           [ "${{ needs.build-tech.result }}" = "success" ] && PARTS+=("tech")
           [ "${{ needs.build-support.result }}" = "success" ] && PARTS+=("support")
@@ -1115,8 +1151,23 @@ jobs:
           PEXELS_API_KEY:        ${{ secrets.PEXELS_API_KEY }}
           GOOGLE_CLIENT_ID:      ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET:  ${{ secrets.GOOGLE_CLIENT_SECRET }}
+          OPENWA_API_MASTER_KEY: ${{ secrets.OPENWA_API_MASTER_KEY }}
         run: |
           envsubst '$DOCKERHUB_USERNAME' < deploy/docker-compose.yml > /tmp/docker-compose.yml
+          # OpenWA gateway env (SQLite + session data on the mounted /app/data
+          # volume so a connected account survives restarts). API_MASTER_KEY
+          # bootstraps the gateway's own API keys; set the OPENWA_API_MASTER_KEY
+          # repo secret to enable it.
+          cat > /tmp/open-wa.env <<EOF
+          NODE_ENV=production
+          PORT=2024
+          DATABASE_TYPE=sqlite
+          DATABASE_NAME=/app/data/openwa.sqlite
+          SESSION_DATA_PATH=/app/data/sessions
+          STORAGE_TYPE=local
+          STORAGE_LOCAL_PATH=/app/data/media
+          API_MASTER_KEY=${OPENWA_API_MASTER_KEY}
+          EOF
           cat > /tmp/server.env <<EOF
           NODE_ENV=production
           PORT=2001
@@ -1140,11 +1191,13 @@ jobs:
         run: |
           ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "mkdir -p /opt/duncit /opt/duncit/nginx"
+            "mkdir -p /opt/duncit /opt/duncit/nginx /opt/duncit/open-wa-data"
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/docker-compose.yml \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/docker-compose.yml
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/server.env \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/server.env
+          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/open-wa.env \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/open-wa.env
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/redeploy.sh \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/redeploy.sh
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/nginx/duncit.com \
@@ -1153,6 +1206,7 @@ jobs:
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'REMOTE'
           set -e
           chmod 600 /opt/duncit/server.env
+          chmod 600 /opt/duncit/open-wa.env
           chmod +x /opt/duncit/redeploy.sh
           SUDO=$(command -v sudo || echo)
           # Single consolidated vhost. Install duncit.com, then drop any legacy
@@ -1166,7 +1220,7 @@ jobs:
             $SUDO apt-get update -qq
             $SUDO apt-get install -y -qq certbot python3-certbot-nginx
           fi
-          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d ads-portal.duncit.com -d crm.duncit.com -d finance.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com -d onboarding.duncit.com -d hr.duncit.com -d employee.duncit.com -d status.duncit.com -d signoz.duncit.com -d native.duncit.com -d sonarqube.duncit.com"
+          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d ads-portal.duncit.com -d crm.duncit.com -d finance.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com -d onboarding.duncit.com -d hr.duncit.com -d employee.duncit.com -d status.duncit.com -d signoz.duncit.com -d native.duncit.com -d sonarqube.duncit.com -d open-wa-server.duncit.com"
           if ! $SUDO test -d /etc/letsencrypt/live/duncit.com; then
             $SUDO certbot --nginx --non-interactive --agree-tos --redirect --cert-name duncit.com -m admin@duncit.com $CERTBOT_DOMAINS || true
           else
@@ -1210,6 +1264,8 @@ jobs:
               curl -fsSI http://127.0.0.1:2020/ | head -1
               curl -fsSI http://127.0.0.1:2022/ | head -1
               curl -fsSI http://127.0.0.1:2007/ | head -1
+              # open-wa (2024) is optional/stateful — never block the gate on it.
+              curl -fsSI http://127.0.0.1:2024/ | head -1 || true
               curl -fsSI http://127.0.0.1:2008/ | head -1
               curl -fsSI http://127.0.0.1:2009/ | head -1
               curl -fsSI http://127.0.0.1:2010/ | head -1

@@ -63,9 +63,9 @@ services:
     pids_limit: 512
     mem_limit: ${OPENWA_MEM_LIMIT:-2g} # tune up for many concurrent sessions
     ports:
-      - '127.0.0.1:${API_PORT:-2785}:2785'
+      - '127.0.0.1:${API_PORT:-2024}:2024'
     expose:
-      - '2785'
+      - '2024'
     environment:
       # Core
       - NODE_ENV=${NODE_ENV:-production}
@@ -76,7 +76,7 @@ services:
       # to the tmpfs; the entrypoint pre-creates these owned by openwa. (#254)
       - XDG_CONFIG_HOME=/tmp/.config
       - XDG_CACHE_HOME=/tmp/.cache
-      - PORT=2785
+      - PORT=2024
       - LOG_LEVEL=${LOG_LEVEL:-info}
       # Database
       - DATABASE_TYPE=${DATABASE_TYPE:-sqlite}
@@ -142,7 +142,7 @@ services:
           'CMD',
           'node',
           '-e',
-          "require('http').get('http://localhost:2785/api/health/ready', (r) => process.exit(r.statusCode === 200 ? 0 : 1))",
+          "require('http').get('http://localhost:2024/api/health/ready', (r) => process.exit(r.statusCode === 200 ? 0 : 1))",
         ]
       interval: 30s
       timeout: 10s
@@ -153,7 +153,7 @@ services:
       - 'com.openwa.core=true'
 
   # The dashboard SPA is now bundled into the openwa-api image and served by NestJS on the
-  # same port (2785) — there is no separate dashboard container. Reach it at the openwa-api
+  # same port (2024) — there is no separate dashboard container. Reach it at the openwa-api
   # port directly; put your own TLS reverse proxy (nginx/Caddy/cloud LB) in front if needed.
 
   # ===== OPTIONAL: Built-in PostgreSQL =====

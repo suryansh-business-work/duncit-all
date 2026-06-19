@@ -30,6 +30,23 @@ export const whatsappService = {
     return conn;
   },
 
+  /** Mint a dedicated gateway API key using the supplied master/admin key, then
+   * save it as the connection's key. Returns the new key once (for the user to
+   * copy) plus the updated connection. */
+  async generateApiKey(input: { base_url: string; master_key: string }) {
+    const baseUrl = input.base_url.trim();
+    const master = input.master_key.trim();
+    if (!baseUrl || !master) {
+      throw new Error('Enter the gateway URL and your master/admin API key first.');
+    }
+    const client = createWaClient(baseUrl, master);
+    const created = await client.createApiKey('Duncit CRM', 'admin');
+    const apiKey = created?.apiKey ?? created?.api_key ?? created?.key;
+    if (!apiKey) throw new Error('The gateway did not return an API key.');
+    const conn = await this.saveConfig({ base_url: baseUrl, api_key: apiKey });
+    return { connection: conn, api_key: apiKey as string };
+  },
+
   /** Ensure the OpenWA session exists + is started, then mark CONNECTING. The
    * gateway persists the session so a scanned account survives restarts. */
   async connect() {

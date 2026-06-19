@@ -79,6 +79,15 @@ export const waLeadsResolvers = {
       requireRole(ctx, RW);
       return toConnection(await whatsappService.saveConfig(args.input ?? {}));
     },
+    waGenerateApiKey: async (
+      _p: unknown,
+      args: { base_url: string; master_key: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, RW);
+      const { connection, api_key } = await whatsappService.generateApiKey(args);
+      return { api_key, connection: toConnection(connection) };
+    },
     waConnect: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       return toConnection(await whatsappService.connect());

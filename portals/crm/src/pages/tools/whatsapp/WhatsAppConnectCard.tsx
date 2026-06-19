@@ -13,9 +13,11 @@ import {
   Typography,
 } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import VpnKeyIcon from '@mui/icons-material/VpnKey';
 import {
   WA_CONNECT,
   WA_DISCONNECT,
+  WA_GENERATE_API_KEY,
   WA_QR,
   WA_SAVE_CONFIG,
   WA_STATUS,
@@ -46,6 +48,7 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
   const [saveConfig, saveState] = useMutation(WA_SAVE_CONFIG);
   const [connect, connectState] = useMutation(WA_CONNECT);
   const [disconnect, disconnectState] = useMutation(WA_DISCONNECT);
+  const [generate, generateState] = useMutation(WA_GENERATE_API_KEY);
 
   // Poll the live status + QR only while a scan is pending.
   const statusQuery = useQuery(WA_STATUS, { pollInterval: connecting ? 3000 : 0, skip: !connecting });
@@ -55,11 +58,20 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
     if (polledStatus && polledStatus !== 'CONNECTING') onChanged();
   }, [polledStatus, onChanged]);
 
-  const busy = saveState.loading || connectState.loading || disconnectState.loading;
+  const busy =
+    saveState.loading || connectState.loading || disconnectState.loading || generateState.loading;
 
   const handleConnect = async () => {
     await saveConfig({ variables: { input: { base_url: baseUrl, api_key: apiKey || undefined } } });
     await connect();
+    onChanged();
+  };
+
+  // Mint a dedicated key from the master/admin key currently in the field.
+  const handleGenerate = async () => {
+    const res = await generate({ variables: { base_url: baseUrl, master_key: apiKey } });
+    const key = res.data?.waGenerateApiKey?.api_key;
+    if (key) setApiKey(key);
     onChanged();
   };
 
@@ -115,6 +127,24 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
             placeholder={connection.has_api_key ? '•••••• (saved — leave blank to keep)' : 'Paste the OpenWA API key'}
             fullWidth
           />
+          <Box>
+            <Button
+              size="small"
+              startIcon={<VpnKeyIcon fontSize="small" />}
+              disabled={busy || !baseUrl.trim() || !apiKey.trim()}
+              onClick={handleGenerate}
+            >
+              Generate API key
+            </Button>
+            <Typography variant="caption" color="text.secondary" display="block">
+              Paste your master/admin key above, then generate a dedicated key (saved automatically).
+            </Typography>
+            {generateState.error && (
+              <Typography variant="caption" color="error" display="block">
+                {generateState.error.message}
+              </Typography>
+            )}
+          </Box>
           {connecting && qr ? (
             <Box sx={{ textAlign: 'center' }}>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 1 }}>

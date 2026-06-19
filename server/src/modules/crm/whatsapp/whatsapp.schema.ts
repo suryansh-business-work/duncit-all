@@ -24,6 +24,12 @@ export const waLeadsTypeDefs = gql`
     status: WaStatus!
   }
 
+  "Result of generating a fresh gateway API key (the key is returned once)."
+  type WaGeneratedKey {
+    api_key: String!
+    connection: WaConnection!
+  }
+
   input WaConfigInput {
     base_url: String
     api_key: String
@@ -119,6 +125,8 @@ export const waLeadsTypeDefs = gql`
 
   extend type Mutation {
     waSaveConfig(input: WaConfigInput!): WaConnection!
+    "Mint a dedicated gateway API key from your master/admin key and save it."
+    waGenerateApiKey(base_url: String!, master_key: String!): WaGeneratedKey!
     "Create/start the session so a QR can be scanned."
     waConnect: WaConnection!
     waDisconnect: WaConnection!

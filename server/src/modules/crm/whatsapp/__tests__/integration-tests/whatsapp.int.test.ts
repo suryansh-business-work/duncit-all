@@ -34,6 +34,27 @@ describe('whatsappService integration (bug WA-LeadGen P3)', () => {
     expect(fresh.base_url).toBe('https://open-wa-server.duncit.com');
   });
 
+  it('generateApiKey mints a dedicated key from the master and saves it', async () => {
+    setFetch((url, init) => {
+      if (init.method === 'POST' && url.endsWith('/auth/api-keys')) {
+        return { status: 200, body: { apiKey: 'gen-key-xyz', name: 'Duncit CRM', role: 'admin' } };
+      }
+      return { status: 200, body: {} };
+    });
+    const res = await whatsappService.generateApiKey({
+      base_url: 'https://wa.test',
+      master_key: 'master-123',
+    });
+    expect(res.api_key).toBe('gen-key-xyz');
+    expect(res.connection.api_key).toBe('gen-key-xyz');
+  });
+
+  it('generateApiKey needs the gateway URL + master key', async () => {
+    await expect(
+      whatsappService.generateApiKey({ base_url: '', master_key: '' })
+    ).rejects.toThrow(/master/i);
+  });
+
   it('connect() creates the session when missing, then marks CONNECTING', async () => {
     await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
     const calls: string[] = [];

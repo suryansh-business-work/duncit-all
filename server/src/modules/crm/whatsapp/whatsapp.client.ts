@@ -5,6 +5,7 @@
  * normalises them into our Mongo shapes.
  */
 export interface WaClient {
+  createApiKey(name: string, role?: string): Promise<any>;
   createSession(name: string): Promise<any>;
   getSession(id: string): Promise<any>;
   startSession(id: string): Promise<any>;
@@ -44,6 +45,7 @@ export function createWaClient(baseUrl: string, apiKey: string): WaClient {
   }
 
   return {
+    createApiKey: (name, role = 'admin') => req('POST', '/auth/api-keys', { name, role }),
     createSession: (name) => req('POST', '/sessions', { name }),
     getSession: (id) => req('GET', `/sessions/${id}`),
     startSession: (id) => req('POST', `/sessions/${id}/start`),

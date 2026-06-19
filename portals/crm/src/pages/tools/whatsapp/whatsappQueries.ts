@@ -48,6 +48,18 @@ export const WA_SAVE_CONFIG = gql`
   }
 `;
 
+export const WA_GENERATE_API_KEY = gql`
+  ${CONNECTION_FIELDS}
+  mutation WaGenerateApiKey($base_url: String!, $master_key: String!) {
+    waGenerateApiKey(base_url: $base_url, master_key: $master_key) {
+      api_key
+      connection {
+        ...WaConnectionFields
+      }
+    }
+  }
+`;
+
 export const WA_CONNECT = gql`
   ${CONNECTION_FIELDS}
   mutation WaConnect {

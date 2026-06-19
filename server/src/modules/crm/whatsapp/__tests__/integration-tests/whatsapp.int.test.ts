@@ -249,6 +249,17 @@ describe('whatsappData sync + cache + leads (WA-LeadGen P4/P5)', () => {
     expect(await whatsappData.listGroups()).toHaveLength(2);
   });
 
+  it('sync() throws a combined error when both groups and contacts fail', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    setFetch((url) => {
+      if (url.endsWith('/contacts') || url.endsWith('/groups')) {
+        return { status: 400, body: { message: 'Session is not ready' } };
+      }
+      return { status: 200, body: {} };
+    });
+    await expect(whatsappData.sync()).rejects.toThrow(/not ready/i);
+  });
+
   it('imports group members as leads tagged with the group + community', async () => {
     const { whatsappData } = await import('../../whatsapp.data');
     await whatsappData.sync(); // populate the group + community first

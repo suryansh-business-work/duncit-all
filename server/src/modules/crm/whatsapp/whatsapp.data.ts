@@ -95,8 +95,22 @@ export const whatsappData = {
    * indexes) and auto-create a User Lead per contact. Returns counts. */
   async sync() {
     const { conn, client, sessionId } = await getClientAndSession();
-    const groups: any[] = (await client.listGroups(sessionId)) ?? [];
-    const contacts: any[] = (await client.listContacts(sessionId)) ?? [];
+    // Fetch both independently so a failure in one doesn't drop the other.
+    const errors: string[] = [];
+    const grab = async (label: string, p: Promise<any>): Promise<any[]> => {
+      try {
+        const res = await p;
+        return Array.isArray(res) ? res : [];
+      } catch (error) {
+        errors.push(`${label}: ${error instanceof Error ? error.message : String(error)}`);
+        return [];
+      }
+    };
+    const groups: any[] = await grab('groups', client.listGroups(sessionId));
+    const contacts: any[] = await grab('contacts', client.listContacts(sessionId));
+    if (groups.length === 0 && contacts.length === 0 && errors.length > 0) {
+      throw new Error(errors.join(' | '));
+    }
 
     // Communities = distinct parent JIDs referenced by member groups.
     const nameByJid = new Map<string, string>();

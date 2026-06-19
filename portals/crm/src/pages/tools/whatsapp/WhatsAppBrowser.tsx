@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
+  Alert,
   Box,
   Button,
   Chip,
@@ -84,6 +85,19 @@ export default function WhatsAppBrowser() {
     await Promise.all([communities.refetch(), groups.refetch(), contacts.refetch()]);
   };
 
+  // Auto-sync once when the connected browser opens, so data appears without a
+  // manual Refresh. Errors surface in the alert below.
+  const didAutoSync = useRef(false);
+  useEffect(() => {
+    if (didAutoSync.current) return;
+    didAutoSync.current = true;
+    onRefresh().catch(() => undefined);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const syncing = refreshState.loading;
+  const emptyHint = syncing ? 'Syncing from WhatsApp…' : 'No data yet. Tap Refresh to sync.';
+
   return (
     <Box>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 1 }}>
@@ -102,8 +116,14 @@ export default function WhatsAppBrowser() {
         </Button>
       </Stack>
 
+      {refreshState.error && (
+        <Alert severity="error" sx={{ mb: 1 }}>
+          Sync failed: {refreshState.error.message}
+        </Alert>
+      )}
+
       {tab === 0 &&
-        (communities.loading ? (
+        (communities.loading || (syncing && (communities.data?.waCommunities ?? []).length === 0) ? (
           <Loading />
         ) : (
           <List>
@@ -118,6 +138,9 @@ export default function WhatsAppBrowser() {
                 <ListItemText primary={c.name} secondary={`${c.groups_count} groups`} />
               </ListItemButton>
             ))}
+            {(communities.data?.waCommunities ?? []).length === 0 && (
+              <Typography color="text.secondary" sx={{ px: 2, py: 1 }}>{emptyHint}</Typography>
+            )}
           </List>
         ))}
 
@@ -142,13 +165,16 @@ export default function WhatsAppBrowser() {
                   <ListItemText primary={g.name} secondary="Tap to view members" />
                 </ListItemButton>
               ))}
+              {(groups.data?.waGroups ?? []).length === 0 && (
+                <Typography color="text.secondary" sx={{ px: 2, py: 1 }}>{emptyHint}</Typography>
+              )}
             </List>
           )}
         </Box>
       )}
 
       {tab === 2 &&
-        (contacts.loading ? (
+        (contacts.loading || (syncing && (contacts.data?.waContacts ?? []).length === 0) ? (
           <Loading />
         ) : (
           <List>
@@ -159,6 +185,9 @@ export default function WhatsAppBrowser() {
                 secondary={`+${u.phone}${u.is_business ? ' · Business' : ''}`}
               />
             ))}
+            {(contacts.data?.waContacts ?? []).length === 0 && (
+              <Typography color="text.secondary" sx={{ px: 2, py: 1 }}>{emptyHint}</Typography>
+            )}
           </List>
         ))}
 

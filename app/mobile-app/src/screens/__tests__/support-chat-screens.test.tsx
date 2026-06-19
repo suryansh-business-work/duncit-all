@@ -69,6 +69,7 @@ const chatBase = () => ({
   isLoading: false,
   error: '',
   typing: false,
+  aiThinking: false,
   send: jest.fn().mockResolvedValue(undefined),
   uploadAttachment: jest.fn().mockResolvedValue('https://img/up.jpg'),
   emitTyping: jest.fn(),
@@ -161,6 +162,12 @@ describe('LiveChatScreen — states + messages', () => {
     expect(screen.getByTestId('support-typing')).toBeOnTheScreen();
     // Non-image attachment opens via the file chip.
     fireEvent.press(screen.getByTestId('support-attach-https://x/doc.pdf'));
+  });
+
+  it('shows the AI thinking indicator while the bot replies', () => {
+    mockedChat.mockReturnValue({ ...chatBase(), aiThinking: true });
+    renderWithProviders(<LiveChatScreen />);
+    expect(screen.getByTestId('support-typing')).toHaveTextContent('Duncit Assistant is typing…');
   });
 
   it('shows a delivered tick when the agent has not read yet', () => {

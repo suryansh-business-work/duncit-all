@@ -39,6 +39,9 @@ export default function SupportChatPage() {
 
   const [messages, setMessages] = useState<SupportChatMessage[]>([]);
   const [typing, setTyping] = useState(false);
+  // True while the AI assistant is generating its reply (no socket typing event
+  // is emitted for the bot, so we drive it locally after the user sends).
+  const [aiThinking, setAiThinking] = useState(false);
   const [showJump, setShowJump] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
@@ -59,7 +62,10 @@ export default function SupportChatPage() {
     sessionId,
     onMessage: (m: SupportChatMessage) => {
       setMessages((prev) => (prev.some((p) => p.id === m.id) ? prev : [...prev, m]));
-      if (m.sender_role !== 'USER' && sessionId) markRead({ variables: { session_id: sessionId } });
+      if (m.sender_role !== 'USER') {
+        setAiThinking(false);
+        if (sessionId) markRead({ variables: { session_id: sessionId } });
+      }
     },
     onSession: (s: SupportChatSession) => setSession((prev) => ({ ...prev, ...s })),
     onTyping: () => {
@@ -72,7 +78,7 @@ export default function SupportChatPage() {
   useEffect(() => { if (sessionQuery.data) setSession(sessionQuery.data.mySupportChat); }, [sessionQuery.data]);
   useEffect(() => { if (messagesQuery.data) setMessages(messagesQuery.data.supportChatMessages); }, [messagesQuery.data]);
   useEffect(() => { if (sessionId) markRead({ variables: { session_id: sessionId } }); }, [sessionId, markRead]);
-  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages, typing]);
+  useEffect(() => { scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight }); }, [messages, typing, aiThinking]);
 
   const onScroll = () => {
     const el = scrollRef.current;
@@ -84,6 +90,8 @@ export default function SupportChatPage() {
   const send = async (text: string, attachments: string[]) => {
     const tempId = `temp-${Date.now()}`;
     setMessages((prev) => [...prev, optimistic(tempId, text, attachments)]);
+    // Show the assistant "thinking" while the AI fields the chat (no agent yet).
+    if (session?.ai_active !== false && !session?.agent_id) setAiThinking(true);
     try {
       if (!sessionId) {
         const r = await startChat({});
@@ -153,9 +161,9 @@ export default function SupportChatPage() {
                 <ChatBubble msg={m} agentLastReadAt={session?.agent_last_read_at ?? null} />
               </Box>
             ))}
-            {typing && (
+            {(typing || aiThinking) && (
               <Typography variant="caption" color="text.secondary" sx={{ pl: 1, fontStyle: 'italic' }}>
-                Support is typing…
+                {aiThinking ? 'Duncit Assistant is typing…' : 'Support is typing…'}
               </Typography>
             )}
           </Stack>

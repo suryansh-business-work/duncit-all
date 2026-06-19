@@ -1,6 +1,7 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import {
   Box,
+  Button,
   Collapse,
   InputAdornment,
   List,
@@ -14,6 +15,8 @@ import {
 } from '@mui/material';
 import ExpandLessIcon from '@mui/icons-material/ExpandLess';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
+import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
+import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import SearchIcon from '@mui/icons-material/Search';
 import { NavLink, useLocation } from 'react-router-dom';
 import { appConfig, type AppNavItem } from '../config/app-config';
@@ -26,10 +29,15 @@ interface SidebarProps {
   onNavigate?: () => void;
 }
 
+/** Broadcast from the Expand-all / Collapse-all button: `nonce` forces groups to
+ * re-sync their open state to `open` even after the user toggled them manually. */
+type ExpandSignal = { open: boolean; nonce: number } | null;
+
 interface NodeProps {
   item: AppNavItem;
   pathname: string;
   onNavigate?: () => void;
+  expandAll?: ExpandSignal;
 }
 
 interface LeafItemProps extends NodeProps {
@@ -78,10 +86,14 @@ function LeafItem({ item, pathname, onNavigate, forceSelected }: Readonly<LeafIt
   );
 }
 
-function GroupItem({ item, pathname, onNavigate, searching }: Readonly<GroupItemProps>) {
+function GroupItem({ item, pathname, onNavigate, searching, expandAll }: Readonly<GroupItemProps>) {
   const active = useMemo(() => groupActive(pathname, item), [pathname, item]);
   const winner = useMemo(() => bestChild(pathname, item.children ?? []), [pathname, item.children]);
   const [open, setOpen] = useState(active);
+  // Expand-all / Collapse-all re-syncs every group when its nonce changes.
+  useEffect(() => {
+    if (expandAll) setOpen(expandAll.open);
+  }, [expandAll]);
   const isOpen = searching ? true : open;
   return (
     <Box sx={{ mb: 0.25 }}>
@@ -108,6 +120,7 @@ function GroupItem({ item, pathname, onNavigate, searching }: Readonly<GroupItem
               pathname={pathname}
               onNavigate={onNavigate}
               searching={searching}
+              expandAll={expandAll}
               forceSelected={winner ? winner === child : undefined}
             />
           ))}
@@ -117,9 +130,17 @@ function GroupItem({ item, pathname, onNavigate, searching }: Readonly<GroupItem
   );
 }
 
-function NavNode({ item, pathname, onNavigate, forceSelected, searching }: Readonly<NavNodeProps>) {
+function NavNode({ item, pathname, onNavigate, forceSelected, searching, expandAll }: Readonly<NavNodeProps>) {
   if (item.children && item.children.length > 0) {
-    return <GroupItem item={item} pathname={pathname} onNavigate={onNavigate} searching={searching} />;
+    return (
+      <GroupItem
+        item={item}
+        pathname={pathname}
+        onNavigate={onNavigate}
+        searching={searching}
+        expandAll={expandAll}
+      />
+    );
   }
   return (
     <LeafItem item={item} pathname={pathname} onNavigate={onNavigate} forceSelected={forceSelected} />
@@ -142,6 +163,15 @@ export default function AppSidebar({ onNavigate }: Readonly<SidebarProps>) {
   const { logoUrl, appName, loading } = useBranding();
   const [query, setQuery] = useState('');
   const nav = useMemo(() => filterNav(appConfig.nav, query.trim()), [query]);
+  // Expand-all / Collapse-all toggle: `allOpen` flips the label; `expandAll`
+  // carries a nonce so every group re-syncs even after manual toggling.
+  const [allOpen, setAllOpen] = useState(false);
+  const [expandAll, setExpandAll] = useState<ExpandSignal>(null);
+  const toggleAll = () => {
+    const open = !allOpen;
+    setAllOpen(open);
+    setExpandAll({ open, nonce: Date.now() });
+  };
   return (
     <Stack sx={{ height: '100%' }}>
       <Box
@@ -178,13 +208,22 @@ export default function AppSidebar({ onNavigate }: Readonly<SidebarProps>) {
           onChange={(e) => setQuery(e.target.value)}
           InputProps={{ startAdornment: <InputAdornment position="start"><SearchIcon fontSize="small" /></InputAdornment> }}
         />
+        <Button
+          size="small"
+          fullWidth
+          onClick={toggleAll}
+          startIcon={allOpen ? <UnfoldLessIcon fontSize="small" /> : <UnfoldMoreIcon fontSize="small" />}
+          sx={{ mt: 0.75, justifyContent: 'flex-start', color: 'text.secondary', fontWeight: 700 }}
+        >
+          {allOpen ? 'Collapse all' : 'Expand all'}
+        </Button>
       </Box>
       <List sx={{ px: 1, py: 1, flex: 1, overflowY: 'auto' }}>
         {nav.length === 0 ? (
           <Typography variant="caption" color="text.secondary" sx={{ px: 1.5 }}>No menu items match.</Typography>
         ) : (
           nav.map((item) => (
-            <NavNode key={item.label} item={item} pathname={location.pathname} onNavigate={onNavigate} searching={!!query.trim()} />
+            <NavNode key={item.label} item={item} pathname={location.pathname} onNavigate={onNavigate} searching={!!query.trim()} expandAll={expandAll} />
           ))
         )}
       </List>

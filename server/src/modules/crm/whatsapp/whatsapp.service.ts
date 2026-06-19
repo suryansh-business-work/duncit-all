@@ -1,7 +1,11 @@
 import { WaConnectionModel } from './whatsapp.model';
-import { createWaClient, mapSessionStatus } from './whatsapp.client';
+import { createWaClient, mapSessionStatus, type WaClient } from './whatsapp.client';
 
 const KEY = 'default';
+/** Human-friendly name of our single WhatsApp session on the gateway. The
+ * gateway keys sessions by a generated UUID `id` (not the name), so we resolve
+ * that id at connect time and persist it in WaConnection.session_id. */
+const SESSION_NAME = 'duncit-crm';
 
 /** Load (or lazily create) the single gateway connection config doc. Returns the
  * hydrated Mongoose document (so callers can `.save()`). */
@@ -24,6 +28,29 @@ function isAlreadyExists(error: unknown): boolean {
 function isNotFound(error: unknown): boolean {
   const msg = error instanceof Error ? error.message : '';
   return msg.includes('(404)') || /not found/i.test(msg);
+}
+
+/** Find our session's gateway id (a UUID) by its name. */
+async function findSessionIdByName(client: WaClient): Promise<string | undefined> {
+  const list = await client.listSessions().catch(() => []);
+  const sessions: { id?: string; name?: string }[] = Array.isArray(list) ? list : [];
+  return sessions.find((s) => s.name === SESSION_NAME)?.id;
+}
+
+/** Resolve the gateway session id for SESSION_NAME, creating the session if it
+ * doesn't exist yet. Returns the gateway's generated UUID id. */
+async function resolveSessionId(client: WaClient): Promise<string> {
+  const existing = await findSessionIdByName(client);
+  if (existing) return existing;
+  try {
+    const created = await client.createSession(SESSION_NAME);
+    if (created?.id) return created.id as string;
+  } catch (error) {
+    if (!isAlreadyExists(error)) throw error;
+  }
+  const afterCreate = await findSessionIdByName(client);
+  if (afterCreate) return afterCreate;
+  throw new Error('Could not resolve the WhatsApp session from the gateway.');
 }
 
 export interface WaConfigInput {
@@ -67,16 +94,13 @@ export const whatsappService = {
   async connect() {
     const conn = await getConnection();
     const client = createWaClient(conn.base_url, conn.api_key);
-    // Idempotent: ensure the session exists, then start it. Creating a session
-    // that already exists returns 409 — that's the desired state, not an error.
-    try {
-      await client.createSession(conn.session_id);
-    } catch (error) {
-      if (!isAlreadyExists(error)) throw error;
-    }
+    // Resolve the gateway's real session id (UUID) by name, creating it if
+    // needed, and persist it — start/qr/status all key off this id, not the name.
+    const sessionId = await resolveSessionId(client);
+    conn.session_id = sessionId;
     // Start the engine (launches Chromium + whatsapp-web). "Already started" is
     // fine; surface any other failure so the user sees why it didn't connect.
-    await client.startSession(conn.session_id).catch((error) => {
+    await client.startSession(sessionId).catch((error) => {
       const msg = error instanceof Error ? error.message : '';
       if (!/already (started|authenticated|exists)/i.test(msg)) throw error;
     });

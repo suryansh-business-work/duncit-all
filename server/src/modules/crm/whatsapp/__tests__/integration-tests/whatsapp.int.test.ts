@@ -55,34 +55,37 @@ describe('whatsappService integration (bug WA-LeadGen P3)', () => {
     ).rejects.toThrow(/master/i);
   });
 
-  it('connect() creates the session when missing, then marks CONNECTING', async () => {
+  it('connect() creates a session, persists its gateway id (UUID) and starts it', async () => {
     await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
     const calls: string[] = [];
     setFetch((url, init) => {
       calls.push(`${init.method} ${url}`);
-      if (init.method === 'GET' && url.endsWith('/sessions/duncit-crm')) return { status: 404, body: 'not found' };
-      return { status: 200, body: { id: 'duncit-crm' } };
+      if (init.method === 'GET' && url.endsWith('/sessions')) return { status: 200, body: [] }; // none yet
+      if (init.method === 'POST' && url.endsWith('/sessions')) return { status: 200, body: { id: 'uuid-123', name: 'duncit-crm' } };
+      return { status: 200, body: {} }; // start
     });
     const conn = await whatsappService.connect();
     expect(conn.status).toBe('CONNECTING');
-    expect(calls.some((c) => c.startsWith('POST') && c.endsWith('/sessions'))).toBe(true); // created
-    expect(calls.some((c) => c.includes('/sessions/duncit-crm/start'))).toBe(true);
+    expect(conn.session_id).toBe('uuid-123');
+    // start must use the resolved UUID, not the name.
+    expect(calls.some((c) => c.includes('/sessions/uuid-123/start'))).toBe(true);
   });
 
-  it('connect() tolerates an already-existing session (409) and still starts it', async () => {
+  it('connect() reuses the existing session id found by name (no duplicate create)', async () => {
     await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
     const calls: string[] = [];
     setFetch((url, init) => {
       calls.push(`${init.method} ${url}`);
-      if (init.method === 'POST' && url.endsWith('/sessions')) {
-        return { status: 409, body: { message: "Session with name 'duncit-crm' already exists" } };
+      if (init.method === 'GET' && url.endsWith('/sessions')) {
+        return { status: 200, body: [{ id: 'uuid-existing', name: 'duncit-crm' }] };
       }
-      return { status: 200, body: { id: 'duncit-crm' } };
+      return { status: 200, body: {} }; // start
     });
     const conn = await whatsappService.connect();
+    expect(conn.session_id).toBe('uuid-existing');
     expect(conn.status).toBe('CONNECTING');
-    expect(conn.last_error).toBeNull();
-    expect(calls.some((c) => c.includes('/sessions/duncit-crm/start'))).toBe(true);
+    expect(calls.some((c) => c.startsWith('POST') && c.endsWith('/sessions'))).toBe(false); // no create
+    expect(calls.some((c) => c.includes('/sessions/uuid-existing/start'))).toBe(true);
   });
 
   it('routes gateway calls through OPENWA_INTERNAL_URL, ignoring the public base_url', async () => {

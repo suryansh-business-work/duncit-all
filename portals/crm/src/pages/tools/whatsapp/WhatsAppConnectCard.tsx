@@ -62,18 +62,28 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
     saveState.loading || connectState.loading || disconnectState.loading || generateState.loading;
 
   const handleConnect = async () => {
-    await saveConfig({ variables: { input: { base_url: baseUrl, api_key: apiKey || undefined } } });
-    await connect();
+    try {
+      await saveConfig({ variables: { input: { base_url: baseUrl, api_key: apiKey || undefined } } });
+      await connect();
+    } catch {
+      // Surfaced via connectState/saveState.error below.
+    }
     onChanged();
   };
 
   // Mint a dedicated key from the master/admin key currently in the field.
   const handleGenerate = async () => {
-    const res = await generate({ variables: { base_url: baseUrl, master_key: apiKey } });
-    const key = res.data?.waGenerateApiKey?.api_key;
-    if (key) setApiKey(key);
+    try {
+      const res = await generate({ variables: { base_url: baseUrl, master_key: apiKey } });
+      const key = res.data?.waGenerateApiKey?.api_key;
+      if (key) setApiKey(key);
+    } catch {
+      // Surfaced via generateState.error below.
+    }
     onChanged();
   };
+
+  const actionError = connectState.error?.message || saveState.error?.message;
 
   if (connected) {
     return (
@@ -110,7 +120,8 @@ export default function WhatsAppConnectCard({ connection, onChanged }: Readonly<
             <Typography fontWeight={800}>Gateway connection</Typography>
             <Chip size="small" label={connection.status} color={STATUS_COLOR[connection.status]} />
           </Stack>
-          {connection.last_error && <Alert severity="error">{connection.last_error}</Alert>}
+          {actionError && <Alert severity="error">{actionError}</Alert>}
+          {!actionError && connection.last_error && <Alert severity="error">{connection.last_error}</Alert>}
           <TextField
             label="Gateway URL"
             size="small"

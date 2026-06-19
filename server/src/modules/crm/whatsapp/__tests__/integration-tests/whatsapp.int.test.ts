@@ -94,6 +94,21 @@ describe('whatsappService integration (bug WA-LeadGen P3)', () => {
     expect(conn.connected_at).toBeTruthy();
   });
 
+  it('refreshStatus() maps a missing session (404) to DISCONNECTED, not ERROR', async () => {
+    await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
+    setFetch(() => ({ status: 404, body: { message: "Session with id 'duncit-crm' not found" } }));
+    const conn = await whatsappService.refreshStatus();
+    expect(conn.status).toBe('DISCONNECTED');
+    expect(conn.last_error).toBeNull();
+  });
+
+  it('qr() returns DISCONNECTED when no session exists yet (404)', async () => {
+    await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
+    setFetch(() => ({ status: 404, body: { message: 'not found' } }));
+    const res = await whatsappService.qr();
+    expect(res).toEqual({ qr_code: null, status: 'DISCONNECTED' });
+  });
+
   it('refreshStatus() records ERROR when the gateway is unreachable', async () => {
     await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
     setFetch(() => ({ status: 500, body: 'boom' }));

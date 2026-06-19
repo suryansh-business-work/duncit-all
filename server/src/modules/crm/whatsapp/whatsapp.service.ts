@@ -18,6 +18,14 @@ function isAlreadyExists(error: unknown): boolean {
   return msg.includes('(409)') || /already exists/i.test(msg);
 }
 
+/** True when an OpenWA error is a 404 "session not found" — the session simply
+ * hasn't been created yet (e.g. before the first connect, or after a gateway
+ * redeploy reset its store). That's DISCONNECTED, not an error. */
+function isNotFound(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : '';
+  return msg.includes('(404)') || /not found/i.test(msg);
+}
+
 export interface WaConfigInput {
   base_url?: string;
   api_key?: string;
@@ -85,8 +93,13 @@ export const whatsappService = {
       if (conn.status === 'CONNECTED' && !conn.connected_at) conn.connected_at = new Date();
       conn.last_error = session?.lastError ?? null;
     } catch (error) {
-      conn.status = 'ERROR';
-      conn.last_error = error instanceof Error ? error.message : 'Status check failed';
+      if (isNotFound(error)) {
+        conn.status = 'DISCONNECTED';
+        conn.last_error = null;
+      } else {
+        conn.status = 'ERROR';
+        conn.last_error = error instanceof Error ? error.message : 'Status check failed';
+      }
     }
     await conn.save();
     return conn;
@@ -96,8 +109,15 @@ export const whatsappService = {
   async qr(): Promise<{ qr_code: string | null; status: string }> {
     const conn = await getConnection();
     const client = createWaClient(conn.base_url, conn.api_key);
-    const res = await client.getQr(conn.session_id);
-    return { qr_code: res?.qrCode ?? null, status: mapSessionStatus(res?.status) };
+    try {
+      const res = await client.getQr(conn.session_id);
+      return { qr_code: res?.qrCode ?? null, status: mapSessionStatus(res?.status) };
+    } catch (error) {
+      // No session yet (404) → nothing to scan; surface DISCONNECTED so the UI
+      // prompts the user to connect rather than showing a raw gateway error.
+      if (isNotFound(error)) return { qr_code: null, status: 'DISCONNECTED' };
+      throw error;
+    }
   },
 
   /** Stop the session and mark disconnected (does not delete persisted auth). */

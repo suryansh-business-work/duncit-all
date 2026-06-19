@@ -3,6 +3,7 @@ import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import { WA_CONNECTION, type WaConnection } from './whatsappQueries';
 import WhatsAppConnectCard from './WhatsAppConnectCard';
+import WhatsAppBrowser from './WhatsAppBrowser';
 
 /**
  * WhatsApp Lead Generator — connect a WhatsApp account through the OpenWA gateway
@@ -20,7 +21,7 @@ export default function WhatsAppLeadGeneratorPage() {
   const connection: WaConnection | undefined = data?.waConnection;
 
   return (
-    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 720, mx: 'auto' }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 860, mx: 'auto' }}>
       <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
         <WhatsAppIcon sx={{ color: '#25D366' }} />
         <Typography variant="h5" fontWeight={800}>
@@ -37,12 +38,7 @@ export default function WhatsAppLeadGeneratorPage() {
       ) : connection ? (
         <Stack spacing={2}>
           <WhatsAppConnectCard connection={connection} onChanged={() => void refetch()} />
-          {connection.status === 'CONNECTED' ? (
-            <Alert severity="info" sx={{ borderRadius: 2 }}>
-              Connected. The Communities / Groups / Users browser and lead import
-              are being wired up next.
-            </Alert>
-          ) : null}
+          {connection.status === 'CONNECTED' ? <WhatsAppBrowser /> : null}
         </Stack>
       ) : null}
     </Box>

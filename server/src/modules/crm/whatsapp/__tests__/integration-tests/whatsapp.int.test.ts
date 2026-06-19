@@ -87,6 +87,70 @@ describe('whatsappService integration (bug WA-LeadGen P3)', () => {
   });
 });
 
+describe('whatsappData sync + cache + leads (WA-LeadGen P4/P5)', () => {
+  const groups = [
+    { id: 'comm1@g.us', name: 'Pune Community' },
+    { id: 'g1@g.us', name: 'Runners', linkedParentJID: 'comm1@g.us' },
+    { id: 'g2@g.us', name: 'Foodies' },
+  ];
+  const contacts = [
+    { id: { _serialized: '628111@c.us', user: '628111' }, number: '628111', name: 'Asha', isBusiness: false },
+    { id: '628222@c.us', pushname: 'Bob' },
+    { id: '120@g.us', name: 'a group, skipped' },
+  ];
+
+  function syncFetch() {
+    setFetch((url) => {
+      if (url.endsWith('/contacts')) return { status: 200, body: contacts };
+      if (/\/groups\/[^/]+$/.test(url)) return { status: 200, body: { participants: [{ id: '628333@c.us' }, { id: '628111@c.us' }] } };
+      if (url.endsWith('/groups')) return { status: 200, body: groups };
+      return { status: 200, body: {} };
+    });
+  }
+
+  // Collections are wiped per-test, so configure + (re)fetch each time.
+  beforeEach(async () => {
+    await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
+    syncFetch();
+  });
+
+  it('syncs communities/groups/contacts and auto-creates leads (idempotent)', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    const res = await whatsappData.sync();
+    expect(res.communities).toBe(1);
+    expect(res.groups).toBe(2); // g1 + g2 (comm1 is a community parent, not a group)
+    expect(res.leads).toBe(2); // Asha + Bob (the @g.us entry is skipped)
+
+    expect(await whatsappData.listCommunities()).toHaveLength(1);
+    expect(await whatsappData.listGroups()).toHaveLength(2);
+    expect(await whatsappData.listGroups('comm1@g.us')).toHaveLength(1);
+    expect(await whatsappData.listContacts()).toHaveLength(2);
+    expect(await whatsappData.listUserLeads()).toHaveLength(2);
+
+    // Re-sync must not duplicate (unique indexes + upsert).
+    await whatsappData.sync();
+    expect(await whatsappData.listUserLeads()).toHaveLength(2);
+    expect(await whatsappData.listGroups()).toHaveLength(2);
+  });
+
+  it('imports group members as leads tagged with the group + community', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    await whatsappData.sync(); // populate the group + community first
+    const members = await whatsappData.groupMembers('g1@g.us');
+    expect(members.map((m) => m.phone).sort()).toEqual(['628111', '628333']);
+    const leads = await whatsappData.listUserLeads('628333');
+    expect(leads[0]?.source_groups?.[0]?.jid).toBe('g1@g.us');
+    expect(leads[0]?.source_communities?.[0]?.jid).toBe('comm1@g.us');
+  });
+
+  it('searches leads by name/phone', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    await whatsappData.sync();
+    const byName = await whatsappData.listUserLeads('Asha');
+    expect(byName.some((l) => l.phone === '628111')).toBe(true);
+  });
+});
+
 describe('mapSessionStatus', () => {
   it('maps gateway statuses to coarse states', () => {
     expect(mapSessionStatus('READY')).toBe('CONNECTED');

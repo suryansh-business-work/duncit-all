@@ -20,6 +20,20 @@ export interface WaClient {
 
 type Method = 'GET' | 'POST' | 'DELETE';
 
+/** Pull a human-readable message out of an OpenWA error body (NestJS shape
+ * `{ message, error, statusCode }`; `message` may be a string or string[]).
+ * Falls back to the raw text when the body isn't JSON. */
+export function parseGatewayError(text: string): string {
+  try {
+    const parsed = JSON.parse(text) as { message?: string | string[] };
+    if (Array.isArray(parsed.message)) return parsed.message.join(', ');
+    if (parsed.message) return String(parsed.message);
+  } catch {
+    /* not JSON — fall through to raw text */
+  }
+  return text.slice(0, 300);
+}
+
 export function createWaClient(baseUrl: string, apiKey: string): WaClient {
   // Prefer the internal Docker-network URL (e.g. http://open-wa:2024) for
   // server→gateway calls: the public domain resolves to the host's own IP and
@@ -28,15 +42,20 @@ export function createWaClient(baseUrl: string, apiKey: string): WaClient {
   const internal = (process.env.OPENWA_INTERNAL_URL || '').trim();
   const effective = (internal || baseUrl || '').replace(/\/+$/, '');
   const root = `${effective}/api`;
+  // Prefer the stable master key (shared secret via env, accepted verbatim by the
+  // gateway) over a separately-issued key — the gateway can reset its issued-key
+  // store on redeploy, leaving the stored key invalid (401 "Invalid API key").
+  const master = (process.env.OPENWA_API_MASTER_KEY || '').trim();
+  const key = master || apiKey;
 
   async function req(method: Method, path: string, body?: unknown): Promise<any> {
-    if (!effective || !apiKey) {
+    if (!effective || !key) {
       throw new Error('WhatsApp gateway is not configured. Set the base URL and API key first.');
     }
     const res = await fetch(`${root}${path}`, {
       method,
       headers: {
-        'X-API-Key': apiKey,
+        'X-API-Key': key,
         'Content-Type': 'application/json',
         Accept: 'application/json',
       },
@@ -44,7 +63,7 @@ export function createWaClient(baseUrl: string, apiKey: string): WaClient {
     });
     if (!res.ok) {
       const text = await res.text().catch(() => '');
-      throw new Error(`OpenWA ${method} ${path} failed (${res.status}): ${text.slice(0, 300)}`);
+      throw new Error(`OpenWA ${method} ${path} failed (${res.status}): ${parseGatewayError(text)}`);
     }
     if (res.status === 204) return null;
     return res.json().catch(() => null);

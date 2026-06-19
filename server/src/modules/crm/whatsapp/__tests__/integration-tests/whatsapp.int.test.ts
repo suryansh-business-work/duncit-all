@@ -105,6 +105,33 @@ describe('whatsappService integration (bug WA-LeadGen P3)', () => {
     }
   });
 
+  it('uses the master key (OPENWA_API_MASTER_KEY) as X-API-Key when set', async () => {
+    await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'stored-key' });
+    const prev = process.env.OPENWA_API_MASTER_KEY;
+    process.env.OPENWA_API_MASTER_KEY = 'master-xyz';
+    let sentKey: string | undefined;
+    setFetch((_url, init) => {
+      sentKey = (init as { headers?: Record<string, string> }).headers?.['X-API-Key'];
+      return { status: 200, body: { status: 'READY' } };
+    });
+    try {
+      await whatsappService.refreshStatus();
+      expect(sentKey).toBe('master-xyz');
+    } finally {
+      if (prev === undefined) delete process.env.OPENWA_API_MASTER_KEY;
+      else process.env.OPENWA_API_MASTER_KEY = prev;
+    }
+  });
+
+  it('parses gateway error bodies into a readable message (no raw JSON)', async () => {
+    await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
+    setFetch(() => ({ status: 401, body: { message: 'Invalid API key', error: 'Unauthorized', statusCode: 401 } }));
+    const conn = await whatsappService.refreshStatus();
+    expect(conn.status).toBe('ERROR');
+    expect(conn.last_error).toContain('Invalid API key');
+    expect(conn.last_error).not.toContain('statusCode');
+  });
+
   it('refreshStatus() maps a READY session to CONNECTED and stores the phone', async () => {
     await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
     setFetch(() => ({ status: 200, body: { status: 'READY', phone: '628123', lastError: null } }));

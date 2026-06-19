@@ -1185,6 +1185,7 @@ jobs:
           PEXELS_API_KEY=${PEXELS_API_KEY}
           GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
           GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
+          OPENWA_API_MASTER_KEY=${OPENWA_API_MASTER_KEY}
           EOF
 
       - name: Push files to VPS

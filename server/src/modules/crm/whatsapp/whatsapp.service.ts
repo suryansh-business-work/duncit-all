@@ -74,7 +74,12 @@ export const whatsappService = {
     } catch (error) {
       if (!isAlreadyExists(error)) throw error;
     }
-    await client.startSession(conn.session_id).catch(() => undefined);
+    // Start the engine (launches Chromium + whatsapp-web). "Already started" is
+    // fine; surface any other failure so the user sees why it didn't connect.
+    await client.startSession(conn.session_id).catch((error) => {
+      const msg = error instanceof Error ? error.message : '';
+      if (!/already (started|authenticated|exists)/i.test(msg)) throw error;
+    });
     conn.status = 'CONNECTING';
     conn.last_error = null;
     await conn.save();
@@ -113,9 +118,13 @@ export const whatsappService = {
       const res = await client.getQr(conn.session_id);
       return { qr_code: res?.qrCode ?? null, status: mapSessionStatus(res?.status) };
     } catch (error) {
-      // No session yet (404) → nothing to scan; surface DISCONNECTED so the UI
-      // prompts the user to connect rather than showing a raw gateway error.
-      if (isNotFound(error)) return { qr_code: null, status: 'DISCONNECTED' };
+      const msg = error instanceof Error ? error.message : '';
+      // No session / engine not started → prompt the user to connect.
+      if (isNotFound(error) || /not started/i.test(msg)) return { qr_code: null, status: 'DISCONNECTED' };
+      // Session is booting but the QR hasn't been emitted yet → keep polling.
+      if (/not ready/i.test(msg)) return { qr_code: null, status: 'CONNECTING' };
+      // Account already linked → no QR needed.
+      if (/already authenticated/i.test(msg)) return { qr_code: null, status: 'CONNECTED' };
       throw error;
     }
   },

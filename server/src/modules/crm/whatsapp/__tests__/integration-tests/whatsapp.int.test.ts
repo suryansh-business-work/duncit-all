@@ -156,6 +156,20 @@ describe('whatsappService integration (bug WA-LeadGen P3)', () => {
     expect(res).toEqual({ qr_code: null, status: 'DISCONNECTED' });
   });
 
+  it('qr() keeps polling (CONNECTING) while the QR is not ready yet (400)', async () => {
+    await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
+    setFetch(() => ({ status: 400, body: { message: 'QR code is not ready yet. Please wait...' } }));
+    const res = await whatsappService.qr();
+    expect(res).toEqual({ qr_code: null, status: 'CONNECTING' });
+  });
+
+  it('qr() returns the QR data url once the gateway has it', async () => {
+    await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
+    setFetch(() => ({ status: 200, body: { qrCode: 'data:image/png;base64,abc', status: 'QR_READY' } }));
+    const res = await whatsappService.qr();
+    expect(res).toEqual({ qr_code: 'data:image/png;base64,abc', status: 'CONNECTING' });
+  });
+
   it('refreshStatus() records ERROR when the gateway is unreachable', async () => {
     await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
     setFetch(() => ({ status: 500, body: 'boom' }));

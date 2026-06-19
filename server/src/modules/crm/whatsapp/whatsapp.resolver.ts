@@ -8,6 +8,15 @@ import type { WaConnectionDoc } from './whatsapp.model';
 
 const RW = [...CRM_RW];
 
+type PageInput = {
+  search?: string | null;
+  page?: number | null;
+  page_size?: number | null;
+  sort_by?: string | null;
+  sort_dir?: string | null;
+  community_jid?: string | null;
+};
+
 const id = (d: any) => ({ ...d, id: String(d._id) });
 const toUserLead = (d: any) => ({
   ...id(d),
@@ -15,6 +24,42 @@ const toUserLead = (d: any) => ({
   source_groups: d.source_groups ?? [],
   imported_at: d.imported_at ? new Date(d.imported_at).toISOString() : null,
 });
+
+type Page = { items: any[]; total: number; page: number; page_size: number };
+const toPage = (p: Page, mapFn: (d: any) => any) => ({
+  items: p.items.map(mapFn),
+  total: p.total,
+  page: p.page,
+  page_size: p.page_size,
+});
+
+const toSyncResult = (c: {
+  communities: number;
+  groups: number;
+  total: number;
+  leads_created: number;
+  valid: number;
+  invalid: number;
+  duplicates: number;
+}) => ({
+  communities: c.communities,
+  groups: c.groups,
+  contacts: c.total,
+  leads: c.leads_created,
+  valid: c.valid,
+  invalid: c.invalid,
+  duplicates: c.duplicates,
+});
+
+const toExtraction = (j: any) =>
+  j
+    ? {
+        ...j,
+        id: String(j._id),
+        started_at: j.started_at ? new Date(j.started_at).toISOString() : null,
+        finished_at: j.finished_at ? new Date(j.finished_at).toISOString() : null,
+      }
+    : null;
 
 /** Public-safe view of the connection — never leak the raw API key. */
 function toConnection(conn: WaConnectionDoc) {
@@ -43,21 +88,25 @@ export const waLeadsResolvers = {
       requireRole(ctx, RW);
       return whatsappService.qr();
     },
-    waCommunities: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+    waLeadStats: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      return (await whatsappData.listCommunities()).map(id);
+      return whatsappData.stats();
     },
-    waGroups: async (_p: unknown, args: { community_jid?: string | null }, ctx: GraphQLContext) => {
+    waCommunities: async (_p: unknown, args: { input?: PageInput }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      return (await whatsappData.listGroups(args.community_jid ?? null)).map(id);
+      return toPage(await whatsappData.listCommunities(args.input ?? {}), id);
     },
-    waContacts: async (_p: unknown, args: { search?: string | null }, ctx: GraphQLContext) => {
+    waGroups: async (_p: unknown, args: { input?: PageInput }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      return (await whatsappData.listContacts(args.search ?? null)).map(id);
+      return toPage(await whatsappData.listGroups(args.input ?? {}), id);
     },
-    waUserLeads: async (_p: unknown, args: { search?: string | null }, ctx: GraphQLContext) => {
+    waContacts: async (_p: unknown, args: { input?: PageInput }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      return (await whatsappData.listUserLeads(args.search ?? null)).map(toUserLead);
+      return toPage(await whatsappData.listContacts(args.input ?? {}), id);
+    },
+    waUserLeads: async (_p: unknown, args: { input?: PageInput }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return toPage(await whatsappData.listUserLeads(args.input ?? {}), toUserLead);
     },
     waUserLead: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
@@ -70,8 +119,12 @@ export const waLeadsResolvers = {
     },
     waExportUserLeads: async (_p: unknown, args: { search?: string | null }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      const leads = await whatsappData.listUserLeads(args.search ?? null);
+      const leads = await whatsappData.allUserLeads(args.search ?? null);
       return buildLeadsWorkbook(leads as any);
+    },
+    waExtraction: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return toExtraction(await whatsappData.extractionStatus());
     },
   },
   Mutation: {
@@ -98,7 +151,11 @@ export const waLeadsResolvers = {
     },
     waRefresh: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
-      return whatsappData.sync();
+      return toSyncResult(await whatsappData.sync());
+    },
+    waStartExtraction: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return toExtraction(await whatsappData.startExtraction());
     },
     waCreateUserLead: async (
       _p: unknown,

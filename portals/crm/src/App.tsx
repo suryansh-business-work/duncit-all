@@ -25,6 +25,7 @@ import AmenitiesPage from './pages/data/venues/AmenitiesPage';
 import EventSuitabilityPage from './pages/data/venues/EventSuitabilityPage';
 import AppShell from './components/AppShell';
 import ErrorBoundary from './components/ErrorBoundary';
+import { ExtractionProvider, ExtractionWidget } from './pages/tools/whatsapp/extraction';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
 
@@ -47,8 +48,9 @@ const authed = (element: JSX.Element) => (
 
 export default function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<LoginPage />} />
+    <ExtractionProvider>
+      <Routes>
+        <Route path="/login" element={<LoginPage />} />
       {/* Public, no-login survey fill page reached via a generated share link. */}
       <Route path="/s/:token" element={<PublicSurveyPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
@@ -79,6 +81,8 @@ export default function App() {
       <Route path="/data/venues/event-suitability" element={authed(<EventSuitabilityPage />)} />
       <Route path="/settings/dynamic-fields" element={authed(<ManageDynamicFieldsPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
-    </Routes>
+      </Routes>
+      <ExtractionWidget />
+    </ExtractionProvider>
   );
 }

@@ -88,38 +88,73 @@ export interface WaConnection {
   connected_at?: string | null;
 }
 
+export interface WaPageInput {
+  search?: string | null;
+  page?: number | null;
+  page_size?: number | null;
+  sort_by?: string | null;
+  sort_dir?: 'asc' | 'desc' | null;
+  community_jid?: string | null;
+}
+
+export const WA_LEAD_STATS = gql`
+  query WaLeadStats {
+    waLeadStats {
+      total_leads
+      total_communities
+      total_groups
+      total_contacts
+    }
+  }
+`;
+
 export const WA_COMMUNITIES = gql`
-  query WaCommunities {
-    waCommunities {
-      id
-      community_jid
-      name
-      groups_count
+  query WaCommunities($input: WaPageInput) {
+    waCommunities(input: $input) {
+      total
+      page
+      page_size
+      items {
+        id
+        community_jid
+        name
+        groups_count
+      }
     }
   }
 `;
 
 export const WA_GROUPS = gql`
-  query WaGroups($community_jid: String) {
-    waGroups(community_jid: $community_jid) {
-      id
-      group_jid
-      name
-      community_jid
-      members_count
+  query WaGroups($input: WaPageInput) {
+    waGroups(input: $input) {
+      total
+      page
+      page_size
+      items {
+        id
+        group_jid
+        name
+        community_jid
+        members_count
+      }
     }
   }
 `;
 
 export const WA_CONTACTS = gql`
-  query WaContacts($search: String) {
-    waContacts(search: $search) {
-      id
-      contact_jid
-      phone
-      name
-      push_name
-      is_business
+  query WaContacts($input: WaPageInput) {
+    waContacts(input: $input) {
+      total
+      page
+      page_size
+      items {
+        id
+        contact_jid
+        phone
+        name
+        push_name
+        is_business
+      }
     }
   }
 `;
@@ -136,21 +171,26 @@ export const WA_GROUP_MEMBERS = gql`
 `;
 
 export const WA_USER_LEADS = gql`
-  query WaUserLeads($search: String) {
-    waUserLeads(search: $search) {
-      id
-      phone
-      name
-      source_account
-      source_communities {
-        jid
+  query WaUserLeads($input: WaPageInput) {
+    waUserLeads(input: $input) {
+      total
+      page
+      page_size
+      items {
+        id
+        phone
         name
+        source_account
+        source_communities {
+          jid
+          name
+        }
+        source_groups {
+          jid
+          name
+        }
+        imported_at
       }
-      source_groups {
-        jid
-        name
-      }
-      imported_at
     }
   }
 `;
@@ -183,9 +223,73 @@ export const WA_REFRESH = gql`
       groups
       contacts
       leads
+      valid
+      invalid
+      duplicates
     }
   }
 `;
+
+const EXTRACTION_FIELDS = gql`
+  fragment WaExtractionFields on WaExtraction {
+    id
+    status
+    phase
+    total
+    processed
+    valid
+    invalid
+    duplicates
+    communities
+    groups
+    leads_created
+    error
+    started_at
+    finished_at
+  }
+`;
+
+export const WA_EXTRACTION = gql`
+  ${EXTRACTION_FIELDS}
+  query WaExtraction {
+    waExtraction {
+      ...WaExtractionFields
+    }
+  }
+`;
+
+export const WA_START_EXTRACTION = gql`
+  ${EXTRACTION_FIELDS}
+  mutation WaStartExtraction {
+    waStartExtraction {
+      ...WaExtractionFields
+    }
+  }
+`;
+
+export interface WaExtraction {
+  id: string;
+  status: 'RUNNING' | 'DONE' | 'FAILED';
+  phase: string;
+  total: number;
+  processed: number;
+  valid: number;
+  invalid: number;
+  duplicates: number;
+  communities: number;
+  groups: number;
+  leads_created: number;
+  error?: string | null;
+  started_at?: string | null;
+  finished_at?: string | null;
+}
+
+export interface WaLeadStats {
+  total_leads: number;
+  total_communities: number;
+  total_groups: number;
+  total_contacts: number;
+}
 
 export const WA_CREATE_USER_LEAD = gql`
   mutation WaCreateUserLead($input: WaCreateUserLeadInput!) {
@@ -201,6 +305,7 @@ export const WA_IMPORT_USER_LEADS = gql`
   mutation WaImportUserLeads($file_base64: String!) {
     waImportUserLeads(file_base64: $file_base64) {
       imported
+      duplicates
       skipped
     }
   }

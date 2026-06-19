@@ -210,15 +210,16 @@ describe('whatsappData sync + cache + leads (WA-LeadGen P4/P5)', () => {
     { id: 'g2@g.us', name: 'Foodies' },
   ];
   const contacts = [
-    { id: { _serialized: '628111@c.us', user: '628111' }, number: '628111', name: 'Asha', isBusiness: false },
-    { id: '628222@c.us', pushname: 'Bob' },
+    { id: { _serialized: '919811112222@c.us', user: '919811112222' }, number: '919811112222', name: 'Asha', isBusiness: false },
+    { id: '919833334444@c.us', pushname: 'Bob' },
+    { id: '12345@c.us', number: '12345', name: 'Too Short' }, // invalid phone → counted invalid
     { id: '120@g.us', name: 'a group, skipped' },
   ];
 
   function syncFetch() {
     setFetch((url) => {
       if (url.endsWith('/contacts')) return { status: 200, body: contacts };
-      if (/\/groups\/[^/]+$/.test(url)) return { status: 200, body: { participants: [{ id: '628333@c.us' }, { id: '628111@c.us' }] } };
+      if (/\/groups\/[^/]+$/.test(url)) return { status: 200, body: { participants: [{ id: '919855556666@c.us' }, { id: '919811112222@c.us' }] } };
       if (url.endsWith('/groups')) return { status: 200, body: groups };
       return { status: 200, body: {} };
     });
@@ -230,23 +231,28 @@ describe('whatsappData sync + cache + leads (WA-LeadGen P4/P5)', () => {
     syncFetch();
   });
 
-  it('syncs communities/groups/contacts and auto-creates leads (idempotent)', async () => {
+  it('syncs communities/groups, validates phones, dedupes + counts leads', async () => {
     const { whatsappData } = await import('../../whatsapp.data');
     const res = await whatsappData.sync();
     expect(res.communities).toBe(1);
     expect(res.groups).toBe(2); // g1 + g2 (comm1 is a community parent, not a group)
-    expect(res.leads).toBe(2); // Asha + Bob (the @g.us entry is skipped)
+    expect(res.valid).toBe(2); // Asha + Bob
+    expect(res.invalid).toBe(2); // the 5-digit number + the @g.us entry
+    expect(res.leads_created).toBe(2);
 
-    expect(await whatsappData.listCommunities()).toHaveLength(1);
-    expect(await whatsappData.listGroups()).toHaveLength(2);
-    expect(await whatsappData.listGroups('comm1@g.us')).toHaveLength(1);
-    expect(await whatsappData.listContacts()).toHaveLength(2);
-    expect(await whatsappData.listUserLeads()).toHaveLength(2);
+    expect((await whatsappData.listCommunities()).items).toHaveLength(1);
+    expect((await whatsappData.listGroups()).items).toHaveLength(2);
+    expect((await whatsappData.listGroups({ community_jid: 'comm1@g.us' })).items).toHaveLength(1);
+    expect((await whatsappData.listContacts()).items).toHaveLength(2);
+    const leadsPage = await whatsappData.listUserLeads();
+    expect(leadsPage.items).toHaveLength(2);
+    expect(leadsPage.total).toBe(2);
 
-    // Re-sync must not duplicate (unique indexes + upsert).
-    await whatsappData.sync();
-    expect(await whatsappData.listUserLeads()).toHaveLength(2);
-    expect(await whatsappData.listGroups()).toHaveLength(2);
+    // Re-sync: nothing new, every existing number counts as a duplicate.
+    const res2 = await whatsappData.sync();
+    expect(res2.leads_created).toBe(0);
+    expect(res2.duplicates).toBe(2);
+    expect((await whatsappData.listUserLeads()).items).toHaveLength(2);
   });
 
   it('sync() throws a combined error when both groups and contacts fail', async () => {
@@ -264,8 +270,8 @@ describe('whatsappData sync + cache + leads (WA-LeadGen P4/P5)', () => {
     const { whatsappData } = await import('../../whatsapp.data');
     await whatsappData.sync(); // populate the group + community first
     const members = await whatsappData.groupMembers('g1@g.us');
-    expect(members.map((m) => m.phone).sort()).toEqual(['628111', '628333']);
-    const leads = await whatsappData.listUserLeads('628333');
+    expect(members.map((m) => m.phone).sort()).toEqual(['919811112222', '919855556666']);
+    const leads = (await whatsappData.listUserLeads({ search: '919855556666' })).items;
     expect(leads[0]?.source_groups?.[0]?.jid).toBe('g1@g.us');
     expect(leads[0]?.source_communities?.[0]?.jid).toBe('comm1@g.us');
   });
@@ -273,8 +279,23 @@ describe('whatsappData sync + cache + leads (WA-LeadGen P4/P5)', () => {
   it('searches leads by name/phone', async () => {
     const { whatsappData } = await import('../../whatsapp.data');
     await whatsappData.sync();
-    const byName = await whatsappData.listUserLeads('Asha');
-    expect(byName.some((l) => l.phone === '628111')).toBe(true);
+    const byName = (await whatsappData.listUserLeads({ search: 'Asha' })).items;
+    expect(byName.some((l) => l.phone === '919811112222')).toBe(true);
+  });
+
+  it('runs a background extraction job and reports progress + stats', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    const job = await whatsappData.startExtraction();
+    expect(String((job as { status?: string }).status)).toBe('RUNNING');
+    // The runner is fire-and-forget; wait for it to settle, then check the job.
+    await new Promise((r) => setTimeout(r, 150));
+    const done = await whatsappData.extractionStatus();
+    expect(done?.status).toBe('DONE');
+    expect(done?.valid).toBe(2);
+    expect(done?.leads_created).toBe(2);
+    const stats = await whatsappData.stats();
+    expect(stats.total_leads).toBe(2);
+    expect(stats.total_communities).toBe(1);
   });
 });
 
@@ -294,21 +315,42 @@ describe('whatsapp manual leads + Excel (WA-LeadGen P5)', () => {
   it('round-trips an Excel export → import and upserts leads', async () => {
     const { whatsappData } = await import('../../whatsapp.data');
     const { buildLeadsWorkbook, parseLeadsWorkbook } = await import('../../whatsapp.excel');
-    const b64 = buildLeadsWorkbook([{ phone: '628999', name: 'Excel Guy' }]);
+    const b64 = buildLeadsWorkbook([{ phone: '919812345678', name: 'Excel Guy' }]);
     expect(typeof b64).toBe('string');
     expect(b64.length).toBeGreaterThan(0);
     const rows = parseLeadsWorkbook(b64);
-    expect(rows).toEqual([{ phone: '628999', name: 'Excel Guy' }]);
+    expect(rows).toEqual([{ phone: '919812345678', name: 'Excel Guy' }]);
     const res = await whatsappData.importLeads(rows);
     expect(res.imported).toBe(1);
-    const found = await whatsappData.listUserLeads('628999');
-    expect(found.some((l) => l.phone === '628999')).toBe(true);
+    const found = (await whatsappData.listUserLeads({ search: '919812345678' })).items;
+    expect(found.some((l) => l.phone === '919812345678')).toBe(true);
   });
 
-  it('skips rows without a phone on import', async () => {
+  it('skips invalid rows + counts duplicates on import', async () => {
     const { whatsappData } = await import('../../whatsapp.data');
-    const res = await whatsappData.importLeads([{ phone: '', name: 'no phone' }, { phone: '628000', name: 'ok' }]);
-    expect(res).toEqual({ imported: 1, skipped: 1 });
+    const res = await whatsappData.importLeads([
+      { phone: '', name: 'no phone' },
+      { phone: '12345', name: 'too short' },
+      { phone: '919800000000', name: 'ok' },
+    ]);
+    expect(res).toEqual({ imported: 1, duplicates: 0, skipped: 2 });
+  });
+});
+
+describe('normalizePhone', () => {
+  it('accepts E.164-shaped numbers (8–15 digits) and strips formatting', async () => {
+    const { normalizePhone } = await import('../../whatsapp.phone');
+    expect(normalizePhone('+91 98765-43210')).toEqual({ valid: true, phone: '919876543210' });
+    expect(normalizePhone('628111222333')).toEqual({ valid: true, phone: '628111222333' });
+  });
+
+  it('rejects junk: too short/long, leading zero, all-same, non-numeric', async () => {
+    const { normalizePhone } = await import('../../whatsapp.phone');
+    expect(normalizePhone('12345').valid).toBe(false);
+    expect(normalizePhone('0123456789').valid).toBe(false);
+    expect(normalizePhone('0000000000').valid).toBe(false);
+    expect(normalizePhone('abc').valid).toBe(false);
+    expect(normalizePhone('1234567890123456').valid).toBe(false);
   });
 });
 

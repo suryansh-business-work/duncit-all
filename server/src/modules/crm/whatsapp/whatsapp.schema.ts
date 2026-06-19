@@ -36,11 +36,27 @@ export const waLeadsTypeDefs = gql`
     session_id: String
   }
 
+  "Server-side pagination / search / sort options for the cache lists."
+  input WaPageInput {
+    search: String
+    page: Int
+    page_size: Int
+    sort_by: String
+    sort_dir: String
+    community_jid: String
+  }
+
   type WaCommunity {
     id: ID!
     community_jid: String!
     name: String!
     groups_count: Int!
+  }
+  type WaCommunityPage {
+    items: [WaCommunity!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
   }
 
   type WaGroup {
@@ -50,6 +66,12 @@ export const waLeadsTypeDefs = gql`
     community_jid: String
     members_count: Int!
   }
+  type WaGroupPage {
+    items: [WaGroup!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
 
   type WaContact {
     id: ID!
@@ -58,6 +80,12 @@ export const waLeadsTypeDefs = gql`
     name: String!
     push_name: String
     is_business: Boolean!
+  }
+  type WaContactPage {
+    items: [WaContact!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
   }
 
   type WaMember {
@@ -82,16 +110,52 @@ export const waLeadsTypeDefs = gql`
     source_groups: [WaSourceRef!]!
     imported_at: String
   }
+  type WaUserLeadPage {
+    items: [WaUserLead!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  "Top-of-page dashboard counters."
+  type WaLeadStats {
+    total_leads: Int!
+    total_communities: Int!
+    total_groups: Int!
+    total_contacts: Int!
+  }
 
   type WaSyncResult {
     communities: Int!
     groups: Int!
     contacts: Int!
     leads: Int!
+    valid: Int!
+    invalid: Int!
+    duplicates: Int!
+  }
+
+  "Background extraction job — live progress + quality breakdown."
+  type WaExtraction {
+    id: ID!
+    status: String!
+    phase: String!
+    total: Int!
+    processed: Int!
+    valid: Int!
+    invalid: Int!
+    duplicates: Int!
+    communities: Int!
+    groups: Int!
+    leads_created: Int!
+    error: String
+    started_at: String
+    finished_at: String
   }
 
   type WaImportResult {
     imported: Int!
+    duplicates: Int!
     skipped: Int!
   }
 
@@ -108,19 +172,23 @@ export const waLeadsTypeDefs = gql`
     waStatus: WaConnection!
     "Current QR data URL to scan + session status."
     waQr: WaQr!
-    "Cached communities (Mongo-first)."
-    waCommunities: [WaCommunity!]!
-    "Cached groups, optionally filtered to one community."
-    waGroups(community_jid: String): [WaGroup!]!
-    "Cached contacts (optional name/phone search)."
-    waContacts(search: String): [WaContact!]!
-    "Generated user leads (optional name/phone search)."
-    waUserLeads(search: String): [WaUserLead!]!
+    "Dashboard counters (leads / communities / groups / contacts)."
+    waLeadStats: WaLeadStats!
+    "Cached communities (paginated + searchable)."
+    waCommunities(input: WaPageInput): WaCommunityPage!
+    "Cached groups (paginated, searchable, filterable by community)."
+    waGroups(input: WaPageInput): WaGroupPage!
+    "Cached contacts (paginated + searchable)."
+    waContacts(input: WaPageInput): WaContactPage!
+    "Generated user leads (paginated, searchable, sortable)."
+    waUserLeads(input: WaPageInput): WaUserLeadPage!
     waUserLead(id: ID!): WaUserLead
     "Live-fetch a group's members (also imports them as leads)."
     waGroupMembers(group_jid: String!): [WaMember!]!
     "Export user leads as a base64 .xlsx (optionally filtered by search)."
     waExportUserLeads(search: String): String!
+    "Latest background extraction job (for progress polling)."
+    waExtraction: WaExtraction
   }
 
   extend type Mutation {
@@ -130,8 +198,10 @@ export const waLeadsTypeDefs = gql`
     "Create/start the session so a QR can be scanned."
     waConnect: WaConnection!
     waDisconnect: WaConnection!
-    "Pull latest communities/groups/contacts from the gateway into the cache."
+    "Synchronous pull of latest communities/groups/contacts into the cache."
     waRefresh: WaSyncResult!
+    "Start a non-blocking background extraction; poll waExtraction for progress."
+    waStartExtraction: WaExtraction!
     "Manually create (or upsert) a single user lead."
     waCreateUserLead(input: WaCreateUserLeadInput!): WaUserLead!
     "Import user leads from an uploaded .xlsx/.csv (base64)."

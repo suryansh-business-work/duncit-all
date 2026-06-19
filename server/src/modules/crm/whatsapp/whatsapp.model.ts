@@ -98,3 +98,33 @@ const userLeadSchema = new Schema(
 userLeadSchema.index({ connection_key: 1, phone: 1 }, { unique: true });
 export type WaUserLeadDoc = InferSchemaType<typeof userLeadSchema> & { _id: Types.ObjectId };
 export const WaUserLeadModel = model('WaUserLead', userLeadSchema);
+
+export const WA_JOB_STATUSES = ['RUNNING', 'DONE', 'FAILED'] as const;
+export type WaJobStatus = (typeof WA_JOB_STATUSES)[number];
+
+/**
+ * Background data-extraction job. Started by the CRM, it pulls communities /
+ * groups / contacts from the gateway and materialises leads, tracking live
+ * progress + a quality breakdown (valid / invalid / duplicate) the UI polls.
+ */
+const extractionJobSchema = new Schema(
+  {
+    connection_key: { type: String, required: true, default: 'default', index: true },
+    status: { type: String, enum: WA_JOB_STATUSES, default: 'RUNNING' },
+    phase: { type: String, default: 'starting' },
+    total: { type: Number, default: 0 },
+    processed: { type: Number, default: 0 },
+    valid: { type: Number, default: 0 },
+    invalid: { type: Number, default: 0 },
+    duplicates: { type: Number, default: 0 },
+    communities: { type: Number, default: 0 },
+    groups: { type: Number, default: 0 },
+    leads_created: { type: Number, default: 0 },
+    error: { type: String, default: null },
+    started_at: { type: Date, default: Date.now },
+    finished_at: { type: Date, default: null },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+export type WaExtractionJobDoc = InferSchemaType<typeof extractionJobSchema> & { _id: Types.ObjectId };
+export const WaExtractionJobModel = model('WaExtractionJob', extractionJobSchema);

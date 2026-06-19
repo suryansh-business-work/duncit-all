@@ -9,6 +9,10 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
+import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
+import { DatePicker } from '@mui/x-date-pickers/DatePicker';
+import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
+import { format } from 'date-fns';
 import { useFormik } from 'formik';
 import { useEffect } from 'react';
 import {
@@ -98,6 +102,35 @@ export default function EditAccountDialog({ open, onClose, initial, onSaved }: R
               <TextField label="Last name" {...f('last_name')} />
             </Stack>
             <TextField label="Bio" {...f('bio')} multiline minRows={2} />
+            <LocalizationProvider dateAdapter={AdapterDateFns}>
+              <DatePicker
+                label="Date of birth"
+                value={formik.values.dob ? new Date(formik.values.dob) : null}
+                maxDate={new Date()}
+                onChange={(d) =>
+                  formik.setFieldValue(
+                    'dob',
+                    d && !Number.isNaN(d.getTime()) ? format(d, 'yyyy-MM-dd') : '',
+                  )
+                }
+                slotProps={{
+                  textField: {
+                    name: 'dob',
+                    size: 'small',
+                    fullWidth: true,
+                    onBlur: formik.handleBlur,
+                    InputLabelProps: { shrink: true },
+                    error: Boolean(
+                      formik.errors.dob && (formik.touched.dob || formik.values.dob),
+                    ),
+                    helperText:
+                      formik.errors.dob && (formik.touched.dob || formik.values.dob)
+                        ? formik.errors.dob
+                        : ' ',
+                  },
+                }}
+              />
+            </LocalizationProvider>
             <Stack direction="row" spacing={1}>
               <TextField label="City" {...f('city')} />
               <TextField label="Zone" {...f('zone')} />

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   accountEditSchema,
   accountEditInitialValues,
+  toDobInput,
   toUpdateProfileInput,
 } from './account-edit.form';
 
@@ -59,6 +60,33 @@ describe('accountEditSchema', () => {
   it('accepts a fully valid payload', async () => {
     await expect(accountEditSchema.validate(valid)).resolves.toBeTruthy();
   });
+
+  it('allows an empty dob (no change) and a valid past date (bug 8)', async () => {
+    await expect(accountEditSchema.validate({ ...valid, dob: '' })).resolves.toBeTruthy();
+    await expect(
+      accountEditSchema.validate({ ...valid, dob: '1990-01-02' }),
+    ).resolves.toBeTruthy();
+  });
+
+  it('rejects a malformed or future dob (bug 8)', async () => {
+    const bad = await accountEditSchema
+      .validate({ ...valid, dob: '02/01/1990' }, { abortEarly: false })
+      .catch((e) => e);
+    expect(bad.errors.join(' ')).toMatch(/YYYY-MM-DD/);
+    const future = await accountEditSchema
+      .validate({ ...valid, dob: '3000-01-01' }, { abortEarly: false })
+      .catch((e) => e);
+    expect(future.errors.join(' ')).toMatch(/past date/i);
+  });
+});
+
+describe('toDobInput', () => {
+  it('slices ISO dates and rejects junk (bug 8)', () => {
+    expect(toDobInput('1995-06-15T00:00:00.000Z')).toBe('1995-06-15');
+    expect(toDobInput('1995-06-15')).toBe('1995-06-15');
+    expect(toDobInput(null)).toBe('');
+    expect(toDobInput('nope')).toBe('');
+  });
 });
 
 describe('toUpdateProfileInput', () => {
@@ -66,5 +94,10 @@ describe('toUpdateProfileInput', () => {
     const out = toUpdateProfileInput(valid);
     expect(out.first_name).toBe('Jane');
     expect(out.phone_number).toBe('9876543210');
+  });
+
+  it('omits an empty dob but forwards a provided one (bug 8)', () => {
+    expect(toUpdateProfileInput(valid).dob).toBeUndefined();
+    expect(toUpdateProfileInput({ ...valid, dob: '1990-01-02' }).dob).toBe('1990-01-02');
   });
 });

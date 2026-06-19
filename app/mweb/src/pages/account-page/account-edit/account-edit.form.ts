@@ -15,10 +15,22 @@ const optionalPersonName = (label: string) =>
 const optionalLocation = (label: string) =>
   yup.string().trim().max(80, `${label} must be 80 characters or fewer`).default('');
 
+const optionalDob = yup
+  .string()
+  .trim()
+  .matches(/^$|^\d{4}-\d{2}-\d{2}$/, 'Use the format YYYY-MM-DD')
+  .test('past-date', 'Enter a valid past date', (value) => {
+    if (!value) return true;
+    const parsed = new Date(value);
+    return !Number.isNaN(parsed.getTime()) && parsed.getTime() <= Date.now();
+  })
+  .default('');
+
 export const accountEditSchema = yup.object({
   first_name: validationRules.personName('First name'),
   last_name: optionalPersonName('Last name'),
   bio: validationRules.optionalText('Bio', 500),
+  dob: optionalDob,
   city: optionalLocation('City'),
   zone: optionalLocation('Zone'),
   country: optionalLocation('Country'),
@@ -43,6 +55,7 @@ export function accountEditInitialValues(initial: Partial<AccountEditValues>): A
     first_name: '',
     last_name: '',
     bio: '',
+    dob: '',
     city: '',
     zone: '',
     country: '',
@@ -55,5 +68,14 @@ export function accountEditInitialValues(initial: Partial<AccountEditValues>): A
 }
 
 export function toUpdateProfileInput(values: AccountEditValues) {
-  return accountEditSchema.cast(values, { stripUnknown: true });
+  const input = accountEditSchema.cast(values, { stripUnknown: true });
+  // Omit an empty dob so saving the form doesn't wipe an existing birth date.
+  if (!input.dob) delete (input as { dob?: string }).dob;
+  return input;
+}
+
+/** ISO/date string → the YYYY-MM-DD value the DatePicker is initialised with. */
+export function toDobInput(value?: string | null): string {
+  if (!value) return '';
+  return /^\d{4}-\d{2}-\d{2}$/.test(value.slice(0, 10)) ? value.slice(0, 10) : '';
 }

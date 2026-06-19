@@ -11,6 +11,13 @@ async function getConnection() {
   return WaConnectionModel.create({ key: KEY });
 }
 
+/** True when an OpenWA error is a 409 "session already exists" — a harmless
+ * no-op for us, since the gateway persists sessions across restarts. */
+function isAlreadyExists(error: unknown): boolean {
+  const msg = error instanceof Error ? error.message : '';
+  return msg.includes('(409)') || /already exists/i.test(msg);
+}
+
 export interface WaConfigInput {
   base_url?: string;
   api_key?: string;
@@ -52,10 +59,12 @@ export const whatsappService = {
   async connect() {
     const conn = await getConnection();
     const client = createWaClient(conn.base_url, conn.api_key);
+    // Idempotent: ensure the session exists, then start it. Creating a session
+    // that already exists returns 409 — that's the desired state, not an error.
     try {
-      await client.getSession(conn.session_id);
-    } catch {
       await client.createSession(conn.session_id);
+    } catch (error) {
+      if (!isAlreadyExists(error)) throw error;
     }
     await client.startSession(conn.session_id).catch(() => undefined);
     conn.status = 'CONNECTING';

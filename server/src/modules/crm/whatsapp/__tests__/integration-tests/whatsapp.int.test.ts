@@ -69,6 +69,22 @@ describe('whatsappService integration (bug WA-LeadGen P3)', () => {
     expect(calls.some((c) => c.includes('/sessions/duncit-crm/start'))).toBe(true);
   });
 
+  it('connect() tolerates an already-existing session (409) and still starts it', async () => {
+    await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
+    const calls: string[] = [];
+    setFetch((url, init) => {
+      calls.push(`${init.method} ${url}`);
+      if (init.method === 'POST' && url.endsWith('/sessions')) {
+        return { status: 409, body: { message: "Session with name 'duncit-crm' already exists" } };
+      }
+      return { status: 200, body: { id: 'duncit-crm' } };
+    });
+    const conn = await whatsappService.connect();
+    expect(conn.status).toBe('CONNECTING');
+    expect(conn.last_error).toBeNull();
+    expect(calls.some((c) => c.includes('/sessions/duncit-crm/start'))).toBe(true);
+  });
+
   it('refreshStatus() maps a READY session to CONNECTED and stores the phone', async () => {
     await whatsappService.saveConfig({ base_url: 'https://wa.test', api_key: 'k' });
     setFetch(() => ({ status: 200, body: { status: 'READY', phone: '628123', lastError: null } }));

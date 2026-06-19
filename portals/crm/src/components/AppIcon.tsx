@@ -16,6 +16,9 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PhoneInTalkIcon from '@mui/icons-material/PhoneInTalk';
 import EmailIcon from '@mui/icons-material/Email';
 import EventIcon from '@mui/icons-material/Event';
+import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import HandymanIcon from '@mui/icons-material/Handyman';
+import PersonSearchIcon from '@mui/icons-material/PersonSearch';
 
 const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   dashboard: DashboardIcon,
@@ -34,6 +37,9 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   phone: PhoneInTalkIcon,
   email: EmailIcon,
   calendar: EventIcon,
+  whatsapp: WhatsAppIcon,
+  tools: HandymanIcon,
+  'user-search': PersonSearchIcon,
 };
 
 /** Resolves a config icon name to an MUI icon, falling back to a neutral glyph. */

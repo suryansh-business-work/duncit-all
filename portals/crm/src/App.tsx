@@ -17,6 +17,8 @@ import EmailTemplatesPage from './pages/email-templates';
 import EmailTemplateEditorPage from './pages/email-templates/EditorPage';
 import RemindersPage from './pages/reminders';
 import ServicesOfferedPage from './pages/data/services-offered';
+import UserLeadsPage from './pages/user-leads/UserLeadsPage';
+import WhatsAppLeadGeneratorPage from './pages/tools/whatsapp/WhatsAppLeadGeneratorPage';
 import PublicSurveyPage from './pages/public-survey';
 import AmenitiesPage from './pages/data/venues/AmenitiesPage';
 import EventSuitabilityPage from './pages/data/venues/EventSuitabilityPage';
@@ -64,6 +66,8 @@ export default function App() {
       <Route path="/ecomm-leads/new" element={authed(<EcommLeadEditorPage />)} />
       <Route path="/ecomm-leads/:id/view" element={authed(<EcommLeadDetailPage />)} />
       <Route path="/ecomm-leads/:id" element={authed(<EcommLeadEditorPage />)} />
+      <Route path="/user-leads" element={authed(<UserLeadsPage />)} />
+      <Route path="/tools/whatsapp" element={authed(<WhatsAppLeadGeneratorPage />)} />
       <Route path="/call-prompts" element={authed(<CallPromptsPage />)} />
       <Route path="/email-templates" element={authed(<EmailTemplatesPage />)} />
       <Route path="/email-templates/:id" element={authed(<EmailTemplateEditorPage />)} />

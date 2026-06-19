@@ -1,29 +1,50 @@
-import { Alert, Box, Stack, Typography } from '@mui/material';
+import { useQuery } from '@apollo/client';
+import { Alert, Box, CircularProgress, Stack, Typography } from '@mui/material';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
+import { WA_CONNECTION, type WaConnection } from './whatsappQueries';
+import WhatsAppConnectCard from './WhatsAppConnectCard';
 
 /**
- * WhatsApp Lead Generator — connect a WhatsApp account via the OpenWA gateway
- * (portals/crm/open-wa-server, deployed at open-wa-server.duncit.com:2024), then
- * browse Communities / Groups / Users and import them as User Leads.
+ * WhatsApp Lead Generator — connect a WhatsApp account through the OpenWA gateway
+ * (open-wa-server.duncit.com), then browse Communities / Groups / Users and
+ * import them as User Leads.
  *
- * Phase 1 scaffold: this turn wires the nav + route. The connect flow (API key +
- * QR + session), the Communities/Groups/Users browser, Mongo caching and lead
- * import arrive in the following phases.
+ * P3 (this slice): the connect flow (API key + QR + session). The
+ * Communities/Groups/Users browser + import lands in the next phase, shown once a
+ * session is CONNECTED.
  */
 export default function WhatsAppLeadGeneratorPage() {
+  const { data, loading, error, refetch } = useQuery(WA_CONNECTION, {
+    fetchPolicy: 'cache-and-network',
+  });
+  const connection: WaConnection | undefined = data?.waConnection;
+
   return (
-    <Box sx={{ p: { xs: 2, md: 3 } }}>
+    <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 720, mx: 'auto' }}>
       <Stack direction="row" spacing={1.25} alignItems="center" sx={{ mb: 2 }}>
         <WhatsAppIcon sx={{ color: '#25D366' }} />
         <Typography variant="h5" fontWeight={800}>
           WhatsApp Lead Generator
         </Typography>
       </Stack>
-      <Alert severity="info" sx={{ borderRadius: 2 }}>
-        Connect a WhatsApp account through the OpenWA gateway to browse communities,
-        groups and contacts, then import them as User Leads. The connect flow
-        (API key + QR scan) and the data browser are being wired up next.
-      </Alert>
+
+      {loading && !connection ? (
+        <Stack alignItems="center" sx={{ py: 6 }}>
+          <CircularProgress />
+        </Stack>
+      ) : error ? (
+        <Alert severity="error">{error.message}</Alert>
+      ) : connection ? (
+        <Stack spacing={2}>
+          <WhatsAppConnectCard connection={connection} onChanged={() => void refetch()} />
+          {connection.status === 'CONNECTED' ? (
+            <Alert severity="info" sx={{ borderRadius: 2 }}>
+              Connected. The Communities / Groups / Users browser and lead import
+              are being wired up next.
+            </Alert>
+          ) : null}
+        </Stack>
+      ) : null}
     </Box>
   );
 }

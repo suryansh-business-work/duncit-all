@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 
@@ -15,6 +16,8 @@ interface HomeVibeChipsProps {
   categories: VibeCategory[];
   selectedId: string;
   onSelect: (id: string) => void;
+  /** Right-aligned slot in the header (e.g. the Filters button). */
+  action?: ReactNode;
 }
 
 const railSx = {
@@ -47,8 +50,9 @@ function VibeChip({ label, selected, onClick, small }: Readonly<VibeChipProps>) 
 
 /** "What's your vibe" — Categories in row 1; the selected category's
  * Subcategories appear in a second row directly below. */
-export default function HomeVibeChips({ categories, selectedId, onSelect }: Readonly<HomeVibeChipsProps>) {
-  if (categories.length === 0) return null;
+export default function HomeVibeChips({ categories, selectedId, onSelect, action }: Readonly<HomeVibeChipsProps>) {
+  const hasCategories = categories.length > 0;
+  if (!hasCategories && !action) return null;
 
   const activeCategory =
     categories.find((c) => c.id === selectedId || c.subs.some((s) => s.id === selectedId)) ?? null;
@@ -56,13 +60,17 @@ export default function HomeVibeChips({ categories, selectedId, onSelect }: Read
 
   return (
     <Stack spacing={1}>
-      <Stack direction="row" spacing={0.75} alignItems="center" sx={{ px: 0.25 }}>
-        <AutoAwesomeIcon color="primary" sx={{ fontSize: 18 }} />
-        <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.15 }}>
-          What's your vibe today?
-        </Typography>
+      <Stack direction="row" spacing={0.75} alignItems="center" justifyContent="space-between" sx={{ px: 0.25 }}>
+        <Stack direction="row" spacing={0.75} alignItems="center" sx={{ minWidth: 0 }}>
+          <AutoAwesomeIcon color="primary" sx={{ fontSize: 18 }} />
+          <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.15 }} noWrap>
+            What's your vibe today?
+          </Typography>
+        </Stack>
+        {action && <Box sx={{ flex: '0 0 auto' }}>{action}</Box>}
       </Stack>
 
+      {hasCategories && (
       <Box sx={railSx}>
         <Stack direction="row" spacing={1} sx={{ width: 'max-content', pb: 0.25 }}>
           <VibeChip label="All" selected={selectedId === ''} onClick={() => onSelect('')} />
@@ -79,8 +87,9 @@ export default function HomeVibeChips({ categories, selectedId, onSelect }: Read
           })}
         </Stack>
       </Box>
+      )}
 
-      {activeCategory && subs.length > 0 && (
+      {hasCategories && activeCategory && subs.length > 0 && (
         <Box sx={railSx}>
           <Stack direction="row" spacing={1} sx={{ width: 'max-content', pb: 0.25 }}>
             <VibeChip

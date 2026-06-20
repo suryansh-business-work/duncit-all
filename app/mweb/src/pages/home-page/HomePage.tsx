@@ -89,7 +89,27 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         followedPosts={followedPosts}
         followedUsers={followedUsers}
       />
-      <HomeVibeChips categories={vibeCategories} selectedId={categoryId} onSelect={setCategoryId} />
+      <HomeVibeChips
+        categories={vibeCategories}
+        selectedId={categoryId}
+        onSelect={setCategoryId}
+        action={
+          <FilterMenu
+            open={filtersOpen}
+            onOpenChange={setFiltersOpen}
+            categoryChips={categoryChips}
+            categoryId={categoryId}
+            setCategoryId={setCategoryId}
+            priceFilter={priceFilter}
+            setPriceFilter={setPriceFilter}
+            dateFilter={dateFilter}
+            setDateFilter={setDateFilter}
+            sortBy={sortBy}
+            setSortBy={setSortBy}
+            locationId={locationId}
+          />
+        }
+      />
       <Stack spacing={1.75}>
         <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 0.25 }}>
           <Stack
@@ -145,20 +165,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             >
               See all
             </Button>
-            <FilterMenu
-              open={filtersOpen}
-              onOpenChange={setFiltersOpen}
-              categoryChips={categoryChips}
-              categoryId={categoryId}
-              setCategoryId={setCategoryId}
-              priceFilter={priceFilter}
-              setPriceFilter={setPriceFilter}
-              dateFilter={dateFilter}
-              setDateFilter={setDateFilter}
-              sortBy={sortBy}
-              setSortBy={setSortBy}
-              locationId={locationId}
-            />
           </Stack>
         </Stack>
         <HomeFeaturedPods pods={featuredPods} />

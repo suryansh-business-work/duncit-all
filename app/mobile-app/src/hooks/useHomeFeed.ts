@@ -120,6 +120,9 @@ function deriveHome(
   );
   const categoryChips = allChips.filter((c) => podCategoryIds.has(c.id));
   const vibeCategories = deriveVibeCategories(allChips, podCategoryIds);
+  // Whether this city/scope has any pods at all (pre category/price/date filter)
+  // — drives disabling the Filter + Search controls when there's nothing to act on.
+  const hasContent = allPods.some(inScope);
 
   // Past-date pods leave the main feed and move to the Previous Pods section/page.
   const activePods = pods.filter((p) => !isPastPod(p));
@@ -144,6 +147,7 @@ function deriveHome(
   return {
     categoryChips,
     vibeCategories,
+    hasContent,
     clubsWithPods,
     featuredPods,
     activePods: activePods.slice().sort(byDateAsc),

@@ -19,6 +19,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { ClubSection } from '@/components/home/ClubSection';
 import { HappeningNearbyHeader } from '@/components/home/HappeningNearbyHeader';
 import { HomeFeaturedPods } from '@/components/home/HomeFeaturedPods';
+import { HomeFilterButton } from '@/components/home/HomeFilterButton';
 import { HomeFilterSheet } from '@/components/home/HomeFilterSheet';
 import { HomeVibeChips } from '@/components/home/HomeVibeChips';
 import { PreviousPodsRail } from '@/components/home/PreviousPodsRail';
@@ -37,6 +38,7 @@ export function HomeFeed() {
     hasData,
     categoryChips,
     vibeCategories,
+    hasContent,
     clubsWithPods,
     featuredPods,
     previousPods,
@@ -89,16 +91,18 @@ export function HomeFeed() {
               categories={vibeCategories}
               selectedId={selectedCategoryId}
               onSelect={setSelectedCategoryId}
+              action={
+                <HomeFilterButton
+                  count={filterCount}
+                  disabled={!hasContent}
+                  onPress={() => setFilterOpen(true)}
+                />
+              }
             />
           </Reveal>
           <YStack gap={16}>
             <Reveal index={2}>
-              <HappeningNearbyHeader
-                totalPods={totalPods}
-                onPress={openHappeningNearby}
-                onOpenFilter={() => setFilterOpen(true)}
-                filterCount={filterCount}
-              />
+              <HappeningNearbyHeader totalPods={totalPods} onPress={openHappeningNearby} />
             </Reveal>
             <Reveal index={3}>
               <HomeFeaturedPods

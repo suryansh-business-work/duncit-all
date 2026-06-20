@@ -25,6 +25,8 @@ interface Props {
   locationId?: string;
   open?: boolean;
   onOpenChange?: (open: boolean) => void;
+  /** Disabled when there are no clubs/pods to filter. */
+  disabled?: boolean;
 }
 
 const DEFAULT_SORT: SortBy = 'DATE_ASC';
@@ -63,9 +65,11 @@ export default function FilterMenu(props: Readonly<Props>) {
 
   return (
     <>
-      <Tooltip title="Filters">
+      <Tooltip title={props.disabled ? '' : 'Filters'}>
+        <span>
         <IconButton
           onClick={() => setOpen(true)}
+          disabled={props.disabled}
           aria-label={`Open filters${activeCount ? ` (${activeCount} active)` : ''}`}
           sx={{
             border: 1,
@@ -80,6 +84,7 @@ export default function FilterMenu(props: Readonly<Props>) {
             <FilterListIcon />
           </Badge>
         </IconButton>
+        </span>
       </Tooltip>
 
       <ResponsiveDialog

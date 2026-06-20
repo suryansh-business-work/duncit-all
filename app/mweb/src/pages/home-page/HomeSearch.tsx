@@ -10,9 +10,11 @@ import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 interface Props {
   locationId?: string;
   zoneName?: string;
+  /** Disabled when there are no clubs/pods to search. */
+  disabled?: boolean;
 }
 
-export default function HomeSearch({ locationId, zoneName }: Readonly<Props>) {
+export default function HomeSearch({ locationId, zoneName, disabled }: Readonly<Props>) {
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [open, setOpen] = useState(false);
@@ -27,7 +29,7 @@ export default function HomeSearch({ locationId, zoneName }: Readonly<Props>) {
         is_active: true,
       },
     },
-    skip: trimmed.length < 1,
+    skip: disabled || trimmed.length < 1,
     fetchPolicy: 'cache-and-network',
   });
 
@@ -40,7 +42,8 @@ export default function HomeSearch({ locationId, zoneName }: Readonly<Props>) {
         <TextField
           fullWidth
           size="small"
-          placeholder="Search pods…"
+          disabled={disabled}
+          placeholder={disabled ? 'No pods to search yet' : 'Search pods…'}
           value={search}
           onChange={(e) => {
             setSearch(e.target.value);

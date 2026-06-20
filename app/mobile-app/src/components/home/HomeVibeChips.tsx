@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
@@ -8,6 +9,8 @@ interface HomeVibeChipsProps {
   categories: VibeCategory[];
   selectedId: string;
   onSelect: (id: string) => void;
+  /** Right-aligned slot in the header (e.g. the Filters button). */
+  action?: ReactNode;
 }
 
 interface VibeChipProps {
@@ -48,9 +51,15 @@ function VibeChip({ testID, label, selected, small, onPress }: Readonly<VibeChip
 
 /** "What's your vibe today?" — Categories in row 1; the selected category's
  * Subcategories appear in a second row directly below (RN port of mWeb). */
-export function HomeVibeChips({ categories, selectedId, onSelect }: Readonly<HomeVibeChipsProps>) {
+export function HomeVibeChips({
+  categories,
+  selectedId,
+  onSelect,
+  action,
+}: Readonly<HomeVibeChipsProps>) {
   const { primary } = useThemeColors();
-  if (categories.length === 0) return null;
+  const hasCategories = categories.length > 0;
+  if (!hasCategories && !action) return null;
 
   const activeCategory =
     categories.find((c) => c.id === selectedId || c.subs.some((s) => s.id === selectedId)) ?? null;
@@ -58,38 +67,43 @@ export function HomeVibeChips({ categories, selectedId, onSelect }: Readonly<Hom
 
   return (
     <YStack gap={10}>
-      <XStack alignItems="center" gap={6} paddingHorizontal={16}>
-        <MaterialIcons name="auto-awesome" size={18} color={primary} />
-        <Text fontSize={16} fontWeight="900" color="$color">
-          What&apos;s your vibe today?
-        </Text>
+      <XStack alignItems="center" justifyContent="space-between" gap={6} paddingHorizontal={16}>
+        <XStack alignItems="center" gap={6} flex={1}>
+          <MaterialIcons name="auto-awesome" size={18} color={primary} />
+          <Text fontSize={16} fontWeight="900" color="$color" numberOfLines={1}>
+            What&apos;s your vibe today?
+          </Text>
+        </XStack>
+        {action}
       </XStack>
 
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
-      >
-        <VibeChip
-          testID="vibe-chip-all"
-          label="All"
-          selected={selectedId === ''}
-          onPress={() => onSelect('')}
-        />
-        {categories.map((category) => {
-          const selected =
-            category.id === selectedId || category.subs.some((s) => s.id === selectedId);
-          return (
-            <VibeChip
-              key={category.id}
-              testID={`vibe-chip-${category.id}`}
-              label={category.name}
-              selected={selected}
-              onPress={() => onSelect(category.id === selectedId ? '' : category.id)}
-            />
-          );
-        })}
-      </ScrollView>
+      {hasCategories ? (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
+        >
+          <VibeChip
+            testID="vibe-chip-all"
+            label="All"
+            selected={selectedId === ''}
+            onPress={() => onSelect('')}
+          />
+          {categories.map((category) => {
+            const selected =
+              category.id === selectedId || category.subs.some((s) => s.id === selectedId);
+            return (
+              <VibeChip
+                key={category.id}
+                testID={`vibe-chip-${category.id}`}
+                label={category.name}
+                selected={selected}
+                onPress={() => onSelect(category.id === selectedId ? '' : category.id)}
+              />
+            );
+          })}
+        </ScrollView>
+      ) : null}
 
       {activeCategory && subs.length > 0 && (
         <ScrollView

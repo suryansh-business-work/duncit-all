@@ -48,6 +48,7 @@ const base = {
   hasData: true,
   categoryChips: [{ id: 'cat1', name: 'Music', slug: 'm', level: 'CATEGORY', parent_id: null }],
   vibeCategories: [{ id: 'cat1', name: 'Music', subs: [] }],
+  hasContent: true,
   clubsWithPods: [{ club, pods: [pod] }],
   featuredPods: [pod],
   previousPods: [],
@@ -129,18 +130,24 @@ describe('HomeFeed', () => {
     expect(screen.getByTestId('home-skeleton')).toBeOnTheScreen();
   });
 
-  it('opens the filter sheet and applies a price filter (badge appears)', () => {
+  it('opens the filter sheet from the vibe header and applies a price filter (badge appears)', () => {
     renderWithProviders(<HomeFeed />);
-    fireEvent.press(screen.getByTestId('happening-nearby-filter'));
+    fireEvent.press(screen.getByTestId('home-filter-button'));
     expect(screen.getByTestId('home-filter-sheet')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('filter-price-PAID'));
-    // The active-filter count is now 1, so the header badge shows up.
-    expect(screen.getByTestId('happening-nearby-filter-badge')).toBeOnTheScreen();
+    // The active-filter count is now 1, so the filter button badge shows up.
+    expect(screen.getByTestId('home-filter-badge')).toBeOnTheScreen();
     // Resetting clears it again.
     fireEvent.press(screen.getByTestId('home-filter-reset'));
-    expect(screen.queryByTestId('happening-nearby-filter-badge')).toBeNull();
+    expect(screen.queryByTestId('home-filter-badge')).toBeNull();
     // Closing the sheet (Done/close) is wired back to the feed.
     fireEvent.press(screen.getByTestId('home-filter-close'));
+  });
+
+  it('renders the filter button disabled when there is no content', () => {
+    mockedFeed.mockReturnValue({ ...base, hasContent: false });
+    renderWithProviders(<HomeFeed />);
+    expect(screen.getByTestId('home-filter-button')).toBeOnTheScreen();
   });
 
   it('scrolls the feed to the top when the logo bumps the nonce', () => {

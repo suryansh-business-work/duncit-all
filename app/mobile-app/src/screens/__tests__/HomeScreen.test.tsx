@@ -19,6 +19,7 @@ jest.mock('@/hooks/useHomeFeed', () => ({
     hasData: true,
     categoryChips: [],
     vibeCategories: [],
+    hasContent: false,
     clubsWithPods: [],
     featuredPods: [],
     previousPods: [],

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Alert, Box, Button, Chip, Fab, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, Fab, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
@@ -68,6 +68,10 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
   if (loading && !data) return <HomeSkeleton />;
   if (error) return <Alert severity="error">{error.message}</Alert>;
 
+  // No clubs/pods in this city → nothing to filter or search.
+  const noContent = (data?.pods?.length ?? 0) === 0 && (data?.clubs?.length ?? 0) === 0;
+  const podsLabel = `${totalPods} ${totalPods === 1 ? 'pod' : 'pods'} nearby`;
+
   return (
     <Stack
       spacing={2.25}
@@ -107,6 +111,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
             sortBy={sortBy}
             setSortBy={setSortBy}
             locationId={locationId}
+            disabled={noContent}
           />
         }
       />
@@ -127,48 +132,39 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
           >
             <Box
               sx={{
-                width: 34,
-                height: 34,
-                borderRadius: 2.5,
+                width: 30,
+                height: 30,
+                borderRadius: 2,
                 display: 'grid',
                 placeItems: 'center',
                 color: 'primary.contrastText',
                 background: 'linear-gradient(135deg, #ff4f73 0%, #ff7a59 100%)',
-                boxShadow: '0 10px 22px rgba(255,79,115,0.28)',
+                boxShadow: '0 8px 18px rgba(255,79,115,0.24)',
                 flex: '0 0 auto',
               }}
             >
-              <WhatshotIcon sx={{ fontSize: 20 }} />
+              <WhatshotIcon sx={{ fontSize: 17 }} />
             </Box>
             <Box sx={{ minWidth: 0 }}>
-              <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.1 }} noWrap>
+              <Typography variant="subtitle1" sx={{ fontWeight: 900, lineHeight: 1.15 }} noWrap>
                 Happening nearby
               </Typography>
               <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                Live pods around your selected city
+                {podsLabel}
               </Typography>
             </Box>
           </Stack>
-          <Stack direction="row" spacing={1} alignItems="center" sx={{ flex: '0 0 auto' }}>
-            <Chip
-              label={`${totalPods} pods`}
-              color="primary"
-              variant="outlined"
-              onClick={() => navigate('/happening-nearby')}
-              sx={{ fontWeight: 900 }}
-            />
-            <Button
-              size="small"
-              endIcon={<ArrowForwardIcon />}
-              onClick={() => navigate('/happening-nearby')}
-              sx={{ fontWeight: 800, flex: '0 0 auto' }}
-            >
-              See all
-            </Button>
-          </Stack>
+          <Button
+            size="small"
+            endIcon={<ArrowForwardIcon />}
+            onClick={() => navigate('/happening-nearby')}
+            sx={{ fontWeight: 800, flex: '0 0 auto' }}
+          >
+            See all
+          </Button>
         </Stack>
         <HomeFeaturedPods pods={featuredPods} />
-        <HomeSearch locationId={locationId} zoneName={zoneName} />
+        <HomeSearch locationId={locationId} zoneName={zoneName} disabled={noContent} />
 
         {clubs.length === 0 ? (
           <Alert severity="info">

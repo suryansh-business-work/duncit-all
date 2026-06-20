@@ -48,10 +48,14 @@ export default defineConfig({
     ],
   },
   optimizeDeps: {
+    // Pre-bundle the shared runtime deps so a linked-workspace edit (e.g.
+    // @duncit/user-context) re-optimizes consistently and lazy route chunks
+    // never end up holding a stale/null React reference ("useContext of null").
     include: [
       'react',
       'react-dom',
       'react-router-dom',
+      '@apollo/client',
       '@emotion/react',
       '@emotion/styled',
       '@mui/material',

@@ -14,6 +14,8 @@ import {
   ClubForm,
   blankForm,
   linesToMedia,
+  cleanBullets,
+  cleanFaqs,
 } from './queries';
 import ClubFormDialog from './ClubFormDialog';
 import ClubsTable from './ClubsTable';
@@ -62,6 +64,11 @@ export default function ClubsPage() {
       community_link: c.club_whats_app_community_link ?? '',
       announcement_link: c.club_whats_app_announcement_link ?? '',
       group_link: c.club_whats_app_group_link ?? '',
+      who_we_are: c.who_we_are ?? [],
+      what_we_do: c.what_we_do ?? [],
+      perks: c.perks ?? [],
+      values: c.values ?? [],
+      faqs: (c.faqs ?? []).map((f: any) => ({ question: f.question, answer: f.answer })),
       is_active: c.is_active,
     });
     setOpError(null);
@@ -89,6 +96,11 @@ export default function ClubsPage() {
         club_whats_app_community_link: form.community_link,
         club_whats_app_announcement_link: form.announcement_link,
         club_whats_app_group_link: form.group_link,
+        who_we_are: cleanBullets(form.who_we_are),
+        what_we_do: cleanBullets(form.what_we_do),
+        perks: cleanBullets(form.perks),
+        values: cleanBullets(form.values),
+        faqs: cleanFaqs(form.faqs),
         meetup_venues_id: form.meetup_venues_id,
         category_id: form.category_id || null,
         super_category_id: form.super_category_id || null,

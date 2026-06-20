@@ -178,6 +178,19 @@ export const ClubDetailsDocument = gql(`
         url
         type
       }
+      who_we_are
+      what_we_do
+      perks
+      values
+      faqs {
+        question
+        answer
+      }
+      hosts {
+        id
+        name
+        avatar_url
+      }
       club_whats_app_community_link
       club_whats_app_group_link
       meetup_venues_id
@@ -188,6 +201,7 @@ export const ClubDetailsDocument = gql(`
       pod_id
       pod_title
       pod_date_time
+      pod_end_date_time
       pod_type
       pod_amount
       pod_attendees

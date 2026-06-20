@@ -31,6 +31,12 @@ const club = {
   club_whats_app_group_link: null,
   meetup_venues_id: [],
   category_id: null,
+  who_we_are: [],
+  what_we_do: [],
+  perks: [],
+  values: [],
+  faqs: [],
+  hosts: [],
 };
 
 const pod = {

@@ -15,6 +15,16 @@ export const clubTypeDefs = /* GraphQL */ `
     avatar_url: String
   }
 
+  type ClubFaq {
+    question: String!
+    answer: String!
+  }
+
+  input ClubFaqInput {
+    question: String!
+    answer: String!
+  }
+
   type Club {
     id: ID!
     club_id: String!
@@ -25,6 +35,12 @@ export const clubTypeDefs = /* GraphQL */ `
     club_whats_app_announcement_link: String
     club_whats_app_group_link: String
     club_moments: [ClubMedia!]!
+    "Admin-authored Club Detail page content, each rendered as bullets."
+    who_we_are: [String!]!
+    what_we_do: [String!]!
+    perks: [String!]!
+    values: [String!]!
+    faqs: [ClubFaq!]!
     meetup_venues_id: [String!]!
     "Hosts explicitly linked by an admin (Bug 5)."
     host_ids: [ID!]!
@@ -55,6 +71,11 @@ export const clubTypeDefs = /* GraphQL */ `
     club_whats_app_announcement_link: String
     club_whats_app_group_link: String
     club_moments: [ClubMediaInput!]
+    who_we_are: [String!]
+    what_we_do: [String!]
+    perks: [String!]
+    values: [String!]
+    faqs: [ClubFaqInput!]
     meetup_venues_id: [String!]
     host_ids: [ID!]
     category_id: ID
@@ -70,6 +91,11 @@ export const clubTypeDefs = /* GraphQL */ `
     club_whats_app_announcement_link: String
     club_whats_app_group_link: String
     club_moments: [ClubMediaInput!]
+    who_we_are: [String!]
+    what_we_do: [String!]
+    perks: [String!]
+    values: [String!]
+    faqs: [ClubFaqInput!]
     meetup_venues_id: [String!]
     host_ids: [ID!]
     category_id: ID

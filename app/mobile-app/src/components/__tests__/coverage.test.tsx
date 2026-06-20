@@ -77,16 +77,26 @@ describe('ExploreMediaCarousel + ExplorePodOverlay', () => {
   });
 });
 
+const EMPTY_CONTENT = {
+  who_we_are: [],
+  what_we_do: [],
+  perks: [],
+  values: [],
+  faqs: [],
+  hosts: [],
+};
+
 describe('ClubBody', () => {
-  it('renders chat + moments + pods and opens chat', () => {
+  it('renders chat + pods (default Pods Schedule tab) and opens chat + a pod', () => {
     const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
     const club = {
       club_name: 'Runners',
       club_description: 'We run',
-      club_moments: [{ url: 'https://img/m.jpg', type: 'IMAGE' }],
+      club_moments: [],
       club_whats_app_group_link: 'https://wa.me/1',
       club_whats_app_community_link: null,
       meetup_venues_id: ['v1'],
+      ...EMPTY_CONTENT,
     } as never;
     const pods = [
       {
@@ -94,6 +104,7 @@ describe('ClubBody', () => {
         pod_id: 'pod-1',
         pod_title: 'Run',
         pod_date_time: new Date(Date.now() + 5 * 24 * 60 * 60 * 1000).toISOString(),
+        pod_end_date_time: null,
         pod_type: 'NATIVE_FREE',
         pod_amount: 0,
         no_of_spots: 5,
@@ -111,7 +122,6 @@ describe('ClubBody', () => {
         club={club}
         pods={pods}
         members={[{ user_id: 'u1', full_name: 'Asha', profile_photo: null }]}
-        cardWidth={300}
         following={false}
         followBusy={false}
         onToggleFollow={jest.fn()}
@@ -119,7 +129,7 @@ describe('ClubBody', () => {
         onOpenMember={jest.fn()}
       />,
     );
-    expect(screen.getByText('Moments')).toBeOnTheScreen();
+    expect(screen.getByTestId('club-pods-schedule')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('club-chat'));
     expect(openSpy).toHaveBeenCalledWith('https://wa.me/1');
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));
@@ -127,7 +137,7 @@ describe('ClubBody', () => {
     openSpy.mockRestore();
   });
 
-  it('hides past pods from the upcoming list (BUG-4)', () => {
+  it('shows past pods under the Previous rail of Pods Schedule', () => {
     const club = {
       club_name: 'Runners',
       club_description: '',
@@ -135,6 +145,7 @@ describe('ClubBody', () => {
       club_whats_app_group_link: null,
       club_whats_app_community_link: null,
       meetup_venues_id: [],
+      ...EMPTY_CONTENT,
     } as never;
     const pods = [
       {
@@ -142,6 +153,7 @@ describe('ClubBody', () => {
         pod_id: 'pod-2',
         pod_title: 'Old Run',
         pod_date_time: '2026-06-02T06:30:00.000Z',
+        pod_end_date_time: '2026-06-02T08:30:00.000Z',
         pod_type: 'NATIVE_FREE',
         pod_amount: 0,
         no_of_spots: 5,
@@ -158,7 +170,6 @@ describe('ClubBody', () => {
         club={club}
         pods={pods}
         members={[]}
-        cardWidth={300}
         following={false}
         followBusy={false}
         onToggleFollow={jest.fn()}
@@ -166,9 +177,8 @@ describe('ClubBody', () => {
         onOpenMember={jest.fn()}
       />,
     );
-    // The past pod is filtered out → the empty "no active pods" copy shows.
-    expect(screen.getByTestId('club-no-pods')).toBeOnTheScreen();
-    expect(screen.queryByTestId('pod-card-pod-2')).toBeNull();
+    expect(screen.getByText('Previous')).toBeOnTheScreen();
+    expect(screen.getByTestId('pod-card-pod-2')).toBeOnTheScreen();
   });
 });
 
@@ -253,6 +263,7 @@ describe('empty / minimal branches', () => {
       club_whats_app_group_link: null,
       club_whats_app_community_link: null,
       meetup_venues_id: [],
+      ...EMPTY_CONTENT,
     } as never;
     renderWithProviders(
       <ClubBody
@@ -260,7 +271,6 @@ describe('empty / minimal branches', () => {
         pods={[] as never}
         members={[]}
         onOpenMember={jest.fn()}
-        cardWidth={300}
         following={false}
         followBusy={false}
         onToggleFollow={jest.fn()}

@@ -1,13 +1,14 @@
-import { Image, Linking } from 'react-native';
+import { useMemo } from 'react';
+import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { AttendeesSection, buildAttendeePeople } from '@/components/details/PodSections';
+import { ClubSegments } from '@/components/details/club/ClubSegments';
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { FollowPillButton } from '@/components/FollowPillButton';
-import { PodCard } from '@/components/home/PodCard';
-import { isPodActive } from '@/utils/pod-format';
+import { pickPodMoments } from '@/utils/club-detail';
 
 function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
   return (
@@ -22,13 +23,12 @@ function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
   );
 }
 
-/** The club-details body — summary, stats, WhatsApp chat, moments and the
- * club's upcoming pods (each opens the pod). */
+/** The club-details body — summary, stats, WhatsApp chat, members and the
+ * tabbed segments (pods schedule, moments, content sections, hosts). */
 export function ClubBody({
   club,
   pods,
   members,
-  cardWidth,
   following,
   followBusy,
   onToggleFollow,
@@ -38,7 +38,6 @@ export function ClubBody({
   club: ClubDetail;
   pods: ClubPod[];
   members: PodPerson[];
-  cardWidth: number;
   following: boolean;
   followBusy: boolean;
   onToggleFollow: () => void;
@@ -46,10 +45,8 @@ export function ClubBody({
   onOpenMember: (userId: string) => void;
 }>) {
   const { onPrimary } = useThemeColors();
-  const moments = club.club_moments.filter((m) => !!m.url);
+  const moments = useMemo(() => pickPodMoments(pods, 12), [pods]);
   const chat = club.club_whats_app_group_link || club.club_whats_app_community_link;
-  // Past pods must not appear under "Upcoming pods" (BUG-4).
-  const upcomingPods = pods.filter((pod) => isPodActive(pod.pod_date_time));
 
   return (
     <YStack padding={16} gap={18}>
@@ -115,41 +112,13 @@ export function ClubBody({
           </Text>
         </XStack>
       ) : null}
-      {moments.length > 0 ? (
-        <YStack gap={8}>
-          <Text fontSize={16} fontWeight="900" color="$color">
-            Moments
-          </Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={{ gap: 10 }}
-          >
-            {moments.map((moment, i) => (
-              <Image
-                key={`${i}-${moment.url}`}
-                source={{ uri: moment.url }}
-                style={{ width: 120, height: 150, borderRadius: 14 }}
-                resizeMode="cover"
-              />
-            ))}
-          </ScrollView>
-        </YStack>
-      ) : null}
-      <YStack gap={12}>
-        <Text fontSize={16} fontWeight="900" color="$color">
-          Upcoming pods
-        </Text>
-        {upcomingPods.length === 0 ? (
-          <Text testID="club-no-pods" fontSize={13} color="$muted">
-            No active pods in this club yet.
-          </Text>
-        ) : (
-          upcomingPods.map((pod) => (
-            <PodCard key={pod.id} pod={pod} width={cardWidth} onPress={() => onOpenPod(pod)} />
-          ))
-        )}
-      </YStack>
+      <ClubSegments
+        club={club}
+        pods={pods}
+        moments={moments}
+        onOpenPod={onOpenPod}
+        onOpenHost={onOpenMember}
+      />
     </YStack>
   );
 }

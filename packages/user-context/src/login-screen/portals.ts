@@ -25,6 +25,7 @@ export const PORTALS: PortalEntry[] = [
   { key: 'crm', name: 'CRM', description: 'Leads, contacts and customer conversations.', port: 2007, subdomain: 'crm', category: 'Growth', image: PEXELS('7658434') },
   { key: 'ads', name: 'Ads', description: 'Advertising creatives and campaign delivery.', port: 2006, subdomain: 'ads', category: 'Growth', image: PEXELS('3183153') },
   { key: 'marketing', name: 'Marketing', description: 'Campaigns, notifications and audiences.', port: 2015, subdomain: 'marketing', category: 'Growth', image: PEXELS('7693745') },
+  { key: 'challenge', name: 'Challenges', description: 'Create and manage challenges across categories.', port: 2026, subdomain: 'challenge', category: 'Growth', image: PEXELS('863988') },
   { key: 'website-app', name: 'Website', description: 'Site content, careers, newsroom and blog.', port: 2011, subdomain: 'website', category: 'Content & AI', image: PEXELS('8524940') },
   { key: 'legal', name: 'Legal', description: 'Policies, agreements and compliance records.', port: 2012, subdomain: 'legal', category: 'Content & AI', image: PEXELS('7841459') },
   { key: 'ai', name: 'AI', description: 'Models, prompts and AI tooling.', port: 2013, subdomain: 'ai', category: 'Content & AI', image: PEXELS('5473956') },

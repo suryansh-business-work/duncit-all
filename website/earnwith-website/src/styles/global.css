@@ -1,0 +1,36 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #ff4f73;
+  --color-primary-dark: #e23a5e;
+  --color-primary-light: #ffe1e8;
+  --color-accent: #ff7a59;
+  --color-ink: #16131a;
+  --color-ink-soft: #4b4651;
+  --color-cream: #fff7f4;
+
+  --font-head: "Plus Jakarta Sans", system-ui, sans-serif;
+  --font-body: "Manrope", system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-body);
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-cream);
+    color: var(--color-ink);
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-head);
+    font-weight: 800;
+    letter-spacing: -0.02em;
+    line-height: 1.08;
+  }
+  a, button, [role="button"] {
+    cursor: pointer;
+  }
+}

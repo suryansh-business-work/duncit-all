@@ -539,6 +539,46 @@ server {
     }
 }
 
+# --- Earn with Duncit: earnwith.duncit.com (Astro marketing site on :2025) ----
+server {
+    listen 80;
+    listen [::]:80;
+    server_name earnwith.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2025;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
+# --- Challenges console: challenge.duncit.com (SPA on :2026) ------------------
+server {
+    listen 80;
+    listen [::]:80;
+    server_name challenge.duncit.com;
+    client_max_body_size 25m;
+
+    location / {
+        proxy_pass         http://127.0.0.1:2026;
+        proxy_http_version 1.1;
+        proxy_set_header   Host              $host;
+        proxy_set_header   X-Real-IP         $remote_addr;
+        proxy_set_header   X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header   X-Forwarded-Proto $scheme;
+        proxy_set_header   Upgrade           $http_upgrade;
+        proxy_set_header   Connection        "upgrade";
+        proxy_read_timeout 90s;
+    }
+}
+
 # --- OpenWA gateway: open-wa-server.duncit.com (NestJS + WhatsApp on :2024) ---
 # The CRM "WhatsApp Lead Generator" gateway (portals/crm/open-wa-server). Serves
 # the bundled dashboard + REST API + live QR/session WebSocket. Larger body for

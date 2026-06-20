@@ -378,6 +378,34 @@ export const whatsappData = {
     return { total_leads: leads, total_communities: communities, total_groups: groups, total_contacts: contacts };
   },
 
+  /** Edit a single lead's name and/or phone (the phone is re-validated). */
+  async updateLead(id: string, input: { name?: string; phone?: string }) {
+    const set: Record<string, unknown> = {};
+    if (input.name !== undefined) set.name = input.name;
+    if (input.phone !== undefined) {
+      const { valid, phone } = normalizePhone(input.phone);
+      if (!valid) throw new Error('Enter a valid phone number (8–15 digits, with country code).');
+      set.phone = phone;
+    }
+    if (Object.keys(set).length) {
+      await WaUserLeadModel.updateOne({ _id: id, connection_key: KEY }, { $set: set });
+    }
+    return WaUserLeadModel.findOne({ _id: id, connection_key: KEY }).lean();
+  },
+
+  /** Delete a single lead. Returns true when a document was removed. */
+  async deleteLead(id: string) {
+    const res = await WaUserLeadModel.deleteOne({ _id: id, connection_key: KEY });
+    return (res.deletedCount ?? 0) > 0;
+  },
+
+  /** Bulk-delete leads by id. Returns the number of documents removed. */
+  async deleteLeads(ids: string[]) {
+    if (!ids.length) return 0;
+    const res = await WaUserLeadModel.deleteMany({ _id: { $in: ids }, connection_key: KEY });
+    return res.deletedCount ?? 0;
+  },
+
   /** Manually create (or update by phone) a single user lead. Rejects junk. */
   async createLead(input: { phone: string; name?: string; source_account?: string }) {
     const { valid, phone } = normalizePhone(input.phone);

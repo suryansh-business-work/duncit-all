@@ -71,7 +71,11 @@ export const appConfig: AppConfig = {
         { label: 'Venue Leads', to: '/venue-leads', icon: 'location' },
         { label: 'Host Leads', to: '/host-leads', icon: 'groups' },
         { label: 'Ecomm Leads', to: '/ecomm-leads', icon: 'inventory' },
-        { label: 'User Leads', to: '/user-leads', icon: 'user-search' },
+        {
+          label: 'User Leads',
+          icon: 'user-search',
+          children: [{ label: 'WhatsApp Leads', to: '/user-leads', icon: 'whatsapp' }],
+        },
       ],
     },
     {

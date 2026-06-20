@@ -19,21 +19,22 @@ import SearchIcon from '@mui/icons-material/Search';
 import AddIcon from '@mui/icons-material/Add';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
 import DownloadIcon from '@mui/icons-material/Download';
-import BoltIcon from '@mui/icons-material/Bolt';
+import DeleteIcon from '@mui/icons-material/Delete';
 import { WA_EXPORT_USER_LEADS, WA_IMPORT_USER_LEADS, WA_USER_LEADS } from '../tools/whatsapp/whatsappQueries';
-import { useExtraction } from '../tools/whatsapp/extraction';
 import CreateLeadDialog from './CreateLeadDialog';
+import EditLeadDialog from './EditLeadDialog';
+import DeleteLeadsDialog from './DeleteLeadsDialog';
 import LeadStatsBar from './LeadStatsBar';
-import LeadsTable from './LeadsTable';
+import LeadsTable, { type LeadRow } from './LeadsTable';
 import CleanDataButton from './CleanDataButton';
+import { useLeadSelection } from './useLeadSelection';
 import { fileToBase64, downloadBase64Xlsx } from './leadFiles';
 
-/** User Leads — dashboard + server-side searchable/sortable/paginated table. */
+/** WhatsApp Leads — dashboard + server-side searchable/sortable/paginated table. */
 export default function UserLeadsPage() {
   const navigate = useNavigate();
   const client = useApolloClient();
   const fileRef = useRef<HTMLInputElement>(null);
-  const { start: startExtraction, setOnDone } = useExtraction();
 
   const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
@@ -42,6 +43,8 @@ export default function UserLeadsPage() {
   const [sortBy, setSortBy] = useState('imported_at');
   const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
   const [createOpen, setCreateOpen] = useState(false);
+  const [editLead, setEditLead] = useState<LeadRow | null>(null);
+  const [deleteIds, setDeleteIds] = useState<string[]>([]);
   const [toast, setToast] = useState('');
   const [reloadKey, setReloadKey] = useState(0);
 
@@ -64,19 +67,15 @@ export default function UserLeadsPage() {
     void refetch();
     setReloadKey((k) => k + 1);
   };
-  // Refresh the table + counters when a background extraction finishes.
-  useEffect(() => {
-    setOnDone(() => bumpAll());
-    return () => setOnDone(undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
-  const leads = data?.waUserLeads?.items ?? [];
+  const leads: LeadRow[] = data?.waUserLeads?.items ?? [];
   const total = data?.waUserLeads?.total ?? 0;
+  const { selected, toggleOne, toggleAll, clear } = useLeadSelection(leads);
 
   const onSort = (field: string) => {
-    if (sortBy === field) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
-    else {
+    if (sortBy === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
       setSortBy(field);
       setSortDir('asc');
     }
@@ -96,7 +95,15 @@ export default function UserLeadsPage() {
       variables: { search: search || null },
       fetchPolicy: 'network-only',
     });
-    if (res.data?.waExportUserLeads) downloadBase64Xlsx(res.data.waExportUserLeads, 'user-leads.xlsx');
+    if (res.data?.waExportUserLeads) {
+      downloadBase64Xlsx(res.data.waExportUserLeads, 'whatsapp-leads.xlsx');
+    }
+  };
+
+  const onDeleted = (count: number) => {
+    setToast(`Deleted ${count} lead${count === 1 ? '' : 's'}.`);
+    clear();
+    bumpAll();
   };
 
   return (
@@ -104,12 +111,14 @@ export default function UserLeadsPage() {
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }} flexWrap="wrap" gap={1}>
         <Stack direction="row" spacing={1.25} alignItems="center">
           <PersonSearchIcon color="primary" />
-          <Typography variant="h5" fontWeight={800}>User Leads</Typography>
+          <Typography variant="h5" fontWeight={800}>WhatsApp Leads</Typography>
         </Stack>
         <Stack direction="row" spacing={1} flexWrap="wrap">
-          <Button size="small" variant="contained" startIcon={<BoltIcon />} onClick={() => void startExtraction()}>
-            Extract
-          </Button>
+          {selected.size > 0 && (
+            <Button size="small" color="error" variant="contained" startIcon={<DeleteIcon />} onClick={() => setDeleteIds([...selected])}>
+              Delete ({selected.size})
+            </Button>
+          )}
           <Button size="small" variant="outlined" startIcon={<AddIcon />} onClick={() => setCreateOpen(true)}>New</Button>
           <Button size="small" startIcon={<UploadFileIcon />} disabled={importState.loading} onClick={() => fileRef.current?.click()}>Import</Button>
           <Button size="small" startIcon={<DownloadIcon />} onClick={onExport}>Export</Button>
@@ -146,11 +155,22 @@ export default function UserLeadsPage() {
         <Stack alignItems="center" sx={{ py: 6 }}><CircularProgress /></Stack>
       ) : total === 0 ? (
         <Alert severity="info" sx={{ borderRadius: 2 }}>
-          No user leads yet. “Extract” from a connected WhatsApp account, add one with “New”, or “Import” an Excel/CSV.
+          No WhatsApp leads yet. Add one with “New”, or “Import” an Excel/CSV.
         </Alert>
       ) : (
         <Paper variant="outlined" sx={{ borderRadius: 2 }}>
-          <LeadsTable rows={leads} sortBy={sortBy} sortDir={sortDir} onSort={onSort} onRowClick={(id) => navigate(`/user-leads/${id}`)} />
+          <LeadsTable
+            rows={leads}
+            sortBy={sortBy}
+            sortDir={sortDir}
+            onSort={onSort}
+            onRowClick={(id) => navigate(`/user-leads/${id}`)}
+            selected={selected}
+            onToggle={toggleOne}
+            onToggleAll={toggleAll}
+            onEdit={setEditLead}
+            onDelete={(lead) => setDeleteIds([lead.id])}
+          />
           <TablePagination
             component="div"
             count={total}
@@ -158,7 +178,7 @@ export default function UserLeadsPage() {
             onPageChange={(_e, p) => setPage(p)}
             rowsPerPage={pageSize}
             onRowsPerPageChange={(e) => {
-              setPageSize(parseInt(e.target.value, 10));
+              setPageSize(Number.parseInt(e.target.value, 10));
               setPage(0);
             }}
             rowsPerPageOptions={[10, 25, 50, 100]}
@@ -167,6 +187,8 @@ export default function UserLeadsPage() {
       )}
 
       <CreateLeadDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={bumpAll} />
+      <EditLeadDialog lead={editLead} onClose={() => setEditLead(null)} onSaved={bumpAll} />
+      <DeleteLeadsDialog ids={deleteIds} onClose={() => setDeleteIds([])} onDeleted={onDeleted} />
       <Snackbar open={!!toast} autoHideDuration={5000} onClose={() => setToast('')} message={toast} />
     </Box>
   );

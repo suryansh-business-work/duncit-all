@@ -54,6 +54,7 @@ jobs:
           - { name: tech, dir: portals/tech }
           - { name: website-app, dir: portals/website-app }
           - { name: partners-app, dir: portals/partners-app }
+          - { name: challenge-portal, dir: portals/challenge-portal }
 
     steps:
       - name: Checkout

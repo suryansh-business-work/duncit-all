@@ -25,6 +25,8 @@ COPY portals/onboarding/package.json ./portals/onboarding/
 COPY portals/hr/package.json ./portals/hr/
 COPY portals/employee/package.json ./portals/employee/
 COPY website/status-website/package.json ./website/status-website/
+COPY portals/challenge-portal/package.json ./portals/challenge-portal/
+COPY website/earnwith-website/package.json ./website/earnwith-website/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

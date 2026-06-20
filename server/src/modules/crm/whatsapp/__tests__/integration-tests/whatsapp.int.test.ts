@@ -283,6 +283,32 @@ describe('whatsappData sync + cache + leads (WA-LeadGen P4/P5)', () => {
     expect(res.remaining).toBe(1);
   });
 
+  it('updateLead() edits the name and re-validates a new phone', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    const { WaUserLeadModel } = await import('../../whatsapp.model');
+    const created = await WaUserLeadModel.create({ connection_key: 'default', phone: '919811112222', name: 'Old' });
+    const updated = await whatsappData.updateLead(String(created._id), { name: 'New Name', phone: '+91 98000-00001' });
+    expect(updated?.name).toBe('New Name');
+    expect(updated?.phone).toBe('919800000001');
+    await expect(
+      whatsappData.updateLead(String(created._id), { phone: '123' })
+    ).rejects.toThrow(/phone/i);
+  });
+
+  it('deleteLead() removes one and deleteLeads() bulk-removes by id', async () => {
+    const { whatsappData } = await import('../../whatsapp.data');
+    const { WaUserLeadModel } = await import('../../whatsapp.model');
+    const [a, b, c] = await WaUserLeadModel.create([
+      { connection_key: 'default', phone: '919800000001' },
+      { connection_key: 'default', phone: '919800000002' },
+      { connection_key: 'default', phone: '919800000003' },
+    ]);
+    expect(await whatsappData.deleteLead(String(a._id))).toBe(true);
+    expect(await whatsappData.deleteLeads([String(b._id), String(c._id)])).toBe(2);
+    expect(await whatsappData.deleteLeads([])).toBe(0);
+    expect((await whatsappData.listUserLeads()).total).toBe(0);
+  });
+
   it('cancelExtraction() marks the running job CANCELLED', async () => {
     const { whatsappData } = await import('../../whatsapp.data');
     const { WaExtractionJobModel } = await import('../../whatsapp.model');

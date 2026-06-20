@@ -21,6 +21,7 @@ export const ROLES = [
   'HR_MANAGER',
   'EMPLOYEE',
   'ONBOARDING_MANAGER',
+  'CHALLENGE_MANAGER',
 ] as const;
 
 export type UserRole = (typeof ROLES)[number];
@@ -61,4 +62,5 @@ export const ROLE_CATALOG: RoleDefinition[] = [
   { key: 'HR_MANAGER', name: 'HR Manager', description: 'HR console — hr.duncit.com.' },
   { key: 'EMPLOYEE', name: 'Employee', description: 'Employee self-service console.' },
   { key: 'ONBOARDING_MANAGER', name: 'Onboarding Manager', description: 'Partner/host onboarding console.' },
+  { key: 'CHALLENGE_MANAGER', name: 'Challenge Manager', description: 'Challenges console — challenge.duncit.com.' },
 ];

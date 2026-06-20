@@ -1,0 +1,34 @@
+---
+import { siteConfig } from '../config/site-config';
+const { paths } = siteConfig;
+---
+
+<section id="paths" class="mx-auto max-w-6xl scroll-mt-20 px-5 py-16">
+  <div class="mx-auto max-w-2xl text-center">
+    <h2 class="text-3xl text-ink sm:text-4xl">Pick a way to start earning</h2>
+    <p class="mt-4 text-ink-soft">Choose a path and we’ll take you into mWeb to get set up.</p>
+  </div>
+  <div class="mt-12 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+    {
+      paths.map((path) => (
+        <article class="flex flex-col rounded-3xl border border-black/5 bg-white p-7 shadow-sm transition hover:-translate-y-1 hover:shadow-md">
+          <span
+            class="flex h-14 w-14 items-center justify-center rounded-2xl text-white"
+            style="background: linear-gradient(135deg, var(--color-primary) 0%, var(--color-accent) 100%)"
+          >
+            <i class={`fa-solid ${path.icon} text-xl`} aria-hidden="true" />
+          </span>
+          <h3 class="mt-5 text-xl text-ink">{path.title}</h3>
+          <p class="mt-2 grow text-sm leading-relaxed text-ink-soft">{path.text}</p>
+          <a
+            href={path.href}
+            class="mt-6 inline-flex items-center gap-2 self-start rounded-full bg-primary-light px-5 py-2 text-sm font-bold text-primary-dark transition hover:bg-primary hover:text-white"
+          >
+            {path.cta}
+            <i class="fa-solid fa-arrow-right" aria-hidden="true" />
+          </a>
+        </article>
+      ))
+    }
+  </div>
+</section>

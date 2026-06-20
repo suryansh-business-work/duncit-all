@@ -19,5 +19,7 @@ packages:
   - portals/onboarding
   - portals/hr
   - portals/employee
+  - portals/challenge-portal
   - website/status-website
+  - website/earnwith-website
   - packages/*

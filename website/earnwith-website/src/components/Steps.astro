@@ -1,0 +1,28 @@
+---
+import { siteConfig } from '../config/site-config';
+const { steps } = siteConfig;
+---
+
+<section class="mx-auto max-w-6xl px-5 py-16">
+  <div class="rounded-3xl bg-white px-6 py-12 shadow-sm sm:px-12">
+    <div class="mx-auto max-w-2xl text-center">
+      <h2 class="text-3xl text-ink sm:text-4xl">How it works</h2>
+      <p class="mt-4 text-ink-soft">From idea to income in three simple steps.</p>
+    </div>
+    <ol class="mt-10 grid gap-8 sm:grid-cols-3">
+      {
+        steps.map((step, i) => (
+          <li class="text-center">
+            <span class="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-primary-light text-primary-dark">
+              <i class={`fa-solid ${step.icon} text-lg`} aria-hidden="true" />
+            </span>
+            <h3 class="mt-4 text-lg text-ink">
+              <span class="text-primary">{i + 1}.</span> {step.title}
+            </h3>
+            <p class="mt-2 text-sm leading-relaxed text-ink-soft">{step.text}</p>
+          </li>
+        ))
+      }
+    </ol>
+  </div>
+</section>

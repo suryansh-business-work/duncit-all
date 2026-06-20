@@ -67,6 +67,11 @@ export const consoles: Service[] = [
   },
   { name: 'AI', url: 'https://ai.duncit.com/', description: 'AI tooling' },
   {
+    name: 'Challenges',
+    url: 'https://challenge.duncit.com/',
+    description: 'Challenge management',
+  },
+  {
     name: 'Products',
     url: 'https://products.duncit.com/',
     description: 'Catalog & inventory',
@@ -111,6 +116,11 @@ export const platform: Service[] = [
     url: 'https://sonarqube.duncit.com/',
     description: 'Code quality & security analysis',
   },
+  {
+    name: 'OpenWA Server',
+    url: 'https://open-wa-server.duncit.com/',
+    description: 'CRM WhatsApp lead gateway',
+  },
 ];
 
 export const websites: Service[] = [
@@ -133,6 +143,11 @@ export const websites: Service[] = [
     name: 'Native Web',
     url: 'https://native.duncit.com/',
     description: 'Mobile web app',
+  },
+  {
+    name: 'Earn with Duncit',
+    url: 'https://earnwith.duncit.com/',
+    description: 'Earn with Duncit marketing site',
   },
 ];
 

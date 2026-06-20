@@ -173,6 +173,23 @@ export const waLeadsResolvers = {
       requireRole(ctx, RW);
       return toUserLead(await whatsappData.createLead(args.input));
     },
+    waUpdateUserLead: async (
+      _p: unknown,
+      args: { id: string; input: { name?: string; phone?: string } },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, RW);
+      const lead = await whatsappData.updateLead(args.id, args.input ?? {});
+      return lead ? toUserLead(lead) : null;
+    },
+    waDeleteUserLead: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return whatsappData.deleteLead(args.id);
+    },
+    waDeleteUserLeads: async (_p: unknown, args: { ids: string[] }, ctx: GraphQLContext) => {
+      requireRole(ctx, RW);
+      return whatsappData.deleteLeads(args.ids ?? []);
+    },
     waImportUserLeads: async (_p: unknown, args: { file_base64: string }, ctx: GraphQLContext) => {
       requireRole(ctx, RW);
       const rows = parseLeadsWorkbook(args.file_base64);

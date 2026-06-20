@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       services:
-        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website,ads-portal,ads-website,native,crm,finance,tech,support,website-app,legal,ai,products,marketing (or "all")'
+        description: 'Comma-separated list: server,admin,mweb,website,partners-app,partners-website,ads-portal,ads-website,native,crm,finance,tech,support,website-app,legal,ai,products,marketing,challenge,earnwith (or "all")'
         required: false
         default: 'all'
 
@@ -51,6 +51,8 @@ jobs:
       hr: ${{ steps.filter.outputs.hr }}
       employee: ${{ steps.filter.outputs.employee }}
       status: ${{ steps.filter.outputs.status }}
+      challenge: ${{ steps.filter.outputs.challenge }}
+      earnwith: ${{ steps.filter.outputs.earnwith }}
     steps:
       - uses: actions/checkout@v4
       - uses: dorny/paths-filter@v3
@@ -228,6 +230,21 @@ jobs:
               - '.github/workflows/deploy.yml'
             status:
               - 'website/status-website/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            challenge:
+              - 'portals/challenge-portal/**'
+              - 'package.json'
+              - 'pnpm-lock.yaml'
+              - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'deploy/**'
+              - '.github/workflows/deploy.yml'
+            earnwith:
+              - 'website/earnwith-website/**'
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
@@ -1070,13 +1087,79 @@ jobs:
               --cache-to   type=gha,scope=duncit-status,mode=max \
               --push .
 
+  build-challenge:
+    needs: changes
+    if: needs.changes.outputs.challenge == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: challenge-portal
+          typecheck: 'tsc -b --noEmit'
+          test: 'test:forms'
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push challenge
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file portals/challenge-portal/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-challenge:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-challenge:${{ github.sha }} \
+              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --build-arg VITE_REQUIRED_ROLES=CHALLENGE_MANAGER \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --cache-from type=gha,scope=duncit-challenge \
+              --cache-to   type=gha,scope=duncit-challenge,mode=max \
+              --push .
+
+  build-earnwith:
+    needs: changes
+    if: needs.changes.outputs.earnwith == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: TypeScript
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: earnwith-website
+          typecheck: 'tsc -b --noEmit'
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+      - name: Build & push earnwith
+        uses: nick-fields/retry@v3
+        with:
+          timeout_minutes: 30
+          max_attempts: 3
+          retry_wait_seconds: 20
+          command: |
+            docker buildx build \
+              --file website/earnwith-website/Dockerfile \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-earnwith:latest \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-earnwith:${{ github.sha }} \
+              --cache-from type=gha,scope=duncit-earnwith \
+              --cache-to   type=gha,scope=duncit-earnwith,mode=max \
+              --push .
+
   # -----------------------------------------------------------
   # Single deploy job runs after whichever build jobs ran. It only
   # restarts the services whose images were rebuilt.
   # -----------------------------------------------------------
   deploy:
-    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success')
+    needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-earnwith]
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-challenge.result == 'success' || needs.build-earnwith.result == 'success')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -1131,6 +1214,8 @@ jobs:
           [ "${{ needs.build-hr.result }}" = "success" ] && PARTS+=("hr")
           [ "${{ needs.build-employee.result }}" = "success" ] && PARTS+=("employee")
           [ "${{ needs.build-status.result }}" = "success" ] && PARTS+=("status")
+          [ "${{ needs.build-challenge.result }}" = "success" ] && PARTS+=("challenge")
+          [ "${{ needs.build-earnwith.result }}" = "success" ] && PARTS+=("earnwith")
           echo "list=${PARTS[*]}" >> "$GITHUB_OUTPUT"
           echo "Restarting: ${PARTS[*]}"
 
@@ -1221,7 +1306,7 @@ jobs:
             $SUDO apt-get update -qq
             $SUDO apt-get install -y -qq certbot python3-certbot-nginx
           fi
-          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d ads-portal.duncit.com -d crm.duncit.com -d finance.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com -d onboarding.duncit.com -d hr.duncit.com -d employee.duncit.com -d status.duncit.com -d signoz.duncit.com -d native.duncit.com -d sonarqube.duncit.com -d open-wa-server.duncit.com"
+          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d ads-portal.duncit.com -d crm.duncit.com -d finance.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com -d onboarding.duncit.com -d hr.duncit.com -d employee.duncit.com -d status.duncit.com -d signoz.duncit.com -d native.duncit.com -d sonarqube.duncit.com -d open-wa-server.duncit.com -d earnwith.duncit.com -d challenge.duncit.com"
           if ! $SUDO test -d /etc/letsencrypt/live/duncit.com; then
             $SUDO certbot --nginx --non-interactive --agree-tos --redirect --cert-name duncit.com -m admin@duncit.com $CERTBOT_DOMAINS || true
           else
@@ -1279,4 +1364,6 @@ jobs:
               curl -fsSI http://127.0.0.1:2017/ | head -1
               curl -fsSI http://127.0.0.1:2018/ | head -1
               curl -fsSI http://127.0.0.1:2019/ | head -1
+              curl -fsSI http://127.0.0.1:2025/ | head -1
+              curl -fsSI http://127.0.0.1:2026/ | head -1
               '

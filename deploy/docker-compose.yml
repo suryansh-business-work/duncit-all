@@ -202,6 +202,20 @@ services:
     ports:
       - "127.0.0.1:2019:80"
 
+  earnwith:
+    image: ${DOCKERHUB_USERNAME}/duncit-earnwith:${IMAGE_TAG:-latest}
+    container_name: duncit-earnwith
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2025:80"
+
+  challenge:
+    image: ${DOCKERHUB_USERNAME}/duncit-challenge:${IMAGE_TAG:-latest}
+    container_name: duncit-challenge
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2026:80"
+
 networks:
   # Implicit project network for the duncit stack.
   default:

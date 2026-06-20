@@ -173,6 +173,11 @@ export const waLeadsTypeDefs = gql`
     source_account: String
   }
 
+  input WaUpdateUserLeadInput {
+    name: String
+    phone: String
+  }
+
   extend type Query {
     "Stored gateway config + last-known status (no network call)."
     waConnection: WaConnection!
@@ -216,6 +221,12 @@ export const waLeadsTypeDefs = gql`
     waCleanData: WaCleanResult!
     "Manually create (or upsert) a single user lead."
     waCreateUserLead(input: WaCreateUserLeadInput!): WaUserLead!
+    "Edit a single user lead's name and/or phone."
+    waUpdateUserLead(id: ID!, input: WaUpdateUserLeadInput!): WaUserLead
+    "Delete a single user lead."
+    waDeleteUserLead(id: ID!): Boolean!
+    "Bulk-delete user leads by id; returns the number removed."
+    waDeleteUserLeads(ids: [ID!]!): Int!
     "Import user leads from an uploaded .xlsx/.csv (base64)."
     waImportUserLeads(file_base64: String!): WaImportResult!
   }

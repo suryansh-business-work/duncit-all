@@ -1,0 +1,21 @@
+---
+import Layout from '../layouts/Layout.astro';
+import SiteHeader from '../components/SiteHeader.astro';
+import Hero from '../components/Hero.astro';
+import EarnPaths from '../components/EarnPaths.astro';
+import Steps from '../components/Steps.astro';
+import CtaBand from '../components/CtaBand.astro';
+import SiteFooter from '../components/SiteFooter.astro';
+import { siteConfig } from '../config/site-config';
+---
+
+<Layout title={siteConfig.brand.title}>
+  <SiteHeader />
+  <main>
+    <Hero />
+    <EarnPaths />
+    <Steps />
+    <CtaBand />
+  </main>
+  <SiteFooter />
+</Layout>

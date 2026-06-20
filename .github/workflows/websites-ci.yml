@@ -45,6 +45,7 @@ jobs:
           - { name: partners-website, dir: website/partners-website }
           - { name: ads-website, dir: website/ads-website }
           - { name: status-website, dir: website/status-website }
+          - { name: earnwith-website, dir: website/earnwith-website }
 
     steps:
       - name: Checkout

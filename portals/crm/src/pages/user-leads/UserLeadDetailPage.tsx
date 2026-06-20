@@ -42,7 +42,7 @@ export default function UserLeadDetailPage() {
           <ArrowBackIcon />
         </IconButton>
         <Typography variant="h6" fontWeight={800}>
-          User Lead
+          WhatsApp Lead
         </Typography>
       </Stack>
 

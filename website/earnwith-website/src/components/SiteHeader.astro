@@ -1,0 +1,24 @@
+---
+import { siteConfig } from '../config/site-config';
+const { mwebUrl } = siteConfig;
+---
+
+<header class="sticky top-0 z-30 border-b border-black/5 bg-cream/80 backdrop-blur">
+  <nav class="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
+    <a href="/" class="flex items-center gap-2 font-head text-lg font-extrabold text-ink">
+      <img src="/duncit-logo.svg" alt="Duncit" width="28" height="28" />
+      Earn with <span class="text-primary">Duncit</span>
+    </a>
+    <div class="flex items-center gap-6">
+      <a href="#paths" class="hidden text-sm font-semibold text-ink-soft hover:text-ink sm:block">
+        Ways to earn
+      </a>
+      <a
+        href={`${mwebUrl}/earn`}
+        class="rounded-full bg-primary px-5 py-2 text-sm font-bold text-white shadow-sm transition hover:bg-primary-dark"
+      >
+        Start earning
+      </a>
+    </div>
+  </nav>
+</header>

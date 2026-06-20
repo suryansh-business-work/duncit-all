@@ -321,6 +321,28 @@ export const WA_CREATE_USER_LEAD = gql`
   }
 `;
 
+export const WA_UPDATE_USER_LEAD = gql`
+  mutation WaUpdateUserLead($id: ID!, $input: WaUpdateUserLeadInput!) {
+    waUpdateUserLead(id: $id, input: $input) {
+      id
+      phone
+      name
+    }
+  }
+`;
+
+export const WA_DELETE_USER_LEAD = gql`
+  mutation WaDeleteUserLead($id: ID!) {
+    waDeleteUserLead(id: $id)
+  }
+`;
+
+export const WA_DELETE_USER_LEADS = gql`
+  mutation WaDeleteUserLeads($ids: [ID!]!) {
+    waDeleteUserLeads(ids: $ids)
+  }
+`;
+
 export const WA_IMPORT_USER_LEADS = gql`
   mutation WaImportUserLeads($file_base64: String!) {
     waImportUserLeads(file_base64: $file_base64) {

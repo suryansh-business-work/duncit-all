@@ -8,7 +8,7 @@ import { gql } from '@/generated/graphql';
  */
 export const HomeFeedDocument = gql(`
   query MobileHomeFeed($podFilter: PodFilterInput) {
-    categories(filter: { level: CATEGORY }) {
+    categories {
       id
       name
       slug

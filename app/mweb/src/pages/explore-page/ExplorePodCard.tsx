@@ -13,7 +13,7 @@ import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import CommentIcon from '@mui/icons-material/Comment';
 import { TOGGLE_POD_LIKE } from '../pod-details-page/queries';
-import ExploreActionButton from './ExploreActionButton';
+import ExploreActionRail from './ExploreActionRail';
 import ExploreMediaCarousel from './ExploreMediaCarousel';
 import ExplorePodOverlay from './ExplorePodOverlay';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
@@ -69,6 +69,10 @@ export default function ExplorePodCard({
     }
   };
 
+  const openPod = () => {
+    if (pod.club_slug && pod.pod_id) navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`);
+  };
+
   const share = async () => {
     const url = pod.club_slug && pod.pod_id
       ? `${window.location.origin}/club/${pod.club_slug}/pod/${pod.pod_id}`
@@ -107,46 +111,40 @@ export default function ExplorePodCard({
 
       <ExplorePodOverlay pod={pod} club={club} location={location} />
 
-      <Stack
-        spacing={1.5}
-        alignItems="center"
-        sx={{
-          position: 'absolute',
-          right: 12,
-          bottom: 'calc(var(--duncit-bottom-nav-overlay-offset, 88px) + 110px)',
-        }}
-      >
-        <ExploreActionButton
-          icon={<HowToRegIcon />}
-          label={`${pod.pod_attendees?.length ?? 0}${pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''}`}
-          onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
-          tooltip="Join"
-        />
-        <ExploreActionButton
-          icon={liked ? <FavoriteIcon /> : <FavoriteBorderIcon />}
-          label={String(likeCount)}
-          onClick={onLike}
-          active={liked}
-        />
-        <ExploreActionButton
-          icon={<CommentIcon />}
-          label={String(commentCount)}
-          onClick={() => setCommentsOpen(true)}
-        />
-        <ExploreActionButton
-          icon={saved ? <BookmarkIcon /> : <BookmarkBorderIcon />}
-          label="Save"
-          onClick={onToggleSave}
-          active={saved}
-          loading={savePending}
-        />
-        <ExploreActionButton icon={<ShareIcon />} label="Share" onClick={share} />
-        <ExploreActionButton
-          icon={<OpenInNewIcon />}
-          label="Open"
-          onClick={() => pod.club_slug && pod.pod_id && navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`)}
-        />
-      </Stack>
+      <ExploreActionRail
+        actions={[
+          {
+            key: 'join',
+            icon: <HowToRegIcon />,
+            label: `${pod.pod_attendees?.length ?? 0}${pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''}`,
+            onClick: openPod,
+            tooltip: 'Join',
+          },
+          {
+            key: 'like',
+            icon: liked ? <FavoriteIcon /> : <FavoriteBorderIcon />,
+            label: String(likeCount),
+            onClick: onLike,
+            active: liked,
+          },
+          {
+            key: 'comment',
+            icon: <CommentIcon />,
+            label: String(commentCount),
+            onClick: () => setCommentsOpen(true),
+          },
+          {
+            key: 'save',
+            icon: saved ? <BookmarkIcon /> : <BookmarkBorderIcon />,
+            label: 'Save',
+            onClick: onToggleSave,
+            active: saved,
+            loading: savePending,
+          },
+          { key: 'share', icon: <ShareIcon />, label: 'Share', onClick: share },
+          { key: 'open', icon: <OpenInNewIcon />, label: 'Open', onClick: openPod },
+        ]}
+      />
 
       <Stack
         direction="row"

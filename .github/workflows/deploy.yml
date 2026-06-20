@@ -1306,11 +1306,28 @@ jobs:
             $SUDO apt-get update -qq
             $SUDO apt-get install -y -qq certbot python3-certbot-nginx
           fi
-          CERTBOT_DOMAINS="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d ads-portal.duncit.com -d crm.duncit.com -d finance.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com -d onboarding.duncit.com -d hr.duncit.com -d employee.duncit.com -d status.duncit.com -d signoz.duncit.com -d native.duncit.com -d sonarqube.duncit.com -d open-wa-server.duncit.com -d earnwith.duncit.com -d challenge.duncit.com"
-          if ! $SUDO test -d /etc/letsencrypt/live/duncit.com; then
-            $SUDO certbot --nginx --non-interactive --agree-tos --redirect --cert-name duncit.com -m admin@duncit.com $CERTBOT_DOMAINS || true
-          else
-            $SUDO certbot --nginx --non-interactive --agree-tos --redirect --expand --cert-name duncit.com -m admin@duncit.com $CERTBOT_DOMAINS || true
+          # CORE domains have stable DNS — this cert MUST install so HTTPS for
+          # every existing subdomain works. On a shared host the duncit vhost is
+          # HTTP-only until certbot patches in the 443 listeners; if that step is
+          # skipped, HTTPS falls through to another site's default 443 server.
+          CERTBOT_CORE="-d duncit.com -d www.duncit.com -d admin.duncit.com -d mweb.duncit.com -d server.duncit.com -d partners.duncit.com -d partners-app.duncit.com -d ads.duncit.com -d ads-portal.duncit.com -d crm.duncit.com -d finance.duncit.com -d tech.duncit.com -d support.duncit.com -d website.duncit.com -d legal.duncit.com -d ai.duncit.com -d products.duncit.com -d marketing.duncit.com -d onboarding.duncit.com -d hr.duncit.com -d employee.duncit.com -d status.duncit.com -d signoz.duncit.com -d native.duncit.com -d sonarqube.duncit.com -d open-wa-server.duncit.com"
+          # NEWER domains — folded in only when their DNS already resolves, so a
+          # not-yet-created A record can't fail the whole (all-or-nothing) cert
+          # and take HTTPS down with it.
+          CERTBOT_EXTRA=""
+          for d in earnwith.duncit.com challenge.duncit.com; do
+            if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
+              CERTBOT_EXTRA="$CERTBOT_EXTRA -d $d"
+            else
+              echo ">>> Skipping $d in certbot (DNS not resolving yet)"
+            fi
+          done
+          # Always (re)deploy the core cert + 443 listeners.
+          $SUDO certbot --nginx --non-interactive --agree-tos --redirect --expand --cert-name duncit.com -m admin@duncit.com $CERTBOT_CORE || true
+          # Best-effort expansion for the newer domains; a failure here must NOT
+          # drop the core HTTPS already installed above.
+          if [ -n "$CERTBOT_EXTRA" ]; then
+            $SUDO certbot --nginx --non-interactive --agree-tos --redirect --expand --cert-name duncit.com -m admin@duncit.com $CERTBOT_CORE $CERTBOT_EXTRA || true
           fi
           $SUDO nginx -t
           $SUDO systemctl reload nginx

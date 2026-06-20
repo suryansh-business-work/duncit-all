@@ -59,9 +59,15 @@ describe('ExplorePodCard share', () => {
     renderWithProviders(
       <ExplorePodCard
         pod={explorePod}
-        club={{ id: 'c1', club_name: 'C', club_feature_images_and_videos: [] } as never}
+        club={
+          {
+            id: 'c1',
+            club_name: 'C',
+            club_feature_images_and_videos: [{ url: 'https://i/cover.jpg', type: 'IMAGE' }],
+          } as never
+        }
         width={390}
-        height={700}
+        height={2000}
         saved={false}
         like={{ liked_by_me: false, like_count: 9 }}
         commentCount={0}

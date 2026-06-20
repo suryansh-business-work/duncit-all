@@ -47,6 +47,7 @@ const base = {
   isLoading: false,
   hasData: true,
   categoryChips: [{ id: 'cat1', name: 'Music', slug: 'm', level: 'CATEGORY', parent_id: null }],
+  vibeCategories: [{ id: 'cat1', name: 'Music', subs: [] }],
   clubsWithPods: [{ club, pods: [pod] }],
   featuredPods: [pod],
   previousPods: [],

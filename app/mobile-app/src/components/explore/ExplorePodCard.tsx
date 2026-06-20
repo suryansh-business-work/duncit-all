@@ -5,7 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import type { ExploreClub, ExplorePod, LikeState } from '@/stores/explore.store';
 import { podPriceLabel } from '@/utils/pod-format';
-import { ExploreActionButton } from '@/components/explore/ExploreActionButton';
+import { ExploreActionRail } from '@/components/explore/ExploreActionRail';
 import { ExploreMediaCarousel } from '@/components/explore/ExploreMediaCarousel';
 import { ExplorePodOverlay } from '@/components/explore/ExplorePodOverlay';
 
@@ -44,6 +44,9 @@ export function ExplorePodCard({
   // Stack bottom→top: floating nav · CTA bar · (info overlay + action rail).
   const ctaBottom = insets.bottom + 80;
   const contentBottom = ctaBottom + 84; // clears the CTA bar above
+  // Space the action rail can occupy before it would overlap the header/overlay;
+  // the rail collapses extra actions into a "More" menu on short screens.
+  const railAvailable = height - contentBottom - (insets.top + 56);
   const cover = club?.club_feature_images_and_videos.find((m) => !!m.url)?.url ?? null;
   const attendees = pod.pod_attendees.length;
   const joinLabel = `${attendees}${pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''}`;
@@ -71,36 +74,57 @@ export function ExplorePodCard({
       />
       <ExplorePodOverlay pod={pod} clubName={club?.club_name} bottom={contentBottom} />
 
-      <YStack position="absolute" right={12} bottom={contentBottom} gap={14} alignItems="center">
-        <ExploreActionButton
-          testID={`reel-join-${pod.pod_id}`}
-          icon="how-to-reg"
-          label={joinLabel}
-          onPress={onOpen}
+      <YStack position="absolute" right={12} bottom={contentBottom}>
+        <ExploreActionRail
+          availableHeight={railAvailable}
+          actions={[
+            {
+              key: 'join',
+              testID: `reel-join-${pod.pod_id}`,
+              icon: 'how-to-reg',
+              label: joinLabel,
+              onPress: onOpen,
+            },
+            {
+              key: 'like',
+              testID: `reel-like-${pod.pod_id}`,
+              icon: like.liked_by_me ? 'favorite' : 'favorite-border',
+              label: String(like.like_count),
+              active: like.liked_by_me,
+              onPress: onToggleLike,
+            },
+            {
+              key: 'comment',
+              testID: `reel-comment-${pod.pod_id}`,
+              icon: 'chat-bubble-outline',
+              label: String(commentCount),
+              onPress: onComment,
+            },
+            {
+              key: 'save',
+              testID: `reel-save-${pod.pod_id}`,
+              icon: saved ? 'bookmark' : 'bookmark-border',
+              label: 'Save',
+              active: saved,
+              loading: savePending,
+              onPress: onToggleSave,
+            },
+            {
+              key: 'share',
+              testID: `reel-share-${pod.pod_id}`,
+              icon: 'share',
+              label: 'Share',
+              onPress: share,
+            },
+            {
+              key: 'open',
+              testID: `reel-open-${pod.pod_id}`,
+              icon: 'open-in-new',
+              label: 'Open',
+              onPress: onOpen,
+            },
+          ]}
         />
-        <ExploreActionButton
-          testID={`reel-like-${pod.pod_id}`}
-          icon={like.liked_by_me ? 'favorite' : 'favorite-border'}
-          label={String(like.like_count)}
-          active={like.liked_by_me}
-          onPress={onToggleLike}
-        />
-        <ExploreActionButton
-          testID={`reel-comment-${pod.pod_id}`}
-          icon="chat-bubble-outline"
-          label={String(commentCount)}
-          onPress={onComment}
-        />
-        <ExploreActionButton
-          testID={`reel-save-${pod.pod_id}`}
-          icon={saved ? 'bookmark' : 'bookmark-border'}
-          label="Save"
-          active={saved}
-          loading={savePending}
-          onPress={onToggleSave}
-        />
-        <ExploreActionButton icon="share" label="Share" onPress={share} />
-        <ExploreActionButton icon="open-in-new" label="Open" onPress={onOpen} />
       </YStack>
 
       <XStack

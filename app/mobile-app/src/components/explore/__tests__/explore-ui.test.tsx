@@ -1,5 +1,5 @@
-import { FlatList } from 'react-native';
-import { fireEvent, screen } from '@testing-library/react-native';
+import { FlatList, Share } from 'react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
 import { ExploreReels } from '@/components/explore/ExploreReels';
@@ -93,6 +93,94 @@ describe('ExplorePodCard', () => {
     expect(onComment).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('reel-go-p-1'));
     expect(onOpen).toHaveBeenCalled();
+  });
+
+  it('renders the liked/saved/pending states and an unlimited-spots join label', () => {
+    renderWithProviders(
+      <ExplorePodCard
+        pod={{ ...(pod('v') as Record<string, unknown>), no_of_spots: 0 } as never}
+        width={390}
+        height={2000}
+        saved
+        savePending
+        like={{ liked_by_me: true, like_count: 9 }}
+        commentCount={1}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={jest.fn()}
+      />,
+    );
+    // no_of_spots = 0 → the join label omits the "/N" capacity suffix.
+    expect(screen.getByTestId('reel-join-p-v')).toBeOnTheScreen();
+    expect(screen.getByText('9')).toBeOnTheScreen();
+  });
+
+  it('collapses overflow actions into a More menu on short screens', () => {
+    const onOpen = jest.fn();
+    renderWithProviders(
+      <ExplorePodCard
+        pod={pod('1')}
+        width={390}
+        height={700}
+        saved={false}
+        like={{ liked_by_me: false, like_count: 3 }}
+        commentCount={2}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={onOpen}
+      />,
+    );
+    // The least-used actions move into the "More" menu.
+    expect(screen.queryByTestId('reel-share-p-1')).toBeNull();
+    fireEvent.press(screen.getByTestId('reel-more'));
+    fireEvent.press(screen.getByTestId('reel-more-open'));
+    expect(onOpen).toHaveBeenCalled();
+  });
+
+  it('shows every action inline when the screen is tall enough', () => {
+    renderWithProviders(
+      <ExplorePodCard
+        pod={pod('tall')}
+        width={390}
+        height={2000}
+        saved={false}
+        like={{ liked_by_me: false, like_count: 3 }}
+        commentCount={2}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={jest.fn()}
+      />,
+    );
+    expect(screen.getByTestId('reel-share-p-tall')).toBeOnTheScreen();
+    expect(screen.queryByTestId('reel-more')).toBeNull();
+    const shareSpy = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
+    fireEvent.press(screen.getByTestId('reel-share-p-tall'));
+    expect(shareSpy).toHaveBeenCalled();
+    shareSpy.mockRestore();
+  });
+
+  it('swallows share errors (user cancelled)', async () => {
+    const shareSpy = jest.spyOn(Share, 'share').mockRejectedValue(new Error('cancelled'));
+    renderWithProviders(
+      <ExplorePodCard
+        pod={pod('err')}
+        width={390}
+        height={2000}
+        saved={false}
+        like={{ liked_by_me: false, like_count: 0 }}
+        commentCount={0}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={jest.fn()}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('reel-share-p-err'));
+    await waitFor(() => expect(shareSpy).toHaveBeenCalled());
+    shareSpy.mockRestore();
   });
 
   it('shows the "Confirm with UPI" payment copy for paid pods (BUG-9)', () => {

@@ -4,12 +4,13 @@ import { HappeningNearbyHeader } from '@/components/home/HappeningNearbyHeader';
 import { HomeVibeChips } from '@/components/home/HomeVibeChips';
 import { PodCard } from '@/components/home/PodCard';
 import { PreviousPodsRail } from '@/components/home/PreviousPodsRail';
-import type { HomeCategory, HomePod } from '@/hooks/useHomeFeed';
+import type { HomePod, VibeCategory } from '@/hooks/useHomeFeed';
 import { renderWithProviders } from '@/utils/test-utils';
 
-const categories = [
-  { id: 'c1', name: 'Music', slug: 'music', level: 'CATEGORY', parent_id: null },
-] as unknown as HomeCategory[];
+const categories: VibeCategory[] = [
+  { id: 'c1', name: 'Music', subs: [{ id: 's1', name: 'Jazz' }] },
+  { id: 'c2', name: 'Sports', subs: [] },
+];
 
 const pod = {
   id: 'pod1',
@@ -53,6 +54,45 @@ describe('HomeVibeChips', () => {
     );
     fireEvent.press(screen.getByTestId('vibe-chip-all'));
     expect(onSelect).toHaveBeenCalledWith('');
+  });
+
+  it('renders nothing when there are no categories', () => {
+    renderWithProviders(<HomeVibeChips categories={[]} selectedId="" onSelect={jest.fn()} />);
+    expect(screen.queryByTestId('vibe-chip-all')).toBeNull();
+  });
+
+  it('hides the sub row for a selected category with no subcategories', () => {
+    renderWithProviders(
+      <HomeVibeChips categories={categories} selectedId="c2" onSelect={jest.fn()} />,
+    );
+    expect(screen.queryByTestId('vibe-sub-all-c2')).toBeNull();
+  });
+
+  it('shows the selected category subcategory row and selects a sub', () => {
+    const onSelect = jest.fn();
+    renderWithProviders(
+      <HomeVibeChips categories={categories} selectedId="c1" onSelect={onSelect} />,
+    );
+    // Second row appears for the active category (c1 has subs).
+    expect(screen.getByTestId('vibe-sub-all-c1')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('vibe-sub-s1'));
+    expect(onSelect).toHaveBeenCalledWith('s1');
+  });
+
+  it('keeps the sub row open when a sub is selected and returns to the category', () => {
+    const onSelect = jest.fn();
+    renderWithProviders(
+      <HomeVibeChips categories={categories} selectedId="s1" onSelect={onSelect} />,
+    );
+    // The parent category chip is highlighted via its sub selection.
+    fireEvent.press(screen.getByTestId('vibe-sub-s1'));
+    expect(onSelect).toHaveBeenCalledWith('c1');
+    // "All <category>" returns to the broad category filter.
+    fireEvent.press(screen.getByTestId('vibe-sub-all-c1'));
+    expect(onSelect).toHaveBeenCalledWith('c1');
+    // Pressing the parent category chip while a sub is active selects the category.
+    fireEvent.press(screen.getByTestId('vibe-chip-c1'));
+    expect(onSelect).toHaveBeenCalledWith('c1');
   });
 });
 

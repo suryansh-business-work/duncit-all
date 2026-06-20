@@ -85,6 +85,44 @@ describe('useHomeFeed', () => {
     expect(result.current.categoryChips.map((c) => c.id)).toEqual(['cat1']);
   });
 
+  it('builds two-row vibe categories (sorted, with pod-bearing subcategories)', () => {
+    mockHomeState.data = {
+      clubs: [
+        { id: 'c1', category_id: 'sub1', super_category_id: null },
+        { id: 'c2', category_id: 'sub2', super_category_id: null },
+        { id: 'c3', category_id: 'cat2', super_category_id: null },
+        { id: 'c4', category_id: 'sub3', super_category_id: null }, // orphan sub (no parent)
+        { id: 'c5', category_id: null, super_category_id: null }, // no category at all
+      ],
+      pods: [
+        pod('1', 'c1', future(1)),
+        pod('2', 'c2', future(1)),
+        pod('3', 'c3', future(1)),
+        pod('4', 'c4', future(1)),
+        pod('5', 'c5', future(1)),
+      ],
+      categories: [
+        { id: 'cat1', name: 'Music', slug: 'music', level: 'CATEGORY', parent_id: null },
+        { id: 'cat2', name: 'Arts', slug: 'arts', level: 'CATEGORY', parent_id: null },
+        { id: 'sub1', name: 'Jazz', slug: 'jazz', level: 'SUB', parent_id: 'cat1' },
+        { id: 'sub2', name: 'Blues', slug: 'blues', level: 'SUB', parent_id: 'cat1' },
+        { id: 'sub3', name: 'Orphan', slug: 'orphan', level: 'SUB', parent_id: null },
+      ],
+    } as never;
+    const { result } = renderHook(() => useHomeFeed(''));
+    expect(result.current.vibeCategories).toEqual([
+      { id: 'cat2', name: 'Arts', subs: [] },
+      {
+        id: 'cat1',
+        name: 'Music',
+        subs: [
+          { id: 'sub2', name: 'Blues' },
+          { id: 'sub1', name: 'Jazz' },
+        ],
+      },
+    ]);
+  });
+
   it('filters out pods when a super-category or location is selected', () => {
     mockedSuper.mockReturnValue({ selectedSuperId: 'super-x' });
     expect(renderHook(() => useHomeFeed('')).result.current.totalPods).toBe(0);

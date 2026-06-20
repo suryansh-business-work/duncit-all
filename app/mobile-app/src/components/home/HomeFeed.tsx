@@ -36,6 +36,7 @@ export function HomeFeed() {
     isLoading,
     hasData,
     categoryChips,
+    vibeCategories,
     clubsWithPods,
     featuredPods,
     previousPods,
@@ -85,7 +86,7 @@ export function HomeFeed() {
           </Reveal>
           <Reveal index={1}>
             <HomeVibeChips
-              categories={categoryChips}
+              categories={vibeCategories}
               selectedId={selectedCategoryId}
               onSelect={setSelectedCategoryId}
             />

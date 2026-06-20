@@ -330,6 +330,37 @@ export function useHomeData({
     return ordered.filter((c: any) => chipHasPods(c.id));
   }, [data, selectedSuperId, isDescendantOf, podCategoryIds]);
 
+  // Structured two-row "What's your vibe": CATEGORY-level chips (row 1), each
+  // carrying its SUB-category chips (row 2, shown when the category is picked).
+  // Only categories/subs that actually have pods in the current context appear.
+  const vibeCategories = useMemo(() => {
+    const cats = data?.categories ?? [];
+    const chipHasPods = (chipId: string) => {
+      for (const cid of podCategoryIds) {
+        if (cid === chipId || isDescendantOf(cid, chipId)) return true;
+      }
+      return false;
+    };
+    const inScope = (c: any) => !selectedSuperId || isDescendantOf(c.id, selectedSuperId);
+    const categories = cats
+      .filter((c: any) => c.level === 'CATEGORY' && inScope(c) && chipHasPods(c.id))
+      .sort((a: any, b: any) => a.name.localeCompare(b.name));
+    const subsByParent = new Map<string, any[]>();
+    cats
+      .filter((c: any) => c.level === 'SUB' && chipHasPods(c.id))
+      .forEach((s: any) => {
+        const arr = subsByParent.get(s.parent_id) ?? [];
+        arr.push(s);
+        subsByParent.set(s.parent_id, arr);
+      });
+    subsByParent.forEach((arr) => arr.sort((a, b) => a.name.localeCompare(b.name)));
+    return categories.map((c: any) => ({
+      id: c.id,
+      name: c.name,
+      subs: (subsByParent.get(c.id) ?? []).map((s: any) => ({ id: s.id, name: s.name })),
+    }));
+  }, [data, selectedSuperId, isDescendantOf, podCategoryIds]);
+
   const clubs = useMemo(() => {
     const all = data?.clubs ?? [];
     return all.filter((c: any) => (podsByClub.get(c.id)?.length ?? 0) > 0);
@@ -383,6 +414,7 @@ export function useHomeData({
     featuredPods,
     podsByClub,
     categoryChips,
+    vibeCategories,
     followedClubs,
     followedPods,
     hostPods,

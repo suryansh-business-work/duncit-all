@@ -20,6 +20,59 @@ export interface ClubWithPods {
   pods: HomePod[];
 }
 
+export interface VibeSub {
+  id: string;
+  name: string;
+}
+export interface VibeCategory {
+  id: string;
+  name: string;
+  subs: VibeSub[];
+}
+
+/** Structured two-row vibe filter: CATEGORY chips, each carrying its SUB chips.
+ * Only categories/subs that actually have pods (directly or via a descendant)
+ * in the current scope are kept. */
+function deriveVibeCategories(
+  allChips: HomeCategory[],
+  podCategoryIds: Set<string | null | undefined>,
+): VibeCategory[] {
+  const parentById = new Map(allChips.map((c) => [c.id, c.parent_id ?? null]));
+  const isDescendant = (childId: string, ancestorId: string) => {
+    let cur: string | null | undefined = childId;
+    let guard = 0;
+    while (cur && guard++ < 16) {
+      if (cur === ancestorId) return true;
+      cur = parentById.get(cur) ?? null;
+    }
+    return false;
+  };
+  const chipHasPods = (chipId: string) => {
+    for (const cid of podCategoryIds) {
+      if (cid && (cid === chipId || isDescendant(cid, chipId))) return true;
+    }
+    return false;
+  };
+  const categories = allChips
+    .filter((c) => c.level === 'CATEGORY' && chipHasPods(c.id))
+    .sort((a, b) => a.name.localeCompare(b.name));
+  const subsByParent = new Map<string, HomeCategory[]>();
+  allChips
+    .filter((c) => c.level === 'SUB' && chipHasPods(c.id))
+    .forEach((s) => {
+      const key = s.parent_id ?? '';
+      const arr = subsByParent.get(key) ?? [];
+      arr.push(s);
+      subsByParent.set(key, arr);
+    });
+  subsByParent.forEach((arr) => arr.sort((a, b) => a.name.localeCompare(b.name)));
+  return categories.map((c) => ({
+    id: c.id,
+    name: c.name,
+    subs: (subsByParent.get(c.id) ?? []).map((s) => ({ id: s.id, name: s.name })),
+  }));
+}
+
 const byDateAsc = (a: HomePod, b: HomePod) =>
   new Date(a.pod_date_time || 0).getTime() - new Date(b.pod_date_time || 0).getTime();
 
@@ -66,6 +119,7 @@ function deriveHome(
     allPods.filter(inScope).map((p) => clubsById.get(p.club_id)?.category_id),
   );
   const categoryChips = allChips.filter((c) => podCategoryIds.has(c.id));
+  const vibeCategories = deriveVibeCategories(allChips, podCategoryIds);
 
   // Past-date pods leave the main feed and move to the Previous Pods section/page.
   const activePods = pods.filter((p) => !isPastPod(p));
@@ -89,6 +143,7 @@ function deriveHome(
 
   return {
     categoryChips,
+    vibeCategories,
     clubsWithPods,
     featuredPods,
     activePods: activePods.slice().sort(byDateAsc),

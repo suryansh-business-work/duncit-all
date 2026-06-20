@@ -1,20 +1,60 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
-import type { HomeCategory } from '@/hooks/useHomeFeed';
+import type { VibeCategory } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface HomeVibeChipsProps {
-  categories: HomeCategory[];
+  categories: VibeCategory[];
   selectedId: string;
   onSelect: (id: string) => void;
 }
 
-/** "What's your vibe today?" category chip rail — RN port of HomeVibeChips.
- * Selecting a chip filters the feed to that category (toggles off when re-tapped). */
+interface VibeChipProps {
+  testID: string;
+  label: string;
+  selected: boolean;
+  small?: boolean;
+  onPress: () => void;
+}
+
+function VibeChip({ testID, label, selected, small, onPress }: Readonly<VibeChipProps>) {
+  return (
+    <XStack
+      testID={testID}
+      role="button"
+      aria-label={label}
+      aria-pressed={selected}
+      onPress={onPress}
+      height={small ? 36 : 42}
+      paddingHorizontal={16}
+      alignItems="center"
+      borderRadius={14}
+      borderWidth={1.5}
+      backgroundColor={selected ? '$primary' : '$surface'}
+      borderColor={selected ? '$primary' : '$borderColor'}
+      pressStyle={{ opacity: 0.85 }}
+    >
+      <Text
+        fontSize={small ? 12.5 : 13.5}
+        fontWeight="800"
+        color={selected ? '$onPrimary' : '$color'}
+      >
+        {label}
+      </Text>
+    </XStack>
+  );
+}
+
+/** "What's your vibe today?" — Categories in row 1; the selected category's
+ * Subcategories appear in a second row directly below (RN port of mWeb). */
 export function HomeVibeChips({ categories, selectedId, onSelect }: Readonly<HomeVibeChipsProps>) {
   const { primary } = useThemeColors();
   if (categories.length === 0) return null;
+
+  const activeCategory =
+    categories.find((c) => c.id === selectedId || c.subs.some((s) => s.id === selectedId)) ?? null;
+  const subs = activeCategory?.subs ?? [];
 
   return (
     <YStack gap={10}>
@@ -24,60 +64,58 @@ export function HomeVibeChips({ categories, selectedId, onSelect }: Readonly<Hom
           What&apos;s your vibe today?
         </Text>
       </XStack>
+
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
       >
-        <XStack
+        <VibeChip
           testID="vibe-chip-all"
-          role="button"
-          aria-label="All"
-          aria-pressed={selectedId === ''}
+          label="All"
+          selected={selectedId === ''}
           onPress={() => onSelect('')}
-          height={42}
-          paddingHorizontal={16}
-          alignItems="center"
-          borderRadius={14}
-          borderWidth={1.5}
-          backgroundColor={selectedId === '' ? '$primary' : '$surface'}
-          borderColor={selectedId === '' ? '$primary' : '$borderColor'}
-          pressStyle={{ opacity: 0.85 }}
-        >
-          <Text
-            fontSize={13.5}
-            fontWeight="800"
-            color={selectedId === '' ? '$onPrimary' : '$color'}
-          >
-            All
-          </Text>
-        </XStack>
-        {categories.slice(0, 16).map((category) => {
-          const selected = selectedId === category.id;
+        />
+        {categories.map((category) => {
+          const selected =
+            category.id === selectedId || category.subs.some((s) => s.id === selectedId);
           return (
-            <XStack
+            <VibeChip
               key={category.id}
               testID={`vibe-chip-${category.id}`}
-              role="button"
-              aria-label={category.name}
-              aria-pressed={selected}
-              onPress={() => onSelect(selected ? '' : category.id)}
-              height={42}
-              paddingHorizontal={16}
-              alignItems="center"
-              borderRadius={14}
-              borderWidth={1.5}
-              backgroundColor={selected ? '$primary' : '$surface'}
-              borderColor={selected ? '$primary' : '$borderColor'}
-              pressStyle={{ opacity: 0.85 }}
-            >
-              <Text fontSize={13.5} fontWeight="800" color={selected ? '$onPrimary' : '$color'}>
-                {category.name}
-              </Text>
-            </XStack>
+              label={category.name}
+              selected={selected}
+              onPress={() => onSelect(category.id === selectedId ? '' : category.id)}
+            />
           );
         })}
       </ScrollView>
+
+      {activeCategory && subs.length > 0 && (
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
+        >
+          <VibeChip
+            testID={`vibe-sub-all-${activeCategory.id}`}
+            small
+            label={`All ${activeCategory.name}`}
+            selected={selectedId === activeCategory.id}
+            onPress={() => onSelect(activeCategory.id)}
+          />
+          {subs.map((sub) => (
+            <VibeChip
+              key={sub.id}
+              testID={`vibe-sub-${sub.id}`}
+              small
+              label={sub.name}
+              selected={selectedId === sub.id}
+              onPress={() => onSelect(selectedId === sub.id ? activeCategory.id : sub.id)}
+            />
+          ))}
+        </ScrollView>
+      )}
     </YStack>
   );
 }

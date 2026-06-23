@@ -1,0 +1,53 @@
+import { GraphQLError } from 'graphql';
+import { ecommBrandService } from './ecommBrand.service';
+import type { GraphQLContext } from '@context';
+import { requireRole } from '@middleware/rbac';
+
+// Onboarding managers review brands; admins can too.
+const BRAND_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
+
+function uid(ctx: GraphQLContext) {
+  if (!ctx.user) {
+    throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+  }
+  return ctx.user.id;
+}
+
+export const ecommBrandResolvers = {
+  Query: {
+    myEcommBrand: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
+      ecommBrandService.getMine(uid(ctx)),
+    ecommBrands: (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, BRAND_REVIEW);
+      return ecommBrandService.list({ status: args.status });
+    },
+    ecommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, BRAND_REVIEW);
+      return ecommBrandService.getById(args.brand_doc_id);
+    },
+  },
+  Mutation: {
+    saveEcommBrand: (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>
+      ecommBrandService.save(uid(ctx), args.input),
+    submitEcommBrand: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
+      ecommBrandService.submit(uid(ctx)),
+    withdrawEcommBrand: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
+      ecommBrandService.withdraw(uid(ctx)),
+    approveEcommBrand: (
+      _p: unknown,
+      args: { brand_doc_id: string; notes?: string; tags?: string[] },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, BRAND_REVIEW);
+      return ecommBrandService.approve(args.brand_doc_id, args.notes, args.tags);
+    },
+    rejectEcommBrand: (
+      _p: unknown,
+      args: { brand_doc_id: string; notes: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, BRAND_REVIEW);
+      return ecommBrandService.reject(args.brand_doc_id, args.notes);
+    },
+  },
+};

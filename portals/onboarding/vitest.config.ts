@@ -62,6 +62,10 @@ export default defineConfig({
         'src/pages/hosts-page/HostEditDialog.tsx',
         'src/pages/venues-page/VenuesPage.tsx',
         'src/pages/venues-page/VenueEditDialog.tsx',
+        // E-commerce brands: Apollo list container + presentational review dialog
+        // (the table is unit-tested; rendered only for a non-null brand).
+        'src/pages/ecomm-brands-page/EcommBrandsPage.tsx',
+        'src/pages/ecomm-brands-page/EcommBrandReviewDialog.tsx',
         'src/pages/venue-details-page/VenueDetailsPage.tsx',
         'src/pages/venue-details-page/VenueHealthCard.tsx',
         // Apollo slot-availability container: reuses the shared calendar package

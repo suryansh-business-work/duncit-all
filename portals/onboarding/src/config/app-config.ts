@@ -63,6 +63,7 @@ export const appConfig: AppConfig = {
       children: [
         { label: 'Onboarded Hosts', to: '/hosts', icon: 'people' },
         { label: 'Onboarded Venues', to: '/venues', icon: 'storefront' },
+        { label: 'Onboarded E-Commerce Brands', to: '/ecomm-brands', icon: 'inventory' },
       ],
     },
   ],

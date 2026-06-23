@@ -4,6 +4,7 @@ import DashboardPage from './pages/DashboardPage';
 import HostsPage from './pages/hosts-page/HostsPage';
 import VenuesPage from './pages/venues-page/VenuesPage';
 import VenueDetailsPage from './pages/venue-details-page/VenueDetailsPage';
+import EcommBrandsPage from './pages/ecomm-brands-page/EcommBrandsPage';
 import SurveyBuilderPage from './pages/surveys/SurveyBuilderPage';
 import SurveysListPage from './pages/surveys/SurveysListPage';
 import MeetingCalendarPage from './pages/meetings/MeetingCalendarPage';
@@ -36,6 +37,7 @@ export default function App() {
       <Route path="/hosts" element={authed(<HostsPage />)} />
       <Route path="/venues" element={authed(<VenuesPage />)} />
       <Route path="/venues/:venueId" element={authed(<VenueDetailsPage />)} />
+      <Route path="/ecomm-brands" element={authed(<EcommBrandsPage />)} />
       <Route path="/surveys" element={authed(<SurveysListPage />)} />
       <Route path="/surveys/new" element={authed(<SurveyBuilderPage />)} />
       <Route path="/surveys/:id/edit" element={authed(<SurveyBuilderPage />)} />

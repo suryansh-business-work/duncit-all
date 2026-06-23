@@ -5,7 +5,7 @@ describe('ecommBrand resolver auth', () => {
   it('partner mutations require authentication', () => {
     const anon = makeContext(null);
     expect(() =>
-      (ecommBrandResolvers.Query as any).myEcommBrand({}, {}, anon)
+      (ecommBrandResolvers.Query as any).myEcommBrands({}, {}, anon)
     ).toThrow(/auth/i);
     expect(() =>
       (ecommBrandResolvers.Mutation as any).saveEcommBrand({}, { input: {} }, anon)

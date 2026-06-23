@@ -86,8 +86,8 @@ export const ecommBrandTypeDefs = gql`
   }
 
   extend type Query {
-    "The signed-in partner's own e-commerce brand (or null)."
-    myEcommBrand: EcommBrand
+    "The signed-in partner's e-commerce brands (a partner may run several)."
+    myEcommBrands: [EcommBrand!]!
     "Onboarding/admin: all brands, optionally filtered by status."
     ecommBrands(status: EcommBrandStatus): [EcommBrand!]!
     "Onboarding/admin: a single brand by id."
@@ -95,12 +95,12 @@ export const ecommBrandTypeDefs = gql`
   }
 
   extend type Mutation {
-    "Partner: create/update the draft brand."
-    saveEcommBrand(input: EcommBrandInput!): EcommBrand!
-    "Partner: submit the brand for onboarding review."
-    submitEcommBrand: EcommBrand!
+    "Partner: create a new brand (omit brand_doc_id) or update an owned draft."
+    saveEcommBrand(brand_doc_id: ID, input: EcommBrandInput!): EcommBrand!
+    "Partner: submit an owned brand for onboarding review."
+    submitEcommBrand(brand_doc_id: ID!): EcommBrand!
     "Partner: pull a submitted brand back to draft for edits."
-    withdrawEcommBrand: EcommBrand!
+    withdrawEcommBrand(brand_doc_id: ID!): EcommBrand!
     "Onboarding/admin: approve a brand (grants the owner the E-commerce Manager role)."
     approveEcommBrand(brand_doc_id: ID!, notes: String, tags: [String!]): EcommBrand!
     "Onboarding/admin: reject a brand with notes."

@@ -44,25 +44,42 @@ const toPub = (b: IEcommBrand) => ({
   updated_at: b.updated_at?.toISOString?.() ?? '',
 });
 
-// One editable brand per partner: reuse a DRAFT/REJECTED record, else create.
-async function getOrCreate(userId: string) {
-  const uid = new Types.ObjectId(userId);
-  let brand = await EcommBrandModel.findOne({
-    owner_user_id: uid,
-    status: { $in: ['DRAFT', 'REJECTED'] },
-  }).sort({ updated_at: -1, created_at: -1 });
-  if (!brand) brand = await EcommBrandModel.create({ owner_user_id: uid });
-  return brand;
+const TEXT_FIELDS = [
+  'brand_name', 'logo_url', 'cover_image_url', 'tagline', 'description', 'website_url',
+  'instagram_url', 'contact_person', 'contact_email', 'contact_phone',
+  'registered_business_name', 'gstin', 'pan', 'address_line1', 'city', 'state',
+  'postal_code', 'country', 'account_holder_name', 'account_number', 'ifsc_code', 'upi_id',
+] as const;
+
+function applyInput(brand: IEcommBrand, input: any) {
+  for (const field of TEXT_FIELDS) {
+    if (input[field] !== undefined) (brand as any)[field] = str(input[field]);
+  }
+  if (input.product_categories !== undefined) {
+    brand.product_categories = (input.product_categories as string[]).map(str).filter(Boolean).slice(0, 30);
+  }
+  if (input.established_year !== undefined) {
+    const year = Number(input.established_year);
+    brand.established_year = Number.isFinite(year) && year > 0 ? Math.trunc(year) : null;
+  }
+  if (input.documents !== undefined) {
+    brand.documents = (input.documents || [])
+      .filter((d: any) => d && d.type && d.url)
+      .map((d: any) => ({ type: str(d.type), url: str(d.url), uploaded_at: new Date() }));
+  }
 }
 
-async function findCurrent(userId: string) {
-  const uid = new Types.ObjectId(userId);
-  const active = await EcommBrandModel.findOne({
-    owner_user_id: uid,
-    status: { $in: ['DRAFT', 'REJECTED', 'SUBMITTED'] },
-  }).sort({ updated_at: -1, created_at: -1 });
-  if (active) return active;
-  return EcommBrandModel.findOne({ owner_user_id: uid }).sort({ updated_at: -1, created_at: -1 });
+// Load a brand that belongs to the signed-in partner (404 otherwise).
+async function loadOwned(userId: string, brandId: string) {
+  if (!Types.ObjectId.isValid(brandId)) {
+    throw new GraphQLError('Invalid brand', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const brand = await EcommBrandModel.findOne({
+    _id: brandId,
+    owner_user_id: new Types.ObjectId(userId),
+  });
+  if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+  return brand;
 }
 
 // On approval the brand owner becomes an E-commerce Manager so they can list
@@ -76,17 +93,13 @@ async function assignEcommRole(userId: Types.ObjectId) {
   await userService.assignRoles(String(userId), Array.from(roles));
 }
 
-const TEXT_FIELDS = [
-  'brand_name', 'logo_url', 'cover_image_url', 'tagline', 'description', 'website_url',
-  'instagram_url', 'contact_person', 'contact_email', 'contact_phone',
-  'registered_business_name', 'gstin', 'pan', 'address_line1', 'city', 'state',
-  'postal_code', 'country', 'account_holder_name', 'account_number', 'ifsc_code', 'upi_id',
-] as const;
-
 export const ecommBrandService = {
-  async getMine(userId: string) {
-    const brand = await findCurrent(userId);
-    return brand ? toPub(brand) : null;
+  // A partner may run several brands — list all of theirs.
+  async listMine(userId: string) {
+    const docs = await EcommBrandModel.find({ owner_user_id: new Types.ObjectId(userId) })
+      .sort({ updated_at: -1, created_at: -1 })
+      .limit(200);
+    return docs.map(toPub);
   },
 
   async list(filter?: { status?: string }) {
@@ -102,30 +115,30 @@ export const ecommBrandService = {
     return brand ? toPub(brand) : null;
   },
 
-  async save(userId: string, input: any) {
-    const brand = await getOrCreate(userId);
-    for (const field of TEXT_FIELDS) {
-      if (input[field] !== undefined) (brand as any)[field] = str(input[field]);
+  // Create a new brand (no id) or update an owned, still-editable one.
+  async save(userId: string, brandId: string | null | undefined, input: any) {
+    let brand: IEcommBrand;
+    if (brandId) {
+      brand = await loadOwned(userId, brandId);
+      if (brand.status === 'SUBMITTED' || brand.status === 'APPROVED') {
+        throw new GraphQLError('This brand is locked for review and cannot be edited', {
+          extensions: { code: 'BAD_REQUEST' },
+        });
+      }
+    } else {
+      brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(userId) });
     }
-    if (input.product_categories !== undefined) {
-      brand.product_categories = (input.product_categories as string[]).map(str).filter(Boolean).slice(0, 30);
-    }
-    if (input.established_year !== undefined) {
-      const year = Number(input.established_year);
-      brand.established_year = Number.isFinite(year) && year > 0 ? Math.trunc(year) : null;
-    }
-    if (input.documents !== undefined) {
-      brand.documents = (input.documents || [])
-        .filter((d: any) => d && d.type && d.url)
-        .map((d: any) => ({ type: str(d.type), url: str(d.url), uploaded_at: new Date() }));
-    }
+    applyInput(brand, input);
     if (brand.status === 'REJECTED') brand.status = 'DRAFT';
     await brand.save();
     return toPub(brand);
   },
 
-  async submit(userId: string) {
-    const brand = await getOrCreate(userId);
+  async submit(userId: string, brandId: string) {
+    const brand = await loadOwned(userId, brandId);
+    if (brand.status === 'APPROVED') {
+      throw new GraphQLError('This brand is already approved', { extensions: { code: 'BAD_REQUEST' } });
+    }
     if (!str(brand.brand_name)) {
       throw new GraphQLError('Add a brand name before submitting', { extensions: { code: 'BAD_REQUEST' } });
     }
@@ -141,12 +154,13 @@ export const ecommBrandService = {
     return toPub(brand);
   },
 
-  async withdraw(userId: string) {
-    const uid = new Types.ObjectId(userId);
-    const brand = await EcommBrandModel.findOne({ owner_user_id: uid, status: 'SUBMITTED' }).sort({
-      updated_at: -1,
-    });
-    if (!brand) throw new GraphQLError('No submitted brand to withdraw', { extensions: { code: 'NOT_FOUND' } });
+  async withdraw(userId: string, brandId: string) {
+    const brand = await loadOwned(userId, brandId);
+    if (brand.status !== 'SUBMITTED') {
+      throw new GraphQLError('Only a submitted brand can be moved back to draft', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
     brand.status = 'DRAFT';
     brand.submitted_at = null;
     await brand.save();

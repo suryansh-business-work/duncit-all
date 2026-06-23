@@ -15,8 +15,8 @@ function uid(ctx: GraphQLContext) {
 
 export const ecommBrandResolvers = {
   Query: {
-    myEcommBrand: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
-      ecommBrandService.getMine(uid(ctx)),
+    myEcommBrands: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
+      ecommBrandService.listMine(uid(ctx)),
     ecommBrands: (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, BRAND_REVIEW);
       return ecommBrandService.list({ status: args.status });
@@ -27,12 +27,12 @@ export const ecommBrandResolvers = {
     },
   },
   Mutation: {
-    saveEcommBrand: (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>
-      ecommBrandService.save(uid(ctx), args.input),
-    submitEcommBrand: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
-      ecommBrandService.submit(uid(ctx)),
-    withdrawEcommBrand: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
-      ecommBrandService.withdraw(uid(ctx)),
+    saveEcommBrand: (_p: unknown, args: { brand_doc_id?: string | null; input: any }, ctx: GraphQLContext) =>
+      ecommBrandService.save(uid(ctx), args.brand_doc_id ?? null, args.input),
+    submitEcommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) =>
+      ecommBrandService.submit(uid(ctx), args.brand_doc_id),
+    withdrawEcommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) =>
+      ecommBrandService.withdraw(uid(ctx), args.brand_doc_id),
     approveEcommBrand: (
       _p: unknown,
       args: { brand_doc_id: string; notes?: string; tags?: string[] },

@@ -34,28 +34,28 @@ const BRAND_FIELDS = `
   approved_at
 `;
 
-export const MY_BRAND = gql`
-  query MyEcommBrand {
+export const MY_BRANDS = gql`
+  query MyEcommBrands {
     me { user_id full_name email roles }
-    myEcommBrand { ${BRAND_FIELDS} }
+    myEcommBrands { ${BRAND_FIELDS} }
   }
 `;
 
 export const SAVE_BRAND = gql`
-  mutation SaveEcommBrand($input: EcommBrandInput!) {
-    saveEcommBrand(input: $input) { ${BRAND_FIELDS} }
+  mutation SaveEcommBrand($brand_doc_id: ID, $input: EcommBrandInput!) {
+    saveEcommBrand(brand_doc_id: $brand_doc_id, input: $input) { ${BRAND_FIELDS} }
   }
 `;
 
 export const SUBMIT_BRAND = gql`
-  mutation SubmitEcommBrand {
-    submitEcommBrand { id status submitted_at }
+  mutation SubmitEcommBrand($brand_doc_id: ID!) {
+    submitEcommBrand(brand_doc_id: $brand_doc_id) { id status submitted_at }
   }
 `;
 
 export const WITHDRAW_BRAND = gql`
-  mutation WithdrawEcommBrand {
-    withdrawEcommBrand { id status }
+  mutation WithdrawEcommBrand($brand_doc_id: ID!) {
+    withdrawEcommBrand(brand_doc_id: $brand_doc_id) { id status }
   }
 `;
 

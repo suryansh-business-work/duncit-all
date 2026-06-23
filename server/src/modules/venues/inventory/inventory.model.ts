@@ -23,6 +23,11 @@ export interface IInventoryProduct extends Document {
   description: string;
 
   category_id: Types.ObjectId | null;
+  // E-commerce brand this product belongs to + the 3-level taxonomy (the same
+  // Category collection pods use): super → category (category_id) → sub.
+  brand_id: Types.ObjectId | null;
+  super_category_id: Types.ObjectId | null;
+  sub_category_id: Types.ObjectId | null;
   brand_name: string;
   product_type: ProductType;
   unit_type: UnitType;
@@ -94,6 +99,9 @@ const productSchema = new Schema<IInventoryProduct>(
     description: { type: String, default: '', trim: true, maxlength: 4000 },
 
     category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    brand_id: { type: Schema.Types.ObjectId, ref: 'EcommBrand', default: null, index: true },
+    super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
+    sub_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null, index: true },
     brand_name: { type: String, default: '', trim: true, maxlength: 120 },
     product_type: {
       type: String,

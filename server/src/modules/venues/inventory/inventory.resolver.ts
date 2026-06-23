@@ -22,13 +22,17 @@ export const inventoryResolvers = {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.listProductRequests(args.status ?? null);
     },
-    myProductListings: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+    myProductListings: async (_p: unknown, args: { brand_id?: string | null }, ctx: GraphQLContext) => {
       requireAuth(ctx);
-      return inventoryService.listMyProductListings(ctx.user);
+      return inventoryService.listMyProductListings(ctx.user, args.brand_id);
     },
-    availablePodProducts: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+    availablePodProducts: async (
+      _p: unknown,
+      args: { super_category_id?: string | null; category_id?: string | null; sub_category_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
       requireAuth(ctx);
-      return inventoryService.listAvailablePodProducts();
+      return inventoryService.listAvailablePodProducts(args);
     },
     inventoryProduct: async (_p: unknown, args: { product_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);

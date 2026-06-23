@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -90,6 +91,9 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     short_description: product.short_description ?? '',
     description: product.description ?? '',
     category_id: product.category_id ? String(product.category_id) : null,
+    brand_id: product.brand_id ? String(product.brand_id) : null,
+    super_category_id: product.super_category_id ? String(product.super_category_id) : null,
+    sub_category_id: product.sub_category_id ? String(product.sub_category_id) : null,
     brand_name: product.brand_name ?? '',
     product_type: product.product_type ?? 'CONSUMABLE',
     unit_type: product.unit_type ?? 'PIECE',
@@ -245,6 +249,12 @@ function validateProductListingInput(input: any) {
   if (!cleanText(input.product_name, 200)) {
     throw new GraphQLError('Product title is required', { extensions: { code: 'BAD_USER_INPUT' } });
   }
+  if (!input.brand_id || !Types.ObjectId.isValid(input.brand_id)) {
+    throw new GraphQLError('Select the brand this product belongs to', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  if (!input.super_category_id || !input.category_id || !input.sub_category_id) {
+    throw new GraphQLError('Select a Super category, Category and Sub category', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
   if (listingImages(input).length === 0) {
     throw new GraphQLError('Upload at least one product image before submitting', { extensions: { code: 'BAD_USER_INPUT' } });
   }
@@ -280,8 +290,14 @@ async function requireEcommManager(user: AuthUser | null) {
   return user;
 }
 
+const toOid = (v: any) => (v && Types.ObjectId.isValid(v) ? new Types.ObjectId(v) : null);
+
 function applyListingFields(doc: IInventoryProduct, input: any, user: AuthUser | null) {
   const images = listingImages(input);
+  if (input.brand_id !== undefined) doc.brand_id = toOid(input.brand_id);
+  if (input.super_category_id !== undefined) doc.super_category_id = toOid(input.super_category_id);
+  if (input.category_id !== undefined) doc.category_id = toOid(input.category_id);
+  if (input.sub_category_id !== undefined) doc.sub_category_id = toOid(input.sub_category_id);
   doc.product_name = cleanText(input.product_name, 200);
   doc.short_description = cleanText(input.description, 220);
   doc.description = cleanText(input.description);
@@ -340,19 +356,31 @@ export const inventoryService = {
     return docs.map(inventoryProductToPub);
   },
 
-  async listMyProductListings(user: AuthUser | null) {
+  async listMyProductListings(user: AuthUser | null, brandId?: string | null) {
     if (!user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
-    const docs = await InventoryProductModel.find({ listing_submitted_by_id: user.id }).sort({ updated_at: -1 }).limit(200);
+    const q: any = { listing_submitted_by_id: user.id };
+    if (brandId && Types.ObjectId.isValid(brandId)) q.brand_id = new Types.ObjectId(brandId);
+    const docs = await InventoryProductModel.find(q).sort({ updated_at: -1 }).limit(200);
     return docs.map(inventoryProductToPub);
   },
 
-  async listAvailablePodProducts() {
-    const docs = await InventoryProductModel.find({
+  async listAvailablePodProducts(filter?: {
+    super_category_id?: string | null;
+    category_id?: string | null;
+    sub_category_id?: string | null;
+  }) {
+    const q: any = {
       is_active: true,
       status: 'ACTIVE',
       pod_available: true,
       listing_review_status: 'APPROVED',
-    }).sort({ product_name: 1 }).limit(300);
+    };
+    // Approved products only surface in pods of a matching category level.
+    for (const key of ['super_category_id', 'category_id', 'sub_category_id'] as const) {
+      const value = filter?.[key];
+      if (value && Types.ObjectId.isValid(value)) q[key] = new Types.ObjectId(value);
+    }
+    const docs = await InventoryProductModel.find(q).sort({ product_name: 1 }).limit(300);
     return docs.map(inventoryProductToPub);
   },
 
@@ -370,6 +398,10 @@ export const inventoryService = {
     const doc = await InventoryProductModel.create({
       product_name: cleanText(input.product_name, 200),
       sku,
+      brand_id: toOid(input.brand_id),
+      super_category_id: toOid(input.super_category_id),
+      category_id: toOid(input.category_id),
+      sub_category_id: toOid(input.sub_category_id),
       short_description: cleanText(input.description, 220),
       description: cleanText(input.description),
       image_url: images[0] ?? '',

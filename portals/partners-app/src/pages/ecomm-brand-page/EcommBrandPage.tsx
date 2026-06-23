@@ -1,4 +1,5 @@
 import { useMemo, useRef, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, IconButton, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
@@ -12,6 +13,7 @@ import { toFormValues, toSaveInput, type BrandFormValues } from './schema';
 type Editing = EcommBrand | 'new' | null;
 
 export default function EcommBrandPage() {
+  const navigate = useNavigate();
   const { data, loading, refetch } = useQuery(MY_BRANDS, { fetchPolicy: 'cache-and-network' });
   const [saveBrand, saveState] = useMutation(SAVE_BRAND);
   const [submitBrand, submitState] = useMutation(SUBMIT_BRAND);
@@ -104,7 +106,11 @@ export default function EcommBrandPage() {
               New brand
             </Button>
           </Stack>
-          <PartnerBrandsTable brands={brands} onOpen={(brand) => { setError(null); setEditing(brand); }} />
+          <PartnerBrandsTable
+            brands={brands}
+            onOpen={(brand) => { setError(null); setEditing(brand); }}
+            onManageProducts={(brand) => navigate(`/ecomm-brand/${brand.id}/products`)}
+          />
         </CardContent>
       </Card>
 

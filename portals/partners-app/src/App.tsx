@@ -43,9 +43,10 @@ export default function App() {
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
       <Route path="/ecomm-brand" element={authed(<EcommBrandPage />)} />
       <Route path="/pods" element={<Navigate to="/become-host" replace />} />
-      <Route path="/list-products" element={authed(<ListProductsPage />)} />
-      <Route path="/list-products/new" element={authed(<ProductListingEditorPage />)} />
-      <Route path="/list-products/:productId" element={authed(<ProductListingEditorPage />)} />
+      <Route path="/ecomm-brand/:brandId/products" element={authed(<ListProductsPage />)} />
+      <Route path="/ecomm-brand/:brandId/products/new" element={authed(<ProductListingEditorPage />)} />
+      <Route path="/ecomm-brand/:brandId/products/:productId" element={authed(<ProductListingEditorPage />)} />
+      <Route path="/list-products" element={<Navigate to="/ecomm-brand" replace />} />
       <Route path="/support" element={authed(<SupportPage />)} />
       <Route path="/policies" element={authed(<PartnerPoliciesPage />)} />
       <Route path="/policies/:slug" element={authed(<PartnerPoliciesPage />)} />

@@ -59,6 +59,9 @@ export const inventoryTypeDefs = /* GraphQL */ `
     description: String!
 
     category_id: ID
+    brand_id: ID
+    super_category_id: ID
+    sub_category_id: ID
     brand_name: String!
     product_type: ProductType!
     unit_type: UnitType!
@@ -248,6 +251,10 @@ export const inventoryTypeDefs = /* GraphQL */ `
 
   input ProductListingInput {
     is_duncit_delivery_partner: Boolean!
+    brand_id: ID!
+    super_category_id: ID!
+    category_id: ID!
+    sub_category_id: ID!
     product_name: String!
     image_url: String!
     images: [String!]
@@ -265,8 +272,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
   extend type Query {
     inventoryProducts(search: String, activeOnly: Boolean, status: InventoryStatus): [InventoryProduct!]!
     productListingRequests(status: ProductListingReviewStatus): [InventoryProduct!]!
-    myProductListings: [InventoryProduct!]!
-    availablePodProducts: [InventoryProduct!]!
+    myProductListings(brand_id: ID): [InventoryProduct!]!
+    availablePodProducts(super_category_id: ID, category_id: ID, sub_category_id: ID): [InventoryProduct!]!
     inventoryProduct(product_doc_id: ID!): InventoryProduct
     inventoryActivityLogs(product_doc_id: ID!, limit: Int): [InventoryActivityLog!]!
     inventoryStockMovements(product_doc_id: ID!, limit: Int): [InventoryStockMovement!]!

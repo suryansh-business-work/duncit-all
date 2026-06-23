@@ -7,6 +7,7 @@ import MediaPickerDialog from '../../../components/media-picker-dialog/MediaPick
 import { parseApiError } from '../../../utils/parseApiError';
 import type { ProductListingValues } from './list-products.types';
 import { StepBody } from './list-products.form-ui';
+import CategoryCascade from './CategoryCascade';
 
 const PRODUCT_FIELDS = `
   id
@@ -17,6 +18,10 @@ const PRODUCT_FIELDS = `
   image_url
   inventory_count
   unit_cost
+  brand_id
+  super_category_id
+  category_id
+  sub_category_id
 `;
 
 const SUBMIT_PRODUCT_LISTING = gql`
@@ -33,6 +38,9 @@ const UPDATE_PRODUCT_LISTING = gql`
 
 export const productListingSchema = yup.object({
   is_duncit_delivery_partner: yup.boolean().required('Delivery partner status is required'),
+  super_category_id: yup.string().required('Select a super category'),
+  category_id: yup.string().required('Select a category'),
+  sub_category_id: yup.string().required('Select a sub category'),
   product_name: yup.string().trim().min(3, 'Product title is too short').max(160).required('Product title is required'),
   image_urls: yup.array().of(yup.string().trim().url('Use valid image URLs')).min(1, 'At least one product image is required').required(),
   description: yup.string().trim().min(20, 'Description must be at least 20 characters').max(2000).required('Description is required'),
@@ -48,6 +56,9 @@ export const productListingSchema = yup.object({
 
 const emptyValues: ProductListingValues = {
   is_duncit_delivery_partner: false,
+  super_category_id: '',
+  category_id: '',
+  sub_category_id: '',
   product_name: '',
   image_urls: [],
   description: '',
@@ -65,11 +76,12 @@ const steps = ['Delivery partner', 'Product details', 'Inventory', 'Commission',
 const stepFields = [['is_duncit_delivery_partner'], ['product_name', 'image_urls', 'description'], ['size_label', 'height_cm', 'weight_kg', 'color', 'inventory_count', 'unit_cost'], ['commission_pct'], ['delivery_target'], []];
 
 interface Props {
+  brandId: string;
   product?: any | null;
   onSaved?: () => void;
 }
 
-export default function ListProductsForm({ product = null, onSaved }: Readonly<Props>) {
+export default function ListProductsForm({ brandId, product = null, onSaved }: Readonly<Props>) {
   const [submitProduct, submitState] = useMutation(SUBMIT_PRODUCT_LISTING);
   const [updateProduct, updateState] = useMutation(UPDATE_PRODUCT_LISTING);
   const [activeStep, setActiveStep] = useState(0);
@@ -88,7 +100,7 @@ export default function ListProductsForm({ product = null, onSaved }: Readonly<P
     onSubmit: async (values, helpers) => {
       setApiError(null);
       try {
-        const variables = editing ? { product_doc_id: product.id, input: toSubmitInput(values) } : { input: toSubmitInput(values) };
+        const variables = editing ? { product_doc_id: product.id, input: toSubmitInput(values, brandId) } : { input: toSubmitInput(values, brandId) };
         await (editing ? updateProduct : submitProduct)({ variables });
         setSubmitted(true);
         setActiveStep(5);
@@ -116,8 +128,19 @@ export default function ListProductsForm({ product = null, onSaved }: Readonly<P
           <Stepper activeStep={activeStep} alternativeLabel sx={{ display: { xs: 'none', sm: 'flex' } }}>
             {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
           </Stepper>
-          {submitted && <Alert severity="success">Product {editing ? 'updated' : 'submitted'}. Admin approval is required before hosts can select it.</Alert>}
+          {submitted && <Alert severity="success">Product {editing ? 'updated' : 'submitted'}. Products portal approval is required before it shows in matching pods.</Alert>}
           {apiError && <Alert severity="error">{apiError}</Alert>}
+          <CategoryCascade
+            superId={formik.values.super_category_id}
+            categoryId={formik.values.category_id}
+            subId={formik.values.sub_category_id}
+            error={Boolean(formik.submitCount) && (!formik.values.super_category_id || !formik.values.category_id || !formik.values.sub_category_id)}
+            onChange={(next) => {
+              formik.setFieldValue('super_category_id', next.superId);
+              formik.setFieldValue('category_id', next.categoryId);
+              formik.setFieldValue('sub_category_id', next.subId);
+            }}
+          />
           <StepBody step={activeStep} formik={formik} onImageClick={() => setPickerOpen(true)} />
           <Stack direction="row" spacing={1} justifyContent="space-between">
             <Button disabled={activeStep === 0 || loading} onClick={() => setActiveStep((step) => step - 1)}>Back</Button>
@@ -136,6 +159,26 @@ function productToValues(product?: any | null): ProductListingValues {
   return { ...emptyValues, ...product, image_urls };
 }
 
-function toSubmitInput(values: ProductListingValues) {
-  return { ...values, image_url: values.image_urls[0] ?? '', images: values.image_urls, height_cm: Number(values.height_cm), weight_kg: Number(values.weight_kg), inventory_count: Number(values.inventory_count), unit_cost: Number(values.unit_cost) };
+// Build only the fields ProductListingInput accepts (an edited product carries
+// extra fields like id/listing_* that the input would reject).
+function toSubmitInput(values: ProductListingValues, brandId: string) {
+  return {
+    is_duncit_delivery_partner: values.is_duncit_delivery_partner,
+    brand_id: brandId,
+    super_category_id: values.super_category_id,
+    category_id: values.category_id,
+    sub_category_id: values.sub_category_id,
+    product_name: values.product_name,
+    image_url: values.image_urls[0] ?? '',
+    images: values.image_urls,
+    description: values.description,
+    size_label: values.size_label,
+    height_cm: Number(values.height_cm),
+    weight_kg: Number(values.weight_kg),
+    color: values.color,
+    inventory_count: Number(values.inventory_count),
+    unit_cost: Number(values.unit_cost),
+    commission_pct: values.commission_pct,
+    delivery_target: values.delivery_target,
+  };
 }

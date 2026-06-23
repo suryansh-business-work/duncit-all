@@ -48,7 +48,7 @@ const PRODUCT_FIELDS = `
 `;
 
 export const MY_PRODUCT_LISTINGS = gql`
-  query MyProductListings { myProductListings { ${PRODUCT_FIELDS} } }
+  query MyProductListings($brand_id: ID) { myProductListings(brand_id: $brand_id) { ${PRODUCT_FIELDS} } }
 `;
 
 const UPDATE_QUANTITY = gql`
@@ -64,13 +64,14 @@ const DELETE_LISTING = gql`
 `;
 
 interface Props {
+  brandId: string;
   refreshKey?: number;
   canManageProducts?: boolean;
   onEdit: (product: any) => void;
 }
 
-export default function ProductListingsTable({ refreshKey = 0, canManageProducts = false, onEdit }: Readonly<Props>) {
-  const { data, loading, error, refetch } = useQuery(MY_PRODUCT_LISTINGS, { fetchPolicy: 'cache-and-network' });
+export default function ProductListingsTable({ brandId, refreshKey = 0, canManageProducts = false, onEdit }: Readonly<Props>) {
+  const { data, loading, error, refetch } = useQuery(MY_PRODUCT_LISTINGS, { variables: { brand_id: brandId }, fetchPolicy: 'cache-and-network' });
   const [updateQuantity, quantityState] = useMutation(UPDATE_QUANTITY);
   const [deleteListing, deleteState] = useMutation(DELETE_LISTING);
   const [quantities, setQuantities] = useState<Record<string, string>>({});

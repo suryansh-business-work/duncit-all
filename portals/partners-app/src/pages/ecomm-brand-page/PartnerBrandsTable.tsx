@@ -1,6 +1,7 @@
 import { Alert, Avatar, Box, Chip, IconButton, Stack, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import VisibilityIcon from '@mui/icons-material/Visibility';
+import Inventory2Icon from '@mui/icons-material/Inventory2';
 import type { EcommBrand } from './queries';
 
 const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'warning' | 'error'> = {
@@ -13,9 +14,10 @@ const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'warning' | 
 interface Props {
   brands: EcommBrand[];
   onOpen: (brand: EcommBrand) => void;
+  onManageProducts: (brand: EcommBrand) => void;
 }
 
-export default function PartnerBrandsTable({ brands, onOpen }: Readonly<Props>) {
+export default function PartnerBrandsTable({ brands, onOpen, onManageProducts }: Readonly<Props>) {
   if (brands.length === 0) {
     return <Alert severity="info">No brands yet — create your first product brand to get started.</Alert>;
   }
@@ -50,6 +52,13 @@ export default function PartnerBrandsTable({ brands, onOpen }: Readonly<Props>) 
               </TableCell>
               <TableCell><Chip size="small" color={STATUS_COLOR[brand.status]} label={brand.status} /></TableCell>
               <TableCell align="right" onClick={(e) => e.stopPropagation()}>
+                {brand.status === 'APPROVED' && (
+                  <Tooltip title="Product management">
+                    <IconButton size="small" color="primary" onClick={() => onManageProducts(brand)}>
+                      <Inventory2Icon fontSize="small" />
+                    </IconButton>
+                  </Tooltip>
+                )}
                 <Tooltip title={locked ? 'View' : 'Edit'}>
                   <IconButton size="small" onClick={() => onOpen(brand)}>
                     {locked ? <VisibilityIcon fontSize="small" /> : <EditIcon fontSize="small" />}

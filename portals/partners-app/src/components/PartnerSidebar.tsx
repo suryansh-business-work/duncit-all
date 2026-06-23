@@ -2,7 +2,7 @@ import { gql, useQuery } from '@apollo/client';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
 import { Box, Divider, List, ListItemButton, ListItemIcon, ListItemText, Skeleton, Typography } from '@mui/material';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBoxOpen, faBuilding, faCircleQuestion, faFileLines, faGaugeHigh, faHeadset, faStore, faUserTie } from '@fortawesome/free-solid-svg-icons';
+import { faBuilding, faCircleQuestion, faFileLines, faGaugeHigh, faHeadset, faStore, faUserTie } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { useBranding } from '../lib/useBranding';
 import { HEADER_HEIGHT } from './PartnerShell';
@@ -26,7 +26,6 @@ const sections: { heading: string; items: NavItem[] }[] = [
       { label: 'Venues', to: '/register-venue', icon: faBuilding, match: '/register-venue' },
       { label: 'Host', to: '/become-host', icon: faUserTie, match: '/become-host' },
       { label: 'E-Commerce Brand', to: '/ecomm-brand', icon: faStore, match: '/ecomm-brand' },
-      { label: 'Products', to: '/list-products', icon: faBoxOpen, match: '/list-products' },
     ],
   },
   { heading: 'Help', items: [{ label: 'FAQs', to: '/faqs', icon: faCircleQuestion, match: '/faqs' }, { label: 'Support', to: '/support', icon: faHeadset, match: '/support' }] },

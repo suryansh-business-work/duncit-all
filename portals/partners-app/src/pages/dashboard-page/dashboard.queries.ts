@@ -12,6 +12,7 @@ const METRICS = `
 export const PARTNER_DASHBOARD = gql`
   query PartnerDashboard($from: String!, $to: String!) {
     me {
+      user_id
       roles
     }
     partnerDashboard(from: $from, to: $to) {

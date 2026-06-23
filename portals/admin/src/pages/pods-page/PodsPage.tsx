@@ -1,9 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Alert, Snackbar, Stack } from '@mui/material';
+import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
+import MediaPickerDialog from '../../components/MediaPickerDialog';
 import {
   PODS,
   CLUBS,
@@ -57,7 +59,48 @@ export default function PodsPage() {
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
+  const [quickPod, setQuickPod] = useState<any | null>(null);
+  const [quickBusy, setQuickBusy] = useState(false);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerResolve = useRef<((url: string | null) => void) | null>(null);
   const releaseRequest = usePodReleaseRequest({ refetch, setToast });
+
+  // Bridge the URL-callback media picker to the shared form's promise picker.
+  const pickImage = () =>
+    new Promise<string | null>((resolve) => {
+      pickerResolve.current = resolve;
+      setPickerOpen(true);
+    });
+  const settlePicker = (url: string | null) => {
+    pickerResolve.current?.(url);
+    pickerResolve.current = null;
+    setPickerOpen(false);
+  };
+
+  const saveQuickEdit = async (values: PodContentValues) => {
+    if (!quickPod) return;
+    setQuickBusy(true);
+    setOpError(null);
+    try {
+      await updateMut({
+        variables: {
+          id: quickPod.id,
+          input: {
+            pod_title: values.pod_title,
+            pod_description: values.pod_description,
+            pod_images_and_videos: values.pod_images_and_videos.map((m) => ({ url: m.url, type: m.type || 'IMAGE' })),
+          },
+        },
+      });
+      setQuickPod(null);
+      setToast('Saved');
+      await refetch();
+    } catch (e: any) {
+      setOpError(e.message);
+    } finally {
+      setQuickBusy(false);
+    }
+  };
 
   const clubs = clubsData?.clubs ?? [];
   const locations = locsData?.locations ?? [];
@@ -154,6 +197,7 @@ export default function PodsPage() {
         venueName={venueName}
         locName={locName}
         onEdit={openEdit}
+        onQuickEdit={(p) => { setOpError(null); setQuickPod(p); }}
         onDelete={remove}
         onComplete={releaseRequest.openCompletePod}
         onView={(p) => navigate(`/pods/${p.id}`)}
@@ -182,6 +226,36 @@ export default function PodsPage() {
         userName={userName}
         onSubmit={submit}
         finance={financeData?.publicFinanceSettings}
+      />
+
+      {quickPod && (
+        <PodContentFormDialog
+          open={!!quickPod}
+          title="Quick edit pod"
+          defaultValues={{
+            pod_title: quickPod.pod_title || '',
+            pod_description: quickPod.pod_description || '',
+            pod_images_and_videos: (quickPod.pod_images_and_videos ?? []).map((m: any) => ({ url: m.url, type: m.type })),
+          }}
+          editableFields={['pod_title', 'pod_description', 'pod_images_and_videos']}
+          readOnlyContext={[
+            { label: 'Club', value: clubName(quickPod.club_id) },
+            { label: 'Place', value: quickPod.pod_mode === 'VIRTUAL' ? 'Virtual pod' : venueName(quickPod.venue_id) },
+          ]}
+          busy={quickBusy}
+          error={opError}
+          onClose={() => setQuickPod(null)}
+          onSubmit={saveQuickEdit}
+          onPickImage={pickImage}
+        />
+      )}
+
+      <MediaPickerDialog
+        open={pickerOpen}
+        onClose={() => settlePicker(null)}
+        onPicked={(url) => settlePicker(url)}
+        folder="/pods/media"
+        title="Add pod image"
       />
 
       <Snackbar

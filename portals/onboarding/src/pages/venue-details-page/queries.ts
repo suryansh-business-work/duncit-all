@@ -26,6 +26,32 @@ export const VENUE_DETAILS = gql`
   }
 `;
 
+const SLOT_FIELDS = `id venue_id start_at end_at status booked_by_pod_id booked_pod_title notes created_at`;
+
+export const ADMIN_VENUE_SLOTS = gql`
+  query AdminVenueSlots($venue_id: ID!, $from: String, $to: String) {
+    adminVenueSlots(venue_id: $venue_id, from: $from, to: $to) { ${SLOT_FIELDS} }
+  }
+`;
+
+export const ADMIN_CREATE_VENUE_SLOTS = gql`
+  mutation AdminCreateVenueSlots($input: BulkCreateVenueSlotsInput!) {
+    adminCreateVenueSlots(input: $input) { id start_at end_at status notes }
+  }
+`;
+
+export const ADMIN_UPDATE_VENUE_SLOT = gql`
+  mutation AdminUpdateVenueSlot($slot_id: ID!, $input: UpdateVenueSlotInput!) {
+    adminUpdateVenueSlot(slot_id: $slot_id, input: $input) { id start_at end_at status notes }
+  }
+`;
+
+export const ADMIN_DELETE_VENUE_SLOT = gql`
+  mutation AdminDeleteVenueSlot($slot_id: ID!) {
+    adminDeleteVenueSlot(slot_id: $slot_id)
+  }
+`;
+
 export interface AdminVenueDetails {
   id: string;
   venue_name: string;

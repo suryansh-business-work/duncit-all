@@ -13,12 +13,14 @@
   "dependencies": {
     "@apollo/client": "^3.10.4",
     "@duncit/logs": "workspace:*",
+    "@duncit/portal-pod-form": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/user-context": "workspace:*",
     "@emotion/react": "^11.11.4",
     "@emotion/styled": "^11.11.5",
     "@graphql-typed-document-node/core": "^3.2.0",
+    "@hookform/resolvers": "^3.9.1",
     "@monaco-editor/react": "^4.6.0",
     "@mui/icons-material": "^5.15.18",
     "@mui/material": "^5.15.18",
@@ -37,11 +39,13 @@
     "react-activity-calendar": "^3.2.0",
     "react-chartjs-2": "^5.3.1",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.0",
     "react-quill": "^2.0.0",
     "react-router": "^6.23.1",
     "react-router-dom": "^6.23.1",
     "socket.io-client": "^4.8.3",
-    "yup": "^1.4.0"
+    "yup": "^1.4.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

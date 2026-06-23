@@ -1,17 +1,24 @@
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import { CREATE_PARTNER_POD, PARTNER_PODS_PAGE } from './queries';
+import { format } from 'date-fns';
+import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
+import MediaPickerDialog from '../../components/MediaPickerDialog';
+import { CREATE_PARTNER_POD, HOST_UPDATE_POD, PARTNER_PODS_PAGE } from './queries';
 import PartnerPodsTable from './PartnerPodsTable';
 import { PartnerPodForm, blankPartnerPodForm, buildPartnerPodInput, type PartnerPodFormValues } from './partner-pod';
 
 export default function PartnerPodsSection() {
   const { data, loading, error, refetch } = useQuery(PARTNER_PODS_PAGE, { fetchPolicy: 'cache-and-network' });
   const [createPod, createState] = useMutation(CREATE_PARTNER_POD);
+  const [hostUpdatePod, updateState] = useMutation(HOST_UPDATE_POD);
   const [open, setOpen] = useState(false);
+  const [editPod, setEditPod] = useState<any | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const pickerResolve = useRef<((url: string | null) => void) | null>(null);
   const clubs = data?.clubs ?? [];
   const venues = (data?.myVenues ?? []).filter((venue: any) => venue.status === 'APPROVED' && venue.is_active);
   const products = data?.availablePodProducts ?? [];
@@ -31,6 +38,40 @@ export default function PartnerPodsSection() {
     }
   };
 
+  // Bridge the URL-callback MediaPickerDialog to the package's promise-based picker.
+  const pickImage = () =>
+    new Promise<string | null>((resolve) => {
+      pickerResolve.current = resolve;
+      setPickerOpen(true);
+    });
+  const settlePicker = (url: string | null) => {
+    pickerResolve.current?.(url);
+    pickerResolve.current = null;
+    setPickerOpen(false);
+  };
+
+  const saveEdit = async (values: PodContentValues) => {
+    if (!editPod) return;
+    setOpError(null);
+    try {
+      await hostUpdatePod({
+        variables: {
+          pod_doc_id: editPod.id,
+          input: {
+            pod_title: values.pod_title,
+            pod_description: values.pod_description,
+            pod_images_and_videos: values.pod_images_and_videos.map((m) => ({ url: m.url, type: m.type || 'IMAGE' })),
+          },
+        },
+      });
+      setEditPod(null);
+      setMessage('Pod updated.');
+      await refetch();
+    } catch (editError: any) {
+      setOpError(editError.message);
+    }
+  };
+
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
@@ -44,7 +85,7 @@ export default function PartnerPodsSection() {
           </Stack>
           {!approvedHost && <Alert severity="info">Host approval is required before creating pods.</Alert>}
           {error && <Alert severity="error">{error.message}</Alert>}
-          <PartnerPodsTable loading={loading && !data} pods={data?.myHostPods ?? []} clubName={clubName} venueName={venueName} />
+          <PartnerPodsTable loading={loading && !data} pods={data?.myHostPods ?? []} clubName={clubName} venueName={venueName} onEdit={(pod) => { setOpError(null); setEditPod(pod); }} />
         </Stack>
       </CardContent>
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">
@@ -54,6 +95,37 @@ export default function PartnerPodsSection() {
           {opError && <Alert severity="error" sx={{ mt: 2 }}>{opError}</Alert>}
         </DialogContent>
       </Dialog>
+
+      {editPod && (
+        <PodContentFormDialog
+          open={!!editPod}
+          title="Edit pod"
+          defaultValues={{
+            pod_title: editPod.pod_title || '',
+            pod_description: editPod.pod_description || '',
+            pod_images_and_videos: (editPod.pod_images_and_videos ?? []).map((m: any) => ({ url: m.url, type: m.type })),
+          }}
+          editableFields={['pod_title', 'pod_description', 'pod_images_and_videos']}
+          readOnlyContext={[
+            { label: 'Date', value: editPod.pod_date_time ? format(new Date(editPod.pod_date_time), 'dd MMM yyyy, h:mm a') : 'Not scheduled' },
+            { label: 'Place', value: editPod.pod_mode === 'VIRTUAL' ? 'Virtual pod' : venueName(editPod.venue_id) },
+            { label: 'Attendees', value: String(editPod.pod_attendees?.length ?? 0) },
+          ]}
+          busy={updateState.loading}
+          error={opError}
+          onClose={() => setEditPod(null)}
+          onSubmit={saveEdit}
+          onPickImage={pickImage}
+        />
+      )}
+
+      <MediaPickerDialog
+        open={pickerOpen}
+        onClose={() => settlePicker(null)}
+        onPicked={(url) => settlePicker(url)}
+        folder="/pods/media"
+        title="Add pod image"
+      />
       <Snackbar open={!!message} autoHideDuration={2500} message={message ?? ''} onClose={() => setMessage(null)} />
     </Card>
   );

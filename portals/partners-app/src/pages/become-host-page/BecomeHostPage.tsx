@@ -59,6 +59,9 @@ export default function BecomeHostPage() {
   };
 
   const status = data?.myHost?.status;
+  // An approved host has already "become a host" — they get the hosting area
+  // (their pods), never the become-a-host application flow.
+  const isHost = status === 'APPROVED';
   const busy = m1State.loading || m2State.loading || m3State.loading || mFinalState.loading || withdrawState.loading;
   const locked = status === 'SUBMITTED' || status === 'APPROVED';
   const withdraw = async () => {
@@ -74,33 +77,38 @@ export default function BecomeHostPage() {
 
   return (
     <Stack spacing={2.25}>
-      <Box sx={{ p: 2.25, borderRadius: 2, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' }}>
+      <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
         <Stack direction="row" alignItems="flex-start" spacing={1.25}>
           <Box sx={{ flex: 1 }}>
-            <Typography variant="overline" sx={{ color: 'rgba(255,255,255,0.62)', fontWeight: 900 }}>Partner tools</Typography>
-            <Typography variant="h4" sx={{ fontWeight: 950 }}>Become a host</Typography>
-            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 800 }}>4 steps - submit your profile for review</Typography>
+            <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>Partner tools</Typography>
+            <Typography variant="h4" sx={{ fontWeight: 950 }}>{isHost ? 'Your hosting' : 'Become a host'}</Typography>
+            <Typography variant="caption" sx={{ color: 'rgba(255,255,255,0.68)', fontWeight: 800 }}>
+              {isHost ? 'Manage your pods and hosting profile.' : '4 steps - submit your profile for review'}
+            </Typography>
           </Box>
-          {status && <Chip size="small" label={status} sx={{ bgcolor: status === 'APPROVED' ? 'success.main' : 'rgba(255,255,255,0.14)', color: '#fff', fontWeight: 900 }} />}
+          {status && <Chip size="small" label={isHost ? 'HOST' : status} sx={{ bgcolor: status === 'APPROVED' ? 'success.main' : 'rgba(255,255,255,0.14)', color: '#fff', fontWeight: 900 }} />}
         </Stack>
       </Box>
-      {status === 'SUBMITTED' && <Alert severity="info">Application under review.</Alert>}
-      {status === 'APPROVED' && <Alert severity="success">Approved! You can host pods now.</Alert>}
-      {status === 'REJECTED' && <Alert severity="error">Rejected: {data?.myHost?.reviewer_notes || 'See notes.'}</Alert>}
-      <HostWithdrawApplication status={status} busy={busy} onWithdraw={withdraw} />
-      <Stepper activeStep={step} alternativeLabel sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(17,24,39,0.05)' }}>
-        {HOST_STEPS.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
-      </Stepper>
-      <Card variant="outlined">
-        <CardContent>
-          <HostStepContent step={step} s1={s1} s2={s2} s3={s3} set1={set1} set2={set2} set3={set3} openPicker={setPicker} />
-          {err && <Alert severity="error" sx={{ mt: 2 }}>{err}</Alert>}
-          <Stack direction="row" spacing={1} mt={3} justifyContent="space-between">
-            <Button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))}>Back</Button>
-            <Button variant="contained" onClick={next} disabled={busy || locked}>{step === 3 ? 'Submit' : 'Next'}</Button>
-          </Stack>
-        </CardContent>
-      </Card>
+      {!isHost && (
+        <>
+          {status === 'SUBMITTED' && <Alert severity="info">Application under review.</Alert>}
+          {status === 'REJECTED' && <Alert severity="error">Rejected: {data?.myHost?.reviewer_notes || 'See notes.'}</Alert>}
+          <HostWithdrawApplication status={status} busy={busy} onWithdraw={withdraw} />
+          <Stepper activeStep={step} alternativeLabel sx={{ p: 1, borderRadius: 2, bgcolor: 'rgba(17,24,39,0.05)' }}>
+            {HOST_STEPS.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
+          </Stepper>
+          <Card variant="outlined">
+            <CardContent>
+              <HostStepContent step={step} s1={s1} s2={s2} s3={s3} set1={set1} set2={set2} set3={set3} openPicker={setPicker} />
+              {err && <Alert severity="error" sx={{ mt: 2 }}>{err}</Alert>}
+              <Stack direction="row" spacing={1} mt={3} justifyContent="space-between">
+                <Button disabled={step === 0} onClick={() => setStep((current) => Math.max(0, current - 1))}>Back</Button>
+                <Button variant="contained" onClick={next} disabled={busy || locked}>{step === 3 ? 'Submit' : 'Next'}</Button>
+              </Stack>
+            </CardContent>
+          </Card>
+        </>
+      )}
       <PartnerPodsSection />
       <MediaPickerDialog open={picker !== null} onClose={() => setPicker(null)} onPicked={(url) => {
         if (picker === 'photo') set2({ ...s2, passport_photo_url: url });

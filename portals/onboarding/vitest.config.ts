@@ -52,6 +52,10 @@ export default defineConfig({
         'src/components/DateField.tsx',
         'src/pages/LoginPage.tsx',
         'src/pages/DashboardPage.tsx',
+        // Chart wrappers — chart.js renders to <canvas> which jsdom can't draw;
+        // their pure inputs (onboardingStats) are unit-tested to 100% instead.
+        'src/pages/dashboard/StatusBreakdownChart.tsx',
+        'src/pages/dashboard/OnboardingTrendChart.tsx',
         // Apollo CRUD containers (queries + mutations) — their presentational
         // children (tables, cards, dialogs, sections, forms) ARE unit-tested.
         'src/pages/hosts-page/HostsPage.tsx',
@@ -60,6 +64,9 @@ export default defineConfig({
         'src/pages/venues-page/VenueEditDialog.tsx',
         'src/pages/venue-details-page/VenueDetailsPage.tsx',
         'src/pages/venue-details-page/VenueHealthCard.tsx',
+        // Apollo slot-availability container: reuses the shared calendar package
+        // (canvas-free but Apollo-driven); validated end-to-end.
+        'src/pages/venue-details-page/VenueSlotAvailabilityTab.tsx',
         'src/pages/user-details-page/UserHealthSection/AdjustHealthDialog.tsx',
         'src/components/AdminHostCreateDialog.tsx',
         'src/components/AdminVenueCreateDialog.tsx',

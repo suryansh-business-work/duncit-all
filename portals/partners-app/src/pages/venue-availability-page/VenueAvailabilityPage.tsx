@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { Link as RouterLink, useNavigate, useParams } from 'react-router-dom';
 import {
   Alert,
@@ -23,9 +23,14 @@ import {
   startOfMonth,
   subMonths,
 } from 'date-fns';
-import AvailabilityCalendar from './AvailabilityCalendar';
-import DayDrawer from './DayDrawer';
-import { VENUE_SLOTS, type VenueSlotRow } from './queries';
+import { AvailabilityCalendar, DayDrawer, type NewSlotInput } from '@duncit/availability-calendar';
+import {
+  CREATE_VENUE_SLOTS,
+  DELETE_VENUE_SLOT,
+  UPDATE_VENUE_SLOT,
+  VENUE_SLOTS,
+  type VenueSlotRow,
+} from './queries';
 import { MY_VENUES } from '../register-venue-page/queries';
 
 export default function VenueAvailabilityPage() {
@@ -47,6 +52,23 @@ export default function VenueAvailabilityPage() {
     fetchPolicy: 'cache-and-network',
     skip: !venueId,
   });
+
+  const [createSlots] = useMutation(CREATE_VENUE_SLOTS);
+  const [updateSlot] = useMutation(UPDATE_VENUE_SLOT);
+  const [deleteSlot] = useMutation(DELETE_VENUE_SLOT);
+
+  const handleCreate = async (input: NewSlotInput) => {
+    await createSlots({ variables: { input: { venue_id: venueId, slots: [input] } } });
+    await refetch();
+  };
+  const handleToggleBlock = async (slot: VenueSlotRow) => {
+    await updateSlot({ variables: { slot_id: slot.id, input: { block: slot.status !== 'BLOCKED' } } });
+    await refetch();
+  };
+  const handleDelete = async (slotId: string) => {
+    await deleteSlot({ variables: { slot_id: slotId } });
+    await refetch();
+  };
 
   const slotsForSelected = useMemo<VenueSlotRow[]>(() => {
     if (!selectedDate) return [];
@@ -135,12 +157,13 @@ export default function VenueAvailabilityPage() {
       </Card>
 
       <DayDrawer
-        venueId={venueId}
         open={!!selectedDate}
         date={selectedDate}
         slots={slotsForSelected}
         onClose={() => setSelectedDate(null)}
-        onChanged={() => refetch()}
+        onCreate={handleCreate}
+        onToggleBlock={handleToggleBlock}
+        onDelete={handleDelete}
       />
     </Stack>
   );

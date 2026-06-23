@@ -24,6 +24,7 @@ interface Props {
   venueName: (id: string) => string;
   locName: (id: string) => string;
   onEdit: (p: any) => void;
+  onQuickEdit: (p: any) => void;
   onDelete: (p: any) => void;
   onComplete: (p: any) => void;
   onView?: (p: any) => void;
@@ -57,7 +58,7 @@ function PodCover({ pod }: Readonly<{ pod: any }>) {
   );
 }
 
-export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onDelete, onComplete, onView }: Readonly<Props>) {
+export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onView }: Readonly<Props>) {
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>
@@ -158,7 +159,7 @@ export default function PodsTable({ loading, pods, clubName, venueName, locName,
                     />
                   </TableCell>
                   <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                    <PodActionButtons pod={p} onEdit={onEdit} onDelete={onDelete} onComplete={onComplete} />
+                    <PodActionButtons pod={p} onEdit={onEdit} onQuickEdit={onQuickEdit} onDelete={onDelete} onComplete={onComplete} />
                   </TableCell>
                 </TableRow>
               ))}

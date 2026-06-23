@@ -18,6 +18,8 @@ import {
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import { PORTAL_ACCESS, type PortalAccess } from '../../constants/portalAccess';
 
+const cleanHost = (u: string) => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
+
 interface Props {
   open: boolean;
   onClose: () => void;
@@ -36,23 +38,37 @@ function PortalCard({
   selectedRoles: Set<string>;
   toggleRole: (key: string) => void;
 }>) {
+  const links = portal.links ?? [{ label: '', url: portal.url }];
   return (
     <Card variant="outlined">
       <CardContent sx={{ py: 1.5, '&:last-child': { pb: 1.5 } }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 0.5 }}>
-          <Box sx={{ minWidth: 0 }}>
-            <Typography variant="subtitle2" fontWeight={700}>
-              {portal.name}
-            </Typography>
-            <Typography variant="caption" color="text.secondary">
-              {portal.url.replace(/^https?:\/\//, '').replace(/\/$/, '')}
-            </Typography>
-          </Box>
-          <Tooltip title={`Open ${portal.url}`}>
-            <IconButton size="small" component="a" href={portal.url} target="_blank" rel="noopener">
-              <OpenInNewIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
+        <Typography variant="subtitle2" fontWeight={700}>
+          {portal.name}
+        </Typography>
+        <Stack spacing={0.25} sx={{ mb: 0.75, mt: 0.25 }}>
+          {links.map((link) => (
+            <Stack
+              key={link.url}
+              direction="row"
+              alignItems="center"
+              justifyContent="space-between"
+            >
+              <Typography variant="caption" color="text.secondary" noWrap sx={{ minWidth: 0 }}>
+                {link.label ? `${link.label} · ${cleanHost(link.url)}` : cleanHost(link.url)}
+              </Typography>
+              <Tooltip title={`Open ${link.url}`}>
+                <IconButton
+                  size="small"
+                  component="a"
+                  href={link.url}
+                  target="_blank"
+                  rel="noopener"
+                >
+                  <OpenInNewIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
+            </Stack>
+          ))}
         </Stack>
         <Stack spacing={0.25}>
           {portal.roles.map((r) => (

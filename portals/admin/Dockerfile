@@ -37,6 +37,8 @@ COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/logs/package.json ./packages/logs/
 COPY packages/shell/package.json ./packages/shell/
 COPY packages/theme/package.json ./packages/theme/
+COPY packages/availability-calendar/package.json ./packages/availability-calendar/
+COPY packages/portal-pod-form/package.json ./packages/portal-pod-form/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

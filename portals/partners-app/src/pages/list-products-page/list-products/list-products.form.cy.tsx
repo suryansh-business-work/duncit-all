@@ -3,6 +3,9 @@ import { productListingSchema } from './list-products.form';
 
 const validListing = {
   is_duncit_delivery_partner: true,
+  super_category_id: '507f1f77bcf86cd799439011',
+  category_id: '507f1f77bcf86cd799439012',
+  sub_category_id: '507f1f77bcf86cd799439013',
   product_name: 'Cold brew kit',
   image_urls: ['https://cdn.example.com/product.jpg'],
   description: 'A complete cold brew kit for hosts to add to their pods.',

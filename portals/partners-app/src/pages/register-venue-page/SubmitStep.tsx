@@ -5,15 +5,36 @@ interface Props {
   step1: VenueStep1;
   step2: VenueStep2;
   step3: VenueStep3;
+  status?: string;
 }
 
-export default function SubmitStep({ step1, step2, step3 }: Readonly<Props>) {
+type ChipColor = 'warning' | 'info' | 'success' | 'error';
+
+// The review card mirrors the real venue status so it never contradicts the
+// header (e.g. an APPROVED venue must not show a "Draft" pill).
+const STATUS_CHIP: Record<string, { label: string; color: ChipColor }> = {
+  DRAFT: { label: 'Draft', color: 'warning' },
+  SUBMITTED: { label: 'Submitted', color: 'info' },
+  APPROVED: { label: 'Approved', color: 'success' },
+  REJECTED: { label: 'Rejected', color: 'error' },
+};
+
+const STATUS_BLURB: Record<string, string> = {
+  DRAFT: 'Our team verifies your space within 24 hours.',
+  SUBMITTED: 'Submitted — our team verifies your space within 24 hours.',
+  APPROVED: 'Approved — your venue is live and visible to hosts.',
+  REJECTED: 'Rejected — update the details and resubmit for review.',
+};
+
+export default function SubmitStep({ step1, step2, step3, status = 'DRAFT' }: Readonly<Props>) {
+  const chip = STATUS_CHIP[status] ?? STATUS_CHIP.DRAFT;
+  const blurb = STATUS_BLURB[status] ?? STATUS_BLURB.DRAFT;
   return (
     <Stack spacing={2}>
       <Box sx={{ p: 1.5, borderRadius: 2, bgcolor: 'rgba(255,79,115,0.10)', border: '1px solid rgba(255,79,115,0.18)' }}>
         <Typography variant="subtitle2" sx={{ fontWeight: 950 }}>Review & submit</Typography>
         <Typography variant="caption" color="text.secondary">
-          Our team verifies your space within 24 hours.
+          {blurb}
         </Typography>
       </Box>
       <Box sx={{ overflow: 'hidden', borderRadius: 2, border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
@@ -21,7 +42,7 @@ export default function SubmitStep({ step1, step2, step3 }: Readonly<Props>) {
         <Stack spacing={1} sx={{ p: 1.5 }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="h6" sx={{ flex: 1, fontWeight: 950 }} noWrap>{step1.venue_name || 'Venue name'}</Typography>
-            <Chip size="small" label="Draft" color="warning" sx={{ fontWeight: 900 }} />
+            <Chip size="small" label={chip.label} color={chip.color} sx={{ fontWeight: 900 }} />
           </Stack>
           <Typography variant="caption" color="text.secondary">
             {step1.venue_type} - Capacity {step1.capacity || 0}

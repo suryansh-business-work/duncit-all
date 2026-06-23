@@ -18,6 +18,14 @@ export const CLUBS = gql`
         url
         type
       }
+      who_we_are
+      what_we_do
+      perks
+      values
+      faqs {
+        question
+        answer
+      }
       meetup_venues_id
       category_id
       super_category_id
@@ -69,6 +77,11 @@ export const DELETE = gql`
   }
 `;
 
+export interface ClubFaq {
+  question: string;
+  answer: string;
+}
+
 export interface ClubForm {
   id?: string;
   club_id: string;
@@ -82,6 +95,11 @@ export interface ClubForm {
   community_link: string;
   announcement_link: string;
   group_link: string;
+  who_we_are: string[];
+  what_we_do: string[];
+  perks: string[];
+  values: string[];
+  faqs: ClubFaq[];
   is_active: boolean;
 }
 export const blankForm: ClubForm = {
@@ -96,6 +114,11 @@ export const blankForm: ClubForm = {
   community_link: '',
   announcement_link: '',
   group_link: '',
+  who_we_are: [],
+  what_we_do: [],
+  perks: [],
+  values: [],
+  faqs: [],
   is_active: true,
 };
 
@@ -105,3 +128,11 @@ export const linesToMedia = (text: string) =>
     .map((s) => s.trim())
     .filter(Boolean)
     .map((url) => ({ url, type: /\.(mp4|mov|webm)$/i.test(url) ? 'VIDEO' : 'IMAGE' }));
+
+export const cleanBullets = (items: string[]) =>
+  items.map((item) => item.trim()).filter(Boolean);
+
+export const cleanFaqs = (items: ClubFaq[]) =>
+  items
+    .map((faq) => ({ question: faq.question.trim(), answer: faq.answer.trim() }))
+    .filter((faq) => faq.question && faq.answer);

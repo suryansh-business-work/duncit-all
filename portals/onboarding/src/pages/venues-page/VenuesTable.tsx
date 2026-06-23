@@ -1,20 +1,14 @@
 import EditIcon from '@mui/icons-material/Edit';
-import OpenInNewIcon from '@mui/icons-material/OpenInNew';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Link as RouterLink } from 'react-router-dom';
 import { Chip, IconButton, Link, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
-import { urlConfigs } from '../../config/url-configs';
 
 interface Props {
   venues: any[];
   onEdit: (venue: any) => void;
   onReview: (venue: any) => void;
 }
-
-const publicVenueUrl = (venueId: string) => {
-  const baseUrl = urlConfigs.mwebUrl.replace(/\/$/, '');
-  return `${baseUrl}/venue/${venueId}`;
-};
 
 export default function VenuesTable({ venues, onEdit, onReview }: Readonly<Props>) {
   return (
@@ -58,7 +52,7 @@ export default function VenuesTable({ venues, onEdit, onReview }: Readonly<Props
             <TableCell><Chip size="small" label={venue.status} /></TableCell>
             <TableCell>{venue.submitted_at ? new Date(venue.submitted_at).toLocaleDateString() : '—'}</TableCell>
             <TableCell align="right">
-              <Tooltip title="Venue details"><IconButton size="small" component="a" href={publicVenueUrl(venue.id)} target="_blank" rel="noreferrer"><OpenInNewIcon fontSize="small" /></IconButton></Tooltip>
+              <Tooltip title="Venue details"><IconButton size="small" component={RouterLink} to={`/venues/${venue.id}`}><VisibilityIcon fontSize="small" /></IconButton></Tooltip>
               <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(venue)}><EditIcon fontSize="small" /></IconButton></Tooltip>
               <Tooltip title="Review"><IconButton size="small" onClick={() => onReview(venue)}><RateReviewIcon fontSize="small" /></IconButton></Tooltip>
             </TableCell>

@@ -4,20 +4,20 @@ import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   MenuItem,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
 import AdminHostCreateDialog from '../../components/AdminHostCreateDialog';
+import TableSkeleton from '../../components/TableSkeleton';
 import { APPROVE, HOSTS, REJECT, STATUSES } from './queries';
 import HostEditDialog from './HostEditDialog';
 import HostReviewDialog from './HostReviewDialog';
 import HostsTable from './HostsTable';
 
 export default function HostsPage() {
-  const [status, setStatus] = useState('SUBMITTED');
+  const [status, setStatus] = useState('');
   const { data, loading, error, refetch } = useQuery(HOSTS, {
     variables: { status: status || null },
   });
@@ -84,9 +84,12 @@ export default function HostsPage() {
       </Stack>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
-      {loading && !data && <CircularProgress />}
 
-      <HostsTable hosts={data?.hosts ?? []} onEdit={setEditing} onReview={openReview} />
+      {loading && !data ? (
+        <TableSkeleton columns={6} />
+      ) : (
+        <HostsTable hosts={data?.hosts ?? []} onEdit={setEditing} onReview={openReview} />
+      )}
 
       <HostReviewDialog
         active={active}

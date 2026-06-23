@@ -5,12 +5,14 @@ import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import BasicClubSection from './BasicClubSection';
 import ClubMediaSection from './ClubMediaSection';
 import ClubVenueLinksSection from './ClubVenueLinksSection';
+import ClubContentSection from './ClubContentSection';
 import type { ClubForm } from '../queries';
 
 export const SECTIONS = [
   { id: 'basic', title: '1. Basic Information' },
   { id: 'media', title: '2. Media & Moments' },
   { id: 'venues', title: '3. Venues & Community Links' },
+  { id: 'content', title: '4. Page Content (Who We Are, Perks, FAQs…)' },
 ];
 
 interface Props {
@@ -42,6 +44,7 @@ export default function ClubFormSections(props: Readonly<Props>) {
             {section.id === 'basic' && <BasicClubSection form={props.form} setForm={props.setForm} superCats={props.superCats} allCats={props.allCats} />}
             {section.id === 'media' && <ClubMediaSection form={props.form} setForm={props.setForm} />}
             {section.id === 'venues' && <ClubVenueLinksSection form={props.form} setForm={props.setForm} venues={props.venues} />}
+            {section.id === 'content' && <ClubContentSection form={props.form} setForm={props.setForm} />}
           </AccordionDetails>
         </Accordion>
       ))}

@@ -39,11 +39,17 @@ export const venueSlotTypeDefs = /* GraphQL */ `
   extend type Query {
     venueSlots(venue_id: ID!, from: String, to: String): [VenueSlot!]!
     venueAvailableSlots(venue_id: ID!, from: String): [VenueSlot!]!
+    "Onboarding/admin: all slots for any venue (role-gated, no owner check)."
+    adminVenueSlots(venue_id: ID!, from: String, to: String): [VenueSlot!]!
   }
 
   extend type Mutation {
     createVenueSlots(input: BulkCreateVenueSlotsInput!): [VenueSlot!]!
     updateVenueSlot(slot_id: ID!, input: UpdateVenueSlotInput!): VenueSlot!
     deleteVenueSlot(slot_id: ID!): Boolean!
+    "Onboarding/admin slot management for any venue (role-gated)."
+    adminCreateVenueSlots(input: BulkCreateVenueSlotsInput!): [VenueSlot!]!
+    adminUpdateVenueSlot(slot_id: ID!, input: UpdateVenueSlotInput!): VenueSlot!
+    adminDeleteVenueSlot(slot_id: ID!): Boolean!
   }
 `;

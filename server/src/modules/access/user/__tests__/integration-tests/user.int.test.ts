@@ -11,6 +11,8 @@ jest.mock("@services/email/email.service", () => ({
 }));
 
 import { userService } from "../../user.service";
+import { LocationModel } from "@modules/platform/location/location.model";
+import { Types } from "mongoose";
 
 describe("userService integration", () => {
   it("rejects login for a non-existent account", async () => {
@@ -247,6 +249,50 @@ describe("userService integration", () => {
           new_password: "BrandNew123",
         } as any),
       ).rejects.toThrow(/invalid otp/i);
+    });
+  });
+
+  describe("selected location", () => {
+    const newUser = async (email: string) => {
+      const res = await userService.register({
+        first_name: "Loc",
+        email,
+        password: "StrongPass123",
+        dob: new Date("1990-01-01").toISOString(),
+      } as any);
+      return res.user.user_id;
+    };
+
+    it("persists, then clears, the user's selected location", async () => {
+      const userId = await newUser("loc-set@duncit.com");
+      const loc = await LocationModel.create({
+        location_id: "mumbai",
+        location_name: "Mumbai",
+        country: "India",
+        country_code: "IN",
+        city: "Mumbai",
+        location_image: "https://img/mumbai.jpg",
+        location_pincode: "400001",
+      });
+
+      const set = await userService.setMySelectedLocation(userId, String(loc._id));
+      expect(set!.selected_location_id).toBe(String(loc._id));
+
+      const me = await userService.me(userId);
+      expect(me!.selected_location_id).toBe(String(loc._id));
+
+      const cleared = await userService.setMySelectedLocation(userId, null);
+      expect(cleared!.selected_location_id).toBeNull();
+    });
+
+    it("rejects an invalid or unknown location id", async () => {
+      const userId = await newUser("loc-bad@duncit.com");
+      await expect(userService.setMySelectedLocation(userId, "not-an-id")).rejects.toThrow(
+        /invalid location/i,
+      );
+      await expect(
+        userService.setMySelectedLocation(userId, new Types.ObjectId().toString()),
+      ).rejects.toThrow(/not found/i);
     });
   });
 });

@@ -16,6 +16,7 @@ export const MobileMeDocument = gql(`
       profile_photo
       phone_number
       phone_extension
+      selected_location_id
       roles
     }
   }

@@ -1,4 +1,3 @@
-import { useWindowDimensions } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
@@ -19,7 +18,6 @@ export function ClubDetailsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'ClubDetails'>>();
-  const { width } = useWindowDimensions();
   const { clubId } = route.params;
   const { club, pods, members, isLoading, followingInitially } = useClubDetails(clubId);
   const {
@@ -27,7 +25,6 @@ export function ClubDetailsScreen() {
     busy: followBusy,
     toggle: toggleFollow,
   } = useClubFollow(clubId, followingInitially);
-  const cardWidth = Math.min(width - 32, 520);
 
   return (
     <YStack flex={1} testID="club-details-screen">
@@ -53,7 +50,6 @@ export function ClubDetailsScreen() {
               club={club}
               pods={pods}
               members={members}
-              cardWidth={cardWidth}
               following={following}
               followBusy={followBusy}
               onToggleFollow={() => void toggleFollow()}

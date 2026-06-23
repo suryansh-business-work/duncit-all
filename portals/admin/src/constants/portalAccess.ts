@@ -1,7 +1,8 @@
 // Single source of truth for portal-based access. Drives BOTH the Manage Roles
 // dialog (portal-access section) and the Roles table's portal-link column, so
 // the two stay in sync. Each console portal grants its role(s); the Duncit app
-// (mWeb) expands to User (default + mandatory), Host and Venue Owner.
+// expands to User (default + mandatory), Host, Venue Owner and E-commerce
+// Manager — and ships on two surfaces (mWeb + Native), both listed under it.
 
 export interface PortalRole {
   key: string;
@@ -10,10 +11,19 @@ export interface PortalRole {
   required?: boolean;
 }
 
+/** A live surface for a portal (a console may run on more than one URL). */
+export interface PortalLink {
+  label: string;
+  url: string;
+}
+
 export interface PortalAccess {
   key: string;
   name: string;
+  /** Primary URL — also the link shown against each role in the Roles table. */
   url: string;
+  /** Extra surfaces that share the same access (e.g. the app's mWeb + Native). */
+  links?: PortalLink[];
   roles: PortalRole[];
 }
 
@@ -24,10 +34,17 @@ export const PORTAL_ACCESS: PortalAccess[] = [
     key: 'mweb',
     name: 'Duncit App',
     url: url('mweb'),
+    // The same access powers both consumer surfaces — granting any role here
+    // applies identically to the responsive web app and the native app.
+    links: [
+      { label: 'mWeb', url: url('mweb') },
+      { label: 'Native', url: url('native') },
+    ],
     roles: [
       { key: 'USER', name: 'User', required: true },
       { key: 'HOST', name: 'Host' },
       { key: 'VENUE_OWNER', name: 'Venue Owner' },
+      { key: 'ECOMM_MANAGER', name: 'E-commerce Manager' },
     ],
   },
   {

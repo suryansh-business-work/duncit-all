@@ -15,6 +15,8 @@ export const PARTNER_PODS_PAGE = gql`
     myHostPods {
       id
       pod_title
+      pod_description
+      pod_images_and_videos { url type }
       club_id
       venue_id
       pod_mode
@@ -30,5 +32,16 @@ export const PARTNER_PODS_PAGE = gql`
 export const CREATE_PARTNER_POD = gql`
   mutation CreatePartnerPod($input: CreatePodInput!) {
     createPartnerPod(input: $input) { id }
+  }
+`;
+
+export const HOST_UPDATE_POD = gql`
+  mutation PartnerHostUpdatePod($pod_doc_id: ID!, $input: HostUpdatePodInput!) {
+    hostUpdatePod(pod_doc_id: $pod_doc_id, input: $input) {
+      id
+      pod_title
+      pod_description
+      pod_images_and_videos { url type }
+    }
   }
 `;

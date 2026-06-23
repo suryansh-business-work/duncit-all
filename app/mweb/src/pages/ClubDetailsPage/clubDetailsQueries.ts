@@ -15,6 +15,14 @@ export const CLUB_BY_SLUG = gql`
         url
         type
       }
+      who_we_are
+      what_we_do
+      perks
+      values
+      faqs {
+        question
+        answer
+      }
       club_whats_app_community_link
       club_whats_app_announcement_link
       club_whats_app_group_link

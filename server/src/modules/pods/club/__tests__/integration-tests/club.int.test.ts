@@ -41,6 +41,29 @@ describe('clubService integration', () => {
     expect(updated!.host_ids).toEqual([h2]);
   });
 
+  it('persists Club Detail page content (who_we_are/what_we_do/perks/values/faqs)', async () => {
+    const created = await clubService.create({
+      club_name: 'Makers',
+      who_we_are: ['Builders', 'Tinkerers'],
+      what_we_do: ['Weekly hack nights'],
+      perks: ['Free coffee'],
+      values: ['Curiosity'],
+      faqs: [{ question: 'Cost?', answer: 'Free' }],
+    });
+    expect(created!.who_we_are).toEqual(['Builders', 'Tinkerers']);
+    expect(created!.what_we_do).toEqual(['Weekly hack nights']);
+    expect(created!.perks).toEqual(['Free coffee']);
+    expect(created!.values).toEqual(['Curiosity']);
+    expect(created!.faqs).toEqual([{ question: 'Cost?', answer: 'Free' }]);
+
+    const updated = await clubService.update(created!.id, {
+      perks: ['Free coffee', 'Member discounts'],
+      faqs: [{ question: 'Age limit?', answer: '18+' }],
+    });
+    expect(updated!.perks).toEqual(['Free coffee', 'Member discounts']);
+    expect(updated!.faqs).toEqual([{ question: 'Age limit?', answer: '18+' }]);
+  });
+
   it('resolves linked hosts, falls back to pod hosts, and counts followers (Bug 5)', async () => {
     const club = await clubService.create({ club_name: 'Trekkers' });
     const linked = new Types.ObjectId();

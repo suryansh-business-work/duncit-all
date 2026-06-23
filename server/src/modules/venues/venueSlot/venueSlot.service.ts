@@ -77,20 +77,124 @@ async function findOverlap(venueId: string, start: Date, end: Date, ignoreId?: s
   return VenueSlotModel.findOne(q);
 }
 
+async function loadSlot(slotId: string) {
+  if (!Types.ObjectId.isValid(slotId)) fail('BAD_USER_INPUT', 'Invalid slot_id');
+  const slot = await VenueSlotModel.findById(slotId);
+  if (!slot) fail('NOT_FOUND', 'Slot not found');
+  return slot!;
+}
+
+// Core create/update/delete shared by the owner-scoped methods (partner editing
+// their own venue) and the admin methods (onboarding editing any venue). The
+// caller is responsible for the ownership/role check before invoking these.
+async function createSlotsCore(
+  venueId: string,
+  ownerUserId: string,
+  slots: Array<{ start_at: string; end_at: string; notes?: string }>
+) {
+  if (!slots?.length) fail('BAD_USER_INPUT', 'At least one slot is required');
+
+  const prepared = slots.map((s) => {
+    const start = parseDate(s.start_at, 'start_at');
+    const end = parseDate(s.end_at, 'end_at');
+    validateSlotWindow(start, end);
+    return { start, end, notes: (s.notes ?? '').trim() };
+  });
+
+  // Reject when any new slot collides with an existing one (any status).
+  for (const p of prepared) {
+    const overlap = await findOverlap(venueId, p.start, p.end);
+    if (overlap) {
+      fail(
+        'CONFLICT',
+        `Overlaps with existing slot ${overlap.start_at.toISOString()} – ${overlap.end_at.toISOString()}`
+      );
+    }
+  }
+  // Reject overlaps within the batch itself.
+  const sorted = [...prepared].sort((a, b) => a.start.getTime() - b.start.getTime());
+  for (let i = 1; i < sorted.length; i += 1) {
+    if (sorted[i].start.getTime() < sorted[i - 1].end.getTime()) {
+      fail('CONFLICT', 'Two of the new slots overlap with each other');
+    }
+  }
+
+  const docs = await VenueSlotModel.insertMany(
+    prepared.map((p) => ({
+      venue_id: new Types.ObjectId(venueId),
+      owner_user_id: new Types.ObjectId(ownerUserId),
+      start_at: p.start,
+      end_at: p.end,
+      notes: p.notes,
+      status: 'AVAILABLE' as VenueSlotStatus,
+    }))
+  );
+  return withVenueAndPod(docs as IVenueSlot[]);
+}
+
+async function updateSlotCore(
+  slot: IVenueSlot,
+  input: { start_at?: string; end_at?: string; notes?: string; block?: boolean }
+) {
+  if (slot.status === 'BOOKED') {
+    fail('BAD_REQUEST', 'Booked slots cannot be edited. Cancel the pod first.');
+  }
+  if (input.start_at !== undefined || input.end_at !== undefined) {
+    const start = input.start_at ? parseDate(input.start_at, 'start_at') : slot.start_at;
+    const end = input.end_at ? parseDate(input.end_at, 'end_at') : slot.end_at;
+    validateSlotWindow(start, end);
+    const overlap = await findOverlap(String(slot.venue_id), start, end, String(slot._id));
+    if (overlap) {
+      fail(
+        'CONFLICT',
+        `Overlaps with existing slot ${overlap.start_at.toISOString()} – ${overlap.end_at.toISOString()}`
+      );
+    }
+    slot.start_at = start;
+    slot.end_at = end;
+  }
+  if (input.notes !== undefined) slot.notes = (input.notes ?? '').trim();
+  if (input.block !== undefined) slot.status = input.block ? 'BLOCKED' : 'AVAILABLE';
+  await (slot as any).save();
+  return (await withVenueAndPod([slot]))[0];
+}
+
+async function removeSlotCore(slot: IVenueSlot) {
+  if (slot.status === 'BOOKED') {
+    fail('BAD_REQUEST', 'Booked slots cannot be deleted. Cancel the pod first.');
+  }
+  await (slot as any).deleteOne();
+  return true;
+}
+
+async function listSlotsForVenue(venueId: string, from?: string | null, to?: string | null) {
+  const q: any = { venue_id: new Types.ObjectId(venueId) };
+  if (from || to) q.start_at = {};
+  if (from) q.start_at.$gte = parseDate(from, 'from');
+  if (to) q.start_at.$lte = parseDate(to, 'to');
+  const docs = await VenueSlotModel.find(q).sort({ start_at: 1 }).limit(500);
+  return withVenueAndPod(docs);
+}
+
 export const venueSlotService = {
   async listForVenue(viewerId: string, venueId: string, from?: string | null, to?: string | null) {
+    if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue_id');
     const venue = await VenueModel.findById(venueId);
     if (!venue) fail('NOT_FOUND', 'Venue not found');
     // Owner sees everything; non-owners can only fetch via venueAvailableSlots.
     if (String(venue!.owner_user_id) !== viewerId) {
       fail('FORBIDDEN', 'Only the venue owner can view all slots');
     }
-    const q: any = { venue_id: new Types.ObjectId(venueId) };
-    if (from || to) q.start_at = {};
-    if (from) q.start_at.$gte = parseDate(from, 'from');
-    if (to) q.start_at.$lte = parseDate(to, 'to');
-    const docs = await VenueSlotModel.find(q).sort({ start_at: 1 }).limit(500);
-    return withVenueAndPod(docs);
+    return listSlotsForVenue(venueId, from, to);
+  },
+
+  // Admin (onboarding/super-admin) read of any venue's slots — role-gated in the
+  // resolver. Unlike listForVenue there is no owner check.
+  async adminListForVenue(venueId: string, from?: string | null, to?: string | null) {
+    if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue_id');
+    const venue = await VenueModel.findById(venueId);
+    if (!venue) fail('NOT_FOUND', 'Venue not found');
+    return listSlotsForVenue(venueId, from, to);
   },
 
   async listAvailable(venueId: string, from?: string | null) {
@@ -114,87 +218,37 @@ export const venueSlotService = {
 
   async create(userId: string, input: { venue_id: string; slots: Array<{ start_at: string; end_at: string; notes?: string }> }) {
     await ensureOwnedVenue(userId, input.venue_id);
-    if (!input.slots?.length) fail('BAD_USER_INPUT', 'At least one slot is required');
+    return createSlotsCore(input.venue_id, userId, input.slots);
+  },
 
-    const prepared = input.slots.map((s) => {
-      const start = parseDate(s.start_at, 'start_at');
-      const end = parseDate(s.end_at, 'end_at');
-      validateSlotWindow(start, end);
-      return { start, end, notes: (s.notes ?? '').trim() };
-    });
-
-    // Reject when any new slot collides with an existing one (any status).
-    for (const p of prepared) {
-      const overlap = await findOverlap(input.venue_id, p.start, p.end);
-      if (overlap) {
-        fail(
-          'CONFLICT',
-          `Overlaps with existing slot ${overlap.start_at.toISOString()} – ${overlap.end_at.toISOString()}`
-        );
-      }
-    }
-    // Reject overlaps within the batch itself.
-    const sorted = [...prepared].sort((a, b) => a.start.getTime() - b.start.getTime());
-    for (let i = 1; i < sorted.length; i++) {
-      if (sorted[i].start.getTime() < sorted[i - 1].end.getTime()) {
-        fail('CONFLICT', 'Two of the new slots overlap with each other');
-      }
-    }
-
-    const docs = await VenueSlotModel.insertMany(
-      prepared.map((p) => ({
-        venue_id: new Types.ObjectId(input.venue_id),
-        owner_user_id: new Types.ObjectId(userId),
-        start_at: p.start,
-        end_at: p.end,
-        notes: p.notes,
-        status: 'AVAILABLE' as VenueSlotStatus,
-      }))
-    );
-    return withVenueAndPod(docs as IVenueSlot[]);
+  // Admin create — slots are owned by the venue's actual owner, not the editor.
+  async adminCreate(input: { venue_id: string; slots: Array<{ start_at: string; end_at: string; notes?: string }> }) {
+    if (!Types.ObjectId.isValid(input.venue_id)) fail('BAD_USER_INPUT', 'Invalid venue_id');
+    const venue = await VenueModel.findById(input.venue_id);
+    if (!venue) fail('NOT_FOUND', 'Venue not found');
+    return createSlotsCore(input.venue_id, String(venue!.owner_user_id), input.slots);
   },
 
   async update(userId: string, slotId: string, input: { start_at?: string; end_at?: string; notes?: string; block?: boolean }) {
-    if (!Types.ObjectId.isValid(slotId)) fail('BAD_USER_INPUT', 'Invalid slot_id');
-    const slot = await VenueSlotModel.findById(slotId);
-    if (!slot) fail('NOT_FOUND', 'Slot not found');
-    if (String(slot!.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
-    if (slot!.status === 'BOOKED') {
-      fail('BAD_REQUEST', 'Booked slots cannot be edited. Cancel the pod first.');
-    }
+    const slot = await loadSlot(slotId);
+    if (String(slot.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
+    return updateSlotCore(slot, input);
+  },
 
-    if (input.start_at !== undefined || input.end_at !== undefined) {
-      const start = input.start_at ? parseDate(input.start_at, 'start_at') : slot!.start_at;
-      const end = input.end_at ? parseDate(input.end_at, 'end_at') : slot!.end_at;
-      validateSlotWindow(start, end);
-      const overlap = await findOverlap(String(slot!.venue_id), start, end, slotId);
-      if (overlap) {
-        fail(
-          'CONFLICT',
-          `Overlaps with existing slot ${overlap.start_at.toISOString()} – ${overlap.end_at.toISOString()}`
-        );
-      }
-      slot!.start_at = start;
-      slot!.end_at = end;
-    }
-    if (input.notes !== undefined) slot!.notes = (input.notes ?? '').trim();
-    if (input.block !== undefined) {
-      slot!.status = input.block ? 'BLOCKED' : 'AVAILABLE';
-    }
-    await slot!.save();
-    return (await withVenueAndPod([slot!]))[0];
+  async adminUpdate(slotId: string, input: { start_at?: string; end_at?: string; notes?: string; block?: boolean }) {
+    const slot = await loadSlot(slotId);
+    return updateSlotCore(slot, input);
   },
 
   async remove(userId: string, slotId: string) {
-    if (!Types.ObjectId.isValid(slotId)) fail('BAD_USER_INPUT', 'Invalid slot_id');
-    const slot = await VenueSlotModel.findById(slotId);
-    if (!slot) fail('NOT_FOUND', 'Slot not found');
-    if (String(slot!.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
-    if (slot!.status === 'BOOKED') {
-      fail('BAD_REQUEST', 'Booked slots cannot be deleted. Cancel the pod first.');
-    }
-    await slot!.deleteOne();
-    return true;
+    const slot = await loadSlot(slotId);
+    if (String(slot.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
+    return removeSlotCore(slot);
+  },
+
+  async adminRemove(slotId: string) {
+    const slot = await loadSlot(slotId);
+    return removeSlotCore(slot);
   },
 
   // Atomic: only succeeds if the slot is currently AVAILABLE. Called from pod

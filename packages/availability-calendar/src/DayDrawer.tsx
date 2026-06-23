@@ -1,10 +1,14 @@
 import { useState } from 'react';
-import { useMutation } from '@apollo/client';
 import {
   Alert,
   Box,
   Button,
   Chip,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
   Drawer,
   IconButton,
   Stack,
@@ -17,20 +21,16 @@ import BlockIcon from '@mui/icons-material/Block';
 import CheckIcon from '@mui/icons-material/Check';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { format, isAfter, set as setTimeOnDate } from 'date-fns';
-import {
-  CREATE_VENUE_SLOTS,
-  DELETE_VENUE_SLOT,
-  UPDATE_VENUE_SLOT,
-  type VenueSlotRow,
-} from './queries';
+import type { NewSlotInput, VenueSlotRow } from './types';
 
 interface Props {
-  venueId: string;
   open: boolean;
   date: Date | null;
   slots: VenueSlotRow[];
   onClose: () => void;
-  onChanged: () => void;
+  onCreate: (input: NewSlotInput) => Promise<void>;
+  onToggleBlock: (slot: VenueSlotRow) => Promise<void>;
+  onDelete: (slotId: string) => Promise<void>;
 }
 
 const STATUS_COLOR: Record<VenueSlotRow['status'], 'success' | 'warning' | 'default'> = {
@@ -48,15 +48,15 @@ function combineDateAndTime(date: Date, time: Date): Date {
   });
 }
 
-export default function DayDrawer({ venueId, open, date, slots, onClose, onChanged }: Readonly<Props>) {
+/** The day slot editor (list + block/delete + add). Prop-driven: it owns the
+ *  form + confirm UX, the host app wires the create/update/delete calls. */
+export default function DayDrawer({ open, date, slots, onClose, onCreate, onToggleBlock, onDelete }: Readonly<Props>) {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
-
-  const [createSlots, { loading: creating }] = useMutation(CREATE_VENUE_SLOTS);
-  const [updateSlot] = useMutation(UPDATE_VENUE_SLOT);
-  const [deleteSlot] = useMutation(DELETE_VENUE_SLOT);
+  const [creating, setCreating] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
 
   const reset = () => {
     setStartTime(null);
@@ -86,53 +86,38 @@ export default function DayDrawer({ venueId, open, date, slots, onClose, onChang
       setError('Start time must be in the future.');
       return;
     }
+    setCreating(true);
     try {
-      await createSlots({
-        variables: {
-          input: {
-            venue_id: venueId,
-            slots: [{ start_at: start.toISOString(), end_at: end.toISOString(), notes }],
-          },
-        },
-      });
+      await onCreate({ start_at: start.toISOString(), end_at: end.toISOString(), notes });
       reset();
-      onChanged();
-    } catch (e: any) {
-      setError(e?.message || 'Could not create slot');
-    }
-  };
-
-  const handleDelete = async (slotId: string) => {
-    if (!window.confirm('Delete this slot?')) return;
-    try {
-      await deleteSlot({ variables: { slot_id: slotId } });
-      onChanged();
-    } catch (e: any) {
-      setError(e?.message || 'Could not delete slot');
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not create slot');
+    } finally {
+      setCreating(false);
     }
   };
 
   const handleToggleBlock = async (slot: VenueSlotRow) => {
     try {
-      await updateSlot({
-        variables: {
-          slot_id: slot.id,
-          input: { block: slot.status !== 'BLOCKED' },
-        },
-      });
-      onChanged();
-    } catch (e: any) {
-      setError(e?.message || 'Could not update slot');
+      await onToggleBlock(slot);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not update slot');
+    }
+  };
+
+  const handleConfirmDelete = async () => {
+    const slotId = confirmDeleteId;
+    setConfirmDeleteId(null);
+    if (!slotId) return;
+    try {
+      await onDelete(slotId);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not delete slot');
     }
   };
 
   return (
-    <Drawer
-      anchor="right"
-      open={open && !!date}
-      onClose={handleClose}
-      PaperProps={{ sx: { width: { xs: '100%', sm: 380 } } }}
-    >
+    <Drawer anchor="right" open={open && !!date} onClose={handleClose} PaperProps={{ sx: { width: { xs: '100%', sm: 380 } } }}>
       <Stack spacing={2} sx={{ p: 2, height: '100%' }}>
         <Stack direction="row" alignItems="center" justifyContent="space-between">
           <Box>
@@ -143,7 +128,7 @@ export default function DayDrawer({ venueId, open, date, slots, onClose, onChang
               {date ? format(date, 'EEEE, dd MMM yyyy') : ''}
             </Typography>
           </Box>
-          <IconButton size="small" onClick={handleClose}>
+          <IconButton size="small" onClick={handleClose} aria-label="Close">
             <CloseIcon />
           </IconButton>
         </Stack>
@@ -159,15 +144,7 @@ export default function DayDrawer({ venueId, open, date, slots, onClose, onChang
           ) : (
             <Stack spacing={1} sx={{ mt: 1 }}>
               {slots.map((slot) => (
-                <Box
-                  key={slot.id}
-                  sx={{
-                    p: 1.25,
-                    borderRadius: 1.5,
-                    border: 1,
-                    borderColor: 'divider',
-                  }}
-                >
+                <Box key={slot.id} sx={{ p: 1.25, borderRadius: 1.5, border: 1, borderColor: 'divider' }}>
                   <Stack direction="row" justifyContent="space-between" alignItems="center">
                     <Typography variant="body2" fontWeight={800}>
                       {format(new Date(slot.start_at), 'hh:mm a')} – {format(new Date(slot.end_at), 'hh:mm a')}
@@ -193,12 +170,7 @@ export default function DayDrawer({ venueId, open, date, slots, onClose, onChang
                       >
                         {slot.status === 'BLOCKED' ? 'Unblock' : 'Block'}
                       </Button>
-                      <Button
-                        size="small"
-                        color="error"
-                        startIcon={<DeleteOutlineIcon />}
-                        onClick={() => handleDelete(slot.id)}
-                      >
+                      <Button size="small" color="error" startIcon={<DeleteOutlineIcon />} onClick={() => setConfirmDeleteId(slot.id)}>
                         Delete
                       </Button>
                     </Stack>
@@ -215,26 +187,10 @@ export default function DayDrawer({ venueId, open, date, slots, onClose, onChang
           </Typography>
           <Stack spacing={1.5} sx={{ mt: 1 }}>
             <Stack direction="row" spacing={1}>
-              <TimePicker
-                label="Start"
-                value={startTime}
-                onChange={setStartTime}
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
-              />
-              <TimePicker
-                label="End"
-                value={endTime}
-                onChange={setEndTime}
-                slotProps={{ textField: { size: 'small', fullWidth: true } }}
-              />
+              <TimePicker label="Start" value={startTime} onChange={setStartTime} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
+              <TimePicker label="End" value={endTime} onChange={setEndTime} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
             </Stack>
-            <TextField
-              size="small"
-              label="Notes (optional)"
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              inputProps={{ maxLength: 280 }}
-            />
+            <TextField size="small" label="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} inputProps={{ maxLength: 280 }} />
             {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
             <Button variant="contained" disabled={creating} onClick={handleAdd}>
               {creating ? 'Adding…' : 'Add slot'}
@@ -242,6 +198,19 @@ export default function DayDrawer({ venueId, open, date, slots, onClose, onChang
           </Stack>
         </Box>
       </Stack>
+
+      <Dialog open={!!confirmDeleteId} onClose={() => setConfirmDeleteId(null)}>
+        <DialogTitle>Delete this slot?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>This permanently removes the time slot. Booked slots cannot be deleted.</DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={() => setConfirmDeleteId(null)}>Cancel</Button>
+          <Button color="error" variant="contained" onClick={handleConfirmDelete}>
+            Delete
+          </Button>
+        </DialogActions>
+      </Dialog>
     </Drawer>
   );
 }

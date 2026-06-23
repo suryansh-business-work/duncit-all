@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useApolloClient, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { Box, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import HealthMeter from './HealthMeter';
 import HealthDetailDialog from './HealthDetailDialog';
@@ -14,33 +14,16 @@ interface Props {
   venues: VenueLite[];
 }
 
-// Compact dashboard strip. Shows the partner's host meter (if they have a
-// host profile) and one meter per approved venue. Tap any meter to open the
-// detail dialog with admin remarks.
+// Compact dashboard strip. Shows the partner's account meter plus one meter per
+// venue. Every meter reads the same live score the detail dialog uses, so the
+// number rendered on the dashboard always matches the number shown after a tap.
 export default function HealthStrip({ venues }: Readonly<Props>) {
-  const client = useApolloClient();
   const { data: hostData } = useQuery<{ myAccountHealth: HealthScore | null }>(PARTNER_HEALTH, {
     fetchPolicy: 'cache-and-network',
   });
   const [selected, setSelected] = useState<HealthScore | null>(null);
 
   const accountHealth = hostData?.myAccountHealth ?? null;
-
-  // Per-venue health is fetched on demand when the meter is tapped. That keeps
-  // the dashboard render light for partners with many venues; the dialog is
-  // already a click-to-open surface.
-  const openVenueDialog = async (venue: VenueLite) => {
-    try {
-      const { data } = await client.query<{ myVenueHealth: HealthScore | null }>({
-        query: PARTNER_VENUE_HEALTH,
-        variables: { venue_id: venue.id },
-        fetchPolicy: 'network-only',
-      });
-      if (data?.myVenueHealth) setSelected(data.myVenueHealth);
-    } catch {
-      // Surface failures softly — the dashboard remains usable.
-    }
-  };
 
   if (!accountHealth && venues.length === 0) return null;
 
@@ -62,14 +45,7 @@ export default function HealthStrip({ venues }: Readonly<Props>) {
               />
             )}
             {venues.map((venue) => (
-              <MeterCard
-                key={venue.id}
-                title="Venue"
-                subtitle={venue.venue_name ?? 'Venue'}
-                score={null}
-                pendingVenueId={venue.id}
-                onClick={() => openVenueDialog(venue)}
-              />
+              <VenueMeter key={venue.id} venue={venue} onOpen={setSelected} />
             ))}
           </Stack>
         </Stack>
@@ -83,17 +59,40 @@ export default function HealthStrip({ venues }: Readonly<Props>) {
   );
 }
 
+// One venue meter. Reads the venue's live health up front so the dashboard shows
+// the real score (not a placeholder); the very same record opens in the dialog
+// on tap, keeping the two views in lock-step.
+function VenueMeter({
+  venue,
+  onOpen,
+}: Readonly<{ venue: VenueLite; onOpen: (s: HealthScore) => void }>) {
+  const { data } = useQuery<{ myVenueHealth: HealthScore | null }>(PARTNER_VENUE_HEALTH, {
+    variables: { venue_id: venue.id },
+    fetchPolicy: 'cache-and-network',
+  });
+  const score = data?.myVenueHealth ?? null;
+  return (
+    <MeterCard
+      title="Venue"
+      subtitle={venue.venue_name ?? 'Venue'}
+      score={score}
+      onClick={() => {
+        if (score) onOpen(score);
+      }}
+    />
+  );
+}
+
 interface MeterCardProps {
   title: string;
   subtitle: string;
   score: HealthScore | null;
-  pendingVenueId?: string;
   onClick: () => void;
 }
 
 function MeterCard({ title, subtitle, score, onClick }: Readonly<MeterCardProps>) {
-  // When `score` is null, render a neutral placeholder. The detail dialog
-  // fetches the real numbers on demand.
+  // While the score is still loading the meter shows a neutral placeholder; it
+  // snaps to the real value as soon as the query resolves.
   return (
     <Box
       role="button"

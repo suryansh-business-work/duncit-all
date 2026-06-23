@@ -5,7 +5,10 @@ import { endOfDay, format, startOfDay, subDays } from 'date-fns';
 import DashboardDateRange from './DashboardDateRange';
 import DashboardMetricCards, { emptyMetrics } from './DashboardMetricCards';
 import DashboardPanels from './DashboardPanels';
+import EarningsBreakdownChart from './EarningsBreakdownChart';
+import PodsTrendChart from './PodsTrendChart';
 import HealthStrip from './health/HealthStrip';
+import { monthlyPodEarnings } from './insights';
 import { PARTNER_DASHBOARD } from './dashboard.queries';
 import type { DashboardRange, DashboardTab } from './dashboard.types';
 
@@ -52,6 +55,25 @@ export default function PartnerDashboardPage() {
       </Box>
       {error && <Alert severity="error">{error.message}</Alert>}
       <HealthStrip venues={venues} />
+
+      <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
+        <Card variant="outlined" sx={{ borderRadius: 2 }}>
+          <CardContent>
+            <Typography variant="h6" fontWeight={950} sx={{ mb: 1 }}>Earnings breakdown</Typography>
+            <EarningsBreakdownChart
+              venue={dashboard?.summary?.venue_earning ?? 0}
+              host={dashboard?.summary?.host_earning ?? 0}
+              products={dashboard?.summary?.product_earning ?? 0}
+            />
+          </CardContent>
+        </Card>
+        <Card variant="outlined" sx={{ borderRadius: 2 }}>
+          <CardContent>
+            <Typography variant="h6" fontWeight={950} sx={{ mb: 1 }}>Pod earnings (last 6 months)</Typography>
+            <PodsTrendChart points={monthlyPodEarnings(pods)} />
+          </CardContent>
+        </Card>
+      </Box>
       <Card variant="outlined" sx={{ borderRadius: 2 }}>
         <CardContent>
           <Stack spacing={2}>

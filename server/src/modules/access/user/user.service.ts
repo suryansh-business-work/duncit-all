@@ -37,6 +37,7 @@ import type { AuthUser } from '@context';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/pods/club/club.model';
+import { LocationModel } from '@modules/platform/location/location.model';
 import { UserContactActionModel } from './userContactAction.model';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { USER_SCHEMA_FLAGS } from './user.featureFlags';
@@ -349,6 +350,9 @@ async function toPublic(u: any) {
     country: profile.country ?? legacy.country ?? 'India',
     city: profile.city ?? legacy.city ?? null,
     zone: profile.zone ?? legacy.zone ?? null,
+    selected_location_id: profile.selected_location_id
+      ? String(profile.selected_location_id)
+      : null,
     roles: roleKeys,
     assigned_city: profile.assigned_city ?? legacy.assigned_city ?? null,
     assigned_zones: meta.assigned_zones ?? legacy.assigned_zones ?? [],
@@ -1122,6 +1126,30 @@ export const userService = {
     const updated = await UserModel.findByIdAndUpdate(
       user_id,
       { $set: { 'metadata.profile_visibility': visibility } },
+      { new: true }
+    );
+    if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    return toPublic(updated);
+  },
+
+  // Persist the user's selected header location. A null/empty id clears it.
+  // A non-empty id must reference an existing location, so a stale/invalid id
+  // can never be stored.
+  async setMySelectedLocation(user_id: string, location_id: string | null) {
+    let value: Types.ObjectId | null = null;
+    if (location_id) {
+      if (!Types.ObjectId.isValid(location_id)) {
+        throw new GraphQLError('Invalid location', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      const exists = await LocationModel.exists({ _id: new Types.ObjectId(location_id) });
+      if (!exists) {
+        throw new GraphQLError('Location not found', { extensions: { code: 'NOT_FOUND' } });
+      }
+      value = new Types.ObjectId(location_id);
+    }
+    const updated = await UserModel.findByIdAndUpdate(
+      user_id,
+      { $set: { 'profile.selected_location_id': value } },
       { new: true }
     );
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });

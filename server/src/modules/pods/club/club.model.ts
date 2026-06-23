@@ -5,6 +5,11 @@ export interface IMedia {
   type: 'IMAGE' | 'VIDEO';
 }
 
+export interface IClubFaq {
+  question: string;
+  answer: string;
+}
+
 export interface IClub extends Document {
   club_id: string;
   club_name: string;
@@ -14,6 +19,12 @@ export interface IClub extends Document {
   club_whats_app_announcement_link?: string;
   club_whats_app_group_link?: string;
   club_moments: IMedia[];
+  /** Admin-authored Club Detail page content, each shown as bullets. */
+  who_we_are: string[];
+  what_we_do: string[];
+  perks: string[];
+  values: string[];
+  faqs: IClubFaq[];
   meetup_venues_id: string[];
   /** Hosts explicitly linked to this club by an admin (Bug 5). When empty the
    *  Club Detail page falls back to the hosts of the club's pods. */
@@ -33,6 +44,14 @@ const mediaSchema = new Schema<IMedia>(
   { _id: false }
 );
 
+const faqSchema = new Schema<IClubFaq>(
+  {
+    question: { type: String, required: true, trim: true },
+    answer: { type: String, required: true, trim: true },
+  },
+  { _id: false }
+);
+
 const clubSchema = new Schema<IClub>(
   {
     club_id: { type: String, required: true, unique: true, lowercase: true, trim: true },
@@ -43,6 +62,11 @@ const clubSchema = new Schema<IClub>(
     club_whats_app_announcement_link: { type: String, default: '' },
     club_whats_app_group_link: { type: String, default: '' },
     club_moments: { type: [mediaSchema], default: [] },
+    who_we_are: { type: [String], default: [] },
+    what_we_do: { type: [String], default: [] },
+    perks: { type: [String], default: [] },
+    values: { type: [String], default: [] },
+    faqs: { type: [faqSchema], default: [] },
     meetup_venues_id: { type: [String], default: [] },
     host_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
     category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },

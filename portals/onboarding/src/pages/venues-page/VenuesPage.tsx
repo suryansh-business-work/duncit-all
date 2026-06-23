@@ -5,19 +5,19 @@ import {
   Alert,
   Box,
   Button,
-  CircularProgress,
   MenuItem,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
+import TableSkeleton from '../../components/TableSkeleton';
 import { APPROVE, REJECT, SET_VENUE_DEDUCTIONS, STATUSES, VENUES } from './queries';
 import VenueEditDialog from './VenueEditDialog';
 import VenueReviewDialog from './VenueReviewDialog';
 import VenuesTable from './VenuesTable';
 
 export default function VenuesPage() {
-  const [status, setStatus] = useState('SUBMITTED');
+  const [status, setStatus] = useState('');
   const { data, loading, error, refetch } = useQuery(VENUES, {
     variables: { status: status || null },
   });
@@ -94,9 +94,12 @@ export default function VenuesPage() {
       </Stack>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
-      {loading && !data && <CircularProgress />}
 
-      <VenuesTable venues={data?.venues ?? []} onEdit={setEditing} onReview={openReview} />
+      {loading && !data ? (
+        <TableSkeleton columns={7} />
+      ) : (
+        <VenuesTable venues={data?.venues ?? []} onEdit={setEditing} onReview={openReview} />
+      )}
 
       <VenueReviewDialog
         active={active}

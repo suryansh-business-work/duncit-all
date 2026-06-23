@@ -6,6 +6,7 @@ export const PRODUCT_ACCESS_MESSAGE = 'You must be an Ecomm Manager to add produ
 export const PRODUCT_LISTING_ACCESS = gql`
   query ProductListingAccess {
     me {
+      user_id
       roles
     }
   }

@@ -1,30 +1,23 @@
 import { useQuery } from '@apollo/client';
-import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Chip, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack, Typography } from '@mui/material';
 import { useFollowedClubs } from '../../hooks/useFollowedClubs';
 import { notify } from '../../components/notify';
 import { usePricing } from '../../hooks/usePricing';
 import ClubHero from '../club-details-page/ClubHero';
 import ClubDetailsSkeleton from '../club-details-page/ClubDetailsSkeleton';
 import ClubMeetupVenuesSection from '../club-details-page/ClubMeetupVenuesSection';
-import ClubMomentsSection from '../club-details-page/ClubMomentsSection';
 import ClubSocialLinks from '../club-details-page/ClubSocialLinks';
 import ClubSummaryHeader from '../club-details-page/ClubSummaryHeader';
 import ClubMembersSection from '../club-details-page/ClubMembersSection';
-import ClubHostsSection from '../club-details-page/ClubHostsSection';
 import ClubStoriesSection from '../club-details-page/ClubStoriesSection';
-import ClubUpcomingPodsSection from '../club-details-page/ClubUpcomingPodsSection';
-import { podStatus } from '../../utils/podStatus';
+import ClubSegments from '../club-details-page/ClubSegments';
 import { CLUB_BY_SLUG, CLUB_DETAILS_RELATED } from './clubDetailsQueries';
 import useSavedClub from './useSavedClub';
-
-type ClubTab = 'LIVE' | 'UPCOMING' | 'PREVIOUS' | 'MOMENTS' | 'VENUES';
 
 export default function ClubDetailsPage() {
   const { clubSlug = '' } = useParams();
   const navigate = useNavigate();
-  const [tab, setTab] = useState<ClubTab>('UPCOMING');
   const { format: pricingFormat } = usePricing();
   const { isFollowing, toggle: toggleFollow } = useFollowedClubs();
 
@@ -47,22 +40,9 @@ export default function ClubDetailsPage() {
   if (!club) return <Alert severity="warning">Club not found.</Alert>;
 
   const featureMedia = club.club_feature_images_and_videos ?? [];
-  const moments = club.club_moments ?? [];
   const pods = data?.clubPods ?? [];
-  const podsByPhase = (phase: 'LIVE' | 'UPCOMING' | 'ENDED') =>
-    pods.filter((podItem: any) => podStatus(podItem.pod_date_time, podItem.pod_end_date_time) === phase);
-  const livePods = podsByPhase('LIVE');
-  const upcomingPods = podsByPhase('UPCOMING');
-  const previousPods = podsByPhase('ENDED');
   const venueIds: string[] = club.meetup_venues_id ?? [];
   const venues = (data?.publicVenues ?? []).filter((venue: any) => venueIds.includes(venue.id));
-  const clubTabs: ReadonlyArray<readonly [ClubTab, string]> = [
-    ['LIVE', `Live ${livePods.length}`],
-    ['UPCOMING', `Upcoming ${upcomingPods.length}`],
-    ['PREVIOUS', `Previous ${previousPods.length}`],
-    ['MOMENTS', `Moments ${moments.length}`],
-    ['VENUES', `Venues ${venues.length}`],
-  ];
 
   const openPod = (podDocId: string) => {
     const pod = pods.find((podItem: any) => podItem.id === podDocId);
@@ -91,6 +71,10 @@ export default function ClubDetailsPage() {
       /* user cancelled */
     }
   };
+
+  const memberIds = Array.from(
+    new Set<string>(pods.flatMap((podItem: any) => podItem.pod_attendees ?? []))
+  );
 
   return (
     <Stack
@@ -126,12 +110,6 @@ export default function ClubDetailsPage() {
       />
       <ClubStoriesSection clubId={club.id} />
       <ClubSocialLinks club={club} />
-      <ClubHostsSection hosts={club.hosts ?? []} />
-      <ClubMembersSection
-        memberIds={Array.from(
-          new Set(pods.flatMap((podItem: any) => podItem.pod_attendees ?? []))
-        )}
-      />
       {club.club_description && (
         <Box>
           <Typography variant="h6" fontWeight={700} gutterBottom>
@@ -142,34 +120,9 @@ export default function ClubDetailsPage() {
           </Typography>
         </Box>
       )}
-      <Stack direction="row" spacing={1} sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
-        {clubTabs.map(([value, label]) => (
-          <Chip key={value} label={label} clickable color={tab === value ? 'primary' : 'default'} variant={tab === value ? 'filled' : 'outlined'} onClick={() => setTab(value)} sx={{ height: 34, fontWeight: 900 }} />
-        ))}
-      </Stack>
-      {tab === 'LIVE' && (
-        <ClubUpcomingPodsSection
-          pods={livePods}
-          priceFormat={pricingFormat}
-          onOpen={openPod}
-          title="Live now"
-          emptyText="No pods are live right now."
-        />
-      )}
-      {tab === 'UPCOMING' && (
-        <ClubUpcomingPodsSection pods={upcomingPods} priceFormat={pricingFormat} onOpen={openPod} />
-      )}
-      {tab === 'PREVIOUS' && (
-        <ClubUpcomingPodsSection
-          pods={previousPods}
-          priceFormat={pricingFormat}
-          onOpen={openPod}
-          title="Previous pods"
-          emptyText="No past pods yet."
-        />
-      )}
-      {tab === 'MOMENTS' && <ClubMomentsSection moments={moments} />}
-      {tab === 'VENUES' && <ClubMeetupVenuesSection venues={venues} />}
+      <ClubMembersSection memberIds={memberIds} />
+      <ClubMeetupVenuesSection venues={venues} />
+      <ClubSegments club={club} pods={pods} priceFormat={pricingFormat} onOpenPod={openPod} />
     </Stack>
   );
 }

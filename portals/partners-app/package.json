@@ -12,7 +12,10 @@
   },
   "dependencies": {
     "@apollo/client": "^3.10.4",
+    "@duncit/availability-calendar": "workspace:*",
     "@duncit/logs": "workspace:*",
+    "@duncit/portal-pod-form": "workspace:*",
+    "@hookform/resolvers": "^3.9.1",
     "@duncit/shell": "workspace:*",
     "@duncit/theme": "workspace:*",
     "@duncit/user-context": "workspace:*",
@@ -25,15 +28,19 @@
     "@mui/system": "^5.15.18",
     "@mui/x-date-pickers": "^6.20.2",
     "@react-oauth/google": "^0.13.5",
+    "chart.js": "^4.5.1",
     "date-fns": "^2.30.0",
     "formik": "^2.4.6",
     "graphql": "^16.8.1",
     "react": "^18.3.1",
+    "react-chartjs-2": "^5.3.1",
     "react-datepicker": "^9.1.0",
     "react-dom": "^18.3.1",
+    "react-hook-form": "^7.54.0",
     "react-router": "^6.23.1",
     "react-router-dom": "^6.23.1",
-    "yup": "^1.4.0"
+    "yup": "^1.4.0",
+    "zod": "^3.24.1"
   },
   "devDependencies": {
     "@testing-library/jest-dom": "^6.9.1",

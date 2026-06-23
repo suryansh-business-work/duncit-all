@@ -8,6 +8,7 @@ export const MY_HOST = gql`
       first_name
       last_name
       email
+      roles
     }
     myHost {
       id step_completed status full_name email phone dob aadhar_number pan_number

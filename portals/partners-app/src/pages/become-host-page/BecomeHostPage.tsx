@@ -59,9 +59,10 @@ export default function BecomeHostPage() {
   };
 
   const status = data?.myHost?.status;
-  // An approved host has already "become a host" — they get the hosting area
-  // (their pods), never the become-a-host application flow.
-  const isHost = status === 'APPROVED';
+  // Anyone who already holds the HOST role (granted on approval, or directly by
+  // an admin / via Super Admin) has already "become a host" — they get the
+  // hosting area (their pods), never the become-a-host application flow.
+  const isHost = (account?.roles ?? []).includes('HOST') || status === 'APPROVED';
   const busy = m1State.loading || m2State.loading || m3State.loading || mFinalState.loading || withdrawState.loading;
   const locked = status === 'SUBMITTED' || status === 'APPROVED';
   const withdraw = async () => {

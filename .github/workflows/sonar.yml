@@ -10,12 +10,27 @@ jobs:
   build:
     name: Build and analyze
     runs-on: ubuntu-latest
-    
+
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0  # Shallow clones should be disabled for a better relevancy of analysis
+      # The SonarQube server is a manually-managed VPS container; when it is down
+      # the scanner returns 502 and fails the whole pipeline. Probe it first and
+      # skip (not fail) the scan when it is unreachable — a real quality gate still
+      # runs and can fail whenever the server is up.
+      - name: Check SonarQube availability
+        id: sonar
+        run: |
+          code=$(curl -s -o /dev/null -w "%{http_code}" -m 10 "${{ secrets.SONAR_HOST_URL }}/api/server/version" || echo "000")
+          if [ "$code" = "200" ]; then
+            echo "up=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "up=false" >> "$GITHUB_OUTPUT"
+            echo "::warning::SonarQube server unreachable (HTTP $code) — skipping scan."
+          fi
       - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0
+        if: steps.sonar.outputs.up == 'true'
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
           SONAR_HOST_URL: ${{ secrets.SONAR_HOST_URL }}

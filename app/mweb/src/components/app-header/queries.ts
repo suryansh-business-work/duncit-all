@@ -23,6 +23,7 @@ export const HEADER_DATA = gql`
       is_email_verified
       profile_photo
       city
+      selected_location_id
       roles
       following_pod_ids
       following_user_ids
@@ -109,6 +110,16 @@ export const PUBLIC_POLICIES = gql`
       id
       slug
       title
+    }
+  }
+`;
+
+/** Persist the user's selected header location so it sticks across sessions. */
+export const SET_MY_SELECTED_LOCATION = gql`
+  mutation SetMySelectedLocation($locationId: ID) {
+    setMySelectedLocation(location_id: $locationId) {
+      user_id
+      selected_location_id
     }
   }
 `;

@@ -21,3 +21,13 @@ export const LocationsDocument = gql(`
     activePodLocationIds
   }
 `);
+
+/** Persist the user's selected header location (parity with mWeb's header). */
+export const SetSelectedLocationDocument = gql(`
+  mutation MobileSetSelectedLocation($locationId: ID) {
+    setMySelectedLocation(location_id: $locationId) {
+      user_id
+      selected_location_id
+    }
+  }
+`);

@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
+import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { useUserData } from '@duncit/user-context';
 import { Alert, AppBar, Avatar, Box, Chip, IconButton, Toolbar, Tooltip } from '@mui/material';
-import { HEADER_DATA, PUBLIC_POLICIES } from './queries';
+import { HEADER_DATA, PUBLIC_POLICIES, SET_MY_SELECTED_LOCATION } from './queries';
 import HeaderBrand from './HeaderBrand';
 import HeaderMascotButton from './HeaderMascotButton';
 import HeaderLocationButton from './HeaderLocationButton';
@@ -41,6 +41,9 @@ export default function AppHeader({
   const navigate = useNavigate();
   const { logout: ctxLogout } = useUserData();
   const { data, loading } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-and-network' });
+  const [persistSelectedLocation] = useMutation(SET_MY_SELECTED_LOCATION, {
+    onError: () => undefined,
+  });
   const [locDialogOpen, setLocDialogOpen] = useState(false);
   const [draftLocationId, setDraftLocationId] = useState('');
   const [draftZone, setDraftZone] = useState('');
@@ -60,12 +63,24 @@ export default function AppHeader({
   const locations = data?.locations ?? [];
   const superCategoryValue = selectedSuperCategory || superCats[0]?.slug || '';
 
+  // Persist an explicit location choice so it sticks across sessions/devices.
+  // The auto-default below does NOT persist — only a real user pick does.
+  const persistLocation = useCallback(
+    (id: string) => {
+      if (!id || id === me?.selected_location_id) return;
+      persistSelectedLocation({ variables: { locationId: id } }).catch(() => undefined);
+    },
+    [persistSelectedLocation, me?.selected_location_id]
+  );
+
   useEffect(() => {
     if (!selectedLocationId && locations.length > 0) {
+      // Prefer the user's persisted choice; then a city match; then the first.
+      const persisted = locations.find((l: any) => l.id === me?.selected_location_id);
       const cityMatch = locations.find(
         (l: any) => me?.city && l.location_name?.toLowerCase() === me.city.toLowerCase()
       );
-      onLocationChange(cityMatch?.id ?? locations[0].id);
+      onLocationChange(persisted?.id ?? cityMatch?.id ?? locations[0].id);
     }
   }, [locations, selectedLocationId, me, onLocationChange]);
 
@@ -153,6 +168,7 @@ export default function AppHeader({
                   onApply={() => {
                     onLocationChange(draftLocationId);
                     onZoneChange(draftZone);
+                    persistLocation(draftLocationId);
                     setLocDialogOpen(false);
                   }}
                   onAutoApply={(locationId, zoneName) => {
@@ -160,6 +176,7 @@ export default function AppHeader({
                     setDraftZone(zoneName);
                     onLocationChange(locationId);
                     onZoneChange(zoneName);
+                    persistLocation(locationId);
                     setLocDialogOpen(false);
                   }}
                 />

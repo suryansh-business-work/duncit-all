@@ -170,6 +170,19 @@ export const userResolvers = {
       }
       return userService.updateMyProfileVisibility(ctx.user.id, args.visibility);
     },
+    setMySelectedLocation: async (
+      _p: unknown,
+      args: { location_id?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.setMySelectedLocation(ctx.user.id, args.location_id ?? null);
+    },
     requestEmailVerificationOtp: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
       if (!ctx.user) {
         const { GraphQLError } = await import('graphql');

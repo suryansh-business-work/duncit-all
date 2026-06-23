@@ -72,6 +72,9 @@ const profileSchema = new Schema(
     city: { type: String },
     zone: { type: String },
     assigned_city: { type: String },
+    // The location the user last picked in the header (persists their choice
+    // across sessions/devices). References platform locations; null = unset.
+    selected_location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null },
   },
   { _id: false }
 );

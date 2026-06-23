@@ -54,6 +54,8 @@ export const userTypeDefs = gql`
     country: String!
     city: String
     zone: String
+    "The location the user last selected in the header (persisted choice)."
+    selected_location_id: ID
 
     roles: [String!]!
 
@@ -304,6 +306,8 @@ export const userTypeDefs = gql`
     signupWithGoogle(input: GoogleSignupInput!): AuthPayload!
     updateMyProfile(input: UpdateMyProfileInput!): User!
     updateMyProfileVisibility(visibility: ProfileVisibility!): User!
+    "Persist the user's selected header location (pass null to clear)."
+    setMySelectedLocation(location_id: ID): User!
     requestEmailVerificationOtp: OtpRequestResult!
     verifyEmailVerificationOtp(otp: String!): User!
     requestPasswordResetOtp(email: String!): OtpRequestResult!

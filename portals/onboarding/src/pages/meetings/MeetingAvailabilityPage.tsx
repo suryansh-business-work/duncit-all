@@ -15,6 +15,17 @@ import {
   Typography,
 } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
+import { TimePicker } from '@mui/x-date-pickers/TimePicker';
+import { format, parse } from 'date-fns';
+
+// "HH:mm" string ↔ Date for the MUIX TimePicker (kept as strings for the API).
+const toTime = (hhmm: string): Date | null => {
+  if (!hhmm) return null;
+  const d = parse(hhmm, 'HH:mm', new Date());
+  return Number.isNaN(d.getTime()) ? null : d;
+};
+const fromTime = (d: Date | null): string =>
+  d && !Number.isNaN(d.getTime()) ? format(d, 'HH:mm') : '';
 
 const AVAILABILITY = gql`
   query MeetingAvailability {
@@ -130,23 +141,17 @@ export default function MeetingAvailabilityPage() {
               </Stack>
             </Box>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField
-                size="small"
-                type="time"
+              <TimePicker
                 label="Start time (IST)"
-                value={startTime}
-                onChange={(e) => setStartTime(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
+                value={toTime(startTime)}
+                onChange={(d) => setStartTime(fromTime(d))}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
               />
-              <TextField
-                size="small"
-                type="time"
+              <TimePicker
                 label="End time (IST)"
-                value={endTime}
-                onChange={(e) => setEndTime(e.target.value)}
-                InputLabelProps={{ shrink: true }}
-                fullWidth
+                value={toTime(endTime)}
+                onChange={(d) => setEndTime(fromTime(d))}
+                slotProps={{ textField: { size: 'small', fullWidth: true } }}
               />
             </Stack>
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

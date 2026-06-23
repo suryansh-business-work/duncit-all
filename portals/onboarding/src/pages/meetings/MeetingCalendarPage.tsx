@@ -13,6 +13,7 @@ import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import EventIcon from '@mui/icons-material/Event';
 import { addMonths, eachDayOfInterval, endOfMonth, endOfWeek, format, isSameDay, isSameMonth, isToday, startOfMonth, startOfWeek } from 'date-fns';
+import MeetingDetailsDrawer from './MeetingDetailsDrawer';
 import { ONBOARDING_MEETINGS, type OnboardingMeeting } from './queries';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -21,6 +22,7 @@ const eventDate = (m: OnboardingMeeting) => new Date(m.scheduled_at ?? m.request
 /** Onboarding → Meeting → Calendar: month grid of venue + host meetings. */
 export default function MeetingCalendarPage() {
   const [cursor, setCursor] = useState(new Date());
+  const [selected, setSelected] = useState<OnboardingMeeting | null>(null);
   const { data, loading } = useQuery<{ onboardingMeetings: OnboardingMeeting[] }>(ONBOARDING_MEETINGS, { variables: { filter: {} }, fetchPolicy: 'cache-and-network' });
   const meetings = data?.onboardingMeetings ?? [];
 
@@ -64,7 +66,13 @@ export default function MeetingCalendarPage() {
                     <Stack spacing={0.25} sx={{ mt: 0.25 }}>
                       {dayMeetings.slice(0, 3).map((m) => (
                         <Tooltip key={m.id} title={`${m.kind} · ${m.user_name || m.contact_name || 'Applicant'} · ${m.status}`}>
-                          <Box sx={{ bgcolor: m.kind === 'VENUE' ? 'info.main' : 'secondary.main', color: '#fff', borderRadius: 0.5, px: 0.5, fontSize: 10, lineHeight: 1.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <Box
+                            role="button"
+                            tabIndex={0}
+                            onClick={() => setSelected(m)}
+                            onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && setSelected(m)}
+                            sx={{ bgcolor: m.kind === 'VENUE' ? 'info.main' : 'secondary.main', color: '#fff', borderRadius: 0.5, px: 0.5, fontSize: 10, lineHeight: 1.5, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', cursor: 'pointer' }}
+                          >
                             {format(eventDate(m), 'p')} {m.user_name || m.contact_name || m.kind}
                           </Box>
                         </Tooltip>
@@ -78,6 +86,8 @@ export default function MeetingCalendarPage() {
           </>
         )}
       </Card>
+
+      <MeetingDetailsDrawer meeting={selected} onClose={() => setSelected(null)} />
     </Stack>
   );
 }

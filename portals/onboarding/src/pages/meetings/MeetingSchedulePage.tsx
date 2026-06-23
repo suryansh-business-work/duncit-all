@@ -25,6 +25,7 @@ import {
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import CancelMeetingDialog from './CancelMeetingDialog';
+import MeetingDetailsDrawer from './MeetingDetailsDrawer';
 import { ONBOARDING_MEETINGS, UPDATE_MEETING, type MeetingStatus, type OnboardingMeeting, type SurveyKind } from './queries';
 
 const STATUS_COLORS: Record<MeetingStatus, 'default' | 'info' | 'success' | 'error'> = {
@@ -52,6 +53,7 @@ export default function MeetingSchedulePage() {
   const [updateMeeting, { loading: saving }] = useMutation(UPDATE_MEETING);
   const [editing, setEditing] = useState<OnboardingMeeting | null>(null);
   const [cancelling, setCancelling] = useState<OnboardingMeeting | null>(null);
+  const [selected, setSelected] = useState<OnboardingMeeting | null>(null);
   const [when, setWhen] = useState('');
   const [link, setLink] = useState('');
   const [status, setStatus] = useState<MeetingStatus>('SCHEDULED');
@@ -107,7 +109,7 @@ export default function MeetingSchedulePage() {
             </TableHead>
             <TableBody>
               {meetings.map((m) => (
-                <TableRow key={m.id} hover>
+                <TableRow key={m.id} hover sx={{ cursor: 'pointer' }} onClick={() => setSelected(m)}>
                   <TableCell>
                     <Typography variant="body2" fontWeight={700}>{m.user_name || m.contact_name || '—'}</Typography>
                     <Typography variant="caption" color="text.secondary">{m.user_email || m.contact_phone || ''}</Typography>
@@ -125,7 +127,7 @@ export default function MeetingSchedulePage() {
                       <Typography variant="caption" color="text.secondary" display="block">{m.cancel_reason}</Typography>
                     )}
                   </TableCell>
-                  <TableCell align="right">
+                  <TableCell align="right" onClick={(e) => e.stopPropagation()}>
                     <Button size="small" onClick={() => openEdit(m)}>Schedule</Button>
                     {(m.status === 'REQUESTED' || m.status === 'SCHEDULED') && (
                       <Button size="small" color="error" onClick={() => setCancelling(m)}>Cancel</Button>
@@ -159,6 +161,13 @@ export default function MeetingSchedulePage() {
       </Dialog>
 
       <CancelMeetingDialog meeting={cancelling} onClose={() => setCancelling(null)} onCancelled={() => refetch()} />
+
+      <MeetingDetailsDrawer
+        meeting={selected}
+        onClose={() => setSelected(null)}
+        onEdit={(meeting) => { setSelected(null); openEdit(meeting); }}
+        onCancel={(meeting) => { setSelected(null); setCancelling(meeting); }}
+      />
     </Stack>
   );
 }

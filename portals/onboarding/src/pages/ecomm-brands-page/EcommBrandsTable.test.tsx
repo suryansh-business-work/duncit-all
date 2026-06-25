@@ -18,19 +18,23 @@ const phoneOnly = {
 };
 
 describe('EcommBrandsTable', () => {
-  it('renders brands with fallbacks and fires review', () => {
+  it('renders brands with fallbacks and fires edit/review', () => {
+    const onEdit = vi.fn();
     const onReview = vi.fn();
-    render(<EcommBrandsTable brands={[full, sparse, phoneOnly]} onReview={onReview} />);
+    render(<EcommBrandsTable brands={[full, sparse, phoneOnly]} onEdit={onEdit} onReview={onReview} />);
     expect(screen.getByText('Acme')).toBeInTheDocument();
     expect(screen.getByText('Apparel, Decor')).toBeInTheDocument();
     expect(screen.getByText('Untitled brand')).toBeInTheDocument();
     expect(screen.getByText('999')).toBeInTheDocument();
-    fireEvent.click(screen.getAllByRole('button')[0]);
+    const buttons = screen.getAllByRole('button');
+    fireEvent.click(buttons[0]);
+    expect(onEdit).toHaveBeenCalledWith(full);
+    fireEvent.click(buttons[1]);
     expect(onReview).toHaveBeenCalledWith(full);
   });
 
   it('shows an empty state', () => {
-    render(<EcommBrandsTable brands={[]} onReview={vi.fn()} />);
+    render(<EcommBrandsTable brands={[]} onEdit={vi.fn()} onReview={vi.fn()} />);
     expect(screen.getByText('No brands found.')).toBeInTheDocument();
   });
 });

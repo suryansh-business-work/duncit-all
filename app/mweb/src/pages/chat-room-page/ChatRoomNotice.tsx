@@ -1,6 +1,10 @@
 import { Box, Chip, Stack, Typography } from '@mui/material';
 
-export default function ChatRoomNotice() {
+interface ChatRoomNoticeProps {
+  ended?: boolean;
+}
+
+export default function ChatRoomNotice({ ended = false }: Readonly<ChatRoomNoticeProps>) {
   return (
     <Box sx={{ mb: 1.5, mx: 'auto', maxWidth: 420, p: 1.25, borderRadius: 3, bgcolor: 'rgba(112,70,255,0.12)', border: '1px solid rgba(112,70,255,0.24)' }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
@@ -9,10 +13,14 @@ export default function ChatRoomNotice() {
             POD CHAT
           </Typography>
           <Typography variant="body2" sx={{ fontWeight: 900 }} noWrap>
-            Keep the plan in one place
+            {ended ? 'This pod has ended' : 'Keep the plan in one place'}
           </Typography>
         </Box>
-        <Chip size="small" label="Live" color="success" sx={{ fontWeight: 900 }} />
+        {ended ? (
+          <Chip size="small" label="Ended" sx={{ fontWeight: 900 }} />
+        ) : (
+          <Chip size="small" label="Live" color="success" sx={{ fontWeight: 900 }} />
+        )}
       </Stack>
     </Box>
   );

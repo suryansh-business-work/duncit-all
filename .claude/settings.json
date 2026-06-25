@@ -319,7 +319,14 @@
       "Bash(grep -nB3 -A22 'function resolvePackageManager' C:/Users/Suryansh/AppData/Local/npm-cache/_npx/6bc7bae5c2059953/node_modules/@expo/package-manager/build/utils/nodeManagers.js)",
       "Bash(cd /c/Users/Suryansh/Desktop/Projects/duncit.com/project/app/mobile-app; grep -nE \"file:\" package.json | head -4; grep -nE \"schema|modules\" codegen.ts | head -4)",
       "Bash(*)",
-      "Bash(docker *)"
+      "Bash(docker *)",
+      "Read(//portals/crm/src/pages/host-leads/**)",
+      "Read(//portals/crm/src/pages/venue-leads/**)",
+      "Read(//portals/crm/src/pages/ecomm-leads/**)",
+      "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/server/src/modules/survey/**)",
+      "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/onboarding/src/pages/meetings/**)",
+      "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/onboarding/src/**)",
+      "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/server/src/modules/access/**)"
     ],
     "deny": [],
     "ask": [],

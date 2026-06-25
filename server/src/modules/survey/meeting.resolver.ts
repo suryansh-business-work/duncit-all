@@ -23,9 +23,13 @@ export const meetingResolvers = {
       requireAuth(ctx);
       return meetingService.availability();
     },
-    meetingSlots: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+    meetingSlots: (_p: unknown, args: { exclude_meeting_id?: string | null }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      return meetingService.slots(user.id);
+      return meetingService.slots(user.id, { excludeMeetingId: args.exclude_meeting_id ?? null });
+    },
+    meetingHolidays: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return meetingService.holidays();
     },
   },
   Mutation: {
@@ -49,9 +53,25 @@ export const meetingResolvers = {
       requireRole(ctx, ONBOARDING_RW);
       return meetingService.cancelByStaff(args.id, args.reason);
     },
+    dismissMeeting: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ONBOARDING_RW);
+      return meetingService.dismiss(args.id);
+    },
+    sendMeetingFeedback: (_p: unknown, args: { id: string; feedback: string }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, ONBOARDING_RW);
+      return meetingService.sendFeedback(args.id, args.feedback, { id: user.id, name: user.email ?? null });
+    },
     updateMeetingAvailability: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ONBOARDING_RW);
       return meetingService.updateAvailability(args.input);
+    },
+    addMeetingHoliday: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      requireRole(ctx, ONBOARDING_RW);
+      return meetingService.addHoliday(args.input);
+    },
+    removeMeetingHoliday: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ONBOARDING_RW);
+      return meetingService.removeHoliday(args.id);
     },
   },
 };

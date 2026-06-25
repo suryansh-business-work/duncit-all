@@ -62,7 +62,11 @@ export function MeetingPhase({
     .filter((x) => x.text.trim() !== '');
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView
+      contentContainerStyle={{ padding: 16, paddingBottom: 96, gap: 16 }}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+    >
       {answered.length > 0 && (
         <YStack gap={8} padding={12} borderRadius={12} backgroundColor="$color2">
           <Text fontSize={12} fontWeight="800" opacity={0.7} color={ink}>

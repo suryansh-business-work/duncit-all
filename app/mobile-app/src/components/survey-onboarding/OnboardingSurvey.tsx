@@ -5,6 +5,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
+import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { useGoBack } from '@/hooks/useGoBack';
 import { PlaceholderScreen } from '@/components/PlaceholderScreen';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -112,41 +113,43 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
           </Text>
         </XStack>
 
-        {flow.phase === 'category' && (
-          <CategoryPhase busy={flow.busy} error={flow.error} onContinue={flow.chooseCategory} />
-        )}
-        {flow.phase === 'survey' && flow.survey && (
-          <SurveyPhase
-            survey={flow.survey}
-            answer={flow.answer}
-            busy={flow.busy}
-            error={flow.error}
-            onSubmit={flow.submitSurvey}
-          />
-        )}
-        {flow.phase === 'meeting' && (
-          <MeetingPhase
-            survey={flow.survey}
-            answer={flow.answer}
-            slots={flow.slots}
-            slotsLoading={flow.slotsLoading}
-            selectedSlot={flow.selectedSlot}
-            setSelectedSlot={flow.setSelectedSlot}
-            name={flow.name}
-            setName={flow.setName}
-            lockName={flow.lockName}
-            ext={flow.ext}
-            setExt={flow.setExt}
-            phone={flow.phone}
-            setPhone={flow.setPhone}
-            hasProfilePhone={flow.hasProfilePhone}
-            notes={flow.notes}
-            setNotes={flow.setNotes}
-            busy={flow.busy}
-            error={flow.error}
-            onSubmit={flow.submitMeeting}
-          />
-        )}
+        <KeyboardScreen>
+          {flow.phase === 'category' && (
+            <CategoryPhase busy={flow.busy} error={flow.error} onContinue={flow.chooseCategory} />
+          )}
+          {flow.phase === 'survey' && flow.survey && (
+            <SurveyPhase
+              survey={flow.survey}
+              answer={flow.answer}
+              busy={flow.busy}
+              error={flow.error}
+              onSubmit={flow.submitSurvey}
+            />
+          )}
+          {flow.phase === 'meeting' && (
+            <MeetingPhase
+              survey={flow.survey}
+              answer={flow.answer}
+              slots={flow.slots}
+              slotsLoading={flow.slotsLoading}
+              selectedSlot={flow.selectedSlot}
+              setSelectedSlot={flow.setSelectedSlot}
+              name={flow.name}
+              setName={flow.setName}
+              lockName={flow.lockName}
+              ext={flow.ext}
+              setExt={flow.setExt}
+              phone={flow.phone}
+              setPhone={flow.setPhone}
+              hasProfilePhone={flow.hasProfilePhone}
+              notes={flow.notes}
+              setNotes={flow.setNotes}
+              busy={flow.busy}
+              error={flow.error}
+              onSubmit={flow.submitMeeting}
+            />
+          )}
+        </KeyboardScreen>
       </SafeAreaView>
     </YStack>
   );

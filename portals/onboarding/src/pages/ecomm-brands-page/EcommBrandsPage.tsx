@@ -5,6 +5,7 @@ import TableSkeleton from '../../components/TableSkeleton';
 import { APPROVE_BRAND, ECOMM_BRANDS, REJECT_BRAND, STATUSES } from './queries';
 import EcommBrandsTable from './EcommBrandsTable';
 import EcommBrandReviewDialog from './EcommBrandReviewDialog';
+import EcommBrandEditDialog from './EcommBrandEditDialog';
 
 export default function EcommBrandsPage() {
   const [status, setStatus] = useState('');
@@ -14,6 +15,7 @@ export default function EcommBrandsPage() {
   const [approve] = useMutation(APPROVE_BRAND);
   const [reject] = useMutation(REJECT_BRAND);
   const [active, setActive] = useState<any | null>(null);
+  const [editing, setEditing] = useState<any | null>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
 
@@ -69,8 +71,14 @@ export default function EcommBrandsPage() {
       {loading && !data ? (
         <TableSkeleton columns={6} />
       ) : (
-        <EcommBrandsTable brands={data?.ecommBrands ?? []} onReview={openReview} />
+        <EcommBrandsTable brands={data?.ecommBrands ?? []} onEdit={setEditing} onReview={openReview} />
       )}
+
+      <EcommBrandEditDialog
+        brand={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => refetch()}
+      />
 
       <EcommBrandReviewDialog
         active={active}

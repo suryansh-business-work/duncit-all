@@ -60,7 +60,11 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
   if (!active) return null;
 
   return (
-    <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
+    <ScrollView
+      contentContainerStyle={{ padding: 16, paddingBottom: 96, gap: 16 }}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="interactive"
+    >
       {sections.length > 1 && (
         <Text fontSize={12} opacity={0.7} color={ink} fontWeight="700">
           Step {step + 1} of {sections.length}

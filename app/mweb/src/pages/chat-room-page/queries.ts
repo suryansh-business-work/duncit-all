@@ -24,6 +24,8 @@ export const POD_MESSAGES = gql`
     pod(pod_doc_id: $pod_id) {
       id
       pod_title
+      pod_date_time
+      pod_end_date_time
     }
   }
 `;

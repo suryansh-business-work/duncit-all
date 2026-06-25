@@ -55,3 +55,23 @@ export const REJECT_BRAND = gql`
     }
   }
 `;
+
+export const ADMIN_UPDATE_ECOMM_BRAND = gql`
+  mutation AdminUpdateEcommBrand(
+    $id: ID!
+    $input: EcommBrandInput!
+    $status: EcommBrandStatus
+  ) {
+    adminUpdateEcommBrand(brand_doc_id: $id, input: $input, status: $status) {
+      id
+    }
+  }
+`;
+
+export const DOC_TYPES = [
+  'GST Certificate',
+  'PAN Card',
+  'Business Registration',
+  'Trademark Certificate',
+  'Other',
+];

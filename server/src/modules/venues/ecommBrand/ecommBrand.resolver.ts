@@ -49,5 +49,13 @@ export const ecommBrandResolvers = {
       requireRole(ctx, BRAND_REVIEW);
       return ecommBrandService.reject(args.brand_doc_id, args.notes);
     },
+    adminUpdateEcommBrand: (
+      _p: unknown,
+      args: { brand_doc_id: string; input: any; status?: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, BRAND_REVIEW);
+      return ecommBrandService.adminUpdate(args.brand_doc_id, args.input, args.status);
+    },
   },
 };

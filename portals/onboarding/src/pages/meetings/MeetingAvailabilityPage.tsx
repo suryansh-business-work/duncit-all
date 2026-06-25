@@ -17,6 +17,7 @@ import {
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { format, parse } from 'date-fns';
+import MeetingHolidaysCard from './MeetingHolidaysCard';
 
 // "HH:mm" string ↔ Date for the MUIX TimePicker (kept as strings for the API).
 const toTime = (hhmm: string): Date | null => {
@@ -183,6 +184,8 @@ export default function MeetingAvailabilityPage() {
           </Stack>
         </CardContent>
       </Card>
+
+      <MeetingHolidaysCard />
 
       <Snackbar open={!!toast} autoHideDuration={3000} onClose={() => setToast(null)} message={toast ?? ''} />
     </Stack>

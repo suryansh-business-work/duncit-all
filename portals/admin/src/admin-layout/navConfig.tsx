@@ -93,6 +93,13 @@ export const NAV: NavSection[] = [
     ],
   },
   {
+    heading: 'Approvals',
+    prefixes: ['/approvals'],
+    items: [
+      { label: 'Approve/Deny Requests', to: '/approvals', icon: navIcons.factCheck },
+    ],
+  },
+  {
     heading: 'System',
     prefixes: ['/branding', '/settings'],
     items: [

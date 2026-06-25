@@ -1,9 +1,12 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { MeetingAvailabilityModel, MeetingModel, type MeetingAvailabilityDoc, type MeetingStatus } from './meeting.model';
+import { MeetingAvailabilityModel, MeetingHolidayModel, MeetingModel, type MeetingAvailabilityDoc, type HolidayType, type MeetingStatus } from './meeting.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { leadSurveyService } from './leadSurvey.service';
+import { surveyService } from './survey.service';
+import { approvalService } from '@modules/approval/approval.service';
 import type { SurveyKind } from './survey.model';
+import type { MeetingApprovalStatus } from './meeting.model';
 import {
   sendMeetingBookedEmail,
   sendMeetingCancelledEmail,
@@ -28,9 +31,12 @@ const pub = (doc: any, names?: Map<string, { name: string; email: string }>) => 
     meeting_link: o.meeting_link ?? null,
     status: o.status ?? 'REQUESTED',
     cancel_reason: o.cancel_reason ?? null,
+    dismissed: !!o.dismissed,
     notes: o.notes ?? null,
     contact_name: o.contact_name ?? null,
     contact_phone: o.contact_phone ?? null,
+    approval_status: o.approval_status ?? 'NONE',
+    feedback: o.feedback ?? null,
     created_at: iso(o.created_at),
     updated_at: iso(o.updated_at),
   };
@@ -108,10 +114,40 @@ export interface MeetingFilter {
 const notFound = () => new GraphQLError('Meeting not found', { extensions: { code: 'NOT_FOUND' } });
 
 const TIME_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const minutesOf = (hhmm: string) => {
   const [h, m] = hhmm.split(':').map(Number);
   return h * 60 + m;
 };
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/** Wall-clock (offset-shifted) calendar day 'YYYY-MM-DD' for an instant. */
+function localDayKey(instantMs: number, offsetMin: number): string {
+  const local = new Date(instantMs + offsetMin * 60_000);
+  return `${local.getUTCFullYear()}-${pad2(local.getUTCMonth() + 1)}-${pad2(local.getUTCDate())}`;
+}
+
+/** Holiday day keys ('YYYY-MM-DD') — onboarding-team leave that blocks slots. */
+async function holidayDaySet(): Promise<Set<string>> {
+  const docs = await MeetingHolidayModel.find().select('date').lean();
+  return new Set(docs.map((d: any) => d.date as string));
+}
+
+/** True when the requested instant falls on a configured holiday. */
+async function isHolidayInstant(requestedAt: string): Promise<boolean> {
+  const [av, holidays] = await Promise.all([MeetingAvailabilityModel.findOne(), holidayDaySet()]);
+  const offset = av?.timezone_offset_minutes ?? 330;
+  return holidays.has(localDayKey(new Date(requestedAt).getTime(), offset));
+}
+
+const pubHoliday = (doc: any) => ({
+  id: String(doc._id),
+  date: doc.date,
+  name: doc.name ?? '',
+  type: doc.type ?? 'PUBLIC_HOLIDAY',
+});
+
+const HOLIDAY_BLOCKED = 'Our onboarding team is on leave that day — please pick another slot';
 
 const pubAvailability = (doc: MeetingAvailabilityDoc) => ({
   id: String(doc._id),
@@ -132,6 +168,7 @@ const pubAvailability = (doc: MeetingAvailabilityDoc) => ({
 export function generateSlots(
   av: Pick<MeetingAvailabilityDoc, 'week_days' | 'start_time' | 'end_time' | 'slot_minutes' | 'horizon_days' | 'timezone_offset_minutes'>,
   now: Date = new Date(),
+  holidays: Set<string> = new Set(),
 ): { start_at: Date; end_at: Date }[] {
   const offsetMs = (av.timezone_offset_minutes ?? 330) * 60_000;
   const slotMs = Math.max(av.slot_minutes ?? 30, 5) * 60_000;
@@ -143,6 +180,8 @@ export function generateSlots(
   for (let i = 0; i < (av.horizon_days ?? 7); i++) {
     const local = new Date(localNow.getTime() + i * 86_400_000);
     if (!days.has(local.getUTCDay())) continue;
+    // Skip onboarding-team holidays / leave days.
+    if (holidays.has(`${local.getUTCFullYear()}-${pad2(local.getUTCMonth() + 1)}-${pad2(local.getUTCDate())}`)) continue;
     // UTC instant of this local day's midnight.
     const midnight = Date.UTC(local.getUTCFullYear(), local.getUTCMonth(), local.getUTCDate()) - offsetMs;
     for (let m = startMin; m + av.slot_minutes <= endMin; m += av.slot_minutes) {
@@ -154,14 +193,33 @@ export function generateSlots(
   return slots;
 }
 
-/** Instants other (non-cancelled) meetings occupy — scheduled time wins. */
-async function occupiedInstants(excludeUserId?: string | null): Promise<Set<number>> {
+interface OccupyOpts {
+  /** Skip a user's own meetings (gate: keep your held slot selectable). */
+  excludeUserId?: string | null;
+  /** Skip one specific meeting (staff scheduling: keep its own slot selectable). */
+  excludeMeetingId?: string | null;
+}
+
+/** Effective busy instants of other non-cancelled meetings — scheduled time wins. */
+async function occupiedInstants(opts: OccupyOpts = {}): Promise<number[]> {
   const q: any = { status: { $in: ['REQUESTED', 'SCHEDULED'] } };
-  if (excludeUserId) q.user_id = { $ne: new Types.ObjectId(excludeUserId) };
+  if (opts.excludeUserId) q.user_id = { $ne: new Types.ObjectId(opts.excludeUserId) };
+  if (opts.excludeMeetingId) q._id = { $ne: new Types.ObjectId(opts.excludeMeetingId) };
   const docs = await MeetingModel.find(q).select('requested_at scheduled_at').lean();
-  return new Set(
-    docs.map((d: any) => (d.scheduled_at ?? d.requested_at)?.getTime?.()).filter((t: any) => typeof t === 'number'),
-  );
+  return docs
+    .map((d: any) => (d.scheduled_at ?? d.requested_at)?.getTime?.())
+    .filter((t: any): t is number => typeof t === 'number');
+}
+
+/** A candidate instant collides with a busy one when their slot windows overlap
+ * (covers staff-scheduled times that fall off the regular slot grid). */
+const isTaken = (instant: number, busy: number[], slotMs: number) =>
+  busy.some((t) => Math.abs(t - instant) < slotMs);
+
+/** Slot length (ms) from the availability singleton — drives overlap windows. */
+async function slotWindowMs(): Promise<number> {
+  const av = await MeetingAvailabilityModel.findOne();
+  return Math.max(av?.slot_minutes ?? 30, 5) * 60_000;
 }
 
 /** Best-effort applicant notification for booking + cancellation actions. */
@@ -236,14 +294,43 @@ export const meetingService = {
     return pubAvailability(doc);
   },
 
-  /** Bookable slots for the gate's meeting step — others' bookings disabled. */
-  async slots(userId: string) {
+  /** Onboarding-team holidays / leave days (sorted by date). */
+  async holidays() {
+    const docs = await MeetingHolidayModel.find().sort({ date: 1 });
+    return docs.map(pubHoliday);
+  },
+
+  /** Add (or update) a holiday — one entry per calendar day. */
+  async addHoliday(input: { date: string; name?: string | null; type?: HolidayType | null }) {
+    if (!DATE_RE.test(input.date ?? '')) {
+      throw new GraphQLError('Holiday date must be YYYY-MM-DD', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const doc = await MeetingHolidayModel.findOneAndUpdate(
+      { date: input.date },
+      { $set: { name: input.name ?? '', type: input.type ?? 'PUBLIC_HOLIDAY' } },
+      { new: true, upsert: true, setDefaultsOnInsert: true },
+    );
+    return pubHoliday(doc);
+  },
+
+  async removeHoliday(id: string) {
+    const r = await MeetingHolidayModel.deleteOne({ _id: new Types.ObjectId(id) });
+    return r.deletedCount > 0;
+  },
+
+  /** Bookable slots — booked instants disabled. The gate excludes the caller's
+   * own held slot; staff scheduling passes `excludeMeetingId` to keep the
+   * meeting being edited selectable. */
+  async slots(userId: string, opts: { excludeMeetingId?: string | null } = {}) {
     const doc = (await MeetingAvailabilityModel.findOne()) ?? (await MeetingAvailabilityModel.create({}));
-    const taken = await occupiedInstants(userId);
-    return generateSlots(doc).map((slot) => ({
+    // When scheduling a specific meeting, only other applicants block slots.
+    const occupy = opts.excludeMeetingId ? { excludeMeetingId: opts.excludeMeetingId } : { excludeUserId: userId };
+    const [busy, holidays] = await Promise.all([occupiedInstants(occupy), holidayDaySet()]);
+    const slotMs = Math.max(doc.slot_minutes ?? 30, 5) * 60_000;
+    return generateSlots(doc, new Date(), holidays).map((slot) => ({
       start_at: slot.start_at.toISOString(),
       end_at: slot.end_at.toISOString(),
-      available: !taken.has(slot.start_at.getTime()),
+      available: !isTaken(slot.start_at.getTime(), busy, slotMs),
     }));
   },
 
@@ -257,10 +344,13 @@ export const meetingService = {
     if (!input.contact_phone?.trim()) {
       throw new GraphQLError('Phone number is required so our onboarding team can reach you', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    // Slot race: another user may have just taken this instant.
-    const taken = await occupiedInstants(userId);
-    if (taken.has(new Date(input.requested_at).getTime())) {
+    // Slot race: another user may have just taken (or overlap) this instant.
+    const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeUserId: userId }), slotWindowMs()]);
+    if (isTaken(new Date(input.requested_at).getTime(), busy, slotMs)) {
       throw new GraphQLError('That slot was just booked — please pick another one', { extensions: { code: 'CONFLICT' } });
+    }
+    if (await isHolidayInstant(input.requested_at)) {
+      throw new GraphQLError(HOLIDAY_BLOCKED, { extensions: { code: 'CONFLICT' } });
     }
     // A fresh booking always restarts the request — a previously CANCELLED or
     // DONE meeting must come back as REQUESTED so the Earn card locks again.
@@ -276,6 +366,7 @@ export const meetingService = {
           scheduled_at: null,
           meeting_link: null,
           cancel_reason: null,
+          dismissed: false,
         },
       },
       { new: true, upsert: true, setDefaultsOnInsert: true },
@@ -299,9 +390,12 @@ export const meetingService = {
     if (!requestedAt) throw new GraphQLError('A new date & time is required', { extensions: { code: 'BAD_USER_INPUT' } });
     const doc = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind });
     if (!doc) throw notFound();
-    const taken = await occupiedInstants(userId);
-    if (taken.has(new Date(requestedAt).getTime())) {
+    const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeUserId: userId }), slotWindowMs()]);
+    if (isTaken(new Date(requestedAt).getTime(), busy, slotMs)) {
       throw new GraphQLError('That slot was just booked — please pick another one', { extensions: { code: 'CONFLICT' } });
+    }
+    if (await isHolidayInstant(requestedAt)) {
+      throw new GraphQLError(HOLIDAY_BLOCKED, { extensions: { code: 'CONFLICT' } });
     }
     doc.requested_at = new Date(requestedAt);
     doc.scheduled_at = null;
@@ -343,6 +437,76 @@ export const meetingService = {
     return pub(doc);
   },
 
+  /** Onboarding staff hide a cancelled meeting from the calendar (Outlook
+   * "remove from my calendar") — the record stays for audit. */
+  async dismiss(id: string) {
+    const doc = await MeetingModel.findById(id);
+    if (!doc) throw notFound();
+    if (doc.status !== 'CANCELLED') {
+      throw new GraphQLError('Only cancelled meetings can be removed from the calendar', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    doc.dismissed = true;
+    await doc.save();
+    return pub(doc);
+  },
+
+  /** Onboarding staff send post-meeting feedback + the applicant's survey
+   * answers to the Admin console for approval. Only a DONE meeting can be sent;
+   * a DENIED meeting can be re-sent. */
+  async sendFeedback(id: string, feedback: string, by: { id?: string | null; name?: string | null }) {
+    if (!feedback?.trim()) {
+      throw new GraphQLError('Add your feedback before sending', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const doc = await MeetingModel.findById(id);
+    if (!doc) throw notFound();
+    if (doc.status !== 'DONE') {
+      throw new GraphQLError('Mark the meeting as done before sending feedback', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (doc.approval_status === 'PENDING' || doc.approval_status === 'APPROVED') {
+      throw new GraphQLError('Feedback for this meeting is already with the Admin', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const [names, responses] = await Promise.all([
+      userMap([String(doc.user_id)]),
+      surveyService.userResponses(String(doc.user_id)),
+    ]);
+    const who = names.get(String(doc.user_id));
+    const kindLabel = MEETING_KIND_LABELS[doc.kind] ?? 'Host';
+    // Survey answers for this kind become the approval request's detail rows.
+    const surveyDetails = responses
+      .filter((r: any) => r.kind === doc.kind)
+      .flatMap((r: any) => (r.items ?? []).map((it: any) => ({ label: it.label, value: it.answer })));
+    const details = [...surveyDetails, { label: 'Interviewer feedback', value: feedback.trim() }];
+    await approvalService.create({
+      type: 'ONBOARDING_MEETING_FEEDBACK',
+      source_portal: 'onboarding',
+      title: `${kindLabel} onboarding — ${who?.name ?? 'Applicant'}`,
+      summary: `Approve to draft this ${kindLabel.toLowerCase()} into the onboarded list.`,
+      details,
+      kind: doc.kind,
+      subject_user_id: String(doc.user_id),
+      subject_name: who?.name ?? null,
+      subject_email: who?.email ?? null,
+      subject_phone: doc.contact_phone ?? null,
+      meeting_id: String(doc._id),
+      requested_by: by.id ?? null,
+      requested_by_name: by.name ?? null,
+    });
+    doc.feedback = feedback.trim();
+    doc.feedback_sent_at = new Date();
+    doc.approval_status = 'PENDING';
+    await doc.save();
+    return pub(doc);
+  },
+
+  /** Set by the Admin console's approve/deny actions (via approvalService). */
+  async setApprovalStatus(id: string, status: MeetingApprovalStatus) {
+    const doc = await MeetingModel.findById(id);
+    if (!doc) return null;
+    doc.approval_status = status;
+    await doc.save();
+    return pub(doc);
+  },
+
   async myMeeting(userId: string, kind: SurveyKind) {
     return pub(await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind }));
   },
@@ -380,6 +544,13 @@ export const meetingService = {
   ) {
     const doc = await MeetingModel.findById(id);
     if (!doc) throw notFound();
+    // Staff can't schedule onto a slot another applicant already holds.
+    if (input.scheduled_at) {
+      const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeMeetingId: id }), slotWindowMs()]);
+      if (isTaken(new Date(input.scheduled_at).getTime(), busy, slotMs)) {
+        throw new GraphQLError('That slot is already taken by another meeting', { extensions: { code: 'CONFLICT' } });
+      }
+    }
     const touchedSchedule =
       input.scheduled_at !== undefined || input.meeting_link !== undefined || input.status != null;
     if (input.status != null) doc.status = input.status;

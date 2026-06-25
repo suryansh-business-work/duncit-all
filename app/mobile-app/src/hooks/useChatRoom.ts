@@ -11,6 +11,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 import { usePodSocket } from '@/hooks/usePodSocket';
 import type { ChatMessage } from '@/hooks/useChat';
 import { toErrorMessage } from '@/utils/errors';
+import { isPodActive } from '@/utils/pod-format';
 
 export interface ChatImageAsset {
   base64?: string | null;
@@ -28,6 +29,7 @@ const MESSAGE_LIMIT = 80;
  */
 export function useChatRoom(podId: string) {
   const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [podEnded, setPodEnded] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [sending, setSending] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -36,7 +38,11 @@ export function useChatRoom(podId: string) {
     let active = true;
     setIsLoading(true);
     graphqlRequest(PodMessagesDocument, { podId, limit: MESSAGE_LIMIT }, { auth: true })
-      .then((data) => active && setMessages(data.podMessages))
+      .then((data) => {
+        if (!active) return;
+        setMessages(data.podMessages);
+        setPodEnded(!isPodActive(data.pod?.pod_date_time, data.pod?.pod_end_date_time));
+      })
       .catch((e) => active && setError(toErrorMessage(e, 'Could not load messages.')))
       .finally(() => active && setIsLoading(false));
     return () => {
@@ -135,5 +141,5 @@ export function useChatRoom(podId: string) {
     [applyReaction],
   );
 
-  return { messages, isLoading, sending, error, setError, sendText, sendImage, react };
+  return { messages, podEnded, isLoading, sending, error, setError, sendText, sendImage, react };
 }

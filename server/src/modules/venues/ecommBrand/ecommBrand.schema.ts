@@ -105,5 +105,7 @@ export const ecommBrandTypeDefs = gql`
     approveEcommBrand(brand_doc_id: ID!, notes: String, tags: [String!]): EcommBrand!
     "Onboarding/admin: reject a brand with notes."
     rejectEcommBrand(brand_doc_id: ID!, notes: String!): EcommBrand!
+    "Onboarding/admin: edit any brand (e.g. complete an approval-created draft) and optionally set its status."
+    adminUpdateEcommBrand(brand_doc_id: ID!, input: EcommBrandInput!, status: EcommBrandStatus): EcommBrand!
   }
 `;

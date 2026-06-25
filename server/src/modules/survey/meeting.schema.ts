@@ -20,9 +20,15 @@ export const meetingTypeDefs = gql`
     status: MeetingStatus!
     "Why onboarding staff cancelled it (null for self-cancels)."
     cancel_reason: String
+    "Hidden from the onboarding calendar (cancelled meeting removed by staff)."
+    dismissed: Boolean
     notes: String
     contact_name: String
     contact_phone: String
+    "Admin-approval state of the interviewer's feedback: NONE | PENDING | APPROVED | DENIED."
+    approval_status: String
+    "The interviewer's post-meeting feedback (set when 'Send feedback' is submitted)."
+    feedback: String
     created_at: String
     updated_at: String
   }
@@ -74,6 +80,27 @@ export const meetingTypeDefs = gql`
     available: Boolean!
   }
 
+  enum HolidayType {
+    PUBLIC_HOLIDAY
+    OFFICE_HOLIDAY
+    OFFICIAL_LEAVE
+  }
+
+  "An onboarding-team holiday / leave day — blocks bookable slots and shows on the calendar."
+  type MeetingHoliday {
+    id: ID!
+    "Wall-clock (IST) calendar day as 'YYYY-MM-DD'."
+    date: String!
+    name: String
+    type: HolidayType!
+  }
+
+  input AddMeetingHolidayInput {
+    date: String!
+    name: String
+    type: HolidayType
+  }
+
   extend type Query {
     "Current user's meeting request for a kind."
     myMeeting(kind: SurveyKind!): OnboardingMeeting
@@ -83,8 +110,10 @@ export const meetingTypeDefs = gql`
     onboardingMeetings(filter: MeetingFilter): [OnboardingMeeting!]!
     "Global slot-availability config."
     meetingAvailability: MeetingAvailability!
-    "Bookable slots for the gate's meeting step (others' bookings disabled)."
-    meetingSlots: [MeetingSlot!]!
+    "Bookable slots (others' bookings disabled). Staff pass exclude_meeting_id to keep the meeting being scheduled selectable."
+    meetingSlots(exclude_meeting_id: ID): [MeetingSlot!]!
+    "Onboarding-team holidays / leave days (block slots; shown on the calendar)."
+    meetingHolidays: [MeetingHoliday!]!
   }
 
   extend type Mutation {
@@ -96,6 +125,14 @@ export const meetingTypeDefs = gql`
     updateMeeting(id: ID!, input: UpdateMeetingInput!): OnboardingMeeting!
     "Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again."
     cancelMeeting(id: ID!, reason: String!): OnboardingMeeting!
+    "Onboarding staff remove a cancelled meeting from the calendar (kept for audit)."
+    dismissMeeting(id: ID!): OnboardingMeeting!
+    "Onboarding staff send post-meeting feedback (with the applicant's survey answers) to the Admin console for approval. Requires the meeting to be DONE."
+    sendMeetingFeedback(id: ID!, feedback: String!): OnboardingMeeting!
     updateMeetingAvailability(input: MeetingAvailabilityInput!): MeetingAvailability!
+    "Onboarding staff add (or update) a holiday / leave day."
+    addMeetingHoliday(input: AddMeetingHolidayInput!): MeetingHoliday!
+    "Onboarding staff remove a holiday / leave day."
+    removeMeetingHoliday(id: ID!): Boolean!
   }
 `;

@@ -8,73 +8,102 @@ import {
   Card,
   Chip,
   CircularProgress,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
   Link,
-  MenuItem,
   Stack,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-  TextField,
   Typography,
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import CancelMeetingDialog from './CancelMeetingDialog';
 import MeetingDetailsDrawer from './MeetingDetailsDrawer';
-import { ONBOARDING_MEETINGS, UPDATE_MEETING, type MeetingStatus, type OnboardingMeeting, type SurveyKind } from './queries';
+import ScheduleMeetingDialog from './ScheduleMeetingDialog';
+import SendFeedbackDialog from './SendFeedbackDialog';
+import {
+  ONBOARDING_MEETINGS,
+  UPDATE_MEETING,
+  type MeetingApprovalStatus,
+  type MeetingStatus,
+  type OnboardingMeeting,
+  type SurveyKind,
+} from './queries';
 
 const STATUS_COLORS: Record<MeetingStatus, 'default' | 'info' | 'success' | 'error'> = {
   REQUESTED: 'default', SCHEDULED: 'info', DONE: 'success', CANCELLED: 'error',
 };
-const STATUSES: MeetingStatus[] = ['REQUESTED', 'SCHEDULED', 'DONE', 'CANCELLED'];
-const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
-const toLocalInput = (iso?: string | null) => {
-  if (!iso) return '';
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return '';
-  const pad = (n: number) => String(n).padStart(2, '0');
-  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+const APPROVAL_LABELS: Record<MeetingApprovalStatus, string> = {
+  NONE: '—', PENDING: 'Pending', APPROVED: 'Approved', DENIED: 'Denied',
 };
-
-/** Onboarding → Meeting → Venue/Host Meeting Schedule: table of requests + scheduling. */
+const APPROVAL_COLORS: Record<MeetingApprovalStatus, 'default' | 'warning' | 'success' | 'error'> = {
+  NONE: 'default', PENDING: 'warning', APPROVED: 'success', DENIED: 'error',
+};
+const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
 const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
 
+/** Admin-approval state of the interviewer's feedback. */
+function ApprovalCell({ status }: Readonly<{ status?: MeetingApprovalStatus | null }>) {
+  const value = status ?? 'NONE';
+  if (value === 'NONE') return <Typography variant="body2" color="text.secondary">—</Typography>;
+  return <Chip size="small" color={APPROVAL_COLORS[value]} label={APPROVAL_LABELS[value]} />;
+}
+
+interface RowActionsProps {
+  meeting: OnboardingMeeting;
+  marking: boolean;
+  onSchedule: (m: OnboardingMeeting) => void;
+  onMarkDone: (m: OnboardingMeeting) => void;
+  onSendFeedback: (m: OnboardingMeeting) => void;
+  onCancel: (m: OnboardingMeeting) => void;
+}
+
+/** Row actions, gated by meeting + approval state. */
+function RowActions({ meeting, marking, onSchedule, onMarkDone, onSendFeedback, onCancel }: Readonly<RowActionsProps>) {
+  const approval = meeting.approval_status ?? 'NONE';
+  const canCancel = meeting.status === 'REQUESTED' || meeting.status === 'SCHEDULED';
+  const canSendFeedback = meeting.status === 'DONE' && (approval === 'NONE' || approval === 'DENIED');
+  return (
+    <>
+      <Button size="small" onClick={() => onSchedule(meeting)}>Schedule</Button>
+      {meeting.status === 'SCHEDULED' && (
+        <Button size="small" color="success" disabled={marking} onClick={() => onMarkDone(meeting)}>Mark done</Button>
+      )}
+      {canSendFeedback && (
+        <Button size="small" onClick={() => onSendFeedback(meeting)}>Send feedback</Button>
+      )}
+      {canCancel && (
+        <Button size="small" color="error" onClick={() => onCancel(meeting)}>Cancel</Button>
+      )}
+    </>
+  );
+}
+
+/** Onboarding → Meeting → Venue/Host/Seller Meeting Schedule: requests + scheduling. */
 export default function MeetingSchedulePage() {
   const params = useParams<{ kind: string }>();
   const kind = (params.kind?.toUpperCase() as SurveyKind) || 'VENUE';
   const valid = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM';
 
   const { data, loading, refetch } = useQuery<{ onboardingMeetings: OnboardingMeeting[] }>(ONBOARDING_MEETINGS, { variables: { filter: { kind } }, skip: !valid, fetchPolicy: 'cache-and-network' });
-  const [updateMeeting, { loading: saving }] = useMutation(UPDATE_MEETING);
+  const [updateMeeting, { loading: marking }] = useMutation(UPDATE_MEETING);
   const [editing, setEditing] = useState<OnboardingMeeting | null>(null);
   const [cancelling, setCancelling] = useState<OnboardingMeeting | null>(null);
+  const [feedbackFor, setFeedbackFor] = useState<OnboardingMeeting | null>(null);
   const [selected, setSelected] = useState<OnboardingMeeting | null>(null);
-  const [when, setWhen] = useState('');
-  const [link, setLink] = useState('');
-  const [status, setStatus] = useState<MeetingStatus>('SCHEDULED');
-  const [notes, setNotes] = useState('');
-  const [error, setError] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   if (!valid) return <Alert severity="error">Unknown meeting kind.</Alert>;
   const meetings = data?.onboardingMeetings ?? [];
 
-  const openEdit = (m: OnboardingMeeting) => {
-    setEditing(m); setWhen(toLocalInput(m.scheduled_at)); setLink(m.meeting_link ?? ''); setStatus(m.status === 'REQUESTED' ? 'SCHEDULED' : m.status); setNotes(m.notes ?? ''); setError(null);
-  };
-  const save = async () => {
-    if (!editing) return;
-    setError(null);
+  const markDone = async (m: OnboardingMeeting) => {
+    setActionError(null);
     try {
-      await updateMeeting({ variables: { id: editing.id, input: { status, scheduled_at: when ? new Date(when).toISOString() : null, meeting_link: link.trim() || null, notes } } });
-      setEditing(null);
+      await updateMeeting({ variables: { id: m.id, input: { status: 'DONE' } } });
       await refetch();
-    } catch (e: any) {
-      setError(e?.message ?? 'Could not update meeting');
+    } catch (e) {
+      setActionError(e instanceof Error ? e.message : 'Could not mark the meeting as done');
     }
   };
 
@@ -87,6 +116,8 @@ export default function MeetingSchedulePage() {
           <Typography variant="body2" color="text.secondary">Onboarding meeting requests from {KIND_LABELS[kind].toLowerCase()} applicants.</Typography>
         </Box>
       </Stack>
+
+      {actionError && <Alert severity="error" onClose={() => setActionError(null)}>{actionError}</Alert>}
 
       <Card>
         {loading && meetings.length === 0 && (
@@ -104,6 +135,7 @@ export default function MeetingSchedulePage() {
                 <TableCell>Scheduled</TableCell>
                 <TableCell>Link</TableCell>
                 <TableCell>Status</TableCell>
+                <TableCell>Admin approval</TableCell>
                 <TableCell align="right">Actions</TableCell>
               </TableRow>
             </TableHead>
@@ -127,11 +159,16 @@ export default function MeetingSchedulePage() {
                       <Typography variant="caption" color="text.secondary" display="block">{m.cancel_reason}</Typography>
                     )}
                   </TableCell>
+                  <TableCell><ApprovalCell status={m.approval_status} /></TableCell>
                   <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                    <Button size="small" onClick={() => openEdit(m)}>Schedule</Button>
-                    {(m.status === 'REQUESTED' || m.status === 'SCHEDULED') && (
-                      <Button size="small" color="error" onClick={() => setCancelling(m)}>Cancel</Button>
-                    )}
+                    <RowActions
+                      meeting={m}
+                      marking={marking}
+                      onSchedule={setEditing}
+                      onMarkDone={markDone}
+                      onSendFeedback={setFeedbackFor}
+                      onCancel={setCancelling}
+                    />
                   </TableCell>
                 </TableRow>
               ))}
@@ -140,32 +177,20 @@ export default function MeetingSchedulePage() {
         )}
       </Card>
 
-      <Dialog open={!!editing} onClose={() => setEditing(null)} fullWidth maxWidth="xs">
-        <DialogTitle>Schedule meeting</DialogTitle>
-        <DialogContent>
-          <Stack spacing={2} sx={{ mt: 0.5 }}>
-            {error && <Alert severity="error">{error}</Alert>}
-            <Typography variant="caption" color="text.secondary">Requested for {fmt(editing?.requested_at)}{editing?.notes ? ` · ${editing.notes}` : ''}</Typography>
-            <TextField size="small" type="datetime-local" label="Scheduled date & time" value={when} onChange={(e) => setWhen(e.target.value)} InputLabelProps={{ shrink: true }} fullWidth />
-            <TextField size="small" type="url" label="Meeting link" placeholder="https://meet.google.com/…" value={link} onChange={(e) => setLink(e.target.value)} fullWidth />
-            <TextField select size="small" label="Status" value={status} onChange={(e) => setStatus(e.target.value as MeetingStatus)} fullWidth>
-              {STATUSES.map((s) => <MenuItem key={s} value={s}>{s}</MenuItem>)}
-            </TextField>
-            <TextField size="small" label="Notes" value={notes} onChange={(e) => setNotes(e.target.value)} multiline minRows={2} fullWidth />
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={() => setEditing(null)}>Cancel</Button>
-          <Button variant="contained" onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save'}</Button>
-        </DialogActions>
-      </Dialog>
+      <ScheduleMeetingDialog
+        meeting={editing}
+        onClose={() => setEditing(null)}
+        onSaved={() => { setEditing(null); return refetch(); }}
+      />
 
       <CancelMeetingDialog meeting={cancelling} onClose={() => setCancelling(null)} onCancelled={() => refetch()} />
+
+      <SendFeedbackDialog meeting={feedbackFor} onClose={() => setFeedbackFor(null)} onSent={() => refetch()} />
 
       <MeetingDetailsDrawer
         meeting={selected}
         onClose={() => setSelected(null)}
-        onEdit={(meeting) => { setSelected(null); openEdit(meeting); }}
+        onEdit={(meeting) => { setSelected(null); setEditing(meeting); }}
         onCancel={(meeting) => { setSelected(null); setCancelling(meeting); }}
       />
     </Stack>

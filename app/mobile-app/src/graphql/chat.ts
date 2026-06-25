@@ -36,6 +36,11 @@ export const PodMessagesDocument = gql(`
       deleted
       createdAt
     }
+    pod(pod_doc_id: $podId) {
+      id
+      pod_date_time
+      pod_end_date_time
+    }
   }
 `);
 

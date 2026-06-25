@@ -12,6 +12,7 @@ import DeleteIcon from '@mui/icons-material/Delete';
 import AssignmentIcon from '@mui/icons-material/Assignment';
 import { DELETE_SURVEY, SURVEYS, type SurveyKind } from './queries';
 import ScopePicker, { type Scope } from './ScopePicker';
+import DefaultSurveysSection from './DefaultSurveysSection';
 
 type Row = {
   id: string; kind: SurveyKind; title: string; is_active: boolean; updated_at?: string | null;
@@ -22,6 +23,7 @@ type Row = {
 const emptyScope: Scope = { super_category_id: '', category_id: '', sub_category_id: '' };
 const scopeLabel = (r: Row) =>
   [r.super_category_name, r.category_name, r.sub_category_name].filter(Boolean).join(' › ') || 'Kind default';
+const isScoped = (r: Row) => Boolean(r.super_category_name || r.category_name || r.sub_category_name);
 
 /** List + manage onboarding surveys across the Super → Category → Sub taxonomy. */
 export default function SurveysListPage() {
@@ -41,7 +43,7 @@ export default function SurveysListPage() {
   );
   const { data, loading, error, refetch } = useQuery<{ surveys: Row[] }>(SURVEYS, { variables, fetchPolicy: 'cache-and-network' });
   const [deleteSurvey, { loading: deleting }] = useMutation(DELETE_SURVEY);
-  const rows = data?.surveys ?? [];
+  const rows = (data?.surveys ?? []).filter(isScoped);
 
   const onDelete = async () => {
     if (!confirmId) return;
@@ -62,6 +64,7 @@ export default function SurveysListPage() {
           <Typography variant="h5" fontWeight={800}>Surveys</Typography>
           <Typography variant="body2" color="text.secondary">Build category-specific onboarding surveys shown before users register a venue / become a host.</Typography>
         </Box>
+        <DefaultSurveysSection />
         <Button variant="contained" startIcon={<AddIcon />} onClick={() => navigate('/surveys/new')}>New survey</Button>
       </Stack>
 
@@ -81,7 +84,7 @@ export default function SurveysListPage() {
         <Stack alignItems="center" sx={{ py: 4 }}><CircularProgress /></Stack>
       )}
       {(!loading || data) && rows.length === 0 && (
-        <Alert severity="info">No surveys yet. Create one with “New survey”.</Alert>
+        <Alert severity="info">No category-specific surveys yet. The Default Survey (button above) is used as the fallback. Create one with “New survey”.</Alert>
       )}
       {(!loading || data) && rows.length > 0 && (
         <Paper variant="outlined">

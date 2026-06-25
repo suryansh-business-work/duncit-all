@@ -1,12 +1,14 @@
+import EditIcon from '@mui/icons-material/Edit';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Avatar, Box, Chip, IconButton, Stack, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
 
 interface Props {
   brands: any[];
+  onEdit: (brand: any) => void;
   onReview: (brand: any) => void;
 }
 
-export default function EcommBrandsTable({ brands, onReview }: Readonly<Props>) {
+export default function EcommBrandsTable({ brands, onEdit, onReview }: Readonly<Props>) {
   return (
     <Table size="small">
       <TableHead>
@@ -43,6 +45,11 @@ export default function EcommBrandsTable({ brands, onReview }: Readonly<Props>) 
             <TableCell><Chip size="small" label={brand.status} /></TableCell>
             <TableCell>{brand.submitted_at ? new Date(brand.submitted_at).toLocaleDateString() : '—'}</TableCell>
             <TableCell align="right">
+              <Tooltip title="Edit">
+                <IconButton size="small" onClick={() => onEdit(brand)}>
+                  <EditIcon fontSize="small" />
+                </IconButton>
+              </Tooltip>
               <Tooltip title="Review">
                 <IconButton size="small" onClick={() => onReview(brand)}>
                   <RateReviewIcon fontSize="small" />

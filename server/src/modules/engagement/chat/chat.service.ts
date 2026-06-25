@@ -5,6 +5,20 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 import { UserModel } from '@modules/access/user/user.model';
 
+// A pod with no explicit end time is treated as live for this long after start.
+const POD_LIVE_TAIL_MS = 4 * 60 * 60 * 1000;
+
+/** Mirrors the clients' podStatus/isPodActive util: a pod has "ended" once it is
+ * past its end time, or 4h after start when no end time is set. Chat is closed
+ * for ended pods. */
+function isPodEnded(start?: Date | null, end?: Date | null): boolean {
+  if (!start) return false;
+  const startMs = start.getTime();
+  if (Number.isNaN(startMs)) return false;
+  const endMs = end ? end.getTime() : startMs + POD_LIVE_TAIL_MS;
+  return Date.now() > endMs;
+}
+
 async function isMember(podId: string, userId: string): Promise<boolean> {
   const pod = await PodModel.findById(podId).select('pod_hosts_id pod_attendees').lean();
   if (!pod) return false;
@@ -44,6 +58,14 @@ export const chatService = {
   }) {
     if (!(await isMember(opts.podId, opts.userId))) {
       throw new GraphQLError('Not a pod member', { extensions: { code: 'FORBIDDEN' } });
+    }
+    const pod = await PodModel.findById(opts.podId)
+      .select('pod_date_time pod_end_date_time')
+      .lean();
+    if (isPodEnded(pod?.pod_date_time, pod?.pod_end_date_time)) {
+      throw new GraphQLError('This pod has ended — chat is closed.', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
     }
     const text = (opts.text || '').trim();
     const type = opts.type || (opts.imageUrl ? 'IMAGE' : 'TEXT');

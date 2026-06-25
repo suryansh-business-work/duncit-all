@@ -231,4 +231,87 @@ describe('meeting slot booking', () => {
       meetingService.request(me, 'HOST', { requested_at: '2027-01-04T05:00:00.000Z', contact_phone: '9444444444' }),
     ).rejects.toThrow(/just booked/i);
   });
+
+  it('blocks staff from scheduling a meeting onto a slot another applicant holds', async () => {
+    const a = new Types.ObjectId().toString();
+    const b = new Types.ObjectId().toString();
+    await meetingService.request(a, 'VENUE', { requested_at: '2027-06-01T05:00:00.000Z', contact_phone: '9100000001' });
+    await meetingService.request(b, 'HOST', { requested_at: '2027-06-01T06:00:00.000Z', contact_phone: '9100000002' });
+    const bMeeting = await meetingService.myMeeting(b, 'HOST');
+
+    // a holds 05:00 → staff cannot schedule b onto it.
+    await expect(
+      meetingService.update(bMeeting!.id, { status: 'SCHEDULED', scheduled_at: '2027-06-01T05:00:00.000Z' }),
+    ).rejects.toThrow(/already taken/i);
+    // Scheduling b onto its own requested time is fine (it excludes itself).
+    const ok = await meetingService.update(bMeeting!.id, { status: 'SCHEDULED', scheduled_at: '2027-06-01T06:00:00.000Z' });
+    expect(ok!.status).toBe('SCHEDULED');
+  });
+
+  it('keeps the meeting being scheduled selectable in the staff slot grid', async () => {
+    const staff = new Types.ObjectId().toString();
+    const applicant = new Types.ObjectId().toString();
+    const target = (await meetingService.slots(staff)).find((s) => s.available)!;
+    await meetingService.request(applicant, 'VENUE', { requested_at: target.start_at, contact_phone: '9120000001' });
+    const m = await meetingService.myMeeting(applicant, 'VENUE');
+
+    // For everyone else the held slot is now blocked …
+    const blocked = await meetingService.slots(staff);
+    expect(blocked.find((s) => s.start_at === target.start_at)?.available).toBe(false);
+    // … but excluding the meeting itself keeps it selectable for re-scheduling.
+    const forEdit = await meetingService.slots(staff, { excludeMeetingId: m!.id });
+    expect(forEdit.find((s) => s.start_at === target.start_at)?.available).toBe(true);
+  });
+
+  it('removes only cancelled meetings from the calendar and re-booking restores them', async () => {
+    const u = new Types.ObjectId().toString();
+    await meetingService.request(u, 'VENUE', { requested_at: '2027-07-01T05:00:00.000Z', contact_phone: '9130000001' });
+    const m = await meetingService.myMeeting(u, 'VENUE');
+    await expect(meetingService.dismiss(m!.id)).rejects.toThrow(/cancelled/i);
+
+    await meetingService.cancelMyMeeting(u, 'VENUE');
+    const hidden = await meetingService.dismiss(m!.id);
+    expect(hidden!.dismissed).toBe(true);
+
+    // Re-booking clears the dismissed flag so the meeting shows again.
+    const again = await meetingService.request(u, 'VENUE', { requested_at: '2027-07-02T05:00:00.000Z', contact_phone: '9130000001' });
+    expect(again!.dismissed).toBe(false);
+    await expect(meetingService.dismiss(new Types.ObjectId().toString())).rejects.toThrow(/not found/i);
+  });
+
+  it('generateSlots skips holiday days', () => {
+    const now = new Date('2026-07-06T00:00:00.000Z'); // local (IST) Monday morning
+    const holidays = new Set(['2026-07-06']);
+    const slots = generateSlots(AV, now, holidays);
+    expect(slots.length).toBeGreaterThan(0);
+    expect(slots.some((s) => s.start_at.toISOString().startsWith('2026-07-06'))).toBe(false);
+  });
+
+  it('blocks bookable slots and requests on a holiday, then frees them on removal', async () => {
+    const u = new Types.ObjectId().toString();
+    const before = (await meetingService.slots(u)).find((s) => s.available)!;
+    const istDay = new Date(new Date(before.start_at).getTime() + 330 * 60_000).toISOString().slice(0, 10);
+
+    const h = await meetingService.addHoliday({ date: istDay, name: 'Diwali', type: 'PUBLIC_HOLIDAY' });
+    expect(h.date).toBe(istDay);
+    expect((await meetingService.holidays()).some((x) => x.date === istDay)).toBe(true);
+
+    const after = await meetingService.slots(u);
+    expect(after.some((s) => s.start_at === before.start_at)).toBe(false);
+    await expect(
+      meetingService.request(u, 'VENUE', { requested_at: before.start_at, contact_phone: '9610000001' }),
+    ).rejects.toThrow(/leave that day/i);
+
+    expect(await meetingService.removeHoliday(h.id)).toBe(true);
+    const restored = await meetingService.slots(u);
+    expect(restored.some((s) => s.start_at === before.start_at)).toBe(true);
+  });
+
+  it('validates the holiday date and upserts one entry per day', async () => {
+    await expect(meetingService.addHoliday({ date: '07-2026' })).rejects.toThrow(/YYYY-MM-DD/);
+    await meetingService.addHoliday({ date: '2030-01-01', name: 'NY', type: 'OFFICE_HOLIDAY' });
+    const b = await meetingService.addHoliday({ date: '2030-01-01', name: 'New Year', type: 'OFFICIAL_LEAVE' });
+    expect(b.name).toBe('New Year');
+    expect((await meetingService.holidays()).filter((x) => x.date === '2030-01-01')).toHaveLength(1);
+  });
 });

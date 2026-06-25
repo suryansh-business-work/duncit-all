@@ -8,6 +8,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { useGoBack } from '@/hooks/useGoBack';
+import { ChatClosedNotice } from '@/components/chat/ChatClosedNotice';
 import { ChatComposer } from '@/components/chat/ChatComposer';
 import { ChatMessageBubble } from '@/components/chat/ChatMessageBubble';
 import { EmojiBar } from '@/components/chat/EmojiBar';
@@ -24,7 +25,7 @@ type EmojiTarget = { type: 'compose' } | { type: 'react'; id: string } | null;
 export function ChatRoomScreen() {
   const goBack = useGoBack();
   const { podId, title } = useRoute<RouteProp<RootStackParamList, 'ChatRoom'>>().params;
-  const { messages, isLoading, sending, error, setError, sendText, sendImage, react } =
+  const { messages, podEnded, isLoading, sending, error, setError, sendText, sendImage, react } =
     useChatRoom(podId);
   const { data: meData } = useMe();
   const meId = meData?.me?.user_id;
@@ -135,16 +136,20 @@ export function ChatRoomScreen() {
 
         {emojiFor ? <EmojiBar onSelect={handleSelectEmoji} /> : null}
 
-        <ChatComposer
-          value={text}
-          onChangeText={setText}
-          onSend={handleSend}
-          onPickImage={() => void handlePickImage()}
-          onToggleEmoji={() =>
-            setEmojiFor((prev) => (prev?.type === 'compose' ? null : { type: 'compose' }))
-          }
-          sending={sending}
-        />
+        {podEnded ? (
+          <ChatClosedNotice />
+        ) : (
+          <ChatComposer
+            value={text}
+            onChangeText={setText}
+            onSend={handleSend}
+            onPickImage={() => void handlePickImage()}
+            onToggleEmoji={() =>
+              setEmojiFor((prev) => (prev?.type === 'compose' ? null : { type: 'compose' }))
+            }
+            sending={sending}
+          />
+        )}
       </SafeAreaView>
     </YStack>
   );

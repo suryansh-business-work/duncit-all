@@ -255,4 +255,17 @@ export const hostService = {
     const r = await HostModel.deleteOne({ _id: new Types.ObjectId(hostId) });
     return r.deletedCount > 0;
   },
+
+  /** Draft a host shell from an approved onboarding-meeting request so it shows
+   * in the Onboarded Hosts list (status DRAFT). Idempotent per user. */
+  async createDraftFromApproval(prefill: { userId: string; name?: string; email?: string; phone?: string }) {
+    const h = await getOrCreate(prefill.userId);
+    if (h.status === 'APPROVED') return toPub(h);
+    if (prefill.name && !h.full_name) h.full_name = prefill.name;
+    if (prefill.email && !h.email) h.email = prefill.email;
+    if (prefill.phone && !h.phone) h.phone = prefill.phone;
+    h.status = 'DRAFT';
+    await h.save();
+    return toPub(h);
+  },
 };

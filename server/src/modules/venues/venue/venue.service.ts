@@ -353,4 +353,17 @@ export const venueService = {
     const r = await VenueModel.deleteOne({ _id: new Types.ObjectId(venueId) });
     return r.deletedCount > 0;
   },
+
+  /** Draft a venue shell from an approved onboarding-meeting request so it shows
+   * in the Onboarded Venues list (status DRAFT). Reuses the owner's open draft. */
+  async createDraftFromApproval(prefill: { userId: string; name?: string; email?: string; phone?: string }) {
+    const v = await getOrCreate(prefill.userId);
+    if (prefill.name && !v.venue_name) v.venue_name = prefill.name;
+    if (prefill.name && !v.owner_name) v.owner_name = prefill.name;
+    if (prefill.email && !v.owner_email) v.owner_email = prefill.email;
+    if (prefill.phone && !v.owner_phone) v.owner_phone = prefill.phone;
+    v.status = 'DRAFT';
+    await v.save();
+    return toPub(v);
+  },
 };

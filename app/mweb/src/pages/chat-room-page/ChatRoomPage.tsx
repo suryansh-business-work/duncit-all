@@ -8,6 +8,8 @@ import {
   Stack,
 } from '@mui/material';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
+import { isPodActive } from '../../utils/podStatus';
+import ChatClosedNotice from './ChatClosedNotice';
 import ChatRoomHeader from './ChatRoomHeader';
 import ChatRoomNotice from './ChatRoomNotice';
 import EmojiPopover from './EmojiPopover';
@@ -34,6 +36,8 @@ export default function ChatRoomPage() {
   const [error, setError] = useState<string | null>(null);
 
   const myId = data?.me?.user_id;
+  const pod = data?.pod;
+  const podEnded = pod ? !isPodActive(pod.pod_date_time, pod.pod_end_date_time) : false;
   const messages = useMemo(() => {
     const initial = data?.podMessages ?? [];
     const merged = [...initial];
@@ -124,7 +128,7 @@ export default function ChatRoomPage() {
         ref={scrollRef}
         sx={{ flex: 1, overflowY: 'auto', px: { xs: 1.25, sm: 2 }, py: 1.25 }}
       >
-        <ChatRoomNotice />
+        <ChatRoomNotice ended={podEnded} />
         {messages.map((m: any) => (
           <MessageBubble
             key={m.id}
@@ -135,13 +139,17 @@ export default function ChatRoomPage() {
         ))}
       </Box>
 
-      <MessageComposer
-        text={text}
-        setText={setText}
-        onSend={() => submit()}
-        onOpenPicker={() => setPicker(true)}
-        onOpenEmoji={setEmojiAnchor}
-      />
+      {podEnded ? (
+        <ChatClosedNotice />
+      ) : (
+        <MessageComposer
+          text={text}
+          setText={setText}
+          onSend={() => submit()}
+          onOpenPicker={() => setPicker(true)}
+          onOpenEmoji={setEmojiAnchor}
+        />
+      )}
 
       <EmojiPopover
         anchorEl={emojiAnchor}

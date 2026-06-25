@@ -27,6 +27,7 @@ import PodIdeasPage from './pages/PodIdeasPage';
 import BadgesPage from './pages/BadgesPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
+import ApprovalsPage from './pages/approvals-page';
 import { redirectPathFromLocation } from './utils/redirect';
 
 function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
@@ -71,6 +72,7 @@ export default function App() {
                 <Route path="/badges" element={<BadgesPage />} />
                 <Route path="/partners/faqs" element={<PartnerFaqsPage />} />
                 <Route path="/pod-plans" element={<PodPlansPage />} />
+                <Route path="/approvals" element={<ApprovalsPage />} />
                 <Route path="/branding" element={<BrandingPage />} />
                 <Route path="/rbac/roles" element={<RolesPage />} />
                 <Route path="/profile" element={<ProfilePage />} />

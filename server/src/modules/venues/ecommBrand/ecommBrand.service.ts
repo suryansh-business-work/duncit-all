@@ -189,4 +189,38 @@ export const ecommBrandService = {
     await brand.save();
     return toPub(brand);
   },
+
+  /** Onboarding/admin edit of any brand (e.g. completing an approval-created
+   * draft by adding documents) with an optional status change. No owner-scope or
+   * SUBMITTED/APPROVED lock — mirrors adminUpdateHost / adminUpdateVenue. */
+  async adminUpdate(id: string, input: any, status?: string) {
+    const brand = await EcommBrandModel.findById(id);
+    if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+    applyInput(brand, input);
+    if (status) {
+      brand.status = status as any;
+      if (status === 'APPROVED' && !brand.approved_at) brand.approved_at = new Date();
+      if (status === 'SUBMITTED' && !brand.submitted_at) brand.submitted_at = new Date();
+      if (status !== 'REJECTED') brand.rejected_at = null;
+    }
+    await brand.save();
+    if (status === 'APPROVED') await assignEcommRole(brand.owner_user_id);
+    return toPub(brand);
+  },
+
+  /** Draft a brand shell from an approved onboarding-meeting request so it shows
+   * in the Onboarded E-Commerce Brands list (status DRAFT). Reuses an open draft. */
+  async createDraftFromApproval(prefill: { userId: string; name?: string; email?: string; phone?: string }) {
+    const uid = new Types.ObjectId(prefill.userId);
+    let brand = await EcommBrandModel.findOne({ owner_user_id: uid, status: { $in: ['DRAFT', 'REJECTED'] } })
+      .sort({ updated_at: -1, created_at: -1 });
+    if (!brand) brand = await EcommBrandModel.create({ owner_user_id: uid });
+    if (prefill.name && !brand.brand_name) brand.brand_name = prefill.name;
+    if (prefill.name && !brand.contact_person) brand.contact_person = prefill.name;
+    if (prefill.email && !brand.contact_email) brand.contact_email = prefill.email;
+    if (prefill.phone && !brand.contact_phone) brand.contact_phone = prefill.phone;
+    brand.status = 'DRAFT';
+    await brand.save();
+    return toPub(brand);
+  },
 };

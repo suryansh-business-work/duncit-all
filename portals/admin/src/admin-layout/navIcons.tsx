@@ -36,6 +36,7 @@ import ArticleIcon from '@mui/icons-material/Article';
 import CampaignIcon from '@mui/icons-material/Campaign';
 import WhatsAppIcon from '@mui/icons-material/WhatsApp';
 import HandshakeIcon from '@mui/icons-material/Handshake';
+import FactCheckIcon from '@mui/icons-material/FactCheck';
 
 export const navIcons = {
   people: <PeopleIcon />,
@@ -76,4 +77,5 @@ export const navIcons = {
   campaign: <CampaignIcon />,
   whatsapp: <WhatsAppIcon />,
   partners: <HandshakeIcon />,
+  factCheck: <FactCheckIcon />,
 };

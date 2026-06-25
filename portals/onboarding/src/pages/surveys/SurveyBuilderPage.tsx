@@ -1,6 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Alert, Box, Button, Card, CardContent, CircularProgress, FormControlLabel,
   MenuItem, Snackbar, Stack, Switch, TextField, Typography,
@@ -17,18 +17,25 @@ import ScopePicker, { type Scope } from './ScopePicker';
 
 const blankByType = (type: QuestionType): DraftQuestion => ({ type, label: '', help: '', required: false, multi: false, options: type === 'MCQ' ? [''] : [] });
 const emptyScope: Scope = { super_category_id: '', category_id: '', sub_category_id: '' };
+const KINDS = new Set<SurveyKind>(['VENUE', 'HOST', 'ECOMM']);
+const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
+const initialKind = (raw: string | null): SurveyKind => (raw && KINDS.has(raw as SurveyKind) ? (raw as SurveyKind) : 'VENUE');
 
 /** Create / edit a single onboarding survey scoped to a taxonomy slot. */
 export default function SurveyBuilderPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const isNew = !id;
+  // Default surveys are the kind-level fallback — they carry no category scope,
+  // so the builder hides the category picker entirely for them.
+  const isDefaultMode = searchParams.get('default') === '1';
 
   const { data, loading } = useQuery<{ surveyById: Survey | null }>(SURVEY_BY_ID, { variables: { id }, skip: isNew, fetchPolicy: 'cache-and-network' });
   const [createSurvey, { loading: creating }] = useMutation(CREATE_SURVEY);
   const [updateSurvey, { loading: updating }] = useMutation(UPDATE_SURVEY);
 
-  const [kind, setKind] = useState<SurveyKind>('VENUE');
+  const [kind, setKind] = useState<SurveyKind>(() => initialKind(searchParams.get('kind')));
   const [scope, setScope] = useState<Scope>(emptyScope);
   const [title, setTitle] = useState('');
   const [isActive, setIsActive] = useState(true);
@@ -81,6 +88,11 @@ export default function SurveyBuilderPage() {
   };
 
   const saving = creating || updating;
+  const verb = isNew ? 'New' : 'Edit';
+  const heading = isDefaultMode ? `${verb} ${KIND_LABELS[kind]} default survey` : `${verb} survey`;
+  const subtitle = isDefaultMode
+    ? 'The kind-level fallback survey, shown when no category-specific survey exists. No category needed.'
+    : 'Scope a survey to a category slot. Leave categories empty for the kind-level default.';
 
   return (
     <Stack spacing={2.5}>
@@ -89,8 +101,8 @@ export default function SurveyBuilderPage() {
       </Box>
       <Stack direction="row" alignItems="center" spacing={1} flexWrap="wrap" useFlexGap>
         <Box sx={{ flex: 1 }}>
-          <Typography variant="h5" fontWeight={800}>{isNew ? 'New survey' : 'Edit survey'}</Typography>
-          <Typography variant="body2" color="text.secondary">Scope a survey to a category slot. Leave categories empty for the kind-level default.</Typography>
+          <Typography variant="h5" fontWeight={800}>{heading}</Typography>
+          <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
         </Box>
         <Button variant="contained" startIcon={<SaveIcon />} onClick={save} disabled={saving}>{saving ? 'Saving…' : 'Save survey'}</Button>
       </Stack>
@@ -104,15 +116,17 @@ export default function SurveyBuilderPage() {
           <Card variant="outlined"><CardContent>
             <Stack spacing={1.75}>
               <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems={{ sm: 'center' }}>
-                <TextField select size="small" label="Kind" value={kind} onChange={(e) => setKind(e.target.value as SurveyKind)} sx={{ minWidth: 160 }}>
-                  <MenuItem value="VENUE">Venue</MenuItem>
-                  <MenuItem value="HOST">Host</MenuItem>
-                  <MenuItem value="ECOMM">Ecomm (Seller)</MenuItem>
-                </TextField>
+                {!isDefaultMode && (
+                  <TextField select size="small" label="Kind" value={kind} onChange={(e) => setKind(e.target.value as SurveyKind)} sx={{ minWidth: 160 }}>
+                    <MenuItem value="VENUE">Venue</MenuItem>
+                    <MenuItem value="HOST">Host</MenuItem>
+                    <MenuItem value="ECOMM">Ecomm (Seller)</MenuItem>
+                  </TextField>
+                )}
                 <TextField size="small" label="Survey title" value={title} onChange={(e) => setTitle(e.target.value)} sx={{ flex: 1 }} fullWidth />
                 <FormControlLabel control={<Switch checked={isActive} onChange={(e) => setIsActive(e.target.checked)} />} label="Active" />
               </Stack>
-              <ScopePicker value={scope} onChange={setScope} emptyLabel="— Kind default —" />
+              {!isDefaultMode && <ScopePicker value={scope} onChange={setScope} emptyLabel="— Kind default —" />}
             </Stack>
           </CardContent></Card>
 

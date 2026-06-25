@@ -1,13 +1,14 @@
-import { Box, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Stack, Tooltip, Typography, useTheme } from '@mui/material';
 import { format, isSameDay, isToday } from 'date-fns';
 import { HOLIDAY_TYPE_LABELS, type MeetingAvailability, type MeetingHoliday, type OnboardingMeeting } from '../queries';
-import { CAL, eventStart } from '../calendarColors';
+import { CAL, calBackgrounds, eventStart } from '../calendarColors';
 import TimeGridEvent from './TimeGridEvent';
 import { dayFraction, hourRange, isWeekendDay, isWorkingHour } from './calendarMath';
 
 const HOUR_PX = 48;
 const GUTTER = 56;
-const HOLIDAY_BG = '#FFF7ED';
+
+type CalBg = ReturnType<typeof calBackgrounds>;
 
 interface Props {
   days: Date[];
@@ -22,21 +23,22 @@ interface Props {
 
 const hourLabel = (h: number) => format(new Date(2020, 0, 1, h), 'h a');
 
-function bandBg(av: MeetingAvailability | undefined, day: Date, hour: number): string {
-  if (!isWorkingHour(av, day, hour)) return CAL.nonWorking;
-  if (isToday(day)) return CAL.today;
-  if (isWeekendDay(day)) return CAL.weekend;
-  return CAL.working;
+function bandBg(av: MeetingAvailability | undefined, day: Date, hour: number, bg: CalBg): string {
+  if (!isWorkingHour(av, day, hour)) return bg.nonWorking;
+  if (isToday(day)) return bg.today;
+  if (isWeekendDay(day)) return bg.weekend;
+  return bg.working;
 }
 
-function headerBg(day: Date, holiday: boolean): string {
-  if (holiday) return HOLIDAY_BG;
-  if (isToday(day)) return CAL.today;
+function headerBg(day: Date, holiday: boolean, bg: CalBg): string {
+  if (holiday) return bg.holiday;
+  if (isToday(day)) return bg.today;
   return 'transparent';
 }
 
 /** Outlook-style hourly time grid for the Day & Week views. */
 export default function TimeGridView({ days, meetings, holidays, availability, slotMinutes, now, onSelect, onContext }: Readonly<Props>) {
+  const bg = calBackgrounds(useTheme());
   const eventHours = meetings.map((m) => eventStart(m).getHours());
   const [lo, hi] = hourRange(availability, eventHours);
   const hours = Array.from({ length: hi - lo }, (_, i) => lo + i);
@@ -52,7 +54,7 @@ export default function TimeGridView({ days, meetings, holidays, availability, s
           {days.map((day) => {
             const holiday = holidays.get(format(day, 'yyyy-MM-dd'));
             return (
-              <Box key={day.toISOString()} sx={{ flex: 1, textAlign: 'center', py: 0.5, bgcolor: headerBg(day, !!holiday) }}>
+              <Box key={day.toISOString()} sx={{ flex: 1, textAlign: 'center', py: 0.5, bgcolor: headerBg(day, !!holiday, bg) }}>
                 <Typography variant="caption" color="text.secondary" fontWeight={700}>{format(day, 'EEE')}</Typography>
                 <Typography variant="subtitle2" fontWeight={isToday(day) ? 800 : 600}>{format(day, 'd')}</Typography>
                 {holiday && (
@@ -85,7 +87,7 @@ export default function TimeGridView({ days, meetings, holidays, availability, s
             return (
               <Box key={day.toISOString()} sx={{ flex: 1, position: 'relative', borderLeft: 1, borderColor: 'divider' }}>
                 {hours.map((h) => (
-                  <Box key={h} sx={{ height: HOUR_PX, borderBottom: 1, borderColor: 'divider', bgcolor: dayIsHoliday ? HOLIDAY_BG : bandBg(availability, day, h) }} />
+                  <Box key={h} sx={{ height: HOUR_PX, borderBottom: 1, borderColor: 'divider', bgcolor: dayIsHoliday ? bg.holiday : bandBg(availability, day, h, bg) }} />
                 ))}
                 {dayEvents.map((m) => (
                   <TimeGridEvent key={m.id} meeting={m} lo={lo} hi={hi} slotMinutes={slotMinutes} now={now} onSelect={onSelect} onContext={onContext} />

@@ -1,11 +1,12 @@
-import { Box, Chip, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Chip, Link, Stack, Tooltip, Typography, useTheme } from '@mui/material';
 import { format, isSameDay, isSameMonth, isToday } from 'date-fns';
 import { HOLIDAY_TYPE_LABELS, type MeetingHoliday, type OnboardingMeeting } from '../queries';
-import { CAL, displayStatus, eventStart, statusMeta } from '../calendarColors';
+import { calBackgrounds, displayStatus, eventStart, statusMeta } from '../calendarColors';
 import { isWeekendDay } from './calendarMath';
 
 const WEEKDAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
-const HOLIDAY_BG = '#FFF7ED';
+
+type CalBg = ReturnType<typeof calBackgrounds>;
 
 interface Props {
   days: Date[];
@@ -16,17 +17,20 @@ interface Props {
   now: number;
   onSelect: (m: OnboardingMeeting) => void;
   onContext: (e: React.MouseEvent, m: OnboardingMeeting) => void;
+  /** Click "+N more" → open the Day view for that date. */
+  onMore: (day: Date) => void;
 }
 
-function cellBg(day: Date, cursor: Date): string {
-  if (!isSameMonth(day, cursor)) return '#0000000a';
-  if (isToday(day)) return CAL.today;
-  if (isWeekendDay(day)) return CAL.weekend;
-  return CAL.working;
+function cellBg(day: Date, cursor: Date, bg: CalBg): string {
+  if (!isSameMonth(day, cursor)) return bg.outOfMonth;
+  if (isToday(day)) return bg.today;
+  if (isWeekendDay(day)) return bg.weekend;
+  return bg.working;
 }
 
 /** Month grid: each day shows up to three colour-coded meeting chips. */
-export default function MonthView({ days, cursor, meetings, holidays, slotMinutes, now, onSelect, onContext }: Readonly<Props>) {
+export default function MonthView({ days, cursor, meetings, holidays, slotMinutes, now, onSelect, onContext, onMore }: Readonly<Props>) {
+  const bg = calBackgrounds(useTheme());
   return (
     <>
       <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)' }}>
@@ -40,7 +44,7 @@ export default function MonthView({ days, cursor, meetings, holidays, slotMinute
           const muted = !isSameMonth(day, cursor);
           const holiday = holidays.get(format(day, 'yyyy-MM-dd'));
           return (
-            <Box key={day.toISOString()} sx={{ minHeight: 96, borderRight: 1, borderBottom: 1, borderColor: 'divider', p: 0.5, bgcolor: holiday ? HOLIDAY_BG : cellBg(day, cursor) }}>
+            <Box key={day.toISOString()} sx={{ minHeight: 96, borderRight: 1, borderBottom: 1, borderColor: 'divider', p: 0.5, bgcolor: holiday ? bg.holiday : cellBg(day, cursor, bg) }}>
               <Typography variant="caption" sx={{ fontWeight: isToday(day) ? 800 : 500, color: muted ? 'text.disabled' : 'text.primary' }}>{format(day, 'd')}</Typography>
               {holiday && (
                 <Tooltip title={`${HOLIDAY_TYPE_LABELS[holiday.type]}${holiday.name ? ` · ${holiday.name}` : ''}`}>
@@ -73,7 +77,19 @@ export default function MonthView({ days, cursor, meetings, holidays, slotMinute
                     </Tooltip>
                   );
                 })}
-                {dayMeetings.length > 3 && <Typography variant="caption" color="text.secondary">+{dayMeetings.length - 3} more</Typography>}
+                {dayMeetings.length > 3 && (
+                  <Link
+                    component="button"
+                    type="button"
+                    variant="caption"
+                    color="text.secondary"
+                    underline="hover"
+                    onClick={(e) => { e.stopPropagation(); onMore(day); }}
+                    sx={{ textAlign: 'left' }}
+                  >
+                    +{dayMeetings.length - 3} more
+                  </Link>
+                )}
               </Stack>
             </Box>
           );

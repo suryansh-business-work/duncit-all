@@ -75,7 +75,7 @@ export default function MeetingCalendarPage() {
   if (loading && meetings.length === 0) {
     body = <Stack alignItems="center" sx={{ py: 5 }}><CircularProgress /></Stack>;
   } else if (view === 'month') {
-    body = <MonthView days={days} cursor={cursor} meetings={meetings} holidays={holidays} slotMinutes={slotMinutes} now={now} onSelect={setSelected} onContext={openContext} />;
+    body = <MonthView days={days} cursor={cursor} meetings={meetings} holidays={holidays} slotMinutes={slotMinutes} now={now} onSelect={setSelected} onContext={openContext} onMore={(day) => { setCursor(day); setView('day'); }} />;
   } else {
     body = <TimeGridView days={days} meetings={meetings} holidays={holidays} availability={availability} slotMinutes={slotMinutes} now={now} onSelect={setSelected} onContext={openContext} />;
   }

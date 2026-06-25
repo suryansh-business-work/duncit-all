@@ -1,6 +1,7 @@
+import { alpha, type Theme } from '@mui/material';
 import type { OnboardingMeeting } from './queries';
 
-/** Onboarding calendar / slot-picker palette (matches the agreed spec). */
+/** Onboarding calendar / slot-picker status palette (vivid; works in both themes). */
 export const CAL = {
   available: '#22C55E',
   selected: '#2563EB',
@@ -11,11 +12,23 @@ export const CAL = {
   cancelled: '#EF4444',
   blocked: '#374151',
   nowLine: '#DC2626',
-  today: '#DBEAFE',
-  weekend: '#F8FAFC',
-  working: '#FFFFFF',
-  nonWorking: '#F1F5F9',
 } as const;
+
+/**
+ * Theme-aware day-cell / time-band backgrounds. The spec colours are light-mode;
+ * deriving them from the MUI palette keeps the calendar readable in dark mode too.
+ */
+export function calBackgrounds(theme: Theme) {
+  const dark = theme.palette.mode === 'dark';
+  return {
+    today: alpha(theme.palette.primary.main, dark ? 0.24 : 0.12),
+    weekend: theme.palette.action.hover,
+    working: 'transparent',
+    nonWorking: theme.palette.action.disabledBackground,
+    holiday: alpha(theme.palette.warning.main, dark ? 0.22 : 0.14),
+    outOfMonth: theme.palette.action.hover,
+  };
+}
 
 export type DisplayStatus = 'PENDING' | 'BOOKED' | 'ONGOING' | 'COMPLETED' | 'CANCELLED';
 

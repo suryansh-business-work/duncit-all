@@ -123,7 +123,7 @@ export default function UsersPage() {
               rows={(data?.users ?? []).map((u: any) => ({ id: u.user_id, ...u }))}
               columns={columns}
               autoHeight
-              getRowHeight={() => 72}
+              getRowHeight={() => 'auto'}
               disableRowSelectionOnClick
               onRowClick={(p) => navigate(`/users/${p.id}`)}
               sx={{
@@ -133,7 +133,8 @@ export default function UsersPage() {
                   borderBottom: (theme) => `1px solid ${theme.palette.divider}`,
                 },
                 '& .MuiDataGrid-columnHeaderTitle': { fontWeight: 800 },
-                '& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center' },
+                // Rows grow to fit wrapped content (e.g. users with many roles).
+                '& .MuiDataGrid-cell': { display: 'flex', alignItems: 'center', py: 1, minHeight: 56 },
                 '& .MuiDataGrid-row': { cursor: 'pointer' },
                 '& .MuiDataGrid-row:hover': {
                   bgcolor: (theme) => alpha(theme.palette.primary.main, 0.04),

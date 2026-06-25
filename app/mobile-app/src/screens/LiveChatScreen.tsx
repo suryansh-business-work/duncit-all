@@ -5,6 +5,7 @@ import {
   type NativeScrollEvent,
 } from 'react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -14,10 +15,12 @@ import { SupportChatComposer } from '@/components/support-chat/SupportChatCompos
 import {
   SupportFeedbackModal,
   EmailTranscriptModal,
+  ReopenReasonModal,
 } from '@/components/support-chat/SupportChatModals';
 import { useSupportChat } from '@/hooks/useSupportChat';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { dayLabel, showDaySeparator } from '@/utils/support-chat';
+import { canReopen, dayLabel, showDaySeparator } from '@/utils/support-chat';
+import { formatDateTime } from '@/utils/date-format';
 import { shareTranscript } from '@/utils/transcript';
 import { toErrorMessage } from '@/utils/errors';
 
@@ -50,6 +53,9 @@ export function LiveChatScreen() {
   const [emailBusy, setEmailBusy] = useState(false);
   const [emailDone, setEmailDone] = useState(false);
   const [emailError, setEmailError] = useState('');
+  const [reopenOpen, setReopenOpen] = useState(false);
+  const [reopenBusy, setReopenBusy] = useState(false);
+  const [reopenError, setReopenError] = useState('');
   const scrollRef = useRef<RNScrollView>(null);
 
   /* istanbul ignore next -- native autoscroll; method absent under the test renderer */
@@ -58,6 +64,11 @@ export function LiveChatScreen() {
   const handleContentSizeChange = () => scrollToEnd(false);
 
   const closed = session?.status === 'CLOSED';
+  // A closed chat may be re-opened until the server's reopen deadline (Bug 3/11).
+  const reopenAllowed = closed && canReopen(session?.reopen_deadline);
+  const reopenDeadlineLabel = session?.reopen_deadline
+    ? formatDateTime(session.reopen_deadline)
+    : '';
 
   const submit = async (text: string, attachments: string[] = []) => {
     if (busy) return;
@@ -69,6 +80,19 @@ export function LiveChatScreen() {
     } catch (e) {
       setSendError(toErrorMessage(e, 'Could not send the message.'));
     } finally {
+      setBusy(false);
+    }
+  };
+
+  const uploadAndSend = async (asset: Parameters<typeof uploadAttachment>[0], asDoc: boolean) => {
+    setBusy(true);
+    setSendError('');
+    try {
+      const url = await uploadAttachment(asset, asDoc);
+      setBusy(false);
+      await submit('', [url]);
+    } catch (e) {
+      setSendError(toErrorMessage(e, 'Could not attach the file.'));
       setBusy(false);
     }
   };
@@ -86,21 +110,34 @@ export function LiveChatScreen() {
     });
     const asset = result.canceled ? undefined : result.assets[0];
     if (!asset) return;
-    setBusy(true);
-    setSendError('');
-    try {
-      const url = await uploadAttachment(asset);
-      setBusy(false);
-      await submit('', [url]);
-    } catch (e) {
-      setSendError(toErrorMessage(e, 'Could not attach the file.'));
-      setBusy(false);
-    }
+    await uploadAndSend(asset, false);
+  };
+
+  const attachDocument = async () => {
+    const result = await DocumentPicker.getDocumentAsync({
+      type: ['application/pdf', 'application/msword', 'text/plain', 'text/csv'],
+      copyToCacheDirectory: true,
+    });
+    const doc = result.canceled ? undefined : result.assets[0];
+    if (!doc) return;
+    await uploadAndSend({ uri: doc.uri, fileName: doc.name, mimeType: doc.mimeType }, true);
   };
 
   const onResolve = async () => {
     await resolve();
     setFeedbackOpen(true);
+  };
+  const onReopenSubmit = async (reason: string) => {
+    setReopenBusy(true);
+    setReopenError('');
+    try {
+      await reopen(reason);
+      setReopenOpen(false);
+    } catch (e) {
+      setReopenError(toErrorMessage(e, 'Could not re-open the chat.'));
+    } finally {
+      setReopenBusy(false);
+    }
   };
   const onDownload = async () => {
     const t = await getTranscript();
@@ -193,17 +230,31 @@ export function LiveChatScreen() {
     );
   }
 
+  // Closed chats only show the toggle while the reopen window is still open; an
+  // open chat always shows the resolve toggle.
+  const showToggle = closed ? reopenAllowed : true;
+  const onToggle = () => {
+    if (closed) {
+      setReopenError('');
+      setReopenOpen(true);
+    } else {
+      void onResolve();
+    }
+  };
+
   const headerActions = (
     <XStack gap={6} alignItems="center">
-      <XStack
-        testID="chat-action-toggle"
-        role="button"
-        aria-label={closed ? 'Re-open chat' : 'Mark resolved'}
-        onPress={() => void (closed ? reopen() : onResolve())}
-        padding={6}
-      >
-        <MaterialIcons name={closed ? 'replay' : 'check-circle'} size={20} color={ink} />
-      </XStack>
+      {showToggle ? (
+        <XStack
+          testID="chat-action-toggle"
+          role="button"
+          aria-label={closed ? 'Re-open chat' : 'Mark resolved'}
+          onPress={onToggle}
+          padding={6}
+        >
+          <MaterialIcons name={closed ? 'replay' : 'check-circle'} size={20} color={ink} />
+        </XStack>
+      ) : null}
       <XStack
         testID="chat-action-download"
         role="button"
@@ -282,21 +333,25 @@ export function LiveChatScreen() {
         ) : null}
 
         {closed ? (
-          <Text
-            testID="chat-closed-note"
-            fontSize={12}
-            color="$muted"
-            textAlign="center"
-            padding={6}
-          >
-            This chat is resolved — send a message or re-open it if you still need help.
-          </Text>
+          <YStack alignItems="center" padding={6} gap={2}>
+            <Text testID="chat-closed-note" fontSize={12} color="$muted" textAlign="center">
+              {reopenAllowed
+                ? 'This chat is resolved — send a message or re-open it if you still need help.'
+                : 'This chat is resolved. The re-open window has passed — start a new chat if you still need help.'}
+            </Text>
+            {reopenAllowed && reopenDeadlineLabel ? (
+              <Text testID="chat-reopen-deadline" fontSize={11} color="$muted" textAlign="center">
+                You can reopen until {reopenDeadlineLabel}
+              </Text>
+            ) : null}
+          </YStack>
         ) : null}
 
         <SupportChatComposer
           busy={busy}
           onSendText={(t) => void submit(t)}
           onAttach={() => void attach()}
+          onAttachDocument={() => void attachDocument()}
           onTyping={emitTyping}
         />
       </YStack>
@@ -314,6 +369,14 @@ export function LiveChatScreen() {
         error={emailError}
         onSend={(em) => void onEmail(em)}
         onClose={() => setEmailOpen(false)}
+      />
+      <ReopenReasonModal
+        open={reopenOpen}
+        busy={reopenBusy}
+        error={reopenError}
+        deadlineLabel={reopenDeadlineLabel}
+        onSubmit={(reason) => void onReopenSubmit(reason)}
+        onClose={() => setReopenOpen(false)}
       />
     </StackScreen>
   );

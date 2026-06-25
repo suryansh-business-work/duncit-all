@@ -101,4 +101,30 @@ describe('ticketService integration', () => {
     const byAgent = await ticketService.reopen(new Types.ObjectId().toString(), true, t.id);
     expect(byAgent.status).toBe('OPEN');
   });
+
+  it('captures the reopen reason and exposes the reopen deadline within the window', async () => {
+    const t = await ticketService.createTicket(userId, { subject: 'S', body_text: 'B' });
+    const resolved = await ticketService.updateStatus(t.id, 'RESOLVED');
+    expect(resolved.resolved_at).toBeTruthy();
+    expect(resolved.reopen_deadline).toBeTruthy();
+
+    const reopened = await ticketService.reopen(userId, false, t.id, 'Issue persists');
+    expect(reopened.status).toBe('OPEN');
+    expect(reopened.resolved_at).toBeNull();
+    expect(reopened.messages.some((m) => m.body_text.includes('Issue persists'))).toBe(true);
+  });
+
+  it('blocks a user reopen / reply after the 3-day window, but an agent can still reopen', async () => {
+    const t = await ticketService.createTicket(userId, { subject: 'S', body_text: 'B' });
+    await ticketService.updateStatus(t.id, 'RESOLVED');
+    // Backdate the resolution to 4 days ago — past the 3-day reopen window.
+    await TicketModel.updateOne({ _id: t.id }, { $set: { resolved_at: new Date(Date.now() - 4 * 86_400_000) } });
+
+    await expect(ticketService.reopen(userId, false, t.id, 'still broken')).rejects.toThrow(/window/i);
+    await expect(
+      ticketService.replyToTicket(userId, false, { ticket_id: t.id, body_text: 'hi' })
+    ).rejects.toThrow(/window/i);
+    const byAgent = await ticketService.reopen(new Types.ObjectId().toString(), true, t.id);
+    expect(byAgent.status).toBe('OPEN');
+  });
 });

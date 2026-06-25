@@ -21,6 +21,8 @@ export interface ISupportChatSession extends Document {
   rating: number | null;
   feedback_comment: string;
   feedback_at: Date | null;
+  /** When the chat was resolved/closed — drives the 3-day reopen window. */
+  resolved_at: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -41,6 +43,7 @@ const sessionSchema = new Schema<ISupportChatSession>(
     rating: { type: Number, default: null, min: 1, max: 5 },
     feedback_comment: { type: String, default: '', maxlength: 1000 },
     feedback_at: { type: Date, default: null },
+    resolved_at: { type: Date, default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

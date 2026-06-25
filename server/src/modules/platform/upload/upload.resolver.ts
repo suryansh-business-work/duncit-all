@@ -69,11 +69,11 @@ export const uploadResolvers = {
     },
     uploadImageToImagekit: (
       _p: unknown,
-      args: { fileBase64: string; fileName: string; mimeType?: string; folder?: string },
+      args: { fileBase64: string; fileName: string; mimeType?: string; folder?: string; allow_documents?: boolean },
       ctx: GraphQLContext
     ) => {
       requireAuth(ctx);
-      return uploadBase64Image(args);
+      return uploadBase64Image({ ...args, allowDocuments: args.allow_documents });
     },
   },
 };

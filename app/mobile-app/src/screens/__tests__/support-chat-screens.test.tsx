@@ -1,5 +1,6 @@
-import { act, fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import * as ImagePicker from 'expo-image-picker';
+import * as DocumentPicker from 'expo-document-picker';
 
 import { ChatWithUsScreen } from '@/screens/ChatWithUsScreen';
 import { LiveChatScreen } from '@/screens/LiveChatScreen';
@@ -37,6 +38,7 @@ const mockedUnified = useUnifiedTickets as jest.Mock;
 const mockedDetails = useTicketDetails as jest.Mock;
 const reqPerm = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
 const launch = ImagePicker.launchImageLibraryAsync as jest.Mock;
+const pickDoc = DocumentPicker.getDocumentAsync as jest.Mock;
 const mockShare = shareTranscript as jest.Mock;
 
 const chatMsg = (id: string, role: string, over: Record<string, unknown> = {}) => ({
@@ -53,6 +55,9 @@ const chatMsg = (id: string, role: string, over: Record<string, unknown> = {}) =
   ...over,
 });
 
+const FUTURE_DEADLINE = '2999-01-01T00:00:00Z';
+const PAST_DEADLINE = '2000-01-01T00:00:00Z';
+
 const session = (over: Record<string, unknown> = {}) => ({
   id: 's1',
   ticket_no: 'CH-AAA111',
@@ -60,6 +65,8 @@ const session = (over: Record<string, unknown> = {}) => ({
   agent_id: null,
   ai_active: true,
   agent_last_read_at: null,
+  resolved_at: null,
+  reopen_deadline: null,
   ...over,
 });
 
@@ -256,6 +263,33 @@ describe('LiveChatScreen — send + attach', () => {
       expect(screen.getByTestId('support-chat-send-error')).toHaveTextContent('upload failed'),
     );
   });
+
+  it('attaches a document: cancel then success (Bug 9)', async () => {
+    const send = jest.fn().mockResolvedValue(undefined);
+    const uploadAttachment = jest.fn().mockResolvedValue('https://img/spec.pdf');
+    mockedChat.mockReturnValue({ ...chatBase(), send, uploadAttachment });
+    renderWithProviders(<LiveChatScreen />);
+
+    // Cancelled document pick is a no-op.
+    pickDoc.mockResolvedValueOnce({ canceled: true, assets: null });
+    fireEvent.press(screen.getByTestId('support-chat-attach-doc'));
+    await waitFor(() => expect(pickDoc).toHaveBeenCalled());
+    expect(uploadAttachment).not.toHaveBeenCalled();
+
+    // A picked PDF uploads with allowDocuments=true and is sent as an attachment.
+    pickDoc.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ uri: 'file://spec.pdf', name: 'spec.pdf', mimeType: 'application/pdf' }],
+    });
+    fireEvent.press(screen.getByTestId('support-chat-attach-doc'));
+    await waitFor(() =>
+      expect(uploadAttachment).toHaveBeenCalledWith(
+        { uri: 'file://spec.pdf', fileName: 'spec.pdf', mimeType: 'application/pdf' },
+        true,
+      ),
+    );
+    await waitFor(() => expect(send).toHaveBeenCalledWith('', ['https://img/spec.pdf']));
+  });
 });
 
 describe('LiveChatScreen — actions', () => {
@@ -283,13 +317,63 @@ describe('LiveChatScreen — actions', () => {
     expect(screen.queryByTestId('support-feedback-modal')).toBeNull();
   });
 
-  it('re-opens a resolved chat and shows the closed note', () => {
+  it('re-opens a closed chat via the reason modal and shows the deadline', async () => {
     const reopen = jest.fn().mockResolvedValue(undefined);
-    mockedChat.mockReturnValue({ ...chatBase(), session: session({ status: 'CLOSED' }), reopen });
+    mockedChat.mockReturnValue({
+      ...chatBase(),
+      session: session({
+        status: 'CLOSED',
+        resolved_at: PAST_DEADLINE,
+        reopen_deadline: FUTURE_DEADLINE,
+      }),
+      reopen,
+    });
     renderWithProviders(<LiveChatScreen />);
     expect(screen.getByTestId('chat-closed-note')).toBeOnTheScreen();
+    expect(screen.getByTestId('chat-reopen-deadline')).toHaveTextContent(/You can reopen until/);
+
     fireEvent.press(screen.getByTestId('chat-action-toggle'));
-    expect(reopen).toHaveBeenCalled();
+    fireEvent.changeText(screen.getByTestId('reopen-reason-input'), 'Need more help');
+    fireEvent.press(screen.getByTestId('reopen-submit'));
+    await waitFor(() => expect(reopen).toHaveBeenCalledWith('Need more help'));
+    await waitFor(() => expect(screen.queryByTestId('reopen-reason-modal')).toBeNull());
+  });
+
+  it('surfaces a chat reopen failure in the modal', async () => {
+    const reopen = jest.fn().mockRejectedValue(new Error('window closed'));
+    mockedChat.mockReturnValue({
+      ...chatBase(),
+      session: session({
+        status: 'CLOSED',
+        resolved_at: PAST_DEADLINE,
+        reopen_deadline: FUTURE_DEADLINE,
+      }),
+      reopen,
+    });
+    renderWithProviders(<LiveChatScreen />);
+    fireEvent.press(screen.getByTestId('chat-action-toggle'));
+    fireEvent.changeText(screen.getByTestId('reopen-reason-input'), 'please');
+    fireEvent.press(screen.getByTestId('reopen-submit'));
+    await waitFor(() =>
+      expect(screen.getByTestId('reopen-error')).toHaveTextContent('window closed'),
+    );
+    fireEvent.press(screen.getByTestId('reopen-cancel'));
+    expect(screen.queryByTestId('reopen-reason-modal')).toBeNull();
+  });
+
+  it('hides the toggle and shows the expired note once the chat reopen window passes', () => {
+    mockedChat.mockReturnValue({
+      ...chatBase(),
+      session: session({
+        status: 'CLOSED',
+        resolved_at: PAST_DEADLINE,
+        reopen_deadline: PAST_DEADLINE,
+      }),
+    });
+    renderWithProviders(<LiveChatScreen />);
+    expect(screen.queryByTestId('chat-action-toggle')).toBeNull();
+    expect(screen.getByTestId('chat-closed-note')).toHaveTextContent(/re-open window has passed/i);
+    expect(screen.queryByTestId('chat-reopen-deadline')).toBeNull();
   });
 
   it('downloads the transcript and skips when none', async () => {
@@ -423,12 +507,20 @@ describe('AllSupportTicketsScreen', () => {
 });
 
 describe('TicketDetailsScreen', () => {
-  const detail = (status: string) => ({
+  const FUTURE = '2999-01-01T00:00:00Z';
+  const PAST = '2000-01-01T00:00:00Z';
+  const detail = (status: string, over: Record<string, unknown> = {}) => ({
     id: 't1',
     subject: 'Refund issue',
     category: 'PAYMENT',
     status,
-    created_at: '',
+    priority: 'HIGH',
+    created_at: '2026-06-01T10:00:00Z',
+    updated_at: '2026-06-02T10:00:00Z',
+    last_message_at: '2026-06-02T10:00:00Z',
+    resolved_at: null,
+    reopen_deadline: null,
+    ...over,
     messages: [
       {
         id: 'm1',
@@ -469,6 +561,11 @@ describe('TicketDetailsScreen', () => {
     const b = renderWithProviders(<TicketDetailsScreen />);
     expect(screen.getByText('On it')).toBeOnTheScreen();
     expect(screen.queryByTestId('ticket-reopen')).toBeNull();
+    // Bug 1: ticket number, priority and the raised/last-updated dates render.
+    expect(screen.getByTestId('ticket-meta-no')).toHaveTextContent(/^ST-/);
+    expect(screen.getByTestId('ticket-meta-priority')).toHaveTextContent('HIGH');
+    expect(screen.getByText(/Raised:/)).toBeOnTheScreen();
+    expect(screen.getByText(/Last updated:/)).toBeOnTheScreen();
     b.unmount();
 
     mockedDetails.mockReturnValue({
@@ -504,33 +601,58 @@ describe('TicketDetailsScreen', () => {
     );
   });
 
-  it('re-opens a resolved ticket (ignores a second press, then surfaces a failure)', async () => {
-    let resolveReopen: () => void = () => undefined;
-    const reopen = jest.fn().mockImplementation(
-      () =>
-        new Promise<void>((resolve) => {
-          resolveReopen = resolve;
-        }),
-    );
+  it('re-opens a resolved ticket via the reason modal, then surfaces a failure', async () => {
+    const reopen = jest.fn().mockResolvedValue(undefined);
     mockedDetails.mockReturnValue({
-      ticket: detail('RESOLVED'),
+      ticket: detail('RESOLVED', { resolved_at: PAST, reopen_deadline: FUTURE }),
       isLoading: false,
       reply: jest.fn(),
       reopen,
     });
     renderWithProviders(<TicketDetailsScreen />);
-    fireEvent.press(screen.getByTestId('ticket-reopen'));
-    fireEvent.press(screen.getByTestId('ticket-reopen')); // busy → no-op
-    expect(reopen).toHaveBeenCalledTimes(1);
-    await act(async () => {
-      resolveReopen();
-      await Promise.resolve();
-    });
+    // The reopen window line shows while the deadline is in the future.
+    expect(screen.getByTestId('ticket-reopen-until')).toHaveTextContent(/You can reopen until/);
 
+    fireEvent.press(screen.getByTestId('ticket-reopen'));
+    expect(screen.getByTestId('reopen-deadline')).toBeOnTheScreen();
+    fireEvent.changeText(screen.getByTestId('reopen-reason-input'), 'Still broken');
+    fireEvent.press(screen.getByTestId('reopen-submit'));
+    await waitFor(() => expect(reopen).toHaveBeenCalledWith('Still broken'));
+    await waitFor(() => expect(screen.queryByTestId('reopen-reason-modal')).toBeNull());
+
+    // Re-open again, this time the server rejects → error surfaces in the modal.
     reopen.mockRejectedValueOnce(new Error('cannot reopen'));
     fireEvent.press(screen.getByTestId('ticket-reopen'));
+    fireEvent.changeText(screen.getByTestId('reopen-reason-input'), 'again');
+    fireEvent.press(screen.getByTestId('reopen-submit'));
     await waitFor(() =>
-      expect(screen.getByTestId('ticket-reply-error')).toHaveTextContent('cannot reopen'),
+      expect(screen.getByTestId('reopen-error')).toHaveTextContent('cannot reopen'),
     );
+    // Cancelling closes the modal.
+    fireEvent.press(screen.getByTestId('reopen-cancel'));
+    expect(screen.queryByTestId('reopen-reason-modal')).toBeNull();
+  });
+
+  it('hides reopen and shows the expired note once the window has passed', () => {
+    mockedDetails.mockReturnValue({
+      ticket: detail('CLOSED', { resolved_at: PAST, reopen_deadline: PAST }),
+      isLoading: false,
+      reply: jest.fn(),
+      reopen: jest.fn(),
+    });
+    renderWithProviders(<TicketDetailsScreen />);
+    expect(screen.queryByTestId('ticket-reopen')).toBeNull();
+    expect(screen.getByTestId('ticket-reopen-expired')).toBeOnTheScreen();
+  });
+
+  it('falls back to last_message_at when updated_at is absent', () => {
+    mockedDetails.mockReturnValue({
+      ticket: detail('OPEN', { updated_at: null }),
+      isLoading: false,
+      reply: jest.fn(),
+      reopen: jest.fn(),
+    });
+    renderWithProviders(<TicketDetailsScreen />);
+    expect(screen.getByText(/Last updated:/)).toBeOnTheScreen();
   });
 });

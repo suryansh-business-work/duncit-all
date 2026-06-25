@@ -28,6 +28,8 @@ export const StartSupportChatDocument = gql(`
       ai_active
       agent_id
       agent_last_read_at
+      resolved_at
+      reopen_deadline
     }
   }
 `);
@@ -86,8 +88,8 @@ export const ResolveSupportChatDocument = gql(`
 `);
 
 export const ReopenSupportChatDocument = gql(`
-  mutation MobileReopenSupportChat($sessionId: ID!) {
-    reopenSupportChat(session_id: $sessionId) {
+  mutation MobileReopenSupportChat($sessionId: ID!, $reason: String) {
+    reopenSupportChat(session_id: $sessionId, reason: $reason) {
       id
       status
     }
@@ -140,7 +142,12 @@ export const TicketDetailsDocument = gql(`
       subject
       category
       status
+      priority
       created_at
+      updated_at
+      last_message_at
+      resolved_at
+      reopen_deadline
       messages {
         id
         author_role
@@ -164,8 +171,8 @@ export const ReplyToTicketDocument = gql(`
 `);
 
 export const ReopenTicketDocument = gql(`
-  mutation MobileReopenTicket($ticketId: ID!) {
-    reopenTicket(ticket_id: $ticketId) {
+  mutation MobileReopenTicket($ticketId: ID!, $reason: String) {
+    reopenTicket(ticket_id: $ticketId, reason: $reason) {
       id
       status
     }

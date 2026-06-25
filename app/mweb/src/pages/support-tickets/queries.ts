@@ -20,7 +20,12 @@ export const TICKET = gql`
       subject
       category
       status
+      priority
+      created_at
+      updated_at
       last_message_at
+      resolved_at
+      reopen_deadline
       messages {
         id
         author_role
@@ -53,15 +58,18 @@ export const REPLY_TO_TICKET = gql`
 `;
 
 export const REOPEN_TICKET = gql`
-  mutation ReopenMyTicket($ticket_id: ID!) {
-    reopenTicket(ticket_id: $ticket_id) {
+  mutation ReopenMyTicket($ticket_id: ID!, $reason: String) {
+    reopenTicket(ticket_id: $ticket_id, reason: $reason) {
       id
       status
+      resolved_at
+      reopen_deadline
     }
   }
 `;
 
 export type TicketStatus = 'OPEN' | 'PENDING' | 'RESOLVED' | 'CLOSED';
+export type TicketPriority = 'LOW' | 'MEDIUM' | 'HIGH';
 export type TicketCategory = 'GENERAL' | 'PAYMENT' | 'BOOKING' | 'SAFETY' | 'TECHNICAL' | 'OTHER';
 
 export interface TicketListItem {
@@ -88,6 +96,11 @@ export interface TicketDetail {
   subject: string;
   category: TicketCategory;
   status: TicketStatus;
+  priority: TicketPriority;
+  created_at: string;
+  updated_at: string;
   last_message_at: string;
+  resolved_at: string | null;
+  reopen_deadline: string | null;
   messages: TicketMessage[];
 }

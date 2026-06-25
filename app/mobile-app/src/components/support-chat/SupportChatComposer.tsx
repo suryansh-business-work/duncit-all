@@ -9,11 +9,18 @@ interface Props {
   busy?: boolean;
   onSendText: (text: string) => void;
   onAttach: () => void;
+  onAttachDocument: () => void;
   onTyping: () => void;
 }
 
-/** Chat input row: attach (image/video), text field that signals typing, send. */
-export function SupportChatComposer({ busy, onSendText, onAttach, onTyping }: Readonly<Props>) {
+/** Chat input row: attach image/video, attach document, typing-aware text field, send. */
+export function SupportChatComposer({
+  busy,
+  onSendText,
+  onAttach,
+  onAttachDocument,
+  onTyping,
+}: Readonly<Props>) {
   const { muted, onPrimary, color: ink } = useThemeColors();
   const [text, setText] = useState('');
   const lastTyping = useRef(0);
@@ -56,6 +63,23 @@ export function SupportChatComposer({ busy, onSendText, onAttach, onTyping }: Re
         ) : (
           <MaterialIcons name="attach-file" size={20} color={muted} />
         )}
+      </XStack>
+      <XStack
+        testID="support-chat-attach-doc"
+        role="button"
+        aria-label="Attach document"
+        onPress={busy ? undefined : onAttachDocument}
+        width={42}
+        height={42}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={21}
+        borderWidth={1}
+        borderColor="$borderColor"
+        opacity={busy ? 0.6 : 1}
+        pressStyle={{ opacity: 0.7 }}
+      >
+        <MaterialIcons name="description" size={20} color={muted} />
       </XStack>
       <XStack
         flex={1}

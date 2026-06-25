@@ -33,19 +33,22 @@ export const StatusFeedDocument = gql(`
   }
 `);
 
-/** Uploads a base64 image to ImageKit (server holds the private key) → url. */
+/** Uploads a base64 image/document to ImageKit (server holds the private key) → url.
+ * Pass `allowDocuments: true` with the real mimeType to upload PDFs/Office/txt/csv. */
 export const UploadImageDocument = gql(`
   mutation MobileUploadImage(
     $fileBase64: String!
     $fileName: String!
     $mimeType: String
     $folder: String
+    $allowDocuments: Boolean
   ) {
     uploadImageToImagekit(
       fileBase64: $fileBase64
       fileName: $fileName
       mimeType: $mimeType
       folder: $folder
+      allow_documents: $allowDocuments
     ) {
       url
       fileId

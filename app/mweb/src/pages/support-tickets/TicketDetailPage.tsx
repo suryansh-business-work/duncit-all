@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import {
-  Avatar,
   Box,
   Button,
   Chip,
@@ -16,16 +15,13 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import SendIcon from '@mui/icons-material/Send';
 import ReplayIcon from '@mui/icons-material/Replay';
-import { format } from 'date-fns';
 import AttachmentsField from '../../forms/support-form/AttachmentsField';
-import {
-  REOPEN_TICKET,
-  REPLY_TO_TICKET,
-  TICKET,
-  type TicketDetail,
-  type TicketMessage,
-  type TicketStatus,
-} from './queries';
+import ReopenReasonDialog from '../support-chat/ReopenReasonDialog';
+import { canReopen } from '../support-chat/chatHelpers';
+import { useDateFormat } from '../../utils/dateFormat';
+import TicketMeta from './TicketMeta';
+import TicketBubble from './TicketBubble';
+import { REOPEN_TICKET, REPLY_TO_TICKET, TICKET, type TicketDetail, type TicketStatus } from './queries';
 
 const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'default'> = {
   OPEN: 'primary',
@@ -33,48 +29,6 @@ const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'de
   RESOLVED: 'success',
   CLOSED: 'default',
 };
-
-function Bubble({ msg }: Readonly<{ msg: TicketMessage }>) {
-  const isUser = msg.author_role === 'USER';
-  return (
-    <Stack direction="row" sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start' }} spacing={1}>
-      {!isUser && (
-        <Avatar src={msg.author_photo || undefined} sx={{ width: 28, height: 28, fontSize: 12 }}>
-          {msg.author_name?.[0]?.toUpperCase() || 'S'}
-        </Avatar>
-      )}
-      <Paper
-        variant="outlined"
-        sx={{
-          p: 1.25,
-          maxWidth: '78%',
-          borderRadius: 3,
-          bgcolor: isUser ? 'primary.main' : 'background.paper',
-          color: isUser ? 'primary.contrastText' : 'text.primary',
-        }}
-      >
-        {!isUser && (
-          <Typography variant="caption" sx={{ fontWeight: 800 }}>
-            {msg.author_name || 'Support'}
-          </Typography>
-        )}
-        <Typography variant="body2">{msg.body_text}</Typography>
-        {msg.attachments.length > 0 && (
-          <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 0.75, mt: 0.75 }}>
-            {msg.attachments.map((url, i) => (
-              <a key={url + i} href={url} target="_blank" rel="noopener noreferrer">
-                <Avatar variant="rounded" src={url} sx={{ width: 54, height: 54 }} />
-              </a>
-            ))}
-          </Stack>
-        )}
-        <Typography variant="caption" sx={{ opacity: 0.7, display: 'block', mt: 0.25 }}>
-          {format(new Date(msg.created_at), 'd MMM, HH:mm')}
-        </Typography>
-      </Paper>
-    </Stack>
-  );
-}
 
 export default function TicketDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -85,12 +39,16 @@ export default function TicketDetailPage() {
   });
   const [reply, { loading: replying }] = useMutation(REPLY_TO_TICKET, { onCompleted: () => refetch() });
   const [reopenTicket, { loading: reopening }] = useMutation(REOPEN_TICKET, { onCompleted: () => refetch() });
+  const { formatDateTime } = useDateFormat();
   const [message, setMessage] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
+  const [reopenOpen, setReopenOpen] = useState(false);
+  const [reopenError, setReopenError] = useState<string | null>(null);
 
   const ticket = data?.ticket;
-  // A resolved/closed ticket can be re-opened so the user can question it (Bug 3).
-  const reopenable = ticket?.status === 'CLOSED' || ticket?.status === 'RESOLVED';
+  // A resolved/closed ticket can be re-opened within the server window (Bug 3/11).
+  const isResolved = ticket?.status === 'CLOSED' || ticket?.status === 'RESOLVED';
+  const reopenable = isResolved && canReopen(ticket?.reopen_deadline);
 
   const send = async () => {
     if (!message.trim() && attachments.length === 0) return;
@@ -99,8 +57,15 @@ export default function TicketDetailPage() {
     setAttachments([]);
   };
 
-  const reopen = async () => {
-    if (id) await reopenTicket({ variables: { ticket_id: id } });
+  const reopen = async (reason: string) => {
+    if (!id) return;
+    setReopenError(null);
+    try {
+      await reopenTicket({ variables: { ticket_id: id, reason } });
+      setReopenOpen(false);
+    } catch (e) {
+      setReopenError(e instanceof Error ? e.message : 'Could not re-open this ticket.');
+    }
   };
 
   return (
@@ -125,24 +90,38 @@ export default function TicketDetailPage() {
         </Typography>
       ) : (
         <>
+          <TicketMeta ticket={ticket} />
+
           <Stack spacing={1.25}>
             {ticket.messages.map((m) => (
-              <Bubble key={m.id} msg={m} />
+              <TicketBubble key={m.id} msg={m} />
             ))}
           </Stack>
 
-          {reopenable && (
+          {isResolved && (
             <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 3, bgcolor: 'action.hover' }}>
               <Stack direction="row" spacing={1} alignItems="center" justifyContent="space-between">
-                <Typography variant="body2" color="text.secondary">
-                  This ticket is {ticket.status.toLowerCase()}. Re-open it or just reply to continue.
-                </Typography>
+                <Stack sx={{ minWidth: 0 }}>
+                  <Typography variant="body2" color="text.secondary">
+                    This ticket is {ticket.status.toLowerCase()}. Re-open it to continue.
+                  </Typography>
+                  {reopenable && ticket.reopen_deadline && (
+                    <Typography variant="caption" color="text.secondary">
+                      You can reopen this until {formatDateTime(ticket.reopen_deadline)}
+                    </Typography>
+                  )}
+                  {!reopenable && (
+                    <Typography variant="caption" color="text.secondary">
+                      The reopen window has passed — raise a new ticket if you still need help.
+                    </Typography>
+                  )}
+                </Stack>
                 <Button
                   variant="outlined"
                   size="small"
                   startIcon={<ReplayIcon />}
-                  disabled={reopening}
-                  onClick={reopen}
+                  disabled={!reopenable || reopening}
+                  onClick={() => setReopenOpen(true)}
                   sx={{ borderRadius: 99, fontWeight: 800, flexShrink: 0 }}
                 >
                   Re-open
@@ -175,6 +154,17 @@ export default function TicketDetailPage() {
               </Stack>
             </Stack>
           </Paper>
+
+          <ReopenReasonDialog
+            open={reopenOpen}
+            loading={reopening}
+            error={reopenError}
+            onClose={() => {
+              setReopenOpen(false);
+              setReopenError(null);
+            }}
+            onSubmit={reopen}
+          />
         </>
       )}
     </Stack>

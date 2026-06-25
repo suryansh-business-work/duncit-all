@@ -66,6 +66,9 @@ export const notificationTypeDefs = /* GraphQL */ `
     deleteNotification(notification_doc_id: ID!): Boolean!
     savePushSubscription(input: PushSubscriptionInput!): Boolean!
     deletePushSubscription(endpoint: String!): Boolean!
+    "Register a native (Expo) push token for the signed-in device."
+    saveExpoPushToken(token: String!, platform: String): Boolean!
+    deleteExpoPushToken(token: String!): Boolean!
     markNotificationRead(user_notification_doc_id: ID!): Boolean!
     markAllNotificationsRead: Boolean!
   }

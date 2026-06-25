@@ -46,7 +46,20 @@ export const getStatesForCountry = (countryCode?: string) => {
     : [];
 };
 
-export const getCitiesForState = (_countryCode?: string, _stateCode?: string): GeoCity[] => [];
+// Cities for the selected state — loaded lazily so the large country-state-city
+// dataset becomes its own chunk instead of bloating the main bundle. It shares
+// ISO 3166-2 codes with country-region-data, so the State picker's code maps directly.
+export async function loadCitiesForState(countryCode?: string, stateCode?: string): Promise<GeoCity[]> {
+  if (!countryCode || !stateCode) return [];
+  const { City } = await import('country-state-city');
+  return byName(
+    City.getCitiesOfState(countryCode, stateCode).map((city) => ({
+      name: city.name,
+      countryCode,
+      stateCode,
+    }))
+  );
+}
 
 export const findCountry = (countryCode?: string) =>
   COUNTRY_OPTIONS.find((country) => country.isoCode === countryCode);
@@ -55,6 +68,3 @@ export const findState = (countryCode?: string, stateCode?: string, stateName?: 
   getStatesForCountry(countryCode).find(
     (state) => state.isoCode === stateCode || state.name === stateName
   );
-
-export const findCity = (countryCode?: string, stateCode?: string, cityName?: string) =>
-  getCitiesForState(countryCode, stateCode).find((city) => city.name === cityName);

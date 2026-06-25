@@ -8,7 +8,9 @@ import ChatBubble from './ChatBubble';
 import ChatComposer from './ChatComposer';
 import FeedbackDialog from './FeedbackDialog';
 import EmailTranscriptDialog from './EmailTranscriptDialog';
-import { dayLabel, downloadBase64Text, mergeReal, showDaySeparator } from './chatHelpers';
+import ReopenReasonDialog from './ReopenReasonDialog';
+import { canReopen, dayLabel, downloadBase64Text, mergeReal, showDaySeparator } from './chatHelpers';
+import { useDateFormat } from '../../utils/dateFormat';
 import { useSupportChatSocket } from './useSupportChatSocket';
 import {
   EMAIL_SUPPORT_CHAT_TRANSCRIPT,
@@ -45,6 +47,9 @@ export default function SupportChatPage() {
   const [showJump, setShowJump] = useState(false);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [emailOpen, setEmailOpen] = useState(false);
+  const [reopenOpen, setReopenOpen] = useState(false);
+  const [reopenError, setReopenError] = useState<string | null>(null);
+  const { formatDateTime } = useDateFormat();
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -55,7 +60,7 @@ export default function SupportChatPage() {
   const [sendMessage, { loading: sending }] = useMutation(SEND_SUPPORT_CHAT_MESSAGE);
   const [markRead] = useMutation(MARK_SUPPORT_CHAT_READ);
   const [resolveChat] = useMutation(RESOLVE_SUPPORT_CHAT);
-  const [reopenChat] = useMutation(REOPEN_SUPPORT_CHAT);
+  const [reopenChat, { loading: reopening }] = useMutation(REOPEN_SUPPORT_CHAT);
   const [fetchTranscript] = useLazyQuery(SUPPORT_CHAT_TRANSCRIPT, { fetchPolicy: 'network-only' });
 
   const { emitTyping } = useSupportChatSocket({
@@ -114,10 +119,16 @@ export default function SupportChatPage() {
     setSession((prev) => (prev ? { ...prev, status: 'CLOSED' } : prev));
     setFeedbackOpen(true);
   };
-  const onReopen = async () => {
+  const onReopen = async (reason: string) => {
     if (!sessionId) return;
-    await reopenChat({ variables: { session_id: sessionId } });
-    setSession((prev) => (prev ? { ...prev, status: 'OPEN' } : prev));
+    setReopenError(null);
+    try {
+      await reopenChat({ variables: { session_id: sessionId, reason } });
+      setSession((prev) => (prev ? { ...prev, status: 'OPEN' } : prev));
+      setReopenOpen(false);
+    } catch (e) {
+      setReopenError(e instanceof Error ? e.message : 'Could not re-open this chat.');
+    }
   };
   const onDownload = async () => {
     if (!sessionId) return;
@@ -127,15 +138,18 @@ export default function SupportChatPage() {
   };
 
   const loading = sessionQuery.loading && !session;
+  const closed = session?.status === 'CLOSED';
+  const reopenable = closed && canReopen(session?.reopen_deadline);
 
   return (
     <Stack spacing={1.5} sx={{ height: 'calc(100dvh - 120px)', position: 'relative' }}>
       <ChatHeader
         ticketNo={session?.ticket_no ?? null}
         status={session?.status ?? null}
+        reopenable={reopenable}
         onBack={() => navigate('/support')}
         onResolve={onResolve}
-        onReopen={onReopen}
+        onReopen={() => setReopenOpen(true)}
         onDownload={onDownload}
         onEmail={() => setEmailOpen(true)}
       />
@@ -176,10 +190,12 @@ export default function SupportChatPage() {
         </Fab>
       )}
 
-      {session?.status === 'CLOSED' && (
+      {closed && (
         <Paper variant="outlined" sx={{ p: 1, borderRadius: 2, textAlign: 'center', bgcolor: 'action.hover' }}>
           <Typography variant="caption" color="text.secondary">
-            This chat is resolved — send a message or re-open it if you still need help.
+            {reopenable && session?.reopen_deadline
+              ? `This chat is resolved — you can reopen it until ${formatDateTime(session.reopen_deadline)}.`
+              : 'This chat is resolved. The reopen window has passed — start a new chat if you still need help.'}
           </Typography>
         </Paper>
       )}
@@ -190,6 +206,16 @@ export default function SupportChatPage() {
         <>
           <FeedbackDialog open={feedbackOpen} sessionId={sessionId} onClose={() => setFeedbackOpen(false)} onSubmitted={() => setFeedbackOpen(false)} />
           <EmailTranscriptDialog open={emailOpen} sessionId={sessionId} onClose={() => setEmailOpen(false)} />
+          <ReopenReasonDialog
+            open={reopenOpen}
+            loading={reopening}
+            error={reopenError}
+            onClose={() => {
+              setReopenOpen(false);
+              setReopenError(null);
+            }}
+            onSubmit={onReopen}
+          />
         </>
       )}
     </Stack>

@@ -95,19 +95,26 @@ async function uploadToImagekit(opts: {
   };
 }
 
+// Documents are only accepted when the caller opts in (support attachments) —
+// avatars / pod media stay image+video only.
+const DOC_MIME_RE = /^(application\/pdf|application\/msword|application\/vnd\.openxmlformats-officedocument\.[a-z.]+|application\/vnd\.ms-(excel|powerpoint)|text\/plain|text\/csv)$/i;
+
 export async function uploadBase64Image(opts: {
   fileBase64: string;
   fileName: string;
   folder?: string;
   mimeType?: string;
+  allowDocuments?: boolean;
 }) {
   const mimeType = (opts.mimeType || '').trim() || 'image/jpeg';
   const isImage = /^image\//i.test(mimeType);
   const isVideo = /^video\//i.test(mimeType);
-  if (!isImage && !isVideo) {
-    throw new GraphQLError('Only image or video uploads are allowed', {
-      extensions: { code: 'BAD_USER_INPUT' },
-    });
+  const isDocument = opts.allowDocuments === true && DOC_MIME_RE.test(mimeType);
+  if (!isImage && !isVideo && !isDocument) {
+    const msg = opts.allowDocuments
+      ? 'Only image, video or document uploads are allowed'
+      : 'Only image or video uploads are allowed';
+    throw new GraphQLError(msg, { extensions: { code: 'BAD_USER_INPUT' } });
   }
 
   const raw = opts.fileBase64.includes(',')
@@ -117,11 +124,17 @@ export async function uploadBase64Image(opts: {
   if (!fileBytes.length) {
     throw new GraphQLError('Upload file is empty', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  const maxBytes = isVideo ? 100 * 1024 * 1024 : 15 * 1024 * 1024;
+  let maxBytes = 15 * 1024 * 1024;
+  let tooLargeMsg = 'Image is too large (max 15 MB)';
+  if (isVideo) {
+    maxBytes = 100 * 1024 * 1024;
+    tooLargeMsg = 'Video is too large (max 100 MB)';
+  } else if (isDocument) {
+    maxBytes = 25 * 1024 * 1024;
+    tooLargeMsg = 'Document is too large (max 25 MB)';
+  }
   if (fileBytes.length > maxBytes) {
-    throw new GraphQLError(isVideo ? 'Video is too large (max 100 MB)' : 'Image is too large (max 15 MB)', {
-      extensions: { code: 'BAD_USER_INPUT' },
-    });
+    throw new GraphQLError(tooLargeMsg, { extensions: { code: 'BAD_USER_INPUT' } });
   }
 
   const safeName = (opts.fileName || `upload-${Date.now()}`)

@@ -81,14 +81,14 @@ export const supportChatResolvers = {
     },
     reopenSupportChat: async (
       _p: unknown,
-      args: { session_id: string },
+      args: { session_id: string; reason?: string | null },
       ctx: GraphQLContext
     ) => {
       const user = requireAuth(ctx);
       const isAgent = hasRole(user, SUPPORT_ROLES);
       const ok = await supportChatService.canAccessSession(args.session_id, user.id, isAgent);
       if (!ok) throw new GraphQLError('Chat session not found', { extensions: { code: 'NOT_FOUND' } });
-      return supportChatService.reopen(args.session_id, isAgent ? 'support' : 'the user');
+      return supportChatService.reopen(args.session_id, isAgent ? 'support' : 'the user', isAgent, args.reason ?? null);
     },
     submitSupportChatFeedback: (
       _p: unknown,

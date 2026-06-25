@@ -9,6 +9,13 @@ import type { SupportChatMessage } from './queries';
 
 const IMAGE_RE = /\.(png|jpe?g|gif|webp|avif)$/i;
 
+/** Human-readable file name from an attachment URL (drops query + path). */
+function fileName(url: string): string {
+  const path = url.split('?')[0];
+  const last = path.slice(path.lastIndexOf('/') + 1);
+  return decodeURIComponent(last) || 'Attachment';
+}
+
 function Tick({ msg, agentLastReadAt }: Readonly<{ msg: SupportChatMessage; agentLastReadAt: string | null }>) {
   const state = userMessageTick(msg, agentLastReadAt);
   if (state === 'pending') return <AccessTimeIcon sx={{ fontSize: 14, opacity: 0.7 }} />;
@@ -32,7 +39,8 @@ function Attachment({ url }: Readonly<{ url: string }>) {
       clickable
       size="small"
       icon={<InsertDriveFileIcon />}
-      label="Attachment"
+      label={fileName(url)}
+      sx={{ maxWidth: 220, '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
     />
   );
 }

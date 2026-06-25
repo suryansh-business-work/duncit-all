@@ -58,3 +58,15 @@ export function mergeReal<T extends { id: string }>(prev: T[], tempId: string, r
 export function appendUnique<T extends { id: string }>(prev: T[], msg: T): T[] {
   return prev.some((m) => m.id === msg.id) ? prev : [...prev, msg];
 }
+
+/**
+ * Whether the user may still re-open a resolved/closed item. The server blocks a
+ * reopen once `now >= reopen_deadline`; we mirror that to gate the UI (Bug 3/11).
+ * Missing/invalid deadlines are treated as "closed" (no reopen) — parity with mWeb.
+ */
+export function canReopen(reopenDeadline?: string | null, now: Date = new Date()): boolean {
+  if (!reopenDeadline) return false;
+  const ms = new Date(reopenDeadline).getTime();
+  if (Number.isNaN(ms)) return false;
+  return now.getTime() < ms;
+}

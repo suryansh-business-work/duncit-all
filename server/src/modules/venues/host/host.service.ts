@@ -256,6 +256,18 @@ export const hostService = {
     return r.deletedCount > 0;
   },
 
+  /** Un-approve a user's host when their HOST role is revoked from Access. */
+  async revokeApprovalForUser(userId: string) {
+    const h = await HostModel.findOne({ user_id: new Types.ObjectId(userId) });
+    if (h && h.status === 'APPROVED') {
+      h.status = 'REJECTED';
+      h.rejected_at = new Date();
+      h.reviewer_notes = 'Approval revoked — host access was removed.';
+      await h.save();
+    }
+    return true;
+  },
+
   /** Draft a host shell from an approved onboarding-meeting request so it shows
    * in the Onboarded Hosts list (status DRAFT). Idempotent per user. */
   async createDraftFromApproval(prefill: { userId: string; name?: string; email?: string; phone?: string }) {

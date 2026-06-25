@@ -42,6 +42,18 @@ export function mergeReal(
   return without.some((m) => m.id === real.id) ? without : [...without, real];
 }
 
+/**
+ * Whether the user may still re-open a resolved/closed item. The server blocks
+ * a reopen once `now >= reopen_deadline`; we mirror that to gate the UI.
+ * Missing/invalid deadlines are treated as "closed" (no reopen).
+ */
+export function canReopen(reopenDeadline: string | null | undefined): boolean {
+  if (!reopenDeadline) return false;
+  const ms = new Date(reopenDeadline).getTime();
+  if (Number.isNaN(ms)) return false;
+  return Date.now() < ms;
+}
+
 /** Trigger a browser download of a base64-encoded UTF-8 text transcript. */
 export function downloadBase64Text(filename: string, base64: string): void {
   const binary = atob(base64);

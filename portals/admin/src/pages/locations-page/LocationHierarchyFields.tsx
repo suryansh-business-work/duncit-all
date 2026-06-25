@@ -1,11 +1,11 @@
+import { useEffect, useState } from 'react';
 import { Autocomplete, Stack, TextField } from '@mui/material';
 import {
   COUNTRY_OPTIONS,
   findCountry,
-  findCity,
   findState,
-  getCitiesForState,
   getStatesForCountry,
+  loadCitiesForState,
   type GeoCity,
   type GeoCountry,
   type GeoState,
@@ -24,8 +24,18 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
   const country = findCountry(form.country_code) ?? null;
   const states = getStatesForCountry(form.country_code);
   const state = findState(form.country_code, form.state_code, form.state) ?? form.state;
-  const cities = getCitiesForState(form.country_code, form.state_code);
-  const city = findCity(form.country_code, form.state_code, form.city) ?? form.city;
+  const [cities, setCities] = useState<GeoCity[]>([]);
+
+  // Load the selected state's cities on demand (the dataset is a lazy chunk).
+  useEffect(() => {
+    let active = true;
+    loadCitiesForState(form.country_code, form.state_code).then((next) => {
+      if (active) setCities(next);
+    });
+    return () => {
+      active = false;
+    };
+  }, [form.country_code, form.state_code]);
 
   return (
     <Stack spacing={2}>
@@ -75,7 +85,7 @@ export default function LocationHierarchyFields({ form, setForm }: Readonly<Prop
         <Autocomplete<GeoCity | string, false, false, true>
           freeSolo
           options={cities}
-          value={city}
+          value={form.city}
           getOptionLabel={label}
           onChange={(_, value) => {
             const nextCity = typeof value === 'string' ? value : value?.name ?? '';

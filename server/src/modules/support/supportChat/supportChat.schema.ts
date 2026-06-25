@@ -51,6 +51,10 @@ export const supportChatTypeDefs = /* GraphQL */ `
     rating: Int
     feedback_comment: String
     feedback_at: String
+    "When the chat was resolved/closed (drives the reopen window)."
+    resolved_at: String
+    "User can reopen the chat until this instant (null if not resolved/closed)."
+    reopen_deadline: String
     created_at: String!
     updated_at: String!
   }
@@ -103,8 +107,8 @@ export const supportChatTypeDefs = /* GraphQL */ `
     closeSupportChat(session_id: ID!): SupportChatSession!
     "The user (or an agent) marks the chat resolved — same as close, owner-allowed."
     resolveSupportChat(session_id: ID!): SupportChatSession!
-    "Re-open a resolved/closed chat from either side."
-    reopenSupportChat(session_id: ID!): SupportChatSession!
+    "Re-open a resolved/closed chat (user within 3 days, or an agent). Reason logged to the thread."
+    reopenSupportChat(session_id: ID!, reason: String): SupportChatSession!
     "Leave a 1-5 satisfaction rating + optional comment on a chat."
     submitSupportChatFeedback(
       session_id: ID!

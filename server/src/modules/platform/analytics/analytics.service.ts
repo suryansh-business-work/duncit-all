@@ -259,12 +259,17 @@ export const analyticsService = {
       count: statusMap.get(s) || 0,
     }));
 
+    // Pods & clubs are the only entities with a super-category dimension, so when
+    // a super category is selected the totals must reflect that scope (users /
+    // venues / hosts / support tickets aren't category-scoped — they stay global).
+    const sumCounts = (counts: Map<string, number>) => [...counts.values()].reduce((a, b) => a + b, 0);
+
     return {
       pods: buildBuckets(podCountById),
       clubs: buildBuckets(clubCountById),
       users_total,
-      pods_total,
-      clubs_total,
+      pods_total: wantSlug ? sumCounts(podCountById) : pods_total,
+      clubs_total: wantSlug ? sumCounts(clubCountById) : clubs_total,
       venues_total,
       hosts_total,
       support_tickets_open,

@@ -1,4 +1,5 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
+import { AppState, type AppStateStatus } from 'react-native';
 
 import {
   MobileMarkAllNotificationsReadDocument,
@@ -180,5 +181,51 @@ describe('useNotifications → device notifications (Notifee)', () => {
       await result.current.refetch();
     });
     expect(mockDisplay).toHaveBeenCalled();
+  });
+});
+
+describe('useNotifications → real-time refresh (BUG-A)', () => {
+  let appStateCb: (state: AppStateStatus) => void;
+  let removeListener: jest.Mock;
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    removeListener = jest.fn();
+    jest.spyOn(AppState, 'addEventListener').mockImplementation((_event, handler) => {
+      appStateCb = handler as (state: AppStateStatus) => void;
+      return { remove: removeListener } as never;
+    });
+  });
+
+  afterEach(() => {
+    jest.runOnlyPendingTimers();
+    jest.useRealTimers();
+    (AppState.addEventListener as jest.Mock).mockRestore();
+  });
+
+  it('polls the feed on an interval and refetches when the app foregrounds', async () => {
+    const { unmount } = renderHook(() => useNotifications());
+    // Initial load.
+    await waitFor(() => expect(mockRequest).toHaveBeenCalledTimes(1));
+
+    // A polled refetch that rejects is swallowed (no unhandled rejection).
+    mockRequest.mockRejectedValueOnce(new Error('blip'));
+    await act(async () => {
+      jest.advanceTimersByTime(30_000);
+    });
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+
+    // Foregrounding → refetch; a background transition does not.
+    await act(async () => {
+      appStateCb('active');
+    });
+    expect(mockRequest).toHaveBeenCalledTimes(3);
+    await act(async () => {
+      appStateCb('background');
+    });
+    expect(mockRequest).toHaveBeenCalledTimes(3);
+
+    unmount();
+    expect(removeListener).toHaveBeenCalled();
   });
 });

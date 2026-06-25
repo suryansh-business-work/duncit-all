@@ -37,6 +37,9 @@ export default function MyTicketsList() {
   const all = data?.myTickets ?? [];
   const items = filter === 'ALL' ? all : all.filter((t) => t.status === filter);
 
+  const countFor = (f: Filter): number =>
+    f === 'ALL' ? all.length : all.filter((t) => t.status === f).length;
+
   return (
     <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: 4 }}>
       <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
@@ -50,7 +53,7 @@ export default function MyTicketsList() {
         sx={{ minHeight: 36, mb: 1, '& .MuiTab-root': { minHeight: 36, py: 0.5 } }}
       >
         {FILTERS.map((f) => (
-          <Tab key={f} value={f} label={LABEL[f]} sx={{ fontWeight: 800 }} />
+          <Tab key={f} value={f} label={`${LABEL[f]} (${countFor(f)})`} sx={{ fontWeight: 800 }} />
         ))}
       </Tabs>
 

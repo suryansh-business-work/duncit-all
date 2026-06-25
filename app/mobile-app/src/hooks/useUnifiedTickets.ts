@@ -66,10 +66,17 @@ export function useTicketDetails(ticketId: string) {
     [ticketId, reload],
   );
 
-  const reopen = useCallback(async () => {
-    await graphqlRequest(ReopenTicketDocument, { ticketId }, { auth: true });
-    await reload();
-  }, [ticketId, reload]);
+  const reopen = useCallback(
+    async (reason: string) => {
+      await graphqlRequest(
+        ReopenTicketDocument,
+        { ticketId, reason: reason.trim() || null },
+        { auth: true },
+      );
+      await reload();
+    },
+    [ticketId, reload],
+  );
 
   return { ticket, isLoading, reply, reopen, reload };
 }

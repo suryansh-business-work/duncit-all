@@ -231,6 +231,33 @@ async function signToken(payload: AuthUser): Promise<string> {
   return jwt.sign(payload, secret);
 }
 
+// Onboarding roles that mirror an approved Host / Venue / Brand. Removing one
+// must downgrade the corresponding entity so the onboarding status reflects it.
+const ONBOARDING_REVOKE_ROLES = new Set(['HOST', 'VENUE_OWNER', 'ECOMM_MANAGER']);
+
+/** Downgrade a user's APPROVED onboarding entity when its role is revoked.
+ * Best-effort + dynamic imports (the venue services import userService back). */
+async function syncRevokedOnboarding(userId: string, removedRoles: string[]) {
+  for (const role of removedRoles) {
+    if (!ONBOARDING_REVOKE_ROLES.has(role)) continue;
+    try {
+      if (role === 'HOST') {
+        const { hostService } = await import('@modules/venues/host/host.service');
+        await hostService.revokeApprovalForUser(userId);
+      } else if (role === 'VENUE_OWNER') {
+        const { venueService } = await import('@modules/venues/venue/venue.service');
+        await venueService.revokeApprovalForUser(userId);
+      } else if (role === 'ECOMM_MANAGER') {
+        const { ecommBrandService } = await import('@modules/venues/ecommBrand/ecommBrand.service');
+        await ecommBrandService.revokeApprovalForUser(userId);
+      }
+    } catch (err) {
+      // eslint-disable-next-line no-console
+      console.error('[user.replaceUserRoles] onboarding revoke sync failed:', err);
+    }
+  }
+}
+
 // Replace the entire role set for a user. Authoritative writes go to
 // user_roles; the role_keys + assigned_zones cache on the user doc is updated
 // in the same transaction so JWT issuance and hot reads stay correct.
@@ -246,6 +273,10 @@ async function replaceUserRoles(
   const assignedCity = opts?.assignedCity ?? null;
   const oid = new Types.ObjectId(userId);
   const assignedBy = opts?.assignedBy ? new Types.ObjectId(opts.assignedBy) : null;
+
+  // Snapshot the current roles so we can detect onboarding roles being removed.
+  const beforeDoc = await UserModel.findById(oid).select('metadata.role_keys').lean();
+  const oldRoles = ((beforeDoc as any)?.metadata?.role_keys ?? []) as string[];
 
   const session = await UserModel.db.startSession();
   try {
@@ -294,6 +325,11 @@ async function replaceUserRoles(
   } finally {
     await session.endSession();
   }
+
+  // After the role write commits, sync any revoked onboarding roles back to
+  // the Host/Venue/Brand status (e.g. revoking HOST un-approves the host).
+  const removed = oldRoles.filter((r) => !normalized.includes(r));
+  if (removed.length) await syncRevokedOnboarding(userId, removed);
 }
 
 // Build the public GraphQL User shape. Storage is nested; consumers and the

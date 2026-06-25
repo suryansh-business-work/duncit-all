@@ -1,0 +1,46 @@
+import { Avatar, Paper, Stack, Typography } from '@mui/material';
+import { format } from 'date-fns';
+import type { TicketMessage } from './queries';
+
+/** A single message bubble in the ticket thread. */
+export default function TicketBubble({ msg }: Readonly<{ msg: TicketMessage }>) {
+  const isUser = msg.author_role === 'USER';
+  return (
+    <Stack direction="row" sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start' }} spacing={1}>
+      {!isUser && (
+        <Avatar src={msg.author_photo || undefined} sx={{ width: 28, height: 28, fontSize: 12 }}>
+          {msg.author_name?.[0]?.toUpperCase() || 'S'}
+        </Avatar>
+      )}
+      <Paper
+        variant="outlined"
+        sx={{
+          p: 1.25,
+          maxWidth: '78%',
+          borderRadius: 3,
+          bgcolor: isUser ? 'primary.main' : 'background.paper',
+          color: isUser ? 'primary.contrastText' : 'text.primary',
+        }}
+      >
+        {!isUser && (
+          <Typography variant="caption" sx={{ fontWeight: 800 }}>
+            {msg.author_name || 'Support'}
+          </Typography>
+        )}
+        <Typography variant="body2">{msg.body_text}</Typography>
+        {msg.attachments.length > 0 && (
+          <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 0.75, mt: 0.75 }}>
+            {msg.attachments.map((url, i) => (
+              <a key={url + i} href={url} target="_blank" rel="noopener noreferrer">
+                <Avatar variant="rounded" src={url} sx={{ width: 54, height: 54 }} />
+              </a>
+            ))}
+          </Stack>
+        )}
+        <Typography variant="caption" sx={{ opacity: 0.7, display: 'block', mt: 0.25 }}>
+          {format(new Date(msg.created_at), 'd MMM, HH:mm')}
+        </Typography>
+      </Paper>
+    </Stack>
+  );
+}

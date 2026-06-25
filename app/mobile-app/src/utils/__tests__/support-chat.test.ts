@@ -1,5 +1,6 @@
 import {
   appendUnique,
+  canReopen,
   dayLabel,
   durationLabel,
   formatTime,
@@ -57,5 +58,16 @@ describe('support-chat utils', () => {
   it('appendUnique skips duplicates', () => {
     expect(appendUnique([{ id: 'a' }], { id: 'b' }).map((m) => m.id)).toEqual(['a', 'b']);
     expect(appendUnique([{ id: 'a' }], { id: 'a' }).map((m) => m.id)).toEqual(['a']);
+  });
+
+  it('canReopen gates the reopen window', () => {
+    const now = new Date('2026-06-25T00:00:00Z');
+    // No / invalid deadline → cannot reopen (parity with mWeb).
+    expect(canReopen(null, now)).toBe(false);
+    expect(canReopen(undefined, now)).toBe(false);
+    expect(canReopen('not-a-date', now)).toBe(false);
+    // Future deadline → open; past deadline → closed.
+    expect(canReopen('2026-06-28T00:00:00Z', now)).toBe(true);
+    expect(canReopen('2026-06-20T00:00:00Z', now)).toBe(false);
   });
 });

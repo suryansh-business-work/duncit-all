@@ -90,11 +90,33 @@ describe('useTicketDetails', () => {
     await waitFor(() => expect(result.current.isLoading).toBe(false));
 
     await act(async () => {
-      await result.current.reopen();
+      await result.current.reopen('Still broken');
     });
     expect(mockRequest.mock.calls.some((c) => JSON.stringify(c[0]).includes('reopenTicket'))).toBe(
       true,
     );
+    // The reason is forwarded to the reopen mutation.
+    const reopenCall = mockRequest.mock.calls.find((c) =>
+      JSON.stringify(c[0]).includes('reopenTicket'),
+    );
+    expect(reopenCall?.[1]).toEqual({ ticketId: 't1', reason: 'Still broken' });
+  });
+
+  it('sends a null reason when the reopen reason is blank', async () => {
+    mockRequest.mockImplementation((doc: unknown) => {
+      if (JSON.stringify(doc).includes('reopenTicket'))
+        return Promise.resolve({ reopenTicket: { id: 't1', status: 'OPEN' } });
+      return Promise.resolve({ ticket });
+    });
+    const { result } = renderHook(() => useTicketDetails('t1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.reopen('   ');
+    });
+    const reopenCall = mockRequest.mock.calls.find((c) =>
+      JSON.stringify(c[0]).includes('reopenTicket'),
+    );
+    expect(reopenCall?.[1]).toEqual({ ticketId: 't1', reason: null });
   });
 
   it('treats a missing ticket as null', async () => {

@@ -166,8 +166,9 @@ export function useSupportChat() {
     [session, sessionId],
   );
 
-  /** Uploads a picked image/video to ImageKit and returns its URL. */
-  const uploadAttachment = useCallback(async (asset: PickedAsset) => {
+  /** Uploads a picked image/video/document to ImageKit and returns its URL.
+   * Documents need `allowDocuments` so the server accepts non-media mime types (Bug 9). */
+  const uploadAttachment = useCallback(async (asset: PickedAsset, allowDocuments = false) => {
     const mimeType = asset.mimeType ?? 'image/jpeg';
     let base64 = asset.base64 ?? null;
     if (!base64 && asset.uri) {
@@ -183,6 +184,7 @@ export function useSupportChat() {
         fileName: asset.fileName ?? `chat-${Date.now()}`,
         mimeType,
         folder: '/support/chat',
+        allowDocuments,
       },
       { auth: true },
     );
@@ -195,11 +197,18 @@ export function useSupportChat() {
     setSession({ ...session, status: SupportChatStatus.Closed });
   }, [session]);
 
-  const reopen = useCallback(async () => {
-    if (!session) return;
-    await graphqlRequest(ReopenSupportChatDocument, { sessionId: session.id }, { auth: true });
-    setSession({ ...session, status: SupportChatStatus.Open });
-  }, [session]);
+  const reopen = useCallback(
+    async (reason: string) => {
+      if (!session) return;
+      await graphqlRequest(
+        ReopenSupportChatDocument,
+        { sessionId: session.id, reason: reason.trim() || null },
+        { auth: true },
+      );
+      setSession({ ...session, status: SupportChatStatus.Open });
+    },
+    [session],
+  );
 
   const submitFeedback = useCallback(
     async (rating: number, comment: string) => {

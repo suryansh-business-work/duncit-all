@@ -44,6 +44,14 @@ export const notificationResolvers = {
       requireAuth(ctx);
       return notificationService.deletePushSubscription(args.endpoint);
     },
+    saveExpoPushToken: async (_p: unknown, args: { token: string; platform?: string | null }, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      return notificationService.saveExpoPushToken(u.id, args.token, args.platform ?? null);
+    },
+    deleteExpoPushToken: async (_p: unknown, args: { token: string }, ctx: GraphQLContext) => {
+      requireAuth(ctx);
+      return notificationService.deleteExpoPushToken(args.token);
+    },
     markNotificationRead: async (
       _p: unknown,
       args: { user_notification_doc_id: string },

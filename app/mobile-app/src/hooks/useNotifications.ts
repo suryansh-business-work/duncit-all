@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { AppState } from 'react-native';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
@@ -12,6 +13,10 @@ import { useNotificationPrefsStore } from '@/stores/notification-prefs.store';
 
 export type NotificationsData = ResultOf<typeof MobileNotificationsDocument>;
 export type UserNotification = NotificationsData['myNotifications'][number];
+
+/** Background refresh cadence so a newly-arrived notification surfaces on the
+ * bell badge without the user opening the screen (BUG-A). */
+const POLL_INTERVAL_MS = 30_000;
 
 /**
  * Notifications feed + read mutations — RN port of mWeb's HeaderNotificationsBell
@@ -52,6 +57,24 @@ export function useNotifications() {
       .finally(() => active && setIsLoading(false));
     return () => {
       active = false;
+    };
+  }, [refetch]);
+
+  // Lightweight real-time refresh (BUG-A): poll on an interval and refetch when
+  // the app returns to the foreground, so a newly-arrived notification updates
+  // the bell badge without the user opening the screen. Both are RN-safe (no
+  // EventSource) and are torn down on unmount.
+  useEffect(() => {
+    const poll = () => {
+      refetch().catch(() => undefined);
+    };
+    const timer = setInterval(poll, POLL_INTERVAL_MS);
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active') poll();
+    });
+    return () => {
+      clearInterval(timer);
+      subscription.remove();
     };
   }, [refetch]);
 

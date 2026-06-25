@@ -11,6 +11,7 @@ import {
   MenuItem,
   Stack,
   TextField,
+  Tooltip,
   Typography,
 } from '@mui/material';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -123,18 +124,19 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
               fontSize={12}
               colorScheme="light"
               theme={activityTheme}
-              renderBlock={(block, activity) =>
-                cloneElement(block, {
-                  role: 'button',
-                  tabIndex: 0,
-                  onClick: () => {
-                    setSelectedDate(activity.date);
-                    setJourneyDate(activity.date);
-                  },
-                  style: { ...(block.props.style || {}), cursor: 'pointer' },
-                })
-              }
-              tooltips={{ activity: { text: (activity) => `${activity.count} events on ${activity.date}` } }}
+              renderBlock={(block, activity) => (
+                <Tooltip key={activity.date} arrow title={`${activity.count} ${activity.count === 1 ? 'event' : 'events'} on ${activity.date}`}>
+                  {cloneElement(block, {
+                    role: 'button',
+                    tabIndex: 0,
+                    onClick: () => {
+                      setSelectedDate(activity.date);
+                      setJourneyDate(activity.date);
+                    },
+                    style: { ...(block.props.style || {}), cursor: 'pointer' },
+                  })}
+                </Tooltip>
+              )}
             />
           </Box>
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>

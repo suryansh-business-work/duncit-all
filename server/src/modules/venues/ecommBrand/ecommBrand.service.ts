@@ -208,6 +208,18 @@ export const ecommBrandService = {
     return toPub(brand);
   },
 
+  /** Un-approve a user's brands when their ECOMM_MANAGER role is revoked from Access. */
+  async revokeApprovalForUser(userId: string) {
+    const docs = await EcommBrandModel.find({ owner_user_id: new Types.ObjectId(userId), status: 'APPROVED' });
+    for (const brand of docs) {
+      brand.status = 'REJECTED';
+      brand.rejected_at = new Date();
+      brand.reviewer_notes = 'Approval revoked — seller access was removed.';
+      await brand.save();
+    }
+    return true;
+  },
+
   /** Draft a brand shell from an approved onboarding-meeting request so it shows
    * in the Onboarded E-Commerce Brands list (status DRAFT). Reuses an open draft. */
   async createDraftFromApproval(prefill: { userId: string; name?: string; email?: string; phone?: string }) {

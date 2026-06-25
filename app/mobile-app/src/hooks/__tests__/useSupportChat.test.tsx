@@ -228,9 +228,21 @@ describe('useSupportChat', () => {
     await result.current.uploadAttachment({ base64: 'abc' });
     const upVars = mockRequest.mock.calls
       .filter((c) => JSON.stringify(c[0]).includes('uploadImageToImagekit'))
-      .at(-1)?.[1] as Record<string, string>;
+      .at(-1)?.[1] as Record<string, unknown>;
     expect(upVars.mimeType).toBe('image/jpeg');
     expect(upVars.fileName).toMatch(/^chat-\d+$/);
+    expect(upVars.allowDocuments).toBe(false);
+
+    // A document upload forwards allowDocuments + the real mime type (Bug 9).
+    await result.current.uploadAttachment(
+      { base64: 'pdf64', fileName: 'spec.pdf', mimeType: 'application/pdf' },
+      true,
+    );
+    const docVars = mockRequest.mock.calls
+      .filter((c) => JSON.stringify(c[0]).includes('uploadImageToImagekit'))
+      .at(-1)?.[1] as Record<string, unknown>;
+    expect(docVars.allowDocuments).toBe(true);
+    expect(docVars.mimeType).toBe('application/pdf');
 
     await expect(result.current.uploadAttachment({})).rejects.toThrow(/could not read/i);
   });
@@ -244,9 +256,22 @@ describe('useSupportChat', () => {
     expect(result.current.session?.status).toBe('CLOSED');
 
     await act(async () => {
-      await result.current.reopen();
+      await result.current.reopen('Still need help');
     });
     expect(result.current.session?.status).toBe('OPEN');
+    const reopenVars = mockRequest.mock.calls.find((c) =>
+      JSON.stringify(c[0]).includes('reopenSupportChat'),
+    )?.[1] as Record<string, unknown>;
+    expect(reopenVars).toEqual({ sessionId: 's1', reason: 'Still need help' });
+
+    // A blank reason is forwarded as null.
+    await act(async () => {
+      await result.current.reopen('   ');
+    });
+    const blankReopen = mockRequest.mock.calls
+      .filter((c) => JSON.stringify(c[0]).includes('reopenSupportChat'))
+      .at(-1)?.[1] as Record<string, unknown>;
+    expect(blankReopen).toEqual({ sessionId: 's1', reason: null });
 
     await act(async () => {
       await result.current.submitFeedback(5, 'great');
@@ -319,7 +344,7 @@ describe('useSupportChat', () => {
     await act(async () => {
       await result.current.send('hello');
       await result.current.resolve();
-      await result.current.reopen();
+      await result.current.reopen('x');
       await result.current.submitFeedback(5, 'x');
       await result.current.emailTranscript('a@b.com');
       result.current.emitTyping();

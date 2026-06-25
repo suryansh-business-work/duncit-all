@@ -32,6 +32,12 @@ jest.mock('expo-location', () => ({
   getCurrentPositionAsync: jest.fn(),
 }));
 
+// expo-document-picker is a native module; default to "cancelled" so the support
+// chat document attach is a no-op unless a spec overrides it.
+jest.mock('expo-document-picker', () => ({
+  getDocumentAsync: jest.fn().mockResolvedValue({ canceled: true, assets: null }),
+}));
+
 // expo-video is a native module; the player setup callback runs synchronously so
 // splash-video specs cover the loop/mute/play wiring without the native runtime.
 jest.mock('expo-video', () => ({

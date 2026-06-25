@@ -57,6 +57,11 @@ describe('MyTicketsList', () => {
     expect(screen.getByTestId('my-ticket-t2')).toBeOnTheScreen();
     expect(screen.getByText('ARCHIVED')).toBeOnTheScreen();
     expect(screen.getAllByText(/ST-/).length).toBeGreaterThan(0);
+    // Bug 4: each filter chip shows a count from the loaded tickets.
+    expect(screen.getByTestId('tickets-filter-ALL')).toHaveTextContent('All (3)');
+    expect(screen.getByTestId('tickets-filter-OPEN')).toHaveTextContent('Open (1)');
+    expect(screen.getByTestId('tickets-filter-CLOSED')).toHaveTextContent('Closed (1)');
+    expect(screen.getByTestId('tickets-filter-RESOLVED')).toHaveTextContent('Resolved (0)');
 
     // Filter to Resolved → none → per-filter empty message.
     fireEvent.press(screen.getByTestId('tickets-filter-RESOLVED'));

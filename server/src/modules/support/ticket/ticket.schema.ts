@@ -55,6 +55,10 @@ export const ticketTypeDefs = /* GraphQL */ `
     assignee_id: ID
     assignee_name: String
     last_message_at: String!
+    "When the ticket was resolved/closed (drives the reopen window)."
+    resolved_at: String
+    "Reopen is allowed by the user until this instant (null if not resolved/closed)."
+    reopen_deadline: String
     message_count: Int!
     messages: [TicketMessage!]!
     created_at: String!
@@ -84,8 +88,8 @@ export const ticketTypeDefs = /* GraphQL */ `
       attachments: [String!]
     ): Ticket!
     updateTicketStatus(ticket_id: ID!, status: TicketStatus!): Ticket!
-    "Re-open a resolved/closed ticket — allowed for the ticket owner or an agent."
-    reopenTicket(ticket_id: ID!): Ticket!
+    "Re-open a resolved/closed ticket (owner within 3 days, or an agent). Reason logged to the thread."
+    reopenTicket(ticket_id: ID!, reason: String): Ticket!
     assignTicket(ticket_id: ID!, assignee_id: ID): Ticket!
   }
 `;

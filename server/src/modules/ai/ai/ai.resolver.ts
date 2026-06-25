@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { importRemoteImage, pexelsSearch } from '@modules/platform/upload/upload.service';
 import { UserModel } from '@modules/access/user/user.model';
+import { analyticsService } from '@modules/platform/analytics/analytics.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
@@ -457,7 +458,12 @@ async function adminAiChat(prompt: string) {
       extensions: { code: 'AI_NOT_CONFIGURED' },
     });
   }
-  const context = await adminUserContext(prompt);
+  // Give the model live platform data so it can answer counts/summaries/trends
+  // instead of falling back to "I couldn't find any …". Best-effort.
+  const [context, platform] = await Promise.all([
+    adminUserContext(prompt),
+    analyticsService.dashboardTotals(null).catch(() => null),
+  ]);
   const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
   const body = {
     model,
@@ -466,14 +472,15 @@ async function adminAiChat(prompt: string) {
       {
         role: 'system',
         content: [
-          'You are the Duncit admin assistant. Answer only from the provided admin context and general UI guidance.',
+          'You are the Duncit admin assistant. Answer from the provided admin context: platform_stats (live data) and any matched users.',
+          'platform_stats holds REAL totals — users_total, pods_total, clubs_total, venues_total, hosts_total, support tickets (open/total/by status), and pods/clubs broken down by super category. Use these for any count, summary or trend question. Never say data is missing when platform_stats contains it.',
           'When user context contains profile_url, include that relative admin link exactly.',
-          'If the context is empty or insufficient, say what you could not find and ask for a clearer phone, email, or name.',
+          'Keep answers short, clear and easy to understand. Only ask for a clearer phone/email/name when the question is about a specific person you could not match.',
         ].join('\n'),
       },
       {
         role: 'user',
-        content: `Admin question: ${prompt.trim()}\n\nAdmin context JSON:\n${JSON.stringify({ users: context }, null, 2)}`,
+        content: `Admin question: ${prompt.trim()}\n\nAdmin context JSON:\n${JSON.stringify({ platform_stats: platform, users: context }, null, 2)}`,
       },
     ],
   };

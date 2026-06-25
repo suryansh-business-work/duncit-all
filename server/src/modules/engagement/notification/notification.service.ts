@@ -8,6 +8,7 @@ import {
   UserNotificationModel,
   type IUserNotification,
   PushSubscriptionModel,
+  ExpoPushTokenModel,
   PushKeyModel,
 } from './notification.model';
 import { UserModel } from '@modules/access/user/user.model';
@@ -127,6 +128,55 @@ export const notificationService = {
       })
     );
 
+    const expo = await this.fanOutExpoPush(notif, userIds);
+    return { delivered: delivered + expo.delivered, failed: failed + expo.failed };
+  },
+
+  /** Deliver to native devices via Expo's push service (chunks of 100). */
+  async fanOutExpoPush(notif: INotification, userIds: string[]) {
+    let delivered = 0;
+    let failed = 0;
+    if (userIds.length === 0) return { delivered, failed };
+    const tokens = await ExpoPushTokenModel.find({
+      user_id: { $in: userIds.map((id) => new Types.ObjectId(id)) },
+    }).lean();
+    if (tokens.length === 0) return { delivered, failed };
+
+    const messages = tokens.map((t: any) => ({
+      to: t.token as string,
+      sound: 'default',
+      title: notif.title,
+      body: notif.body,
+      data: { id: String(notif._id), link: notif.link_url ?? '/' },
+    }));
+
+    for (let i = 0; i < messages.length; i += 100) {
+      const chunk = messages.slice(i, i + 100);
+      try {
+        const res = await fetch('https://exp.host/--/api/v2/push/send', {
+          method: 'POST',
+          headers: { 'content-type': 'application/json', accept: 'application/json' },
+          body: JSON.stringify(chunk),
+        });
+        const json: any = await res.json().catch(() => ({}));
+        const receipts: any[] = Array.isArray(json?.data) ? json.data : [];
+        for (const [idx, receipt] of receipts.entries()) {
+          if (receipt?.status === 'ok') {
+            delivered++;
+          } else {
+            failed++;
+            // Drop tokens Expo reports as no longer registered.
+            if (receipt?.details?.error === 'DeviceNotRegistered' && chunk[idx]?.to) {
+              ExpoPushTokenModel.deleteOne({ token: chunk[idx].to }).catch(() => undefined);
+            }
+          }
+        }
+      } catch (err) {
+        failed += chunk.length;
+        // eslint-disable-next-line no-console
+        console.error('[notification] expo push failed:', err);
+      }
+    }
     return { delivered, failed };
   },
 
@@ -218,6 +268,23 @@ export const notificationService = {
 
   async deletePushSubscription(endpoint: string) {
     await PushSubscriptionModel.deleteOne({ endpoint });
+    return true;
+  },
+
+  /** Register/rebind a native Expo push token to the signed-in user. */
+  async saveExpoPushToken(userId: string, token: string, platform?: string | null) {
+    const clean = (token || '').trim();
+    if (!clean) throw new GraphQLError('Push token is required', { extensions: { code: 'BAD_USER_INPUT' } });
+    await ExpoPushTokenModel.updateOne(
+      { token: clean },
+      { $set: { user_id: new Types.ObjectId(userId), token: clean, platform: platform ?? null } },
+      { upsert: true }
+    );
+    return true;
+  },
+
+  async deleteExpoPushToken(token: string) {
+    await ExpoPushTokenModel.deleteOne({ token: (token || '').trim() });
     return true;
   },
 

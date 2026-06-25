@@ -53,6 +53,7 @@
           "photosPermission": "Allow Duncit to access your photos to post a status."
         }
       ],
+      "expo-document-picker",
       [
         "expo-location",
         {

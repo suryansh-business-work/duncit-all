@@ -3,10 +3,13 @@ import { Types } from 'mongoose';
 import { TicketModel, type ITicket, type TicketStatus, type TicketCategory } from './ticket.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { emitToSupportAgents, emitToSupportUser } from '@modules/support/supportChat/supportChat.socket';
+import { reopenDeadline, reopenExpired } from '@modules/support/reopenWindow';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
 }
+
+const REOPEN_EXPIRED_MSG = 'This ticket can no longer be reopened — the 3-day window has passed. Please raise a new ticket.';
 
 /** Statuses a user reply should re-open back to OPEN (they still have a question). */
 const USER_REOPENS = new Set<TicketStatus>(['PENDING', 'RESOLVED', 'CLOSED']);
@@ -44,6 +47,8 @@ async function toPub(doc: ITicket) {
     assignee_id: doc.assignee_id ? String(doc.assignee_id) : null,
     assignee_name: assignee?.name ?? null,
     last_message_at: doc.last_message_at?.toISOString?.() ?? '',
+    resolved_at: doc.resolved_at ? doc.resolved_at.toISOString() : null,
+    reopen_deadline: reopenDeadline(doc.resolved_at)?.toISOString() ?? null,
     message_count: doc.messages.length,
     messages: doc.messages.map((m) => ({
       id: String(m._id),
@@ -128,6 +133,10 @@ export const ticketService = {
     if (!isAgent && String(doc!.user_id) !== String(actorId)) {
       fail('FORBIDDEN', 'Cannot reply to another user’s ticket');
     }
+    // A user reply re-opens a resolved/closed ticket, but only within the 3-day window.
+    if (!isAgent && (doc!.status === 'RESOLVED' || doc!.status === 'CLOSED') && reopenExpired(doc!.resolved_at)) {
+      fail('BAD_USER_INPUT', REOPEN_EXPIRED_MSG);
+    }
 
     const meta = await actorMeta(actorId, isAgent ? 'AGENT' : 'USER');
     doc!.messages.push({
@@ -140,8 +149,12 @@ export const ticketService = {
     // An agent reply moves an OPEN ticket to PENDING (waiting on the user);
     // a user reply re-opens a pending/resolved/closed ticket so they can keep
     // the conversation going (Bug 3: question a resolved/closed ticket).
-    if (isAgent && doc!.status === 'OPEN') doc!.status = 'PENDING';
-    else if (!isAgent && USER_REOPENS.has(doc!.status)) doc!.status = 'OPEN';
+    if (isAgent && doc!.status === 'OPEN') {
+      doc!.status = 'PENDING';
+    } else if (!isAgent && USER_REOPENS.has(doc!.status)) {
+      doc!.status = 'OPEN';
+      doc!.resolved_at = null;
+    }
     await doc!.save();
 
     const pub = await toPub(doc!);
@@ -155,6 +168,8 @@ export const ticketService = {
     const doc = await TicketModel.findById(ticketId);
     if (!doc) fail('NOT_FOUND', 'Ticket not found');
     doc!.status = status;
+    // Stamp/clear the resolution time that drives the 3-day reopen window.
+    doc!.resolved_at = status === 'RESOLVED' || status === 'CLOSED' ? new Date() : null;
     await doc!.save();
     const pub = await toPub(doc!);
     emitToSupportAgents('ticket:update', pub);
@@ -162,14 +177,27 @@ export const ticketService = {
     return pub;
   },
 
-  async reopen(actorId: string, isAgent: boolean, ticketId: string) {
+  async reopen(actorId: string, isAgent: boolean, ticketId: string, reason?: string | null) {
     if (!Types.ObjectId.isValid(ticketId)) fail('BAD_USER_INPUT', 'Invalid ticket_id');
     const doc = await TicketModel.findById(ticketId);
     if (!doc) fail('NOT_FOUND', 'Ticket not found');
     if (!isAgent && String(doc!.user_id) !== String(actorId)) {
       fail('FORBIDDEN', 'Cannot reopen another user’s ticket');
     }
+    // Users may only reopen within the 3-day window; agents are unrestricted.
+    if (!isAgent && (doc!.status === 'RESOLVED' || doc!.status === 'CLOSED') && reopenExpired(doc!.resolved_at)) {
+      fail('BAD_USER_INPUT', REOPEN_EXPIRED_MSG);
+    }
+    // Log the reopen (with reason) into the thread for history.
+    const meta = await actorMeta(actorId, isAgent ? 'AGENT' : 'USER');
+    const trimmed = (reason || '').trim();
+    doc!.messages.push({
+      ...meta,
+      body_text: trimmed ? `Re-opened this ticket. Reason: ${trimmed}` : 'Re-opened this ticket.',
+      attachments: [],
+    } as any);
     doc!.status = 'OPEN';
+    doc!.resolved_at = null;
     doc!.last_message_at = new Date();
     await doc!.save();
     const pub = await toPub(doc!);

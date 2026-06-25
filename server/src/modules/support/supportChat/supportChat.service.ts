@@ -11,6 +11,7 @@ import { UserModel } from '@modules/access/user/user.model';
 import { emitToSupportAgents, emitToSupportUser, emitToSupportSession } from './supportChat.socket';
 import { ticketNo } from './unifiedTickets.service';
 import { aiSupportReply, isOpenAiConfigured, type SupportAiTurn } from './supportChat.ai';
+import { reopenDeadline, reopenExpired } from '@modules/support/reopenWindow';
 import { sendHtmlEmail } from '@services/email/email.service';
 
 function fail(code: string, msg: string): never {
@@ -70,6 +71,8 @@ async function sessionPub(doc: ISupportChatSession) {
     rating: doc.rating ?? null,
     feedback_comment: doc.feedback_comment || null,
     feedback_at: doc.feedback_at?.toISOString?.() ?? null,
+    resolved_at: doc.resolved_at ? doc.resolved_at.toISOString() : null,
+    reopen_deadline: reopenDeadline(doc.resolved_at)?.toISOString() ?? null,
     created_at: doc.created_at?.toISOString?.() ?? '',
     updated_at: doc.updated_at?.toISOString?.() ?? '',
   };
@@ -262,6 +265,7 @@ export const supportChatService = {
     const session = await SupportChatSessionModel.findById(sessionId);
     if (!session) fail('NOT_FOUND', 'Chat session not found');
     session!.status = 'CLOSED';
+    session!.resolved_at = new Date();
     await session!.save();
     const pub = await sessionPub(session!);
     emitToSupportAgents('support_chat:session_update', pub);
@@ -380,6 +384,7 @@ export const supportChatService = {
     const session = await SupportChatSessionModel.findById(sessionId);
     if (!session) fail('NOT_FOUND', 'Chat session not found');
     session!.status = 'CLOSED';
+    session!.resolved_at = new Date();
     await this.appendBubble(session!, {
       senderId: AI_SENDER_ID,
       role: 'SYSTEM',
@@ -389,20 +394,26 @@ export const supportChatService = {
     return sessionPub(session!);
   },
 
-  async reopen(sessionId: string, byLabel = 'the user') {
+  async reopen(sessionId: string, byLabel = 'the user', isAgent = false, reason?: string | null) {
     if (!Types.ObjectId.isValid(sessionId)) fail('BAD_USER_INPUT', 'Invalid session_id');
     const session = await SupportChatSessionModel.findById(sessionId);
     if (!session) fail('NOT_FOUND', 'Chat session not found');
+    // Users may only reopen within the 3-day window; agents are unrestricted.
+    if (!isAgent && reopenExpired(session!.resolved_at)) {
+      fail('BAD_USER_INPUT', 'This chat can no longer be reopened — the 3-day window has passed. Please start a new chat.');
+    }
     session!.status = 'OPEN';
+    session!.resolved_at = null;
     // Resurface to a human if one was already in the loop.
     if (session!.agent_id || session!.handed_off) {
       session!.unread_for_agent = (session!.unread_for_agent || 0) + 1;
     }
+    const trimmed = (reason || '').trim();
     await this.appendBubble(session!, {
       senderId: AI_SENDER_ID,
       role: 'SYSTEM',
       name: AI_NAME,
-      text: `Chat re-opened by ${byLabel}.`,
+      text: trimmed ? `Chat re-opened by ${byLabel}. Reason: ${trimmed}` : `Chat re-opened by ${byLabel}.`,
     });
     return sessionPub(session!);
   },

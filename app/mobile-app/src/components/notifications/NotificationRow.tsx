@@ -20,6 +20,11 @@ export function NotificationRow({
   const { onPrimary, primary, muted } = useThemeColors();
   const unread = !item.read_at;
   const notification = item.notification;
+  // Unread cards sit on the primary gradient (white ink); read cards sit on the
+  // light `$surface` card, so they take the theme ink colour `$color` (B-fix:
+  // `undefined` resolved to a near-invisible grey on the surface).
+  const titleColor = unread ? '#ffffff' : '$color';
+  const bodyColor = unread ? '#ffffff' : '$color';
   const ink = unread ? '#ffffff' : undefined;
 
   const body = (
@@ -45,7 +50,7 @@ export function NotificationRow({
       </YStack>
       <YStack flex={1} gap={2}>
         <XStack alignItems="center" gap={6}>
-          <Text flex={1} fontSize={15} fontWeight="900" color={ink ?? '$color'} numberOfLines={2}>
+          <Text flex={1} fontSize={15} fontWeight="900" color={titleColor} numberOfLines={2}>
             {notification.title}
           </Text>
           <Text fontSize={11} fontWeight="700" color={ink ?? muted} opacity={unread ? 0.9 : 1}>
@@ -56,8 +61,8 @@ export function NotificationRow({
           <Text
             flex={1}
             fontSize={13}
-            color={ink ?? '$muted'}
-            opacity={unread ? 0.92 : 1}
+            color={bodyColor}
+            opacity={unread ? 0.92 : 0.85}
             numberOfLines={2}
           >
             {notification.body}

@@ -354,6 +354,18 @@ export const venueService = {
     return r.deletedCount > 0;
   },
 
+  /** Un-approve a user's venues when their VENUE_OWNER role is revoked from Access. */
+  async revokeApprovalForUser(userId: string) {
+    const docs = await VenueModel.find({ owner_user_id: new Types.ObjectId(userId), status: 'APPROVED' });
+    for (const v of docs) {
+      v.status = 'REJECTED';
+      v.rejected_at = new Date();
+      v.reviewer_notes = 'Approval revoked — venue access was removed.';
+      await v.save();
+    }
+    return true;
+  },
+
   /** Draft a venue shell from an approved onboarding-meeting request so it shows
    * in the Onboarded Venues list (status DRAFT). Reuses the owner's open draft. */
   async createDraftFromApproval(prefill: { userId: string; name?: string; email?: string; phone?: string }) {

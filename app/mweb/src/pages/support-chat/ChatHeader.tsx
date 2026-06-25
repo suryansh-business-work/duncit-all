@@ -11,6 +11,8 @@ import EmailIcon from '@mui/icons-material/Email';
 interface Props {
   ticketNo: string | null;
   status: 'OPEN' | 'CLOSED' | null;
+  /** Whether the closed chat is still within the server reopen window. */
+  reopenable: boolean;
   onBack: () => void;
   onResolve: () => void;
   onReopen: () => void;
@@ -21,6 +23,7 @@ interface Props {
 export default function ChatHeader({
   ticketNo,
   status,
+  reopenable,
   onBack,
   onResolve,
   onReopen,
@@ -66,7 +69,7 @@ export default function ChatHeader({
             <CheckCircleIcon fontSize="small" sx={{ mr: 1 }} /> Mark resolved
           </MenuItem>
         ) : (
-          <MenuItem onClick={run(onReopen)}>
+          <MenuItem onClick={run(onReopen)} disabled={!reopenable}>
             <ReplayIcon fontSize="small" sx={{ mr: 1 }} /> Re-open chat
           </MenuItem>
         )}

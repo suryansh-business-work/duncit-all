@@ -326,7 +326,8 @@
       "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/server/src/modules/survey/**)",
       "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/onboarding/src/pages/meetings/**)",
       "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/portals/onboarding/src/**)",
-      "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/server/src/modules/access/**)"
+      "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/server/src/modules/access/**)",
+      "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/app/mweb/src/**)"
     ],
     "deny": [],
     "ask": [],

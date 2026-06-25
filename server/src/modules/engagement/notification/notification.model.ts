@@ -85,6 +85,26 @@ const pushSubscriptionSchema = new Schema<IPushSubscription>(
 
 export const PushSubscriptionModel = model<IPushSubscription>('PushSubscription', pushSubscriptionSchema);
 
+/** Native (Expo) push token per device — used to deliver push to iOS/Android. */
+export interface IExpoPushToken extends Document {
+  user_id: Types.ObjectId;
+  token: string;
+  platform?: string | null;
+  created_at: Date;
+  updated_at: Date;
+}
+
+const expoPushTokenSchema = new Schema<IExpoPushToken>(
+  {
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    token: { type: String, required: true, unique: true },
+    platform: { type: String, default: null },
+  },
+  { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
+);
+
+export const ExpoPushTokenModel = model<IExpoPushToken>('ExpoPushToken', expoPushTokenSchema);
+
 export interface IPushKey extends Document {
   key: string;
   publicKey: string;

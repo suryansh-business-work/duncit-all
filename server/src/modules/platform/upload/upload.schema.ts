@@ -112,6 +112,8 @@ export const uploadTypeDefs = /* GraphQL */ `
       fileName: String!
       mimeType: String
       folder: String
+      "Allow document files (PDF/Office/txt/csv) in addition to image/video — used by support chat attachments."
+      allow_documents: Boolean
     ): UploadedImage!
   }
 `;

@@ -3,7 +3,7 @@ import { useMutation } from '@apollo/client';
 import { Box, Button, Chip, CircularProgress, IconButton, Stack, TextField } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SendIcon from '@mui/icons-material/Send';
-import { UPLOAD_IMAGE } from './queries';
+import { UPLOAD_ATTACHMENT } from './queries';
 
 const MAX_BYTES = 100 * 1024 * 1024; // Bug 10: documents, images & videos up to 100 MB.
 const ACCEPT = 'image/*,video/*,application/pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx';
@@ -27,7 +27,7 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [uploadFile, { loading: uploading }] = useMutation(UPLOAD_IMAGE);
+  const [uploadFile, { loading: uploading }] = useMutation(UPLOAD_ATTACHMENT);
   const fileRef = useRef<HTMLInputElement | null>(null);
   const lastTyping = useRef(0);
 
@@ -52,7 +52,13 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
     try {
       const fileBase64 = await readAsDataUrl(file);
       const res = await uploadFile({
-        variables: { fileBase64, fileName: file.name, mimeType: file.type, folder: '/support-chat' },
+        variables: {
+          fileBase64,
+          fileName: file.name,
+          mimeType: file.type,
+          folder: '/support-chat',
+          allow_documents: true,
+        },
       });
       const url = res.data?.uploadImageToImagekit?.url;
       if (url) setAttachments((prev) => [...prev, url].slice(0, 5));

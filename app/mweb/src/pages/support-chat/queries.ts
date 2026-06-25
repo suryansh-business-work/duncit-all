@@ -1,6 +1,30 @@
 import { gql } from '@apollo/client';
 
-export { UPLOAD_IMAGE } from '../../components/media-picker-dialog/queries';
+/**
+ * Document-capable upload used by the chat composer. Unlike the image-only
+ * UPLOAD_IMAGE, this passes allow_documents:true so the server also accepts
+ * PDFs/Office/txt/csv when the real mimeType is supplied.
+ */
+export const UPLOAD_ATTACHMENT = gql`
+  mutation UploadSupportAttachment(
+    $fileBase64: String!
+    $fileName: String!
+    $mimeType: String
+    $folder: String
+    $allow_documents: Boolean
+  ) {
+    uploadImageToImagekit(
+      fileBase64: $fileBase64
+      fileName: $fileName
+      mimeType: $mimeType
+      folder: $folder
+      allow_documents: $allow_documents
+    ) {
+      url
+      fileId
+    }
+  }
+`;
 
 const SESSION_FIELDS = gql`
   fragment SupportChatSessionFields on SupportChatSession {
@@ -13,6 +37,8 @@ const SESSION_FIELDS = gql`
     agent_last_read_at
     user_last_read_at
     rating
+    resolved_at
+    reopen_deadline
   }
 `;
 
@@ -86,10 +112,12 @@ export const RESOLVE_SUPPORT_CHAT = gql`
 `;
 
 export const REOPEN_SUPPORT_CHAT = gql`
-  mutation ReopenMySupportChat($session_id: ID!) {
-    reopenSupportChat(session_id: $session_id) {
+  mutation ReopenMySupportChat($session_id: ID!, $reason: String) {
+    reopenSupportChat(session_id: $session_id, reason: $reason) {
       id
       status
+      resolved_at
+      reopen_deadline
     }
   }
 `;
@@ -129,6 +157,8 @@ export interface SupportChatSession {
   agent_last_read_at: string | null;
   user_last_read_at: string | null;
   rating: number | null;
+  resolved_at: string | null;
+  reopen_deadline: string | null;
 }
 
 export interface SupportChatMessage {

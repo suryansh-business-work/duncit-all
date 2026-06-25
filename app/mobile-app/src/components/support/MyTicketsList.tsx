@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { ListSkeleton } from '@/components/Skeleton';
 import { useTickets } from '@/hooks/useSupport';
+import { ticketNo } from '@/components/support/TicketMeta';
 import type { RootStackParamList } from '@/navigation/types';
 
 type Filter = 'ALL' | 'OPEN' | 'PENDING' | 'RESOLVED' | 'CLOSED';
@@ -17,11 +18,6 @@ const LABEL: Record<Filter, string> = {
   CLOSED: 'Closed',
 };
 
-/** Short ticket number derived from the id — matches the server's ST- scheme. */
-function ticketNo(id: string): string {
-  return `ST-${id.slice(-6).toUpperCase()}`;
-}
-
 /**
  * The user's own support tickets with Open/Pending/Resolved/Closed filter chips
  * (Bug 4). Mirrors mWeb's MyTicketsList; rows open the ticket detail thread.
@@ -32,6 +28,9 @@ export function MyTicketsList() {
   const [filter, setFilter] = useState<Filter>('ALL');
 
   const items = filter === 'ALL' ? tickets : tickets.filter((t) => t.status === filter);
+  // Count per status filter, computed from the loaded tickets (Bug 4).
+  const countFor = (f: Filter) =>
+    f === 'ALL' ? tickets.length : tickets.filter((t) => t.status === f).length;
 
   return (
     <YStack gap={10} testID="my-tickets-list">
@@ -57,7 +56,7 @@ export function MyTicketsList() {
               pressStyle={{ opacity: 0.85 }}
             >
               <Text fontSize={12} fontWeight="800" color={active ? '$onPrimary' : '$muted'}>
-                {LABEL[f]}
+                {LABEL[f]} ({countFor(f)})
               </Text>
             </XStack>
           );

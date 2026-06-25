@@ -5,8 +5,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
+import { TicketMeta } from '@/components/support/TicketMeta';
+import { TicketReopenFooter } from '@/components/support/TicketReopenFooter';
+import { ReopenReasonModal } from '@/components/support-chat/SupportChatModals';
 import { useTicketDetails } from '@/hooks/useUnifiedTickets';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { canReopen } from '@/utils/support-chat';
+import { formatDateTime } from '@/utils/date-format';
 import { toErrorMessage } from '@/utils/errors';
 import type { RootStackParamList } from '@/navigation/types';
 
@@ -19,8 +24,13 @@ export function TicketDetailsScreen() {
   const [text, setText] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
-  // A resolved/closed ticket can be re-opened so the user can question it (Bug 3).
-  const reopenable = ticket?.status === 'RESOLVED' || ticket?.status === 'CLOSED';
+  const [reopenOpen, setReopenOpen] = useState(false);
+  const [reopenBusy, setReopenBusy] = useState(false);
+  const [reopenError, setReopenError] = useState('');
+  // A resolved/closed ticket can be re-opened until the server's deadline (Bug 3/11).
+  const resolved = ticket?.status === 'RESOLVED' || ticket?.status === 'CLOSED';
+  const reopenable = resolved && canReopen(ticket?.reopen_deadline);
+  const reopenDeadlineLabel = ticket?.reopen_deadline ? formatDateTime(ticket.reopen_deadline) : '';
 
   const submit = async () => {
     if (busy || !text.trim()) return;
@@ -36,16 +46,16 @@ export function TicketDetailsScreen() {
     }
   };
 
-  const doReopen = async () => {
-    if (busy) return;
-    setBusy(true);
-    setError('');
+  const onReopenSubmit = async (reason: string) => {
+    setReopenBusy(true);
+    setReopenError('');
     try {
-      await reopen();
+      await reopen(reason);
+      setReopenOpen(false);
     } catch (e) {
-      setError(toErrorMessage(e, 'Could not re-open the ticket.'));
+      setReopenError(toErrorMessage(e, 'Could not re-open the ticket.'));
     } finally {
-      setBusy(false);
+      setReopenBusy(false);
     }
   };
 
@@ -65,18 +75,18 @@ export function TicketDetailsScreen() {
   } else {
     ticketBody = (
       <YStack flex={1}>
-        <YStack padding={16} gap={4} borderBottomWidth={1} borderColor="$borderColor">
+        <YStack padding={16} gap={6} borderBottomWidth={1} borderColor="$borderColor">
           <Text fontSize={16} fontWeight="900" color="$color">
             {ticket.subject}
           </Text>
-          <XStack gap={8}>
-            <Text fontSize={12} fontWeight="800" color="$muted">
-              {ticket.category}
-            </Text>
-            <Text fontSize={12} fontWeight="800" color="$primary">
-              {ticket.status}
-            </Text>
-          </XStack>
+          <TicketMeta
+            id={ticket.id}
+            status={ticket.status}
+            category={ticket.category}
+            priority={ticket.priority}
+            createdAt={ticket.created_at}
+            updatedAt={ticket.updated_at ?? ticket.last_message_at}
+          />
         </YStack>
         <ScrollView flex={1} contentContainerStyle={{ padding: 16, gap: 10 }}>
           {ticket.messages.map((m) => {
@@ -108,30 +118,15 @@ export function TicketDetailsScreen() {
             {error}
           </Text>
         ) : null}
-        {reopenable ? (
-          <XStack
-            testID="ticket-reopen"
-            role="button"
-            aria-label="Re-open ticket"
-            onPress={() => void doReopen()}
-            margin={12}
-            marginBottom={0}
-            height={42}
-            alignItems="center"
-            justifyContent="center"
-            gap={8}
-            borderRadius={999}
-            borderWidth={1}
-            borderColor="$primary"
-            opacity={busy ? 0.6 : 1}
-            pressStyle={{ opacity: 0.85 }}
-          >
-            <MaterialIcons name="replay" size={18} color={ink} />
-            <Text fontSize={13} fontWeight="800" color="$primary">
-              Re-open ticket
-            </Text>
-          </XStack>
-        ) : null}
+        <TicketReopenFooter
+          reopenable={reopenable}
+          expired={resolved && !reopenable}
+          deadlineLabel={reopenDeadlineLabel}
+          onReopen={() => {
+            setReopenError('');
+            setReopenOpen(true);
+          }}
+        />
         <XStack gap={8} padding={12} alignItems="center">
           <XStack
             flex={1}
@@ -176,6 +171,14 @@ export function TicketDetailsScreen() {
   return (
     <StackScreen title="Ticket Details" testID="ticket-details-screen">
       {ticketBody}
+      <ReopenReasonModal
+        open={reopenOpen}
+        busy={reopenBusy}
+        error={reopenError}
+        deadlineLabel={reopenDeadlineLabel}
+        onSubmit={(reason) => void onReopenSubmit(reason)}
+        onClose={() => setReopenOpen(false)}
+      />
     </StackScreen>
   );
 }

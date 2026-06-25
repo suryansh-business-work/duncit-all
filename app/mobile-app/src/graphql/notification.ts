@@ -36,3 +36,17 @@ export const MobileMarkAllNotificationsReadDocument = gql(`
     markAllNotificationsRead
   }
 `);
+
+/** Register/rebind this device's Expo push token to the signed-in user (BUG-C). */
+export const MobileSaveExpoPushTokenDocument = gql(`
+  mutation MobileSaveExpoPushToken($token: String!, $platform: String) {
+    saveExpoPushToken(token: $token, platform: $platform)
+  }
+`);
+
+/** Unbind this device's Expo push token on logout (BUG-C). */
+export const MobileDeleteExpoPushTokenDocument = gql(`
+  mutation MobileDeleteExpoPushToken($token: String!) {
+    deleteExpoPushToken(token: $token)
+  }
+`);

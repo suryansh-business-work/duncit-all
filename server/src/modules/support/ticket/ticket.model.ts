@@ -44,6 +44,8 @@ export interface ITicket extends Document {
   priority: TicketPriority;
   assignee_id: Types.ObjectId | null;
   last_message_at: Date;
+  /** When the ticket was moved to RESOLVED/CLOSED — drives the 3-day reopen window. */
+  resolved_at: Date | null;
   messages: Types.DocumentArray<ITicketMessage>;
   created_at: Date;
   updated_at: Date;
@@ -72,6 +74,7 @@ const ticketSchema = new Schema<ITicket>(
     },
     assignee_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     last_message_at: { type: Date, default: Date.now, index: true },
+    resolved_at: { type: Date, default: null },
     messages: { type: [messageSchema], default: [] },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

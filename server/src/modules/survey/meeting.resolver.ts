@@ -37,13 +37,13 @@ export const meetingResolvers = {
       const user = requireAuth(ctx);
       return meetingService.request(user.id, args.kind, args.input);
     },
-    rescheduleMyMeeting: (_p: unknown, args: { kind: SurveyKind; requested_at: string }, ctx: GraphQLContext) => {
+    rescheduleMyMeeting: (_p: unknown, args: { kind: SurveyKind; requested_at: string; reason?: string | null }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      return meetingService.rescheduleMyMeeting(user.id, args.kind, args.requested_at);
+      return meetingService.rescheduleMyMeeting(user.id, args.kind, args.requested_at, args.reason ?? null);
     },
-    cancelMyMeeting: (_p: unknown, args: { kind: SurveyKind }, ctx: GraphQLContext) => {
+    cancelMyMeeting: (_p: unknown, args: { kind: SurveyKind; reason?: string | null }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      return meetingService.cancelMyMeeting(user.id, args.kind);
+      return meetingService.cancelMyMeeting(user.id, args.kind, args.reason ?? null);
     },
     updateMeeting: (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, ONBOARDING_RW);

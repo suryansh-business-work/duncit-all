@@ -50,6 +50,8 @@ export interface MyMeeting {
   requested_at: string;
   scheduled_at?: string | null;
   meeting_link?: string | null;
+  /** Times the user has rescheduled — reschedule is one-time (0 = not yet used). */
+  reschedule_count?: number | null;
 }
 export interface MyMeetingResult {
   myMeeting: MyMeeting | null;
@@ -59,6 +61,10 @@ export interface RequestMeetingInput {
   notes?: string | null;
   contact_name?: string | null;
   contact_phone?: string | null;
+  /** Taxonomy the applicant chose in the gate — shown on the onboarding listing. */
+  super_category_id?: string | null;
+  category_id?: string | null;
+  sub_category_id?: string | null;
 }
 export interface MeetingSlot {
   start_at: string;
@@ -116,6 +122,7 @@ export const MyMeetingDocument = parse(`
       requested_at
       scheduled_at
       meeting_link
+      reschedule_count
     }
   }
 `);
@@ -137,14 +144,19 @@ export const MeetingSlotsDocument = parse(`
 `);
 
 export const RescheduleMyMeetingDocument = parse(`
-  mutation RescheduleMyMeeting($kind: SurveyKind!, $requested_at: String!) {
-    rescheduleMyMeeting(kind: $kind, requested_at: $requested_at) { id requested_at status }
+  mutation RescheduleMyMeeting($kind: SurveyKind!, $requested_at: String!, $reason: String) {
+    rescheduleMyMeeting(kind: $kind, requested_at: $requested_at, reason: $reason) {
+      id
+      requested_at
+      status
+      reschedule_count
+    }
   }
 `);
 
 export const CancelMyMeetingDocument = parse(`
-  mutation CancelMyMeeting($kind: SurveyKind!) {
-    cancelMyMeeting(kind: $kind) { id status }
+  mutation CancelMyMeeting($kind: SurveyKind!, $reason: String) {
+    cancelMyMeeting(kind: $kind, reason: $reason) { id status }
   }
 `);
 
@@ -156,6 +168,7 @@ export const MyMeetingsDocument = parse(`
       status
       requested_at
       scheduled_at
+      reschedule_count
     }
   }
 `);

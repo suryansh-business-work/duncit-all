@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { MeetingAvailabilityModel, MeetingHolidayModel, MeetingModel, type MeetingAvailabilityDoc, type HolidayType, type MeetingStatus } from './meeting.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { CategoryModel } from '@modules/pods/category/category.model';
 import { leadSurveyService } from './leadSurvey.service';
 import { surveyService } from './survey.service';
 import { approvalService } from '@modules/approval/approval.service';
@@ -15,17 +16,23 @@ import {
 } from '@services/email/email.service';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
+const oid = (v?: string | null) => (v ? new Types.ObjectId(v) : null);
 
-const pub = (doc: any, names?: Map<string, { name: string; email: string }>) => {
+const pub = (doc: any, names?: Map<string, { name: string; email: string }>, catNames?: Map<string, string>) => {
   if (!doc) return null;
   const o = doc.toObject ? doc.toObject() : doc;
   const u = names?.get(String(o.user_id));
+  const cat = (id: any) => (id && catNames ? catNames.get(String(id)) ?? null : null);
   return {
     id: String(o._id),
     kind: o.kind,
     user_id: String(o.user_id),
     user_name: u?.name ?? null,
     user_email: u?.email ?? null,
+    super_category_name: cat(o.super_category_id),
+    category_name: cat(o.category_id),
+    sub_category_name: cat(o.sub_category_id),
+    reschedule_count: o.reschedule_count ?? 0,
     requested_at: iso(o.requested_at),
     scheduled_at: iso(o.scheduled_at),
     meeting_link: o.meeting_link ?? null,
@@ -56,6 +63,30 @@ async function userMap(ids: string[]): Promise<Map<string, { name: string; email
       },
     ]),
   );
+}
+
+/** Batch-resolve category names for the super/category/sub ids on the docs. */
+async function categoryNameMap(docs: any[]): Promise<Map<string, string>> {
+  const ids = new Set<string>();
+  for (const d of docs) {
+    for (const k of ['super_category_id', 'category_id', 'sub_category_id'] as const) {
+      if (d[k]) ids.add(String(d[k]));
+    }
+  }
+  if (ids.size === 0) return new Map();
+  const cats = await CategoryModel.find({ _id: { $in: [...ids] } }).select('name').lean();
+  return new Map(cats.map((c: any) => [String(c._id), c.name as string]));
+}
+
+/** Best-effort in-app (Notification Center) message to a single user. */
+async function notifyUserInApp(userId: string, title: string, body: string) {
+  try {
+    const { notificationService } = await import('@modules/engagement/notification/notification.service');
+    await notificationService.create({ title, body, scope: 'USER', target_user_ids: [userId], silent: false });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[meeting] in-app notification failed:', err);
+  }
 }
 
 /** Active onboarding staff who should be CC'd when a meeting is scheduled. */
@@ -338,16 +369,29 @@ export const meetingService = {
   async request(
     userId: string,
     kind: SurveyKind,
-    input: { requested_at: string; notes?: string | null; contact_name?: string | null; contact_phone?: string | null },
+    input: {
+      requested_at: string;
+      notes?: string | null;
+      contact_name?: string | null;
+      contact_phone?: string | null;
+      super_category_id?: string | null;
+      category_id?: string | null;
+      sub_category_id?: string | null;
+    },
   ) {
     if (!input.requested_at) throw new GraphQLError('A preferred date & time is required', { extensions: { code: 'BAD_USER_INPUT' } });
     if (!input.contact_phone?.trim()) {
       throw new GraphQLError('Phone number is required so our onboarding team can reach you', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    // Slot race: another user may have just taken (or overlap) this instant.
-    const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeUserId: userId }), slotWindowMs()]);
+    // Slot race: block other users AND this user's other-kind meetings at the
+    // same instant — only the caller's own meeting for THIS kind is excluded.
+    const own = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind }).select('_id');
+    const [busy, slotMs] = await Promise.all([
+      occupiedInstants(own ? { excludeMeetingId: String(own._id) } : {}),
+      slotWindowMs(),
+    ]);
     if (isTaken(new Date(input.requested_at).getTime(), busy, slotMs)) {
-      throw new GraphQLError('That slot was just booked — please pick another one', { extensions: { code: 'CONFLICT' } });
+      throw new GraphQLError('That slot is already booked — please pick another one', { extensions: { code: 'CONFLICT' } });
     }
     if (await isHolidayInstant(input.requested_at)) {
       throw new GraphQLError(HOLIDAY_BLOCKED, { extensions: { code: 'CONFLICT' } });
@@ -362,10 +406,17 @@ export const meetingService = {
           notes: input.notes ?? null,
           contact_name: input.contact_name ?? null,
           contact_phone: input.contact_phone ?? null,
+          super_category_id: oid(input.super_category_id),
+          category_id: oid(input.category_id),
+          sub_category_id: oid(input.sub_category_id),
           status: 'REQUESTED',
           scheduled_at: null,
           meeting_link: null,
           cancel_reason: null,
+          reschedule_count: 0,
+          reschedule_reason: null,
+          approval_status: 'NONE',
+          feedback: null,
           dismissed: false,
         },
       },
@@ -386,13 +437,18 @@ export const meetingService = {
 
   /** User moves their own meeting to a new open slot. Contact details are kept;
    * any staff scheduling is reset since the time changed. */
-  async rescheduleMyMeeting(userId: string, kind: SurveyKind, requestedAt: string) {
+  async rescheduleMyMeeting(userId: string, kind: SurveyKind, requestedAt: string, reason?: string | null) {
     if (!requestedAt) throw new GraphQLError('A new date & time is required', { extensions: { code: 'BAD_USER_INPUT' } });
     const doc = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind });
     if (!doc) throw notFound();
-    const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeUserId: userId }), slotWindowMs()]);
+    // Reschedule is a one-time option.
+    if ((doc.reschedule_count ?? 0) >= 1) {
+      throw new GraphQLError('You have already used your one-time reschedule option', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    // Block other users' slots and the user's own other-kind meetings.
+    const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeMeetingId: String(doc._id) }), slotWindowMs()]);
     if (isTaken(new Date(requestedAt).getTime(), busy, slotMs)) {
-      throw new GraphQLError('That slot was just booked — please pick another one', { extensions: { code: 'CONFLICT' } });
+      throw new GraphQLError('That slot is already booked — please pick another one', { extensions: { code: 'CONFLICT' } });
     }
     if (await isHolidayInstant(requestedAt)) {
       throw new GraphQLError(HOLIDAY_BLOCKED, { extensions: { code: 'CONFLICT' } });
@@ -401,17 +457,19 @@ export const meetingService = {
     doc.scheduled_at = null;
     doc.meeting_link = null;
     doc.status = 'REQUESTED';
+    doc.reschedule_count = (doc.reschedule_count ?? 0) + 1;
+    doc.reschedule_reason = reason?.trim() || null;
     await doc.save();
     await notifyApplicant(doc, 'booked');
     return pub(doc);
   },
 
   /** User cancels their own meeting — frees the slot and unlocks the Earn card. */
-  async cancelMyMeeting(userId: string, kind: SurveyKind) {
+  async cancelMyMeeting(userId: string, kind: SurveyKind, reason?: string | null) {
     const doc = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind });
     if (!doc) throw notFound();
     doc.status = 'CANCELLED';
-    doc.cancel_reason = null;
+    doc.cancel_reason = reason?.trim() || null;
     await doc.save();
     await notifyApplicant(doc, 'cancelled');
     return pub(doc);
@@ -433,6 +491,11 @@ export const meetingService = {
       doc,
       'cancelled',
       `Reason: ${reason.trim()}. Please fill the survey again and book a new slot from Earn with Duncit.`,
+    );
+    await notifyUserInApp(
+      String(doc.user_id),
+      'Onboarding meeting cancelled',
+      `Your ${MEETING_KIND_LABELS[doc.kind] ?? 'onboarding'} meeting was cancelled. Reason: ${reason.trim()}`,
     );
     return pub(doc);
   },
@@ -462,8 +525,8 @@ export const meetingService = {
     if (doc.status !== 'DONE') {
       throw new GraphQLError('Mark the meeting as done before sending feedback', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    if (doc.approval_status === 'PENDING' || doc.approval_status === 'APPROVED') {
-      throw new GraphQLError('Feedback for this meeting is already with the Admin', { extensions: { code: 'BAD_USER_INPUT' } });
+    if (doc.approval_status !== 'NONE') {
+      throw new GraphQLError('Feedback has already been sent for this meeting', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const [names, responses] = await Promise.all([
       userMap([String(doc.user_id)]),
@@ -527,8 +590,11 @@ export const meetingService = {
       q.$or = [{ scheduled_at: range(filter) }, { scheduled_at: null, requested_at: range(filter) }];
     }
     const docs = await MeetingModel.find(q).sort({ scheduled_at: 1, requested_at: 1 });
-    const names = await userMap(docs.map((d: any) => String(d.user_id)));
-    return docs.map((d) => pub(d, names));
+    const [names, catNames] = await Promise.all([
+      userMap(docs.map((d: any) => String(d.user_id))),
+      categoryNameMap(docs),
+    ]);
+    return docs.map((d) => pub(d, names, catNames));
   },
 
   /** Onboarding staff schedule/track a meeting (date, link, status, notes). */
@@ -568,6 +634,11 @@ export const meetingService = {
         // eslint-disable-next-line no-console
         console.error('[meeting.update] notifyScheduled failed:', err);
       }
+      await notifyUserInApp(
+        String(doc.user_id),
+        'Onboarding meeting scheduled',
+        `Your ${MEETING_KIND_LABELS[doc.kind] ?? 'onboarding'} meeting is scheduled for ${slotLabel(iso(doc.scheduled_at))}.`,
+      );
     }
     return pub(doc);
   },

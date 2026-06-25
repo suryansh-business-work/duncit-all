@@ -20,6 +20,9 @@ export interface MeetingInput {
   notes?: string | null;
   contact_name?: string | null;
   contact_phone?: string | null;
+  super_category_id?: string | null;
+  category_id?: string | null;
+  sub_category_id?: string | null;
 }
 
 interface Props {

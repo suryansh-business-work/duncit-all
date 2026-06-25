@@ -1,6 +1,13 @@
+import { useQuery } from '@apollo/client';
 import { Box, Button, Chip, Divider, Drawer, IconButton, Link, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
-import type { MeetingStatus, OnboardingMeeting, SurveyKind } from './queries';
+import {
+  USER_SURVEY_RESPONSES,
+  type MeetingStatus,
+  type OnboardingMeeting,
+  type SurveyKind,
+  type UserSurveyResponse,
+} from './queries';
 
 const STATUS_COLOR: Record<MeetingStatus, 'default' | 'info' | 'success' | 'error'> = {
   REQUESTED: 'default',
@@ -21,25 +28,45 @@ interface Props {
 function DetailRow({ label, value }: Readonly<{ label: string; value: string }>) {
   return (
     <Box>
-      <Typography variant="caption" color="text.secondary" fontWeight={700}>
-        {label}
-      </Typography>
+      <Typography variant="caption" color="text.secondary" fontWeight={700}>{label}</Typography>
       <Typography variant="body2">{value}</Typography>
     </Box>
   );
 }
 
-// Right-side details drawer for a single onboarding meeting. Read-only; the
-// schedule page also passes edit/cancel actions, the calendar does not.
+/** Read-only survey answers the applicant submitted for this kind. */
+function SurveyAnswers({ userId, kind }: Readonly<{ userId: string; kind: SurveyKind }>) {
+  const { data, loading } = useQuery<{ userSurveyResponses: UserSurveyResponse[] }>(USER_SURVEY_RESPONSES, {
+    variables: { user_id: userId },
+    fetchPolicy: 'cache-and-network',
+  });
+  const items = (data?.userSurveyResponses ?? []).filter((r) => r.kind === kind).flatMap((r) => r.items ?? []);
+  return (
+    <Box>
+      <Typography variant="caption" color="text.secondary" fontWeight={700}>Survey answers</Typography>
+      {loading && items.length === 0 && <Typography variant="body2" color="text.secondary">Loading…</Typography>}
+      {!loading && items.length === 0 && <Typography variant="body2" color="text.secondary">No survey answers on file.</Typography>}
+      <Stack spacing={0.75} sx={{ mt: 0.5 }}>
+        {items.map((it) => (
+          <Box key={`${it.label}-${it.answer}`}>
+            <Typography variant="caption" color="text.secondary">{it.label}</Typography>
+            <Typography variant="body2">{it.answer || '—'}</Typography>
+          </Box>
+        ))}
+      </Stack>
+    </Box>
+  );
+}
+
+// Right-side details drawer for a single onboarding meeting (incl. survey answers).
 export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCancel }: Readonly<Props>) {
   const cancellable = !!meeting && (meeting.status === 'REQUESTED' || meeting.status === 'SCHEDULED');
+  const blocked = !!meeting && (meeting.status === 'CANCELLED' || meeting.approval_status === 'DENIED');
+  const catPath = meeting
+    ? [meeting.super_category_name, meeting.category_name, meeting.sub_category_name].filter(Boolean).join(' › ')
+    : '';
   return (
-    <Drawer
-      anchor="right"
-      open={!!meeting}
-      onClose={onClose}
-      PaperProps={{ sx: { width: { xs: '100%', sm: 380 } } }}
-    >
+    <Drawer anchor="right" open={!!meeting} onClose={onClose} PaperProps={{ sx: { width: { xs: '100%', sm: 380 } } }}>
       {meeting && (
         <Stack spacing={2} sx={{ p: 2 }}>
           <Stack direction="row" justifyContent="space-between" alignItems="flex-start">
@@ -51,56 +78,36 @@ export default function MeetingDetailsDrawer({ meeting, onClose, onEdit, onCance
                 {meeting.user_name || meeting.contact_name || 'Applicant'}
               </Typography>
             </Box>
-            <IconButton size="small" onClick={onClose} aria-label="Close">
-              <CloseIcon />
-            </IconButton>
+            <IconButton size="small" onClick={onClose} aria-label="Close"><CloseIcon /></IconButton>
           </Stack>
 
-          <Chip
-            size="small"
-            color={STATUS_COLOR[meeting.status]}
-            label={meeting.status}
-            sx={{ alignSelf: 'flex-start', fontWeight: 800 }}
-          />
+          <Chip size="small" color={STATUS_COLOR[meeting.status]} label={meeting.status} sx={{ alignSelf: 'flex-start', fontWeight: 800 }} />
 
+          {catPath && <DetailRow label="Category" value={catPath} />}
           <DetailRow label="Requested for" value={fmt(meeting.requested_at)} />
           <DetailRow label="Scheduled" value={fmt(meeting.scheduled_at)} />
-          <DetailRow
-            label="Contact"
-            value={[meeting.user_email, meeting.contact_phone].filter(Boolean).join(' · ') || '—'}
-          />
+          <DetailRow label="Contact" value={[meeting.user_email, meeting.contact_phone].filter(Boolean).join(' · ') || '—'} />
 
-          {meeting.meeting_link && (
+          {meeting.meeting_link && !blocked && (
             <Box>
-              <Typography variant="caption" color="text.secondary" fontWeight={700}>
-                Meeting link
-              </Typography>
+              <Typography variant="caption" color="text.secondary" fontWeight={700}>Meeting link</Typography>
               <Box>
-                <Link href={meeting.meeting_link} target="_blank" rel="noopener" variant="body2">
-                  Join meeting
-                </Link>
+                <Link href={meeting.meeting_link} target="_blank" rel="noopener" variant="body2">Join meeting</Link>
               </Box>
             </Box>
           )}
           {meeting.notes && <DetailRow label="Notes" value={meeting.notes} />}
-          {meeting.status === 'CANCELLED' && meeting.cancel_reason && (
-            <DetailRow label="Cancel reason" value={meeting.cancel_reason} />
-          )}
+          {meeting.status === 'CANCELLED' && meeting.cancel_reason && <DetailRow label="Cancel reason" value={meeting.cancel_reason} />}
 
-          {(onEdit || onCancel) && (
+          <Divider />
+          {meeting.user_id && <SurveyAnswers userId={meeting.user_id} kind={meeting.kind} />}
+
+          {(onEdit || onCancel) && !blocked && (
             <>
               <Divider />
               <Stack direction="row" spacing={1}>
-                {onEdit && (
-                  <Button variant="contained" onClick={() => onEdit(meeting)}>
-                    Schedule
-                  </Button>
-                )}
-                {onCancel && cancellable && (
-                  <Button color="error" onClick={() => onCancel(meeting)}>
-                    Cancel
-                  </Button>
-                )}
+                {onEdit && <Button variant="contained" onClick={() => onEdit(meeting)}>Schedule</Button>}
+                {onCancel && cancellable && <Button color="error" onClick={() => onCancel(meeting)}>Cancel</Button>}
               </Stack>
             </>
           )}

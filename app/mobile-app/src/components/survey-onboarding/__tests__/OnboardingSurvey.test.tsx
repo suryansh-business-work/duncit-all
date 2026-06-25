@@ -145,9 +145,11 @@ describe('OnboardingSurvey', () => {
     expect(await screen.findByText('About')).toBeOnTheScreen();
     expect(screen.getByText('Tell us more')).toBeOnTheScreen();
 
-    // Submit with required unanswered -> validation error.
+    // Submit with required unanswered -> validation error + inline messages.
     fireEvent.press(screen.getByTestId('primary-action'));
-    expect(await screen.findByText(/Please answer: Name/)).toBeOnTheScreen();
+    expect(await screen.findByText(/Please answer all required questions/)).toBeOnTheScreen();
+    expect(screen.getByTestId('required-q1')).toBeOnTheScreen();
+    expect(screen.getByTestId('required-q3')).toBeOnTheScreen();
 
     // Fill text, textarea, single MCQ, toggle multi MCQ (on then off then on).
     fireEvent.changeText(screen.getByTestId('q-q1'), 'Asha');

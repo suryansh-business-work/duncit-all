@@ -109,6 +109,7 @@ describe('EarnScreen', () => {
     });
     renderWithProviders(<EarnScreen />);
     fireEvent.press(await screen.findByTestId('cancel-VENUE'));
+    fireEvent.changeText(screen.getByTestId('cancel-reason'), 'Changed my mind');
     fireEvent.press(screen.getByTestId('cancel-confirm'));
     await waitFor(() => expect(screen.queryByTestId('cancel-dialog')).toBeNull(), {
       timeout: 5000,

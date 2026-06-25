@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { Autocomplete, Button, Stack, TextField } from '@mui/material';
+import { Alert, Autocomplete, Button, Stack, TextField } from '@mui/material';
 import { CATEGORIES, type CategoryLevel, type CategoryOption } from './queries';
 
 export interface CategoryScope {
@@ -30,14 +30,32 @@ const useLevel = (level: CategoryLevel, parentId: string) => {
 /** Super → Category → Sub picker shown before the survey; resolves which survey to ask. */
 export default function CategoryStep({ submitting, onContinue }: Readonly<Props>) {
   const [scope, setScope] = useState<CategoryScope>({ super_category_id: '', category_id: '', sub_category_id: '' });
+  const [error, setError] = useState<string | null>(null);
   const supers = useLevel('SUPER', '');
   const cats = useLevel('CATEGORY', scope.super_category_id);
   const subs = useLevel('SUB', scope.category_id);
 
   const pick = (level: keyof CategoryScope, id: string) => {
+    setError(null);
     if (level === 'super_category_id') setScope({ super_category_id: id, category_id: '', sub_category_id: '' });
     else if (level === 'category_id') setScope((s) => ({ ...s, category_id: id, sub_category_id: '' }));
     else setScope((s) => ({ ...s, sub_category_id: id }));
+  };
+
+  // A level is required only when it actually has options to choose from —
+  // a leaf super/category has no children, so we don't dead-end the user.
+  const firstMissing = (): string | null => {
+    if (!scope.super_category_id) return 'Please select a Super Category.';
+    if (cats.options.length > 0 && !scope.category_id) return 'Please select a Category.';
+    if (subs.options.length > 0 && !scope.sub_category_id) return 'Please select a Sub-Category.';
+    return null;
+  };
+
+  const onSubmit = () => {
+    const missing = firstMissing();
+    if (missing) { setError(missing); return; }
+    setError(null);
+    onContinue(scope);
   };
 
   const field = (
@@ -58,16 +76,20 @@ export default function CategoryStep({ submitting, onContinue }: Readonly<Props>
     />
   );
 
+  const catRequired = cats.options.length > 0;
+  const subRequired = subs.options.length > 0;
+
   return (
     <Stack spacing={2}>
-      {field('Super category *', 'super_category_id', supers.options, supers.loading, false)}
-      {field('Category', 'category_id', cats.options, cats.loading, !scope.super_category_id)}
-      {field('Sub category', 'sub_category_id', subs.options, subs.loading, !scope.category_id)}
+      {field('Super Category *', 'super_category_id', supers.options, supers.loading, false)}
+      {field(catRequired ? 'Category *' : 'Category', 'category_id', cats.options, cats.loading, !scope.super_category_id)}
+      {field(subRequired ? 'Sub-Category *' : 'Sub-Category', 'sub_category_id', subs.options, subs.loading, !scope.category_id)}
+      {error && <Alert severity="warning">{error}</Alert>}
       <Button
         variant="contained"
         size="large"
-        disabled={submitting || !scope.super_category_id}
-        onClick={() => onContinue(scope)}
+        disabled={submitting}
+        onClick={onSubmit}
         sx={{ borderRadius: 999, fontWeight: 900 }}
       >
         {submitting ? 'Loading…' : 'Continue'}

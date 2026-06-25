@@ -1,10 +1,8 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import AdminVenueCreateDialog from '../../components/AdminVenueCreateDialog';
 import {
   Alert,
   Box,
-  Button,
   MenuItem,
   Stack,
   TextField,
@@ -27,7 +25,6 @@ export default function VenuesPage() {
   const [active, setActive] = useState<any | null>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
-  const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
 
   const parseTags = () =>
@@ -72,25 +69,20 @@ export default function VenuesPage() {
             Review submitted venue requests and manage approved spaces for clubs, pods and meetups.
           </Typography>
         </Stack>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Button variant="contained" onClick={() => setCreateOpen(true)}>
-            Create on behalf
-          </Button>
-          <TextField
-            select
-            size="small"
-            label="Status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            sx={{ minWidth: 180 }}
-          >
-            {STATUSES.map((s) => (
-              <MenuItem key={s} value={s}>
-                {s || 'All'}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Stack>
+        <TextField
+          select
+          size="small"
+          label="Status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          sx={{ minWidth: 180 }}
+        >
+          {STATUSES.map((s) => (
+            <MenuItem key={s} value={s}>
+              {s || 'All'}
+            </MenuItem>
+          ))}
+        </TextField>
       </Stack>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
@@ -114,11 +106,6 @@ export default function VenuesPage() {
         savingDeductions={savingDeductions}
       />
 
-      <AdminVenueCreateDialog
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onSaved={() => refetch()}
-      />
       <VenueEditDialog venue={editing} onClose={() => setEditing(null)} onSaved={() => refetch()} />
     </Box>
   );

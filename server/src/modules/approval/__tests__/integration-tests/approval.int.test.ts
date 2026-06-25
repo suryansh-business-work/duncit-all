@@ -108,7 +108,7 @@ describe('approval — meeting feedback flow', () => {
     expect(b?.contact_person).toBe('Seller Person');
   });
 
-  it('denying marks the meeting denied, drafts nothing, and allows a re-send', async () => {
+  it('denying marks the meeting denied, drafts nothing, and blocks a re-send until re-requested', async () => {
     const { userId, meetingId } = await doneMeeting('HOST', '2027-08-05T05:00:00.000Z', 'Rejy');
     await meetingService.sendFeedback(meetingId, 'unsure', ADMIN);
     const req: any = await pendingFor(userId);
@@ -119,10 +119,8 @@ describe('approval — meeting feedback flow', () => {
     expect(meeting!.approval_status).toBe('DENIED');
     expect(await HostModel.findOne({ user_id: new Types.ObjectId(userId) })).toBeNull();
 
-    // A denied meeting can be re-sent for another review.
-    const resent = await meetingService.sendFeedback(meetingId, 'reconsider', ADMIN);
-    expect(resent!.approval_status).toBe('PENDING');
-
+    // A denied meeting is terminal — feedback can't be re-sent without a re-apply.
+    await expect(meetingService.sendFeedback(meetingId, 'reconsider', ADMIN)).rejects.toThrow(/already/i);
     await expect(approvalService.deny(String(req._id), ADMIN, 'x')).rejects.toThrow(/already/i);
   });
 

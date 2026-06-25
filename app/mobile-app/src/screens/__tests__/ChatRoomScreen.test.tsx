@@ -169,4 +169,10 @@ describe('ChatRoomScreen', () => {
     mount({ messages: [message('m1', 'u2')] });
     expect(screen.getByTestId('chat-message-m1')).toBeOnTheScreen();
   });
+
+  it('replaces the composer with a closed notice once the pod has ended', () => {
+    mount({ podEnded: true });
+    expect(screen.getByTestId('chat-closed-notice')).toBeOnTheScreen();
+    expect(screen.queryByTestId('chat-input')).toBeNull();
+  });
 });

@@ -98,7 +98,12 @@ describe('SurveyPhase', () => {
       />,
     );
     fireEvent.press(screen.getByTestId('primary-action'));
-    expect(screen.getByText('Please answer: Choices')).toBeOnTheScreen();
+    expect(screen.getByText('Please answer all required questions.')).toBeOnTheScreen();
+    expect(screen.getByTestId('required-q1')).toBeOnTheScreen();
+    // Answering clears the inline required message on the next validation.
+    fireEvent.press(screen.getByTestId('opt-q1-A'));
+    fireEvent.press(screen.getByTestId('primary-action'));
+    expect(screen.queryByTestId('required-q1')).toBeNull();
   });
 
   it('shows a server error passed via props', () => {

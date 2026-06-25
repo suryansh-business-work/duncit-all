@@ -3,13 +3,11 @@ import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
   Box,
-  Button,
   MenuItem,
   Stack,
   TextField,
   Typography,
 } from '@mui/material';
-import AdminHostCreateDialog from '../../components/AdminHostCreateDialog';
 import TableSkeleton from '../../components/TableSkeleton';
 import { APPROVE, HOSTS, REJECT, STATUSES } from './queries';
 import HostEditDialog from './HostEditDialog';
@@ -26,7 +24,6 @@ export default function HostsPage() {
   const [active, setActive] = useState<any | null>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
-  const [createOpen, setCreateOpen] = useState(false);
   const [editing, setEditing] = useState<any | null>(null);
 
   const parseTags = () =>
@@ -62,25 +59,20 @@ export default function HostsPage() {
             Review submitted host requests and manage approved hosts for Duncit communities.
           </Typography>
         </Stack>
-        <Stack direction="row" spacing={1} alignItems="center">
-          <Button variant="contained" onClick={() => setCreateOpen(true)}>
-            Create on behalf
-          </Button>
-          <TextField
-            select
-            size="small"
-            label="Status"
-            value={status}
-            onChange={(e) => setStatus(e.target.value)}
-            sx={{ minWidth: 180 }}
-          >
-            {STATUSES.map((s) => (
-              <MenuItem key={s} value={s}>
-                {s || 'All'}
-              </MenuItem>
-            ))}
-          </TextField>
-        </Stack>
+        <TextField
+          select
+          size="small"
+          label="Status"
+          value={status}
+          onChange={(e) => setStatus(e.target.value)}
+          sx={{ minWidth: 180 }}
+        >
+          {STATUSES.map((s) => (
+            <MenuItem key={s} value={s}>
+              {s || 'All'}
+            </MenuItem>
+          ))}
+        </TextField>
       </Stack>
 
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
@@ -102,11 +94,6 @@ export default function HostsPage() {
         onReject={doReject}
       />
 
-      <AdminHostCreateDialog
-        open={createOpen}
-        onClose={() => setCreateOpen(false)}
-        onSaved={() => refetch()}
-      />
       <HostEditDialog host={editing} onClose={() => setEditing(null)} onSaved={() => refetch()} />
     </Box>
   );

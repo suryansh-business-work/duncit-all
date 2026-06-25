@@ -34,7 +34,7 @@ export default function SurveyStepper({ survey, submitting, onSubmit, submitLabe
       if (!q.required) continue;
       const a = get(q.qid);
       const filled = q.type === 'MCQ' && q.multi ? a.values.length > 0 : (a.value ?? '').trim() !== '';
-      if (!filled) { setError(`Please answer: ${q.label}`); return false; }
+      if (!filled) { setError(`This field is required: ${q.label}`); return false; }
     }
     setError(null);
     return true;

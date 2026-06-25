@@ -20,6 +20,7 @@ const EARN_ME = gql`
       status
       scheduled_at
       requested_at
+      reschedule_count
     }
   }
 `;
@@ -57,6 +58,7 @@ interface EarnMeeting {
   status: string;
   scheduled_at?: string | null;
   requested_at?: string | null;
+  reschedule_count?: number | null;
 }
 
 const PENDING = new Set(['REQUESTED', 'SCHEDULED']);
@@ -121,7 +123,12 @@ export default function EarnPage() {
                 disabledLabel={showMeetingNotice ? 'Meeting scheduled' : 'Already enabled'}
               />
               {showMeetingNotice && (
-                <EarnMeetingActions kind={box.kind} onChanged={() => void refetch()} />
+                <EarnMeetingActions
+                  kind={box.kind}
+                  bookedAt={pendingMeeting.scheduled_at ?? pendingMeeting.requested_at ?? null}
+                  rescheduleCount={pendingMeeting.reschedule_count ?? 0}
+                  onChanged={() => void refetch()}
+                />
               )}
             </Stack>
           );

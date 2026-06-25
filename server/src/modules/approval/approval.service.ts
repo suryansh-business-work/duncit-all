@@ -77,6 +77,18 @@ async function syncMeetingStatus(doc: any, status: 'APPROVED' | 'DENIED') {
   await meetingService.setApprovalStatus(String(doc.meeting_id), status);
 }
 
+/** Best-effort in-app notification to the request's subject. */
+async function notifySubject(doc: any, title: string, body: string) {
+  if (!doc.subject_user_id) return;
+  try {
+    const { notificationService } = await import('@modules/engagement/notification/notification.service');
+    await notificationService.create({ title, body, scope: 'USER', target_user_ids: [String(doc.subject_user_id)], silent: false });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[approval] subject notification failed:', err);
+  }
+}
+
 export const approvalService = {
   async list(filter: { status?: ApprovalStatus | null; type?: string | null } = {}) {
     const q: any = {};
@@ -121,6 +133,7 @@ export const approvalService = {
     if (doc.type === 'ONBOARDING_MEETING_FEEDBACK') {
       await draftOnboardedEntity(doc);
       await syncMeetingStatus(doc, 'APPROVED');
+      await notifySubject(doc, 'Onboarding approved', 'Your onboarding has been approved. Our team will help you complete the remaining steps.');
     }
     return pub(doc);
   },
@@ -139,6 +152,8 @@ export const approvalService = {
     await doc.save();
     if (doc.type === 'ONBOARDING_MEETING_FEEDBACK') {
       await syncMeetingStatus(doc, 'DENIED');
+      const tail = notes?.trim() ? ` ${notes.trim()}` : '';
+      await notifySubject(doc, 'Onboarding update', `Your onboarding request was not approved.${tail}`);
     }
     return pub(doc);
   },

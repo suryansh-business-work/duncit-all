@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ScrollView } from 'react-native';
 import { Button, Text, XStack, YStack } from 'tamagui';
 
@@ -57,16 +57,35 @@ export function CategoryPhase({ busy, error, onContinue }: Readonly<Props>) {
     category_id: '',
     sub_category_id: '',
   });
+  const [validationError, setValidationError] = useState<string | null>(null);
   const supers = useCategories('SUPER', '', true);
   const cats = useCategories('CATEGORY', scope.super_category_id, !!scope.super_category_id);
   const subs = useCategories('SUB', scope.category_id, !!scope.category_id);
 
   const pick = (level: keyof Scope, id: string) => {
+    setValidationError(null);
     if (level === 'super_category_id')
       setScope({ super_category_id: id, category_id: '', sub_category_id: '' });
     else if (level === 'category_id')
       setScope((s) => ({ ...s, category_id: id, sub_category_id: '' }));
     else setScope((s) => ({ ...s, sub_category_id: id }));
+  };
+
+  // Category / Sub-category are required only when that level offers choices.
+  const validationMessage = useMemo(() => {
+    if (!scope.super_category_id) return 'Please select a Super Category.';
+    if (cats.length > 0 && !scope.category_id) return 'Please select a Category.';
+    if (subs.length > 0 && !scope.sub_category_id) return 'Please select a Sub-Category.';
+    return null;
+  }, [scope, cats.length, subs.length]);
+
+  const onContinuePress = () => {
+    if (validationMessage) {
+      setValidationError(validationMessage);
+      return;
+    }
+    setValidationError(null);
+    onContinue(scope);
   };
 
   const group = (label: string, level: keyof Scope, options: CategoryOption[]) =>
@@ -99,17 +118,21 @@ export function CategoryPhase({ busy, error, onContinue }: Readonly<Props>) {
       </YStack>
     );
 
+  const message = validationError || error;
   return (
     <ScrollView contentContainerStyle={{ padding: 16, gap: 16 }}>
-      {group('Super category *', 'super_category_id', supers)}
-      {group('Category', 'category_id', cats)}
-      {group('Sub category', 'sub_category_id', subs)}
-      {error ? <Text color="$red10">{error}</Text> : null}
+      {group('Super Category *', 'super_category_id', supers)}
+      {group('Category *', 'category_id', cats)}
+      {group('Sub-Category *', 'sub_category_id', subs)}
+      {message ? (
+        <Text testID="category-error" color="$red10">
+          {message}
+        </Text>
+      ) : null}
       <Button
         testID="primary-action"
-        disabled={busy || !scope.super_category_id}
-        opacity={!scope.super_category_id ? 0.5 : 1}
-        onPress={() => onContinue(scope)}
+        disabled={busy}
+        onPress={onContinuePress}
         backgroundColor={primary}
         color="white"
         fontWeight="800"

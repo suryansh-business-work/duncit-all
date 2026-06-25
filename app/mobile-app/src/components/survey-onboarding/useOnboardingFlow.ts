@@ -30,6 +30,11 @@ export function useOnboardingFlow(kind: SurveyKind) {
   // meeting — even when a meeting was requested before: requestMeeting
   // upserts per (user, kind), so re-submitting only updates the request.
   const [phase, setPhase] = useState<Phase>('category');
+  const [scope, setScope] = useState<Scope>({
+    super_category_id: '',
+    category_id: '',
+    sub_category_id: '',
+  });
   const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [slots, setSlots] = useState<MeetingSlot[]>([]);
@@ -85,13 +90,14 @@ export function useOnboardingFlow(kind: SurveyKind) {
     void loadSlots();
   };
 
-  const chooseCategory = async (scope: Scope) => {
+  const chooseCategory = async (chosen: Scope) => {
     setError(null);
     setBusy(true);
+    setScope(chosen);
     try {
       const res = await graphqlRequest<ActiveSurveyResult, { kind: SurveyKind } & Scope>(
         ActiveSurveyForDocument,
-        { kind, ...scope },
+        { kind, ...chosen },
         { auth: true },
       );
       const s = res.activeSurveyFor;
@@ -167,6 +173,9 @@ export function useOnboardingFlow(kind: SurveyKind) {
             notes: notes || null,
             contact_name: name.trim() || null,
             contact_phone: `${ext.trim()} ${phone.trim()}`.trim(),
+            super_category_id: scope.super_category_id || null,
+            category_id: scope.category_id || null,
+            sub_category_id: scope.sub_category_id || null,
           },
         },
         { auth: true },

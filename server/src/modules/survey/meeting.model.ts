@@ -20,6 +20,10 @@ const meetingSchema = new Schema(
   {
     kind: { type: String, enum: SURVEY_KINDS, required: true, index: true },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
+    /** Taxonomy the applicant chose in the gate (drives the schedule listing). */
+    super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    sub_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     /** When the user is available / proposed. */
     requested_at: { type: Date, required: true },
     /** When onboarding actually scheduled it (set by staff). */
@@ -36,6 +40,10 @@ const meetingSchema = new Schema(
     contact_name: { type: String, default: null },
     contact_phone: { type: String, default: null },
     created_by: { type: String, default: null },
+    /** One-time reschedule guard — incremented each time the user reschedules. */
+    reschedule_count: { type: Number, default: 0 },
+    /** Why the user rescheduled / self-cancelled (mandatory in the apps). */
+    reschedule_reason: { type: String, default: null },
     /** Admin-approval state of the interviewer's post-meeting feedback. */
     approval_status: { type: String, enum: MEETING_APPROVAL_STATUSES, default: 'NONE', index: true },
     /** The interviewer's feedback, captured when "Send feedback" is submitted. */

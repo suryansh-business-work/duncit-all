@@ -14,6 +14,12 @@ export const meetingTypeDefs = gql`
     user_id: ID!
     user_name: String
     user_email: String
+    "Taxonomy the applicant chose in the gate."
+    super_category_name: String
+    category_name: String
+    sub_category_name: String
+    "Times the user has rescheduled (reschedule is one-time)."
+    reschedule_count: Int
     requested_at: String!
     scheduled_at: String
     meeting_link: String
@@ -38,6 +44,9 @@ export const meetingTypeDefs = gql`
     notes: String
     contact_name: String
     contact_phone: String
+    super_category_id: ID
+    category_id: ID
+    sub_category_id: ID
   }
   input UpdateMeetingInput {
     status: MeetingStatus
@@ -118,10 +127,10 @@ export const meetingTypeDefs = gql`
 
   extend type Mutation {
     requestMeeting(kind: SurveyKind!, input: RequestMeetingInput!): OnboardingMeeting!
-    "Move the caller's own meeting to a new open slot (keeps contact details, resets staff scheduling)."
-    rescheduleMyMeeting(kind: SurveyKind!, requested_at: String!): OnboardingMeeting!
-    "Cancel the caller's own pending meeting."
-    cancelMyMeeting(kind: SurveyKind!): OnboardingMeeting!
+    "Move the caller's own meeting to a new open slot (one-time; keeps contact details, resets staff scheduling)."
+    rescheduleMyMeeting(kind: SurveyKind!, requested_at: String!, reason: String): OnboardingMeeting!
+    "Cancel the caller's own pending meeting (with a reason)."
+    cancelMyMeeting(kind: SurveyKind!, reason: String): OnboardingMeeting!
     updateMeeting(id: ID!, input: UpdateMeetingInput!): OnboardingMeeting!
     "Onboarding staff cancel a meeting with a reason — the applicant is emailed and asked to fill the survey again."
     cancelMeeting(id: ID!, reason: String!): OnboardingMeeting!

@@ -99,7 +99,11 @@ export function EarnScreen() {
                   onPress={() => navigation.navigate(box.route)}
                 />
                 {showMeetingNotice ? (
-                  <EarnMeetingActions kind={box.kind} onChanged={() => void loadMeetings()} />
+                  <EarnMeetingActions
+                    kind={box.kind}
+                    rescheduleCount={pendingMeeting.reschedule_count}
+                    onChanged={() => void loadMeetings()}
+                  />
                 ) : null}
               </YStack>
             );

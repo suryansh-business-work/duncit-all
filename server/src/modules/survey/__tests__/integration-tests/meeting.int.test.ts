@@ -157,7 +157,7 @@ describe('meeting slot booking', () => {
     await meetingService.request(other, 'VENUE', { requested_at: '2027-02-01T06:00:00.000Z', contact_phone: '9555555552' });
     await expect(
       meetingService.rescheduleMyMeeting(me, 'VENUE', '2027-02-01T06:00:00.000Z'),
-    ).rejects.toThrow(/just booked/i);
+    ).rejects.toThrow(/already booked/i);
 
     const moved = await meetingService.rescheduleMyMeeting(me, 'VENUE', '2027-02-01T07:00:00.000Z');
     expect(moved!.requested_at).toBe('2027-02-01T07:00:00.000Z');
@@ -229,7 +229,7 @@ describe('meeting slot booking', () => {
     await meetingService.request(other, 'HOST', { requested_at: '2027-01-04T05:00:00.000Z', contact_phone: '9333333333' });
     await expect(
       meetingService.request(me, 'HOST', { requested_at: '2027-01-04T05:00:00.000Z', contact_phone: '9444444444' }),
-    ).rejects.toThrow(/just booked/i);
+    ).rejects.toThrow(/already booked/i);
   });
 
   it('blocks staff from scheduling a meeting onto a slot another applicant holds', async () => {
@@ -313,5 +313,48 @@ describe('meeting slot booking', () => {
     const b = await meetingService.addHoliday({ date: '2030-01-01', name: 'New Year', type: 'OFFICIAL_LEAVE' });
     expect(b.name).toBe('New Year');
     expect((await meetingService.holidays()).filter((x) => x.date === '2030-01-01')).toHaveLength(1);
+  });
+
+  it('blocks the same user from booking one instant across kinds (shared inventory)', async () => {
+    const u = new Types.ObjectId().toString();
+    await meetingService.request(u, 'HOST', { requested_at: '2027-09-01T05:00:00.000Z', contact_phone: '9140000001' });
+    await expect(
+      meetingService.request(u, 'VENUE', { requested_at: '2027-09-01T05:00:00.000Z', contact_phone: '9140000001' }),
+    ).rejects.toThrow(/already booked/i);
+    const ok = await meetingService.request(u, 'VENUE', { requested_at: '2027-09-01T06:00:00.000Z', contact_phone: '9140000001' });
+    expect(ok!.kind).toBe('VENUE');
+  });
+
+  it('allows the user to reschedule only once and records the reason', async () => {
+    const u = new Types.ObjectId().toString();
+    await meetingService.request(u, 'HOST', { requested_at: '2027-09-02T05:00:00.000Z', contact_phone: '9150000001' });
+    const moved = await meetingService.rescheduleMyMeeting(u, 'HOST', '2027-09-02T06:00:00.000Z', 'Clashing work call');
+    expect(moved!.reschedule_count).toBe(1);
+    await expect(
+      meetingService.rescheduleMyMeeting(u, 'HOST', '2027-09-02T07:00:00.000Z', 'again'),
+    ).rejects.toThrow(/one-time reschedule/i);
+  });
+
+  it('records the self-cancel reason and shows the chosen category in the listing', async () => {
+    const { CategoryModel } = await import('@modules/pods/category/category.model');
+    const catId = new Types.ObjectId();
+    await CategoryModel.collection.insertOne({ _id: catId, name: 'Badminton' } as never);
+    const u = new Types.ObjectId().toString();
+    await meetingService.request(u, 'ECOMM', {
+      requested_at: '2027-09-03T05:00:00.000Z',
+      contact_phone: '9160000001',
+      category_id: catId.toString(),
+    });
+    const cancelled = await meetingService.cancelMyMeeting(u, 'ECOMM', 'Changed my mind');
+    expect(cancelled!.status).toBe('CANCELLED');
+    expect(cancelled!.cancel_reason).toBe('Changed my mind');
+    // After a cancel the user re-requests, which restores the category mapping.
+    await meetingService.request(u, 'ECOMM', {
+      requested_at: '2027-09-03T06:00:00.000Z',
+      contact_phone: '9160000001',
+      category_id: catId.toString(),
+    });
+    const mine = (await meetingService.list({ kind: 'ECOMM' })).find((m) => m!.user_id === u);
+    expect(mine!.category_name).toBe('Badminton');
   });
 });

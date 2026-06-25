@@ -28,20 +28,25 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
   );
   const [step, setStep] = useState(0);
   const [localError, setLocalError] = useState<string | null>(null);
+  const [missing, setMissing] = useState<Set<string>>(new Set());
+
+  const isFilled = (q: SurveyQuestion) => {
+    const a = answer.get(q.qid);
+    return q.type === 'MCQ' && q.multi ? a.values.length > 0 : a.value.trim() !== '';
+  };
 
   const validate = (idx: number) => {
     // `idx` is always the clamped current step, so `sections[idx]` is defined;
     // the `?? []` is a TS-narrowing fallback only.
     /* istanbul ignore next */
     const stepQuestions = sections[idx]?.questions ?? [];
-    for (const q of stepQuestions) {
-      if (!q.required) continue;
-      const a = answer.get(q.qid);
-      const filled = q.type === 'MCQ' && q.multi ? a.values.length > 0 : a.value.trim() !== '';
-      if (!filled) {
-        setLocalError(`Please answer: ${q.label}`);
-        return false;
-      }
+    const unanswered = new Set(
+      stepQuestions.filter((q) => q.required && !isFilled(q)).map((q) => q.qid),
+    );
+    setMissing(unanswered);
+    if (unanswered.size > 0) {
+      setLocalError('Please answer all required questions.');
+      return false;
     }
     setLocalError(null);
     return true;
@@ -129,6 +134,11 @@ export function SurveyPhase({ survey, answer, busy, error, onSubmit }: Readonly<
                   </Button>
                 );
               })}
+            {missing.has(q.qid) ? (
+              <Text testID={`required-${q.qid}`} fontSize={12} color="$red10">
+                This field is required.
+              </Text>
+            ) : null}
           </YStack>
         );
       })}

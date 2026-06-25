@@ -26,6 +26,7 @@ const SURVEY = {
 };
 
 const SCOPE = { super_category_id: 's', category_id: '', sub_category_id: '' };
+const FULL_SCOPE = { super_category_id: 's', category_id: 'c', sub_category_id: 'sb' };
 
 function route({
   meeting = null,
@@ -260,6 +261,60 @@ describe('useOnboardingFlow', () => {
           contact_phone: '+91 9876543210',
           contact_name: null,
           notes: null,
+          // Super present; empty category/sub coalesce to null.
+          super_category_id: 's',
+          category_id: null,
+          sub_category_id: null,
+        }),
+      }),
+      { auth: true },
+    );
+  });
+
+  it('coalesces an empty super-category to null in the meeting request', async () => {
+    route({ meeting: null, survey: null });
+    const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
+    await waitFor(() => expect(result.current.phase).toBe('category'));
+    await act(async () => {
+      await result.current.chooseCategory({
+        super_category_id: '',
+        category_id: '',
+        sub_category_id: '',
+      });
+    });
+    act(() => result.current.setSelectedSlot('2027-01-04T04:30:00.000Z'));
+    act(() => result.current.setPhone('9876543210'));
+    await act(async () => {
+      await result.current.submitMeeting();
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        input: expect.objectContaining({ super_category_id: null }),
+      }),
+      { auth: true },
+    );
+  });
+
+  it('forwards the full chosen taxonomy into the meeting request', async () => {
+    route({ meeting: null, survey: null });
+    const { result } = renderHook(() => useOnboardingFlow('HOST' as never));
+    await waitFor(() => expect(result.current.phase).toBe('category'));
+    await act(async () => {
+      await result.current.chooseCategory(FULL_SCOPE);
+    });
+    act(() => result.current.setSelectedSlot('2027-01-04T04:30:00.000Z'));
+    act(() => result.current.setPhone('9876543210'));
+    await act(async () => {
+      await result.current.submitMeeting();
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        input: expect.objectContaining({
+          super_category_id: 's',
+          category_id: 'c',
+          sub_category_id: 'sb',
         }),
       }),
       { auth: true },

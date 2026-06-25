@@ -56,6 +56,70 @@ describe('CategoryPhase', () => {
     });
   });
 
+  it('blocks Continue with a Super Category message when nothing is picked', async () => {
+    routeLevels();
+    const onContinue = jest.fn();
+    renderWithProviders(<CategoryPhase busy={false} error={null} onContinue={onContinue} />);
+    await screen.findByTestId('cat-sup1');
+
+    fireEvent.press(screen.getByTestId('primary-action'));
+    expect(await screen.findByTestId('category-error')).toHaveTextContent(
+      'Please select a Super Category.',
+    );
+    expect(onContinue).not.toHaveBeenCalled();
+  });
+
+  it('requires a Category once a Super is picked, then a Sub once a Category is picked', async () => {
+    routeLevels();
+    const onContinue = jest.fn();
+    renderWithProviders(<CategoryPhase busy={false} error={null} onContinue={onContinue} />);
+
+    // Super picked, category offered but unpicked → category message.
+    fireEvent.press(await screen.findByTestId('cat-sup1'));
+    await screen.findByTestId('cat-c1');
+    fireEvent.press(screen.getByTestId('primary-action'));
+    expect(await screen.findByTestId('category-error')).toHaveTextContent(
+      'Please select a Category.',
+    );
+    expect(onContinue).not.toHaveBeenCalled();
+
+    // Category picked, sub offered but unpicked → sub message.
+    fireEvent.press(screen.getByTestId('cat-c1'));
+    await screen.findByTestId('cat-sb1');
+    fireEvent.press(screen.getByTestId('primary-action'));
+    expect(await screen.findByTestId('category-error')).toHaveTextContent(
+      'Please select a Sub-Category.',
+    );
+    expect(onContinue).not.toHaveBeenCalled();
+
+    // Sub picked → continues with the full scope (validation error cleared on pick).
+    fireEvent.press(screen.getByTestId('cat-sb1'));
+    expect(screen.queryByTestId('category-error')).toBeNull();
+    fireEvent.press(screen.getByTestId('primary-action'));
+    expect(onContinue).toHaveBeenCalledWith({
+      super_category_id: 'sup1',
+      category_id: 'c1',
+      sub_category_id: 'sb1',
+    });
+  });
+
+  it('continues with only a super when no deeper levels are offered', async () => {
+    mockRequest.mockImplementation((_doc: never, vars: { level?: string }) =>
+      Promise.resolve({
+        categories: vars?.level === 'SUPER' ? [cat('only', 'Only')] : [],
+      }),
+    );
+    const onContinue = jest.fn();
+    renderWithProviders(<CategoryPhase busy={false} error={null} onContinue={onContinue} />);
+    fireEvent.press(await screen.findByTestId('cat-only'));
+    fireEvent.press(screen.getByTestId('primary-action'));
+    expect(onContinue).toHaveBeenCalledWith({
+      super_category_id: 'only',
+      category_id: '',
+      sub_category_id: '',
+    });
+  });
+
   it('coalesces a missing categories list to empty', async () => {
     mockRequest.mockImplementation(() => Promise.resolve({})); // no `categories` field
     renderWithProviders(<CategoryPhase busy={false} error={null} onContinue={jest.fn()} />);

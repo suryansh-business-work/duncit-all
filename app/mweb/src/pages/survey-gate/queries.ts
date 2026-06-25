@@ -67,6 +67,7 @@ export const MY_MEETING = gql`
       requested_at
       scheduled_at
       meeting_link
+      reschedule_count
     }
   }
 `;

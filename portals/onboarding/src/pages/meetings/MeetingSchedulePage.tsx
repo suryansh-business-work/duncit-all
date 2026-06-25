@@ -4,7 +4,6 @@ import { useParams } from 'react-router-dom';
 import {
   Alert,
   Box,
-  Button,
   Card,
   Chip,
   CircularProgress,
@@ -15,11 +14,14 @@ import {
   TableCell,
   TableHead,
   TableRow,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import CancelMeetingDialog from './CancelMeetingDialog';
 import MeetingDetailsDrawer from './MeetingDetailsDrawer';
+import MeetingRowActions from './MeetingRowActions';
 import ScheduleMeetingDialog from './ScheduleMeetingDialog';
 import SendFeedbackDialog from './SendFeedbackDialog';
 import {
@@ -40,8 +42,17 @@ const APPROVAL_LABELS: Record<MeetingApprovalStatus, string> = {
 const APPROVAL_COLORS: Record<MeetingApprovalStatus, 'default' | 'warning' | 'success' | 'error'> = {
   NONE: 'default', PENDING: 'warning', APPROVED: 'success', DENIED: 'error',
 };
+const STATUS_FILTERS: { value: MeetingStatus | ''; label: string }[] = [
+  { value: '', label: 'All' },
+  { value: 'REQUESTED', label: 'Requested' },
+  { value: 'SCHEDULED', label: 'Scheduled' },
+  { value: 'DONE', label: 'Done' },
+  { value: 'CANCELLED', label: 'Cancelled' },
+];
 const fmt = (iso?: string | null) => (iso ? new Date(iso).toLocaleString() : '—');
 const KIND_LABELS: Record<SurveyKind, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
+const catPath = (m: OnboardingMeeting) =>
+  [m.super_category_name, m.category_name, m.sub_category_name].filter(Boolean).join(' › ') || '—';
 
 /** Admin-approval state of the interviewer's feedback. */
 function ApprovalCell({ status }: Readonly<{ status?: MeetingApprovalStatus | null }>) {
@@ -50,34 +61,13 @@ function ApprovalCell({ status }: Readonly<{ status?: MeetingApprovalStatus | nu
   return <Chip size="small" color={APPROVAL_COLORS[value]} label={APPROVAL_LABELS[value]} />;
 }
 
-interface RowActionsProps {
-  meeting: OnboardingMeeting;
-  marking: boolean;
-  onSchedule: (m: OnboardingMeeting) => void;
-  onMarkDone: (m: OnboardingMeeting) => void;
-  onSendFeedback: (m: OnboardingMeeting) => void;
-  onCancel: (m: OnboardingMeeting) => void;
-}
-
-/** Row actions, gated by meeting + approval state. */
-function RowActions({ meeting, marking, onSchedule, onMarkDone, onSendFeedback, onCancel }: Readonly<RowActionsProps>) {
-  const approval = meeting.approval_status ?? 'NONE';
-  const canCancel = meeting.status === 'REQUESTED' || meeting.status === 'SCHEDULED';
-  const canSendFeedback = meeting.status === 'DONE' && (approval === 'NONE' || approval === 'DENIED');
-  return (
-    <>
-      <Button size="small" onClick={() => onSchedule(meeting)}>Schedule</Button>
-      {meeting.status === 'SCHEDULED' && (
-        <Button size="small" color="success" disabled={marking} onClick={() => onMarkDone(meeting)}>Mark done</Button>
-      )}
-      {canSendFeedback && (
-        <Button size="small" onClick={() => onSendFeedback(meeting)}>Send feedback</Button>
-      )}
-      {canCancel && (
-        <Button size="small" color="error" onClick={() => onCancel(meeting)}>Cancel</Button>
-      )}
-    </>
-  );
+/** Join link is hidden once a meeting is cancelled or admin-denied. */
+function JoinCell({ meeting }: Readonly<{ meeting: OnboardingMeeting }>) {
+  const blocked = meeting.status === 'CANCELLED' || meeting.approval_status === 'DENIED';
+  if (meeting.meeting_link && !blocked) {
+    return <Link href={meeting.meeting_link} target="_blank" rel="noopener" variant="body2">Join</Link>;
+  }
+  return <Typography variant="body2" color="text.secondary">—</Typography>;
 }
 
 /** Onboarding → Meeting → Venue/Host/Seller Meeting Schedule: requests + scheduling. */
@@ -85,8 +75,10 @@ export default function MeetingSchedulePage() {
   const params = useParams<{ kind: string }>();
   const kind = (params.kind?.toUpperCase() as SurveyKind) || 'VENUE';
   const valid = kind === 'VENUE' || kind === 'HOST' || kind === 'ECOMM';
+  const [statusFilter, setStatusFilter] = useState<MeetingStatus | ''>('');
 
-  const { data, loading, refetch } = useQuery<{ onboardingMeetings: OnboardingMeeting[] }>(ONBOARDING_MEETINGS, { variables: { filter: { kind } }, skip: !valid, fetchPolicy: 'cache-and-network' });
+  const filter = { kind, ...(statusFilter ? { status: statusFilter } : {}) };
+  const { data, loading, refetch } = useQuery<{ onboardingMeetings: OnboardingMeeting[] }>(ONBOARDING_MEETINGS, { variables: { filter }, skip: !valid, fetchPolicy: 'cache-and-network' });
   const [updateMeeting, { loading: marking }] = useMutation(UPDATE_MEETING);
   const [editing, setEditing] = useState<OnboardingMeeting | null>(null);
   const [cancelling, setCancelling] = useState<OnboardingMeeting | null>(null);
@@ -117,6 +109,10 @@ export default function MeetingSchedulePage() {
         </Box>
       </Stack>
 
+      <ToggleButtonGroup size="small" exclusive value={statusFilter} onChange={(_, v) => setStatusFilter(v ?? '')}>
+        {STATUS_FILTERS.map((f) => <ToggleButton key={f.label} value={f.value}>{f.label}</ToggleButton>)}
+      </ToggleButtonGroup>
+
       {actionError && <Alert severity="error" onClose={() => setActionError(null)}>{actionError}</Alert>}
 
       <Card>
@@ -124,13 +120,14 @@ export default function MeetingSchedulePage() {
           <Stack alignItems="center" sx={{ py: 5 }}><CircularProgress /></Stack>
         )}
         {!loading && meetings.length === 0 && (
-          <Typography variant="body2" color="text.secondary" sx={{ p: 3, textAlign: 'center' }}>No meeting requests yet.</Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ p: 3, textAlign: 'center' }}>No meetings for this filter.</Typography>
         )}
         {meetings.length > 0 && (
           <Table size="small">
             <TableHead>
               <TableRow>
                 <TableCell>Requester</TableCell>
+                <TableCell>Category</TableCell>
                 <TableCell>Requested for</TableCell>
                 <TableCell>Scheduled</TableCell>
                 <TableCell>Link</TableCell>
@@ -146,13 +143,10 @@ export default function MeetingSchedulePage() {
                     <Typography variant="body2" fontWeight={700}>{m.user_name || m.contact_name || '—'}</Typography>
                     <Typography variant="caption" color="text.secondary">{m.user_email || m.contact_phone || ''}</Typography>
                   </TableCell>
+                  <TableCell><Typography variant="body2">{catPath(m)}</Typography></TableCell>
                   <TableCell><Typography variant="body2">{fmt(m.requested_at)}</Typography></TableCell>
                   <TableCell><Typography variant="body2">{fmt(m.scheduled_at)}</Typography></TableCell>
-                  <TableCell>
-                    {m.meeting_link
-                      ? <Link href={m.meeting_link} target="_blank" rel="noopener" variant="body2">Join</Link>
-                      : <Typography variant="body2" color="text.secondary">—</Typography>}
-                  </TableCell>
+                  <TableCell><JoinCell meeting={m} /></TableCell>
                   <TableCell>
                     <Chip size="small" color={STATUS_COLORS[m.status]} label={m.status} />
                     {m.status === 'CANCELLED' && m.cancel_reason && (
@@ -161,13 +155,13 @@ export default function MeetingSchedulePage() {
                   </TableCell>
                   <TableCell><ApprovalCell status={m.approval_status} /></TableCell>
                   <TableCell align="right" onClick={(e) => e.stopPropagation()}>
-                    <RowActions
+                    <MeetingRowActions
                       meeting={m}
                       marking={marking}
                       onSchedule={setEditing}
                       onMarkDone={markDone}
                       onSendFeedback={setFeedbackFor}
-                      onCancel={setCancelling}
+                      onReject={setCancelling}
                     />
                   </TableCell>
                 </TableRow>
@@ -177,16 +171,9 @@ export default function MeetingSchedulePage() {
         )}
       </Card>
 
-      <ScheduleMeetingDialog
-        meeting={editing}
-        onClose={() => setEditing(null)}
-        onSaved={() => { setEditing(null); return refetch(); }}
-      />
-
+      <ScheduleMeetingDialog meeting={editing} onClose={() => setEditing(null)} onSaved={() => { setEditing(null); return refetch(); }} />
       <CancelMeetingDialog meeting={cancelling} onClose={() => setCancelling(null)} onCancelled={() => refetch()} />
-
       <SendFeedbackDialog meeting={feedbackFor} onClose={() => setFeedbackFor(null)} onSent={() => refetch()} />
-
       <MeetingDetailsDrawer
         meeting={selected}
         onClose={() => setSelected(null)}

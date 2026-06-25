@@ -21,6 +21,10 @@ export interface OnboardingMeeting {
   contact_phone?: string | null;
   approval_status?: MeetingApprovalStatus | null;
   feedback?: string | null;
+  super_category_name?: string | null;
+  category_name?: string | null;
+  sub_category_name?: string | null;
+  reschedule_count?: number | null;
 }
 
 export interface SurveyResponseItem {
@@ -65,6 +69,7 @@ export const HOLIDAY_TYPE_LABELS: Record<HolidayType, string> = {
 
 const FIELDS = `
   id kind user_id user_name user_email requested_at scheduled_at meeting_link status cancel_reason dismissed notes contact_name contact_phone approval_status feedback
+  super_category_name category_name sub_category_name reschedule_count
 `;
 
 export const ONBOARDING_MEETINGS = gql`

@@ -32,6 +32,7 @@ export default function SurveyGatePage() {
   const [step, setStep] = useState<Step>('loading');
   const [survey, setSurvey] = useState<ActiveSurvey | null>(null);
   const [submittedAnswers, setSubmittedAnswers] = useState<SurveyAnswerInput[]>([]);
+  const [scope, setScope] = useState<CategoryScope | null>(null);
   const [resolving, setResolving] = useState(false);
   const [bookedSlot, setBookedSlot] = useState('');
   const [meetingError, setMeetingError] = useState<string | null>(null);
@@ -50,10 +51,11 @@ export default function SurveyGatePage() {
 
   const afterSurvey = () => setStep('meeting');
 
-  const onCategory = async (scope: CategoryScope) => {
+  const onCategory = async (picked: CategoryScope) => {
+    setScope(picked);
     setResolving(true);
     try {
-      const { data } = await resolveSurvey({ variables: { kind, ...scope } });
+      const { data } = await resolveSurvey({ variables: { kind, ...picked } });
       const s = data?.activeSurveyFor ?? null;
       setSurvey(s);
       // Re-prompt the survey on every visit until the meeting is requested — we
@@ -76,7 +78,12 @@ export default function SurveyGatePage() {
   const onMeeting = async (input: MeetingInput) => {
     setMeetingError(null);
     try {
-      await requestMeeting({ variables: { kind, input } });
+      const taxonomy = {
+        super_category_id: scope?.super_category_id || null,
+        category_id: scope?.category_id || null,
+        sub_category_id: scope?.sub_category_id || null,
+      };
+      await requestMeeting({ variables: { kind, input: { ...input, ...taxonomy } } });
       setBookedSlot(input.requested_at);
       setStep('thanks');
     } catch (e) {

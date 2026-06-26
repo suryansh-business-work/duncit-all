@@ -13,7 +13,7 @@
  * by reading a module-level cached zone, refreshed from settings on boot via
  * {@link setReopenWindowZone}. Callers may also pass an explicit `tz` override.
  */
-import { fromZonedTime, toZonedTime } from 'date-fns-tz';
+import { utcToZonedTime, zonedTimeToUtc } from 'date-fns-tz';
 
 export const REOPEN_WINDOW_DAYS = 3;
 export const DEFAULT_REOPEN_ZONE = 'Asia/Kolkata';
@@ -34,11 +34,11 @@ export function getReopenWindowZone(): string {
 export function reopenDeadline(resolvedAt?: Date | null, tz: string = cachedZone): Date | null {
   if (!resolvedAt) return null;
   // The wall-clock day of resolution in the configured zone.
-  const zoned = toZonedTime(resolvedAt, tz);
+  const zoned = utcToZonedTime(resolvedAt, tz);
   const zoneMidnight = new Date(zoned.getFullYear(), zoned.getMonth(), zoned.getDate(), 0, 0, 0, 0);
   // Convert that zone-local midnight back to a real UTC instant, then add the
   // inclusive window length in whole days.
-  const startUtc = fromZonedTime(zoneMidnight, tz);
+  const startUtc = zonedTimeToUtc(zoneMidnight, tz);
   return new Date(startUtc.getTime() + REOPEN_WINDOW_DAYS * 86_400_000);
 }
 

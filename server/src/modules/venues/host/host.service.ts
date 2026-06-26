@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { HostModel, type IHost } from './host.model';
+import { HostModel, type IHost, type IHostCategory } from './host.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
@@ -50,6 +50,12 @@ const toPub = (h: IHost) => ({
   full_address: h.full_address ?? '',
   bank_account: toBankAccountPub(h.bank_account),
   tags: h.tags ?? [],
+  host_categories: (h.host_categories ?? []).map((c) => ({
+    super_category_name: c.super_category_name ?? '',
+    category_name: c.category_name ?? '',
+    sub_category_name: c.sub_category_name ?? '',
+    request_no: c.request_no ?? '',
+  })),
   step_completed: h.step_completed ?? 0,
   status: h.status,
   is_active: h.is_active ?? true,
@@ -278,6 +284,24 @@ export const hostService = {
     if (prefill.phone && !h.phone) h.phone = prefill.phone;
     h.status = 'DRAFT';
     await h.save();
+    return toPub(h);
+  },
+
+  /** Append a category mapping to an approved host from an approved Host Request.
+   * Idempotent per request_no so a re-run won't duplicate the entry. */
+  async addCategoryFromRequest(hostUserId: string, mapping: IHostCategory) {
+    const h = await HostModel.findOne({ user_id: new Types.ObjectId(hostUserId) });
+    if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
+    const exists = (h.host_categories ?? []).some((c) => c.request_no === mapping.request_no);
+    if (!exists) {
+      h.host_categories.push({
+        super_category_name: mapping.super_category_name ?? '',
+        category_name: mapping.category_name ?? '',
+        sub_category_name: mapping.sub_category_name ?? '',
+        request_no: mapping.request_no ?? '',
+      });
+      await h.save();
+    }
     return toPub(h);
   },
 };

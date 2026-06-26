@@ -53,4 +53,38 @@ describe('hostService integration', () => {
     expect(rejected.status).toBe('REJECTED');
     expect(await HostModel.countDocuments()).toBe(1);
   });
+
+  it('appends a category from an approved request and dedupes by request_no', async () => {
+    const u = new Types.ObjectId().toString();
+    await HostModel.create({ user_id: u, full_name: 'Cat Host', status: 'APPROVED' });
+    const mapping = {
+      super_category_name: 'For You',
+      category_name: 'Sports',
+      sub_category_name: 'Badminton',
+      request_no: 'HOSTREQ-000001',
+    };
+
+    const after = await hostService.addCategoryFromRequest(u, mapping);
+    expect(after.host_categories).toHaveLength(1);
+    expect(after.host_categories[0]).toMatchObject(mapping);
+
+    // Idempotent: re-applying the same request_no does not duplicate.
+    const again = await hostService.addCategoryFromRequest(u, mapping);
+    expect(again.host_categories).toHaveLength(1);
+
+    // A different request_no adds a second mapping.
+    const second = await hostService.addCategoryFromRequest(u, { ...mapping, request_no: 'HOSTREQ-000002' });
+    expect(second.host_categories).toHaveLength(2);
+  });
+
+  it('throws when adding a category to a missing host', async () => {
+    await expect(
+      hostService.addCategoryFromRequest(new Types.ObjectId().toString(), {
+        super_category_name: '',
+        category_name: '',
+        sub_category_name: '',
+        request_no: 'X',
+      })
+    ).rejects.toThrow(/host not found/i);
+  });
 });

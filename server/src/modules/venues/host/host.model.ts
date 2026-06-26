@@ -7,6 +7,13 @@ import {
 
 export type HostStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
+export interface IHostCategory {
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+  request_no: string;
+}
+
 export interface IHost extends Document {
   user_id: Types.ObjectId;
   // Step 1: Personal
@@ -23,6 +30,9 @@ export interface IHost extends Document {
   full_address: string;
   bank_account: IBankAccountVerification;
   tags: string[];
+  // Categories this host is approved to operate in. Seeded from approved Host
+  // Requests (one entry per HOSTREQ) and backfilled from historical HostLeads.
+  host_categories: IHostCategory[];
   // Step 4: Confirmation handled by submit
   step_completed: number;
   status: HostStatus;
@@ -34,6 +44,16 @@ export interface IHost extends Document {
   created_at: Date;
   updated_at: Date;
 }
+
+const hostCategorySchema = new Schema<IHostCategory>(
+  {
+    super_category_name: { type: String, default: '' },
+    category_name: { type: String, default: '' },
+    sub_category_name: { type: String, default: '' },
+    request_no: { type: String, default: '' },
+  },
+  { _id: false }
+);
 
 const hostSchema = new Schema<IHost>(
   {
@@ -49,6 +69,7 @@ const hostSchema = new Schema<IHost>(
     full_address: { type: String, default: '' },
     bank_account: { type: bankAccountSchema, default: blankBankAccount },
     tags: { type: [String], default: [] },
+    host_categories: { type: [hostCategorySchema], default: [] },
     step_completed: { type: Number, default: 0, min: 0, max: 4 },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     is_active: { type: Boolean, default: true },

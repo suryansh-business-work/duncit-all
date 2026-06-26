@@ -392,7 +392,8 @@
       "Bash(sed -n '39,43p' src/components/status/StatusRail.tsx)",
       "Bash(sed -n '66,70p' src/components/status/StatusTile.tsx)",
       "Bash(sed -n '58,62p' src/components/status/StatusViewer.tsx)",
-      "Bash(awk -F'|' 'NF>=5 { s=$2;b=$3;f=$4;l=$5; if \\(s ~ /[0-9]/ && \\(s+0<100||b+0<100||f+0<100||l+0<100\\)\\) print }')"
+      "Bash(awk -F'|' 'NF>=5 { s=$2;b=$3;f=$4;l=$5; if \\(s ~ /[0-9]/ && \\(s+0<100||b+0<100||f+0<100||l+0<100\\)\\) print }')",
+      "Bash(awk -F'|' 'NF>=6 && $6 ~ /[0-9]/ {print $1\"|stmt:\"$2\"|br:\"$3\"|uncov:\"$6}')"
     ],
     "deny": [],
     "ask": [],

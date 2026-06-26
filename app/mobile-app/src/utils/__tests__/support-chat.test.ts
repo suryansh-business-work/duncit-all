@@ -12,7 +12,8 @@ import {
 describe('support-chat utils', () => {
   const at = (iso: string) => ({ id: 'x', created_at: iso });
 
-  it('tickState reflects pending / seen / delivered', () => {
+  it('tickState reflects failed / pending / seen / delivered', () => {
+    expect(tickState({ id: 'a', created_at: '2020-01-01T00:00:00Z', failed: true })).toBe('failed');
     expect(tickState({ id: 'a', created_at: '2020-01-01T00:00:00Z', pending: true })).toBe(
       'pending',
     );
@@ -21,23 +22,33 @@ describe('support-chat utils', () => {
     expect(tickState(at('2020-01-02T00:00:00Z'), null)).toBe('delivered');
   });
 
-  it('formatTime renders HH:mm and tolerates an invalid date', () => {
-    expect(formatTime('2026-06-01T08:05:00Z')).toMatch(/^\d{2}:\d{2}$/);
+  it('formatTime renders the zone-local time and tolerates an invalid date', () => {
+    // 08:05 UTC reads as 08:05 in UTC and 13:35 in Asia/Kolkata (default).
+    expect(formatTime('2026-06-01T08:05:00Z', 'UTC')).toBe('08:05');
+    expect(formatTime('2026-06-01T08:05:00Z', 'Asia/Kolkata')).toBe('13:35');
+    expect(formatTime('2026-06-01T08:05:00Z')).toBe('13:35');
     expect(formatTime('')).toBe('');
   });
 
-  it('dayLabel returns Today / Yesterday / a date', () => {
+  it('dayLabel returns Today / Yesterday / a date in the configured zone', () => {
     const now = new Date();
     const yest = new Date(now.getTime() - 86_400_000);
+    // Default zone (Asia/Kolkata) is used when none is supplied.
     expect(dayLabel(now.toISOString())).toBe('Today');
-    expect(dayLabel(yest.toISOString())).toBe('Yesterday');
-    expect(dayLabel('2000-06-03T10:00:00Z')).toMatch(/2000/);
+    expect(dayLabel(now.toISOString(), 'UTC')).toBe('Today');
+    expect(dayLabel(yest.toISOString(), 'UTC')).toBe('Yesterday');
+    expect(dayLabel('2000-06-03T10:00:00Z', 'UTC')).toMatch(/2000/);
+    expect(dayLabel('not-a-date', 'UTC')).toBe('');
   });
 
-  it('showDaySeparator is true at the start and across day boundaries', () => {
+  it('showDaySeparator is true at the start and across zone day boundaries', () => {
     expect(showDaySeparator('2020-01-01T10:00:00Z')).toBe(true);
-    expect(showDaySeparator('2020-01-01T11:00:00Z', '2020-01-01T09:00:00Z')).toBe(false);
-    expect(showDaySeparator('2020-03-03T10:00:00Z', '2020-03-01T10:00:00Z')).toBe(true);
+    expect(showDaySeparator('2020-01-01T11:00:00Z', '2020-01-01T09:00:00Z', 'UTC')).toBe(false);
+    expect(showDaySeparator('2020-03-03T10:00:00Z', '2020-03-01T10:00:00Z', 'UTC')).toBe(true);
+    // A late-evening UTC stamp falls on the NEXT calendar day in Asia/Kolkata.
+    expect(showDaySeparator('2020-01-01T20:00:00Z', '2020-01-01T10:00:00Z', 'Asia/Kolkata')).toBe(
+      true,
+    );
   });
 
   it('durationLabel formats seconds and minutes, null otherwise', () => {

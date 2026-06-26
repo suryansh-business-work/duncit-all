@@ -18,6 +18,7 @@ export const PublicAppSettingsDocument = gql(`
     publicAppSettings {
       date_format
       time_format
+      time_zone
     }
   }
 `);

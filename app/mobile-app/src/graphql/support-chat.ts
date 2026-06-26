@@ -30,6 +30,8 @@ export const StartSupportChatDocument = gql(`
       agent_last_read_at
       resolved_at
       reopen_deadline
+      rating
+      feedback_comment
     }
   }
 `);
@@ -83,6 +85,7 @@ export const ResolveSupportChatDocument = gql(`
     resolveSupportChat(session_id: $sessionId) {
       id
       status
+      resolved_at
     }
   }
 `);
@@ -106,17 +109,18 @@ export const SubmitSupportChatFeedbackDocument = gql(`
 `);
 
 export const SupportChatTranscriptDocument = gql(`
-  query MobileSupportChatTranscript($sessionId: ID!) {
-    supportChatTranscript(session_id: $sessionId) {
+  query MobileSupportChatTranscript($sessionId: ID!, $format: TranscriptFormat) {
+    supportChatTranscript(session_id: $sessionId, format: $format) {
       filename
       text
+      content_base64
     }
   }
 `);
 
 export const EmailSupportChatTranscriptDocument = gql(`
-  mutation MobileEmailSupportChatTranscript($sessionId: ID!, $email: String!) {
-    emailSupportChatTranscript(session_id: $sessionId, email: $email)
+  mutation MobileEmailSupportChatTranscript($sessionId: ID!, $email: String!, $format: TranscriptFormat) {
+    emailSupportChatTranscript(session_id: $sessionId, email: $email, format: $format)
   }
 `);
 
@@ -148,6 +152,8 @@ export const TicketDetailsDocument = gql(`
       last_message_at
       resolved_at
       reopen_deadline
+      rating
+      feedback_comment
       messages {
         id
         author_role
@@ -176,5 +182,39 @@ export const ReopenTicketDocument = gql(`
       id
       status
     }
+  }
+`);
+
+export const ResolveTicketDocument = gql(`
+  mutation MobileResolveTicket($ticketId: ID!) {
+    resolveTicket(ticket_id: $ticketId) {
+      id
+      status
+    }
+  }
+`);
+
+export const SubmitTicketFeedbackDocument = gql(`
+  mutation MobileSubmitTicketFeedback($ticketId: ID!, $rating: Int!, $comment: String) {
+    submitTicketFeedback(ticket_id: $ticketId, rating: $rating, comment: $comment) {
+      id
+      rating
+    }
+  }
+`);
+
+export const TicketTranscriptDocument = gql(`
+  query MobileTicketTranscript($ticketId: ID!, $format: TranscriptFormat) {
+    ticketTranscript(ticket_id: $ticketId, format: $format) {
+      filename
+      text
+      content_base64
+    }
+  }
+`);
+
+export const EmailTicketTranscriptDocument = gql(`
+  mutation MobileEmailTicketTranscript($ticketId: ID!, $email: String!, $format: TranscriptFormat) {
+    emailTicketTranscript(ticket_id: $ticketId, email: $email, format: $format)
   }
 `);

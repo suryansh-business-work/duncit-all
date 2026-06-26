@@ -75,14 +75,20 @@ function mockBoot() {
       return Promise.resolve({ uploadImageToImagekit: { url: 'https://img/up.jpg', fileId: 'f' } });
     }
     if (body.includes('resolveSupportChat'))
-      return Promise.resolve({ resolveSupportChat: { id: 's1', status: 'CLOSED' } });
+      return Promise.resolve({
+        resolveSupportChat: { id: 's1', status: 'CLOSED', resolved_at: '2026-06-26T00:00:00Z' },
+      });
     if (body.includes('reopenSupportChat'))
       return Promise.resolve({ reopenSupportChat: { id: 's1', status: 'OPEN' } });
     if (body.includes('submitSupportChatFeedback'))
       return Promise.resolve({ submitSupportChatFeedback: { id: 's1', rating: 5 } });
     if (body.includes('supportChatTranscript')) {
       return Promise.resolve({
-        supportChatTranscript: { filename: 'support-CH-AAA111.txt', text: 'transcript' },
+        supportChatTranscript: {
+          filename: 'support-CH-AAA111.txt',
+          text: 'transcript',
+          content_base64: 'dHJhbnNjcmlwdA==',
+        },
       });
     }
     if (body.includes('emailSupportChatTranscript'))
@@ -132,14 +138,15 @@ describe('useSupportChat', () => {
     act(() => socket.fire('support_chat:session_update', { id: 'other', agent_last_read_at: 'X' }));
     expect(result.current.session?.agent_last_read_at).toBe('NOW');
 
-    // Typing toggles on then clears, and a foreign typing signal is ignored.
+    // Typing labels by role/name (B14a), then clears; a foreign signal is ignored.
     jest.useFakeTimers();
-    act(() => socket.fire('support_typing', { session_id: 's1' }));
-    expect(result.current.typing).toBe(true);
-    act(() => socket.fire('support_typing', { session_id: 's1' })); // resets the timer
+    act(() => socket.fire('support_typing', { session_id: 's1', role: 'AGENT', name: 'Asha' }));
+    expect(result.current.typing).toBe('Support is typing…');
+    act(() => socket.fire('support_typing', { session_id: 's1', role: 'USER', name: 'Ravi' }));
+    expect(result.current.typing).toBe('Ravi is typing…');
     act(() => socket.fire('support_typing', { session_id: 'other' }));
     act(() => jest.advanceTimersByTime(2500));
-    expect(result.current.typing).toBe(false);
+    expect(result.current.typing).toBe('');
     jest.useRealTimers();
 
     unmount();
@@ -171,7 +178,7 @@ describe('useSupportChat', () => {
     expect(sendVars.text).toBeNull();
   });
 
-  it('removes the optimistic message and rethrows on a send failure', async () => {
+  it('keeps the optimistic message flagged failed and rethrows on a send failure (B12)', async () => {
     const { result } = await bootedHook();
     mockRequest.mockImplementation((doc: unknown) => {
       if (JSON.stringify(doc).includes('sendSupportChatMessage'))
@@ -181,8 +188,36 @@ describe('useSupportChat', () => {
     await act(async () => {
       await expect(result.current.send('hi')).rejects.toThrow('boom');
     });
-    expect(result.current.messages.some((m) => m.pending)).toBe(false);
+    // The message is retained (not dropped) and marked failed for the Retry UI.
+    const failed = result.current.messages.find((m) => m.failed);
+    expect(failed?.text).toBe('hi');
+    expect(failed?.pending).toBe(false);
     expect(result.current.aiThinking).toBe(false);
+  });
+
+  it('retries a failed message in place, reconciling the server copy (B12)', async () => {
+    const { result } = await bootedHook();
+    mockRequest.mockImplementationOnce((doc: unknown) =>
+      JSON.stringify(doc).includes('sendSupportChatMessage')
+        ? Promise.reject(new Error('boom'))
+        : Promise.resolve({}),
+    );
+    await act(async () => {
+      await expect(result.current.send('hi')).rejects.toThrow('boom');
+    });
+    const failed = result.current.messages.find((m) => m.failed)!;
+
+    // The retry re-uses the same optimistic row and succeeds this time.
+    mockRequest.mockImplementation((doc: unknown, vars: any) => {
+      if (JSON.stringify(doc).includes('sendSupportChatMessage'))
+        return Promise.resolve({ sendSupportChatMessage: msg('m2', 's1', { text: vars?.text }) });
+      return Promise.resolve({});
+    });
+    await act(async () => {
+      await result.current.retry(failed);
+    });
+    expect(result.current.messages.some((m) => m.failed)).toBe(false);
+    expect(result.current.messages.some((m) => m.id === 'm2')).toBe(true);
   });
 
   it('shows the assistant thinking while the AI fields the chat, clears on a reply', async () => {
@@ -254,6 +289,7 @@ describe('useSupportChat', () => {
       await result.current.resolve();
     });
     expect(result.current.session?.status).toBe('CLOSED');
+    expect(result.current.session?.resolved_at).toBe('2026-06-26T00:00:00Z');
 
     await act(async () => {
       await result.current.reopen('Still need help');
@@ -281,9 +317,22 @@ describe('useSupportChat', () => {
       JSON.stringify(c[0]).includes('submitSupportChatFeedback'),
     )?.[1] as Record<string, unknown>;
     expect(fbVars.rating).toBe(5);
+    // The local session rating updates so the form locks (one-time, B8).
+    expect(result.current.session?.rating).toBe(4);
+    expect(result.current.session?.feedback_comment).toBeNull();
 
-    const transcript = await result.current.getTranscript();
-    expect(transcript?.filename).toContain('CH-AAA111');
+    // .txt by default, .docx on request (B15).
+    const txt = await result.current.getTranscript();
+    expect(txt?.filename).toContain('CH-AAA111');
+    const txtVars = mockRequest.mock.calls
+      .filter((c) => JSON.stringify(c[0]).includes('supportChatTranscript'))
+      .at(-1)?.[1] as Record<string, unknown>;
+    expect(txtVars.format).toBe('TXT');
+    await result.current.getTranscript('DOCX' as never);
+    const docxVars = mockRequest.mock.calls
+      .filter((c) => JSON.stringify(c[0]).includes('supportChatTranscript'))
+      .at(-1)?.[1] as Record<string, unknown>;
+    expect(docxVars.format).toBe('DOCX');
 
     await act(async () => {
       await result.current.emailTranscript('me@x.com');
@@ -292,6 +341,7 @@ describe('useSupportChat', () => {
       JSON.stringify(c[0]).includes('emailSupportChatTranscript'),
     )?.[1] as Record<string, unknown>;
     expect(emVars.email).toBe('me@x.com');
+    expect(emVars.format).toBe('DOCX');
   });
 
   it('emits typing through the socket once connected', async () => {

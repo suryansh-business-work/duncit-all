@@ -71,4 +71,51 @@ describe('ticket e2e', () => {
     const user = server.client(signToken({ roles: ['USER'] }));
     await expect(user.request(gql`query { tickets { id } }`)).rejects.toThrow();
   });
+
+  it('lets the owner resolve, then leave one-time feedback (B7 + B8)', async () => {
+    const userId = new Types.ObjectId().toString();
+    const user = server.client(signToken({ id: userId, roles: ['USER'] }));
+    const created = await user.request<{ createTicket: { id: string } }>(CREATE, {
+      input: { subject: 'Resolve me', body_text: 'please' },
+    });
+    const id = created.createTicket.id;
+
+    const resolved = await user.request<{ resolveTicket: { status: string; messages: Array<{ author_role: string }> } }>(
+      gql`mutation ($id: ID!) { resolveTicket(ticket_id: $id) { status messages { author_role } } }`,
+      { id }
+    );
+    expect(resolved.resolveTicket.status).toBe('RESOLVED');
+    expect(resolved.resolveTicket.messages.some((m) => m.author_role === 'SYSTEM')).toBe(true);
+
+    const fed = await user.request<{ submitTicketFeedback: { rating: number; feedback_comment: string } }>(
+      gql`mutation ($id: ID!) { submitTicketFeedback(ticket_id: $id, rating: 5, comment: "ok") { rating feedback_comment } }`,
+      { id }
+    );
+    expect(fed.submitTicketFeedback.rating).toBe(5);
+
+    await expect(
+      user.request(gql`mutation ($id: ID!) { submitTicketFeedback(ticket_id: $id, rating: 2) { rating } }`, { id })
+    ).rejects.toThrow(/already submitted/i);
+  });
+
+  it('returns a ticket transcript to the owner but hides it from a stranger', async () => {
+    const userId = new Types.ObjectId().toString();
+    const user = server.client(signToken({ id: userId, roles: ['USER'] }));
+    const created = await user.request<{ createTicket: { id: string } }>(CREATE, {
+      input: { subject: 'Export me', body_text: 'hello transcript' },
+    });
+    const id = created.createTicket.id;
+
+    const tr = await user.request<{ ticketTranscript: { filename: string; text: string } }>(
+      gql`query ($id: ID!) { ticketTranscript(ticket_id: $id, format: TXT) { filename text } }`,
+      { id }
+    );
+    expect(tr.ticketTranscript.filename).toMatch(/^support-ST-[0-9A-F]{6}\.txt$/);
+    expect(tr.ticketTranscript.text).toContain('hello transcript');
+
+    const stranger = server.client(signToken({ roles: ['USER'] }));
+    await expect(
+      stranger.request(gql`query ($id: ID!) { ticketTranscript(ticket_id: $id) { filename } }`, { id })
+    ).rejects.toThrow(/not found/i);
+  });
 });

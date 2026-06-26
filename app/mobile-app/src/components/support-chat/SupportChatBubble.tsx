@@ -39,12 +39,37 @@ function Attachment({ url }: Readonly<{ url: string }>) {
   );
 }
 
+/** WhatsApp-style delivery indicator for the user's own message (B12):
+ * clock = pending, single grey ✓ = Sent/delivered, double blue ✓✓ = Seen. */
+function Tick({ id, state }: Readonly<{ id: string; state: 'pending' | 'delivered' | 'seen' }>) {
+  if (state === 'pending') {
+    return <MaterialIcons testID={`tick-${id}`} name="schedule" size={12} color="#e6e6e6" />;
+  }
+  const seen = state === 'seen';
+  return (
+    <MaterialIcons
+      testID={`tick-${id}`}
+      name={seen ? 'done-all' : 'done'}
+      size={13}
+      color={TICK_COLOR[state]}
+    />
+  );
+}
+
 interface Props {
   message: SupportChatMessage;
   agentLastReadAt?: string | null;
+  timeZone?: string;
+  /** Re-send handler for a failed message (B12). */
+  onRetry?: (message: SupportChatMessage) => void;
 }
 
-export function SupportChatBubble({ message, agentLastReadAt }: Readonly<Props>) {
+export function SupportChatBubble({
+  message,
+  agentLastReadAt,
+  timeZone,
+  onRetry,
+}: Readonly<Props>) {
   if (message.sender_role === 'SYSTEM') {
     return (
       <XStack justifyContent="center" testID={`support-msg-${message.id}`}>
@@ -94,25 +119,27 @@ export function SupportChatBubble({ message, agentLastReadAt }: Readonly<Props>)
         ) : null}
         <XStack justifyContent="flex-end" alignItems="center" gap={4}>
           <Text fontSize={10} color={mine ? '$onPrimary' : '$muted'} opacity={0.7}>
-            {formatTime(message.created_at)}
+            {formatTime(message.created_at, timeZone)}
           </Text>
-          {tick === 'pending' && (
-            <MaterialIcons
-              testID={`tick-${message.id}`}
-              name="schedule"
-              size={12}
-              color="#e6e6e6"
-            />
-          )}
-          {tick && tick !== 'pending' && (
-            <MaterialIcons
-              testID={`tick-${message.id}`}
-              name="done-all"
-              size={13}
-              color={TICK_COLOR[tick]}
-            />
-          )}
+          {tick && tick !== 'failed' ? <Tick id={message.id} state={tick} /> : null}
         </XStack>
+        {tick === 'failed' ? (
+          <XStack
+            testID={`retry-${message.id}`}
+            role="button"
+            aria-label="Retry sending"
+            onPress={() => onRetry?.(message)}
+            alignItems="center"
+            gap={4}
+            alignSelf="flex-end"
+            pressStyle={{ opacity: 0.7 }}
+          >
+            <MaterialIcons name="error-outline" size={13} color="#ff5a5f" />
+            <Text fontSize={11} fontWeight="800" color="#ff5a5f">
+              Failed · Retry
+            </Text>
+          </XStack>
+        ) : null}
       </YStack>
     </XStack>
   );

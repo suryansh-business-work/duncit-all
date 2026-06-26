@@ -108,6 +108,9 @@
   "pnpm": {
     "neverBuiltDependencies": [
       "mongodb-memory-server"
-    ]
+    ],
+    "overrides": {
+      "@mui/x-date-pickers>date-fns": "2.30.0"
+    }
   }
 }

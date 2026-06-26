@@ -24,6 +24,8 @@ export const ticketTypeDefs = /* GraphQL */ `
   enum TicketAuthorRole {
     USER
     AGENT
+    "Automated timeline entry (resolve / reopen), no human author."
+    SYSTEM
   }
 
   type TicketActor {
@@ -59,6 +61,10 @@ export const ticketTypeDefs = /* GraphQL */ `
     resolved_at: String
     "Reopen is allowed by the user until this instant (null if not resolved/closed)."
     reopen_deadline: String
+    "Satisfaction rating (1-5) left by the owner after resolution; null if none."
+    rating: Int
+    feedback_comment: String
+    feedback_at: String
     message_count: Int!
     messages: [TicketMessage!]!
     created_at: String!
@@ -77,6 +83,8 @@ export const ticketTypeDefs = /* GraphQL */ `
     tickets(status: TicketStatus, assignee_id: ID, search: String, limit: Int): [Ticket!]!
     ticket(id: ID!): Ticket
     myTickets: [Ticket!]!
+    "Transcript of a ticket (.txt or .docx) — accessible to its owner or a support agent."
+    ticketTranscript(ticket_id: ID!, format: TranscriptFormat): SupportChatTranscript!
   }
 
   extend type Mutation {
@@ -90,6 +98,12 @@ export const ticketTypeDefs = /* GraphQL */ `
     updateTicketStatus(ticket_id: ID!, status: TicketStatus!): Ticket!
     "Re-open a resolved/closed ticket (owner within 3 days, or an agent). Reason logged to the thread."
     reopenTicket(ticket_id: ID!, reason: String): Ticket!
+    "Mark a ticket resolved (owner OR an agent) — appends a SYSTEM timeline bubble."
+    resolveTicket(ticket_id: ID!): Ticket!
+    "Leave a 1-5 satisfaction rating + optional comment on a resolved/closed ticket (owner-only, one-time)."
+    submitTicketFeedback(ticket_id: ID!, rating: Int!, comment: String): Ticket!
     assignTicket(ticket_id: ID!, assignee_id: ID): Ticket!
+    "Email the ticket transcript to an address (defaults to a .docx attachment)."
+    emailTicketTranscript(ticket_id: ID!, email: String!, format: TranscriptFormat): Boolean!
   }
 `;

@@ -2,6 +2,7 @@ import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole, hasRole } from '@middleware/rbac';
 import { supportChatService } from './supportChat.service';
+import type { TranscriptFormat } from '@modules/support/transcript';
 import { listMyUnifiedSupportTickets } from './unifiedTickets.service';
 import { userService } from '@modules/access/user/user.service';
 import { registerSchema } from '@modules/access/user/user.validator';
@@ -36,14 +37,14 @@ export const supportChatResolvers = {
     },
     supportChatTranscript: async (
       _p: unknown,
-      args: { session_id: string },
+      args: { session_id: string; format?: TranscriptFormat },
       ctx: GraphQLContext
     ) => {
       const user = requireAuth(ctx);
       const isAgent = hasRole(user, SUPPORT_ROLES);
       const ok = await supportChatService.canAccessSession(args.session_id, user.id, isAgent);
       if (!ok) throw new GraphQLError('Chat session not found', { extensions: { code: 'NOT_FOUND' } });
-      return supportChatService.transcript(args.session_id);
+      return supportChatService.transcript(args.session_id, args.format ?? 'TXT');
     },
   },
   Mutation: {
@@ -103,14 +104,14 @@ export const supportChatResolvers = {
     },
     emailSupportChatTranscript: async (
       _p: unknown,
-      args: { session_id: string; email: string },
+      args: { session_id: string; email: string; format?: TranscriptFormat },
       ctx: GraphQLContext
     ) => {
       const user = requireAuth(ctx);
       const isAgent = hasRole(user, SUPPORT_ROLES);
       const ok = await supportChatService.canAccessSession(args.session_id, user.id, isAgent);
       if (!ok) throw new GraphQLError('Chat session not found', { extensions: { code: 'NOT_FOUND' } });
-      return supportChatService.emailTranscript(args.session_id, args.email);
+      return supportChatService.emailTranscript(args.session_id, args.email, args.format ?? 'DOCX');
     },
     markSupportChatRead: (_p: unknown, args: { session_id: string }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);

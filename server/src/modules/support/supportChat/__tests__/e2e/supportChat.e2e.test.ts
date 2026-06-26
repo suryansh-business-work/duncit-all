@@ -75,4 +75,34 @@ describe('supportChat e2e', () => {
       user.request(gql`query { supportChatSessions { id } }`)
     ).rejects.toThrow();
   });
+
+  it('exports a chat transcript in the requested format and gates feedback on resolution', async () => {
+    const userId = new Types.ObjectId().toString();
+    const user = server.client(signToken({ id: userId, roles: ['USER'] }));
+    const started = await user.request<{ startSupportChat: { id: string } }>(START, {
+      text: 'export this chat',
+    });
+    const id = started.startSupportChat.id;
+
+    const docx = await user.request<{ supportChatTranscript: { filename: string } }>(
+      gql`query ($id: ID!) { supportChatTranscript(session_id: $id, format: DOCX) { filename } }`,
+      { id }
+    );
+    expect(docx.supportChatTranscript.filename).toMatch(/\.docx$/);
+
+    // Feedback is rejected before the chat is resolved.
+    await expect(
+      user.request(
+        gql`mutation ($id: ID!) { submitSupportChatFeedback(session_id: $id, rating: 5) { rating } }`,
+        { id }
+      )
+    ).rejects.toThrow(/resolved before feedback/i);
+
+    await user.request(gql`mutation ($id: ID!) { resolveSupportChat(session_id: $id) { status } }`, { id });
+    const fed = await user.request<{ submitSupportChatFeedback: { rating: number } }>(
+      gql`mutation ($id: ID!) { submitSupportChatFeedback(session_id: $id, rating: 4) { rating } }`,
+      { id }
+    );
+    expect(fed.submitSupportChatFeedback.rating).toBe(4);
+  });
 });

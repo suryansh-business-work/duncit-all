@@ -119,6 +119,75 @@ describe('useTicketDetails', () => {
     expect(reopenCall?.[1]).toEqual({ ticketId: 't1', reason: null });
   });
 
+  it('resolves the ticket and reloads (B7)', async () => {
+    mockRequest.mockImplementation((doc: unknown) => {
+      if (JSON.stringify(doc).includes('resolveTicket'))
+        return Promise.resolve({ resolveTicket: { id: 't1', status: 'RESOLVED' } });
+      return Promise.resolve({ ticket });
+    });
+    const { result } = renderHook(() => useTicketDetails('t1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.resolve();
+    });
+    expect(mockRequest.mock.calls.some((c) => JSON.stringify(c[0]).includes('resolveTicket'))).toBe(
+      true,
+    );
+  });
+
+  it('submits ticket feedback (trimmed) and reloads (B8)', async () => {
+    mockRequest.mockImplementation((doc: unknown) => {
+      if (JSON.stringify(doc).includes('submitTicketFeedback'))
+        return Promise.resolve({ submitTicketFeedback: { id: 't1', rating: 4 } });
+      return Promise.resolve({ ticket });
+    });
+    const { result } = renderHook(() => useTicketDetails('t1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.submitFeedback(4, '   ');
+    });
+    const fb = mockRequest.mock.calls.find((c) =>
+      JSON.stringify(c[0]).includes('submitTicketFeedback'),
+    );
+    expect(fb?.[1]).toEqual({ ticketId: 't1', rating: 4, comment: null });
+  });
+
+  it('fetches the transcript (.txt then .docx) and emails it (.docx) (B15)', async () => {
+    mockRequest.mockImplementation((doc: unknown) => {
+      const body = JSON.stringify(doc);
+      if (body.includes('ticketTranscript'))
+        return Promise.resolve({
+          ticketTranscript: { filename: 'support-ST.txt', text: 't', content_base64: 'dA==' },
+        });
+      if (body.includes('emailTicketTranscript'))
+        return Promise.resolve({ emailTicketTranscript: true });
+      return Promise.resolve({ ticket });
+    });
+    const { result } = renderHook(() => useTicketDetails('t1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    const txt = await result.current.getTranscript();
+    expect(txt.filename).toBe('support-ST.txt');
+    const txtVars = mockRequest.mock.calls
+      .filter((c) => JSON.stringify(c[0]).includes('ticketTranscript'))
+      .at(-1)?.[1] as Record<string, unknown>;
+    expect(txtVars.format).toBe('TXT');
+
+    await result.current.getTranscript('DOCX' as never);
+    const docxVars = mockRequest.mock.calls
+      .filter((c) => JSON.stringify(c[0]).includes('ticketTranscript'))
+      .at(-1)?.[1] as Record<string, unknown>;
+    expect(docxVars.format).toBe('DOCX');
+
+    await act(async () => {
+      await result.current.emailTranscript('me@x.com');
+    });
+    const em = mockRequest.mock.calls.find((c) =>
+      JSON.stringify(c[0]).includes('emailTicketTranscript'),
+    );
+    expect(em?.[1]).toEqual({ ticketId: 't1', email: 'me@x.com', format: 'DOCX' });
+  });
+
   it('treats a missing ticket as null', async () => {
     mockRequest.mockResolvedValue({ ticket: null });
     const { result } = renderHook(() => useTicketDetails('missing'));

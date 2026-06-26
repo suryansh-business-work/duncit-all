@@ -7,6 +7,8 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface Props {
   busy?: boolean;
+  /** Locks the composer once a chat is resolved (B7) — input + send disabled. */
+  locked?: boolean;
   onSendText: (text: string) => void;
   onAttach: () => void;
   onAttachDocument: () => void;
@@ -16,6 +18,7 @@ interface Props {
 /** Chat input row: attach image/video, attach document, typing-aware text field, send. */
 export function SupportChatComposer({
   busy,
+  locked,
   onSendText,
   onAttach,
   onAttachDocument,
@@ -24,6 +27,8 @@ export function SupportChatComposer({
   const { muted, onPrimary, color: ink } = useThemeColors();
   const [text, setText] = useState('');
   const lastTyping = useRef(0);
+
+  if (locked) return null;
 
   const change = (value: string) => {
     setText(value);

@@ -34,6 +34,32 @@ export const brandingMock = (overrides: Record<string, unknown> = {}): MockedRes
   },
 });
 
+export const PUBLIC_APP_SETTINGS = gql`
+  query PublicAppSettings {
+    publicAppSettings {
+      date_format
+      time_format
+      time_zone
+    }
+  }
+`;
+
+/** Settings query fired by useDateFormat for tz-aware chat/ticket timestamps. */
+export const publicAppSettingsMock = (overrides: Record<string, unknown> = {}): MockedResponse => ({
+  request: { query: PUBLIC_APP_SETTINGS },
+  result: {
+    data: {
+      publicAppSettings: {
+        date_format: 'dd MMM yyyy',
+        time_format: 'HH:mm',
+        time_zone: 'Asia/Kolkata',
+        ...overrides,
+      },
+    },
+  },
+  maxUsageCount: 20,
+});
+
 interface Options {
   mocks?: MockedResponse[];
   initialEntries?: string[];

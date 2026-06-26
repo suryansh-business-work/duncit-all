@@ -22,10 +22,11 @@ const CREATE_FLAG = gql`
 describe('settings e2e', () => {
   it('exposes public app settings and branding without auth', async () => {
     const pub = server.client();
-    const settings = await pub.request<{ publicAppSettings: { date_format: string } }>(
-      gql`query { publicAppSettings { date_format time_format } }`
+    const settings = await pub.request<{ publicAppSettings: { date_format: string; time_zone: string } }>(
+      gql`query { publicAppSettings { date_format time_format time_zone } }`
     );
     expect(settings.publicAppSettings.date_format).toBeTruthy();
+    expect(settings.publicAppSettings.time_zone).toBe('Asia/Kolkata');
 
     const branding = await pub.request<{ branding: { app_name: string } }>(
       gql`query { branding { app_name } }`
@@ -65,10 +66,11 @@ describe('settings e2e', () => {
   it('updates app settings + branding and forbids non-admins', async () => {
     const admin = server.client(signToken({ roles: ['SUPER_ADMIN'] }));
     const settings: any = await admin.request(
-      gql`mutation ($i: UpdateAppSettingsInput!) { updateAppSettings(input: $i) { date_format } }`,
-      { i: { date_format: 'yyyy-MM-dd' } }
+      gql`mutation ($i: UpdateAppSettingsInput!) { updateAppSettings(input: $i) { date_format time_zone } }`,
+      { i: { date_format: 'yyyy-MM-dd', time_zone: 'Asia/Dubai' } }
     );
     expect(settings.updateAppSettings.date_format).toBe('yyyy-MM-dd');
+    expect(settings.updateAppSettings.time_zone).toBe('Asia/Dubai');
 
     const branding: any = await admin.request(
       gql`mutation ($i: UpdateBrandingInput!) { updateBranding(input: $i) { support_phone } }`,

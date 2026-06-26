@@ -30,6 +30,7 @@
     "@mui/x-date-pickers": "^6.20.2",
     "@react-oauth/google": "^0.13.5",
     "date-fns": "^2.30.0",
+    "date-fns-tz": "2.0.1",
     "formik": "^2.4.6",
     "graphql": "^16.8.1",
     "react": "^18.3.1",

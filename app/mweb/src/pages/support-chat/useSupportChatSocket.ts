@@ -11,11 +11,17 @@ function getSocketUrl() {
   }
 }
 
+/** Live typing signal from a peer in the session room (B14a). */
+export interface TypingPayload {
+  role: 'USER' | 'AGENT';
+  name: string | null;
+}
+
 interface Params {
   sessionId: string | null;
   onMessage: (msg: any) => void;
   onSession?: (session: any) => void;
-  onTyping?: () => void;
+  onTyping?: (payload: TypingPayload) => void;
 }
 
 /**
@@ -52,7 +58,11 @@ export function useSupportChatSocket({ sessionId, onMessage, onSession, onTyping
       if (session.id === sessionId) onSessionRef.current?.(session);
     });
     s.on('support_typing', (payload: any) => {
-      if (payload?.session_id === sessionId) onTypingRef.current?.();
+      if (payload?.session_id !== sessionId) return;
+      onTypingRef.current?.({
+        role: payload?.role === 'AGENT' ? 'AGENT' : 'USER',
+        name: payload?.name ?? null,
+      });
     });
     return () => {
       s.emit('leave_support_session', sessionId);

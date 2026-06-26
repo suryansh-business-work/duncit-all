@@ -6,7 +6,9 @@ import SupportAgentIcon from '@mui/icons-material/SupportAgent';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import ReplayIcon from '@mui/icons-material/Replay';
 import DownloadIcon from '@mui/icons-material/Download';
+import DescriptionIcon from '@mui/icons-material/Description';
 import EmailIcon from '@mui/icons-material/Email';
+import type { TranscriptFormat } from './queries';
 
 interface Props {
   ticketNo: string | null;
@@ -16,7 +18,7 @@ interface Props {
   onBack: () => void;
   onResolve: () => void;
   onReopen: () => void;
-  onDownload: () => void;
+  onDownload: (format: TranscriptFormat) => void;
   onEmail: () => void;
 }
 
@@ -73,8 +75,11 @@ export default function ChatHeader({
             <ReplayIcon fontSize="small" sx={{ mr: 1 }} /> Re-open chat
           </MenuItem>
         )}
-        <MenuItem onClick={run(onDownload)}>
+        <MenuItem onClick={run(() => onDownload('TXT'))}>
           <DownloadIcon fontSize="small" sx={{ mr: 1 }} /> Download .txt
+        </MenuItem>
+        <MenuItem onClick={run(() => onDownload('DOCX'))}>
+          <DescriptionIcon fontSize="small" sx={{ mr: 1 }} /> Download .docx
         </MenuItem>
         <MenuItem onClick={run(onEmail)}>
           <EmailIcon fontSize="small" sx={{ mr: 1 }} /> Email transcript

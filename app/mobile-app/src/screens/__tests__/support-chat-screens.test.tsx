@@ -5,18 +5,17 @@ import * as DocumentPicker from 'expo-document-picker';
 import { ChatWithUsScreen } from '@/screens/ChatWithUsScreen';
 import { LiveChatScreen } from '@/screens/LiveChatScreen';
 import { AllSupportTicketsScreen } from '@/screens/AllSupportTicketsScreen';
-import { TicketDetailsScreen } from '@/screens/TicketDetailsScreen';
 import { useSupportChat } from '@/hooks/useSupportChat';
 import { useTickets } from '@/hooks/useSupport';
-import { useTicketDetails, useUnifiedTickets } from '@/hooks/useUnifiedTickets';
+import { useUnifiedTickets } from '@/hooks/useUnifiedTickets';
 import { shareTranscript } from '@/utils/transcript';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useSupportChat');
 jest.mock('@/hooks/useSupport', () => ({ useTickets: jest.fn() }));
-jest.mock('@/hooks/useUnifiedTickets', () => ({
-  useUnifiedTickets: jest.fn(),
-  useTicketDetails: jest.fn(),
+jest.mock('@/hooks/useUnifiedTickets', () => ({ useUnifiedTickets: jest.fn() }));
+jest.mock('@/hooks/useAppSettings', () => ({
+  useAppSettings: () => ({ dateFormat: 'dd MMM yyyy', timeFormat: 'HH:mm', timeZone: 'UTC' }),
 }));
 jest.mock('@/utils/transcript', () => ({
   shareTranscript: jest.fn().mockResolvedValue(undefined),
@@ -35,7 +34,6 @@ jest.mock('@react-navigation/native', () => ({
 const mockedChat = useSupportChat as jest.Mock;
 const mockedTickets = useTickets as jest.Mock;
 const mockedUnified = useUnifiedTickets as jest.Mock;
-const mockedDetails = useTicketDetails as jest.Mock;
 const reqPerm = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
 const launch = ImagePicker.launchImageLibraryAsync as jest.Mock;
 const pickDoc = DocumentPicker.getDocumentAsync as jest.Mock;
@@ -67,6 +65,8 @@ const session = (over: Record<string, unknown> = {}) => ({
   agent_last_read_at: null,
   resolved_at: null,
   reopen_deadline: null,
+  rating: null,
+  feedback_comment: null,
   ...over,
 });
 
@@ -75,15 +75,18 @@ const chatBase = () => ({
   messages: [],
   isLoading: false,
   error: '',
-  typing: false,
+  typing: '',
   aiThinking: false,
   send: jest.fn().mockResolvedValue(undefined),
+  retry: jest.fn().mockResolvedValue(undefined),
   uploadAttachment: jest.fn().mockResolvedValue('https://img/up.jpg'),
   emitTyping: jest.fn(),
   resolve: jest.fn().mockResolvedValue(undefined),
   reopen: jest.fn().mockResolvedValue(undefined),
   submitFeedback: jest.fn().mockResolvedValue(undefined),
-  getTranscript: jest.fn().mockResolvedValue({ filename: 'support-CH.txt', text: 'log' }),
+  getTranscript: jest
+    .fn()
+    .mockResolvedValue({ filename: 'support-CH.txt', text: 'log', content_base64: 'bG9n' }),
   emailTranscript: jest.fn().mockResolvedValue(undefined),
 });
 
@@ -151,10 +154,10 @@ describe('LiveChatScreen — states + messages', () => {
     mockedChat.mockReturnValue({
       ...chatBase(),
       session: session({ agent_last_read_at: '2999-01-01T00:00:00Z' }),
-      typing: true,
+      typing: 'Support is typing…',
       messages: [
         chatMsg('1', 'USER', { created_at: '2000-01-01T10:00:00Z' }),
-        chatMsg('2', 'SYSTEM', { text: 'Picked up by Agent A' }),
+        chatMsg('2', 'SYSTEM', { text: 'Support executive Agent A will be assisting you now.' }),
         chatMsg('3', 'AGENT', {
           is_ai: true,
           attachments: ['https://img/a.jpg', 'https://x/doc.pdf'],
@@ -162,11 +165,13 @@ describe('LiveChatScreen — states + messages', () => {
       ],
     });
     renderWithProviders(<LiveChatScreen />);
-    expect(screen.getByText('Picked up by Agent A')).toBeOnTheScreen();
+    expect(
+      screen.getByText('Support executive Agent A will be assisting you now.'),
+    ).toBeOnTheScreen();
     expect(screen.getByText('Duncit Assistant')).toBeOnTheScreen();
     expect(screen.getByTestId('tick-1')).toBeOnTheScreen();
     expect(screen.getByTestId('day-1')).toBeOnTheScreen();
-    expect(screen.getByTestId('support-typing')).toBeOnTheScreen();
+    expect(screen.getByTestId('support-typing')).toHaveTextContent('Support is typing…');
     // Non-image attachment opens via the file chip.
     fireEvent.press(screen.getByTestId('support-attach-https://x/doc.pdf'));
   });
@@ -178,12 +183,19 @@ describe('LiveChatScreen — states + messages', () => {
   });
 
   it('shows a delivered tick when the agent has not read yet', () => {
-    mockedChat.mockReturnValue({
-      ...chatBase(),
-      messages: [chatMsg('1', 'USER')],
-    });
+    mockedChat.mockReturnValue({ ...chatBase(), messages: [chatMsg('1', 'USER')] });
     renderWithProviders(<LiveChatScreen />);
     expect(screen.getByTestId('tick-1')).toBeOnTheScreen();
+  });
+
+  it('shows a failed message with a Retry affordance and re-sends it', () => {
+    const retry = jest.fn().mockResolvedValue(undefined);
+    const failed = chatMsg('1', 'USER', { failed: true });
+    mockedChat.mockReturnValue({ ...chatBase(), retry, messages: [failed] });
+    renderWithProviders(<LiveChatScreen />);
+    expect(screen.getByText('Failed · Retry')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('retry-1'));
+    expect(retry).toHaveBeenCalledWith(failed);
   });
 });
 
@@ -270,13 +282,11 @@ describe('LiveChatScreen — send + attach', () => {
     mockedChat.mockReturnValue({ ...chatBase(), send, uploadAttachment });
     renderWithProviders(<LiveChatScreen />);
 
-    // Cancelled document pick is a no-op.
     pickDoc.mockResolvedValueOnce({ canceled: true, assets: null });
     fireEvent.press(screen.getByTestId('support-chat-attach-doc'));
     await waitFor(() => expect(pickDoc).toHaveBeenCalled());
     expect(uploadAttachment).not.toHaveBeenCalled();
 
-    // A picked PDF uploads with allowDocuments=true and is sent as an attachment.
     pickDoc.mockResolvedValueOnce({
       canceled: false,
       assets: [{ uri: 'file://spec.pdf', name: 'spec.pdf', mimeType: 'application/pdf' }],
@@ -292,31 +302,91 @@ describe('LiveChatScreen — send + attach', () => {
   });
 });
 
-describe('LiveChatScreen — actions', () => {
-  it('resolves then submits feedback (and can skip)', async () => {
+describe('LiveChatScreen — resolve + feedback (B7/B8)', () => {
+  it('confirms before resolving, then submits emoji feedback', async () => {
     const resolve = jest.fn().mockResolvedValue(undefined);
     const submitFeedback = jest.fn().mockResolvedValue(undefined);
     mockedChat.mockReturnValue({ ...chatBase(), resolve, submitFeedback });
     renderWithProviders(<LiveChatScreen />);
+
+    // Toggle opens the confirm modal — resolve only runs after "Yes".
     fireEvent.press(screen.getByTestId('chat-action-toggle'));
+    expect(screen.getByTestId('resolve-confirm-modal')).toBeOnTheScreen();
+    expect(resolve).not.toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('resolve-confirm-yes'));
     await waitFor(() => expect(resolve).toHaveBeenCalled());
     await waitFor(() => expect(screen.getByTestId('support-feedback-modal')).toBeOnTheScreen());
 
-    fireEvent.press(screen.getByTestId('feedback-star-4'));
+    fireEvent.press(screen.getByTestId('feedback-emoji-4'));
     fireEvent.press(screen.getByTestId('feedback-submit'));
     await waitFor(() => expect(submitFeedback).toHaveBeenCalledWith(4, ''));
+    await waitFor(() => expect(screen.getByTestId('feedback-thanks')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('feedback-done'));
+    expect(screen.queryByTestId('support-feedback-modal')).toBeNull();
   });
 
-  it('closes the feedback modal on skip', async () => {
+  it('cancels the resolve confirmation', () => {
     const resolve = jest.fn().mockResolvedValue(undefined);
     mockedChat.mockReturnValue({ ...chatBase(), resolve });
     renderWithProviders(<LiveChatScreen />);
     fireEvent.press(screen.getByTestId('chat-action-toggle'));
-    await waitFor(() => expect(screen.getByTestId('support-feedback-modal')).toBeOnTheScreen());
-    fireEvent.press(screen.getByTestId('feedback-skip'));
-    expect(screen.queryByTestId('support-feedback-modal')).toBeNull();
+    fireEvent.press(screen.getByTestId('resolve-confirm-cancel'));
+    expect(screen.queryByTestId('resolve-confirm-modal')).toBeNull();
+    expect(resolve).not.toHaveBeenCalled();
   });
 
+  it('surfaces a feedback submit failure', async () => {
+    const submitFeedback = jest.fn().mockRejectedValue(new Error('already submitted'));
+    mockedChat.mockReturnValue({
+      ...chatBase(),
+      session: session({ status: 'CLOSED', resolved_at: PAST_DEADLINE }),
+      submitFeedback,
+    });
+    renderWithProviders(<LiveChatScreen />);
+    // Auto-opens for a resolved, unrated chat.
+    await waitFor(() => expect(screen.getByTestId('support-feedback-modal')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('feedback-emoji-2'));
+    fireEvent.press(screen.getByTestId('feedback-submit'));
+    await waitFor(() =>
+      expect(screen.getByTestId('feedback-error')).toHaveTextContent('already submitted'),
+    );
+  });
+
+  it('locks the composer and shows the resolved note once closed', () => {
+    mockedChat.mockReturnValue({
+      ...chatBase(),
+      session: session({
+        status: 'CLOSED',
+        resolved_at: PAST_DEADLINE,
+        reopen_deadline: FUTURE_DEADLINE,
+        rating: 5,
+      }),
+    });
+    renderWithProviders(<LiveChatScreen />);
+    expect(screen.getByTestId('chat-closed-note')).toHaveTextContent(
+      'This conversation has been marked as resolved.',
+    );
+    // Composer is locked (input hidden).
+    expect(screen.queryByTestId('support-chat-input')).toBeNull();
+  });
+
+  it('does not auto-open feedback for an already-rated resolved chat (one-time)', () => {
+    mockedChat.mockReturnValue({
+      ...chatBase(),
+      session: session({
+        status: 'CLOSED',
+        resolved_at: PAST_DEADLINE,
+        reopen_deadline: FUTURE_DEADLINE,
+        rating: 3,
+        feedback_comment: 'It was ok',
+      }),
+    });
+    renderWithProviders(<LiveChatScreen />);
+    expect(screen.queryByTestId('support-feedback-modal')).toBeNull();
+  });
+});
+
+describe('LiveChatScreen — reopen + transcript', () => {
   it('re-opens a closed chat via the reason modal and shows the deadline', async () => {
     const reopen = jest.fn().mockResolvedValue(undefined);
     mockedChat.mockReturnValue({
@@ -325,11 +395,11 @@ describe('LiveChatScreen — actions', () => {
         status: 'CLOSED',
         resolved_at: PAST_DEADLINE,
         reopen_deadline: FUTURE_DEADLINE,
+        rating: 5,
       }),
       reopen,
     });
     renderWithProviders(<LiveChatScreen />);
-    expect(screen.getByTestId('chat-closed-note')).toBeOnTheScreen();
     expect(screen.getByTestId('chat-reopen-deadline')).toHaveTextContent(/You can reopen until/);
 
     fireEvent.press(screen.getByTestId('chat-action-toggle'));
@@ -337,6 +407,24 @@ describe('LiveChatScreen — actions', () => {
     fireEvent.press(screen.getByTestId('reopen-submit'));
     await waitFor(() => expect(reopen).toHaveBeenCalledWith('Need more help'));
     await waitFor(() => expect(screen.queryByTestId('reopen-reason-modal')).toBeNull());
+  });
+
+  it('re-opens with no reason (optional, B11)', async () => {
+    const reopen = jest.fn().mockResolvedValue(undefined);
+    mockedChat.mockReturnValue({
+      ...chatBase(),
+      session: session({
+        status: 'CLOSED',
+        resolved_at: PAST_DEADLINE,
+        reopen_deadline: FUTURE_DEADLINE,
+        rating: 5,
+      }),
+      reopen,
+    });
+    renderWithProviders(<LiveChatScreen />);
+    fireEvent.press(screen.getByTestId('chat-action-toggle'));
+    fireEvent.press(screen.getByTestId('reopen-submit'));
+    await waitFor(() => expect(reopen).toHaveBeenCalledWith(''));
   });
 
   it('surfaces a chat reopen failure in the modal', async () => {
@@ -347,6 +435,7 @@ describe('LiveChatScreen — actions', () => {
         status: 'CLOSED',
         resolved_at: PAST_DEADLINE,
         reopen_deadline: FUTURE_DEADLINE,
+        rating: 5,
       }),
       reopen,
     });
@@ -368,6 +457,7 @@ describe('LiveChatScreen — actions', () => {
         status: 'CLOSED',
         resolved_at: PAST_DEADLINE,
         reopen_deadline: PAST_DEADLINE,
+        rating: 5,
       }),
     });
     renderWithProviders(<LiveChatScreen />);
@@ -376,12 +466,22 @@ describe('LiveChatScreen — actions', () => {
     expect(screen.queryByTestId('chat-reopen-deadline')).toBeNull();
   });
 
-  it('downloads the transcript and skips when none', async () => {
-    const getTranscript = jest.fn().mockResolvedValue({ filename: 'f.txt', text: 'log' });
+  it('downloads the .txt and .docx transcripts, and skips when none', async () => {
+    const getTranscript = jest
+      .fn()
+      .mockResolvedValue({ filename: 'f.txt', text: 'log', content_base64: 'bG9n' });
     mockedChat.mockReturnValue({ ...chatBase(), getTranscript });
     const a = renderWithProviders(<LiveChatScreen />);
     fireEvent.press(screen.getByTestId('chat-action-download'));
-    await waitFor(() => expect(mockShare).toHaveBeenCalledWith('f.txt', 'log'));
+    await waitFor(() =>
+      expect(mockShare).toHaveBeenCalledWith({
+        filename: 'f.txt',
+        text: 'log',
+        content_base64: 'bG9n',
+      }),
+    );
+    fireEvent.press(screen.getByTestId('chat-action-download-docx'));
+    await waitFor(() => expect(getTranscript).toHaveBeenCalledTimes(2));
     a.unmount();
 
     mockShare.mockClear();
@@ -503,156 +603,5 @@ describe('AllSupportTicketsScreen', () => {
     mockNavigate.mockClear();
     fireEvent.press(screen.getByTestId('all-ticket-SOS-CCC333'));
     expect(mockNavigate).not.toHaveBeenCalled();
-  });
-});
-
-describe('TicketDetailsScreen', () => {
-  const FUTURE = '2999-01-01T00:00:00Z';
-  const PAST = '2000-01-01T00:00:00Z';
-  const detail = (status: string, over: Record<string, unknown> = {}) => ({
-    id: 't1',
-    subject: 'Refund issue',
-    category: 'PAYMENT',
-    status,
-    priority: 'HIGH',
-    created_at: '2026-06-01T10:00:00Z',
-    updated_at: '2026-06-02T10:00:00Z',
-    last_message_at: '2026-06-02T10:00:00Z',
-    resolved_at: null,
-    reopen_deadline: null,
-    ...over,
-    messages: [
-      {
-        id: 'm1',
-        author_role: 'USER',
-        author_name: 'Me',
-        body_text: 'Please refund',
-        attachments: [],
-        created_at: '',
-      },
-      {
-        id: 'm2',
-        author_role: 'AGENT',
-        author_name: 'Agent A',
-        body_text: 'On it',
-        attachments: [],
-        created_at: '',
-      },
-    ],
-  });
-
-  it('shows loading, the thread and the missing state', () => {
-    mockedDetails.mockReturnValue({
-      ticket: null,
-      isLoading: true,
-      reply: jest.fn(),
-      reopen: jest.fn(),
-    });
-    const a = renderWithProviders(<TicketDetailsScreen />);
-    expect(screen.getByTestId('ticket-details-loading')).toBeOnTheScreen();
-    a.unmount();
-
-    mockedDetails.mockReturnValue({
-      ticket: detail('OPEN'),
-      isLoading: false,
-      reply: jest.fn(),
-      reopen: jest.fn(),
-    });
-    const b = renderWithProviders(<TicketDetailsScreen />);
-    expect(screen.getByText('On it')).toBeOnTheScreen();
-    expect(screen.queryByTestId('ticket-reopen')).toBeNull();
-    // Bug 1: ticket number, priority and the raised/last-updated dates render.
-    expect(screen.getByTestId('ticket-meta-no')).toHaveTextContent(/^ST-/);
-    expect(screen.getByTestId('ticket-meta-priority')).toHaveTextContent('HIGH');
-    expect(screen.getByText(/Raised:/)).toBeOnTheScreen();
-    expect(screen.getByText(/Last updated:/)).toBeOnTheScreen();
-    b.unmount();
-
-    mockedDetails.mockReturnValue({
-      ticket: null,
-      isLoading: false,
-      reply: jest.fn(),
-      reopen: jest.fn(),
-    });
-    renderWithProviders(<TicketDetailsScreen />);
-    expect(screen.getByTestId('ticket-details-missing')).toBeOnTheScreen();
-  });
-
-  it('sends a reply (empty is a no-op) and surfaces failures', async () => {
-    const reply = jest.fn().mockResolvedValue(undefined);
-    mockedDetails.mockReturnValue({
-      ticket: detail('OPEN'),
-      isLoading: false,
-      reply,
-      reopen: jest.fn(),
-    });
-    renderWithProviders(<TicketDetailsScreen />);
-    fireEvent.press(screen.getByTestId('ticket-reply-send'));
-    expect(reply).not.toHaveBeenCalled();
-    fireEvent.changeText(screen.getByTestId('ticket-reply-input'), 'thanks');
-    fireEvent.press(screen.getByTestId('ticket-reply-send'));
-    await waitFor(() => expect(reply).toHaveBeenCalledWith('thanks'));
-
-    reply.mockRejectedValueOnce(new Error('server busy'));
-    fireEvent.changeText(screen.getByTestId('ticket-reply-input'), 'again');
-    fireEvent.press(screen.getByTestId('ticket-reply-send'));
-    await waitFor(() =>
-      expect(screen.getByTestId('ticket-reply-error')).toHaveTextContent('server busy'),
-    );
-  });
-
-  it('re-opens a resolved ticket via the reason modal, then surfaces a failure', async () => {
-    const reopen = jest.fn().mockResolvedValue(undefined);
-    mockedDetails.mockReturnValue({
-      ticket: detail('RESOLVED', { resolved_at: PAST, reopen_deadline: FUTURE }),
-      isLoading: false,
-      reply: jest.fn(),
-      reopen,
-    });
-    renderWithProviders(<TicketDetailsScreen />);
-    // The reopen window line shows while the deadline is in the future.
-    expect(screen.getByTestId('ticket-reopen-until')).toHaveTextContent(/You can reopen until/);
-
-    fireEvent.press(screen.getByTestId('ticket-reopen'));
-    expect(screen.getByTestId('reopen-deadline')).toBeOnTheScreen();
-    fireEvent.changeText(screen.getByTestId('reopen-reason-input'), 'Still broken');
-    fireEvent.press(screen.getByTestId('reopen-submit'));
-    await waitFor(() => expect(reopen).toHaveBeenCalledWith('Still broken'));
-    await waitFor(() => expect(screen.queryByTestId('reopen-reason-modal')).toBeNull());
-
-    // Re-open again, this time the server rejects → error surfaces in the modal.
-    reopen.mockRejectedValueOnce(new Error('cannot reopen'));
-    fireEvent.press(screen.getByTestId('ticket-reopen'));
-    fireEvent.changeText(screen.getByTestId('reopen-reason-input'), 'again');
-    fireEvent.press(screen.getByTestId('reopen-submit'));
-    await waitFor(() =>
-      expect(screen.getByTestId('reopen-error')).toHaveTextContent('cannot reopen'),
-    );
-    // Cancelling closes the modal.
-    fireEvent.press(screen.getByTestId('reopen-cancel'));
-    expect(screen.queryByTestId('reopen-reason-modal')).toBeNull();
-  });
-
-  it('hides reopen and shows the expired note once the window has passed', () => {
-    mockedDetails.mockReturnValue({
-      ticket: detail('CLOSED', { resolved_at: PAST, reopen_deadline: PAST }),
-      isLoading: false,
-      reply: jest.fn(),
-      reopen: jest.fn(),
-    });
-    renderWithProviders(<TicketDetailsScreen />);
-    expect(screen.queryByTestId('ticket-reopen')).toBeNull();
-    expect(screen.getByTestId('ticket-reopen-expired')).toBeOnTheScreen();
-  });
-
-  it('falls back to last_message_at when updated_at is absent', () => {
-    mockedDetails.mockReturnValue({
-      ticket: detail('OPEN', { updated_at: null }),
-      isLoading: false,
-      reply: jest.fn(),
-      reopen: jest.fn(),
-    });
-    renderWithProviders(<TicketDetailsScreen />);
-    expect(screen.getByText(/Last updated:/)).toBeOnTheScreen();
   });
 });

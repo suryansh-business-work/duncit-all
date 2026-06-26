@@ -1,5 +1,6 @@
 import { getIo, type AuthedSocket } from '@realtime/io';
 import { supportChatService } from './supportChat.service';
+import { buildTypingPayload } from './supportChat.typing';
 
 const SUPPORT_ROLES = new Set(['SUPER_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_USER']);
 
@@ -40,7 +41,17 @@ export function attachSupportChatHandlers() {
 
     socket.on('support_typing', (sessionId: string) => {
       if (!socket.userId) return;
-      socket.to(supportSessionRoom(sessionId)).emit('support_typing', { session_id: sessionId, user_id: socket.userId });
+      // Label the typing indicator on the other side as "Support is typing…" vs
+      // "<user> is typing…". Role comes from the socket's JWT roles (cheap — no
+      // DB lookup); name is included only when the socket already carries one.
+      const name = (socket as AuthedSocket & { displayName?: string }).displayName ?? null;
+      const payload = buildTypingPayload({
+        sessionId,
+        userId: socket.userId,
+        roles: socket.roles,
+        name,
+      });
+      socket.to(supportSessionRoom(sessionId)).emit('support_typing', payload);
     });
   });
 }

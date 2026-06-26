@@ -1,63 +1,49 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
-import {
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Rating,
-  Stack,
-  TextField,
-  Typography,
-} from '@mui/material';
+import EmojiFeedbackDialog from './EmojiFeedbackDialog';
 import { SUBMIT_SUPPORT_CHAT_FEEDBACK } from './queries';
 
 interface Props {
   open: boolean;
   sessionId: string;
+  /** Existing rating/comment so an already-rated chat shows the read-only view. */
+  rating: number | null;
+  comment: string | null;
   onClose: () => void;
-  onSubmitted: () => void;
+  onSubmitted: (rating: number, comment: string) => void;
 }
 
-export default function FeedbackDialog({ open, sessionId, onClose, onSubmitted }: Readonly<Props>) {
-  const [rating, setRating] = useState<number | null>(0);
-  const [comment, setComment] = useState('');
+/** Chat satisfaction feedback (B8) — wires the chat mutation into the shared emoji dialog. */
+export default function FeedbackDialog({
+  open,
+  sessionId,
+  rating,
+  comment,
+  onClose,
+  onSubmitted,
+}: Readonly<Props>) {
   const [submit, { loading }] = useMutation(SUBMIT_SUPPORT_CHAT_FEEDBACK);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSubmit = async () => {
-    if (!rating) return;
-    await submit({ variables: { session_id: sessionId, rating, comment: comment.trim() || null } });
-    onSubmitted();
+  const handleSubmit = async (value: number, note: string) => {
+    setError(null);
+    try {
+      await submit({ variables: { session_id: sessionId, rating: value, comment: note || null } });
+      onSubmitted(value, note);
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not submit your feedback.');
+    }
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
-      <DialogTitle sx={{ fontWeight: 900 }}>How did we do?</DialogTitle>
-      <DialogContent>
-        <Stack spacing={1.5} alignItems="center" sx={{ pt: 1 }}>
-          <Typography variant="body2" color="text.secondary">
-            Rate your support experience.
-          </Typography>
-          <Rating value={rating} onChange={(_e, v) => setRating(v)} size="large" />
-          <TextField
-            fullWidth
-            size="small"
-            label="Anything to add? (optional)"
-            value={comment}
-            onChange={(e) => setComment(e.target.value)}
-            multiline
-            minRows={2}
-            inputProps={{ maxLength: 1000 }}
-          />
-        </Stack>
-      </DialogContent>
-      <DialogActions>
-        <Button onClick={onClose}>Skip</Button>
-        <Button variant="contained" disabled={!rating || loading} onClick={handleSubmit}>
-          {loading ? 'Sending…' : 'Submit'}
-        </Button>
-      </DialogActions>
-    </Dialog>
+    <EmojiFeedbackDialog
+      open={open}
+      existingRating={rating}
+      existingComment={comment}
+      busy={loading}
+      error={error}
+      onSubmit={handleSubmit}
+      onClose={onClose}
+    />
   );
 }

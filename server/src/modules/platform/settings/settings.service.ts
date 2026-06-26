@@ -5,12 +5,17 @@ import {
   BrandingModel,
 } from "./settings.model";
 import { getRuntimeEnvValue } from "@config/runtimeEnv";
+import {
+  setReopenWindowZone,
+  DEFAULT_REOPEN_ZONE,
+} from "@modules/support/reopenWindow";
 
 const toAppPub = (d: any) => ({
   jwt_expires_in: d?.jwt_expires_in ?? null,
   jwt_no_expiry: true,
   date_format: d?.date_format ?? "dd MMM yyyy",
   time_format: d?.time_format ?? "hh:mm a",
+  time_zone: d?.time_zone ?? DEFAULT_REOPEN_ZONE,
   updated_at: d?.updated_at?.toISOString?.() ?? "",
 });
 
@@ -151,6 +156,7 @@ export const settingsService = {
     return {
       date_format: doc.date_format ?? "dd MMM yyyy",
       time_format: doc.time_format ?? "hh:mm a",
+      time_zone: doc.time_zone ?? DEFAULT_REOPEN_ZONE,
     };
   },
 
@@ -176,6 +182,7 @@ export const settingsService = {
     jwt_no_expiry?: boolean;
     date_format?: string;
     time_format?: string;
+    time_zone?: string;
   }) {
     const update: any = {};
     if (input.jwt_no_expiry !== undefined)
@@ -184,12 +191,25 @@ export const settingsService = {
       update.jwt_expires_in = input.jwt_expires_in;
     if (input.date_format !== undefined) update.date_format = input.date_format;
     if (input.time_format !== undefined) update.time_format = input.time_format;
+    if (input.time_zone !== undefined) update.time_zone = input.time_zone;
     const doc = await AppSettingsModel.findOneAndUpdate(
       { singleton_key: "app" },
       { $set: update },
       { new: true, upsert: true },
     );
+    // Keep the reopen-window day boundaries aligned with the configured zone.
+    if (input.time_zone !== undefined) setReopenWindowZone(doc.time_zone);
     return toAppPub(doc);
+  },
+
+  /**
+   * Refresh process-level caches that derive from app settings (currently the
+   * support reopen-window timezone). Called once on boot after the singleton is
+   * seeded so day-boundary math matches the admin-configured zone.
+   */
+  async refreshDerivedCaches() {
+    const doc = await AppSettingsModel.findOne({ singleton_key: "app" });
+    setReopenWindowZone(doc?.time_zone ?? DEFAULT_REOPEN_ZONE);
   },
 
   async listFlags() {

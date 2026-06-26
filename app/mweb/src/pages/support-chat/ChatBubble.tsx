@@ -1,13 +1,15 @@
-import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Avatar, Chip, Link, Paper, Stack, Typography } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
+import CheckIcon from '@mui/icons-material/Check';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
-import { format } from 'date-fns';
+import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
 import { userMessageTick } from './chatHelpers';
 import type { SupportChatMessage } from './queries';
 
 const IMAGE_RE = /\.(png|jpe?g|gif|webp|avif)$/i;
+const SEEN_BLUE = '#34b7f1';
 
 /** Human-readable file name from an attachment URL (drops query + path). */
 function fileName(url: string): string {
@@ -16,10 +18,27 @@ function fileName(url: string): string {
   return decodeURIComponent(last) || 'Attachment';
 }
 
-function Tick({ msg, agentLastReadAt }: Readonly<{ msg: SupportChatMessage; agentLastReadAt: string | null }>) {
+function Tick({
+  msg,
+  agentLastReadAt,
+  onRetry,
+}: Readonly<{ msg: SupportChatMessage; agentLastReadAt: string | null; onRetry?: () => void }>) {
   const state = userMessageTick(msg, agentLastReadAt);
+  if (state === 'failed') {
+    return (
+      <Stack direction="row" spacing={0.25} alignItems="center">
+        <ErrorOutlineIcon sx={{ fontSize: 14, color: 'error.main' }} />
+        {onRetry && (
+          <Link component="button" type="button" onClick={onRetry} underline="always" sx={{ fontSize: 11, fontWeight: 700, color: 'error.main' }}>
+            Retry
+          </Link>
+        )}
+      </Stack>
+    );
+  }
   if (state === 'pending') return <AccessTimeIcon sx={{ fontSize: 14, opacity: 0.7 }} />;
-  return <DoneAllIcon sx={{ fontSize: 15, color: state === 'seen' ? '#34b7f1' : 'inherit', opacity: state === 'seen' ? 1 : 0.7 }} />;
+  if (state === 'seen') return <DoneAllIcon sx={{ fontSize: 15, color: SEEN_BLUE }} />;
+  return <CheckIcon sx={{ fontSize: 15, opacity: 0.6 }} />;
 }
 
 function Attachment({ url }: Readonly<{ url: string }>) {
@@ -48,9 +67,13 @@ function Attachment({ url }: Readonly<{ url: string }>) {
 interface Props {
   msg: SupportChatMessage;
   agentLastReadAt: string | null;
+  /** Pre-formatted, timezone-aware send time (B10). */
+  timeText: string;
+  /** Re-send a failed optimistic message (B12). */
+  onRetry?: () => void;
 }
 
-export default function ChatBubble({ msg, agentLastReadAt }: Readonly<Props>) {
+export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: Readonly<Props>) {
   if (msg.sender_role === 'SYSTEM') {
     return (
       <Stack alignItems="center" sx={{ my: 0.5 }}>
@@ -95,9 +118,9 @@ export default function ChatBubble({ msg, agentLastReadAt }: Readonly<Props>) {
         )}
         <Stack direction="row" spacing={0.5} alignItems="center" sx={{ justifyContent: 'flex-end', mt: 0.25 }}>
           <Typography variant="caption" sx={{ opacity: 0.7 }}>
-            {format(new Date(msg.created_at), 'HH:mm')}
+            {timeText}
           </Typography>
-          {isUser && <Tick msg={msg} agentLastReadAt={agentLastReadAt} />}
+          {isUser && <Tick msg={msg} agentLastReadAt={agentLastReadAt} onRetry={onRetry} />}
         </Stack>
       </Paper>
     </Stack>

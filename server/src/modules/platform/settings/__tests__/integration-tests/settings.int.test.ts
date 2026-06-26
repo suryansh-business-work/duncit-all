@@ -1,17 +1,42 @@
 import { settingsService } from '../../settings.service';
 import { FeatureFlagModel } from '../../settings.model';
 import { EnvEntryModel } from '@modules/platform/envEntry/envEntry.model';
+import {
+  getReopenWindowZone,
+  setReopenWindowZone,
+  DEFAULT_REOPEN_ZONE,
+} from '@modules/support/reopenWindow';
 
 describe('settingsService integration', () => {
+  afterEach(() => setReopenWindowZone(DEFAULT_REOPEN_ZONE));
+
   it('creates the app-settings singleton and updates formats', async () => {
     const initial = await settingsService.getAppSettings();
     expect(initial.date_format).toBeTruthy();
+    expect(initial.time_zone).toBe('Asia/Kolkata');
 
     const updated = await settingsService.updateAppSettings({ date_format: 'yyyy-MM-dd' });
     expect(updated.date_format).toBe('yyyy-MM-dd');
 
     const pub = await settingsService.getPublicAppSettings();
     expect(pub.date_format).toBe('yyyy-MM-dd');
+    expect(pub.time_zone).toBe('Asia/Kolkata');
+  });
+
+  it('updates the timezone and re-aligns the reopen-window day boundary', async () => {
+    const updated = await settingsService.updateAppSettings({ time_zone: 'America/New_York' });
+    expect(updated.time_zone).toBe('America/New_York');
+    expect(getReopenWindowZone()).toBe('America/New_York');
+
+    const pub = await settingsService.getPublicAppSettings();
+    expect(pub.time_zone).toBe('America/New_York');
+  });
+
+  it('refreshes the cached reopen-window zone from the persisted setting on boot', async () => {
+    await settingsService.updateAppSettings({ time_zone: 'Europe/London' });
+    setReopenWindowZone(DEFAULT_REOPEN_ZONE); // simulate a fresh process
+    await settingsService.refreshDerivedCaches();
+    expect(getReopenWindowZone()).toBe('Europe/London');
   });
 
   it('runs the full feature-flag lifecycle', async () => {

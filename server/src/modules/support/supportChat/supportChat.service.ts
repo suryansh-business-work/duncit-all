@@ -13,6 +13,11 @@ import { ticketNo } from './unifiedTickets.service';
 import { aiSupportReply, isOpenAiConfigured, type SupportAiTurn } from './supportChat.ai';
 import { reopenDeadline, reopenExpired } from '@modules/support/reopenWindow';
 import { sendHtmlEmail } from '@services/email/email.service';
+import {
+  buildTranscriptArtifact,
+  type TranscriptData,
+  type TranscriptFormat,
+} from '@modules/support/transcript';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -24,7 +29,12 @@ const AI_NAME = 'Duncit Assistant';
 const AI_GREETING =
   "Hi! 👋 I'm the Duncit Assistant. Tell me what you need help with and I'll do my best — or connect you to our support team.";
 const HANDOFF_NOTICE =
-  "I'm connecting you to a support executive who specialises in your concern for a quicker resolution. They'll be with you shortly.";
+  "We're transferring this chat to a support executive who specialises in your concern for a quicker resolution. They'll be with you shortly.";
+
+/** SYSTEM bubble announcing which human executive has taken over the chat. */
+function claimNotice(name: string): string {
+  return `Support executive ${name || 'a support executive'} will be assisting you now.`;
+}
 
 async function buildUser(userId: Types.ObjectId | string) {
   const u = await UserModel.findById(userId).select(
@@ -164,7 +174,7 @@ export const supportChatService = {
         sender_role: 'SYSTEM',
         sender_name: meta.name,
         sender_photo: meta.photo,
-        text: `Picked up by ${meta.name || 'a support agent'}`,
+        text: claimNotice(meta.name),
         attachments: [],
       });
       session!.last_message_at = new Date();
@@ -428,6 +438,11 @@ export const supportChatService = {
     const session = await SupportChatSessionModel.findById(sessionId);
     if (!session) fail('NOT_FOUND', 'Chat session not found');
     if (String(session!.user_id) !== String(userId)) fail('FORBIDDEN', 'Not your chat');
+    // Feedback is only meaningful once the chat is resolved, and may be left once.
+    if (session!.status !== 'CLOSED' || !session!.resolved_at) {
+      fail('BAD_USER_INPUT', 'Chat must be resolved before feedback');
+    }
+    if (session!.rating != null) fail('BAD_USER_INPUT', 'Feedback already submitted');
     session!.rating = input.rating;
     session!.feedback_comment = (input.comment ?? '').trim();
     session!.feedback_at = new Date();
@@ -437,7 +452,7 @@ export const supportChatService = {
     return pub;
   },
 
-  async buildTranscript(sessionId: string) {
+  async buildTranscript(sessionId: string): Promise<TranscriptData> {
     if (!Types.ObjectId.isValid(sessionId)) fail('BAD_USER_INPUT', 'Invalid session_id');
     const session = await SupportChatSessionModel.findById(sessionId);
     if (!session) fail('NOT_FOUND', 'Chat session not found');
@@ -446,47 +461,51 @@ export const supportChatService = {
       buildUser(session!.user_id),
       SupportChatMessageModel.find({ session_id: session!._id }).sort({ created_at: 1 }),
     ]);
-    const header = [
-      'Duncit — Support chat transcript',
-      `Ticket: ${no}`,
-      `User: ${user.name}${user.phone ? ` (${user.phone})` : ''}`,
-      `Status: ${session!.status}`,
-      `Started: ${session!.created_at?.toISOString?.() ?? ''}`,
-      `Generated: ${new Date().toISOString()}`,
-      '------------------------------------------------',
-      '',
-    ];
     const lines = msgs.map((m) => {
       let who: string;
       if (m.sender_role === 'USER') who = user.name || 'You';
       else if (m.sender_role === 'SYSTEM') who = 'System';
       else who = m.is_ai ? AI_NAME : m.sender_name || 'Support';
-      const when = m.created_at?.toISOString?.() ?? '';
       const body =
         m.text || (m.attachments?.length ? `[${m.attachments.length} attachment(s)]` : '');
-      return `[${when}] ${who}: ${body}`;
+      return { who, when: m.created_at?.toISOString?.() ?? '', body };
     });
-    return { session: session!, no, text: [...header, ...lines].join('\n') };
-  },
-
-  async transcript(sessionId: string) {
-    const { no, text } = await this.buildTranscript(sessionId);
     return {
-      filename: `support-${no}.txt`,
-      text,
-      content_base64: Buffer.from(text, 'utf8').toString('base64'),
+      title: 'Duncit — Support chat transcript',
+      no,
+      header: [
+        { label: 'Ticket', value: no },
+        { label: 'User', value: `${user.name}${user.phone ? ` (${user.phone})` : ''}` },
+        { label: 'Status', value: session!.status },
+        { label: 'Started', value: session!.created_at?.toISOString?.() ?? '' },
+        { label: 'Generated', value: new Date().toISOString() },
+      ],
+      lines,
     };
   },
 
-  async emailTranscript(sessionId: string, email: string) {
+  async transcript(sessionId: string, format: TranscriptFormat = 'TXT') {
+    const data = await this.buildTranscript(sessionId);
+    const { filename, text, content_base64 } = await buildTranscriptArtifact(data, format);
+    return { filename, text, content_base64 };
+  },
+
+  async emailTranscript(sessionId: string, email: string, format: TranscriptFormat = 'DOCX') {
     const addr = (email || '').trim();
     if (!/^\S+@\S+\.\S+$/.test(addr)) fail('BAD_USER_INPUT', 'A valid email is required');
-    const { no, text } = await this.buildTranscript(sessionId);
+    const data = await this.buildTranscript(sessionId);
+    const artifact = await buildTranscriptArtifact(data, format);
     await sendHtmlEmail({
       to: addr,
-      subject: `Your Duncit support chat transcript (${no})`,
-      html: `<p>Hi,</p><p>Your Duncit support chat <b>${no}</b> transcript is attached as a text file.</p><p>— Team Duncit</p>`,
-      attachments: [{ filename: `support-${no}.txt`, content: text, contentType: 'text/plain' }],
+      subject: `Your Duncit support chat transcript (${data.no})`,
+      html: `<p>Hi,</p><p>Your Duncit support chat <b>${data.no}</b> transcript is attached.</p><p>— Team Duncit</p>`,
+      attachments: [
+        {
+          filename: artifact.filename,
+          content: Buffer.from(artifact.content_base64, 'base64'),
+          contentType: artifact.content_type,
+        },
+      ],
     });
     return true;
   },

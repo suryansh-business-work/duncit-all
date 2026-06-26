@@ -1,22 +1,26 @@
 import { gql, useQuery } from '@apollo/client';
-import { format as fmtFn, parseISO } from 'date-fns';
+import { parseISO } from 'date-fns';
+import { formatInTimeZone } from 'date-fns-tz';
 
 export const PUBLIC_APP_SETTINGS = gql`
   query PublicAppSettings {
     publicAppSettings {
       date_format
       time_format
+      time_zone
     }
   }
 `;
 
 const FALLBACK_DATE = 'dd MMM yyyy';
 const FALLBACK_TIME = 'hh:mm a';
+const FALLBACK_ZONE = 'Asia/Kolkata';
 
 export function useDateFormat() {
   const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
   const dateFormat: string = data?.publicAppSettings?.date_format || FALLBACK_DATE;
   const timeFormat: string = data?.publicAppSettings?.time_format || FALLBACK_TIME;
+  const timeZone: string = data?.publicAppSettings?.time_zone || FALLBACK_ZONE;
 
   const toDate = (input: string | number | Date | null | undefined): Date | null => {
     if (!input) return null;
@@ -29,10 +33,12 @@ export function useDateFormat() {
     }
   };
 
+  // Format in the admin-configured IANA zone so every client renders the same
+  // wall-clock time regardless of the viewer's device timezone (B10).
   const safeFmt = (d: Date | null, p: string) => {
     if (!d) return '';
     try {
-      return fmtFn(d, p);
+      return formatInTimeZone(d, timeZone, p);
     } catch {
       return '';
     }
@@ -41,6 +47,7 @@ export function useDateFormat() {
   return {
     dateFormat,
     timeFormat,
+    timeZone,
     formatDate: (input: string | number | Date | null | undefined) =>
       safeFmt(toDate(input), dateFormat),
     formatTime: (input: string | number | Date | null | undefined) =>

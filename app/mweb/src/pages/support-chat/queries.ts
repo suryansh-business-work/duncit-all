@@ -37,6 +37,8 @@ const SESSION_FIELDS = gql`
     agent_last_read_at
     user_last_read_at
     rating
+    feedback_comment
+    feedback_at
     resolved_at
     reopen_deadline
   }
@@ -127,13 +129,15 @@ export const SUBMIT_SUPPORT_CHAT_FEEDBACK = gql`
     submitSupportChatFeedback(session_id: $session_id, rating: $rating, comment: $comment) {
       id
       rating
+      feedback_comment
+      feedback_at
     }
   }
 `;
 
 export const SUPPORT_CHAT_TRANSCRIPT = gql`
-  query MySupportChatTranscript($session_id: ID!) {
-    supportChatTranscript(session_id: $session_id) {
+  query MySupportChatTranscript($session_id: ID!, $format: TranscriptFormat) {
+    supportChatTranscript(session_id: $session_id, format: $format) {
       filename
       text
       content_base64
@@ -142,10 +146,13 @@ export const SUPPORT_CHAT_TRANSCRIPT = gql`
 `;
 
 export const EMAIL_SUPPORT_CHAT_TRANSCRIPT = gql`
-  mutation EmailMySupportChatTranscript($session_id: ID!, $email: String!) {
-    emailSupportChatTranscript(session_id: $session_id, email: $email)
+  mutation EmailMySupportChatTranscript($session_id: ID!, $email: String!, $format: TranscriptFormat) {
+    emailSupportChatTranscript(session_id: $session_id, email: $email, format: $format)
   }
 `;
+
+/** Server export format for chat/ticket transcripts. */
+export type TranscriptFormat = 'TXT' | 'DOCX';
 
 export interface SupportChatSession {
   id: string;
@@ -157,6 +164,8 @@ export interface SupportChatSession {
   agent_last_read_at: string | null;
   user_last_read_at: string | null;
   rating: number | null;
+  feedback_comment: string | null;
+  feedback_at: string | null;
   resolved_at: string | null;
   reopen_deadline: string | null;
 }
@@ -174,4 +183,6 @@ export interface SupportChatMessage {
   created_at: string;
   /** Client-only: true while an optimistic message awaits server acknowledgement. */
   pending?: boolean;
+  /** Client-only: true when the optimistic send failed and can be retried (B12). */
+  failed?: boolean;
 }

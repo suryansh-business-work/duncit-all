@@ -21,17 +21,14 @@ interface Props {
 }
 
 /**
- * Captures a required, non-empty reason before re-opening a resolved/closed
- * ticket or chat. Reused by both TicketDetailPage and the chat header flow.
+ * Captures an OPTIONAL reason before re-opening a resolved/closed ticket or
+ * chat (B11 — reason is optional everywhere). Reused by both TicketDetailPage
+ * and the chat header flow.
  */
 export default function ReopenReasonDialog({ open, loading, error, onClose, onSubmit }: Readonly<Props>) {
   const [reason, setReason] = useState('');
-  const trimmed = reason.trim();
 
-  const submit = () => {
-    if (!trimmed) return;
-    onSubmit(trimmed);
-  };
+  const submit = () => onSubmit(reason.trim());
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
@@ -43,13 +40,13 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
           </Alert>
         )}
         <Typography variant="body2" color="text.secondary" sx={{ mb: 1.5 }}>
-          Tell us why you need to re-open this — it helps our team pick up where you left off.
+          Tell us why you need to re-open this — it helps our team pick up where you left off. (optional)
         </Typography>
         <TextField
           autoFocus
           fullWidth
           size="small"
-          label="Reason"
+          label="Reason (optional)"
           value={reason}
           onChange={(e) => setReason(e.target.value)}
           multiline
@@ -59,7 +56,7 @@ export default function ReopenReasonDialog({ open, loading, error, onClose, onSu
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" disabled={!trimmed || loading} onClick={submit}>
+        <Button variant="contained" disabled={loading} onClick={submit}>
           {loading ? 'Re-opening…' : 'Re-open'}
         </Button>
       </DialogActions>

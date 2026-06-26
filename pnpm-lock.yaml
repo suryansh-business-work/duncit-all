@@ -74,6 +74,9 @@ importers:
       date-fns:
         specifier: ^2.30.0
         version: 2.30.0
+      date-fns-tz:
+        specifier: ^2.0.1
+        version: 2.0.1(date-fns@2.30.0)
       formik:
         specifier: ^2.4.6
         version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
@@ -1759,6 +1762,9 @@ importers:
       date-fns:
         specifier: ^2.30.0
         version: 2.30.0
+      date-fns-tz:
+        specifier: 2.0.1
+        version: 2.0.1(date-fns@2.30.0)
       formik:
         specifier: ^2.4.6
         version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
@@ -6156,6 +6162,11 @@ packages:
 
   dataloader@2.2.3:
     resolution: {integrity: sha512-y2krtASINtPFS1rSDjacrFgn1dcUuoREVabwlOGOe4SdxenREqwjwjElAdwvbGM7kgZz9a3KVicWR7vcz8rnzA==}
+
+  date-fns-tz@2.0.1:
+    resolution: {integrity: sha512-fJCG3Pwx8HUoLhkepdsP7Z5RsucUi+ZBOxyM5d0ZZ6c4SdYustq0VMmOu6Wf7bli+yS/Jwp91TOCqn9jMcVrUA==}
+    peerDependencies:
+      date-fns: 2.x
 
   date-fns-tz@3.2.0:
     resolution: {integrity: sha512-sg8HqoTEulcbbbVXeg84u5UnlsQa8GS5QXMqjjYIhS4abEVVKIUwe0/l/UhrZdKaL/W5eWZNlbTeEIiOXTcsBQ==}
@@ -14939,6 +14950,10 @@ snapshots:
       whatwg-url: 14.2.0
 
   dataloader@2.2.3: {}
+
+  date-fns-tz@2.0.1(date-fns@2.30.0):
+    dependencies:
+      date-fns: 2.30.0
 
   date-fns-tz@3.2.0(date-fns@2.30.0):
     dependencies:

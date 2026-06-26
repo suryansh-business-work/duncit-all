@@ -1,9 +1,26 @@
-import { Avatar, Paper, Stack, Typography } from '@mui/material';
-import { format } from 'date-fns';
+import { Avatar, Chip, Paper, Stack, Typography } from '@mui/material';
 import type { TicketMessage } from './queries';
 
-/** A single message bubble in the ticket thread. */
-export default function TicketBubble({ msg }: Readonly<{ msg: TicketMessage }>) {
+interface Props {
+  msg: TicketMessage;
+  /** Pre-formatted, timezone-aware send time (B10). */
+  timeText: string;
+}
+
+/** A single message bubble in the ticket thread (B7 renders SYSTEM as a chip). */
+export default function TicketBubble({ msg, timeText }: Readonly<Props>) {
+  if (msg.author_role === 'SYSTEM') {
+    return (
+      <Stack alignItems="center" sx={{ my: 0.5 }}>
+        <Chip
+          size="small"
+          label={msg.body_text}
+          sx={{ bgcolor: 'action.hover', fontWeight: 700, height: 'auto', py: 0.5, '& .MuiChip-label': { whiteSpace: 'normal', textAlign: 'center' } }}
+        />
+      </Stack>
+    );
+  }
+
   const isUser = msg.author_role === 'USER';
   return (
     <Stack direction="row" sx={{ justifyContent: isUser ? 'flex-end' : 'flex-start' }} spacing={1}>
@@ -30,15 +47,15 @@ export default function TicketBubble({ msg }: Readonly<{ msg: TicketMessage }>) 
         <Typography variant="body2">{msg.body_text}</Typography>
         {msg.attachments.length > 0 && (
           <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 0.75, mt: 0.75 }}>
-            {msg.attachments.map((url, i) => (
-              <a key={url + i} href={url} target="_blank" rel="noopener noreferrer">
+            {msg.attachments.map((url) => (
+              <a key={url} href={url} target="_blank" rel="noopener noreferrer">
                 <Avatar variant="rounded" src={url} sx={{ width: 54, height: 54 }} />
               </a>
             ))}
           </Stack>
         )}
         <Typography variant="caption" sx={{ opacity: 0.7, display: 'block', mt: 0.25 }}>
-          {format(new Date(msg.created_at), 'd MMM, HH:mm')}
+          {timeText}
         </Typography>
       </Paper>
     </Stack>

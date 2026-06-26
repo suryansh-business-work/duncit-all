@@ -10,7 +10,7 @@
   <mj-body background-color="#f4f4f4">
     <mj-section padding="20px 0 0 0">
       <mj-column>
-        <mj-image src="https://duncit.com/duncit-logo.svg" alt="Duncit" width="160px" align="center" padding="0" />
+        <mj-image src="{{brand_logo_url}}" alt="Duncit" width="110px" align="center" padding="0" />
       </mj-column>
     </mj-section>
     <mj-section background-color="#ffffff" padding="20px">

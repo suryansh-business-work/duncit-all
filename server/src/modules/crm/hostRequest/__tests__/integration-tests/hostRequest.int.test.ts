@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { hostRequestService } from '../../hostRequest.service';
 import { HostRequestModel } from '../../hostRequest.model';
 import { HostModel } from '@modules/venues/host/host.model';
+import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { sendEmail } from '@services/email/email.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
@@ -51,22 +52,70 @@ const submitInput = (seed: { super_category_id: string; category_id: string; sub
   ],
 });
 
+/** Submit on behalf of an already-APPROVED host (gate satisfied by the Host doc). */
+const submit = (userId: string, input: Parameters<typeof hostRequestService.submit>[1]) =>
+  hostRequestService.submit(userId, input, { isHost: false });
+
 describe('hostRequestService — submit', () => {
-  it('rejects a user with no host record', async () => {
+  it('FORBIDDEN when the caller is neither a HOST by role nor an APPROVED host', async () => {
     await expect(
-      hostRequestService.submit(new Types.ObjectId().toString(), {})
+      hostRequestService.submit(new Types.ObjectId().toString(), {}, { isHost: false })
+    ).rejects.toMatchObject({ extensions: { code: 'FORBIDDEN' } });
+  });
+
+  it('FORBIDDEN for a non-approved host doc when not a HOST by role', async () => {
+    const userId = new Types.ObjectId().toString();
+    await HostModel.create({ user_id: userId, status: 'SUBMITTED' });
+    await expect(
+      hostRequestService.submit(userId, {}, { isHost: false })
     ).rejects.toThrow(/approved hosts/i);
   });
 
-  it('rejects a non-approved host', async () => {
+  it('allows a HOST-by-role with no Host doc, sourcing contact from the User', async () => {
     const userId = new Types.ObjectId().toString();
-    await HostModel.create({ user_id: userId, status: 'SUBMITTED' });
-    await expect(hostRequestService.submit(userId, {})).rejects.toThrow(/approved hosts/i);
+    await UserModel.create({
+      _id: userId,
+      auth: { email: 'role-host@example.com', phone: { number: '9876543210', extension: '91' } },
+      profile: { first_name: 'Role', last_name: 'Host' },
+    });
+    const out = await hostRequestService.submit(userId, {}, { isHost: true });
+    expect(out.status).toBe('REQUESTED');
+    expect(out.host_name).toBe('Role Host');
+    expect(out.host_email).toBe('role-host@example.com');
+    expect(out.host_phone).toBe('+919876543210');
+    expect(out.audit_log[0].by_name).toBe('Role Host');
+  });
+
+  it('sources contact from a minimal User (no phone, single name) for a HOST by role', async () => {
+    const userId = new Types.ObjectId().toString();
+    await UserModel.create({
+      _id: userId,
+      auth: { email: 'minimal@example.com' },
+      profile: { first_name: 'Solo' },
+    });
+    const out = await hostRequestService.submit(userId, {}, { isHost: true });
+    expect(out.host_name).toBe('Solo');
+    expect(out.host_email).toBe('minimal@example.com');
+    expect(out.host_phone).toBe('');
+  });
+
+  it('tolerates a HOST by role whose User doc is missing entirely', async () => {
+    const out = await hostRequestService.submit(new Types.ObjectId().toString(), {}, { isHost: true });
+    expect(out.host_name).toBe('');
+    expect(out.host_email).toBe('');
+    expect(out.host_phone).toBe('');
+  });
+
+  it('allows an APPROVED host doc even when not a HOST by role', async () => {
+    const seed = await seedApprovedHost();
+    const out = await hostRequestService.submit(seed.userId, submitInput(seed), { isHost: false });
+    expect(out.status).toBe('REQUESTED');
+    expect(out.host_name).toBe('Asha Host');
   });
 
   it('creates a request with resolved names, audit, responses, notify + email', async () => {
     const seed = await seedApprovedHost();
-    const out = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const out = await submit(seed.userId, submitInput(seed));
 
     expect(out.request_no).toBe('HOSTREQ-000001');
     expect(out.status).toBe('REQUESTED');
@@ -92,26 +141,53 @@ describe('hostRequestService — submit', () => {
 
   it('allocates sequential request numbers across applications', async () => {
     const seed = await seedApprovedHost();
-    const first = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const first = await submit(seed.userId, submitInput(seed));
     // Resolve the first so a same-category re-apply is allowed.
     await hostRequestService.reject(first.id, REVIEWER, 'no');
-    const second = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const second = await submit(seed.userId, submitInput(seed));
     expect(first.request_no).toBe('HOSTREQ-000001');
     expect(second.request_no).toBe('HOSTREQ-000002');
   });
 
-  it('blocks a duplicate active request for the same category with CONFLICT', async () => {
+  it('CONFLICT on a leaf already held by an ACTIVE request', async () => {
     const seed = await seedApprovedHost();
-    await hostRequestService.submit(seed.userId, submitInput(seed));
-    await expect(hostRequestService.submit(seed.userId, submitInput(seed))).rejects.toMatchObject({
-      extensions: { code: 'CONFLICT' },
+    await hostRequestService.submit(seed.userId, submitInput(seed), { isHost: false });
+    await expect(
+      hostRequestService.submit(seed.userId, submitInput(seed), { isHost: false })
+    ).rejects.toMatchObject({ extensions: { code: 'CONFLICT' } });
+  });
+
+  it('CONFLICT on a leaf already APPROVED on the Host doc (not just active)', async () => {
+    const seed = await seedApprovedHost();
+    const req = await hostRequestService.submit(seed.userId, submitInput(seed), { isHost: false });
+    // Approve it so the leaf moves onto Host.host_categories and the request is terminal.
+    await hostRequestService.approve(req.id, REVIEWER);
+    await expect(
+      hostRequestService.submit(seed.userId, submitInput(seed), { isHost: false })
+    ).rejects.toMatchObject({ extensions: { code: 'CONFLICT' } });
+  });
+
+  it('allows a sibling sub-category under the same super/category', async () => {
+    const seed = await seedApprovedHost();
+    await hostRequestService.submit(seed.userId, submitInput(seed), { isHost: false });
+    const sibling = await CategoryModel.create({
+      name: 'Tennis',
+      slug: `tennis-${seed.userId}`,
+      level: 'SUB',
+      parent_id: new Types.ObjectId(seed.category_id),
     });
+    const out = await hostRequestService.submit(
+      seed.userId,
+      { ...submitInput(seed), sub_category_id: String(sibling._id) },
+      { isHost: false }
+    );
+    expect(out.status).toBe('REQUESTED');
   });
 
   it('handles no-answers and empty-category submit (no category resolution)', async () => {
     const userId = new Types.ObjectId().toString();
     await HostModel.create({ user_id: userId, full_name: 'Bare', email: 'bare@example.com', status: 'APPROVED' });
-    const out = await hostRequestService.submit(userId, {});
+    const out = await submit(userId, {});
     expect(out.super_category_name).toBe('');
     expect(out.category_name).toBe('');
     expect(out.sub_category_name).toBe('');
@@ -120,7 +196,7 @@ describe('hostRequestService — submit', () => {
   it('skips email when the host has no email, but still notifies', async () => {
     const userId = new Types.ObjectId().toString();
     await HostModel.create({ user_id: userId, full_name: 'NoMail', email: '', status: 'APPROVED' });
-    await hostRequestService.submit(userId, {});
+    await submit(userId, {});
     expect(mockSendEmail).not.toHaveBeenCalled();
     expect(mockNotify).toHaveBeenCalled();
   });
@@ -128,14 +204,14 @@ describe('hostRequestService — submit', () => {
   it('survives an email send failure (best-effort)', async () => {
     mockSendEmail.mockRejectedValueOnce(new Error('smtp down'));
     const seed = await seedApprovedHost();
-    const out = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const out = await submit(seed.userId, submitInput(seed));
     expect(out.status).toBe('REQUESTED');
   });
 
   it('survives a notification failure (best-effort)', async () => {
     mockNotify.mockRejectedValueOnce(new Error('sse down'));
     const seed = await seedApprovedHost();
-    const out = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const out = await submit(seed.userId, submitInput(seed));
     expect(out.status).toBe('REQUESTED');
   });
 });
@@ -143,7 +219,7 @@ describe('hostRequestService — submit', () => {
 describe('hostRequestService — acknowledge', () => {
   it('moves REQUESTED -> ACKNOWLEDGED with audit, notify + email', async () => {
     const seed = await seedApprovedHost();
-    const req = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const req = await submit(seed.userId, submitInput(seed));
     const ack = await hostRequestService.acknowledge(req.id, REVIEWER);
     expect(ack.status).toBe('ACKNOWLEDGED');
     expect(ack.audit_log).toHaveLength(2);
@@ -155,7 +231,7 @@ describe('hostRequestService — acknowledge', () => {
 
   it('guards against acknowledging a non-requested request', async () => {
     const seed = await seedApprovedHost();
-    const req = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const req = await submit(seed.userId, submitInput(seed));
     await hostRequestService.acknowledge(req.id, REVIEWER);
     await expect(hostRequestService.acknowledge(req.id, REVIEWER)).rejects.toThrow(/requested host request/i);
   });
@@ -170,7 +246,7 @@ describe('hostRequestService — acknowledge', () => {
 describe('hostRequestService — approve', () => {
   it('approves a REQUESTED request, syncs the host category, notify + email', async () => {
     const seed = await seedApprovedHost();
-    const req = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const req = await submit(seed.userId, submitInput(seed));
     const approved = await hostRequestService.approve(req.id, REVIEWER, 'Welcome aboard');
     expect(approved.status).toBe('APPROVED');
     expect(approved.reviewer_notes).toBe('Welcome aboard');
@@ -183,6 +259,9 @@ describe('hostRequestService — approve', () => {
       sub_category_name: 'Badminton',
       request_no: 'HOSTREQ-000001',
     });
+    expect(String(host.host_categories[0].super_category_id)).toBe(seed.super_category_id);
+    expect(String(host.host_categories[0].category_id)).toBe(seed.category_id);
+    expect(String(host.host_categories[0].sub_category_id)).toBe(seed.sub_category_id);
     expect(mockSendEmail).toHaveBeenLastCalledWith(
       expect.objectContaining({ template: 'host-request-approved' })
     );
@@ -190,7 +269,7 @@ describe('hostRequestService — approve', () => {
 
   it('approves an ACKNOWLEDGED request without notes', async () => {
     const seed = await seedApprovedHost();
-    const req = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const req = await submit(seed.userId, submitInput(seed));
     await hostRequestService.acknowledge(req.id, REVIEWER);
     const approved = await hostRequestService.approve(req.id, REVIEWER);
     expect(approved.status).toBe('APPROVED');
@@ -200,7 +279,7 @@ describe('hostRequestService — approve', () => {
 
   it('guards against approving a terminal request', async () => {
     const seed = await seedApprovedHost();
-    const req = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const req = await submit(seed.userId, submitInput(seed));
     await hostRequestService.approve(req.id, REVIEWER);
     await expect(hostRequestService.approve(req.id, REVIEWER)).rejects.toThrow(/already been decided/i);
   });
@@ -215,7 +294,7 @@ describe('hostRequestService — approve', () => {
 describe('hostRequestService — reject', () => {
   it('rejects a REQUESTED request with notes, notify + email', async () => {
     const seed = await seedApprovedHost();
-    const req = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const req = await submit(seed.userId, submitInput(seed));
     const rejected = await hostRequestService.reject(req.id, REVIEWER, 'Not a fit right now');
     expect(rejected.status).toBe('REJECTED');
     expect(rejected.reviewer_notes).toBe('Not a fit right now');
@@ -226,7 +305,7 @@ describe('hostRequestService — reject', () => {
 
   it('rejects an ACKNOWLEDGED request', async () => {
     const seed = await seedApprovedHost();
-    const req = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const req = await submit(seed.userId, submitInput(seed));
     await hostRequestService.acknowledge(req.id, REVIEWER);
     const rejected = await hostRequestService.reject(req.id, REVIEWER, 'changed mind');
     expect(rejected.status).toBe('REJECTED');
@@ -234,7 +313,7 @@ describe('hostRequestService — reject', () => {
 
   it('guards against rejecting a terminal request', async () => {
     const seed = await seedApprovedHost();
-    const req = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const req = await submit(seed.userId, submitInput(seed));
     await hostRequestService.reject(req.id, REVIEWER, 'no');
     await expect(hostRequestService.reject(req.id, REVIEWER, 'again')).rejects.toThrow(/already been decided/i);
   });
@@ -251,7 +330,7 @@ describe('hostRequestService — queries', () => {
     const seed = await seedApprovedHost();
     expect(await hostRequestService.myActive(seed.userId)).toBeNull();
 
-    const req = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const req = await submit(seed.userId, submitInput(seed));
     const active = await hostRequestService.myActive(seed.userId);
     expect(active?.id).toBe(req.id);
 
@@ -261,9 +340,9 @@ describe('hostRequestService — queries', () => {
 
   it('listMine returns the host history newest first', async () => {
     const seed = await seedApprovedHost();
-    const first = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const first = await submit(seed.userId, submitInput(seed));
     await hostRequestService.reject(first.id, REVIEWER, 'no');
-    const second = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const second = await submit(seed.userId, submitInput(seed));
     const mine = await hostRequestService.listMine(seed.userId);
     expect(mine).toHaveLength(2);
     expect(mine[0].id).toBe(second.id);
@@ -271,7 +350,7 @@ describe('hostRequestService — queries', () => {
 
   it('list filters by status and returns all when unfiltered', async () => {
     const seed = await seedApprovedHost();
-    const req = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const req = await submit(seed.userId, submitInput(seed));
     await hostRequestService.acknowledge(req.id, REVIEWER);
 
     const all = await hostRequestService.list();
@@ -284,8 +363,125 @@ describe('hostRequestService — queries', () => {
 
   it('getById returns the request or null', async () => {
     const seed = await seedApprovedHost();
-    const req = await hostRequestService.submit(seed.userId, submitInput(seed));
+    const req = await submit(seed.userId, submitInput(seed));
     expect((await hostRequestService.getById(req.id))?.id).toBe(req.id);
     expect(await hostRequestService.getById(new Types.ObjectId().toString())).toBeNull();
+  });
+});
+
+describe('hostRequestService — takenCategoryIds', () => {
+  it('returns [] when the host holds no categories and has no active requests', async () => {
+    const seed = await seedApprovedHost();
+    expect(await hostRequestService.takenCategoryIds(seed.userId)).toEqual([]);
+  });
+
+  it('includes leaves held on Host.host_categories (leaf = sub ?? category ?? super)', async () => {
+    const seed = await seedApprovedHost();
+    await HostModel.updateOne(
+      { user_id: new Types.ObjectId(seed.userId) },
+      {
+        $set: {
+          host_categories: [
+            {
+              super_category_id: new Types.ObjectId(seed.super_category_id),
+              category_id: new Types.ObjectId(seed.category_id),
+              sub_category_id: new Types.ObjectId(seed.sub_category_id),
+              super_category_name: 'For You',
+              category_name: 'Sports',
+              sub_category_name: 'Badminton',
+              request_no: 'HOSTREQ-000009',
+            },
+            // Category-level leaf (no sub) -> leaf is the category id.
+            {
+              super_category_id: new Types.ObjectId(seed.super_category_id),
+              category_id: new Types.ObjectId(seed.category_id),
+              sub_category_id: null,
+              super_category_name: 'For You',
+              category_name: 'Sports',
+              sub_category_name: '',
+              request_no: 'HOSTREQ-000010',
+            },
+          ],
+        },
+      }
+    );
+    const taken = await hostRequestService.takenCategoryIds(seed.userId);
+    expect(taken).toContain(seed.sub_category_id);
+    expect(taken).toContain(seed.category_id);
+    expect(taken).not.toContain(seed.super_category_id);
+  });
+
+  it('falls back to the category/super id when a held entry has no deeper leaf', async () => {
+    const seed = await seedApprovedHost();
+    await HostModel.updateOne(
+      { user_id: new Types.ObjectId(seed.userId) },
+      {
+        $set: {
+          host_categories: [
+            // Super-only entry -> leaf is the super id (category + sub null).
+            {
+              super_category_id: new Types.ObjectId(seed.super_category_id),
+              category_id: null,
+              sub_category_id: null,
+              super_category_name: 'For You',
+              category_name: '',
+              sub_category_name: '',
+              request_no: 'HOSTREQ-000011',
+            },
+          ],
+        },
+      }
+    );
+    expect(await hostRequestService.takenCategoryIds(seed.userId)).toEqual([seed.super_category_id]);
+  });
+
+  it('includes leaves from ACTIVE requests when the caller has no Host doc', async () => {
+    const userId = new Types.ObjectId().toString();
+    await UserModel.create({
+      _id: userId,
+      auth: { email: 'no-host@example.com' },
+      profile: { first_name: 'No', last_name: 'Host' },
+    });
+    const sub = await CategoryModel.create({
+      name: 'Chess',
+      slug: `chess-${userId}`,
+      level: 'SUB',
+    });
+    await hostRequestService.submit(
+      userId,
+      {
+        super_category_id: null,
+        category_id: null,
+        sub_category_id: String(sub._id),
+        survey_id: new Types.ObjectId().toString(),
+        answers: [],
+      },
+      { isHost: true }
+    );
+    const taken = await hostRequestService.takenCategoryIds(userId);
+    expect(taken).toEqual([String(sub._id)]);
+  });
+
+  it('includes leaves from ACTIVE requests only', async () => {
+    const seed = await seedApprovedHost();
+    await submit(seed.userId, submitInput(seed));
+    const taken = await hostRequestService.takenCategoryIds(seed.userId);
+    expect(taken).toEqual([seed.sub_category_id]);
+  });
+
+  it('unions held categories and active requests, de-duplicated', async () => {
+    const seed = await seedApprovedHost();
+    const req = await submit(seed.userId, submitInput(seed));
+    await hostRequestService.approve(req.id, REVIEWER); // moves leaf onto host_categories
+    // A second active request on a sibling sub adds a distinct leaf.
+    const sibling = await CategoryModel.create({
+      name: 'Tennis',
+      slug: `tennis-taken-${seed.userId}`,
+      level: 'SUB',
+      parent_id: new Types.ObjectId(seed.category_id),
+    });
+    await submit(seed.userId, { ...submitInput(seed), sub_category_id: String(sibling._id) });
+    const taken = await hostRequestService.takenCategoryIds(seed.userId);
+    expect(taken.sort()).toEqual([seed.sub_category_id, String(sibling._id)].sort());
   });
 });

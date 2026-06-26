@@ -8,6 +8,9 @@ import {
 export type HostStatus = 'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED';
 
 export interface IHostCategory {
+  super_category_id: Types.ObjectId | null;
+  category_id: Types.ObjectId | null;
+  sub_category_id: Types.ObjectId | null;
   super_category_name: string;
   category_name: string;
   sub_category_name: string;
@@ -47,6 +50,9 @@ export interface IHost extends Document {
 
 const hostCategorySchema = new Schema<IHostCategory>(
   {
+    super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    sub_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     super_category_name: { type: String, default: '' },
     category_name: { type: String, default: '' },
     sub_category_name: { type: String, default: '' },

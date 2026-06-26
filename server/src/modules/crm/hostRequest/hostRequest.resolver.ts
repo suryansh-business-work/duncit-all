@@ -1,6 +1,6 @@
 import { hostRequestService } from './hostRequest.service';
 import type { GraphQLContext } from '@context';
-import { requireAuth, requireRole } from '@middleware/rbac';
+import { requireAuth, requireRole, hasRole } from '@middleware/rbac';
 
 // Same onboarding role set survey.resolver.ts uses for its authoring queries.
 const ONBOARDING_REVIEW = ['SUPER_ADMIN', 'ONBOARDING_MANAGER'];
@@ -20,6 +20,10 @@ export const hostRequestResolvers = {
       const user = requireAuth(ctx);
       return hostRequestService.listMine(user.id);
     },
+    myHostTakenCategoryIds: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return hostRequestService.takenCategoryIds(user.id);
+    },
     hostRequests: (_p: unknown, args: { status?: string | null }, ctx: GraphQLContext) => {
       requireRole(ctx, ONBOARDING_REVIEW);
       return hostRequestService.list({ status: args.status ?? null });
@@ -32,7 +36,7 @@ export const hostRequestResolvers = {
   Mutation: {
     submitHostRequest: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      return hostRequestService.submit(user.id, args.input);
+      return hostRequestService.submit(user.id, args.input, { isHost: hasRole(user, ['HOST']) });
     },
     acknowledgeHostRequest: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
       const user = requireRole(ctx, ONBOARDING_REVIEW);

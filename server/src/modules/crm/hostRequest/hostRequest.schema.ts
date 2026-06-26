@@ -52,6 +52,7 @@ export const hostRequestTypeDefs = /* GraphQL */ `
   extend type Query {
     myHostRequest: HostRequest
     myHostRequests: [HostRequest!]!
+    myHostTakenCategoryIds: [ID!]!
     hostRequests(status: HostRequestStatus): [HostRequest!]!
     hostRequest(id: ID!): HostRequest
   }

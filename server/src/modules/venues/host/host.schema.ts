@@ -7,6 +7,9 @@ export const hostTypeDefs = /* GraphQL */ `
   }
 
   type HostCategory {
+    super_category_id: ID
+    category_id: ID
+    sub_category_id: ID
     super_category_name: String!
     category_name: String!
     sub_category_name: String!

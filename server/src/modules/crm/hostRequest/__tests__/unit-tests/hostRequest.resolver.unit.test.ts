@@ -6,6 +6,7 @@ jest.mock('../../hostRequest.service', () => ({
   hostRequestService: {
     myActive: jest.fn().mockResolvedValue({ id: 'active' }),
     listMine: jest.fn().mockResolvedValue([]),
+    takenCategoryIds: jest.fn().mockResolvedValue(['leaf-1']),
     list: jest.fn().mockResolvedValue([]),
     getById: jest.fn().mockResolvedValue(null),
     submit: jest.fn().mockResolvedValue({ id: 'new' }),
@@ -20,6 +21,7 @@ const Q = hostRequestResolvers.Query as any;
 const M = hostRequestResolvers.Mutation as any;
 
 const host = makeContext({ id: 'host-1', email: 'host@example.com', roles: ['USER'] });
+const hostRole = makeContext({ id: 'host-2', email: 'host2@example.com', roles: ['USER', 'HOST'] });
 const staff = makeContext({ id: 'staff-1', email: 'ops@example.com', roles: ['ONBOARDING_MANAGER'] });
 const anon = makeContext(null);
 
@@ -27,6 +29,7 @@ describe('hostRequest resolver — auth gates', () => {
   it('host queries require auth', () => {
     expect(() => Q.myHostRequest({}, {}, anon)).toThrow(/not authenticated/i);
     expect(() => Q.myHostRequests({}, {}, anon)).toThrow(/not authenticated/i);
+    expect(() => Q.myHostTakenCategoryIds({}, {}, anon)).toThrow(/not authenticated/i);
     expect(() => M.submitHostRequest({}, { input: {} }, anon)).toThrow(/not authenticated/i);
   });
 
@@ -45,8 +48,15 @@ describe('hostRequest resolver — delegation', () => {
     expect(svc.myActive).toHaveBeenCalledWith('host-1');
     await Q.myHostRequests({}, {}, host);
     expect(svc.listMine).toHaveBeenCalledWith('host-1');
+    await Q.myHostTakenCategoryIds({}, {}, host);
+    expect(svc.takenCategoryIds).toHaveBeenCalledWith('host-1');
+  });
+
+  it('submit passes isHost=false for a plain user and isHost=true for a HOST role', async () => {
     await M.submitHostRequest({}, { input: { survey_id: 's' } }, host);
-    expect(svc.submit).toHaveBeenCalledWith('host-1', { survey_id: 's' });
+    expect(svc.submit).toHaveBeenLastCalledWith('host-1', { survey_id: 's' }, { isHost: false });
+    await M.submitHostRequest({}, { input: { survey_id: 's' } }, hostRole);
+    expect(svc.submit).toHaveBeenLastCalledWith('host-2', { survey_id: 's' }, { isHost: true });
   });
 
   it('portal queries delegate with status filter (and null when omitted)', async () => {

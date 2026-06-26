@@ -8,6 +8,7 @@ import {
   type IHostRequest,
 } from './hostRequest.model';
 import { HostModel } from '@modules/venues/host/host.model';
+import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { sendEmail } from '@services/email/email.service';
 
@@ -58,6 +59,36 @@ const toPub = (h: IHostRequest) => ({
 
 const oid = (v?: string | null) => (v ? new Types.ObjectId(v) : null);
 const notFound = () => new GraphQLError('Host request not found', { extensions: { code: 'NOT_FOUND' } });
+
+/** The leaf (most specific) category id of a {super,category,sub} tuple. */
+const leafId = (
+  superId?: string | null,
+  categoryId?: string | null,
+  subId?: string | null
+): string | null => subId || categoryId || superId || null;
+
+interface HostContact {
+  name: string;
+  email: string;
+  phone: string;
+}
+
+/** Contact snapshot from the User doc — used when the caller is a HOST by role
+ * but has no Host application document yet. */
+async function contactFromUser(hostUserId: string): Promise<HostContact> {
+  const u: any = await UserModel.findById(hostUserId).select(
+    'profile.first_name profile.last_name auth.email auth.phone.number auth.phone.extension'
+  );
+  const number = u?.auth?.phone?.number ?? '';
+  const ext = u?.auth?.phone?.extension
+    ? `+${String(u.auth.phone.extension).replace(/^\+/, '')}`
+    : '';
+  return {
+    name: `${u?.profile?.first_name ?? ''} ${u?.profile?.last_name ?? ''}`.trim(),
+    email: u?.auth?.email ?? '',
+    phone: number ? `${ext}${number}` : '',
+  };
+}
 
 /** Resolve {super,category,sub} ObjectIds to their display names in one query.
  * Missing/unknown ids resolve to '' (the schema default). */
@@ -134,35 +165,70 @@ function appendAudit(h: IHostRequest, status: HostRequestStatus, reviewer: Revie
 }
 
 export const hostRequestService = {
-  async submit(hostUserId: string, input: SubmitInput) {
+  /** Distinct LEAF category ids (sub ?? category ?? super) the host already holds
+   * on their Host doc OR has in an ACTIVE (REQUESTED|ACKNOWLEDGED) request. */
+  async takenCategoryIds(hostUserId: string): Promise<string[]> {
+    const uid = new Types.ObjectId(hostUserId);
+    const [host, active] = await Promise.all([
+      HostModel.findOne({ user_id: uid }).select('host_categories'),
+      HostRequestModel.find({
+        host_user_id: uid,
+        status: { $in: HOST_REQUEST_ACTIVE_STATUSES },
+      }).select('super_category_id category_id sub_category_id'),
+    ]);
+
+    const taken = new Set<string>();
+    const add = (
+      superId?: Types.ObjectId | null,
+      categoryId?: Types.ObjectId | null,
+      subId?: Types.ObjectId | null
+    ) => {
+      const leaf = leafId(
+        superId ? String(superId) : null,
+        categoryId ? String(categoryId) : null,
+        subId ? String(subId) : null
+      );
+      if (leaf) taken.add(leaf);
+    };
+    for (const c of host?.host_categories ?? []) {
+      add(c.super_category_id, c.category_id, c.sub_category_id);
+    }
+    for (const r of active) {
+      add(r.super_category_id, r.category_id, r.sub_category_id);
+    }
+    return Array.from(taken);
+  },
+
+  async submit(hostUserId: string, input: SubmitInput, opts: { isHost: boolean }) {
     const host = await HostModel.findOne({ user_id: new Types.ObjectId(hostUserId) });
-    if (!host || host.status !== 'APPROVED') {
+    const allowed = opts.isHost || host?.status === 'APPROVED';
+    if (!allowed) {
       throw new GraphQLError('Only approved hosts can apply for a new category', {
         extensions: { code: 'FORBIDDEN' },
       });
     }
 
-    const dup = await HostRequestModel.findOne({
-      host_user_id: new Types.ObjectId(hostUserId),
-      status: { $in: HOST_REQUEST_ACTIVE_STATUSES },
-      super_category_id: oid(input.super_category_id),
-      category_id: oid(input.category_id),
-      sub_category_id: oid(input.sub_category_id),
-    });
-    if (dup) {
-      throw new GraphQLError('You already have an active request for this category', {
-        extensions: { code: 'CONFLICT' },
-      });
+    const inputLeaf = leafId(input.super_category_id, input.category_id, input.sub_category_id);
+    if (inputLeaf) {
+      const taken = await this.takenCategoryIds(hostUserId);
+      if (taken.includes(inputLeaf)) {
+        throw new GraphQLError('You already host (or have a pending request for) this category.', {
+          extensions: { code: 'CONFLICT' },
+        });
+      }
     }
 
+    const contact: HostContact = host
+      ? { name: host.full_name, email: host.email, phone: host.phone }
+      : await contactFromUser(hostUserId);
     const names = await resolveCategoryNames(input);
     const requestNo = await nextHostRequestNo();
     const doc = new HostRequestModel({
       request_no: requestNo,
       host_user_id: new Types.ObjectId(hostUserId),
-      contact_name: host.full_name,
-      contact_email: host.email,
-      contact_phone: host.phone,
+      contact_name: contact.name,
+      contact_email: contact.email,
+      contact_phone: contact.phone,
       super_category_id: oid(input.super_category_id),
       category_id: oid(input.category_id),
       sub_category_id: oid(input.sub_category_id),
@@ -175,7 +241,7 @@ export const hostRequestService = {
       })),
       status: 'REQUESTED',
     });
-    const reviewer: Reviewer = { id: hostUserId, name: host.full_name };
+    const reviewer: Reviewer = { id: hostUserId, name: contact.name };
     appendAudit(doc, 'REQUESTED', reviewer, 'Request submitted');
     await doc.save();
 
@@ -222,6 +288,9 @@ export const hostRequestService = {
 
     const { hostService } = await import('@modules/venues/host/host.service');
     await hostService.addCategoryFromRequest(String(h.host_user_id), {
+      super_category_id: h.super_category_id,
+      category_id: h.category_id,
+      sub_category_id: h.sub_category_id,
       super_category_name: h.super_category_name,
       category_name: h.category_name,
       sub_category_name: h.sub_category_name,

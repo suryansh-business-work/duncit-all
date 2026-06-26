@@ -51,6 +51,9 @@ const toPub = (h: IHost) => ({
   bank_account: toBankAccountPub(h.bank_account),
   tags: h.tags ?? [],
   host_categories: (h.host_categories ?? []).map((c) => ({
+    super_category_id: c.super_category_id ? String(c.super_category_id) : null,
+    category_id: c.category_id ? String(c.category_id) : null,
+    sub_category_id: c.sub_category_id ? String(c.sub_category_id) : null,
     super_category_name: c.super_category_name ?? '',
     category_name: c.category_name ?? '',
     sub_category_name: c.sub_category_name ?? '',
@@ -295,6 +298,9 @@ export const hostService = {
     const exists = (h.host_categories ?? []).some((c) => c.request_no === mapping.request_no);
     if (!exists) {
       h.host_categories.push({
+        super_category_id: mapping.super_category_id ?? null,
+        category_id: mapping.category_id ?? null,
+        sub_category_id: mapping.sub_category_id ?? null,
         super_category_name: mapping.super_category_name ?? '',
         category_name: mapping.category_name ?? '',
         sub_category_name: mapping.sub_category_name ?? '',

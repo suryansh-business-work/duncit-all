@@ -70,6 +70,9 @@ async function run() {
       continue;
     }
     const entry = {
+      super_category_id: superId ?? null,
+      category_id: categoryId ?? null,
+      sub_category_id: subId ?? null,
       super_category_name: await nameFor(superId),
       category_name: await nameFor(categoryId),
       sub_category_name: await nameFor(subId),

@@ -70,6 +70,8 @@ const profileSchema = new Schema(
     locale: { type: String, default: 'en-IN' },
     timezone: { type: String, default: 'Asia/Kolkata' },
     city: { type: String },
+    state: { type: String },
+    pincode: { type: String },
     zone: { type: String },
     assigned_city: { type: String },
     // The location the user last picked in the header (persists their choice

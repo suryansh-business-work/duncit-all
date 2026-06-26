@@ -34,7 +34,13 @@ export const accountHealthTypeDefs = /* GraphQL */ `
     subject_type: HealthSubjectType!
     subject_id: ID!
     delta: Int!
-    remark: String!
+    remark: String
+  }
+
+  input EditAdjustmentInput {
+    id: ID!
+    delta: Int!
+    remark: String
   }
 
   extend type Query {
@@ -49,7 +55,11 @@ export const accountHealthTypeDefs = /* GraphQL */ `
   }
 
   extend type Mutation {
-    """ Admin-only: append a delta with remark. Returns the updated score. """
+    """ Admin-only: append a delta with an optional remark. Returns the updated score. """
     adjustHealth(input: AdjustHealthInput!): HealthScore!
+    """ Admin-only: edit an existing adjustment's delta/remark in place. Returns the recomputed score. """
+    editAdjustment(input: EditAdjustmentInput!): HealthScore!
+    """ Admin-only: delete an adjustment. Returns the recomputed score. """
+    deleteAdjustment(id: ID!): HealthScore!
   }
 `;

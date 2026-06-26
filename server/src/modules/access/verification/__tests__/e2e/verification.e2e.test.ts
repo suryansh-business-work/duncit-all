@@ -29,6 +29,13 @@ const MY = gql`
       status
       document_url
       reject_reason
+      address {
+        line1
+        city
+        state
+        pincode
+        country
+      }
     }
   }
 `;
@@ -38,6 +45,37 @@ const SUBMIT = gql`
       type
       status
       document_url
+    }
+  }
+`;
+const SUBMIT_ADDRESS = gql`
+  mutation SubmitAddress(
+    $line1: String!
+    $line2: String
+    $city: String!
+    $state: String!
+    $pincode: String!
+    $country: String
+  ) {
+    submitAddressVerification(
+      line1: $line1
+      line2: $line2
+      city: $city
+      state: $state
+      pincode: $pincode
+      country: $country
+    ) {
+      type
+      status
+      document_url
+      address {
+        line1
+        line2
+        city
+        state
+        pincode
+        country
+      }
     }
   }
 `;
@@ -51,15 +89,31 @@ const REVIEW = gql`
   }
 `;
 
+type Ver = {
+  type: string;
+  status: string;
+  document_url: string | null;
+  address: { line1: string } | null;
+};
+
 describe('verification e2e', () => {
-  it('lists 7 types, submits a doc, and an admin approves/rejects', async () => {
+  it('lists exactly IDENTITY/ADDRESS/EMAIL, all NOT_SUBMITTED when nothing is verified', async () => {
+    const userId = await makeUser();
+    const user = server.client(signToken({ id: userId, roles: ['USER'] }));
+
+    const before = await user.request<{ myVerifications: Ver[] }>(MY);
+    expect(before.myVerifications.map((v) => v.type).sort()).toEqual([
+      'ADDRESS',
+      'EMAIL',
+      'IDENTITY',
+    ]);
+    expect(before.myVerifications.every((v) => v.status === 'NOT_SUBMITTED')).toBe(true);
+  });
+
+  it('submits an IDENTITY doc (PENDING) and an admin approves it', async () => {
     const userId = await makeUser();
     const user = server.client(signToken({ id: userId, roles: ['USER'] }));
     const admin = server.client(adminToken());
-
-    const before = await user.request<{ myVerifications: { type: string; status: string }[] }>(MY);
-    expect(before.myVerifications).toHaveLength(7);
-    expect(before.myVerifications.every((v) => v.status === 'NOT_SUBMITTED')).toBe(true);
 
     const submitted = await user.request<{ submitVerification: { status: string } }>(SUBMIT, {
       type: 'IDENTITY',
@@ -73,33 +127,75 @@ describe('verification e2e', () => {
       status: 'APPROVED',
     });
     expect(approved.reviewVerification.status).toBe('APPROVED');
-
-    const rejected = await admin.request<{ reviewVerification: { reject_reason: string } }>(REVIEW, {
-      uid: userId,
-      type: 'POLICE',
-      status: 'REJECTED',
-      reason: 'Blurry document',
-    });
-    expect(rejected.reviewVerification.reject_reason).toBe('Blurry document');
   });
 
-  it('auto-approves EMAIL from the existing OTP verification', async () => {
-    const userId = await makeUser(true);
-    const user = server.client(signToken({ id: userId, roles: ['USER'] }));
-    const res = await user.request<{ myVerifications: { type: string; status: string }[] }>(MY);
-    const email = res.myVerifications.find((v) => v.type === 'EMAIL');
-    expect(email?.status).toBe('APPROVED');
-  });
-
-  it('rejects an invalid document url and a non-review status', async () => {
+  it('submits a structured ADDRESS (PENDING) and an admin rejects it with a reason', async () => {
     const userId = await makeUser();
     const user = server.client(signToken({ id: userId, roles: ['USER'] }));
     const admin = server.client(adminToken());
+
+    const submitted = await user.request<{
+      submitAddressVerification: { status: string; document_url: string | null; address: any };
+    }>(SUBMIT_ADDRESS, {
+      line1: '12 MG Road',
+      line2: 'Near Park',
+      city: 'Pune',
+      state: 'Maharashtra',
+      pincode: '411001',
+      country: 'India',
+    });
+    expect(submitted.submitAddressVerification.status).toBe('PENDING');
+    expect(submitted.submitAddressVerification.document_url).toBeNull();
+    expect(submitted.submitAddressVerification.address).toMatchObject({
+      line1: '12 MG Road',
+      line2: 'Near Park',
+      city: 'Pune',
+      state: 'Maharashtra',
+      pincode: '411001',
+      country: 'India',
+    });
+
+    // The stored address is returned in the list query too.
+    const listed = await user.request<{ myVerifications: Ver[] }>(MY);
+    expect(listed.myVerifications.find((v) => v.type === 'ADDRESS')?.address?.line1).toBe(
+      '12 MG Road'
+    );
+
+    const rejected = await admin.request<{ reviewVerification: { reject_reason: string } }>(REVIEW, {
+      uid: userId,
+      type: 'ADDRESS',
+      status: 'REJECTED',
+      reason: 'Pincode mismatch',
+    });
+    expect(rejected.reviewVerification.reject_reason).toBe('Pincode mismatch');
+  });
+
+  it('reports EMAIL as VERIFIED_BY_APP when the login email is verified, NOT_SUBMITTED otherwise', async () => {
+    const verifiedId = await makeUser(true);
+    const verifiedUser = server.client(signToken({ id: verifiedId, roles: ['USER'] }));
+    const verified = await verifiedUser.request<{ myVerifications: Ver[] }>(MY);
+    expect(verified.myVerifications.find((v) => v.type === 'EMAIL')?.status).toBe('VERIFIED_BY_APP');
+
+    const unverifiedId = await makeUser(false);
+    const unverifiedUser = server.client(signToken({ id: unverifiedId, roles: ['USER'] }));
+    const unverified = await unverifiedUser.request<{ myVerifications: Ver[] }>(MY);
+    expect(unverified.myVerifications.find((v) => v.type === 'EMAIL')?.status).toBe('NOT_SUBMITTED');
+  });
+
+  it('rejects an invalid document url, ADDRESS via submitVerification, and reviewing EMAIL', async () => {
+    const userId = await makeUser();
+    const user = server.client(signToken({ id: userId, roles: ['USER'] }));
+    const admin = server.client(adminToken());
+
+    await expect(user.request(SUBMIT, { type: 'IDENTITY', url: 'not-a-url' })).rejects.toThrow();
     await expect(
-      user.request(SUBMIT, { type: 'SELFIE', url: 'not-a-url' })
+      user.request(SUBMIT, { type: 'ADDRESS', url: 'https://img/addr.jpg' })
     ).rejects.toThrow();
     await expect(
-      admin.request(REVIEW, { uid: userId, type: 'SELFIE', status: 'PENDING' })
+      admin.request(REVIEW, { uid: userId, type: 'EMAIL', status: 'APPROVED' })
+    ).rejects.toThrow();
+    await expect(
+      admin.request(REVIEW, { uid: userId, type: 'IDENTITY', status: 'PENDING' })
     ).rejects.toThrow();
   });
 

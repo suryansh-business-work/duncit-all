@@ -86,6 +86,34 @@ function userLabel(user: any): string {
   );
 }
 
+// Validates a delta is a non-zero integer within [-100, 100] and returns the
+// truncated value. Shared by adjust + editAdjustment.
+function validateDelta(input: number): number {
+  const delta = Math.trunc(input);
+  if (!Number.isFinite(delta) || delta === 0 || delta < -100 || delta > 100) {
+    fail('BAD_USER_INPUT', 'Delta must be a non-zero integer between -100 and 100');
+  }
+  return delta;
+}
+
+// Resolves the user this adjustment impacts + a human-readable label for the
+// subject. Shared by adjust + editAdjustment + deleteAdjustment.
+async function resolveSubject(
+  subjectType: HealthSubjectType,
+  subjectId: string
+): Promise<{ subjectUserId: Types.ObjectId; subjectLabel: string }> {
+  if (subjectType === 'USER') {
+    const user = await UserModel.findById(subjectId).select(
+      'profile.first_name profile.last_name auth.email'
+    );
+    if (!user) fail('NOT_FOUND', 'User not found');
+    return { subjectUserId: (user as any)._id, subjectLabel: userLabel(user) };
+  }
+  const venue = await VenueModel.findById(subjectId).select('owner_user_id venue_name');
+  if (!venue) fail('NOT_FOUND', 'Venue not found');
+  return { subjectUserId: venue!.owner_user_id, subjectLabel: venue!.venue_name || 'Venue' };
+}
+
 export const accountHealthService = {
   async getMyAccountHealth(userId: string) {
     const user = await UserModel.findById(userId).select(
@@ -125,33 +153,16 @@ export const accountHealthService = {
     subject_type: HealthSubjectType;
     subject_id: string;
     delta: number;
-    remark: string;
+    remark?: string;
   }) {
     if (!Types.ObjectId.isValid(input.subject_id)) fail('BAD_USER_INPUT', 'Invalid subject_id');
-    const delta = Math.trunc(input.delta);
-    if (!Number.isFinite(delta) || delta === 0 || delta < -100 || delta > 100) {
-      fail('BAD_USER_INPUT', 'Delta must be a non-zero integer between -100 and 100');
-    }
-    const remark = String(input.remark ?? '').trim();
-    if (remark.length < 3) fail('BAD_USER_INPUT', 'Remark is required (min 3 chars)');
+    const delta = validateDelta(input.delta);
+    const remark = String(input.remark ?? '').trim().slice(0, 500);
 
-    let subjectUserId: Types.ObjectId;
-    let subjectLabel: string;
-    if (input.subject_type === 'USER') {
-      const user = await UserModel.findById(input.subject_id).select(
-        'profile.first_name profile.last_name auth.email'
-      );
-      if (!user) fail('NOT_FOUND', 'User not found');
-      subjectUserId = (user as any)._id;
-      subjectLabel = userLabel(user);
-    } else {
-      const venue = await VenueModel.findById(input.subject_id).select(
-        'owner_user_id venue_name'
-      );
-      if (!venue) fail('NOT_FOUND', 'Venue not found');
-      subjectUserId = venue!.owner_user_id;
-      subjectLabel = venue!.venue_name || 'Venue';
-    }
+    const { subjectUserId, subjectLabel } = await resolveSubject(
+      input.subject_type,
+      input.subject_id
+    );
 
     await HealthAdjustmentModel.create({
       subject_type: input.subject_type,
@@ -163,5 +174,33 @@ export const accountHealthService = {
     });
 
     return buildScore(input.subject_type, input.subject_id, subjectLabel);
+  },
+
+  async editAdjustment(_adminId: string, input: { id: string; delta: number; remark?: string }) {
+    if (!Types.ObjectId.isValid(input.id)) fail('BAD_USER_INPUT', 'Invalid id');
+    const doc = await HealthAdjustmentModel.findById(input.id);
+    if (!doc) fail('NOT_FOUND', 'Adjustment not found');
+    const delta = validateDelta(input.delta);
+    const remark = String(input.remark ?? '').trim().slice(0, 500);
+
+    doc!.delta = delta;
+    doc!.remark = remark;
+    await doc!.save();
+
+    const { subjectLabel } = await resolveSubject(doc!.subject_type, String(doc!.subject_id));
+    return buildScore(doc!.subject_type, String(doc!.subject_id), subjectLabel);
+  },
+
+  async deleteAdjustment(id: string) {
+    if (!Types.ObjectId.isValid(id)) fail('BAD_USER_INPUT', 'Invalid id');
+    const doc = await HealthAdjustmentModel.findById(id);
+    if (!doc) fail('NOT_FOUND', 'Adjustment not found');
+    const subjectType = doc!.subject_type;
+    const subjectId = String(doc!.subject_id);
+
+    await HealthAdjustmentModel.deleteOne({ _id: doc!._id });
+
+    const { subjectLabel } = await resolveSubject(subjectType, subjectId);
+    return buildScore(subjectType, subjectId, subjectLabel);
   },
 };

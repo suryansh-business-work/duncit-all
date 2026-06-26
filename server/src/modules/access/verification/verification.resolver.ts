@@ -24,6 +24,21 @@ export const verificationResolvers = {
       const u = requireAuth(ctx);
       return verificationService.submit(u.id, args.type, args.document_url);
     },
+    submitAddressVerification: (
+      _p: unknown,
+      args: {
+        line1: string;
+        line2?: string;
+        city: string;
+        state: string;
+        pincode: string;
+        country?: string;
+      },
+      ctx: GraphQLContext
+    ) => {
+      const u = requireAuth(ctx);
+      return verificationService.submitAddress(u.id, args);
+    },
     reviewVerification: (
       _p: unknown,
       args: { user_id: string; type: string; status: string; reject_reason?: string },

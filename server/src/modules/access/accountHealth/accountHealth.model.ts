@@ -22,7 +22,7 @@ const healthAdjustmentSchema = new Schema<IHealthAdjustment>(
     subject_id: { type: Schema.Types.ObjectId, required: true, index: true },
     subject_user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     delta: { type: Number, required: true, min: -100, max: 100 },
-    remark: { type: String, required: true, trim: true, minlength: 3, maxlength: 500 },
+    remark: { type: String, required: false, default: '', trim: true, maxlength: 500 },
     created_by: { type: Schema.Types.ObjectId, ref: 'User', default: null },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

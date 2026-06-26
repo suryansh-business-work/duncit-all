@@ -18,12 +18,13 @@ interface Props {
   selectedId: string | null;
   /** Sessions that arrived live over the socket — highlighted until opened. */
   freshIds: Set<string>;
+  emptyLabel: string;
   onSelect: (id: string) => void;
 }
 
 /** The left-hand "Chat with Us" session list. Unassigned or freshly arrived
  * sessions are tinted + tagged NEW so agents can jump on them instantly. */
-export default function SessionList({ sessions, loading, selectedId, freshIds, onSelect }: Readonly<Props>) {
+export default function SessionList({ sessions, loading, selectedId, freshIds, emptyLabel, onSelect }: Readonly<Props>) {
   if (loading && !sessions.length) {
     return (
       <Box sx={{ p: 2, textAlign: 'center' }}>
@@ -34,7 +35,7 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, o
   if (!sessions.length) {
     return (
       <Typography variant="caption" color="text.secondary" sx={{ px: 1.5 }}>
-        No open chats.
+        {emptyLabel}
       </Typography>
     );
   }
@@ -47,10 +48,11 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, o
           onClick={() => onSelect(s.id)}
           sx={{
             alignItems: 'flex-start',
-            ...((freshIds.has(s.id) || !s.agent_id) && {
-              bgcolor: 'warning.light',
-              '&:hover': { bgcolor: 'warning.light' },
-            }),
+            ...(s.status !== 'CLOSED' &&
+              (freshIds.has(s.id) || !s.agent_id) && {
+                bgcolor: 'warning.light',
+                '&:hover': { bgcolor: 'warning.light' },
+              }),
           }}
         >
           <ListItemAvatar sx={{ minWidth: 40 }}>
@@ -66,7 +68,8 @@ export default function SessionList({ sessions, loading, selectedId, freshIds, o
             primaryTypographyProps={{ variant: 'body2', fontWeight: 700, noWrap: true }}
             secondaryTypographyProps={{ variant: 'caption', noWrap: true }}
           />
-          {!s.agent_id && <Chip size="small" color="error" label="NEW" sx={{ ml: 0.5, mt: 0.25 }} />}
+          {s.status === 'CLOSED' && <Chip size="small" color="success" label="Resolved" sx={{ ml: 0.5, mt: 0.25 }} />}
+          {s.status !== 'CLOSED' && !s.agent_id && <Chip size="small" color="error" label="NEW" sx={{ ml: 0.5, mt: 0.25 }} />}
         </ListItemButton>
       ))}
     </List>

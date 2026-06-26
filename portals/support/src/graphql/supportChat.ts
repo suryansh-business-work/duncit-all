@@ -4,11 +4,17 @@ export const SUPPORT_CHAT_SESSIONS = gql`
   query SupportChatSessions($status: SupportChatStatus) {
     supportChatSessions(status: $status) {
       id
+      ticket_no
       status
       last_message_at
       last_message_preview
       unread_for_agent
       agent_id
+      user_last_read_at
+      rating
+      feedback_comment
+      feedback_at
+      resolved_at
       user {
         id
         name
@@ -30,6 +36,7 @@ export const SUPPORT_CHAT_MESSAGES = gql`
       sender_photo
       text
       attachments
+      is_ai
       created_at
     }
   }
@@ -46,6 +53,7 @@ export const SEND_SUPPORT_CHAT_MESSAGE = gql`
       sender_photo
       text
       attachments
+      is_ai
       created_at
     }
   }
@@ -56,6 +64,17 @@ export const CLOSE_SUPPORT_CHAT = gql`
     closeSupportChat(session_id: $session_id) {
       id
       status
+      resolved_at
+    }
+  }
+`;
+
+export const REOPEN_SUPPORT_CHAT = gql`
+  mutation ReopenSupportChat($session_id: ID!, $reason: String) {
+    reopenSupportChat(session_id: $session_id, reason: $reason) {
+      id
+      status
+      resolved_at
     }
   }
 `;
@@ -69,13 +88,38 @@ export const MARK_SUPPORT_CHAT_READ = gql`
   }
 `;
 
+export const SUPPORT_CHAT_TRANSCRIPT = gql`
+  query SupportChatTranscript($session_id: ID!, $format: TranscriptFormat) {
+    supportChatTranscript(session_id: $session_id, format: $format) {
+      filename
+      text
+      content_base64
+    }
+  }
+`;
+
+export const EMAIL_SUPPORT_CHAT_TRANSCRIPT = gql`
+  mutation EmailSupportChatTranscript($session_id: ID!, $email: String!, $format: TranscriptFormat) {
+    emailSupportChatTranscript(session_id: $session_id, email: $email, format: $format)
+  }
+`;
+
+export type SupportChatStatus = 'OPEN' | 'CLOSED';
+export type TranscriptFormat = 'TXT' | 'DOCX';
+
 export interface SupportChatSession {
   id: string;
-  status: 'OPEN' | 'CLOSED';
+  ticket_no: string;
+  status: SupportChatStatus;
   last_message_at: string;
   last_message_preview: string;
   unread_for_agent: number;
   agent_id: string | null;
+  user_last_read_at: string | null;
+  rating: number | null;
+  feedback_comment: string | null;
+  feedback_at: string | null;
+  resolved_at: string | null;
   user: { id: string; name: string; phone: string | null; avatar_url: string | null };
 }
 
@@ -88,7 +132,14 @@ export interface SupportChatMessage {
   sender_photo: string | null;
   text: string;
   attachments: string[];
+  is_ai: boolean;
   created_at: string;
+}
+
+export interface SupportChatTranscript {
+  filename: string;
+  text: string;
+  content_base64: string;
 }
 
 export const CLAIM_SUPPORT_CHAT = gql`

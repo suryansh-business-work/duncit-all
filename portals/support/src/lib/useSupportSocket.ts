@@ -14,7 +14,14 @@ export interface SupportSocketEvents {
   onChatSessionNew?: (s: any) => void;
   onChatSessionUpdate?: (s: any) => void;
   onChatMessage?: (m: any) => void;
-  onChatTyping?: (p: { session_id: string; user_id: string }) => void;
+  onChatTyping?: (p: ChatTypingPayload) => void;
+}
+
+export interface ChatTypingPayload {
+  session_id: string;
+  user_id: string;
+  role: 'USER' | 'AGENT';
+  name: string | null;
 }
 
 function socketOrigin(): string {

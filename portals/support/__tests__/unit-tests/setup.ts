@@ -34,3 +34,11 @@ if (!window.matchMedia) {
 if (!Element.prototype.scrollTo) {
   Element.prototype.scrollTo = vi.fn();
 }
+
+// jsdom doesn't implement Blob URLs; the transcript downloader creates one.
+if (typeof URL.createObjectURL !== 'function') {
+  URL.createObjectURL = vi.fn(() => 'blob:mock');
+}
+if (typeof URL.revokeObjectURL !== 'function') {
+  URL.revokeObjectURL = vi.fn();
+}

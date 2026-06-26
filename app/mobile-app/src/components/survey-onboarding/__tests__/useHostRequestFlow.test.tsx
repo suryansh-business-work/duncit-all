@@ -54,9 +54,23 @@ const SURVEY = {
 
 const SCOPE = { super_category_id: 's', category_id: 'c', sub_category_id: 'sb' };
 
-function route({ survey = null, failSubmit = false }: { survey?: unknown; failSubmit?: boolean }) {
+function route({
+  survey = null,
+  failSubmit = false,
+  taken = [],
+  failTaken = false,
+}: {
+  survey?: unknown;
+  failSubmit?: boolean;
+  taken?: string[];
+  failTaken?: boolean;
+}) {
   mockRequest.mockImplementation((doc: never) => {
     switch (opName(doc)) {
+      case 'MyHostTakenCategoryIds':
+        return failTaken
+          ? Promise.reject(new Error('down'))
+          : Promise.resolve({ myHostTakenCategoryIds: taken });
       case 'ActiveSurveyFor':
         return Promise.resolve({ activeSurveyFor: survey });
       case 'SubmitHostRequest':
@@ -215,5 +229,18 @@ describe('useHostRequestFlow', () => {
     const { result } = renderHook(() => useHostRequestFlow());
     await waitFor(() => expect(result.current.phase).toBe('category'));
     expect(result.current.answer.get('missing')).toEqual({ value: '', values: [] });
+  });
+
+  it('fetches the host taken category ids on mount', async () => {
+    route({ taken: ['cat1', 'cat2'] });
+    const { result } = renderHook(() => useHostRequestFlow());
+    await waitFor(() => expect(result.current.takenIds).toEqual(['cat1', 'cat2']));
+  });
+
+  it('falls back to an empty taken set when the fetch fails', async () => {
+    route({ failTaken: true });
+    const { result } = renderHook(() => useHostRequestFlow());
+    await waitFor(() => expect(mockRequest).toHaveBeenCalled());
+    expect(result.current.takenIds).toEqual([]);
   });
 });

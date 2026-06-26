@@ -120,6 +120,22 @@ describe('CategoryPhase', () => {
     });
   });
 
+  it('disables already-held options and blocks picking them', async () => {
+    routeLevels();
+    const onContinue = jest.fn();
+    renderWithProviders(
+      <CategoryPhase busy={false} error={null} onContinue={onContinue} disabledIds={['sup1']} />,
+    );
+    const held = await screen.findByTestId('cat-sup1');
+    expect(held).toBeDisabled();
+    fireEvent.press(held);
+    // A held leaf is non-pressable: no category list loads beneath it.
+    expect(screen.queryByTestId('cat-c1')).toBeNull();
+    // A sibling stays enabled and selectable.
+    fireEvent.press(await screen.findByTestId('cat-sup2'));
+    expect(await screen.findByTestId('cat-c1')).toBeOnTheScreen();
+  });
+
   it('coalesces a missing categories list to empty', async () => {
     mockRequest.mockImplementation(() => Promise.resolve({})); // no `categories` field
     renderWithProviders(<CategoryPhase busy={false} error={null} onContinue={jest.fn()} />);

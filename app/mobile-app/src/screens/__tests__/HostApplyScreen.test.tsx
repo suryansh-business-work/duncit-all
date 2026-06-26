@@ -36,6 +36,7 @@ const flow = (over: Record<string, unknown> = {}) => ({
   answer: { get: jest.fn(), set: jest.fn(), toggle: jest.fn() },
   busy: false,
   error: null,
+  takenIds: [],
   chooseCategory: jest.fn(),
   submitSurvey: jest.fn(),
   ...over,

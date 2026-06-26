@@ -32,6 +32,30 @@ export const SubmitHostRequestDocument = gql(`
   }
 `);
 
+/**
+ * Leaf category ids the caller already holds or has pending. Drives the picker:
+ * an option whose id is in this set renders disabled (mirrors the server's
+ * leaf-level CONFLICT check on submit).
+ */
+export const MyHostTakenCategoryIdsDocument = gql(`
+  query MyHostTakenCategoryIds {
+    myHostTakenCategoryIds
+  }
+`);
+
+/** The host's approved categories — listed on Host Studio as "Super › Category › Sub". */
+export const MyHostCategoriesDocument = gql(`
+  query MyHostCategories {
+    myHost {
+      host_categories {
+        super_category_name
+        category_name
+        sub_category_name
+      }
+    }
+  }
+`);
+
 export type MyHostRequest = NonNullable<ResultOf<typeof MyHostRequestDocument>['myHostRequest']>;
 
 /**

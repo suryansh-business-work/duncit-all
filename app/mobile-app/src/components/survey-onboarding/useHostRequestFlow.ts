@@ -1,7 +1,7 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { graphqlRequest } from '@/services/graphql.client';
-import { SubmitHostRequestDocument } from '@/graphql/host-request';
+import { MyHostTakenCategoryIdsDocument, SubmitHostRequestDocument } from '@/graphql/host-request';
 import { toErrorMessage } from '@/utils/errors';
 import {
   ActiveSurveyForDocument,
@@ -36,6 +36,18 @@ export function useHostRequestFlow() {
   const [answers, setAnswers] = useState<Record<string, Answer>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [takenIds, setTakenIds] = useState<string[]>([]);
+
+  // Leaf categories the host already holds/has pending — disabled in the picker.
+  useEffect(() => {
+    let alive = true;
+    graphqlRequest(MyHostTakenCategoryIdsDocument, undefined, { auth: true })
+      .then((res) => alive && setTakenIds(res.myHostTakenCategoryIds))
+      .catch(() => alive && setTakenIds([]));
+    return () => {
+      alive = false;
+    };
+  }, []);
 
   const get = (qid: string): Answer => answers[qid] ?? { value: '', values: [] };
   const set = (qid: string, patch: Partial<Answer>) =>
@@ -124,6 +136,7 @@ export function useHostRequestFlow() {
     answer: { get, set, toggle },
     busy,
     error,
+    takenIds,
     chooseCategory,
     submitSurvey,
   };

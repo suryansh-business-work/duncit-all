@@ -59,7 +59,12 @@ export function HostApplyScreen() {
 
         <KeyboardScreen>
           {flow.phase === 'category' && (
-            <CategoryPhase busy={flow.busy} error={flow.error} onContinue={flow.chooseCategory} />
+            <CategoryPhase
+              busy={flow.busy}
+              error={flow.error}
+              onContinue={flow.chooseCategory}
+              disabledIds={flow.takenIds}
+            />
           )}
           {flow.phase === 'survey' && flow.survey && (
             <SurveyPhase

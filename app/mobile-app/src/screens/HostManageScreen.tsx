@@ -8,6 +8,7 @@ import { PrimaryButton } from '@/components/PrimaryButton';
 import { StackScreen } from '@/components/StackScreen';
 import { DraftDeleteConfirm } from '@/components/host-manage/DraftDeleteConfirm';
 import { HostApplyBanner } from '@/components/host-manage/HostApplyBanner';
+import { HostCategoriesCard } from '@/components/host-manage/HostCategoriesCard';
 import { HostPodsSection } from '@/components/host-manage/HostPodsSection';
 import { HostShareSection } from '@/components/host-manage/HostShareSection';
 import { STEP_TITLES } from '@/components/create-pod';
@@ -50,6 +51,10 @@ export function HostManageScreen() {
             label="Create a Pod"
             onPress={() => navigation.navigate('CreatePod')}
           />
+
+          <HostCategoriesCard />
+
+          <HostApplyBanner />
 
           <HostPodsSection />
 
@@ -123,8 +128,6 @@ export function HostManageScreen() {
               </YStack>
             );
           })}
-
-          <HostApplyBanner />
         </YStack>
       </ScrollView>
       {target ? (

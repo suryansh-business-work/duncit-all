@@ -7,6 +7,7 @@ import HostDraftsCard from './HostDraftsCard';
 import HostPodsCard from './host-manage-page/HostPodsCard';
 import HostShareCard from './host-manage-page/HostShareCard';
 import HostApplyBanner from './host-apply-page/HostApplyBanner';
+import HostCategoriesCard from './host-apply-page/HostCategoriesCard';
 
 const HOST_PODS = gql`
   query MyHostedPods($host_user_id: ID!) {
@@ -74,6 +75,9 @@ export default function HostManagePage() {
         </Button>
       </Stack>
 
+      {isHost && <HostCategoriesCard />}
+      {isHost && <HostApplyBanner />}
+
       <HostDraftsCard />
 
       <HostPodsCard
@@ -86,8 +90,6 @@ export default function HostManagePage() {
       />
 
       <HostShareCard />
-
-      {isHost && <HostApplyBanner />}
     </Stack>
   );
 }

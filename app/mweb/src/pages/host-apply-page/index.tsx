@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useLazyQuery, useMutation } from '@apollo/client';
+import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { Box, Button, Card, CardContent, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
@@ -9,6 +9,7 @@ import AuthLogo from '../../components/AuthLogo';
 import { notifyError } from '../../components/notify';
 import {
   ACTIVE_SURVEY_FOR,
+  MY_HOST_TAKEN_CATEGORY_IDS,
   SUBMIT_HOST_REQUEST,
   type ActiveSurvey,
   type SubmitHostRequestInput,
@@ -32,6 +33,9 @@ export default function HostApplyPage() {
 
   const [resolveSurvey] = useLazyQuery<{ activeSurveyFor: ActiveSurvey | null }>(ACTIVE_SURVEY_FOR, {
     fetchPolicy: 'network-only',
+  });
+  const takenQ = useQuery<{ myHostTakenCategoryIds: string[] }>(MY_HOST_TAKEN_CATEGORY_IDS, {
+    fetchPolicy: 'cache-and-network',
   });
   const [submitRequest, { loading: submitting }] = useMutation(SUBMIT_HOST_REQUEST);
 
@@ -93,7 +97,13 @@ export default function HostApplyPage() {
               <Typography variant="body2" color="text.secondary">{subtitle}</Typography>
             </Stack>
           )}
-          {step === 'category' && <CategoryStep submitting={resolving || submitting} onContinue={onCategory} />}
+          {step === 'category' && (
+            <CategoryStep
+              submitting={resolving || submitting}
+              onContinue={onCategory}
+              disabledIds={takenQ.data?.myHostTakenCategoryIds ?? []}
+            />
+          )}
           {step === 'survey' && survey && (
             <SurveyStepper survey={survey} submitting={submitting} submitLabel="Submit" onSubmit={onSurvey} />
           )}

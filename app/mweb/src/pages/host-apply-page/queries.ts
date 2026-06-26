@@ -52,6 +52,38 @@ export const SUBMIT_HOST_REQUEST = gql`
   }
 `;
 
+/** Leaf category ids the caller already holds or has pending — disables those picker options. */
+export const MY_HOST_TAKEN_CATEGORY_IDS = gql`
+  query MyHostTakenCategoryIds {
+    myHostTakenCategoryIds
+  }
+`;
+
+export interface HostCategory {
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+}
+
+export const MY_HOST_CATEGORIES = gql`
+  query MyHostCategories {
+    myHost {
+      host_categories {
+        super_category_name
+        category_name
+        sub_category_name
+      }
+    }
+  }
+`;
+
+/** "Super › Category › Sub" — drops empty parts; separator " › " (kept in sync with native). */
+export function formatCategoryPath(cat: HostCategory): string {
+  return [cat.super_category_name, cat.category_name, cat.sub_category_name]
+    .filter(Boolean)
+    .join(' › ');
+}
+
 /** Active (in-process) requests lock the banner to a read-only "Applied". */
 const ACTIVE_STATUSES = new Set<HostRequestStatus>(['REQUESTED', 'ACKNOWLEDGED']);
 

@@ -27,6 +27,12 @@ export const HOSTS = gql`
       is_active
       submitted_at
       reviewer_notes
+      host_categories {
+        super_category_name
+        category_name
+        sub_category_name
+        request_no
+      }
     }
   }
 `;

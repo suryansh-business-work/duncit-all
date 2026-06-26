@@ -107,6 +107,12 @@ export default defineConfig({
         // Meeting calendar + schedule tables: Apollo containers (queries +
         // mutations) with date-picker/calendar UI; exercised by e2e flows.
         'src/pages/meetings/**',
+        // Host Requests: Apollo list container + its dialogs (contact details +
+        // approve/reject decision) rendered only for a non-null request. The
+        // table + kebab row actions ARE unit-tested.
+        'src/pages/host-requests/HostRequestsPage.tsx',
+        'src/pages/host-requests/ContactDetailsDialog.tsx',
+        'src/pages/host-requests/DecisionDialog.tsx',
       ],
       thresholds: {
         lines: 100,

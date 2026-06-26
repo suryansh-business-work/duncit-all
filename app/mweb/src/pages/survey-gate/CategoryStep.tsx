@@ -12,6 +12,9 @@ export interface CategoryScope {
 interface Props {
   submitting: boolean;
   onContinue: (scope: CategoryScope) => void;
+  /** Leaf category ids the caller already holds/has pending — greyed out in the picker.
+   * Omitted (default) → no option is disabled, so the shared survey-gate is unaffected. */
+  disabledIds?: string[];
 }
 
 const useLevel = (level: CategoryLevel, parentId: string) => {
@@ -28,8 +31,9 @@ const useLevel = (level: CategoryLevel, parentId: string) => {
 };
 
 /** Super → Category → Sub picker shown before the survey; resolves which survey to ask. */
-export default function CategoryStep({ submitting, onContinue }: Readonly<Props>) {
+export default function CategoryStep({ submitting, onContinue, disabledIds }: Readonly<Props>) {
   const [scope, setScope] = useState<CategoryScope>({ super_category_id: '', category_id: '', sub_category_id: '' });
+  const disabledSet = new Set(disabledIds ?? []);
   const [error, setError] = useState<string | null>(null);
   const supers = useLevel('SUPER', '');
   const cats = useLevel('CATEGORY', scope.super_category_id);
@@ -70,6 +74,7 @@ export default function CategoryStep({ submitting, onContinue }: Readonly<Props>
       value={scope[level] || null}
       getOptionLabel={(id) => list.find((c) => c.id === id)?.name ?? ''}
       onChange={(_, v) => pick(level, v ?? '')}
+      getOptionDisabled={(id) => disabledSet.has(id)}
       loading={loading}
       disabled={disabled}
       renderInput={(p) => <TextField {...p} label={label} size="small" />}

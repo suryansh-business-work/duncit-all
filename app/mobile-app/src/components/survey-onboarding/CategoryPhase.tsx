@@ -16,6 +16,8 @@ interface Props {
   busy: boolean;
   error: string | null;
   onContinue: (scope: Scope) => void;
+  /** Leaf category ids the host already holds/has pending — rendered non-pressable. */
+  disabledIds?: string[];
 }
 
 function useCategories(level: CategoryLevel, parentId: string, enabled: boolean) {
@@ -50,8 +52,9 @@ function useCategories(level: CategoryLevel, parentId: string, enabled: boolean)
 }
 
 /** Super → Category → Sub picker; resolves which survey to ask. */
-export function CategoryPhase({ busy, error, onContinue }: Readonly<Props>) {
+export function CategoryPhase({ busy, error, onContinue, disabledIds }: Readonly<Props>) {
   const { color: ink, primary } = useThemeColors();
+  const disabledSet = useMemo(() => new Set(disabledIds ?? []), [disabledIds]);
   const [scope, setScope] = useState<Scope>({
     super_category_id: '',
     category_id: '',
@@ -97,6 +100,7 @@ export function CategoryPhase({ busy, error, onContinue }: Readonly<Props>) {
         <XStack flexWrap="wrap" gap={8}>
           {options.map((c) => {
             const selected = scope[level] === c.id;
+            const heldDisabled = disabledSet.has(c.id);
             return (
               <Button
                 key={c.id}
@@ -106,7 +110,10 @@ export function CategoryPhase({ busy, error, onContinue }: Readonly<Props>) {
                 backgroundColor={selected ? primary : 'transparent'}
                 borderColor={selected ? primary : ink}
                 borderWidth={1}
-                onPress={() => pick(level, c.id)}
+                disabled={heldDisabled}
+                aria-disabled={heldDisabled}
+                opacity={heldDisabled ? 0.4 : 1}
+                onPress={heldDisabled ? undefined : () => pick(level, c.id)}
               >
                 <Text color={selected ? 'white' : ink} fontWeight={selected ? '800' : '500'}>
                   {c.name}

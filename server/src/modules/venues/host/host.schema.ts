@@ -6,6 +6,16 @@ export const hostTypeDefs = /* GraphQL */ `
     REJECTED
   }
 
+  type HostCategory {
+    super_category_id: ID
+    category_id: ID
+    sub_category_id: ID
+    super_category_name: String!
+    category_name: String!
+    sub_category_name: String!
+    request_no: String!
+  }
+
   type Host {
     id: ID!
     user_id: ID!
@@ -20,6 +30,7 @@ export const hostTypeDefs = /* GraphQL */ `
     full_address: String!
     bank_account: BankAccountVerification!
     tags: [String!]!
+    host_categories: [HostCategory!]!
     step_completed: Int!
     status: HostStatus!
     is_active: Boolean!

@@ -1,0 +1,36 @@
+<mjml>
+  <mj-head>
+    <mj-title>We received your Duncit host request</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+      <mj-button background-color="#3b82f6" color="#ffffff" border-radius="8px" font-weight="700" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <mj-section padding="20px 0 0 0">
+      <mj-column>
+        <mj-image src="{{brand_logo_url}}" alt="Duncit" width="110px" align="center" padding="0" />
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="bold" color="#222">
+          Request received 👋
+        </mj-text>
+        <mj-text font-size="14px" color="#555">
+          Hi {{host_name}}, we've received your request to host in a new category and our onboarding team is reviewing it. We'll reach out with the next steps soon.
+        </mj-text>
+        <mj-text font-size="14px" color="#555">
+          Request ID: <strong>{{request_no}}</strong><br />
+          Category: <strong>{{category_path}}</strong>
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="16px 0 24px 0">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. You're receiving this because you applied to host a new category on Duncit.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

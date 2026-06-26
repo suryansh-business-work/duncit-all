@@ -6,6 +6,8 @@ import AddIcon from '@mui/icons-material/Add';
 import HostDraftsCard from './HostDraftsCard';
 import HostPodsCard from './host-manage-page/HostPodsCard';
 import HostShareCard from './host-manage-page/HostShareCard';
+import HostApplyBanner from './host-apply-page/HostApplyBanner';
+import HostCategoriesCard from './host-apply-page/HostCategoriesCard';
 
 const HOST_PODS = gql`
   query MyHostedPods($host_user_id: ID!) {
@@ -35,6 +37,7 @@ const ME_QUERY = gql`
     me {
       user_id
       full_name
+      roles
     }
   }
 `;
@@ -44,6 +47,7 @@ const ME_QUERY = gql`
 export default function HostManagePage() {
   const meQ = useQuery(ME_QUERY, { fetchPolicy: 'cache-and-network' });
   const userId = meQ.data?.me?.user_id;
+  const isHost = (meQ.data?.me?.roles ?? []).includes('HOST');
   const { data, loading, error, refetch } = useQuery(HOST_PODS, {
     variables: { host_user_id: userId },
     skip: !userId,
@@ -70,6 +74,9 @@ export default function HostManagePage() {
           Create
         </Button>
       </Stack>
+
+      {isHost && <HostCategoriesCard />}
+      {isHost && <HostApplyBanner />}
 
       <HostDraftsCard />
 

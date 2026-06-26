@@ -23,7 +23,11 @@
     "migrate:rbac-roles": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-rbac-roles.ts",
     "migrate:rbac-roles:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-rbac-roles.ts --dry-run",
     "migrate:survey-scope": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-survey-scope.ts",
-    "migrate:survey-scope:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-survey-scope.ts --dry-run"
+    "migrate:survey-scope:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-survey-scope.ts --dry-run",
+    "migrate:host-categories": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-host-categories.ts",
+    "migrate:host-categories:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-host-categories.ts --dry-run",
+    "migrate:email-logo": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-logo.ts",
+    "migrate:email-logo:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-logo.ts --dry-run"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",

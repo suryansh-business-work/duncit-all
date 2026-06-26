@@ -50,6 +50,7 @@ async function bootstrap() {
   await connectDB();
   await safeSeed('rbac', () => rbacService.seedDefaults());
   await safeSeed('settings', () => settingsService.seedDefaults());
+  await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
   await safeSeed('category', () => categoryService.seedDefaults());
   await safeSeed('vapid', () => notificationService.ensureVapid());
   await safeSeed('policy', () => policyService.seedDefaults());

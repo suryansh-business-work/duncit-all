@@ -9,7 +9,7 @@ export type TicketCategory =
   | 'SAFETY'
   | 'TECHNICAL'
   | 'OTHER';
-export type TicketAuthorRole = 'USER' | 'AGENT';
+export type TicketAuthorRole = 'USER' | 'AGENT' | 'SYSTEM';
 
 export interface ITicketMessage {
   _id: Types.ObjectId;
@@ -26,7 +26,7 @@ export interface ITicketMessage {
 const messageSchema = new Schema<ITicketMessage>(
   {
     author_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
-    author_role: { type: String, enum: ['USER', 'AGENT'], required: true },
+    author_role: { type: String, enum: ['USER', 'AGENT', 'SYSTEM'], required: true },
     author_name: { type: String, default: '' },
     author_photo: { type: String, default: '' },
     body_html: { type: String, default: '' },
@@ -46,6 +46,10 @@ export interface ITicket extends Document {
   last_message_at: Date;
   /** When the ticket was moved to RESOLVED/CLOSED — drives the 3-day reopen window. */
   resolved_at: Date | null;
+  /** Optional satisfaction feedback once the ticket is resolved/closed. */
+  rating: number | null;
+  feedback_comment: string;
+  feedback_at: Date | null;
   messages: Types.DocumentArray<ITicketMessage>;
   created_at: Date;
   updated_at: Date;
@@ -75,6 +79,9 @@ const ticketSchema = new Schema<ITicket>(
     assignee_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
     last_message_at: { type: Date, default: Date.now, index: true },
     resolved_at: { type: Date, default: null },
+    rating: { type: Number, default: null, min: 1, max: 5 },
+    feedback_comment: { type: String, default: '', maxlength: 1000 },
+    feedback_at: { type: Date, default: null },
     messages: { type: [messageSchema], default: [] },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

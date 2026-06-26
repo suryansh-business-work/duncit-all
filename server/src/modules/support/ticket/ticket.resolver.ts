@@ -1,8 +1,21 @@
+import { GraphQLError } from 'graphql';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole, hasRole } from '@middleware/rbac';
 import { ticketService } from './ticket.service';
+import type { TranscriptFormat } from '@modules/support/transcript';
 
 const SUPPORT_ROLES = ['SUPER_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_USER'];
+
+/** Throws NOT_FOUND unless the caller owns the ticket or is a support agent. */
+async function requireTicketAccess(ctx: GraphQLContext, ticketId: string) {
+  const user = requireAuth(ctx);
+  const isAgent = hasRole(user, SUPPORT_ROLES);
+  if (isAgent) return;
+  const ticket = await ticketService.getById(ticketId);
+  if (!ticket || ticket.user.id !== user.id) {
+    throw new GraphQLError('Ticket not found', { extensions: { code: 'NOT_FOUND' } });
+  }
+}
 
 export const ticketResolvers = {
   Query: {
@@ -33,6 +46,14 @@ export const ticketResolvers = {
       const user = requireAuth(ctx);
       return ticketService.listMine(user.id);
     },
+    ticketTranscript: async (
+      _p: unknown,
+      args: { ticket_id: string; format?: TranscriptFormat },
+      ctx: GraphQLContext
+    ) => {
+      await requireTicketAccess(ctx, args.ticket_id);
+      return ticketService.transcript(args.ticket_id, args.format ?? 'TXT');
+    },
   },
   Mutation: {
     createTicket: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -61,6 +82,22 @@ export const ticketResolvers = {
       const isAgent = hasRole(user, SUPPORT_ROLES);
       return ticketService.reopen(user.id, isAgent, args.ticket_id, args.reason ?? null);
     },
+    resolveTicket: (_p: unknown, args: { ticket_id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      const isAgent = hasRole(user, SUPPORT_ROLES);
+      return ticketService.resolve(user.id, isAgent, args.ticket_id);
+    },
+    submitTicketFeedback: (
+      _p: unknown,
+      args: { ticket_id: string; rating: number; comment?: string },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return ticketService.submitFeedback(user.id, args.ticket_id, {
+        rating: args.rating,
+        comment: args.comment,
+      });
+    },
     assignTicket: (
       _p: unknown,
       args: { ticket_id: string; assignee_id?: string | null },
@@ -68,6 +105,14 @@ export const ticketResolvers = {
     ) => {
       requireRole(ctx, SUPPORT_ROLES);
       return ticketService.assign(args.ticket_id, args.assignee_id ?? null);
+    },
+    emailTicketTranscript: async (
+      _p: unknown,
+      args: { ticket_id: string; email: string; format?: TranscriptFormat },
+      ctx: GraphQLContext
+    ) => {
+      await requireTicketAccess(ctx, args.ticket_id);
+      return ticketService.emailTranscript(args.ticket_id, args.email, args.format ?? 'DOCX');
     },
   },
 };

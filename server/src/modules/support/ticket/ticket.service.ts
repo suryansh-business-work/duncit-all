@@ -4,6 +4,13 @@ import { TicketModel, type ITicket, type TicketStatus, type TicketCategory } fro
 import { UserModel } from '@modules/access/user/user.model';
 import { emitToSupportAgents, emitToSupportUser } from '@modules/support/supportChat/supportChat.socket';
 import { reopenDeadline, reopenExpired } from '@modules/support/reopenWindow';
+import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
+import { sendHtmlEmail } from '@services/email/email.service';
+import {
+  buildTranscriptArtifact,
+  type TranscriptData,
+  type TranscriptFormat,
+} from '@modules/support/transcript';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -49,6 +56,9 @@ async function toPub(doc: ITicket) {
     last_message_at: doc.last_message_at?.toISOString?.() ?? '',
     resolved_at: doc.resolved_at ? doc.resolved_at.toISOString() : null,
     reopen_deadline: reopenDeadline(doc.resolved_at)?.toISOString() ?? null,
+    rating: doc.rating ?? null,
+    feedback_comment: doc.feedback_comment || null,
+    feedback_at: doc.feedback_at?.toISOString?.() ?? null,
     message_count: doc.messages.length,
     messages: doc.messages.map((m) => ({
       id: String(m._id),
@@ -204,6 +214,122 @@ export const ticketService = {
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
     return pub;
+  },
+
+  /**
+   * Mark a ticket RESOLVED — allowed by the owner OR an agent (mirrors the
+   * reopen guard). Stamps resolved_at, appends a SYSTEM timeline bubble and
+   * emits the ticket update. Leaves richer status transitions to updateStatus.
+   */
+  async resolve(actorId: string, isAgent: boolean, ticketId: string) {
+    if (!Types.ObjectId.isValid(ticketId)) fail('BAD_USER_INPUT', 'Invalid ticket_id');
+    const doc = await TicketModel.findById(ticketId);
+    if (!doc) fail('NOT_FOUND', 'Ticket not found');
+    if (!isAgent && String(doc!.user_id) !== String(actorId)) {
+      fail('FORBIDDEN', 'Cannot resolve another user’s ticket');
+    }
+    const meta = await actorMeta(actorId, isAgent ? 'AGENT' : 'USER');
+    doc!.status = 'RESOLVED';
+    doc!.resolved_at = new Date();
+    doc!.last_message_at = new Date();
+    doc!.messages.push({
+      author_id: meta.author_id,
+      author_role: 'SYSTEM',
+      author_name: meta.author_name,
+      author_photo: meta.author_photo,
+      body_text: `Ticket marked resolved by ${meta.author_name}.`,
+      attachments: [],
+    } as any);
+    await doc!.save();
+    const pub = await toPub(doc!);
+    emitToSupportAgents('ticket:update', pub);
+    emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
+    return pub;
+  },
+
+  /**
+   * Owner-only satisfaction feedback on a resolved/closed ticket. One-time:
+   * a ticket that already has a rating cannot be re-rated.
+   */
+  async submitFeedback(
+    actorId: string,
+    ticketId: string,
+    input: { rating: number; comment?: string }
+  ) {
+    if (!Types.ObjectId.isValid(ticketId)) fail('BAD_USER_INPUT', 'Invalid ticket_id');
+    if (input.rating < 1 || input.rating > 5) fail('BAD_USER_INPUT', 'Rating must be 1-5');
+    const doc = await TicketModel.findById(ticketId);
+    if (!doc) fail('NOT_FOUND', 'Ticket not found');
+    if (String(doc!.user_id) !== String(actorId)) fail('FORBIDDEN', 'Not your ticket');
+    if (doc!.status !== 'RESOLVED' && doc!.status !== 'CLOSED') {
+      fail('BAD_USER_INPUT', 'Ticket must be resolved before feedback');
+    }
+    if (doc!.rating != null) fail('BAD_USER_INPUT', 'Feedback already submitted');
+    doc!.rating = input.rating;
+    doc!.feedback_comment = (input.comment ?? '').trim();
+    doc!.feedback_at = new Date();
+    await doc!.save();
+    const pub = await toPub(doc!);
+    emitToSupportAgents('ticket:update', pub);
+    emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
+    return pub;
+  },
+
+  async buildTranscript(ticketId: string): Promise<TranscriptData> {
+    if (!Types.ObjectId.isValid(ticketId)) fail('BAD_USER_INPUT', 'Invalid ticket_id');
+    const doc = await TicketModel.findById(ticketId);
+    if (!doc) fail('NOT_FOUND', 'Ticket not found');
+    const no = ticketNo('ST', doc!._id as Types.ObjectId);
+    const user = await buildActor(doc!.user_id);
+    const userName = user?.name ?? 'User';
+    const lines = doc!.messages.map((m) => {
+      let who: string;
+      if (m.author_role === 'USER') who = userName || 'You';
+      else if (m.author_role === 'SYSTEM') who = 'System';
+      else who = m.author_name || 'Support';
+      const body =
+        m.body_text || (m.attachments?.length ? `[${m.attachments.length} attachment(s)]` : '');
+      return { who, when: m.created_at?.toISOString?.() ?? '', body };
+    });
+    return {
+      title: 'Duncit — Support ticket transcript',
+      no,
+      header: [
+        { label: 'Ticket', value: no },
+        { label: 'Subject', value: doc!.subject || '' },
+        { label: 'User', value: `${userName}${user?.phone ? ` (${user.phone})` : ''}` },
+        { label: 'Status', value: doc!.status },
+        { label: 'Started', value: doc!.created_at?.toISOString?.() ?? '' },
+        { label: 'Generated', value: new Date().toISOString() },
+      ],
+      lines,
+    };
+  },
+
+  async transcript(ticketId: string, format: TranscriptFormat = 'TXT') {
+    const data = await this.buildTranscript(ticketId);
+    const { filename, text, content_base64 } = await buildTranscriptArtifact(data, format);
+    return { filename, text, content_base64 };
+  },
+
+  async emailTranscript(ticketId: string, email: string, format: TranscriptFormat = 'DOCX') {
+    const addr = (email || '').trim();
+    if (!/^\S+@\S+\.\S+$/.test(addr)) fail('BAD_USER_INPUT', 'A valid email is required');
+    const data = await this.buildTranscript(ticketId);
+    const artifact = await buildTranscriptArtifact(data, format);
+    await sendHtmlEmail({
+      to: addr,
+      subject: `Your Duncit support ticket transcript (${data.no})`,
+      html: `<p>Hi,</p><p>Your Duncit support ticket <b>${data.no}</b> transcript is attached.</p><p>— Team Duncit</p>`,
+      attachments: [
+        {
+          filename: artifact.filename,
+          content: Buffer.from(artifact.content_base64, 'base64'),
+          contentType: artifact.content_type,
+        },
+      ],
+    });
+    return true;
   },
 
   async assign(ticketId: string, assigneeId: string | null) {

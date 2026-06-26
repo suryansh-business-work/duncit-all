@@ -78,7 +78,7 @@ describe('supportChat claim + system bubble', () => {
     const messages = await supportChatService.listMessages(session.id);
     const system = messages.filter((m) => m.sender_role === 'SYSTEM');
     expect(system).toHaveLength(1);
-    expect(system[0].text).toMatch(/picked up by/i);
+    expect(system[0].text).toMatch(/will be assisting you now/i);
 
     // Claiming again is a no-op (no duplicate bubble, agent unchanged).
     const again = await supportChatService.claim(session.id, new Types.ObjectId().toString());
@@ -127,20 +127,32 @@ describe('supportChat resolve / reopen / feedback', () => {
     expect(mine?.status).toBe('CLOSED');
   });
 
-  it('stores satisfaction feedback and rejects another user / a bad rating', async () => {
+  it('stores satisfaction feedback on a resolved chat and enforces the guards', async () => {
     const uid = new Types.ObjectId().toString();
     const session = await supportChatService.start(uid, 'thanks');
 
+    // (a) bad rating is rejected before any resolution check.
+    await expect(
+      supportChatService.submitFeedback(session.id, uid, { rating: 9 })
+    ).rejects.toThrow(/1-5/);
+    // (b) feedback is blocked while the chat is still open.
+    await expect(
+      supportChatService.submitFeedback(session.id, uid, { rating: 4 })
+    ).rejects.toThrow(/resolved before feedback/i);
+    // (c) another user can never leave feedback.
+    await expect(
+      supportChatService.submitFeedback(session.id, new Types.ObjectId().toString(), { rating: 4 })
+    ).rejects.toThrow(/not your chat/i);
+
+    await supportChatService.resolve(session.id, 'the user');
     const fed = await supportChatService.submitFeedback(session.id, uid, { rating: 5, comment: 'great' });
     expect(fed.rating).toBe(5);
     expect(fed.feedback_comment).toBe('great');
 
+    // (d) one-time: a second submission is rejected.
     await expect(
-      supportChatService.submitFeedback(session.id, new Types.ObjectId().toString(), { rating: 4 })
-    ).rejects.toThrow(/not your chat/i);
-    await expect(
-      supportChatService.submitFeedback(session.id, uid, { rating: 9 })
-    ).rejects.toThrow(/1-5/);
+      supportChatService.submitFeedback(session.id, uid, { rating: 3 })
+    ).rejects.toThrow(/already submitted/i);
   });
 
   it('records read timestamps for the seen/blue-tick state', async () => {
@@ -168,7 +180,20 @@ describe('supportChat transcript', () => {
     expect(Buffer.from(t.content_base64, 'base64').toString('utf8')).toBe(t.text);
   });
 
-  it('emails the transcript via the email service to a valid address only', async () => {
+  it('builds a .docx transcript (valid zip/Office package) on request', async () => {
+    const uid = new Types.ObjectId().toString();
+    const session = await supportChatService.start(uid, 'Need the docx');
+
+    const t = await supportChatService.transcript(session.id, 'DOCX');
+    expect(t.filename).toMatch(/^support-CH-[0-9A-F]{6}\.docx$/);
+    // .txt rendering is still returned for previews.
+    expect(t.text).toContain('Need the docx');
+    // A .docx is a zip — its bytes start with the "PK" local-file signature.
+    const bytes = Buffer.from(t.content_base64, 'base64');
+    expect(bytes.subarray(0, 2).toString('latin1')).toBe('PK');
+  });
+
+  it('emails the transcript (.docx by default) to a valid address only', async () => {
     const uid = new Types.ObjectId().toString();
     const session = await supportChatService.start(uid, 'email me please');
 
@@ -177,10 +202,20 @@ describe('supportChat transcript', () => {
     expect(sendHtmlEmailMock).toHaveBeenCalledTimes(1);
     const arg = sendHtmlEmailMock.mock.calls[0][0];
     expect(arg.to).toBe('me@example.com');
-    expect(arg.attachments[0].filename).toMatch(/^support-CH-/);
+    expect(arg.attachments[0].filename).toMatch(/^support-CH-[0-9A-F]{6}\.docx$/);
+    expect(Buffer.isBuffer(arg.attachments[0].content)).toBe(true);
 
     await expect(supportChatService.emailTranscript(session.id, 'not-an-email')).rejects.toThrow(
       /valid email/i
     );
+  });
+
+  it('emails a .txt transcript when the TXT format is requested', async () => {
+    const uid = new Types.ObjectId().toString();
+    const session = await supportChatService.start(uid, 'txt please');
+
+    await supportChatService.emailTranscript(session.id, 'me@example.com', 'TXT');
+    const arg = sendHtmlEmailMock.mock.calls.at(-1)![0];
+    expect(arg.attachments[0].filename).toMatch(/\.txt$/);
   });
 });

@@ -71,7 +71,10 @@ describe('supportChat AI assistant', () => {
     const msgs = await supportChatService.listMessages(sessionId);
     const system = msgs.filter((m) => m.sender_role === 'SYSTEM');
     expect(system).toHaveLength(1);
-    expect(system[0].text).toMatch(/support executive/i);
+    // B14b handoff copy.
+    expect(system[0].text).toBe(
+      "We're transferring this chat to a support executive who specialises in your concern for a quicker resolution. They'll be with you shortly."
+    );
     const fresh = await SupportChatSessionModel.findById(sessionId);
     expect(fresh!.ai_active).toBe(false);
     expect(fresh!.handed_off).toBe(true);

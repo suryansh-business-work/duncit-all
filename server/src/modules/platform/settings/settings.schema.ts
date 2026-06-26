@@ -6,12 +6,16 @@ export const settingsTypeDefs = gql`
     jwt_no_expiry: Boolean!
     date_format: String!
     time_format: String!
+    "IANA timezone (e.g. Asia/Kolkata) used to display all dates & times."
+    time_zone: String!
     updated_at: String
   }
 
   type PublicAppSettings {
     date_format: String!
     time_format: String!
+    "IANA timezone (e.g. Asia/Kolkata) used to display all dates & times."
+    time_zone: String!
   }
 
   type PublicClientConfig {
@@ -24,6 +28,7 @@ export const settingsTypeDefs = gql`
     jwt_no_expiry: Boolean
     date_format: String
     time_format: String
+    time_zone: String
   }
 
   type FeatureFlag {

@@ -6,6 +6,8 @@ export interface IAppSettings extends Document {
   jwt_no_expiry: boolean;
   date_format: string;
   time_format: string;
+  /** IANA timezone used to format/display dates & times across all apps. */
+  time_zone: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -22,6 +24,7 @@ const appSettingsSchema = new Schema<IAppSettings>(
     jwt_no_expiry: { type: Boolean, default: false },
     date_format: { type: String, default: "dd MMM yyyy" },
     time_format: { type: String, default: "hh:mm a" },
+    time_zone: { type: String, default: "Asia/Kolkata" },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

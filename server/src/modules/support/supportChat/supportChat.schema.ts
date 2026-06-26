@@ -59,10 +59,18 @@ export const supportChatTypeDefs = /* GraphQL */ `
     updated_at: String!
   }
 
-  "A plain-text export of a chat, generated server-side."
+  "Export format for support chat / ticket transcripts."
+  enum TranscriptFormat {
+    TXT
+    DOCX
+  }
+
+  "A server-generated export of a chat or ticket (filename + base64 content)."
   type SupportChatTranscript {
     filename: String!
+    "Plain-text rendering (always present, regardless of the chosen format)."
     text: String!
+    "Base64-encoded file for the requested format (.txt utf-8 or .docx binary)."
     content_base64: String!
   }
 
@@ -93,8 +101,8 @@ export const supportChatTypeDefs = /* GraphQL */ `
     mySupportChat: SupportChatSession
     "All of the signed-in user's support items (tickets, SOS, callbacks, chats)."
     myUnifiedSupportTickets: [UnifiedSupportTicket!]!
-    "Plain-text transcript of a chat — accessible to its owner or a support agent."
-    supportChatTranscript(session_id: ID!): SupportChatTranscript!
+    "Transcript of a chat (.txt or .docx) — accessible to its owner or a support agent."
+    supportChatTranscript(session_id: ID!, format: TranscriptFormat): SupportChatTranscript!
   }
 
   extend type Mutation {
@@ -115,8 +123,8 @@ export const supportChatTypeDefs = /* GraphQL */ `
       rating: Int!
       comment: String
     ): SupportChatSession!
-    "Email the chat transcript (as a .txt attachment) to an address."
-    emailSupportChatTranscript(session_id: ID!, email: String!): Boolean!
+    "Email the chat transcript to an address (defaults to a .docx attachment)."
+    emailSupportChatTranscript(session_id: ID!, email: String!, format: TranscriptFormat): Boolean!
     markSupportChatRead(session_id: ID!): SupportChatSession!
     "Agent picks up an unassigned chat — announced as a SYSTEM bubble."
     claimSupportChat(session_id: ID!): SupportChatSession!

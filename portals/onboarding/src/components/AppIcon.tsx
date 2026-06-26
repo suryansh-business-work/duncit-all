@@ -15,6 +15,7 @@ import PeopleIcon from '@mui/icons-material/People';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 import AssignmentIcon from '@mui/icons-material/Assignment';
+import AssignmentIndIcon from '@mui/icons-material/AssignmentInd';
 import EventIcon from '@mui/icons-material/Event';
 
 const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
@@ -33,6 +34,7 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   people: PeopleIcon,
   storefront: StorefrontIcon,
   survey: AssignmentIcon,
+  'host-request': AssignmentIndIcon,
   calendar: EventIcon,
 };
 

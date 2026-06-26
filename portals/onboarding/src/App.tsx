@@ -2,6 +2,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import HostsPage from './pages/hosts-page/HostsPage';
+import HostRequestsPage from './pages/host-requests/HostRequestsPage';
 import VenuesPage from './pages/venues-page/VenuesPage';
 import VenueDetailsPage from './pages/venue-details-page/VenueDetailsPage';
 import EcommBrandsPage from './pages/ecomm-brands-page/EcommBrandsPage';
@@ -34,6 +35,7 @@ export default function App() {
     <Routes>
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
+      <Route path="/host-requests" element={authed(<HostRequestsPage />)} />
       <Route path="/hosts" element={authed(<HostsPage />)} />
       <Route path="/venues" element={authed(<VenuesPage />)} />
       <Route path="/venues/:venueId" element={authed(<VenueDetailsPage />)} />

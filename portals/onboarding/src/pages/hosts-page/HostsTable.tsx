@@ -2,10 +2,35 @@ import EditIcon from '@mui/icons-material/Edit';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Chip, IconButton, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
 
+interface HostCategory {
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+  request_no: string;
+}
+
 interface Props {
   hosts: any[];
   onEdit: (host: any) => void;
   onReview: (host: any) => void;
+}
+
+const catPath = (c: HostCategory) =>
+  [c.super_category_name, c.category_name, c.sub_category_name].filter(Boolean).join(' › ') || '—';
+
+function CategoryCell({ categories }: Readonly<{ categories?: HostCategory[] }>) {
+  if (!categories || categories.length === 0) {
+    return <Typography variant="body2" color="text.secondary">—</Typography>;
+  }
+  return (
+    <>
+      {categories.map((c) => (
+        <Typography key={c.request_no || catPath(c)} variant="body2" display="block">
+          {catPath(c)}
+        </Typography>
+      ))}
+    </>
+  );
 }
 
 export default function HostsTable({ hosts, onEdit, onReview }: Readonly<Props>) {
@@ -16,6 +41,7 @@ export default function HostsTable({ hosts, onEdit, onReview }: Readonly<Props>)
           <TableCell>Host</TableCell>
           <TableCell>Contact</TableCell>
           <TableCell>Documents</TableCell>
+          <TableCell>Category</TableCell>
           <TableCell>Status</TableCell>
           <TableCell>Submitted</TableCell>
           <TableCell align="right">Actions</TableCell>
@@ -36,6 +62,7 @@ export default function HostsTable({ hosts, onEdit, onReview }: Readonly<Props>)
               <Typography variant="caption" display="block">PAN: {host.pan_number || '—'}</Typography>
               <Typography variant="caption" display="block">Aadhar: {host.aadhar_number || '—'}</Typography>
             </TableCell>
+            <TableCell><CategoryCell categories={host.host_categories} /></TableCell>
             <TableCell><Chip size="small" label={host.status} /></TableCell>
             <TableCell>{host.submitted_at ? new Date(host.submitted_at).toLocaleDateString() : '—'}</TableCell>
             <TableCell align="right">
@@ -45,7 +72,7 @@ export default function HostsTable({ hosts, onEdit, onReview }: Readonly<Props>)
           </TableRow>
         ))}
         {hosts.length === 0 && (
-          <TableRow><TableCell colSpan={6} align="center">No hosts found.</TableCell></TableRow>
+          <TableRow><TableCell colSpan={7} align="center">No hosts found.</TableCell></TableRow>
         )}
       </TableBody>
     </Table>

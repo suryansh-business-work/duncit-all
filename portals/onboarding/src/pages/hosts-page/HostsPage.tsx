@@ -78,7 +78,7 @@ export default function HostsPage() {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
 
       {loading && !data ? (
-        <TableSkeleton columns={6} />
+        <TableSkeleton columns={7} />
       ) : (
         <HostsTable hosts={data?.hosts ?? []} onEdit={setEditing} onReview={openReview} />
       )}

@@ -61,6 +61,7 @@ export const appConfig: AppConfig = {
       label: 'Onboarding',
       icon: 'people',
       children: [
+        { label: 'Host Requests', to: '/host-requests', icon: 'host-request' },
         { label: 'Onboarded Hosts', to: '/hosts', icon: 'people' },
         { label: 'Onboarded Venues', to: '/venues', icon: 'storefront' },
         { label: 'Onboarded E-Commerce Brands', to: '/ecomm-brands', icon: 'inventory' },

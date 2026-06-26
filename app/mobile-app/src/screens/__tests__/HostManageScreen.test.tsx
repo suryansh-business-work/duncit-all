@@ -26,6 +26,12 @@ jest.mock('@/components/host-manage/HostShareSection', () => {
   const { View: V } = require('react-native');
   return { HostShareSection: () => <V testID="host-share-section" /> };
 });
+// The apply-another-category banner is unit-tested on its own; stub it here.
+jest.mock('@/components/host-manage/HostApplyBanner', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View: V } = require('react-native');
+  return { HostApplyBanner: () => <V testID="host-apply-banner" /> };
+});
 const mockedUse = useHostDrafts as jest.Mock;
 
 const drafts = [

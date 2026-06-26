@@ -16,6 +16,7 @@ import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { CreatePodScreen } from '@/screens/CreatePodScreen';
 import { FaqsScreen } from '@/screens/FaqsScreen';
 import { HostManageScreen } from '@/screens/HostManageScreen';
+import { HostApplyScreen } from '@/screens/HostApplyScreen';
 import { HostDashboardScreen } from '@/screens/HostDashboardScreen';
 import { VerificationScreen } from '@/screens/VerificationScreen';
 import { WalletScreen } from '@/screens/WalletScreen';
@@ -99,6 +100,7 @@ export function RootNavigator() {
           <Stack.Screen name="PodHistoryDetails" component={PodHistoryDetailsScreen} />
           <Stack.Screen name="BecomeHost" component={BecomeHostScreen} />
           <Stack.Screen name="HostManage" component={HostManageScreen} />
+          <Stack.Screen name="HostApply" component={HostApplyScreen} />
           <Stack.Screen name="HostDashboard" component={HostDashboardScreen} />
           <Stack.Screen name="Verification" component={VerificationScreen} />
           <Stack.Screen name="Wallet" component={WalletScreen} />

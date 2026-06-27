@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { emailTemplateTestSchema } from './email-template-test.form';
+import { emailTemplateTestSchema, toSendTestInput } from './email-template-test.form';
 
 describe('emailTemplateTestSchema', () => {
   it('rejects empty recipient', async () => {
@@ -13,5 +13,11 @@ describe('emailTemplateTestSchema', () => {
   it('accepts and lowercases a valid email', async () => {
     const parsed = await emailTemplateTestSchema.validate({ to: 'Test@Example.COM' });
     expect(parsed.to).toBe('test@example.com');
+  });
+});
+
+describe('toSendTestInput', () => {
+  it('casts and normalises the recipient email', () => {
+    expect(toSendTestInput({ to: 'User@Example.COM' })).toEqual({ to: 'user@example.com' });
   });
 });

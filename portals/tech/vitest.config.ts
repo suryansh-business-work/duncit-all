@@ -60,6 +60,19 @@ export default defineConfig({
         // Interactive test panels: real Apollo mutations, Google OAuth/Maps
         // SDKs and <script> injection — exercised by the e2e console flows.
         'src/pages/environment/test-panels/**',
+        // Email Templates: Apollo CRUD container + editor hook + mutation
+        // dialogs, plus the Monaco-editor pane and its AI button (real browser
+        // editor + Apollo mutation) — exercised by the e2e console flows. The
+        // presentational children (TemplateList, EditorActionsBar,
+        // CreateTemplateForm, PreviewVariablesPane) and helpers (mjmlFormat,
+        // queries, form schemas) ARE unit-tested here.
+        'src/pages/email-templates-page/EmailTemplatesPage.tsx',
+        'src/pages/email-templates-page/useEmailTemplateEditor.ts',
+        'src/pages/email-templates-page/CreateTemplateDialog.tsx',
+        'src/pages/email-templates-page/SendTestDialog.tsx',
+        'src/pages/email-templates-page/MjmlEditorPane.tsx',
+        'src/pages/email-templates-page/TemplateEditorPanel.tsx',
+        'src/components/MjmlAiButton.tsx',
       ],
       thresholds: {
         lines: 100,

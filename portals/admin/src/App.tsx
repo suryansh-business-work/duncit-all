@@ -20,7 +20,6 @@ import EventTicketsPage from './pages/EventTicketsPage';
 import SlidersPage from './pages/SlidersPage';
 import BrandingPage from './pages/BrandingPage';
 import FaqsPage from './pages/FaqsPage';
-import EmailTemplatesPage from './pages/EmailTemplatesPage';
 import PodIdeasPage from './pages/PodIdeasPage';
 import BadgesPage from './pages/BadgesPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
@@ -63,7 +62,6 @@ export default function App() {
                 <Route path="/event-tickets" element={<EventTicketsPage />} />
                 <Route path="/sliders" element={<SlidersPage />} />
                 <Route path="/faqs" element={<FaqsPage />} />
-                <Route path="/email-templates" element={<EmailTemplatesPage />} />
                 <Route path="/pod-ideas" element={<PodIdeasPage />} />
                 <Route path="/badges" element={<BadgesPage />} />
                 <Route path="/partners/faqs" element={<PartnerFaqsPage />} />

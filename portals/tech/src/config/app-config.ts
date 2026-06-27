@@ -67,6 +67,7 @@ export const appConfig: AppConfig = {
     { label: 'Maintenance', to: '/portal-modes', icon: 'construction' },
     { label: 'Feature Flags', to: '/feature-flags', icon: 'flag' },
     { label: 'Authentication', to: '/authentication', icon: 'lock' },
+    { label: 'Email Templates', to: '/email-templates', icon: 'email' },
     {
       label: 'Server',
       icon: 'dns',

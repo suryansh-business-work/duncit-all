@@ -14,35 +14,54 @@ interface ChipProps {
   label: string;
   active: boolean;
   disabled?: boolean;
+  /** The user's currently-booked slot — shown highlighted with a badge but not re-pickable. */
+  current?: boolean;
   testID: string;
   onPress: () => void;
 }
 
-function SlotChip({ label, active, disabled = false, testID, onPress }: Readonly<ChipProps>) {
+function SlotChip({
+  label,
+  active,
+  disabled = false,
+  current = false,
+  testID,
+  onPress,
+}: Readonly<ChipProps>) {
   const press = () => {
     if (!disabled) onPress();
   };
+  const highlighted = active || current;
   let border = '$borderColor';
-  if (active) border = '$primary';
+  if (highlighted) border = '$primary';
+  let chipOpacity = 1;
+  if (disabled && !current) chipOpacity = 0.4;
   return (
     <XStack
       testID={testID}
       role="button"
-      aria-label={label}
+      aria-label={current ? `${label} (current)` : label}
       aria-disabled={disabled}
       onPress={press}
-      opacity={disabled ? 0.4 : 1}
+      opacity={chipOpacity}
+      gap={5}
+      alignItems="center"
       paddingHorizontal={12}
       paddingVertical={7}
       borderRadius={999}
       borderWidth={1}
       borderColor={border}
-      backgroundColor={active ? '$primary' : 'transparent'}
+      backgroundColor={highlighted ? '$primary' : 'transparent'}
       pressStyle={{ opacity: 0.85 }}
     >
-      <Text fontSize={12.5} fontWeight="800" color={active ? '$onPrimary' : '$color'}>
+      <Text fontSize={12.5} fontWeight="800" color={highlighted ? '$onPrimary' : '$color'}>
         {label}
       </Text>
+      {current ? (
+        <Text fontSize={9.5} fontWeight="900" color="$onPrimary" opacity={0.85}>
+          CURRENT
+        </Text>
+      ) : null}
     </XStack>
   );
 }
@@ -51,11 +70,13 @@ interface Props {
   slots: MeetingSlot[];
   value: string;
   onChange: (startAt: string) => void;
+  /** The slot the user is already booked into — shown highlighted but not re-pickable (reschedule). */
+  currentSlot?: string;
 }
 
 /** Day + time-slot chip grid for onboarding meetings; booked slots are disabled.
  * The Tamagui twin of mWeb's SlotPicker. */
-export function SlotPicker({ slots, value, onChange }: Readonly<Props>) {
+export function SlotPicker({ slots, value, onChange, currentSlot }: Readonly<Props>) {
   const { color: ink } = useThemeColors();
   const [day, setDay] = useState('');
   const days: string[] = [];
@@ -88,16 +109,20 @@ export function SlotPicker({ slots, value, onChange }: Readonly<Props>) {
         Time slot *
       </Text>
       <XStack gap={6} flexWrap="wrap">
-        {daySlots.map((s) => (
-          <SlotChip
-            key={s.start_at}
-            testID={`slot-${s.start_at}`}
-            label={timeLabel(s.start_at)}
-            active={value === s.start_at}
-            disabled={!s.available}
-            onPress={() => onChange(s.start_at)}
-          />
-        ))}
+        {daySlots.map((s) => {
+          const isCurrent = !!currentSlot && s.start_at === currentSlot;
+          return (
+            <SlotChip
+              key={s.start_at}
+              testID={`slot-${s.start_at}`}
+              label={timeLabel(s.start_at)}
+              active={value === s.start_at}
+              disabled={!s.available || isCurrent}
+              current={isCurrent}
+              onPress={() => onChange(s.start_at)}
+            />
+          );
+        })}
       </XStack>
     </YStack>
   );

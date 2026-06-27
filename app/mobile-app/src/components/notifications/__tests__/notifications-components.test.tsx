@@ -10,6 +10,11 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/hooks/useNotifications', () => ({ useNotifications: jest.fn() }));
 const mockedUseNotifications = useNotifications as jest.Mock;
 
+const mockNavigate = jest.fn();
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: mockNavigate }),
+}));
+
 const notif = (over: Record<string, unknown> = {}): UserNotification =>
   ({
     id: 'n1',
@@ -206,10 +211,56 @@ describe('NotificationsBell', () => {
     await waitFor(() => expect(openURL).toHaveBeenCalledWith('http://x'));
   });
 
+  it('routes an in-app /earn link to the Earn screen instead of opening a URL (BUG-5)', async () => {
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
+    mockedUseNotifications.mockReturnValue({
+      notifs: [
+        notif({
+          notification: { id: 'a', title: 'T', body: 'B', image_url: null, link_url: '/earn' },
+        }),
+      ],
+      unreadCount: 1,
+      refetch,
+      markRead,
+      markAll,
+    });
+    renderWithProviders(<NotificationsBell />);
+    fireEvent.press(screen.getByTestId('notifications-bell'));
+    fireEvent.press(screen.getByTestId('notification-n1'));
+    await waitFor(() => expect(markRead).toHaveBeenCalled());
+    await waitFor(() => expect(mockNavigate).toHaveBeenCalledWith('Earn'));
+    expect(openURL).not.toHaveBeenCalled();
+    // The list closes after navigating in-app.
+    expect(screen.queryByTestId('notifications-screen')).toBeNull();
+  });
+
+  it('ignores an unrecognised in-app link and keeps the list open (BUG-5)', async () => {
+    const openURL = jest.spyOn(Linking, 'openURL').mockResolvedValue(undefined as never);
+    mockedUseNotifications.mockReturnValue({
+      notifs: [
+        notif({
+          notification: { id: 'a', title: 'T', body: 'B', image_url: null, link_url: '/unknown' },
+        }),
+      ],
+      unreadCount: 1,
+      refetch,
+      markRead,
+      markAll,
+    });
+    renderWithProviders(<NotificationsBell />);
+    fireEvent.press(screen.getByTestId('notifications-bell'));
+    fireEvent.press(screen.getByTestId('notification-n1'));
+    await waitFor(() => expect(markRead).toHaveBeenCalled());
+    expect(mockNavigate).not.toHaveBeenCalled();
+    expect(openURL).not.toHaveBeenCalled();
+    expect(screen.getByTestId('notifications-screen')).toBeOnTheScreen();
+  });
+
   it('marks read without navigating when there is no link', async () => {
     renderWithProviders(<NotificationsBell />);
     fireEvent.press(screen.getByTestId('notifications-bell'));
     fireEvent.press(screen.getByTestId('notification-n1'));
     await waitFor(() => expect(markRead).toHaveBeenCalled());
+    expect(mockNavigate).not.toHaveBeenCalled();
   });
 });

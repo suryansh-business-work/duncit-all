@@ -74,9 +74,11 @@ export function useOnboardingFlow(kind: SurveyKind) {
   const loadSlots = async () => {
     setSlotsLoading(true);
     try {
-      const res = await graphqlRequest<MeetingSlotsResult>(MeetingSlotsDocument, undefined, {
-        auth: true,
-      });
+      const res = await graphqlRequest<MeetingSlotsResult, { kind: SurveyKind }>(
+        MeetingSlotsDocument,
+        { kind },
+        { auth: true },
+      );
       setSlots(res.meetingSlots);
     } catch (e) {
       setError(toErrorMessage(e, 'Could not load the available slots'));

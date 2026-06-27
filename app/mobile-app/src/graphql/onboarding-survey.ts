@@ -134,8 +134,8 @@ export const RequestMeetingDocument = parse(`
 `);
 
 export const MeetingSlotsDocument = parse(`
-  query MeetingSlots {
-    meetingSlots {
+  query MeetingSlots($kind: SurveyKind) {
+    meetingSlots(kind: $kind) {
       start_at
       end_at
       available

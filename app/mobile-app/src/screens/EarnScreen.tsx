@@ -106,6 +106,7 @@ export function EarnScreen() {
                   <EarnMeetingActions
                     kind={box.kind}
                     rescheduleCount={pendingMeeting.reschedule_count}
+                    currentSlot={pendingMeeting.scheduled_at ?? pendingMeeting.requested_at}
                     onChanged={() => void loadMeetings()}
                   />
                 ) : null}

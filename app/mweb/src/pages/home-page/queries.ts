@@ -2,24 +2,6 @@ import { gql } from '@apollo/client';
 
 export const HOME_DATA = gql`
   query HomeFeed($podFilter: PodFilterInput, $superCatSlug: String) {
-    sliders(filter: { super_category_slug: $superCatSlug, is_active: true }) {
-      id
-      title
-      description
-      media_url
-      media_type
-      link_type
-      link_target_kind
-      link_target_slug
-      link_target_parent_slug
-      link_url
-      effective_link_url
-      scope
-      super_category_slug
-      location_id
-      zone_name
-      sort_order
-    }
     clubs(filter: { is_active: true }) {
       id
       club_id

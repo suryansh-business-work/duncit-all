@@ -2,9 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { buildHomeStatusEntries, buildMyStatusViewer, initials } from '../homeStatusItems';
 
 const baseArgs = {
-  duncitName: 'Duncit',
-  brandingLogoUrl: 'logo.png',
-  sliders: [] as any[],
   followedClubs: [] as any[],
   hostPods: [] as any[],
   followedPods: [] as any[],
@@ -21,12 +18,9 @@ describe('initials', () => {
 });
 
 describe('buildHomeStatusEntries (bug 2/3 order)', () => {
-  it('orders sliders → clubs → host pods → followed pods → users', () => {
+  it('orders clubs → host pods → followed pods → users', () => {
     const entries = buildHomeStatusEntries({
       ...baseArgs,
-      sliders: [
-        { id: 's1', title: 'Promo', media_url: 'p.jpg', media_type: 'IMAGE', link_type: 'INTERNAL', link_url: '/x' },
-      ],
       followedClubs: [
         {
           id: 'c1',
@@ -47,12 +41,11 @@ describe('buildHomeStatusEntries (bug 2/3 order)', () => {
         { author_id: 'u1', image_url: 'st.jpg', media_type: 'IMAGE', caption: 'Hi', created_at: 'now', expires_at: 'later' },
       ],
     });
-    expect(entries.map((e) => e.key)).toEqual(['slider-s1', 'club-c1', 'pod-p1', 'pod-p2', 'user-u1']);
-    expect(entries[0].viewer.internal).toBe(true);
-    expect(entries[3].videoUrl).toBe('b.mp4');
-    expect(entries[2].viewer.subLabel).toBe('Your pod status');
-    expect(entries[3].viewer.subLabel).toBe('Followed pod');
-    expect(entries[4].viewer.slides?.[0]?.mediaUrl).toBe('st.jpg');
+    expect(entries.map((e) => e.key)).toEqual(['club-c1', 'pod-p1', 'pod-p2', 'user-u1']);
+    expect(entries[2].videoUrl).toBe('b.mp4');
+    expect(entries[1].viewer.subLabel).toBe('Your pod status');
+    expect(entries[2].viewer.subLabel).toBe('Followed pod');
+    expect(entries[3].viewer.slides?.[0]?.mediaUrl).toBe('st.jpg');
   });
 });
 

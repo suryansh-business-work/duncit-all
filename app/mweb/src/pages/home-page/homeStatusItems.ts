@@ -26,35 +26,11 @@ function firstMedia(items?: Array<{ url?: string | null; type?: string | null }>
 }
 
 interface BuildArgs {
-  duncitName: string;
-  brandingLogoUrl?: string | null;
-  sliders: any[];
   followedClubs: any[];
   hostPods: any[];
   followedPods: any[];
   followedUsers: any[];
   followedPosts: any[];
-}
-
-function sliderEntry(slider: any, duncitName: string, brandingLogoUrl?: string | null): HomeStatusEntry {
-  const isVideo = slider.media_type === 'VIDEO';
-  const target = slider.effective_link_url ?? slider.link_url ?? '';
-  return {
-    key: `slider-${slider.id}`,
-    label: duncitName,
-    imageUrl: isVideo ? null : slider.media_url,
-    videoUrl: isVideo ? slider.media_url : null,
-    initials: initials(duncitName),
-    viewer: {
-      label: duncitName,
-      subLabel: slider.title,
-      avatarUrl: brandingLogoUrl,
-      mediaUrl: slider.media_url,
-      mediaType: slider.media_type,
-      targetUrl: target,
-      internal: slider.link_type === 'INTERNAL' && target.startsWith('/'),
-    },
-  };
 }
 
 function clubEntry(club: any): HomeStatusEntry {
@@ -137,12 +113,9 @@ function userEntry(user: any, followedPosts: any[]): HomeStatusEntry {
   };
 }
 
-/** Ordered rail entries: Duncit sliders → followed clubs → host/followed pods →
- * followed users. (The "my status" tile is handled separately by the rail.) */
+/** Ordered rail entries: followed clubs → host/followed pods → followed users.
+ * (The "my status" tile is handled separately by the rail.) */
 export function buildHomeStatusEntries({
-  duncitName,
-  brandingLogoUrl,
-  sliders,
   followedClubs,
   hostPods,
   followedPods,
@@ -150,7 +123,6 @@ export function buildHomeStatusEntries({
   followedPosts,
 }: BuildArgs): HomeStatusEntry[] {
   return [
-    ...sliders.map((s) => sliderEntry(s, duncitName, brandingLogoUrl)),
     ...followedClubs.map((c) => clubEntry(c)),
     ...hostPods.map((p) => podEntry(p, true)),
     ...followedPods.map((p) => podEntry(p, false)),

@@ -8,7 +8,6 @@ import { buildHomeStatusEntries, buildMyStatusViewer } from './homeStatusItems';
 interface HomeStatusRailProps {
   me?: any;
   branding?: any;
-  sliders: any[];
   followedClubs: any[];
   followedPods: any[];
   hostPods: any[];
@@ -19,7 +18,6 @@ interface HomeStatusRailProps {
 export default function HomeStatusRail({
   me,
   branding,
-  sliders,
   followedClubs,
   followedPods,
   hostPods,
@@ -28,21 +26,17 @@ export default function HomeStatusRail({
 }: Readonly<HomeStatusRailProps>) {
   // Index into the ordered viewer sequence ([my status, …entries]); null = closed.
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
-  const duncitName = branding?.app_name || 'Duncit';
 
   const entries = useMemo(
     () =>
       buildHomeStatusEntries({
-        duncitName,
-        brandingLogoUrl: branding?.logo_url,
-        sliders,
         followedClubs,
         hostPods,
         followedPods,
         followedUsers,
         followedPosts,
       }),
-    [duncitName, branding?.logo_url, sliders, followedClubs, hostPods, followedPods, followedUsers, followedPosts],
+    [followedClubs, hostPods, followedPods, followedUsers, followedPosts],
   );
 
   const myViewer = useMemo(() => buildMyStatusViewer(me), [me]);

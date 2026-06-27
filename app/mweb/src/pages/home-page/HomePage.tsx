@@ -36,7 +36,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
     branding,
     me,
     isHost,
-    sliders,
     clubs,
     featuredPods,
     podsByClub,
@@ -86,7 +85,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
       <HomeStatusRail
         me={me ? { ...me, my_stories: myStories } : me}
         branding={branding}
-        sliders={sliders}
         followedClubs={followedClubs}
         followedPods={followedPods}
         hostPods={hostPods}

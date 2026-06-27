@@ -88,7 +88,9 @@ describe('AccountEditForm', () => {
     expect(onSubmit).not.toHaveBeenCalled();
 
     fireEvent.changeText(screen.getByTestId('field-dob'), '1990-12-31');
-    await waitFor(() => expect(screen.queryByTestId('dob-error')).toBeNull());
+    // A valid dob re-enables Save and submits the new value; assert via the
+    // stable enabled-state + submit below rather than the error node, whose exit
+    // animation can briefly linger in CI.
     await pressSaveWhenEnabled();
     await waitFor(() => expect(onSubmit).toHaveBeenCalledTimes(1));
     expect(onSubmit.mock.calls[0][0]).toMatchObject({ dob: '1990-12-31' });

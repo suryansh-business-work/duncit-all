@@ -19,9 +19,7 @@ import ReferralsPage from './pages/referrals-page/ReferralsPage';
 import EventTicketsPage from './pages/EventTicketsPage';
 import SlidersPage from './pages/SlidersPage';
 import BrandingPage from './pages/BrandingPage';
-import InterviewRequestsPage from './pages/InterviewRequestsPage';
 import FaqsPage from './pages/FaqsPage';
-import SupportLogsPage from './pages/SupportLogsPage';
 import EmailTemplatesPage from './pages/EmailTemplatesPage';
 import PodIdeasPage from './pages/PodIdeasPage';
 import BadgesPage from './pages/BadgesPage';
@@ -64,9 +62,7 @@ export default function App() {
                 <Route path="/referrals" element={<ReferralsPage />} />
                 <Route path="/event-tickets" element={<EventTicketsPage />} />
                 <Route path="/sliders" element={<SlidersPage />} />
-                <Route path="/interview-requests" element={<InterviewRequestsPage />} />
                 <Route path="/faqs" element={<FaqsPage />} />
-                <Route path="/support-logs" element={<SupportLogsPage />} />
                 <Route path="/email-templates" element={<EmailTemplatesPage />} />
                 <Route path="/pod-ideas" element={<PodIdeasPage />} />
                 <Route path="/badges" element={<BadgesPage />} />

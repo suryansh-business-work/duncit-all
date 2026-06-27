@@ -71,16 +71,12 @@ export const NAV: NavSection[] = [
   {
     heading: 'Engagement',
     prefixes: [
-      '/interview-requests',
       '/faqs',
       '/email-templates',
       '/badges',
-      '/support-logs',
     ],
     items: [
-      { label: 'Interview Requests', to: '/interview-requests', icon: navIcons.eventAvailable },
       { label: 'FAQs', to: '/faqs', icon: navIcons.help },
-      { label: 'Support Logs', to: '/support-logs', icon: navIcons.support },
       { label: 'Email Templates', to: '/email-templates', icon: navIcons.email },
       { label: 'Badges', to: '/badges', icon: navIcons.shield },
     ],

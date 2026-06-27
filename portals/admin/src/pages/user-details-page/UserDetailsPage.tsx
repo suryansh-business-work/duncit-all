@@ -17,7 +17,6 @@ import UserInterestsSection from './UserInterestsSection';
 import UserHeader from './UserHeader';
 import UserSummaryCard from './UserSummaryCard';
 import UserDetailsTabs from './UserDetailsTabs';
-import UserSupportTicketsSection from './UserSupportTicketsSection';
 import RolesSection from './RolesSection';
 import DeleteUserDialog from './DeleteUserDialog';
 import UserHealthSection from './UserHealthSection';
@@ -104,7 +103,6 @@ export default function UserDetailsPage() {
           { label: 'Surveys', content: <UserSurveysSection userId={userId} /> },
           { label: 'Health', content: <UserHealthSection userId={userId} /> },
           { label: 'Activity', content: <UserActivitySection userId={userId} /> },
-          { label: 'Support Tickets', content: <UserSupportTicketsSection email={s.user.email} /> },
           {
             label: 'Call & Email Logs',
             content: <ContactActionsSection userId={userId} refreshToken={contactRefresh} />,

@@ -1,41 +1,67 @@
-import { renderHook, waitFor } from '@testing-library/react-native';
+import { act, renderHook, waitFor } from '@testing-library/react-native';
 
 import { graphqlRequest } from '@/services/graphql.client';
 import { useAccountHealth, useVenueHealth } from '@/hooks/useHealth';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
+
+let focusCallback: (() => void) | undefined;
+const mockAddListener = jest.fn((_event: string, cb: () => void) => {
+  focusCallback = cb;
+  return jest.fn();
+});
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ addListener: mockAddListener }),
+}));
+
 const mockRequest = graphqlRequest as jest.Mock;
 
-beforeEach(() => mockRequest.mockReset());
+beforeEach(() => {
+  jest.clearAllMocks();
+  focusCallback = undefined;
+  mockRequest.mockReset();
+});
 
 const health = { base_score: 100, delta_sum: 0, total_score: 100, band: 'GREEN', adjustments: [] };
 
 describe('useAccountHealth', () => {
   it('loads account health', async () => {
-    mockRequest.mockResolvedValueOnce({ myAccountHealth: health });
+    mockRequest.mockResolvedValue({ myAccountHealth: health });
     const { result } = renderHook(() => useAccountHealth());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.health?.band).toBe('GREEN');
   });
 
   it('captures an error', async () => {
-    mockRequest.mockRejectedValueOnce(new Error('boom'));
+    mockRequest.mockRejectedValue(new Error('boom'));
     const { result } = renderHook(() => useAccountHealth());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.error).toBeDefined();
   });
 
   it('coalesces a missing account score to null', async () => {
-    mockRequest.mockResolvedValueOnce({ myAccountHealth: null });
+    mockRequest.mockResolvedValue({ myAccountHealth: null });
     const { result } = renderHook(() => useAccountHealth());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.health).toBeNull();
+  });
+
+  it('refetches when the screen regains focus', async () => {
+    mockRequest.mockResolvedValue({ myAccountHealth: health });
+    const { result } = renderHook(() => useAccountHealth());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(mockAddListener).toHaveBeenCalledWith('focus', expect.any(Function));
+    const before = mockRequest.mock.calls.length;
+    await act(async () => {
+      focusCallback?.();
+    });
+    await waitFor(() => expect(mockRequest.mock.calls.length).toBeGreaterThan(before));
   });
 });
 
 describe('useVenueHealth', () => {
   it('loads venue health for a venue id', async () => {
-    mockRequest.mockResolvedValueOnce({ myVenueHealth: { ...health, subject_label: 'Cafe' } });
+    mockRequest.mockResolvedValue({ myVenueHealth: { ...health, subject_label: 'Cafe' } });
     const { result } = renderHook(() => useVenueHealth('v1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.health?.subject_label).toBe('Cafe');
@@ -50,16 +76,27 @@ describe('useVenueHealth', () => {
   });
 
   it('captures an error', async () => {
-    mockRequest.mockRejectedValueOnce(new Error('bad'));
+    mockRequest.mockRejectedValue(new Error('bad'));
     const { result } = renderHook(() => useVenueHealth('v1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.error).toBeDefined();
   });
 
   it('coalesces a missing venue score to null', async () => {
-    mockRequest.mockResolvedValueOnce({ myVenueHealth: null });
+    mockRequest.mockResolvedValue({ myVenueHealth: null });
     const { result } = renderHook(() => useVenueHealth('v1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.health).toBeNull();
+  });
+
+  it('refetches the venue score when the screen regains focus', async () => {
+    mockRequest.mockResolvedValue({ myVenueHealth: health });
+    const { result } = renderHook(() => useVenueHealth('v1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    const before = mockRequest.mock.calls.length;
+    await act(async () => {
+      focusCallback?.();
+    });
+    await waitFor(() => expect(mockRequest.mock.calls.length).toBeGreaterThan(before));
   });
 });

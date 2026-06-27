@@ -1,34 +1,37 @@
-import { Field, useField } from 'formik';
+import { Controller, useFormContext } from 'react-hook-form';
 import { TextField, type TextFieldProps } from '@mui/material';
 
 type Omitted = 'name' | 'value' | 'onChange' | 'onBlur' | 'error' | 'helperText';
 
 export interface FormFieldProps extends Omit<TextFieldProps, Omitted> {
-  /** Formik field name. */
+  /** react-hook-form field name. */
   name: string;
   /** Helper text shown when the field has no validation error. */
   hint?: string;
 }
 
 /**
- * MUI `TextField` wired into Formik. Real-time validation: shows the
- * validation error after the field is touched, otherwise renders the
- * supplied `hint` so every input has guidance underneath it.
+ * MUI `TextField` wired into react-hook-form via the surrounding
+ * `FormProvider`. Real-time validation: shows the validation error once the
+ * field has one, otherwise renders the supplied `hint` so every input has
+ * guidance underneath it.
  */
 export default function FormField({ name, hint, ...rest }: Readonly<FormFieldProps>) {
-  const [field, meta] = useField(name);
-  const hasChanged = meta.value !== meta.initialValue;
-  const showError = Boolean(meta.error && (meta.touched || hasChanged));
+  const { control } = useFormContext();
   return (
-    <TextField
-      {...rest}
-      {...field}
-      fullWidth={rest.fullWidth ?? true}
-      error={showError}
-      helperText={showError ? meta.error : (hint ?? ' ')}
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <TextField
+          {...rest}
+          {...field}
+          value={field.value ?? ''}
+          fullWidth={rest.fullWidth ?? true}
+          error={!!fieldState.error}
+          helperText={fieldState.error?.message ?? hint ?? ' '}
+        />
+      )}
     />
   );
 }
-
-/** Re-export Formik's `Field` for advanced/custom inputs. */
-export { Field };

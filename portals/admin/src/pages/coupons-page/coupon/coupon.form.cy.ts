@@ -3,29 +3,28 @@ import { couponFormSchema, couponFormDefaults, toCouponInput } from './coupon.fo
 
 const base = { ...couponFormDefaults, code: 'SAVE20', discount_pct: 20 };
 
+const messages = (input: unknown) => {
+  const result = couponFormSchema.safeParse(input);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('couponFormSchema', () => {
-  it('uppercases and accepts a valid code', async () => {
-    const value = await couponFormSchema.validate({ ...base, code: 'save20' });
+  it('uppercases and accepts a valid code', () => {
+    const value = couponFormSchema.parse({ ...base, code: 'save20' });
     expect(value.code).toBe('SAVE20');
   });
 
-  it('rejects an invalid code', async () => {
-    const error = await couponFormSchema.validate({ ...base, code: 'ab' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/code/i);
+  it('rejects an invalid code', () => {
+    expect(messages({ ...base, code: 'ab' })).toMatch(/code/i);
   });
 
-  it('rejects discount outside 1-100', async () => {
-    const low = await couponFormSchema.validate({ ...base, discount_pct: 0 }, { abortEarly: false }).catch((e) => e);
-    expect(low.errors.join(' ')).toMatch(/minimum/i);
-    const high = await couponFormSchema.validate({ ...base, discount_pct: 101 }, { abortEarly: false }).catch((e) => e);
-    expect(high.errors.join(' ')).toMatch(/maximum/i);
+  it('rejects discount outside 1-100', () => {
+    expect(messages({ ...base, discount_pct: 0 })).toMatch(/minimum/i);
+    expect(messages({ ...base, discount_pct: 101 })).toMatch(/maximum/i);
   });
 
-  it('requires a pod for POD scope', async () => {
-    const error = await couponFormSchema
-      .validate({ ...base, scope: 'POD', pod_id: '' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/pod/i);
+  it('requires a pod for POD scope', () => {
+    expect(messages({ ...base, scope: 'POD', pod_id: '' })).toMatch(/pod/i);
   });
 });
 

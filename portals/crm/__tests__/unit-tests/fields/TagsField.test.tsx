@@ -1,18 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { Formik, Form } from 'formik';
+import { FormProvider, useForm } from 'react-hook-form';
 import TagsField from '@/forms/fields/TagsField';
 
-const renderField = (initial: string[]) =>
-  render(
-    <Formik initialValues={{ tags: initial }} onSubmit={() => undefined}>
-      {() => (
-        <Form>
-          <TagsField name="tags" suggestions={['featured', 'priority']} />
-        </Form>
-      )}
-    </Formik>
+function Harness({ initial }: Readonly<{ initial: string[] }>) {
+  const methods = useForm({ defaultValues: { tags: initial } });
+  return (
+    <FormProvider {...methods}>
+      <form>
+        <TagsField name="tags" suggestions={['featured', 'priority']} />
+      </form>
+    </FormProvider>
   );
+}
+
+const renderField = (initial: string[]) => render(<Harness initial={initial} />);
 
 describe('TagsField', () => {
   it('shows the existing tags as chips', () => {

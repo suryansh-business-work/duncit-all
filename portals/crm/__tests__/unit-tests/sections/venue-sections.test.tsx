@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { render } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
 import { MemoryRouter } from 'react-router-dom';
-import { Formik, Form } from 'formik';
+import { FormProvider, useForm } from 'react-hook-form';
 import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
 import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
 import { venueLeadInitialValues } from '@/forms/venue-lead/venue-lead.types';
@@ -53,14 +53,21 @@ const emptyConfig: CrmOptionGroup = {
   host_services_offered_options: ['Event Hosting', 'Other'],
 };
 
+function FormHarness({ children }: Readonly<{ children: React.ReactNode }>) {
+  const methods = useForm({ defaultValues: venueLeadInitialValues });
+  return (
+    <FormProvider {...methods}>
+      <form>{children}</form>
+    </FormProvider>
+  );
+}
+
 const wrap = (children: React.ReactNode) =>
   render(
     <MockedProvider mocks={[]}>
       <MemoryRouter>
         <LocalizationProvider dateAdapter={AdapterDateFns}>
-          <Formik initialValues={venueLeadInitialValues} onSubmit={() => undefined}>
-            {() => <Form>{children}</Form>}
-          </Formik>
+          <FormHarness>{children}</FormHarness>
         </LocalizationProvider>
       </MemoryRouter>
     </MockedProvider>

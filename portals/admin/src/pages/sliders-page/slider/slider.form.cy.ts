@@ -22,45 +22,42 @@ const base: SliderForm = {
   is_active: true,
 };
 
+const messages = (input: unknown) => {
+  const result = sliderFormSchema.safeParse(input);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('sliderFormSchema', () => {
-  it('rejects empty title', async () => {
-    const error = await sliderFormSchema.validate({ ...base, title: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/title is required/i);
+  it('rejects empty title', () => {
+    expect(messages({ ...base, title: '' })).toMatch(/title is required/i);
   });
 
-  it('rejects external link that is not http(s)', async () => {
-    const error = await sliderFormSchema
-      .validate({ ...base, link_url: 'javascript:alert(1)' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/http/i);
+  it('rejects external link that is not http(s)', () => {
+    expect(messages({ ...base, link_url: 'javascript:alert(1)' })).toMatch(/http/i);
   });
 
-  it('requires a target kind+id for INTERNAL link', async () => {
-    const error = await sliderFormSchema
-      .validate({ ...base, link_type: 'INTERNAL', link_target_kind: '', link_target_id: '', link_url: '' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/pick (a target kind|a pod or club)/i);
+  it('requires a target kind+id for INTERNAL link', () => {
+    const text = messages({
+      ...base,
+      link_type: 'INTERNAL',
+      link_target_kind: '',
+      link_target_id: '',
+      link_url: '',
+    });
+    expect(text).toMatch(/pick (a target kind|a pod or club)/i);
   });
 
-  it('requires location for LOCATION scope', async () => {
-    const error = await sliderFormSchema
-      .validate({ ...base, scope: 'LOCATION' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/location/i);
+  it('requires location for LOCATION scope', () => {
+    expect(messages({ ...base, scope: 'LOCATION' })).toMatch(/location/i);
   });
 
-  it('rejects ends_at not after starts_at', async () => {
-    const error = await sliderFormSchema
-      .validate(
-        { ...base, starts_at: '2025-06-10T10:00', ends_at: '2025-06-10T09:00' },
-        { abortEarly: false },
-      )
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/end must be after start/i);
+  it('rejects ends_at not after starts_at', () => {
+    const text = messages({ ...base, starts_at: '2025-06-10T10:00', ends_at: '2025-06-10T09:00' });
+    expect(text).toMatch(/end must be after start/i);
   });
 
-  it('accepts a fully valid slider', async () => {
-    const parsed = await sliderFormSchema.validate(base, { abortEarly: false });
+  it('accepts a fully valid slider', () => {
+    const parsed = sliderFormSchema.parse(base);
     expect(parsed.title).toBe('New Year Bash');
   });
 });
@@ -85,7 +82,7 @@ describe('toCreateSliderInput / toUpdateSliderInput', () => {
   });
 
   it('toUpdateSliderInput omits slider_id and adds is_active', () => {
-    const update = toUpdateSliderInput({ ...base, is_active: false }) as any;
+    const update = toUpdateSliderInput({ ...base, is_active: false }) as { slider_id?: string; is_active: boolean };
     expect(update.slider_id).toBeUndefined();
     expect(update.is_active).toBe(false);
   });

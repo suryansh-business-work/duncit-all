@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen, waitFor } from '@testing-library/react';
 import { MockedProvider } from '@apollo/client/testing';
-import { Formik, Form } from 'formik';
+import { FormProvider, useForm } from 'react-hook-form';
 import SuperCategoryField from '@/forms/fields/SuperCategoryField';
 import { SUPER_CATEGORIES } from '@/api/crm.gql';
 
@@ -18,16 +18,21 @@ const superCategoriesMock = {
   },
 };
 
+function Harness() {
+  const methods = useForm({ defaultValues: { super_category_id: '' } });
+  return (
+    <FormProvider {...methods}>
+      <form>
+        <SuperCategoryField name="super_category_id" />
+      </form>
+    </FormProvider>
+  );
+}
+
 function renderField(mocks = [superCategoriesMock]) {
   return render(
     <MockedProvider mocks={mocks}>
-      <Formik initialValues={{ super_category_id: '' }} onSubmit={() => undefined}>
-        {() => (
-          <Form>
-            <SuperCategoryField name="super_category_id" />
-          </Form>
-        )}
-      </Formik>
+      <Harness />
     </MockedProvider>
   );
 }

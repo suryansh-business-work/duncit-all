@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useField, useFormikContext } from 'formik';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { InputAdornment, MenuItem, TextField } from '@mui/material';
 
 /**
@@ -34,59 +34,62 @@ interface Props {
 
 /** Combines a country-code dropdown with the phone field on a single line. */
 export default function PhoneField({ name, label, size = 'small', required }: Readonly<Props>) {
-  const [numberField, numberMeta] = useField<string>(name);
+  const { control, setValue } = useFormContext();
   const extName = `${name}_ext`;
-  const [extField] = useField<string>(extName);
-  const formik = useFormikContext<Record<string, unknown>>();
-
-  const currentDial = extField.value || '+91';
-  const showError = Boolean(numberMeta.error && (numberMeta.touched || numberMeta.value !== numberMeta.initialValue));
-
-  const onDialChange = (next: string) => {
-    formik.setFieldValue(extName, next, false);
-  };
+  const currentDial = (useWatch({ control, name: extName }) as string) || '+91';
 
   const codeOptions = useMemo(
     () => COUNTRY_CODES.map((c) => ({ key: `${c.code}-${c.dial}`, ...c })),
     []
   );
 
+  const onDialChange = (next: string) => {
+    setValue(extName, next, { shouldDirty: true });
+  };
+
   return (
-    <TextField
-      {...numberField}
-      label={label}
-      size={size}
-      fullWidth
-      required={required}
-      error={showError}
-      helperText={showError ? (numberMeta.error as string) : ' '}
-      inputProps={{ inputMode: 'numeric' }}
-      InputProps={{
-        startAdornment: (
-          <InputAdornment position="start" sx={{ mr: 0.5 }}>
-            <TextField
-              select
-              value={currentDial}
-              onChange={(e) => onDialChange(e.target.value)}
-              size={size}
-              variant="standard"
-              sx={{
-                minWidth: 78,
-                '& .MuiInput-underline:before': { borderBottom: 'none' },
-                '& .MuiInput-underline:after': { borderBottom: 'none' },
-                '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
-              }}
-              SelectProps={{ MenuProps: { PaperProps: { sx: { maxHeight: 320 } } } }}
-            >
-              {codeOptions.map((opt) => (
-                <MenuItem key={opt.key} value={opt.dial}>
-                  {opt.label} {opt.dial}
-                </MenuItem>
-              ))}
-            </TextField>
-          </InputAdornment>
-        ),
-      }}
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <TextField
+          {...field}
+          value={field.value ?? ''}
+          label={label}
+          size={size}
+          fullWidth
+          required={required}
+          error={!!fieldState.error}
+          helperText={fieldState.error?.message ?? ' '}
+          inputProps={{ inputMode: 'numeric' }}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start" sx={{ mr: 0.5 }}>
+                <TextField
+                  select
+                  value={currentDial}
+                  onChange={(e) => onDialChange(e.target.value)}
+                  size={size}
+                  variant="standard"
+                  sx={{
+                    minWidth: 78,
+                    '& .MuiInput-underline:before': { borderBottom: 'none' },
+                    '& .MuiInput-underline:after': { borderBottom: 'none' },
+                    '& .MuiInput-underline:hover:not(.Mui-disabled):before': { borderBottom: 'none' },
+                  }}
+                  SelectProps={{ MenuProps: { PaperProps: { sx: { maxHeight: 320 } } } }}
+                >
+                  {codeOptions.map((opt) => (
+                    <MenuItem key={opt.key} value={opt.dial}>
+                      {opt.label} {opt.dial}
+                    </MenuItem>
+                  ))}
+                </TextField>
+              </InputAdornment>
+            ),
+          }}
+        />
+      )}
     />
   );
 }

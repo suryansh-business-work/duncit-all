@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
+import { ZodError } from 'zod';
 import {
   ASSIGN_ROLES,
   DELETE_USER,
@@ -85,13 +86,14 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
     setBusy(true);
     setOpError(null);
     try {
-      const valid = await userProfileSchema.validate(nextForm, { abortEarly: false });
+      const valid = await userProfileSchema.parseAsync(nextForm);
       const input = toUpdateUserInput(valid);
       await updateUser({ variables: { user_id, input } });
       setToast('User updated');
       await refetch();
     } catch (e: any) {
-      setOpError(e.message);
+      const message = e instanceof ZodError ? (e.issues[0]?.message ?? 'Invalid profile') : e.message;
+      setOpError(message);
     } finally {
       setBusy(false);
     }

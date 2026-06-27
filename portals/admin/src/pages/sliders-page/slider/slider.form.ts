@@ -1,102 +1,68 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import type { SliderForm } from '../queries';
 
-const httpOnlyUrl = yup
-  .string()
-  .trim()
-  .default('')
-  .test('http-url', 'External link must be a valid http(s) URL', (value) => {
-    if (!value) return true;
-    try {
-      const parsed = new URL(value);
-      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch {
-      return false;
+const isHttpUrl = (value: string) => {
+  if (!value) return true;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
+
+export const sliderFormSchema: z.ZodType<SliderForm, z.ZodTypeDef, unknown> = z
+  .object({
+    id: z.string().optional(),
+    slider_id: z.string().trim().max(80, 'Slider ID must be 80 characters or fewer').default(''),
+    title: z
+      .string()
+      .trim()
+      .min(1, 'Title is required')
+      .min(2, 'Title must be at least 2 characters')
+      .max(120, 'Title must be 120 characters or fewer'),
+    description: z.string().trim().max(1000, 'Description must be 1000 characters or fewer').default(''),
+    media_url: z.string().trim().min(1, 'Media URL is required'),
+    media_type: z.enum(['IMAGE', 'VIDEO']),
+    link_type: z.enum(['INTERNAL', 'EXTERNAL']),
+    link_target_kind: z.enum(['POD', 'CLUB', '']).default(''),
+    link_target_id: z.string().trim().default(''),
+    link_url: z.string().trim().default('').refine(isHttpUrl, 'External link must be a valid http(s) URL'),
+    scope: z.enum(['GLOBAL', 'LOCATION', 'ZONE']),
+    super_category_slug: z.string().trim().default(''),
+    location_id: z.string().default(''),
+    zone_name: z.string().default(''),
+    sort_order: z.coerce
+      .number()
+      .int('Sort order must be a whole number')
+      .min(0, 'Sort order must be 0 or greater')
+      .max(9999),
+    starts_at: z.string().default(''),
+    ends_at: z.string().default(''),
+    is_active: z.boolean(),
+  })
+  .superRefine((values, ctx) => {
+    if (values.link_type === 'INTERNAL') {
+      if (values.link_target_kind !== 'POD' && values.link_target_kind !== 'CLUB') {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['link_target_kind'], message: 'Pick a target kind' });
+      }
+      if (!values.link_target_id) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['link_target_id'], message: 'Pick a pod or club' });
+      }
+    }
+    if (values.link_type === 'EXTERNAL' && !(values.link_url && values.link_url.trim().length > 0)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['link_url'], message: 'External URL is required' });
+    }
+    if ((values.scope === 'LOCATION' || values.scope === 'ZONE') && !values.location_id) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['location_id'], message: 'Pick a location' });
+    }
+    if (values.scope === 'ZONE' && !values.zone_name) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['zone_name'], message: 'Pick a zone' });
+    }
+    if (values.ends_at && values.starts_at && new Date(values.ends_at) <= new Date(values.starts_at)) {
+      ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['ends_at'], message: 'End must be after start' });
     }
   });
-
-export const sliderFormSchema = yup.object({
-  id: yup.string().optional(),
-  slider_id: yup
-    .string()
-    .trim()
-    .max(80, 'Slider ID must be 80 characters or fewer')
-    .default(''),
-  title: yup
-    .string()
-    .trim()
-    .min(2, 'Title must be at least 2 characters')
-    .max(120, 'Title must be 120 characters or fewer')
-    .required('Title is required'),
-  description: yup
-    .string()
-    .trim()
-    .max(1000, 'Description must be 1000 characters or fewer')
-    .default(''),
-  media_url: yup
-    .string()
-    .trim()
-    .required('Media URL is required'),
-  media_type: yup
-    .mixed<'IMAGE' | 'VIDEO'>()
-    .oneOf(['IMAGE', 'VIDEO'])
-    .required('Media type is required'),
-  link_type: yup
-    .mixed<'INTERNAL' | 'EXTERNAL'>()
-    .oneOf(['INTERNAL', 'EXTERNAL'])
-    .required(),
-  link_target_kind: yup
-    .mixed<'POD' | 'CLUB' | ''>()
-    .oneOf(['POD', 'CLUB', ''])
-    .when('link_type', {
-      is: 'INTERNAL',
-      then: (schema) =>
-        schema.test('kind-required', 'Pick a target kind', (value) => value === 'POD' || value === 'CLUB'),
-      otherwise: (schema) => schema.default(''),
-    }),
-  link_target_id: yup.string().trim().default('').when('link_type', {
-    is: 'INTERNAL',
-    then: (schema) => schema.required('Pick a pod or club'),
-  }),
-  link_url: httpOnlyUrl.when('link_type', {
-    is: 'EXTERNAL',
-    then: (schema) =>
-      schema.test(
-        'external-required',
-        'External URL is required',
-        (value) => !!(value && value.trim().length > 0),
-      ),
-  }),
-  scope: yup
-    .mixed<'GLOBAL' | 'LOCATION' | 'ZONE'>()
-    .oneOf(['GLOBAL', 'LOCATION', 'ZONE'])
-    .required('Scope is required'),
-  super_category_slug: yup.string().trim().default(''),
-  location_id: yup.string().default('').when('scope', {
-    is: (scope: string) => scope === 'LOCATION' || scope === 'ZONE',
-    then: (schema) => schema.required('Pick a location'),
-  }),
-  zone_name: yup.string().default('').when('scope', {
-    is: 'ZONE',
-    then: (schema) => schema.required('Pick a zone'),
-  }),
-  sort_order: yup
-    .number()
-    .integer('Sort order must be a whole number')
-    .min(0, 'Sort order must be 0 or greater')
-    .max(9999)
-    .required('Sort order is required'),
-  starts_at: yup.string().default(''),
-  ends_at: yup
-    .string()
-    .default('')
-    .test('after-start', 'End must be after start', function endAfterStart(value) {
-      const { starts_at } = this.parent;
-      if (!value || !starts_at) return true;
-      return new Date(value) > new Date(starts_at);
-    }),
-  is_active: yup.boolean().required(),
-});
 
 export interface CreateSliderInput {
   slider_id?: string;
@@ -118,7 +84,7 @@ export interface CreateSliderInput {
 }
 
 export function toCreateSliderInput(values: SliderForm): CreateSliderInput {
-  const cast = sliderFormSchema.cast(values, { stripUnknown: true });
+  const cast = sliderFormSchema.parse(values);
   return {
     slider_id: cast.slider_id || undefined,
     title: cast.title,
@@ -126,7 +92,8 @@ export function toCreateSliderInput(values: SliderForm): CreateSliderInput {
     media_url: cast.media_url,
     media_type: cast.media_type,
     link_type: cast.link_type,
-    link_target_kind: cast.link_type === 'INTERNAL' ? (cast.link_target_kind || null) as any : null,
+    link_target_kind:
+      cast.link_type === 'INTERNAL' ? ((cast.link_target_kind || null) as 'POD' | 'CLUB' | null) : null,
     link_target_id: cast.link_type === 'INTERNAL' ? cast.link_target_id : null,
     link_url: cast.link_type === 'EXTERNAL' ? cast.link_url : '',
     scope: cast.scope,

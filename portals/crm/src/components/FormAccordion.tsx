@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useFormikContext } from 'formik';
+import { useFormContext, useFormState } from 'react-hook-form';
 import {
   Accordion,
   AccordionDetails,
@@ -19,7 +19,7 @@ interface Props {
   children: ReactNode;
   defaultExpanded?: boolean;
   /**
-   * Formik field paths covered by this accordion (e.g. ["venue_name",
+   * RHF field paths covered by this accordion (e.g. ["venue_name",
    * "venue_types", "contacts.0.email"]). When any of these have an error AND
    * the user has tried to submit (or already touched the field), the
    * accordion header turns red and the error count is shown so users find
@@ -36,7 +36,8 @@ interface Props {
 }
 
 export default function FormAccordion({ title, children, defaultExpanded, fieldPaths, expandSignal, expandSignalValue }: Readonly<Props>) {
-  const ctx = useFormikContext<Record<string, unknown>>();
+  const { control } = useFormContext();
+  const { errors, touchedFields, submitCount } = useFormState({ control });
   const [expanded, setExpanded] = useState(!!defaultExpanded);
 
   // Respond to Expand All / Collapse All from the parent.
@@ -46,24 +47,24 @@ export default function FormAccordion({ title, children, defaultExpanded, fieldP
   }, [expandSignal, expandSignalValue]);
 
   const errorCount = useMemo(() => {
-    if (!ctx || !fieldPaths || fieldPaths.length === 0) return 0;
-    const submitTried = ctx.submitCount > 0;
+    if (!fieldPaths || fieldPaths.length === 0) return 0;
+    const submitTried = submitCount > 0;
     return fieldPaths.reduce((acc, path) => {
-      const err = getNested(ctx.errors, path);
+      const err = getNested(errors, path);
       if (!err) return acc;
       // Only count after the user has touched the field OR after a submit
       // attempt. This keeps the form quiet while the user is still typing.
-      const touched = !!getNested(ctx.touched, path);
+      const touched = !!getNested(touchedFields, path);
       if (!submitTried && !touched) return acc;
       return acc + (Array.isArray(err) ? err.filter(Boolean).length : 1);
     }, 0);
-  }, [ctx, fieldPaths]);
+  }, [errors, touchedFields, submitCount, fieldPaths]);
 
   // Auto-open the accordion on a failed submit so the user lands on the
   // problem area without hunting through closed sections.
   useEffect(() => {
-    if (ctx?.submitCount && errorCount > 0) setExpanded(true);
-  }, [ctx?.submitCount, errorCount]);
+    if (submitCount && errorCount > 0) setExpanded(true);
+  }, [submitCount, errorCount]);
 
   const hasError = errorCount > 0;
 

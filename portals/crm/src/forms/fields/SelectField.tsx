@@ -1,4 +1,4 @@
-import { useField } from 'formik';
+import { Controller, useFormContext } from 'react-hook-form';
 import { MenuItem, TextField } from '@mui/material';
 
 interface Props {
@@ -10,32 +10,37 @@ interface Props {
   allowEmpty?: boolean;
 }
 
-/** Single-select dropdown bound to Formik. */
+/** Single-select dropdown bound to react-hook-form. */
 export default function SelectField({ name, label, options, hint, required, allowEmpty = true }: Readonly<Props>) {
-  const [field, meta] = useField(name);
-  const showError = Boolean(meta.error && (meta.touched || meta.value !== meta.initialValue));
+  const { control } = useFormContext();
   return (
-    <TextField
-      select
-      fullWidth
-      size="small"
-      label={label}
-      required={required}
-      {...field}
-      value={field.value ?? ''}
-      error={showError}
-      helperText={showError ? meta.error : (hint ?? ' ')}
-    >
-      {allowEmpty && (
-        <MenuItem value="">
-          <em>None</em>
-        </MenuItem>
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <TextField
+          select
+          fullWidth
+          size="small"
+          label={label}
+          required={required}
+          {...field}
+          value={field.value ?? ''}
+          error={!!fieldState.error}
+          helperText={fieldState.error?.message ?? hint ?? ' '}
+        >
+          {allowEmpty && (
+            <MenuItem value="">
+              <em>None</em>
+            </MenuItem>
+          )}
+          {options.map((option) => (
+            <MenuItem key={option} value={option}>
+              {option}
+            </MenuItem>
+          ))}
+        </TextField>
       )}
-      {options.map((option) => (
-        <MenuItem key={option} value={option}>
-          {option}
-        </MenuItem>
-      ))}
-    </TextField>
+    />
   );
 }

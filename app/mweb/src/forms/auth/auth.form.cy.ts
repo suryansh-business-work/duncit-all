@@ -1,12 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import {
-  googleSignupSchema,
-  whatsAppOtpRequestSchema,
-  whatsAppOtpVerifySchema,
-} from './auth.form';
+import { googleSignupSchema } from './auth.form';
 
-// login + register validation moved to RHF + Zod — see ../login/login.form.cy.ts
-// and ../register/register.form.cy.ts. This file covers the remaining yup flows.
+// login + register moved to RHF + Zod — see ../login and ../register.
+// WhatsApp OTP moved to RHF + Zod — see ../whatsapp-otp/whatsapp-otp.form.cy.ts.
+// This file covers the remaining yup flow: Google signup.
 
 const today = new Date();
 const minus18 = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
@@ -31,27 +28,5 @@ describe('googleSignupSchema', () => {
         zone: 'HSR',
       }),
     ).resolves.toBeTruthy();
-  });
-});
-
-describe('whatsAppOtpRequestSchema', () => {
-  it('requires a 6+ digit number', async () => {
-    const error = await whatsAppOtpRequestSchema
-      .validate({ phone_extension: '+91', phone_number: '12' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/digits/i);
-  });
-});
-
-describe('whatsAppOtpVerifySchema', () => {
-  it('rejects non-numeric OTP', async () => {
-    const error = await whatsAppOtpVerifySchema
-      .validate({ otp: 'abcd' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/otp/i);
-  });
-  it('accepts 4-8 digit OTP', async () => {
-    await expect(whatsAppOtpVerifySchema.validate({ otp: '1234' })).resolves.toBeTruthy();
-    await expect(whatsAppOtpVerifySchema.validate({ otp: '12345678' })).resolves.toBeTruthy();
   });
 });

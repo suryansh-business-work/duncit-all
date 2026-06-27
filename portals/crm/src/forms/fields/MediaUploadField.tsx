@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { useField } from 'formik';
+import { useController, useFormContext } from 'react-hook-form';
 import { Alert, Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import UploadIcon from '@mui/icons-material/Upload';
 import DeleteIcon from '@mui/icons-material/Delete';
@@ -26,8 +26,9 @@ const toValue = (list: string[]): string => list.join('\n');
  * NO raw URL paste. Used for venue/host photos and videos.
  */
 export default function MediaUploadField({ name, label, kind, folder = 'crm/media', helperText }: Readonly<Props>) {
-  const [field, , helpers] = useField<string>(name);
-  const list = toList(field.value);
+  const { control } = useFormContext();
+  const { field } = useController({ control, name });
+  const list = toList((field.value as string) ?? '');
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -53,7 +54,7 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
         const url = res.data?.uploadImageToImagekit?.url ?? '';
         if (url) added.push(url);
       }
-      if (added.length) helpers.setValue(toValue([...list, ...added]));
+      if (added.length) field.onChange(toValue([...list, ...added]));
     } catch (e) {
       setError(parseApiError(e));
     } finally {
@@ -62,7 +63,7 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
     }
   };
 
-  const removeAt = (idx: number) => helpers.setValue(toValue(list.filter((_, i) => i !== idx)));
+  const removeAt = (idx: number) => field.onChange(toValue(list.filter((_, i) => i !== idx)));
 
   return (
     <Stack spacing={1}>

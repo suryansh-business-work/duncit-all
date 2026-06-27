@@ -16,12 +16,3 @@ export const googleSignupSchema = yup.object({
   city: locationName('City'),
   zone: locationName('Zone'),
 });
-
-export const whatsAppOtpRequestSchema = yup.object({
-  phone_extension: validationRules.phoneExtension('Code'),
-  phone_number: validationRules.phoneNumber('WhatsApp number'),
-});
-
-export const whatsAppOtpVerifySchema = yup.object({
-  otp: validationRules.otp(),
-});

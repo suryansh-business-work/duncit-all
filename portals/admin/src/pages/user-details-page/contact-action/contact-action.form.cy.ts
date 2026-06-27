@@ -5,44 +5,37 @@ import {
   toRecordContactInput,
 } from './contact-action.form';
 
+const messages = (schema: ReturnType<typeof buildContactActionSchema>, input: unknown) => {
+  const result = schema.safeParse(input);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('contact action schema (CALL)', () => {
   const schema = buildContactActionSchema('CALL');
 
-  it('accepts a valid call with empty recording url', async () => {
-    const parsed = await schema.validate(contactActionInitialValues, { abortEarly: false });
+  it('accepts a valid call with empty recording url', () => {
+    const parsed = schema.parse(contactActionInitialValues);
     expect(parsed.status).toBe('LOGGED');
   });
 
-  it('rejects status that is not in the CALL enum', async () => {
-    const error = await schema
-      .validate({ ...contactActionInitialValues, status: 'SENT' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/status/i);
+  it('rejects status that is not in the CALL enum', () => {
+    expect(messages(schema, { ...contactActionInitialValues, status: 'SENT' })).toMatch(/status/i);
   });
 
-  it('rejects recording url that is not http(s)', async () => {
-    const error = await schema
-      .validate({ ...contactActionInitialValues, recording_url: 'ftp://example.com/x' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/http/i);
+  it('rejects recording url that is not http(s)', () => {
+    expect(messages(schema, { ...contactActionInitialValues, recording_url: 'ftp://example.com/x' })).toMatch(/http/i);
   });
 
-  it('rejects negative duration', async () => {
-    const error = await schema
-      .validate({ ...contactActionInitialValues, duration_seconds: -1 }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/negative/i);
+  it('rejects negative duration', () => {
+    expect(messages(schema, { ...contactActionInitialValues, duration_seconds: -1 })).toMatch(/negative/i);
   });
 });
 
 describe('contact action schema (EMAIL)', () => {
   const schema = buildContactActionSchema('EMAIL');
 
-  it('rejects status that is not in the EMAIL enum', async () => {
-    const error = await schema
-      .validate({ ...contactActionInitialValues, status: 'CONNECTED' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/status/i);
+  it('rejects status that is not in the EMAIL enum', () => {
+    expect(messages(schema, { ...contactActionInitialValues, status: 'CONNECTED' })).toMatch(/status/i);
   });
 });
 

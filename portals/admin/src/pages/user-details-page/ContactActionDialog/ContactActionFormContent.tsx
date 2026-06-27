@@ -1,9 +1,9 @@
 import { Alert, Button, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import CallIcon from '@mui/icons-material/Call';
 import EmailIcon from '@mui/icons-material/Email';
-import { useFormikContext } from 'formik';
+import type { Control } from 'react-hook-form';
+import RhfTextField from '../../../forms/components/RhfTextField';
 import type { ContactActionValues, ContactType } from '../contact-action.form';
-import { shouldShowContactError } from './contactActionDialogHelpers';
 
 interface Props {
   type: ContactType;
@@ -12,17 +12,28 @@ interface Props {
   statusOptions: readonly string[];
   error: string | null;
   busy: boolean;
+  control: Control<ContactActionValues>;
+  values: ContactActionValues;
   onClose: () => void;
+  onSubmit: () => void;
   onOpenNativeAction: (subject: string) => void;
   onStartRecorded: (notes: string) => void;
 }
 
-export default function ContactActionFormContent({ type, user, target, statusOptions, error, busy, onClose, onOpenNativeAction, onStartRecorded }: Readonly<Props>) {
-  const { values, errors, touched, submitCount, handleBlur, handleChange, setFieldValue, submitForm } =
-    useFormikContext<ContactActionValues>();
-  const showError = (key: keyof ContactActionValues) => shouldShowContactError(values, errors, touched, submitCount, key);
-  const helperText = (key: keyof ContactActionValues, fallback = ' ') => (showError(key) ? String(errors[key]) : fallback);
-
+export default function ContactActionFormContent({
+  type,
+  user,
+  target,
+  statusOptions,
+  error,
+  busy,
+  control,
+  values,
+  onClose,
+  onSubmit,
+  onOpenNativeAction,
+  onStartRecorded,
+}: Readonly<Props>) {
   return (
     <>
       <DialogTitle data-dialog-drag-handle="true" sx={{ cursor: 'move' }}>
@@ -34,38 +45,55 @@ export default function ContactActionFormContent({ type, user, target, statusOpt
           <Typography variant="body2" color="text.secondary">
             {user.full_name || user.email || user.user_id}
           </Typography>
-          <TextField label={type === 'CALL' ? 'Phone' : 'Email'} value={target} disabled fullWidth helperText={target ? ' ' : 'No target available for this contact action.'} />
-          {type === 'EMAIL' && (
-            <TextField label="Subject" name="subject" value={values.subject} onChange={handleChange} onBlur={handleBlur} error={showError('subject')} helperText={helperText('subject')} fullWidth />
-          )}
-          <TextField select label="Status" name="status" value={values.status} onChange={handleChange} onBlur={handleBlur} error={showError('status')} helperText={helperText('status')} fullWidth required>
-            {statusOptions.map((option) => <MenuItem key={option} value={option}>{option}</MenuItem>)}
-          </TextField>
+          <TextField
+            label={type === 'CALL' ? 'Phone' : 'Email'}
+            value={target}
+            disabled
+            fullWidth
+            helperText={target ? ' ' : 'No target available for this contact action.'}
+          />
+          {type === 'EMAIL' && <RhfTextField control={control} name="subject" label="Subject" />}
+          <RhfTextField control={control} name="status" select label="Status" required>
+            {statusOptions.map((option) => (
+              <MenuItem key={option} value={option}>
+                {option}
+              </MenuItem>
+            ))}
+          </RhfTextField>
           {type === 'CALL' && (
             <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-              <TextField
+              <RhfTextField
+                control={control}
+                name="duration_seconds"
                 label="Duration seconds"
                 type="number"
-                name="duration_seconds"
-                value={values.duration_seconds}
-                onChange={(event) => setFieldValue('duration_seconds', event.target.value === '' ? 0 : Number(event.target.value))}
-                onBlur={handleBlur}
-                error={showError('duration_seconds')}
-                helperText={helperText('duration_seconds')}
-                fullWidth
                 inputProps={{ min: 0, step: 1 }}
               />
-              <TextField label="Recording URL" name="recording_url" value={values.recording_url} onChange={handleChange} onBlur={handleBlur} error={showError('recording_url')} helperText={helperText('recording_url')} fullWidth />
+              <RhfTextField control={control} name="recording_url" label="Recording URL" />
             </Stack>
           )}
-          <TextField label="Notes" name="notes" value={values.notes} onChange={handleChange} onBlur={handleBlur} error={showError('notes')} helperText={helperText('notes')} multiline minRows={4} fullWidth />
+          <RhfTextField control={control} name="notes" label="Notes" multiline minRows={4} />
         </Stack>
       </DialogContent>
       <DialogActions>
-        {type === 'CALL' && <Button onClick={() => onStartRecorded(values.notes)} startIcon={<CallIcon />} disabled={busy || !target}>Start Recorded Call</Button>}
-        <Button onClick={() => onOpenNativeAction(values.subject)} startIcon={type === 'CALL' ? <CallIcon /> : <EmailIcon />} disabled={!target}>{type === 'CALL' ? 'Open Dialer' : 'Open Email'}</Button>
-        <Button onClick={onClose} disabled={busy}>Cancel</Button>
-        <Button variant="contained" onClick={submitForm} disabled={busy || !target}>{busy ? 'Saving...' : 'Save Log'}</Button>
+        {type === 'CALL' && (
+          <Button onClick={() => onStartRecorded(values.notes)} startIcon={<CallIcon />} disabled={busy || !target}>
+            Start Recorded Call
+          </Button>
+        )}
+        <Button
+          onClick={() => onOpenNativeAction(values.subject)}
+          startIcon={type === 'CALL' ? <CallIcon /> : <EmailIcon />}
+          disabled={!target}
+        >
+          {type === 'CALL' ? 'Open Dialer' : 'Open Email'}
+        </Button>
+        <Button onClick={onClose} disabled={busy}>
+          Cancel
+        </Button>
+        <Button variant="contained" onClick={onSubmit} disabled={busy || !target}>
+          {busy ? 'Saving...' : 'Save Log'}
+        </Button>
       </DialogActions>
     </>
   );

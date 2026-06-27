@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { useField } from 'formik';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { useQuery } from '@apollo/client';
 import { Autocomplete, TextField } from '@mui/material';
 import { CRM_SERVICES_OFFERED, type CrmServiceOffered } from '../../api/data.gql';
@@ -27,13 +27,11 @@ export default function ServicesOfferedPicker({
   servicesName = 'services_offered',
   appliesTo,
 }: Readonly<Props>) {
-  const [superField] = useField<string>(superName);
-  const [catField] = useField<string[]>(categoryName);
-  const [subField] = useField<string[]>(subName);
-  const [servicesField, , servicesHelpers] = useField<LeadService[]>(servicesName);
-  const superId = superField.value || '';
-  const categoryIds = catField.value ?? [];
-  const subIds = subField.value ?? [];
+  const { control, setValue } = useFormContext();
+  const superId = (useWatch({ control, name: superName }) as string) || '';
+  const categoryIds = (useWatch({ control, name: categoryName }) as string[]) ?? [];
+  const subIds = (useWatch({ control, name: subName }) as string[]) ?? [];
+  const services = (useWatch({ control, name: servicesName }) as LeadService[]) ?? [];
 
   const { data, loading } = useQuery<{ crmServicesOffered: CrmServiceOffered[] }>(CRM_SERVICES_OFFERED, {
     variables: {
@@ -60,7 +58,7 @@ export default function ServicesOfferedPicker({
     return Array.from(new Set(scoped.map((r) => r.title))).sort((a, b) => a.localeCompare(b));
   }, [data, categoryIds, subIds]);
 
-  const selected = (servicesField.value ?? []).map((s) => s.service).filter(Boolean);
+  const selected = services.map((s) => s.service).filter(Boolean);
 
   if (!superId) return null;
 
@@ -73,12 +71,11 @@ export default function ServicesOfferedPicker({
       options={titles}
       value={selected}
       onChange={(_, picked) => {
-        const existing = servicesField.value ?? [];
         const next: LeadService[] = (picked as string[])
           .map((t) => t.trim())
           .filter(Boolean)
-          .map((t) => existing.find((s) => s.service === t) ?? { service: t, custom_name: '', description: '' });
-        servicesHelpers.setValue(next);
+          .map((t) => services.find((s) => s.service === t) ?? { service: t, custom_name: '', description: '' });
+        setValue(servicesName, next, { shouldDirty: true, shouldValidate: true });
       }}
       renderInput={(p) => (
         <TextField

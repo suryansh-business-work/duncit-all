@@ -1,6 +1,7 @@
+export { default as CheckoutFields } from './checkout.form';
 export {
-  checkoutFormSchema,
-  checkoutInitialValues,
+  checkoutSchema,
+  checkoutDefaults,
   toCheckoutContact,
-} from './checkout.form';
+} from './checkout.types';
 export type { CheckoutFormValues } from './checkout.types';

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client';
-import { useField } from 'formik';
+import { useController, useFormContext } from 'react-hook-form';
 import {
   Alert,
   Box,
@@ -28,9 +28,9 @@ interface Props {
   /** Limits the dropdown to fields tagged for this entity. */
   entity: 'VENUE_LEAD' | 'HOST_LEAD' | 'ECOMM_LEAD';
   /**
-   * Formik field name holding a JSON-stringified `Record<string, value>`
-   * keyed by `CrmDynamicField.name`. We hide the JSON behind helpers and
-   * surface a normal per-field input.
+   * RHF field name holding a JSON-stringified `Record<string, value>`
+   * keyed by `CrmDynamicField.name`. We hide the JSON behind the controller
+   * and surface a normal per-field input.
    */
   name: string;
 }
@@ -124,10 +124,11 @@ const FieldCell = ({ field, value, onChange }: CellProps) => {
 /**
  * Renders the admin-defined dynamic fields applicable to `entity`. Reads /
  * writes the JSON-stringified value bag at `name` so the parent form's
- * Formik state stays untouched aside from this one string field.
+ * RHF state stays untouched aside from this one string field.
  */
 export default function DynamicFieldsRenderer({ entity, name }: Readonly<Props>) {
-  const [field, , helpers] = useField<string>(name);
+  const { control } = useFormContext();
+  const { field } = useController({ control, name });
   const { data, loading } = useQuery<{ crmDynamicFields: CrmDynamicField[] }>(CRM_DYNAMIC_FIELDS, {
     variables: { entity, include_inactive: false },
     fetchPolicy: 'cache-first',
@@ -135,7 +136,7 @@ export default function DynamicFieldsRenderer({ entity, name }: Readonly<Props>)
 
   const values = useMemo(() => {
     try {
-      return JSON.parse(field.value || '{}') as Record<string, any>;
+      return JSON.parse((field.value as string) || '{}') as Record<string, any>;
     } catch {
       return {};
     }
@@ -145,7 +146,7 @@ export default function DynamicFieldsRenderer({ entity, name }: Readonly<Props>)
 
   const update = (key: string, next: any) => {
     const merged = { ...values, [key]: next };
-    helpers.setValue(JSON.stringify(merged));
+    field.onChange(JSON.stringify(merged));
   };
 
   if (loading && fields.length === 0) {

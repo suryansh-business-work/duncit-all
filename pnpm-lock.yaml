@@ -823,9 +823,6 @@ importers:
       date-fns:
         specifier: ^2.30.0
         version: 2.30.0
-      formik:
-        specifier: ^2.4.6
-        version: 2.4.9(@types/react@18.3.28)(react@18.3.1)
       graphql:
         specifier: ^16.8.1
         version: 16.14.0
@@ -856,9 +853,6 @@ importers:
       wavesurfer.js:
         specifier: ^7.12.7
         version: 7.12.7
-      yup:
-        specifier: ^1.4.0
-        version: 1.7.1
       zod:
         specifier: ^3.24.1
         version: 3.25.76

@@ -8,6 +8,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/hooks/useAccount', () => ({ useAccount: jest.fn() }));
 jest.mock('@/hooks/useLogout', () => ({ useLogout: jest.fn() }));
 jest.mock('@/hooks/useMe', () => ({ useRoleLabels: () => ({ labelFor: (k: string) => k }) }));
+jest.mock('@/hooks/useLocations', () => ({ useLocations: () => ({ locations: [] }) }));
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
@@ -32,7 +33,7 @@ const me = {
   profile_photo: null,
   bio: 'Hi',
   city: 'Pune',
-  zone: 'Kothrud',
+  state: 'Maharashtra',
   country: 'India',
   dob: '1995-01-01',
   roles: ['USER'],
@@ -76,7 +77,7 @@ describe('AccountScreen', () => {
   it('renders info rows, health and hosts/venues, and wires actions', () => {
     renderWithProviders(<AccountScreen />);
     expect(screen.getByText('riya@duncit.com')).toBeOnTheScreen();
-    expect(screen.getByText('Pune · Kothrud · India')).toBeOnTheScreen();
+    expect(screen.getByText('Pune · Maharashtra · India')).toBeOnTheScreen();
     expect(screen.getByTestId('account-health')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('account-health'));
     expect(mockNavigate).toHaveBeenCalledWith('AccountHealth');
@@ -117,7 +118,7 @@ describe('AccountScreen', () => {
 
   it('renders the email/dob/phone fallbacks when fields are empty', () => {
     setAccount({
-      me: { ...me, email: '', phone_number: '', city: '', zone: '', country: '', dob: '' },
+      me: { ...me, email: '', phone_number: '', city: '', state: '', country: '', dob: '' },
     });
     renderWithProviders(<AccountScreen />);
     expect(screen.getAllByText('—').length).toBeGreaterThan(0);

@@ -9,6 +9,10 @@ import { ProcessingOverlay } from '@/components/checkout/ProcessingOverlay';
 import { Accordion } from '@/components/details/Accordion';
 import { renderWithProviders } from '@/utils/test-utils';
 
+jest.mock('@/hooks/useLocations', () => ({
+  useLocations: () => ({ locations: [] }),
+}));
+
 describe('AuthScaffold accent word', () => {
   it('renders the accent-coloured trailing word', () => {
     renderWithProviders(
@@ -31,6 +35,12 @@ describe('EditAccountDialog non-Error save failure', () => {
         onClose={jest.fn()}
         onSave={onSave}
       />,
+    );
+    fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
+    await waitFor(() =>
+      expect(screen.getByTestId('account-edit-submit').props.accessibilityState?.disabled).toBe(
+        false,
+      ),
     );
     fireEvent.press(screen.getByTestId('account-edit-submit'));
     await waitFor(() =>

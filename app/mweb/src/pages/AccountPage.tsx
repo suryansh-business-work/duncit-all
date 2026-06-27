@@ -9,6 +9,7 @@ import {
   CardContent,
   CircularProgress,
   Divider,
+  Snackbar,
   Stack,
   Typography,
 } from '@mui/material';
@@ -20,7 +21,7 @@ import MediaPickerDialog from '../components/MediaPickerDialog';
 import AccountInfoRow from './account-page/AccountInfoRow';
 import AccountProfileHeader from './account-page/AccountProfileHeader';
 import EditAccountDialog from './account-page/EditAccountDialog';
-import { toDobInput } from './account-page/account-edit/account-edit.form';
+import { toDobInput } from './account-page/account-edit';
 import HostsVenuesCard from './account-page/HostsVenuesCard';
 import PrivacyToggleCard from './account-page/PrivacyToggleCard';
 import HealthMeter from '../components/health/HealthMeter';
@@ -37,14 +38,15 @@ const ME = gql`
       email
       phone_number
       phone_extension
+      whatsapp_number
+      whatsapp_extension
       profile_photo
       bio
       city
-      zone
+      state
       country
       dob
       roles
-      status
       profile_visibility
       created_at
     }
@@ -72,6 +74,7 @@ export default function AccountPage() {
   const [editOpen, setEditOpen] = useState(false);
   const [savingPhoto, setSavingPhoto] = useState(false);
   const [photoError, setPhotoError] = useState<string | null>(null);
+  const [savedOpen, setSavedOpen] = useState(false);
   const [updateUser] = useMutation(UPDATE_USER);
   const { formatDate } = useDateFormat();
 
@@ -119,7 +122,7 @@ export default function AccountPage() {
             <AccountInfoRow
               icon={<LocationCityIcon fontSize="small" />}
               label="Location"
-              value={[me.city, me.zone, me.country].filter(Boolean).join(' · ') || '—'}
+              value={[me.city, me.state, me.country].filter(Boolean).join(' · ') || '—'}
             />
             <AccountInfoRow
               icon={<CakeIcon fontSize="small" />}
@@ -198,15 +201,28 @@ export default function AccountPage() {
           bio: me.bio || '',
           dob: toDobInput(me.dob),
           city: me.city || '',
-          zone: me.zone || '',
+          state: me.state || '',
           country: me.country || '',
           phone_extension: me.phone_extension || '+91',
           phone_number: me.phone_number || '',
           whatsapp_extension: me.whatsapp_extension || '+91',
           whatsapp_number: me.whatsapp_number || '',
         }}
-        onSaved={() => refetch()}
+        onSaved={() => {
+          refetch();
+          setSavedOpen(true);
+        }}
       />
+      <Snackbar
+        open={savedOpen}
+        autoHideDuration={3000}
+        onClose={() => setSavedOpen(false)}
+        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
+      >
+        <Alert severity="success" variant="filled" onClose={() => setSavedOpen(false)}>
+          Profile updated
+        </Alert>
+      </Snackbar>
     </Stack>
   );
 }

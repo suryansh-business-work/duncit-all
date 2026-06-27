@@ -106,6 +106,34 @@ export const updateMyProfileSchema = yup.object({
   bio: yup.string().max(500).optional(),
   profile_photo: yup.string().url().optional(),
   profile_links: yup.array().of(profileLinkSchema).max(5).optional(),
+  // Location + DOB are accepted by the GraphQL input and mapped in the service;
+  // they must be declared here or `validate({ stripUnknown: true })` drops them.
+  city: yup.string().max(80).optional(),
+  state: yup.string().max(80).optional(),
+  zone: yup.string().max(80).optional(),
+  country: yup.string().max(80).optional(),
+  dob: yup
+    .string()
+    .matches(/^$|^\d{4}-\d{2}-\d{2}$/, { message: 'Use the format YYYY-MM-DD', excludeEmptyString: true })
+    .optional(),
+  // Contact + WhatsApp numbers: previously undeclared, so edits were silently
+  // dropped before reaching the service (the numbers-not-saving bug).
+  phone_number: yup
+    .string()
+    .matches(phoneRegex, { message: 'Invalid phone', excludeEmptyString: true })
+    .optional(),
+  phone_extension: yup
+    .string()
+    .matches(extRegex, { message: 'Invalid extension', excludeEmptyString: true })
+    .optional(),
+  whatsapp_number: yup
+    .string()
+    .matches(phoneRegex, { message: 'Invalid WhatsApp number', excludeEmptyString: true })
+    .optional(),
+  whatsapp_extension: yup
+    .string()
+    .matches(extRegex, { message: 'Invalid WhatsApp extension', excludeEmptyString: true })
+    .optional(),
 });
 
 export const petProfileSchema = yup.object({

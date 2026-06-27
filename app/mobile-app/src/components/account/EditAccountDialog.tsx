@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -10,8 +10,10 @@ import {
   toUpdateProfileInput,
   type AccountEditValues,
 } from '@/forms/account-edit';
+import { useLocations } from '@/hooks/useLocations';
 import type { AccountMe, UpdateProfileInput } from '@/hooks/useAccount';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { buildLocationTree } from '@/utils/location-tree';
 
 export interface EditAccountDialogProps {
   open: boolean;
@@ -24,6 +26,8 @@ export interface EditAccountDialogProps {
  * <EditAccountDialog/>. */
 export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAccountDialogProps>) {
   const { color } = useThemeColors();
+  const { locations } = useLocations();
+  const countries = useMemo(() => buildLocationTree(locations), [locations]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -93,6 +97,7 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
                 <YStack paddingHorizontal={16} paddingBottom={16}>
                   <AccountEditForm
                     me={me}
+                    countries={countries}
                     loading={loading}
                     errorMessage={errorMessage}
                     onSubmit={submit}

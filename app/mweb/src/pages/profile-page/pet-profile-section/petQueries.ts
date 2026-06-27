@@ -1,5 +1,5 @@
 import { gql } from '@apollo/client';
-import * as yup from 'yup';
+import { z } from 'zod';
 
 export const UPDATE_PET = gql`
   mutation UpdateMyPetProfile($input: PetProfileInput!) {
@@ -17,19 +17,43 @@ export const UPDATE_PET = gql`
   }
 `;
 
-export const petSchema = yup.object({
-  name: yup.string().max(60).optional(),
-  species: yup.string().max(40).optional(),
-  breed: yup.string().max(60).optional(),
-  age: yup
-    .number()
-    .typeError('Age must be a number')
-    .min(0, 'Age must be 0 or more')
-    .max(100, 'Age looks too large')
-    .optional(),
-  photo_url: yup.string().url('Must be a valid URL').optional(),
-  bio: yup.string().max(500, 'Bio must be 500 characters or fewer').optional(),
+const ageField = z.union([z.literal(''), z.coerce.number()]).superRefine((value, ctx) => {
+  if (value === '') {
+    return;
+  }
+  if (Number.isNaN(value)) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Age must be a number' });
+    return;
+  }
+  if (value < 0) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Age must be 0 or more' });
+  }
+  if (value > 100) {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Age looks too large' });
+  }
 });
+
+const photoUrlField = z.string().superRefine((value, ctx) => {
+  if (!value) {
+    return;
+  }
+  try {
+    new URL(value);
+  } catch {
+    ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Must be a valid URL' });
+  }
+});
+
+export const petSchema = z.object({
+  name: z.string().max(60),
+  species: z.string().max(40),
+  breed: z.string().max(60),
+  age: ageField,
+  photo_url: photoUrlField,
+  bio: z.string().max(500, 'Bio must be 500 characters or fewer'),
+});
+
+export type PetFormValues = z.infer<typeof petSchema>;
 
 export interface PetProfile {
   name?: string | null;

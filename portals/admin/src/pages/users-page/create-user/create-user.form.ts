@@ -1,29 +1,28 @@
-import * as yup from 'yup';
-import { validationRules } from '../../../forms/validation/rules';
+import { z } from 'zod';
+import { zodRules } from '../../../forms/validation/zodRules';
 import type { CreateForm } from '../helpers';
 
-export const createUserSchema: yup.ObjectSchema<CreateForm> = yup.object({
-  first_name: validationRules.personName('First name'),
-  last_name: validationRules.personName('Last name'),
-  email: validationRules.optionalEmail('Email'),
-  phone_extension: validationRules.phoneExtension('Phone code'),
-  phone_number: validationRules.phoneNumber('Phone number'),
-  password: yup.string().min(8, 'Min 8 characters').max(128).required('Password is required'),
-  dob: yup
-    .string()
-    .required('Date of birth is required')
-    .test('valid-date', 'Enter a valid date of birth', (value) => {
-      if (!value) return false;
-      const date = new Date(value);
-      return !Number.isNaN(date.getTime()) && date <= new Date();
-    }),
-  roles: yup.array(yup.string().required()).min(1, 'At least one role is required').required(),
-  city: validationRules.optionalText('City', 80),
-  zone: validationRules.optionalText('Zone', 80),
+const isValidPastDate = (value: string) => {
+  if (!value) return false;
+  const date = new Date(value);
+  return !Number.isNaN(date.getTime()) && date <= new Date();
+};
+
+export const createUserSchema = z.object({
+  first_name: zodRules.personName('First name'),
+  last_name: zodRules.personName('Last name'),
+  email: zodRules.optionalEmail('Email'),
+  phone_extension: zodRules.phoneExtension('Phone code'),
+  phone_number: zodRules.phoneNumber('Phone number'),
+  password: z.string().min(1, 'Password is required').min(8, 'Min 8 characters').max(128),
+  dob: z.string().min(1, 'Date of birth is required').refine(isValidPastDate, 'Enter a valid date of birth'),
+  roles: z.array(z.string()).min(1, 'At least one role is required'),
+  city: zodRules.optionalText('City', 80),
+  zone: zodRules.optionalText('Zone', 80),
 });
 
 export function toCreateUserInput(values: CreateForm) {
-  const cast = createUserSchema.cast(values, { stripUnknown: true });
+  const cast = createUserSchema.parse(values);
   return {
     first_name: cast.first_name,
     last_name: cast.last_name,

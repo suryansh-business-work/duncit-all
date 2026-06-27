@@ -1,17 +1,27 @@
-import * as yup from 'yup';
-import { Form, Formik } from 'formik';
+import { useEffect } from 'react';
+import { z } from 'zod';
+import { useForm, Controller } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from '@mui/material';
 import type { PaymentReleaseReviewFormProps, PaymentReleaseReviewValues } from './payment-release-review.types';
 
-export const paymentReleaseReviewSchema = (requestedAmount: number): yup.ObjectSchema<PaymentReleaseReviewValues> => yup.object({
-  status: yup.mixed<'APPROVED' | 'REJECTED'>().oneOf(['APPROVED', 'REJECTED']).required('Status is required'),
-  approval_type: yup.mixed<'FULL' | 'PARTIAL'>().oneOf(['FULL', 'PARTIAL']).required('Release type is required'),
-  approved_amount: yup.number().typeError('Enter amount').min(0).max(requestedAmount, 'Cannot exceed requested amount').required('Approved amount is required'),
-  approval_reason: yup.string().trim().max(1000).default('').when(['status', 'approval_type'], {
-    is: (status: string, type: string) => status === 'REJECTED' || type === 'PARTIAL',
-    then: (schema) => schema.required('Reason is required'),
-  }),
-});
+export const paymentReleaseReviewSchema = (requestedAmount: number) =>
+  z
+    .object({
+      status: z.enum(['APPROVED', 'REJECTED'], { required_error: 'Status is required' }),
+      approval_type: z.enum(['FULL', 'PARTIAL'], { required_error: 'Release type is required' }),
+      approved_amount: z
+        .number({ invalid_type_error: 'Enter amount', required_error: 'Approved amount is required' })
+        .min(0)
+        .max(requestedAmount, 'Cannot exceed requested amount'),
+      approval_reason: z.string().trim().max(1000).default(''),
+    })
+    .superRefine((values, ctx) => {
+      const needsReason = values.status === 'REJECTED' || values.approval_type === 'PARTIAL';
+      if (needsReason && !values.approval_reason) {
+        ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['approval_reason'], message: 'Reason is required' });
+      }
+    });
 
 export function toReviewInput(values: PaymentReleaseReviewValues, requestedAmount: number) {
   const approved = values.status === 'APPROVED';
@@ -25,42 +35,97 @@ export function toReviewInput(values: PaymentReleaseReviewValues, requestedAmoun
 
 export default function PaymentReleaseReviewForm({ request, busy, errorMessage, onClose, onSubmit }: Readonly<PaymentReleaseReviewFormProps>) {
   const requestedAmount = Number(request?.amount_requested || 0);
+  const { control, handleSubmit, watch, setValue, reset } = useForm<PaymentReleaseReviewValues>({
+    defaultValues: { status: 'APPROVED', approval_type: 'FULL', approved_amount: requestedAmount, approval_reason: '' },
+    resolver: zodResolver(paymentReleaseReviewSchema(requestedAmount)),
+  });
+  const status = watch('status');
+  const approvalType = watch('approval_type');
+
+  useEffect(() => {
+    reset({ status: 'APPROVED', approval_type: 'FULL', approved_amount: requestedAmount, approval_reason: '' });
+  }, [requestedAmount, reset]);
+
+  const submit = handleSubmit((values) => onSubmit(values));
+
   return (
     <Dialog open={!!request} onClose={busy ? undefined : onClose} fullWidth maxWidth="sm">
       <DialogTitle>Review Payment Release</DialogTitle>
-      <Formik<PaymentReleaseReviewValues>
-        initialValues={{ status: 'APPROVED', approval_type: 'FULL', approved_amount: requestedAmount, approval_reason: '' }}
-        enableReinitialize
-        validationSchema={paymentReleaseReviewSchema(requestedAmount)}
-        onSubmit={(values) => onSubmit(values)}
-      >
-        {({ values, errors, touched, handleChange, handleBlur, setFieldValue }) => {
-          const show = (key: keyof PaymentReleaseReviewValues) => Boolean(errors[key] && touched[key]);
-          return (
-            <Form noValidate>
-              <DialogContent dividers>
-                <Stack spacing={2}>
-                  {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
-                  <TextField select name="status" label="Decision" value={values.status} onChange={handleChange} fullWidth>
-                    <MenuItem value="APPROVED">Approve</MenuItem>
-                    <MenuItem value="REJECTED">Reject</MenuItem>
-                  </TextField>
-                  <TextField select name="approval_type" label="Release type" value={values.approval_type} onChange={(event) => { handleChange(event); if (event.target.value === 'FULL') setFieldValue('approved_amount', requestedAmount); }} disabled={values.status === 'REJECTED'} fullWidth>
-                    <MenuItem value="FULL">Full Release</MenuItem>
-                    <MenuItem value="PARTIAL">Partial Release</MenuItem>
-                  </TextField>
-                  <TextField name="approved_amount" label="Approved amount" type="number" value={values.approved_amount} onChange={handleChange} onBlur={handleBlur} disabled={values.status === 'REJECTED' || values.approval_type === 'FULL'} error={show('approved_amount')} helperText={show('approved_amount') ? errors.approved_amount : `Requested Rs ${requestedAmount.toFixed(2)}`} fullWidth />
-                  <TextField name="approval_reason" label="Reason" value={values.approval_reason} onChange={handleChange} onBlur={handleBlur} error={show('approval_reason')} helperText={show('approval_reason') ? errors.approval_reason : 'Required for partial release or rejection'} multiline minRows={3} fullWidth />
-                </Stack>
-              </DialogContent>
-              <DialogActions>
-                <Button onClick={onClose} disabled={busy}>Cancel</Button>
-                <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Saving...' : 'Submit Review'}</Button>
-              </DialogActions>
-            </Form>
-          );
-        }}
-      </Formik>
+      <form noValidate onSubmit={submit}>
+        <DialogContent dividers>
+          <Stack spacing={2}>
+            {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+            <Controller
+              control={control}
+              name="status"
+              render={({ field }) => (
+                <TextField {...field} select label="Decision" fullWidth>
+                  <MenuItem value="APPROVED">Approve</MenuItem>
+                  <MenuItem value="REJECTED">Reject</MenuItem>
+                </TextField>
+              )}
+            />
+            <Controller
+              control={control}
+              name="approval_type"
+              render={({ field }) => (
+                <TextField
+                  {...field}
+                  select
+                  label="Release type"
+                  onChange={(event) => {
+                    field.onChange(event);
+                    if (event.target.value === 'FULL') {
+                      setValue('approved_amount', requestedAmount);
+                    }
+                  }}
+                  disabled={status === 'REJECTED'}
+                  fullWidth
+                >
+                  <MenuItem value="FULL">Full Release</MenuItem>
+                  <MenuItem value="PARTIAL">Partial Release</MenuItem>
+                </TextField>
+              )}
+            />
+            <Controller
+              control={control}
+              name="approved_amount"
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  value={field.value ?? ''}
+                  onChange={(event) => field.onChange(event.target.value === '' ? '' : Number(event.target.value))}
+                  label="Approved amount"
+                  type="number"
+                  disabled={status === 'REJECTED' || approvalType === 'FULL'}
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message ?? `Requested Rs ${requestedAmount.toFixed(2)}`}
+                  fullWidth
+                />
+              )}
+            />
+            <Controller
+              control={control}
+              name="approval_reason"
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  label="Reason"
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message ?? 'Required for partial release or rejection'}
+                  multiline
+                  minRows={3}
+                  fullWidth
+                />
+              )}
+            />
+          </Stack>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={onClose} disabled={busy}>Cancel</Button>
+          <Button type="submit" variant="contained" disabled={busy}>{busy ? 'Saving...' : 'Submit Review'}</Button>
+        </DialogActions>
+      </form>
     </Dialog>
   );
 }

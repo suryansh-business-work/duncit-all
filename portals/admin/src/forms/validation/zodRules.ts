@@ -5,6 +5,17 @@ import {
   PHONE_EXTENSION_PATTERN,
 } from './rules';
 
+const isValidUrl = (value: string, allowRelative: boolean) => {
+  if (!value) return true;
+  if (allowRelative && /^\/[\w./?=&%#:+-]*$/.test(value)) return true;
+  try {
+    const parsed = new URL(value);
+    return ['http:', 'https:', 'mailto:', 'tel:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
+
 /**
  * Zod counterparts of the shared yup `validationRules`, used by the RHF+Zod
  * admin forms. Mirrors the messages 1:1 so behaviour and copy stay identical.
@@ -35,4 +46,9 @@ export const zodRules = {
       .regex(PHONE_NUMBER_PATTERN, `${label} must contain only digits (6-15 digits)`),
   phoneExtension: (label = 'Phone code') =>
     z.string().trim().regex(PHONE_EXTENSION_PATTERN, `${label} is invalid`),
+  optionalUrl: (label: string, allowRelative = false) =>
+    z
+      .string()
+      .trim()
+      .refine((value) => isValidUrl(value, allowRelative), `${label} must be a valid URL`),
 };

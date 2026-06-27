@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
-import { Form, Formik } from 'formik';
-import * as yup from 'yup';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Alert, Button, Stack, TextField, Typography } from '@mui/material';
 import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
-import { validationRules } from '../../../forms/validation/rules';
+import { OTP_PATTERN } from '../../../forms/validation/rules';
 import type { EmailVerificationFormProps, EmailVerificationValues } from './email-verification.types';
 
 const REQUEST_EMAIL_OTP = gql`
@@ -25,8 +26,12 @@ const VERIFY_EMAIL_OTP = gql`
   }
 `;
 
-export const emailVerificationSchema: yup.ObjectSchema<EmailVerificationValues> = yup.object({
-  otp: validationRules.otp(),
+export const emailVerificationSchema = z.object({
+  otp: z
+    .string()
+    .trim()
+    .min(1, 'OTP is required')
+    .regex(OTP_PATTERN, 'Enter the OTP we sent'),
 });
 
 export default function EmailVerificationForm({ email, verified, onVerified }: Readonly<EmailVerificationFormProps>) {
@@ -36,6 +41,21 @@ export default function EmailVerificationForm({ email, verified, onVerified }: R
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const { control, handleSubmit } = useForm<EmailVerificationValues>({
+    defaultValues: { otp: '' },
+    resolver: zodResolver(emailVerificationSchema),
+  });
+
+  const submit = handleSubmit(async (values) => {
+    setError(null);
+    try {
+      await verifyOtp({ variables: { otp: values.otp } });
+      setMessage('Email verified.');
+      onVerified();
+    } catch (e: any) {
+      setError(e?.message ?? 'Invalid OTP');
+    }
+  });
 
   const sendOtp = async () => {
     setError(null);
@@ -60,42 +80,28 @@ export default function EmailVerificationForm({ email, verified, onVerified }: R
       {message && <Alert severity="success">{message}</Alert>}
       {devOtp && <Alert severity="info">Dev OTP: {devOtp}</Alert>}
       {error && <Alert severity="error">{error}</Alert>}
-      <Formik<EmailVerificationValues>
-        initialValues={{ otp: '' }}
-        validationSchema={emailVerificationSchema}
-        onSubmit={async (values) => {
-          setError(null);
-          try {
-            await verifyOtp({ variables: { otp: values.otp } });
-            setMessage('Email verified.');
-            onVerified();
-          } catch (e: any) {
-            setError(e?.message ?? 'Invalid OTP');
-          }
-        }}
-      >
-        {({ values, errors, touched, handleBlur, handleChange }) => (
-          <Form noValidate>
-            <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ sm: 'flex-start' }}>
-              <Button variant="outlined" onClick={sendOtp} disabled={!email || requestState.loading}>
-                {requested ? 'Resend OTP' : 'Send OTP'}
-              </Button>
+      <form noValidate onSubmit={submit}>
+        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.25} alignItems={{ sm: 'flex-start' }}>
+          <Button variant="outlined" onClick={sendOtp} disabled={!email || requestState.loading}>
+            {requested ? 'Resend OTP' : 'Send OTP'}
+          </Button>
+          <Controller
+            control={control}
+            name="otp"
+            render={({ field, fieldState }) => (
               <TextField
-                name="otp"
+                {...field}
                 label="OTP"
-                value={values.otp}
-                onChange={handleChange}
-                onBlur={handleBlur}
-                error={Boolean(touched.otp && errors.otp)}
-                helperText={touched.otp && errors.otp ? errors.otp : ' '}
+                error={!!fieldState.error}
+                helperText={fieldState.error?.message ?? ' '}
                 size="small"
                 inputProps={{ inputMode: 'numeric', maxLength: 6 }}
               />
-              <Button type="submit" variant="contained" disabled={verifyState.loading}>Verify</Button>
-            </Stack>
-          </Form>
-        )}
-      </Formik>
+            )}
+          />
+          <Button type="submit" variant="contained" disabled={verifyState.loading}>Verify</Button>
+        </Stack>
+      </form>
     </Stack>
   );
 }

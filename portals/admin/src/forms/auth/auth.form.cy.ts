@@ -1,28 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { loginSchema, toLoginPayload } from './auth.form';
 
+const messagesOf = (input: { email: string; password: string }) => {
+  const result = loginSchema.safeParse(input);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('admin login form schema', () => {
-  it('rejects empty values with required errors', async () => {
-    const error = await loginSchema.validate({ email: '', password: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.name).toBe('ValidationError');
-    expect(error.errors.join(' ')).toMatch(/email/i);
-    expect(error.errors.join(' ')).toMatch(/password/i);
+  it('rejects empty values with required errors', () => {
+    const msg = messagesOf({ email: '', password: '' });
+    expect(msg).toMatch(/email/i);
+    expect(msg).toMatch(/password/i);
   });
 
-  it('rejects invalid email format', async () => {
-    const error = await loginSchema
-      .validate({ email: 'not-an-email', password: 'longenough' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.name).toBe('ValidationError');
-    expect(error.errors.join(' ')).toMatch(/email/i);
+  it('rejects invalid email format', () => {
+    const msg = messagesOf({ email: 'not-an-email', password: 'longenough' });
+    expect(msg).toMatch(/email/i);
   });
 
-  it('rejects passwords shorter than 8 characters', async () => {
-    const error = await loginSchema
-      .validate({ email: 'a@b.co', password: 'short' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.name).toBe('ValidationError');
-    expect(error.errors.join(' ')).toMatch(/8 characters/i);
+  it('rejects passwords shorter than 8 characters', () => {
+    const msg = messagesOf({ email: 'a@b.co', password: 'short' });
+    expect(msg).toMatch(/8 characters/i);
   });
 
   it('accepts valid credentials and normalises through toLoginPayload', () => {

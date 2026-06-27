@@ -1,4 +1,4 @@
-import type * as yup from 'yup';
+import type { z } from 'zod';
 import type { loginSchema } from './auth.form';
 
-export type LoginFormValues = yup.InferType<typeof loginSchema>;
+export type LoginFormValues = z.infer<typeof loginSchema>;

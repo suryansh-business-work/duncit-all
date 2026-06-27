@@ -55,7 +55,7 @@ export default function UsersPage() {
     setBusy(true);
     setOpError(null);
     try {
-      const valid = await createUserSchema.validate(values, { abortEarly: false });
+      const valid = createUserSchema.parse(values);
       await createUser({
         variables: {
           input: toCreateUserInput(valid),

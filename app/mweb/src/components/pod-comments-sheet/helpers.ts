@@ -1,7 +1,7 @@
-import * as Yup from 'yup';
+import { z } from 'zod';
 
-export const commentSchema = Yup.object({
-  text: Yup.string().trim().required('Required').max(1000, 'Max 1000 chars'),
+export const commentSchema = z.object({
+  text: z.string().trim().min(1, 'Required').max(1000, 'Max 1000 chars'),
 });
 
 export const formatRelative = (iso: string) => {

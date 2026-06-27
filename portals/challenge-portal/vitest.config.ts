@@ -13,7 +13,7 @@ export default defineConfig({
     setupFiles: ['./__tests__/unit-tests/setup.ts'],
     // Vitest specs live under __tests__/unit-tests; Cypress e2e specs under
     // __tests__/e2e are discovered separately by Cypress.
-    include: ['__tests__/unit-tests/**/*.{cy,test,spec}.{ts,tsx}'],
+    include: ['__tests__/unit-tests/**/*.{cy,test,spec}.{ts,tsx}', 'src/**/*.cy.{ts,tsx}'],
     exclude: ['node_modules/**', 'dist/**', '__tests__/e2e/**'],
     coverage: {
       provider: 'v8',

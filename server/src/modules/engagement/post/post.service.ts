@@ -58,6 +58,37 @@ function normalizeMediaType(value?: string | null): 'IMAGE' | 'VIDEO' {
   return String(value || '').toUpperCase() === 'VIDEO' ? 'VIDEO' : 'IMAGE';
 }
 
+/**
+ * Best-effort "someone interacted with your post" notification to the post
+ * owner. The post owner is skipped when they are the actor (no self-notifies),
+ * and a single USER-scoped notification is created — notificationService.create
+ * handles the inbox row + web-push + Expo fan-out. The link_url deep-links the
+ * tap to the post (mWeb `/post/:id`, mobile PostDetail). A failure here must
+ * never break the like/comment mutation, so the caller fires-and-forgets.
+ */
+async function notifyPostActivity(
+  ownerId: string,
+  actorId: string,
+  postId: string,
+  action: 'liked' | 'commented on'
+) {
+  if (ownerId === actorId) return;
+  const { userService } = await import('@modules/access/user/user.service');
+  const { notificationService } = await import(
+    '@modules/engagement/notification/notification.service'
+  );
+  const actor = await userService.getById(actorId).catch(() => null);
+  const name = actor?.full_name?.trim() || 'Someone';
+  await notificationService.create({
+    title: action === 'liked' ? 'New like on your post' : 'New comment on your post',
+    body: `${name} ${action} your post`,
+    image_url: actor?.profile_photo ?? null,
+    link_url: `/post/${postId}`,
+    scope: 'USER',
+    target_user_ids: [ownerId],
+  });
+}
+
 export const postService = {
   async list(authorId: string | null | undefined, viewerId?: string | null) {
     // Permanent profile posts only — stories never surface on the profile grid.
@@ -141,9 +172,17 @@ export const postService = {
     const doc = await PostModel.findById(id);
     if (!doc) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
     const idx = doc.likes.findIndex((x) => String(x) === viewerId);
+    const nowLiked = idx < 0;
     if (idx >= 0) doc.likes.splice(idx, 1);
     else doc.likes.push(new Types.ObjectId(viewerId));
     await doc.save();
+    // Notify the owner only when transitioning to liked (never on unlike).
+    if (nowLiked) {
+      notifyPostActivity(String(doc.author_id), viewerId, String(doc._id), 'liked').catch((err) =>
+
+        console.error('notifyPostActivity (like) failed', err)
+      );
+    }
     return toPub(doc, viewerId);
   },
 
@@ -166,6 +205,11 @@ export const postService = {
       created_at: new Date(),
     } as any);
     await doc.save();
+    notifyPostActivity(String(doc.author_id), viewerId, String(doc._id), 'commented on').catch(
+      (err) =>
+
+        console.error('notifyPostActivity (comment) failed', err)
+    );
     return toPub(doc, viewerId);
   },
 

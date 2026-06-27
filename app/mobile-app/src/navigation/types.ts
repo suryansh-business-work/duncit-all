@@ -53,6 +53,7 @@ export type RootStackParamList = {
   Checkout: { podId: string };
   HostsVenues: undefined;
   PublicProfile: { userId: string };
+  PostDetail: { postId: string };
   Follow: { userId: string; tab: 'followers' | 'following' };
   VenueDetails: { venueId: string };
   NotFound: undefined;
@@ -75,6 +76,7 @@ export type MenuRoute = Exclude<
   | 'PodHistoryDetails'
   | 'VenueHealth'
   | 'PublicProfile'
+  | 'PostDetail'
   | 'Follow'
   | 'VenueDetails'
   | 'Checkout'

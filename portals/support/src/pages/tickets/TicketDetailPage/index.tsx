@@ -1,15 +1,14 @@
 import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Box, Button, Chip, CircularProgress, Divider, IconButton, Snackbar, Stack, Typography } from '@mui/material';
+import { Box, Chip, CircularProgress, Divider, IconButton, Snackbar, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import SendIcon from '@mui/icons-material/Send';
 import { REPLY_TO_TICKET, TICKET, type Ticket, type TicketStatus } from '../../../graphql/tickets';
-import RichTextEditor, { htmlToText } from '../../../components/RichTextEditor';
-import UploadField from '../../../components/UploadField';
+import { htmlToText } from '../../../components/RichTextEditor';
 import { useSupportSocket } from '../../../lib/useSupportSocket';
 import TicketHeader from './TicketHeader';
 import TicketThread from './TicketThread';
+import TicketComposerArea from './TicketComposerArea';
 import { useTicketActions } from './useTicketActions';
 
 const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'default'> = {
@@ -78,15 +77,16 @@ export default function TicketDetailPage() {
 
         <Divider />
 
-        <Box>
-          <RichTextEditor value={bodyHtml} onChange={setBodyHtml} placeholder="Write a reply…" minHeight={110} />
-          <Stack direction="row" alignItems="flex-end" justifyContent="space-between" sx={{ mt: 1 }} spacing={1}>
-            <UploadField value={attachments} onChange={setAttachments} folder="/support/tickets" label="Attach" />
-            <Button variant="contained" endIcon={<SendIcon />} disabled={replying || !htmlToText(bodyHtml)} onClick={send}>
-              Send
-            </Button>
-          </Stack>
-        </Box>
+        <TicketComposerArea
+          status={ticket.status}
+          bodyHtml={bodyHtml}
+          attachments={attachments}
+          replying={replying}
+          onBodyHtml={setBodyHtml}
+          onAttachments={setAttachments}
+          onSend={send}
+          onClose={actions.close}
+        />
       </>
     );
   };

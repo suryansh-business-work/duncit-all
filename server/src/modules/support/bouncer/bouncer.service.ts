@@ -16,6 +16,7 @@ import { ClubModel } from '@modules/pods/club/club.model';
 import { settingsService } from '@modules/platform/settings/settings.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { getIo } from '@realtime/io';
+import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
 
 const ADMIN_ROOM = 'admin:bouncers';
 
@@ -35,6 +36,22 @@ function applyCallbackOutcome(
   if (typeof outcome.conclusion === 'string') {
     doc.conclusion = outcome.conclusion.trim();
   }
+}
+
+/**
+ * Stamp a freshly-created doc with its human-readable reference. The number is
+ * derived from the (unique) document id, so it is collision-free without a
+ * shared counter — concurrency-safe by construction. Persisted on the doc and
+ * returned so the create-time publish carries it.
+ */
+async function stampTicketNo(
+  doc: { _id: unknown; ticket_no: string; save: () => Promise<unknown> },
+  prefix: string
+): Promise<string> {
+  const no = ticketNo(prefix, doc._id as Types.ObjectId);
+  doc.ticket_no = no;
+  await doc.save();
+  return no;
 }
 
 function emit(event: string, payload: any, hostId?: string | null) {
@@ -89,6 +106,7 @@ async function buildPodInfo(podId: Types.ObjectId | null | undefined) {
 async function toSosPub(doc: any) {
   return {
     id: String(doc._id),
+    ticket_no: doc.ticket_no || ticketNo('SOS', doc._id),
     user: (await buildActor(doc.user_id)) ?? { id: String(doc.user_id), name: 'User', phone: doc.contact_phone, avatar_url: null },
     host: await buildActor(doc.host_id),
     pod: (await buildPodInfo(doc.pod_id)) ?? { id: String(doc.pod_id), title: '(pod removed)', venue_id: null, venue_name: null, club_id: null, club_name: null, starts_at: null },
@@ -106,6 +124,7 @@ async function toSosPub(doc: any) {
 async function toCallbackPub(doc: any) {
   return {
     id: String(doc._id),
+    ticket_no: doc.ticket_no || ticketNo('CB', doc._id),
     user: (await buildActor(doc.user_id)) ?? { id: String(doc.user_id), name: 'User', phone: doc.contact_phone, avatar_url: null },
     pod: await buildPodInfo(doc.pod_id),
     contact_phone: doc.contact_phone ?? '',
@@ -188,6 +207,7 @@ export const bouncerService = {
       contact_phone: phone,
       status: 'ACTIVE',
     });
+    await stampTicketNo(doc, 'SOS');
 
     const pub = await toSosPub(doc);
     emit('bouncer:sos_new', pub, hostId ? String(hostId) : null);
@@ -196,7 +216,7 @@ export const bouncerService = {
     // and push fan-out can take seconds. Failures are already swallowed inside.
     void notifyHost({
       hostId: hostId ? String(hostId) : null,
-      title: `🚨 SOS from ${pub.user.name}`,
+      title: `🚨 SOS ${pub.ticket_no} from ${pub.user.name}`,
       body: `At "${pub.pod.title}". ${pub.message || 'Tap to respond.'}`,
       link: `/bouncers?sos=${pub.id}`,
     });
@@ -282,6 +302,7 @@ export const bouncerService = {
       reason: (input.reason ?? '').trim(),
       status: 'PENDING',
     });
+    await stampTicketNo(doc, 'CB');
 
     const pub = await toCallbackPub(doc);
     emit('bouncer:callback_new', pub);

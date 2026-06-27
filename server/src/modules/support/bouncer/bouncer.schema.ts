@@ -50,6 +50,8 @@ export const bouncerTypeDefs = /* GraphQL */ `
 
   type BouncerSosAlert {
     id: ID!
+    "Human-readable reference, e.g. SOS-A1B2C3."
+    ticket_no: String!
     user: BouncerActor!
     host: BouncerActor
     pod: BouncerPodInfo!
@@ -65,6 +67,8 @@ export const bouncerTypeDefs = /* GraphQL */ `
 
   type BouncerCallbackRequest {
     id: ID!
+    "Human-readable reference, e.g. CB-A1B2C3."
+    ticket_no: String!
     user: BouncerActor!
     pod: BouncerPodInfo
     contact_phone: String!

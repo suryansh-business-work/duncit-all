@@ -217,6 +217,55 @@ describe('TicketDetailPage', () => {
     expect(screen.getByText('TICKET LIST')).toBeInTheDocument();
   });
 
+  it('hides the composer on a RESOLVED ticket and closes it via the confirm dialog (Item 17)', async () => {
+    const resolved = td({ status: 'RESOLVED', resolved_at: new Date().toISOString() });
+    renderAt([
+      ticketMock(resolved),
+      { request: { query: UPDATE_TICKET_STATUS, variables: { ticket_id: ID, status: 'CLOSED' } }, result: { data: { updateTicketStatus: { id: ID, status: 'CLOSED' } } } },
+      ticketMock(td({ status: 'CLOSED' })),
+      ticketMock(td({ status: 'CLOSED' })),
+    ]);
+    await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
+
+    // No reply composer is shown — the prominent Close button is instead.
+    expect(screen.queryByTestId('quill')).not.toBeInTheDocument();
+    fireEvent.click(screen.getByRole('button', { name: /^close$/i }));
+    await waitFor(() => expect(screen.getByRole('heading', { name: /close this support ticket\?/i })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /close ticket/i }));
+
+    // After closing it is permanently read-only — no composer, no Close button.
+    await waitFor(() => expect(screen.getByText(/closed and read-only/i)).toBeInTheDocument());
+    expect(screen.queryByRole('button', { name: /^close$/i })).not.toBeInTheDocument();
+    expect(screen.queryByTestId('quill')).not.toBeInTheDocument();
+  });
+
+  it('surfaces a close error in the snackbar (Item 17)', async () => {
+    renderAt([
+      ticketMock(td({ status: 'RESOLVED', resolved_at: new Date().toISOString() })),
+      { request: { query: UPDATE_TICKET_STATUS, variables: { ticket_id: ID, status: 'CLOSED' } }, error: new Error('Close failed') },
+    ]);
+    await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /^close$/i }));
+    fireEvent.click(await screen.findByRole('button', { name: /close ticket/i }));
+    await waitFor(() => expect(screen.getByText(/close failed/i)).toBeInTheDocument());
+  });
+
+  it('shows a read-only notice (no composer, no Close button) on a CLOSED ticket', async () => {
+    renderAt([ticketMock(td({ status: 'CLOSED' }))]);
+    await waitFor(() => expect(screen.getByText(/closed and read-only/i)).toBeInTheDocument());
+    expect(screen.queryByTestId('quill')).not.toBeInTheDocument();
+    expect(screen.queryByRole('button', { name: /^close$/i })).not.toBeInTheDocument();
+  });
+
+  it('dismisses the close confirm dialog on cancel', async () => {
+    renderAt([ticketMock(td({ status: 'RESOLVED', resolved_at: new Date().toISOString() }))]);
+    await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /^close$/i }));
+    await waitFor(() => expect(screen.getByRole('heading', { name: /close this support ticket\?/i })).toBeInTheDocument());
+    fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
+    await waitFor(() => expect(screen.queryByRole('heading', { name: /close this support ticket\?/i })).not.toBeInTheDocument());
+  });
+
   it('handles a nameless author and a user with no phone', async () => {
     const t = td({
       user: { id: 'u1', name: 'Riya', phone: null, avatar_url: null },

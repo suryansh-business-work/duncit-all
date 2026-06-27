@@ -23,6 +23,20 @@ describe('bouncerService integration', () => {
     expect(mine?.status).toBe('ACTIVE');
   });
 
+  it('exposes a derived SOS-/CB- ticket_no even for legacy docs without one (Item 20)', async () => {
+    const sos = await BouncerSosAlertModel.create({ user_id: userId, pod_id: podId, status: 'ACTIVE' });
+    const cb = await BouncerCallbackRequestModel.create({
+      user_id: userId,
+      contact_phone: '+919999999999',
+      status: 'PENDING',
+    });
+
+    const [sosPub] = await bouncerService.listSos();
+    const [cbPub] = await bouncerService.listCallbacks();
+    expect(sosPub.ticket_no).toBe(`SOS-${String(sos._id).slice(-6).toUpperCase()}`);
+    expect(cbPub.ticket_no).toBe(`CB-${String(cb._id).slice(-6).toUpperCase()}`);
+  });
+
   it('acknowledges then resolves an SOS, and blocks ack after resolve', async () => {
     const sos = await BouncerSosAlertModel.create({ user_id: userId, pod_id: podId, status: 'ACTIVE' });
     const id = String(sos._id);

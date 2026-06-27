@@ -2,6 +2,7 @@ import { createBottomTabNavigator, type BottomTabBarProps } from '@react-navigat
 
 import { BottomNav } from '@/components/BottomNav';
 import { PodFeedbackPrompt } from '@/components/support/PodFeedbackPrompt';
+import { usePushNotificationDeepLink } from '@/hooks/usePushNotificationDeepLink';
 import { ChatsScreen } from '@/screens/ChatsScreen';
 import { ClubsScreen } from '@/screens/ClubsScreen';
 import { ExploreScreen } from '@/screens/ExploreScreen';
@@ -17,6 +18,8 @@ const renderTabBar = (props: BottomTabBarProps) => <BottomNav {...props} />;
  * with the floating custom {@link BottomNav}. Account-menu destinations stay
  * stack screens pushed on top of this (see RootNavigator). */
 export function MainTabs() {
+  // Tapping a native push (e.g. a post-activity notification) deep-links here.
+  usePushNotificationDeepLink();
   return (
     <>
       <Tab.Navigator

@@ -29,7 +29,9 @@
     "migrate:email-logo": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-logo.ts",
     "migrate:email-logo:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-email-logo.ts --dry-run",
     "migrate:verification-cleanup": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-verification-cleanup.ts",
-    "migrate:verification-cleanup:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-verification-cleanup.ts --dry-run"
+    "migrate:verification-cleanup:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-verification-cleanup.ts --dry-run",
+    "migrate:bouncer-ticket-no": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-bouncer-ticket-no.ts",
+    "migrate:bouncer-ticket-no:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-bouncer-ticket-no.ts --dry-run"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",

@@ -17,6 +17,7 @@ import PodMapSection from '../components/pod-details/PodMapSection';
 import PodSocialBar from './pod-details-page/PodSocialBar';
 import { usePodDetailActions } from './pod-details-page/usePodDetailActions';
 import { usePodProductSelection } from './pod-details-page/usePodProductSelection';
+import { useFeatureFlag } from '../hooks/useFeatureFlag';
 import ConfettiOverlay from '../components/ConfettiOverlay';
 import { useStatusUpload } from '../components/status-upload/StatusUploadProvider';
 import {
@@ -33,6 +34,7 @@ export default function PodDetailsPage() {
   const [search] = useSearchParams();
   const referralFromUrl = search.get('ref');
   const { compute: priceCompute, format: priceFormat } = usePricing();
+  const showProducts = useFeatureFlag('is_product_visible');
   const slugResolution = useQuery(POD_ID_BY_SLUGS, {
     variables: { clubSlug, podSlug },
     skip: !clubSlug || !podSlug,
@@ -138,7 +140,7 @@ export default function PodDetailsPage() {
         viewerId={data?.me?.user_id ?? null}
       />
 
-      {pod.product_requests?.some((item: any) => item?.product_name) && (
+      {showProducts && pod.product_requests?.some((item: any) => item?.product_name) && (
         <PodCommercePreview
           pod={pod}
           priceFormat={priceFormat}

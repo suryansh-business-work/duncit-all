@@ -45,12 +45,14 @@ export function useVenueDashboard() {
   return { venues, podDates, isLoading };
 }
 
-/** ecomm studio dashboard — the product catalogue with stock + price. */
-export function useEcommDashboard() {
+/** ecomm studio dashboard — the product catalogue with stock + price. The
+ * `enabled` flag lets a caller skip the fetch when products are gated off. */
+export function useEcommDashboard(enabled = true) {
   const [products, setProducts] = useState<DashboardProduct[]>([]);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(enabled);
 
   useEffect(() => {
+    if (!enabled) return undefined;
     let active = true;
     graphqlRequest(EcommDashboardDocument, undefined, { auth: true })
       .then((data) => active && setProducts(data.availablePodProducts))
@@ -59,7 +61,7 @@ export function useEcommDashboard() {
     return () => {
       active = false;
     };
-  }, []);
+  }, [enabled]);
 
   return { products, isLoading };
 }

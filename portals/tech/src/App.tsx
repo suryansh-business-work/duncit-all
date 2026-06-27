@@ -4,6 +4,7 @@ import EnvironmentPage from './pages/environment';
 import PortalModesPage from './pages/portal-modes';
 import FeatureFlagsPage from './pages/feature-flags-page/FeatureFlagsPage';
 import AuthenticationPage from './pages/AuthenticationPage';
+import EmailTemplatesPage from './pages/email-templates-page/EmailTemplatesPage';
 import ServerInfoPage from './pages/server/ServerInfoPage';
 import DockerPage from './pages/server/DockerPage';
 import AppShell from './components/AppShell';
@@ -35,6 +36,7 @@ export default function App() {
         <Route path="/portal-modes" element={authed(<PortalModesPage />)} />
         <Route path="/feature-flags" element={authed(<FeatureFlagsPage />)} />
         <Route path="/authentication" element={authed(<AuthenticationPage />)} />
+        <Route path="/email-templates" element={authed(<EmailTemplatesPage />)} />
         <Route path="/server" element={<Navigate to="/server/info" replace />} />
         <Route path="/server/info" element={authed(<ServerInfoPage />)} />
         <Route path="/server/docker" element={authed(<DockerPage />)} />

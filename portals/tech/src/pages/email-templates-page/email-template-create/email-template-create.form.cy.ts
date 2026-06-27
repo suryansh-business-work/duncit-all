@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { emailTemplateCreateSchema, slugify } from './email-template-create.form';
+import { emailTemplateCreateSchema, slugify, toCreateTemplateInput } from './email-template-create.form';
 
 describe('emailTemplateCreateSchema', () => {
   it('rejects slug with spaces', async () => {
@@ -31,5 +31,13 @@ describe('slugify helper', () => {
   it('produces a kebab-case slug from arbitrary input', () => {
     expect(slugify('Hello, World!')).toBe('hello-world');
     expect(slugify('  Trim Me  ')).toBe('trim-me');
+  });
+});
+
+describe('toCreateTemplateInput', () => {
+  it('casts and trims the create payload to slug/name/subject', () => {
+    expect(
+      toCreateTemplateInput({ slug: 'welcome-email', name: '  Welcome  ', subject: '  Hello  ' }),
+    ).toEqual({ slug: 'welcome-email', name: 'Welcome', subject: 'Hello' });
   });
 });

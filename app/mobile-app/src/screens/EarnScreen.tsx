@@ -6,6 +6,7 @@ import { ScrollView, Text, YStack } from 'tamagui';
 import { EarnBox } from '@/components/earn/EarnBox';
 import { EarnMeetingActions } from '@/components/earn/EarnMeetingActions';
 import { StackScreen } from '@/components/StackScreen';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useMe } from '@/hooks/useMe';
 import { MyMeetingsDocument, type MyMeetingsResult } from '@/graphql/onboarding-survey';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -56,6 +57,9 @@ const meetingNotice = (meeting: EarnMeeting) => {
 export function EarnScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const roles = useMe().data?.me?.roles ?? [];
+  const showProducts = useFeatureFlag('is_product_visible');
+  // The product-seller path is hidden when products are gated off.
+  const boxes = showProducts ? BOXES : BOXES.filter((box) => box.kind !== 'ECOMM');
   const [meetings, setMeetings] = useState<EarnMeeting[]>([]);
 
   const loadMeetings = () =>
@@ -79,7 +83,7 @@ export function EarnScreen() {
           <Text fontSize={13} color="$muted">
             Pick a way to start earning on Duncit.
           </Text>
-          {BOXES.map((box) => {
+          {boxes.map((box) => {
             const hasRole = roles.includes(box.role);
             const pendingMeeting = meetings.find(
               (m) => m.kind === box.kind && PENDING.has(m.status),

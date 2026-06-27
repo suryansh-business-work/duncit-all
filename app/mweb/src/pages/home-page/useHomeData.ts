@@ -89,24 +89,6 @@ export function useHomeData({
     return cat?.id ?? null;
   }, [data, superCategorySlug]);
 
-  const sliders = useMemo(() => {
-    const list = data?.sliders ?? [];
-    const map = new Map<string, any>();
-    list
-      .filter((s: any) => {
-        if (s.scope === 'GLOBAL') return true;
-        if (s.scope === 'LOCATION') return !locationId || s.location_id === locationId;
-        if (s.scope === 'ZONE') {
-          const locationOk = !locationId || s.location_id === locationId;
-          const zoneOk = !zoneName || s.zone_name === zoneName;
-          return locationOk && zoneOk;
-        }
-        return true;
-      })
-      .forEach((s: any) => map.set(s.id, s));
-    return [...map.values()].sort((x, y) => (x.sort_order ?? 0) - (y.sort_order ?? 0));
-  }, [data, locationId, zoneName]);
-
   const catParent = useMemo(() => {
     const m = new Map<string, string | null>();
     (data?.categories ?? []).forEach((c: any) => m.set(c.id, c.parent_id ?? null));
@@ -409,7 +391,6 @@ export function useHomeData({
     branding: headerData?.branding,
     me: headerData?.me,
     isHost,
-    sliders,
     clubs,
     featuredPods,
     podsByClub,

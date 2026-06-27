@@ -19,7 +19,6 @@ import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import HelpOutlineIcon from '@mui/icons-material/HelpOutline';
 import SupportAgentIcon from '@mui/icons-material/SupportAgent';
-import MarkEmailReadIcon from '@mui/icons-material/MarkEmailRead';
 import AccountBalanceIcon from '@mui/icons-material/AccountBalance';
 import DashboardCustomizeIcon from '@mui/icons-material/DashboardCustomize';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
@@ -60,7 +59,6 @@ export const navIcons = {
   eventAvailable: <EventAvailableIcon />,
   help: <HelpOutlineIcon />,
   support: <SupportAgentIcon />,
-  email: <MarkEmailReadIcon />,
   finance: <AccountBalanceIcon />,
   financeDashboard: <DashboardCustomizeIcon />,
   receipt: <ReceiptLongIcon />,

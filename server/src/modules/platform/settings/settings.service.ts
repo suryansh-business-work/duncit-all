@@ -141,6 +141,13 @@ const DEFAULT_FLAGS: {
     description: "Ask the user to verify a WhatsApp number after signup.",
     enabled: false,
   },
+  {
+    key: "is_product_visible",
+    name: "Product Features Visible",
+    description:
+      "Show all product features (Pod Shop, product management, Create-a-Pod products step, product nav) across apps and portals.",
+    enabled: false,
+  },
 ];
 
 export const settingsService = {

@@ -57,8 +57,8 @@ const CARDS: HubCard[] = [
   {
     key: 'engagement',
     title: 'Engagement',
-    description: 'Interview requests, FAQs, support logs, email templates and badges.',
-    to: '/interview-requests',
+    description: 'FAQs, email templates and badges.',
+    to: '/faqs',
     icon: 'engagement',
     accent: '#dc2626',
   },

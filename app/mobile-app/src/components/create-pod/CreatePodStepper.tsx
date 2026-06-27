@@ -27,8 +27,12 @@ import { OffersStep } from './steps/OffersStep';
 import { PerksStep } from './steps/PerksStep';
 import { ProductsStep } from './steps/ProductsStep';
 import { PaymentStep } from './steps/PaymentStep';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 export type DraftPayload = ReturnType<typeof serializeDraft>;
+
+/** Index of the optional "Add Products" step inside the full step list. */
+const PRODUCTS_STEP_INDEX = 6;
 
 interface Props {
   initialValues: CreatePodFormValues;
@@ -63,13 +67,34 @@ export function CreatePodStepper({
     defaultValues: initialValues,
     mode: 'onTouched',
   });
+  // When products are gated off, the "Add Products" step is removed so the
+  // stepper skips straight from Perks to Payment. Titles/fields are filtered in
+  // lockstep to keep their indices aligned with the rendered steps.
+  const showProducts = useFeatureFlag('is_product_visible');
+  const dropProductsStep = <T,>(list: T[]): T[] =>
+    showProducts ? list : list.filter((_, index) => index !== PRODUCTS_STEP_INDEX);
+  const stepTitles = dropProductsStep(STEP_TITLES);
+  const stepFields = dropProductsStep(STEP_FIELDS);
+
   const [step, setStep] = useState(initialStep);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const draftIdRef = useRef(initialDraftId);
   const dupTitleRef = useRef(false);
-  const isLast = step === STEP_TITLES.length - 1;
+  const isLast = step === stepTitles.length - 1;
   const submitLabel = busy ? 'Creating…' : 'Create Pod';
+
+  // With products gated off, drop any product values a stale draft may carry and
+  // clamp the active step so a draft saved on the (now-removed) Products step
+  // can't land out of range.
+  useEffect(() => {
+    if (showProducts) return;
+    if (form.getValues('products_enabled') || form.getValues('product_requests').length > 0) {
+      form.setValue('products_enabled', false);
+      form.setValue('product_requests', []);
+    }
+    if (step > stepTitles.length - 1) setStep(stepTitles.length - 1);
+  }, [showProducts, step, stepTitles.length]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A duplicate-title error is shown inline on the title field; clear it as soon
   // as the host edits the title so the stale message can't linger (DIFF-7).
@@ -103,7 +128,7 @@ export function CreatePodStepper({
     persistSafely(target);
   };
   const next = async () => {
-    if (await form.trigger(STEP_FIELDS[step])) goTo(step + 1);
+    if (await form.trigger(stepFields[step])) goTo(step + 1);
   };
   const submit = form.handleSubmit(async (values) => {
     setBusy(true);
@@ -140,7 +165,7 @@ export function CreatePodStepper({
           return venueIds.some((venueId) => venueLocationById.get(venueId) === locationId);
         });
 
-  const steps = [
+  const steps = dropProductsStep([
     <LocationStep key="location" form={form} locations={locations} />,
     <ClubStep key="club" form={form} clubs={clubsForLocation} />,
     <WhenWhereStep key="when" form={form} clubs={clubsForLocation} venues={venues} />,
@@ -149,23 +174,23 @@ export function CreatePodStepper({
     <PerksStep key="perks" form={form} />,
     <ProductsStep key="products" form={form} products={products} />,
     <PaymentStep key="payment" form={form} />,
-  ];
+  ]);
 
   return (
     <YStack gap={16} padding={16} paddingBottom={48}>
       <YStack gap={6}>
         <Text fontSize={12.5} fontWeight="800" color="$muted">
-          Step {step + 1} of {STEP_TITLES.length}
+          Step {step + 1} of {stepTitles.length}
         </Text>
         <Text fontSize={17} fontWeight="900" color="$color">
-          {STEP_TITLES[step]}
+          {stepTitles[step]}
         </Text>
         <XStack height={6} borderRadius={999} backgroundColor="$borderColor" overflow="hidden">
           <YStack
             testID="create-pod-progress"
             height="100%"
             backgroundColor="$primary"
-            width={`${((step + 1) / STEP_TITLES.length) * 100}%`}
+            width={`${((step + 1) / stepTitles.length) * 100}%`}
           />
         </XStack>
       </YStack>

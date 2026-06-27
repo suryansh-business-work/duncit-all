@@ -66,6 +66,5 @@ export const SUMMARY_TILES: Array<{
     label: 'Support Tickets',
     icon: SupportAgentIcon,
     color: '#0891b2',
-    to: '/support-logs',
   },
 ];

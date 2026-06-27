@@ -13,6 +13,7 @@ import PerksSection from './PerksSection';
 import PaymentChargesSection from './PaymentChargesSection';
 import DuncitProductsSection from './DuncitProductsSection';
 import type { PodForm } from '../queries';
+import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 
 type SectionBody =
   | 'BasicInfoSection'
@@ -27,8 +28,8 @@ type SectionConfig = { id: string; label: string; body: SectionBody };
 
 export const SECTION_IDS = ['basic', 'when', 'meeting', 'about', 'offers', 'perks', 'products', 'payment'];
 
-function getSections(podMode: PodForm['pod_mode']) {
-  const productSections: SectionConfig[] = podMode === 'VIRTUAL'
+function getSections(podMode: PodForm['pod_mode'], showProducts: boolean) {
+  const productSections: SectionConfig[] = podMode === 'VIRTUAL' || !showProducts
     ? []
     : [{ id: 'products', label: 'Approved Products', body: 'DuncitProductsSection' }];
   const base: SectionConfig[] = [
@@ -74,7 +75,8 @@ export default function PodFormSections({
   finance,
 }: Readonly<Props>) {
   const { values, setFieldValue } = useFormikContext<PodForm>();
-  const sections = getSections(values.pod_mode);
+  const showProducts = useFeatureFlag('is_product_visible');
+  const sections = getSections(values.pod_mode, showProducts);
   const expandableSections = sections.filter((section) => section.id !== 'products' || values.products_enabled);
   const allOpen = expandableSections.every((section) => expanded.has(section.id));
   return (

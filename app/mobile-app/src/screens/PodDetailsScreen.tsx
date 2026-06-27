@@ -19,6 +19,7 @@ import { BackoutConfirmDialog } from '@/components/pod-history/BackoutConfirmDia
 import { DetailSkeleton } from '@/components/Skeleton';
 import { FollowPillButton } from '@/components/FollowPillButton';
 import { usePodActions, usePodDetails } from '@/hooks/useDetails';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { usePodFollow } from '@/hooks/useFollow';
 import { usePodBackout } from '@/hooks/usePodHistory';
 import { useExploreStore } from '@/stores/explore.store';
@@ -54,6 +55,7 @@ export function PodDetailsScreen() {
     toggle: toggleFollow,
   } = usePodFollow(podId, followingInitially);
   const { backout, busy: backingOut } = usePodBackout();
+  const showProducts = useFeatureFlag('is_product_visible');
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [commentDelta, setCommentDelta] = useState(0);
@@ -166,7 +168,7 @@ export function PodDetailsScreen() {
               onOpenComments={() => setCommentsOpen(true)}
             />
           </Reveal>
-          {pod.product_requests?.length ? (
+          {showProducts && pod.product_requests?.length ? (
             <Reveal index={3}>
               <PodShop pod={pod} />
             </Reveal>

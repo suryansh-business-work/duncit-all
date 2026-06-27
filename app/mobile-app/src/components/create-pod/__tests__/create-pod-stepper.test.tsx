@@ -4,6 +4,18 @@ import { CreatePodStepper } from '@/components/create-pod/CreatePodStepper';
 import { blankCreatePodForm } from '@/components/create-pod/create-pod.types';
 import { renderWithProviders } from '@/utils/test-utils';
 
+// The products step is gated behind `is_product_visible`; default it on so the
+// end-to-end flows below still walk through the Products step. The skip path is
+// covered by its own test that flips this to off.
+const mockFeatureFlag = jest.fn().mockReturnValue(true);
+jest.mock('@/hooks/useFeatureFlag', () => ({
+  useFeatureFlag: (key: string, fallback?: boolean) => mockFeatureFlag(key, fallback),
+}));
+
+beforeEach(() => {
+  mockFeatureFlag.mockReturnValue(true);
+});
+
 const toText = (date: Date) => {
   const pad = (n: number) => String(n).padStart(2, '0');
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())} ${pad(date.getHours())}:${pad(date.getMinutes())}`;
@@ -252,5 +264,48 @@ describe('CreatePodStepper', () => {
   it('resumes at the provided step', () => {
     setup({ initialStep: 3, initialValues: { ...blankCreatePodForm, pod_title: 'Resumed' } });
     expect(screen.getByTestId('field-pod_description')).toBeOnTheScreen();
+  });
+
+  it('skips the Products step and shows 7 steps when products are gated off', async () => {
+    mockFeatureFlag.mockReturnValue(false);
+    setup();
+    // The flow now has 7 steps; Perks goes straight to Payment.
+    expect(screen.getByText('Step 1 of 7')).toBeOnTheScreen();
+    press('create-pod-location-l1');
+    press('create-pod-submit');
+    await screen.findByTestId('field-pod_title');
+    fireEvent.changeText(screen.getByTestId('field-pod_title'), 'Sunday community hike');
+    press('create-pod-club-c1');
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-venue-v1');
+    press('create-pod-venue-v1');
+    fireEvent.changeText(screen.getByTestId('field-pod_date_time_text'), futureText);
+    press('create-pod-submit');
+    await screen.findByTestId('field-pod_description');
+    fireEvent.changeText(screen.getByTestId('field-pod_description'), 'A relaxed hike.');
+    fireEvent.changeText(screen.getByTestId('field-media_text'), 'https://cdn/img.jpg');
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-offers-input');
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-perks-input');
+    press('create-pod-submit');
+    // Perks (step 6 of 7) jumps to Payment — the Products toggle never appears.
+    await screen.findByTestId('create-pod-type-NATIVE_FREE');
+    expect(screen.queryByTestId('products-enabled-toggle')).toBeNull();
+  });
+
+  it('clears stale product values from a resumed draft when products are off', () => {
+    mockFeatureFlag.mockReturnValue(false);
+    setup({
+      initialStep: 7,
+      initialValues: {
+        ...blankCreatePodForm,
+        products_enabled: true,
+        product_requests: [{ product_id: 'p1', quantity: 2 }],
+      },
+    });
+    // Step clamped into range (7 steps → last index 6) and lands on Payment.
+    expect(screen.getByTestId('create-pod-type-NATIVE_FREE')).toBeOnTheScreen();
+    expect(screen.queryByTestId('products-enabled-toggle')).toBeNull();
   });
 });

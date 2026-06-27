@@ -22,11 +22,18 @@ const mockUseMe = jest.fn();
 jest.mock('@/hooks/useMe', () => ({ useMe: () => mockUseMe() }));
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
+// Products gated on by default so the "By listing your product" box shows; the
+// off path (box hidden) has its own test.
+const mockFeatureFlag = jest.fn().mockReturnValue(true);
+jest.mock('@/hooks/useFeatureFlag', () => ({
+  useFeatureFlag: (key: string, fallback?: boolean) => mockFeatureFlag(key, fallback),
+}));
 const opName = (doc: { definitions?: { name?: { value?: string } }[] }) =>
   doc?.definitions?.[0]?.name?.value;
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockFeatureFlag.mockReturnValue(true);
   mockUseMe.mockReturnValue({ data: { me: { roles: ['HOST'] } } });
   mockRequest.mockResolvedValue({ myMeetings: [] });
 });
@@ -137,5 +144,13 @@ describe('EarnScreen', () => {
     const before = mockRequest.mock.calls.length;
     focusCallback?.();
     await waitFor(() => expect(mockRequest.mock.calls.length).toBeGreaterThan(before));
+  });
+
+  it('hides the product-seller box when products are gated off', () => {
+    mockFeatureFlag.mockReturnValue(false);
+    mockUseMe.mockReturnValue({ data: { me: { roles: [] } } });
+    renderWithProviders(<EarnScreen />);
+    expect(screen.queryByTestId('earn-box-ECOMM_MANAGER')).toBeNull();
+    expect(screen.getByTestId('earn-box-HOST')).toBeOnTheScreen();
   });
 });

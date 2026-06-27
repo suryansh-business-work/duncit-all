@@ -6,6 +6,9 @@ import * as envEntryBarrel from './pages/environment/env-entry';
 import * as flagQueries from './pages/feature-flags-page/queries';
 import * as flagBarrel from './pages/feature-flags-page/feature-flag';
 import * as portalModeQueries from './pages/portal-modes/queries';
+import * as emailTplQueries from './pages/email-templates-page/queries';
+import * as emailTplCreateBarrel from './pages/email-templates-page/email-template-create';
+import * as emailTplTestBarrel from './pages/email-templates-page/email-template-test';
 
 /**
  * GraphQL document modules + barrels are pure module-level code; importing them
@@ -44,5 +47,20 @@ describe('module barrels & GraphQL documents', () => {
   it('exposes portal-mode documents', () => {
     expect(portalModeQueries.PORTAL_MODES).toBeDefined();
     expect(portalModeQueries.SET_PORTAL_MODE).toBeDefined();
+  });
+
+  it('exposes email-template documents + form barrels', () => {
+    expect(emailTplQueries.TEMPLATES).toBeDefined();
+    expect(emailTplQueries.RENDER).toBeDefined();
+    expect(emailTplQueries.CREATE).toBeDefined();
+    expect(emailTplQueries.UPDATE).toBeDefined();
+    expect(emailTplQueries.DELETE).toBeDefined();
+    expect(emailTplQueries.SEND_TEST).toBeDefined();
+    expect(emailTplQueries.STARTER).toMatch(/<mjml>/);
+    expect(emailTplCreateBarrel.emailTemplateCreateSchema).toBeDefined();
+    expect(emailTplCreateBarrel.slugify).toBeTypeOf('function');
+    expect(emailTplCreateBarrel.toCreateTemplateInput).toBeTypeOf('function');
+    expect(emailTplTestBarrel.emailTemplateTestSchema).toBeDefined();
+    expect(emailTplTestBarrel.toSendTestInput).toBeTypeOf('function');
   });
 });

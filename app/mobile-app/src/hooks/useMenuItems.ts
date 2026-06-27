@@ -1,6 +1,7 @@
 import type { ComponentProps } from 'react';
 import type { MaterialIcons } from '@expo/vector-icons';
 
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import type { MenuRoute } from '@/navigation/types';
 import type { StudioMode } from '@/utils/studio-mode';
 
@@ -32,6 +33,7 @@ const studio = (yourX: MenuItem, dashboard: MenuRoute): MenuItem[] => [
  * studio shows its own rows (the drawer adds Dark Mode / Policies / Logout).
  */
 export function useMenuItems(mode: StudioMode = 'USER'): { items: MenuItem[] } {
+  const showProducts = useFeatureFlag('is_product_visible');
   if (mode === 'HOST') {
     const items = studio(
       { label: 'Your Pods', icon: 'dashboard', route: 'HostManage' },
@@ -46,12 +48,12 @@ export function useMenuItems(mode: StudioMode = 'USER'): { items: MenuItem[] } {
     };
   }
   if (mode === 'ECOMM') {
-    return {
-      items: studio(
-        { label: 'Your Products', icon: 'inventory-2', route: 'ProductsManage' },
-        'ProductsManage',
-      ),
-    };
+    const items = studio(
+      { label: 'Your Products', icon: 'inventory-2', route: 'ProductsManage' },
+      'ProductsManage',
+    );
+    // With products gated off, hide the product-management row from the studio.
+    return { items: showProducts ? items : items.filter((item) => item.label !== 'Your Products') };
   }
   return {
     items: [

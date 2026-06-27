@@ -16,6 +16,7 @@ import {
 } from '@mui/material';
 import VisibilityIcon from '@mui/icons-material/Visibility';
 import PodActionButtons from './PodActionButtons';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 interface Props {
   loading: boolean;
@@ -59,6 +60,7 @@ function PodCover({ pod }: Readonly<{ pod: any }>) {
 }
 
 export default function PodsTable({ loading, pods, clubName, venueName, locName, onEdit, onQuickEdit, onDelete, onComplete, onView }: Readonly<Props>) {
+  const showProducts = useFeatureFlag('is_product_visible');
   return (
     <Card>
       <CardContent sx={{ p: 0 }}>
@@ -77,7 +79,7 @@ export default function PodsTable({ loading, pods, clubName, venueName, locName,
                 <TableCell>Date / Time</TableCell>
                 <TableCell>Type</TableCell>
                 <TableCell>Amount</TableCell>
-                <TableCell>Products</TableCell>
+                {showProducts && <TableCell>Products</TableCell>}
                 <TableCell>Spots</TableCell>
                 <TableCell>Hits</TableCell>
                 <TableCell>Status</TableCell>
@@ -127,20 +129,22 @@ export default function PodsTable({ loading, pods, clubName, venueName, locName,
                     </Stack>
                   </TableCell>
                   <TableCell>{p.pod_amount > 0 ? `₹${p.pod_amount}` : 'Free'}</TableCell>
-                  <TableCell>
-                    {p.product_requests?.length ? (
-                      <Stack spacing={0.25}>
-                        {p.product_requests.map((item: any) => (
-                          <Typography key={item.product_id} variant="caption">
-                            {item.product_name}: {item.quantity}
+                  {showProducts && (
+                    <TableCell>
+                      {p.product_requests?.length ? (
+                        <Stack spacing={0.25}>
+                          {p.product_requests.map((item: any) => (
+                            <Typography key={item.product_id} variant="caption">
+                              {item.product_name}: {item.quantity}
+                            </Typography>
+                          ))}
+                          <Typography variant="caption" fontWeight={700}>
+                            ₹{p.product_cost_total ?? 0}
                           </Typography>
-                        ))}
-                        <Typography variant="caption" fontWeight={700}>
-                          ₹{p.product_cost_total ?? 0}
-                        </Typography>
-                      </Stack>
-                    ) : '—'}
-                  </TableCell>
+                        </Stack>
+                      ) : '—'}
+                    </TableCell>
+                  )}
                   <TableCell>
                     {p.pod_attendees?.length ?? 0}
                     {p.no_of_spots ? ` / ${p.no_of_spots}` : ''}

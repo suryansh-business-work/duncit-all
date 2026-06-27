@@ -1,5 +1,7 @@
-import { Formik } from 'formik';
-import * as yup from 'yup';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import {
   Alert,
   Button,
@@ -11,8 +13,8 @@ import {
   MenuItem,
   Stack,
   Switch,
-  TextField,
 } from '@mui/material';
+import RhfTextField from '../../../forms/components/RhfTextField';
 import { PARTNER_FAQ_TOPICS, type PartnerFaqTopic } from './partner-faq.types';
 
 export interface PartnerFaqFormValues {
@@ -33,16 +35,20 @@ interface Props {
   onSubmit: (values: PartnerFaqFormValues) => Promise<void>;
 }
 
-export const partnerFaqSchema = yup.object({
-  partner_topic: yup.mixed<PartnerFaqTopic>().oneOf(['VENUE', 'HOST', 'PRODUCTS']).required('Topic is required'),
-  question: yup.string().trim().min(5, 'Question must be at least 5 characters').max(300).required('Question is required'),
-  answer: yup.string().trim().min(5, 'Answer must be at least 5 characters').max(4000).required('Answer is required'),
-  sort_order: yup.number().integer().min(0).max(9999).required('Sort order is required'),
-  is_active: yup.boolean().required(),
+export const partnerFaqSchema = z.object({
+  partner_topic: z.enum(['VENUE', 'HOST', 'PRODUCTS'], { message: 'Topic is required' }),
+  question: z.string().trim().min(5, 'Question must be at least 5 characters').max(300),
+  answer: z.string().trim().min(5, 'Answer must be at least 5 characters').max(4000),
+  sort_order: z.coerce
+    .number({ message: 'Sort order is required' })
+    .int()
+    .min(0)
+    .max(9999),
+  is_active: z.boolean(),
 });
 
 export const toPartnerFaqInput = (values: PartnerFaqFormValues) => {
-  const cast = partnerFaqSchema.cast(values, { stripUnknown: true }) as PartnerFaqFormValues;
+  const cast = partnerFaqSchema.parse(values);
   return {
     audience: 'PARTNERS',
     partner_topic: cast.partner_topic,
@@ -54,31 +60,54 @@ export const toPartnerFaqInput = (values: PartnerFaqFormValues) => {
 };
 
 export default function PartnerFaqForm({ open, editing, initialValues, saving, error, onClose, onSubmit }: Readonly<Props>) {
+  const { control, handleSubmit, reset } = useForm<PartnerFaqFormValues>({
+    defaultValues: initialValues,
+    resolver: zodResolver(partnerFaqSchema),
+    mode: 'onTouched',
+  });
+
+  useEffect(() => {
+    reset(initialValues);
+  }, [initialValues, reset]);
+
+  const submit = handleSubmit((values) => onSubmit(values));
+
   return (
-    <Formik initialValues={initialValues} enableReinitialize validationSchema={partnerFaqSchema} onSubmit={onSubmit}>
-      {({ values, errors, touched, handleChange, setFieldValue, submitForm }) => (
-        <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-          <DialogTitle>{editing ? 'Edit Partner FAQ' : 'New Partner FAQ'}</DialogTitle>
-          <DialogContent>
-            <Stack spacing={2} sx={{ mt: 1 }}>
-              <TextField select name="partner_topic" label="Topic" value={values.partner_topic} onChange={handleChange} fullWidth>
-                {PARTNER_FAQ_TOPICS.map((topic) => <MenuItem key={topic.value} value={topic.value}>{topic.label}</MenuItem>)}
-              </TextField>
-              <TextField name="question" label="Question" value={values.question} onChange={handleChange} error={Boolean(touched.question && errors.question)} helperText={touched.question && errors.question} fullWidth required />
-              <TextField name="answer" label="Answer" value={values.answer} onChange={handleChange} error={Boolean(touched.answer && errors.answer)} helperText={touched.answer && errors.answer} multiline minRows={4} fullWidth required />
-              <Stack direction="row" spacing={2} alignItems="center">
-                <TextField name="sort_order" label="Sort order" type="number" value={values.sort_order} onChange={handleChange} sx={{ width: 160 }} />
-                <FormControlLabel control={<Switch checked={values.is_active} onChange={(event) => setFieldValue('is_active', event.target.checked)} />} label="Active" />
-              </Stack>
-              {error && <Alert severity="error">{error}</Alert>}
-            </Stack>
-          </DialogContent>
-          <DialogActions>
-            <Button onClick={onClose}>Cancel</Button>
-            <Button variant="contained" onClick={() => submitForm()} disabled={saving}>{saving ? 'Saving...' : 'Save'}</Button>
-          </DialogActions>
-        </Dialog>
-      )}
-    </Formik>
+    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
+      <DialogTitle>{editing ? 'Edit Partner FAQ' : 'New Partner FAQ'}</DialogTitle>
+      <DialogContent>
+        <Stack spacing={2} sx={{ mt: 1 }}>
+          <RhfTextField control={control} name="partner_topic" select label="Topic">
+            {PARTNER_FAQ_TOPICS.map((topic) => (
+              <MenuItem key={topic.value} value={topic.value}>
+                {topic.label}
+              </MenuItem>
+            ))}
+          </RhfTextField>
+          <RhfTextField control={control} name="question" label="Question" required />
+          <RhfTextField control={control} name="answer" label="Answer" multiline minRows={4} required />
+          <Stack direction="row" spacing={2} alignItems="center">
+            <RhfTextField control={control} name="sort_order" label="Sort order" type="number" sx={{ width: 160 }} fullWidth={false} />
+            <Controller
+              control={control}
+              name="is_active"
+              render={({ field }) => (
+                <FormControlLabel
+                  control={<Switch checked={!!field.value} onChange={(event) => field.onChange(event.target.checked)} />}
+                  label="Active"
+                />
+              )}
+            />
+          </Stack>
+          {error && <Alert severity="error">{error}</Alert>}
+        </Stack>
+      </DialogContent>
+      <DialogActions>
+        <Button onClick={onClose}>Cancel</Button>
+        <Button variant="contained" onClick={submit} disabled={saving}>
+          {saving ? 'Saving...' : 'Save'}
+        </Button>
+      </DialogActions>
+    </Dialog>
   );
 }

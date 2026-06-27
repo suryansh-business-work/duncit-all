@@ -1,9 +1,14 @@
-import * as yup from 'yup';
-import { validationRules } from '../validation/rules';
+import { z } from 'zod';
 
-export const loginSchema = yup.object({
-  email: validationRules.email('Email'),
-  password: yup.string().min(8, 'Min 8 characters').required('Password is required'),
+export const loginSchema = z.object({
+  email: z
+    .string()
+    .trim()
+    .min(1, 'Email is required')
+    .email('Enter a valid email')
+    .max(254)
+    .transform((value) => value.toLowerCase()),
+  password: z.string().min(1, 'Password is required').min(8, 'Min 8 characters'),
 });
 
 export interface LoginPayload {
@@ -12,6 +17,6 @@ export interface LoginPayload {
 }
 
 export function toLoginPayload(values: { email: string; password: string }): LoginPayload {
-  const cast = loginSchema.cast(values, { stripUnknown: true });
+  const cast = loginSchema.parse(values);
   return { email: cast.email, password: cast.password };
 }

@@ -5,6 +5,10 @@ import { Text, XStack, YStack } from 'tamagui';
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import type { AccountMe } from '@/hooks/useAccount';
+import type { CountryNode } from '@/utils/location-tree';
+import { ContactFields } from './ContactFields';
+import { DobDateField } from './DobDateField';
+import { LocationSelect } from './LocationSelect';
 import {
   accountEditDefaults,
   accountEditSchema,
@@ -13,23 +17,31 @@ import {
 
 export interface AccountEditFormProps {
   me: AccountMe | null;
+  countries: CountryNode[];
   loading?: boolean;
   errorMessage?: string | null;
   onSubmit: (values: AccountEditValues) => void | Promise<void>;
 }
 
-/** Edit-profile form — name, bio, location and phone/whatsapp. RN twin of mWeb's
- * EditAccountDialog body (React Hook Form + Zod, rule 10). */
+/** Edit-profile form — name, bio, DOB picker, dependent location and phone/
+ * whatsapp with country codes. RN twin of mWeb's AccountEditForm (RHF + Zod,
+ * rule 10); Save stays disabled until a valid change is made. */
 export function AccountEditForm({
   me,
+  countries,
   loading,
   errorMessage,
   onSubmit,
 }: Readonly<AccountEditFormProps>) {
-  const { control, handleSubmit } = useForm<AccountEditValues>({
+  const {
+    control,
+    setValue,
+    handleSubmit,
+    formState: { isDirty, isValid },
+  } = useForm<AccountEditValues>({
     values: accountEditDefaults(me),
     resolver: zodResolver(accountEditSchema),
-    mode: 'onBlur',
+    mode: 'onChange',
   });
 
   return (
@@ -61,67 +73,17 @@ export function AccountEditForm({
 
       <FormTextField control={control} name="bio" label="Bio" multiline numberOfLines={3} />
 
-      <FormTextField
-        control={control}
-        name="dob"
-        label="Date of birth (YYYY-MM-DD)"
-        placeholder="1995-06-15"
-        autoCapitalize="none"
-      />
+      <DobDateField control={control} />
 
-      <XStack gap={12}>
-        <YStack flex={1}>
-          <FormTextField control={control} name="city" label="City" />
-        </YStack>
-        <YStack flex={1}>
-          <FormTextField control={control} name="zone" label="Zone" />
-        </YStack>
-      </XStack>
+      <LocationSelect control={control} setValue={setValue} countries={countries} />
 
-      <FormTextField control={control} name="country" label="Country" />
-
-      <XStack gap={12}>
-        <YStack width={96}>
-          <FormTextField
-            control={control}
-            name="phone_extension"
-            label="Code"
-            keyboardType="phone-pad"
-          />
-        </YStack>
-        <YStack flex={1}>
-          <FormTextField
-            control={control}
-            name="phone_number"
-            label="Phone number"
-            keyboardType="phone-pad"
-          />
-        </YStack>
-      </XStack>
-
-      <XStack gap={12}>
-        <YStack width={96}>
-          <FormTextField
-            control={control}
-            name="whatsapp_extension"
-            label="Code"
-            keyboardType="phone-pad"
-          />
-        </YStack>
-        <YStack flex={1}>
-          <FormTextField
-            control={control}
-            name="whatsapp_number"
-            label="WhatsApp number"
-            keyboardType="phone-pad"
-          />
-        </YStack>
-      </XStack>
+      <ContactFields control={control} setValue={setValue} />
 
       <PrimaryButton
         testID="account-edit-submit"
         label={loading ? 'Saving…' : 'Save'}
         loading={loading}
+        disabled={loading || !isDirty || !isValid}
         onPress={handleSubmit(onSubmit)}
       />
     </YStack>

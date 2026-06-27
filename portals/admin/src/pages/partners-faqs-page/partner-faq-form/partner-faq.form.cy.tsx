@@ -9,15 +9,18 @@ const base: PartnerFaqFormValues = {
   is_active: true,
 };
 
+const messagesOf = (input: unknown) => {
+  const result = partnerFaqSchema.safeParse(input);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('partnerFaqSchema', () => {
-  it('requires a partner topic', async () => {
-    const error = await partnerFaqSchema.validate({ ...base, partner_topic: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/topic/i);
+  it('requires a partner topic', () => {
+    expect(messagesOf({ ...base, partner_topic: '' })).toMatch(/topic/i);
   });
 
-  it('rejects short questions', async () => {
-    const error = await partnerFaqSchema.validate({ ...base, question: 'Hi' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/question/i);
+  it('rejects short questions', () => {
+    expect(messagesOf({ ...base, question: 'Hi' })).toMatch(/question/i);
   });
 
   it('builds a partner FAQ input', () => {

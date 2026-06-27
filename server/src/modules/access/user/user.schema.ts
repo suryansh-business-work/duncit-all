@@ -234,6 +234,7 @@ export const userTypeDefs = gql`
     profile_photo: String
     profile_links: [ProfileLinkInput!]
     city: String
+    state: String
     zone: String
     country: String
     dob: String

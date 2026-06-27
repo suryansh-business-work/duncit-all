@@ -1,26 +1,13 @@
-import { gql, useMutation } from '@apollo/client';
+import { useMemo } from 'react';
+import { gql, useMutation, useQuery } from '@apollo/client';
+import { Dialog, DialogContent, DialogTitle } from '@mui/material';
+import { buildLocationTree, type LocationLike } from '../../utils/location-tree';
 import {
-  Alert,
-  Button,
-  Dialog,
-  DialogActions,
-  DialogContent,
-  DialogTitle,
-  Stack,
-  TextField,
-} from '@mui/material';
-import { LocalizationProvider } from '@mui/x-date-pickers/LocalizationProvider';
-import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { AdapterDateFns } from '@mui/x-date-pickers/AdapterDateFns';
-import { format } from 'date-fns';
-import { useFormik } from 'formik';
-import { useEffect } from 'react';
-import {
-  accountEditInitialValues,
-  accountEditSchema,
+  AccountEditForm,
+  accountEditDefaults,
   toUpdateProfileInput,
   type AccountEditValues,
-} from './account-edit.form';
+} from './account-edit';
 
 const UPDATE_PROFILE = gql`
   mutation UpdateMyProfileFull($input: UpdateMyProfileInput!) {
@@ -30,13 +17,32 @@ const UPDATE_PROFILE = gql`
       last_name
       bio
       city
-      zone
+      state
       country
       phone_number
       phone_extension
       whatsapp_number
       whatsapp_extension
       dob
+    }
+  }
+`;
+
+const LOCATIONS = gql`
+  query EditProfileLocations {
+    locations {
+      id
+      location_name
+      city
+      state
+      state_code
+      country
+      country_code
+      location_pincode
+      location_zones {
+        zone_name
+        pincode
+      }
     }
   }
 `;
@@ -49,112 +55,31 @@ export interface EditAccountDialogProps {
 }
 
 export default function EditAccountDialog({ open, onClose, initial, onSaved }: Readonly<EditAccountDialogProps>) {
-  const [updateProfile, { loading }] = useMutation(UPDATE_PROFILE);
+  const [updateProfile, { loading, error }] = useMutation(UPDATE_PROFILE);
+  const { data } = useQuery(LOCATIONS, { fetchPolicy: 'cache-and-network' });
+  const countries = useMemo(
+    () => buildLocationTree((data?.locations ?? []) as LocationLike[]),
+    [data?.locations],
+  );
 
-  const formik = useFormik<AccountEditValues>({
-    initialValues: accountEditInitialValues(initial),
-    validationSchema: accountEditSchema,
-    enableReinitialize: true,
-    validateOnBlur: true,
-    validateOnChange: true,
-    onSubmit: async (values, { setStatus }) => {
-      setStatus(undefined);
-      try {
-        await updateProfile({ variables: { input: toUpdateProfileInput(values) } });
-        onSaved();
-        onClose();
-      } catch (error: any) {
-        setStatus(error?.message || 'Could not save profile');
-      }
-    },
-  });
-
-  useEffect(() => {
-    if (!open) formik.setStatus(undefined);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
-
-  const f = (name: keyof AccountEditValues) => {
-    const value = (formik.values as any)[name] ?? '';
-    const error = (formik.errors as any)[name];
-    const showError = Boolean(error && ((formik.touched as any)[name] || String(value).length > 0));
-    return {
-      name,
-      value,
-      onChange: formik.handleChange,
-      onBlur: formik.handleBlur,
-      error: showError,
-      helperText: showError ? error : ' ',
-      fullWidth: true,
-      size: 'small' as const,
-    };
+  const handleSubmit = async (values: AccountEditValues) => {
+    await updateProfile({ variables: { input: toUpdateProfileInput(values) } });
+    onSaved();
+    onClose();
   };
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>Edit profile</DialogTitle>
-      <form onSubmit={formik.handleSubmit} noValidate>
-        <DialogContent dividers>
-          <Stack spacing={1.5}>
-            {formik.status && <Alert severity="error">{formik.status}</Alert>}
-            <Stack direction="row" spacing={1}>
-              <TextField label="First name" {...f('first_name')} />
-              <TextField label="Last name" {...f('last_name')} />
-            </Stack>
-            <TextField label="Bio" {...f('bio')} multiline minRows={2} />
-            <LocalizationProvider dateAdapter={AdapterDateFns}>
-              <DatePicker
-                label="Date of birth"
-                value={formik.values.dob ? new Date(formik.values.dob) : null}
-                maxDate={new Date()}
-                onChange={(d) =>
-                  formik.setFieldValue(
-                    'dob',
-                    d && !Number.isNaN(d.getTime()) ? format(d, 'yyyy-MM-dd') : '',
-                  )
-                }
-                slotProps={{
-                  textField: {
-                    name: 'dob',
-                    size: 'small',
-                    fullWidth: true,
-                    onBlur: formik.handleBlur,
-                    InputLabelProps: { shrink: true },
-                    error: Boolean(
-                      formik.errors.dob && (formik.touched.dob || formik.values.dob),
-                    ),
-                    helperText:
-                      formik.errors.dob && (formik.touched.dob || formik.values.dob)
-                        ? formik.errors.dob
-                        : ' ',
-                  },
-                }}
-              />
-            </LocalizationProvider>
-            <Stack direction="row" spacing={1}>
-              <TextField label="City" {...f('city')} />
-              <TextField label="Zone" {...f('zone')} />
-            </Stack>
-            <TextField label="Country" {...f('country')} />
-            <Stack direction="row" spacing={1}>
-              <TextField label="Phone code" {...f('phone_extension')} sx={{ maxWidth: 110 }} />
-              <TextField label="Phone number" {...f('phone_number')} />
-            </Stack>
-            <Stack direction="row" spacing={1}>
-              <TextField label="WhatsApp code" {...f('whatsapp_extension')} sx={{ maxWidth: 110 }} />
-              <TextField label="WhatsApp number" {...f('whatsapp_number')} />
-            </Stack>
-          </Stack>
-        </DialogContent>
-        <DialogActions>
-          <Button onClick={onClose} disabled={loading}>
-            Cancel
-          </Button>
-          <Button type="submit" variant="contained" disabled={loading}>
-            {loading ? 'Saving…' : 'Save'}
-          </Button>
-        </DialogActions>
-      </form>
+      <DialogContent dividers>
+        <AccountEditForm
+          countries={countries}
+          defaultValues={accountEditDefaults(initial)}
+          loading={loading}
+          errorMessage={error?.message ?? null}
+          onSubmit={handleSubmit}
+        />
+      </DialogContent>
     </Dialog>
   );
 }

@@ -14,27 +14,25 @@ const validForm = {
   zone: 'HSR',
 };
 
+const messagesOf = (input: unknown) => {
+  const result = createUserSchema.safeParse(input);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('createUserSchema', () => {
-  it('rejects empty required fields', async () => {
-    const error = await createUserSchema
-      .validate(
-        {
-          first_name: '',
-          last_name: '',
-          email: '',
-          phone_extension: '',
-          phone_number: '',
-          password: '',
-          dob: '',
-          roles: [],
-          city: '',
-          zone: '',
-        },
-        { abortEarly: false },
-      )
-      .catch((e) => e);
-    expect(error.name).toBe('ValidationError');
-    const msg = error.errors.join(' ');
+  it('rejects empty required fields', () => {
+    const msg = messagesOf({
+      first_name: '',
+      last_name: '',
+      email: '',
+      phone_extension: '',
+      phone_number: '',
+      password: '',
+      dob: '',
+      roles: [],
+      city: '',
+      zone: '',
+    });
     expect(msg).toMatch(/first name/i);
     expect(msg).toMatch(/last name/i);
     expect(msg).toMatch(/phone/i);
@@ -43,40 +41,24 @@ describe('createUserSchema', () => {
     expect(msg).toMatch(/date of birth/i);
   });
 
-  it('rejects phone numbers with alphabetic characters', async () => {
-    const error = await createUserSchema
-      .validate({ ...validForm, phone_number: 'abc1234' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.name).toBe('ValidationError');
-    expect(error.errors.join(' ')).toMatch(/digits/i);
+  it('rejects phone numbers with alphabetic characters', () => {
+    expect(messagesOf({ ...validForm, phone_number: 'abc1234' })).toMatch(/digits/i);
   });
 
-  it('rejects names with special characters', async () => {
-    const error = await createUserSchema
-      .validate({ ...validForm, first_name: 'Jane@!' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.name).toBe('ValidationError');
-    expect(error.errors.join(' ')).toMatch(/first name/i);
+  it('rejects names with special characters', () => {
+    expect(messagesOf({ ...validForm, first_name: 'Jane@!' })).toMatch(/first name/i);
   });
 
-  it('rejects passwords shorter than 8 characters', async () => {
-    const error = await createUserSchema
-      .validate({ ...validForm, password: 'short' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.name).toBe('ValidationError');
-    expect(error.errors.join(' ')).toMatch(/8 characters/i);
+  it('rejects passwords shorter than 8 characters', () => {
+    expect(messagesOf({ ...validForm, password: 'short' })).toMatch(/8 characters/i);
   });
 
-  it('rejects an empty roles array', async () => {
-    const error = await createUserSchema
-      .validate({ ...validForm, roles: [] }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.name).toBe('ValidationError');
-    expect(error.errors.join(' ')).toMatch(/role/i);
+  it('rejects an empty roles array', () => {
+    expect(messagesOf({ ...validForm, roles: [] })).toMatch(/role/i);
   });
 
-  it('accepts a fully valid form', async () => {
-    const parsed = await createUserSchema.validate(validForm, { abortEarly: false });
+  it('accepts a fully valid form', () => {
+    const parsed = createUserSchema.parse(validForm);
     expect(parsed.first_name).toBe('Jane');
     expect(parsed.phone_number).toBe('9876543210');
     expect(parsed.email).toBe('jane@example.com');

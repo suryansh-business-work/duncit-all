@@ -732,6 +732,7 @@ export const userService = {
       bio: 'profile.bio',
       profile_photo: 'profile.profile_photo',
       city: 'profile.city',
+      state: 'profile.state',
       zone: 'profile.zone',
       country: 'profile.country',
     };

@@ -1,4 +1,4 @@
-import { useField } from 'formik';
+import { Controller, useFormContext } from 'react-hook-form';
 import { TextField, type TextFieldProps } from '@mui/material';
 
 type Omitted = 'name' | 'value' | 'onChange' | 'onBlur' | 'error' | 'helperText' | 'type';
@@ -16,25 +16,33 @@ export default function PhoneNumberField({
   inputProps,
   ...rest
 }: Readonly<PhoneNumberFieldProps>) {
-  const [field, meta, helpers] = useField<string>(name);
-  const showError = meta.touched && !!meta.error;
+  const { control } = useFormContext();
 
   return (
-    <TextField
-      {...rest}
-      name={field.name}
-      value={field.value ?? ''}
-      type="tel"
-      fullWidth={rest.fullWidth ?? true}
-      error={showError}
-      helperText={showError ? meta.error : (hint ?? ' ')}
-      onBlur={field.onBlur}
-      onChange={(event) => helpers.setValue(onlyDigits(event.target.value))}
-      inputProps={{
-        inputMode: 'numeric',
-        pattern: '[0-9]*',
-        maxLength: 15,
-        ...inputProps,
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => {
+        const showError = !!fieldState.error;
+        return (
+          <TextField
+            {...rest}
+            name={field.name}
+            value={field.value ?? ''}
+            type="tel"
+            fullWidth={rest.fullWidth ?? true}
+            error={showError}
+            helperText={showError ? fieldState.error?.message : (hint ?? ' ')}
+            onBlur={field.onBlur}
+            onChange={(event) => field.onChange(onlyDigits(event.target.value))}
+            inputProps={{
+              inputMode: 'numeric',
+              pattern: '[0-9]*',
+              maxLength: 15,
+              ...inputProps,
+            }}
+          />
+        );
       }}
     />
   );

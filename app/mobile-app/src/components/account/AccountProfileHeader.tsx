@@ -15,7 +15,7 @@ export interface AccountProfileHeaderProps {
   onLogout: () => void;
 }
 
-/** Avatar (with change-photo overlay), name, bio, role/status chips and the
+/** Avatar (with change-photo overlay), name, bio, role chips and the
  * Edit/Logout actions — RN twin of mWeb's <AccountProfileHeader/>. */
 export function AccountProfileHeader({
   me,
@@ -103,18 +103,6 @@ export function AccountProfileHeader({
               </Text>
             </XStack>
           ))}
-          {me.status ? (
-            <XStack
-              borderRadius={999}
-              paddingHorizontal={10}
-              paddingVertical={3}
-              backgroundColor="$surface"
-            >
-              <Text fontSize={11} fontWeight="800" color="$color">
-                {me.status}
-              </Text>
-            </XStack>
-          ) : null}
         </XStack>
       </YStack>
 

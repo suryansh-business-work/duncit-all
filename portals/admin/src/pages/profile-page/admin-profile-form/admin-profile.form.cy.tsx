@@ -13,19 +13,18 @@ const validProfile = {
   profile_photo: 'https://cdn.example.com/admin.jpg',
 };
 
+const messagesOf = (input: unknown) => {
+  const result = adminProfileSchema.safeParse(input);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('adminProfileSchema', () => {
-  it('rejects invalid names', async () => {
-    const error = await adminProfileSchema
-      .validate({ ...validProfile, first_name: 'Admin!' }, { abortEarly: false })
-      .catch((validationError) => validationError);
-    expect(error.errors.join(' ')).toMatch(/first name/i);
+  it('rejects invalid names', () => {
+    expect(messagesOf({ ...validProfile, first_name: 'Admin!' })).toMatch(/first name/i);
   });
 
-  it('rejects invalid profile photo URLs', async () => {
-    const error = await adminProfileSchema
-      .validate({ ...validProfile, profile_photo: 'not-a-url' }, { abortEarly: false })
-      .catch((validationError) => validationError);
-    expect(error.errors.join(' ')).toMatch(/profile photo/i);
+  it('rejects invalid profile photo URLs', () => {
+    expect(messagesOf({ ...validProfile, profile_photo: 'not-a-url' })).toMatch(/profile photo/i);
   });
 });
 

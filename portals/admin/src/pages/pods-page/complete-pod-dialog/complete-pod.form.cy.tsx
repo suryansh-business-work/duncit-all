@@ -11,28 +11,27 @@ const valid = (over: Partial<CompletePodValues> = {}): CompletePodValues => ({
   ...over,
 });
 
-const errorsOf = async (hasVenue: boolean, values: CompletePodValues) =>
-  buildCompleteSchema(hasVenue)
-    .validate(values, { abortEarly: false })
-    .then(() => [] as string[])
-    .catch((e) => e.errors as string[]);
+const errorsOf = (hasVenue: boolean, values: CompletePodValues): string[] => {
+  const result = buildCompleteSchema(hasVenue).safeParse(values);
+  return result.success ? [] : result.error.issues.map((issue) => issue.message);
+};
 
 describe('buildCompleteSchema', () => {
-  it('accepts a complete venue submission', async () => {
-    expect(await errorsOf(true, valid())).toEqual([]);
+  it('accepts a complete venue submission', () => {
+    expect(errorsOf(true, valid())).toEqual([]);
   });
 
-  it('requires party media regardless of venue', async () => {
-    expect((await errorsOf(true, valid({ media_text: '' }))).join(' ')).toMatch(/party/i);
-    expect((await errorsOf(false, valid({ media_text: '' }))).join(' ')).toMatch(/party/i);
+  it('requires party media regardless of venue', () => {
+    expect(errorsOf(true, valid({ media_text: '' })).join(' ')).toMatch(/party/i);
+    expect(errorsOf(false, valid({ media_text: '' })).join(' ')).toMatch(/party/i);
   });
 
-  it('requires a bill amount + upload only for venue pods', async () => {
-    const errs = (await errorsOf(true, valid({ venue_bill_amount: 0, bill_url: '' }))).join(' ');
+  it('requires a bill amount + upload only for venue pods', () => {
+    const errs = errorsOf(true, valid({ venue_bill_amount: 0, bill_url: '' })).join(' ');
     expect(errs).toMatch(/venue bill/i);
     expect(errs).toMatch(/bill upload/i);
     // Virtual pod (no venue): no bill needed.
-    expect(await errorsOf(false, valid({ venue_bill_amount: 0, bill_url: '' }))).toEqual([]);
+    expect(errorsOf(false, valid({ venue_bill_amount: 0, bill_url: '' }))).toEqual([]);
   });
 });
 

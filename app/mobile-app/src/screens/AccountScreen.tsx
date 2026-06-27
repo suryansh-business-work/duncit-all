@@ -79,7 +79,7 @@ export function AccountScreen() {
               <AccountInfoRow
                 icon="location-city"
                 label="Location"
-                value={[me.city, me.zone, me.country].filter(Boolean).join(' · ') || '—'}
+                value={[me.city, me.state, me.country].filter(Boolean).join(' · ') || '—'}
               />
               <AccountInfoRow
                 icon="cake"

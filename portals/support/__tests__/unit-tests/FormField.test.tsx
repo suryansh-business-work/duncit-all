@@ -1,18 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen, fireEvent, waitFor } from '@testing-library/react';
-import { Form, Formik } from 'formik';
-import * as yup from 'yup';
-import FormField, { Field } from '../../src/forms/FormField';
+import { FormProvider, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
+import FormField from '../../src/forms/FormField';
 
-const schema = yup.object({ email: yup.string().email('Enter a valid email').required('Email is required') });
+const schema = z.object({
+  email: z.string().min(1, 'Email is required').email('Enter a valid email'),
+});
 
-function Harness({ hint, fullWidth }: { hint?: string; fullWidth?: boolean }) {
+function Harness({ hint, fullWidth }: Readonly<{ hint?: string; fullWidth?: boolean }>) {
+  const methods = useForm({
+    defaultValues: { email: '' },
+    resolver: zodResolver(schema),
+    mode: 'all',
+  });
   return (
-    <Formik initialValues={{ email: '' }} validationSchema={schema} onSubmit={() => undefined}>
-      <Form>
+    <FormProvider {...methods}>
+      <form>
         <FormField name="email" label="Email" hint={hint} fullWidth={fullWidth} />
-      </Form>
-    </Formik>
+      </form>
+    </FormProvider>
   );
 }
 
@@ -46,9 +54,5 @@ describe('FormField', () => {
   it('respects an explicit fullWidth={false}', () => {
     const { container } = render(<Harness fullWidth={false} />);
     expect(container.querySelector('.MuiFormControl-fullWidth')).toBeNull();
-  });
-
-  it('re-exports Formik Field', () => {
-    expect(Field).toBeTruthy();
   });
 });

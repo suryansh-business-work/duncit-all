@@ -22,3 +22,14 @@ export const PublicAppSettingsDocument = gql(`
     }
   }
 `);
+
+/** Public feature flags (e.g. `is_product_visible`) seeded server-side and read
+ * by every client to gate optional surfaces. Mirrors mWeb's useFeatureFlag. */
+export const PublicFeatureFlagsDocument = gql(`
+  query MobilePublicFeatureFlags {
+    publicFeatureFlags {
+      key
+      enabled
+    }
+  }
+`);

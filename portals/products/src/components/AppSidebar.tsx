@@ -1,13 +1,20 @@
 import { Box, List, ListItemButton, ListItemIcon, ListItemText, Skeleton, Stack, Typography } from '@mui/material';
 import { NavLink, useLocation } from 'react-router-dom';
 import { appConfig } from '../config/app-config';
+import { isProductNavItem } from '../config/product-nav';
 import { useBranding } from '../lib/useBranding';
+import { useFeatureFlag } from '../hooks/useFeatureFlag';
 import AppIcon from './AppIcon';
 import { HEADER_HEIGHT } from './AppShell';
 
 export default function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () => void }>) {
   const location = useLocation();
   const { logoUrl, appName, loading } = useBranding();
+  const showProducts = useFeatureFlag('is_product_visible');
+  // With products gated off, drop the product-specific nav entries.
+  const navItems = showProducts
+    ? appConfig.nav
+    : appConfig.nav.filter((item) => !isProductNavItem(item.to));
   return (
     <Stack sx={{ height: '100%' }}>
       <Box
@@ -36,7 +43,7 @@ export default function AppSidebar({ onNavigate }: Readonly<{ onNavigate?: () =>
         </Typography>
       </Box>
       <List sx={{ px: 1, py: 1, flex: 1 }}>
-        {appConfig.nav.map((item) => {
+        {navItems.map((item) => {
           const selected = location.pathname === item.to;
           return (
             <ListItemButton

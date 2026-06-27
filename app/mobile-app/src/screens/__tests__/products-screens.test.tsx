@@ -16,6 +16,16 @@ jest.mock('@react-navigation/native', () => ({
 jest.mock('@/hooks/useStudioDashboards', () => ({ useEcommDashboard: jest.fn() }));
 const mockedUse = useEcommDashboard as jest.Mock;
 
+const mockFeatureFlag = jest.fn().mockReturnValue(true);
+jest.mock('@/hooks/useFeatureFlag', () => ({
+  useFeatureFlag: (key: string, fallback?: boolean) => mockFeatureFlag(key, fallback),
+}));
+
+beforeEach(() => {
+  mockFeatureFlag.mockReturnValue(true);
+  mockedUse.mockReturnValue({ isLoading: false, products: [] });
+});
+
 describe('ProductsManageScreen (ecomm dashboard)', () => {
   it('shows catalogue stats and the stock chart', () => {
     mockedUse.mockReturnValue({
@@ -38,5 +48,12 @@ describe('ProductsManageScreen (ecomm dashboard)', () => {
     renderWithProviders(<ProductsManageScreen />);
     expect(screen.getByTestId('ecomm-dashboard-loading')).toBeOnTheScreen();
     expect(screen.getByTestId('ecomm-dashboard-empty')).toBeOnTheScreen();
+  });
+
+  it('shows an unavailable placeholder when products are gated off', () => {
+    mockFeatureFlag.mockReturnValue(false);
+    renderWithProviders(<ProductsManageScreen />);
+    expect(screen.getByTestId('products-unavailable')).toBeOnTheScreen();
+    expect(screen.queryByTestId('ecomm-stock-chart')).toBeNull();
   });
 });

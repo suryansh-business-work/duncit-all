@@ -17,6 +17,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { POD_DETAIL } from './queries';
 import PodCouponsSection from './PodCouponsSection';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 const fmtDateTime = (iso?: string | null) =>
   iso ? new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : '—';
@@ -37,6 +38,7 @@ function Row({ label, value }: Readonly<{ label: string; value: React.ReactNode 
 export default function PodDetailsPage() {
   const { id = '' } = useParams();
   const navigate = useNavigate();
+  const showProducts = useFeatureFlag('is_product_visible');
   const { data, loading, error } = useQuery(POD_DETAIL, {
     variables: { id },
     skip: !id,
@@ -101,7 +103,9 @@ export default function PodDetailsPage() {
             <Row label="Spots left" value={Math.max((pod.no_of_spots ?? 0) - attendees, 0)} />
             <Row label="Views" value={pod.pod_hits ?? 0} />
             <Row label="Likes · Comments" value={`${pod.like_count ?? 0} · ${pod.comment_count ?? 0}`} />
-            <Row label="Products" value={pod.products_enabled ? 'Enabled' : 'Off'} />
+            {showProducts && (
+              <Row label="Products" value={pod.products_enabled ? 'Enabled' : 'Off'} />
+            )}
             {pod.pod_description && (
               <Box sx={{ mt: 1.5 }}>
                 <Typography variant="caption" color="text.secondary">

@@ -36,6 +36,7 @@ const sz = { fontSize: 'small' as const };
 export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
   const navigate = useNavigate();
   const showPodPlans = useFeatureFlag('pod_plans_section');
+  const showProducts = useFeatureFlag('is_product_visible');
   const { mode } = useStudioMode();
   const effectiveMode = resolveMode(mode, roles);
 
@@ -66,7 +67,9 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
     return { items: studio({ label: 'Your Venues', icon: <StorefrontIcon {...sz} />, onClick: go('/venues/manage') }, '/venues/manage') };
   }
   if (effectiveMode === 'ECOMM') {
-    return { items: studio({ label: 'Your Products', icon: <Inventory2Icon {...sz} />, onClick: go('/products/manage') }, '/products/manage') };
+    const items = studio({ label: 'Your Products', icon: <Inventory2Icon {...sz} />, onClick: go('/products/manage') }, '/products/manage');
+    // With products gated off, hide the product-management row from the seller studio.
+    return { items: showProducts ? items : items.filter((item) => item.label !== 'Your Products') };
   }
 
   const items: MenuItem[] = [

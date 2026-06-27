@@ -2,12 +2,25 @@ import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { SimpleBarChart } from '@/components/SimpleBarChart';
 import { StackScreen } from '@/components/StackScreen';
+import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { useEcommDashboard } from '@/hooks/useStudioDashboards';
 import { StatTile } from '@/screens/VenueManageScreen';
 
 /** ecomm studio dashboard — catalogue stats + stock-by-product chart (B3-1). */
 export function ProductsManageScreen() {
-  const { products, isLoading } = useEcommDashboard();
+  const showProducts = useFeatureFlag('is_product_visible');
+  const { products, isLoading } = useEcommDashboard(showProducts);
+  if (!showProducts) {
+    return (
+      <StackScreen header title="ecomm Studio" testID="products-manage-screen">
+        <YStack padding={16}>
+          <Text testID="products-unavailable" fontSize={13} color="$muted">
+            Product features are not available right now.
+          </Text>
+        </YStack>
+      </StackScreen>
+    );
+  }
   const totalStock = products.reduce((sum, p) => sum + (p.available_count ?? 0), 0);
   const avgPrice = products.length
     ? Math.round(products.reduce((sum, p) => sum + (p.unit_cost ?? 0), 0) / products.length)

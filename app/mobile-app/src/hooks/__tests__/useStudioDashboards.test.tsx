@@ -81,4 +81,11 @@ describe('useEcommDashboard', () => {
     await waitFor(() => expect(bad.result.current.isLoading).toBe(false));
     expect(bad.result.current.products).toEqual([]);
   });
+
+  it('skips the fetch entirely when disabled', () => {
+    const { result } = renderHook(() => useEcommDashboard(false));
+    expect(mockRequest).not.toHaveBeenCalled();
+    expect(result.current.isLoading).toBe(false);
+    expect(result.current.products).toEqual([]);
+  });
 });

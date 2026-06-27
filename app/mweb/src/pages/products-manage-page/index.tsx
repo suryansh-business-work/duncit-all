@@ -2,6 +2,7 @@ import { gql, useQuery } from '@apollo/client';
 import { Alert, Box, Card, CardContent, CircularProgress, Stack, Typography } from '@mui/material';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import SimpleBarChart from '../../components/SimpleBarChart';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 const AVAILABLE_PRODUCTS = gql`
   query EcommDashboardProducts {
@@ -17,7 +18,18 @@ const AVAILABLE_PRODUCTS = gql`
 /** ecomm studio dashboard — catalogue size, stock and price stats + a
  * stock-by-product chart (B3-1). */
 export default function ProductsManagePage() {
-  const { data, loading, error } = useQuery(AVAILABLE_PRODUCTS, { fetchPolicy: 'cache-and-network' });
+  const showProducts = useFeatureFlag('is_product_visible');
+  const { data, loading, error } = useQuery(AVAILABLE_PRODUCTS, {
+    fetchPolicy: 'cache-and-network',
+    skip: !showProducts,
+  });
+  if (!showProducts) {
+    return (
+      <Stack sx={{ maxWidth: 760, mx: 'auto', width: '100%', py: 4 }}>
+        <Alert severity="info">Product features are not available right now.</Alert>
+      </Stack>
+    );
+  }
   const products: any[] = data?.availablePodProducts ?? [];
   const totalStock = products.reduce((sum, p) => sum + (p.available_count ?? 0), 0);
   const avgPrice = products.length

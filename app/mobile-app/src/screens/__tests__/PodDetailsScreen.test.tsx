@@ -37,6 +37,13 @@ const mockBackout = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/hooks/usePodHistory', () => ({
   usePodBackout: () => ({ backout: mockBackout, busy: false }),
 }));
+
+// Products gated on by default so the Pod Shop renders; the off path has its
+// own test below.
+const mockFeatureFlag = jest.fn().mockReturnValue(true);
+jest.mock('@/hooks/useFeatureFlag', () => ({
+  useFeatureFlag: (key: string, fallback?: boolean) => mockFeatureFlag(key, fallback),
+}));
 jest.mock('@/hooks/usePolicies', () => ({
   usePolicy: () => ({ data: null, isLoading: false }),
 }));
@@ -105,6 +112,7 @@ beforeEach(() => {
   mockGoBack.mockClear();
   mockNavigate.mockClear();
   mockBackout.mockClear();
+  mockFeatureFlag.mockReturnValue(true);
   mockSaved = false;
   mockLiked = false;
   mockLikeCount = 3;
@@ -227,6 +235,30 @@ describe('PodDetailsScreen', () => {
     // Club details card (with name) renders instead of just the View-club button.
     fireEvent.press(screen.getByTestId('pod-expand-all'));
     expect(screen.getByText('Jazz Club')).toBeOnTheScreen();
+  });
+
+  it('hides the Pod Shop when products are gated off, even with products', () => {
+    mockFeatureFlag.mockReturnValue(false);
+    mockedPod.mockReturnValue({
+      ...podData,
+      pod: {
+        ...podData.pod,
+        product_requests: [
+          {
+            product_id: 'pr1',
+            product_name: 'Drum sticks',
+            available_count: 5,
+            unit_cost: 200,
+            image_url: '',
+            images: [],
+          },
+        ],
+      },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    expect(screen.queryByTestId('pod-shop')).toBeNull();
   });
 
   it('toggles like and opens the comments sheet', () => {

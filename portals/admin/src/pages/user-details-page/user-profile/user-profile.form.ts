@@ -9,6 +9,15 @@ export const userProfileSchema: yup.ObjectSchema<EditForm> = yup.object({
   phone_extension: validationRules.phoneExtension('Phone code'),
   phone_number: validationRules.phoneNumber('Phone number'),
   city: validationRules.optionalText('City', 80),
+  state: validationRules.optionalText('State', 80),
+  pincode: yup
+    .string()
+    .trim()
+    .matches(/^[0-9A-Za-z -]{3,12}$/, {
+      message: 'Pincode must be 3–12 letters, digits, spaces or hyphens',
+      excludeEmptyString: true,
+    })
+    .default(''),
   zone: validationRules.optionalText('Zone', 80),
   assigned_city: validationRules.optionalText('Assigned city', 80),
   assigned_zones: validationRules.optionalText('Assigned zones', 500),
@@ -28,6 +37,8 @@ export function toUpdateUserInput(values: EditForm) {
     phone_extension: cast.phone_extension,
     phone_number: cast.phone_number,
     city: cast.city || undefined,
+    state: cast.state || undefined,
+    pincode: cast.pincode || undefined,
     zone: cast.zone || undefined,
     assigned_city: cast.assigned_city || undefined,
     assigned_zones: cast.assigned_zones

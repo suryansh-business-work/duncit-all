@@ -12,6 +12,7 @@ import { Form, Formik, type FormikErrors, type FormikTouched } from 'formik';
 import PhoneExtensionField from '../../components/PhoneExtensionField';
 import SaveIcon from '@mui/icons-material/Save';
 import MediaPickerField from '../../components/MediaPickerField';
+import AddressFields from './AddressFields';
 import type { EditForm } from './queries';
 import { userProfileSchema } from './user-profile.form';
 
@@ -31,6 +32,17 @@ function showError(
 ) {
   const value = values[key];
   return Boolean(errors[key] && (submitCount > 0 || touched[key] || String(value ?? '').length > 0));
+}
+
+function fieldError(
+  values: EditForm,
+  errors: FormikErrors<EditForm>,
+  touched: FormikTouched<EditForm>,
+  submitCount: number,
+  key: keyof EditForm
+) {
+  const error = showError(values, errors, touched, submitCount, key);
+  return { error, helperText: error ? (errors[key] as string) : ' ' };
 }
 
 export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Props>) {
@@ -75,9 +87,17 @@ export default function ProfileForm({ form, busy, opError, onSave }: Readonly<Pr
               <Grid item xs={8} sm={9}>
                 <TextField label="Phone number" name="phone_number" value={values.phone_number} onChange={handleChange} onBlur={handleBlur} error={showError(values, errors, touched, submitCount, 'phone_number')} helperText={showError(values, errors, touched, submitCount, 'phone_number') ? errors.phone_number : ' '} fullWidth />
               </Grid>
-              <Grid item xs={12} sm={6}>
-                <TextField label="City" name="city" value={values.city} onChange={handleChange} onBlur={handleBlur} error={showError(values, errors, touched, submitCount, 'city')} helperText={showError(values, errors, touched, submitCount, 'city') ? errors.city : ' '} fullWidth />
-              </Grid>
+              <AddressFields
+                state={values.state}
+                city={values.city}
+                pincode={values.pincode}
+                stateError={fieldError(values, errors, touched, submitCount, 'state')}
+                cityError={fieldError(values, errors, touched, submitCount, 'city')}
+                pincodeError={fieldError(values, errors, touched, submitCount, 'pincode')}
+                setFieldValue={(field, value) => {
+                  setFieldValue(field, value);
+                }}
+              />
               <Grid item xs={12} sm={6}>
                 <TextField label="Zone" name="zone" value={values.zone} onChange={handleChange} onBlur={handleBlur} error={showError(values, errors, touched, submitCount, 'zone')} helperText={showError(values, errors, touched, submitCount, 'zone') ? errors.zone : ' '} fullWidth />
               </Grid>

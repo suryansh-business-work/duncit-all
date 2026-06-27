@@ -1,19 +1,15 @@
 import { useState } from 'react';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  Paper,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { useMutation } from '@apollo/client';
+import { Alert, Box, Button, Card, CardContent, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
-import { format } from 'date-fns';
 import AdjustHealthDialog from './AdjustHealthDialog';
-import type { AdminHealthScore } from './queries';
+import AdjustmentRow from './AdjustmentRow';
+import { useConfirm } from '../../../components/useConfirm';
+import {
+  DELETE_ADJUSTMENT,
+  type AdminHealthAdjustment,
+  type AdminHealthScore,
+} from './queries';
 
 const BAND_COLOR: Record<AdminHealthScore['band'], 'error' | 'warning' | 'success'> = {
   RED: 'error',
@@ -34,6 +30,26 @@ interface Props {
 
 export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
   const [open, setOpen] = useState(false);
+  const [editing, setEditing] = useState<AdminHealthAdjustment | null>(null);
+  const [deleteAdjustment, { loading: deleting }] = useMutation(DELETE_ADJUSTMENT);
+  const confirm = useConfirm();
+
+  const closeDialog = () => {
+    setOpen(false);
+    setEditing(null);
+  };
+
+  const onDelete = async (adjustment: AdminHealthAdjustment) => {
+    const ok = await confirm({
+      title: 'Delete adjustment',
+      message: 'This removes the adjustment and recomputes the score. This cannot be undone.',
+      confirmLabel: 'Delete',
+      destructive: true,
+    });
+    if (!ok) return;
+    const { data } = await deleteAdjustment({ variables: { id: adjustment.id } });
+    if (data?.deleteAdjustment) onUpdated(data.deleteAdjustment);
+  };
 
   return (
     <Card variant="outlined">
@@ -72,7 +88,7 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
                 Base: {score.base_score} · Admin adjustment: {score.delta_sum >= 0 ? `+${score.delta_sum}` : score.delta_sum} · Final: {score.total_score}/100
               </Typography>
             </Box>
-            <Button variant="contained" size="small" startIcon={<EditIcon />} onClick={() => setOpen(true)}>
+            <Button variant="contained" size="small" startIcon={<EditIcon />} onClick={() => { setEditing(null); setOpen(true); }}>
               Adjust
             </Button>
           </Stack>
@@ -85,23 +101,17 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
               <Alert severity="info" sx={{ mt: 0.5 }}>No admin adjustments yet. Default score is {score.base_score}.</Alert>
             ) : (
               <Stack spacing={0.75} sx={{ mt: 0.5 }}>
-                {score.adjustments.map((a) => {
-                  const sign = a.delta > 0 ? `+${a.delta}` : `${a.delta}`;
-                  const color: 'success' | 'error' = a.delta > 0 ? 'success' : 'error';
-                  return (
-                    <Paper key={a.id} variant="outlined" sx={{ p: 1 }}>
-                      <Stack direction="row" alignItems="center" spacing={1}>
-                        <Chip size="small" color={color} label={sign} sx={{ fontWeight: 900 }} />
-                        <Box sx={{ flex: 1, minWidth: 0 }}>
-                          <Typography variant="body2">{a.remark}</Typography>
-                          <Typography variant="caption" color="text.secondary">
-                            {a.created_by_name} · {format(new Date(a.created_at), 'dd MMM yyyy, hh:mm a')}
-                          </Typography>
-                        </Box>
-                      </Stack>
-                    </Paper>
-                  );
-                })}
+                {score.adjustments.map((a) => (
+                  <AdjustmentRow
+                    key={a.id}
+                    adjustment={a}
+                    busy={deleting}
+                    onEdit={(adj) => { setEditing(adj); setOpen(true); }}
+                    onDelete={(adj) => {
+                      onDelete(adj).catch(() => undefined);
+                    }}
+                  />
+                ))}
               </Stack>
             )}
           </Box>
@@ -113,10 +123,11 @@ export default function HealthScoreCard({ score, onUpdated }: Readonly<Props>) {
         subjectId={score.subject_id}
         subjectLabel={score.subject_label}
         currentScore={score.total_score}
-        onClose={() => setOpen(false)}
+        editing={editing}
+        onClose={closeDialog}
         onSaved={(next) => {
           onUpdated(next);
-          setOpen(false);
+          closeDialog();
         }}
       />
     </Card>

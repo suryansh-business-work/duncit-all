@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import {
   Alert,
@@ -50,6 +50,22 @@ export default function LocationFormDialog({
 }: Readonly<Props>) {
   const [aiError, setAiError] = useState<string | null>(null);
   const [fillAreas, { loading: fillingAreas }] = useMutation(AI_FILL_LOCATION_AREAS);
+  // Scroll the freshly-added Area row into view so the user doesn't have to hunt
+  // for it at the bottom of the dialog (B20).
+  const lastZoneRef = useRef<HTMLDivElement | null>(null);
+  const [justAdded, setJustAdded] = useState(false);
+
+  const handleAddZone = () => {
+    addZone();
+    setJustAdded(true);
+  };
+
+  useEffect(() => {
+    if (justAdded) {
+      lastZoneRef.current?.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      setJustAdded(false);
+    }
+  }, [form.zones.length, justAdded]);
 
   const fillAreasWithAi = async () => {
     setAiError(null);
@@ -130,7 +146,7 @@ export default function LocationFormDialog({
                 >
                   {fillingAreas ? 'Filling…' : 'Fill with AI'}
                 </Button>
-                <Button size="small" startIcon={<AddIcon />} onClick={addZone}>
+                <Button size="small" startIcon={<AddIcon />} onClick={handleAddZone}>
                   Add Area
                 </Button>
               </Stack>
@@ -140,6 +156,7 @@ export default function LocationFormDialog({
               {form.zones.map((z, i) => (
                 <Stack
                   key={i}
+                  ref={i === form.zones.length - 1 ? lastZoneRef : undefined}
                   direction={{ xs: 'column', sm: 'row' }}
                   spacing={1}
                   alignItems={{ xs: 'stretch', sm: 'center' }}

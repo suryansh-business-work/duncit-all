@@ -8,6 +8,8 @@ const valid = {
   phone_extension: '+91',
   phone_number: '9876543210',
   city: 'Bengaluru',
+  state: 'Karnataka',
+  pincode: '560102',
   zone: 'HSR',
   assigned_city: '',
   assigned_zones: '',
@@ -42,6 +44,22 @@ describe('userProfileSchema', () => {
     const parsed = await userProfileSchema.validate({ ...valid, email: '' }, { abortEarly: false });
     expect(parsed.email).toBe('');
   });
+
+  it('accepts state and pincode left blank', async () => {
+    const parsed = await userProfileSchema.validate(
+      { ...valid, state: '', pincode: '' },
+      { abortEarly: false }
+    );
+    expect(parsed.state).toBe('');
+    expect(parsed.pincode).toBe('');
+  });
+
+  it('rejects a pincode with invalid characters', async () => {
+    const error = await userProfileSchema
+      .validate({ ...valid, pincode: '!!' }, { abortEarly: false })
+      .catch((e) => e);
+    expect(error.errors.join(' ')).toMatch(/pincode/i);
+  });
 });
 
 describe('toUpdateUserInput', () => {
@@ -60,5 +78,14 @@ describe('toUpdateUserInput', () => {
   it('includes email when provided', () => {
     const input = toUpdateUserInput(valid);
     expect(input.email).toBe('jane@example.com');
+  });
+
+  it('emits state and pincode when set, omits them when blank', () => {
+    const filled = toUpdateUserInput(valid);
+    expect(filled.state).toBe('Karnataka');
+    expect(filled.pincode).toBe('560102');
+    const blank = toUpdateUserInput({ ...valid, state: '', pincode: '' });
+    expect(blank.state).toBeUndefined();
+    expect(blank.pincode).toBeUndefined();
   });
 });

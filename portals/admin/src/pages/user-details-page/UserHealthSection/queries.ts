@@ -40,6 +40,24 @@ export const ADJUST_HEALTH = gql`
   ${HEALTH_FIELDS}
 `;
 
+export const EDIT_ADJUSTMENT = gql`
+  mutation EditAdjustment($input: EditAdjustmentInput!) {
+    editAdjustment(input: $input) {
+      ...AdminHealthFields
+    }
+  }
+  ${HEALTH_FIELDS}
+`;
+
+export const DELETE_ADJUSTMENT = gql`
+  mutation DeleteAdjustment($id: ID!) {
+    deleteAdjustment(id: $id) {
+      ...AdminHealthFields
+    }
+  }
+  ${HEALTH_FIELDS}
+`;
+
 export interface AdminHealthAdjustment {
   id: string;
   delta: number;

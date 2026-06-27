@@ -67,12 +67,12 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
           <Typography variant="body2" color="text.secondary">Filter user outreach by type, status, or notes.</Typography>
         </Stack>
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5}>
-          <TextField select size="small" label="Type" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} sx={{ minWidth: 130 }}>
+          <TextField select size="small" label="Type" value={typeFilter} onChange={(event) => setTypeFilter(event.target.value)} sx={{ minWidth: 130 }} InputLabelProps={{ shrink: true }} SelectProps={{ displayEmpty: true }}>
             <MenuItem value="">All</MenuItem>
             <MenuItem value="CALL">Call</MenuItem>
             <MenuItem value="EMAIL">Email</MenuItem>
           </TextField>
-          <TextField select size="small" label="Status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} sx={{ minWidth: 150 }}>
+          <TextField select size="small" label="Status" value={statusFilter} onChange={(event) => setStatusFilter(event.target.value)} sx={{ minWidth: 150 }} InputLabelProps={{ shrink: true }} SelectProps={{ displayEmpty: true }}>
             <MenuItem value="">All</MenuItem>
             {statuses.map((status) => <MenuItem key={status} value={status}>{status}</MenuItem>)}
           </TextField>

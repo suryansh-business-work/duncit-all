@@ -1,22 +1,19 @@
 import { useState } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
 import {
-  Button,
   Card,
   CardContent,
-  Chip,
   CircularProgress,
-  Link,
   Stack,
   Table,
   TableBody,
   TableCell,
   TableHead,
   TableRow,
-  TextField,
   Typography,
 } from '@mui/material';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
+import VerificationRow, { type VerificationItem } from './VerificationRow';
 
 const USER_VERIFICATIONS = gql`
   query AdminUserVerifications($user_id: ID!) {
@@ -24,6 +21,14 @@ const USER_VERIFICATIONS = gql`
       type
       status
       document_url
+      address {
+        line1
+        line2
+        city
+        state
+        pincode
+        country
+      }
       reject_reason
     }
   }
@@ -48,25 +53,8 @@ const REVIEW = gql`
   }
 `;
 
-const LABELS: Record<string, string> = {
-  IDENTITY: 'Identity',
-  ADDRESS: 'Address',
-  PHONE: 'Phone',
-  EMAIL: 'Email',
-  BANK_ACCOUNT: 'Bank Account',
-  POLICE: 'Police',
-  SELFIE: 'Selfie',
-};
-
-const STATUS_COLOR: Record<string, 'default' | 'warning' | 'success' | 'error'> = {
-  NOT_SUBMITTED: 'default',
-  PENDING: 'warning',
-  APPROVED: 'success',
-  REJECTED: 'error',
-};
-
-/** Admin review of a user's 7 verification types — approve or reject each with
- * an optional reason (B2-#9). */
+/** Admin review of a user's 3 verification types — Identity (document) and
+ * Address (manual fields) are approve/reject; Email is verified by the app. */
 export default function UserVerificationsSection({ userId }: Readonly<{ userId: string }>) {
   const { data, loading, refetch } = useQuery(USER_VERIFICATIONS, {
     variables: { user_id: userId },
@@ -84,7 +72,7 @@ export default function UserVerificationsSection({ userId }: Readonly<{ userId: 
   };
 
   if (loading && !data) return <CircularProgress />;
-  const verifications = data?.userVerifications ?? [];
+  const verifications: VerificationItem[] = data?.userVerifications ?? [];
 
   return (
     <Card>
@@ -98,62 +86,22 @@ export default function UserVerificationsSection({ userId }: Readonly<{ userId: 
             <TableRow>
               <TableCell>Type</TableCell>
               <TableCell>Status</TableCell>
-              <TableCell>Document</TableCell>
+              <TableCell>Details</TableCell>
               <TableCell align="right">Review</TableCell>
             </TableRow>
           </TableHead>
           <TableBody>
-            {verifications.map((item: any) => (
-              <TableRow key={item.type}>
-                <TableCell>{LABELS[item.type] ?? item.type}</TableCell>
-                <TableCell>
-                  <Chip size="small" label={item.status} color={STATUS_COLOR[item.status]} />
-                </TableCell>
-                <TableCell>
-                  {item.document_url ? (
-                    <Link href={item.document_url} target="_blank" rel="noopener">
-                      View
-                    </Link>
-                  ) : (
-                    <Typography variant="caption" color="text.secondary">
-                      —
-                    </Typography>
-                  )}
-                </TableCell>
-                <TableCell align="right">
-                  <Stack direction="row" spacing={1} justifyContent="flex-end" alignItems="center">
-                    <TextField
-                      size="small"
-                      placeholder="Reject reason"
-                      value={reasons[item.type] ?? ''}
-                      onChange={(e) => setReasons((r) => ({ ...r, [item.type]: e.target.value }))}
-                      sx={{ width: 160 }}
-                    />
-                    <Button
-                      size="small"
-                      color="success"
-                      variant="outlined"
-                      disabled={saving}
-                      onClick={() => {
-                        act(item.type, 'APPROVED').catch(() => undefined);
-                      }}
-                    >
-                      Approve
-                    </Button>
-                    <Button
-                      size="small"
-                      color="error"
-                      variant="outlined"
-                      disabled={saving}
-                      onClick={() => {
-                        act(item.type, 'REJECTED').catch(() => undefined);
-                      }}
-                    >
-                      Reject
-                    </Button>
-                  </Stack>
-                </TableCell>
-              </TableRow>
+            {verifications.map((item) => (
+              <VerificationRow
+                key={item.type}
+                item={item}
+                saving={saving}
+                reason={reasons[item.type] ?? ''}
+                onReasonChange={(value) => setReasons((r) => ({ ...r, [item.type]: value }))}
+                onAct={(status) => {
+                  act(item.type, status).catch(() => undefined);
+                }}
+              />
             ))}
           </TableBody>
         </Table>

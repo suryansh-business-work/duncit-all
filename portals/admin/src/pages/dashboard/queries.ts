@@ -37,32 +37,6 @@ export const TOTALS = gql`
       hosts_total
       support_tickets_open
       support_tickets_total
-      support_tickets_by_status {
-        status
-        count
-      }
-    }
-  }
-`;
-
-export const ACTIVE = gql`
-  query DashboardActive(
-    $from: String!
-    $to: String!
-    $granularity: AnalyticsGranularity
-    $slug: String
-  ) {
-    activeUserStats(from: $from, to: $to, granularity: $granularity, super_category_slug: $slug) {
-      granularity
-      from
-      to
-      total_unique_devices
-      total_unique_users
-      buckets {
-        bucket
-        unique_devices
-        unique_users
-      }
     }
   }
 `;
@@ -80,13 +54,18 @@ export const SUMMARY_TILES: Array<{
   label: string;
   icon: SvgIconComponent;
   color: string;
+  to?: string;
 }> = [
-  { key: 'users_total', label: 'Users', icon: PeopleAltIcon, color: '#2563eb' },
-  { key: 'pods_total', label: 'Pods', icon: EventAvailableIcon, color: '#7c3aed' },
-  { key: 'clubs_total', label: 'Clubs', icon: GroupsIcon, color: '#0f766e' },
+  { key: 'users_total', label: 'Users', icon: PeopleAltIcon, color: '#2563eb', to: '/users' },
+  { key: 'pods_total', label: 'Pods', icon: EventAvailableIcon, color: '#7c3aed', to: '/pods' },
+  { key: 'clubs_total', label: 'Clubs', icon: GroupsIcon, color: '#0f766e', to: '/clubs' },
   { key: 'venues_total', label: 'Venues', icon: StorefrontIcon, color: '#d97706' },
   { key: 'hosts_total', label: 'Hosts', icon: BadgeIcon, color: '#dc2626' },
-  { key: 'support_tickets_open', label: 'Support Tickets', icon: SupportAgentIcon, color: '#0891b2' },
+  {
+    key: 'support_tickets_open',
+    label: 'Support Tickets',
+    icon: SupportAgentIcon,
+    color: '#0891b2',
+    to: '/support-logs',
+  },
 ];
-
-export const ymd = (d: Date) => d.toISOString().slice(0, 10);

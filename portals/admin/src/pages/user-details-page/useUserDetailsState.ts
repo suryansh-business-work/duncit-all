@@ -41,6 +41,8 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
         phone_extension: user.phone_extension ?? '',
         phone_number: user.phone_number ?? '',
         city: user.city ?? '',
+        state: user.state ?? '',
+        pincode: user.pincode ?? '',
         zone: user.zone ?? '',
         assigned_city: user.assigned_city ?? '',
         assigned_zones: (user.assigned_zones ?? []).join(', '),
@@ -66,6 +68,8 @@ export function useUserDetailsState(user_id: string | undefined, setToast: (m: s
       form.phone_extension !== (user.phone_extension ?? '') ||
       form.phone_number !== (user.phone_number ?? '') ||
       form.city !== (user.city ?? '') ||
+      form.state !== (user.state ?? '') ||
+      form.pincode !== (user.pincode ?? '') ||
       form.zone !== (user.zone ?? '') ||
       form.assigned_city !== (user.assigned_city ?? '') ||
       form.assigned_zones !== (user.assigned_zones ?? []).join(', ') ||

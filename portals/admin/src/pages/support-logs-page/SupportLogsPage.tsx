@@ -70,6 +70,8 @@ export default function SupportLogsPage() {
               value={status}
               onChange={(e) => setStatus(e.target.value)}
               sx={{ minWidth: 200 }}
+              InputLabelProps={{ shrink: true }}
+              SelectProps={{ displayEmpty: true }}
             >
               {STATUSES.map((s) => (
                 <MenuItem key={s || 'all'} value={s}>
@@ -84,6 +86,8 @@ export default function SupportLogsPage() {
               value={category}
               onChange={(e) => setCategory(e.target.value)}
               sx={{ minWidth: 200 }}
+              InputLabelProps={{ shrink: true }}
+              SelectProps={{ displayEmpty: true }}
             >
               <MenuItem value="">All</MenuItem>
               {categories.map((c) => (

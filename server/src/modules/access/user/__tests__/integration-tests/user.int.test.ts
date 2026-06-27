@@ -11,6 +11,8 @@ jest.mock("@services/email/email.service", () => ({
 }));
 
 import { userService } from "../../user.service";
+import { UserModel } from "../../user.model";
+import { RoleModel } from "@modules/access/rbac/rbac.model";
 import { LocationModel } from "@modules/platform/location/location.model";
 import { Types } from "mongoose";
 
@@ -293,6 +295,71 @@ describe("userService integration", () => {
       await expect(
         userService.setMySelectedLocation(userId, new Types.ObjectId().toString()),
       ).rejects.toThrow(/not found/i);
+    });
+  });
+
+  describe("list search by role (B10)", () => {
+    it("matches users by Role name via metadata.role_keys", async () => {
+      await RoleModel.create({ key: "CRM_MANAGER", name: "CRM Manager", is_system: true });
+
+      const res = await userService.register({
+        first_name: "Crm",
+        email: "crm-person@duncit.com",
+        password: "StrongPass123",
+        dob: new Date("1990-01-01").toISOString(),
+      } as any);
+      await UserModel.updateOne(
+        { _id: res.user.user_id },
+        { $set: { "metadata.role_keys": ["USER", "CRM_MANAGER"] } },
+      );
+
+      // Resolvable by the Role's display name...
+      const byName = await userService.list({ search: "CRM Manager" });
+      expect(byName.map((u) => u.user_id)).toContain(res.user.user_id);
+
+      // ...and by the role key itself.
+      const byKey = await userService.list({ search: "CRM_MANAGER" });
+      expect(byKey.map((u) => u.user_id)).toContain(res.user.user_id);
+
+      // The match is driven by the denormalized role_keys cache.
+      const stored = await UserModel.findById(res.user.user_id)
+        .select("metadata.role_keys")
+        .lean();
+      expect((stored as any).metadata.role_keys).toContain("CRM_MANAGER");
+    });
+
+    it("escapes regex special characters in the search term", async () => {
+      await userService.register({
+        first_name: "Regex",
+        email: "regex-test@duncit.com",
+        password: "StrongPass123",
+        dob: new Date("1990-01-01").toISOString(),
+      } as any);
+      // '.*' must be treated literally, not as a wildcard that matches everyone.
+      const res = await userService.list({ search: ".*" });
+      expect(res).toHaveLength(0);
+    });
+  });
+
+  describe("update persists state + pincode (B15)", () => {
+    it("stores and returns profile.state and profile.pincode", async () => {
+      const reg = await userService.register({
+        first_name: "Addr",
+        email: "addr@duncit.com",
+        password: "StrongPass123",
+        dob: new Date("1990-01-01").toISOString(),
+      } as any);
+
+      const updated = await userService.update(reg.user.user_id, {
+        state: "Maharashtra",
+        pincode: "400001",
+      } as any);
+      expect(updated!.state).toBe("Maharashtra");
+      expect(updated!.pincode).toBe("400001");
+
+      const me = await userService.me(reg.user.user_id);
+      expect(me!.state).toBe("Maharashtra");
+      expect(me!.pincode).toBe("400001");
     });
   });
 });

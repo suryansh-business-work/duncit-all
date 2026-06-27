@@ -15,7 +15,12 @@ import {
 } from '@mui/material';
 import RemoveIcon from '@mui/icons-material/Remove';
 import AddIcon from '@mui/icons-material/Add';
-import { ADJUST_HEALTH, type AdminHealthScore } from './queries';
+import {
+  ADJUST_HEALTH,
+  EDIT_ADJUSTMENT,
+  type AdminHealthAdjustment,
+  type AdminHealthScore,
+} from './queries';
 
 interface Props {
   open: boolean;
@@ -23,6 +28,8 @@ interface Props {
   subjectId: string;
   subjectLabel: string;
   currentScore: number;
+  /** When set, the dialog edits this existing adjustment instead of adding one. */
+  editing?: AdminHealthAdjustment | null;
   onClose: () => void;
   onSaved: (next: AdminHealthScore) => void;
 }
@@ -33,6 +40,7 @@ export default function AdjustHealthDialog({
   subjectId,
   subjectLabel,
   currentScore,
+  editing,
   onClose,
   onSaved,
 }: Readonly<Props>) {
@@ -40,19 +48,28 @@ export default function AdjustHealthDialog({
   const [magnitude, setMagnitude] = useState<number>(5);
   const [remark, setRemark] = useState('');
   const [error, setError] = useState<string | null>(null);
-  const [save, { loading }] = useMutation(ADJUST_HEALTH);
+  const [add, { loading: adding }] = useMutation(ADJUST_HEALTH);
+  const [edit, { loading: editingBusy }] = useMutation(EDIT_ADJUSTMENT);
+  const loading = adding || editingBusy;
 
   useEffect(() => {
-    if (open) {
+    if (!open) return;
+    setError(null);
+    if (editing) {
+      setDirection(editing.delta >= 0 ? 'plus' : 'minus');
+      setMagnitude(Math.abs(editing.delta));
+      setRemark(editing.remark ?? '');
+    } else {
       setDirection('plus');
       setMagnitude(5);
       setRemark('');
-      setError(null);
     }
-  }, [open]);
+  }, [open, editing]);
 
   const delta = direction === 'plus' ? Math.abs(magnitude) : -Math.abs(magnitude);
-  const projected = Math.max(0, Math.min(100, currentScore + delta));
+  // In edit mode the current score already includes the old delta — project the swap.
+  const baseline = editing ? currentScore - editing.delta : currentScore;
+  const projected = Math.max(0, Math.min(100, baseline + delta));
 
   const submit = async () => {
     setError(null);
@@ -60,17 +77,17 @@ export default function AdjustHealthDialog({
       setError('Enter an adjustment between 1 and 100.');
       return;
     }
-    if (remark.trim().length < 3) {
-      setError('A remark of at least 3 characters is required.');
-      return;
-    }
     try {
-      const { data } = await save({
-        variables: {
-          input: { subject_type: subjectType, subject_id: subjectId, delta, remark: remark.trim() },
-        },
-      });
-      if (data?.adjustHealth) onSaved(data.adjustHealth);
+      const trimmed = remark.trim();
+      const result = editing
+        ? await edit({ variables: { input: { id: editing.id, delta, remark: trimmed } } })
+        : await add({
+            variables: {
+              input: { subject_type: subjectType, subject_id: subjectId, delta, remark: trimmed },
+            },
+          });
+      const next = editing ? result.data?.editAdjustment : result.data?.adjustHealth;
+      if (next) onSaved(next);
       onClose();
     } catch (e: any) {
       setError(e?.message || 'Could not save adjustment.');
@@ -80,7 +97,7 @@ export default function AdjustHealthDialog({
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ fontWeight: 900 }}>
-        Adjust {subjectType === 'USER' ? 'user' : 'venue'} health
+        {editing ? 'Edit' : 'Adjust'} {subjectType === 'USER' ? 'user' : 'venue'} health
         <Typography variant="caption" color="text.secondary" sx={{ display: 'block' }}>
           {subjectLabel} · current {currentScore}/100
         </Typography>
@@ -113,7 +130,7 @@ export default function AdjustHealthDialog({
           />
 
           <TextField
-            label="Remark (visible to the user)"
+            label="Remark (optional)"
             multiline
             minRows={3}
             value={remark}

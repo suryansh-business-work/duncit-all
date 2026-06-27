@@ -28,5 +28,13 @@ export const accountHealthResolvers = {
       const user = requireRole(ctx, ADMIN_ROLES);
       return accountHealthService.adjust(user.id, args.input);
     },
+    editAdjustment: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const user = requireRole(ctx, ADMIN_ROLES);
+      return accountHealthService.editAdjustment(user.id, args.input);
+    },
+    deleteAdjustment: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return accountHealthService.deleteAdjustment(args.id);
+    },
   },
 };

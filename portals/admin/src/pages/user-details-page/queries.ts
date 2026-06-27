@@ -14,6 +14,8 @@ export const USER = gql`
       is_phone_verified
       country
       city
+      state
+      pincode
       zone
       assigned_city
       assigned_zones
@@ -59,6 +61,8 @@ export const UPDATE_USER = gql`
       phone_number
       phone_extension
       city
+      state
+      pincode
       zone
       bio
       profile_photo
@@ -197,6 +201,8 @@ export interface EditForm {
   phone_extension: string;
   phone_number: string;
   city: string;
+  state: string;
+  pincode: string;
   zone: string;
   assigned_city: string;
   assigned_zones: string;

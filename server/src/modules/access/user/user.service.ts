@@ -39,11 +39,15 @@ import { PodModel } from '@modules/pods/pod/pod.model';
 import { ClubModel } from '@modules/pods/club/club.model';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { UserContactActionModel } from './userContactAction.model';
+import { rbacService } from '@modules/access/rbac/rbac.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { USER_SCHEMA_FLAGS } from './user.featureFlags';
 
 const idStrings = (values: unknown[] | undefined | null) =>
   (values ?? []).map((x: any) => String(x));
+// Escape user-supplied search terms before building a RegExp so special chars
+// (., *, (, etc.) are matched literally and cannot break the query.
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 const EMAIL_OTP_MINUTES = 10;
 const isDev = (process.env.NODE_ENV || 'development') !== 'production';
 // Privileged role keys that require phone-verified + 2FA for elevated session.
@@ -385,6 +389,8 @@ async function toPublic(u: any) {
         : '',
     country: profile.country ?? legacy.country ?? 'India',
     city: profile.city ?? legacy.city ?? null,
+    state: profile.state ?? null,
+    pincode: profile.pincode ?? null,
     zone: profile.zone ?? legacy.zone ?? null,
     selected_location_id: profile.selected_location_id
       ? String(profile.selected_location_id)
@@ -1343,13 +1349,23 @@ export const userService = {
     if (filter?.zone) query['profile.zone'] = filter.zone;
     if (filter?.status) query['metadata.status'] = filter.status;
     if (filter?.search) {
-      const rx = new RegExp(filter.search, 'i');
-      query.$or = [
+      const rx = new RegExp(escapeRegExp(filter.search), 'i');
+      const or: any[] = [
         { 'profile.first_name': rx },
         { 'profile.last_name': rx },
         { 'auth.email': rx },
         { 'auth.phone.number': rx },
       ];
+      // Also match by role: resolve the role keys whose name OR key matches the
+      // search term, then look those up against the denormalized role_keys cache.
+      const roles = await rbacService.listRoles();
+      const matchedKeys = roles
+        .filter((r) => r && (rx.test(r.name) || rx.test(r.key)))
+        .map((r) => r!.key);
+      if (matchedKeys.length) {
+        or.push({ 'metadata.role_keys': { $in: matchedKeys } });
+      }
+      query.$or = or;
     }
     const all = await UserModel.find(query).sort({ 'metadata.created_at': -1 });
     return Promise.all(all.map((u) => toPublic(u)));
@@ -1392,6 +1408,8 @@ export const userService = {
       'bio',
       'profile_photo',
       'city',
+      'state',
+      'pincode',
       'zone',
     ] as const;
     for (const f of profileFields) {

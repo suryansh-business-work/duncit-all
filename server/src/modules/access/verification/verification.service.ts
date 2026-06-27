@@ -11,10 +11,32 @@ import {
 
 const iso = (d?: Date | null) => (d ? d.toISOString() : null);
 
+type AddressInput = {
+  line1: string;
+  line2?: string | null;
+  city: string;
+  state: string;
+  pincode: string;
+  country?: string | null;
+};
+
+const toAddress = (a?: any) =>
+  a
+    ? {
+        line1: a.line1 ?? null,
+        line2: a.line2 ?? null,
+        city: a.city ?? null,
+        state: a.state ?? null,
+        pincode: a.pincode ?? null,
+        country: a.country ?? null,
+      }
+    : null;
+
 const toPub = (type: VerificationType, doc?: UserVerificationDoc | null) => ({
   type,
   status: doc?.status ?? 'NOT_SUBMITTED',
   document_url: doc?.document_url ?? null,
+  address: toAddress(doc?.address),
   reject_reason: doc?.reject_reason ?? null,
   reviewed_at: iso(doc?.reviewed_at),
   updated_at: iso((doc as any)?.updated_at),
@@ -35,30 +57,35 @@ function validateDocumentUrl(url: string) {
 }
 
 export const verificationService = {
-  // The full 7-type list for a user. Missing rows are NOT_SUBMITTED; EMAIL/PHONE
-  // auto-approve from the existing OTP verification when not separately submitted.
+  // The full type list for a user. Missing rows are NOT_SUBMITTED; EMAIL derives
+  // its terminal VERIFIED_BY_APP status from the login email's OTP verification.
   async listForUser(userId: string) {
     if (!Types.ObjectId.isValid(userId)) return [];
     const oid = new Types.ObjectId(userId);
     const [docs, user] = await Promise.all([
       UserVerificationModel.find({ user_id: oid }),
-      UserModel.findById(oid).select('auth.is_email_verified auth.phone.is_verified'),
+      UserModel.findById(oid).select('auth.is_email_verified'),
     ]);
     const byType = new Map(docs.map((d) => [d.type as VerificationType, d as UserVerificationDoc]));
     const emailVerified = !!(user as any)?.auth?.is_email_verified;
-    const phoneVerified = !!(user as any)?.auth?.phone?.is_verified;
 
     return VERIFICATION_TYPES.map((type) => {
+      // EMAIL is verified by the app at login — terminal, never a stored row.
+      if (type === 'EMAIL') {
+        return { ...toPub(type, null), status: emailVerified ? 'VERIFIED_BY_APP' : 'NOT_SUBMITTED' };
+      }
       const doc = byType.get(type);
-      if (doc) return toPub(type, doc);
-      if (type === 'EMAIL' && emailVerified) return { ...toPub(type, null), status: 'APPROVED' };
-      if (type === 'PHONE' && phoneVerified) return { ...toPub(type, null), status: 'APPROVED' };
-      return toPub(type, null);
+      return toPub(type, doc);
     });
   },
 
   async submit(userId: string, type: string, documentUrl: string) {
     assertType(type);
+    if (type !== 'IDENTITY') {
+      throw new GraphQLError('Use submitAddressVerification for ADDRESS', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
     validateDocumentUrl(documentUrl);
     const doc = await UserVerificationModel.findOneAndUpdate(
       { user_id: new Types.ObjectId(userId), type },
@@ -66,6 +93,7 @@ export const verificationService = {
         $set: {
           status: 'PENDING',
           document_url: documentUrl,
+          address: null,
           reject_reason: null,
           reviewed_by: null,
           reviewed_at: null,
@@ -76,6 +104,31 @@ export const verificationService = {
     return toPub(type, doc as UserVerificationDoc);
   },
 
+  async submitAddress(userId: string, input: AddressInput) {
+    const doc = await UserVerificationModel.findOneAndUpdate(
+      { user_id: new Types.ObjectId(userId), type: 'ADDRESS' },
+      {
+        $set: {
+          status: 'PENDING',
+          document_url: null,
+          address: {
+            line1: input.line1,
+            line2: input.line2 ?? null,
+            city: input.city,
+            state: input.state,
+            pincode: input.pincode,
+            country: input.country ?? null,
+          },
+          reject_reason: null,
+          reviewed_by: null,
+          reviewed_at: null,
+        },
+      },
+      { new: true, upsert: true }
+    );
+    return toPub('ADDRESS', doc as UserVerificationDoc);
+  },
+
   async review(
     adminId: string,
     userId: string,
@@ -84,6 +137,11 @@ export const verificationService = {
     rejectReason?: string | null
   ) {
     assertType(type);
+    if (type === 'EMAIL') {
+      throw new GraphQLError('EMAIL is verified by the app and cannot be reviewed', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
     if (status !== 'APPROVED' && status !== 'REJECTED') {
       throw new GraphQLError('Status must be APPROVED or REJECTED', {
         extensions: { code: 'BAD_USER_INPUT' },

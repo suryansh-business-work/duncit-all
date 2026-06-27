@@ -3,6 +3,7 @@ import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import { notifyError } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
+import { useDebouncedValue } from '../../utils/useDebouncedValue';
 import {
   CREATE_LOCATION,
   DELETE_LOCATION,
@@ -16,8 +17,10 @@ import LocationsToolbar from './LocationsToolbar';
 
 export default function LocationsPage() {
   const [search, setSearch] = useState('');
+  // Debounce so we query ~300ms after typing stops, not on every keystroke (B26).
+  const debouncedSearch = useDebouncedValue(search, 300);
   const { data, loading, error, refetch } = useQuery(LOCATIONS, {
-    variables: { filter: { search: search || undefined } },
+    variables: { filter: { search: debouncedSearch || undefined } },
     fetchPolicy: 'cache-and-network',
   });
   const [createMut] = useMutation(CREATE_LOCATION);

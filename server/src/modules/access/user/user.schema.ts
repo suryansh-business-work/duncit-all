@@ -53,6 +53,8 @@ export const userTypeDefs = gql`
 
     country: String!
     city: String
+    state: String
+    pincode: String
     zone: String
     "The location the user last selected in the header (persisted choice)."
     selected_location_id: ID
@@ -159,6 +161,8 @@ export const userTypeDefs = gql`
     phone_extension: String
     dob: String
     city: String
+    state: String
+    pincode: String
     zone: String
     bio: String
     profile_photo: String

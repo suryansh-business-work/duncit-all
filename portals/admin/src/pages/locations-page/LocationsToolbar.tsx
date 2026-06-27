@@ -28,7 +28,7 @@ export default function LocationsToolbar({ search, setSearch, onCreate }: Readon
       <Stack direction="row" spacing={2}>
         <TextField
           size="small"
-          placeholder="Search country, state, city, PIN"
+          placeholder="Search state, city, area or PIN"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
         />

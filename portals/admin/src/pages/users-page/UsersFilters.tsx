@@ -38,6 +38,8 @@ export default function UsersFilters({
             value={role}
             onChange={(e) => setRole(e.target.value)}
             sx={{ minWidth: 180 }}
+            InputLabelProps={{ shrink: true }}
+            SelectProps={{ displayEmpty: true }}
           >
             <MenuItem value="">Any</MenuItem>
             {roles.map((r: any) => (
@@ -53,6 +55,8 @@ export default function UsersFilters({
             value={status}
             onChange={(e) => setStatus(e.target.value)}
             sx={{ minWidth: 160 }}
+            InputLabelProps={{ shrink: true }}
+            SelectProps={{ displayEmpty: true }}
           >
             {STATUS_OPTIONS.map((s) => (
               <MenuItem key={s} value={s}>

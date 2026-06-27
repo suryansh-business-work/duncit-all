@@ -1,51 +1,29 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  Alert,
-  Box,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import CheckCircleIcon from '@mui/icons-material/CheckCircle';
-import UploadFileIcon from '@mui/icons-material/UploadFile';
 import VerifiedUserIcon from '@mui/icons-material/VerifiedUser';
-import MediaPickerDialog from '../../components/MediaPickerDialog';
-import {
-  MY_VERIFICATIONS,
-  STATUS_META,
-  SUBMIT_VERIFICATION,
-  VERIFICATION_LABELS,
-  type Verification,
-} from './queries';
+import { MY_VERIFICATIONS, type Verification } from './queries';
+import VerificationCardShell from './VerificationCardShell';
+import IdentityCard from './IdentityCard';
+import AddressCard from './AddressCard';
 
-/** Verification — the user uploads a document for each of the 7 verification
- * types; an admin then approves/rejects them in the admin panel (B2-#9). */
+/**
+ * Verification — Identity (one document ≤4 MB), Address (manual residential
+ * address) and Email (verified by the app). An admin approves/rejects Identity
+ * & Address. mWeb twin of the native VerificationScreen (B22).
+ */
 export default function VerificationPage() {
   const navigate = useNavigate();
   const { data, loading, error, refetch } = useQuery(MY_VERIFICATIONS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [submit] = useMutation(SUBMIT_VERIFICATION);
-  const [picking, setPicking] = useState<string | null>(null);
   const [snack, setSnack] = useState<string | null>(null);
 
-  const upload = async (type: string, url: string) => {
-    setPicking(null);
-    try {
-      await submit({ variables: { type, document_url: url } });
-      setSnack('Document submitted for review.');
-      await refetch();
-    } catch (e: any) {
-      setSnack(e?.message ?? 'Could not submit the document.');
-    }
+  const onChanged = () => {
+    setSnack('Submitted for review.');
+    refetch().catch(() => undefined);
   };
 
   if (loading && !data) {
@@ -71,59 +49,21 @@ export default function VerificationPage() {
             Verification
           </Typography>
           <Typography variant="caption" color="text.secondary" fontWeight={800}>
-            Upload documents to verify your account
+            Verify your identity, address and email
           </Typography>
         </Box>
       </Stack>
 
       {verifications.map((item) => {
-        const meta = STATUS_META[item.status];
-        const verified = item.status === 'APPROVED';
-        return (
-          <Card key={item.type} variant="outlined" sx={{ borderRadius: 3 }}>
-            <CardContent>
-              <Stack direction="row" alignItems="center" spacing={1.5}>
-                <CheckCircleIcon
-                  sx={{ color: verified ? 'success.main' : 'action.disabled' }}
-                  aria-hidden
-                />
-                <Box sx={{ flex: 1, minWidth: 0 }}>
-                  <Typography variant="subtitle1" fontWeight={900}>
-                    {VERIFICATION_LABELS[item.type] ?? item.type}
-                  </Typography>
-                  <Chip size="small" label={meta.label} color={meta.color} sx={{ mt: 0.5, fontWeight: 800 }} />
-                  {item.status === 'REJECTED' && item.reject_reason && (
-                    <Typography variant="caption" color="error.main" display="block" sx={{ mt: 0.5 }}>
-                      {item.reject_reason}
-                    </Typography>
-                  )}
-                </Box>
-                {!verified && (
-                  <Button
-                    size="small"
-                    variant="outlined"
-                    startIcon={<UploadFileIcon />}
-                    onClick={() => setPicking(item.type)}
-                    sx={{ borderRadius: 999, fontWeight: 900, flex: '0 0 auto' }}
-                  >
-                    {item.status === 'NOT_SUBMITTED' ? 'Upload' : 'Re-upload'}
-                  </Button>
-                )}
-              </Stack>
-            </CardContent>
-          </Card>
-        );
+        if (item.type === 'IDENTITY') {
+          return <IdentityCard key={item.type} item={item} onChanged={onChanged} onError={setSnack} />;
+        }
+        if (item.type === 'ADDRESS') {
+          return <AddressCard key={item.type} item={item} onChanged={onChanged} onError={setSnack} />;
+        }
+        return <VerificationCardShell key={item.type} item={item} />;
       })}
 
-      <MediaPickerDialog
-        open={!!picking}
-        onClose={() => setPicking(null)}
-        folder="/verifications"
-        title="Upload document"
-        onPicked={(url: string) => {
-          if (picking) upload(picking, url).catch(() => undefined);
-        }}
-      />
       {snack && (
         <Alert severity="info" onClose={() => setSnack(null)}>
           {snack}

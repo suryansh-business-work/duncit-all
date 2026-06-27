@@ -1,16 +1,20 @@
-import { Formik } from 'formik';
-import * as yup from 'yup';
+import { useEffect } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { Alert, Button, MenuItem, Stack, TextField } from '@mui/material';
-import FormField from '../FormField';
-import { validationRules } from '../validation/rules';
+import RhfTextField from '../components/RhfTextField';
+import { zodRules } from '../validation/rules';
 import { SUPPORT_CATEGORIES, supportInitialValues, type SupportFormValues } from './support.types';
 
-export const supportSchema: yup.ObjectSchema<SupportFormValues> = yup.object({
-  name: validationRules.personName('Name'),
-  email: validationRules.email('Email'),
-  category: yup.mixed<SupportFormValues['category']>().oneOf(SUPPORT_CATEGORIES.map((item) => item.value), 'Select a valid category').required('Category is required'),
-  subject: validationRules.requiredText('Subject', 3, 120),
-  message: validationRules.requiredText('Message', 10, 2000),
+const CATEGORY_VALUES = SUPPORT_CATEGORIES.map((item) => item.value) as [SupportFormValues['category'], ...SupportFormValues['category'][]];
+
+export const supportSchema = z.object({
+  name: zodRules.personName('Name'),
+  email: zodRules.email('Email'),
+  category: z.enum(CATEGORY_VALUES, { errorMap: () => ({ message: 'Select a valid category' }) }),
+  subject: zodRules.requiredText('Subject', 3, 120),
+  message: zodRules.requiredText('Message', 10, 2000),
 });
 
 interface Props {
@@ -21,42 +25,47 @@ interface Props {
 }
 
 export default function SupportForm({ initialValues, loading, errorMessage, onSubmit }: Readonly<Props>) {
+  const defaults = { ...supportInitialValues, ...(initialValues ?? {}) };
+  const { control, register, handleSubmit, reset, setError, formState } = useForm<SupportFormValues>({
+    resolver: zodResolver(supportSchema),
+    defaultValues: defaults,
+    mode: 'onBlur',
+  });
+  const { errors, isSubmitting } = formState;
+
+  useEffect(() => {
+    reset({ ...supportInitialValues, ...(initialValues ?? {}) });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValues?.name, initialValues?.email, initialValues?.category, initialValues?.subject, initialValues?.message]);
+
+  const submit = handleSubmit(async (values) => {
+    try {
+      await onSubmit(values);
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Could not submit support request.';
+      setError('root', { message });
+    }
+  });
+
+  const categoryError = Boolean(errors.category);
+  const rootError = errors.root?.message;
+
   return (
-    <Formik
-      initialValues={{ ...supportInitialValues, ...(initialValues ?? {}) } as SupportFormValues}
-      validationSchema={supportSchema}
-      enableReinitialize
-      validateOnBlur
-      onSubmit={async (values, { setStatus }) => {
-        setStatus(undefined);
-        try {
-          await onSubmit(values);
-        } catch (error: any) {
-          setStatus(error?.message ?? 'Could not submit support request.');
-        }
-      }}
-    >
-      {({ values, touched, errors, handleBlur, handleChange, handleSubmit, isSubmitting, status }) => {
-        const categoryError = Boolean(touched.category && errors.category);
-        return (
-          <Stack component="form" noValidate onSubmit={handleSubmit} spacing={2}>
-            <FormField name="name" label="Your name" autoComplete="name" />
-            <FormField name="email" label="Email" type="email" autoComplete="email" disabled InputProps={{ readOnly: true }} hint="Locked to your Duncit account" />
-            <TextField select name="category" label="Category" value={values.category} onChange={handleChange} onBlur={handleBlur} error={categoryError} helperText={categoryError ? errors.category : ' '} fullWidth>
-              {SUPPORT_CATEGORIES.map((category) => <MenuItem key={category.value} value={category.value}>{category.label}</MenuItem>)}
-            </TextField>
-            <FormField name="subject" label="Subject" />
-            <FormField name="message" label="Message" multiline minRows={4} />
-            {(errorMessage || status) && <Alert severity="error">{errorMessage ?? status}</Alert>}
-            <Button type="submit" variant="contained" size="large" disabled={loading || isSubmitting}>{loading || isSubmitting ? 'Sending...' : 'Send to support'}</Button>
-          </Stack>
-        );
-      }}
-    </Formik>
+    <Stack component="form" noValidate onSubmit={submit} spacing={2}>
+      <RhfTextField control={control} name="name" label="Your name" autoComplete="name" />
+      <RhfTextField control={control} name="email" label="Email" type="email" autoComplete="email" disabled InputProps={{ readOnly: true }} hint="Locked to your Duncit account" />
+      <TextField select label="Category" defaultValue={defaults.category} error={categoryError} helperText={categoryError ? errors.category?.message : ' '} fullWidth {...register('category')}>
+        {SUPPORT_CATEGORIES.map((category) => <MenuItem key={category.value} value={category.value}>{category.label}</MenuItem>)}
+      </TextField>
+      <RhfTextField control={control} name="subject" label="Subject" />
+      <RhfTextField control={control} name="message" label="Message" multiline minRows={4} />
+      {(errorMessage ?? rootError) && <Alert severity="error">{errorMessage ?? rootError}</Alert>}
+      <Button type="submit" variant="contained" size="large" disabled={loading || isSubmitting}>{loading || isSubmitting ? 'Sending...' : 'Send to support'}</Button>
+    </Stack>
   );
 }
 
 export function toContactInput(values: SupportFormValues) {
-  const payload = supportSchema.cast(values, { stripUnknown: true }) as SupportFormValues;
+  const payload = supportSchema.parse(values);
   return { name: payload.name, email: payload.email, subject: `[${payload.category}] ${payload.subject}`, message: payload.message };
 }

@@ -1,2 +1,2 @@
-export { default as LoginForm, loginSchema } from './login.form';
-export { loginInitialValues, type LoginFormValues } from './login.types';
+export { default as LoginForm } from './login.form';
+export { loginSchema, loginInitialValues, type LoginFormValues } from './login.types';

@@ -1,34 +1,40 @@
 import { describe, expect, it } from 'vitest';
-import { loginSchema } from './login.form';
-import { loginInitialValues } from './login.types';
+import { loginSchema, loginInitialValues } from './login.types';
 
 const valid = { ...loginInitialValues, email: 'manager@duncit.com', password: 'secret123' };
 
+const firstError = (result: ReturnType<typeof loginSchema.safeParse>) =>
+  result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
+
 describe('loginSchema', () => {
-  it('accepts a valid email and password', async () => {
-    await expect(loginSchema.validate(valid)).resolves.toMatchObject({ email: 'manager@duncit.com' });
+  it('accepts a valid email and password', () => {
+    const result = loginSchema.safeParse(valid);
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.email).toBe('manager@duncit.com');
   });
 
-  it('requires both fields', async () => {
-    const error = await loginSchema
-      .validate({ email: '', password: '' }, { abortEarly: false })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/email/i);
-    expect(error.errors.join(' ')).toMatch(/password/i);
+  it('requires both fields', () => {
+    const result = loginSchema.safeParse({ email: '', password: '' });
+    expect(result.success).toBe(false);
+    expect(firstError(result)).toMatch(/email/i);
+    expect(firstError(result)).toMatch(/password/i);
   });
 
-  it('rejects an invalid email', async () => {
-    const error = await loginSchema.validate({ ...valid, email: 'not-an-email' }).catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/valid email/i);
+  it('rejects an invalid email', () => {
+    const result = loginSchema.safeParse({ ...valid, email: 'not-an-email' });
+    expect(result.success).toBe(false);
+    expect(firstError(result)).toMatch(/valid email/i);
   });
 
-  it('rejects a short password', async () => {
-    const error = await loginSchema.validate({ ...valid, password: 'short' }).catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/at least 8/i);
+  it('rejects a short password', () => {
+    const result = loginSchema.safeParse({ ...valid, password: 'short' });
+    expect(result.success).toBe(false);
+    expect(firstError(result)).toMatch(/at least 8/i);
   });
 
-  it('normalises the email to lowercase', async () => {
-    const parsed = await loginSchema.validate({ ...valid, email: 'Manager@Duncit.com' });
-    expect(parsed.email).toBe('manager@duncit.com');
+  it('normalises the email to lowercase', () => {
+    const result = loginSchema.safeParse({ ...valid, email: 'Manager@Duncit.com' });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.email).toBe('manager@duncit.com');
   });
 });

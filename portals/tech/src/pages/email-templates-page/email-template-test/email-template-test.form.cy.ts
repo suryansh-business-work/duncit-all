@@ -1,18 +1,20 @@
 import { describe, expect, it } from 'vitest';
 import { emailTemplateTestSchema, toSendTestInput } from './email-template-test.form';
 
+const firstError = (result: ReturnType<typeof emailTemplateTestSchema.safeParse>) =>
+  result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
+
 describe('emailTemplateTestSchema', () => {
-  it('rejects empty recipient', async () => {
-    const error = await emailTemplateTestSchema.validate({ to: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/email/i);
+  it('rejects empty recipient', () => {
+    expect(firstError(emailTemplateTestSchema.safeParse({ to: '' }))).toMatch(/email/i);
   });
-  it('rejects invalid email format', async () => {
-    const error = await emailTemplateTestSchema.validate({ to: 'not-an-email' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/email/i);
+  it('rejects invalid email format', () => {
+    expect(firstError(emailTemplateTestSchema.safeParse({ to: 'not-an-email' }))).toMatch(/email/i);
   });
-  it('accepts and lowercases a valid email', async () => {
-    const parsed = await emailTemplateTestSchema.validate({ to: 'Test@Example.COM' });
-    expect(parsed.to).toBe('test@example.com');
+  it('accepts and lowercases a valid email', () => {
+    const result = emailTemplateTestSchema.safeParse({ to: 'Test@Example.COM' });
+    expect(result.success).toBe(true);
+    if (result.success) expect(result.data.to).toBe('test@example.com');
   });
 });
 

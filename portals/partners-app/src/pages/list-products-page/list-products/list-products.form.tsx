@@ -1,13 +1,17 @@
 import { gql, useMutation } from '@apollo/client';
-import { useState } from 'react';
-import { useFormik } from 'formik';
-import * as yup from 'yup';
+import { useEffect, useState } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Card, CardContent, Stack, Step, StepLabel, Stepper } from '@mui/material';
+import type { Path } from 'react-hook-form';
 import MediaPickerDialog from '../../../components/media-picker-dialog/MediaPickerDialog';
 import { parseApiError } from '../../../utils/parseApiError';
 import type { ProductListingValues } from './list-products.types';
+import { productListingSchema } from './list-products.schema';
 import { StepBody } from './list-products.form-ui';
 import CategoryCascade from './CategoryCascade';
+
+export { productListingSchema } from './list-products.schema';
 
 const PRODUCT_FIELDS = `
   id
@@ -36,24 +40,6 @@ const UPDATE_PRODUCT_LISTING = gql`
   }
 `;
 
-export const productListingSchema = yup.object({
-  is_duncit_delivery_partner: yup.boolean().required('Delivery partner status is required'),
-  super_category_id: yup.string().required('Select a super category'),
-  category_id: yup.string().required('Select a category'),
-  sub_category_id: yup.string().required('Select a sub category'),
-  product_name: yup.string().trim().min(3, 'Product title is too short').max(160).required('Product title is required'),
-  image_urls: yup.array().of(yup.string().trim().url('Use valid image URLs')).min(1, 'At least one product image is required').required(),
-  description: yup.string().trim().min(20, 'Description must be at least 20 characters').max(2000).required('Description is required'),
-  size_label: yup.string().trim().max(120).required('Size is required'),
-  height_cm: yup.number().typeError('Height is required').min(0.1).max(1000).required('Height is required'),
-  weight_kg: yup.number().typeError('Weight is required').min(0.01).max(1000).required('Weight is required'),
-  color: yup.string().trim().max(80).required('Color is required'),
-  inventory_count: yup.number().typeError('Inventory is required').integer().min(1).required('Inventory is required'),
-  unit_cost: yup.number().typeError('Price is required').min(1).required('Price is required'),
-  commission_pct: yup.number().min(5, 'Commission starts at 5%').max(50, 'Commission cannot exceed 50%').required(),
-  delivery_target: yup.string().oneOf(['HOST', 'VENUE']).required('Delivery target is required'),
-});
-
 const emptyValues: ProductListingValues = {
   is_duncit_delivery_partner: false,
   super_category_id: '',
@@ -73,7 +59,7 @@ const emptyValues: ProductListingValues = {
 };
 
 const steps = ['Delivery partner', 'Product details', 'Inventory', 'Commission', 'Delivery', 'Preview'];
-const stepFields = [['is_duncit_delivery_partner'], ['product_name', 'image_urls', 'description'], ['size_label', 'height_cm', 'weight_kg', 'color', 'inventory_count', 'unit_cost'], ['commission_pct'], ['delivery_target'], []];
+const stepFields: Path<ProductListingValues>[][] = [['is_duncit_delivery_partner'], ['product_name', 'image_urls', 'description'], ['size_label', 'height_cm', 'weight_kg', 'color', 'inventory_count', 'unit_cost'], ['commission_pct'], ['delivery_target'], []];
 
 interface Props {
   brandId: string;
@@ -91,57 +77,64 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
   const loading = submitState.loading || updateState.loading;
   const editing = Boolean(product?.id);
 
-  const formik = useFormik<ProductListingValues>({
-    initialValues: productToValues(product),
-    enableReinitialize: true,
-    validationSchema: productListingSchema,
-    validateOnBlur: true,
-    validateOnChange: false,
-    onSubmit: async (values, helpers) => {
-      setApiError(null);
-      try {
-        const variables = editing ? { product_doc_id: product.id, input: toSubmitInput(values, brandId) } : { input: toSubmitInput(values, brandId) };
-        await (editing ? updateProduct : submitProduct)({ variables });
-        setSubmitted(true);
-        setActiveStep(5);
-        if (!editing) helpers.resetForm({ values: emptyValues });
-        onSaved?.();
-      } catch (error) {
-        setApiError(parseApiError(error));
-      }
-    },
+  const { control, handleSubmit, reset, trigger, watch, setValue, formState } = useForm<ProductListingValues>({
+    resolver: zodResolver(productListingSchema),
+    defaultValues: productToValues(product),
+    mode: 'onBlur',
+  });
+
+  useEffect(() => {
+    reset(productToValues(product));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [product?.id]);
+
+  const onSubmit = handleSubmit(async (values) => {
+    setApiError(null);
+    try {
+      const variables = editing ? { product_doc_id: product.id, input: toSubmitInput(values, brandId) } : { input: toSubmitInput(values, brandId) };
+      await (editing ? updateProduct : submitProduct)({ variables });
+      setSubmitted(true);
+      setActiveStep(5);
+      if (!editing) reset(emptyValues);
+      onSaved?.();
+    } catch (error) {
+      setApiError(parseApiError(error));
+    }
   });
 
   const next = async () => {
-    const fields = stepFields[activeStep];
-    formik.setTouched(fields.reduce((acc, name) => ({ ...acc, [name]: true }), formik.touched), true);
-    const errors = await formik.validateForm();
-    if (fields.some((name) => Boolean((errors as any)[name]))) return;
+    const valid = await trigger(stepFields[activeStep]);
+    if (!valid) return;
     setActiveStep((step) => Math.min(step + 1, steps.length - 1));
   };
-  const addImage = (url: string) => formik.setFieldValue('image_urls', Array.from(new Set([...formik.values.image_urls, url])));
+  const addImage = (url: string) => setValue('image_urls', Array.from(new Set([...watch('image_urls'), url])), { shouldValidate: true });
+
+  const superId = watch('super_category_id');
+  const categoryId = watch('category_id');
+  const subId = watch('sub_category_id');
+  const cascadeError = Boolean(formState.submitCount) && (!superId || !categoryId || !subId);
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
       <CardContent>
-        <Stack spacing={2.25} component="form" onSubmit={formik.handleSubmit}>
+        <Stack spacing={2.25} component="form" onSubmit={onSubmit}>
           <Stepper activeStep={activeStep} alternativeLabel sx={{ display: { xs: 'none', sm: 'flex' } }}>
             {steps.map((label) => <Step key={label}><StepLabel>{label}</StepLabel></Step>)}
           </Stepper>
           {submitted && <Alert severity="success">Product {editing ? 'updated' : 'submitted'}. Products portal approval is required before it shows in matching pods.</Alert>}
           {apiError && <Alert severity="error">{apiError}</Alert>}
           <CategoryCascade
-            superId={formik.values.super_category_id}
-            categoryId={formik.values.category_id}
-            subId={formik.values.sub_category_id}
-            error={Boolean(formik.submitCount) && (!formik.values.super_category_id || !formik.values.category_id || !formik.values.sub_category_id)}
-            onChange={(next) => {
-              formik.setFieldValue('super_category_id', next.superId);
-              formik.setFieldValue('category_id', next.categoryId);
-              formik.setFieldValue('sub_category_id', next.subId);
+            superId={superId}
+            categoryId={categoryId}
+            subId={subId}
+            error={cascadeError}
+            onChange={(nextCascade) => {
+              setValue('super_category_id', nextCascade.superId, { shouldValidate: true });
+              setValue('category_id', nextCascade.categoryId, { shouldValidate: true });
+              setValue('sub_category_id', nextCascade.subId, { shouldValidate: true });
             }}
           />
-          <StepBody step={activeStep} formik={formik} onImageClick={() => setPickerOpen(true)} />
+          <StepBody step={activeStep} control={control} watch={watch} setValue={setValue} onImageClick={() => setPickerOpen(true)} />
           <Stack direction="row" spacing={1} justifyContent="space-between">
             <Button disabled={activeStep === 0 || loading} onClick={() => setActiveStep((step) => step - 1)}>Back</Button>
             {activeStep < steps.length - 1 ? <Button variant="contained" onClick={next}>Next</Button> : <Button type="submit" variant="contained" disabled={loading}>{loading ? 'Saving...' : editing ? 'Update listing' : 'Submit for approval'}</Button>}

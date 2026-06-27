@@ -11,19 +11,18 @@ const valid = {
   subject: 'New pods are live',
 };
 
+const messages = (result: ReturnType<typeof marketingCampaignSchema.safeParse>) =>
+  result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+
 describe('marketingCampaignSchema', () => {
-  it('rejects invalid MJML', async () => {
-    const error = await marketingCampaignSchema
-      .validate({ ...valid, mjml: 'plain email' }, { abortEarly: false })
-      .catch((validationError) => validationError);
-    expect(error.errors.join(' ')).toMatch(/mjml/i);
+  it('rejects invalid MJML', () => {
+    const result = marketingCampaignSchema.safeParse({ ...valid, mjml: 'plain email' });
+    expect(messages(result)).toMatch(/mjml/i);
   });
 
-  it('requires a selected dynamic card when card type is set', async () => {
-    const error = await marketingCampaignSchema
-      .validate({ ...valid, card_type: 'POD', card_ref_id: '' }, { abortEarly: false })
-      .catch((validationError) => validationError);
-    expect(error.errors.join(' ')).toMatch(/select a card/i);
+  it('requires a selected dynamic card when card type is set', () => {
+    const result = marketingCampaignSchema.safeParse({ ...valid, card_type: 'POD', card_ref_id: '' });
+    expect(messages(result)).toMatch(/select a card/i);
   });
 });
 

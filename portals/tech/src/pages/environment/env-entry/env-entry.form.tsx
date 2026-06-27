@@ -1,4 +1,6 @@
-import { useFormik } from 'formik';
+import { useEffect } from 'react';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Button,
   Dialog,
@@ -31,15 +33,17 @@ interface Props {
 
 export default function EnvEntryForm({ open, def, initial, busy, testing, onClose, onSubmit, onTest }: Readonly<Props>) {
   const isEdit = !!initial;
-  const formik = useFormik<EnvEntryFormValues>({
-    initialValues: initial ? valuesFromEntry(initial) : emptyValues(),
-    validationSchema: envEntrySchema(def, isEdit),
-    enableReinitialize: true,
-    onSubmit,
+  const defaults = initial ? valuesFromEntry(initial) : emptyValues();
+  const { control, handleSubmit, reset } = useForm<EnvEntryFormValues>({
+    defaultValues: defaults,
+    resolver: zodResolver(envEntrySchema(def, isEdit)),
+    mode: 'all',
   });
 
-  const configError = (name: string) =>
-    (formik.touched.config as any)?.[name] && (formik.errors.config as any)?.[name];
+  useEffect(() => {
+    reset(initial ? valuesFromEntry(initial) : emptyValues());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial, def]);
 
   const secretHelper = (name: string) => {
     if (!isEdit) return 'Required';
@@ -57,7 +61,7 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
       <DialogTitle>{isEdit ? `Edit ${initial!.name}` : `New ${def.label} entry`}</DialogTitle>
-      <form onSubmit={formik.handleSubmit} noValidate>
+      <form onSubmit={handleSubmit(onSubmit)} noValidate>
         <DialogContent dividers>
           <Stack spacing={1.5}>
             {def.docUrl && (
@@ -69,50 +73,70 @@ export default function EnvEntryForm({ open, def, initial, busy, testing, onClos
                 </Link>
               </Typography>
             )}
-            <TextField
-              label="Name"
+            <Controller
+              control={control}
               name="name"
-              value={formik.values.name}
-              onChange={formik.handleChange}
-              onBlur={formik.handleBlur}
-              error={formik.touched.name && Boolean(formik.errors.name)}
-              helperText={(formik.touched.name && formik.errors.name) || 'A label to tell entries apart'}
-              fullWidth
-              required
-              autoComplete="off"
-              inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }}
+              render={({ field, fieldState }) => (
+                <TextField
+                  {...field}
+                  label="Name"
+                  error={!!fieldState.error}
+                  helperText={fieldState.error?.message ?? 'A label to tell entries apart'}
+                  fullWidth
+                  required
+                  autoComplete="off"
+                  inputProps={{ autoComplete: 'off', 'data-1p-ignore': true, 'data-lpignore': true }}
+                />
+              )}
             />
-            <TextField
-              label="Description"
+            <Controller
+              control={control}
               name="description"
-              value={formik.values.description}
-              onChange={formik.handleChange}
-              fullWidth
-              multiline
-              minRows={2}
+              render={({ field }) => (
+                <TextField {...field} label="Description" fullWidth multiline minRows={2} />
+              )}
             />
             <Stack direction="row" spacing={2}>
-              <FormControlLabel
-                control={<Switch checked={formik.values.is_default} onChange={(e) => formik.setFieldValue('is_default', e.target.checked)} />}
-                label="Default"
+              <Controller
+                control={control}
+                name="is_default"
+                render={({ field }) => (
+                  <FormControlLabel
+                    control={<Switch checked={!!field.value} onChange={(e) => field.onChange(e.target.checked)} />}
+                    label="Default"
+                  />
+                )}
               />
-              <FormControlLabel
-                control={<Switch checked={formik.values.is_active} onChange={(e) => formik.setFieldValue('is_active', e.target.checked)} />}
-                label="Active"
+              <Controller
+                control={control}
+                name="is_active"
+                render={({ field }) => (
+                  <FormControlLabel
+                    control={<Switch checked={!!field.value} onChange={(e) => field.onChange(e.target.checked)} />}
+                    label="Active"
+                  />
+                )}
               />
             </Stack>
 
             <Typography variant="overline" color="text.secondary" sx={{ pt: 1 }}>{def.label} config</Typography>
             {def.fields.map((field) => (
-              <ConfigField
+              <Controller
                 key={field.name}
-                field={field}
-                value={formik.values.config[field.name] ?? ''}
-                error={configError(field.name)}
-                helperText={fieldHelper(field)}
-                onChange={formik.handleChange}
-                onBlur={formik.handleBlur}
-                onToggleBool={(name, checked) => formik.setFieldValue(`config.${name}`, checked ? 'true' : 'false')}
+                control={control}
+                name={`config.${field.name}`}
+                defaultValue=""
+                render={({ field: rhfField, fieldState }) => (
+                  <ConfigField
+                    field={field}
+                    value={rhfField.value}
+                    error={fieldState.error?.message ?? false}
+                    helperText={fieldHelper(field)}
+                    onChange={(e) => rhfField.onChange(e.target.value)}
+                    onBlur={rhfField.onBlur}
+                    onToggleBool={(_name, checked) => rhfField.onChange(checked ? 'true' : 'false')}
+                  />
+                )}
               />
             ))}
           </Stack>

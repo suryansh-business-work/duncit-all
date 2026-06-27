@@ -33,10 +33,15 @@ const entry: EnvEntry = {
 };
 
 describe('EnvEntryForm', () => {
-  it('requires the primary secret on create but not on edit', async () => {
-    await expect(envEntrySchema(imagekitDef, false).validate({ name: 'X', config: {} })).rejects.toThrow(/required/i);
-    await expect(envEntrySchema(imagekitDef, false).validate({ name: 'X', config: { private_key: 'k' } })).resolves.toBeTruthy();
-    await expect(envEntrySchema(imagekitDef, true).validate({ name: 'X', config: {} })).resolves.toBeTruthy();
+  const errorsOf = (def: EnvCategoryDef, isEdit: boolean, values: Record<string, unknown>) => {
+    const result = envEntrySchema(def, isEdit).safeParse(values);
+    return result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
+  };
+
+  it('requires the primary secret on create but not on edit', () => {
+    expect(errorsOf(imagekitDef, false, { name: 'X', config: {} })).toMatch(/required/i);
+    expect(envEntrySchema(imagekitDef, false).safeParse({ name: 'X', config: { private_key: 'k' } }).success).toBe(true);
+    expect(envEntrySchema(imagekitDef, true).safeParse({ name: 'X', config: {} }).success).toBe(true);
   });
 
   it('drops blank secrets from the config pairs', () => {
@@ -72,13 +77,11 @@ describe('EnvEntryForm', () => {
       expect(PHONE_RE.test('+1-415-555')).toBe(false); // separators
     });
 
-    it('flags a bad TWILIO phone_number via the schema', async () => {
-      await expect(
-        envEntrySchema(twilioDef, true).validate({ name: 'T', config: { phone_number: '12345' } })
-      ).rejects.toThrow(/E\.164/i);
-      await expect(
-        envEntrySchema(twilioDef, true).validate({ name: 'T', config: { phone_number: '+14155552671' } })
-      ).resolves.toBeTruthy();
+    it('flags a bad TWILIO phone_number via the schema', () => {
+      expect(errorsOf(twilioDef, true, { name: 'T', config: { phone_number: '12345' } })).toMatch(/E\.164/i);
+      expect(
+        envEntrySchema(twilioDef, true).safeParse({ name: 'T', config: { phone_number: '+14155552671' } }).success
+      ).toBe(true);
     });
   });
 

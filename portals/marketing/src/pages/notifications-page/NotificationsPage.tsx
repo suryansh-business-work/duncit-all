@@ -57,7 +57,7 @@ export default function NotificationsPage() {
     setBusy(true);
     setOpError(null);
     try {
-      const valid = await notificationFormSchema.validate(values, { abortEarly: false });
+      const valid = notificationFormSchema.parse(values);
       const payload = toCreateNotificationInput(valid);
       const res = await createMut({ variables: { input: payload } });
       const c = res.data?.createNotification;

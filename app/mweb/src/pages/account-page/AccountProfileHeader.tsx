@@ -77,7 +77,6 @@ export default function AccountProfileHeader({
           {me.roles?.map((r: string) => (
             <Chip key={r} label={labelFor(r)} size="small" color="primary" variant="outlined" />
           ))}
-          {me.status && <Chip label={me.status} size="small" />}
         </Stack>
       </Box>
       <Stack direction={{ xs: 'row', sm: 'column' }} spacing={1}>

@@ -1,78 +1,95 @@
-import * as yup from 'yup';
-import type { InventoryProductFormValues } from './types';
+import { z } from 'zod';
 
-export const productSchema: yup.ObjectSchema<InventoryProductFormValues> = yup.object({
-  id: yup.string().optional(),
+const SKU_PATTERN = /^[A-Z0-9-]*$/;
 
-  product_name: yup.string().trim().min(2, 'At least 2 characters').max(200).required('Product name is required'),
-  sku: yup
-    .string()
-    .trim()
-    .matches(/^[A-Z0-9-]*$/, 'SKU may contain only uppercase letters, digits and hyphens')
-    .max(50)
-    .default(''),
-  barcode: yup.string().trim().max(80).default(''),
-  short_description: yup.string().max(280, 'Keep under 280 chars').default(''),
-  description: yup.string().max(4000, 'Keep under 4000 chars').default(''),
+const intField = (max?: number, min = 0) => {
+  let schema = z
+    .number({ invalid_type_error: 'Number required' })
+    .int()
+    .min(min);
+  if (max !== undefined) schema = schema.max(max);
+  return schema;
+};
 
-  category_id: yup.string().default(''),
-  brand_name: yup.string().max(120).default(''),
-  product_type: yup
-    .mixed<'CONSUMABLE' | 'MERCHANDISE' | 'EQUIPMENT'>()
-    .oneOf(['CONSUMABLE', 'MERCHANDISE', 'EQUIPMENT'])
-    .required(),
-  unit_type: yup
-    .mixed<'BOTTLE' | 'PIECE' | 'PACKET' | 'BOX' | 'KG' | 'LITRE' | 'METER' | 'OTHER'>()
-    .oneOf(['BOTTLE', 'PIECE', 'PACKET', 'BOX', 'KG', 'LITRE', 'METER', 'OTHER'])
-    .required(),
+const moneyField = z
+  .number({ invalid_type_error: 'Number required' })
+  .min(0)
+  .max(1000000);
 
-  image_url: yup.string().url('Must be a valid URL').default(''),
-  images: yup.array().of(yup.string().url('Image must be a valid URL').required()).default([]),
+export const productSchema = z
+  .object({
+    id: z.string().optional(),
 
-  min_order_qty: yup.number().typeError('Number required').integer().min(0).max(100000).required(),
-  max_order_qty: yup
-    .number()
-    .typeError('Number required')
-    .integer()
-    .min(1)
-    .max(1000000)
-    .required()
-    .test('gte-min', 'Max order qty must be ≥ min order qty', function (value) {
-      const { min_order_qty } = this.parent as InventoryProductFormValues;
-      return Number(value ?? 0) >= Number(min_order_qty ?? 0);
-    }),
-  low_stock_alert: yup.number().typeError('Number required').integer().min(0).max(100000).required(),
-  inventory_count: yup.number().typeError('Number required').integer().min(0).required(),
-  reserved_count: yup.number().typeError('Number required').integer().min(0).required(),
-  damaged_count: yup.number().typeError('Number required').integer().min(0).required(),
+    product_name: z
+      .string()
+      .trim()
+      .max(200)
+      .superRefine((value, ctx) => {
+        if (value.length === 0) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'Product name is required' });
+          return;
+        }
+        if (value.length < 2) {
+          ctx.addIssue({ code: z.ZodIssueCode.custom, message: 'At least 2 characters' });
+        }
+      }),
+    sku: z
+      .string()
+      .trim()
+      .regex(SKU_PATTERN, 'SKU may contain only uppercase letters, digits and hyphens')
+      .max(50),
+    barcode: z.string().trim().max(80),
+    short_description: z.string().max(280, 'Keep under 280 chars'),
+    description: z.string().max(4000, 'Keep under 4000 chars'),
 
-  vendor_name: yup.string().max(120).default(''),
-  supplier_contact: yup.string().max(120).default(''),
+    category_id: z.string(),
+    brand_name: z.string().max(120),
+    product_type: z.enum(['CONSUMABLE', 'MERCHANDISE', 'EQUIPMENT']),
+    unit_type: z.enum(['BOTTLE', 'PIECE', 'PACKET', 'BOX', 'KG', 'LITRE', 'METER', 'OTHER']),
 
-  unit_cost: yup.number().typeError('Cost is required').min(0).max(1000000).required(),
-  purchase_price: yup.number().typeError('Number required').min(0).max(1000000).required(),
-  selling_price: yup.number().typeError('Number required').min(0).max(1000000).required(),
-  tax_percent: yup.number().typeError('Number required').min(0).max(100).required(),
-  discount_percent: yup.number().typeError('Number required').min(0).max(100).required(),
+    image_url: z.string().url('Must be a valid URL').or(z.literal('')),
+    images: z.array(z.string().url('Image must be a valid URL')),
 
-  weight_volume: yup.string().max(60).default(''),
-  expiry_date: yup.string().default(''),
-  manufacturing_date: yup.string().default(''),
-  batch_number: yup.string().max(60).default(''),
-  storage_instructions: yup.string().max(500).default(''),
+    min_order_qty: intField(100000),
+    max_order_qty: intField(1000000, 1),
+    low_stock_alert: intField(100000),
+    inventory_count: intField(),
+    reserved_count: intField(),
+    damaged_count: intField(),
 
-  status: yup
-    .mixed<'ACTIVE' | 'DRAFT' | 'OUT_OF_STOCK' | 'ARCHIVED'>()
-    .oneOf(['ACTIVE', 'DRAFT', 'OUT_OF_STOCK', 'ARCHIVED'])
-    .required(),
-  visibility: yup
-    .mixed<'PUBLIC' | 'INTERNAL'>()
-    .oneOf(['PUBLIC', 'INTERNAL'])
-    .required(),
-  tags: yup.array().of(yup.string().required().max(40)).max(20, 'At most 20 tags').default([]),
+    vendor_name: z.string().max(120),
+    supplier_contact: z.string().max(120),
 
-  pod_available: yup.boolean().required(),
-  host_request_allowed: yup.boolean().required(),
-  delivery_available: yup.boolean().required(),
-  delivery_charge: yup.number().typeError('Number required').min(0).max(100000).required(),
-});
+    unit_cost: z
+      .number({ invalid_type_error: 'Cost is required' })
+      .min(0)
+      .max(1000000),
+    purchase_price: moneyField,
+    selling_price: moneyField,
+    tax_percent: z.number({ invalid_type_error: 'Number required' }).min(0).max(100),
+    discount_percent: z.number({ invalid_type_error: 'Number required' }).min(0).max(100),
+
+    weight_volume: z.string().max(60),
+    expiry_date: z.string(),
+    manufacturing_date: z.string(),
+    batch_number: z.string().max(60),
+    storage_instructions: z.string().max(500),
+
+    status: z.enum(['ACTIVE', 'DRAFT', 'OUT_OF_STOCK', 'ARCHIVED']),
+    visibility: z.enum(['PUBLIC', 'INTERNAL']),
+    tags: z.array(z.string().max(40)).max(20, 'At most 20 tags'),
+
+    pod_available: z.boolean(),
+    host_request_allowed: z.boolean(),
+    delivery_available: z.boolean(),
+    delivery_charge: z.number({ invalid_type_error: 'Number required' }).min(0).max(100000),
+  })
+  .superRefine((values, ctx) => {
+    if (Number(values.max_order_qty ?? 0) < Number(values.min_order_qty ?? 0)) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        path: ['max_order_qty'],
+        message: 'Max order qty must be ≥ min order qty',
+      });
+    }
+  });

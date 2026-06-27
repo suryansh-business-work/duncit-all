@@ -33,49 +33,44 @@ const base = {
   product_requests: [],
 };
 
+const messagesFor = (input: Record<string, unknown>) => {
+  const result = podFormSchema.safeParse(input);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('podFormSchema', () => {
-  it('rejects empty title', async () => {
-    const error = await podFormSchema.validate({ ...base, pod_title: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/title/i);
+  it('rejects empty title', () => {
+    expect(messagesFor({ ...base, pod_title: '' })).toMatch(/title/i);
   });
 
-  it('rejects past pod_date_time', async () => {
-    const error = await podFormSchema.validate({ ...base, pod_date_time: pastISO }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/start/i);
+  it('rejects past pod_date_time', () => {
+    expect(messagesFor({ ...base, pod_date_time: pastISO })).toMatch(/start/i);
   });
 
-  it('rejects VIRTUAL pod without meeting_url', async () => {
-    const error = await podFormSchema
-      .validate({ ...base, pod_mode: 'VIRTUAL', venue_id: '', meeting_url: '' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.name).toBe('ValidationError');
-    expect(error.errors.join(' ')).toMatch(/meeting link|meeting url|select a venue/i);
+  it('rejects VIRTUAL pod without meeting_url', () => {
+    expect(messagesFor({ ...base, pod_mode: 'VIRTUAL', venue_id: '', meeting_url: '' })).toMatch(
+      /meeting link|meeting url|select a venue/i,
+    );
   });
 
-  it('requires at least one image in the media list', async () => {
-    const empty = await podFormSchema.validate({ ...base, media_text: '' }, { abortEarly: false }).catch((e) => e);
-    expect(empty.errors.join(' ')).toMatch(/at least one image/i);
-    const videoOnly = await podFormSchema
-      .validate({ ...base, media_text: 'https://cdn.example.com/clip.mp4' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(videoOnly.errors.join(' ')).toMatch(/at least one image/i);
+  it('requires at least one image in the media list', () => {
+    expect(messagesFor({ ...base, media_text: '' })).toMatch(/at least one image/i);
+    expect(messagesFor({ ...base, media_text: 'https://cdn.example.com/clip.mp4' })).toMatch(
+      /at least one image/i,
+    );
     const mixed = ['https://cdn.example.com/clip.mp4', 'https://cdn.example.com/a.jpg'].join('\n');
-    await expect(podFormSchema.validate({ ...base, media_text: mixed })).resolves.toBeTruthy();
+    expect(podFormSchema.safeParse({ ...base, media_text: mixed }).success).toBe(true);
   });
 
-  it('rejects FREE pod with non-zero amount', async () => {
-    const error = await podFormSchema
-      .validate({ ...base, pod_type: 'FREE', pod_amount: 100 }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/free pods/i);
+  it('rejects FREE pod with non-zero amount', () => {
+    expect(messagesFor({ ...base, pod_type: 'FREE', pod_amount: 100 })).toMatch(/free pods/i);
   });
 
-  it('rejects empty pod_hosts_id', async () => {
-    const error = await podFormSchema.validate({ ...base, pod_hosts_id: [] }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/host/i);
+  it('rejects empty pod_hosts_id', () => {
+    expect(messagesFor({ ...base, pod_hosts_id: [] })).toMatch(/host/i);
   });
 
-  it('accepts a fully valid pod', async () => {
-    await expect(podFormSchema.validate(base)).resolves.toBeTruthy();
+  it('accepts a fully valid pod', () => {
+    expect(podFormSchema.safeParse(base).success).toBe(true);
   });
 });

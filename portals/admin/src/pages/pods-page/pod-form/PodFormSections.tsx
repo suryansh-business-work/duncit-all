@@ -2,7 +2,7 @@ import { Accordion, AccordionDetails, AccordionSummary, Button, FormControlLabel
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
-import { useFormikContext } from 'formik';
+import { useFormContext, useWatch } from 'react-hook-form';
 import BasicInfoSection from './BasicInfoSection';
 import MediaSection from './MediaSection';
 import WhenWhereSection from './WhenWhereSection';
@@ -74,10 +74,12 @@ export default function PodFormSections({
   userName,
   finance,
 }: Readonly<Props>) {
-  const { values, setFieldValue } = useFormikContext<PodForm>();
+  const { control, setValue } = useFormContext<PodForm>();
+  const podMode = useWatch({ control, name: 'pod_mode' });
+  const productsEnabled = useWatch({ control, name: 'products_enabled' });
   const showProducts = useFeatureFlag('is_product_visible');
-  const sections = getSections(values.pod_mode, showProducts);
-  const expandableSections = sections.filter((section) => section.id !== 'products' || values.products_enabled);
+  const sections = getSections(podMode, showProducts);
+  const expandableSections = sections.filter((section) => section.id !== 'products' || productsEnabled);
   const allOpen = expandableSections.every((section) => expanded.has(section.id));
   return (
     <>
@@ -105,9 +107,9 @@ export default function PodFormSections({
       {sections.map((sec) => (
         <Accordion
           key={sec.id}
-          expanded={sec.id === 'products' ? values.products_enabled && expanded.has(sec.id) : expanded.has(sec.id)}
+          expanded={sec.id === 'products' ? productsEnabled && expanded.has(sec.id) : expanded.has(sec.id)}
           onChange={(_, open) => {
-            if (sec.id === 'products' && !values.products_enabled) return;
+            if (sec.id === 'products' && !productsEnabled) return;
             onToggle(sec.id, open);
           }}
           disableGutters
@@ -132,9 +134,9 @@ export default function PodFormSections({
                   onFocus={(event) => event.stopPropagation()}
                   control={
                     <Switch
-                      checked={values.products_enabled}
+                      checked={productsEnabled}
                       onChange={(event) => {
-                        setFieldValue('products_enabled', event.target.checked);
+                        setValue('products_enabled', event.target.checked);
                         onToggle('products', event.target.checked);
                       }}
                     />
@@ -155,7 +157,7 @@ export default function PodFormSections({
             {sec.body === 'AboutSection' && <AboutSection />}
             {sec.body === 'OffersSection' && <OffersSection />}
             {sec.body === 'PerksSection' && <PerksSection />}
-            {sec.body === 'DuncitProductsSection' && values.products_enabled && (
+            {sec.body === 'DuncitProductsSection' && productsEnabled && (
               <DuncitProductsSection products={inventoryProducts} />
             )}
             {sec.body === 'PaymentChargesSection' && (

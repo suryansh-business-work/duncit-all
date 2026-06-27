@@ -12,7 +12,8 @@ import {
   Stack,
   TextField,
 } from '@mui/material';
-import { Form, Formik } from 'formik';
+import { Controller, FormProvider, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import HostAccordionForm from '../../components/host-form/HostAccordionForm';
 import { STATUSES, UPDATE_HOST } from './queries';
 import {
@@ -32,78 +33,81 @@ export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Prop
   const [error, setError] = useState('');
   const [updateHost, state] = useMutation(UPDATE_HOST);
 
+  const methods = useForm<HostEditValues>({
+    resolver: zodResolver(hostEditSchema),
+    mode: 'onChange',
+    defaultValues: hostEditInitialValues(host),
+  });
+  const { control, formState } = methods;
+
   useEffect(() => {
     if (!host) return;
     setError('');
-  }, [host]);
+    methods.reset(hostEditInitialValues(host));
+  }, [host, methods]);
+
+  const onSubmit = methods.handleSubmit(async (values) => {
+    if (!host) return;
+    setError('');
+    try {
+      await updateHost({ variables: { id: host.id, ...toHostEditVariables(values) } });
+      onSaved();
+      onClose();
+    } catch (err: any) {
+      setError(err?.message || 'Failed to save host');
+    }
+  });
 
   return (
     <Dialog open={!!host} onClose={state.loading ? undefined : onClose} fullWidth maxWidth="md">
-      <Formik<HostEditValues>
-        initialValues={hostEditInitialValues(host)}
-        enableReinitialize
-        validationSchema={hostEditSchema}
-        validateOnBlur
-        validateOnChange
-        onSubmit={async (values) => {
-          if (!host) return;
-          setError('');
-          try {
-            await updateHost({ variables: { id: host.id, ...toHostEditVariables(values) } });
-            onSaved();
-            onClose();
-          } catch (err: any) {
-            setError(err?.message || 'Failed to save host');
-          }
-        }}
-      >
-        {({ values, errors, touched, submitCount, handleBlur, handleChange, submitForm }) => {
-          const statusError =
-            !!errors.status && (submitCount > 0 || touched.status || !!values.status);
-          return (
-            <Form noValidate>
-              <DialogTitle>Edit Host</DialogTitle>
-              <DialogContent dividers>
-                <Stack spacing={2} sx={{ mt: 1 }}>
-                  {error && <Alert severity="error">{error}</Alert>}
-                  <HostAccordionForm mode="edit" />
-                  <TextField
-                    select
-                    label="Status"
-                    name="status"
-                    value={values.status}
-                    onChange={handleChange}
-                    onBlur={handleBlur}
-                    error={statusError}
-                    helperText={statusError ? (errors.status as string) : ' '}
-                    sx={{ maxWidth: 280 }}
-                  >
-                    {STATUSES.filter(Boolean).map((item) => (
-                      <MenuItem key={item} value={item}>
-                        {item}
-                      </MenuItem>
-                    ))}
-                  </TextField>
-                </Stack>
-              </DialogContent>
-              <DialogActions>
-                <Button type="button" onClick={onClose} disabled={state.loading}>
-                  Cancel
-                </Button>
-                <Button
-                  type="button"
-                  variant="contained"
-                  onClick={submitForm}
-                  disabled={state.loading}
-                  startIcon={state.loading ? <CircularProgress size={14} /> : undefined}
-                >
-                  Save
-                </Button>
-              </DialogActions>
-            </Form>
-          );
-        }}
-      </Formik>
+      <FormProvider {...methods}>
+        <form onSubmit={onSubmit} noValidate>
+          <DialogTitle>Edit Host</DialogTitle>
+          <DialogContent dividers>
+            <Stack spacing={2} sx={{ mt: 1 }}>
+              {error && <Alert severity="error">{error}</Alert>}
+              <HostAccordionForm mode="edit" />
+              <Controller
+                control={control}
+                name="status"
+                render={({ field, fieldState }) => {
+                  const statusError =
+                    !!fieldState.error && (formState.submitCount > 0 || fieldState.isTouched || !!field.value);
+                  return (
+                    <TextField
+                      select
+                      label="Status"
+                      {...field}
+                      error={statusError}
+                      helperText={statusError ? fieldState.error?.message : ' '}
+                      sx={{ maxWidth: 280 }}
+                    >
+                      {STATUSES.filter(Boolean).map((item) => (
+                        <MenuItem key={item} value={item}>
+                          {item}
+                        </MenuItem>
+                      ))}
+                    </TextField>
+                  );
+                }}
+              />
+            </Stack>
+          </DialogContent>
+          <DialogActions>
+            <Button type="button" onClick={onClose} disabled={state.loading}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              variant="contained"
+              disabled={state.loading}
+              startIcon={state.loading ? <CircularProgress size={14} /> : undefined}
+            >
+              Save
+            </Button>
+          </DialogActions>
+        </form>
+      </FormProvider>
     </Dialog>
   );
 }

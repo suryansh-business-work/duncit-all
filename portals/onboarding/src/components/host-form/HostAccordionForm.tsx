@@ -13,11 +13,12 @@ import {
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import { useFormikContext, getIn } from 'formik';
+import { useFormContext, useWatch } from 'react-hook-form';
 import DateField from '../DateField';
 import HostBankAccountSection from './HostBankAccountSection';
 import HostIdentitySection from './HostIdentitySection';
 import HostVerificationSection from './HostVerificationSection';
+import { useHostFieldProps } from './useHostFieldProps';
 import { getHostDobMaxDate, getHostDobMinDate } from '../../utils/hostDob';
 import type { HostCreateValues, HostEditValues } from '../../forms/host.form';
 
@@ -48,8 +49,10 @@ type Values = HostCreateValues & Partial<HostEditValues>;
  * details auto-fill from that user's profile.
  */
 export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>) {
-  const formik = useFormikContext<Values>();
-  const { values, errors, touched, submitCount, handleBlur, handleChange, setFieldValue } = formik;
+  const { control, setValue, getValues } = useFormContext<Values>();
+  const { hasError, errorMessage, tfProps } = useHostFieldProps();
+  const targetUserId = useWatch({ control, name: 'target_user_id' });
+  const dob = useWatch({ control, name: 'step1.dob' });
 
   const [expanded, setExpanded] = useState<Set<PanelKey>>(new Set(['personal']));
   const allExpanded = useMemo(() => ALL_PANELS.every((p) => expanded.has(p)), [expanded]);
@@ -57,45 +60,35 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
   const toggle = (panel: PanelKey) =>
     setExpanded((prev) => {
       const next = new Set(prev);
-      if (next.has(panel)) next.delete(panel);
-      else next.add(panel);
+      if (next.has(panel)) {
+        next.delete(panel);
+      } else {
+        next.add(panel);
+      }
       return next;
     });
   const expandAll = () => setExpanded(new Set(ALL_PANELS));
   const collapseAll = () => setExpanded(new Set());
 
-  const hasError = (name: string) => {
-    const value = getIn(values, name);
-    const hasValue = Array.isArray(value) ? value.length > 0 : String(value ?? '').length > 0;
-    return Boolean(
-      getIn(errors, name) && (submitCount > 0 || getIn(touched, name) || hasValue),
-    );
-  };
-
-  const tfProps = (name: string) => ({
-    name,
-    value: getIn(values, name) ?? '',
-    onChange: handleChange,
-    onBlur: handleBlur,
-    error: hasError(name),
-    helperText: hasError(name) ? (getIn(errors, name) as string) : ' ',
-    fullWidth: true,
-    size: 'small' as const,
-  });
-
+  const opts = { shouldValidate: true, shouldDirty: true } as const;
   const handlePickUser = (next: UserOption | null) => {
-    setFieldValue('target_user_id', next?.user_id ?? '');
+    setValue('target_user_id', next?.user_id ?? '', opts);
     if (next) {
-      setFieldValue('step1.full_name', next.full_name ?? values.step1.full_name);
-      setFieldValue('step1.email', next.email ?? values.step1.email);
-      setFieldValue('step1.phone', next.phone_number ?? values.step1.phone);
+      const current = getValues('step1');
+      setValue('step1.full_name', next.full_name ?? current.full_name, opts);
+      setValue('step1.email', next.email ?? current.email, opts);
+      setValue('step1.phone', next.phone_number ?? current.phone, opts);
     }
   };
 
   const selectedUser =
     mode === 'create' && userOptions
-      ? userOptions.find((u) => u.user_id === values.target_user_id) ?? null
+      ? userOptions.find((u) => u.user_id === targetUserId) ?? null
       : null;
+
+  const targetUserHelper = hasError('target_user_id')
+    ? errorMessage('target_user_id')
+    : 'Personal details auto-fill from this user.';
 
   return (
     <Stack spacing={1.5}>
@@ -131,11 +124,7 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
                     size="small"
                     required
                     error={hasError('target_user_id')}
-                    helperText={
-                      hasError('target_user_id')
-                        ? (errors.target_user_id as string)
-                        : 'Personal details auto-fill from this user.'
-                    }
+                    helperText={targetUserHelper}
                   />
                 )}
               />
@@ -147,10 +136,10 @@ export default function HostAccordionForm({ mode, userOptions }: Readonly<Props>
               <DateField
                 size="small"
                 label="DOB"
-                value={values.step1.dob}
-                onChange={(iso) => setFieldValue('step1.dob', iso)}
+                value={dob ?? ''}
+                onChange={(iso) => setValue('step1.dob', iso, opts)}
                 error={hasError('step1.dob')}
-                helperText={hasError('step1.dob') ? (getIn(errors, 'step1.dob') as string) : ' '}
+                helperText={hasError('step1.dob') ? errorMessage('step1.dob') : ' '}
                 minDate={getHostDobMinDate()}
                 maxDate={getHostDobMaxDate()}
               />

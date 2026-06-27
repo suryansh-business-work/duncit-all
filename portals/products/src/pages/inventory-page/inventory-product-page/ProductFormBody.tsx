@@ -1,5 +1,5 @@
 import { Box } from '@mui/material';
-import { useFormikContext } from 'formik';
+import { useFormContext } from 'react-hook-form';
 import ProductAccordion from './ProductAccordion';
 import StickyFooter from './StickyFooter';
 import type { InventoryProductFormValues } from './types';
@@ -14,6 +14,7 @@ interface ProductFormBodyProps {
   activityLoading: boolean;
   onCancel: () => void;
   onAfterSave: () => void;
+  onSubmit: (values: InventoryProductFormValues) => Promise<void> | void;
   onError: (msg: string) => void;
 }
 
@@ -26,19 +27,23 @@ export default function ProductFormBody({
   activityLoading,
   onCancel,
   onAfterSave,
+  onSubmit,
   onError,
 }: Readonly<ProductFormBodyProps>) {
-  const f = useFormikContext<InventoryProductFormValues>();
-  useUnsavedWarning(f.dirty && !f.isSubmitting);
+  const f = useFormContext<InventoryProductFormValues>();
+  const { isSubmitting, isDirty } = f.formState;
+  useUnsavedWarning(isDirty && !isSubmitting);
+
+  const handleSubmit = f.handleSubmit(onSubmit);
 
   const submit = (andClose: boolean) => {
-    f.submitForm().then(() => {
+    handleSubmit().then(() => {
       if (andClose && !isNew) onAfterSave();
     });
   };
 
   return (
-    <Box component="form" onSubmit={f.handleSubmit} noValidate>
+    <Box component="form" onSubmit={handleSubmit} noValidate>
       <ProductAccordion
         isNew={isNew}
         categories={categories}
@@ -49,8 +54,8 @@ export default function ProductFormBody({
         onError={onError}
       />
       <StickyFooter
-        busy={f.isSubmitting}
-        dirty={f.dirty}
+        busy={isSubmitting}
+        dirty={isDirty}
         isEdit={!isNew}
         onCancel={onCancel}
         onSaveAndContinue={() => submit(false)}

@@ -1,16 +1,22 @@
-import { useFormikContext } from 'formik';
+import { Controller, useFormContext } from 'react-hook-form';
 import ChipArrayField from './ChipArrayField';
 import type { PodForm } from '../queries';
 
 export default function OffersSection() {
-  const { values, setFieldValue } = useFormikContext<PodForm>();
+  const { control } = useFormContext<PodForm>();
   return (
-    <ChipArrayField
-      label="Amenities & facilities"
-      value={values.what_this_pod_offers}
-      onChange={(next) => setFieldValue('what_this_pod_offers', next)}
-      placeholder="e.g. Free WiFi, Parking, Pet Friendly"
-      helperText="Press Enter to add a chip. Keep each chip short."
+    <Controller
+      control={control}
+      name="what_this_pod_offers"
+      render={({ field }) => (
+        <ChipArrayField
+          label="Amenities & facilities"
+          value={field.value}
+          onChange={field.onChange}
+          placeholder="e.g. Free WiFi, Parking, Pet Friendly"
+          helperText="Press Enter to add a chip. Keep each chip short."
+        />
+      )}
     />
   );
 }

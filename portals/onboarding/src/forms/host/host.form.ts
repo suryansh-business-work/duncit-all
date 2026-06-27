@@ -1,72 +1,94 @@
-import * as yup from 'yup';
-import { AADHAR_PATTERN, PAN_PATTERN, validationRules } from '../validation/rules';
-import {
-  bankAccountSchema,
-  blankBankAccountValues,
-  normalizeBankAccountValues,
-} from '../validation/bankAccount';
+import { z } from 'zod';
+import { AADHAR_PATTERN, PAN_PATTERN, PERSON_NAME_PATTERN } from '../validation/rules';
+import { blankBankAccountValues, normalizeBankAccountValues } from '../validation/bankAccount';
+import type { BankAccountValues } from '../validation/bankAccount';
+import { castHostBankAccount, hostBankAccountSchema } from './host-bank-account';
 import { HOST_DOB_RANGE_ERROR, isValidHostDob } from '../../utils/hostDob';
 
-const hostPhone = yup
+const EMAIL_PATTERN = /^[^@\s]+@[^@\s]+\.[^@\s]+$/;
+
+const requiredText = (label: string, min: number, max: number) =>
+  z
+    .string()
+    .trim()
+    .min(1, `${label} is required`)
+    .min(min, `${label} must be at least ${min} characters`)
+    .max(max, `${label} must be ${max} characters or fewer`);
+
+const hostFullName = z
   .string()
   .trim()
-  .matches(/^\+?\d{6,15}$/, 'Phone must contain only digits with an optional + prefix')
-  .required('Phone is required');
+  .min(1, 'Full name is required')
+  .regex(PERSON_NAME_PATTERN, 'Full name can use letters, spaces, apostrophes, periods and hyphens only');
 
-const hostDob = yup
+const hostEmail = z
+  .string()
+  .trim()
+  .transform((value) => value.toLowerCase())
+  .pipe(
+    z.string().min(1, 'Email is required').max(254).regex(EMAIL_PATTERN, 'Enter a valid email'),
+  );
+
+const hostPhone = z
+  .string()
+  .trim()
+  .min(1, 'Phone is required')
+  .regex(/^\+?\d{6,15}$/, 'Phone must contain only digits with an optional + prefix');
+
+const hostDob = z
   .string()
   .trim()
   .default('')
-  .test('dob', HOST_DOB_RANGE_ERROR, isValidHostDob);
+  .refine(isValidHostDob, HOST_DOB_RANGE_ERROR);
 
-export const hostStep1Schema = yup.object({
-  full_name: validationRules.personName('Full name'),
-  email: validationRules.email('Email'),
+export const hostStep1Schema = z.object({
+  full_name: hostFullName,
+  email: hostEmail,
   phone: hostPhone,
   dob: hostDob,
 });
 
-export const hostStep2Schema = yup.object({
-  aadhar_number: yup
+export const hostStep2Schema = z.object({
+  aadhar_number: z
     .string()
     .trim()
-    .matches(AADHAR_PATTERN, 'Aadhar must be a 12 digit number')
-    .required('Aadhar is required'),
-  pan_number: yup
+    .min(1, 'Aadhar is required')
+    .regex(AADHAR_PATTERN, 'Aadhar must be a 12 digit number'),
+  pan_number: z
     .string()
     .trim()
-    .uppercase()
-    .matches(PAN_PATTERN, 'PAN must use format ABCDE1234F')
-    .required('PAN is required'),
-  passport_photo_url: validationRules.requiredText('Passport photo', 1, 1000),
+    .transform((value) => value.toUpperCase())
+    .pipe(z.string().min(1, 'PAN is required').regex(PAN_PATTERN, 'PAN must use format ABCDE1234F')),
+  passport_photo_url: requiredText('Passport photo', 1, 1000),
 });
 
-export const hostStep3Schema = yup.object({
-  police_verification_url: validationRules.requiredText('Police verification', 1, 1000),
-  full_address: validationRules.requiredText('Address', 5, 500),
-  bank_account: bankAccountSchema,
-  tags: yup.array(yup.string().trim().max(40)).default([]),
+export const hostStep3Schema = z.object({
+  police_verification_url: requiredText('Police verification', 1, 1000),
+  full_address: requiredText('Address', 5, 500),
+  bank_account: hostBankAccountSchema,
+  tags: z.array(z.string().trim().max(40)).default([]),
 });
 
-export const hostEditSchema = yup.object({
+const hostStatus = z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], {
+  errorMap: () => ({ message: 'Select a valid status' }),
+});
+
+export const hostEditSchema = z.object({
   step1: hostStep1Schema,
   step2: hostStep2Schema,
   step3: hostStep3Schema,
-  status: yup
-    .mixed<'DRAFT' | 'SUBMITTED' | 'APPROVED' | 'REJECTED'>()
-    .oneOf(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], 'Select a valid status')
-    .required('Status is required'),
+  status: hostStatus,
 });
 
-export const hostCreateSchema = yup.object({
-  target_user_id: yup.string().trim().required('Select a user'),
+export const hostCreateSchema = z.object({
+  target_user_id: z.string().trim().min(1, 'Select a user'),
   step1: hostStep1Schema,
   step2: hostStep2Schema,
   step3: hostStep3Schema,
 });
 
-export type HostEditValues = yup.InferType<typeof hostEditSchema>;
-export type HostCreateValues = yup.InferType<typeof hostCreateSchema>;
+export type HostEditValues = z.input<typeof hostEditSchema>;
+export type HostCreateValues = z.input<typeof hostCreateSchema>;
 
 const dateOnly = (value?: string | null) =>
   value ? new Date(value).toISOString().slice(0, 10) : '';
@@ -91,16 +113,24 @@ export function hostEditInitialValues(host: any | null): HostEditValues {
       tags: host?.tags ?? [],
     },
     status: host?.status ?? 'APPROVED',
-  } as HostEditValues;
+  };
 }
 
+type HostStepValues = Pick<HostCreateValues, 'step1' | 'step2' | 'step3'>;
+
+const castStep1 = (values: HostStepValues) => hostStep1Schema.parse(values.step1);
+const castStep2 = (values: HostStepValues) => hostStep2Schema.parse(values.step2);
+const castStep3 = (values: HostStepValues) => {
+  const step3 = hostStep3Schema.parse(values.step3);
+  return { ...step3, bank_account: castHostBankAccount(step3.bank_account as BankAccountValues) };
+};
+
 export function toHostEditVariables(values: HostEditValues) {
-  const cast = hostEditSchema.cast(values, { stripUnknown: true });
   return {
-    step1: cast.step1,
-    step2: cast.step2,
-    step3: cast.step3,
-    status: cast.status,
+    step1: castStep1(values),
+    step2: castStep2(values),
+    step3: castStep3(values),
+    status: hostStatus.parse(values.status),
   };
 }
 
@@ -112,12 +142,11 @@ export const hostCreateInitialValues: HostCreateValues = {
 };
 
 export function toHostCreateVariables(values: HostCreateValues, submit: boolean) {
-  const cast = hostCreateSchema.cast(values, { stripUnknown: true });
   return {
-    target_user_id: cast.target_user_id,
-    step1: cast.step1,
-    step2: cast.step2,
-    step3: cast.step3,
+    target_user_id: values.target_user_id.trim(),
+    step1: castStep1(values),
+    step2: castStep2(values),
+    step3: castStep3(values),
     submit,
   };
 }

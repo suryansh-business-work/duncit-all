@@ -1,4 +1,4 @@
-import { useFormikContext } from 'formik';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { MenuItem, Stack, TextField } from '@mui/material';
 import DateTimeField from '../../../components/DateTimeField';
 import GoogleMapPreview from '../../../components/GoogleMapPreview';
@@ -10,18 +10,22 @@ interface Props {
 }
 
 export default function WhenWhereSection({ clubs, venues }: Readonly<Props>) {
-  const { values, errors, touched, setFieldValue } = useFormikContext<PodForm>();
-  const err = (k: keyof PodForm) => !!touched[k] && !!errors[k];
-  const help = (k: keyof PodForm) => (touched[k] ? (errors[k] as string) : undefined);
+  const { control, setValue, formState: { errors } } = useFormContext<PodForm>();
+  const clubId = useWatch({ control, name: 'club_id' });
+  const venueId = useWatch({ control, name: 'venue_id' });
+  const startDateTime = useWatch({ control, name: 'pod_date_time' });
   const linkedVenueIds = new Set(
-    clubs.find((club) => club.id === values.club_id)?.meetup_venues_id ?? []
+    clubs.find((club) => club.id === clubId)?.meetup_venues_id ?? []
   );
   const clubVenues = venues.filter((venue) => linkedVenueIds.has(venue.id));
-  const selectedVenue = venues.find((venue) => venue.id === values.venue_id);
+  const selectedVenue = venues.find((venue) => venue.id === venueId);
   const now = new Date();
-  const endMin = values.pod_date_time && new Date(values.pod_date_time) > now
-    ? new Date(values.pod_date_time)
+  const endMin = startDateTime && new Date(startDateTime) > now
+    ? new Date(startDateTime)
     : now;
+  const venueHint = clubVenues.length === 0
+    ? 'No approved venues linked to this club.'
+    : 'Only venues linked with this club are shown.';
 
   return (
     <Stack spacing={2}>
@@ -29,24 +33,19 @@ export default function WhenWhereSection({ clubs, venues }: Readonly<Props>) {
         <TextField
           select
           label="Venue"
-          name="venue_id"
-          value={values.venue_id}
+          value={venueId}
           onChange={(event) => {
-            setFieldValue('venue_id', event.target.value);
-            setFieldValue('location_id', '');
-            setFieldValue('zone_name', '');
+            setValue('venue_id', event.target.value, { shouldValidate: true });
+            setValue('location_id', '');
+            setValue('zone_name', '');
           }}
           fullWidth
           required
-          disabled={!values.club_id}
-          error={err('venue_id')}
+          disabled={!clubId}
+          error={!!errors.venue_id}
           helperText={
-            help('venue_id') ||
-            (!values.club_id
-              ? 'Pick a club in Basic Information first.'
-              : clubVenues.length === 0
-                ? 'No approved venues linked to this club.'
-                : 'Only venues linked with this club are shown.')
+            errors.venue_id?.message ||
+            (!clubId ? 'Pick a club in Basic Information first.' : venueHint)
           }
         >
           {clubVenues.map((venue) => (
@@ -73,22 +72,34 @@ export default function WhenWhereSection({ clubs, venues }: Readonly<Props>) {
         />
       )}
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <DateTimeField
-          label="Start date & time"
-          value={values.pod_date_time}
-          onChange={(iso) => setFieldValue('pod_date_time', iso)}
-          minDateTime={now}
-          required
-          error={err('pod_date_time')}
-          helperText={help('pod_date_time')}
+        <Controller
+          control={control}
+          name="pod_date_time"
+          render={({ field, fieldState }) => (
+            <DateTimeField
+              label="Start date & time"
+              value={field.value}
+              onChange={field.onChange}
+              minDateTime={now}
+              required
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+            />
+          )}
         />
-        <DateTimeField
-          label="End date & time"
-          value={values.pod_end_date_time}
-          onChange={(iso) => setFieldValue('pod_end_date_time', iso)}
-          minDateTime={endMin}
-          error={err('pod_end_date_time')}
-          helperText={help('pod_end_date_time')}
+        <Controller
+          control={control}
+          name="pod_end_date_time"
+          render={({ field, fieldState }) => (
+            <DateTimeField
+              label="End date & time"
+              value={field.value}
+              onChange={field.onChange}
+              minDateTime={endMin}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+            />
+          )}
         />
       </Stack>
     </Stack>

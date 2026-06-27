@@ -1,32 +1,28 @@
-import { useFormikContext } from 'formik';
+import { useFormContext } from 'react-hook-form';
 import { Stack, TextField } from '@mui/material';
+import RhfTextField from '../../../forms/components/RhfTextField';
 import type { PodForm } from '../queries';
 
 export default function AboutSection() {
-  const { values, errors, touched, handleChange } = useFormikContext<PodForm>();
+  const { control, register } = useFormContext<PodForm>();
   return (
     <Stack spacing={2}>
-      <TextField
-        label="Description"
+      <RhfTextField
+        control={control}
         name="pod_description"
-        value={values.pod_description}
-        onChange={handleChange}
-        fullWidth
+        label="Description"
+        required
         multiline
         minRows={3}
-        required
-        error={!!touched.pod_description && !!errors.pod_description}
-        helperText={touched.pod_description ? (errors.pod_description as string) : undefined}
+        hint=" "
       />
       <TextField
         label="Pod info / additional notes"
-        name="pod_info"
-        value={values.pod_info}
-        onChange={handleChange}
         fullWidth
         multiline
         minRows={2}
         helperText="Logistics, what to bring, parking notes, etc."
+        {...register('pod_info')}
       />
     </Stack>
   );

@@ -1,6 +1,8 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useMutation, useQuery } from '@apollo/client';
+import { FormProvider, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
   Button,
@@ -10,7 +12,6 @@ import {
   Stack,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { Formik } from 'formik';
 import ProductFormBody from './ProductFormBody';
 import ProductPageHeader from './ProductPageHeader';
 import {
@@ -22,7 +23,7 @@ import {
 } from './productQueries';
 import { CREATE_PRODUCT, UPDATE_PRODUCT } from '../queries';
 import { productSchema } from './schema';
-import { toFormValues, toSubmitInput } from './types';
+import { toFormValues, toSubmitInput, type InventoryProductFormValues } from './types';
 
 export default function InventoryProductPage() {
   const navigate = useNavigate();
@@ -64,6 +65,37 @@ export default function InventoryProductPage() {
     (c: any) => c.level !== 'SUPER'
   );
 
+  const methods = useForm<InventoryProductFormValues>({
+    resolver: zodResolver(productSchema),
+    mode: 'onChange',
+    defaultValues: initialValues,
+  });
+
+  // Mirrors Formik `enableReinitialize`: refill when the loaded product changes.
+  useEffect(() => {
+    methods.reset(initialValues);
+  }, [initialValues, methods]);
+
+  const onSubmit = async (values: InventoryProductFormValues) => {
+    setError(null);
+    try {
+      const input = toSubmitInput(values);
+      if (id) {
+        await updateProduct({ variables: { id, input } });
+        setToast('Saved');
+        await productQuery.refetch();
+        methods.reset(values);
+      } else {
+        const res = await createProduct({ variables: { input } });
+        const newId = res.data?.createInventoryProduct?.id;
+        setToast('Created');
+        if (newId) navigate(`/inventory/${newId}/edit`, { replace: true });
+      }
+    } catch (err: any) {
+      setError(err?.message ?? 'Save failed');
+    }
+  };
+
   if (!isNew && productQuery.loading && !productQuery.data) {
     return (
       <Stack alignItems="center" sx={{ py: 8 }}>
@@ -98,33 +130,7 @@ export default function InventoryProductPage() {
           {error}
         </Alert>
       )}
-      <Formik
-        initialValues={initialValues}
-        enableReinitialize
-        validationSchema={productSchema}
-        validateOnChange
-        onSubmit={async (values, helpers) => {
-          setError(null);
-          try {
-            const input = toSubmitInput(values);
-            if (id) {
-              await updateProduct({ variables: { id, input } });
-              setToast('Saved');
-              await productQuery.refetch();
-              helpers.resetForm({ values });
-            } else {
-              const res = await createProduct({ variables: { input } });
-              const newId = res.data?.createInventoryProduct?.id;
-              setToast('Created');
-              if (newId) navigate(`/inventory/${newId}/edit`, { replace: true });
-            }
-          } catch (err: any) {
-            setError(err?.message ?? 'Save failed');
-          } finally {
-            helpers.setSubmitting(false);
-          }
-        }}
-      >
+      <FormProvider {...methods}>
         <ProductFormBody
           isNew={isNew}
           categories={categories}
@@ -136,9 +142,10 @@ export default function InventoryProductPage() {
           }
           onCancel={() => navigate('/inventory')}
           onAfterSave={() => navigate('/inventory')}
+          onSubmit={onSubmit}
           onError={setError}
         />
-      </Formik>
+      </FormProvider>
       <Snackbar
         open={!!toast}
         autoHideDuration={3000}

@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useFormikContext } from 'formik';
+import { useFormContext, useWatch } from 'react-hook-form';
 import type { PodForm } from '../queries';
 
 interface Props {
@@ -8,51 +8,57 @@ interface Props {
 }
 
 /**
- * Keeps dependent fields consistent inside the Formik tree:
+ * Keeps dependent fields consistent inside the RHF tree:
  * - resets venue_id when club changes and the prior venue is no longer valid
  * - forces pod_amount = 0 for FREE pod types
  */
-export default function CascadeEffect({ clubs, venues }: Props) {
-  const { values, setFieldValue } = useFormikContext<PodForm>();
+export default function CascadeEffect({ clubs, venues }: Readonly<Props>) {
+  const { control, getValues, setValue } = useFormContext<PodForm>();
+  const podMode = useWatch({ control, name: 'pod_mode' });
+  const clubId = useWatch({ control, name: 'club_id' });
+  const venueId = useWatch({ control, name: 'venue_id' });
+  const podType = useWatch({ control, name: 'pod_type' });
+  const productsEnabled = useWatch({ control, name: 'products_enabled' });
 
   useEffect(() => {
-    if (values.pod_mode === 'VIRTUAL') {
-      if (values.venue_id) setFieldValue('venue_id', '');
-      if (values.location_id) setFieldValue('location_id', '');
-      if (values.zone_name) setFieldValue('zone_name', '');
-      if (values.place_charges.length > 0) setFieldValue('place_charges', []);
-      if (values.products_enabled) setFieldValue('products_enabled', false);
-      if (values.product_requests.length > 0) setFieldValue('product_requests', []);
+    const values = getValues();
+    if (podMode === 'VIRTUAL') {
+      if (values.venue_id) setValue('venue_id', '');
+      if (values.location_id) setValue('location_id', '');
+      if (values.zone_name) setValue('zone_name', '');
+      if (values.place_charges.length > 0) setValue('place_charges', []);
+      if (values.products_enabled) setValue('products_enabled', false);
+      if (values.product_requests.length > 0) setValue('product_requests', []);
       return;
     }
-    if (values.meeting_platform) setFieldValue('meeting_platform', '');
-    if (values.meeting_url) setFieldValue('meeting_url', '');
-    if (values.meeting_notes) setFieldValue('meeting_notes', '');
-  }, [values.pod_mode]); // eslint-disable-line react-hooks/exhaustive-deps
+    if (values.meeting_platform) setValue('meeting_platform', '');
+    if (values.meeting_url) setValue('meeting_url', '');
+    if (values.meeting_notes) setValue('meeting_notes', '');
+  }, [podMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!values.club_id || !values.venue_id) return;
-    const club = clubs.find((item: any) => item.id === values.club_id);
+    if (!clubId || !venueId) return;
+    const club = clubs.find((item: any) => item.id === clubId);
     const linked = new Set(club?.meetup_venues_id ?? []);
-    const valid = venues.some((venue: any) => venue.id === values.venue_id && linked.has(venue.id));
+    const valid = venues.some((venue: any) => venue.id === venueId && linked.has(venue.id));
     if (!valid) {
-      setFieldValue('venue_id', '');
-      setFieldValue('location_id', '');
-      setFieldValue('zone_name', '');
+      setValue('venue_id', '');
+      setValue('location_id', '');
+      setValue('zone_name', '');
     }
-  }, [values.club_id, venues, clubs]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [clubId, venues, clubs]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (values.pod_type.includes('FREE') && values.pod_amount !== 0) {
-      setFieldValue('pod_amount', 0);
+    if (podType.includes('FREE') && getValues('pod_amount') !== 0) {
+      setValue('pod_amount', 0);
     }
-  }, [values.pod_type]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [podType]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {
-    if (!values.products_enabled && values.product_requests.length > 0) {
-      setFieldValue('product_requests', []);
+    if (!productsEnabled && getValues('product_requests').length > 0) {
+      setValue('product_requests', []);
     }
-  }, [values.products_enabled]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [productsEnabled]); // eslint-disable-line react-hooks/exhaustive-deps
 
   return null;
 }

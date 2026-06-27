@@ -1,16 +1,22 @@
-import { useFormikContext } from 'formik';
+import { Controller, useFormContext } from 'react-hook-form';
 import MediaListField from '../../../components/MediaListField';
 import type { PodForm } from '../queries';
 
 export default function MediaSection() {
-  const { values, setFieldValue } = useFormikContext<PodForm>();
+  const { control } = useFormContext<PodForm>();
   return (
-    <MediaListField
-      label="Images & videos"
-      value={values.media_text}
-      onChange={(v) => setFieldValue('media_text', v)}
-      folder="/pods"
-      helperText="Cover image first; rest become a gallery."
+    <Controller
+      control={control}
+      name="media_text"
+      render={({ field }) => (
+        <MediaListField
+          label="Images & videos"
+          value={field.value}
+          onChange={field.onChange}
+          folder="/pods"
+          helperText="Cover image first; rest become a gallery."
+        />
+      )}
     />
   );
 }

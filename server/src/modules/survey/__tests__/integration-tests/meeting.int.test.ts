@@ -5,6 +5,9 @@ import {
   sendMeetingScheduledEmail,
   sendMeetingScheduledAdminEmail,
   sendMeetingCancelledEmail,
+  sendMeetingRescheduledEmail,
+  sendMeetingApprovedEmail,
+  sendMeetingRejectedEmail,
 } from '@services/email/email.service';
 
 jest.mock('@services/email/email.service', () => ({
@@ -12,6 +15,9 @@ jest.mock('@services/email/email.service', () => ({
   sendMeetingScheduledAdminEmail: jest.fn().mockResolvedValue(undefined),
   sendMeetingBookedEmail: jest.fn().mockResolvedValue(undefined),
   sendMeetingCancelledEmail: jest.fn().mockResolvedValue(undefined),
+  sendMeetingRescheduledEmail: jest.fn().mockResolvedValue(undefined),
+  sendMeetingApprovedEmail: jest.fn().mockResolvedValue(undefined),
+  sendMeetingRejectedEmail: jest.fn().mockResolvedValue(undefined),
 }));
 
 const userId = new Types.ObjectId().toString();
@@ -356,5 +362,72 @@ describe('meeting slot booking', () => {
     });
     const mine = (await meetingService.list({ kind: 'ECOMM' })).find((m) => m!.user_id === u);
     expect(mine!.category_name).toBe('Badminton');
+  });
+});
+
+describe('meeting notifications + cross-flow slot picker (batch)', () => {
+  it('kind-aware picker hides the user\'s own other-flow slot but keeps the same-flow slot selectable', async () => {
+    const me = new Types.ObjectId().toString();
+    const open = (await meetingService.slots(me, { kind: 'VENUE' })).filter((s) => s.available);
+    expect(open.length).toBeGreaterThan(0);
+    const slot = open[0];
+    // Book that instant for HOST.
+    await meetingService.request(me, 'HOST', { requested_at: slot.start_at, contact_phone: '9170000001' });
+    // In the VENUE picker it must now show unavailable (other-flow booking).
+    const venueView = await meetingService.slots(me, { kind: 'VENUE' });
+    expect(venueView.find((s) => s.start_at === slot.start_at)?.available).toBe(false);
+    // But in the HOST picker the user's own same-flow slot stays selectable.
+    const hostView = await meetingService.slots(me, { kind: 'HOST' });
+    expect(hostView.find((s) => s.start_at === slot.start_at)?.available).toBe(true);
+  });
+
+  it('rejects rescheduling to the same slot (must move to a different time)', async () => {
+    const u = new Types.ObjectId().toString();
+    await meetingService.request(u, 'HOST', { requested_at: '2028-01-03T05:00:00.000Z', contact_phone: '9180000001' });
+    await expect(
+      meetingService.rescheduleMyMeeting(u, 'HOST', '2028-01-03T05:00:00.000Z'),
+    ).rejects.toThrow(/different time slot/i);
+  });
+
+  it('emails distinct events when staff schedule, reschedule, then update details', async () => {
+    const applicant = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: applicant,
+      auth: { email: 'evt@example.com' },
+      profile: { first_name: 'Evt' },
+    } as never);
+    await meetingService.request(applicant.toString(), 'HOST', { requested_at: '2028-02-01T05:00:00.000Z', contact_phone: '9190000001' });
+    const m = await meetingService.myMeeting(applicant.toString(), 'HOST');
+
+    (sendMeetingScheduledEmail as jest.Mock).mockClear();
+    await meetingService.update(m!.id, { status: 'SCHEDULED', scheduled_at: '2028-02-01T05:00:00.000Z', meeting_link: 'https://x' });
+    expect(sendMeetingScheduledEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'evt@example.com' }));
+
+    (sendMeetingRescheduledEmail as jest.Mock).mockClear();
+    await meetingService.update(m!.id, { scheduled_at: '2028-02-01T06:00:00.000Z' });
+    expect(sendMeetingRescheduledEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'evt@example.com', change: 'rescheduled' }));
+
+    (sendMeetingRescheduledEmail as jest.Mock).mockClear();
+    await meetingService.update(m!.id, { meeting_link: 'https://y' });
+    expect(sendMeetingRescheduledEmail).toHaveBeenCalledWith(expect.objectContaining({ change: 'updated' }));
+  });
+
+  it('emails the applicant on the onboarding approve / deny decision', async () => {
+    const applicant = new Types.ObjectId();
+    await UserModel.collection.insertOne({
+      _id: applicant,
+      auth: { email: 'dec@example.com' },
+      profile: { first_name: 'Dec' },
+    } as never);
+    await meetingService.request(applicant.toString(), 'VENUE', { requested_at: '2028-03-01T05:00:00.000Z', contact_phone: '9200000001' });
+    const m = await meetingService.myMeeting(applicant.toString(), 'VENUE');
+
+    (sendMeetingApprovedEmail as jest.Mock).mockClear();
+    await meetingService.setApprovalStatus(m!.id, 'APPROVED');
+    expect(sendMeetingApprovedEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'dec@example.com' }));
+
+    (sendMeetingRejectedEmail as jest.Mock).mockClear();
+    await meetingService.setApprovalStatus(m!.id, 'DENIED');
+    expect(sendMeetingRejectedEmail).toHaveBeenCalledWith(expect.objectContaining({ to: 'dec@example.com' }));
   });
 });

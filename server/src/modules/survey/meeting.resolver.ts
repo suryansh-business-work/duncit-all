@@ -23,9 +23,9 @@ export const meetingResolvers = {
       requireAuth(ctx);
       return meetingService.availability();
     },
-    meetingSlots: (_p: unknown, args: { exclude_meeting_id?: string | null }, ctx: GraphQLContext) => {
+    meetingSlots: (_p: unknown, args: { kind?: SurveyKind | null; exclude_meeting_id?: string | null }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
-      return meetingService.slots(user.id, { excludeMeetingId: args.exclude_meeting_id ?? null });
+      return meetingService.slots(user.id, { kind: args.kind ?? null, excludeMeetingId: args.exclude_meeting_id ?? null });
     },
     meetingHolidays: (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
       requireAuth(ctx);

@@ -1,7 +1,8 @@
-import { useFormikContext } from 'formik';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { MenuItem, Stack, TextField, ToggleButton, ToggleButtonGroup } from '@mui/material';
 import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
+import RhfTextField from '../../../forms/components/RhfTextField';
 import type { PodForm } from '../queries';
 
 interface Props {
@@ -11,34 +12,26 @@ interface Props {
 }
 
 export default function BasicInfoSection({ clubs, users, userName }: Readonly<Props>) {
-  const { values, errors, touched, handleChange, setFieldValue } = useFormikContext<PodForm>();
-  const err = (k: keyof PodForm) => !!touched[k] && !!errors[k];
-  const help = (k: keyof PodForm) => (touched[k] ? (errors[k] as string) : undefined);
+  const { control, register, getValues, setValue, formState: { errors } } = useFormContext<PodForm>();
+  const podMode = useWatch({ control, name: 'pod_mode' });
+  const clubId = useWatch({ control, name: 'club_id' });
+  const hosts = useWatch({ control, name: 'pod_hosts_id' });
+  const id = getValues('id');
+  const podId = getValues('pod_id');
+  const titleHint = id
+    ? `URL slug: ${podId || '—'}`
+    : 'A URL-friendly slug is auto-generated from this title';
 
   return (
     <Stack spacing={2}>
-      <TextField
-        label="Pod title"
-        name="pod_title"
-        value={values.pod_title}
-        onChange={handleChange}
-        fullWidth
-        required
-        error={err('pod_title')}
-        helperText={
-          help('pod_title') ??
-          (values.id
-            ? `URL slug: ${values.pod_id || '—'}`
-            : 'A URL-friendly slug is auto-generated from this title')
-        }
-      />
+      <RhfTextField control={control} name="pod_title" label="Pod title" required hint={titleHint} />
       <ToggleButtonGroup
         exclusive
         fullWidth
         color="primary"
-        value={values.pod_mode}
+        value={podMode}
         onChange={(_, nextMode) => {
-          if (nextMode) setFieldValue('pod_mode', nextMode);
+          if (nextMode) setValue('pod_mode', nextMode);
         }}
         aria-label="Pod mode"
       >
@@ -52,18 +45,17 @@ export default function BasicInfoSection({ clubs, users, userName }: Readonly<Pr
       <TextField
         select
         label="Club"
-        name="club_id"
-        value={values.club_id}
+        value={clubId}
         onChange={(event) => {
-          setFieldValue('club_id', event.target.value);
-          setFieldValue('venue_id', '');
-          setFieldValue('location_id', '');
-          setFieldValue('zone_name', '');
+          setValue('club_id', event.target.value, { shouldValidate: true });
+          setValue('venue_id', '');
+          setValue('location_id', '');
+          setValue('zone_name', '');
         }}
         fullWidth
         required
-        error={err('club_id')}
-        helperText={help('club_id')}
+        error={!!errors.club_id}
+        helperText={errors.club_id?.message}
       >
         {clubs.map((club) => (
           <MenuItem key={club.id} value={club.id}>
@@ -74,10 +66,10 @@ export default function BasicInfoSection({ clubs, users, userName }: Readonly<Pr
       <TextField
         select
         label="Hosts"
-        value={values.pod_hosts_id}
-        onChange={(e) => {
-          const v = e.target.value as unknown as string[] | string;
-          setFieldValue('pod_hosts_id', typeof v === 'string' ? v.split(',') : v);
+        value={hosts}
+        onChange={(event) => {
+          const v = event.target.value as unknown as string[] | string;
+          setValue('pod_hosts_id', typeof v === 'string' ? v.split(',') : v, { shouldValidate: true });
         }}
         SelectProps={{
           multiple: true,
@@ -85,8 +77,8 @@ export default function BasicInfoSection({ clubs, users, userName }: Readonly<Pr
         }}
         fullWidth
         required
-        error={err('pod_hosts_id')}
-        helperText={help('pod_hosts_id')}
+        error={!!errors.pod_hosts_id}
+        helperText={errors.pod_hosts_id?.message}
       >
         {users.map((u) => (
           <MenuItem key={u.user_id} value={u.user_id}>
@@ -96,11 +88,9 @@ export default function BasicInfoSection({ clubs, users, userName }: Readonly<Pr
       </TextField>
       <TextField
         label="Hashtags (space or comma separated)"
-        name="pod_hashtag_text"
-        value={values.pod_hashtag_text}
-        onChange={handleChange}
         fullWidth
         placeholder="#cricket #weekend"
+        {...register('pod_hashtag_text')}
       />
     </Stack>
   );

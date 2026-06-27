@@ -1,38 +1,28 @@
 import { TextField } from '@mui/material';
-import { getIn, useFormikContext } from 'formik';
+import { useFormContext, useWatch } from 'react-hook-form';
 import MediaPickerField from '../MediaPickerField';
+import { useHostFieldProps } from './useHostFieldProps';
 import type { HostCreateValues, HostEditValues } from '../../forms/host.form';
 
 type Values = HostCreateValues & Partial<HostEditValues>;
 
 export default function HostVerificationSection() {
-  const { values, errors, touched, submitCount, handleBlur, handleChange, setFieldValue } =
-    useFormikContext<Values>();
-  const hasError = (name: string) => {
-    const value = getIn(values, name);
-    const hasValue = Array.isArray(value) ? value.length > 0 : String(value ?? '').length > 0;
-    return Boolean(getIn(errors, name) && (submitCount > 0 || getIn(touched, name) || hasValue));
-  };
-  const tfProps = (name: string) => ({
-    name,
-    value: getIn(values, name) ?? '',
-    onChange: handleChange,
-    onBlur: handleBlur,
-    error: hasError(name),
-    helperText: hasError(name) ? (getIn(errors, name) as string) : ' ',
-    fullWidth: true,
-    size: 'small' as const,
-  });
+  const { control, setValue } = useFormContext<Values>();
+  const { hasError, errorMessage, tfProps } = useHostFieldProps();
+  const policeUrl = useWatch({ control, name: 'step3.police_verification_url' });
+  const tags = useWatch({ control, name: 'step3.tags' });
+
+  const opts = { shouldValidate: true, shouldDirty: true } as const;
 
   return (
     <>
       <MediaPickerField
         label="Police verification document"
-        value={values.step3.police_verification_url}
-        onChange={(url) => setFieldValue('step3.police_verification_url', url)}
+        value={policeUrl ?? ''}
+        onChange={(url) => setValue('step3.police_verification_url', url, opts)}
         helperText={
           hasError('step3.police_verification_url')
-            ? (getIn(errors, 'step3.police_verification_url') as string)
+            ? errorMessage('step3.police_verification_url')
             : ' '
         }
         folder="/hosts/docs"
@@ -41,11 +31,12 @@ export default function HostVerificationSection() {
       <TextField label="Full address" multiline minRows={2} required {...tfProps('step3.full_address')} />
       <TextField
         label="Tags"
-        value={values.step3.tags.join(', ')}
+        value={(tags ?? []).join(', ')}
         onChange={(event) =>
-          setFieldValue(
+          setValue(
             'step3.tags',
             event.target.value.split(',').map((tag) => tag.trim()).filter(Boolean),
+            opts,
           )
         }
         helperText="Comma separated host tags."

@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { websiteContentSchema, toContentInput } from './website-content.form';
-import type { WebsiteContentFormValues } from './website-content.types';
+import {
+  websiteContentSchema,
+  toContentInput,
+  type WebsiteContentFormValues,
+} from './website-content.types';
 
 const base: WebsiteContentFormValues = {
   title: 'How we built Duncit',
@@ -16,34 +19,36 @@ const base: WebsiteContentFormValues = {
   sort_order: 0,
 };
 
+const firstError = (result: ReturnType<typeof websiteContentSchema.safeParse>) =>
+  result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
+
 describe('websiteContentSchema', () => {
-  it('rejects an empty title', async () => {
-    const error = await websiteContentSchema
-      .validate({ ...base, title: '' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/title/i);
+  it('rejects an empty title', () => {
+    const result = websiteContentSchema.safeParse({ ...base, title: '' });
+    expect(result.success).toBe(false);
+    expect(firstError(result)).toMatch(/title/i);
   });
 
-  it('rejects a non-http image URL', async () => {
-    const error = await websiteContentSchema
-      .validate({ ...base, image_url: 'ftp://x' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/valid url/i);
+  it('rejects a non-http image URL', () => {
+    const result = websiteContentSchema.safeParse({ ...base, image_url: 'ftp://x' });
+    expect(result.success).toBe(false);
+    expect(firstError(result)).toMatch(/valid url/i);
   });
 
-  it('rejects a negative sort order', async () => {
-    const error = await websiteContentSchema
-      .validate({ ...base, sort_order: -1 }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/sort order/i);
+  it('rejects a negative sort order', () => {
+    const result = websiteContentSchema.safeParse({ ...base, sort_order: -1 });
+    expect(result.success).toBe(false);
+    expect(firstError(result)).toMatch(/sort order/i);
   });
 
-  it('accepts a valid mailto CTA link', async () => {
-    await expect(websiteContentSchema.validate({ ...base, cta_url: 'mailto:hi@duncit.com' })).resolves.toBeTruthy();
+  it('accepts a valid mailto CTA link', () => {
+    const result = websiteContentSchema.safeParse({ ...base, cta_url: 'mailto:hi@duncit.com' });
+    expect(result.success).toBe(true);
   });
 
-  it('accepts valid input', async () => {
-    await expect(websiteContentSchema.validate(base)).resolves.toBeTruthy();
+  it('accepts valid input', () => {
+    const result = websiteContentSchema.safeParse(base);
+    expect(result.success).toBe(true);
   });
 });
 

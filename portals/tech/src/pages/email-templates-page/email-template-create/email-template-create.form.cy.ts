@@ -1,29 +1,26 @@
 import { describe, expect, it } from 'vitest';
 import { emailTemplateCreateSchema, slugify, toCreateTemplateInput } from './email-template-create.form';
 
+const firstError = (result: ReturnType<typeof emailTemplateCreateSchema.safeParse>) =>
+  result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
+
 describe('emailTemplateCreateSchema', () => {
-  it('rejects slug with spaces', async () => {
-    const error = await emailTemplateCreateSchema
-      .validate({ slug: 'hello world', name: 'Welcome', subject: 'Welcome' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/slug/i);
+  it('rejects slug with spaces', () => {
+    const result = emailTemplateCreateSchema.safeParse({ slug: 'hello world', name: 'Welcome', subject: 'Welcome' });
+    expect(firstError(result)).toMatch(/slug/i);
   });
-  it('rejects uppercase slug', async () => {
-    const error = await emailTemplateCreateSchema
-      .validate({ slug: 'Welcome', name: 'Welcome', subject: 'Welcome' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/slug/i);
+  it('rejects uppercase slug', () => {
+    const result = emailTemplateCreateSchema.safeParse({ slug: 'Welcome', name: 'Welcome', subject: 'Welcome' });
+    expect(firstError(result)).toMatch(/slug/i);
   });
-  it('rejects short subject', async () => {
-    const error = await emailTemplateCreateSchema
-      .validate({ slug: 'welcome', name: 'Welcome', subject: 'A' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/subject/i);
+  it('rejects short subject', () => {
+    const result = emailTemplateCreateSchema.safeParse({ slug: 'welcome', name: 'Welcome', subject: 'A' });
+    expect(firstError(result)).toMatch(/subject/i);
   });
-  it('accepts a fully valid template', async () => {
-    await expect(
-      emailTemplateCreateSchema.validate({ slug: 'welcome-email', name: 'Welcome Email', subject: 'Welcome' }),
-    ).resolves.toBeTruthy();
+  it('accepts a fully valid template', () => {
+    expect(
+      emailTemplateCreateSchema.safeParse({ slug: 'welcome-email', name: 'Welcome Email', subject: 'Welcome' }).success,
+    ).toBe(true);
   });
 });
 

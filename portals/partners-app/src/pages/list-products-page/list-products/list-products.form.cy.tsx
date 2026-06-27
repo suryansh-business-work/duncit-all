@@ -19,23 +19,22 @@ const validListing = {
   delivery_target: 'HOST',
 };
 
+const messages = (result: ReturnType<typeof productListingSchema.safeParse>) =>
+  result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+
 describe('productListingSchema', () => {
-  it('rejects missing required product details', async () => {
-    const error = await productListingSchema
-      .validate({ ...validListing, product_name: '', image_urls: [] }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/product title/i);
-    expect(error.errors.join(' ')).toMatch(/image/i);
+  it('rejects missing required product details', () => {
+    const result = productListingSchema.safeParse({ ...validListing, product_name: '', image_urls: [] });
+    expect(messages(result)).toMatch(/product title/i);
+    expect(messages(result)).toMatch(/image/i);
   });
 
-  it('requires commission in allowed range', async () => {
-    const error = await productListingSchema
-      .validate({ ...validListing, commission_pct: 3 }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/commission/i);
+  it('requires commission in allowed range', () => {
+    const result = productListingSchema.safeParse({ ...validListing, commission_pct: 3 });
+    expect(messages(result)).toMatch(/commission/i);
   });
 
-  it('accepts a complete product listing', async () => {
-    await expect(productListingSchema.validate(validListing, { abortEarly: false })).resolves.toBeTruthy();
+  it('accepts a complete product listing', () => {
+    expect(productListingSchema.safeParse(validListing).success).toBe(true);
   });
 });

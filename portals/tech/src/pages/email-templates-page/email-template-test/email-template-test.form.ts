@@ -1,12 +1,12 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { validationRules } from '../../../forms/validation/rules';
 
-export const emailTemplateTestSchema = yup.object({
+export const emailTemplateTestSchema = z.object({
   to: validationRules.email('Recipient email'),
 });
 
-export type EmailTemplateTestValues = yup.InferType<typeof emailTemplateTestSchema>;
+export type EmailTemplateTestValues = z.infer<typeof emailTemplateTestSchema>;
 
 export function toSendTestInput(values: EmailTemplateTestValues) {
-  return emailTemplateTestSchema.cast(values, { stripUnknown: true });
+  return emailTemplateTestSchema.parse(values);
 }

@@ -13,51 +13,42 @@ const base = {
   target_user_ids: [] as string[],
 };
 
+const messages = (result: ReturnType<typeof notificationFormSchema.safeParse>) =>
+  result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+
 describe('notificationFormSchema', () => {
-  it('rejects title shorter than 3 chars', async () => {
-    const error = await notificationFormSchema
-      .validate({ ...base, title: 'Hi' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/title/i);
+  it('rejects title shorter than 3 chars', () => {
+    const result = notificationFormSchema.safeParse({ ...base, title: 'Hi' });
+    expect(messages(result)).toMatch(/title/i);
   });
 
-  it('rejects body shorter than 5 chars', async () => {
-    const error = await notificationFormSchema
-      .validate({ ...base, body: 'Hi' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/body/i);
+  it('rejects body shorter than 5 chars', () => {
+    const result = notificationFormSchema.safeParse({ ...base, body: 'Hi' });
+    expect(messages(result)).toMatch(/body/i);
   });
 
-  it('requires location for LOCATION scope', async () => {
-    const error = await notificationFormSchema
-      .validate({ ...base, scope: 'LOCATION' as const }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/location/i);
+  it('requires location for LOCATION scope', () => {
+    const result = notificationFormSchema.safeParse({ ...base, scope: 'LOCATION' as const });
+    expect(messages(result)).toMatch(/location/i);
   });
 
-  it('requires zone for ZONE scope', async () => {
-    const error = await notificationFormSchema
-      .validate({ ...base, scope: 'ZONE' as const, location_id: 'l1' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/zone/i);
+  it('requires zone for ZONE scope', () => {
+    const result = notificationFormSchema.safeParse({ ...base, scope: 'ZONE' as const, location_id: 'l1' });
+    expect(messages(result)).toMatch(/zone/i);
   });
 
-  it('requires at least one user for USER scope', async () => {
-    const error = await notificationFormSchema
-      .validate({ ...base, scope: 'USER' as const }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/user/i);
+  it('requires at least one user for USER scope', () => {
+    const result = notificationFormSchema.safeParse({ ...base, scope: 'USER' as const });
+    expect(messages(result)).toMatch(/user/i);
   });
 
-  it('rejects image_url with non-http protocol', async () => {
-    const error = await notificationFormSchema
-      .validate({ ...base, image_url: 'javascript:alert(1)' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/image url/i);
+  it('rejects image_url with non-http protocol', () => {
+    const result = notificationFormSchema.safeParse({ ...base, image_url: 'javascript:alert(1)' });
+    expect(messages(result)).toMatch(/image url/i);
   });
 
-  it('accepts a valid GLOBAL notification', async () => {
-    const parsed = await notificationFormSchema.validate(base, { abortEarly: false });
+  it('accepts a valid GLOBAL notification', () => {
+    const parsed = notificationFormSchema.parse(base);
     expect(parsed.scope).toBe('GLOBAL');
   });
 });

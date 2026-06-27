@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { gql, useQuery } from '@apollo/client';
-import { useField, useFormikContext } from 'formik';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { Autocomplete, TextField } from '@mui/material';
 
 const LOCATIONS = gql`
@@ -39,8 +39,7 @@ interface CityProps {
  * Admin onboarding the city.
  */
 export function CityField({ name, label, required }: Readonly<CityProps>) {
-  const [field, meta] = useField<string>(name);
-  const formik = useFormikContext<Record<string, unknown>>();
+  const { control, setValue } = useFormContext();
   const { data, loading } = useQuery<{ locations: LocationDoc[] }>(LOCATIONS, { fetchPolicy: 'cache-first' });
 
   const options = useMemo(() => {
@@ -51,29 +50,35 @@ export function CityField({ name, label, required }: Readonly<CityProps>) {
     return Array.from(set).sort();
   }, [data]);
 
-  const showError = Boolean(meta.error && (meta.touched || meta.value !== meta.initialValue));
+  // Reset area whenever the city changes.
+  const areaName = name === 'city' ? 'area' : name.replace(/city$/, 'area');
 
   return (
-    <Autocomplete
-      freeSolo
-      value={field.value || ''}
-      options={options}
-      loading={loading}
-      onChange={(_, value) => {
-        formik.setFieldValue(name, value ?? '');
-        // Reset area whenever the city changes.
-        formik.setFieldValue(name === 'city' ? 'area' : `${name.replace(/city$/, 'area')}`, '');
-      }}
-      onInputChange={(_, value) => formik.setFieldValue(name, value ?? '')}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label={label}
-          required={required}
-          size="small"
-          error={showError}
-          helperText={showError ? (meta.error as string) : ' '}
-          onBlur={field.onBlur}
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <Autocomplete
+          freeSolo
+          value={field.value || ''}
+          options={options}
+          loading={loading}
+          onChange={(_, value) => {
+            field.onChange(value ?? '');
+            setValue(areaName, '', { shouldDirty: true });
+          }}
+          onInputChange={(_, value) => field.onChange(value ?? '')}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label={label}
+              required={required}
+              size="small"
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message ?? ' '}
+              onBlur={field.onBlur}
+            />
+          )}
         />
       )}
     />
@@ -92,9 +97,8 @@ interface AreaProps {
  * field stays useful for new cities that don't have zones in admin yet.
  */
 export function AreaField({ name, cityField, label }: Readonly<AreaProps>) {
-  const [field, meta] = useField<string>(name);
-  const formik = useFormikContext<Record<string, any>>();
-  const city = (formik.values[cityField] ?? '') as string;
+  const { control } = useFormContext();
+  const city = (useWatch({ control, name: cityField }) as string) ?? '';
   const { data, loading } = useQuery<{ locations: LocationDoc[] }>(LOCATIONS, { fetchPolicy: 'cache-first' });
 
   const options = useMemo(() => {
@@ -108,24 +112,28 @@ export function AreaField({ name, cityField, label }: Readonly<AreaProps>) {
     return Array.from(set).sort();
   }, [data, city]);
 
-  const showError = Boolean(meta.error && (meta.touched || meta.value !== meta.initialValue));
-
   return (
-    <Autocomplete
-      freeSolo
-      value={field.value || ''}
-      options={options}
-      loading={loading}
-      onChange={(_, value) => formik.setFieldValue(name, value ?? '')}
-      onInputChange={(_, value) => formik.setFieldValue(name, value ?? '')}
-      renderInput={(params) => (
-        <TextField
-          {...params}
-          label={label}
-          size="small"
-          error={showError}
-          helperText={showError ? (meta.error as string) : ' '}
-          onBlur={field.onBlur}
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <Autocomplete
+          freeSolo
+          value={field.value || ''}
+          options={options}
+          loading={loading}
+          onChange={(_, value) => field.onChange(value ?? '')}
+          onInputChange={(_, value) => field.onChange(value ?? '')}
+          renderInput={(params) => (
+            <TextField
+              {...params}
+              label={label}
+              size="small"
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message ?? ' '}
+              onBlur={field.onBlur}
+            />
+          )}
         />
       )}
     />

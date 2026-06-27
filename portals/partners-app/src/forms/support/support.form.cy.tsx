@@ -10,17 +10,20 @@ const valid = {
   message: 'My venue request was submitted but I need help with the review status.',
 };
 
+const messages = (result: ReturnType<typeof supportSchema.safeParse>) =>
+  result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+
 describe('supportSchema', () => {
-  it('requires account identity fields', async () => {
-    const error = await supportSchema.validate({ ...valid, name: '', email: '' }, { abortEarly: false }).catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/name/i);
-    expect(error.errors.join(' ')).toMatch(/email/i);
+  it('requires account identity fields', () => {
+    const result = supportSchema.safeParse({ ...valid, name: '', email: '' });
+    expect(messages(result)).toMatch(/name/i);
+    expect(messages(result)).toMatch(/email/i);
   });
 
-  it('rejects invalid category and short message', async () => {
-    const error = await supportSchema.validate({ ...valid, category: 'BAD' as any, message: 'short' }, { abortEarly: false }).catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/category/i);
-    expect(error.errors.join(' ')).toMatch(/message/i);
+  it('rejects invalid category and short message', () => {
+    const result = supportSchema.safeParse({ ...valid, category: 'BAD' as never, message: 'short' });
+    expect(messages(result)).toMatch(/category/i);
+    expect(messages(result)).toMatch(/message/i);
   });
 
   it('normalises input for submitContactForm', () => {

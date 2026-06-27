@@ -1,10 +1,19 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useMutation } from '@apollo/client';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Dialog } from '@mui/material';
-import { Form, Formik } from 'formik';
 import DraggableDialogPaper from '../DraggableDialogPaper';
 import { RECORD_USER_CONTACT_ACTION, START_RECORDED_USER_CALL } from '../queries';
-import { CALL_STATUSES, EMAIL_STATUSES, buildContactActionSchema, contactActionInitialValues, toRecordContactInput, type ContactActionValues, type ContactType } from '../contact-action.form';
+import {
+  CALL_STATUSES,
+  EMAIL_STATUSES,
+  buildContactActionSchema,
+  contactActionInitialValues,
+  toRecordContactInput,
+  type ContactActionValues,
+  type ContactType,
+} from '../contact-action.form';
 import ContactActionFormContent from './ContactActionFormContent';
 import { buildContactTarget, openNativeContact } from './contactActionDialogHelpers';
 
@@ -25,6 +34,19 @@ export default function ContactActionDialog({ open, type, user, onClose, onSaved
   const schema = useMemo(() => buildContactActionSchema(type), [type]);
   const statusOptions = type === 'CALL' ? CALL_STATUSES : EMAIL_STATUSES;
 
+  const { control, watch, reset, handleSubmit } = useForm<ContactActionValues>({
+    defaultValues: contactActionInitialValues,
+    resolver: zodResolver(schema),
+    mode: 'onTouched',
+  });
+
+  useEffect(() => {
+    reset(contactActionInitialValues);
+    setError(null);
+  }, [type, open, reset]);
+
+  const values = watch();
+
   const startRecorded = async (notes: string) => {
     setBusy(true);
     setError(null);
@@ -39,7 +61,7 @@ export default function ContactActionDialog({ open, type, user, onClose, onSaved
     }
   };
 
-  const submit = async (values: ContactActionValues) => {
+  const submit = handleSubmit(async (accepted) => {
     if (!target) {
       setError('Contact target missing');
       return;
@@ -47,7 +69,7 @@ export default function ContactActionDialog({ open, type, user, onClose, onSaved
     setBusy(true);
     setError(null);
     try {
-      await recordAction({ variables: { input: toRecordContactInput(values, user.user_id, type, target) } });
+      await recordAction({ variables: { input: toRecordContactInput(accepted, user.user_id, type, target) } });
       onSaved();
       onClose();
     } catch (saveError: any) {
@@ -55,25 +77,24 @@ export default function ContactActionDialog({ open, type, user, onClose, onSaved
     } finally {
       setBusy(false);
     }
-  };
+  });
 
   return (
     <Dialog open={open} onClose={busy ? undefined : onClose} PaperComponent={DraggableDialogPaper} fullWidth maxWidth="sm">
-      <Formik<ContactActionValues> initialValues={contactActionInitialValues} enableReinitialize validationSchema={schema} validateOnBlur validateOnChange onSubmit={submit}>
-        <Form noValidate>
-          <ContactActionFormContent
-            type={type}
-            user={user}
-            target={target}
-            statusOptions={statusOptions}
-            error={error}
-            busy={busy}
-            onClose={onClose}
-            onOpenNativeAction={(subject) => openNativeContact(type, target, subject)}
-            onStartRecorded={startRecorded}
-          />
-        </Form>
-      </Formik>
+      <ContactActionFormContent
+        type={type}
+        user={user}
+        target={target}
+        statusOptions={statusOptions}
+        error={error}
+        busy={busy}
+        control={control}
+        values={values}
+        onClose={onClose}
+        onSubmit={submit}
+        onOpenNativeAction={(subject) => openNativeContact(type, target, subject)}
+        onStartRecorded={startRecorded}
+      />
     </Dialog>
   );
 }

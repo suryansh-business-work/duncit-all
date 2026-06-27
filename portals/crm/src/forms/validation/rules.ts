@@ -1,19 +1,19 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 
-/** Shared, reusable Yup field rules so every form validates consistently. */
+/** Shared, reusable Zod field rules so every form validates consistently. */
 export const validationRules = {
   email: (label = 'Email') =>
-    yup
+    z
       .string()
       .trim()
-      .lowercase()
-      .email(`Enter a valid ${label.toLowerCase()}`)
+      .min(1, `${label} is required`)
       .max(254, `${label} is too long`)
-      .required(`${label} is required`),
+      .email(`Enter a valid ${label.toLowerCase()}`)
+      .transform((v) => v.toLowerCase()),
   password: (label = 'Password') =>
-    yup
+    z
       .string()
+      .min(1, `${label} is required`)
       .min(8, `${label} must be at least 8 characters`)
-      .max(128, `${label} is too long`)
-      .required(`${label} is required`),
+      .max(128, `${label} is too long`),
 };

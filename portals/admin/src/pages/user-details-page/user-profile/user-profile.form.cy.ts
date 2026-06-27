@@ -18,47 +18,37 @@ const valid = {
   status: 'ACTIVE' as const,
 };
 
+const messages = (input: unknown) => {
+  const result = userProfileSchema.safeParse(input);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('userProfileSchema', () => {
-  it('rejects names with special characters', async () => {
-    const error = await userProfileSchema
-      .validate({ ...valid, first_name: 'Jane!@' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/first name/i);
+  it('rejects names with special characters', () => {
+    expect(messages({ ...valid, first_name: 'Jane!@' })).toMatch(/first name/i);
   });
 
-  it('rejects phone with letters', async () => {
-    const error = await userProfileSchema
-      .validate({ ...valid, phone_number: 'abc123' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/digits/i);
+  it('rejects phone with letters', () => {
+    expect(messages({ ...valid, phone_number: 'abc123' })).toMatch(/digits/i);
   });
 
-  it('rejects an invalid status', async () => {
-    const error = await userProfileSchema
-      .validate({ ...valid, status: 'BOGUS' as any }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/status/i);
+  it('rejects an invalid status', () => {
+    expect(messages({ ...valid, status: 'BOGUS' as any })).toMatch(/status/i);
   });
 
-  it('accepts an optional email left blank', async () => {
-    const parsed = await userProfileSchema.validate({ ...valid, email: '' }, { abortEarly: false });
+  it('accepts an optional email left blank', () => {
+    const parsed = userProfileSchema.parse({ ...valid, email: '' });
     expect(parsed.email).toBe('');
   });
 
-  it('accepts state and pincode left blank', async () => {
-    const parsed = await userProfileSchema.validate(
-      { ...valid, state: '', pincode: '' },
-      { abortEarly: false }
-    );
+  it('accepts state and pincode left blank', () => {
+    const parsed = userProfileSchema.parse({ ...valid, state: '', pincode: '' });
     expect(parsed.state).toBe('');
     expect(parsed.pincode).toBe('');
   });
 
-  it('rejects a pincode with invalid characters', async () => {
-    const error = await userProfileSchema
-      .validate({ ...valid, pincode: '!!' }, { abortEarly: false })
-      .catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/pincode/i);
+  it('rejects a pincode with invalid characters', () => {
+    expect(messages({ ...valid, pincode: '!!' })).toMatch(/pincode/i);
   });
 });
 

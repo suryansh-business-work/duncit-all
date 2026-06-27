@@ -7,7 +7,7 @@ import { podFormSchema } from '../pod-form/schema';
 import type { PodForm } from '../queries';
 
 export function toPodMutationInput(values: PodForm) {
-  const cast: any = (podFormSchema as any).cast(values, { stripUnknown: true });
+  const cast = podFormSchema.parse(values);
   return {
     pod_title: cast.pod_title,
     club_id: cast.club_id,

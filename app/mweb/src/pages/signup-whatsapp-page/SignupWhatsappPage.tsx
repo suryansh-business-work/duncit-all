@@ -1,7 +1,6 @@
 import { useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { useFormik } from 'formik';
 import {
   Alert,
   Box,
@@ -12,12 +11,13 @@ import {
   Typography,
 } from '@mui/material';
 import {
-  whatsAppOtpRequestSchema,
-  whatsAppOtpVerifySchema,
-} from '../../validators/auth';
+  WhatsAppRequestForm,
+  WhatsAppVerifyForm,
+  whatsAppOtpRequestDefaults,
+  type WhatsAppOtpRequestValues,
+  type WhatsAppOtpVerifyValues,
+} from '../../forms/whatsapp-otp';
 import { REQUEST_OTP, SKIP, VERIFY_OTP } from './queries';
-import RequestForm from './RequestForm';
-import VerifyForm from './VerifyForm';
 
 export default function SignupWhatsappPage() {
   const navigate = useNavigate();
@@ -27,43 +27,37 @@ export default function SignupWhatsappPage() {
   const [step, setStep] = useState<'request' | 'verify'>('request');
   const [devOtp, setDevOtp] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [requested, setRequested] = useState<WhatsAppOtpRequestValues>(whatsAppOtpRequestDefaults);
 
-  const requestForm = useFormik({
-    initialValues: { phone_extension: '+91', phone_number: '' },
-    validationSchema: whatsAppOtpRequestSchema,
-    onSubmit: async (values) => {
-      setError(null);
-      try {
-        const res = await requestOtp({
-          variables: { ext: values.phone_extension, num: values.phone_number },
-        });
-        setDevOtp(res.data?.requestWhatsAppOtp?.dev_otp ?? null);
-        setStep('verify');
-      } catch (e: any) {
-        setError(e.message ?? 'Could not send OTP');
-      }
-    },
-  });
+  const onRequest = async (values: WhatsAppOtpRequestValues) => {
+    setError(null);
+    try {
+      const res = await requestOtp({
+        variables: { ext: values.phone_extension, num: values.phone_number },
+      });
+      setRequested(values);
+      setDevOtp(res.data?.requestWhatsAppOtp?.dev_otp ?? null);
+      setStep('verify');
+    } catch (e: any) {
+      setError(e.message ?? 'Could not send OTP');
+    }
+  };
 
-  const verifyForm = useFormik({
-    initialValues: { otp: '' },
-    validationSchema: whatsAppOtpVerifySchema,
-    onSubmit: async (values) => {
-      setError(null);
-      try {
-        await verifyOtp({
-          variables: {
-            ext: requestForm.values.phone_extension,
-            num: requestForm.values.phone_number,
-            otp: values.otp,
-          },
-        });
-        navigate('/signup-survey');
-      } catch (e: any) {
-        setError(e.message ?? 'Invalid OTP');
-      }
-    },
-  });
+  const onVerify = async (values: WhatsAppOtpVerifyValues) => {
+    setError(null);
+    try {
+      await verifyOtp({
+        variables: {
+          ext: requested.phone_extension,
+          num: requested.phone_number,
+          otp: values.otp,
+        },
+      });
+      navigate('/signup-survey');
+    } catch (e: any) {
+      setError(e.message ?? 'Invalid OTP');
+    }
+  };
 
   const onSkip = async () => {
     try {
@@ -97,11 +91,15 @@ export default function SignupWhatsappPage() {
             )}
 
             {step === 'request' ? (
-              <RequestForm form={requestForm} loading={requestState.loading} onSkip={onSkip} />
+              <WhatsAppRequestForm
+                loading={requestState.loading}
+                onSubmit={onRequest}
+                onSkip={onSkip}
+              />
             ) : (
-              <VerifyForm
-                form={verifyForm}
+              <WhatsAppVerifyForm
                 loading={verifyState.loading}
+                onSubmit={onVerify}
                 onChangeNumber={() => setStep('request')}
                 onSkip={onSkip}
               />

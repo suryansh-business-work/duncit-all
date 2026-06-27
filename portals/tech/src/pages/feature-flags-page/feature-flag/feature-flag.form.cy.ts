@@ -8,17 +8,18 @@ const base = {
   is_enabled: false,
 };
 
+const firstError = (result: ReturnType<typeof featureFlagFormSchema.safeParse>) =>
+  result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
+
 describe('featureFlagFormSchema', () => {
-  it('rejects key with spaces', async () => {
-    const error = await featureFlagFormSchema.validate({ ...base, key: 'new flag' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/key/i);
+  it('rejects key with spaces', () => {
+    expect(firstError(featureFlagFormSchema.safeParse({ ...base, key: 'new flag' }))).toMatch(/key/i);
   });
-  it('rejects empty name', async () => {
-    const error = await featureFlagFormSchema.validate({ ...base, name: '' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/name/i);
+  it('rejects empty name', () => {
+    expect(firstError(featureFlagFormSchema.safeParse({ ...base, name: '' }))).toMatch(/name/i);
   });
-  it('accepts valid input', async () => {
-    await expect(featureFlagFormSchema.validate(base)).resolves.toBeTruthy();
+  it('accepts valid input', () => {
+    expect(featureFlagFormSchema.safeParse(base).success).toBe(true);
   });
 });
 

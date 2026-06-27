@@ -14,52 +14,43 @@ const valid = {
   ],
 };
 
+/** Collect every zod issue message for a value into one searchable string. */
+const messages = (value: unknown): string => {
+  const result = hostLeadSchema.safeParse(value);
+  return result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
+};
+
 describe('hostLeadSchema', () => {
-  it('accepts a valid host lead', async () => {
-    await expect(hostLeadSchema.validate(valid)).resolves.toBeTruthy();
+  it('accepts a valid host lead', () => {
+    expect(hostLeadSchema.safeParse(valid).success).toBe(true);
   });
 
-  it('requires host name', async () => {
-    const error = await hostLeadSchema.validate({ ...valid, host_name: '' }).catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/host name/i);
+  it('requires host name', () => {
+    expect(messages({ ...valid, host_name: '' })).toMatch(/host name/i);
   });
 
-  it('requires the primary contact mobile number', async () => {
-    const error = await hostLeadSchema
-      .validate({ ...valid, contacts: [{ ...valid.contacts[0], mobile_number: '' }] })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/primary contact mobile/i);
+  it('requires the primary contact mobile number', () => {
+    expect(messages({ ...valid, contacts: [{ ...valid.contacts[0], mobile_number: '' }] })).toMatch(
+      /primary contact mobile/i
+    );
   });
 
-  it('rejects non-numeric community size', async () => {
-    const error = await hostLeadSchema
-      .validate({ ...valid, community_size: 'big' })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/whole number/i);
+  it('rejects non-numeric community size', () => {
+    expect(messages({ ...valid, community_size: 'big' })).toMatch(/whole number/i);
   });
 
-  it('requires super category', async () => {
-    const error = await hostLeadSchema
-      .validate({ ...valid, super_category_id: '' })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/super category is required/i);
+  it('requires super category', () => {
+    expect(messages({ ...valid, super_category_id: '' })).toMatch(/super category is required/i);
   });
 
-  it('rejects malformed website', async () => {
-    const error = await hostLeadSchema
-      .validate({ ...valid, website: 'foo' })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/valid website/i);
+  it('rejects malformed website', () => {
+    expect(messages({ ...valid, website: 'foo' })).toMatch(/valid website/i);
   });
 
-  it('requires custom_name when service is "Other"', async () => {
-    const error = await hostLeadSchema
-      .validate({
-        ...valid,
-        services_offered: [{ service: 'Other', custom_name: '', description: '' }],
-      })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/custom service name/i);
+  it('requires custom_name when service is "Other"', () => {
+    expect(messages({ ...valid, services_offered: [{ service: 'Other', custom_name: '', description: '' }] })).toMatch(
+      /custom service name/i
+    );
   });
 });
 

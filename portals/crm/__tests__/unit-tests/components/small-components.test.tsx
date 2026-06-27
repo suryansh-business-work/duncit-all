@@ -1,7 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { Formik, Form } from 'formik';
+import { FormProvider, useForm } from 'react-hook-form';
 import { StatusChip, PriorityChip } from '@/components/StatusChips';
 import ExternalLink from '@/components/ExternalLink';
 import LeadStatTile from '@/components/LeadStatTile';
@@ -214,43 +214,38 @@ describe('AppBreadcrumbs', () => {
   });
 });
 
+function AccordionHarness({
+  fieldPaths,
+  defaultExpanded,
+  withError,
+}: Readonly<{ fieldPaths?: string[]; defaultExpanded?: boolean; withError?: boolean }>) {
+  const methods = useForm({
+    defaultValues: { a: '' },
+    resolver: withError
+      ? async () => ({ values: {}, errors: { a: { type: 'required', message: 'Required' } } })
+      : undefined,
+  });
+  return (
+    <FormProvider {...methods}>
+      <form onSubmit={methods.handleSubmit(() => undefined)}>
+        <FormAccordion title="Basics" fieldPaths={fieldPaths} defaultExpanded={defaultExpanded}>
+          <div data-testid="inner">child</div>
+        </FormAccordion>
+        <button type="submit">submit</button>
+      </form>
+    </FormProvider>
+  );
+}
+
 describe('FormAccordion', () => {
   it('renders the title and children', () => {
-    render(
-      <Formik initialValues={{ a: '' }} onSubmit={() => undefined}>
-        {() => (
-          <Form>
-            <FormAccordion title="Basics" defaultExpanded>
-              <div data-testid="inner">child</div>
-            </FormAccordion>
-          </Form>
-        )}
-      </Formik>
-    );
+    render(<AccordionHarness defaultExpanded />);
     expect(screen.getByText('Basics')).toBeTruthy();
     expect(screen.getByTestId('inner')).toBeTruthy();
   });
   it('flags an error chip when fieldPaths have errors after submit', async () => {
-    let triggerSubmit: (() => Promise<void>) | undefined;
-    render(
-      <Formik
-        initialValues={{ a: '' }}
-        validate={() => ({ a: 'Required' })}
-        onSubmit={() => undefined}
-      >
-        {(fmk) => {
-          triggerSubmit = fmk.submitForm;
-          return (
-            <Form>
-              <FormAccordion title="Basics" fieldPaths={['a']}>
-                <div>child</div>
-              </FormAccordion>
-            </Form>
-          );
-        }}
-      </Formik>
-    );
-    await triggerSubmit?.();
+    render(<AccordionHarness fieldPaths={['a']} withError />);
+    fireEvent.click(screen.getByRole('button', { name: /submit/i }));
     expect(await screen.findByText(/1 error/i)).toBeTruthy();
   });
 });

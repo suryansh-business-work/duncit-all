@@ -6,8 +6,9 @@ import {
   DialogContent,
   DialogTitle,
 } from '@mui/material';
-import { Formik, Form } from 'formik';
-import { useRef, useState } from 'react';
+import { FormProvider, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useEffect, useRef, useState } from 'react';
 import AiFillButton from '../../components/AiFillButton';
 import CascadeEffect from './pod-form/CascadeEffect';
 import PodFormSections, { SECTION_IDS } from './pod-form/PodFormSections';
@@ -47,10 +48,21 @@ export default function PodFormDialog({
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['basic']));
   const submitMode = useRef<'publish' | 'draft'>('publish');
   const isEdit = !!initialValues.id;
-  const toggleOne = (id: string, open: boolean) => {
+  const methods = useForm<PodForm>({
+    resolver: zodResolver(podFormSchema),
+    defaultValues: initialValues,
+    mode: 'onBlur',
+  });
+
+  useEffect(() => {
+    methods.reset(initialValues);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initialValues]);
+
+  const toggleOne = (id: string, openSection: boolean) => {
     setExpanded((prev) => {
       const next = new Set(prev);
-      if (open) next.add(id);
+      if (openSection) next.add(id);
       else next.delete(id);
       return next;
     });
@@ -58,85 +70,77 @@ export default function PodFormDialog({
   const expandAll = () => setExpanded(new Set(SECTION_IDS));
   const collapseAll = () => setExpanded(new Set());
 
+  const submit = methods.handleSubmit(async (values) => {
+    const draft = submitMode.current === 'draft';
+    submitMode.current = 'publish';
+    await onSubmit(values, { draft });
+  });
+  const busyOrSubmitting = busy || methods.formState.isSubmitting;
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
-      <Formik<PodForm>
-        initialValues={initialValues}
-        enableReinitialize
-        validationSchema={podFormSchema}
-        validateOnBlur
-        onSubmit={async (values) => {
-          const draft = submitMode.current === 'draft';
-          submitMode.current = 'publish';
-          await onSubmit(values, { draft });
-        }}
-      >
-        {(formik) => (
-          <Form noValidate>
-            <CascadeEffect
+      <FormProvider {...methods}>
+        <form noValidate onSubmit={submit}>
+          <CascadeEffect clubs={clubs} venues={venues} />
+          <DialogTitle
+            sx={{
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'space-between',
+              gap: 1,
+            }}
+          >
+            <span>{isEdit ? 'Edit Pod' : 'New Pod'}</span>
+            <AiFillButton
+              entity="POD"
+              onFill={(d: any) =>
+                applyAiFillToForm(d, methods.getValues(), (next) => methods.reset(next))
+              }
+            />
+          </DialogTitle>
+          <DialogContent dividers>
+            <PodFormSections
+              expanded={expanded}
+              onToggle={toggleOne}
+              onExpandAll={expandAll}
+              onCollapseAll={collapseAll}
               clubs={clubs}
               venues={venues}
+              inventoryProducts={inventoryProducts}
+              users={users}
+              userName={userName}
+              finance={finance}
             />
-            <DialogTitle
-              sx={{
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'space-between',
-                gap: 1,
-              }}
-            >
-              <span>{isEdit ? 'Edit Pod' : 'New Pod'}</span>
-              <AiFillButton
-                entity="POD"
-                onFill={(d: any) =>
-                  applyAiFillToForm(d, formik.values, formik.setValues)
-                }
-              />
-            </DialogTitle>
-            <DialogContent dividers>
-              <PodFormSections
-                expanded={expanded}
-                onToggle={toggleOne}
-                onExpandAll={expandAll}
-                onCollapseAll={collapseAll}
-                clubs={clubs}
-                venues={venues}
-                inventoryProducts={inventoryProducts}
-                users={users}
-                userName={userName}
-                finance={finance}
-              />
-              {opError && <Alert severity="error" sx={{ mt: 2 }}>{opError}</Alert>}
-            </DialogContent>
-            <DialogActions>
-              <Button onClick={onClose}>Cancel</Button>
-              {!isEdit && (
-                <Button
-                  variant="outlined"
-                  type="button"
-                  disabled={busy || formik.isSubmitting}
-                  onClick={() => {
-                    submitMode.current = 'draft';
-                    formik.submitForm();
-                  }}
-                >
-                  Save as Draft
-                </Button>
-              )}
+            {opError && <Alert severity="error" sx={{ mt: 2 }}>{opError}</Alert>}
+          </DialogContent>
+          <DialogActions>
+            <Button onClick={onClose}>Cancel</Button>
+            {!isEdit && (
               <Button
-                variant="contained"
-                type="submit"
-                disabled={busy || formik.isSubmitting}
+                variant="outlined"
+                type="button"
+                disabled={busyOrSubmitting}
                 onClick={() => {
-                  submitMode.current = 'publish';
+                  submitMode.current = 'draft';
+                  void submit();
                 }}
               >
-                {busy ? 'Saving…' : 'Save'}
+                Save as Draft
               </Button>
-            </DialogActions>
-          </Form>
-        )}
-      </Formik>
+            )}
+            <Button
+              variant="contained"
+              type="submit"
+              disabled={busyOrSubmitting}
+              onClick={() => {
+                submitMode.current = 'publish';
+              }}
+            >
+              {busy ? 'Saving…' : 'Save'}
+            </Button>
+          </DialogActions>
+        </form>
+      </FormProvider>
     </Dialog>
   );
 }

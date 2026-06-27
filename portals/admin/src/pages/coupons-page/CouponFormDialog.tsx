@@ -1,5 +1,7 @@
+import { useEffect } from 'react';
 import { useMutation } from '@apollo/client';
-import { useFormik } from 'formik';
+import { Controller, useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
   Button,
@@ -11,14 +13,9 @@ import {
   MenuItem,
   Stack,
   Switch,
-  TextField,
 } from '@mui/material';
-import {
-  couponFormDefaults,
-  couponFormSchema,
-  toCouponInput,
-  type CouponFormValues,
-} from './coupon';
+import RhfTextField from '../../forms/components/RhfTextField';
+import { couponFormDefaults, couponFormSchema, toCouponInput, type CouponFormValues } from './coupon';
 import { CREATE_COUPON, UPDATE_COUPON, type CouponRow } from './queries';
 
 interface Props {
@@ -32,50 +29,53 @@ interface Props {
 
 const toDateInput = (iso?: string | null) => (iso ? iso.slice(0, 10) : '');
 
+const buildDefaults = (
+  initial?: CouponRow | null,
+  lockedPod?: { id: string; title: string } | null,
+): CouponFormValues =>
+  initial
+    ? {
+        code: initial.code,
+        description: initial.description,
+        discount_pct: initial.discount_pct,
+        scope: initial.scope,
+        pod_id: initial.pod_id ?? '',
+        valid_from: toDateInput(initial.valid_from),
+        valid_until: toDateInput(initial.valid_until),
+        max_uses: initial.max_uses,
+        per_user_limit: initial.per_user_limit,
+        min_order_amount: initial.min_order_amount,
+        is_active: initial.is_active,
+      }
+    : { ...couponFormDefaults, ...(lockedPod ? { scope: 'POD', pod_id: lockedPod.id } : {}) };
+
 export default function CouponFormDialog({ open, onClose, onSaved, initial, lockedPod, pods }: Readonly<Props>) {
   const [createCoupon] = useMutation(CREATE_COUPON);
   const [updateCoupon] = useMutation(UPDATE_COUPON);
 
-  const formik = useFormik<CouponFormValues>({
-    enableReinitialize: true,
-    initialValues: initial
-      ? {
-          code: initial.code,
-          description: initial.description,
-          discount_pct: initial.discount_pct,
-          scope: initial.scope,
-          pod_id: initial.pod_id ?? '',
-          valid_from: toDateInput(initial.valid_from),
-          valid_until: toDateInput(initial.valid_until),
-          max_uses: initial.max_uses,
-          per_user_limit: initial.per_user_limit,
-          min_order_amount: initial.min_order_amount,
-          is_active: initial.is_active,
-        }
-      : { ...couponFormDefaults, ...(lockedPod ? { scope: 'POD', pod_id: lockedPod.id } : {}) },
-    validationSchema: couponFormSchema,
-    onSubmit: async (values, helpers) => {
-      try {
-        const input = toCouponInput(values);
-        if (initial) await updateCoupon({ variables: { id: initial.id, input } });
-        else await createCoupon({ variables: { input } });
-        onSaved();
-        onClose();
-      } catch (error) {
-        helpers.setStatus((error as Error)?.message ?? 'Could not save coupon');
-      }
-    },
+  const { control, handleSubmit, watch, reset, setError, formState } = useForm<CouponFormValues>({
+    defaultValues: buildDefaults(initial, lockedPod),
+    resolver: zodResolver(couponFormSchema),
+    mode: 'onTouched',
   });
-  const { values, errors, touched, handleChange, handleBlur, setFieldValue, submitForm, status } = formik;
-  const field = (name: keyof typeof values) => ({
-    name,
-    value: (values[name] ?? '') as string | number,
-    onChange: handleChange,
-    onBlur: handleBlur,
-    error: touched[name] && !!errors[name],
-    helperText: touched[name] ? (errors[name] as string) : undefined,
-    fullWidth: true,
-    size: 'small' as const,
+
+  useEffect(() => {
+    reset(buildDefaults(initial, lockedPod));
+  }, [initial, lockedPod, reset]);
+
+  const scope = watch('scope');
+  const status = formState.errors.root?.message;
+
+  const submit = handleSubmit(async (values) => {
+    try {
+      const input = toCouponInput(values);
+      if (initial) await updateCoupon({ variables: { id: initial.id, input } });
+      else await createCoupon({ variables: { input } });
+      onSaved();
+      onClose();
+    } catch (error) {
+      setError('root', { message: (error as Error)?.message ?? 'Could not save coupon' });
+    }
   });
 
   return (
@@ -84,58 +84,74 @@ export default function CouponFormDialog({ open, onClose, onSaved, initial, lock
       <DialogContent dividers>
         <Stack spacing={2} sx={{ mt: 0.5 }}>
           {status && <Alert severity="error">{status}</Alert>}
-          <TextField label="Code" {...field('code')} inputProps={{ style: { textTransform: 'uppercase' } }} />
-          <TextField label="Description" {...field('description')} multiline minRows={2} />
+          <RhfTextField
+            control={control}
+            name="code"
+            label="Code"
+            size="small"
+            inputProps={{ style: { textTransform: 'uppercase' } }}
+          />
+          <RhfTextField control={control} name="description" label="Description" size="small" multiline minRows={2} />
           <Stack direction="row" spacing={2}>
-            <TextField type="number" label="Discount %" {...field('discount_pct')} />
-            <TextField type="number" label="Min order ₹" {...field('min_order_amount')} />
+            <RhfTextField control={control} name="discount_pct" type="number" label="Discount %" size="small" />
+            <RhfTextField control={control} name="min_order_amount" type="number" label="Min order ₹" size="small" />
           </Stack>
           <Stack direction="row" spacing={2}>
-            <TextField select label="Scope" {...field('scope')} disabled={!!lockedPod}>
+            <RhfTextField control={control} name="scope" select label="Scope" size="small" disabled={!!lockedPod}>
               <MenuItem value="GLOBAL">Global (all pods)</MenuItem>
               <MenuItem value="POD">Pod-specific</MenuItem>
-            </TextField>
-            {values.scope === 'POD' && (
-              <TextField
-                select
-                label="Pod"
-                {...field('pod_id')}
-                disabled={!!lockedPod}
-              >
+            </RhfTextField>
+            {scope === 'POD' && (
+              <RhfTextField control={control} name="pod_id" select label="Pod" size="small" disabled={!!lockedPod}>
                 {lockedPod ? (
                   <MenuItem value={lockedPod.id}>{lockedPod.title}</MenuItem>
                 ) : (
-                  pods.map((p) => (
-                    <MenuItem key={p.id} value={p.id}>
-                      {p.title}
+                  pods.map((pod) => (
+                    <MenuItem key={pod.id} value={pod.id}>
+                      {pod.title}
                     </MenuItem>
                   ))
                 )}
-              </TextField>
+              </RhfTextField>
             )}
           </Stack>
           <Stack direction="row" spacing={2}>
-            <TextField type="date" label="Valid from" InputLabelProps={{ shrink: true }} {...field('valid_from')} />
-            <TextField type="date" label="Valid until" InputLabelProps={{ shrink: true }} {...field('valid_until')} />
+            <RhfTextField
+              control={control}
+              name="valid_from"
+              type="date"
+              label="Valid from"
+              size="small"
+              InputLabelProps={{ shrink: true }}
+            />
+            <RhfTextField
+              control={control}
+              name="valid_until"
+              type="date"
+              label="Valid until"
+              size="small"
+              InputLabelProps={{ shrink: true }}
+            />
           </Stack>
           <Stack direction="row" spacing={2}>
-            <TextField type="number" label="Max total uses" {...field('max_uses')} />
-            <TextField type="number" label="Per-user limit" {...field('per_user_limit')} />
+            <RhfTextField control={control} name="max_uses" type="number" label="Max total uses" size="small" />
+            <RhfTextField control={control} name="per_user_limit" type="number" label="Per-user limit" size="small" />
           </Stack>
-          <FormControlLabel
-            control={
-              <Switch
-                checked={values.is_active}
-                onChange={(e) => setFieldValue('is_active', e.target.checked)}
+          <Controller
+            control={control}
+            name="is_active"
+            render={({ field }) => (
+              <FormControlLabel
+                control={<Switch checked={!!field.value} onChange={(event) => field.onChange(event.target.checked)} />}
+                label="Active"
               />
-            }
-            label="Active"
+            )}
           />
         </Stack>
       </DialogContent>
       <DialogActions>
         <Button onClick={onClose}>Cancel</Button>
-        <Button variant="contained" onClick={submitForm}>
+        <Button variant="contained" onClick={submit}>
           {initial ? 'Save' : 'Create'}
         </Button>
       </DialogActions>

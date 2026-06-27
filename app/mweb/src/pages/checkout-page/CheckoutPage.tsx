@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
-import { useFormik } from 'formik';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Backdrop, Box, Button, Chip, IconButton, Skeleton, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { alpha, useTheme, type Theme } from '@mui/material/styles';
 import PaymentLottie from '../../components/PaymentLottie';
-import { checkoutFormSchema, checkoutInitialValues, toCheckoutContact } from './checkout.form';
+import { checkoutSchema, checkoutDefaults, toCheckoutContact } from './checkout';
 import { buildBreakup } from './checkoutMath';
 import CheckoutSuccess from './CheckoutSuccess';
 import OrderSummaryCard from './OrderSummaryCard';
@@ -20,6 +21,7 @@ import {
   PREVIEW_COUPON,
   PUBLIC_FINANCE,
   VERIFY_RAZORPAY_PAYMENT,
+  type CheckoutForm,
   type CheckoutState,
   type CouponPreview,
 } from './queries';
@@ -123,63 +125,65 @@ export default function CheckoutPage() {
     }
   };
 
-  const formik = useFormik({
-    initialValues: checkoutInitialValues,
-    validationSchema: checkoutFormSchema,
-    validateOnBlur: true,
-    validateOnChange: true,
-    onSubmit: async (values) => {
-      setError(null);
-      setSubmitting(true);
-      const finance = financeData?.publicFinanceSettings;
-      const title = pod?.pod_title || state.pod_title || search.get('title') || 'Booking';
-      const { simulate_failure, ...contact } = toCheckoutContact(values);
-      const input = {
-        pod_id: checkoutPodId || null,
-        amount,
-        selected_products: selectedProducts,
-        description: state.description || `Pod booking · ${title}`,
-        ...contact,
-        checkout_url: window.location.href,
-        coupon_code: coupon?.ok ? coupon.code : null,
-      };
-      try {
-        // Razorpay is the live gateway and takes precedence whenever its keys are
-        // configured in the Tech portal. The dummy gateway is only a local fallback.
-        if (finance?.razorpay_enabled) {
-          const orderRes = await doRazorpayOrder({ variables: { input } });
-          const order = orderRes.data?.createRazorpayOrder;
-          if (!order) {
-            setError('Could not start the payment. Please try again.');
-            return;
-          }
-          // 100%-off coupon → already completed server-side, no gateway sheet.
-          if (order.free && order.payment) {
-            setSuccess(order.payment);
-            return;
-          }
-          setSubmitting(false);
-          await openRazorpayCheckout(order as RazorpayOrderData, {
-            onSuccess: (sig) => verifyRazorpay(order.payment_doc_id, sig),
-            onDismiss: () => setError('Payment was cancelled.'),
-          });
-          return;
-        }
-        if (finance?.dummy_mode) {
-          const res = await doCheckout({ variables: { input: { ...input, simulate_failure } } });
-          const payment = res.data?.dummyCheckout;
-          if (payment?.status === 'SUCCESS') setSuccess(payment);
-          else setError('Payment failed. Please try again.');
-          return;
-        }
-        setError('Online payments are not configured yet. Please try again later.');
-      } catch (submitError: any) {
-        setError(parseApiError(submitError));
-      } finally {
-        setSubmitting(false);
-      }
-    },
+  const { control, handleSubmit, getValues, reset } = useForm<CheckoutForm>({
+    defaultValues: checkoutDefaults,
+    resolver: zodResolver(checkoutSchema),
+    mode: 'onTouched',
   });
+
+  const onCheckout = async (values: CheckoutForm) => {
+    setError(null);
+    setSubmitting(true);
+    const finance = financeData?.publicFinanceSettings;
+    const title = pod?.pod_title || state.pod_title || search.get('title') || 'Booking';
+    const { simulate_failure, ...contact } = toCheckoutContact(values);
+    const input = {
+      pod_id: checkoutPodId || null,
+      amount,
+      selected_products: selectedProducts,
+      description: state.description || `Pod booking · ${title}`,
+      ...contact,
+      checkout_url: window.location.href,
+      coupon_code: coupon?.ok ? coupon.code : null,
+    };
+    try {
+      // Razorpay is the live gateway and takes precedence whenever its keys are
+      // configured in the Tech portal. The dummy gateway is only a local fallback.
+      if (finance?.razorpay_enabled) {
+        const orderRes = await doRazorpayOrder({ variables: { input } });
+        const order = orderRes.data?.createRazorpayOrder;
+        if (!order) {
+          setError('Could not start the payment. Please try again.');
+          return;
+        }
+        // 100%-off coupon → already completed server-side, no gateway sheet.
+        if (order.free && order.payment) {
+          setSuccess(order.payment);
+          return;
+        }
+        setSubmitting(false);
+        await openRazorpayCheckout(order as RazorpayOrderData, {
+          onSuccess: (sig) => verifyRazorpay(order.payment_doc_id, sig),
+          onDismiss: () => setError('Payment was cancelled.'),
+        });
+        return;
+      }
+      if (finance?.dummy_mode) {
+        const res = await doCheckout({ variables: { input: { ...input, simulate_failure } } });
+        const payment = res.data?.dummyCheckout;
+        if (payment?.status === 'SUCCESS') setSuccess(payment);
+        else setError('Payment failed. Please try again.');
+        return;
+      }
+      setError('Online payments are not configured yet. Please try again later.');
+    } catch (submitError: any) {
+      setError(parseApiError(submitError));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const submit = handleSubmit(onCheckout);
 
   // Preload the Razorpay checkout SDK as soon as we know it's the live gateway,
   // so there's no script-fetch delay after the user presses Pay (B2-#2).
@@ -191,12 +195,14 @@ export default function CheckoutPage() {
   useEffect(() => {
     const me = meData?.me;
     if (!me) return;
-    formik.setValues((prev) => ({
+    const prev = getValues();
+    reset({
       ...prev,
       email: prev.email || me.email || '',
       phone_extension: prev.phone_extension || me.phone_extension || '+91',
       phone_number: prev.phone_number || me.phone_number || '',
-    }), false);
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meData]);
 
   const pod = podData?.pod;
@@ -235,7 +241,8 @@ export default function CheckoutPage() {
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2}>
         <OrderSummaryCard pod={pod} stateTitle={state.pod_title || search.get('title') || ''} breakup={breakup} selectedProducts={selectedProducts} />
         <PaymentDetailsCard
-          formik={formik}
+          control={control}
+          onSubmit={submit}
           error={error}
           submitting={submitting}
           total={breakup.total}

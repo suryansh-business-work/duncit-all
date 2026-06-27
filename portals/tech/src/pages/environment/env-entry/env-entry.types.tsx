@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import type { EnvCategoryDef, EnvEntry } from '../queries';
 
 export interface EnvEntryFormValues {
@@ -50,30 +50,39 @@ export const PHONE_RE = /^\+[1-9]\d{6,14}$/;
  *  - any `phone` field, when filled, must be a valid E.164 number.
  */
 export const envEntrySchema = (def: EnvCategoryDef, isEdit: boolean) =>
-  yup.object({
-    name: yup.string().trim().required('Name is required'),
-    config: yup
-      .object()
-      .test('required-secret', 'Credentials required', function (config) {
-        if (isEdit) return true;
+  z
+    .object({
+      name: z.string().trim().min(1, 'Name is required'),
+      description: z.string().default(''),
+      is_default: z.boolean().default(false),
+      is_active: z.boolean().default(true),
+      config: z.record(z.string()).default({}),
+    })
+    .superRefine((values, ctx) => {
+      const config = values.config;
+
+      if (!isEdit) {
         const secret = def.fields.find((f) => f.secret);
-        if (!secret) return true;
-        const value = (config as Record<string, string>)?.[secret.name];
-        return value && value.trim()
-          ? true
-          : this.createError({ path: `config.${secret.name}`, message: `${secret.label} is required` });
-      })
-      .test('phone-format', 'Invalid phone number', function (config) {
-        const c = (config ?? {}) as Record<string, string>;
-        for (const field of def.fields.filter((f) => f.phone)) {
-          const value = (c[field.name] ?? '').toString().trim();
-          if (value && !PHONE_RE.test(value)) {
-            return this.createError({
-              path: `config.${field.name}`,
-              message: `${field.label} must be E.164, e.g. +14155552671`,
+        if (secret) {
+          const value = config[secret.name];
+          if (!value || !value.trim()) {
+            ctx.addIssue({
+              code: z.ZodIssueCode.custom,
+              path: ['config', secret.name],
+              message: `${secret.label} is required`,
             });
           }
         }
-        return true;
-      }),
-  });
+      }
+
+      for (const field of def.fields.filter((f) => f.phone)) {
+        const value = (config[field.name] ?? '').toString().trim();
+        if (value && !PHONE_RE.test(value)) {
+          ctx.addIssue({
+            code: z.ZodIssueCode.custom,
+            path: ['config', field.name],
+            message: `${field.label} must be E.164, e.g. +14155552671`,
+          });
+        }
+      }
+    });

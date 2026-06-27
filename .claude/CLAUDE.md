@@ -204,3 +204,6 @@ These guidelines are working if: fewer unnecessary changes in diffs, fewer rewri
 - After any mobile-app refactor run `npm run typecheck`, `npm run lint` (zero-warning gate, `lint:fix` auto-formats prettier) AND `npm run test:coverage` — a green typecheck is not enough; the branch threshold catches coverage regressions from extracted components.
 
 27.Most important point mWeb and Mobile App need to be absolute identical
+28. Do Not create mjml File in Local inside tech portal there is the option of /email-templates Usi se sabhi maintain karana hai
+29. Use MUI for mWeb & Portal components and for Native Web and Native App use Tamagui components
+30. Is mWeb, Native App, Portal, Native web use React Hooks Form and Zod

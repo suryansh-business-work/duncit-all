@@ -11,11 +11,12 @@ import {
   RadioGroup,
   Slider,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
+import { Controller, type Control, type UseFormSetValue, type UseFormWatch } from 'react-hook-form';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
+import RhfTextField from '../../../forms/components/RhfTextField';
 import type { ProductListingValues } from './list-products.types';
 
 const hints: Record<string, string> = {
@@ -29,48 +30,129 @@ const hints: Record<string, string> = {
   unit_cost: 'Final per-unit selling price shown to users.',
 };
 
-export function StepBody({ step, formik, onImageClick }: Readonly<{ step: number; formik: any; onImageClick: () => void }>) {
-  if (step === 0) return <RadioField formik={formik} name="is_duncit_delivery_partner" label="Are you a Duncit product delivery partner?" options={[['true', 'Yes, I deliver Duncit products'], ['false', 'No, I am not a delivery partner yet']]} />;
-  if (step === 1) return <Stack spacing={2}>{field(formik, 'product_name', 'Product title')}<ImageField formik={formik} onImageClick={onImageClick} />{field(formik, 'description', 'Description', 'text', true)}</Stack>;
-  if (step === 2) return <Stack spacing={2}>{field(formik, 'size_label', 'Size')}{field(formik, 'height_cm', 'Height (cm)', 'number')}{field(formik, 'weight_kg', 'Weight (kg)', 'number')}{field(formik, 'color', 'Color')}{field(formik, 'inventory_count', 'Available inventory', 'number')}{field(formik, 'unit_cost', 'Product price', 'number')}</Stack>;
-  if (step === 3) return <Box><Typography fontWeight={900}>Duncit commission: {formik.values.commission_pct}%</Typography><Slider min={5} max={50} value={formik.values.commission_pct} onChange={(_, value) => formik.setFieldValue('commission_pct', value)} valueLabelDisplay="auto" /><Alert severity="info">Higher commission improves marketplace viability, but approval still depends on product quality, pricing, and fulfillment clarity.</Alert></Box>;
-  if (step === 4) return <RadioField formik={formik} name="delivery_target" label="Delivery option" options={[['HOST', 'Self delivery to host'], ['VENUE', 'Self delivery to venue']]} />;
-  return <Preview values={formik.values} />;
+interface StepProps {
+  step: number;
+  control: Control<ProductListingValues>;
+  watch: UseFormWatch<ProductListingValues>;
+  setValue: UseFormSetValue<ProductListingValues>;
+  onImageClick: () => void;
 }
 
-function field(formik: any, name: string, label: string, type = 'text', multiline = false) {
-  const touched = formik.touched[name];
-  const error = touched && formik.errors[name];
-  return <TextField name={name} label={label} type={type} value={formik.values[name]} onChange={formik.handleChange} onBlur={formik.handleBlur} multiline={multiline} minRows={multiline ? 4 : undefined} error={Boolean(error)} helperText={error || hints[name] || ' '} fullWidth />;
+export function StepBody({ step, control, watch, setValue, onImageClick }: Readonly<StepProps>) {
+  if (step === 0) {
+    return <BooleanRadioField control={control} name="is_duncit_delivery_partner" label="Are you a Duncit product delivery partner?" options={[['true', 'Yes, I deliver Duncit products'], ['false', 'No, I am not a delivery partner yet']]} />;
+  }
+  if (step === 1) {
+    return <Stack spacing={2}>{field(control, 'product_name', 'Product title')}<ImageField control={control} watch={watch} setValue={setValue} onImageClick={onImageClick} />{field(control, 'description', 'Description', 'text', true)}</Stack>;
+  }
+  if (step === 2) {
+    return <Stack spacing={2}>{field(control, 'size_label', 'Size')}{field(control, 'height_cm', 'Height (cm)', 'number')}{field(control, 'weight_kg', 'Weight (kg)', 'number')}{field(control, 'color', 'Color')}{field(control, 'inventory_count', 'Available inventory', 'number')}{field(control, 'unit_cost', 'Product price', 'number')}</Stack>;
+  }
+  if (step === 3) {
+    return <CommissionField control={control} />;
+  }
+  if (step === 4) {
+    return <StringRadioField control={control} name="delivery_target" label="Delivery option" options={[['HOST', 'Self delivery to host'], ['VENUE', 'Self delivery to venue']]} />;
+  }
+  return <Preview values={watch()} />;
 }
 
-function ImageField({ formik, onImageClick }: Readonly<{ formik: any; onImageClick: () => void }>) {
-  const images = formik.values.image_urls ?? [];
-  const error = formik.touched.image_urls && formik.errors.image_urls;
-  const removeImage = (url: string) => formik.setFieldValue('image_urls', images.filter((item: string) => item !== url));
+function field(control: Control<ProductListingValues>, name: keyof ProductListingValues, label: string, type = 'text', multiline = false) {
+  return <RhfTextField control={control} name={name} label={label} type={type} multiline={multiline} minRows={multiline ? 4 : undefined} hint={hints[name]} />;
+}
+
+function CommissionField({ control }: Readonly<{ control: Control<ProductListingValues> }>) {
   return (
-    <Stack spacing={1}>
-      {images.length > 0 && (
-        <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' } }}>
-          {images.map((url: string) => (
-            <Box key={url} sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden', border: 1, borderColor: 'divider' }}>
-              <Box component="img" src={url} alt="Product" sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block' }} />
-              <IconButton size="small" onClick={() => removeImage(url)} sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(0,0,0,0.5)', color: '#fff', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}>
-                <CloseIcon fontSize="small" />
-              </IconButton>
-            </Box>
-          ))}
+    <Controller
+      control={control}
+      name="commission_pct"
+      render={({ field }) => (
+        <Box>
+          <Typography fontWeight={900}>Duncit commission: {field.value}%</Typography>
+          <Slider min={5} max={50} value={field.value} onChange={(_, value) => field.onChange(value)} valueLabelDisplay="auto" />
+          <Alert severity="info">Higher commission improves marketplace viability, but approval still depends on product quality, pricing, and fulfillment clarity.</Alert>
         </Box>
       )}
-      <Button variant="outlined" startIcon={<AddPhotoAlternateIcon />} onClick={onImageClick}>Add product image</Button>
-      <FormHelperText error={Boolean(error)}>{error || 'Upload clear images from multiple angles. The first image becomes the main product photo.'}</FormHelperText>
-    </Stack>
+    />
   );
 }
 
-function RadioField({ formik, name, label, options }: Readonly<{ formik: any; name: string; label: string; options: string[][] }>) {
-  const value = name === 'is_duncit_delivery_partner' ? String(formik.values[name]) : formik.values[name];
-  return <FormControl error={Boolean(formik.touched[name] && formik.errors[name])}><FormLabel>{label}</FormLabel><RadioGroup value={value} onChange={(event) => formik.setFieldValue(name, name === 'is_duncit_delivery_partner' ? event.target.value === 'true' : event.target.value)}>{options.map(([optionValue, optionLabel]) => <FormControlLabel key={optionValue} value={optionValue} control={<Radio />} label={optionLabel} />)}</RadioGroup><FormHelperText>{formik.touched[name] && formik.errors[name]}</FormHelperText></FormControl>;
+interface ImageFieldProps {
+  control: Control<ProductListingValues>;
+  watch: UseFormWatch<ProductListingValues>;
+  setValue: UseFormSetValue<ProductListingValues>;
+  onImageClick: () => void;
+}
+
+function ImageField({ control, watch, setValue, onImageClick }: Readonly<ImageFieldProps>) {
+  const images = watch('image_urls') ?? [];
+  const removeImage = (url: string) => setValue('image_urls', images.filter((item) => item !== url), { shouldValidate: true });
+  return (
+    <Controller
+      control={control}
+      name="image_urls"
+      render={({ fieldState }) => (
+        <Stack spacing={1}>
+          {images.length > 0 && (
+            <Box sx={{ display: 'grid', gap: 1, gridTemplateColumns: { xs: 'repeat(2, 1fr)', sm: 'repeat(4, 1fr)' } }}>
+              {images.map((url) => (
+                <Box key={url} sx={{ position: 'relative', borderRadius: 2, overflow: 'hidden', border: 1, borderColor: 'divider' }}>
+                  <Box component="img" src={url} alt="Product" sx={{ width: '100%', aspectRatio: '1 / 1', objectFit: 'cover', display: 'block' }} />
+                  <IconButton size="small" onClick={() => removeImage(url)} sx={{ position: 'absolute', top: 4, right: 4, bgcolor: 'rgba(0,0,0,0.5)', color: '#fff', '&:hover': { bgcolor: 'rgba(0,0,0,0.7)' } }}>
+                    <CloseIcon fontSize="small" />
+                  </IconButton>
+                </Box>
+              ))}
+            </Box>
+          )}
+          <Button variant="outlined" startIcon={<AddPhotoAlternateIcon />} onClick={onImageClick}>Add product image</Button>
+          <FormHelperText error={Boolean(fieldState.error)}>{fieldState.error?.message ?? 'Upload clear images from multiple angles. The first image becomes the main product photo.'}</FormHelperText>
+        </Stack>
+      )}
+    />
+  );
+}
+
+interface RadioFieldProps {
+  control: Control<ProductListingValues>;
+  label: string;
+  options: string[][];
+}
+
+function BooleanRadioField({ control, name, label, options }: Readonly<RadioFieldProps & { name: 'is_duncit_delivery_partner' }>) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <FormControl error={Boolean(fieldState.error)}>
+          <FormLabel>{label}</FormLabel>
+          <RadioGroup value={String(field.value)} onChange={(event) => field.onChange(event.target.value === 'true')}>
+            {options.map(([optionValue, optionLabel]) => <FormControlLabel key={optionValue} value={optionValue} control={<Radio />} label={optionLabel} />)}
+          </RadioGroup>
+          <FormHelperText>{fieldState.error?.message}</FormHelperText>
+        </FormControl>
+      )}
+    />
+  );
+}
+
+function StringRadioField({ control, name, label, options }: Readonly<RadioFieldProps & { name: 'delivery_target' }>) {
+  return (
+    <Controller
+      control={control}
+      name={name}
+      render={({ field, fieldState }) => (
+        <FormControl error={Boolean(fieldState.error)}>
+          <FormLabel>{label}</FormLabel>
+          <RadioGroup value={field.value} onChange={(event) => field.onChange(event.target.value)}>
+            {options.map(([optionValue, optionLabel]) => <FormControlLabel key={optionValue} value={optionValue} control={<Radio />} label={optionLabel} />)}
+          </RadioGroup>
+          <FormHelperText>{fieldState.error?.message}</FormHelperText>
+        </FormControl>
+      )}
+    />
+  );
 }
 
 function Preview({ values }: Readonly<{ values: ProductListingValues }>) {

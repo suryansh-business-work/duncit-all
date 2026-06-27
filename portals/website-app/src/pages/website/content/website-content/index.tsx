@@ -1,8 +1,8 @@
+export { default as WebsiteContentForm } from './website-content.form';
 export {
-  default as WebsiteContentForm,
   websiteContentSchema,
   blankValues,
   toFormValues,
   toContentInput,
-} from './website-content.form';
+} from './website-content.types';
 export type { WebsiteContentFormValues, WebsiteContentInput } from './website-content.types';

@@ -1,4 +1,4 @@
-import { useFormikContext } from 'formik';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import { MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
 import PodPriceBreakdown from '../PodPriceBreakdown';
 import PlaceChargesField from './PlaceChargesField';
@@ -12,13 +12,20 @@ interface Props {
 }
 
 export default function PaymentChargesSection({ finance, inventoryProducts }: Readonly<Props>) {
-  const { values, errors, touched, handleChange, setFieldValue } = useFormikContext<PodForm>();
-  const isFree = values.pod_type.includes('FREE');
-  const productCost = values.products_enabled
-    ? getProductRequestTotal(values.product_requests, inventoryProducts)
+  const { control, register, getValues, setValue, formState: { errors } } = useFormContext<PodForm>();
+  const podType = useWatch({ control, name: 'pod_type' });
+  const podAmount = useWatch({ control, name: 'pod_amount' });
+  const noOfSpots = useWatch({ control, name: 'no_of_spots' });
+  const podMode = useWatch({ control, name: 'pod_mode' });
+  const productsEnabled = useWatch({ control, name: 'products_enabled' });
+  const productRequests = useWatch({ control, name: 'product_requests' });
+  const isActive = useWatch({ control, name: 'is_active' });
+  const id = getValues('id');
+  const isFree = podType.includes('FREE');
+  const productCost = productsEnabled
+    ? getProductRequestTotal(productRequests, inventoryProducts)
     : 0;
-  const err = (k: keyof PodForm) => !!touched[k] && !!errors[k];
-  const help = (k: keyof PodForm) => (touched[k] ? (errors[k] as string) : undefined);
+  const amountHint = isFree ? 'Free pod — amount must be 0' : 'GROSS price (incl. fee + GST). 0 – 1999.';
 
   return (
     <Stack spacing={2}>
@@ -26,11 +33,10 @@ export default function PaymentChargesSection({ finance, inventoryProducts }: Re
         <TextField
           select
           label="Pod type"
-          name="pod_type"
-          value={values.pod_type}
-          onChange={(e) => {
-            setFieldValue('pod_type', e.target.value);
-            if (e.target.value.includes('FREE')) setFieldValue('pod_amount', 0);
+          value={podType}
+          onChange={(event) => {
+            setValue('pod_type', event.target.value, { shouldValidate: true });
+            if (event.target.value.includes('FREE')) setValue('pod_amount', 0);
           }}
           fullWidth
         >
@@ -43,9 +49,8 @@ export default function PaymentChargesSection({ finance, inventoryProducts }: Re
         <TextField
           select
           label="Occurrence"
-          name="pod_occurrence"
-          value={values.pod_occurrence}
-          onChange={handleChange}
+          value={getValues('pod_occurrence')}
+          onChange={(event) => setValue('pod_occurrence', event.target.value)}
           fullWidth
         >
           {OCCURRENCES.map((o) => (
@@ -59,62 +64,61 @@ export default function PaymentChargesSection({ finance, inventoryProducts }: Re
         <TextField
           label="Amount (₹)"
           type="number"
-          name="pod_amount"
-          value={values.pod_amount}
-          onChange={(e) => setFieldValue('pod_amount', Number(e.target.value) || 0)}
+          value={podAmount}
+          onChange={(event) => setValue('pod_amount', Number(event.target.value) || 0, { shouldValidate: true })}
           inputProps={{ min: 0, max: 1999 }}
           disabled={isFree}
-          helperText={
-            help('pod_amount') ||
-            (isFree ? 'Free pod — amount must be 0' : 'GROSS price (incl. fee + GST). 0 – 1999.')
-          }
-          error={err('pod_amount')}
+          helperText={errors.pod_amount?.message || amountHint}
+          error={!!errors.pod_amount}
           fullWidth
         />
         <TextField
           label="No. of spots"
           type="number"
-          name="no_of_spots"
-          value={values.no_of_spots}
-          onChange={(e) => setFieldValue('no_of_spots', Number(e.target.value) || 0)}
+          value={noOfSpots}
+          onChange={(event) => setValue('no_of_spots', Number(event.target.value) || 0, { shouldValidate: true })}
           inputProps={{ min: 0 }}
           fullWidth
-          error={err('no_of_spots')}
-          helperText={help('no_of_spots')}
+          error={!!errors.no_of_spots}
+          helperText={errors.no_of_spots?.message}
         />
-        {values.id && (
+        {id && (
           <Stack direction="row" alignItems="center" spacing={1} sx={{ pt: 1, flexShrink: 0 }}>
             <Switch
-              checked={values.is_active}
-              onChange={(_, v) => setFieldValue('is_active', v)}
+              checked={isActive}
+              onChange={(_, v) => setValue('is_active', v)}
             />
-            <Typography variant="body2">{values.is_active ? 'Active' : 'Inactive'}</Typography>
+            <Typography variant="body2">{isActive ? 'Active' : 'Inactive'}</Typography>
           </Stack>
         )}
       </Stack>
-      {!isFree && Number(values.pod_amount) > 0 && finance && (
+      {!isFree && Number(podAmount) > 0 && finance && (
         <PodPriceBreakdown
-          amount={values.pod_amount}
+          amount={podAmount}
           finance={finance}
           productCost={productCost}
-          spots={values.no_of_spots}
+          spots={noOfSpots}
         />
       )}
       <TextField
         label="Payment terms"
-        name="payment_terms"
-        value={values.payment_terms}
-        onChange={handleChange}
         fullWidth
         multiline
         minRows={3}
         helperText="Refund policy, cancellation, tax info."
+        {...register('payment_terms')}
       />
-      {values.pod_mode === 'PHYSICAL' && (
-        <PlaceChargesField
-          value={values.place_charges}
-          onChange={(next) => setFieldValue('place_charges', next)}
-          helperText="Optional venue-side charges (entry, table, etc.) shown separately to users."
+      {podMode === 'PHYSICAL' && (
+        <Controller
+          control={control}
+          name="place_charges"
+          render={({ field }) => (
+            <PlaceChargesField
+              value={field.value}
+              onChange={field.onChange}
+              helperText="Optional venue-side charges (entry, table, etc.) shown separately to users."
+            />
+          )}
         />
       )}
     </Stack>

@@ -16,88 +16,69 @@ const valid = {
   ],
 };
 
+/** Collect every zod issue message for a value into one searchable string. */
+const messages = (value: unknown): string => {
+  const result = venueLeadSchema.safeParse(value);
+  return result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
+};
+
 describe('venueLeadSchema', () => {
-  it('accepts a valid venue lead', async () => {
-    await expect(venueLeadSchema.validate(valid)).resolves.toBeTruthy();
+  it('accepts a valid venue lead', () => {
+    expect(venueLeadSchema.safeParse(valid).success).toBe(true);
   });
 
-  it('requires venue name, city and full address', async () => {
-    const error = await venueLeadSchema
-      .validate({ ...valid, venue_name: '', city: '', full_address: '' }, { abortEarly: false })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/venue name/i);
-    expect(error.errors.join(' ')).toMatch(/city/i);
-    expect(error.errors.join(' ')).toMatch(/address/i);
+  it('requires venue name, city and full address', () => {
+    const msg = messages({ ...valid, venue_name: '', city: '', full_address: '' });
+    expect(msg).toMatch(/venue name/i);
+    expect(msg).toMatch(/city/i);
+    expect(msg).toMatch(/address/i);
   });
 
-  it('requires at least one venue type', async () => {
-    const error = await venueLeadSchema.validate({ ...valid, venue_types: [] }).catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/venue type/i);
+  it('requires at least one venue type', () => {
+    expect(messages({ ...valid, venue_types: [] })).toMatch(/venue type/i);
   });
 
-  it('requires the primary contact mobile number', async () => {
-    const error = await venueLeadSchema
-      .validate({ ...valid, contacts: [{ ...valid.contacts[0], mobile_number: '' }] })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/primary contact mobile/i);
+  it('requires the primary contact mobile number', () => {
+    expect(messages({ ...valid, contacts: [{ ...valid.contacts[0], mobile_number: '' }] })).toMatch(
+      /primary contact mobile/i
+    );
   });
 
-  it('rejects non-numeric capacity', async () => {
-    const error = await venueLeadSchema
-      .validate({ ...valid, capacity_max: 'abc' })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/whole number/i);
+  it('rejects non-numeric capacity', () => {
+    expect(messages({ ...valid, capacity_max: 'abc' })).toMatch(/whole number/i);
   });
 
-  it('requires super category', async () => {
-    const error = await venueLeadSchema
-      .validate({ ...valid, super_category_id: '' })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/super category is required/i);
+  it('requires super category', () => {
+    expect(messages({ ...valid, super_category_id: '' })).toMatch(/super category is required/i);
   });
 
-  it('accepts a website url', async () => {
-    await expect(
-      venueLeadSchema.validate({ ...valid, website: 'https://example.com' })
-    ).resolves.toBeTruthy();
+  it('accepts a website url', () => {
+    expect(venueLeadSchema.safeParse({ ...valid, website: 'https://example.com' }).success).toBe(true);
   });
 
-  it('rejects a malformed website', async () => {
-    const error = await venueLeadSchema
-      .validate({ ...valid, website: 'not-a-url' })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/valid website/i);
+  it('rejects a malformed website', () => {
+    expect(messages({ ...valid, website: 'not-a-url' })).toMatch(/valid website/i);
   });
 
-  it('accepts a valid services_offered list', async () => {
-    await expect(
-      venueLeadSchema.validate({
+  it('accepts a valid services_offered list', () => {
+    expect(
+      venueLeadSchema.safeParse({
         ...valid,
-        services_offered: [
-          { service: 'Catering', custom_name: '', description: 'Veg + non-veg' },
-        ],
-      })
-    ).resolves.toBeTruthy();
+        services_offered: [{ service: 'Catering', custom_name: '', description: 'Veg + non-veg' }],
+      }).success
+    ).toBe(true);
   });
 
-  it('requires custom_name when service is "Other"', async () => {
-    const error = await venueLeadSchema
-      .validate({
-        ...valid,
-        services_offered: [{ service: 'Other', custom_name: '', description: '' }],
-      })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/custom service name/i);
+  it('requires custom_name when service is "Other"', () => {
+    expect(messages({ ...valid, services_offered: [{ service: 'Other', custom_name: '', description: '' }] })).toMatch(
+      /custom service name/i
+    );
   });
 
-  it('rejects empty service row', async () => {
-    const error = await venueLeadSchema
-      .validate({
-        ...valid,
-        services_offered: [{ service: '', custom_name: '', description: '' }],
-      })
-      .catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/pick a service/i);
+  it('rejects empty service row', () => {
+    expect(messages({ ...valid, services_offered: [{ service: '', custom_name: '', description: '' }] })).toMatch(
+      /pick a service/i
+    );
   });
 });
 

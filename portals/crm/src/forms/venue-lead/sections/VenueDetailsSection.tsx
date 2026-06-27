@@ -1,5 +1,5 @@
 import { Stack } from '@mui/material';
-import { useField } from 'formik';
+import { useFormContext, useWatch } from 'react-hook-form';
 import FormField from '../../FormField';
 import SelectField from '../../fields/SelectField';
 import MultiSelectField from '../../fields/MultiSelectField';
@@ -9,8 +9,9 @@ import CategorySelectors from '../../fields/CategorySelectors';
 import type { CrmOptionGroup } from '../../../api/crm.types';
 
 export default function VenueDetailsSection({ config }: Readonly<{ config: CrmOptionGroup }>) {
-  const [typesField] = useField<string[]>('venue_types');
-  const showOther = (typesField.value ?? []).includes('Other');
+  const { control } = useFormContext();
+  const venueTypes = (useWatch({ control, name: 'venue_types' }) as string[]) ?? [];
+  const showOther = venueTypes.includes('Other');
   return (
     <Stack spacing={1.5}>
       <SuperCategoryField

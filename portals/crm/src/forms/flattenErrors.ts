@@ -1,4 +1,11 @@
-import type { FormikErrors } from 'formik';
+import type { FieldErrors } from 'react-hook-form';
+
+/**
+ * Accepts either a react-hook-form `FieldErrors` tree (leaves are
+ * `{ message }` objects) or a plain nested string-error map (used by the
+ * focused unit tests). Both are walked the same way.
+ */
+type ErrorTree = FieldErrors<any> | Record<string, unknown>;
 
 const LABELS: Record<string, string> = {
   venue_name: 'Venue name',
@@ -28,17 +35,21 @@ const LABELS: Record<string, string> = {
 };
 
 /**
- * Flattens a Formik error tree into `{ path, label, message }[]` so we can
- * list each failing field by its human-friendly name in a top-level alert.
+ * Flattens a react-hook-form error tree into `{ path, label, message }[]` so we
+ * can list each failing field by its human-friendly name in a top-level alert.
  * Paths use dot/bracket notation so they match what FormAccordion's
- * `fieldPaths` prop expects.
+ * `fieldPaths` prop expects. Both string leaves (used in unit tests) and RHF
+ * `{ message }` leaf objects are recognised.
  */
-export function flattenErrors(errors: FormikErrors<any>): { path: string; label: string; message: string }[] {
+export function flattenErrors(errors: ErrorTree): { path: string; label: string; message: string }[] {
   const out: { path: string; label: string; message: string }[] = [];
+  const push = (path: string, message: string) => {
+    out.push({ path, label: LABELS[path] ?? humanise(path), message });
+  };
   const walk = (value: any, path: string) => {
     if (value == null) return;
     if (typeof value === 'string') {
-      out.push({ path, label: LABELS[path] ?? humanise(path), message: value });
+      push(path, value);
       return;
     }
     if (Array.isArray(value)) {
@@ -46,7 +57,14 @@ export function flattenErrors(errors: FormikErrors<any>): { path: string; label:
       return;
     }
     if (typeof value === 'object') {
+      // RHF leaf error: `{ message, type, ref }`. Treat it as a single entry
+      // rather than recursing into its internals.
+      if (typeof value.message === 'string' && path) {
+        push(path, value.message);
+        return;
+      }
       for (const key of Object.keys(value)) {
+        if (key === 'ref' || key === 'type' || key === 'message') continue;
         walk(value[key], path ? `${path}.${key}` : key);
       }
     }

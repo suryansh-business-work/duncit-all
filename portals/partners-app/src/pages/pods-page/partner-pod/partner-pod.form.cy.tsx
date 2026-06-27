@@ -27,19 +27,22 @@ const validPod = {
   product_requests: [],
 };
 
+const messages = (result: ReturnType<typeof partnerPodSchema.safeParse>) =>
+  result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+
 describe('partnerPodSchema', () => {
-  it('requires core pod details', async () => {
-    const error = await partnerPodSchema.validate({ ...validPod, pod_title: '', club_id: '' }, { abortEarly: false }).catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/title/i);
-    expect(error.errors.join(' ')).toMatch(/club/i);
+  it('requires core pod details', () => {
+    const result = partnerPodSchema.safeParse({ ...validPod, pod_title: '', club_id: '' });
+    expect(messages(result)).toMatch(/title/i);
+    expect(messages(result)).toMatch(/club/i);
   });
 
-  it('requires meeting link for virtual pods', async () => {
-    const error = await partnerPodSchema.validate({ ...validPod, pod_mode: 'VIRTUAL', venue_id: '', meeting_url: '' }, { abortEarly: false }).catch((caught) => caught);
-    expect(error.errors.join(' ')).toMatch(/meeting link/i);
+  it('requires meeting link for virtual pods', () => {
+    const result = partnerPodSchema.safeParse({ ...validPod, pod_mode: 'VIRTUAL', venue_id: '', meeting_url: '' });
+    expect(messages(result)).toMatch(/meeting link/i);
   });
 
-  it('accepts a complete pod', async () => {
-    await expect(partnerPodSchema.validate(validPod, { abortEarly: false })).resolves.toBeTruthy();
+  it('accepts a complete pod', () => {
+    expect(partnerPodSchema.safeParse(validPod).success).toBe(true);
   });
 });

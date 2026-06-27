@@ -4,21 +4,20 @@ import {
   Card,
   CardContent,
   CircularProgress,
-  MenuItem,
   Stack,
-  TextField,
   Typography,
 } from '@mui/material';
 import LockIcon from '@mui/icons-material/Lock';
 import { alpha, useTheme } from '@mui/material/styles';
-import type { FormikProps } from 'formik';
+import type { Control } from 'react-hook-form';
 import type { AvailableCoupon, CheckoutForm, CouponPreview } from './queries';
-import CheckoutContactFields from './CheckoutContactFields';
+import { CheckoutFields } from './checkout';
 import CouponField from './CouponField';
 import { formatMoney } from './checkoutMath';
 
 interface Props {
-  formik: FormikProps<CheckoutForm>;
+  control: Control<CheckoutForm>;
+  onSubmit: () => void;
   error: string | null;
   submitting: boolean;
   total: number;
@@ -36,7 +35,8 @@ interface Props {
 }
 
 export default function PaymentDetailsCard({
-  formik,
+  control,
+  onSubmit,
   error,
   submitting,
   total,
@@ -55,10 +55,6 @@ export default function PaymentDetailsCard({
   const discounted = effectiveTotal < total;
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
-  const { values, setFieldValue, submitForm } = formik;
-  const setField = <Key extends keyof CheckoutForm>(key: Key, value: CheckoutForm[Key]) => {
-    setFieldValue(key, value);
-  };
   const fieldSx = {
     '& .MuiInputLabel-root': { color: 'text.secondary' },
     '& .MuiInputLabel-root.Mui-focused': { color: '#ff8b5f' },
@@ -88,22 +84,12 @@ export default function PaymentDetailsCard({
       <CardContent>
         <Typography variant="subtitle1" fontWeight={900} gutterBottom>Payment details</Typography>
         <Stack spacing={2} sx={{ mt: 3 }}>
-          <CheckoutContactFields formik={formik} fieldSx={fieldSx} />
-          {dummyMode && (
-            <TextField
-              select
-              label="Simulate"
-              value={values.simulate_failure ? 'fail' : 'success'}
-              onChange={(e) => setField('simulate_failure', e.target.value === 'fail')}
-              fullWidth
-              helperText="Dummy gateway only"
-              sx={fieldSx}
-              SelectProps={{ MenuProps: selectMenuProps }}
-            >
-              <MenuItem value="success">Successful Payment</MenuItem>
-              <MenuItem value="fail">Failed Payment</MenuItem>
-            </TextField>
-          )}
+          <CheckoutFields
+            control={control}
+            fieldSx={fieldSx}
+            dummyMode={dummyMode}
+            selectMenuProps={selectMenuProps}
+          />
           <CouponField
             code={couponCode}
             setCode={setCouponCode}
@@ -126,7 +112,7 @@ export default function PaymentDetailsCard({
             variant="contained"
             size="large"
             startIcon={submitting ? <CircularProgress size={18} color="inherit" /> : <LockIcon />}
-            onClick={submitForm}
+            onClick={onSubmit}
             disabled={submitting || total <= 0}
             sx={{ minHeight: 48, borderRadius: 3, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
           >

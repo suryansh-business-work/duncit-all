@@ -1,6 +1,6 @@
 import { useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
-import { useField } from 'formik';
+import { useController, useFormContext } from 'react-hook-form';
 import {
   Alert,
   Avatar,
@@ -29,8 +29,8 @@ interface Props {
 }
 
 /**
- * Upload-an-image field bound to Formik. Stores the resulting ImageKit URL.
- * Uses the existing server `uploadImageToImagekit` mutation so credentials
+ * Upload-an-image field bound to react-hook-form. Stores the resulting ImageKit
+ * URL. Uses the existing server `uploadImageToImagekit` mutation so credentials
  * never leave the API server. Preview is shown inline; remove restores the
  * empty state.
  */
@@ -41,7 +41,8 @@ export default function ImageUploadField({
   folder = 'crm',
   shape = 'square',
 }: Readonly<Props>) {
-  const [field, , helpers] = useField<string>(name);
+  const { control } = useFormContext();
+  const { field } = useController({ control, name });
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -67,7 +68,7 @@ export default function ImageUploadField({
         },
       });
       const url = res.data?.uploadImageToImagekit?.url ?? '';
-      helpers.setValue(url);
+      field.onChange(url);
     } catch (e) {
       setError(parseApiError(e));
     } finally {
@@ -77,7 +78,7 @@ export default function ImageUploadField({
   };
 
   const remove = () => {
-    helpers.setValue('');
+    field.onChange('');
     setError(null);
   };
 

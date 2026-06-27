@@ -1,5 +1,5 @@
 import { useEffect, useMemo } from 'react';
-import { useField, useFormikContext } from 'formik';
+import { useFormContext, useWatch } from 'react-hook-form';
 import { useQuery } from '@apollo/client';
 import { Autocomplete, Skeleton, Stack, TextField } from '@mui/material';
 import { CATEGORIES_BY_PARENT, CATEGORIES_BY_LEVEL, type CategoryOption } from '../../api/data.gql';
@@ -13,7 +13,7 @@ interface Props {
 /**
  * Nested Category (multi) + Sub-category (multi) pickers under the chosen Super
  * Category. Categories are scoped to the super; sub-categories to the selected
- * categories. Bound to Formik `category_ids` / `sub_category_ids`. Selecting a
+ * categories. Bound to RHF `category_ids` / `sub_category_ids`. Selecting a
  * narrower level clears stale deeper picks so the hierarchy stays consistent.
  */
 export default function CategorySelectors({
@@ -21,13 +21,10 @@ export default function CategorySelectors({
   categoryName = 'category_ids',
   subName = 'sub_category_ids',
 }: Readonly<Props>) {
-  const { setFieldValue } = useFormikContext<Record<string, unknown>>();
-  const [superField] = useField<string>(superName);
-  const [catField] = useField<string[]>(categoryName);
-  const [subField] = useField<string[]>(subName);
-  const superId = superField.value || '';
-  const categoryIds = catField.value ?? [];
-  const subIds = subField.value ?? [];
+  const { control, setValue } = useFormContext();
+  const superId = (useWatch({ control, name: superName }) as string) || '';
+  const categoryIds = (useWatch({ control, name: categoryName }) as string[]) ?? [];
+  const subIds = (useWatch({ control, name: subName }) as string[]) ?? [];
 
   const cats = useQuery<{ categories: CategoryOption[] }>(CATEGORIES_BY_PARENT, {
     variables: { level: 'CATEGORY', parent_id: superId || null },
@@ -55,18 +52,25 @@ export default function CategorySelectors({
 
   // Drop categories not under the current super, and subs not under a selected category.
   useEffect(() => {
-    if (!superId && categoryIds.length) setFieldValue(categoryName, []);
-  }, [superId, categoryIds.length, categoryName, setFieldValue]);
+    if (!superId && categoryIds.length) setValue(categoryName, [], { shouldDirty: true });
+  }, [superId, categoryIds.length, categoryName, setValue]);
   useEffect(() => {
     // Don't prune while the sub options are still loading — otherwise editing a
     // lead wipes its saved sub-categories before the options arrive (the saved
     // subs then never persist on the next save).
     if (subs.loading || (categoryIds.length > 0 && (subs.data?.categories ?? undefined) === undefined)) return;
     const valid = subIds.filter((id) => subOptions.some((s) => s.id === id));
-    if (valid.length !== subIds.length) setFieldValue(subName, valid);
-  }, [subOptions, subIds, subName, setFieldValue, subs.loading, subs.data, categoryIds.length]);
+    if (valid.length !== subIds.length) setValue(subName, valid, { shouldDirty: true });
+  }, [subOptions, subIds, subName, setValue, subs.loading, subs.data, categoryIds.length]);
 
   if (!superId) return null;
+
+  const renderCatInput = (p: object) => (
+    <TextField {...p} label="Category" placeholder={categoryIds.length ? '' : 'Select categories'} helperText="Optional · multiple" />
+  );
+  const renderSubInput = (p: object) => (
+    <TextField {...p} label="Sub Category" placeholder={subIds.length ? '' : 'Select sub-categories'} helperText="Optional · multiple" />
+  );
 
   return (
     <Stack spacing={1.5}>
@@ -79,10 +83,8 @@ export default function CategorySelectors({
           options={catOptions.map((c) => c.id)}
           value={categoryIds.filter((id) => catOptions.some((c) => c.id === id))}
           getOptionLabel={(id) => nameById.get(id) ?? id}
-          onChange={(_, v) => setFieldValue(categoryName, v)}
-          renderInput={(p) => (
-            <TextField {...p} label="Category" placeholder={categoryIds.length ? '' : 'Select categories'} helperText="Optional · multiple" />
-          )}
+          onChange={(_, v) => setValue(categoryName, v, { shouldDirty: true })}
+          renderInput={renderCatInput}
         />
       )}
       {categoryIds.length > 0 && (
@@ -92,11 +94,9 @@ export default function CategorySelectors({
           options={subOptions.map((s) => s.id)}
           value={subIds.filter((id) => subOptions.some((s) => s.id === id))}
           getOptionLabel={(id) => nameById.get(id) ?? id}
-          onChange={(_, v) => setFieldValue(subName, v)}
+          onChange={(_, v) => setValue(subName, v, { shouldDirty: true })}
           loading={subs.loading}
-          renderInput={(p) => (
-            <TextField {...p} label="Sub Category" placeholder={subIds.length ? '' : 'Select sub-categories'} helperText="Optional · multiple" />
-          )}
+          renderInput={renderSubInput}
         />
       )}
     </Stack>

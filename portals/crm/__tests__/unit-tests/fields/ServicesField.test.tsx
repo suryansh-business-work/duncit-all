@@ -1,19 +1,22 @@
 import { describe, expect, it } from 'vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
-import { Formik, Form } from 'formik';
+import { FormProvider, useForm } from 'react-hook-form';
 import ServicesField from '@/forms/fields/ServicesField';
 import type { CrmServiceOffered } from '@/api/crm.types';
 
-function renderWith(initial: CrmServiceOffered[], onSubmit = () => undefined) {
-  return render(
-    <Formik initialValues={{ services_offered: initial }} onSubmit={onSubmit as any}>
-      {() => (
-        <Form>
-          <ServicesField name="services_offered" options={['Catering', 'DJ / Music', 'Other']} />
-        </Form>
-      )}
-    </Formik>
+function Harness({ initial }: Readonly<{ initial: CrmServiceOffered[] }>) {
+  const methods = useForm({ defaultValues: { services_offered: initial } });
+  return (
+    <FormProvider {...methods}>
+      <form>
+        <ServicesField name="services_offered" options={['Catering', 'DJ / Music', 'Other']} />
+      </form>
+    </FormProvider>
   );
+}
+
+function renderWith(initial: CrmServiceOffered[]) {
+  return render(<Harness initial={initial} />);
 }
 
 describe('ServicesField', () => {

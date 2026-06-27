@@ -24,40 +24,35 @@ const step3 = {
   tags: ['a'],
 };
 
+const isValid = (schema: { safeParse: (v: unknown) => { success: boolean } }, value: unknown) =>
+  schema.safeParse(value).success;
+
 describe('host step schemas', () => {
-  it('validates step1 and rejects bad email/phone/dob', async () => {
-    await expect(hostStep1Schema.isValid(step1)).resolves.toBe(true);
-    await expect(hostStep1Schema.isValid({ ...step1, email: 'bad' })).resolves.toBe(false);
-    await expect(hostStep1Schema.isValid({ ...step1, phone: 'abc' })).resolves.toBe(false);
-    await expect(
-      hostStep1Schema.isValid({ ...step1, dob: format(subYears(new Date(), 5), 'yyyy-MM-dd') }),
-    ).resolves.toBe(false);
+  it('validates step1 and rejects bad email/phone/dob', () => {
+    expect(isValid(hostStep1Schema, step1)).toBe(true);
+    expect(isValid(hostStep1Schema, { ...step1, email: 'bad' })).toBe(false);
+    expect(isValid(hostStep1Schema, { ...step1, phone: 'abc' })).toBe(false);
+    expect(
+      isValid(hostStep1Schema, { ...step1, dob: format(subYears(new Date(), 5), 'yyyy-MM-dd') }),
+    ).toBe(false);
   });
 
-  it('validates step2 aadhar/pan', async () => {
-    await expect(hostStep2Schema.isValid(step2)).resolves.toBe(true);
-    await expect(hostStep2Schema.isValid({ ...step2, aadhar_number: '12' })).resolves.toBe(false);
-    await expect(hostStep2Schema.isValid({ ...step2, pan_number: 'bad' })).resolves.toBe(false);
+  it('validates step2 aadhar/pan', () => {
+    expect(isValid(hostStep2Schema, step2)).toBe(true);
+    expect(isValid(hostStep2Schema, { ...step2, aadhar_number: '12' })).toBe(false);
+    expect(isValid(hostStep2Schema, { ...step2, pan_number: 'bad' })).toBe(false);
   });
 
-  it('validates step3', async () => {
-    await expect(hostStep3Schema.isValid(step3)).resolves.toBe(true);
-    await expect(hostStep3Schema.isValid({ ...step3, full_address: 'x' })).resolves.toBe(false);
+  it('validates step3', () => {
+    expect(isValid(hostStep3Schema, step3)).toBe(true);
+    expect(isValid(hostStep3Schema, { ...step3, full_address: 'x' })).toBe(false);
   });
 
-  it('validates edit and create wrappers', async () => {
-    await expect(
-      hostEditSchema.isValid({ step1, step2, step3, status: 'APPROVED' }),
-    ).resolves.toBe(true);
-    await expect(
-      hostEditSchema.isValid({ step1, step2, step3, status: 'BOGUS' }),
-    ).resolves.toBe(false);
-    await expect(
-      hostCreateSchema.isValid({ target_user_id: 'u1', step1, step2, step3 }),
-    ).resolves.toBe(true);
-    await expect(
-      hostCreateSchema.isValid({ target_user_id: '', step1, step2, step3 }),
-    ).resolves.toBe(false);
+  it('validates edit and create wrappers', () => {
+    expect(isValid(hostEditSchema, { step1, step2, step3, status: 'APPROVED' })).toBe(true);
+    expect(isValid(hostEditSchema, { step1, step2, step3, status: 'BOGUS' })).toBe(false);
+    expect(isValid(hostCreateSchema, { target_user_id: 'u1', step1, step2, step3 })).toBe(true);
+    expect(isValid(hostCreateSchema, { target_user_id: '', step1, step2, step3 })).toBe(false);
   });
 });
 

@@ -13,21 +13,23 @@ const base = {
   is_active: true,
 };
 
+const messages = (input: unknown) => {
+  const result = podPlanFormSchema.safeParse(input);
+  return result.success ? '' : result.error.issues.map((issue) => issue.message).join(' ');
+};
+
 describe('podPlanFormSchema', () => {
-  it('rejects keys with uppercase letters', async () => {
-    const error = await podPlanFormSchema.validate({ ...base, key: 'Premium' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/key/i);
+  it('rejects keys with uppercase letters', () => {
+    expect(messages({ ...base, key: 'Premium' })).toMatch(/key/i);
   });
-  it('rejects image_url that is not http(s)', async () => {
-    const error = await podPlanFormSchema.validate({ ...base, image_url: 'ftp://x' }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/image url/i);
+  it('rejects image_url that is not http(s)', () => {
+    expect(messages({ ...base, image_url: 'ftp://x' })).toMatch(/image url/i);
   });
-  it('rejects sort_order over 999', async () => {
-    const error = await podPlanFormSchema.validate({ ...base, sort_order: 1000 }, { abortEarly: false }).catch((e) => e);
-    expect(error.errors.join(' ')).toMatch(/sort/i);
+  it('rejects sort_order over 999', () => {
+    expect(messages({ ...base, sort_order: 1000 })).toMatch(/sort/i);
   });
-  it('accepts a valid plan', async () => {
-    await expect(podPlanFormSchema.validate(base)).resolves.toBeTruthy();
+  it('accepts a valid plan', () => {
+    expect(podPlanFormSchema.safeParse(base).success).toBe(true);
   });
 });
 

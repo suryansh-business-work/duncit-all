@@ -1,4 +1,4 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 
 export type ContactType = 'CALL' | 'EMAIL';
 
@@ -13,49 +13,36 @@ export interface ContactActionValues {
 export const CALL_STATUSES = ['LOGGED', 'CONNECTED', 'MISSED', 'VOICEMAIL'] as const;
 export const EMAIL_STATUSES = ['LOGGED', 'SENT', 'BOUNCED', 'REPLIED'] as const;
 
-const httpsUrl = (label: string) =>
-  yup
-    .string()
-    .trim()
-    .default('')
-    .test(label, `${label} must start with http:// or https://`, (value) => {
-      if (!value) return true;
-      try {
-        const parsed = new URL(value);
-        return ['http:', 'https:'].includes(parsed.protocol);
-      } catch {
-        return false;
-      }
-    });
+const isHttpUrl = (value: string) => {
+  if (!value) return true;
+  try {
+    const parsed = new URL(value);
+    return ['http:', 'https:'].includes(parsed.protocol);
+  } catch {
+    return false;
+  }
+};
 
-export const buildContactActionSchema = (type: ContactType): yup.ObjectSchema<ContactActionValues> =>
-  yup.object({
-    subject: yup
+export const buildContactActionSchema = (
+  type: ContactType,
+): z.ZodType<ContactActionValues, z.ZodTypeDef, unknown> => {
+  const statuses = type === 'CALL' ? CALL_STATUSES : EMAIL_STATUSES;
+  return z.object({
+    subject: z.string().trim().max(160, 'Subject must be 160 characters or fewer').default(''),
+    notes: z.string().trim().max(2000, 'Notes must be 2000 characters or fewer').default(''),
+    status: z
       .string()
       .trim()
-      .max(160, 'Subject must be 160 characters or fewer')
-      .default(''),
-    notes: yup
-      .string()
-      .trim()
-      .max(2000, 'Notes must be 2000 characters or fewer')
-      .default(''),
-    status: yup
-      .string()
-      .trim()
-      .oneOf(
-        type === 'CALL' ? [...CALL_STATUSES] : [...EMAIL_STATUSES],
-        'Select a valid status',
-      )
-      .required('Status is required'),
-    duration_seconds: yup
+      .refine((value) => (statuses as readonly string[]).includes(value), 'Select a valid status'),
+    duration_seconds: z.coerce
       .number()
-      .integer('Duration must be a whole number')
+      .int('Duration must be a whole number')
       .min(0, 'Duration cannot be negative')
       .max(86_400, 'Duration cannot exceed 24 hours')
       .default(0),
-    recording_url: httpsUrl('Recording URL'),
+    recording_url: z.string().trim().default('').refine(isHttpUrl, 'Recording URL must start with http:// or https://'),
   });
+};
 
 export const contactActionInitialValues: ContactActionValues = {
   subject: '',
@@ -82,7 +69,7 @@ export function toRecordContactInput(
   type: ContactType,
   target: string,
 ): RecordContactPayload {
-  const cast = buildContactActionSchema(type).cast(values, { stripUnknown: true });
+  const cast = buildContactActionSchema(type).parse(values);
   return {
     user_id,
     type,

@@ -1,28 +1,15 @@
 import { Box, TextField } from '@mui/material';
-import { getIn, useFormikContext } from 'formik';
+import { useFormContext, useWatch } from 'react-hook-form';
 import MediaPickerField from '../MediaPickerField';
+import { useHostFieldProps } from './useHostFieldProps';
 import type { HostCreateValues, HostEditValues } from '../../forms/host.form';
 
 type Values = HostCreateValues & Partial<HostEditValues>;
 
 export default function HostIdentitySection() {
-  const { values, errors, touched, submitCount, handleBlur, handleChange, setFieldValue } =
-    useFormikContext<Values>();
-  const hasError = (name: string) => {
-    const value = getIn(values, name);
-    const hasValue = Array.isArray(value) ? value.length > 0 : String(value ?? '').length > 0;
-    return Boolean(getIn(errors, name) && (submitCount > 0 || getIn(touched, name) || hasValue));
-  };
-  const tfProps = (name: string) => ({
-    name,
-    value: getIn(values, name) ?? '',
-    onChange: handleChange,
-    onBlur: handleBlur,
-    error: hasError(name),
-    helperText: hasError(name) ? (getIn(errors, name) as string) : ' ',
-    fullWidth: true,
-    size: 'small' as const,
-  });
+  const { control, setValue } = useFormContext<Values>();
+  const { hasError, errorMessage, tfProps } = useHostFieldProps();
+  const passportPhotoUrl = useWatch({ control, name: 'step2.passport_photo_url' });
 
   return (
     <>
@@ -32,13 +19,9 @@ export default function HostIdentitySection() {
       </Box>
       <MediaPickerField
         label="Passport photo"
-        value={values.step2.passport_photo_url}
-        onChange={(url) => setFieldValue('step2.passport_photo_url', url)}
-        helperText={
-          hasError('step2.passport_photo_url')
-            ? (getIn(errors, 'step2.passport_photo_url') as string)
-            : ' '
-        }
+        value={passportPhotoUrl ?? ''}
+        onChange={(url) => setValue('step2.passport_photo_url', url, { shouldValidate: true, shouldDirty: true })}
+        helperText={hasError('step2.passport_photo_url') ? errorMessage('step2.passport_photo_url') : ' '}
         folder="/hosts/photo"
         required
       />

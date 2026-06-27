@@ -1,48 +1,63 @@
-import * as yup from 'yup';
+import { z } from 'zod';
 import { SLUG_KEY_PATTERN } from '../../../forms/validation/rules';
 
-const httpUrl = yup
-  .string()
-  .trim()
-  .default('')
-  .test('http-url', 'Image URL must be a valid http(s) URL', (value) => {
-    if (!value) return true;
-    try {
-      const parsed = new URL(value);
-      return parsed.protocol === 'http:' || parsed.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  });
+const isHttpUrl = (value: string) => {
+  if (!value) return true;
+  try {
+    const parsed = new URL(value);
+    return parsed.protocol === 'http:' || parsed.protocol === 'https:';
+  } catch {
+    return false;
+  }
+};
 
-export const podPlanFormSchema = yup.object({
-  key: yup
+export interface PodPlanFormValues {
+  key: string;
+  name: string;
+  description: string;
+  image_url: string;
+  features: string[];
+  price_label: string;
+  sort_order: number;
+  is_coming_soon: boolean;
+  is_active: boolean;
+}
+
+export const podPlanFormSchema: z.ZodType<PodPlanFormValues, z.ZodTypeDef, unknown> = z.object({
+  key: z
     .string()
     .trim()
-    .matches(SLUG_KEY_PATTERN, 'Key may contain lowercase letters, digits, dashes and underscores')
     .max(40, 'Key must be 40 characters or fewer')
-    .required('Key is required'),
-  name: yup
+    .regex(SLUG_KEY_PATTERN, 'Key may contain lowercase letters, digits, dashes and underscores'),
+  name: z
     .string()
     .trim()
     .min(1, 'Name is required')
-    .max(80, 'Name must be 80 characters or fewer')
-    .required('Name is required'),
-  description: yup.string().trim().max(500).default(''),
-  image_url: httpUrl,
-  features: yup.array(yup.string().trim().required().max(120)).max(20).default([]),
-  price_label: yup.string().trim().max(60).default(''),
-  sort_order: yup
+    .max(80, 'Name must be 80 characters or fewer'),
+  description: z.string().trim().max(500).default(''),
+  image_url: z.string().trim().default('').refine(isHttpUrl, 'Image URL must be a valid http(s) URL'),
+  features: z.array(z.string().trim().min(1).max(120)).max(20).default([]),
+  price_label: z.string().trim().max(60).default(''),
+  sort_order: z.coerce
     .number()
-    .integer('Sort order must be a whole number')
+    .int('Sort order must be a whole number')
     .min(0, 'Sort order must be 0 or greater')
-    .max(999)
-    .required('Sort order is required'),
-  is_coming_soon: yup.boolean().default(false),
-  is_active: yup.boolean().default(true),
+    .max(999, 'Sort order must be 999 or fewer'),
+  is_coming_soon: z.boolean().default(false),
+  is_active: z.boolean().default(true),
 });
 
-export type PodPlanFormValues = yup.InferType<typeof podPlanFormSchema>;
+export const podPlanFormDefaults: PodPlanFormValues = {
+  key: '',
+  name: '',
+  description: '',
+  image_url: '',
+  features: [],
+  price_label: '',
+  sort_order: 0,
+  is_coming_soon: false,
+  is_active: true,
+};
 
 export function parsePodPlanFeatures(text: string) {
   return text
@@ -53,7 +68,7 @@ export function parsePodPlanFeatures(text: string) {
 }
 
 export function toPodPlanInput(values: PodPlanFormValues) {
-  const cast = podPlanFormSchema.cast(values, { stripUnknown: true });
+  const cast = podPlanFormSchema.parse(values);
   return {
     key: cast.key,
     name: cast.name,

@@ -1,16 +1,22 @@
-import { useFormikContext } from 'formik';
+import { Controller, useFormContext } from 'react-hook-form';
 import ChipArrayField from './ChipArrayField';
 import type { PodForm } from '../queries';
 
 export default function PerksSection() {
-  const { values, setFieldValue } = useFormikContext<PodForm>();
+  const { control } = useFormContext<PodForm>();
   return (
-    <ChipArrayField
-      label="Available perks"
-      value={values.available_perks}
-      onChange={(next) => setFieldValue('available_perks', next)}
-      placeholder="e.g. Free Drink, Early Entry, VIP Access"
-      helperText="Perks attendees unlock by joining."
+    <Controller
+      control={control}
+      name="available_perks"
+      render={({ field }) => (
+        <ChipArrayField
+          label="Available perks"
+          value={field.value}
+          onChange={field.onChange}
+          placeholder="e.g. Free Drink, Early Entry, VIP Access"
+          helperText="Perks attendees unlock by joining."
+        />
+      )}
     />
   );
 }

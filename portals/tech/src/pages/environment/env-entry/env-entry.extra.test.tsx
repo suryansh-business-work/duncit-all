@@ -56,9 +56,14 @@ describe('env-entry.types helpers', () => {
     expect(pairs.find((p) => p.key === 'phone_number')?.value).toBe('+14155552671');
   });
 
-  it('validates phone fields on create and edit', async () => {
-    await expect(envEntrySchema(twilioDef, false).validate({ name: 'X', config: { auth_token: 't', phone_number: 'bad' } })).rejects.toThrow(/E\.164/i);
-    await expect(envEntrySchema(twilioDef, false).validate({ name: 'X', config: { auth_token: 't', phone_number: '+14155552671' } })).resolves.toBeTruthy();
+  const schemaErrors = (def: EnvCategoryDef, isEdit: boolean, values: Record<string, unknown>) => {
+    const result = envEntrySchema(def, isEdit).safeParse(values);
+    return result.success ? '' : result.error.issues.map((i) => i.message).join(' ');
+  };
+
+  it('validates phone fields on create and edit', () => {
+    expect(schemaErrors(twilioDef, false, { name: 'X', config: { auth_token: 't', phone_number: 'bad' } })).toMatch(/E\.164/i);
+    expect(envEntrySchema(twilioDef, false).safeParse({ name: 'X', config: { auth_token: 't', phone_number: '+14155552671' } }).success).toBe(true);
   });
 
   it('valuesFromEntry coerces a null config value to an empty string', () => {
@@ -66,16 +71,16 @@ describe('env-entry.types helpers', () => {
     expect(v.config.account_sid).toBe('');
   });
 
-  it('requires the primary secret on create', async () => {
-    await expect(envEntrySchema(twilioDef, false).validate({ name: 'X', config: {} })).rejects.toThrow(/required/i);
+  it('requires the primary secret on create', () => {
+    expect(schemaErrors(twilioDef, false, { name: 'X', config: {} })).toMatch(/required/i);
   });
 
-  it('passes a category with no secret field on create', async () => {
-    await expect(envEntrySchema(noSecretDef, false).validate({ name: 'X', config: {} })).resolves.toBeTruthy();
+  it('passes a category with no secret field on create', () => {
+    expect(envEntrySchema(noSecretDef, false).safeParse({ name: 'X', config: {} }).success).toBe(true);
   });
 
-  it('tolerates a missing config object during phone validation (edit)', async () => {
-    await expect(envEntrySchema(twilioDef, true).validate({ name: 'X' })).resolves.toBeTruthy();
+  it('tolerates a missing config object during phone validation (edit)', () => {
+    expect(envEntrySchema(twilioDef, true).safeParse({ name: 'X' }).success).toBe(true);
   });
 });
 
@@ -105,6 +110,8 @@ describe('EnvEntryForm interactions', () => {
     fireEvent.click(screen.getByLabelText('Active'));
     fireEvent.blur(tokenInput);
     await waitFor(() => expect(screen.getByText(/Auth Token is required/i)).toBeInTheDocument());
+    fireEvent.blur(nameInput);
+    await waitFor(() => expect(screen.getByText(/Name is required/i)).toBeInTheDocument());
     fireEvent.change(nameInput, { target: { value: 'My TW' } });
     fireEvent.change(tokenInput, { target: { value: 'tok' } });
     fireEvent.click(screen.getByRole('button', { name: 'Save' }));

@@ -1,36 +1,37 @@
-import * as yup from 'yup';
-import { validationRules } from '../../../forms/validation/rules';
+import { z } from 'zod';
+import { zodRules } from '../../../forms/validation/zodRules';
 import type { EditForm } from '../queries';
 
-export const userProfileSchema: yup.ObjectSchema<EditForm> = yup.object({
-  first_name: validationRules.personName('First name'),
-  last_name: validationRules.personName('Last name'),
-  email: validationRules.optionalEmail('Email'),
-  phone_extension: validationRules.phoneExtension('Phone code'),
-  phone_number: validationRules.phoneNumber('Phone number'),
-  city: validationRules.optionalText('City', 80),
-  state: validationRules.optionalText('State', 80),
-  pincode: yup
+const PINCODE_PATTERN = /^[0-9A-Za-z -]{3,12}$/;
+
+export const userProfileSchema: z.ZodType<EditForm, z.ZodTypeDef, unknown> = z.object({
+  first_name: zodRules.personName('First name'),
+  last_name: zodRules.personName('Last name'),
+  email: zodRules.optionalEmail('Email').default(''),
+  phone_extension: zodRules.phoneExtension('Phone code'),
+  phone_number: zodRules.phoneNumber('Phone number'),
+  city: zodRules.optionalText('City', 80).default(''),
+  state: zodRules.optionalText('State', 80).default(''),
+  pincode: z
     .string()
     .trim()
-    .matches(/^[0-9A-Za-z -]{3,12}$/, {
-      message: 'Pincode must be 3–12 letters, digits, spaces or hyphens',
-      excludeEmptyString: true,
-    })
-    .default(''),
-  zone: validationRules.optionalText('Zone', 80),
-  assigned_city: validationRules.optionalText('Assigned city', 80),
-  assigned_zones: validationRules.optionalText('Assigned zones', 500),
-  bio: validationRules.optionalText('Bio', 500),
-  profile_photo: validationRules.optionalText('Profile photo URL', 1000),
-  status: yup
-    .mixed<EditForm['status']>()
-    .oneOf(['ACTIVE', 'INACTIVE', 'SUSPENDED'], 'Select a valid status')
-    .required('Status is required'),
+    .default('')
+    .refine(
+      (value) => value === '' || PINCODE_PATTERN.test(value),
+      'Pincode must be 3–12 letters, digits, spaces or hyphens',
+    ),
+  zone: zodRules.optionalText('Zone', 80).default(''),
+  assigned_city: zodRules.optionalText('Assigned city', 80).default(''),
+  assigned_zones: zodRules.optionalText('Assigned zones', 500).default(''),
+  bio: zodRules.optionalText('Bio', 500).default(''),
+  profile_photo: zodRules.optionalText('Profile photo URL', 1000).default(''),
+  status: z.enum(['ACTIVE', 'INACTIVE', 'SUSPENDED'], {
+    errorMap: () => ({ message: 'Select a valid status' }),
+  }),
 });
 
 export function toUpdateUserInput(values: EditForm) {
-  const cast = userProfileSchema.cast(values, { stripUnknown: true });
+  const cast = userProfileSchema.parse(values);
   const input: any = {
     first_name: cast.first_name,
     last_name: cast.last_name,

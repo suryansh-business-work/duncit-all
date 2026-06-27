@@ -9,34 +9,35 @@ import {
   Tooltip,
 } from '@mui/material';
 import AutoFixHighIcon from '@mui/icons-material/AutoFixHigh';
-import { useFormikContext } from 'formik';
+import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import DateTimeField from '../../../components/DateTimeField';
 import { generateMeetingLink, MEETING_PLATFORMS } from '../meeting-platforms';
 import type { PodForm } from '../queries';
 
 export default function MeetingSection() {
-  const { values, errors, touched, handleChange, setFieldValue } = useFormikContext<PodForm>();
+  const { control, register, getValues, setValue, formState: { errors } } = useFormContext<PodForm>();
   const [generating, setGenerating] = useState(false);
   const [generateError, setGenerateError] = useState<string | null>(null);
-  const err = (key: keyof PodForm) => !!touched[key] && !!errors[key];
-  const help = (key: keyof PodForm) => (touched[key] ? (errors[key] as string) : undefined);
+  const startDateTime = useWatch({ control, name: 'pod_date_time' });
+  const meetingPlatform = useWatch({ control, name: 'meeting_platform' });
   const now = new Date();
-  const endMin = values.pod_date_time && new Date(values.pod_date_time) > now
-    ? new Date(values.pod_date_time)
+  const endMin = startDateTime && new Date(startDateTime) > now
+    ? new Date(startDateTime)
     : now;
 
   const handleAutoGenerate = async () => {
-    if (!values.meeting_platform || values.meeting_platform === 'OTHER') return;
+    const platform = getValues('meeting_platform');
+    if (!platform || platform === 'OTHER') return;
     setGenerating(true);
     setGenerateError(null);
     try {
       const url = await generateMeetingLink({
-        platform: values.meeting_platform,
-        title: values.pod_title || 'Duncit Pod',
-        startISO: values.pod_date_time || new Date().toISOString(),
-        endISO: values.pod_end_date_time || undefined,
+        platform,
+        title: getValues('pod_title') || 'Duncit Pod',
+        startISO: getValues('pod_date_time') || new Date().toISOString(),
+        endISO: getValues('pod_end_date_time') || undefined,
       });
-      setFieldValue('meeting_url', url);
+      setValue('meeting_url', url, { shouldValidate: true });
     } catch (error: any) {
       setGenerateError(error?.message ?? 'Could not generate meeting link');
     } finally {
@@ -45,41 +46,52 @@ export default function MeetingSection() {
   };
 
   const canAutoGenerate =
-    !!values.meeting_platform &&
-    values.meeting_platform !== 'OTHER' &&
-    !!values.pod_date_time;
+    !!meetingPlatform &&
+    meetingPlatform !== 'OTHER' &&
+    !!startDateTime;
 
   return (
     <Stack spacing={2}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <DateTimeField
-          label="Start date & time"
-          value={values.pod_date_time}
-          onChange={(iso) => setFieldValue('pod_date_time', iso)}
-          minDateTime={now}
-          required
-          error={err('pod_date_time')}
-          helperText={help('pod_date_time')}
+        <Controller
+          control={control}
+          name="pod_date_time"
+          render={({ field, fieldState }) => (
+            <DateTimeField
+              label="Start date & time"
+              value={field.value}
+              onChange={field.onChange}
+              minDateTime={now}
+              required
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+            />
+          )}
         />
-        <DateTimeField
-          label="End date & time"
-          value={values.pod_end_date_time}
-          onChange={(iso) => setFieldValue('pod_end_date_time', iso)}
-          minDateTime={endMin}
-          error={err('pod_end_date_time')}
-          helperText={help('pod_end_date_time')}
+        <Controller
+          control={control}
+          name="pod_end_date_time"
+          render={({ field, fieldState }) => (
+            <DateTimeField
+              label="End date & time"
+              value={field.value}
+              onChange={field.onChange}
+              minDateTime={endMin}
+              error={!!fieldState.error}
+              helperText={fieldState.error?.message}
+            />
+          )}
         />
       </Stack>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <TextField
           select
           label="Meeting platform"
-          name="meeting_platform"
-          value={values.meeting_platform || ''}
-          onChange={handleChange}
+          value={meetingPlatform || ''}
+          onChange={(event) => setValue('meeting_platform', event.target.value, { shouldValidate: true })}
           fullWidth
-          error={err('meeting_platform')}
-          helperText={help('meeting_platform') || 'Pick a platform to auto-generate a link.'}
+          error={!!errors.meeting_platform}
+          helperText={errors.meeting_platform?.message || 'Pick a platform to auto-generate a link.'}
         >
           {MEETING_PLATFORMS.map((platform) => (
             <MenuItem key={platform.value} value={platform.value}>
@@ -87,44 +99,46 @@ export default function MeetingSection() {
             </MenuItem>
           ))}
         </TextField>
-        <TextField
-          label="Meeting link"
+        <Controller
+          control={control}
           name="meeting_url"
-          value={values.meeting_url}
-          onChange={handleChange}
-          fullWidth
-          required
-          placeholder="https://meet.google.com/..."
-          error={err('meeting_url') || !!generateError}
-          helperText={help('meeting_url') || generateError || 'Visible to joined members only.'}
-          InputProps={{
-            endAdornment: canAutoGenerate ? (
-              <InputAdornment position="end">
-                <Tooltip title="Auto-generate meeting link">
-                  <Button
-                    size="small"
-                    onClick={handleAutoGenerate}
-                    disabled={generating}
-                    startIcon={generating ? <CircularProgress size={14} /> : <AutoFixHighIcon fontSize="small" />}
-                  >
-                    {generating ? 'Generating…' : 'Generate'}
-                  </Button>
-                </Tooltip>
-              </InputAdornment>
-            ) : undefined,
-          }}
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              label="Meeting link"
+              fullWidth
+              required
+              placeholder="https://meet.google.com/..."
+              error={!!fieldState.error || !!generateError}
+              helperText={fieldState.error?.message || generateError || 'Visible to joined members only.'}
+              InputProps={{
+                endAdornment: canAutoGenerate ? (
+                  <InputAdornment position="end">
+                    <Tooltip title="Auto-generate meeting link">
+                      <Button
+                        size="small"
+                        onClick={handleAutoGenerate}
+                        disabled={generating}
+                        startIcon={generating ? <CircularProgress size={14} /> : <AutoFixHighIcon fontSize="small" />}
+                      >
+                        {generating ? 'Generating…' : 'Generate'}
+                      </Button>
+                    </Tooltip>
+                  </InputAdornment>
+                ) : undefined,
+              }}
+            />
+          )}
         />
       </Stack>
       <TextField
         label="Meeting notes"
-        name="meeting_notes"
-        value={values.meeting_notes}
-        onChange={handleChange}
         fullWidth
         multiline
         minRows={3}
-        error={err('meeting_notes')}
-        helperText={help('meeting_notes') || 'Password, agenda, joining instructions, or moderator notes.'}
+        error={!!errors.meeting_notes}
+        helperText={errors.meeting_notes?.message || 'Password, agenda, joining instructions, or moderator notes.'}
+        {...register('meeting_notes')}
       />
     </Stack>
   );

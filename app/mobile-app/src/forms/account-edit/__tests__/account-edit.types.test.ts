@@ -13,7 +13,7 @@ const fullMe = {
   last_name: 'Sharma',
   bio: 'Hi',
   city: 'Pune',
-  zone: 'Kothrud',
+  state: 'Maharashtra',
   country: 'India',
   phone_extension: '+91',
   phone_number: '9876543210',
@@ -28,9 +28,9 @@ describe('accountEditDefaults', () => {
       last_name: '',
       bio: '',
       dob: '',
-      city: '',
-      zone: '',
       country: '',
+      state: '',
+      city: '',
       phone_extension: '+91',
       phone_number: '',
       whatsapp_extension: '+91',
@@ -38,9 +38,10 @@ describe('accountEditDefaults', () => {
     });
   });
 
-  it('reflects the loaded user values when present', () => {
+  it('reflects the loaded user values including state (bug 14)', () => {
     expect(accountEditDefaults(fullMe)).toMatchObject({
       first_name: 'Riya',
+      state: 'Maharashtra',
       whatsapp_extension: '+44',
       whatsapp_number: '5551234',
     });
@@ -62,9 +63,23 @@ describe('toDobInput', () => {
 });
 
 describe('toUpdateProfileInput', () => {
-  it('maps values to the mutation input and omits an empty dob', () => {
+  it('maps values to the mutation input (state, not zone) and omits an empty dob', () => {
     const values: AccountEditValues = accountEditDefaults(fullMe);
-    expect(toUpdateProfileInput(values)).toEqual({ ...values, dob: undefined });
+    const input = toUpdateProfileInput(values);
+    expect(input).toEqual({
+      first_name: 'Riya',
+      last_name: 'Sharma',
+      bio: 'Hi',
+      country: 'India',
+      state: 'Maharashtra',
+      city: 'Pune',
+      phone_extension: '+91',
+      phone_number: '9876543210',
+      whatsapp_extension: '+44',
+      whatsapp_number: '5551234',
+    });
+    expect('zone' in input).toBe(false);
+    expect(input.dob).toBeUndefined();
   });
 
   it('forwards a provided dob', () => {
@@ -86,5 +101,28 @@ describe('accountEditSchema dob validation (bug 8)', () => {
   });
   it('rejects a future date', () => {
     expect(accountEditSchema.safeParse({ ...base, dob: '3000-01-01' }).success).toBe(false);
+  });
+  it('rejects an invalid calendar date (NaN time)', () => {
+    expect(accountEditSchema.safeParse({ ...base, dob: '1995-13-40' }).success).toBe(false);
+  });
+});
+
+describe('accountEditSchema field validation', () => {
+  const base = accountEditDefaults(fullMe);
+  it('requires a first name', () => {
+    expect(accountEditSchema.safeParse({ ...base, first_name: '' }).success).toBe(false);
+  });
+  it('rejects non-digit phone numbers', () => {
+    expect(accountEditSchema.safeParse({ ...base, phone_number: 'abc' }).success).toBe(false);
+  });
+  it('rejects an over-long extension', () => {
+    expect(accountEditSchema.safeParse({ ...base, phone_extension: '+123456' }).success).toBe(
+      false,
+    );
+  });
+  it('accepts a blank optional location', () => {
+    expect(accountEditSchema.safeParse({ ...base, country: '', state: '', city: '' }).success).toBe(
+      true,
+    );
   });
 });

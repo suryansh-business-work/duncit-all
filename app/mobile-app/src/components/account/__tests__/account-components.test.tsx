@@ -14,6 +14,22 @@ jest.mock('@/hooks/useMe', () => ({
   useRoleLabels: () => ({ labelFor: (k: string) => `Role:${k}` }),
 }));
 
+jest.mock('@/hooks/useLocations', () => ({
+  useLocations: () => ({
+    locations: [
+      {
+        id: 'l1',
+        location_name: 'Pune',
+        city: 'Pune',
+        state: 'Maharashtra',
+        state_code: 'MH',
+        country: 'India',
+        country_code: 'in',
+      },
+    ],
+  }),
+}));
+
 const me = {
   user_id: 'u1',
   first_name: 'Riya',
@@ -27,7 +43,7 @@ const me = {
   profile_photo: null,
   bio: 'Hello there',
   city: 'Pune',
-  zone: 'Kothrud',
+  state: 'Maharashtra',
   country: 'India',
   dob: '1995-01-01',
   roles: ['USER'],
@@ -44,7 +60,7 @@ describe('AccountInfoRow', () => {
 });
 
 describe('AccountProfileHeader', () => {
-  it('renders identity + role/status chips and fires edit/logout/photo', () => {
+  it('renders identity + role chips (no status chip, bug 6) and fires edit/logout/photo', () => {
     const onChangePhoto = jest.fn();
     const onEdit = jest.fn();
     const onLogout = jest.fn();
@@ -59,7 +75,7 @@ describe('AccountProfileHeader', () => {
     );
     expect(screen.getByText('Riya Sharma')).toBeOnTheScreen();
     expect(screen.getByText('Role:USER')).toBeOnTheScreen();
-    expect(screen.getByText('ACTIVE')).toBeOnTheScreen();
+    expect(screen.queryByText('ACTIVE')).toBeNull();
     fireEvent.press(screen.getByTestId('account-change-photo'));
     fireEvent.press(screen.getByTestId('account-edit'));
     fireEvent.press(screen.getByTestId('account-logout'));
@@ -209,20 +225,31 @@ describe('EditAccountDialog', () => {
     expect(screen.queryByTestId('account-edit-submit')).toBeNull();
   });
 
+  const pressSaveWhenEnabled = async () => {
+    await waitFor(() =>
+      expect(screen.getByTestId('account-edit-submit').props.accessibilityState?.disabled).toBe(
+        false,
+      ),
+    );
+    fireEvent.press(screen.getByTestId('account-edit-submit'));
+  };
+
   it('saves mapped values then closes', async () => {
     const onSave = jest.fn().mockResolvedValue(undefined);
     const onClose = jest.fn();
     renderWithProviders(<EditAccountDialog open me={me} onClose={onClose} onSave={onSave} />);
-    fireEvent.press(screen.getByTestId('account-edit-submit'));
+    fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
+    await pressSaveWhenEnabled();
     await waitFor(() => expect(onSave).toHaveBeenCalled());
-    expect(onSave.mock.calls[0][0]).toMatchObject({ first_name: 'Riya', city: 'Pune' });
+    expect(onSave.mock.calls[0][0]).toMatchObject({ first_name: 'Riya R', city: 'Pune' });
     await waitFor(() => expect(onClose).toHaveBeenCalled());
   });
 
   it('shows an error when saving fails and can be dismissed', async () => {
     const onSave = jest.fn().mockRejectedValue(new Error('save failed'));
     renderWithProviders(<EditAccountDialog open me={me} onClose={jest.fn()} onSave={onSave} />);
-    fireEvent.press(screen.getByTestId('account-edit-submit'));
+    fireEvent.changeText(screen.getByTestId('field-first_name'), 'Riya R');
+    await pressSaveWhenEnabled();
     await waitFor(() =>
       expect(screen.getByTestId('account-edit-error')).toHaveTextContent('save failed'),
     );

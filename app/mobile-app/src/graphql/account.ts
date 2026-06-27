@@ -42,7 +42,7 @@ export const MobileAccountDocument = gql(`
       profile_photo
       bio
       city
-      zone
+      state
       country
       dob
       roles
@@ -92,7 +92,7 @@ export const MobileUpdateProfileDocument = gql(`
       full_name
       bio
       city
-      zone
+      state
       country
       phone_number
       phone_extension

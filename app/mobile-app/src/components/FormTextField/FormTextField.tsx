@@ -20,6 +20,7 @@ type PassthroughProps = Pick<
   | 'maxLength'
   | 'multiline'
   | 'numberOfLines'
+  | 'editable'
 >;
 
 export interface FormTextFieldProps<T extends FieldValues> extends PassthroughProps {

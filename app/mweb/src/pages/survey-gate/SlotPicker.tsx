@@ -6,6 +6,8 @@ interface Props {
   slots: MeetingSlot[];
   value: string;
   onChange: (startAt: string) => void;
+  /** The user's currently-booked slot (reschedule): shown for reference, not re-selectable. */
+  currentSlot?: string | null;
 }
 
 const dayKey = (iso: string) => new Date(iso).toDateString();
@@ -14,8 +16,15 @@ const dayLabel = (iso: string) =>
 const timeLabel = (iso: string) =>
   new Date(iso).toLocaleTimeString('en-IN', { hour: 'numeric', minute: '2-digit', hour12: true });
 
-/** Day + time-slot chip grid for onboarding meetings; booked slots are disabled. */
-export default function SlotPicker({ slots, value, onChange }: Readonly<Props>) {
+const chipColor = (selected: boolean, isCurrent: boolean): 'primary' | 'secondary' | 'default' => {
+  if (selected) return 'primary';
+  if (isCurrent) return 'secondary';
+  return 'default';
+};
+
+/** Day + time-slot chip grid for onboarding meetings; booked slots are disabled.
+ * On reschedule, the current slot is marked and locked (must pick a different one). */
+export default function SlotPicker({ slots, value, onChange, currentSlot }: Readonly<Props>) {
   const [day, setDay] = useState('');
   const days: string[] = [];
   for (const s of slots) {
@@ -23,6 +32,9 @@ export default function SlotPicker({ slots, value, onChange }: Readonly<Props>) 
   }
   const activeDay = day || days[0] || '';
   const daySlots = slots.filter((s) => dayKey(s.start_at) === dayKey(activeDay));
+  const hint = currentSlot
+    ? 'Greyed-out slots are booked; your current slot is marked and can’t be re-selected.'
+    : 'Greyed-out slots are already booked.';
 
   return (
     <Stack spacing={2}>
@@ -43,20 +55,24 @@ export default function SlotPicker({ slots, value, onChange }: Readonly<Props>) 
       <Box>
         <Typography variant="subtitle2" sx={{ mb: 0.75 }}>Time slot</Typography>
         <Stack direction="row" sx={{ flexWrap: 'wrap', gap: 0.75 }}>
-          {daySlots.map((s) => (
-            <Chip
-              key={s.start_at}
-              label={timeLabel(s.start_at)}
-              disabled={!s.available}
-              color={value === s.start_at ? 'primary' : 'default'}
-              variant={s.available ? 'filled' : 'outlined'}
-              onClick={() => onChange(s.start_at)}
-              sx={{ fontWeight: 800 }}
-            />
-          ))}
+          {daySlots.map((s) => {
+            const isCurrent = !!currentSlot && s.start_at === currentSlot;
+            const selectable = s.available && !isCurrent;
+            return (
+              <Chip
+                key={s.start_at}
+                label={isCurrent ? `${timeLabel(s.start_at)} · current` : timeLabel(s.start_at)}
+                disabled={!selectable}
+                color={chipColor(value === s.start_at, isCurrent)}
+                variant={selectable ? 'filled' : 'outlined'}
+                onClick={() => selectable && onChange(s.start_at)}
+                sx={{ fontWeight: 800, ...(isCurrent ? { borderStyle: 'dashed' } : {}) }}
+              />
+            );
+          })}
         </Stack>
         <Typography variant="caption" color="text.secondary">
-          Greyed-out slots are already booked.
+          {hint}
         </Typography>
       </Box>
     </Stack>

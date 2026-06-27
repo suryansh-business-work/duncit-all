@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 
 export const HOME_DATA = gql`
-  query HomeFeed($podFilter: PodFilterInput, $superCatSlug: String) {
+  query HomeFeed($podFilter: PodFilterInput) {
     clubs(filter: { is_active: true }) {
       id
       club_id

@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { Alert, Box, Button, CircularProgress, Stack, TextField, Typography } from '@mui/material';
 import SlotPicker from './SlotPicker';
-import { MEETING_SLOTS, type MeetingSlot } from './queries';
+import { MEETING_SLOTS, type MeetingSlot, type SurveyKind } from './queries';
 
 const MEETING_ME = gql`
   query MeetingMe {
@@ -26,14 +26,17 @@ export interface MeetingInput {
 }
 
 interface Props {
+  kind: SurveyKind;
   submitting: boolean;
   error?: string | null;
   onSubmit: (input: MeetingInput) => void;
 }
 
-/** Final gate step: pick an open onboarding slot (booked ones are disabled). */
-export default function MeetingForm({ submitting, error: submitError, onSubmit }: Readonly<Props>) {
+/** Final gate step: pick an open onboarding slot (booked ones — including the
+ * user's own bookings in other onboarding flows — are disabled). */
+export default function MeetingForm({ kind, submitting, error: submitError, onSubmit }: Readonly<Props>) {
   const { data, loading, error } = useQuery<{ meetingSlots: MeetingSlot[] }>(MEETING_SLOTS, {
+    variables: { kind },
     fetchPolicy: 'network-only',
   });
   const { data: meData } = useQuery(MEETING_ME, { fetchPolicy: 'cache-and-network' });

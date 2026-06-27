@@ -44,6 +44,7 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
   const [error, setError] = useState<string | null>(null);
 
   const { data, loading, refetch } = useQuery<{ meetingSlots: MeetingSlot[] }>(MEETING_SLOTS, {
+    variables: { kind },
     skip: !open,
     fetchPolicy: 'network-only',
   });
@@ -81,7 +82,12 @@ export default function RescheduleMeetingDialog({ open, kind, bookedAt, onClose,
             {slots.length === 0 ? (
               <Alert severity="info">No slots are open right now — please check back soon.</Alert>
             ) : (
-              <SlotPicker slots={slots} value={slot} onChange={setSlot} />
+              <SlotPicker slots={slots} value={slot} onChange={setSlot} currentSlot={bookedAt} />
+            )}
+            {slot && (
+              <Typography variant="body2">
+                Moving from <strong>{formatSlot(bookedAt)}</strong> to <strong>{formatSlot(slot)}</strong>.
+              </Typography>
             )}
             <MeetingReasonForm
               formId="reschedule-reason-form"

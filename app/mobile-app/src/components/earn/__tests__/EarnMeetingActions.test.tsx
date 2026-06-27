@@ -12,6 +12,7 @@ const opName = (doc: { definitions?: { name?: { value?: string } }[] }) =>
 const SLOTS = [
   { start_at: '2027-01-04T04:30:00.000Z', end_at: '2027-01-04T05:00:00.000Z', available: true },
   { start_at: '2027-01-04T05:00:00.000Z', end_at: '2027-01-04T05:30:00.000Z', available: false },
+  { start_at: '2027-01-04T06:00:00.000Z', end_at: '2027-01-04T06:30:00.000Z', available: true },
 ];
 
 function route({ slots = SLOTS, failReschedule = false, failCancel = false } = {}) {
@@ -67,6 +68,39 @@ describe('EarnMeetingActions', () => {
       }),
       { auth: true },
     );
+  }, 15000);
+
+  it('shows the current slot for reference, highlighted but not re-pickable (BUG-14)', async () => {
+    route();
+    const onChanged = jest.fn();
+    // The booked slot is itself an "available" time — only the current-slot flag
+    // (not availability) makes it non-selectable.
+    renderWithProviders(
+      <EarnMeetingActions
+        kind="VENUE"
+        currentSlot="2027-01-04T04:30:00.000Z"
+        onChanged={onChanged}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('reschedule-VENUE'));
+    // Reference line names the currently-booked slot.
+    expect(await screen.findByTestId('reschedule-current')).toHaveTextContent(/Currently booked/);
+    // Tapping the current slot does NOT select it…
+    fireEvent.press(screen.getByTestId('slot-2027-01-04T04:30:00.000Z'));
+    fireEvent.changeText(screen.getByTestId('reschedule-reason'), 'Need a later time');
+    fireEvent.press(screen.getByTestId('reschedule-confirm'));
+    // …so confirming still reports "pick an available slot".
+    expect(await screen.findByTestId('reschedule-error')).toHaveTextContent(/available slot/);
+    // The slots query is scoped to this flow's kind so cross-flow bookings show busy (BUG-16).
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.objectContaining({ definitions: expect.anything() }),
+      expect.objectContaining({ kind: 'VENUE' }),
+      { auth: true },
+    );
+    // A different open slot can still be picked and the reschedule goes through.
+    fireEvent.press(screen.getByTestId('slot-2027-01-04T06:00:00.000Z'));
+    fireEvent.press(screen.getByTestId('reschedule-confirm'));
+    await waitFor(() => expect(onChanged).toHaveBeenCalled(), { timeout: 5000 });
   }, 15000);
 
   it('hides the reschedule action once the one-time option is used', () => {

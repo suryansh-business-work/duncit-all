@@ -25,7 +25,6 @@ export function useHomeData({
 }: UseHomeDataParams) {
   const { data, loading, error, refetch } = useQuery(HOME_DATA, {
     variables: {
-      superCatSlug: superCategorySlug || undefined,
       podFilter: {
         location_id: locationId || undefined,
         zone_name: zoneName || undefined,

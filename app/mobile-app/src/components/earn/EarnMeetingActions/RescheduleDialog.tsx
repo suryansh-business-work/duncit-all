@@ -15,6 +15,8 @@ interface Props {
   slotsLoading: boolean;
   slot: string;
   onPickSlot: (v: string) => void;
+  /** The meeting's current slot — shown for reference (highlighted, not re-pickable). */
+  currentSlot?: string | null;
   reason: string;
   onChangeReason: (v: string) => void;
   busy: boolean;
@@ -23,6 +25,9 @@ interface Props {
   onConfirm: () => void;
 }
 
+const formatSlot = (iso: string) =>
+  new Date(iso).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' });
+
 /** Slot grid + required reason for a one-time meeting reschedule. */
 export function RescheduleDialog({
   open,
@@ -30,6 +35,7 @@ export function RescheduleDialog({
   slotsLoading,
   slot,
   onPickSlot,
+  currentSlot,
   reason,
   onChangeReason,
   busy,
@@ -69,6 +75,17 @@ export function RescheduleDialog({
                   Reschedule your onboarding meeting
                 </Text>
                 <ScrollView keyboardShouldPersistTaps="handled">
+                  {currentSlot ? (
+                    <Text
+                      testID="reschedule-current"
+                      fontSize={12.5}
+                      color="$muted"
+                      paddingBottom={10}
+                    >
+                      Currently booked for {formatSlot(currentSlot)}. Pick a different open slot
+                      below.
+                    </Text>
+                  ) : null}
                   {slotsLoading ? <Spinner testID="reschedule-loading" color={primary} /> : null}
                   {!slotsLoading && slots.length === 0 ? (
                     <Text testID="reschedule-empty" fontSize={13} color="$muted">
@@ -76,7 +93,12 @@ export function RescheduleDialog({
                     </Text>
                   ) : null}
                   {slots.length > 0 ? (
-                    <SlotPicker slots={slots} value={slot} onChange={onPickSlot} />
+                    <SlotPicker
+                      slots={slots}
+                      value={slot}
+                      onChange={onPickSlot}
+                      currentSlot={currentSlot ?? undefined}
+                    />
                   ) : null}
                   <ReasonField
                     testID="reschedule-reason"

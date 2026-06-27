@@ -119,8 +119,8 @@ export const meetingTypeDefs = gql`
     onboardingMeetings(filter: MeetingFilter): [OnboardingMeeting!]!
     "Global slot-availability config."
     meetingAvailability: MeetingAvailability!
-    "Bookable slots (others' bookings disabled). Staff pass exclude_meeting_id to keep the meeting being scheduled selectable."
-    meetingSlots(exclude_meeting_id: ID): [MeetingSlot!]!
+    "Bookable slots (others' bookings disabled). Pass kind so the user's own other-flow bookings show unavailable; staff pass exclude_meeting_id to keep the meeting being scheduled selectable."
+    meetingSlots(kind: SurveyKind, exclude_meeting_id: ID): [MeetingSlot!]!
     "Onboarding-team holidays / leave days (block slots; shown on the calendar)."
     meetingHolidays: [MeetingHoliday!]!
   }

@@ -9,6 +9,7 @@ import {
   RescheduleMyMeetingDocument,
   type MeetingSlot,
   type MeetingSlotsResult,
+  type SurveyKind,
 } from '@/graphql/onboarding-survey';
 import { ActionButton } from './ActionButton';
 import { RescheduleDialog } from './RescheduleDialog';
@@ -18,6 +19,8 @@ interface Props {
   kind: string;
   /** Times the meeting has been rescheduled — reschedule is one-time. */
   rescheduleCount?: number | null;
+  /** The meeting's booked slot — shown for reference in the reschedule picker. */
+  currentSlot?: string | null;
   /** Called after a successful reschedule/cancel so the screen can refetch. */
   onChanged: () => void;
 }
@@ -27,7 +30,12 @@ const RESCHEDULE_LIMIT_MESSAGE = 'You have already used your one-time reschedule
 /** Reschedule / cancel actions for an Earn card with a pending onboarding
  * meeting — the Tamagui twin of mWeb's EarnMeetingActions. Reschedule is a
  * one-time option; both actions require a reason. */
-export function EarnMeetingActions({ kind, rescheduleCount, onChanged }: Readonly<Props>) {
+export function EarnMeetingActions({
+  kind,
+  rescheduleCount,
+  currentSlot,
+  onChanged,
+}: Readonly<Props>) {
   const canReschedule = (rescheduleCount ?? 0) < 1;
   const [rescheduleOpen, setRescheduleOpen] = useState(false);
   const [cancelOpen, setCancelOpen] = useState(false);
@@ -46,7 +54,11 @@ export function EarnMeetingActions({ kind, rescheduleCount, onChanged }: Readonl
     setReason('');
     setRescheduleOpen(true);
     setSlotsLoading(true);
-    graphqlRequest<MeetingSlotsResult>(MeetingSlotsDocument, undefined, { auth: true })
+    graphqlRequest<MeetingSlotsResult, { kind: SurveyKind }>(
+      MeetingSlotsDocument,
+      { kind: kind as SurveyKind },
+      { auth: true },
+    )
       .then((res) => setSlots(res.meetingSlots))
       .catch((e) => setError(toErrorMessage(e, 'Could not load the available slots')))
       .finally(() => setSlotsLoading(false));
@@ -127,6 +139,7 @@ export function EarnMeetingActions({ kind, rescheduleCount, onChanged }: Readonl
         slotsLoading={slotsLoading}
         slot={slot}
         onPickSlot={setSlot}
+        currentSlot={currentSlot}
         reason={reason}
         onChangeReason={setReason}
         busy={busy}

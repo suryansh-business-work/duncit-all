@@ -13,6 +13,10 @@ jest.mock('@/hooks/useNotifications', () => ({
   }),
 }));
 
+jest.mock('@react-navigation/native', () => ({
+  useNavigation: () => ({ navigate: jest.fn() }),
+}));
+
 describe('NotificationsBell open/close', () => {
   it('opens the notifications screen and closes it', () => {
     renderWithProviders(<NotificationsBell />);

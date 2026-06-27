@@ -138,7 +138,7 @@ export default function SurveyGatePage() {
           {step === 'meeting' && (
             <>
               {survey && <SubmittedSummary survey={survey} answers={submittedAnswers} />}
-              <MeetingForm submitting={requesting} error={meetingError} onSubmit={onMeeting} />
+              <MeetingForm kind={kind} submitting={requesting} error={meetingError} onSubmit={onMeeting} />
             </>
           )}
           {step === 'thanks' && (

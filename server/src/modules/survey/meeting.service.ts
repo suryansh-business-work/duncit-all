@@ -13,7 +13,14 @@ import {
   sendMeetingCancelledEmail,
   sendMeetingScheduledEmail,
   sendMeetingScheduledAdminEmail,
+  sendMeetingRescheduledEmail,
+  sendMeetingApprovedEmail,
+  sendMeetingRejectedEmail,
 } from '@services/email/email.service';
+
+/** Where a meeting notification deep-links to — the Earn surface holds the
+ * meeting card with its full details on every client. */
+const MEETING_DEEP_LINK = '/earn';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 const oid = (v?: string | null) => (v ? new Types.ObjectId(v) : null);
@@ -78,11 +85,12 @@ async function categoryNameMap(docs: any[]): Promise<Map<string, string>> {
   return new Map(cats.map((c: any) => [String(c._id), c.name as string]));
 }
 
-/** Best-effort in-app (Notification Center) message to a single user. */
-async function notifyUserInApp(userId: string, title: string, body: string) {
+/** Best-effort in-app (Notification Center) message to a single user. The
+ * optional link_url deep-links the notification tap to the meeting surface. */
+async function notifyUserInApp(userId: string, title: string, body: string, link_url?: string | null) {
   try {
     const { notificationService } = await import('@modules/engagement/notification/notification.service');
-    await notificationService.create({ title, body, scope: 'USER', target_user_ids: [userId], silent: false });
+    await notificationService.create({ title, body, scope: 'USER', target_user_ids: [userId], silent: false, link_url: link_url ?? null });
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[meeting] in-app notification failed:', err);
@@ -101,37 +109,69 @@ async function onboardingAdminEmails(): Promise<string[]> {
   return admins.map((u: any) => u.auth?.email).filter(Boolean);
 }
 
-const slotLabel = (value?: string | null) =>
-  value
-    ? `${new Date(value).toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short', timeZone: 'UTC' })} UTC`
-    : 'To be confirmed';
+/** Fixed-offset timezone label, e.g. "GMT+5:30" (IST) — meetings use one
+ * configured offset, so we render the wall-clock time at that offset. */
+function gmtLabel(offsetMin: number): string {
+  const sign = offsetMin < 0 ? '-' : '+';
+  const abs = Math.abs(offsetMin);
+  return `GMT${sign}${Math.floor(abs / 60)}:${String(abs % 60).padStart(2, '0')}`;
+}
 
-/** Email the applicant + onboarding staff that a meeting was scheduled. */
+/** Human slot label in the configured onboarding timezone (not UTC) so the
+ * applicant always sees the meeting time + zone they'll actually attend. */
+function slotLabelTz(value: string | null | undefined, offsetMin: number): string {
+  if (!value) return 'To be confirmed';
+  const shifted = new Date(new Date(value).getTime() + offsetMin * 60_000);
+  const formatted = shifted.toLocaleString('en-US', { dateStyle: 'full', timeStyle: 'short', timeZone: 'UTC' });
+  return `${formatted} ${gmtLabel(offsetMin)}`;
+}
+
 const MEETING_KIND_LABELS: Record<string, string> = { VENUE: 'Venue', HOST: 'Host', ECOMM: 'Seller' };
 
-async function notifyScheduled(doc: any) {
+type MeetingEvent = 'scheduled' | 'rescheduled' | 'updated' | 'approved' | 'rejected';
+
+const MEETING_EVENT_INAPP: Record<MeetingEvent, (kind: string, slot: string) => { title: string; body: string }> = {
+  scheduled: (kind, slot) => ({ title: 'Onboarding meeting scheduled', body: `Your ${kind} onboarding meeting is scheduled for ${slot}.` }),
+  rescheduled: (kind, slot) => ({ title: 'Onboarding meeting rescheduled', body: `Your ${kind} onboarding meeting was moved to ${slot}.` }),
+  updated: (kind) => ({ title: 'Onboarding meeting updated', body: `The details of your ${kind} onboarding meeting were updated.` }),
+  approved: (kind) => ({ title: 'Onboarding approved 🎉', body: `Your ${kind} onboarding has been approved — open the app to get started.` }),
+  rejected: (kind) => ({ title: 'Onboarding update', body: `There's an update on your ${kind} onboarding request.` }),
+};
+
+/**
+ * Single source for staff-driven meeting events: fires the in-app Notification
+ * Center message (with a deep-link to the Earn surface) AND the matching email.
+ * Best-effort per channel — callers wrap in try/catch so a delivery failure
+ * never blocks the state change. Content is kept consistent across channels.
+ */
+async function notifyMeetingEvent(doc: any, event: MeetingEvent) {
   const kindLabel = MEETING_KIND_LABELS[doc.kind] ?? 'Host';
-  const slot = slotLabel(iso(doc.scheduled_at));
+  const [names, av] = await Promise.all([
+    userMap([String(doc.user_id)]),
+    MeetingAvailabilityModel.findOne(),
+  ]);
+  const who = names.get(String(doc.user_id));
+  const offset = av?.timezone_offset_minutes ?? 330;
+  const slot = slotLabelTz(iso(doc.scheduled_at ?? doc.requested_at), offset);
   const link = doc.meeting_link || '';
   const notes = doc.notes || '';
-  const [names, adminTo] = await Promise.all([
-    userMap([String(doc.user_id)]),
-    onboardingAdminEmails(),
-  ]);
-  const host = names.get(String(doc.user_id));
-  if (host?.email) {
-    await sendMeetingScheduledEmail({ to: host.email, name: host.name, kind: kindLabel, slot, link, notes });
-  }
-  if (adminTo.length > 0) {
-    await sendMeetingScheduledAdminEmail({
-      to: adminTo.join(','),
-      name: host?.name ?? 'Applicant',
-      email: host?.email ?? '',
-      kind: kindLabel,
-      slot,
-      link,
-      notes,
-    });
+
+  const inApp = MEETING_EVENT_INAPP[event](kindLabel, slot);
+  await notifyUserInApp(String(doc.user_id), inApp.title, inApp.body, MEETING_DEEP_LINK);
+
+  if (!who?.email) return;
+  if (event === 'scheduled') {
+    await sendMeetingScheduledEmail({ to: who.email, name: who.name, kind: kindLabel, slot, link, notes });
+    const adminTo = await onboardingAdminEmails();
+    if (adminTo.length > 0) {
+      await sendMeetingScheduledAdminEmail({ to: adminTo.join(','), name: who.name, email: who.email, kind: kindLabel, slot, link, notes });
+    }
+  } else if (event === 'rescheduled' || event === 'updated') {
+    await sendMeetingRescheduledEmail({ to: who.email, name: who.name, kind: kindLabel, slot, link, notes, change: event });
+  } else if (event === 'approved') {
+    await sendMeetingApprovedEmail({ to: who.email, name: who.name, kind: kindLabel });
+  } else {
+    await sendMeetingRejectedEmail({ to: who.email, name: who.name, kind: kindLabel });
   }
 }
 
@@ -256,14 +296,14 @@ async function slotWindowMs(): Promise<number> {
 /** Best-effort applicant notification for booking + cancellation actions. */
 async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled', reason?: string) {
   try {
-    const names = await userMap([String(doc.user_id)]);
+    const [names, av] = await Promise.all([userMap([String(doc.user_id)]), MeetingAvailabilityModel.findOne()]);
     const who = names.get(String(doc.user_id));
     if (!who?.email) return;
     const opts = {
       to: who.email,
       name: who.name,
       kind: MEETING_KIND_LABELS[doc.kind] ?? 'Host',
-      slot: slotLabel(iso(doc.scheduled_at ?? doc.requested_at)),
+      slot: slotLabelTz(iso(doc.scheduled_at ?? doc.requested_at), av?.timezone_offset_minutes ?? 330),
       notes: doc.notes || '',
     };
     if (kind === 'booked') await sendMeetingBookedEmail(opts);
@@ -349,13 +389,24 @@ export const meetingService = {
     return r.deletedCount > 0;
   },
 
-  /** Bookable slots — booked instants disabled. The gate excludes the caller's
-   * own held slot; staff scheduling passes `excludeMeetingId` to keep the
-   * meeting being edited selectable. */
-  async slots(userId: string, opts: { excludeMeetingId?: string | null } = {}) {
+  /** Bookable slots — booked instants disabled.
+   * - Staff scheduling a specific meeting pass `excludeMeetingId`: only OTHER
+   *   meetings block it.
+   * - The user gate/reschedule pass `kind`: block other users AND the caller's
+   *   own OTHER-kind meetings (so a slot already booked in another onboarding
+   *   flow shows unavailable), while keeping the caller's own same-kind slot
+   *   selectable — matching request()/reschedule validation. */
+  async slots(userId: string, opts: { kind?: SurveyKind | null; excludeMeetingId?: string | null } = {}) {
     const doc = (await MeetingAvailabilityModel.findOne()) ?? (await MeetingAvailabilityModel.create({}));
-    // When scheduling a specific meeting, only other applicants block slots.
-    const occupy = opts.excludeMeetingId ? { excludeMeetingId: opts.excludeMeetingId } : { excludeUserId: userId };
+    let occupy: OccupyOpts;
+    if (opts.excludeMeetingId) {
+      occupy = { excludeMeetingId: opts.excludeMeetingId };
+    } else if (opts.kind) {
+      const own = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind: opts.kind }).select('_id');
+      occupy = own ? { excludeMeetingId: String(own._id) } : {};
+    } else {
+      occupy = { excludeUserId: userId };
+    }
     const [busy, holidays] = await Promise.all([occupiedInstants(occupy), holidayDaySet()]);
     const slotMs = Math.max(doc.slot_minutes ?? 30, 5) * 60_000;
     return generateSlots(doc, new Date(), holidays).map((slot) => ({
@@ -447,6 +498,12 @@ export const meetingService = {
     }
     // Block other users' slots and the user's own other-kind meetings.
     const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeMeetingId: String(doc._id) }), slotWindowMs()]);
+    // A reschedule must move to a DIFFERENT slot — the current one is shown for
+    // reference only and cannot be re-picked.
+    const currentMs = (doc.scheduled_at ?? doc.requested_at)?.getTime();
+    if (currentMs != null && Math.abs(new Date(requestedAt).getTime() - currentMs) < slotMs) {
+      throw new GraphQLError('Please choose a different time slot to reschedule', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
     if (isTaken(new Date(requestedAt).getTime(), busy, slotMs)) {
       throw new GraphQLError('That slot is already booked — please pick another one', { extensions: { code: 'CONFLICT' } });
     }
@@ -496,6 +553,7 @@ export const meetingService = {
       String(doc.user_id),
       'Onboarding meeting cancelled',
       `Your ${MEETING_KIND_LABELS[doc.kind] ?? 'onboarding'} meeting was cancelled. Reason: ${reason.trim()}`,
+      MEETING_DEEP_LINK,
     );
     return pub(doc);
   },
@@ -561,12 +619,22 @@ export const meetingService = {
     return pub(doc);
   },
 
-  /** Set by the Admin console's approve/deny actions (via approvalService). */
+  /** Set by the Admin console's approve/deny actions (via approvalService).
+   * Notifies the applicant (in-app + email) of the onboarding decision. */
   async setApprovalStatus(id: string, status: MeetingApprovalStatus) {
     const doc = await MeetingModel.findById(id);
     if (!doc) return null;
+    const prev = doc.approval_status;
     doc.approval_status = status;
     await doc.save();
+    if (status !== prev && (status === 'APPROVED' || status === 'DENIED')) {
+      try {
+        await notifyMeetingEvent(doc, status === 'APPROVED' ? 'approved' : 'rejected');
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[meeting.setApprovalStatus] notify failed:', err);
+      }
+    }
     return pub(doc);
   },
 
@@ -617,6 +685,9 @@ export const meetingService = {
         throw new GraphQLError('That slot is already taken by another meeting', { extensions: { code: 'CONFLICT' } });
       }
     }
+    // Capture the prior schedule state so we can classify the event after save.
+    const wasScheduled = doc.status === 'SCHEDULED';
+    const prevScheduledMs = doc.scheduled_at?.getTime() ?? null;
     const touchedSchedule =
       input.scheduled_at !== undefined || input.meeting_link !== undefined || input.status != null;
     if (input.status != null) doc.status = input.status;
@@ -625,20 +696,25 @@ export const meetingService = {
     if (input.notes !== undefined) doc.notes = input.notes;
     doc.created_by = doc.created_by ?? by ?? null;
     await doc.save();
-    // Notify the applicant + onboarding staff when the meeting is (re)scheduled.
-    // Best-effort — an email failure must not fail the staff's update.
+    // Notify the applicant (in-app + email) when staff schedule / reschedule /
+    // update a confirmed meeting. Distinct events drive distinct copy.
+    // Best-effort — a delivery failure must not fail the staff's update.
     if (doc.status === 'SCHEDULED' && touchedSchedule) {
+      const newScheduledMs = doc.scheduled_at?.getTime() ?? null;
+      let event: MeetingEvent;
+      if (!wasScheduled) {
+        event = 'scheduled';
+      } else if (newScheduledMs !== prevScheduledMs) {
+        event = 'rescheduled';
+      } else {
+        event = 'updated';
+      }
       try {
-        await notifyScheduled(doc);
+        await notifyMeetingEvent(doc, event);
       } catch (err) {
         // eslint-disable-next-line no-console
-        console.error('[meeting.update] notifyScheduled failed:', err);
+        console.error('[meeting.update] notify failed:', err);
       }
-      await notifyUserInApp(
-        String(doc.user_id),
-        'Onboarding meeting scheduled',
-        `Your ${MEETING_KIND_LABELS[doc.kind] ?? 'onboarding'} meeting is scheduled for ${slotLabel(iso(doc.scheduled_at))}.`,
-      );
     }
     return pub(doc);
   },

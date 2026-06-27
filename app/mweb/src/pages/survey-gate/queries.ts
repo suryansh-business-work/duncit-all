@@ -79,8 +79,8 @@ export const REQUEST_MEETING = gql`
 `;
 
 export const MEETING_SLOTS = gql`
-  query MeetingSlots {
-    meetingSlots {
+  query MeetingSlots($kind: SurveyKind) {
+    meetingSlots(kind: $kind) {
       start_at
       end_at
       available

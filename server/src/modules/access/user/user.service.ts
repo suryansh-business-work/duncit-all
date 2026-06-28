@@ -23,6 +23,9 @@ import type {
   StartRecordedUserCallDTO,
   RequestPasswordResetDTO,
   ResetPasswordDTO,
+  RequestPasswordChangeDTO,
+  ChangePasswordDTO,
+  DeleteMyAccountDTO,
 } from './user.validator';
 import { verifyGoogleIdToken } from './user.google';
 import {
@@ -30,6 +33,8 @@ import {
   sendAdminCredentialsEmail,
   sendEmailVerificationOtpEmail,
   sendPasswordResetOtpEmail,
+  sendPasswordChangeOtpEmail,
+  sendAccountDeletionOtpEmail,
   sendAdminAccessGrantedEmail,
   sendAdminAccessRevokedEmail,
 } from '@services/email/email.service';
@@ -334,6 +339,31 @@ async function replaceUserRoles(
   // the Host/Venue/Brand status (e.g. revoking HOST un-approves the host).
   const removed = oldRoles.filter((r) => !normalized.includes(r));
   if (removed.length) await syncRevokedOnboarding(userId, removed);
+}
+
+// Soft-delete writes for a user: flag the doc (deleted_at + INACTIVE) and hard
+// delete the relation rows so counters do not drift. Session-optional so the
+// admin remove() can run it inside a transaction (prod replica set) while the
+// self-serve deleteMyAccount runs it directly (standalone mongo has no
+// transactions). The relation deletes are independent, so any-order is fine.
+async function softDeleteUserWrites(oid: Types.ObjectId, session?: any) {
+  const opts = session ? { session } : {};
+  await UserModel.updateOne(
+    { _id: oid },
+    { $set: { 'metadata.deleted_at': new Date(), 'metadata.status': 'INACTIVE' } },
+    opts
+  );
+  await Promise.all([
+    UserRoleModel.deleteMany({ user_id: oid }, opts),
+    UserSavedPodModel.deleteMany({ user_id: oid }, opts),
+    PodFollowerModel.deleteMany({ user_id: oid }, opts),
+    ClubFollowerModel.deleteMany({ user_id: oid }, opts),
+    UserInterestModel.deleteMany({ user_id: oid }, opts),
+    UserRelationshipModel.deleteMany(
+      { $or: [{ follower_id: oid }, { following_id: oid }] },
+      opts
+    ),
+  ]);
 }
 
 // Build the public GraphQL User shape. Storage is nested; consumers and the
@@ -890,6 +920,154 @@ export const userService = {
         $unset: {
           'auth.password_reset_otp_hash': '',
           'auth.password_reset_otp_expires_at': '',
+        },
+      }
+    );
+    return true;
+  },
+
+  // Auth-required: the user knows their current password. Verify it, then email
+  // a confirmation OTP. Google-only accounts (no password) cannot use this flow.
+  async requestPasswordChangeOtp(user_id: string, input: RequestPasswordChangeDTO) {
+    const user = await UserModel.findById(user_id).select('+auth.password');
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const stored = (user as any).auth?.password as string | undefined;
+    if (!stored) {
+      throw new GraphQLError('This account uses Google sign-in and has no password to change.', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const ok = await bcrypt.compare(input.current_password, stored);
+    if (!ok) {
+      throw new GraphQLError('Current password is incorrect', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const email = user.auth?.email;
+    if (!email) {
+      throw new GraphQLError('Add an email address before changing your password', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const otp = String(crypto.randomInt(100000, 1000000));
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          'auth.password_change_otp_hash': hashOtp(otp),
+          'auth.password_change_otp_expires_at': new Date(Date.now() + EMAIL_OTP_MINUTES * 60_000),
+        },
+      }
+    );
+    await sendPasswordChangeOtpEmail({
+      to: email,
+      name: user.profile?.first_name || 'there',
+      otp,
+      expiresMinutes: String(EMAIL_OTP_MINUTES),
+    });
+    return { ok: true, dev_otp: isDev ? otp : null };
+  },
+
+  // Auth-required: confirm the OTP from requestPasswordChangeOtp and set the new
+  // password. On success the change OTP is cleared and password_changed_at set.
+  async changePasswordWithOtp(user_id: string, input: ChangePasswordDTO) {
+    const code = String(input.otp || '').trim();
+    const user = await UserModel.findById(user_id).select(
+      '+auth.password_change_otp_hash +auth.password_change_otp_expires_at'
+    );
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const expiresAt = (user as any).auth?.password_change_otp_expires_at as Date | undefined;
+    const storedHash = (user as any).auth?.password_change_otp_hash as string | undefined;
+    if (!storedHash || !expiresAt || expiresAt.getTime() < Date.now()) {
+      throw new GraphQLError('OTP expired. Request a new OTP.', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    if (hashOtp(code) !== storedHash) {
+      throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const hashed = await bcrypt.hash(input.new_password, 10);
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $set: { 'auth.password': hashed, 'security.password_changed_at': new Date() },
+        $unset: {
+          'auth.password_change_otp_hash': '',
+          'auth.password_change_otp_expires_at': '',
+        },
+      }
+    );
+    return true;
+  },
+
+  // Auth-required: email a confirmation OTP before self-serve account deletion.
+  async requestAccountDeletionOtp(user_id: string) {
+    const user = await UserModel.findById(user_id);
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const email = user.auth?.email;
+    if (!email) {
+      throw new GraphQLError('Add an email address before deleting your account', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const otp = String(crypto.randomInt(100000, 1000000));
+    await UserModel.updateOne(
+      { _id: user._id },
+      {
+        $set: {
+          'auth.account_deletion_otp_hash': hashOtp(otp),
+          'auth.account_deletion_otp_expires_at': new Date(Date.now() + EMAIL_OTP_MINUTES * 60_000),
+        },
+      }
+    );
+    await sendAccountDeletionOtpEmail({
+      to: email,
+      name: user.profile?.first_name || 'there',
+      otp,
+      expiresMinutes: String(EMAIL_OTP_MINUTES),
+    });
+    return { ok: true, dev_otp: isDev ? otp : null };
+  },
+
+  // Auth-required self-serve deletion: confirm the OTP, then soft-delete the
+  // account using the same soft-delete writes as the admin remove() path.
+  // Invalidating the session is implicit — the soft-delete sets status INACTIVE
+  // so login() (status !== ACTIVE) rejects, the email/phone/password are scrubbed
+  // so the credentials can never re-authenticate, and roles are stripped so every
+  // gated resolver denies the stale JWT.
+  async deleteMyAccount(user_id: string, input: DeleteMyAccountDTO) {
+    const code = String(input.otp || '').trim();
+    const user = await UserModel.findById(user_id).select(
+      '+auth.account_deletion_otp_hash +auth.account_deletion_otp_expires_at'
+    );
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const expiresAt = (user as any).auth?.account_deletion_otp_expires_at as Date | undefined;
+    const storedHash = (user as any).auth?.account_deletion_otp_hash as string | undefined;
+    if (!storedHash || !expiresAt || expiresAt.getTime() < Date.now()) {
+      throw new GraphQLError('OTP expired. Request a new OTP.', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    if (hashOtp(code) !== storedHash) {
+      throw new GraphQLError('Invalid OTP', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    // Soft-delete (deleted_at + INACTIVE) and strip relation rows. Self-serve,
+    // so no transaction wrapper — the deletes are independent and idempotent.
+    const oid = new Types.ObjectId(user_id);
+    await softDeleteUserWrites(oid);
+    // Anonymize the login identifiers + clear roles/OTP so the freed email/phone
+    // can be reused and the stale JWT can never re-authenticate.
+    await UserModel.updateOne(
+      { _id: oid },
+      {
+        $set: { 'metadata.role_keys': [] },
+        $unset: {
+          'auth.email': '',
+          'auth.google_id': '',
+          'auth.phone': '',
+          'auth.password': '',
+          'auth.account_deletion_otp_hash': '',
+          'auth.account_deletion_otp_expires_at': '',
         },
       }
     );
@@ -1461,29 +1639,7 @@ export const userService = {
     const oid = new Types.ObjectId(user_id);
     const session = await UserModel.db.startSession();
     try {
-      await session.withTransaction(async () => {
-        await UserModel.updateOne(
-          { _id: oid },
-          {
-            $set: {
-              'metadata.deleted_at': new Date(),
-              'metadata.status': 'INACTIVE',
-            },
-          },
-          { session }
-        );
-        await Promise.all([
-          UserRoleModel.deleteMany({ user_id: oid }, { session }),
-          UserSavedPodModel.deleteMany({ user_id: oid }, { session }),
-          PodFollowerModel.deleteMany({ user_id: oid }, { session }),
-          ClubFollowerModel.deleteMany({ user_id: oid }, { session }),
-          UserInterestModel.deleteMany({ user_id: oid }, { session }),
-          UserRelationshipModel.deleteMany(
-            { $or: [{ follower_id: oid }, { following_id: oid }] },
-            { session }
-          ),
-        ]);
-      });
+      await session.withTransaction(() => softDeleteUserWrites(oid, session));
     } finally {
       await session.endSession();
     }

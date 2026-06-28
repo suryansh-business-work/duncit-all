@@ -3,6 +3,9 @@ import {
   googleSignupSchema,
   requestPasswordResetSchema,
   resetPasswordSchema,
+  requestPasswordChangeSchema,
+  changePasswordSchema,
+  deleteMyAccountSchema,
 } from '../../user.validator';
 
 describe('auth validators — simplified signup contract', () => {
@@ -72,5 +75,33 @@ describe('auth validators — simplified signup contract', () => {
     await expect(
       resetPasswordSchema.validate({ email: 'riya@duncit.com', otp: '123456', new_password: 'short' }),
     ).rejects.toThrow();
+  });
+
+  it('requestPasswordChangeSchema requires an 8+ char current_password', async () => {
+    await expect(
+      requestPasswordChangeSchema.validate({ current_password: 'StrongPass123' }),
+    ).resolves.toMatchObject({ current_password: 'StrongPass123' });
+    await expect(requestPasswordChangeSchema.validate({ current_password: 'short' })).rejects.toThrow();
+    await expect(requestPasswordChangeSchema.validate({})).rejects.toThrow();
+  });
+
+  it('changePasswordSchema requires a 6-digit OTP and an 8+ char new_password', async () => {
+    await expect(
+      changePasswordSchema.validate({ otp: '123456', new_password: 'BrandNew123' }),
+    ).resolves.toMatchObject({ otp: '123456' });
+    await expect(
+      changePasswordSchema.validate({ otp: '12', new_password: 'BrandNew123' }),
+    ).rejects.toThrow(/6 digit/i);
+    await expect(
+      changePasswordSchema.validate({ otp: '123456', new_password: 'short' }),
+    ).rejects.toThrow();
+  });
+
+  it('deleteMyAccountSchema requires a 6-digit OTP', async () => {
+    await expect(deleteMyAccountSchema.validate({ otp: '123456' })).resolves.toMatchObject({
+      otp: '123456',
+    });
+    await expect(deleteMyAccountSchema.validate({ otp: '12' })).rejects.toThrow(/6 digit/i);
+    await expect(deleteMyAccountSchema.validate({})).rejects.toThrow();
   });
 });

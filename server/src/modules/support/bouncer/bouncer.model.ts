@@ -20,6 +20,7 @@ const geoSchema = new Schema<IBouncerGeo>(
 );
 
 export interface IBouncerSosAlert extends Document {
+  ticket_no: string;
   user_id: Types.ObjectId;
   pod_id: Types.ObjectId;
   host_id: Types.ObjectId | null;
@@ -39,6 +40,7 @@ export interface IBouncerSosAlert extends Document {
 
 const sosSchema = new Schema<IBouncerSosAlert>(
   {
+    ticket_no: { type: String, default: '', trim: true, index: true },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', required: true, index: true },
     host_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },
@@ -64,6 +66,7 @@ const sosSchema = new Schema<IBouncerSosAlert>(
 export const BouncerSosAlertModel = model<IBouncerSosAlert>('BouncerSosAlert', sosSchema);
 
 export interface IBouncerCallbackRequest extends Document {
+  ticket_no: string;
   user_id: Types.ObjectId;
   pod_id: Types.ObjectId | null;
   host_id: Types.ObjectId | null;
@@ -81,6 +84,7 @@ export interface IBouncerCallbackRequest extends Document {
 
 const callbackSchema = new Schema<IBouncerCallbackRequest>(
   {
+    ticket_no: { type: String, default: '', trim: true, index: true },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null },
     host_id: { type: Schema.Types.ObjectId, ref: 'User', default: null },

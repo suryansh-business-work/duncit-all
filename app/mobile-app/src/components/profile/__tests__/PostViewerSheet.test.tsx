@@ -7,6 +7,10 @@ import { renderWithProviders } from '@/utils/test-utils';
 jest.mock('@/hooks/usePostViewer', () => ({ usePostViewer: jest.fn() }));
 const mockedViewer = usePostViewer as jest.Mock;
 
+const mockSharePost = jest.fn();
+jest.mock('@/utils/share', () => ({ sharePost: (...a: unknown[]) => mockSharePost(...a) }));
+beforeEach(() => mockSharePost.mockClear());
+
 const post: PostDetail = {
   id: 'p1',
   author_id: 'me',
@@ -174,5 +178,52 @@ describe('PostViewerSheet', () => {
     );
     expect(screen.getByTestId('post-comments-empty')).toBeOnTheScreen();
     expect(screen.queryByTestId('post-viewer-image')).toBeNull();
+  });
+
+  it('shares the post via the header action', () => {
+    setup();
+    renderWithProviders(
+      <PostViewerSheet postId="p1" meId="me" onClose={jest.fn()} onDeleted={jest.fn()} />,
+    );
+    fireEvent.press(screen.getByTestId('post-viewer-share'));
+    expect(mockSharePost).toHaveBeenCalledWith('p1', 'Sam Lee');
+  });
+
+  it('shares with a default title when the author has no name', () => {
+    setup({ post: { ...post, author: null } });
+    renderWithProviders(
+      <PostViewerSheet postId="p1" meId="me" onClose={jest.fn()} onDeleted={jest.fn()} />,
+    );
+    fireEvent.press(screen.getByTestId('post-viewer-share'));
+    expect(mockSharePost).toHaveBeenCalledWith('p1', 'Post');
+  });
+
+  it('double-tap does not re-like an already-liked post', () => {
+    const api = setup(); // fixture post is liked_by_me: true
+    jest
+      .spyOn(Date, 'now')
+      .mockReturnValue(1000)
+      .mockReturnValueOnce(1000)
+      .mockReturnValueOnce(1100);
+    renderWithProviders(
+      <PostViewerSheet postId="p1" meId="me" onClose={jest.fn()} onDeleted={jest.fn()} />,
+    );
+    fireEvent.press(screen.getByTestId('post-media'));
+    fireEvent.press(screen.getByTestId('post-media'));
+    expect(api.toggleLike).not.toHaveBeenCalled();
+    jest.restoreAllMocks();
+  });
+
+  it('double-tap likes an unliked post once', () => {
+    const api = setup({ post: { ...post, liked_by_me: false } });
+    const nowSpy = jest.spyOn(Date, 'now');
+    nowSpy.mockReturnValueOnce(1000).mockReturnValueOnce(1100);
+    renderWithProviders(
+      <PostViewerSheet postId="p1" meId="me" onClose={jest.fn()} onDeleted={jest.fn()} />,
+    );
+    fireEvent.press(screen.getByTestId('post-media'));
+    fireEvent.press(screen.getByTestId('post-media'));
+    expect(api.toggleLike).toHaveBeenCalledTimes(1);
+    nowSpy.mockRestore();
   });
 });

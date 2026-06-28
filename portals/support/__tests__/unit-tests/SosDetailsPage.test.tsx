@@ -14,6 +14,7 @@ const ID = 'sos-1';
 
 const fullAlert = (status: SosAlert['status']): SosAlert => ({
   id: ID,
+  ticket_no: 'SOS-AAA111',
   status,
   message: 'Help, feeling unsafe',
   contact_phone: '+919800000000',
@@ -28,6 +29,7 @@ const fullAlert = (status: SosAlert['status']): SosAlert => ({
 
 const minimalResolved: SosAlert = {
   id: ID,
+  ticket_no: 'SOS-BBB222',
   status: 'RESOLVED',
   message: '',
   contact_phone: '',
@@ -72,6 +74,7 @@ describe('SosDetailsPage', () => {
       queryMock([fullAlert('RESOLVED')]),
     ]);
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
+    expect(screen.getByText('SOS-AAA111')).toBeInTheDocument();
     expect(screen.getByText('Open in Maps')).toBeInTheDocument();
     expect(screen.getByText(/Sam/)).toBeInTheDocument();
 

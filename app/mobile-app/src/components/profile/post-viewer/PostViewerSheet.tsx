@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Image, Modal } from 'react-native';
+import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
@@ -9,6 +9,8 @@ import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { usePostViewer } from '@/hooks/usePostViewer';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { sharePost } from '@/utils/share';
+import { PostMedia } from './PostMedia';
 import { PostViewerBody } from './PostViewerBody';
 
 interface Props {
@@ -44,6 +46,11 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
     }
   };
 
+  /** Double-tap likes only (never unlikes), reusing the existing toggle. */
+  const likeOnDoubleTap = () => {
+    if (!post?.liked_by_me) toggleLike();
+  };
+
   const removePost = async () => {
     if (deleting) return;
     setDeleting(true);
@@ -67,6 +74,21 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
                 <Text fontSize={16} fontWeight="900" color="$color" numberOfLines={1} flex={1}>
                   {post?.author?.full_name ?? 'Post'}
                 </Text>
+                {post ? (
+                  <XStack
+                    testID="post-viewer-share"
+                    role="button"
+                    aria-label="Share post"
+                    onPress={() => sharePost(post.id, post.author?.full_name ?? 'Post')}
+                    width={36}
+                    height={36}
+                    alignItems="center"
+                    justifyContent="center"
+                    pressStyle={{ opacity: 0.6 }}
+                  >
+                    <MaterialIcons name="share" size={20} color={color} />
+                  </XStack>
+                ) : null}
                 {canDelete ? (
                   <XStack
                     testID="post-viewer-delete"
@@ -112,12 +134,7 @@ export function PostViewerSheet({ postId, meId, onClose, onDeleted }: Readonly<P
               {post ? (
                 <>
                   {post.image_url ? (
-                    <Image
-                      testID="post-viewer-image"
-                      source={{ uri: post.image_url }}
-                      style={{ width: '100%', height: 320 }}
-                      resizeMode="cover"
-                    />
+                    <PostMedia imageUrl={post.image_url} onDoubleTapLike={likeOnDoubleTap} />
                   ) : null}
                   <PostViewerBody
                     post={post}

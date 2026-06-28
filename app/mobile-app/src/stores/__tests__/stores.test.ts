@@ -180,4 +180,13 @@ describe('status store', () => {
       'No media selected.',
     );
   });
+
+  it('deleteStory removes the post then refetches the feed', async () => {
+    mockRequest
+      .mockResolvedValueOnce({ deletePost: true })
+      .mockResolvedValueOnce({ stories: [], myStories: [] });
+    await useStatusStore.getState().deleteStory('s1');
+    expect(mockRequest.mock.calls[0]?.[1]).toEqual({ id: 's1' });
+    expect(mockRequest).toHaveBeenCalledTimes(2);
+  });
 });

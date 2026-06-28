@@ -14,6 +14,7 @@ const ID = 'cb-1';
 
 const req = (status: CallbackRequest['status'], extras: Partial<CallbackRequest> = {}): CallbackRequest => ({
   id: ID,
+  ticket_no: 'CB-AAA111',
   status,
   reason: 'Call me about my booking',
   contact_phone: '+919800000000',
@@ -58,6 +59,7 @@ describe('CallbackDetailsPage', () => {
       queryMock([req('CLOSED')]),
     ]);
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
+    expect(screen.getByText('CB-AAA111')).toBeInTheDocument();
     fireEvent.click(screen.getByRole('button', { name: /mark contacted/i }));
     await waitFor(() => expect(screen.queryByRole('button', { name: /mark contacted/i })).not.toBeInTheDocument());
     fireEvent.click(screen.getByRole('button', { name: /close/i }));

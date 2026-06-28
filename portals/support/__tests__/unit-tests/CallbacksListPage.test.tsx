@@ -15,10 +15,13 @@ vi.mock('../../src/lib/useSupportSocket', () => ({
 
 const req: CallbackRequest = {
   id: 'cb-1',
+  ticket_no: 'CB-AAA111',
   status: 'PENDING',
   reason: 'call me',
   contact_phone: '+919800000000',
   contacted_at: null,
+  duration_seconds: null,
+  conclusion: null,
   created_at: new Date().toISOString(),
   user: { id: 'u1', name: 'Aman', phone: '+919800000000' },
   pod: null,
@@ -28,23 +31,24 @@ const req: CallbackRequest = {
 const bareReq: CallbackRequest = {
   ...req,
   id: 'cb-2',
+  ticket_no: 'CB-BBB222',
   contact_phone: '',
   user: { id: 'u2', name: 'Dev', phone: null },
   pod: { id: 'p2', title: 'Sunday Brunch' },
 };
 
-const queryMock = (items: CallbackRequest[]) => ({
-  request: { query: BOUNCER_CALLBACK_REQUESTS },
+const queryMock = (items: CallbackRequest[], status: string | null = null) => ({
+  request: { query: BOUNCER_CALLBACK_REQUESTS, variables: { status } },
   result: { data: { bouncerCallbackRequests: items } },
 });
 
 describe('CallbacksListPage', () => {
   it('shows an empty state', async () => {
     renderWithProviders(<CallbacksListPage />, { mocks: [queryMock([])] });
-    await waitFor(() => expect(screen.getByText(/no callback requests yet/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/no callback requests found/i)).toBeInTheDocument());
   });
 
-  it('lists requests, refetches on live events and opens a detail row', async () => {
+  it('lists requests (with the ID column), refetches on live events and opens a detail row', async () => {
     renderWithProviders(<></>, {
       mocks: [queryMock([req, bareReq]), queryMock([req, bareReq]), queryMock([req, bareReq])],
       initialEntries: ['/callbacks'],
@@ -56,9 +60,30 @@ describe('CallbacksListPage', () => {
       ),
     });
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
+    expect(screen.getByText('CB-AAA111')).toBeInTheDocument();
     sockMock.events.onCallback();
     sockMock.events.onCallbackUpdate();
     fireEvent.click(screen.getByText('Aman'));
     expect(screen.getByText('CALLBACK DETAIL')).toBeInTheDocument();
+  });
+
+  it('filters by status (Resolved sends CLOSED)', async () => {
+    renderWithProviders(<CallbacksListPage />, {
+      mocks: [queryMock([req]), queryMock([], 'CLOSED')],
+    });
+    await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
+
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.click(screen.getByRole('option', { name: 'Resolved' }));
+    await waitFor(() => expect(screen.getByText(/no callback requests found/i)).toBeInTheDocument());
+  });
+
+  it('filters the list client-side by the search box', async () => {
+    renderWithProviders(<CallbacksListPage />, { mocks: [queryMock([req, bareReq])] });
+    await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'Brunch' } });
+    await waitFor(() => expect(screen.getByText('Dev')).toBeInTheDocument());
+    expect(screen.queryByText('Aman')).not.toBeInTheDocument();
   });
 });

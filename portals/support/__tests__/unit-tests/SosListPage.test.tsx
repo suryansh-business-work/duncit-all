@@ -15,6 +15,7 @@ vi.mock('../../src/lib/useSupportSocket', () => ({
 
 const alert: SosAlert = {
   id: 'sos-1',
+  ticket_no: 'SOS-AAA111',
   status: 'ACTIVE',
   message: 'help',
   contact_phone: '+919800000000',
@@ -31,23 +32,24 @@ const alert: SosAlert = {
 const bareAlert: SosAlert = {
   ...alert,
   id: 'sos-2',
+  ticket_no: 'SOS-BBB222',
   contact_phone: '',
   user: { id: 'u2', name: 'Dev', phone: null, avatar_url: null },
   pod: { id: 'p2', title: 'Yoga', venue_name: null, club_name: null, starts_at: null },
 };
 
-const queryMock = (alerts: SosAlert[]) => ({
-  request: { query: BOUNCER_SOS_ALERTS, variables: { status: null } },
+const queryMock = (alerts: SosAlert[], status: string | null = null) => ({
+  request: { query: BOUNCER_SOS_ALERTS, variables: { status } },
   result: { data: { bouncerSosAlerts: alerts } },
 });
 
 describe('SosListPage', () => {
   it('shows an empty state when there are no alerts', async () => {
     renderWithProviders(<SosListPage />, { mocks: [queryMock([])] });
-    await waitFor(() => expect(screen.getByText(/no sos alerts yet/i)).toBeInTheDocument());
+    await waitFor(() => expect(screen.getByText(/no sos alerts found/i)).toBeInTheDocument());
   });
 
-  it('renders alerts and navigates to a detail row, and live events refetch', async () => {
+  it('renders alerts (with the ID column) and navigates to a detail row, and live events refetch', async () => {
     renderWithProviders(<></>, {
       mocks: [queryMock([alert, bareAlert]), queryMock([alert, bareAlert]), queryMock([alert, bareAlert])],
       initialEntries: ['/sos'],
@@ -59,6 +61,7 @@ describe('SosListPage', () => {
       ),
     });
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
+    expect(screen.getByText('SOS-AAA111')).toBeInTheDocument();
 
     // Live socket callbacks trigger a refetch without throwing.
     sockMock.events.onSos();
@@ -66,5 +69,25 @@ describe('SosListPage', () => {
 
     fireEvent.click(screen.getByText('Riya'));
     expect(screen.getByText('SOS DETAIL')).toBeInTheDocument();
+  });
+
+  it('filters by status (Active sends ACTIVE) with an Active-specific empty state', async () => {
+    renderWithProviders(<SosListPage />, {
+      mocks: [queryMock([alert]), queryMock([], 'ACTIVE')],
+    });
+    await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
+
+    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.click(screen.getByRole('option', { name: 'Active' }));
+    await waitFor(() => expect(screen.getByText(/no active sos alerts found/i)).toBeInTheDocument());
+  });
+
+  it('filters the list client-side by the search box (ticket id / name)', async () => {
+    renderWithProviders(<SosListPage />, { mocks: [queryMock([alert, bareAlert])] });
+    await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
+
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'BBB222' } });
+    await waitFor(() => expect(screen.getByText('Dev')).toBeInTheDocument());
+    expect(screen.queryByText('Riya')).not.toBeInTheDocument();
   });
 });

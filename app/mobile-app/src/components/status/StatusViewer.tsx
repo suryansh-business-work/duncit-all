@@ -27,6 +27,8 @@ interface StatusViewerProps {
   onPrev?: () => void;
   /** Navigate to the item's club/pod/user when "Open details" is tapped (bug 3). */
   onOpenTarget?: (target: StoryTarget) => void;
+  /** Own story only — delete the currently shown slide (item 12). */
+  onDelete?: (slideId: string) => void;
 }
 
 // Each image slide runs 15s; videos play to their end, capped at 30s so a long
@@ -46,6 +48,7 @@ export function StatusViewer({
   onNext,
   onPrev,
   onOpenTarget,
+  onDelete,
 }: Readonly<StatusViewerProps>) {
   const { onPrimary } = useThemeColors();
   const [index, setIndex] = useState(0);
@@ -158,6 +161,23 @@ export function StatusViewer({
                   </Text>
                 ) : null}
               </YStack>
+              {onDelete && current ? (
+                <XStack
+                  testID="status-viewer-delete"
+                  role="button"
+                  aria-label="Delete story"
+                  onPress={() => onDelete(current.id)}
+                  width={36}
+                  height={36}
+                  marginRight={8}
+                  alignItems="center"
+                  justifyContent="center"
+                  borderRadius={18}
+                  backgroundColor="rgba(255,255,255,0.16)"
+                >
+                  <MaterialIcons name="delete-outline" size={20} color="#ffffff" />
+                </XStack>
+              ) : null}
               <XStack
                 testID="status-viewer-close"
                 role="button"

@@ -1,83 +1,36 @@
-import { Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Spinner, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { useRoleLabels } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { AccountMe } from '@/hooks/useAccount';
+import { shareProfile } from '@/utils/share';
 
 export interface AccountProfileHeaderProps {
   me: AccountMe;
-  savingPhoto: boolean;
-  onChangePhoto: () => void;
   onEdit: () => void;
   onLogout: () => void;
+  /** Refresh the screen after the photo/story changes. */
+  onChanged?: () => void | Promise<void>;
 }
 
-/** Avatar (with change-photo overlay), name, bio, role chips and the
- * Edit/Logout actions — RN twin of mWeb's <AccountProfileHeader/>. */
+/** Avatar (Instagram-style photo/story control, items 9 + 12), name, bio, role
+ * chips and the Edit/Logout actions — RN twin of mWeb's <AccountProfileHeader/>. */
 export function AccountProfileHeader({
   me,
-  savingPhoto,
-  onChangePhoto,
   onEdit,
   onLogout,
+  onChanged,
 }: Readonly<AccountProfileHeaderProps>) {
-  const { onPrimary, color, primary } = useThemeColors();
+  const { color } = useThemeColors();
   const { labelFor } = useRoleLabels();
   const initial = (me.first_name?.[0] ?? 'U').toUpperCase();
 
   return (
     <YStack gap={16} alignItems="center">
-      <YStack>
-        <YStack
-          width={96}
-          height={96}
-          borderRadius={48}
-          overflow="hidden"
-          backgroundColor="$primary"
-          alignItems="center"
-          justifyContent="center"
-        >
-          {me.profile_photo ? (
-            <Image
-              source={{ uri: me.profile_photo }}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="cover"
-            />
-          ) : (
-            <Text fontSize={36} fontWeight="900" color={onPrimary}>
-              {initial}
-            </Text>
-          )}
-        </YStack>
-        <XStack
-          testID="account-change-photo"
-          role="button"
-          aria-label="Change photo"
-          aria-disabled={savingPhoto}
-          onPress={savingPhoto ? undefined : onChangePhoto}
-          position="absolute"
-          bottom={0}
-          right={0}
-          width={34}
-          height={34}
-          borderRadius={17}
-          alignItems="center"
-          justifyContent="center"
-          backgroundColor="$surface"
-          borderWidth={1}
-          borderColor="$borderColor"
-          pressStyle={{ opacity: 0.8 }}
-        >
-          {savingPhoto ? (
-            <Spinner size="small" color="$primary" />
-          ) : (
-            <MaterialIcons name="photo-camera" size={16} color={primary} />
-          )}
-        </XStack>
-      </YStack>
+      <ProfileAvatar photo={me.profile_photo} initial={initial} size={96} onChanged={onChanged} />
 
       <YStack alignItems="center" gap={6}>
         <Text fontSize={20} fontWeight="900" color="$color" textAlign="center">
@@ -125,6 +78,26 @@ export function AccountProfileHeader({
           <MaterialIcons name="edit" size={16} color={color} />
           <Text fontSize={14} fontWeight="800" color="$color">
             Edit
+          </Text>
+        </XStack>
+        <XStack
+          testID="account-share"
+          role="button"
+          aria-label="Share profile"
+          onPress={() => shareProfile(me.user_id, me.full_name ?? 'Profile')}
+          flex={1}
+          height={44}
+          alignItems="center"
+          justifyContent="center"
+          gap={6}
+          borderRadius={999}
+          borderWidth={1}
+          borderColor="$borderColor"
+          pressStyle={{ opacity: 0.85 }}
+        >
+          <MaterialIcons name="share" size={16} color={color} />
+          <Text fontSize={14} fontWeight="800" color="$color">
+            Share
           </Text>
         </XStack>
         <XStack

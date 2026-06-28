@@ -54,6 +54,10 @@ async function bootstrap() {
   await safeSeed('category', () => categoryService.seedDefaults());
   await safeSeed('vapid', () => notificationService.ensureVapid());
   await safeSeed('policy', () => policyService.seedDefaults());
+  await safeSeed('emailTemplates', async () => {
+    const { emailTemplateService } = await import('@modules/content/emailTemplate/emailTemplate.service');
+    await emailTemplateService.seedDefaults();
+  });
   await safeSeed('websiteContent', () => websiteContentService.seedDefaults());
   await safeSeed('marketing', () => marketingService.resumeSchedules());
   await safeSeed('crmServices', () => crmService.seedServiceDefaults());

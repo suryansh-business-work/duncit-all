@@ -4,6 +4,7 @@ export const BOUNCER_SOS_ALERTS = gql`
   query BouncerSosAlerts($status: BouncerSosStatus) {
     bouncerSosAlerts(status: $status) {
       id
+      ticket_no
       status
       message
       contact_phone
@@ -41,6 +42,7 @@ export const BOUNCER_CALLBACK_REQUESTS = gql`
   query BouncerCallbackRequests($status: BouncerCallbackStatus) {
     bouncerCallbackRequests(status: $status) {
       id
+      ticket_no
       status
       reason
       contact_phone
@@ -131,6 +133,7 @@ export const CLOSE_CALLBACK = gql`
 
 export interface SosAlert {
   id: string;
+  ticket_no: string;
   status: 'ACTIVE' | 'ACKNOWLEDGED' | 'RESOLVED';
   message: string;
   contact_phone: string;
@@ -151,6 +154,7 @@ export interface SosAlert {
 
 export interface CallbackRequest {
   id: string;
+  ticket_no: string;
   status: 'PENDING' | 'CONTACTED' | 'CLOSED';
   reason: string;
   contact_phone: string;

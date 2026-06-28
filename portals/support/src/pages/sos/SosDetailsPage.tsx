@@ -75,10 +75,11 @@ export default function SosDetailsPage() {
           <CardContent>
             <Stack spacing={1.5}>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                   <Typography variant="h6" sx={{ fontWeight: 800 }}>
                     {alert.user.name}
                   </Typography>
+                  <Chip size="small" variant="outlined" label={alert.ticket_no} />
                   <Chip size="small" color={STATUS_COLOR[alert.status]} label={alert.status} />
                 </Stack>
                 <Typography variant="caption" color="text.secondary">

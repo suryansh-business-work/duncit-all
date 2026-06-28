@@ -8,10 +8,8 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useNotifications, type UserNotification } from '@/hooks/useNotifications';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
+import { resolveNotificationLink } from '@/utils/notification-link';
 import { NotificationsScreen } from './NotificationsScreen';
-
-/** Param-less in-app deep-link path → React Navigation screen (notification link_url routing). */
-const IN_APP_ROUTES: Record<string, 'Earn'> = { '/earn': 'Earn' };
 
 /** Header bell with unread badge — RN twin of mWeb's <HeaderNotificationsBell/>.
  * Opens the full-screen notifications list and owns the data + read mutations. */
@@ -27,15 +25,20 @@ export function NotificationsBell() {
   };
 
   const openLink = (link: string) => {
-    if (link.startsWith('http')) {
+    const target = resolveNotificationLink(link);
+    if (target.kind === 'external') {
       setOpen(false);
-      void Linking.openURL(link);
+      void Linking.openURL(target.url);
       return;
     }
-    const route = IN_APP_ROUTES[link];
-    if (route) {
+    if (target.kind === 'post') {
       setOpen(false);
-      navigation.navigate(route);
+      navigation.navigate('PostDetail', { postId: target.postId });
+      return;
+    }
+    if (target.kind === 'screen') {
+      setOpen(false);
+      navigation.navigate(target.route);
     }
   };
 

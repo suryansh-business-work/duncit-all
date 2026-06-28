@@ -1,9 +1,10 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
+import { ConfirmDialog } from '@/components/ConfirmDialog';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import {
   AccountEditForm,
@@ -22,6 +23,9 @@ export interface EditAccountDialogProps {
   onSave: (input: UpdateProfileInput) => Promise<void>;
 }
 
+/* istanbul ignore next -- placeholder ref value, replaced once the form mounts */
+const NOOP = () => undefined;
+
 /** Edit-profile bottom sheet hosting the RHF+Zod form — RN twin of mWeb's
  * <EditAccountDialog/>. */
 export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAccountDialogProps>) {
@@ -30,6 +34,23 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
   const countries = useMemo(() => buildLocationTree(locations), [locations]);
   const [loading, setLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const dirtyRef = useRef(false);
+  const resetRef = useRef<() => void>(NOOP);
+
+  const requestClose = useCallback(() => {
+    if (dirtyRef.current) {
+      setConfirmOpen(true);
+      return;
+    }
+    onClose();
+  }, [onClose]);
+
+  const confirmDiscard = useCallback(() => {
+    resetRef.current();
+    setConfirmOpen(false);
+    onClose();
+  }, [onClose]);
 
   const submit = async (values: AccountEditValues) => {
     setLoading(true);
@@ -45,13 +66,13 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
   };
 
   return (
-    <Modal visible={open} transparent animationType="slide" onRequestClose={onClose}>
+    <Modal visible={open} transparent animationType="slide" onRequestClose={requestClose}>
       <ModalThemeScope>
         <YStack flex={1} testID="edit-account-dialog">
           <YStack
             role="button"
             aria-label="Close"
-            onPress={onClose}
+            onPress={requestClose}
             position="absolute"
             top={0}
             left={0}
@@ -84,7 +105,7 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
                   testID="edit-account-close"
                   role="button"
                   aria-label="Close"
-                  onPress={onClose}
+                  onPress={requestClose}
                   width={32}
                   height={32}
                   alignItems="center"
@@ -101,12 +122,29 @@ export function EditAccountDialog({ open, me, onClose, onSave }: Readonly<EditAc
                     loading={loading}
                     errorMessage={errorMessage}
                     onSubmit={submit}
+                    onDirtyChange={(dirty) => {
+                      dirtyRef.current = dirty;
+                    }}
+                    onRegisterReset={(reset) => {
+                      resetRef.current = reset;
+                    }}
                   />
                 </YStack>
               </ScrollView>
             </SafeAreaView>
           </YStack>
         </YStack>
+        <ConfirmDialog
+          open={confirmOpen}
+          testID="edit-account-discard-confirm"
+          title="Discard unsaved changes?"
+          message="You have unsaved changes. Closing now will lose them."
+          confirmLabel="Discard"
+          cancelLabel="Keep editing"
+          destructive
+          onConfirm={confirmDiscard}
+          onCancel={() => setConfirmOpen(false)}
+        />
       </ModalThemeScope>
     </Modal>
   );

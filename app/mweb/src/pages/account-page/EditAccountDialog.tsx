@@ -1,6 +1,13 @@
 import { useMemo } from 'react';
 import { gql, useMutation, useQuery } from '@apollo/client';
-import { Dialog, DialogContent, DialogTitle } from '@mui/material';
+import {
+  Button,
+  Dialog,
+  DialogActions,
+  DialogContent,
+  DialogContentText,
+  DialogTitle,
+} from '@mui/material';
 import { buildLocationTree, type LocationLike } from '../../utils/location-tree';
 import {
   AccountEditForm,
@@ -8,6 +15,7 @@ import {
   toUpdateProfileInput,
   type AccountEditValues,
 } from './account-edit';
+import { useUnsavedGuard } from './useUnsavedGuard';
 
 const UPDATE_PROFILE = gql`
   mutation UpdateMyProfileFull($input: UpdateMyProfileInput!) {
@@ -61,6 +69,7 @@ export default function EditAccountDialog({ open, onClose, initial, onSaved }: R
     () => buildLocationTree((data?.locations ?? []) as LocationLike[]),
     [data?.locations],
   );
+  const guard = useUnsavedGuard(onClose);
 
   const handleSubmit = async (values: AccountEditValues) => {
     await updateProfile({ variables: { input: toUpdateProfileInput(values) } });
@@ -69,17 +78,37 @@ export default function EditAccountDialog({ open, onClose, initial, onSaved }: R
   };
 
   return (
-    <Dialog open={open} onClose={onClose} fullWidth maxWidth="sm">
-      <DialogTitle>Edit profile</DialogTitle>
-      <DialogContent dividers>
-        <AccountEditForm
-          countries={countries}
-          defaultValues={accountEditDefaults(initial)}
-          loading={loading}
-          errorMessage={error?.message ?? null}
-          onSubmit={handleSubmit}
-        />
-      </DialogContent>
-    </Dialog>
+    <>
+      <Dialog open={open} onClose={guard.requestClose} fullWidth maxWidth="sm">
+        <DialogTitle>Edit profile</DialogTitle>
+        <DialogContent dividers>
+          <AccountEditForm
+            countries={countries}
+            defaultValues={accountEditDefaults(initial)}
+            loading={loading}
+            errorMessage={error?.message ?? null}
+            onSubmit={handleSubmit}
+            onDirtyChange={guard.setDirty}
+            onRegisterReset={guard.registerReset}
+          />
+        </DialogContent>
+      </Dialog>
+      <Dialog open={guard.confirmOpen} onClose={guard.cancelDiscard} data-testid="discard-confirm">
+        <DialogTitle>Discard unsaved changes?</DialogTitle>
+        <DialogContent>
+          <DialogContentText>
+            You have unsaved changes. Closing now will lose them.
+          </DialogContentText>
+        </DialogContent>
+        <DialogActions>
+          <Button onClick={guard.cancelDiscard} data-testid="discard-cancel">
+            Keep editing
+          </Button>
+          <Button onClick={guard.confirmDiscard} color="error" data-testid="discard-confirm-yes">
+            Discard
+          </Button>
+        </DialogActions>
+      </Dialog>
+    </>
   );
 }

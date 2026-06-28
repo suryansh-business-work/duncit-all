@@ -1,6 +1,11 @@
 export { AccountInfoRow } from './AccountInfoRow';
 export { AccountProfileHeader } from './AccountProfileHeader';
 export { AccountHealthCard } from './AccountHealthCard';
+export { CompletionMeter } from './CompletionMeter';
 export { HostsVenuesCard } from './HostsVenuesCard';
 export { EditAccountDialog } from './EditAccountDialog';
 export { PrivacyToggleCard } from './PrivacyToggleCard';
+export { SecuritySection } from './SecuritySection';
+export { ChangePasswordDialog } from './ChangePasswordDialog';
+export { DeleteAccountDialog } from './DeleteAccountDialog';
+export { SecuritySheet } from './SecuritySheet';

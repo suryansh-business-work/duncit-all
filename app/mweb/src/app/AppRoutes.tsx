@@ -17,6 +17,7 @@ const SignupSurveyPage = lazy(() => import('../pages/SignupSurveyPage'));
 const SignupWhatsappPage = lazy(() => import('../pages/SignupWhatsappPage'));
 const AccountPage = lazy(() => import('../pages/AccountPage'));
 const ProfilePage = lazy(() => import('../pages/ProfilePage'));
+const PostPage = lazy(() => import('../pages/PostPage'));
 const FollowPage = lazy(() => import('../pages/FollowPage'));
 const PublicProfilePage = lazy(() => import('../pages/PublicProfilePage'));
 const PodDetailsPage = lazy(() => import('../pages/PodDetailsPage'));
@@ -106,6 +107,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
           )}
         />
         <Route path="/profile" element={withAuth(<ProfilePage />)} />
+        <Route path="/post/:postId" element={withAuth(<PostPage />)} />
         <Route path="/follow" element={withAuth(<FollowPage superCategorySlug={superCategory} />)} />
         <Route path="/account" element={withAuth(<AccountPage />)} />
         <Route path="/club/:clubSlug" element={withAuth(<ClubDetailsPage />)} />

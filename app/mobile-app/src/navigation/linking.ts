@@ -63,6 +63,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       ClubDetails: 'club/:clubId',
       HostsVenues: 'hosts-venues',
       PublicProfile: 'u/:userId',
+      PostDetail: 'post/:postId',
       VenueDetails: 'venue/:venueId',
       Checkout: 'checkout/:podId',
       NotFound: '*',

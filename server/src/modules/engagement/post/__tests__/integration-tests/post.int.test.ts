@@ -1,9 +1,32 @@
 import { Types } from 'mongoose';
 import { postService } from '../../post.service';
 import { PostModel } from '../../post.model';
+import { UserNotificationModel } from '@modules/engagement/notification/notification.model';
+import { notificationService } from '@modules/engagement/notification/notification.service';
 
 const author = new Types.ObjectId().toString();
 const img = 'https://img/post.jpg';
+
+// Post like/comment notifications are fired-and-forgotten (dynamic import +
+// async fan-out). Spy on create() so each test can await the in-flight
+// notification promises before the DB is wiped in afterEach — otherwise the
+// trailing save() races the teardown.
+let notifyPromises: Promise<unknown>[] = [];
+const realCreate = notificationService.create.bind(notificationService);
+beforeEach(() => {
+  notifyPromises = [];
+  jest.spyOn(notificationService, 'create').mockImplementation((input, sentBy) => {
+    const p = realCreate(input, sentBy);
+    notifyPromises.push(p.catch(() => undefined));
+    return p;
+  });
+});
+afterEach(async () => {
+  await Promise.all(notifyPromises);
+  jest.restoreAllMocks();
+});
+
+const settleNotifs = () => Promise.all(notifyPromises);
 
 describe('postService integration', () => {
   it('creates a post and lists/fetches it', async () => {
@@ -16,7 +39,10 @@ describe('postService integration', () => {
   });
 
   it('toggles a like and adds a comment', async () => {
-    const post = await postService.create(author, { image_url: img });
+    // Own author so this test's fire-and-forget notifications never collide
+    // with the dedicated notification assertions below.
+    const owner = new Types.ObjectId().toString();
+    const post = await postService.create(owner, { image_url: img });
     const liker = new Types.ObjectId().toString();
 
     const liked = await postService.toggleLike(post.id, liker);
@@ -26,6 +52,46 @@ describe('postService integration', () => {
 
     const commented = await postService.addComment(post.id, liker, 'Nice shot');
     expect(commented.comments_count).toBe(1);
+    await settleNotifs();
+  });
+
+  it('notifies the post owner on a like (to-liked) and a comment, deep-linking to the post', async () => {
+    // Fresh owner so only this test's actions notify them.
+    const owner = new Types.ObjectId().toString();
+    const post = await postService.create(owner, { image_url: img });
+    const actor = new Types.ObjectId().toString();
+
+    await postService.toggleLike(post.id, actor);
+    await postService.addComment(post.id, actor, 'Love this');
+    await settleNotifs();
+
+    const inbox = await UserNotificationModel.find({
+      user_id: new Types.ObjectId(owner),
+    }).populate('notification_id');
+    const notifs = inbox.map((n) => n.notification_id as any);
+    expect(notifs).toHaveLength(2);
+    const like = notifs.find((n: any) => n.title === 'New like on your post');
+    const comment = notifs.find((n: any) => n.title === 'New comment on your post');
+    expect(like?.link_url).toBe(`/post/${post.id}`);
+    expect(like?.body).toContain('liked your post');
+    expect(comment?.link_url).toBe(`/post/${post.id}`);
+    expect(comment?.body).toContain('commented on your post');
+  });
+
+  it('never notifies the owner for their own like/comment, nor on an unlike', async () => {
+    const owner = new Types.ObjectId().toString();
+    const post = await postService.create(owner, { image_url: img });
+    const actor = new Types.ObjectId().toString();
+
+    // Owner liking/commenting on their own post → no self-notify.
+    await postService.toggleLike(post.id, owner);
+    await postService.addComment(post.id, owner, 'self note');
+    // A like immediately followed by an unlike → exactly one notification.
+    await postService.toggleLike(post.id, actor);
+    await postService.toggleLike(post.id, actor);
+    await settleNotifs();
+    const inbox = await UserNotificationModel.find({ user_id: new Types.ObjectId(owner) });
+    expect(inbox).toHaveLength(1);
   });
 
   it('only lets the author delete their post', async () => {

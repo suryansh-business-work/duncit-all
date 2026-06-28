@@ -1,11 +1,13 @@
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, InputAdornment, Link, Stack, Typography } from '@mui/material';
+import { Alert, Button, IconButton, InputAdornment, Link, Stack, Typography } from '@mui/material';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import LockOutlinedIcon from '@mui/icons-material/LockOutlined';
 import PersonOutlineIcon from '@mui/icons-material/PersonOutline';
+import VisibilityOutlinedIcon from '@mui/icons-material/VisibilityOutlined';
+import VisibilityOffOutlinedIcon from '@mui/icons-material/VisibilityOffOutlined';
 import { Link as RouterLink } from 'react-router-dom';
 import RhfTextField from '../components/RhfTextField';
 import DobYearField from './DobYearField';
@@ -22,7 +24,29 @@ const startIcon = (icon: React.ReactNode) => ({
   startAdornment: <InputAdornment position="start">{icon}</InputAdornment>,
 });
 
+const passwordInputProps = (visible: boolean, onToggle: () => void) => ({
+  ...startIcon(<LockOutlinedIcon fontSize="small" />),
+  endAdornment: (
+    <InputAdornment position="end">
+      <IconButton
+        size="small"
+        onClick={onToggle}
+        edge="end"
+        aria-label={visible ? 'Hide password' : 'Show password'}
+      >
+        {visible ? (
+          <VisibilityOffOutlinedIcon fontSize="small" />
+        ) : (
+          <VisibilityOutlinedIcon fontSize="small" />
+        )}
+      </IconButton>
+    </InputAdornment>
+  ),
+});
+
 export default function RegisterForm({ loading, errorMessage, initialValues, onSubmit }: Readonly<Props>) {
+  const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<RegisterFormValues>({
     defaultValues: initialValues ?? registerDefaults,
@@ -67,24 +91,24 @@ export default function RegisterForm({ loading, errorMessage, initialValues, onS
         <RhfTextField
           control={control}
           name="password"
-          type="password"
+          type={showPwd ? 'text' : 'password'}
           label="Password"
           placeholder="Create password"
           autoComplete="new-password"
           size="small"
           InputLabelProps={{ shrink: true }}
-          InputProps={startIcon(<LockOutlinedIcon fontSize="small" />)}
+          InputProps={passwordInputProps(showPwd, () => setShowPwd((v) => !v))}
         />
         <RhfTextField
           control={control}
           name="confirmPassword"
-          type="password"
+          type={showConfirmPwd ? 'text' : 'password'}
           label="Confirm Password"
           placeholder="Re-enter password"
           autoComplete="new-password"
           size="small"
           InputLabelProps={{ shrink: true }}
-          InputProps={startIcon(<LockOutlinedIcon fontSize="small" />)}
+          InputProps={passwordInputProps(showConfirmPwd, () => setShowConfirmPwd((v) => !v))}
         />
       </Stack>
       <Stack spacing={2} sx={{ mt: 2 }}>

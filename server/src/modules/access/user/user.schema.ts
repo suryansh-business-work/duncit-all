@@ -197,6 +197,19 @@ export const userTypeDefs = gql`
     new_password: String!
   }
 
+  input RequestPasswordChangeInput {
+    current_password: String!
+  }
+
+  input ChangePasswordInput {
+    otp: String!
+    new_password: String!
+  }
+
+  input DeleteMyAccountInput {
+    otp: String!
+  }
+
   input RecordUserContactActionInput {
     user_id: ID!
     type: AdminContactActionType!
@@ -317,6 +330,14 @@ export const userTypeDefs = gql`
     verifyEmailVerificationOtp(otp: String!): User!
     requestPasswordResetOtp(email: String!): OtpRequestResult!
     resetPasswordWithOtp(input: ResetPasswordInput!): Boolean!
+    "Auth-required: verify the current password and email a change-confirmation OTP."
+    requestPasswordChangeOtp(input: RequestPasswordChangeInput!): OtpRequestResult!
+    "Auth-required: confirm the OTP and set the new password."
+    changePasswordWithOtp(input: ChangePasswordInput!): Boolean!
+    "Auth-required: email a confirmation OTP before self-serve account deletion."
+    requestAccountDeletionOtp: OtpRequestResult!
+    "Auth-required: confirm the OTP and soft-delete (and anonymize) the account."
+    deleteMyAccount(input: DeleteMyAccountInput!): Boolean!
     updateMyPetProfile(input: PetProfileInput!): User!
     updateMyInterests(category_ids: [ID!]!): User!
     toggleSavedPod(pod_doc_id: ID!): SavedPodState!

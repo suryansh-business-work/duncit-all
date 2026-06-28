@@ -20,8 +20,33 @@ interface Props {
   onSubmit: (values: ResetPasswordValues) => Promise<void> | void;
 }
 
+const passwordInputProps = (visible: boolean, onToggle: () => void) => ({
+  startAdornment: (
+    <InputAdornment position="start">
+      <LockOutlinedIcon fontSize="small" />
+    </InputAdornment>
+  ),
+  endAdornment: (
+    <InputAdornment position="end">
+      <IconButton
+        size="small"
+        onClick={onToggle}
+        edge="end"
+        aria-label={visible ? 'Hide password' : 'Show password'}
+      >
+        {visible ? (
+          <VisibilityOffOutlinedIcon fontSize="small" />
+        ) : (
+          <VisibilityOutlinedIcon fontSize="small" />
+        )}
+      </IconButton>
+    </InputAdornment>
+  ),
+});
+
 export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: Readonly<Props>) {
   const [showPwd, setShowPwd] = useState(false);
+  const [showConfirmPwd, setShowConfirmPwd] = useState(false);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const { control, handleSubmit } = useForm<ResetPasswordValues>({
     defaultValues: resetPasswordDefaults,
@@ -64,36 +89,17 @@ export default function ResetPasswordForm({ loading, errorMessage, onSubmit }: R
           placeholder="Create a new password"
           autoComplete="new-password"
           size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <LockOutlinedIcon fontSize="small" />
-              </InputAdornment>
-            ),
-            endAdornment: (
-              <InputAdornment position="end">
-                <IconButton size="small" onClick={() => setShowPwd((v) => !v)} edge="end" aria-label="toggle password">
-                  {showPwd ? <VisibilityOffOutlinedIcon fontSize="small" /> : <VisibilityOutlinedIcon fontSize="small" />}
-                </IconButton>
-              </InputAdornment>
-            ),
-          }}
+          InputProps={passwordInputProps(showPwd, () => setShowPwd((v) => !v))}
         />
         <RhfTextField
           control={control}
           name="confirm_password"
-          type={showPwd ? 'text' : 'password'}
+          type={showConfirmPwd ? 'text' : 'password'}
           label="Confirm new password"
           placeholder="Re-enter new password"
           autoComplete="new-password"
           size="small"
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <LockOutlinedIcon fontSize="small" />
-              </InputAdornment>
-            ),
-          }}
+          InputProps={passwordInputProps(showConfirmPwd, () => setShowConfirmPwd((v) => !v))}
         />
         <Button
           type="submit"

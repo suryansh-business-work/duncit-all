@@ -1,4 +1,4 @@
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql, useQuery } from '@apollo/client';
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserData } from '@duncit/user-context';
@@ -17,13 +17,14 @@ import EmailIcon from '@mui/icons-material/Email';
 import PhoneIcon from '@mui/icons-material/Phone';
 import LocationCityIcon from '@mui/icons-material/LocationCity';
 import CakeIcon from '@mui/icons-material/Cake';
-import MediaPickerDialog from '../components/MediaPickerDialog';
 import AccountInfoRow from './account-page/AccountInfoRow';
 import AccountProfileHeader from './account-page/AccountProfileHeader';
 import EditAccountDialog from './account-page/EditAccountDialog';
+import CompletionMeter from './account-page/CompletionMeter';
 import { toDobInput } from './account-page/account-edit';
 import HostsVenuesCard from './account-page/HostsVenuesCard';
 import PrivacyToggleCard from './account-page/PrivacyToggleCard';
+import SecuritySection from './account-page/SecuritySection';
 import HealthMeter from '../components/health/HealthMeter';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useDateFormat } from '../utils/dateFormat';
@@ -53,15 +54,6 @@ const ME = gql`
   }
 `;
 
-const UPDATE_USER = gql`
-  mutation UpdateMyProfilePhoto($input: UpdateMyProfileInput!) {
-    updateMyProfile(input: $input) {
-      user_id
-      profile_photo
-    }
-  }
-`;
-
 export default function AccountPage() {
   const navigate = useNavigate();
   const { logout: ctxLogout } = useUserData();
@@ -70,12 +62,8 @@ export default function AccountPage() {
     fetchPolicy: 'cache-and-network',
   });
   const health = healthData?.myAccountHealth ?? null;
-  const [pickerOpen, setPickerOpen] = useState(false);
   const [editOpen, setEditOpen] = useState(false);
-  const [savingPhoto, setSavingPhoto] = useState(false);
-  const [photoError, setPhotoError] = useState<string | null>(null);
   const [savedOpen, setSavedOpen] = useState(false);
-  const [updateUser] = useMutation(UPDATE_USER);
   const { formatDate } = useDateFormat();
 
   const logout = () => {
@@ -100,10 +88,9 @@ export default function AccountPage() {
         <CardContent>
           <AccountProfileHeader
             me={me}
-            savingPhoto={savingPhoto}
-            onChangePhoto={() => setPickerOpen(true)}
             onEdit={() => setEditOpen(true)}
             onLogout={logout}
+            onChanged={() => refetch()}
           />
 
           <Divider sx={{ my: 3 }} />
@@ -130,6 +117,10 @@ export default function AccountPage() {
               value={me.dob ? formatDate(me.dob) : '—'}
             />
           </Stack>
+
+          <Divider sx={{ my: 3 }} />
+
+          <CompletionMeter profile={me} />
         </CardContent>
       </Card>
 
@@ -171,27 +162,8 @@ export default function AccountPage() {
       <PrivacyToggleCard visibility={me.profile_visibility} onChanged={() => refetch()} />
 
       <HostsVenuesCard />
-      <MediaPickerDialog
-        open={pickerOpen}
-        onClose={() => setPickerOpen(false)}
-        folder="/users"
-        title="Update profile photo"
-        onPicked={async (url) => {
-          setSavingPhoto(true);
-          setPhotoError(null);
-          try {
-            await updateUser({
-              variables: { input: { profile_photo: url } },
-            });
-            await refetch();
-          } catch (e: any) {
-            setPhotoError(e.message ?? 'Could not update profile photo');
-          } finally {
-            setSavingPhoto(false);
-          }
-        }}
-      />
-      {photoError && <Alert severity="error" onClose={() => setPhotoError(null)}>{photoError}</Alert>}
+
+      <SecuritySection />
       <EditAccountDialog
         open={editOpen}
         onClose={() => setEditOpen(false)}

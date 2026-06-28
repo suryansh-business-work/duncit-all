@@ -8,8 +8,12 @@ import { SurveyChip } from '@/components/survey/SurveyChip';
 import { TAB_CONFIG } from '@/navigation/tabs';
 import { renderWithProviders } from '@/utils/test-utils';
 
+jest.mock('@/components/profile/ProfileAvatar', () => ({
+  ProfileAvatar: () => null,
+}));
+
 describe('AccountProfileHeader with a photo', () => {
-  it('renders the avatar image when a profile photo is set', () => {
+  it('renders identity when a profile photo is set', () => {
     renderWithProviders(
       <AccountProfileHeader
         me={
@@ -22,8 +26,6 @@ describe('AccountProfileHeader with a photo', () => {
             profile_photo: 'https://img/a.jpg',
           } as never
         }
-        savingPhoto={false}
-        onChangePhoto={jest.fn()}
         onEdit={jest.fn()}
         onLogout={jest.fn()}
       />,

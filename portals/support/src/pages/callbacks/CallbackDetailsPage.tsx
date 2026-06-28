@@ -86,10 +86,11 @@ export default function CallbackDetailsPage() {
           <CardContent>
             <Stack spacing={1.5}>
               <Stack direction="row" alignItems="center" justifyContent="space-between">
-                <Stack direction="row" spacing={1} alignItems="center">
+                <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
                   <Typography variant="h6" sx={{ fontWeight: 800 }}>
                     {req.user.name}
                   </Typography>
+                  <Chip size="small" variant="outlined" label={req.ticket_no} />
                   <Chip size="small" color={STATUS_COLOR[req.status]} label={req.status} />
                 </Stack>
                 <Typography variant="caption" color="text.secondary">

@@ -18,6 +18,17 @@ jest.mock('@/components/profile/post-viewer/PostViewerSheet', () => {
   };
 });
 jest.mock('@/hooks/useStatusUpload', () => ({ useStatusUpload: jest.fn() }));
+// Avatar interactions are covered in profile-avatar.test; the stub exposes an
+// onChanged trigger so the header's refetch closure stays covered.
+jest.mock('@/components/profile/ProfileAvatar', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Pressable } = require('react-native');
+  return {
+    ProfileAvatar: ({ onChanged }: { onChanged?: () => void }) => (
+      <Pressable testID="avatar-changed" onPress={() => onChanged?.()} />
+    ),
+  };
+});
 const mockNavigate = jest.fn();
 const mockGoBack = jest.fn();
 jest.mock('@react-navigation/native', () => ({
@@ -69,6 +80,8 @@ describe('ProfileScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Account');
     fireEvent.press(screen.getByTestId('profile-back'));
     expect(mockGoBack).toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('avatar-changed'));
+    expect(refetch).toHaveBeenCalled();
   });
 
   it('shows the error state when the profile is missing', () => {

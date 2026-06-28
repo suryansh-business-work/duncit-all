@@ -7,9 +7,11 @@ import {
   AccountHealthCard,
   AccountInfoRow,
   AccountProfileHeader,
+  CompletionMeter,
   EditAccountDialog,
   HostsVenuesCard,
   PrivacyToggleCard,
+  SecuritySection,
 } from '@/components/account';
 import { StackScreen } from '@/components/StackScreen';
 import { DetailSkeleton } from '@/components/Skeleton';
@@ -23,16 +25,7 @@ import { formatDate } from '@/utils/date-format';
  * edit/logout, contact + location info, account health, and host/venue shortcuts. */
 export function AccountScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const {
-    me,
-    health,
-    isLoading,
-    error,
-    savingPhoto,
-    updateProfile,
-    updateVisibility,
-    changePhoto,
-  } = useAccount();
+  const { me, health, isLoading, error, updateProfile, updateVisibility, refresh } = useAccount();
   const logout = useLogout();
   const [editOpen, setEditOpen] = useState(false);
 
@@ -61,10 +54,9 @@ export function AccountScreen() {
           >
             <AccountProfileHeader
               me={me}
-              savingPhoto={savingPhoto}
-              onChangePhoto={() => void changePhoto()}
               onEdit={() => setEditOpen(true)}
               onLogout={() => void logout()}
+              onChanged={() => void refresh()}
             />
             <YStack height={1} backgroundColor="$borderColor" />
             <YStack gap={14}>
@@ -87,6 +79,8 @@ export function AccountScreen() {
                 value={me.dob ? formatDate(me.dob) : '—'}
               />
             </YStack>
+            <YStack height={1} backgroundColor="$borderColor" />
+            <CompletionMeter profile={me} />
           </YStack>
 
           <PrivacyToggleCard
@@ -109,6 +103,8 @@ export function AccountScreen() {
             onVenue={() => navigation.navigate(isVenue ? 'VenueManage' : 'RegisterVenue')}
             onPodHistory={() => navigation.navigate('PodHistory')}
           />
+
+          <SecuritySection />
         </ScrollView>
       )}
 

@@ -103,6 +103,38 @@ export const MobileUpdateProfileDocument = gql(`
   }
 `);
 
+/** Step 1 of change-password — verify current password, email an OTP. */
+export const MobileRequestPasswordChangeOtpDocument = gql(`
+  mutation MobileRequestPasswordChangeOtp($input: RequestPasswordChangeInput!) {
+    requestPasswordChangeOtp(input: $input) {
+      ok
+    }
+  }
+`);
+
+/** Step 2 of change-password — commit the new password with the emailed OTP. */
+export const MobileChangePasswordWithOtpDocument = gql(`
+  mutation MobileChangePasswordWithOtp($input: ChangePasswordInput!) {
+    changePasswordWithOtp(input: $input)
+  }
+`);
+
+/** Step 1 of delete-account — email a confirmation OTP. */
+export const MobileRequestAccountDeletionOtpDocument = gql(`
+  mutation MobileRequestAccountDeletionOtp {
+    requestAccountDeletionOtp {
+      ok
+    }
+  }
+`);
+
+/** Step 2 of delete-account — permanently delete the account with the OTP. */
+export const MobileDeleteMyAccountDocument = gql(`
+  mutation MobileDeleteMyAccount($input: DeleteMyAccountInput!) {
+    deleteMyAccount(input: $input)
+  }
+`);
+
 /** Role key → display name map, shared with mWeb's <UserSummary/> chips. */
 export const MobileRolesDocument = gql(`
   query MobilePublicRoles {

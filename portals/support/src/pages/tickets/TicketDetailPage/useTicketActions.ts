@@ -31,6 +31,12 @@ export function useTicketActions(ticketId: string | undefined, onChanged: () => 
   const setStatus = (status: TicketStatus) =>
     updateStatus({ variables: { ticket_id: ticketId, status } }).catch((e: Error) => setNotice(e.message));
 
+  // Permanently close a resolved ticket — reuses the status mutation (CLOSED).
+  const close = () =>
+    updateStatus({ variables: { ticket_id: ticketId, status: 'CLOSED' } }).catch((e: Error) =>
+      setNotice(e.message)
+    );
+
   const download = async (format: TranscriptFormat) => {
     try {
       const { data } = await client.query<{ ticketTranscript: TicketTranscript }>({
@@ -53,5 +59,5 @@ export function useTicketActions(ticketId: string | undefined, onChanged: () => 
     }
   };
 
-  return { notice, clearNotice: () => setNotice(''), resolve, reopen, setStatus, download, email };
+  return { notice, clearNotice: () => setNotice(''), resolve, reopen, setStatus, close, download, email };
 }

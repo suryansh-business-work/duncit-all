@@ -14,6 +14,16 @@ jest.mock('@/hooks/useMe', () => ({
   useRoleLabels: () => ({ labelFor: (k: string) => `Role:${k}` }),
 }));
 
+const mockShareProfile = jest.fn();
+jest.mock('@/utils/share', () => ({ shareProfile: (...a: unknown[]) => mockShareProfile(...a) }));
+beforeEach(() => mockShareProfile.mockClear());
+
+// The avatar's photo/story interactions live in security-flows.test; stub it
+// here so these header tests assert identity + actions only.
+jest.mock('@/components/profile/ProfileAvatar', () => ({
+  ProfileAvatar: () => null,
+}));
+
 jest.mock('@/hooks/useLocations', () => ({
   useLocations: () => ({
     locations: [
@@ -60,44 +70,36 @@ describe('AccountInfoRow', () => {
 });
 
 describe('AccountProfileHeader', () => {
-  it('renders identity + role chips (no status chip, bug 6) and fires edit/logout/photo', () => {
-    const onChangePhoto = jest.fn();
+  it('renders identity + role chips (no status chip, bug 6) and fires edit/logout', () => {
     const onEdit = jest.fn();
     const onLogout = jest.fn();
-    renderWithProviders(
-      <AccountProfileHeader
-        me={me}
-        savingPhoto={false}
-        onChangePhoto={onChangePhoto}
-        onEdit={onEdit}
-        onLogout={onLogout}
-      />,
-    );
+    renderWithProviders(<AccountProfileHeader me={me} onEdit={onEdit} onLogout={onLogout} />);
     expect(screen.getByText('Riya Sharma')).toBeOnTheScreen();
     expect(screen.getByText('Role:USER')).toBeOnTheScreen();
     expect(screen.queryByText('ACTIVE')).toBeNull();
-    fireEvent.press(screen.getByTestId('account-change-photo'));
     fireEvent.press(screen.getByTestId('account-edit'));
     fireEvent.press(screen.getByTestId('account-logout'));
-    expect(onChangePhoto).toHaveBeenCalled();
     expect(onEdit).toHaveBeenCalled();
     expect(onLogout).toHaveBeenCalled();
   });
 
-  it('disables the photo button and uses initials when saving / no photo + name fallback', () => {
-    const onChangePhoto = jest.fn();
+  it('uses the name fallback when full_name and bio are absent', () => {
     renderWithProviders(
       <AccountProfileHeader
         me={{ ...me, full_name: null, bio: null } as AccountMe}
-        savingPhoto
-        onChangePhoto={onChangePhoto}
         onEdit={jest.fn()}
         onLogout={jest.fn()}
       />,
     );
-    fireEvent.press(screen.getByTestId('account-change-photo'));
-    expect(onChangePhoto).not.toHaveBeenCalled();
     expect(screen.getByText('Riya Sharma')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('account-share'));
+    expect(mockShareProfile).toHaveBeenCalledWith('u1', 'Profile');
+  });
+
+  it('shares the profile with the full name', () => {
+    renderWithProviders(<AccountProfileHeader me={me} onEdit={jest.fn()} onLogout={jest.fn()} />);
+    fireEvent.press(screen.getByTestId('account-share'));
+    expect(mockShareProfile).toHaveBeenCalledWith('u1', 'Riya Sharma');
   });
 });
 

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Stack } from '@mui/material';
@@ -15,6 +15,10 @@ interface Props {
   loading?: boolean;
   errorMessage?: string | null;
   onSubmit: (values: AccountEditValues) => Promise<void> | void;
+  /** Notifies the parent dialog when there are unsaved changes (for the close guard). */
+  onDirtyChange?: (dirty: boolean) => void;
+  /** Lets the parent revert the form to its loaded values (discard-on-close). */
+  onRegisterReset?: (reset: () => void) => void;
 }
 
 /**
@@ -28,17 +32,30 @@ export default function AccountEditForm({
   loading,
   errorMessage,
   onSubmit,
+  onDirtyChange,
+  onRegisterReset,
 }: Readonly<Props>) {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const {
     control,
     setValue,
     handleSubmit,
+    reset,
     formState: { isDirty, isValid },
   } = useForm<AccountEditValues>({
     defaultValues,
     resolver: zodResolver(accountEditSchema),
     mode: 'onChange',
+  });
+
+  const discard = () => reset(defaultValues);
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    onRegisterReset?.(discard);
   });
 
   const submit = handleSubmit(async (values) => {
@@ -83,9 +100,21 @@ export default function AccountEditForm({
         <DobDateField control={control} />
         <LocationSelect control={control} setValue={setValue} countries={countries} />
         <ContactFields control={control} setValue={setValue} />
-        <Button type="submit" variant="contained" disabled={loading || !isDirty || !isValid}>
-          {loading ? 'Saving…' : 'Save'}
-        </Button>
+        <Stack direction="row" spacing={1}>
+          <Button
+            type="button"
+            variant="outlined"
+            color="inherit"
+            onClick={discard}
+            disabled={loading || !isDirty}
+            data-testid="account-edit-discard"
+          >
+            Discard changes
+          </Button>
+          <Button type="submit" variant="contained" disabled={loading || !isDirty || !isValid}>
+            {loading ? 'Saving…' : 'Save'}
+          </Button>
+        </Stack>
       </Stack>
     </form>
   );

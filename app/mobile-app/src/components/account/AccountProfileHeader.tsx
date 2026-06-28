@@ -6,6 +6,7 @@ import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { useRoleLabels } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { AccountMe } from '@/hooks/useAccount';
+import { shareProfile } from '@/utils/share';
 
 export interface AccountProfileHeaderProps {
   me: AccountMe;
@@ -77,6 +78,26 @@ export function AccountProfileHeader({
           <MaterialIcons name="edit" size={16} color={color} />
           <Text fontSize={14} fontWeight="800" color="$color">
             Edit
+          </Text>
+        </XStack>
+        <XStack
+          testID="account-share"
+          role="button"
+          aria-label="Share profile"
+          onPress={() => shareProfile(me.user_id, me.full_name ?? 'Profile')}
+          flex={1}
+          height={44}
+          alignItems="center"
+          justifyContent="center"
+          gap={6}
+          borderRadius={999}
+          borderWidth={1}
+          borderColor="$borderColor"
+          pressStyle={{ opacity: 0.85 }}
+        >
+          <MaterialIcons name="share" size={16} color={color} />
+          <Text fontSize={14} fontWeight="800" color="$color">
+            Share
           </Text>
         </XStack>
         <XStack

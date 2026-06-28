@@ -1,8 +1,10 @@
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import LogoutIcon from '@mui/icons-material/Logout';
+import ShareIcon from '@mui/icons-material/Share';
 import ProfileAvatar from '../../components/profile-avatar';
 import { useRoleLabels } from '../../hooks/useRoleLabels';
+import { shareProfile } from '../../utils/share';
 
 export interface AccountProfileHeaderProps {
   me: any;
@@ -51,6 +53,18 @@ export default function AccountProfileHeader({
       <Stack direction={{ xs: 'row', sm: 'column' }} spacing={1}>
         <Button variant="outlined" startIcon={<EditIcon />} onClick={onEdit}>
           Edit
+        </Button>
+        <Button
+          variant="outlined"
+          startIcon={<ShareIcon />}
+          onClick={() =>
+            shareProfile(
+              me.user_id,
+              me.full_name || `${me.first_name ?? ''} ${me.last_name ?? ''}`.trim(),
+            )
+          }
+        >
+          Share
         </Button>
         <Button variant="outlined" color="error" startIcon={<LogoutIcon />} onClick={onLogout}>
           Logout

@@ -8,6 +8,7 @@ import { useRoleLabels } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfileMe } from '@/hooks/useProfile';
 import type { RootStackParamList } from '@/navigation/types';
+import { shareProfile } from '@/utils/share';
 
 function Stat({
   value,
@@ -42,7 +43,7 @@ export function ProfileHeader({
   me,
   onChanged,
 }: Readonly<{ me: ProfileMe; onChanged?: () => void | Promise<void> }>) {
-  const { primary } = useThemeColors();
+  const { primary, color } = useThemeColors();
   const { labelFor } = useRoleLabels();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const openFollow = (tab: 'followers' | 'following') =>
@@ -114,6 +115,26 @@ export function ProfileHeader({
           {me.bio}
         </Text>
       ) : null}
+
+      <XStack
+        testID="profile-share"
+        role="button"
+        aria-label="Share profile"
+        onPress={() => shareProfile(me.user_id, me.full_name ?? 'Profile')}
+        height={44}
+        alignItems="center"
+        justifyContent="center"
+        gap={6}
+        borderRadius={999}
+        borderWidth={1}
+        borderColor="$borderColor"
+        pressStyle={{ opacity: 0.85 }}
+      >
+        <MaterialIcons name="share" size={16} color={color} />
+        <Text fontSize={14} fontWeight="800" color="$color">
+          Share profile
+        </Text>
+      </XStack>
     </YStack>
   );
 }

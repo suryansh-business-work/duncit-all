@@ -9,7 +9,12 @@ const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),
 }));
-beforeEach(() => mockNavigate.mockClear());
+const mockShareProfile = jest.fn();
+jest.mock('@/utils/share', () => ({ shareProfile: (...a: unknown[]) => mockShareProfile(...a) }));
+beforeEach(() => {
+  mockNavigate.mockClear();
+  mockShareProfile.mockClear();
+});
 
 // The avatar's photo/story interactions are covered in profile-avatar.test; here
 // the stub surfaces its `initial` prop so the header's fallback stays asserted.
@@ -97,6 +102,19 @@ describe('ProfileHeader', () => {
     expect(mockNavigate).toHaveBeenCalledWith('Follow', { userId: 'u', tab: 'followers' });
     fireEvent.press(screen.getByTestId('profile-following'));
     expect(mockNavigate).toHaveBeenCalledWith('Follow', { userId: 'u', tab: 'following' });
+  });
+
+  it('shares the profile with the full name', () => {
+    renderWithProviders(<ProfileHeader me={me as never} />);
+    fireEvent.press(screen.getByTestId('profile-share'));
+    expect(mockShareProfile).toHaveBeenCalledWith('u', 'Sam Lee');
+  });
+
+  it('shares the profile, falling back to a default name', () => {
+    const m2 = { ...me, full_name: null } as never;
+    renderWithProviders(<ProfileHeader me={m2} />);
+    fireEvent.press(screen.getByTestId('profile-share'));
+    expect(mockShareProfile).toHaveBeenCalledWith('u', 'Profile');
   });
 });
 

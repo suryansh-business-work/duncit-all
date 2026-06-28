@@ -1,19 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import {
-  Alert,
-  Avatar,
-  Box,
-  CircularProgress,
-  Dialog,
-  DialogContent,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
-import CloseIcon from '@mui/icons-material/Close';
-import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import { Alert, Box, CircularProgress, Dialog, DialogContent, Stack } from '@mui/material';
 import ConfirmDialog from '../../../components/ConfirmDialog';
 import {
   ADD_COMMENT,
@@ -24,6 +11,7 @@ import {
 } from '../queries';
 import PostActions from './PostActions';
 import PostCommentList from './PostCommentList';
+import PostDialogHeader from './PostDialogHeader';
 import PostMediaPane from './PostMediaPane';
 
 interface Props {
@@ -70,6 +58,11 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
     } catch {
       /* ignore */
     }
+  };
+
+  /** Double-tap likes only (never unlikes), reusing the existing toggle. */
+  const likeOnDoubleTap = () => {
+    if (post && !post.liked_by_me) onLike();
   };
 
   const onSend = async () => {
@@ -124,7 +117,11 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
             direction={{ xs: 'column', md: 'row' }}
             sx={{ minHeight: { md: 520 }, bgcolor: 'background.paper' }}
           >
-            <PostMediaPane imageUrl={post.image_url} caption={post.caption} />
+            <PostMediaPane
+              imageUrl={post.image_url}
+              caption={post.caption}
+              onDoubleTapLike={likeOnDoubleTap}
+            />
 
             <Stack
               sx={{
@@ -135,32 +132,12 @@ export default function PostDialog({ postId, meId, onClose, onDeleted }: Readonl
                 borderColor: { md: 'divider' },
               }}
             >
-              <Stack
-                direction="row"
-                alignItems="center"
-                spacing={1.5}
-                sx={{ p: 1.5, borderBottom: 1, borderColor: 'divider' }}
-              >
-                <Avatar
-                  src={post.author?.profile_photo || undefined}
-                  sx={{ width: 32, height: 32 }}
-                >
-                  {(post.author?.first_name?.[0] ?? 'U').toUpperCase()}
-                </Avatar>
-                <Typography variant="subtitle2" fontWeight={700} sx={{ flex: 1 }}>
-                  {post.author?.full_name ?? 'User'}
-                </Typography>
-                {canDelete && (
-                  <Tooltip title="Delete post">
-                    <IconButton size="small" onClick={() => setConfirmPostOpen(true)}>
-                      <DeleteOutlineIcon fontSize="small" />
-                    </IconButton>
-                  </Tooltip>
-                )}
-                <IconButton size="small" onClick={onClose}>
-                  <CloseIcon fontSize="small" />
-                </IconButton>
-              </Stack>
+              <PostDialogHeader
+                post={post}
+                canDelete={canDelete}
+                onClose={onClose}
+                onRequestDelete={() => setConfirmPostOpen(true)}
+              />
 
               <PostCommentList
                 post={post}

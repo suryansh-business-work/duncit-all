@@ -2,8 +2,10 @@ import { useState } from 'react';
 import { Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import SettingsIcon from '@mui/icons-material/Settings';
+import ShareIcon from '@mui/icons-material/Share';
 import FollowListDialog from '../../components/FollowListDialog';
 import ProfileAvatar from '../../components/profile-avatar';
+import { shareProfile } from '../../utils/share';
 
 function Stat({
   label,
@@ -110,6 +112,20 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, o
           <Button fullWidth variant="outlined" size="small" onClick={onSettings} sx={{ borderRadius: 3, fontWeight: 900, fontSize: 12, minHeight: 42, px: 1 }}>
             Edit profile
           </Button>
+          <IconButton
+            onClick={() => shareProfile(me.user_id, displayName)}
+            sx={{
+              width: 44,
+              height: 42,
+              flex: '0 0 44px',
+              borderRadius: 3,
+              border: 1,
+              borderColor: 'divider',
+            }}
+            aria-label="Share profile"
+          >
+            <ShareIcon />
+          </IconButton>
           <IconButton
             onClick={onSettings}
             sx={{

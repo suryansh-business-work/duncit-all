@@ -14,6 +14,10 @@ jest.mock('@/hooks/useMe', () => ({
   useRoleLabels: () => ({ labelFor: (k: string) => `Role:${k}` }),
 }));
 
+const mockShareProfile = jest.fn();
+jest.mock('@/utils/share', () => ({ shareProfile: (...a: unknown[]) => mockShareProfile(...a) }));
+beforeEach(() => mockShareProfile.mockClear());
+
 // The avatar's photo/story interactions live in security-flows.test; stub it
 // here so these header tests assert identity + actions only.
 jest.mock('@/components/profile/ProfileAvatar', () => ({
@@ -88,6 +92,14 @@ describe('AccountProfileHeader', () => {
       />,
     );
     expect(screen.getByText('Riya Sharma')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('account-share'));
+    expect(mockShareProfile).toHaveBeenCalledWith('u1', 'Profile');
+  });
+
+  it('shares the profile with the full name', () => {
+    renderWithProviders(<AccountProfileHeader me={me} onEdit={jest.fn()} onLogout={jest.fn()} />);
+    fireEvent.press(screen.getByTestId('account-share'));
+    expect(mockShareProfile).toHaveBeenCalledWith('u1', 'Riya Sharma');
   });
 });
 

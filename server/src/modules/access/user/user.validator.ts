@@ -43,6 +43,28 @@ export const resetPasswordSchema = yup.object({
   new_password: yup.string().min(8).max(100).required(),
 });
 
+// Change password (user knows their current password). Step 1 verifies the
+// current password and emails an OTP; step 2 confirms the OTP + sets the new one.
+export const requestPasswordChangeSchema = yup.object({
+  current_password: yup.string().min(8).max(100).required(),
+});
+
+export const changePasswordSchema = yup.object({
+  otp: yup
+    .string()
+    .matches(/^\d{6}$/, 'Enter the 6 digit OTP')
+    .required(),
+  new_password: yup.string().min(8).max(100).required(),
+});
+
+// Self-serve account deletion: confirmed with a 6-digit email OTP.
+export const deleteMyAccountSchema = yup.object({
+  otp: yup
+    .string()
+    .matches(/^\d{6}$/, 'Enter the 6 digit OTP')
+    .required(),
+});
+
 export const googleSignupSchema = yup.object({
   id_token: yup.string().min(20).required(),
   // Token-only Google signup: the account is created from the verified Google
@@ -173,6 +195,9 @@ export type RegisterDTO = yup.InferType<typeof registerSchema>;
 export type LoginDTO = yup.InferType<typeof loginSchema>;
 export type RequestPasswordResetDTO = yup.InferType<typeof requestPasswordResetSchema>;
 export type ResetPasswordDTO = yup.InferType<typeof resetPasswordSchema>;
+export type RequestPasswordChangeDTO = yup.InferType<typeof requestPasswordChangeSchema>;
+export type ChangePasswordDTO = yup.InferType<typeof changePasswordSchema>;
+export type DeleteMyAccountDTO = yup.InferType<typeof deleteMyAccountSchema>;
 export type GoogleSignupDTO = yup.InferType<typeof googleSignupSchema>;
 export type CreateUserDTO = yup.InferType<typeof createUserSchema>;
 export type UpdateUserDTO = yup.InferType<typeof updateUserSchema>;

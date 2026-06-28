@@ -4,3 +4,7 @@ export { AccountHealthCard } from './AccountHealthCard';
 export { HostsVenuesCard } from './HostsVenuesCard';
 export { EditAccountDialog } from './EditAccountDialog';
 export { PrivacyToggleCard } from './PrivacyToggleCard';
+export { SecuritySection } from './SecuritySection';
+export { ChangePasswordDialog } from './ChangePasswordDialog';
+export { DeleteAccountDialog } from './DeleteAccountDialog';
+export { SecuritySheet } from './SecuritySheet';

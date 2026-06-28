@@ -6,6 +6,8 @@ jest.mock("@services/email/email.service", () => ({
   sendAdminCredentialsEmail: jest.fn().mockResolvedValue(undefined),
   sendEmailVerificationOtpEmail: jest.fn().mockResolvedValue(undefined),
   sendPasswordResetOtpEmail: jest.fn().mockResolvedValue(undefined),
+  sendPasswordChangeOtpEmail: jest.fn().mockResolvedValue(undefined),
+  sendAccountDeletionOtpEmail: jest.fn().mockResolvedValue(undefined),
   sendAdminAccessGrantedEmail: jest.fn().mockResolvedValue(undefined),
   sendAdminAccessRevokedEmail: jest.fn().mockResolvedValue(undefined),
 }));
@@ -251,6 +253,122 @@ describe("userService integration", () => {
           new_password: "BrandNew123",
         } as any),
       ).rejects.toThrow(/invalid otp/i);
+    });
+  });
+
+  describe("change password (knows current password)", () => {
+    const registerUser = async (email: string, password = "OldPass123") => {
+      const res = await userService.register({
+        first_name: "Change",
+        email,
+        password,
+        dob: new Date("1991-01-01").toISOString(),
+      } as any);
+      return res.user.user_id;
+    };
+
+    it("changes the password end-to-end via OTP and logs in with the new one", async () => {
+      const userId = await registerUser("change-ok@duncit.com");
+
+      const req = await userService.requestPasswordChangeOtp(userId, {
+        current_password: "OldPass123",
+      } as any);
+      expect(req.ok).toBe(true);
+      expect(req.dev_otp).toMatch(/^\d{6}$/);
+
+      const done = await userService.changePasswordWithOtp(userId, {
+        otp: req.dev_otp as string,
+        new_password: "BrandNew123",
+      } as any);
+      expect(done).toBe(true);
+
+      const res = await userService.login({
+        email: "change-ok@duncit.com",
+        password: "BrandNew123",
+      } as any);
+      expect(res.token).toBeTruthy();
+      await expect(
+        userService.login({ email: "change-ok@duncit.com", password: "OldPass123" } as any),
+      ).rejects.toThrow(/invalid credentials/i);
+    });
+
+    it("rejects requesting an OTP with the wrong current password", async () => {
+      const userId = await registerUser("change-wrong-cur@duncit.com");
+      await expect(
+        userService.requestPasswordChangeOtp(userId, { current_password: "WrongPass999" } as any),
+      ).rejects.toThrow(/current password is incorrect/i);
+    });
+
+    it("rejects a wrong OTP at confirmation", async () => {
+      const userId = await registerUser("change-wrong-otp@duncit.com");
+      await userService.requestPasswordChangeOtp(userId, { current_password: "OldPass123" } as any);
+      await expect(
+        userService.changePasswordWithOtp(userId, {
+          otp: "000000",
+          new_password: "BrandNew123",
+        } as any),
+      ).rejects.toThrow(/invalid otp/i);
+    });
+
+    it("rejects a change when no OTP was requested", async () => {
+      const userId = await registerUser("change-no-otp@duncit.com");
+      await expect(
+        userService.changePasswordWithOtp(userId, {
+          otp: "123456",
+          new_password: "BrandNew123",
+        } as any),
+      ).rejects.toThrow(/otp expired/i);
+    });
+  });
+
+  describe("delete my account (self-serve, OTP)", () => {
+    const registerUser = async (email: string) => {
+      const res = await userService.register({
+        first_name: "Del",
+        email,
+        password: "StrongPass123",
+        dob: new Date("1991-01-01").toISOString(),
+      } as any);
+      return res.user.user_id;
+    };
+
+    it("soft-deletes the account via OTP and blocks subsequent login", async () => {
+      const userId = await registerUser("delete-ok@duncit.com");
+
+      const req = await userService.requestAccountDeletionOtp(userId);
+      expect(req.ok).toBe(true);
+      expect(req.dev_otp).toMatch(/^\d{6}$/);
+
+      const done = await userService.deleteMyAccount(userId, { otp: req.dev_otp as string } as any);
+      expect(done).toBe(true);
+
+      const stored = await UserModel.findById(userId)
+        .select("metadata.status metadata.deleted_at metadata.role_keys auth.email")
+        .lean();
+      expect((stored as any).metadata.status).toBe("INACTIVE");
+      expect((stored as any).metadata.deleted_at).toBeTruthy();
+      expect((stored as any).metadata.role_keys).toEqual([]);
+      // Login identifier is scrubbed, so the credentials can never authenticate.
+      expect((stored as any).auth.email).toBeUndefined();
+
+      await expect(
+        userService.login({ email: "delete-ok@duncit.com", password: "StrongPass123" } as any),
+      ).rejects.toThrow(/invalid credentials/i);
+    });
+
+    it("rejects a wrong OTP", async () => {
+      const userId = await registerUser("delete-wrong@duncit.com");
+      await userService.requestAccountDeletionOtp(userId);
+      await expect(
+        userService.deleteMyAccount(userId, { otp: "000000" } as any),
+      ).rejects.toThrow(/invalid otp/i);
+    });
+
+    it("rejects deletion when no OTP was requested", async () => {
+      const userId = await registerUser("delete-no-otp@duncit.com");
+      await expect(
+        userService.deleteMyAccount(userId, { otp: "123456" } as any),
+      ).rejects.toThrow(/otp expired/i);
     });
   });
 

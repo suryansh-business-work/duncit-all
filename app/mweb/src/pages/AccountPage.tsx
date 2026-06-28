@@ -24,6 +24,7 @@ import EditAccountDialog from './account-page/EditAccountDialog';
 import { toDobInput } from './account-page/account-edit';
 import HostsVenuesCard from './account-page/HostsVenuesCard';
 import PrivacyToggleCard from './account-page/PrivacyToggleCard';
+import SecuritySection from './account-page/SecuritySection';
 import HealthMeter from '../components/health/HealthMeter';
 import { MY_ACCOUNT_HEALTH, type HealthScore } from '../components/health/queries';
 import { useDateFormat } from '../utils/dateFormat';
@@ -171,6 +172,8 @@ export default function AccountPage() {
       <PrivacyToggleCard visibility={me.profile_visibility} onChanged={() => refetch()} />
 
       <HostsVenuesCard />
+
+      <SecuritySection />
       <MediaPickerDialog
         open={pickerOpen}
         onClose={() => setPickerOpen(false)}

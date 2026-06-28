@@ -4,6 +4,9 @@ import {
   registerSchema,
   requestPasswordResetSchema,
   resetPasswordSchema,
+  requestPasswordChangeSchema,
+  changePasswordSchema,
+  deleteMyAccountSchema,
   googleSignupSchema,
   createUserSchema,
   updateUserSchema,
@@ -139,6 +142,45 @@ export const userResolvers = {
     resetPasswordWithOtp: async (_p: unknown, args: { input: unknown }) => {
       const data = await validate(resetPasswordSchema, args.input);
       return userService.resetPasswordWithOtp(data);
+    },
+    requestPasswordChangeOtp: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      const data = await validate(requestPasswordChangeSchema, args.input);
+      return userService.requestPasswordChangeOtp(ctx.user.id, data);
+    },
+    changePasswordWithOtp: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      const data = await validate(changePasswordSchema, args.input);
+      return userService.changePasswordWithOtp(ctx.user.id, data);
+    },
+    requestAccountDeletionOtp: async (_p: unknown, _args: unknown, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      return userService.requestAccountDeletionOtp(ctx.user.id);
+    },
+    deleteMyAccount: async (_p: unknown, args: { input: unknown }, ctx: GraphQLContext) => {
+      if (!ctx.user) {
+        const { GraphQLError } = await import('graphql');
+        throw new GraphQLError('Authentication required', {
+          extensions: { code: 'UNAUTHENTICATED' },
+        });
+      }
+      const data = await validate(deleteMyAccountSchema, args.input);
+      return userService.deleteMyAccount(ctx.user.id, data);
     },
     loginWithGoogle: async (_p: unknown, args: { input: { id_token: string } }) => {
       return userService.loginWithGoogle(args.input?.id_token);

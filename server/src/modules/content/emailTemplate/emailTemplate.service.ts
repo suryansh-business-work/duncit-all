@@ -54,19 +54,20 @@ export function renderMjml(
  * has visited the editor. The disk version is auto-imported to the DB on
  * first read so it can be edited in the UI from then on.
  */
+/**
+ * Directory holding the on-disk MJML templates. This file lives at
+ * <root>/modules/content/emailTemplate, so three `..` reach <root> (src in dev,
+ * dist in prod) before descending into services/email/templates. The previous
+ * two-`..` path resolved to <root>/modules/services/... which never existed, so
+ * every first-read disk import silently failed.
+ */
+const TEMPLATES_DIR = path.join(__dirname, '..', '..', '..', 'services', 'email', 'templates');
+
 async function loadTemplate(slug: string) {
   const existing = await EmailTemplateModel.findOne({ slug });
   if (existing) return existing;
 
-  const filePath = path.join(
-    __dirname,
-    '..',
-    '..',
-    'services',
-    'email',
-    'templates',
-    `${slug}.mjml`
-  );
+  const filePath = path.join(TEMPLATES_DIR, `${slug}.mjml`);
   if (!fs.existsSync(filePath)) return null;
   const mjml = fs.readFileSync(filePath, 'utf8');
   const created = await EmailTemplateModel.create({
@@ -109,6 +110,26 @@ export const emailTemplateService = {
   async delete(template_id: string) {
     const r = await EmailTemplateModel.deleteOne({ template_id });
     return r.deletedCount > 0;
+  },
+
+  /**
+   * Import every on-disk MJML template into the DB so the DB-first render path
+   * never has to touch the filesystem in production. Idempotent: existing slugs
+   * are left untouched (so admin edits in the editor are never overwritten).
+   * Best-effort per file — one bad template must not block the rest.
+   */
+  async seedDefaults(): Promise<void> {
+    if (!fs.existsSync(TEMPLATES_DIR)) return;
+    const slugs = fs
+      .readdirSync(TEMPLATES_DIR)
+      .filter((f) => f.endsWith('.mjml'))
+      .map((f) => f.replace(/\.mjml$/, ''));
+    for (const slug of slugs) {
+      await loadTemplate(slug).catch((err) => {
+        console.error(`[emailTemplate.seedDefaults] ${slug} failed:`, err);
+        return null;
+      });
+    }
   },
 
   /** Render a stored template by slug for use from email.service. */

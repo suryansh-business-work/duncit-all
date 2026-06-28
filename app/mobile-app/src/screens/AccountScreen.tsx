@@ -10,6 +10,7 @@ import {
   EditAccountDialog,
   HostsVenuesCard,
   PrivacyToggleCard,
+  SecuritySection,
 } from '@/components/account';
 import { StackScreen } from '@/components/StackScreen';
 import { DetailSkeleton } from '@/components/Skeleton';
@@ -109,6 +110,8 @@ export function AccountScreen() {
             onVenue={() => navigation.navigate(isVenue ? 'VenueManage' : 'RegisterVenue')}
             onPodHistory={() => navigation.navigate('PodHistory')}
           />
+
+          <SecuritySection />
         </ScrollView>
       )}
 

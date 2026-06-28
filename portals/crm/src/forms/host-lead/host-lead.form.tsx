@@ -61,7 +61,7 @@ const SECTIONS = [
 export default function HostLeadForm({ config, initialValues, submitting, submitLabel = 'Save host lead', onSubmit, onCancel }: Readonly<Props>) {
   const [status, setStatus] = useState<string | undefined>(undefined);
   const methods = useForm<HostLeadFormValues>({
-    resolver: zodResolver(hostLeadSchema),
+    resolver: zodResolver(hostLeadSchema, undefined, { raw: true }),
     mode: 'onChange',
     defaultValues: initialValues ?? hostLeadInitialValues,
   });

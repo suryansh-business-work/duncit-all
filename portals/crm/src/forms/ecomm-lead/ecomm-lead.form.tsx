@@ -40,7 +40,7 @@ const SECTIONS = [
 export default function EcommLeadForm({ config, initialValues, submitting, submitLabel = 'Save ecomm lead', onSubmit, onCancel }: Readonly<Props>) {
   const [status, setStatus] = useState<string | undefined>(undefined);
   const methods = useForm<EcommLeadFormValues>({
-    resolver: zodResolver(ecommLeadSchema),
+    resolver: zodResolver(ecommLeadSchema, undefined, { raw: true }),
     mode: 'onChange',
     defaultValues: initialValues ?? ecommLeadInitialValues,
   });

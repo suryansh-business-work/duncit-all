@@ -63,7 +63,7 @@ const SECTIONS = [
 export default function VenueLeadForm({ config, initialValues, submitting, submitLabel = 'Save venue lead', onSubmit, onCancel }: Readonly<Props>) {
   const [status, setStatus] = useState<string | undefined>(undefined);
   const methods = useForm<VenueLeadFormValues>({
-    resolver: zodResolver(venueLeadSchema),
+    resolver: zodResolver(venueLeadSchema, undefined, { raw: true }),
     mode: 'onChange',
     defaultValues: initialValues ?? venueLeadInitialValues,
   });

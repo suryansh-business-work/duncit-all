@@ -9,6 +9,17 @@ jest.mock('@/hooks/useAccount', () => ({ useAccount: jest.fn() }));
 jest.mock('@/hooks/useLogout', () => ({ useLogout: jest.fn() }));
 jest.mock('@/hooks/useMe', () => ({ useRoleLabels: () => ({ labelFor: (k: string) => k }) }));
 jest.mock('@/hooks/useLocations', () => ({ useLocations: () => ({ locations: [] }) }));
+// The avatar's photo/story interactions are covered in profile-avatar.test; the
+// stub exposes an onChanged trigger so the screen's refresh closure stays covered.
+jest.mock('@/components/profile/ProfileAvatar', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Pressable } = require('react-native');
+  return {
+    ProfileAvatar: ({ onChanged }: { onChanged?: () => void }) => (
+      <Pressable testID="avatar-changed" onPress={() => onChanged?.()} />
+    ),
+  };
+});
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
@@ -18,7 +29,7 @@ const mockedUseAccount = useAccount as jest.Mock;
 const mockedUseLogout = useLogout as jest.Mock;
 const logout = jest.fn();
 const updateProfile = jest.fn().mockResolvedValue(undefined);
-const changePhoto = jest.fn().mockResolvedValue(undefined);
+const refresh = jest.fn().mockResolvedValue(undefined);
 
 const me = {
   user_id: 'u1',
@@ -48,9 +59,9 @@ function setAccount(over: Record<string, unknown> = {}) {
     health,
     isLoading: false,
     error: undefined,
-    savingPhoto: false,
     updateProfile,
-    changePhoto,
+    updateVisibility: jest.fn().mockResolvedValue(undefined),
+    refresh,
     ...over,
   });
 }
@@ -82,8 +93,8 @@ describe('AccountScreen', () => {
     fireEvent.press(screen.getByTestId('account-health'));
     expect(mockNavigate).toHaveBeenCalledWith('AccountHealth');
 
-    fireEvent.press(screen.getByTestId('account-change-photo'));
-    expect(changePhoto).toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('avatar-changed'));
+    expect(refresh).toHaveBeenCalled();
 
     fireEvent.press(screen.getByTestId('account-logout'));
     expect(logout).toHaveBeenCalled();

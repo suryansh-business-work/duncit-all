@@ -1,3 +1,4 @@
+import { useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, XStack, YStack } from 'tamagui';
@@ -21,6 +22,10 @@ export interface AccountEditFormProps {
   loading?: boolean;
   errorMessage?: string | null;
   onSubmit: (values: AccountEditValues) => void | Promise<void>;
+  /** Notifies the parent sheet when there are unsaved changes (for the close guard). */
+  onDirtyChange?: (dirty: boolean) => void;
+  /** Lets the parent revert the form to its loaded values (discard-on-close). */
+  onRegisterReset?: (reset: () => void) => void;
 }
 
 /** Edit-profile form — name, bio, DOB picker, dependent location and phone/
@@ -32,16 +37,30 @@ export function AccountEditForm({
   loading,
   errorMessage,
   onSubmit,
+  onDirtyChange,
+  onRegisterReset,
 }: Readonly<AccountEditFormProps>) {
   const {
     control,
     setValue,
     handleSubmit,
+    reset,
     formState: { isDirty, isValid },
   } = useForm<AccountEditValues>({
     values: accountEditDefaults(me),
     resolver: zodResolver(accountEditSchema),
     mode: 'onChange',
+  });
+
+  const discard = () => reset(accountEditDefaults(me));
+  const discardDisabled = loading || !isDirty;
+
+  useEffect(() => {
+    onDirtyChange?.(isDirty);
+  }, [isDirty, onDirtyChange]);
+
+  useEffect(() => {
+    onRegisterReset?.(discard);
   });
 
   return (
@@ -78,6 +97,28 @@ export function AccountEditForm({
       <LocationSelect control={control} setValue={setValue} countries={countries} />
 
       <ContactFields control={control} setValue={setValue} />
+
+      <XStack
+        testID="account-edit-discard"
+        role="button"
+        aria-label="Discard changes"
+        aria-disabled={discardDisabled}
+        onPress={() => {
+          if (!discardDisabled) discard();
+        }}
+        height={46}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={12}
+        borderWidth={1}
+        borderColor="$borderColor"
+        opacity={discardDisabled ? 0.5 : 1}
+        pressStyle={{ opacity: 0.85 }}
+      >
+        <Text fontSize={14} fontWeight="800" color="$color">
+          Discard changes
+        </Text>
+      </XStack>
 
       <PrimaryButton
         testID="account-edit-submit"

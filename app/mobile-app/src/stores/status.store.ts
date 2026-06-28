@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { CreatePostDocument, StatusFeedDocument, UploadImageDocument } from '@/graphql/status';
+import { DeletePostDocument } from '@/graphql/posts';
 import { graphqlRequest } from '@/services/graphql.client';
 
 export type StatusFeed = ResultOf<typeof StatusFeedDocument>;
@@ -20,6 +21,8 @@ interface StatusState {
   fetch: (force?: boolean) => Promise<void>;
   /** Uploads the image then creates the status post and refetches the feed. */
   publish: (asset: StatusUploadAsset) => Promise<void>;
+  /** Deletes one of my own stories (item 12) and refetches the feed. */
+  deleteStory: (id: string) => Promise<void>;
 }
 
 /** Status (story) feed + publish pipeline: ImageKit upload → createPost. */
@@ -59,6 +62,10 @@ export const useStatusStore = create<StatusState>((set, get) => ({
       },
       { auth: true },
     );
+    await get().fetch(true);
+  },
+  deleteStory: async (id) => {
+    await graphqlRequest(DeletePostDocument, { id }, { auth: true });
     await get().fetch(true);
   },
 }));

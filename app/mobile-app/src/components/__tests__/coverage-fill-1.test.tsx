@@ -12,6 +12,14 @@ import { SurveyChip } from '@/components/survey/SurveyChip';
 import { useThemeStore } from '@/stores/theme.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
+// Surface the avatar's `initial` prop as text so the header's initials fallback
+// stays covered without mounting the avatar's photo/story hooks.
+jest.mock('@/components/profile/ProfileAvatar', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Text } = require('react-native');
+  return { ProfileAvatar: ({ initial }: { initial: string }) => <Text>{initial}</Text> };
+});
+
 describe('AccountProfileHeader fallbacks', () => {
   it('renders the initial, no status chip and no photo', () => {
     renderWithProviders(
@@ -27,8 +35,6 @@ describe('AccountProfileHeader fallbacks', () => {
             profile_photo: null,
           } as never
         }
-        savingPhoto={false}
-        onChangePhoto={jest.fn()}
         onEdit={jest.fn()}
         onLogout={jest.fn()}
       />,

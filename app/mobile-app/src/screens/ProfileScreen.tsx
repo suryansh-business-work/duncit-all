@@ -79,7 +79,7 @@ export function ProfileScreen() {
           </YStack>
         ) : (
           <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 24 }}>
-            <ProfileHeader me={me} />
+            <ProfileHeader me={me} onChanged={() => void refetch()} />
             <ProfilePanels
               me={me}
               onOpenHost={() => navigation.navigate(isHost ? 'HostManage' : 'BecomeHost')}

@@ -1,9 +1,8 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useQuery } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, CircularProgress, Snackbar, Stack } from '@mui/material';
-import { ME_AND_POSTS, UPDATE_MY_PROFILE } from './queries';
-import MediaPickerDialog from '../../components/MediaPickerDialog';
+import { ME_AND_POSTS } from './queries';
 import PostDialog from './PostDialog';
 import ProfileAccordions from './ProfileAccordions';
 import ProfileHeader from './ProfileHeader';
@@ -16,10 +15,8 @@ export default function ProfilePage() {
   const { data, loading, error, refetch } = useQuery(ME_AND_POSTS, {
     fetchPolicy: 'cache-and-network',
   });
-  const [updateProfile] = useMutation(UPDATE_MY_PROFILE);
   const [openPostId, setOpenPostId] = useState<string | null>(null);
   const [uploadOpen, setUploadOpen] = useState(false);
-  const [photoOpen, setPhotoOpen] = useState(false);
   const [snack, setSnack] = useState<string | null>(null);
 
   const me = data?.me;
@@ -51,24 +48,14 @@ export default function ProfilePage() {
     return <Alert severity="error">{error?.message ?? 'Unable to load profile'}</Alert>;
   }
 
-  const saveProfilePhoto = async (profilePhoto: string) => {
-    try {
-      await updateProfile({ variables: { input: { profile_photo: profilePhoto } } });
-      setSnack('Profile image updated.');
-      await refetch();
-    } catch (e: any) {
-      setSnack(e?.message ?? 'Could not update profile image');
-    }
-  };
-
   return (
     <Stack spacing={2.5} sx={{ maxWidth: 935, mx: 'auto', px: { xs: 0.5, sm: 0 }, pb: 6 }}>
       <ProfileHeader
         me={me}
         postsCount={posts.length}
         onNewPost={() => setUploadOpen(true)}
-        onChangePhoto={() => setPhotoOpen(true)}
         onSettings={() => navigate('/account')}
+        onChanged={() => refetch()}
       />
 
       <ProfileAccordions me={me} onSaved={() => refetch()} />
@@ -93,14 +80,6 @@ export default function ProfilePage() {
           refetch();
         }}
         onError={(msg) => setSnack(msg)}
-      />
-
-      <MediaPickerDialog
-        open={photoOpen}
-        onClose={() => setPhotoOpen(false)}
-        onPicked={saveProfilePhoto}
-        folder="/users"
-        title="Update profile image"
       />
 
       <Snackbar open={!!snack} autoHideDuration={3500} onClose={() => setSnack(null)} message={snack ?? ''} />

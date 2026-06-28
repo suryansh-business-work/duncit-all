@@ -1,64 +1,33 @@
-import {
-  Avatar,
-  Box,
-  Button,
-  Chip,
-  CircularProgress,
-  IconButton,
-  Stack,
-  Tooltip,
-  Typography,
-} from '@mui/material';
+import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import EditIcon from '@mui/icons-material/Edit';
 import LogoutIcon from '@mui/icons-material/Logout';
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import ProfileAvatar from '../../components/profile-avatar';
 import { useRoleLabels } from '../../hooks/useRoleLabels';
 
 export interface AccountProfileHeaderProps {
   me: any;
-  savingPhoto: boolean;
-  onChangePhoto: () => void;
   onEdit: () => void;
   onLogout: () => void;
+  /** Refresh the page after the photo/story changes. */
+  onChanged?: () => void;
 }
 
 export default function AccountProfileHeader({
   me,
-  savingPhoto,
-  onChangePhoto,
   onEdit,
   onLogout,
+  onChanged,
 }: Readonly<AccountProfileHeaderProps>) {
   const { labelFor } = useRoleLabels();
 
   return (
     <Stack direction={{ xs: 'column', sm: 'row' }} spacing={3} alignItems="center">
-      <Box sx={{ position: 'relative' }}>
-        <Avatar
-          src={me.profile_photo || undefined}
-          sx={{ width: 96, height: 96, bgcolor: 'primary.main', fontSize: 36 }}
-        >
-          {(me.first_name?.[0] ?? 'U').toUpperCase()}
-        </Avatar>
-        <Tooltip title="Change photo">
-          <IconButton
-            size="small"
-            onClick={onChangePhoto}
-            disabled={savingPhoto}
-            sx={{
-              position: 'absolute',
-              bottom: 0,
-              right: 0,
-              bgcolor: 'background.paper',
-              border: 1,
-              borderColor: 'divider',
-              '&:hover': { bgcolor: 'action.hover' },
-            }}
-          >
-            {savingPhoto ? <CircularProgress size={16} /> : <PhotoCameraIcon fontSize="small" />}
-          </IconButton>
-        </Tooltip>
-      </Box>
+      <ProfileAvatar
+        photo={me.profile_photo}
+        name={me.full_name || `${me.first_name ?? ''} ${me.last_name ?? ''}`.trim()}
+        size={96}
+        onChanged={onChanged}
+      />
       <Box sx={{ flex: 1, textAlign: { xs: 'center', sm: 'left' } }}>
         <Typography variant="h5" fontWeight={700}>
           {me.full_name || `${me.first_name} ${me.last_name}`}

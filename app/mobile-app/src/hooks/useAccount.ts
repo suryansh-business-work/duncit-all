@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from 'react';
-import * as ImagePicker from 'expo-image-picker';
 import type { ResultOf, VariablesOf } from '@graphql-typed-document-node/core';
 
 import {
@@ -9,7 +8,6 @@ import {
   MobileUpdateProfileVisibilityDocument,
 } from '@/graphql/account';
 import { ProfileVisibility } from '@/generated/graphql/graphql';
-import { UploadImageDocument } from '@/graphql/status';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useMeStore } from '@/stores/me.store';
 
@@ -20,7 +18,7 @@ export type UpdateProfileInput = VariablesOf<typeof MobileUpdateProfileDocument>
 
 /**
  * Profile-settings data + mutations — RN twin of mWeb's AccountPage hooks. Loads
- * the full `me` record and account health, and exposes profile/photo updates that
+ * the full `me` record and account health, and exposes profile updates that
  * refresh both this screen and the shared `me` store (so the header avatar syncs).
  */
 export function useAccount() {
@@ -28,7 +26,6 @@ export function useAccount() {
   const [health, setHealth] = useState<AccountHealth | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
-  const [savingPhoto, setSavingPhoto] = useState(false);
 
   const load = useCallback(async () => {
     const [account, healthResult] = await Promise.all([
@@ -74,44 +71,13 @@ export function useAccount() {
     [refresh],
   );
 
-  const changePhoto = useCallback(async () => {
-    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
-    if (!permission.granted) throw new Error('Photo access is needed to update your photo.');
-    const result = await ImagePicker.launchImageLibraryAsync({
-      mediaTypes: ['images'],
-      base64: true,
-      quality: 0.8,
-    });
-    const asset = result.canceled ? undefined : result.assets[0];
-    if (!asset?.base64) return;
-
-    setSavingPhoto(true);
-    try {
-      const mimeType = asset.mimeType ?? 'image/jpeg';
-      const uploaded = await graphqlRequest(
-        UploadImageDocument,
-        {
-          fileBase64: `data:${mimeType};base64,${asset.base64}`,
-          fileName: asset.fileName ?? `avatar-${Date.now()}.jpg`,
-          mimeType,
-          folder: '/users',
-        },
-        { auth: true },
-      );
-      await updateProfile({ profile_photo: uploaded.uploadImageToImagekit.url });
-    } finally {
-      setSavingPhoto(false);
-    }
-  }, [updateProfile]);
-
   return {
     me,
     health,
     isLoading,
     error,
-    savingPhoto,
     updateProfile,
     updateVisibility,
-    changePhoto,
+    refresh,
   };
 }

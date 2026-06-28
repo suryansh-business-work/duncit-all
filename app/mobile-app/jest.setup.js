@@ -38,6 +38,14 @@ jest.mock('expo-document-picker', () => ({
   getDocumentAsync: jest.fn().mockResolvedValue({ canceled: true, assets: null }),
 }));
 
+// expo-image-manipulator is a native module; resolve a base64 result so the
+// avatar crop pipeline (item 9) runs without the native runtime.
+jest.mock('expo-image-manipulator', () => ({
+  manipulateAsync: jest.fn().mockResolvedValue({ uri: 'file://cropped.jpg', base64: 'CROPPED' }),
+  SaveFormat: { JPEG: 'jpeg' },
+  FlipType: { Horizontal: 'horizontal', Vertical: 'vertical' },
+}));
+
 // expo-video is a native module; the player setup callback runs synchronously so
 // splash-video specs cover the loop/mute/play wiring without the native runtime.
 jest.mock('expo-video', () => ({

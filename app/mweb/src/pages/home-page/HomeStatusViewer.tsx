@@ -1,12 +1,15 @@
 import { useEffect, useRef, useState } from 'react';
 import { Box, Button, Dialog, IconButton, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
+import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNowStrict } from 'date-fns';
 import HomeStatusViewerDetails from './HomeStatusViewerDetails';
 
 export interface HomeStatusViewerSlide {
+  /** Post id — present for own stories so the slide can be deleted (item 12). */
+  id?: string;
   mediaUrl?: string | null;
   mediaType?: string | null;
   subLabel?: string;
@@ -50,6 +53,8 @@ interface HomeStatusViewerProps {
   onNext?: () => void;
   /** Jump to the previous follower's story (back tap on slide 1 / swipe right). */
   onPrev?: () => void;
+  /** Own story only — delete the currently shown slide by its post id (item 12). */
+  onDelete?: (slideId: string) => void;
 }
 
 // A horizontal pointer drag longer than this (px) counts as a story swipe.
@@ -65,6 +70,7 @@ export default function HomeStatusViewer({
   onClose,
   onNext,
   onPrev,
+  onDelete,
 }: Readonly<HomeStatusViewerProps>) {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
@@ -219,6 +225,16 @@ export default function HomeStatusViewer({
                 </Typography>
               )}
             </Box>
+            {onDelete && current?.id && (
+              <IconButton
+                onClick={() => onDelete(current.id as string)}
+                aria-label="Delete story"
+                data-testid="status-delete"
+                sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
+              >
+                <DeleteOutlineIcon fontSize="small" />
+              </IconButton>
+            )}
             <IconButton onClick={onClose} aria-label="Close status" sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}>
               <CloseIcon fontSize="small" />
             </IconButton>

@@ -11,6 +11,14 @@ jest.mock('@react-navigation/native', () => ({
 }));
 beforeEach(() => mockNavigate.mockClear());
 
+// The avatar's photo/story interactions are covered in profile-avatar.test; here
+// the stub surfaces its `initial` prop so the header's fallback stays asserted.
+jest.mock('@/components/profile/ProfileAvatar', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Text } = require('react-native');
+  return { ProfileAvatar: ({ initial }: { initial: string }) => <Text>{initial}</Text> };
+});
+
 jest.mock('@/components/profile/post-viewer/PostViewerSheet', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View, Text, Pressable } = require('react-native');

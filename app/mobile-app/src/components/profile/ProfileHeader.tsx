@@ -1,9 +1,9 @@
-import { Image } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { ProfileAvatar } from '@/components/profile/ProfileAvatar';
 import { useRoleLabels } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { ProfileMe } from '@/hooks/useProfile';
@@ -36,9 +36,13 @@ function Stat({
 }
 
 /** Profile identity card — avatar, name, verified email, role chips, stats, bio.
- * Tapping the follower/following counts opens the list (bug 9). */
-export function ProfileHeader({ me }: Readonly<{ me: ProfileMe }>) {
-  const { onPrimary, primary } = useThemeColors();
+ * Tapping the follower/following counts opens the list (bug 9). The avatar is the
+ * Instagram-style photo/story control (items 9 + 12). */
+export function ProfileHeader({
+  me,
+  onChanged,
+}: Readonly<{ me: ProfileMe; onChanged?: () => void | Promise<void> }>) {
+  const { primary } = useThemeColors();
   const { labelFor } = useRoleLabels();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const openFollow = (tab: 'followers' | 'following') =>
@@ -48,27 +52,7 @@ export function ProfileHeader({ me }: Readonly<{ me: ProfileMe }>) {
   return (
     <YStack gap={14} padding={16}>
       <XStack gap={14} alignItems="center">
-        <YStack
-          width={76}
-          height={76}
-          borderRadius={999}
-          overflow="hidden"
-          backgroundColor="$primary"
-          alignItems="center"
-          justifyContent="center"
-        >
-          {me.profile_photo ? (
-            <Image
-              source={{ uri: me.profile_photo }}
-              style={{ width: '100%', height: '100%' }}
-              resizeMode="cover"
-            />
-          ) : (
-            <Text fontSize={30} fontWeight="900" color={onPrimary}>
-              {initial}
-            </Text>
-          )}
-        </YStack>
+        <ProfileAvatar photo={me.profile_photo} initial={initial} size={76} onChanged={onChanged} />
         <YStack flex={1} gap={3}>
           <Text fontSize={20} fontWeight="900" color="$color" numberOfLines={1}>
             {me.full_name ?? 'User'}

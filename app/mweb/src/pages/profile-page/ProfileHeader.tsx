@@ -1,9 +1,9 @@
 import { useState } from 'react';
-import { Avatar, Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
+import { Box, Button, IconButton, Stack, Tooltip, Typography } from '@mui/material';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
-import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
 import SettingsIcon from '@mui/icons-material/Settings';
 import FollowListDialog from '../../components/FollowListDialog';
+import ProfileAvatar from '../../components/profile-avatar';
 
 function Stat({
   label,
@@ -37,11 +37,12 @@ interface Props {
   me: any;
   postsCount: number;
   onNewPost: () => void;
-  onChangePhoto: () => void;
   onSettings: () => void;
+  /** Refresh the page after the avatar photo/story changes. */
+  onChanged?: () => void;
 }
 
-export default function ProfileHeader({ me, postsCount, onNewPost, onChangePhoto, onSettings }: Readonly<Props>) {
+export default function ProfileHeader({ me, postsCount, onNewPost, onSettings, onChanged }: Readonly<Props>) {
   const displayName = me.full_name || `${me.first_name} ${me.last_name}`;
   const [followTab, setFollowTab] = useState<'followers' | 'following' | null>(null);
 
@@ -70,31 +71,12 @@ export default function ProfileHeader({ me, postsCount, onNewPost, onChangePhoto
         </Tooltip>
       </Box>
       <Stack spacing={2} alignItems="center" sx={{ px: 2, pb: 2, mt: { xs: -6, sm: -7 } }}>
-        <Box sx={{ position: 'relative' }}>
-          <Avatar
-            src={me.profile_photo || undefined}
-            sx={{
-              width: { xs: 112, sm: 136 },
-              height: { xs: 112, sm: 136 },
-              bgcolor: 'primary.main',
-              fontSize: { xs: 42, sm: 52 },
-              border: 4,
-              borderColor: 'background.paper',
-              boxShadow: '0 18px 36px rgba(0,0,0,0.34)',
-            }}
-          >
-            {(me.first_name?.[0] ?? 'U').toUpperCase()}
-          </Avatar>
-          <Tooltip title="Change profile image">
-            <IconButton
-              size="small"
-              onClick={onChangePhoto}
-              sx={{ position: 'absolute', right: 4, bottom: 6, bgcolor: 'primary.main', color: 'common.white', '&:hover': { bgcolor: 'primary.dark' } }}
-            >
-              <PhotoCameraIcon fontSize="small" />
-            </IconButton>
-          </Tooltip>
-        </Box>
+        <ProfileAvatar
+          photo={me.profile_photo}
+          name={displayName}
+          size={128}
+          onChanged={onChanged}
+        />
         <Box sx={{ width: '100%', textAlign: 'center' }}>
           <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1.1 }}>
             {displayName}

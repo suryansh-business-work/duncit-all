@@ -78,6 +78,12 @@ export const VENUE_SETTINGS_FRAGMENT = `
       booking_approval_required
       allow_multiple_bookings
     }
+    auto_extend {
+      enabled
+      template_id
+      horizon_days
+      until
+    }
   }
 `;
 

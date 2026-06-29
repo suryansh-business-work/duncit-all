@@ -1,6 +1,12 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { VenueModel, type IVenue, type IVenueRules, type IVenueSettings } from './venue.model';
+import {
+  VenueModel,
+  type IVenue,
+  type IVenueAutoExtend,
+  type IVenueRules,
+  type IVenueSettings,
+} from './venue.model';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
@@ -34,6 +40,13 @@ const toRulesPub = (r?: Partial<IVenueRules> | null) => ({
   allow_multiple_bookings: r?.allow_multiple_bookings ?? false,
 });
 
+const toAutoExtendPub = (a?: Partial<IVenueAutoExtend> | null) => ({
+  enabled: a?.enabled ?? false,
+  template_id: a?.template_id ? String(a.template_id) : null,
+  horizon_days: a?.horizon_days ?? 30,
+  until: a?.until ?? '',
+});
+
 const toSettingsPub = (s?: IVenueSettings | null) => ({
   operating_hours: {
     open: s?.operating_hours?.open ?? '09:00',
@@ -42,6 +55,7 @@ const toSettingsPub = (s?: IVenueSettings | null) => ({
   weekly_off_days: [...(s?.weekly_off_days ?? [])].sort((a, b) => a - b),
   holidays: [...(s?.holidays ?? [])].sort((a, b) => a.localeCompare(b)),
   rules: toRulesPub(s?.rules),
+  auto_extend: toAutoExtendPub(s?.auto_extend),
 });
 
 function normalizeRulesInput(base: ReturnType<typeof toRulesPub>, input: any) {
@@ -59,6 +73,26 @@ function normalizeRulesInput(base: ReturnType<typeof toRulesPub>, input: any) {
     booking_approval_required: boolField(input.booking_approval_required, base.booking_approval_required),
     allow_multiple_bookings: boolField(input.allow_multiple_bookings, base.allow_multiple_bookings),
   };
+}
+
+function normalizeAutoExtendInput(base: ReturnType<typeof toAutoExtendPub>, input: any) {
+  const next = { ...base };
+  if (input.enabled !== undefined) next.enabled = Boolean(input.enabled);
+  if (input.horizon_days !== undefined) {
+    next.horizon_days = clampInt(input.horizon_days, 1, 365, base.horizon_days);
+  }
+  if (input.template_id !== undefined) {
+    const raw = input.template_id;
+    if (raw === null || String(raw).trim() === '') next.template_id = null;
+    else if (Types.ObjectId.isValid(String(raw))) next.template_id = String(raw);
+    else fail('BAD_USER_INPUT', 'auto_extend.template_id must be a valid id');
+  }
+  if (input.until !== undefined) {
+    const u = String(input.until).trim();
+    if (u !== '' && !ISO_DATE_RE.test(u)) fail('BAD_USER_INPUT', 'auto_extend.until must be YYYY-MM-DD');
+    next.until = u;
+  }
+  return next;
 }
 
 function normalizeSettingsInput(current: IVenueSettings | undefined, input: any) {
@@ -90,6 +124,12 @@ function normalizeSettingsInput(current: IVenueSettings | undefined, input: any)
     next.holidays = [...new Set(hs)].sort((a, b) => a.localeCompare(b));
   }
   if (input.rules) next.rules = normalizeRulesInput(base.rules, input.rules);
+  if (input.auto_extend) next.auto_extend = normalizeAutoExtendInput(base.auto_extend, input.auto_extend);
+  // Auto-extend can never promise further ahead than slots may be scheduled.
+  next.auto_extend = {
+    ...next.auto_extend,
+    horizon_days: Math.min(next.auto_extend.horizon_days, next.rules.max_advance_days),
+  };
   return next;
 }
 

@@ -63,15 +63,25 @@ function parseDate(value: string, label: string): Date {
   return d;
 }
 
-// Venue owners may publish availability up to this many days ahead — keeps the
-// calendar finite and bookable windows realistic.
-const MAX_FUTURE_DAYS = 60;
+// How many days ahead a venue may publish availability — keeps the calendar
+// finite and bookable windows realistic. Configurable per venue via
+// settings.rules.max_advance_days (default 60, clamped 1..365).
+const DEFAULT_MAX_ADVANCE_DAYS = 60;
+const MAX_ADVANCE_DAYS_CAP = 365;
 
-function validateSlotWindow(start: Date, end: Date) {
+const venueMaxAdvance = (
+  venue: { settings?: { rules?: { max_advance_days?: number } } } | null
+): number =>
+  Math.max(
+    1,
+    Math.min(MAX_ADVANCE_DAYS_CAP, Math.round(Number(venue?.settings?.rules?.max_advance_days)) || DEFAULT_MAX_ADVANCE_DAYS)
+  );
+
+function validateSlotWindow(start: Date, end: Date, maxAdvanceDays: number) {
   if (end.getTime() <= start.getTime()) fail('BAD_USER_INPUT', 'end_at must be after start_at');
   if (start.getTime() < Date.now() - 60_000) fail('BAD_USER_INPUT', 'Cannot create slots in the past');
-  if (start.getTime() > Date.now() + MAX_FUTURE_DAYS * 24 * 60 * 60 * 1000) {
-    fail('BAD_USER_INPUT', `Slots can only be scheduled up to ${MAX_FUTURE_DAYS} days in advance`);
+  if (start.getTime() > Date.now() + maxAdvanceDays * 24 * 60 * 60 * 1000) {
+    fail('BAD_USER_INPUT', `Slots can only be scheduled up to ${maxAdvanceDays} days in advance`);
   }
 }
 
@@ -107,14 +117,15 @@ async function loadSlot(slotId: string) {
 async function createSlotsCore(
   venueId: string,
   ownerUserId: string,
-  slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }>
+  slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }>,
+  maxAdvanceDays: number
 ) {
   if (!slots?.length) fail('BAD_USER_INPUT', 'At least one slot is required');
 
   const prepared = slots.map((s) => {
     const start = parseDate(s.start_at, 'start_at');
     const end = parseDate(s.end_at, 'end_at');
-    validateSlotWindow(start, end);
+    validateSlotWindow(start, end, maxAdvanceDays);
     return { start, end, notes: (s.notes ?? '').trim(), price: normalizePrice(s.price) };
   });
 
@@ -152,7 +163,8 @@ async function createSlotsCore(
 
 async function updateSlotCore(
   slot: IVenueSlot,
-  input: { start_at?: string; end_at?: string; notes?: string; block?: boolean; price?: number }
+  input: { start_at?: string; end_at?: string; notes?: string; block?: boolean; price?: number },
+  maxAdvanceDays: number
 ) {
   if (slot.status === 'BOOKED') {
     fail('BAD_REQUEST', 'Booked slots cannot be edited. Cancel the pod first.');
@@ -160,7 +172,7 @@ async function updateSlotCore(
   if (input.start_at !== undefined || input.end_at !== undefined) {
     const start = input.start_at ? parseDate(input.start_at, 'start_at') : slot.start_at;
     const end = input.end_at ? parseDate(input.end_at, 'end_at') : slot.end_at;
-    validateSlotWindow(start, end);
+    validateSlotWindow(start, end, maxAdvanceDays);
     const overlap = await findOverlap(String(slot.venue_id), start, end, String(slot._id));
     if (overlap) {
       fail(
@@ -254,8 +266,8 @@ export const venueSlotService = {
   },
 
   async create(userId: string, input: { venue_id: string; slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }> }) {
-    await ensureOwnedVenue(userId, input.venue_id);
-    return createSlotsCore(input.venue_id, userId, input.slots);
+    const venue = await ensureOwnedVenue(userId, input.venue_id);
+    return createSlotsCore(input.venue_id, userId, input.slots, venueMaxAdvance(venue));
   },
 
   // Admin create — slots are owned by the venue's actual owner, not the editor.
@@ -263,18 +275,79 @@ export const venueSlotService = {
     if (!Types.ObjectId.isValid(input.venue_id)) fail('BAD_USER_INPUT', 'Invalid venue_id');
     const venue = await VenueModel.findById(input.venue_id);
     if (!venue) fail('NOT_FOUND', 'Venue not found');
-    return createSlotsCore(input.venue_id, String(venue!.owner_user_id), input.slots);
+    return createSlotsCore(input.venue_id, String(venue!.owner_user_id), input.slots, venueMaxAdvance(venue));
+  },
+
+  /** Insert generated slots, silently DROPPING any that fall in the past,
+   * beyond the cap, or overlap an existing/earlier slot — instead of throwing.
+   * Idempotent (re-running creates nothing new); used by the auto-extend job.
+   * The caller has already resolved ownership. Returns the number created. */
+  async createSkippingOverlaps(
+    venueId: string,
+    ownerUserId: string,
+    slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }>,
+    maxAdvanceDays: number
+  ): Promise<number> {
+    const now = Date.now();
+    const maxTs = now + maxAdvanceDays * 24 * 60 * 60 * 1000;
+    const prepared = slots
+      .map((s) => ({
+        start: new Date(s.start_at),
+        end: new Date(s.end_at),
+        notes: (s.notes ?? '').trim(),
+        price: normalizePrice(s.price),
+      }))
+      .filter(
+        (p) =>
+          !Number.isNaN(p.start.getTime()) &&
+          !Number.isNaN(p.end.getTime()) &&
+          p.end.getTime() > p.start.getTime() &&
+          p.start.getTime() >= now - 60_000 &&
+          p.start.getTime() <= maxTs
+      )
+      .sort((a, b) => a.start.getTime() - b.start.getTime());
+    if (!prepared.length) return 0;
+
+    const existing = await VenueSlotModel.find({
+      venue_id: new Types.ObjectId(venueId),
+      start_at: { $lt: new Date(maxTs + 24 * 60 * 60 * 1000) },
+      end_at: { $gt: new Date(now) },
+    }).select('start_at end_at');
+
+    const toInsert: typeof prepared = [];
+    for (const p of prepared) {
+      const collides =
+        toInsert.some((q) => q.start < p.end && q.end > p.start) ||
+        existing.some((e) => e.start_at < p.end && e.end_at > p.start);
+      if (!collides) toInsert.push(p);
+    }
+    if (!toInsert.length) return 0;
+
+    const docs = await VenueSlotModel.insertMany(
+      toInsert.map((p) => ({
+        venue_id: new Types.ObjectId(venueId),
+        owner_user_id: new Types.ObjectId(ownerUserId),
+        start_at: p.start,
+        end_at: p.end,
+        price: p.price,
+        notes: p.notes,
+        status: 'AVAILABLE' as VenueSlotStatus,
+      }))
+    );
+    return docs.length;
   },
 
   async update(userId: string, slotId: string, input: { start_at?: string; end_at?: string; notes?: string; block?: boolean; price?: number }) {
     const slot = await loadSlot(slotId);
     if (String(slot.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
-    return updateSlotCore(slot, input);
+    const venue = await VenueModel.findById(slot.venue_id);
+    return updateSlotCore(slot, input, venueMaxAdvance(venue));
   },
 
   async adminUpdate(slotId: string, input: { start_at?: string; end_at?: string; notes?: string; block?: boolean; price?: number }) {
     const slot = await loadSlot(slotId);
-    return updateSlotCore(slot, input);
+    const venue = await VenueModel.findById(slot.venue_id);
+    return updateSlotCore(slot, input, venueMaxAdvance(venue));
   },
 
   async remove(userId: string, slotId: string) {
@@ -318,9 +391,10 @@ export const venueSlotService = {
       set_duration_minutes?: number;
     }
   ) {
-    await ensureOwnedVenue(userId, input.venue_id);
+    const venue = await ensureOwnedVenue(userId, input.venue_id);
     const slots = await matchingBulkSlots(input.venue_id, input.from, input.to, input.weekdays);
     if (!slots.length) return { matched: 0, affected: 0, skipped: 0 };
+    const maxAdvanceDays = venueMaxAdvance(venue);
 
     const set: { price?: number; status?: VenueSlotStatus } = {};
     if (input.set_price !== undefined) set.price = normalizePrice(input.set_price);
@@ -350,7 +424,7 @@ export const venueSlotService = {
       }
       let windowOk = true;
       try {
-        validateSlotWindow(start, end);
+        validateSlotWindow(start, end, maxAdvanceDays);
       } catch {
         windowOk = false; // out of range / past → skip this slot, keep the batch
       }

@@ -32,6 +32,16 @@ export interface IVenueRules {
   allow_multiple_bookings: boolean;
 }
 
+/** Auto-extend: keep a rolling window of availability published automatically.
+ * A daily job rolls the venue's default (or referenced) slot template forward
+ * up to `horizon_days` ahead, until the optional `until` date. */
+export interface IVenueAutoExtend {
+  enabled: boolean;
+  template_id: Types.ObjectId | null; // SlotTemplate to roll forward (null = owner's default)
+  horizon_days: number; // keep slots published this many days ahead
+  until: string; // optional 'YYYY-MM-DD' stop date ('' = open-ended)
+}
+
 /** Operating hours, weekly-off, holidays + booking rules. Drives the Recurring
  * Availability generator (skip offs/holidays, clamp to hours) and validation. */
 export interface IVenueSettings {
@@ -39,6 +49,7 @@ export interface IVenueSettings {
   weekly_off_days: number[]; // 0..6 (Sun..Sat)
   holidays: string[]; // 'YYYY-MM-DD'
   rules: IVenueRules;
+  auto_extend: IVenueAutoExtend;
 }
 
 export interface IVenue extends Document {
@@ -119,6 +130,16 @@ const venueRulesSchema = new Schema<IVenueRules>(
   { _id: false }
 );
 
+const venueAutoExtendSchema = new Schema<IVenueAutoExtend>(
+  {
+    enabled: { type: Boolean, default: false },
+    template_id: { type: Schema.Types.ObjectId, ref: 'SlotTemplate', default: null },
+    horizon_days: { type: Number, default: 30, min: 1, max: 365 },
+    until: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
 const venueSettingsSchema = new Schema<IVenueSettings>(
   {
     operating_hours: {
@@ -134,6 +155,7 @@ const venueSettingsSchema = new Schema<IVenueSettings>(
     weekly_off_days: { type: [Number], default: [] },
     holidays: { type: [String], default: [] },
     rules: { type: venueRulesSchema, default: () => ({}) },
+    auto_extend: { type: venueAutoExtendSchema, default: () => ({}) },
   },
   { _id: false }
 );

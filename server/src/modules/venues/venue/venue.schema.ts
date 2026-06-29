@@ -33,11 +33,19 @@ export const venueTypeDefs = /* GraphQL */ `
     allow_multiple_bookings: Boolean!
   }
 
+  type VenueAutoExtend {
+    enabled: Boolean!
+    template_id: ID
+    horizon_days: Int!
+    until: String!
+  }
+
   type VenueSettings {
     operating_hours: VenueOperatingHours!
     weekly_off_days: [Int!]!
     holidays: [String!]!
     rules: VenueRules!
+    auto_extend: VenueAutoExtend!
   }
 
   input VenueOperatingHoursInput {
@@ -56,11 +64,19 @@ export const venueTypeDefs = /* GraphQL */ `
     allow_multiple_bookings: Boolean
   }
 
+  input VenueAutoExtendInput {
+    enabled: Boolean
+    template_id: ID
+    horizon_days: Int
+    until: String
+  }
+
   input VenueSettingsInput {
     operating_hours: VenueOperatingHoursInput
     weekly_off_days: [Int!]
     holidays: [String!]
     rules: VenueRulesInput
+    auto_extend: VenueAutoExtendInput
   }
 
   type Venue {

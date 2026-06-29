@@ -22,8 +22,23 @@ export interface VenueRulesForm {
   allow_multiple_bookings: boolean;
 }
 
+export interface VenueAutoExtendForm {
+  enabled: boolean;
+  template_id: string | null;
+  horizon_days: number;
+  until: string; // 'YYYY-MM-DD' or ''
+}
+
+const DEFAULT_AUTO_EXTEND: VenueAutoExtendForm = {
+  enabled: false,
+  template_id: null,
+  horizon_days: 30,
+  until: '',
+};
+
 export interface VenueSettingsView extends VenueSettingsLike {
   rules: VenueRulesForm;
+  auto_extend: VenueAutoExtendForm;
 }
 
 /** Normalises a venue's GraphQL `settings` (possibly undefined for old venues)
@@ -37,6 +52,7 @@ export function readVenueSettings(settings: any): VenueSettingsView {
     weekly_off_days: settings?.weekly_off_days ?? [],
     holidays: settings?.holidays ?? [],
     rules: { ...DEFAULT_RULES, ...(settings?.rules ?? {}) },
+    auto_extend: { ...DEFAULT_AUTO_EXTEND, ...(settings?.auto_extend ?? {}) },
   };
 }
 
@@ -59,9 +75,10 @@ export function hhmmToDate(hhmm: string): Date {
 export const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export const WEEKDAY_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
-// The server hard-caps slot creation at 60 days ahead (venueSlot.service
-// MAX_FUTURE_DAYS). The client must never promise beyond it, so the effective
-// advance window is min(the venue's rule, the server cap).
-export const SERVER_MAX_ADVANCE_DAYS = 60;
+// Slot creation is capped per venue by settings.rules.max_advance_days (default
+// 60, configurable up to 365 — the server honors the same value). The dialog
+// must never promise beyond it, so the effective window clamps the rule to a
+// sane [1, 365] range.
+export const MAX_ADVANCE_DAYS_CAP = 365;
 export const effectiveMaxAdvance = (maxAdvanceDays: number) =>
-  Math.min(Math.max(1, maxAdvanceDays), SERVER_MAX_ADVANCE_DAYS);
+  Math.min(Math.max(1, Math.round(maxAdvanceDays) || 60), MAX_ADVANCE_DAYS_CAP);

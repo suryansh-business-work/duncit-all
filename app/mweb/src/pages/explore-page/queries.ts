@@ -30,12 +30,14 @@ export const EXPLORE_PODS = gql`
       place_detail
       like_count
       liked_by_me
+      liked_user_ids
       comment_count
     }
     clubs(filter: { is_active: true }) {
       id
       club_id
       club_name
+      is_verified
       super_category_id
       category_id
       club_feature_images_and_videos {
@@ -57,6 +59,19 @@ export const EXPLORE_PODS = gql`
     locations {
       id
       location_name
+    }
+  }
+`;
+
+/** Resolves a pod's likers to public users for the "who liked" list (item 8). */
+export const POD_LIKERS = gql`
+  query PodLikers($ids: [ID!]!) {
+    publicUsersByIds(user_ids: $ids) {
+      user_id
+      full_name
+      first_name
+      username
+      profile_photo
     }
   }
 `;

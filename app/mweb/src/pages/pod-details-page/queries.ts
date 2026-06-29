@@ -182,7 +182,19 @@ export const POD_COMMENTS = gql`
       author_name
       author_photo
       text
+      like_count
+      liked_by_me
       created_at
+    }
+  }
+`;
+
+export const TOGGLE_POD_COMMENT_LIKE = gql`
+  mutation TogglePodCommentLike($id: ID!, $comment_id: ID!) {
+    togglePodCommentLike(pod_doc_id: $id, comment_id: $comment_id) {
+      id
+      like_count
+      liked_by_me
     }
   }
 `;

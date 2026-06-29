@@ -1,8 +1,10 @@
+import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import EventIcon from '@mui/icons-material/Event';
 import PlaceIcon from '@mui/icons-material/Place';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import { usePricing } from '../../hooks/usePricing';
 
 interface Props {
@@ -11,11 +13,16 @@ interface Props {
   location: any;
 }
 
+const CAPTION_COLLAPSE_AT = 90;
+
 export default function ExplorePodOverlay({ pod, club, location }: Readonly<Props>) {
   const navigate = useNavigate();
   const { format } = usePricing();
+  const [expanded, setExpanded] = useState(false);
   const isFree = pod.pod_type?.includes('FREE');
   const placeLabel = pod.place_label || [location?.location_name, pod.zone_name].filter(Boolean).join(' - ');
+  const description: string = pod.pod_description ?? '';
+  const collapsible = description.length > CAPTION_COLLAPSE_AT;
 
   return (
     <>
@@ -50,24 +57,32 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
             <Typography variant="subtitle2" fontWeight={900} noWrap>
               {club.club_name}
             </Typography>
+            {club.is_verified && (
+              <VerifiedIcon sx={{ fontSize: 16, color: '#1d9bf0', flex: '0 0 auto' }} aria-label="Verified club" />
+            )}
           </Stack>
         )}
         <Typography variant="h5" fontWeight={900} sx={{ lineHeight: 1.05, textShadow: '0 2px 12px rgba(0,0,0,0.36)' }}>
           {pod.pod_title}
         </Typography>
-        {pod.pod_description && (
-          <Typography
-            variant="body2"
-            sx={{
-              display: '-webkit-box',
-              WebkitLineClamp: 2,
-              WebkitBoxOrient: 'vertical',
-              overflow: 'hidden',
-              opacity: 0.9,
-            }}
-          >
-            {pod.pod_description}
-          </Typography>
+        {description && (
+          <Box onClick={() => collapsible && setExpanded((v) => !v)} sx={{ cursor: collapsible ? 'pointer' : 'default' }}>
+            <Typography
+              variant="body2"
+              sx={
+                collapsible && !expanded
+                  ? { display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', opacity: 0.9 }
+                  : { opacity: 0.92 }
+              }
+            >
+              {description}
+            </Typography>
+            {collapsible && (
+              <Typography component="span" variant="caption" sx={{ fontWeight: 800, opacity: 0.85 }}>
+                {expanded ? 'Show less' : 'More'}
+              </Typography>
+            )}
+          </Box>
         )}
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
           <Chip

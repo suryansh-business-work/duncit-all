@@ -11,6 +11,7 @@ export interface ExploreAction {
   active?: boolean;
   loading?: boolean;
   tooltip?: string;
+  onLabelClick?: () => void;
 }
 
 /** Approx pitch of one action (button 42 + caption + gap) — used to decide how
@@ -74,6 +75,7 @@ export default function ExploreActionRail({ actions }: Readonly<{ actions: Explo
           active={action.active}
           loading={action.loading}
           tooltip={action.tooltip}
+          onLabelClick={action.onLabelClick}
         />
       ))}
       {overflow && (

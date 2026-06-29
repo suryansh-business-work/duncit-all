@@ -7,9 +7,19 @@ interface Props {
   active?: boolean;
   loading?: boolean;
   tooltip?: string;
+  /** Optional separate tap on the count/label (e.g. like count → who-liked list). */
+  onLabelClick?: () => void;
 }
 
-export default function ExploreActionButton({ icon, label, onClick, active, loading, tooltip }: Readonly<Props>) {
+export default function ExploreActionButton({
+  icon,
+  label,
+  onClick,
+  active,
+  loading,
+  tooltip,
+  onLabelClick,
+}: Readonly<Props>) {
   return (
     <Stack alignItems="center" spacing={0.25}>
       <IconButton
@@ -27,7 +37,16 @@ export default function ExploreActionButton({ icon, label, onClick, active, load
       >
         {loading ? <CircularProgress size={19} color="inherit" /> : icon}
       </IconButton>
-      <Typography variant="caption" sx={{ color: 'common.white', fontWeight: 800, textShadow: '0 1px 6px rgba(0,0,0,0.45)' }}>
+      <Typography
+        variant="caption"
+        onClick={onLabelClick}
+        sx={{
+          color: 'common.white',
+          fontWeight: 800,
+          textShadow: '0 1px 6px rgba(0,0,0,0.45)',
+          cursor: onLabelClick ? 'pointer' : 'default',
+        }}
+      >
         {label}
       </Typography>
     </Stack>

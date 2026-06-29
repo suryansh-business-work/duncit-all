@@ -45,6 +45,10 @@ const toPub = (d: any) => {
   };
 };
 
+/** Shared public-shape mapper, so co-located features (e.g. search) return clubs
+ * that the existing `Club` field resolvers can read without re-querying. */
+export const mapClubToPublic = (doc: any) => toPub(doc);
+
 function notFound(): never {
   throw new GraphQLError('Club not found', { extensions: { code: 'NOT_FOUND' } });
 }

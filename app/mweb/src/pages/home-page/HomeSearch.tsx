@@ -1,11 +1,6 @@
-import { useMemo, useState } from 'react';
-import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import { Box, ClickAwayListener, InputAdornment, Paper, TextField } from '@mui/material';
+import { Box, InputAdornment, TextField } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
-import PodSearchResults from './PodSearchResults';
-import { POD_SEARCH } from '../../components/app-header/queries';
-import { useDebouncedValue } from '../../hooks/useDebouncedValue';
 
 interface Props {
   locationId?: string;
@@ -14,88 +9,44 @@ interface Props {
   disabled?: boolean;
 }
 
-export default function HomeSearch({ locationId, zoneName, disabled }: Readonly<Props>) {
+/** Home-page search launcher — tapping it opens the full Search experience
+ * (clubs, pods, categories, suggestions, sort & filter) at /search. */
+export default function HomeSearch({ disabled }: Readonly<Props>) {
   const navigate = useNavigate();
-  const [search, setSearch] = useState('');
-  const [open, setOpen] = useState(false);
-  const trimmed = useDebouncedValue(search.trim());
-
-  const { data, loading } = useQuery(POD_SEARCH, {
-    variables: {
-      filter: {
-        search: trimmed || undefined,
-        location_id: locationId || undefined,
-        zone_name: zoneName || undefined,
-        is_active: true,
-      },
-    },
-    skip: disabled || trimmed.length < 1,
-    fetchPolicy: 'cache-and-network',
-  });
-
-  const pods: any[] = useMemo(() => data?.pods ?? [], [data]);
-  const showResults = open && trimmed.length > 0;
+  const open = () => {
+    if (!disabled) navigate('/search');
+  };
 
   return (
-    <ClickAwayListener onClickAway={() => setOpen(false)}>
-      <Box sx={{ position: 'relative', width: '100%' }}>
-        <TextField
-          fullWidth
-          size="small"
-          disabled={disabled}
-          placeholder={disabled ? 'No pods to search yet' : 'Search pods…'}
-          value={search}
-          onChange={(e) => {
-            setSearch(e.target.value);
-            setOpen(true);
-          }}
-          onFocus={() => setOpen(true)}
-          InputProps={{
-            startAdornment: (
-              <InputAdornment position="start">
-                <SearchIcon fontSize="small" color="action" />
-              </InputAdornment>
-            ),
-          }}
-          inputProps={{
-            'aria-label': 'Search pods',
-            enterKeyHint: 'search',
-          }}
-          sx={{
-            '& .MuiOutlinedInput-root': {
-              borderRadius: 2,
-              bgcolor: 'background.paper',
-              minHeight: 44,
-            },
-          }}
-        />
-        {showResults && (
-          <Paper
-            elevation={6}
-            sx={{
-              position: 'absolute',
-              top: 'calc(100% + 4px)',
-              left: 0,
-              right: 0,
-              zIndex: 5,
-              borderRadius: 2,
-              overflow: 'hidden',
-            }}
-          >
-            <PodSearchResults
-              loading={loading}
-              pods={pods}
-              onSelect={(podId) => {
-                setOpen(false);
-                const pod = pods.find((p: any) => p.id === podId);
-                if (pod?.club_slug && pod.pod_id) {
-                  navigate(`/club/${pod.club_slug}/pod/${pod.pod_id}`);
-                }
-              }}
-            />
-          </Paper>
-        )}
-      </Box>
-    </ClickAwayListener>
+    <Box sx={{ width: '100%' }}>
+      <TextField
+        fullWidth
+        size="small"
+        disabled={disabled}
+        placeholder={disabled ? 'No pods to search yet' : 'Search clubs, pods, categories or activities…'}
+        onClick={open}
+        onFocus={open}
+        inputProps={{
+          'aria-label': 'Search Duncit',
+          enterKeyHint: 'search',
+          readOnly: true,
+        }}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" color="action" />
+            </InputAdornment>
+          ),
+        }}
+        sx={{
+          '& .MuiOutlinedInput-root': {
+            borderRadius: 2,
+            bgcolor: 'background.paper',
+            minHeight: 44,
+            cursor: disabled ? 'default' : 'pointer',
+          },
+        }}
+      />
+    </Box>
   );
 }

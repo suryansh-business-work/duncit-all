@@ -40,6 +40,14 @@ export const venueSlotResolvers = {
       const user = requireAuth(ctx);
       return venueSlotService.remove(user.id, args.slot_id);
     },
+    bulkDeleteVenueSlots: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return venueSlotService.bulkDelete(user.id, args.input);
+    },
+    bulkUpdateVenueSlots: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return venueSlotService.bulkUpdate(user.id, args.input);
+    },
     adminCreateVenueSlots: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ONBOARDING_RW);
       return venueSlotService.adminCreate(args.input);

@@ -195,6 +195,24 @@ async function listSlotsForVenue(venueId: string, from?: string | null, to?: str
   return withVenueAndPod(docs);
 }
 
+// Non-booked slots of a venue matching a bulk filter: `from`..`to` (from defaults
+// to "now" so historical slots are never touched) plus an optional weekday set,
+// matched in local time — the same basis the recurring generator uses.
+async function matchingBulkSlots(
+  venueId: string,
+  from?: string | null,
+  to?: string | null,
+  weekdays?: number[] | null
+) {
+  const q: any = { venue_id: new Types.ObjectId(venueId), status: { $ne: 'BOOKED' } };
+  q.start_at = { $gte: from ? parseDate(from, 'from') : new Date() };
+  if (to) q.start_at.$lte = parseDate(to, 'to');
+  const docs = await VenueSlotModel.find(q).sort({ start_at: 1 }).limit(2000);
+  if (!weekdays?.length) return docs;
+  const set = new Set(weekdays);
+  return docs.filter((s) => set.has(s.start_at.getDay()));
+}
+
 export const venueSlotService = {
   async listForVenue(viewerId: string, venueId: string, from?: string | null, to?: string | null) {
     if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue_id');
@@ -268,6 +286,86 @@ export const venueSlotService = {
   async adminRemove(slotId: string) {
     const slot = await loadSlot(slotId);
     return removeSlotCore(slot);
+  },
+
+  /** Bulk-delete a venue's upcoming non-booked slots matching the filter
+   * (future / date-range / weekdays). Booked slots are never deleted. */
+  async bulkDelete(
+    userId: string,
+    input: { venue_id: string; from?: string; to?: string; weekdays?: number[] }
+  ) {
+    await ensureOwnedVenue(userId, input.venue_id);
+    const slots = await matchingBulkSlots(input.venue_id, input.from, input.to, input.weekdays);
+    if (!slots.length) return { matched: 0, affected: 0, skipped: 0 };
+    const ids = slots.map((s) => s._id);
+    const r = await VenueSlotModel.deleteMany({ _id: { $in: ids } });
+    return { matched: slots.length, affected: r.deletedCount ?? 0, skipped: 0 };
+  },
+
+  /** Bulk-update a venue's upcoming non-booked slots: set price and/or
+   * enable/disable (atomic), and/or shift time / set duration (per-slot,
+   * skipping any that would fall out of range or collide). */
+  async bulkUpdate(
+    userId: string,
+    input: {
+      venue_id: string;
+      from?: string;
+      to?: string;
+      weekdays?: number[];
+      set_price?: number;
+      block?: boolean;
+      shift_minutes?: number;
+      set_duration_minutes?: number;
+    }
+  ) {
+    await ensureOwnedVenue(userId, input.venue_id);
+    const slots = await matchingBulkSlots(input.venue_id, input.from, input.to, input.weekdays);
+    if (!slots.length) return { matched: 0, affected: 0, skipped: 0 };
+
+    const set: { price?: number; status?: VenueSlotStatus } = {};
+    if (input.set_price !== undefined) set.price = normalizePrice(input.set_price);
+    if (input.block !== undefined) set.status = input.block ? 'BLOCKED' : 'AVAILABLE';
+    const shiftsTime = input.shift_minutes !== undefined || input.set_duration_minutes !== undefined;
+
+    if (!shiftsTime) {
+      if (set.price === undefined && set.status === undefined) {
+        fail('BAD_USER_INPUT', 'No bulk update specified');
+      }
+      const ids = slots.map((s) => s._id);
+      const r = await VenueSlotModel.updateMany({ _id: { $in: ids } }, { $set: set });
+      return { matched: slots.length, affected: r.modifiedCount ?? 0, skipped: 0 };
+    }
+
+    let affected = 0;
+    let skipped = 0;
+    for (const slot of slots) {
+      let start = new Date(slot.start_at);
+      let end = new Date(slot.end_at);
+      if (input.shift_minutes !== undefined) {
+        start = new Date(start.getTime() + input.shift_minutes * 60_000);
+        end = new Date(end.getTime() + input.shift_minutes * 60_000);
+      }
+      if (input.set_duration_minutes !== undefined) {
+        end = new Date(start.getTime() + input.set_duration_minutes * 60_000);
+      }
+      let windowOk = true;
+      try {
+        validateSlotWindow(start, end);
+      } catch {
+        windowOk = false; // out of range / past → skip this slot, keep the batch
+      }
+      if (!windowOk || (await findOverlap(String(slot.venue_id), start, end, String(slot._id)))) {
+        skipped += 1;
+        continue;
+      }
+      slot.start_at = start;
+      slot.end_at = end;
+      if (set.price !== undefined) slot.price = set.price;
+      if (set.status !== undefined) slot.status = set.status;
+      await (slot as any).save();
+      affected += 1;
+    }
+    return { matched: slots.length, affected, skipped };
   },
 
   // Atomic: only succeeds if the slot is currently AVAILABLE. Called from pod

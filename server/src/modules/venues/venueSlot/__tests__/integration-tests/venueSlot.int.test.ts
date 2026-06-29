@@ -1,5 +1,6 @@
 import { Types } from 'mongoose';
 import { venueSlotService } from '../../venueSlot.service';
+import { VenueSlotModel } from '../../venueSlot.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 
 const ownerId = new Types.ObjectId().toString();
@@ -82,5 +83,69 @@ describe('venueSlotService integration', () => {
     await expect(
       venueSlotService.create(ownerId, { venue_id: venueId, slots: [{ start_at: inDays(61), end_at: inDays(61.1) }] })
     ).rejects.toThrow(/60 days/i);
+  });
+
+  it('bulk-deletes upcoming non-booked slots but never booked ones', async () => {
+    const venueId = await seedVenue();
+    await venueSlotService.create(ownerId, {
+      venue_id: venueId,
+      slots: [
+        { start_at: inDays(1), end_at: inDays(1.1) },
+        { start_at: inDays(2), end_at: inDays(2.1) },
+      ],
+    });
+    const slots = await venueSlotService.listForVenue(ownerId, venueId);
+    await VenueSlotModel.updateOne({ _id: slots[0].id }, { $set: { status: 'BOOKED' } });
+
+    const res = await venueSlotService.bulkDelete(ownerId, { venue_id: venueId });
+    expect(res.matched).toBe(1);
+    expect(res.affected).toBe(1);
+    const left = await venueSlotService.listForVenue(ownerId, venueId);
+    expect(left).toHaveLength(1);
+    expect(left[0].status).toBe('BOOKED');
+  });
+
+  it('bulk-sets price and toggles block on matching slots', async () => {
+    const venueId = await seedVenue();
+    await venueSlotService.create(ownerId, {
+      venue_id: venueId,
+      slots: [
+        { start_at: inDays(3), end_at: inDays(3.1), price: 100 },
+        { start_at: inDays(4), end_at: inDays(4.1), price: 200 },
+      ],
+    });
+    const priced = await venueSlotService.bulkUpdate(ownerId, { venue_id: venueId, set_price: 777 });
+    expect(priced.affected).toBe(2);
+    expect((await venueSlotService.listForVenue(ownerId, venueId)).every((s) => s.price === 777)).toBe(true);
+
+    const blocked = await venueSlotService.bulkUpdate(ownerId, { venue_id: venueId, block: true });
+    expect(blocked.affected).toBe(2);
+    expect(
+      (await venueSlotService.listForVenue(ownerId, venueId)).every((s) => s.status === 'BLOCKED')
+    ).toBe(true);
+
+    await expect(venueSlotService.bulkUpdate(ownerId, { venue_id: venueId })).rejects.toThrow(/no bulk update/i);
+  });
+
+  it('bulk time-shift skips slots that would collide', async () => {
+    const venueId = await seedVenue();
+    const base = new Date(Date.now() + 10 * 86_400_000);
+    base.setHours(10, 0, 0, 0);
+    const hour = 3_600_000;
+    await venueSlotService.create(ownerId, {
+      venue_id: venueId,
+      slots: [
+        { start_at: new Date(base).toISOString(), end_at: new Date(base.getTime() + hour).toISOString() },
+        { start_at: new Date(base.getTime() + hour).toISOString(), end_at: new Date(base.getTime() + 2 * hour).toISOString() },
+      ],
+    });
+    const slots = await venueSlotService.listForVenue(ownerId, venueId);
+    // Book the earlier slot (10–11) so it is excluded yet still blocks the shift.
+    await VenueSlotModel.updateOne({ _id: slots[0].id }, { $set: { status: 'BOOKED' } });
+    // Shifting the later slot (11–12) back an hour → 10–11, which collides with the booked one.
+    const res = await venueSlotService.bulkUpdate(ownerId, { venue_id: venueId, shift_minutes: -60 });
+    expect(res.matched).toBe(1);
+    expect(res.affected).toBe(0);
+    expect(res.skipped).toBe(1);
   });
 });

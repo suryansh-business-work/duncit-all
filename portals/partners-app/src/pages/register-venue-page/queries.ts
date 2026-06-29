@@ -60,6 +60,27 @@ export const MY_VENUE = gql`
   }
 `;
 
+export const VENUE_SETTINGS_FRAGMENT = `
+  settings {
+    operating_hours {
+      open
+      close
+    }
+    weekly_off_days
+    holidays
+    rules {
+      buffer_minutes
+      min_notice_minutes
+      max_advance_days
+      max_bookings_per_slot
+      allow_instant_booking
+      allow_waitlist
+      booking_approval_required
+      allow_multiple_bookings
+    }
+  }
+`;
+
 export const MY_VENUES = gql`
   query MyVenues {
     myVenues {
@@ -73,6 +94,7 @@ export const MY_VENUES = gql`
       cover_image_url
       city
       locality
+      ${VENUE_SETTINGS_FRAGMENT}
     }
   }
 `;

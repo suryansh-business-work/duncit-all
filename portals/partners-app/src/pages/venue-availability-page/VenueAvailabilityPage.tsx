@@ -34,7 +34,6 @@ import {
 import {
   AvailabilityCalendar,
   DayDrawer,
-  RecurringAvailabilityDialog,
   type CalendarView,
   type NewSlotInput,
 } from '@duncit/availability-calendar';
@@ -45,6 +44,7 @@ import {
   VENUE_SLOTS,
   type VenueSlotRow,
 } from './queries';
+import RecurringAvailabilityDialog from './recurring/RecurringAvailabilityDialog';
 import { MY_VENUES } from '../register-venue-page/queries';
 
 function viewRange(view: CalendarView, anchor: Date) {
@@ -88,10 +88,6 @@ export default function VenueAvailabilityPage() {
 
   const handleCreate = async (input: NewSlotInput) => {
     await createSlots({ variables: { input: { venue_id: venueId, slots: [input] } } });
-    await refetch();
-  };
-  const handleRecurringAdd = async (slots: NewSlotInput[]) => {
-    await createSlots({ variables: { input: { venue_id: venueId, slots } } });
     await refetch();
   };
   const handleToggleBlock = async (slot: VenueSlotRow) => {
@@ -240,7 +236,11 @@ export default function VenueAvailabilityPage() {
       <RecurringAvailabilityDialog
         open={recurringOpen}
         onClose={() => setRecurringOpen(false)}
-        onAdd={handleRecurringAdd}
+        venueId={venueId}
+        settings={venue?.settings}
+        onDone={async () => {
+          await refetch();
+        }}
       />
     </Stack>
   );

@@ -31,7 +31,24 @@ export const MyPodMembershipsDocument = gql(`
           url
           type
         }
+        club {
+          id
+          category_id
+          super_category_id
+        }
       }
+    }
+  }
+`);
+
+/** Super + Category tree for the Pod History filter (For You / For Your Pet → Sports …). */
+export const PodHistoryCategoriesDocument = gql(`
+  query MobilePodHistoryCategories {
+    categories {
+      id
+      name
+      level
+      parent_id
     }
   }
 `);

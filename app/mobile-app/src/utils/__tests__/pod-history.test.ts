@@ -1,9 +1,14 @@
 import {
+  activePodHistoryFilterCount,
+  applyPodHistory,
   buildTimeline,
+  categoriesUnder,
   dedupeByPod,
+  DEFAULT_POD_HISTORY_FILTERS,
   podPriceCaption,
   refundLabel,
   REFUND_LABEL,
+  superCategories,
   type PodMembership,
   type RefundStatus,
 } from '@/utils/pod-history';
@@ -121,5 +126,102 @@ describe('buildTimeline', () => {
     expect(events[2]?.tag).toBe('Checked');
     expect(events[3]?.title).toBe('Refund not initiated');
     expect(events[3]?.state).toBe('current');
+  });
+});
+
+describe('pod history filter + sort', () => {
+  const withClub = (
+    id: string,
+    superId: string,
+    categoryId: string,
+    amount: number,
+    date: string,
+  ) =>
+    membership({
+      id,
+      pod: {
+        id: `pod-${id}`,
+        pod_title: `Pod ${id}`,
+        pod_date_time: date,
+        pod_amount: amount,
+        club: { id: `club-${id}`, super_category_id: superId, category_id: categoryId },
+      },
+    });
+
+  const a = withClub('a', 's1', 'c1', 300, '2026-06-05T10:00:00Z');
+  const b = withClub('b', 's1', 'c2', 100, '2026-06-02T10:00:00Z');
+  const c = withClub('c', 's2', 'c3', 200, '2026-06-09T10:00:00Z');
+  const all = [a, b, c];
+  const ids = (items: PodMembership[]) => items.map((i) => i.id);
+
+  it('keeps everything and sorts newest-first by default', () => {
+    expect(ids(applyPodHistory(all, DEFAULT_POD_HISTORY_FILTERS))).toEqual(['c', 'a', 'b']);
+  });
+
+  it('sorts oldest-first, then by price low→high and high→low', () => {
+    expect(ids(applyPodHistory(all, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'DATE_ASC' }))).toEqual(
+      ['b', 'a', 'c'],
+    );
+    expect(
+      ids(applyPodHistory(all, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'PRICE_ASC' })),
+    ).toEqual(['b', 'c', 'a']);
+    expect(
+      ids(applyPodHistory(all, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'PRICE_DESC' })),
+    ).toEqual(['a', 'c', 'b']);
+  });
+
+  it('filters by super category, then refines by category', () => {
+    expect(ids(applyPodHistory(all, { superId: 's1', categoryId: '', sort: 'DATE_DESC' }))).toEqual(
+      ['a', 'b'],
+    );
+    expect(
+      ids(applyPodHistory(all, { superId: 's1', categoryId: 'c2', sort: 'DATE_DESC' })),
+    ).toEqual(['b']);
+  });
+
+  it('drops items without a matching club (incl. missing club)', () => {
+    const noClub = membership({ id: 'x', pod: { id: 'pod-x', pod_title: 'X' } });
+    const items = applyPodHistory([a, noClub], {
+      superId: 's1',
+      categoryId: '',
+      sort: 'DATE_DESC',
+    });
+    expect(ids(items)).toEqual(['a']);
+  });
+
+  it('derives super options and cascading category options', () => {
+    const cats = [
+      { id: 's1', name: 'For You', level: 'SUPER', parent_id: null },
+      { id: 's2', name: 'For Your Pet', level: 'SUPER', parent_id: null },
+      { id: 'c1', name: 'Sports', level: 'CATEGORY', parent_id: 's1' },
+      { id: 'c2', name: 'Yoga', level: 'CATEGORY', parent_id: 's2' },
+    ] as never;
+    expect(superCategories(cats).map((c) => c.id)).toEqual(['s1', 's2']);
+    expect(categoriesUnder(cats, 's1').map((c) => c.id)).toEqual(['c1']);
+    expect(categoriesUnder(cats, '')).toEqual([]);
+  });
+
+  it('counts the active filters', () => {
+    expect(activePodHistoryFilterCount(DEFAULT_POD_HISTORY_FILTERS)).toBe(0);
+    expect(
+      activePodHistoryFilterCount({ superId: 's1', categoryId: 'c1', sort: 'DATE_DESC' }),
+    ).toBe(2);
+  });
+
+  it('treats a pod-less membership as zero date/price across every sort', () => {
+    const z = membership({ id: 'z', pod: null });
+    const list = [a, z, b];
+    expect(
+      ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'DATE_DESC' })),
+    ).toEqual(['a', 'b', 'z']);
+    expect(
+      ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'DATE_ASC' })),
+    ).toEqual(['z', 'b', 'a']);
+    expect(
+      ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'PRICE_ASC' })),
+    ).toEqual(['z', 'b', 'a']);
+    expect(
+      ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'PRICE_DESC' })),
+    ).toEqual(['a', 'b', 'z']);
   });
 });

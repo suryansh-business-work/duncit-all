@@ -26,7 +26,24 @@ export const MY_POD_MEMBERSHIPS = gql`
           url
           type
         }
+        club {
+          id
+          category_id
+          super_category_id
+        }
       }
+    }
+  }
+`;
+
+/** Super + Category tree for the Pod History filter (For You / For Your Pet → Sports …). */
+export const POD_HISTORY_CATEGORIES = gql`
+  query PodHistoryCategories {
+    categories {
+      id
+      name
+      level
+      parent_id
     }
   }
 `;
@@ -87,5 +104,15 @@ export interface PodHistoryItem {
     pod_type: string;
     no_of_spots?: number | null;
     pod_images_and_videos: Array<{ url: string; type: string }>;
+    club?: { id: string; category_id?: string | null; super_category_id?: string | null } | null;
   } | null;
+}
+
+export type CategoryLevel = 'SUPER' | 'CATEGORY' | 'SUB';
+
+export interface PodHistoryCategory {
+  id: string;
+  name: string;
+  level: CategoryLevel;
+  parent_id?: string | null;
 }

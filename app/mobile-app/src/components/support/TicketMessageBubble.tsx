@@ -1,6 +1,9 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { formatTime } from '@/utils/support-chat';
+import { formatTime, tickState } from '@/utils/support-chat';
+
+const TICK_COLOR = { delivered: '#9aa0a6', seen: '#34b7f1' } as const;
 
 export interface TicketThreadMessage {
   id: string;
@@ -13,10 +16,13 @@ export interface TicketThreadMessage {
 interface Props {
   message: TicketThreadMessage;
   timeZone: string;
+  /** When the support agent last opened the thread — flips the user's Sent ticks to Seen (B12). */
+  agentLastReadAt?: string | null;
 }
 
-/** One ticket message — USER/AGENT bubbles, or a centered SYSTEM timeline line (B7). */
-export function TicketMessageBubble({ message, timeZone }: Readonly<Props>) {
+/** One ticket message — USER/AGENT bubbles, or a centered SYSTEM timeline line (B7).
+ * The user's own messages carry a Sent (✓) / Seen (✓✓) tick like the live chat (B12). */
+export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Readonly<Props>) {
   const time = formatTime(message.created_at, timeZone);
 
   if (message.author_role === 'SYSTEM') {
@@ -40,6 +46,7 @@ export function TicketMessageBubble({ message, timeZone }: Readonly<Props>) {
   }
 
   const mine = message.author_role === 'USER';
+  const seen = mine && tickState(message, agentLastReadAt) === 'seen';
   return (
     <XStack justifyContent={mine ? 'flex-end' : 'flex-start'} testID={`ticket-msg-${message.id}`}>
       <YStack
@@ -57,16 +64,21 @@ export function TicketMessageBubble({ message, timeZone }: Readonly<Props>) {
         <Text fontSize={13.5} color={mine ? '$onPrimary' : '$color'}>
           {message.body_text}
         </Text>
-        {time ? (
-          <Text
-            fontSize={10}
-            color={mine ? '$onPrimary' : '$muted'}
-            opacity={0.7}
-            alignSelf="flex-end"
-          >
-            {time}
-          </Text>
-        ) : null}
+        <XStack alignSelf="flex-end" alignItems="center" gap={4}>
+          {time ? (
+            <Text fontSize={10} color={mine ? '$onPrimary' : '$muted'} opacity={0.7}>
+              {time}
+            </Text>
+          ) : null}
+          {mine ? (
+            <MaterialIcons
+              testID={`ticket-tick-${message.id}`}
+              name={seen ? 'done-all' : 'done'}
+              size={13}
+              color={seen ? TICK_COLOR.seen : TICK_COLOR.delivered}
+            />
+          ) : null}
+        </XStack>
       </YStack>
     </XStack>
   );

@@ -154,6 +154,8 @@ export const TicketDetailsDocument = gql(`
       reopen_deadline
       rating
       feedback_comment
+      user_last_read_at
+      agent_last_read_at
       messages {
         id
         author_role
@@ -162,6 +164,17 @@ export const TicketDetailsDocument = gql(`
         attachments
         created_at
       }
+    }
+  }
+`);
+
+/** Marks the ticket thread read so the other side's Sent ticks turn Seen (B12). */
+export const MarkTicketReadDocument = gql(`
+  mutation MobileMarkTicketRead($ticketId: ID!) {
+    markTicketRead(ticket_id: $ticketId) {
+      id
+      user_last_read_at
+      agent_last_read_at
     }
   }
 `);

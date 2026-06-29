@@ -208,6 +208,37 @@ describe('ticket feedback (B8)', () => {
   });
 });
 
+describe('ticket read receipts / ticks (B12)', () => {
+  it('stamps the acting side last-read so the other side ticks turn Seen', async () => {
+    const t = await ticketService.createTicket(userId, { subject: 'S', body_text: 'B' });
+    expect(t.user_last_read_at).toBeNull();
+    expect(t.agent_last_read_at).toBeNull();
+
+    // Agent opens the thread → agent_last_read_at set (user's message now Seen).
+    const agentId = new Types.ObjectId().toString();
+    const afterAgentRead = await ticketService.markRead(agentId, true, t.id);
+    expect(afterAgentRead.agent_last_read_at).toBeTruthy();
+    expect(afterAgentRead.user_last_read_at).toBeNull();
+
+    // User opens the thread → user_last_read_at set (agent's reply now Seen).
+    const afterUserRead = await ticketService.markRead(userId, false, t.id);
+    expect(afterUserRead.user_last_read_at).toBeTruthy();
+  });
+
+  it('forbids a stranger marking a ticket read and rejects bad ids', async () => {
+    const t = await ticketService.createTicket(userId, { subject: 'S', body_text: 'B' });
+    await expect(
+      ticketService.markRead(new Types.ObjectId().toString(), false, t.id)
+    ).rejects.toThrow(/another user/i);
+    await expect(ticketService.markRead(userId, false, 'not-an-id')).rejects.toThrow(
+      /invalid ticket_id/i
+    );
+    await expect(
+      ticketService.markRead(userId, true, new Types.ObjectId().toString())
+    ).rejects.toThrow(/not found/i);
+  });
+});
+
 describe('ticket transcript (B15)', () => {
   it('builds a plain-text transcript with the ST ticket number and subject', async () => {
     const t = await ticketService.createTicket(userId, {

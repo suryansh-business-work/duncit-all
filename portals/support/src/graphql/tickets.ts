@@ -18,6 +18,8 @@ export const TICKET_FIELDS = gql`
     rating
     feedback_comment
     feedback_at
+    user_last_read_at
+    agent_last_read_at
     created_at
     updated_at
     user {
@@ -56,6 +58,16 @@ export const TICKET = gql`
     }
   }
   ${TICKET_FIELDS}
+`;
+
+export const MARK_TICKET_READ = gql`
+  mutation MarkTicketRead($ticket_id: ID!) {
+    markTicketRead(ticket_id: $ticket_id) {
+      id
+      user_last_read_at
+      agent_last_read_at
+    }
+  }
 `;
 
 export const REPLY_TO_TICKET = gql`
@@ -158,6 +170,8 @@ export interface Ticket {
   rating: number | null;
   feedback_comment: string | null;
   feedback_at: string | null;
+  user_last_read_at: string | null;
+  agent_last_read_at: string | null;
   created_at: string;
   updated_at: string;
   user: { id: string; name: string; phone: string | null; avatar_url: string | null };

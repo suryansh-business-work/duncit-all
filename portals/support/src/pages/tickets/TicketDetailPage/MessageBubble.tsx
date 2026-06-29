@@ -1,14 +1,21 @@
 import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
+import CheckIcon from '@mui/icons-material/Check';
+import DoneAllIcon from '@mui/icons-material/DoneAll';
 import type { TicketMessage } from '../../../graphql/tickets';
+
+const SEEN_BLUE = '#34b7f1';
 
 interface Props {
   msg: TicketMessage;
   time: string;
+  /** When the user last opened the thread — flips the agent's Sent ticks to Seen (B12). */
+  userLastReadAt?: string | null;
 }
 
 /** A ticket thread entry — SYSTEM rows render as a centered timeline chip;
- * USER/AGENT render as left/right bubbles with a tz-aware timestamp. */
-export default function MessageBubble({ msg, time }: Readonly<Props>) {
+ * USER/AGENT render as left/right bubbles with a tz-aware timestamp. The agent's
+ * own messages carry a Sent (✓) / Seen (✓✓ blue) tick like the live chat (B12). */
+export default function MessageBubble({ msg, time, userLastReadAt }: Readonly<Props>) {
   if (msg.author_role === 'SYSTEM') {
     return (
       <Stack direction="row" sx={{ justifyContent: 'center' }}>
@@ -17,6 +24,8 @@ export default function MessageBubble({ msg, time }: Readonly<Props>) {
     );
   }
   const isAgent = msg.author_role === 'AGENT';
+  const seen =
+    !!userLastReadAt && new Date(userLastReadAt).getTime() >= new Date(msg.created_at).getTime();
   return (
     <Stack direction="row" spacing={1.25} sx={{ flexDirection: isAgent ? 'row-reverse' : 'row' }}>
       <Avatar src={msg.author_photo || undefined} sx={{ width: 32, height: 32, fontSize: 13 }}>
@@ -39,6 +48,12 @@ export default function MessageBubble({ msg, time }: Readonly<Props>) {
           <Typography variant="caption" sx={{ opacity: 0.7 }}>
             {time}
           </Typography>
+          {isAgent &&
+            (seen ? (
+              <DoneAllIcon sx={{ fontSize: 15, color: SEEN_BLUE }} />
+            ) : (
+              <CheckIcon sx={{ fontSize: 15, opacity: 0.7 }} />
+            ))}
         </Stack>
         {msg.body_html ? (
           <Box sx={{ '& p': { m: 0 }, fontSize: 14 }} dangerouslySetInnerHTML={{ __html: msg.body_html }} />

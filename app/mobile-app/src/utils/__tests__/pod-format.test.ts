@@ -10,6 +10,8 @@ import {
   podPriceLabel,
   podScheduleLabel,
   podShareMessage,
+  podStatus,
+  podStatusBadge,
   podTimeChip,
 } from '@/utils/pod-format';
 
@@ -156,5 +158,32 @@ describe('podShareMessage', () => {
     expect(message).not.toContain('When:');
     expect(message).not.toContain('Where:');
     expect(message).toContain('Open Mic');
+  });
+});
+
+describe('podStatus / podStatusBadge (explore item 16)', () => {
+  const NOW = new Date('2026-06-15T12:00:00.000Z').getTime();
+  beforeEach(() => jest.spyOn(Date, 'now').mockReturnValue(NOW));
+  afterEach(() => jest.restoreAllMocks());
+
+  const at = (hoursFromNow: number) => new Date(NOW + hoursFromNow * 3600_000).toISOString();
+
+  it('treats a missing or invalid start as upcoming', () => {
+    expect(podStatus(null)).toBe('UPCOMING');
+    expect(podStatus('not-a-date')).toBe('UPCOMING');
+  });
+
+  it('classifies future / in-window / past pods', () => {
+    expect(podStatus(at(2))).toBe('UPCOMING');
+    expect(podStatus(at(-1))).toBe('LIVE'); // within the 4h live tail
+    expect(podStatus(at(-6))).toBe('ENDED');
+    expect(podStatus(at(-1), at(-0.5))).toBe('ENDED'); // explicit end already past
+  });
+
+  it('maps each status to a label + tint', () => {
+    expect(podStatusBadge('LIVE').label).toBe('Live');
+    expect(podStatusBadge('UPCOMING').label).toBe('Upcoming');
+    expect(podStatusBadge('ENDED').label).toBe('Ended');
+    expect(podStatusBadge('LIVE').tint).toContain('34,197,94');
   });
 });

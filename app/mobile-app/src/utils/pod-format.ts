@@ -87,6 +87,28 @@ export function isPodActive(start?: string | null, end?: string | null): boolean
   return Date.now() <= endMs;
 }
 
+export type PodStatus = 'LIVE' | 'UPCOMING' | 'ENDED';
+
+/** Derives a pod's status from its start (+ optional end) timestamp relative to
+ * now. Mirrors mWeb's podStatus. */
+export function podStatus(start?: string | null, end?: string | null): PodStatus {
+  if (!start) return 'UPCOMING';
+  const startMs = new Date(start).getTime();
+  if (Number.isNaN(startMs)) return 'UPCOMING';
+  const endMs = end ? new Date(end).getTime() : startMs + POD_LIVE_TAIL_MS;
+  const now = Date.now();
+  if (now < startMs) return 'UPCOMING';
+  if (now <= endMs) return 'LIVE';
+  return 'ENDED';
+}
+
+/** Maps a pod status to a badge label + colour so reels badges stay consistent. */
+export function podStatusBadge(status: PodStatus): { label: string; tint: string } {
+  if (status === 'LIVE') return { label: 'Live', tint: 'rgba(34,197,94,0.85)' };
+  if (status === 'UPCOMING') return { label: 'Upcoming', tint: 'rgba(245,158,11,0.85)' };
+  return { label: 'Ended', tint: 'rgba(120,120,130,0.85)' };
+}
+
 export type TimeTone = 'error' | 'warning' | 'info';
 
 /** Countdown chip data for the pod start: expired / soon / N days · hours.

@@ -303,6 +303,32 @@ describe('ExplorePodCard', () => {
     expect(screen.queryByTestId('reel-like-p-nolk-count')).toBeNull();
   });
 
+  it('shows a Sold Out badge + capacity when the pod is full (item 16)', () => {
+    renderWithProviders(
+      <ExplorePodCard
+        pod={
+          {
+            ...(pod('full') as Record<string, unknown>),
+            no_of_spots: 2,
+            pod_attendees: ['u1', 'u2'],
+          } as never
+        }
+        width={390}
+        height={2000}
+        saved={false}
+        like={{ liked_by_me: false, like_count: 0 }}
+        commentCount={0}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Sold Out')).toBeOnTheScreen();
+    // "2/2" appears on both the capacity chip and the join-rail label.
+    expect(screen.getAllByText('2/2').length).toBeGreaterThan(0);
+  });
+
   it('omits the verified badge and caption toggle for short, unverified content', () => {
     renderWithProviders(
       <ExplorePodCard

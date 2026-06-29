@@ -70,6 +70,8 @@ describe('ExploreMediaCarousel + ExplorePodOverlay', () => {
       place_label: 'Cafe',
       place_detail: null,
       zone_name: null,
+      pod_attendees: ['u1', 'u2'],
+      no_of_spots: 3,
     } as never;
     renderWithProviders(<ExplorePodOverlay pod={pod} clubName="Runners" />);
     expect(screen.getByText('Jam')).toBeOnTheScreen();
@@ -249,6 +251,8 @@ describe('empty / minimal branches', () => {
       place_label: null,
       place_detail: null,
       zone_name: null,
+      pod_attendees: [],
+      no_of_spots: 0,
     } as never;
     renderWithProviders(<ExplorePodOverlay pod={pod} />);
     expect(screen.getByText('Bare')).toBeOnTheScreen();

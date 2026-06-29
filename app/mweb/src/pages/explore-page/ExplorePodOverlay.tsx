@@ -5,7 +5,9 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import EventIcon from '@mui/icons-material/Event';
 import PlaceIcon from '@mui/icons-material/Place';
 import VerifiedIcon from '@mui/icons-material/Verified';
+import GroupIcon from '@mui/icons-material/Group';
 import { usePricing } from '../../hooks/usePricing';
+import { podStatus, podStatusChip } from '../../utils/podStatus';
 
 interface Props {
   pod: any;
@@ -23,6 +25,11 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
   const placeLabel = pod.place_label || [location?.location_name, pod.zone_name].filter(Boolean).join(' - ');
   const description: string = pod.pod_description ?? '';
   const collapsible = description.length > CAPTION_COLLAPSE_AT;
+  // Event status + capacity badges (explore item 16).
+  const spots = pod.no_of_spots ?? 0;
+  const attendees = pod.pod_attendees?.length ?? 0;
+  const soldOut = spots > 0 && attendees >= spots;
+  const statusChip = podStatusChip(podStatus(pod.pod_date_time, pod.pod_end_time));
 
   return (
     <>
@@ -95,6 +102,22 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
             )}
           </Box>
         )}
+        <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+          <Chip
+            size="small"
+            label={soldOut ? 'Sold Out' : statusChip.label}
+            color={soldOut ? 'error' : statusChip.color}
+            sx={{ fontWeight: 800, color: soldOut || statusChip.color !== 'default' ? 'common.white' : undefined }}
+          />
+          {spots > 0 && (
+            <Chip
+              size="small"
+              icon={<GroupIcon sx={{ color: 'common.white !important' }} />}
+              label={`${attendees}/${spots}`}
+              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'common.white' }}
+            />
+          )}
+        </Stack>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap" useFlexGap>
           <Chip
             size="small"

@@ -6,7 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { PressScale } from '@/animations/PressScale';
 import type { ExplorePod } from '@/stores/explore.store';
-import { podDateLabel, podPriceLabel } from '@/utils/pod-format';
+import { podDateLabel, podPriceLabel, podStatus, podStatusBadge } from '@/utils/pod-format';
 
 const CAPTION_COLLAPSE_AT = 90;
 
@@ -51,6 +51,11 @@ export function ExplorePodOverlay({
     [pod.place_label, pod.place_detail].filter(Boolean).join(' · ') || pod.zone_name || '';
   const description = pod.pod_description ?? '';
   const collapsible = description.length > CAPTION_COLLAPSE_AT;
+  // Event status + capacity badges (explore item 16).
+  const spots = pod.no_of_spots;
+  const attendees = pod.pod_attendees.length;
+  const soldOut = spots > 0 && attendees >= spots;
+  const statusBadge = podStatusBadge(podStatus(pod.pod_date_time));
 
   return (
     <>
@@ -111,6 +116,11 @@ export function ExplorePodOverlay({
           </YStack>
         ) : null}
         <XStack gap={8} flexWrap="wrap">
+          <Chip
+            label={soldOut ? 'Sold Out' : statusBadge.label}
+            tint={soldOut ? 'rgba(239,68,68,0.85)' : statusBadge.tint}
+          />
+          {spots > 0 ? <Chip icon="group" label={`${attendees}/${spots}`} /> : null}
           <Chip
             label={podPriceLabel(pod)}
             tint={isFree ? 'rgba(34,197,94,0.32)' : 'rgba(255,79,115,0.5)'}

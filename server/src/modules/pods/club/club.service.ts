@@ -55,7 +55,13 @@ function notFound(): never {
 }
 
 export const clubService = {
-  async list(filter?: { search?: string; category_id?: string; super_category_id?: string; is_active?: boolean }) {
+  async list(filter?: {
+    search?: string;
+    category_id?: string;
+    super_category_id?: string;
+    is_active?: boolean;
+    is_verified?: boolean;
+  }) {
     const q: any = {};
     if (filter?.search) {
       q.$or = [
@@ -66,6 +72,7 @@ export const clubService = {
     if (filter?.category_id) q.category_id = filter.category_id;
     if (filter?.super_category_id) q.super_category_id = filter.super_category_id;
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
+    if (filter?.is_verified !== undefined) q.is_verified = filter.is_verified;
     const docs = await ClubModel.find(q).sort({ club_name: 1 });
     return docs.map(toPub);
   },

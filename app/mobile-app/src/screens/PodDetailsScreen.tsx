@@ -38,6 +38,7 @@ export function PodDetailsScreen() {
     venue,
     location,
     viewerId,
+    viewerPhoto,
     savedInitially,
     membershipState,
     people,
@@ -201,6 +202,7 @@ export function PodDetailsScreen() {
           podId={pod.id}
           open={commentsOpen}
           viewerId={viewerId}
+          viewerPhoto={viewerPhoto}
           onClose={() => setCommentsOpen(false)}
           onCountChange={(delta) => {
             setCommentDelta((prev) => prev + delta);

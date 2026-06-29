@@ -31,6 +31,7 @@ export function usePodDetails(podId: string) {
   const [venue, setVenue] = useState<PodVenue | null>(null);
   const [location, setLocation] = useState<PodLocation | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
+  const [viewerPhoto, setViewerPhoto] = useState<string | null>(null);
   const [savedInitially, setSavedInitially] = useState(false);
   const [followingInitially, setFollowingInitially] = useState(false);
   const [membershipState, setMembershipState] = useState<PodMembershipState | null>(null);
@@ -43,6 +44,7 @@ export function usePodDetails(podId: string) {
     const nextPod = data.pod ?? null;
     setPod(nextPod);
     setViewerId(data.me?.user_id ?? null);
+    setViewerPhoto(data.me?.profile_photo ?? null);
     setVenue(data.publicVenues.find((v) => v.id === nextPod?.venue_id) ?? null);
     setLocation(data.locations.find((l) => l.id === nextPod?.location_id) ?? null);
     setSavedInitially((data.me?.saved_pod_ids ?? []).includes(nextPod?.id ?? ''));
@@ -78,6 +80,7 @@ export function usePodDetails(podId: string) {
     venue,
     location,
     viewerId,
+    viewerPhoto,
     savedInitially,
     followingInitially,
     membershipState,
@@ -216,8 +219,16 @@ export function usePodComments(podId: string, open: boolean) {
   };
 
   const remove = async (commentId: string) => {
+    // Optimistically drop the comment, but keep a snapshot so we can restore the
+    // thread (and let the caller skip the count decrement) if the server rejects.
+    const snapshot = comments;
     setComments((prev) => prev.filter((c) => c.id !== commentId));
-    await graphqlRequest(DeletePodCommentDocument, { podId, commentId }, { auth: true });
+    try {
+      await graphqlRequest(DeletePodCommentDocument, { podId, commentId }, { auth: true });
+    } catch (err) {
+      setComments(snapshot);
+      throw err;
+    }
   };
 
   // Optimistic comment reaction (explore item 4): flip locally, then reconcile

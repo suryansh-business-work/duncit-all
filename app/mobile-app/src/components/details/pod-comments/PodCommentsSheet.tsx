@@ -57,8 +57,12 @@ export function PodCommentsSheet({
 
   const confirmDelete = async (target: PodComment) => {
     setDeleteTarget(null);
-    await remove(target.id);
-    onCountChange(-1);
+    try {
+      await remove(target.id);
+      onCountChange(-1);
+    } catch {
+      /* remove() restored the comment; leave the count unchanged */
+    }
   };
 
   const openProfile = (authorId: string) => {

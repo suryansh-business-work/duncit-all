@@ -152,6 +152,7 @@ export default function PodCommentsSheet({
         message="This comment will be permanently removed."
         confirmLabel="Delete"
         cancelLabel="Cancel"
+        destructive
         onConfirm={onConfirmDelete}
         onClose={() => setDeleteId(null)}
       />

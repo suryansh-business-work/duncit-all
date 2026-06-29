@@ -17,7 +17,7 @@ const pod = {
 beforeEach(() => {
   Object.assign(mockState, {
     data: {
-      me: { user_id: 'u', saved_pod_ids: ['p9'] },
+      me: { user_id: 'u', profile_photo: 'http://img/me.jpg', saved_pod_ids: ['p9'] },
       clubs: [{ id: 'c1', club_name: 'C1' }],
       pods: [pod],
     },
@@ -45,6 +45,7 @@ describe('useExplore', () => {
     const { result } = renderHook(() => useExplore());
     expect(result.current.likeStateFor(pod)).toEqual({ liked_by_me: false, like_count: 4 });
     expect(result.current.clubsById.get('c1')?.club_name).toBe('C1');
+    expect(result.current.viewerPhoto).toBe('http://img/me.jpg');
   });
 
   it('handles an undefined feed', () => {
@@ -53,5 +54,6 @@ describe('useExplore', () => {
     expect(result.current.pods).toHaveLength(0);
     expect(result.current.isSaved('p1')).toBe(false);
     expect(result.current.likeStateFor(pod)).toEqual({ liked_by_me: false, like_count: 4 });
+    expect(result.current.viewerPhoto).toBeNull();
   });
 });

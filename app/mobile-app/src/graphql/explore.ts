@@ -8,6 +8,7 @@ export const ExplorePodsDocument = gql(`
   query MobileExplorePods {
     me {
       user_id
+      profile_photo
       saved_pod_ids
     }
     clubs(filter: { is_active: true }) {

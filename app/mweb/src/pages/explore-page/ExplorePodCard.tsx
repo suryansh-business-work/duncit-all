@@ -30,6 +30,16 @@ interface Props {
   viewerId?: string | null;
 }
 
+/** Reconcile the cached likers with the viewer's own optimistic like so a
+ * just-liked pod shows the viewer instead of a stale "No likes yet". */
+function likersWithViewer(ids: string[], viewerId: string | null | undefined, liked: boolean): string[] {
+  if (!viewerId) return ids;
+  const has = ids.includes(viewerId);
+  if (liked && !has) return [...ids, viewerId];
+  if (!liked && has) return ids.filter((id) => id !== viewerId);
+  return ids;
+}
+
 export default function ExplorePodCard({
   pod,
   club,
@@ -199,7 +209,7 @@ export default function ExplorePodCard({
       <LikesListDialog
         open={likersOpen}
         onClose={() => setLikersOpen(false)}
-        userIds={pod.liked_user_ids ?? []}
+        userIds={likersWithViewer(pod.liked_user_ids ?? [], viewerId, liked)}
       />
     </Box>
   );

@@ -103,6 +103,19 @@ describe('PodCommentsSheet', () => {
     expect(onCountChange).toHaveBeenCalledWith(-1);
   });
 
+  it('keeps the count unchanged (no unhandled rejection) when delete fails (review fix)', async () => {
+    const remove = jest.fn().mockRejectedValue(new Error('offline'));
+    const onCountChange = jest.fn();
+    mockComments.mockReturnValue({ ...baseThread, remove });
+    renderSheet({ onCountChange });
+
+    fireEvent(screen.getByTestId('comment-row-c1'), 'longPress');
+    fireEvent.press(screen.getByTestId('comment-delete-confirm-btn'));
+    await waitFor(() => expect(remove).toHaveBeenCalledWith('c1'));
+    // The rejection is swallowed in confirmDelete, so the badge is not decremented.
+    expect(onCountChange).not.toHaveBeenCalled();
+  });
+
   it('opens a commenter profile from their avatar/name (item 11)', () => {
     const onClose = jest.fn();
     mockComments.mockReturnValue(baseThread);

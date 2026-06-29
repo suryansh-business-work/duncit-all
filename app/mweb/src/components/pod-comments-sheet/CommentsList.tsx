@@ -1,8 +1,16 @@
+import type { KeyboardEvent } from 'react';
 import { Avatar, Box, IconButton, List, ListItem, Stack, Typography } from '@mui/material';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
 import FavoriteIcon from '@mui/icons-material/Favorite';
 import { formatRelative } from './helpers';
+
+const activateOnKey = (fn: () => void) => (e: KeyboardEvent) => {
+  if (e.key === 'Enter' || e.key === ' ') {
+    e.preventDefault();
+    fn();
+  }
+};
 
 interface Props {
   comments: any[];
@@ -29,6 +37,10 @@ export default function CommentsList({
             <Avatar
               src={c.author_photo || undefined}
               onClick={() => onOpenProfile(c.author_id)}
+              onKeyDown={activateOnKey(() => onOpenProfile(c.author_id))}
+              role="button"
+              tabIndex={0}
+              aria-label={`Open ${c.author_name || 'user'} profile`}
               sx={{ cursor: 'pointer', flex: '0 0 auto' }}
             >
               {(c.author_name || '?').slice(0, 1).toUpperCase()}
@@ -38,6 +50,9 @@ export default function CommentsList({
                 <Typography
                   variant="subtitle2"
                   onClick={() => onOpenProfile(c.author_id)}
+                  onKeyDown={activateOnKey(() => onOpenProfile(c.author_id))}
+                  role="button"
+                  tabIndex={0}
                   sx={{ cursor: 'pointer' }}
                 >
                   {c.author_name || 'Anon'}

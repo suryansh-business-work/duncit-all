@@ -6,6 +6,7 @@ export const PodDetailsDocument = gql(`
   query MobilePodDetails($podId: ID!) {
     me {
       user_id
+      profile_photo
       saved_pod_ids
       following_pod_ids
     }

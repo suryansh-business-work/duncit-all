@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import {
@@ -38,6 +39,40 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
     navigate(`/u/${userId}`);
   };
 
+  let body: ReactNode;
+  if (loading && users.length === 0) {
+    body = (
+      <Stack alignItems="center" sx={{ py: 4 }}>
+        <CircularProgress size={22} />
+      </Stack>
+    );
+  } else if (userIds.length === 0) {
+    body = (
+      <Typography sx={{ px: 3, pb: 3 }} color="text.secondary">
+        No likes yet.
+      </Typography>
+    );
+  } else {
+    body = (
+      <List sx={{ pb: 2 }}>
+        {users.map((u) => (
+          <ListItemButton key={u.user_id} onClick={() => openProfile(u.user_id)}>
+            <ListItemAvatar>
+              <Avatar src={u.profile_photo || undefined}>
+                {(u.full_name || u.first_name || '?').slice(0, 1).toUpperCase()}
+              </Avatar>
+            </ListItemAvatar>
+            <ListItemText
+              primary={u.full_name || u.first_name || 'User'}
+              secondary={u.username ? `@${u.username}` : undefined}
+              primaryTypographyProps={{ fontWeight: 800 }}
+            />
+          </ListItemButton>
+        ))}
+      </List>
+    );
+  }
+
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="xs" PaperProps={{ sx: { borderRadius: 3 } }}>
       <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 1 }}>
@@ -46,32 +81,7 @@ export default function LikesListDialog({ open, onClose, userIds }: Readonly<Pro
           <CloseIcon />
         </IconButton>
       </Stack>
-      {loading && users.length === 0 ? (
-        <Stack alignItems="center" sx={{ py: 4 }}>
-          <CircularProgress size={22} />
-        </Stack>
-      ) : userIds.length === 0 ? (
-        <Typography sx={{ px: 3, pb: 3 }} color="text.secondary">
-          No likes yet.
-        </Typography>
-      ) : (
-        <List sx={{ pb: 2 }}>
-          {users.map((u) => (
-            <ListItemButton key={u.user_id} onClick={() => openProfile(u.user_id)}>
-              <ListItemAvatar>
-                <Avatar src={u.profile_photo || undefined}>
-                  {(u.full_name || u.first_name || '?').slice(0, 1).toUpperCase()}
-                </Avatar>
-              </ListItemAvatar>
-              <ListItemText
-                primary={u.full_name || u.first_name || 'User'}
-                secondary={u.username ? `@${u.username}` : undefined}
-                primaryTypographyProps={{ fontWeight: 800 }}
-              />
-            </ListItemButton>
-          ))}
-        </List>
-      )}
+      {body}
     </Dialog>
   );
 }

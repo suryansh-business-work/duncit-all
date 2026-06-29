@@ -48,8 +48,15 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
             direction="row"
             spacing={1}
             alignItems="center"
+            role="button"
+            tabIndex={0}
+            aria-label={`Open ${club.club_name} club`}
             sx={{ cursor: 'pointer' }}
             onClick={() => club.club_id && navigate(`/club/${club.club_id}`)}
+            onDoubleClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              if ((e.key === 'Enter' || e.key === ' ') && club.club_id) navigate(`/club/${club.club_id}`);
+            }}
           >
             <Box sx={{ width: 24, height: 24, borderRadius: '50%', bgcolor: 'primary.main', display: 'grid', placeItems: 'center' }}>
               <GroupsIcon sx={{ fontSize: 15 }} />
@@ -66,7 +73,11 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
           {pod.pod_title}
         </Typography>
         {description && (
-          <Box onClick={() => collapsible && setExpanded((v) => !v)} sx={{ cursor: collapsible ? 'pointer' : 'default' }}>
+          <Box
+            onClick={() => collapsible && setExpanded((v) => !v)}
+            onDoubleClick={(e) => collapsible && e.stopPropagation()}
+            sx={{ cursor: collapsible ? 'pointer' : 'default' }}
+          >
             <Typography
               variant="body2"
               sx={

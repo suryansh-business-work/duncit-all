@@ -11,6 +11,7 @@ import { Text, YStack } from 'tamagui';
 
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useExplore } from '@/hooks/useExplore';
+import { likersWithViewer } from '@/utils/explore-likers';
 import type { ExplorePod } from '@/stores/explore.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
@@ -33,6 +34,7 @@ export function ExploreReels() {
     isLoading,
     hasData,
     viewerId,
+    viewerPhoto,
     isSaved,
     isSavePending,
     likeStateFor,
@@ -128,6 +130,7 @@ export function ExploreReels() {
           podId={commentsPod.id}
           open
           viewerId={viewerId}
+          viewerPhoto={viewerPhoto}
           onClose={() => setCommentsPod(null)}
           onCountChange={(delta) => bumpComment(commentsPod.id, delta)}
         />
@@ -135,7 +138,11 @@ export function ExploreReels() {
       {likersPod ? (
         <LikesListSheet
           open
-          userIds={likersPod.liked_user_ids}
+          userIds={likersWithViewer(
+            likersPod.liked_user_ids,
+            viewerId,
+            likeStateFor(likersPod).liked_by_me,
+          )}
           onClose={() => setLikersPod(null)}
         />
       ) : null}

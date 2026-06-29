@@ -5,6 +5,7 @@ import AppleIcon from '@mui/icons-material/Apple';
 import DownloadIcon from '@mui/icons-material/Download';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import GoogleIcon from '@mui/icons-material/Google';
+import StorefrontIcon from '@mui/icons-material/Storefront';
 import { alpha, useTheme } from '@mui/material/styles';
 import PaymentLottie from '../../components/PaymentLottie';
 import ConfettiOverlay from '../../components/ConfettiOverlay';
@@ -51,6 +52,8 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile }: Rea
   const [loadTicketPdf, { loading: ticketLoading }] = useLazyQuery(TICKET_PDF, { fetchPolicy: 'network-only' });
   const { formatDateTime } = useDateFormat();
   const paidAt = payment.paid_at || payment.created_at;
+  const venueCharges: Array<{ amount: number }> = pod?.place_charges ?? [];
+  const venueTotal = venueCharges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
 
   const downloadTicket = async () => {
     if (!pod?.id) return;
@@ -136,6 +139,14 @@ export default function CheckoutSuccess({ payment, pod, onHome, onProfile }: Rea
                     Add to Google Wallet
                   </Button>
                 </Stack>
+                {venueTotal > 0 && (
+                  <Stack direction="row" spacing={1} alignItems="center">
+                    <StorefrontIcon fontSize="small" color="action" />
+                    <Typography variant="caption" color="text.secondary">
+                      Venue charges {formatMoney(payment.currency_symbol, venueTotal)} are payable directly at the venue.
+                    </Typography>
+                  </Stack>
+                )}
               </Stack>
             </Box>
           )}

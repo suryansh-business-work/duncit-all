@@ -511,9 +511,11 @@ export const paymentService = {
     return toPub(doc);
   },
 
-  async invoicePdfBase64(paymentDocId: string) {
+  async invoicePdfBase64(paymentDocId: string, requesterId: string, isAdmin: boolean) {
     const doc = await PaymentModel.findById(paymentDocId);
     if (!doc) throw new GraphQLError('Payment not found', { extensions: { code: 'NOT_FOUND' } });
+    if (!isAdmin && String(doc.user_id) !== String(requesterId))
+      throw new GraphQLError('Not your invoice', { extensions: { code: 'FORBIDDEN' } });
     if (!doc.invoice_no) {
       throw new GraphQLError('No invoice generated for this payment', {
         extensions: { code: 'BAD_REQUEST' },

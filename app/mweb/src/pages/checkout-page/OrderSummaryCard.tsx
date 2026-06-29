@@ -1,6 +1,9 @@
-import { Box, Card, CardContent, Divider, Stack, Typography } from '@mui/material';
+import { useState } from 'react';
+import { Box, Card, CardContent, Divider, IconButton, Stack, Typography } from '@mui/material';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { alpha, useTheme } from '@mui/material/styles';
 import { formatMoney } from './checkoutMath';
+import VenueChargesDialog, { type VenueCharge } from './VenueChargesDialog';
 
 interface Props {
   pod: any;
@@ -22,6 +25,11 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup, selectedPro
     .map((item: any) => ({ ...item, quantity: selectedMap.get(item.product_id) || 0, total_cost: Number(item.unit_cost || 0) * Number(selectedMap.get(item.product_id) || 0) }));
   const productTotal = productItems.reduce((sum: number, item: any) => sum + Number(item.total_cost || 0), 0);
   const ticketTotal = Math.max(0, Number(breakup.total) - productTotal);
+  // Venue charges are paid directly at the venue — shown for transparency but
+  // NOT added to the online "Total payable".
+  const venueCharges: VenueCharge[] = pod?.place_charges ?? [];
+  const venueTotal = venueCharges.reduce((sum, charge) => sum + Number(charge.amount || 0), 0);
+  const [venueInfoOpen, setVenueInfoOpen] = useState(false);
 
   return (
     <Card sx={{ flex: 1, borderRadius: 4, bgcolor: isDark ? 'rgba(255,255,255,0.08)' : alpha(theme.palette.background.paper, 0.82), color: 'text.primary', boxShadow: 'none', border: '1px solid', borderColor: isDark ? 'rgba(255,255,255,0.12)' : 'divider' }}>
@@ -49,7 +57,22 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup, selectedPro
           <Row label={`GST (${breakup.gstPct}%)`} value={fmt(breakup.gst)} />
           <Divider sx={{ my: 1 }} />
           <Row label="Total payable" value={fmt(breakup.total)} bold />
+          {venueCharges.length > 0 && (
+            <Box sx={{ mt: 1, p: 1.25, borderRadius: 2, border: '1px dashed', borderColor: 'divider', bgcolor: 'action.hover' }}>
+              <Stack direction="row" justifyContent="space-between" alignItems="center" spacing={1}>
+                <Stack direction="row" alignItems="center" spacing={0.5}>
+                  <Typography variant="body2" fontWeight={600}>Venue Charges</Typography>
+                  <IconButton size="small" aria-label="About venue charges" onClick={() => setVenueInfoOpen(true)} sx={{ p: 0.25 }}>
+                    <InfoOutlinedIcon fontSize="inherit" color="action" />
+                  </IconButton>
+                </Stack>
+                <Typography variant="body2" fontWeight={700}>{fmt(venueTotal)}</Typography>
+              </Stack>
+              <Typography variant="caption" color="text.secondary">Payable directly at the venue</Typography>
+            </Box>
+          )}
         </Stack>
+        <VenueChargesDialog open={venueInfoOpen} charges={venueCharges} currency={breakup.currency} onClose={() => setVenueInfoOpen(false)} />
       </CardContent>
     </Card>
   );

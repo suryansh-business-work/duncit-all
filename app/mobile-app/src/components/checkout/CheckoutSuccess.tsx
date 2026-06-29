@@ -33,6 +33,7 @@ export function CheckoutSuccess({
   const [busy, setBusy] = useState(false);
   const [ticketBusy, setTicketBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const venueTotal = (pod?.place_charges ?? []).reduce((sum, charge) => sum + charge.amount, 0);
 
   const download = async () => {
     setBusy(true);
@@ -81,6 +82,16 @@ export function CheckoutSuccess({
       </YStack>
 
       {pod ? <ConfirmationPodCard pod={pod} /> : null}
+
+      {venueTotal > 0 ? (
+        <XStack testID="success-venue-note" alignItems="center" gap={6} alignSelf="stretch">
+          <MaterialIcons name="storefront" size={16} color="#9aa0a6" />
+          <Text fontSize={12} color="$muted" flex={1}>
+            Venue charges {formatMoney(payment.currency_symbol, venueTotal)} are payable directly at
+            the venue.
+          </Text>
+        </XStack>
+      ) : null}
 
       {error ? (
         <Text testID="invoice-error" fontSize={13} color="$danger">

@@ -37,6 +37,11 @@ export const MobileCheckoutPodDocument = gql(`
       pod_date_time
       pod_type
       pod_amount
+      place_charges {
+        label
+        amount
+        note
+      }
       zone_name
       pod_images_and_videos {
         url

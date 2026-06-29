@@ -1,6 +1,7 @@
+import { Modal } from 'react-native';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
-import { CheckoutSuccess, OrderSummary } from '@/components/checkout';
+import { CheckoutSuccess, OrderSummary, VenueChargesSheet } from '@/components/checkout';
 import { renderWithProviders } from '@/utils/test-utils';
 import type { CheckoutBreakup } from '@/utils/checkout-math';
 
@@ -43,6 +44,67 @@ describe('OrderSummary', () => {
       />,
     );
     expect(screen.getByText('Bare')).toBeOnTheScreen();
+    // No place_charges → the venue-charges row is hidden.
+    expect(screen.queryByTestId('venue-charges-row')).toBeNull();
+  });
+
+  it('shows venue charges (pay at venue), sums them, and opens/closes the info sheet', () => {
+    renderWithProviders(
+      <OrderSummary
+        pod={
+          {
+            id: 'p1',
+            pod_title: 'Sunset Pod',
+            pod_images_and_videos: [],
+            place_charges: [
+              { label: 'Entry fee', amount: 100, note: 'Paid at the gate' },
+              { label: 'Table charge', amount: 50, note: null },
+            ],
+          } as never
+        }
+        breakup={breakup}
+      />,
+    );
+    // The venue line is shown separately, marked pay-at-venue (NOT in Total payable).
+    expect(screen.getByTestId('venue-charges-row')).toBeOnTheScreen();
+    expect(screen.getByText('Payable directly at the venue')).toBeOnTheScreen();
+    // 100 + 50 = ₹150.00 — appears once (the row) while the sheet is closed.
+    expect(screen.getByText('₹150.00')).toBeOnTheScreen();
+    // Info icon opens the explainer sheet with the spec copy + itemisation.
+    fireEvent.press(screen.getByTestId('venue-charges-info'));
+    expect(screen.UNSAFE_getByType(Modal).props.visible).toBe(true);
+    expect(
+      screen.getByText('Optional venue-side charges to be paid to the Venue.'),
+    ).toBeOnTheScreen();
+    expect(screen.getByText('Entry fee')).toBeOnTheScreen();
+    expect(screen.getByText('Paid at the gate')).toBeOnTheScreen();
+    expect(screen.getByText('Table charge')).toBeOnTheScreen();
+    expect(screen.getByText('Total venue charges')).toBeOnTheScreen();
+    // The summed total now shows in both the row and the sheet; per-charge ₹50 is unique.
+    expect(screen.getAllByText('₹150.00')).toHaveLength(2);
+    expect(screen.getByText('₹50.00')).toBeOnTheScreen();
+    // Close button dismisses the sheet (Modal flips back to hidden).
+    fireEvent.press(screen.getByTestId('venue-charges-sheet-close'));
+    expect(screen.UNSAFE_getByType(Modal).props.visible).toBe(false);
+  });
+});
+
+describe('VenueChargesSheet', () => {
+  const charges = [
+    { label: 'Entry fee', amount: 100, note: 'Paid at the gate' },
+    { label: 'Table charge', amount: 50, note: null },
+  ];
+
+  it('dismisses via both the close button and the backdrop', () => {
+    const onClose = jest.fn();
+    const { rerender } = renderWithProviders(
+      <VenueChargesSheet open charges={charges} currency="₹" onClose={onClose} />,
+    );
+    fireEvent.press(screen.getByTestId('venue-charges-sheet-close'));
+    expect(onClose).toHaveBeenCalledTimes(1);
+    rerender(<VenueChargesSheet open charges={charges} currency="₹" onClose={onClose} />);
+    fireEvent.press(screen.getByTestId('venue-charges-sheet-backdrop'));
+    expect(onClose).toHaveBeenCalledTimes(2);
   });
 });
 
@@ -122,5 +184,33 @@ describe('CheckoutSuccess', () => {
       />,
     );
     expect(screen.queryByTestId('download-ticket')).toBeNull();
+    // No pod / place_charges → the pay-at-venue reminder is hidden.
+    expect(screen.queryByTestId('success-venue-note')).toBeNull();
+  });
+
+  it('reminds the buyer about venue charges payable at the venue', () => {
+    renderWithProviders(
+      <CheckoutSuccess
+        payment={payment}
+        pod={
+          {
+            id: 'p1',
+            pod_title: 'Sunset Pod',
+            place_charges: [
+              { label: 'Entry fee', amount: 100, note: null },
+              { label: 'Table charge', amount: 50, note: null },
+            ],
+          } as never
+        }
+        onDownloadInvoice={jest.fn()}
+        onHome={jest.fn()}
+        onProfile={jest.fn()}
+      />,
+    );
+    expect(screen.getByTestId('success-venue-note')).toBeOnTheScreen();
+    // ₹150.00 (100 + 50) is unique here — the receipt total is ₹130.00.
+    expect(
+      screen.getByText(/Venue charges ₹150\.00 are payable directly at\s+the venue\./),
+    ).toBeOnTheScreen();
   });
 });

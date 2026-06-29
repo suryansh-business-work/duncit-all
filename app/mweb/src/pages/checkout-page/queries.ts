@@ -36,6 +36,11 @@ export const CHECKOUT_POD = gql`
       pod_end_date_time
       pod_type
       pod_amount
+      place_charges {
+        label
+        amount
+        note
+      }
       products_enabled
       product_cost_total
       product_requests {

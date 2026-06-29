@@ -85,6 +85,43 @@ describe('venueSlotService integration', () => {
     ).rejects.toThrow(/60 days/i);
   });
 
+  it('honors a venue-configured advance cap above the default 60', async () => {
+    const v = await VenueModel.create({
+      owner_user_id: ownerId,
+      status: 'APPROVED',
+      is_active: true,
+      venue_name: 'Hall',
+      settings: { rules: { max_advance_days: 90 } },
+    });
+    const venueId = String(v._id);
+    const created = await venueSlotService.create(ownerId, {
+      venue_id: venueId,
+      slots: [{ start_at: inDays(75), end_at: inDays(75.1) }],
+    });
+    expect(created).toHaveLength(1);
+    await expect(
+      venueSlotService.create(ownerId, { venue_id: venueId, slots: [{ start_at: inDays(91), end_at: inDays(91.1) }] })
+    ).rejects.toThrow(/90 days/i);
+  });
+
+  it('createSkippingOverlaps drops past, beyond-cap and overlapping slots', async () => {
+    const venueId = await seedVenue();
+    await venueSlotService.create(ownerId, { venue_id: venueId, slots: [{ start_at: inDays(3), end_at: inDays(3.1) }] });
+    const n = await venueSlotService.createSkippingOverlaps(
+      venueId,
+      ownerId,
+      [
+        { start_at: inDays(-1), end_at: inDays(-0.9) }, // past → dropped
+        { start_at: inDays(3.05), end_at: inDays(3.15) }, // overlaps existing → dropped
+        { start_at: inDays(70), end_at: inDays(70.1) }, // beyond the 60-day cap → dropped
+        { start_at: inDays(5), end_at: inDays(5.1) }, // ok
+      ],
+      60
+    );
+    expect(n).toBe(1);
+    expect(await venueSlotService.listForVenue(ownerId, venueId)).toHaveLength(2);
+  });
+
   it('bulk-deletes upcoming non-booked slots but never booked ones', async () => {
     const venueId = await seedVenue();
     await venueSlotService.create(ownerId, {

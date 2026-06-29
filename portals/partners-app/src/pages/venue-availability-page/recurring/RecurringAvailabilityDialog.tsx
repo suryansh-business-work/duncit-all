@@ -84,7 +84,12 @@ export default function RecurringAvailabilityDialog({ open, onClose, venueId, se
           </Typography>
           <SlotBehaviourAccordion form={form} patch={patch} />
           <VenueRulesAccordion venueId={venueId} rules={venueSettings.rules} onSaved={onDone} />
-          <FutureAvailabilityAccordion maxAdvanceDays={advanceCap} />
+          <FutureAvailabilityAccordion
+            venueId={venueId}
+            autoExtend={venueSettings.auto_extend}
+            maxAdvanceDays={advanceCap}
+            onSaved={onDone}
+          />
           <SaveAsTemplateAccordion venueId={venueId} form={form} patch={patch} />
           <BulkActionsAccordion venueId={venueId} onDone={onDone} />
         </Stack>

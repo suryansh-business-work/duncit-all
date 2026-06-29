@@ -60,6 +60,10 @@ async function bootstrap() {
   });
   await safeSeed('websiteContent', () => websiteContentService.seedDefaults());
   await safeSeed('marketing', () => marketingService.resumeSchedules());
+  await safeSeed('venueAutoExtend', async () => {
+    const { autoExtendService } = await import('@modules/venues/autoExtend/autoExtend.service');
+    await autoExtendService.resumeSchedules();
+  });
   await safeSeed('crmServices', () => crmService.seedServiceDefaults());
   await safeSeed('surveyIndexes', () => surveyService.syncIndexes());
   await safeSeed('crmServicesOfferedSlugs', async () => {

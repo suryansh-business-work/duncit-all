@@ -60,6 +60,7 @@ const AccountHealthPage = lazy(() => import('../pages/AccountHealthPage'));
 const VenueHealthPage = lazy(() => import('../pages/VenueHealthPage'));
 const CheckoutPage = lazy(() => import('../pages/CheckoutPage'));
 const ExplorePage = lazy(() => import('../pages/ExplorePage'));
+const SearchPage = lazy(() => import('../pages/search-page'));
 const PreviousPodsPage = lazy(() => import('../pages/PreviousPodsPage'));
 const HappeningNearbyPage = lazy(() => import('../pages/HappeningNearbyPage'));
 const CreatePodPage = lazy(() => import('../pages/create-pod-page'));
@@ -184,6 +185,7 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
             />,
           )}
         />
+        <Route path="/search" element={withAuth(<SearchPage />)} />
         <Route path="/saved" element={withAuth(<SavedItemsPage />)} />
         <Route path="/clubs" element={withAuth(<ClubsPage superCategorySlug={superCategory} />)} />
         <Route path="/chats" element={withAuth(<ChatsPage superCategorySlug={superCategory} />)} />

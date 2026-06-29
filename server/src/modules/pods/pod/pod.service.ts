@@ -99,6 +99,12 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
   };
 };
 
+/** Shared helpers so co-located features (e.g. search) can return pods in the
+ * same public shape the `Pod` field resolvers expect. */
+export const mapPodToPublic = (doc: any, clubSlugById?: Map<string, string>) =>
+  toPub(doc, clubSlugById);
+export const loadPodClubSlugMap = (podDocs: any[]) => loadClubSlugMap(podDocs);
+
 function notFound(): never {
   throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
 }

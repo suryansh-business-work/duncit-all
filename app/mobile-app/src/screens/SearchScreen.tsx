@@ -1,44 +1,37 @@
 import { useEffect, useRef, useState } from 'react';
-import { useWindowDimensions, type TextInput } from 'react-native';
+import type { TextInput } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Input, ScrollView, XStack, YStack } from 'tamagui';
 
-import { Reveal } from '@/animations/Reveal';
-import { PodCard } from '@/components/home/PodCard';
 import { StackScreen } from '@/components/StackScreen';
+import { CategoryActions } from '@/components/search/CategoryActions';
+import { SearchResults } from '@/components/search/SearchResults';
+import { SearchSuggestions } from '@/components/search/SearchSuggestions';
 import { useDetailNav } from '@/hooks/useDetailNav';
-import { usePodSearch } from '@/hooks/usePodSearch';
+import { useSearchCategories, useSearchDiscovery, useSearchSuggestions } from '@/hooks/useSearch';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import type { RootStackParamList } from '@/navigation/types';
+import type { SearchSort } from '@/utils/search-sort';
 
-/** Empty/prompt state — shown before typing or when nothing matches. */
-function SearchHint({
-  icon,
-  text,
-  testID,
-}: Readonly<{ icon: 'search' | 'search-off'; text: string; testID: string }>) {
-  const { muted } = useThemeColors();
-  return (
-    <YStack flex={1} alignItems="center" justifyContent="center" gap={10} padding={32}>
-      <MaterialIcons name={icon} size={40} color={muted} />
-      <Text testID={testID} color="$muted" textAlign="center">
-        {text}
-      </Text>
-    </YStack>
-  );
-}
-
-/** Header search — type to find any active pod by title or place, then tap to
- * open its detail page. Mirrors mWeb's pod search. */
+/** Home > Search — live suggestions, category quick-actions, club-grouped results
+ * (Happening This Week / More Clubs), sort & filter and discovery-oriented empty
+ * states. Identical experience to mWeb's SearchPage. */
 export function SearchScreen() {
-  const { width } = useWindowDimensions();
   const { muted } = useThemeColors();
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { openPod, openClub } = useDetailNav();
   const [query, setQuery] = useState('');
-  const { results, hasQuery, isLoading } = usePodSearch(query);
-  const { openPod } = useDetailNav();
+  const [categoryId, setCategoryId] = useState('');
+  const [sort, setSort] = useState<SearchSort>('RELEVANCE');
+  const [showSuggest, setShowSuggest] = useState(false);
   const inputRef = useRef<TextInput | null>(null);
 
-  // Native-stack screens mount mid-transition, so autoFocus alone can lose the
-  // keyboard — re-focus once the push animation settles.
+  const { happening, moreClubs, loading, active } = useSearchDiscovery(query, categoryId);
+  const suggestions = useSearchSuggestions(query);
+  const { categories, nameOf } = useSearchCategories();
+
   useEffect(() => {
     const timer = setTimeout(
       /* istanbul ignore next -- the input stays mounted for the screen's lifetime */
@@ -47,6 +40,22 @@ export function SearchScreen() {
     );
     return () => clearTimeout(timer);
   }, []);
+
+  const onChange = (next: string) => {
+    setQuery(next);
+    setShowSuggest(true);
+  };
+
+  const pickSuggestion = (text: string) => {
+    setQuery(text);
+    setShowSuggest(false);
+  };
+
+  const pickCategory = (id: string) => {
+    setCategoryId(id);
+    setQuery('');
+    setShowSuggest(false);
+  };
 
   return (
     <StackScreen title="Search" testID="search-screen">
@@ -70,8 +79,8 @@ export function SearchScreen() {
           unstyled
           autoFocus
           value={query}
-          onChangeText={setQuery}
-          placeholder="Search pods…"
+          onChangeText={onChange}
+          placeholder="Search clubs, pods, categories or activities…"
           placeholderTextColor="$muted"
           color="$color"
           fontSize={15}
@@ -79,32 +88,32 @@ export function SearchScreen() {
         />
       </XStack>
 
-      {!hasQuery ? (
-        <SearchHint icon="search" text="Search pods by name or place." testID="search-prompt" />
-      ) : null}
-      {hasQuery && isLoading ? (
-        <YStack flex={1} alignItems="center" justifyContent="center" padding={32}>
-          <Spinner testID="search-loading" color="$primary" />
+      <SearchSuggestions suggestions={showSuggest ? suggestions : []} onPick={pickSuggestion} />
+
+      <ScrollView showsVerticalScrollIndicator={false}>
+        <YStack padding={16} gap={16} paddingBottom={40}>
+          {active ? (
+            <SearchResults
+              happening={happening}
+              moreClubs={moreClubs}
+              loading={loading}
+              keyword={query.trim()}
+              sort={sort}
+              onSortChange={setSort}
+              categories={categories}
+              categoryId={categoryId}
+              onCategoryChange={setCategoryId}
+              categoryNameOf={nameOf}
+              onOpenClub={openClub}
+              onOpenPod={(pod) => openPod(pod.id, pod.pod_title)}
+              onShareIdea={() => navigation.navigate('PodIdeas')}
+              onEarn={() => navigation.navigate('Earn')}
+            />
+          ) : (
+            <CategoryActions categories={categories} onSelect={pickCategory} />
+          )}
         </YStack>
-      ) : null}
-      {hasQuery && !isLoading && results.length === 0 ? (
-        <SearchHint icon="search-off" text="No pods match your search." testID="search-empty" />
-      ) : null}
-      {hasQuery && !isLoading && results.length > 0 ? (
-        <ScrollView showsVerticalScrollIndicator={false}>
-          <YStack gap={12} padding={16} paddingBottom={40}>
-            {results.map((pod, index) => (
-              <Reveal key={pod.id} index={index} scale>
-                <PodCard
-                  pod={pod}
-                  width={width - 32}
-                  onPress={() => openPod(pod.id, pod.pod_title)}
-                />
-              </Reveal>
-            ))}
-          </YStack>
-        </ScrollView>
-      ) : null}
+      </ScrollView>
     </StackScreen>
   );
 }

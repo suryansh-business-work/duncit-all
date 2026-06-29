@@ -54,25 +54,6 @@ export const HEADER_DATA = gql`
   }
 `;
 
-export const POD_SEARCH = gql`
-  query PodHeaderSearch($filter: PodFilterInput) {
-    pods(filter: $filter) {
-      id
-      pod_id
-      club_slug
-      pod_title
-      pod_date_time
-      no_of_spots
-      pod_attendees
-      place_label
-      place_detail
-      pod_images_and_videos {
-        url
-      }
-    }
-  }
-`;
-
 export const MY_NOTIFS = gql`
   query MyNotifications {
     myNotifications(limit: 30) {

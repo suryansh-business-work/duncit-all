@@ -20,6 +20,14 @@ export function countryFlagUrl(countryCode?: string | null): string {
   return code ? `https://flagcdn.com/48x36/${code}.png` : '';
 }
 
+/** Subtitle for a city in the location picker: "128 Clubs" / "1 Club", or
+ * "No Clubs Operating Yet" when none are live. Mirrors mWeb's util 1:1. */
+export function clubCountLabel(count?: number | null): string {
+  const n = count ?? 0;
+  if (n <= 0) return 'No Clubs Operating Yet';
+  return `${n} Club${n === 1 ? '' : 's'}`;
+}
+
 function upsert<T>(list: T[], match: (item: T) => boolean, create: () => T): T {
   const found = list.find(match);
   if (found) return found;

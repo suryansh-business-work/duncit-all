@@ -24,6 +24,8 @@ export const locationTypeDefs = /* GraphQL */ `
     location_pincode: String!
     location_zones: [LocationZone!]!
     is_active: Boolean!
+    "Count of active clubs currently operating in this city (Home location selector)."
+    active_club_count: Int!
     created_at: String!
     updated_at: String!
   }

@@ -1,5 +1,6 @@
 import {
   buildLocationTree,
+  clubCountLabel,
   countryFlagUrl,
   locationMapEmbedUrl,
   locationMapQuery,
@@ -18,6 +19,7 @@ const loc = (over: Partial<LocationItem>): LocationItem =>
     location_image: '',
     location_pincode: '',
     location_zones: [],
+    active_club_count: 0,
     ...over,
   }) as LocationItem;
 
@@ -26,6 +28,16 @@ describe('countryFlagUrl', () => {
     expect(countryFlagUrl('IN')).toBe('https://flagcdn.com/48x36/in.png');
     expect(countryFlagUrl('')).toBe('');
     expect(countryFlagUrl(null)).toBe('');
+  });
+});
+
+describe('clubCountLabel', () => {
+  it('pluralises, handles one, and the empty city', () => {
+    expect(clubCountLabel(128)).toBe('128 Clubs');
+    expect(clubCountLabel(1)).toBe('1 Club');
+    expect(clubCountLabel(0)).toBe('No Clubs Operating Yet');
+    expect(clubCountLabel(null)).toBe('No Clubs Operating Yet');
+    expect(clubCountLabel()).toBe('No Clubs Operating Yet');
   });
 });
 

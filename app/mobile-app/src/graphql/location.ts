@@ -13,6 +13,7 @@ export const LocationsDocument = gql(`
       country_code
       location_image
       location_pincode
+      active_club_count
       location_zones {
         zone_name
         pincode

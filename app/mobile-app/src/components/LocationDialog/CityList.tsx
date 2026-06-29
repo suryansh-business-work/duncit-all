@@ -4,6 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { LocationItem } from '@/stores/location.store';
+import { clubCountLabel } from '@/utils/location-tree';
 
 interface Props {
   cities: LocationItem[];
@@ -56,7 +57,10 @@ export function CityList({ cities, draftId, onPick }: Readonly<Props>) {
               <Text fontSize={14.5} fontWeight="800" color="$color" numberOfLines={1}>
                 {loc.location_name}
               </Text>
-              <Text fontSize={12} color="$muted" numberOfLines={1}>
+              <Text fontSize={12.5} fontWeight="700" color="$primary" numberOfLines={1}>
+                {clubCountLabel(loc.active_club_count)}
+              </Text>
+              <Text fontSize={11.5} color="$muted" numberOfLines={1}>
                 {[loc.city, loc.state].filter(Boolean).join(', ')}
               </Text>
             </YStack>

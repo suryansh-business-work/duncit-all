@@ -17,6 +17,7 @@ const city = (state: string, code: string): LocationItem =>
     location_image: '',
     location_pincode: '',
     location_zones: [],
+    active_club_count: 0,
   }) as LocationItem;
 
 // 7 states → the state search box is shown (threshold > 6).

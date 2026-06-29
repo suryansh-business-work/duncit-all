@@ -1,6 +1,7 @@
 import { Box, Card, CardActionArea, Chip, Typography } from '@mui/material';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import WhatshotIcon from '@mui/icons-material/Whatshot';
+import { clubCountLabel } from '../../utils/location-tree';
 
 interface LocationCityCardProps {
   location: any;
@@ -72,7 +73,10 @@ export default function LocationCityCard({
           <Typography variant="body2" sx={{ fontWeight: 800, lineHeight: 1.1 }} noWrap>
             {location.location_name}
           </Typography>
-          <Typography variant="caption" sx={{ lineHeight: 1.2, color: 'rgba(255,255,255,0.82)' }}>
+          <Typography variant="caption" sx={{ display: 'block', lineHeight: 1.2, fontWeight: 700, color: '#fff' }} noWrap>
+            {clubCountLabel(location.active_club_count)}
+          </Typography>
+          <Typography variant="caption" sx={{ lineHeight: 1.2, color: 'rgba(255,255,255,0.72)' }}>
             {areaCount ? `${areaCount} areas` : 'No areas'}
           </Typography>
         </Box>

@@ -25,6 +25,7 @@ const loc = (over: Record<string, unknown>) => ({
   location_image: '',
   location_pincode: '',
   location_zones: [],
+  active_club_count: 0,
   ...over,
 });
 

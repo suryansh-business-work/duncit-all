@@ -13,6 +13,15 @@ export interface LocationLike {
   location_image?: string | null;
   location_pincode?: string | null;
   location_zones?: { zone_name: string; pincode?: string | null }[] | null;
+  active_club_count?: number | null;
+}
+
+/** Subtitle for a city in the location picker: "128 Clubs" / "1 Club", or
+ *  "No Clubs Operating Yet" when none are live. Mirrored 1:1 in the mobile app. */
+export function clubCountLabel(count?: number | null): string {
+  const n = count ?? 0;
+  if (n <= 0) return 'No Clubs Operating Yet';
+  return `${n} Club${n === 1 ? '' : 's'}`;
 }
 
 export interface CountryNode {

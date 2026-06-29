@@ -25,6 +25,7 @@ const mumbai = {
   country_code: 'IN',
   location_image: '',
   location_pincode: '400001',
+  active_club_count: 128,
   location_zones: [
     { zone_name: 'Andheri', pincode: '400053' },
     { zone_name: 'Bandra', pincode: '400050' },
@@ -40,6 +41,7 @@ const delhi = {
   country_code: 'IN',
   location_image: 'https://img/x.png',
   location_pincode: '110001',
+  active_club_count: 1,
   location_zones: [],
 };
 const dubai = {
@@ -52,6 +54,7 @@ const dubai = {
   country_code: 'AE',
   location_image: '',
   location_pincode: '00000',
+  active_club_count: 0,
   location_zones: [],
 };
 
@@ -113,6 +116,19 @@ describe('LocationDialog drilldown', () => {
     renderWithProviders(<LocationDialog open onClose={jest.fn()} />);
     fireEvent.press(screen.getByTestId('country-AE'));
     expect(screen.getByTestId('location-l3')).toBeOnTheScreen();
+  });
+
+  it('shows the active club count under each city', () => {
+    setup();
+    renderWithProviders(<LocationDialog open onClose={jest.fn()} />);
+    // Default India/Delhi → Delhi has 1 club.
+    expect(screen.getByText('1 Club')).toBeOnTheScreen();
+    // Maharashtra → Mumbai has 128.
+    fireEvent.press(screen.getByTestId('state-MH'));
+    expect(screen.getByText('128 Clubs')).toBeOnTheScreen();
+    // UAE → Dubai has none.
+    fireEvent.press(screen.getByTestId('country-AE'));
+    expect(screen.getByText('No Clubs Operating Yet')).toBeOnTheScreen();
   });
 
   it('filters areas and shows the empty state', () => {

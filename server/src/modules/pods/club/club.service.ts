@@ -190,4 +190,33 @@ export const clubService = {
     if (!Types.ObjectId.isValid(clubId)) return 0;
     return ClubFollowerModel.countDocuments({ club_id: new Types.ObjectId(clubId) });
   },
+
+  /** Number of distinct ACTIVE clubs operating in each location, keyed by the
+   * location's id (string). A club "operates" in a location when one of its
+   * meetup venues (stored as venue _id strings) sits in that location. Used by
+   * the Home location selector to show "<N> Clubs" under each city. */
+  async activeClubCountsByLocation(): Promise<Record<string, number>> {
+    const rows = await ClubModel.aggregate([
+      { $match: { is_active: true } },
+      { $project: { venueIds: '$meetup_venues_id' } },
+      { $unwind: '$venueIds' },
+      {
+        $addFields: {
+          venueOid: { $convert: { input: '$venueIds', to: 'objectId', onError: null, onNull: null } },
+        },
+      },
+      { $match: { venueOid: { $ne: null } } },
+      { $lookup: { from: 'venues', localField: 'venueOid', foreignField: '_id', as: 'venue' } },
+      { $unwind: '$venue' },
+      // Only count via venues that are actually live (the platform's "operating"
+      // predicate — same as publicVenues / venueSlot.listAvailable).
+      { $match: { 'venue.location_id': { $ne: null }, 'venue.status': 'APPROVED', 'venue.is_active': true } },
+      // Distinct (club, location) so a club with several venues in one city counts once.
+      { $group: { _id: { club: '$_id', loc: '$venue.location_id' } } },
+      { $group: { _id: '$_id.loc', count: { $sum: 1 } } },
+    ]);
+    const map: Record<string, number> = {};
+    for (const row of rows) map[String(row._id)] = row.count as number;
+    return map;
+  },
 };

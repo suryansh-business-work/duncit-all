@@ -910,7 +910,36 @@ export const podService = {
       author_name: u ? `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() : null,
       author_photo: u?.profile?.profile_photo ?? null,
       text: trimmed,
+      likes: [],
       created_at: created_at.toISOString(),
+    };
+  },
+
+  /** Like/unlike a single pod comment (explore item 4). Returns the comment in
+   * the same shape as listComments so the client can refresh it in place. */
+  async toggleCommentLike(id: string, commentId: string, viewerId: string) {
+    if (!Types.ObjectId.isValid(id) || !Types.ObjectId.isValid(commentId))
+      throw new GraphQLError('Invalid id', { extensions: { code: 'BAD_USER_INPUT' } });
+    const doc = await PodModel.findById(id);
+    if (!doc) notFound();
+    const c: any = (doc!.comments as any).find((x: any) => String(x._id) === commentId);
+    if (!c) throw new GraphQLError('Comment not found', { extensions: { code: 'NOT_FOUND' } });
+    c.likes = c.likes ?? [];
+    const idx = c.likes.findIndex((x: any) => String(x) === viewerId);
+    if (idx >= 0) c.likes.splice(idx, 1);
+    else c.likes.push(new Types.ObjectId(viewerId));
+    await doc!.save();
+    const u: any = await UserModel.findById(c.author_id).select(
+      'profile.first_name profile.last_name profile.profile_photo'
+    );
+    return {
+      id: String(c._id),
+      author_id: String(c.author_id),
+      author_name: u ? `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() : null,
+      author_photo: u?.profile?.profile_photo ?? null,
+      text: c.text,
+      likes: (c.likes ?? []).map((x: any) => String(x)),
+      created_at: new Date(c.created_at).toISOString(),
     };
   },
 
@@ -953,6 +982,7 @@ export const podService = {
         author_name: u ? `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() : null,
         author_photo: u?.profile?.profile_photo ?? null,
         text: c.text,
+        likes: (c.likes ?? []).map((x: any) => String(x)),
         created_at: new Date(c.created_at).toISOString(),
       };
     });

@@ -81,6 +81,8 @@ export const podTypeDefs = /* GraphQL */ `
     pod_images_and_videos: [PodMedia!]!
     pod_hits: Int!
     pod_attendees: [ID!]!
+    "Users who liked this pod — powers the 'who liked' list (explore item 8)."
+    liked_user_ids: [ID!]!
     pod_description: String!
     pod_date_time: String!
     pod_end_date_time: String
@@ -112,6 +114,10 @@ export const podTypeDefs = /* GraphQL */ `
     author_name: String
     author_photo: String
     text: String!
+    "How many users liked this comment (explore item 4 — comment reactions)."
+    like_count: Int!
+    "Whether the signed-in viewer liked this comment."
+    liked_by_me: Boolean!
     created_at: String!
   }
 
@@ -228,6 +234,8 @@ export const podTypeDefs = /* GraphQL */ `
     incrementPodHits(pod_doc_id: ID!): Pod!
     togglePodLike(pod_doc_id: ID!): Pod!
     addPodComment(pod_doc_id: ID!, text: String!): PodComment!
+    "Like/unlike a pod comment — returns the updated comment (explore item 4)."
+    togglePodCommentLike(pod_doc_id: ID!, comment_id: ID!): PodComment!
     deletePodComment(pod_doc_id: ID!, comment_id: ID!): Boolean!
     generateMeetingLink(
       platform: String!

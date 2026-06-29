@@ -29,6 +29,8 @@ export interface IPodComment {
   _id?: Types.ObjectId;
   author_id: Types.ObjectId;
   text: string;
+  /** Users who liked this comment (B-explore comment reactions). */
+  likes: Types.ObjectId[];
   created_at: Date;
 }
 
@@ -106,6 +108,7 @@ const commentSchema = new Schema<IPodComment>(
   {
     author_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
     text: { type: String, required: true, trim: true, maxlength: 1000 },
+    likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     created_at: { type: Date, default: () => new Date() },
   },
   { _id: true }

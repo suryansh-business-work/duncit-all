@@ -1,10 +1,14 @@
+import { useState } from 'react';
 import { StyleSheet } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { PressScale } from '@/animations/PressScale';
 import type { ExplorePod } from '@/stores/explore.store';
 import { podDateLabel, podPriceLabel } from '@/utils/pod-format';
+
+const CAPTION_COLLAPSE_AT = 90;
 
 function Chip({ icon, label, tint }: Readonly<{ icon?: string; label: string; tint?: string }>) {
   return (
@@ -27,6 +31,8 @@ function Chip({ icon, label, tint }: Readonly<{ icon?: string; label: string; ti
 interface ExplorePodOverlayProps {
   pod: ExplorePod;
   clubName?: string;
+  isVerified?: boolean;
+  onOpenClub?: () => void;
   bottom?: number;
 }
 
@@ -35,11 +41,16 @@ interface ExplorePodOverlayProps {
 export function ExplorePodOverlay({
   pod,
   clubName,
+  isVerified,
+  onOpenClub,
   bottom = 150,
 }: Readonly<ExplorePodOverlayProps>) {
+  const [expanded, setExpanded] = useState(false);
   const isFree = pod.pod_type.includes('FREE');
   const place =
     [pod.place_label, pod.place_detail].filter(Boolean).join(' · ') || pod.zone_name || '';
+  const description = pod.pod_description ?? '';
+  const collapsible = description.length > CAPTION_COLLAPSE_AT;
 
   return (
     <>
@@ -50,29 +61,54 @@ export function ExplorePodOverlay({
       />
       <YStack position="absolute" left={16} right={80} bottom={bottom} gap={8}>
         {clubName ? (
-          <XStack alignItems="center" gap={8}>
-            <YStack
-              width={24}
-              height={24}
-              borderRadius={12}
-              backgroundColor="$primary"
-              alignItems="center"
-              justifyContent="center"
-            >
-              <MaterialIcons name="groups" size={14} color="#ffffff" />
-            </YStack>
-            <Text color="#ffffff" fontSize={13} fontWeight="900" numberOfLines={1}>
-              {clubName}
-            </Text>
-          </XStack>
+          <PressScale testID="explore-club-link" accessibilityLabel={clubName} onPress={onOpenClub}>
+            <XStack alignItems="center" gap={8}>
+              <YStack
+                width={24}
+                height={24}
+                borderRadius={12}
+                backgroundColor="$primary"
+                alignItems="center"
+                justifyContent="center"
+              >
+                <MaterialIcons name="groups" size={14} color="#ffffff" />
+              </YStack>
+              <Text color="#ffffff" fontSize={13} fontWeight="900" numberOfLines={1}>
+                {clubName}
+              </Text>
+              {isVerified ? (
+                <MaterialIcons
+                  testID="explore-club-verified"
+                  name="verified"
+                  size={15}
+                  color="#1d9bf0"
+                />
+              ) : null}
+            </XStack>
+          </PressScale>
         ) : null}
         <Text color="#ffffff" fontSize={22} fontWeight="900" numberOfLines={2}>
           {pod.pod_title}
         </Text>
-        {pod.pod_description ? (
-          <Text color="rgba(255,255,255,0.9)" fontSize={13} numberOfLines={2}>
-            {pod.pod_description}
-          </Text>
+        {description ? (
+          <YStack
+            testID="explore-caption-wrap"
+            onPress={collapsible ? () => setExpanded((v) => !v) : undefined}
+          >
+            <Text
+              testID="explore-caption"
+              color="rgba(255,255,255,0.9)"
+              fontSize={13}
+              numberOfLines={collapsible && !expanded ? 2 : undefined}
+            >
+              {description}
+            </Text>
+            {collapsible ? (
+              <Text testID="explore-caption-toggle" color="#ffffff" fontSize={12} fontWeight="800">
+                {expanded ? 'Show less' : 'More'}
+              </Text>
+            ) : null}
+          </YStack>
         ) : null}
         <XStack gap={8} flexWrap="wrap">
           <Chip

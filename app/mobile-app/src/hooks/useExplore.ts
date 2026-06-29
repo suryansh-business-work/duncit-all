@@ -68,6 +68,7 @@ export function useExplore() {
     isLoading,
     hasData: !!data,
     viewerId: data?.me?.user_id ?? null,
+    viewerPhoto: data?.me?.profile_photo ?? null,
     isSaved,
     isSavePending,
     likeStateFor,

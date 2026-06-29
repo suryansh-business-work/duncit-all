@@ -8,6 +8,7 @@ import { podPriceLabel } from '@/utils/pod-format';
 import { ExploreActionRail } from '@/components/explore/ExploreActionRail';
 import { ExploreMediaCarousel } from '@/components/explore/ExploreMediaCarousel';
 import { ExplorePodOverlay } from '@/components/explore/ExplorePodOverlay';
+import { DoubleTapJoin } from '@/components/explore/DoubleTapJoin';
 
 interface ExplorePodCardProps {
   pod: ExplorePod;
@@ -22,6 +23,8 @@ interface ExplorePodCardProps {
   onToggleLike: () => void;
   onComment: () => void;
   onOpen: () => void;
+  onOpenClub?: () => void;
+  onShowLikers?: () => void;
 }
 
 /** One full-screen reel: media background, info overlay, the right-side action
@@ -39,6 +42,8 @@ export function ExplorePodCard({
   onToggleLike,
   onComment,
   onOpen,
+  onOpenClub,
+  onShowLikers,
 }: Readonly<ExplorePodCardProps>) {
   const insets = useSafeAreaInsets();
   // Stack bottom→top: floating nav · CTA bar · (info overlay + action rail).
@@ -65,14 +70,22 @@ export function ExplorePodCard({
 
   return (
     <YStack width={width} height={height} backgroundColor="#000000" testID={`reel-${pod.pod_id}`}>
-      <ExploreMediaCarousel
-        media={pod.pod_images_and_videos}
-        fallbackUrl={cover}
-        width={width}
-        height={height}
-        dotsBottom={ctaBottom + 56}
+      <DoubleTapJoin onJoin={onOpen} testID={`reel-doubletap-${pod.pod_id}`}>
+        <ExploreMediaCarousel
+          media={pod.pod_images_and_videos}
+          fallbackUrl={cover}
+          width={width}
+          height={height}
+          dotsBottom={ctaBottom + 56}
+        />
+      </DoubleTapJoin>
+      <ExplorePodOverlay
+        pod={pod}
+        clubName={club?.club_name}
+        isVerified={club?.is_verified}
+        onOpenClub={onOpenClub}
+        bottom={contentBottom}
       />
-      <ExplorePodOverlay pod={pod} clubName={club?.club_name} bottom={contentBottom} />
 
       <YStack position="absolute" right={12} bottom={contentBottom}>
         <ExploreActionRail
@@ -92,6 +105,7 @@ export function ExplorePodCard({
               label: String(like.like_count),
               active: like.liked_by_me,
               onPress: onToggleLike,
+              onLabelPress: like.like_count > 0 ? onShowLikers : undefined,
             },
             {
               key: 'comment',

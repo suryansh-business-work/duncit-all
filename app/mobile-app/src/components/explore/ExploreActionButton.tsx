@@ -11,6 +11,8 @@ interface ExploreActionButtonProps {
   active?: boolean;
   loading?: boolean;
   testID?: string;
+  /** Optional separate press on the caption (e.g. like count → who-liked list). */
+  onLabelPress?: () => void;
 }
 
 /** A round glassy action button with a caption — the reels' right-side rail. */
@@ -21,6 +23,7 @@ export function ExploreActionButton({
   active,
   loading,
   testID,
+  onLabelPress,
 }: Readonly<ExploreActionButtonProps>) {
   return (
     <YStack
@@ -46,7 +49,13 @@ export function ExploreActionButton({
           <MaterialIcons name={icon} size={22} color="#ffffff" />
         )}
       </YStack>
-      <Text fontSize={11} fontWeight="800" color="#ffffff">
+      <Text
+        testID={onLabelPress ? `${testID}-count` : undefined}
+        onPress={onLabelPress}
+        fontSize={11}
+        fontWeight="800"
+        color="#ffffff"
+      >
         {label}
       </Text>
     </YStack>

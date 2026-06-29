@@ -1,5 +1,7 @@
 import { Box, Badge, Chip, IconButton, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
+import AddIcon from '@mui/icons-material/Add';
+import RefreshIcon from '@mui/icons-material/Refresh';
 import type { ExploreFilters } from './exploreFilters';
 
 interface ExploreHeaderProps {
@@ -8,9 +10,19 @@ interface ExploreHeaderProps {
   activeCount: number;
   resultCount: number;
   onOpenFilters: () => void;
+  onCreatePost: () => void;
+  onRefresh: () => void;
 }
 
-export default function ExploreHeader({ activeCount, resultCount, onOpenFilters }: Readonly<ExploreHeaderProps>) {
+const HEADER_BTN_SX = { width: 40, height: 40, bgcolor: 'rgba(0,0,0,0.42)', color: '#fff', backdropFilter: 'blur(8px)' } as const;
+
+export default function ExploreHeader({
+  activeCount,
+  resultCount,
+  onOpenFilters,
+  onCreatePost,
+  onRefresh,
+}: Readonly<ExploreHeaderProps>) {
   return (
     <Stack spacing={1.1} sx={{ position: 'absolute', top: 10, left: 10, right: 10, zIndex: 3 }}>
       <Stack direction="row" alignItems="center" spacing={1}>
@@ -26,11 +38,13 @@ export default function ExploreHeader({ activeCount, resultCount, onOpenFilters 
             />
           </Stack>
         </Box>
-        <IconButton
-          onClick={onOpenFilters}
-          sx={{ width: 40, height: 40, bgcolor: 'rgba(0,0,0,0.42)', color: '#fff', backdropFilter: 'blur(8px)' }}
-          aria-label="Open filters"
-        >
+        <IconButton onClick={onRefresh} sx={HEADER_BTN_SX} aria-label="Refresh feed">
+          <RefreshIcon fontSize="small" />
+        </IconButton>
+        <IconButton onClick={onCreatePost} sx={HEADER_BTN_SX} aria-label="Create post">
+          <AddIcon fontSize="small" />
+        </IconButton>
+        <IconButton onClick={onOpenFilters} sx={HEADER_BTN_SX} aria-label="Open filters">
           <Badge badgeContent={activeCount} color="primary" overlap="circular">
             <TuneIcon fontSize="small" />
           </Badge>

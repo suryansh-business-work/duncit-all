@@ -8,6 +8,7 @@ import {
   PodCommentsDocument,
   PodDetailsDocument,
   PodPeopleDocument,
+  TogglePodCommentLikeDocument,
 } from '@/graphql/details';
 import { TogglePodLikeDocument, ToggleSavedPodDocument } from '@/graphql/explore';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -30,6 +31,7 @@ export function usePodDetails(podId: string) {
   const [venue, setVenue] = useState<PodVenue | null>(null);
   const [location, setLocation] = useState<PodLocation | null>(null);
   const [viewerId, setViewerId] = useState<string | null>(null);
+  const [viewerPhoto, setViewerPhoto] = useState<string | null>(null);
   const [savedInitially, setSavedInitially] = useState(false);
   const [followingInitially, setFollowingInitially] = useState(false);
   const [membershipState, setMembershipState] = useState<PodMembershipState | null>(null);
@@ -42,6 +44,7 @@ export function usePodDetails(podId: string) {
     const nextPod = data.pod ?? null;
     setPod(nextPod);
     setViewerId(data.me?.user_id ?? null);
+    setViewerPhoto(data.me?.profile_photo ?? null);
     setVenue(data.publicVenues.find((v) => v.id === nextPod?.venue_id) ?? null);
     setLocation(data.locations.find((l) => l.id === nextPod?.location_id) ?? null);
     setSavedInitially((data.me?.saved_pod_ids ?? []).includes(nextPod?.id ?? ''));
@@ -77,6 +80,7 @@ export function usePodDetails(podId: string) {
     venue,
     location,
     viewerId,
+    viewerPhoto,
     savedInitially,
     followingInitially,
     membershipState,
@@ -215,9 +219,56 @@ export function usePodComments(podId: string, open: boolean) {
   };
 
   const remove = async (commentId: string) => {
+    // Optimistically drop the comment, but keep a snapshot so we can restore the
+    // thread (and let the caller skip the count decrement) if the server rejects.
+    const snapshot = comments;
     setComments((prev) => prev.filter((c) => c.id !== commentId));
-    await graphqlRequest(DeletePodCommentDocument, { podId, commentId }, { auth: true });
+    try {
+      await graphqlRequest(DeletePodCommentDocument, { podId, commentId }, { auth: true });
+    } catch (err) {
+      setComments(snapshot);
+      throw err;
+    }
   };
 
-  return { comments, isLoading, error, add, remove };
+  // Optimistic comment reaction (explore item 4): flip locally, then reconcile
+  // with the server, reverting on failure.
+  const flip = (commentId: string) =>
+    setComments((prev) =>
+      prev.map((c) =>
+        c.id === commentId
+          ? {
+              ...c,
+              liked_by_me: !c.liked_by_me,
+              like_count: c.like_count + (c.liked_by_me ? -1 : 1),
+            }
+          : c,
+      ),
+    );
+
+  const toggleLike = async (commentId: string) => {
+    flip(commentId);
+    try {
+      const res = await graphqlRequest(
+        TogglePodCommentLikeDocument,
+        { podId, commentId },
+        { auth: true },
+      );
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId
+            ? {
+                ...c,
+                liked_by_me: res.togglePodCommentLike.liked_by_me,
+                like_count: res.togglePodCommentLike.like_count,
+              }
+            : c,
+        ),
+      );
+    } catch {
+      flip(commentId);
+    }
+  };
+
+  return { comments, isLoading, error, add, remove, toggleLike };
 }

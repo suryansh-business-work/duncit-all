@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
+import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
@@ -14,7 +15,9 @@ import {
   POD_COMMENTS,
   ADD_POD_COMMENT,
   DELETE_POD_COMMENT,
+  TOGGLE_POD_COMMENT_LIKE,
 } from '../../pages/pod-details-page/queries';
+import ConfirmDialog from '../ConfirmDialog';
 import CommentsList from './CommentsList';
 import CommentInput from './CommentInput';
 
@@ -33,6 +36,7 @@ export default function PodCommentsSheet({
   viewerId,
   onCountChange,
 }: Readonly<Props>) {
+  const navigate = useNavigate();
   const { data, loading, error, refetch } = useQuery(POD_COMMENTS, {
     variables: { id: podId },
     fetchPolicy: 'cache-and-network',
@@ -40,9 +44,32 @@ export default function PodCommentsSheet({
   });
   const [addComment, addState] = useMutation(ADD_POD_COMMENT);
   const [deleteComment] = useMutation(DELETE_POD_COMMENT);
+  const [toggleCommentLike] = useMutation(TOGGLE_POD_COMMENT_LIKE);
   const [snack, setSnack] = useState<string | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
 
   const comments = useMemo(() => data?.podComments ?? [], [data]);
+
+  const onToggleLike = async (commentId: string) => {
+    try {
+      await toggleCommentLike({ variables: { id: podId, comment_id: commentId } });
+      await refetch();
+    } catch (e: any) {
+      setSnack(e.message);
+    }
+  };
+
+  const onConfirmDelete = async () => {
+    const id = deleteId;
+    setDeleteId(null);
+    if (!id) return;
+    await onDelete(id);
+  };
+
+  const openProfile = (authorId: string) => {
+    onClose();
+    navigate(`/u/${authorId}`);
+  };
 
   const onAdd = async (values: { text: string }, helpers: any) => {
     try {
@@ -104,7 +131,13 @@ export default function PodCommentsSheet({
             Be the first to comment.
           </Typography>
         )}
-        <CommentsList comments={comments} viewerId={viewerId} onDelete={onDelete} />
+        <CommentsList
+          comments={comments}
+          viewerId={viewerId}
+          onToggleLike={onToggleLike}
+          onRequestDelete={setDeleteId}
+          onOpenProfile={openProfile}
+        />
       </Box>
 
       <CommentInput viewerId={viewerId} posting={addState.loading} onSubmit={onAdd} />
@@ -113,6 +146,16 @@ export default function PodCommentsSheet({
           {snack}
         </Alert>
       )}
+      <ConfirmDialog
+        open={!!deleteId}
+        title="Delete comment?"
+        message="This comment will be permanently removed."
+        confirmLabel="Delete"
+        cancelLabel="Cancel"
+        destructive
+        onConfirm={onConfirmDelete}
+        onClose={() => setDeleteId(null)}
+      />
     </Drawer>
   );
 }

@@ -16,6 +16,7 @@ import { TOGGLE_POD_LIKE } from '../pod-details-page/queries';
 import ExploreActionRail from './ExploreActionRail';
 import ExploreMediaCarousel from './ExploreMediaCarousel';
 import ExplorePodOverlay from './ExplorePodOverlay';
+import LikesListDialog from './LikesListDialog';
 import PodCommentsSheet from '../../components/PodCommentsSheet';
 import { usePricing } from '../../hooks/usePricing';
 
@@ -27,6 +28,16 @@ interface Props {
   savePending?: boolean;
   onToggleSave: () => void;
   viewerId?: string | null;
+}
+
+/** Reconcile the cached likers with the viewer's own optimistic like so a
+ * just-liked pod shows the viewer instead of a stale "No likes yet". */
+function likersWithViewer(ids: string[], viewerId: string | null | undefined, liked: boolean): string[] {
+  if (!viewerId) return ids;
+  const has = ids.includes(viewerId);
+  if (liked && !has) return [...ids, viewerId];
+  if (!liked && has) return ids.filter((id) => id !== viewerId);
+  return ids;
 }
 
 export default function ExplorePodCard({
@@ -45,6 +56,7 @@ export default function ExplorePodCard({
   const [likeCount, setLikeCount] = useState<number>(pod.like_count ?? 0);
   const [commentCount, setCommentCount] = useState<number>(pod.comment_count ?? 0);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [likersOpen, setLikersOpen] = useState(false);
   const [toggleLike] = useMutation(TOGGLE_POD_LIKE);
 
   // Re-sync to the latest server values when the feed refetches (e.g. after the
@@ -92,6 +104,7 @@ export default function ExplorePodCard({
 
   return (
     <Box
+      onDoubleClick={openPod}
       sx={{
         position: 'relative',
         height: '100%',
@@ -126,6 +139,7 @@ export default function ExplorePodCard({
             label: String(likeCount),
             onClick: onLike,
             active: liked,
+            onLabelClick: likeCount > 0 ? () => setLikersOpen(true) : undefined,
           },
           {
             key: 'comment',
@@ -190,6 +204,12 @@ export default function ExplorePodCard({
         onClose={() => setCommentsOpen(false)}
         viewerId={viewerId}
         onCountChange={(d) => setCommentCount((c) => Math.max(0, c + d))}
+      />
+
+      <LikesListDialog
+        open={likersOpen}
+        onClose={() => setLikersOpen(false)}
+        userIds={likersWithViewer(pod.liked_user_ids ?? [], viewerId, liked)}
       />
     </Box>
   );

@@ -6,6 +6,7 @@ export const PodDetailsDocument = gql(`
   query MobilePodDetails($podId: ID!) {
     me {
       user_id
+      profile_photo
       saved_pod_ids
       following_pod_ids
     }
@@ -132,6 +133,8 @@ export const PodCommentsDocument = gql(`
       author_name
       author_photo
       text
+      like_count
+      liked_by_me
       created_at
     }
   }
@@ -146,7 +149,20 @@ export const AddPodCommentDocument = gql(`
       author_name
       author_photo
       text
+      like_count
+      liked_by_me
       created_at
+    }
+  }
+`);
+
+/** Like/unlike a pod comment (auth) — explore item 4. */
+export const TogglePodCommentLikeDocument = gql(`
+  mutation MobileTogglePodCommentLike($podId: ID!, $commentId: ID!) {
+    togglePodCommentLike(pod_doc_id: $podId, comment_id: $commentId) {
+      id
+      like_count
+      liked_by_me
     }
   }
 `);

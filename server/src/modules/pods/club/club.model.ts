@@ -31,6 +31,8 @@ export interface IClub extends Document {
   host_ids: Types.ObjectId[];
   category_id: Types.ObjectId | null;
   super_category_id: Types.ObjectId | null;
+  /** Admin-set verified badge for official clubs (explore item 15). */
+  is_verified: boolean;
   is_active: boolean;
   created_at: Date;
   updated_at: Date;
@@ -71,6 +73,7 @@ const clubSchema = new Schema<IClub>(
     host_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
     category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    is_verified: { type: Boolean, default: false },
     is_active: { type: Boolean, default: true },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

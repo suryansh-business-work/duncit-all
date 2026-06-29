@@ -154,6 +154,14 @@ export const podResolvers = {
       return (parent.liked_user_ids ?? []).some((x: string) => String(x) === uid);
     },
   },
+  PodComment: {
+    like_count: (parent: any): number => (parent.likes ?? []).length,
+    liked_by_me: (parent: any, _a: unknown, ctx: GraphQLContext): boolean => {
+      const uid = ctx.user?.id;
+      if (!uid) return false;
+      return (parent.likes ?? []).some((x: string) => String(x) === uid);
+    },
+  },
   Query: {
     pods: async (_p: unknown, args: { filter?: any }) => podService.list(args.filter),
     myHostPods: async (_p: unknown, args: { from?: string | null; to?: string | null }, ctx: GraphQLContext) => {
@@ -239,6 +247,14 @@ export const podResolvers = {
     ) => {
       const u = requireAuth(ctx);
       return podService.addComment(args.pod_doc_id, u.id, args.text);
+    },
+    togglePodCommentLike: async (
+      _p: unknown,
+      args: { pod_doc_id: string; comment_id: string },
+      ctx: GraphQLContext
+    ) => {
+      const u = requireAuth(ctx);
+      return podService.toggleCommentLike(args.pod_doc_id, args.comment_id, u.id);
     },
     deletePodComment: async (
       _p: unknown,

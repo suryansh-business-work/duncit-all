@@ -11,7 +11,7 @@ beforeEach(() => mockRequest.mockReset());
 describe('usePodDetails / useClubDetails', () => {
   it('loads the pod, the viewer + the resolved venue/location', async () => {
     mockRequest.mockResolvedValueOnce({
-      me: { user_id: 'me', saved_pod_ids: ['p1'] },
+      me: { user_id: 'me', profile_photo: 'http://img/me.jpg', saved_pod_ids: ['p1'] },
       pod: { id: 'p1', venue_id: 'v1', location_id: 'l1' },
       publicVenues: [{ id: 'v1', venue_name: 'Hall' }],
       locations: [{ id: 'l1', location_name: 'City' }],
@@ -21,6 +21,7 @@ describe('usePodDetails / useClubDetails', () => {
     expect(result.current.pod?.id).toBe('p1');
     expect(result.current.savedInitially).toBe(true);
     expect(result.current.viewerId).toBe('me');
+    expect(result.current.viewerPhoto).toBe('http://img/me.jpg');
     expect(result.current.venue?.id).toBe('v1');
     expect(result.current.location?.id).toBe('l1');
   });
@@ -257,5 +258,52 @@ describe('usePodComments', () => {
       await result.current.remove('c1');
     });
     expect(result.current.comments).toHaveLength(0);
+  });
+
+  it('restores the comment and rethrows when delete fails (review fix)', async () => {
+    mockRequest.mockResolvedValueOnce({ podComments: [{ id: 'c1', author_id: 'me', text: 'hi' }] });
+    const { result } = renderHook(() => usePodComments('p1', true));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    mockRequest.mockRejectedValueOnce(new Error('offline'));
+    await act(async () => {
+      await expect(result.current.remove('c1')).rejects.toThrow('offline');
+    });
+    // The optimistic delete is rolled back so the thread is intact.
+    expect(result.current.comments).toHaveLength(1);
+    expect(result.current.comments[0]?.id).toBe('c1');
+  });
+
+  it('un-likes an already-liked comment and leaves the others untouched (item 4)', async () => {
+    mockRequest.mockResolvedValueOnce({
+      podComments: [
+        { id: 'c1', author_id: 'me', text: 'hi', like_count: 1, liked_by_me: true },
+        { id: 'c2', author_id: 'x', text: 'yo', like_count: 4, liked_by_me: false },
+      ],
+    });
+    const { result } = renderHook(() => usePodComments('p1', true));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    mockRequest.mockResolvedValueOnce({
+      togglePodCommentLike: { id: 'c1', like_count: 0, liked_by_me: false },
+    });
+    await act(async () => {
+      await result.current.toggleLike('c1');
+    });
+    expect(result.current.comments[0]?.liked_by_me).toBe(false);
+    expect(result.current.comments[0]?.like_count).toBe(0);
+    expect(result.current.comments[1]?.like_count).toBe(4); // c2 untouched
+  });
+
+  it('reverts a comment like when the server rejects (item 4)', async () => {
+    mockRequest.mockResolvedValueOnce({
+      podComments: [{ id: 'c1', author_id: 'me', text: 'hi', like_count: 5, liked_by_me: false }],
+    });
+    const { result } = renderHook(() => usePodComments('p1', true));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    mockRequest.mockRejectedValueOnce(new Error('x'));
+    await act(async () => {
+      await result.current.toggleLike('c1');
+    });
+    expect(result.current.comments[0]?.liked_by_me).toBe(false);
+    expect(result.current.comments[0]?.like_count).toBe(5);
   });
 });

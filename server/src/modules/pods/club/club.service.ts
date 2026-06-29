@@ -39,6 +39,7 @@ const toPub = (d: any) => {
     host_ids: (d.host_ids ?? []).map((x: any) => String(x)),
     category_id: d.category_id ? String(d.category_id) : null,
     super_category_id: d.super_category_id ? String(d.super_category_id) : null,
+    is_verified: !!d.is_verified,
     is_active: !!d.is_active,
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
@@ -54,7 +55,13 @@ function notFound(): never {
 }
 
 export const clubService = {
-  async list(filter?: { search?: string; category_id?: string; super_category_id?: string; is_active?: boolean }) {
+  async list(filter?: {
+    search?: string;
+    category_id?: string;
+    super_category_id?: string;
+    is_active?: boolean;
+    is_verified?: boolean;
+  }) {
     const q: any = {};
     if (filter?.search) {
       q.$or = [
@@ -65,6 +72,7 @@ export const clubService = {
     if (filter?.category_id) q.category_id = filter.category_id;
     if (filter?.super_category_id) q.super_category_id = filter.super_category_id;
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
+    if (filter?.is_verified !== undefined) q.is_verified = filter.is_verified;
     const docs = await ClubModel.find(q).sort({ club_name: 1 });
     return docs.map(toPub);
   },
@@ -110,6 +118,7 @@ export const clubService = {
       host_ids: input.host_ids ?? [],
       category_id: input.category_id || null,
       super_category_id: input.super_category_id || null,
+      is_verified: input.is_verified ?? false,
       is_active: input.is_active ?? true,
     });
     return toPub(doc);
@@ -135,6 +144,7 @@ export const clubService = {
       'host_ids',
       'category_id',
       'super_category_id',
+      'is_verified',
       'is_active',
     ];
     for (const f of fields) {

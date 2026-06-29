@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Box, Button, Chip, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import ResponsiveDialog from '../../components/ResponsiveDialog';
@@ -39,8 +40,15 @@ function ChipRow<T extends string>({ items, value, onChange }: Readonly<{ items:
   );
 }
 
+const VIBE_COLLAPSED_COUNT = 9;
+
 export default function ExploreFilterSheet({ open, filters, setFilters, categories, activeCount, resultCount, onClose }: Readonly<ExploreFilterSheetProps>) {
+  const [showAllVibes, setShowAllVibes] = useState(false);
   const reset = () => setFilters({ preset: 'ALL', categoryId: '', price: 'ALL', date: 'ALL', sort: 'SOONEST', search: '' });
+  // Keep the panel short on small screens: show a handful of vibes, overflow the
+  // rest behind a "+N more" toggle so filter controls never push past the sheet (item 1).
+  const visibleCats = showAllVibes ? categories : categories.slice(0, VIBE_COLLAPSED_COUNT);
+  const hiddenCount = Math.max(0, categories.length - VIBE_COLLAPSED_COUNT);
 
   return (
     <ResponsiveDialog
@@ -82,10 +90,19 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
           <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>Vibe</Typography>
           <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
             <Chip label="All" clickable color={!filters.categoryId ? 'primary' : 'default'} variant={!filters.categoryId ? 'filled' : 'outlined'} onClick={() => setFilters({ ...filters, categoryId: '' })} sx={{ height: 32, fontWeight: 800 }} />
-            {categories.slice(0, 18).map((category) => {
+            {visibleCats.map((category: any) => {
               const selected = filters.categoryId === category.id;
               return <Chip key={category.id} label={category.name} clickable color={selected ? 'primary' : 'default'} variant={selected ? 'filled' : 'outlined'} onClick={() => setFilters({ ...filters, categoryId: selected ? '' : category.id })} sx={{ height: 32, fontWeight: 800 }} />;
             })}
+            {hiddenCount > 0 && (
+              <Chip
+                label={showAllVibes ? 'Show less' : `+${hiddenCount} more`}
+                clickable
+                variant="outlined"
+                onClick={() => setShowAllVibes((v) => !v)}
+                sx={{ height: 32, fontWeight: 800 }}
+              />
+            )}
           </Stack>
         </Stack>
         <Stack spacing={0.8}>

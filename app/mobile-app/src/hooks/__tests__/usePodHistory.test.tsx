@@ -3,7 +3,13 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 import { graphqlRequest } from '@/services/graphql.client';
-import { usePodBackout, usePodHistory, usePodInvoice, usePodTicket } from '@/hooks/usePodHistory';
+import {
+  usePodBackout,
+  usePodHistory,
+  usePodHistoryCategories,
+  usePodInvoice,
+  usePodTicket,
+} from '@/hooks/usePodHistory';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 jest.mock('expo-file-system/legacy', () => ({
@@ -165,5 +171,38 @@ describe('usePodTicket', () => {
       await expect(result.current.download('pod1')).rejects.toThrow('Sharing is not available');
     });
     expect(share).not.toHaveBeenCalled();
+  });
+});
+
+describe('usePodHistoryCategories', () => {
+  const cats = [{ id: 's1', name: 'For You', level: 'SUPER', parent_id: null }];
+
+  it('loads the category tree', async () => {
+    mockRequest.mockResolvedValueOnce({ categories: cats });
+    const { result } = renderHook(() => usePodHistoryCategories());
+    await waitFor(() => expect(result.current).toHaveLength(1));
+    expect(result.current[0]?.id).toBe('s1');
+  });
+
+  it('stays empty when the request fails', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('boom'));
+    const { result } = renderHook(() => usePodHistoryCategories());
+    await waitFor(() => expect(mockRequest).toHaveBeenCalled());
+    expect(result.current).toEqual([]);
+  });
+
+  it('ignores a response that resolves after unmount', async () => {
+    let resolveFn: (value: unknown) => void = () => undefined;
+    mockRequest.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveFn = resolve;
+      }),
+    );
+    const { unmount } = renderHook(() => usePodHistoryCategories());
+    unmount();
+    await act(async () => {
+      resolveFn({ categories: cats });
+    });
+    expect(mockRequest).toHaveBeenCalled();
   });
 });

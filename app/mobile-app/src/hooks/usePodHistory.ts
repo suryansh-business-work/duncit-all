@@ -7,10 +7,11 @@ import {
   EventTicketPdfDocument,
   MyEventTicketForPodDocument,
   MyPodMembershipsDocument,
+  PodHistoryCategoriesDocument,
   PodInvoicePdfDocument,
 } from '@/graphql/pod-history';
 import { graphqlRequest } from '@/services/graphql.client';
-import { dedupeByPod, type PodMembership } from '@/utils/pod-history';
+import { dedupeByPod, type PodHistoryCategory, type PodMembership } from '@/utils/pod-history';
 
 /**
  * Pod memberships for the history list + details — RN port of mWeb's
@@ -38,6 +39,25 @@ export function usePodHistory() {
   }, [refetch]);
 
   return { items, uniqueItems: dedupeByPod(items), isLoading, error, refetch };
+}
+
+/** Super + Category tree for the Pod History filter (fetched once). */
+export function usePodHistoryCategories() {
+  const [categories, setCategories] = useState<PodHistoryCategory[]>([]);
+
+  useEffect(() => {
+    let active = true;
+    graphqlRequest(PodHistoryCategoriesDocument, undefined, { auth: true })
+      .then((data) => {
+        if (active) setCategories(data.categories);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return categories;
 }
 
 /** Backout mutation with a busy flag — mWeb's BACKOUT_POD_HISTORY. */

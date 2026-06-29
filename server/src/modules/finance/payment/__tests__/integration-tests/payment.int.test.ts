@@ -89,4 +89,33 @@ describe('paymentService integration', () => {
     );
     expect(res.status).toBe('SUCCESS');
   });
+
+  describe('invoicePdfBase64 access control', () => {
+    it('rejects a missing payment', async () => {
+      await expect(
+        paymentService.invoicePdfBase64(new Types.ObjectId().toString(), new Types.ObjectId().toString(), false)
+      ).rejects.toThrow(/not found/i);
+    });
+
+    it('forbids a non-owner, non-admin requester', async () => {
+      const doc = await makePayment({ invoice_no: 'INV-1' });
+      await expect(
+        paymentService.invoicePdfBase64(String(doc._id), new Types.ObjectId().toString(), false)
+      ).rejects.toThrow(/not your invoice/i);
+    });
+
+    it('lets the owner past the ownership gate (no invoice yet → BAD_REQUEST, not FORBIDDEN)', async () => {
+      const doc = await makePayment();
+      await expect(
+        paymentService.invoicePdfBase64(String(doc._id), String(doc.user_id), false)
+      ).rejects.toThrow(/no invoice generated/i);
+    });
+
+    it('lets an admin past the ownership gate for another user’s payment', async () => {
+      const doc = await makePayment();
+      await expect(
+        paymentService.invoicePdfBase64(String(doc._id), new Types.ObjectId().toString(), true)
+      ).rejects.toThrow(/no invoice generated/i);
+    });
+  });
 });

@@ -1,7 +1,7 @@
 import { paymentService, computeQuote } from './payment.service';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import type { GraphQLContext } from '@context';
-import { requireAuth, requireRole } from '@middleware/rbac';
+import { hasRole, requireAuth, requireRole } from '@middleware/rbac';
 import { validate } from '@utils/validate';
 import {
   dummyCheckoutSchema,
@@ -44,8 +44,9 @@ export const paymentResolvers = {
       return computeQuote(args.input.amount);
     },
     paymentInvoicePdfBase64: (_p: unknown, args: { payment_doc_id: string }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_RW);
-      return paymentService.invoicePdfBase64(args.payment_doc_id);
+      // The buyer can download their own invoice; admins (support/finance) any.
+      const u = requireAuth(ctx);
+      return paymentService.invoicePdfBase64(args.payment_doc_id, u.id, hasRole(u, ADMIN_RW));
     },
   },
   Mutation: {

@@ -17,4 +17,20 @@ describe('payment e2e', () => {
     const anon = server.client();
     await expect(anon.request(gql`query { myPayments { id } }`)).rejects.toThrow();
   });
+
+  it('lets an authenticated user reach their invoice (no longer admin-gated)', async () => {
+    const missingId = '64b000000000000000000000';
+    // A normal USER must now get past the role gate — a missing payment surfaces
+    // "Payment not found", not "Access Denied". This is the invoice-download fix.
+    const user = server.client(signToken({ roles: ['USER'] }));
+    await expect(
+      user.request(gql`query { paymentInvoicePdfBase64(payment_doc_id: "${missingId}") }`)
+    ).rejects.toThrow(/not found/i);
+
+    // An anonymous caller is still rejected (authentication required).
+    const anon = server.client();
+    await expect(
+      anon.request(gql`query { paymentInvoicePdfBase64(payment_doc_id: "${missingId}") }`)
+    ).rejects.toThrow(/authenticat/i);
+  });
 });

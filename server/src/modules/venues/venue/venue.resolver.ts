@@ -1,7 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { venueService } from './venue.service';
 import type { GraphQLContext } from '@context';
-import { requireRole } from '@middleware/rbac';
+import { hasRole, requireRole } from '@middleware/rbac';
 
 const ADMIN_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
 
@@ -93,6 +93,15 @@ export const venueResolvers = {
     ) => {
       requireRole(ctx, ADMIN_REVIEW);
       return venueService.setDeductions(args.venue_doc_id, args.venue_share_pct, args.venue_commission_pct);
+    },
+    updateVenueSettings: async (
+      _p: unknown,
+      args: { venue_doc_id: string; input: any },
+      ctx: GraphQLContext
+    ) => {
+      const userId = uid(ctx);
+      const isAdmin = !!ctx.user && hasRole(ctx.user, ADMIN_REVIEW);
+      return venueService.updateSettings(userId, isAdmin, args.venue_doc_id, args.input);
     },
     deleteVenue: async (
       _p: unknown,

@@ -1,10 +1,97 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { VenueModel, type IVenue } from './venue.model';
+import { VenueModel, type IVenue, type IVenueRules, type IVenueSettings } from './venue.model';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
+
+const fail = (code: string, message: string): never => {
+  throw new GraphQLError(message, { extensions: { code } });
+};
+
+const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
+const ISO_DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
+const hhmmToMinutes = (hhmm: string) => {
+  const [h, m] = hhmm.split(':').map(Number);
+  return h * 60 + m;
+};
+
+const clampInt = (value: unknown, min: number, max: number, fallback: number) => {
+  const n = Math.trunc(Number(value));
+  if (!Number.isFinite(n)) return fallback;
+  return Math.min(max, Math.max(min, n));
+};
+
+const toRulesPub = (r?: Partial<IVenueRules> | null) => ({
+  buffer_minutes: r?.buffer_minutes ?? 0,
+  min_notice_minutes: r?.min_notice_minutes ?? 0,
+  max_advance_days: r?.max_advance_days ?? 60,
+  max_bookings_per_slot: r?.max_bookings_per_slot ?? 1,
+  allow_instant_booking: r?.allow_instant_booking ?? true,
+  allow_waitlist: r?.allow_waitlist ?? false,
+  booking_approval_required: r?.booking_approval_required ?? false,
+  allow_multiple_bookings: r?.allow_multiple_bookings ?? false,
+});
+
+const toSettingsPub = (s?: IVenueSettings | null) => ({
+  operating_hours: {
+    open: s?.operating_hours?.open ?? '09:00',
+    close: s?.operating_hours?.close ?? '23:00',
+  },
+  weekly_off_days: [...(s?.weekly_off_days ?? [])].sort((a, b) => a - b),
+  holidays: [...(s?.holidays ?? [])].sort((a, b) => a.localeCompare(b)),
+  rules: toRulesPub(s?.rules),
+});
+
+function normalizeRulesInput(base: ReturnType<typeof toRulesPub>, input: any) {
+  const intField = (value: unknown, min: number, max: number, fallback: number) =>
+    value !== undefined ? clampInt(value, min, max, fallback) : fallback;
+  const boolField = (value: unknown, fallback: boolean) =>
+    value !== undefined ? Boolean(value) : fallback;
+  return {
+    buffer_minutes: intField(input.buffer_minutes, 0, 1440, base.buffer_minutes),
+    min_notice_minutes: intField(input.min_notice_minutes, 0, 525_600, base.min_notice_minutes),
+    max_advance_days: intField(input.max_advance_days, 1, 365, base.max_advance_days),
+    max_bookings_per_slot: intField(input.max_bookings_per_slot, 1, 100_000, base.max_bookings_per_slot),
+    allow_instant_booking: boolField(input.allow_instant_booking, base.allow_instant_booking),
+    allow_waitlist: boolField(input.allow_waitlist, base.allow_waitlist),
+    booking_approval_required: boolField(input.booking_approval_required, base.booking_approval_required),
+    allow_multiple_bookings: boolField(input.allow_multiple_bookings, base.allow_multiple_bookings),
+  };
+}
+
+function normalizeSettingsInput(current: IVenueSettings | undefined, input: any) {
+  const base = toSettingsPub(current);
+  const next = { ...base };
+  if (input.operating_hours) {
+    const open = String(input.operating_hours.open ?? '');
+    const close = String(input.operating_hours.close ?? '');
+    if (!HHMM_RE.test(open) || !HHMM_RE.test(close)) {
+      fail('BAD_USER_INPUT', 'Operating hours must be HH:mm (24-hour)');
+    }
+    if (hhmmToMinutes(open) >= hhmmToMinutes(close)) {
+      fail('BAD_USER_INPUT', 'Opening time must be before closing time');
+    }
+    next.operating_hours = { open, close };
+  }
+  if (input.weekly_off_days !== undefined) {
+    const days = (input.weekly_off_days as unknown[]).map((d) => Math.trunc(Number(d)));
+    if (days.some((d) => !Number.isFinite(d) || d < 0 || d > 6)) {
+      fail('BAD_USER_INPUT', 'weekly_off_days must be integers 0..6 (Sun..Sat)');
+    }
+    next.weekly_off_days = [...new Set(days)].sort((a, b) => a - b);
+  }
+  if (input.holidays !== undefined) {
+    const hs = (input.holidays as unknown[]).map((h) => String(h).trim());
+    if (hs.some((h) => !ISO_DATE_RE.test(h))) {
+      fail('BAD_USER_INPUT', 'holidays must be YYYY-MM-DD dates');
+    }
+    next.holidays = [...new Set(hs)].sort((a, b) => a.localeCompare(b));
+  }
+  if (input.rules) next.rules = normalizeRulesInput(base.rules, input.rules);
+  return next;
+}
 
 const toPub = (v: IVenue) => ({
   id: String(v._id),
@@ -44,6 +131,7 @@ const toPub = (v: IVenue) => ({
   tags: v.tags ?? [],
   venue_share_pct: v.venue_share_pct ?? 0,
   venue_commission_pct: v.venue_commission_pct ?? 0,
+  settings: toSettingsPub(v.settings),
   step_completed: v.step_completed ?? 0,
   status: v.status,
   is_active: v.is_active ?? true,
@@ -319,6 +407,21 @@ export const venueService = {
     );
     if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
     return toPub(v);
+  },
+
+  /** Owner (or admin) updates operating hours / weekly-off / holidays / rules.
+   * Drives the Recurring Availability generator + validation. */
+  async updateSettings(userId: string, isAdmin: boolean, venueId: string, input: any) {
+    if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue id');
+    const v = await VenueModel.findById(venueId);
+    if (!v) fail('NOT_FOUND', 'Venue not found');
+    if (!isAdmin && String(v!.owner_user_id) !== String(userId)) {
+      fail('FORBIDDEN', 'Not your venue');
+    }
+    v!.settings = normalizeSettingsInput(v!.settings, input) as IVenueSettings;
+    v!.markModified('settings');
+    await v!.save();
+    return toPub(v!);
   },
 
   async setActive(venueId: string, active: boolean) {

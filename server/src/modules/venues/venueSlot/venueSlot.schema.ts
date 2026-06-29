@@ -39,6 +39,31 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     block: Boolean
   }
 
+  type BulkSlotResult {
+    matched: Int!
+    affected: Int!
+    skipped: Int!
+  }
+
+  "Filter for bulk slot ops — only non-booked slots; from defaults to now so history is never touched."
+  input BulkDeleteVenueSlotsInput {
+    venue_id: ID!
+    from: String
+    to: String
+    weekdays: [Int!]
+  }
+
+  input BulkUpdateVenueSlotsInput {
+    venue_id: ID!
+    from: String
+    to: String
+    weekdays: [Int!]
+    set_price: Int
+    block: Boolean
+    shift_minutes: Int
+    set_duration_minutes: Int
+  }
+
   extend type Query {
     venueSlots(venue_id: ID!, from: String, to: String): [VenueSlot!]!
     venueAvailableSlots(venue_id: ID!, from: String): [VenueSlot!]!
@@ -50,6 +75,9 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     createVenueSlots(input: BulkCreateVenueSlotsInput!): [VenueSlot!]!
     updateVenueSlot(slot_id: ID!, input: UpdateVenueSlotInput!): VenueSlot!
     deleteVenueSlot(slot_id: ID!): Boolean!
+    "Bulk-manage a venue's upcoming non-booked slots (owner-scoped)."
+    bulkDeleteVenueSlots(input: BulkDeleteVenueSlotsInput!): BulkSlotResult!
+    bulkUpdateVenueSlots(input: BulkUpdateVenueSlotsInput!): BulkSlotResult!
     "Onboarding/admin slot management for any venue (role-gated)."
     adminCreateVenueSlots(input: BulkCreateVenueSlotsInput!): [VenueSlot!]!
     adminUpdateVenueSlot(slot_id: ID!, input: UpdateVenueSlotInput!): VenueSlot!

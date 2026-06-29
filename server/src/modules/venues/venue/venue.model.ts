@@ -13,6 +13,34 @@ export interface IVenueDocument {
   uploaded_at: Date;
 }
 
+/** Daily operating window in venue-local "HH:mm" (24h). */
+export interface IVenueOperatingHours {
+  open: string;
+  close: string;
+}
+
+/** Booking rules a venue owner controls — consumed by recurring-slot creation
+ * and (later) the booking flow. */
+export interface IVenueRules {
+  buffer_minutes: number; // gap enforced between adjacent slots
+  min_notice_minutes: number; // earliest a slot can start from "now"
+  max_advance_days: number; // furthest ahead a slot can be scheduled
+  max_bookings_per_slot: number; // capacity per slot
+  allow_instant_booking: boolean;
+  allow_waitlist: boolean;
+  booking_approval_required: boolean;
+  allow_multiple_bookings: boolean;
+}
+
+/** Operating hours, weekly-off, holidays + booking rules. Drives the Recurring
+ * Availability generator (skip offs/holidays, clamp to hours) and validation. */
+export interface IVenueSettings {
+  operating_hours: IVenueOperatingHours;
+  weekly_off_days: number[]; // 0..6 (Sun..Sat)
+  holidays: string[]; // 'YYYY-MM-DD'
+  rules: IVenueRules;
+}
+
 export interface IVenue extends Document {
   owner_user_id: Types.ObjectId;
   // Step 1: Venue details
@@ -54,6 +82,8 @@ export interface IVenue extends Document {
   // page; 0 on either falls back to the global default_venue_* at settlement.
   venue_share_pct: number;
   venue_commission_pct: number;
+  // Venue Settings (operating hours, weekly-off, holidays) + booking rules.
+  settings: IVenueSettings;
   // Workflow
   step_completed: number; // 0..4
   status: VenueStatus;
@@ -71,6 +101,39 @@ const venueDocumentSchema = new Schema<IVenueDocument>(
     type: { type: String, required: true },
     url: { type: String, required: true },
     uploaded_at: { type: Date, default: () => new Date() },
+  },
+  { _id: false }
+);
+
+const venueRulesSchema = new Schema<IVenueRules>(
+  {
+    buffer_minutes: { type: Number, default: 0, min: 0, max: 1440 },
+    min_notice_minutes: { type: Number, default: 0, min: 0, max: 525_600 },
+    max_advance_days: { type: Number, default: 60, min: 1, max: 365 },
+    max_bookings_per_slot: { type: Number, default: 1, min: 1, max: 100_000 },
+    allow_instant_booking: { type: Boolean, default: true },
+    allow_waitlist: { type: Boolean, default: false },
+    booking_approval_required: { type: Boolean, default: false },
+    allow_multiple_bookings: { type: Boolean, default: false },
+  },
+  { _id: false }
+);
+
+const venueSettingsSchema = new Schema<IVenueSettings>(
+  {
+    operating_hours: {
+      type: new Schema<IVenueOperatingHours>(
+        {
+          open: { type: String, default: '09:00' },
+          close: { type: String, default: '23:00' },
+        },
+        { _id: false }
+      ),
+      default: () => ({ open: '09:00', close: '23:00' }),
+    },
+    weekly_off_days: { type: [Number], default: [] },
+    holidays: { type: [String], default: [] },
+    rules: { type: venueRulesSchema, default: () => ({}) },
   },
   { _id: false }
 );
@@ -109,6 +172,7 @@ const venueSchema = new Schema<IVenue>(
     tags: { type: [String], default: [] },
     venue_share_pct: { type: Number, default: 0, min: 0, max: 100 },
     venue_commission_pct: { type: Number, default: 0, min: 0, max: 100 },
+    settings: { type: venueSettingsSchema, default: () => ({}) },
     step_completed: { type: Number, default: 0, min: 0, max: 4 },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     is_active: { type: Boolean, default: true },

@@ -1,8 +1,10 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { io, type Socket } from 'socket.io-client';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
   EmailTicketTranscriptDocument,
+  MarkTicketReadDocument,
   ReopenTicketDocument,
   ReplyToTicketDocument,
   ResolveTicketDocument,
@@ -12,6 +14,8 @@ import {
   UnifiedSupportTicketsDocument,
 } from '@/graphql/support-chat';
 import { TranscriptFormat } from '@/generated/graphql/graphql';
+import { config } from '@/constants/config';
+import { getAuthToken } from '@/services/auth-token';
 import { graphqlRequest } from '@/services/graphql.client';
 
 export type UnifiedTicket = ResultOf<
@@ -43,21 +47,62 @@ export function useUnifiedTickets() {
 export function useTicketDetails(ticketId: string) {
   const [ticket, setTicket] = useState<TicketDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const countRef = useRef(0);
+  const socketRef = useRef<Socket | null>(null);
+
+  // Marking the thread read flips the OTHER side's Sent ticks to Seen (B12).
+  const markRead = useCallback(() => {
+    graphqlRequest(MarkTicketReadDocument, { ticketId }, { auth: true }).catch(() => undefined);
+  }, [ticketId]);
 
   const reload = useCallback(async () => {
     const data = await graphqlRequest(TicketDetailsDocument, { id: ticketId }, { auth: true });
     setTicket(data.ticket ?? null);
+    countRef.current = data.ticket?.messages.length ?? 0;
   }, [ticketId]);
 
   useEffect(() => {
     let active = true;
     reload()
+      .then(() => {
+        if (active) markRead();
+      })
       .catch(() => undefined)
       .finally(() => active && setIsLoading(false));
     return () => {
       active = false;
     };
-  }, [reload]);
+  }, [reload, markRead]);
+
+  // Live ticket updates (B12): refresh the thread + read ticks without a manual
+  // refetch, and mark a freshly-arrived agent reply read while it is on screen.
+  useEffect(() => {
+    if (!ticketId) return undefined;
+    let cancelled = false;
+    getAuthToken().then((token) => {
+      if (cancelled || !token) return;
+      const s = io(config.apiUrl, {
+        path: '/socket.io',
+        auth: { token },
+        transports: ['websocket', 'polling'],
+      });
+      socketRef.current = s;
+      s.on('ticket:update', (updated: TicketDetail) => {
+        if (updated.id !== ticketId) return;
+        // A growing thread means a new reply arrived while the user is viewing —
+        // mark it read so the other side's tick turns Seen. A pure read-state
+        // update (same count) must NOT re-mark, which would loop.
+        if (updated.messages.length > countRef.current) markRead();
+        countRef.current = updated.messages.length;
+        setTicket(updated);
+      });
+    });
+    return () => {
+      cancelled = true;
+      socketRef.current?.disconnect();
+      socketRef.current = null;
+    };
+  }, [ticketId, markRead]);
 
   const reply = useCallback(
     async (bodyText: string) => {

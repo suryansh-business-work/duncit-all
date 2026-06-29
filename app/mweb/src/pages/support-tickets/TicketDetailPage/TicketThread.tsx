@@ -9,10 +9,11 @@ interface Props {
   messages: readonly TicketMessage[];
   timeZone: string;
   formatTime: (iso: string) => string;
+  agentLastReadAt?: string | null;
 }
 
 /** Ticket message timeline with day separators (B10) + jump-to-latest FAB (B13). */
-export default function TicketThread({ messages, timeZone, formatTime }: Readonly<Props>) {
+export default function TicketThread({ messages, timeZone, formatTime, agentLastReadAt }: Readonly<Props>) {
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const [showJump, setShowJump] = useState(false);
 
@@ -37,7 +38,7 @@ export default function TicketThread({ messages, timeZone, formatTime }: Readonl
                   </Typography>
                 </Stack>
               )}
-              <TicketBubble msg={m} timeText={formatTime(m.created_at)} />
+              <TicketBubble msg={m} timeText={formatTime(m.created_at)} agentLastReadAt={agentLastReadAt} />
             </Box>
           ))}
         </Stack>

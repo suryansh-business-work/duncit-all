@@ -50,6 +50,9 @@ export interface ITicket extends Document {
   rating: number | null;
   feedback_comment: string;
   feedback_at: Date | null;
+  /** When each side last opened the thread — drives the Sent/Seen ticks (B12). */
+  user_last_read_at: Date | null;
+  agent_last_read_at: Date | null;
   messages: Types.DocumentArray<ITicketMessage>;
   created_at: Date;
   updated_at: Date;
@@ -82,6 +85,8 @@ const ticketSchema = new Schema<ITicket>(
     rating: { type: Number, default: null, min: 1, max: 5 },
     feedback_comment: { type: String, default: '', maxlength: 1000 },
     feedback_at: { type: Date, default: null },
+    user_last_read_at: { type: Date, default: null },
+    agent_last_read_at: { type: Date, default: null },
     messages: { type: [messageSchema], default: [] },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

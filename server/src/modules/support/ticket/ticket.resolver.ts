@@ -77,6 +77,11 @@ export const ticketResolvers = {
       requireRole(ctx, SUPPORT_ROLES);
       return ticketService.updateStatus(args.ticket_id, args.status);
     },
+    markTicketRead: async (_p: unknown, args: { ticket_id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      await requireTicketAccess(ctx, args.ticket_id);
+      return ticketService.markRead(user.id, hasRole(user, SUPPORT_ROLES), args.ticket_id);
+    },
     reopenTicket: (_p: unknown, args: { ticket_id: string; reason?: string | null }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       const isAgent = hasRole(user, SUPPORT_ROLES);

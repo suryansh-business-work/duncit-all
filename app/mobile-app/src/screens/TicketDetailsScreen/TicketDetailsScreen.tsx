@@ -109,6 +109,7 @@ export function TicketDetailsScreen() {
             ref={scrollRef}
             messages={ticket.messages}
             timeZone={timeZone}
+            agentLastReadAt={ticket.agent_last_read_at}
             onScroll={onScroll}
           />
           {showJump ? (

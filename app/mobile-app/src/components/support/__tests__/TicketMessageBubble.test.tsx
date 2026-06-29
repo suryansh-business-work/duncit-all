@@ -19,7 +19,7 @@ describe('TicketMessageBubble', () => {
     expect(screen.getByText('10:00')).toBeOnTheScreen();
   });
 
-  it('renders an AGENT bubble and omits the time when the stamp is missing', () => {
+  it('renders an AGENT bubble with no tick and omits the time when the stamp is missing', () => {
     renderWithProviders(
       <TicketMessageBubble
         message={msg({ author_role: 'AGENT', author_name: 'Agent A', created_at: '' })}
@@ -27,8 +27,34 @@ describe('TicketMessageBubble', () => {
       />,
     );
     expect(screen.getByText('Agent A')).toBeOnTheScreen();
-    // No valid timestamp → no time line.
+    // No valid timestamp → no time line, and ticks are only on the user's own messages.
     expect(screen.queryByText('10:00')).toBeNull();
+    expect(screen.queryByTestId('ticket-tick-m1')).toBeNull();
+  });
+
+  it('shows a Sent tick on the user message until the agent reads it (B12)', () => {
+    // No agent read yet → the single-check (delivered) branch.
+    renderWithProviders(<TicketMessageBubble message={msg()} timeZone="UTC" />);
+    expect(screen.getByTestId('ticket-tick-m1')).toBeOnTheScreen();
+  });
+
+  it('flips to a Seen tick once the agent has read the message (B12)', () => {
+    // Agent read after the message → the double-check (seen) branch.
+    renderWithProviders(
+      <TicketMessageBubble message={msg()} timeZone="UTC" agentLastReadAt="2026-06-01T12:00:00Z" />,
+    );
+    expect(screen.getByTestId('ticket-tick-m1')).toBeOnTheScreen();
+  });
+
+  it('renders an AGENT bubble time in the muted colour with no tick', () => {
+    renderWithProviders(
+      <TicketMessageBubble
+        message={msg({ author_role: 'AGENT', author_name: 'Agent A' })}
+        timeZone="UTC"
+      />,
+    );
+    expect(screen.getByText('10:00')).toBeOnTheScreen();
+    expect(screen.queryByTestId('ticket-tick-m1')).toBeNull();
   });
 
   it('centers a SYSTEM timeline line (B7)', () => {

@@ -59,6 +59,8 @@ async function toPub(doc: ITicket) {
     rating: doc.rating ?? null,
     feedback_comment: doc.feedback_comment || null,
     feedback_at: doc.feedback_at?.toISOString?.() ?? null,
+    user_last_read_at: doc.user_last_read_at?.toISOString?.() ?? null,
+    agent_last_read_at: doc.agent_last_read_at?.toISOString?.() ?? null,
     message_count: doc.messages.length,
     messages: doc.messages.map((m) => ({
       id: String(m._id),
@@ -167,6 +169,28 @@ export const ticketService = {
     }
     await doc!.save();
 
+    const pub = await toPub(doc!);
+    emitToSupportAgents('ticket:update', pub);
+    emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
+    return pub;
+  },
+
+  /**
+   * Mark the thread read for the acting side (B12). Stamps user_last_read_at or
+   * agent_last_read_at and pushes the update so the OTHER side's Sent ticks flip
+   * to Seen live. Owner-or-agent only (mirrors replyToTicket's guard).
+   */
+  async markRead(actorId: string, isAgent: boolean, ticketId: string) {
+    if (!Types.ObjectId.isValid(ticketId)) fail('BAD_USER_INPUT', 'Invalid ticket_id');
+    const doc = await TicketModel.findById(ticketId);
+    if (!doc) fail('NOT_FOUND', 'Ticket not found');
+    if (!isAgent && String(doc!.user_id) !== String(actorId)) {
+      fail('FORBIDDEN', 'Cannot read another user’s ticket');
+    }
+    const now = new Date();
+    if (isAgent) doc!.agent_last_read_at = now;
+    else doc!.user_last_read_at = now;
+    await doc!.save();
     const pub = await toPub(doc!);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);

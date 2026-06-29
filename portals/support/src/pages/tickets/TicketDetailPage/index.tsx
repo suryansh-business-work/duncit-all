@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Chip, CircularProgress, Divider, IconButton, Snackbar, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { REPLY_TO_TICKET, TICKET, type Ticket, type TicketStatus } from '../../../graphql/tickets';
+import { MARK_TICKET_READ, REPLY_TO_TICKET, TICKET, type Ticket, type TicketStatus } from '../../../graphql/tickets';
 import { htmlToText } from '../../../components/RichTextEditor';
 import { useSupportSocket } from '../../../lib/useSupportSocket';
 import TicketHeader from './TicketHeader';
@@ -26,6 +26,7 @@ export default function TicketDetailPage() {
     fetchPolicy: 'cache-and-network',
   });
   const [reply, { loading: replying }] = useMutation(REPLY_TO_TICKET, { onCompleted: () => refetch() });
+  const [markTicketRead] = useMutation(MARK_TICKET_READ);
   const actions = useTicketActions(id, () => refetch());
 
   const [bodyHtml, setBodyHtml] = useState('');
@@ -38,6 +39,12 @@ export default function TicketDetailPage() {
   });
 
   const ticket = data?.ticket;
+
+  // Mark the thread read on open (B12) so the user's Sent ticks flip to Seen.
+  const ticketId = ticket?.id;
+  useEffect(() => {
+    if (ticketId) markTicketRead({ variables: { ticket_id: ticketId } }).catch(() => undefined);
+  }, [ticketId, markTicketRead]);
 
   const send = async () => {
     const bodyText = htmlToText(bodyHtml);

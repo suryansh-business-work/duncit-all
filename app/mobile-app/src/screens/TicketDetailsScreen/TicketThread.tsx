@@ -15,12 +15,13 @@ import { dayLabel, showDaySeparator } from '@/utils/support-chat';
 interface Props {
   messages: TicketThreadMessage[];
   timeZone: string;
+  agentLastReadAt?: string | null;
   onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
 }
 
 /** The ticket reply thread with day separators and SYSTEM timeline lines (B7/B10). */
 export const TicketThread = forwardRef<RNScrollView, Props>(function TicketThread(
-  { messages, timeZone, onScroll },
+  { messages, timeZone, agentLastReadAt, onScroll },
   ref,
 ) {
   return (
@@ -44,7 +45,7 @@ export const TicketThread = forwardRef<RNScrollView, Props>(function TicketThrea
               {dayLabel(m.created_at, timeZone)}
             </Text>
           ) : null}
-          <TicketMessageBubble message={m} timeZone={timeZone} />
+          <TicketMessageBubble message={m} timeZone={timeZone} agentLastReadAt={agentLastReadAt} />
         </YStack>
       ))}
     </ScrollView>

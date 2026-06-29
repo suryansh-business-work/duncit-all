@@ -65,6 +65,9 @@ export const ticketTypeDefs = /* GraphQL */ `
     rating: Int
     feedback_comment: String
     feedback_at: String
+    "When each side last opened the thread — drives the Sent/Seen ticks (B12)."
+    user_last_read_at: String
+    agent_last_read_at: String
     message_count: Int!
     messages: [TicketMessage!]!
     created_at: String!
@@ -96,6 +99,8 @@ export const ticketTypeDefs = /* GraphQL */ `
       attachments: [String!]
     ): Ticket!
     updateTicketStatus(ticket_id: ID!, status: TicketStatus!): Ticket!
+    "Mark a ticket thread read (owner or agent) — updates the side's last-read so the other side's ticks turn 'Seen' (B12)."
+    markTicketRead(ticket_id: ID!): Ticket!
     "Re-open a resolved/closed ticket (owner within 3 days, or an agent). Reason logged to the thread."
     reopenTicket(ticket_id: ID!, reason: String): Ticket!
     "Mark a ticket resolved (owner OR an agent) — appends a SYSTEM timeline bubble."

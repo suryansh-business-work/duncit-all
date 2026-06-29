@@ -13,7 +13,9 @@ import TicketHeader from './TicketHeader';
 import TicketThread from './TicketThread';
 import TicketComposer from './TicketComposer';
 import ResolvedNotice from './ResolvedNotice';
+import { useTicketSocket } from '../useTicketSocket';
 import {
+  MARK_TICKET_READ,
   REOPEN_TICKET,
   REPLY_TO_TICKET,
   RESOLVE_TICKET,
@@ -33,8 +35,17 @@ export default function TicketDetailPage() {
   const [reply, { loading: replying }] = useMutation(REPLY_TO_TICKET, { onCompleted: () => refetch() });
   const [reopenTicket, { loading: reopening }] = useMutation(REOPEN_TICKET, { onCompleted: () => refetch() });
   const [resolveTicket, { loading: resolving }] = useMutation(RESOLVE_TICKET, { onCompleted: () => refetch() });
+  const [markTicketRead] = useMutation(MARK_TICKET_READ);
   const [fetchTranscript] = useLazyQuery(TICKET_TRANSCRIPT, { fetchPolicy: 'network-only' });
   const { formatDateTime, formatTime, timeZone } = useDateFormat();
+
+  // Mark the thread read on open (B12) so the agent's view shows the Seen tick.
+  const ticketId = data?.ticket?.id;
+  useEffect(() => {
+    if (ticketId) markTicketRead({ variables: { ticket_id: ticketId } }).catch(() => undefined);
+  }, [ticketId, markTicketRead]);
+  // Live refresh so the user's own Sent ticks flip to Seen without a manual reload.
+  useTicketSocket(ticketId, () => void refetch());
 
   const [reopenOpen, setReopenOpen] = useState(false);
   const [reopenError, setReopenError] = useState<string | null>(null);
@@ -108,7 +119,12 @@ export default function TicketDetailPage() {
       />
 
       <TicketMeta ticket={ticket} />
-      <TicketThread messages={ticket.messages} timeZone={timeZone} formatTime={formatTime} />
+      <TicketThread
+        messages={ticket.messages}
+        timeZone={timeZone}
+        formatTime={formatTime}
+        agentLastReadAt={ticket.agent_last_read_at}
+      />
 
       {isResolved && (
         <ResolvedNotice

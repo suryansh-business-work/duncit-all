@@ -49,7 +49,12 @@ export default function TicketThread({ ticket }: Readonly<{ ticket: Ticket }>) {
                 </Typography>
               </Divider>
               {group.messages.map((m) => (
-                <MessageBubble key={m.id} msg={m} time={formatTime(m.created_at)} />
+                <MessageBubble
+                  key={m.id}
+                  msg={m}
+                  time={formatTime(m.created_at)}
+                  userLastReadAt={ticket.user_last_read_at}
+                />
               ))}
             </Stack>
           ))}

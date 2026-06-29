@@ -31,6 +31,8 @@ export const TICKET = gql`
       rating
       feedback_comment
       feedback_at
+      user_last_read_at
+      agent_last_read_at
       messages {
         id
         author_role
@@ -40,6 +42,16 @@ export const TICKET = gql`
         attachments
         created_at
       }
+    }
+  }
+`;
+
+export const MARK_TICKET_READ = gql`
+  mutation MarkMyTicketRead($ticket_id: ID!) {
+    markTicketRead(ticket_id: $ticket_id) {
+      id
+      user_last_read_at
+      agent_last_read_at
     }
   }
 `;
@@ -148,5 +160,7 @@ export interface TicketDetail {
   rating: number | null;
   feedback_comment: string | null;
   feedback_at: string | null;
+  user_last_read_at: string | null;
+  agent_last_read_at: string | null;
   messages: TicketMessage[];
 }

@@ -38,7 +38,9 @@ export default function SubmitStep({ step1, step2, step3, status = 'DRAFT' }: Re
         </Typography>
       </Box>
       <Box sx={{ overflow: 'hidden', borderRadius: 2, border: 1, borderColor: 'divider', bgcolor: 'background.paper' }}>
-        <Box component="img" src={step1.cover_image_url || '/duncit-logo.svg'} alt={step1.venue_name || 'Venue'} sx={{ width: '100%', height: 116, objectFit: 'cover', display: 'block', bgcolor: 'action.hover' }} />
+        <Box sx={{ width: '100%', aspectRatio: '16 / 9', bgcolor: 'action.hover', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          <Box component="img" src={step1.cover_image_url || '/duncit-logo.svg'} alt={step1.venue_name || 'Venue'} sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }} />
+        </Box>
         <Stack spacing={1} sx={{ p: 1.5 }}>
           <Stack direction="row" spacing={1} alignItems="center">
             <Typography variant="h6" sx={{ flex: 1, fontWeight: 950 }} noWrap>{step1.venue_name || 'Venue name'}</Typography>

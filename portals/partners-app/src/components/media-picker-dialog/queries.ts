@@ -6,12 +6,14 @@ export const UPLOAD_IMAGE = gql`
     $fileName: String!
     $mimeType: String
     $folder: String
+    $allowDocuments: Boolean
   ) {
     uploadImageToImagekit(
       fileBase64: $fileBase64
       fileName: $fileName
       mimeType: $mimeType
       folder: $folder
+      allow_documents: $allowDocuments
     ) {
       url
       fileId

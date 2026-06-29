@@ -40,6 +40,12 @@ export default function PartnerDashboardPage() {
   };
   const hasItems = itemCounts[tab] > 0;
   const metrics = dashboard?.[tab] ?? emptyMetrics;
+  const summary = dashboard?.summary;
+  // Summary total must equal Venue + Host + Product earning (whichever apply).
+  const summaryTotal =
+    (summary?.venue_earning ?? 0) + (summary?.host_earning ?? 0) + (summary?.product_earning ?? 0);
+  // Venue Health is meaningless for a draft venue — only show meters once it exists.
+  const liveVenues = venues.filter((venue: any) => venue.status !== 'DRAFT');
 
   return (
     <Stack spacing={2.25}>
@@ -54,7 +60,7 @@ export default function PartnerDashboardPage() {
         </Stack>
       </Box>
       {error && <Alert severity="error">{error.message}</Alert>}
-      <HealthStrip venues={venues} />
+      <HealthStrip venues={liveVenues} />
 
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
         <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -80,14 +86,14 @@ export default function PartnerDashboardPage() {
             <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={1}>
               <Box>
                 <Typography variant="h6" fontWeight={950}>Partner performance</Typography>
-                <Typography variant="caption" color="text.secondary" fontWeight={800}>Summary total: {formatMoney(dashboard?.summary?.total_earning ?? 0)}</Typography>
+                <Typography variant="caption" color="text.secondary" fontWeight={800}>Summary total: {formatMoney(summaryTotal)}</Typography>
               </Box>
               {loading && <CircularProgress size={22} />}
             </Stack>
             <Tabs value={tab} onChange={(_event, value) => setTab(value)} variant="scrollable" allowScrollButtonsMobile>
               {tabs.map((item) => <Tab key={item.value} value={item.value} label={`${item.label}${itemCounts[item.value] ? ` (${itemCounts[item.value]})` : ''}`} />)}
             </Tabs>
-            {hasItems && <DashboardMetricCards metrics={metrics} />}
+            {hasItems && <DashboardMetricCards metrics={metrics} tab={tab} />}
             <DashboardPanels tab={tab} venues={venues} pods={pods} products={products} hasRoleAccess={roleAccess[tab]} />
           </Stack>
         </CardContent>

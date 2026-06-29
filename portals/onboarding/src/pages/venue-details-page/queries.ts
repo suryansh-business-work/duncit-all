@@ -26,7 +26,7 @@ export const VENUE_DETAILS = gql`
   }
 `;
 
-const SLOT_FIELDS = `id venue_id start_at end_at status booked_by_pod_id booked_pod_title notes created_at`;
+const SLOT_FIELDS = `id venue_id start_at end_at price status booked_by_pod_id booked_pod_title notes created_at`;
 
 export const ADMIN_VENUE_SLOTS = gql`
   query AdminVenueSlots($venue_id: ID!, $from: String, $to: String) {
@@ -36,13 +36,13 @@ export const ADMIN_VENUE_SLOTS = gql`
 
 export const ADMIN_CREATE_VENUE_SLOTS = gql`
   mutation AdminCreateVenueSlots($input: BulkCreateVenueSlotsInput!) {
-    adminCreateVenueSlots(input: $input) { id start_at end_at status notes }
+    adminCreateVenueSlots(input: $input) { id start_at end_at price status notes }
   }
 `;
 
 export const ADMIN_UPDATE_VENUE_SLOT = gql`
   mutation AdminUpdateVenueSlot($slot_id: ID!, $input: UpdateVenueSlotInput!) {
-    adminUpdateVenueSlot(slot_id: $slot_id, input: $input) { id start_at end_at status notes }
+    adminUpdateVenueSlot(slot_id: $slot_id, input: $input) { id start_at end_at price status notes }
   }
 `;
 

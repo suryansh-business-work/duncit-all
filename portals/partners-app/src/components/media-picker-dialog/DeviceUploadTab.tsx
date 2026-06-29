@@ -1,6 +1,7 @@
 import { RefObject } from 'react';
 import { Box, Button, LinearProgress, Stack, Typography } from '@mui/material';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import PictureAsPdfIcon from '@mui/icons-material/PictureAsPdf';
 
 interface DeviceUploadTabProps {
   fileInputRef: RefObject<HTMLInputElement>;
@@ -12,6 +13,15 @@ interface DeviceUploadTabProps {
   onPickFile: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
+// Copy + hint derived from the accepted MIME list so a PDF-only picker never
+// claims "image".
+function dropHints(accept: string): { label: string; hint: string } {
+  if (/pdf/i.test(accept) && !/image\//i.test(accept)) {
+    return { label: 'Click to choose a PDF', hint: 'PDF only · max 50 MB · uploads to ImageKit' };
+  }
+  return { label: 'Click to choose an image', hint: 'PNG, JPG, WebP, GIF · max 15 MB · uploads to ImageKit' };
+}
+
 export default function DeviceUploadTab({
   fileInputRef,
   accept,
@@ -21,6 +31,9 @@ export default function DeviceUploadTab({
   uploading,
   onPickFile,
 }: Readonly<DeviceUploadTabProps>) {
+  const isPdf = picked?.type === 'application/pdf';
+  const isVideo = picked?.type.startsWith('video/') ?? false;
+  const { label, hint } = dropHints(accept);
   return (
     <Stack spacing={2} alignItems="center" sx={{ py: 2 }}>
       <input
@@ -30,7 +43,15 @@ export default function DeviceUploadTab({
         onChange={onPickFile}
         hidden
       />
-      {previewUrl ? (
+      {previewUrl && isPdf && (
+        <Stack alignItems="center" spacing={1} sx={{ width: '100%', maxWidth: 480, p: 4, borderRadius: 2, bgcolor: 'action.hover' }}>
+          <PictureAsPdfIcon color="error" sx={{ fontSize: 56 }} />
+          <Typography variant="body2" fontWeight={700} noWrap sx={{ maxWidth: '100%' }}>
+            {picked?.name}
+          </Typography>
+        </Stack>
+      )}
+      {previewUrl && !isPdf && (
         <Box
           sx={{
             width: '100%',
@@ -40,7 +61,7 @@ export default function DeviceUploadTab({
             bgcolor: 'action.hover',
           }}
         >
-          {picked?.type.startsWith('video/') ? (
+          {isVideo ? (
             <video
               src={previewUrl}
               controls
@@ -65,7 +86,8 @@ export default function DeviceUploadTab({
             />
           )}
         </Box>
-      ) : (
+      )}
+      {!previewUrl && (
         <Box
           onClick={() => fileInputRef.current?.click()}
           sx={{
@@ -83,10 +105,10 @@ export default function DeviceUploadTab({
         >
           <CloudUploadIcon color="primary" sx={{ fontSize: 48 }} />
           <Typography variant="subtitle1" fontWeight={600} sx={{ mt: 1 }}>
-            Click to choose an image
+            {label}
           </Typography>
           <Typography variant="caption" color="text.secondary">
-            PNG, JPG, WebP, GIF · max 15 MB · uploads to ImageKit
+            {hint}
           </Typography>
         </Box>
       )}

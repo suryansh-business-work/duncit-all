@@ -7,6 +7,7 @@ const METRICS = `
   venue_earning
   host_earning
   product_earning
+  added_slots
 `;
 
 export const PARTNER_DASHBOARD = gql`

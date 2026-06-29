@@ -39,6 +39,7 @@ const toPub = (d: any) => {
     host_ids: (d.host_ids ?? []).map((x: any) => String(x)),
     category_id: d.category_id ? String(d.category_id) : null,
     super_category_id: d.super_category_id ? String(d.super_category_id) : null,
+    is_verified: !!d.is_verified,
     is_active: !!d.is_active,
     created_at: d.created_at?.toISOString?.() ?? '',
     updated_at: d.updated_at?.toISOString?.() ?? '',
@@ -110,6 +111,7 @@ export const clubService = {
       host_ids: input.host_ids ?? [],
       category_id: input.category_id || null,
       super_category_id: input.super_category_id || null,
+      is_verified: input.is_verified ?? false,
       is_active: input.is_active ?? true,
     });
     return toPub(doc);
@@ -135,6 +137,7 @@ export const clubService = {
       'host_ids',
       'category_id',
       'super_category_id',
+      'is_verified',
       'is_active',
     ];
     for (const f of fields) {

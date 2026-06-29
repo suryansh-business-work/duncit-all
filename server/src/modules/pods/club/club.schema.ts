@@ -50,6 +50,8 @@ export const clubTypeDefs = /* GraphQL */ `
     followers_count: Int!
     category_id: ID
     super_category_id: ID
+    "Verified badge for official clubs (explore item 15)."
+    is_verified: Boolean!
     is_active: Boolean!
     created_at: String!
     updated_at: String!
@@ -59,6 +61,7 @@ export const clubTypeDefs = /* GraphQL */ `
     search: String
     category_id: ID
     super_category_id: ID
+    is_verified: Boolean
     is_active: Boolean
   }
 
@@ -80,6 +83,7 @@ export const clubTypeDefs = /* GraphQL */ `
     host_ids: [ID!]
     category_id: ID
     super_category_id: ID
+    is_verified: Boolean
     is_active: Boolean
   }
 
@@ -100,6 +104,7 @@ export const clubTypeDefs = /* GraphQL */ `
     host_ids: [ID!]
     category_id: ID
     super_category_id: ID
+    is_verified: Boolean
     is_active: Boolean
   }
 

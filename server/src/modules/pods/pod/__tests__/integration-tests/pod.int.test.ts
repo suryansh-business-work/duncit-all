@@ -195,3 +195,32 @@ describe('podService integration', () => {
     });
   });
 });
+
+describe('pod comment reactions (explore item 4)', () => {
+  it('likes/unlikes a comment and exposes the liker array', async () => {
+    const pod = await PodModel.create(makePod());
+    const viewer = new Types.ObjectId().toString();
+    const liker = new Types.ObjectId().toString();
+    const added = await podService.addComment(String(pod._id), viewer, 'Nice pod!');
+    expect(added.likes).toEqual([]);
+
+    const liked = await podService.toggleCommentLike(String(pod._id), added.id, liker);
+    expect(liked.likes).toEqual([liker]);
+
+    const list = await podService.listComments(String(pod._id));
+    expect(list[0]?.likes).toEqual([liker]);
+
+    const unliked = await podService.toggleCommentLike(String(pod._id), added.id, liker);
+    expect(unliked.likes).toEqual([]);
+  });
+
+  it('rejects a like on a bad id or a missing comment', async () => {
+    const pod = await PodModel.create(makePod());
+    await expect(
+      podService.toggleCommentLike('not-an-id', new Types.ObjectId().toString(), new Types.ObjectId().toString())
+    ).rejects.toThrow(/invalid id/i);
+    await expect(
+      podService.toggleCommentLike(String(pod._id), new Types.ObjectId().toString(), new Types.ObjectId().toString())
+    ).rejects.toThrow(/comment not found/i);
+  });
+});

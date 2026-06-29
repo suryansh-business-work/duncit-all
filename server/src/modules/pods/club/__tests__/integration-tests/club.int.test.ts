@@ -64,6 +64,17 @@ describe('clubService integration', () => {
     expect(updated!.faqs).toEqual([{ question: 'Age limit?', answer: '18+' }]);
   });
 
+  it('sets and toggles the verified badge (explore item 15)', async () => {
+    const created = await clubService.create({ club_name: 'Official Club', is_verified: true });
+    expect(created!.is_verified).toBe(true);
+
+    const plain = await clubService.create({ club_name: 'Plain Club' });
+    expect(plain!.is_verified).toBe(false);
+
+    const updated = await clubService.update(plain!.id, { is_verified: true });
+    expect(updated!.is_verified).toBe(true);
+  });
+
   it('resolves linked hosts, falls back to pod hosts, and counts followers (Bug 5)', async () => {
     const club = await clubService.create({ club_name: 'Trekkers' });
     const linked = new Types.ObjectId();

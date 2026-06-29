@@ -45,7 +45,21 @@ export const ExplorePodsDocument = gql(`
       zone_name
       like_count
       liked_by_me
+      liked_user_ids
       comment_count
+    }
+  }
+`);
+
+/** Resolves a pod's likers to public users for the "who liked" list (item 8). */
+export const PodLikersDocument = gql(`
+  query MobilePodLikers($ids: [ID!]!) {
+    publicUsersByIds(user_ids: $ids) {
+      user_id
+      full_name
+      first_name
+      username
+      profile_photo
     }
   }
 `);

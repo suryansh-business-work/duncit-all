@@ -14,6 +14,8 @@ import { useExplore } from '@/hooks/useExplore';
 import type { ExplorePod } from '@/stores/explore.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
+import { ExploreCreateButton } from '@/components/explore/ExploreCreateButton';
+import { LikesListSheet } from '@/components/explore/LikesListSheet';
 import { PodCommentsSheet } from '@/components/details/pod-comments';
 
 /** Vertical full-screen pager of pods — the Reels experience. Measures its own
@@ -22,6 +24,7 @@ export function ExploreReels() {
   const { width } = useWindowDimensions();
   const [height, setHeight] = useState(0);
   const [commentsPod, setCommentsPod] = useState<ExplorePod | null>(null);
+  const [likersPod, setLikersPod] = useState<ExplorePod | null>(null);
   const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const {
@@ -108,6 +111,7 @@ export function ExploreReels() {
               onToggleSave={() => toggleSave(item.id, saved)}
               onToggleLike={() => toggleLike(item.id, like)}
               onComment={() => setCommentsPod(item)}
+              onShowLikers={() => setLikersPod(item)}
             />
           );
         }}
@@ -118,6 +122,7 @@ export function ExploreReels() {
   return (
     <YStack flex={1} onLayout={onLayout} testID="explore-reels">
       {reelsBody}
+      <ExploreCreateButton />
       {commentsPod ? (
         <PodCommentsSheet
           podId={commentsPod.id}
@@ -125,6 +130,13 @@ export function ExploreReels() {
           viewerId={viewerId}
           onClose={() => setCommentsPod(null)}
           onCountChange={(delta) => bumpComment(commentsPod.id, delta)}
+        />
+      ) : null}
+      {likersPod ? (
+        <LikesListSheet
+          open
+          userIds={likersPod.liked_user_ids}
+          onClose={() => setLikersPod(null)}
         />
       ) : null}
     </YStack>

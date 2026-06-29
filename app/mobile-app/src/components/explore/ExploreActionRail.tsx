@@ -16,6 +16,7 @@ export interface ExploreRailAction {
   active?: boolean;
   loading?: boolean;
   testID?: string;
+  onLabelPress?: () => void;
 }
 
 interface ExploreActionRailProps {
@@ -44,6 +45,7 @@ export function ExploreActionRail({ actions, availableHeight }: Readonly<Explore
           active={action.active}
           loading={action.loading}
           onPress={action.onPress}
+          onLabelPress={action.onLabelPress}
         />
       ))}
       {overflow && (

@@ -36,6 +36,25 @@ jest.mock('@/components/details/pod-comments', () => {
     ),
   };
 });
+jest.mock('@/components/explore/ExploreCreateButton', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View } = require('react-native');
+  return { ExploreCreateButton: () => <View testID="explore-create-post" /> };
+});
+jest.mock('@/components/explore/LikesListSheet', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View, Text } = require('react-native');
+  return {
+    LikesListSheet: ({ userIds, onClose }: { userIds: string[]; onClose: () => void }) => (
+      <View testID="explore-likes-sheet">
+        <Text testID="explore-likes-count">{userIds.length}</Text>
+        <Text testID="explore-likes-close" onPress={onClose}>
+          close
+        </Text>
+      </View>
+    ),
+  };
+});
 
 const mockedExplore = useExplore as jest.Mock;
 
@@ -244,6 +263,46 @@ describe('ExplorePodCard', () => {
     expect(screen.getByText('Show less')).toBeOnTheScreen();
   });
 
+  it('opens the likers list when the like count is tapped (item 8)', () => {
+    const onShowLikers = jest.fn();
+    renderWithProviders(
+      <ExplorePodCard
+        pod={pod('lk')}
+        width={390}
+        height={2000}
+        saved={false}
+        like={{ liked_by_me: false, like_count: 4 }}
+        commentCount={0}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={jest.fn()}
+        onShowLikers={onShowLikers}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('reel-like-p-lk-count'));
+    expect(onShowLikers).toHaveBeenCalled();
+  });
+
+  it('disables the likers tap when there are no likes (item 8)', () => {
+    renderWithProviders(
+      <ExplorePodCard
+        pod={pod('nolk')}
+        width={390}
+        height={2000}
+        saved={false}
+        like={{ liked_by_me: false, like_count: 0 }}
+        commentCount={0}
+        onToggleLike={jest.fn()}
+        onToggleSave={jest.fn()}
+        onComment={jest.fn()}
+        onOpen={jest.fn()}
+        onShowLikers={jest.fn()}
+      />,
+    );
+    expect(screen.queryByTestId('reel-like-p-nolk-count')).toBeNull();
+  });
+
   it('omits the verified badge and caption toggle for short, unverified content', () => {
     renderWithProviders(
       <ExplorePodCard
@@ -375,6 +434,20 @@ describe('ExploreReels', () => {
     layout();
     fireEvent.press(screen.getByTestId('explore-club-link'));
     expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: 'c1', title: 'Paws Club' });
+  });
+
+  it('opens and closes the likers sheet from a reel (item 8)', () => {
+    mockedExplore.mockReturnValue({
+      ...base,
+      pods: [{ ...(pod('1') as Record<string, unknown>), liked_user_ids: ['a', 'b'] } as never],
+    });
+    renderWithProviders(<ExploreReels />);
+    layout();
+    fireEvent.press(screen.getByTestId('reel-like-p-1-count'));
+    expect(screen.getByTestId('explore-likes-sheet')).toBeOnTheScreen();
+    expect(screen.getByTestId('explore-likes-count')).toHaveTextContent('2');
+    fireEvent.press(screen.getByTestId('explore-likes-close'));
+    expect(screen.queryByTestId('explore-likes-sheet')).toBeNull();
   });
 
   it('falls back to a generic club title when the club is unknown (item 14)', () => {

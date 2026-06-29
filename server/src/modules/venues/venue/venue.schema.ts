@@ -17,6 +17,52 @@ export const venueTypeDefs = /* GraphQL */ `
     url: String!
   }
 
+  type VenueOperatingHours {
+    open: String!
+    close: String!
+  }
+
+  type VenueRules {
+    buffer_minutes: Int!
+    min_notice_minutes: Int!
+    max_advance_days: Int!
+    max_bookings_per_slot: Int!
+    allow_instant_booking: Boolean!
+    allow_waitlist: Boolean!
+    booking_approval_required: Boolean!
+    allow_multiple_bookings: Boolean!
+  }
+
+  type VenueSettings {
+    operating_hours: VenueOperatingHours!
+    weekly_off_days: [Int!]!
+    holidays: [String!]!
+    rules: VenueRules!
+  }
+
+  input VenueOperatingHoursInput {
+    open: String!
+    close: String!
+  }
+
+  input VenueRulesInput {
+    buffer_minutes: Int
+    min_notice_minutes: Int
+    max_advance_days: Int
+    max_bookings_per_slot: Int
+    allow_instant_booking: Boolean
+    allow_waitlist: Boolean
+    booking_approval_required: Boolean
+    allow_multiple_bookings: Boolean
+  }
+
+  input VenueSettingsInput {
+    operating_hours: VenueOperatingHoursInput
+    weekly_off_days: [Int!]
+    holidays: [String!]
+    rules: VenueRulesInput
+  }
+
   type Venue {
     id: ID!
     owner_user_id: ID!
@@ -51,6 +97,7 @@ export const venueTypeDefs = /* GraphQL */ `
     tags: [String!]!
     venue_share_pct: Float!
     venue_commission_pct: Float!
+    settings: VenueSettings!
     step_completed: Int!
     status: VenueStatus!
     is_active: Boolean!
@@ -131,6 +178,8 @@ export const venueTypeDefs = /* GraphQL */ `
     ): Venue!
     setVenueActive(venue_doc_id: ID!, active: Boolean!): Venue!
     setVenueDeductions(venue_doc_id: ID!, venue_share_pct: Float!, venue_commission_pct: Float!): Venue!
+    "Owner (or admin) updates operating hours, weekly-off, holidays + booking rules."
+    updateVenueSettings(venue_doc_id: ID!, input: VenueSettingsInput!): Venue!
     deleteVenue(venue_doc_id: ID!): Boolean!
   }
 `;

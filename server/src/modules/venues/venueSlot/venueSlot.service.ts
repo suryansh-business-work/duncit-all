@@ -71,11 +71,11 @@ const MAX_ADVANCE_DAYS_CAP = 365;
 
 const venueMaxAdvance = (
   venue: { settings?: { rules?: { max_advance_days?: number } } } | null
-): number =>
-  Math.max(
-    1,
-    Math.min(MAX_ADVANCE_DAYS_CAP, Math.round(Number(venue?.settings?.rules?.max_advance_days)) || DEFAULT_MAX_ADVANCE_DAYS)
-  );
+): number => {
+  const n = Math.round(Number(venue?.settings?.rules?.max_advance_days));
+  if (!Number.isFinite(n)) return DEFAULT_MAX_ADVANCE_DAYS;
+  return Math.max(1, Math.min(MAX_ADVANCE_DAYS_CAP, n));
+};
 
 function validateSlotWindow(start: Date, end: Date, maxAdvanceDays: number) {
   if (end.getTime() <= start.getTime()) fail('BAD_USER_INPUT', 'end_at must be after start_at');

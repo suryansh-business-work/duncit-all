@@ -37,6 +37,9 @@ export default function FutureAvailabilityAccordion({
   onSaved,
 }: Readonly<Props>) {
   const [draft, setDraft] = useState<VenueAutoExtendForm>(autoExtend);
+  // Free-text while typing so multi-digit entry isn't snapped to 1 mid-keystroke;
+  // clamped on blur and on save.
+  const [horizonText, setHorizonText] = useState(String(autoExtend.horizon_days));
   const [saved, setSaved] = useState(false);
   const [save, { loading, error }] = useMutation(UPDATE_VENUE_SETTINGS);
   const { data } = useQuery(MY_SLOT_TEMPLATES, { variables: { venue_id: venueId } });
@@ -47,15 +50,23 @@ export default function FutureAvailabilityAccordion({
     setDraft((d) => ({ ...d, ...p }));
   };
 
+  const commitHorizon = () => {
+    const n = clampDays(horizonText, maxAdvanceDays);
+    setHorizonText(String(n));
+    patch({ horizon_days: n });
+    return n;
+  };
+
   const onSave = async () => {
     setSaved(false);
+    const horizon = commitHorizon();
     await save({
       variables: {
         venue_doc_id: venueId,
         input: {
           auto_extend: {
             enabled: draft.enabled,
-            horizon_days: draft.horizon_days,
+            horizon_days: horizon,
             until: draft.until,
             template_id: draft.template_id,
           },
@@ -100,8 +111,12 @@ export default function FutureAvailabilityAccordion({
               label={`Keep published ahead (days, max ${maxAdvanceDays})`}
               type="number"
               size="small"
-              value={draft.horizon_days}
-              onChange={(e) => patch({ horizon_days: clampDays(e.target.value, maxAdvanceDays) })}
+              value={horizonText}
+              onChange={(e) => {
+                setSaved(false);
+                setHorizonText(e.target.value);
+              }}
+              onBlur={commitHorizon}
               inputProps={{ min: 1, max: maxAdvanceDays }}
               disabled={!draft.enabled}
             />
@@ -121,7 +136,7 @@ export default function FutureAvailabilityAccordion({
               )}
             </Stack>
           </Box>
-          {error && <Alert severity="error">{error.message}</Alert>}
+          {error && <Alert severity="error">Could not save auto-extend. Please try again.</Alert>}
           {saved && !loading && <Alert severity="success">Auto-extend saved.</Alert>}
           <Box>
             <Button variant="outlined" onClick={onSave} disabled={loading}>

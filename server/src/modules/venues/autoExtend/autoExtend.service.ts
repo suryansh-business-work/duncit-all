@@ -5,8 +5,11 @@ import { buildRecurringSlots, venueDateEndUtc } from './slotGenerator';
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-const clampMaxAdvance = (v: number | undefined) =>
-  Math.max(1, Math.min(365, Math.round(Number(v)) || 60));
+const clampMaxAdvance = (v: number | undefined) => {
+  const n = Math.round(Number(v));
+  if (!Number.isFinite(n)) return 60;
+  return Math.max(1, Math.min(365, n));
+};
 
 const log = (msg: string, err?: unknown) => {
   // eslint-disable-next-line no-console

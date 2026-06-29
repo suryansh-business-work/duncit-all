@@ -461,6 +461,14 @@ export const venueService = {
     v!.settings = normalizeSettingsInput(v!.settings, input) as IVenueSettings;
     v!.markModified('settings');
     await v!.save();
+    // Don't make the owner wait for the daily sweep: top up straight away when
+    // auto-extend is on. Best-effort — the scheduled job is the fallback.
+    if (v!.settings.auto_extend?.enabled) {
+      const venueDocId = String(v!._id);
+      void import('@modules/venues/autoExtend/autoExtend.service')
+        .then(({ autoExtendService }) => autoExtendService.runForVenue(venueDocId))
+        .catch(() => undefined);
+    }
     return toPub(v!);
   },
 

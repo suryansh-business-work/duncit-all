@@ -47,7 +47,9 @@ export interface GeneratedSlot {
 /** Server mirror of the client's recurring generator. Walks every venue-local
  * day in [from, to], keeps the template's weekdays, skips weekly-off/holiday
  * (when configured) and past, applies the per-day price, and returns the slots.
- * Overlap/cap filtering is the caller's job (createSkippingOverlaps). */
+ * Times come straight from the (already-validated) template; like the manual
+ * create path it does not re-clamp to operating hours. Overlap/cap filtering is
+ * the caller's job (createSkippingOverlaps). */
 export function buildRecurringSlots(
   config: ISlotTemplateConfig,
   settings: ServerSettingsLike,

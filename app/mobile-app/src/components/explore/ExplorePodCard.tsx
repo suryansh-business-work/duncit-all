@@ -22,6 +22,7 @@ interface ExplorePodCardProps {
   onToggleLike: () => void;
   onComment: () => void;
   onOpen: () => void;
+  onOpenClub?: () => void;
 }
 
 /** One full-screen reel: media background, info overlay, the right-side action
@@ -39,6 +40,7 @@ export function ExplorePodCard({
   onToggleLike,
   onComment,
   onOpen,
+  onOpenClub,
 }: Readonly<ExplorePodCardProps>) {
   const insets = useSafeAreaInsets();
   // Stack bottom→top: floating nav · CTA bar · (info overlay + action rail).
@@ -72,7 +74,13 @@ export function ExplorePodCard({
         height={height}
         dotsBottom={ctaBottom + 56}
       />
-      <ExplorePodOverlay pod={pod} clubName={club?.club_name} bottom={contentBottom} />
+      <ExplorePodOverlay
+        pod={pod}
+        clubName={club?.club_name}
+        isVerified={club?.is_verified}
+        onOpenClub={onOpenClub}
+        bottom={contentBottom}
+      />
 
       <YStack position="absolute" right={12} bottom={contentBottom}>
         <ExploreActionRail

@@ -1,5 +1,10 @@
 import { useState, type ReactNode } from 'react';
-import { FlatList, useWindowDimensions, type LayoutChangeEvent } from 'react-native';
+import {
+  FlatList,
+  RefreshControl,
+  useWindowDimensions,
+  type LayoutChangeEvent,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, YStack } from 'tamagui';
@@ -17,6 +22,7 @@ export function ExploreReels() {
   const { width } = useWindowDimensions();
   const [height, setHeight] = useState(0);
   const [commentsPod, setCommentsPod] = useState<ExplorePod | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const {
     pods,
@@ -31,11 +37,26 @@ export function ExploreReels() {
     bumpComment,
     toggleSave,
     toggleLike,
+    refetch,
   } = useExplore();
 
   const onLayout = (e: LayoutChangeEvent) => setHeight(e.nativeEvent.layout.height);
   const openPod = (pod: ExplorePod) =>
     navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title });
+  const openClub = (pod: ExplorePod) =>
+    navigation.navigate('ClubDetails', {
+      clubId: pod.club_id,
+      title: clubsById.get(pod.club_id)?.club_name ?? 'Club',
+    });
+  // Pull-to-refresh: reload the feed without duplicate entries (item 12).
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
 
   let reelsBody: ReactNode = null;
   if (height === 0) {
@@ -61,6 +82,14 @@ export function ExploreReels() {
         snapToAlignment="start"
         decelerationRate="fast"
         getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#ffffff"
+            testID="explore-refresh"
+          />
+        }
         renderItem={({ item }) => {
           const like = likeStateFor(item);
           const saved = isSaved(item.id);
@@ -75,6 +104,7 @@ export function ExploreReels() {
               like={like}
               commentCount={commentCountFor(item)}
               onOpen={() => openPod(item)}
+              onOpenClub={() => openClub(item)}
               onToggleSave={() => toggleSave(item.id, saved)}
               onToggleLike={() => toggleLike(item.id, like)}
               onComment={() => setCommentsPod(item)}

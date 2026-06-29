@@ -14,6 +14,7 @@ export const ExplorePodsDocument = gql(`
       id
       club_id
       club_name
+      is_verified
       super_category_id
       club_feature_images_and_videos {
         url

@@ -1,11 +1,14 @@
 export type VenueSlotStatus = 'AVAILABLE' | 'BOOKED' | 'BLOCKED';
 
+export type CalendarView = 'month' | 'week' | 'day';
+
 /** A single bookable time window for a venue. Shared shape across portals. */
 export interface VenueSlotRow {
   id: string;
   venue_id: string;
   start_at: string;
   end_at: string;
+  price: number;
   status: VenueSlotStatus;
   booked_by_pod_id: string | null;
   booked_pod_title: string | null;
@@ -17,5 +20,6 @@ export interface VenueSlotRow {
 export interface NewSlotInput {
   start_at: string;
   end_at: string;
+  price: number;
   notes: string;
 }

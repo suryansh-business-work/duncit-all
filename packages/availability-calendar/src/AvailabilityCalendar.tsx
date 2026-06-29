@@ -8,10 +8,11 @@ import {
   startOfMonth,
   startOfWeek,
 } from 'date-fns';
-import type { VenueSlotRow } from './types';
+import type { CalendarView, VenueSlotRow } from './types';
 
 interface Props {
   month: Date;
+  view?: CalendarView;
   slots: VenueSlotRow[];
   selectedDate: Date | null;
   onSelect: (date: Date) => void;
@@ -74,16 +75,17 @@ function CountBadge({ count, selected, label, bg, fg }: Readonly<BadgeProps>) {
   );
 }
 
-/** Month grid showing per-day slot counts (A/B/×). Pure + prop-driven so any
- *  portal can render it; the host wires data + the day-click handler. */
-export default function AvailabilityCalendar({ month, slots, selectedDate, onSelect }: Readonly<Props>) {
-  const buckets = bucketByDay(slots);
+// The visible day cells for the active view: a single day, the anchor's week, or
+// the full 6×7 month grid.
+function buildCells(view: CalendarView, month: Date, anchor: Date): Date[] {
+  if (view === 'day') return [anchor];
+  if (view === 'week') {
+    const weekStart = startOfWeek(anchor, { weekStartsOn: 0 });
+    return Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
+  }
   const monthStart = startOfMonth(month);
   const monthEnd = endOfMonth(month);
   const gridStart = startOfWeek(monthStart, { weekStartsOn: 0 });
-  const today = new Date();
-  today.setHours(0, 0, 0, 0);
-
   const cells: Date[] = [];
   let cursor = gridStart;
   // 6 rows × 7 cols always fits any month.
@@ -92,74 +94,123 @@ export default function AvailabilityCalendar({ month, slots, selectedDate, onSel
     cursor = addDays(cursor, 1);
     if (i >= 28 && cursor > monthEnd && cursor.getDay() === 0) break;
   }
+  return cells;
+}
+
+interface DayCellProps {
+  date: Date;
+  view: CalendarView;
+  monthStart: Date;
+  today: Date;
+  bucket?: Bucket;
+  selectedDate: Date | null;
+  onSelect: (date: Date) => void;
+}
+
+/** A single day tile with its A/B/× slot counts. Hoisted to module scope so it
+ *  is never re-created per render (S6478). */
+function DayCell({ date, view, monthStart, today, bucket, selectedDate, onSelect }: Readonly<DayCellProps>) {
+  const isOtherMonth = view === 'month' && !isSameMonth(date, monthStart);
+  const isPast = date < today;
+  const isSelected = !!selectedDate && isSameDay(date, selectedDate);
+  const isToday = isSameDay(date, today);
+  const isDayView = view === 'day';
+  const { bgcolor, color } = cellColors(isSelected, isOtherMonth, isPast);
+
+  return (
+    <Box
+      role="button"
+      tabIndex={0}
+      onClick={() => onSelect(date)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') onSelect(date);
+      }}
+      sx={{
+        aspectRatio: isDayView ? undefined : '1 / 1',
+        minHeight: isDayView ? 120 : undefined,
+        p: { xs: 0.5, sm: 0.75 },
+        borderRadius: 1.5,
+        border: 1.5,
+        borderColor: isSelected ? 'primary.main' : 'divider',
+        bgcolor,
+        color,
+        cursor: 'pointer',
+        opacity: isOtherMonth ? 0.5 : 1,
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0.25,
+        position: 'relative',
+        outline: 'none',
+        '&:hover': { borderColor: 'primary.main' },
+        '&:focus-visible': { boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}` },
+      }}
+    >
+      <Stack direction="row" justifyContent="space-between" alignItems="center">
+        <Typography
+          variant="body2"
+          sx={{ fontWeight: isToday ? 900 : 600, textDecoration: isToday ? 'underline' : 'none' }}
+        >
+          {isDayView ? format(date, 'EEEE, dd MMM') : format(date, 'd')}
+        </Typography>
+      </Stack>
+      {bucket && (
+        <Stack direction="row" spacing={0.25} flexWrap="wrap" sx={{ rowGap: 0.25 }}>
+          <CountBadge count={bucket.available} selected={isSelected} label="A" bg="success.light" fg="success.contrastText" />
+          <CountBadge count={bucket.booked} selected={isSelected} label="B" bg="warning.light" fg="warning.contrastText" />
+          <CountBadge count={bucket.blocked} selected={isSelected} label="×" bg="grey.300" fg="text.secondary" />
+        </Stack>
+      )}
+    </Box>
+  );
+}
+
+/** Day/Week/Month slot calendar showing per-day counts (A/B/×). Pure +
+ *  prop-driven so any portal can render it; the host wires data, the active
+ *  view, and the day-click handler. */
+export default function AvailabilityCalendar({
+  month,
+  view = 'month',
+  slots,
+  selectedDate,
+  onSelect,
+}: Readonly<Props>) {
+  const buckets = bucketByDay(slots);
+  const monthStart = startOfMonth(month);
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  // `month` is the universal anchor: the month for month view, and the in-range
+  // day for week/day views (the host drives it). `selectedDate` only highlights.
+  const cells = buildCells(view, month, month);
+  const cols = view === 'day' ? 1 : 7;
 
   return (
     <Box>
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: { xs: 0.5, sm: 1 }, mb: 1 }}>
-        {WEEKDAY_LABELS.map((label) => (
-          <Typography
-            key={label}
-            variant="caption"
-            sx={{ fontWeight: 800, color: 'text.secondary', textAlign: 'center' }}
-          >
-            {label}
-          </Typography>
-        ))}
-      </Box>
-      <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(7, 1fr)', gap: { xs: 0.5, sm: 1 } }}>
-        {cells.map((date) => {
-          const key = format(date, 'yyyy-MM-dd');
-          const bucket = buckets.get(key);
-          const isOtherMonth = !isSameMonth(date, monthStart);
-          const isPast = date < today;
-          const isSelected = !!selectedDate && isSameDay(date, selectedDate);
-          const isToday = isSameDay(date, today);
-          const { bgcolor, color } = cellColors(isSelected, isOtherMonth, isPast);
-
-          return (
-            <Box
-              key={key}
-              role="button"
-              tabIndex={0}
-              onClick={() => onSelect(date)}
-              onKeyDown={(e) => (e.key === 'Enter' || e.key === ' ') && onSelect(date)}
-              sx={{
-                aspectRatio: '1 / 1',
-                p: { xs: 0.5, sm: 0.75 },
-                borderRadius: 1.5,
-                border: 1.5,
-                borderColor: isSelected ? 'primary.main' : 'divider',
-                bgcolor,
-                color,
-                cursor: 'pointer',
-                opacity: isOtherMonth ? 0.5 : 1,
-                display: 'flex',
-                flexDirection: 'column',
-                gap: 0.25,
-                position: 'relative',
-                outline: 'none',
-                '&:hover': { borderColor: 'primary.main' },
-                '&:focus-visible': { boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}` },
-              }}
+      {view !== 'day' && (
+        <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: { xs: 0.5, sm: 1 }, mb: 1 }}>
+          {WEEKDAY_LABELS.map((label) => (
+            <Typography
+              key={label}
+              variant="caption"
+              sx={{ fontWeight: 800, color: 'text.secondary', textAlign: 'center' }}
             >
-              <Stack direction="row" justifyContent="space-between" alignItems="center">
-                <Typography
-                  variant="body2"
-                  sx={{ fontWeight: isToday ? 900 : 600, textDecoration: isToday ? 'underline' : 'none' }}
-                >
-                  {format(date, 'd')}
-                </Typography>
-              </Stack>
-              {bucket && (
-                <Stack direction="row" spacing={0.25} flexWrap="wrap" sx={{ rowGap: 0.25 }}>
-                  <CountBadge count={bucket.available} selected={isSelected} label="A" bg="success.light" fg="success.contrastText" />
-                  <CountBadge count={bucket.booked} selected={isSelected} label="B" bg="warning.light" fg="warning.contrastText" />
-                  <CountBadge count={bucket.blocked} selected={isSelected} label="×" bg="grey.300" fg="text.secondary" />
-                </Stack>
-              )}
-            </Box>
-          );
-        })}
+              {label}
+            </Typography>
+          ))}
+        </Box>
+      )}
+      <Box sx={{ display: 'grid', gridTemplateColumns: `repeat(${cols}, 1fr)`, gap: { xs: 0.5, sm: 1 } }}>
+        {cells.map((date) => (
+          <DayCell
+            key={format(date, 'yyyy-MM-dd')}
+            date={date}
+            view={view}
+            monthStart={monthStart}
+            today={today}
+            bucket={buckets.get(format(date, 'yyyy-MM-dd'))}
+            selectedDate={selectedDate}
+            onSelect={onSelect}
+          />
+        ))}
       </Box>
     </Box>
   );

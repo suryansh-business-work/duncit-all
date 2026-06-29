@@ -1,3 +1,4 @@
 export { default as AvailabilityCalendar } from './AvailabilityCalendar';
 export { default as DayDrawer } from './DayDrawer';
-export type { NewSlotInput, VenueSlotRow, VenueSlotStatus } from './types';
+export { default as RecurringAvailabilityDialog } from './RecurringAvailabilityDialog';
+export type { CalendarView, NewSlotInput, VenueSlotRow, VenueSlotStatus } from './types';

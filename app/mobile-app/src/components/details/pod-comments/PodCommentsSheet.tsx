@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { FlatList, Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
+import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -8,6 +10,7 @@ import { KeyboardScreen } from '@/components/KeyboardScreen';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { usePodComments, type PodComment } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import type { RootStackParamList } from '@/navigation/types';
 import { CommentComposer } from './CommentComposer';
 import { CommentRow } from './CommentRow';
 
@@ -15,23 +18,27 @@ interface Props {
   podId: string;
   open: boolean;
   viewerId: string | null;
+  viewerPhoto?: string | null;
   onClose: () => void;
   onCountChange: (delta: number) => void;
 }
 
-/** Comments bottom sheet — list + add/delete. RN port of mWeb's
- * PodCommentsSheet; loads on open via usePodComments. */
+/** Comments bottom sheet — list + add/like/delete. Likes update in place; deleting
+ * your own comment goes through a long-press + confirmation (explore items 3,4,5,11). */
 export function PodCommentsSheet({
   podId,
   open,
   viewerId,
+  viewerPhoto,
   onClose,
   onCountChange,
 }: Readonly<Props>) {
   const { color } = useThemeColors();
-  const { comments, isLoading, error, add, remove } = usePodComments(podId, open);
+  const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const { comments, isLoading, error, add, remove, toggleLike } = usePodComments(podId, open);
   const [text, setText] = useState('');
   const [posting, setPosting] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<PodComment | null>(null);
 
   const submit = async () => {
     const value = text.trim();
@@ -48,9 +55,15 @@ export function PodCommentsSheet({
     }
   };
 
-  const onDelete = async (id: string) => {
-    await remove(id);
+  const confirmDelete = async (target: PodComment) => {
+    setDeleteTarget(null);
+    await remove(target.id);
     onCountChange(-1);
+  };
+
+  const openProfile = (authorId: string) => {
+    onClose();
+    navigation.navigate('PublicProfile', { userId: authorId });
   };
 
   return (
@@ -126,7 +139,9 @@ export function PodCommentsSheet({
                       <CommentRow
                         comment={item}
                         canDelete={!!viewerId && item.author_id === viewerId}
-                        onDelete={() => onDelete(item.id)}
+                        onToggleLike={() => toggleLike(item.id)}
+                        onRequestDelete={() => setDeleteTarget(item)}
+                        onOpenProfile={() => openProfile(item.author_id)}
                       />
                     )}
                   />
@@ -138,9 +153,76 @@ export function PodCommentsSheet({
                   onSubmit={submit}
                   disabled={!viewerId}
                   posting={posting}
+                  viewerPhoto={viewerPhoto}
                 />
               </SafeAreaView>
             </YStack>
+
+            {deleteTarget ? (
+              <YStack
+                testID="comment-delete-confirm"
+                position="absolute"
+                top={0}
+                left={0}
+                right={0}
+                bottom={0}
+                alignItems="center"
+                justifyContent="center"
+                backgroundColor="rgba(0,0,0,0.55)"
+                padding={28}
+              >
+                <YStack
+                  width="100%"
+                  maxWidth={360}
+                  gap={6}
+                  padding={20}
+                  borderRadius={18}
+                  backgroundColor="$background"
+                >
+                  <Text fontSize={16} fontWeight="900" color="$color">
+                    Delete comment?
+                  </Text>
+                  <Text fontSize={13} color="$muted">
+                    This comment will be permanently removed.
+                  </Text>
+                  <XStack gap={10} marginTop={12} justifyContent="flex-end">
+                    <XStack
+                      testID="comment-delete-cancel"
+                      role="button"
+                      aria-label="Cancel"
+                      onPress={() => setDeleteTarget(null)}
+                      height={42}
+                      paddingHorizontal={18}
+                      borderRadius={12}
+                      alignItems="center"
+                      justifyContent="center"
+                      borderWidth={1}
+                      borderColor="$borderColor"
+                    >
+                      <Text fontSize={14} fontWeight="800" color="$color">
+                        Cancel
+                      </Text>
+                    </XStack>
+                    <XStack
+                      testID="comment-delete-confirm-btn"
+                      role="button"
+                      aria-label="Delete"
+                      onPress={() => confirmDelete(deleteTarget)}
+                      height={42}
+                      paddingHorizontal={18}
+                      borderRadius={12}
+                      alignItems="center"
+                      justifyContent="center"
+                      backgroundColor="$danger"
+                    >
+                      <Text fontSize={14} fontWeight="900" color="#ffffff">
+                        Delete
+                      </Text>
+                    </XStack>
+                  </XStack>
+                </YStack>
+              </YStack>
+            ) : null}
           </YStack>
         </KeyboardScreen>
       </ModalThemeScope>

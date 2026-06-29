@@ -132,6 +132,8 @@ export const PodCommentsDocument = gql(`
       author_name
       author_photo
       text
+      like_count
+      liked_by_me
       created_at
     }
   }
@@ -146,7 +148,20 @@ export const AddPodCommentDocument = gql(`
       author_name
       author_photo
       text
+      like_count
+      liked_by_me
       created_at
+    }
+  }
+`);
+
+/** Like/unlike a pod comment (auth) — explore item 4. */
+export const TogglePodCommentLikeDocument = gql(`
+  mutation MobileTogglePodCommentLike($podId: ID!, $commentId: ID!) {
+    togglePodCommentLike(pod_doc_id: $podId, comment_id: $commentId) {
+      id
+      like_count
+      liked_by_me
     }
   }
 `);

@@ -258,4 +258,38 @@ describe('usePodComments', () => {
     });
     expect(result.current.comments).toHaveLength(0);
   });
+
+  it('un-likes an already-liked comment and leaves the others untouched (item 4)', async () => {
+    mockRequest.mockResolvedValueOnce({
+      podComments: [
+        { id: 'c1', author_id: 'me', text: 'hi', like_count: 1, liked_by_me: true },
+        { id: 'c2', author_id: 'x', text: 'yo', like_count: 4, liked_by_me: false },
+      ],
+    });
+    const { result } = renderHook(() => usePodComments('p1', true));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    mockRequest.mockResolvedValueOnce({
+      togglePodCommentLike: { id: 'c1', like_count: 0, liked_by_me: false },
+    });
+    await act(async () => {
+      await result.current.toggleLike('c1');
+    });
+    expect(result.current.comments[0]?.liked_by_me).toBe(false);
+    expect(result.current.comments[0]?.like_count).toBe(0);
+    expect(result.current.comments[1]?.like_count).toBe(4); // c2 untouched
+  });
+
+  it('reverts a comment like when the server rejects (item 4)', async () => {
+    mockRequest.mockResolvedValueOnce({
+      podComments: [{ id: 'c1', author_id: 'me', text: 'hi', like_count: 5, liked_by_me: false }],
+    });
+    const { result } = renderHook(() => usePodComments('p1', true));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    mockRequest.mockRejectedValueOnce(new Error('x'));
+    await act(async () => {
+      await result.current.toggleLike('c1');
+    });
+    expect(result.current.comments[0]?.liked_by_me).toBe(false);
+    expect(result.current.comments[0]?.like_count).toBe(5);
+  });
 });

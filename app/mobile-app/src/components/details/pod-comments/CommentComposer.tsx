@@ -1,5 +1,8 @@
+import { Image } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, Spinner, XStack } from 'tamagui';
+import { Input, Spinner, XStack, YStack } from 'tamagui';
+
+import { useThemeColors } from '@/hooks/useThemeColors';
 
 interface Props {
   value: string;
@@ -7,11 +10,21 @@ interface Props {
   onSubmit: () => void;
   disabled: boolean;
   posting: boolean;
+  /** The signed-in user's profile photo, shown beside the input (explore item 3). */
+  viewerPhoto?: string | null;
 }
 
-/** The bottom input row for adding a comment. Disabled (sign-in hint) when there
- * is no viewer. */
-export function CommentComposer({ value, onChange, onSubmit, disabled, posting }: Readonly<Props>) {
+/** The bottom input row for adding a comment, with the viewer's avatar. Disabled
+ * (sign-in hint) when there is no viewer. */
+export function CommentComposer({
+  value,
+  onChange,
+  onSubmit,
+  disabled,
+  posting,
+  viewerPhoto,
+}: Readonly<Props>) {
+  const { muted } = useThemeColors();
   const canSend = !disabled && !posting && !!value.trim();
   return (
     <XStack
@@ -22,6 +35,20 @@ export function CommentComposer({ value, onChange, onSubmit, disabled, posting }
       borderTopWidth={1}
       borderColor="$borderColor"
     >
+      {viewerPhoto ? (
+        <Image source={{ uri: viewerPhoto }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+      ) : (
+        <YStack
+          width={32}
+          height={32}
+          borderRadius={16}
+          backgroundColor="$surface"
+          alignItems="center"
+          justifyContent="center"
+        >
+          <MaterialIcons name="person" size={18} color={muted} />
+        </YStack>
+      )}
       <Input
         testID="pod-comment-input"
         flex={1}

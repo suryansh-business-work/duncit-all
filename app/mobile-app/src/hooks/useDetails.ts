@@ -8,6 +8,7 @@ import {
   PodCommentsDocument,
   PodDetailsDocument,
   PodPeopleDocument,
+  TogglePodCommentLikeDocument,
 } from '@/graphql/details';
 import { TogglePodLikeDocument, ToggleSavedPodDocument } from '@/graphql/explore';
 import { graphqlRequest } from '@/services/graphql.client';
@@ -219,5 +220,44 @@ export function usePodComments(podId: string, open: boolean) {
     await graphqlRequest(DeletePodCommentDocument, { podId, commentId }, { auth: true });
   };
 
-  return { comments, isLoading, error, add, remove };
+  // Optimistic comment reaction (explore item 4): flip locally, then reconcile
+  // with the server, reverting on failure.
+  const flip = (commentId: string) =>
+    setComments((prev) =>
+      prev.map((c) =>
+        c.id === commentId
+          ? {
+              ...c,
+              liked_by_me: !c.liked_by_me,
+              like_count: c.like_count + (c.liked_by_me ? -1 : 1),
+            }
+          : c,
+      ),
+    );
+
+  const toggleLike = async (commentId: string) => {
+    flip(commentId);
+    try {
+      const res = await graphqlRequest(
+        TogglePodCommentLikeDocument,
+        { podId, commentId },
+        { auth: true },
+      );
+      setComments((prev) =>
+        prev.map((c) =>
+          c.id === commentId
+            ? {
+                ...c,
+                liked_by_me: res.togglePodCommentLike.liked_by_me,
+                like_count: res.togglePodCommentLike.like_count,
+              }
+            : c,
+        ),
+      );
+    } catch {
+      flip(commentId);
+    }
+  };
+
+  return { comments, isLoading, error, add, remove, toggleLike };
 }

@@ -211,9 +211,17 @@ describe('pod history filter + sort', () => {
   it('treats a pod-less membership as zero date/price across every sort', () => {
     const z = membership({ id: 'z', pod: null });
     const list = [a, z, b];
-    expect(ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'DATE_DESC' }))).toEqual(['a', 'b', 'z']);
-    expect(ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'DATE_ASC' }))).toEqual(['z', 'b', 'a']);
-    expect(ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'PRICE_ASC' }))).toEqual(['z', 'b', 'a']);
-    expect(ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'PRICE_DESC' }))).toEqual(['a', 'b', 'z']);
+    expect(
+      ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'DATE_DESC' })),
+    ).toEqual(['a', 'b', 'z']);
+    expect(
+      ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'DATE_ASC' })),
+    ).toEqual(['z', 'b', 'a']);
+    expect(
+      ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'PRICE_ASC' })),
+    ).toEqual(['z', 'b', 'a']);
+    expect(
+      ids(applyPodHistory(list, { ...DEFAULT_POD_HISTORY_FILTERS, sort: 'PRICE_DESC' })),
+    ).toEqual(['a', 'b', 'z']);
   });
 });

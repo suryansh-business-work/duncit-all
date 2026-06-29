@@ -5,6 +5,7 @@ import type {
   RecurringConfig,
   VenueSettingsLike,
 } from './recurring.types';
+import { effectiveMaxAdvance } from './settings-map';
 
 const HHMM_RE = /^([01]\d|2[0-3]):[0-5]\d$/;
 
@@ -74,7 +75,7 @@ export function generateRecurringSlots(
   const weekdays = new Set(config.weekdays);
   const weeklyOff = new Set(settings.weekly_off_days);
   const holidays = new Set(settings.holidays);
-  const maxStart = addDays(now, settings.rules.max_advance_days);
+  const maxStart = addDays(now, effectiveMaxAdvance(settings.rules.max_advance_days));
   const last = startOfDay(config.endDate);
 
   let cursor = startOfDay(config.startDate);

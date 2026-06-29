@@ -6,7 +6,7 @@ import { addDays } from 'date-fns';
 import DayOfWeekPicker from './DayOfWeekPicker';
 import PricingSection from './PricingSection';
 import type { RecurringForm } from './useRecurringDialog';
-import type { VenueSettingsView } from './settings-map';
+import { effectiveMaxAdvance, type VenueSettingsView } from './settings-map';
 
 interface Props {
   form: RecurringForm;
@@ -15,7 +15,7 @@ interface Props {
 }
 
 export default function BasicSection({ form, patch, settings }: Readonly<Props>) {
-  const maxDate = addDays(new Date(), settings.rules.max_advance_days);
+  const maxDate = addDays(new Date(), effectiveMaxAdvance(settings.rules.max_advance_days));
   return (
     <Stack spacing={2}>
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>

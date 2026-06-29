@@ -4,8 +4,8 @@ import { addDays } from 'date-fns';
 import { generateRecurringSlots } from './generate-recurring-slots';
 import type { RecurringConfig } from './recurring.types';
 import { hhmmToDate, readVenueSettings, timeToHHMM } from './settings-map';
-import { BULK_DELETE_VENUE_SLOTS, CREATE_VENUE_SLOTS } from './recurring.queries';
-import { VENUE_SLOTS } from '../queries';
+import { CREATE_VENUE_SLOTS } from './recurring.queries';
+import { DELETE_VENUE_SLOT, VENUE_SLOTS } from '../queries';
 
 export type ConflictMode = 'SKIP' | 'REPLACE';
 
@@ -37,26 +37,31 @@ export const initialRecurringForm = (): RecurringForm => ({
 
 const toInt = (v: string) => Math.max(0, Math.round(Number(v) || 0));
 
-interface ExistingSlot {
+interface Interval {
   start_at: string;
   end_at: string;
 }
+interface ExistingSlot extends Interval {
+  id: string;
+  status: string;
+}
 
-function dropOverlaps<T extends ExistingSlot>(slots: T[], existing: ExistingSlot[]): T[] {
-  return slots.filter((g) => {
-    const gs = new Date(g.start_at).getTime();
-    const ge = new Date(g.end_at).getTime();
-    return !existing.some((e) => {
-      const es = new Date(e.start_at).getTime();
-      const ee = new Date(e.end_at).getTime();
-      return gs < ee && ge > es;
-    });
-  });
+function intervalsOverlap(a: Interval, b: Interval) {
+  const as = new Date(a.start_at).getTime();
+  const ae = new Date(a.end_at).getTime();
+  const bs = new Date(b.start_at).getTime();
+  const be = new Date(b.end_at).getTime();
+  return as < be && ae > bs;
+}
+
+function dropOverlaps<T extends Interval>(slots: T[], existing: Interval[]): T[] {
+  return slots.filter((g) => !existing.some((e) => intervalsOverlap(g, e)));
 }
 
 /** Owns the recurring form + derives the live preview from the tested generator,
- * and runs a conflict-aware create (Skip drops overlaps client-side, Replace
- * bulk-deletes the window first). */
+ * and runs a conflict-aware create. Both modes fetch the existing window and act
+ * on real time-overlaps: Skip drops colliding generated slots; Replace deletes
+ * the colliding non-booked slots and skips ones that collide with a booked slot. */
 export function useRecurringDialog(
   venueId: string,
   settings: unknown,
@@ -67,7 +72,7 @@ export function useRecurringDialog(
   const [serverError, setServerError] = useState<string | null>(null);
   const client = useApolloClient();
   const [createSlots] = useMutation(CREATE_VENUE_SLOTS);
-  const [bulkDelete] = useMutation(BULK_DELETE_VENUE_SLOTS);
+  const [deleteSlot] = useMutation(DELETE_VENUE_SLOT);
 
   const patch = (p: Partial<RecurringForm>) => setForm((f) => ({ ...f, ...p }));
   const reset = () => {
@@ -85,8 +90,12 @@ export function useRecurringDialog(
       startTime: timeToHHMM(form.startTime),
       endTime: timeToHHMM(form.endTime),
       defaultPrice: toInt(form.defaultPrice),
+      // A blank or deselected-day override is treated as "no override" so the
+      // generator falls back to the default price (never a ₹0 slot).
       perDayPrice: Object.fromEntries(
-        Object.entries(form.perDayPrice).map(([d, p]) => [Number(d), toInt(p)]),
+        Object.entries(form.perDayPrice)
+          .filter(([d, p]) => form.weekdays.includes(Number(d)) && String(p).trim() !== '')
+          .map(([d, p]) => [Number(d), toInt(p)]),
       ),
       skipWeeklyOff: form.skipWeeklyOff,
       skipHolidays: form.skipHolidays,
@@ -96,6 +105,15 @@ export function useRecurringDialog(
 
   const result = useMemo(() => generateRecurringSlots(config, venueSettings), [config, venueSettings]);
 
+  const fetchExisting = async (from: Date, to: Date): Promise<ExistingSlot[]> => {
+    const { data } = await client.query({
+      query: VENUE_SLOTS,
+      variables: { venue_id: venueId, from: from.toISOString(), to: addDays(to, 1).toISOString() },
+      fetchPolicy: 'network-only',
+    });
+    return data?.venueSlots ?? [];
+  };
+
   const submit = async (): Promise<boolean> => {
     if (result.errors.length > 0 || result.slots.length === 0 || !form.startDate || !form.endDate) {
       return false;
@@ -103,30 +121,22 @@ export function useRecurringDialog(
     setSubmitting(true);
     setServerError(null);
     try {
-      let slots = result.slots.map((s) => ({ start_at: s.start_at, end_at: s.end_at, price: s.price }));
+      const generated = result.slots.map((s) => ({ start_at: s.start_at, end_at: s.end_at, price: s.price }));
+      const existing = await fetchExisting(form.startDate, form.endDate);
+
+      let slots = generated;
       if (form.conflictMode === 'REPLACE') {
-        await bulkDelete({
-          variables: {
-            input: {
-              venue_id: venueId,
-              from: form.startDate.toISOString(),
-              to: form.endDate.toISOString(),
-              weekdays: form.weekdays,
-            },
-          },
-        });
+        const overlapping = existing.filter((e) => generated.some((g) => intervalsOverlap(g, e)));
+        const bookedOverlap = overlapping.filter((e) => e.status === 'BOOKED');
+        for (const e of overlapping.filter((o) => o.status !== 'BOOKED')) {
+          await deleteSlot({ variables: { slot_id: e.id } });
+        }
+        // Generated slots that still collide with a booked slot can't be created.
+        slots = dropOverlaps(generated, bookedOverlap);
       } else {
-        const { data } = await client.query({
-          query: VENUE_SLOTS,
-          variables: {
-            venue_id: venueId,
-            from: form.startDate.toISOString(),
-            to: addDays(form.endDate, 1).toISOString(),
-          },
-          fetchPolicy: 'network-only',
-        });
-        slots = dropOverlaps(slots, data?.venueSlots ?? []);
+        slots = dropOverlaps(generated, existing);
       }
+
       if (slots.length === 0) {
         setServerError('Every matching slot already exists — nothing to add.');
         return false;

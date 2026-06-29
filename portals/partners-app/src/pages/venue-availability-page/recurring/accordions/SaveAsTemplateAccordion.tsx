@@ -61,7 +61,9 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
             start_time: timeToHHMM(form.startTime),
             end_time: timeToHHMM(form.endTime),
             default_price: toInt(form.defaultPrice),
-            per_day_price: Object.entries(form.perDayPrice).map(([d, p]) => ({ weekday: Number(d), price: toInt(p) })),
+            per_day_price: Object.entries(form.perDayPrice)
+              .filter(([d, p]) => form.weekdays.includes(Number(d)) && String(p).trim() !== '')
+              .map(([d, p]) => ({ weekday: Number(d), price: toInt(p) })),
             skip_weekly_off: form.skipWeeklyOff,
             skip_holidays: form.skipHolidays,
           },

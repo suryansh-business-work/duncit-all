@@ -58,3 +58,10 @@ export function hhmmToDate(hhmm: string): Date {
 
 export const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export const WEEKDAY_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+// The server hard-caps slot creation at 60 days ahead (venueSlot.service
+// MAX_FUTURE_DAYS). The client must never promise beyond it, so the effective
+// advance window is min(the venue's rule, the server cap).
+export const SERVER_MAX_ADVANCE_DAYS = 60;
+export const effectiveMaxAdvance = (maxAdvanceDays: number) =>
+  Math.min(Math.max(1, maxAdvanceDays), SERVER_MAX_ADVANCE_DAYS);

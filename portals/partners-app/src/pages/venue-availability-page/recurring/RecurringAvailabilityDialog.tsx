@@ -22,6 +22,7 @@ import FutureAvailabilityAccordion from './accordions/FutureAvailabilityAccordio
 import SaveAsTemplateAccordion from './accordions/SaveAsTemplateAccordion';
 import BulkActionsAccordion from './accordions/BulkActionsAccordion';
 import { useRecurringDialog } from './useRecurringDialog';
+import { effectiveMaxAdvance } from './settings-map';
 
 interface Props {
   open: boolean;
@@ -47,6 +48,7 @@ export default function RecurringAvailabilityDialog({ open, onClose, venueId, se
   };
   const canCreate = result.errors.length === 0 && result.summary.total > 0 && !submitting;
   const datesPicked = !!form.startDate && !!form.endDate;
+  const advanceCap = effectiveMaxAdvance(venueSettings.rules.max_advance_days);
 
   return (
     <Dialog open={open} onClose={close} fullWidth maxWidth="lg" fullScreen={fullScreen} scroll="paper">
@@ -82,14 +84,14 @@ export default function RecurringAvailabilityDialog({ open, onClose, venueId, se
           </Typography>
           <SlotBehaviourAccordion form={form} patch={patch} />
           <VenueRulesAccordion venueId={venueId} rules={venueSettings.rules} onSaved={onDone} />
-          <FutureAvailabilityAccordion maxAdvanceDays={venueSettings.rules.max_advance_days} />
+          <FutureAvailabilityAccordion maxAdvanceDays={advanceCap} />
           <SaveAsTemplateAccordion venueId={venueId} form={form} patch={patch} />
           <BulkActionsAccordion venueId={venueId} onDone={onDone} />
         </Stack>
       </DialogContent>
 
       <Box sx={{ px: 3, pt: 2 }}>
-        <PreviewBar summary={result.summary} />
+        <PreviewBar summary={result.summary} maxAdvanceDays={advanceCap} />
       </Box>
 
       <DialogActions sx={{ px: 3, py: 2 }}>

@@ -38,7 +38,7 @@ describe('PreviewBar', () => {
   };
 
   it('renders the total, per-day breakdown, revenue and skip notice', () => {
-    render(<PreviewBar summary={summary} />);
+    render(<PreviewBar summary={summary} maxAdvanceDays={60} />);
     expect(screen.getByText('7 Slots')).toBeTruthy();
     expect(screen.getByText('₹48,378')).toBeTruthy();
     expect(screen.getByText('Sunday')).toBeTruthy();

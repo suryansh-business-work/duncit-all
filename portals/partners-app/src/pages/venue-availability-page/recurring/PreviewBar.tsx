@@ -5,7 +5,12 @@ import type { PreviewSummary } from './recurring.types';
 
 const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
 
-export default function PreviewBar({ summary }: Readonly<{ summary: PreviewSummary }>) {
+interface Props {
+  summary: PreviewSummary;
+  maxAdvanceDays: number;
+}
+
+export default function PreviewBar({ summary, maxAdvanceDays }: Readonly<Props>) {
   const days = Object.keys(summary.byWeekday)
     .map(Number)
     .sort((a, b) => a - b);
@@ -14,7 +19,7 @@ export default function PreviewBar({ summary }: Readonly<{ summary: PreviewSumma
   if (summary.skippedWeeklyOff) skips.push(`${summary.skippedWeeklyOff} weekly-off`);
   if (summary.skippedHolidays) skips.push(`${summary.skippedHolidays} holiday`);
   if (summary.skippedPast) skips.push(`${summary.skippedPast} past`);
-  if (summary.skippedBeyondCap) skips.push(`${summary.skippedBeyondCap} beyond 60 days`);
+  if (summary.skippedBeyondCap) skips.push(`${summary.skippedBeyondCap} beyond ${maxAdvanceDays} days`);
 
   return (
     <Box

@@ -36,8 +36,8 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
   const [price, setPrice] = useState('');
   const [result, setResult] = useState<string | null>(null);
   const [confirm, setConfirm] = useState<null | { text: string; run: () => Promise<void> }>(null);
-  const [bulkDelete] = useMutation(BULK_DELETE_VENUE_SLOTS);
-  const [bulkUpdate] = useMutation(BULK_UPDATE_VENUE_SLOTS);
+  const [bulkDelete, { error: deleteError }] = useMutation(BULK_DELETE_VENUE_SLOTS);
+  const [bulkUpdate, { error: updateError }] = useMutation(BULK_UPDATE_VENUE_SLOTS);
 
   const filter = () => ({
     venue_id: venueId,
@@ -84,6 +84,9 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
           </Stack>
           <DayOfWeekPicker value={weekdays} onChange={setWeekdays} />
           {result && <Alert severity="info" onClose={() => setResult(null)}>{result}</Alert>}
+          {(deleteError || updateError) && (
+            <Alert severity="error">{(deleteError ?? updateError)?.message}</Alert>
+          )}
           <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1} alignItems="center">
             <Button color="error" variant="outlined" onClick={() => setConfirm({ text: 'Delete all matching upcoming slots? This cannot be undone.', run: runDelete })}>
               Delete matching
@@ -91,13 +94,22 @@ export default function BulkActionsAccordion({ venueId, onDone }: Readonly<Props
             <Button color="error" variant="text" onClick={() => setConfirm({ text: 'Disable (block) all matching slots?', run: () => runUpdate({ block: true }, 'Disabled') })}>
               Disable
             </Button>
-            <Button variant="text" onClick={() => runUpdate({ block: false }, 'Enabled')}>
+            <Button variant="text" onClick={() => setConfirm({ text: 'Enable (unblock) all matching slots?', run: () => runUpdate({ block: false }, 'Enabled') })}>
               Enable
             </Button>
           </Stack>
           <Stack direction="row" spacing={1} alignItems="center">
             <TextField size="small" type="number" label="New price (₹)" value={price} onChange={(e) => setPrice(e.target.value)} sx={{ maxWidth: 160 }} inputProps={{ min: 0 }} />
-            <Button variant="outlined" disabled={price === ''} onClick={() => runUpdate({ set_price: toInt(price) }, 'Re-priced')}>
+            <Button
+              variant="outlined"
+              disabled={price === ''}
+              onClick={() =>
+                setConfirm({
+                  text: `Re-price all matching upcoming slots to ₹${toInt(price)}? Existing prices are overwritten.`,
+                  run: () => runUpdate({ set_price: toInt(price) }, 'Re-priced'),
+                })
+              }
+            >
               Set price
             </Button>
           </Stack>

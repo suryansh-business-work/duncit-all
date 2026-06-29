@@ -41,6 +41,7 @@ export default function MediaPickerDialog({
 
   const allowImage = useMemo(() => /image\//.test(accept) || accept === '*', [accept]);
   const allowVideo = useMemo(() => /video\//.test(accept) || accept === '*', [accept]);
+  const allowDocs = useMemo(() => /pdf/i.test(accept), [accept]);
 
   useEffect(() => {
     if (!open) return;
@@ -66,13 +67,23 @@ export default function MediaPickerDialog({
     if (!f) return;
     const isImage = f.type.startsWith('image/');
     const isVideo = f.type.startsWith('video/');
-    if (!isImage && !isVideo) {
-      setError('Please choose an image or video file');
+    const isPdf = f.type === 'application/pdf';
+    const accepted = (allowImage && isImage) || (allowVideo && isVideo) || (allowDocs && isPdf);
+    if (!accepted) {
+      setError(allowDocs ? 'Please choose a PDF document' : 'Please choose an image or video file');
       return;
     }
-    const maxBytes = isVideo ? 100 * 1024 * 1024 : 15 * 1024 * 1024;
+    let maxBytes = 15 * 1024 * 1024;
+    let tooLargeMsg = 'Image is too large (max 15 MB)';
+    if (isVideo) {
+      maxBytes = 100 * 1024 * 1024;
+      tooLargeMsg = 'Video is too large (max 100 MB)';
+    } else if (isPdf) {
+      maxBytes = 50 * 1024 * 1024;
+      tooLargeMsg = 'Document is too large (max 50 MB)';
+    }
     if (f.size > maxBytes) {
-      setError(isVideo ? 'Video is too large (max 100 MB)' : 'Image is too large (max 15 MB)');
+      setError(tooLargeMsg);
       return;
     }
     setError(null);
@@ -93,7 +104,7 @@ export default function MediaPickerDialog({
       });
       setUploadPct(55);
       const res = await uploadImageMut({
-        variables: { fileBase64, fileName: picked.name, mimeType: picked.type, folder },
+        variables: { fileBase64, fileName: picked.name, mimeType: picked.type, folder, allowDocuments: allowDocs },
       });
       const url = res.data?.uploadImageToImagekit?.url;
       if (!url) throw new Error('No URL returned from ImageKit upload');

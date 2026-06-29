@@ -10,20 +10,34 @@ import {
   CircularProgress,
   IconButton,
   Stack,
+  ToggleButton,
+  ToggleButtonGroup,
   Typography,
 } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ChevronLeftIcon from '@mui/icons-material/ChevronLeft';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
+import EventRepeatIcon from '@mui/icons-material/EventRepeat';
+import TodayIcon from '@mui/icons-material/Today';
 import {
+  addDays,
   addMonths,
+  endOfDay,
   endOfMonth,
+  endOfWeek,
   format,
   isSameDay,
+  startOfDay,
   startOfMonth,
-  subMonths,
+  startOfWeek,
 } from 'date-fns';
-import { AvailabilityCalendar, DayDrawer, type NewSlotInput } from '@duncit/availability-calendar';
+import {
+  AvailabilityCalendar,
+  DayDrawer,
+  RecurringAvailabilityDialog,
+  type CalendarView,
+  type NewSlotInput,
+} from '@duncit/availability-calendar';
 import {
   CREATE_VENUE_SLOTS,
   DELETE_VENUE_SLOT,
@@ -33,22 +47,37 @@ import {
 } from './queries';
 import { MY_VENUES } from '../register-venue-page/queries';
 
+function viewRange(view: CalendarView, anchor: Date) {
+  if (view === 'day') return { from: startOfDay(anchor), to: endOfDay(anchor) };
+  if (view === 'week') {
+    return { from: startOfWeek(anchor, { weekStartsOn: 0 }), to: endOfWeek(anchor, { weekStartsOn: 0 }) };
+  }
+  return { from: startOfMonth(anchor), to: endOfMonth(anchor) };
+}
+
+function periodLabel(view: CalendarView, anchor: Date, range: { from: Date; to: Date }) {
+  if (view === 'day') return format(anchor, 'EEEE, dd MMM yyyy');
+  if (view === 'week') return `${format(range.from, 'dd MMM')} – ${format(range.to, 'dd MMM')}`;
+  return format(anchor, 'MMMM yyyy');
+}
+
 export default function VenueAvailabilityPage() {
   const { venueId = '' } = useParams<{ venueId: string }>();
   const navigate = useNavigate();
-  const [month, setMonth] = useState(() => startOfMonth(new Date()));
+  const [view, setView] = useState<CalendarView>('month');
+  // Anchor on today so Day/Week views open on the current period (month view
+  // derives its own startOfMonth). Keeping the 1st here would land Day on a past date.
+  const [anchor, setAnchor] = useState(() => new Date());
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [recurringOpen, setRecurringOpen] = useState(false);
 
   const { data: venuesData } = useQuery(MY_VENUES, { fetchPolicy: 'cache-first' });
   const venue = (venuesData?.myVenues ?? []).find((v: any) => v.id === venueId);
   const isApproved = venue?.status === 'APPROVED';
 
+  const range = useMemo(() => viewRange(view, anchor), [view, anchor]);
   const { data, loading, error, refetch } = useQuery<{ venueSlots: VenueSlotRow[] }>(VENUE_SLOTS, {
-    variables: {
-      venue_id: venueId,
-      from: startOfMonth(month).toISOString(),
-      to: endOfMonth(month).toISOString(),
-    },
+    variables: { venue_id: venueId, from: range.from.toISOString(), to: range.to.toISOString() },
     fetchPolicy: 'cache-and-network',
     skip: !venueId,
   });
@@ -61,6 +90,10 @@ export default function VenueAvailabilityPage() {
     await createSlots({ variables: { input: { venue_id: venueId, slots: [input] } } });
     await refetch();
   };
+  const handleRecurringAdd = async (slots: NewSlotInput[]) => {
+    await createSlots({ variables: { input: { venue_id: venueId, slots } } });
+    await refetch();
+  };
   const handleToggleBlock = async (slot: VenueSlotRow) => {
     await updateSlot({ variables: { slot_id: slot.id, input: { block: slot.status !== 'BLOCKED' } } });
     await refetch();
@@ -68,6 +101,12 @@ export default function VenueAvailabilityPage() {
   const handleDelete = async (slotId: string) => {
     await deleteSlot({ variables: { slot_id: slotId } });
     await refetch();
+  };
+
+  const shift = (dir: 1 | -1) => {
+    if (view === 'month') setAnchor(addMonths(anchor, dir));
+    else if (view === 'week') setAnchor(addDays(anchor, dir * 7));
+    else setAnchor(addDays(anchor, dir));
   };
 
   const slotsForSelected = useMemo<VenueSlotRow[]>(() => {
@@ -122,16 +161,47 @@ export default function VenueAvailabilityPage() {
 
       <Card variant="outlined">
         <CardContent>
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ mb: 2 }}>
-            <IconButton onClick={() => setMonth(subMonths(month, 1))} aria-label="Previous month">
-              <ChevronLeftIcon />
-            </IconButton>
-            <Typography variant="h6" fontWeight={900}>
-              {format(month, 'MMMM yyyy')}
-            </Typography>
-            <IconButton onClick={() => setMonth(addMonths(month, 1))} aria-label="Next month">
-              <ChevronRightIcon />
-            </IconButton>
+          <Stack
+            direction={{ xs: 'column', md: 'row' }}
+            alignItems={{ xs: 'stretch', md: 'center' }}
+            justifyContent="space-between"
+            spacing={1.5}
+            sx={{ mb: 2 }}
+          >
+            <ToggleButtonGroup
+              size="small"
+              exclusive
+              value={view}
+              onChange={(_e, next) => next && setView(next)}
+              aria-label="Calendar view"
+            >
+              <ToggleButton value="day">Day</ToggleButton>
+              <ToggleButton value="week">Week</ToggleButton>
+              <ToggleButton value="month">Month</ToggleButton>
+            </ToggleButtonGroup>
+
+            <Stack direction="row" alignItems="center" spacing={0.5} justifyContent="center">
+              <IconButton onClick={() => shift(-1)} aria-label="Previous">
+                <ChevronLeftIcon />
+              </IconButton>
+              <Typography variant="subtitle1" fontWeight={900} sx={{ minWidth: 160, textAlign: 'center' }}>
+                {periodLabel(view, anchor, range)}
+              </Typography>
+              <IconButton onClick={() => shift(1)} aria-label="Next">
+                <ChevronRightIcon />
+              </IconButton>
+              <Button size="small" startIcon={<TodayIcon />} onClick={() => setAnchor(new Date())}>
+                Today
+              </Button>
+            </Stack>
+
+            <Button
+              variant="outlined"
+              startIcon={<EventRepeatIcon />}
+              onClick={() => setRecurringOpen(true)}
+            >
+              Recurring availability
+            </Button>
           </Stack>
 
           {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
@@ -141,7 +211,8 @@ export default function VenueAvailabilityPage() {
             </Stack>
           ) : (
             <AvailabilityCalendar
-              month={month}
+              month={anchor}
+              view={view}
               slots={data?.venueSlots ?? []}
               selectedDate={selectedDate}
               onSelect={setSelectedDate}
@@ -164,6 +235,12 @@ export default function VenueAvailabilityPage() {
         onCreate={handleCreate}
         onToggleBlock={handleToggleBlock}
         onDelete={handleDelete}
+      />
+
+      <RecurringAvailabilityDialog
+        open={recurringOpen}
+        onClose={() => setRecurringOpen(false)}
+        onAdd={handleRecurringAdd}
       />
     </Stack>
   );

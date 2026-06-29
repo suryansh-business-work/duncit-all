@@ -11,6 +11,7 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     venue_name: String
     start_at: String!
     end_at: String!
+    price: Int!
     status: VenueSlotStatus!
     booked_by_pod_id: ID
     booked_pod_title: String
@@ -21,6 +22,7 @@ export const venueSlotTypeDefs = /* GraphQL */ `
   input CreateVenueSlotInput {
     start_at: String!
     end_at: String!
+    price: Int
     notes: String
   }
 
@@ -32,6 +34,7 @@ export const venueSlotTypeDefs = /* GraphQL */ `
   input UpdateVenueSlotInput {
     start_at: String
     end_at: String
+    price: Int
     notes: String
     block: Boolean
   }

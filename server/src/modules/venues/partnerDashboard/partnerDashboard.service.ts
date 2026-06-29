@@ -4,6 +4,7 @@ import { PaymentReleaseModel } from '@modules/finance/finance/paymentRelease.mod
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 
 interface DashboardRange {
   from: string;
@@ -54,7 +55,7 @@ function uniquePods(groups: any[][]) {
   return Array.from(byId.values());
 }
 
-function metrics(pods: any[], earnings: EarningsParts) {
+function metrics(pods: any[], earnings: EarningsParts, addedSlots = 0) {
   const venue = money(earnings.venue ?? 0);
   const host = money(earnings.host ?? 0);
   const product = money(earnings.product ?? 0);
@@ -65,6 +66,7 @@ function metrics(pods: any[], earnings: EarningsParts) {
     venue_earning: venue,
     host_earning: host,
     product_earning: product,
+    added_slots: addedSlots,
   };
 }
 
@@ -101,11 +103,20 @@ export const partnerDashboardService = {
     const hostEarning = releaseTotal(hostReleases);
     const summaryProductEarning = productTotal(productPods, productIdSet);
 
+    // Upcoming, still-available slots the owner has published across their venues.
+    const addedSlots = venueIds.length
+      ? await VenueSlotModel.countDocuments({
+          venue_id: { $in: venueIds },
+          status: 'AVAILABLE',
+          start_at: { $gte: new Date() },
+        })
+      : 0;
+
     return {
       from: from.toISOString(),
       to: to.toISOString(),
-      summary: metrics(summaryPods, { venue: venueEarning, host: hostEarning, product: summaryProductEarning }),
-      venue: metrics(venuePods, { venue: venueEarning, product: productTotal(venuePods, productIdSet) }),
+      summary: metrics(summaryPods, { venue: venueEarning, host: hostEarning, product: summaryProductEarning }, addedSlots),
+      venue: metrics(venuePods, { venue: venueEarning, product: productTotal(venuePods, productIdSet) }, addedSlots),
       host: metrics(hostPods, { host: hostEarning, product: productTotal(hostPods, productIdSet) }),
       products: metrics(productPods, { product: summaryProductEarning }),
     };

@@ -130,8 +130,8 @@ export async function uploadBase64Image(opts: {
     maxBytes = 100 * 1024 * 1024;
     tooLargeMsg = 'Video is too large (max 100 MB)';
   } else if (isDocument) {
-    maxBytes = 25 * 1024 * 1024;
-    tooLargeMsg = 'Document is too large (max 25 MB)';
+    maxBytes = 50 * 1024 * 1024;
+    tooLargeMsg = 'Document is too large (max 50 MB)';
   }
   if (fileBytes.length > maxBytes) {
     throw new GraphQLError(tooLargeMsg, { extensions: { code: 'BAD_USER_INPUT' } });

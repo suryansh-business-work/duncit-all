@@ -7,6 +7,7 @@ export const VENUE_SLOTS = gql`
       venue_id
       start_at
       end_at
+      price
       status
       booked_by_pod_id
       booked_pod_title
@@ -34,6 +35,7 @@ export const CREATE_VENUE_SLOTS = gql`
       id
       start_at
       end_at
+      price
       status
       notes
     }
@@ -46,6 +48,7 @@ export const UPDATE_VENUE_SLOT = gql`
       id
       start_at
       end_at
+      price
       status
       notes
     }
@@ -63,6 +66,7 @@ export interface VenueSlotRow {
   venue_id: string;
   start_at: string;
   end_at: string;
+  price: number;
   status: 'AVAILABLE' | 'BOOKED' | 'BLOCKED';
   booked_by_pod_id: string | null;
   booked_pod_title: string | null;

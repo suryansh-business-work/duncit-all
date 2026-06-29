@@ -7,6 +7,7 @@ export interface IVenueSlot extends Document {
   owner_user_id: Types.ObjectId;
   start_at: Date;
   end_at: Date;
+  price: number;
   status: VenueSlotStatus;
   booked_by_pod_id: Types.ObjectId | null;
   notes: string;
@@ -20,6 +21,7 @@ const venueSlotSchema = new Schema<IVenueSlot>(
     owner_user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     start_at: { type: Date, required: true, index: true },
     end_at: { type: Date, required: true },
+    price: { type: Number, default: 0, min: 0, max: 1_000_000 },
     status: {
       type: String,
       enum: ['AVAILABLE', 'BOOKED', 'BLOCKED'],

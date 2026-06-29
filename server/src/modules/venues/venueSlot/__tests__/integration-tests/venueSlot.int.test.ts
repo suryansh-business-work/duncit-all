@@ -46,4 +46,41 @@ describe('venueSlotService integration', () => {
       venueSlotService.listForVenue(new Types.ObjectId().toString(), venueId)
     ).rejects.toThrow(/only the venue owner/i);
   });
+
+  it('stores a per-slot price and exposes it (defaulting to 0)', async () => {
+    const venueId = await seedVenue();
+    const created = await venueSlotService.create(ownerId, {
+      venue_id: venueId,
+      slots: [
+        { start_at: inDays(3), end_at: inDays(3.1), price: 500 },
+        { start_at: inDays(4), end_at: inDays(4.1) },
+      ],
+    });
+    const byStart = [...created].sort((a, b) => a.start_at.localeCompare(b.start_at));
+    expect(byStart[0].price).toBe(500);
+    expect(byStart[1].price).toBe(0);
+  });
+
+  it('updates a slot price and rejects a negative price', async () => {
+    const venueId = await seedVenue();
+    const [slot] = await venueSlotService.create(ownerId, {
+      venue_id: venueId,
+      slots: [{ start_at: inDays(5), end_at: inDays(5.1), price: 100 }],
+    });
+    const updated = await venueSlotService.update(ownerId, slot.id, { price: 250 });
+    expect(updated.price).toBe(250);
+    await expect(
+      venueSlotService.update(ownerId, slot.id, { price: -5 })
+    ).rejects.toThrow(/0 or more/i);
+    await expect(
+      venueSlotService.update(ownerId, slot.id, { price: 1_000_001 })
+    ).rejects.toThrow(/or less/i);
+  });
+
+  it('rejects slots scheduled more than 60 days ahead', async () => {
+    const venueId = await seedVenue();
+    await expect(
+      venueSlotService.create(ownerId, { venue_id: venueId, slots: [{ start_at: inDays(61), end_at: inDays(61.1) }] })
+    ).rejects.toThrow(/60 days/i);
+  });
 });

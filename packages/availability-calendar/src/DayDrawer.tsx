@@ -20,8 +20,13 @@ import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
 import BlockIcon from '@mui/icons-material/Block';
 import CheckIcon from '@mui/icons-material/Check';
 import { TimePicker } from '@mui/x-date-pickers/TimePicker';
-import { format, isAfter, set as setTimeOnDate } from 'date-fns';
+import { addDays, format, isAfter, set as setTimeOnDate } from 'date-fns';
 import type { NewSlotInput, VenueSlotRow } from './types';
+
+// Mirror the server cap: availability can be published at most this far ahead.
+const MAX_FUTURE_DAYS = 60;
+
+const priceLabel = (price: number) => (price > 0 ? `₹${price}` : 'Free');
 
 interface Props {
   open: boolean;
@@ -53,6 +58,7 @@ function combineDateAndTime(date: Date, time: Date): Date {
 export default function DayDrawer({ open, date, slots, onClose, onCreate, onToggleBlock, onDelete }: Readonly<Props>) {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
+  const [price, setPrice] = useState('');
   const [notes, setNotes] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [creating, setCreating] = useState(false);
@@ -61,6 +67,7 @@ export default function DayDrawer({ open, date, slots, onClose, onCreate, onTogg
   const reset = () => {
     setStartTime(null);
     setEndTime(null);
+    setPrice('');
     setNotes('');
     setError(null);
   };
@@ -86,9 +93,18 @@ export default function DayDrawer({ open, date, slots, onClose, onCreate, onTogg
       setError('Start time must be in the future.');
       return;
     }
+    if (isAfter(start, addDays(new Date(), MAX_FUTURE_DAYS))) {
+      setError(`Slots can only be scheduled up to ${MAX_FUTURE_DAYS} days ahead.`);
+      return;
+    }
     setCreating(true);
     try {
-      await onCreate({ start_at: start.toISOString(), end_at: end.toISOString(), notes });
+      await onCreate({
+        start_at: start.toISOString(),
+        end_at: end.toISOString(),
+        price: Math.max(0, Math.round(Number(price) || 0)),
+        notes,
+      });
       reset();
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not create slot');
@@ -149,7 +165,12 @@ export default function DayDrawer({ open, date, slots, onClose, onCreate, onTogg
                     <Typography variant="body2" fontWeight={800}>
                       {format(new Date(slot.start_at), 'hh:mm a')} – {format(new Date(slot.end_at), 'hh:mm a')}
                     </Typography>
-                    <Chip size="small" color={STATUS_COLOR[slot.status]} label={slot.status} />
+                    <Stack direction="row" spacing={0.75} alignItems="center">
+                      <Typography variant="caption" fontWeight={800} color="text.secondary">
+                        {priceLabel(slot.price)}
+                      </Typography>
+                      <Chip size="small" color={STATUS_COLOR[slot.status]} label={slot.status} />
+                    </Stack>
                   </Stack>
                   {slot.booked_pod_title && (
                     <Typography variant="caption" color="text.secondary">
@@ -190,6 +211,15 @@ export default function DayDrawer({ open, date, slots, onClose, onCreate, onTogg
               <TimePicker label="Start" value={startTime} onChange={setStartTime} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
               <TimePicker label="End" value={endTime} onChange={setEndTime} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
             </Stack>
+            <TextField
+              size="small"
+              type="number"
+              label="Price (₹)"
+              value={price}
+              onChange={(e) => setPrice(e.target.value)}
+              inputProps={{ min: 0, step: 50 }}
+              helperText="Leave 0 for a free slot"
+            />
             <TextField size="small" label="Notes (optional)" value={notes} onChange={(e) => setNotes(e.target.value)} inputProps={{ maxLength: 280 }} />
             {error && <Alert severity="error" onClose={() => setError(null)}>{error}</Alert>}
             <Button variant="contained" disabled={creating} onClick={handleAdd}>

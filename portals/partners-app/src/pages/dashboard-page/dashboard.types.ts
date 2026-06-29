@@ -5,6 +5,7 @@ export interface DashboardMetrics {
   venue_earning: number;
   host_earning: number;
   product_earning: number;
+  added_slots: number;
 }
 
 export type DashboardTab = 'venue' | 'host' | 'products';

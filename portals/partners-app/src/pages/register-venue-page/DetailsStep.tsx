@@ -83,10 +83,24 @@ export default function DetailsStep({ value, locations, onChange, onCoverPick, s
         </Typography>
         {value.cover_image_url && (
           <Box
-            component="img"
-            src={value.cover_image_url}
-            sx={{ width: '100%', maxHeight: 180, objectFit: 'cover', borderRadius: 1 }}
-          />
+            sx={{
+              width: '100%',
+              aspectRatio: '16 / 9',
+              borderRadius: 1,
+              overflow: 'hidden',
+              bgcolor: 'action.hover',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+          >
+            <Box
+              component="img"
+              src={value.cover_image_url}
+              alt="Venue cover"
+              sx={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', display: 'block' }}
+            />
+          </Box>
         )}
         <Button startIcon={<UploadFileIcon />} variant="outlined" onClick={onCoverPick}>
           {value.cover_image_url ? 'Change cover image' : 'Upload cover image'}

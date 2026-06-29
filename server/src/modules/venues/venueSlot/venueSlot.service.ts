@@ -35,6 +35,7 @@ const toPub = (s: IVenueSlot, venueName: string, podTitle: string | null) => ({
   venue_name: venueName,
   start_at: s.start_at.toISOString(),
   end_at: s.end_at.toISOString(),
+  price: s.price ?? 0,
   status: s.status,
   booked_by_pod_id: s.booked_by_pod_id ? String(s.booked_by_pod_id) : null,
   booked_pod_title: podTitle,
@@ -62,9 +63,25 @@ function parseDate(value: string, label: string): Date {
   return d;
 }
 
+// Venue owners may publish availability up to this many days ahead — keeps the
+// calendar finite and bookable windows realistic.
+const MAX_FUTURE_DAYS = 60;
+
 function validateSlotWindow(start: Date, end: Date) {
   if (end.getTime() <= start.getTime()) fail('BAD_USER_INPUT', 'end_at must be after start_at');
   if (start.getTime() < Date.now() - 60_000) fail('BAD_USER_INPUT', 'Cannot create slots in the past');
+  if (start.getTime() > Date.now() + MAX_FUTURE_DAYS * 24 * 60 * 60 * 1000) {
+    fail('BAD_USER_INPUT', `Slots can only be scheduled up to ${MAX_FUTURE_DAYS} days in advance`);
+  }
+}
+
+// Slot price in whole rupees — non-negative integer. Defaults to 0 (free).
+const MAX_SLOT_PRICE = 1_000_000;
+function normalizePrice(value: unknown): number {
+  const n = Math.round(Number(value) || 0);
+  if (n < 0) fail('BAD_USER_INPUT', 'price must be 0 or more');
+  if (n > MAX_SLOT_PRICE) fail('BAD_USER_INPUT', `price must be ${MAX_SLOT_PRICE} or less`);
+  return n;
 }
 
 async function findOverlap(venueId: string, start: Date, end: Date, ignoreId?: string) {
@@ -90,7 +107,7 @@ async function loadSlot(slotId: string) {
 async function createSlotsCore(
   venueId: string,
   ownerUserId: string,
-  slots: Array<{ start_at: string; end_at: string; notes?: string }>
+  slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }>
 ) {
   if (!slots?.length) fail('BAD_USER_INPUT', 'At least one slot is required');
 
@@ -98,7 +115,7 @@ async function createSlotsCore(
     const start = parseDate(s.start_at, 'start_at');
     const end = parseDate(s.end_at, 'end_at');
     validateSlotWindow(start, end);
-    return { start, end, notes: (s.notes ?? '').trim() };
+    return { start, end, notes: (s.notes ?? '').trim(), price: normalizePrice(s.price) };
   });
 
   // Reject when any new slot collides with an existing one (any status).
@@ -125,6 +142,7 @@ async function createSlotsCore(
       owner_user_id: new Types.ObjectId(ownerUserId),
       start_at: p.start,
       end_at: p.end,
+      price: p.price,
       notes: p.notes,
       status: 'AVAILABLE' as VenueSlotStatus,
     }))
@@ -134,7 +152,7 @@ async function createSlotsCore(
 
 async function updateSlotCore(
   slot: IVenueSlot,
-  input: { start_at?: string; end_at?: string; notes?: string; block?: boolean }
+  input: { start_at?: string; end_at?: string; notes?: string; block?: boolean; price?: number }
 ) {
   if (slot.status === 'BOOKED') {
     fail('BAD_REQUEST', 'Booked slots cannot be edited. Cancel the pod first.');
@@ -154,6 +172,7 @@ async function updateSlotCore(
     slot.end_at = end;
   }
   if (input.notes !== undefined) slot.notes = (input.notes ?? '').trim();
+  if (input.price !== undefined) slot.price = normalizePrice(input.price);
   if (input.block !== undefined) slot.status = input.block ? 'BLOCKED' : 'AVAILABLE';
   await (slot as any).save();
   return (await withVenueAndPod([slot]))[0];
@@ -216,26 +235,26 @@ export const venueSlotService = {
     return withVenueAndPod(docs);
   },
 
-  async create(userId: string, input: { venue_id: string; slots: Array<{ start_at: string; end_at: string; notes?: string }> }) {
+  async create(userId: string, input: { venue_id: string; slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }> }) {
     await ensureOwnedVenue(userId, input.venue_id);
     return createSlotsCore(input.venue_id, userId, input.slots);
   },
 
   // Admin create — slots are owned by the venue's actual owner, not the editor.
-  async adminCreate(input: { venue_id: string; slots: Array<{ start_at: string; end_at: string; notes?: string }> }) {
+  async adminCreate(input: { venue_id: string; slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }> }) {
     if (!Types.ObjectId.isValid(input.venue_id)) fail('BAD_USER_INPUT', 'Invalid venue_id');
     const venue = await VenueModel.findById(input.venue_id);
     if (!venue) fail('NOT_FOUND', 'Venue not found');
     return createSlotsCore(input.venue_id, String(venue!.owner_user_id), input.slots);
   },
 
-  async update(userId: string, slotId: string, input: { start_at?: string; end_at?: string; notes?: string; block?: boolean }) {
+  async update(userId: string, slotId: string, input: { start_at?: string; end_at?: string; notes?: string; block?: boolean; price?: number }) {
     const slot = await loadSlot(slotId);
     if (String(slot.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
     return updateSlotCore(slot, input);
   },
 
-  async adminUpdate(slotId: string, input: { start_at?: string; end_at?: string; notes?: string; block?: boolean }) {
+  async adminUpdate(slotId: string, input: { start_at?: string; end_at?: string; notes?: string; block?: boolean; price?: number }) {
     const slot = await loadSlot(slotId);
     return updateSlotCore(slot, input);
   },

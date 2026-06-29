@@ -6,6 +6,8 @@ export const partnerDashboardTypeDefs = /* GraphQL */ `
     venue_earning: Float!
     host_earning: Float!
     product_earning: Float!
+    "Count of upcoming availability slots the venue owner has published (venue section)."
+    added_slots: Int!
   }
 
   type PartnerDashboard {

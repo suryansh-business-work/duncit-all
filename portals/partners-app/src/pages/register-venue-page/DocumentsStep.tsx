@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { Button, Chip, FormHelperText, IconButton, MenuItem, Stack, TextField, Typography } from '@mui/material';
+import { Box, Button, Chip, FormHelperText, IconButton, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
 import UploadFileIcon from '@mui/icons-material/UploadFile';
@@ -26,7 +26,17 @@ export default function DocumentsStep({ value, onChange, onDocPick, showAllError
     <Stack spacing={2.5}>
       <TextField label="GSTIN (optional)" value={value.gstin} onChange={(e) => onChange({ ...value, gstin: e.target.value })} error={showAllErrors && !!errors.gstin} helperText={showAllErrors ? errors.gstin || ' ' : ' '} />
       <TextField label="PAN (optional)" value={value.pan} onChange={(e) => onChange({ ...value, pan: e.target.value })} error={showAllErrors && !!errors.pan} helperText={showAllErrors ? errors.pan || ' ' : ' '} />
-      <Typography variant="subtitle2">Documents</Typography>
+      <Box>
+        <Typography variant="subtitle2">
+          Documents{' '}
+          <Typography component="span" variant="caption" color="error.main" fontWeight={800}>
+            (required)
+          </Typography>
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Upload at least one document (GSTIN Certificate or PAN Card). PDF only, max 50 MB.
+        </Typography>
+      </Box>
       {docError && <FormHelperText error>{docError}</FormHelperText>}
       {value.documents.map((doc, index) => (
         <Stack key={index} spacing={0.5}>

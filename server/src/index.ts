@@ -113,9 +113,11 @@ async function bootstrap() {
     app.options('*', cors({ origin: true, credentials: true }));
   }
 
+  // 70mb covers a base64-inflated 50 MB document upload (50 MB raw ≈ 67 MB base64)
+  // so the upload service's size checks are the real gate, not the body parser.
   app.use(
     '/graphql',
-    express.json({ limit: '25mb' }),
+    express.json({ limit: '70mb' }),
     expressMiddleware(apollo, { context: buildContext })
   );
 

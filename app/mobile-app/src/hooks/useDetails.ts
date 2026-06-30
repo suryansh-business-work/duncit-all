@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
   AddPodCommentDocument,
+  CategoryNameDocument,
   ClubDetailsDocument,
   DeletePodCommentDocument,
   PodCommentsDocument,
@@ -91,10 +92,14 @@ export function usePodDetails(podId: string) {
   };
 }
 
-/** Fetches a club + its active pods (auth), plus the members who joined them. */
+/** Fetches a club + its active pods (auth), plus the members who joined them.
+ * Also resolves category/super-category display names and the viewer's
+ * following_user_ids (for the Friends-in-club section). */
 export function useClubDetails(clubId: string) {
   const [data, setData] = useState<ClubDetailsResult | null>(null);
   const [members, setMembers] = useState<PodPerson[]>([]);
+  const [categoryName, setCategoryName] = useState('');
+  const [superCategoryName, setSuperCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
@@ -105,16 +110,31 @@ export function useClubDetails(clubId: string) {
       .then(async (result) => {
         if (!active) return;
         setData(result);
-        // Everyone attending the club's pods — the Members avatar rail (B4-12).
+
+        // Resolve member profiles.
         const ids = Array.from(new Set(result.pods.flatMap((pod) => pod.pod_attendees)));
-        if (ids.length === 0) {
-          setMembers([]);
-          return;
-        }
-        const people = await graphqlRequest(PodPeopleDocument, { ids }, { auth: true }).catch(
-          () => null,
-        );
+        const people =
+          ids.length > 0
+            ? await graphqlRequest(PodPeopleDocument, { ids }, { auth: true }).catch(() => null)
+            : null;
         if (active) setMembers(people ? people.publicUsersByIds : []);
+
+        // Resolve category / super-category names (best-effort).
+        const catId = result.club?.category_id ?? '';
+        const superCatId = result.club?.super_category_id ?? '';
+        /* istanbul ignore next */
+        const fetchCat = catId
+          ? graphqlRequest(CategoryNameDocument, { id: catId }).catch(() => null)
+          : Promise.resolve(null);
+        /* istanbul ignore next */
+        const fetchSuperCat = superCatId
+          ? graphqlRequest(CategoryNameDocument, { id: superCatId }).catch(() => null)
+          : Promise.resolve(null);
+        const [catResult, superCatResult] = await Promise.all([fetchCat, fetchSuperCat]);
+        if (active) {
+          setCategoryName(catResult?.category?.name ?? '');
+          setSuperCategoryName(superCatResult?.category?.name ?? '');
+        }
       })
       .catch((err) => active && setError(err))
       .finally(() => active && setIsLoading(false));
@@ -124,10 +144,14 @@ export function useClubDetails(clubId: string) {
   }, [clubId]);
 
   const followingInitially = (data?.me?.following_club_ids ?? []).includes(clubId);
+  const followingUserIds: string[] = data?.me?.following_user_ids ?? [];
   return {
     club: data?.club ?? null,
     pods: data?.pods ?? [],
     members,
+    followingUserIds,
+    categoryName,
+    superCategoryName,
     followingInitially,
     isLoading,
     error,

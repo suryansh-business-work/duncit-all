@@ -87,6 +87,91 @@ const EMPTY_CONTENT = {
 };
 
 describe('ClubBody', () => {
+  it('renders only superCategoryName chip when categoryName is empty', () => {
+    const club = {
+      club_name: 'Art Club',
+      club_description: '',
+      club_moments: [],
+      club_whats_app_group_link: null,
+      club_whats_app_community_link: null,
+      meetup_venues_id: [],
+      ...EMPTY_CONTENT,
+    } as never;
+    renderWithProviders(
+      <ClubBody
+        club={club}
+        pods={[] as never}
+        members={[]}
+        followingUserIds={[]}
+        categoryName=""
+        superCategoryName="Creative"
+        following={false}
+        followBusy={false}
+        onToggleFollow={jest.fn()}
+        onOpenPod={jest.fn()}
+        onOpenMember={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Creative')).toBeOnTheScreen();
+  });
+
+  it('renders category chip with only categoryName (no superCategory)', () => {
+    const club = {
+      club_name: 'Art Club',
+      club_description: '',
+      club_moments: [],
+      club_whats_app_group_link: null,
+      club_whats_app_community_link: null,
+      meetup_venues_id: [],
+      ...EMPTY_CONTENT,
+    } as never;
+    renderWithProviders(
+      <ClubBody
+        club={club}
+        pods={[] as never}
+        members={[]}
+        followingUserIds={[]}
+        categoryName="Art"
+        superCategoryName=""
+        following={false}
+        followBusy={false}
+        onToggleFollow={jest.fn()}
+        onOpenPod={jest.fn()}
+        onOpenMember={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Art')).toBeOnTheScreen();
+  });
+
+  it('renders category chips when names are provided', () => {
+    const club = {
+      club_name: 'Art Club',
+      club_description: '',
+      club_moments: [],
+      club_whats_app_group_link: null,
+      club_whats_app_community_link: null,
+      meetup_venues_id: [],
+      ...EMPTY_CONTENT,
+    } as never;
+    renderWithProviders(
+      <ClubBody
+        club={club}
+        pods={[] as never}
+        members={[]}
+        followingUserIds={[]}
+        categoryName="Art"
+        superCategoryName="Creative"
+        following={false}
+        followBusy={false}
+        onToggleFollow={jest.fn()}
+        onOpenPod={jest.fn()}
+        onOpenMember={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Art')).toBeOnTheScreen();
+    expect(screen.getByText('Creative')).toBeOnTheScreen();
+  });
+
   it('renders chat + pods (default Pods Schedule tab) and opens chat + a pod', () => {
     const openSpy = jest.spyOn(Linking, 'openURL').mockResolvedValue(true as never);
     const club = {
@@ -122,6 +207,9 @@ describe('ClubBody', () => {
         club={club}
         pods={pods}
         members={[{ user_id: 'u1', full_name: 'Asha', profile_photo: null }]}
+        followingUserIds={[]}
+        categoryName=""
+        superCategoryName=""
         following={false}
         followBusy={false}
         onToggleFollow={jest.fn()}
@@ -170,6 +258,9 @@ describe('ClubBody', () => {
         club={club}
         pods={pods}
         members={[]}
+        followingUserIds={[]}
+        categoryName=""
+        superCategoryName=""
         following={false}
         followBusy={false}
         onToggleFollow={jest.fn()}
@@ -270,6 +361,9 @@ describe('empty / minimal branches', () => {
         club={club}
         pods={[] as never}
         members={[]}
+        followingUserIds={[]}
+        categoryName=""
+        superCategoryName=""
         onOpenMember={jest.fn()}
         following={false}
         followBusy={false}

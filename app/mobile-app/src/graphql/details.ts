@@ -174,12 +174,49 @@ export const DeletePodCommentDocument = gql(`
   }
 `);
 
+/** Ratings list for a club. */
+export const ClubRatingsDocument = gql(`
+  query MobileClubRatings($clubId: ID!) {
+    clubRatings(club_doc_id: $clubId) {
+      id
+      user_id
+      user_name
+      user_photo
+      stars
+      comment
+      created_at
+    }
+  }
+`);
+
+/** Submit or update a club rating (auth). */
+export const AddClubRatingDocument = gql(`
+  mutation MobileAddClubRating($clubId: ID!, $stars: Int!, $comment: String) {
+    addClubRating(club_doc_id: $clubId, stars: $stars, comment: $comment) {
+      id
+      rating
+      ratings_count
+    }
+  }
+`);
+
+/** Category name lookup — used to resolve category/super-cat display names. */
+export const CategoryNameDocument = gql(`
+  query MobileCategoryName($id: ID!) {
+    category(category_id: $id) {
+      id
+      name
+    }
+  }
+`);
+
 /** Club + its active pods for the club-details screen. */
 export const ClubDetailsDocument = gql(`
   query MobileClubDetails($clubId: ID!) {
     me {
       user_id
       following_club_ids
+      following_user_ids
     }
     club(club_doc_id: $clubId) {
       id
@@ -211,6 +248,9 @@ export const ClubDetailsDocument = gql(`
       club_whats_app_group_link
       meetup_venues_id
       category_id
+      super_category_id
+      rating
+      ratings_count
     }
     pods(filter: { club_id: $clubId, is_active: true }) {
       id

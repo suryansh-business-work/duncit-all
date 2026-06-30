@@ -1,4 +1,5 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen } from '@testing-library/react-native';
+import { Share } from 'react-native';
 
 import { ClubDetailsScreen } from '@/screens/ClubDetailsScreen';
 import { useClubDetails } from '@/hooks/useDetails';
@@ -89,6 +90,24 @@ describe('ClubDetailsScreen', () => {
     expect(mockNavigate).toHaveBeenCalledWith('PublicProfile', { userId: 'm1' });
     fireEvent.press(screen.getByTestId('detail-back')); // DetailHero onBack
     expect(mockGoBack).toHaveBeenCalled();
+  });
+
+  it('share button triggers Share.share', async () => {
+    const shareSpy = jest
+      .spyOn(Share, 'share')
+      .mockResolvedValue({ action: 'sharedAction' } as never);
+    mockedClub.mockReturnValue({
+      club,
+      pods: [],
+      members: [],
+      followingInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<ClubDetailsScreen />);
+    fireEvent.press(screen.getByTestId('hb-share'));
+    await act(async () => {});
+    expect(shareSpy).toHaveBeenCalled();
+    shareSpy.mockRestore();
   });
 
   it('shows the unavailable state and goes back', () => {

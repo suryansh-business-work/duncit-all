@@ -28,6 +28,8 @@ export const CLUB_BY_SLUG = gql`
       club_whats_app_group_link
       meetup_venues_id
       followers_count
+      rating
+      ratings_count
       hosts {
         id
         name
@@ -41,6 +43,10 @@ export const CLUB_BY_SLUG = gql`
 
 export const CLUB_DETAILS_RELATED = gql`
   query ClubDetailsRelated($id: ID!) {
+    me {
+      user_id
+      following_user_ids
+    }
     clubPods: pods(filter: { club_id: $id, is_active: true }) {
       id
       pod_id
@@ -88,6 +94,46 @@ export const CLUB_STORIES = gql`
         full_name
         profile_photo
       }
+    }
+  }
+`;
+
+/** Resolves category and super-category names for a club (B11). */
+export const CLUB_CATEGORY_NAMES = gql`
+  query ClubCategoryNames($catId: ID!, $superCatId: ID!) {
+    clubCategory: category(category_id: $catId) {
+      id
+      name
+      slug
+    }
+    clubSuperCategory: category(category_id: $superCatId) {
+      id
+      name
+      slug
+    }
+  }
+`;
+
+export const CLUB_RATINGS = gql`
+  query ClubRatings($id: ID!) {
+    clubRatings(club_doc_id: $id) {
+      id
+      user_id
+      user_name
+      user_photo
+      stars
+      comment
+      created_at
+    }
+  }
+`;
+
+export const ADD_CLUB_RATING = gql`
+  mutation AddClubRating($clubId: ID!, $stars: Int!, $comment: String) {
+    addClubRating(club_doc_id: $clubId, stars: $stars, comment: $comment) {
+      id
+      rating
+      ratings_count
     }
   }
 `;

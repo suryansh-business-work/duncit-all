@@ -2,7 +2,8 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import CheckIcon from '@mui/icons-material/Check';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
-import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Button, Chip, Stack, Typography } from '@mui/material';
+import ClubNotifyButton from './ClubNotifyButton';
 
 interface Props {
   club: any;
@@ -10,9 +11,13 @@ interface Props {
   podCount: number;
   venueCount: number;
   followersCount: number;
+  membersCount: number;
+  categoryName?: string;
+  superCategoryName?: string;
   following: boolean;
   chatUrl?: string | null;
   onToggleFollow: () => void;
+  clubId: string;
 }
 
 function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
@@ -28,7 +33,20 @@ function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
   );
 }
 
-export default function ClubSummaryHeader({ club, featureUrl, podCount, venueCount, followersCount, following, chatUrl, onToggleFollow }: Readonly<Props>) {
+export default function ClubSummaryHeader({
+  club,
+  featureUrl,
+  podCount,
+  venueCount,
+  followersCount,
+  membersCount,
+  categoryName,
+  superCategoryName,
+  following,
+  chatUrl,
+  onToggleFollow,
+  clubId,
+}: Readonly<Props>) {
   const momentsCount = club.club_moments?.length ?? 0;
 
   return (
@@ -47,31 +65,67 @@ export default function ClubSummaryHeader({ club, featureUrl, podCount, venueCou
       }}
     >
       <Stack direction="row" spacing={1.5} alignItems="center">
-        <Avatar src={featureUrl} variant="rounded" sx={{ width: 72, height: 72, borderRadius: 4, bgcolor: 'primary.main' }}>
+        <Avatar
+          src={featureUrl}
+          variant="rounded"
+          sx={{ width: 72, height: 72, borderRadius: 4, bgcolor: 'primary.main' }}
+        >
           <GroupsIcon />
         </Avatar>
         <Box sx={{ minWidth: 0, flex: 1 }}>
           <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1.1 }} noWrap>
             {club.club_name}
           </Typography>
+          {(superCategoryName || categoryName) && (
+            <Stack direction="row" spacing={0.5} sx={{ mt: 0.5, flexWrap: 'wrap', gap: 0.5 }}>
+              {superCategoryName && (
+                <Chip label={superCategoryName} size="small" variant="outlined" sx={{ height: 20, fontSize: 10, fontWeight: 700 }} />
+              )}
+              {categoryName && (
+                <Chip label={categoryName} size="small" color="primary" sx={{ height: 20, fontSize: 10, fontWeight: 700 }} />
+              )}
+            </Stack>
+          )}
           {club.club_description && (
-            <Typography variant="body2" color="text.secondary" sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>
+            <Typography
+              variant="body2"
+              color="text.secondary"
+              sx={{ display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden', mt: 0.5 }}
+            >
               {club.club_description}
             </Typography>
           )}
         </Box>
+        <ClubNotifyButton clubId={clubId} />
       </Stack>
       <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
         <Stat label="followers" value={followersCount} />
+        <Stat label="members" value={membersCount} />
         <Stat label="pods" value={podCount} />
         <Stat label="moments" value={momentsCount} />
         <Stat label="venues" value={venueCount} />
       </Stack>
       <Stack direction="row" spacing={1} sx={{ mt: 2 }}>
-        <Button fullWidth variant={following ? 'outlined' : 'contained'} startIcon={following ? <CheckIcon /> : <PersonAddAltIcon />} onClick={onToggleFollow} sx={{ borderRadius: 3, fontWeight: 900 }}>
+        <Button
+          fullWidth
+          variant={following ? 'outlined' : 'contained'}
+          startIcon={following ? <CheckIcon /> : <PersonAddAltIcon />}
+          onClick={onToggleFollow}
+          sx={{ borderRadius: 3, fontWeight: 900 }}
+        >
           {following ? 'Following' : 'Follow Club'}
         </Button>
-        <Button fullWidth variant="outlined" startIcon={<ChatBubbleOutlineIcon />} component={chatUrl ? 'a' : 'button'} href={chatUrl || undefined} target={chatUrl ? '_blank' : undefined} rel={chatUrl ? 'noreferrer' : undefined} disabled={!chatUrl} sx={{ borderRadius: 3, fontWeight: 900 }}>
+        <Button
+          fullWidth
+          variant="outlined"
+          startIcon={<ChatBubbleOutlineIcon />}
+          component={chatUrl ? 'a' : 'button'}
+          href={chatUrl || undefined}
+          target={chatUrl ? '_blank' : undefined}
+          rel={chatUrl ? 'noreferrer' : undefined}
+          disabled={!chatUrl}
+          sx={{ borderRadius: 3, fontWeight: 900 }}
+        >
           Chat
         </Button>
       </Stack>

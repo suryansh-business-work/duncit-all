@@ -1,3 +1,4 @@
+import { Share } from 'react-native';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
@@ -6,11 +7,14 @@ import { Reveal } from '@/animations/Reveal';
 import { useGoBack } from '@/hooks/useGoBack';
 import { AppBackground } from '@/components/AppBackground';
 import { ClubBody } from '@/components/details/ClubBody';
-import { DetailHero } from '@/components/details/DetailHero';
+import { DetailHero, HeroButton } from '@/components/details/DetailHero';
 import { DetailSkeleton } from '@/components/Skeleton';
 import { useClubDetails } from '@/hooks/useDetails';
 import { useClubFollow } from '@/hooks/useFollow';
 import type { RootStackParamList } from '@/navigation/types';
+import { ClubNotifyButton } from '@/components/details/club/ClubNotifyButton';
+
+const DEEP_LINK_BASE = 'https://duncit.com/club';
 
 /** Club details — opened from club cards/headers. Hero + summary + moments +
  * the club's upcoming pods. */
@@ -19,12 +23,28 @@ export function ClubDetailsScreen() {
   const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'ClubDetails'>>();
   const { clubId } = route.params;
-  const { club, pods, members, isLoading, followingInitially } = useClubDetails(clubId);
+  const {
+    club,
+    pods,
+    members,
+    followingUserIds,
+    categoryName,
+    superCategoryName,
+    isLoading,
+    followingInitially,
+  } = useClubDetails(clubId);
   const {
     following,
     busy: followBusy,
     toggle: toggleFollow,
   } = useClubFollow(clubId, followingInitially);
+
+  const handleShare = async () => {
+    /* istanbul ignore next */
+    if (!club) return;
+    const url = `${DEEP_LINK_BASE}/${club.club_id}`;
+    await Share.share({ title: club.club_name, message: `${club.club_name} — ${url}`, url });
+  };
 
   return (
     <YStack flex={1} testID="club-details-screen">
@@ -44,12 +64,18 @@ export function ClubDetailsScreen() {
         </YStack>
       ) : (
         <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 110 }}>
-          <DetailHero media={club.club_feature_images_and_videos} onBack={goBack} />
+          <DetailHero media={club.club_feature_images_and_videos} onBack={goBack}>
+            <HeroButton testID="hb-share" icon="share" onPress={handleShare} />
+            <ClubNotifyButton clubId={clubId} />
+          </DetailHero>
           <Reveal>
             <ClubBody
               club={club}
               pods={pods}
               members={members}
+              followingUserIds={followingUserIds}
+              categoryName={categoryName}
+              superCategoryName={superCategoryName}
               following={following}
               followBusy={followBusy}
               onToggleFollow={() => void toggleFollow()}

@@ -12,7 +12,13 @@ import ClubSummaryHeader from '../club-details-page/ClubSummaryHeader';
 import ClubMembersSection from '../club-details-page/ClubMembersSection';
 import ClubStoriesSection from '../club-details-page/ClubStoriesSection';
 import ClubSegments from '../club-details-page/ClubSegments';
-import { CLUB_BY_SLUG, CLUB_DETAILS_RELATED } from './clubDetailsQueries';
+import ClubFriendsSection from '../club-details-page/ClubFriendsSection';
+import ClubRatingSection from '../club-details-page/ClubRatingSection';
+import {
+  CLUB_BY_SLUG,
+  CLUB_DETAILS_RELATED,
+  CLUB_CATEGORY_NAMES,
+} from './clubDetailsQueries';
 import useSavedClub from './useSavedClub';
 
 export default function ClubDetailsPage() {
@@ -29,10 +35,19 @@ export default function ClubDetailsPage() {
   const club = slugQuery.data?.clubBySlug;
   const clubId: string = club?.id ?? '';
   const { saved, saving: savingClub, toggleSaved } = useSavedClub(clubId);
+
   const { data, loading, error } = useQuery(CLUB_DETAILS_RELATED, {
     variables: { id: clubId },
     skip: !clubId,
     fetchPolicy: 'cache-and-network',
+  });
+
+  const catId = club?.category_id ?? '';
+  const superCatId = club?.super_category_id ?? '';
+  const { data: catData } = useQuery(CLUB_CATEGORY_NAMES, {
+    variables: { catId, superCatId },
+    skip: !catId && !superCatId,
+    fetchPolicy: 'cache-first',
   });
 
   if (slugQuery.loading || (loading && !data)) return <ClubDetailsSkeleton />;
@@ -43,6 +58,16 @@ export default function ClubDetailsPage() {
   const pods = data?.clubPods ?? [];
   const venueIds: string[] = club.meetup_venues_id ?? [];
   const venues = (data?.publicVenues ?? []).filter((venue: any) => venueIds.includes(venue.id));
+
+  const memberIds = Array.from(
+    new Set<string>(pods.flatMap((podItem: any) => podItem.pod_attendees ?? []))
+  );
+
+  const followingUserIds: string[] = data?.me?.following_user_ids ?? [];
+  const friendIds = memberIds.filter((id) => followingUserIds.includes(id));
+
+  const categoryName = catData?.clubCategory?.name ?? '';
+  const superCategoryName = catData?.clubSuperCategory?.name ?? '';
 
   const openPod = (podDocId: string) => {
     const pod = pods.find((podItem: any) => podItem.id === podDocId);
@@ -72,10 +97,6 @@ export default function ClubDetailsPage() {
     }
   };
 
-  const memberIds = Array.from(
-    new Set<string>(pods.flatMap((podItem: any) => podItem.pod_attendees ?? []))
-  );
-
   return (
     <Stack
       spacing={2.25}
@@ -104,9 +125,13 @@ export default function ClubDetailsPage() {
         podCount={pods.length}
         venueCount={venues.length}
         followersCount={club.followers_count ?? 0}
+        membersCount={memberIds.length}
+        categoryName={categoryName}
+        superCategoryName={superCategoryName}
         following={isFollowing(club.id)}
         chatUrl={club.club_whats_app_group_link || club.club_whats_app_community_link}
         onToggleFollow={toggleClubFollow}
+        clubId={club.id}
       />
       <ClubStoriesSection clubId={club.id} />
       <ClubSocialLinks club={club} />
@@ -121,6 +146,12 @@ export default function ClubDetailsPage() {
         </Box>
       )}
       <ClubMembersSection memberIds={memberIds} />
+      <ClubFriendsSection friendIds={friendIds} />
+      <ClubRatingSection
+        clubId={club.id}
+        rating={club.rating ?? 0}
+        ratingsCount={club.ratings_count ?? 0}
+      />
       <ClubMeetupVenuesSection venues={venues} />
       <ClubSegments club={club} pods={pods} priceFormat={pricingFormat} onOpenPod={openPod} />
     </Stack>

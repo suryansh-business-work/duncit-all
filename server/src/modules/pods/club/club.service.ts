@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { ClubModel } from './club.model';
+import { ClubRatingModel } from './clubRating.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { ClubFollowerModel } from '@modules/access/user/relations';
@@ -189,6 +190,59 @@ export const clubService = {
   async followersCount(clubId: string) {
     if (!Types.ObjectId.isValid(clubId)) return 0;
     return ClubFollowerModel.countDocuments({ club_id: new Types.ObjectId(clubId) });
+  },
+
+  async getRating(clubId: string): Promise<number> {
+    if (!Types.ObjectId.isValid(clubId)) return 0;
+    const [row] = await ClubRatingModel.aggregate([
+      { $match: { club_id: new Types.ObjectId(clubId) } },
+      { $group: { _id: null, avg: { $avg: '$stars' } } },
+    ]);
+    return row?.avg ?? 0;
+  },
+
+  async getRatingsCount(clubId: string): Promise<number> {
+    if (!Types.ObjectId.isValid(clubId)) return 0;
+    return ClubRatingModel.countDocuments({ club_id: new Types.ObjectId(clubId) });
+  },
+
+  async listRatings(clubId: string) {
+    if (!Types.ObjectId.isValid(clubId)) return [];
+    const ratings = await ClubRatingModel.find({ club_id: new Types.ObjectId(clubId) }).sort({
+      created_at: -1,
+    });
+    const userIds = ratings.map((r) => r.user_id);
+    const users = await UserModel.find({ _id: { $in: userIds } }).select(
+      'profile.first_name profile.last_name profile.profile_photo'
+    );
+    const userMap = new Map(users.map((u: any) => [String(u._id), u]));
+    return ratings.map((r) => {
+      const u: any = userMap.get(String(r.user_id));
+      return {
+        id: String(r._id),
+        user_id: String(r.user_id),
+        user_name: u ? `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'Member' : 'Member',
+        user_photo: u?.profile?.profile_photo ?? null,
+        stars: r.stars,
+        comment: r.comment ?? null,
+        created_at: r.created_at.toISOString(),
+      };
+    });
+  },
+
+  async addRating(clubId: string, userId: string, stars: number, comment?: string) {
+    if (!Types.ObjectId.isValid(clubId) || !Types.ObjectId.isValid(userId)) {
+      throw new GraphQLError('Invalid club or user', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    if (stars < 1 || stars > 5) {
+      throw new GraphQLError('Stars must be between 1 and 5', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    await ClubRatingModel.findOneAndUpdate(
+      { club_id: new Types.ObjectId(clubId), user_id: new Types.ObjectId(userId) },
+      { stars, comment: comment ?? undefined },
+      { upsert: true }
+    );
+    return this.getById(clubId);
   },
 
   /** Number of distinct ACTIVE clubs operating in each location, keyed by the

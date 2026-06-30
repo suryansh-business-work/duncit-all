@@ -25,6 +25,16 @@ export const clubTypeDefs = /* GraphQL */ `
     answer: String!
   }
 
+  type ClubRating {
+    id: ID!
+    user_id: ID!
+    user_name: String
+    user_photo: String
+    stars: Int!
+    comment: String
+    created_at: String!
+  }
+
   type Club {
     id: ID!
     club_id: String!
@@ -53,6 +63,10 @@ export const clubTypeDefs = /* GraphQL */ `
     "Verified badge for official clubs (explore item 15)."
     is_verified: Boolean!
     is_active: Boolean!
+    "Average star rating (1-5) across all user ratings. 0 when no ratings yet."
+    rating: Float!
+    "Total number of user ratings submitted."
+    ratings_count: Int!
     created_at: String!
     updated_at: String!
   }
@@ -112,11 +126,14 @@ export const clubTypeDefs = /* GraphQL */ `
     clubs(filter: ClubFilterInput): [Club!]!
     club(club_doc_id: ID!): Club
     clubBySlug(club_slug: String!): Club
+    clubRatings(club_doc_id: ID!): [ClubRating!]!
   }
 
   extend type Mutation {
     createClub(input: CreateClubInput!): Club!
     updateClub(club_doc_id: ID!, input: UpdateClubInput!): Club!
     deleteClub(club_doc_id: ID!): Boolean!
+    "Submit or update a star rating (1-5) on a club. Requires authentication."
+    addClubRating(club_doc_id: ID!, stars: Int!, comment: String): Club!
   }
 `;

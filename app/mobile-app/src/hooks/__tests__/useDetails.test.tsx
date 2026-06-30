@@ -111,6 +111,19 @@ describe('usePodDetails / useClubDetails', () => {
     expect(bad.result.current.error).toBeUndefined();
   });
 
+  it('resolves categoryName and superCategoryName when club has category_id', async () => {
+    mockRequest
+      .mockResolvedValueOnce({
+        club: { id: 'c1', category_id: 'cat1', super_category_id: 'sup1' },
+        pods: [],
+      })
+      .mockResolvedValue({ category: { id: 'cat1', name: 'Art' } });
+    const { result } = renderHook(() => useClubDetails('c1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await waitFor(() => expect(result.current.categoryName).toBe('Art'));
+    expect(result.current.superCategoryName).toBe('Art');
+  });
+
   it('usePodDetails surfaces a load error', async () => {
     mockRequest.mockRejectedValueOnce(new Error('boom'));
     const { result } = renderHook(() => usePodDetails('p1'));

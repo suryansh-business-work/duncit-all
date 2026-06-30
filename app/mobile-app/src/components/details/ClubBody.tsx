@@ -5,6 +5,8 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { AttendeesSection, buildAttendeePeople } from '@/components/details/PodSections';
 import { ClubSegments } from '@/components/details/club/ClubSegments';
+import { ClubFriendsSection } from '@/components/details/club/ClubFriendsSection';
+import { ClubRatingSection } from '@/components/details/club/ClubRatingSection';
 import type { ClubDetail, ClubPod, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { FollowPillButton } from '@/components/FollowPillButton';
@@ -23,12 +25,51 @@ function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
   );
 }
 
+function CategoryChips({
+  categoryName,
+  superCategoryName,
+}: Readonly<{ categoryName: string; superCategoryName: string }>) {
+  if (!superCategoryName && !categoryName) return null;
+  return (
+    <XStack gap={6} flexWrap="wrap">
+      {superCategoryName ? (
+        <XStack
+          paddingHorizontal={8}
+          paddingVertical={3}
+          borderRadius={8}
+          borderWidth={1}
+          borderColor="$borderColor"
+        >
+          <Text fontSize={11} fontWeight="700" color="$muted">
+            {superCategoryName}
+          </Text>
+        </XStack>
+      ) : null}
+      {categoryName ? (
+        <XStack
+          paddingHorizontal={8}
+          paddingVertical={3}
+          borderRadius={8}
+          backgroundColor="$primary"
+        >
+          <Text fontSize={11} fontWeight="700" color="$onPrimary">
+            {categoryName}
+          </Text>
+        </XStack>
+      ) : null}
+    </XStack>
+  );
+}
+
 /** The club-details body — summary, stats, WhatsApp chat, members and the
  * tabbed segments (pods schedule, moments, content sections, hosts). */
 export function ClubBody({
   club,
   pods,
   members,
+  followingUserIds,
+  categoryName,
+  superCategoryName,
   following,
   followBusy,
   onToggleFollow,
@@ -38,6 +79,9 @@ export function ClubBody({
   club: ClubDetail;
   pods: ClubPod[];
   members: PodPerson[];
+  followingUserIds: string[];
+  categoryName: string;
+  superCategoryName: string;
   following: boolean;
   followBusy: boolean;
   onToggleFollow: () => void;
@@ -48,11 +92,21 @@ export function ClubBody({
   const moments = useMemo(() => pickPodMoments(pods, 12), [pods]);
   const chat = club.club_whats_app_group_link || club.club_whats_app_community_link;
 
+  const memberIds = useMemo(
+    () => Array.from(new Set(pods.flatMap((pod) => pod.pod_attendees))),
+    [pods],
+  );
+  const friendIds = useMemo(
+    () => memberIds.filter((id) => followingUserIds.includes(id)),
+    [memberIds, followingUserIds],
+  );
+
   return (
     <YStack padding={16} gap={18}>
       <Text fontSize={24} fontWeight="900" color="$color">
         {club.club_name}
       </Text>
+      <CategoryChips categoryName={categoryName} superCategoryName={superCategoryName} />
       {club.club_description ? (
         <Text fontSize={14} color="$muted" lineHeight={20}>
           {club.club_description}
@@ -72,6 +126,7 @@ export function ClubBody({
         borderColor="$borderColor"
         backgroundColor="$surface"
       >
+        <Stat value={members.length} label="members" />
         <Stat value={pods.length} label="pods" />
         <Stat value={moments.length} label="moments" />
         <Stat value={club.meetup_venues_id.length} label="venues" />
@@ -92,6 +147,12 @@ export function ClubBody({
           />
         </YStack>
       ) : null}
+      <ClubFriendsSection friendIds={friendIds} onOpenProfile={onOpenMember} />
+      <ClubRatingSection
+        clubId={club.id}
+        rating={club.rating ?? 0}
+        ratingsCount={club.ratings_count ?? 0}
+      />
       {chat ? (
         <XStack
           testID="club-chat"

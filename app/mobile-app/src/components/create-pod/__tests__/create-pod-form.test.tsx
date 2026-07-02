@@ -23,6 +23,7 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   pod_title: 'Sunday community hike',
   club_id: 'club-1',
   venue_id: 'venue-1',
+  venue_slot_id: 'slot-1',
   pod_description: 'A relaxed group hike around the lake.',
   pod_date_time_text: futureText,
   media_text: 'https://cdn/img.jpg',
@@ -45,33 +46,33 @@ describe('parseDateTimeText', () => {
 });
 
 describe('createPodSchema', () => {
-  it('accepts a valid physical pod and exposes a field group per step', () => {
+  it('accepts a valid physical pod and exposes a field group per step (4 steps)', () => {
     expect(createPodSchema.safeParse(valid()).success).toBe(true);
     expect(STEP_FIELDS).toHaveLength(STEP_TITLES.length);
-    expect(STEP_TITLES).toHaveLength(8);
-    expect(STEP_TITLES[0]).toBe('Where to Host');
+    expect(STEP_TITLES).toEqual([
+      'Pod Basics',
+      'Location, Category & Club',
+      'Venue & Slot',
+      'Pricing & Publish',
+    ]);
   });
 
-  it('requires title, club, description and a venue for physical pods', () => {
+  it('requires title, club, description and a venue + slot for physical pods', () => {
     const paths = issuesOf(
-      valid({ pod_title: 'x', club_id: '', pod_description: 'short', venue_id: '' }),
+      valid({ pod_title: 'x', club_id: '', pod_description: 'short', venue_id: '', venue_slot_id: '' }),
     );
     expect(paths).toEqual(
-      expect.arrayContaining(['pod_title', 'club_id', 'pod_description', 'venue_id']),
+      expect.arrayContaining(['pod_title', 'club_id', 'pod_description', 'venue_id', 'venue_slot_id']),
     );
   });
 
   it('requires a valid meeting link for virtual pods', () => {
-    expect(issuesOf(valid({ pod_mode: 'VIRTUAL', venue_id: '', meeting_url: '' }))).toContain(
-      'meeting_url',
-    );
-    expect(issuesOf(valid({ pod_mode: 'VIRTUAL', venue_id: '', meeting_url: 'nope' }))).toContain(
-      'meeting_url',
-    );
+    const virtual = { pod_mode: 'VIRTUAL' as const, venue_id: '', venue_slot_id: '' };
+    expect(issuesOf(valid({ ...virtual, meeting_url: '' }))).toContain('meeting_url');
+    expect(issuesOf(valid({ ...virtual, meeting_url: 'nope' }))).toContain('meeting_url');
     expect(
-      createPodSchema.safeParse(
-        valid({ pod_mode: 'VIRTUAL', venue_id: '', meeting_url: 'https://meet.duncit.com/x' }),
-      ).success,
+      createPodSchema.safeParse(valid({ ...virtual, meeting_url: 'https://meet.duncit.com/x' }))
+        .success,
     ).toBe(true);
   });
 
@@ -130,6 +131,8 @@ describe('buildCreatePodInput', () => {
     expect(input.product_requests).toEqual([{ product_id: 'p1', quantity: 3 }]);
     expect(input.place_charges).toEqual([{ label: 'Entry', amount: 50, note: '' }]);
     expect(input.venue_id).toBe('venue-1');
+    expect(input.venue_slot_id).toBe('slot-1');
+    expect(input.location_id).toBe('l1');
     expect(input.meeting_url).toBeNull();
     expect(input.is_active).toBe(true);
   });
@@ -147,8 +150,17 @@ describe('buildCreatePodInput', () => {
     );
     expect(input.product_requests).toEqual([]);
     expect(input.venue_id).toBeNull();
+    expect(input.venue_slot_id).toBeNull();
     expect(input.meeting_platform).toBeNull();
     expect(input.meeting_notes).toBeNull();
+  });
+});
+
+describe('buildCreatePodInput fallbacks', () => {
+  it('nulls an unset slot and location (legacy drafts)', () => {
+    const input = buildCreatePodInput(valid({ venue_slot_id: '', location_id: '' }));
+    expect(input.venue_slot_id).toBeNull();
+    expect(input.location_id).toBeNull();
   });
 });
 

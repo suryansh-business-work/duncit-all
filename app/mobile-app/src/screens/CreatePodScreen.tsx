@@ -11,18 +11,20 @@ import { useHomeStore } from '@/stores/home.store';
 import type { RootStackParamList } from '@/navigation/types';
 
 /** Host-only Create Pod screen — reached from the Home "+" button or by resuming
- * a draft from Host Management. The draft autosaves; finishing step 7 publishes
- * the pod, refreshes the feed and lands the host on Hosts Management. */
+ * a draft from Host Management. The draft autosaves; finishing the last step
+ * publishes the pod, refreshes the feed and lands the host on Hosts Management. */
 export function CreatePodScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'CreatePod'>>();
   const {
     isHost,
+    viewerUserId,
     clubs,
     locations,
-    venueLocations,
     venues,
     products,
+    hostCategories,
+    finance,
     isLoading,
     initialValues,
     initialStep,
@@ -59,9 +61,11 @@ export function CreatePodScreen() {
               initialDraftId={initialDraftId}
               clubs={clubs}
               locations={locations}
-              venueLocations={venueLocations}
               venues={venues}
               products={products}
+              hostCategories={hostCategories}
+              viewerUserId={viewerUserId}
+              finance={finance}
               onSaveDraft={saveDraft}
               onPublish={async (id, input) => {
                 await publish(id, input);

@@ -31,12 +31,14 @@ export interface PodPlaceCharge {
 
 /** RN inputs are strings; numbers/dates are parsed by the schema + mapper. */
 export interface CreatePodFormValues {
-  /** City the host wants to run the pod in — filters the club list (step 1). */
+  /** Pod location — defaults to the host's selected location; filters clubs + venues. */
   location_id: string;
   pod_title: string;
   club_id: string;
   pod_mode: 'PHYSICAL' | 'VIRTUAL';
   venue_id: string;
+  /** The venue partner's availability slot the pod books (physical pods). */
+  venue_slot_id: string;
   meeting_platform: string;
   meeting_url: string;
   meeting_notes: string;
@@ -65,6 +67,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   club_id: '',
   pod_mode: 'PHYSICAL',
   venue_id: '',
+  venue_slot_id: '',
   meeting_platform: '',
   meeting_url: '',
   meeting_notes: '',
@@ -98,23 +101,48 @@ export interface CreatePodLocation {
   id: string;
   location_name: string;
   city?: string | null;
+  state?: string | null;
 }
 
-/** Venue id → location id pairs (from publicVenues) for the club-by-location filter. */
-export interface VenueLocationRef {
-  id: string;
-  location_id?: string | null;
-}
-
+/** A venue partner whose published slots the host can book. */
 export interface CreatePodVenue {
   id: string;
+  owner_user_id?: string | null;
   venue_name: string;
+  venue_type?: string | null;
+  location_id?: string | null;
   city?: string | null;
   locality?: string | null;
   address_line1?: string | null;
   state?: string | null;
   postal_code?: string | null;
   country?: string | null;
+  owner_name?: string | null;
+  owner_phone?: string | null;
+  owner_email?: string | null;
+}
+
+/** One bookable availability slot from the venue partner's calendar. */
+export interface CreatePodSlot {
+  id: string;
+  start_at: string;
+  end_at: string;
+  price: number;
+  status: string;
+}
+
+/** Host's onboarded category — auto-selected (read-only) on the pod. */
+export interface CreatePodHostCategory {
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+}
+
+/** Finance settings that feed the pricing panel (public query). */
+export interface CreatePodFinance {
+  platform_fee_pct: number;
+  gst_pct: number;
+  currency_symbol: string;
 }
 
 export interface CreatePodProduct {

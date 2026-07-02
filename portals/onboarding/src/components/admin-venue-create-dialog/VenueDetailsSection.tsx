@@ -2,6 +2,7 @@ import { Box, MenuItem, Stack, TextField } from '@mui/material';
 import MediaListField from '../MediaListField';
 import MediaPickerField from '../MediaPickerField';
 import { VENUE_TYPES, type Step1 } from './queries';
+import VenueChecklistFields from './VenueChecklistFields';
 import VenueLocationFields from './VenueLocationFields';
 import { getVenueError, type VenueValidationErrors } from './venue.form';
 
@@ -46,6 +47,7 @@ export default function VenueDetailsSection({ s1, setS1, locations, errors }: Re
           helperText="Comma separated tags shown on approved venue cards."
         />
       </Box>
+      <VenueChecklistFields s1={s1} set={set} />
       <VenueLocationFields s1={s1} locations={locations} set={set} errors={errors} />
       <MediaPickerField
         label="Cover image"

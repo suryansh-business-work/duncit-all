@@ -17,6 +17,7 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   pod_title: 'Sunday community hike',
   club_id: 'club-1',
   venue_id: 'venue-1',
+  venue_slot_id: 'slot-1',
   pod_description: 'A relaxed group hike around the lake.',
   pod_date_time: future(),
   media_text: 'https://cdn/img.jpg',
@@ -40,16 +41,17 @@ describe('createPodSchema', () => {
     expect(paths).toContain('pod_description');
   });
 
-  it('requires a venue for physical pods', () => {
+  it('requires a venue and a booked slot for physical pods', () => {
     expect(issuesOf(valid({ venue_id: '' }))).toContain('venue_id');
+    expect(issuesOf(valid({ venue_slot_id: '' }))).toContain('venue_slot_id');
   });
 
-  it('requires a valid meeting link for virtual pods (and no venue)', () => {
-    expect(issuesOf(valid({ pod_mode: 'VIRTUAL', venue_id: '', meeting_url: '' }))).toContain('meeting_url');
-    expect(issuesOf(valid({ pod_mode: 'VIRTUAL', venue_id: '', meeting_url: 'not-a-url' }))).toContain('meeting_url');
+  it('requires a valid meeting link for virtual pods (and no venue/slot)', () => {
+    expect(issuesOf(valid({ pod_mode: 'VIRTUAL', venue_id: '', venue_slot_id: '', meeting_url: '' }))).toContain('meeting_url');
+    expect(issuesOf(valid({ pod_mode: 'VIRTUAL', venue_id: '', venue_slot_id: '', meeting_url: 'not-a-url' }))).toContain('meeting_url');
     expect(
       createPodSchema.safeParse(
-        valid({ pod_mode: 'VIRTUAL', venue_id: '', meeting_url: 'https://meet.duncit.com/x' }),
+        valid({ pod_mode: 'VIRTUAL', venue_id: '', venue_slot_id: '', meeting_url: 'https://meet.duncit.com/x' }),
       ).success,
     ).toBe(true);
   });
@@ -85,14 +87,18 @@ describe('createPodSchema', () => {
     ).toBe(true);
   });
 
-  it('requires a location for step 1', () => {
+  it('requires a pod location', () => {
     expect(issuesOf(valid({ location_id: '' }))).toContain('location_id');
   });
 
-  it('exposes one field group and title per step', () => {
+  it('exposes one field group and title per step (4 steps)', () => {
     expect(STEP_FIELDS).toHaveLength(STEP_TITLES.length);
-    expect(STEP_TITLES).toHaveLength(8);
-    expect(STEP_TITLES[0]).toBe('Where to Host');
+    expect(STEP_TITLES).toEqual([
+      'Pod Basics',
+      'Location, Category & Club',
+      'Venue & Slot',
+      'Pricing & Publish',
+    ]);
   });
 });
 
@@ -119,6 +125,8 @@ describe('buildCreatePodInput', () => {
     expect(input.product_requests).toEqual([{ product_id: 'p1', quantity: 3 }]);
     expect(input.place_charges).toEqual([{ label: 'Entry', amount: 50, note: '' }]);
     expect(input.venue_id).toBe('venue-1');
+    expect(input.venue_slot_id).toBe('slot-1');
+    expect(input.location_id).toBe('loc-1');
     expect(input.meeting_url).toBeNull();
     expect(input.is_active).toBe(true);
   });
@@ -130,17 +138,19 @@ describe('buildCreatePodInput', () => {
     expect(input.product_requests).toEqual([]);
   });
 
-  it('maps a virtual pod with meeting fields and no venue', () => {
+  it('maps a virtual pod with meeting fields and no venue or slot', () => {
     const input = buildCreatePodInput(
       valid({
         pod_mode: 'VIRTUAL',
         venue_id: 'ignored',
+        venue_slot_id: 'ignored-slot',
         meeting_platform: 'Meet',
         meeting_url: 'https://meet.duncit.com/x',
         meeting_notes: 'Join early',
       }),
     );
     expect(input.venue_id).toBeNull();
+    expect(input.venue_slot_id).toBeNull();
     expect(input.meeting_platform).toBe('Meet');
     expect(input.meeting_url).toBe('https://meet.duncit.com/x');
     expect(input.meeting_notes).toBe('Join early');

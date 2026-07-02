@@ -7,6 +7,9 @@ export const VENUES = gql`
       venue_name
       venue_type
       description
+      amenities
+      facilities
+      security
       cover_image_url
       gallery
       location_id

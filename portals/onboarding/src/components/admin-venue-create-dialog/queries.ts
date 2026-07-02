@@ -56,6 +56,16 @@ export const ADMIN_CREATE_VENUE = gql`
   }
 `;
 
+export const REGISTRATION_CONFIG = gql`
+  query OnboardingVenueRegistrationConfig {
+    venueRegistrationConfig {
+      amenities
+      facilities
+      security
+    }
+  }
+`;
+
 export const VENUE_TYPES = ['Cafe', 'Co-working', 'Restaurant', 'Park', 'Studio', 'Other'];
 export const DOC_TYPES = [
   'GST Certificate',
@@ -70,6 +80,9 @@ export interface Step1 {
   venue_type: string;
   capacity: number;
   description: string;
+  amenities: string[];
+  facilities: string[];
+  security: string[];
   cover_image_url: string;
   gallery: string[];
   address_line1: string;
@@ -104,6 +117,9 @@ export const blankS1: Step1 = {
   venue_type: 'Cafe',
   capacity: 10,
   description: '',
+  amenities: [],
+  facilities: [],
+  security: [],
   cover_image_url: '',
   gallery: [],
   address_line1: '',

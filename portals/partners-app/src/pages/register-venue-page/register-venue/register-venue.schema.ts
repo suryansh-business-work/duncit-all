@@ -55,6 +55,9 @@ export const registerVenueSchema = z.object({
   capacity_items: z
     .array(capacityItemSchema)
     .min(1, 'Add at least one capacity entry for your venue'),
+  amenities: z.array(z.string().trim()),
+  facilities: z.array(z.string().trim()),
+  security: z.array(z.string().trim()),
   documents: z.array(documentSchema).min(1, 'Upload at least one document'),
   gstin: optionalPattern(GSTIN_PATTERN, 'GSTIN must follow format like 22ABCDE1234F1Z5'),
   pan: optionalPattern(PAN_PATTERN, 'PAN must follow format ABCDE1234F'),
@@ -75,8 +78,9 @@ export const registerVenueSchema = z.object({
   owner_address: z.string().trim().max(500, 'Address must be 500 characters or fewer'),
 });
 
-/** Fields validated (and shown as incomplete in the rail) per section. */
-export const SECTION_FIELDS: Record<Exclude<VenueSectionKey, 'review'>, (keyof RegisterVenueValues)[]> = {
+/** Fields validated (and shown as incomplete in the rail) per section.
+ * 'review' has no fields; 'leaves' persists via venue settings, not this form. */
+export const SECTION_FIELDS: Record<Exclude<VenueSectionKey, 'review' | 'leaves'>, (keyof RegisterVenueValues)[]> = {
   details: [
     'venue_name',
     'description',
@@ -97,6 +101,7 @@ export const SECTION_FIELDS: Record<Exclude<VenueSectionKey, 'review'>, (keyof R
     'postal_code',
   ],
   'type-capacity': ['venue_type', 'capacity_items'],
+  amenities: ['amenities', 'facilities', 'security'],
   documents: ['documents', 'gstin', 'pan'],
   owner: ['owner_name', 'owner_email', 'owner_phone', 'owner_dob', 'owner_address'],
 };

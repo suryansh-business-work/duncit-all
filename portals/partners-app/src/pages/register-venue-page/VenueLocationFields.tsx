@@ -7,6 +7,7 @@ interface Props {
   onChange: (next: VenueLocationValues) => void;
   errors?: Partial<Record<keyof VenueLocationValues, string>>;
   showAllErrors?: boolean;
+  disabled?: boolean;
 }
 
 interface NamedOption {
@@ -35,7 +36,7 @@ export const findSelectedLocation = (locations: any[], value: VenueLocationValue
   ) ??
   null;
 
-export default function VenueLocationFields({ value, locations, onChange, errors, showAllErrors }: Readonly<Props>) {
+export default function VenueLocationFields({ value, locations, onChange, errors, showAllErrors, disabled = false }: Readonly<Props>) {
   const selectedLocation = findSelectedLocation(locations, value);
   const selectedCountry = value.country_code
     ? { name: value.country || value.country_code, code: value.country_code }
@@ -82,6 +83,7 @@ export default function VenueLocationFields({ value, locations, onChange, errors
         value={selectedCountry}
         getOptionLabel={(option) => option.name}
         isOptionEqualToValue={(a, b) => a.code === b.code}
+        disabled={disabled}
         onChange={(_, next) => set({ country: next?.name ?? '', country_code: next?.code ?? '', state: '', state_code: '', location_id: '', city: '', locality: '', postal_code: '' })}
         renderInput={(params) => <TextField {...params} label="Country" required error={showError('country')} helperText={showError('country') ? errors?.country : ' '} />}
       />
@@ -90,7 +92,7 @@ export default function VenueLocationFields({ value, locations, onChange, errors
         value={selectedState}
         getOptionLabel={(option) => option.name}
         isOptionEqualToValue={(a, b) => a.code === b.code}
-        disabled={!value.country_code}
+        disabled={disabled || !value.country_code}
         onChange={(_, next) => set({ state: next?.name ?? '', state_code: next?.code ?? '', location_id: '', city: '', locality: '', postal_code: '' })}
         renderInput={(params) => <TextField {...params} label="State" required error={showError('state')} helperText={showError('state') ? errors?.state : ' '} />}
       />
@@ -99,7 +101,7 @@ export default function VenueLocationFields({ value, locations, onChange, errors
         value={selectedLocation}
         getOptionLabel={cityName}
         isOptionEqualToValue={(a, b) => a.id === b.id}
-        disabled={!value.state}
+        disabled={disabled || !value.state}
         onChange={(_, next) => chooseLocation(next)}
         renderInput={(params) => <TextField {...params} label="City" required error={showError('city')} helperText={showError('city') ? errors?.city : ' '} />}
       />
@@ -108,7 +110,7 @@ export default function VenueLocationFields({ value, locations, onChange, errors
         value={selectedZone}
         getOptionLabel={(option) => option.zone_name}
         isOptionEqualToValue={(a, b) => a.zone_name === b.zone_name}
-        disabled={!selectedLocation || zones.length === 0}
+        disabled={disabled || !selectedLocation || zones.length === 0}
         onChange={(_, next) => set({ locality: next?.zone_name ?? '', postal_code: next?.pincode || selectedLocation?.location_pincode || '' })}
         renderInput={(params) => <TextField {...params} label="Locality / Area" required={zones.length > 0} error={showError('locality')} helperText={showError('locality') ? errors?.locality : ' '} />}
       />

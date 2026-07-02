@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { registerVenueSchema, SECTION_FIELDS } from './register-venue.schema';
-import { toStep1Input, venueToValues } from './register-venue.mappers';
+import { toApprovedUpdateInput, toStep1Input, venueToValues } from './register-venue.mappers';
 import { blankRegisterVenueValues, type RegisterVenueValues } from './register-venue.types';
 
 const validValues: RegisterVenueValues = {
@@ -132,11 +132,75 @@ describe('register-venue mappers', () => {
       documents: [{ type: 'PAN Card', url: 'https://cdn.example.com/pan.pdf' }],
       owner_dob: '1990-05-10T00:00:00.000Z',
       city: 'Bengaluru',
+      amenities: ['AC'],
+      facilities: ['Parking'],
+      security: ['CCTV Surveillance'],
     };
     const values = venueToValues(venue, [], { name: 'Owner', email: 'owner@example.com' });
     expect(values.capacity_items).toEqual([{ label: 'Main hall', capacity: 30 }]);
     expect(values.super_category_id).toBe('s1');
     expect(values.owner_dob).toBe('1990-05-10');
     expect(values.owner_email).toBe('owner@example.com');
+    expect(values.amenities).toEqual(['AC']);
+    expect(values.facilities).toEqual(['Parking']);
+    expect(values.security).toEqual(['CCTV Surveillance']);
+  });
+
+  it('sends amenities, facilities and security with step 1', () => {
+    const input = toStep1Input({
+      ...validValues,
+      amenities: ['AC', 'Wi-Fi'],
+      facilities: ['Parking'],
+      security: ['Security Guard'],
+    });
+    expect(input.amenities).toEqual(['AC', 'Wi-Fi']);
+    expect(input.facilities).toEqual(['Parking']);
+    expect(input.security).toEqual(['Security Guard']);
+  });
+});
+
+describe('toApprovedUpdateInput (approved-venue spot edits)', () => {
+  it('details → only description + images', () => {
+    expect(
+      toApprovedUpdateInput('details', { ...validValues, cover_image_url: 'https://x/c.jpg', gallery: ['https://x/1.jpg'] }, 1)
+    ).toEqual({
+      description: 'A cosy corner cafe',
+      cover_image_url: 'https://x/c.jpg',
+      gallery: ['https://x/1.jpg'],
+    });
+  });
+
+  it('type-capacity → cleaned capacity list only', () => {
+    expect(toApprovedUpdateInput('type-capacity', validValues, 1)).toEqual({
+      capacity_items: [
+        { label: 'Main hall', capacity: 30 },
+        { label: 'Rooftop tables', capacity: 12 },
+      ],
+    });
+  });
+
+  it('documents → only rows added past the original (append-only)', () => {
+    const values = {
+      ...validValues,
+      documents: [
+        { type: 'PAN Card', url: 'https://cdn.example.com/pan.pdf' },
+        { type: 'Trade License', url: 'https://cdn.example.com/license.pdf' },
+        { type: 'Other', url: '' },
+      ],
+    };
+    expect(toApprovedUpdateInput('documents', values, 1)).toEqual({
+      add_documents: [{ type: 'Trade License', url: 'https://cdn.example.com/license.pdf' }],
+    });
+  });
+
+  it('owner → contact fields without the locked email', () => {
+    const input = toApprovedUpdateInput('owner', { ...validValues, owner_dob: '' }, 1);
+    expect(input).toEqual({
+      owner_name: 'Owner Name',
+      owner_phone: '+919876543210',
+      owner_dob: null,
+      owner_address: '',
+    });
+    expect('owner_email' in input).toBe(false);
   });
 });

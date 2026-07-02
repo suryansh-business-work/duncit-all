@@ -16,7 +16,6 @@ import CloseIcon from '@mui/icons-material/Close';
 import EventRepeatIcon from '@mui/icons-material/EventRepeat';
 import BasicSection from './BasicSection';
 import PreviewBar from './PreviewBar';
-import SlotBehaviourAccordion from './accordions/SlotBehaviourAccordion';
 import VenueRulesAccordion from './accordions/VenueRulesAccordion';
 import FutureAvailabilityAccordion from './accordions/FutureAvailabilityAccordion';
 import SaveAsTemplateAccordion from './accordions/SaveAsTemplateAccordion';
@@ -69,8 +68,8 @@ export default function RecurringAvailabilityDialog({ open, onClose, venueId, se
         </IconButton>
       </DialogTitle>
 
-      <DialogContent dividers>
-        <Stack spacing={2}>
+      <DialogContent dividers sx={{ py: 3 }}>
+        <Stack spacing={3}>
           <BasicSection form={form} patch={patch} settings={venueSettings} />
           {serverError && (
             <Alert severity="error" onClose={() => setServerError(null)}>
@@ -79,10 +78,9 @@ export default function RecurringAvailabilityDialog({ open, onClose, venueId, se
           )}
           {datesPicked && result.errors.length > 0 && <Alert severity="warning">{result.errors[0]}</Alert>}
 
-          <Typography variant="overline" color="text.secondary" fontWeight={800}>
+          <Typography variant="overline" color="text.secondary" fontWeight={800} sx={{ pt: 0.5 }}>
             Advanced settings
           </Typography>
-          <SlotBehaviourAccordion form={form} patch={patch} />
           <VenueRulesAccordion venueId={venueId} rules={venueSettings.rules} onSaved={onDone} />
           <FutureAvailabilityAccordion
             venueId={venueId}

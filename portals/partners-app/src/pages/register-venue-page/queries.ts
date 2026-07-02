@@ -32,6 +32,9 @@ export const MY_VENUE = gql`
         sub_category_name
       }
       description
+      amenities
+      facilities
+      security
       location_id
       country
       country_code
@@ -53,6 +56,10 @@ export const MY_VENUE = gql`
       owner_dob
       owner_address
       reviewer_notes
+      # Leaves & Holidays section edits settings.holidays
+      settings {
+        holidays
+      }
     }
     locations(filter: { is_active: true }) {
       id
@@ -123,6 +130,9 @@ export const REGISTRATION_CONFIG = gql`
       venue_types
       doc_types
       capacity_item_limit
+      amenities
+      facilities
+      security
     }
   }
 `;
@@ -147,4 +157,19 @@ export const STEP3 = gql`
 
 export const FINAL = gql`
   mutation VFinal($venue_id: ID) { submitVenueFinal(venue_id: $venue_id) { id status } }
+`;
+
+export const UPDATE_APPROVED_VENUE = gql`
+  mutation UpdateApprovedVenue($venue_id: ID!, $input: UpdateApprovedVenueInput!) {
+    updateApprovedVenue(venue_id: $venue_id, input: $input) { id status updated_at }
+  }
+`;
+
+export const UPDATE_VENUE_HOLIDAYS = gql`
+  mutation UpdateVenueHolidays($venue_doc_id: ID!, $input: VenueSettingsInput!) {
+    updateVenueSettings(venue_doc_id: $venue_doc_id, input: $input) {
+      id
+      settings { holidays }
+    }
+  }
 `;

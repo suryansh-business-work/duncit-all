@@ -87,7 +87,7 @@ export default function EcommBrandPage() {
   if (loading && !data) return <Typography>Loading…</Typography>;
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 860, mx: 'auto', width: '100%' }}>
+    <Stack spacing={2.25} sx={{ width: '100%' }}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
         <Typography variant="overline" sx={{ opacity: 0.8, fontWeight: 800 }}>Partner tools</Typography>
         <Typography variant="h4" sx={{ fontWeight: 900, lineHeight: 1.05 }}>E-Commerce Brands</Typography>

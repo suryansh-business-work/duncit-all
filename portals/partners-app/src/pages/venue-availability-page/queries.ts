@@ -67,7 +67,7 @@ export interface VenueSlotRow {
   start_at: string;
   end_at: string;
   price: number;
-  status: 'AVAILABLE' | 'BOOKED' | 'BLOCKED';
+  status: 'AVAILABLE' | 'PENDING' | 'BOOKED' | 'BLOCKED';
   booked_by_pod_id: string | null;
   booked_pod_title: string | null;
   notes: string;

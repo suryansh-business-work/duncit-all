@@ -36,13 +36,19 @@ interface Props {
   onCreate: (input: NewSlotInput) => Promise<void>;
   onToggleBlock: (slot: VenueSlotRow) => Promise<void>;
   onDelete: (slotId: string) => Promise<void>;
+  /** True when this date is a venue leave/holiday — adding slots is disabled. */
+  isHoliday?: boolean;
 }
 
-const STATUS_COLOR: Record<VenueSlotRow['status'], 'success' | 'warning' | 'default'> = {
+const STATUS_COLOR: Record<VenueSlotRow['status'], 'success' | 'info' | 'warning' | 'default'> = {
   AVAILABLE: 'success',
+  PENDING: 'info',
   BOOKED: 'warning',
   BLOCKED: 'default',
 };
+
+// PENDING = a live booking request; decide it in Slot Requests, don't edit it.
+const LOCKED_STATUSES = new Set<VenueSlotRow['status']>(['BOOKED', 'PENDING']);
 
 function combineDateAndTime(date: Date, time: Date): Date {
   return setTimeOnDate(date, {
@@ -55,7 +61,7 @@ function combineDateAndTime(date: Date, time: Date): Date {
 
 /** The day slot editor (list + block/delete + add). Prop-driven: it owns the
  *  form + confirm UX, the host app wires the create/update/delete calls. */
-export default function DayDrawer({ open, date, slots, onClose, onCreate, onToggleBlock, onDelete }: Readonly<Props>) {
+export default function DayDrawer({ open, date, slots, onClose, onCreate, onToggleBlock, onDelete, isHoliday = false }: Readonly<Props>) {
   const [startTime, setStartTime] = useState<Date | null>(null);
   const [endTime, setEndTime] = useState<Date | null>(null);
   const [price, setPrice] = useState('');
@@ -174,7 +180,12 @@ export default function DayDrawer({ open, date, slots, onClose, onCreate, onTogg
                   </Stack>
                   {slot.booked_pod_title && (
                     <Typography variant="caption" color="text.secondary">
-                      Booked by pod: {slot.booked_pod_title}
+                      {slot.status === 'PENDING' ? 'Requested by pod' : 'Booked by pod'}: {slot.booked_pod_title}
+                    </Typography>
+                  )}
+                  {slot.status === 'PENDING' && (
+                    <Typography variant="caption" color="info.main" sx={{ display: 'block' }}>
+                      Awaiting your decision — approve or decline it under Slot Requests.
                     </Typography>
                   )}
                   {slot.notes && (
@@ -182,7 +193,7 @@ export default function DayDrawer({ open, date, slots, onClose, onCreate, onTogg
                       {slot.notes}
                     </Typography>
                   )}
-                  {slot.status !== 'BOOKED' && (
+                  {!LOCKED_STATUSES.has(slot.status) && (
                     <Stack direction="row" spacing={1} sx={{ mt: 1 }}>
                       <Button
                         size="small"
@@ -206,7 +217,12 @@ export default function DayDrawer({ open, date, slots, onClose, onCreate, onTogg
           <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>
             Add a new slot
           </Typography>
-          <Stack spacing={1.5} sx={{ mt: 1 }}>
+          {isHoliday && (
+            <Alert severity="error" sx={{ mt: 1 }}>
+              This date is marked as a venue leave/holiday — slots cannot be added or booked.
+            </Alert>
+          )}
+          <Stack spacing={1.5} sx={{ mt: 1, display: isHoliday ? 'none' : 'flex' }}>
             <Stack direction="row" spacing={1}>
               <TimePicker label="Start" value={startTime} onChange={setStartTime} slotProps={{ textField: { size: 'small', fullWidth: true } }} />
               <TimePicker label="End" value={endTime} onChange={setEndTime} slotProps={{ textField: { size: 'small', fullWidth: true } }} />

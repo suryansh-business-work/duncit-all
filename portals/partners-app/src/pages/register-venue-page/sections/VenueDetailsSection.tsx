@@ -5,11 +5,12 @@ import VenueMapPreview from '../../../components/VenueMapPreview';
 import VenueLocationFields from '../VenueLocationFields';
 import VenueLocationFinder from '../VenueLocationFinder';
 import VenueImagesField from './VenueImagesField';
-import type { RegisterVenueValues, VenueLocationValues } from '../register-venue';
+import type { RegisterVenueMode, RegisterVenueValues, VenueLocationValues } from '../register-venue';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
   locations: any[];
+  mode: RegisterVenueMode;
 }
 
 const LOCATION_KEYS: (keyof VenueLocationValues)[] = [
@@ -23,9 +24,12 @@ const LOCATION_KEYS: (keyof VenueLocationValues)[] = [
   'postal_code',
 ];
 
-export default function VenueDetailsSection({ form, locations }: Readonly<Props>) {
+export default function VenueDetailsSection({ form, locations, mode }: Readonly<Props>) {
   const { control, watch, setValue, formState } = form;
   const values = watch();
+  // Post-approval, only the description and images stay editable here —
+  // identity fields (name, category, address) are locked with disabled styling.
+  const locked = mode === 'edit-approved';
 
   const locationValue: VenueLocationValues = {
     location_id: values.location_id ?? '',
@@ -62,8 +66,9 @@ export default function VenueDetailsSection({ form, locations }: Readonly<Props>
             {...field}
             label="Venue name"
             required
+            disabled={locked}
             error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? ' '}
+            helperText={fieldState.error?.message ?? (locked ? 'Locked after approval' : 'Public name shown to hosts and guests')}
           />
         )}
       />
@@ -77,7 +82,7 @@ export default function VenueDetailsSection({ form, locations }: Readonly<Props>
             multiline
             minRows={3}
             error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? 'Tell hosts what makes your space great'}
+            helperText={fieldState.error?.message ?? 'Tell hosts what makes your space great (max 2000 characters)'}
           />
         )}
       />
@@ -95,12 +100,13 @@ export default function VenueDetailsSection({ form, locations }: Readonly<Props>
           </Typography>
         </Typography>
         <Typography variant="caption" color="text.secondary">
-          Pick the category you want to host pods in at this venue.
+          {locked ? 'Locked after approval' : 'Pick the category you want to host pods in at this venue.'}
         </Typography>
         <CategoryCascade
           superId={values.super_category_id}
           categoryId={values.category_id}
           subId={values.sub_category_id}
+          disabled={locked}
           error={categoryError}
           onChange={(next) => {
             setValue('super_category_id', next.superId, { shouldDirty: true, shouldValidate: categoryError });
@@ -122,8 +128,9 @@ export default function VenueDetailsSection({ form, locations }: Readonly<Props>
             {...field}
             label="Address line 1"
             required
+            disabled={locked}
             error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? ' '}
+            helperText={fieldState.error?.message ?? (locked ? 'Locked after approval' : 'Building / street — shown on the venue page')}
           />
         )}
       />
@@ -134,17 +141,19 @@ export default function VenueDetailsSection({ form, locations }: Readonly<Props>
           <TextField
             {...field}
             label="Address line 2"
+            disabled={locked}
             error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? ' '}
+            helperText={fieldState.error?.message ?? (locked ? 'Locked after approval' : 'Landmark or floor (optional)')}
           />
         )}
       />
-      <VenueLocationFinder locations={locations} value={locationValue} onChange={applyLocation} />
+      {!locked && <VenueLocationFinder locations={locations} value={locationValue} onChange={applyLocation} />}
       <VenueLocationFields
         value={locationValue}
         locations={locations}
         onChange={applyLocation}
         errors={locationErrors}
+        disabled={locked}
         showAllErrors
       />
       <VenueMapPreview

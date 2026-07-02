@@ -12,19 +12,19 @@ import {
 import GpsFixedIcon from '@mui/icons-material/GpsFixed';
 import SearchIcon from '@mui/icons-material/Search';
 import { useVenueGeocoder, type VenueGeocodeResult } from './useVenueGeocoder';
-import type { VenueStep1 } from './types';
+import type { VenueLocationValues } from './register-venue/register-venue.types';
 
 interface VenueLocationFinderProps {
   locations: any[];
-  value: VenueStep1;
-  onChange: (next: VenueStep1) => void;
+  value: VenueLocationValues;
+  onChange: (next: VenueLocationValues) => void;
 }
 
 function applyGeocodeToForm(
-  prev: VenueStep1,
+  prev: VenueLocationValues,
   result: VenueGeocodeResult,
   locations: any[]
-): { next: VenueStep1; matchedLocation: any | null } {
+): { next: VenueLocationValues; matchedLocation: any | null } {
   const cityLower = result.city.toLowerCase();
   const matched =
     locations.find(

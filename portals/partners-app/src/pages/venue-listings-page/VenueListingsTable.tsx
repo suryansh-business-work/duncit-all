@@ -6,11 +6,13 @@ import EventAvailableIcon from '@mui/icons-material/EventAvailable';
 import { MY_VENUES } from '../register-venue-page/queries';
 import VenueListingsToolbar from './VenueListingsToolbar';
 
-interface Props {
-  onEdit: () => void;
-}
+const rowAction = (status: string) => {
+  if (status === 'APPROVED' || status === 'SUBMITTED') return 'View';
+  if (status === 'REJECTED') return 'Edit & resubmit';
+  return 'Edit';
+};
 
-export default function VenueListingsTable({ onEdit }: Readonly<Props>) {
+export default function VenueListingsTable() {
   const { data, loading, error } = useQuery(MY_VENUES, { fetchPolicy: 'cache-and-network' });
   const [search, setSearch] = useState('');
   const [status, setStatus] = useState('ALL');
@@ -63,7 +65,7 @@ export default function VenueListingsTable({ onEdit }: Readonly<Props>) {
                             Availability
                           </Button>
                         )}
-                        <Button size="small" onClick={onEdit}>{venue.status === 'APPROVED' ? 'View' : 'Continue'}</Button>
+                        <Button size="small" component={RouterLink} to={`/register-venue/${venue.id}`}>{rowAction(venue.status)}</Button>
                       </Stack>
                     </TableCell>
                   </TableRow>

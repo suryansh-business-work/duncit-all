@@ -9,8 +9,10 @@ import {
 } from './venue.model';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { CategoryModel } from '@modules/pods/category/category.model';
 import { sendEmail } from '@services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
+import { VENUE_CAPACITY_ITEM_LIMIT, VENUE_DOC_TYPES, VENUE_TYPES } from './venue.constants';
 
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
@@ -133,12 +135,26 @@ function normalizeSettingsInput(current: IVenueSettings | undefined, input: any)
   return next;
 }
 
+const toVenueCategoryPub = (c?: IVenue['venue_category'] | null) => ({
+  super_category_id: c?.super_category_id ? String(c.super_category_id) : null,
+  category_id: c?.category_id ? String(c.category_id) : null,
+  sub_category_id: c?.sub_category_id ? String(c.sub_category_id) : null,
+  super_category_name: c?.super_category_name ?? '',
+  category_name: c?.category_name ?? '',
+  sub_category_name: c?.sub_category_name ?? '',
+});
+
 const toPub = (v: IVenue) => ({
   id: String(v._id),
   owner_user_id: String(v.owner_user_id),
   venue_name: v.venue_name ?? '',
   venue_type: v.venue_type ?? '',
   capacity: v.capacity ?? 0,
+  capacity_items: (v.capacity_items ?? []).map((item) => ({
+    label: item.label,
+    capacity: item.capacity,
+  })),
+  venue_category: toVenueCategoryPub(v.venue_category),
   description: v.description ?? '',
   amenities: v.amenities ?? [],
   cover_image_url: v.cover_image_url ?? '',
@@ -207,6 +223,94 @@ async function getOrCreate(userId: string) {
   return v;
 }
 
+/** Registration mutations may target a specific venue (edit from "Your venue
+ * registrations"): it must belong to the caller and still be editable. Without
+ * a venue_id we keep the historical "current open draft" behaviour. */
+async function resolveEditableVenue(userId: string, venueId?: string | null) {
+  if (!venueId) return getOrCreate(userId);
+  if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue id');
+  const v = await VenueModel.findById(venueId);
+  if (!v) fail('NOT_FOUND', 'Venue not found');
+  if (String(v!.owner_user_id) !== String(userId)) fail('FORBIDDEN', 'Not your venue');
+  if (v!.status !== 'DRAFT' && v!.status !== 'REJECTED') {
+    fail('BAD_REQUEST', 'This venue application is no longer editable');
+  }
+  return v!;
+}
+
+/** Validates a Super → Category → Sub triple against the shared Category
+ * collection (ids exist, levels match, parent chain lines up) and returns the
+ * denormalized subdoc. */
+async function normalizeVenueCategoryInput(input: any) {
+  const ids = [input.super_category_id, input.category_id, input.sub_category_id].map(String);
+  if (ids.some((id) => !Types.ObjectId.isValid(id))) {
+    fail('BAD_USER_INPUT', 'Venue category selection is invalid');
+  }
+  const docs = await Promise.all(ids.map((id) => CategoryModel.findById(id)));
+  const [superCat, category, subCat] = docs;
+  if (!superCat || superCat.level !== 'SUPER') fail('BAD_USER_INPUT', 'Select a valid super category');
+  if (!category || category.level !== 'CATEGORY' || String(category.parent_id) !== String(superCat!._id)) {
+    fail('BAD_USER_INPUT', 'Select a valid category under the chosen super category');
+  }
+  if (!subCat || subCat.level !== 'SUB' || String(subCat.parent_id) !== String(category!._id)) {
+    fail('BAD_USER_INPUT', 'Select a valid sub category under the chosen category');
+  }
+  return {
+    super_category_id: superCat!._id,
+    category_id: category!._id,
+    sub_category_id: subCat!._id,
+    super_category_name: superCat!.name,
+    category_name: category!.name,
+    sub_category_name: subCat!.name,
+  };
+}
+
+/** Cleans the dynamic capacity list: labels required, capacities whole
+ * numbers ≥ 1. Returns null when the input did not include the field. */
+function normalizeCapacityItems(items: unknown) {
+  if (items === undefined || items === null) return null;
+  const list = (items as any[])
+    .map((item) => ({
+      label: String(item?.label ?? '').trim(),
+      capacity: Math.trunc(Number(item?.capacity)),
+    }))
+    .filter((item) => item.label || Number.isFinite(item.capacity));
+  if (list.length > VENUE_CAPACITY_ITEM_LIMIT) {
+    fail('BAD_USER_INPUT', `At most ${VENUE_CAPACITY_ITEM_LIMIT} capacity entries are allowed`);
+  }
+  for (const item of list) {
+    if (!item.label) fail('BAD_USER_INPUT', 'Every capacity entry needs a label');
+    if (item.label.length > 80) fail('BAD_USER_INPUT', 'Capacity labels must be 80 characters or fewer');
+    if (!Number.isFinite(item.capacity) || item.capacity < 1 || item.capacity > 100_000) {
+      fail('BAD_USER_INPUT', `Enter a capacity between 1 and 100000 for "${item.label}"`);
+    }
+  }
+  return list;
+}
+
+/** Normalizes a full step-1 payload (location + capacity list + category) into
+ * a patch shared by owner submit and admin create/update. */
+async function buildStep1Patch(input: any) {
+  const patch: any = await normalizeStep1Location(input);
+  const capacityItems = normalizeCapacityItems(input.capacity_items);
+  if (capacityItems === null) {
+    delete patch.capacity_items;
+  } else {
+    patch.capacity_items = capacityItems;
+    // The scalar stays the source of truth for existing consumers — keep it
+    // in lock-step with the itemised list whenever one is supplied.
+    if (capacityItems.length > 0) {
+      patch.capacity = capacityItems.reduce((sum, item) => sum + item.capacity, 0);
+    }
+  }
+  if (input.venue_category === undefined || input.venue_category === null) {
+    delete patch.venue_category;
+  } else {
+    patch.venue_category = await normalizeVenueCategoryInput(input.venue_category);
+  }
+  return patch;
+}
+
 async function findCurrentUserVenue(userId: string) {
   const uid = new Types.ObjectId(userId);
   const activeApplication = await VenueModel.findOne({
@@ -268,7 +372,20 @@ async function assignApprovedVenueRole(userId: Types.ObjectId) {
 }
 
 export const venueService = {
-  async getMine(userId: string) {
+  registrationConfig() {
+    return {
+      venue_types: VENUE_TYPES,
+      doc_types: VENUE_DOC_TYPES,
+      capacity_item_limit: VENUE_CAPACITY_ITEM_LIMIT,
+    };
+  },
+  async getMine(userId: string, venueId?: string | null) {
+    if (venueId) {
+      if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue id');
+      const v = await VenueModel.findById(venueId);
+      if (!v || String(v.owner_user_id) !== String(userId)) return null;
+      return toPub(v);
+    }
     const v = await findCurrentUserVenue(userId);
     return v ? toPub(v) : null;
   },
@@ -287,16 +404,16 @@ export const venueService = {
     const v = await VenueModel.findById(id);
     return v ? toPub(v) : null;
   },
-  async submitStep1(userId: string, input: any) {
-    const v = await getOrCreate(userId);
-    Object.assign(v, await normalizeStep1Location(input));
+  async submitStep1(userId: string, input: any, venueId?: string | null) {
+    const v = await resolveEditableVenue(userId, venueId);
+    Object.assign(v, await buildStep1Patch(input));
     if (v.step_completed < 1) v.step_completed = 1;
     if (v.status === 'REJECTED') v.status = 'DRAFT';
     await v.save();
     return toPub(v);
   },
-  async submitStep2(userId: string, input: any) {
-    const v = await getOrCreate(userId);
+  async submitStep2(userId: string, input: any, venueId?: string | null) {
+    const v = await resolveEditableVenue(userId, venueId);
     if (v.step_completed < 1) {
       throw new GraphQLError('Complete venue details first', { extensions: { code: 'BAD_REQUEST' } });
     }
@@ -313,8 +430,8 @@ export const venueService = {
     await v.save();
     return toPub(v);
   },
-  async submitStep3(userId: string, input: any) {
-    const v = await getOrCreate(userId);
+  async submitStep3(userId: string, input: any, venueId?: string | null) {
+    const v = await resolveEditableVenue(userId, venueId);
     if (v.step_completed < 2) {
       throw new GraphQLError('Complete documentation step first', { extensions: { code: 'BAD_REQUEST' } });
     }
@@ -328,8 +445,8 @@ export const venueService = {
     await v.save();
     return toPub(v);
   },
-  async submitFinal(userId: string) {
-    const v = await getOrCreate(userId);
+  async submitFinal(userId: string, venueId?: string | null) {
+    const v = await resolveEditableVenue(userId, venueId);
     if (v.step_completed < 3) {
       throw new GraphQLError('Complete all steps first', { extensions: { code: 'BAD_REQUEST' } });
     }
@@ -376,7 +493,7 @@ export const venueService = {
         extensions: { code: 'BAD_USER_INPUT' },
       });
     }
-    const normalized = await normalizeStep1Location(opts.step1);
+    const normalized = await buildStep1Patch(opts.step1);
     const documents = (opts.step2.documents || [])
       .filter((d: any) => d && d.type && d.url)
       .map((d: any) => ({
@@ -406,7 +523,7 @@ export const venueService = {
   async adminUpdate(id: string, opts: { step1: any; step2: any; step3: any; status?: string }) {
     const v = await VenueModel.findById(id);
     if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
-    Object.assign(v, await normalizeStep1Location(opts.step1));
+    Object.assign(v, await buildStep1Patch(opts.step1));
     v.documents = (opts.step2.documents || [])
       .filter((d: any) => d && d.type && d.url)
       .map((d: any) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));

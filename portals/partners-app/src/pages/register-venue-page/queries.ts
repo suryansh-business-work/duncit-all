@@ -1,7 +1,7 @@
 import { gql } from '@apollo/client';
 
 export const MY_VENUE = gql`
-  query MyVenue {
+  query MyVenue($venue_id: ID) {
     me {
       user_id
       full_name
@@ -9,7 +9,7 @@ export const MY_VENUE = gql`
       last_name
       email
     }
-    myVenue {
+    myVenue(venue_id: $venue_id) {
       id
       step_completed
       status
@@ -19,6 +19,18 @@ export const MY_VENUE = gql`
       venue_name
       venue_type
       capacity
+      capacity_items {
+        label
+        capacity
+      }
+      venue_category {
+        super_category_id
+        category_id
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+      }
       description
       location_id
       country
@@ -105,24 +117,34 @@ export const MY_VENUES = gql`
   }
 `;
 
+export const REGISTRATION_CONFIG = gql`
+  query VenueRegistrationConfig {
+    venueRegistrationConfig {
+      venue_types
+      doc_types
+      capacity_item_limit
+    }
+  }
+`;
+
 export const STEP1 = gql`
-  mutation V1($input: VenueStep1Input!) {
-    submitVenueStep1(input: $input) { id step_completed status }
+  mutation V1($input: VenueStep1Input!, $venue_id: ID) {
+    submitVenueStep1(input: $input, venue_id: $venue_id) { id step_completed status }
   }
 `;
 
 export const STEP2 = gql`
-  mutation V2($input: VenueStep2Input!) {
-    submitVenueStep2(input: $input) { id step_completed }
+  mutation V2($input: VenueStep2Input!, $venue_id: ID) {
+    submitVenueStep2(input: $input, venue_id: $venue_id) { id step_completed }
   }
 `;
 
 export const STEP3 = gql`
-  mutation V3($input: VenueStep3Input!) {
-    submitVenueStep3(input: $input) { id step_completed }
+  mutation V3($input: VenueStep3Input!, $venue_id: ID) {
+    submitVenueStep3(input: $input, venue_id: $venue_id) { id step_completed }
   }
 `;
 
 export const FINAL = gql`
-  mutation VFinal { submitVenueFinal { id status } }
+  mutation VFinal($venue_id: ID) { submitVenueFinal(venue_id: $venue_id) { id status } }
 `;

@@ -13,6 +13,26 @@ export interface IVenueDocument {
   uploaded_at: Date;
 }
 
+/** Category the venue wants to host pods in — Super → Category → Sub triple
+ * off the shared pods Category collection, names denormalized for display
+ * (same pattern as Host.host_categories). */
+export interface IVenueCategory {
+  super_category_id: Types.ObjectId | null;
+  category_id: Types.ObjectId | null;
+  sub_category_id: Types.ObjectId | null;
+  super_category_name: string;
+  category_name: string;
+  sub_category_name: string;
+}
+
+/** One named capacity the venue offers (e.g. "Banquet hall" → 120,
+ * "Rooftop tables" → 40). The scalar `capacity` stays the sum of these so
+ * existing consumers (listings, admin review, booking) keep working. */
+export interface IVenueCapacityItem {
+  label: string;
+  capacity: number;
+}
+
 /** Daily operating window in venue-local "HH:mm" (24h). */
 export interface IVenueOperatingHours {
   open: string;
@@ -58,6 +78,8 @@ export interface IVenue extends Document {
   venue_name: string;
   venue_type: string; // cafe, sports turf, banquet, etc.
   capacity: number;
+  capacity_items: IVenueCapacityItem[];
+  venue_category: IVenueCategory;
   description: string;
   amenities: string[];
   cover_image_url: string;
@@ -116,6 +138,26 @@ const venueDocumentSchema = new Schema<IVenueDocument>(
   { _id: false }
 );
 
+const venueCategorySchema = new Schema<IVenueCategory>(
+  {
+    super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    sub_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
+    super_category_name: { type: String, default: '' },
+    category_name: { type: String, default: '' },
+    sub_category_name: { type: String, default: '' },
+  },
+  { _id: false }
+);
+
+const venueCapacityItemSchema = new Schema<IVenueCapacityItem>(
+  {
+    label: { type: String, required: true, trim: true, maxlength: 80 },
+    capacity: { type: Number, required: true, min: 1, max: 100_000 },
+  },
+  { _id: false }
+);
+
 const venueRulesSchema = new Schema<IVenueRules>(
   {
     buffer_minutes: { type: Number, default: 0, min: 0, max: 1440 },
@@ -166,6 +208,8 @@ const venueSchema = new Schema<IVenue>(
     venue_name: { type: String, default: '' },
     venue_type: { type: String, default: '' },
     capacity: { type: Number, default: 0 },
+    capacity_items: { type: [venueCapacityItemSchema], default: [] },
+    venue_category: { type: venueCategorySchema, default: () => ({}) },
     description: { type: String, default: '' },
     amenities: { type: [String], default: [] },
     cover_image_url: { type: String, default: '' },

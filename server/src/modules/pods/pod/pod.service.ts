@@ -90,6 +90,7 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     })),
     product_cost_total: d.product_cost_total ?? 0,
     is_active: !!d.is_active,
+    venue_approval_status: d.venue_approval_status ?? 'NONE',
     liked_user_ids: (d.liked_user_ids ?? []).map((x: any) => String(x)),
     like_count: (d.liked_user_ids ?? []).length,
     comment_count: (d.comments ?? []).length,
@@ -248,6 +249,30 @@ async function podAudience(doc: any, excludeUserId: string) {
     .filter((u: { email: string }) => !!u.email);
 }
 
+/** Best-effort in-app note to the venue owner: a host requested one of their
+ * slots and it's waiting in the partner portal's Slot Requests inbox. */
+async function notifyVenueSlotRequested(pod: any, slot: any) {
+  try {
+    const { notificationService } = await import(
+      '@modules/engagement/notification/notification.service'
+    );
+    const when = new Date(slot.start_at).toLocaleString('en-IN', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+    await notificationService.create({
+      title: 'New slot booking request',
+      body: `"${pod.pod_title}" requested your venue slot on ${when}. Review it in the Partners portal.`,
+      scope: 'USER',
+      target_user_ids: [String(slot.owner_user_id)],
+      silent: false,
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[pod] slot request notification failed:', err);
+  }
+}
+
 const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const requestMap = (items: any[] = []) => {
@@ -271,7 +296,9 @@ async function resolveVenueLocation(input: any) {
 
   const venue = await VenueModel.findById(venueId);
   if (!venue) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
-  const club = input.club_id ? await ClubModel.findById(input.club_id) : null;
+  // Slot bookings go to any venue partner's availability calendar, so the
+  // legacy club↔venue link only constrains the manual (no-slot) path.
+  const club = !input.venue_slot_id && input.club_id ? await ClubModel.findById(input.club_id) : null;
   if (club?.meetup_venues_id?.length && !club.meetup_venues_id.includes(String(venue._id))) {
     throw new GraphQLError('Selected venue is not linked to this club', {
       extensions: { code: 'BAD_USER_INPUT' },
@@ -495,6 +522,7 @@ export const podService = {
     // the booking contract. The slot itself is booked atomically *after* the
     // pod row is created (further down) so we never orphan a slot.
     let slotDoc: any = null;
+    let needsVenueApproval = false;
     if (podMode === 'PHYSICAL' && input.venue_slot_id) {
       slotDoc = await VenueSlotModel.findById(input.venue_slot_id);
       if (!slotDoc) {
@@ -510,6 +538,19 @@ export const podService = {
           extensions: { code: 'BAD_USER_INPUT' },
         });
       }
+      const slotVenue = await VenueModel.findById(slotDoc.venue_id).select('settings.holidays owner_user_id');
+      const holidays = new Set(slotVenue?.settings?.holidays ?? []);
+      const { venueLocalYmd } = await import('@modules/venues/autoExtend/slotGenerator');
+      if (holidays.has(venueLocalYmd(slotDoc.start_at))) {
+        throw new GraphQLError('The venue is on leave on this date. Pick another slot.', {
+          extensions: { code: 'CONFLICT' },
+        });
+      }
+      // Booking another partner's venue holds the slot until that venue
+      // approves; booking your own venue confirms instantly.
+      needsVenueApproval = !(input.pod_hosts_id ?? [])
+        .map(String)
+        .includes(String(slotDoc.owner_user_id));
       input.venue_id = String(slotDoc.venue_id);
       input.pod_date_time = slotDoc.start_at.toISOString();
       input.pod_end_date_time = slotDoc.end_at.toISOString();
@@ -563,15 +604,22 @@ export const podService = {
       products_enabled: !!input.products_enabled,
       product_requests: productRequests,
       product_cost_total: productRequests.reduce((sum, item) => sum + item.total_cost, 0),
-      is_active: input.is_active ?? true,
+      // A pod awaiting the venue's slot approval stays offline until approved.
+      is_active: needsVenueApproval ? false : input.is_active ?? true,
+      venue_approval_status: needsVenueApproval ? 'PENDING' : 'NONE',
     });
 
-    // Atomic book — if a concurrent request snatched the slot between our
+    // Atomic book/hold — if a concurrent request snatched the slot between our
     // status check and now, this throws CONFLICT and we roll the pod back so
     // the caller can retry with a different slot.
     if (slotDoc) {
       try {
-        await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+        if (needsVenueApproval) {
+          await venueSlotService.holdForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+          await notifyVenueSlotRequested(doc, slotDoc);
+        } else {
+          await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
+        }
       } catch (e) {
         await doc.deleteOne();
         throw e;
@@ -597,11 +645,21 @@ export const podService = {
     }
     const podMode = normalizePodMode(input.pod_mode);
     if (podMode === 'PHYSICAL') {
+      // Slot bookings may target ANY approved venue partner (the venue approves
+      // the request before the pod goes live); the manual no-slot path is still
+      // restricted to the host's own approved venues.
       const venue = input.venue_id
-        ? await VenueModel.findOne({ _id: input.venue_id, owner_user_id: userObjectId, status: 'APPROVED', is_active: true }).select('_id')
+        ? await VenueModel.findOne(
+            input.venue_slot_id
+              ? { _id: input.venue_id, status: 'APPROVED', is_active: true }
+              : { _id: input.venue_id, owner_user_id: userObjectId, status: 'APPROVED', is_active: true }
+          ).select('_id')
         : null;
       if (!venue) {
-        throw new GraphQLError('Select one of your approved venues', { extensions: { code: 'BAD_USER_INPUT' } });
+        throw new GraphQLError(
+          input.venue_slot_id ? 'Select an approved venue' : 'Select one of your approved venues',
+          { extensions: { code: 'BAD_USER_INPUT' } }
+        );
       }
     }
     return this.create({ ...input, pod_mode: podMode, pod_hosts_id: [userId], pod_attendees: [userId] });

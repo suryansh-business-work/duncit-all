@@ -54,7 +54,13 @@ async function runForVenue(venueId: string): Promise<number> {
 
   const slots = buildRecurringSlots(template.config, venue.settings, now, to, now);
   if (!slots.length) return 0;
-  return venueSlotService.createSkippingOverlaps(venueId, String(venue.owner_user_id), slots, maxAdvanceDays);
+  return venueSlotService.createSkippingOverlaps(
+    venueId,
+    String(venue.owner_user_id),
+    slots,
+    maxAdvanceDays,
+    venue.settings?.holidays ?? []
+  );
 }
 
 /** Sweep every auto-extend-enabled, approved, active venue. One venue failing

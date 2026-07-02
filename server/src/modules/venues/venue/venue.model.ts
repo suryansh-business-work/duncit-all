@@ -82,6 +82,8 @@ export interface IVenue extends Document {
   venue_category: IVenueCategory;
   description: string;
   amenities: string[];
+  facilities: string[];
+  security: string[];
   cover_image_url: string;
   gallery: string[];
   location_id?: Types.ObjectId | null;
@@ -212,6 +214,8 @@ const venueSchema = new Schema<IVenue>(
     venue_category: { type: venueCategorySchema, default: () => ({}) },
     description: { type: String, default: '' },
     amenities: { type: [String], default: [] },
+    facilities: { type: [String], default: [] },
+    security: { type: [String], default: [] },
     cover_image_url: { type: String, default: '' },
     gallery: { type: [String], default: [] },
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null, index: true },

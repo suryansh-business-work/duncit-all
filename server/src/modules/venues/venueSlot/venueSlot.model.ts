@@ -1,6 +1,8 @@
 import { Schema, model, Types, type Document } from 'mongoose';
 
-export type VenueSlotStatus = 'AVAILABLE' | 'BOOKED' | 'BLOCKED';
+/** PENDING = a hold placed by a host's pod that is waiting for the venue
+ * owner's approval; it books into BOOKED or releases back to AVAILABLE. */
+export type VenueSlotStatus = 'AVAILABLE' | 'PENDING' | 'BOOKED' | 'BLOCKED';
 
 export interface IVenueSlot extends Document {
   venue_id: Types.ObjectId;
@@ -24,7 +26,7 @@ const venueSlotSchema = new Schema<IVenueSlot>(
     price: { type: Number, default: 0, min: 0, max: 1_000_000 },
     status: {
       type: String,
-      enum: ['AVAILABLE', 'BOOKED', 'BLOCKED'],
+      enum: ['AVAILABLE', 'PENDING', 'BOOKED', 'BLOCKED'],
       default: 'AVAILABLE',
       index: true,
     },

@@ -36,6 +36,8 @@ export const venueResolvers = {
       venueService.submitStep3(uid(ctx), args.input, args.venue_id),
     submitVenueFinal: async (_p: unknown, args: { venue_id?: string }, ctx: GraphQLContext) =>
       venueService.submitFinal(uid(ctx), args.venue_id),
+    updateApprovedVenue: async (_p: unknown, args: { venue_id: string; input: any }, ctx: GraphQLContext) =>
+      venueService.updateApproved(uid(ctx), args.venue_id, args.input),
     approveVenue: async (
       _p: unknown,
       args: { venue_doc_id: string; notes?: string; tags?: string[] },

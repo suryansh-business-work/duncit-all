@@ -71,6 +71,50 @@ function metrics(pods: any[], earnings: EarningsParts, addedSlots = 0) {
 }
 
 export const partnerDashboardService = {
+  /** Venue KPI cards for the partner portal's Venue Dashboard. Scope = one of
+   * the owner's venues (venue_id) or all of them. Potential earning = the value
+   * of the whole upcoming published calendar (every future slot's price). */
+  async venueStats(userId: string, venueId?: string | null) {
+    if (!Types.ObjectId.isValid(userId)) {
+      throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
+    }
+    const owner = new Types.ObjectId(userId);
+    const venueFilter: any = { owner_user_id: owner };
+    if (venueId) {
+      if (!Types.ObjectId.isValid(venueId)) {
+        throw new GraphQLError('Invalid venue id', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      venueFilter._id = new Types.ObjectId(venueId);
+    }
+    const venues = await VenueModel.find(venueFilter).select('_id status capacity').lean();
+    if (venueId && venues.length === 0) {
+      throw new GraphQLError('Venue not found or not yours', { extensions: { code: 'NOT_FOUND' } });
+    }
+    const venueIds = venues.map((v) => v._id);
+
+    const byStatus = new Map<string, { count: number; total: number }>();
+    if (venueIds.length) {
+      const rows = await VenueSlotModel.aggregate([
+        { $match: { venue_id: { $in: venueIds }, start_at: { $gte: new Date() } } },
+        { $group: { _id: '$status', count: { $sum: 1 }, total: { $sum: '$price' } } },
+      ]);
+      rows.forEach((r: any) => byStatus.set(String(r._id), { count: r.count ?? 0, total: r.total ?? 0 }));
+    }
+    const stat = (status: string) => byStatus.get(status) ?? { count: 0, total: 0 };
+    const upcoming = ['AVAILABLE', 'PENDING', 'BOOKED'].map(stat);
+
+    return {
+      total_venues: venues.length,
+      approved_venues: venues.filter((v) => v.status === 'APPROVED').length,
+      total_capacity: venues.reduce((sum, v) => sum + (v.capacity ?? 0), 0),
+      potential_earning: upcoming.reduce((sum, s) => sum + s.total, 0),
+      booked_earning: stat('BOOKED').total,
+      upcoming_slots: upcoming.reduce((sum, s) => sum + s.count, 0),
+      booked_slots: stat('BOOKED').count,
+      pending_requests: stat('PENDING').count,
+    };
+  },
+
   async get(userId: string, range: DashboardRange) {
     if (!Types.ObjectId.isValid(userId)) {
       throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });

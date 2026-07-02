@@ -21,6 +21,14 @@ export const podTypeDefs = /* GraphQL */ `
     VIRTUAL
   }
 
+  "Venue's decision on the pod's slot request — PENDING pods are offline until APPROVED."
+  enum PodVenueApproval {
+    NONE
+    PENDING
+    APPROVED
+    DECLINED
+  }
+
   type PodMedia {
     url: String!
     type: CategoryMediaType!
@@ -99,6 +107,7 @@ export const podTypeDefs = /* GraphQL */ `
     product_requests: [PodProductRequest!]!
     product_cost_total: Float!
     is_active: Boolean!
+    venue_approval_status: PodVenueApproval!
     host_names: [String!]!
     like_count: Int!
     liked_by_me: Boolean!

@@ -49,6 +49,9 @@ export const venueTypeDefs = /* GraphQL */ `
     venue_types: [String!]!
     doc_types: [String!]!
     capacity_item_limit: Int!
+    amenities: [String!]!
+    facilities: [String!]!
+    security: [String!]!
   }
 
   type VenueOperatingHours {
@@ -123,6 +126,8 @@ export const venueTypeDefs = /* GraphQL */ `
     venue_category: VenueCategory!
     description: String!
     amenities: [String!]!
+    facilities: [String!]!
+    security: [String!]!
     cover_image_url: String!
     gallery: [String!]!
     location_id: ID
@@ -169,6 +174,8 @@ export const venueTypeDefs = /* GraphQL */ `
     venue_category: VenueCategoryInput
     description: String
     amenities: [String!]
+    facilities: [String!]
+    security: [String!]
     cover_image_url: String
     gallery: [String!]
     location_id: ID
@@ -201,6 +208,23 @@ export const venueTypeDefs = /* GraphQL */ `
     bank_account: BankAccountVerificationInput
   }
 
+  """
+  The only fields an owner may change on an APPROVED venue: description,
+  images, capacity list, owner contact details, and appended (never replaced)
+  documents. Everything else is locked after approval.
+  """
+  input UpdateApprovedVenueInput {
+    description: String
+    cover_image_url: String
+    gallery: [String!]
+    capacity_items: [VenueCapacityItemInput!]
+    add_documents: [VenueDocumentInput!]
+    owner_name: String
+    owner_phone: String
+    owner_dob: String
+    owner_address: String
+  }
+
   extend type Query {
     "Without venue_id: the owner's current application. With venue_id: that venue (must be the owner's)."
     myVenue(venue_id: ID): Venue
@@ -217,6 +241,8 @@ export const venueTypeDefs = /* GraphQL */ `
     submitVenueStep2(input: VenueStep2Input!, venue_id: ID): Venue!
     submitVenueStep3(input: VenueStep3Input!, venue_id: ID): Venue!
     submitVenueFinal(venue_id: ID): Venue!
+    "Owner edits the editable subset of an APPROVED venue (documents append-only)."
+    updateApprovedVenue(venue_id: ID!, input: UpdateApprovedVenueInput!): Venue!
     approveVenue(venue_doc_id: ID!, notes: String, tags: [String!]): Venue!
     rejectVenue(venue_doc_id: ID!, notes: String!): Venue!
     adminCreateVenue(

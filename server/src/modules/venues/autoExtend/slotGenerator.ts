@@ -26,6 +26,13 @@ function venueWallToUtc(y: number, mo: number, day: number, hh: number, mm: numb
   return new Date(Date.UTC(y, mo, day, hh, mm, 0, 0) - TZ_OFFSET_MS);
 }
 
+/** 'YYYY-MM-DD' an instant falls on per the venue's wall clock — the same
+ * basis `Venue.settings.holidays` dates are stored in. */
+export function venueLocalYmd(d: Date): string {
+  const { y, mo, day } = venueParts(d);
+  return `${y}-${String(mo + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+}
+
 /** End-of-day UTC instant for an inclusive 'YYYY-MM-DD' venue date (or null). */
 export function venueDateEndUtc(ymd: string): Date | null {
   if (!/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null;

@@ -2,7 +2,11 @@ import { useQuery } from '@apollo/client';
 import { Link as RouterLink, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { Alert, Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { RegisterVenueForm, type VenueRegistrationConfig } from './register-venue-page/register-venue';
+import {
+  RegisterVenueForm,
+  type RegisterVenueMode,
+  type VenueRegistrationConfig,
+} from './register-venue-page/register-venue';
 import { MY_VENUE, REGISTRATION_CONFIG } from './register-venue-page/queries';
 
 const statusChipColor = (status: string) => {
@@ -12,7 +16,14 @@ const statusChipColor = (status: string) => {
 
 function StatusAlerts({ status, notes }: Readonly<{ status?: string; notes?: string }>) {
   if (status === 'SUBMITTED') return <Alert severity="info">Application under review — view only.</Alert>;
-  if (status === 'APPROVED') return <Alert severity="success">Approved — this venue is view-only.</Alert>;
+  if (status === 'APPROVED') {
+    return (
+      <Alert severity="success">
+        Approved — you can update the description, images, capacity, owner details and add new
+        documents. Everything else is locked; locked fields appear greyed out.
+      </Alert>
+    );
+  }
   if (status === 'REJECTED') {
     return <Alert severity="error">Rejected: {notes || 'See notes.'} Update and resubmit.</Alert>;
   }
@@ -34,6 +45,9 @@ export default function RegisterVenuePage() {
     venue_types: [],
     doc_types: [],
     capacity_item_limit: 50,
+    amenities: [],
+    facilities: [],
+    security: [],
   };
 
   const account = data?.me;
@@ -48,7 +62,11 @@ export default function RegisterVenuePage() {
   const hydrate = Boolean(venueId) || currentMode || resumable;
   const venue = hydrate ? myVenue : null;
   const status = venue?.status as string | undefined;
-  const readOnly = status === 'SUBMITTED' || status === 'APPROVED';
+  // SUBMITTED = read-only while under review; APPROVED = spot-edit the allowed
+  // subset (description, images, capacity, owner, appended documents, leaves).
+  let mode: RegisterVenueMode = 'register';
+  if (status === 'SUBMITTED') mode = 'view';
+  if (status === 'APPROVED') mode = 'edit-approved';
   const notFound = Boolean(venueId) && !loading && !myVenue;
 
   if ((loading && !data) || (configQuery.loading && !configQuery.data)) {
@@ -60,7 +78,7 @@ export default function RegisterVenuePage() {
   }
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 1100, mx: 'auto', width: '100%' }}>
+    <Stack spacing={2.25} sx={{ width: '100%' }}>
       <Box
         sx={{
           p: 2.5,
@@ -109,7 +127,7 @@ export default function RegisterVenuePage() {
           locations={locations}
           account={{ name: accountName, email: accountEmail }}
           config={config}
-          readOnly={readOnly}
+          mode={mode}
           onPersisted={() => refetch()}
           onSubmitted={(id) => navigate(`/register-venue/${id}`, { replace: true })}
         />

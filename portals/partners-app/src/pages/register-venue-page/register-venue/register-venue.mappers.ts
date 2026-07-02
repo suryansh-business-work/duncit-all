@@ -58,6 +58,9 @@ export function venueToValues(
       label: item.label,
       capacity: item.capacity,
     })),
+    amenities: venue.amenities || [],
+    facilities: venue.facilities || [],
+    security: venue.security || [],
     documents: (venue.documents ?? []).map((doc: any) => ({ type: doc.type, url: doc.url })),
     gstin: venue.gstin || '',
     pan: venue.pan || '',
@@ -91,6 +94,9 @@ export function toStep1Input(values: RegisterVenueValues) {
         }
       : null,
     description: values.description,
+    amenities: values.amenities,
+    facilities: values.facilities,
+    security: values.security,
     cover_image_url: values.cover_image_url,
     gallery: values.gallery,
     location_id: values.location_id || null,
@@ -111,6 +117,39 @@ export function toStep2Input(values: RegisterVenueValues) {
     documents: values.documents.filter((doc) => doc.type && doc.url),
     gstin: values.gstin,
     pan: values.pan,
+  };
+}
+
+/** Payload for updateApprovedVenue — only the active section's editable
+ * fields. Documents are append-only: rows past `originalDocCount` are the new
+ * uploads (existing rows render locked, so indices below it never change). */
+export function toApprovedUpdateInput(
+  section: 'details' | 'type-capacity' | 'documents' | 'owner',
+  values: RegisterVenueValues,
+  originalDocCount: number
+) {
+  if (section === 'details') {
+    return {
+      description: values.description,
+      cover_image_url: values.cover_image_url,
+      gallery: values.gallery,
+    };
+  }
+  if (section === 'type-capacity') {
+    return { capacity_items: toCapacityItems(values) };
+  }
+  if (section === 'documents') {
+    return {
+      add_documents: values.documents
+        .slice(originalDocCount)
+        .filter((doc) => doc.type && doc.url),
+    };
+  }
+  return {
+    owner_name: values.owner_name,
+    owner_phone: values.owner_phone,
+    owner_dob: values.owner_dob || null,
+    owner_address: values.owner_address,
   };
 }
 

@@ -40,6 +40,22 @@ function Chip({ label }: Readonly<{ label: string }>) {
   );
 }
 
+function ChipsGroup({ title, items }: Readonly<{ title: string; items?: string[] | null }>) {
+  if (!items?.length) return null;
+  return (
+    <YStack gap={8}>
+      <Text fontSize={15} fontWeight="900" color="$color">
+        {title}
+      </Text>
+      <XStack flexWrap="wrap" gap={6}>
+        {items.map((item) => (
+          <Chip key={item} label={item} />
+        ))}
+      </XStack>
+    </YStack>
+  );
+}
+
 /** The scrollable venue body — cover, chips, description, location, amenities and
  * gallery. Split out of the screen so the loading/error chain stays simple. */
 function VenueDetailsContent({
@@ -95,18 +111,9 @@ function VenueDetailsContent({
         {addressLine(venue) || 'Address not provided'}
       </Text>
 
-      {venue.amenities && venue.amenities.length > 0 ? (
-        <YStack gap={8}>
-          <Text fontSize={15} fontWeight="900" color="$color">
-            Amenities
-          </Text>
-          <XStack flexWrap="wrap" gap={6}>
-            {venue.amenities.map((item) => (
-              <Chip key={item} label={item} />
-            ))}
-          </XStack>
-        </YStack>
-      ) : null}
+      <ChipsGroup title="Amenities" items={venue.amenities} />
+      <ChipsGroup title="Facilities" items={venue.facilities} />
+      <ChipsGroup title="Venue Security" items={venue.security} />
 
       {gallery.length > 1 ? (
         <YStack gap={8}>

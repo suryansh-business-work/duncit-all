@@ -28,7 +28,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
             label="Owner name"
             required
             error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? ' '}
+            helperText={fieldState.error?.message ?? 'Person hosts should reach out to'}
           />
         )}
       />
@@ -60,7 +60,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
             label="Owner phone"
             required
             error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? ' '}
+            helperText={fieldState.error?.message ?? 'Digits only, with optional + country code'}
           />
         )}
       />
@@ -74,7 +74,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
             onChange={field.onChange}
             onBlur={field.onBlur}
             error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? ' '}
+            helperText={fieldState.error?.message ?? 'Optional — used for identity checks'}
             maxDate={new Date()}
           />
         )}
@@ -89,7 +89,7 @@ export default function OwnerSection({ form, accountEmail }: Readonly<Props>) {
             multiline
             minRows={2}
             error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? ' '}
+            helperText={fieldState.error?.message ?? 'Optional — correspondence address (max 500 characters)'}
           />
         )}
       />

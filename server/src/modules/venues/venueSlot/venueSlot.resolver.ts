@@ -26,6 +26,10 @@ export const venueSlotResolvers = {
       requireRole(ctx, ONBOARDING_RW);
       return venueSlotService.adminListForVenue(args.venue_id, args.from, args.to);
     },
+    venueSlotRequests: (_p: unknown, args: { venue_id?: string | null }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return venueSlotService.listRequests(user.id, args.venue_id);
+    },
   },
   Mutation: {
     createVenueSlots: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -47,6 +51,18 @@ export const venueSlotResolvers = {
     bulkUpdateVenueSlots: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return venueSlotService.bulkUpdate(user.id, args.input);
+    },
+    approveVenueSlotRequest: (_p: unknown, args: { slot_id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return venueSlotService.approveRequest(user.id, args.slot_id);
+    },
+    declineVenueSlotRequest: (
+      _p: unknown,
+      args: { slot_id: string; reason?: string | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return venueSlotService.declineRequest(user.id, args.slot_id, args.reason);
     },
     adminCreateVenueSlots: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ONBOARDING_RW);

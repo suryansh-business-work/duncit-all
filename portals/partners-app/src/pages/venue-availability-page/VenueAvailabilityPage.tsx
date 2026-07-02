@@ -74,6 +74,7 @@ export default function VenueAvailabilityPage() {
   const { data: venuesData } = useQuery(MY_VENUES, { fetchPolicy: 'cache-first' });
   const venue = (venuesData?.myVenues ?? []).find((v: any) => v.id === venueId);
   const isApproved = venue?.status === 'APPROVED';
+  const venueHolidays: string[] = venue?.settings?.holidays ?? [];
 
   const range = useMemo(() => viewRange(view, anchor), [view, anchor]);
   const { data, loading, error, refetch } = useQuery<{ venueSlots: VenueSlotRow[] }>(VENUE_SLOTS, {
@@ -114,7 +115,7 @@ export default function VenueAvailabilityPage() {
 
   if (!venue && venuesData) {
     return (
-      <Stack spacing={2} sx={{ maxWidth: 860, mx: 'auto' }}>
+      <Stack spacing={2} sx={{ width: '100%' }}>
         <Alert severity="error">Venue not found, or it isn't yours.</Alert>
         <Button component={RouterLink} to="/register-venue" variant="outlined">
           Back to venues
@@ -125,7 +126,7 @@ export default function VenueAvailabilityPage() {
 
   if (!isApproved && venue) {
     return (
-      <Stack spacing={2} sx={{ maxWidth: 860, mx: 'auto' }}>
+      <Stack spacing={2} sx={{ width: '100%' }}>
         <Alert severity="warning">
           Availability is only editable once your venue is approved (current status: {venue.status}).
         </Alert>
@@ -137,7 +138,7 @@ export default function VenueAvailabilityPage() {
   }
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 860, mx: 'auto' }}>
+    <Stack spacing={2.5} sx={{ width: '100%' }}>
       <Stack direction="row" alignItems="center" spacing={1}>
         <IconButton size="small" onClick={() => navigate('/register-venue')} aria-label="Back">
           <ArrowBackIcon />
@@ -212,13 +213,16 @@ export default function VenueAvailabilityPage() {
               slots={data?.venueSlots ?? []}
               selectedDate={selectedDate}
               onSelect={setSelectedDate}
+              holidays={venueHolidays}
             />
           )}
 
           <Stack direction="row" spacing={2} sx={{ mt: 2, flexWrap: 'wrap', rowGap: 1 }}>
             <Legend color="success.light" label="A — Available" />
+            <Legend color="info.light" label="P — Pending approval" />
             <Legend color="warning.light" label="B — Booked" />
             <Legend color="grey.300" label="× — Blocked" />
+            <Legend color="error.light" label="Leave / Holiday" />
           </Stack>
         </CardContent>
       </Card>
@@ -231,6 +235,7 @@ export default function VenueAvailabilityPage() {
         onCreate={handleCreate}
         onToggleBlock={handleToggleBlock}
         onDelete={handleDelete}
+        isHoliday={Boolean(selectedDate && venueHolidays.includes(format(selectedDate, 'yyyy-MM-dd')))}
       />
 
       <RecurringAvailabilityDialog

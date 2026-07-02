@@ -16,10 +16,13 @@ interface Props {
   slots: VenueSlotRow[];
   selectedDate: Date | null;
   onSelect: (date: Date) => void;
+  /** Venue leave/holiday dates ('yyyy-MM-dd') — rendered red; never bookable. */
+  holidays?: string[];
 }
 
 interface Bucket {
   available: number;
+  pending: number;
   booked: number;
   blocked: number;
 }
@@ -28,8 +31,9 @@ function bucketByDay(slots: VenueSlotRow[]): Map<string, Bucket> {
   const map = new Map<string, Bucket>();
   for (const slot of slots) {
     const key = format(new Date(slot.start_at), 'yyyy-MM-dd');
-    const bucket = map.get(key) ?? { available: 0, booked: 0, blocked: 0 };
+    const bucket = map.get(key) ?? { available: 0, pending: 0, booked: 0, blocked: 0 };
     if (slot.status === 'AVAILABLE') bucket.available += 1;
+    else if (slot.status === 'PENDING') bucket.pending += 1;
     else if (slot.status === 'BOOKED') bucket.booked += 1;
     else bucket.blocked += 1;
     map.set(key, bucket);
@@ -38,9 +42,10 @@ function bucketByDay(slots: VenueSlotRow[]): Map<string, Bucket> {
 }
 
 // Flat (non-nested) colour resolution keeps the JSX free of nested ternaries.
-function cellColors(isSelected: boolean, isOtherMonth: boolean, isPast: boolean) {
+function cellColors(isSelected: boolean, isOtherMonth: boolean, isPast: boolean, isHoliday: boolean) {
   if (isSelected) return { bgcolor: 'primary.main', color: 'primary.contrastText' };
   if (isOtherMonth) return { bgcolor: 'transparent', color: 'text.disabled' };
+  if (isHoliday) return { bgcolor: 'error.light', color: 'error.contrastText' };
   if (isPast) return { bgcolor: 'background.paper', color: 'text.disabled' };
   return { bgcolor: 'background.paper', color: 'text.primary' };
 }
@@ -103,19 +108,20 @@ interface DayCellProps {
   monthStart: Date;
   today: Date;
   bucket?: Bucket;
+  isHoliday: boolean;
   selectedDate: Date | null;
   onSelect: (date: Date) => void;
 }
 
-/** A single day tile with its A/B/× slot counts. Hoisted to module scope so it
- *  is never re-created per render (S6478). */
-function DayCell({ date, view, monthStart, today, bucket, selectedDate, onSelect }: Readonly<DayCellProps>) {
+/** A single day tile with its A/P/B/× slot counts. Hoisted to module scope so
+ *  it is never re-created per render (S6478). */
+function DayCell({ date, view, monthStart, today, bucket, isHoliday, selectedDate, onSelect }: Readonly<DayCellProps>) {
   const isOtherMonth = view === 'month' && !isSameMonth(date, monthStart);
   const isPast = date < today;
   const isSelected = !!selectedDate && isSameDay(date, selectedDate);
   const isToday = isSameDay(date, today);
   const isDayView = view === 'day';
-  const { bgcolor, color } = cellColors(isSelected, isOtherMonth, isPast);
+  const { bgcolor, color } = cellColors(isSelected, isOtherMonth, isPast, isHoliday);
 
   return (
     <Box
@@ -152,10 +158,21 @@ function DayCell({ date, view, monthStart, today, bucket, selectedDate, onSelect
         >
           {isDayView ? format(date, 'EEEE, dd MMM') : format(date, 'd')}
         </Typography>
+        {isHoliday && !isDayView && (
+          <Typography variant="caption" sx={{ fontSize: 9, fontWeight: 800 }} aria-label="Venue on leave">
+            LEAVE
+          </Typography>
+        )}
       </Stack>
+      {isHoliday && isDayView && (
+        <Typography variant="caption" sx={{ fontWeight: 800 }}>
+          Venue on leave — not bookable
+        </Typography>
+      )}
       {bucket && (
         <Stack direction="row" spacing={0.25} flexWrap="wrap" sx={{ rowGap: 0.25 }}>
           <CountBadge count={bucket.available} selected={isSelected} label="A" bg="success.light" fg="success.contrastText" />
+          <CountBadge count={bucket.pending} selected={isSelected} label="P" bg="info.light" fg="info.contrastText" />
           <CountBadge count={bucket.booked} selected={isSelected} label="B" bg="warning.light" fg="warning.contrastText" />
           <CountBadge count={bucket.blocked} selected={isSelected} label="×" bg="grey.300" fg="text.secondary" />
         </Stack>
@@ -173,8 +190,10 @@ export default function AvailabilityCalendar({
   slots,
   selectedDate,
   onSelect,
+  holidays = [],
 }: Readonly<Props>) {
   const buckets = bucketByDay(slots);
+  const holidaySet = new Set(holidays);
   const monthStart = startOfMonth(month);
   const today = new Date();
   today.setHours(0, 0, 0, 0);
@@ -207,6 +226,7 @@ export default function AvailabilityCalendar({
             monthStart={monthStart}
             today={today}
             bucket={buckets.get(format(date, 'yyyy-MM-dd'))}
+            isHoliday={holidaySet.has(format(date, 'yyyy-MM-dd'))}
             selectedDate={selectedDate}
             onSelect={onSelect}
           />

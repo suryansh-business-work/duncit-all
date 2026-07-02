@@ -12,22 +12,25 @@ import {
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import DeleteIcon from '@mui/icons-material/Delete';
-import type { RegisterVenueValues, VenueRegistrationConfig } from '../register-venue';
+import type { RegisterVenueMode, RegisterVenueValues, VenueRegistrationConfig } from '../register-venue';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
   config: VenueRegistrationConfig;
+  mode: RegisterVenueMode;
 }
 
 /** Venue type + the dynamic capacity list under it: each row names one space
- * ("Banquet hall", "Rooftop tables") with its own capacity number. */
-export default function VenueTypeCapacitySection({ form, config }: Readonly<Props>) {
+ * ("Banquet hall", "Rooftop tables") with its own capacity number. The
+ * capacity list stays editable after approval; the venue type is locked. */
+export default function VenueTypeCapacitySection({ form, config, mode }: Readonly<Props>) {
   const { control, watch, formState } = form;
   const { fields, append, remove } = useFieldArray({ control, name: 'capacity_items' });
   const items = watch('capacity_items');
   const total = items.reduce((sum, item) => sum + (Number(item.capacity) || 0), 0);
   const listError = formState.errors.capacity_items?.root?.message ?? formState.errors.capacity_items?.message;
   const atLimit = fields.length >= config.capacity_item_limit;
+  const typeLocked = mode === 'edit-approved';
 
   return (
     <Stack spacing={2.5}>
@@ -40,8 +43,9 @@ export default function VenueTypeCapacitySection({ form, config }: Readonly<Prop
             select
             label="Venue type"
             required
+            disabled={typeLocked}
             error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? ' '}
+            helperText={fieldState.error?.message ?? (typeLocked ? 'Locked after approval' : 'Closest match for your space')}
           >
             {config.venue_types.map((type) => (
               <MenuItem key={type} value={type}>
@@ -78,7 +82,7 @@ export default function VenueTypeCapacitySection({ form, config }: Readonly<Prop
                 size="small"
                 fullWidth
                 error={Boolean(fieldState.error)}
-                helperText={fieldState.error?.message ?? ' '}
+                helperText={fieldState.error?.message ?? 'e.g. Banquet hall, Rooftop tables'}
               />
             )}
           />
@@ -94,7 +98,7 @@ export default function VenueTypeCapacitySection({ form, config }: Readonly<Prop
                 sx={{ minWidth: 130 }}
                 inputProps={{ min: 1, step: 1 }}
                 error={Boolean(fieldState.error)}
-                helperText={fieldState.error?.message ?? ' '}
+                helperText={fieldState.error?.message ?? 'People it holds'}
               />
             )}
           />

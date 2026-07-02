@@ -30,6 +30,9 @@ export const venueStep1Schema: yup.ObjectSchema<Step1> = yup.object({
     .max(100_000, 'Capacity is unrealistic')
     .required('Capacity is required'),
   description: yup.string().trim().max(2000, 'Description must be 2000 characters or fewer').default(''),
+  amenities: yup.array(yup.string().trim().required()).default([]),
+  facilities: yup.array(yup.string().trim().required()).default([]),
+  security: yup.array(yup.string().trim().required()).default([]),
   cover_image_url: yup.string().trim().max(1000).default(''),
   gallery: yup.array(yup.string().trim().max(1000).required()).default([]),
   address_line1: yup

@@ -42,6 +42,8 @@ export const MobilePublicVenuesDocument = gql(`
       lat
       lng
       amenities
+      facilities
+      security
       tags
     }
   }

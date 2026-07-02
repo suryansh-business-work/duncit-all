@@ -2,32 +2,59 @@ import { useEffect, useRef, useState } from 'react';
 import { useMutation } from '@apollo/client';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { FINAL, STEP1, STEP2, STEP3 } from '../queries';
+import { FINAL, STEP1, STEP2, STEP3, UPDATE_APPROVED_VENUE } from '../queries';
 import { SECTION_FIELDS, registerVenueSchema } from './register-venue.schema';
-import { toStep1Input, toStep2Input, toStep3Input, venueToValues } from './register-venue.mappers';
+import {
+  toApprovedUpdateInput,
+  toStep1Input,
+  toStep2Input,
+  toStep3Input,
+  venueToValues,
+} from './register-venue.mappers';
 import {
   blankRegisterVenueValues,
+  type RegisterVenueMode,
   type RegisterVenueValues,
   type VenueSectionKey,
 } from './register-venue.types';
 
-export type EditableSectionKey = Exclude<VenueSectionKey, 'review'>;
+export type EditableSectionKey = Exclude<VenueSectionKey, 'review' | 'leaves'>;
 export type SectionState = 'complete' | 'incomplete';
 
-const SECTION_ORDER: VenueSectionKey[] = ['details', 'type-capacity', 'documents', 'owner', 'review'];
+const SECTION_ORDER: VenueSectionKey[] = [
+  'details',
+  'type-capacity',
+  'amenities',
+  'documents',
+  'owner',
+  'leaves',
+  'review',
+];
+
+/** Sections updateApprovedVenue can persist (amenities are locked post-approval). */
+const APPROVED_EDIT_SECTIONS = new Set<EditableSectionKey>([
+  'details',
+  'type-capacity',
+  'documents',
+  'owner',
+]);
 
 interface Options {
   venue: any | null;
   locations: any[];
   account: { name: string; email: string };
+  mode: RegisterVenueMode;
   onPersisted: () => Promise<unknown>;
 }
 
-export function useRegisterVenueForm({ venue, locations, account, onPersisted }: Readonly<Options>) {
+export function useRegisterVenueForm({ venue, locations, account, mode, onPersisted }: Readonly<Options>) {
   const [active, setActive] = useState<VenueSectionKey>('details');
   const [venueId, setVenueId] = useState<string | null>(venue?.id ?? null);
   const [error, setError] = useState<string | null>(null);
+  const [saved, setSaved] = useState<string | null>(null);
   const hydratedFor = useRef<string | null>(null);
+  // Documents the venue already had — those rows are append-only after approval.
+  const originalDocCount = venue?.documents?.length ?? 0;
 
   const form = useForm<RegisterVenueValues>({
     resolver: zodResolver(registerVenueSchema),
@@ -53,7 +80,8 @@ export function useRegisterVenueForm({ venue, locations, account, onPersisted }:
   const [saveStep2, s2] = useMutation(STEP2);
   const [saveStep3, s3] = useMutation(STEP3);
   const [submitFinal, sf] = useMutation(FINAL);
-  const busy = s1.loading || s2.loading || s3.loading || sf.loading;
+  const [saveApproved, sa] = useMutation(UPDATE_APPROVED_VENUE);
+  const busy = s1.loading || s2.loading || s3.loading || sf.loading || sa.loading;
 
   // Live section completion for the rail: map zod issue paths back to sections.
   // watch() subscribes this hook to every change; compute per render (no memo —
@@ -62,6 +90,7 @@ export function useRegisterVenueForm({ venue, locations, account, onPersisted }:
   const sectionState: Record<EditableSectionKey, SectionState> = {
     details: 'complete',
     'type-capacity': 'complete',
+    amenities: 'complete',
     documents: 'complete',
     owner: 'complete',
   };
@@ -117,6 +146,7 @@ export function useRegisterVenueForm({ venue, locations, account, onPersisted }:
 
   const saveSection = async (section: EditableSectionKey) => {
     setError(null);
+    setSaved(null);
     if (await requireDetailsFirst(section)) return false;
     const ok = await form.trigger(SECTION_FIELDS[section], { shouldFocus: true });
     if (!ok) return false;
@@ -124,6 +154,35 @@ export function useRegisterVenueForm({ venue, locations, account, onPersisted }:
       await persistSection(section);
       const next = SECTION_ORDER[SECTION_ORDER.indexOf(section) + 1];
       if (next) setActive(next);
+      return true;
+    } catch (mutationError: any) {
+      setError(mutationError.message);
+      return false;
+    }
+  };
+
+  /** Post-approval edit: persists only the active section's editable fields
+   * through updateApprovedVenue. Never advances sections — the owner is
+   * spot-editing, not walking a wizard. */
+  const saveApprovedSection = async (section: EditableSectionKey) => {
+    setError(null);
+    setSaved(null);
+    if (!venueId || !APPROVED_EDIT_SECTIONS.has(section)) return false;
+    const ok = await form.trigger(SECTION_FIELDS[section], { shouldFocus: true });
+    if (!ok) return false;
+    try {
+      await saveApproved({
+        variables: {
+          venue_id: venueId,
+          input: toApprovedUpdateInput(
+            section as 'details' | 'type-capacity' | 'documents' | 'owner',
+            form.getValues(),
+            originalDocCount
+          ),
+        },
+      });
+      await onPersisted();
+      setSaved('Changes saved.');
       return true;
     } catch (mutationError: any) {
       setError(mutationError.message);
@@ -162,5 +221,18 @@ export function useRegisterVenueForm({ venue, locations, account, onPersisted }:
     }
   };
 
-  return { form, active, setActive, error, busy, sectionState, saveSection, submitAll };
+  return {
+    form,
+    active,
+    setActive,
+    error,
+    saved,
+    busy,
+    mode,
+    venueId,
+    sectionState,
+    saveSection,
+    saveApprovedSection,
+    submitAll,
+  };
 }

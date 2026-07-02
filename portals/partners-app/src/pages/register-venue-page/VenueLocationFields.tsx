@@ -1,11 +1,11 @@
 import { Autocomplete, Box, TextField } from '@mui/material';
-import type { VenueStep1 } from './types';
+import type { VenueLocationValues } from './register-venue/register-venue.types';
 
 interface Props {
-  value: VenueStep1;
+  value: VenueLocationValues;
   locations: any[];
-  onChange: (next: VenueStep1) => void;
-  errors?: Partial<Record<keyof VenueStep1, string>>;
+  onChange: (next: VenueLocationValues) => void;
+  errors?: Partial<Record<keyof VenueLocationValues, string>>;
   showAllErrors?: boolean;
 }
 
@@ -25,7 +25,7 @@ const uniqueOptions = (items: NamedOption[]) => {
   return [...byKey.values()].sort((a, b) => a.name.localeCompare(b.name));
 };
 
-export const findSelectedLocation = (locations: any[], value: VenueStep1) =>
+export const findSelectedLocation = (locations: any[], value: VenueLocationValues) =>
   locations.find((item) => item.id === value.location_id) ??
   locations.find(
     (item) =>
@@ -56,8 +56,8 @@ export default function VenueLocationFields({ value, locations, onChange, errors
   const zones = selectedLocation?.location_zones ?? [];
   const selectedZone = zones.find((zone: any) => zone.zone_name === value.locality) ?? null;
 
-  const set = (patch: Partial<VenueStep1>) => onChange({ ...value, ...patch });
-  const showError = (key: keyof VenueStep1) => Boolean(errors?.[key] && (showAllErrors || value[key]));
+  const set = (patch: Partial<VenueLocationValues>) => onChange({ ...value, ...patch });
+  const showError = (key: keyof VenueLocationValues) => Boolean(errors?.[key] && (showAllErrors || value[key]));
   const chooseLocation = (location: any | null) => {
     if (!location) {
       set({ location_id: '', city: '', locality: '', postal_code: '' });

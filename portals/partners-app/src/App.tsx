@@ -39,6 +39,7 @@ export default function App() {
       <Route path="/register-venue" element={authed(<VenueListingsPage />)} />
       <Route path="/register-venue/new" element={authed(<RegisterVenuePage />)} />
       <Route path="/register-venue/current" element={authed(<RegisterVenuePage />)} />
+      <Route path="/register-venue/:venueId" element={authed(<RegisterVenuePage />)} />
       <Route path="/venues/:venueId/availability" element={authed(<VenueAvailabilityPage />)} />
       <Route path="/become-host" element={authed(<BecomeHostPage />)} />
       <Route path="/ecomm-brand" element={authed(<EcommBrandPage />)} />

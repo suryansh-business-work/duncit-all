@@ -632,7 +632,17 @@
       "Bash(xargs grep -l \"joinChildren\\\\|divider\")",
       "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/app/mweb/node_modules/@mui/system//**)",
       "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/app/mweb/node_modules/@mui/system/esm/Stack//**)",
-      "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/app/mweb/src/pages/checkout-page//**)"
+      "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/app/mweb/src/pages/checkout-page//**)",
+      "Bash(python -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\('main:',p.get\\('main'\\)\\); print\\('module:',p.get\\('module'\\)\\); print\\('exports:',json.dumps\\(p.get\\('exports'\\)\\)\\); print\\('scripts:',json.dumps\\(p.get\\('scripts'\\)\\)\\)\")",
+      "Bash(python -c \"import sys,json; p=json.load\\(sys.stdin\\); print\\('avail dep:', p.get\\('dependencies',{}\\).get\\('@duncit/availability-calendar'\\)\\); print\\('scripts:', json.dumps\\(p.get\\('scripts'\\)\\)\\)\")",
+      "Bash(cd /c/Users/Suryansh/Desktop/Projects/duncit.com/project && echo \"=== Does onboarding VenueSlotAvailabilityTab use DayDrawer? ===\" && grep -rn \"DayDrawer\\\\|VenueSlotRow\\\\|adminVenueSlots\\\\|@duncit/availability-calendar\" portals/onboarding/src/pages/venue-details-page/ | head -30)",
+      "Bash(echo \"exit: $?\")",
+      "Bash(find /c/Users/Suryansh/Desktop/Projects/duncit.com/project/app/mweb/src -type f -name \"*.tsx\" -o -name \"*.ts\" -o -name \"*.jsx\" -o -name \"*.js\" | head -30)",
+      "Read(//c/Users/Suryansh/Desktop/Projects/duncit.com/project/app/mweb/src/**)",
+      "Bash(xargs grep -l \"useLocations\\\\|getLocations\\\\|FetchLocations\")",
+      "Bash(find /c/Users/Suryansh/Desktop/Projects/duncit.com/project/app/mweb/src -type f -name \"*.graphql\" | head -20)",
+      "Bash(xargs grep -l \"LocationPicker\\\\|cityLabel\\\\|location.store\")",
+      "Bash(grep -r \"LocationDialog\" /c/Users/Suryansh/Desktop/Projects/duncit.com/project/app/mweb/src --include=\"*.tsx\" --include=\"*.ts\" | head -10)"
     ],
     "deny": [],
     "ask": [],

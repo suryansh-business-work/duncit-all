@@ -1,11 +1,9 @@
-import { Link as RouterLink, useNavigate } from 'react-router-dom';
+import { Link as RouterLink } from 'react-router-dom';
 import { Box, Button, Stack, Typography } from '@mui/material';
 import AddBusinessIcon from '@mui/icons-material/AddBusiness';
 import VenueListingsTable from './VenueListingsTable';
 
 export default function VenueListingsPage() {
-  const navigate = useNavigate();
-
   return (
     <Stack spacing={2.5} sx={{ maxWidth: 860, mx: 'auto' }}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' }}>
@@ -22,7 +20,7 @@ export default function VenueListingsPage() {
           </Button>
         </Stack>
       </Box>
-      <VenueListingsTable onEdit={() => navigate('/register-venue/current')} />
+      <VenueListingsTable />
     </Stack>
   );
 }

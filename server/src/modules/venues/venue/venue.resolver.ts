@@ -12,10 +12,11 @@ function uid(ctx: GraphQLContext) {
 
 export const venueResolvers = {
   Query: {
-    myVenue: async (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
-      venueService.getMine(uid(ctx)),
+    myVenue: async (_p: unknown, args: { venue_id?: string }, ctx: GraphQLContext) =>
+      venueService.getMine(uid(ctx), args.venue_id),
     myVenues: async (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
       venueService.listMine(uid(ctx)),
+    venueRegistrationConfig: async () => venueService.registrationConfig(),
     venues: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_REVIEW);
       return venueService.list({ status: args.status });
@@ -27,14 +28,14 @@ export const venueResolvers = {
     publicVenues: async () => venueService.list({ status: 'APPROVED' }),
   },
   Mutation: {
-    submitVenueStep1: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>
-      venueService.submitStep1(uid(ctx), args.input),
-    submitVenueStep2: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>
-      venueService.submitStep2(uid(ctx), args.input),
-    submitVenueStep3: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>
-      venueService.submitStep3(uid(ctx), args.input),
-    submitVenueFinal: async (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
-      venueService.submitFinal(uid(ctx)),
+    submitVenueStep1: async (_p: unknown, args: { input: any; venue_id?: string }, ctx: GraphQLContext) =>
+      venueService.submitStep1(uid(ctx), args.input, args.venue_id),
+    submitVenueStep2: async (_p: unknown, args: { input: any; venue_id?: string }, ctx: GraphQLContext) =>
+      venueService.submitStep2(uid(ctx), args.input, args.venue_id),
+    submitVenueStep3: async (_p: unknown, args: { input: any; venue_id?: string }, ctx: GraphQLContext) =>
+      venueService.submitStep3(uid(ctx), args.input, args.venue_id),
+    submitVenueFinal: async (_p: unknown, args: { venue_id?: string }, ctx: GraphQLContext) =>
+      venueService.submitFinal(uid(ctx), args.venue_id),
     approveVenue: async (
       _p: unknown,
       args: { venue_doc_id: string; notes?: string; tags?: string[] },

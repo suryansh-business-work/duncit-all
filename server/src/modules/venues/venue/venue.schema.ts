@@ -17,6 +17,40 @@ export const venueTypeDefs = /* GraphQL */ `
     url: String!
   }
 
+  "Category the venue wants to host pods in (shared pods Category taxonomy)."
+  type VenueCategory {
+    super_category_id: ID
+    category_id: ID
+    sub_category_id: ID
+    super_category_name: String!
+    category_name: String!
+    sub_category_name: String!
+  }
+
+  input VenueCategoryInput {
+    super_category_id: ID!
+    category_id: ID!
+    sub_category_id: ID!
+  }
+
+  "One named capacity the venue offers (e.g. 'Banquet hall' seats 120)."
+  type VenueCapacityItem {
+    label: String!
+    capacity: Int!
+  }
+
+  input VenueCapacityItemInput {
+    label: String!
+    capacity: Int!
+  }
+
+  "Registration option catalogs — clients render these instead of hardcoding."
+  type VenueRegistrationConfig {
+    venue_types: [String!]!
+    doc_types: [String!]!
+    capacity_item_limit: Int!
+  }
+
   type VenueOperatingHours {
     open: String!
     close: String!
@@ -85,6 +119,8 @@ export const venueTypeDefs = /* GraphQL */ `
     venue_name: String!
     venue_type: String!
     capacity: Int!
+    capacity_items: [VenueCapacityItem!]!
+    venue_category: VenueCategory!
     description: String!
     amenities: [String!]!
     cover_image_url: String!
@@ -129,6 +165,8 @@ export const venueTypeDefs = /* GraphQL */ `
     venue_name: String!
     venue_type: String!
     capacity: Int!
+    capacity_items: [VenueCapacityItemInput!]
+    venue_category: VenueCategoryInput
     description: String
     amenities: [String!]
     cover_image_url: String
@@ -164,18 +202,21 @@ export const venueTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
-    myVenue: Venue
+    "Without venue_id: the owner's current application. With venue_id: that venue (must be the owner's)."
+    myVenue(venue_id: ID): Venue
     myVenues: [Venue!]!
     venues(status: VenueStatus): [Venue!]!
     venue(venue_doc_id: ID!): Venue
     publicVenues: [Venue!]!
+    venueRegistrationConfig: VenueRegistrationConfig!
   }
 
   extend type Mutation {
-    submitVenueStep1(input: VenueStep1Input!): Venue!
-    submitVenueStep2(input: VenueStep2Input!): Venue!
-    submitVenueStep3(input: VenueStep3Input!): Venue!
-    submitVenueFinal: Venue!
+    "venue_id targets a specific editable (DRAFT/REJECTED) venue of the owner; omitted = current draft (created if needed)."
+    submitVenueStep1(input: VenueStep1Input!, venue_id: ID): Venue!
+    submitVenueStep2(input: VenueStep2Input!, venue_id: ID): Venue!
+    submitVenueStep3(input: VenueStep3Input!, venue_id: ID): Venue!
+    submitVenueFinal(venue_id: ID): Venue!
     approveVenue(venue_doc_id: ID!, notes: String, tags: [String!]): Venue!
     rejectVenue(venue_doc_id: ID!, notes: String!): Venue!
     adminCreateVenue(

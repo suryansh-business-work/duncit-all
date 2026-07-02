@@ -20,6 +20,15 @@ export const VENUES = gql`
       locality
       postal_code
       capacity
+      capacity_items {
+        label
+        capacity
+      }
+      venue_category {
+        super_category_name
+        category_name
+        sub_category_name
+      }
       status
       step_completed
       submitted_at

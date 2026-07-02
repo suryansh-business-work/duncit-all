@@ -64,8 +64,16 @@ export default function VenueReviewDialog({
   };
 
   const documents = active?.documents ?? [];
+  const capacityItems = active?.capacity_items ?? [];
   const locationLine =
     [active?.locality, active?.city, active?.state, active?.country].filter(Boolean).join(', ') || '—';
+  const categoryPath = [
+    active?.venue_category?.super_category_name,
+    active?.venue_category?.category_name,
+    active?.venue_category?.sub_category_name,
+  ]
+    .filter(Boolean)
+    .join(' › ');
 
   return (
     <Dialog open={!!active} onClose={onClose} fullWidth maxWidth="sm">
@@ -93,6 +101,18 @@ export default function VenueReviewDialog({
               <Chip size="small" variant="outlined" label={`GSTIN ${active?.gstin || '—'}`} />
               <Chip size="small" variant="outlined" label={`PAN ${active?.pan || '—'}`} />
             </Stack>
+            {categoryPath && (
+              <Typography variant="body2" sx={{ mb: 0.5 }}>
+                Hosts in: <strong>{categoryPath}</strong>
+              </Typography>
+            )}
+            {capacityItems.length > 0 && (
+              <Stack direction="row" spacing={1} flexWrap="wrap" rowGap={1} sx={{ mb: 1 }}>
+                {capacityItems.map((item: any) => (
+                  <Chip key={item.label} size="small" label={`${item.label}: ${item.capacity}`} />
+                ))}
+              </Stack>
+            )}
             <Typography variant="body2">
               {locationLine}
               {active?.postal_code ? ` · PIN ${active.postal_code}` : ''}

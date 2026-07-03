@@ -57,6 +57,7 @@ export const CreatePodOptionsDocument = gql(`
     myHost {
       id
       status
+      is_active
       host_categories {
         super_category_id
         category_id

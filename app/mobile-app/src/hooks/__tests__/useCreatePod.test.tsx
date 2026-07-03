@@ -62,6 +62,8 @@ describe('useCreatePod', () => {
     mockRequest.mockResolvedValueOnce({
       ...options,
       me: { user_id: 'u1', roles: [], selected_location_id: null },
+      // No cached HOST role AND no approved host profile → genuinely not a host.
+      myHost: null,
       locations: null,
       publicFinanceSettings: null,
     });
@@ -77,6 +79,29 @@ describe('useCreatePod', () => {
     expect(failed.current.clubs).toEqual([]);
     expect(failed.current.products).toEqual([]);
     expect(failed.current.hostCategories).toEqual([]);
+  });
+
+  it('treats an approved host profile as host access even without the cached HOST role', async () => {
+    // Legacy / HOSTREQ-only hosts lack HOST in me.roles but are approved+active.
+    mockRequest.mockResolvedValueOnce({
+      ...options,
+      me: { ...options.me, roles: [] },
+      myHost: { id: 'h1', status: 'APPROVED', is_active: true, host_categories: [] },
+    });
+    const { result } = renderHook(() => useCreatePod());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.isHost).toBe(true);
+  });
+
+  it('blocks an approved but deactivated host that has no HOST role', async () => {
+    mockRequest.mockResolvedValueOnce({
+      ...options,
+      me: { ...options.me, roles: [] },
+      myHost: { id: 'h1', status: 'APPROVED', is_active: false, host_categories: [] },
+    });
+    const { result } = renderHook(() => useCreatePod());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.isHost).toBe(false);
   });
 
   it('hydrates and clamps a resumed draft', async () => {

@@ -80,7 +80,7 @@ function SpaceHarness({ venues }: Readonly<{ venues: CreatePodVenue[] }>) {
       ...blankCreatePodForm,
       pod_mode: 'PHYSICAL',
       location_id: 'l1',
-      venue_id: venues[0].id,
+      venue_id: venues[0]?.id ?? '',
     },
   });
   return (

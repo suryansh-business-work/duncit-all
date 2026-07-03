@@ -1,11 +1,12 @@
 import { gql, useQuery } from '@apollo/client';
 import { Controller } from 'react-hook-form';
-import { Alert, Autocomplete, MenuItem, Stack, TextField, Typography } from '@mui/material';
-import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
+import { Alert, FormHelperText, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
-import { formatDurationBetween, useDateFormat } from '../../../../utils/dateFormat';
+import { formatDurationBetween } from '../../../../utils/dateFormat';
 import SlotPicker from '../SlotPicker';
+import VenuePicker from '../VenuePicker';
 import VenueContactCard from '../VenueContactCard';
+import VirtualMeetingFields from '../VirtualMeetingFields';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
 
 type VenueSpace = { label: string; capacity: number };
@@ -38,16 +39,14 @@ interface Props {
   viewerUserId: string;
 }
 
-/** Step 3 — pick a venue partner in the pod's city and book one of its
- * published availability slots (physical), or meeting details + schedule
+/** Step 3 — pick a venue partner in the pod's city (card rail) and book one of
+ * its published availability slots (physical), or meeting details + schedule
  * (virtual). The slot sets the pod's date/time. */
 export default function VenueSlotStep({ form, venues, viewerUserId }: Readonly<Props>) {
   const {
     control,
-    register,
     watch,
     setValue,
-    getValues,
     formState: { errors },
   } = form;
   const mode = watch('pod_mode');
@@ -65,6 +64,11 @@ export default function VenueSlotStep({ form, venues, viewerUserId }: Readonly<P
     const chosen = spaces.find((space) => space.label === label);
     if (chosen) setValue('no_of_spots', chosen.capacity, { shouldDirty: true, shouldValidate: true });
   };
+  const selectVenue = (id: string) => {
+    setValue('venue_id', id, { shouldDirty: true, shouldValidate: true });
+    setValue('venue_slot_id', '', { shouldDirty: true });
+    setValue('venue_space_label', '', { shouldDirty: true });
+  };
 
   const slotsQuery = useQuery<{ venueAvailableSlots: CreatePodSlot[] }>(VENUE_AVAILABLE_SLOTS, {
     variables: { venue_id: venueId },
@@ -72,9 +76,6 @@ export default function VenueSlotStep({ form, venues, viewerUserId }: Readonly<P
     fetchPolicy: 'cache-and-network',
   });
   const slots = slotsQuery.data?.venueAvailableSlots ?? [];
-
-  const { dateFormat, timeFormat } = useDateFormat();
-  const dateTimeFormat = `${dateFormat} ${timeFormat}`;
   const duration = formatDurationBetween(watch('pod_date_time'), watch('pod_end_date_time'));
 
   const pickSlot = (slot: CreatePodSlot) => {
@@ -85,107 +86,16 @@ export default function VenueSlotStep({ form, venues, viewerUserId }: Readonly<P
   };
 
   if (mode !== 'PHYSICAL') {
-    return (
-      <Stack spacing={2}>
-        <TextField
-          label="Meeting platform"
-          fullWidth
-          {...register('meeting_platform')}
-          error={!!errors.meeting_platform}
-          helperText={errors.meeting_platform?.message ?? 'e.g. Google Meet, Zoom'}
-        />
-        <TextField
-          label="Meeting link"
-          required
-          fullWidth
-          {...register('meeting_url')}
-          error={!!errors.meeting_url}
-          helperText={errors.meeting_url?.message ?? 'Attendees join through this link'}
-        />
-        <TextField label="Meeting notes" fullWidth multiline minRows={2} {...register('meeting_notes')} />
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <Controller
-            control={control}
-            name="pod_date_time"
-            render={({ field }) => (
-              <DateTimePicker
-                label="Start date & time"
-                value={field.value}
-                onChange={field.onChange}
-                format={dateTimeFormat}
-                minDateTime={new Date()}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    required: true,
-                    error: !!errors.pod_date_time,
-                    helperText: errors.pod_date_time?.message,
-                  },
-                }}
-              />
-            )}
-          />
-          <Controller
-            control={control}
-            name="pod_end_date_time"
-            render={({ field }) => (
-              <DateTimePicker
-                label="End date & time"
-                value={field.value}
-                onChange={field.onChange}
-                format={dateTimeFormat}
-                minDateTime={getValues('pod_date_time') ?? new Date()}
-                slotProps={{
-                  textField: {
-                    fullWidth: true,
-                    error: !!errors.pod_end_date_time,
-                    helperText: errors.pod_end_date_time?.message,
-                  },
-                }}
-              />
-            )}
-          />
-        </Stack>
-        {duration && (
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-            Total duration: {duration}
-          </Typography>
-        )}
-      </Stack>
-    );
+    return <VirtualMeetingFields form={form} />;
   }
 
   return (
     <Stack spacing={2}>
-      <Controller
-        control={control}
-        name="venue_id"
-        render={({ field }) => (
-          <Autocomplete
-            options={cityVenues}
-            getOptionLabel={(option) => `${option.venue_name} — ${[option.locality, option.city].filter(Boolean).join(', ')}`}
-            value={cityVenues.find((venue) => venue.id === field.value) ?? null}
-            onChange={(_e, next) => {
-              field.onChange(next?.id ?? '');
-              setValue('venue_slot_id', '', { shouldDirty: true });
-              setValue('venue_space_label', '', { shouldDirty: true });
-            }}
-            isOptionEqualToValue={(option, selected) => option.id === selected.id}
-            renderInput={(params) => (
-              <TextField
-                {...params}
-                label="Venue partner"
-                required
-                error={!!errors.venue_id}
-                helperText={errors.venue_id?.message ?? 'Approved venue partners in your pod location'}
-              />
-            )}
-          />
-        )}
-      />
+      <VenuePicker venues={cityVenues} selectedId={venueId} onSelect={selectVenue} />
       {cityVenues.length === 0 && (
         <Alert severity="info">No venue partners are available in this location yet — pick another location or go virtual.</Alert>
       )}
+      {errors.venue_id && <FormHelperText error>{errors.venue_id.message}</FormHelperText>}
       {selectedVenue && (
         <Stack spacing={1.5} sx={{ p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
           <Typography variant="body2" sx={{ fontWeight: 700 }}>

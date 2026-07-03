@@ -6,8 +6,11 @@ import { FormTextField } from '@/components/FormTextField';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { ChipSelectField } from '../ChipSelectField';
 import { PlaceChargesField } from '../PlaceChargesField';
+import { PodTypeCards } from '../PodTypeCards';
 import { PricePanel } from '../PricePanel';
 import { ProductRequestsField } from '../ProductRequestsField';
+import { SpotsStepper } from '../SpotsStepper';
+import { TermsAgreement } from '../TermsAgreement';
 import {
   POD_TYPES,
   type CreatePodFinance,
@@ -24,8 +27,8 @@ interface Props {
   finance: CreatePodFinance;
 }
 
-/** Step 4 — pricing, spots, terms, optional products, plus the slot-cost / GST
- * / potential-earnings panel. mWeb twin. */
+/** Step 4 — Free/Paid cards, ticket price, spots stepper, the slot-cost / GST /
+ * earnings panel, optional products and the Organizer Terms gate. mWeb twin. */
 export function PricingStep({
   form,
   products,
@@ -46,6 +49,7 @@ export function PricingStep({
 
   return (
     <YStack gap={14}>
+      <PodTypeCards form={form} />
       <Controller
         control={control}
         name="pod_type"
@@ -65,16 +69,21 @@ export function PricingStep({
       <FormTextField
         control={control}
         name="pod_amount_text"
-        label="Amount (₹)"
+        label="Ticket price (₹ per person)"
         keyboardType="numeric"
-        hint={isFree ? 'Free pod amount must be 0.' : 'Gross ticket price, max 1999.'}
+        editable={!isFree}
+        hint={isFree ? 'Free pods are ₹0.' : 'Gross ticket price, max 1999.'}
       />
-      <FormTextField
+      <Controller
         control={control}
         name="no_of_spots_text"
-        label="No. of spots"
-        keyboardType="numeric"
-        hint="Auto-filled from the venue space you pick — adjust if needed"
+        render={({ field, fieldState }) => (
+          <SpotsStepper
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+          />
+        )}
       />
       <PricePanel
         finance={finance}
@@ -130,6 +139,7 @@ export function PricingStep({
           ) : null}
         </>
       ) : null}
+      <TermsAgreement form={form} />
     </YStack>
   );
 }

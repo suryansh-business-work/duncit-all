@@ -1,18 +1,18 @@
 import { Controller } from 'react-hook-form';
-import { Text, YStack } from 'tamagui';
+import { YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
-import { ChipArrayField } from '../ChipArrayField';
 import { HashtagChipsField } from '../HashtagChipsField';
 import { MediaUploadField } from '../MediaUploadField';
+import { OptionalSettingsCards } from '../OptionalSettingsCards';
 import type { CreatePodForm } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
 }
 
-/** Step 1 — Pod Basics: title, description, feature image(s), hashtags and
- * optional extras (info, offers, perks). Mobile twin of mWeb's BasicsStep. */
+/** Step 1 — Pod Basics: title, description, cover media and hashtags, with
+ * optional extras (info, offers, perks) as tap-to-expand cards. mWeb twin. */
 export function BasicsStep({ form }: Readonly<Props>) {
   const { control } = form;
   return (
@@ -31,38 +31,7 @@ export function BasicsStep({ form }: Readonly<Props>) {
         )}
       />
       <HashtagChipsField form={form} />
-      <Text fontSize={13} fontWeight="800" color="$muted">
-        More details (optional)
-      </Text>
-      <FormTextField control={control} name="pod_info" label="Pod info" multiline />
-      <Controller
-        control={control}
-        name="what_this_pod_offers"
-        render={({ field, fieldState }) => (
-          <ChipArrayField
-            label="What this pod offers"
-            value={field.value}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-            placeholder="e.g. Coaching, Snacks"
-            testID="create-pod-offers"
-          />
-        )}
-      />
-      <Controller
-        control={control}
-        name="available_perks"
-        render={({ field, fieldState }) => (
-          <ChipArrayField
-            label="Available perks"
-            value={field.value}
-            onChange={field.onChange}
-            error={fieldState.error?.message}
-            placeholder="e.g. Free parking, Goodies"
-            testID="create-pod-perks"
-          />
-        )}
-      />
+      <OptionalSettingsCards form={form} />
     </YStack>
   );
 }

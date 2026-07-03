@@ -1,4 +1,5 @@
 import { useForm } from 'react-hook-form';
+import { format } from 'date-fns';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Text } from 'tamagui';
 
@@ -140,7 +141,10 @@ describe('VenueSlotStep', () => {
     await screen.findByTestId('create-pod-slot-s1');
     fireEvent.press(screen.getByTestId('create-pod-slot-s1'));
     expect(screen.getByTestId('create-pod-approval-note')).toHaveTextContent(/your venue/);
-    // Free slots read as "Free" in the picker.
+    // Free slots read as "Free" — the grid paginates by day, so switch to the
+    // free slot's day first.
+    const freeDay = format(new Date(freeSlot.start_at), 'yyyy-MM-dd');
+    fireEvent.press(screen.getByTestId(`create-pod-day-${freeDay}`));
     expect(screen.getByTestId('create-pod-slot-s2')).toHaveTextContent(/Free/);
   });
 

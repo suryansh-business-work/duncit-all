@@ -21,6 +21,7 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   pod_description: 'A relaxed group hike around the lake.',
   pod_date_time: future(),
   media_text: 'https://cdn/img.jpg',
+  agreed_to_terms: true,
   ...over,
 });
 
@@ -89,6 +90,11 @@ describe('createPodSchema', () => {
 
   it('requires a pod location', () => {
     expect(issuesOf(valid({ location_id: '' }))).toContain('location_id');
+  });
+
+  it('gates publishing on accepting the Organizer Terms', () => {
+    expect(issuesOf(valid({ agreed_to_terms: false }))).toContain('agreed_to_terms');
+    expect(createPodSchema.safeParse(valid({ agreed_to_terms: true })).success).toBe(true);
   });
 
   it('exposes one field group and title per step (4 steps)', () => {

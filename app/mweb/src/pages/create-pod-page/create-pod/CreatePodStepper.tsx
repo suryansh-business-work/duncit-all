@@ -1,14 +1,17 @@
 import { useEffect, useRef, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Box, Button, LinearProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Stack } from '@mui/material';
 import {
   STEP_FIELDS,
   STEP_TITLES,
+  STEP_SUBTITLES,
   buildCreatePodInput,
   createPodSchema,
   serializeDraft,
 } from './create-pod.form';
+import StepHero from './StepHero';
+import StepFooterBar from './StepFooterBar';
 import type {
   CreatePodClub,
   CreatePodFormValues,
@@ -173,36 +176,25 @@ export default function CreatePodStepper({
   ];
 
   return (
-    <Stack spacing={2}>
-      <Box>
-        <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-          Step {step + 1} of {STEP_TITLES.length}
-        </Typography>
-        <Typography variant="subtitle1" sx={{ fontWeight: 900 }}>
-          {STEP_TITLES[step]}
-        </Typography>
-        <LinearProgress
-          variant="determinate"
-          value={((step + 1) / STEP_TITLES.length) * 100}
-          sx={{ mt: 0.75, borderRadius: 999, height: 6 }}
-        />
-      </Box>
+    <Stack spacing={2.5}>
+      <StepHero
+        step={step}
+        total={STEP_TITLES.length}
+        title={STEP_TITLES[step]}
+        subtitle={STEP_SUBTITLES[step]}
+      />
       {steps[step]}
       {error && <Alert severity="error">{error}</Alert>}
-      <Stack direction="row" justifyContent="space-between" spacing={1}>
-        <Button disabled={step === 0 || busy} onClick={() => goTo(step - 1)}>
-          Back
-        </Button>
-        {isLast ? (
-          <Button variant="contained" onClick={() => void submit()} disabled={busy}>
-            {busy ? 'Creating…' : 'Create Pod'}
-          </Button>
-        ) : (
-          <Button variant="contained" onClick={() => void next()} disabled={busy}>
-            Next
-          </Button>
-        )}
-      </Stack>
+      {/* Spacer so the last field is never hidden behind the fixed footer bar. */}
+      <Box aria-hidden sx={{ height: 88 }} />
+      <StepFooterBar
+        isFirst={step === 0}
+        isLast={isLast}
+        busy={busy}
+        onBack={() => goTo(step - 1)}
+        onNext={() => void next()}
+        onSubmit={() => void submit()}
+      />
     </Stack>
   );
 }

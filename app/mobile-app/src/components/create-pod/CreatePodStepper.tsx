@@ -8,6 +8,7 @@ import { useVenueSlots } from '@/hooks/useVenueSlots';
 import {
   STEP_FIELDS,
   STEP_TITLES,
+  STEP_SUBTITLES,
   buildCreatePodInput,
   createPodSchema,
   serializeDraft,
@@ -189,12 +190,6 @@ export function CreatePodStepper({
   return (
     <YStack gap={16} padding={16} paddingBottom={48}>
       <YStack gap={6}>
-        <Text fontSize={12.5} fontWeight="800" color="$muted">
-          Step {step + 1} of {STEP_TITLES.length}
-        </Text>
-        <Text fontSize={17} fontWeight="900" color="$color">
-          {STEP_TITLES[step]}
-        </Text>
         <XStack height={6} borderRadius={999} backgroundColor="$borderColor" overflow="hidden">
           <YStack
             testID="create-pod-progress"
@@ -203,6 +198,15 @@ export function CreatePodStepper({
             width={`${((step + 1) / STEP_TITLES.length) * 100}%`}
           />
         </XStack>
+        <Text fontSize={12} fontWeight="900" color="$primary" letterSpacing={1}>
+          Step {step + 1} of {STEP_TITLES.length}
+        </Text>
+        <Text fontSize={20} fontWeight="900" color="$color">
+          {STEP_TITLES[step]}
+        </Text>
+        <Text fontSize={13} color="$muted">
+          {STEP_SUBTITLES[step]}
+        </Text>
       </YStack>
       {steps[step]}
       {error ? (

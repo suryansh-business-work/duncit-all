@@ -28,6 +28,7 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   pod_date_time_text: futureText,
   media_text: 'https://cdn/img.jpg',
   location_id: 'l1',
+  agreed_to_terms: true,
   ...over,
 });
 
@@ -111,6 +112,11 @@ describe('createPodSchema', () => {
         valid({ products_enabled: true, product_requests: [{ product_id: 'p1', quantity: 2 }] }),
       ).success,
     ).toBe(true);
+  });
+
+  it('gates publishing on accepting the Organizer Terms', () => {
+    expect(issuesOf(valid({ agreed_to_terms: false }))).toContain('agreed_to_terms');
+    expect(createPodSchema.safeParse(valid({ agreed_to_terms: true })).success).toBe(true);
   });
 });
 

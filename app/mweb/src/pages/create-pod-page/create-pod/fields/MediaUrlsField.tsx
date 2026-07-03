@@ -1,7 +1,8 @@
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
-import { Box, Button, FormHelperText, IconButton, Stack, Typography } from '@mui/material';
-import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
+import { Box, FormHelperText, IconButton, Stack, Typography } from '@mui/material';
+import AddPhotoAlternateOutlinedIcon from '@mui/icons-material/AddPhotoAlternateOutlined';
+import AddIcon from '@mui/icons-material/Add';
 import CloseIcon from '@mui/icons-material/Close';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import MediaPickerDialog from '../../../../components/MediaPickerDialog';
@@ -19,9 +20,9 @@ interface Props {
   form: CreatePodForm;
 }
 
-/** Pod media — upload via the shared MediaPickerDialog (device + Pexels) into
- * a thumbnail list; URLs serialize into media_text, same dynamic component
- * pattern as the mobile app (B3-9). */
+/** Pod cover media — a dashed upload dropzone (empty state) that opens the shared
+ * MediaPickerDialog (device + Pexels); picked URLs render as a thumbnail strip
+ * with an add-more tile. URLs serialize into media_text (B3-9 dynamic pattern). */
 export default function MediaUrlsField({ form }: Readonly<Props>) {
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -31,31 +32,52 @@ export default function MediaUrlsField({ form }: Readonly<Props>) {
       name="media_text"
       render={({ field, fieldState }) => {
         const urls = splitLines(field.value ?? '');
-        const removeUrl = (url: string) =>
-          field.onChange(urls.filter((item) => item !== url).join('\n'));
+        const addUrl = (url: string) => field.onChange([...urls, url].join('\n'));
+        const removeUrl = (url: string) => field.onChange(urls.filter((item) => item !== url).join('\n'));
         return (
           <Box>
-            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800 }}>
-              Pod media (at least one image)
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 900, letterSpacing: '0.06em' }}>
+              Cover image *
             </Typography>
-            {urls.length > 0 && (
-              <Stack direction="row" spacing={1} sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
+            {urls.length === 0 ? (
+              <Box
+                role="button"
+                tabIndex={0}
+                aria-label="Upload an image"
+                onClick={() => setPickerOpen(true)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    setPickerOpen(true);
+                  }
+                }}
+                sx={{
+                  mt: 1,
+                  cursor: 'pointer',
+                  borderRadius: 3,
+                  border: '2px dashed',
+                  borderColor: fieldState.error ? 'error.main' : 'divider',
+                  bgcolor: 'action.hover',
+                  px: 2,
+                  py: 4,
+                  display: 'grid',
+                  placeItems: 'center',
+                  gap: 1,
+                  textAlign: 'center',
+                  transition: 'border-color 160ms ease',
+                  '&:hover': { borderColor: 'primary.main' },
+                }}
+              >
+                <Box sx={{ width: 56, height: 56, borderRadius: '50%', display: 'grid', placeItems: 'center', bgcolor: 'background.paper', border: 1, borderColor: 'divider' }}>
+                  <AddPhotoAlternateOutlinedIcon color="primary" />
+                </Box>
+                <Typography variant="subtitle2" fontWeight={800}>Upload an image</Typography>
+                <Typography variant="caption" color="text.secondary">Min 800×400px (JPG, PNG)</Typography>
+              </Box>
+            ) : (
+              <Stack direction="row" sx={{ mt: 1, flexWrap: 'wrap', gap: 1 }}>
                 {urls.map((url) => (
-                  <Box
-                    key={url}
-                    sx={{
-                      position: 'relative',
-                      width: 84,
-                      height: 84,
-                      borderRadius: 2,
-                      overflow: 'hidden',
-                      border: 1,
-                      borderColor: 'divider',
-                      bgcolor: 'action.hover',
-                      display: 'grid',
-                      placeItems: 'center',
-                    }}
-                  >
+                  <Box key={url} sx={{ position: 'relative', width: 88, height: 88, borderRadius: 2, overflow: 'hidden', border: 1, borderColor: 'divider', bgcolor: 'action.hover', display: 'grid', placeItems: 'center' }}>
                     {VIDEO_URL_RE.test(url) ? (
                       <VideocamIcon color="action" />
                     ) : (
@@ -71,24 +93,30 @@ export default function MediaUrlsField({ form }: Readonly<Props>) {
                     </IconButton>
                   </Box>
                 ))}
+                <Box
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Add media"
+                  onClick={() => setPickerOpen(true)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                      e.preventDefault();
+                      setPickerOpen(true);
+                    }
+                  }}
+                  sx={{ cursor: 'pointer', width: 88, height: 88, borderRadius: 2, border: '2px dashed', borderColor: 'divider', display: 'grid', placeItems: 'center', color: 'text.secondary', '&:hover': { borderColor: 'primary.main', color: 'primary.main' } }}
+                >
+                  <AddIcon />
+                </Box>
               </Stack>
             )}
-            <Button
-              startIcon={<AddPhotoAlternateIcon />}
-              variant="outlined"
-              size="small"
-              onClick={() => setPickerOpen(true)}
-              sx={{ mt: 1, borderRadius: 999, fontWeight: 900 }}
-            >
-              Add media
-            </Button>
             {fieldState.error && <FormHelperText error>{fieldState.error.message}</FormHelperText>}
             <MediaPickerDialog
               open={pickerOpen}
               onClose={() => setPickerOpen(false)}
               folder="/pods"
               title="Add pod media"
-              onPicked={(url) => field.onChange([...urls, url].join('\n'))}
+              onPicked={addUrl}
             />
           </Box>
         );

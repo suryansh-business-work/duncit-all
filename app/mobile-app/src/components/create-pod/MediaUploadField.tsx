@@ -23,7 +23,7 @@ interface Props {
  * into media_text); paste URLs directly in the box below. Mirrors mWeb's
  * MediaUrlsField (B3-9). */
 export function MediaUploadField({ value, onChange, error }: Readonly<Props>) {
-  const { muted, onPrimary } = useThemeColors();
+  const { muted, primary } = useThemeColors();
   const upload = useMediaUpload('/pods');
   const urls = splitLines(value ?? '');
   const removeUrl = (url: string) => onChange(urls.filter((item) => item !== url).join('\n'));
@@ -36,7 +36,7 @@ export function MediaUploadField({ value, onChange, error }: Readonly<Props>) {
   return (
     <YStack gap={8}>
       <Text fontSize={14} fontWeight="500" color="$color">
-        Pod media (at least one image)
+        Cover image (at least one image)
       </Text>
       {urls.length > 0 ? (
         <XStack gap={8} flexWrap="wrap">
@@ -81,31 +81,48 @@ export function MediaUploadField({ value, onChange, error }: Readonly<Props>) {
           ))}
         </XStack>
       ) : null}
-      <XStack
+      <YStack
         testID="media-upload-add"
         role="button"
         aria-label="Add media"
         aria-disabled={upload.uploading}
         onPress={upload.uploading ? undefined : () => void addFromLibrary()}
-        alignSelf="flex-start"
         alignItems="center"
+        justifyContent="center"
         gap={8}
-        paddingHorizontal={14}
-        height={42}
-        borderRadius={999}
-        backgroundColor="$primary"
+        paddingVertical={24}
+        paddingHorizontal={16}
+        borderRadius={16}
+        borderWidth={2}
+        borderColor="$borderColor"
+        borderStyle="dashed"
+        backgroundColor="$surface"
         opacity={upload.uploading ? 0.7 : 1}
         pressStyle={{ opacity: 0.85 }}
       >
-        {upload.uploading ? (
-          <Spinner size="small" color={onPrimary} />
-        ) : (
-          <MaterialIcons name="add-photo-alternate" size={18} color={onPrimary} />
-        )}
-        <Text fontSize={13} fontWeight="900" color="$onPrimary">
-          {upload.uploading ? 'Uploading…' : 'Add media'}
+        <YStack
+          width={52}
+          height={52}
+          borderRadius={26}
+          alignItems="center"
+          justifyContent="center"
+          backgroundColor="$background"
+          borderWidth={1}
+          borderColor="$borderColor"
+        >
+          {upload.uploading ? (
+            <Spinner size="small" color={primary} />
+          ) : (
+            <MaterialIcons name="add-photo-alternate" size={24} color={primary} />
+          )}
+        </YStack>
+        <Text fontSize={14} fontWeight="800" color="$color">
+          {upload.uploading ? 'Uploading…' : 'Upload an image'}
         </Text>
-      </XStack>
+        <Text fontSize={12} color="$muted">
+          Min 800×400px (JPG, PNG)
+        </Text>
+      </YStack>
       <Input
         testID="field-media_text"
         size="$4"

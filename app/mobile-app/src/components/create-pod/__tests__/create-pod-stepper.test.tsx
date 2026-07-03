@@ -138,6 +138,8 @@ async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
   }
   press('create-pod-submit');
   await screen.findByTestId('create-pod-type-NATIVE_FREE');
+  // Accept the Organizer Terms gate so the final publish validates.
+  press('create-pod-terms');
 }
 
 describe('CreatePodStepper', () => {
@@ -187,6 +189,8 @@ describe('CreatePodStepper', () => {
     press('create-pod-type-NATIVE_PAID');
     press('create-pod-type-NATIVE_FREE');
 
+    // Accept the Organizer Terms gate, then publish.
+    press('create-pod-terms');
     press('create-pod-submit');
     await waitFor(() => expect(onPublish).toHaveBeenCalled());
     expect(onPublish.mock.calls[0]?.[0]).toBe('draft-1');

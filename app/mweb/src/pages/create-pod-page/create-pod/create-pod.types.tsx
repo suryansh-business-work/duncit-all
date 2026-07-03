@@ -49,6 +49,8 @@ export interface CreatePodFormValues {
   product_requests: PodProductRequest[];
   place_charges: PodPlaceCharge[];
   payment_terms: string;
+  /** Client-side publish gate — host must accept the Organizer Terms (last step). */
+  agreed_to_terms: boolean;
 }
 
 export const blankCreatePodForm: CreatePodFormValues = {
@@ -77,6 +79,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   product_requests: [],
   place_charges: [],
   payment_terms: '',
+  agreed_to_terms: false,
 };
 
 export interface CreatePodClub {

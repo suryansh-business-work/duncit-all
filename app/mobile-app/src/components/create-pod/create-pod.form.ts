@@ -78,6 +78,7 @@ export const createPodSchema = z
       )
       .max(10),
     payment_terms: z.string().max(4000),
+    agreed_to_terms: z.boolean(),
   })
   .superRefine((values, ctx) => {
     if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
@@ -142,6 +143,13 @@ export const createPodSchema = z
         message: 'Add at least one image URL',
       });
     }
+    if (!values.agreed_to_terms) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['agreed_to_terms'],
+        message: 'Accept the Organizer Terms to publish',
+      });
+    }
   });
 
 /** Fields validated when leaving each stepper step (index aligned with STEP_TITLES). */
@@ -174,6 +182,7 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'payment_terms',
     'products_enabled',
     'product_requests',
+    'agreed_to_terms',
   ],
 ];
 
@@ -182,6 +191,14 @@ export const STEP_TITLES = [
   'Location, Category & Club',
   'Venue & Slot',
   'Pricing & Publish',
+];
+
+/** One-line intro under each step title — mirrors the mWeb stepper. */
+export const STEP_SUBTITLES = [
+  'Start with the core details so people understand what this pod is about.',
+  'Where and what are you playing — location, category and the club it belongs to.',
+  'Pick a partner venue and lock in your date & time from its calendar.',
+  'Decide how much to charge, then review and publish your pod.',
 ];
 
 /** Maps validated form values onto the server's CreatePodInput. */

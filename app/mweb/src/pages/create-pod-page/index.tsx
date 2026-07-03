@@ -1,7 +1,8 @@
 import { gql, useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import { Alert, Box, Button, CircularProgress, Stack, Typography } from '@mui/material';
+import { Alert, Box, Button, CircularProgress, IconButton, Stack, Typography } from '@mui/material';
 import AddCircleOutlineIcon from '@mui/icons-material/AddCircleOutline';
+import CloseIcon from '@mui/icons-material/Close';
 import {
   CreatePodStepper,
   blankCreatePodForm,
@@ -177,16 +178,21 @@ export default function CreatePodPage() {
 
   return (
     <Stack spacing={2} sx={{ p: { xs: 1.5, sm: 2 }, maxWidth: 720, mx: 'auto', minHeight: '100%' }}>
-      <Stack direction="row" spacing={1.25} alignItems="center">
-        <AddCircleOutlineIcon color="primary" />
-        <Box>
-          <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
-            Create a Pod
-          </Typography>
-          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-            Your progress saves automatically — finish anytime from Host Management.
-          </Typography>
-        </Box>
+      <Stack direction="row" spacing={1.25} alignItems="center" justifyContent="space-between">
+        <Stack direction="row" spacing={1.25} alignItems="center" sx={{ minWidth: 0 }}>
+          <AddCircleOutlineIcon color="primary" />
+          <Box sx={{ minWidth: 0 }}>
+            <Typography variant="h6" sx={{ fontWeight: 900, lineHeight: 1.1 }}>
+              Create a Pod
+            </Typography>
+            <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
+              Your progress saves automatically — finish anytime from Host Management.
+            </Typography>
+          </Box>
+        </Stack>
+        <IconButton aria-label="Close" onClick={() => navigate('/host/manage')}>
+          <CloseIcon />
+        </IconButton>
       </Stack>
       {body}
     </Stack>

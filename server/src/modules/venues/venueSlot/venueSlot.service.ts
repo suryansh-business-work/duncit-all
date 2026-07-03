@@ -530,7 +530,7 @@ export const venueSlotService = {
     const podMap = new Map(pods.map((p) => [String(p._id), p]));
     const hostIds = pods.flatMap((p) => (p.pod_hosts_id ?? []).slice(0, 1));
     const hosts = await UserModel.find({ _id: { $in: hostIds } })
-      .select('profile.first_name profile.last_name auth.email auth.phone')
+      .select('profile.first_name profile.last_name auth.email auth.phone.number auth.phone.extension')
       .lean();
     const hostMap = new Map(hosts.map((u: any) => [String(u._id), u]));
     const venues = await VenueModel.find({ _id: { $in: slots.map((s) => s.venue_id) } }).select('venue_name');
@@ -557,7 +557,7 @@ export const venueSlotService = {
           pod_description: pod.pod_description ?? '',
           host_name: hostName,
           host_email: host?.auth?.email ?? '',
-          host_phone: host?.auth?.phone ?? '',
+          host_phone: `${host?.auth?.phone?.extension ?? ''}${host?.auth?.phone?.number ?? ''}`,
         };
       });
   },

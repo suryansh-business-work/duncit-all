@@ -1,9 +1,12 @@
 import { Controller } from 'react-hook-form';
-import { Alert, FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mui/material';
+import { Alert, FormControlLabel, InputAdornment, Stack, Switch, TextField } from '@mui/material';
 import PlaceChargesField from '../fields/PlaceChargesField';
 import ProductRequestsField from '../fields/ProductRequestsField';
 import PricePanel from '../PricePanel';
-import { POD_TYPES, type CreatePodForm, type CreatePodProduct, type CreatePodSlot } from '../create-pod.types';
+import PodTypeCards from '../PodTypeCards';
+import SpotsStepper from '../SpotsStepper';
+import TermsAgreement from '../TermsAgreement';
+import type { CreatePodForm, CreatePodProduct, CreatePodSlot } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
@@ -12,8 +15,8 @@ interface Props {
   selectedSlot: CreatePodSlot | null;
 }
 
-/** Step 4 — pricing, spots, terms, optional products, plus the slot-cost / GST
- * / potential-earnings panel. */
+/** Step 4 — Free/Paid cards, ticket price, spots stepper, the slot-cost / GST /
+ * earnings panel, optional products and the Organizer Terms publish gate. */
 export default function PricingStep({ form, products, showProducts, selectedSlot }: Readonly<Props>) {
   const {
     control,
@@ -22,52 +25,30 @@ export default function PricingStep({ form, products, showProducts, selectedSlot
     setValue,
     formState: { errors },
   } = form;
-  const podType = watch('pod_type');
-  const isFree = podType.includes('FREE');
+  const isFree = watch('pod_type').includes('FREE');
   const isPhysical = watch('pod_mode') === 'PHYSICAL';
   const productsEnabled = watch('products_enabled');
 
   return (
     <Stack spacing={2}>
+      <PodTypeCards form={form} />
+      <TextField
+        label="Ticket price (per person)"
+        type="number"
+        fullWidth
+        disabled={isFree}
+        InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
+        error={!!errors.pod_amount}
+        helperText={errors.pod_amount?.message ?? (isFree ? 'Free pods are ₹0.' : 'Gross ticket price, max 1999.')}
+        {...register('pod_amount', { valueAsNumber: true })}
+      />
       <Controller
         control={control}
-        name="pod_type"
-        render={({ field }) => (
-          <TextField
-            select
-            label="Pod type"
-            fullWidth
-            value={field.value}
-            onChange={(e) => {
-              field.onChange(e.target.value);
-              if (e.target.value.includes('FREE')) setValue('pod_amount', 0);
-            }}
-          >
-            {POD_TYPES.map((type) => (
-              <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
-            ))}
-          </TextField>
+        name="no_of_spots"
+        render={({ field, fieldState }) => (
+          <SpotsStepper value={Number(field.value) || 0} onChange={field.onChange} error={fieldState.error?.message} />
         )}
       />
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <TextField
-          label="Amount (₹)"
-          type="number"
-          fullWidth
-          disabled={isFree}
-          error={!!errors.pod_amount}
-          helperText={errors.pod_amount?.message ?? (isFree ? 'Free pod amount must be 0.' : 'Gross ticket price, max 1999.')}
-          {...register('pod_amount', { valueAsNumber: true })}
-        />
-        <TextField
-          label="No. of spots"
-          type="number"
-          fullWidth
-          error={!!errors.no_of_spots}
-          helperText={errors.no_of_spots?.message ?? 'Auto-filled from the venue space you pick — adjust if needed'}
-          {...register('no_of_spots', { valueAsNumber: true })}
-        />
-      </Stack>
       <PricePanel
         slotPrice={selectedSlot ? selectedSlot.price : null}
         podAmount={Number(watch('pod_amount')) || 0}
@@ -134,6 +115,7 @@ export default function PricingStep({ form, products, showProducts, selectedSlot
           )}
         </>
       )}
+      <TermsAgreement form={form} />
     </Stack>
   );
 }

@@ -6,9 +6,9 @@ import { FormTextField } from '@/components/FormTextField';
 import { MapEmbed } from '@/components/MapEmbed';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import { formatDurationBetween } from '@/utils/date-format';
-import { ChipSelectField } from '../ChipSelectField';
 import { DateTimeField } from '../DateTimeField';
 import { SlotPicker } from '../SlotPicker';
+import { VenuePicker } from '../VenuePicker';
 import { VenueContactCard } from '../VenueContactCard';
 import { parseDateTimeText } from '../create-pod.form';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
@@ -137,21 +137,15 @@ export function VenueSlotStep({ form, venues, viewerUserId }: Readonly<Props>) {
         control={control}
         name="venue_id"
         render={({ field, fieldState }) => (
-          <ChipSelectField
-            label="Venue partner"
-            options={cityVenues.map((venue) => ({
-              value: venue.id,
-              label: [venue.venue_name, venue.locality || venue.city].filter(Boolean).join(' · '),
-            }))}
-            value={field.value}
-            onChange={(next) => {
+          <VenuePicker
+            venues={cityVenues}
+            selectedId={field.value}
+            onSelect={(next) => {
               field.onChange(next);
               setValue('venue_slot_id', '', { shouldDirty: true });
               setValue('venue_space_label', '', { shouldDirty: true });
             }}
             error={fieldState.error?.message}
-            emptyHint="No venue partners are available in this location yet — pick another location or go virtual."
-            testID="create-pod-venue"
           />
         )}
       />

@@ -3,6 +3,7 @@ import { Controller } from 'react-hook-form';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Text, XStack, YStack } from 'tamagui';
 
+import { MapEmbed } from '@/components/MapEmbed';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { ChipSelectField } from '../ChipSelectField';
 import { ClubPreview } from '../ClubPreview';
@@ -128,6 +129,13 @@ export function LocationClubStep({ form, clubs, locations, hostCategories }: Rea
           </YStack>
         ) : null}
       </YStack>
+
+      {location ? (
+        <MapEmbed
+          query={[locationLabel(location), location.state].filter(Boolean).join(', ')}
+          height={170}
+        />
+      ) : null}
 
       <YStack gap={4}>
         <Text fontSize={14} fontWeight="500" color="$color">

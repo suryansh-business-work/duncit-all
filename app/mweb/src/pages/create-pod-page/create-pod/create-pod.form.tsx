@@ -57,6 +57,7 @@ export const createPodSchema = z
       )
       .max(10),
     payment_terms: z.string().max(4000),
+    agreed_to_terms: z.boolean(),
   })
   .superRefine((values, ctx) => {
     if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
@@ -87,6 +88,9 @@ export const createPodSchema = z
     if (!hasImageLine(values.media_text)) {
       ctx.addIssue({ code: 'custom', path: ['media_text'], message: 'Add at least one image URL' });
     }
+    if (!values.agreed_to_terms) {
+      ctx.addIssue({ code: 'custom', path: ['agreed_to_terms'], message: 'Accept the Organizer Terms to publish' });
+    }
   });
 
 /** Fields validated when leaving each stepper step (index aligned with STEPS). */
@@ -94,7 +98,7 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
   ['pod_title', 'pod_description', 'media_text', 'pod_hashtag_text', 'pod_info', 'what_this_pod_offers', 'available_perks'],
   ['location_id', 'pod_mode', 'club_id'],
   ['venue_id', 'venue_slot_id', 'venue_space_label', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
-  ['pod_type', 'pod_amount', 'no_of_spots', 'place_charges', 'payment_terms', 'products_enabled', 'product_requests'],
+  ['pod_type', 'pod_amount', 'no_of_spots', 'place_charges', 'payment_terms', 'products_enabled', 'product_requests', 'agreed_to_terms'],
 ];
 
 export const STEP_TITLES = [
@@ -102,6 +106,14 @@ export const STEP_TITLES = [
   'Location, Category & Club',
   'Venue & Slot',
   'Pricing & Publish',
+];
+
+/** One-line intro under each step title — mirrors the mobile stepper. */
+export const STEP_SUBTITLES = [
+  'Start with the core details so people understand what this pod is about.',
+  'Where and what are you playing — location, category and the club it belongs to.',
+  'Pick a partner venue and lock in your date & time from its calendar.',
+  'Decide how much to charge, then review and publish your pod.',
 ];
 
 /** Maps the validated form values onto the server's CreatePodInput. */

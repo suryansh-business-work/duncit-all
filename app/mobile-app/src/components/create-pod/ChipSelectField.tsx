@@ -16,7 +16,7 @@ interface Props {
 }
 
 /** A labelled wrap of selectable chips — the screen's picker control for
- * clubs, venues, mode, pod type and occurrence. */
+ * clubs, venues, venue space, mode and pod type. */
 export function ChipSelectField({
   label,
   options,

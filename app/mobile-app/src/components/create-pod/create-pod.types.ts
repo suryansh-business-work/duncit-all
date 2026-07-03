@@ -9,15 +9,6 @@ export const POD_TYPES = [
   { value: 'NON_NATIVE_PAID', label: 'Non-native - Paid' },
 ] as const;
 
-export const OCCURRENCES = [
-  { value: 'ONE_TIME', label: 'One time' },
-  { value: 'DAILY', label: 'Daily' },
-  { value: 'WEEKLY', label: 'Weekly' },
-  { value: 'MONTHLY', label: 'Monthly' },
-  { value: 'ALTERNATE_DAY', label: 'Alternate day' },
-  { value: 'WEEKENDS_ONLY', label: 'Weekends only' },
-] as const;
-
 export interface PodProductRequest {
   product_id: string;
   quantity: number;
@@ -39,6 +30,8 @@ export interface CreatePodFormValues {
   venue_id: string;
   /** The venue partner's availability slot the pod books (physical pods). */
   venue_slot_id: string;
+  /** Selected venue space/type (a capacity item label) — drives No. of spots. */
+  venue_space_label: string;
   meeting_platform: string;
   meeting_url: string;
   meeting_notes: string;
@@ -49,7 +42,6 @@ export interface CreatePodFormValues {
   pod_end_date_time_text: string;
   pod_type: string;
   pod_amount_text: string;
-  pod_occurrence: string;
   no_of_spots_text: string;
   pod_hashtag_text: string;
   media_text: string;
@@ -68,6 +60,7 @@ export const blankCreatePodForm: CreatePodFormValues = {
   pod_mode: 'PHYSICAL',
   venue_id: '',
   venue_slot_id: '',
+  venue_space_label: '',
   meeting_platform: '',
   meeting_url: '',
   meeting_notes: '',
@@ -77,7 +70,6 @@ export const blankCreatePodForm: CreatePodFormValues = {
   pod_end_date_time_text: '',
   pod_type: 'NATIVE_FREE',
   pod_amount_text: '0',
-  pod_occurrence: 'ONE_TIME',
   no_of_spots_text: '0',
   pod_hashtag_text: '',
   media_text: '',
@@ -111,6 +103,8 @@ export interface CreatePodVenue {
   owner_user_id?: string | null;
   venue_name: string;
   venue_type?: string | null;
+  capacity?: number | null;
+  capacity_items?: { label: string; capacity: number }[] | null;
   location_id?: string | null;
   city?: string | null;
   locality?: string | null;

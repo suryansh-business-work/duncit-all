@@ -1,12 +1,24 @@
 import { gql, useQuery } from '@apollo/client';
 import { Controller } from 'react-hook-form';
-import { Alert, Autocomplete, Stack, TextField, Typography } from '@mui/material';
+import { Alert, Autocomplete, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import { DateTimePicker } from '@mui/x-date-pickers/DateTimePicker';
 import VenueMapPreview from '../../../../components/VenueMapPreview';
 import { formatDurationBetween, useDateFormat } from '../../../../utils/dateFormat';
 import SlotPicker from '../SlotPicker';
 import VenueContactCard from '../VenueContactCard';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
+
+type VenueSpace = { label: string; capacity: number };
+
+/** The venue's bookable spaces: its named capacity items, or the whole venue as
+ * a single option when only a total capacity is set. Picking one fills spots. */
+const venueSpaces = (venue: CreatePodVenue | null): VenueSpace[] => {
+  if (!venue) return [];
+  const items = venue.capacity_items ?? [];
+  if (items.length > 0) return items;
+  if (venue.capacity) return [{ label: 'Whole venue', capacity: venue.capacity }];
+  return [];
+};
 
 export const VENUE_AVAILABLE_SLOTS = gql`
   query CreatePodVenueSlots($venue_id: ID!) {
@@ -46,6 +58,13 @@ export default function VenueSlotStep({ form, venues, viewerUserId }: Readonly<P
   const cityVenues = venues.filter((venue) => !locationId || venue.location_id === locationId);
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
   const ownVenue = Boolean(selectedVenue && selectedVenue.owner_user_id === viewerUserId);
+  const spaces = venueSpaces(selectedVenue);
+
+  const pickSpace = (label: string) => {
+    setValue('venue_space_label', label, { shouldDirty: true });
+    const chosen = spaces.find((space) => space.label === label);
+    if (chosen) setValue('no_of_spots', chosen.capacity, { shouldDirty: true, shouldValidate: true });
+  };
 
   const slotsQuery = useQuery<{ venueAvailableSlots: CreatePodSlot[] }>(VENUE_AVAILABLE_SLOTS, {
     variables: { venue_id: venueId },
@@ -149,6 +168,7 @@ export default function VenueSlotStep({ form, venues, viewerUserId }: Readonly<P
             onChange={(_e, next) => {
               field.onChange(next?.id ?? '');
               setValue('venue_slot_id', '', { shouldDirty: true });
+              setValue('venue_space_label', '', { shouldDirty: true });
             }}
             isOptionEqualToValue={(option, selected) => option.id === selected.id}
             renderInput={(params) => (
@@ -165,6 +185,39 @@ export default function VenueSlotStep({ form, venues, viewerUserId }: Readonly<P
       />
       {cityVenues.length === 0 && (
         <Alert severity="info">No venue partners are available in this location yet — pick another location or go virtual.</Alert>
+      )}
+      {selectedVenue && (
+        <Stack spacing={1.5} sx={{ p: 1.5, borderRadius: 2, bgcolor: 'action.hover' }}>
+          <Typography variant="body2" sx={{ fontWeight: 700 }}>
+            {selectedVenue.venue_type ? `${selectedVenue.venue_type} · ` : ''}Total capacity: {selectedVenue.capacity ?? 0}
+          </Typography>
+          {spaces.length > 0 ? (
+            <Controller
+              control={control}
+              name="venue_space_label"
+              render={({ field }) => (
+                <TextField
+                  select
+                  label="Space & capacity"
+                  fullWidth
+                  value={field.value}
+                  onChange={(e) => pickSpace(e.target.value)}
+                  helperText="Pick a space — its capacity auto-fills No. of spots."
+                >
+                  {spaces.map((space) => (
+                    <MenuItem key={space.label} value={space.label}>
+                      {space.label} · {space.capacity} spots
+                    </MenuItem>
+                  ))}
+                </TextField>
+              )}
+            />
+          ) : (
+            <Typography variant="caption" color="text.secondary">
+              This venue hasn’t listed capacity — set No. of spots manually on the next step.
+            </Typography>
+          )}
+        </Stack>
       )}
       {selectedVenue && (
         <SlotPicker

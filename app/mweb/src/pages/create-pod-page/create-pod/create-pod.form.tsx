@@ -32,7 +32,7 @@ export const createPodSchema = z
     pod_end_date_time: z.date().nullable(),
     pod_type: z.string().min(1, 'Select a pod type'),
     pod_amount: z.number({ invalid_type_error: 'Amount must be a number' }).min(0).max(1999),
-    pod_occurrence: z.string().min(1),
+    venue_space_label: z.string(),
     no_of_spots: z.number({ invalid_type_error: 'Spots must be a number' }).min(0).max(10000),
     pod_hashtag_text: z.string().max(500),
     media_text: z.string(),
@@ -93,8 +93,8 @@ export const createPodSchema = z
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
   ['pod_title', 'pod_description', 'media_text', 'pod_hashtag_text', 'pod_info', 'what_this_pod_offers', 'available_perks'],
   ['location_id', 'pod_mode', 'club_id'],
-  ['venue_id', 'venue_slot_id', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
-  ['pod_type', 'pod_occurrence', 'pod_amount', 'no_of_spots', 'place_charges', 'payment_terms', 'products_enabled', 'product_requests'],
+  ['venue_id', 'venue_slot_id', 'venue_space_label', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
+  ['pod_type', 'pod_amount', 'no_of_spots', 'place_charges', 'payment_terms', 'products_enabled', 'product_requests'],
 ];
 
 export const STEP_TITLES = [
@@ -126,7 +126,6 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     pod_end_date_time: values.pod_end_date_time?.toISOString() ?? null,
     pod_type: values.pod_type,
     pod_amount: Number(values.pod_amount) || 0,
-    pod_occurrence: values.pod_occurrence,
     no_of_spots: Number(values.no_of_spots) || 0,
     pod_info: values.pod_info,
     pod_hashtag: values.pod_hashtag_text

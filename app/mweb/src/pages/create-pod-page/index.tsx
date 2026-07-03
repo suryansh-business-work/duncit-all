@@ -58,6 +58,7 @@ const CREATE_POD_OPTIONS = gql`
     myHost {
       id
       status
+      is_active
       host_categories {
         super_category_id
         category_id
@@ -96,7 +97,13 @@ export default function CreatePodPage() {
   const [saveMut] = useMutation(SAVE_POD_DRAFT);
   const [publishMut] = useMutation(PUBLISH_POD_DRAFT);
 
-  const isHost = (options.data?.me?.roles ?? []).includes('HOST');
+  // Host access mirrors the server's createForPartner check: the cached HOST
+  // role OR an approved, active host profile (legacy/HOSTREQ hosts may lack the
+  // role in me.roles but are still allowed to create pods).
+  const myHost = options.data?.myHost;
+  const isHost =
+    (options.data?.me?.roles ?? []).includes('HOST') ||
+    (myHost?.status === 'APPROVED' && myHost?.is_active !== false);
   const clubs = options.data?.clubs ?? [];
   const locations = options.data?.locations ?? [];
   const products = options.data?.availablePodProducts ?? [];

@@ -89,8 +89,15 @@ export function useCreatePod(draftId?: string) {
     await graphqlRequest(PublishPodDraftDocument, { draft_id: id, input }, { auth: true });
   };
 
+  // Host access mirrors the server's createForPartner check: the cached HOST
+  // role OR an approved, active host profile (legacy/HOSTREQ hosts may lack the
+  // role in me.roles but are still allowed to create pods).
+  const isHost =
+    (data?.me?.roles ?? []).includes('HOST') ||
+    (data?.myHost?.status === 'APPROVED' && data?.myHost?.is_active !== false);
+
   return {
-    isHost: (data?.me?.roles ?? []).includes('HOST'),
+    isHost,
     viewerUserId: data?.me?.user_id ?? '',
     clubs: data?.clubs ?? [],
     locations: data?.locations ?? [],

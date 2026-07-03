@@ -1,0 +1,165 @@
+---
+// Blog detail (?slug=…) — fully dynamic from the Website portal's blog
+// content: the post body plus Suggested (same category), Related (latest
+// others) and a month-by-month Archive. New posts appear without a redeploy.
+import PageLayout from '../../layouts/PageLayout.astro';
+---
+
+<PageLayout
+  title="Blog"
+  eyebrow="Duncit Blog"
+  heading="Story"
+  intro="Stories, updates and energy from the Duncit community."
+  heroImage="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=1600&q=80&auto=format&fit=crop"
+>
+  <div class="not-prose grid lg:grid-cols-[1fr_300px] gap-10 items-start">
+    <article id="postBody" class="min-w-0">
+      <div class="space-y-3" aria-hidden="true">
+        <div class="skeleton h-64"></div>
+        <div class="skeleton h-8 w-2/3"></div>
+        <div class="skeleton h-4"></div>
+        <div class="skeleton h-4"></div>
+        <div class="skeleton h-4 w-5/6"></div>
+      </div>
+    </article>
+    <aside class="space-y-8">
+      <section>
+        <h3 class="font-head font-extrabold text-lg text-ink mb-3">Suggested posts</h3>
+        <div id="suggestedPosts" class="space-y-3">
+          <div class="skeleton h-16" aria-hidden="true"></div>
+          <div class="skeleton h-16" aria-hidden="true"></div>
+        </div>
+      </section>
+      <section>
+        <h3 class="font-head font-extrabold text-lg text-ink mb-3">Related posts</h3>
+        <div id="relatedPosts" class="space-y-3">
+          <div class="skeleton h-16" aria-hidden="true"></div>
+          <div class="skeleton h-16" aria-hidden="true"></div>
+        </div>
+      </section>
+      <section>
+        <h3 class="font-head font-extrabold text-lg text-ink mb-3">Archive</h3>
+        <div id="postArchive" class="space-y-1.5">
+          <div class="skeleton h-8" aria-hidden="true"></div>
+          <div class="skeleton h-8" aria-hidden="true"></div>
+        </div>
+      </section>
+      <a href="/blog" class="inline-flex items-center gap-2 font-bold text-primary">
+        <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All posts
+      </a>
+    </aside>
+  </div>
+</PageLayout>
+
+<script>
+  import { urlConfigs } from '../../config/url-configs';
+
+  const slug = new URLSearchParams(window.location.search).get('slug') ?? '';
+  const postBody = document.getElementById('postBody');
+  const suggestedEl = document.getElementById('suggestedPosts');
+  const relatedEl = document.getElementById('relatedPosts');
+  const archiveEl = document.getElementById('postArchive');
+
+  const esc = (value: unknown) => {
+    const div = document.createElement('div');
+    div.textContent = String(value ?? '');
+    return div.innerHTML;
+  };
+
+  const fmtDate = (value: unknown) => {
+    if (!value) return '';
+    try {
+      return new Intl.DateTimeFormat('en', { month: 'short', day: '2-digit', year: 'numeric' })
+        .format(new Date(String(value)));
+    } catch {
+      return '';
+    }
+  };
+
+  const postLink = (item: any) => `/blog/post?slug=${encodeURIComponent(item.slug)}`;
+
+  const miniCard = (item: any) => `
+    <a href="${postLink(item)}" class="glass rounded-xl p-3 block hover:-translate-y-0.5 transition">
+      <span class="block text-xs text-ink-soft">${esc(fmtDate(item.published_at))}</span>
+      <span class="block font-head font-bold text-sm text-ink leading-snug">${esc(item.title)}</span>
+    </a>`;
+
+  const empty = (label: string) => `<p class="text-sm text-ink-soft">${label}</p>`;
+
+  async function load() {
+    if (!slug) {
+      window.location.replace('/blog');
+      return;
+    }
+    try {
+      const res = await fetch(urlConfigs.graphqlUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query:
+            'query { publicWebsiteContent(type: BLOG) { id title slug summary body category image_url published_at } }',
+        }),
+      });
+      const json = await res.json();
+      const posts: any[] = json?.data?.publicWebsiteContent ?? [];
+      const post = posts.find((p) => p.slug === slug);
+
+      if (!post) {
+        if (postBody) postBody.innerHTML = '<p class="text-ink-soft">This post could not be found. It may have been unpublished.</p>';
+        return;
+      }
+
+      document.title = `${post.title} — Duncit Blog`;
+      const heading = document.querySelector('[data-page-heading]') ?? document.querySelector('h1');
+      if (heading) heading.textContent = post.title;
+
+      if (postBody) {
+        postBody.innerHTML = `
+          ${post.image_url ? `<img src="${esc(post.image_url)}" alt="" class="w-full aspect-video object-cover rounded-2xl sticker mb-6" />` : ''}
+          <div class="flex items-center gap-2 text-xs text-ink-soft mb-4">
+            ${post.category ? `<span class="font-bold uppercase tracking-wider text-primary">${esc(post.category)}</span><span>•</span>` : ''}
+            <span>${esc(fmtDate(post.published_at))}</span>
+          </div>
+          <div class="prose-page">${post.body || `<p>${esc(post.summary)}</p>`}</div>`;
+      }
+
+      const others = posts.filter((p) => p.slug !== slug);
+      const suggested = others.filter((p) => p.category && p.category === post.category).slice(0, 3);
+      const related = others.filter((p) => !suggested.includes(p)).slice(0, 3);
+
+      if (suggestedEl) {
+        suggestedEl.innerHTML = suggested.length ? suggested.map(miniCard).join('') : empty('No other posts in this category yet.');
+      }
+      if (relatedEl) {
+        relatedEl.innerHTML = related.length ? related.map(miniCard).join('') : empty('More posts coming soon.');
+      }
+
+      if (archiveEl) {
+        const byMonth = new Map<string, number>();
+        for (const p of posts) {
+          if (!p.published_at) continue;
+          const d = new Date(p.published_at);
+          const key = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+          byMonth.set(key, (byMonth.get(key) ?? 0) + 1);
+        }
+        const months = [...byMonth.entries()].sort(([a], [b]) => b.localeCompare(a));
+        archiveEl.innerHTML = months.length
+          ? months
+              .map(([key, count]) => {
+                const [year, month] = key.split('-');
+                const label = new Intl.DateTimeFormat('en', { month: 'long', year: 'numeric' })
+                  .format(new Date(Number(year), Number(month) - 1, 1));
+                return `<a href="/blog" class="flex items-center justify-between px-3 py-2 rounded-lg glass-chip text-sm font-semibold text-ink hover:text-primary transition">
+                    <span>${esc(label)}</span><span class="text-ink-soft">${count}</span>
+                  </a>`;
+              })
+              .join('')
+          : empty('No archive yet.');
+      }
+    } catch {
+      if (postBody) postBody.innerHTML = '<p class="text-ink-soft">The post could not be loaded right now. Please try again later.</p>';
+    }
+  }
+
+  load();
+</script>

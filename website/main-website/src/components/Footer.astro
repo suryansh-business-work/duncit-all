@@ -1,14 +1,62 @@
 ---
-// Shared footer used across all pages.
+// Shared footer used across all pages. Link columns come from the Website
+// portal (Navigation manager) and the Policy Hub column from the Legal
+// portal's active policies — both baked in at build time with safe fallbacks.
+import { fetchBranding, fetchNavGroups, fetchPolicies } from '../lib/site-data';
+
+const branding = await fetchBranding();
+const footerLogo = branding.website_footer_logo_url || '/duncit-logo.svg';
+
+const FALLBACK_COLUMNS = [
+  {
+    label: 'About',
+    links: [
+      { id: 'f-about', label: 'About us', url: '/about' },
+      { id: 'f-newsroom', label: 'Newsroom', url: '/newsroom' },
+      { id: 'f-careers', label: 'Careers', url: '/careers' },
+      { id: 'f-contact', label: 'Contact us', url: '/contact' },
+    ],
+  },
+  {
+    label: 'Community',
+    links: [
+      { id: 'f-community', label: 'Community', url: '/community' },
+      { id: 'f-guidelines', label: 'Guidelines', url: '/guidelines' },
+      { id: 'f-blog', label: 'Blog', url: '/blog' },
+    ],
+  },
+  {
+    label: 'Safety Hub',
+    links: [
+      { id: 'f-approach', label: 'Our approach', url: '/safety/approach' },
+      { id: 'f-advice', label: 'Advice', url: '/safety/advice' },
+      { id: 'f-tools', label: 'Safety Tools', url: '/safety/tools' },
+      { id: 'f-resources', label: 'Resources', url: '/safety/resources' },
+    ],
+  },
+  {
+    label: 'Support',
+    links: [
+      { id: 'f-help', label: 'Help Center', url: '/help' },
+      { id: 'f-faq', label: 'FAQ', url: '/faq' },
+      { id: 'f-support-mail', label: 'Email support', url: `mailto:${branding.support_email}` },
+    ],
+  },
+];
+
+const columns = await fetchNavGroups('MAIN', 'FOOTER', FALLBACK_COLUMNS as never);
+const policies = await fetchPolicies();
+const year = new Date().getFullYear();
 ---
+
 <footer class="bg-cream rounded-3xl mt-3 pt-16 pb-8 px-6">
   <div class="max-w-6xl mx-auto">
     <div class="grid md:grid-cols-2 gap-8 items-center">
       <a href="/" class="inline-block">
-        <img src="/duncit-logo.svg" alt="Duncit" class="h-16 sm:h-24 w-auto" />
+        <img src={footerLogo} alt={branding.app_name} class="h-16 sm:h-24 w-auto" />
       </a>
       <div class="md:text-right">
-        <p class="font-head font-bold text-ink mb-3">Get notified when we launch</p>
+        <p class="font-head font-bold text-ink mb-3">Get Duncit updates</p>
         <form class="flex gap-2 md:justify-end" id="footerForm">
           <input
             type="email"
@@ -20,69 +68,47 @@
             <i class="fa-solid fa-paper-plane"></i> Notify
           </button>
         </form>
-        <div class="mt-4 flex md:justify-end gap-3">
-          <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
-          <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-          <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
-          <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
-        </div>
       </div>
     </div>
 
     <hr class="my-10 border-ink/10" />
 
     <div class="grid grid-cols-2 md:grid-cols-5 gap-8">
+      {
+        columns.map((column) => (
+          <div>
+            <h4 class="font-head font-extrabold mb-3">{column.label}</h4>
+            <ul class="space-y-2 text-sm text-ink-soft">
+              {column.links.map((link) => (
+                <li>
+                  <a href={link.url} class="hover:text-primary">
+                    {link.label}
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+        ))
+      }
       <div>
-        <h4 class="font-head font-extrabold mb-3">About</h4>
+        <h4 class="font-head font-extrabold mb-3">Policy Hub</h4>
         <ul class="space-y-2 text-sm text-ink-soft">
-          <li><a href="/about" class="hover:text-primary">About us</a></li>
-          <li><a href="/newsroom" class="hover:text-primary">Newsroom</a></li>
-          <li><a href="/careers" class="hover:text-primary">Careers</a></li>
-          <li><a href="/contact" class="hover:text-primary">Contact us</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-head font-extrabold mb-3">Community</h4>
-        <ul class="space-y-2 text-sm text-ink-soft">
-          <li><a href="/community" class="hover:text-primary">Community</a></li>
-          <li><a href="/guidelines" class="hover:text-primary">Guidelines</a></li>
-          <li><a href="/blog" class="hover:text-primary">Blog</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-head font-extrabold mb-3">Safety Hub</h4>
-        <ul class="space-y-2 text-sm text-ink-soft">
-          <li><a href="/safety/approach" class="hover:text-primary">Our approach</a></li>
-          <li><a href="/safety/advice" class="hover:text-primary">Advice</a></li>
-          <li><a href="/safety/tools" class="hover:text-primary">Safety Tools</a></li>
-          <li><a href="/safety/resources" class="hover:text-primary">Resources</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-head font-extrabold mb-3">Privacy Hub</h4>
-        <ul class="space-y-2 text-sm text-ink-soft">
-          <li><a href="/privacy/policy" class="hover:text-primary">Privacy Policy</a></li>
-          <li><a href="/privacy/cookies" class="hover:text-primary">Cookies Policy</a></li>
-          <li><a href="/privacy/security" class="hover:text-primary">Privacy &amp; Security</a></li>
-          <li><a href="/privacy/tips" class="hover:text-primary">Tips</a></li>
-        </ul>
-      </div>
-      <div>
-        <h4 class="font-head font-extrabold mb-3">Support</h4>
-        <ul class="space-y-2 text-sm text-ink-soft">
-          <li><a href="/help" class="hover:text-primary">Help Center</a></li>
-          <li><a href="/faq" class="hover:text-primary">FAQ</a></li>
-          <li><a href="/portals" class="hover:text-primary">Duncit Portals</a></li>
+          {
+            policies.map((policy) => (
+              <li>
+                <a href={`/policy?slug=${policy.slug}`} class="hover:text-primary">
+                  {policy.title}
+                </a>
+              </li>
+            ))
+          }
+          <li><a href="/policies" class="hover:text-primary font-bold">All policies</a></li>
         </ul>
       </div>
     </div>
 
-    <div class="mt-10 pt-6 border-t border-ink/10 flex flex-col sm:flex-row justify-between items-center gap-3 text-sm text-ink-soft">
-      <span>© Duncit 2026 | All Rights Reserved</span>
-      <span class="flex gap-4">
-        <a href="/legal" class="hover:text-primary">Legal Notice</a>
-        <a href="/terms" class="hover:text-primary">Terms &amp; Conditions</a>
-      </span>
+    <div class="mt-10 pt-6 border-t border-ink/10 flex justify-center items-center text-sm text-ink-soft">
+      <span>© {branding.app_name} {year} | All Rights Reserved</span>
     </div>
   </div>
 </footer>

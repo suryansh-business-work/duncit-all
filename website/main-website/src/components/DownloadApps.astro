@@ -1,0 +1,93 @@
+---
+// The shared "Download the app" section used across every Duncit website —
+// Android + iOS only. Store links come from Admin → Branding → Website Logos;
+// while a listing is unpublished the button renders a real "coming soon"
+// state instead of a dead link. No mWeb promos here by design.
+import { fetchBranding } from '../lib/site-data';
+
+const branding = await fetchBranding();
+const stores = [
+  {
+    icon: 'fa-google-play',
+    eyebrow: 'Get it on',
+    name: 'Google Play',
+    url: branding.android_app_url,
+  },
+  {
+    icon: 'fa-apple',
+    eyebrow: 'Download on the',
+    name: 'App Store',
+    url: branding.ios_app_url,
+  },
+];
+const perks = [
+  { icon: 'fa-bolt', tone: 'text-primary bg-primary/15', title: 'Instant matches', text: 'Slide into vibe-based friend circles in seconds.' },
+  { icon: 'fa-comments', tone: 'text-secondary bg-secondary/15', title: 'Real chats', text: 'No pressure, just real talk and laughs.' },
+  { icon: 'fa-shield-heart', tone: 'text-tertiary-dark bg-tertiary/30', title: 'Safe space', text: 'Verified profiles and built-in safety tools.' },
+];
+---
+
+<section id="download" class="relative overflow-hidden bg-ink py-20 px-6">
+  <div class="absolute -top-24 -left-24 w-96 h-96 rounded-full bg-primary/30 blur-3xl" aria-hidden="true"></div>
+  <div class="absolute -bottom-24 -right-24 w-96 h-96 rounded-full bg-secondary/30 blur-3xl" aria-hidden="true"></div>
+
+  <div class="relative z-10 max-w-5xl mx-auto text-center">
+    <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-dark text-white font-bold text-xs uppercase tracking-wider mb-6">
+      <i class="fa-solid fa-mobile-screen"></i> The Duncit app
+    </span>
+    <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4 text-white">
+      One app, <span class="text-tertiary">Many Communities</span>
+    </h2>
+    <p class="text-white/80 text-lg max-w-xl mx-auto mb-10">
+      Download the app for Android or iOS and match with friends by energy — real plans, real
+      places, real people.
+    </p>
+
+    <div class="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto mb-12">
+      {
+        stores.map((store) =>
+          store.url ? (
+            <a
+              href={store.url}
+              target="_blank"
+              rel="noreferrer"
+              class="group glass-dark text-white rounded-2xl p-6 flex items-center gap-4 hover:scale-[1.02] transition"
+            >
+              <i class={`fa-brands ${store.icon} text-5xl`} aria-hidden="true"></i>
+              <span class="text-left">
+                <span class="block text-xs opacity-70 uppercase tracking-wide">{store.eyebrow}</span>
+                <span class="block text-xl font-bold font-head">{store.name}</span>
+              </span>
+              <i class="fa-solid fa-arrow-right ml-auto opacity-0 group-hover:opacity-100 transition" aria-hidden="true"></i>
+            </a>
+          ) : (
+            <div class="glass-dark text-white rounded-2xl p-6 flex items-center gap-4 relative overflow-hidden">
+              <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-tertiary text-ink text-[10px] font-black uppercase tracking-wider">
+                Coming soon
+              </span>
+              <i class={`fa-brands ${store.icon} text-5xl opacity-80`} aria-hidden="true"></i>
+              <span class="text-left">
+                <span class="block text-xs opacity-70 uppercase tracking-wide">{store.eyebrow}</span>
+                <span class="block text-xl font-bold font-head">{store.name}</span>
+              </span>
+            </div>
+          )
+        )
+      }
+    </div>
+
+    <div class="grid sm:grid-cols-3 gap-5 max-w-3xl mx-auto text-left">
+      {
+        perks.map((perk) => (
+          <div class="glass rounded-2xl p-5">
+            <div class={`w-10 h-10 rounded-full ${perk.tone} inline-flex items-center justify-center mb-3`}>
+              <i class={`fa-solid ${perk.icon}`} aria-hidden="true"></i>
+            </div>
+            <h3 class="text-lg mb-1">{perk.title}</h3>
+            <p class="text-sm text-ink-soft">{perk.text}</p>
+          </div>
+        ))
+      }
+    </div>
+  </div>
+</section>

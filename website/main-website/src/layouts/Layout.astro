@@ -1,4 +1,7 @@
 ---
+import '../styles/global.css';
+import { fetchBranding } from '../lib/site-data';
+
 interface Props {
   title: string;
   description?: string;
@@ -6,10 +9,12 @@ interface Props {
 
 const {
   title,
-  description = 'Duncit — connect instantly with friends who match your energy.',
+  description = 'Duncit — the friendship platform that matches people by energy, not algorithms.',
 } = Astro.props;
 
-import '../styles/global.css';
+// Admin-managed favicon (Branding → Website Logos), baked in at build time.
+const branding = await fetchBranding();
+const favicon = branding.website_favicon_url || '/duncit-logo.svg';
 ---
 
 <!doctype html>
@@ -18,7 +23,7 @@ import '../styles/global.css';
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
-    <link rel="icon" type="image/svg+xml" href="/duncit-logo.svg" />
+    <link rel="icon" href={favicon} />
     <title>{title}</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />

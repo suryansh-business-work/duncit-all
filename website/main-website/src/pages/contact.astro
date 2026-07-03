@@ -1,5 +1,12 @@
 ---
+// Contact — reach-us cards come from Admin branding (support email/phone) and
+// the form lands in the Website portal's Contact Submissions inbox.
 import PageLayout from '../layouts/PageLayout.astro';
+import { fetchBranding } from '../lib/site-data';
+
+const branding = await fetchBranding();
+const supportEmail = branding.support_email || 'support@duncit.com';
+const supportPhone = branding.support_phone;
 ---
 
 <PageLayout
@@ -10,22 +17,25 @@ import PageLayout from '../layouts/PageLayout.astro';
   accent="secondary"
   heroImage="https://images.unsplash.com/photo-1573497019418-b400bb3ab074?w=1600&q=80&auto=format&fit=crop"
 >
-  <div class="not-prose grid sm:grid-cols-3 gap-4 my-6">
-    <a href="mailto:hello@duncit.com" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition text-center">
-      <i class="fa-solid fa-envelope text-2xl text-primary mb-2"></i>
-      <div class="font-head font-bold text-ink">General</div>
-      <div class="text-sm text-ink-soft mt-1">hello@duncit.com</div>
+  <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
+    <a href={`mailto:${supportEmail}`} class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition text-center">
+      <i class="fa-solid fa-envelope text-2xl text-primary mb-2" aria-hidden="true"></i>
+      <div class="font-head font-bold text-ink">Email us</div>
+      <div class="text-sm text-ink-soft mt-1">{supportEmail}</div>
     </a>
-    <a href="mailto:press@duncit.com" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition text-center">
-      <i class="fa-solid fa-newspaper text-2xl text-secondary mb-2"></i>
-      <div class="font-head font-bold text-ink">Press</div>
-      <div class="text-sm text-ink-soft mt-1">press@duncit.com</div>
-    </a>
-    <a href="mailto:support@duncit.com" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition text-center">
-      <i class="fa-solid fa-life-ring text-2xl text-tertiary-dark mb-2"></i>
-      <div class="font-head font-bold text-ink">Support</div>
-      <div class="text-sm text-ink-soft mt-1">support@duncit.com</div>
-    </a>
+    {supportPhone ? (
+      <a href={`tel:${supportPhone}`} class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition text-center">
+        <i class="fa-solid fa-phone text-2xl text-secondary mb-2" aria-hidden="true"></i>
+        <div class="font-head font-bold text-ink">Call us</div>
+        <div class="text-sm text-ink-soft mt-1">{supportPhone}</div>
+      </a>
+    ) : (
+      <a href="/help" class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition text-center">
+        <i class="fa-solid fa-life-ring text-2xl text-tertiary-dark mb-2" aria-hidden="true"></i>
+        <div class="font-head font-bold text-ink">Help Center</div>
+        <div class="text-sm text-ink-soft mt-1">Browse answered topics</div>
+      </a>
+    )}
   </div>
 
   <h2>Send us a message</h2>
@@ -39,15 +49,6 @@ import PageLayout from '../layouts/PageLayout.astro';
       Send <i class="fa-solid fa-paper-plane"></i>
     </button>
   </form>
-
-  <h2>Follow along</h2>
-  <p>
-    For day-to-day updates, find us on
-    <a href="#">Twitter / X</a>,
-    <a href="#">Instagram</a>,
-    <a href="#">TikTok</a>, and
-    <a href="#">Discord</a>.
-  </p>
 </PageLayout>
 
 <script>

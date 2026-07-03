@@ -1,5 +1,6 @@
 import { useForm } from 'react-hook-form';
 import { fireEvent, screen, waitFor } from '@testing-library/react-native';
+import { Text } from 'tamagui';
 
 import { VenueSlotStep } from '@/components/create-pod/steps/VenueSlotStep';
 import { PricingStep } from '@/components/create-pod/steps/PricingStep';
@@ -72,7 +73,61 @@ function VenueSlotHarness({
   return <VenueSlotStep form={form} venues={venues} viewerUserId={viewerUserId} />;
 }
 
+/** Exposes no_of_spots_text so space-picker auto-fill can be asserted. */
+function SpaceHarness({ venues }: Readonly<{ venues: CreatePodVenue[] }>) {
+  const form = useForm<CreatePodFormValues>({
+    defaultValues: {
+      ...blankCreatePodForm,
+      pod_mode: 'PHYSICAL',
+      location_id: 'l1',
+      venue_id: venues[0]?.id ?? '',
+    },
+  });
+  return (
+    <>
+      <VenueSlotStep form={form} venues={venues} viewerUserId="other-user" />
+      <Text testID="spots-readout">{form.watch('no_of_spots_text')}</Text>
+    </>
+  );
+}
+
 describe('VenueSlotStep', () => {
+  it('lists named venue spaces and auto-fills spots from the picked capacity', async () => {
+    const withSpaces: CreatePodVenue = {
+      ...venue,
+      venue_type: 'Banquet',
+      capacity: 200,
+      capacity_items: [
+        { label: 'Main Hall', capacity: 120 },
+        { label: 'Terrace', capacity: 40 },
+      ],
+    };
+    renderWithProviders(<SpaceHarness venues={[withSpaces]} />);
+    expect(screen.getByTestId('create-pod-venue-capacity')).toHaveTextContent(
+      'Banquet · Total capacity: 200',
+    );
+    fireEvent.press(screen.getByTestId('create-pod-space-Terrace'));
+    await waitFor(() => expect(screen.getByTestId('spots-readout')).toHaveTextContent('40'));
+    // Switching to another space re-fills spots from its capacity.
+    fireEvent.press(screen.getByTestId('create-pod-space-Main Hall'));
+    await waitFor(() => expect(screen.getByTestId('spots-readout')).toHaveTextContent('120'));
+  });
+
+  it('offers the whole venue when only a total capacity is set', async () => {
+    const totalOnly: CreatePodVenue = { ...venue, capacity: 75, capacity_items: [] };
+    renderWithProviders(<SpaceHarness venues={[totalOnly]} />);
+    fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
+    await waitFor(() => expect(screen.getByTestId('spots-readout')).toHaveTextContent('75'));
+  });
+
+  it('shows a manual-spots hint when the venue lists no capacity', () => {
+    renderWithProviders(
+      <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
+    );
+    expect(screen.getByTestId('create-pod-venue-capacity')).toHaveTextContent('Total capacity: 0');
+    expect(screen.queryByTestId('create-pod-space-Whole venue')).toBeNull();
+  });
+
   it('shows the empty hint when no venue partners serve the pod city', () => {
     renderWithProviders(<VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l9' }} />);
     expect(screen.getByTestId('create-pod-venue-empty')).toBeOnTheScreen();

@@ -1,12 +1,7 @@
 import { parse } from 'date-fns';
 import { z } from 'zod';
 
-import {
-  CategoryMediaType,
-  type PodMode,
-  type PodOccurrence,
-  type PodType,
-} from '@/generated/graphql/graphql';
+import { CategoryMediaType, type PodMode, type PodType } from '@/generated/graphql/graphql';
 import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
 
 const DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
@@ -58,7 +53,7 @@ export const createPodSchema = z
       .refine((text) => text === '' || !!parseDateTimeText(text), 'Use YYYY-MM-DD HH:mm'),
     pod_type: z.string().min(1),
     pod_amount_text: z.string().refine(intIn(0, 1999), 'Amount must be 0–1999'),
-    pod_occurrence: z.string().min(1),
+    venue_space_label: z.string(),
     no_of_spots_text: z.string().refine(intIn(0, 10000), 'Spots must be 0–10000'),
     pod_hashtag_text: z.string().max(500),
     media_text: z.string(),
@@ -167,12 +162,12 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'meeting_platform',
     'meeting_url',
     'meeting_notes',
+    'venue_space_label',
     'pod_date_time_text',
     'pod_end_date_time_text',
   ],
   [
     'pod_type',
-    'pod_occurrence',
     'pod_amount_text',
     'no_of_spots_text',
     'place_charges',
@@ -213,7 +208,6 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     pod_end_date_time: parseDateTimeText(values.pod_end_date_time_text)?.toISOString() ?? null,
     pod_type: values.pod_type as PodType,
     pod_amount: Number(values.pod_amount_text) || 0,
-    pod_occurrence: values.pod_occurrence as PodOccurrence,
     no_of_spots: Number(values.no_of_spots_text) || 0,
     pod_info: values.pod_info,
     pod_hashtag: values.pod_hashtag_text

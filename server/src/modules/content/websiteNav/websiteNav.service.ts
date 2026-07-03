@@ -120,13 +120,13 @@ export const websiteNavService = {
       row('MAIN', 'FOOTER', 'Support', 'Help center', '/help', 0),
       row('MAIN', 'FOOTER', 'Support', 'FAQ', '/faq', 1),
       row('MAIN', 'FOOTER', 'Support', 'Contact', '/contact', 2),
-      // Satellite site footers
+      // Satellite site footers — Support goes to the public help center
       row('PARTNERS', 'FOOTER', 'Duncit', 'duncit.com', 'https://duncit.com', 0),
-      row('PARTNERS', 'FOOTER', 'Duncit', 'Support', 'https://support.duncit.com', 1),
+      row('PARTNERS', 'FOOTER', 'Duncit', 'Support', 'https://duncit.com/help', 1),
       row('ADS', 'FOOTER', 'Duncit', 'duncit.com', 'https://duncit.com', 0),
-      row('ADS', 'FOOTER', 'Duncit', 'Support', 'https://support.duncit.com', 1),
+      row('ADS', 'FOOTER', 'Duncit', 'Support', 'https://duncit.com/help', 1),
       row('EARNWITH', 'FOOTER', 'Duncit', 'duncit.com', 'https://duncit.com', 0),
-      row('EARNWITH', 'FOOTER', 'Duncit', 'Support', 'https://support.duncit.com', 1),
+      row('EARNWITH', 'FOOTER', 'Duncit', 'Support', 'https://duncit.com/help', 1),
     ]);
   },
 };

@@ -3,9 +3,19 @@
 // from the environment so deployments stay dynamic without a code change.
 const isDevelopment = import.meta.env.PUBLIC_IS_DEVELOPMENT === 'true';
 
+// Localhost targets in dev, production hosts otherwise — every cross-site
+// link goes through this map so environments never leak into each other.
 const portalUrl =
   import.meta.env.PUBLIC_ADS_PORTAL_URL ||
   (isDevelopment ? 'http://localhost:2006' : 'https://ads-portal.duncit.com');
+
+const graphqlUrl =
+  import.meta.env.PUBLIC_GRAPHQL_URL ||
+  (isDevelopment ? 'http://localhost:2001/graphql' : 'https://server.duncit.com/graphql');
+
+const mainSiteUrl =
+  import.meta.env.PUBLIC_MAIN_SITE_URL ||
+  (isDevelopment ? 'http://localhost:2000' : 'https://duncit.com');
 
 export interface Feature {
   icon: string;
@@ -16,6 +26,8 @@ export interface Feature {
 export const siteConfig = {
   isDevelopment,
   portalUrl,
+  graphqlUrl,
+  mainSiteUrl,
   brand: {
     name: 'Duncit Ads',
     title: 'Duncit Ads — advertise where your audience actually shows up',
@@ -44,10 +56,9 @@ export const siteConfig = {
   footer: {
     tagline: 'Advertising for the Duncit network.',
     links: [
-      { label: 'Duncit', href: 'https://duncit.com' },
+      { label: 'Duncit', href: mainSiteUrl },
       { label: 'Ads Console', href: portalUrl },
-      { label: 'Support', href: 'https://support.duncit.com' },
+      { label: 'Support', href: `${mainSiteUrl}/help` },
     ],
-    email: 'ads@duncit.com',
   },
 };

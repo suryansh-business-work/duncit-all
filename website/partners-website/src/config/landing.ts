@@ -1,5 +1,4 @@
 export const partnerLanding = {
-  appUrl: 'https://partners-app.duncit.com',
   heroImage: 'https://images.unsplash.com/photo-1556761175-b413da4baf72?w=1800&q=85&auto=format&fit=crop',
   proofImage: 'https://images.unsplash.com/photo-1542744095-fcf48d80b0fd?w=1200&q=85&auto=format&fit=crop',
   pillars: [

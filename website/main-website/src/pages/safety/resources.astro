@@ -1,5 +1,9 @@
 ---
 import PageLayout from '../../layouts/PageLayout.astro';
+import { fetchBranding } from '../../lib/site-data';
+
+const branding = await fetchBranding();
+const supportEmail = branding.support_email || 'support@duncit.com';
 
 const resources = [
   { region: 'United States', name: 'Crisis Text Line', contact: 'Text HOME to 741741' },
@@ -37,5 +41,5 @@ const resources = [
   </div>
 
   <h2>On-platform support</h2>
-  <p>For Duncit-specific issues, contact <a href="mailto:safety@duncit.com">safety@duncit.com</a>. We don't replace professional help, but we'll listen and act on what we can.</p>
+  <p>For Duncit-specific issues, contact <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. We don't replace professional help, but we'll listen and act on what we can.</p>
 </PageLayout>

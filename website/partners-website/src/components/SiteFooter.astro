@@ -1,0 +1,84 @@
+---
+// Footer — links managed from the Website portal (Navigation → PARTNERS) and
+// the Policy Hub from the Legal portal; branding assets from Admin.
+import { urlConfigs } from '../config/url-configs';
+import { fetchBranding, fetchNavGroups, fetchPolicies, type SiteNavGroup } from '../lib/site-data';
+
+const FALLBACK_GROUPS: SiteNavGroup[] = [
+  {
+    label: 'Duncit',
+    links: [
+      { id: 'f-main', area: 'FOOTER', group_label: 'Duncit', label: 'duncit.com', url: urlConfigs.mainSiteUrl, sort_order: 0 },
+      { id: 'f-support', area: 'FOOTER', group_label: 'Duncit', label: 'Support', url: `${urlConfigs.mainSiteUrl}/help`, sort_order: 1 },
+    ],
+  },
+];
+
+const [branding, navGroups, policies] = await Promise.all([
+  fetchBranding(),
+  fetchNavGroups('FOOTER', FALLBACK_GROUPS),
+  fetchPolicies(),
+]);
+const year = new Date().getFullYear();
+---
+
+<footer class="rounded-3xl mt-3 bg-cream px-5 sm:px-8 py-12">
+  <div class="max-w-6xl mx-auto grid gap-10 md:grid-cols-[1.2fr_2fr]">
+    <div>
+      {branding.website_footer_logo_url ? (
+        <img src={branding.website_footer_logo_url} alt="Duncit" class="h-10 w-auto" />
+      ) : (
+        <div class="inline-flex items-center gap-2">
+          <span class="w-9 h-9 rounded-full bg-primary text-white inline-flex items-center justify-center font-black font-head">D</span>
+          <span class="font-head font-black text-ink text-xl leading-none">Duncit Partners</span>
+        </div>
+      )}
+      <p class="mt-3 text-sm text-ink-soft max-w-xs">
+        Real bookings for venues and hosts, backed by Duncit's trust layer.
+      </p>
+      <a href={`mailto:${branding.support_email || 'support@duncit.com'}`} class="mt-3 inline-block text-sm font-semibold text-primary hover:underline">
+        {branding.support_email || 'support@duncit.com'}
+      </a>
+    </div>
+
+    <div class="grid grid-cols-2 sm:grid-cols-3 gap-8">
+      {navGroups.map((group) => (
+        <nav aria-label={group.label}>
+          <h3 class="font-head font-extrabold text-sm text-ink uppercase tracking-wider mb-3">{group.label}</h3>
+          <ul class="space-y-2">
+            {group.links.map((link) => (
+              <li>
+                <a href={link.url} class="text-sm text-ink-soft hover:text-ink transition">{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ))}
+      {policies.length > 0 && (
+        <nav aria-label="Policy Hub">
+          <h3 class="font-head font-extrabold text-sm text-ink uppercase tracking-wider mb-3">Policy Hub</h3>
+          <ul class="space-y-2">
+            {policies.slice(0, 6).map((policy) => (
+              <li>
+                <a
+                  href={`${urlConfigs.mainSiteUrl}/policy?slug=${encodeURIComponent(policy.slug)}`}
+                  class="text-sm text-ink-soft hover:text-ink transition"
+                >
+                  {policy.title}
+                </a>
+              </li>
+            ))}
+            <li>
+              <a href={`${urlConfigs.mainSiteUrl}/policies`} class="text-sm font-semibold text-primary hover:underline">
+                All policies
+              </a>
+            </li>
+          </ul>
+        </nav>
+      )}
+    </div>
+  </div>
+  <div class="max-w-6xl mx-auto mt-10 pt-5 border-t border-ink/10 text-xs text-ink-soft text-center">
+    © {year} Duncit. All rights reserved.
+  </div>
+</footer>

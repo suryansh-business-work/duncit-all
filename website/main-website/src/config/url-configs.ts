@@ -10,7 +10,6 @@ const urls = isDevelopment
       partnersSiteUrl: 'http://localhost:2004',
       adsSiteUrl: 'http://localhost:2020',
       earnwithUrl: 'http://localhost:2025',
-      supportPortalUrl: 'http://localhost:2010',
     }
   : {
       graphqlUrl: 'https://server.duncit.com/graphql',
@@ -19,7 +18,6 @@ const urls = isDevelopment
       partnersSiteUrl: 'https://partners.duncit.com',
       adsSiteUrl: 'https://ads.duncit.com',
       earnwithUrl: 'https://earnwith.duncit.com',
-      supportPortalUrl: 'https://support.duncit.com',
     };
 
 export const urlConfigs = {
@@ -30,15 +28,7 @@ export const urlConfigs = {
   partnersSiteUrl: import.meta.env.PUBLIC_PARTNERS_SITE_URL || urls.partnersSiteUrl,
   adsSiteUrl: import.meta.env.PUBLIC_ADS_SITE_URL || urls.adsSiteUrl,
   earnwithUrl: import.meta.env.PUBLIC_EARNWITH_URL || urls.earnwithUrl,
-  supportPortalUrl: import.meta.env.PUBLIC_SUPPORT_PORTAL_URL || urls.supportPortalUrl,
   emails: {
-    hello: 'hello@duncit.com',
-    press: 'press@duncit.com',
     support: 'support@duncit.com',
-    safety: 'safety@duncit.com',
-    privacy: 'privacy@duncit.com',
-    legal: 'legal@duncit.com',
-    careers: 'careers@duncit.com',
-    security: 'security@duncit.com',
   },
 };

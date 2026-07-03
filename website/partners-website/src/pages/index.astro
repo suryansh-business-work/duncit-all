@@ -1,9 +1,14 @@
 ---
 import Layout from '../layouts/Layout.astro';
+import DownloadApps from '../components/DownloadApps.astro';
+import SiteFooter from '../components/SiteFooter.astro';
 import { partnerLanding } from '../config/landing';
+import { urlConfigs } from '../config/url-configs';
+import { fetchBranding } from '../lib/site-data';
 
-const venueUrl = `${partnerLanding.appUrl}/register-venue`;
-const hostUrl = `${partnerLanding.appUrl}/become-host`;
+const branding = await fetchBranding();
+const venueUrl = `${urlConfigs.partnersAppUrl}/register-venue`;
+const hostUrl = `${urlConfigs.partnersAppUrl}/become-host`;
 ---
 
 <Layout title="Duncit Partners — Host and venue growth">
@@ -15,11 +20,17 @@ const hostUrl = `${partnerLanding.appUrl}/become-host`;
       </div>
 
       <nav class="relative z-20 flex items-center justify-between gap-4">
-        <a href="https://duncit.com" class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white sticker hover:-translate-y-0.5 transition">
-          <span class="w-8 h-8 rounded-full bg-primary text-white inline-flex items-center justify-center font-black font-head">D</span>
-          <span class="font-head font-black text-ink text-lg leading-none">Duncit</span>
+        <a href={urlConfigs.mainSiteUrl} class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white sticker hover:-translate-y-0.5 transition">
+          {branding.website_header_logo_url ? (
+            <img src={branding.website_header_logo_url} alt="Duncit" class="h-8 w-auto" />
+          ) : (
+            <>
+              <span class="w-8 h-8 rounded-full bg-primary text-white inline-flex items-center justify-center font-black font-head">D</span>
+              <span class="font-head font-black text-ink text-lg leading-none">Duncit</span>
+            </>
+          )}
         </a>
-        <a href={partnerLanding.appUrl} class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tertiary text-ink font-bold sticker hover:scale-[1.03] transition">
+        <a href={urlConfigs.partnersAppUrl} class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-tertiary text-ink font-bold sticker hover:scale-[1.03] transition">
           <i class="fa-solid fa-right-to-bracket"></i> Partner login
         </a>
       </nav>
@@ -88,6 +99,9 @@ const hostUrl = `${partnerLanding.appUrl}/become-host`;
         </div>
       </div>
     </section>
+
+    <DownloadApps />
+    <SiteFooter />
   </main>
 </Layout>
 

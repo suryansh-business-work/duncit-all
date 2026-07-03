@@ -1,22 +1,82 @@
 ---
+// Footer — links managed from the Website portal (Navigation → EARNWITH) and
+// the Policy Hub from the Legal portal; branding assets from Admin.
 import { siteConfig } from '../config/site-config';
-const { brand, footer } = siteConfig;
+import { fetchBranding, fetchNavGroups, fetchPolicies, type SiteNavGroup } from '../lib/site-data';
+
+const { brand, footer, mainSiteUrl } = siteConfig;
+
+const FALLBACK_GROUPS: SiteNavGroup[] = [
+  {
+    label: 'Duncit',
+    links: footer.links.map((link, index) => ({
+      id: `fallback-${index}`,
+      area: 'FOOTER' as const,
+      group_label: 'Duncit',
+      label: link.label,
+      url: link.href,
+      sort_order: index,
+    })),
+  },
+];
+
+const [branding, navGroups, policies] = await Promise.all([
+  fetchBranding(),
+  fetchNavGroups('FOOTER', FALLBACK_GROUPS),
+  fetchPolicies(),
+]);
+const supportEmail = branding.support_email || 'support@duncit.com';
 const year = new Date().getFullYear();
 ---
 
 <footer class="border-t border-black/5">
-  <div class="mx-auto flex max-w-6xl flex-col gap-6 px-5 py-10 sm:flex-row sm:items-center sm:justify-between">
+  <div class="mx-auto max-w-6xl px-5 py-10 grid gap-8 sm:grid-cols-[1.2fr_2fr]">
     <div>
       <div class="flex items-center gap-2 font-head text-base font-extrabold text-ink">
-        <img src="/duncit-logo.svg" alt="Duncit" width="24" height="24" />
+        <img src={branding.website_footer_logo_url || '/duncit-logo.svg'} alt="Duncit" class="h-6 w-auto" />
         {brand.name}
       </div>
       <p class="mt-2 text-sm text-ink-soft">{footer.tagline}</p>
+      <a href={`mailto:${supportEmail}`} class="mt-2 inline-block text-sm font-semibold text-primary hover:underline">
+        {supportEmail}
+      </a>
     </div>
-    <nav class="flex flex-wrap gap-x-6 gap-y-2 text-sm font-semibold text-ink-soft">
-      {footer.links.map((link) => <a href={link.href} class="hover:text-ink">{link.label}</a>)}
-      <a href={`mailto:${footer.email}`} class="hover:text-ink">{footer.email}</a>
-    </nav>
+    <div class="grid grid-cols-2 gap-8">
+      {navGroups.map((group) => (
+        <nav aria-label={group.label}>
+          <h3 class="font-head font-extrabold text-xs text-ink uppercase tracking-wider mb-3">{group.label}</h3>
+          <ul class="space-y-2">
+            {group.links.map((link) => (
+              <li>
+                <a href={link.url} class="text-sm text-ink-soft hover:text-ink transition">{link.label}</a>
+              </li>
+            ))}
+          </ul>
+        </nav>
+      ))}
+      {policies.length > 0 && (
+        <nav aria-label="Policy Hub">
+          <h3 class="font-head font-extrabold text-xs text-ink uppercase tracking-wider mb-3">Policy Hub</h3>
+          <ul class="space-y-2">
+            {policies.slice(0, 5).map((policy) => (
+              <li>
+                <a
+                  href={`${mainSiteUrl}/policy?slug=${encodeURIComponent(policy.slug)}`}
+                  class="text-sm text-ink-soft hover:text-ink transition"
+                >
+                  {policy.title}
+                </a>
+              </li>
+            ))}
+            <li>
+              <a href={`${mainSiteUrl}/policies`} class="text-sm font-semibold text-primary hover:underline">
+                All policies
+              </a>
+            </li>
+          </ul>
+        </nav>
+      )}
+    </div>
   </div>
   <div class="border-t border-black/5 py-5 text-center text-xs text-ink-soft">
     © {year} Duncit. All rights reserved.

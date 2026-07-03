@@ -4,6 +4,7 @@ import { ClubModel } from '../../club.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { venueService } from '@modules/venues/venue/venue.service';
 import { ClubFollowerModel } from '@modules/access/user/relations';
 
 describe('clubService integration', () => {
@@ -117,38 +118,84 @@ describe('clubService integration', () => {
     expect(await clubService.followersCount(club!.id)).toBe(1);
   });
 
-  it('counts distinct active clubs via their live (APPROVED + active) meetup venues', async () => {
-    const locA = new Types.ObjectId();
-    const locB = new Types.ObjectId();
-    const venA1 = new Types.ObjectId();
-    const venA2 = new Types.ObjectId();
-    const venB1 = new Types.ObjectId();
-    const venRejected = new Types.ObjectId();
-    const venDeactivated = new Types.ObjectId();
-    await VenueModel.collection.insertMany([
-      { _id: venA1, location_id: locA, status: 'APPROVED', is_active: true },
-      { _id: venA2, location_id: locA, status: 'APPROVED', is_active: true },
-      { _id: venB1, location_id: locB, status: 'APPROVED', is_active: true },
-      { _id: venRejected, location_id: locA, status: 'REJECTED', is_active: true },
-      { _id: venDeactivated, location_id: locB, status: 'APPROVED', is_active: false },
-    ] as never);
+  it('persists location_id on create and update, coercing empty to null', async () => {
+    const loc = new Types.ObjectId().toString();
+    const created = await clubService.create({ club_name: 'Located Club', location_id: loc });
+    expect(created!.location_id).toBe(loc);
 
-    // Two live venues in loc A → the club still counts once for A.
-    await clubService.create({ club_name: 'A One', meetup_venues_id: [String(venA1), String(venA2)] });
-    // A live venue in A and one in B → counts for both cities.
-    await clubService.create({ club_name: 'A and B', meetup_venues_id: [String(venA1), String(venB1)] });
-    // Inactive CLUB → excluded entirely.
-    const inactive = await clubService.create({ club_name: 'Inactive', meetup_venues_id: [String(venA1)] });
+    const cleared = await clubService.update(created!.id, { location_id: '' });
+    expect(cleared!.location_id).toBeNull();
+
+    const loc2 = new Types.ObjectId().toString();
+    const reset = await clubService.update(created!.id, { location_id: loc2 });
+    expect(reset!.location_id).toBe(loc2);
+  });
+
+  it('counts active clubs by their own location_id', async () => {
+    const locA = new Types.ObjectId().toString();
+    const locB = new Types.ObjectId().toString();
+    await clubService.create({ club_name: 'A One', location_id: locA });
+    await clubService.create({ club_name: 'A Two', location_id: locA });
+    await clubService.create({ club_name: 'B One', location_id: locB });
+    // Inactive club → excluded.
+    const inactive = await clubService.create({ club_name: 'Inactive', location_id: locA });
     await clubService.update(inactive!.id, { is_active: false });
-    // Active club whose only venue is REJECTED → not operating, excluded from A.
-    await clubService.create({ club_name: 'Rejected venue', meetup_venues_id: [String(venRejected)] });
-    // Active club whose only venue is deactivated → excluded from B.
-    await clubService.create({ club_name: 'Dead venue', meetup_venues_id: [String(venDeactivated)] });
-    // Club with no venues → contributes to no city.
-    await clubService.create({ club_name: 'Venueless' });
+    // Club with no location → contributes to no city.
+    await clubService.create({ club_name: 'Locationless' });
 
     const counts = await clubService.activeClubCountsByLocation();
-    expect(counts[String(locA)]).toBe(2);
-    expect(counts[String(locB)]).toBe(1);
+    expect(counts[locA]).toBe(2);
+    expect(counts[locB]).toBe(1);
+  });
+
+  it('auto-matches APPROVED+active venues to a club by location + Super/Sub category', async () => {
+    const locA = new Types.ObjectId();
+    const locB = new Types.ObjectId();
+    const superId = new Types.ObjectId();
+    const subMatch = new Types.ObjectId();
+    const subOther = new Types.ObjectId();
+
+    const venMatch = new Types.ObjectId();
+    const venWrongLoc = new Types.ObjectId();
+    const venWrongSub = new Types.ObjectId();
+    const venNotApproved = new Types.ObjectId();
+    const venInactive = new Types.ObjectId();
+    await VenueModel.collection.insertMany([
+      // The one true match: right location, right super + sub.
+      { _id: venMatch, venue_name: 'Match Hall', location_id: locA, status: 'APPROVED', is_active: true,
+        venue_category: { super_category_id: superId, sub_category_id: subMatch } },
+      // Right category, wrong city.
+      { _id: venWrongLoc, venue_name: 'Wrong City', location_id: locB, status: 'APPROVED', is_active: true,
+        venue_category: { super_category_id: superId, sub_category_id: subMatch } },
+      // Right city + super, wrong sub.
+      { _id: venWrongSub, venue_name: 'Wrong Sub', location_id: locA, status: 'APPROVED', is_active: true,
+        venue_category: { super_category_id: superId, sub_category_id: subOther } },
+      // Right everything but not approved.
+      { _id: venNotApproved, venue_name: 'Draft', location_id: locA, status: 'DRAFT', is_active: true,
+        venue_category: { super_category_id: superId, sub_category_id: subMatch } },
+      // Right everything but deactivated.
+      { _id: venInactive, venue_name: 'Dead', location_id: locA, status: 'APPROVED', is_active: false,
+        venue_category: { super_category_id: superId, sub_category_id: subMatch } },
+    ] as never);
+
+    const club = await clubService.create({
+      club_name: 'Matcher',
+      location_id: String(locA),
+      super_category_id: String(superId),
+      category_id: String(subMatch),
+    });
+
+    const criteria = {
+      location_id: club!.location_id,
+      super_category_id: club!.super_category_id,
+      category_id: club!.category_id,
+    };
+    const matched = await venueService.findMatchingForClub(criteria);
+    expect(matched.map((v) => v.venue_name)).toEqual(['Match Hall']);
+    expect(await venueService.countMatchingForClub(criteria)).toBe(1);
+
+    // A club with no location matches nothing.
+    expect(await venueService.findMatchingForClub({ location_id: null })).toEqual([]);
+    expect(await venueService.countMatchingForClub({ location_id: null })).toBe(0);
   });
 });

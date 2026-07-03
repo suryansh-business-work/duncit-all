@@ -7,7 +7,7 @@ import { Alert, Snackbar, Stack } from '@mui/material';
 import {
   CLUBS,
   CATEGORIES,
-  APPROVED_VENUES,
+  LOCATIONS,
   CREATE,
   UPDATE,
   DELETE,
@@ -31,7 +31,7 @@ export default function ClubsPage() {
     fetchPolicy: 'cache-and-network',
   });
   const { data: catData } = useQuery(CATEGORIES);
-  const { data: venuesData } = useQuery(APPROVED_VENUES);
+  const { data: locData } = useQuery(LOCATIONS);
   const [createMut] = useMutation(CREATE);
   const [updateMut] = useMutation(UPDATE);
   const [deleteMut] = useMutation(DELETE);
@@ -56,11 +56,11 @@ export default function ClubsPage() {
       club_description: c.club_description ?? '',
       category_id: c.category_id ?? '',
       super_category_id: c.super_category_id ?? '',
+      location_id: c.location_id ?? '',
       feature_text: (c.club_feature_images_and_videos ?? [])
         .map((m: any) => m.url)
         .join('\n'),
       moments_text: (c.club_moments ?? []).map((m: any) => m.url).join('\n'),
-      meetup_venues_id: c.meetup_venues_id ?? [],
       community_link: c.club_whats_app_community_link ?? '',
       announcement_link: c.club_whats_app_announcement_link ?? '',
       group_link: c.club_whats_app_group_link ?? '',
@@ -101,7 +101,7 @@ export default function ClubsPage() {
         perks: cleanBullets(form.perks),
         values: cleanBullets(form.values),
         faqs: cleanFaqs(form.faqs),
-        meetup_venues_id: form.meetup_venues_id,
+        location_id: form.location_id || null,
         category_id: form.category_id || null,
         super_category_id: form.super_category_id || null,
       };
@@ -142,7 +142,7 @@ export default function ClubsPage() {
   };
 
   const superCats = (catData?.categories ?? []).filter((c: any) => c.level === 'SUPER');
-  const venues = venuesData?.venues ?? [];
+  const locations = locData?.locations ?? [];
   const allCats = catData?.categories ?? [];
   const catName = (id: string) => allCats.find((c: any) => c.id === id)?.name ?? '—';
 
@@ -174,7 +174,7 @@ export default function ClubsPage() {
         opError={opError}
         superCats={superCats}
         allCats={allCats}
-        venues={venues}
+        locations={locations}
       />
 
       <Snackbar

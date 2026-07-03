@@ -30,7 +30,7 @@ const club = {
   club_moments: [],
   club_whats_app_community_link: null,
   club_whats_app_group_link: null,
-  meetup_venues_id: [],
+  matched_venues_count: 0,
   category_id: null,
   who_we_are: [],
   what_we_do: [],

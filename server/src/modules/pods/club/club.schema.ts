@@ -51,7 +51,14 @@ export const clubTypeDefs = /* GraphQL */ `
     perks: [String!]!
     values: [String!]!
     faqs: [ClubFaq!]!
+    "Deprecated hand-picked venue links; venues now auto-match by location + category."
     meetup_venues_id: [String!]!
+    "City the club operates in (ref Location)."
+    location_id: ID
+    "APPROVED, active venues that match this club by location + Super/Sub category."
+    matched_venues: [Venue!]!
+    "How many venues auto-match this club (location + category)."
+    matched_venues_count: Int!
     "Hosts explicitly linked by an admin (Bug 5)."
     host_ids: [ID!]!
     "Resolved host profiles — linked hosts, or the hosts of the club's pods as a fallback."
@@ -75,6 +82,7 @@ export const clubTypeDefs = /* GraphQL */ `
     search: String
     category_id: ID
     super_category_id: ID
+    location_id: ID
     is_verified: Boolean
     is_active: Boolean
   }
@@ -94,6 +102,7 @@ export const clubTypeDefs = /* GraphQL */ `
     values: [String!]
     faqs: [ClubFaqInput!]
     meetup_venues_id: [String!]
+    location_id: ID
     host_ids: [ID!]
     category_id: ID
     super_category_id: ID
@@ -115,6 +124,7 @@ export const clubTypeDefs = /* GraphQL */ `
     values: [String!]
     faqs: [ClubFaqInput!]
     meetup_venues_id: [String!]
+    location_id: ID
     host_ids: [ID!]
     category_id: ID
     super_category_id: ID

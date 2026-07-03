@@ -15,7 +15,7 @@ const locations = [
   { id: 'l2', location_name: 'HSR', city: 'Bengaluru', state: 'KA' },
   { id: 'l3', location_name: 'Goa', city: null },
 ];
-const clubs = [{ id: 'c1', club_name: 'Runners', meetup_venues_id: [] }];
+const clubs = [{ id: 'c1', club_name: 'Runners', location_id: 'l1', super_category_id: null }];
 const hostCategories: CreatePodHostCategory[] = [
   { super_category_name: 'Sports', category_name: 'Running', sub_category_name: 'Trail' },
 ];

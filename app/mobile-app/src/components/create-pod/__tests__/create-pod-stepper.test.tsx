@@ -32,13 +32,15 @@ beforeEach(() => {
 });
 
 const clubs = [
-  { id: 'c1', club_name: 'Runners', meetup_venues_id: ['v1'] },
-  // No linked venues — always listed so hosts never hit a dead end.
-  { id: 'c2', club_name: 'Writers', meetup_venues_id: [] },
-  // All venues in another city — filtered out for l1.
-  { id: 'c3', club_name: 'Surfers', meetup_venues_id: ['v9'] },
-  // No meetup_venues_id at all — also always listed.
-  { id: 'c4', club_name: 'Gamers' },
+  // Same city (l1) + the host's super category → shown.
+  { id: 'c1', club_name: 'Runners', location_id: 'l1', super_category_id: 'sc-sports' },
+  { id: 'c2', club_name: 'Writers', location_id: 'l1', super_category_id: 'sc-sports' },
+  // Right category, different city → dropped for an l1 physical pod.
+  { id: 'c3', club_name: 'Surfers', location_id: 'l2', super_category_id: 'sc-sports' },
+  // Different category → dropped regardless of city.
+  { id: 'c4', club_name: 'Gamers', location_id: 'l1', super_category_id: 'sc-games' },
+  // No category at all → dropped while the host has categories.
+  { id: 'c5', club_name: 'Nomads', location_id: 'l1' },
 ];
 const locations = [
   { id: 'l1', location_name: 'Pune', city: 'Pune', state: 'MH' },
@@ -64,7 +66,12 @@ const venues = [
 ];
 const products = [{ id: 'p1', product_name: 'Water', unit_cost: 20, available_count: 10 }];
 const hostCategories = [
-  { super_category_name: 'Sports', category_name: 'Running', sub_category_name: 'Trail' },
+  {
+    super_category_id: 'sc-sports',
+    super_category_name: 'Sports',
+    category_name: 'Running',
+    sub_category_name: 'Trail',
+  },
 ];
 const finance = { platform_fee_pct: 5, gst_pct: 18, currency_symbol: '₹' };
 
@@ -146,10 +153,12 @@ describe('CreatePodStepper', () => {
     await screen.findByTestId('create-pod-location-label');
     expect(screen.getByTestId('create-pod-location-label')).toHaveTextContent(/Pune/);
     expect(screen.getByTestId('create-pod-category')).toHaveTextContent('Sports › Running › Trail');
-    // Location filter: c1 (venue in l1) + c2/c4 (no venues) stay; c3 drops out.
+    // Category + location filter: c1 & c2 (l1 + Sports) stay; c3 (other city),
+    // c4 (other category) and c5 (no category) all drop out.
     expect(screen.getByTestId('create-pod-club-c2')).toBeOnTheScreen();
-    expect(screen.getByTestId('create-pod-club-c4')).toBeOnTheScreen();
     expect(screen.queryByTestId('create-pod-club-c3')).toBeNull();
+    expect(screen.queryByTestId('create-pod-club-c4')).toBeNull();
+    expect(screen.queryByTestId('create-pod-club-c5')).toBeNull();
     press('create-pod-club-c1');
     press('create-pod-submit');
 
@@ -195,6 +204,28 @@ describe('CreatePodStepper', () => {
     await waitFor(() => expect(onPublish).toHaveBeenCalled());
     expect(onPublish.mock.calls[0]?.[1].venue_id).toBeNull();
     expect(onPublish.mock.calls[0]?.[1].venue_slot_id).toBeNull();
+  });
+
+  it('shows clubs from every category when the host has no linked categories', async () => {
+    setup({ hostCategories: [] });
+    await fillBasics();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-location-label');
+    // No category gate → any club in the pod city shows, incl. c4 (other category).
+    expect(screen.getByTestId('create-pod-club-c4')).toBeOnTheScreen();
+    // Different-city clubs still drop for a physical pod.
+    expect(screen.queryByTestId('create-pod-club-c3')).toBeNull();
+  });
+
+  it('lists category clubs from any city until a location is picked', async () => {
+    setup({ initialValues: { ...initialValues, location_id: '' } });
+    await fillBasics();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-club-c1');
+    // No location yet → category match alone, so the other-city club c3 shows too.
+    expect(screen.getByTestId('create-pod-club-c3')).toBeOnTheScreen();
+    // Category gate still applies: c4 (other category) stays hidden.
+    expect(screen.queryByTestId('create-pod-club-c4')).toBeNull();
   });
 
   it('blocks Next while the current step is invalid', async () => {

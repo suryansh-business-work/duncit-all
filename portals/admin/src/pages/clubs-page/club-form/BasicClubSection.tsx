@@ -7,12 +7,17 @@ interface Props {
   setForm: (f: ClubForm | ((prev: ClubForm) => ClubForm)) => void;
   superCats: any[];
   allCats: any[];
+  locations: any[];
 }
 
-/** Basic club fields + the full Super → Category → Sub Category cascade. The
- * club persists super_category_id + category_id (the sub); the middle level
- * narrows the sub list and is re-derived from the saved sub when editing. */
-export default function BasicClubSection({ form, setForm, superCats, allCats }: Readonly<Props>) {
+const locationLabel = (loc: any) =>
+  [loc.location_name || loc.city, loc.state].filter(Boolean).join(', ');
+
+/** Basic club fields + the full Super → Category → Sub Category cascade + the
+ * club's location. The club persists super_category_id + category_id (the sub);
+ * the middle level narrows the sub list and is re-derived from the saved sub
+ * when editing. Location + category together drive the auto-matched venues. */
+export default function BasicClubSection({ form, setForm, superCats, allCats, locations }: Readonly<Props>) {
   const selectedSub = allCats.find((c: any) => c.id === form.category_id);
   const [midId, setMidId] = useState<string>(selectedSub?.parent_id ?? '');
 
@@ -72,6 +77,19 @@ export default function BasicClubSection({ form, setForm, superCats, allCats }: 
           {subCats.map((category: any) => <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>)}
         </TextField>
       </Stack>
+      <TextField
+        label="Location"
+        select
+        value={form.location_id}
+        onChange={(e) => setForm({ ...form, location_id: e.target.value })}
+        fullWidth
+        helperText="The city the club operates in. Approved venues here in the same category auto-link to this club."
+      >
+        <MenuItem value="">None</MenuItem>
+        {locations.map((loc: any) => (
+          <MenuItem key={loc.id} value={loc.id}>{locationLabel(loc)}</MenuItem>
+        ))}
+      </TextField>
       {form.id && (
         <Stack direction="row" alignItems="center" spacing={1}>
           <Switch checked={form.is_active} onChange={(_, value) => setForm({ ...form, is_active: value })} />

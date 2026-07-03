@@ -380,6 +380,32 @@ async function assignApprovedVenueRole(userId: Types.ObjectId) {
   await userService.assignRoles(String(userId), Array.from(current));
 }
 
+/** Mongo query for the venues that auto-match a club, or null when the club has
+ * no location (nothing can match yet). A venue matches when it is APPROVED +
+ * active, sits in the club's location, and — when the club has them — shares the
+ * club's Super category and Sub category (the club's `category_id` holds the
+ * sub level, mirrored against the venue's `venue_category.sub_category_id`). */
+function buildClubMatchQuery(criteria: {
+  location_id?: string | null;
+  super_category_id?: string | null;
+  category_id?: string | null;
+}): Record<string, unknown> | null {
+  const { location_id, super_category_id, category_id } = criteria;
+  if (!location_id || !Types.ObjectId.isValid(location_id)) return null;
+  const q: Record<string, unknown> = {
+    status: 'APPROVED',
+    is_active: true,
+    location_id: new Types.ObjectId(location_id),
+  };
+  if (super_category_id && Types.ObjectId.isValid(super_category_id)) {
+    q['venue_category.super_category_id'] = new Types.ObjectId(super_category_id);
+  }
+  if (category_id && Types.ObjectId.isValid(category_id)) {
+    q['venue_category.sub_category_id'] = new Types.ObjectId(category_id);
+  }
+  return q;
+}
+
 export const venueService = {
   registrationConfig() {
     return {
@@ -411,6 +437,29 @@ export const venueService = {
     if (filter?.status) q.status = filter.status;
     const docs = await VenueModel.find(q).sort({ created_at: -1 });
     return docs.map(toPub);
+  },
+  /** APPROVED, active venues that match a club: same location, and the club's
+   * Super + Sub category (when set). This is the single source of truth for the
+   * club↔venue link — admin count, Club.matched_venues, and pod enforcement all
+   * go through here. Returns [] when the club has no location yet. */
+  async findMatchingForClub(criteria: {
+    location_id?: string | null;
+    super_category_id?: string | null;
+    category_id?: string | null;
+  }) {
+    const q = buildClubMatchQuery(criteria);
+    if (!q) return [];
+    const docs = await VenueModel.find(q).sort({ venue_name: 1 });
+    return docs.map(toPub);
+  },
+  async countMatchingForClub(criteria: {
+    location_id?: string | null;
+    super_category_id?: string | null;
+    category_id?: string | null;
+  }) {
+    const q = buildClubMatchQuery(criteria);
+    if (!q) return 0;
+    return VenueModel.countDocuments(q);
   },
   async getById(id: string) {
     const v = await VenueModel.findById(id);

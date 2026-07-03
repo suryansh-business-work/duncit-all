@@ -100,8 +100,8 @@ describe('ChipArrayField', () => {
 });
 
 const clubs = [
-  { id: 'c1', club_name: 'Runners', meetup_venues_id: [] },
-  { id: 'c2', club_name: 'Readers', meetup_venues_id: [] },
+  { id: 'c1', club_name: 'Runners', location_id: 'l1', super_category_id: null },
+  { id: 'c2', club_name: 'Readers', location_id: 'l1', super_category_id: null },
 ];
 
 describe('ClubSearchField', () => {

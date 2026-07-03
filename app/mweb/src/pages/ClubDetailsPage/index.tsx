@@ -56,8 +56,7 @@ export default function ClubDetailsPage() {
 
   const featureMedia = club.club_feature_images_and_videos ?? [];
   const pods = data?.clubPods ?? [];
-  const venueIds: string[] = club.meetup_venues_id ?? [];
-  const venues = (data?.publicVenues ?? []).filter((venue: any) => venueIds.includes(venue.id));
+  const venues = club.matched_venues ?? [];
 
   const memberIds = Array.from(
     new Set<string>(pods.flatMap((podItem: any) => podItem.pod_attendees ?? []))

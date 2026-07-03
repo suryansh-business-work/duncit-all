@@ -58,7 +58,9 @@ export const CLUBS = gql`
       id
       club_id
       club_name
-      meetup_venues_id
+      matched_venues {
+        id
+      }
     }
   }
 `;

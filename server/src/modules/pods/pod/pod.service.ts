@@ -8,6 +8,7 @@ import { HostModel } from '@modules/venues/host/host.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { venueService } from '@modules/venues/venue/venue.service';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { venueSlotService } from '@modules/venues/venueSlot/venueSlot.service';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
@@ -297,12 +298,21 @@ async function resolveVenueLocation(input: any) {
   const venue = await VenueModel.findById(venueId);
   if (!venue) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });
   // Slot bookings go to any venue partner's availability calendar, so the
-  // legacy club↔venue link only constrains the manual (no-slot) path.
+  // club↔venue match only constrains the manual (no-slot) path. Venues now
+  // auto-match a club by location + category (single source of truth in
+  // venueService); a club with no location yet imposes no constraint.
   const club = !input.venue_slot_id && input.club_id ? await ClubModel.findById(input.club_id) : null;
-  if (club?.meetup_venues_id?.length && !club.meetup_venues_id.includes(String(venue._id))) {
-    throw new GraphQLError('Selected venue is not linked to this club', {
-      extensions: { code: 'BAD_USER_INPUT' },
+  if (club?.location_id) {
+    const matched = await venueService.findMatchingForClub({
+      location_id: String(club.location_id),
+      super_category_id: club.super_category_id ? String(club.super_category_id) : null,
+      category_id: club.category_id ? String(club.category_id) : null,
     });
+    if (!matched.some((v: { id: string }) => String(v.id) === String(venue._id))) {
+      throw new GraphQLError('Selected venue is not available for this club', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
   }
   if (!locationId && (venue as any).location_id) {
     locationId = String((venue as any).location_id);

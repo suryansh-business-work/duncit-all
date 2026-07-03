@@ -39,7 +39,7 @@ export default function CascadeEffect({ clubs, venues }: Readonly<Props>) {
   useEffect(() => {
     if (!clubId || !venueId) return;
     const club = clubs.find((item: any) => item.id === clubId);
-    const linked = new Set(club?.meetup_venues_id ?? []);
+    const linked = new Set((club?.matched_venues ?? []).map((v: any) => v.id));
     const valid = venues.some((venue: any) => venue.id === venueId && linked.has(venue.id));
     if (!valid) {
       setValue('venue_id', '');

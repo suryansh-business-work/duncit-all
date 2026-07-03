@@ -31,7 +31,9 @@
     "migrate:verification-cleanup": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-verification-cleanup.ts",
     "migrate:verification-cleanup:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-verification-cleanup.ts --dry-run",
     "migrate:bouncer-ticket-no": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-bouncer-ticket-no.ts",
-    "migrate:bouncer-ticket-no:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-bouncer-ticket-no.ts --dry-run"
+    "migrate:bouncer-ticket-no:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-bouncer-ticket-no.ts --dry-run",
+    "migrate:club-location": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-club-location.ts",
+    "migrate:club-location:dry": "ts-node -r tsconfig-paths/register --transpile-only scripts/migrate-club-location.ts --dry-run"
   },
   "dependencies": {
     "@apollo/server": "^4.10.4",

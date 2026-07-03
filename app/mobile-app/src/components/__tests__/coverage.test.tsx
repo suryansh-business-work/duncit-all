@@ -94,7 +94,7 @@ describe('ClubBody', () => {
       club_moments: [],
       club_whats_app_group_link: null,
       club_whats_app_community_link: null,
-      meetup_venues_id: [],
+      matched_venues_count: 0,
       ...EMPTY_CONTENT,
     } as never;
     renderWithProviders(
@@ -122,7 +122,7 @@ describe('ClubBody', () => {
       club_moments: [],
       club_whats_app_group_link: null,
       club_whats_app_community_link: null,
-      meetup_venues_id: [],
+      matched_venues_count: 0,
       ...EMPTY_CONTENT,
     } as never;
     renderWithProviders(
@@ -150,7 +150,7 @@ describe('ClubBody', () => {
       club_moments: [],
       club_whats_app_group_link: null,
       club_whats_app_community_link: null,
-      meetup_venues_id: [],
+      matched_venues_count: 0,
       ...EMPTY_CONTENT,
     } as never;
     renderWithProviders(
@@ -180,7 +180,7 @@ describe('ClubBody', () => {
       club_moments: [],
       club_whats_app_group_link: 'https://wa.me/1',
       club_whats_app_community_link: null,
-      meetup_venues_id: ['v1'],
+      matched_venues_count: 1,
       ...EMPTY_CONTENT,
     } as never;
     const pods = [
@@ -232,7 +232,7 @@ describe('ClubBody', () => {
       club_moments: [],
       club_whats_app_group_link: null,
       club_whats_app_community_link: null,
-      meetup_venues_id: [],
+      matched_venues_count: 0,
       ...EMPTY_CONTENT,
     } as never;
     const pods = [
@@ -353,7 +353,7 @@ describe('empty / minimal branches', () => {
       club_moments: [],
       club_whats_app_group_link: null,
       club_whats_app_community_link: null,
-      meetup_venues_id: [],
+      matched_venues_count: 0,
       ...EMPTY_CONTENT,
     } as never;
     renderWithProviders(

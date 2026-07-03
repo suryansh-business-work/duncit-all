@@ -26,6 +26,18 @@ export const venueResolvers = {
       return venueService.getById(args.venue_doc_id);
     },
     publicVenues: async () => venueService.list({ status: 'APPROVED' }),
+    matchingVenues: async (
+      _p: unknown,
+      args: { location_id: string; super_category_id?: string; category_id?: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ['SUPER_ADMIN', 'CITY_ADMIN']);
+      return venueService.findMatchingForClub({
+        location_id: args.location_id,
+        super_category_id: args.super_category_id ?? null,
+        category_id: args.category_id ?? null,
+      });
+    },
   },
   Mutation: {
     submitVenueStep1: async (_p: unknown, args: { input: any; venue_id?: string }, ctx: GraphQLContext) =>

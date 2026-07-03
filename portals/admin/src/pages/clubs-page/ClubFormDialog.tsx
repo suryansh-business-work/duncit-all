@@ -22,7 +22,7 @@ interface Props {
   opError: string | null;
   superCats: any[];
   allCats: any[];
-  venues: any[];
+  locations: any[];
 }
 
 export default function ClubFormDialog({
@@ -36,7 +36,7 @@ export default function ClubFormDialog({
   opError,
   superCats,
   allCats,
-  venues,
+  locations,
 }: Readonly<Props>) {
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['basic']));
   const toggleOne = (id: string, open: boolean) => {
@@ -87,7 +87,7 @@ export default function ClubFormDialog({
           onCollapseAll={collapseAll}
           superCats={superCats}
           allCats={allCats}
-          venues={venues}
+          locations={locations}
         />
         {opError && <Alert severity="error" sx={{ mt: 2 }}>{opError}</Alert>}
       </DialogContent>

@@ -37,6 +37,7 @@ const toPub = (d: any) => {
     values: d.values ?? [],
     faqs: (d.faqs ?? []).map((f: any) => ({ question: f.question, answer: f.answer })),
     meetup_venues_id: d.meetup_venues_id ?? [],
+    location_id: d.location_id ? String(d.location_id) : null,
     host_ids: (d.host_ids ?? []).map((x: any) => String(x)),
     category_id: d.category_id ? String(d.category_id) : null,
     super_category_id: d.super_category_id ? String(d.super_category_id) : null,
@@ -60,6 +61,7 @@ export const clubService = {
     search?: string;
     category_id?: string;
     super_category_id?: string;
+    location_id?: string;
     is_active?: boolean;
     is_verified?: boolean;
   }) {
@@ -72,6 +74,7 @@ export const clubService = {
     }
     if (filter?.category_id) q.category_id = filter.category_id;
     if (filter?.super_category_id) q.super_category_id = filter.super_category_id;
+    if (filter?.location_id) q.location_id = filter.location_id;
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
     if (filter?.is_verified !== undefined) q.is_verified = filter.is_verified;
     const docs = await ClubModel.find(q).sort({ club_name: 1 });
@@ -116,6 +119,7 @@ export const clubService = {
       values: input.values ?? [],
       faqs: input.faqs ?? [],
       meetup_venues_id: input.meetup_venues_id ?? [],
+      location_id: input.location_id || null,
       host_ids: input.host_ids ?? [],
       category_id: input.category_id || null,
       super_category_id: input.super_category_id || null,
@@ -142,14 +146,17 @@ export const clubService = {
       'values',
       'faqs',
       'meetup_venues_id',
+      'location_id',
       'host_ids',
       'category_id',
       'super_category_id',
       'is_verified',
       'is_active',
     ];
+    const nullableRefs = new Set(['location_id', 'category_id', 'super_category_id']);
     for (const f of fields) {
-      if (input[f] !== undefined) (doc as any)[f] = input[f];
+      if (input[f] === undefined) continue;
+      (doc as any)[f] = nullableRefs.has(f) ? input[f] || null : input[f];
     }
     await doc.save();
     return toPub(doc);
@@ -245,29 +252,14 @@ export const clubService = {
     return this.getById(clubId);
   },
 
-  /** Number of distinct ACTIVE clubs operating in each location, keyed by the
-   * location's id (string). A club "operates" in a location when one of its
-   * meetup venues (stored as venue _id strings) sits in that location. Used by
-   * the Home location selector to show "<N> Clubs" under each city. */
+  /** Number of ACTIVE clubs in each location, keyed by the location's id
+   * (string). A club is tied to one location (`location_id`); venues auto-match
+   * it by that location + category. Used by the Home location selector to show
+   * "<N> Clubs" under each city. */
   async activeClubCountsByLocation(): Promise<Record<string, number>> {
     const rows = await ClubModel.aggregate([
-      { $match: { is_active: true } },
-      { $project: { venueIds: '$meetup_venues_id' } },
-      { $unwind: '$venueIds' },
-      {
-        $addFields: {
-          venueOid: { $convert: { input: '$venueIds', to: 'objectId', onError: null, onNull: null } },
-        },
-      },
-      { $match: { venueOid: { $ne: null } } },
-      { $lookup: { from: 'venues', localField: 'venueOid', foreignField: '_id', as: 'venue' } },
-      { $unwind: '$venue' },
-      // Only count via venues that are actually live (the platform's "operating"
-      // predicate — same as publicVenues / venueSlot.listAvailable).
-      { $match: { 'venue.location_id': { $ne: null }, 'venue.status': 'APPROVED', 'venue.is_active': true } },
-      // Distinct (club, location) so a club with several venues in one city counts once.
-      { $group: { _id: { club: '$_id', loc: '$venue.location_id' } } },
-      { $group: { _id: '$_id.loc', count: { $sum: 1 } } },
+      { $match: { is_active: true, location_id: { $ne: null } } },
+      { $group: { _id: '$location_id', count: { $sum: 1 } } },
     ]);
     const map: Record<string, number> = {};
     for (const row of rows) map[String(row._id)] = row.count as number;

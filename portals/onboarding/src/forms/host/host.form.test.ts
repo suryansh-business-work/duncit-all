@@ -79,10 +79,39 @@ describe('host initial values + variable mappers', () => {
     expect(values.step3.tags).toEqual(['vip']);
   });
 
+  it('hydrates and maps host categories (ids only) for the edit form', () => {
+    const values = hostEditInitialValues({
+      status: 'APPROVED',
+      host_categories: [
+        {
+          super_category_id: 's1', category_id: 'c1', sub_category_id: 'x1',
+          super_category_name: 'For You', category_name: 'Sports', sub_category_name: 'Badminton',
+          request_no: 'HOSTREQ-1',
+        },
+        // Ids present but names/request_no missing → fields default to ''.
+        { super_category_id: 's2', category_id: 'c2', sub_category_id: 'x2' },
+        // Incomplete triple is dropped during hydration.
+        { super_category_id: 's3', category_id: '', sub_category_id: '' },
+      ],
+    });
+    expect(values.categories).toHaveLength(2);
+    expect(values.categories?.[0]).toMatchObject({ sub_category_name: 'Badminton', request_no: 'HOSTREQ-1' });
+    expect(values.categories?.[1]).toMatchObject({
+      super_category_id: 's2', super_category_name: '', category_name: '', sub_category_name: '', request_no: '',
+    });
+
+    const mapped = toHostEditVariables({ step1, step2, step3, status: 'APPROVED', categories: values.categories } as never);
+    expect(mapped.categories).toEqual([
+      { super_category_id: 's1', category_id: 'c1', sub_category_id: 'x1' },
+      { super_category_id: 's2', category_id: 'c2', sub_category_id: 'x2' },
+    ]);
+  });
+
   it('maps edit and create variables', () => {
     const edit = toHostEditVariables({ step1, step2, step3, status: 'APPROVED' } as never);
     expect(edit.status).toBe('APPROVED');
     expect(edit.step1.full_name).toBe('Asha Rao');
+    expect(edit.categories).toEqual([]);
 
     const created = toHostCreateVariables({ ...hostCreateInitialValues, target_user_id: 'u1', step1, step2, step3 } as never, true);
     expect(created.submit).toBe(true);

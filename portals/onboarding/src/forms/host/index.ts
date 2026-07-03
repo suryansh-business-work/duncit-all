@@ -2,6 +2,7 @@ export {
   hostStep1Schema,
   hostStep2Schema,
   hostStep3Schema,
+  hostCategorySchema,
   hostEditSchema,
   hostCreateSchema,
   hostEditInitialValues,
@@ -9,4 +10,5 @@ export {
   toHostEditVariables,
   toHostCreateVariables,
 } from './host.form';
+export type { HostCategoryValue } from './host.form';
 export type { HostCreateValues, HostEditValues } from './host.types';

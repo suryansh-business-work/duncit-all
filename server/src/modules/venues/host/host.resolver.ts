@@ -66,7 +66,7 @@ export const hostResolvers = {
     },
     adminUpdateHost: async (
       _p: unknown,
-      args: { host_doc_id: string; step1: any; step2: any; step3: any; status?: string },
+      args: { host_doc_id: string; step1: any; step2: any; step3: any; status?: string; categories?: any[] },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_REVIEW);
@@ -75,6 +75,7 @@ export const hostResolvers = {
         step2: args.step2,
         step3: args.step3,
         status: args.status,
+        categories: args.categories,
       });
     },
     setHostActive: async (

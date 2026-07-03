@@ -8,6 +8,7 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  Divider,
   MenuItem,
   Stack,
   TextField,
@@ -15,6 +16,7 @@ import {
 import { Controller, FormProvider, useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import HostAccordionForm from '../../components/host-form/HostAccordionForm';
+import HostCategoriesSection from '../../components/host-form/HostCategoriesSection';
 import { STATUSES, UPDATE_HOST } from './queries';
 import {
   hostEditInitialValues,
@@ -67,6 +69,9 @@ export default function HostEditDialog({ host, onClose, onSaved }: Readonly<Prop
             <Stack spacing={2} sx={{ mt: 1 }}>
               {error && <Alert severity="error">{error}</Alert>}
               <HostAccordionForm mode="edit" />
+              <Divider />
+              <HostCategoriesSection />
+              <Divider />
               <Controller
                 control={control}
                 name="status"

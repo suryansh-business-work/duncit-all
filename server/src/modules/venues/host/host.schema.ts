@@ -62,6 +62,13 @@ export const hostTypeDefs = /* GraphQL */ `
     tags: [String!]
   }
 
+  "A Super → Category → Sub triple a host is approved to operate in."
+  input HostCategoryInput {
+    super_category_id: ID!
+    category_id: ID!
+    sub_category_id: ID!
+  }
+
   extend type Query {
     myHost: Host
     hosts(status: HostStatus): [Host!]!
@@ -90,6 +97,8 @@ export const hostTypeDefs = /* GraphQL */ `
       step2: HostStep2Input!
       step3: HostStep3Input!
       status: HostStatus
+      "When provided, replaces the host's operating categories (multi-category)."
+      categories: [HostCategoryInput!]
     ): Host!
     setHostActive(host_doc_id: ID!, active: Boolean!): Host!
     deleteHost(host_doc_id: ID!): Boolean!

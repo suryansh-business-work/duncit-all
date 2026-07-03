@@ -73,11 +73,25 @@ const hostStatus = z.enum(['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], {
   errorMap: () => ({ message: 'Select a valid status' }),
 });
 
+/** One category a host operates in. Ids drive the save; names + request_no are
+ * carried for display (request_no marks a category the host requested). */
+export const hostCategorySchema = z.object({
+  super_category_id: z.string().trim().min(1),
+  category_id: z.string().trim().min(1),
+  sub_category_id: z.string().trim().min(1),
+  super_category_name: z.string().default(''),
+  category_name: z.string().default(''),
+  sub_category_name: z.string().default(''),
+  request_no: z.string().default(''),
+});
+export type HostCategoryValue = z.input<typeof hostCategorySchema>;
+
 export const hostEditSchema = z.object({
   step1: hostStep1Schema,
   step2: hostStep2Schema,
   step3: hostStep3Schema,
   status: hostStatus,
+  categories: z.array(hostCategorySchema).default([]),
 });
 
 export const hostCreateSchema = z.object({
@@ -113,6 +127,17 @@ export function hostEditInitialValues(host: any | null): HostEditValues {
       tags: host?.tags ?? [],
     },
     status: host?.status ?? 'APPROVED',
+    categories: (host?.host_categories ?? [])
+      .filter((c: any) => c?.super_category_id && c?.category_id && c?.sub_category_id)
+      .map((c: any) => ({
+        super_category_id: String(c.super_category_id),
+        category_id: String(c.category_id),
+        sub_category_id: String(c.sub_category_id),
+        super_category_name: c.super_category_name ?? '',
+        category_name: c.category_name ?? '',
+        sub_category_name: c.sub_category_name ?? '',
+        request_no: c.request_no ?? '',
+      })),
   };
 }
 
@@ -131,6 +156,12 @@ export function toHostEditVariables(values: HostEditValues) {
     step2: castStep2(values),
     step3: castStep3(values),
     status: hostStatus.parse(values.status),
+    // Server denormalizes names + preserves request_no; send ids only.
+    categories: (values.categories ?? []).map((c) => ({
+      super_category_id: c.super_category_id,
+      category_id: c.category_id,
+      sub_category_id: c.sub_category_id,
+    })),
   };
 }
 

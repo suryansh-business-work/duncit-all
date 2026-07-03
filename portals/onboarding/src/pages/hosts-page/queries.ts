@@ -28,6 +28,9 @@ export const HOSTS = gql`
       submitted_at
       reviewer_notes
       host_categories {
+        super_category_id
+        category_id
+        sub_category_id
         super_category_name
         category_name
         sub_category_name
@@ -60,6 +63,7 @@ export const UPDATE_HOST = gql`
     $step2: HostStep2Input!
     $step3: HostStep3Input!
     $status: HostStatus
+    $categories: [HostCategoryInput!]
   ) {
     adminUpdateHost(
       host_doc_id: $id
@@ -67,10 +71,33 @@ export const UPDATE_HOST = gql`
       step2: $step2
       step3: $step3
       status: $status
+      categories: $categories
     ) {
       id
     }
   }
 `;
+
+export const CATEGORIES = gql`
+  query HostEditCategories($level: CategoryLevel!, $parent_id: ID) {
+    categories(filter: { level: $level, parent_id: $parent_id }) {
+      id
+      name
+      level
+      parent_id
+      is_active
+      sort_order
+    }
+  }
+`;
+
+export interface CategoryOption {
+  id: string;
+  name: string;
+  level: 'SUPER' | 'CATEGORY' | 'SUB';
+  parent_id: string | null;
+  is_active?: boolean | null;
+  sort_order?: number | null;
+}
 
 export const STATUSES = ['', 'DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'];

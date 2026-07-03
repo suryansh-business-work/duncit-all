@@ -1,6 +1,5 @@
 import { Box, Stack, Typography } from '@mui/material';
 import EventAvailableIcon from '@mui/icons-material/EventAvailable';
-import { WEEKDAY_FULL } from './settings-map';
 import type { PreviewSummary } from './recurring.types';
 
 const fmt = (n: number) => `₹${n.toLocaleString('en-IN')}`;
@@ -11,9 +10,7 @@ interface Props {
 }
 
 export default function PreviewBar({ summary, maxAdvanceDays }: Readonly<Props>) {
-  const days = Object.keys(summary.byWeekday)
-    .map(Number)
-    .sort((a, b) => a - b);
+  const spaceLabels = Object.keys(summary.bySpace).sort((a, b) => a.localeCompare(b));
 
   const skips: string[] = [];
   if (summary.skippedWeeklyOff) skips.push(`${summary.skippedWeeklyOff} weekly-off`);
@@ -58,16 +55,16 @@ export default function PreviewBar({ summary, maxAdvanceDays }: Readonly<Props>)
         </Stack>
 
         <Stack direction="row" spacing={2.5} flexWrap="wrap" rowGap={1}>
-          {days.map((day) => (
-            <Box key={day}>
+          {spaceLabels.map((label) => (
+            <Box key={label || 'whole-venue'}>
               <Typography variant="caption" fontWeight={800}>
-                {WEEKDAY_FULL[day]}
+                {label || 'Whole venue'}
               </Typography>
               <Typography variant="body2" fontWeight={900}>
-                {summary.byWeekday[day].count} Slots
+                {summary.bySpace[label].count} Slots
               </Typography>
               <Typography variant="caption" color="text.secondary">
-                {fmt(summary.byWeekday[day].price)}
+                {fmt(summary.bySpace[label].price)} · cap {summary.bySpace[label].capacity}
               </Typography>
             </Box>
           ))}

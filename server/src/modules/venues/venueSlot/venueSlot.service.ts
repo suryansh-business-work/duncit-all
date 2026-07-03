@@ -38,6 +38,8 @@ const toPub = (s: IVenueSlot, venueName: string, podTitle: string | null) => ({
   start_at: s.start_at.toISOString(),
   end_at: s.end_at.toISOString(),
   price: s.price ?? 0,
+  space_label: s.space_label ?? '',
+  capacity: s.capacity ?? 0,
   status: s.status,
   booked_by_pod_id: s.booked_by_pod_id ? String(s.booked_by_pod_id) : null,
   booked_pod_title: podTitle,
@@ -111,11 +113,29 @@ function normalizePrice(value: unknown): number {
   return n;
 }
 
-async function findOverlap(venueId: string, start: Date, end: Date, ignoreId?: string) {
+// A slot's guest capacity — non-negative integer (0 = unset/whole venue).
+const MAX_SLOT_CAPACITY = 100_000;
+function normalizeCapacity(value: unknown): number {
+  const n = Math.round(Number(value) || 0);
+  if (n < 0) fail('BAD_USER_INPUT', 'capacity must be 0 or more');
+  if (n > MAX_SLOT_CAPACITY) fail('BAD_USER_INPUT', `capacity must be ${MAX_SLOT_CAPACITY} or less`);
+  return n;
+}
+
+async function findOverlap(
+  venueId: string,
+  start: Date,
+  end: Date,
+  spaceLabel: string,
+  ignoreId?: string
+) {
   const q: any = {
     venue_id: new Types.ObjectId(venueId),
     start_at: { $lt: end },
     end_at: { $gt: start },
+    // Overlaps are per space: two spaces (or whole-venue) may share a time
+    // window. '' matches whole-venue slots including legacy docs with no field.
+    space_label: spaceLabel === '' ? { $in: ['', null] } : spaceLabel,
   };
   if (ignoreId) q._id = { $ne: new Types.ObjectId(ignoreId) };
   return VenueSlotModel.findOne(q);
@@ -134,7 +154,14 @@ async function loadSlot(slotId: string) {
 async function createSlotsCore(
   venueId: string,
   ownerUserId: string,
-  slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }>,
+  slots: Array<{
+    start_at: string;
+    end_at: string;
+    notes?: string;
+    price?: number;
+    space_label?: string;
+    capacity?: number;
+  }>,
   rules: SlotRules
 ) {
   if (!slots?.length) fail('BAD_USER_INPUT', 'At least one slot is required');
@@ -143,12 +170,20 @@ async function createSlotsCore(
     const start = parseDate(s.start_at, 'start_at');
     const end = parseDate(s.end_at, 'end_at');
     validateSlotWindow(start, end, rules);
-    return { start, end, notes: (s.notes ?? '').trim(), price: normalizePrice(s.price) };
+    return {
+      start,
+      end,
+      notes: (s.notes ?? '').trim(),
+      price: normalizePrice(s.price),
+      space_label: (s.space_label ?? '').trim(),
+      capacity: normalizeCapacity(s.capacity),
+    };
   });
 
-  // Reject when any new slot collides with an existing one (any status).
+  // Reject when any new slot collides with an existing one in the SAME space
+  // (any status) — different spaces may share a time window.
   for (const p of prepared) {
-    const overlap = await findOverlap(venueId, p.start, p.end);
+    const overlap = await findOverlap(venueId, p.start, p.end, p.space_label);
     if (overlap) {
       fail(
         'CONFLICT',
@@ -156,11 +191,19 @@ async function createSlotsCore(
       );
     }
   }
-  // Reject overlaps within the batch itself.
-  const sorted = [...prepared].sort((a, b) => a.start.getTime() - b.start.getTime());
-  for (let i = 1; i < sorted.length; i += 1) {
-    if (sorted[i].start.getTime() < sorted[i - 1].end.getTime()) {
-      fail('CONFLICT', 'Two of the new slots overlap with each other');
+  // Reject overlaps within the batch itself, per space.
+  const bySpace = new Map<string, typeof prepared>();
+  for (const p of prepared) {
+    const group = bySpace.get(p.space_label) ?? [];
+    group.push(p);
+    bySpace.set(p.space_label, group);
+  }
+  for (const group of bySpace.values()) {
+    const sorted = [...group].sort((a, b) => a.start.getTime() - b.start.getTime());
+    for (let i = 1; i < sorted.length; i += 1) {
+      if (sorted[i].start.getTime() < sorted[i - 1].end.getTime()) {
+        fail('CONFLICT', 'Two of the new slots overlap with each other');
+      }
     }
   }
 
@@ -171,6 +214,8 @@ async function createSlotsCore(
       start_at: p.start,
       end_at: p.end,
       price: p.price,
+      space_label: p.space_label,
+      capacity: p.capacity,
       notes: p.notes,
       status: 'AVAILABLE' as VenueSlotStatus,
     }))
@@ -193,7 +238,7 @@ async function updateSlotCore(
     const start = input.start_at ? parseDate(input.start_at, 'start_at') : slot.start_at;
     const end = input.end_at ? parseDate(input.end_at, 'end_at') : slot.end_at;
     validateSlotWindow(start, end, rules);
-    const overlap = await findOverlap(String(slot.venue_id), start, end, String(slot._id));
+    const overlap = await findOverlap(String(slot.venue_id), start, end, slot.space_label ?? '', String(slot._id));
     if (overlap) {
       fail(
         'CONFLICT',
@@ -316,13 +361,22 @@ export const venueSlotService = {
     return withVenueAndPod(open);
   },
 
-  async create(userId: string, input: { venue_id: string; slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }> }) {
+  async create(
+    userId: string,
+    input: {
+      venue_id: string;
+      slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number; space_label?: string; capacity?: number }>;
+    }
+  ) {
     const venue = await ensureOwnedVenue(userId, input.venue_id);
     return createSlotsCore(input.venue_id, userId, input.slots, venueSlotRules(venue));
   },
 
   // Admin create — slots are owned by the venue's actual owner, not the editor.
-  async adminCreate(input: { venue_id: string; slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }> }) {
+  async adminCreate(input: {
+    venue_id: string;
+    slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number; space_label?: string; capacity?: number }>;
+  }) {
     if (!Types.ObjectId.isValid(input.venue_id)) fail('BAD_USER_INPUT', 'Invalid venue_id');
     const venue = await VenueModel.findById(input.venue_id);
     if (!venue) fail('NOT_FOUND', 'Venue not found');
@@ -482,7 +536,10 @@ export const venueSlotService = {
       } catch {
         windowOk = false; // out of range / past → skip this slot, keep the batch
       }
-      if (!windowOk || (await findOverlap(String(slot.venue_id), start, end, String(slot._id)))) {
+      if (
+        !windowOk ||
+        (await findOverlap(String(slot.venue_id), start, end, slot.space_label ?? '', String(slot._id)))
+      ) {
         skipped += 1;
         continue;
       }

@@ -243,6 +243,8 @@ export default function VenueAvailabilityPage() {
         onClose={() => setRecurringOpen(false)}
         venueId={venueId}
         settings={venue?.settings}
+        capacityItems={venue?.capacity_items ?? []}
+        venueCapacity={venue?.capacity ?? 0}
         onDone={async () => {
           await refetch();
         }}

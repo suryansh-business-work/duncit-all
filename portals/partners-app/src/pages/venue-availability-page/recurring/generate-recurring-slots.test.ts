@@ -17,10 +17,9 @@ const config = (over: Partial<RecurringConfig> = {}): RecurringConfig => ({
   startDate: new Date(2026, 6, 6), // Mon
   endDate: new Date(2026, 6, 12), // Sun
   weekdays: [0, 1, 2, 3, 4, 5, 6],
-  startTime: '13:00',
-  endTime: '14:00',
-  defaultPrice: 399,
-  perDayPrice: {},
+  timeSlots: [{ start: '13:00', end: '14:00' }],
+  spaces: [{ label: 'Hall', capacity: 100, price: 399 }],
+  bufferMinutes: 0,
   skipWeeklyOff: true,
   skipHolidays: true,
   ...over,
@@ -35,38 +34,103 @@ describe('generateRecurringSlots — validation', () => {
       'Select at least one day to repeat on.',
     );
     expect(
-      generateRecurringSlots(config({ startTime: '15:00', endTime: '14:00' }), settings(), NOW).errors,
-    ).toContain('End time must be after start time.');
+      generateRecurringSlots(
+        config({ timeSlots: [{ start: '15:00', end: '14:00' }] }),
+        settings(),
+        NOW,
+      ).errors,
+    ).toContain('Each time slot must end after it starts.');
     expect(
-      generateRecurringSlots(config({ startTime: '08:00' }), settings(), NOW).errors[0],
-    ).toMatch(/before the venue opens/);
+      generateRecurringSlots(
+        config({ timeSlots: [{ start: '08:00', end: '09:30' }] }),
+        settings(),
+        NOW,
+      ).errors.some((e) => /before the venue opens/.test(e)),
+    ).toBe(true);
     expect(generateRecurringSlots(config({ startDate: null }), settings(), NOW).slots).toHaveLength(0);
+  });
+
+  it('requires at least one time slot and one priced space', () => {
+    expect(generateRecurringSlots(config({ timeSlots: [] }), settings(), NOW).errors).toContain(
+      'Add at least one time slot.',
+    );
+    expect(generateRecurringSlots(config({ spaces: [] }), settings(), NOW).errors).toContain(
+      'Add at least one space with a price.',
+    );
+    expect(
+      generateRecurringSlots(
+        config({ spaces: [{ label: 'Hall', capacity: 100, price: -5 }] }),
+        settings(),
+        NOW,
+      ).errors,
+    ).toContain('Price cannot be negative.');
+  });
+
+  it('rejects overlapping time slots and enforces the buffer gap', () => {
+    const overlap = generateRecurringSlots(
+      config({
+        timeSlots: [
+          { start: '09:00', end: '10:00' },
+          { start: '09:30', end: '10:30' },
+        ],
+      }),
+      settings(),
+      NOW,
+    );
+    expect(overlap.errors).toContain('Time slots must not overlap.');
+
+    const tooClose = generateRecurringSlots(
+      config({
+        bufferMinutes: 15,
+        timeSlots: [
+          { start: '09:00', end: '10:00' },
+          { start: '10:05', end: '11:00' },
+        ],
+      }),
+      settings(),
+      NOW,
+    );
+    expect(tooClose.errors).toContain('Keep at least a 15-minute gap between time slots.');
   });
 });
 
 describe('generateRecurringSlots — generation', () => {
-  it('creates one slot per selected weekday in range', () => {
+  it('creates one slot per weekday, carrying the space label + capacity', () => {
     const { slots, summary } = generateRecurringSlots(config(), settings(), NOW);
     expect(slots).toHaveLength(7);
     expect(summary.total).toBe(7);
     expect(summary.estimatedRevenue).toBe(7 * 399);
+    expect(slots[0].space_label).toBe('Hall');
+    expect(slots[0].capacity).toBe(100);
+    expect(summary.bySpace.Hall.count).toBe(7);
+    expect(summary.bySpace.Hall.price).toBe(399);
+  });
+
+  it('multiplies slots across time ranges and spaces', () => {
+    const res = generateRecurringSlots(
+      config({
+        timeSlots: [
+          { start: '13:00', end: '14:00' },
+          { start: '15:00', end: '16:00' },
+        ],
+        spaces: [
+          { label: 'Banquet hall', capacity: 120, price: 899 },
+          { label: 'Rooftop', capacity: 40, price: 499 },
+        ],
+      }),
+      settings(),
+      NOW,
+    );
+    // 7 days × 2 time ranges × 2 spaces.
+    expect(res.slots).toHaveLength(28);
+    expect(res.summary.bySpace['Banquet hall'].count).toBe(14);
+    expect(res.summary.bySpace.Rooftop.count).toBe(14);
+    expect(res.summary.estimatedRevenue).toBe(14 * 899 + 14 * 499);
   });
 
   it('keeps only the chosen weekdays', () => {
     const { slots } = generateRecurringSlots(config({ weekdays: [1, 3, 5] }), settings(), NOW);
     expect(slots).toHaveLength(3);
-  });
-
-  it('applies per-day price overrides and reflects them in the summary', () => {
-    const { summary } = generateRecurringSlots(
-      config({ perDayPrice: { 0: 499, 6: 449 } }),
-      settings(),
-      NOW,
-    );
-    expect(summary.byWeekday[0].price).toBe(499);
-    expect(summary.byWeekday[6].price).toBe(449);
-    expect(summary.byWeekday[1].price).toBe(399);
-    expect(summary.estimatedRevenue).toBe(5 * 399 + 449 + 499);
   });
 
   it('skips weekly-off days and holidays when enabled', () => {
@@ -87,7 +151,6 @@ describe('generateRecurringSlots — generation', () => {
     );
     const cap = new Date(NOW.getTime() + 90 * 86_400_000);
     expect(res.slots.every((s) => new Date(s.start_at) <= cap)).toBe(true);
-    // Slots exist past the old 60-day limit (proving the rule, not 60, is the cap).
     const beyond60 = new Date(NOW.getTime() + 60 * 86_400_000);
     expect(res.slots.some((s) => new Date(s.start_at) > beyond60)).toBe(true);
     expect(res.summary.skippedBeyondCap).toBeGreaterThan(0);

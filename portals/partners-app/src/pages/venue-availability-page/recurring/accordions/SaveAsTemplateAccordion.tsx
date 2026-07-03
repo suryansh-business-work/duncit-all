@@ -21,8 +21,8 @@ import {
   DELETE_SLOT_TEMPLATE,
   MY_SLOT_TEMPLATES,
 } from '../recurring.queries';
-import { hhmmToDate, timeToHHMM } from '../settings-map';
-import type { RecurringForm } from '../useRecurringDialog';
+import { timeToHHMM } from '../settings-map';
+import { newTimeSlot, type RecurringForm } from '../useRecurringDialog';
 
 const toInt = (v: string) => Math.max(0, Math.round(Number(v) || 0));
 
@@ -39,18 +39,21 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
   const [deleteTemplate] = useMutation(DELETE_SLOT_TEMPLATE);
   const templates = data?.mySlotTemplates ?? [];
 
+  // Templates capture the schedule skeleton (weekdays + the first time range + a
+  // base price). Applying sets one time slot and that base price on every space;
+  // per-space prices are then adjustable. The server template shape is unchanged.
   const apply = (t: any) =>
     patch({
       weekdays: t.config.weekdays,
-      startTime: hhmmToDate(t.config.start_time),
-      endTime: hhmmToDate(t.config.end_time),
-      defaultPrice: String(t.config.default_price),
-      perDayPrice: Object.fromEntries(t.config.per_day_price.map((p: any) => [p.weekday, String(p.price)])),
+      timeSlots: [newTimeSlot(t.config.start_time, t.config.end_time)],
+      spaces: form.spaces.map((s) => ({ ...s, price: String(t.config.default_price) })),
       skipWeeklyOff: t.config.skip_weekly_off,
       skipHolidays: t.config.skip_holidays,
     });
 
   const save = async () => {
+    const first = form.timeSlots[0];
+    const basePrice = form.spaces.find((s) => s.enabled) ?? form.spaces[0];
     await createTemplate({
       variables: {
         input: {
@@ -58,12 +61,10 @@ export default function SaveAsTemplateAccordion({ venueId, form, patch }: Readon
           name: name.trim(),
           config: {
             weekdays: form.weekdays,
-            start_time: timeToHHMM(form.startTime),
-            end_time: timeToHHMM(form.endTime),
-            default_price: toInt(form.defaultPrice),
-            per_day_price: Object.entries(form.perDayPrice)
-              .filter(([d, p]) => form.weekdays.includes(Number(d)) && String(p).trim() !== '')
-              .map(([d, p]) => ({ weekday: Number(d), price: toInt(p) })),
+            start_time: timeToHHMM(first?.start ?? null),
+            end_time: timeToHHMM(first?.end ?? null),
+            default_price: toInt(basePrice?.price ?? '0'),
+            per_day_price: [],
             skip_weekly_off: form.skipWeeklyOff,
             skip_holidays: form.skipHolidays,
           },

@@ -8,6 +8,8 @@ export const VENUE_SLOTS = gql`
       start_at
       end_at
       price
+      space_label
+      capacity
       status
       booked_by_pod_id
       booked_pod_title
@@ -67,6 +69,9 @@ export interface VenueSlotRow {
   start_at: string;
   end_at: string;
   price: number;
+  // Optional so a plain calendar VenueSlotRow (no space fields) stays assignable.
+  space_label?: string;
+  capacity?: number;
   status: 'AVAILABLE' | 'PENDING' | 'BOOKED' | 'BLOCKED';
   booked_by_pod_id: string | null;
   booked_pod_title: string | null;

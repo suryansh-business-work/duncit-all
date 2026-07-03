@@ -1,10 +1,9 @@
-import { Box, Stack, Typography } from '@mui/material';
-import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
+import { Stack } from '@mui/material';
 import { DatePicker } from '@mui/x-date-pickers/DatePicker';
-import { TimePicker } from '@mui/x-date-pickers/TimePicker';
 import { addDays } from 'date-fns';
 import DayOfWeekPicker from './DayOfWeekPicker';
-import PricingSection from './PricingSection';
+import TimeSlotsSection from './TimeSlotsSection';
+import SpacePricingSection from './SpacePricingSection';
 import type { RecurringForm } from './useRecurringDialog';
 import { effectiveMaxAdvance, type VenueSettingsView } from './settings-map';
 
@@ -43,39 +42,14 @@ export default function BasicSection({ form, patch, settings }: Readonly<Props>)
         weeklyOff={settings.weekly_off_days}
       />
 
-      <Box>
-        <Typography variant="body2" sx={{ fontWeight: 800, mb: 0.5 }}>
-          Time
-        </Typography>
-        <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-          <TimePicker
-            label="Start time"
-            value={form.startTime}
-            onChange={(t) => patch({ startTime: t })}
-            slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-          />
-          <TimePicker
-            label="End time"
-            value={form.endTime}
-            onChange={(t) => patch({ endTime: t })}
-            slotProps={{ textField: { fullWidth: true, size: 'small' } }}
-          />
-        </Stack>
-        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ mt: 0.5 }}>
-          <InfoOutlinedIcon fontSize="inherit" color="action" />
-          <Typography variant="caption" color="text.secondary">
-            Venue hours {settings.operating_hours.open}–{settings.operating_hours.close}. Slots must fit inside.
-          </Typography>
-        </Stack>
-      </Box>
-
-      <PricingSection
-        defaultPrice={form.defaultPrice}
-        onDefaultPrice={(defaultPrice) => patch({ defaultPrice })}
-        weekdays={form.weekdays}
-        perDayPrice={form.perDayPrice}
-        onPerDayPrice={(perDayPrice) => patch({ perDayPrice })}
+      <TimeSlotsSection
+        timeSlots={form.timeSlots}
+        onChange={(timeSlots) => patch({ timeSlots })}
+        openHours={settings.operating_hours}
+        bufferMinutes={settings.rules.buffer_minutes}
       />
+
+      <SpacePricingSection spaces={form.spaces} onChange={(spaces) => patch({ spaces })} />
     </Stack>
   );
 }

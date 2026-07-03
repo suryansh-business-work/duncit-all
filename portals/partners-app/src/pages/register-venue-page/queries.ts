@@ -116,6 +116,10 @@ export const MY_VENUES = gql`
       venue_name
       venue_type
       capacity
+      capacity_items {
+        label
+        capacity
+      }
       cover_image_url
       city
       locality

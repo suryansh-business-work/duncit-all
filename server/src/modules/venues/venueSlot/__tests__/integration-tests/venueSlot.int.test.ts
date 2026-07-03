@@ -41,6 +41,45 @@ describe('venueSlotService integration', () => {
     ).rejects.toThrow();
   });
 
+  it('allows two different spaces to share a time window but rejects same-space overlap', async () => {
+    const venueId = await seedVenue();
+    const created = await venueSlotService.create(ownerId, {
+      venue_id: venueId,
+      slots: [
+        { start_at: inDays(2), end_at: inDays(2.1), price: 899, space_label: 'Banquet hall', capacity: 120 },
+        { start_at: inDays(2), end_at: inDays(2.1), price: 499, space_label: 'Rooftop', capacity: 40 },
+      ],
+    });
+    expect(created).toHaveLength(2);
+    const banquet = created.find((s) => s.space_label === 'Banquet hall');
+    expect(banquet?.capacity).toBe(120);
+    expect(banquet?.price).toBe(899);
+
+    // A third slot overlapping the SAME space (Rooftop) is rejected...
+    await expect(
+      venueSlotService.create(ownerId, {
+        venue_id: venueId,
+        slots: [{ start_at: inDays(2.05), end_at: inDays(2.15), space_label: 'Rooftop', capacity: 40 }],
+      })
+    ).rejects.toThrow(/overlaps/i);
+    // ...while a new space at the same time is allowed.
+    const lawn = await venueSlotService.create(ownerId, {
+      venue_id: venueId,
+      slots: [{ start_at: inDays(2), end_at: inDays(2.1), space_label: 'Lawn', capacity: 200 }],
+    });
+    expect(lawn).toHaveLength(1);
+  });
+
+  it('defaults space_label to "" and capacity to 0 for whole-venue slots', async () => {
+    const venueId = await seedVenue();
+    const [slot] = await venueSlotService.create(ownerId, {
+      venue_id: venueId,
+      slots: [{ start_at: inDays(5), end_at: inDays(5.1) }],
+    });
+    expect(slot.space_label).toBe('');
+    expect(slot.capacity).toBe(0);
+  });
+
   it('forbids a non-owner from listing all slots', async () => {
     const venueId = await seedVenue();
     await expect(

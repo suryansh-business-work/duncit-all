@@ -10,6 +10,11 @@ export interface IVenueSlot extends Document {
   start_at: Date;
   end_at: Date;
   price: number;
+  /** The venue space/capacity-item this slot is for ('' = whole venue). Slots in
+   * different spaces may share the same time window. */
+  space_label: string;
+  /** Guests this slot can hold — the space's capacity (0 = unset/whole venue). */
+  capacity: number;
   status: VenueSlotStatus;
   booked_by_pod_id: Types.ObjectId | null;
   notes: string;
@@ -24,6 +29,8 @@ const venueSlotSchema = new Schema<IVenueSlot>(
     start_at: { type: Date, required: true, index: true },
     end_at: { type: Date, required: true },
     price: { type: Number, default: 0, min: 0, max: 1_000_000 },
+    space_label: { type: String, default: '', trim: true, maxlength: 120 },
+    capacity: { type: Number, default: 0, min: 0, max: 100_000 },
     status: {
       type: String,
       enum: ['AVAILABLE', 'PENDING', 'BOOKED', 'BLOCKED'],

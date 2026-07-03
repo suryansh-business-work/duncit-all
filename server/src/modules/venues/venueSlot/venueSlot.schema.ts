@@ -30,6 +30,10 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     start_at: String!
     end_at: String!
     price: Int!
+    "The venue space/capacity-item this slot is for ('' = whole venue)."
+    space_label: String!
+    "Guests this slot can hold (0 = unset/whole venue)."
+    capacity: Int!
     status: VenueSlotStatus!
     booked_by_pod_id: ID
     booked_pod_title: String
@@ -42,6 +46,10 @@ export const venueSlotTypeDefs = /* GraphQL */ `
     end_at: String!
     price: Int
     notes: String
+    "The venue space this slot is for ('' = whole venue). Slots in different spaces may share a time."
+    space_label: String
+    "Guests this slot holds (defaults to 0)."
+    capacity: Int
   }
 
   input BulkCreateVenueSlotsInput {

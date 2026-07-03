@@ -20,7 +20,7 @@ import VenueRulesAccordion from './accordions/VenueRulesAccordion';
 import FutureAvailabilityAccordion from './accordions/FutureAvailabilityAccordion';
 import SaveAsTemplateAccordion from './accordions/SaveAsTemplateAccordion';
 import BulkActionsAccordion from './accordions/BulkActionsAccordion';
-import { useRecurringDialog } from './useRecurringDialog';
+import { useRecurringDialog, type CapacityItem } from './useRecurringDialog';
 import { effectiveMaxAdvance } from './settings-map';
 
 interface Props {
@@ -28,14 +28,24 @@ interface Props {
   onClose: () => void;
   venueId: string;
   settings: unknown;
+  capacityItems: CapacityItem[];
+  venueCapacity: number;
   onDone: () => Promise<void> | void;
 }
 
-export default function RecurringAvailabilityDialog({ open, onClose, venueId, settings, onDone }: Readonly<Props>) {
+export default function RecurringAvailabilityDialog({
+  open,
+  onClose,
+  venueId,
+  settings,
+  capacityItems,
+  venueCapacity,
+  onDone,
+}: Readonly<Props>) {
   const theme = useTheme();
   const fullScreen = useMediaQuery(theme.breakpoints.down('md'));
   const { form, patch, reset, venueSettings, result, submit, submitting, serverError, setServerError } =
-    useRecurringDialog(venueId, settings, onDone);
+    useRecurringDialog(venueId, settings, capacityItems, venueCapacity, onDone);
 
   const close = () => {
     reset();

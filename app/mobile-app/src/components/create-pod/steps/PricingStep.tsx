@@ -27,7 +27,13 @@ interface Props {
 
 /** Step 4 — pricing, occurrence, spots, terms, optional products, plus the
  * slot-cost / GST / potential-earnings panel. mWeb twin. */
-export function PricingStep({ form, products, showProducts, selectedSlot, finance }: Readonly<Props>) {
+export function PricingStep({
+  form,
+  products,
+  showProducts,
+  selectedSlot,
+  finance,
+}: Readonly<Props>) {
   const { control, watch, setValue } = form;
   const { color } = useThemeColors();
   const isPhysical = watch('pod_mode') === 'PHYSICAL';

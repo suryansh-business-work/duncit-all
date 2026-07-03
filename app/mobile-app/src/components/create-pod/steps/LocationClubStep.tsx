@@ -133,7 +133,13 @@ export function LocationClubStep({ form, clubs, locations, hostCategories }: Rea
         <Text fontSize={14} fontWeight="500" color="$color">
           Category
         </Text>
-        <YStack padding={12} borderWidth={1} borderColor="$borderColor" borderRadius={12} opacity={0.7}>
+        <YStack
+          padding={12}
+          borderWidth={1}
+          borderColor="$borderColor"
+          borderRadius={12}
+          opacity={0.7}
+        >
           <Text testID="create-pod-category" fontSize={14} fontWeight="700" color="$color">
             {hostCategories.length
               ? hostCategories.map(categoryPath).join(' · ')

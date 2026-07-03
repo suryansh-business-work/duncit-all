@@ -59,10 +59,22 @@ describe('createPodSchema', () => {
 
   it('requires title, club, description and a venue + slot for physical pods', () => {
     const paths = issuesOf(
-      valid({ pod_title: 'x', club_id: '', pod_description: 'short', venue_id: '', venue_slot_id: '' }),
+      valid({
+        pod_title: 'x',
+        club_id: '',
+        pod_description: 'short',
+        venue_id: '',
+        venue_slot_id: '',
+      }),
     );
     expect(paths).toEqual(
-      expect.arrayContaining(['pod_title', 'club_id', 'pod_description', 'venue_id', 'venue_slot_id']),
+      expect.arrayContaining([
+        'pod_title',
+        'club_id',
+        'pod_description',
+        'venue_id',
+        'venue_slot_id',
+      ]),
     );
   });
 

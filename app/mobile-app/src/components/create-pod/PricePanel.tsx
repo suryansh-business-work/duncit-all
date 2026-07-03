@@ -40,12 +40,21 @@ export function PricePanel({ finance, slotPrice, podAmount, spots, isPhysical }:
       </Text>
       {isPhysical ? (
         <>
-          <Row label="Venue slot price" value={slotPrice === null ? 'Pick a slot first' : money(slotPrice)} />
-          <Row label={`GST on slot (${finance.gst_pct}%)`} value={slotPrice === null ? '—' : money(slotGst)} />
+          <Row
+            label="Venue slot price"
+            value={slotPrice === null ? 'Pick a slot first' : money(slotPrice)}
+          />
+          <Row
+            label={`GST on slot (${finance.gst_pct}%)`}
+            value={slotPrice === null ? '—' : money(slotGst)}
+          />
           <Row label="Total venue cost" value={slotPrice === null ? '—' : money(slotTotal)} bold />
         </>
       ) : null}
-      <Row label={`Ticket revenue if full (${Math.max(0, spots)} × ${money(podAmount)})`} value={money(grossRevenue)} />
+      <Row
+        label={`Ticket revenue if full (${Math.max(0, spots)} × ${money(podAmount)})`}
+        value={money(grossRevenue)}
+      />
       <Row label="After platform fee & GST" value={money(netRevenue)} />
       <Row label="Potential earnings" value={money(Math.max(0, potential))} bold />
       <Text fontSize={11.5} color="$muted">
@@ -55,10 +64,19 @@ export function PricePanel({ finance, slotPrice, podAmount, spots, isPhysical }:
   );
 }
 
-function Row({ label, value, bold = false }: Readonly<{ label: string; value: string; bold?: boolean }>) {
+function Row({
+  label,
+  value,
+  bold = false,
+}: Readonly<{ label: string; value: string; bold?: boolean }>) {
   return (
     <XStack justifyContent="space-between" gap={12}>
-      <Text fontSize={13} color={bold ? '$color' : '$muted'} fontWeight={bold ? '800' : '500'} flexShrink={1}>
+      <Text
+        fontSize={13}
+        color={bold ? '$color' : '$muted'}
+        fontWeight={bold ? '800' : '500'}
+        flexShrink={1}
+      >
         {label}
       </Text>
       <Text fontSize={13} fontWeight={bold ? '900' : '700'} color="$color">

@@ -20,8 +20,20 @@ jest.mock('@/services/graphql.client', () => ({
 jest.mock('@/hooks/useFeatureFlag', () => ({ useFeatureFlag: () => true }));
 
 const futureIso = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
-const slot = { id: 's1', start_at: futureIso(24), end_at: futureIso(26), price: 400, status: 'AVAILABLE' };
-const freeSlot = { id: 's2', start_at: futureIso(48), end_at: futureIso(50), price: 0, status: 'AVAILABLE' };
+const slot = {
+  id: 's1',
+  start_at: futureIso(24),
+  end_at: futureIso(26),
+  price: 400,
+  status: 'AVAILABLE',
+};
+const freeSlot = {
+  id: 's2',
+  start_at: futureIso(48),
+  end_at: futureIso(50),
+  price: 0,
+  status: 'AVAILABLE',
+};
 const finance = { platform_fee_pct: 5, gst_pct: 18, currency_symbol: '₹' };
 
 const venue: CreatePodVenue = {
@@ -62,9 +74,7 @@ function VenueSlotHarness({
 
 describe('VenueSlotStep', () => {
   it('shows the empty hint when no venue partners serve the pod city', () => {
-    renderWithProviders(
-      <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l9' }} />,
-    );
+    renderWithProviders(<VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l9' }} />);
     expect(screen.getByTestId('create-pod-venue-empty')).toBeOnTheScreen();
   });
 
@@ -89,9 +99,7 @@ describe('VenueSlotStep', () => {
     );
     await screen.findByTestId('create-pod-slot-s1');
     fireEvent.press(screen.getByTestId('create-pod-venue-v2'));
-    await waitFor(() =>
-      expect(screen.queryByTestId('create-pod-approval-note')).toBeNull(),
-    );
+    await waitFor(() => expect(screen.queryByTestId('create-pod-approval-note')).toBeNull());
   });
 
   it('tells hosts the venue has no open slots', async () => {
@@ -143,7 +151,13 @@ function PricingHarness({ initial }: Readonly<{ initial: Partial<CreatePodFormVa
     defaultValues: { ...blankCreatePodForm, ...initial },
   });
   return (
-    <PricingStep form={form} products={[]} showProducts={false} selectedSlot={slot} finance={finance} />
+    <PricingStep
+      form={form}
+      products={[]}
+      showProducts={false}
+      selectedSlot={slot}
+      finance={finance}
+    />
   );
 }
 
@@ -167,8 +181,20 @@ describe('SlotPicker', () => {
 
   it('groups multiple slots on the same day under one heading', () => {
     const sameDay = [
-      { id: 'a1', start_at: '2030-01-01T10:00:00.000Z', end_at: '2030-01-01T11:00:00.000Z', price: 100, status: 'AVAILABLE' },
-      { id: 'a2', start_at: '2030-01-01T12:00:00.000Z', end_at: '2030-01-01T13:00:00.000Z', price: 0, status: 'AVAILABLE' },
+      {
+        id: 'a1',
+        start_at: '2030-01-01T10:00:00.000Z',
+        end_at: '2030-01-01T11:00:00.000Z',
+        price: 100,
+        status: 'AVAILABLE',
+      },
+      {
+        id: 'a2',
+        start_at: '2030-01-01T12:00:00.000Z',
+        end_at: '2030-01-01T13:00:00.000Z',
+        price: 0,
+        status: 'AVAILABLE',
+      },
     ];
     renderWithProviders(
       <SlotPicker slots={sameDay} loading={false} selectedSlotId="a1" onPick={jest.fn()} />,
@@ -180,9 +206,7 @@ describe('SlotPicker', () => {
 
 describe('VenueContactCard', () => {
   it('falls back to the venue name without owner contact details', () => {
-    renderWithProviders(
-      <VenueContactCard venue={{ id: 'v3', venue_name: 'Bare Hall' }} />,
-    );
+    renderWithProviders(<VenueContactCard venue={{ id: 'v3', venue_name: 'Bare Hall' }} />);
     expect(screen.getByTestId('create-pod-venue-contact')).toHaveTextContent(/Bare Hall/);
     expect(screen.queryByText('owner@venue.com')).toBeNull();
   });
@@ -207,7 +231,13 @@ describe('PricePanel', () => {
 
   it('skips the venue-cost rows for virtual pods', () => {
     renderWithProviders(
-      <PricePanel finance={finance} slotPrice={null} podAmount={100} spots={2} isPhysical={false} />,
+      <PricePanel
+        finance={finance}
+        slotPrice={null}
+        podAmount={100}
+        spots={2}
+        isPhysical={false}
+      />,
     );
     expect(screen.queryByText('Venue slot price')).toBeNull();
     expect(screen.getByText('Potential earnings')).toBeOnTheScreen();

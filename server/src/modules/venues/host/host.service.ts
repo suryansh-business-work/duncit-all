@@ -2,8 +2,59 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { HostModel, type IHost, type IHostCategory } from './host.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { CategoryModel } from '@modules/pods/category/category.model';
 import { sendEmail } from '@services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
+
+const fail = (code: string, message: string): never => {
+  throw new GraphQLError(message, { extensions: { code } });
+};
+
+/** Validates one Super → Category → Sub triple against the shared Category
+ * collection (ids exist, levels match, parent chain lines up) and returns the
+ * denormalized subdoc — same rules the venue category flow enforces. */
+async function normalizeHostCategoryInput(input: any): Promise<Omit<IHostCategory, 'request_no'>> {
+  const ids = [input.super_category_id, input.category_id, input.sub_category_id].map(String);
+  if (ids.some((id) => !Types.ObjectId.isValid(id))) {
+    fail('BAD_USER_INPUT', 'Host category selection is invalid');
+  }
+  const [superCat, category, subCat] = await Promise.all(ids.map((id) => CategoryModel.findById(id)));
+  if (!superCat || superCat.level !== 'SUPER') fail('BAD_USER_INPUT', 'Select a valid super category');
+  if (!category || category.level !== 'CATEGORY' || String(category.parent_id) !== String(superCat!._id)) {
+    fail('BAD_USER_INPUT', 'Select a valid category under the chosen super category');
+  }
+  if (!subCat || subCat.level !== 'SUB' || String(subCat.parent_id) !== String(category!._id)) {
+    fail('BAD_USER_INPUT', 'Select a valid sub category under the chosen category');
+  }
+  return {
+    super_category_id: superCat!._id,
+    category_id: category!._id,
+    sub_category_id: subCat!._id,
+    super_category_name: superCat!.name,
+    category_name: category!.name,
+    sub_category_name: subCat!.name,
+  };
+}
+
+/** Normalizes an admin-supplied category list: validates each triple, dedupes
+ * by sub-category, and preserves the `request_no` of any triple the host
+ * already held (so an admin edit never severs a category's HOSTREQ linkage). */
+async function normalizeHostCategories(input: any[], existing: IHostCategory[]): Promise<IHostCategory[]> {
+  const requestNoBySub = new Map<string, string>();
+  for (const c of existing ?? []) {
+    if (c.sub_category_id) requestNoBySub.set(String(c.sub_category_id), c.request_no ?? '');
+  }
+  const seen = new Set<string>();
+  const out: IHostCategory[] = [];
+  for (const raw of input) {
+    const normalized = await normalizeHostCategoryInput(raw);
+    const key = String(normalized.sub_category_id);
+    if (seen.has(key)) continue; // silently drop duplicate sub-categories
+    seen.add(key);
+    out.push({ ...normalized, request_no: requestNoBySub.get(key) ?? '' });
+  }
+  return out;
+}
 
 const HOST_DOB_MIN_AGE_YEARS = 18;
 const HOST_DOB_MAX_AGE_YEARS = 100;
@@ -205,7 +256,7 @@ export const hostService = {
     await h.save();
     return toPub(h);
   },
-  async adminUpdate(id: string, opts: { step1: any; step2: any; step3: any; status?: string }) {
+  async adminUpdate(id: string, opts: { step1: any; step2: any; step3: any; status?: string; categories?: any[] }) {
     const h = await HostModel.findById(id);
     if (!h) throw new GraphQLError('Host not found', { extensions: { code: 'NOT_FOUND' } });
     h.full_name = opts.step1.full_name;
@@ -217,6 +268,9 @@ export const hostService = {
     h.full_address = opts.step3.full_address;
     if (opts.step3.bank_account !== undefined) h.bank_account = normalizeBankAccountInput(opts.step3.bank_account) as any;
     if (opts.step3.tags !== undefined) h.tags = opts.step3.tags;
+    if (opts.categories !== undefined) {
+      h.host_categories = (await normalizeHostCategories(opts.categories, h.host_categories ?? [])) as any;
+    }
     h.step_completed = Math.max(h.step_completed ?? 0, 3);
     if (opts.status) {
       h.status = opts.status as any;

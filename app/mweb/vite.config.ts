@@ -45,21 +45,45 @@ export default defineConfig({
       '@emotion/styled',
       '@mui/material',
       '@mui/system',
+      '@mui/x-date-pickers',
     ],
   },
   optimizeDeps: {
-    // Pre-bundle the shared runtime deps so a linked-workspace edit (e.g.
-    // @duncit/user-context) re-optimizes consistently and lazy route chunks
-    // never end up holding a stale/null React reference ("useContext of null").
+    // Pre-bundle EVERY shared React-context singleton in the first optimize
+    // pass. This app serves workspace packages (e.g. @duncit/user-context) as
+    // source via /@fs and lazy-loads routes — Vite's dep scanner crawls neither
+    // deeply, so a dep imported only through those boundaries gets discovered
+    // late and re-optimized on its own, minting a fresh `?v=` hash. When the
+    // already-running page holds the old hash and a new chunk pulls the new one,
+    // React/Router load twice → "Cannot read properties of null (reading
+    // 'useContext')". Listing them here forces one complete optimize generation
+    // up front so nothing forks mid-session. If a new context-providing dep is
+    // added, add it here too (then restart dev with `--force`).
     include: [
       'react',
       'react-dom',
+      'react/jsx-runtime',
+      'react/jsx-dev-runtime',
+      'react-router',
       'react-router-dom',
       '@apollo/client',
       '@emotion/react',
       '@emotion/styled',
       '@mui/material',
       '@mui/material/styles',
+      '@mui/icons-material',
+      '@mui/x-date-pickers',
+      '@mui/x-date-pickers/LocalizationProvider',
+      '@mui/x-date-pickers/AdapterDateFns',
+      '@mui/x-date-pickers/DateTimePicker',
+      '@mui/x-date-pickers/DatePicker',
+      '@mui/x-date-pickers/TimePicker',
+      'react-hook-form',
+      '@hookform/resolvers/zod',
+      'zod',
+      'date-fns',
+      'react-slick',
+      '@react-oauth/google',
     ],
   },
 });

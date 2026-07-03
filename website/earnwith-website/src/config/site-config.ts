@@ -1,18 +1,26 @@
 // Single source of truth for the "Earn with Duncit" marketing site. Content
-// lives here as reusable configuration (not business data). The member web app
-// (mWeb) URL the CTAs redirect to is resolved from the environment so deploys
-// stay dynamic without a code change. The earn paths mirror mWeb's Earn page.
+// lives here as reusable configuration (not business data). Cross-site URLs
+// are resolved from the environment so localhost links stay local in dev and
+// production links stay on the real domains.
 const isDevelopment = import.meta.env.PUBLIC_IS_DEVELOPMENT === 'true';
 
 const mwebUrl =
   import.meta.env.PUBLIC_MWEB_URL ||
   (isDevelopment ? 'http://localhost:2003' : 'https://mweb.duncit.com');
 
+const graphqlUrl =
+  import.meta.env.PUBLIC_GRAPHQL_URL ||
+  (isDevelopment ? 'http://localhost:2001/graphql' : 'https://server.duncit.com/graphql');
+
+const mainSiteUrl =
+  import.meta.env.PUBLIC_MAIN_SITE_URL ||
+  (isDevelopment ? 'http://localhost:2000' : 'https://duncit.com');
+
 export interface EarnPath {
   icon: string;
   title: string;
   text: string;
-  /** mWeb survey-gate route this path opens. */
+  /** Duncit web-app survey-gate route this path opens. */
   href: string;
   cta: string;
 }
@@ -26,11 +34,13 @@ export interface Step {
 export const siteConfig = {
   isDevelopment,
   mwebUrl,
+  graphqlUrl,
+  mainSiteUrl,
   brand: {
     name: 'Earn with Duncit',
     title: 'Earn with Duncit — host pods, list your venue or sell your products',
     description:
-      'Turn your community, your space or your products into income on Duncit. Pick a way to start earning and pick up where mWeb takes over.',
+      'Turn your community, your space or your products into income on Duncit. Pick a way to start earning and Duncit takes it from there.',
   },
   hero: {
     eyebrow: 'Earn with Duncit',
@@ -40,8 +50,8 @@ export const siteConfig = {
     primaryCta: { label: 'Start earning', href: `${mwebUrl}/earn` },
     secondaryCta: { label: 'See the ways', href: '#paths' },
   },
-  // Mirrors mWeb's Earn page (app/mweb earn-page) — same three options, each
-  // deep-linking into the matching mWeb survey gate.
+  // Mirrors the in-app Earn page — same three options, each deep-linking into
+  // the matching survey gate.
   paths: [
     {
       icon: 'fa-people-group',
@@ -67,7 +77,7 @@ export const siteConfig = {
   ] as EarnPath[],
   steps: [
     { icon: 'fa-hand-pointer', title: 'Pick a path', text: 'Choose hosting, your venue, or your products.' },
-    { icon: 'fa-clipboard-list', title: 'Tell us about you', text: 'Fill a short survey in mWeb so we can set you up.' },
+    { icon: 'fa-clipboard-list', title: 'Tell us about you', text: 'Fill a short survey in Duncit so we can set you up.' },
     { icon: 'fa-sack-dollar', title: 'Go live & earn', text: 'Get approved, publish, and start getting paid.' },
   ] as Step[],
   cta: {
@@ -78,10 +88,9 @@ export const siteConfig = {
   footer: {
     tagline: 'Earn with the Duncit community.',
     links: [
-      { label: 'Duncit', href: 'https://duncit.com' },
-      { label: 'Open mWeb', href: mwebUrl },
-      { label: 'Support', href: 'https://support.duncit.com' },
+      { label: 'Duncit', href: mainSiteUrl },
+      { label: 'Start earning', href: `${mwebUrl}/earn` },
+      { label: 'Support', href: `${mainSiteUrl}/help` },
     ],
-    email: 'hello@duncit.com',
   },
 };

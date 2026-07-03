@@ -1,69 +1,68 @@
 ---
-// Site-wide side navigation drawer.
-// Toggled by any element with [data-nav-toggle].
+// Site-wide side navigation drawer, toggled by any element with
+// [data-nav-toggle]. Sections come from the Website portal (Navigation
+// manager); the Policy Hub group is the Legal portal's active policies.
 import BrandLogo from './BrandLogo.astro';
+import { fetchNavGroups, fetchPolicies } from '../lib/site-data';
+
+const FALLBACK_GROUPS = [
+  {
+    label: 'About',
+    links: [
+      { id: 'n-about', label: 'About us', url: '/about' },
+      { id: 'n-newsroom', label: 'Newsroom', url: '/newsroom' },
+      { id: 'n-careers', label: 'Careers', url: '/careers' },
+      { id: 'n-contact', label: 'Contact us', url: '/contact' },
+    ],
+  },
+  {
+    label: 'Community',
+    links: [
+      { id: 'n-community', label: 'Community', url: '/community' },
+      { id: 'n-guidelines', label: 'Guidelines', url: '/guidelines' },
+      { id: 'n-blog', label: 'Blog', url: '/blog' },
+    ],
+  },
+  {
+    label: 'Safety Hub',
+    links: [
+      { id: 'n-approach', label: 'Our approach', url: '/safety/approach' },
+      { id: 'n-advice', label: 'Advice', url: '/safety/advice' },
+      { id: 'n-tools', label: 'Safety Tools', url: '/safety/tools' },
+      { id: 'n-resources', label: 'Resources', url: '/safety/resources' },
+    ],
+  },
+  {
+    label: 'Support',
+    links: [
+      { id: 'n-help', label: 'Help Center', url: '/help' },
+      { id: 'n-faq', label: 'FAQ', url: '/faq' },
+    ],
+  },
+];
+
+const GROUP_ICONS: Record<string, string> = {
+  About: 'fa-circle-info',
+  Community: 'fa-people-group',
+  'Safety Hub': 'fa-shield-heart',
+  Support: 'fa-life-ring',
+  'Policy Hub': 'fa-lock',
+};
+
+const navGroups = await fetchNavGroups('MAIN', 'HEADER', FALLBACK_GROUPS as never);
+const policies = await fetchPolicies();
 const sections = [
+  ...navGroups.map((group) => ({
+    title: group.label,
+    icon: GROUP_ICONS[group.label] ?? 'fa-hashtag',
+    links: group.links.map((link) => ({ href: link.url, label: link.label })),
+  })),
   {
-    title: 'About',
-    icon: 'fa-circle-info',
-    links: [
-      { href: '/about', label: 'About us' },
-      { href: '/newsroom', label: 'Newsroom' },
-      { href: '/careers', label: 'Careers' },
-      { href: '/contact', label: 'Contact us' },
-    ],
-  },
-  {
-    title: 'Community',
-    icon: 'fa-people-group',
-    links: [
-      { href: '/community', label: 'Community' },
-      { href: '/guidelines', label: 'Guidelines' },
-      { href: '/blog', label: 'Blog' },
-    ],
-  },
-  {
-    title: 'Partners',
-    icon: 'fa-handshake',
-    links: [
-      { href: '/be-a-host', label: 'Register as a Host' },
-      { href: '/register-your-venue', label: 'Register Your Venue' },
-    ],
-  },
-  {
-    title: 'Safety Hub',
-    icon: 'fa-shield-heart',
-    links: [
-      { href: '/safety/approach', label: 'Our approach' },
-      { href: '/safety/advice', label: 'Advice' },
-      { href: '/safety/tools', label: 'Safety Tools' },
-      { href: '/safety/resources', label: 'Resources' },
-    ],
-  },
-  {
-    title: 'Privacy Hub',
+    title: 'Policy Hub',
     icon: 'fa-lock',
     links: [
-      { href: '/privacy/policy', label: 'Privacy Policy' },
-      { href: '/privacy/cookies', label: 'Cookies Policy' },
-      { href: '/privacy/security', label: 'Privacy & Security' },
-      { href: '/privacy/tips', label: 'Tips' },
-    ],
-  },
-  {
-    title: 'Support',
-    icon: 'fa-life-ring',
-    links: [
-      { href: '/help', label: 'Help Center' },
-      { href: '/faq', label: 'FAQ' },
-    ],
-  },
-  {
-    title: 'Legal',
-    icon: 'fa-scale-balanced',
-    links: [
-      { href: '/legal', label: 'Legal Notice' },
-      { href: '/terms', label: 'Terms & Conditions' },
+      ...policies.map((policy) => ({ href: `/policy?slug=${policy.slug}`, label: policy.title })),
+      { href: '/policies', label: 'All policies' },
     ],
   },
 ];
@@ -117,13 +116,12 @@ const sections = [
   </nav>
 
   <div class="p-5 border-t border-ink/10 bg-white">
-    <p class="text-xs text-ink-soft mb-3 font-semibold">Follow the vibe</p>
-    <div class="flex gap-2">
-      <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Twitter"><i class="fa-brands fa-x-twitter"></i></a>
-      <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Instagram"><i class="fa-brands fa-instagram"></i></a>
-      <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="TikTok"><i class="fa-brands fa-tiktok"></i></a>
-      <a href="#" class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition" aria-label="Discord"><i class="fa-brands fa-discord"></i></a>
-    </div>
+    <a
+      href="/#download"
+      class="w-full inline-flex items-center justify-center gap-2 px-4 py-3 rounded-xl bg-ink text-white font-bold text-sm hover:bg-primary transition"
+    >
+      <i class="fa-solid fa-download"></i> Get the Duncit app
+    </a>
   </div>
 </aside>
 

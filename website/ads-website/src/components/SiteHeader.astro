@@ -1,12 +1,16 @@
 ---
 import { siteConfig } from '../config/site-config';
+import { fetchBranding } from '../lib/site-data';
+
 const { portalUrl } = siteConfig;
+const branding = await fetchBranding();
+const headerLogo = branding.website_header_logo_url || '/duncit-logo.svg';
 ---
 
 <header class="sticky top-0 z-30 border-b border-black/5 bg-cream/80 backdrop-blur">
   <nav class="mx-auto flex max-w-6xl items-center justify-between px-5 py-4">
     <a href="/" class="flex items-center gap-2 font-head text-lg font-extrabold text-ink">
-      <img src="/duncit-logo.svg" alt="Duncit" width="28" height="28" />
+      <img src={headerLogo} alt="Duncit" class="h-7 w-auto" />
       Duncit <span class="text-primary">Ads</span>
     </a>
     <div class="flex items-center gap-6">

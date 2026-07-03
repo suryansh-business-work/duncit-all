@@ -1,0 +1,68 @@
+---
+// One policy page (?slug=…) — content rendered live from the Legal portal so
+// the site always shows the current legal text without a redeploy.
+import PageLayout from '../layouts/PageLayout.astro';
+---
+
+<PageLayout
+  title="Policy"
+  eyebrow="Policy Hub"
+  heading="Policy"
+  intro="Published live from the Duncit Legal team."
+  heroImage="https://images.unsplash.com/photo-1487058792275-0ad4aaf24ca7?w=1600&q=80&auto=format&fit=crop"
+>
+  <div id="policyBody">
+    <div class="not-prose space-y-3" aria-hidden="true">
+      <div class="skeleton h-8 w-2/3"></div>
+      <div class="skeleton h-4"></div>
+      <div class="skeleton h-4"></div>
+      <div class="skeleton h-4 w-5/6"></div>
+      <div class="skeleton h-4 w-4/6"></div>
+    </div>
+  </div>
+  <p class="not-prose mt-8">
+    <a href="/policies" class="inline-flex items-center gap-2 font-bold text-primary">
+      <i class="fa-solid fa-arrow-left" aria-hidden="true"></i> All policies
+    </a>
+  </p>
+</PageLayout>
+
+<script>
+  import { urlConfigs } from '../config/url-configs';
+
+  const body = document.getElementById('policyBody');
+  const slug = new URLSearchParams(window.location.search).get('slug') ?? '';
+
+  async function load() {
+    if (!body) return;
+    if (!slug) {
+      window.location.replace('/policies');
+      return;
+    }
+    try {
+      const res = await fetch(urlConfigs.graphqlUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: 'query Policy($slug: String!) { policyBySlug(slug: $slug) { title content updated_at } }',
+          variables: { slug },
+        }),
+      });
+      const json = await res.json();
+      const policy = json?.data?.policyBySlug;
+      if (!policy) {
+        body.innerHTML = '<p>This policy could not be found. It may have been renamed or retired.</p>';
+        return;
+      }
+      document.title = `${policy.title} — Duncit`;
+      const heading = document.querySelector('[data-page-heading]') ?? document.querySelector('h1');
+      if (heading) heading.textContent = policy.title;
+      // Policy content is trusted HTML authored by our own Legal portal editor.
+      body.innerHTML = policy.content || '<p>No content published yet.</p>';
+    } catch {
+      body.innerHTML = '<p>The policy could not be loaded right now. Please try again later.</p>';
+    }
+  }
+
+  load();
+</script>

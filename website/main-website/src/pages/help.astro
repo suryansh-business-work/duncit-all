@@ -1,14 +1,13 @@
 ---
+// Help Center — topics come live from the Support portal's FAQ groups and
+// the contact details from Admin branding, so support stays in sync without
+// a redeploy.
 import PageLayout from '../layouts/PageLayout.astro';
+import { fetchBranding } from '../lib/site-data';
 
-const topics = [
-  { icon: 'fa-user', title: 'Account & Profile', desc: 'Sign in, edit your profile, manage settings.' },
-  { icon: 'fa-heart', title: 'Matching & Vibes', desc: 'How matching works and how to tune your vibes.' },
-  { icon: 'fa-comments', title: 'Chats & Messaging', desc: 'Sending, blocking, reporting, and chat history.' },
-  { icon: 'fa-shield-heart', title: 'Safety & Reporting', desc: 'Stay safe and report bad actors.' },
-  { icon: 'fa-credit-card', title: 'Subscriptions', desc: 'Duncit+ plans, billing, and refunds.' },
-  { icon: 'fa-mobile', title: 'App & Devices', desc: 'Install, update, and troubleshoot the app.' },
-];
+const branding = await fetchBranding();
+const supportEmail = branding.support_email || 'support@duncit.com';
+const supportPhone = branding.support_phone;
 ---
 
 <PageLayout
@@ -21,30 +20,139 @@ const topics = [
 >
   <div class="not-prose my-6">
     <div class="relative">
-      <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft"></i>
-      <input placeholder="Search help articles…" class="w-full pl-11 pr-4 py-3.5 rounded-xl bg-white border-2 border-ink/10 focus:border-primary outline-none" />
+      <i class="fa-solid fa-magnifying-glass absolute left-4 top-1/2 -translate-y-1/2 text-ink-soft" aria-hidden="true"></i>
+      <input
+        id="helpSearch"
+        type="search"
+        placeholder="Search help topics…"
+        aria-label="Search help topics"
+        class="w-full pl-11 pr-4 py-3.5 rounded-xl glass border-2 border-ink/10 focus:border-primary outline-none"
+      />
     </div>
   </div>
 
-  <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
-    {topics.map((t) => (
-      <a href="/faq" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition">
-        <div class="flex items-start gap-4">
-          <div class="w-11 h-11 rounded-xl bg-primary/15 text-primary inline-flex items-center justify-center shrink-0">
-            <i class={`fa-solid ${t.icon} text-lg`}></i>
-          </div>
-          <div>
-            <div class="font-head font-bold text-ink mb-0.5">{t.title}</div>
-            <div class="text-sm text-ink-soft">{t.desc}</div>
-          </div>
-        </div>
-      </a>
-    ))}
+  <div id="helpTopics" class="not-prose grid sm:grid-cols-2 gap-4 my-6">
+    <div class="skeleton h-24" aria-hidden="true"></div>
+    <div class="skeleton h-24" aria-hidden="true"></div>
+    <div class="skeleton h-24" aria-hidden="true"></div>
+    <div class="skeleton h-24" aria-hidden="true"></div>
   </div>
 
   <h2>Still need help?</h2>
-  <p>
-    Email <a href="mailto:support@duncit.com">support@duncit.com</a> — we usually reply within
-    24 hours, and within 4 hours for urgent safety issues.
-  </p>
+  <div class="not-prose grid sm:grid-cols-2 gap-4 my-6">
+    <a href={`mailto:${supportEmail}`} class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
+      <div class="flex items-start gap-4">
+        <div class="w-11 h-11 rounded-xl bg-primary/15 text-primary inline-flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-envelope text-lg" aria-hidden="true"></i>
+        </div>
+        <div>
+          <div class="font-head font-bold text-ink mb-0.5">Email support</div>
+          <div class="text-sm text-ink-soft">{supportEmail} — we usually reply within 24 hours.</div>
+        </div>
+      </div>
+    </a>
+    {supportPhone && (
+      <a href={`tel:${supportPhone}`} class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
+        <div class="flex items-start gap-4">
+          <div class="w-11 h-11 rounded-xl bg-secondary/15 text-secondary inline-flex items-center justify-center shrink-0">
+            <i class="fa-solid fa-phone text-lg" aria-hidden="true"></i>
+          </div>
+          <div>
+            <div class="font-head font-bold text-ink mb-0.5">Call us</div>
+            <div class="text-sm text-ink-soft">{supportPhone} — for urgent safety issues.</div>
+          </div>
+        </div>
+      </a>
+    )}
+    <a href="/contact" class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
+      <div class="flex items-start gap-4">
+        <div class="w-11 h-11 rounded-xl bg-tertiary/30 text-ink inline-flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-paper-plane text-lg" aria-hidden="true"></i>
+        </div>
+        <div>
+          <div class="font-head font-bold text-ink mb-0.5">Contact form</div>
+          <div class="text-sm text-ink-soft">Send us a message — it lands straight with the team.</div>
+        </div>
+      </div>
+    </a>
+    <a href="/faq" class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
+      <div class="flex items-start gap-4">
+        <div class="w-11 h-11 rounded-xl bg-primary/15 text-primary inline-flex items-center justify-center shrink-0">
+          <i class="fa-solid fa-circle-question text-lg" aria-hidden="true"></i>
+        </div>
+        <div>
+          <div class="font-head font-bold text-ink mb-0.5">Ask a question</div>
+          <div class="text-sm text-ink-soft">Can't find it? Submit your question and we'll answer.</div>
+        </div>
+      </div>
+    </a>
+  </div>
 </PageLayout>
+
+<script>
+  import { urlConfigs } from '../config/url-configs';
+
+  const topicsEl = document.getElementById('helpTopics');
+  const searchEl = document.getElementById('helpSearch') as HTMLInputElement | null;
+
+  const TOPIC_ICONS = ['fa-heart', 'fa-comments', 'fa-shield-heart', 'fa-user', 'fa-mobile', 'fa-credit-card'];
+
+  const esc = (value: unknown) => {
+    const div = document.createElement('div');
+    div.textContent = String(value ?? '');
+    return div.innerHTML;
+  };
+
+  async function loadTopics() {
+    if (!topicsEl) return;
+    try {
+      const res = await fetch(urlConfigs.graphqlUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: 'query { publicFaqGroups { super_category { id name slug } faqs { id question } } }',
+        }),
+      });
+      const json = await res.json();
+      const groups: any[] = (json?.data?.publicFaqGroups ?? []).filter((g: any) => g.faqs?.length);
+      if (!groups.length) {
+        topicsEl.innerHTML =
+          '<p class="text-ink-soft sm:col-span-2">No help topics published yet — reach us directly below.</p>';
+        return;
+      }
+      topicsEl.innerHTML = groups
+        .map((group, index) => {
+          const name = group.super_category?.name ?? 'General';
+          const slug = group.super_category?.slug ?? '';
+          const icon = TOPIC_ICONS[index % TOPIC_ICONS.length];
+          const count = group.faqs.length;
+          return `
+            <a href="/faq${slug ? `#${encodeURIComponent(slug)}` : ''}" data-topic-card data-topic-name="${esc(name.toLowerCase())}" class="block p-5 rounded-2xl glass hover:-translate-y-0.5 transition">
+              <div class="flex items-start gap-4">
+                <div class="w-11 h-11 rounded-xl bg-primary/15 text-primary inline-flex items-center justify-center shrink-0">
+                  <i class="fa-solid ${icon} text-lg" aria-hidden="true"></i>
+                </div>
+                <div>
+                  <div class="font-head font-bold text-ink mb-0.5">${esc(name)}</div>
+                  <div class="text-sm text-ink-soft">${count} answered ${count === 1 ? 'question' : 'questions'}</div>
+                </div>
+              </div>
+            </a>`;
+        })
+        .join('');
+    } catch {
+      topicsEl.innerHTML =
+        '<p class="text-ink-soft sm:col-span-2">Topics could not be loaded right now — reach us directly below.</p>';
+    }
+  }
+
+  searchEl?.addEventListener('input', () => {
+    const term = searchEl.value.trim().toLowerCase();
+    document.querySelectorAll<HTMLElement>('[data-topic-card]').forEach((card) => {
+      const matches = !term || (card.dataset.topicName ?? '').includes(term);
+      card.style.display = matches ? '' : 'none';
+    });
+  });
+
+  loadTopics();
+</script>

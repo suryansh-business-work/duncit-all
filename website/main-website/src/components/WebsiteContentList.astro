@@ -17,8 +17,58 @@ const graphqlUrl = urlConfigs.graphqlUrl;
   data-variant={variant}
   data-graphql-url={graphqlUrl}
 >
-  <div class="p-5 rounded-2xl bg-white sticker text-ink-soft">Loading content...</div>
+  {
+    variant === 'cards' ? (
+      <div class="grid sm:grid-cols-2 gap-5" aria-hidden="true">
+        <div class="skeleton h-64" />
+        <div class="skeleton h-64" />
+        <div class="skeleton h-64" />
+        <div class="skeleton h-64" />
+      </div>
+    ) : (
+      <div class="space-y-3" aria-hidden="true">
+        <div class="skeleton h-24" />
+        <div class="skeleton h-24" />
+        <div class="skeleton h-24" />
+      </div>
+    )
+  }
 </div>
+
+<!-- Apply-to-role dialog (careers pages only; opened per role). -->
+<dialog
+  id="applyDialog"
+  class="m-auto w-[92%] max-w-lg rounded-3xl p-0 backdrop:bg-ink/60 backdrop:backdrop-blur-sm"
+>
+  <form id="applyForm" method="dialog" class="bg-cream p-6 rounded-3xl">
+    <div class="flex items-start justify-between gap-3 mb-4">
+      <div>
+        <p class="text-xs uppercase tracking-wider font-extrabold text-primary">Apply for</p>
+        <h3 class="font-head font-extrabold text-2xl text-ink" id="applyRoleTitle">Role</h3>
+      </div>
+      <button
+        type="button"
+        data-apply-close
+        class="w-9 h-9 rounded-full bg-ink text-white inline-flex items-center justify-center hover:bg-primary transition"
+        aria-label="Close"
+      >
+        <i class="fa-solid fa-xmark"></i>
+      </button>
+    </div>
+    <div class="space-y-3">
+      <input name="name" required minlength="2" maxlength="120" placeholder="Full name *" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="email" type="email" required maxlength="254" placeholder="Email *" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="phone" pattern="\+?\d{6,15}" placeholder="Phone (digits, optional +)" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="resume_url" type="url" placeholder="Resume / CV link (Drive, LinkedIn…)" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <input name="portfolio_url" type="url" placeholder="Portfolio link (optional)" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm" />
+      <textarea name="cover_note" rows="3" maxlength="4000" placeholder="Why you? (optional)" class="w-full px-4 py-2.5 rounded-lg bg-white border-2 border-ink/10 focus:border-primary outline-none text-sm"></textarea>
+      <p id="applyFeedback" class="text-sm font-semibold hidden"></p>
+      <button type="submit" class="w-full px-4 py-3 rounded-xl bg-primary text-white font-bold inline-flex items-center justify-center gap-2 sticker hover:scale-[1.01] transition">
+        <i class="fa-solid fa-paper-plane"></i> Submit application
+      </button>
+    </div>
+  </form>
+</dialog>
 
 <script>
   import { urlConfigs } from '../config/url-configs';
@@ -74,21 +124,24 @@ const graphqlUrl = urlConfigs.graphqlUrl;
     return urlConfigs.graphqlUrl;
   };
 
+  // Open roles: an Apply button per role opens the application dialog —
+  // submissions land in the Website portal's Job Applications inbox.
   const renderJobs = (items: any[]) => `
     <div class="space-y-3">
       ${items.map((item) => `
-        <a href="${safeUrl(item.cta_url)}" class="block p-5 rounded-2xl bg-white sticker hover:-translate-y-0.5 transition">
+        <div class="p-5 rounded-2xl bg-white sticker">
           <div class="flex items-center justify-between gap-4">
             <div>
               <div class="font-head font-bold text-ink text-lg">${escapeHtml(item.title)}</div>
               <div class="text-sm text-ink-soft mt-1">${escapeHtml(item.category || item.summary)}</div>
               ${item.body ? `<p class="text-sm text-ink-soft mt-2">${escapeHtml(item.body)}</p>` : ''}
             </div>
-            <span class="px-3 py-1.5 rounded-full bg-primary text-white font-bold text-xs uppercase tracking-wider sticker shrink-0">
-              ${escapeHtml(item.cta_label || 'Open')}
-            </span>
+            <button type="button" data-apply-role data-role-id="${escapeHtml(item.id)}" data-role-title="${escapeHtml(item.title)}"
+              class="px-4 py-2 rounded-full bg-primary text-white font-bold text-xs uppercase tracking-wider sticker shrink-0 hover:scale-105 transition">
+              Apply now
+            </button>
           </div>
-        </a>
+        </div>
       `).join('')}
     </div>`;
 
@@ -113,10 +166,11 @@ const graphqlUrl = urlConfigs.graphqlUrl;
       `).join('')}
     </div>`;
 
+  // Blog cards open the on-site blog detail page (suggested/related/archive).
   const renderCards = (items: any[]) => `
     <div class="grid sm:grid-cols-2 gap-5">
       ${items.map((item) => `
-        <a href="${safeUrl(item.cta_url)}" class="block bg-white rounded-2xl overflow-hidden sticker hover:-translate-y-1 transition">
+        <a href="/blog/post?slug=${encodeURIComponent(item.slug)}" class="block bg-white rounded-2xl overflow-hidden sticker hover:-translate-y-1 transition">
           ${item.image_url ? `<img src="${safeUrl(item.image_url)}" alt="" class="w-full aspect-video object-cover" />` : ''}
           <div class="p-5">
             <div class="flex items-center gap-2 text-xs text-ink-soft mb-2">
@@ -130,6 +184,12 @@ const graphqlUrl = urlConfigs.graphqlUrl;
         </a>
       `).join('')}
     </div>`;
+
+  const RENDERERS: Record<string, (items: any[]) => string> = {
+    jobs: renderJobs,
+    news: renderNews,
+    cards: renderCards,
+  };
 
   document.querySelectorAll<HTMLElement>('[data-website-content-list]').forEach(async (root) => {
     try {
@@ -145,13 +205,87 @@ const graphqlUrl = urlConfigs.graphqlUrl;
         root.innerHTML = '<div class="p-5 rounded-2xl bg-white sticker text-ink-soft">No published items yet.</div>';
         return;
       }
-      root.innerHTML = root.dataset.variant === 'jobs'
-        ? renderJobs(items)
-        : root.dataset.variant === 'news'
-          ? renderNews(items)
-          : renderCards(items);
+      const render = RENDERERS[root.dataset.variant ?? 'cards'] ?? renderCards;
+      root.innerHTML = render(items);
     } catch (error) {
       root.innerHTML = '<div class="p-5 rounded-2xl bg-white sticker text-ink-soft">Content is temporarily unavailable.</div>';
+    }
+  });
+
+  // ---- Apply dialog wiring ----
+  const dialog = document.getElementById('applyDialog') as HTMLDialogElement | null;
+  const applyForm = document.getElementById('applyForm') as HTMLFormElement | null;
+  const roleTitleEl = document.getElementById('applyRoleTitle');
+  const feedback = document.getElementById('applyFeedback');
+  let activeRole: { id: string; title: string } | null = null;
+
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement | null;
+    const trigger = target?.closest?.('[data-apply-role]') as HTMLElement | null;
+    if (trigger && dialog) {
+      activeRole = { id: trigger.dataset.roleId ?? '', title: trigger.dataset.roleTitle ?? 'Role' };
+      if (roleTitleEl) roleTitleEl.textContent = activeRole.title;
+      if (feedback) feedback.classList.add('hidden');
+      applyForm?.reset();
+      dialog.showModal();
+    }
+    if (target?.closest?.('[data-apply-close]')) dialog?.close();
+  });
+
+  applyForm?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+    if (!applyForm.reportValidity() || !activeRole) return;
+    const data = new FormData(applyForm);
+    const submitBtn = applyForm.querySelector('button[type="submit"]') as HTMLButtonElement | null;
+    if (submitBtn) {
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Sending…';
+    }
+    try {
+      const res = await fetch(urlConfigs.graphqlUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query:
+            'mutation Apply($input: SubmitJobApplicationInput!) { submitJobApplication(input: $input) { ok message } }',
+          variables: {
+            input: {
+              role_content_id: activeRole.id || null,
+              role_title: activeRole.title,
+              name: data.get('name'),
+              email: data.get('email'),
+              phone: data.get('phone') || '',
+              resume_url: data.get('resume_url') || '',
+              portfolio_url: data.get('portfolio_url') || '',
+              cover_note: data.get('cover_note') || '',
+            },
+          },
+        }),
+      });
+      const json = await res.json();
+      const result = json?.data?.submitJobApplication;
+      if (feedback) {
+        feedback.classList.remove('hidden');
+        if (result?.ok) {
+          feedback.textContent = result.message || 'Application received!';
+          feedback.className = 'text-sm font-semibold text-green-700';
+          window.setTimeout(() => dialog?.close(), 1800);
+        } else {
+          feedback.textContent = json?.errors?.[0]?.message || 'Could not submit — please check the form.';
+          feedback.className = 'text-sm font-semibold text-primary';
+        }
+      }
+    } catch {
+      if (feedback) {
+        feedback.classList.remove('hidden');
+        feedback.textContent = 'Network hiccup — please try again.';
+        feedback.className = 'text-sm font-semibold text-primary';
+      }
+    } finally {
+      if (submitBtn) {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit application';
+      }
     }
   });
 </script>

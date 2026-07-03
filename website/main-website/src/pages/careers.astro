@@ -1,23 +1,27 @@
 ---
+// Careers — open roles come live from the Website portal (CAREERS content)
+// and applications land in its Job Applications inbox.
 import PageLayout from '../layouts/PageLayout.astro';
 import WebsiteContentList from '../components/WebsiteContentList.astro';
+import { fetchBranding } from '../lib/site-data';
+
+const branding = await fetchBranding();
+const supportEmail = branding.support_email || 'support@duncit.com';
 ---
 
 <PageLayout
   title="Careers"
   eyebrow="We're hiring"
   heading="Build Duncit with us"
-  intro="Join a small, mission-driven team building the next generation of friendship."
+  intro="Join a small, mission-driven team building the friendship platform that matches people by energy."
   accent="tertiary"
   heroImage="https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80&auto=format&fit=crop"
 >
   <h2>Why Duncit?</h2>
   <ul>
-    <li>Fully remote-first, with optional hubs in Berlin & NYC</li>
-    <li>Competitive equity and salary</li>
-    <li>Unlimited PTO (with a 4-week minimum)</li>
-    <li>Annual company offsite — last one was in Lisbon</li>
-    <li>Mental health & wellness stipend</li>
+    <li><strong>Real impact.</strong> Everything you ship goes straight into how people meet, host and earn together.</li>
+    <li><strong>Small team, big ownership.</strong> You'll own whole surfaces — apps, portals, the platform itself.</li>
+    <li><strong>Energy over ego.</strong> The same vibe-first culture we build for our community, inside the team.</li>
   </ul>
 
   <h2>Open roles</h2>
@@ -26,6 +30,6 @@ import WebsiteContentList from '../components/WebsiteContentList.astro';
   <h2>Don't see your role?</h2>
   <p>
     We love hearing from talented people. Send us a note at
-    <a href="mailto:careers@duncit.com">careers@duncit.com</a> and tell us what you'd build.
+    <a href={`mailto:${supportEmail}`}>{supportEmail}</a> and tell us what you'd build.
   </p>
 </PageLayout>

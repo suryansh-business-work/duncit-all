@@ -96,6 +96,16 @@ export interface IBranding extends Document {
   portals_logo_url: string;
   portals_splash_url: string;
   portals_splash_type: string;
+  // Marketing websites (duncit.com + partners/ads/earnwith subsites) — admin
+  // Branding accordion 1D. Distinct from mweb_* (the PWA): these feed the
+  // static Astro sites' header, footer and favicon at build time.
+  website_header_logo_url: string;
+  website_footer_logo_url: string;
+  website_favicon_url: string;
+  // App store listings for the shared "Download the app" website section.
+  // Empty string = not live yet; the sites render a "coming soon" state.
+  android_app_url: string;
+  ios_app_url: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -135,6 +145,11 @@ const brandingSchema = new Schema<IBranding>(
     portals_logo_url: { type: String, default: "" },
     portals_splash_url: { type: String, default: "" },
     portals_splash_type: { type: String, default: "IMAGE" },
+    website_header_logo_url: { type: String, default: "" },
+    website_footer_logo_url: { type: String, default: "" },
+    website_favicon_url: { type: String, default: "" },
+    android_app_url: { type: String, default: "" },
+    ios_app_url: { type: String, default: "" },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

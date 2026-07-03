@@ -1,5 +1,9 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
+import { fetchBranding } from '../lib/site-data';
+
+const branding = await fetchBranding();
+const supportEmail = branding.support_email || 'support@duncit.com';
 ---
 
 <PageLayout
@@ -29,5 +33,5 @@ import PageLayout from '../layouts/PageLayout.astro';
   <p>Block, mute, and report exist for a reason. Use them freely — and we'll back you up.</p>
 
   <h2>If something goes wrong</h2>
-  <p>Reach out to <a href="mailto:safety@duncit.com">safety@duncit.com</a> or use the in-app report flow. Our Trust & Safety team reviews every report, every time.</p>
+  <p>Reach out to <a href={`mailto:${supportEmail}`}>{supportEmail}</a> or use the in-app report flow. Our Trust & Safety team reviews every report, every time.</p>
 </PageLayout>

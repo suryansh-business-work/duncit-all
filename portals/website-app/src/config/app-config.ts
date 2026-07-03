@@ -67,6 +67,8 @@ export const appConfig: AppConfig = {
     { label: 'Newsletter Submission', to: '/newsletter', icon: 'email' },
     { label: 'Contact Submission', to: '/contact-submissions', icon: 'contactMail' },
     { label: 'FAQ Submission', to: '/faq-submissions', icon: 'help' },
+    { label: 'Job Applications', to: '/job-applications', icon: 'personSearch' },
+    { label: 'Navigation', to: '/navigation', icon: 'accountTree' },
   ],
   modules: [],
 };

@@ -1,5 +1,9 @@
 ---
 import PageLayout from '../../layouts/PageLayout.astro';
+import { fetchBranding } from '../../lib/site-data';
+
+const branding = await fetchBranding();
+const supportEmail = branding.support_email || 'support@duncit.com';
 ---
 
 <PageLayout
@@ -34,5 +38,5 @@ import PageLayout from '../../layouts/PageLayout.astro';
   </ul>
 
   <h2>Need help?</h2>
-  <p>Visit <a href="/safety/resources">our resources page</a> for crisis hotlines, or email <a href="mailto:safety@duncit.com">safety@duncit.com</a>.</p>
+  <p>Visit <a href="/safety/resources">our resources page</a> for crisis hotlines, or email <a href={`mailto:${supportEmail}`}>{supportEmail}</a>.</p>
 </PageLayout>

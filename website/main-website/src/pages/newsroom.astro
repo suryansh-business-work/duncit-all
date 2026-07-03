@@ -1,6 +1,10 @@
 ---
 import PageLayout from '../layouts/PageLayout.astro';
 import WebsiteContentList from '../components/WebsiteContentList.astro';
+import { fetchBranding } from '../lib/site-data';
+
+const branding = await fetchBranding();
+const supportEmail = branding.support_email || 'support@duncit.com';
 ---
 
 <PageLayout
@@ -16,7 +20,7 @@ import WebsiteContentList from '../components/WebsiteContentList.astro';
 
   <h2>Press inquiries</h2>
   <p>
-    For interviews, assets, or quotes, reach our press team at
-    <a href="mailto:press@duncit.com">press@duncit.com</a>. We aim to respond within 24 hours.
+    For interviews, assets, or quotes, reach our team at
+    <a href={`mailto:${supportEmail}`}>{supportEmail}</a>. We aim to respond within 24 hours.
   </p>
 </PageLayout>

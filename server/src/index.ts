@@ -59,6 +59,10 @@ async function bootstrap() {
     await emailTemplateService.seedDefaults();
   });
   await safeSeed('websiteContent', () => websiteContentService.seedDefaults());
+  await safeSeed('websiteNav', async () => {
+    const { websiteNavService } = await import('@modules/content/websiteNav/websiteNav.service');
+    await websiteNavService.seedDefaults();
+  });
   await safeSeed('marketing', () => marketingService.resumeSchedules());
   await safeSeed('venueAutoExtend', async () => {
     const { autoExtendService } = await import('@modules/venues/autoExtend/autoExtend.service');

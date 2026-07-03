@@ -19,6 +19,7 @@ import IdentitySection from './IdentitySection';
 import MascotSection from './MascotSection';
 import AnimationsSection from './AnimationsSection';
 import PlatformAssetsSection from './PlatformAssetsSection';
+import WebsiteAssetsSection from './WebsiteAssetsSection';
 import { PLATFORM_SECTIONS } from './sizeGuides';
 import { BRANDING, UPDATE_BRANDING, emptyBrandingForm, type BrandingFormState } from './queries';
 
@@ -126,6 +127,13 @@ export default function BrandingPage() {
             />
           </BrandingAccordion>
         ))}
+
+        <BrandingAccordion
+          title="1D · Website Logos (marketing sites)"
+          subtitle="Header logo, footer logo, favicon + app-store links for duncit.com and its subsites."
+        >
+          <WebsiteAssetsSection form={form} setForm={setForm} />
+        </BrandingAccordion>
 
         <BrandingAccordion title="Mascot" subtitle="Name, story and artwork of the app mascot.">
           <MascotSection form={form} setForm={setForm} />

@@ -3,10 +3,10 @@ import Layout from '../layouts/Layout.astro';
 import SiteNav from '../components/SiteNav.astro';
 import Footer from '../components/Footer.astro';
 import BrandLogo from '../components/BrandLogo.astro';
+import DownloadApps from '../components/DownloadApps.astro';
 import { urlConfigs } from '../config/url-configs';
 
 // Real group photos from Unsplash (free to use)
-const comingSoonImg = 'https://images.unsplash.com/photo-1522071820081-009f0129c71c?w=1600&q=80&auto=format&fit=crop';
 const vibesImg = 'https://images.unsplash.com/photo-1543269865-cbf427effbad?w=1200&q=80&auto=format&fit=crop';
 const flow1 = 'https://images.unsplash.com/photo-1543807535-eceef0bc6599?w=600&q=80&auto=format&fit=crop';
 const flow2 = 'https://images.unsplash.com/photo-1529390079861-591de354faf5?w=600&q=80&auto=format&fit=crop';
@@ -14,18 +14,22 @@ const flow3 = 'https://images.unsplash.com/photo-1523580494863-6f3031224c94?w=60
 const flow4 = 'https://images.unsplash.com/photo-1496440737103-cd596325d314?w=600&q=80&auto=format&fit=crop';
 const mwebLoginUrl = `${urlConfigs.mwebUrl}/login`;
 const mwebRegisterUrl = `${urlConfigs.mwebUrl}/register`;
+// Every way to earn with Duncit — all paths live on earnwith.duncit.com.
 const earningPaths = [
   {
-    icon: 'fa-store',
-    title: 'Register your venue',
-    text: 'Host the party at your place and Duncit will provide verified bookings for your available slots.',
-    href: '/register-your-venue',
+    icon: 'fa-champagne-glasses',
+    title: 'Host pods',
+    text: 'Create pods, bring the right people together and earn from every gathering you run.',
   },
   {
-    icon: 'fa-champagne-glasses',
-    title: 'Be a Host',
-    text: 'Host bankar paisa kamao: create pods, bring the right people together, and grow with Duncit.',
-    href: '/be-a-host',
+    icon: 'fa-store',
+    title: 'List your venue',
+    text: 'Publish your space’s slots and get verified bookings from hosts near you.',
+  },
+  {
+    icon: 'fa-bag-shopping',
+    title: 'Sell at gatherings',
+    text: 'Bring your products to real meetups and reach buyers face to face.',
   },
 ];
 ---
@@ -77,169 +81,68 @@ const earningPaths = [
           <BrandLogo height={40} />
         </div>
         <div class="flex items-center gap-2">
-          <a href={mwebLoginUrl} class="hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-tertiary text-ink text-xs font-bold sticker hover:scale-105 transition">
-            <i class="fa-solid fa-bolt"></i> mWeb is Live
-          </a>
-          <a href="#" class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="App Store">
-            <i class="fa-brands fa-apple text-lg"></i>
-          </a>
-          <a href="#" class="w-11 h-11 rounded-full bg-ink text-white inline-flex items-center justify-center hover:scale-105 transition" aria-label="Google Play">
-            <i class="fa-brands fa-google-play text-base"></i>
+          <a href="#download" class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full glass-chip text-ink text-xs font-bold hover:scale-105 transition">
+            <i class="fa-solid fa-download"></i> Get the app
           </a>
         </div>
       </nav>
 
-      <!-- Stage: the looping reel speaks for itself — just the calls to action. -->
-      <div class="relative z-10 h-[480px] flex flex-col items-center justify-end pb-6 gap-3 sm:flex-row">
-        <a
-          href={mwebRegisterUrl}
-          class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-white font-bold text-base sticker hover:scale-[1.03] transition"
-        >
-          <i class="fa-solid fa-bolt"></i> Join the energy
-        </a>
-        <a
-          href={mwebLoginUrl}
-          class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/90 backdrop-blur text-ink font-bold text-base sticker hover:scale-[1.03] transition"
-        >
-          <i class="fa-solid fa-right-to-bracket"></i> Sign in
-        </a>
-      </div>
-    </section>
-
-    <!-- ============== MOBILE WEB - LIVE NOW ============== -->
-    <section class="bg-cream py-20 px-6">
-      <div class="max-w-3xl mx-auto text-center">
-        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider mb-6">
-          <i class="fa-solid fa-bolt"></i> Live now
-        </span>
-        <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4">
-          Mobile Web app is <span class="text-primary">accessible</span>
-        </h2>
-        <p class="text-ink-soft text-lg max-w-xl mx-auto mb-8">
-          Sign in from any browser — no install required. The full Duncit
-          experience runs on your phone right now.
-        </p>
-        <div class="flex flex-col sm:flex-row gap-3 justify-center items-center">
+      <!-- Stage: the banner statement + calls to action over the looping reel. -->
+      <div class="relative z-10 h-[480px] flex flex-col items-center justify-end pb-6 gap-6">
+        <div class="glass-dark rounded-3xl px-6 py-5 max-w-2xl text-center">
+          <h1 class="text-2xl sm:text-3xl md:text-4xl text-white">
+            The friendship platform that matches people by
+            <span class="text-tertiary">energy</span>, not algorithms.
+          </h1>
+        </div>
+        <div class="flex flex-col items-center gap-3 sm:flex-row">
           <a
-            href={mwebLoginUrl}
+            href={mwebRegisterUrl}
             class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-primary text-white font-bold text-base sticker hover:scale-[1.03] transition"
           >
-            <i class="fa-solid fa-right-to-bracket"></i> Sign in to launch
+            <i class="fa-solid fa-bolt"></i> Join the energy
           </a>
-          <a
-            href={mwebRegisterUrl}
-            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-ink/5 text-ink font-bold text-base hover:bg-ink/10 transition"
-          >
-            <i class="fa-solid fa-user-plus"></i> Create an account
-          </a>
-        </div>
-      </div>
-    </section>
-
-    <!-- ============== MOBILE APPS PREVIEW ============== -->
-    <section class="relative overflow-hidden py-20 px-6">
-      <!-- Background image with overlay -->
-      <div class="absolute inset-0 z-0">
-        <img src={comingSoonImg} alt="" class="w-full h-full object-cover" />
-        <div class="absolute inset-0 bg-linear-to-br from-secondary/85 via-ink/80 to-primary/85"></div>
-      </div>
-
-      <div class="relative z-10 max-w-5xl mx-auto text-center">
-        <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-tertiary text-ink font-bold text-xs uppercase tracking-wider mb-6 sticker">
-          <i class="fa-solid fa-mobile-screen"></i> Mobile App
-        </span>
-        <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4 text-white">
-          Native app <span class="text-tertiary">in the works</span>
-        </h2>
-        <p class="text-white/85 text-lg max-w-xl mx-auto mb-6">
-          Meanwhile, our Mobile Web app (mWeb) is live — sign in below and
-          launch Duncit right from your browser. iOS &amp; Android apps land soon.
-        </p>
-
-        <!-- Live mWeb CTA -->
-        <div class="flex flex-col sm:flex-row gap-3 justify-center items-center mb-10">
           <a
             href={mwebLoginUrl}
-            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-tertiary text-ink font-bold text-base sticker hover:scale-[1.03] transition"
+            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/90 backdrop-blur text-ink font-bold text-base sticker hover:scale-[1.03] transition"
           >
-            <i class="fa-solid fa-right-to-bracket"></i> Sign in to launch mWeb
+            <i class="fa-solid fa-right-to-bracket"></i> Sign in
           </a>
-          <a
-            href={mwebRegisterUrl}
-            class="inline-flex items-center gap-2 px-7 py-3.5 rounded-full bg-white/10 backdrop-blur text-white font-bold text-base border border-white/30 hover:bg-white/20 transition"
-          >
-            <i class="fa-solid fa-user-plus"></i> Create an account
-          </a>
-        </div>
-
-        <!-- App store preview cards -->
-        <div class="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
-          <div class="bg-ink text-white rounded-2xl p-6 sticker relative overflow-hidden">
-            <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-tertiary text-ink text-[10px] font-black uppercase tracking-wider">Soon</span>
-            <i class="fa-brands fa-apple text-5xl mb-3"></i>
-            <div class="text-left">
-              <div class="text-xs opacity-70 uppercase tracking-wide">Coming to the</div>
-              <div class="text-xl font-bold font-head">App Store</div>
-            </div>
-          </div>
-          <div class="bg-ink text-white rounded-2xl p-6 sticker relative overflow-hidden">
-            <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-tertiary text-ink text-[10px] font-black uppercase tracking-wider">Soon</span>
-            <i class="fa-brands fa-google-play text-5xl mb-3"></i>
-            <div class="text-left">
-              <div class="text-xs opacity-70 uppercase tracking-wide">Coming to</div>
-              <div class="text-xl font-bold font-head">Google Play</div>
-            </div>
-          </div>
-        </div>
-
-        <!-- Feature checklist -->
-        <div data-reveal-group class="mt-12 grid sm:grid-cols-3 gap-6 max-w-3xl mx-auto text-left">
-          <div data-reveal class="bg-white/95 backdrop-blur rounded-2xl p-5 sticker">
-            <div class="w-10 h-10 rounded-full bg-primary/15 text-primary inline-flex items-center justify-center mb-3">
-              <i class="fa-solid fa-bolt"></i>
-            </div>
-            <h3 class="text-lg mb-1">Instant matches</h3>
-            <p class="text-sm text-ink-soft">Swipe into vibe-based friend circles in seconds.</p>
-          </div>
-          <div data-reveal class="bg-white/95 backdrop-blur rounded-2xl p-5 sticker">
-            <div class="w-10 h-10 rounded-full bg-secondary/15 text-secondary inline-flex items-center justify-center mb-3">
-              <i class="fa-solid fa-comments"></i>
-            </div>
-            <h3 class="text-lg mb-1">Real chats</h3>
-            <p class="text-sm text-ink-soft">No pressure, just real talk and laughs.</p>
-          </div>
-          <div data-reveal class="bg-white/95 backdrop-blur rounded-2xl p-5 sticker">
-            <div class="w-10 h-10 rounded-full bg-tertiary/30 text-tertiary-dark inline-flex items-center justify-center mb-3">
-              <i class="fa-solid fa-shield-heart"></i>
-            </div>
-            <h3 class="text-lg mb-1">Safe space</h3>
-            <p class="text-sm text-ink-soft">Verified profiles and built-in safety tools.</p>
-          </div>
         </div>
       </div>
     </section>
 
-    <!-- ============== WAY OF EARNINGS ============== -->
+    <!-- ============== DOWNLOAD THE APP ============== -->
+    <DownloadApps />
+
+    <!-- ============== EARN WITH DUNCIT ============== -->
     <section class="bg-cream py-20 px-6">
       <div class="max-w-6xl mx-auto grid lg:grid-cols-[0.8fr_1.2fr] gap-8 items-start">
         <div>
           <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary font-bold text-xs uppercase tracking-wider mb-5">
-            <i class="fa-solid fa-coins"></i> Way of Earnings with Duncit
+            <i class="fa-solid fa-coins"></i> Earn with Duncit
           </span>
-          <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4">Earn through real gatherings</h2>
+          <h2 class="text-4xl sm:text-5xl md:text-6xl mb-4">Turn gatherings into income</h2>
           <p class="text-ink-soft text-lg max-w-md">
-            Duncit connects earning opportunities to actual local demand: venues get bookings, hosts create experiences.
+            Hosts, venues and sellers all earn from real local demand. Every path lives on
+            Earn with Duncit — pick yours and start.
           </p>
+          <a
+            href={urlConfigs.earnwithUrl}
+            class="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-full bg-primary text-white font-bold sticker hover:scale-[1.03] transition"
+          >
+            Explore Earn with Duncit <i class="fa-solid fa-arrow-right"></i>
+          </a>
         </div>
-        <div class="grid sm:grid-cols-2 gap-4">
+        <div class="grid sm:grid-cols-3 gap-4">
           {earningPaths.map((path) => (
-            <a href={path.href} class="group bg-white rounded-3xl p-6 sticker hover:-translate-y-1 transition block">
+            <a href={urlConfigs.earnwithUrl} class="group glass rounded-3xl p-6 hover:-translate-y-1 transition block">
               <div class="w-14 h-14 rounded-2xl bg-primary/10 text-primary inline-flex items-center justify-center mb-5 group-hover:bg-primary group-hover:text-white transition">
                 <i class={`fa-solid ${path.icon} text-2xl`}></i>
               </div>
-              <h3 class="text-2xl text-ink mb-2">{path.title}</h3>
-              <p class="text-ink-soft leading-relaxed">{path.text}</p>
-              <span class="inline-flex items-center gap-2 mt-5 font-bold text-primary">
+              <h3 class="text-xl text-ink mb-2">{path.title}</h3>
+              <p class="text-ink-soft text-sm leading-relaxed">{path.text}</p>
+              <span class="inline-flex items-center gap-2 mt-5 font-bold text-primary text-sm">
                 Start now <i class="fa-solid fa-arrow-right"></i>
               </span>
             </a>
@@ -256,17 +159,18 @@ const earningPaths = [
             <i class="fa-solid fa-fire"></i> Real Energy
           </span>
           <h2 class="text-4xl sm:text-5xl md:text-6xl mb-5">
-            Straight to the<br />
-            <span class="text-secondary">real vibes</span>
+            <span class="text-primary">No bots.</span><br />
+            <span class="text-secondary">No fakes.</span><br />
+            Just <span class="relative inline-block">vibes.<span class="absolute -bottom-1 left-0 w-full h-3 bg-tertiary/70 -z-10 -rotate-1 rounded"></span></span>
           </h2>
           <p class="text-ink-soft text-lg max-w-md">
             Chatting effortless on Duncit. Discover what you share with new
             friends and dive right into laughs or real talk.
           </p>
-          <div class="mt-6 flex gap-4 text-ink-soft">
-            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-check text-primary"></i> No bots</span>
-            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-check text-primary"></i> No fakes</span>
-            <span class="inline-flex items-center gap-1.5"><i class="fa-solid fa-check text-primary"></i> Just vibes</span>
+          <div class="mt-6 flex flex-wrap gap-3">
+            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-user-check text-primary"></i> Verified people</span>
+            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-bolt text-secondary"></i> Matched by energy</span>
+            <span class="glass-chip inline-flex items-center gap-1.5 px-4 py-2 rounded-full font-bold text-ink"><i class="fa-solid fa-champagne-glasses text-tertiary-dark"></i> Real gatherings</span>
           </div>
         </div>
         <div class="relative">

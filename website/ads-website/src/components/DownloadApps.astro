@@ -1,0 +1,62 @@
+---
+// Shared "Download the app" section (Android + iOS only). Store links come
+// from Admin → Branding → Website Logos; unpublished listings render a real
+// "coming soon" state instead of a dead link.
+import { fetchBranding } from '../lib/site-data';
+
+const branding = await fetchBranding();
+const stores = [
+  { icon: 'fa-google-play', eyebrow: 'Get it on', name: 'Google Play', url: branding.android_app_url },
+  { icon: 'fa-apple', eyebrow: 'Download on the', name: 'App Store', url: branding.ios_app_url },
+];
+---
+
+<section id="download" class="mx-auto max-w-6xl px-5 py-14">
+  <div class="relative overflow-hidden rounded-3xl bg-ink px-6 py-14 text-center">
+    <div class="absolute -top-24 -left-24 w-80 h-80 rounded-full bg-primary/30 blur-3xl" aria-hidden="true"></div>
+    <div class="absolute -bottom-24 -right-24 w-80 h-80 rounded-full bg-primary/20 blur-3xl" aria-hidden="true"></div>
+
+    <div class="relative z-10 max-w-3xl mx-auto">
+      <span class="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass-dark text-white font-bold text-xs uppercase tracking-wider mb-5">
+        <i class="fa-solid fa-mobile-screen" aria-hidden="true"></i> The Duncit app
+      </span>
+      <h2 class="text-3xl sm:text-4xl mb-3 text-white">Your audience lives in the app</h2>
+      <p class="text-white/80 text-lg max-w-xl mx-auto mb-8">
+        Every campaign you launch reaches members on the Duncit app for Android and iOS.
+      </p>
+
+      <div class="grid sm:grid-cols-2 gap-4 max-w-2xl mx-auto">
+        {
+          stores.map((store) =>
+            store.url ? (
+              <a
+                href={store.url}
+                target="_blank"
+                rel="noreferrer"
+                class="group glass-dark text-white rounded-2xl p-6 flex items-center gap-4 hover:scale-[1.02] transition"
+              >
+                <i class={`fa-brands ${store.icon} text-5xl`} aria-hidden="true"></i>
+                <span class="text-left">
+                  <span class="block text-xs opacity-70 uppercase tracking-wide">{store.eyebrow}</span>
+                  <span class="block text-xl font-bold font-head">{store.name}</span>
+                </span>
+                <i class="fa-solid fa-arrow-right ml-auto opacity-0 group-hover:opacity-100 transition" aria-hidden="true"></i>
+              </a>
+            ) : (
+              <div class="glass-dark text-white rounded-2xl p-6 flex items-center gap-4 relative overflow-hidden">
+                <span class="absolute top-3 right-3 px-2.5 py-1 rounded-full bg-primary-light text-ink text-[10px] font-black uppercase tracking-wider">
+                  Coming soon
+                </span>
+                <i class={`fa-brands ${store.icon} text-5xl opacity-80`} aria-hidden="true"></i>
+                <span class="text-left">
+                  <span class="block text-xs opacity-70 uppercase tracking-wide">{store.eyebrow}</span>
+                  <span class="block text-xl font-bold font-head">{store.name}</span>
+                </span>
+              </div>
+            )
+          )
+        }
+      </div>
+    </div>
+  </div>
+</section>

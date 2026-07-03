@@ -11,6 +11,8 @@ import EmailIcon from '@mui/icons-material/Email';
 import ContactMailIcon from '@mui/icons-material/ContactMail';
 import HelpIcon from '@mui/icons-material/Help';
 import WidgetsIcon from '@mui/icons-material/Widgets';
+import PersonSearchIcon from '@mui/icons-material/PersonSearch';
+import AccountTreeIcon from '@mui/icons-material/AccountTree';
 
 const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   settings: SettingsIcon,
@@ -25,6 +27,8 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   email: EmailIcon,
   contactMail: ContactMailIcon,
   help: HelpIcon,
+  personSearch: PersonSearchIcon,
+  accountTree: AccountTreeIcon,
 };
 
 /** Resolves a config icon name to an MUI icon, falling back to a neutral glyph. */

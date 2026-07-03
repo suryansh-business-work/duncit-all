@@ -11,9 +11,11 @@ interface Crumb {
 
 const PARTNER_NAV: { label: string; to: string; match: string }[] = [
   { label: 'Dashboard', to: '/', match: '/' },
-  { label: 'Venues', to: '/register-venue', match: '/register-venue' },
+  { label: 'Venue Management', to: '/register-venue', match: '/register-venue' },
+  { label: 'Venue Dashboard', to: '/venues/dashboard', match: '/venues/dashboard' },
+  { label: 'Slot Requests', to: '/venues/requests', match: '/venues/requests' },
   { label: 'Host', to: '/become-host', match: '/become-host' },
-  { label: 'Products', to: '/list-products', match: '/list-products' },
+  { label: 'E-Commerce Brand', to: '/ecomm-brand', match: '/ecomm-brand' },
   { label: 'FAQs', to: '/faqs', match: '/faqs' },
   { label: 'Support', to: '/support', match: '/support' },
   { label: 'Policies', to: '/policies', match: '/policies' },

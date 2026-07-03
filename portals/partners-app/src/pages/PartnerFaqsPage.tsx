@@ -40,7 +40,7 @@ export default function PartnerFaqsPage() {
   }, [faqs, search]);
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 860, mx: 'auto' }}>
+    <Stack spacing={2.25} sx={{ width: '100%' }}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' }}>
         <Stack direction="row" spacing={1.5} alignItems="center">
           <Box sx={{ width: 44, height: 44, borderRadius: 1.5, display: 'grid', placeItems: 'center', bgcolor: 'rgba(255,255,255,0.14)' }}>

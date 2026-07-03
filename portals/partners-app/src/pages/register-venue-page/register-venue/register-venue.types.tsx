@@ -35,6 +35,9 @@ export interface RegisterVenueValues extends VenueLocationValues {
   address_line2: string;
   venue_type: string;
   capacity_items: CapacityRow[];
+  amenities: string[];
+  facilities: string[];
+  security: string[];
   documents: DocRow[];
   gstin: string;
   pan: string;
@@ -45,13 +48,30 @@ export interface RegisterVenueValues extends VenueLocationValues {
   owner_address: string;
 }
 
-export type VenueSectionKey = 'details' | 'type-capacity' | 'documents' | 'owner' | 'review';
+export type VenueSectionKey =
+  | 'details'
+  | 'type-capacity'
+  | 'amenities'
+  | 'documents'
+  | 'owner'
+  | 'leaves'
+  | 'review';
+
+/** How the form is being used:
+ * - register: new/draft/rejected — everything editable, submit for review.
+ * - edit-approved: APPROVED venue — only description, images, capacity,
+ *   owner contact and appended documents may change; the rest renders disabled.
+ * - view: SUBMITTED — read-only while under review. */
+export type RegisterVenueMode = 'register' | 'edit-approved' | 'view';
 
 /** Served by the `venueRegistrationConfig` query — never hardcode these lists. */
 export interface VenueRegistrationConfig {
   venue_types: string[];
   doc_types: string[];
   capacity_item_limit: number;
+  amenities: string[];
+  facilities: string[];
+  security: string[];
 }
 
 export const blankRegisterVenueValues: RegisterVenueValues = {
@@ -74,6 +94,9 @@ export const blankRegisterVenueValues: RegisterVenueValues = {
   postal_code: '',
   venue_type: '',
   capacity_items: [],
+  amenities: [],
+  facilities: [],
+  security: [],
   documents: [],
   gstin: '',
   pan: '',

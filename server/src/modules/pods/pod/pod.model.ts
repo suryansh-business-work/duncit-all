@@ -3,6 +3,9 @@ import { Schema, model, Types, type Document } from 'mongoose';
 export type PodType = 'NATIVE_FREE' | 'NATIVE_PAID' | 'NATIVE_PAID_PREMIUM' | 'NON_NATIVE_FREE' | 'NON_NATIVE_PAID';
 export type PodOccurrence = 'ONE_TIME' | 'DAILY' | 'WEEKLY' | 'MONTHLY' | 'ALTERNATE_DAY' | 'WEEKENDS_ONLY';
 export type PodMode = 'PHYSICAL' | 'VIRTUAL';
+/** Venue's decision on the pod's slot request. NONE = no approval needed
+ * (own venue / no slot); PENDING pods stay offline until APPROVED. */
+export type PodVenueApproval = 'NONE' | 'PENDING' | 'APPROVED' | 'DECLINED';
 
 export interface IPodMedia {
   url: string;
@@ -70,6 +73,7 @@ export interface IPod extends Document {
   comments: IPodComment[];
   completed_at?: Date | null;
   is_active: boolean;
+  venue_approval_status: PodVenueApproval;
   created_at: Date;
   updated_at: Date;
 }
@@ -160,6 +164,11 @@ const podSchema = new Schema<IPod>(
     comments: { type: [commentSchema], default: [] },
     completed_at: { type: Date, default: null, index: true },
     is_active: { type: Boolean, default: true },
+    venue_approval_status: {
+      type: String,
+      enum: ['NONE', 'PENDING', 'APPROVED', 'DECLINED'],
+      default: 'NONE',
+    },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }
 );

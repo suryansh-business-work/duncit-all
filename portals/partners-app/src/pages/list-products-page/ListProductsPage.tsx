@@ -13,7 +13,7 @@ export default function ListProductsPage() {
   const canManageProducts = canManageProductListings(data?.me?.roles);
 
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 860, mx: 'auto' }}>
+    <Stack spacing={2.5} sx={{ width: '100%' }}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
         <Button onClick={() => navigate('/ecomm-brand')} startIcon={<ArrowBackIcon />} size="small" sx={{ color: 'inherit', mb: 1 }}>
           Back to brands

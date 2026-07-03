@@ -5,7 +5,7 @@ import VenueListingsTable from './VenueListingsTable';
 
 export default function VenueListingsPage() {
   return (
-    <Stack spacing={2.5} sx={{ maxWidth: 860, mx: 'auto' }}>
+    <Stack spacing={2.5} sx={{ width: '100%' }}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: '#fff', background: 'linear-gradient(145deg, #15111c 0%, #2a1926 55%, #111827 100%)' }}>
         <Stack direction={{ xs: 'column', sm: 'row' }} justifyContent="space-between" alignItems={{ xs: 'flex-start', sm: 'center' }} spacing={2}>
           <Box>

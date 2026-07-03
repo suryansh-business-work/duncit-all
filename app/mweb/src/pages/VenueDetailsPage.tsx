@@ -25,6 +25,8 @@ const PUBLIC_VENUES = gql`
       capacity
       description
       amenities
+      facilities
+      security
       cover_image_url
       gallery
       address_line1
@@ -40,6 +42,18 @@ const PUBLIC_VENUES = gql`
     }
   }
 `;
+
+function VenueChipsSection({ title, items }: Readonly<{ title: string; items?: string[] | null }>) {
+  if (!items?.length) return null;
+  return (
+    <Stack spacing={1}>
+      <Typography variant="h6" fontWeight={700}>{title}</Typography>
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        {items.map((item) => <Chip key={item} label={item} variant="outlined" />)}
+      </Stack>
+    </Stack>
+  );
+}
 
 const addressParts = (venue: any) => [
   venue.address_line1,
@@ -134,14 +148,9 @@ export default function VenueDetailsPage() {
         <VenueMapPreview title={venue.venue_name} parts={addressParts(venue)} lat={venue.lat} lng={venue.lng} />
       </Stack>
 
-      {venue.amenities?.length ? (
-        <Stack spacing={1}>
-          <Typography variant="h6" fontWeight={700}>Amenities</Typography>
-          <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-            {venue.amenities.map((item: string) => <Chip key={item} label={item} variant="outlined" />)}
-          </Stack>
-        </Stack>
-      ) : null}
+      <VenueChipsSection title="Amenities" items={venue.amenities} />
+      <VenueChipsSection title="Facilities" items={venue.facilities} />
+      <VenueChipsSection title="Venue Security" items={venue.security} />
 
       {images.length > 1 ? (
         <Stack spacing={1}>

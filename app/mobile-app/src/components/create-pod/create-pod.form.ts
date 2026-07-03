@@ -44,6 +44,7 @@ export const createPodSchema = z
     club_id: z.string().min(1, 'Select a club'),
     pod_mode: z.enum(['PHYSICAL', 'VIRTUAL']),
     venue_id: z.string(),
+    venue_slot_id: z.string(),
     meeting_platform: z.string().trim().max(80),
     meeting_url: z.string().trim(),
     meeting_notes: z.string().trim().max(1000),
@@ -86,6 +87,13 @@ export const createPodSchema = z
   .superRefine((values, ctx) => {
     if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
       ctx.addIssue({ code: 'custom', path: ['venue_id'], message: 'Select a venue' });
+    }
+    if (values.pod_mode === 'PHYSICAL' && !values.venue_slot_id) {
+      ctx.addIssue({
+        code: 'custom',
+        path: ['venue_slot_id'],
+        message: 'Pick an available slot from the venue calendar',
+      });
     }
     if (values.pod_mode === 'VIRTUAL') {
       if (!values.meeting_url) {
@@ -143,20 +151,25 @@ export const createPodSchema = z
 
 /** Fields validated when leaving each stepper step (index aligned with STEP_TITLES). */
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
-  ['location_id'],
-  ['pod_title', 'club_id', 'pod_mode', 'pod_hashtag_text'],
+  [
+    'pod_title',
+    'pod_description',
+    'media_text',
+    'pod_hashtag_text',
+    'pod_info',
+    'what_this_pod_offers',
+    'available_perks',
+  ],
+  ['location_id', 'pod_mode', 'club_id'],
   [
     'venue_id',
+    'venue_slot_id',
     'meeting_platform',
     'meeting_url',
     'meeting_notes',
     'pod_date_time_text',
     'pod_end_date_time_text',
   ],
-  ['pod_description', 'pod_info', 'media_text'],
-  ['what_this_pod_offers'],
-  ['available_perks'],
-  ['products_enabled', 'product_requests'],
   [
     'pod_type',
     'pod_occurrence',
@@ -164,18 +177,16 @@ export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
     'no_of_spots_text',
     'place_charges',
     'payment_terms',
+    'products_enabled',
+    'product_requests',
   ],
 ];
 
 export const STEP_TITLES = [
-  'Where to Host',
-  'Select Club',
-  'When, Where & Map',
-  'About the Pod',
-  'What This Pod Offers',
-  'Available Perks',
-  'Add Products',
-  'Payment & Charges',
+  'Pod Basics',
+  'Location, Category & Club',
+  'Venue & Slot',
+  'Pricing & Publish',
 ];
 
 /** Maps validated form values onto the server's CreatePodInput. */
@@ -188,8 +199,10 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     club_id: values.club_id,
     pod_mode: values.pod_mode as PodMode,
     venue_id: virtual ? null : values.venue_id,
-    venue_slot_id: null,
-    location_id: null,
+    // The booked slot drives the pod window server-side; the venue must
+    // approve it before the pod goes live (own venues confirm instantly).
+    venue_slot_id: virtual ? null : values.venue_slot_id || null,
+    location_id: values.location_id || null,
     zone_name: null,
     meeting_platform: virtual ? values.meeting_platform.trim() || null : null,
     meeting_url: virtual ? values.meeting_url.trim() : null,

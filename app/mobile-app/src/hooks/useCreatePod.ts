@@ -20,9 +20,12 @@ import { graphqlRequest } from '@/services/graphql.client';
 type OptionsData = ResultOf<typeof CreatePodOptionsDocument>;
 type DraftData = ResultOf<typeof MyPodDraftDocument>['myPodDraft'];
 export type CreatePodClub = OptionsData['clubs'][number];
-export type CreatePodVenue = OptionsData['myVenues'][number];
+export type CreatePodVenue = OptionsData['publicVenues'][number];
 
 const clampStep = (step: number) => Math.min(Math.max(step, 0), STEP_TITLES.length - 1);
+
+/** Fallbacks keep the pricing panel rendering while settings load. */
+const blankFinance = { platform_fee_pct: 0, gst_pct: 0, currency_symbol: '₹' };
 
 async function loadCreatePodData(draftId?: string) {
   const options = await graphqlRequest(CreatePodOptionsDocument, undefined, { auth: true });
@@ -55,7 +58,17 @@ export function useCreatePod(draftId?: string) {
       .then((result) => {
         if (!active) return;
         setData(result.options);
-        if (result.draft) applyDraft(result.draft);
+        if (result.draft) {
+          applyDraft(result.draft);
+        } else {
+          // A fresh pod starts in the host's selected location (header pick).
+          const locations = result.options.locations ?? [];
+          const preferred =
+            locations.find((item) => item.id === result.options.me?.selected_location_id)?.id ??
+            locations[0]?.id ??
+            '';
+          setInitialValues({ ...blankCreatePodForm, location_id: preferred });
+        }
       })
       .catch(() => undefined)
       .finally(() => active && setIsLoading(false));
@@ -78,13 +91,14 @@ export function useCreatePod(draftId?: string) {
 
   return {
     isHost: (data?.me?.roles ?? []).includes('HOST'),
+    viewerUserId: data?.me?.user_id ?? '',
     clubs: data?.clubs ?? [],
     locations: data?.locations ?? [],
-    venueLocations: data?.publicVenues ?? [],
-    venues: (data?.myVenues ?? []).filter(
-      (venue) => venue.status === 'APPROVED' && venue.is_active,
-    ),
+    // publicVenues are already APPROVED; keep only active venue partners.
+    venues: (data?.publicVenues ?? []).filter((venue) => venue.is_active !== false),
     products: data?.availablePodProducts ?? [],
+    hostCategories: data?.myHost?.host_categories ?? [],
+    finance: data?.publicFinanceSettings ?? blankFinance,
     isLoading,
     initialValues,
     initialStep,

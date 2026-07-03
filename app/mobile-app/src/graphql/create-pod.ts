@@ -1,11 +1,13 @@
 import { gql } from '@/generated/graphql';
 
-/** Host status + the clubs/venues/products a host can attach a new pod to. */
+/** Host status + the clubs/venue partners/products a host can attach a new
+ * pod to, plus finance settings for the pricing panel. */
 export const CreatePodOptionsDocument = gql(`
   query MobileCreatePodOptions {
     me {
       user_id
       roles
+      selected_location_id
     }
     clubs(filter: { is_active: true }) {
       id
@@ -17,32 +19,76 @@ export const CreatePodOptionsDocument = gql(`
         type
       }
     }
-    locations {
+    locations(filter: { is_active: true }) {
       id
       location_name
       city
+      state
+      state_code
+      country
+      country_code
+      location_image
+      location_pincode
+      active_club_count
+      location_zones {
+        zone_name
+        pincode
+      }
     }
     publicVenues {
       id
+      owner_user_id
       location_id
-    }
-    myVenues {
-      id
       venue_name
+      venue_type
+      capacity
+      cover_image_url
       city
       locality
-      status
-      is_active
       address_line1
       state
       postal_code
       country
+      owner_name
+      owner_phone
+      owner_email
+      is_active
+    }
+    myHost {
+      id
+      status
+      host_categories {
+        super_category_id
+        category_id
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+      }
     }
     availablePodProducts {
       id
       product_name
       unit_cost
       available_count
+    }
+    publicFinanceSettings {
+      platform_fee_pct
+      gst_pct
+      currency_symbol
+    }
+  }
+`);
+
+/** Open availability slots on a venue partner's calendar (step 3). */
+export const VenueAvailableSlotsDocument = gql(`
+  query MobileVenueAvailableSlots($venue_id: ID!) {
+    venueAvailableSlots(venue_id: $venue_id) {
+      id
+      start_at
+      end_at
+      price
+      status
     }
   }
 `);

@@ -14,6 +14,9 @@ import AppBreadcrumbs from './AppBreadcrumbs';
 
 export const DRAWER_WIDTH = 264;
 export const HEADER_HEIGHT = 48;
+/** Partner tools render inside a centered container — wide enough for data
+ * tables and dashboards (≥1300px requirement) without stretching on ultrawide. */
+export const CONTENT_MAX_WIDTH = 1360;
 
 const initials = (user: any) => {
   const name = user?.full_name || [user?.first_name, user?.last_name].filter(Boolean).join(' ') || user?.email || 'P';
@@ -34,6 +37,24 @@ export default function PartnerShell({ children }: Readonly<{ children: ReactNod
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100dvh', bgcolor: 'background.default' }}>
+      <Box
+        component="a"
+        href="#partner-main"
+        sx={{
+          position: 'absolute',
+          left: -9999,
+          zIndex: (t) => t.zIndex.tooltip,
+          bgcolor: 'background.paper',
+          color: 'primary.main',
+          px: 2,
+          py: 1,
+          borderRadius: 1,
+          fontWeight: 700,
+          '&:focus': { left: 8, top: 8 },
+        }}
+      >
+        Skip to main content
+      </Box>
       <Box component="nav" sx={{ width: { md: DRAWER_WIDTH }, flexShrink: { md: 0 } }} aria-label="partner navigation">
         <Drawer variant="temporary" open={mobileOpen} onClose={() => setMobileOpen(false)} ModalProps={{ keepMounted: true }} sx={{ display: { xs: 'block', md: 'none' }, '& .MuiDrawer-paper': { width: DRAWER_WIDTH } }}>
           <PartnerSidebar onCloseMobile={() => setMobileOpen(false)} />
@@ -60,8 +81,8 @@ export default function PartnerShell({ children }: Readonly<{ children: ReactNod
           </Toolbar>
         </AppBar>
         <AppBreadcrumbs />
-        <Box component="main" sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 2.25, md: 3 }, pb: { xs: 3, md: 4 } }}>
-          {children}
+        <Box component="main" id="partner-main" tabIndex={-1} sx={{ flex: 1, minWidth: 0, p: { xs: 1.5, sm: 2.25, md: 3 }, pb: { xs: 3, md: 4 }, outline: 'none' }}>
+          <Box sx={{ maxWidth: CONTENT_MAX_WIDTH, mx: 'auto', width: '100%' }}>{children}</Box>
         </Box>
       </Box>
     </Box>

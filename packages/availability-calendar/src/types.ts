@@ -1,4 +1,5 @@
-export type VenueSlotStatus = 'AVAILABLE' | 'BOOKED' | 'BLOCKED';
+/** PENDING = a host's booking request is waiting for the venue's approval. */
+export type VenueSlotStatus = 'AVAILABLE' | 'PENDING' | 'BOOKED' | 'BLOCKED';
 
 export type CalendarView = 'month' | 'week' | 'day';
 

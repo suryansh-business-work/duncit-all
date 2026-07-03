@@ -13,7 +13,7 @@ import {
 
 const CREATE_POD_OPTIONS = gql`
   query CreatePodOptions {
-    me { user_id roles }
+    me { user_id roles selected_location_id }
     clubs(filter: { is_active: true }) {
       id
       club_name
@@ -21,11 +21,51 @@ const CREATE_POD_OPTIONS = gql`
       club_description
       club_feature_images_and_videos { url type }
     }
-    locations { id location_name city }
-    publicVenues { id location_id }
-    myVenues {
-      id venue_name city locality status is_active
-      address_line1 state postal_code country lat lng
+    locations(filter: { is_active: true }) {
+      id
+      location_name
+      city
+      state
+      state_code
+      country
+      country_code
+      location_image
+      location_pincode
+      active_club_count
+      location_zones { zone_name pincode }
+    }
+    publicVenues {
+      id
+      owner_user_id
+      location_id
+      venue_name
+      venue_type
+      capacity
+      cover_image_url
+      city
+      locality
+      address_line1
+      state
+      postal_code
+      country
+      lat
+      lng
+      owner_name
+      owner_phone
+      owner_email
+      is_active
+    }
+    myHost {
+      id
+      status
+      host_categories {
+        super_category_id
+        category_id
+        sub_category_id
+        super_category_name
+        category_name
+        sub_category_name
+      }
     }
     availablePodProducts { id product_name unit_cost available_count image_url }
   }
@@ -46,7 +86,7 @@ const PUBLISH_POD_DRAFT = gql`
   }
 `;
 
-/** Host-only page to create a pod via the 7-step stepper, reached from the Home
+/** Host-only page to create a pod via the 4-step stepper, reached from the Home
  * "+" button or by resuming a draft from Host Management (`/create-pod/:draftId`). */
 export default function CreatePodPage() {
   const navigate = useNavigate();
@@ -59,14 +99,21 @@ export default function CreatePodPage() {
   const isHost = (options.data?.me?.roles ?? []).includes('HOST');
   const clubs = options.data?.clubs ?? [];
   const locations = options.data?.locations ?? [];
-  const venueLocations = options.data?.publicVenues ?? [];
   const products = options.data?.availablePodProducts ?? [];
-  const venues = (options.data?.myVenues ?? []).filter(
-    (venue: any) => venue.status === 'APPROVED' && venue.is_active
-  );
+  // publicVenues are already APPROVED; keep only active venue partners.
+  const venues = (options.data?.publicVenues ?? []).filter((venue: any) => venue.is_active !== false);
+  const hostCategories = options.data?.myHost?.host_categories ?? [];
+  const viewerUserId = options.data?.me?.user_id ?? '';
 
   const draft = draftQuery.data?.myPodDraft;
-  const initialValues: CreatePodFormValues = draft ? hydrateDraft(draft.payload) : blankCreatePodForm;
+  // Pod location defaults to the host's selected location (header pick).
+  const defaultLocationId =
+    locations.find((item: any) => item.id === options.data?.me?.selected_location_id)?.id ??
+    locations[0]?.id ??
+    '';
+  const initialValues: CreatePodFormValues = draft
+    ? hydrateDraft(draft.payload)
+    : { ...blankCreatePodForm, location_id: defaultLocationId };
   const initialStep = draft ? Math.min(Math.max(draft.step ?? 0, 0), STEP_TITLES.length - 1) : 0;
 
   const saveDraft = async (id: string | null, payload: DraftPayload) => {
@@ -109,9 +156,10 @@ export default function CreatePodPage() {
         initialDraftId={draft?.id ?? null}
         clubs={clubs}
         locations={locations}
-        venueLocations={venueLocations}
         venues={venues}
         products={products}
+        hostCategories={hostCategories}
+        viewerUserId={viewerUserId}
         onSaveDraft={saveDraft}
         onPublish={publish}
       />

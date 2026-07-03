@@ -23,7 +23,7 @@ export default function ProductListingEditorPage() {
   }
 
   return (
-    <Stack spacing={2.25} sx={{ maxWidth: 860, mx: 'auto' }}>
+    <Stack spacing={2.25} sx={{ width: '100%' }}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
         <Stack direction="row" alignItems="center" spacing={1.25}>
           <Button onClick={() => navigate(productsHome)} startIcon={<ArrowBackIcon />} variant="outlined" sx={{ color: 'inherit', borderColor: 'rgba(255,255,255,0.55)' }}>

@@ -1,8 +1,10 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { VenueSlotModel, type IVenueSlot, type VenueSlotStatus } from './venueSlot.model';
-import { VenueModel } from '@modules/venues/venue/venue.model';
+import { VenueModel, type IVenue } from '@modules/venues/venue/venue.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { UserModel } from '@modules/access/user/user.model';
+import { venueLocalYmd } from '@modules/venues/autoExtend/slotGenerator';
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -77,11 +79,26 @@ const venueMaxAdvance = (
   return Math.max(1, Math.min(MAX_ADVANCE_DAYS_CAP, n));
 };
 
-function validateSlotWindow(start: Date, end: Date, maxAdvanceDays: number) {
+/** Per-venue slot constraints the write paths validate against: the advance
+ * cap plus the owner's leave/holiday dates (no slots may exist on those). */
+interface SlotRules {
+  maxAdvanceDays: number;
+  holidays: Set<string>;
+}
+
+const venueSlotRules = (venue: Pick<IVenue, 'settings'> | null): SlotRules => ({
+  maxAdvanceDays: venueMaxAdvance(venue),
+  holidays: new Set(venue?.settings?.holidays ?? []),
+});
+
+function validateSlotWindow(start: Date, end: Date, rules: SlotRules) {
   if (end.getTime() <= start.getTime()) fail('BAD_USER_INPUT', 'end_at must be after start_at');
   if (start.getTime() < Date.now() - 60_000) fail('BAD_USER_INPUT', 'Cannot create slots in the past');
-  if (start.getTime() > Date.now() + maxAdvanceDays * 24 * 60 * 60 * 1000) {
-    fail('BAD_USER_INPUT', `Slots can only be scheduled up to ${maxAdvanceDays} days in advance`);
+  if (start.getTime() > Date.now() + rules.maxAdvanceDays * 24 * 60 * 60 * 1000) {
+    fail('BAD_USER_INPUT', `Slots can only be scheduled up to ${rules.maxAdvanceDays} days in advance`);
+  }
+  if (rules.holidays.has(venueLocalYmd(start))) {
+    fail('BAD_REQUEST', `${venueLocalYmd(start)} is marked as a venue leave/holiday`);
   }
 }
 
@@ -118,14 +135,14 @@ async function createSlotsCore(
   venueId: string,
   ownerUserId: string,
   slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }>,
-  maxAdvanceDays: number
+  rules: SlotRules
 ) {
   if (!slots?.length) fail('BAD_USER_INPUT', 'At least one slot is required');
 
   const prepared = slots.map((s) => {
     const start = parseDate(s.start_at, 'start_at');
     const end = parseDate(s.end_at, 'end_at');
-    validateSlotWindow(start, end, maxAdvanceDays);
+    validateSlotWindow(start, end, rules);
     return { start, end, notes: (s.notes ?? '').trim(), price: normalizePrice(s.price) };
   });
 
@@ -164,15 +181,18 @@ async function createSlotsCore(
 async function updateSlotCore(
   slot: IVenueSlot,
   input: { start_at?: string; end_at?: string; notes?: string; block?: boolean; price?: number },
-  maxAdvanceDays: number
+  rules: SlotRules
 ) {
   if (slot.status === 'BOOKED') {
     fail('BAD_REQUEST', 'Booked slots cannot be edited. Cancel the pod first.');
   }
+  if (slot.status === 'PENDING') {
+    fail('BAD_REQUEST', 'This slot has a pending booking request. Approve or decline it first.');
+  }
   if (input.start_at !== undefined || input.end_at !== undefined) {
     const start = input.start_at ? parseDate(input.start_at, 'start_at') : slot.start_at;
     const end = input.end_at ? parseDate(input.end_at, 'end_at') : slot.end_at;
-    validateSlotWindow(start, end, maxAdvanceDays);
+    validateSlotWindow(start, end, rules);
     const overlap = await findOverlap(String(slot.venue_id), start, end, String(slot._id));
     if (overlap) {
       fail(
@@ -193,6 +213,9 @@ async function updateSlotCore(
 async function removeSlotCore(slot: IVenueSlot) {
   if (slot.status === 'BOOKED') {
     fail('BAD_REQUEST', 'Booked slots cannot be deleted. Cancel the pod first.');
+  }
+  if (slot.status === 'PENDING') {
+    fail('BAD_REQUEST', 'This slot has a pending booking request. Approve or decline it first.');
   }
   await (slot as any).deleteOne();
   return true;
@@ -216,13 +239,37 @@ async function matchingBulkSlots(
   to?: string | null,
   weekdays?: number[] | null
 ) {
-  const q: any = { venue_id: new Types.ObjectId(venueId), status: { $ne: 'BOOKED' } };
+  // Booked slots and pending booking requests are never bulk-touched.
+  const q: any = { venue_id: new Types.ObjectId(venueId), status: { $nin: ['BOOKED', 'PENDING'] } };
   q.start_at = { $gte: from ? parseDate(from, 'from') : new Date() };
   if (to) q.start_at.$lte = parseDate(to, 'to');
   const docs = await VenueSlotModel.find(q).sort({ start_at: 1 }).limit(2000);
   if (!weekdays?.length) return docs;
   const set = new Set(weekdays);
   return docs.filter((s) => set.has(s.start_at.getDay()));
+}
+
+/** Best-effort in-app note to the pod's hosts when a venue decides a request. */
+async function notifySlotDecision(pod: any, slot: IVenueSlot, approved: boolean, reason?: string | null) {
+  try {
+    const { notificationService } = await import('@modules/engagement/notification/notification.service');
+    const when = slot.start_at.toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' });
+    const title = approved ? 'Venue approved your slot' : 'Venue declined your slot';
+    const note = reason?.trim() ? ` Reason: ${reason.trim()}` : '';
+    const body = approved
+      ? `"${pod.pod_title}" is confirmed for ${when} — your pod is now live.`
+      : `"${pod.pod_title}" (${when}) was declined by the venue.${note}`;
+    await notificationService.create({
+      title,
+      body,
+      scope: 'USER',
+      target_user_ids: (pod.pod_hosts_id ?? []).map(String),
+      silent: false,
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[venueSlot] decision notification failed:', err);
+  }
 }
 
 export const venueSlotService = {
@@ -262,12 +309,16 @@ export const venueSlotService = {
     })
       .sort({ start_at: 1 })
       .limit(500);
-    return withVenueAndPod(docs);
+    // Leave/holiday dates are never bookable — hide any stragglers created
+    // before the date was marked as leave.
+    const holidays = new Set(venue!.settings?.holidays ?? []);
+    const open = docs.filter((s) => !holidays.has(venueLocalYmd(s.start_at)));
+    return withVenueAndPod(open);
   },
 
   async create(userId: string, input: { venue_id: string; slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }> }) {
     const venue = await ensureOwnedVenue(userId, input.venue_id);
-    return createSlotsCore(input.venue_id, userId, input.slots, venueMaxAdvance(venue));
+    return createSlotsCore(input.venue_id, userId, input.slots, venueSlotRules(venue));
   },
 
   // Admin create — slots are owned by the venue's actual owner, not the editor.
@@ -275,7 +326,7 @@ export const venueSlotService = {
     if (!Types.ObjectId.isValid(input.venue_id)) fail('BAD_USER_INPUT', 'Invalid venue_id');
     const venue = await VenueModel.findById(input.venue_id);
     if (!venue) fail('NOT_FOUND', 'Venue not found');
-    return createSlotsCore(input.venue_id, String(venue!.owner_user_id), input.slots, venueMaxAdvance(venue));
+    return createSlotsCore(input.venue_id, String(venue!.owner_user_id), input.slots, venueSlotRules(venue));
   },
 
   /** Insert generated slots, silently DROPPING any that fall in the past,
@@ -286,10 +337,12 @@ export const venueSlotService = {
     venueId: string,
     ownerUserId: string,
     slots: Array<{ start_at: string; end_at: string; notes?: string; price?: number }>,
-    maxAdvanceDays: number
+    maxAdvanceDays: number,
+    holidays: string[] = []
   ): Promise<number> {
     const now = Date.now();
     const maxTs = now + maxAdvanceDays * 24 * 60 * 60 * 1000;
+    const leaveDays = new Set(holidays);
     const prepared = slots
       .map((s) => ({
         start: new Date(s.start_at),
@@ -303,7 +356,8 @@ export const venueSlotService = {
           !Number.isNaN(p.end.getTime()) &&
           p.end.getTime() > p.start.getTime() &&
           p.start.getTime() >= now - 60_000 &&
-          p.start.getTime() <= maxTs
+          p.start.getTime() <= maxTs &&
+          !leaveDays.has(venueLocalYmd(p.start))
       )
       .sort((a, b) => a.start.getTime() - b.start.getTime());
     if (!prepared.length) return 0;
@@ -341,13 +395,13 @@ export const venueSlotService = {
     const slot = await loadSlot(slotId);
     if (String(slot.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
     const venue = await VenueModel.findById(slot.venue_id);
-    return updateSlotCore(slot, input, venueMaxAdvance(venue));
+    return updateSlotCore(slot, input, venueSlotRules(venue));
   },
 
   async adminUpdate(slotId: string, input: { start_at?: string; end_at?: string; notes?: string; block?: boolean; price?: number }) {
     const slot = await loadSlot(slotId);
     const venue = await VenueModel.findById(slot.venue_id);
-    return updateSlotCore(slot, input, venueMaxAdvance(venue));
+    return updateSlotCore(slot, input, venueSlotRules(venue));
   },
 
   async remove(userId: string, slotId: string) {
@@ -394,7 +448,7 @@ export const venueSlotService = {
     const venue = await ensureOwnedVenue(userId, input.venue_id);
     const slots = await matchingBulkSlots(input.venue_id, input.from, input.to, input.weekdays);
     if (!slots.length) return { matched: 0, affected: 0, skipped: 0 };
-    const maxAdvanceDays = venueMaxAdvance(venue);
+    const rules = venueSlotRules(venue);
 
     const set: { price?: number; status?: VenueSlotStatus } = {};
     if (input.set_price !== undefined) set.price = normalizePrice(input.set_price);
@@ -424,7 +478,7 @@ export const venueSlotService = {
       }
       let windowOk = true;
       try {
-        validateSlotWindow(start, end, maxAdvanceDays);
+        validateSlotWindow(start, end, rules);
       } catch {
         windowOk = false; // out of range / past → skip this slot, keep the batch
       }
@@ -440,6 +494,114 @@ export const venueSlotService = {
       affected += 1;
     }
     return { matched: slots.length, affected, skipped };
+  },
+
+  /** Atomic hold: AVAILABLE → PENDING for a pod that needs the venue owner's
+   * approval before going live (host booking another partner's venue). */
+  async holdForPod(slotId: string, venueId: string, podId: string): Promise<IVenueSlot> {
+    if (!Types.ObjectId.isValid(slotId)) fail('BAD_USER_INPUT', 'Invalid slot_id');
+    const updated = await VenueSlotModel.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(slotId),
+        venue_id: new Types.ObjectId(venueId),
+        status: 'AVAILABLE',
+      },
+      { $set: { status: 'PENDING', booked_by_pod_id: new Types.ObjectId(podId) } },
+      { new: true }
+    );
+    if (!updated) fail('CONFLICT', 'This slot is no longer available. Pick another slot.');
+    return updated!;
+  },
+
+  /** Owner: pending booking requests across their venues, newest first,
+   * joined with the requesting pod and its host's contact details. */
+  async listRequests(userId: string, venueId?: string | null) {
+    const q: any = { status: 'PENDING', owner_user_id: new Types.ObjectId(userId) };
+    if (venueId) {
+      if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue_id');
+      q.venue_id = new Types.ObjectId(venueId);
+    }
+    const slots = await VenueSlotModel.find(q).sort({ updated_at: -1 }).limit(200);
+    if (!slots.length) return [];
+    const podIds = slots.map((s) => s.booked_by_pod_id).filter(Boolean);
+    const pods = await PodModel.find({ _id: { $in: podIds } }).select(
+      'pod_title pod_description pod_hosts_id'
+    );
+    const podMap = new Map(pods.map((p) => [String(p._id), p]));
+    const hostIds = pods.flatMap((p) => (p.pod_hosts_id ?? []).slice(0, 1));
+    const hosts = await UserModel.find({ _id: { $in: hostIds } })
+      .select('profile.first_name profile.last_name auth.email auth.phone')
+      .lean();
+    const hostMap = new Map(hosts.map((u: any) => [String(u._id), u]));
+    const venues = await VenueModel.find({ _id: { $in: slots.map((s) => s.venue_id) } }).select('venue_name');
+    const venueMap = new Map(venues.map((v) => [String(v._id), v.venue_name || '']));
+
+    return slots
+      .filter((s) => s.booked_by_pod_id && podMap.has(String(s.booked_by_pod_id)))
+      .map((s) => {
+        const pod = podMap.get(String(s.booked_by_pod_id))!;
+        const host: any = hostMap.get(String((pod.pod_hosts_id ?? [])[0])) ?? null;
+        const hostName = host
+          ? `${host.profile?.first_name ?? ''} ${host.profile?.last_name ?? ''}`.trim()
+          : '';
+        return {
+          slot_id: String(s._id),
+          venue_id: String(s.venue_id),
+          venue_name: venueMap.get(String(s.venue_id)) ?? '',
+          start_at: s.start_at.toISOString(),
+          end_at: s.end_at.toISOString(),
+          price: s.price ?? 0,
+          requested_at: s.updated_at?.toISOString() ?? '',
+          pod_id: String(pod._id),
+          pod_title: pod.pod_title ?? '',
+          pod_description: pod.pod_description ?? '',
+          host_name: hostName,
+          host_email: host?.auth?.email ?? '',
+          host_phone: host?.auth?.phone ?? '',
+        };
+      });
+  },
+
+  /** Owner approves a pending request: slot PENDING → BOOKED, pod goes live. */
+  async approveRequest(userId: string, slotId: string) {
+    const slot = await loadSlot(slotId);
+    if (String(slot.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
+    if (slot.status !== 'PENDING' || !slot.booked_by_pod_id) {
+      fail('BAD_REQUEST', 'This slot has no pending booking request');
+    }
+    slot.status = 'BOOKED';
+    await (slot as any).save();
+    const pod = await PodModel.findByIdAndUpdate(
+      slot.booked_by_pod_id,
+      { $set: { venue_approval_status: 'APPROVED', is_active: true } },
+      { new: true }
+    );
+    if (pod) {
+      await notifySlotDecision(pod, slot, true);
+    }
+    return (await withVenueAndPod([slot]))[0];
+  },
+
+  /** Owner declines: slot frees back up, the pod stays offline as DECLINED. */
+  async declineRequest(userId: string, slotId: string, reason?: string | null) {
+    const slot = await loadSlot(slotId);
+    if (String(slot.owner_user_id) !== userId) fail('FORBIDDEN', 'Not your slot');
+    if (slot.status !== 'PENDING' || !slot.booked_by_pod_id) {
+      fail('BAD_REQUEST', 'This slot has no pending booking request');
+    }
+    const podId = slot.booked_by_pod_id;
+    slot.status = 'AVAILABLE';
+    slot.booked_by_pod_id = null;
+    await (slot as any).save();
+    const pod = await PodModel.findByIdAndUpdate(
+      podId,
+      { $set: { venue_approval_status: 'DECLINED', is_active: false, venue_slot_id: null } },
+      { new: true }
+    );
+    if (pod) {
+      await notifySlotDecision(pod, slot, false, reason);
+    }
+    return (await withVenueAndPod([slot]))[0];
   },
 
   // Atomic: only succeeds if the slot is currently AVAILABLE. Called from pod

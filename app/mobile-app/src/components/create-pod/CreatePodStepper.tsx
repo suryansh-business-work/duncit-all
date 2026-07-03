@@ -4,6 +4,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { useVenueSlots } from '@/hooks/useVenueSlots';
 import {
   STEP_FIELDS,
   STEP_TITLES,
@@ -13,26 +14,20 @@ import {
 } from './create-pod.form';
 import type {
   CreatePodClub,
+  CreatePodFinance,
   CreatePodFormValues,
+  CreatePodHostCategory,
   CreatePodLocation,
   CreatePodProduct,
   CreatePodVenue,
-  VenueLocationRef,
 } from './create-pod.types';
-import { LocationStep } from './steps/LocationStep';
-import { ClubStep } from './steps/ClubStep';
-import { WhenWhereStep } from './steps/WhenWhereStep';
-import { AboutStep } from './steps/AboutStep';
-import { OffersStep } from './steps/OffersStep';
-import { PerksStep } from './steps/PerksStep';
-import { ProductsStep } from './steps/ProductsStep';
-import { PaymentStep } from './steps/PaymentStep';
+import { BasicsStep } from './steps/BasicsStep';
+import { LocationClubStep } from './steps/LocationClubStep';
+import { VenueSlotStep } from './steps/VenueSlotStep';
+import { PricingStep } from './steps/PricingStep';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 export type DraftPayload = ReturnType<typeof serializeDraft>;
-
-/** Index of the optional "Add Products" step inside the full step list. */
-const PRODUCTS_STEP_INDEX = 6;
 
 interface Props {
   initialValues: CreatePodFormValues;
@@ -40,25 +35,30 @@ interface Props {
   initialDraftId: string | null;
   clubs: CreatePodClub[];
   locations: CreatePodLocation[];
-  venueLocations: VenueLocationRef[];
   venues: CreatePodVenue[];
   products: CreatePodProduct[];
+  hostCategories: CreatePodHostCategory[];
+  viewerUserId: string;
+  finance: CreatePodFinance;
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;
   onPublish: (draftId: string, input: ReturnType<typeof buildCreatePodInput>) => Promise<void>;
 }
 
-/** 8-step host Create Pod stepper (mobile twin of mWeb): per-step validation
- * gates Next, the draft autosaves on a timer + every step change, and step 7
- * publishes the pod. */
+/** 4-step host Create Pod stepper (mobile twin of mWeb): Basics →
+ * Location/Category/Club → Venue & Slot (from the venue partner's availability
+ * calendar) → Pricing. Per-step validation gates Next, the draft autosaves on
+ * a timer + every step change, and the last step publishes the pod. */
 export function CreatePodStepper({
   initialValues,
   initialStep,
   initialDraftId,
   clubs,
   locations,
-  venueLocations,
   venues,
   products,
+  hostCategories,
+  viewerUserId,
+  finance,
   onSaveDraft,
   onPublish,
 }: Readonly<Props>) {
@@ -67,34 +67,26 @@ export function CreatePodStepper({
     defaultValues: initialValues,
     mode: 'onTouched',
   });
-  // When products are gated off, the "Add Products" step is removed so the
-  // stepper skips straight from Perks to Payment. Titles/fields are filtered in
-  // lockstep to keep their indices aligned with the rendered steps.
+  // Products are a flag-gated section inside the Pricing step (not a step of
+  // their own), so the step list never changes shape.
   const showProducts = useFeatureFlag('is_product_visible');
-  const dropProductsStep = <T,>(list: T[]): T[] =>
-    showProducts ? list : list.filter((_, index) => index !== PRODUCTS_STEP_INDEX);
-  const stepTitles = dropProductsStep(STEP_TITLES);
-  const stepFields = dropProductsStep(STEP_FIELDS);
 
-  const [step, setStep] = useState(initialStep);
+  const [step, setStep] = useState(Math.min(initialStep, STEP_TITLES.length - 1));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const draftIdRef = useRef(initialDraftId);
   const dupTitleRef = useRef(false);
-  const isLast = step === stepTitles.length - 1;
+  const isLast = step === STEP_TITLES.length - 1;
   const submitLabel = busy ? 'Creating…' : 'Create Pod';
 
-  // With products gated off, drop any product values a stale draft may carry and
-  // clamp the active step so a draft saved on the (now-removed) Products step
-  // can't land out of range.
+  // With products gated off, drop any product values a stale draft may carry.
   useEffect(() => {
     if (showProducts) return;
     if (form.getValues('products_enabled') || form.getValues('product_requests').length > 0) {
       form.setValue('products_enabled', false);
       form.setValue('product_requests', []);
     }
-    if (step > stepTitles.length - 1) setStep(stepTitles.length - 1);
-  }, [showProducts, step, stepTitles.length]); // eslint-disable-line react-hooks/exhaustive-deps
+  }, [showProducts]); // eslint-disable-line react-hooks/exhaustive-deps
 
   // A duplicate-title error is shown inline on the title field; clear it as soon
   // as the host edits the title so the stale message can't linger (DIFF-7).
@@ -128,7 +120,7 @@ export function CreatePodStepper({
     persistSafely(target);
   };
   const next = async () => {
-    if (await form.trigger(stepFields[step])) goTo(step + 1);
+    if (await form.trigger(STEP_FIELDS[step])) goTo(step + 1);
   };
   const submit = form.handleSubmit(async (values) => {
     setBusy(true);
@@ -142,7 +134,7 @@ export function CreatePodStepper({
       if (/already exists/i.test(message)) {
         dupTitleRef.current = true;
         form.setError('pod_title', { type: 'duplicate', message });
-        setStep(1);
+        setStep(0);
       } else {
         setError(message);
       }
@@ -151,11 +143,11 @@ export function CreatePodStepper({
     }
   });
 
-  // Clubs load for the picked location: a club qualifies when any of its
-  // meetup venues sits in that city (virtual pods see every club).
+  // Clubs for the picked location: a club qualifies when any venue partner in
+  // that city hosts it, or when it has no venue links (virtual sees all).
   const locationId = form.watch('location_id');
   const podMode = form.watch('pod_mode');
-  const venueLocationById = new Map(venueLocations.map((venue) => [venue.id, venue.location_id]));
+  const venueLocationById = new Map(venues.map((venue) => [venue.id, venue.location_id]));
   const clubsForLocation =
     podMode === 'VIRTUAL' || !locationId
       ? clubs
@@ -165,32 +157,47 @@ export function CreatePodStepper({
           return venueIds.some((venueId) => venueLocationById.get(venueId) === locationId);
         });
 
-  const steps = dropProductsStep([
-    <LocationStep key="location" form={form} locations={locations} />,
-    <ClubStep key="club" form={form} clubs={clubsForLocation} />,
-    <WhenWhereStep key="when" form={form} clubs={clubsForLocation} venues={venues} />,
-    <AboutStep key="about" form={form} />,
-    <OffersStep key="offers" form={form} />,
-    <PerksStep key="perks" form={form} />,
-    <ProductsStep key="products" form={form} products={products} />,
-    <PaymentStep key="payment" form={form} />,
-  ]);
+  // The picked slot feeds the Pricing panel (slot price + GST + earnings).
+  const venueId = form.watch('venue_id');
+  const slotId = form.watch('venue_slot_id');
+  const { slots } = useVenueSlots(podMode === 'PHYSICAL' ? venueId : '');
+  const selectedSlot = slots.find((slot) => slot.id === slotId) ?? null;
+
+  const steps = [
+    <BasicsStep key="basics" form={form} />,
+    <LocationClubStep
+      key="location"
+      form={form}
+      clubs={clubsForLocation}
+      locations={locations}
+      hostCategories={hostCategories}
+    />,
+    <VenueSlotStep key="venue" form={form} venues={venues} viewerUserId={viewerUserId} />,
+    <PricingStep
+      key="pricing"
+      form={form}
+      products={products}
+      showProducts={showProducts}
+      selectedSlot={selectedSlot}
+      finance={finance}
+    />,
+  ];
 
   return (
     <YStack gap={16} padding={16} paddingBottom={48}>
       <YStack gap={6}>
         <Text fontSize={12.5} fontWeight="800" color="$muted">
-          Step {step + 1} of {stepTitles.length}
+          Step {step + 1} of {STEP_TITLES.length}
         </Text>
         <Text fontSize={17} fontWeight="900" color="$color">
-          {stepTitles[step]}
+          {STEP_TITLES[step]}
         </Text>
         <XStack height={6} borderRadius={999} backgroundColor="$borderColor" overflow="hidden">
           <YStack
             testID="create-pod-progress"
             height="100%"
             backgroundColor="$primary"
-            width={`${((step + 1) / stepTitles.length) * 100}%`}
+            width={`${((step + 1) / STEP_TITLES.length) * 100}%`}
           />
         </XStack>
       </YStack>

@@ -12,7 +12,14 @@ import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { sendEmail } from '@services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
-import { VENUE_CAPACITY_ITEM_LIMIT, VENUE_DOC_TYPES, VENUE_TYPES } from './venue.constants';
+import {
+  VENUE_AMENITIES,
+  VENUE_CAPACITY_ITEM_LIMIT,
+  VENUE_DOC_TYPES,
+  VENUE_FACILITIES,
+  VENUE_SECURITY,
+  VENUE_TYPES,
+} from './venue.constants';
 
 const fail = (code: string, message: string): never => {
   throw new GraphQLError(message, { extensions: { code } });
@@ -157,6 +164,8 @@ const toPub = (v: IVenue) => ({
   venue_category: toVenueCategoryPub(v.venue_category),
   description: v.description ?? '',
   amenities: v.amenities ?? [],
+  facilities: v.facilities ?? [],
+  security: v.security ?? [],
   cover_image_url: v.cover_image_url ?? '',
   gallery: v.gallery ?? [],
   location_id: v.location_id ? String(v.location_id) : null,
@@ -377,6 +386,9 @@ export const venueService = {
       venue_types: VENUE_TYPES,
       doc_types: VENUE_DOC_TYPES,
       capacity_item_limit: VENUE_CAPACITY_ITEM_LIMIT,
+      amenities: VENUE_AMENITIES,
+      facilities: VENUE_FACILITIES,
+      security: VENUE_SECURITY,
     };
   },
   async getMine(userId: string, venueId?: string | null) {
@@ -456,6 +468,41 @@ export const venueService = {
     await v.save();
     return toPub(v);
   },
+  /** Owner edit of an APPROVED venue — only the whitelisted fields change.
+   * Documents are append-only: existing entries are never replaced or removed. */
+  async updateApproved(userId: string, venueId: string, input: any) {
+    if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue id');
+    const v = await VenueModel.findById(venueId);
+    if (!v) fail('NOT_FOUND', 'Venue not found');
+    if (String(v!.owner_user_id) !== String(userId)) fail('FORBIDDEN', 'Not your venue');
+    if (v!.status !== 'APPROVED') {
+      fail('BAD_REQUEST', 'Only approved venues can be edited here');
+    }
+    if (input.description !== undefined) v!.description = String(input.description ?? '').slice(0, 2000);
+    if (input.cover_image_url !== undefined) v!.cover_image_url = String(input.cover_image_url ?? '');
+    if (input.gallery !== undefined) {
+      v!.gallery = (input.gallery as unknown[]).map((u) => String(u)).filter(Boolean);
+    }
+    const capacityItems = normalizeCapacityItems(input.capacity_items);
+    if (capacityItems !== null) {
+      if (capacityItems.length === 0) fail('BAD_USER_INPUT', 'Keep at least one capacity entry');
+      v!.capacity_items = capacityItems as any;
+      v!.capacity = capacityItems.reduce((sum, item) => sum + item.capacity, 0);
+    }
+    if (input.add_documents !== undefined) {
+      const added = (input.add_documents as any[])
+        .filter((d) => d && d.type && d.url)
+        .map((d) => ({ type: String(d.type).trim(), url: String(d.url).trim(), uploaded_at: new Date() }));
+      v!.documents = [...(v!.documents ?? []), ...added] as any;
+    }
+    if (input.owner_name !== undefined) v!.owner_name = String(input.owner_name ?? '').trim();
+    if (input.owner_phone !== undefined) v!.owner_phone = String(input.owner_phone ?? '').trim();
+    if (input.owner_dob !== undefined) v!.owner_dob = input.owner_dob ? new Date(input.owner_dob) : null;
+    if (input.owner_address !== undefined) v!.owner_address = String(input.owner_address ?? '');
+    await v!.save();
+    return toPub(v!);
+  },
+
   async approve(id: string, notes?: string, tags?: string[]) {
     const v = await VenueModel.findById(id);
     if (!v) throw new GraphQLError('Venue not found', { extensions: { code: 'NOT_FOUND' } });

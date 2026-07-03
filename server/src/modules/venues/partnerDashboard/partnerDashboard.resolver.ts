@@ -8,5 +8,9 @@ export const partnerDashboardResolvers = {
       const user = requireAuth(ctx);
       return partnerDashboardService.get(user.id, args);
     },
+    venueOwnerStats: async (_p: unknown, args: { venue_id?: string | null }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return partnerDashboardService.venueStats(user.id, args.venue_id);
+    },
   },
 };

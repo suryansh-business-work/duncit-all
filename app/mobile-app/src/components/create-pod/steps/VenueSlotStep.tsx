@@ -1,6 +1,6 @@
 import { Controller } from 'react-hook-form';
 import { format } from 'date-fns';
-import { Text, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { MapEmbed } from '@/components/MapEmbed';
@@ -14,6 +14,18 @@ import { parseDateTimeText } from '../create-pod.form';
 import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod.types';
 
 const DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
+
+type VenueSpace = { label: string; capacity: number };
+
+/** The venue's bookable spaces: its named capacity items, or the whole venue as
+ * a single option when only a total capacity is set. Picking one fills spots. */
+const venueSpaces = (venue: CreatePodVenue | null): VenueSpace[] => {
+  if (!venue) return [];
+  const items = venue.capacity_items ?? [];
+  if (items.length > 0) return items;
+  if (venue.capacity) return [{ label: 'Whole venue', capacity: venue.capacity }];
+  return [];
+};
 
 interface Props {
   form: CreatePodForm;
@@ -34,7 +46,18 @@ export function VenueSlotStep({ form, venues, viewerUserId }: Readonly<Props>) {
   const cityVenues = venues.filter((venue) => !locationId || venue.location_id === locationId);
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
   const ownVenue = Boolean(selectedVenue && selectedVenue.owner_user_id === viewerUserId);
+  const spaces = venueSpaces(selectedVenue);
+  const spaceLabel = watch('venue_space_label');
   const { slots, isLoading } = useVenueSlots(mode === 'PHYSICAL' ? venueId : '');
+
+  // Each chip carries its own space, so picking one fills spots with no lookup.
+  const pickSpace = (space: VenueSpace) => {
+    setValue('venue_space_label', space.label, { shouldDirty: true });
+    setValue('no_of_spots_text', String(space.capacity), {
+      shouldDirty: true,
+      shouldValidate: true,
+    });
+  };
 
   const duration = formatDurationBetween(
     parseDateTimeText(watch('pod_date_time_text')),
@@ -124,6 +147,7 @@ export function VenueSlotStep({ form, venues, viewerUserId }: Readonly<Props>) {
             onChange={(next) => {
               field.onChange(next);
               setValue('venue_slot_id', '', { shouldDirty: true });
+              setValue('venue_space_label', '', { shouldDirty: true });
             }}
             error={fieldState.error?.message}
             emptyHint="No venue partners are available in this location yet — pick another location or go virtual."
@@ -131,6 +155,62 @@ export function VenueSlotStep({ form, venues, viewerUserId }: Readonly<Props>) {
           />
         )}
       />
+      {selectedVenue ? (
+        <YStack
+          gap={8}
+          padding={12}
+          borderRadius={12}
+          backgroundColor="$surface"
+          borderWidth={1}
+          borderColor="$borderColor"
+        >
+          <Text testID="create-pod-venue-capacity" fontSize={13} fontWeight="800" color="$color">
+            {selectedVenue.venue_type ? `${selectedVenue.venue_type} · ` : ''}Total capacity:{' '}
+            {selectedVenue.capacity ?? 0}
+          </Text>
+          {spaces.length > 0 ? (
+            <YStack gap={6}>
+              <Text fontSize={14} fontWeight="500" color="$color">
+                Space &amp; capacity
+              </Text>
+              <XStack gap={6} flexWrap="wrap">
+                {spaces.map((space) => {
+                  const selected = spaceLabel === space.label;
+                  return (
+                    <XStack
+                      key={space.label}
+                      testID={`create-pod-space-${space.label}`}
+                      role="button"
+                      aria-label={`${space.label} ${space.capacity} spots`}
+                      aria-pressed={selected}
+                      onPress={() => pickSpace(space)}
+                      paddingHorizontal={12}
+                      paddingVertical={7}
+                      borderRadius={999}
+                      borderWidth={1}
+                      borderColor={selected ? '$primary' : '$borderColor'}
+                      backgroundColor={selected ? '$primary' : 'transparent'}
+                      pressStyle={{ opacity: 0.85 }}
+                    >
+                      <Text
+                        fontSize={12.5}
+                        fontWeight="800"
+                        color={selected ? '$onPrimary' : '$color'}
+                      >
+                        {space.label} · {space.capacity} spots
+                      </Text>
+                    </XStack>
+                  );
+                })}
+              </XStack>
+            </YStack>
+          ) : (
+            <Text fontSize={12} color="$muted">
+              This venue hasn’t listed capacity — set No. of spots manually on the next step.
+            </Text>
+          )}
+        </YStack>
+      ) : null}
       {selectedVenue ? (
         <Controller
           control={control}

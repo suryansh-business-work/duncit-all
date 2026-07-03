@@ -17,7 +17,6 @@ export {
   STEP_TITLES,
 } from './create-pod.form';
 export {
-  OCCURRENCES,
   POD_TYPES,
   blankCreatePodForm,
   type CreatePodClub,

@@ -9,7 +9,6 @@ import { PlaceChargesField } from '../PlaceChargesField';
 import { PricePanel } from '../PricePanel';
 import { ProductRequestsField } from '../ProductRequestsField';
 import {
-  OCCURRENCES,
   POD_TYPES,
   type CreatePodFinance,
   type CreatePodForm,
@@ -25,8 +24,8 @@ interface Props {
   finance: CreatePodFinance;
 }
 
-/** Step 4 — pricing, occurrence, spots, terms, optional products, plus the
- * slot-cost / GST / potential-earnings panel. mWeb twin. */
+/** Step 4 — pricing, spots, terms, optional products, plus the slot-cost / GST
+ * / potential-earnings panel. mWeb twin. */
 export function PricingStep({
   form,
   products,
@@ -63,19 +62,6 @@ export function PricingStep({
           />
         )}
       />
-      <Controller
-        control={control}
-        name="pod_occurrence"
-        render={({ field }) => (
-          <ChipSelectField
-            label="Occurrence"
-            options={[...OCCURRENCES]}
-            value={field.value}
-            onChange={field.onChange}
-            testID="create-pod-occurrence"
-          />
-        )}
-      />
       <FormTextField
         control={control}
         name="pod_amount_text"
@@ -88,7 +74,7 @@ export function PricingStep({
         name="no_of_spots_text"
         label="No. of spots"
         keyboardType="numeric"
-        hint="How many attendees can join"
+        hint="Auto-filled from the venue space you pick — adjust if needed"
       />
       <PricePanel
         finance={finance}

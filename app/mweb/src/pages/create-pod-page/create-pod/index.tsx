@@ -8,7 +8,6 @@ export {
 } from './create-pod.form';
 export {
   blankCreatePodForm,
-  OCCURRENCES,
   POD_TYPES,
   type CreatePodClub,
   type CreatePodFormValues,

@@ -3,7 +3,7 @@ import { Alert, FormControlLabel, MenuItem, Stack, Switch, TextField } from '@mu
 import PlaceChargesField from '../fields/PlaceChargesField';
 import ProductRequestsField from '../fields/ProductRequestsField';
 import PricePanel from '../PricePanel';
-import { OCCURRENCES, POD_TYPES, type CreatePodForm, type CreatePodProduct, type CreatePodSlot } from '../create-pod.types';
+import { POD_TYPES, type CreatePodForm, type CreatePodProduct, type CreatePodSlot } from '../create-pod.types';
 
 interface Props {
   form: CreatePodForm;
@@ -12,8 +12,8 @@ interface Props {
   selectedSlot: CreatePodSlot | null;
 }
 
-/** Step 4 — pricing, occurrence, spots, terms, optional products, plus the
- * slot-cost / GST / potential-earnings panel. */
+/** Step 4 — pricing, spots, terms, optional products, plus the slot-cost / GST
+ * / potential-earnings panel. */
 export default function PricingStep({ form, products, showProducts, selectedSlot }: Readonly<Props>) {
   const {
     control,
@@ -29,39 +29,26 @@ export default function PricingStep({ form, products, showProducts, selectedSlot
 
   return (
     <Stack spacing={2}>
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <Controller
-          control={control}
-          name="pod_type"
-          render={({ field }) => (
-            <TextField
-              select
-              label="Pod type"
-              fullWidth
-              value={field.value}
-              onChange={(e) => {
-                field.onChange(e.target.value);
-                if (e.target.value.includes('FREE')) setValue('pod_amount', 0);
-              }}
-            >
-              {POD_TYPES.map((type) => (
-                <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
-              ))}
-            </TextField>
-          )}
-        />
-        <Controller
-          control={control}
-          name="pod_occurrence"
-          render={({ field }) => (
-            <TextField select label="Occurrence" fullWidth value={field.value} onChange={field.onChange}>
-              {OCCURRENCES.map((occurrence) => (
-                <MenuItem key={occurrence.value} value={occurrence.value}>{occurrence.label}</MenuItem>
-              ))}
-            </TextField>
-          )}
-        />
-      </Stack>
+      <Controller
+        control={control}
+        name="pod_type"
+        render={({ field }) => (
+          <TextField
+            select
+            label="Pod type"
+            fullWidth
+            value={field.value}
+            onChange={(e) => {
+              field.onChange(e.target.value);
+              if (e.target.value.includes('FREE')) setValue('pod_amount', 0);
+            }}
+          >
+            {POD_TYPES.map((type) => (
+              <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>
+            ))}
+          </TextField>
+        )}
+      />
       <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
         <TextField
           label="Amount (₹)"
@@ -77,7 +64,7 @@ export default function PricingStep({ form, products, showProducts, selectedSlot
           type="number"
           fullWidth
           error={!!errors.no_of_spots}
-          helperText={errors.no_of_spots?.message ?? 'How many attendees can join'}
+          helperText={errors.no_of_spots?.message ?? 'Auto-filled from the venue space you pick — adjust if needed'}
           {...register('no_of_spots', { valueAsNumber: true })}
         />
       </Stack>

@@ -1,8 +1,21 @@
 import { clubService } from './club.service';
+import { venueService } from '@modules/venues/venue/venue.service';
 import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN'];
+
+type ClubMatchParent = {
+  location_id?: string | null;
+  super_category_id?: string | null;
+  category_id?: string | null;
+};
+
+const matchCriteria = (parent: ClubMatchParent) => ({
+  location_id: parent.location_id ?? null,
+  super_category_id: parent.super_category_id ?? null,
+  category_id: parent.category_id ?? null,
+});
 
 export const clubResolvers = {
   Club: {
@@ -11,6 +24,10 @@ export const clubResolvers = {
     followers_count: (parent: { id: string }) => clubService.followersCount(parent.id),
     rating: (parent: { id: string }) => clubService.getRating(parent.id),
     ratings_count: (parent: { id: string }) => clubService.getRatingsCount(parent.id),
+    matched_venues: (parent: ClubMatchParent) =>
+      venueService.findMatchingForClub(matchCriteria(parent)),
+    matched_venues_count: (parent: ClubMatchParent) =>
+      venueService.countMatchingForClub(matchCriteria(parent)),
   },
   Query: {
     clubs: async (_p: unknown, args: { filter?: any }) => clubService.list(args.filter),

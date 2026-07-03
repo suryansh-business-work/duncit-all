@@ -95,7 +95,7 @@ export default function ClubsTable({
                     )}
                   </TableCell>
                   <TableCell>
-                    <Typography variant="body2">{c.meetup_venues_id?.length ?? 0}</Typography>
+                    <Typography variant="body2">{c.matched_venues_count ?? 0}</Typography>
                   </TableCell>
                   <TableCell>
                     <Stack direction="row" spacing={0.5}>

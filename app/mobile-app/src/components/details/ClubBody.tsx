@@ -129,7 +129,7 @@ export function ClubBody({
         <Stat value={members.length} label="members" />
         <Stat value={pods.length} label="pods" />
         <Stat value={moments.length} label="moments" />
-        <Stat value={club.meetup_venues_id.length} label="venues" />
+        <Stat value={club.matched_venues_count} label="venues" />
       </XStack>
       {members.length > 0 ? (
         <YStack gap={8} testID="club-members">

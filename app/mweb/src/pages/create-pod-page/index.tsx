@@ -17,7 +17,8 @@ const CREATE_POD_OPTIONS = gql`
     clubs(filter: { is_active: true }) {
       id
       club_name
-      meetup_venues_id
+      location_id
+      super_category_id
       club_description
       club_feature_images_and_videos { url type }
     }

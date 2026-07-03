@@ -232,6 +232,8 @@ export const venueTypeDefs = /* GraphQL */ `
     venues(status: VenueStatus): [Venue!]!
     venue(venue_doc_id: ID!): Venue
     publicVenues: [Venue!]!
+    "APPROVED, active venues that auto-match a club by location + Super/Sub category (admin Club form). Empty when no location is given."
+    matchingVenues(location_id: ID!, super_category_id: ID, category_id: ID): [Venue!]!
     venueRegistrationConfig: VenueRegistrationConfig!
   }
 

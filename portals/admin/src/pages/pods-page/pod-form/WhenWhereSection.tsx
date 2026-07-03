@@ -15,7 +15,7 @@ export default function WhenWhereSection({ clubs, venues }: Readonly<Props>) {
   const venueId = useWatch({ control, name: 'venue_id' });
   const startDateTime = useWatch({ control, name: 'pod_date_time' });
   const linkedVenueIds = new Set(
-    clubs.find((club) => club.id === clubId)?.meetup_venues_id ?? []
+    (clubs.find((club) => club.id === clubId)?.matched_venues ?? []).map((v: any) => v.id)
   );
   const clubVenues = venues.filter((venue) => linkedVenueIds.has(venue.id));
   const selectedVenue = venues.find((venue) => venue.id === venueId);

@@ -246,7 +246,7 @@ export const ClubDetailsDocument = gql(`
       }
       club_whats_app_community_link
       club_whats_app_group_link
-      meetup_venues_id
+      matched_venues_count
       category_id
       super_category_id
       rating

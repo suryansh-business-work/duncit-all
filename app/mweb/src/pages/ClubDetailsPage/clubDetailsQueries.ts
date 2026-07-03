@@ -26,7 +26,19 @@ export const CLUB_BY_SLUG = gql`
       club_whats_app_community_link
       club_whats_app_announcement_link
       club_whats_app_group_link
-      meetup_venues_id
+      matched_venues {
+        id
+        venue_name
+        address_line1
+        address_line2
+        locality
+        city
+        state
+        country
+        postal_code
+        lat
+        lng
+      }
       followers_count
       rating
       ratings_count
@@ -64,19 +76,6 @@ export const CLUB_DETAILS_RELATED = gql`
         url
         type
       }
-    }
-    publicVenues {
-      id
-      venue_name
-      address_line1
-      address_line2
-      locality
-      city
-      state
-      country
-      postal_code
-      lat
-      lng
     }
   }
 `;

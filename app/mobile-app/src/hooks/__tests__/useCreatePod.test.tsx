@@ -8,7 +8,7 @@ const mockRequest = graphqlRequest as jest.Mock;
 
 const options = {
   me: { user_id: 'u1', roles: ['HOST'], selected_location_id: 'l2' },
-  clubs: [{ id: 'c1', club_name: 'Runners', meetup_venues_id: [] }],
+  clubs: [{ id: 'c1', club_name: 'Runners', location_id: 'l2', super_category_id: null }],
   locations: [
     { id: 'l1', location_name: 'Pune', city: 'Pune' },
     { id: 'l2', location_name: 'Mumbai', city: 'Mumbai' },

@@ -143,19 +143,22 @@ export function CreatePodStepper({
     }
   });
 
-  // Clubs for the picked location: a club qualifies when any venue partner in
-  // that city hosts it, or when it has no venue links (virtual sees all).
+  // Clubs are now scoped by the host's category + the picked location (clubs
+  // carry their own location_id + super_category). Physical pods narrow to the
+  // city; virtual pods keep the category filter only (no city).
   const locationId = form.watch('location_id');
   const podMode = form.watch('pod_mode');
-  const venueLocationById = new Map(venues.map((venue) => [venue.id, venue.location_id]));
-  const clubsForLocation =
-    podMode === 'VIRTUAL' || !locationId
-      ? clubs
-      : clubs.filter((club) => {
-          const venueIds = (club.meetup_venues_id ?? []).filter(Boolean) as string[];
-          if (venueIds.length === 0) return true;
-          return venueIds.some((venueId) => venueLocationById.get(venueId) === locationId);
-        });
+  const hostSuperIds = new Set(
+    hostCategories.map((category) => category.super_category_id).filter(Boolean),
+  );
+  const clubMatchesHostCategory = (club: { super_category_id?: string | null }) =>
+    hostSuperIds.size === 0 ||
+    (!!club.super_category_id && hostSuperIds.has(club.super_category_id));
+  const clubsForLocation = clubs.filter((club) => {
+    if (!clubMatchesHostCategory(club)) return false;
+    if (podMode === 'VIRTUAL' || !locationId) return true;
+    return club.location_id === locationId;
+  });
 
   // The picked slot feeds the Pricing panel (slot price + GST + earnings).
   const venueId = form.watch('venue_id');

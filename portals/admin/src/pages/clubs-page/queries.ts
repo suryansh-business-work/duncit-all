@@ -26,7 +26,8 @@ export const CLUBS = gql`
         question
         answer
       }
-      meetup_venues_id
+      location_id
+      matched_venues_count
       category_id
       super_category_id
       is_active
@@ -44,16 +45,30 @@ export const CATEGORIES = gql`
     }
   }
 `;
-export const APPROVED_VENUES = gql`
-  query ApprovedVenuesForClubs {
-    venues(status: APPROVED) {
+export const LOCATIONS = gql`
+  query LocationsForClubs {
+    locations {
+      id
+      location_name
+      city
+      state
+    }
+  }
+`;
+/** APPROVED, active venues that auto-match a club by location + Super/Sub
+ * category — shown read-only in the Club form so admins see the live linkage. */
+export const MATCHING_VENUES = gql`
+  query MatchingVenuesForClub($location_id: ID!, $super_category_id: ID, $category_id: ID) {
+    matchingVenues(
+      location_id: $location_id
+      super_category_id: $super_category_id
+      category_id: $category_id
+    ) {
       id
       venue_name
-      venue_type
       locality
       city
       state
-      postal_code
     }
   }
 `;
@@ -89,9 +104,9 @@ export interface ClubForm {
   club_description: string;
   category_id: string;
   super_category_id: string;
+  location_id: string;
   feature_text: string;
   moments_text: string;
-  meetup_venues_id: string[];
   community_link: string;
   announcement_link: string;
   group_link: string;
@@ -108,9 +123,9 @@ export const blankForm: ClubForm = {
   club_description: '',
   category_id: '',
   super_category_id: '',
+  location_id: '',
   feature_text: '',
   moments_text: '',
-  meetup_venues_id: [],
   community_link: '',
   announcement_link: '',
   group_link: '',

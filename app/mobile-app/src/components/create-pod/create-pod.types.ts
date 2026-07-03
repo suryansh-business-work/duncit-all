@@ -92,7 +92,8 @@ export const blankCreatePodForm: CreatePodFormValues = {
 export interface CreatePodClub {
   id: string;
   club_name: string;
-  meetup_venues_id?: (string | null)[] | null;
+  location_id?: string | null;
+  super_category_id?: string | null;
   club_description?: string | null;
   club_feature_images_and_videos?: { url: string; type?: string | null }[] | null;
 }
@@ -133,6 +134,7 @@ export interface CreatePodSlot {
 
 /** Host's onboarded category — auto-selected (read-only) on the pod. */
 export interface CreatePodHostCategory {
+  super_category_id?: string | null;
   super_category_name: string;
   category_name: string;
   sub_category_name: string;

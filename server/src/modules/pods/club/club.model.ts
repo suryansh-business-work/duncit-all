@@ -25,7 +25,12 @@ export interface IClub extends Document {
   perks: string[];
   values: string[];
   faqs: IClubFaq[];
+  /** @deprecated Venues now auto-match a club by location + category; kept for
+   *  backward compatibility with pre-sync data. No longer set from the admin. */
   meetup_venues_id: string[];
+  /** City the club operates in (ref Location). Venues auto-match when they sit
+   *  in this location and share the club's Super + Sub category. */
+  location_id: Types.ObjectId | null;
   /** Hosts explicitly linked to this club by an admin (Bug 5). When empty the
    *  Club Detail page falls back to the hosts of the club's pods. */
   host_ids: Types.ObjectId[];
@@ -70,6 +75,7 @@ const clubSchema = new Schema<IClub>(
     values: { type: [String], default: [] },
     faqs: { type: [faqSchema], default: [] },
     meetup_venues_id: { type: [String], default: [] },
+    location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null, index: true },
     host_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
     category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },

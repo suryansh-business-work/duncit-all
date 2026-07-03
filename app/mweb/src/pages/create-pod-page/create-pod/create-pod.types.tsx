@@ -90,7 +90,8 @@ export const blankCreatePodForm: CreatePodFormValues = {
 export interface CreatePodClub {
   id: string;
   club_name: string;
-  meetup_venues_id?: string[] | null;
+  location_id?: string | null;
+  super_category_id?: string | null;
   club_description?: string | null;
   club_feature_images_and_videos?: { url: string; type?: string | null }[] | null;
 }

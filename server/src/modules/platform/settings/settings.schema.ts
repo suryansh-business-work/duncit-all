@@ -87,6 +87,11 @@ export const settingsTypeDefs = gql`
     portals_logo_url: String!
     portals_splash_url: String!
     portals_splash_type: String!
+    website_header_logo_url: String!
+    website_footer_logo_url: String!
+    website_favicon_url: String!
+    android_app_url: String!
+    ios_app_url: String!
     updated_at: String
   }
 
@@ -117,6 +122,11 @@ export const settingsTypeDefs = gql`
     portals_logo_url: String
     portals_splash_url: String
     portals_splash_type: String
+    website_header_logo_url: String
+    website_footer_logo_url: String
+    website_favicon_url: String
+    android_app_url: String
+    ios_app_url: String
   }
 
   extend type Query {

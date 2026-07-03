@@ -66,6 +66,11 @@ const BRANDING_FIELDS = [
   "portals_logo_url",
   "portals_splash_url",
   "portals_splash_type",
+  "website_header_logo_url",
+  "website_footer_logo_url",
+  "website_favicon_url",
+  "android_app_url",
+  "ios_app_url",
 ] as const;
 type BrandingField = (typeof BRANDING_FIELDS)[number];
 
@@ -96,6 +101,11 @@ const brandingToPub = (doc: any) => ({
   portals_logo_url: doc.portals_logo_url ?? "",
   portals_splash_url: doc.portals_splash_url ?? "",
   portals_splash_type: doc.portals_splash_type ?? "IMAGE",
+  website_header_logo_url: doc.website_header_logo_url ?? "",
+  website_footer_logo_url: doc.website_footer_logo_url ?? "",
+  website_favicon_url: doc.website_favicon_url ?? "",
+  android_app_url: doc.android_app_url ?? "",
+  ios_app_url: doc.ios_app_url ?? "",
   updated_at: doc.updated_at?.toISOString?.() ?? "",
 });
 

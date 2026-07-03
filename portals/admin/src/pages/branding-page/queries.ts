@@ -26,6 +26,11 @@ export const BRANDING_FIELDS = `
   portals_logo_url
   portals_splash_url
   portals_splash_type
+  website_header_logo_url
+  website_footer_logo_url
+  website_favicon_url
+  android_app_url
+  ios_app_url
   updated_at
 `;
 
@@ -79,6 +84,11 @@ export interface BrandingFormState {
   portals_logo_url: string;
   portals_splash_url: string;
   portals_splash_type: string;
+  website_header_logo_url: string;
+  website_footer_logo_url: string;
+  website_favicon_url: string;
+  android_app_url: string;
+  ios_app_url: string;
 }
 
 export type PlatformPrefix = 'mweb' | 'mobile' | 'portals';
@@ -109,4 +119,9 @@ export const emptyBrandingForm: BrandingFormState = {
   portals_logo_url: '',
   portals_splash_url: '',
   portals_splash_type: 'IMAGE',
+  website_header_logo_url: '',
+  website_footer_logo_url: '',
+  website_favicon_url: '',
+  android_app_url: '',
+  ios_app_url: '',
 };

@@ -27,6 +27,7 @@ export const HOSTS = gql`
       is_active
       submitted_at
       reviewer_notes
+      host_commission_pct
       host_categories {
         super_category_id
         category_id
@@ -75,6 +76,12 @@ export const UPDATE_HOST = gql`
     ) {
       id
     }
+  }
+`;
+
+export const SET_HOST_DEDUCTIONS = gql`
+  mutation SetHostDeductions($user_id: ID!, $host_commission_pct: Float!) {
+    setHostDeductions(user_id: $user_id, host_commission_pct: $host_commission_pct)
   }
 `;
 

@@ -2,6 +2,7 @@ import { Types } from 'mongoose';
 import { hostService } from '../../host.service';
 import { HostModel } from '../../host.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
+import { UserModel } from '@modules/access/user/user.model';
 
 /** Seed a Super → Category → Sub chain; returns the three ids. */
 async function seedCategoryTree(prefix: string) {
@@ -184,5 +185,40 @@ describe('hostService integration', () => {
         request_no: 'X',
       })
     ).rejects.toThrow(/host not found/i);
+  });
+});
+
+describe('host commission enrichment (Onboarded Hosts console)', () => {
+  it('exposes the per-host commission override only on the gated queries', async () => {
+    const user = await UserModel.create({
+      auth: { email: 'commission-host@x.com' },
+      profile: { first_name: 'Meera' },
+      finance: { host_commission_pct: 12.5 },
+    });
+    const noOverride = await UserModel.create({
+      auth: { email: 'default-host@x.com' },
+      profile: { first_name: 'Dev' },
+    });
+    const h1 = await HostModel.create({ user_id: user._id, full_name: 'Meera', status: 'APPROVED' });
+    await HostModel.create({ user_id: noOverride._id, full_name: 'Dev', status: 'APPROVED' });
+    // Host row whose user doc has been deleted → falls back to 0 (inherit).
+    await HostModel.create({ user_id: new Types.ObjectId(), full_name: 'Ghost', status: 'APPROVED' });
+
+    const gated = await hostService.list({ status: 'APPROVED' }, { withCommission: true });
+    const meera = gated.find((r) => r.user_id === String(user._id));
+    const dev = gated.find((r) => r.user_id === String(noOverride._id));
+    const ghost = gated.find((r) => r.full_name === 'Ghost');
+    expect(meera?.host_commission_pct).toBe(12.5);
+    expect(dev?.host_commission_pct).toBe(0); // 0 = inherit default
+    expect(ghost?.host_commission_pct).toBe(0);
+
+    // publicHosts path (no opts) never leaks the commission.
+    const publicRows = await hostService.list({ status: 'APPROVED' });
+    expect(publicRows.find((r) => r.user_id === String(user._id))?.host_commission_pct).toBeNull();
+
+    // getById (gated host query) is enriched too.
+    const byId = await hostService.getById(String(h1._id));
+    expect(byId?.host_commission_pct).toBe(12.5);
+    expect(await hostService.getById(new Types.ObjectId().toString())).toBeNull();
   });
 });

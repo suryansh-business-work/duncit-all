@@ -1,4 +1,5 @@
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
 import { generateProductInvoicePdf, type ProductInvoiceLine } from '@services/payout/product-invoice.pdf';
@@ -20,16 +21,25 @@ export async function sendProductInvoicesForPod(pod: any, fs: any) {
 
   const productIds = requests.map((r: any) => r.product_id);
   const products = await InventoryProductModel.find({ _id: { $in: productIds } })
-    .select('commission_pct listing_submitted_by_id listing_submitted_by_name')
+    .select('commission_pct brand_id listing_submitted_by_id listing_submitted_by_name')
     .lean();
   const byId = new Map(products.map((p: any) => [String(p._id), p]));
+
+  // Brand-level commission overrides (Onboarded E-Commerce Brands): when set
+  // (> 0) the brand's %% wins over the per-product pct and the global default.
+  const brandIds = [...new Set(products.map((p: any) => String(p.brand_id ?? '')).filter(Boolean))];
+  const brands = brandIds.length
+    ? await EcommBrandModel.find({ _id: { $in: brandIds } }).select('product_commission_pct').lean()
+    : [];
+  const brandPctById = new Map(brands.map((b: any) => [String(b._id), b.product_commission_pct ?? 0]));
 
   const bySeller = new Map<string, SellerBucket>();
   for (const r of requests) {
     const p = byId.get(String(r.product_id));
     const sellerId = p?.listing_submitted_by_id;
     if (!sellerId) continue;
-    const commissionPct = clampPct(p.commission_pct || fs.default_product_commission_pct);
+    const brandPct = p.brand_id ? brandPctById.get(String(p.brand_id)) ?? 0 : 0;
+    const commissionPct = clampPct(brandPct || p.commission_pct || fs.default_product_commission_pct);
     const gross = round2(r.total_cost ?? Number(r.unit_cost || 0) * Number(r.quantity || 0));
     const commission = round2((gross * commissionPct) / 100);
     const bucket: SellerBucket = bySeller.get(sellerId) ?? { name: p.listing_submitted_by_name || 'Seller', lines: [] };

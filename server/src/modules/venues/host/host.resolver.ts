@@ -3,7 +3,8 @@ import { hostService } from './host.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
-const ADMIN_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
+// Onboarding console (Onboarded Hosts) reviews and configures hosts too.
+const ADMIN_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
 
 function uid(ctx: GraphQLContext) {
   if (!ctx.user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
@@ -15,7 +16,7 @@ export const hostResolvers = {
     myHost: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => hostService.getMine(uid(ctx)),
     hosts: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_REVIEW);
-      return hostService.list({ status: args.status });
+      return hostService.list({ status: args.status }, { withCommission: true });
     },
     host: async (_p: unknown, args: { host_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_REVIEW);

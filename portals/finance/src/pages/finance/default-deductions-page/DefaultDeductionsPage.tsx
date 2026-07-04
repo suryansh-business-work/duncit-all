@@ -14,7 +14,6 @@ import {
 import PercentIcon from '@mui/icons-material/Percent';
 import { DEDUCTION_SETTINGS, UPDATE_DEDUCTIONS } from './queries';
 import DeductionSlider from './DeductionSlider';
-import DeductionOverridesSection from './deduction-overrides';
 
 interface Deductions {
   gst_pct: number;
@@ -107,7 +106,7 @@ export default function DefaultDeductionsPage() {
             Default Deductions
           </Typography>
           <Typography variant="body2" color="text.secondary">
-            Global defaults used at settlement. Override per host, venue or product in their detail pages.
+            Global defaults used at settlement. Override per host, venue or brand from the Onboarding portal.
           </Typography>
         </Box>
       </Stack>
@@ -117,7 +116,8 @@ export default function DefaultDeductionsPage() {
           How pod money flows: the customer price is GST-inclusive. GST is extracted first, then the
           platform fee comes off the net; the venue is paid its fixed booked slot price from the
           remaining pool and the host keeps the remainder — there are no share percentages. Duncit's
-          commission is then deducted from each party's amount.
+          commission is then deducted from each party's amount. Per-host, per-venue and per-brand
+          commission overrides are managed in the Onboarding portal's Onboarded lists.
         </Alert>
 
         <DeductionCard title="GST" subtitle="Tax extracted from the GST-inclusive customer payment.">
@@ -146,16 +146,6 @@ export default function DefaultDeductionsPage() {
           <Button variant="contained" size="large" onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Save Deductions'}
           </Button>
-        </Box>
-
-        <Box>
-          <Typography variant="h6" fontWeight={700}>
-            Per-entity Overrides
-          </Typography>
-          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-            Override the commission for a specific host or venue. 0 = inherit the global default.
-          </Typography>
-          <DeductionOverridesSection />
         </Box>
       </Stack>
 

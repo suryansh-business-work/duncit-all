@@ -23,6 +23,10 @@ export interface IEcommBrand extends Document {
   contact_person: string;
   contact_email: string;
   contact_phone: string;
+  // Duncit commission % override applied to ALL this brand's product sales
+  // (0 = inherit: per-product pct, then the global default). Set from the
+  // Onboarding console (Onboarded E-Commerce Brands).
+  product_commission_pct: number;
   // Legal / business
   registered_business_name: string;
   gstin: string;
@@ -76,6 +80,7 @@ const ecommBrandSchema = new Schema<IEcommBrand>(
     contact_person: { type: String, default: '' },
     contact_email: { type: String, default: '' },
     contact_phone: { type: String, default: '' },
+    product_commission_pct: { type: Number, default: 0, min: 0, max: 100 },
     registered_business_name: { type: String, default: '' },
     gstin: { type: String, default: '' },
     pan: { type: String, default: '' },

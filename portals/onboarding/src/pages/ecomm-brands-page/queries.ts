@@ -32,6 +32,7 @@ export const ECOMM_BRANDS = gql`
       upi_id
       documents { type url }
       tags
+      product_commission_pct
       status
       reviewer_notes
       submitted_at
@@ -64,6 +65,15 @@ export const ADMIN_UPDATE_ECOMM_BRAND = gql`
   ) {
     adminUpdateEcommBrand(brand_doc_id: $id, input: $input, status: $status) {
       id
+    }
+  }
+`;
+
+export const SET_BRAND_COMMISSION = gql`
+  mutation SetBrandCommission($id: ID!, $product_commission_pct: Float!) {
+    setBrandCommission(brand_doc_id: $id, product_commission_pct: $product_commission_pct) {
+      id
+      product_commission_pct
     }
   }
 `;

@@ -57,5 +57,14 @@ export const ecommBrandResolvers = {
       requireRole(ctx, BRAND_REVIEW);
       return ecommBrandService.adminUpdate(args.brand_doc_id, args.input, args.status);
     },
+    setBrandCommission: (
+      _p: unknown,
+      args: { brand_doc_id: string; product_commission_pct: number },
+      ctx: GraphQLContext
+    ) => {
+      // Onboarding console + finance manage the brand-level commission.
+      requireRole(ctx, [...BRAND_REVIEW, 'FINANCE_MANAGER']);
+      return ecommBrandService.setCommission(args.brand_doc_id, args.product_commission_pct);
+    },
   },
 };

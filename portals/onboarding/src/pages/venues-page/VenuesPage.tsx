@@ -88,7 +88,7 @@ export default function VenuesPage() {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
 
       {loading && !data ? (
-        <TableSkeleton columns={7} />
+        <TableSkeleton columns={8} />
       ) : (
         <VenuesTable venues={data?.venues ?? []} onEdit={setEditing} onReview={openReview} />
       )}

@@ -45,6 +45,41 @@ describe('useNotifications', () => {
     expect(result.current.unreadCount).toBe(1);
   });
 
+  it('drops content-less notifications (blank title and body)', async () => {
+    mockRequest.mockImplementation((doc: unknown) => {
+      if (doc === MobileNotificationsDocument) {
+        return Promise.resolve({
+          myNotifications: [
+            {
+              id: 'k1',
+              read_at: null,
+              created_at: '2026-06-01',
+              notification: { id: 'a', title: 'Has title', body: '' },
+            },
+            {
+              id: 'k2',
+              read_at: '2026-06-01',
+              created_at: '2026-06-01',
+              notification: { id: 'b', title: '   ', body: '  ' },
+            },
+            {
+              id: 'k3',
+              read_at: '2026-06-01',
+              created_at: '2026-06-01',
+              notification: { id: 'c', title: '', body: 'Has body' },
+            },
+          ],
+          myUnreadNotificationCount: 1,
+        });
+      }
+      return Promise.resolve(true);
+    });
+    const { result } = renderHook(() => useNotifications());
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    // k2 (blank title AND body) is filtered out; the other two survive.
+    expect(result.current.notifs.map((n) => n.id)).toEqual(['k1', 'k3']);
+  });
+
   it('swallows a load error and still settles', async () => {
     mockRequest.mockReset().mockRejectedValue(new Error('x'));
     const { result } = renderHook(() => useNotifications());

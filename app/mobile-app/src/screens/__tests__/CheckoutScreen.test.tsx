@@ -39,15 +39,20 @@ const order = {
 };
 
 function fill() {
+  fireEvent.changeText(screen.getByTestId('field-full_name'), 'Riya Sharma');
   fireEvent.changeText(screen.getByTestId('field-email'), 'r@d.com');
   fireEvent.changeText(screen.getByTestId('field-phone_number'), '9876543210');
-  fireEvent.changeText(screen.getByTestId('field-billing_address'), '12 Main Street, Pune');
+  fireEvent.changeText(screen.getByTestId('field-line1'), '12 Main Street');
+  fireEvent.changeText(screen.getByTestId('field-city'), 'Pune');
+  fireEvent.changeText(screen.getByTestId('field-state'), 'Maharashtra');
+  fireEvent.changeText(screen.getByTestId('field-pincode'), '411001');
 }
 
 const baseHook = (overrides: Record<string, unknown> = {}) => ({
   finance,
   pod,
   me: null,
+  initialValues: {},
   availableCoupons: [],
   isLoading: false,
   pay,

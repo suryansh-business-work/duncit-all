@@ -479,5 +479,37 @@ describe("userService integration", () => {
       expect(me!.state).toBe("Maharashtra");
       expect(me!.pincode).toBe("400001");
     });
+
+    it("saves and returns the structured main address via updateMyProfile", async () => {
+      const reg = await userService.register({
+        first_name: "Main",
+        email: "mainaddr@duncit.com",
+        password: "StrongPass123",
+        dob: new Date("1990-01-01").toISOString(),
+      } as any);
+
+      // A fresh account has an empty (but non-null) address.
+      const before = await userService.me(reg.user.user_id);
+      expect(before!.address).toEqual({
+        line1: "",
+        line2: "",
+        landmark: "",
+        city: "",
+        state: "",
+        pincode: "",
+        country: "India",
+      });
+
+      const updated = await userService.updateMyProfile(reg.user.user_id, {
+        address: { line1: "  8 Residency Rd ", city: "Bengaluru", state: "Karnataka", pincode: "560025" },
+      } as any);
+      expect(updated!.address.line1).toBe("8 Residency Rd");
+      expect(updated!.address.city).toBe("Bengaluru");
+      expect(updated!.address.pincode).toBe("560025");
+      expect(updated!.address.country).toBe("India");
+
+      const me = await userService.me(reg.user.user_id);
+      expect(me!.address.state).toBe("Karnataka");
+    });
   });
 });

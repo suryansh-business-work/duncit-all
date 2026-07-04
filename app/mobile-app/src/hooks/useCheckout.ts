@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 import type { ResultOf } from '@graphql-typed-document-node/core';
@@ -8,14 +8,16 @@ import {
   MobileCheckoutInvoiceDocument,
   MobileCheckoutMeDocument,
   MobileCheckoutPodDocument,
+  MobileCheckoutSaveAddressDocument,
   MobileCreateRazorpayOrderDocument,
   MobileDummyCheckoutDocument,
   MobilePreviewCouponDocument,
   MobilePublicFinanceDocument,
   MobileVerifyRazorpayDocument,
 } from '@/graphql/checkout';
+import type { CheckoutBillingInput } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
-import type { CheckoutFormValues } from '@/forms/checkout';
+import type { CheckoutFormValues, CheckoutMainAddress } from '@/forms/checkout';
 
 export type FinanceSettings = ResultOf<typeof MobilePublicFinanceDocument>['publicFinanceSettings'];
 export type CheckoutPod = ResultOf<typeof MobileCheckoutPodDocument>['pod'];
@@ -37,6 +39,50 @@ export interface RazorpaySignature {
 }
 
 const CHECKOUT_URL = 'duncit-mobile://checkout';
+
+/** Prefill the checkout form from the loaded user — contact + main-address seed
+ * + the "same as my main address" default (on when a main address exists). */
+export function buildCheckoutInitialValues(me: CheckoutMe): Partial<CheckoutFormValues> {
+  const address = me?.address;
+  return {
+    full_name: [me?.first_name, me?.last_name].filter(Boolean).join(' '),
+    email: me?.email ?? '',
+    phone_extension: me?.phone_extension ?? '+91',
+    phone_number: me?.phone_number ?? '',
+    same_as_main: !!address?.line1,
+    line1: address?.line1 ?? '',
+    line2: address?.line2 ?? '',
+    landmark: address?.landmark ?? '',
+    city: address?.city ?? '',
+    state: address?.state ?? '',
+    pincode: address?.pincode ?? '',
+    country: address?.country || 'India',
+  };
+}
+
+/** Build the structured billing block sent on pay. Uses the saved main address
+ * when "same as main" is on, else the entered fields; billing email is sent only
+ * when it differs from the contact email, and GSTIN only when non-empty. */
+export function buildCheckoutBilling(
+  values: CheckoutFormValues,
+  mainAddress: CheckoutMainAddress | null,
+): CheckoutBillingInput {
+  const source = values.same_as_main && mainAddress?.line1 ? mainAddress : values;
+  const gstin = values.gstin.trim();
+  const billingEmail = values.billing_email.trim();
+  const contactEmail = values.email.trim();
+  return {
+    line1: source.line1,
+    line2: source.line2,
+    landmark: source.landmark,
+    city: source.city,
+    state: source.state,
+    pincode: source.pincode,
+    country: source.country || 'India',
+    ...(gstin ? { gstin } : {}),
+    ...(billingEmail && billingEmail !== contactEmail ? { email: billingEmail } : {}),
+  };
+}
 
 /** Loads checkout context (finance + pod + me) and runs the dummy payment +
  * invoice download. RN twin of mWeb's CheckoutPage data layer. */
@@ -72,6 +118,8 @@ export function useCheckout(podId: string) {
     };
   }, [podId]);
 
+  const initialValues = useMemo(() => buildCheckoutInitialValues(me), [me]);
+
   const contactInput = (
     values: CheckoutFormValues,
     amount: number,
@@ -80,19 +128,43 @@ export function useCheckout(podId: string) {
     pod_id: podId || null,
     amount,
     description: `Pod booking · ${pod?.pod_title ?? 'Booking'}`,
+    contact_name: values.full_name.trim(),
     contact_email: values.email,
     contact_phone_extension: values.phone_extension,
     contact_phone_number: values.phone_number,
-    billing_address: values.billing_address,
+    billing: buildCheckoutBilling(values, me?.address ?? null),
     checkout_url: CHECKOUT_URL,
     coupon_code: couponCode || null,
   });
+
+  /** Persist the entered billing address as the main address when opted in. */
+  const maybeSaveMainAddress = async (values: CheckoutFormValues) => {
+    if (!values.save_as_main) return;
+    await graphqlRequest(
+      MobileCheckoutSaveAddressDocument,
+      {
+        input: {
+          address: {
+            line1: values.line1.trim(),
+            line2: values.line2.trim(),
+            landmark: values.landmark.trim(),
+            city: values.city.trim(),
+            state: values.state.trim(),
+            pincode: values.pincode.trim(),
+            country: values.country.trim() || 'India',
+          },
+        },
+      },
+      { auth: true },
+    );
+  };
 
   const pay = async (
     values: CheckoutFormValues,
     amount: number,
     couponCode?: string | null,
   ): Promise<CheckoutPayment> => {
+    await maybeSaveMainAddress(values);
     const data = await graphqlRequest(
       MobileDummyCheckoutDocument,
       {
@@ -111,6 +183,7 @@ export function useCheckout(podId: string) {
     amount: number,
     couponCode?: string | null,
   ): Promise<RazorpayOrder> => {
+    await maybeSaveMainAddress(values);
     const data = await graphqlRequest(
       MobileCreateRazorpayOrderDocument,
       { input: contactInput(values, amount, couponCode) },
@@ -160,6 +233,7 @@ export function useCheckout(podId: string) {
     finance,
     pod,
     me,
+    initialValues,
     availableCoupons,
     isLoading,
     pay,

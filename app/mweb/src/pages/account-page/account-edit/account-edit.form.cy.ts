@@ -57,6 +57,18 @@ describe('accountEditSchema', () => {
     expect(firstError(accountEditSchema.safeParse({ ...valid, dob: '02/01/1990' }))).toMatch(/YYYY-MM-DD/);
     expect(firstError(accountEditSchema.safeParse({ ...valid, dob: '3000-01-01' }))).toMatch(/past date/i);
   });
+
+  it('allows an empty main address (optional) and a valid pincode', () => {
+    expect(accountEditSchema.safeParse(valid).success).toBe(true);
+    expect(
+      accountEditSchema.safeParse({ ...valid, address_line1: '5 Residency Road', address_pincode: '560025' })
+        .success,
+    ).toBe(true);
+  });
+
+  it('rejects a malformed main-address pincode', () => {
+    expect(firstError(accountEditSchema.safeParse({ ...valid, address_pincode: '12' }))).toMatch(/pincode/i);
+  });
 });
 
 describe('toDobInput', () => {
@@ -80,6 +92,21 @@ describe('toUpdateProfileInput', () => {
   it('omits an empty dob but forwards a provided one (bug 1)', () => {
     expect(toUpdateProfileInput(valid).dob).toBeUndefined();
     expect(toUpdateProfileInput({ ...valid, dob: '1990-01-02' }).dob).toBe('1990-01-02');
+  });
+
+  it('forwards the structured main address', () => {
+    const out = toUpdateProfileInput({
+      ...valid,
+      address_line1: '5 Residency Road',
+      address_city: 'Bengaluru',
+      address_state: 'Karnataka',
+      address_pincode: '560025',
+      address_country: 'India',
+    });
+    expect(out.address.line1).toBe('5 Residency Road');
+    expect(out.address.city).toBe('Bengaluru');
+    expect(out.address.pincode).toBe('560025');
+    expect(out.address.country).toBe('India');
   });
 });
 

@@ -59,6 +59,7 @@ export function CheckoutScreen() {
     finance,
     pod,
     me,
+    initialValues,
     availableCoupons,
     isLoading,
     pay,
@@ -196,11 +197,8 @@ export function CheckoutScreen() {
             originalTotal={breakup.total}
           />
           <CheckoutForm
-            initialValues={{
-              email: me?.email ?? '',
-              phone_extension: me?.phone_extension ?? '+91',
-              phone_number: me?.phone_number ?? '',
-            }}
+            initialValues={initialValues}
+            mainAddress={me?.address ?? null}
             loading={submitting}
             errorMessage={error}
             dummyMode={dummyMode}

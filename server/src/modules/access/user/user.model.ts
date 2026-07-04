@@ -61,11 +61,30 @@ const authSchema = new Schema(
   { _id: false }
 );
 
+// Structured postal address — the user's saved "main address". Distinct from
+// the flat geo fields (city/state/zone drive which city's pods they browse);
+// this is the mailing/billing address that prefills checkout. All optional so
+// existing users have an empty address until they fill it.
+const addressSchema = new Schema(
+  {
+    line1: { type: String, default: '', trim: true, maxlength: 200 },
+    line2: { type: String, default: '', trim: true, maxlength: 200 },
+    landmark: { type: String, default: '', trim: true, maxlength: 160 },
+    city: { type: String, default: '', trim: true, maxlength: 120 },
+    state: { type: String, default: '', trim: true, maxlength: 120 },
+    pincode: { type: String, default: '', trim: true, maxlength: 12 },
+    country: { type: String, default: 'India', trim: true, maxlength: 80 },
+  },
+  { _id: false }
+);
+
 const profileSchema = new Schema(
   {
     first_name: { type: String, required: true, trim: true },
     // Optional: simplified signup collects a single "Name"; surname may be empty.
     last_name: { type: String, required: false, trim: true },
+    // The saved main postal address (prefills checkout; billing may differ).
+    address: { type: addressSchema, default: () => ({}) },
     // Optional: token-only Google signup creates the account before dob is known.
     dob: { type: Date, required: false },
     country: { type: String, default: 'India' },

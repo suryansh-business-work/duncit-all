@@ -11,7 +11,7 @@ import LockIcon from '@mui/icons-material/Lock';
 import { alpha, useTheme } from '@mui/material/styles';
 import type { Control } from 'react-hook-form';
 import type { AvailableCoupon, CheckoutForm, CouponPreview } from './queries';
-import { CheckoutFields } from './checkout';
+import { CheckoutFields, type PostalAddressParts } from './checkout';
 import CouponField from './CouponField';
 import { formatMoney } from './checkoutMath';
 
@@ -23,6 +23,8 @@ interface Props {
   total: number;
   currency: string;
   dummyMode: boolean;
+  mainAddress: PostalAddressParts | null;
+  hasMainAddress: boolean;
   effectiveTotal: number;
   coupon: CouponPreview | null;
   couponCode: string;
@@ -42,6 +44,8 @@ export default function PaymentDetailsCard({
   total,
   currency,
   dummyMode,
+  mainAddress,
+  hasMainAddress,
   effectiveTotal,
   coupon,
   couponCode,
@@ -89,6 +93,8 @@ export default function PaymentDetailsCard({
             fieldSx={fieldSx}
             dummyMode={dummyMode}
             selectMenuProps={selectMenuProps}
+            mainAddress={mainAddress}
+            hasMainAddress={hasMainAddress}
           />
           <CouponField
             code={couponCode}

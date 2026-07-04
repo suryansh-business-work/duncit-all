@@ -32,6 +32,27 @@ export const userTypeDefs = gql`
     url: String!
   }
 
+  "A structured postal address — the user's saved main address / order billing address."
+  type PostalAddress {
+    line1: String!
+    line2: String!
+    landmark: String!
+    city: String!
+    state: String!
+    pincode: String!
+    country: String!
+  }
+
+  input PostalAddressInput {
+    line1: String
+    line2: String
+    landmark: String
+    city: String
+    state: String
+    pincode: String
+    country: String
+  }
+
   type User {
     user_id: ID!
     first_name: String!
@@ -56,6 +77,8 @@ export const userTypeDefs = gql`
     state: String
     pincode: String
     zone: String
+    "The saved main postal address (prefills checkout billing)."
+    address: PostalAddress!
     "The location the user last selected in the header (persisted choice)."
     selected_location_id: ID
 
@@ -255,6 +278,8 @@ export const userTypeDefs = gql`
     phone_extension: String
     whatsapp_number: String
     whatsapp_extension: String
+    "The user's saved main postal address."
+    address: PostalAddressInput
   }
 
   type SavedPodState {

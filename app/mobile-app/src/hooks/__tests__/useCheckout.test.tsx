@@ -7,6 +7,7 @@ import {
   MobileCheckoutInvoiceDocument,
   MobileCheckoutMeDocument,
   MobileCheckoutPodDocument,
+  MobileCheckoutSaveAddressDocument,
   MobileCreateRazorpayOrderDocument,
   MobileDummyCheckoutDocument,
   MobilePreviewCouponDocument,
@@ -14,7 +15,12 @@ import {
   MobileVerifyRazorpayDocument,
 } from '@/graphql/checkout';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useCheckout } from '@/hooks/useCheckout';
+import {
+  buildCheckoutBilling,
+  buildCheckoutInitialValues,
+  useCheckout,
+  type CheckoutMe,
+} from '@/hooks/useCheckout';
 import type { CheckoutFormValues } from '@/forms/checkout';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
@@ -31,10 +37,21 @@ const isAvailable = Sharing.isAvailableAsync as jest.Mock;
 const share = Sharing.shareAsync as jest.Mock;
 
 const values: CheckoutFormValues = {
+  full_name: 'Riya Sharma',
   email: 'r@d.com',
   phone_extension: '+91',
   phone_number: '9876543210',
-  billing_address: '12 Main Street',
+  same_as_main: false,
+  line1: '12 Main Street',
+  line2: 'Apt 4',
+  landmark: 'Near Park',
+  city: 'Pune',
+  state: 'Maharashtra',
+  pincode: '411001',
+  country: 'India',
+  billing_email: '',
+  gstin: '',
+  save_as_main: false,
   simulate_failure: false,
 };
 
@@ -176,13 +193,16 @@ describe('useCheckout', () => {
         input: expect.objectContaining({
           pod_id: 'p1',
           amount: 500,
+          contact_name: 'Riya Sharma',
           contact_email: 'r@d.com',
-          billing_address: '12 Main Street',
+          billing: expect.objectContaining({ line1: '12 Main Street', city: 'Pune' }),
           simulate_failure: false,
         }),
       }),
       { auth: true },
     );
+    const dummyCall = mockRequest.mock.calls.find((c) => c[0] === MobileDummyCheckoutDocument);
+    expect('billing_address' in dummyCall![1].input).toBe(false);
   });
 
   it('creates a Razorpay order then verifies the signature', async () => {
@@ -333,5 +353,169 @@ describe('useCheckout', () => {
         'Sharing is not available',
       );
     });
+  });
+
+  it('defaults same-as-main off when there is no saved main address', async () => {
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.initialValues.same_as_main).toBe(false);
+    expect(result.current.initialValues.country).toBe('India');
+  });
+
+  it('prefills initial values from the saved main address', async () => {
+    mockRequest.mockReset().mockImplementation((doc: unknown) => {
+      if (doc === MobileCheckoutMeDocument)
+        return Promise.resolve({
+          me: {
+            user_id: 'u1',
+            first_name: 'Riya',
+            last_name: 'Sharma',
+            email: 'r@d.com',
+            phone_number: '9876543210',
+            phone_extension: '+91',
+            address: {
+              line1: '9 Palm Road',
+              line2: 'Flat 2',
+              landmark: 'Near Lake',
+              city: 'Delhi',
+              state: 'Delhi',
+              pincode: '110001',
+              country: 'India',
+            },
+          },
+        });
+      return route(doc);
+    });
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.initialValues).toMatchObject({
+      full_name: 'Riya Sharma',
+      same_as_main: true,
+      line1: '9 Palm Road',
+      city: 'Delhi',
+    });
+  });
+
+  it('saves the entered address as the main address when opted in', async () => {
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.pay({ ...values, save_as_main: true }, 500);
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      MobileCheckoutSaveAddressDocument,
+      {
+        input: { address: expect.objectContaining({ line1: '12 Main Street', country: 'India' }) },
+      },
+      { auth: true },
+    );
+  });
+
+  it('defaults the saved address country to India when left empty', async () => {
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.pay({ ...values, save_as_main: true, country: '' }, 500);
+    });
+    const saveCall = mockRequest.mock.calls.find((c) => c[0] === MobileCheckoutSaveAddressDocument);
+    expect(saveCall![1].input.address.country).toBe('India');
+  });
+
+  it('does not save the main address on a normal pay', async () => {
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.pay(values, 500);
+    });
+    expect(mockRequest).not.toHaveBeenCalledWith(
+      MobileCheckoutSaveAddressDocument,
+      expect.anything(),
+      expect.anything(),
+    );
+  });
+});
+
+describe('buildCheckoutInitialValues', () => {
+  it('returns empty defaults when there is no user', () => {
+    expect(buildCheckoutInitialValues(null)).toMatchObject({
+      full_name: '',
+      same_as_main: false,
+      line1: '',
+      country: 'India',
+    });
+  });
+
+  it('seeds contact + address from the loaded user', () => {
+    const me = {
+      first_name: 'Riya',
+      last_name: 'Sharma',
+      email: 'r@d.com',
+      phone_extension: '+91',
+      phone_number: '9876543210',
+      address: {
+        line1: 'A',
+        line2: 'B',
+        landmark: 'C',
+        city: 'D',
+        state: 'E',
+        pincode: 'F',
+        country: 'IN',
+      },
+    } as unknown as CheckoutMe;
+    expect(buildCheckoutInitialValues(me)).toMatchObject({
+      full_name: 'Riya Sharma',
+      same_as_main: true,
+      line1: 'A',
+      country: 'IN',
+    });
+  });
+});
+
+describe('buildCheckoutBilling', () => {
+  const mainAddress = {
+    line1: 'Main St 1',
+    line2: 'L2',
+    landmark: 'LM',
+    city: 'Delhi',
+    state: 'Delhi',
+    pincode: '110001',
+    country: 'India',
+  };
+
+  it('uses the entered fields when not same-as-main (no gstin/email)', () => {
+    const billing = buildCheckoutBilling(values, mainAddress);
+    expect(billing).toMatchObject({ line1: '12 Main Street', city: 'Pune' });
+    expect(billing.gstin).toBeUndefined();
+    expect(billing.email).toBeUndefined();
+  });
+
+  it('uses the saved main address when same-as-main is on', () => {
+    const billing = buildCheckoutBilling({ ...values, same_as_main: true }, mainAddress);
+    expect(billing).toMatchObject({ line1: 'Main St 1', city: 'Delhi' });
+  });
+
+  it('falls back to entered fields when same-as-main but no saved address', () => {
+    expect(buildCheckoutBilling({ ...values, same_as_main: true }, null).line1).toBe(
+      '12 Main Street',
+    );
+    expect(
+      buildCheckoutBilling({ ...values, same_as_main: true }, { ...mainAddress, line1: '' }).line1,
+    ).toBe('12 Main Street');
+  });
+
+  it('includes GSTIN + a distinct billing email; omits an equal email', () => {
+    const withExtras = buildCheckoutBilling(
+      { ...values, gstin: '27AAAAA0000A1Z', billing_email: 'bill@d.com' },
+      null,
+    );
+    expect(withExtras.gstin).toBe('27AAAAA0000A1Z');
+    expect(withExtras.email).toBe('bill@d.com');
+    expect(
+      buildCheckoutBilling({ ...values, billing_email: 'r@d.com' }, null).email,
+    ).toBeUndefined();
+  });
+
+  it('defaults the country to India when empty', () => {
+    expect(buildCheckoutBilling({ ...values, country: '' }, null).country).toBe('India');
   });
 });

@@ -44,6 +44,15 @@ export const MobileAccountDocument = gql(`
       city
       state
       country
+      address {
+        line1
+        line2
+        landmark
+        city
+        state
+        pincode
+        country
+      }
       dob
       roles
       status
@@ -99,6 +108,15 @@ export const MobileUpdateProfileDocument = gql(`
       whatsapp_number
       whatsapp_extension
       profile_photo
+      address {
+        line1
+        line2
+        landmark
+        city
+        state
+        pincode
+        country
+      }
     }
   }
 `);

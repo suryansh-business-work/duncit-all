@@ -21,6 +21,32 @@ export const CHECKOUT_ME = gql`
       email
       phone_number
       phone_extension
+      address {
+        line1
+        line2
+        landmark
+        city
+        state
+        pincode
+        country
+      }
+    }
+  }
+`;
+
+export const UPDATE_MY_PROFILE = gql`
+  mutation CheckoutUpdateMyProfile($input: UpdateMyProfileInput!) {
+    updateMyProfile(input: $input) {
+      user_id
+      address {
+        line1
+        line2
+        landmark
+        city
+        state
+        pincode
+        country
+      }
     }
   }
 `;
@@ -183,9 +209,20 @@ export interface CheckoutState {
 }
 
 export interface CheckoutForm {
+  full_name: string;
   email: string;
   phone_extension: string;
   phone_number: string;
-  billing_address: string;
+  same_as_main: boolean;
+  line1: string;
+  line2: string;
+  landmark: string;
+  city: string;
+  state: string;
+  pincode: string;
+  country: string;
+  billing_email: string;
+  gstin: string;
+  save_as_main: boolean;
   simulate_failure: boolean;
 }

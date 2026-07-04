@@ -7,7 +7,13 @@ import { Alert, Backdrop, Box, Button, Chip, IconButton, Skeleton, Stack, Typogr
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { alpha, useTheme, type Theme } from '@mui/material/styles';
 import PaymentLottie from '../../components/PaymentLottie';
-import { checkoutSchema, checkoutDefaults, toCheckoutContact } from './checkout';
+import {
+  checkoutSchema,
+  checkoutDefaults,
+  toCheckoutContact,
+  toCheckoutBilling,
+  resolveBillingAddress,
+} from './checkout';
 import { buildBreakup } from './checkoutMath';
 import CheckoutSuccess from './CheckoutSuccess';
 import OrderSummaryCard from './OrderSummaryCard';
@@ -20,6 +26,7 @@ import {
   DUMMY_CHECKOUT,
   PREVIEW_COUPON,
   PUBLIC_FINANCE,
+  UPDATE_MY_PROFILE,
   VERIFY_RAZORPAY_PAYMENT,
   type CheckoutForm,
   type CheckoutState,
@@ -68,6 +75,7 @@ export default function CheckoutPage() {
   const [doCheckout] = useMutation(DUMMY_CHECKOUT);
   const [doRazorpayOrder] = useMutation(CREATE_RAZORPAY_ORDER);
   const [doVerifyRazorpay] = useMutation(VERIFY_RAZORPAY_PAYMENT);
+  const [doUpdateProfile] = useMutation(UPDATE_MY_PROFILE);
   const [runPreviewCoupon] = useLazyQuery(PREVIEW_COUPON, { fetchPolicy: 'no-cache' });
   const { data: couponsData } = useQuery(AVAILABLE_COUPONS, {
     variables: { pod_id: checkoutPodId || null },
@@ -131,21 +139,35 @@ export default function CheckoutPage() {
     mode: 'onTouched',
   });
 
+  // Best-effort: persist the entered billing address as the main address when the
+  // buyer opts in. Never blocks or fails checkout if the profile save errors.
+  const persistMainAddress = async (values: CheckoutForm) => {
+    if (!values.save_as_main || values.same_as_main) return;
+    try {
+      await doUpdateProfile({ variables: { input: { address: resolveBillingAddress(values, null) } } });
+    } catch {
+      // Saving the main address is best-effort — ignore so payment still proceeds.
+    }
+  };
+
   const onCheckout = async (values: CheckoutForm) => {
     setError(null);
     setSubmitting(true);
     const finance = financeData?.publicFinanceSettings;
     const title = pod?.pod_title || state.pod_title || search.get('title') || 'Booking';
     const { simulate_failure, ...contact } = toCheckoutContact(values);
+    const billing = toCheckoutBilling(values, meData?.me?.address);
     const input = {
       pod_id: checkoutPodId || null,
       amount,
       selected_products: selectedProducts,
       description: state.description || `Pod booking · ${title}`,
       ...contact,
+      billing,
       checkout_url: window.location.href,
       coupon_code: coupon?.ok ? coupon.code : null,
     };
+    await persistMainAddress(values);
     try {
       // Razorpay is the live gateway and takes precedence whenever its keys are
       // configured in the Tech portal. The dummy gateway is only a local fallback.
@@ -196,16 +218,30 @@ export default function CheckoutPage() {
     const me = meData?.me;
     if (!me) return;
     const prev = getValues();
+    const addr = me.address ?? {};
+    const hasMainAddress = !!addr.line1?.trim();
+    const fullName = [me.first_name, me.last_name].filter(Boolean).join(' ').trim();
     reset({
       ...prev,
+      full_name: prev.full_name || fullName,
       email: prev.email || me.email || '',
       phone_extension: prev.phone_extension || me.phone_extension || '+91',
       phone_number: prev.phone_number || me.phone_number || '',
+      same_as_main: hasMainAddress,
+      line1: prev.line1 || addr.line1 || '',
+      line2: prev.line2 || addr.line2 || '',
+      landmark: prev.landmark || addr.landmark || '',
+      city: prev.city || addr.city || '',
+      state: prev.state || addr.state || '',
+      pincode: prev.pincode || addr.pincode || '',
+      country: prev.country || addr.country || 'India',
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [meData]);
 
   const pod = podData?.pod;
+  const mainAddress = meData?.me?.address ?? null;
+  const hasMainAddress = !!mainAddress?.line1?.trim();
   const selectedProducts = state.selected_products ?? [];
   const baseAmount = Number(pod?.pod_amount ?? state.amount ?? search.get('amount') ?? 0);
   const productAmount = selectedProducts.reduce((sum, item) => {
@@ -252,6 +288,8 @@ export default function CheckoutPage() {
             !!financeData?.publicFinanceSettings?.dummy_mode &&
             !financeData?.publicFinanceSettings?.razorpay_enabled
           }
+          mainAddress={mainAddress}
+          hasMainAddress={hasMainAddress}
           coupon={coupon}
           couponCode={couponCode}
           setCouponCode={setCouponCode}

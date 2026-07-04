@@ -46,6 +46,15 @@ const ME = gql`
       city
       state
       country
+      address {
+        line1
+        line2
+        landmark
+        city
+        state
+        pincode
+        country
+      }
       dob
       roles
       profile_visibility
@@ -179,6 +188,13 @@ export default function AccountPage() {
           phone_number: me.phone_number || '',
           whatsapp_extension: me.whatsapp_extension || '+91',
           whatsapp_number: me.whatsapp_number || '',
+          address_line1: me.address?.line1 || '',
+          address_line2: me.address?.line2 || '',
+          address_landmark: me.address?.landmark || '',
+          address_city: me.address?.city || '',
+          address_state: me.address?.state || '',
+          address_pincode: me.address?.pincode || '',
+          address_country: me.address?.country || '',
         }}
         onSaved={() => {
           refetch();

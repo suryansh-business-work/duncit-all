@@ -46,6 +46,13 @@ export const accountEditSchema = z.object({
   phone_number: phone,
   whatsapp_extension: extension,
   whatsapp_number: phone,
+  address_line1: z.string().trim().max(200, 'Too long'),
+  address_line2: z.string().trim().max(200, 'Too long'),
+  address_landmark: z.string().trim().max(160, 'Too long'),
+  address_city: z.string().trim().max(120, 'Too long'),
+  address_state: z.string().trim().max(120, 'Too long'),
+  address_pincode: z.string().trim().max(10, 'Too long'),
+  address_country: z.string().trim().max(80, 'Too long'),
 });
 
 export type AccountEditValues = z.infer<typeof accountEditSchema>;
@@ -64,6 +71,13 @@ export function accountEditDefaults(me: AccountMe | null): AccountEditValues {
     phone_number: me?.phone_number ?? '',
     whatsapp_extension: me?.whatsapp_extension ?? '+91',
     whatsapp_number: me?.whatsapp_number ?? '',
+    address_line1: me?.address?.line1 ?? '',
+    address_line2: me?.address?.line2 ?? '',
+    address_landmark: me?.address?.landmark ?? '',
+    address_city: me?.address?.city ?? '',
+    address_state: me?.address?.state ?? '',
+    address_pincode: me?.address?.pincode ?? '',
+    address_country: me?.address?.country ?? '',
   };
 }
 
@@ -81,5 +95,14 @@ export function toUpdateProfileInput(values: AccountEditValues): UpdateProfileIn
     phone_number: values.phone_number,
     whatsapp_extension: values.whatsapp_extension,
     whatsapp_number: values.whatsapp_number,
+    address: {
+      line1: values.address_line1,
+      line2: values.address_line2,
+      landmark: values.address_landmark,
+      city: values.address_city,
+      state: values.address_state,
+      pincode: values.address_pincode,
+      country: values.address_country,
+    },
   };
 }

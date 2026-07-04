@@ -13,7 +13,7 @@ export const MobilePublicFinanceDocument = gql(`
   }
 `);
 
-/** Contact prefill for checkout — mWeb's CHECKOUT_ME. */
+/** Contact + main-address prefill for checkout — mWeb's CHECKOUT_ME. */
 export const MobileCheckoutMeDocument = gql(`
   query MobileCheckoutMe {
     me {
@@ -23,6 +23,33 @@ export const MobileCheckoutMeDocument = gql(`
       email
       phone_number
       phone_extension
+      address {
+        line1
+        line2
+        landmark
+        city
+        state
+        pincode
+        country
+      }
+    }
+  }
+`);
+
+/** Persist the entered billing address as the user's main address (save-as-main). */
+export const MobileCheckoutSaveAddressDocument = gql(`
+  mutation MobileCheckoutSaveAddress($input: UpdateMyProfileInput!) {
+    updateMyProfile(input: $input) {
+      user_id
+      address {
+        line1
+        line2
+        landmark
+        city
+        state
+        pincode
+        country
+      }
     }
   }
 `);

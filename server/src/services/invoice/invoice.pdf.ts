@@ -1,4 +1,6 @@
 import PDFDocument from 'pdfkit';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export interface InvoiceLineItem {
   description: string;
@@ -13,6 +15,12 @@ export interface InvoiceData {
   customer_name: string;
   customer_email: string;
   customer_phone?: string;
+  // Billing email when it differs from the main contact email — both print.
+  customer_billing_email?: string;
+  // Buyer's billing GSTIN (B2B) + pre-composed address lines for the bill-to
+  // block. Both optional — the block collapses to name + contact when absent.
+  customer_gstin?: string;
+  customer_address_lines?: string[];
   business_name: string;
   business_address: string;
   business_gstin: string;
@@ -37,11 +45,21 @@ export interface InvoiceData {
 }
 
 // Duncit brand palette — kept in lock-step with the ticket PDF + app theme.
-const ACCENT = '#ff4f73';
-const ACCENT_SOFT = '#fff1f4';
+const ACCENT = '#F82D2F';
+const ACCENT_SOFT = '#fff1f1';
 const INK = '#111827';
 const MUTED = '#6b7280';
 const LINE = '#e5e7eb';
+
+// Bundled white brand mark embedded on the header band (loaded once).
+const BRAND_MARK_PATH = path.resolve(__dirname, '../_assets/duncit-mark-white.png');
+const BRAND_MARK: Buffer | null = (() => {
+  try {
+    return fs.readFileSync(BRAND_MARK_PATH);
+  } catch {
+    return null;
+  }
+})();
 
 /** Best-effort fetch of a remote logo into a Buffer pdfkit can embed. Returns
  * null when no URL is set or the fetch/format fails — the wordmark is used then. */
@@ -73,17 +91,21 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
       const cur = data.currency_symbol;
       const fmt = (n: number) => `${cur}${n.toFixed(2)}`;
 
-      // ---- Brand header band ----
+      // ---- Brand header band (logo mark + business name) ----
       doc.rect(0, 0, W, 96).fill(ACCENT);
-      if (logo) {
+      let brandX = L;
+      // Prefer the admin-configured logo; otherwise fall back to the bundled
+      // white brand mark so the invoice always carries the Duncit logo.
+      const headerLogo = logo ?? BRAND_MARK;
+      if (headerLogo) {
         try {
-          doc.image(logo, L, 26, { fit: [150, 44], valign: 'center' });
+          doc.image(headerLogo, L, 26, { fit: [44, 44], valign: 'center' });
+          brandX = L + 54;
         } catch {
-          doc.fillColor('#ffffff').fontSize(24).font('Helvetica-Bold').text(data.business_name, L, 30);
+          brandX = L;
         }
-      } else {
-        doc.fillColor('#ffffff').fontSize(24).font('Helvetica-Bold').text(data.business_name, L, 30);
       }
+      doc.fillColor('#ffffff').fontSize(22).font('Helvetica-Bold').text(data.business_name, brandX, 36);
       doc
         .fillColor('#ffffff')
         .fontSize(20)
@@ -110,17 +132,39 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
         .text(`Date: ${data.invoice_date.toLocaleDateString('en-IN')}`, 360, doc.y + 4, { width: R - 360, align: 'right' })
         .text(`Payment ID: ${data.payment_id}`, 360, doc.y + 2, { width: R - 360, align: 'right' });
 
-      // ---- Bill To card ----
+      // ---- Bill To card (name · GSTIN · contact + billing email · address) ----
       y = Math.max(doc.y, y + 64) + 14;
-      doc.roundedRect(L, y, R - L, 60, 10).fill(ACCENT_SOFT);
+      const contact = [data.customer_email, data.customer_phone].filter(Boolean).join('  ·  ');
+      const addressLines = (data.customer_address_lines ?? []).map((s) => s.trim()).filter(Boolean);
+      const billingEmailRow = data.customer_billing_email ? 1 : 0;
+      // Height grows with the optional GSTIN + billing email + address lines.
+      const extraRows = (data.customer_gstin ? 1 : 0) + billingEmailRow + addressLines.length;
+      const cardH = 52 + extraRows * 13;
+      doc.roundedRect(L, y, R - L, cardH, 10).fill(ACCENT_SOFT);
       doc.fillColor(ACCENT).fontSize(8.5).font('Helvetica-Bold').text('BILL TO', L + 14, y + 12);
       doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(data.customer_name, L + 14, y + 24);
+      let by = y + 40;
       doc.fillColor(MUTED).fontSize(9).font('Helvetica');
-      const contact = [data.customer_email, data.customer_phone].filter(Boolean).join('  ·  ');
-      doc.text(contact, L + 14, y + 40, { width: R - L - 28 });
+      if (contact) {
+        doc.text(contact, L + 14, by, { width: R - L - 28 });
+        by += 13;
+      }
+      if (data.customer_billing_email) {
+        doc.text(`Billing email: ${data.customer_billing_email}`, L + 14, by, { width: R - L - 28 });
+        by += 13;
+      }
+      if (data.customer_gstin) {
+        doc.fillColor(INK).fontSize(9).font('Helvetica-Bold').text(`GSTIN: ${data.customer_gstin}`, L + 14, by);
+        doc.fillColor(MUTED).font('Helvetica');
+        by += 13;
+      }
+      for (const line of addressLines) {
+        doc.text(line, L + 14, by, { width: R - L - 28 });
+        by += 13;
+      }
 
       // ---- Items table ----
-      y += 60 + 22;
+      y += cardH + 22;
       const colX = { desc: L + 6, qty: 320, price: 386, amount: 476 };
       doc.rect(L, y - 6, R - L, 24).fill(ACCENT);
       doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');

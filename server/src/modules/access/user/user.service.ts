@@ -47,6 +47,7 @@ import { UserContactActionModel } from './userContactAction.model';
 import { rbacService } from '@modules/access/rbac/rbac.service';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { USER_SCHEMA_FLAGS } from './user.featureFlags';
+import { toPostalAddress } from '@utils/address';
 
 const idStrings = (values: unknown[] | undefined | null) =>
   (values ?? []).map((x: any) => String(x));
@@ -422,6 +423,7 @@ async function toPublic(u: any) {
     state: profile.state ?? null,
     pincode: profile.pincode ?? null,
     zone: profile.zone ?? legacy.zone ?? null,
+    address: toPostalAddress(profile.address),
     selected_location_id: profile.selected_location_id
       ? String(profile.selected_location_id)
       : null,
@@ -797,6 +799,10 @@ export const userService = {
         throw new GraphQLError('Invalid date of birth', { extensions: { code: 'BAD_USER_INPUT' } });
       }
       set['profile.dob'] = d;
+    }
+    // Save the whole main address as a normalized object (partial inputs fill in).
+    if ((input as any).address !== undefined) {
+      set['profile.address'] = toPostalAddress((input as any).address);
     }
     const updated = await UserModel.findByIdAndUpdate(user_id, { $set: set }, { new: true });
     if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });

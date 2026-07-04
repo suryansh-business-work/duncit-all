@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Image, Modal } from 'react-native';
+import { Modal } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -57,7 +59,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
               justifyContent="center"
             >
               {item.badge?.image_url ? (
-                <Image
+                <AppImage
                   source={{ uri: item.badge.image_url }}
                   style={{ width: '100%', height: '100%' }}
                   resizeMode="cover"
@@ -114,7 +116,7 @@ export function PublicProfileBadges({ badges }: Readonly<{ badges: UserBadge[] }
                     justifyContent="center"
                   >
                     {active?.badge?.image_url ? (
-                      <Image
+                      <AppImage
                         source={{ uri: active.badge.image_url }}
                         style={{ width: '100%', height: '100%' }}
                         resizeMode="cover"

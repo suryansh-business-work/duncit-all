@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
@@ -40,7 +41,7 @@ export function ClubSection({ club, pods, onOpenPod, onOpenClub }: Readonly<Club
           justifyContent="center"
         >
           {image ? (
-            <Image
+            <AppImage
               source={{ uri: image }}
               style={{ width: '100%', height: '100%' }}
               resizeMode="cover"

@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -30,7 +31,7 @@ export function PodClubCard({
           backgroundColor="$surface"
         >
           {logo ? (
-            <Image source={{ uri: logo }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+            <AppImage source={{ uri: logo }} style={{ width: 48, height: 48 }} resizeMode="cover" />
           ) : (
             <Text fontSize={18} fontWeight="900" color="$primary">
               {initial}

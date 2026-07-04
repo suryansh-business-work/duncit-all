@@ -87,6 +87,11 @@ export function ExploreReels() {
         snapToAlignment="start"
         decelerationRate="fast"
         getItemLayout={(_, index) => ({ length: height, offset: height * index, index })}
+        // Full-screen items: keep only the current reel ±2 mounted (default
+        // windowSize 21 = ~21 full-screen image cards alive → heavy memory/GC).
+        windowSize={5}
+        initialNumToRender={2}
+        maxToRenderPerBatch={2}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}

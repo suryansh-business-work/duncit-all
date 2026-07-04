@@ -1,5 +1,7 @@
 import { useState, type ComponentProps, type ReactNode } from 'react';
-import { FlatList, Image, StyleSheet, useWindowDimensions } from 'react-native';
+import { FlatList, StyleSheet, useWindowDimensions } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
@@ -87,7 +89,7 @@ export function DetailHero({
               width={width}
               height={height}
             >
-              <Image source={{ uri: item }} style={{ width, height }} resizeMode="cover" />
+              <AppImage source={{ uri: item }} style={{ width, height }} resizeMode="cover" />
             </XStack>
           )}
         />

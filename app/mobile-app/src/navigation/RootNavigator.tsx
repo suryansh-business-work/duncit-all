@@ -73,10 +73,9 @@ export function RootNavigator() {
     <Stack.Navigator
       screenOptions={{
         headerShown: false,
-        // Premium screen transitions: pushes slide in from the right (pops
-        // reverse automatically), driven natively at 60fps.
-        animation: 'slide_from_right',
-        animationDuration: 300,
+        // Transitions disabled: animating a whole screen (with its full-bleed
+        // backdrop) frame-by-frame janked navigation, so pushes/pops are instant.
+        animation: 'none',
       }}
     >
       {!token ? (

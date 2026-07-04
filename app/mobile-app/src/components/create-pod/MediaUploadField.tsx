@@ -1,4 +1,4 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -57,7 +57,7 @@ export function MediaUploadField({ value, onChange, error }: Readonly<Props>) {
               {VIDEO_URL_RE.test(url) ? (
                 <MaterialIcons name="videocam" size={26} color={muted} />
               ) : (
-                <Image source={{ uri: url }} style={{ width: 84, height: 84 }} />
+                <AppImage source={{ uri: url }} style={{ width: 84, height: 84 }} />
               )}
               <XStack
                 testID={`media-remove-${url}`}

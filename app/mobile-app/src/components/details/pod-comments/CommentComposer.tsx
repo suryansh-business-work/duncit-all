@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, Spinner, XStack, YStack } from 'tamagui';
 
@@ -36,7 +37,10 @@ export function CommentComposer({
       borderColor="$borderColor"
     >
       {viewerPhoto ? (
-        <Image source={{ uri: viewerPhoto }} style={{ width: 32, height: 32, borderRadius: 16 }} />
+        <AppImage
+          source={{ uri: viewerPhoto }}
+          style={{ width: 32, height: 32, borderRadius: 16 }}
+        />
       ) : (
         <YStack
           width={32}

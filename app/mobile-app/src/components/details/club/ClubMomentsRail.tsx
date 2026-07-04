@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { ScrollView, Text, YStack } from 'tamagui';
 
 import type { ClubMoment } from '@/utils/club-detail';
@@ -17,7 +18,7 @@ export function ClubMomentsRail({ moments }: Readonly<{ moments: ClubMoment[] }>
         contentContainerStyle={{ gap: 10 }}
       >
         {moments.map((moment, i) => (
-          <Image
+          <AppImage
             key={`${i}-${moment.url}`}
             source={{ uri: moment.url }}
             style={{ width: 120, height: 150, borderRadius: 14 }}

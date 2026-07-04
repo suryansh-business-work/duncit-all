@@ -1,10 +1,9 @@
 import { useRef, useState } from 'react';
-import { Image, Pressable } from 'react-native';
-import { MaterialIcons } from '@expo/vector-icons';
-import { AnimatePresence, MotiView } from 'moti';
-import { YStack } from 'tamagui';
+import { Pressable } from 'react-native';
+import { AppImage } from '@/components/AppImage';
 
-import { durations } from '@/animations/motion';
+import { MaterialIcons } from '@expo/vector-icons';
+import { YStack } from 'tamagui';
 
 const DOUBLE_TAP_MS = 280;
 const BURST_MS = 700;
@@ -35,36 +34,27 @@ export function PostMedia({ imageUrl, onDoubleTapLike }: Readonly<Props>) {
 
   return (
     <Pressable testID="post-media" onPress={onPress}>
-      <Image
+      <AppImage
         testID="post-viewer-image"
         source={{ uri: imageUrl }}
         style={{ width: '100%', height: 320 }}
         resizeMode="cover"
       />
-      <AnimatePresence>
-        {burst ? (
-          <YStack
-            position="absolute"
-            top={0}
-            bottom={0}
-            left={0}
-            right={0}
-            alignItems="center"
-            justifyContent="center"
-            pointerEvents="none"
-          >
-            <MotiView
-              testID="post-like-burst"
-              from={{ opacity: 0, scale: 0.4 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 1.3 }}
-              transition={{ type: 'timing', duration: durations.fast }}
-            >
-              <MaterialIcons name="favorite" size={110} color="#ffffff" />
-            </MotiView>
-          </YStack>
-        ) : null}
-      </AnimatePresence>
+      {burst ? (
+        <YStack
+          testID="post-like-burst"
+          position="absolute"
+          top={0}
+          bottom={0}
+          left={0}
+          right={0}
+          alignItems="center"
+          justifyContent="center"
+          pointerEvents="none"
+        >
+          <MaterialIcons name="favorite" size={110} color="#ffffff" />
+        </YStack>
+      ) : null}
     </Pressable>
   );
 }

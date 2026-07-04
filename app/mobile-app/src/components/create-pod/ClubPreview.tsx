@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Image, Modal, ScrollView } from 'react-native';
+import { Modal, ScrollView } from 'react-native';
+import { AppImage } from '@/components/AppImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -36,7 +37,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
       backgroundColor="$surface"
     >
       {cover ? (
-        <Image source={{ uri: cover }} style={{ width: 56, height: 56, borderRadius: 12 }} />
+        <AppImage source={{ uri: cover }} style={{ width: 56, height: 56, borderRadius: 12 }} />
       ) : (
         <YStack
           width={56}
@@ -114,7 +115,7 @@ export function ClubPreview({ club }: Readonly<Props>) {
                     <ScrollView horizontal showsHorizontalScrollIndicator={false}>
                       <XStack gap={8} paddingBottom={10}>
                         {images.map((item) => (
-                          <Image
+                          <AppImage
                             key={item.url}
                             source={{ uri: item.url }}
                             style={{ width: 120, height: 90, borderRadius: 10 }}

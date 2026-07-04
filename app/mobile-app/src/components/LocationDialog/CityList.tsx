@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -45,7 +46,7 @@ export function CityList({ cities, draftId, onPick }: Readonly<Props>) {
             pressStyle={{ opacity: 0.85 }}
           >
             {loc.location_image ? (
-              <Image
+              <AppImage
                 source={{ uri: loc.location_image }}
                 style={{ width: 44, height: 44, borderRadius: 10 }}
                 resizeMode="cover"

@@ -1,5 +1,7 @@
 import { type ReactNode, useMemo, useState } from 'react';
-import { Image, Modal } from 'react-native';
+import { Modal } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 
@@ -172,7 +174,7 @@ export function SelectSheet({
                         pressStyle={{ opacity: 0.7 }}
                       >
                         {option.flag ? (
-                          <Image
+                          <AppImage
                             source={{ uri: option.flag }}
                             style={{ width: 22, height: 16, borderRadius: 2 }}
                           />

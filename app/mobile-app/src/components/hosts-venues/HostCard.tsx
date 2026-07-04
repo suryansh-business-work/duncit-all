@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
@@ -52,7 +53,7 @@ export function HostCard({
         justifyContent="center"
       >
         {host.passport_photo_url ? (
-          <Image
+          <AppImage
             source={{ uri: host.passport_photo_url }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"

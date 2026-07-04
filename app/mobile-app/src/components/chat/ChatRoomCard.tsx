@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -35,7 +36,7 @@ export function ChatRoomCard({ room, onPress }: Readonly<{ room: ChatRoom; onPre
         justifyContent="center"
       >
         {room.cover_url ? (
-          <Image
+          <AppImage
             source={{ uri: room.cover_url }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"

@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Image, useWindowDimensions } from 'react-native';
+import { useWindowDimensions } from 'react-native';
+import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -111,7 +112,7 @@ export function ProfilePostsGrid({
               pressStyle={{ opacity: 0.85 }}
             >
               {post.image_url ? (
-                <Image
+                <AppImage
                   source={{ uri: post.image_url }}
                   style={{ width: '100%', height: '100%' }}
                   resizeMode="cover"

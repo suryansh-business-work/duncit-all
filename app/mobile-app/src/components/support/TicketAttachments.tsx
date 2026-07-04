@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -58,7 +59,7 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
         <XStack flexWrap="wrap" gap={8}>
           {attachments.map((url, i) => (
             <YStack key={url} testID={`ticket-attach-${i}`} width={64} height={64}>
-              <Image source={{ uri: url }} style={{ width: 64, height: 64, borderRadius: 10 }} />
+              <AppImage source={{ uri: url }} style={{ width: 64, height: 64, borderRadius: 10 }} />
               <XStack
                 testID={`ticket-attach-remove-${i}`}
                 role="button"

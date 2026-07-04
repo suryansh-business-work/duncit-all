@@ -1,5 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
-import { Image, Modal } from 'react-native';
+import { Modal } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -206,7 +208,7 @@ export function StatusViewer({
                 <StatusVideo uri={current.imageUrl} onEnded={() => advanceRef.current()} />
               ) : null}
               {!isVideo && current?.imageUrl ? (
-                <Image
+                <AppImage
                   testID="status-viewer-image"
                   source={{ uri: current.imageUrl }}
                   style={{ flex: 1, width: '100%' }}

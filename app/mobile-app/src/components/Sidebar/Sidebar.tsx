@@ -1,12 +1,10 @@
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Modal, ScrollView, Switch, useWindowDimensions } from 'react-native';
+import { useState } from 'react';
+import { Modal, ScrollView, Switch, useWindowDimensions } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Separator, Text, XStack, YStack } from 'tamagui';
-
-import { USE_NATIVE_DRIVER } from '@/animations/motion';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useLogout } from '@/hooks/useLogout';
@@ -49,30 +47,6 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
   const { primary } = useThemeColors();
 
   const [switchOpen, setSwitchOpen] = useState(false);
-  const [mounted, setMounted] = useState(open);
-  const tx = useRef(new Animated.Value(panelWidth)).current;
-  const fade = useRef(new Animated.Value(0)).current;
-
-  useEffect(() => {
-    if (open) {
-      setMounted(true);
-      Animated.parallel([
-        Animated.timing(tx, { toValue: 0, duration: 220, useNativeDriver: USE_NATIVE_DRIVER }),
-        Animated.timing(fade, { toValue: 1, duration: 220, useNativeDriver: USE_NATIVE_DRIVER }),
-      ]).start();
-    } else if (mounted) {
-      Animated.parallel([
-        Animated.timing(tx, {
-          toValue: panelWidth,
-          duration: 200,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-        Animated.timing(fade, { toValue: 0, duration: 200, useNativeDriver: USE_NATIVE_DRIVER }),
-      ]).start(() => setMounted(false));
-    }
-    // Animate only on `open` flips; `mounted`/`panelWidth` are derived.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [open]);
 
   const go = (route: MenuRoute) => {
     onClose();
@@ -81,25 +55,25 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
     navigation.navigate(route as never);
   };
 
-  if (!mounted) return null;
+  if (!open) return null;
 
   return (
-    <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose}>
+    <Modal visible={open} transparent animationType="none" onRequestClose={onClose}>
       <ModalThemeScope>
-        <Animated.View style={{ flex: 1, opacity: fade, backgroundColor: 'rgba(0,0,0,0.5)' }}>
-          <YStack testID="sidebar-backdrop" flex={1} onPress={onClose} />
-        </Animated.View>
-        <Animated.View
+        <YStack
+          testID="sidebar-backdrop"
+          flex={1}
+          backgroundColor="rgba(0,0,0,0.5)"
+          onPress={onClose}
+        />
+        <YStack
           testID="sidebar-panel"
-          style={{
-            position: 'absolute',
-            top: 0,
-            bottom: 0,
-            right: 0,
-            width: panelWidth,
-            backgroundColor: background,
-            transform: [{ translateX: tx }],
-          }}
+          position="absolute"
+          top={0}
+          bottom={0}
+          right={0}
+          width={panelWidth}
+          backgroundColor={background}
         >
           <SafeAreaView edges={['top', 'bottom']} style={{ flex: 1 }}>
             <XStack
@@ -206,7 +180,7 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
               }}
             />
           </SafeAreaView>
-        </Animated.View>
+        </YStack>
       </ModalThemeScope>
       <StudioSwitchDialog
         open={switchOpen}

@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { Text, XStack, YStack } from 'tamagui';
 
 import type { ChatMessage } from '@/hooks/useChat';
@@ -30,7 +31,7 @@ function BubbleBody({
   return (
     <>
       {message.image_url ? (
-        <Image
+        <AppImage
           source={{ uri: message.image_url }}
           style={{ width: 180, height: 180, borderRadius: 8 }}
           resizeMode="cover"

@@ -1,7 +1,4 @@
-import { useEffect, useRef } from 'react';
-import { Animated, type DimensionValue, type ViewStyle } from 'react-native';
-
-import { USE_NATIVE_DRIVER } from '@/animations/motion';
+import { View, type DimensionValue, type ViewStyle } from 'react-native';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 
@@ -13,7 +10,8 @@ interface SkeletonProps {
   testID?: string;
 }
 
-/** A single pulsing placeholder block — the RN analogue of MUI's <Skeleton/>. */
+/** A single placeholder block — the RN analogue of MUI's <Skeleton/>. Static
+ * (no shimmer) so no animation loop runs while a loading screen is mounted. */
 export function Skeleton({
   width = '100%',
   height = 16,
@@ -21,32 +19,12 @@ export function Skeleton({
   style,
   testID,
 }: Readonly<SkeletonProps>) {
-  const opacity = useRef(new Animated.Value(0.4)).current;
   const { muted } = useThemeColors();
 
-  useEffect(() => {
-    const loop = Animated.loop(
-      Animated.sequence([
-        Animated.timing(opacity, {
-          toValue: 0.85,
-          duration: 750,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-        Animated.timing(opacity, {
-          toValue: 0.35,
-          duration: 750,
-          useNativeDriver: USE_NATIVE_DRIVER,
-        }),
-      ]),
-    );
-    loop.start();
-    return () => loop.stop();
-  }, [opacity]);
-
   return (
-    <Animated.View
+    <View
       testID={testID}
-      style={[{ width, height, borderRadius: radius, backgroundColor: muted, opacity }, style]}
+      style={[{ width, height, borderRadius: radius, backgroundColor: muted, opacity: 0.5 }, style]}
     />
   );
 }

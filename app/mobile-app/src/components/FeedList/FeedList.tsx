@@ -1,32 +1,37 @@
-import type { ReactNode } from 'react';
-import { RefreshControl } from 'react-native';
-import { ScrollView, Text } from 'tamagui';
+import type { ReactElement } from 'react';
+import { FlatList, RefreshControl } from 'react-native';
+import { Text } from 'tamagui';
 
 import { Reveal } from '@/animations/Reveal';
 import { ListSkeleton } from '@/components/Skeleton';
 import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
-interface FeedListProps {
+interface FeedListProps<T> {
   isLoading: boolean;
   isEmpty: boolean;
   emptyText: string;
   testID: string;
   onRefresh?: () => void;
-  children: ReactNode;
+  data: readonly T[];
+  keyExtractor: (item: T) => string;
+  renderItem: (item: T, index: number) => ReactElement;
 }
 
 /** Vertical feed scaffold shared by the tab screens: a skeleton while the first
- * load is in flight, an empty message, or the scrollable content with
- * pull-to-refresh and room for the floating bottom nav. */
-export function FeedList({
+ * load is in flight, an empty message, or a virtualized list with pull-to-refresh
+ * and room for the floating bottom nav. Backed by FlatList so only the visible
+ * rows (plus a small buffer) are mounted, instead of the whole list at once. */
+export function FeedList<T>({
   isLoading,
   isEmpty,
   emptyText,
   testID,
   onRefresh,
-  children,
-}: Readonly<FeedListProps>) {
+  data,
+  keyExtractor,
+  renderItem,
+}: Readonly<FeedListProps<T>>) {
   const { primary } = useThemeColors();
   const bottomSpace = useBottomNavSpace();
 
@@ -34,19 +39,21 @@ export function FeedList({
     return <ListSkeleton testID={`${testID}-loading`} />;
   }
 
+  const refreshControl = onRefresh ? (
+    <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={primary} />
+  ) : undefined;
+
   return (
-    <ScrollView
-      flex={1}
+    <FlatList
       testID={testID}
+      style={{ flex: 1 }}
+      data={data}
       showsVerticalScrollIndicator={false}
-      refreshControl={
-        onRefresh ? (
-          <RefreshControl refreshing={false} onRefresh={onRefresh} tintColor={primary} />
-        ) : undefined
-      }
+      keyExtractor={keyExtractor}
+      renderItem={({ item, index }) => renderItem(item, index)}
+      refreshControl={refreshControl}
       contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: bottomSpace }}
-    >
-      {isEmpty ? (
+      ListEmptyComponent={
         <Reveal scale>
           <Text
             testID={`${testID}-empty`}
@@ -58,9 +65,7 @@ export function FeedList({
             {emptyText}
           </Text>
         </Reveal>
-      ) : (
-        children
-      )}
-    </ScrollView>
+      }
+    />
   );
 }

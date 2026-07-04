@@ -1,8 +1,8 @@
 import { useState } from 'react';
-import { Modal, Switch } from 'react-native';
+import { FlatList, Modal, Switch } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { ScrollView, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { ConfirmDialog } from '@/components/ConfirmDialog';
@@ -148,11 +148,15 @@ export function NotificationsScreen({
               />
             </XStack>
 
-            <ScrollView
+            <FlatList
               style={{ flex: 1 }}
               contentContainerStyle={{ paddingHorizontal: 12, paddingBottom: 24, gap: 8 }}
-            >
-              {notifs.length === 0 ? (
+              data={notifs}
+              keyExtractor={(item) => item.id}
+              renderItem={({ item }) => (
+                <NotificationRow item={item} onPress={() => onNotifClick(item)} />
+              )}
+              ListEmptyComponent={
                 <YStack
                   padding={24}
                   borderRadius={16}
@@ -163,12 +167,8 @@ export function NotificationsScreen({
                     No notifications yet.
                   </Text>
                 </YStack>
-              ) : (
-                notifs.map((item) => (
-                  <NotificationRow key={item.id} item={item} onPress={() => onNotifClick(item)} />
-                ))
-              )}
-            </ScrollView>
+              }
+            />
           </SafeAreaView>
         </YStack>
         <ConfirmDialog

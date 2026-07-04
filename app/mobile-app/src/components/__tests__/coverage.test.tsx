@@ -276,9 +276,15 @@ describe('ClubBody', () => {
 describe('FeedList', () => {
   it('shows the loading state', () => {
     renderWithProviders(
-      <FeedList testID="x" isLoading isEmpty emptyText="empty">
-        <Text>child</Text>
-      </FeedList>,
+      <FeedList
+        testID="x"
+        isLoading
+        isEmpty
+        emptyText="empty"
+        data={[]}
+        keyExtractor={() => ''}
+        renderItem={() => <Text>child</Text>}
+      />,
     );
     expect(screen.getByTestId('x-loading')).toBeOnTheScreen();
   });

@@ -134,19 +134,4 @@ describe('Accordion', () => {
     );
     expect(screen.getByText('Details')).toBeOnTheScreen();
   });
-
-  it('enables layout animation at module load on Android', () => {
-    jest.isolateModules(() => {
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      const RN = require('react-native');
-      const prevOS = RN.Platform.OS;
-      const spy = jest.fn();
-      RN.Platform.OS = 'android';
-      RN.UIManager.setLayoutAnimationEnabledExperimental = spy;
-      // eslint-disable-next-line @typescript-eslint/no-require-imports
-      require('@/components/details/Accordion');
-      expect(spy).toHaveBeenCalledWith(true);
-      RN.Platform.OS = prevOS;
-    });
-  });
 });

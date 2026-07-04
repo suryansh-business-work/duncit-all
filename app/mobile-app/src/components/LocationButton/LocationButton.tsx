@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
@@ -34,7 +35,7 @@ export function LocationButton() {
         pressStyle={{ opacity: 0.7 }}
       >
         {flag ? (
-          <Image source={{ uri: flag }} style={{ width: 18, height: 13, borderRadius: 2 }} />
+          <AppImage source={{ uri: flag }} style={{ width: 18, height: 13, borderRadius: 2 }} />
         ) : (
           <MaterialIcons name="place" size={15} color={color} />
         )}

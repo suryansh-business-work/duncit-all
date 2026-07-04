@@ -1,5 +1,7 @@
 import { useEffect, useState } from 'react';
-import { FlatList, Image, Modal } from 'react-native';
+import { FlatList, Modal } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -131,7 +133,7 @@ export function LikesListSheet({ open, userIds, onClose }: Readonly<Props>) {
                       paddingVertical={10}
                     >
                       {item.profile_photo ? (
-                        <Image
+                        <AppImage
                           source={{ uri: item.profile_photo }}
                           style={{ width: 44, height: 44, borderRadius: 22 }}
                         />

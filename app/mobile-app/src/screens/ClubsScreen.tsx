@@ -18,13 +18,14 @@ export function ClubsScreen() {
         isEmpty={clubs.length === 0}
         emptyText="No clubs yet. Pull to refresh."
         onRefresh={refetch}
-      >
-        {clubs.map((club, index) => (
-          <Reveal key={club.id} index={index} scale>
+        data={clubs}
+        keyExtractor={(club) => club.id}
+        renderItem={(club, index) => (
+          <Reveal index={index} scale>
             <ClubCard club={club} onPress={() => openClub(club.id, club.club_name)} />
           </Reveal>
-        ))}
-      </FeedList>
+        )}
+      />
     </TabScreen>
   );
 }

@@ -1,4 +1,5 @@
-import { Image, Modal, ScrollView } from 'react-native';
+import { Modal, ScrollView } from 'react-native';
+import { AppImage } from '@/components/AppImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -38,7 +39,7 @@ function AttendeeRow({
       pressStyle={{ opacity: 0.8, backgroundColor: '$surface' }}
     >
       {person.profile_photo ? (
-        <Image
+        <AppImage
           source={{ uri: person.profile_photo }}
           style={{ width: 40, height: 40, borderRadius: 20 }}
         />

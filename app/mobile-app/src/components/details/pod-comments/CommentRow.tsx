@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { formatDistanceToNow } from 'date-fns';
 import { Text, XStack, YStack } from 'tamagui';
@@ -45,7 +46,7 @@ export function CommentRow({
         onPress={onOpenProfile}
       >
         {comment.author_photo ? (
-          <Image
+          <AppImage
             source={{ uri: comment.author_photo }}
             style={{ width: 36, height: 36, borderRadius: 18 }}
           />

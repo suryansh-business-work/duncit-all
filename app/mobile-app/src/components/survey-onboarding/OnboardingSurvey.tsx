@@ -1,5 +1,5 @@
 import { type ComponentProps } from 'react';
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
@@ -88,7 +88,7 @@ export function OnboardingSurvey({ kind, title, subtitle, icon }: Readonly<Props
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
         {logoUrl ? (
           <XStack justifyContent="center" paddingTop={8}>
-            <Image
+            <AppImage
               source={{ uri: logoUrl }}
               style={{ height: 28, width: 120, resizeMode: 'contain' }}
             />

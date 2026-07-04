@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Text, XStack, YStack } from 'tamagui';
@@ -47,7 +48,7 @@ function FollowRow({ person, isSelf, busy, onToggle, onOpen }: Readonly<RowProps
         pressStyle={{ opacity: 0.85 }}
       >
         {person.profile_photo ? (
-          <Image
+          <AppImage
             source={{ uri: person.profile_photo }}
             style={{ width: 44, height: 44, borderRadius: 22 }}
           />
@@ -129,18 +130,18 @@ export function FollowListScreen() {
         isLoading={isLoading}
         isEmpty={people.length === 0}
         emptyText={tab === 'followers' ? 'No followers yet.' : 'Not following anyone yet.'}
-      >
-        {people.map((person) => (
+        data={people}
+        keyExtractor={(person) => person.user_id}
+        renderItem={(person) => (
           <FollowRow
-            key={person.user_id}
             person={person}
             isSelf={person.user_id === myId}
             busy={busyId === person.user_id}
             onToggle={() => void toggle(person)}
             onOpen={() => navigation.navigate('PublicProfile', { userId: person.user_id })}
           />
-        ))}
-      </FeedList>
+        )}
+      />
     </StackScreen>
   );
 }

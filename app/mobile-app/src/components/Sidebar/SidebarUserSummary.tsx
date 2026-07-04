@@ -1,4 +1,4 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -42,7 +42,7 @@ export function SidebarUserSummary({
       pressStyle={{ opacity: 0.85, borderColor: '$primary' }}
     >
       {me?.profile_photo ? (
-        <Image
+        <AppImage
           source={{ uri: me.profile_photo }}
           style={{ width: 52, height: 52, borderRadius: 26 }}
         />

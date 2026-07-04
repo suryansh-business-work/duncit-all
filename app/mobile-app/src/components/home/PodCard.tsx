@@ -1,4 +1,6 @@
-import { Image, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, XStack, YStack } from 'tamagui';
@@ -35,7 +37,7 @@ export function PodCard({ pod, width = 300, onPress, showPlace = true }: Readonl
         backgroundColor="$muted"
       >
         {image ? (
-          <Image source={{ uri: image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
+          <AppImage source={{ uri: image }} style={StyleSheet.absoluteFill} resizeMode="cover" />
         ) : (
           <YStack flex={1} alignItems="center" justifyContent="center">
             <MaterialIcons name="event" size={56} color="rgba(255,255,255,0.85)" />

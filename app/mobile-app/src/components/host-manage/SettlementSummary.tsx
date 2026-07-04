@@ -47,20 +47,23 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
       </Text>
     );
   } else {
+    const w = settlement.waterfall;
     const lines: Line[] = [
-      { label: 'Total collected', value: settlement.collected_total },
-      { label: 'Venue bill', value: settlement.host.venue_bill },
-      { label: `GST (${settlement.host.gst_pct}%)`, value: settlement.host.gst_amount },
-      {
-        label: `Duncit Taken (${settlement.host.duncit_pct}%)`,
-        value: settlement.host.duncit_amount,
-      },
-      {
-        label: `Your Commission (${settlement.host.payout_pct}%)`,
-        value: settlement.host.payout_amount,
-        strong: true,
-      },
+      { label: 'Customer Paid', value: w.amount },
+      { label: `− GST (${w.gst_pct}%)`, value: w.gst_amount },
+      { label: `− Platform Fee (${w.platform_fee_pct}%)`, value: w.platform_fee_amount },
+      { label: 'Pool', value: w.pool_amount },
     ];
+    if (settlement.has_venue) {
+      lines.push(
+        { label: 'Venue price', value: w.venue_amount },
+        { label: 'Venue receives', value: w.venue_receives },
+      );
+    }
+    lines.push(
+      { label: 'You receive', value: w.host_receives, strong: true },
+      { label: 'Duncit revenue', value: w.duncit_revenue },
+    );
     body = (
       <YStack gap={4}>
         {lines.map((line) => (
@@ -79,7 +82,7 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
       testID="settlement-summary"
     >
       <Text fontSize={13} fontWeight="900" color="$color">
-        Your share (after approval)
+        Your share (after Finance approval)
       </Text>
       {body}
     </YStack>

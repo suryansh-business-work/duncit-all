@@ -1,20 +1,23 @@
 import { gql } from '@/generated/graphql';
 
-/** Live host/venue split preview for a pod given the entered venue bill. */
+/** Live money-waterfall preview for a pod given the entered venue bill. */
 export const PodSettlementPreviewDocument = gql(`
   query MobilePodSettlementPreview($pod_id: ID!, $venue_bill_amount: Float!) {
     podSettlementPreview(pod_id: $pod_id, venue_bill_amount: $venue_bill_amount) {
       currency_symbol
       collected_total
       has_venue
-      host {
-        venue_bill
+      waterfall {
+        amount
         gst_pct
         gst_amount
-        duncit_pct
-        duncit_amount
-        payout_pct
-        payout_amount
+        platform_fee_pct
+        platform_fee_amount
+        pool_amount
+        venue_amount
+        venue_receives
+        host_receives
+        duncit_revenue
       }
     }
   }
@@ -57,6 +60,10 @@ export const MyHostPayoutsDocument = gql(`
         duncit_amount
         payout_pct
         payout_amount
+        version
+        share_amount
+        commission_pct
+        commission_amount
       }
       created_at
     }

@@ -46,14 +46,16 @@ describe('useMenuItems', () => {
     ]);
   });
 
-  it('returns the Venue studio menu', () => {
+  it('returns the Venue studio menu with the Earnings row', () => {
     expect(routes('VENUE')).toEqual([
       'VenueManage',
       'VenueManage',
+      'VenueEarnings',
       'Support',
       'Verification',
       'Faqs',
     ]);
+    expect(menu('VENUE').map((i) => i.label)).toContain('Earnings');
   });
 
   it('returns the ecomm studio menu', () => {

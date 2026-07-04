@@ -1,9 +1,12 @@
 import { GraphQLError } from 'graphql';
+import { Types } from 'mongoose';
 import { FinanceSettingsModel, getFinanceSettings, type IFinanceSettings } from './finance.model';
 import { paymentReleaseService } from './paymentRelease.service';
 import { computePodSettlement } from './settlement.service';
+import { breakdownService } from './breakdown.service';
 import { isRazorpayConfigured } from '@modules/finance/payment/razorpay.gateway';
 import { PodModel } from '@modules/pods/pod/pod.model';
+import { UserModel } from '@modules/access/user/user.model';
 import type { GraphQLContext } from '@context';
 import { requireRole, requireAuth } from '@middleware/rbac';
 
@@ -87,6 +90,45 @@ export const financeResolvers = {
       const user = requireAuth(ctx);
       return paymentReleaseService.listMine(user.id);
     },
+    myVenuePayouts: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return paymentReleaseService.listMineVenue(user.id);
+    },
+    podFinanceBreakdown: async (_p: unknown, args: { pod_id: string }, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      const isAdmin = (user.roles ?? []).some((r) => ADMIN_POD.includes(r));
+      if (!isAdmin && !(await breakdownService.canViewPodBreakdown(args.pod_id, user.id))) {
+        throw new GraphQLError('Only this pod’s host, venue owner, or an admin can view its breakdown', {
+          extensions: { code: 'FORBIDDEN' },
+        });
+      }
+      return breakdownService.podFinanceBreakdown(args.pod_id);
+    },
+    potentialPodEarnings: async (
+      _p: unknown,
+      args: { amount: number; venue_id?: string | null; venue_amount?: number | null },
+      ctx: GraphQLContext
+    ) => {
+      const user = requireAuth(ctx);
+      return breakdownService.potentialPodEarnings(
+        user.id,
+        args.amount,
+        args.venue_id ?? null,
+        args.venue_amount ?? null
+      );
+    },
+    myHostEarningsSummary: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return breakdownService.hostEarningsSummary(user.id);
+    },
+    myVenueEarningsSummary: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      const user = requireAuth(ctx);
+      return breakdownService.venueEarningsSummary(user.id);
+    },
+    financeDashboardStats: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return breakdownService.dashboardStats();
+    },
   },
   Mutation: {
     updateFinanceSettings: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -145,6 +187,30 @@ export const financeResolvers = {
     completePodSettlement: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       const { user, isAdmin } = await assertPodActor(ctx, args.input.pod_id);
       return paymentReleaseService.completePod(args.input, { id: user.id, isAdmin });
+    },
+    setHostDeductions: async (
+      _p: unknown,
+      args: { user_id: string; host_commission_pct: number },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      if (!Types.ObjectId.isValid(args.user_id)) {
+        throw new GraphQLError('Invalid user', { extensions: { code: 'BAD_USER_INPUT' } });
+      }
+      if (
+        !Number.isFinite(args.host_commission_pct) ||
+        args.host_commission_pct < 0 ||
+        args.host_commission_pct > 100
+      ) {
+        throw new GraphQLError('host_commission_pct must be between 0 and 100', {
+          extensions: { code: 'BAD_USER_INPUT' },
+        });
+      }
+      const updated = await UserModel.findByIdAndUpdate(args.user_id, {
+        $set: { 'finance.host_commission_pct': args.host_commission_pct },
+      });
+      if (!updated) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+      return true;
     },
   },
 };

@@ -37,6 +37,41 @@ function PayoutLine({ label, value }: Readonly<{ label: string; value: string }>
   );
 }
 
+type Breakdown = NonNullable<HostPayout['breakdown']>;
+
+/** v2: "your amount − commission"; v1: the legacy venue-bill lines. */
+function BreakdownLines({
+  b,
+  symbol,
+}: Readonly<{ b: Breakdown | null | undefined; symbol: string }>) {
+  if (!b) return null;
+  const fmt = (n: number) => `${symbol}${(Number(n) || 0).toFixed(2)}`;
+  if (b.version >= 2) {
+    return (
+      <YStack gap={2}>
+        <PayoutLine label="Your Amount" value={fmt(b.share_amount)} />
+        <PayoutLine
+          label={`− Commission (${b.commission_pct}%)`}
+          value={fmt(b.commission_amount)}
+        />
+      </YStack>
+    );
+  }
+  return (
+    <YStack gap={2}>
+      <PayoutLine label="Venue bill" value={fmt(b.venue_bill)} />
+      <PayoutLine label={`GST (${b.gst_pct}%)`} value={fmt(b.gst_amount)} />
+      <PayoutLine label={`Duncit Taken (${b.duncit_pct}%)`} value={fmt(b.duncit_amount)} />
+    </YStack>
+  );
+}
+
+function payableLabel(b: Breakdown | null | undefined) {
+  if (!b) return 'Your Commission';
+  if (b.version >= 2) return 'Payout';
+  return `Your Commission (${b.payout_pct}%)`;
+}
+
 function PayoutCard({ payout, symbol }: Readonly<{ payout: HostPayout; symbol: string }>) {
   const b = payout.breakdown;
   const fmt = (n: number) => `${symbol}${(Number(n) || 0).toFixed(2)}`;
@@ -56,16 +91,10 @@ function PayoutCard({ payout, symbol }: Readonly<{ payout: HostPayout; symbol: s
         </Text>
         <StatusPill status={payout.status} />
       </XStack>
-      {b ? (
-        <YStack gap={2}>
-          <PayoutLine label="Venue bill" value={fmt(b.venue_bill)} />
-          <PayoutLine label={`GST (${b.gst_pct}%)`} value={fmt(b.gst_amount)} />
-          <PayoutLine label={`Duncit Taken (${b.duncit_pct}%)`} value={fmt(b.duncit_amount)} />
-        </YStack>
-      ) : null}
+      <BreakdownLines b={b} symbol={symbol} />
       <XStack justifyContent="space-between">
         <Text fontSize={13} fontWeight="900" color="$color">
-          Your Commission{b ? ` (${b.payout_pct}%)` : ''}
+          {payableLabel(b)}
         </Text>
         <Text fontSize={13} fontWeight="900" color="$primary">
           {fmt(payable)}

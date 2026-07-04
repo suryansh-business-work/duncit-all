@@ -13,13 +13,32 @@ import {
   type CreatePodFormValues,
   type CreatePodVenue,
 } from '@/components/create-pod/create-pod.types';
+import { usePotentialEarnings } from '@/hooks/usePotentialEarnings';
 import { renderWithProviders } from '@/utils/test-utils';
+
+const mockedEarnings = usePotentialEarnings as jest.Mock;
+
+// Canonical server waterfall @ GST 18 / fee 5 / commission 10, ₹1000, slot ₹300.
+const waterfall = {
+  amount: 1000,
+  gst_pct: 18,
+  gst_amount: 152.54,
+  platform_fee_pct: 5,
+  platform_fee_amount: 42.37,
+  venue_amount: 300,
+  host_amount: 505.09,
+  host_commission_pct: 10,
+  host_commission_amount: 50.51,
+  host_receives: 454.58,
+  host_earn_pct: 45.46,
+};
 
 const mockGraphqlRequest = jest.fn();
 jest.mock('@/services/graphql.client', () => ({
   graphqlRequest: (...args: unknown[]) => mockGraphqlRequest(...args),
 }));
 jest.mock('@/hooks/useFeatureFlag', () => ({ useFeatureFlag: () => true }));
+jest.mock('@/hooks/usePotentialEarnings', () => ({ usePotentialEarnings: jest.fn() }));
 
 const futureIso = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
 const slot = {
@@ -57,6 +76,7 @@ const venue: CreatePodVenue = {
 beforeEach(() => {
   mockGraphqlRequest.mockReset();
   mockGraphqlRequest.mockResolvedValue({ venueAvailableSlots: [slot, freeSlot] });
+  mockedEarnings.mockReset().mockReturnValue({ waterfall: null, isLoading: false });
 });
 
 function VenueSlotHarness({
@@ -227,6 +247,11 @@ describe('PricingStep', () => {
     expect(screen.queryByTestId('charge-add')).toBeNull();
     expect(screen.getByTestId('create-pod-price-panel')).toBeOnTheScreen();
   });
+
+  it('passes the picked venue + slot price to the earnings preview (physical)', () => {
+    renderWithProviders(<PricingHarness initial={{ pod_mode: 'PHYSICAL', venue_id: 'v1' }} />);
+    expect(mockedEarnings).toHaveBeenCalledWith(0, 'v1', 400);
+  });
 });
 
 describe('SlotPicker', () => {
@@ -274,31 +299,70 @@ describe('VenueContactCard', () => {
 describe('PricePanel', () => {
   it('prompts for a slot before showing venue costs (physical)', () => {
     renderWithProviders(
-      <PricePanel finance={finance} slotPrice={null} podAmount={100} spots={10} isPhysical />,
+      <PricePanel finance={finance} slotPrice={null} venueId="v1" podAmount={100} isPhysical />,
     );
     expect(screen.getByText('Pick a slot first')).toBeOnTheScreen();
+    // Without a picked slot the preview is asked without venue args.
+    expect(mockedEarnings).toHaveBeenCalledWith(100, null, null);
   });
 
-  it('computes slot GST + clamps negative potential earnings to zero', () => {
+  it('computes slot GST and renders the server waterfall with the venue line', () => {
+    mockedEarnings.mockReturnValue({ waterfall, isLoading: false });
     renderWithProviders(
-      <PricePanel finance={finance} slotPrice={1000} podAmount={0} spots={0} isPhysical />,
+      <PricePanel finance={finance} slotPrice={300} venueId="v1" podAmount={1000} isPhysical />,
     );
-    // GST 18% on ₹1000 = ₹180; no ticket revenue → potential clamps to 0.
-    expect(screen.getByText('₹180')).toBeOnTheScreen();
-    expect(screen.getByText('₹1180')).toBeOnTheScreen();
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, 'v1', 300);
+    // Slot cost lines (client-side, from the picked slot).
+    expect(screen.getByText('₹54')).toBeOnTheScreen();
+    expect(screen.getByText('₹354')).toBeOnTheScreen();
+    // Server waterfall rows.
+    expect(screen.getByText('Customer Pays')).toBeOnTheScreen();
+    expect(screen.getByText('₹1000.00')).toBeOnTheScreen();
+    expect(screen.getByText('− GST (18%)')).toBeOnTheScreen();
+    expect(screen.getByText('₹152.54')).toBeOnTheScreen();
+    expect(screen.getByText('− Platform Fee (5%)')).toBeOnTheScreen();
+    expect(screen.getByText('− Venue slot price')).toBeOnTheScreen();
+    expect(screen.getByText('₹300.00')).toBeOnTheScreen();
+    expect(screen.getByText('Your Amount')).toBeOnTheScreen();
+    expect(screen.getByText('₹505.09')).toBeOnTheScreen();
+    expect(screen.getByText('− Your Commission (10%)')).toBeOnTheScreen();
+    expect(screen.getByText('You Receive')).toBeOnTheScreen();
+    expect(screen.getByText('₹454.58')).toBeOnTheScreen();
+    expect(screen.getByText('(45.46% of customer amount), per booking.')).toBeOnTheScreen();
   });
 
-  it('skips the venue-cost rows for virtual pods', () => {
+  it('skips venue rows for virtual pods and shows the no-venue payout', () => {
+    mockedEarnings.mockReturnValue({
+      waterfall: {
+        ...waterfall,
+        venue_amount: 0,
+        host_amount: 805.09,
+        host_receives: 724.58,
+        host_earn_pct: 72.46,
+      },
+      isLoading: false,
+    });
     renderWithProviders(
       <PricePanel
         finance={finance}
         slotPrice={null}
-        podAmount={100}
-        spots={2}
+        venueId={null}
+        podAmount={1000}
         isPhysical={false}
       />,
     );
+    expect(mockedEarnings).toHaveBeenCalledWith(1000, null, null);
     expect(screen.queryByText('Venue slot price')).toBeNull();
-    expect(screen.getByText('Potential earnings')).toBeOnTheScreen();
+    expect(screen.queryByText('− Venue slot price')).toBeNull();
+    expect(screen.getByText('₹724.58')).toBeOnTheScreen();
+  });
+
+  it('shows the earnings spinner while the preview loads', () => {
+    mockedEarnings.mockReturnValue({ waterfall: null, isLoading: true });
+    renderWithProviders(
+      <PricePanel finance={finance} slotPrice={300} venueId="v1" podAmount={500} isPhysical />,
+    );
+    expect(screen.getByTestId('create-pod-earnings-loading')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-earnings')).toBeNull();
   });
 });

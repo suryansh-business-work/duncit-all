@@ -11,6 +11,7 @@ import {
   TableRow,
   Typography,
 } from '@mui/material';
+import { Link as RouterLink } from 'react-router-dom';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import ReleaseStatusChip, { ReleaseKindChip } from './ReleaseStatusChip';
 
@@ -43,7 +44,9 @@ export default function PaymentReleaseTable({ rows, loading, onReview }: Readonl
             <TableRow key={row.id} hover>
               <TableCell><ReleaseKindChip kind={row.kind} /></TableCell>
               <TableCell>
-                <Typography variant="body2" fontWeight={700}>{row.pod_title}</Typography>
+                <Link component={RouterLink} to={`/pod-finance/${row.pod_id}`} underline="hover">
+                  <Typography variant="body2" fontWeight={700}>{row.pod_title}</Typography>
+                </Link>
                 <Typography variant="caption" color="text.secondary">{row.release_id}</Typography>
               </TableCell>
               <TableCell>

@@ -7,7 +7,11 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { sendEmail } from '@services/email/email.service';
 import { getFinanceSettings } from './finance.model';
-import { computePodSettlement, type SettlementParty } from './settlement.service';
+import {
+  computePodSettlement,
+  SETTLEMENT_ENGINE_VERSION,
+  type PodSettlement,
+} from './settlement.service';
 import { generatePayoutPdf } from '@services/payout/payout.pdf';
 
 const releaseId = () => `rel_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
@@ -48,6 +52,16 @@ function toPub(doc: IPaymentRelease) {
           duncit_amount: doc.breakdown.duncit_amount ?? 0,
           payout_pct: doc.breakdown.payout_pct ?? 0,
           payout_amount: doc.breakdown.payout_amount ?? 0,
+          version: doc.breakdown.version || 1,
+          net_amount: doc.breakdown.net_amount ?? 0,
+          platform_fee_pct: doc.breakdown.platform_fee_pct ?? 0,
+          platform_fee_amount: doc.breakdown.platform_fee_amount ?? 0,
+          pool_amount: doc.breakdown.pool_amount ?? 0,
+          share_pct: doc.breakdown.share_pct ?? 0,
+          share_amount: doc.breakdown.share_amount ?? 0,
+          commission_pct: doc.breakdown.commission_pct ?? 0,
+          commission_amount: doc.breakdown.commission_amount ?? 0,
+          duncit_revenue: doc.breakdown.duncit_revenue ?? 0,
         }
       : null,
     created_at: doc.created_at?.toISOString?.() ?? '',
@@ -84,16 +98,37 @@ async function beneficiaryFor(kind: PaymentReleaseKind, pod: any, hostUserId?: s
   };
 }
 
-const partyToBreakdown = (p: SettlementParty) => ({
-  collected_total: p.collected_total,
-  venue_bill: p.venue_bill,
-  gst_pct: p.gst_pct,
-  gst_amount: p.gst_amount,
-  duncit_pct: p.duncit_pct,
-  duncit_amount: p.duncit_amount,
-  payout_pct: p.payout_pct,
-  payout_amount: p.payout_amount,
-});
+// v2 snapshot: the party's legacy statement lines + the full waterfall, frozen
+// at completion time so rate changes never rewrite history. `party` picks which
+// side is "this beneficiary's": share_amount = the party's pool money (venue's
+// booked slot price / host's remainder), share_pct = its % of the pool.
+const settlementToBreakdown = (s: PodSettlement, party: 'HOST' | 'VENUE') => {
+  const w = s.waterfall;
+  const isHost = party === 'HOST';
+  const legacy = isHost ? s.host : s.venue!;
+  const shareAmount = isHost ? w.host_amount : w.venue_amount;
+  const sharePct = w.pool_amount > 0 ? Math.round((shareAmount / w.pool_amount) * 10000) / 100 : 0;
+  return {
+    collected_total: legacy.collected_total,
+    venue_bill: legacy.venue_bill,
+    gst_pct: legacy.gst_pct,
+    gst_amount: legacy.gst_amount,
+    duncit_pct: legacy.duncit_pct,
+    duncit_amount: legacy.duncit_amount,
+    payout_pct: legacy.payout_pct,
+    payout_amount: legacy.payout_amount,
+    version: SETTLEMENT_ENGINE_VERSION,
+    net_amount: w.net_amount,
+    platform_fee_pct: w.platform_fee_pct,
+    platform_fee_amount: w.platform_fee_amount,
+    pool_amount: w.pool_amount,
+    share_pct: sharePct,
+    share_amount: shareAmount,
+    commission_pct: isHost ? w.host_commission_pct : w.venue_commission_pct,
+    commission_amount: isHost ? w.host_commission_amount : w.venue_commission_amount,
+    duncit_revenue: w.duncit_revenue,
+  };
+};
 
 // On approval, email the beneficiary their payout statement. When the release
 // carries a settlement breakdown (the host-completion flow), a payout PDF is
@@ -338,11 +373,11 @@ export const paymentReleaseService = {
         notes: clean(input.notes),
         requested_by: new Types.ObjectId(actor.id),
         requested_at: new Date(),
-        breakdown: partyToBreakdown(settlement.host),
+        breakdown: settlementToBreakdown(settlement, 'HOST'),
       })
     );
 
-    if (settlement.has_venue && settlement.venue) {
+    if (settlement.has_venue && settlement.venue && settlement.venue.payout_amount > 0) {
       const venueBeneficiary = await beneficiaryFor('VENUE_BILLING', pod);
       releases.push(
         await PaymentReleaseModel.create({
@@ -360,7 +395,7 @@ export const paymentReleaseService = {
           notes: clean(input.notes),
           requested_by: new Types.ObjectId(actor.id),
           requested_at: new Date(),
-          breakdown: partyToBreakdown(settlement.venue),
+          breakdown: settlementToBreakdown(settlement, 'VENUE'),
         })
       );
     }
@@ -374,6 +409,20 @@ export const paymentReleaseService = {
     const docs = await PaymentReleaseModel.find({
       kind: 'HOST_PAYMENT',
       host_user_id: new Types.ObjectId(userId),
+    })
+      .sort({ created_at: -1 })
+      .limit(200);
+    return docs.map(toPub);
+  },
+
+  /** A venue owner's payouts across every venue they own (Venue Earnings). */
+  async listMineVenue(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) return [];
+    const venues = await VenueModel.find({ owner_user_id: new Types.ObjectId(userId) }).select('_id');
+    if (venues.length === 0) return [];
+    const docs = await PaymentReleaseModel.find({
+      kind: 'VENUE_BILLING',
+      venue_id: { $in: venues.map((v) => v._id) },
     })
       .sort({ created_at: -1 })
       .limit(200);

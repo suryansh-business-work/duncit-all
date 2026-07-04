@@ -9,14 +9,25 @@ export const POD_SETTLEMENT_PREVIEW = gql`
       currency_symbol
       collected_total
       has_venue
-      host {
-        venue_bill
+      waterfall {
+        version
+        amount
         gst_pct
         gst_amount
-        duncit_pct
-        duncit_amount
-        payout_pct
-        payout_amount
+        net_amount
+        platform_fee_pct
+        platform_fee_amount
+        pool_amount
+        venue_amount
+        venue_commission_pct
+        venue_commission_amount
+        venue_receives
+        host_amount
+        host_commission_pct
+        host_commission_amount
+        host_receives
+        duncit_revenue
+        host_earn_pct
       }
     }
   }
@@ -39,7 +50,7 @@ function Row({ symbol, line }: Readonly<{ symbol: string; line: Line }>) {
       <Typography variant="body2" sx={{ fontWeight: line.strong ? 900 : 600 }}>
         {line.label}
       </Typography>
-      <Typography variant="body2" color={line.strong ? 'primary.main' : 'text.primary'} sx={{ fontWeight: line.strong ? 900 : 700 }}>
+      <Typography variant="body2" color={line.strong ? 'success.main' : 'text.primary'} sx={{ fontWeight: line.strong ? 900 : 700 }}>
         {symbol}
         {line.value.toFixed(2)}
       </Typography>
@@ -47,7 +58,27 @@ function Row({ symbol, line }: Readonly<{ symbol: string; line: Line }>) {
   );
 }
 
-/** Live "Host Share" preview of the reconciled split for the entered venue bill. */
+/** Waterfall lines for the settlement — venue rows only when the pod has one. */
+function settlementLines(s: PodSettlement): Line[] {
+  const w = s.waterfall;
+  const venueLines: Line[] = s.has_venue
+    ? [
+        { label: 'Venue slot price', value: w.venue_amount },
+        { label: 'Venue receives', value: w.venue_receives },
+      ]
+    : [];
+  return [
+    { label: 'Customer Paid', value: w.amount },
+    { label: `− GST (${w.gst_pct}%)`, value: w.gst_amount },
+    { label: `− Platform Fee (${w.platform_fee_pct}%)`, value: w.platform_fee_amount },
+    { label: 'Pool', value: w.pool_amount },
+    ...venueLines,
+    { label: 'You receive', value: w.host_receives, strong: true },
+    { label: 'Duncit revenue', value: w.duncit_revenue },
+  ];
+}
+
+/** Live "Host Share" preview — the finance-engine waterfall for this pod. */
 export default function SettlementPreview({ podId, venueBillAmount }: Readonly<Props>) {
   const [amount, setAmount] = useState(venueBillAmount);
   useEffect(() => {
@@ -66,16 +97,9 @@ export default function SettlementPreview({ podId, venueBillAmount }: Readonly<P
     if (!s) {
       return loading ? <CircularProgress size={18} /> : <Typography variant="caption" color="text.secondary">Enter a bill to preview your share.</Typography>;
     }
-    const lines: Line[] = [
-      { label: 'Total collected', value: s.collected_total },
-      { label: 'Venue bill', value: s.host.venue_bill },
-      { label: `GST (${s.host.gst_pct}%)`, value: s.host.gst_amount },
-      { label: `Duncit Taken (${s.host.duncit_pct}%)`, value: s.host.duncit_amount },
-      { label: `Your Commission (${s.host.payout_pct}%)`, value: s.host.payout_amount, strong: true },
-    ];
     return (
       <Stack spacing={0.5}>
-        {lines.map((line) => (
+        {settlementLines(s).map((line) => (
           <Row key={line.label} symbol={s.currency_symbol} line={line} />
         ))}
       </Stack>

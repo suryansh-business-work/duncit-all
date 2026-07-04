@@ -4,16 +4,42 @@ import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
 import PaymentsIcon from '@mui/icons-material/Payments';
 import { useDateFormat } from '../../utils/dateFormat';
 
+/** myHostEarningsSummary — lifetime/pending/this-month totals for the host. */
+export interface HostEarningsSummary {
+  currency_symbol: string;
+  lifetime_earnings: number;
+  pending_amount: number;
+  pods_completed: number;
+  this_month_earnings: number;
+}
+
 interface Props {
   balance: number;
   currency: string;
   nextPayoutAt?: string | null;
+  summary?: HostEarningsSummary | null;
+}
+
+function StatBox({ label, value }: Readonly<{ label: string; value: string }>) {
+  return (
+    <Box sx={{ flex: '1 1 40%', minWidth: 0, p: 1, borderRadius: 2.5, bgcolor: 'rgba(255,255,255,0.14)' }}>
+      <Typography variant="caption" sx={{ fontWeight: 800, opacity: 0.9, display: 'block' }} noWrap>
+        {label}
+      </Typography>
+      <Typography variant="subtitle1" sx={{ fontWeight: 950, lineHeight: 1.2 }} noWrap>
+        {value}
+      </Typography>
+    </Box>
+  );
 }
 
 /** Host earnings summary — available wallet balance + next payout, with wallet
- * and withdraw shortcuts (B2-#5). */
-export default function EarningsCard({ balance, currency, nextPayoutAt }: Readonly<Props>) {
+ * and withdraw shortcuts (B2-#5), plus the settled-earnings summary from
+ * myHostEarningsSummary (Pod Finance Breakdown). */
+export default function EarningsCard({ balance, currency, nextPayoutAt, summary }: Readonly<Props>) {
   const { formatDate } = useDateFormat();
+  const symbol = summary?.currency_symbol ?? currency;
+  const money = (value: number) => `${symbol}${value.toFixed(2)}`;
 
   return (
     <Card
@@ -38,6 +64,14 @@ export default function EarningsCard({ balance, currency, nextPayoutAt }: Readon
         <Typography variant="caption" sx={{ opacity: 0.9, fontWeight: 700 }}>
           {nextPayoutAt ? `Next payout ${formatDate(nextPayoutAt)}` : 'Earnings from your hosted pods'}
         </Typography>
+        {summary && (
+          <Stack direction="row" sx={{ mt: 1.5, flexWrap: 'wrap', gap: 1 }}>
+            <StatBox label="Lifetime earnings" value={money(summary.lifetime_earnings)} />
+            <StatBox label="Pending approval" value={money(summary.pending_amount)} />
+            <StatBox label="This month" value={money(summary.this_month_earnings)} />
+            <StatBox label="Pods completed" value={String(summary.pods_completed)} />
+          </Stack>
+        )}
         <Stack direction="row" spacing={1} sx={{ mt: 1.5 }}>
           <Button
             component={RouterLink}

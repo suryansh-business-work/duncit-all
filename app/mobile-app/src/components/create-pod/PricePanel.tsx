@@ -1,30 +1,74 @@
-import { Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
+import { usePotentialEarnings, type PotentialEarnings } from '@/hooks/usePotentialEarnings';
 import type { CreatePodFinance } from './create-pod.types';
 
 interface Props {
   finance: CreatePodFinance;
   slotPrice: number | null;
+  venueId: string | null;
   podAmount: number;
-  spots: number;
   isPhysical: boolean;
 }
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Slot cost + GST and estimated earnings — venue slot price and GST come from
- * the Finance portal settings, earnings from spots × ticket. mWeb twin. */
-export function PricePanel({ finance, slotPrice, podAmount, spots, isPhysical }: Readonly<Props>) {
+/** Server-computed per-booking earnings waterfall (potentialPodEarnings). */
+function EarningsRows({
+  waterfall,
+  symbol,
+  venuePicked,
+}: Readonly<{ waterfall: PotentialEarnings; symbol: string; venuePicked: boolean }>) {
+  const money = (value: number) => `${symbol}${value.toFixed(2)}`;
+  const rows = [
+    { label: 'Customer Pays', value: money(waterfall.amount) },
+    { label: `− GST (${waterfall.gst_pct}%)`, value: money(waterfall.gst_amount) },
+    {
+      label: `− Platform Fee (${waterfall.platform_fee_pct}%)`,
+      value: money(waterfall.platform_fee_amount),
+    },
+  ];
+  if (venuePicked) {
+    rows.push({ label: '− Venue slot price', value: money(waterfall.venue_amount) });
+  }
+  rows.push(
+    { label: 'Your Amount', value: money(waterfall.host_amount) },
+    {
+      label: `− Your Commission (${waterfall.host_commission_pct}%)`,
+      value: money(waterfall.host_commission_amount),
+    },
+  );
+  return (
+    <YStack gap={8} testID="create-pod-earnings">
+      {rows.map((row) => (
+        <Row key={row.label} label={row.label} value={row.value} />
+      ))}
+      <Row label="You Receive" value={money(waterfall.host_receives)} bold />
+      <Text fontSize={11.5} color="$muted">
+        ({waterfall.host_earn_pct}% of customer amount), per booking.
+      </Text>
+    </YStack>
+  );
+}
+
+/** Slot cost + GST from the venue's booked slot, and the server-computed
+ * potential-earnings waterfall for the entered ticket price. mWeb twin. */
+export function PricePanel({
+  finance,
+  slotPrice,
+  venueId,
+  podAmount,
+  isPhysical,
+}: Readonly<Props>) {
   const money = (value: number) => `${finance.currency_symbol}${round2(value)}`;
   const slotGst = slotPrice ? round2((slotPrice * finance.gst_pct) / 100) : 0;
   const slotTotal = (slotPrice ?? 0) + slotGst;
-  const grossRevenue = round2(Math.max(0, podAmount) * Math.max(0, spots));
-  // Per-ticket net after platform fee + GST (inclusive model), scaled by
-  // spots. The divisor is always ≥ 1 for non-negative percentages.
-  const divisor = (1 + finance.platform_fee_pct / 100) * (1 + finance.gst_pct / 100);
-  const netPerTicket = podAmount / divisor;
-  const netRevenue = round2(Math.max(0, netPerTicket) * Math.max(0, spots));
-  const potential = round2(netRevenue - (isPhysical ? slotTotal : 0));
+  const venuePicked = isPhysical && slotPrice !== null;
+  const { waterfall, isLoading } = usePotentialEarnings(
+    podAmount,
+    venuePicked ? venueId : null,
+    venuePicked ? slotPrice : null,
+  );
 
   return (
     <YStack
@@ -51,14 +95,18 @@ export function PricePanel({ finance, slotPrice, podAmount, spots, isPhysical }:
           <Row label="Total venue cost" value={slotPrice === null ? '—' : money(slotTotal)} bold />
         </>
       ) : null}
-      <Row
-        label={`Ticket revenue if full (${Math.max(0, spots)} × ${money(podAmount)})`}
-        value={money(grossRevenue)}
-      />
-      <Row label="After platform fee & GST" value={money(netRevenue)} />
-      <Row label="Potential earnings" value={money(Math.max(0, potential))} bold />
+      {isLoading ? (
+        <Spinner testID="create-pod-earnings-loading" size="small" color="$primary" />
+      ) : null}
+      {waterfall ? (
+        <EarningsRows
+          waterfall={waterfall}
+          symbol={finance.currency_symbol}
+          venuePicked={venuePicked}
+        />
+      ) : null}
       <Text fontSize={11.5} color="$muted">
-        Estimates before host-share deductions — final settlement happens after the pod completes.
+        Estimates at today's rates — final settlement happens after the pod completes.
       </Text>
     </YStack>
   );

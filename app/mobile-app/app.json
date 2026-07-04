@@ -6,7 +6,7 @@
     "orientation": "portrait",
     "scheme": "duncit",
     "userInterfaceStyle": "automatic",
-    "icon": "./assets/icon.png",
+    "icon": "./assets/duncit-logo.png",
     "assetBundlePatterns": [
       "**/*"
     ],
@@ -22,7 +22,7 @@
       "package": "com.duncit.mobile",
       "softwareKeyboardLayoutMode": "resize",
       "adaptiveIcon": {
-        "foregroundImage": "./assets/adaptive-icon.png",
+        "foregroundImage": "./assets/duncit-icon-foreground.png",
         "backgroundColor": "#F82C2E"
       },
       "permissions": [
@@ -34,13 +34,13 @@
     "web": {
       "bundler": "metro",
       "output": "single",
-      "favicon": "./assets/favicon.png"
+      "favicon": "./assets/duncit-logo.png"
     },
     "plugins": [
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash-icon.png",
+          "image": "./assets/duncit-logo.png",
           "imageWidth": 220,
           "resizeMode": "contain",
           "backgroundColor": "#F82C2E"

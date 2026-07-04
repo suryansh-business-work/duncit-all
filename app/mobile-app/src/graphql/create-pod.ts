@@ -86,6 +86,26 @@ export const CreatePodOptionsDocument = gql(`
   }
 `);
 
+/** Server-computed potential-earnings waterfall for the pricing panel —
+ * amount is the GST-inclusive ticket price, venue_amount the picked slot's price. */
+export const PotentialPodEarningsDocument = gql(`
+  query MobilePotentialPodEarnings($amount: Float!, $venue_id: ID, $venue_amount: Float) {
+    potentialPodEarnings(amount: $amount, venue_id: $venue_id, venue_amount: $venue_amount) {
+      amount
+      gst_pct
+      gst_amount
+      platform_fee_pct
+      platform_fee_amount
+      venue_amount
+      host_amount
+      host_commission_pct
+      host_commission_amount
+      host_receives
+      host_earn_pct
+    }
+  }
+`);
+
 /** Open availability slots on a venue partner's calendar (step 3). */
 export const VenueAvailableSlotsDocument = gql(`
   query MobileVenueAvailableSlots($venue_id: ID!) {

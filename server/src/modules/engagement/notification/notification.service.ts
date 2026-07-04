@@ -295,7 +295,11 @@ export const notificationService = {
       .sort({ created_at: -1 })
       .limit(limit)
       .populate('notification_id');
-    return docs.map((d) => toUserNotifPub(d as any)).filter((d) => d.notification);
+    // Drop rows whose notification was deleted (null) or is content-less — a
+    // notification with a blank title and body renders as an empty card client-side.
+    return docs
+      .map((d) => toUserNotifPub(d as any))
+      .filter((d) => d.notification && (d.notification.title.trim() !== '' || d.notification.body.trim() !== ''));
   },
 
   async unreadCountForUser(userId: string) {

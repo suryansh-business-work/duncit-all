@@ -21,6 +21,7 @@ import InsightsIcon from '@mui/icons-material/Insights';
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import UserVenuePanel from './profile-page/UserVenuePanel';
+import VenueEarningsLinkCard from './venue-earnings-page/VenueEarningsLinkCard';
 import { venueUrl } from '../utils/seoUrls';
 
 const PODS_AT_VENUE = gql`
@@ -108,6 +109,8 @@ export default function VenueManagePage() {
           </Card>
         ))}
       </Stack>
+
+      <VenueEarningsLinkCard />
 
       <Card variant="outlined" sx={{ borderRadius: 4 }}>
         <CardContent>

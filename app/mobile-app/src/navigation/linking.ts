@@ -43,6 +43,7 @@ export const linking: LinkingOptions<RootStackParamList> = {
       CreatePod: 'create-pod',
       RegisterVenue: 'register-venue',
       VenueManage: 'venue-manage',
+      VenueEarnings: 'venue-earnings',
       Support: 'support',
       Sos: 'support/sos',
       Callback: 'support/callback',

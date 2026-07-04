@@ -153,14 +153,13 @@ export const COMPLETE_POD_SETTLEMENT = gql`
     completePodSettlement(input: $input) {
       settlement {
         currency_symbol
-        host {
-          payout_amount
-        }
       }
       releases {
         id
+        release_id
         kind
         status
+        amount_requested
       }
     }
   }
@@ -172,14 +171,25 @@ export const POD_SETTLEMENT_PREVIEW = gql`
       currency_symbol
       collected_total
       has_venue
-      host {
-        venue_bill
+      waterfall {
+        version
+        amount
         gst_pct
         gst_amount
-        duncit_pct
-        duncit_amount
-        payout_pct
-        payout_amount
+        net_amount
+        platform_fee_pct
+        platform_fee_amount
+        pool_amount
+        venue_amount
+        venue_commission_pct
+        venue_commission_amount
+        venue_receives
+        host_amount
+        host_commission_pct
+        host_commission_amount
+        host_receives
+        duncit_revenue
+        host_earn_pct
       }
     }
   }

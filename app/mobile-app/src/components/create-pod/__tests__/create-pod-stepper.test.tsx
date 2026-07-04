@@ -17,6 +17,12 @@ jest.mock('@/services/graphql.client', () => ({
   graphqlRequest: (...args: unknown[]) => mockGraphqlRequest(...args),
 }));
 
+// The price panel's server-driven earnings preview has its own tests — keep
+// the stepper flows deterministic (no debounce timers).
+jest.mock('@/hooks/usePotentialEarnings', () => ({
+  usePotentialEarnings: () => ({ waterfall: null, isLoading: false }),
+}));
+
 const futureIso = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
 const slot = {
   id: 's1',

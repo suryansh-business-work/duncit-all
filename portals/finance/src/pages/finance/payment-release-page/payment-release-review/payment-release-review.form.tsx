@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Dialog, DialogActions, DialogContent, DialogTitle, MenuItem, Stack, TextField } from '@mui/material';
+import ReleaseBreakdownLines from './ReleaseBreakdownLines';
 import type { PaymentReleaseReviewFormProps, PaymentReleaseReviewValues } from './payment-release-review.types';
 
 export const paymentReleaseReviewSchema = (requestedAmount: number) =>
@@ -55,6 +56,7 @@ export default function PaymentReleaseReviewForm({ request, busy, errorMessage, 
         <DialogContent dividers>
           <Stack spacing={2}>
             {errorMessage && <Alert severity="error">{errorMessage}</Alert>}
+            <ReleaseBreakdownLines request={request} />
             <Controller
               control={control}
               name="status"

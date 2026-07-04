@@ -49,6 +49,7 @@ import { TicketDetailsScreen } from '@/screens/TicketDetailsScreen';
 import { SupportTicketsScreen } from '@/screens/SupportTicketsScreen';
 import { SurveyScreen } from '@/screens/SurveyScreen';
 import { VenueManageScreen } from '@/screens/VenueManageScreen';
+import { VenueEarningsScreen } from '@/screens/VenueEarningsScreen';
 import { EarnScreen } from '@/screens/EarnScreen';
 import { ListProductScreen } from '@/screens/ListProductScreen';
 import { ProductsManageScreen } from '@/screens/ProductsManageScreen';
@@ -107,6 +108,7 @@ export function RootNavigator() {
           <Stack.Screen name="CreatePod" component={CreatePodScreen} />
           <Stack.Screen name="RegisterVenue" component={RegisterVenueScreen} />
           <Stack.Screen name="VenueManage" component={VenueManageScreen} />
+          <Stack.Screen name="VenueEarnings" component={VenueEarningsScreen} />
           <Stack.Screen name="Earn" component={EarnScreen} />
           <Stack.Screen name="ListProduct" component={ListProductScreen} />
           <Stack.Screen name="ProductsManage" component={ProductsManageScreen} />

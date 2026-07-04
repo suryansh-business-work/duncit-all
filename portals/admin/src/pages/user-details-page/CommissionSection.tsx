@@ -6,7 +6,6 @@ import { UPDATE_USER } from './queries';
 
 interface Props {
   userId: string;
-  initialSharePct: number;
   initialCommissionPct: number;
   onSaved: (message: string) => void;
 }
@@ -17,30 +16,27 @@ const clampPct = (raw: string) => {
   return Math.min(100, Math.max(0, n));
 };
 
-/** Host deduction overrides (two %s). host_share_pct = the host's slice of a
- * completed pod's net (after venue bill + GST); host_commission_pct = the
- * commission Duncit takes from that slice. 0 falls back to the global default. */
-export default function CommissionSection({ userId, initialSharePct, initialCommissionPct, onSaved }: Readonly<Props>) {
-  const [share, setShare] = useState(String(initialSharePct ?? 0));
+/** Per-host commission override. The host keeps the pool remainder after the
+ * venue's booked slot price; Duncit takes this commission % from that
+ * remainder. 0 falls back to the global default. */
+export default function CommissionSection({ userId, initialCommissionPct, onSaved }: Readonly<Props>) {
   const [commission, setCommission] = useState(String(initialCommissionPct ?? 0));
   const [error, setError] = useState<string | null>(null);
   const [updateUser, { loading }] = useMutation(UPDATE_USER);
 
   const save = async () => {
-    const sharePct = clampPct(share);
     const commissionPct = clampPct(commission);
-    if (sharePct === null || commissionPct === null) {
-      setError('Enter percentages between 0 and 100');
+    if (commissionPct === null) {
+      setError('Enter a percentage between 0 and 100');
       return;
     }
     setError(null);
     try {
       await updateUser({
-        variables: { user_id: userId, input: { host_share_pct: sharePct, host_commission_pct: commissionPct } },
+        variables: { user_id: userId, input: { host_commission_pct: commissionPct } },
       });
-      setShare(String(sharePct));
       setCommission(String(commissionPct));
-      onSaved('Host deductions updated');
+      onSaved('Host commission updated');
     } catch (e: any) {
       setError(e.message);
     }
@@ -52,12 +48,12 @@ export default function CommissionSection({ userId, initialSharePct, initialComm
         <Stack direction="row" alignItems="center" spacing={1} sx={{ mb: 1 }}>
           <PaidIcon color="primary" />
           <Typography variant="subtitle1" sx={{ fontWeight: 700 }}>
-            Host deductions
+            Host commission
           </Typography>
         </Stack>
         <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
-          The host's share of a completed pod's net (after venue bill + GST), and the commission Duncit takes from that
-          share. Leave at 0 to use the global Default Deductions.
+          The commission Duncit takes from this host's earnings (the pool remainder after the venue's booked slot
+          price). Leave at 0 to use the global Default Deductions.
         </Typography>
         {error && (
           <Alert severity="error" sx={{ mb: 2 }}>
@@ -66,16 +62,7 @@ export default function CommissionSection({ userId, initialSharePct, initialComm
         )}
         <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1.5} alignItems="flex-start">
           <TextField
-            label="Host share"
-            type="number"
-            value={share}
-            onChange={(e) => setShare(e.target.value)}
-            inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Host share percentage' }}
-            InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
-            sx={{ maxWidth: 200 }}
-          />
-          <TextField
-            label="Commission from host"
+            label="Host commission"
             type="number"
             value={commission}
             onChange={(e) => setCommission(e.target.value)}

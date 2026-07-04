@@ -92,7 +92,6 @@ export default function UserDetailsPage() {
             content: (
               <CommissionSection
                 userId={userId}
-                initialSharePct={s.user.host_share_pct ?? 0}
                 initialCommissionPct={s.user.host_commission_pct ?? 0}
                 onSaved={setToast}
               />

@@ -12,7 +12,7 @@ import {
 } from '@mui/material';
 import PaidIcon from '@mui/icons-material/Paid';
 
-const MY_HOST_PAYOUTS = gql`
+export const MY_HOST_PAYOUTS = gql`
   query MyHostPayouts {
     myHostPayouts {
       id
@@ -29,6 +29,10 @@ const MY_HOST_PAYOUTS = gql`
         duncit_amount
         payout_pct
         payout_amount
+        version
+        share_amount
+        commission_pct
+        commission_amount
       }
       created_at
     }
@@ -45,16 +49,30 @@ const STATUS_COLOR: Record<Status, 'warning' | 'success' | 'error'> = {
   REJECTED: 'error',
 };
 
+/** v2 (waterfall) breakdowns show the host's pool money − commission; v1 keeps
+ * the legacy venue-bill/GST lines. */
+function breakdownLines(b: any) {
+  if (!b) return [];
+  if (b.version >= 2) {
+    return [
+      { label: 'Your amount', value: b.share_amount },
+      { label: `− Commission (${b.commission_pct}%)`, value: b.commission_amount },
+    ];
+  }
+  return [
+    { label: 'Venue bill', value: b.venue_bill },
+    { label: `GST (${b.gst_pct}%)`, value: b.gst_amount },
+    { label: `Duncit Taken (${b.duncit_pct}%)`, value: b.duncit_amount },
+  ];
+}
+
 function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>) {
   const b = payout.breakdown;
   const fmt = (n: number) => `${symbol}${(Number(n) || 0).toFixed(2)}`;
-  const lines = b
-    ? [
-        { label: 'Venue bill', value: b.venue_bill },
-        { label: `GST (${b.gst_pct}%)`, value: b.gst_amount },
-        { label: `Duncit Taken (${b.duncit_pct}%)`, value: b.duncit_amount },
-      ]
-    : [];
+  const lines = breakdownLines(b);
+  const isV2 = (b?.version ?? 0) >= 2;
+  const legacyLabel = b ? `Your Commission (${b.payout_pct}%)` : 'Your Commission';
+  const payableLabel = isV2 ? 'Payout' : legacyLabel;
   const payable = payout.approved_amount ?? b?.payout_amount ?? payout.amount_requested;
   return (
     <Box sx={{ p: 1.25, borderRadius: 3, border: 1, borderColor: 'divider' }}>
@@ -75,7 +93,7 @@ function PayoutRow({ payout, symbol }: Readonly<{ payout: any; symbol: string }>
         ))}
         <Stack direction="row" justifyContent="space-between" sx={{ mt: 0.25 }}>
           <Typography variant="body2" sx={{ fontWeight: 900 }}>
-            Your Commission{b ? ` (${b.payout_pct}%)` : ''}
+            {payableLabel}
           </Typography>
           <Typography variant="body2" color="primary.main" sx={{ fontWeight: 900 }}>
             {fmt(payable)}

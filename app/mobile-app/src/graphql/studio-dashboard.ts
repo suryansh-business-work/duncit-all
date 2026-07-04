@@ -1,6 +1,7 @@
 import { gql } from '@/generated/graphql';
 
-/** Host studio dashboard — identity + wallet + profile/verification health. */
+/** Host studio dashboard — identity + wallet + earnings summary +
+ * profile/verification health. */
 export const HostDashboardDocument = gql(`
   query MobileHostDashboard {
     me {
@@ -11,6 +12,13 @@ export const HostDashboardDocument = gql(`
       balance
       currency_symbol
       next_payout_at
+    }
+    myHostEarningsSummary {
+      currency_symbol
+      lifetime_earnings
+      pending_amount
+      pods_completed
+      this_month_earnings
     }
     myAccountHealth {
       total_score
@@ -40,6 +48,34 @@ export const VenueDashboardDocument = gql(`
       capacity
       status
       is_active
+    }
+  }
+`);
+
+/** Venue Earnings — summary tiles + payout history across the owner's venues. */
+export const VenueEarningsDocument = gql(`
+  query MobileVenueEarnings {
+    myVenueEarningsSummary {
+      currency_symbol
+      lifetime_earnings
+      pending_amount
+      pods_completed
+      this_month_earnings
+    }
+    myVenuePayouts {
+      id
+      pod_title
+      status
+      amount_requested
+      approved_amount
+      created_at
+      breakdown {
+        version
+        payout_amount
+        share_amount
+        commission_pct
+        commission_amount
+      }
     }
   }
 `);

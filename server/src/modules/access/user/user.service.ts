@@ -1613,6 +1613,9 @@ export const userService = {
     if ((input as any).assigned_zones !== undefined) {
       set['metadata.assigned_zones'] = (input as any).assigned_zones;
     }
+    if ((input as any).host_share_pct !== undefined) {
+      set['finance.host_share_pct'] = (input as any).host_share_pct;
+    }
     if ((input as any).host_commission_pct !== undefined) {
       set['finance.host_commission_pct'] = (input as any).host_commission_pct;
     }

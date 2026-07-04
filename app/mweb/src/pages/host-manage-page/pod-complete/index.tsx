@@ -9,6 +9,6 @@ export {
   blankPodCompleteValues,
   type HostPodForComplete,
   type PodCompleteValues,
+  type PodFinanceWaterfall,
   type PodSettlement,
-  type SettlementParty,
 } from './pod-complete.types';

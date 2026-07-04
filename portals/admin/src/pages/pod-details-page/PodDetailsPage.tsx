@@ -17,6 +17,7 @@ import EditIcon from '@mui/icons-material/Edit';
 import GroupsIcon from '@mui/icons-material/Groups';
 import { POD_DETAIL } from './queries';
 import PodCouponsSection from './PodCouponsSection';
+import PodFinanceSection from './PodFinanceSection';
 import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 
 const fmtDateTime = (iso?: string | null) =>
@@ -119,9 +120,10 @@ export default function PodDetailsPage() {
           </CardContent>
         </Card>
 
-        <Box sx={{ flex: 1, minWidth: 0, width: '100%' }}>
+        <Stack spacing={2.5} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
+          <PodFinanceSection podId={pod.id} />
           <PodCouponsSection podId={pod.id} podTitle={pod.pod_title} />
-        </Box>
+        </Stack>
       </Stack>
     </Stack>
   );

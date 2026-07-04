@@ -21,6 +21,7 @@ import {
 } from './queries';
 import { blankForm, buildEditValues, buildPayload } from './helpers';
 import CompletePodDialog from './complete-pod-dialog';
+import ReleaseSummaryDialog from './ReleaseSummaryDialog';
 import PodsTable from './PodsTable';
 import PodFormDialog from './PodFormDialog';
 import PodsToolbar from './PodsToolbar';
@@ -211,6 +212,11 @@ export default function PodsPage() {
         errorMessage={releaseRequest.releaseError}
         onClose={() => releaseRequest.setCompletePod(null)}
         onSubmit={(values) => releaseRequest.submitComplete(values)}
+      />
+
+      <ReleaseSummaryDialog
+        summary={releaseRequest.releaseSummary}
+        onClose={releaseRequest.closeReleaseSummary}
       />
 
       <PodFormDialog

@@ -92,8 +92,15 @@ export function useNotifications() {
     await refetch();
   }, [refetch]);
 
+  // Drop content-less notifications (legacy/junk rows whose title and body are
+  // both blank) so the list never renders empty cards — the row has nothing to
+  // show for them. Keeps the badge count honest by filtering at the source.
+  const notifs = (data?.myNotifications ?? []).filter(
+    (item) => item.notification.title.trim() !== '' || item.notification.body.trim() !== '',
+  );
+
   return {
-    notifs: data?.myNotifications ?? [],
+    notifs,
     unreadCount: data?.myUnreadNotificationCount ?? 0,
     isLoading,
     refetch,

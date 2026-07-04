@@ -43,9 +43,12 @@ export function useMenuItems(mode: StudioMode = 'USER'): { items: MenuItem[] } {
     return { items };
   }
   if (mode === 'VENUE') {
-    return {
-      items: studio({ label: 'Your Venues', icon: 'store', route: 'VenueManage' }, 'VenueManage'),
-    };
+    const items = studio(
+      { label: 'Your Venues', icon: 'store', route: 'VenueManage' },
+      'VenueManage',
+    );
+    items.splice(2, 0, { label: 'Earnings', icon: 'payments', route: 'VenueEarnings' });
+    return { items };
   }
   if (mode === 'ECOMM') {
     const items = studio(

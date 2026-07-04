@@ -6,6 +6,7 @@ import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
 import { StackScreen } from '@/components/StackScreen';
 import { DetailSkeleton } from '@/components/Skeleton';
+import { EarningsSummaryTiles } from '@/components/earnings/EarningsSummaryTiles';
 import { useHostDashboard, type HostDashboardStats } from '@/hooks/useHostDashboard';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { RootStackParamList } from '@/navigation/types';
@@ -88,7 +89,7 @@ const statTiles = (stats: HostDashboardStats) => [
  * health. RN twin of mWeb's HostDashboardPage (B2-#5). */
 export function HostDashboardScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { me, wallet, health, stats, isLoading } = useHostDashboard();
+  const { me, wallet, earnings, health, stats, isLoading } = useHostDashboard();
 
   if (isLoading && !me) {
     return (
@@ -121,6 +122,8 @@ export function HostDashboardScreen() {
             {me?.full_name ? `Welcome back, ${me.full_name}` : 'Earnings from your hosted pods'}
           </Text>
         </YStack>
+
+        {earnings ? <EarningsSummaryTiles summary={earnings} /> : null}
 
         <XStack gap={10}>
           {statTiles(stats).map((tile) => (

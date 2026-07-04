@@ -4,6 +4,8 @@ import DashboardPage from './pages/DashboardPage';
 import PodProfitCalculatorPage from './pages/calculators/pod-profit';
 import {
   DefaultDeductionsPage,
+  PodFinancePage,
+  PodFinanceDetailPage,
   PaymentLogsPage,
   PaymentReleasePage,
   WithdrawalsPage,
@@ -39,6 +41,8 @@ export default function App() {
       <Route path="/" element={authed(<DashboardPage />)} />
       <Route path="/startup-dashboard" element={authed(<StartupDashboardPage />)} />
       <Route path="/default-deductions" element={authed(<DefaultDeductionsPage />)} />
+      <Route path="/pod-finance" element={authed(<PodFinancePage />)} />
+      <Route path="/pod-finance/:podId" element={authed(<PodFinanceDetailPage />)} />
       <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
       <Route path="/payment-release" element={authed(<PaymentReleasePage />)} />
       <Route path="/withdrawals" element={authed(<WithdrawalsPage />)} />

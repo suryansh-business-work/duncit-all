@@ -18,22 +18,33 @@ export const blankPodCompleteValues: PodCompleteValues = {
   media_text: '',
 };
 
-/** One reconciled settlement party returned by podSettlementPreview / breakdown. */
-export interface SettlementParty {
-  collected_total: number;
-  venue_bill: number;
+/** The GST-inclusive money waterfall for one pod (finance engine v2):
+ * payment → GST → platform fee → pool → venue's fixed slot price → the host
+ * keeps the remainder → Duncit commission out of each side. */
+export interface PodFinanceWaterfall {
+  version: number;
+  amount: number;
   gst_pct: number;
   gst_amount: number;
-  duncit_pct: number;
-  duncit_amount: number;
-  payout_pct: number;
-  payout_amount: number;
+  net_amount: number;
+  platform_fee_pct: number;
+  platform_fee_amount: number;
+  pool_amount: number;
+  venue_amount: number;
+  venue_commission_pct: number;
+  venue_commission_amount: number;
+  venue_receives: number;
+  host_amount: number;
+  host_commission_pct: number;
+  host_commission_amount: number;
+  host_receives: number;
+  duncit_revenue: number;
+  host_earn_pct: number;
 }
 
 export interface PodSettlement {
   currency_symbol: string;
   collected_total: number;
   has_venue: boolean;
-  host: SettlementParty;
-  venue: SettlementParty | null;
+  waterfall: PodFinanceWaterfall;
 }

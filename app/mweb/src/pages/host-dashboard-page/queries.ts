@@ -16,6 +16,13 @@ export const HOST_DASHBOARD_ME = gql`
       total_score
       band
     }
+    myHostEarningsSummary {
+      currency_symbol
+      lifetime_earnings
+      pending_amount
+      pods_completed
+      this_month_earnings
+    }
   }
 `;
 

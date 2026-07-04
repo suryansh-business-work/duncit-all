@@ -1,4 +1,5 @@
 export { default as DefaultDeductionsPage } from './default-deductions-page';
+export { PodFinancePage, PodFinanceDetailPage } from './pod-finance-page';
 export { default as PaymentLogsPage } from './PaymentLogsPage';
 export { default as PaymentReleasePage } from './PaymentReleasePage';
 export { default as WithdrawalsPage } from './withdrawals-page';

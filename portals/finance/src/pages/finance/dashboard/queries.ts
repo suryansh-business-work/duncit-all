@@ -1,26 +1,55 @@
 import { gql } from '@apollo/client';
 
-export { PAYMENTS } from '../payment-logs-page/queries';
-export { PAYMENT_RELEASE_REQUESTS } from '../payment-release-page/queries';
-
-export const PUBLIC_FINANCE_SETTINGS = gql`
-  query PublicFinanceSettings {
-    publicFinanceSettings {
+export const FINANCE_DASHBOARD_STATS = gql`
+  query FinanceDashboardStats {
+    financeDashboardStats {
       currency_symbol
+      total_revenue {
+        total
+        this_month
+        last_month
+        mom_change_pct
+      }
+      duncit_revenue {
+        total
+        this_month
+        last_month
+        mom_change_pct
+      }
+      gst_collected {
+        total
+        this_month
+        last_month
+        mom_change_pct
+      }
+      pending_payouts {
+        total
+        this_month
+        last_month
+        mom_change_pct
+      }
+      completed_payouts {
+        total
+        this_month
+        last_month
+        mom_change_pct
+      }
     }
   }
 `;
 
-export interface DashboardPayment {
+export interface FinanceStat {
   total: number;
-  platform_fee_amount: number;
-  gst_amount: number;
-  status: string;
-  paid_at: string | null;
-  created_at: string;
+  this_month: number;
+  last_month: number;
+  mom_change_pct: number;
 }
 
-export interface DashboardRelease {
-  status: string;
-  amount_requested: number;
+export interface FinanceDashboardStats {
+  currency_symbol: string;
+  total_revenue: FinanceStat;
+  duncit_revenue: FinanceStat;
+  gst_collected: FinanceStat;
+  pending_payouts: FinanceStat;
+  completed_payouts: FinanceStat;
 }

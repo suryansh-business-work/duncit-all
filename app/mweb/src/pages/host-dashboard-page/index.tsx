@@ -69,6 +69,7 @@ export default function HostDashboardPage() {
         balance={wallet?.balance ?? 0}
         currency={wallet?.currency_symbol ?? '₹'}
         nextPayoutAt={wallet?.next_payout_at}
+        summary={meQ.data?.myHostEarningsSummary}
       />
 
       <Stack direction="row" spacing={1}>

@@ -10,8 +10,10 @@ export interface IPaymentReleaseMedia {
 }
 
 // Snapshot of the settlement waterfall that produced this release's amount, so
-// the payout PDF + Host Share UI can render the exact lines (Venue Bill · GST ·
-// Duncit Taken/Cut · Your Commission/Payout) without recomputing.
+// the payout PDF + Host Share UI can render the exact lines without
+// recomputing. version 1 = legacy venue-bill reimbursement lines; version 2 =
+// GST-inclusive share-of-pool waterfall (the extra fields below). Historical
+// snapshots are never recomputed — each renders under the math that made it.
 export interface IPaymentReleaseBreakdown {
   collected_total: number;
   venue_bill: number;
@@ -21,6 +23,19 @@ export interface IPaymentReleaseBreakdown {
   duncit_amount: number;
   payout_pct: number;
   payout_amount: number;
+  // v2 waterfall lines (0 on v1 docs). share/commission are THIS party's side;
+  // duncit_revenue is the pod-level total (fee + both commissions + unallocated
+  // pool) — stamped on both releases, aggregated from HOST_PAYMENT only.
+  version: number;
+  net_amount: number;
+  platform_fee_pct: number;
+  platform_fee_amount: number;
+  pool_amount: number;
+  share_pct: number;
+  share_amount: number;
+  commission_pct: number;
+  commission_amount: number;
+  duncit_revenue: number;
 }
 
 export interface IPaymentRelease extends Document {
@@ -67,6 +82,16 @@ const releaseBreakdownSchema = new Schema<IPaymentReleaseBreakdown>(
     duncit_amount: { type: Number, default: 0 },
     payout_pct: { type: Number, default: 0 },
     payout_amount: { type: Number, default: 0 },
+    version: { type: Number, default: 1 },
+    net_amount: { type: Number, default: 0 },
+    platform_fee_pct: { type: Number, default: 0 },
+    platform_fee_amount: { type: Number, default: 0 },
+    pool_amount: { type: Number, default: 0 },
+    share_pct: { type: Number, default: 0 },
+    share_amount: { type: Number, default: 0 },
+    commission_pct: { type: Number, default: 0 },
+    commission_amount: { type: Number, default: 0 },
+    duncit_revenue: { type: Number, default: 0 },
   },
   { _id: false }
 );

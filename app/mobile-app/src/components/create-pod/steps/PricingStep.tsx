@@ -88,8 +88,8 @@ export function PricingStep({
       <PricePanel
         finance={finance}
         slotPrice={selectedSlot ? selectedSlot.price : null}
+        venueId={watch('venue_id') || null}
         podAmount={Number(watch('pod_amount_text')) || 0}
-        spots={Number(watch('no_of_spots_text')) || 0}
         isPhysical={isPhysical}
       />
       <FormTextField control={control} name="payment_terms" label="Payment terms" multiline />

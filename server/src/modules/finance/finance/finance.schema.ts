@@ -151,6 +151,90 @@ export const financeTypeDefs = /* GraphQL */ `
     duncit_amount: Float!
     payout_pct: Float!
     payout_amount: Float!
+    # Engine version that produced this snapshot (1 = legacy venue-bill lines,
+    # 2 = share-of-pool waterfall). v2-only fields are 0 on v1 docs.
+    version: Int!
+    net_amount: Float!
+    platform_fee_pct: Float!
+    platform_fee_amount: Float!
+    pool_amount: Float!
+    share_pct: Float!
+    share_amount: Float!
+    commission_pct: Float!
+    commission_amount: Float!
+    duncit_revenue: Float!
+  }
+
+  # The complete GST-inclusive money waterfall for one pod (engine v2):
+  # payment -> GST extraction -> platform fee -> pool -> the venue's booked
+  # slot price (Partners portal) comes off the pool -> the HOST keeps the
+  # remainder -> Duncit commission out of each side; duncit_revenue = fee +
+  # both commissions.
+  type PodFinanceWaterfall {
+    version: Int!
+    amount: Float!
+    gst_pct: Float!
+    gst_amount: Float!
+    net_amount: Float!
+    platform_fee_pct: Float!
+    platform_fee_amount: Float!
+    pool_amount: Float!
+    # The venue's fixed booked slot price, clamped to the pool.
+    venue_amount: Float!
+    venue_commission_pct: Float!
+    venue_commission_amount: Float!
+    venue_receives: Float!
+    # The host's remainder: pool - venue_amount.
+    host_amount: Float!
+    host_commission_pct: Float!
+    host_commission_amount: Float!
+    host_receives: Float!
+    duncit_revenue: Float!
+    host_earn_pct: Float!
+  }
+
+  enum PodSettlementStatus {
+    LIVE
+    PENDING_APPROVAL
+    SETTLED
+  }
+
+  type PodFinanceBreakdown {
+    pod_id: ID!
+    pod_title: String!
+    settlement_status: PodSettlementStatus!
+    # true when rendered from the frozen completion snapshot (never drifts).
+    frozen: Boolean!
+    bookings_count: Int!
+    collected_total: Float!
+    currency_symbol: String!
+    has_venue: Boolean!
+    completed_at: String
+    waterfall: PodFinanceWaterfall!
+  }
+
+  type EarningsSummary {
+    currency_symbol: String!
+    lifetime_earnings: Float!
+    pending_amount: Float!
+    pods_completed: Int!
+    this_month_earnings: Float!
+  }
+
+  type FinanceStat {
+    total: Float!
+    this_month: Float!
+    last_month: Float!
+    mom_change_pct: Float!
+  }
+
+  type FinanceDashboardStats {
+    currency_symbol: String!
+    total_revenue: FinanceStat!
+    duncit_revenue: FinanceStat!
+    gst_collected: FinanceStat!
+    pending_payouts: FinanceStat!
+    completed_payouts: FinanceStat!
   }
 
   type PaymentReleaseRequest {
@@ -199,13 +283,12 @@ export const financeTypeDefs = /* GraphQL */ `
     collected_total: Float!
     venue_bill: Float!
     gst_pct: Float!
-    host_share_pct: Float!
     host_commission_pct: Float!
-    venue_share_pct: Float!
     venue_commission_pct: Float!
     host: PodSettlementParty!
     venue: PodSettlementParty
     has_venue: Boolean!
+    waterfall: PodFinanceWaterfall!
   }
 
   type PodSettlementResult {
@@ -252,6 +335,21 @@ export const financeTypeDefs = /* GraphQL */ `
     podSettlementPreview(pod_id: ID!, venue_bill_amount: Float!): PodSettlement!
     # The signed-in host's own completion payouts (Host Share history).
     myHostPayouts: [PaymentReleaseRequest!]!
+    # A venue owner's payouts across every venue they own (Venue Earnings).
+    myVenuePayouts: [PaymentReleaseRequest!]!
+    # Complete financial breakdown for one pod — frozen snapshot once settled,
+    # live at current dynamic rates otherwise. Pod host, venue owner, or admin.
+    podFinanceBreakdown(pod_id: ID!): PodFinanceBreakdown!
+    # Potential-earnings preview for a hypothetical GST-inclusive price using
+    # the signed-in host's effective rates. venue_id resolves the venue's
+    # commission %; venue_amount is the picked slot's price (Partners portal).
+    potentialPodEarnings(amount: Float!, venue_id: ID, venue_amount: Float): PodFinanceWaterfall!
+    # Host Studio dashboard earnings summary (signed-in host).
+    myHostEarningsSummary: EarningsSummary!
+    # Venue Earnings dashboard summary (signed-in venue owner).
+    myVenueEarningsSummary: EarningsSummary!
+    # Finance portal dashboard KPI cards (finance roles only).
+    financeDashboardStats: FinanceDashboardStats!
   }
 
   extend type Mutation {
@@ -261,5 +359,7 @@ export const financeTypeDefs = /* GraphQL */ `
     # Host (or admin) completes a pod: enter venue bill + party media, create
     # the reconciled payout releases for Finance to approve.
     completePodSettlement(input: CompletePodInput!): PodSettlementResult!
+    # Per-host commission override (0 = inherit the global default).
+    setHostDeductions(user_id: ID!, host_commission_pct: Float!): Boolean!
   }
 `;

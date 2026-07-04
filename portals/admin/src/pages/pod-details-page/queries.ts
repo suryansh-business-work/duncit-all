@@ -34,3 +34,39 @@ export const POD_DETAIL = gql`
     }
   }
 `;
+
+export const POD_FINANCE_BREAKDOWN = gql`
+  query AdminPodFinanceBreakdown($pod_id: ID!) {
+    podFinanceBreakdown(pod_id: $pod_id) {
+      pod_id
+      pod_title
+      settlement_status
+      frozen
+      bookings_count
+      collected_total
+      currency_symbol
+      has_venue
+      completed_at
+      waterfall {
+        version
+        amount
+        gst_pct
+        gst_amount
+        net_amount
+        platform_fee_pct
+        platform_fee_amount
+        pool_amount
+        venue_amount
+        venue_commission_pct
+        venue_commission_amount
+        venue_receives
+        host_amount
+        host_commission_pct
+        host_commission_amount
+        host_receives
+        duncit_revenue
+        host_earn_pct
+      }
+    }
+  }
+`;

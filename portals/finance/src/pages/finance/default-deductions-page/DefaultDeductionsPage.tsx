@@ -14,13 +14,12 @@ import {
 import PercentIcon from '@mui/icons-material/Percent';
 import { DEDUCTION_SETTINGS, UPDATE_DEDUCTIONS } from './queries';
 import DeductionSlider from './DeductionSlider';
+import DeductionOverridesSection from './deduction-overrides';
 
 interface Deductions {
   gst_pct: number;
   platform_fee_pct: number;
-  default_host_share_pct: number;
   default_host_commission_pct: number;
-  default_venue_share_pct: number;
   default_venue_commission_pct: number;
   default_product_commission_pct: number;
 }
@@ -28,9 +27,7 @@ interface Deductions {
 const BLANK: Deductions = {
   gst_pct: 0,
   platform_fee_pct: 0,
-  default_host_share_pct: 0,
   default_host_commission_pct: 0,
-  default_venue_share_pct: 0,
   default_venue_commission_pct: 0,
   default_product_commission_pct: 0,
 };
@@ -74,9 +71,7 @@ export default function DefaultDeductionsPage() {
     setForm({
       gst_pct: fs.gst_pct ?? 0,
       platform_fee_pct: fs.platform_fee_pct ?? 0,
-      default_host_share_pct: fs.default_host_share_pct ?? 0,
       default_host_commission_pct: fs.default_host_commission_pct ?? 0,
-      default_venue_share_pct: fs.default_venue_share_pct ?? 0,
       default_venue_commission_pct: fs.default_venue_commission_pct ?? 0,
       default_product_commission_pct: fs.default_product_commission_pct ?? 0,
     });
@@ -118,21 +113,26 @@ export default function DefaultDeductionsPage() {
       </Stack>
 
       <Stack spacing={2}>
-        <DeductionCard title="GST" subtitle="Tax applied on (subtotal + platform fee).">
+        <Alert severity="info">
+          How pod money flows: the customer price is GST-inclusive. GST is extracted first, then the
+          platform fee comes off the net; the venue is paid its fixed booked slot price from the
+          remaining pool and the host keeps the remainder — there are no share percentages. Duncit's
+          commission is then deducted from each party's amount.
+        </Alert>
+
+        <DeductionCard title="GST" subtitle="Tax extracted from the GST-inclusive customer payment.">
           <DeductionSlider label="GST" value={form.gst_pct} onChange={set('gst_pct')} max={28} />
         </DeductionCard>
 
-        <DeductionCard title="Platform Fees" subtitle="Duncit's platform fee on the booking amount.">
+        <DeductionCard title="Platform Fees" subtitle="Duncit's platform fee on the net (post-GST) amount.">
           <DeductionSlider label="Platform fee" value={form.platform_fee_pct} onChange={set('platform_fee_pct')} max={30} />
         </DeductionCard>
 
-        <DeductionCard title="Host" subtitle="The host's share of the pod net, and the commission Duncit takes from that share.">
-          <DeductionSlider label="Host share" value={form.default_host_share_pct} onChange={set('default_host_share_pct')} />
+        <DeductionCard title="Host" subtitle="The commission Duncit takes from the host's pool remainder.">
           <DeductionSlider label="Commission from host" value={form.default_host_commission_pct} onChange={set('default_host_commission_pct')} />
         </DeductionCard>
 
-        <DeductionCard title="Venue" subtitle="The venue's share, and the commission Duncit takes from the venue payout (after GST).">
-          <DeductionSlider label="Venue share" value={form.default_venue_share_pct} onChange={set('default_venue_share_pct')} />
+        <DeductionCard title="Venue" subtitle="The commission Duncit takes from the venue's booked slot price.">
           <DeductionSlider label="Commission from venue" value={form.default_venue_commission_pct} onChange={set('default_venue_commission_pct')} />
         </DeductionCard>
 
@@ -146,6 +146,16 @@ export default function DefaultDeductionsPage() {
           <Button variant="contained" size="large" onClick={save} disabled={saving}>
             {saving ? 'Saving…' : 'Save Deductions'}
           </Button>
+        </Box>
+
+        <Box>
+          <Typography variant="h6" fontWeight={700}>
+            Per-entity Overrides
+          </Typography>
+          <Typography variant="body2" color="text.secondary" sx={{ mb: 2 }}>
+            Override the commission for a specific host or venue. 0 = inherit the global default.
+          </Typography>
+          <DeductionOverridesSection />
         </Box>
       </Stack>
 

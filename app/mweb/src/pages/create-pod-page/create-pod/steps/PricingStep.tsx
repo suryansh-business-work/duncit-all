@@ -52,7 +52,7 @@ export default function PricingStep({ form, products, showProducts, selectedSlot
       <PricePanel
         slotPrice={selectedSlot ? selectedSlot.price : null}
         podAmount={Number(watch('pod_amount')) || 0}
-        spots={Number(watch('no_of_spots')) || 0}
+        venueId={watch('venue_id') || null}
         isPhysical={isPhysical}
       />
       <TextField

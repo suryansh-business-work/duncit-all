@@ -5,12 +5,14 @@ interface Props {
   label: string;
   value: string;
   hint?: string;
+  /** Optional theme color path for the hint (e.g. "success.main"). */
+  hintColor?: string;
   icon: string;
   color?: 'primary' | 'success' | 'warning' | 'info' | 'error';
   loading?: boolean;
 }
 
-export default function StatCard({ label, value, hint, icon, color = 'primary', loading }: Readonly<Props>) {
+export default function StatCard({ label, value, hint, hintColor, icon, color = 'primary', loading }: Readonly<Props>) {
   return (
     <Card variant="outlined" sx={{ borderRadius: 3, flex: '1 1 220px', minWidth: 220 }}>
       <CardContent>
@@ -28,7 +30,7 @@ export default function StatCard({ label, value, hint, icon, color = 'primary', 
           </Typography>
         )}
         {hint && (
-          <Typography variant="caption" color="text.secondary">
+          <Typography variant="caption" color={hintColor ?? 'text.secondary'}>
             {hint}
           </Typography>
         )}

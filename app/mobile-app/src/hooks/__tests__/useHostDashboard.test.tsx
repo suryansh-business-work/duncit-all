@@ -15,6 +15,13 @@ function route(doc: unknown) {
     return Promise.resolve({
       me: { user_id: 'h1', full_name: 'Riya' },
       myWallet: { balance: 1200, currency_symbol: '₹', next_payout_at: future },
+      myHostEarningsSummary: {
+        currency_symbol: '₹',
+        lifetime_earnings: 4540.5,
+        pending_amount: 454.58,
+        pods_completed: 7,
+        this_month_earnings: 900,
+      },
       myAccountHealth: { total_score: 82, band: 'GREEN' },
     });
   if (doc === HostDashboardPodsDocument)
@@ -34,6 +41,8 @@ describe('useHostDashboard', () => {
     const { result } = renderHook(() => useHostDashboard());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
     expect(result.current.wallet?.balance).toBe(1200);
+    expect(result.current.earnings?.lifetime_earnings).toBe(4540.5);
+    expect(result.current.earnings?.pods_completed).toBe(7);
     expect(result.current.health?.total_score).toBe(82);
     expect(result.current.stats).toEqual({ total: 2, upcoming: 1, paid: 1 });
   });
@@ -46,6 +55,7 @@ describe('useHostDashboard', () => {
     });
     const { result } = renderHook(() => useHostDashboard());
     await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.earnings).toBeNull();
     expect(result.current.stats).toEqual({ total: 0, upcoming: 0, paid: 0 });
     expect(mockRequest).not.toHaveBeenCalledWith(
       HostDashboardPodsDocument,

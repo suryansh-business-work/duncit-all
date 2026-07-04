@@ -2,12 +2,20 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
+import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
 import { getFinanceSettings } from './finance.model';
+import {
+  computePodFinanceBreakdown,
+  type BreakdownRates,
+  type PodFinanceBreakdown,
+} from './breakdown.math';
 
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
 const clampPct = (n: number) => Math.min(100, Math.max(0, Number(n) || 0));
+const toPaise = (rupees: number) => Math.round((Number(rupees) || 0) * 100);
+const toRupees = (paise: number) => round2(paise / 100);
 
 // One party's payout statement. The same shape backs both the host's
 // "Host Share" lines and the venue owner's payout lines — only the percentages
@@ -23,6 +31,32 @@ export interface SettlementParty {
   payout_amount: number;
 }
 
+/** The full waterfall in rupees — GraphQL-ready mirror of the paise engine
+ * output. version identifies the engine that produced it (2 = venue slot price
+ * off the pool, host keeps the remainder). */
+export interface SettlementWaterfall {
+  version: number;
+  amount: number;
+  gst_pct: number;
+  gst_amount: number;
+  net_amount: number;
+  platform_fee_pct: number;
+  platform_fee_amount: number;
+  pool_amount: number;
+  /** The venue's booked slot price (Partners portal), clamped to the pool. */
+  venue_amount: number;
+  venue_commission_pct: number;
+  venue_commission_amount: number;
+  venue_receives: number;
+  /** The host's remainder: pool − venue amount. */
+  host_amount: number;
+  host_commission_pct: number;
+  host_commission_amount: number;
+  host_receives: number;
+  duncit_revenue: number;
+  host_earn_pct: number;
+}
+
 export interface PodSettlement {
   pod_id: string;
   pod_title: string;
@@ -30,14 +64,19 @@ export interface PodSettlement {
   collected_total: number;
   venue_bill: number;
   gst_pct: number;
-  host_share_pct: number;
   host_commission_pct: number;
-  venue_share_pct: number;
   venue_commission_pct: number;
   host: SettlementParty;
   venue: SettlementParty | null;
   has_venue: boolean;
+  waterfall: SettlementWaterfall;
 }
+
+/** Engine version stamped on new settlement snapshots — v2 = venue slot price
+ * off the pool + host remainder; v1 (venue-bill reimbursement + host share %)
+ * exists only in historical PaymentRelease.breakdown docs and is never
+ * recomputed. */
+export const SETTLEMENT_ENGINE_VERSION = 2;
 
 /** Money a completed pod actually took in = sum of its SUCCESS payments. */
 export async function collectedForPod(podId: string | Types.ObjectId): Promise<number> {
@@ -48,57 +87,98 @@ export async function collectedForPod(podId: string | Types.ObjectId): Promise<n
   return round2(rows[0]?.total ?? 0);
 }
 
-// Host statement (two-field "Default Deductions" model): from the money
-// collected, deduct the venue bill + GST to get the net pool. The host's gross
-// is `share%` of that net; Duncit then takes `commission%` of the host's gross.
-// The host is paid the remainder; everything else on the host side is Duncit's.
-function computeHostParty(
-  collected: number,
-  venueBill: number,
-  gstPct: number,
-  sharePct: number,
-  commissionPct: number
-): SettlementParty {
-  const gstAmount = round2((collected - venueBill) * (gstPct / 100));
-  const net = round2(collected - venueBill - gstAmount);
-  const hostGross = round2(net * (sharePct / 100));
-  const payoutAmount = round2(hostGross - hostGross * (commissionPct / 100));
-  const payoutPct = net > 0 ? round2((payoutAmount / net) * 100) : 0;
+/**
+ * Resolves the effective dynamic rates for a host/venue pair: per-entity
+ * commission overrides first (User.finance.host_commission_pct,
+ * Venue.venue_commission_pct — 0 means "inherit"), falling back to the
+ * FinanceSettings "Default Deductions". GST % and platform fee % are global.
+ */
+export async function resolveEffectiveRates(options: {
+  hostUserId?: string | Types.ObjectId | null;
+  venueId?: string | Types.ObjectId | null;
+}): Promise<BreakdownRates> {
+  const fs = await getFinanceSettings();
+  const hostUser = options.hostUserId
+    ? await UserModel.findById(options.hostUserId).select('finance.host_commission_pct')
+    : null;
+  const venueDoc = options.venueId
+    ? await VenueModel.findById(options.venueId).select('venue_commission_pct')
+    : null;
+
   return {
-    collected_total: collected,
-    venue_bill: venueBill,
-    gst_pct: gstPct,
-    gst_amount: gstAmount,
-    duncit_pct: round2(100 - payoutPct),
-    duncit_amount: round2(net - payoutAmount),
-    payout_pct: payoutPct,
-    payout_amount: payoutAmount,
+    gst_percent: clampPct(fs.gst_pct),
+    platform_fee_percent: clampPct(fs.platform_fee_pct),
+    host_commission_percent: clampPct(
+      hostUser?.finance?.host_commission_pct || fs.default_host_commission_pct
+    ),
+    venue_commission_percent: options.venueId
+      ? clampPct(venueDoc?.venue_commission_pct || fs.default_venue_commission_pct)
+      : 0,
   };
 }
 
-// Venue statement: from the venue bill, deduct GST, then Duncit takes its
-// commission % of what remains; the venue owner is paid the rest.
-function computeVenueParty(collected: number, venueBill: number, gstPct: number, commissionPct: number): SettlementParty {
-  const gstAmount = round2(venueBill * (gstPct / 100));
-  const afterGst = round2(venueBill - gstAmount);
-  const duncitAmount = round2(afterGst * (commissionPct / 100));
+/** The venue's money for a pod = its booked slot price (Partners portal).
+ * Legacy pods without a slot link fall back to the host-entered venue bill. */
+export async function venueAmountForPod(
+  pod: { venue_id?: Types.ObjectId | null; venue_slot_id?: Types.ObjectId | null },
+  venueBill: number
+): Promise<number> {
+  if (!pod.venue_id) return 0;
+  if (pod.venue_slot_id) {
+    const slot = await VenueSlotModel.findById(pod.venue_slot_id).select('price');
+    if (slot) return round2(slot.price);
+  }
+  return venueBill;
+}
+
+/** Paise engine output → rupee waterfall for GraphQL/persistence. */
+export function toWaterfall(b: PodFinanceBreakdown): SettlementWaterfall {
   return {
-    collected_total: collected,
-    venue_bill: venueBill,
-    gst_pct: gstPct,
-    gst_amount: gstAmount,
-    duncit_pct: commissionPct,
-    duncit_amount: duncitAmount,
-    payout_pct: round2(100 - commissionPct),
-    payout_amount: round2(afterGst - duncitAmount),
+    version: SETTLEMENT_ENGINE_VERSION,
+    amount: toRupees(b.amount_paise),
+    gst_pct: b.rates.gst_percent,
+    gst_amount: toRupees(b.gst_paise),
+    net_amount: toRupees(b.net_paise),
+    platform_fee_pct: b.rates.platform_fee_percent,
+    platform_fee_amount: toRupees(b.platform_fee_paise),
+    pool_amount: toRupees(b.pool_paise),
+    venue_amount: toRupees(b.venue_amount_paise),
+    venue_commission_pct: b.rates.venue_commission_percent,
+    venue_commission_amount: toRupees(b.venue_commission_paise),
+    venue_receives: toRupees(b.venue_receives_paise),
+    host_amount: toRupees(b.host_amount_paise),
+    host_commission_pct: b.rates.host_commission_percent,
+    host_commission_amount: toRupees(b.host_commission_paise),
+    host_receives: toRupees(b.host_receives_paise),
+    duncit_revenue: toRupees(b.duncit_revenue_paise),
+    host_earn_pct: b.host_earn_percent,
   };
+}
+
+/** Waterfall for an arbitrary GST-inclusive rupee amount + venue slot price at
+ * the given rates — powers the create-pod potential-earnings preview and live
+ * pod breakdowns. */
+export function waterfallForAmount(
+  amountRupees: number,
+  venueAmountRupees: number,
+  rates: BreakdownRates
+): SettlementWaterfall {
+  return toWaterfall(
+    computePodFinanceBreakdown(
+      Math.max(0, toPaise(amountRupees)),
+      Math.max(0, toPaise(venueAmountRupees)),
+      rates
+    )
+  );
 }
 
 /**
- * Compute the full host + venue settlement for a pod given the venue bill the
- * host entered. Percentages come from the host's / venue's per-entity overrides,
- * each falling back to the matching global "Default Deductions" when unset (0).
- * GST % is the global finance GST rate.
+ * Compute the full host + venue settlement for a pod. Engine v2: GST is
+ * extracted from the money collected (GST-inclusive), the platform fee comes
+ * off the net, the venue's booked slot price (Partners portal) comes off the
+ * remaining pool, and the host keeps the remainder — Duncit takes its
+ * commission % from each side. The venue bill the host enters is evidence
+ * (and the venue-amount fallback for legacy pods without a slot link).
  */
 export async function computePodSettlement(podDocId: string, venueBillAmount: number): Promise<PodSettlement> {
   if (!Types.ObjectId.isValid(podDocId)) {
@@ -108,7 +188,6 @@ export async function computePodSettlement(podDocId: string, venueBillAmount: nu
   if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
 
   const fs = await getFinanceSettings();
-  const gstPct = clampPct(fs.gst_pct);
   const collected = await collectedForPod(pod._id);
   const venueBill = Math.max(0, round2(venueBillAmount));
   if (venueBill > collected) {
@@ -117,23 +196,41 @@ export async function computePodSettlement(podDocId: string, venueBillAmount: nu
     });
   }
 
-  const hostId = pod.pod_hosts_id?.[0];
-  const hostUser = hostId
-    ? await UserModel.findById(hostId).select('finance.host_share_pct finance.host_commission_pct')
-    : null;
-  const hostSharePct = clampPct(hostUser?.finance?.host_share_pct || fs.default_host_share_pct);
-  const hostCommissionPct = clampPct(hostUser?.finance?.host_commission_pct || fs.default_host_commission_pct);
+  const hasVenue = !!pod.venue_id;
+  const rates = await resolveEffectiveRates({
+    hostUserId: pod.pod_hosts_id?.[0] ?? null,
+    venueId: hasVenue ? pod.venue_id : null,
+  });
+  const venueAmount = await venueAmountForPod(pod, venueBill);
+  const waterfall = toWaterfall(
+    computePodFinanceBreakdown(toPaise(collected), Math.max(0, toPaise(venueAmount)), rates)
+  );
 
-  const hasVenue = !!pod.venue_id && venueBill > 0;
-  let venueSharePct = 0;
-  let venueCommissionPct = 0;
-  let venue: SettlementParty | null = null;
-  if (hasVenue) {
-    const venueDoc = await VenueModel.findById(pod.venue_id).select('venue_share_pct venue_commission_pct');
-    venueSharePct = clampPct(venueDoc?.venue_share_pct || fs.default_venue_share_pct);
-    venueCommissionPct = clampPct(venueDoc?.venue_commission_pct || fs.default_venue_commission_pct);
-    venue = computeVenueParty(collected, venueBill, gstPct, venueCommissionPct);
-  }
+  // Legacy party lines, derived from the waterfall so older consumers keep a
+  // coherent statement: the host line carries the pod-level GST; the venue line
+  // carries none (GST is extracted once, from the customer payment).
+  const host: SettlementParty = {
+    collected_total: collected,
+    venue_bill: venueBill,
+    gst_pct: waterfall.gst_pct,
+    gst_amount: waterfall.gst_amount,
+    duncit_pct: waterfall.host_commission_pct,
+    duncit_amount: waterfall.host_commission_amount,
+    payout_pct: waterfall.host_earn_pct,
+    payout_amount: waterfall.host_receives,
+  };
+  const venue: SettlementParty | null = hasVenue
+    ? {
+        collected_total: collected,
+        venue_bill: venueBill,
+        gst_pct: 0,
+        gst_amount: 0,
+        duncit_pct: waterfall.venue_commission_pct,
+        duncit_amount: waterfall.venue_commission_amount,
+        payout_pct: round2(100 - waterfall.venue_commission_pct),
+        payout_amount: waterfall.venue_receives,
+      }
+    : null;
 
   return {
     pod_id: String(pod._id),
@@ -141,13 +238,12 @@ export async function computePodSettlement(podDocId: string, venueBillAmount: nu
     currency_symbol: fs.currency_symbol,
     collected_total: collected,
     venue_bill: venueBill,
-    gst_pct: gstPct,
-    host_share_pct: hostSharePct,
-    host_commission_pct: hostCommissionPct,
-    venue_share_pct: venueSharePct,
-    venue_commission_pct: venueCommissionPct,
-    host: computeHostParty(collected, venueBill, gstPct, hostSharePct, hostCommissionPct),
+    gst_pct: waterfall.gst_pct,
+    host_commission_pct: waterfall.host_commission_pct,
+    venue_commission_pct: waterfall.venue_commission_pct,
+    host,
     venue,
     has_venue: hasVenue,
+    waterfall,
   };
 }

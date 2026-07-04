@@ -106,7 +106,8 @@ export const venueResolvers = {
       args: { venue_doc_id: string; venue_share_pct: number; venue_commission_pct: number },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      // Finance manages deduction overrides too (Finance portal → overrides).
+      requireRole(ctx, [...ADMIN_REVIEW, 'FINANCE_MANAGER']);
       return venueService.setDeductions(args.venue_doc_id, args.venue_share_pct, args.venue_commission_pct);
     },
     updateVenueSettings: async (

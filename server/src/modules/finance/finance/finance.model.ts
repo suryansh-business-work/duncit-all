@@ -4,9 +4,10 @@ export interface IFinanceSettings extends Document {
   singleton_key: string;
   platform_fee_pct: number;
   gst_pct: number;
-  // Global "Default Deductions" — fallbacks used at settlement when a host /
-  // venue / product has no per-entity override. Two %s per side: a SHARE the
-  // host/venue keeps, and the COMMISSION Duncit takes from that share.
+  // Global "Default Deductions" — commission fallbacks used at settlement when
+  // a host / venue / product has no per-entity override. Engine v2: the venue's
+  // money is its booked slot price and the host keeps the pool remainder, so
+  // the *_share_pct fields are legacy/dormant (kept for stored data only).
   default_host_share_pct: number;
   default_host_commission_pct: number;
   default_venue_share_pct: number;

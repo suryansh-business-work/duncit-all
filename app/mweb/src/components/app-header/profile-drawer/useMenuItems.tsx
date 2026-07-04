@@ -14,6 +14,7 @@ import CategoryIcon from '@mui/icons-material/Category';
 import CardGiftcardIcon from '@mui/icons-material/CardGiftcard';
 import VolunteerActivismIcon from '@mui/icons-material/VolunteerActivism';
 import AccountBalanceWalletIcon from '@mui/icons-material/AccountBalanceWallet';
+import PaidIcon from '@mui/icons-material/Paid';
 import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 import { useStudioMode } from '../../../StudioModeContext';
 import { resolveMode } from '../../../studio-mode';
@@ -64,7 +65,9 @@ export function useMenuItems({ roles, onClose }: UseMenuItemsParams) {
     return { items };
   }
   if (effectiveMode === 'VENUE') {
-    return { items: studio({ label: 'Your Venues', icon: <StorefrontIcon {...sz} />, onClick: go('/venues/manage') }, '/venues/manage') };
+    const items = studio({ label: 'Your Venues', icon: <StorefrontIcon {...sz} />, onClick: go('/venues/manage') }, '/venues/manage');
+    items.splice(2, 0, { label: 'Earnings', icon: <PaidIcon {...sz} />, onClick: go('/venues/earnings') });
+    return { items };
   }
   if (effectiveMode === 'ECOMM') {
     const items = studio({ label: 'Your Products', icon: <Inventory2Icon {...sz} />, onClick: go('/products/manage') }, '/products/manage');

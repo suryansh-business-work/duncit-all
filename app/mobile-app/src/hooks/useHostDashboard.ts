@@ -7,6 +7,7 @@ import { graphqlRequest } from '@/services/graphql.client';
 type DashboardData = ResultOf<typeof HostDashboardDocument>;
 export type HostWallet = DashboardData['myWallet'];
 export type HostHealth = DashboardData['myAccountHealth'];
+export type HostEarnings = DashboardData['myHostEarningsSummary'];
 type HostPod = ResultOf<typeof HostDashboardPodsDocument>['pods'][number];
 
 export interface HostDashboardStats {
@@ -20,6 +21,7 @@ export interface HostDashboardStats {
 export function useHostDashboard() {
   const [me, setMe] = useState<DashboardData['me']>(null);
   const [wallet, setWallet] = useState<HostWallet | null>(null);
+  const [earnings, setEarnings] = useState<HostEarnings | null>(null);
   const [health, setHealth] = useState<HostHealth | null>(null);
   const [pods, setPods] = useState<HostPod[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -32,6 +34,7 @@ export function useHostDashboard() {
         if (!active) return;
         setMe(data.me ?? null);
         setWallet(data.myWallet ?? null);
+        setEarnings(data.myHostEarningsSummary ?? null);
         setHealth(data.myAccountHealth ?? null);
         const hostId = data.me?.user_id;
         if (!hostId) return;
@@ -57,5 +60,5 @@ export function useHostDashboard() {
     paid: pods.filter((p) => !p.pod_type?.includes('FREE')).length,
   };
 
-  return { me, wallet, health, stats, isLoading, error };
+  return { me, wallet, earnings, health, stats, isLoading, error };
 }

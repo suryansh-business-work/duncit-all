@@ -7,6 +7,7 @@ export const PAYMENT_RELEASE_REQUESTS = gql`
       release_id
       kind
       status
+      pod_id
       pod_title
       beneficiary_name
       beneficiary_email
@@ -22,6 +23,33 @@ export const PAYMENT_RELEASE_REQUESTS = gql`
       approved_amount
       approval_reason
       reviewed_at
+      breakdown {
+        version
+        collected_total
+        venue_bill
+        gst_pct
+        gst_amount
+        duncit_pct
+        duncit_amount
+        payout_pct
+        payout_amount
+        net_amount
+        platform_fee_pct
+        platform_fee_amount
+        pool_amount
+        share_amount
+        commission_pct
+        commission_amount
+        duncit_revenue
+      }
+    }
+  }
+`;
+
+export const PUBLIC_FINANCE_SETTINGS = gql`
+  query PublicFinanceSettings {
+    publicFinanceSettings {
+      currency_symbol
     }
   }
 `;

@@ -9,7 +9,7 @@ import {
   Typography,
 } from '@mui/material';
 import TableSkeleton from '../../components/TableSkeleton';
-import { APPROVE, HOSTS, REJECT, STATUSES } from './queries';
+import { APPROVE, HOSTS, REJECT, SET_HOST_DEDUCTIONS, STATUSES } from './queries';
 import HostEditDialog from './HostEditDialog';
 import HostReviewDialog from './HostReviewDialog';
 import HostsTable from './HostsTable';
@@ -21,6 +21,7 @@ export default function HostsPage() {
   });
   const [approve] = useMutation(APPROVE);
   const [reject] = useMutation(REJECT);
+  const [setHostDeductions, { loading: savingCommission }] = useMutation(SET_HOST_DEDUCTIONS);
   const [active, setActive] = useState<any | null>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
@@ -47,6 +48,15 @@ export default function HostsPage() {
     setActive(null);
     setNotes('');
     setTagsText('');
+    refetch();
+  };
+  const doSaveCommission = async (commissionPct: number) => {
+    await setHostDeductions({
+      variables: { user_id: active.user_id, host_commission_pct: commissionPct },
+    });
+    setActive((current: any) =>
+      current ? { ...current, host_commission_pct: commissionPct } : current
+    );
     refetch();
   };
 
@@ -78,7 +88,7 @@ export default function HostsPage() {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
 
       {loading && !data ? (
-        <TableSkeleton columns={7} />
+        <TableSkeleton columns={8} />
       ) : (
         <HostsTable hosts={data?.hosts ?? []} onEdit={setEditing} onReview={openReview} />
       )}
@@ -92,6 +102,8 @@ export default function HostsPage() {
         onClose={() => setActive(null)}
         onApprove={doApprove}
         onReject={doReject}
+        onSaveCommission={doSaveCommission}
+        savingCommission={savingCommission}
       />
 
       <HostEditDialog host={editing} onClose={() => setEditing(null)} onSaved={() => refetch()} />

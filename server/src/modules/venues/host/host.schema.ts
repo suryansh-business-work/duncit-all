@@ -35,6 +35,10 @@ export const hostTypeDefs = /* GraphQL */ `
     status: HostStatus!
     is_active: Boolean!
     reviewer_notes: String!
+    # Duncit commission % override on this host's payouts (0 = inherit the
+    # global default). Only populated on the admin/onboarding queries — null
+    # on publicHosts.
+    host_commission_pct: Float
     submitted_at: String
     approved_at: String
     rejected_at: String

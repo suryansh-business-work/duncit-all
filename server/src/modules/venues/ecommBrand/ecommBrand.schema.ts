@@ -34,6 +34,8 @@ export const ecommBrandTypeDefs = gql`
     contact_phone: String!
     registered_business_name: String!
     gstin: String!
+    # Duncit commission % on all this brand's product sales (0 = inherit).
+    product_commission_pct: Float!
     pan: String!
     established_year: Int
     address_line1: String!
@@ -107,5 +109,7 @@ export const ecommBrandTypeDefs = gql`
     rejectEcommBrand(brand_doc_id: ID!, notes: String!): EcommBrand!
     "Onboarding/admin: edit any brand (e.g. complete an approval-created draft) and optionally set its status."
     adminUpdateEcommBrand(brand_doc_id: ID!, input: EcommBrandInput!, status: EcommBrandStatus): EcommBrand!
+    "Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit)."
+    setBrandCommission(brand_doc_id: ID!, product_commission_pct: Float!): EcommBrand!
   }
 `;

@@ -13,12 +13,12 @@ const renderTable = (venues: unknown[], onEdit = vi.fn(), onReview = vi.fn()) =>
 const full = {
   id: '1', venue_name: 'The Loft', venue_type: 'CAFE', locality: 'Kothrud', city: 'Pune',
   postal_code: '411038', owner_name: 'Asha', owner_phone: '999', owner_email: 'a@b.com',
-  capacity: 40, status: 'APPROVED', submitted_at: '2026-01-02',
+  capacity: 40, status: 'APPROVED', submitted_at: '2026-01-02', venue_commission_pct: 15,
 };
 const sparse = {
   id: '2', venue_name: 'X', venue_type: 'BAR', locality: '', city: '',
   postal_code: '', owner_name: '', owner_phone: '', owner_email: '',
-  capacity: 0, status: 'DRAFT', submitted_at: null,
+  capacity: 0, status: 'DRAFT', submitted_at: null, venue_commission_pct: 0,
 };
 
 describe('VenuesTable', () => {
@@ -27,6 +27,8 @@ describe('VenuesTable', () => {
     const onReview = vi.fn();
     renderTable([full, sparse], onEdit, onReview);
     expect(screen.getByText('The Loft')).toBeInTheDocument();
+    expect(screen.getByText('15%')).toBeInTheDocument();
+    expect(screen.getByText('Default')).toBeInTheDocument();
     const buttons = screen.getAllByRole('button');
     fireEvent.click(buttons[0]);
     fireEvent.click(buttons[1]);

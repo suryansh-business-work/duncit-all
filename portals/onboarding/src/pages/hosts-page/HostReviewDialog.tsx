@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Button,
   Chip,
@@ -6,6 +7,8 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  InputAdornment,
+  Paper,
   Stack,
   TextField,
   Typography,
@@ -21,6 +24,8 @@ interface Props {
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
+  onSaveCommission: (commissionPct: number) => void;
+  savingCommission: boolean;
 }
 
 const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'error' | 'warning'> = {
@@ -63,7 +68,22 @@ export default function HostReviewDialog({
   onClose,
   onApprove,
   onReject,
+  onSaveCommission,
+  savingCommission,
 }: Readonly<Props>) {
+  const [commission, setCommission] = useState('0');
+  useEffect(() => {
+    setCommission(String(active?.host_commission_pct ?? 0));
+  }, [active]);
+
+  const commissionValid = (() => {
+    const n = Number(commission);
+    return Number.isFinite(n) && n >= 0 && n <= 100;
+  })();
+  const saveCommission = () => {
+    if (commissionValid) onSaveCommission(Number(commission));
+  };
+
   const hasDocs = !!(active?.passport_photo_url || active?.police_verification_url);
   return (
     <Dialog open={!!active} onClose={onClose} fullWidth maxWidth="sm">
@@ -116,6 +136,37 @@ export default function HostReviewDialog({
             helperText="Comma-separated tags applied when this host is approved."
             fullWidth
           />
+
+          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+            <Typography variant="subtitle2" fontWeight={800}>
+              Host commission
+            </Typography>
+            <Typography variant="caption" color="text.secondary" display="block">
+              The commission Duncit takes from this host&apos;s payouts. 0 = inherit default.
+            </Typography>
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1.5 }}>
+              <TextField
+                label="Commission from host"
+                type="number"
+                size="small"
+                value={commission}
+                onChange={(e) => setCommission(e.target.value)}
+                error={!commissionValid}
+                helperText="0 = inherit default"
+                inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Host commission percentage' }}
+                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                sx={{ maxWidth: 220 }}
+              />
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={saveCommission}
+                disabled={savingCommission || !commissionValid}
+              >
+                {savingCommission ? 'Saving…' : 'Save commission'}
+              </Button>
+            </Stack>
+          </Paper>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, pb: 2 }}>

@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import TableSkeleton from '../../components/TableSkeleton';
-import { APPROVE_BRAND, ECOMM_BRANDS, REJECT_BRAND, STATUSES } from './queries';
+import { APPROVE_BRAND, ECOMM_BRANDS, REJECT_BRAND, SET_BRAND_COMMISSION, STATUSES } from './queries';
 import EcommBrandsTable from './EcommBrandsTable';
 import EcommBrandReviewDialog from './EcommBrandReviewDialog';
 import EcommBrandEditDialog from './EcommBrandEditDialog';
@@ -14,6 +14,7 @@ export default function EcommBrandsPage() {
   });
   const [approve] = useMutation(APPROVE_BRAND);
   const [reject] = useMutation(REJECT_BRAND);
+  const [setBrandCommission, { loading: savingCommission }] = useMutation(SET_BRAND_COMMISSION);
   const [active, setActive] = useState<any | null>(null);
   const [editing, setEditing] = useState<any | null>(null);
   const [notes, setNotes] = useState('');
@@ -38,6 +39,15 @@ export default function EcommBrandsPage() {
     setActive(null);
     setNotes('');
     setTagsText('');
+    refetch();
+  };
+  const doSaveCommission = async (commissionPct: number) => {
+    await setBrandCommission({
+      variables: { id: active.id, product_commission_pct: commissionPct },
+    });
+    setActive((current: any) =>
+      current ? { ...current, product_commission_pct: commissionPct } : current
+    );
     refetch();
   };
 
@@ -69,7 +79,7 @@ export default function EcommBrandsPage() {
       {error && <Alert severity="error" sx={{ mb: 2 }}>{error.message}</Alert>}
 
       {loading && !data ? (
-        <TableSkeleton columns={6} />
+        <TableSkeleton columns={7} />
       ) : (
         <EcommBrandsTable brands={data?.ecommBrands ?? []} onEdit={setEditing} onReview={openReview} />
       )}
@@ -89,6 +99,8 @@ export default function EcommBrandsPage() {
         onClose={() => setActive(null)}
         onApprove={doApprove}
         onReject={doReject}
+        onSaveCommission={doSaveCommission}
+        savingCommission={savingCommission}
       />
     </Box>
   );

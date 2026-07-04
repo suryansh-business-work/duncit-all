@@ -1,6 +1,7 @@
 import EditIcon from '@mui/icons-material/Edit';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Avatar, Box, Chip, IconButton, Stack, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
+import { commissionLabel } from '../../utils/commissionLabel';
 
 interface Props {
   brands: any[];
@@ -17,6 +18,7 @@ export default function EcommBrandsTable({ brands, onEdit, onReview }: Readonly<
           <TableCell>Categories</TableCell>
           <TableCell>Owner</TableCell>
           <TableCell>Status</TableCell>
+          <TableCell>Commission</TableCell>
           <TableCell>Submitted</TableCell>
           <TableCell align="right">Actions</TableCell>
         </TableRow>
@@ -43,6 +45,7 @@ export default function EcommBrandsTable({ brands, onEdit, onReview }: Readonly<
               <Typography variant="caption" color="text.secondary">{brand.contact_email || brand.contact_phone || '—'}</Typography>
             </TableCell>
             <TableCell><Chip size="small" label={brand.status} /></TableCell>
+            <TableCell><Chip size="small" variant="outlined" label={commissionLabel(brand.product_commission_pct)} /></TableCell>
             <TableCell>{brand.submitted_at ? new Date(brand.submitted_at).toLocaleDateString() : '—'}</TableCell>
             <TableCell align="right">
               <Tooltip title="Edit">
@@ -59,7 +62,7 @@ export default function EcommBrandsTable({ brands, onEdit, onReview }: Readonly<
           </TableRow>
         ))}
         {brands.length === 0 && (
-          <TableRow><TableCell colSpan={6} align="center">No brands found.</TableCell></TableRow>
+          <TableRow><TableCell colSpan={7} align="center">No brands found.</TableCell></TableRow>
         )}
       </TableBody>
     </Table>

@@ -5,11 +5,12 @@ import EcommBrandsTable from './EcommBrandsTable';
 const full = {
   id: '1', brand_name: 'Acme', logo_url: 'https://img/acme.png', tagline: 'Quality goods',
   product_categories: ['Apparel', 'Decor'], contact_person: 'Asha', contact_email: 'a@b.com',
-  contact_phone: '999', status: 'SUBMITTED', submitted_at: '2026-01-02',
+  contact_phone: '999', status: 'SUBMITTED', submitted_at: '2026-01-02', product_commission_pct: 8,
 };
 const sparse = {
   id: '2', brand_name: '', logo_url: '', tagline: '', product_categories: [],
   contact_person: '', contact_email: '', contact_phone: '', status: 'DRAFT', submitted_at: null,
+  product_commission_pct: 0,
 };
 // product_categories omitted (nullish fallback) + phone-only contact (email empty).
 const phoneOnly = {
@@ -26,6 +27,8 @@ describe('EcommBrandsTable', () => {
     expect(screen.getByText('Apparel, Decor')).toBeInTheDocument();
     expect(screen.getByText('Untitled brand')).toBeInTheDocument();
     expect(screen.getByText('999')).toBeInTheDocument();
+    expect(screen.getByText('8%')).toBeInTheDocument();
+    expect(screen.getAllByText('Default').length).toBeGreaterThan(0);
     const buttons = screen.getAllByRole('button');
     fireEvent.click(buttons[0]);
     expect(onEdit).toHaveBeenCalledWith(full);

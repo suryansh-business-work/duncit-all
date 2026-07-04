@@ -1,6 +1,7 @@
 import EditIcon from '@mui/icons-material/Edit';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Chip, IconButton, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
+import { commissionLabel } from '../../utils/commissionLabel';
 
 interface HostCategory {
   super_category_name: string;
@@ -43,6 +44,7 @@ export default function HostsTable({ hosts, onEdit, onReview }: Readonly<Props>)
           <TableCell>Documents</TableCell>
           <TableCell>Category</TableCell>
           <TableCell>Status</TableCell>
+          <TableCell>Commission</TableCell>
           <TableCell>Submitted</TableCell>
           <TableCell align="right">Actions</TableCell>
         </TableRow>
@@ -64,6 +66,7 @@ export default function HostsTable({ hosts, onEdit, onReview }: Readonly<Props>)
             </TableCell>
             <TableCell><CategoryCell categories={host.host_categories} /></TableCell>
             <TableCell><Chip size="small" label={host.status} /></TableCell>
+            <TableCell><Chip size="small" variant="outlined" label={commissionLabel(host.host_commission_pct)} /></TableCell>
             <TableCell>{host.submitted_at ? new Date(host.submitted_at).toLocaleDateString() : '—'}</TableCell>
             <TableCell align="right">
               <Tooltip title="Edit"><IconButton size="small" onClick={() => onEdit(host)}><EditIcon fontSize="small" /></IconButton></Tooltip>
@@ -72,7 +75,7 @@ export default function HostsTable({ hosts, onEdit, onReview }: Readonly<Props>)
           </TableRow>
         ))}
         {hosts.length === 0 && (
-          <TableRow><TableCell colSpan={7} align="center">No hosts found.</TableCell></TableRow>
+          <TableRow><TableCell colSpan={8} align="center">No hosts found.</TableCell></TableRow>
         )}
       </TableBody>
     </Table>

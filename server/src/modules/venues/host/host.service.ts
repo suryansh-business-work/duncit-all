@@ -114,6 +114,7 @@ const toPub = (h: IHost) => ({
   status: h.status,
   is_active: h.is_active ?? true,
   reviewer_notes: h.reviewer_notes ?? '',
+  host_commission_pct: null as number | null,
   submitted_at: h.submitted_at ? h.submitted_at.toISOString() : null,
   approved_at: h.approved_at ? h.approved_at.toISOString() : null,
   rejected_at: h.rejected_at ? h.rejected_at.toISOString() : null,
@@ -137,20 +138,34 @@ async function assignApprovedHostRole(userId: Types.ObjectId) {
   await userService.assignRoles(String(userId), Array.from(current));
 }
 
+/** Attach each host's Duncit commission override (User.finance, 0 = inherit)
+ * — only for the gated admin/onboarding queries, never for publicHosts. */
+async function withCommission(rows: ReturnType<typeof toPub>[]) {
+  if (rows.length === 0) return rows;
+  const users = await UserModel.find({ _id: { $in: rows.map((r) => r.user_id) } }).select(
+    'finance.host_commission_pct'
+  );
+  const byId = new Map(users.map((u: any) => [String(u._id), u.finance?.host_commission_pct ?? 0]));
+  return rows.map((r) => ({ ...r, host_commission_pct: byId.get(r.user_id) ?? 0 }));
+}
+
 export const hostService = {
   async getMine(userId: string) {
     const h = await HostModel.findOne({ user_id: new Types.ObjectId(userId) });
     return h ? toPub(h) : null;
   },
-  async list(filter?: { status?: string }) {
+  async list(filter?: { status?: string }, opts?: { withCommission?: boolean }) {
     const q: any = {};
     if (filter?.status) q.status = filter.status;
     const docs = await HostModel.find(q).sort({ created_at: -1 });
-    return docs.map(toPub);
+    const rows = docs.map(toPub);
+    return opts?.withCommission ? withCommission(rows) : rows;
   },
   async getById(id: string) {
     const h = await HostModel.findById(id);
-    return h ? toPub(h) : null;
+    if (!h) return null;
+    const [row] = await withCommission([toPub(h)]);
+    return row ?? null;
   },
   async submitStep1(userId: string, input: any) {
     const h = await getOrCreate(userId);

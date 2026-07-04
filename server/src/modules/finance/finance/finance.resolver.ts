@@ -193,7 +193,8 @@ export const financeResolvers = {
       args: { user_id: string; host_commission_pct: number },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_RW);
+      // Finance + the Onboarding console (Onboarded Hosts) manage host commission.
+      requireRole(ctx, [...ADMIN_RW, 'ONBOARDING_MANAGER']);
       if (!Types.ObjectId.isValid(args.user_id)) {
         throw new GraphQLError('Invalid user', { extensions: { code: 'BAD_USER_INPUT' } });
       }

@@ -21,6 +21,7 @@ const toPub = (b: IEcommBrand) => ({
   contact_phone: b.contact_phone ?? '',
   registered_business_name: b.registered_business_name ?? '',
   gstin: b.gstin ?? '',
+  product_commission_pct: b.product_commission_pct ?? 0,
   pan: b.pan ?? '',
   established_year: b.established_year ?? null,
   address_line1: b.address_line1 ?? '',
@@ -177,6 +178,21 @@ export const ecommBrandService = {
     if (tags) brand.tags = tags.map((tag) => tag.trim()).filter(Boolean);
     await brand.save();
     await assignEcommRole(brand.owner_user_id);
+    return toPub(brand);
+  },
+
+  /** Brand-level Duncit commission %% on product sales (0 = inherit the
+   * per-product pct, then the global default). Onboarded-brand console. */
+  async setCommission(id: string, commissionPct: number) {
+    if (!Number.isFinite(commissionPct) || commissionPct < 0 || commissionPct > 100) {
+      throw new GraphQLError('product_commission_pct must be between 0 and 100', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const brand = await EcommBrandModel.findById(id);
+    if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+    brand.product_commission_pct = commissionPct;
+    await brand.save();
     return toPub(brand);
   },
 

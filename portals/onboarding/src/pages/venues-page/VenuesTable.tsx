@@ -3,6 +3,7 @@ import VisibilityIcon from '@mui/icons-material/Visibility';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Link as RouterLink } from 'react-router-dom';
 import { Chip, IconButton, Link, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
+import { commissionLabel } from '../../utils/commissionLabel';
 
 interface Props {
   venues: any[];
@@ -20,6 +21,7 @@ export default function VenuesTable({ venues, onEdit, onReview }: Readonly<Props
           <TableCell>Owner</TableCell>
           <TableCell>Capacity</TableCell>
           <TableCell>Status</TableCell>
+          <TableCell>Commission</TableCell>
           <TableCell>Submitted</TableCell>
           <TableCell align="right">Actions</TableCell>
         </TableRow>
@@ -50,6 +52,7 @@ export default function VenuesTable({ venues, onEdit, onReview }: Readonly<Props
             </TableCell>
             <TableCell>{venue.capacity}</TableCell>
             <TableCell><Chip size="small" label={venue.status} /></TableCell>
+            <TableCell><Chip size="small" variant="outlined" label={commissionLabel(venue.venue_commission_pct)} /></TableCell>
             <TableCell>{venue.submitted_at ? new Date(venue.submitted_at).toLocaleDateString() : '—'}</TableCell>
             <TableCell align="right">
               <Tooltip title="Venue details"><IconButton size="small" component={RouterLink} to={`/venues/${venue.id}`}><VisibilityIcon fontSize="small" /></IconButton></Tooltip>
@@ -59,7 +62,7 @@ export default function VenuesTable({ venues, onEdit, onReview }: Readonly<Props
           </TableRow>
         ))}
         {venues.length === 0 && (
-          <TableRow><TableCell colSpan={7} align="center">No venues found.</TableCell></TableRow>
+          <TableRow><TableCell colSpan={8} align="center">No venues found.</TableCell></TableRow>
         )}
       </TableBody>
     </Table>

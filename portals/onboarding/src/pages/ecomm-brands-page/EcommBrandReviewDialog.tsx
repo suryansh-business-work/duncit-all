@@ -1,3 +1,4 @@
+import { useEffect, useState } from 'react';
 import {
   Box,
   Button,
@@ -7,7 +8,9 @@ import {
   DialogContent,
   DialogTitle,
   Divider,
+  InputAdornment,
   Link,
+  Paper,
   Stack,
   TextField,
   Typography,
@@ -22,6 +25,8 @@ interface Props {
   onClose: () => void;
   onApprove: () => void;
   onReject: () => void;
+  onSaveCommission: (commissionPct: number) => void;
+  savingCommission: boolean;
 }
 
 const STATUS_COLOR: Record<string, 'default' | 'info' | 'success' | 'error' | 'warning'> = {
@@ -51,7 +56,22 @@ export default function EcommBrandReviewDialog({
   onClose,
   onApprove,
   onReject,
+  onSaveCommission,
+  savingCommission,
 }: Readonly<Props>) {
+  const [commission, setCommission] = useState('0');
+  useEffect(() => {
+    setCommission(String(active?.product_commission_pct ?? 0));
+  }, [active]);
+
+  const commissionValid = (() => {
+    const n = Number(commission);
+    return Number.isFinite(n) && n >= 0 && n <= 100;
+  })();
+  const saveCommission = () => {
+    if (commissionValid) onSaveCommission(Number(commission));
+  };
+
   const documents = active?.documents ?? [];
   const address = [active?.address_line1, active?.city, active?.state, active?.postal_code, active?.country]
     .filter(Boolean)
@@ -131,6 +151,35 @@ export default function EcommBrandReviewDialog({
             helperText="Comma separated tags for this approved brand."
             fullWidth
           />
+
+          <Paper variant="outlined" sx={{ p: 1.5, borderRadius: 2 }}>
+            <Typography variant="subtitle2" fontWeight={800}>
+              Product sales commission %
+            </Typography>
+            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mt: 1.5 }}>
+              <TextField
+                label="Product sales commission"
+                type="number"
+                size="small"
+                value={commission}
+                onChange={(e) => setCommission(e.target.value)}
+                error={!commissionValid}
+                helperText="applies to all this brand's product sales; 0 = inherit default"
+                inputProps={{ min: 0, max: 100, step: 1, 'aria-label': 'Product sales commission percentage' }}
+                InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
+                fullWidth
+              />
+              <Button
+                variant="outlined"
+                size="small"
+                onClick={saveCommission}
+                disabled={savingCommission || !commissionValid}
+                sx={{ whiteSpace: 'nowrap', mb: 2.5 }}
+              >
+                {savingCommission ? 'Saving…' : 'Save commission'}
+              </Button>
+            </Stack>
+          </Paper>
         </Stack>
       </DialogContent>
       <DialogActions sx={{ px: 3, py: 2 }}>

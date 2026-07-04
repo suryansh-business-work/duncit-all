@@ -1,5 +1,7 @@
 import { Types } from 'mongoose';
 import { ecommBrandService } from '../../ecommBrand.service';
+import { ecommBrandResolvers } from '../../ecommBrand.resolver';
+import { makeContext } from '@test/harness';
 
 describe('ecommBrandService integration', () => {
   const newOwner = () => new Types.ObjectId().toString();
@@ -59,5 +61,53 @@ describe('ecommBrandService integration', () => {
     const rejected = await ecommBrandService.reject(draft.id, 'Logo resolution too low');
     expect(rejected.status).toBe('REJECTED');
     expect(rejected.reviewer_notes).toBe('Logo resolution too low');
+  });
+});
+
+describe('brand-level product commission (Onboarded E-Commerce Brands console)', () => {
+  const newOwner = () => new Types.ObjectId().toString();
+
+  it('sets, validates, and exposes the brand commission override', async () => {
+    const draft = await ecommBrandService.save(newOwner(), null, {
+      brand_name: 'Override Co',
+      description: 'Brand with a custom commission.',
+      contact_email: 'oc@x.com',
+    });
+    expect(draft.product_commission_pct).toBe(0); // inherit by default
+
+    const updated = await ecommBrandService.setCommission(draft.id, 12.5);
+    expect(updated.product_commission_pct).toBe(12.5);
+
+    await expect(ecommBrandService.setCommission(draft.id, 101)).rejects.toThrow(/0 and 100/);
+    await expect(ecommBrandService.setCommission(draft.id, -1)).rejects.toThrow(/0 and 100/);
+    await expect(ecommBrandService.setCommission(draft.id, Number.NaN)).rejects.toThrow(/0 and 100/);
+    await expect(
+      ecommBrandService.setCommission(new Types.ObjectId().toString(), 10)
+    ).rejects.toThrow(/not found/i);
+  });
+
+  it('setBrandCommission mutation is gated to onboarding/admin/finance roles', async () => {
+    const draft = await ecommBrandService.save(newOwner(), null, {
+      brand_name: 'Gated Co',
+      description: 'Role gating test brand.',
+      contact_email: 'gc@x.com',
+    });
+    const M = ecommBrandResolvers.Mutation as any;
+    // The resolver gate throws synchronously (non-async arrow).
+    expect(() =>
+      M.setBrandCommission({}, { brand_doc_id: draft.id, product_commission_pct: 9 }, makeContext({ roles: ['USER'] }))
+    ).toThrow(/access denied/i);
+    const asOnboarding = await M.setBrandCommission(
+      {},
+      { brand_doc_id: draft.id, product_commission_pct: 9 },
+      makeContext({ roles: ['ONBOARDING_MANAGER'] })
+    );
+    expect(asOnboarding.product_commission_pct).toBe(9);
+    const asFinance = await M.setBrandCommission(
+      {},
+      { brand_doc_id: draft.id, product_commission_pct: 7 },
+      makeContext({ roles: ['FINANCE_MANAGER'] })
+    );
+    expect(asFinance.product_commission_pct).toBe(7);
   });
 });

@@ -32,6 +32,15 @@ const UPDATE_PROFILE = gql`
       whatsapp_number
       whatsapp_extension
       dob
+      address {
+        line1
+        line2
+        landmark
+        city
+        state
+        pincode
+        country
+      }
     }
   }
 `;

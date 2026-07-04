@@ -4,6 +4,16 @@ import { PERSON_NAME_PATTERN } from '../../../forms/validation/rules';
 const DOB_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const PHONE_PATTERN = /^\d{6,15}$/;
 const EXT_PATTERN = /^\+?\d{1,5}$/;
+const PINCODE_PATTERN = /^\d{4,10}$/;
+
+const addressText = (label: string, max: number) =>
+  z.string().trim().max(max, `${label} must be ${max} characters or fewer`);
+
+/** Main-address pincode — optional (empty = unset) or 4–10 digits. */
+const addressPincode = z
+  .string()
+  .trim()
+  .refine((v) => v === '' || PINCODE_PATTERN.test(v), 'Enter a valid pincode');
 
 const optionalPersonName = (label: string) =>
   z
@@ -63,6 +73,13 @@ export const accountEditSchema = z.object({
   phone_number: phone,
   whatsapp_extension: extension,
   whatsapp_number: phone,
+  address_line1: addressText('Address line 1', 200),
+  address_line2: addressText('Address line 2', 200),
+  address_landmark: addressText('Landmark', 160),
+  address_city: addressText('City', 120),
+  address_state: addressText('State', 120),
+  address_pincode: addressPincode,
+  address_country: addressText('Country', 80),
 });
 
 export type AccountEditValues = z.infer<typeof accountEditSchema>;
@@ -87,6 +104,13 @@ export function accountEditDefaults(initial: Partial<AccountEditValues>): Accoun
     phone_number: '',
     whatsapp_extension: '+91',
     whatsapp_number: '',
+    address_line1: '',
+    address_line2: '',
+    address_landmark: '',
+    address_city: '',
+    address_state: '',
+    address_pincode: '',
+    address_country: '',
     ...initial,
   };
 }
@@ -105,6 +129,15 @@ export function toUpdateProfileInput(values: AccountEditValues) {
     whatsapp_extension: values.whatsapp_extension,
     whatsapp_number: values.whatsapp_number,
     dob: values.dob,
+    address: {
+      line1: values.address_line1,
+      line2: values.address_line2,
+      landmark: values.address_landmark,
+      city: values.address_city,
+      state: values.address_state,
+      pincode: values.address_pincode,
+      country: values.address_country,
+    },
   };
   // Omit an empty dob so saving the form doesn't wipe an existing birth date.
   if (!input.dob) delete (input as { dob?: string }).dob;

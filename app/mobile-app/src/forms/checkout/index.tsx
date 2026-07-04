@@ -1,3 +1,10 @@
 export { CheckoutForm } from './checkout.form';
 export type { CheckoutFormProps } from './checkout.form';
-export { checkoutSchema, checkoutDefaults, type CheckoutFormValues } from './checkout.types';
+export { CheckoutContactFields } from './CheckoutContactFields';
+export { CheckoutBillingSection } from './CheckoutBillingSection';
+export {
+  checkoutSchema,
+  checkoutDefaults,
+  type CheckoutFormValues,
+  type CheckoutMainAddress,
+} from './checkout.types';

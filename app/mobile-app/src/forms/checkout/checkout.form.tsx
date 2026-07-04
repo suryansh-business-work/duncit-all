@@ -3,22 +3,31 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { checkoutDefaults, checkoutSchema, type CheckoutFormValues } from './checkout.types';
+import { CheckoutBillingSection } from './CheckoutBillingSection';
+import { CheckoutContactFields } from './CheckoutContactFields';
+import {
+  checkoutDefaults,
+  checkoutSchema,
+  type CheckoutFormValues,
+  type CheckoutMainAddress,
+} from './checkout.types';
 
 export interface CheckoutFormProps {
   initialValues?: Partial<CheckoutFormValues>;
+  /** The user's saved main address — powers the "same as main" summary/prefill. */
+  mainAddress?: CheckoutMainAddress | null;
   loading?: boolean;
   errorMessage?: string | null;
   dummyMode?: boolean;
   onSubmit: (values: CheckoutFormValues) => void | Promise<void>;
 }
 
-/** Checkout contact + payment-method form — RN twin of mWeb's checkout form. */
+/** Checkout contact + billing form — RN twin of mWeb's checkout form. */
 export function CheckoutForm({
   initialValues,
+  mainAddress = null,
   loading,
   errorMessage,
   dummyMode = true,
@@ -33,39 +42,9 @@ export function CheckoutForm({
   const simulate = useController({ control, name: 'simulate_failure' });
 
   return (
-    <YStack gap={14}>
-      <FormTextField
-        control={control}
-        name="email"
-        label="Email"
-        autoCapitalize="none"
-        keyboardType="email-address"
-      />
-      <XStack gap={12}>
-        <YStack width={96}>
-          <FormTextField
-            control={control}
-            name="phone_extension"
-            label="Code"
-            keyboardType="phone-pad"
-          />
-        </YStack>
-        <YStack flex={1}>
-          <FormTextField
-            control={control}
-            name="phone_number"
-            label="Phone"
-            keyboardType="phone-pad"
-          />
-        </YStack>
-      </XStack>
-      <FormTextField
-        control={control}
-        name="billing_address"
-        label="Billing address"
-        multiline
-        numberOfLines={2}
-      />
+    <YStack gap={16}>
+      <CheckoutContactFields control={control} />
+      <CheckoutBillingSection control={control} mainAddress={mainAddress} />
 
       {dummyMode ? (
         <XStack

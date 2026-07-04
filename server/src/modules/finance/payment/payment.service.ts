@@ -14,8 +14,23 @@ import {
   verifyRazorpaySignature,
 } from './razorpay.gateway';
 import { couponService } from '@modules/finance/coupon/coupon.service';
+import { toPostalAddress, composeAddressLine, type PostalAddress } from '@utils/address';
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
+
+const emptyBilling = () => ({
+  name: '',
+  email: '',
+  phone: '',
+  gstin: '',
+  line1: '',
+  line2: '',
+  landmark: '',
+  city: '',
+  state: '',
+  pincode: '',
+  country: 'India',
+});
 
 const toPub = (p: IPayment) => ({
   id: String(p._id),
@@ -26,6 +41,7 @@ const toPub = (p: IPayment) => ({
   user_email: p.user_email,
   user_phone: p.user_phone,
   billing_address: p.billing_address ?? '',
+  billing: { ...emptyBilling(), ...((p.billing as any)?.toObject?.() ?? p.billing ?? {}) },
   checkout_url: p.checkout_url ?? '',
   target_type: p.target_type,
   pod_id: p.pod_id ? String(p.pod_id) : null,
@@ -115,7 +131,38 @@ function selectedProductTotal(pod: any, selectedProducts: any[] = []) {
 }
 
 const userDisplayName = (user: any) =>
-  [user.first_name, user.last_name].filter(Boolean).join(' ').trim() || user.email || 'Customer';
+  [user.profile?.first_name ?? user.first_name, user.profile?.last_name ?? user.last_name]
+    .filter(Boolean)
+    .join(' ')
+    .trim() ||
+  user.auth?.email ||
+  user.email ||
+  'Customer';
+
+/**
+ * Resolve the buyer identity + structured billing snapshot for a checkout.
+ * Prefers the structured `input.billing` (address may differ from the main
+ * address); falls back to the legacy free-text `billing_address` (parsed into
+ * line1) so older clients keep working. Composes the flat `billing_address`
+ * string from the structured parts for legacy readers + compact displays.
+ */
+function buildBuyerFields(input: any, user: any) {
+  const contactPhone = `${input.contact_phone_extension} ${input.contact_phone_number}`.trim();
+  const name = String(input.contact_name ?? '').trim() || userDisplayName(user);
+  const email = String(input.contact_email ?? '').trim().toLowerCase();
+  const legacyText = String(input.billing_address ?? '').trim();
+  // Structured billing is preferred; legacy free-text goes into line1 verbatim,
+  // and its one-line string is kept exactly as typed (no country appended).
+  const address: PostalAddress = input.billing
+    ? toPostalAddress(input.billing)
+    : toPostalAddress({ line1: legacyText });
+  const gstin = String(input.billing?.gstin ?? '').trim().toUpperCase();
+  // Billing email may be entered separately; defaults to the main contact email.
+  const billingEmail = String(input.billing?.email ?? '').trim().toLowerCase() || email;
+  const billing = { name, email: billingEmail, phone: contactPhone, gstin, ...address };
+  const billing_address = input.billing ? composeAddressLine(address) : legacyText;
+  return { user_name: name, user_email: email, user_phone: contactPhone, billing, billing_address };
+}
 
 /** The metadata blob recorded on every payment doc (source + pod breakdown). */
 const paymentMetadata = (input: any, pod: any) => ({
@@ -206,6 +253,37 @@ async function bookPodForPayment(pod: any, userId: any, paymentDocId: string) {
   }
 }
 
+/** Multi-line bill-to address for the invoice, composed from the frozen billing
+ * snapshot. Empty parts drop out; returns [] when no address was captured. */
+function billingAddressLines(b?: IPayment['billing']): string[] {
+  if (!b) return [];
+  const cityState = [b.city, b.state].filter(Boolean).join(', ');
+  return [
+    b.line1,
+    [b.line2, b.landmark].filter(Boolean).join(', '),
+    [cityState, b.pincode].filter(Boolean).join(' - '),
+    b.country,
+  ]
+    .map((s) => (s || '').trim())
+    .filter(Boolean);
+}
+
+/** Invoice bill-to fields from a payment — prefers the billing snapshot, falls
+ * back to the flat buyer identity for older payments without a billing block.
+ * Both the main contact email and a differing billing email print on the invoice. */
+function invoiceBillTo(doc: IPayment) {
+  const b = doc.billing;
+  const billingEmail = b?.email && b.email !== doc.user_email ? b.email : undefined;
+  return {
+    customer_name: b?.name || doc.user_name,
+    customer_email: doc.user_email,
+    customer_billing_email: billingEmail,
+    customer_phone: b?.phone || doc.user_phone || undefined,
+    customer_gstin: b?.gstin || undefined,
+    customer_address_lines: billingAddressLines(b),
+  };
+}
+
 /** Post-success side effects shared by every gateway: book the pod, generate the
  * invoice PDF and email the receipt. The payment doc must already be SUCCESS with
  * an invoice number + paid_at set. Best-effort — failures here never fail payment. */
@@ -216,9 +294,7 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
     const pdf = await generateInvoicePdf({
       invoice_no: doc.invoice_no!,
       invoice_date: doc.paid_at!,
-      customer_name: doc.user_name,
-      customer_email: doc.user_email,
-      customer_phone: doc.user_phone || undefined,
+      ...invoiceBillTo(doc),
       business_name: fs.business_name,
       business_address: fs.business_address,
       business_gstin: fs.business_gstin,
@@ -314,16 +390,12 @@ export const paymentService = {
     const status = input.simulate_failure ? 'FAILED' : 'SUCCESS';
     const paidAt = status === 'SUCCESS' ? new Date() : null;
     const invoice_no = status === 'SUCCESS' ? await nextInvoiceNumber() : null;
-    const contactPhone = `${input.contact_phone_extension} ${input.contact_phone_number}`.trim();
 
     const doc = await PaymentModel.create({
       payment_id: newPaymentId(),
       invoice_no,
       user_id: user._id,
-      user_name: userDisplayName(user),
-      user_email: input.contact_email,
-      user_phone: contactPhone,
-      billing_address: input.billing_address,
+      ...buildBuyerFields(input, user),
       checkout_url: input.checkout_url,
       target_type: input.pod_id ? 'POD' : 'OTHER',
       pod_id: input.pod_id ? new Types.ObjectId(input.pod_id) : null,
@@ -366,14 +438,10 @@ export const paymentService = {
       userId
     );
     const payment_id = newPaymentId();
-    const contactPhone = `${input.contact_phone_extension} ${input.contact_phone_number}`.trim();
     const base = {
       payment_id,
       user_id: user._id,
-      user_name: userDisplayName(user),
-      user_email: input.contact_email,
-      user_phone: contactPhone,
-      billing_address: input.billing_address,
+      ...buildBuyerFields(input, user),
       checkout_url: input.checkout_url,
       target_type: input.pod_id ? 'POD' : 'OTHER',
       pod_id: input.pod_id ? new Types.ObjectId(input.pod_id) : null,
@@ -525,9 +593,7 @@ export const paymentService = {
     const pdf = await generateInvoicePdf({
       invoice_no: doc.invoice_no,
       invoice_date: doc.paid_at || doc.created_at,
-      customer_name: doc.user_name,
-      customer_email: doc.user_email,
-      customer_phone: doc.user_phone || undefined,
+      ...invoiceBillTo(doc),
       business_name: fs.business_name,
       business_address: fs.business_address,
       business_gstin: fs.business_gstin,

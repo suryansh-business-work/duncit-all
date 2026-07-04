@@ -35,6 +35,34 @@ describe('accountEditDefaults', () => {
       phone_number: '',
       whatsapp_extension: '+91',
       whatsapp_number: '',
+      address_line1: '',
+      address_line2: '',
+      address_landmark: '',
+      address_city: '',
+      address_state: '',
+      address_pincode: '',
+      address_country: '',
+    });
+  });
+
+  it('seeds the main-address fields from the loaded user', () => {
+    const me = {
+      ...fullMe,
+      address: {
+        line1: '9 Palm Road',
+        line2: 'Flat 2',
+        landmark: 'Near Lake',
+        city: 'Delhi',
+        state: 'Delhi',
+        pincode: '110001',
+        country: 'India',
+      },
+    } as unknown as AccountMe;
+    expect(accountEditDefaults(me)).toMatchObject({
+      address_line1: '9 Palm Road',
+      address_landmark: 'Near Lake',
+      address_pincode: '110001',
+      address_country: 'India',
     });
   });
 
@@ -77,6 +105,15 @@ describe('toUpdateProfileInput', () => {
       phone_number: '9876543210',
       whatsapp_extension: '+44',
       whatsapp_number: '5551234',
+      address: {
+        line1: '',
+        line2: '',
+        landmark: '',
+        city: '',
+        state: '',
+        pincode: '',
+        country: '',
+      },
     });
     expect('zone' in input).toBe(false);
     expect(input.dob).toBeUndefined();

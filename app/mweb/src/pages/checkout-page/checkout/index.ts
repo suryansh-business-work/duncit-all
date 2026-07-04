@@ -3,5 +3,7 @@ export {
   checkoutSchema,
   checkoutDefaults,
   toCheckoutContact,
+  toCheckoutBilling,
+  resolveBillingAddress,
 } from './checkout.types';
-export type { CheckoutFormValues } from './checkout.types';
+export type { CheckoutFormValues, PostalAddressParts } from './checkout.types';

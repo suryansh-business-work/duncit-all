@@ -1,5 +1,7 @@
 import PDFDocument from 'pdfkit';
 import QRCode from 'qrcode';
+import fs from 'node:fs';
+import path from 'node:path';
 
 export interface TicketPdfData {
   brand: string;
@@ -16,9 +18,18 @@ export interface TicketPdfData {
   attendee_email: string;
 }
 
-const ACCENT = '#ff4f73';
+const ACCENT = '#F82D2F';
 const INK = '#111827';
 const MUTED = '#6b7280';
+
+// Bundled white brand mark shown on the ticket band (loaded once).
+const BRAND_MARK: Buffer | null = (() => {
+  try {
+    return fs.readFileSync(path.resolve(__dirname, '../_assets/duncit-mark-white.png'));
+  } catch {
+    return null;
+  }
+})();
 
 /** Renders a single, designed event-ticket PDF with an embedded verifiable QR. */
 export async function generateTicketPdf(data: TicketPdfData): Promise<Buffer> {
@@ -36,11 +47,20 @@ export async function generateTicketPdf(data: TicketPdfData): Promise<Buffer> {
       const H = doc.page.height;
       const stubX = W - 200;
 
-      // Background + accent band
+      // Background + accent band (brand mark + name)
       doc.rect(0, 0, W, H).fill('#ffffff');
       doc.rect(0, 0, W, 64).fill(ACCENT);
-      doc.fillColor('#ffffff').fontSize(20).font('Helvetica-Bold').text(data.brand, 28, 22);
-      doc.fontSize(10).font('Helvetica').text('EVENT TICKET', 28, 44);
+      let brandX = 28;
+      if (BRAND_MARK) {
+        try {
+          doc.image(BRAND_MARK, 28, 16, { fit: [32, 32], valign: 'center' });
+          brandX = 68;
+        } catch {
+          brandX = 28;
+        }
+      }
+      doc.fillColor('#ffffff').fontSize(20).font('Helvetica-Bold').text(data.brand, brandX, 18);
+      doc.fontSize(10).font('Helvetica').text('EVENT TICKET', brandX, 42);
 
       // Left: event details
       const leftX = 28;

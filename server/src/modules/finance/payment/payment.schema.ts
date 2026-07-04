@@ -11,6 +11,35 @@ export const paymentTypeDefs = /* GraphQL */ `
     OTHER
   }
 
+  "Structured billing block snapshotted on a payment (drives the invoice bill-to)."
+  type BillingDetails {
+    name: String!
+    email: String!
+    phone: String!
+    gstin: String!
+    line1: String!
+    line2: String!
+    landmark: String!
+    city: String!
+    state: String!
+    pincode: String!
+    country: String!
+  }
+
+  "Structured billing address entered at checkout (may differ from the main address)."
+  input CheckoutBillingInput {
+    "Billing contact email — may differ from the main contact email; both print on the invoice."
+    email: String
+    gstin: String
+    line1: String!
+    line2: String
+    landmark: String
+    city: String!
+    state: String!
+    pincode: String!
+    country: String
+  }
+
   type Payment {
     id: ID!
     payment_id: String!
@@ -19,7 +48,9 @@ export const paymentTypeDefs = /* GraphQL */ `
     user_name: String!
     user_email: String!
     user_phone: String
+    "Legacy one-line billing address, composed from the structured billing block."
     billing_address: String!
+    billing: BillingDetails!
     checkout_url: String!
     target_type: PaymentTargetType!
     pod_id: ID
@@ -68,11 +99,15 @@ export const paymentTypeDefs = /* GraphQL */ `
     amount: Float!
     selected_products: [CheckoutProductSelectionInput!]
     description: String
+    "Buyer's full name for the invoice bill-to (falls back to the profile name)."
+    contact_name: String
     contact_email: String!
     contact_phone: String
     contact_phone_extension: String!
     contact_phone_number: String!
-    billing_address: String!
+    "Structured billing address (preferred). Legacy free-text still accepted."
+    billing: CheckoutBillingInput
+    billing_address: String
     checkout_url: String!
     coupon_code: String
     simulate_failure: Boolean
@@ -91,11 +126,13 @@ export const paymentTypeDefs = /* GraphQL */ `
     amount: Float!
     selected_products: [CheckoutProductSelectionInput!]
     description: String
+    contact_name: String
     contact_email: String!
     contact_phone: String
     contact_phone_extension: String!
     contact_phone_number: String!
-    billing_address: String!
+    billing: CheckoutBillingInput
+    billing_address: String
     checkout_url: String!
     coupon_code: String
   }

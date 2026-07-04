@@ -122,6 +122,18 @@ const profileLinkSchema = yup.object({
   url: yup.string().trim().url().max(2048).required(),
 });
 
+// Structured main postal address — reused by the profile update. Every part is
+// optional (users fill it gradually); lengths guard the DB fields.
+export const postalAddressSchema = yup.object({
+  line1: yup.string().trim().max(200).optional(),
+  line2: yup.string().trim().max(200).optional(),
+  landmark: yup.string().trim().max(160).optional(),
+  city: yup.string().trim().max(120).optional(),
+  state: yup.string().trim().max(120).optional(),
+  pincode: yup.string().trim().max(12).optional(),
+  country: yup.string().trim().max(80).optional(),
+});
+
 export const updateMyProfileSchema = yup.object({
   first_name: yup.string().min(1).max(60).optional(),
   last_name: yup.string().min(1).max(60).optional(),
@@ -156,6 +168,8 @@ export const updateMyProfileSchema = yup.object({
     .string()
     .matches(extRegex, { message: 'Invalid WhatsApp extension', excludeEmptyString: true })
     .optional(),
+  // The saved main postal address; every part optional so partial edits are ok.
+  address: postalAddressSchema.optional(),
 });
 
 export const petProfileSchema = yup.object({

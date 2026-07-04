@@ -5,6 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { FormTextField } from '@/components/FormTextField';
 import { PrimaryButton } from '@/components/PrimaryButton';
+import { AddressFields } from '@/forms/components/AddressFields';
 import type { AccountMe } from '@/hooks/useAccount';
 import type { CountryNode } from '@/utils/location-tree';
 import { ContactFields } from './ContactFields';
@@ -15,6 +16,16 @@ import {
   accountEditSchema,
   type AccountEditValues,
 } from './account-edit.types';
+
+const ADDRESS_NAMES = {
+  line1: 'address_line1',
+  line2: 'address_line2',
+  landmark: 'address_landmark',
+  city: 'address_city',
+  state: 'address_state',
+  pincode: 'address_pincode',
+  country: 'address_country',
+} as const;
 
 export interface AccountEditFormProps {
   me: AccountMe | null;
@@ -97,6 +108,11 @@ export function AccountEditForm({
       <LocationSelect control={control} setValue={setValue} countries={countries} />
 
       <ContactFields control={control} setValue={setValue} />
+
+      <Text fontSize={12} fontWeight="900" color="$muted" letterSpacing={0.6}>
+        MAIN ADDRESS
+      </Text>
+      <AddressFields control={control} names={ADDRESS_NAMES} />
 
       <XStack
         testID="account-edit-discard"

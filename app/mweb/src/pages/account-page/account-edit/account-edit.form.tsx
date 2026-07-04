@@ -1,13 +1,24 @@
 import { useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Alert, Button, Stack } from '@mui/material';
+import { Alert, Button, Stack, Typography } from '@mui/material';
 import RhfTextField from '../../../forms/components/RhfTextField';
+import AddressFields, { type AddressFieldNames } from '../../../forms/components/AddressFields';
 import type { CountryNode } from '../../../utils/location-tree';
 import DobDateField from './DobDateField';
 import LocationSelect from './LocationSelect';
 import ContactFields from './ContactFields';
 import { accountEditSchema, type AccountEditValues } from './account-edit.types';
+
+const ADDRESS_NAMES: AddressFieldNames<AccountEditValues> = {
+  line1: 'address_line1',
+  line2: 'address_line2',
+  landmark: 'address_landmark',
+  city: 'address_city',
+  state: 'address_state',
+  pincode: 'address_pincode',
+  country: 'address_country',
+};
 
 interface Props {
   countries: CountryNode[];
@@ -100,6 +111,10 @@ export default function AccountEditForm({
         <DobDateField control={control} />
         <LocationSelect control={control} setValue={setValue} countries={countries} />
         <ContactFields control={control} setValue={setValue} />
+        <Typography variant="overline" color="text.secondary" fontWeight={900}>
+          Main address
+        </Typography>
+        <AddressFields control={control} names={ADDRESS_NAMES} size="small" shrinkLabels />
         <Stack direction="row" spacing={1}>
           <Button
             type="button"

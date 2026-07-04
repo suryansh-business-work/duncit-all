@@ -17,7 +17,8 @@ import {
 } from '@/graphql/checkout';
 import type { CheckoutBillingInput } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
-import type { CheckoutFormValues, CheckoutMainAddress } from '@/forms/checkout';
+import type { CheckoutContact, CheckoutFormValues, CheckoutMainAddress } from '@/forms/checkout';
+import type { SelectedProduct } from '@/hooks/usePodProductSelection';
 
 export type FinanceSettings = ResultOf<typeof MobilePublicFinanceDocument>['publicFinanceSettings'];
 export type CheckoutPod = ResultOf<typeof MobileCheckoutPodDocument>['pod'];
@@ -60,6 +61,33 @@ export function buildCheckoutInitialValues(me: CheckoutMe): Partial<CheckoutForm
   };
 }
 
+/** Read-only contact for the checkout summary, resolved from the loaded user.
+ * Returns null until the profile has loaded so the card can show a spinner
+ * instead of blanks (the form prefill still supplies what is sent on pay). */
+export function buildCheckoutContact(me: CheckoutMe): CheckoutContact | null {
+  if (!me) return null;
+  return {
+    name: [me.first_name, me.last_name].filter(Boolean).join(' '),
+    email: me.email ?? '',
+    phone_extension: me.phone_extension ?? '',
+    phone_number: me.phone_number ?? '',
+  };
+}
+
+/** Sum the picked products' line totals (unit_cost × qty) against the pod's
+ * product catalogue. The server recomputes + validates this, so it is only for
+ * the displayed amount. Products missing from the catalogue contribute nothing. */
+export function sumSelectedProducts(
+  pod: CheckoutPod,
+  selectedProducts: SelectedProduct[],
+): number {
+  const byId = new Map((pod?.product_requests ?? []).map((p) => [p.product_id, p]));
+  return selectedProducts.reduce(
+    (sum, item) => sum + Number(byId.get(item.product_id)?.unit_cost ?? 0) * item.quantity,
+    0,
+  );
+}
+
 /** Build the structured billing block sent on pay. Uses the saved main address
  * when "same as main" is on, else the entered fields; billing email is sent only
  * when it differs from the contact email, and GSTIN only when non-empty. */
@@ -86,7 +114,7 @@ export function buildCheckoutBilling(
 
 /** Loads checkout context (finance + pod + me) and runs the dummy payment +
  * invoice download. RN twin of mWeb's CheckoutPage data layer. */
-export function useCheckout(podId: string) {
+export function useCheckout(podId: string, selectedProducts: SelectedProduct[] = []) {
   const [finance, setFinance] = useState<FinanceSettings | null>(null);
   const [pod, setPod] = useState<CheckoutPod>(null);
   const [me, setMe] = useState<CheckoutMe>(null);
@@ -119,6 +147,8 @@ export function useCheckout(podId: string) {
   }, [podId]);
 
   const initialValues = useMemo(() => buildCheckoutInitialValues(me), [me]);
+  // Displayed add-on total for the picked products; the server is authoritative.
+  const productTotal = sumSelectedProducts(pod, selectedProducts);
 
   const contactInput = (
     values: CheckoutFormValues,
@@ -135,6 +165,7 @@ export function useCheckout(podId: string) {
     billing: buildCheckoutBilling(values, me?.address ?? null),
     checkout_url: CHECKOUT_URL,
     coupon_code: couponCode || null,
+    selected_products: selectedProducts,
   });
 
   /** Persist the entered billing address as the main address when opted in. The
@@ -235,6 +266,7 @@ export function useCheckout(podId: string) {
     pod,
     me,
     initialValues,
+    productTotal,
     availableCoupons,
     isLoading,
     pay,

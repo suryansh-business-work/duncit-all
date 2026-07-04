@@ -13,6 +13,7 @@ import {
 import { StackScreen } from '@/components/StackScreen';
 import { CheckoutForm, type CheckoutFormValues } from '@/forms/checkout';
 import {
+  buildCheckoutContact,
   useCheckout,
   type CheckoutPayment,
   type CouponPreview,
@@ -55,11 +56,13 @@ export function CheckoutScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   const route = useRoute<RouteProp<RootStackParamList, 'Checkout'>>();
   const podId = route.params?.podId ?? '';
+  const selectedProducts = route.params?.selectedProducts ?? [];
   const {
     finance,
     pod,
     me,
     initialValues,
+    productTotal,
     availableCoupons,
     isLoading,
     pay,
@@ -67,7 +70,7 @@ export function CheckoutScreen() {
     verifyRazorpay,
     previewCoupon,
     downloadInvoice,
-  } = useCheckout(podId);
+  } = useCheckout(podId, selectedProducts);
   const { download: downloadTicket } = usePodTicket();
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -78,7 +81,7 @@ export function CheckoutScreen() {
   const [couponError, setCouponError] = useState<string | null>(null);
   const [applyingCoupon, setApplyingCoupon] = useState(false);
 
-  const amount = Number(pod?.pod_amount ?? 0);
+  const amount = Number(pod?.pod_amount ?? 0) + productTotal;
   const breakup = buildBreakup(amount, finance);
   // Razorpay takes precedence whenever its Tech-portal keys are set; the dummy
   // gateway is only a local fallback.
@@ -87,6 +90,10 @@ export function CheckoutScreen() {
   const appliedCode = coupon?.ok ? coupon.code : null;
   const effectiveTotal = coupon?.ok ? coupon.final_total : (breakup?.total ?? amount);
   const onDownloadTicket = podId ? () => downloadTicket(podId) : undefined;
+  // Render the contact from the freshly-loaded profile (not just the form
+  // prefill), with a spinner while it is still loading, so the card is robust.
+  const contact = buildCheckoutContact(me);
+  const contactLoading = isLoading && !me;
 
   const applyCoupon = async (codeArg?: string) => {
     const code = (codeArg ?? couponCode).trim();
@@ -178,7 +185,7 @@ export function CheckoutScreen() {
         </ScrollView>
       ) : (
         <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
-          <OrderSummary pod={pod} breakup={breakup} />
+          <OrderSummary pod={pod} breakup={breakup} selectedProducts={selectedProducts} />
           <CouponField
             code={couponCode}
             setCode={setCouponCode}
@@ -199,6 +206,8 @@ export function CheckoutScreen() {
           <CheckoutForm
             initialValues={initialValues}
             mainAddress={me?.address ?? null}
+            contact={contact}
+            contactLoading={contactLoading}
             loading={submitting}
             errorMessage={error}
             dummyMode={dummyMode}

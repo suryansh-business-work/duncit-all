@@ -1,5 +1,5 @@
 import { fireEvent, screen } from '@testing-library/react-native';
-import { Linking } from 'react-native';
+import { Dimensions, Linking } from 'react-native';
 import { Text } from 'tamagui';
 
 import { AuthAvatarsStrip } from '@/components/AuthAvatarsStrip';
@@ -136,6 +136,27 @@ describe('AuthLogo', () => {
       height: 40,
       width: 160,
     });
+  });
+
+  it('clamps a very wide logo to the viewport width (minus padding)', () => {
+    const dims = jest
+      .spyOn(Dimensions, 'get')
+      .mockReturnValue({ width: 200, height: 800, scale: 1, fontScale: 1 });
+    mockedUseBranding.mockReturnValue(
+      brandingResult({
+        data: { branding: { app_name: 'Duncit', logo_url: 'https://cdn.duncit.com/logo.png' } },
+      }),
+    );
+    renderWithProviders(<AuthLogo size={80} />);
+    const img = screen.getByTestId('auth-logo-image');
+    // Wide art (aspect 5) → 80*5=400 and 80*4=320, but the viewport clamp
+    // (200 − 48 = 152) wins so the mark never overflows a narrow phone.
+    fireEvent(img, 'load', { nativeEvent: { source: { width: 500, height: 100 } } });
+    expect(screen.getByTestId('auth-logo-image').props.style).toMatchObject({
+      height: 80,
+      width: 152,
+    });
+    dims.mockRestore();
   });
 
   it('prefers the mobile-specific logo over the global one', () => {

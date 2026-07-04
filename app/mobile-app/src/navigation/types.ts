@@ -51,7 +51,7 @@ export type RootStackParamList = {
   ClubDetails: { clubId: string; title: string };
   PreviousPods: undefined;
   HappeningNearby: undefined;
-  Checkout: { podId: string };
+  Checkout: { podId: string; selectedProducts?: { product_id: string; quantity: number }[] };
   HostsVenues: undefined;
   PublicProfile: { userId: string };
   PostDetail: { postId: string };

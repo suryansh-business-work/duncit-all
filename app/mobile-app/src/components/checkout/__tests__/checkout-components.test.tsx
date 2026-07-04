@@ -36,6 +36,45 @@ describe('OrderSummary', () => {
     expect(screen.getByText('Platform fee (10%)')).toBeOnTheScreen();
   });
 
+  it('breaks out carried products with the ticket price shown separately', () => {
+    renderWithProviders(
+      <OrderSummary
+        pod={
+          {
+            id: 'p1',
+            pod_title: 'Sunset Pod',
+            pod_images_and_videos: [],
+            product_requests: [
+              { product_id: 'pr1', product_name: 'Tee', unit_cost: 15 },
+              { product_id: 'pr2', product_name: 'Cap', unit_cost: 5 },
+              { product_id: 'pr3', product_name: 'Badge', unit_cost: null },
+            ],
+          } as never
+        }
+        breakup={breakup}
+        selectedProducts={[
+          { product_id: 'pr1', quantity: 2 },
+          { product_id: 'pr2', quantity: 1 },
+          { product_id: 'pr3', quantity: 1 },
+          { product_id: 'missing', quantity: 4 },
+        ]}
+      />,
+    );
+    // Ticket price = total (130) − product add-ons (30 + 5 + 0 = 35) = 95.
+    expect(screen.getByText('Ticket price')).toBeOnTheScreen();
+    expect(screen.getByText('₹95.00')).toBeOnTheScreen();
+    // One row per picked product with its line total (nullish cost → 0).
+    expect(screen.getByText('Tee × 2')).toBeOnTheScreen();
+    expect(screen.getByText('₹30.00')).toBeOnTheScreen();
+    expect(screen.getByText('Cap × 1')).toBeOnTheScreen();
+    expect(screen.getByText('₹5.00')).toBeOnTheScreen();
+    expect(screen.getByText('Badge × 1')).toBeOnTheScreen();
+    // Add-ons subtotal, and the plain "Subtotal" row is replaced.
+    expect(screen.getByText('Products')).toBeOnTheScreen();
+    expect(screen.getByText('₹35.00')).toBeOnTheScreen();
+    expect(screen.queryByText('Subtotal')).toBeNull();
+  });
+
   it('tolerates a pod with no image/date', () => {
     renderWithProviders(
       <OrderSummary

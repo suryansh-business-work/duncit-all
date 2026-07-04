@@ -1,7 +1,7 @@
 import { Controller, type Control } from 'react-hook-form';
 import { MenuItem, TextField, type SxProps, type Theme } from '@mui/material';
 import CheckoutContactFields from '../CheckoutContactFields';
-import type { CheckoutForm } from '../queries';
+import type { CheckoutContact, CheckoutForm } from '../queries';
 import type { PostalAddressParts } from './checkout.types';
 
 interface Props {
@@ -11,6 +11,8 @@ interface Props {
   selectMenuProps: Record<string, unknown>;
   mainAddress: PostalAddressParts | null;
   hasMainAddress: boolean;
+  contact: CheckoutContact | null;
+  contactLoading: boolean;
 }
 
 /**
@@ -24,6 +26,8 @@ export default function CheckoutFields({
   selectMenuProps,
   mainAddress,
   hasMainAddress,
+  contact,
+  contactLoading,
 }: Readonly<Props>) {
   return (
     <>
@@ -32,6 +36,8 @@ export default function CheckoutFields({
         fieldSx={fieldSx}
         mainAddress={mainAddress}
         hasMainAddress={hasMainAddress}
+        contact={contact}
+        contactLoading={contactLoading}
       />
       {dummyMode && (
         <Controller

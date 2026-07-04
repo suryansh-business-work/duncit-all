@@ -1,10 +1,15 @@
 import { useWatch, type Control } from 'react-hook-form';
-import { Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
-import type { CheckoutFormValues } from './checkout.types';
+import type { CheckoutContact, CheckoutFormValues } from './checkout.types';
 
 export interface CheckoutContactFieldsProps {
   control: Control<CheckoutFormValues>;
+  /** Contact resolved from the loaded profile — rendered directly so the card
+   * doesn't depend solely on the form-prefill timing (falls back to form state). */
+  contact?: CheckoutContact | null;
+  /** True while the profile is still loading — shows a spinner instead of blanks. */
+  loading?: boolean;
 }
 
 /** One "label · value" row in the read-only contact summary. */
@@ -28,15 +33,24 @@ function SummaryRow({ label, value }: Readonly<{ label: string; value: string }>
   );
 }
 
-/** "Contact details" section — now a READ-ONLY summary. The name/email/phone are
- * taken from the profile prefill (still kept in form state + sent on pay) and can
- * only be changed from the user's profile. */
-export function CheckoutContactFields({ control }: Readonly<CheckoutContactFieldsProps>) {
+/** "Contact details" section — a READ-ONLY summary. The name/email/phone come
+ * from the loaded profile (rendered directly, falling back to the form prefill
+ * which is still what gets sent on pay) and can only be changed from the
+ * profile. While the profile is still loading a spinner shows instead of blanks. */
+export function CheckoutContactFields({
+  control,
+  contact,
+  loading,
+}: Readonly<CheckoutContactFieldsProps>) {
   const [fullName, email, phoneExtension, phoneNumber] = useWatch({
     control,
     name: ['full_name', 'email', 'phone_extension', 'phone_number'],
   });
-  const phone = [phoneExtension, phoneNumber].filter(Boolean).join(' ');
+  const displayName = contact?.name || fullName;
+  const displayEmail = contact?.email || email;
+  const ext = contact?.phone_extension || phoneExtension;
+  const num = contact?.phone_number || phoneNumber;
+  const phone = [ext, num].filter(Boolean).join(' ');
 
   return (
     <YStack gap={10}>
@@ -52,9 +66,20 @@ export function CheckoutContactFields({ control }: Readonly<CheckoutContactField
         borderWidth={1}
         borderColor="$borderColor"
       >
-        <SummaryRow label="Name" value={fullName} />
-        <SummaryRow label="Email" value={email} />
-        <SummaryRow label="Phone" value={phone} />
+        {loading ? (
+          <XStack testID="checkout-contact-loading" alignItems="center" gap={8}>
+            <Spinner color="$primary" />
+            <Text fontSize={13} color="$muted">
+              Loading your details…
+            </Text>
+          </XStack>
+        ) : (
+          <>
+            <SummaryRow label="Name" value={displayName} />
+            <SummaryRow label="Email" value={displayEmail} />
+            <SummaryRow label="Phone" value={phone} />
+          </>
+        )}
       </YStack>
       <Text fontSize={12} color="$muted">
         To change these, edit your profile.

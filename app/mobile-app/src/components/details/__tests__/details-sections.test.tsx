@@ -177,45 +177,149 @@ describe('PodSocialBar', () => {
 });
 
 describe('PodShop', () => {
-  it('lists real products', () => {
-    const pod = {
-      products_enabled: true,
-      product_requests: [
-        {
-          product_id: '1',
-          product_name: 'Tee',
-          image_url: 'http://x/i.png',
-          images: [],
-          unit_cost: 100,
-          available_count: 5,
-          quantity: 0,
-          total_cost: 0,
-        },
-        {
-          product_id: '2',
-          product_name: 'Cap',
-          image_url: '',
-          images: [],
-          unit_cost: 50,
-          available_count: 3,
-          quantity: 0,
-          total_cost: 0,
-        },
-      ],
-    } as never;
-    renderWithProviders(<PodShop pod={pod} />);
+  // Four products exercise every image/stock/price fallback branch:
+  //  1 image_url set; 2 image_url empty → images[0]; 3 images empty → icon +
+  //  available_count null → quantity; 4 images null → icon + all-null → 0.
+  const products = [
+    {
+      product_id: '1',
+      product_name: 'Tee',
+      image_url: 'http://x/i.png',
+      images: [],
+      unit_cost: 100,
+      available_count: 5,
+      quantity: 0,
+      total_cost: 0,
+    },
+    {
+      product_id: '2',
+      product_name: 'Cap',
+      image_url: '',
+      images: ['http://y/c.png'],
+      unit_cost: 50,
+      available_count: 3,
+      quantity: 0,
+      total_cost: 0,
+    },
+    {
+      product_id: '3',
+      product_name: 'Mug',
+      image_url: '',
+      images: [],
+      unit_cost: 20,
+      available_count: null,
+      quantity: 7,
+      total_cost: 0,
+    },
+    {
+      product_id: '4',
+      product_name: 'Pin',
+      image_url: '',
+      images: null,
+      unit_cost: null,
+      available_count: null,
+      quantity: null,
+      total_cost: 0,
+    },
+  ];
+  const podWith = (list = products) =>
+    ({ products_enabled: true, product_requests: list }) as never;
+
+  it('lists real products with image/stock/price fallbacks and a zero total', () => {
+    renderWithProviders(
+      <PodShop pod={podWith()} selectedProducts={{}} onSelectionChange={jest.fn()} />,
+    );
     expect(screen.getByText('Available')).toBeOnTheScreen();
     expect(screen.getByText('Tee')).toBeOnTheScreen();
     expect(screen.getByText('Available 5')).toBeOnTheScreen();
-    expect(screen.getByText('₹100')).toBeOnTheScreen();
+    expect(screen.getByText('+₹100')).toBeOnTheScreen();
     expect(screen.getByText('Cap')).toBeOnTheScreen();
+    // available_count null falls back to quantity; all-null → 0.
+    expect(screen.getByText('Available 7')).toBeOnTheScreen();
+    expect(screen.getByText('Available 0')).toBeOnTheScreen();
+    expect(screen.getByText('+₹0')).toBeOnTheScreen();
+    // Nothing picked yet → neutral caption + ₹0 running total.
+    expect(screen.getByText('Selected product total')).toBeOnTheScreen();
+    expect(screen.getByText('₹0')).toBeOnTheScreen();
+  });
+
+  it('selects a product when its row is pressed', () => {
+    const onSelectionChange = jest.fn();
+    renderWithProviders(
+      <PodShop pod={podWith()} selectedProducts={{}} onSelectionChange={onSelectionChange} />,
+    );
+    fireEvent.press(screen.getByTestId('pod-shop-row-1'));
+    expect(onSelectionChange).toHaveBeenCalledWith({ '1': 1 });
+  });
+
+  it('shows steppers for a picked product and increments within stock', () => {
+    const onSelectionChange = jest.fn();
+    renderWithProviders(
+      <PodShop
+        pod={podWith()}
+        selectedProducts={{ '1': 2 }}
+        onSelectionChange={onSelectionChange}
+      />,
+    );
+    expect(screen.getByTestId('pod-shop-qty-1')).toHaveTextContent('2');
+    expect(screen.getByText('+₹200')).toBeOnTheScreen();
+    // 1 product picked → singular caption + line total in the footer.
+    expect(screen.getByText('1 product selected')).toBeOnTheScreen();
+    expect(screen.getByText('₹200')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('pod-shop-inc-1'));
+    expect(onSelectionChange).toHaveBeenCalledWith({ '1': 3 });
+    fireEvent.press(screen.getByTestId('pod-shop-dec-1'));
+    expect(onSelectionChange).toHaveBeenCalledWith({ '1': 1 });
+  });
+
+  it('removes a product when decremented to zero', () => {
+    const onSelectionChange = jest.fn();
+    renderWithProviders(
+      <PodShop
+        pod={podWith()}
+        selectedProducts={{ '1': 1 }}
+        onSelectionChange={onSelectionChange}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('pod-shop-dec-1'));
+    expect(onSelectionChange).toHaveBeenCalledWith({});
+  });
+
+  it('deselects a picked product when its row is pressed again', () => {
+    const onSelectionChange = jest.fn();
+    renderWithProviders(
+      <PodShop
+        pod={podWith()}
+        selectedProducts={{ '2': 1 }}
+        onSelectionChange={onSelectionChange}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('pod-shop-row-2'));
+    expect(onSelectionChange).toHaveBeenCalledWith({});
+  });
+
+  it('disables the increment at max stock and shows a plural caption', () => {
+    renderWithProviders(
+      <PodShop
+        pod={podWith()}
+        selectedProducts={{ '1': 5, '2': 1 }}
+        onSelectionChange={jest.fn()}
+      />,
+    );
+    // Product 1 is at its available_count (5) → the + button is disabled.
+    expect(screen.getByTestId('pod-shop-inc-1').props['aria-disabled']).toBe(true);
+    // Product 2 (qty 1 of 3) is still below stock → + stays enabled.
+    expect(screen.getByTestId('pod-shop-inc-2').props['aria-disabled']).toBe(false);
+    // Two products picked → plural caption.
+    expect(screen.getByText('2 products selected')).toBeOnTheScreen();
   });
 
   it('shows the empty state when there are no products', () => {
     const pod = { products_enabled: false, product_requests: [] } as never;
-    renderWithProviders(<PodShop pod={pod} />);
+    renderWithProviders(<PodShop pod={pod} selectedProducts={{}} onSelectionChange={jest.fn()} />);
     expect(screen.getByTestId('pod-shop-empty')).toBeOnTheScreen();
     expect(screen.getByText('Closed')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-shop-total')).toBeNull();
   });
 });
 

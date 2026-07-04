@@ -10,6 +10,7 @@ import { CheckoutContactFields } from './CheckoutContactFields';
 import {
   checkoutDefaults,
   checkoutSchema,
+  type CheckoutContact,
   type CheckoutFormValues,
   type CheckoutMainAddress,
 } from './checkout.types';
@@ -18,6 +19,10 @@ export interface CheckoutFormProps {
   initialValues?: Partial<CheckoutFormValues>;
   /** The user's saved main address — powers the "same as main" summary/prefill. */
   mainAddress?: CheckoutMainAddress | null;
+  /** Contact resolved from the loaded profile — shown in the read-only summary. */
+  contact?: CheckoutContact | null;
+  /** True while the profile is still loading (contact card shows a spinner). */
+  contactLoading?: boolean;
   loading?: boolean;
   errorMessage?: string | null;
   dummyMode?: boolean;
@@ -28,6 +33,8 @@ export interface CheckoutFormProps {
 export function CheckoutForm({
   initialValues,
   mainAddress = null,
+  contact = null,
+  contactLoading = false,
   loading,
   errorMessage,
   dummyMode = true,
@@ -43,7 +50,7 @@ export function CheckoutForm({
 
   return (
     <YStack gap={16}>
-      <CheckoutContactFields control={control} />
+      <CheckoutContactFields control={control} contact={contact} loading={contactLoading} />
       <CheckoutBillingSection control={control} mainAddress={mainAddress} />
 
       {dummyMode ? (

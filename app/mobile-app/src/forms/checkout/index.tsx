@@ -5,6 +5,7 @@ export { CheckoutBillingSection } from './CheckoutBillingSection';
 export {
   checkoutSchema,
   checkoutDefaults,
+  type CheckoutContact,
   type CheckoutFormValues,
   type CheckoutMainAddress,
 } from './checkout.types';

@@ -22,6 +22,7 @@ import { usePodActions, usePodDetails } from '@/hooks/useDetails';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 import { usePodFollow } from '@/hooks/useFollow';
 import { usePodBackout } from '@/hooks/usePodHistory';
+import { usePodProductSelection } from '@/hooks/usePodProductSelection';
 import { useExploreStore } from '@/stores/explore.store';
 import { podShareMessage } from '@/utils/pod-format';
 import type { RootStackParamList } from '@/navigation/types';
@@ -56,6 +57,10 @@ export function PodDetailsScreen() {
     toggle: toggleFollow,
   } = usePodFollow(podId, followingInitially);
   const { backout, busy: backingOut } = usePodBackout();
+  const { selectedProducts, selectedProductList, setSelectedProducts } = usePodProductSelection(
+    podId,
+    pod,
+  );
   const showProducts = useFeatureFlag('is_product_visible');
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -171,7 +176,11 @@ export function PodDetailsScreen() {
           </Reveal>
           {showProducts && pod.product_requests?.length ? (
             <Reveal index={3}>
-              <PodShop pod={pod} />
+              <PodShop
+                pod={pod}
+                selectedProducts={selectedProducts}
+                onSelectionChange={setSelectedProducts}
+              />
             </Reveal>
           ) : null}
           <Reveal index={4}>
@@ -192,7 +201,9 @@ export function PodDetailsScreen() {
           pod={pod}
           isFree={isFree}
           membershipState={membershipState}
-          onCheckout={() => navigation.navigate('Checkout', { podId: pod.id })}
+          onCheckout={() =>
+            navigation.navigate('Checkout', { podId: pod.id, selectedProducts: selectedProductList })
+          }
           onBackout={() => setBackoutOpen(true)}
         />
       ) : null}

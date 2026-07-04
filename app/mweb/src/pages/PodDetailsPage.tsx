@@ -146,7 +146,6 @@ export default function PodDetailsPage() {
           priceFormat={priceFormat}
           selectedProducts={productSelection.selectedProducts}
           onSelectionChange={productSelection.setSelectedProducts}
-          onCheckout={actions.onPaidCheckout}
         />
       )}
 

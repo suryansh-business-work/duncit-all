@@ -32,6 +32,32 @@ describe('CheckoutForm', () => {
     expect(screen.getByTestId('field-billing_email')).toBeOnTheScreen();
   });
 
+  it('prefers the resolved profile contact over the form prefill', () => {
+    renderWithProviders(
+      <CheckoutForm
+        initialValues={contact}
+        contact={{
+          name: 'Neha Verma',
+          email: 'neha@d.com',
+          phone_extension: '+91',
+          phone_number: '9000000000',
+        }}
+        onSubmit={jest.fn()}
+      />,
+    );
+    expect(screen.getByText('Neha Verma')).toBeOnTheScreen();
+    expect(screen.getByText('neha@d.com')).toBeOnTheScreen();
+    expect(screen.getByText('+91 9000000000')).toBeOnTheScreen();
+    // The form prefill name is superseded by the loaded profile.
+    expect(screen.queryByText('Riya Sharma')).toBeNull();
+  });
+
+  it('shows a spinner in the contact card while the profile is still loading', () => {
+    renderWithProviders(<CheckoutForm initialValues={contact} contactLoading onSubmit={jest.fn()} />);
+    expect(screen.getByTestId('checkout-contact-loading')).toBeOnTheScreen();
+    expect(screen.queryByText('Riya Sharma')).toBeNull();
+  });
+
   it('blocks submit on invalid billing details', async () => {
     const onSubmit = jest.fn();
     renderWithProviders(<CheckoutForm initialValues={contact} onSubmit={onSubmit} />);

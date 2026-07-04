@@ -208,6 +208,14 @@ export interface CheckoutState {
   description?: string;
 }
 
+/** Resolved buyer contact, taken straight from the loaded `me` query. */
+export interface CheckoutContact {
+  fullName: string;
+  email: string;
+  phoneExtension: string;
+  phoneNumber: string;
+}
+
 export interface CheckoutForm {
   full_name: string;
   email: string;

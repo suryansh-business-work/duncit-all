@@ -3,7 +3,6 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Chip, Stack, Typography } from '@mui/material';
 import GroupsIcon from '@mui/icons-material/Groups';
 import EventIcon from '@mui/icons-material/Event';
-import PlaceIcon from '@mui/icons-material/Place';
 import VerifiedIcon from '@mui/icons-material/Verified';
 import { usePricing } from '../../hooks/usePricing';
 
@@ -20,7 +19,6 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
   const { format } = usePricing();
   const [expanded, setExpanded] = useState(false);
   const isFree = pod.pod_type?.includes('FREE');
-  const placeLabel = pod.place_label || [location?.location_name, pod.zone_name].filter(Boolean).join(' - ');
   const description: string = pod.pod_description ?? '';
   const collapsible = description.length > CAPTION_COLLAPSE_AT;
 
@@ -112,14 +110,6 @@ export default function ExplorePodOverlay({ pod, club, location }: Readonly<Prop
                 hour: 'numeric',
                 minute: '2-digit',
               })}
-              sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'common.white' }}
-            />
-          )}
-          {placeLabel && (
-            <Chip
-              size="small"
-              icon={<PlaceIcon sx={{ color: 'common.white !important' }} />}
-              label={placeLabel}
               sx={{ bgcolor: 'rgba(255,255,255,0.15)', color: 'common.white' }}
             />
           )}

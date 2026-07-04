@@ -16,6 +16,8 @@ interface Props {
   defaultExpanded?: boolean;
   expanded: boolean;
   onChange: (open: boolean) => void;
+  /** Colors the summary header/title in the theme error color (e.g. invalid section). */
+  error?: boolean;
   children: ReactNode;
 }
 
@@ -25,8 +27,10 @@ export default function PodAccordion({
   icon,
   expanded,
   onChange,
+  error = false,
   children,
 }: Readonly<Props>) {
+  const accent = error ? 'error.main' : 'primary.main';
   return (
     <Accordion
       expanded={expanded}
@@ -52,8 +56,8 @@ export default function PodAccordion({
         id={`${id}-header`}
       >
         <Stack direction="row" alignItems="center" spacing={1.25} sx={{ flex: 1 }}>
-          {icon && <Box sx={{ display: 'flex', color: 'primary.main' }}>{icon}</Box>}
-          <Typography variant="subtitle1" fontWeight={600}>
+          {icon && <Box sx={{ display: 'flex', color: accent }}>{icon}</Box>}
+          <Typography variant="subtitle1" fontWeight={600} color={error ? 'error.main' : undefined}>
             {title}
           </Typography>
         </Stack>

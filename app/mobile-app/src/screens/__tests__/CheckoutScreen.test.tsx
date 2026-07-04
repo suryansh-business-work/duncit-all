@@ -38,21 +38,27 @@ const order = {
   total: 590,
 };
 
+// Contact is read-only — it arrives prefilled via initialValues; the test only
+// fills the editable billing address fields.
 function fill() {
-  fireEvent.changeText(screen.getByTestId('field-full_name'), 'Riya Sharma');
-  fireEvent.changeText(screen.getByTestId('field-email'), 'r@d.com');
-  fireEvent.changeText(screen.getByTestId('field-phone_number'), '9876543210');
   fireEvent.changeText(screen.getByTestId('field-line1'), '12 Main Street');
   fireEvent.changeText(screen.getByTestId('field-city'), 'Pune');
   fireEvent.changeText(screen.getByTestId('field-state'), 'Maharashtra');
   fireEvent.changeText(screen.getByTestId('field-pincode'), '411001');
 }
 
+const contactValues = {
+  full_name: 'Riya Sharma',
+  email: 'r@d.com',
+  phone_extension: '+91',
+  phone_number: '9876543210',
+};
+
 const baseHook = (overrides: Record<string, unknown> = {}) => ({
   finance,
   pod,
   me: null,
-  initialValues: {},
+  initialValues: contactValues,
   availableCoupons: [],
   isLoading: false,
   pay,

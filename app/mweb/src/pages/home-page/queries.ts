@@ -57,6 +57,7 @@ export const HOME_DATA = gql`
       id
       name
       slug
+      icon
       level
       parent_id
     }

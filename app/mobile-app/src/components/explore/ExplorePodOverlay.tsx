@@ -47,8 +47,6 @@ export function ExplorePodOverlay({
 }: Readonly<ExplorePodOverlayProps>) {
   const [expanded, setExpanded] = useState(false);
   const isFree = pod.pod_type.includes('FREE');
-  const place =
-    [pod.place_label, pod.place_detail].filter(Boolean).join(' · ') || pod.zone_name || '';
   const description = pod.pod_description ?? '';
   const collapsible = description.length > CAPTION_COLLAPSE_AT;
 
@@ -116,7 +114,6 @@ export function ExplorePodOverlay({
             tint={isFree ? 'rgba(34,197,94,0.32)' : 'rgba(255,79,115,0.5)'}
           />
           {pod.pod_date_time ? <Chip icon="event" label={podDateLabel(pod)} /> : null}
-          {place ? <Chip icon="place" label={place} /> : null}
         </XStack>
       </YStack>
     </>

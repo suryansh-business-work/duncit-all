@@ -36,11 +36,6 @@ jest.mock('@/components/details/pod-comments', () => {
     ),
   };
 });
-jest.mock('@/components/explore/ExploreCreateButton', () => {
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const { View } = require('react-native');
-  return { ExploreCreateButton: () => <View testID="explore-create-post" /> };
-});
 jest.mock('@/components/explore/LikesListSheet', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View, Text } = require('react-native');

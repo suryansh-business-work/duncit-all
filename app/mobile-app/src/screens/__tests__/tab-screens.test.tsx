@@ -35,7 +35,13 @@ const club = (id: string) =>
 
 beforeEach(() => {
   mockNavigate.mockClear();
-  mockedHomeData.mockReturnValue({ pods: [], clubs: [], isLoading: false, refetch: jest.fn() });
+  mockedHomeData.mockReturnValue({
+    pods: [],
+    clubs: [],
+    categories: [],
+    isLoading: false,
+    refetch: jest.fn(),
+  });
   mockedFollowing.mockReturnValue({
     people: [],
     followedClubs: [],
@@ -51,6 +57,7 @@ describe('ClubsScreen', () => {
     mockedHomeData.mockReturnValue({
       pods: [],
       clubs: [club('1')],
+      categories: [{ id: 'cat1', name: 'Music', slug: 'm', level: 'CATEGORY', parent_id: null }],
       isLoading: false,
       refetch: jest.fn(),
     });
@@ -58,6 +65,30 @@ describe('ClubsScreen', () => {
     expect(screen.getByTestId('club-card-cl-1')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('club-card-cl-1'));
     expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: '1', title: 'Club 1' });
+  });
+
+  it('filters clubs by search query and category, then shows an empty message', () => {
+    mockedHomeData.mockReturnValue({
+      pods: [],
+      clubs: [
+        { ...(club('1') as Record<string, unknown>), club_name: 'Runners', category_id: 'cat1' },
+        { ...(club('2') as Record<string, unknown>), club_name: 'Painters', category_id: 'cat2' },
+      ] as never,
+      categories: [
+        { id: 'cat1', name: 'Sports', slug: 's', level: 'CATEGORY', parent_id: null },
+        { id: 'cat2', name: 'Arts', slug: 'a', level: 'CATEGORY', parent_id: null },
+      ],
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+    renderWithProviders(<ClubsScreen />);
+    // Search narrows to the matching club.
+    fireEvent.changeText(screen.getByTestId('clubs-search-input'), 'Runner');
+    expect(screen.getByTestId('club-card-cl-1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('club-card-cl-2')).toBeNull();
+    // Category filter to Arts drops the (sports) match → empty state.
+    fireEvent.press(screen.getByTestId('clubs-filter-cat-cat2'));
+    expect(screen.getByTestId('clubs-list-empty')).toBeOnTheScreen();
   });
 });
 

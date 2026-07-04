@@ -5,5 +5,6 @@ export {
   toCheckoutContact,
   toCheckoutBilling,
   resolveBillingAddress,
+  shouldPersistMainAddress,
 } from './checkout.types';
 export type { CheckoutFormValues, PostalAddressParts } from './checkout.types';

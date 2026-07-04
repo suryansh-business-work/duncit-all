@@ -1,10 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Alert, Box, CircularProgress, Snackbar, Stack } from '@mui/material';
+import { Alert, Box, CircularProgress, Stack } from '@mui/material';
 import Slider from 'react-slick';
 import 'slick-carousel/slick/slick.css';
 import 'slick-carousel/slick/slick-theme.css';
-import UploadDialog from '../profile-page/UploadDialog';
 import ExplorePodCard from './ExplorePodCard';
 import ExploreHeader from './ExploreHeader';
 import ExploreFilterSheet from './ExploreFilterSheet';
@@ -32,8 +31,6 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
   });
   const [toggleSavedPod] = useMutation(TOGGLE_SAVED_POD);
   const [filtersOpen, setFiltersOpen] = useState(false);
-  const [composeOpen, setComposeOpen] = useState(false);
-  const [snack, setSnack] = useState<string | null>(null);
   const [filters, setFilters] = useState<ExploreFilters>(DEFAULT_FILTERS);
   const [pendingSave, setPendingSave] = useState<Set<string>>(new Set());
   // Local optimistic overlay; merged with server saved_pod_ids.
@@ -153,7 +150,7 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
         '& .slick-slide > div': { height: '100%' },
       }}
     >
-      <ExploreHeader filters={filters} setFilters={setFilters} activeCount={activeCount} resultCount={pods.length} onOpenFilters={() => setFiltersOpen(true)} onCreatePost={() => setComposeOpen(true)} onRefresh={() => void refetch()} />
+      <ExploreHeader filters={filters} setFilters={setFilters} activeCount={activeCount} resultCount={pods.length} onOpenFilters={() => setFiltersOpen(true)} onRefresh={() => void refetch()} />
       {pods.length === 0 ? (
         <Stack alignItems="center" justifyContent="center" sx={{ height: '100%', px: 3 }}>
           <Alert severity="info">No pods match these filters.</Alert>
@@ -194,22 +191,6 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
         activeCount={activeCount}
         resultCount={pods.length}
         onClose={() => setFiltersOpen(false)}
-      />
-      <UploadDialog
-        open={composeOpen}
-        onClose={() => setComposeOpen(false)}
-        onSuccess={(msg) => {
-          setComposeOpen(false);
-          setSnack(msg);
-        }}
-        onError={(msg) => setSnack(msg)}
-      />
-      <Snackbar
-        open={!!snack}
-        autoHideDuration={3000}
-        onClose={() => setSnack(null)}
-        message={snack}
-        anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}
       />
     </Box>
   );

@@ -12,6 +12,7 @@ export const HomeFeedDocument = gql(`
       id
       name
       slug
+      icon
       level
       parent_id
     }

@@ -33,6 +33,7 @@ export const checkoutSchema = z
     pincode: z.string().trim().max(10, 'Too long'),
     country: z.string().trim().max(80, 'Too long'),
     billing_email: z.string().trim().max(254, 'Too long'),
+    has_gstin: z.boolean(),
     gstin: z.string().trim().max(15, 'Too long'),
     save_as_main: z.boolean(),
     simulate_failure: z.boolean(),
@@ -71,7 +72,7 @@ export const checkoutSchema = z
         message: 'Enter a valid email',
       });
     }
-    if (values.gstin !== '' && !GSTIN_RE.test(values.gstin.toUpperCase())) {
+    if (values.has_gstin && values.gstin !== '' && !GSTIN_RE.test(values.gstin.toUpperCase())) {
       ctx.addIssue({
         code: z.ZodIssueCode.custom,
         path: ['gstin'],
@@ -107,6 +108,7 @@ export const checkoutDefaults: CheckoutFormValues = {
   pincode: '',
   country: 'India',
   billing_email: '',
+  has_gstin: false,
   gstin: '',
   save_as_main: false,
   simulate_failure: false,

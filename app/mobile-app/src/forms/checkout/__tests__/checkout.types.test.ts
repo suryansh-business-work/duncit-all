@@ -59,10 +59,13 @@ describe('checkoutSchema — contact + billing', () => {
     expect(parse({ billing_email: 'not-an-email' }).success).toBe(false);
   });
 
-  it('validates the optional GSTIN only when present (case-insensitive)', () => {
-    expect(parse({ gstin: '' }).success).toBe(true);
-    expect(parse({ gstin: '27AAAAA0000A1Z' }).success).toBe(true);
-    expect(parse({ gstin: '27aaaaa0000a1z' }).success).toBe(true);
-    expect(parse({ gstin: 'INVALID123' }).success).toBe(false);
+  it('validates the GSTIN only when the has_gstin toggle is on (case-insensitive)', () => {
+    // Toggle off → the GSTIN field is never validated, even if malformed.
+    expect(parse({ has_gstin: false, gstin: 'INVALID123' }).success).toBe(true);
+    // Toggle on → an empty GSTIN is still fine (it just won't be sent).
+    expect(parse({ has_gstin: true, gstin: '' }).success).toBe(true);
+    expect(parse({ has_gstin: true, gstin: '27AAAAA0000A1Z' }).success).toBe(true);
+    expect(parse({ has_gstin: true, gstin: '27aaaaa0000a1z' }).success).toBe(true);
+    expect(parse({ has_gstin: true, gstin: 'INVALID123' }).success).toBe(false);
   });
 });

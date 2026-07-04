@@ -13,6 +13,7 @@ import {
   toCheckoutContact,
   toCheckoutBilling,
   resolveBillingAddress,
+  shouldPersistMainAddress,
 } from './checkout';
 import { buildBreakup } from './checkoutMath';
 import CheckoutSuccess from './CheckoutSuccess';
@@ -142,7 +143,7 @@ export default function CheckoutPage() {
   // Best-effort: persist the entered billing address as the main address when the
   // buyer opts in. Never blocks or fails checkout if the profile save errors.
   const persistMainAddress = async (values: CheckoutForm) => {
-    if (!values.save_as_main || values.same_as_main) return;
+    if (!shouldPersistMainAddress(values, hasMainAddress)) return;
     try {
       await doUpdateProfile({ variables: { input: { address: resolveBillingAddress(values, null) } } });
     } catch {

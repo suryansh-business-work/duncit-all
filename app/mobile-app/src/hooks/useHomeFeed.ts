@@ -23,10 +23,12 @@ export interface ClubWithPods {
 export interface VibeSub {
   id: string;
   name: string;
+  icon?: string;
 }
 export interface VibeCategory {
   id: string;
   name: string;
+  icon?: string;
   subs: VibeSub[];
 }
 
@@ -69,7 +71,12 @@ function deriveVibeCategories(
   return categories.map((c) => ({
     id: c.id,
     name: c.name,
-    subs: (subsByParent.get(c.id) ?? []).map((s) => ({ id: s.id, name: s.name })),
+    icon: c.icon ?? undefined,
+    subs: (subsByParent.get(c.id) ?? []).map((s) => ({
+      id: s.id,
+      name: s.name,
+      icon: s.icon ?? undefined,
+    })),
   }));
 }
 

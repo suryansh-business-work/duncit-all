@@ -23,8 +23,9 @@ export function MainTabs() {
   return (
     <>
       <Tab.Navigator
-        // Tab content cross-fades instead of switching abruptly.
-        screenOptions={{ headerShown: false, animation: 'fade' }}
+        // Tab switches are instant (no cross-fade) — animating a tab's full-bleed
+        // backdrop janked the switch.
+        screenOptions={{ headerShown: false, animation: 'none' }}
         tabBar={renderTabBar}
       >
         <Tab.Screen name="HomeTab" component={HomeScreen} />

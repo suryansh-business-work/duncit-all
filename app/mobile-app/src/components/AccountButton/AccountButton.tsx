@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { Text, XStack, YStack } from 'tamagui';
 
 import { Sidebar } from '@/components/Sidebar';
@@ -28,7 +29,7 @@ export function AccountButton() {
         justifyContent="center"
       >
         {me?.profile_photo ? (
-          <Image
+          <AppImage
             testID="account-avatar-image"
             source={{ uri: me.profile_photo }}
             style={{ width: 34, height: 34, borderRadius: 17 }}

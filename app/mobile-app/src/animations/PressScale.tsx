@@ -1,13 +1,15 @@
 import type { ReactNode } from 'react';
 import { Pressable } from 'react-native';
 import type { StyleProp, ViewStyle } from 'react-native';
-import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 
-import { pressSpring } from '@/animations/motion';
+const PRESSED_OPACITY = 0.85;
 
-const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
-
-const PRESSED_SCALE = 0.96;
+/** Press feedback style: the caller's style plus a dim while pressed. Extracted
+ * so both pressed states are unit-testable (RTL can't drive Pressable state). */
+export const pressedOpacityStyle = (
+  style: StyleProp<ViewStyle>,
+  pressed: boolean,
+): StyleProp<ViewStyle> => [style, { opacity: pressed ? PRESSED_OPACITY : 1 }];
 
 interface PressScaleProps {
   children: ReactNode;
@@ -19,9 +21,9 @@ interface PressScaleProps {
 }
 
 /**
- * The app-wide press feedback: scales down to 0.96 on touch and springs back
- * on release — all on the UI thread. Wrap tappable cards, tabs and CTAs in
- * this for consistent, premium press feel.
+ * App-wide press feedback: dims to 0.85 while pressed. The former spring
+ * scale-down animation was removed app-wide for performance — the feedback is
+ * now an instant opacity change on a plain Pressable.
  */
 export function PressScale({
   children,
@@ -31,29 +33,17 @@ export function PressScale({
   testID,
   accessibilityLabel,
 }: Readonly<PressScaleProps>) {
-  const scale = useSharedValue(1);
-
-  const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
-
   return (
-    <AnimatedPressable
+    <Pressable
       testID={testID}
       role="button"
       aria-label={accessibilityLabel}
       aria-disabled={disabled}
       disabled={disabled}
-      onPressIn={() => {
-        scale.value = withSpring(PRESSED_SCALE, pressSpring);
-      }}
-      onPressOut={() => {
-        scale.value = withSpring(1, pressSpring);
-      }}
       onPress={onPress}
-      style={[style, animatedStyle]}
+      style={({ pressed }) => pressedOpacityStyle(style, pressed)}
     >
       {children}
-    </AnimatedPressable>
+    </Pressable>
   );
 }

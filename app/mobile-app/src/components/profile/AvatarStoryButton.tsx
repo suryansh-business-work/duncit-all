@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, YStack } from 'tamagui';
 
@@ -60,7 +61,7 @@ export function AvatarStoryButton({
         pressStyle={{ opacity: 0.85 }}
       >
         {photo ? (
-          <Image
+          <AppImage
             source={{ uri: photo }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"

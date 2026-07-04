@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AttendeesDialog, type AttendeePerson } from '@/components/details/AttendeesDialog';
@@ -44,7 +44,7 @@ function AttendeeBubble({ person, first }: Readonly<{ person: AttendeePerson; fi
       zIndex={person.is_host ? 1 : 0}
     >
       {person.profile_photo ? (
-        <Image source={{ uri: person.profile_photo }} style={{ width: 36, height: 36 }} />
+        <AppImage source={{ uri: person.profile_photo }} style={{ width: 36, height: 36 }} />
       ) : (
         <Text fontSize={13} fontWeight="800" color="$onPrimary">
           {(person.full_name?.[0] ?? '?').toUpperCase()}

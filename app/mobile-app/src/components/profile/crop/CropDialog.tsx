@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Image, Modal } from 'react-native';
+import { Modal } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
@@ -98,7 +100,7 @@ export function CropDialog({ photo, saving, onConfirm, onCancel }: Readonly<Prop
                 borderWidth={2}
                 borderColor="rgba(255,255,255,0.85)"
               >
-                <Image
+                <AppImage
                   testID="crop-preview"
                   source={{ uri: photo.uri }}
                   style={{

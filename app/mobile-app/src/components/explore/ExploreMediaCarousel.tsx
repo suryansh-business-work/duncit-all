@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { FlatList, Image } from 'react-native';
+import { FlatList } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { XStack, YStack } from 'tamagui';
 
@@ -52,8 +54,13 @@ export function ExploreMediaCarousel({
         showsHorizontalScrollIndicator={false}
         keyExtractor={(url, i) => `${i}-${url}`}
         onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / width))}
+        // Only decode the visible image (+1) per card — a reel can carry several
+        // full-screen photos and decoding them all at once spikes memory.
+        initialNumToRender={1}
+        windowSize={2}
+        maxToRenderPerBatch={1}
         renderItem={({ item }) => (
-          <Image source={{ uri: item }} style={{ width, height }} resizeMode="cover" />
+          <AppImage source={{ uri: item }} style={{ width, height }} resizeMode="cover" />
         )}
       />
       {items.length > 1 ? (

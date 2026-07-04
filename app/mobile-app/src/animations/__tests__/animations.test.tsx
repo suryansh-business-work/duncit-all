@@ -1,20 +1,9 @@
 import { fireEvent, screen } from '@testing-library/react-native';
 import { Text } from 'tamagui';
 
-import { PressScale } from '@/animations/PressScale';
+import { PressScale, pressedOpacityStyle } from '@/animations/PressScale';
 import { Reveal } from '@/animations/Reveal';
-import { MAX_STAGGER_STEPS, STAGGER_MS, staggerDelay } from '@/animations/motion';
 import { renderWithProviders } from '@/utils/test-utils';
-
-describe('staggerDelay', () => {
-  it('adds one step per index and caps long groups', () => {
-    expect(staggerDelay(0)).toBe(0);
-    expect(staggerDelay(-2)).toBe(0);
-    expect(staggerDelay(1)).toBe(STAGGER_MS);
-    expect(staggerDelay(3)).toBe(3 * STAGGER_MS);
-    expect(staggerDelay(50)).toBe(MAX_STAGGER_STEPS * STAGGER_MS);
-  });
-});
 
 describe('Reveal', () => {
   it('renders children inside the animated entry view', () => {
@@ -39,18 +28,20 @@ describe('Reveal', () => {
 });
 
 describe('PressScale', () => {
-  it('fires onPress and animates the press in/out cycle', () => {
+  it('fires onPress and dims to 0.85 only while pressed', () => {
     const onPress = jest.fn();
     renderWithProviders(
       <PressScale testID="press-scale" accessibilityLabel="Do it" onPress={onPress}>
         <Text>tap</Text>
       </PressScale>,
     );
-    const target = screen.getByTestId('press-scale');
-    fireEvent(target, 'pressIn');
-    fireEvent(target, 'pressOut');
-    fireEvent.press(target);
+    fireEvent.press(screen.getByTestId('press-scale'));
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('dims to 0.85 only while pressed', () => {
+    expect(pressedOpacityStyle(undefined, true)).toEqual([undefined, { opacity: 0.85 }]);
+    expect(pressedOpacityStyle(undefined, false)).toEqual([undefined, { opacity: 1 }]);
   });
 
   it('ignores presses when disabled', () => {

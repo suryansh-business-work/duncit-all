@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -29,7 +30,7 @@ function ProductRow({ product }: Readonly<{ product: Product }>) {
         justifyContent="center"
       >
         {image ? (
-          <Image source={{ uri: image }} style={{ width: 48, height: 48 }} resizeMode="cover" />
+          <AppImage source={{ uri: image }} style={{ width: 48, height: 48 }} resizeMode="cover" />
         ) : (
           <MaterialIcons name="shopping-bag" size={20} color="#ff8b5f" />
         )}

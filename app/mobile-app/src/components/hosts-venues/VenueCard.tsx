@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -36,7 +37,7 @@ export function VenueCard({ venue, onOpen }: Readonly<VenueCardProps>) {
     >
       <YStack height={120} backgroundColor="$primary" alignItems="center" justifyContent="center">
         {venue.cover_image_url ? (
-          <Image
+          <AppImage
             source={{ uri: venue.cover_image_url }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"

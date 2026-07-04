@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { ScrollView, Text, YStack } from 'tamagui';
 
 import type { ClubDetail } from '@/hooks/useDetails';
@@ -35,7 +36,7 @@ export function ClubHostsRail({ hosts, onOpenHost }: Readonly<Props>) {
             onPress={() => onOpenHost(host.id)}
           >
             {host.avatar_url ? (
-              <Image
+              <AppImage
                 source={{ uri: host.avatar_url }}
                 style={{ width: 56, height: 56, borderRadius: 28 }}
               />

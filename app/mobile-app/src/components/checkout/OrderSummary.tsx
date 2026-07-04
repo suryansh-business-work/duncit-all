@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -50,7 +51,11 @@ export function OrderSummary({
       overflow="hidden"
     >
       {image ? (
-        <Image source={{ uri: image }} style={{ width: '100%', height: 140 }} resizeMode="cover" />
+        <AppImage
+          source={{ uri: image }}
+          style={{ width: '100%', height: 140 }}
+          resizeMode="cover"
+        />
       ) : null}
       <YStack padding={16} gap={8}>
         <Text fontSize={11} fontWeight="800" textTransform="uppercase" color="$muted">

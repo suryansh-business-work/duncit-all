@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { useController, type Control, type Path } from 'react-hook-form';
 
 import { countryFlagUrl } from '@/utils/location-tree';
@@ -44,7 +45,7 @@ export function CountryCodeField({ control, name, label, testID, disabled }: Rea
       error={fieldState.error?.message}
       leading={
         flag ? (
-          <Image source={{ uri: flag }} style={{ width: 22, height: 16, borderRadius: 2 }} />
+          <AppImage source={{ uri: flag }} style={{ width: 22, height: 16, borderRadius: 2 }} />
         ) : undefined
       }
       onPick={field.onChange}

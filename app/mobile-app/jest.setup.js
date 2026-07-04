@@ -11,6 +11,13 @@ jest.mock('lottie-react-native', () => ({
   default: (props) => require('react').createElement(require('react-native').View, props),
 }));
 
+// expo-image is a native module; render it as react-native's <Image> so specs
+// keep asserting on image structure/props without the native runtime.
+jest.mock('expo-image', () => ({
+  __esModule: true,
+  Image: (props) => require('react').createElement(require('react-native').Image, props),
+}));
+
 // react-native-webview is a native module; render it as a plain host View so the
 // location map can mount in tests without the native runtime.
 jest.mock('react-native-webview', () => ({

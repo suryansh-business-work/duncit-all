@@ -1,4 +1,6 @@
-import { Image, Linking } from 'react-native';
+import { Linking } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -11,7 +13,7 @@ const TICK_COLOR = { delivered: '#9aa0a6', seen: '#34b7f1' } as const;
 function Attachment({ url }: Readonly<{ url: string }>) {
   if (IMAGE_RE.test(url)) {
     return (
-      <Image
+      <AppImage
         source={{ uri: url }}
         style={{ width: 180, height: 180, borderRadius: 10 }}
         resizeMode="cover"

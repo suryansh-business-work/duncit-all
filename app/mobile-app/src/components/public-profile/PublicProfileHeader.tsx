@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -30,7 +31,7 @@ export function PublicProfileHeader({ user }: Readonly<{ user: PublicProfileUser
         justifyContent="center"
       >
         {user.profile_photo ? (
-          <Image
+          <AppImage
             source={{ uri: user.profile_photo }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"

@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Image, useWindowDimensions } from 'react-native';
+import { useWindowDimensions } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
@@ -39,7 +41,7 @@ function PersonRow({ person, onPress }: Readonly<{ person: FollowedPerson; onPre
       pressStyle={{ opacity: 0.85 }}
     >
       {person.profile_photo ? (
-        <Image
+        <AppImage
           source={{ uri: person.profile_photo }}
           style={{ width: 44, height: 44, borderRadius: 22 }}
         />
@@ -84,7 +86,7 @@ function ClubRow({ club, onPress }: Readonly<{ club: FollowedClub; onPress: () =
       pressStyle={{ opacity: 0.85 }}
     >
       {logo ? (
-        <Image source={{ uri: logo }} style={{ width: 44, height: 44, borderRadius: 12 }} />
+        <AppImage source={{ uri: logo }} style={{ width: 44, height: 44, borderRadius: 12 }} />
       ) : (
         <YStack
           width={44}
@@ -151,42 +153,51 @@ export function FollowingScreen() {
         })}
       </XStack>
 
-      <FeedList
-        testID="following-list"
-        isLoading={isLoading}
-        isEmpty={counts[tab] === 0}
-        emptyText={EMPTY_TEXT[tab]}
-        onRefresh={refetch}
-      >
-        {tab === 'PEOPLE'
-          ? people.map((person) => (
-              <PersonRow
-                key={person.user_id}
-                person={person}
-                onPress={() => navigation.navigate('PublicProfile', { userId: person.user_id })}
-              />
-            ))
-          : null}
-        {tab === 'CLUBS'
-          ? followedClubs.map((club) => (
-              <ClubRow
-                key={club.id}
-                club={club}
-                onPress={() => openClub(club.id, club.club_name)}
-              />
-            ))
-          : null}
-        {tab === 'PODS'
-          ? followedPods.map((pod) => (
-              <PodCard
-                key={pod.id}
-                pod={pod}
-                width={cardWidth}
-                onPress={() => openPod(pod.id, pod.pod_title)}
-              />
-            ))
-          : null}
-      </FeedList>
+      {tab === 'PEOPLE' ? (
+        <FeedList
+          testID="following-list"
+          isLoading={isLoading}
+          isEmpty={counts.PEOPLE === 0}
+          emptyText={EMPTY_TEXT.PEOPLE}
+          onRefresh={refetch}
+          data={people}
+          keyExtractor={(person) => person.user_id}
+          renderItem={(person) => (
+            <PersonRow
+              person={person}
+              onPress={() => navigation.navigate('PublicProfile', { userId: person.user_id })}
+            />
+          )}
+        />
+      ) : null}
+      {tab === 'CLUBS' ? (
+        <FeedList
+          testID="following-list"
+          isLoading={isLoading}
+          isEmpty={counts.CLUBS === 0}
+          emptyText={EMPTY_TEXT.CLUBS}
+          onRefresh={refetch}
+          data={followedClubs}
+          keyExtractor={(club) => club.id}
+          renderItem={(club) => (
+            <ClubRow club={club} onPress={() => openClub(club.id, club.club_name)} />
+          )}
+        />
+      ) : null}
+      {tab === 'PODS' ? (
+        <FeedList
+          testID="following-list"
+          isLoading={isLoading}
+          isEmpty={counts.PODS === 0}
+          emptyText={EMPTY_TEXT.PODS}
+          onRefresh={refetch}
+          data={followedPods}
+          keyExtractor={(pod) => pod.id}
+          renderItem={(pod) => (
+            <PodCard pod={pod} width={cardWidth} onPress={() => openPod(pod.id, pod.pod_title)} />
+          )}
+        />
+      ) : null}
     </TabScreen>
   );
 }

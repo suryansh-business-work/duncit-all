@@ -2,10 +2,8 @@ import type { ComponentProps } from 'react';
 import { Modal } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
-import { MotiView } from 'moti';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { durations } from '@/animations/motion';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { STUDIO_LABEL, availableModes, type StudioMode } from '@/utils/studio-mode';
@@ -65,63 +63,51 @@ export function StudioSwitchDialog({ open, roles, current, onClose, onSelect }: 
                 {availableModes(roles).map((option) => {
                   const selected = option.mode === current;
                   return (
-                    <MotiView
+                    <YStack
                       key={option.mode}
-                      animate={{ scale: selected ? 1.12 : 1, translateY: selected ? -6 : 0 }}
-                      transition={{ type: 'timing', duration: durations.fast }}
+                      testID={`studio-switch-${option.mode}`}
+                      role="button"
+                      aria-label={option.label}
+                      aria-pressed={selected}
+                      onPress={() => onSelect(option.mode)}
+                      width={52}
+                      height={52}
+                      alignItems="center"
+                      justifyContent="center"
+                      borderRadius={26}
+                      borderWidth={2}
+                      borderColor={selected ? '$primary' : '$borderColor'}
+                      backgroundColor={selected ? '$primary' : '$surface'}
+                      pressStyle={{ opacity: 0.85 }}
                     >
-                      <YStack
-                        testID={`studio-switch-${option.mode}`}
-                        role="button"
-                        aria-label={option.label}
-                        aria-pressed={selected}
-                        onPress={() => onSelect(option.mode)}
-                        width={52}
-                        height={52}
-                        alignItems="center"
-                        justifyContent="center"
-                        borderRadius={26}
-                        borderWidth={2}
-                        borderColor={selected ? '$primary' : '$borderColor'}
-                        backgroundColor={selected ? '$primary' : '$surface'}
-                        pressStyle={{ opacity: 0.85 }}
-                      >
-                        <MaterialIcons
-                          name={ICONS[option.mode]}
-                          size={22}
-                          color={selected ? onPrimary : color}
-                        />
-                      </YStack>
-                    </MotiView>
+                      <MaterialIcons
+                        name={ICONS[option.mode]}
+                        size={22}
+                        color={selected ? onPrimary : color}
+                      />
+                    </YStack>
                   );
                 })}
               </XStack>
-              <MotiView
-                key={current}
-                from={{ opacity: 0.4, translateY: 8, scale: 0.97 }}
-                animate={{ opacity: 1, translateY: 0, scale: 1 }}
-                transition={{ type: 'timing', duration: durations.base }}
+              <XStack
+                testID="studio-switch-active-card"
+                alignItems="center"
+                gap={12}
+                borderRadius={16}
+                paddingHorizontal={18}
+                paddingVertical={16}
+                backgroundColor="$primary"
               >
-                <XStack
-                  testID="studio-switch-active-card"
-                  alignItems="center"
-                  gap={12}
-                  borderRadius={16}
-                  paddingHorizontal={18}
-                  paddingVertical={16}
-                  backgroundColor="$primary"
-                >
-                  <YStack flex={1}>
-                    <Text fontSize={18} fontWeight="900" color="$onPrimary" numberOfLines={1}>
-                      {STUDIO_LABEL[current]}
-                    </Text>
-                    <Text fontSize={11.5} fontWeight="700" color="$onPrimary" opacity={0.85}>
-                      Active right now — tap a bubble to switch
-                    </Text>
-                  </YStack>
-                  <MaterialIcons name="check-circle" size={22} color={onPrimary} />
-                </XStack>
-              </MotiView>
+                <YStack flex={1}>
+                  <Text fontSize={18} fontWeight="900" color="$onPrimary" numberOfLines={1}>
+                    {STUDIO_LABEL[current]}
+                  </Text>
+                  <Text fontSize={11.5} fontWeight="700" color="$onPrimary" opacity={0.85}>
+                    Active right now — tap a bubble to switch
+                  </Text>
+                </YStack>
+                <MaterialIcons name="check-circle" size={22} color={onPrimary} />
+              </XStack>
               <Text fontSize={11.5} color={muted} paddingTop={10} textAlign="center">
                 Switching changes your sidebar, header and dashboard.
               </Text>

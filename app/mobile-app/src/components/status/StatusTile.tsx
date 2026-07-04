@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, YStack } from 'tamagui';
 
@@ -52,7 +53,7 @@ export function StatusTile({
         overflow="hidden"
       >
         {image ? (
-          <Image
+          <AppImage
             source={{ uri: image }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"

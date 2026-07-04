@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Image, useWindowDimensions } from 'react-native';
+import { useWindowDimensions } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
@@ -60,7 +62,7 @@ export function PublicProfilePosts({
               borderColor="$primary"
               padding={2}
             >
-              <Image source={{ uri: url }} style={{ width: 60, height: 60, borderRadius: 30 }} />
+              <AppImage source={{ uri: url }} style={{ width: 60, height: 60, borderRadius: 30 }} />
             </XStack>
           ))}
         </ScrollView>
@@ -93,7 +95,7 @@ export function PublicProfilePosts({
               aria-label="Open post"
               onPress={() => setPostIndex(index)}
             >
-              <Image
+              <AppImage
                 source={{ uri: post.image_url }}
                 style={{ width: cell, height: cell, borderRadius: 6 }}
                 resizeMode="cover"

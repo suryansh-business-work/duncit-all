@@ -1,4 +1,4 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { Text, XStack, YStack } from 'tamagui';
@@ -39,7 +39,7 @@ export function NotificationRow({
         justifyContent="center"
       >
         {notification.image_url ? (
-          <Image
+          <AppImage
             source={{ uri: notification.image_url }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"

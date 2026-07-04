@@ -1,4 +1,5 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { useRoute, type RouteProp } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Spinner, Text, XStack, YStack } from 'tamagui';
@@ -74,7 +75,7 @@ function VenueDetailsContent({
         justifyContent="center"
       >
         {gallery[0] ? (
-          <Image
+          <AppImage
             source={{ uri: gallery[0] as string }}
             style={{ width: '100%', height: '100%' }}
             resizeMode="cover"
@@ -122,7 +123,7 @@ function VenueDetailsContent({
           </Text>
           <XStack flexWrap="wrap" gap={8}>
             {gallery.slice(1).map((url) => (
-              <Image
+              <AppImage
                 key={url as string}
                 testID="venue-gallery-image"
                 source={{ uri: url as string }}

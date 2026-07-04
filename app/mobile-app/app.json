@@ -72,6 +72,8 @@
         "expo-build-properties",
         {
           "android": {
+            "minSdkVersion": 24,
+            "useLegacyPackaging": true,
             "enableProguardInReleaseBuilds": true,
             "enableShrinkResourcesInReleaseBuilds": true
           }

@@ -1,4 +1,4 @@
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
@@ -36,7 +36,7 @@ export function ClubCard({ club, onPress }: Readonly<{ club: HomeClub; onPress?:
           justifyContent="center"
         >
           {image ? (
-            <Image
+            <AppImage
               source={{ uri: image }}
               style={{ width: '100%', height: '100%' }}
               resizeMode="cover"

@@ -1,5 +1,6 @@
 import { useMemo, useState } from 'react';
-import { Image } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { MaterialIcons } from '@expo/vector-icons';
 import { Input, ScrollView, Text, XStack, YStack } from 'tamagui';
 
@@ -45,7 +46,7 @@ function Chip({
       pressStyle={{ opacity: 0.8 }}
     >
       {flag ? (
-        <Image source={{ uri: flag }} style={{ width: 22, height: 16, borderRadius: 2 }} />
+        <AppImage source={{ uri: flag }} style={{ width: 22, height: 16, borderRadius: 2 }} />
       ) : null}
       <Text fontSize={13} fontWeight="800" color={active ? '$primary' : '$color'}>
         {label}

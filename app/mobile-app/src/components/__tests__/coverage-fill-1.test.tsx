@@ -1,4 +1,5 @@
 import type { BottomTabBarProps } from '@react-navigation/bottom-tabs';
+import { View } from 'react-native';
 import { screen } from '@testing-library/react-native';
 
 import { AccountProfileHeader } from '@/components/account/AccountProfileHeader';
@@ -79,11 +80,18 @@ describe('PrimaryButton default spinner id', () => {
 describe('FeedList without pull-to-refresh', () => {
   it('renders content with no refresh control', () => {
     renderWithProviders(
-      <FeedList isLoading={false} isEmpty={false} emptyText="none" testID="feed">
-        <></>
-      </FeedList>,
+      <FeedList
+        isLoading={false}
+        isEmpty={false}
+        emptyText="none"
+        testID="feed"
+        data={[{ id: 'a' }]}
+        keyExtractor={(item) => item.id}
+        renderItem={(item) => <View testID={`feed-row-${item.id}`} />}
+      />,
     );
     expect(screen.getByTestId('feed')).toBeOnTheScreen();
+    expect(screen.getByTestId('feed-row-a')).toBeOnTheScreen();
   });
 });
 

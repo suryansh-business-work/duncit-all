@@ -1,5 +1,7 @@
 import { useState } from 'react';
-import { Image, Modal } from 'react-native';
+import { Modal } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { Text, YStack } from 'tamagui';
 
 import { ModalThemeScope } from '@/components/ModalThemeScope';
@@ -40,7 +42,7 @@ export function Mascot() {
         alignItems="center"
         justifyContent="center"
       >
-        <Image
+        <AppImage
           testID="mascot-image"
           source={{ uri: url }}
           resizeMode="contain"
@@ -75,7 +77,7 @@ export function Mascot() {
                 Meet {name}
               </Text>
               <YStack alignItems="center">
-                <Image
+                <AppImage
                   source={{ uri: url }}
                   resizeMode="contain"
                   style={{ width: 180, height: 180 }}

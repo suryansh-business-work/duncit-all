@@ -1,4 +1,6 @@
-import { FlatList, Image, Modal, useWindowDimensions } from 'react-native';
+import { FlatList, Modal, useWindowDimensions } from 'react-native';
+import { AppImage } from '@/components/AppImage';
+
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MaterialIcons } from '@expo/vector-icons';
 import { XStack, YStack } from 'tamagui';
@@ -28,7 +30,7 @@ export function ImageViewerModal({
             getItemLayout={(_, i) => ({ length: width, offset: width * i, index: i })}
             keyExtractor={(url, i) => `${i}-${url}`}
             renderItem={({ item }) => (
-              <Image source={{ uri: item }} style={{ width, height }} resizeMode="contain" />
+              <AppImage source={{ uri: item }} style={{ width, height }} resizeMode="contain" />
             )}
           />
           <SafeAreaView edges={['top']} style={{ position: 'absolute', top: 0, right: 0 }}>

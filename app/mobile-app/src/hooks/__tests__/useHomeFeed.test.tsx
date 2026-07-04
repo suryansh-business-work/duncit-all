@@ -102,22 +102,31 @@ describe('useHomeFeed', () => {
         pod('5', 'c5', future(1)),
       ],
       categories: [
-        { id: 'cat1', name: 'Music', slug: 'music', level: 'CATEGORY', parent_id: null },
+        {
+          id: 'cat1',
+          name: 'Music',
+          slug: 'music',
+          icon: '🎵',
+          level: 'CATEGORY',
+          parent_id: null,
+        },
         { id: 'cat2', name: 'Arts', slug: 'arts', level: 'CATEGORY', parent_id: null },
-        { id: 'sub1', name: 'Jazz', slug: 'jazz', level: 'SUB', parent_id: 'cat1' },
+        { id: 'sub1', name: 'Jazz', slug: 'jazz', icon: '🎷', level: 'SUB', parent_id: 'cat1' },
         { id: 'sub2', name: 'Blues', slug: 'blues', level: 'SUB', parent_id: 'cat1' },
         { id: 'sub3', name: 'Orphan', slug: 'orphan', level: 'SUB', parent_id: null },
       ],
     } as never;
     const { result } = renderHook(() => useHomeFeed(''));
+    // Icons thread through onto categories + subs (undefined when absent).
     expect(result.current.vibeCategories).toEqual([
       { id: 'cat2', name: 'Arts', subs: [] },
       {
         id: 'cat1',
         name: 'Music',
+        icon: '🎵',
         subs: [
           { id: 'sub2', name: 'Blues' },
-          { id: 'sub1', name: 'Jazz' },
+          { id: 'sub1', name: 'Jazz', icon: '🎷' },
         ],
       },
     ]);

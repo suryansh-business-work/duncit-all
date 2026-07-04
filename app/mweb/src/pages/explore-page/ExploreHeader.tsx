@@ -1,6 +1,5 @@
 import { Box, Badge, Chip, IconButton, Stack, Typography } from '@mui/material';
 import TuneIcon from '@mui/icons-material/Tune';
-import AddIcon from '@mui/icons-material/Add';
 import RefreshIcon from '@mui/icons-material/Refresh';
 import type { ExploreFilters } from './exploreFilters';
 
@@ -10,7 +9,6 @@ interface ExploreHeaderProps {
   activeCount: number;
   resultCount: number;
   onOpenFilters: () => void;
-  onCreatePost: () => void;
   onRefresh: () => void;
 }
 
@@ -20,7 +18,6 @@ export default function ExploreHeader({
   activeCount,
   resultCount,
   onOpenFilters,
-  onCreatePost,
   onRefresh,
 }: Readonly<ExploreHeaderProps>) {
   return (
@@ -40,9 +37,6 @@ export default function ExploreHeader({
         </Box>
         <IconButton onClick={onRefresh} sx={HEADER_BTN_SX} aria-label="Refresh feed">
           <RefreshIcon fontSize="small" />
-        </IconButton>
-        <IconButton onClick={onCreatePost} sx={HEADER_BTN_SX} aria-label="Create post">
-          <AddIcon fontSize="small" />
         </IconButton>
         <IconButton onClick={onOpenFilters} sx={HEADER_BTN_SX} aria-label="Open filters">
           <Badge badgeContent={activeCount} color="primary" overlap="circular">

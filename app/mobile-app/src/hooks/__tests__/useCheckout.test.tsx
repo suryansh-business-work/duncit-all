@@ -50,6 +50,7 @@ const values: CheckoutFormValues = {
   pincode: '411001',
   country: 'India',
   billing_email: '',
+  has_gstin: false,
   gstin: '',
   save_as_main: false,
   simulate_failure: false,
@@ -433,6 +434,26 @@ describe('useCheckout', () => {
       expect.anything(),
     );
   });
+
+  it('skips saving when opted in but a main address already exists', async () => {
+    mockRequest.mockReset().mockImplementation((doc: unknown) => {
+      if (doc === MobileCheckoutMeDocument)
+        return Promise.resolve({
+          me: { user_id: 'u1', email: 'r@d.com', address: { line1: '9 Palm Road', city: 'Delhi' } },
+        });
+      return route(doc);
+    });
+    const { result } = renderHook(() => useCheckout('p1'));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.pay({ ...values, save_as_main: true }, 500);
+    });
+    expect(mockRequest).not.toHaveBeenCalledWith(
+      MobileCheckoutSaveAddressDocument,
+      expect.anything(),
+      expect.anything(),
+    );
+  });
 });
 
 describe('buildCheckoutInitialValues', () => {
@@ -503,9 +524,9 @@ describe('buildCheckoutBilling', () => {
     ).toBe('12 Main Street');
   });
 
-  it('includes GSTIN + a distinct billing email; omits an equal email', () => {
+  it('includes GSTIN only when has_gstin is on + a distinct billing email', () => {
     const withExtras = buildCheckoutBilling(
-      { ...values, gstin: '27AAAAA0000A1Z', billing_email: 'bill@d.com' },
+      { ...values, has_gstin: true, gstin: '27AAAAA0000A1Z', billing_email: 'bill@d.com' },
       null,
     );
     expect(withExtras.gstin).toBe('27AAAAA0000A1Z');
@@ -513,6 +534,14 @@ describe('buildCheckoutBilling', () => {
     expect(
       buildCheckoutBilling({ ...values, billing_email: 'r@d.com' }, null).email,
     ).toBeUndefined();
+  });
+
+  it('omits the GSTIN when has_gstin is off even if a value is present', () => {
+    const billing = buildCheckoutBilling(
+      { ...values, has_gstin: false, gstin: '27AAAAA0000A1Z' },
+      null,
+    );
+    expect(billing.gstin).toBeUndefined();
   });
 
   it('defaults the country to India when empty', () => {

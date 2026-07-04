@@ -51,6 +51,7 @@ export const checkoutSchema = z
     pincode: z.string().trim().max(10, 'Pincode must be 10 characters or fewer'),
     country: z.string().trim().max(80, 'Country must be 80 characters or fewer'),
     billing_email: z.string().trim().max(254),
+    has_gstin: z.boolean(),
     gstin: z.string().trim().max(20),
     save_as_main: z.boolean(),
     simulate_failure: z.boolean(),
@@ -71,7 +72,7 @@ export const checkoutSchema = z
       }
     }
     const gstin = values.gstin.trim().toUpperCase();
-    if (gstin && !GSTIN_PATTERN.test(gstin)) {
+    if (values.has_gstin && gstin && !GSTIN_PATTERN.test(gstin)) {
       ctx.addIssue({ code: z.ZodIssueCode.custom, path: ['gstin'], message: 'Enter a valid 15-character GSTIN' });
     }
     const billingEmail = values.billing_email.trim();
@@ -96,6 +97,7 @@ export const checkoutDefaults: CheckoutForm = {
   pincode: '',
   country: 'India',
   billing_email: '',
+  has_gstin: false,
   gstin: '',
   save_as_main: false,
   simulate_failure: false,
@@ -140,16 +142,24 @@ export function resolveBillingAddress(
   };
 }
 
-/** Build the CheckoutBillingInput sent on pay. GSTIN is uppercased and omitted
- * when empty; the billing email is only sent when it differs from the contact
- * email (empty means "use the contact email"). */
+/** Whether to persist the entered billing address as the buyer's main address on
+ * pay: only when they opted in, typed a fresh (not same-as-main) address, and had
+ * no saved main address to begin with. */
+export function shouldPersistMainAddress(values: CheckoutForm, hasMainAddress: boolean): boolean {
+  return values.save_as_main && !values.same_as_main && !hasMainAddress;
+}
+
+/** Build the CheckoutBillingInput sent on pay. GSTIN is uppercased and only sent
+ * when the buyer toggled "I have a GSTIN" and typed one; the billing email is
+ * only sent when it differs from the contact email (empty means "use the contact
+ * email"). */
 export function toCheckoutBilling(values: CheckoutForm, mainAddress?: PostalAddressParts | null) {
   const address = resolveBillingAddress(values, mainAddress);
   const gstin = values.gstin.trim().toUpperCase();
   const billingEmail = values.billing_email.trim().toLowerCase();
   const contactEmail = values.email.trim().toLowerCase();
   const billing: PostalAddressParts & { gstin?: string; email?: string } = { ...address };
-  if (gstin) billing.gstin = gstin;
+  if (values.has_gstin && gstin) billing.gstin = gstin;
   if (billingEmail && billingEmail !== contactEmail) billing.email = billingEmail;
   return billing;
 }

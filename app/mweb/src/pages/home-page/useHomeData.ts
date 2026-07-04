@@ -338,7 +338,8 @@ export function useHomeData({
     return categories.map((c: any) => ({
       id: c.id,
       name: c.name,
-      subs: (subsByParent.get(c.id) ?? []).map((s: any) => ({ id: s.id, name: s.name })),
+      icon: c.icon ?? null,
+      subs: (subsByParent.get(c.id) ?? []).map((s: any) => ({ id: s.id, name: s.name, icon: s.icon ?? null })),
     }));
   }, [data, selectedSuperId, isDescendantOf, podCategoryIds]);
 

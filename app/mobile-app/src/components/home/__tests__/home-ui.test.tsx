@@ -10,8 +10,8 @@ import type { HomePod, VibeCategory } from '@/hooks/useHomeFeed';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const categories: VibeCategory[] = [
-  { id: 'c1', name: 'Music', subs: [{ id: 's1', name: 'Jazz' }] },
-  { id: 'c2', name: 'Sports', subs: [] },
+  { id: 'c1', name: 'Music', icon: '🎵', subs: [{ id: 's1', name: 'Jazz' }] },
+  { id: 'c2', name: 'Sports', icon: 'https://cdn.duncit/sport.png', subs: [] },
 ];
 
 const pod = {
@@ -108,6 +108,18 @@ describe('HomeVibeChips', () => {
     );
     expect(screen.getByText('ACT')).toBeOnTheScreen();
     expect(screen.queryByTestId('vibe-chip-all')).toBeNull();
+  });
+
+  it('renders each tab icon: emoji, image thumbnail and the All fallback', () => {
+    renderWithProviders(
+      <HomeVibeChips categories={categories} selectedId="" onSelect={jest.fn()} />,
+    );
+    // Emoji icon → text; http icon → image thumbnail.
+    expect(screen.getByTestId('vibe-chip-c1-emoji')).toBeOnTheScreen();
+    expect(screen.getByTestId('vibe-chip-c2-image')).toBeOnTheScreen();
+    // The "All" tab has no icon → MaterialIcons fallback (no emoji/image nodes).
+    expect(screen.queryByTestId('vibe-chip-all-emoji')).toBeNull();
+    expect(screen.queryByTestId('vibe-chip-all-image')).toBeNull();
   });
 });
 

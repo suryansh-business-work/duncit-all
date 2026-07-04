@@ -14,6 +14,9 @@ interface AccordionProps {
   onToggle: () => void;
   children: ReactNode;
   testID?: string;
+  /** When true, tints the header title + border in the theme danger colour
+   * (used to flag a section that has validation errors). */
+  error?: boolean;
 }
 
 /** A single collapsible section — RN port of mWeb's PodAccordion. */
@@ -24,14 +27,17 @@ export function Accordion({
   onToggle,
   children,
   testID,
+  error = false,
 }: Readonly<AccordionProps>) {
   const { primary, muted } = useThemeColors();
+  const borderTint = error ? '$danger' : '$borderColor';
+  const titleTint = error ? '$danger' : '$color';
 
   return (
     <YStack
       testID={testID}
       borderWidth={1}
-      borderColor="$borderColor"
+      borderColor={borderTint}
       borderRadius={14}
       backgroundColor="$surface"
       marginBottom={10}
@@ -49,7 +55,7 @@ export function Accordion({
         pressStyle={{ opacity: 0.8 }}
       >
         <MaterialIcons name={icon} size={18} color={primary} />
-        <Text flex={1} fontSize={15} fontWeight="900" color="$color">
+        <Text flex={1} fontSize={15} fontWeight="900" color={titleTint}>
           {title}
         </Text>
         <MaterialIcons

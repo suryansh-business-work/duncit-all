@@ -4,6 +4,8 @@ import { useNavigate } from 'react-router-dom';
 import {
   Alert,
   Box,
+  Button,
+  Chip,
   CircularProgress,
   InputAdornment,
   Stack,
@@ -11,7 +13,10 @@ import {
   Typography,
 } from '@mui/material';
 import SearchIcon from '@mui/icons-material/Search';
+import TuneIcon from '@mui/icons-material/Tune';
 import ClubListCard from './clubs-page/ClubListCard';
+import SearchFilterSheet from './search-page/SearchFilterSheet';
+import { useSearchCategories } from './search-page/useSearchDiscovery';
 
 const ALL_CLUBS = gql`
   query AllClubs {
@@ -24,6 +29,7 @@ const ALL_CLUBS = gql`
       club_id
       club_name
       club_description
+      category_id
       super_category_id
       club_feature_images_and_videos {
         url
@@ -47,6 +53,10 @@ export default function ClubsPage({ superCategorySlug }: Readonly<ClubsPageProps
   });
   const navigate = useNavigate();
   const [q, setQ] = useState('');
+  const [categoryId, setCategoryId] = useState('');
+  const [filterOpen, setFilterOpen] = useState(false);
+  const { buttons: categoryOptions } = useSearchCategories();
+  const selectedCategory = categoryOptions.find((c) => c.id === categoryId) ?? null;
 
   const podCounts = useMemo(() => {
     const m = new Map<string, number>();
@@ -67,12 +77,16 @@ export default function ClubsPage({ superCategorySlug }: Readonly<ClubsPageProps
       .filter((c: any) => !selectedSuperId || c.super_category_id === selectedSuperId)
       .filter(
         (c: any) =>
+          !categoryId || c.category_id === categoryId || c.super_category_id === categoryId,
+      )
+      .filter(
+        (c: any) =>
           !term ||
           c.club_name?.toLowerCase().includes(term) ||
           c.club_description?.toLowerCase().includes(term),
       )
       .sort((a: any, b: any) => a.club_name.localeCompare(b.club_name));
-  }, [data, q, superCategorySlug]);
+  }, [data, q, categoryId, superCategorySlug]);
 
   if (loading && !data)
     return (
@@ -100,20 +114,40 @@ export default function ClubsPage({ superCategorySlug }: Readonly<ClubsPageProps
           Find communities hosting pods near you
         </Typography>
       </Box>
-      <TextField
-        size="small"
-        placeholder="Search clubs"
-        value={q}
-        onChange={(e) => setQ(e.target.value)}
-        InputProps={{
-          startAdornment: (
-            <InputAdornment position="start">
-              <SearchIcon fontSize="small" />
-            </InputAdornment>
-          ),
-        }}
-        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
-      />
+      <Stack direction="row" spacing={1} alignItems="center">
+        <TextField
+          size="small"
+          placeholder="Search clubs"
+          value={q}
+          onChange={(e) => setQ(e.target.value)}
+          InputProps={{
+            startAdornment: (
+              <InputAdornment position="start">
+                <SearchIcon fontSize="small" />
+              </InputAdornment>
+            ),
+          }}
+          sx={{ flex: 1, '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
+        />
+        <Button
+          variant="outlined"
+          startIcon={<TuneIcon />}
+          onClick={() => setFilterOpen(true)}
+          sx={{ flex: '0 0 auto', borderRadius: 999, fontWeight: 800, whiteSpace: 'nowrap' }}
+        >
+          Category
+        </Button>
+      </Stack>
+      {selectedCategory && (
+        <Box>
+          <Chip
+            label={selectedCategory.name}
+            color="primary"
+            onDelete={() => setCategoryId('')}
+            sx={{ fontWeight: 800 }}
+          />
+        </Box>
+      )}
       {clubs.length === 0 ? (
         <Alert severity="info">No clubs found.</Alert>
       ) : (
@@ -138,6 +172,13 @@ export default function ClubsPage({ superCategorySlug }: Readonly<ClubsPageProps
           ))}
         </Box>
       )}
+      <SearchFilterSheet
+        open={filterOpen}
+        categories={categoryOptions}
+        categoryId={categoryId}
+        onClose={() => setFilterOpen(false)}
+        onSelect={setCategoryId}
+      />
     </Stack>
   );
 }

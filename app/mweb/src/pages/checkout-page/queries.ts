@@ -222,6 +222,7 @@ export interface CheckoutForm {
   pincode: string;
   country: string;
   billing_email: string;
+  has_gstin: boolean;
   gstin: string;
   save_as_main: boolean;
   simulate_failure: boolean;

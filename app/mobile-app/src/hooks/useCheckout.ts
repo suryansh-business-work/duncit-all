@@ -79,7 +79,7 @@ export function buildCheckoutBilling(
     state: source.state,
     pincode: source.pincode,
     country: source.country || 'India',
-    ...(gstin ? { gstin } : {}),
+    ...(values.has_gstin && gstin ? { gstin } : {}),
     ...(billingEmail && billingEmail !== contactEmail ? { email: billingEmail } : {}),
   };
 }
@@ -137,9 +137,10 @@ export function useCheckout(podId: string) {
     coupon_code: couponCode || null,
   });
 
-  /** Persist the entered billing address as the main address when opted in. */
+  /** Persist the entered billing address as the main address when opted in. The
+   * opt-in only applies when there is no saved main address yet. */
   const maybeSaveMainAddress = async (values: CheckoutFormValues) => {
-    if (!values.save_as_main) return;
+    if (!values.save_as_main || me?.address?.line1) return;
     await graphqlRequest(
       MobileCheckoutSaveAddressDocument,
       {

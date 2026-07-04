@@ -4,6 +4,7 @@ import {
   checkoutDefaults,
   toCheckoutContact,
   toCheckoutBilling,
+  shouldPersistMainAddress,
 } from './checkout.types';
 import type { CheckoutForm } from '../queries';
 
@@ -21,6 +22,7 @@ const valid: CheckoutForm = {
   pincode: '110001',
   country: 'India',
   billing_email: '',
+  has_gstin: false,
   gstin: '',
   save_as_main: false,
   simulate_failure: false,
@@ -44,6 +46,7 @@ describe('checkoutSchema', () => {
     expect(checkoutDefaults.phone_extension).toBe('+91');
     expect(checkoutDefaults.country).toBe('India');
     expect(checkoutDefaults.same_as_main).toBe(false);
+    expect(checkoutDefaults.has_gstin).toBe(false);
     expect(checkoutDefaults.simulate_failure).toBe(false);
   });
 
@@ -84,11 +87,16 @@ describe('checkoutSchema', () => {
     expect(result.success).toBe(true);
   });
 
-  it('accepts a valid GSTIN and rejects a malformed one', () => {
-    expect(checkoutSchema.safeParse({ ...valid, gstin: '27AAPFU0939F1Z' }).success).toBe(true);
-    // lower-case is accepted (validated uppercased, mirroring the server).
-    expect(checkoutSchema.safeParse({ ...valid, gstin: '27aapfu0939f1z' }).success).toBe(true);
-    expect(firstError(checkoutSchema.safeParse({ ...valid, gstin: 'NOTAGSTIN' }))).toMatch(/gstin/i);
+  it('validates the GSTIN only when has_gstin is on', () => {
+    // Off: the GSTIN field is ignored entirely, even when malformed.
+    expect(checkoutSchema.safeParse({ ...valid, has_gstin: false, gstin: 'NOTAGSTIN' }).success).toBe(true);
+    // On: a valid GSTIN passes; lower-case is accepted (validated uppercased).
+    expect(checkoutSchema.safeParse({ ...valid, has_gstin: true, gstin: '27AAPFU0939F1Z' }).success).toBe(true);
+    expect(checkoutSchema.safeParse({ ...valid, has_gstin: true, gstin: '27aapfu0939f1z' }).success).toBe(true);
+    // On but empty is allowed — there is simply nothing to send.
+    expect(checkoutSchema.safeParse({ ...valid, has_gstin: true, gstin: '' }).success).toBe(true);
+    // On and malformed is rejected.
+    expect(firstError(checkoutSchema.safeParse({ ...valid, has_gstin: true, gstin: 'NOTAGSTIN' }))).toMatch(/gstin/i);
   });
 
   it('accepts an empty billing email but rejects a malformed one', () => {
@@ -127,11 +135,16 @@ describe('toCheckoutBilling', () => {
 
   it('uppercases the GSTIN and only sends a differing billing email', () => {
     const billing = toCheckoutBilling(
-      { ...valid, gstin: '27aapfu0939f1z', billing_email: 'Billing@Acme.IO' },
+      { ...valid, has_gstin: true, gstin: '27aapfu0939f1z', billing_email: 'Billing@Acme.IO' },
       mainAddress,
     );
     expect(billing.gstin).toBe('27AAPFU0939F1Z');
     expect(billing.email).toBe('billing@acme.io');
+  });
+
+  it('omits the GSTIN when has_gstin is off, even if one was typed', () => {
+    const billing = toCheckoutBilling({ ...valid, has_gstin: false, gstin: '27AAPFU0939F1Z' }, mainAddress);
+    expect('gstin' in billing).toBe(false);
   });
 
   it('drops a billing email equal to the contact email', () => {
@@ -149,5 +162,20 @@ describe('toCheckoutBilling', () => {
   it('falls back to India when country is blank', () => {
     const billing = toCheckoutBilling({ ...valid, country: '' }, mainAddress);
     expect(billing.country).toBe('India');
+  });
+});
+
+describe('shouldPersistMainAddress', () => {
+  it('saves only when opted in, address is fresh, and no main address exists', () => {
+    expect(shouldPersistMainAddress({ ...valid, save_as_main: true }, false)).toBe(true);
+  });
+
+  it('never saves when a main address already exists', () => {
+    expect(shouldPersistMainAddress({ ...valid, save_as_main: true }, true)).toBe(false);
+  });
+
+  it('does not save when the checkbox is off or the address mirrors the main one', () => {
+    expect(shouldPersistMainAddress({ ...valid, save_as_main: false }, false)).toBe(false);
+    expect(shouldPersistMainAddress({ ...valid, save_as_main: true, same_as_main: true }, false)).toBe(false);
   });
 });

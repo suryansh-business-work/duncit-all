@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
 
+import { VibeCategoryTab } from '@/components/home/VibeCategoryTab';
 import type { VibeCategory } from '@/hooks/useHomeFeed';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
@@ -13,15 +14,15 @@ interface HomeVibeChipsProps {
   action?: ReactNode;
 }
 
-interface VibeChipProps {
+interface VibeSubChipProps {
   testID: string;
   label: string;
   selected: boolean;
-  small?: boolean;
   onPress: () => void;
 }
 
-function VibeChip({ testID, label, selected, small, onPress }: Readonly<VibeChipProps>) {
+/** A small pill used for the sub-category row below the tabber. */
+function VibeSubChip({ testID, label, selected, onPress }: Readonly<VibeSubChipProps>) {
   return (
     <XStack
       testID={testID}
@@ -29,7 +30,7 @@ function VibeChip({ testID, label, selected, small, onPress }: Readonly<VibeChip
       aria-label={label}
       aria-pressed={selected}
       onPress={onPress}
-      height={small ? 36 : 42}
+      height={36}
       paddingHorizontal={16}
       alignItems="center"
       borderRadius={14}
@@ -38,19 +39,16 @@ function VibeChip({ testID, label, selected, small, onPress }: Readonly<VibeChip
       borderColor={selected ? '$primary' : '$borderColor'}
       pressStyle={{ opacity: 0.85 }}
     >
-      <Text
-        fontSize={small ? 12.5 : 13.5}
-        fontWeight="800"
-        color={selected ? '$onPrimary' : '$color'}
-      >
+      <Text fontSize={12.5} fontWeight="800" color={selected ? '$onPrimary' : '$color'}>
         {label}
       </Text>
     </XStack>
   );
 }
 
-/** "What's your vibe today?" — Categories in row 1; the selected category's
- * Subcategories appear in a second row directly below (RN port of mWeb). */
+/** "What's your vibe today?" — top-level categories render as an icon+label TABBER
+ * (with a leading "All" tab); the selected category's sub-categories appear as a
+ * pill row directly below. */
 export function HomeVibeChips({
   categories,
   selectedId,
@@ -81,11 +79,12 @@ export function HomeVibeChips({
         <ScrollView
           horizontal
           showsHorizontalScrollIndicator={false}
-          contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
+          contentContainerStyle={{ gap: 4, paddingHorizontal: 12 }}
         >
-          <VibeChip
+          <VibeCategoryTab
             testID="vibe-chip-all"
             label="All"
+            fallback="apps"
             selected={selectedId === ''}
             onPress={() => onSelect('')}
           />
@@ -93,10 +92,11 @@ export function HomeVibeChips({
             const selected =
               category.id === selectedId || category.subs.some((s) => s.id === selectedId);
             return (
-              <VibeChip
+              <VibeCategoryTab
                 key={category.id}
                 testID={`vibe-chip-${category.id}`}
                 label={category.name}
+                icon={category.icon}
                 selected={selected}
                 onPress={() => onSelect(category.id === selectedId ? '' : category.id)}
               />
@@ -111,18 +111,16 @@ export function HomeVibeChips({
           showsHorizontalScrollIndicator={false}
           contentContainerStyle={{ gap: 8, paddingHorizontal: 16 }}
         >
-          <VibeChip
+          <VibeSubChip
             testID={`vibe-sub-all-${activeCategory.id}`}
-            small
             label={`All ${activeCategory.name}`}
             selected={selectedId === activeCategory.id}
             onPress={() => onSelect(activeCategory.id)}
           />
           {subs.map((sub) => (
-            <VibeChip
+            <VibeSubChip
               key={sub.id}
               testID={`vibe-sub-${sub.id}`}
-              small
               label={sub.name}
               selected={selectedId === sub.id}
               onPress={() => onSelect(selectedId === sub.id ? activeCategory.id : sub.id)}

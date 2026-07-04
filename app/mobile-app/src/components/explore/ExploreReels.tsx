@@ -15,7 +15,6 @@ import { likersWithViewer } from '@/utils/explore-likers';
 import type { ExplorePod } from '@/stores/explore.store';
 import type { RootStackParamList } from '@/navigation/types';
 import { ExplorePodCard } from '@/components/explore/ExplorePodCard';
-import { ExploreCreateButton } from '@/components/explore/ExploreCreateButton';
 import { LikesListSheet } from '@/components/explore/LikesListSheet';
 import { PodCommentsSheet } from '@/components/details/pod-comments';
 
@@ -129,7 +128,6 @@ export function ExploreReels() {
   return (
     <YStack flex={1} onLayout={onLayout} testID="explore-reels">
       {reelsBody}
-      <ExploreCreateButton />
       {commentsPod ? (
         <PodCommentsSheet
           podId={commentsPod.id}

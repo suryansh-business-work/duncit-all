@@ -2,6 +2,12 @@ jest.mock('@services/email/email.service', () => ({ sendEmail: jest.fn().mockRes
 jest.mock('@services/invoice/invoice.pdf', () => ({
   generateInvoicePdf: jest.fn().mockResolvedValue(Buffer.from('pdf')),
 }));
+// dummyCheckout books the pod, which fires a fire-and-forget event-ticket email
+// (ticketService.ensureForMembership). Stub it so that floating promise never
+// touches Mongo after this suite tears down ("Cannot log after tests are done").
+jest.mock('@modules/pods/ticket/ticket.service', () => ({
+  ticketService: { ensureForMembership: jest.fn().mockResolvedValue(null) },
+}));
 
 import { Types } from 'mongoose';
 import { paymentService } from '../../payment.service';

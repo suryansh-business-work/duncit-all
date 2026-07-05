@@ -21,6 +21,7 @@ export const PORTALS = [
   'ads-portal',
   'partners-app',
   'challenge-portal',
+  'developers-portal',
 ] as const;
 export type PortalKey = (typeof PORTALS)[number];
 

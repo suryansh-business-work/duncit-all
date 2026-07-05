@@ -18,8 +18,8 @@ const identity = (node: ReactNode): ReactNode => node;
  * stack — Apollo, user/session, theme + color mode, MUI localization, Google
  * OAuth, the router, portal-mode gating and console-log shipping — so each
  * portal only supplies its route tree and a few config values. The chrome
- * (header + sidebar) lives in the portal's own `<App />` for now and moves into
- * the Shell in a later phase.
+ * (header + sidebar + breadcrumbs) is the Shell's `AppShell`, which the
+ * portal's `<App />` wraps its authed routes in.
  */
 export function mountPortal(opts: MountPortalOptions): void {
   const {

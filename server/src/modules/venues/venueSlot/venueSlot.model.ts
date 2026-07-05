@@ -17,6 +17,10 @@ export interface IVenueSlot extends Document {
   capacity: number;
   status: VenueSlotStatus;
   booked_by_pod_id: Types.ObjectId | null;
+  /** Set when the slot was booked through the public developer API. */
+  booked_by_api_key_id: Types.ObjectId | null;
+  /** Integrator-supplied reference for an external (API) booking. */
+  external_ref: string;
   notes: string;
   created_at: Date;
   updated_at: Date;
@@ -38,6 +42,8 @@ const venueSlotSchema = new Schema<IVenueSlot>(
       index: true,
     },
     booked_by_pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null, index: true },
+    booked_by_api_key_id: { type: Schema.Types.ObjectId, ref: 'ApiKey', default: null, index: true },
+    external_ref: { type: String, default: '', trim: true, maxlength: 120 },
     notes: { type: String, default: '', trim: true, maxlength: 280 },
   },
   { timestamps: { createdAt: 'created_at', updatedAt: 'updated_at' } }

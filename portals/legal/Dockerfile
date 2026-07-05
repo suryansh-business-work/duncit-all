@@ -32,6 +32,7 @@ COPY portals/hr/package.json ./portals/hr/
 COPY portals/employee/package.json ./portals/employee/
 COPY website/status-website/package.json ./website/status-website/
 COPY portals/challenge-portal/package.json ./portals/challenge-portal/
+COPY portals/developers/package.json ./portals/developers/
 COPY website/earnwith-website/package.json ./website/earnwith-website/
 COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/logs/package.json ./packages/logs/

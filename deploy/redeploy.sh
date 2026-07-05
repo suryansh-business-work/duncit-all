@@ -11,7 +11,7 @@
 set -euo pipefail
 cd /opt/duncit
 
-ALL_SERVICES=(server admin mweb website partners-website partners-app ads-portal ads-website native crm open-wa finance tech support website-app legal ai products marketing onboarding hr employee status earnwith challenge)
+ALL_SERVICES=(server admin mweb website partners-website partners-app ads-portal ads-website native crm open-wa finance tech support website-app legal ai products marketing onboarding hr employee status earnwith challenge developers)
 declare -A PORT_OF=(
   [server]=2001 [admin]=2002 [mweb]=2003 [website]=2000
   [partners-website]=2004 [partners-app]=2005 [ads-portal]=2006 [ads-website]=2020 [native]=2022
@@ -19,7 +19,7 @@ declare -A PORT_OF=(
   [support]=2010 [website-app]=2011 [legal]=2012
   [ai]=2013 [products]=2014 [marketing]=2015
   [onboarding]=2016 [hr]=2017 [employee]=2018 [status]=2019
-  [earnwith]=2025 [challenge]=2026
+  [earnwith]=2025 [challenge]=2026 [developers]=2027
 )
 
 requested_raw="${SERVICES:-}"

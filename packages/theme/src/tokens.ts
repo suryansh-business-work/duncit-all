@@ -63,6 +63,8 @@ export const tokens = {
     touchTarget: 44,
     scrollbar: 8,
     helperGap: 5,
+    headerHeight: 48,
+    drawerWidth: 256,
   },
 
   // Typography.

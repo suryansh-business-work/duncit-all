@@ -44,7 +44,7 @@ export type RootStackParamList = {
   Faqs: undefined;
   PodPlans: undefined;
   Policies: undefined;
-  SupportTickets: undefined;
+  SupportTickets: { podId?: string; podTitle?: string } | undefined;
   Policy: { slug: string };
   ChatRoom: { podId: string; title: string };
   PodDetails: { podId: string; title: string };

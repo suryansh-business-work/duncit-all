@@ -17,12 +17,17 @@ function uid(ctx: GraphQLContext) {
 
 export const ecommBrandResolvers = {
   EcommBrand: {
-    approved_product_count: (parent: { id: string }) =>
-      InventoryProductModel.countDocuments({
+    // .exec() returns a genuine Promise — returning the bare Mongoose Query lets
+    // the GraphQL executor adopt (.then) it more than once → "Query was already
+    // executed". Guard a missing id (0 products) too.
+    approved_product_count: (parent: { id?: string }) => {
+      if (!parent.id) return 0;
+      return InventoryProductModel.countDocuments({
         brand_id: parent.id,
         ownership: 'BRAND',
         listing_review_status: 'APPROVED',
-      }),
+      }).exec();
+    },
   },
   Query: {
     myEcommBrands: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>

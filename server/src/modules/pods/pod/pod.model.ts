@@ -74,6 +74,10 @@ export interface IPod extends Document {
   completed_at?: Date | null;
   is_active: boolean;
   venue_approval_status: PodVenueApproval;
+  // Soft-delete marker (distinct from is_active, which is the venue-approval
+  // offline flag). Set instead of hard-deleting so bookings/payments/history
+  // survive; excluded from every discovery/listing read.
+  deleted_at?: Date | null;
   created_at: Date;
   updated_at: Date;
 }
@@ -164,6 +168,7 @@ const podSchema = new Schema<IPod>(
     comments: { type: [commentSchema], default: [] },
     completed_at: { type: Date, default: null, index: true },
     is_active: { type: Boolean, default: true },
+    deleted_at: { type: Date, default: null, index: true },
     venue_approval_status: {
       type: String,
       enum: ['NONE', 'PENDING', 'APPROVED', 'DECLINED'],
@@ -178,5 +183,28 @@ podSchema.index({ club_id: 1, pod_id: 1 }, { unique: true });
 podSchema.index({ club_id: 1, pod_date_time: -1 });
 podSchema.index({ location_id: 1, zone_name: 1, pod_date_time: -1 });
 podSchema.index({ venue_id: 1, pod_date_time: -1 });
+
+// Soft-delete: every read automatically excludes deleted pods (deleted_at set),
+// so discovery/listing/metrics never surface a deleted pod. Callers that must
+// see deleted pods (e.g. Pod History resolving a booking's pod) opt in with
+// `.setOptions({ includeDeleted: true })`; queries that already filter on
+// `deleted_at` are left untouched.
+function excludeDeleted(this: any, next: (err?: any) => void) {
+  if (this.getOptions?.().includeDeleted) return next();
+  const filter = this.getQuery ? this.getQuery() : this.getFilter?.();
+  if (!filter || filter.deleted_at === undefined) this.where({ deleted_at: null });
+  next();
+}
+podSchema.pre('find', excludeDeleted);
+podSchema.pre('findOne', excludeDeleted);
+podSchema.pre('findOneAndUpdate', excludeDeleted);
+podSchema.pre('countDocuments', excludeDeleted);
+podSchema.pre('updateMany', excludeDeleted);
+podSchema.pre('updateOne', excludeDeleted);
+podSchema.pre('aggregate', function (next) {
+  if ((this as any).options?.includeDeleted) return next();
+  this.pipeline().unshift({ $match: { deleted_at: null } });
+  next();
+});
 
 export const PodModel = model<IPod>('Pod', podSchema);

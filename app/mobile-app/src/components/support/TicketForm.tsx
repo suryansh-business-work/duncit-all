@@ -1,7 +1,9 @@
 import { useState } from 'react';
-import { Button, Input, Text, YStack } from 'tamagui';
+import { MaterialIcons } from '@expo/vector-icons';
+import { Button, Input, Text, XStack, YStack } from 'tamagui';
 
 import { createTicket } from '@/hooks/useSupport';
+import { useThemeColors } from '@/hooks/useThemeColors';
 import { CategorySelect } from './CategorySelect';
 import { TicketAttachments } from './TicketAttachments';
 import { DEFAULT_TICKET_CATEGORY, toServerCategory } from './ticketCategories';
@@ -10,6 +12,8 @@ interface Props {
   onCreated: (id: string) => void;
   initialName?: string;
   initialEmail?: string;
+  podId?: string;
+  podTitle?: string;
 }
 
 /**
@@ -17,7 +21,14 @@ interface Props {
  * mWeb's SupportForm: the same fields (name/email auto-filled), the same
  * dropdown categories and the same "Send to support" action.
  */
-export function TicketForm({ onCreated, initialName = '', initialEmail = '' }: Readonly<Props>) {
+export function TicketForm({
+  onCreated,
+  initialName = '',
+  initialEmail = '',
+  podId,
+  podTitle,
+}: Readonly<Props>) {
+  const { primary } = useThemeColors();
   const [name, setName] = useState(initialName);
   const [email, setEmail] = useState(initialEmail);
   const [category, setCategory] = useState<string>(DEFAULT_TICKET_CATEGORY);
@@ -40,6 +51,7 @@ export function TicketForm({ onCreated, initialName = '', initialEmail = '' }: R
         message.trim(),
         toServerCategory(category),
         attachments,
+        podId && podTitle ? { id: podId, title: podTitle } : undefined,
       );
       onCreated(id);
     } catch {
@@ -59,6 +71,24 @@ export function TicketForm({ onCreated, initialName = '', initialEmail = '' }: R
       borderColor="$borderColor"
       backgroundColor="$surface"
     >
+      {podTitle ? (
+        <XStack
+          testID="ticket-attached-pod"
+          alignItems="center"
+          gap={6}
+          alignSelf="flex-start"
+          paddingHorizontal={10}
+          paddingVertical={5}
+          borderRadius={999}
+          borderWidth={1}
+          borderColor="$primary"
+        >
+          <MaterialIcons name="event" size={14} color={primary} />
+          <Text fontSize={12} fontWeight="800" color="$primary">
+            About pod: {podTitle}
+          </Text>
+        </XStack>
+      ) : null}
       <Input
         testID="ticket-name"
         placeholder="Your name"

@@ -39,9 +39,13 @@ const makeSupportPath = (item: PodHistoryItem) => {
   const title = item.pod?.pod_title ?? 'Pod';
   const params = new URLSearchParams({
     category: 'PAYMENT',
-    subject: `Refund support - ${title}`,
-    message: `I need help with my pod history. Pod: ${title}. Membership: ${item.id}. Refund status: ${refundLabel[item.refund_status]}.`,
+    subject: `Support - ${title}`,
+    message: `I need help with my pod booking. Pod: ${title}. Membership: ${item.id}. Refund status: ${refundLabel[item.refund_status]}.`,
   });
+  if (item.pod?.id) {
+    params.set('podId', item.pod.id);
+    params.set('podTitle', title);
+  }
   return `/support/tickets?${params.toString()}`;
 };
 
@@ -52,6 +56,7 @@ export default function PodHistoryDetails({ item, backingOut, onBackout }: Reado
   const [loadTicketForPod] = useLazyQuery(POD_HISTORY_TICKET_FOR_POD, { fetchPolicy: 'network-only' });
   const [loadTicketPdf, ticketState] = useLazyQuery(POD_HISTORY_TICKET_PDF, { fetchPolicy: 'network-only' });
   const pod = item.pod;
+  const isDeleted = !!pod?.is_deleted;
   const imageUrl = pod?.pod_images_and_videos?.[0]?.url;
   const podDetailsPath = pod?.club_slug && pod?.pod_id ? podUrl(pod.club_slug, pod.pod_id) : '';
 
@@ -118,20 +123,29 @@ export default function PodHistoryDetails({ item, backingOut, onBackout }: Reado
       <Card>
         <CardContent>
           <Typography variant="subtitle1" fontWeight={950} gutterBottom>Actions</Typography>
+          {isDeleted && (
+            <Alert severity="info" sx={{ mb: 1.5 }}>
+              This pod was removed. Your booking record stays here — download your invoice or contact support.
+            </Alert>
+          )}
           <Stack direction={{ xs: 'column', sm: 'row' }} spacing={1} useFlexGap flexWrap="wrap">
-            <Button component={RouterLink} to={podDetailsPath || '#'} disabled={!podDetailsPath} variant="contained" endIcon={<ArrowForwardIcon />}>
-              Go to Pod Details
-            </Button>
-            <Button onClick={onBackout} disabled={item.status !== 'JOINED' || backingOut} color="error" variant="outlined" startIcon={<RestartAltIcon />}>
-              {backingOut ? 'Backing out...' : 'Backout Pod'}
-            </Button>
-            <Button variant="outlined" startIcon={<ReceiptLongIcon />} onClick={() => notify(`Refund status: ${refundLabel[item.refund_status]}`, 'info')}>
-              Refund Status: {refundLabel[item.refund_status]}
-            </Button>
-            {item.status === 'JOINED' && (
-              <Button onClick={downloadTicket} disabled={!pod?.id || ticketState.loading} variant="contained" startIcon={<ConfirmationNumberIcon />} sx={{ background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)', fontWeight: 900 }}>
-                {ticketState.loading ? 'Downloading...' : 'Ticket'}
-              </Button>
+            {!isDeleted && (
+              <>
+                <Button component={RouterLink} to={podDetailsPath || '#'} disabled={!podDetailsPath} variant="contained" endIcon={<ArrowForwardIcon />}>
+                  Go to Pod Details
+                </Button>
+                <Button onClick={onBackout} disabled={item.status !== 'JOINED' || backingOut} color="error" variant="outlined" startIcon={<RestartAltIcon />}>
+                  {backingOut ? 'Backing out...' : 'Backout Pod'}
+                </Button>
+                <Button variant="outlined" startIcon={<ReceiptLongIcon />} onClick={() => notify(`Refund status: ${refundLabel[item.refund_status]}`, 'info')}>
+                  Refund Status: {refundLabel[item.refund_status]}
+                </Button>
+                {item.status === 'JOINED' && (
+                  <Button onClick={downloadTicket} disabled={!pod?.id || ticketState.loading} variant="contained" startIcon={<ConfirmationNumberIcon />} sx={{ background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)', fontWeight: 900 }}>
+                    {ticketState.loading ? 'Downloading...' : 'Ticket'}
+                  </Button>
+                )}
+              </>
             )}
             <Button onClick={downloadInvoice} disabled={!item.payment_id || invoiceState.loading} variant="outlined" startIcon={<ReceiptLongIcon />}>
               {invoiceState.loading ? 'Downloading...' : 'Invoice'}

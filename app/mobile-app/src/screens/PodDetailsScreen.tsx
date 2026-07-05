@@ -177,6 +177,20 @@ export function PodDetailsScreen() {
               onOpenProfile={(userId) => navigation.navigate('PublicProfile', { userId })}
             />
           </Reveal>
+          <XStack
+            testID="pod-contact-support"
+            role="button"
+            aria-label="Contact support about this pod"
+            onPress={() =>
+              navigation.navigate('SupportTickets', { podId: pod.id, podTitle: pod.pod_title })
+            }
+            paddingHorizontal={16}
+            paddingTop={12}
+          >
+            <Text fontSize={13} fontWeight="800" color="$primary">
+              Contact support about this pod
+            </Text>
+          </XStack>
         </ScrollView>
       )}
 

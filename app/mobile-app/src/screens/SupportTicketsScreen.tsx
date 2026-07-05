@@ -1,4 +1,4 @@
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { MaterialIcons } from '@expo/vector-icons';
 import { ScrollView, Text, XStack, YStack } from 'tamagui';
@@ -17,6 +17,9 @@ import type { RootStackParamList } from '@/navigation/types';
  */
 export function SupportTicketsScreen() {
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
+  const route = useRoute<RouteProp<RootStackParamList, 'SupportTickets'>>();
+  const podId = route.params?.podId;
+  const podTitle = route.params?.podTitle;
   const me = useMeStore((s) => s.data?.me);
   const { onPrimary, success } = useThemeColors();
 
@@ -95,6 +98,8 @@ export function SupportTicketsScreen() {
         <TicketForm
           initialName={me?.full_name || ''}
           initialEmail={me?.email || ''}
+          podId={podId}
+          podTitle={podTitle}
           onCreated={(id) => navigation.navigate('TicketDetails', { ticketId: id })}
         />
 

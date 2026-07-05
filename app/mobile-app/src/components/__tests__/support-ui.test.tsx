@@ -85,7 +85,7 @@ describe('TicketForm', () => {
     fireEvent.changeText(screen.getByTestId('ticket-message'), 'Body');
     fireEvent.press(screen.getByTestId('ticket-submit'));
     await waitFor(() => expect(onCreated).toHaveBeenCalled());
-    // BUG (friendly) → TECHNICAL (server enum); no attachments added.
-    expect(mockedCreate).toHaveBeenCalledWith('Sub', 'Body', 'TECHNICAL', []);
+    // BUG (friendly) → TECHNICAL (server enum); no attachments, no attached pod.
+    expect(mockedCreate).toHaveBeenCalledWith('Sub', 'Body', 'TECHNICAL', [], undefined);
   });
 });

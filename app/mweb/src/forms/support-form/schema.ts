@@ -7,6 +7,9 @@ export interface SupportFormValues {
   subject: string;
   message: string;
   attachments: string[];
+  /** Attached pod (set when Contact Support was opened from a pod). */
+  pod_id?: string;
+  pod_title?: string;
 }
 
 export const DEFAULTS: SupportFormValues = {
@@ -16,6 +19,8 @@ export const DEFAULTS: SupportFormValues = {
   subject: '',
   message: '',
   attachments: [],
+  pod_id: '',
+  pod_title: '',
 };
 
 export const CATEGORIES = [
@@ -50,4 +55,6 @@ export const supportSchema = z.object({
     .min(10, 'Please describe in at least 10 characters')
     .max(2000, 'Max 2000 characters'),
   attachments: z.array(z.string().url('Invalid URL')).max(5, 'Up to 5 images').default([]),
+  pod_id: z.string().optional(),
+  pod_title: z.string().optional(),
 });

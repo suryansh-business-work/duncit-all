@@ -151,6 +151,11 @@ describe('PodDetailsScreen', () => {
     expect(screen.getByTestId('pod-save')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-venue-details'));
     expect(mockNavigate).toHaveBeenCalledWith('VenueDetails', { venueId: 'v1' });
+    fireEvent.press(screen.getByTestId('pod-contact-support'));
+    expect(mockNavigate).toHaveBeenCalledWith('SupportTickets', {
+      podId: 'p1',
+      podTitle: 'Sunset Jam',
+    });
   });
 
   it('opens, posts to, and closes the comments sheet', async () => {

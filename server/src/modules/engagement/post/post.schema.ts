@@ -35,6 +35,11 @@ export const postTypeDefs = /* GraphQL */ `
     club_id: ID
   }
 
+  enum FollowingFeedSource {
+    PEOPLE
+    CLUBS
+  }
+
   extend type Query {
     posts(author_id: ID): [Post!]!
     post(post_doc_id: ID!): Post
@@ -45,6 +50,8 @@ export const postTypeDefs = /* GraphQL */ `
     myStories: [Post!]!
     "Active (non-expired) stories attached to a club, newest first (Bug 6)."
     clubStories(club_id: ID!): [Post!]!
+    "Posts + active stories from the people/clubs the viewer follows, newest first."
+    followingFeed(source: FollowingFeedSource!, limit: Int): [Post!]!
   }
 
   extend type Mutation {

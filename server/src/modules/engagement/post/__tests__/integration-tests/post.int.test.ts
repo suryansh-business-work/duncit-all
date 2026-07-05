@@ -3,6 +3,7 @@ import { postService } from '../../post.service';
 import { PostModel } from '../../post.model';
 import { UserNotificationModel } from '@modules/engagement/notification/notification.model';
 import { notificationService } from '@modules/engagement/notification/notification.service';
+import { ClubFollowerModel, UserRelationshipModel } from '@modules/access/user/relations';
 
 const author = new Types.ObjectId().toString();
 const img = 'https://img/post.jpg';
@@ -53,6 +54,36 @@ describe('postService integration', () => {
     const commented = await postService.addComment(post.id, liker, 'Nice shot');
     expect(commented.comments_count).toBe(1);
     await settleNotifs();
+  });
+
+  it('followingFeed: PEOPLE = followed authors (posts + live stories), CLUBS = followed club stories', async () => {
+    const viewer = new Types.ObjectId();
+    const followedUser = new Types.ObjectId();
+    const stranger = new Types.ObjectId();
+    const followedClub = new Types.ObjectId();
+    await UserRelationshipModel.create({ follower_id: viewer, following_id: followedUser });
+    await ClubFollowerModel.create({ user_id: viewer, club_id: followedClub });
+
+    const future = new Date(Date.now() + 3600_000);
+    const past = new Date(Date.now() - 3600_000);
+    await PostModel.create([
+      { author_id: followedUser, image_url: img, kind: 'POST', caption: 'keep-post' },
+      { author_id: followedUser, image_url: img, kind: 'STORY', caption: 'live-story', expires_at: future },
+      { author_id: followedUser, image_url: img, kind: 'STORY', caption: 'dead-story', expires_at: past },
+      { author_id: stranger, image_url: img, kind: 'POST', caption: 'stranger-post' },
+      { author_id: followedUser, image_url: img, kind: 'STORY', caption: 'club-story', club_id: followedClub, expires_at: future },
+    ]);
+
+    const people = await postService.followingFeed(String(viewer), 'PEOPLE');
+    expect(people.map((p) => p.caption).sort()).toEqual(['keep-post', 'live-story']);
+
+    const clubs = await postService.followingFeed(String(viewer), 'CLUBS');
+    expect(clubs.map((p) => p.caption)).toEqual(['club-story']);
+
+    // No follows → empty feed, no query fired against an empty $in.
+    const loner = new Types.ObjectId().toString();
+    expect(await postService.followingFeed(loner, 'PEOPLE')).toEqual([]);
+    expect(await postService.followingFeed(loner, 'CLUBS')).toEqual([]);
   });
 
   it('notifies the post owner on a like (to-liked) and a comment, deep-linking to the post', async () => {

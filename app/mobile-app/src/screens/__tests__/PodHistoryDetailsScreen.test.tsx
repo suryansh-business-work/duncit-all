@@ -113,7 +113,10 @@ describe('PodHistoryDetailsScreen actions', () => {
     expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'pod1', title: 'Sunset Pod' });
 
     fireEvent.press(screen.getByTestId('ph-support'));
-    expect(mockNavigate).toHaveBeenCalledWith('SupportTickets');
+    expect(mockNavigate).toHaveBeenCalledWith('SupportTickets', {
+      podId: 'pod1',
+      podTitle: 'Sunset Pod',
+    });
 
     fireEvent.press(screen.getByTestId('ph-backout-terms'));
     expect(mockNavigate).toHaveBeenCalledWith('Policy', { slug: 'backout-terms' });

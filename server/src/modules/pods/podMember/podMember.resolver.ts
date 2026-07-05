@@ -12,7 +12,9 @@ function requireUser(ctx: GraphQLContext) {
 
 export const podMemberResolvers = {
   PodMember: {
-    pod: async (parent: { pod_id: string }) => podService.getById(parent.pod_id),
+    // Pod History must still show a booking whose pod was soft-deleted.
+    pod: async (parent: { pod_id: string }) =>
+      podService.getById(parent.pod_id, { includeDeleted: true }),
   },
   Query: {
     myPodMemberships: async (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {

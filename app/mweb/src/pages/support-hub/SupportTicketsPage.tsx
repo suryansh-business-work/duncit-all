@@ -25,6 +25,9 @@ export default function SupportTicketsPage() {
     ...(params.get('category') ? { category: params.get('category')! } : {}),
     ...(params.get('subject') ? { subject: params.get('subject')! } : {}),
     ...(params.get('message') ? { message: params.get('message')! } : {}),
+    ...(params.get('podId')
+      ? { pod_id: params.get('podId')!, pod_title: params.get('podTitle') || '' }
+      : {}),
   };
 
   const [createTicket, { loading }] = useMutation(CREATE_TICKET);
@@ -51,6 +54,7 @@ export default function SupportTicketsPage() {
             category: TICKET_CATEGORY[values.category] ?? 'OTHER',
             body_text: values.message,
             attachments: values.attachments,
+            ...(values.pod_id ? { pod_id: values.pod_id, pod_title: values.pod_title } : {}),
           },
         },
       });

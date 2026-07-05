@@ -3,9 +3,11 @@ import { useQuery } from '@apollo/client';
 import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import {
   Alert,
+  Button,
   Chip,
   Stack,
 } from '@mui/material';
+import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import { usePricing } from '../hooks/usePricing';
 import BackoutConfirmDialog from './pod-details-page/BackoutConfirmDialog';
 import PodHero from './pod-details-page/PodHero';
@@ -159,6 +161,20 @@ export default function PodDetailsPage() {
           ))}
         </Stack>
       )}
+
+      <Button
+        variant="text"
+        size="small"
+        startIcon={<ContactSupportIcon />}
+        onClick={() =>
+          navigate(
+            `/support/tickets?category=BOOKING&podId=${pod.id}&podTitle=${encodeURIComponent(pod.pod_title)}&subject=${encodeURIComponent(`Support - ${pod.pod_title}`)}`
+          )
+        }
+        sx={{ alignSelf: 'flex-start', fontWeight: 800 }}
+      >
+        Contact support about this pod
+      </Button>
 
       <StickyPodActionPanel
         pod={pod}

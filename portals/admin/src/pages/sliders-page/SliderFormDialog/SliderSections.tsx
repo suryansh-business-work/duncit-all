@@ -26,8 +26,6 @@ export default function SliderSections({
   superCategories,
   opError,
 }: Readonly<Props>) {
-  const selectedLocation = locations.find((item: any) => item.id === values.location_id);
-  const zonesForLocation = selectedLocation?.location_zones ?? [];
   const showError = (key: keyof SliderForm) => fieldError(values, errors, submitCount, key);
   const helperText = (key: keyof SliderForm, fallback = ' ') =>
     showError(key) ? String(errors[key]?.message ?? '') : fallback;
@@ -50,7 +48,6 @@ export default function SliderSections({
         form={values}
         setForm={setForm}
         locations={locations}
-        zonesForLocation={zonesForLocation}
         superCategories={superCategories}
       />
       {(showError('location_id') || showError('zone_name')) && (

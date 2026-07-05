@@ -1,8 +1,6 @@
 import { CircularProgress, Stack, IconButton } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import ShareIcon from '@mui/icons-material/Share';
-import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
-import NotificationsNoneIcon from '@mui/icons-material/NotificationsNone';
 import BookmarkBorderIcon from '@mui/icons-material/BookmarkBorder';
 import BookmarkIcon from '@mui/icons-material/Bookmark';
 
@@ -10,8 +8,6 @@ interface Props {
   onBack: () => void;
   saved: boolean;
   saveLoading?: boolean;
-  following: boolean;
-  onToggleFollow: () => void;
   onToggleSave: () => void;
   onShare: () => void;
 }
@@ -27,7 +23,7 @@ const overlayBtn = {
   '&:hover': { bgcolor: 'rgba(255,255,255,1)' },
 };
 
-export default function HeroOverlayActions({ onBack, saved, saveLoading, following, onToggleFollow, onToggleSave, onShare }: Readonly<Props>) {
+export default function HeroOverlayActions({ onBack, saved, saveLoading, onToggleSave, onShare }: Readonly<Props>) {
   return (
     <Stack
       direction="row"
@@ -47,14 +43,6 @@ export default function HeroOverlayActions({ onBack, saved, saveLoading, followi
         <ArrowBackIcon fontSize="small" />
       </IconButton>
       <Stack direction="row" spacing={0.75}>
-        <IconButton
-          size="small"
-          aria-label={following ? 'Following pod' : 'Follow pod'}
-          onClick={onToggleFollow}
-          sx={{ ...overlayBtn, color: following ? '#ed4f7a' : '#111827' }}
-        >
-          {following ? <NotificationsActiveIcon fontSize="small" /> : <NotificationsNoneIcon fontSize="small" />}
-        </IconButton>
         <IconButton
           size="small"
           aria-label={saved ? 'Saved' : 'Save'}

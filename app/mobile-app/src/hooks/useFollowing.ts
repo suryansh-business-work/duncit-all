@@ -3,19 +3,17 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { FollowingPeopleDocument } from '@/graphql/following';
 import { graphqlRequest } from '@/services/graphql.client';
-import { useHomeData } from '@/hooks/useHomeFeed';
 import { useFollowingStore, type FollowingData } from '@/stores/following.store';
 
 export type FollowedPerson = ResultOf<typeof FollowingPeopleDocument>['publicUsersByIds'][number];
 export type FollowedClub = NonNullable<FollowingData['clubs']>[number];
 
-/** Loads the people, clubs and pods the signed-in user follows so the Following
- * tab mirrors mWeb's FollowPage (People / Clubs / Pods). */
+/** Loads the people and clubs the signed-in user follows so the Following tab
+ * mirrors mWeb's FollowPage (People / Clubs). */
 export function useFollowing() {
   const data = useFollowingStore((s) => s.data);
   const isLoading = useFollowingStore((s) => s.isLoading);
   const fetch = useFollowingStore((s) => s.fetch);
-  const home = useHomeData();
   const [people, setPeople] = useState<FollowedPerson[]>([]);
 
   useEffect(() => {
@@ -29,10 +27,6 @@ export function useFollowing() {
   const followedClubIds = useMemo(
     () => new Set(data?.me?.following_club_ids ?? []),
     [data?.me?.following_club_ids],
-  );
-  const followedPodIds = useMemo(
-    () => new Set(data?.me?.following_pod_ids ?? []),
-    [data?.me?.following_pod_ids],
   );
 
   // Resolve the followed people's public profiles (skip when none).
@@ -55,19 +49,10 @@ export function useFollowing() {
     [data?.clubs, followedClubIds],
   );
 
-  const followedPods = useMemo(
-    () => home.pods.filter((pod) => followedPodIds.has(pod.id)),
-    [home.pods, followedPodIds],
-  );
-
   return {
     people,
     followedClubs,
-    followedPods,
-    isLoading: isLoading || home.isLoading,
-    refetch: () => {
-      fetch(true);
-      home.refetch();
-    },
+    isLoading,
+    refetch: () => fetch(true),
   };
 }

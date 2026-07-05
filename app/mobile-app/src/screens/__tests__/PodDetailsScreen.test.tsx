@@ -28,11 +28,6 @@ jest.mock('@/hooks/useDetails', () => ({
   }),
 }));
 
-const mockPodToggle = jest.fn();
-jest.mock('@/hooks/useFollow', () => ({
-  usePodFollow: () => ({ following: false, busy: false, toggle: mockPodToggle }),
-}));
-
 const mockBackout = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/hooks/usePodHistory', () => ({
   usePodBackout: () => ({ backout: mockBackout, busy: false }),
@@ -154,8 +149,6 @@ describe('PodDetailsScreen', () => {
     });
     renderWithProviders(<PodDetailsScreen />);
     expect(screen.getByTestId('pod-save')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('pod-follow'));
-    expect(mockPodToggle).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('pod-venue-details'));
     expect(mockNavigate).toHaveBeenCalledWith('VenueDetails', { venueId: 'v1' });
   });

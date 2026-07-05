@@ -46,7 +46,6 @@ export function useHomeData({
   const { data: headerData } = useQuery(HEADER_DATA, { fetchPolicy: 'cache-first' });
   const isHost = (headerData?.me?.roles ?? []).includes('HOST');
   const { ids: followedClubIds } = useFollowedClubs();
-  const followingPodIds: string[] = headerData?.me?.following_pod_ids ?? [];
   const followingUserIds: string[] = headerData?.me?.following_user_ids ?? [];
   const { data: followedUsersData } = useQuery(FOLLOWED_USERS, {
     variables: { userIds: followingUserIds },
@@ -357,12 +356,6 @@ export function useHomeData({
       .slice(0, 12);
   }, [data, followedClubSet, selectedSuperId]);
 
-  const followedPodSet = useMemo(() => new Set(followingPodIds), [followingPodIds]);
-  const followedPods = useMemo(
-    () => filteredPods.filter((pod: any) => followedPodSet.has(pod.id)).slice(0, 12),
-    [filteredPods, followedPodSet]
-  );
-
   const hostPods = useMemo(() => {
     const meId = headerData?.me?.user_id;
     if (!meId) return [];
@@ -397,7 +390,6 @@ export function useHomeData({
     categoryChips,
     vibeCategories,
     followedClubs,
-    followedPods,
     hostPods,
     followedPosts,
     myStories,

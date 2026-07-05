@@ -6,7 +6,6 @@ import { useStatus, type StatusGroup, type StatusSlide } from '@/hooks/useStatus
 /** Where the viewer's "Open details" button navigates for a rail item. */
 export type StoryTarget =
   | { kind: 'club'; id: string; title: string }
-  | { kind: 'pod'; id: string; title: string }
   | { kind: 'user'; id: string };
 
 export interface StoryRailItem extends StatusGroup {
@@ -45,13 +44,13 @@ function toGroup(
 
 /**
  * The home story rail's ordered content — the RN mirror of mWeb's HomeStatusRail
- * (bug 3): the viewer's own story first, then followed clubs, followed pods and
- * the people the viewer follows (only their active stories). This replaces the
- * old "everyone's stories" feed so both platforms show the same followed set.
+ * (bug 3): the viewer's own story first, then followed clubs and the people the
+ * viewer follows (only their active stories). This replaces the old "everyone's
+ * stories" feed so both platforms show the same followed set.
  */
 export function useStoryRail() {
   const { statuses, mine, isLoading: statusLoading } = useStatus();
-  const { people, followedClubs, followedPods, isLoading: followLoading } = useFollowing();
+  const { people, followedClubs, isLoading: followLoading } = useFollowing();
 
   const items = useMemo<StoryRailItem[]>(() => {
     const clubItems = followedClubs
@@ -62,18 +61,6 @@ export function useStoryRail() {
           mediaToSlides(`club-${club.id}`, club.club_feature_images_and_videos ?? []),
           'Club status',
           { kind: 'club', id: club.id, title: club.club_name },
-        ),
-      )
-      .filter((item): item is StoryRailItem => item !== null);
-
-    const podItems = followedPods
-      .map((pod) =>
-        toGroup(
-          `pod-${pod.id}`,
-          pod.pod_title,
-          mediaToSlides(`pod-${pod.id}`, pod.pod_images_and_videos ?? []),
-          'Followed pod',
-          { kind: 'pod', id: pod.id, title: pod.pod_title },
         ),
       )
       .filter((item): item is StoryRailItem => item !== null);
@@ -96,8 +83,8 @@ export function useStoryRail() {
       ];
     });
 
-    return [...clubItems, ...podItems, ...userItems];
-  }, [statuses, people, followedClubs, followedPods]);
+    return [...clubItems, ...userItems];
+  }, [statuses, people, followedClubs]);
 
   return { mine, items, isLoading: statusLoading || followLoading };
 }

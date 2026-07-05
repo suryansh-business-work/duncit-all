@@ -31,6 +31,7 @@ export const BRANDING_FIELDS = `
   website_favicon_url
   android_app_url
   ios_app_url
+  home_all_vibe_icon_url
   updated_at
 `;
 
@@ -89,6 +90,7 @@ export interface BrandingFormState {
   website_favicon_url: string;
   android_app_url: string;
   ios_app_url: string;
+  home_all_vibe_icon_url: string;
 }
 
 export type PlatformPrefix = 'mweb' | 'mobile' | 'portals';
@@ -124,4 +126,5 @@ export const emptyBrandingForm: BrandingFormState = {
   website_favicon_url: '',
   android_app_url: '',
   ios_app_url: '',
+  home_all_vibe_icon_url: '',
 };

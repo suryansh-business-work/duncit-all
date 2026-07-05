@@ -17,10 +17,8 @@ import { PodShop } from '@/components/details/PodShop';
 import { PodSocialBar } from '@/components/details/PodSocialBar';
 import { BackoutConfirmDialog } from '@/components/pod-history/BackoutConfirmDialog';
 import { DetailSkeleton } from '@/components/Skeleton';
-import { FollowPillButton } from '@/components/FollowPillButton';
 import { usePodActions, usePodDetails } from '@/hooks/useDetails';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
-import { usePodFollow } from '@/hooks/useFollow';
 import { usePodBackout } from '@/hooks/usePodHistory';
 import { usePodProductSelection } from '@/hooks/usePodProductSelection';
 import { useExploreStore } from '@/stores/explore.store';
@@ -44,18 +42,12 @@ export function PodDetailsScreen() {
     membershipState,
     people,
     isLoading,
-    followingInitially,
     refetch,
   } = usePodDetails(podId);
   const { liked, likeCount, saved, savePending, toggleLike, toggleSave } = usePodActions(
     pod,
     savedInitially,
   );
-  const {
-    following,
-    busy: followBusy,
-    toggle: toggleFollow,
-  } = usePodFollow(podId, followingInitially);
   const { backout, busy: backingOut } = usePodBackout();
   const { selectedProducts, selectedProductList, setSelectedProducts } = usePodProductSelection(
     podId,
@@ -148,14 +140,6 @@ export function PodDetailsScreen() {
           <Reveal index={0}>
             <PodInfo pod={pod} />
           </Reveal>
-          <XStack paddingHorizontal={16} paddingBottom={4}>
-            <FollowPillButton
-              testID="pod-follow"
-              following={following}
-              busy={followBusy}
-              onToggle={() => void toggleFollow()}
-            />
-          </XStack>
           <Reveal index={1}>
             <PodSchedule
               pod={pod}

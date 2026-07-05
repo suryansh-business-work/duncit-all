@@ -10,6 +10,8 @@ interface HomeVibeChipsProps {
   categories: VibeCategory[];
   selectedId: string;
   onSelect: (id: string) => void;
+  /** Admin-managed icon for the leading "All" tab (branding). */
+  allIcon?: string | null;
   /** Right-aligned slot in the header (e.g. the Filters button). */
   action?: ReactNode;
 }
@@ -53,6 +55,7 @@ export function HomeVibeChips({
   categories,
   selectedId,
   onSelect,
+  allIcon,
   action,
 }: Readonly<HomeVibeChipsProps>) {
   const { primary } = useThemeColors();
@@ -84,6 +87,7 @@ export function HomeVibeChips({
           <VibeCategoryTab
             testID="vibe-chip-all"
             label="All"
+            icon={allIcon ?? undefined}
             fallback="apps"
             selected={selectedId === ''}
             onPress={() => onSelect('')}

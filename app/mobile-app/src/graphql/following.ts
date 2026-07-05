@@ -1,12 +1,11 @@
 import { gql } from '@/generated/graphql';
 
 /** The ids the signed-in user follows + the followed clubs, so the Following tab
- * can show Pods, Clubs and People (parity with mWeb's FollowPage). */
+ * can show Clubs and People (parity with mWeb's FollowPage). */
 export const FollowingDocument = gql(`
   query MobileFollowing {
     me {
       user_id
-      following_pod_ids
       following_club_ids
       following_user_ids
     }
@@ -59,25 +58,6 @@ export const FollowingOfDocument = gql(`
       first_name
       profile_photo
       is_following
-    }
-  }
-`);
-
-/** Follow/unfollow a pod — returns the viewer's updated followed-pod ids. */
-export const FollowPodDocument = gql(`
-  mutation MobileFollowPod($podId: ID!) {
-    followPod(pod_id: $podId) {
-      user_id
-      following_pod_ids
-    }
-  }
-`);
-
-export const UnfollowPodDocument = gql(`
-  mutation MobileUnfollowPod($podId: ID!) {
-    unfollowPod(pod_id: $podId) {
-      user_id
-      following_pod_ids
     }
   }
 `);

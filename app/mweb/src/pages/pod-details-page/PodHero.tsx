@@ -45,9 +45,7 @@ interface Props {
   title: string;
   saved: boolean;
   saveLoading?: boolean;
-  following: boolean;
   onBack: () => void;
-  onToggleFollow: () => void;
   onToggleSave: () => void;
   onShare: () => void;
 }
@@ -57,9 +55,7 @@ export default function PodHero({
   title,
   saved,
   saveLoading,
-  following,
   onBack,
-  onToggleFollow,
   onToggleSave,
   onShare,
 }: Readonly<Props>) {
@@ -89,8 +85,6 @@ export default function PodHero({
           onBack={onBack}
           saved={saved}
           saveLoading={saveLoading}
-          following={following}
-          onToggleFollow={onToggleFollow}
           onToggleSave={onToggleSave}
           onShare={onShare}
         />

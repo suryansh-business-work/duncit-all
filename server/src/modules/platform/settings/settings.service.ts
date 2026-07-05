@@ -71,6 +71,7 @@ const BRANDING_FIELDS = [
   "website_favicon_url",
   "android_app_url",
   "ios_app_url",
+  "home_all_vibe_icon_url",
 ] as const;
 type BrandingField = (typeof BRANDING_FIELDS)[number];
 
@@ -106,6 +107,7 @@ const brandingToPub = (doc: any) => ({
   website_favicon_url: doc.website_favicon_url ?? "",
   android_app_url: doc.android_app_url ?? "",
   ios_app_url: doc.ios_app_url ?? "",
+  home_all_vibe_icon_url: doc.home_all_vibe_icon_url ?? "",
   updated_at: doc.updated_at?.toISOString?.() ?? "",
 });
 

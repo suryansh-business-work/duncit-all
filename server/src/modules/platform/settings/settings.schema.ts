@@ -92,6 +92,7 @@ export const settingsTypeDefs = gql`
     website_favicon_url: String!
     android_app_url: String!
     ios_app_url: String!
+    home_all_vibe_icon_url: String!
     updated_at: String
   }
 
@@ -127,6 +128,7 @@ export const settingsTypeDefs = gql`
     website_favicon_url: String
     android_app_url: String
     ios_app_url: String
+    home_all_vibe_icon_url: String
   }
 
   extend type Query {

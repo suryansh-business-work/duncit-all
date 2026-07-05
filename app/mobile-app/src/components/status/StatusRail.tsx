@@ -16,13 +16,13 @@ interface StatusRailProps {
 }
 
 /** Home status rail — "Your story" upload tile first, then the same followed
- * clubs / pods / people mWeb shows (bug 3). Tapping one opens the viewer, which
- * walks the whole ordered list so the next/previous story is a tap or swipe away
- * (bug 2) and can deep-link into the club/pod/profile via "Open details". */
+ * clubs / people mWeb shows (bug 3). Tapping one opens the viewer, which walks
+ * the whole ordered list so the next/previous story is a tap or swipe away
+ * (bug 2) and can deep-link into the club/profile via "Open details". */
 export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   const { mine, items } = useStoryRail();
   const { uploading, pickAndUpload } = useStatusUpload();
-  const { openClub, openPod } = useDetailNav();
+  const { openClub } = useDetailNav();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
   // Index into the ordered list (mine first, then followed content); null = closed.
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
@@ -37,7 +37,6 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   const openTarget = (target: StoryTarget) => {
     setActiveIndex(null);
     if (target.kind === 'club') openClub(target.id, target.title);
-    else if (target.kind === 'pod') openPod(target.id, target.title);
     else navigation.navigate('PublicProfile', { userId: target.id });
   };
 

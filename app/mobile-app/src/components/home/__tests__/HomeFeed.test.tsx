@@ -7,6 +7,10 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/components/status/StatusRail', () => ({ StatusRail: () => null }));
 jest.mock('@/hooks/useHomeFeed', () => ({ useHomeFeed: jest.fn() }));
+let mockBrandingData: { branding: { home_all_vibe_icon_url: string } } | null = {
+  branding: { home_all_vibe_icon_url: 'https://cdn.duncit/all.png' },
+};
+jest.mock('@/hooks/useBranding', () => ({ useBranding: () => ({ data: mockBrandingData }) }));
 let mockRoles: string[] = [];
 jest.mock('@/hooks/useMe', () => ({
   useMe: () => ({ data: { me: { first_name: 'Sam', profile_photo: null, roles: mockRoles } } }),
@@ -59,6 +63,7 @@ const base = {
 beforeEach(() => {
   mockNavigate.mockClear();
   mockRoles = [];
+  mockBrandingData = { branding: { home_all_vibe_icon_url: 'https://cdn.duncit/all.png' } };
   mockedFeed.mockReturnValue(base);
   useHomeStore.setState({ scrollTopNonce: 0 });
 });
@@ -148,6 +153,12 @@ describe('HomeFeed', () => {
     mockedFeed.mockReturnValue({ ...base, hasContent: false });
     renderWithProviders(<HomeFeed />);
     expect(screen.getByTestId('home-filter-button')).toBeOnTheScreen();
+  });
+
+  it('renders the vibe tabber when branding (the All-tab icon) is unavailable', () => {
+    mockBrandingData = null;
+    renderWithProviders(<HomeFeed />);
+    expect(screen.getByTestId('vibe-chip-all')).toBeOnTheScreen();
   });
 
   it('scrolls the feed to the top when the logo bumps the nonce', () => {

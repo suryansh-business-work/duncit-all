@@ -10,7 +10,12 @@ const isImageIcon = (value: string | null | undefined) => {
 const resolveMuiIcon = (name: string) =>
   (MuiIcons as Record<string, SvgIconComponent>)[name] || null;
 
-export function renderSuperCategoryMark(icon: string | null | undefined) {
+/**
+ * Render a super/category `icon` value (image URL, MUI icon name or emoji) as a
+ * node. `size` (px) sizes all three variants — default 18 for the compact header
+ * chips; the home vibe tabber passes a larger value for a full-bleed icon.
+ */
+export function renderSuperCategoryMark(icon: string | null | undefined, size = 18) {
   const next = (icon ?? '').trim();
   if (!next) return null;
   if (isImageIcon(next)) {
@@ -19,14 +24,14 @@ export function renderSuperCategoryMark(icon: string | null | undefined) {
         component="img"
         src={next}
         alt=""
-        sx={{ width: 18, height: 18, objectFit: 'cover', borderRadius: 0.75, flex: '0 0 auto' }}
+        sx={{ width: size, height: size, objectFit: 'contain', borderRadius: 0.75, flex: '0 0 auto' }}
       />
     );
   }
   const MuiIcon = resolveMuiIcon(next);
-  if (MuiIcon) return <MuiIcon sx={{ fontSize: 18, flex: '0 0 auto' }} />;
+  if (MuiIcon) return <MuiIcon sx={{ fontSize: size, flex: '0 0 auto' }} />;
   return next.length <= 2 ? (
-    <Box component="span" sx={{ lineHeight: 1, flex: '0 0 auto' }}>
+    <Box component="span" sx={{ lineHeight: 1, fontSize: size, flex: '0 0 auto' }}>
       {next}
     </Box>
   ) : null;

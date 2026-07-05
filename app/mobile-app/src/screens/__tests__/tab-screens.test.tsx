@@ -45,7 +45,6 @@ beforeEach(() => {
   mockedFollowing.mockReturnValue({
     people: [],
     followedClubs: [],
-    followedPods: [],
     isLoading: false,
     refetch: jest.fn(),
   });
@@ -93,23 +92,6 @@ describe('ClubsScreen', () => {
 });
 
 describe('FollowingScreen', () => {
-  const followedPod = {
-    id: 'p1',
-    pod_id: 'pod-1',
-    pod_title: 'Pod',
-    pod_date_time: '2026-06-10T18:30:00.000Z',
-    pod_type: 'NATIVE_FREE',
-    pod_amount: 0,
-    pod_attendees: [],
-    no_of_spots: 4,
-    host_names: [],
-    pod_images_and_videos: [],
-    club_id: 'c1',
-    club_slug: 's',
-    place_label: null,
-    place_detail: null,
-  };
-
   it('shows an empty hint on the default People tab', () => {
     renderWithProviders(<FollowingScreen />);
     expect(screen.getByTestId('following-list-empty')).toBeOnTheScreen();
@@ -122,7 +104,6 @@ describe('FollowingScreen', () => {
         { user_id: 'f2', full_name: null, profile_photo: null },
       ],
       followedClubs: [],
-      followedPods: [],
       isLoading: false,
       refetch: jest.fn(),
     });
@@ -143,7 +124,6 @@ describe('FollowingScreen', () => {
         },
         { id: 'c2', club_name: 'NoLogo', club_feature_images_and_videos: [] },
       ],
-      followedPods: [],
       isLoading: false,
       refetch: jest.fn(),
     });
@@ -152,20 +132,6 @@ describe('FollowingScreen', () => {
     expect(screen.getByTestId('following-club-c2')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('following-club-c1'));
     expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: 'c1', title: 'Runners' });
-  });
-
-  it('switches to Pods and opens one', () => {
-    mockedFollowing.mockReturnValue({
-      people: [],
-      followedClubs: [],
-      followedPods: [followedPod],
-      isLoading: false,
-      refetch: jest.fn(),
-    });
-    renderWithProviders(<FollowingScreen />);
-    fireEvent.press(screen.getByTestId('following-tab-pods'));
-    fireEvent.press(screen.getByTestId('pod-card-pod-1'));
-    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Pod' });
   });
 });
 

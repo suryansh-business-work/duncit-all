@@ -60,7 +60,6 @@ const ME_QUERY = gql`
       profile_photo
       city
       roles
-      following_pod_ids
       following_user_ids
     }
   }

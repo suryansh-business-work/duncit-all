@@ -28,7 +28,6 @@ function firstMedia(items?: Array<{ url?: string | null; type?: string | null }>
 interface BuildArgs {
   followedClubs: any[];
   hostPods: any[];
-  followedPods: any[];
   followedUsers: any[];
   followedPosts: any[];
 }
@@ -59,7 +58,7 @@ function clubEntry(club: any): HomeStatusEntry {
   };
 }
 
-function podEntry(pod: any, isHost: boolean): HomeStatusEntry {
+function podEntry(pod: any): HomeStatusEntry {
   const media = firstMedia(pod.pod_images_and_videos);
   return {
     key: `pod-${pod.id}`,
@@ -69,7 +68,7 @@ function podEntry(pod: any, isHost: boolean): HomeStatusEntry {
     initials: initials(pod.pod_title),
     viewer: {
       label: pod.pod_title,
-      subLabel: isHost ? 'Your pod status' : 'Followed pod',
+      subLabel: 'Your pod status',
       mediaUrl: media?.url,
       mediaType: media?.type,
       slides: (pod.pod_images_and_videos ?? []).map((item: any, index: number) => ({
@@ -113,19 +112,17 @@ function userEntry(user: any, followedPosts: any[]): HomeStatusEntry {
   };
 }
 
-/** Ordered rail entries: followed clubs → host/followed pods → followed users.
+/** Ordered rail entries: followed clubs → your hosted pods → followed users.
  * (The "my status" tile is handled separately by the rail.) */
 export function buildHomeStatusEntries({
   followedClubs,
   hostPods,
-  followedPods,
   followedUsers,
   followedPosts,
 }: BuildArgs): HomeStatusEntry[] {
   return [
     ...followedClubs.map((c) => clubEntry(c)),
-    ...hostPods.map((p) => podEntry(p, true)),
-    ...followedPods.map((p) => podEntry(p, false)),
+    ...hostPods.map((p) => podEntry(p)),
     ...followedUsers.map((u) => userEntry(u, followedPosts)),
   ];
 }

@@ -14,6 +14,7 @@ export const HEADER_DATA = gql`
       app_loader_lottie_url
       confetti_lottie_url
       welcome_lottie_url
+      home_all_vibe_icon_url
     }
     me {
       user_id
@@ -25,7 +26,6 @@ export const HEADER_DATA = gql`
       city
       selected_location_id
       roles
-      following_pod_ids
       following_user_ids
     }
     superCategories: categories(filter: { level: SUPER }) {

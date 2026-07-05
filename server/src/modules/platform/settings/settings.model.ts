@@ -106,6 +106,10 @@ export interface IBranding extends Document {
   // Empty string = not live yet; the sites render a "coming soon" state.
   android_app_url: string;
   ios_app_url: string;
+  // Icon for the synthetic "All" tab in the home "What's your vibe" tabber
+  // (mWeb + mobile). Admin-managed from the Category catalogue; empty string
+  // falls back to the bundled apps/grid icon on each client.
+  home_all_vibe_icon_url: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -150,6 +154,7 @@ const brandingSchema = new Schema<IBranding>(
     website_favicon_url: { type: String, default: "" },
     android_app_url: { type: String, default: "" },
     ios_app_url: { type: String, default: "" },
+    home_all_vibe_icon_url: { type: String, default: "" },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

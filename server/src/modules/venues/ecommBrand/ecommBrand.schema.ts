@@ -52,6 +52,10 @@ export const ecommBrandTypeDefs = gql`
     status: EcommBrandStatus!
     is_active: Boolean!
     reviewer_notes: String!
+    # E-commerce: the brand's default ShipRocket pickup/warehouse location.
+    default_pickup_location_id: ID
+    # E-commerce: number of this brand's APPROVED products (resolved).
+    approved_product_count: Int!
     submitted_at: String
     approved_at: String
     rejected_at: String
@@ -92,6 +96,8 @@ export const ecommBrandTypeDefs = gql`
     myEcommBrands: [EcommBrand!]!
     "Onboarding/admin: all brands, optionally filtered by status."
     ecommBrands(status: EcommBrandStatus): [EcommBrand!]!
+    "Products portal e-commerce: external brands (default APPROVED) + approved-product counts."
+    marketplaceBrands(status: EcommBrandStatus): [EcommBrand!]!
     "Onboarding/admin: a single brand by id."
     ecommBrand(brand_doc_id: ID!): EcommBrand
   }

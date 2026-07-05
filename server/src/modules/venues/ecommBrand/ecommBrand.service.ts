@@ -38,6 +38,7 @@ const toPub = (b: IEcommBrand) => ({
   status: b.status,
   is_active: b.is_active ?? true,
   reviewer_notes: b.reviewer_notes ?? '',
+  default_pickup_location_id: b.default_pickup_location_id ? String(b.default_pickup_location_id) : null,
   submitted_at: b.submitted_at ? b.submitted_at.toISOString() : null,
   approved_at: b.approved_at ? b.approved_at.toISOString() : null,
   rejected_at: b.rejected_at ? b.rejected_at.toISOString() : null,

@@ -63,6 +63,8 @@ const TRACKED_FIELDS = [
   'is_duncit_delivery_partner',
   'size_label',
   'height_cm',
+  'length_cm',
+  'breadth_cm',
   'weight_kg',
   'color',
   'commission_pct',
@@ -133,8 +135,11 @@ export const inventoryProductToPub = (product: IInventoryProduct) => {
     listing_reviewed_by_id: product.listing_reviewed_by_id ?? null,
     listing_reviewed_by_name: product.listing_reviewed_by_name ?? '',
     is_duncit_delivery_partner: !!product.is_duncit_delivery_partner,
+    ownership: product.ownership ?? 'DUNCIT',
     size_label: product.size_label ?? '',
     height_cm: product.height_cm ?? 0,
+    length_cm: product.length_cm ?? 0,
+    breadth_cm: product.breadth_cm ?? 0,
     weight_kg: product.weight_kg ?? 0,
     color: product.color ?? '',
     commission_pct: product.commission_pct ?? 5,
@@ -337,15 +342,27 @@ export const inventoryService = {
     return generateUniqueSku();
   },
 
-  async list(filter?: { search?: string; activeOnly?: boolean; status?: string }) {
+  async list(filter?: { search?: string; activeOnly?: boolean; status?: string; ownership?: string }) {
     const q: any = {};
     if (filter?.activeOnly) q.is_active = true;
     if (filter?.status) q.status = filter.status;
+    if (filter?.ownership) q.ownership = filter.ownership;
     if (filter?.search) {
       const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
       q.$or = [{ product_name: r }, { sku: r }, { tags: r }, { brand_name: r }];
     }
     const docs = await InventoryProductModel.find(q).sort({ product_name: 1 });
+    return docs.map(inventoryProductToPub);
+  },
+
+  /** Approved products of one external brand — the e-commerce marketplace list. */
+  async listMarketplaceBrandProducts(brandId: string) {
+    if (!Types.ObjectId.isValid(brandId)) return [];
+    const docs = await InventoryProductModel.find({
+      brand_id: new Types.ObjectId(brandId),
+      ownership: 'BRAND',
+      listing_review_status: 'APPROVED',
+    }).sort({ product_name: 1 });
     return docs.map(inventoryProductToPub);
   },
 
@@ -422,8 +439,11 @@ export const inventoryService = {
       listing_submitted_by_id: info.id,
       listing_submitted_by_name: info.name,
       is_duncit_delivery_partner: !!input.is_duncit_delivery_partner,
+      ownership: 'BRAND',
       size_label: cleanText(input.size_label, 120),
       height_cm: Number(input.height_cm) || 0,
+      length_cm: Number(input.length_cm) || 0,
+      breadth_cm: Number(input.breadth_cm) || 0,
       weight_kg: Number(input.weight_kg) || 0,
       color: cleanText(input.color, 80),
       commission_pct: Number(input.commission_pct) || 5,
@@ -544,6 +564,10 @@ export const inventoryService = {
       last_updated_by_name: info.name,
     });
     applyInput(doc, { ...input, sku });
+    // The Products-portal Add form only ever creates Duncit-owned catalogue
+    // products; external brand products come exclusively via submitProductListing.
+    doc.ownership = 'DUNCIT';
+    doc.brand_id = null;
     await doc.save();
     await logActivity(doc._id, user, 'CREATE', ['*']);
     if (doc.inventory_count > 0) {

@@ -157,6 +157,23 @@ export async function trackByAwb(awb: string): Promise<TrackResult> {
   return normaliseTracking(data);
 }
 
+export interface AddPickupResult {
+  pickup_id: string;
+  registered: boolean;
+}
+
+/** Register a pickup/warehouse location with ShipRocket by nickname. */
+export async function addPickupLocation(payload: Record<string, unknown>): Promise<AddPickupResult> {
+  const data = await srRequest('/settings/company/addpickup', {
+    method: 'POST',
+    body: JSON.stringify(payload),
+  });
+  return {
+    pickup_id: String(data?.pickup_id ?? data?.address?.id ?? ''),
+    registered: data?.success === true || !!data?.pickup_id || !!data?.address?.id,
+  };
+}
+
 function normaliseTracking(data: any): TrackResult {
   const td = data?.tracking_data ?? data ?? {};
   const track = td?.shipment_track?.[0] ?? {};

@@ -1,7 +1,7 @@
 import { Controller, type UseFormReturn } from 'react-hook-form';
 import { Stack, TextField } from '@mui/material';
 import { AdminCategorySelect, type AdminCategoryValue } from '@duncit/category';
-import { AdminLocationSelect, type AdminLocationValue } from '@duncit/location';
+import { AdminLocationSelect, Fieldset, type AdminLocationValue } from '@duncit/location';
 import VenueMapPreview from '../../../components/VenueMapPreview';
 import VenueImagesField from './VenueImagesField';
 import type { RegisterVenueMode, RegisterVenueValues } from '../register-venue';
@@ -99,63 +99,54 @@ export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
         errors={categoryError ? { sub: 'Select the super category, category and sub category.' } : undefined}
       />
 
-      <Controller
-        name="address_line1"
-        control={control}
-        render={({ field, fieldState }) => (
-          <TextField
-            {...field}
-            label="Address line 1"
-            required
-            disabled={locked}
-            error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? (locked ? 'Locked after approval' : 'Building / street — shown on the venue page')}
-          />
-        )}
-      />
-      <Controller
-        name="address_line2"
-        control={control}
-        render={({ field, fieldState }) => (
-          <TextField
-            {...field}
-            label="Address line 2"
-            disabled={locked}
-            error={Boolean(fieldState.error)}
-            helperText={fieldState.error?.message ?? (locked ? 'Locked after approval' : 'Landmark or floor (optional)')}
-          />
-        )}
-      />
-
-      <AdminLocationSelect
-        value={locValue}
-        onChange={(next) => {
-          const validate = categoryError || Boolean(formState.errors.city);
-          write('location_id', next.location_id, validate);
-          write('country', next.country, validate);
-          write('country_code', next.country_code, validate);
-          write('state', next.state, validate);
-          write('state_code', next.state_code, validate);
-          write('city', next.city, validate);
-          write('locality', next.locality, validate);
-          write('postal_code', next.pincode, validate);
-        }}
-        fields={['country', 'state', 'city', 'locality']}
-        direction="row"
-        required
-        disabled={locked}
-        legend="Location"
-        hint={LOCATION_HINT}
-        errors={{ country: err('country'), state: err('state'), city: err('city'), locality: err('locality') }}
-      />
-      <TextField
-        label="PIN code"
-        required
-        value={values.postal_code ?? ''}
-        InputProps={{ readOnly: true }}
-        error={Boolean(formState.errors.postal_code)}
-        helperText={err('postal_code') ?? ' '}
-      />
+      <Fieldset legend="Location" hint={LOCATION_HINT}>
+        <Controller
+          name="address_line1"
+          control={control}
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              label="Address line 1"
+              required
+              disabled={locked}
+              error={Boolean(fieldState.error)}
+              helperText={fieldState.error?.message ?? (locked ? 'Locked after approval' : 'Building / street — shown on the venue page')}
+            />
+          )}
+        />
+        <Controller
+          name="address_line2"
+          control={control}
+          render={({ field, fieldState }) => (
+            <TextField
+              {...field}
+              label="Address line 2"
+              disabled={locked}
+              error={Boolean(fieldState.error)}
+              helperText={fieldState.error?.message ?? (locked ? 'Locked after approval' : 'Landmark or floor (optional)')}
+            />
+          )}
+        />
+        <AdminLocationSelect
+          value={locValue}
+          onChange={(next) => {
+            const validate = categoryError || Boolean(formState.errors.city);
+            write('location_id', next.location_id, validate);
+            write('country', next.country, validate);
+            write('country_code', next.country_code, validate);
+            write('state', next.state, validate);
+            write('state_code', next.state_code, validate);
+            write('city', next.city, validate);
+            write('locality', next.locality, validate);
+            write('postal_code', next.pincode, validate);
+          }}
+          fields={['country', 'state', 'city', 'locality']}
+          direction="row"
+          required
+          disabled={locked}
+          errors={{ country: err('country'), state: err('state'), city: err('city'), locality: err('locality') }}
+        />
+      </Fieldset>
 
       <VenueMapPreview
         parts={[

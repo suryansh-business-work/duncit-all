@@ -15,7 +15,6 @@ import {
   Typography,
 } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
-import AppBreadcrumbs from '../../components/AppBreadcrumbs';
 import CreateKeyDialog from './CreateKeyDialog';
 import { CREATE_API_KEY, MY_API_KEYS, REVOKE_API_KEY, type ApiKeyRow } from './queries';
 
@@ -54,7 +53,6 @@ export default function ApiKeysPage() {
 
   return (
     <Stack spacing={2}>
-      <AppBreadcrumbs />
       <Stack direction="row" alignItems="center" justifyContent="space-between">
         <Box>
           <Typography variant="h5" fontWeight={900}>

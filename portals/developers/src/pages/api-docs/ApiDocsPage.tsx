@@ -11,7 +11,6 @@ import {
   Typography,
 } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
-import AppBreadcrumbs from '../../components/AppBreadcrumbs';
 import TryItPanel from './TryItPanel';
 import { API_BASE, API_ENDPOINTS, buildCurl } from './apiReference';
 
@@ -26,7 +25,6 @@ export default function ApiDocsPage() {
 
   return (
     <Stack spacing={2}>
-      <AppBreadcrumbs />
       <Box>
         <Typography variant="h5" fontWeight={900}>
           API Reference

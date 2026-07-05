@@ -2,7 +2,6 @@ import { useNavigate } from 'react-router-dom';
 import { Box, Card, CardActionArea, CardContent, Stack, Typography } from '@mui/material';
 import KeyIcon from '@mui/icons-material/Key';
 import MenuBookIcon from '@mui/icons-material/MenuBook';
-import AppBreadcrumbs from '../components/AppBreadcrumbs';
 
 const TILES = [
   {
@@ -23,7 +22,6 @@ export default function DashboardPage() {
   const navigate = useNavigate();
   return (
     <Stack spacing={2}>
-      <AppBreadcrumbs />
       <Box>
         <Typography variant="h5" fontWeight={900}>
           Developers

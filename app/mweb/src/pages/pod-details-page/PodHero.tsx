@@ -145,8 +145,6 @@ export default function PodHero({
         onBack={onBack}
         saved={saved}
         saveLoading={saveLoading}
-        following={following}
-        onToggleFollow={onToggleFollow}
         onToggleSave={onToggleSave}
         onShare={onShare}
       />

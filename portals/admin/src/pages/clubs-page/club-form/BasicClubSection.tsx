@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
+import { Stack, Switch, TextField, Typography } from '@mui/material';
 import {
   AdminLocationSelect,
   buildLocationValue,
@@ -7,6 +7,13 @@ import {
   type AdminLocationValue,
   type LocationDoc,
 } from '@duncit/location';
+import {
+  AdminCategorySelect,
+  buildCategoryValue,
+  EMPTY_CATEGORY,
+  type AdminCategoryValue,
+  type CategoryDoc,
+} from '@duncit/category';
 import type { ClubForm } from '../queries';
 
 interface Props {
@@ -17,51 +24,33 @@ interface Props {
   locations: LocationDoc[];
 }
 
-/** Basic club fields + the full Super → Category → Sub Category cascade + the
- * club's location. The club persists super_category_id + category_id (the sub);
- * the middle level narrows the sub list and is re-derived from the saved sub
- * when editing. Location + category together drive the auto-matched venues. */
-export default function BasicClubSection({ form, setForm, superCats, allCats, locations }: Readonly<Props>) {
-  const selectedSub = allCats.find((c: any) => c.id === form.category_id);
-  const [midId, setMidId] = useState<string>(selectedSub?.parent_id ?? '');
+const CATEGORY_HINT =
+  'Venues auto-match to this club by location + category — pick the same Super & Sub the venues sit under.';
+const LOCATION_HINT =
+  'The city (and optional locality) the club operates in. Approved venues here in the same category auto-link to this club.';
 
-  // The cascading picker keeps its own full country/state/city value; the club
-  // persists only location_id. Hydrate from the saved id when editing.
+/** Basic club fields + the shared Category (Super → Category → Sub) and Location
+ * (Country → State → City → Locality) pickers, each in its own hinted fieldset.
+ * The club persists super_category_id + category_id (the sub) + location_id +
+ * locality. Location + category together drive the auto-matched venues. */
+export default function BasicClubSection({ form, setForm, allCats, locations }: Readonly<Props>) {
+  // Both pickers keep their own full cascade value; the club persists only the
+  // ids. Hydrate from the saved ids when a club is opened for editing.
   const initialLocation = useMemo<AdminLocationValue>(
     () => (form.location_id ? buildLocationValue(locations, form.location_id, form.locality) : EMPTY_LOCATION),
-    // Re-hydrate when a different club is opened or the location list arrives.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [form.id, locations.length],
   );
   const [locValue, setLocValue] = useState<AdminLocationValue>(initialLocation);
   useEffect(() => setLocValue(initialLocation), [initialLocation]);
 
-  // Re-derive the middle level when a different club is opened for editing.
-  useEffect(() => {
-    setMidId(selectedSub?.parent_id ?? '');
+  const initialCategory = useMemo<AdminCategoryValue>(
+    () => buildCategoryValue(allCats as CategoryDoc[], form.super_category_id, form.category_id),
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [form.id]);
-
-  const midCats = allCats.filter(
-    (c: any) =>
-      c.level === 'CATEGORY' && (!form.super_category_id || c.parent_id === form.super_category_id)
+    [form.id, allCats.length],
   );
-  const midIdSet = new Set(midCats.map((c: any) => c.id));
-  const subCats = allCats.filter((c: any) => {
-    if (c.level !== 'SUB') return false;
-    if (midId) return c.parent_id === midId;
-    if (form.super_category_id) return midIdSet.has(c.parent_id);
-    return true;
-  });
-
-  const onSuperChange = (value: string) => {
-    setMidId('');
-    setForm({ ...form, super_category_id: value, category_id: '' });
-  };
-  const onMidChange = (value: string) => {
-    setMidId(value);
-    setForm({ ...form, category_id: '' });
-  };
+  const [catValue, setCatValue] = useState<AdminCategoryValue>(initialCategory);
+  useEffect(() => setCatValue(initialCategory), [initialCategory]);
 
   return (
     <Stack spacing={2}>
@@ -78,35 +67,30 @@ export default function BasicClubSection({ form, setForm, superCats, allCats, lo
         }
       />
       <TextField label="Description" value={form.club_description} onChange={(e) => setForm({ ...form, club_description: e.target.value })} fullWidth multiline minRows={2} />
-      <Stack direction={{ xs: 'column', sm: 'row' }} spacing={2}>
-        <TextField label="Super Category" select value={form.super_category_id} onChange={(e) => onSuperChange(e.target.value)} fullWidth helperText="Drives the app feed grouping.">
-          <MenuItem value="">None</MenuItem>
-          {superCats.map((category: any) => <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>)}
-        </TextField>
-        <TextField label="Category" select value={midId} onChange={(e) => onMidChange(e.target.value)} fullWidth helperText="Narrows the sub-category list.">
-          <MenuItem value="">None</MenuItem>
-          {midCats.map((category: any) => <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>)}
-        </TextField>
-        <TextField label="Sub Category" select value={form.category_id} onChange={(e) => setForm({ ...form, category_id: e.target.value })} fullWidth>
-          <MenuItem value="">None</MenuItem>
-          {subCats.map((category: any) => <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>)}
-        </TextField>
-      </Stack>
-      <Stack spacing={0.5}>
-        <AdminLocationSelect
-          value={locValue}
-          onChange={(next) => {
-            setLocValue(next);
-            setForm((prev) => ({ ...prev, location_id: next.location_id, locality: next.locality }));
-          }}
-          fields={['country', 'state', 'city', 'locality']}
-          direction="row"
-        />
-        <Typography variant="caption" color="text.secondary">
-          The city (and optional locality) the club operates in. Approved venues here in the same
-          category auto-link to this club.
-        </Typography>
-      </Stack>
+
+      <AdminCategorySelect
+        value={catValue}
+        onChange={(next) => {
+          setCatValue(next);
+          setForm((prev) => ({ ...prev, super_category_id: next.super_id, category_id: next.sub_id }));
+        }}
+        direction="row"
+        legend="Category"
+        hint={CATEGORY_HINT}
+      />
+
+      <AdminLocationSelect
+        value={locValue}
+        onChange={(next) => {
+          setLocValue(next);
+          setForm((prev) => ({ ...prev, location_id: next.location_id, locality: next.locality }));
+        }}
+        fields={['country', 'state', 'city', 'locality']}
+        direction="row"
+        legend="Location"
+        hint={LOCATION_HINT}
+      />
+
       {form.id && (
         <Stack direction="row" alignItems="center" spacing={1}>
           <Switch checked={form.is_active} onChange={(_, value) => setForm({ ...form, is_active: value })} />

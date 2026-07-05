@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.10.4",
+    "@duncit/category": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/portal-pod-form": "workspace:*",

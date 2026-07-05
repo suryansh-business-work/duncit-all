@@ -6,9 +6,11 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { podPriceCaption, refundLabel, type PodMembership } from '@/utils/pod-history';
+import type { ProductOrder } from '@/utils/product-orders';
 import { formatDateTime } from '@/utils/date-format';
 import { PodHistoryActions } from './PodHistoryActions';
 import { PodHistoryTimeline } from './PodHistoryTimeline';
+import { PodProductOrdersCard } from './PodProductOrdersCard';
 
 export interface PodHistoryDetailsProps {
   item: PodMembership;
@@ -16,6 +18,8 @@ export interface PodHistoryDetailsProps {
   invoiceBusy: boolean;
   ticketBusy: boolean;
   notice: string | null;
+  productOrders?: ProductOrder[];
+  ordersLoading?: boolean;
   onPodDetails: () => void;
   onBackout: () => void;
   onRefundStatus: () => void;
@@ -67,7 +71,7 @@ function Card({ title, children }: Readonly<{ title?: string; children: ReactNod
 /** Membership details body — summary, actions, timeline and terms links.
  * RN twin of mWeb's PodHistoryDetails. */
 export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
-  const { item, notice, onBackoutTerms, onGeneralTerms } = props;
+  const { item, notice, onBackoutTerms, onGeneralTerms, productOrders, ordersLoading } = props;
   const { onPrimary, primary } = useThemeColors();
   const pod = item.pod;
   const image = pod?.pod_images_and_videos?.[0]?.url;
@@ -129,6 +133,8 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
           </Text>
         ) : null}
       </Card>
+
+      <PodProductOrdersCard orders={productOrders ?? []} loading={ordersLoading ?? false} />
 
       <Card title="Timeline">
         <PodHistoryTimeline item={item} />

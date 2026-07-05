@@ -4,6 +4,7 @@ import {
   InputAdornment,
   Stack,
   Switch,
+  Typography,
 } from '@mui/material';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import RhfNumberField from './RhfNumberField';
@@ -57,6 +58,26 @@ export default function DeliveryAvailabilitySection() {
           hint={chargeHint}
           InputProps={{ startAdornment: <InputAdornment position="start">₹</InputAdornment> }}
         />
+      </Grid>
+      <Grid item xs={12}>
+        <Typography variant="subtitle2" fontWeight={700}>
+          Shipping dimensions
+        </Typography>
+        <Typography variant="caption" color="text.secondary">
+          Package size and weight used by ShipRocket to rate and book couriers.
+        </Typography>
+      </Grid>
+      <Grid item xs={6} md={3}>
+        <RhfNumberField control={control} name="length_cm" label="Length" hint="cm" />
+      </Grid>
+      <Grid item xs={6} md={3}>
+        <RhfNumberField control={control} name="breadth_cm" label="Breadth" hint="cm" />
+      </Grid>
+      <Grid item xs={6} md={3}>
+        <RhfNumberField control={control} name="height_cm" label="Height" hint="cm" />
+      </Grid>
+      <Grid item xs={6} md={3}>
+        <RhfNumberField control={control} name="weight_kg" label="Weight" hint="kg" />
       </Grid>
     </Grid>
   );

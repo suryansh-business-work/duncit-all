@@ -3,7 +3,6 @@ import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import CheckIcon from '@mui/icons-material/Check';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
 import { Avatar, Box, Button, Chip, Stack, Typography } from '@mui/material';
-import ClubNotifyButton from './ClubNotifyButton';
 
 interface Props {
   club: any;
@@ -17,7 +16,6 @@ interface Props {
   following: boolean;
   chatUrl?: string | null;
   onToggleFollow: () => void;
-  clubId: string;
 }
 
 function Stat({ label, value }: Readonly<{ label: string; value: number }>) {
@@ -45,7 +43,6 @@ export default function ClubSummaryHeader({
   following,
   chatUrl,
   onToggleFollow,
-  clubId,
 }: Readonly<Props>) {
   const momentsCount = club.club_moments?.length ?? 0;
 
@@ -96,7 +93,6 @@ export default function ClubSummaryHeader({
             </Typography>
           )}
         </Box>
-        <ClubNotifyButton clubId={clubId} />
       </Stack>
       <Stack direction="row" spacing={1.5} sx={{ mt: 2 }}>
         <Stat label="followers" value={followersCount} />

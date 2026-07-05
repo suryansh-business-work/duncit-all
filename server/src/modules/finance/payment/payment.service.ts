@@ -170,7 +170,14 @@ function productLinesFor(pod: any, selectedProducts: any[] = []) {
   const byId = new Map<string, any>(
     (pod?.product_requests ?? []).map((item: any) => [String(item.product_id), item])
   );
-  const lines: Array<{ product_id: string; name: string; quantity: number; unit_cost: number; gross: number }> = [];
+  const lines: Array<{
+    product_id: string;
+    name: string;
+    quantity: number;
+    unit_cost: number;
+    gross: number;
+    fulfilment_method?: string;
+  }> = [];
   for (const sel of selectedProducts) {
     const productId = String(sel?.product_id || '');
     const quantity = Number(sel?.quantity) || 0;
@@ -183,6 +190,9 @@ function productLinesFor(pod: any, selectedProducts: any[] = []) {
       quantity,
       unit_cost,
       gross: round2(unit_cost * quantity),
+      // Optional per-line fulfilment override; falls back to the checkout-level
+      // fulfilment_method when building the order.
+      fulfilment_method: sel?.fulfilment_method ? String(sel.fulfilment_method) : undefined,
     });
   }
   return lines;
@@ -198,6 +208,9 @@ const paymentMetadata = (input: any, pod: any) => ({
   selected_products: input.selected_products ?? [],
   // Invoice-ready product lines (name/qty/unit/gross) for itemization.
   product_lines: pod ? productLinesFor(pod, input.selected_products ?? []) : [],
+  // Fulfilment intent for the product order created on payment success.
+  fulfilment_method: input.fulfilment_method ?? 'PICKUP',
+  shipping_address: input.shipping_address ?? null,
 });
 
 /** Apply an optional coupon to the gross payable, returning the priced quote, the
@@ -347,6 +360,14 @@ function invoiceBillTo(doc: IPayment) {
 async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) {
   const pod = doc.pod_id ? await PodModel.findById(doc.pod_id) : null;
   await bookPodForPayment(pod, doc.user_id, String(doc._id));
+  // Fulfilment: create the product order(s) for any add-on products bought.
+  // Best-effort + idempotent — never fail a paid checkout on a fulfilment hiccup.
+  try {
+    const { productOrderService } = await import('@modules/commerce/productOrder/productOrder.service');
+    await productOrderService.createFromPayment(doc);
+  } catch (e) {
+    console.warn('[payment] ProductOrder creation failed', (e as Error).message);
+  }
   try {
     const pdf = await generateInvoicePdf({
       invoice_no: doc.invoice_no!,

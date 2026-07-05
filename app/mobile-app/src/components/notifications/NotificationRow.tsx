@@ -28,7 +28,7 @@ export function NotificationRow({
   const ink = unread ? '#ffffff' : undefined;
 
   const body = (
-    <XStack gap={12} padding={12} alignItems="center">
+    <XStack flex={1} gap={12} padding={12} alignItems="center">
       <YStack
         width={46}
         height={46}

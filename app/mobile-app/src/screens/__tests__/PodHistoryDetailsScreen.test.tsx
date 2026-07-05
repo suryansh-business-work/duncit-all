@@ -14,6 +14,9 @@ jest.mock('@/hooks/usePodHistory', () => ({
   usePodTicket: jest.fn(),
 }));
 jest.mock('@/hooks/usePolicies', () => ({ usePolicy: jest.fn() }));
+jest.mock('@/hooks/useProductOrders', () => ({
+  useProductOrders: () => ({ orders: [], isLoading: false, error: undefined }),
+}));
 const mockNavigate = jest.fn();
 let mockRouteParams: { membershipId: string } | undefined = { membershipId: 'm1' };
 jest.mock('@react-navigation/native', () => ({

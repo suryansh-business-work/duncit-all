@@ -2,6 +2,8 @@ import { GraphQLError } from 'graphql';
 import { ecommBrandService } from './ecommBrand.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
+import { ADMIN_RW } from '@modules/venues/inventory/inventory.resolver';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 
 // Onboarding managers review brands; admins can too.
 const BRAND_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
@@ -14,12 +16,24 @@ function uid(ctx: GraphQLContext) {
 }
 
 export const ecommBrandResolvers = {
+  EcommBrand: {
+    approved_product_count: (parent: { id: string }) =>
+      InventoryProductModel.countDocuments({
+        brand_id: parent.id,
+        ownership: 'BRAND',
+        listing_review_status: 'APPROVED',
+      }),
+  },
   Query: {
     myEcommBrands: (_p: unknown, _a: unknown, ctx: GraphQLContext) =>
       ecommBrandService.listMine(uid(ctx)),
     ecommBrands: (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, BRAND_REVIEW);
       return ecommBrandService.list({ status: args.status });
+    },
+    marketplaceBrands: (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return ecommBrandService.list({ status: args.status ?? 'APPROVED' });
     },
     ecommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, BRAND_REVIEW);

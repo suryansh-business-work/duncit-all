@@ -5,6 +5,7 @@ import DashboardIcon from '@mui/icons-material/Dashboard';
 import ForumIcon from '@mui/icons-material/Forum';
 import Inventory2Icon from '@mui/icons-material/Inventory2';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import LocalShippingIcon from '@mui/icons-material/LocalShipping';
 import WidgetsIcon from '@mui/icons-material/Widgets';
 
 const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
@@ -14,6 +15,7 @@ const ICONS: Record<string, React.ComponentType<SvgIconProps>> = {
   forum: ForumIcon,
   inventory: Inventory2Icon,
   storefront: StorefrontIcon,
+  local_shipping: LocalShippingIcon,
 };
 
 /** Resolves a config icon name to an MUI icon, falling back to a neutral glyph. */

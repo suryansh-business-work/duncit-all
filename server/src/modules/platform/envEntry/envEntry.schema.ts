@@ -12,6 +12,7 @@ export const envEntryTypeDefs = gql`
     GEMINI
     SERVAM
     RAZORPAY
+    SHIPROCKET
   }
 
   type EnvConfigPair {

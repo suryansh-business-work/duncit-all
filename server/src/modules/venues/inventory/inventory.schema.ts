@@ -109,8 +109,11 @@ export const inventoryTypeDefs = /* GraphQL */ `
     listing_reviewed_by_id: String
     listing_reviewed_by_name: String!
     is_duncit_delivery_partner: Boolean!
+    ownership: ProductOwnership!
     size_label: String!
     height_cm: Float!
+    length_cm: Float!
+    breadth_cm: Float!
     weight_kg: Float!
     color: String!
     commission_pct: Float!
@@ -200,6 +203,10 @@ export const inventoryTypeDefs = /* GraphQL */ `
     host_request_allowed: Boolean
     delivery_available: Boolean
     delivery_charge: Float
+    height_cm: Float
+    length_cm: Float
+    breadth_cm: Float
+    weight_kg: Float
     is_active: Boolean
   }
 
@@ -240,6 +247,10 @@ export const inventoryTypeDefs = /* GraphQL */ `
     host_request_allowed: Boolean
     delivery_available: Boolean
     delivery_charge: Float
+    height_cm: Float
+    length_cm: Float
+    breadth_cm: Float
+    weight_kg: Float
     is_active: Boolean
   }
 
@@ -261,6 +272,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     description: String!
     size_label: String
     height_cm: Float
+    length_cm: Float
+    breadth_cm: Float
     weight_kg: Float
     color: String
     inventory_count: Int!
@@ -270,7 +283,9 @@ export const inventoryTypeDefs = /* GraphQL */ `
   }
 
   extend type Query {
-    inventoryProducts(search: String, activeOnly: Boolean, status: InventoryStatus): [InventoryProduct!]!
+    inventoryProducts(search: String, activeOnly: Boolean, status: InventoryStatus, ownership: ProductOwnership): [InventoryProduct!]!
+    "Approved products of one external brand — the e-commerce marketplace list."
+    marketplaceBrandProducts(brand_doc_id: ID!): [InventoryProduct!]!
     productListingRequests(status: ProductListingReviewStatus): [InventoryProduct!]!
     myProductListings(brand_id: ID): [InventoryProduct!]!
     availablePodProducts(super_category_id: ID, category_id: ID, sub_category_id: ID): [InventoryProduct!]!

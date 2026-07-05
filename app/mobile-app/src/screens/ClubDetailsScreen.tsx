@@ -12,7 +12,6 @@ import { DetailSkeleton } from '@/components/Skeleton';
 import { useClubDetails } from '@/hooks/useDetails';
 import { useClubFollow } from '@/hooks/useFollow';
 import type { RootStackParamList } from '@/navigation/types';
-import { ClubNotifyButton } from '@/components/details/club/ClubNotifyButton';
 
 const DEEP_LINK_BASE = 'https://duncit.com/club';
 
@@ -66,7 +65,6 @@ export function ClubDetailsScreen() {
         <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 110 }}>
           <DetailHero media={club.club_feature_images_and_videos} onBack={goBack}>
             <HeroButton testID="hb-share" icon="share" onPress={handleShare} />
-            <ClubNotifyButton clubId={clubId} />
           </DetailHero>
           <Reveal>
             <ClubBody

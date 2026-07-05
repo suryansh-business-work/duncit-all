@@ -18,6 +18,7 @@ const CATEGORY_LABELS: Record<EnvCategory, string> = {
   GEMINI: 'Gemini',
   SERVAM: 'Servam AI (Sarvam)',
   RAZORPAY: 'Razorpay',
+  SHIPROCKET: 'ShipRocket',
 };
 
 /** Convert [{key,value}] input into a typed config object (number/bool coercion). */

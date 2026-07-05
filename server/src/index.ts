@@ -28,6 +28,7 @@ import { attachBouncerHandlers } from '@modules/support/bouncer/bouncer.socket';
 import { attachSupportChatHandlers } from '@modules/support/supportChat/supportChat.socket';
 import { attachCallHandlers } from '@modules/crm/call/call.socket';
 import { buildCallWebhookRouter } from '@modules/crm/call/call.webhook';
+import { buildShiprocketWebhookRouter } from '@modules/commerce/shiprocket/shiprocket.webhook';
 import { startNgrokTunnel } from '@config/ngrok';
 import { websiteContentService } from '@modules/content/websiteContent/websiteContent.service';
 import { userService } from '@modules/access/user/user.service';
@@ -148,6 +149,9 @@ async function bootstrap() {
 
   // CRM softphone + AI call Twilio webhooks (parses its own urlencoded bodies).
   app.use('/twilio', buildCallWebhookRouter());
+
+  // ShipRocket shipment-status webhook (parses its own JSON, self-verifies x-api-key).
+  app.use('/shiprocket', buildShiprocketWebhookRouter());
 
   // Branded notice at the API root instead of Express's default "Cannot GET /".
   app.get('/', (_req, res) => res.type('html').send(LANDING_HTML));

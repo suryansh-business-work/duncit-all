@@ -17,6 +17,7 @@ export const ENV_CATEGORIES = [
   'GEMINI',
   'SERVAM',
   'RAZORPAY',
+  'SHIPROCKET',
 ] as const;
 export type EnvCategory = (typeof ENV_CATEGORIES)[number];
 

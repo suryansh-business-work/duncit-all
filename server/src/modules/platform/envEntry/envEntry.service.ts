@@ -148,6 +148,20 @@ async function probeRazorpay(str: ConfigStr): Promise<TestResult> {
     : { ok: false, message: `Razorpay rejected the credentials (HTTP ${res.status})` };
 }
 
+async function probeShiprocket(str: ConfigStr): Promise<TestResult> {
+  if (!str('email') || !str('password'))
+    return { ok: false, message: 'Account email and password are required' };
+  const res = await fetch('https://apiv2.shiprocket.in/v1/external/auth/login', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email: str('email'), password: str('password') }),
+  });
+  const data = (await res.json().catch(() => ({}))) as { token?: string };
+  return res.ok && data.token
+    ? { ok: true, message: 'ShipRocket credentials are valid' }
+    : { ok: false, message: `ShipRocket rejected the credentials (HTTP ${res.status})` };
+}
+
 const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestResult>>> = {
   IMAGEKIT: probeImagekit,
   PEXELS: probePexels,
@@ -158,6 +172,7 @@ const ENV_PROBES: Partial<Record<EnvCategory, (str: ConfigStr) => Promise<TestRe
   GEMINI: probeGemini,
   SERVAM: probeServam,
   RAZORPAY: probeRazorpay,
+  SHIPROCKET: probeShiprocket,
 };
 
 /** Probe a category's credentials against its upstream API. Pure fetch. */

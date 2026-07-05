@@ -4,6 +4,10 @@ import WelcomePage from './pages/WelcomePage';
 import InventoryPage from './pages/inventory-page/InventoryPage';
 import InventoryProductPage from './pages/inventory-page/inventory-product-page/InventoryProductPage';
 import EcommRequestsPage from './pages/ecomm/EcommRequestsPage';
+import EcommMarketplacePage from './pages/ecomm/EcommMarketplacePage';
+import EcommBrandDetailPage from './pages/ecomm/EcommBrandDetailPage';
+import ProductOrdersPage from './pages/orders/ProductOrdersPage';
+import ProductOrderDetailPage from './pages/orders/ProductOrderDetailPage';
 import AppShell from './components/AppShell';
 import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
@@ -42,6 +46,10 @@ export default function App() {
       <Route path="/inventory/new" element={products(<InventoryProductPage />)} />
       <Route path="/inventory/:id/edit" element={products(<InventoryProductPage />)} />
       <Route path="/ecomm/product-requests" element={products(<EcommRequestsPage />)} />
+      <Route path="/ecomm/brands" element={products(<EcommMarketplacePage />)} />
+      <Route path="/ecomm/brands/:brandId" element={products(<EcommBrandDetailPage />)} />
+      <Route path="/orders" element={products(<ProductOrdersPage />)} />
+      <Route path="/orders/:orderId" element={products(<ProductOrderDetailPage />)} />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
   );

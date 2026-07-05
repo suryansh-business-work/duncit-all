@@ -1,8 +1,10 @@
 import {
+  Chip,
   FormHelperText,
   Grid,
   MenuItem,
 } from '@mui/material';
+import VerifiedIcon from '@mui/icons-material/Verified';
 import { Controller, useFormContext, useWatch } from 'react-hook-form';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import TagsInput from './TagsInput';
@@ -20,6 +22,14 @@ export default function BasicInfoSection({ categories }: Readonly<BasicInfoSecti
 
   return (
     <Grid container spacing={2}>
+      <Grid item xs={12}>
+        <Chip
+          color="primary"
+          variant="outlined"
+          icon={<VerifiedIcon />}
+          label="Product owner: Duncit"
+        />
+      </Grid>
       <Grid item xs={12} sm={8}>
         <RhfTextField
           control={control}

@@ -46,6 +46,8 @@ export interface IEcommBrand extends Document {
   // Verification
   documents: IEcommBrandDocument[];
   tags: string[];
+  // E-commerce: default ShipRocket pickup/warehouse for this brand's SHIP orders.
+  default_pickup_location_id: Types.ObjectId | null;
   // Workflow
   status: EcommBrandStatus;
   is_active: boolean;
@@ -96,6 +98,7 @@ const ecommBrandSchema = new Schema<IEcommBrand>(
     upi_id: { type: String, default: '' },
     documents: { type: [brandDocumentSchema], default: [] },
     tags: { type: [String], default: [] },
+    default_pickup_location_id: { type: Schema.Types.ObjectId, ref: 'BrandPickupLocation', default: null },
     status: { type: String, enum: ['DRAFT', 'SUBMITTED', 'APPROVED', 'REJECTED'], default: 'DRAFT' },
     is_active: { type: Boolean, default: true },
     reviewer_notes: { type: String, default: '' },

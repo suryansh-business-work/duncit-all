@@ -2,17 +2,25 @@ import type { GraphQLContext } from '@context';
 import { requireAuth, requireRole } from '@middleware/rbac';
 import { inventoryService } from './inventory.service';
 
-const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER'];
+export const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'PRODUCTS_MANAGER'];
 
 export const inventoryResolvers = {
   Query: {
     inventoryProducts: async (
       _p: unknown,
-      args: { search?: string; activeOnly?: boolean; status?: string },
+      args: { search?: string; activeOnly?: boolean; status?: string; ownership?: string },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.list(args);
+    },
+    marketplaceBrandProducts: async (
+      _p: unknown,
+      args: { brand_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_RW);
+      return inventoryService.listMarketplaceBrandProducts(args.brand_doc_id);
     },
     productListingRequests: async (
       _p: unknown,

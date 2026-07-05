@@ -92,6 +92,8 @@ export const paymentTypeDefs = /* GraphQL */ `
   input CheckoutProductSelectionInput {
     product_id: ID!
     quantity: Int!
+    "Optional per-product fulfilment override; falls back to the checkout-level method."
+    fulfilment_method: FulfilmentMethod
   }
 
   input DummyCheckoutInput {
@@ -111,6 +113,10 @@ export const paymentTypeDefs = /* GraphQL */ `
     checkout_url: String!
     coupon_code: String
     simulate_failure: Boolean
+    "How the add-on products are delivered (default PICKUP)."
+    fulfilment_method: FulfilmentMethod
+    "Delivery address, required when any product ships."
+    shipping_address: OrderShippingAddressInput
   }
 
   input PaymentFilterInput {
@@ -135,6 +141,8 @@ export const paymentTypeDefs = /* GraphQL */ `
     billing_address: String
     checkout_url: String!
     coupon_code: String
+    fulfilment_method: FulfilmentMethod
+    shipping_address: OrderShippingAddressInput
   }
 
   """

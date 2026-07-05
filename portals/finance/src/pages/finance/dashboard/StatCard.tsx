@@ -1,5 +1,5 @@
 import { Card, CardContent, Skeleton, Stack, Typography } from '@mui/material';
-import AppIcon from '../../../components/AppIcon';
+import { AppIcon } from '@duncit/shell';
 
 interface Props {
   label: string;

@@ -2,9 +2,8 @@
 import { gql, useMutation } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { LoginScreen, type LoginFormValues, type LoginScreenConfig } from '@duncit/user-context';
+import { useColorMode, useBranding } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
-import { useColorMode } from '../ColorModeContext';
-import { useBranding } from '../lib/useBranding';
 import { accessDeniedMessage, hasAppAccess, setToken } from '../lib/session';
 import { parseApiError } from '../utils/parseApiError';
 import { getSafeRedirectPath, redirectPathFromLocation, type RedirectLocation } from '../utils/redirect';

@@ -10,7 +10,7 @@
 export { AdminLocationSelect, type AdminLocationSelectProps } from './AdminLocationSelect';
 export { RhfAdminLocation } from './RhfAdminLocation';
 export { useAdminLocations, ADMIN_LOCATIONS } from './queries';
-export { buildLocationValue, useLocationValueFromId } from './resolve';
+export { buildLocationValue, useLocationValueFromId, buildLocationValueFromNames } from './resolve';
 export {
   countryOptions,
   stateOptions,

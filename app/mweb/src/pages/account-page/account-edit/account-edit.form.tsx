@@ -4,7 +4,6 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Button, Stack, Typography } from '@mui/material';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import AddressFields, { type AddressFieldNames } from '../../../forms/components/AddressFields';
-import type { CountryNode } from '../../../utils/location-tree';
 import DobDateField from './DobDateField';
 import LocationSelect from './LocationSelect';
 import ContactFields from './ContactFields';
@@ -21,7 +20,6 @@ const ADDRESS_NAMES: AddressFieldNames<AccountEditValues> = {
 };
 
 interface Props {
-  countries: CountryNode[];
   defaultValues: AccountEditValues;
   loading?: boolean;
   errorMessage?: string | null;
@@ -38,7 +36,6 @@ interface Props {
  * Twin of the mobile app's <AccountEditForm/> so both surfaces stay identical.
  */
 export default function AccountEditForm({
-  countries,
   defaultValues,
   loading,
   errorMessage,
@@ -109,7 +106,7 @@ export default function AccountEditForm({
           InputLabelProps={{ shrink: true }}
         />
         <DobDateField control={control} />
-        <LocationSelect control={control} setValue={setValue} countries={countries} />
+        <LocationSelect control={control} setValue={setValue} />
         <ContactFields control={control} setValue={setValue} />
         <Typography variant="overline" color="text.secondary" fontWeight={900}>
           Main address

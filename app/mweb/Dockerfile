@@ -38,6 +38,7 @@ COPY packages/user-context/package.json ./packages/user-context/
 COPY packages/logs/package.json ./packages/logs/
 COPY packages/shell/package.json ./packages/shell/
 COPY packages/theme/package.json ./packages/theme/
+COPY packages/location/package.json ./packages/location/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

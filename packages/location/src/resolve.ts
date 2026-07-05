@@ -35,3 +35,29 @@ export function useLocationValueFromId(locationId?: string | null, locality = ''
     return buildLocationValue(locations, locationId, locality);
   }, [locations, locationId, locality]);
 }
+
+/** Build a picker value from persisted country/state/city NAME strings — for
+ * forms (e.g. profiles) that store names rather than a location_id. */
+export function buildLocationValueFromNames(
+  locations: LocationDoc[],
+  names: { country?: string; state?: string; city?: string; locality?: string },
+): AdminLocationValue {
+  const lc = (value?: string) => (value ?? '').toLowerCase();
+  const doc = names.city
+    ? locations.find(
+        (loc) =>
+          lc(loc.city) === lc(names.city) &&
+          (!names.state || lc(loc.state) === lc(names.state)) &&
+          (!names.country || lc(loc.country) === lc(names.country)),
+      )
+    : undefined;
+  if (doc) return buildLocationValue(locations, doc.id, names.locality ?? '');
+  // No admin match — surface the saved names so the field isn't silently blank.
+  return {
+    ...EMPTY_LOCATION,
+    country: names.country ?? '',
+    state: names.state ?? '',
+    city: names.city ?? '',
+    locality: names.locality ?? '',
+  };
+}

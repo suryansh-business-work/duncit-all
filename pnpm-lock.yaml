@@ -32,6 +32,9 @@ importers:
       '@duncit/auth-tokens':
         specifier: workspace:*
         version: link:../../packages/auth-tokens
+      '@duncit/location':
+        specifier: workspace:*
+        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs

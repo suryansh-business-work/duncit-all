@@ -1,5 +1,4 @@
-import { useMemo } from 'react';
-import { gql, useMutation, useQuery } from '@apollo/client';
+import { gql, useMutation } from '@apollo/client';
 import {
   Button,
   Dialog,
@@ -8,7 +7,6 @@ import {
   DialogContentText,
   DialogTitle,
 } from '@mui/material';
-import { buildLocationTree, type LocationLike } from '../../utils/location-tree';
 import {
   AccountEditForm,
   accountEditDefaults,
@@ -45,25 +43,6 @@ const UPDATE_PROFILE = gql`
   }
 `;
 
-const LOCATIONS = gql`
-  query EditProfileLocations {
-    locations {
-      id
-      location_name
-      city
-      state
-      state_code
-      country
-      country_code
-      location_pincode
-      location_zones {
-        zone_name
-        pincode
-      }
-    }
-  }
-`;
-
 export interface EditAccountDialogProps {
   open: boolean;
   onClose: () => void;
@@ -73,11 +52,6 @@ export interface EditAccountDialogProps {
 
 export default function EditAccountDialog({ open, onClose, initial, onSaved }: Readonly<EditAccountDialogProps>) {
   const [updateProfile, { loading, error }] = useMutation(UPDATE_PROFILE);
-  const { data } = useQuery(LOCATIONS, { fetchPolicy: 'cache-and-network' });
-  const countries = useMemo(
-    () => buildLocationTree((data?.locations ?? []) as LocationLike[]),
-    [data?.locations],
-  );
   const guard = useUnsavedGuard(onClose);
 
   const handleSubmit = async (values: AccountEditValues) => {
@@ -92,7 +66,6 @@ export default function EditAccountDialog({ open, onClose, initial, onSaved }: R
         <DialogTitle>Edit profile</DialogTitle>
         <DialogContent dividers>
           <AccountEditForm
-            countries={countries}
             defaultValues={accountEditDefaults(initial)}
             loading={loading}
             errorMessage={error?.message ?? null}

@@ -40,6 +40,9 @@ export interface ITicket extends Document {
   user_id: Types.ObjectId;
   subject: string;
   category: TicketCategory;
+  /** Optional pod this ticket is about (attached from "Contact Support" on a pod). */
+  pod_id: Types.ObjectId | null;
+  pod_title: string;
   status: TicketStatus;
   priority: TicketPriority;
   assignee_id: Types.ObjectId | null;
@@ -68,6 +71,8 @@ const ticketSchema = new Schema<ITicket>(
       default: 'GENERAL',
       index: true,
     },
+    pod_id: { type: Schema.Types.ObjectId, ref: 'Pod', default: null, index: true },
+    pod_title: { type: String, default: '', trim: true, maxlength: 200 },
     status: {
       type: String,
       enum: ['OPEN', 'PENDING', 'RESOLVED', 'CLOSED'],

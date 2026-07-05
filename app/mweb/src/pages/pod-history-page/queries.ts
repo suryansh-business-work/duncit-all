@@ -21,6 +21,7 @@ export const MY_POD_MEMBERSHIPS = gql`
         pod_end_date_time
         pod_amount
         pod_type
+        is_deleted
         no_of_spots
         pod_images_and_videos {
           url
@@ -102,6 +103,7 @@ export interface PodHistoryItem {
     pod_end_date_time?: string | null;
     pod_amount: number;
     pod_type: string;
+    is_deleted?: boolean | null;
     no_of_spots?: number | null;
     pod_images_and_videos: Array<{ url: string; type: string }>;
     club?: { id: string; category_id?: string | null; super_category_id?: string | null } | null;

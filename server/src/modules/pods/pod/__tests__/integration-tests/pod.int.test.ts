@@ -60,6 +60,23 @@ describe('podService integration', () => {
     expect(await podService.getById(new Types.ObjectId().toString())).toBeNull();
   });
 
+  it('soft-deletes: excludes from reads but keeps the row + includeDeleted access', async () => {
+    const doc = await PodModel.create(makePod());
+    const id = String(doc._id);
+    await podService.remove(id);
+    // Row survives in the DB (bypass the soft-delete hook to see it).
+    const raw = await PodModel.findById(id).setOptions({ includeDeleted: true });
+    expect(raw?.deleted_at).toBeInstanceOf(Date);
+    // Default reads exclude it.
+    expect(await podService.list()).toEqual([]);
+    expect(await PodModel.countDocuments()).toBe(0);
+    expect(await podService.getById(id)).toBeNull();
+    // Pod History resolves it via includeDeleted.
+    const kept = await podService.getById(id, { includeDeleted: true });
+    expect(kept?.is_deleted).toBe(true);
+    expect(kept?.pod_title).toBe('Test pod');
+  });
+
   it('reports only locations with a live (active, upcoming) pod', async () => {
     const live = new Types.ObjectId();
     const inactive = new Types.ObjectId();

@@ -85,38 +85,44 @@ export function PodHistoryActions({
   onTicket,
   onSupport,
 }: Readonly<PodHistoryActionsProps>) {
+  // A deleted pod keeps its booking record but only allows Invoice + Support.
+  const isDeleted = !!item.pod?.is_deleted;
   return (
     <XStack flexWrap="wrap" gap={8}>
-      <ActionButton
-        testID="ph-pod-details"
-        icon="arrow-forward"
-        label="Go to Pod Details"
-        variant="contained"
-        disabled={!item.pod?.id}
-        onPress={onPodDetails}
-      />
-      <ActionButton
-        testID="ph-backout"
-        icon="restart-alt"
-        label={backingOut ? 'Backing out…' : 'Backout Pod'}
-        variant="danger"
-        disabled={item.status !== 'JOINED' || backingOut}
-        onPress={onBackout}
-      />
-      <ActionButton
-        testID="ph-refund"
-        icon="receipt-long"
-        label={`Refund: ${refundLabel(item.refund_status)}`}
-        onPress={onRefundStatus}
-      />
-      <ActionButton
-        testID="ph-ticket"
-        icon="confirmation-number"
-        label={ticketBusy ? 'Downloading…' : 'Ticket'}
-        variant="contained"
-        disabled={item.status !== 'JOINED' || !item.pod?.id || ticketBusy}
-        onPress={onTicket}
-      />
+      {!isDeleted ? (
+        <>
+          <ActionButton
+            testID="ph-pod-details"
+            icon="arrow-forward"
+            label="Go to Pod Details"
+            variant="contained"
+            disabled={!item.pod?.id}
+            onPress={onPodDetails}
+          />
+          <ActionButton
+            testID="ph-backout"
+            icon="restart-alt"
+            label={backingOut ? 'Backing out…' : 'Backout Pod'}
+            variant="danger"
+            disabled={item.status !== 'JOINED' || backingOut}
+            onPress={onBackout}
+          />
+          <ActionButton
+            testID="ph-refund"
+            icon="receipt-long"
+            label={`Refund: ${refundLabel(item.refund_status)}`}
+            onPress={onRefundStatus}
+          />
+          <ActionButton
+            testID="ph-ticket"
+            icon="confirmation-number"
+            label={ticketBusy ? 'Downloading…' : 'Ticket'}
+            variant="contained"
+            disabled={item.status !== 'JOINED' || !item.pod?.id || ticketBusy}
+            onPress={onTicket}
+          />
+        </>
+      ) : null}
       <ActionButton
         testID="ph-invoice"
         icon="receipt-long"

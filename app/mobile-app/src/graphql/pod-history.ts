@@ -26,6 +26,7 @@ export const MyPodMembershipsDocument = gql(`
         pod_end_date_time
         pod_amount
         pod_type
+        is_deleted
         no_of_spots
         pod_images_and_videos {
           url

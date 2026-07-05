@@ -129,6 +129,27 @@ describe('PodHistoryActions', () => {
     expect(h.onSupport).toHaveBeenCalled();
   });
 
+  it('shows only Invoice + Support for a soft-deleted pod', () => {
+    const h = handlers();
+    renderWithProviders(
+      <PodHistoryActions
+        item={membership({ pod: { ...basePod, is_deleted: true } })}
+        backingOut={false}
+        invoiceBusy={false}
+        ticketBusy={false}
+        {...h}
+      />,
+    );
+    expect(screen.queryByTestId('ph-pod-details')).toBeNull();
+    expect(screen.queryByTestId('ph-backout')).toBeNull();
+    expect(screen.queryByTestId('ph-refund')).toBeNull();
+    expect(screen.queryByTestId('ph-ticket')).toBeNull();
+    fireEvent.press(screen.getByTestId('ph-invoice'));
+    fireEvent.press(screen.getByTestId('ph-support'));
+    expect(h.onInvoice).toHaveBeenCalled();
+    expect(h.onSupport).toHaveBeenCalled();
+  });
+
   it('disables backout/invoice/pod-details appropriately', () => {
     const h = handlers();
     renderWithProviders(

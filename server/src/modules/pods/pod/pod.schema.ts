@@ -107,6 +107,8 @@ export const podTypeDefs = /* GraphQL */ `
     product_requests: [PodProductRequest!]!
     product_cost_total: Float!
     is_active: Boolean!
+    is_deleted: Boolean!
+    deleted_at: String
     venue_approval_status: PodVenueApproval!
     host_names: [String!]!
     like_count: Int!

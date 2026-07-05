@@ -91,6 +91,8 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     })),
     product_cost_total: d.product_cost_total ?? 0,
     is_active: !!d.is_active,
+    is_deleted: !!d.deleted_at,
+    deleted_at: d.deleted_at?.toISOString?.() ?? null,
     venue_approval_status: d.venue_approval_status ?? 'NONE',
     liked_user_ids: (d.liked_user_ids ?? []).map((x: any) => String(x)),
     like_count: (d.liked_user_ids ?? []).length,
@@ -480,8 +482,12 @@ export const podService = {
     return docs.map((d) => toPub(d, slugMap));
   },
 
-  async getById(id: string) {
-    const doc = await PodModel.findById(id);
+  async getById(id: string, opts?: { includeDeleted?: boolean }) {
+    // Pod History resolves a booking's pod even after it was soft-deleted; every
+    // other caller gets the default (deleted pods excluded by the schema hook).
+    const query = PodModel.findById(id);
+    if (opts?.includeDeleted) query.setOptions({ includeDeleted: true });
+    const doc = await query;
     if (!doc) return null;
     const slugMap = await loadClubSlugMap([doc]);
     return toPub(doc, slugMap);
@@ -917,9 +923,13 @@ export const podService = {
   async remove(id: string) {
     const doc = await PodModel.findById(id);
     if (!doc) notFound();
-    await applyProductDeltas(doc.product_requests ?? [], []);
+    // Soft delete: release the venue slot + reserved inventory, then mark the
+    // pod deleted (keep the row so bookings/payments/tickets/history survive).
+    await applyProductDeltas(doc!.product_requests ?? [], []);
     await venueSlotService.releaseForPod(String(doc!._id));
-    await doc!.deleteOne();
+    doc!.deleted_at = new Date();
+    doc!.is_active = false;
+    await doc!.save();
     return true;
   },
 

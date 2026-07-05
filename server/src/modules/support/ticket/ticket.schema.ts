@@ -52,6 +52,9 @@ export const ticketTypeDefs = /* GraphQL */ `
     user: TicketActor!
     subject: String!
     category: TicketCategory!
+    "The pod this ticket is about, if it was raised from a pod."
+    pod_id: ID
+    pod_title: String!
     status: TicketStatus!
     priority: TicketPriority!
     assignee_id: ID
@@ -80,6 +83,9 @@ export const ticketTypeDefs = /* GraphQL */ `
     body_html: String
     body_text: String!
     attachments: [String!]
+    "Attach the pod this ticket is about (from Contact Support on a pod)."
+    pod_id: ID
+    pod_title: String
   }
 
   extend type Query {

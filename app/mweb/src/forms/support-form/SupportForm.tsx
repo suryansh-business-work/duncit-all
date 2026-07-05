@@ -1,9 +1,10 @@
 import { useState } from 'react';
-import { Controller, useForm } from 'react-hook-form';
+import { Controller, useForm, useWatch } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import {
   Alert,
   Button,
+  Chip,
   InputAdornment,
   MenuItem,
   Stack,
@@ -11,6 +12,7 @@ import {
 } from '@mui/material';
 import SubjectIcon from '@mui/icons-material/Subject';
 import CategoryIcon from '@mui/icons-material/Category';
+import EventIcon from '@mui/icons-material/Event';
 import RhfTextField from '../components/RhfTextField';
 import {
   CATEGORIES,
@@ -50,10 +52,20 @@ export default function SupportForm({
   });
 
   const isSubmitting = formState.isSubmitting;
+  const attachedPod = useWatch({ control, name: 'pod_title' });
 
   return (
     <form noValidate onSubmit={submit}>
       <Stack spacing={1.5}>
+        {attachedPod ? (
+          <Chip
+            icon={<EventIcon />}
+            label={`About pod: ${attachedPod}`}
+            variant="outlined"
+            color="primary"
+            sx={{ alignSelf: 'flex-start', fontWeight: 800 }}
+          />
+        ) : null}
         <RhfTextField control={control} name="name" label="Your name" autoComplete="name" />
         <RhfTextField
           control={control}

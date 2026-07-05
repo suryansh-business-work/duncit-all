@@ -49,6 +49,8 @@ async function toPub(doc: ITicket) {
     user: user ?? { id: String(doc.user_id), name: 'User', phone: null, avatar_url: null },
     subject: doc.subject,
     category: doc.category,
+    pod_id: doc.pod_id ? String(doc.pod_id) : null,
+    pod_title: doc.pod_title ?? '',
     status: doc.status,
     priority: doc.priority,
     assignee_id: doc.assignee_id ? String(doc.assignee_id) : null,
@@ -101,6 +103,8 @@ export const ticketService = {
       body_html?: string;
       body_text: string;
       attachments?: string[];
+      pod_id?: string | null;
+      pod_title?: string | null;
     }
   ) {
     const subject = (input.subject || '').trim();
@@ -110,10 +114,13 @@ export const ticketService = {
 
     const meta = await actorMeta(userId, 'USER');
     const now = new Date();
+    const podId = input.pod_id && Types.ObjectId.isValid(input.pod_id) ? new Types.ObjectId(input.pod_id) : null;
     const doc = await TicketModel.create({
       user_id: new Types.ObjectId(userId),
       subject,
       category: input.category ?? 'GENERAL',
+      pod_id: podId,
+      pod_title: (input.pod_title || '').trim(),
       status: 'OPEN',
       priority: 'MEDIUM',
       last_message_at: now,

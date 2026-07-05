@@ -28,7 +28,7 @@ export default function BasicClubSection({ form, setForm, superCats, allCats, lo
   // The cascading picker keeps its own full country/state/city value; the club
   // persists only location_id. Hydrate from the saved id when editing.
   const initialLocation = useMemo<AdminLocationValue>(
-    () => (form.location_id ? buildLocationValue(locations, form.location_id) : EMPTY_LOCATION),
+    () => (form.location_id ? buildLocationValue(locations, form.location_id, form.locality) : EMPTY_LOCATION),
     // Re-hydrate when a different club is opened or the location list arrives.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [form.id, locations.length],
@@ -97,14 +97,14 @@ export default function BasicClubSection({ form, setForm, superCats, allCats, lo
           value={locValue}
           onChange={(next) => {
             setLocValue(next);
-            setForm((prev) => ({ ...prev, location_id: next.location_id }));
+            setForm((prev) => ({ ...prev, location_id: next.location_id, locality: next.locality }));
           }}
-          fields={['country', 'state', 'city']}
+          fields={['country', 'state', 'city', 'locality']}
           direction="row"
         />
         <Typography variant="caption" color="text.secondary">
-          The city the club operates in. Approved venues here in the same category auto-link to this
-          club.
+          The city (and optional locality) the club operates in. Approved venues here in the same
+          category auto-link to this club.
         </Typography>
       </Stack>
       {form.id && (

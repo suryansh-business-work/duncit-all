@@ -31,6 +31,8 @@ export interface IClub extends Document {
   /** City the club operates in (ref Location). Venues auto-match when they sit
    *  in this location and share the club's Super + Sub category. */
   location_id: Types.ObjectId | null;
+  /** Optional locality/zone within the club's city (a Location zone_name). */
+  locality: string;
   /** Hosts explicitly linked to this club by an admin (Bug 5). When empty the
    *  Club Detail page falls back to the hosts of the club's pods. */
   host_ids: Types.ObjectId[];
@@ -76,6 +78,7 @@ const clubSchema = new Schema<IClub>(
     faqs: { type: [faqSchema], default: [] },
     meetup_venues_id: { type: [String], default: [] },
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null, index: true },
+    locality: { type: String, default: '', trim: true, maxlength: 120 },
     host_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
     category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },

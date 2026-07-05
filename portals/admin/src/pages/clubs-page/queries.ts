@@ -27,6 +27,7 @@ export const CLUBS = gql`
         answer
       }
       location_id
+      locality
       matched_venues_count
       category_id
       super_category_id
@@ -114,6 +115,7 @@ export interface ClubForm {
   category_id: string;
   super_category_id: string;
   location_id: string;
+  locality: string;
   feature_text: string;
   moments_text: string;
   community_link: string;
@@ -133,6 +135,7 @@ export const blankForm: ClubForm = {
   category_id: '',
   super_category_id: '',
   location_id: '',
+  locality: '',
   feature_text: '',
   moments_text: '',
   community_link: '',

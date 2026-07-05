@@ -18,6 +18,7 @@ import {
   cleanFaqs,
 } from './queries';
 import ClubFormDialog from './ClubFormDialog';
+import { validateClub, type ClubErrors } from './club-form/clubValidation';
 import ClubsTable from './ClubsTable';
 import ClubsToolbar from './ClubsToolbar';
 
@@ -41,11 +42,13 @@ export default function ClubsPage() {
   const [form, setForm] = useState<ClubForm>(blankForm);
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ClubErrors>({});
   const [toast, setToast] = useState<string | null>(null);
 
   const openCreate = () => {
     setForm({ ...blankForm });
     setOpError(null);
+    setFieldErrors({});
     setOpen(true);
   };
   const openEdit = (c: any) => {
@@ -63,7 +66,6 @@ export default function ClubsPage() {
         .join('\n'),
       moments_text: (c.club_moments ?? []).map((m: any) => m.url).join('\n'),
       community_link: c.club_whats_app_community_link ?? '',
-      announcement_link: c.club_whats_app_announcement_link ?? '',
       group_link: c.club_whats_app_group_link ?? '',
       who_we_are: c.who_we_are ?? [],
       what_we_do: c.what_we_do ?? [],
@@ -73,6 +75,7 @@ export default function ClubsPage() {
       is_active: c.is_active,
     });
     setOpError(null);
+    setFieldErrors({});
     setOpen(true);
   };
 
@@ -85,17 +88,27 @@ export default function ClubsPage() {
   }, [editId, data?.clubs]);
 
   const submit = async (options?: { draft?: boolean }) => {
+    const isDraft = !!options?.draft;
+    // Full validation on final save; drafts may be incomplete.
+    if (!isDraft) {
+      const errs = validateClub(form);
+      setFieldErrors(errs);
+      if (Object.keys(errs).length > 0) {
+        setOpError('Please complete the highlighted required fields before saving.');
+        return;
+      }
+    } else {
+      setFieldErrors({});
+    }
     setBusy(true);
     setOpError(null);
     try {
-      const isDraft = !!options?.draft;
       const payload = {
         club_name: form.club_name,
         club_description: form.club_description,
         club_feature_images_and_videos: linesToMedia(form.feature_text),
         club_moments: linesToMedia(form.moments_text),
         club_whats_app_community_link: form.community_link,
-        club_whats_app_announcement_link: form.announcement_link,
         club_whats_app_group_link: form.group_link,
         who_we_are: cleanBullets(form.who_we_are),
         what_we_do: cleanBullets(form.what_we_do),
@@ -174,6 +187,7 @@ export default function ClubsPage() {
         onSaveDraft={() => submit({ draft: true })}
         busy={busy}
         opError={opError}
+        errors={fieldErrors}
         superCats={superCats}
         allCats={allCats}
         locations={locations}

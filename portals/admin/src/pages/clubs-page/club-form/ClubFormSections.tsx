@@ -1,4 +1,4 @@
-import { Accordion, AccordionDetails, AccordionSummary, Button, Stack, Typography } from '@mui/material';
+import { Accordion, AccordionDetails, AccordionSummary, Button, Chip, Stack, Typography } from '@mui/material';
 import ExpandMoreIcon from '@mui/icons-material/ExpandMore';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
@@ -6,6 +6,7 @@ import BasicClubSection from './BasicClubSection';
 import ClubMediaSection from './ClubMediaSection';
 import ClubVenueLinksSection from './ClubVenueLinksSection';
 import ClubContentSection from './ClubContentSection';
+import { SECTION_OF, type ClubErrors } from './clubValidation';
 import type { ClubForm } from '../queries';
 
 export const SECTIONS = [
@@ -22,6 +23,7 @@ interface Props {
   onToggle: (id: string, open: boolean) => void;
   onExpandAll: () => void;
   onCollapseAll: () => void;
+  errors: ClubErrors;
   superCats: any[];
   allCats: any[];
   locations: any[];
@@ -29,6 +31,8 @@ interface Props {
 
 export default function ClubFormSections(props: Readonly<Props>) {
   const allOpen = props.expanded.size === SECTIONS.length;
+  const errorCount = (id: string) =>
+    Object.keys(props.errors).filter((key) => SECTION_OF[key] === id).length;
   return (
     <>
       <Stack direction="row" justifyContent="flex-end" spacing={1} sx={{ mb: 1 }}>
@@ -38,13 +42,18 @@ export default function ClubFormSections(props: Readonly<Props>) {
       {SECTIONS.map((section) => (
         <Accordion key={section.id} expanded={props.expanded.has(section.id)} onChange={(_, open) => props.onToggle(section.id, open)} disableGutters square sx={{ '&:before': { display: 'none' }, mb: 1.5, border: '1px solid', borderColor: 'divider', borderRadius: 1.5, overflow: 'hidden', boxShadow: 'none', '&.Mui-expanded': { mb: 1.5 } }}>
           <AccordionSummary expandIcon={<ExpandMoreIcon />}>
-            <Typography variant="subtitle1" fontWeight={600}>{section.title}</Typography>
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <Typography variant="subtitle1" fontWeight={600}>{section.title}</Typography>
+              {errorCount(section.id) > 0 && (
+                <Chip size="small" color="error" label={`${errorCount(section.id)} required`} />
+              )}
+            </Stack>
           </AccordionSummary>
           <AccordionDetails>
-            {section.id === 'basic' && <BasicClubSection form={props.form} setForm={props.setForm} superCats={props.superCats} allCats={props.allCats} locations={props.locations} />}
-            {section.id === 'media' && <ClubMediaSection form={props.form} setForm={props.setForm} />}
-            {section.id === 'venues' && <ClubVenueLinksSection form={props.form} setForm={props.setForm} />}
-            {section.id === 'content' && <ClubContentSection form={props.form} setForm={props.setForm} />}
+            {section.id === 'basic' && <BasicClubSection form={props.form} setForm={props.setForm} errors={props.errors} superCats={props.superCats} allCats={props.allCats} locations={props.locations} />}
+            {section.id === 'media' && <ClubMediaSection form={props.form} setForm={props.setForm} errors={props.errors} />}
+            {section.id === 'venues' && <ClubVenueLinksSection form={props.form} setForm={props.setForm} errors={props.errors} />}
+            {section.id === 'content' && <ClubContentSection form={props.form} setForm={props.setForm} errors={props.errors} />}
           </AccordionDetails>
         </Accordion>
       ))}

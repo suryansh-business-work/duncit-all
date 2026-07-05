@@ -3,10 +3,12 @@ import { Alert, Chip, CircularProgress, List, ListItem, ListItemText, Stack, Tex
 import StorefrontIcon from '@mui/icons-material/Storefront';
 import type { ClubForm } from '../queries';
 import { MATCHING_VENUES } from '../queries';
+import type { ClubErrors } from './clubValidation';
 
 interface Props {
   form: ClubForm;
   setForm: (f: ClubForm | ((prev: ClubForm) => ClubForm)) => void;
+  errors?: ClubErrors;
 }
 
 const venueLine = (venue: any) => [venue.locality, venue.city, venue.state].filter(Boolean).join(', ');
@@ -14,7 +16,7 @@ const venueLine = (venue: any) => [venue.locality, venue.city, venue.state].filt
 /** Venues are no longer picked by hand — they auto-match a club by its location
  * + Super/Sub category. This section shows that live matched list (read-only)
  * plus the WhatsApp community links. */
-export default function ClubVenueLinksSection({ form, setForm }: Readonly<Props>) {
+export default function ClubVenueLinksSection({ form, setForm, errors }: Readonly<Props>) {
   const ready = !!form.location_id;
   const { data, loading, error } = useQuery(MATCHING_VENUES, {
     skip: !ready,
@@ -65,9 +67,24 @@ export default function ClubVenueLinksSection({ form, setForm }: Readonly<Props>
         </List>
       )}
 
-      <TextField label="WhatsApp Community link" value={form.community_link} onChange={(e) => setForm({ ...form, community_link: e.target.value })} fullWidth />
-      <TextField label="WhatsApp Announcement link" value={form.announcement_link} onChange={(e) => setForm({ ...form, announcement_link: e.target.value })} fullWidth />
-      <TextField label="WhatsApp Group link" value={form.group_link} onChange={(e) => setForm({ ...form, group_link: e.target.value })} fullWidth />
+      <TextField
+        label="WhatsApp Community link"
+        value={form.community_link}
+        onChange={(e) => setForm({ ...form, community_link: e.target.value })}
+        fullWidth
+        required
+        error={!!errors?.community_link}
+        helperText={errors?.community_link ?? 'Invite link members join — shown on the club page (mWeb + app).'}
+      />
+      <TextField
+        label="WhatsApp Group link"
+        value={form.group_link}
+        onChange={(e) => setForm({ ...form, group_link: e.target.value })}
+        fullWidth
+        required
+        error={!!errors?.group_link}
+        helperText={errors?.group_link ?? 'Group chat link — shown on the club page (mWeb + app).'}
+      />
     </Stack>
   );
 }

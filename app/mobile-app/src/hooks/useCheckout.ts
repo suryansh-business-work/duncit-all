@@ -77,10 +77,7 @@ export function buildCheckoutContact(me: CheckoutMe): CheckoutContact | null {
 /** Sum the picked products' line totals (unit_cost × qty) against the pod's
  * product catalogue. The server recomputes + validates this, so it is only for
  * the displayed amount. Products missing from the catalogue contribute nothing. */
-export function sumSelectedProducts(
-  pod: CheckoutPod,
-  selectedProducts: SelectedProduct[],
-): number {
+export function sumSelectedProducts(pod: CheckoutPod, selectedProducts: SelectedProduct[]): number {
   const byId = new Map((pod?.product_requests ?? []).map((p) => [p.product_id, p]));
   return selectedProducts.reduce(
     (sum, item) => sum + Number(byId.get(item.product_id)?.unit_cost ?? 0) * item.quantity,

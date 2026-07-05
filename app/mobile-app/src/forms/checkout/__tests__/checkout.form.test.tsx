@@ -53,7 +53,9 @@ describe('CheckoutForm', () => {
   });
 
   it('shows a spinner in the contact card while the profile is still loading', () => {
-    renderWithProviders(<CheckoutForm initialValues={contact} contactLoading onSubmit={jest.fn()} />);
+    renderWithProviders(
+      <CheckoutForm initialValues={contact} contactLoading onSubmit={jest.fn()} />,
+    );
     expect(screen.getByTestId('checkout-contact-loading')).toBeOnTheScreen();
     expect(screen.queryByText('Riya Sharma')).toBeNull();
   });

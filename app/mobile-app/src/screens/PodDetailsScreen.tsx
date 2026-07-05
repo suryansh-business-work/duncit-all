@@ -202,7 +202,10 @@ export function PodDetailsScreen() {
           isFree={isFree}
           membershipState={membershipState}
           onCheckout={() =>
-            navigation.navigate('Checkout', { podId: pod.id, selectedProducts: selectedProductList })
+            navigation.navigate('Checkout', {
+              podId: pod.id,
+              selectedProducts: selectedProductList,
+            })
           }
           onBackout={() => setBackoutOpen(true)}
         />

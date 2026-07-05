@@ -4,7 +4,10 @@ import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { useCheckout } from '@/hooks/useCheckout';
 import { renderWithProviders } from '@/utils/test-utils';
 
-jest.mock('@/hooks/useCheckout', () => ({ useCheckout: jest.fn() }));
+jest.mock('@/hooks/useCheckout', () => ({
+  ...jest.requireActual('@/hooks/useCheckout'),
+  useCheckout: jest.fn(),
+}));
 const mockDownloadTicket = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/hooks/usePodHistory', () => ({
   usePodTicket: () => ({ download: mockDownloadTicket }),

@@ -64,4 +64,20 @@ describe('createTicket', () => {
       },
     });
   });
+
+  it('attaches the pod reference when one is provided', async () => {
+    mockRequest.mockResolvedValueOnce({ createTicket: { id: 't3' } });
+    await createTicket('S', 'B', 'BOOKING', [], { id: 'p1', title: 'Sunset Jam' });
+    const [, vars] = mockRequest.mock.calls[0];
+    expect(vars).toEqual({
+      input: {
+        subject: 'S',
+        body_text: 'B',
+        category: 'BOOKING',
+        attachments: [],
+        pod_id: 'p1',
+        pod_title: 'Sunset Jam',
+      },
+    });
+  });
 });

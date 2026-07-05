@@ -34,10 +34,19 @@ export async function createTicket(
   body: string,
   category: string,
   attachments: string[] = [],
+  pod?: { id: string; title: string },
 ) {
   const data = await graphqlRequest(
     CreateTicketDocument,
-    { input: { subject, body_text: body, category: category as never, attachments } },
+    {
+      input: {
+        subject,
+        body_text: body,
+        category: category as never,
+        attachments,
+        ...(pod ? { pod_id: pod.id, pod_title: pod.title } : {}),
+      },
+    },
     { auth: true },
   );
   return data.createTicket.id;

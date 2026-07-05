@@ -100,7 +100,12 @@ export function PodHistoryDetailsScreen() {
             }
             onInvoice={downloadInvoice}
             onTicket={downloadTicket}
-            onSupport={() => navigation.navigate('SupportTickets')}
+            onSupport={() =>
+              navigation.navigate('SupportTickets', {
+                podId: selected.pod?.id,
+                podTitle: selected.pod?.pod_title,
+              })
+            }
             onBackoutTerms={() => navigation.navigate('Policy', { slug: 'backout-terms' })}
             onGeneralTerms={() => void Linking.openURL(GENERAL_TERMS_URL)}
           />

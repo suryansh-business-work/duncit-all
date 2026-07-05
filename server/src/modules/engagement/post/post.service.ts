@@ -1,6 +1,7 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PostModel, type IPost } from './post.model';
+import { ClubFollowerModel, UserRelationshipModel } from '@modules/access/user/relations';
 
 const STORY_TTL_MS = 24 * 60 * 60 * 1000;
 
@@ -111,6 +112,36 @@ export const postService = {
       q.author_id = new Types.ObjectId(authorId);
     }
     const docs = await PostModel.find(q).sort({ created_at: -1 });
+    return docs.map((d) => toPub(d, viewerId));
+  },
+
+  /**
+   * The Following feed: permanent posts + still-active stories from the people
+   * (PEOPLE) or clubs (CLUBS) the viewer follows, newest first. Following a
+   * private account implies approved access, so no extra privacy gate is needed.
+   */
+  async followingFeed(viewerId: string, source: 'PEOPLE' | 'CLUBS', limit = 60) {
+    const oid = new Types.ObjectId(viewerId);
+    // Permanent posts always qualify; stories only while their 24h window is open.
+    const liveContent = { $or: [{ kind: { $ne: 'STORY' } }, { expires_at: { $gt: new Date() } }] };
+    let q: Record<string, unknown>;
+    if (source === 'CLUBS') {
+      const follows = await ClubFollowerModel.find({ user_id: oid }).select('club_id').lean();
+      const clubIds = follows.map((f: any) => f.club_id);
+      if (clubIds.length === 0) return [];
+      q = { club_id: { $in: clubIds }, ...liveContent };
+    } else {
+      const follows = await UserRelationshipModel.find({ follower_id: oid })
+        .select('following_id')
+        .lean();
+      const userIds = follows.map((f: any) => f.following_id);
+      if (userIds.length === 0) return [];
+      // Club-scoped stories belong to the Clubs feed, not the People feed.
+      q = { author_id: { $in: userIds }, club_id: null, ...liveContent };
+    }
+    const docs = await PostModel.find(q)
+      .sort({ created_at: -1 })
+      .limit(Math.min(Math.max(limit, 1), 100));
     return docs.map((d) => toPub(d, viewerId));
   },
 

@@ -8,8 +8,10 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useSupport', () => ({ useTickets: jest.fn(), createTicket: jest.fn() }));
 const mockNavigate = jest.fn();
+let mockRouteParams: { podId?: string; podTitle?: string } | undefined;
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
+  useRoute: () => ({ params: mockRouteParams }),
 }));
 
 const mockedCreate = createTicket as jest.Mock;
@@ -17,6 +19,7 @@ const mockedTickets = useTickets as jest.Mock;
 beforeEach(() => {
   mockNavigate.mockClear();
   mockedCreate.mockReset();
+  mockRouteParams = undefined;
   mockedTickets.mockReturnValue({ tickets: [], isLoading: false, reload: jest.fn() });
   useMeStore.setState({ data: undefined });
 });
@@ -74,6 +77,23 @@ describe('SupportTicketsScreen', () => {
     fireEvent.press(screen.getByTestId('ticket-submit'));
     await waitFor(() =>
       expect(mockNavigate).toHaveBeenCalledWith('TicketDetails', { ticketId: 'tk1' }),
+    );
+  });
+
+  it('attaches the pod from route params: chip shown + pod sent on create', async () => {
+    mockRouteParams = { podId: 'p1', podTitle: 'Sunset Jam' };
+    mockedCreate.mockResolvedValue('tk2');
+    renderWithProviders(<SupportTicketsScreen />);
+    expect(screen.getByTestId('ticket-attached-pod')).toBeOnTheScreen();
+    expect(screen.getByText('About pod: Sunset Jam')).toBeOnTheScreen();
+    fireEvent.changeText(screen.getByTestId('ticket-subject'), 'Help');
+    fireEvent.changeText(screen.getByTestId('ticket-message'), 'About this pod');
+    fireEvent.press(screen.getByTestId('ticket-submit'));
+    await waitFor(() =>
+      expect(mockedCreate).toHaveBeenCalledWith('Help', 'About this pod', expect.any(String), [], {
+        id: 'p1',
+        title: 'Sunset Jam',
+      }),
     );
   });
 });

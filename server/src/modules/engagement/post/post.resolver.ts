@@ -47,6 +47,14 @@ export const postResolvers = {
     },
     clubStories: (_p: unknown, args: { club_id: string }, ctx: GraphQLContext) =>
       postService.listClubStories(args.club_id, ctx.user?.id ?? null),
+    followingFeed: (
+      _p: unknown,
+      args: { source: 'PEOPLE' | 'CLUBS'; limit?: number },
+      ctx: GraphQLContext
+    ) => {
+      const u = requireAuth(ctx);
+      return postService.followingFeed(u.id, args.source, args.limit ?? 60);
+    },
   },
   Mutation: {
     createPost: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {

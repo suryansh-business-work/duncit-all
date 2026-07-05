@@ -5,6 +5,7 @@ export type InventoryVisibility = 'PUBLIC' | 'INTERNAL';
 export type ProductType = 'CONSUMABLE' | 'MERCHANDISE' | 'EQUIPMENT';
 export type ProductListingReviewStatus = 'PENDING' | 'APPROVED' | 'DENIED';
 export type ProductListingDeliveryTarget = 'HOST' | 'VENUE';
+export type ProductOwnership = 'DUNCIT' | 'BRAND';
 export type UnitType =
   | 'BOTTLE'
   | 'PIECE'
@@ -74,8 +75,11 @@ export interface IInventoryProduct extends Document {
   listing_reviewed_by_id: string | null;
   listing_reviewed_by_name: string;
   is_duncit_delivery_partner: boolean;
+  ownership: ProductOwnership;
   size_label: string;
   height_cm: number;
+  length_cm: number;
+  breadth_cm: number;
   weight_kg: number;
   color: string;
   commission_pct: number;
@@ -170,8 +174,12 @@ const productSchema = new Schema<IInventoryProduct>(
     listing_reviewed_by_id: { type: String, default: null },
     listing_reviewed_by_name: { type: String, default: '' },
     is_duncit_delivery_partner: { type: Boolean, default: false },
+    // Duncit's own catalogue product vs an external partner brand's listing.
+    ownership: { type: String, enum: ['DUNCIT', 'BRAND'], default: 'DUNCIT', index: true },
     size_label: { type: String, default: '', trim: true, maxlength: 120 },
     height_cm: { type: Number, default: 0, min: 0 },
+    length_cm: { type: Number, default: 0, min: 0 },
+    breadth_cm: { type: Number, default: 0, min: 0 },
     weight_kg: { type: Number, default: 0, min: 0 },
     color: { type: String, default: '', trim: true, maxlength: 80 },
     commission_pct: { type: Number, default: 5, min: 5, max: 50 },

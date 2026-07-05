@@ -69,6 +69,18 @@ export const CATEGORY_FIELDS: Record<EnvCategory, EnvFieldDef[]> = {
       hint: 'Used to verify Razorpay webhooks',
     },
   ],
+  SHIPROCKET: [
+    { name: 'email', label: 'Account Email', hint: 'ShipRocket API user email' },
+    { name: 'password', label: 'Account Password', secret: true, hint: 'ShipRocket API user password' },
+    {
+      name: 'pickup_location',
+      label: 'Default Pickup Location Nickname',
+      hint: 'Must match a warehouse configured in ShipRocket (Settings → Pickup Addresses)',
+    },
+    { name: 'channel_id', label: 'Channel ID (optional)', number: true, hint: 'ShipRocket channel id, if any' },
+    { name: 'webhook_secret', label: 'Webhook x-api-key (optional)', secret: true, hint: 'Verifies inbound ShipRocket webhooks' },
+    { name: 'token_ttl_hours', label: 'Token TTL hours (optional)', number: true, hint: 'Auth token cache lifetime; default 240 (~10 days)' },
+  ],
 };
 
 /** Where an operator obtains each category's credentials (shown in the Add dialog). */
@@ -83,6 +95,7 @@ export const CATEGORY_DOCS: Record<EnvCategory, string> = {
   GEMINI: 'https://aistudio.google.com/app/apikey',
   SERVAM: 'https://dashboard.sarvam.ai/admin',
   RAZORPAY: 'https://dashboard.razorpay.com/app/keys',
+  SHIPROCKET: 'https://app.shiprocket.in/api-user',
 };
 
 const secretSet = new Set<string>();
@@ -124,6 +137,12 @@ export const ENV_KEY_MAP: Record<string, { category: EnvCategory; field: string 
   RAZORPAY_KEY_ID: { category: 'RAZORPAY', field: 'key_id' },
   RAZORPAY_KEY_SECRET: { category: 'RAZORPAY', field: 'key_secret' },
   RAZORPAY_WEBHOOK_SECRET: { category: 'RAZORPAY', field: 'webhook_secret' },
+  SHIPROCKET_EMAIL: { category: 'SHIPROCKET', field: 'email' },
+  SHIPROCKET_PASSWORD: { category: 'SHIPROCKET', field: 'password' },
+  SHIPROCKET_PICKUP_LOCATION: { category: 'SHIPROCKET', field: 'pickup_location' },
+  SHIPROCKET_CHANNEL_ID: { category: 'SHIPROCKET', field: 'channel_id' },
+  SHIPROCKET_WEBHOOK_SECRET: { category: 'SHIPROCKET', field: 'webhook_secret' },
+  SHIPROCKET_TOKEN_TTL_HOURS: { category: 'SHIPROCKET', field: 'token_ttl_hours' },
 };
 
 export function maskSecret(value: string) {

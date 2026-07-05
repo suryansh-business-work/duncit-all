@@ -47,6 +47,11 @@ export const dummyCheckoutSchema = yup.object({
     }),
   coupon_code: yup.string().trim().max(40).nullable().default(null),
   simulate_failure: yup.boolean().default(false),
+  // Kept as pass-through (lenient) shapes so stripUnknown doesn't drop them —
+  // sub-fields are already enforced by the GraphQL input types.
+  selected_products: yup.array().optional().default(undefined),
+  fulfilment_method: yup.string().oneOf(['SHIP', 'PICKUP']).default('PICKUP'),
+  shipping_address: yup.object().nullable().default(null),
 }).test(
   'has-billing',
   'A billing address is required',

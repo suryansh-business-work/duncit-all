@@ -20,20 +20,26 @@ export function Fieldset({ legend, hint, children }: Readonly<FieldsetProps>) {
       component="fieldset"
       sx={{
         m: 0,
+        mt: 1,
         px: 2,
         pt: 1,
         pb: 2,
-        border: 1,
+        border: '1px solid',
         borderColor: 'divider',
         borderRadius: 2,
         minWidth: 0,
+        bgcolor: 'action.hover',
       }}
     >
-      <Typography component="legend" variant="subtitle2" sx={{ px: 0.75, fontWeight: 800 }}>
+      <Typography
+        component="legend"
+        variant="overline"
+        sx={{ px: 1, fontWeight: 900, letterSpacing: 0.6, color: 'text.secondary', lineHeight: 1 }}
+      >
         {legend}
       </Typography>
       {hint ? (
-        <FormHelperText sx={{ mt: 0, mb: 1.25, mx: 0 }}>{hint}</FormHelperText>
+        <FormHelperText sx={{ mt: 0, mb: 1.5, mx: 0 }}>{hint}</FormHelperText>
       ) : null}
       <Stack spacing={2}>{children}</Stack>
     </Box>

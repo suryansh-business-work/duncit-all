@@ -3,7 +3,7 @@ import FormField from '../../FormField';
 import FieldGrid from '../../fields/FieldGrid';
 import SuperCategoryField from '../../fields/SuperCategoryField';
 import CategorySelectors from '../../fields/CategorySelectors';
-import { AreaField, CityField } from '../../fields/LocationField';
+import { LocationFieldset } from '../../fields/LocationField';
 
 export default function EcommBasicSection() {
   return (
@@ -20,10 +20,7 @@ export default function EcommBasicSection() {
         <FormField name="brand_name" label="Brand Name" size="small" />
       </FieldGrid>
       <FormField name="business_type" label="Business Type" size="small" hint="e.g. Manufacturer, Reseller, D2C brand." />
-      <FieldGrid>
-        <CityField name="city" label="City" />
-        <AreaField name="area" cityField="city" label="Area / Locality" />
-      </FieldGrid>
+      <LocationFieldset />
     </Stack>
   );
 }

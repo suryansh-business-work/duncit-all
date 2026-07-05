@@ -71,6 +71,8 @@ export default function SliderScopeFields({
           fields={form.scope === 'ZONE' ? ['city', 'locality'] : ['city']}
           labels={{ locality: 'Zone' }}
           required
+          legend="Location"
+          hint="Where this slider shows — the city (and zone, for ZONE scope) it's scoped to."
         />
       )}
     </>

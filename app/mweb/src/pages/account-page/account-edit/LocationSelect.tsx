@@ -37,6 +37,8 @@ export default function LocationSelect({ control, setValue }: Readonly<Props>) {
         write('city', next.city);
       }}
       fields={['country', 'state', 'city']}
+      legend="Location"
+      hint="Your city — used to surface pods and clubs near you."
     />
   );
 }

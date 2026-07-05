@@ -75,6 +75,7 @@ export default function BasicClubSection({ form, setForm, allCats, locations }: 
           setForm((prev) => ({ ...prev, super_category_id: next.super_id, category_id: next.sub_id }));
         }}
         direction="row"
+        required
         legend="Category"
         hint={CATEGORY_HINT}
       />
@@ -87,6 +88,7 @@ export default function BasicClubSection({ form, setForm, allCats, locations }: 
         }}
         fields={['country', 'state', 'city', 'locality']}
         direction="row"
+        required
         legend="Location"
         hint={LOCATION_HINT}
       />

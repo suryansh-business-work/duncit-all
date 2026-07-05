@@ -20,6 +20,7 @@ export default function ClubVenueLinksSection({ form, setForm }: Readonly<Props>
     skip: !ready,
     variables: {
       location_id: form.location_id,
+      locality: form.locality || null,
       super_category_id: form.super_category_id || null,
       category_id: form.category_id || null,
     },

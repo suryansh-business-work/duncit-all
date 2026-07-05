@@ -3,7 +3,6 @@ import { Stack, TextField, Typography } from '@mui/material';
 import CategoryCascade from '../../list-products-page/list-products/CategoryCascade';
 import VenueMapPreview from '../../../components/VenueMapPreview';
 import VenueLocationFields from '../VenueLocationFields';
-import VenueLocationFinder from '../VenueLocationFinder';
 import VenueImagesField from './VenueImagesField';
 import type { RegisterVenueMode, RegisterVenueValues, VenueLocationValues } from '../register-venue';
 
@@ -147,7 +146,6 @@ export default function VenueDetailsSection({ form, locations, mode }: Readonly<
           />
         )}
       />
-      {!locked && <VenueLocationFinder locations={locations} value={locationValue} onChange={applyLocation} />}
       <VenueLocationFields
         value={locationValue}
         locations={locations}

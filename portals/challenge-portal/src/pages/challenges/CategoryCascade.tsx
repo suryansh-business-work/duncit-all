@@ -29,6 +29,7 @@ export default function CategoryCascade({ value, onChange }: Readonly<Props>) {
       onChange={(next) =>
         onChange({ superId: next.super_id, categoryId: next.category_id, subId: next.sub_id })
       }
+      required
     />
   );
 }

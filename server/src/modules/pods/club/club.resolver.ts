@@ -7,12 +7,14 @@ const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN'];
 
 type ClubMatchParent = {
   location_id?: string | null;
+  locality?: string | null;
   super_category_id?: string | null;
   category_id?: string | null;
 };
 
 const matchCriteria = (parent: ClubMatchParent) => ({
   location_id: parent.location_id ?? null,
+  locality: parent.locality ?? null,
   super_category_id: parent.super_category_id ?? null,
   category_id: parent.category_id ?? null,
 });

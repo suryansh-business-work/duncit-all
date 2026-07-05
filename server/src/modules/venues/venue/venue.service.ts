@@ -387,16 +387,22 @@ async function assignApprovedVenueRole(userId: Types.ObjectId) {
  * sub level, mirrored against the venue's `venue_category.sub_category_id`). */
 function buildClubMatchQuery(criteria: {
   location_id?: string | null;
+  locality?: string | null;
   super_category_id?: string | null;
   category_id?: string | null;
 }): Record<string, unknown> | null {
-  const { location_id, super_category_id, category_id } = criteria;
+  const { location_id, locality, super_category_id, category_id } = criteria;
   if (!location_id || !Types.ObjectId.isValid(location_id)) return null;
   const q: Record<string, unknown> = {
     status: 'APPROVED',
     is_active: true,
     location_id: new Types.ObjectId(location_id),
   };
+  // Match by LOCALITY when the club has one — a club scoped to a locality only
+  // links venues in that same locality (not the whole city). Legacy clubs with
+  // no locality fall back to city-level matching.
+  const trimmedLocality = (locality ?? '').trim();
+  if (trimmedLocality) q.locality = trimmedLocality;
   if (super_category_id && Types.ObjectId.isValid(super_category_id)) {
     q['venue_category.super_category_id'] = new Types.ObjectId(super_category_id);
   }
@@ -444,6 +450,7 @@ export const venueService = {
    * go through here. Returns [] when the club has no location yet. */
   async findMatchingForClub(criteria: {
     location_id?: string | null;
+    locality?: string | null;
     super_category_id?: string | null;
     category_id?: string | null;
   }) {
@@ -454,6 +461,7 @@ export const venueService = {
   },
   async countMatchingForClub(criteria: {
     location_id?: string | null;
+    locality?: string | null;
     super_category_id?: string | null;
     category_id?: string | null;
   }) {

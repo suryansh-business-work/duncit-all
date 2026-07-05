@@ -307,6 +307,7 @@ async function resolveVenueLocation(input: any) {
   if (club?.location_id) {
     const matched = await venueService.findMatchingForClub({
       location_id: String(club.location_id),
+      locality: club.locality ?? null,
       super_category_id: club.super_category_id ? String(club.super_category_id) : null,
       category_id: club.category_id ? String(club.category_id) : null,
     });

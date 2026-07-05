@@ -57,7 +57,7 @@ export function CityField({ name, label, required }: Readonly<CityProps>) {
 }
 
 /** City + Area/Locality grouped in a hinted Location fieldset (lead forms). */
-export function LocationFieldset({ required = false }: Readonly<{ required?: boolean }>) {
+export function LocationFieldset({ required = true }: Readonly<{ required?: boolean }>) {
   return (
     <Fieldset legend="Location" hint="Where the lead is based — city + locality (from the admin Location list).">
       <CityField name="city" label="City" required={required} />

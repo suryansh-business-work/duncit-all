@@ -65,6 +65,11 @@ export interface InventoryProductFormValues {
   host_request_allowed: boolean;
   delivery_available: boolean;
   delivery_charge: number;
+
+  height_cm: number;
+  length_cm: number;
+  breadth_cm: number;
+  weight_kg: number;
 }
 
 export const blankProductForm: InventoryProductFormValues = {
@@ -104,6 +109,10 @@ export const blankProductForm: InventoryProductFormValues = {
   host_request_allowed: true,
   delivery_available: false,
   delivery_charge: 0,
+  height_cm: 0,
+  length_cm: 0,
+  breadth_cm: 0,
+  weight_kg: 0,
 };
 
 export function toFormValues(product: any): InventoryProductFormValues {
@@ -148,6 +157,10 @@ export function toFormValues(product: any): InventoryProductFormValues {
     host_request_allowed: product.host_request_allowed ?? true,
     delivery_available: product.delivery_available ?? false,
     delivery_charge: product.delivery_charge ?? 0,
+    height_cm: product.height_cm ?? 0,
+    length_cm: product.length_cm ?? 0,
+    breadth_cm: product.breadth_cm ?? 0,
+    weight_kg: product.weight_kg ?? 0,
   };
 }
 

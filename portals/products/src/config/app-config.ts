@@ -62,7 +62,9 @@ export const appConfig: AppConfig = {
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
     { label: 'Inventory', to: '/inventory', icon: 'inventory' },
+    { label: 'E-commerce', to: '/ecomm/brands', icon: 'storefront' },
     { label: 'Ecomm Requests', to: '/ecomm/product-requests', icon: 'storefront' },
+    { label: 'Orders', to: '/orders', icon: 'local_shipping' },
   ],
   modules: [],
 };

@@ -42,6 +42,10 @@ export const INVENTORY_PRODUCT_DETAIL = gql`
       host_request_allowed
       delivery_available
       delivery_charge
+      height_cm
+      length_cm
+      breadth_cm
+      weight_kg
       is_active
       last_updated_by_id
       last_updated_by_name

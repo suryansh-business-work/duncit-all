@@ -14,6 +14,7 @@ import { parseApiError } from '../../utils/parseApiError';
 import { podUrl } from '../../utils/seoUrls';
 import { useDateFormat } from '../../utils/dateFormat';
 import PodHistoryTimeline from './PodHistoryTimeline';
+import PodProductOrdersCard from './PodProductOrdersCard';
 import {
   POD_HISTORY_INVOICE_PDF,
   POD_HISTORY_TICKET_FOR_POD,
@@ -146,6 +147,8 @@ export default function PodHistoryDetails({ item, backingOut, onBackout }: Reado
           )}
         </CardContent>
       </Card>
+
+      <PodProductOrdersCard podId={pod?.id} />
 
       <Card>
         <CardContent>

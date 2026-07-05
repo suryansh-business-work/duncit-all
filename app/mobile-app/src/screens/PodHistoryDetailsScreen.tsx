@@ -7,6 +7,7 @@ import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 import { BackoutConfirmDialog, PodHistoryDetails } from '@/components/pod-history';
 import { StackScreen } from '@/components/StackScreen';
 import { usePodBackout, usePodHistory, usePodInvoice, usePodTicket } from '@/hooks/usePodHistory';
+import { useProductOrders } from '@/hooks/useProductOrders';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
 import { refundLabel } from '@/utils/pod-history';
@@ -28,6 +29,7 @@ export function PodHistoryDetailsScreen() {
 
   const selected = items.find((item) => item.id === membershipId) ?? null;
   const title = selected?.pod?.pod_title ?? 'Details';
+  const { orders: productOrders, isLoading: ordersLoading } = useProductOrders(selected?.pod?.id);
 
   const confirmBackout = async () => {
     if (!selected?.pod?.id) return;
@@ -83,6 +85,8 @@ export function PodHistoryDetailsScreen() {
             invoiceBusy={invoiceBusy}
             ticketBusy={ticketBusy}
             notice={notice}
+            productOrders={productOrders}
+            ordersLoading={ordersLoading}
             onPodDetails={() =>
               selected.pod?.id &&
               navigation.navigate('PodDetails', {

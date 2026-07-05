@@ -42,7 +42,7 @@ export default function InventoryPage() {
   } | null>(null);
 
   const { data, loading, error, refetch } = useQuery(INVENTORY_PRODUCTS, {
-    variables: { search: search || undefined, status: statusFilter || undefined },
+    variables: { search: search || undefined, status: statusFilter || undefined, ownership: 'DUNCIT' },
     fetchPolicy: 'cache-and-network',
   });
   const products = data?.inventoryProducts ?? [];

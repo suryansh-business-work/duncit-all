@@ -83,6 +83,11 @@ export const productSchema = z
     host_request_allowed: z.boolean(),
     delivery_available: z.boolean(),
     delivery_charge: z.number({ invalid_type_error: 'Number required' }).min(0).max(100000),
+
+    height_cm: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
+    length_cm: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
+    breadth_cm: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
+    weight_kg: z.number({ invalid_type_error: 'Number required' }).min(0).max(1000),
   })
   .superRefine((values, ctx) => {
     if (Number(values.max_order_qty ?? 0) < Number(values.min_order_qty ?? 0)) {

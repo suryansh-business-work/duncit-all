@@ -55,6 +55,8 @@ export const clubTypeDefs = /* GraphQL */ `
     meetup_venues_id: [String!]!
     "City the club operates in (ref Location)."
     location_id: ID
+    "Optional locality/zone within the club's city."
+    locality: String!
     "APPROVED, active venues that match this club by location + Super/Sub category."
     matched_venues: [Venue!]!
     "How many venues auto-match this club (location + category)."
@@ -103,6 +105,7 @@ export const clubTypeDefs = /* GraphQL */ `
     faqs: [ClubFaqInput!]
     meetup_venues_id: [String!]
     location_id: ID
+    locality: String
     host_ids: [ID!]
     category_id: ID
     super_category_id: ID
@@ -125,6 +128,7 @@ export const clubTypeDefs = /* GraphQL */ `
     faqs: [ClubFaqInput!]
     meetup_venues_id: [String!]
     location_id: ID
+    locality: String
     host_ids: [ID!]
     category_id: ID
     super_category_id: ID

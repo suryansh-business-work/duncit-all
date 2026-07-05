@@ -57,6 +57,7 @@ export default function ClubsPage() {
       category_id: c.category_id ?? '',
       super_category_id: c.super_category_id ?? '',
       location_id: c.location_id ?? '',
+      locality: c.locality ?? '',
       feature_text: (c.club_feature_images_and_videos ?? [])
         .map((m: any) => m.url)
         .join('\n'),
@@ -102,6 +103,7 @@ export default function ClubsPage() {
         values: cleanBullets(form.values),
         faqs: cleanFaqs(form.faqs),
         location_id: form.location_id || null,
+        locality: form.locality,
         category_id: form.category_id || null,
         super_category_id: form.super_category_id || null,
       };

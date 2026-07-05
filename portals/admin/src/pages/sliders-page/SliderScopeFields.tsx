@@ -1,11 +1,12 @@
+import { useMemo } from 'react';
 import { MenuItem, TextField } from '@mui/material';
+import { AdminLocationSelect, buildLocationValue, type LocationDoc } from '@duncit/location';
 import { SCOPES, type SliderForm } from './queries';
 
 interface Props {
   form: SliderForm;
   setForm: React.Dispatch<React.SetStateAction<SliderForm>>;
-  locations: any[];
-  zonesForLocation: any[];
+  locations: LocationDoc[];
   superCategories: { id: string; name: string; slug: string }[];
 }
 
@@ -13,9 +14,15 @@ export default function SliderScopeFields({
   form,
   setForm,
   locations,
-  zonesForLocation,
   superCategories,
 }: Readonly<Props>) {
+  // The slider persists location_id (+ zone_name for ZONE scope); hydrate the
+  // cascading picker from those saved values.
+  const locValue = useMemo(
+    () => buildLocationValue(locations, form.location_id, form.zone_name),
+    [locations, form.location_id, form.zone_name],
+  );
+
   return (
     <>
       <TextField
@@ -56,39 +63,15 @@ export default function SliderScopeFields({
       </TextField>
 
       {(form.scope === 'LOCATION' || form.scope === 'ZONE') && (
-        <TextField
-          select
-          label="Location"
-          value={form.location_id}
-          onChange={(e) => setForm({ ...form, location_id: e.target.value, zone_name: '' })}
-          fullWidth
+        <AdminLocationSelect
+          value={locValue}
+          onChange={(next) =>
+            setForm({ ...form, location_id: next.location_id, zone_name: next.locality })
+          }
+          fields={form.scope === 'ZONE' ? ['city', 'locality'] : ['city']}
+          labels={{ locality: 'Zone' }}
           required
-        >
-          {locations.map((l: any) => (
-            <MenuItem key={l.id} value={l.id}>
-              {l.location_name}
-            </MenuItem>
-          ))}
-        </TextField>
-      )}
-
-      {form.scope === 'ZONE' && (
-        <TextField
-          select
-          label="Zone"
-          value={form.zone_name}
-          onChange={(e) => setForm({ ...form, zone_name: e.target.value })}
-          fullWidth
-          required
-          disabled={!form.location_id}
-          helperText={!form.location_id ? 'Select a location first' : ''}
-        >
-          {zonesForLocation.map((z: any) => (
-            <MenuItem key={z.zone_name} value={z.zone_name}>
-              {z.zone_name}
-            </MenuItem>
-          ))}
-        </TextField>
+        />
       )}
     </>
   );

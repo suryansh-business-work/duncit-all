@@ -1,5 +1,12 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { MenuItem, Stack, Switch, TextField, Typography } from '@mui/material';
+import {
+  AdminLocationSelect,
+  buildLocationValue,
+  EMPTY_LOCATION,
+  type AdminLocationValue,
+  type LocationDoc,
+} from '@duncit/location';
 import type { ClubForm } from '../queries';
 
 interface Props {
@@ -7,11 +14,8 @@ interface Props {
   setForm: (f: ClubForm | ((prev: ClubForm) => ClubForm)) => void;
   superCats: any[];
   allCats: any[];
-  locations: any[];
+  locations: LocationDoc[];
 }
-
-const locationLabel = (loc: any) =>
-  [loc.location_name || loc.city, loc.state].filter(Boolean).join(', ');
 
 /** Basic club fields + the full Super → Category → Sub Category cascade + the
  * club's location. The club persists super_category_id + category_id (the sub);
@@ -20,6 +24,17 @@ const locationLabel = (loc: any) =>
 export default function BasicClubSection({ form, setForm, superCats, allCats, locations }: Readonly<Props>) {
   const selectedSub = allCats.find((c: any) => c.id === form.category_id);
   const [midId, setMidId] = useState<string>(selectedSub?.parent_id ?? '');
+
+  // The cascading picker keeps its own full country/state/city value; the club
+  // persists only location_id. Hydrate from the saved id when editing.
+  const initialLocation = useMemo<AdminLocationValue>(
+    () => (form.location_id ? buildLocationValue(locations, form.location_id, form.locality) : EMPTY_LOCATION),
+    // Re-hydrate when a different club is opened or the location list arrives.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [form.id, locations.length],
+  );
+  const [locValue, setLocValue] = useState<AdminLocationValue>(initialLocation);
+  useEffect(() => setLocValue(initialLocation), [initialLocation]);
 
   // Re-derive the middle level when a different club is opened for editing.
   useEffect(() => {
@@ -77,19 +92,21 @@ export default function BasicClubSection({ form, setForm, superCats, allCats, lo
           {subCats.map((category: any) => <MenuItem key={category.id} value={category.id}>{category.name}</MenuItem>)}
         </TextField>
       </Stack>
-      <TextField
-        label="Location"
-        select
-        value={form.location_id}
-        onChange={(e) => setForm({ ...form, location_id: e.target.value })}
-        fullWidth
-        helperText="The city the club operates in. Approved venues here in the same category auto-link to this club."
-      >
-        <MenuItem value="">None</MenuItem>
-        {locations.map((loc: any) => (
-          <MenuItem key={loc.id} value={loc.id}>{locationLabel(loc)}</MenuItem>
-        ))}
-      </TextField>
+      <Stack spacing={0.5}>
+        <AdminLocationSelect
+          value={locValue}
+          onChange={(next) => {
+            setLocValue(next);
+            setForm((prev) => ({ ...prev, location_id: next.location_id, locality: next.locality }));
+          }}
+          fields={['country', 'state', 'city', 'locality']}
+          direction="row"
+        />
+        <Typography variant="caption" color="text.secondary">
+          The city (and optional locality) the club operates in. Approved venues here in the same
+          category auto-link to this club.
+        </Typography>
+      </Stack>
       {form.id && (
         <Stack direction="row" alignItems="center" spacing={1}>
           <Switch checked={form.is_active} onChange={(_, value) => setForm({ ...form, is_active: value })} />

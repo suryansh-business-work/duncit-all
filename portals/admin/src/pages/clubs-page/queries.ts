@@ -27,6 +27,7 @@ export const CLUBS = gql`
         answer
       }
       location_id
+      locality
       matched_venues_count
       category_id
       super_category_id
@@ -52,6 +53,15 @@ export const LOCATIONS = gql`
       location_name
       city
       state
+      state_code
+      country
+      country_code
+      location_pincode
+      location_zones {
+        zone_name
+        zone_code
+        pincode
+      }
     }
   }
 `;
@@ -105,6 +115,7 @@ export interface ClubForm {
   category_id: string;
   super_category_id: string;
   location_id: string;
+  locality: string;
   feature_text: string;
   moments_text: string;
   community_link: string;
@@ -124,6 +135,7 @@ export const blankForm: ClubForm = {
   category_id: '',
   super_category_id: '',
   location_id: '',
+  locality: '',
   feature_text: '',
   moments_text: '',
   community_link: '',

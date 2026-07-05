@@ -24,6 +24,7 @@
   },
   "dependencies": {
     "@apollo/client": "^3.10.4",
+    "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@duncit/theme": "workspace:*",

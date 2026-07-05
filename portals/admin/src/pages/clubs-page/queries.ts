@@ -52,6 +52,15 @@ export const LOCATIONS = gql`
       location_name
       city
       state
+      state_code
+      country
+      country_code
+      location_pincode
+      location_zones {
+        zone_name
+        zone_code
+        pincode
+      }
     }
   }
 `;

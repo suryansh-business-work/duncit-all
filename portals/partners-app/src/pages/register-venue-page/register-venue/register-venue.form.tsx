@@ -60,7 +60,7 @@ export default function RegisterVenueForm({
               pointerEvents: viewOnly ? 'none' : undefined,
             }}
           >
-            {active === 'details' && <VenueDetailsSection form={form} locations={locations} mode={mode} />}
+            {active === 'details' && <VenueDetailsSection form={form} mode={mode} />}
             {active === 'type-capacity' && <VenueTypeCapacitySection form={form} config={config} mode={mode} />}
             {active === 'amenities' && (
               <AmenitiesSection form={form} config={config} disabled={mode === 'edit-approved'} />

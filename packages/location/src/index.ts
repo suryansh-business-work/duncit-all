@@ -9,6 +9,7 @@
  */
 export { AdminLocationSelect, type AdminLocationSelectProps } from './AdminLocationSelect';
 export { RhfAdminLocation } from './RhfAdminLocation';
+export { Fieldset, type FieldsetProps } from './Fieldset';
 export { useAdminLocations, ADMIN_LOCATIONS } from './queries';
 export { buildLocationValue, useLocationValueFromId, buildLocationValueFromNames } from './resolve';
 export {

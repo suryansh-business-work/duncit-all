@@ -1,5 +1,18 @@
-import { findSelectedLocation } from '../VenueLocationFields';
 import { blankRegisterVenueValues, type RegisterVenueValues } from './register-venue.types';
+
+const cityName = (location: any) => location.city || location.location_name || '';
+
+/** Match a saved venue to its admin Location doc — by id first, then by
+ * city/state/country when the id is missing (legacy venues). */
+const findSelectedLocation = (locations: any[], values: RegisterVenueValues) =>
+  locations.find((item) => item.id === values.location_id) ??
+  locations.find(
+    (item) =>
+      cityName(item) === values.city &&
+      (!values.state || item.state === values.state) &&
+      (!values.country_code || item.country_code === values.country_code)
+  ) ??
+  null;
 
 /** Re-derives location_id / zone / postal_code from the locations list so the
  * cascading dropdowns line up with what the server stored. */

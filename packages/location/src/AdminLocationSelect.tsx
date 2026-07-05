@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { Autocomplete, Stack, TextField } from '@mui/material';
+import { Fieldset } from './Fieldset';
 import { useAdminLocations } from './queries';
 import {
   cityOptions,
@@ -79,6 +80,10 @@ export interface AdminLocationSelectProps {
   direction?: 'row' | 'column';
   labels?: Partial<Record<LocationLevel, string>>;
   errors?: Partial<Record<LocationLevel, string>>;
+  /** When set, wrap the fields in a titled <fieldset> with this legend. */
+  legend?: string;
+  /** Helper hint shown in the fieldset — explain what maps from the location. */
+  hint?: string;
 }
 
 /**
@@ -96,6 +101,8 @@ export function AdminLocationSelect({
   direction = 'column',
   labels,
   errors,
+  legend,
+  hint,
 }: Readonly<AdminLocationSelectProps>) {
   const { locations, loading } = useAdminLocations();
 
@@ -148,8 +155,7 @@ export function AdminLocationSelect({
   };
 
   const active = ALL_LEVELS.filter((level) => fields.includes(level));
-
-  return (
+  const rows = (
     <Stack direction={direction} spacing={2} sx={{ width: '100%' }}>
       {active.map((level) => (
         <LevelSelect
@@ -166,5 +172,13 @@ export function AdminLocationSelect({
         />
       ))}
     </Stack>
+  );
+
+  return legend ? (
+    <Fieldset legend={legend} hint={hint}>
+      {rows}
+    </Fieldset>
+  ) : (
+    rows
   );
 }

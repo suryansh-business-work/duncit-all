@@ -1,36 +1,41 @@
 import { Controller, type UseFormReturn } from 'react-hook-form';
-import { Stack, TextField, Typography } from '@mui/material';
-import CategoryCascade from '../../list-products-page/list-products/CategoryCascade';
+import { Stack, TextField } from '@mui/material';
+import { AdminCategorySelect, type AdminCategoryValue } from '@duncit/category';
+import { AdminLocationSelect, type AdminLocationValue } from '@duncit/location';
 import VenueMapPreview from '../../../components/VenueMapPreview';
-import VenueLocationFields from '../VenueLocationFields';
 import VenueImagesField from './VenueImagesField';
-import type { RegisterVenueMode, RegisterVenueValues, VenueLocationValues } from '../register-venue';
+import type { RegisterVenueMode, RegisterVenueValues } from '../register-venue';
 
 interface Props {
   form: UseFormReturn<RegisterVenueValues>;
-  locations: any[];
   mode: RegisterVenueMode;
 }
 
-const LOCATION_KEYS: (keyof VenueLocationValues)[] = [
-  'location_id',
-  'country',
-  'country_code',
-  'state',
-  'state_code',
-  'city',
-  'locality',
-  'postal_code',
-];
+const CATEGORY_HINT = 'Pick the category you want to host pods in at this venue.';
+const LOCATION_HINT = 'Where the venue is — used to match it to clubs in this locality.';
 
-export default function VenueDetailsSection({ form, locations, mode }: Readonly<Props>) {
+export default function VenueDetailsSection({ form, mode }: Readonly<Props>) {
   const { control, watch, setValue, formState } = form;
   const values = watch();
   // Post-approval, only the description and images stay editable here —
   // identity fields (name, category, address) are locked with disabled styling.
   const locked = mode === 'edit-approved';
+  const write = (key: keyof RegisterVenueValues, value: string, validate: boolean) =>
+    setValue(key, value, { shouldDirty: true, shouldValidate: validate });
 
-  const locationValue: VenueLocationValues = {
+  const catValue: AdminCategoryValue = {
+    super_id: values.super_category_id ?? '',
+    super_name: '',
+    category_id: values.category_id ?? '',
+    category_name: '',
+    sub_id: values.sub_category_id ?? '',
+    sub_name: '',
+  };
+  const categoryError = Boolean(
+    formState.errors.super_category_id || formState.errors.category_id || formState.errors.sub_category_id
+  );
+
+  const locValue: AdminLocationValue = {
     location_id: values.location_id ?? '',
     country: values.country ?? '',
     country_code: values.country_code ?? '',
@@ -38,22 +43,9 @@ export default function VenueDetailsSection({ form, locations, mode }: Readonly<
     state_code: values.state_code ?? '',
     city: values.city ?? '',
     locality: values.locality ?? '',
-    postal_code: values.postal_code ?? '',
+    pincode: values.postal_code ?? '',
   };
-  const applyLocation = (next: VenueLocationValues) => {
-    LOCATION_KEYS.forEach((key) => {
-      setValue(key, next[key] ?? '', { shouldDirty: true, shouldValidate: Boolean(formState.errors[key]) });
-    });
-  };
-  const locationErrors = Object.fromEntries(
-    LOCATION_KEYS.filter((key) => formState.errors[key]).map((key) => [
-      key,
-      String(formState.errors[key]?.message ?? ''),
-    ])
-  ) as Partial<Record<keyof VenueLocationValues, string>>;
-  const categoryError = Boolean(
-    formState.errors.super_category_id || formState.errors.category_id || formState.errors.sub_category_id
-  );
+  const err = (key: keyof RegisterVenueValues) => String(formState.errors[key]?.message ?? '') || undefined;
 
   return (
     <Stack spacing={2.5}>
@@ -91,34 +83,22 @@ export default function VenueDetailsSection({ form, locations, mode }: Readonly<
         onCoverChange={(url) => setValue('cover_image_url', url, { shouldDirty: true })}
         onGalleryChange={(urls) => setValue('gallery', urls, { shouldDirty: true })}
       />
-      <Stack spacing={0.75}>
-        <Typography variant="subtitle2" fontWeight={800}>
-          Venue category{' '}
-          <Typography component="span" variant="caption" color="error.main" fontWeight={800}>
-            (required)
-          </Typography>
-        </Typography>
-        <Typography variant="caption" color="text.secondary">
-          {locked ? 'Locked after approval' : 'Pick the category you want to host pods in at this venue.'}
-        </Typography>
-        <CategoryCascade
-          superId={values.super_category_id}
-          categoryId={values.category_id}
-          subId={values.sub_category_id}
-          disabled={locked}
-          error={categoryError}
-          onChange={(next) => {
-            setValue('super_category_id', next.superId, { shouldDirty: true, shouldValidate: categoryError });
-            setValue('category_id', next.categoryId, { shouldDirty: true, shouldValidate: categoryError });
-            setValue('sub_category_id', next.subId, { shouldDirty: true, shouldValidate: categoryError });
-          }}
-        />
-        {categoryError && (
-          <Typography variant="caption" color="error.main">
-            Select the super category, category and sub category.
-          </Typography>
-        )}
-      </Stack>
+
+      <AdminCategorySelect
+        value={catValue}
+        onChange={(next) => {
+          write('super_category_id', next.super_id, categoryError);
+          write('category_id', next.category_id, categoryError);
+          write('sub_category_id', next.sub_id, categoryError);
+        }}
+        direction="row"
+        required
+        disabled={locked}
+        legend="Venue category"
+        hint={CATEGORY_HINT}
+        errors={categoryError ? { sub: 'Select the super category, category and sub category.' } : undefined}
+      />
+
       <Controller
         name="address_line1"
         control={control}
@@ -146,14 +126,37 @@ export default function VenueDetailsSection({ form, locations, mode }: Readonly<
           />
         )}
       />
-      <VenueLocationFields
-        value={locationValue}
-        locations={locations}
-        onChange={applyLocation}
-        errors={locationErrors}
+
+      <AdminLocationSelect
+        value={locValue}
+        onChange={(next) => {
+          const validate = categoryError || Boolean(formState.errors.city);
+          write('location_id', next.location_id, validate);
+          write('country', next.country, validate);
+          write('country_code', next.country_code, validate);
+          write('state', next.state, validate);
+          write('state_code', next.state_code, validate);
+          write('city', next.city, validate);
+          write('locality', next.locality, validate);
+          write('postal_code', next.pincode, validate);
+        }}
+        fields={['country', 'state', 'city', 'locality']}
+        direction="row"
+        required
         disabled={locked}
-        showAllErrors
+        legend="Location"
+        hint={LOCATION_HINT}
+        errors={{ country: err('country'), state: err('state'), city: err('city'), locality: err('locality') }}
       />
+      <TextField
+        label="PIN code"
+        required
+        value={values.postal_code ?? ''}
+        InputProps={{ readOnly: true }}
+        error={Boolean(formState.errors.postal_code)}
+        helperText={err('postal_code') ?? ' '}
+      />
+
       <VenueMapPreview
         parts={[
           values.address_line1,

@@ -13,6 +13,8 @@
   "dependencies": {
     "@apollo/client": "^3.10.4",
     "@duncit/availability-calendar": "workspace:*",
+    "@duncit/category": "workspace:*",
+    "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
     "@duncit/portal-pod-form": "workspace:*",
     "@hookform/resolvers": "^3.9.1",

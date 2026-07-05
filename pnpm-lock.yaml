@@ -1719,6 +1719,12 @@ importers:
       '@duncit/availability-calendar':
         specifier: workspace:*
         version: link:../../packages/availability-calendar
+      '@duncit/category':
+        specifier: workspace:*
+        version: link:../../packages/category
+      '@duncit/location':
+        specifier: workspace:*
+        version: link:../../packages/location
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs

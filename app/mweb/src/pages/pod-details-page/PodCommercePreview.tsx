@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { Box, Button, Checkbox, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Checkbox, Chip, Divider, IconButton, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import StorefrontIcon from '@mui/icons-material/Storefront';
@@ -10,7 +10,6 @@ interface Props {
   priceFormat: (amount: number) => string;
   selectedProducts: Record<string, number>;
   onSelectionChange: (next: Record<string, number>) => void;
-  onCheckout: () => void;
 }
 
 /** Footer label: a count of selected products, or a neutral total caption. */
@@ -19,7 +18,7 @@ function productCountLabel(count: number): string {
   return `${count} product${count === 1 ? '' : 's'} selected`;
 }
 
-export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, onCheckout }: Readonly<Props>) {
+export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
@@ -145,15 +144,6 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
           {priceFormat(selectedTotal)}
         </Typography>
       </Stack>
-      <Button
-        fullWidth
-        variant="contained"
-        disabled={selectedCount === 0}
-        onClick={onCheckout}
-        sx={{ mt: 1.5, borderRadius: 3, fontWeight: 900, background: 'linear-gradient(90deg, #ff4f73 0%, #ff8b5f 100%)' }}
-      >
-        Add to booking · {priceFormat(Number(pod.pod_amount || 0) + selectedTotal)}
-      </Button>
     </Box>
   );
 }

@@ -28,11 +28,6 @@ jest.mock('@/hooks/useDetails', () => ({
   }),
 }));
 
-const mockPodToggle = jest.fn();
-jest.mock('@/hooks/useFollow', () => ({
-  usePodFollow: () => ({ following: false, busy: false, toggle: mockPodToggle }),
-}));
-
 const mockBackout = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/hooks/usePodHistory', () => ({
   usePodBackout: () => ({ backout: mockBackout, busy: false }),
@@ -121,13 +116,23 @@ beforeEach(() => {
 
 describe('PodDetailsScreen', () => {
   it('shows the spinner while loading', () => {
-    mockedPod.mockReturnValue({ pod: null, savedInitially: false, isLoading: true });
+    mockedPod.mockReturnValue({
+      pod: null,
+      savedInitially: false,
+      isLoading: true,
+      refetch: jest.fn().mockResolvedValue(undefined),
+    });
     renderWithProviders(<PodDetailsScreen />);
     expect(screen.getByTestId('pod-details-loading')).toBeOnTheScreen();
   });
 
   it('shows the error state when the pod is missing and goes back', () => {
-    mockedPod.mockReturnValue({ pod: null, savedInitially: false, isLoading: false });
+    mockedPod.mockReturnValue({
+      pod: null,
+      savedInitially: false,
+      isLoading: false,
+      refetch: jest.fn().mockResolvedValue(undefined),
+    });
     renderWithProviders(<PodDetailsScreen />);
     expect(screen.getByTestId('pod-details-error')).toBeOnTheScreen();
     fireEvent.press(screen.getByLabelText('Go back'));
@@ -144,8 +149,6 @@ describe('PodDetailsScreen', () => {
     });
     renderWithProviders(<PodDetailsScreen />);
     expect(screen.getByTestId('pod-save')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('pod-follow'));
-    expect(mockPodToggle).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('pod-venue-details'));
     expect(mockNavigate).toHaveBeenCalledWith('VenueDetails', { venueId: 'v1' });
   });
@@ -237,6 +240,34 @@ describe('PodDetailsScreen', () => {
     expect(screen.getByText('Jazz Club')).toBeOnTheScreen();
   });
 
+  it('carries a selected product from the pod shop into checkout', () => {
+    mockedPod.mockReturnValue({
+      ...podData,
+      pod: {
+        ...podData.pod,
+        product_requests: [
+          {
+            product_id: 'pr1',
+            product_name: 'Drum sticks',
+            available_count: 5,
+            unit_cost: 200,
+            image_url: '',
+            images: [],
+          },
+        ],
+      },
+      savedInitially: false,
+      isLoading: false,
+    });
+    renderWithProviders(<PodDetailsScreen />);
+    fireEvent.press(screen.getByTestId('pod-shop-row-pr1'));
+    fireEvent.press(screen.getByTestId('pod-book'));
+    expect(mockNavigate).toHaveBeenCalledWith('Checkout', {
+      podId: 'p1',
+      selectedProducts: [{ product_id: 'pr1', quantity: 1 }],
+    });
+  });
+
   it('hides the Pod Shop when products are gated off, even with products', () => {
     mockFeatureFlag.mockReturnValue(false);
     mockedPod.mockReturnValue({
@@ -283,7 +314,7 @@ describe('PodDetailsScreen', () => {
     renderWithProviders(<PodDetailsScreen />);
     expect(screen.getByText('Join')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('pod-book'));
-    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1' });
+    expect(mockNavigate).toHaveBeenCalledWith('Checkout', { podId: 'p1', selectedProducts: [] });
   });
 
   it('shows "Pod Booked" for an existing member and backs out instead of paying again', async () => {

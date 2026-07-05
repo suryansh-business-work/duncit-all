@@ -83,6 +83,15 @@ export const checkoutSchema = z
 
 export type CheckoutFormValues = z.infer<typeof checkoutSchema>;
 
+/** Read-only contact shown on the checkout summary, resolved from the loaded
+ * profile so the card never depends solely on the form-prefill timing. */
+export interface CheckoutContact {
+  name: string;
+  email: string;
+  phone_extension: string;
+  phone_number: string;
+}
+
 /** Compact read-only shape of the user's saved main address (checkout summary). */
 export interface CheckoutMainAddress {
   line1: string;

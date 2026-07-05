@@ -4,7 +4,6 @@ import { buildHomeStatusEntries, buildMyStatusViewer, initials } from '../homeSt
 const baseArgs = {
   followedClubs: [] as any[],
   hostPods: [] as any[],
-  followedPods: [] as any[],
   followedUsers: [] as any[],
   followedPosts: [] as any[],
 };
@@ -18,7 +17,7 @@ describe('initials', () => {
 });
 
 describe('buildHomeStatusEntries (bug 2/3 order)', () => {
-  it('orders clubs → host pods → followed pods → users', () => {
+  it('orders clubs → your hosted pods → users', () => {
     const entries = buildHomeStatusEntries({
       ...baseArgs,
       followedClubs: [
@@ -33,19 +32,14 @@ describe('buildHomeStatusEntries (bug 2/3 order)', () => {
       hostPods: [
         { id: 'p1', pod_id: 'pod1', pod_title: 'Host Pod', club_slug: 'cl', pod_images_and_videos: [{ url: 'a.jpg', type: 'IMAGE' }] },
       ],
-      followedPods: [
-        { id: 'p2', pod_id: 'pod2', pod_title: 'Fan Pod', club_slug: 'cl', pod_images_and_videos: [{ url: 'b.mp4', type: 'VIDEO' }] },
-      ],
       followedUsers: [{ user_id: 'u1', full_name: 'Asha Verma', first_name: 'Asha', profile_photo: 'u.jpg' }],
       followedPosts: [
         { author_id: 'u1', image_url: 'st.jpg', media_type: 'IMAGE', caption: 'Hi', created_at: 'now', expires_at: 'later' },
       ],
     });
-    expect(entries.map((e) => e.key)).toEqual(['club-c1', 'pod-p1', 'pod-p2', 'user-u1']);
-    expect(entries[2].videoUrl).toBe('b.mp4');
+    expect(entries.map((e) => e.key)).toEqual(['club-c1', 'pod-p1', 'user-u1']);
     expect(entries[1].viewer.subLabel).toBe('Your pod status');
-    expect(entries[2].viewer.subLabel).toBe('Followed pod');
-    expect(entries[3].viewer.slides?.[0]?.mediaUrl).toBe('st.jpg');
+    expect(entries[2].viewer.slides?.[0]?.mediaUrl).toBe('st.jpg');
   });
 });
 

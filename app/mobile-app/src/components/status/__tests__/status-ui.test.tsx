@@ -250,28 +250,17 @@ describe('StatusRail (bug 3 composite)', () => {
     expect(mockNavigate).toHaveBeenCalledWith('PublicProfile', { userId: 'a1' });
   });
 
-  it('deep-links a followed club and pod to their detail screens (bug 3)', () => {
+  it('deep-links a followed club to its detail screen (bug 3)', () => {
     const clubItem = {
       ...userItem2,
       key: 'club-c1',
       target: { kind: 'club' as const, id: 'c1', title: 'Runners' },
     };
     mockedRail.mockReturnValue({ mine: null, items: [clubItem], isLoading: false });
-    const { rerender } = renderWithProviders(<StatusRail userName="Sam" />);
+    renderWithProviders(<StatusRail userName="Sam" />);
     fireEvent.press(screen.getByTestId('status-club-c1'));
     fireEvent.press(screen.getByTestId('status-open-target'));
     expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: 'c1', title: 'Runners' });
-
-    const podItem = {
-      ...userItem2,
-      key: 'pod-p1',
-      target: { kind: 'pod' as const, id: 'p1', title: 'Sunset Jam' },
-    };
-    mockedRail.mockReturnValue({ mine: null, items: [podItem], isLoading: false });
-    rerender(<StatusRail userName="Sam" />);
-    fireEvent.press(screen.getByTestId('status-pod-p1'));
-    fireEvent.press(screen.getByTestId('status-open-target'));
-    expect(mockNavigate).toHaveBeenCalledWith('PodDetails', { podId: 'p1', title: 'Sunset Jam' });
   });
 
   it('uses the avatar fallback when my latest story is a video', () => {

@@ -11,6 +11,7 @@ import { Reveal } from '@/animations/Reveal';
 import { HomeSkeleton } from '@/components/Skeleton';
 
 import { useBottomNavSpace } from '@/hooks/useBottomNavSpace';
+import { useBranding } from '@/hooks/useBranding';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useHomeFeed } from '@/hooks/useHomeFeed';
 import { useHomeStore } from '@/stores/home.store';
@@ -47,6 +48,7 @@ export function HomeFeed() {
   } = useHomeFeed(selectedCategoryId, filters);
   const filterCount = activeFilterCount(filters, selectedCategoryId);
   const bottomSpace = useBottomNavSpace();
+  const { data: brandingData } = useBranding();
   const { data: meData } = useMe();
   const { primary, onPrimary } = useThemeColors();
   const { openPod, openClub, openPreviousPods, openHappeningNearby } = useDetailNav();
@@ -91,6 +93,7 @@ export function HomeFeed() {
               categories={vibeCategories}
               selectedId={selectedCategoryId}
               onSelect={setSelectedCategoryId}
+              allIcon={brandingData?.branding.home_all_vibe_icon_url}
               action={
                 <HomeFilterButton
                   count={filterCount}

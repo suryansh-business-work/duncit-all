@@ -64,16 +64,12 @@ export default function PodDetailsPage() {
   const pod = data?.pod ?? null;
   const productSelection = usePodProductSelection(id, pod);
   const savedIds: string[] = data?.me?.saved_pod_ids ?? [];
-  const followingIds: string[] = data?.me?.following_pod_ids ?? [];
   const saved = pod ? savedIds.includes(pod.id) : false;
-  const following = pod ? followingIds.includes(pod.id) : false;
   const actions = usePodDetailActions({
     id,
     pod,
     saved,
     savedIds,
-    following,
-    followingIds,
     referralFromUrl,
     selectedProducts: productSelection.selectedProductList,
     refetch,
@@ -121,9 +117,7 @@ export default function PodDetailsPage() {
         title={pod.pod_title}
         saved={actions.displaySaved}
         saveLoading={actions.savePending}
-        following={following}
         onBack={() => navigate(-1)}
-        onToggleFollow={actions.onToggleFollow}
         onToggleSave={actions.onToggleSave}
         onShare={actions.onShare}
       />
@@ -146,7 +140,6 @@ export default function PodDetailsPage() {
           priceFormat={priceFormat}
           selectedProducts={productSelection.selectedProducts}
           onSelectionChange={productSelection.setSelectedProducts}
-          onCheckout={actions.onPaidCheckout}
         />
       )}
 

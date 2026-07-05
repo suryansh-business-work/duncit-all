@@ -66,7 +66,7 @@ export function SplashOverlay({ onDone }: Readonly<{ onDone?: () => void }>) {
           testID="splash-image"
           source={{ uri: splashUrl }}
           style={StyleSheet.absoluteFill}
-          resizeMode="cover"
+          resizeMode="contain"
         />
       ) : null}
       {!splashUrl ? <AuthLogo size={logoSize} /> : null}

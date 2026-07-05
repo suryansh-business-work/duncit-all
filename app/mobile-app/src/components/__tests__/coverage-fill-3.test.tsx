@@ -53,7 +53,13 @@ describe('PodSchedule venue without coordinates', () => {
 
 describe('PodShop null product list', () => {
   it('coalesces a missing product list to empty', () => {
-    renderWithProviders(<PodShop pod={{ products_enabled: false } as never} />);
+    renderWithProviders(
+      <PodShop
+        pod={{ products_enabled: false } as never}
+        selectedProducts={{}}
+        onSelectionChange={jest.fn()}
+      />,
+    );
     expect(screen.getByTestId('pod-shop-empty')).toBeOnTheScreen();
   });
 });

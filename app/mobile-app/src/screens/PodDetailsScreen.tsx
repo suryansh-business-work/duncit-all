@@ -17,11 +17,10 @@ import { PodShop } from '@/components/details/PodShop';
 import { PodSocialBar } from '@/components/details/PodSocialBar';
 import { BackoutConfirmDialog } from '@/components/pod-history/BackoutConfirmDialog';
 import { DetailSkeleton } from '@/components/Skeleton';
-import { FollowPillButton } from '@/components/FollowPillButton';
 import { usePodActions, usePodDetails } from '@/hooks/useDetails';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
-import { usePodFollow } from '@/hooks/useFollow';
 import { usePodBackout } from '@/hooks/usePodHistory';
+import { usePodProductSelection } from '@/hooks/usePodProductSelection';
 import { useExploreStore } from '@/stores/explore.store';
 import { podShareMessage } from '@/utils/pod-format';
 import type { RootStackParamList } from '@/navigation/types';
@@ -43,19 +42,17 @@ export function PodDetailsScreen() {
     membershipState,
     people,
     isLoading,
-    followingInitially,
     refetch,
   } = usePodDetails(podId);
   const { liked, likeCount, saved, savePending, toggleLike, toggleSave } = usePodActions(
     pod,
     savedInitially,
   );
-  const {
-    following,
-    busy: followBusy,
-    toggle: toggleFollow,
-  } = usePodFollow(podId, followingInitially);
   const { backout, busy: backingOut } = usePodBackout();
+  const { selectedProducts, selectedProductList, setSelectedProducts } = usePodProductSelection(
+    podId,
+    pod,
+  );
   const showProducts = useFeatureFlag('is_product_visible');
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
@@ -143,14 +140,6 @@ export function PodDetailsScreen() {
           <Reveal index={0}>
             <PodInfo pod={pod} />
           </Reveal>
-          <XStack paddingHorizontal={16} paddingBottom={4}>
-            <FollowPillButton
-              testID="pod-follow"
-              following={following}
-              busy={followBusy}
-              onToggle={() => void toggleFollow()}
-            />
-          </XStack>
           <Reveal index={1}>
             <PodSchedule
               pod={pod}
@@ -171,7 +160,11 @@ export function PodDetailsScreen() {
           </Reveal>
           {showProducts && pod.product_requests?.length ? (
             <Reveal index={3}>
-              <PodShop pod={pod} />
+              <PodShop
+                pod={pod}
+                selectedProducts={selectedProducts}
+                onSelectionChange={setSelectedProducts}
+              />
             </Reveal>
           ) : null}
           <Reveal index={4}>
@@ -192,7 +185,12 @@ export function PodDetailsScreen() {
           pod={pod}
           isFree={isFree}
           membershipState={membershipState}
-          onCheckout={() => navigation.navigate('Checkout', { podId: pod.id })}
+          onCheckout={() =>
+            navigation.navigate('Checkout', {
+              podId: pod.id,
+              selectedProducts: selectedProductList,
+            })
+          }
           onBackout={() => setBackoutOpen(true)}
         />
       ) : null}

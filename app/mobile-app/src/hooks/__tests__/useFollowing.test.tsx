@@ -6,12 +6,6 @@ import { useFollowing } from '@/hooks/useFollowing';
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
 
-const mockHome = {
-  pods: [{ id: 'p1' }, { id: 'p2' }],
-  isLoading: false,
-  hasData: true,
-  refetch: jest.fn(),
-};
 const mockFollowingState: { data: unknown; isLoading: boolean; fetch: jest.Mock } = {
   data: undefined,
   isLoading: false,
@@ -20,7 +14,6 @@ const mockFollowingState: { data: unknown; isLoading: boolean; fetch: jest.Mock 
 jest.mock('@/stores/following.store', () => ({
   useFollowingStore: (selector: (s: unknown) => unknown) => selector(mockFollowingState),
 }));
-jest.mock('@/hooks/useHomeFeed', () => ({ useHomeData: () => mockHome }));
 
 beforeEach(() => {
   mockRequest.mockReset();
@@ -28,11 +21,10 @@ beforeEach(() => {
 });
 
 describe('useFollowing', () => {
-  it('returns followed people, clubs and pods', async () => {
+  it('returns followed people and clubs', async () => {
     mockFollowingState.data = {
       me: {
         user_id: 'u',
-        following_pod_ids: ['p1'],
         following_club_ids: ['c1'],
         following_user_ids: ['f1'],
       },
@@ -44,7 +36,6 @@ describe('useFollowing', () => {
     mockRequest.mockResolvedValueOnce({ publicUsersByIds: [{ user_id: 'f1', full_name: 'Riya' }] });
     const { result } = renderHook(() => useFollowing());
     await waitFor(() => expect(result.current.people).toHaveLength(1));
-    expect(result.current.followedPods.map((p: { id: string }) => p.id)).toEqual(['p1']);
     expect(result.current.followedClubs.map((c: { id: string }) => c.id)).toEqual(['c1']);
     expect(mockFollowingState.fetch).toHaveBeenCalled();
   });
@@ -99,11 +90,9 @@ describe('useFollowing', () => {
   it('treats absent data as empty and force-refetches', () => {
     mockFollowingState.data = undefined;
     const { result } = renderHook(() => useFollowing());
-    expect(result.current.followedPods).toEqual([]);
     expect(result.current.followedClubs).toEqual([]);
     expect(result.current.people).toEqual([]);
     result.current.refetch();
     expect(mockFollowingState.fetch).toHaveBeenCalledWith(true);
-    expect(mockHome.refetch).toHaveBeenCalled();
   });
 });

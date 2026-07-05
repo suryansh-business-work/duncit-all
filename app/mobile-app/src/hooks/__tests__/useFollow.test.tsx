@@ -1,7 +1,7 @@
 import { act, renderHook } from '@testing-library/react-native';
 
 import { graphqlRequest } from '@/services/graphql.client';
-import { useClubFollow, useFollow, usePodFollow } from '@/hooks/useFollow';
+import { useClubFollow, useFollow } from '@/hooks/useFollow';
 
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
 const mockRequest = graphqlRequest as jest.Mock;
@@ -64,23 +64,7 @@ describe('useFollow', () => {
   });
 });
 
-describe('usePodFollow / useClubFollow', () => {
-  it('follows and unfollows a pod via the server list', async () => {
-    mockRequest.mockResolvedValueOnce({ followPod: { following_pod_ids: ['p1'] } });
-    const follow = renderHook(() => usePodFollow('p1', false));
-    await act(async () => {
-      await follow.result.current.toggle();
-    });
-    expect(follow.result.current.following).toBe(true);
-
-    mockRequest.mockResolvedValueOnce({ unfollowPod: { following_pod_ids: [] } });
-    const unfollow = renderHook(() => usePodFollow('p1', true));
-    await act(async () => {
-      await unfollow.result.current.toggle();
-    });
-    expect(unfollow.result.current.following).toBe(false);
-  });
-
+describe('useClubFollow', () => {
   it('follows and unfollows a club via the server list', async () => {
     mockRequest.mockResolvedValueOnce({ followClub: { following_club_ids: ['c1'] } });
     const follow = renderHook(() => useClubFollow('c1', false));

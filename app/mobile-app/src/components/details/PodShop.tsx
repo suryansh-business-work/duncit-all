@@ -1,61 +1,41 @@
-import { AppImage } from '@/components/AppImage';
-
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
+import { PodShopProductRow } from './PodShopProductRow';
 
-type Product = PodDetail['product_requests'][number];
-
-function ProductRow({ product }: Readonly<{ product: Product }>) {
-  const image = product.image_url || product.images?.[0] || '';
-  return (
-    <XStack
-      gap={10}
-      alignItems="center"
-      padding={10}
-      borderRadius={14}
-      borderWidth={1}
-      borderColor="$borderColor"
-      backgroundColor="$surface"
-    >
-      <YStack
-        width={48}
-        height={48}
-        borderRadius={10}
-        overflow="hidden"
-        backgroundColor="rgba(255,139,95,0.18)"
-        alignItems="center"
-        justifyContent="center"
-      >
-        {image ? (
-          <AppImage source={{ uri: image }} style={{ width: 48, height: 48 }} resizeMode="cover" />
-        ) : (
-          <MaterialIcons name="shopping-bag" size={20} color="#ff8b5f" />
-        )}
-      </YStack>
-      <YStack flex={1} gap={2}>
-        <Text fontSize={14} fontWeight="800" color="$color">
-          {product.product_name}
-        </Text>
-        <Text fontSize={12} color="$muted">
-          Available {product.available_count}
-        </Text>
-      </YStack>
-      <Text fontSize={14} fontWeight="900" color="$color">
-        ₹{product.unit_cost}
-      </Text>
-    </XStack>
-  );
+interface PodShopProps {
+  pod: PodDetail;
+  selectedProducts: Record<string, number>;
+  onSelectionChange: (next: Record<string, number>) => void;
 }
 
-/** Pod Shop preview — lists the pod's real products (name · availability · price)
- * with an explicit empty state. RN port of mWeb's PodCommercePreview; shows only
- * real products, never perks/placeholder data. */
-export function PodShop({ pod }: Readonly<{ pod: PodDetail }>) {
+/** Footer caption: neutral when nothing is picked, else the count of picks. */
+function productCountLabel(count: number): string {
+  if (count === 0) return 'Selected product total';
+  return `${count} product${count === 1 ? '' : 's'} selected`;
+}
+
+/** Pod Shop — lists the pod's real products with buyer selection (checkbox +
+ * quantity steppers) tracked as a `{ productId: qty }` map, plus a running
+ * selected-total. RN port of mWeb's PodCommercePreview; only real products, no
+ * perks/placeholder data. */
+export function PodShop({ pod, selectedProducts, onSelectionChange }: Readonly<PodShopProps>) {
   const { primary } = useThemeColors();
   const products = pod.product_requests ?? [];
+  const selectedTotal = products.reduce(
+    (sum, item) => sum + (selectedProducts[item.product_id] ?? 0) * Number(item.unit_cost ?? 0),
+    0,
+  );
+  const selectedCount = Object.values(selectedProducts).filter((qty) => qty > 0).length;
+
+  const updateQuantity = (productId: string, quantity: number) => {
+    const next = { ...selectedProducts };
+    if (quantity <= 0) delete next[productId];
+    else next[productId] = quantity;
+    onSelectionChange(next);
+  };
 
   return (
     <YStack
@@ -102,10 +82,27 @@ export function PodShop({ pod }: Readonly<{ pod: PodDetail }>) {
       ) : (
         <YStack gap={8}>
           {products.map((product) => (
-            <ProductRow key={product.product_id} product={product} />
+            <PodShopProductRow
+              key={product.product_id}
+              product={product}
+              quantity={selectedProducts[product.product_id] ?? 0}
+              primary={primary}
+              onUpdate={updateQuantity}
+            />
           ))}
         </YStack>
       )}
+
+      {products.length > 0 ? (
+        <XStack justifyContent="space-between" alignItems="center" testID="pod-shop-total">
+          <Text fontSize={12} color="$muted">
+            {productCountLabel(selectedCount)}
+          </Text>
+          <Text fontSize={15} fontWeight="900" color="$color">
+            ₹{selectedTotal}
+          </Text>
+        </XStack>
+      ) : null}
     </YStack>
   );
 }

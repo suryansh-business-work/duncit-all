@@ -4,13 +4,17 @@ import { CheckoutScreen } from '@/screens/CheckoutScreen';
 import { useCheckout } from '@/hooks/useCheckout';
 import { renderWithProviders } from '@/utils/test-utils';
 
-jest.mock('@/hooks/useCheckout', () => ({ useCheckout: jest.fn() }));
+jest.mock('@/hooks/useCheckout', () => ({
+  ...jest.requireActual('@/hooks/useCheckout'),
+  useCheckout: jest.fn(),
+}));
 const mockDownloadTicket = jest.fn().mockResolvedValue(undefined);
 jest.mock('@/hooks/usePodHistory', () => ({
   usePodTicket: () => ({ download: mockDownloadTicket }),
 }));
 const mockNavigate = jest.fn();
-let mockRouteParams: { podId: string } | undefined = { podId: 'p1' };
+type RouteParams = { podId: string; selectedProducts?: { product_id: string; quantity: number }[] };
+let mockRouteParams: RouteParams | undefined = { podId: 'p1' };
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate, goBack: jest.fn() }),
   useRoute: () => ({ params: mockRouteParams }),
@@ -59,6 +63,7 @@ const baseHook = (overrides: Record<string, unknown> = {}) => ({
   pod,
   me: null,
   initialValues: contactValues,
+  productTotal: 0,
   availableCoupons: [],
   isLoading: false,
   pay,
@@ -122,6 +127,40 @@ describe('CheckoutScreen', () => {
     });
     rerender(<CheckoutScreen />);
     expect(screen.getByTestId('checkout-unavailable')).toBeOnTheScreen();
+  });
+
+  it('renders the contact from the loaded profile (not just the form prefill)', () => {
+    mockedCheckout.mockReturnValue(
+      baseHook({
+        me: {
+          first_name: 'Neha',
+          last_name: 'Verma',
+          email: 'neha@d.com',
+          phone_extension: '+91',
+          phone_number: '9000000000',
+        },
+      }),
+    );
+    renderWithProviders(<CheckoutScreen />);
+    expect(screen.getByText('Neha Verma')).toBeOnTheScreen();
+    expect(screen.getByText('neha@d.com')).toBeOnTheScreen();
+    expect(screen.getByText('+91 9000000000')).toBeOnTheScreen();
+  });
+
+  it('shows a spinner in the contact card while the profile is still loading', () => {
+    mockedCheckout.mockReturnValue(baseHook({ me: null, isLoading: true }));
+    renderWithProviders(<CheckoutScreen />);
+    expect(screen.getByTestId('checkout-contact-loading')).toBeOnTheScreen();
+  });
+
+  it('carries the selected products into the payable amount', async () => {
+    mockRouteParams = { podId: 'p1', selectedProducts: [{ product_id: 'pr1', quantity: 2 }] };
+    mockedCheckout.mockReturnValue(baseHook({ productTotal: 200 }));
+    renderWithProviders(<CheckoutScreen />);
+    fill();
+    fireEvent.press(screen.getByTestId('checkout-submit'));
+    // pod_amount 500 + product total 200 = 700.
+    await waitFor(() => expect(pay).toHaveBeenCalledWith(expect.anything(), 700, null));
   });
 
   it('pays and shows the success view', async () => {

@@ -164,6 +164,30 @@ function buildBuyerFields(input: any, user: any) {
   return { user_name: name, user_email: email, user_phone: contactPhone, billing, billing_address };
 }
 
+/** Snapshot the selected products as invoice-ready lines (name/qty/unit/gross),
+ * resolved against the pod's product_requests. Empty when nothing was selected. */
+function productLinesFor(pod: any, selectedProducts: any[] = []) {
+  const byId = new Map<string, any>(
+    (pod?.product_requests ?? []).map((item: any) => [String(item.product_id), item])
+  );
+  const lines: Array<{ product_id: string; name: string; quantity: number; unit_cost: number; gross: number }> = [];
+  for (const sel of selectedProducts) {
+    const productId = String(sel?.product_id || '');
+    const quantity = Number(sel?.quantity) || 0;
+    const product = byId.get(productId);
+    if (!productId || quantity <= 0 || !product) continue;
+    const unit_cost = Number(product.unit_cost || 0);
+    lines.push({
+      product_id: productId,
+      name: product.product_name || 'Product',
+      quantity,
+      unit_cost,
+      gross: round2(unit_cost * quantity),
+    });
+  }
+  return lines;
+}
+
 /** The metadata blob recorded on every payment doc (source + pod breakdown). */
 const paymentMetadata = (input: any, pod: any) => ({
   source: 'app_checkout',
@@ -172,6 +196,8 @@ const paymentMetadata = (input: any, pod: any) => ({
   ticket_amount: pod ? Number(pod.pod_amount || 0) : null,
   product_cost_total: pod ? selectedProductTotal(pod, input.selected_products ?? []) : null,
   selected_products: input.selected_products ?? [],
+  // Invoice-ready product lines (name/qty/unit/gross) for itemization.
+  product_lines: pod ? productLinesFor(pod, input.selected_products ?? []) : [],
 });
 
 /** Apply an optional coupon to the gross payable, returning the priced quote, the
@@ -268,6 +294,37 @@ function billingAddressLines(b?: IPayment['billing']): string[] {
     .filter(Boolean);
 }
 
+/**
+ * Invoice line items for a payment. When products were bought alongside the pod
+ * ticket, split the (net) subtotal into an "Event ticket" line + one line per
+ * product, in proportion to each part's gross price — so the lines still sum to
+ * the subtotal while itemizing what the buyer paid for. Falls back to a single
+ * line (= subtotal) when there are no products.
+ */
+function buildInvoiceItems(doc: IPayment): Array<{ description: string; qty: number; unit_price: number; amount: number }> {
+  const meta = (doc.metadata ?? {}) as Record<string, any>;
+  const productLines: any[] = Array.isArray(meta.product_lines) ? meta.product_lines : [];
+  const ticketGross = round2(Number(meta.ticket_amount ?? 0));
+  const productGross = round2(productLines.reduce((sum, l) => sum + Number(l.gross || 0), 0));
+  const totalGross = round2(ticketGross + productGross);
+
+  if (productLines.length === 0 || totalGross <= 0) {
+    return [{ description: doc.description, qty: 1, unit_price: doc.subtotal, amount: doc.subtotal }];
+  }
+
+  // Proportional share of the net subtotal, largest-remainder-safe: the ticket
+  // line absorbs the rounding residue so the items sum to the subtotal exactly.
+  const shareOf = (gross: number) => round2((doc.subtotal * gross) / totalGross);
+  const items = productLines.map((l) => {
+    const amount = shareOf(Number(l.gross || 0));
+    const qty = Number(l.quantity) || 1;
+    return { description: l.name || 'Product', qty, unit_price: round2(amount / qty), amount };
+  });
+  const productsNet = round2(items.reduce((sum, it) => sum + it.amount, 0));
+  const ticketNet = round2(doc.subtotal - productsNet);
+  return [{ description: 'Event ticket', qty: 1, unit_price: ticketNet, amount: ticketNet }, ...items];
+}
+
 /** Invoice bill-to fields from a payment — prefers the billing snapshot, falls
  * back to the flat buyer identity for older payments without a billing block.
  * Both the main contact email and a differing billing email print on the invoice. */
@@ -299,7 +356,7 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
       business_address: fs.business_address,
       business_gstin: fs.business_gstin,
       currency_symbol: fs.currency_symbol,
-      items: [{ description: doc.description, qty: 1, unit_price: doc.subtotal, amount: doc.subtotal }],
+      items: buildInvoiceItems(doc),
       subtotal: doc.subtotal,
       platform_fee_amount: doc.platform_fee_amount,
       platform_fee_pct: doc.platform_fee_pct,
@@ -598,14 +655,7 @@ export const paymentService = {
       business_address: fs.business_address,
       business_gstin: fs.business_gstin,
       currency_symbol: doc.currency_symbol,
-      items: [
-        {
-          description: doc.description,
-          qty: 1,
-          unit_price: doc.subtotal,
-          amount: doc.subtotal,
-        },
-      ],
+      items: buildInvoiceItems(doc),
       subtotal: doc.subtotal,
       platform_fee_amount: doc.platform_fee_amount,
       platform_fee_pct: doc.platform_fee_pct,

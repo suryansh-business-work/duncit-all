@@ -45,38 +45,30 @@ beforeEach(() => {
       {
         id: 'c1',
         club_name: 'Runners',
-        club_feature_images_and_videos: [{ url: 'club.jpg', type: 'IMAGE' }],
+        club_feature_images_and_videos: [{ url: 'club.mp4', type: 'VIDEO' }],
       },
       { id: 'c2', club_name: 'Empty', club_feature_images_and_videos: [] },
-    ],
-    followedPods: [
-      {
-        id: 'p1',
-        pod_title: 'Sunset Jam',
-        pod_images_and_videos: [{ url: 'pod.mp4', type: 'VIDEO' }],
-      },
     ],
     isLoading: false,
   });
 });
 
 describe('useStoryRail (bug 3)', () => {
-  it('mirrors mWeb order: clubs → pods → followed users (with media only)', () => {
+  it('mirrors mWeb order: clubs → followed users (with media only)', () => {
     const { result } = renderHook(() => useStoryRail());
-    expect(result.current.items.map((i) => i.key)).toEqual(['club-c1', 'pod-p1', 'user-u1']);
+    expect(result.current.items.map((i) => i.key)).toEqual(['club-c1', 'user-u1']);
   });
 
   it('builds deep-link targets and sub-labels for each source', () => {
     const { result } = renderHook(() => useStoryRail());
-    const [club, pod, user] = result.current.items;
+    const [club, user] = result.current.items;
     expect(club?.target).toEqual({ kind: 'club', id: 'c1', title: 'Runners' });
-    expect(pod?.target).toEqual({ kind: 'pod', id: 'p1', title: 'Sunset Jam' });
-    expect(pod?.cover.mediaType).toBe('VIDEO');
+    expect(club?.cover.mediaType).toBe('VIDEO');
     expect(user?.target).toEqual({ kind: 'user', id: 'u1' });
     expect(user?.subLabel).toBe('Asha Verma');
   });
 
-  it('skips clubs/pods without media and people without an active story', () => {
+  it('skips clubs without media and people without an active story', () => {
     const { result } = renderHook(() => useStoryRail());
     const keys = result.current.items.map((i) => i.key);
     expect(keys).not.toContain('club-c2'); // no media
@@ -102,7 +94,6 @@ describe('useStoryRail (bug 3)', () => {
         },
         { id: 'c4', club_name: 'NoMediaField' },
       ],
-      followedPods: [{ id: 'p2', pod_title: 'NoMediaPod' }],
       isLoading: false,
     });
     const { result } = renderHook(() => useStoryRail());
@@ -112,9 +103,8 @@ describe('useStoryRail (bug 3)', () => {
     expect(user?.subLabel).toBeUndefined(); // full_name null → undefined
     const club = result.current.items.find((i) => i.key === 'club-c3');
     expect(club?.slides[0]?.mediaType).toBe('IMAGE'); // null type → IMAGE
-    // Clubs/pods without a media field are skipped (?? [] → no cover slide).
+    // A club without a media field is skipped (?? [] → no cover slide).
     expect(result.current.items.find((i) => i.key === 'club-c4')).toBeUndefined();
-    expect(result.current.items.find((i) => i.key === 'pod-p2')).toBeUndefined();
   });
 
   it('passes through my own story and a combined loading flag', () => {
@@ -122,7 +112,6 @@ describe('useStoryRail (bug 3)', () => {
     mockedFollowing.mockReturnValue({
       people: [],
       followedClubs: [],
-      followedPods: [],
       isLoading: false,
     });
     const { result } = renderHook(() => useStoryRail());

@@ -15,6 +15,7 @@ import {
 import CategoryFormDialog from './CategoryFormDialog';
 import CategoriesColumns from './CategoriesColumns';
 import CategoryDeleteDialog from './CategoryDeleteDialog';
+import AllVibeIconCard from './AllVibeIconCard';
 import { buildCreateInput, buildMediaFromText, buildUpdateInput } from './helpers';
 import { isImageIconValue } from '../../components/IconPickerField';
 
@@ -142,6 +143,8 @@ export default function CategoriesPage() {
           item to drill down.
         </Typography>
       </Box>
+
+      <AllVibeIconCard />
 
       <CategoriesColumns
         superSel={superSel}

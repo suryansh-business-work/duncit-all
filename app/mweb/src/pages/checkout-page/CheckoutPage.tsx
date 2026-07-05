@@ -29,6 +29,7 @@ import {
   PUBLIC_FINANCE,
   UPDATE_MY_PROFILE,
   VERIFY_RAZORPAY_PAYMENT,
+  type CheckoutContact,
   type CheckoutForm,
   type CheckoutState,
   type CouponPreview,
@@ -67,7 +68,9 @@ export default function CheckoutPage() {
   const checkoutPodId = podId || state.pod_id || search.get('pod_id') || '';
 
   const { data: financeData, loading: financeLoading } = useQuery(PUBLIC_FINANCE);
-  const { data: meData } = useQuery(CHECKOUT_ME);
+  const { data: meData, loading: meLoading } = useQuery(CHECKOUT_ME, {
+    fetchPolicy: 'cache-and-network',
+  });
   const { data: podData, loading: podLoading, error: podError } = useQuery(CHECKOUT_POD, {
     variables: { id: checkoutPodId },
     skip: !checkoutPodId,
@@ -241,8 +244,19 @@ export default function CheckoutPage() {
   }, [meData]);
 
   const pod = podData?.pod;
-  const mainAddress = meData?.me?.address ?? null;
+  const me = meData?.me;
+  const mainAddress = me?.address ?? null;
   const hasMainAddress = !!mainAddress?.line1?.trim();
+  // Resolve the buyer's contact straight from the loaded `me` query so the
+  // read-only card never depends on the prefill reset → useWatch timing.
+  const meContact: CheckoutContact | null = me
+    ? {
+        fullName: [me.first_name, me.last_name].filter(Boolean).join(' ').trim(),
+        email: me.email ?? '',
+        phoneExtension: me.phone_extension ?? '',
+        phoneNumber: me.phone_number ?? '',
+      }
+    : null;
   const selectedProducts = state.selected_products ?? [];
   const baseAmount = Number(pod?.pod_amount ?? state.amount ?? search.get('amount') ?? 0);
   const productAmount = selectedProducts.reduce((sum, item) => {
@@ -291,6 +305,8 @@ export default function CheckoutPage() {
           }
           mainAddress={mainAddress}
           hasMainAddress={hasMainAddress}
+          contact={meContact}
+          contactLoading={meLoading && !me}
           coupon={coupon}
           couponCode={couponCode}
           setCouponCode={setCouponCode}

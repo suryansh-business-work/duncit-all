@@ -121,6 +121,18 @@ describe('HomeVibeChips', () => {
     expect(screen.queryByTestId('vibe-chip-all-emoji')).toBeNull();
     expect(screen.queryByTestId('vibe-chip-all-image')).toBeNull();
   });
+
+  it('renders the admin-managed All-tab icon as an image when provided', () => {
+    renderWithProviders(
+      <HomeVibeChips
+        categories={categories}
+        selectedId=""
+        onSelect={jest.fn()}
+        allIcon="https://cdn.duncit/all.png"
+      />,
+    );
+    expect(screen.getByTestId('vibe-chip-all-image')).toBeOnTheScreen();
+  });
 });
 
 describe('PodCard', () => {

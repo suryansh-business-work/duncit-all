@@ -9,7 +9,6 @@ interface HomeStatusRailProps {
   me?: any;
   branding?: any;
   followedClubs: any[];
-  followedPods: any[];
   hostPods: any[];
   followedPosts: any[];
   followedUsers: any[];
@@ -19,7 +18,6 @@ export default function HomeStatusRail({
   me,
   branding,
   followedClubs,
-  followedPods,
   hostPods,
   followedPosts,
   followedUsers,
@@ -32,11 +30,10 @@ export default function HomeStatusRail({
       buildHomeStatusEntries({
         followedClubs,
         hostPods,
-        followedPods,
         followedUsers,
         followedPosts,
       }),
-    [followedClubs, hostPods, followedPods, followedUsers, followedPosts],
+    [followedClubs, hostPods, followedUsers, followedPosts],
   );
 
   const myViewer = useMemo(() => buildMyStatusViewer(me), [me]);

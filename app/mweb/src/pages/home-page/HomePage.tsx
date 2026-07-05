@@ -42,7 +42,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
     categoryChips,
     vibeCategories,
     followedClubs,
-    followedPods,
     hostPods,
     followedPosts,
     myStories,
@@ -86,7 +85,6 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         me={me ? { ...me, my_stories: myStories } : me}
         branding={branding}
         followedClubs={followedClubs}
-        followedPods={followedPods}
         hostPods={hostPods}
         followedPosts={followedPosts}
         followedUsers={followedUsers}
@@ -95,6 +93,7 @@ export default function HomePage({ superCategorySlug, locationId, zoneName }: Re
         categories={vibeCategories}
         selectedId={categoryId}
         onSelect={setCategoryId}
+        allIcon={branding?.home_all_vibe_icon_url}
         action={
           <FilterMenu
             open={filtersOpen}

@@ -95,12 +95,16 @@ describe('SplashOverlay', () => {
     expect(screen.getByTestId('splash-image')).toBeOnTheScreen();
   });
 
-  it('renders the admin-configured splash image full-bleed', () => {
+  it('renders the admin-configured splash image contained (no crop) on brand red', () => {
     mockedUseBranding.mockReturnValue(
       brandingWith({ mobile_splash_url: 'https://cdn.duncit.com/splash.jpg' }),
     );
     renderWithProviders(<SplashOverlay />);
-    expect(screen.getByTestId('splash-image')).toBeOnTheScreen();
+    const image = screen.getByTestId('splash-image');
+    expect(image).toBeOnTheScreen();
+    // A wide wordmark-on-red asset must fit whole — AppImage maps resizeMode
+    // "contain" to expo-image's contentFit, never the cropping "cover".
+    expect(image.props.contentFit).toBe('contain');
     expect(screen.queryByTestId('auth-logo-mark')).toBeNull();
   });
 

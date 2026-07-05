@@ -36,10 +36,10 @@ describe('home / following / chat stores', () => {
   it('following + chat: fetch populate data', async () => {
     useFollowingStore.setState({ data: undefined, isLoading: false });
     mockRequest.mockResolvedValueOnce({
-      me: { user_id: 'u', following_pod_ids: ['p1'], following_user_ids: [] },
+      me: { user_id: 'u', following_club_ids: ['c1'], following_user_ids: [] },
     });
     await useFollowingStore.getState().fetch();
-    expect(useFollowingStore.getState().data?.me?.following_pod_ids).toEqual(['p1']);
+    expect(useFollowingStore.getState().data?.me?.following_club_ids).toEqual(['c1']);
 
     useChatStore.setState({ data: undefined, isLoading: false });
     mockRequest.mockResolvedValueOnce({ myChatRooms: [{ id: 'r1' }] });

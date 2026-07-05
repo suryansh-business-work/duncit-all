@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { useWindowDimensions } from 'react-native';
 import { AppImage } from '@/components/AppImage';
 
 import { useNavigation } from '@react-navigation/native';
@@ -8,19 +7,17 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { FeedList } from '@/components/FeedList';
-import { PodCard } from '@/components/home/PodCard';
 import { TabScreen } from '@/components/TabScreen';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useFollowing, type FollowedClub, type FollowedPerson } from '@/hooks/useFollowing';
 import type { RootStackParamList } from '@/navigation/types';
 
-type Tab = 'PEOPLE' | 'CLUBS' | 'PODS';
-const TABS: Tab[] = ['PEOPLE', 'CLUBS', 'PODS'];
-const TAB_LABELS: Record<Tab, string> = { PEOPLE: 'People', CLUBS: 'Clubs', PODS: 'Pods' };
+type Tab = 'PEOPLE' | 'CLUBS';
+const TABS: Tab[] = ['PEOPLE', 'CLUBS'];
+const TAB_LABELS: Record<Tab, string> = { PEOPLE: 'People', CLUBS: 'Clubs' };
 const EMPTY_TEXT: Record<Tab, string> = {
   PEOPLE: "You're not following anyone yet. Follow people to see them here.",
   CLUBS: "You're not following any clubs yet. Follow a club to see it here.",
-  PODS: "You're not following any pods yet. Follow a pod to see it here.",
 };
 
 /** One followed person — avatar + name, opens their public profile. */
@@ -107,20 +104,17 @@ function ClubRow({ club, onPress }: Readonly<{ club: FollowedClub; onPress: () =
   );
 }
 
-/** Following tab — the people, clubs and pods the user follows (parity with
- * mWeb's FollowPage). Fixes followed people/clubs not appearing here. */
+/** Following tab — the people and clubs the user follows (parity with mWeb's
+ * FollowPage). Fixes followed people/clubs not appearing here. */
 export function FollowingScreen() {
-  const { people, followedClubs, followedPods, isLoading, refetch } = useFollowing();
-  const { openPod, openClub } = useDetailNav();
+  const { people, followedClubs, isLoading, refetch } = useFollowing();
+  const { openClub } = useDetailNav();
   const navigation = useNavigation<NativeStackNavigationProp<RootStackParamList>>();
-  const { width } = useWindowDimensions();
-  const cardWidth = Math.min(width - 32, 520);
   const [tab, setTab] = useState<Tab>('PEOPLE');
 
   const counts: Record<Tab, number> = {
     PEOPLE: people.length,
     CLUBS: followedClubs.length,
-    PODS: followedPods.length,
   };
 
   return (
@@ -181,20 +175,6 @@ export function FollowingScreen() {
           keyExtractor={(club) => club.id}
           renderItem={(club) => (
             <ClubRow club={club} onPress={() => openClub(club.id, club.club_name)} />
-          )}
-        />
-      ) : null}
-      {tab === 'PODS' ? (
-        <FeedList
-          testID="following-list"
-          isLoading={isLoading}
-          isEmpty={counts.PODS === 0}
-          emptyText={EMPTY_TEXT.PODS}
-          onRefresh={refetch}
-          data={followedPods}
-          keyExtractor={(pod) => pod.id}
-          renderItem={(pod) => (
-            <PodCard pod={pod} width={cardWidth} onPress={() => openPod(pod.id, pod.pod_title)} />
           )}
         />
       ) : null}

@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { Image } from 'react-native';
+import { Image, useWindowDimensions } from 'react-native';
 import { Spinner, Text, YStack } from 'tamagui';
 
 import { useBranding } from '@/hooks/useBranding';
@@ -17,6 +17,7 @@ function isRasterUrl(url?: string | null): url is string {
  */
 export function AuthLogo({ size = 58 }: Readonly<{ size?: number }>) {
   const { data, isLoading } = useBranding();
+  const { width: windowWidth } = useWindowDimensions();
   const branding = data?.branding;
   const name = branding?.app_name ?? 'Duncit';
   const logoUrl = branding?.mobile_logo_url || branding?.logo_url;
@@ -34,8 +35,10 @@ export function AuthLogo({ size = 58 }: Readonly<{ size?: number }>) {
   }
 
   if (isRasterUrl(logoUrl)) {
-    // Cap width at 4× height (matches mWeb's maxWidth clamp) for very wide marks.
-    const width = Math.min(size * aspect, size * 4);
+    // Cap width at 4× height (matches mWeb's maxWidth clamp) for very wide marks,
+    // and never wider than the viewport (minus padding) so a very wide wordmark
+    // can't overflow and clip on a narrow phone.
+    const width = Math.min(size * aspect, size * 4, windowWidth - 48);
     return (
       <Image
         testID="auth-logo-image"

@@ -10,7 +10,7 @@ import {
 import LockIcon from '@mui/icons-material/Lock';
 import { alpha, useTheme } from '@mui/material/styles';
 import type { Control } from 'react-hook-form';
-import type { AvailableCoupon, CheckoutForm, CouponPreview } from './queries';
+import type { AvailableCoupon, CheckoutContact, CheckoutForm, CouponPreview } from './queries';
 import { CheckoutFields, type PostalAddressParts } from './checkout';
 import CouponField from './CouponField';
 import { formatMoney } from './checkoutMath';
@@ -25,6 +25,8 @@ interface Props {
   dummyMode: boolean;
   mainAddress: PostalAddressParts | null;
   hasMainAddress: boolean;
+  contact: CheckoutContact | null;
+  contactLoading: boolean;
   effectiveTotal: number;
   coupon: CouponPreview | null;
   couponCode: string;
@@ -46,6 +48,8 @@ export default function PaymentDetailsCard({
   dummyMode,
   mainAddress,
   hasMainAddress,
+  contact,
+  contactLoading,
   effectiveTotal,
   coupon,
   couponCode,
@@ -95,6 +99,8 @@ export default function PaymentDetailsCard({
             selectMenuProps={selectMenuProps}
             mainAddress={mainAddress}
             hasMainAddress={hasMainAddress}
+            contact={contact}
+            contactLoading={contactLoading}
           />
           <CouponField
             code={couponCode}

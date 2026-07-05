@@ -69,6 +69,17 @@ export const MobileCheckoutPodDocument = gql(`
         amount
         note
       }
+      products_enabled
+      product_requests {
+        product_id
+        product_name
+        image_url
+        unit_cost
+        quantity
+        available_count
+        total_cost
+      }
+      product_cost_total
       zone_name
       pod_images_and_videos {
         url

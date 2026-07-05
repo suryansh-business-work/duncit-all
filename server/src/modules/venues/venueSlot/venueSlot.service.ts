@@ -685,4 +685,41 @@ export const venueSlotService = {
       { $set: { status: 'AVAILABLE', booked_by_pod_id: null } }
     );
   },
+
+  /** Atomic external booking (public developer API): AVAILABLE → BOOKED keyed
+   * on the API key, not a pod. Returns null when the slot is not available so
+   * the REST layer can answer 409. */
+  async bookExternal(
+    slotId: string,
+    apiKeyId: string,
+    externalRef?: string | null
+  ): Promise<IVenueSlot | null> {
+    if (!Types.ObjectId.isValid(slotId)) return null;
+    return VenueSlotModel.findOneAndUpdate(
+      { _id: new Types.ObjectId(slotId), status: 'AVAILABLE' },
+      {
+        $set: {
+          status: 'BOOKED',
+          booked_by_api_key_id: new Types.ObjectId(apiKeyId),
+          external_ref: String(externalRef ?? '').trim().slice(0, 120),
+        },
+      },
+      { new: true }
+    );
+  },
+
+  /** Release an external booking — a key can only cancel its OWN bookings.
+   * Returns null when the slot is not booked by this key (caller → 409). */
+  async releaseExternal(slotId: string, apiKeyId: string): Promise<IVenueSlot | null> {
+    if (!Types.ObjectId.isValid(slotId)) return null;
+    return VenueSlotModel.findOneAndUpdate(
+      {
+        _id: new Types.ObjectId(slotId),
+        status: 'BOOKED',
+        booked_by_api_key_id: new Types.ObjectId(apiKeyId),
+      },
+      { $set: { status: 'AVAILABLE', booked_by_api_key_id: null, external_ref: '' } },
+      { new: true }
+    );
+  },
 };

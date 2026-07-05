@@ -3,6 +3,24 @@ import type { ApolloClient } from '@apollo/client';
 import type { AccentColors, ComponentExtend } from '@duncit/theme';
 import type { UserProviderProps } from '@duncit/user-context';
 
+/** A sidebar navigation entry. Items with `children` render as a collapsible group. */
+export interface AppNavItem {
+  label: string;
+  /** Route the item links to. Optional when the item is purely a group header. */
+  to?: string;
+  icon?: string;
+  /** Optional nested children — rendered as a collapsible group. */
+  children?: AppNavItem[];
+}
+
+/** One entry of the header-wide global search. */
+export interface SearchItem {
+  label: string;
+  to: string;
+  keywords?: string[];
+  section?: string;
+}
+
 /** Portal-specific values the shared Shell needs to boot the provider tree. */
 export interface PortalBootConfig {
   /** Stable portal key, e.g. `crm`. Drives the user-cache storage key + PortalModeGate. */
@@ -15,6 +33,16 @@ export interface PortalBootConfig {
   colorModeKey: string;
   /** Brand accent passed to the shared theme; omit to use the Duncit default. */
   accent?: AccentColors;
+  /** Human console title, e.g. `Duncit CRM` — the chrome's header brand link. */
+  fullName?: string;
+  /** Sidebar navigation tree rendered by the shared chrome. */
+  nav?: AppNavItem[];
+  /** Header-wide search entries; derived from `nav` when omitted. */
+  searchItems?: SearchItem[];
+  /** Roles granting access to this console (SUPER_ADMIN always passes). */
+  requiredRoles?: string[];
+  /** Sidebar footer caption (defaults to `© Duncit`). */
+  footerCaption?: string;
 }
 
 /** Everything `mountPortal` needs. Only the route tree + a handful of portal

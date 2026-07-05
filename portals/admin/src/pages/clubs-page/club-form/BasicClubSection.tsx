@@ -15,10 +15,12 @@ import {
   type CategoryDoc,
 } from '@duncit/category';
 import type { ClubForm } from '../queries';
+import type { ClubErrors } from './clubValidation';
 
 interface Props {
   form: ClubForm;
   setForm: (f: ClubForm | ((prev: ClubForm) => ClubForm)) => void;
+  errors?: ClubErrors;
   superCats: any[];
   allCats: any[];
   locations: LocationDoc[];
@@ -27,13 +29,13 @@ interface Props {
 const CATEGORY_HINT =
   'Venues auto-match to this club by location + category — pick the same Super & Sub the venues sit under.';
 const LOCATION_HINT =
-  'The city (and optional locality) the club operates in. Approved venues here in the same category auto-link to this club.';
+  'Approved venues here in the same category auto-link to this club.';
 
 /** Basic club fields + the shared Category (Super → Category → Sub) and Location
  * (Country → State → City → Locality) pickers, each in its own hinted fieldset.
  * The club persists super_category_id + category_id (the sub) + location_id +
  * locality. Location + category together drive the auto-matched venues. */
-export default function BasicClubSection({ form, setForm, allCats, locations }: Readonly<Props>) {
+export default function BasicClubSection({ form, setForm, errors, allCats, locations }: Readonly<Props>) {
   // Both pickers keep their own full cascade value; the club persists only the
   // ids. Hydrate from the saved ids when a club is opened for editing.
   const initialLocation = useMemo<AdminLocationValue>(
@@ -60,13 +62,25 @@ export default function BasicClubSection({ form, setForm, allCats, locations }: 
         onChange={(e) => setForm({ ...form, club_name: e.target.value })}
         fullWidth
         required
+        error={!!errors?.club_name}
         helperText={
-          form.id
+          errors?.club_name ??
+          (form.id
             ? `URL slug: ${form.club_id || '—'}`
-            : 'A URL-friendly slug is auto-generated from this name'
+            : 'A URL-friendly slug is auto-generated from this name')
         }
       />
-      <TextField label="Description" value={form.club_description} onChange={(e) => setForm({ ...form, club_description: e.target.value })} fullWidth multiline minRows={2} />
+      <TextField
+        label="Description"
+        value={form.club_description}
+        onChange={(e) => setForm({ ...form, club_description: e.target.value })}
+        fullWidth
+        multiline
+        minRows={2}
+        required
+        error={!!errors?.club_description}
+        helperText={errors?.club_description ?? 'A short intro shown at the top of the club page.'}
+      />
 
       <AdminCategorySelect
         value={catValue}
@@ -78,6 +92,7 @@ export default function BasicClubSection({ form, setForm, allCats, locations }: 
         required
         legend="Category"
         hint={CATEGORY_HINT}
+        errors={{ super: errors?.super_category_id, sub: errors?.category_id }}
       />
 
       <AdminLocationSelect
@@ -91,6 +106,7 @@ export default function BasicClubSection({ form, setForm, allCats, locations }: 
         required
         legend="Location"
         hint={LOCATION_HINT}
+        errors={{ city: errors?.location_id }}
       />
 
       {form.id && (

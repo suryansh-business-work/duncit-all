@@ -6,9 +6,10 @@ import {
   DialogContent,
   DialogTitle,
 } from '@mui/material';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import AiFillButton from '../../components/AiFillButton';
 import ClubFormSections, { SECTIONS } from './club-form/ClubFormSections';
+import { SECTION_OF, type ClubErrors } from './club-form/clubValidation';
 import { ClubForm } from './queries';
 
 interface Props {
@@ -20,6 +21,7 @@ interface Props {
   onSaveDraft: () => void;
   busy: boolean;
   opError: string | null;
+  errors: ClubErrors;
   superCats: any[];
   allCats: any[];
   locations: any[];
@@ -34,6 +36,7 @@ export default function ClubFormDialog({
   onSaveDraft,
   busy,
   opError,
+  errors,
   superCats,
   allCats,
   locations,
@@ -49,6 +52,14 @@ export default function ClubFormDialog({
   };
   const expandAll = () => setExpanded(new Set(SECTIONS.map((section) => section.id)));
   const collapseAll = () => setExpanded(new Set());
+
+  // Auto-expand every section that has a validation error after a failed save.
+  const errorKeys = Object.keys(errors).join(',');
+  useEffect(() => {
+    if (!errorKeys) return;
+    const sections = new Set(errorKeys.split(',').map((key) => SECTION_OF[key]).filter(Boolean));
+    if (sections.size > 0) setExpanded((prev) => new Set([...prev, ...sections]));
+  }, [errorKeys]);
 
   return (
     <Dialog open={open} onClose={onClose} fullWidth maxWidth="md">
@@ -71,7 +82,6 @@ export default function ClubFormDialog({
               feature_text: d.feature_text ?? prev.feature_text,
               moments_text: d.moments_text ?? prev.moments_text,
               community_link: d.community_link ?? prev.community_link,
-              announcement_link: d.announcement_link ?? prev.announcement_link,
               group_link: d.group_link ?? prev.group_link,
             }))
           }
@@ -85,6 +95,7 @@ export default function ClubFormDialog({
           onToggle={toggleOne}
           onExpandAll={expandAll}
           onCollapseAll={collapseAll}
+          errors={errors}
           superCats={superCats}
           allCats={allCats}
           locations={locations}

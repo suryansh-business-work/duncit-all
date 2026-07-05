@@ -90,7 +90,10 @@ export function ClubBody({
 }>) {
   const { onPrimary } = useThemeColors();
   const moments = useMemo(() => pickPodMoments(pods, 12), [pods]);
-  const chat = club.club_whats_app_group_link || club.club_whats_app_community_link;
+  const chatLinks = [
+    { key: 'community', label: 'Community', href: club.club_whats_app_community_link },
+    { key: 'group', label: 'Group chat', href: club.club_whats_app_group_link },
+  ].filter((link) => link.href);
 
   const memberIds = useMemo(
     () => Array.from(new Set(pods.flatMap((pod) => pod.pod_attendees))),
@@ -153,24 +156,31 @@ export function ClubBody({
         rating={club.rating ?? 0}
         ratingsCount={club.ratings_count ?? 0}
       />
-      {chat ? (
-        <XStack
-          testID="club-chat"
-          role="button"
-          aria-label="Chat on WhatsApp"
-          onPress={() => void Linking.openURL(chat)}
-          alignItems="center"
-          justifyContent="center"
-          gap={8}
-          height={48}
-          borderRadius={14}
-          backgroundColor="$primary"
-          pressStyle={{ opacity: 0.85 }}
-        >
-          <MaterialIcons name="chat" size={18} color={onPrimary} />
-          <Text fontSize={14} fontWeight="900" color="$onPrimary">
-            Chat on WhatsApp
-          </Text>
+      {chatLinks.length > 0 ? (
+        <XStack gap={8} flexWrap="wrap">
+          {chatLinks.map((link) => (
+            <XStack
+              key={link.key}
+              testID={`club-chat-${link.key}`}
+              role="button"
+              aria-label={`Open ${link.label} on WhatsApp`}
+              onPress={() => void Linking.openURL(link.href as string)}
+              alignItems="center"
+              justifyContent="center"
+              gap={8}
+              flex={1}
+              minWidth={140}
+              height={48}
+              borderRadius={14}
+              backgroundColor="$primary"
+              pressStyle={{ opacity: 0.85 }}
+            >
+              <MaterialIcons name="chat" size={18} color={onPrimary} />
+              <Text fontSize={14} fontWeight="900" color="$onPrimary">
+                {link.label}
+              </Text>
+            </XStack>
+          ))}
         </XStack>
       ) : null}
       <ClubSegments

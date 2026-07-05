@@ -179,7 +179,7 @@ describe('ClubBody', () => {
       club_description: 'We run',
       club_moments: [],
       club_whats_app_group_link: 'https://wa.me/1',
-      club_whats_app_community_link: null,
+      club_whats_app_community_link: 'https://wa.me/community',
       matched_venues_count: 1,
       ...EMPTY_CONTENT,
     } as never;
@@ -218,7 +218,9 @@ describe('ClubBody', () => {
       />,
     );
     expect(screen.getByTestId('club-pods-schedule')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('club-chat'));
+    fireEvent.press(screen.getByTestId('club-chat-community'));
+    expect(openSpy).toHaveBeenCalledWith('https://wa.me/community');
+    fireEvent.press(screen.getByTestId('club-chat-group'));
     expect(openSpy).toHaveBeenCalledWith('https://wa.me/1');
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));
     expect(onOpenPod).toHaveBeenCalled();

@@ -12,7 +12,6 @@ export const CLUBS = gql`
         type
       }
       club_whats_app_community_link
-      club_whats_app_announcement_link
       club_whats_app_group_link
       club_moments {
         url
@@ -120,7 +119,6 @@ export interface ClubForm {
   feature_text: string;
   moments_text: string;
   community_link: string;
-  announcement_link: string;
   group_link: string;
   who_we_are: string[];
   what_we_do: string[];
@@ -140,7 +138,6 @@ export const blankForm: ClubForm = {
   feature_text: '',
   moments_text: '',
   community_link: '',
-  announcement_link: '',
   group_link: '',
   who_we_are: [],
   what_we_do: [],

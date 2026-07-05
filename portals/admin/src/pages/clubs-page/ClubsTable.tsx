@@ -100,7 +100,6 @@ export default function ClubsTable({
                   <TableCell>
                     <Stack direction="row" spacing={0.5}>
                       {c.club_whats_app_community_link && <Chip size="small" label="C" />}
-                      {c.club_whats_app_announcement_link && <Chip size="small" label="A" />}
                       {c.club_whats_app_group_link && <Chip size="small" label="G" />}
                     </Stack>
                   </TableCell>

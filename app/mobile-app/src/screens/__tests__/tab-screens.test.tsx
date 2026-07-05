@@ -1,17 +1,24 @@
-import { fireEvent, screen } from '@testing-library/react-native';
+import { act, fireEvent, screen } from '@testing-library/react-native';
 
 import { ChatsScreen } from '@/screens/ChatsScreen';
 import { ClubsScreen } from '@/screens/ClubsScreen';
 import { FollowingScreen } from '@/screens/FollowingScreen';
 import { useChatRooms } from '@/hooks/useChat';
-import { useFollowing } from '@/hooks/useFollowing';
+import { useFollowingFeed } from '@/hooks/useFollowingFeed';
 import { useHomeData } from '@/hooks/useHomeFeed';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/components/AppHeader', () => ({ AppHeader: () => null }));
 jest.mock('@/hooks/useHomeFeed');
-jest.mock('@/hooks/useFollowing');
+jest.mock('@/hooks/useFollowingFeed', () => ({ useFollowingFeed: jest.fn() }));
 jest.mock('@/hooks/useChat');
+jest.mock('@/hooks/useMe', () => ({
+  useMe: () => ({ data: { me: { user_id: 'me1' } } }),
+}));
+const mockViewer = jest.fn((_props: unknown) => null);
+jest.mock('@/components/profile/post-viewer/PostViewerSheet', () => ({
+  PostViewerSheet: (props: unknown) => mockViewer(props),
+}));
 
 const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
@@ -19,7 +26,7 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 const mockedHomeData = useHomeData as jest.Mock;
-const mockedFollowing = useFollowing as jest.Mock;
+const mockedFeed = useFollowingFeed as jest.Mock;
 const mockedChatRooms = useChatRooms as jest.Mock;
 
 const club = (id: string) =>
@@ -33,8 +40,33 @@ const club = (id: string) =>
     super_category_id: null,
   }) as never;
 
+const feedPost = (id: string, over: Record<string, unknown> = {}) => ({
+  id,
+  author_id: 'u1',
+  club_id: null,
+  image_url: 'https://img/p.jpg',
+  media_type: 'IMAGE',
+  kind: 'POST',
+  caption: 'Hello world',
+  likes_count: 2,
+  liked_by_me: false,
+  comments_count: 1,
+  created_at: '2026-06-10T10:00:00Z',
+  author: { user_id: 'u1', full_name: 'Asha Verma', first_name: 'Asha', profile_photo: 'a.jpg' },
+  ...over,
+});
+
+const emptyFeed = () => ({
+  posts: [] as ReturnType<typeof feedPost>[],
+  isLoading: false,
+  error: undefined,
+  refetch: jest.fn().mockResolvedValue(undefined),
+  toggleLike: jest.fn().mockResolvedValue(undefined),
+});
+
 beforeEach(() => {
   mockNavigate.mockClear();
+  mockViewer.mockClear();
   mockedHomeData.mockReturnValue({
     pods: [],
     clubs: [],
@@ -42,12 +74,7 @@ beforeEach(() => {
     isLoading: false,
     refetch: jest.fn(),
   });
-  mockedFollowing.mockReturnValue({
-    people: [],
-    followedClubs: [],
-    isLoading: false,
-    refetch: jest.fn(),
-  });
+  mockedFeed.mockImplementation(() => emptyFeed());
   mockedChatRooms.mockReturnValue({ rooms: [], isLoading: false, refetch: jest.fn() });
 });
 
@@ -92,46 +119,60 @@ describe('ClubsScreen', () => {
 });
 
 describe('FollowingScreen', () => {
-  it('shows an empty hint on the default People tab', () => {
+  it('shows empty hints on both feed tabs', () => {
     renderWithProviders(<FollowingScreen />);
-    expect(screen.getByTestId('following-list-empty')).toBeOnTheScreen();
+    expect(screen.getByTestId('following-feed-empty')).toBeOnTheScreen();
+    expect(screen.getByText(/Follow people/)).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('following-tab-clubs'));
+    expect(screen.getByText(/Follow clubs/)).toBeOnTheScreen();
   });
 
-  it('lists followed people (with + without photo) and opens a profile', () => {
-    mockedFollowing.mockReturnValue({
-      people: [
-        { user_id: 'f1', full_name: 'Riya', profile_photo: 'pic.jpg' },
-        { user_id: 'f2', full_name: null, profile_photo: null },
-      ],
-      followedClubs: [],
-      isLoading: false,
-      refetch: jest.fn(),
-    });
+  it('renders the People feed: like press + author press → profile', () => {
+    const people = { ...emptyFeed(), posts: [feedPost('p1')] };
+    mockedFeed.mockImplementation((source: string) => (source === 'PEOPLE' ? people : emptyFeed()));
     renderWithProviders(<FollowingScreen />);
-    expect(screen.getByTestId('following-person-f2')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('following-person-f1'));
-    expect(mockNavigate).toHaveBeenCalledWith('PublicProfile', { userId: 'f1' });
+    expect(screen.getByTestId('feed-post-p1')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('feed-like-p1'));
+    expect(people.toggleLike).toHaveBeenCalledWith(expect.objectContaining({ id: 'p1' }));
+    fireEvent.press(screen.getByTestId('feed-author-p1'));
+    expect(mockNavigate).toHaveBeenCalledWith('PublicProfile', { userId: 'u1' });
   });
 
-  it('switches to Clubs (with + without logo) and opens a club', () => {
-    mockedFollowing.mockReturnValue({
-      people: [],
-      followedClubs: [
-        {
-          id: 'c1',
-          club_name: 'Runners',
-          club_feature_images_and_videos: [{ url: 'x', type: 'IMAGE' }],
-        },
-        { id: 'c2', club_name: 'NoLogo', club_feature_images_and_videos: [] },
-      ],
-      isLoading: false,
-      refetch: jest.fn(),
-    });
+  it('Clubs feed: club-scoped post opens the club', () => {
+    const clubs = { ...emptyFeed(), posts: [feedPost('p2', { club_id: 'c9', kind: 'STORY' })] };
+    mockedFeed.mockImplementation((source: string) => (source === 'CLUBS' ? clubs : emptyFeed()));
     renderWithProviders(<FollowingScreen />);
     fireEvent.press(screen.getByTestId('following-tab-clubs'));
-    expect(screen.getByTestId('following-club-c2')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('following-club-c1'));
-    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: 'c1', title: 'Runners' });
+    fireEvent.press(screen.getByTestId('feed-author-p2'));
+    expect(mockNavigate).toHaveBeenCalledWith('ClubDetails', { clubId: 'c9', title: 'Club' });
+  });
+
+  it('comment press opens the post viewer; onDeleted refetches and closes', () => {
+    const people = { ...emptyFeed(), posts: [feedPost('p1')] };
+    mockedFeed.mockImplementation((source: string) => (source === 'PEOPLE' ? people : emptyFeed()));
+    renderWithProviders(<FollowingScreen />);
+    fireEvent.press(screen.getByTestId('feed-comment-p1'));
+    expect(mockViewer).toHaveBeenCalledWith(expect.objectContaining({ postId: 'p1', meId: 'me1' }));
+    const props = mockViewer.mock.calls.at(-1)?.[0] as {
+      onDeleted: () => void;
+      onClose: () => void;
+    };
+    act(() => props.onDeleted());
+    expect(people.refetch).toHaveBeenCalled();
+    // Re-open then plain close.
+    fireEvent.press(screen.getByTestId('feed-comment-p1'));
+    const again = mockViewer.mock.calls.at(-1)?.[0] as { onClose: () => void };
+    act(() => again.onClose());
+  });
+
+  it('pull-to-refresh refetches the active feed', () => {
+    const people = { ...emptyFeed(), posts: [feedPost('p1')] };
+    mockedFeed.mockImplementation((source: string) => (source === 'PEOPLE' ? people : emptyFeed()));
+    renderWithProviders(<FollowingScreen />);
+    act(() => {
+      screen.getByTestId('following-feed').props.refreshControl.props.onRefresh();
+    });
+    expect(people.refetch).toHaveBeenCalled();
   });
 });
 

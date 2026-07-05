@@ -130,7 +130,6 @@ export default function ClubDetailsPage() {
         following={isFollowing(club.id)}
         chatUrl={club.club_whats_app_group_link || club.club_whats_app_community_link}
         onToggleFollow={toggleClubFollow}
-        clubId={club.id}
       />
       <ClubStoriesSection clubId={club.id} />
       <ClubSocialLinks club={club} />

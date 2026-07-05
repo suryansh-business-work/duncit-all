@@ -61,8 +61,9 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
         <PressScale
           accessibilityLabel={club.club_name}
           onPress={() => onOpenClub(club.id, club.club_name)}
+          style={{ flex: 1, minWidth: 0 }}
         >
-          <XStack alignItems="center" gap={12} flex={1}>
+          <XStack alignItems="center" gap={12} flex={1} minWidth={0}>
             <YStack
               width={52}
               height={52}
@@ -82,7 +83,7 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
                 <MaterialIcons name="groups" size={26} color={onPrimary} />
               )}
             </YStack>
-            <YStack flex={1} gap={2}>
+            <YStack flex={1} minWidth={0} gap={2}>
               <Text
                 fontSize={15.5}
                 fontWeight="900"
@@ -94,13 +95,13 @@ export function SearchClubCard({ result, categoryName, onOpenClub, onOpenPod }: 
               </Text>
               <XStack alignItems="center" gap={8} flexWrap="wrap">
                 {categoryName ? (
-                  <Text fontSize={12} fontWeight="800" color="$primary">
+                  <Text fontSize={12} fontWeight="800" color="$primary" numberOfLines={1}>
                     {categoryName}
                   </Text>
                 ) : null}
                 <XStack alignItems="center" gap={3}>
                   <MaterialIcons name="people" size={13} color={muted} />
-                  <Text fontSize={12} fontWeight="700" color="$muted">
+                  <Text fontSize={12} fontWeight="700" color="$muted" numberOfLines={1}>
                     {followersText(followers)}
                   </Text>
                 </XStack>

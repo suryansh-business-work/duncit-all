@@ -735,6 +735,9 @@ importers:
       '@apollo/client':
         specifier: ^3.10.4
         version: 3.14.1(@types/react@18.3.28)(graphql-ws@6.0.8(crossws@0.3.5)(graphql@16.14.0)(ws@8.20.1))(graphql@16.14.0)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
+      '@duncit/category':
+        specifier: workspace:*
+        version: link:../../packages/category
       '@duncit/logs':
         specifier: workspace:*
         version: link:../../packages/logs

@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useQuery } from '@apollo/client';
+import { makeCategoryMatcher } from '../../utils/category-match';
 import { SEARCH_DISCOVERY, SEARCH_CATEGORIES } from './queries';
 
 export interface SearchCategory {
@@ -49,5 +50,7 @@ export function useSearchCategories() {
     return null;
   };
 
-  return { buttons, nameOf };
+  const matchesCategory = useMemo(() => makeCategoryMatcher(all), [all]);
+
+  return { buttons, nameOf, matchesCategory };
 }

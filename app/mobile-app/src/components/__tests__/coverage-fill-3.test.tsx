@@ -130,8 +130,11 @@ describe('FormTextField secure toggle', () => {
   it('toggles password visibility and coalesces a null value', () => {
     renderWithProviders(<SecureHarness />);
     expect(screen.getByTestId('field-pw').props.value).toBe('');
+    // Masked to start, then the eye toggle unmasks the field.
+    expect(screen.getByTestId('field-pw').props.secureTextEntry).toBe(true);
     fireEvent.press(screen.getByTestId('toggle-pw'));
     expect(screen.getByLabelText('Hide password')).toBeOnTheScreen();
+    expect(screen.getByTestId('field-pw').props.secureTextEntry).toBe(false);
   });
 });
 

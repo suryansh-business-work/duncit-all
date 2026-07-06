@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { MeetingAvailabilityModel, MeetingHolidayModel, MeetingModel, type MeetingAvailabilityDoc, type HolidayType, type MeetingStatus } from './meeting.model';
+import { MeetingAvailabilityModel, MeetingHolidayModel, MeetingModel, nextMeetingRequestNo, type MeetingAvailabilityDoc, type HolidayType, type MeetingStatus } from './meeting.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { leadSurveyService } from './leadSurvey.service';
@@ -32,6 +32,7 @@ const pub = (doc: any, names?: Map<string, { name: string; email: string }>, cat
   const cat = (id: any) => (id && catNames ? catNames.get(String(id)) ?? null : null);
   return {
     id: String(o._id),
+    request_no: o.request_no ?? null,
     kind: o.kind,
     user_id: String(o.user_id),
     user_name: u?.name ?? null,
@@ -436,7 +437,7 @@ export const meetingService = {
     }
     // Slot race: block other users AND this user's other-kind meetings at the
     // same instant — only the caller's own meeting for THIS kind is excluded.
-    const own = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind }).select('_id');
+    const own = await MeetingModel.findOne({ user_id: new Types.ObjectId(userId), kind }).select('_id request_no');
     const [busy, slotMs] = await Promise.all([
       occupiedInstants(own ? { excludeMeetingId: String(own._id) } : {}),
       slotWindowMs(),
@@ -447,12 +448,16 @@ export const meetingService = {
     if (await isHolidayInstant(input.requested_at)) {
       throw new GraphQLError(HOLIDAY_BLOCKED, { extensions: { code: 'CONFLICT' } });
     }
+    // Assign a request id once and keep it across re-requests of the same
+    // user+kind (also back-fills legacy rows that predate the field).
+    const requestNo = own?.request_no ?? (await nextMeetingRequestNo(kind));
     // A fresh booking always restarts the request — a previously CANCELLED or
     // DONE meeting must come back as REQUESTED so the Earn card locks again.
     const doc = await MeetingModel.findOneAndUpdate(
       { user_id: new Types.ObjectId(userId), kind },
       {
         $set: {
+          request_no: requestNo,
           requested_at: new Date(input.requested_at),
           notes: input.notes ?? null,
           contact_name: input.contact_name ?? null,

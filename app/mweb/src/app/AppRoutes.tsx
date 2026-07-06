@@ -189,7 +189,12 @@ export default function AppRoutes({ superCategory, locationId, zoneName }: Reado
         />
         <Route path="/search" element={withAuth(<SearchPage />)} />
         <Route path="/saved" element={withAuth(<SavedItemsPage />)} />
-        <Route path="/clubs" element={withAuth(<ClubsPage superCategorySlug={superCategory} />)} />
+        <Route
+          path="/clubs"
+          element={withAuth(
+            <ClubsPage superCategorySlug={superCategory} locationId={locationId} zoneName={zoneName} />,
+          )}
+        />
         <Route path="/chats" element={withAuth(<ChatsPage superCategorySlug={superCategory} />)} />
         <Route path="/chats/:id" element={withAuth(<ChatRoomPage />)} />
         <Route path="/register" element={redirectIfAuthed(<RegisterPage />)} />

@@ -42,6 +42,12 @@ export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
         </Text>
       </XStack>
 
+      {meeting.request_no ? (
+        <Text testID={`meeting-request-no-${kind}`} fontSize={12} fontWeight="800" color="$muted">
+          Request ID: {meeting.request_no}
+        </Text>
+      ) : null}
+
       {scheduled ? (
         <>
           {meeting.scheduled_at ? (

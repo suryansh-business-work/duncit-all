@@ -46,6 +46,8 @@ export interface MyResponseResult {
 export type MeetingStatus = 'REQUESTED' | 'SCHEDULED' | 'DONE' | 'CANCELLED';
 export interface MyMeeting {
   id: string;
+  /** Human-readable request id (DUN-VEN-/DUN-HOST-/DUN-BRAND-000001). */
+  request_no?: string | null;
   status: MeetingStatus;
   requested_at: string;
   scheduled_at?: string | null;
@@ -118,6 +120,7 @@ export const MyMeetingDocument = parse(`
   query MyMeeting($kind: SurveyKind!) {
     myMeeting(kind: $kind) {
       id
+      request_no
       status
       requested_at
       scheduled_at
@@ -129,7 +132,7 @@ export const MyMeetingDocument = parse(`
 
 export const RequestMeetingDocument = parse(`
   mutation RequestMeeting($kind: SurveyKind!, $input: RequestMeetingInput!) {
-    requestMeeting(kind: $kind, input: $input) { id }
+    requestMeeting(kind: $kind, input: $input) { id request_no }
   }
 `);
 
@@ -164,6 +167,7 @@ export const MyMeetingsDocument = parse(`
   query MyMeetings {
     myMeetings {
       id
+      request_no
       kind
       status
       requested_at

@@ -110,6 +110,10 @@ export const SET_MY_SELECTED_LOCATION = gql`
  * so the home feed can re-fetch (a logo tap should refresh, not no-op). */
 export const HOME_REFRESH_EVENT = 'duncit:home-refresh';
 
+/** Dispatched on `window` to open the header's location picker from elsewhere
+ * (e.g. the Clubs page "change your location" link). */
+export const OPEN_LOCATION_PICKER_EVENT = 'duncit:open-location-picker';
+
 export const formatRelative = (iso: string) => {
   const diff = Date.now() - new Date(iso).getTime();
   const m = Math.floor(diff / 60000);

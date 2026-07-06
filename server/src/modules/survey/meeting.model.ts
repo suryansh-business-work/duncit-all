@@ -1,4 +1,4 @@
-import { Schema, model, InferSchemaType, Types } from 'mongoose';
+import { Schema, model, InferSchemaType, Types, type Document } from 'mongoose';
 import { SURVEY_KINDS } from './survey.model';
 
 /**
@@ -18,6 +18,10 @@ export type MeetingApprovalStatus = (typeof MEETING_APPROVAL_STATUSES)[number];
 
 const meetingSchema = new Schema(
   {
+    /** Human-readable request id shown in the apps + onboarding tables
+     * (DUN-VEN-/DUN-HOST-/DUN-BRAND-000001). Assigned once on first request;
+     * kept across re-requests of the same user+kind. */
+    request_no: { type: String, default: null, index: true },
     kind: { type: String, enum: SURVEY_KINDS, required: true, index: true },
     user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true, index: true },
     /** Taxonomy the applicant chose in the gate (drives the schedule listing). */
@@ -58,6 +62,40 @@ meetingSchema.index({ user_id: 1, kind: 1 }, { unique: true });
 
 export type MeetingDoc = InferSchemaType<typeof meetingSchema> & { _id: Types.ObjectId };
 export const MeetingModel = model('OnboardingMeeting', meetingSchema);
+
+/** Per-kind human-readable request-id prefixes (Venue / Host / Brand-Seller). */
+const MEETING_REQUEST_PREFIX: Record<string, string> = {
+  VENUE: 'DUN-VEN',
+  HOST: 'DUN-HOST',
+  ECOMM: 'DUN-BRAND',
+};
+
+// Atomic sequential counter per kind (pattern: hostRequest.nextHostRequestNo).
+interface IMeetingRequestCounter extends Document {
+  singleton_key: string;
+  seq: number;
+}
+
+const meetingRequestCounterSchema = new Schema<IMeetingRequestCounter>({
+  singleton_key: { type: String, required: true, unique: true },
+  seq: { type: Number, default: 0 },
+});
+
+export const MeetingRequestCounterModel = model<IMeetingRequestCounter>(
+  'MeetingRequestCounter',
+  meetingRequestCounterSchema,
+);
+
+/** Generates the next request id for a kind, e.g. `DUN-VEN-000001`. */
+export async function nextMeetingRequestNo(kind: string): Promise<string> {
+  const prefix = MEETING_REQUEST_PREFIX[kind] ?? 'DUN-REQ';
+  const doc = await MeetingRequestCounterModel.findOneAndUpdate(
+    { singleton_key: `meeting_request_${kind}` },
+    { $inc: { seq: 1 } },
+    { new: true, upsert: true, setDefaultsOnInsert: true },
+  );
+  return `${prefix}-${String(doc.seq).padStart(6, '0')}`;
+}
 
 /**
  * Global onboarding-meeting availability — a single document edited from the

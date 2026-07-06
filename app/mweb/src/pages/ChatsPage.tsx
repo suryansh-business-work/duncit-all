@@ -9,13 +9,16 @@ import {
   CardContent,
   Chip,
   CircularProgress,
+  InputAdornment,
   Stack,
+  TextField,
   Typography,
   Box,
 } from '@mui/material';
 import EventIcon from '@mui/icons-material/Event';
 import GroupsIcon from '@mui/icons-material/Groups';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
+import SearchIcon from '@mui/icons-material/Search';
 import { podStatus, podStatusChip } from '../utils/podStatus';
 
 type ChatFilter = 'ALL' | 'PODS' | 'DMS' | 'HOSTS' | 'UNREAD';
@@ -50,6 +53,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
   const { data, loading, error } = useQuery(MY_CHAT_ROOMS, { fetchPolicy: 'cache-and-network' });
   const navigate = useNavigate();
   const [filter, setFilter] = useState<ChatFilter>('ALL');
+  const [q, setQ] = useState('');
 
   const rooms = useMemo(() => {
     const all = data?.myChatRooms ?? [];
@@ -62,8 +66,19 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
     (data?.clubs ?? []).forEach((c: any) => clubsById.set(c.id, c));
     return all.filter((r: any) => clubsById.get(r.club_id)?.super_category_id === selectedSuperId);
   }, [data, superCategorySlug]);
-  const visibleRooms = filter === 'ALL' || filter === 'PODS' ? rooms : [];
+  const filteredRooms = filter === 'ALL' || filter === 'PODS' ? rooms : [];
+  const term = q.trim().toLowerCase();
+  const visibleRooms = term
+    ? filteredRooms.filter((r: any) => (r.pod_title ?? '').toLowerCase().includes(term))
+    : filteredRooms;
   const filters: Array<[ChatFilter, string, number]> = [['ALL', 'All', rooms.length], ['PODS', 'Pods', rooms.length], ['DMS', 'DMs', 0], ['HOSTS', 'Hosts', 0], ['UNREAD', 'Unread', 0]];
+
+  let emptyMessage = 'No conversations in this filter yet.';
+  if (rooms.length === 0) {
+    emptyMessage = "You haven't joined any pods yet. Join or host a pod to start chatting with attendees.";
+  } else if (filteredRooms.length > 0) {
+    emptyMessage = 'No chats match your search.';
+  }
 
   if (loading && !data)
     return (
@@ -94,6 +109,20 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
           {rooms.length} pod {rooms.length === 1 ? 'chat' : 'chats'} connected right now
         </Typography>
       </Box>
+      <TextField
+        size="small"
+        placeholder="Search chats by pod name"
+        value={q}
+        onChange={(e) => setQ(e.target.value)}
+        InputProps={{
+          startAdornment: (
+            <InputAdornment position="start">
+              <SearchIcon fontSize="small" />
+            </InputAdornment>
+          ),
+        }}
+        sx={{ '& .MuiOutlinedInput-root': { borderRadius: 999, bgcolor: 'background.paper' } }}
+      />
       <Stack direction="row" spacing={0.75} sx={{ overflowX: 'auto', '&::-webkit-scrollbar': { display: 'none' } }}>
         {filters.map(([value, label, count]) => (
           <Chip key={value} clickable label={count ? `${label} ${count}` : label} color={filter === value ? 'primary' : 'default'} variant={filter === value ? 'filled' : 'outlined'} onClick={() => setFilter(value)} sx={{ height: 34, fontWeight: 900 }} />
@@ -117,9 +146,7 @@ export default function ChatsPage({ superCategorySlug }: Readonly<ChatsPageProps
         </Box>
       )}
       {visibleRooms.length === 0 ? (
-        <Alert severity="info">
-          {rooms.length === 0 ? "You haven't joined any pods yet. Join or host a pod to start chatting with attendees." : 'No conversations in this filter yet.'}
-        </Alert>
+        <Alert severity="info">{emptyMessage}</Alert>
       ) : (
         <Stack spacing={1.25}>
           {visibleRooms.map((p: any) => {

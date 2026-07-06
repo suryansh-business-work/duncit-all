@@ -99,8 +99,10 @@ export function FormTextField<T extends FieldValues>({
             onPress={() => setVisible((v) => !v)}
             position="absolute"
             right={4}
-            height="100%"
+            top={0}
+            bottom={0}
             width={40}
+            zIndex={1}
             alignItems="center"
             justifyContent="center"
             pressStyle={{ opacity: 0.6 }}

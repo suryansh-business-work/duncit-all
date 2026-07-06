@@ -10,6 +10,8 @@ export const meetingTypeDefs = gql`
 
   type OnboardingMeeting {
     id: ID!
+    "Human-readable request id, e.g. DUN-VEN-000001."
+    request_no: String
     kind: SurveyKind!
     user_id: ID!
     user_name: String

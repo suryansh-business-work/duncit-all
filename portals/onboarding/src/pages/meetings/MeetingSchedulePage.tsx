@@ -126,6 +126,7 @@ export default function MeetingSchedulePage() {
           <Table size="small">
             <TableHead>
               <TableRow>
+                <TableCell>Request ID</TableCell>
                 <TableCell>Requester</TableCell>
                 <TableCell>Category</TableCell>
                 <TableCell>Requested for</TableCell>
@@ -139,6 +140,11 @@ export default function MeetingSchedulePage() {
             <TableBody>
               {meetings.map((m) => (
                 <TableRow key={m.id} hover sx={{ cursor: 'pointer' }} onClick={() => setSelected(m)}>
+                  <TableCell>
+                    <Typography variant="body2" fontWeight={800} sx={{ fontFamily: 'monospace', whiteSpace: 'nowrap' }}>
+                      {m.request_no || '—'}
+                    </Typography>
+                  </TableCell>
                   <TableCell>
                     <Typography variant="body2" fontWeight={700}>{m.user_name || m.contact_name || '—'}</Typography>
                     <Typography variant="caption" color="text.secondary">{m.user_email || m.contact_phone || ''}</Typography>

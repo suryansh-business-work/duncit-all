@@ -8,6 +8,7 @@ import {
   Chip,
   CircularProgress,
   InputAdornment,
+  Link,
   Stack,
   TextField,
   Typography,
@@ -17,14 +18,19 @@ import TuneIcon from '@mui/icons-material/Tune';
 import ClubListCard from './clubs-page/ClubListCard';
 import SearchFilterSheet from './search-page/SearchFilterSheet';
 import { useSearchCategories } from './search-page/useSearchDiscovery';
+import { OPEN_LOCATION_PICKER_EVENT } from '../components/app-header/queries';
 
 const ALL_CLUBS = gql`
-  query AllClubs {
+  query AllClubs($locationId: ID) {
     superCategories: categories(filter: { level: SUPER }) {
       id
       slug
     }
-    clubs(filter: { is_active: true }) {
+    locations {
+      id
+      location_name
+    }
+    clubs(filter: { is_active: true, location_id: $locationId }) {
       id
       club_id
       club_name
@@ -45,18 +51,32 @@ const ALL_CLUBS = gql`
 
 interface ClubsPageProps {
   superCategorySlug?: string;
+  locationId?: string;
+  zoneName?: string;
 }
 
-export default function ClubsPage({ superCategorySlug }: Readonly<ClubsPageProps>) {
+export default function ClubsPage({
+  superCategorySlug,
+  locationId,
+  zoneName,
+}: Readonly<ClubsPageProps>) {
   const { data, loading, error } = useQuery(ALL_CLUBS, {
+    variables: { locationId: locationId || undefined },
     fetchPolicy: 'cache-and-network',
   });
   const navigate = useNavigate();
   const [q, setQ] = useState('');
   const [categoryId, setCategoryId] = useState('');
   const [filterOpen, setFilterOpen] = useState(false);
-  const { buttons: categoryOptions } = useSearchCategories();
+  const { buttons: categoryOptions, matchesCategory } = useSearchCategories();
   const selectedCategory = categoryOptions.find((c) => c.id === categoryId) ?? null;
+  const selectedLocationName = useMemo(
+    () => (data?.locations ?? []).find((l: any) => l.id === locationId)?.location_name ?? '',
+    [data, locationId],
+  );
+  const locationNoteLabel = zoneName
+    ? `${selectedLocationName} · ${zoneName}`
+    : selectedLocationName;
 
   const podCounts = useMemo(() => {
     const m = new Map<string, number>();
@@ -75,10 +95,7 @@ export default function ClubsPage({ superCategorySlug }: Readonly<ClubsPageProps
       : null;
     return list
       .filter((c: any) => !selectedSuperId || c.super_category_id === selectedSuperId)
-      .filter(
-        (c: any) =>
-          !categoryId || c.category_id === categoryId || c.super_category_id === categoryId,
-      )
+      .filter((c: any) => matchesCategory(c, categoryId))
       .filter(
         (c: any) =>
           !term ||
@@ -86,7 +103,7 @@ export default function ClubsPage({ superCategorySlug }: Readonly<ClubsPageProps
           c.club_description?.toLowerCase().includes(term),
       )
       .sort((a: any, b: any) => a.club_name.localeCompare(b.club_name));
-  }, [data, q, categoryId, superCategorySlug]);
+  }, [data, q, categoryId, superCategorySlug, matchesCategory]);
 
   if (loading && !data)
     return (
@@ -114,6 +131,20 @@ export default function ClubsPage({ superCategorySlug }: Readonly<ClubsPageProps
           Find communities hosting pods near you
         </Typography>
       </Box>
+      {locationId && selectedLocationName && (
+        <Alert severity="info" sx={{ borderRadius: 3, py: 0.25, alignItems: 'center', fontWeight: 700 }}>
+          Showing clubs in <b>{locationNoteLabel}</b>. Want clubs from another location?{' '}
+          <Link
+            component="button"
+            type="button"
+            underline="always"
+            sx={{ fontWeight: 800, verticalAlign: 'baseline' }}
+            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
+          >
+            Change your location here
+          </Link>
+        </Alert>
+      )}
       <Stack direction="row" spacing={1} alignItems="center">
         <TextField
           size="small"

@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react';
 
 import type { HomeCategory, HomeClub } from '@/hooks/useHomeFeed';
+import { makeCategoryMatcher } from '@/utils/category-match';
 
 /** [value, label] option tuple consumed by OptionChipRow. */
 export type CategoryOption = readonly [string, string];
@@ -8,7 +9,8 @@ export type CategoryOption = readonly [string, string];
 /**
  * Client-side search + category filter for the Clubs tab. Matches the query
  * against the club name/description (case-insensitive) and the selected CATEGORY
- * against the club's `category_id` or `super_category_id`.
+ * against the club's category branch (equal/ancestor/descendant), so picking a
+ * CATEGORY chip also keeps clubs tagged at its SUB descendants.
  */
 export function useClubsFilter(clubs: HomeClub[], categories: HomeCategory[]) {
   const [query, setQuery] = useState('');
@@ -23,17 +25,17 @@ export function useClubsFilter(clubs: HomeClub[], categories: HomeCategory[]) {
     [categories],
   );
 
+  const matchesCategory = useMemo(() => makeCategoryMatcher(categories), [categories]);
+
   const filtered = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return clubs.filter((club) => {
-      const matchesCategory =
-        !categoryId || club.category_id === categoryId || club.super_category_id === categoryId;
-      if (!matchesCategory) return false;
+      if (!matchesCategory(club, categoryId)) return false;
       if (!needle) return true;
       const haystack = `${club.club_name} ${club.club_description ?? ''}`.toLowerCase();
       return haystack.includes(needle);
     });
-  }, [clubs, query, categoryId]);
+  }, [clubs, query, categoryId, matchesCategory]);
 
   return { query, setQuery, categoryId, setCategoryId, categoryOptions, filtered };
 }

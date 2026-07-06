@@ -3,7 +3,12 @@ import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
 import { useUserData } from '@duncit/user-context';
 import { Alert, AppBar, Avatar, Box, Chip, IconButton, Toolbar, Tooltip } from '@mui/material';
-import { HEADER_DATA, PUBLIC_POLICIES, SET_MY_SELECTED_LOCATION } from './queries';
+import {
+  HEADER_DATA,
+  OPEN_LOCATION_PICKER_EVENT,
+  PUBLIC_POLICIES,
+  SET_MY_SELECTED_LOCATION,
+} from './queries';
 import HeaderBrand from './HeaderBrand';
 import HeaderMascotButton from './HeaderMascotButton';
 import HeaderLocationButton from './HeaderLocationButton';
@@ -94,6 +99,17 @@ export default function AppHeader({
     () => locations.find((l: any) => l.id === selectedLocationId),
     [locations, selectedLocationId]
   );
+
+  // Open the picker when another screen (e.g. the Clubs page note) asks for it.
+  useEffect(() => {
+    const openPicker = () => {
+      setDraftLocationId(selectedLocationId);
+      setDraftZone(selectedZoneName);
+      setLocDialogOpen(true);
+    };
+    window.addEventListener(OPEN_LOCATION_PICKER_EVENT, openPicker);
+    return () => window.removeEventListener(OPEN_LOCATION_PICKER_EVENT, openPicker);
+  }, [selectedLocationId, selectedZoneName]);
 
   const { data: policiesData } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-first' });
   const publicPolicies = policiesData?.publicPolicies ?? [];

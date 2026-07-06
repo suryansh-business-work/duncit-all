@@ -3,6 +3,7 @@ import { useEffect, useMemo } from 'react';
 import { useLocations } from '@/hooks/useLocations';
 import { useSuperCategories } from '@/hooks/useSuperCategories';
 import { useHomeStore, type HomeFeed } from '@/stores/home.store';
+import { makeCategoryMatcher } from '@/utils/category-match';
 import {
   DEFAULT_HOME_FILTERS,
   comparePods,
@@ -88,8 +89,8 @@ const isPastPod = (p: HomePod) =>
   !!p.pod_date_time && new Date(p.pod_date_time).getTime() < Date.now();
 
 /** Derives the home shell sections from the raw feed. A selected vibe chip keeps
- * only pods whose club matches that category (direct match — the deep
- * ancestor/price/date filtering from mWeb is a follow-up). */
+ * only pods whose club sits on the same category branch — equal/ancestor/
+ * descendant — so the "All {category}" chip also keeps SUB-tagged clubs. */
 function deriveHome(
   data: HomeFeed | undefined,
   selectedCategoryId: string,
@@ -102,6 +103,7 @@ function deriveHome(
   const allChips = data?.categories ?? [];
 
   const clubsById = new Map(clubs.map((c) => [c.id, c]));
+  const matchesCategory = makeCategoryMatcher(allChips);
   // Virtual pods are location-independent — keep them under the Super Category
   // regardless of the selected city (bug 10).
   const inScope = (p: HomePod) => {
@@ -114,7 +116,7 @@ function deriveHome(
   const pods = allPods.filter((p) => {
     if (!inScope(p)) return false;
     const club = clubsById.get(p.club_id);
-    if (selectedCategoryId && club?.category_id !== selectedCategoryId) return false;
+    if (!matchesCategory(club, selectedCategoryId)) return false;
     // Price/date filters from the filter sheet (bug 6).
     if (!matchesPrice(p, filters.price)) return false;
     if (!matchesDate(p.pod_date_time, filters.date)) return false;

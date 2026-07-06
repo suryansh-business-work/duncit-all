@@ -6,6 +6,7 @@ export type MeetingApprovalStatus = 'NONE' | 'PENDING' | 'APPROVED' | 'DENIED';
 
 export interface OnboardingMeeting {
   id: string;
+  request_no?: string | null;
   kind: SurveyKind;
   user_name?: string | null;
   user_email?: string | null;
@@ -68,7 +69,7 @@ export const HOLIDAY_TYPE_LABELS: Record<HolidayType, string> = {
 };
 
 const FIELDS = `
-  id kind user_id user_name user_email requested_at scheduled_at meeting_link status cancel_reason dismissed notes contact_name contact_phone approval_status feedback
+  id request_no kind user_id user_name user_email requested_at scheduled_at meeting_link status cancel_reason dismissed notes contact_name contact_phone approval_status feedback
   super_category_name category_name sub_category_name reschedule_count
 `;
 

@@ -16,6 +16,7 @@ const EARN_ME = gql`
     }
     myMeetings {
       id
+      request_no
       kind
       status
       scheduled_at
@@ -54,6 +55,7 @@ const BOXES = [
 
 interface EarnMeeting {
   id: string;
+  request_no?: string | null;
   kind: string;
   status: string;
   scheduled_at?: string | null;
@@ -69,7 +71,8 @@ const meetingNotice = (meeting: EarnMeeting) => {
     ? new Date(at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' })
     : '';
   const whenSuffix = when ? ` on ${when}` : '';
-  return `You already have an onboarding meeting scheduled for this${whenSuffix}. Our team will meet you then — this option unlocks once the meeting is done.`;
+  const ref = meeting.request_no ? ` (Request ID: ${meeting.request_no})` : '';
+  return `You already have an onboarding meeting${ref} scheduled for this${whenSuffix}. Our team will meet you then — this option unlocks once the meeting is done.`;
 };
 
 /** "Earn with Duncit" — three ways to start earning. A box is disabled when the

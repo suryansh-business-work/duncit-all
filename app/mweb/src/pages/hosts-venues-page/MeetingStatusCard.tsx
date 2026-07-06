@@ -6,6 +6,7 @@ import { useDateFormat } from '../../utils/dateFormat';
 
 interface Meeting {
   id: string;
+  request_no?: string | null;
   status: 'REQUESTED' | 'SCHEDULED' | 'DONE' | 'CANCELLED';
   requested_at: string;
   scheduled_at?: string | null;
@@ -39,6 +40,11 @@ export default function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind 
           </Typography>
           <Chip size="small" label={meeting.status} color={scheduled ? 'success' : 'default'} />
         </Stack>
+        {meeting.request_no && (
+          <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 800, display: 'block', mb: 1 }}>
+            Request ID: {meeting.request_no}
+          </Typography>
+        )}
         {scheduled ? (
           <Stack spacing={1.25} alignItems="flex-start">
             {meeting.scheduled_at && (

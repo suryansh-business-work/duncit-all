@@ -26,6 +26,8 @@ describe('meetingService integration', () => {
   it('requests once per user/kind (upsert), then lets staff schedule it with a link', async () => {
     const a = await meetingService.request(userId, 'VENUE', { requested_at: '2026-07-01T10:00:00.000Z', notes: 'morning', contact_phone: '9000000001' });
     expect(a!.status).toBe('REQUESTED');
+    // Every raised request carries a human-readable, kind-prefixed id.
+    expect(a!.request_no).toMatch(/^DUN-VEN-\d{6}$/);
     // Re-request updates the same row (still one).
     await meetingService.request(userId, 'VENUE', { requested_at: '2026-07-02T10:00:00.000Z', contact_phone: '9000000001' });
     const mine = await meetingService.myMeeting(userId, 'VENUE');
@@ -188,13 +190,15 @@ describe('meeting slot booking', () => {
 
   it('re-booking after a cancel restarts the request (Earn card locks again)', async () => {
     const me = new Types.ObjectId().toString();
-    await meetingService.request(me, 'VENUE', { requested_at: '2027-04-01T05:00:00.000Z', contact_phone: '9777777771' });
+    const first = await meetingService.request(me, 'VENUE', { requested_at: '2027-04-01T05:00:00.000Z', contact_phone: '9777777771' });
     await meetingService.cancelMyMeeting(me, 'VENUE');
 
     const again = await meetingService.request(me, 'VENUE', { requested_at: '2027-04-02T05:00:00.000Z', contact_phone: '9777777771' });
     expect(again!.status).toBe('REQUESTED');
     expect(again!.scheduled_at).toBeNull();
     expect(again!.cancel_reason).toBeNull();
+    // The request id is assigned once and kept across the re-request.
+    expect(again!.request_no).toBe(first!.request_no);
     const mine = await meetingService.myMeetings(me);
     expect(mine.filter((m) => m!.kind === 'VENUE')).toHaveLength(1);
   });

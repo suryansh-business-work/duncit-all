@@ -6,12 +6,15 @@ import { FollowingScreen } from '@/screens/FollowingScreen';
 import { useChatRooms } from '@/hooks/useChat';
 import { useFollowingFeed } from '@/hooks/useFollowingFeed';
 import { useHomeData } from '@/hooks/useHomeFeed';
+import { useLocations } from '@/hooks/useLocations';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/components/AppHeader', () => ({ AppHeader: () => null }));
+jest.mock('@/components/home/ClubsLocationNote', () => ({ ClubsLocationNote: () => null }));
 jest.mock('@/hooks/useHomeFeed');
 jest.mock('@/hooks/useFollowingFeed', () => ({ useFollowingFeed: jest.fn() }));
 jest.mock('@/hooks/useChat');
+jest.mock('@/hooks/useLocations', () => ({ useLocations: jest.fn() }));
 jest.mock('@/hooks/useMe', () => ({
   useMe: () => ({ data: { me: { user_id: 'me1' } } }),
 }));
@@ -28,6 +31,7 @@ jest.mock('@react-navigation/native', () => ({
 const mockedHomeData = useHomeData as jest.Mock;
 const mockedFeed = useFollowingFeed as jest.Mock;
 const mockedChatRooms = useChatRooms as jest.Mock;
+const mockedLocations = useLocations as jest.Mock;
 
 const club = (id: string) =>
   ({
@@ -76,6 +80,7 @@ beforeEach(() => {
   });
   mockedFeed.mockImplementation(() => emptyFeed());
   mockedChatRooms.mockReturnValue({ rooms: [], isLoading: false, refetch: jest.fn() });
+  mockedLocations.mockReturnValue({ selectedId: '', cityLabel: '', zoneName: '' });
 });
 
 describe('ClubsScreen', () => {
@@ -115,6 +120,23 @@ describe('ClubsScreen', () => {
     // Category filter to Arts drops the (sports) match → empty state.
     fireEvent.press(screen.getByTestId('clubs-filter-cat-cat2'));
     expect(screen.getByTestId('clubs-list-empty')).toBeOnTheScreen();
+  });
+
+  it('shows only clubs in the selected location', () => {
+    mockedLocations.mockReturnValue({ selectedId: 'loc1', cityLabel: 'Delhi', zoneName: '' });
+    mockedHomeData.mockReturnValue({
+      pods: [],
+      clubs: [
+        { ...(club('1') as Record<string, unknown>), location_id: 'loc1' },
+        { ...(club('2') as Record<string, unknown>), location_id: 'loc2' },
+      ] as never,
+      categories: [],
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+    renderWithProviders(<ClubsScreen />);
+    expect(screen.getByTestId('club-card-cl-1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('club-card-cl-2')).toBeNull();
   });
 });
 
@@ -191,5 +213,31 @@ describe('ChatsScreen', () => {
     expect(mockNavigate).not.toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('chat-room-r1'));
     expect(mockNavigate).toHaveBeenCalledWith('ChatRoom', { podId: 'pod9', title: 'Coffee' });
+  });
+
+  it('filters rooms by pod title and shows a no-match message', () => {
+    mockedChatRooms.mockReturnValue({
+      rooms: [
+        { id: 'r1', pod_id: 'pod9', pod_title: 'Coffee', pod_attendees: ['u1'], cover_url: null },
+        { id: 'r2', pod_id: 'pod8', pod_title: 'Painting', pod_attendees: [], cover_url: null },
+        // A title-less room must not crash the filter and never matches.
+        { id: 'r3', pod_id: 'pod7', pod_title: null, pod_attendees: [], cover_url: null },
+      ],
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+    renderWithProviders(<ChatsScreen />);
+    fireEvent.changeText(screen.getByTestId('chats-search-input'), 'coff');
+    expect(screen.getByTestId('chat-room-r1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('chat-room-r2')).toBeNull();
+    expect(screen.queryByTestId('chat-room-r3')).toBeNull();
+    // A query that matches nothing falls back to the no-match message.
+    fireEvent.changeText(screen.getByTestId('chats-search-input'), 'zzz');
+    expect(screen.getByText('No chats match your search.')).toBeOnTheScreen();
+  });
+
+  it('shows the empty hint when there are no rooms at all', () => {
+    renderWithProviders(<ChatsScreen />);
+    expect(screen.getByText(/No chats yet/)).toBeOnTheScreen();
   });
 });

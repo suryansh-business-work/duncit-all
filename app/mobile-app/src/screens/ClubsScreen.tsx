@@ -1,18 +1,31 @@
+import { useMemo } from 'react';
+
 import { Reveal } from '@/animations/Reveal';
 import { FeedList } from '@/components/FeedList';
 import { ClubCard } from '@/components/home/ClubCard';
+import { ClubsLocationNote } from '@/components/home/ClubsLocationNote';
 import { ClubsSearchFilter } from '@/components/home/ClubsSearchFilter';
 import { TabScreen } from '@/components/TabScreen';
 import { useClubsFilter } from '@/hooks/useClubsFilter';
 import { useDetailNav } from '@/hooks/useDetailNav';
 import { useHomeData } from '@/hooks/useHomeFeed';
+import { useLocations } from '@/hooks/useLocations';
 
-/** Clubs tab — all active communities with client-side search + category filter. */
+/** Clubs tab — active communities in the selected location, with client-side
+ * search + category filter. Changing the location re-scopes the list. */
 export function ClubsScreen() {
   const { clubs, categories, isLoading, refetch } = useHomeData();
+  const { selectedId: selectedLocationId } = useLocations();
   const { openClub } = useDetailNav();
+
+  const locationClubs = useMemo(
+    () =>
+      selectedLocationId ? clubs.filter((club) => club.location_id === selectedLocationId) : clubs,
+    [clubs, selectedLocationId],
+  );
+
   const { query, setQuery, categoryId, setCategoryId, categoryOptions, filtered } = useClubsFilter(
-    clubs,
+    locationClubs,
     categories,
   );
   const isSearching = !!query || !!categoryId;
@@ -20,6 +33,7 @@ export function ClubsScreen() {
 
   return (
     <TabScreen testID="clubs-screen">
+      <ClubsLocationNote />
       <ClubsSearchFilter
         query={query}
         onQueryChange={setQuery}

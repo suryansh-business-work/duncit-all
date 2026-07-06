@@ -40,11 +40,21 @@ interface Props {
   error?: string;
   min?: number;
   max?: number;
+  /** When true, spots are fixed by the venue space's capacity — shown read-only. */
+  readOnly?: boolean;
 }
 
-/** Total-spots stepper — decrement / editable count / increment, clamped to the
- * schema's 0–10000 range. Mobile twin of mWeb's SpotsStepper. */
-export function SpotsStepper({ value, onChange, error, min = 0, max = 10000 }: Readonly<Props>) {
+/** Total-spots control. For physical pods it is read-only — the count comes from
+ * the venue space's capacity. Virtual pods use the editable stepper (0–10000).
+ * Mobile twin of mWeb's SpotsStepper. */
+export function SpotsStepper({
+  value,
+  onChange,
+  error,
+  min = 0,
+  max = 10000,
+  readOnly = false,
+}: Readonly<Props>) {
   const { color } = useThemeColors();
   const parsed = Number.parseInt(value, 10);
   const current = Number.isFinite(parsed) ? parsed : min;
@@ -66,39 +76,45 @@ export function SpotsStepper({ value, onChange, error, min = 0, max = 10000 }: R
             Total spots
           </Text>
           <Text fontSize={12} color="$muted">
-            Number of available tickets.
+            {readOnly ? 'Set by the venue space you picked.' : 'Number of available tickets.'}
           </Text>
         </YStack>
-        <XStack alignItems="center" gap={10}>
-          <StepButton
-            testID="spots-dec"
-            label="Decrease spots"
-            icon="remove"
-            onPress={() => set(current - 1)}
-            color={color}
-          />
-          <Input
-            testID="field-no_of_spots_text"
-            width={64}
-            textAlign="center"
-            size="$4"
-            backgroundColor="$surface"
-            color="$color"
-            fontWeight="900"
-            borderColor="$borderColor"
-            keyboardType="numeric"
-            value={value}
-            onChangeText={onChange}
-            aria-label="Total spots"
-          />
-          <StepButton
-            testID="spots-inc"
-            label="Increase spots"
-            icon="add"
-            onPress={() => set(current + 1)}
-            color={color}
-          />
-        </XStack>
+        {readOnly ? (
+          <Text testID="create-pod-spots-readonly" fontSize={20} fontWeight="900" color="$color">
+            {value}
+          </Text>
+        ) : (
+          <XStack alignItems="center" gap={10}>
+            <StepButton
+              testID="spots-dec"
+              label="Decrease spots"
+              icon="remove"
+              onPress={() => set(current - 1)}
+              color={color}
+            />
+            <Input
+              testID="field-no_of_spots_text"
+              width={64}
+              textAlign="center"
+              size="$4"
+              backgroundColor="$surface"
+              color="$color"
+              fontWeight="900"
+              borderColor="$borderColor"
+              keyboardType="numeric"
+              value={value}
+              onChangeText={onChange}
+              aria-label="Total spots"
+            />
+            <StepButton
+              testID="spots-inc"
+              label="Increase spots"
+              icon="add"
+              onPress={() => set(current + 1)}
+              color={color}
+            />
+          </XStack>
+        )}
       </XStack>
       {error ? (
         <Text testID="no_of_spots_text-error" fontSize={12} color="$danger">

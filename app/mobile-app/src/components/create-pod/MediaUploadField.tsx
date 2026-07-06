@@ -1,6 +1,6 @@
 import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, Spinner, Text, XStack, YStack } from 'tamagui';
+import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { useMediaUpload } from '@/hooks/useMediaUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -20,8 +20,7 @@ interface Props {
 }
 
 /** Pod media — upload from the library into a thumbnail list (URLs serialize
- * into media_text); paste URLs directly in the box below. Mirrors mWeb's
- * MediaUrlsField (B3-9). */
+ * into media_text). Upload-only (no raw URL box). Mirrors mWeb's MediaUrlsField. */
 export function MediaUploadField({ value, onChange, error }: Readonly<Props>) {
   const { muted, primary } = useThemeColors();
   const upload = useMediaUpload('/pods');
@@ -123,19 +122,6 @@ export function MediaUploadField({ value, onChange, error }: Readonly<Props>) {
           Min 800×400px (JPG, PNG)
         </Text>
       </YStack>
-      <Input
-        testID="field-media_text"
-        size="$4"
-        backgroundColor="$surface"
-        color="$color"
-        placeholderTextColor="$muted"
-        borderColor={error ? '$danger' : '$borderColor'}
-        value={value}
-        onChangeText={onChange}
-        placeholder="…or paste URLs, one per line"
-        multiline
-        aria-label="Media URLs"
-      />
       {upload.error ? (
         <Text testID="media-upload-error" fontSize={12} color="$danger">
           {upload.error}

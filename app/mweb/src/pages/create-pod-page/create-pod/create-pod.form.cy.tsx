@@ -18,9 +18,11 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   club_id: 'club-1',
   venue_id: 'venue-1',
   venue_slot_id: 'slot-1',
+  venue_space_label: 'Whole venue',
   pod_description: 'A relaxed group hike around the lake.',
   pod_date_time: future(),
   media_text: 'https://cdn/img.jpg',
+  what_this_pod_offers: ['Guided trail'],
   agreed_to_terms: true,
   ...over,
 });
@@ -42,9 +44,15 @@ describe('createPodSchema', () => {
     expect(paths).toContain('pod_description');
   });
 
-  it('requires a venue and a booked slot for physical pods', () => {
+  it('requires a venue, a space/capacity and a booked slot for physical pods', () => {
     expect(issuesOf(valid({ venue_id: '' }))).toContain('venue_id');
+    expect(issuesOf(valid({ venue_space_label: '' }))).toContain('venue_space_label');
     expect(issuesOf(valid({ venue_slot_id: '' }))).toContain('venue_slot_id');
+  });
+
+  it('requires at least one "what this pod offers" entry', () => {
+    expect(issuesOf(valid({ what_this_pod_offers: [] }))).toContain('what_this_pod_offers');
+    expect(createPodSchema.safeParse(valid({ what_this_pod_offers: ['Coaching'] })).success).toBe(true);
   });
 
   it('requires a valid meeting link for virtual pods (and no venue/slot)', () => {

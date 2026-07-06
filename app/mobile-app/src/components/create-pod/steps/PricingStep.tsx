@@ -82,6 +82,7 @@ export function PricingStep({
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}
+            readOnly={isPhysical}
           />
         )}
       />
@@ -90,6 +91,7 @@ export function PricingStep({
         slotPrice={selectedSlot ? selectedSlot.price : null}
         venueId={watch('venue_id') || null}
         podAmount={Number(watch('pod_amount_text')) || 0}
+        noOfSpots={Number(watch('no_of_spots_text')) || 0}
         isPhysical={isPhysical}
       />
       <FormTextField control={control} name="payment_terms" label="Payment terms" multiline />

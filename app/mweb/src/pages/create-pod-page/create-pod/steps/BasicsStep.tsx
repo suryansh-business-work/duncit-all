@@ -1,6 +1,8 @@
+import { Controller } from 'react-hook-form';
 import { Stack, TextField } from '@mui/material';
 import HashtagChipsField from '../fields/HashtagChipsField';
 import MediaUrlsField from '../fields/MediaUrlsField';
+import ChipArrayField from '../fields/ChipArrayField';
 import OptionalSettingsCards from '../OptionalSettingsCards';
 import type { CreatePodForm } from '../create-pod.types';
 
@@ -8,11 +10,12 @@ interface Props {
   form: CreatePodForm;
 }
 
-/** Step 1 — Pod Basics: title, description, cover media and hashtags, with
- * optional extras (info, offers, perks) surfaced as tap-to-edit cards. */
+/** Step 1 — Pod Basics: title, description, cover media, hashtags and the
+ * required "what this pod offers" list, with optional extras (info, perks). */
 export default function BasicsStep({ form }: Readonly<Props>) {
   const {
     register,
+    control,
     formState: { errors },
   } = form;
 
@@ -39,6 +42,19 @@ export default function BasicsStep({ form }: Readonly<Props>) {
         helperText={errors.pod_description?.message ?? 'Tell people what to expect — agenda, vibe, who it is for'}
       />
       <MediaUrlsField form={form} />
+      <Controller
+        control={control}
+        name="what_this_pod_offers"
+        render={({ field, fieldState }) => (
+          <ChipArrayField
+            label="What this pod offers *"
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+            placeholder="e.g. Coaching, Snacks, Equipment"
+          />
+        )}
+      />
       <HashtagChipsField form={form} />
       <OptionalSettingsCards form={form} />
     </Stack>

@@ -23,6 +23,16 @@ jest.mock('@/hooks/usePotentialEarnings', () => ({
   usePotentialEarnings: () => ({ waterfall: null, isLoading: false }),
 }));
 
+// Cover media is upload-only now — stub the picker to return a hosted URL so the
+// Basics step can satisfy the "at least one image" rule.
+jest.mock('@/hooks/useMediaUpload', () => ({
+  useMediaUpload: () => ({
+    uploading: false,
+    error: undefined,
+    pickAndUpload: jest.fn().mockResolvedValue('https://cdn/img.jpg'),
+  }),
+}));
+
 const futureIso = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
 const slot = {
   id: 's1',
@@ -38,8 +48,16 @@ beforeEach(() => {
 });
 
 const clubs = [
-  // Same city (l1) + the host's super category → shown.
-  { id: 'c1', club_name: 'Runners', location_id: 'l1', super_category_id: 'sc-sports' },
+  // Same city (l1) + the host's super category → shown. Carries the auto-matched
+  // venues that scope the venue picker on step 3 (v9 is dropped by the city filter).
+  {
+    id: 'c1',
+    club_name: 'Runners',
+    location_id: 'l1',
+    super_category_id: 'sc-sports',
+    matched_venues: [{ id: 'v1' }, { id: 'v9' }],
+    matched_venues_count: 1,
+  },
   { id: 'c2', club_name: 'Writers', location_id: 'l1', super_category_id: 'sc-sports' },
   // Right category, different city → dropped for an l1 physical pod.
   { id: 'c3', club_name: 'Surfers', location_id: 'l2', super_category_id: 'sc-sports' },
@@ -116,7 +134,13 @@ async function fillBasics() {
     screen.getByTestId('field-pod_description'),
     'A relaxed group hike around the lake.',
   );
-  fireEvent.changeText(screen.getByTestId('field-media_text'), 'https://cdn/img.jpg');
+  // Cover media is upload-only — the stubbed picker appends a hosted URL.
+  fireEvent.press(screen.getByTestId('media-upload-add'));
+  await screen.findByTestId('media-thumb-https://cdn/img.jpg');
+  // "What this pod offers" is now required.
+  fireEvent.changeText(screen.getByTestId('create-pod-offers-input'), 'Guided trail');
+  fireEvent(screen.getByTestId('create-pod-offers-input'), 'submitEditing');
+  await screen.findByTestId('create-pod-offers-chip-Guided trail');
 }
 
 // Drives the flow up to the Pricing step for either mode.
@@ -130,6 +154,8 @@ async function fillToPricing(mode: 'PHYSICAL' | 'VIRTUAL') {
   if (mode === 'PHYSICAL') {
     await screen.findByTestId('create-pod-venue-v1');
     press('create-pod-venue-v1');
+    // The space (capacity) selector gates the slot list — pick the whole venue.
+    press('create-pod-space-Whole venue');
     await screen.findByTestId('create-pod-slot-s1');
     press('create-pod-slot-s1');
   } else {
@@ -170,10 +196,12 @@ describe('CreatePodStepper', () => {
     press('create-pod-club-c1');
     press('create-pod-submit');
 
-    // Step 3: only venues in the pod city are offered; picking a slot books it.
+    // Step 3: only the club's matched venues in the pod city are offered; the
+    // space (capacity) selector gates the slots, and picking a slot books it.
     await screen.findByTestId('create-pod-venue-v1');
     expect(screen.queryByTestId('create-pod-venue-v9')).toBeNull();
     press('create-pod-venue-v1');
+    press('create-pod-space-Whole venue');
     await screen.findByTestId('create-pod-slot-s1');
     press('create-pod-slot-s1');
     // Partner venue → approval note + contact card + window from slot.
@@ -238,6 +266,67 @@ describe('CreatePodStepper', () => {
     expect(screen.queryByTestId('create-pod-club-c4')).toBeNull();
   });
 
+  it('matches clubs by the host super + sub category', async () => {
+    const subClubs = [
+      {
+        id: 'sc1',
+        club_name: 'Trail Club',
+        location_id: 'l1',
+        super_category_id: 'sc-sports',
+        category_id: 'sub-trail',
+      },
+      {
+        id: 'sc2',
+        club_name: 'Road Club',
+        location_id: 'l1',
+        super_category_id: 'sc-sports',
+        category_id: 'sub-road',
+      },
+    ];
+    const subHost = [
+      {
+        super_category_id: 'sc-sports',
+        sub_category_id: 'sub-trail',
+        super_category_name: 'Sports',
+        category_name: 'Running',
+        sub_category_name: 'Trail',
+      },
+    ];
+    setup({ clubs: subClubs, hostCategories: subHost });
+    await fillBasics();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-location-label');
+    // Only the same sub-category (Trail) club matches.
+    expect(screen.getByTestId('create-pod-club-sc1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-club-sc2')).toBeNull();
+  });
+
+  it('treats a super-only host entry as matching clubs of any sub in that super', async () => {
+    const mixClubs = [
+      {
+        id: 'mx1',
+        club_name: 'Trail Club',
+        location_id: 'l1',
+        super_category_id: 'sc-sports',
+        category_id: 'sub-trail',
+      },
+      {
+        id: 'mx2',
+        club_name: 'Road Club',
+        location_id: 'l1',
+        super_category_id: 'sc-sports',
+        category_id: 'sub-road',
+      },
+    ];
+    // Default hostCategories carries a super but no sub → any sub matches.
+    setup({ clubs: mixClubs });
+    await fillBasics();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-location-label');
+    expect(screen.getByTestId('create-pod-club-mx1')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-club-mx2')).toBeOnTheScreen();
+  });
+
   it('blocks Next while the current step is invalid', async () => {
     setup();
     // Step 1: basics missing.
@@ -262,6 +351,8 @@ describe('CreatePodStepper', () => {
     press('create-pod-submit');
     await screen.findByTestId('create-pod-venue-v1');
     press('create-pod-venue-v1');
+    // Pick a space so the slot picker (and its error) render, but leave the slot unbooked.
+    press('create-pod-space-Whole venue');
     await screen.findByTestId('create-pod-slot-s1');
     press('create-pod-submit');
     await waitFor(() =>

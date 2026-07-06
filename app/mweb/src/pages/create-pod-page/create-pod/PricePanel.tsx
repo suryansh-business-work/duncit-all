@@ -26,6 +26,7 @@ export const POTENTIAL_POD_EARNINGS = gql`
 interface Props {
   slotPrice: number | null;
   podAmount: number;
+  noOfSpots: number;
   venueId: string | null;
   isPhysical: boolean;
 }
@@ -44,7 +45,7 @@ function useDebouncedAmount(podAmount: number) {
 
 /** Slot cost + GST (venue side, unchanged) and the server-computed potential
  * earnings waterfall for the host — potentialPodEarnings, per booking. */
-export default function PricePanel({ slotPrice, podAmount, venueId, isPhysical }: Readonly<Props>) {
+export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, isPhysical }: Readonly<Props>) {
   const { gstPct, currency } = usePricing();
   const amount = useDebouncedAmount(podAmount);
   const hasVenue = isPhysical && !!venueId;
@@ -96,6 +97,17 @@ export default function PricePanel({ slotPrice, podAmount, venueId, isPhysical }
             Slot cost & potential earnings
           </Typography>
         </Stack>
+        {podAmount > 0 && noOfSpots > 0 && (
+          <>
+            <Row
+              label={`Total collection (${money(podAmount)} × ${noOfSpots})`}
+              value={money(podAmount * noOfSpots)}
+              bold
+              color="success.main"
+            />
+            <Divider />
+          </>
+        )}
         {isPhysical && (
           <>
             <Row label="Venue slot price" value={slotPrice === null ? 'Pick a slot first' : money(slotPrice)} />

@@ -8,7 +8,7 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 import { ChipArrayField } from './ChipArrayField';
 import type { CreatePodForm } from './create-pod.types';
 
-type PanelKey = 'info' | 'offers' | 'perks';
+type PanelKey = 'info' | 'perks';
 type IconName = keyof typeof MaterialIcons.glyphMap;
 
 const PANELS: { key: PanelKey; title: string; subtitle: string; icon: IconName }[] = [
@@ -18,7 +18,6 @@ const PANELS: { key: PanelKey; title: string; subtitle: string; icon: IconName }
     subtitle: 'Rules, requirements, or what to bring.',
     icon: 'info-outline',
   },
-  { key: 'offers', title: 'Offers', subtitle: 'Discounts / promos', icon: 'local-offer' },
   { key: 'perks', title: 'Perks', subtitle: 'Member benefits', icon: 'star-outline' },
 ];
 
@@ -26,21 +25,18 @@ function PanelBody({ panelKey, form }: Readonly<{ panelKey: PanelKey; form: Crea
   if (panelKey === 'info') {
     return <FormTextField control={form.control} name="pod_info" label="Pod info" multiline />;
   }
-  const name = panelKey === 'offers' ? 'what_this_pod_offers' : 'available_perks';
-  const placeholder =
-    panelKey === 'offers' ? 'e.g. Coaching, Snacks' : 'e.g. Free parking, Goodies';
   return (
     <Controller
       control={form.control}
-      name={name}
+      name="available_perks"
       render={({ field, fieldState }) => (
         <ChipArrayField
-          label={panelKey === 'offers' ? 'What this pod offers' : 'Available perks'}
+          label="Available perks"
           value={field.value}
           onChange={field.onChange}
           error={fieldState.error?.message}
-          placeholder={placeholder}
-          testID={`create-pod-${panelKey}`}
+          placeholder="e.g. Free parking, Goodies"
+          testID="create-pod-perks"
         />
       )}
     />
@@ -54,13 +50,11 @@ export function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }
   const [active, setActive] = useState<PanelKey | null>(null);
   const { color, onPrimary } = useThemeColors();
   const info = form.watch('pod_info');
-  const offers = form.watch('what_this_pod_offers');
   const perks = form.watch('available_perks');
 
   const summaryFor = (key: PanelKey): string => {
     if (key === 'info') return info.trim() ? 'Added' : 'Add';
-    const list = key === 'offers' ? offers : perks;
-    return list.length > 0 ? `${list.length} added` : 'Add';
+    return perks.length > 0 ? `${perks.length} added` : 'Add';
   };
 
   return (

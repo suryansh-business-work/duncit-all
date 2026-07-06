@@ -50,10 +50,17 @@ export function ClubPreview({ club }: Readonly<Props>) {
           <MaterialIcons name="groups" size={26} color={onPrimary} />
         </YStack>
       )}
-      <YStack flex={1}>
+      <YStack flex={1} gap={2}>
         <Text fontSize={14.5} fontWeight="900" color="$color" numberOfLines={1}>
           {club.club_name}
         </Text>
+        <XStack alignItems="center" gap={4}>
+          <MaterialIcons name="storefront" size={13} color={ink} />
+          <Text testID="club-preview-venue-count" fontSize={12} fontWeight="700" color="$muted">
+            {club.matched_venues_count ?? 0}{' '}
+            {(club.matched_venues_count ?? 0) === 1 ? 'venue' : 'venues'}
+          </Text>
+        </XStack>
         <Text
           testID="club-preview-details"
           role="button"

@@ -15,44 +15,71 @@ import type { CreatePodForm, CreatePodSlot, CreatePodVenue } from '../create-pod
 
 const DATE_TIME_FORMAT = 'yyyy-MM-dd HH:mm';
 
-type VenueSpace = { label: string; capacity: number };
+/** `label` is what the host sees; `slotSpaceLabel` is the VenueSlot.space_label
+ * this space books ('' = whole venue), used to filter the slot list. */
+type VenueSpace = { label: string; capacity: number; slotSpaceLabel: string };
 
-/** The venue's bookable spaces: its named capacity items, or the whole venue as
- * a single option when only a total capacity is set. Picking one fills spots. */
+/** The venue's bookable spaces: its named capacity items, else the whole venue
+ * as a single option. Always ≥1 when a venue is picked, so capacity selection is
+ * always required before slots/prices show. Picking one fills No. of spots. */
 const venueSpaces = (venue: CreatePodVenue | null): VenueSpace[] => {
   if (!venue) return [];
   const items = venue.capacity_items ?? [];
-  if (items.length > 0) return items;
-  if (venue.capacity) return [{ label: 'Whole venue', capacity: venue.capacity }];
-  return [];
+  if (items.length > 0) {
+    return items.map((item) => ({
+      label: item.label,
+      capacity: item.capacity,
+      slotSpaceLabel: item.label,
+    }));
+  }
+  return [{ label: 'Whole venue', capacity: venue.capacity ?? 0, slotSpaceLabel: '' }];
 };
 
 interface Props {
   form: CreatePodForm;
   venues: CreatePodVenue[];
+  /** Ids of the venues that match the selected club — the venue picker is scoped to these. */
+  clubVenueIds: Set<string>;
   viewerUserId: string;
 }
 
 /** Step 3 — pick a venue partner in the pod's city and book one of its
  * published availability slots (physical), or meeting details + schedule
  * (virtual). The slot sets the pod's date/time. mWeb twin. */
-export function VenueSlotStep({ form, venues, viewerUserId }: Readonly<Props>) {
-  const { control, watch, setValue } = form;
+export function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId }: Readonly<Props>) {
+  const {
+    control,
+    watch,
+    setValue,
+    formState: { errors },
+  } = form;
+  const spaceError = errors.venue_space_label?.message;
   const mode = watch('pod_mode');
   const locationId = watch('location_id');
   const venueId = watch('venue_id');
   const slotId = watch('venue_slot_id');
 
-  const cityVenues = venues.filter((venue) => !locationId || venue.location_id === locationId);
+  // Venues are scoped to the selected club's auto-matched venues, then the city.
+  const clubVenues = venues.filter(
+    (venue) => clubVenueIds.has(venue.id) && (!locationId || venue.location_id === locationId),
+  );
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
   const ownVenue = Boolean(selectedVenue && selectedVenue.owner_user_id === viewerUserId);
   const spaces = venueSpaces(selectedVenue);
   const spaceLabel = watch('venue_space_label');
+  const selectedSpace = spaces.find((space) => space.label === spaceLabel) ?? null;
   const { slots, isLoading } = useVenueSlots(mode === 'PHYSICAL' ? venueId : '');
+  // Only the picked space's slots — and only once a space is chosen (so no price
+  // shows before a capacity is selected).
+  const slotsForSpace = selectedSpace
+    ? slots.filter((slot) => (slot.space_label ?? '') === selectedSpace.slotSpaceLabel)
+    : [];
 
   // Each chip carries its own space, so picking one fills spots with no lookup.
   const pickSpace = (space: VenueSpace) => {
-    setValue('venue_space_label', space.label, { shouldDirty: true });
+    setValue('venue_space_label', space.label, { shouldDirty: true, shouldValidate: true });
+    // Changing the space invalidates any slot picked under the old space.
+    setValue('venue_slot_id', '', { shouldDirty: true });
     setValue('no_of_spots_text', String(space.capacity), {
       shouldDirty: true,
       shouldValidate: true,
@@ -138,12 +165,13 @@ export function VenueSlotStep({ form, venues, viewerUserId }: Readonly<Props>) {
         name="venue_id"
         render={({ field, fieldState }) => (
           <VenuePicker
-            venues={cityVenues}
+            venues={clubVenues}
             selectedId={field.value}
             onSelect={(next) => {
               field.onChange(next);
               setValue('venue_slot_id', '', { shouldDirty: true });
               setValue('venue_space_label', '', { shouldDirty: true });
+              setValue('no_of_spots_text', '0', { shouldDirty: true });
             }}
             error={fieldState.error?.message}
           />
@@ -162,56 +190,54 @@ export function VenueSlotStep({ form, venues, viewerUserId }: Readonly<Props>) {
             {selectedVenue.venue_type ? `${selectedVenue.venue_type} · ` : ''}Total capacity:{' '}
             {selectedVenue.capacity ?? 0}
           </Text>
-          {spaces.length > 0 ? (
-            <YStack gap={6}>
-              <Text fontSize={14} fontWeight="500" color="$color">
-                Space &amp; capacity
-              </Text>
-              <XStack gap={6} flexWrap="wrap">
-                {spaces.map((space) => {
-                  const selected = spaceLabel === space.label;
-                  return (
-                    <XStack
-                      key={space.label}
-                      testID={`create-pod-space-${space.label}`}
-                      role="button"
-                      aria-label={`${space.label} ${space.capacity} spots`}
-                      aria-pressed={selected}
-                      onPress={() => pickSpace(space)}
-                      paddingHorizontal={12}
-                      paddingVertical={7}
-                      borderRadius={999}
-                      borderWidth={1}
-                      borderColor={selected ? '$primary' : '$borderColor'}
-                      backgroundColor={selected ? '$primary' : 'transparent'}
-                      pressStyle={{ opacity: 0.85 }}
-                    >
-                      <Text
-                        fontSize={12.5}
-                        fontWeight="800"
-                        color={selected ? '$onPrimary' : '$color'}
-                      >
-                        {space.label} · {space.capacity} spots
-                      </Text>
-                    </XStack>
-                  );
-                })}
-              </XStack>
-            </YStack>
-          ) : (
-            <Text fontSize={12} color="$muted">
-              This venue hasn’t listed capacity — set No. of spots manually on the next step.
+          <YStack gap={6}>
+            <Text fontSize={14} fontWeight="500" color="$color">
+              Space &amp; capacity *
             </Text>
-          )}
+            <XStack gap={6} flexWrap="wrap">
+              {spaces.map((space) => {
+                const selected = spaceLabel === space.label;
+                return (
+                  <XStack
+                    key={space.label}
+                    testID={`create-pod-space-${space.label}`}
+                    role="button"
+                    aria-label={`${space.label} ${space.capacity} spots`}
+                    aria-pressed={selected}
+                    onPress={() => pickSpace(space)}
+                    paddingHorizontal={12}
+                    paddingVertical={7}
+                    borderRadius={999}
+                    borderWidth={1}
+                    borderColor={selected ? '$primary' : '$borderColor'}
+                    backgroundColor={selected ? '$primary' : 'transparent'}
+                    pressStyle={{ opacity: 0.85 }}
+                  >
+                    <Text
+                      fontSize={12.5}
+                      fontWeight="800"
+                      color={selected ? '$onPrimary' : '$color'}
+                    >
+                      {space.label} · {space.capacity} spots
+                    </Text>
+                  </XStack>
+                );
+              })}
+            </XStack>
+            <Text fontSize={12} color={spaceError ? '$danger' : '$muted'}>
+              {spaceError ??
+                'Pick a space — its capacity sets No. of spots. Slots show after this.'}
+            </Text>
+          </YStack>
         </YStack>
       ) : null}
-      {selectedVenue ? (
+      {selectedVenue && selectedSpace ? (
         <Controller
           control={control}
           name="venue_slot_id"
           render={({ fieldState }) => (
             <SlotPicker
-              slots={slots}
+              slots={slotsForSpace}
               loading={isLoading}
               selectedSlotId={slotId}
               onPick={pickSlot}

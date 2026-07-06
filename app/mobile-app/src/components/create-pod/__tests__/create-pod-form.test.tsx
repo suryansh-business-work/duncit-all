@@ -24,9 +24,11 @@ const valid = (over: Partial<CreatePodFormValues> = {}): CreatePodFormValues => 
   club_id: 'club-1',
   venue_id: 'venue-1',
   venue_slot_id: 'slot-1',
+  venue_space_label: 'Main Hall',
   pod_description: 'A relaxed group hike around the lake.',
   pod_date_time_text: futureText,
   media_text: 'https://cdn/img.jpg',
+  what_this_pod_offers: ['Snacks'],
   location_id: 'l1',
   agreed_to_terms: true,
   ...over,
@@ -77,6 +79,30 @@ describe('createPodSchema', () => {
         'venue_slot_id',
       ]),
     );
+  });
+
+  it('requires at least one "what this pod offers" entry', () => {
+    expect(issuesOf(valid({ what_this_pod_offers: [] }))).toContain('what_this_pod_offers');
+    expect(createPodSchema.safeParse(valid({ what_this_pod_offers: ['Coaching'] })).success).toBe(
+      true,
+    );
+  });
+
+  it('requires a venue space/capacity for physical pods (skipped for virtual)', () => {
+    // Physical pod with a venue but no space → the space error fires.
+    expect(issuesOf(valid({ venue_space_label: '' }))).toContain('venue_space_label');
+    // Virtual pods never need a space.
+    expect(
+      createPodSchema.safeParse(
+        valid({
+          pod_mode: 'VIRTUAL',
+          venue_id: '',
+          venue_slot_id: '',
+          venue_space_label: '',
+          meeting_url: 'https://meet.duncit.com/x',
+        }),
+      ).success,
+    ).toBe(true);
   });
 
   it('requires a valid meeting link for virtual pods', () => {

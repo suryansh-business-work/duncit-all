@@ -36,7 +36,10 @@ export const createPodSchema = z
     no_of_spots: z.number({ invalid_type_error: 'Spots must be a number' }).min(0).max(10000),
     pod_hashtag_text: z.string().max(500),
     media_text: z.string(),
-    what_this_pod_offers: z.array(z.string().trim().min(1).max(40)).max(20),
+    what_this_pod_offers: z
+      .array(z.string().trim().min(1).max(40))
+      .min(1, 'Add at least one thing this pod offers')
+      .max(20),
     available_perks: z.array(z.string().trim().min(1).max(40)).max(20),
     products_enabled: z.boolean(),
     product_requests: z
@@ -62,6 +65,9 @@ export const createPodSchema = z
   .superRefine((values, ctx) => {
     if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
       ctx.addIssue({ code: 'custom', path: ['venue_id'], message: 'Select a venue' });
+    } else if (values.pod_mode === 'PHYSICAL' && !values.venue_space_label) {
+      // A space (capacity) is chosen after the venue and gates the slot list.
+      ctx.addIssue({ code: 'custom', path: ['venue_space_label'], message: 'Pick a space / capacity' });
     }
     if (values.pod_mode === 'PHYSICAL' && !values.venue_slot_id) {
       ctx.addIssue({ code: 'custom', path: ['venue_slot_id'], message: 'Pick an available slot from the venue calendar' });

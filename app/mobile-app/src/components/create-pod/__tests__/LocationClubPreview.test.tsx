@@ -118,4 +118,16 @@ describe('ClubPreview', () => {
     fireEvent.press(screen.getByTestId('club-preview-details'));
     expect(screen.getByText('No description yet.')).toBeOnTheScreen();
   });
+
+  it('shows the matched-venue count (0 when unset, singular vs plural)', () => {
+    // No count → falls back to 0 venues.
+    const { rerender } = renderWithProviders(<ClubPreview club={{ id: 'c3', club_name: 'A' }} />);
+    expect(screen.getByTestId('club-preview-venue-count')).toHaveTextContent('0 venues');
+    // Exactly one → singular.
+    rerender(<ClubPreview club={{ id: 'c3', club_name: 'A', matched_venues_count: 1 }} />);
+    expect(screen.getByTestId('club-preview-venue-count')).toHaveTextContent('1 venue');
+    // Many → plural with the real count.
+    rerender(<ClubPreview club={{ id: 'c3', club_name: 'A', matched_venues_count: 4 }} />);
+    expect(screen.getByTestId('club-preview-venue-count')).toHaveTextContent('4 venues');
+  });
 });

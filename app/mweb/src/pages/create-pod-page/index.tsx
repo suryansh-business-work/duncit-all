@@ -20,6 +20,9 @@ const CREATE_POD_OPTIONS = gql`
       club_name
       location_id
       super_category_id
+      category_id
+      matched_venues_count
+      matched_venues { id }
       club_description
       club_feature_images_and_videos { url type }
     }

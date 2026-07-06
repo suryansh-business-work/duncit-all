@@ -47,10 +47,10 @@ const mocks = [
   },
 ];
 
-function setup(podAmount: number) {
+function setup(podAmount: number, noOfSpots = 0) {
   return render(
     <MockedProvider mocks={mocks} addTypename={false}>
-      <PricePanel slotPrice={300} podAmount={podAmount} venueId="v1" isPhysical />
+      <PricePanel slotPrice={300} podAmount={podAmount} noOfSpots={noOfSpots} venueId="v1" isPhysical />
     </MockedProvider>,
   );
 }
@@ -76,5 +76,11 @@ describe('PricePanel (potentialPodEarnings)', () => {
     setup(0);
     expect(screen.getByText('Set a ticket price to preview your earnings.')).toBeInTheDocument();
     expect(screen.queryByText('You Receive')).not.toBeInTheDocument();
+  });
+
+  it('shows the ticket × spots total when both are set', () => {
+    setup(1000, 30);
+    expect(screen.getByText('Total collection (₹1,000 × 30)')).toBeInTheDocument();
+    expect(screen.getByText('₹30,000')).toBeInTheDocument();
   });
 });

@@ -61,16 +61,11 @@ describe('MediaUploadField', () => {
     fireEvent.press(screen.getByTestId('media-upload-add'));
   });
 
-  it('tolerates an undefined form value', () => {
+  it('tolerates an undefined form value and shows only the upload dropzone (no URL box)', () => {
     mockedUpload.mockReturnValue(api());
     renderWithProviders(<MediaUploadField value={undefined as never} onChange={jest.fn()} />);
-    expect(screen.getByTestId('field-media_text')).toBeOnTheScreen();
-  });
-
-  it('accepts pasted URLs through the text box', () => {
-    mockedUpload.mockReturnValue(api());
-    renderWithProviders(<Harness />);
-    fireEvent.changeText(screen.getByTestId('field-media_text'), 'https://cdn/p.jpg');
-    expect(screen.getByTestId('media-thumb-https://cdn/p.jpg')).toBeOnTheScreen();
+    // Upload-only now — the dropzone renders and the removed raw URL input does not.
+    expect(screen.getByTestId('media-upload-add')).toBeOnTheScreen();
+    expect(screen.queryByTestId('field-media_text')).toBeNull();
   });
 });

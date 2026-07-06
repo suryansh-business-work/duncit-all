@@ -8,6 +8,7 @@ interface Props {
   slotPrice: number | null;
   venueId: string | null;
   podAmount: number;
+  noOfSpots: number;
   isPhysical: boolean;
 }
 
@@ -58,6 +59,7 @@ export function PricePanel({
   slotPrice,
   venueId,
   podAmount,
+  noOfSpots,
   isPhysical,
 }: Readonly<Props>) {
   const money = (value: number) => `${finance.currency_symbol}${round2(value)}`;
@@ -82,6 +84,13 @@ export function PricePanel({
       <Text fontSize={14} fontWeight="900" color="$color">
         Slot cost & potential earnings
       </Text>
+      {podAmount > 0 && noOfSpots > 0 ? (
+        <Row
+          label={`Total collection (${money(podAmount)} × ${noOfSpots})`}
+          value={money(podAmount * noOfSpots)}
+          bold
+        />
+      ) : null}
       {isPhysical ? (
         <>
           <Row

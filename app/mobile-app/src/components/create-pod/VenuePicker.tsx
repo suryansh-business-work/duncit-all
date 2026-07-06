@@ -21,11 +21,10 @@ export function VenuePicker({ venues, selectedId, onSelect, error, emptyHint }: 
     return (
       <YStack gap={8}>
         <Text fontSize={14} fontWeight="500" color="$color">
-          Select venue partner
+          Select venue
         </Text>
         <Text testID="create-pod-venue-empty" fontSize={12.5} color="$muted">
-          {emptyHint ??
-            'No venue partners are available in this location yet — pick another location or go virtual.'}
+          {emptyHint ?? 'No venues match this club yet — pick another club or go virtual.'}
         </Text>
       </YStack>
     );
@@ -34,7 +33,7 @@ export function VenuePicker({ venues, selectedId, onSelect, error, emptyHint }: 
   return (
     <YStack gap={8}>
       <Text fontSize={14} fontWeight="500" color="$color">
-        Select venue partner
+        Select venue
       </Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false}>
         <XStack gap={10} paddingRight={10}>

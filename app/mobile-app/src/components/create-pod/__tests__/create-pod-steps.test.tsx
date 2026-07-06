@@ -46,6 +46,8 @@ const slot = {
   start_at: futureIso(24),
   end_at: futureIso(26),
   price: 400,
+  space_label: '',
+  capacity: 10,
   status: 'AVAILABLE',
 };
 const freeSlot = {
@@ -53,6 +55,8 @@ const freeSlot = {
   start_at: futureIso(48),
   end_at: futureIso(50),
   price: 0,
+  space_label: '',
+  capacity: 10,
   status: 'AVAILABLE',
 };
 const finance = { platform_fee_pct: 5, gst_pct: 18, currency_symbol: '₹' };
@@ -83,15 +87,57 @@ function VenueSlotHarness({
   initial,
   venues = [venue],
   viewerUserId = 'me-1',
+  clubVenueIds = new Set(venues.map((item) => item.id)),
 }: Readonly<{
   initial: Partial<CreatePodFormValues>;
   venues?: CreatePodVenue[];
   viewerUserId?: string;
+  clubVenueIds?: Set<string>;
 }>) {
   const form = useForm<CreatePodFormValues>({
     defaultValues: { ...blankCreatePodForm, ...initial },
   });
-  return <VenueSlotStep form={form} venues={venues} viewerUserId={viewerUserId} />;
+  return (
+    <VenueSlotStep
+      form={form}
+      venues={venues}
+      clubVenueIds={clubVenueIds}
+      viewerUserId={viewerUserId}
+    />
+  );
+}
+
+/** Lets a test force a venue_space_label error to assert the danger-styled line. */
+function SpaceErrorHarness() {
+  const form = useForm<CreatePodFormValues>({
+    defaultValues: {
+      ...blankCreatePodForm,
+      pod_mode: 'PHYSICAL',
+      location_id: 'l1',
+      venue_id: 'v1',
+    },
+  });
+  return (
+    <>
+      <VenueSlotStep
+        form={form}
+        venues={[venue]}
+        clubVenueIds={new Set(['v1'])}
+        viewerUserId="me-1"
+      />
+      <Text
+        testID="force-space-error"
+        role="button"
+        aria-label="force"
+        onPress={() =>
+          form.setError('venue_space_label', {
+            type: 'manual',
+            message: 'Pick a space / capacity',
+          })
+        }
+      />
+    </>
+  );
 }
 
 /** Exposes no_of_spots_text so space-picker auto-fill can be asserted. */
@@ -106,7 +152,12 @@ function SpaceHarness({ venues }: Readonly<{ venues: CreatePodVenue[] }>) {
   });
   return (
     <>
-      <VenueSlotStep form={form} venues={venues} viewerUserId="other-user" />
+      <VenueSlotStep
+        form={form}
+        venues={venues}
+        clubVenueIds={new Set(venues.map((item) => item.id))}
+        viewerUserId="other-user"
+      />
       <Text testID="spots-readout">{form.watch('no_of_spots_text')}</Text>
     </>
   );
@@ -141,16 +192,63 @@ describe('VenueSlotStep', () => {
     await waitFor(() => expect(screen.getByTestId('spots-readout')).toHaveTextContent('75'));
   });
 
-  it('shows a manual-spots hint when the venue lists no capacity', () => {
+  it('offers a "Whole venue" space (capacity 0) when the venue lists no capacity', () => {
     renderWithProviders(
       <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
     );
     expect(screen.getByTestId('create-pod-venue-capacity')).toHaveTextContent('Total capacity: 0');
-    expect(screen.queryByTestId('create-pod-space-Whole venue')).toBeNull();
+    // No named capacity items → a single whole-venue chip (0 spots), not a manual hint.
+    expect(screen.getByTestId('create-pod-space-Whole venue')).toHaveTextContent(/0 spots/);
   });
 
-  it('shows the empty hint when no venue partners serve the pod city', () => {
+  it('filters slots to the picked space and coalesces a missing slot space label', async () => {
+    const withSpaces: CreatePodVenue = {
+      ...venue,
+      capacity: 200,
+      capacity_items: [{ label: 'Main Hall', capacity: 120 }],
+    };
+    mockGraphqlRequest.mockResolvedValue({
+      venueAvailableSlots: [
+        { ...slot, id: 'sa', space_label: 'Main Hall' },
+        // No space_label → coalesced to '' → excluded from the Main Hall list.
+        {
+          id: 'sb',
+          start_at: futureIso(30),
+          end_at: futureIso(32),
+          price: 50,
+          status: 'AVAILABLE',
+        },
+      ],
+    });
+    renderWithProviders(
+      <VenueSlotHarness
+        initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }}
+        venues={[withSpaces]}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('create-pod-space-Main Hall'));
+    await screen.findByTestId('create-pod-slot-sa');
+    expect(screen.queryByTestId('create-pod-slot-sb')).toBeNull();
+  });
+
+  it('surfaces the venue space validation error in danger styling', async () => {
+    renderWithProviders(<SpaceErrorHarness />);
+    fireEvent.press(screen.getByTestId('force-space-error'));
+    await screen.findByText('Pick a space / capacity');
+  });
+
+  it('shows the empty hint when the club matches no venue in the pod city', () => {
     renderWithProviders(<VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l9' }} />);
+    expect(screen.getByTestId('create-pod-venue-empty')).toBeOnTheScreen();
+  });
+
+  it('shows the empty hint when the club has no matched venues (empty scope)', () => {
+    renderWithProviders(
+      <VenueSlotHarness
+        initial={{ pod_mode: 'PHYSICAL', location_id: 'l1' }}
+        clubVenueIds={new Set()}
+      />,
+    );
     expect(screen.getByTestId('create-pod-venue-empty')).toBeOnTheScreen();
   });
 
@@ -158,6 +256,8 @@ describe('VenueSlotStep', () => {
     renderWithProviders(
       <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
     );
+    // Slots are gated behind the space (capacity) selection now.
+    fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
     await screen.findByTestId('create-pod-slot-s1');
     fireEvent.press(screen.getByTestId('create-pod-slot-s1'));
     expect(screen.getByTestId('create-pod-approval-note')).toHaveTextContent(/your venue/);
@@ -176,7 +276,8 @@ describe('VenueSlotStep', () => {
         venues={[venue, second]}
       />,
     );
-    await screen.findByTestId('create-pod-slot-s1');
+    // A slot is pre-booked → the approval note shows even before a space is picked.
+    await screen.findByTestId('create-pod-approval-note');
     fireEvent.press(screen.getByTestId('create-pod-venue-v2'));
     await waitFor(() => expect(screen.queryByTestId('create-pod-approval-note')).toBeNull());
   });
@@ -186,6 +287,7 @@ describe('VenueSlotStep', () => {
     renderWithProviders(
       <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
     );
+    fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
     await screen.findByTestId('create-pod-no-slots');
   });
 
@@ -194,6 +296,7 @@ describe('VenueSlotStep', () => {
     renderWithProviders(
       <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
     );
+    fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
     await screen.findByTestId('create-pod-no-slots');
   });
 
@@ -270,6 +373,8 @@ describe('SlotPicker', () => {
         start_at: '2030-01-01T10:00:00.000Z',
         end_at: '2030-01-01T11:00:00.000Z',
         price: 100,
+        space_label: '',
+        capacity: 10,
         status: 'AVAILABLE',
       },
       {
@@ -277,6 +382,8 @@ describe('SlotPicker', () => {
         start_at: '2030-01-01T12:00:00.000Z',
         end_at: '2030-01-01T13:00:00.000Z',
         price: 0,
+        space_label: '',
+        capacity: 10,
         status: 'AVAILABLE',
       },
     ];
@@ -299,17 +406,60 @@ describe('VenueContactCard', () => {
 describe('PricePanel', () => {
   it('prompts for a slot before showing venue costs (physical)', () => {
     renderWithProviders(
-      <PricePanel finance={finance} slotPrice={null} venueId="v1" podAmount={100} isPhysical />,
+      <PricePanel
+        finance={finance}
+        slotPrice={null}
+        venueId="v1"
+        podAmount={100}
+        noOfSpots={0}
+        isPhysical
+      />,
     );
     expect(screen.getByText('Pick a slot first')).toBeOnTheScreen();
     // Without a picked slot the preview is asked without venue args.
     expect(mockedEarnings).toHaveBeenCalledWith(100, null, null);
   });
 
+  it('shows the total-collection row when a price and spot count are set', () => {
+    renderWithProviders(
+      <PricePanel
+        finance={finance}
+        slotPrice={null}
+        venueId={null}
+        podAmount={100}
+        noOfSpots={5}
+        isPhysical={false}
+      />,
+    );
+    expect(screen.getByText('Total collection (₹100 × 5)')).toBeOnTheScreen();
+    expect(screen.getByText('₹500')).toBeOnTheScreen();
+  });
+
+  it('hides the total-collection row when the spot count is zero', () => {
+    renderWithProviders(
+      <PricePanel
+        finance={finance}
+        slotPrice={null}
+        venueId={null}
+        podAmount={100}
+        noOfSpots={0}
+        isPhysical={false}
+      />,
+    );
+    expect(screen.queryByText(/Total collection/)).toBeNull();
+  });
+
   it('computes slot GST and renders the server waterfall with the venue line', () => {
     mockedEarnings.mockReturnValue({ waterfall, isLoading: false });
     renderWithProviders(
-      <PricePanel finance={finance} slotPrice={300} venueId="v1" podAmount={1000} isPhysical />,
+      <PricePanel
+        finance={finance}
+        slotPrice={300}
+        venueId="v1"
+        podAmount={1000}
+        noOfSpots={0}
+        isPhysical
+      />,
     );
     expect(mockedEarnings).toHaveBeenCalledWith(1000, 'v1', 300);
     // Slot cost lines (client-side, from the picked slot).
@@ -348,6 +498,7 @@ describe('PricePanel', () => {
         slotPrice={null}
         venueId={null}
         podAmount={1000}
+        noOfSpots={0}
         isPhysical={false}
       />,
     );
@@ -360,7 +511,14 @@ describe('PricePanel', () => {
   it('shows the earnings spinner while the preview loads', () => {
     mockedEarnings.mockReturnValue({ waterfall: null, isLoading: true });
     renderWithProviders(
-      <PricePanel finance={finance} slotPrice={300} venueId="v1" podAmount={500} isPhysical />,
+      <PricePanel
+        finance={finance}
+        slotPrice={300}
+        venueId="v1"
+        podAmount={500}
+        noOfSpots={0}
+        isPhysical
+      />,
     );
     expect(screen.getByTestId('create-pod-earnings-loading')).toBeOnTheScreen();
     expect(screen.queryByTestId('create-pod-earnings')).toBeNull();

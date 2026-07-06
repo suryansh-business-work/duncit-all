@@ -4,6 +4,7 @@ import { YStack } from 'tamagui';
 import { FormTextField } from '@/components/FormTextField';
 import { HashtagChipsField } from '../HashtagChipsField';
 import { MediaUploadField } from '../MediaUploadField';
+import { ChipArrayField } from '../ChipArrayField';
 import { OptionalSettingsCards } from '../OptionalSettingsCards';
 import type { CreatePodForm } from '../create-pod.types';
 
@@ -11,8 +12,8 @@ interface Props {
   form: CreatePodForm;
 }
 
-/** Step 1 — Pod Basics: title, description, cover media and hashtags, with
- * optional extras (info, offers, perks) as tap-to-expand cards. mWeb twin. */
+/** Step 1 — Pod Basics: title, description, cover media, hashtags and the
+ * required "what this pod offers" list, with optional extras (info, perks). */
 export function BasicsStep({ form }: Readonly<Props>) {
   const { control } = form;
   return (
@@ -27,6 +28,20 @@ export function BasicsStep({ form }: Readonly<Props>) {
             value={field.value}
             onChange={field.onChange}
             error={fieldState.error?.message}
+          />
+        )}
+      />
+      <Controller
+        control={control}
+        name="what_this_pod_offers"
+        render={({ field, fieldState }) => (
+          <ChipArrayField
+            label="What this pod offers *"
+            value={field.value}
+            onChange={field.onChange}
+            error={fieldState.error?.message}
+            placeholder="e.g. Coaching, Snacks, Equipment"
+            testID="create-pod-offers"
           />
         )}
       />

@@ -3,6 +3,7 @@ import {
   Avatar,
   Box,
   Button,
+  Chip,
   Dialog,
   DialogContent,
   DialogTitle,
@@ -12,6 +13,7 @@ import {
 } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import GroupsIcon from '@mui/icons-material/Groups';
+import StorefrontOutlinedIcon from '@mui/icons-material/StorefrontOutlined';
 import type { CreatePodClub } from './create-pod.types';
 
 interface Props {
@@ -42,9 +44,17 @@ export default function ClubPreview({ club }: Readonly<Props>) {
         <Typography variant="subtitle2" sx={{ fontWeight: 900 }} noWrap>
           {club.club_name}
         </Typography>
-        <Button size="small" onClick={() => setOpen(true)} sx={{ p: 0, fontWeight: 900 }}>
-          View club details
-        </Button>
+        <Stack direction="row" spacing={1} alignItems="center" sx={{ mt: 0.25 }}>
+          <Chip
+            size="small"
+            variant="outlined"
+            icon={<StorefrontOutlinedIcon />}
+            label={`${club.matched_venues_count ?? 0} ${(club.matched_venues_count ?? 0) === 1 ? 'venue' : 'venues'}`}
+          />
+          <Button size="small" onClick={() => setOpen(true)} sx={{ p: 0, fontWeight: 900 }}>
+            View club details
+          </Button>
+        </Stack>
       </Box>
 
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="xs">

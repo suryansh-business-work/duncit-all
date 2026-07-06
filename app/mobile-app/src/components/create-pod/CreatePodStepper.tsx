@@ -144,22 +144,37 @@ export function CreatePodStepper({
     }
   });
 
-  // Clubs are now scoped by the host's category + the picked location (clubs
-  // carry their own location_id + super_category). Physical pods narrow to the
-  // city; virtual pods keep the category filter only (no city).
+  // Clubs are scoped by the host's category (Super + Sub) + the picked location.
+  // A club's `category_id` holds the Sub level, mirrored against the host's
+  // `sub_category_id`; a host entry with no Sub matches any Sub in that Super.
   const locationId = form.watch('location_id');
   const podMode = form.watch('pod_mode');
-  const hostSuperIds = new Set(
-    hostCategories.map((category) => category.super_category_id).filter(Boolean),
+  const hostCategoryKeys = new Set(
+    hostCategories
+      .filter((category) => category.super_category_id)
+      .map((category) => `${category.super_category_id}|${category.sub_category_id ?? ''}`),
   );
-  const clubMatchesHostCategory = (club: { super_category_id?: string | null }) =>
-    hostSuperIds.size === 0 ||
-    (!!club.super_category_id && hostSuperIds.has(club.super_category_id));
+  const clubMatchesHostCategory = (club: {
+    super_category_id?: string | null;
+    category_id?: string | null;
+  }) => {
+    if (hostCategoryKeys.size === 0) return true; // host has no categories → don't over-filter
+    if (!club.super_category_id) return false;
+    return (
+      hostCategoryKeys.has(`${club.super_category_id}|${club.category_id ?? ''}`) ||
+      hostCategoryKeys.has(`${club.super_category_id}|`)
+    );
+  };
   const clubsForLocation = clubs.filter((club) => {
     if (!clubMatchesHostCategory(club)) return false;
     if (podMode === 'VIRTUAL' || !locationId) return true;
     return club.location_id === locationId;
   });
+
+  // Step 3 venues are scoped to the selected club's auto-matched venues.
+  const clubId = form.watch('club_id');
+  const selectedClub = clubs.find((club) => club.id === clubId) ?? null;
+  const clubVenueIds = new Set((selectedClub?.matched_venues ?? []).map((venue) => venue.id));
 
   // The picked slot feeds the Pricing panel (slot price + GST + earnings).
   const venueId = form.watch('venue_id');
@@ -176,7 +191,13 @@ export function CreatePodStepper({
       locations={locations}
       hostCategories={hostCategories}
     />,
-    <VenueSlotStep key="venue" form={form} venues={venues} viewerUserId={viewerUserId} />,
+    <VenueSlotStep
+      key="venue"
+      form={form}
+      venues={venues}
+      clubVenueIds={clubVenueIds}
+      viewerUserId={viewerUserId}
+    />,
     <PricingStep
       key="pricing"
       form={form}

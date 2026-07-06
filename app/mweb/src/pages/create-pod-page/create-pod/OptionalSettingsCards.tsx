@@ -5,18 +5,16 @@ import {
   DialogTitle, IconButton, Stack, TextField, Typography,
 } from '@mui/material';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
-import LocalOfferOutlinedIcon from '@mui/icons-material/LocalOfferOutlined';
 import StarBorderIcon from '@mui/icons-material/StarBorder';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import CloseIcon from '@mui/icons-material/Close';
 import ChipArrayField from './fields/ChipArrayField';
 import type { CreatePodForm } from './create-pod.types';
 
-type PanelKey = 'info' | 'offers' | 'perks';
+type PanelKey = 'info' | 'perks';
 
 const PANELS: { key: PanelKey; title: string; subtitle: string; icon: ReactNode }[] = [
   { key: 'info', title: 'Additional Info', subtitle: 'Rules, requirements, or what to bring.', icon: <InfoOutlinedIcon fontSize="small" /> },
-  { key: 'offers', title: 'Offers', subtitle: 'Discounts / promos', icon: <LocalOfferOutlinedIcon fontSize="small" /> },
   { key: 'perks', title: 'Perks', subtitle: 'Member benefits', icon: <StarBorderIcon fontSize="small" /> },
 ];
 
@@ -60,14 +58,12 @@ function PanelBody({ panelKey, form }: Readonly<{ panelKey: PanelKey; form: Crea
       />
     );
   }
-  const name = panelKey === 'offers' ? 'what_this_pod_offers' : 'available_perks';
-  const placeholder = panelKey === 'offers' ? 'e.g. Coaching, Snacks' : 'e.g. Free parking, Goodies';
   return (
     <Controller
       control={form.control}
-      name={name}
+      name="available_perks"
       render={({ field, fieldState }) => (
-        <ChipArrayField label="" value={field.value} onChange={field.onChange} error={fieldState.error?.message} placeholder={placeholder} />
+        <ChipArrayField label="" value={field.value} onChange={field.onChange} error={fieldState.error?.message} placeholder="e.g. Free parking, Goodies" />
       )}
     />
   );
@@ -78,13 +74,11 @@ function PanelBody({ panelKey, form }: Readonly<{ panelKey: PanelKey; form: Crea
 export default function OptionalSettingsCards({ form }: Readonly<{ form: CreatePodForm }>) {
   const [active, setActive] = useState<PanelKey | null>(null);
   const info = form.watch('pod_info');
-  const offers = form.watch('what_this_pod_offers');
   const perks = form.watch('available_perks');
 
   const summaryFor = (key: PanelKey): string => {
     if (key === 'info') return info.trim() ? 'Added' : 'Add';
-    const list = key === 'offers' ? offers : perks;
-    return list.length > 0 ? `${list.length} added` : 'Add';
+    return perks.length > 0 ? `${perks.length} added` : 'Add';
   };
   const activePanel = PANELS.find((panel) => panel.key === active) ?? null;
 
@@ -95,10 +89,7 @@ export default function OptionalSettingsCards({ form }: Readonly<{ form: CreateP
       </Typography>
       <Stack spacing={1.25} sx={{ mt: 1 }}>
         <SettingCard panel={PANELS[0]} summary={summaryFor('info')} onOpen={() => setActive('info')} />
-        <Box sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25 }}>
-          <SettingCard panel={PANELS[1]} summary={summaryFor('offers')} onOpen={() => setActive('offers')} />
-          <SettingCard panel={PANELS[2]} summary={summaryFor('perks')} onOpen={() => setActive('perks')} />
-        </Box>
+        <SettingCard panel={PANELS[1]} summary={summaryFor('perks')} onOpen={() => setActive('perks')} />
       </Stack>
 
       <Dialog open={!!active} onClose={() => setActive(null)} fullWidth maxWidth="sm">

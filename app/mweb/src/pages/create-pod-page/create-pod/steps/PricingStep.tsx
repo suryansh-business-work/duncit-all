@@ -46,12 +46,13 @@ export default function PricingStep({ form, products, showProducts, selectedSlot
         control={control}
         name="no_of_spots"
         render={({ field, fieldState }) => (
-          <SpotsStepper value={Number(field.value) || 0} onChange={field.onChange} error={fieldState.error?.message} />
+          <SpotsStepper value={Number(field.value) || 0} onChange={field.onChange} error={fieldState.error?.message} readOnly={isPhysical} />
         )}
       />
       <PricePanel
         slotPrice={selectedSlot ? selectedSlot.price : null}
         podAmount={Number(watch('pod_amount')) || 0}
+        noOfSpots={Number(watch('no_of_spots')) || 0}
         venueId={watch('venue_id') || null}
         isPhysical={isPhysical}
       />

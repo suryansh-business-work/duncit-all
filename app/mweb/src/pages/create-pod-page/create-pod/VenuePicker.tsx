@@ -15,7 +15,7 @@ export default function VenuePicker({ venues, selectedId, onSelect }: Readonly<P
   return (
     <Box>
       <Typography variant="caption" color="text.secondary" fontWeight={800}>
-        Select venue partner
+        Select venue
       </Typography>
       <Stack direction="row" sx={{ mt: 1, gap: 1.25, overflowX: 'auto', pb: 1, scrollSnapType: 'x mandatory' }}>
         {venues.map((venue) => {

@@ -70,6 +70,14 @@ describe('SpotsStepper', () => {
     fireEvent.press(screen.getByTestId('spots-inc'));
     expect(screen.getByTestId('sp-readout')).toHaveTextContent('1');
   });
+
+  it('renders a static read-only value with no stepper controls when readOnly', () => {
+    renderWithProviders(<SpotsStepper value="42" onChange={jest.fn()} readOnly />);
+    expect(screen.getByTestId('create-pod-spots-readonly')).toHaveTextContent('42');
+    expect(screen.getByText('Set by the venue space you picked.')).toBeOnTheScreen();
+    expect(screen.queryByTestId('spots-inc')).toBeNull();
+    expect(screen.queryByTestId('field-no_of_spots_text')).toBeNull();
+  });
 });
 
 function TermsHarness() {
@@ -114,6 +122,8 @@ describe('SlotPicker day labels', () => {
       start_at: noon.toISOString(),
       end_at: noon.toISOString(),
       price: 0,
+      space_label: '',
+      capacity: 20,
       status: 'AVAILABLE',
     };
     renderWithProviders(
@@ -124,7 +134,7 @@ describe('SlotPicker day labels', () => {
 });
 
 describe('VenuePicker', () => {
-  it('renders the validation error under the card rail', () => {
+  it('renders the "Select venue" label and the validation error under the card rail', () => {
     renderWithProviders(
       <VenuePicker
         venues={[{ id: 'v1', venue_name: 'Hall' }]}
@@ -133,7 +143,23 @@ describe('VenuePicker', () => {
         error="Select a venue"
       />,
     );
+    expect(screen.getByText('Select venue')).toBeOnTheScreen();
     expect(screen.getByTestId('create-pod-venue-error')).toBeOnTheScreen();
+  });
+
+  it('shows the default empty hint when no venue matches the club', () => {
+    renderWithProviders(<VenuePicker venues={[]} selectedId="" onSelect={jest.fn()} />);
+    expect(screen.getByText('Select venue')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-venue-empty')).toHaveTextContent(
+      /No venues match this club yet/,
+    );
+  });
+
+  it('renders a custom empty hint when provided', () => {
+    renderWithProviders(
+      <VenuePicker venues={[]} selectedId="" onSelect={jest.fn()} emptyHint="Custom hint" />,
+    );
+    expect(screen.getByText('Custom hint')).toBeOnTheScreen();
   });
 });
 
@@ -168,20 +194,19 @@ describe('OptionalSettingsCards', () => {
     expect(screen.queryByTestId('field-pod_info')).toBeNull();
   });
 
-  it('shows filled summaries and reveals the offers + perks chip fields', () => {
+  it('shows filled summaries and reveals the perks chip field (offers panel is gone)', () => {
     renderWithProviders(
       <OptionalHarness
         initial={{
           pod_info: 'Bring water',
-          what_this_pod_offers: ['Snacks'],
           available_perks: ['Parking'],
         }}
       />,
     );
     expect(screen.getByText('Added')).toBeOnTheScreen();
-    expect(screen.getAllByText('1 added')).toHaveLength(2);
-    fireEvent.press(screen.getByTestId('optional-offers'));
-    expect(screen.getByTestId('create-pod-offers-input')).toBeOnTheScreen();
+    // Only perks carry a chip summary now — the offers panel was moved into Basics.
+    expect(screen.getByText('1 added')).toBeOnTheScreen();
+    expect(screen.queryByTestId('optional-offers')).toBeNull();
     fireEvent.press(screen.getByTestId('optional-perks'));
     expect(screen.getByTestId('create-pod-perks-input')).toBeOnTheScreen();
   });

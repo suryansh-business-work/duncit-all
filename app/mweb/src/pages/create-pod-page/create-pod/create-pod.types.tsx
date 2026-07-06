@@ -87,6 +87,12 @@ export interface CreatePodClub {
   club_name: string;
   location_id?: string | null;
   super_category_id?: string | null;
+  /** Club's Sub-level category (matched against the host's sub_category_id). */
+  category_id?: string | null;
+  /** How many APPROVED+active venues auto-match this club (location + category). */
+  matched_venues_count?: number | null;
+  /** Ids of the venues that match this club — the venue picker is scoped to these. */
+  matched_venues?: { id: string }[] | null;
   club_description?: string | null;
   club_feature_images_and_videos?: { url: string; type?: string | null }[] | null;
 }
@@ -135,6 +141,10 @@ export interface CreatePodSlot {
   start_at: string;
   end_at: string;
   price: number;
+  /** The venue space/capacity-item this slot is for ('' = whole venue). */
+  space_label: string;
+  /** Guests this slot's space can hold — drives the pod's No. of spots. */
+  capacity: number;
   status: string;
 }
 

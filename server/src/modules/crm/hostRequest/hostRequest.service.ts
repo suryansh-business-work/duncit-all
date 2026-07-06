@@ -356,4 +356,13 @@ export const hostRequestService = {
     const h = await HostRequestModel.findById(id);
     return h ? toPub(h) : null;
   },
+
+  /** Permanently remove a host-request record (onboarding cleanup). */
+  async remove(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new GraphQLError('Host request not found', { extensions: { code: 'NOT_FOUND' } });
+    }
+    const r = await HostRequestModel.deleteOne({ _id: new Types.ObjectId(id) });
+    return r.deletedCount > 0;
+  },
 };

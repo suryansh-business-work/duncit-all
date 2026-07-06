@@ -28,11 +28,16 @@ export const VENUES = gql`
         capacity
       }
       venue_category {
+        super_category_id
+        category_id
+        sub_category_id
         super_category_name
         category_name
         sub_category_name
       }
       status
+      is_active
+      pod_count
       step_completed
       submitted_at
       reviewer_notes
@@ -104,6 +109,21 @@ export const SET_VENUE_DEDUCTIONS = gql`
       venue_share_pct
       venue_commission_pct
     }
+  }
+`;
+
+export const SET_VENUE_ACTIVE = gql`
+  mutation SetVenueActive($id: ID!, $active: Boolean!) {
+    setVenueActive(venue_doc_id: $id, active: $active) {
+      id
+      is_active
+    }
+  }
+`;
+
+export const DELETE_VENUE = gql`
+  mutation DeleteVenue($id: ID!, $email: String!, $password: String!) {
+    deleteVenue(venue_doc_id: $id, email: $email, password: $password)
   }
 `;
 

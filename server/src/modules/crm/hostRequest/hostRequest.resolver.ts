@@ -50,5 +50,9 @@ export const hostRequestResolvers = {
       const user = requireRole(ctx, ONBOARDING_REVIEW);
       return hostRequestService.reject(args.id, reviewerFrom(user), args.notes);
     },
+    deleteHostRequest: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ONBOARDING_REVIEW);
+      return hostRequestService.remove(args.id);
+    },
   },
 };

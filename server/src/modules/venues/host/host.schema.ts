@@ -105,6 +105,7 @@ export const hostTypeDefs = /* GraphQL */ `
       categories: [HostCategoryInput!]
     ): Host!
     setHostActive(host_doc_id: ID!, active: Boolean!): Host!
-    deleteHost(host_doc_id: ID!): Boolean!
+    "Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the host still has live pods."
+    deleteHost(host_doc_id: ID!, email: String!, password: String!): Boolean!
   }
 `;

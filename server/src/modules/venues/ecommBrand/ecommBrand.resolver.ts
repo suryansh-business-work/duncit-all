@@ -1,5 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { ecommBrandService } from './ecommBrand.service';
+import { userService } from '@modules/access/user/user.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 import { ADMIN_RW } from '@modules/venues/inventory/inventory.resolver';
@@ -7,6 +8,8 @@ import { InventoryProductModel } from '@modules/venues/inventory/inventory.model
 
 // Onboarding managers review brands; admins can too.
 const BRAND_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
+// Permanent hard-delete is a developer-only action.
+const DEVELOPER_DELETE = ['SUPER_ADMIN', 'DEVELOPERS_MANAGER'];
 
 function uid(ctx: GraphQLContext) {
   if (!ctx.user) {
@@ -38,7 +41,7 @@ export const ecommBrandResolvers = {
     },
     marketplaceBrands: (_p: unknown, args: { status?: string }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
-      return ecommBrandService.list({ status: args.status ?? 'APPROVED' });
+      return ecommBrandService.list({ status: args.status ?? 'APPROVED', activeOnly: true });
     },
     ecommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) => {
       requireRole(ctx, BRAND_REVIEW);
@@ -84,6 +87,25 @@ export const ecommBrandResolvers = {
       // Onboarding console + finance manage the brand-level commission.
       requireRole(ctx, [...BRAND_REVIEW, 'FINANCE_MANAGER']);
       return ecommBrandService.setCommission(args.brand_doc_id, args.product_commission_pct);
+    },
+    setEcommBrandActive: (
+      _p: unknown,
+      args: { brand_doc_id: string; active: boolean },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, BRAND_REVIEW);
+      return ecommBrandService.setActive(args.brand_doc_id, args.active);
+    },
+    deleteEcommBrand: async (
+      _p: unknown,
+      args: { brand_doc_id: string; email: string; password: string },
+      ctx: GraphQLContext
+    ) => {
+      // Developer-only permanent delete, re-confirmed with the caller's own
+      // email + password (this cannot be undone).
+      requireRole(ctx, DEVELOPER_DELETE);
+      await userService.assertPasswordConfirmation(uid(ctx), args.email, args.password);
+      return ecommBrandService.deleteBrand(args.brand_doc_id);
     },
   },
 };

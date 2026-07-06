@@ -1,21 +1,64 @@
 import { Box, MenuItem, Stack, TextField } from '@mui/material';
+import { AdminLocationSelect, type AdminLocationValue } from '@duncit/location';
+import { AdminCategorySelect, type AdminCategoryValue } from '@duncit/category';
 import MediaListField from '../MediaListField';
 import MediaPickerField from '../MediaPickerField';
 import { VENUE_TYPES, type Step1 } from './queries';
 import VenueChecklistFields from './VenueChecklistFields';
-import VenueLocationFields from './VenueLocationFields';
 import { getVenueError, type VenueValidationErrors } from './venue.form';
 
 interface Props {
   s1: Step1;
   setS1: (next: Step1) => void;
-  locations: any[];
   errors?: VenueValidationErrors;
 }
 
-export default function VenueDetailsSection({ s1, setS1, locations, errors }: Readonly<Props>) {
+export default function VenueDetailsSection({ s1, setS1, errors }: Readonly<Props>) {
   const set = (patch: Partial<Step1>) => setS1({ ...s1, ...patch });
-  const err = (field: keyof Step1) => getVenueError(errors, `step1.${field}`);
+  const err = (field: string) => getVenueError(errors, `step1.${field}`);
+
+  const locationValue: AdminLocationValue = {
+    location_id: s1.location_id,
+    country: s1.country,
+    country_code: s1.country_code,
+    state: s1.state,
+    state_code: s1.state_code,
+    city: s1.city,
+    locality: s1.locality,
+    pincode: s1.postal_code,
+  };
+  const applyLocation = (value: AdminLocationValue) =>
+    set({
+      location_id: value.location_id,
+      country: value.country,
+      country_code: value.country_code,
+      state: value.state,
+      state_code: value.state_code,
+      city: value.city,
+      locality: value.locality,
+      postal_code: value.pincode,
+    });
+
+  const categoryValue: AdminCategoryValue = {
+    super_id: s1.venue_category.super_category_id,
+    super_name: s1.venue_category.super_category_name,
+    category_id: s1.venue_category.category_id,
+    category_name: s1.venue_category.category_name,
+    sub_id: s1.venue_category.sub_category_id,
+    sub_name: s1.venue_category.sub_category_name,
+  };
+  const applyCategory = (value: AdminCategoryValue) =>
+    set({
+      venue_category: {
+        super_category_id: value.super_id,
+        super_category_name: value.super_name,
+        category_id: value.category_id,
+        category_name: value.category_name,
+        sub_category_id: value.sub_id,
+        sub_category_name: value.sub_name,
+      },
+    });
+
   return (
     <Stack spacing={1.5}>
       <Box
@@ -47,8 +90,35 @@ export default function VenueDetailsSection({ s1, setS1, locations, errors }: Re
           helperText="Comma separated tags shown on approved venue cards."
         />
       </Box>
+
+      <AdminLocationSelect
+        value={locationValue}
+        onChange={applyLocation}
+        fields={['country', 'state', 'city', 'locality']}
+        required
+        legend="Location"
+        hint="Pick the venue's Country → State → City → Locality from the admin location list."
+        errors={{
+          country: err('country') || undefined,
+          state: err('state') || undefined,
+          city: err('city') || err('location_id') || undefined,
+          locality: err('locality') || undefined,
+        }}
+      />
+
+      <AdminCategorySelect
+        value={categoryValue}
+        onChange={applyCategory}
+        legend="Category"
+        hint="Super → Category → Sub the venue hosts pods in — used to auto-match clubs by location + category."
+        errors={{
+          super: err('venue_category.super_category_id') || undefined,
+          sub: err('venue_category.sub_category_id') || undefined,
+        }}
+      />
+
       <VenueChecklistFields s1={s1} set={set} />
-      <VenueLocationFields s1={s1} locations={locations} set={set} errors={errors} />
+
       <MediaPickerField
         label="Cover image"
         value={s1.cover_image_url}

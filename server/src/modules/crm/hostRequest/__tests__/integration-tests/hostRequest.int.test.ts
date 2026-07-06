@@ -485,3 +485,15 @@ describe('hostRequestService — takenCategoryIds', () => {
     expect(taken.sort()).toEqual([seed.sub_category_id, String(sibling._id)].sort());
   });
 });
+
+describe('hostRequestService — remove', () => {
+  it('permanently deletes a request; missing ids return false, invalid ids throw', async () => {
+    const seed = await seedApprovedHost();
+    const req = await submit(seed.userId, submitInput(seed));
+
+    expect(await hostRequestService.remove(req.id)).toBe(true);
+    expect(await HostRequestModel.findById(req.id)).toBeNull();
+    expect(await hostRequestService.remove(new Types.ObjectId().toString())).toBe(false);
+    await expect(hostRequestService.remove('not-an-id')).rejects.toThrow(/not found/i);
+  });
+});

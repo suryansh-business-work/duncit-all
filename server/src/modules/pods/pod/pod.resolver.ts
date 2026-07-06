@@ -8,9 +8,16 @@ import { VenueModel } from '@modules/venues/venue/venue.model';
 import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
 
 const ADMIN_WRITE = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN'];
+// Roles allowed to see pods still awaiting a venue's slot approval (admin +
+// onboarding review consoles). Everyone else — including the public discovery
+// feed — never receives a PENDING pod, so it stays offline until approved.
+const POD_REVIEW_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
 
 const isAdminCtx = (ctx: GraphQLContext) =>
   !!ctx.user?.roles?.some((r) => ADMIN_WRITE.includes(r));
+
+const canReviewPendingPods = (ctx: GraphQLContext) =>
+  !!ctx.user?.roles?.some((r) => POD_REVIEW_ROLES.includes(r));
 
 const cleanParts = (parts: Array<string | null | undefined>) =>
   parts.map((part) => part?.trim()).filter(Boolean) as string[];
@@ -163,7 +170,8 @@ export const podResolvers = {
     },
   },
   Query: {
-    pods: async (_p: unknown, args: { filter?: any }) => podService.list(args.filter),
+    pods: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) =>
+      podService.list(args.filter, { includePendingApproval: canReviewPendingPods(ctx) }),
     myHostPods: async (_p: unknown, args: { from?: string | null; to?: string | null }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       return podService.listMyHostPods(user.id, { from: args.from, to: args.to });

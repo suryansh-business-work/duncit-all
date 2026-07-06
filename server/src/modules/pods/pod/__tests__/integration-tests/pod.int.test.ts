@@ -240,4 +240,20 @@ describe('pod comment reactions (explore item 4)', () => {
       podService.toggleCommentLike(String(pod._id), new Types.ObjectId().toString(), new Types.ObjectId().toString())
     ).rejects.toThrow(/comment not found/i);
   });
+
+  it('hides pods awaiting venue slot approval from the default list unless a reviewer opts in', async () => {
+    const clubId = new Types.ObjectId();
+    await PodModel.create(makePod({ club_id: clubId, pod_title: 'Live pod', venue_approval_status: 'NONE' }));
+    await PodModel.create(
+      makePod({ club_id: clubId, pod_title: 'Pending pod', venue_approval_status: 'PENDING', is_active: false })
+    );
+
+    // Public/consumer reads never receive a pod still awaiting venue approval.
+    const publicList = await podService.list({ club_id: String(clubId) });
+    expect(publicList.map((p) => p.pod_title)).toEqual(['Live pod']);
+
+    // Admin/onboarding reviewers opt in and see the pending pod too.
+    const reviewList = await podService.list({ club_id: String(clubId) }, { includePendingApproval: true });
+    expect(reviewList.map((p) => p.pod_title).sort()).toEqual(['Live pod', 'Pending pod']);
+  });
 });

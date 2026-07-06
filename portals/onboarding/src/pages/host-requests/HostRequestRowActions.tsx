@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconButton, ListItemText, Menu, MenuItem, Typography } from '@mui/material';
+import { IconButton, ListItemText, Menu, MenuItem } from '@mui/material';
 import MoreVertIcon from '@mui/icons-material/MoreVert';
 import type { HostRequest } from './queries';
 
@@ -13,6 +13,7 @@ interface Handlers {
   onAcknowledge: (r: HostRequest) => void;
   onApprove: (r: HostRequest) => void;
   onReject: (r: HostRequest) => void;
+  onDelete: (r: HostRequest) => void;
 }
 
 interface Props extends Handlers {
@@ -20,27 +21,26 @@ interface Props extends Handlers {
   busy: boolean;
 }
 
-/** Status-driven action list. Terminal (APPROVED/REJECTED) requests get no actions. */
+/** Status-driven action list. Delete is always available; approve/reject/ack
+ * depend on the request status. */
 function buildActions(request: HostRequest, h: Handlers): Action[] {
+  const actions: Action[] = [];
   if (request.status === 'REQUESTED') {
-    return [{ label: 'Acknowledge', onClick: () => h.onAcknowledge(request) }];
-  }
-  if (request.status === 'ACKNOWLEDGED') {
-    return [
+    actions.push({ label: 'Acknowledge', onClick: () => h.onAcknowledge(request) });
+  } else if (request.status === 'ACKNOWLEDGED') {
+    actions.push(
       { label: 'Approve', onClick: () => h.onApprove(request) },
       { label: 'Reject', onClick: () => h.onReject(request), danger: true },
-    ];
+    );
   }
-  return [];
+  actions.push({ label: 'Delete', onClick: () => h.onDelete(request), danger: true });
+  return actions;
 }
 
 /** Actions dropdown on a host-request row — options change with the request status. */
-export default function HostRequestRowActions({ request, busy, onAcknowledge, onApprove, onReject }: Readonly<Props>) {
+export default function HostRequestRowActions({ request, busy, onAcknowledge, onApprove, onReject, onDelete }: Readonly<Props>) {
   const [anchor, setAnchor] = useState<null | HTMLElement>(null);
-  const actions = buildActions(request, { onAcknowledge, onApprove, onReject });
-  if (actions.length === 0) {
-    return <Typography variant="caption" color="text.secondary">—</Typography>;
-  }
+  const actions = buildActions(request, { onAcknowledge, onApprove, onReject, onDelete });
   const run = (action: Action) => {
     setAnchor(null);
     action.onClick();

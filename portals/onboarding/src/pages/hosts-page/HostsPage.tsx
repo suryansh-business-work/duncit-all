@@ -9,7 +9,10 @@ import {
   Typography,
 } from '@mui/material';
 import TableSkeleton from '../../components/TableSkeleton';
-import { APPROVE, HOSTS, REJECT, SET_HOST_DEDUCTIONS, STATUSES } from './queries';
+import ConfirmDialog from '../../components/ConfirmDialog';
+import HardDeleteDialog from '../../components/HardDeleteDialog';
+import { useEntityLifecycle } from '../../components/useEntityLifecycle';
+import { APPROVE, DELETE_HOST, HOSTS, REJECT, SET_HOST_ACTIVE, SET_HOST_DEDUCTIONS, STATUSES } from './queries';
 import HostEditDialog from './HostEditDialog';
 import HostReviewDialog from './HostReviewDialog';
 import HostsTable from './HostsTable';
@@ -22,6 +25,7 @@ export default function HostsPage() {
   const [approve] = useMutation(APPROVE);
   const [reject] = useMutation(REJECT);
   const [setHostDeductions, { loading: savingCommission }] = useMutation(SET_HOST_DEDUCTIONS);
+  const lifecycle = useEntityLifecycle(SET_HOST_ACTIVE, DELETE_HOST, refetch);
   const [active, setActive] = useState<any | null>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
@@ -90,8 +94,40 @@ export default function HostsPage() {
       {loading && !data ? (
         <TableSkeleton columns={8} />
       ) : (
-        <HostsTable hosts={data?.hosts ?? []} onEdit={setEditing} onReview={openReview} />
+        <HostsTable
+          hosts={data?.hosts ?? []}
+          onEdit={setEditing}
+          onReview={openReview}
+          canHardDelete={lifecycle.canHardDelete}
+          onToggleActive={lifecycle.setToggleTarget}
+          onDelete={lifecycle.setDeleteTarget}
+        />
       )}
+
+      <ConfirmDialog
+        open={!!lifecycle.toggleTarget}
+        title={lifecycle.toggleTarget?.is_active === false ? 'Activate host' : 'Deactivate host'}
+        message={
+          lifecycle.toggleTarget?.is_active === false
+            ? 'This host will be able to create and host pods again.'
+            : 'This host will be unable to create pods and will be hidden from public discovery. You can reactivate them anytime.'
+        }
+        confirmLabel={lifecycle.toggleTarget?.is_active === false ? 'Activate' : 'Deactivate'}
+        confirmColor={lifecycle.toggleTarget?.is_active === false ? 'success' : 'warning'}
+        loading={lifecycle.toggling}
+        onClose={() => lifecycle.setToggleTarget(null)}
+        onConfirm={lifecycle.confirmToggle}
+      />
+
+      <HardDeleteDialog
+        open={!!lifecycle.deleteTarget}
+        entityLabel="host"
+        entityName={lifecycle.deleteTarget?.full_name ?? ''}
+        loading={lifecycle.deleting}
+        error={lifecycle.deleteError}
+        onClose={lifecycle.closeDelete}
+        onConfirm={lifecycle.confirmDelete}
+      />
 
       <HostReviewDialog
         active={active}

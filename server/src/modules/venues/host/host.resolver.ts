@@ -1,10 +1,13 @@
 import { GraphQLError } from 'graphql';
 import { hostService } from './host.service';
+import { userService } from '@modules/access/user/user.service';
 import type { GraphQLContext } from '@context';
 import { requireRole } from '@middleware/rbac';
 
 // Onboarding console (Onboarded Hosts) reviews and configures hosts too.
 const ADMIN_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
+// Permanent hard-delete is a developer-only action.
+const DEVELOPER_DELETE = ['SUPER_ADMIN', 'DEVELOPERS_MANAGER'];
 
 function uid(ctx: GraphQLContext) {
   if (!ctx.user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
@@ -22,7 +25,7 @@ export const hostResolvers = {
       requireRole(ctx, ADMIN_REVIEW);
       return hostService.getById(args.host_doc_id);
     },
-    publicHosts: async () => hostService.list({ status: 'APPROVED' }),
+    publicHosts: async () => hostService.list({ status: 'APPROVED', activeOnly: true }),
   },
   Mutation: {
     submitHostStep1: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) =>
@@ -89,10 +92,13 @@ export const hostResolvers = {
     },
     deleteHost: async (
       _p: unknown,
-      args: { host_doc_id: string },
+      args: { host_doc_id: string; email: string; password: string },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      // Developer-only permanent delete, re-confirmed with the caller's own
+      // email + password (this cannot be undone).
+      requireRole(ctx, DEVELOPER_DELETE);
+      await userService.assertPasswordConfirmation(uid(ctx), args.email, args.password);
       return hostService.deleteHost(args.host_doc_id);
     },
   },

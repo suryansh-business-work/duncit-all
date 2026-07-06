@@ -10,6 +10,9 @@ import {
 import { LocationModel } from '@modules/platform/location/location.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
+import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
+import { SlotTemplateModel } from '@modules/venues/slotTemplate/slotTemplate.model';
 import { sendEmail } from '@services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 import {
@@ -380,6 +383,16 @@ async function assignApprovedVenueRole(userId: Types.ObjectId) {
   await userService.assignRoles(String(userId), Array.from(current));
 }
 
+/** Strip a single role from a user (used on hard-delete when they have no
+ * remaining entity of that kind). No-op if the user is gone or never held it. */
+async function removeUserRole(userId: Types.ObjectId, role: string) {
+  const u: any = await UserModel.findById(userId).select('metadata.role_keys');
+  const roles = (u?.metadata?.role_keys ?? []) as string[];
+  if (!u || !roles.includes(role)) return;
+  const { userService } = await import('@modules/access/user/user.service');
+  await userService.assignRoles(String(userId), roles.filter((r) => r !== role));
+}
+
 /** Mongo query for the venues that auto-match a club, or null when the club has
  * no location (nothing can match yet). A venue matches when it is APPROVED +
  * active, sits in the club's location, and — when the club has them — shares the
@@ -438,9 +451,12 @@ export const venueService = {
     const docs = await VenueModel.find({ owner_user_id: uid }).sort({ updated_at: -1, created_at: -1 }).limit(200);
     return docs.map(toPub);
   },
-  async list(filter?: { status?: string }) {
+  async list(filter?: { status?: string; activeOnly?: boolean }) {
     const q: any = {};
     if (filter?.status) q.status = filter.status;
+    // Customer-facing surfaces (publicVenues, developer API) pass activeOnly so
+    // deactivated venues disappear; admin/onboarding lists keep showing them.
+    if (filter?.activeOnly) q.is_active = { $ne: false };
     const docs = await VenueModel.find(q).sort({ created_at: -1 });
     return docs.map(toPub);
   },
@@ -721,9 +737,39 @@ export const venueService = {
     return toPub(v);
   },
 
+  /** Developer hard-delete: permanently removes a venue and its owned slot data
+   * everywhere. BLOCKS when the venue still has live dependents (non-deleted
+   * pods or booked/pending slots) so no active booking is ever orphaned. */
   async deleteVenue(venueId: string) {
-    const r = await VenueModel.deleteOne({ _id: new Types.ObjectId(venueId) });
-    return r.deletedCount > 0;
+    if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue id');
+    const venueOid = new Types.ObjectId(venueId);
+    const venue = await VenueModel.findById(venueOid);
+    if (!venue) fail('NOT_FOUND', 'Venue not found');
+
+    const podCount = await PodModel.countDocuments({ venue_id: venueOid, deleted_at: null });
+    const bookedSlots = await VenueSlotModel.countDocuments({
+      venue_id: venueOid,
+      $or: [{ status: { $in: ['BOOKED', 'PENDING'] } }, { booked_by_api_key_id: { $ne: null } }],
+    });
+    if (podCount > 0 || bookedSlots > 0) {
+      const parts: string[] = [];
+      if (podCount > 0) parts.push(`${podCount} pod(s)`);
+      if (bookedSlots > 0) parts.push(`${bookedSlots} booked slot(s)`);
+      fail(
+        'BAD_REQUEST',
+        `This venue still has ${parts.join(' and ')} attached. Remove or reassign them before deleting.`
+      );
+    }
+
+    // No live dependents — remove the venue and its owned (unbooked) slot data.
+    await VenueSlotModel.deleteMany({ venue_id: venueOid });
+    await SlotTemplateModel.deleteMany({ venue_id: venueOid });
+    await VenueModel.deleteOne({ _id: venueOid });
+
+    // Drop the owner's VENUE_OWNER role only when this was their last venue.
+    const remaining = await VenueModel.countDocuments({ owner_user_id: venue!.owner_user_id });
+    if (remaining === 0) await removeUserRole(venue!.owner_user_id, 'VENUE_OWNER');
+    return true;
   },
 
   /** Un-approve a user's venues when their VENUE_OWNER role is revoked from Access. */

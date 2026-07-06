@@ -158,6 +158,8 @@ export const venueTypeDefs = /* GraphQL */ `
     step_completed: Int!
     status: VenueStatus!
     is_active: Boolean!
+    "Count of live (non-deleted) pods hosted at this venue (resolved)."
+    pod_count: Int!
     reviewer_notes: String!
     submitted_at: String
     approved_at: String
@@ -265,6 +267,7 @@ export const venueTypeDefs = /* GraphQL */ `
     setVenueDeductions(venue_doc_id: ID!, venue_share_pct: Float!, venue_commission_pct: Float!): Venue!
     "Owner (or admin) updates operating hours, weekly-off, holidays + booking rules."
     updateVenueSettings(venue_doc_id: ID!, input: VenueSettingsInput!): Venue!
-    deleteVenue(venue_doc_id: ID!): Boolean!
+    "Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the venue still has live pods/booked slots."
+    deleteVenue(venue_doc_id: ID!, email: String!, password: String!): Boolean!
   }
 `;

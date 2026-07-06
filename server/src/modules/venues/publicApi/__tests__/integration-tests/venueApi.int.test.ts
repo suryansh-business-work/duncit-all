@@ -97,6 +97,18 @@ describe('public venue API router', () => {
     expect(venue).not.toHaveProperty('venue_share_pct');
   });
 
+  it('excludes deactivated venues from the list and 404s on a single deactivated venue', async () => {
+    const activeId = await seedVenue();
+    const deactivatedId = await seedVenue({ is_active: false, venue_name: 'Offline Hall' });
+    const key = await seedKey();
+
+    const list = await request(app).get('/api/v1/venues').set('x-api-key', key).expect(200);
+    expect(list.body.venues).toHaveLength(1);
+    expect(list.body.venues[0].id).toBe(activeId);
+
+    await request(app).get(`/api/v1/venues/${deactivatedId}`).set('x-api-key', key).expect(404);
+  });
+
   it('gets one venue by id and 404s on drafts and unknown ids', async () => {
     const approvedId = await seedVenue();
     const draftId = await seedVenue({ status: 'DRAFT' });

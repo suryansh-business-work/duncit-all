@@ -1,10 +1,14 @@
 import { GraphQLError } from 'graphql';
 import { venueService } from './venue.service';
+import { userService } from '@modules/access/user/user.service';
+import { PodModel } from '@modules/pods/pod/pod.model';
 import type { GraphQLContext } from '@context';
 import { hasRole, requireRole } from '@middleware/rbac';
 
 // Onboarding console (Onboarded Venues) reviews and configures venues too.
 const ADMIN_REVIEW = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'ONBOARDING_MANAGER'];
+// Permanent hard-delete is a developer-only action (mirrors the API-key gate).
+const DEVELOPER_DELETE = ['SUPER_ADMIN', 'DEVELOPERS_MANAGER'];
 
 function uid(ctx: GraphQLContext) {
   if (!ctx.user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
@@ -12,6 +16,14 @@ function uid(ctx: GraphQLContext) {
 }
 
 export const venueResolvers = {
+  Venue: {
+    // Live pods hosted at this venue. `.exec()` returns a real Promise so the
+    // GraphQL executor never adopts a bare Mongoose Query twice.
+    pod_count: (parent: { id?: string }) => {
+      if (!parent.id) return 0;
+      return PodModel.countDocuments({ venue_id: parent.id, deleted_at: null }).exec();
+    },
+  },
   Query: {
     myVenue: async (_p: unknown, args: { venue_id?: string }, ctx: GraphQLContext) =>
       venueService.getMine(uid(ctx), args.venue_id),
@@ -26,7 +38,7 @@ export const venueResolvers = {
       requireRole(ctx, ADMIN_REVIEW);
       return venueService.getById(args.venue_doc_id);
     },
-    publicVenues: async () => venueService.list({ status: 'APPROVED' }),
+    publicVenues: async () => venueService.list({ status: 'APPROVED', activeOnly: true }),
     matchingVenues: async (
       _p: unknown,
       args: { location_id: string; locality?: string; super_category_id?: string; category_id?: string },
@@ -123,10 +135,13 @@ export const venueResolvers = {
     },
     deleteVenue: async (
       _p: unknown,
-      args: { venue_doc_id: string },
+      args: { venue_doc_id: string; email: string; password: string },
       ctx: GraphQLContext
     ) => {
-      requireRole(ctx, ADMIN_REVIEW);
+      // Developer-only permanent delete, re-confirmed with the caller's own
+      // email + password (this cannot be undone).
+      requireRole(ctx, DEVELOPER_DELETE);
+      await userService.assertPasswordConfirmation(uid(ctx), args.email, args.password);
       return venueService.deleteVenue(args.venue_doc_id);
     },
   },

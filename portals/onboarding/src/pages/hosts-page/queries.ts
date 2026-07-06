@@ -85,6 +85,71 @@ export const SET_HOST_DEDUCTIONS = gql`
   }
 `;
 
+export const SET_HOST_ACTIVE = gql`
+  mutation SetHostActive($id: ID!, $active: Boolean!) {
+    setHostActive(host_doc_id: $id, active: $active) {
+      id
+      is_active
+    }
+  }
+`;
+
+export const DELETE_HOST = gql`
+  mutation DeleteHost($id: ID!, $email: String!, $password: String!) {
+    deleteHost(host_doc_id: $id, email: $email, password: $password)
+  }
+`;
+
+export const HOST_DETAILS = gql`
+  query HostDetails($host_doc_id: ID!) {
+    host(host_doc_id: $host_doc_id) {
+      id
+      user_id
+      full_name
+      email
+      phone
+      full_address
+      status
+      is_active
+      host_commission_pct
+      host_categories {
+        super_category_name
+        category_name
+        sub_category_name
+        request_no
+      }
+    }
+  }
+`;
+
+export const HOST_PODS = gql`
+  query HostPods($host_user_id: ID!) {
+    pods(filter: { host_user_id: $host_user_id }) {
+      id
+      pod_title
+      pod_date_time
+      pod_end_date_time
+      pod_mode
+      is_active
+      venue_approval_status
+      host_names
+      club_slug
+    }
+  }
+`;
+
+export interface HostPod {
+  id: string;
+  pod_title: string;
+  pod_date_time: string;
+  pod_end_date_time: string | null;
+  pod_mode: 'PHYSICAL' | 'VIRTUAL';
+  is_active: boolean;
+  venue_approval_status: 'NONE' | 'PENDING' | 'APPROVED' | 'DECLINED';
+  host_names: string[];
+  club_slug: string;
+}
+
 export const CATEGORIES = gql`
   query HostEditCategories($level: CategoryLevel!, $parent_id: ID) {
     categories(filter: { level: $level, parent_id: $parent_id }) {

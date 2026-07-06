@@ -3,6 +3,8 @@ jest.mock('@services/email/email.service', () => ({ sendEmail: jest.fn().mockRes
 import { Types } from 'mongoose';
 import { venueService } from '../../venue.service';
 import { VenueModel } from '../../venue.model';
+import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
 import { LocationModel } from '@modules/platform/location/location.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 
@@ -233,5 +235,44 @@ describe('venueService integration', () => {
 
     expect(await venueService.deleteVenue(id)).toBe(true);
     expect(await VenueModel.countDocuments()).toBe(0);
+  });
+
+  it('hides deactivated venues from an activeOnly list only', async () => {
+    const owner = new Types.ObjectId();
+    await VenueModel.create({ owner_user_id: owner, venue_name: 'On', status: 'APPROVED', is_active: true });
+    await VenueModel.create({ owner_user_id: owner, venue_name: 'Off', status: 'APPROVED', is_active: false });
+
+    const all = await venueService.list({ status: 'APPROVED' });
+    expect(all).toHaveLength(2);
+
+    const activeOnly = await venueService.list({ status: 'APPROVED', activeOnly: true });
+    expect(activeOnly.map((v) => v.venue_name)).toEqual(['On']);
+  });
+
+  it('blocks venue delete while a pod or booked slot references it, then cascades slots when clean', async () => {
+    const owner = new Types.ObjectId();
+    const venue = await VenueModel.create({ owner_user_id: owner, venue_name: 'Del', status: 'APPROVED' });
+    const vid = String(venue._id);
+
+    // A live pod blocks the delete.
+    const pod = await PodModel.create({
+      pod_id: 'p1', pod_title: 'P', pod_hosts_id: [owner], club_id: new Types.ObjectId(),
+      venue_id: venue._id, pod_description: 'd', pod_date_time: new Date(), pod_type: 'NATIVE_FREE',
+    });
+    await expect(venueService.deleteVenue(vid)).rejects.toThrow(/pod\(s\) attached/i);
+
+    // Soft-delete the pod; a BOOKED slot still blocks.
+    await PodModel.updateOne({ _id: pod._id }, { deleted_at: new Date() });
+    const slot = await VenueSlotModel.create({
+      venue_id: venue._id, owner_user_id: owner, start_at: new Date(), end_at: new Date(Date.now() + 3_600_000),
+      status: 'BOOKED', booked_by_pod_id: pod._id,
+    });
+    await expect(venueService.deleteVenue(vid)).rejects.toThrow(/booked slot/i);
+
+    // Free the slot → delete succeeds and cascades the now-unbooked slot.
+    await VenueSlotModel.updateOne({ _id: slot._id }, { status: 'AVAILABLE', booked_by_pod_id: null });
+    expect(await venueService.deleteVenue(vid)).toBe(true);
+    expect(await VenueModel.findById(vid)).toBeNull();
+    expect(await VenueSlotModel.countDocuments({ venue_id: venue._id })).toBe(0);
   });
 });

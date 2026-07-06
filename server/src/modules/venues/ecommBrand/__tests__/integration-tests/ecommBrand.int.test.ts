@@ -1,6 +1,10 @@
+import bcrypt from 'bcryptjs';
 import { Types } from 'mongoose';
 import { ecommBrandService } from '../../ecommBrand.service';
 import { ecommBrandResolvers } from '../../ecommBrand.resolver';
+import { EcommBrandModel } from '../../ecommBrand.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { UserModel } from '@modules/access/user/user.model';
 import { makeContext } from '@test/harness';
 
 describe('ecommBrandService integration', () => {
@@ -109,5 +113,60 @@ describe('brand-level product commission (Onboarded E-Commerce Brands console)',
       makeContext({ roles: ['FINANCE_MANAGER'] })
     );
     expect(asFinance.product_commission_pct).toBe(7);
+  });
+});
+
+describe('brand deactivate + developer hard-delete', () => {
+  it('toggles active and hides deactivated brands from an activeOnly list only', async () => {
+    const owner = new Types.ObjectId();
+    await EcommBrandModel.create({ owner_user_id: owner, brand_name: 'On', status: 'APPROVED', is_active: true });
+    const off = await EcommBrandModel.create({ owner_user_id: owner, brand_name: 'Off', status: 'APPROVED', is_active: true });
+
+    const toggled = await ecommBrandService.setActive(String(off._id), false);
+    expect(toggled.is_active).toBe(false);
+
+    const activeOnly = await ecommBrandService.list({ status: 'APPROVED', activeOnly: true });
+    expect(activeOnly.map((b) => b.brand_name)).toEqual(['On']);
+    expect(await ecommBrandService.list({ status: 'APPROVED' })).toHaveLength(2);
+  });
+
+  it('blocks brand delete while it has products, then deletes when clean', async () => {
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'Del', status: 'APPROVED' });
+    const bid = String(brand._id);
+    const product = await InventoryProductModel.create({
+      product_name: 'P', sku: 'DELBRAND1', unit_cost: 10, brand_id: brand._id, ownership: 'BRAND',
+    });
+    await expect(ecommBrandService.deleteBrand(bid)).rejects.toThrow(/still has 1 product/i);
+
+    await InventoryProductModel.deleteOne({ _id: product._id });
+    expect(await ecommBrandService.deleteBrand(bid)).toBe(true);
+    expect(await EcommBrandModel.findById(bid)).toBeNull();
+  });
+
+  it('deleteEcommBrand is developer-gated and re-verifies the caller password', async () => {
+    const brand = await EcommBrandModel.create({ owner_user_id: new Types.ObjectId(), brand_name: 'Guarded', status: 'APPROVED' });
+    const bid = String(brand._id);
+    const M = ecommBrandResolvers.Mutation as any;
+
+    // Non-developer → access denied before any password check.
+    await expect(
+      M.deleteEcommBrand({}, { brand_doc_id: bid, email: 'x@x.com', password: 'p' }, makeContext({ roles: ['ONBOARDING_MANAGER'] }))
+    ).rejects.toThrow(/access denied/i);
+
+    const dev = await UserModel.create({
+      auth: { email: 'brand-dev@x.com', password: await bcrypt.hash('secret', 10) },
+      profile: { first_name: 'Dev' },
+    });
+    const ctx = makeContext({ id: String(dev._id), roles: ['DEVELOPERS_MANAGER'] });
+
+    // Wrong password → rejected, brand survives.
+    await expect(
+      M.deleteEcommBrand({}, { brand_doc_id: bid, email: 'brand-dev@x.com', password: 'nope' }, ctx)
+    ).rejects.toThrow(/password is incorrect/i);
+    expect(await EcommBrandModel.findById(bid)).not.toBeNull();
+
+    // Correct email + password → deleted.
+    expect(await M.deleteEcommBrand({}, { brand_doc_id: bid, email: 'brand-dev@x.com', password: 'secret' }, ctx)).toBe(true);
+    expect(await EcommBrandModel.findById(bid)).toBeNull();
   });
 });

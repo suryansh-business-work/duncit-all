@@ -16,7 +16,7 @@ const base: HostRequest = {
   created_at: '2026-01-02T10:00:00.000Z',
 };
 
-const handlers = () => ({ onAcknowledge: vi.fn(), onApprove: vi.fn(), onReject: vi.fn() });
+const handlers = () => ({ onAcknowledge: vi.fn(), onApprove: vi.fn(), onReject: vi.fn(), onDelete: vi.fn() });
 
 describe('HostRequestRowActions', () => {
   it('offers Acknowledge for a REQUESTED request', () => {
@@ -58,14 +58,22 @@ describe('HostRequestRowActions', () => {
     expect(screen.getByRole('button', { name: 'Host request actions' })).toBeDisabled();
   });
 
-  it('shows a dash with no actions for a terminal request', () => {
-    render(<HostRequestRowActions request={{ ...base, status: 'APPROVED' }} busy={false} {...handlers()} />);
-    expect(screen.getByText('—')).toBeInTheDocument();
-    expect(screen.queryByRole('button')).toBeNull();
+  it('offers only Delete for a terminal (APPROVED) request', () => {
+    const h = handlers();
+    const req = { ...base, status: 'APPROVED' as const };
+    render(<HostRequestRowActions request={req} busy={false} {...h} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Host request actions' }));
+    expect(screen.queryByText('Approve')).toBeNull();
+    fireEvent.click(screen.getByText('Delete'));
+    expect(h.onDelete).toHaveBeenCalledWith(req);
   });
 
-  it('shows a dash for a rejected request too', () => {
-    render(<HostRequestRowActions request={{ ...base, status: 'REJECTED' }} busy={false} {...handlers()} />);
-    expect(screen.getByText('—')).toBeInTheDocument();
+  it('offers Delete for a rejected request too', () => {
+    const h = handlers();
+    const req = { ...base, status: 'REJECTED' as const };
+    render(<HostRequestRowActions request={req} busy={false} {...h} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Host request actions' }));
+    fireEvent.click(screen.getByText('Delete'));
+    expect(h.onDelete).toHaveBeenCalledWith(req);
   });
 });

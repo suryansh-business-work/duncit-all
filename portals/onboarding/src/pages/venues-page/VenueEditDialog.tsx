@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useMutation, useQuery } from '@apollo/client';
+import { useMutation } from '@apollo/client';
 import {
   Alert,
   Button,
@@ -13,14 +13,13 @@ import {
   TextField,
 } from '@mui/material';
 import VenueAccordionForm from '../../components/admin-venue-create-dialog/VenueAccordionForm';
-import { selectedLocation } from '../../components/admin-venue-create-dialog/VenueLocationFields';
 import {
-  LOCATIONS_FOR_VENUE,
   blankS1,
   blankS3,
   type DocEntry,
   type Step1,
   type Step3,
+  type VenueCategoryValue,
 } from '../../components/admin-venue-create-dialog/queries';
 import {
   collectVenueValidationErrors,
@@ -39,27 +38,17 @@ interface Props {
 const dateOnly = (value?: string | null) =>
   value ? new Date(value).toISOString().slice(0, 10) : '';
 
-const hydrateLocation = (base: Step1, locations: any[]): Step1 => {
-  const location = selectedLocation(locations, base);
-  const zones = location?.location_zones ?? [];
-  const zone = zones.find(
-    (item: any) => item.zone_name === base.locality || item.zone_code === base.locality,
-  );
-  return {
-    ...base,
-    location_id: base.location_id || location?.id || '',
-    country: location?.country || base.country,
-    country_code: location?.country_code || base.country_code,
-    state: location?.state || base.state,
-    state_code: location?.state_code || base.state_code,
-    city: location ? location.city || location.location_name : base.city,
-    locality:
-      zone?.zone_name ||
-      base.locality ||
-      (location && zones.length === 0 ? location.city || location.location_name : ''),
-    postal_code: zone?.pincode || location?.location_pincode || base.postal_code,
-  };
-};
+const hydrateCategory = (venueCategory: any): VenueCategoryValue => ({
+  super_category_id: venueCategory?.super_category_id ?? '',
+  super_category_name: venueCategory?.super_category_name ?? '',
+  category_id: venueCategory?.category_id ?? '',
+  category_name: venueCategory?.category_name ?? '',
+  sub_category_id: venueCategory?.sub_category_id ?? '',
+  sub_category_name: venueCategory?.sub_category_name ?? '',
+});
+
+const isCompleteCategory = (c: VenueCategoryValue) =>
+  !!(c.super_category_id && c.category_id && c.sub_category_id);
 
 export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Props>) {
   const [s1, setS1] = useState<Step1>(blankS1);
@@ -70,12 +59,10 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
   const [submitError, setSubmitError] = useState('');
   const [fieldErrors, setFieldErrors] = useState<VenueValidationErrors>({});
   const [updateVenue, state] = useMutation(UPDATE_VENUE);
-  const { data: locationsData } = useQuery(LOCATIONS_FOR_VENUE, { skip: !venue });
 
   useEffect(() => {
     if (!venue) return;
-    const locations = locationsData?.locations ?? [];
-    const baseS1 = {
+    setS1({
       venue_name: venue.venue_name ?? '',
       venue_type: venue.venue_type ?? 'Cafe',
       capacity: venue.capacity ?? 1,
@@ -95,9 +82,9 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
       state_code: venue.state_code ?? '',
       locality: venue.locality ?? '',
       postal_code: venue.postal_code ?? '',
+      venue_category: hydrateCategory(venue.venue_category),
       tags: venue.tags ?? [],
-    };
-    setS1(hydrateLocation(baseS1, locations));
+    });
     setDocs((venue.documents ?? []).map((doc: any) => ({ type: doc.type, url: doc.url })));
     setS2({ gstin: venue.gstin ?? '', pan: venue.pan ?? '' });
     setS3({
@@ -111,11 +98,20 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
     setStatus(venue.status ?? 'APPROVED');
     setSubmitError('');
     setFieldErrors({});
-  }, [venue, locationsData]);
+  }, [venue]);
 
   const save = async () => {
     if (!venue) return;
-    const step1 = { ...s1, capacity: Number(s1.capacity) || 1 };
+    // Send only the id triple (VenueCategoryInput) when complete; the spread's
+    // 6-field venue_category is overwritten so the name fields never reach the API.
+    const category = isCompleteCategory(s1.venue_category)
+      ? {
+          super_category_id: s1.venue_category.super_category_id,
+          category_id: s1.venue_category.category_id,
+          sub_category_id: s1.venue_category.sub_category_id,
+        }
+      : undefined;
+    const step1 = { ...s1, capacity: Number(s1.capacity) || 1, venue_category: category };
     const step2 = {
       documents: docs.filter((doc) => doc.type && doc.url),
       gstin: s2.gstin.trim().toUpperCase(),
@@ -123,7 +119,7 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
     };
     const payload = { step1, step2, step3: s3, status };
     try {
-      await validateVenueEdit(payload);
+      await validateVenueEdit({ ...payload, step1: s1 });
     } catch (validationError) {
       setFieldErrors(collectVenueValidationErrors(validationError));
       return;
@@ -153,7 +149,6 @@ export default function VenueEditDialog({ venue, onClose, onSaved }: Readonly<Pr
             setS2={setS2}
             s3={s3}
             setS3={setS3}
-            locations={locationsData?.locations ?? []}
             errors={fieldErrors}
           />
           <TextField

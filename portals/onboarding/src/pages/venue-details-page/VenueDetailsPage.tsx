@@ -1,19 +1,24 @@
 import { useState } from 'react';
 import { useQuery } from '@apollo/client';
-import { useNavigate, useParams } from 'react-router-dom';
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom';
 import { Alert, Box, CircularProgress, IconButton, Stack, Tab, Tabs, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { VENUE_DETAILS, type AdminVenueDetails } from './queries';
 import VenueOverviewCard from './VenueOverviewCard';
 import VenueHealthCard from './VenueHealthCard';
 import VenueSlotAvailabilityTab from './VenueSlotAvailabilityTab';
+import VenuePodsTab from './VenuePodsTab';
 
-const TABS = ['Overview', 'Account Health', 'Slot Availability'] as const;
+const TABS = ['Overview', 'Pods', 'Account Health', 'Slot Availability'] as const;
 
 export default function VenueDetailsPage() {
   const { venueId = '' } = useParams<{ venueId: string }>();
   const navigate = useNavigate();
-  const [tab, setTab] = useState(0);
+  const [searchParams] = useSearchParams();
+  // Deep-link support: /venues/:id?tab=pods opens the Pods tab (from the
+  // Onboarded Venues table's pod-count button).
+  const initialTab = searchParams.get('tab') === 'pods' ? TABS.indexOf('Pods') : 0;
+  const [tab, setTab] = useState(initialTab);
   const { data, loading, error } = useQuery<{ venue: AdminVenueDetails | null }>(VENUE_DETAILS, {
     variables: { venue_doc_id: venueId },
     fetchPolicy: 'cache-and-network',
@@ -56,7 +61,9 @@ export default function VenueDetailsPage() {
 
       {tab === 0 && <VenueOverviewCard venue={venue} />}
 
-      {tab === 1 && (
+      {tab === 1 && <VenuePodsTab venueId={venue.id} />}
+
+      {tab === 2 && (
         <Stack>
           <Typography variant="h6" fontWeight={900}>
             Account Health
@@ -69,7 +76,7 @@ export default function VenueDetailsPage() {
         </Stack>
       )}
 
-      {tab === 2 && <VenueSlotAvailabilityTab venueId={venue.id} />}
+      {tab === 3 && <VenueSlotAvailabilityTab venueId={venue.id} />}
     </Stack>
   );
 }

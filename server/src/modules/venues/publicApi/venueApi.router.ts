@@ -99,7 +99,7 @@ export function buildVenueApiRouter(): Router {
 
   router.get('/venues', requireApiKey('venues:read'), async (_req, res) => {
     try {
-      const venues = await venueService.list({ status: 'APPROVED' });
+      const venues = await venueService.list({ status: 'APPROVED', activeOnly: true });
       return res.json({ venues: venues.map(toApiVenue) });
     } catch (err) {
       return sendError(res, err);
@@ -110,7 +110,7 @@ export function buildVenueApiRouter(): Router {
     try {
       const valid = Types.ObjectId.isValid(req.params.id);
       const venue = valid ? await venueService.getById(req.params.id) : null;
-      if (!venue || venue.status !== 'APPROVED') {
+      if (!venue || venue.status !== 'APPROVED' || venue.is_active === false) {
         return res.status(404).json({ error: 'venue_not_found' });
       }
       return res.json({ venue: toApiVenue(venue) });

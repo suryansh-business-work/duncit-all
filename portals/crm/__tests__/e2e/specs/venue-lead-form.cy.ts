@@ -37,12 +37,11 @@ describe('Venue lead — create flow', () => {
     cy.get('input[name="venue_name"]').type('Cypress Arena');
     cy.pickMuiOption(/venue type/i, /banquet hall/i);
 
-    // Section 2 (Location) is collapsed by default. `CityField` wraps its
-    // input in an Autocomplete so the `<input>` has an auto-generated name;
-    // typeIntoField targets it by floating-label text instead. Passing a
-    // plain string is an exact (asterisk-tolerant) match on the label.
+    // Section 2 (Location) is collapsed by default. `CityField` is now a strict
+    // @duncit/location Autocomplete backed by the admin Location list (mocked in
+    // baseMocks) — the city must be *picked* from the dropdown, not free-typed.
     cy.expandSection(/^\s*2\.\s*Location\s*$/i);
-    cy.typeIntoField('City', 'Bengaluru');
+    cy.pickMuiOption(/city/i, /bengaluru/i);
     cy.get('textarea[name="full_address"], input[name="full_address"]').first().type('12 Cypress Road');
 
     // Section 3 (Contacts) is also collapsed by default.

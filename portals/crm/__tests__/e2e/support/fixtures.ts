@@ -178,11 +178,32 @@ export const sampleHostLead = {
  * every other element on the page. `AppBranding` is similarly needed by the
  * shell sidebar's logo loader.
  */
+/** Admin Location list backing the shared @duncit/location strict city picker
+ * (lead forms). Without it the City autocomplete has no options and the
+ * required-city validation blocks the create flow. */
+export const adminLocations = [
+  {
+    __typename: 'Location',
+    id: 'loc-blr',
+    location_name: 'Bengaluru',
+    country: 'India',
+    country_code: 'IN',
+    state: 'Karnataka',
+    state_code: 'KA',
+    city: 'Bengaluru',
+    location_pincode: '560001',
+    location_zones: [
+      { __typename: 'LocationZone', zone_name: 'Koramangala', zone_code: 'KOR', pincode: '560034' },
+    ],
+  },
+];
+
 export const baseMocks = () => ({
   SessionMe: { data: { me: adminUser } },
   AppBranding: { data: { branding } },
   CrmLeadConfig: { data: { crmLeadConfig } },
   SuperCategories: { data: { categories: superCategories } },
+  AdminLocations: { data: { locations: adminLocations } },
   VenueLeads: { data: { venueLeads: [sampleVenueLead] } },
   HostLeads: { data: { hostLeads: [sampleHostLead] } },
   VenueLead: { data: { venueLead: sampleVenueLead } },

@@ -28,7 +28,7 @@ const sparse: HostRequest = {
   created_at: '2026-01-03T10:00:00.000Z',
 };
 
-const handlers = () => ({ onAcknowledge: vi.fn(), onApprove: vi.fn(), onReject: vi.fn() });
+const handlers = () => ({ onAcknowledge: vi.fn(), onApprove: vi.fn(), onReject: vi.fn(), onDelete: vi.fn() });
 
 describe('HostRequestsTable', () => {
   it('renders rows with the category path, fallbacks and a status chip', () => {

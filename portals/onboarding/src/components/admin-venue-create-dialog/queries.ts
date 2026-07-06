@@ -15,26 +15,6 @@ export const USERS = gql`
   }
 `;
 
-export const LOCATIONS_FOR_VENUE = gql`
-  query LocationsForVenueForm {
-    locations(filter: { is_active: true }) {
-      id
-      country
-      country_code
-      state
-      state_code
-      city
-      location_name
-      location_pincode
-      location_zones {
-        zone_name
-        zone_code
-        pincode
-      }
-    }
-  }
-`;
-
 export const ADMIN_CREATE_VENUE = gql`
   mutation AdminCreateVenue(
     $owner_user_id: ID!
@@ -75,6 +55,24 @@ export const DOC_TYPES = [
   'Other',
 ];
 
+export interface VenueCategoryValue {
+  super_category_id: string;
+  super_category_name: string;
+  category_id: string;
+  category_name: string;
+  sub_category_id: string;
+  sub_category_name: string;
+}
+
+export const blankVenueCategory: VenueCategoryValue = {
+  super_category_id: '',
+  super_category_name: '',
+  category_id: '',
+  category_name: '',
+  sub_category_id: '',
+  sub_category_name: '',
+};
+
 export interface Step1 {
   venue_name: string;
   venue_type: string;
@@ -95,6 +93,7 @@ export interface Step1 {
   state_code: string;
   locality: string;
   postal_code: string;
+  venue_category: VenueCategoryValue;
   tags: string[];
 }
 
@@ -132,6 +131,7 @@ export const blankS1: Step1 = {
   state_code: '',
   locality: '',
   postal_code: '',
+  venue_category: blankVenueCategory,
   tags: [],
 };
 

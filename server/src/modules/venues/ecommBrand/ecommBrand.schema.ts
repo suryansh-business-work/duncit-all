@@ -117,5 +117,9 @@ export const ecommBrandTypeDefs = gql`
     adminUpdateEcommBrand(brand_doc_id: ID!, input: EcommBrandInput!, status: EcommBrandStatus): EcommBrand!
     "Onboarding/finance: brand-level Duncit commission %% override on product sales (0 = inherit)."
     setBrandCommission(brand_doc_id: ID!, product_commission_pct: Float!): EcommBrand!
+    "Onboarding/admin: deactivate/reactivate a brand — hides it + its products from the marketplace and pod product picker (reversible)."
+    setEcommBrandActive(brand_doc_id: ID!, active: Boolean!): EcommBrand!
+    "Developer-only permanent delete. Re-confirm with your own email + password. Cannot be undone; blocked if the brand still has products."
+    deleteEcommBrand(brand_doc_id: ID!, email: String!, password: String!): Boolean!
   }
 `;

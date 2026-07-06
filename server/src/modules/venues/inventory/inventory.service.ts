@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import type { AuthUser } from '@context';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { InventoryProductModel, type IInventoryProduct } from './inventory.model';
 import { InventoryActivityLogModel } from './inventoryActivityLog.model';
 import { InventoryStockMovementModel } from './inventoryStockMovement.model';
@@ -278,6 +279,17 @@ function validateProductListingInput(input: any) {
   }
 }
 
+/** A deactivated brand cannot list new products (it is hidden everywhere). */
+async function assertBrandActive(brandId: unknown) {
+  if (!brandId || !Types.ObjectId.isValid(String(brandId))) return;
+  const brand = await EcommBrandModel.findById(String(brandId)).select('is_active');
+  if (brand && brand.is_active === false) {
+    throw new GraphQLError('This brand is deactivated and cannot list new products', {
+      extensions: { code: 'BAD_REQUEST' },
+    });
+  }
+}
+
 async function ownedListing(id: string, user: AuthUser | null) {
   if (!user) throw new GraphQLError('Authentication required', { extensions: { code: 'UNAUTHENTICATED' } });
   const doc = await InventoryProductModel.findOne({ _id: id, listing_submitted_by_id: user.id });
@@ -355,9 +367,12 @@ export const inventoryService = {
     return docs.map(inventoryProductToPub);
   },
 
-  /** Approved products of one external brand — the e-commerce marketplace list. */
+  /** Approved products of one external brand — the e-commerce marketplace list.
+   * A deactivated brand shows no products (its storefront is hidden). */
   async listMarketplaceBrandProducts(brandId: string) {
     if (!Types.ObjectId.isValid(brandId)) return [];
+    const brand = await EcommBrandModel.findById(brandId).select('is_active status');
+    if (!brand || brand.is_active === false || brand.status !== 'APPROVED') return [];
     const docs = await InventoryProductModel.find({
       brand_id: new Types.ObjectId(brandId),
       ownership: 'BRAND',
@@ -397,6 +412,13 @@ export const inventoryService = {
       const value = filter?.[key];
       if (value && Types.ObjectId.isValid(value)) q[key] = new Types.ObjectId(value);
     }
+    // Hide products of deactivated brands (a deactivated brand + its products
+    // must not appear in the pod product picker). Duncit-owned products (no
+    // brand_id) are unaffected by the $nin.
+    const inactiveBrands = await EcommBrandModel.find({ is_active: false }).select('_id').lean();
+    if (inactiveBrands.length > 0) {
+      q.brand_id = { $nin: inactiveBrands.map((b) => b._id) };
+    }
     const docs = await InventoryProductModel.find(q).sort({ product_name: 1 }).limit(300);
     return docs.map(inventoryProductToPub);
   },
@@ -409,6 +431,7 @@ export const inventoryService = {
   async submitProductListing(input: any, user: AuthUser | null) {
     const actor = await requireEcommManager(user);
     validateProductListingInput(input);
+    await assertBrandActive(input.brand_id);
     const info = userInfo(actor);
     const sku = await generateUniqueSku();
     const images = listingImages(input);

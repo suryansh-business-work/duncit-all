@@ -2,6 +2,9 @@ import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { EcommBrandModel, type IEcommBrand } from './ecommBrand.model';
 import { UserModel } from '@modules/access/user/user.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { BrandPickupLocationModel } from '@modules/venues/brandPickupLocation/brandPickupLocation.model';
+import { sendEmail } from '@services/email/email.service';
 
 const str = (v: unknown) => (typeof v === 'string' ? v.trim() : '');
 
@@ -95,6 +98,16 @@ async function assignEcommRole(userId: Types.ObjectId) {
   await userService.assignRoles(String(userId), Array.from(roles));
 }
 
+/** Strip a single role from a user (used on brand hard-delete when they have no
+ * remaining brand). No-op if the user is gone or never held the role. */
+async function removeUserRole(userId: string, role: string) {
+  const u: any = await UserModel.findById(userId).select('metadata.role_keys');
+  const roles = (u?.metadata?.role_keys ?? []) as string[];
+  if (!u || !roles.includes(role)) return;
+  const { userService } = await import('@modules/access/user/user.service');
+  await userService.assignRoles(userId, roles.filter((r) => r !== role));
+}
+
 export const ecommBrandService = {
   // A partner may run several brands — list all of theirs.
   async listMine(userId: string) {
@@ -104,9 +117,12 @@ export const ecommBrandService = {
     return docs.map(toPub);
   },
 
-  async list(filter?: { status?: string }) {
+  async list(filter?: { status?: string; activeOnly?: boolean }) {
     const q: any = {};
     if (filter?.status) q.status = filter.status;
+    // marketplaceBrands passes activeOnly so deactivated brands vanish from the
+    // storefront; the onboarding list keeps showing them (to reactivate).
+    if (filter?.activeOnly) q.is_active = { $ne: false };
     const docs = await EcommBrandModel.find(q).sort({ created_at: -1 });
     return docs.map(toPub);
   },
@@ -205,6 +221,64 @@ export const ecommBrandService = {
     brand.reviewer_notes = notes;
     await brand.save();
     return toPub(brand);
+  },
+
+  /** Deactivate/reactivate a brand. A deactivated brand (is_active=false) and its
+   * products disappear from the marketplace + pod product picker without touching
+   * status/roles (reversible). Mirrors venue/host setActive + owner email. */
+  async setActive(id: string, active: boolean) {
+    const brand = await EcommBrandModel.findById(id);
+    if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+    brand.is_active = active;
+    await brand.save();
+
+    if (brand.contact_email) {
+      const slug = active ? 'brand-activated' : 'brand-deactivated';
+      try {
+        await sendEmail({
+          to: brand.contact_email,
+          subject: active ? 'Your brand is now active' : 'Your brand has been deactivated',
+          template: slug,
+          vars: {
+            contact_person: brand.contact_person ?? '',
+            brand_name: brand.brand_name ?? '',
+            status: active ? 'active' : 'deactivated',
+          },
+        });
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.warn(`[ecommBrand.setActive] email failed for ${slug}:`, (err as Error).message);
+      }
+    }
+
+    return toPub(brand);
+  },
+
+  /** Developer hard-delete: permanently removes a brand everywhere, its pickup
+   * locations, and revokes the owner's ECOMM_MANAGER role when it was their last
+   * brand. BLOCKS when the brand still has products (remove them first). */
+  async deleteBrand(id: string) {
+    if (!Types.ObjectId.isValid(id)) {
+      throw new GraphQLError('Invalid brand id', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    const brand = await EcommBrandModel.findById(id);
+    if (!brand) throw new GraphQLError('Brand not found', { extensions: { code: 'NOT_FOUND' } });
+
+    const productCount = await InventoryProductModel.countDocuments({ brand_id: brand._id, ownership: 'BRAND' });
+    if (productCount > 0) {
+      throw new GraphQLError(
+        `This brand still has ${productCount} product(s). Remove them before deleting.`,
+        { extensions: { code: 'BAD_REQUEST' } }
+      );
+    }
+
+    await BrandPickupLocationModel.deleteMany({ brand_id: brand._id });
+    await EcommBrandModel.deleteOne({ _id: brand._id });
+
+    // Drop the owner's ECOMM_MANAGER role only when this was their last brand.
+    const remaining = await EcommBrandModel.countDocuments({ owner_user_id: brand.owner_user_id });
+    if (remaining === 0) await removeUserRole(String(brand.owner_user_id), 'ECOMM_MANAGER');
+    return true;
   },
 
   /** Onboarding/admin edit of any brand (e.g. completing an approval-created

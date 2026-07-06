@@ -3,6 +3,7 @@ import { Types } from 'mongoose';
 import { HostModel, type IHost, type IHostCategory } from './host.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
 import { sendEmail } from '@services/email/email.service';
 import { normalizeBankAccountInput, toBankAccountPub } from '@modules/finance/finance/bankAccount';
 
@@ -138,6 +139,16 @@ async function assignApprovedHostRole(userId: Types.ObjectId) {
   await userService.assignRoles(String(userId), Array.from(current));
 }
 
+/** Strip a single role from a user (used on host hard-delete). No-op if the
+ * user is gone or never held the role. */
+async function removeUserRole(userId: string, role: string) {
+  const u: any = await UserModel.findById(userId).select('metadata.role_keys');
+  const roles = (u?.metadata?.role_keys ?? []) as string[];
+  if (!u || !roles.includes(role)) return;
+  const { userService } = await import('@modules/access/user/user.service');
+  await userService.assignRoles(userId, roles.filter((r) => r !== role));
+}
+
 /** Attach each host's Duncit commission override (User.finance, 0 = inherit)
  * — only for the gated admin/onboarding queries, never for publicHosts. */
 async function withCommission(rows: ReturnType<typeof toPub>[]) {
@@ -154,9 +165,12 @@ export const hostService = {
     const h = await HostModel.findOne({ user_id: new Types.ObjectId(userId) });
     return h ? toPub(h) : null;
   },
-  async list(filter?: { status?: string }, opts?: { withCommission?: boolean }) {
+  async list(filter?: { status?: string; activeOnly?: boolean }, opts?: { withCommission?: boolean }) {
     const q: any = {};
     if (filter?.status) q.status = filter.status;
+    // publicHosts passes activeOnly so deactivated hosts drop off discovery;
+    // the onboarding list keeps showing them (to reactivate).
+    if (filter?.activeOnly) q.is_active = { $ne: false };
     const docs = await HostModel.find(q).sort({ created_at: -1 });
     const rows = docs.map(toPub);
     return opts?.withCommission ? withCommission(rows) : rows;
@@ -329,9 +343,22 @@ export const hostService = {
     return toPub(h);
   },
 
+  /** Developer hard-delete: permanently removes a host record everywhere and
+   * revokes their HOST role (host↔user is 1:1). BLOCKS when the host still has
+   * live (non-deleted) pods so no active pod is orphaned. */
   async deleteHost(hostId: string) {
-    const r = await HostModel.deleteOne({ _id: new Types.ObjectId(hostId) });
-    return r.deletedCount > 0;
+    if (!Types.ObjectId.isValid(hostId)) fail('BAD_USER_INPUT', 'Invalid host id');
+    const host = await HostModel.findById(hostId);
+    if (!host) fail('NOT_FOUND', 'Host not found');
+
+    const podCount = await PodModel.countDocuments({ pod_hosts_id: host!.user_id, deleted_at: null });
+    if (podCount > 0) {
+      fail('BAD_REQUEST', `This host still hosts ${podCount} pod(s). Remove or reassign them before deleting.`);
+    }
+
+    await HostModel.deleteOne({ _id: host!._id });
+    await removeUserRole(String(host!.user_id), 'HOST');
+    return true;
   },
 
   /** Un-approve a user's host when their HOST role is revoked from Access. */

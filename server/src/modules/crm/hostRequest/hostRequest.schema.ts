@@ -62,5 +62,7 @@ export const hostRequestTypeDefs = /* GraphQL */ `
     acknowledgeHostRequest(id: ID!): HostRequest!
     approveHostRequest(id: ID!, notes: String): HostRequest!
     rejectHostRequest(id: ID!, notes: String!): HostRequest!
+    "Onboarding: permanently remove a host request record."
+    deleteHostRequest(id: ID!): Boolean!
   }
 `;

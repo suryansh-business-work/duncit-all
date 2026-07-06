@@ -9,7 +9,10 @@ import {
   Typography,
 } from '@mui/material';
 import TableSkeleton from '../../components/TableSkeleton';
-import { APPROVE, REJECT, SET_VENUE_DEDUCTIONS, STATUSES, VENUES } from './queries';
+import ConfirmDialog from '../../components/ConfirmDialog';
+import HardDeleteDialog from '../../components/HardDeleteDialog';
+import { useEntityLifecycle } from '../../components/useEntityLifecycle';
+import { APPROVE, DELETE_VENUE, REJECT, SET_VENUE_ACTIVE, SET_VENUE_DEDUCTIONS, STATUSES, VENUES } from './queries';
 import VenueEditDialog from './VenueEditDialog';
 import VenueReviewDialog from './VenueReviewDialog';
 import VenuesTable from './VenuesTable';
@@ -22,6 +25,7 @@ export default function VenuesPage() {
   const [approve] = useMutation(APPROVE);
   const [reject] = useMutation(REJECT);
   const [setVenueDeductions, { loading: savingDeductions }] = useMutation(SET_VENUE_DEDUCTIONS);
+  const lifecycle = useEntityLifecycle(SET_VENUE_ACTIVE, DELETE_VENUE, refetch);
   const [active, setActive] = useState<any | null>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
@@ -90,8 +94,40 @@ export default function VenuesPage() {
       {loading && !data ? (
         <TableSkeleton columns={8} />
       ) : (
-        <VenuesTable venues={data?.venues ?? []} onEdit={setEditing} onReview={openReview} />
+        <VenuesTable
+          venues={data?.venues ?? []}
+          onEdit={setEditing}
+          onReview={openReview}
+          canHardDelete={lifecycle.canHardDelete}
+          onToggleActive={lifecycle.setToggleTarget}
+          onDelete={lifecycle.setDeleteTarget}
+        />
       )}
+
+      <ConfirmDialog
+        open={!!lifecycle.toggleTarget}
+        title={lifecycle.toggleTarget?.is_active === false ? 'Activate venue' : 'Deactivate venue'}
+        message={
+          lifecycle.toggleTarget?.is_active === false
+            ? 'This venue will become available again for pod creation and public discovery.'
+            : 'This venue will stop appearing when creating pods and in public listings. You can reactivate it anytime.'
+        }
+        confirmLabel={lifecycle.toggleTarget?.is_active === false ? 'Activate' : 'Deactivate'}
+        confirmColor={lifecycle.toggleTarget?.is_active === false ? 'success' : 'warning'}
+        loading={lifecycle.toggling}
+        onClose={() => lifecycle.setToggleTarget(null)}
+        onConfirm={lifecycle.confirmToggle}
+      />
+
+      <HardDeleteDialog
+        open={!!lifecycle.deleteTarget}
+        entityLabel="venue"
+        entityName={lifecycle.deleteTarget?.venue_name ?? ''}
+        loading={lifecycle.deleting}
+        error={lifecycle.deleteError}
+        onClose={lifecycle.closeDelete}
+        onConfirm={lifecycle.confirmDelete}
+      />
 
       <VenueReviewDialog
         active={active}

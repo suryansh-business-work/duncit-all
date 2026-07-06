@@ -2,12 +2,14 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, MenuItem, Stack, TextField, Typography } from '@mui/material';
 import TableSkeleton from '../../components/TableSkeleton';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import HostRequestsTable from './HostRequestsTable';
 import ContactDetailsDialog from './ContactDetailsDialog';
 import DecisionDialog, { type DecisionMode } from './DecisionDialog';
 import {
   ACKNOWLEDGE_HOST_REQUEST,
   APPROVE_HOST_REQUEST,
+  DELETE_HOST_REQUEST,
   HOST_REQUESTS,
   REJECT_HOST_REQUEST,
   STATUS_FILTERS,
@@ -25,12 +27,14 @@ export default function HostRequestsPage() {
   const [acknowledge, { loading: acking }] = useMutation(ACKNOWLEDGE_HOST_REQUEST);
   const [approve, { loading: approving }] = useMutation(APPROVE_HOST_REQUEST);
   const [reject, { loading: rejecting }] = useMutation(REJECT_HOST_REQUEST);
+  const [deleteRequest, { loading: deleting }] = useMutation(DELETE_HOST_REQUEST);
 
   const [contactFor, setContactFor] = useState<HostRequest | null>(null);
   const [decision, setDecision] = useState<{ mode: DecisionMode; request: HostRequest } | null>(null);
+  const [deleteFor, setDeleteFor] = useState<HostRequest | null>(null);
   const [actionError, setActionError] = useState<string | null>(null);
 
-  const busy = acking || approving || rejecting;
+  const busy = acking || approving || rejecting || deleting;
   const requests = data?.hostRequests ?? [];
 
   const run = async (work: Promise<unknown>, fallback: string) => {
@@ -61,6 +65,11 @@ export default function HostRequestsPage() {
       : reject({ variables: { id: request.id, notes } });
     const ok = await run(work, 'Could not update the request');
     if (ok) setDecision(null);
+  };
+  const confirmDelete = async () => {
+    if (!deleteFor) return;
+    const ok = await run(deleteRequest({ variables: { id: deleteFor.id } }), 'Could not delete the request');
+    if (ok) setDeleteFor(null);
   };
 
   return (
@@ -98,6 +107,7 @@ export default function HostRequestsPage() {
           onAcknowledge={doAcknowledge}
           onApprove={(r) => openDecision('APPROVE', r)}
           onReject={(r) => openDecision('REJECT', r)}
+          onDelete={setDeleteFor}
         />
       )}
 
@@ -114,6 +124,17 @@ export default function HostRequestsPage() {
         busy={busy}
         onClose={() => setDecision(null)}
         onConfirm={confirmDecision}
+      />
+
+      <ConfirmDialog
+        open={!!deleteFor}
+        title="Delete host request"
+        message={`Permanently delete request ${deleteFor?.request_no ?? ''}? This cannot be undone.`}
+        confirmLabel="Delete"
+        confirmColor="error"
+        loading={deleting}
+        onClose={() => setDeleteFor(null)}
+        onConfirm={confirmDelete}
       />
     </Box>
   );

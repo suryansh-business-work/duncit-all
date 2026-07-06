@@ -439,15 +439,18 @@ async function applyProductDeltas(oldItems: any[], nextItems: any[]) {
 }
 
 export const podService = {
-  async list(filter?: {
-    club_id?: string;
-    venue_id?: string;
-    location_id?: string;
-    zone_name?: string;
-    search?: string;
-    is_active?: boolean;
-    host_user_id?: string;
-  }) {
+  async list(
+    filter?: {
+      club_id?: string;
+      venue_id?: string;
+      location_id?: string;
+      zone_name?: string;
+      search?: string;
+      is_active?: boolean;
+      host_user_id?: string;
+    },
+    opts?: { includePendingApproval?: boolean }
+  ) {
     const q: any = {};
     if (filter?.club_id) q.club_id = filter.club_id;
     if (filter?.venue_id) q.venue_id = filter.venue_id;
@@ -456,6 +459,11 @@ export const podService = {
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
     if (filter?.search) q.pod_title = new RegExp(filter.search, 'i');
     if (filter?.host_user_id) q.pod_hosts_id = filter.host_user_id;
+    // A pod awaiting the venue owner's slot approval is NOT live. Hide it from
+    // every non-review caller so it can never surface in discovery (or via an
+    // unfiltered public read) until the owner approves — a server guarantee, not
+    // just a client `is_active` filter. Admin/onboarding reviewers opt in.
+    if (!opts?.includePendingApproval) q.venue_approval_status = { $ne: 'PENDING' };
     const docs = await PodModel.find(q).sort({ pod_date_time: -1 });
     const slugMap = await loadClubSlugMap(docs);
     return docs.map((d) => toPub(d, slugMap));
@@ -653,10 +661,14 @@ export const podService = {
     // AND automatically on host-application approval. An approved host profile is
     // accepted as a fallback so legacy approved hosts (without the cached role)
     // keep working.
+    // A deactivated host may not create pods even if they still hold the cached
+    // HOST role. Role-only hosts (no Host doc) are unaffected.
+    const hostDoc = await HostModel.findOne({ user_id: userObjectId }).select('status is_active');
+    if (hostDoc && hostDoc.is_active === false) {
+      throw new GraphQLError('Your host account has been deactivated', { extensions: { code: 'FORBIDDEN' } });
+    }
     const hasHostRole = await UserRoleModel.exists({ user_id: userObjectId, role: 'HOST' });
-    const approvedHost = hasHostRole
-      ? null
-      : await HostModel.findOne({ user_id: userObjectId, status: 'APPROVED', is_active: true }).select('_id');
+    const approvedHost = !hasHostRole && hostDoc?.status === 'APPROVED';
     if (!hasHostRole && !approvedHost) {
       throw new GraphQLError('Host access is required before creating pods', { extensions: { code: 'FORBIDDEN' } });
     }

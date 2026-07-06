@@ -41,7 +41,6 @@ interface Props {
   owner?: OwnerUser | null;
   setOwner?: (next: OwnerUser | null) => void;
   ownerOptions?: OwnerUser[];
-  locations: any[];
   /** Toggle whether the Owner section is rendered (default true). */
   showOwnerSection?: boolean;
   errors?: VenueValidationErrors;
@@ -72,7 +71,6 @@ export default function VenueAccordionForm({
   owner,
   setOwner,
   ownerOptions,
-  locations,
   showOwnerSection = true,
   errors,
 }: Readonly<Props>) {
@@ -110,7 +108,7 @@ export default function VenueAccordionForm({
           <Typography variant="subtitle1">Venue details</Typography>
         </AccordionSummary>
         <AccordionDetails>
-          <VenueDetailsSection s1={s1} setS1={setS1} locations={locations} errors={errors} />
+          <VenueDetailsSection s1={s1} setS1={setS1} errors={errors} />
         </AccordionDetails>
       </Accordion>
 

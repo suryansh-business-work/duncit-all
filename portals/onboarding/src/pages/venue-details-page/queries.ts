@@ -26,6 +26,34 @@ export const VENUE_DETAILS = gql`
   }
 `;
 
+export const VENUE_PODS = gql`
+  query VenuePods($venue_id: ID!) {
+    pods(filter: { venue_id: $venue_id }) {
+      id
+      pod_title
+      pod_date_time
+      pod_end_date_time
+      pod_mode
+      is_active
+      venue_approval_status
+      host_names
+      club_slug
+    }
+  }
+`;
+
+export interface VenuePod {
+  id: string;
+  pod_title: string;
+  pod_date_time: string;
+  pod_end_date_time: string | null;
+  pod_mode: 'PHYSICAL' | 'VIRTUAL';
+  is_active: boolean;
+  venue_approval_status: 'NONE' | 'PENDING' | 'APPROVED' | 'DECLINED';
+  host_names: string[];
+  club_slug: string;
+}
+
 const SLOT_FIELDS = `id venue_id start_at end_at price status booked_by_pod_id booked_pod_title notes created_at`;
 
 export const ADMIN_VENUE_SLOTS = gql`

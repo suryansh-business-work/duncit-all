@@ -1,6 +1,7 @@
 import { Types } from 'mongoose';
 import { hostService } from '../../host.service';
 import { HostModel } from '../../host.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 import { UserModel } from '@modules/access/user/user.model';
 
@@ -185,6 +186,25 @@ describe('hostService integration', () => {
         request_no: 'X',
       })
     ).rejects.toThrow(/host not found/i);
+  });
+
+  it('hides deactivated hosts from an activeOnly list and blocks delete while pods exist', async () => {
+    await HostModel.create({ user_id: new Types.ObjectId(), full_name: 'On', status: 'APPROVED', is_active: true });
+    await HostModel.create({ user_id: new Types.ObjectId(), full_name: 'Off', status: 'APPROVED', is_active: false });
+
+    const activeOnly = await hostService.list({ status: 'APPROVED', activeOnly: true });
+    expect(activeOnly.map((h) => h.full_name)).toEqual(['On']);
+
+    const host = await HostModel.create({ user_id: new Types.ObjectId(), full_name: 'Del', status: 'APPROVED' });
+    const pod = await PodModel.create({
+      pod_id: 'hp1', pod_title: 'P', pod_hosts_id: [host.user_id], club_id: new Types.ObjectId(),
+      pod_description: 'd', pod_date_time: new Date(), pod_type: 'NATIVE_FREE',
+    });
+    await expect(hostService.deleteHost(String(host._id))).rejects.toThrow(/still hosts/i);
+
+    await PodModel.updateOne({ _id: pod._id }, { deleted_at: new Date() });
+    expect(await hostService.deleteHost(String(host._id))).toBe(true);
+    expect(await HostModel.findById(host._id)).toBeNull();
   });
 });
 

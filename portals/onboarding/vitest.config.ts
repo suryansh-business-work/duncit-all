@@ -42,6 +42,11 @@ export default defineConfig({
         // Apollo data hooks (settings/branding) — exercised via the live client.
         'src/utils/dateFormat.ts',
         'src/lib/useBranding.ts',
+        // Deactivate/activate + hard-delete wiring hook: Apollo mutations +
+        // user-context role read. Driven by the excluded list pages; its
+        // presentational pieces (LifecycleActions/ConfirmDialog/HardDeleteDialog)
+        // ARE unit-tested.
+        'src/components/useEntityLifecycle.ts',
         // Auth + Google Identity + routed shell need window.google, OAuth
         // redirects and a live router — covered end-to-end, not in jsdom.
         'src/components/AppShell.tsx',
@@ -60,6 +65,9 @@ export default defineConfig({
         // children (tables, cards, dialogs, sections, forms) ARE unit-tested.
         'src/pages/hosts-page/HostsPage.tsx',
         'src/pages/hosts-page/HostEditDialog.tsx',
+        // Host details: Apollo container (host + host-pods queries, bucketing);
+        // its presentational HostPodsSection IS unit-tested.
+        'src/pages/host-details-page/HostDetailsPage.tsx',
         'src/pages/venues-page/VenuesPage.tsx',
         'src/pages/venues-page/VenueEditDialog.tsx',
         // E-commerce brands: Apollo list container + presentational review dialog
@@ -75,6 +83,8 @@ export default defineConfig({
         // Apollo slot-availability container: reuses the shared calendar package
         // (canvas-free but Apollo-driven); validated end-to-end.
         'src/pages/venue-details-page/VenueSlotAvailabilityTab.tsx',
+        // Apollo pods-at-venue list (useQuery + dateFormat hook); e2e-validated.
+        'src/pages/venue-details-page/VenuePodsTab.tsx',
         'src/pages/user-details-page/UserHealthSection/AdjustHealthDialog.tsx',
         'src/components/AdminHostCreateDialog.tsx',
         'src/components/AdminVenueCreateDialog.tsx',

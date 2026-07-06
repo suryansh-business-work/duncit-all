@@ -52,3 +52,9 @@ export const REJECT_HOST_REQUEST = gql`
     rejectHostRequest(id: $id, notes: $notes) { ${FIELDS} }
   }
 `;
+
+export const DELETE_HOST_REQUEST = gql`
+  mutation DeleteHostRequest($id: ID!) {
+    deleteHostRequest(id: $id)
+  }
+`;

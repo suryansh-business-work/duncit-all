@@ -974,6 +974,31 @@ export const userService = {
     return { ok: true, dev_otp: isDev ? otp : null };
   },
 
+  /** Re-verify the signed-in user's OWN email + password to authorize a sensitive
+   * action (e.g. a developer hard-delete). Throws on any mismatch. Google-only
+   * accounts (no password) cannot confirm this way — same as password change. */
+  async assertPasswordConfirmation(user_id: string, email: string, password: string) {
+    const user = await UserModel.findById(user_id).select('+auth.password');
+    if (!user) throw new GraphQLError('User not found', { extensions: { code: 'NOT_FOUND' } });
+    const stored = (user as any).auth?.password as string | undefined;
+    if (!stored) {
+      throw new GraphQLError('This account uses Google sign-in and has no password to confirm with.', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const accountEmail = String(user.auth?.email ?? '').toLowerCase();
+    if (!email || email.trim().toLowerCase() !== accountEmail) {
+      throw new GraphQLError('The email does not match your account', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    const ok = await bcrypt.compare(String(password ?? ''), stored);
+    if (!ok) {
+      throw new GraphQLError('Password is incorrect', { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+    return true;
+  },
+
   // Auth-required: confirm the OTP from requestPasswordChangeOtp and set the new
   // password. On success the change OTP is cleared and password_changed_at set.
   async changePasswordWithOtp(user_id: string, input: ChangePasswordDTO) {

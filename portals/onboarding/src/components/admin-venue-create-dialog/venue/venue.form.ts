@@ -58,6 +58,24 @@ export const venueStep1Schema: yup.ObjectSchema<Step1> = yup.object({
     .trim()
     .matches(POSTAL_CODE_PATTERN, 'Enter a valid postal/ZIP code (3–12 alphanumerics)')
     .required('Postal code is required'),
+  // Optional Super → Category → Sub selection (validated server-side when set).
+  venue_category: yup
+    .object({
+      super_category_id: yup.string().trim().default(''),
+      super_category_name: yup.string().trim().default(''),
+      category_id: yup.string().trim().default(''),
+      category_name: yup.string().trim().default(''),
+      sub_category_id: yup.string().trim().default(''),
+      sub_category_name: yup.string().trim().default(''),
+    })
+    .default({
+      super_category_id: '',
+      super_category_name: '',
+      category_id: '',
+      category_name: '',
+      sub_category_id: '',
+      sub_category_name: '',
+    }),
   tags: yup.array(yup.string().trim().max(40).required()).default([]),
 });
 

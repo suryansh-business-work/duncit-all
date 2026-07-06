@@ -2,22 +2,28 @@ import EditIcon from '@mui/icons-material/Edit';
 import RateReviewIcon from '@mui/icons-material/RateReview';
 import { Avatar, Box, Chip, IconButton, Stack, Table, TableBody, TableCell, TableHead, TableRow, Tooltip, Typography } from '@mui/material';
 import { commissionLabel } from '../../utils/commissionLabel';
+import LifecycleActions from '../../components/LifecycleActions';
 
 interface Props {
   brands: any[];
   onEdit: (brand: any) => void;
   onReview: (brand: any) => void;
+  canHardDelete: boolean;
+  onToggleActive: (brand: any) => void;
+  onDelete: (brand: any) => void;
 }
 
-export default function EcommBrandsTable({ brands, onEdit, onReview }: Readonly<Props>) {
+export default function EcommBrandsTable({ brands, onEdit, onReview, canHardDelete, onToggleActive, onDelete }: Readonly<Props>) {
   return (
     <Table size="small">
       <TableHead>
         <TableRow>
           <TableCell>Brand</TableCell>
           <TableCell>Categories</TableCell>
+          <TableCell>Products</TableCell>
           <TableCell>Owner</TableCell>
           <TableCell>Status</TableCell>
+          <TableCell>Active</TableCell>
           <TableCell>Commission</TableCell>
           <TableCell>Submitted</TableCell>
           <TableCell align="right">Actions</TableCell>
@@ -41,10 +47,16 @@ export default function EcommBrandsTable({ brands, onEdit, onReview }: Readonly<
               <Typography variant="body2">{(brand.product_categories ?? []).join(', ') || '—'}</Typography>
             </TableCell>
             <TableCell>
+              <Chip size="small" variant="outlined" label={`${brand.approved_product_count ?? 0} live`} />
+            </TableCell>
+            <TableCell>
               <Typography variant="body2">{brand.contact_person || '—'}</Typography>
               <Typography variant="caption" color="text.secondary">{brand.contact_email || brand.contact_phone || '—'}</Typography>
             </TableCell>
             <TableCell><Chip size="small" label={brand.status} /></TableCell>
+            <TableCell>
+              <Chip size="small" variant="outlined" color={brand.is_active === false ? 'default' : 'success'} label={brand.is_active === false ? 'Inactive' : 'Active'} />
+            </TableCell>
             <TableCell><Chip size="small" variant="outlined" label={commissionLabel(brand.product_commission_pct)} /></TableCell>
             <TableCell>{brand.submitted_at ? new Date(brand.submitted_at).toLocaleDateString() : '—'}</TableCell>
             <TableCell align="right">
@@ -58,11 +70,17 @@ export default function EcommBrandsTable({ brands, onEdit, onReview }: Readonly<
                   <RateReviewIcon fontSize="small" />
                 </IconButton>
               </Tooltip>
+              <LifecycleActions
+                active={brand.is_active !== false}
+                onToggleActive={() => onToggleActive(brand)}
+                canHardDelete={canHardDelete}
+                onDelete={() => onDelete(brand)}
+              />
             </TableCell>
           </TableRow>
         ))}
         {brands.length === 0 && (
-          <TableRow><TableCell colSpan={7} align="center">No brands found.</TableCell></TableRow>
+          <TableRow><TableCell colSpan={9} align="center">No brands found.</TableCell></TableRow>
         )}
       </TableBody>
     </Table>

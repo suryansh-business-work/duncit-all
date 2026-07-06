@@ -18,9 +18,10 @@ interface Props {
   onAcknowledge: (r: HostRequest) => void;
   onApprove: (r: HostRequest) => void;
   onReject: (r: HostRequest) => void;
+  onDelete: (r: HostRequest) => void;
 }
 
-export default function HostRequestsTable({ requests, busy, onAcknowledge, onApprove, onReject }: Readonly<Props>) {
+export default function HostRequestsTable({ requests, busy, onAcknowledge, onApprove, onReject, onDelete }: Readonly<Props>) {
   return (
     <Table size="small">
       <TableHead>
@@ -50,6 +51,7 @@ export default function HostRequestsTable({ requests, busy, onAcknowledge, onApp
                 onAcknowledge={onAcknowledge}
                 onApprove={onApprove}
                 onReject={onReject}
+                onDelete={onDelete}
               />
             </TableCell>
           </TableRow>

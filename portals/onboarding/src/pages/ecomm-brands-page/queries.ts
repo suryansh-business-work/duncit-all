@@ -34,6 +34,8 @@ export const ECOMM_BRANDS = gql`
       tags
       product_commission_pct
       status
+      is_active
+      approved_product_count
       reviewer_notes
       submitted_at
       approved_at
@@ -75,6 +77,21 @@ export const SET_BRAND_COMMISSION = gql`
       id
       product_commission_pct
     }
+  }
+`;
+
+export const SET_ECOMM_BRAND_ACTIVE = gql`
+  mutation SetEcommBrandActive($id: ID!, $active: Boolean!) {
+    setEcommBrandActive(brand_doc_id: $id, active: $active) {
+      id
+      is_active
+    }
+  }
+`;
+
+export const DELETE_ECOMM_BRAND = gql`
+  mutation DeleteEcommBrand($id: ID!, $email: String!, $password: String!) {
+    deleteEcommBrand(brand_doc_id: $id, email: $email, password: $password)
   }
 `;
 

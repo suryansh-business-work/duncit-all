@@ -30,11 +30,19 @@ export const CLUBS = gql`
       matched_venues_count
       category_id
       super_category_id
+      admin_user_ids
+      club_admins {
+        id
+        name
+        avatar_url
+      }
+      is_verified
       is_active
       updated_at
     }
   }
 `;
+
 export const CATEGORIES = gql`
   query AllCategories {
     categories {
@@ -45,43 +53,7 @@ export const CATEGORIES = gql`
     }
   }
 `;
-export const LOCATIONS = gql`
-  query LocationsForClubs {
-    locations {
-      id
-      location_name
-      city
-      state
-      state_code
-      country
-      country_code
-      location_pincode
-      location_zones {
-        zone_name
-        zone_code
-        pincode
-      }
-    }
-  }
-`;
-/** APPROVED, active venues that auto-match a club by location + Super/Sub
- * category — shown read-only in the Club form so admins see the live linkage. */
-export const MATCHING_VENUES = gql`
-  query MatchingVenuesForClub($location_id: ID!, $locality: String, $super_category_id: ID, $category_id: ID) {
-    matchingVenues(
-      location_id: $location_id
-      locality: $locality
-      super_category_id: $super_category_id
-      category_id: $category_id
-    ) {
-      id
-      venue_name
-      locality
-      city
-      state
-    }
-  }
-`;
+
 export const CREATE = gql`
   mutation CreateClub($input: CreateClubInput!) {
     createClub(input: $input) {
@@ -101,63 +73,3 @@ export const DELETE = gql`
     deleteClub(club_doc_id: $id)
   }
 `;
-
-export interface ClubFaq {
-  question: string;
-  answer: string;
-}
-
-export interface ClubForm {
-  id?: string;
-  club_id: string;
-  club_name: string;
-  club_description: string;
-  category_id: string;
-  super_category_id: string;
-  location_id: string;
-  locality: string;
-  feature_text: string;
-  moments_text: string;
-  community_link: string;
-  group_link: string;
-  who_we_are: string[];
-  what_we_do: string[];
-  perks: string[];
-  values: string[];
-  faqs: ClubFaq[];
-  is_active: boolean;
-}
-export const blankForm: ClubForm = {
-  club_id: '',
-  club_name: '',
-  club_description: '',
-  category_id: '',
-  super_category_id: '',
-  location_id: '',
-  locality: '',
-  feature_text: '',
-  moments_text: '',
-  community_link: '',
-  group_link: '',
-  who_we_are: [],
-  what_we_do: [],
-  perks: [],
-  values: [],
-  faqs: [],
-  is_active: true,
-};
-
-export const linesToMedia = (text: string) =>
-  text
-    .split('\n')
-    .map((s) => s.trim())
-    .filter(Boolean)
-    .map((url) => ({ url, type: /\.(mp4|mov|webm)$/i.test(url) ? 'VIDEO' : 'IMAGE' }));
-
-export const cleanBullets = (items: string[]) =>
-  items.map((item) => item.trim()).filter(Boolean);
-
-export const cleanFaqs = (items: ClubFaq[]) =>
-  items
-    .map((faq) => ({ question: faq.question.trim(), answer: faq.answer.trim() }))
-    .filter((faq) => faq.question && faq.answer);

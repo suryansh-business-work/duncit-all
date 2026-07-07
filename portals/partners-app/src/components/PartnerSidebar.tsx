@@ -1,11 +1,12 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
 import { Link as RouterLink, useLocation } from 'react-router-dom';
+import { useUserData } from '@duncit/user-context';
 import { Box, Collapse, Divider, List, ListItemButton, ListItemIcon, ListItemText, Skeleton, Typography } from '@mui/material';
 import ExpandLess from '@mui/icons-material/ExpandLess';
 import ExpandMore from '@mui/icons-material/ExpandMore';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faBuilding, faCalendarCheck, faChartLine, faCircleQuestion, faFileLines, faGaugeHigh, faHeadset, faStore, faUserTie } from '@fortawesome/free-solid-svg-icons';
+import { faBuilding, faCalendarCheck, faChartLine, faCircleQuestion, faFileLines, faGaugeHigh, faHeadset, faStore, faUsersGear, faUserTie } from '@fortawesome/free-solid-svg-icons';
 import type { IconDefinition } from '@fortawesome/free-solid-svg-icons';
 import { useBranding } from '../lib/useBranding';
 import { HEADER_HEIGHT } from './PartnerShell';
@@ -45,6 +46,18 @@ const sections: { heading: string; items: NavItem[] }[] = [
   { heading: 'Help', items: [{ label: 'FAQs', to: '/faqs', icon: faCircleQuestion, match: '/faqs' }, { label: 'Support', to: '/support', icon: faHeadset, match: '/support' }] },
 ];
 
+// Rendered inside 'Partner Tools' only for users with the CLUB_ADMIN role.
+const CLUB_ADMIN_GROUP: NavItem = {
+  label: 'Club Admin',
+  to: '/club-admin/dashboard',
+  icon: faUsersGear,
+  match: '/club-admin',
+  children: [
+    { label: 'Dashboard', to: '/club-admin/dashboard', icon: faGaugeHigh, match: '/club-admin/dashboard' },
+    { label: 'Clubs', to: '/club-admin/clubs', icon: faBuilding, match: '/club-admin/clubs' },
+  ],
+};
+
 const PUBLIC_POLICIES = gql`
   query PartnerSidebarPolicies {
     publicPolicies { id slug title }
@@ -63,7 +76,19 @@ export default function PartnerSidebar({ onCloseMobile }: Readonly<Props>) {
   const location = useLocation();
   const { data } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-first' });
   const { logoUrl, appName, loading } = useBranding();
+  const { user } = useUserData();
   const policies = data?.publicPolicies ?? [];
+  const isClubAdmin = (user?.roles ?? []).includes('CLUB_ADMIN');
+
+  const navSections = useMemo(
+    () =>
+      sections.map((section) =>
+        section.heading === 'Partner Tools' && isClubAdmin
+          ? { ...section, items: [...section.items, CLUB_ADMIN_GROUP] }
+          : section
+      ),
+    [isClubAdmin]
+  );
 
   return (
     <Box component="aside" sx={{ display: 'flex', flexDirection: 'column', height: '100%', bgcolor: 'background.paper' }}>
@@ -77,7 +102,7 @@ export default function PartnerSidebar({ onCloseMobile }: Readonly<Props>) {
       </Box>
       <Divider />
       <List component="nav" aria-label="Partner sections" sx={{ py: 1, flex: 1, overflowY: 'auto' }}>
-        {sections.map((section) => (
+        {navSections.map((section) => (
           <Box key={section.heading} sx={{ mb: 1 }}>
             <Typography variant="overline" sx={{ px: 2.5, color: 'text.secondary', fontWeight: 700, letterSpacing: 0.4, display: 'block', mt: 1 }}>
               {section.heading}

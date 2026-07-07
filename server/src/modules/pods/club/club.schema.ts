@@ -65,6 +65,10 @@ export const clubTypeDefs = /* GraphQL */ `
     host_ids: [ID!]!
     "Resolved host profiles — linked hosts, or the hosts of the club's pods as a fallback."
     hosts: [ClubActor!]!
+    "Users who administer this club (assigned by an admin) — the CLUB_ADMIN scope."
+    admin_user_ids: [ID!]!
+    "Resolved profiles of the club's assigned admins."
+    club_admins: [ClubActor!]!
     "How many users follow this club."
     followers_count: Int!
     category_id: ID
@@ -107,6 +111,7 @@ export const clubTypeDefs = /* GraphQL */ `
     location_id: ID
     locality: String
     host_ids: [ID!]
+    admin_user_ids: [ID!]
     category_id: ID
     super_category_id: ID
     is_verified: Boolean
@@ -130,6 +135,7 @@ export const clubTypeDefs = /* GraphQL */ `
     location_id: ID
     locality: String
     host_ids: [ID!]
+    admin_user_ids: [ID!]
     category_id: ID
     super_category_id: ID
     is_verified: Boolean

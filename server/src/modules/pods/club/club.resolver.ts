@@ -23,6 +23,8 @@ export const clubResolvers = {
   Club: {
     hosts: (parent: { id: string; host_ids?: string[] }) =>
       clubService.getHosts(parent.id, parent.host_ids ?? []),
+    club_admins: (parent: { admin_user_ids?: string[] }) =>
+      clubService.getClubAdmins(parent.admin_user_ids ?? []),
     followers_count: (parent: { id: string }) => clubService.followersCount(parent.id),
     rating: (parent: { id: string }) => clubService.getRating(parent.id),
     ratings_count: (parent: { id: string }) => clubService.getRatingsCount(parent.id),

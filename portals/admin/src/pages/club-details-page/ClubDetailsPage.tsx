@@ -10,6 +10,7 @@ import { CLUB_DETAIL } from './queries';
 import ClubOverviewCard from './ClubOverviewCard';
 import ClubContentSections from './ClubContentSections';
 import ClubPodsCard from './ClubPodsCard';
+import ClubAdminsCard from './ClubAdminsCard';
 import MediaGallery from './MediaGallery';
 import type { ClubDetail, ClubPodRow } from './types';
 
@@ -89,7 +90,10 @@ export default function ClubDetailsPage() {
           <ClubContentSections club={club} />
         </Stack>
 
-        <ClubPodsCard pods={pods} />
+        <Stack spacing={2.5} sx={{ minWidth: 0 }}>
+          <ClubPodsCard pods={pods} />
+          <ClubAdminsCard admins={club.club_admins ?? []} />
+        </Stack>
       </Box>
     </Stack>
   );

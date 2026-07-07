@@ -34,6 +34,12 @@ export const CLUB_DETAIL = gql`
         url
         type
       }
+      admin_user_ids
+      club_admins {
+        id
+        name
+        avatar_url
+      }
     }
     pods(filter: { club_id: $id }) {
       id

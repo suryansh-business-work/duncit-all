@@ -2,9 +2,10 @@ import { useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import { Alert, Box, Button, Card, CardContent, Dialog, DialogContent, DialogTitle, Snackbar, Stack, Typography } from '@mui/material';
 import AddIcon from '@mui/icons-material/Add';
+import { PodForm, blankPodFormValues, buildPodInput, type PodFormValues } from '@duncit/pod-form';
 import { CREATE_PARTNER_POD, PARTNER_PODS_PAGE } from './queries';
 import PartnerPodsTable from './PartnerPodsTable';
-import { PartnerPodForm, blankPartnerPodForm, buildPartnerPodInput, type PartnerPodFormValues } from './partner-pod';
+import { PARTNER_POD_CONFIG, getClubVenueIds } from './partner-pod-config';
 
 export default function PartnerPodsPage() {
   const { data, loading, error, refetch } = useQuery(PARTNER_PODS_PAGE, { fetchPolicy: 'cache-and-network' });
@@ -19,12 +20,12 @@ export default function PartnerPodsPage() {
   const clubName = (id: string) => clubs.find((club: any) => club.id === id)?.club_name ?? 'Club';
   const venueName = (id?: string | null) => venues.find((venue: any) => venue.id === id)?.venue_name ?? 'Venue';
 
-  const submit = async (values: PartnerPodFormValues, options?: { draft?: boolean }) => {
+  const submit = async (values: PodFormValues, options: { draft: boolean }) => {
     setOpError(null);
     try {
-      await createPod({ variables: { input: buildPartnerPodInput(values, options?.draft) } });
+      await createPod({ variables: { input: buildPodInput(values, { draft: options.draft, config: PARTNER_POD_CONFIG }) } });
       setOpen(false);
-      setMessage(options?.draft ? 'Pod draft saved.' : 'Pod created.');
+      setMessage(options.draft ? 'Pod draft saved.' : 'Pod created.');
       await refetch();
     } catch (submitError: any) {
       setOpError(submitError.message);
@@ -49,8 +50,19 @@ export default function PartnerPodsPage() {
       <Dialog open={open} onClose={() => setOpen(false)} fullWidth maxWidth="md">
         <DialogTitle>New Pod</DialogTitle>
         <DialogContent dividers>
-          <PartnerPodForm initialValues={blankPartnerPodForm} clubs={clubs} venues={venues} products={products} busy={createState.loading} onCancel={() => setOpen(false)} onSubmit={submit} />
-          {opError && <Alert severity="error" sx={{ mt: 2 }}>{opError}</Alert>}
+          <Alert severity="info" sx={{ mb: 1.5 }}>Your approved host profile is added as the pod host automatically.</Alert>
+          <PodForm
+            initialValues={blankPodFormValues}
+            config={PARTNER_POD_CONFIG}
+            clubs={clubs}
+            venues={venues}
+            products={products}
+            getClubVenueIds={getClubVenueIds}
+            busy={createState.loading}
+            error={opError}
+            onCancel={() => setOpen(false)}
+            onSubmit={submit}
+          />
         </DialogContent>
       </Dialog>
       <Snackbar open={!!message} autoHideDuration={2500} message={message ?? ''} onClose={() => setMessage(null)} />

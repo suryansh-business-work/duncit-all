@@ -45,6 +45,7 @@ export const PORTAL_ACCESS: PortalAccess[] = [
       { key: 'HOST', name: 'Host' },
       { key: 'VENUE_OWNER', name: 'Venue Owner' },
       { key: 'ECOMM_MANAGER', name: 'E-commerce Manager' },
+      { key: 'CLUB_ADMIN', name: 'Club Admin' },
     ],
   },
   {

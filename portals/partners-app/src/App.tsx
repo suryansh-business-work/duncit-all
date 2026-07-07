@@ -13,6 +13,10 @@ import ListProductsPage from './pages/list-products-page/ListProductsPage';
 import ProductListingEditorPage from './pages/list-products-page/ProductListingEditorPage';
 import PartnerPoliciesPage from './pages/policies-page/PartnerPoliciesPage';
 import SupportPage from './pages/support-page/SupportPage';
+import ClubAdminDashboardPage from './pages/club-admin-dashboard-page/ClubAdminDashboardPage';
+import ClubAdminClubsPage from './pages/club-admin-clubs-page/ClubAdminClubsPage';
+import ClubAdminClubPodsPage from './pages/club-admin-club-pods-page/ClubAdminClubPodsPage';
+import ClubAdminEditClubPage from './pages/club-admin-edit-club-page/ClubAdminEditClubPage';
 import PartnerShell from './components/PartnerShell';
 import { redirectPathFromLocation } from './utils/redirect';
 
@@ -52,6 +56,11 @@ export default function App() {
       <Route path="/ecomm-brand/:brandId/products/new" element={authed(<ProductListingEditorPage />)} />
       <Route path="/ecomm-brand/:brandId/products/:productId" element={authed(<ProductListingEditorPage />)} />
       <Route path="/list-products" element={<Navigate to="/ecomm-brand" replace />} />
+      <Route path="/club-admin" element={authed(<Navigate to="/club-admin/dashboard" replace />)} />
+      <Route path="/club-admin/dashboard" element={authed(<ClubAdminDashboardPage />)} />
+      <Route path="/club-admin/clubs" element={authed(<ClubAdminClubsPage />)} />
+      <Route path="/club-admin/clubs/:clubId" element={authed(<ClubAdminClubPodsPage />)} />
+      <Route path="/club-admin/clubs/:clubId/edit" element={authed(<ClubAdminEditClubPage />)} />
       <Route path="/support" element={authed(<SupportPage />)} />
       <Route path="/policies" element={authed(<PartnerPoliciesPage />)} />
       <Route path="/policies/:slug" element={authed(<PartnerPoliciesPage />)} />

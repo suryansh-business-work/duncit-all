@@ -243,7 +243,7 @@ async function signToken(payload: AuthUser): Promise<string> {
 
 // Onboarding roles that mirror an approved Host / Venue / Brand. Removing one
 // must downgrade the corresponding entity so the onboarding status reflects it.
-const ONBOARDING_REVOKE_ROLES = new Set(['HOST', 'VENUE_OWNER', 'ECOMM_MANAGER']);
+const ONBOARDING_REVOKE_ROLES = new Set(['HOST', 'VENUE_OWNER', 'ECOMM_MANAGER', 'CLUB_ADMIN']);
 
 /** Downgrade a user's APPROVED onboarding entity when its role is revoked.
  * Best-effort + dynamic imports (the venue services import userService back). */
@@ -260,6 +260,9 @@ async function syncRevokedOnboarding(userId: string, removedRoles: string[]) {
       } else if (role === 'ECOMM_MANAGER') {
         const { ecommBrandService } = await import('@modules/venues/ecommBrand/ecommBrand.service');
         await ecommBrandService.revokeApprovalForUser(userId);
+      } else if (role === 'CLUB_ADMIN') {
+        const { clubService } = await import('@modules/pods/club/club.service');
+        await clubService.revokeAdminForUser(userId);
       }
     } catch (err) {
       // eslint-disable-next-line no-console

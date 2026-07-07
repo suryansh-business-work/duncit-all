@@ -1,6 +1,4 @@
-import type { PodForm, PodPlaceCharge } from './queries';
-
-const fmt = (dt: Date) => dt.toISOString();
+import type { PodFormValues, PodPlaceCharge } from '@duncit/pod-form';
 
 const sanitizeChips = (input: unknown): string[] | undefined => {
   if (!Array.isArray(input)) return undefined;
@@ -24,8 +22,8 @@ const sanitizeCharges = (input: unknown): PodPlaceCharge[] | undefined => {
 
 export function applyAiFillToForm(
   d: any,
-  prev: PodForm,
-  setValues: (v: PodForm) => void
+  prev: PodFormValues,
+  setValues: (v: PodFormValues) => void
 ) {
   const startsInDays = Number(d?.starts_in_days) || 3;
   const durationMinutes = Number(d?.duration_minutes) || 90;
@@ -38,7 +36,7 @@ export function applyAiFillToForm(
   const perks = sanitizeChips(d?.available_perks);
   const charges = sanitizeCharges(d?.place_charges);
 
-  const next: PodForm = {
+  const next: PodFormValues = {
     ...prev,
     pod_title: d?.pod_title ?? prev.pod_title,
     pod_description: d?.pod_description ?? prev.pod_description,
@@ -51,8 +49,8 @@ export function applyAiFillToForm(
     pod_occurrence:
       typeof d?.pod_occurrence === 'string' ? d.pod_occurrence : prev.pod_occurrence,
     zone_name: d?.zone_name ?? prev.zone_name,
-    pod_date_time: fmt(start),
-    pod_end_date_time: fmt(end),
+    pod_date_time: start,
+    pod_end_date_time: end,
     payment_terms: typeof d?.payment_terms === 'string' ? d.payment_terms : prev.payment_terms,
     what_this_pod_offers: offers ?? prev.what_this_pod_offers,
     available_perks: perks ?? prev.available_perks,

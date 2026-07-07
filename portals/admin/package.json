@@ -13,8 +13,10 @@
   "dependencies": {
     "@apollo/client": "^3.10.4",
     "@duncit/category": "workspace:*",
+    "@duncit/club-form": "workspace:*",
     "@duncit/location": "workspace:*",
     "@duncit/logs": "workspace:*",
+    "@duncit/pod-form": "workspace:*",
     "@duncit/portal-pod-form": "workspace:*",
     "@duncit/shell": "workspace:*",
     "@duncit/theme": "workspace:*",

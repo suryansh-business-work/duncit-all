@@ -1,0 +1,308 @@
+import { Types } from 'mongoose';
+import { clubAdminService } from '../../clubAdmin.service';
+import { podService } from '@modules/pods/pod/pod.service';
+import { ClubModel } from '@modules/pods/club/club.model';
+import { CategoryModel } from '@modules/pods/category/category.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
+import { PodMemberModel } from '@modules/pods/podMember/podMember.model';
+import { ClubRatingModel } from '@modules/pods/club/clubRating.model';
+import { ClubFollowerModel } from '@modules/access/user/relations';
+import { PaymentModel } from '@modules/finance/payment/payment.model';
+
+const uid = () => new Types.ObjectId().toString();
+
+const seedClub = (over: Record<string, unknown> = {}) =>
+  ClubModel.create({
+    club_id: `c-${Math.random().toString(36).slice(2)}`,
+    club_name: 'Club',
+    ...over,
+  });
+
+const seedPod = (clubId: unknown, over: Record<string, unknown> = {}) =>
+  PodModel.create({
+    pod_id: `p-${Math.random().toString(36).slice(2)}`,
+    pod_title: 'Pod',
+    club_id: clubId,
+    pod_description: 'desc',
+    pod_type: 'NATIVE_FREE',
+    pod_date_time: new Date(Date.now() + 86_400_000),
+    is_active: true,
+    ...over,
+  });
+
+const seedPayment = (podId: unknown, over: Record<string, unknown> = {}) =>
+  PaymentModel.create({
+    payment_id: `pay-${Math.random().toString(36).slice(2)}`,
+    user_id: new Types.ObjectId(),
+    user_name: 'Buyer',
+    user_email: 'b@duncit.com',
+    pod_id: podId,
+    subtotal: 100,
+    total: 120,
+    status: 'SUCCESS',
+    ...over,
+  });
+
+describe('clubAdminService assignment + guards', () => {
+  it('lists only the clubs a user administers', async () => {
+    const admin = uid();
+    const mine = await seedClub({ admin_user_ids: [admin] });
+    await seedClub({ admin_user_ids: [uid()] });
+    const clubs = await clubAdminService.listAdminClubs(admin);
+    expect(clubs.map((c: any) => c.id)).toEqual([String(mine._id)]);
+    expect(await clubAdminService.adminClubIds(admin)).toEqual([String(mine._id)]);
+    expect(await clubAdminService.listAdminClubs('not-an-id')).toEqual([]);
+  });
+
+  it('guards club access by membership, with a SUPER_ADMIN bypass', async () => {
+    const admin = uid();
+    const club = await seedClub({ admin_user_ids: [admin] });
+    await expect(
+      clubAdminService.assertClubAdmin({ id: admin }, String(club._id))
+    ).resolves.toBeUndefined();
+    await expect(
+      clubAdminService.assertClubAdmin({ id: uid() }, String(club._id))
+    ).rejects.toThrow(/do not administer/i);
+    await expect(
+      clubAdminService.assertClubAdmin({ id: uid(), roles: ['SUPER_ADMIN'] }, String(club._id))
+    ).resolves.toBeUndefined();
+    await expect(
+      clubAdminService.assertClubAdmin({ id: uid() }, 'not-an-id')
+    ).rejects.toThrow(/do not administer/i);
+  });
+
+  it('scopes pod delete to the admin’s own clubs', async () => {
+    const admin = uid();
+    const club = await seedClub({ admin_user_ids: [admin] });
+    const other = await seedClub({ admin_user_ids: [uid()] });
+    const myPod = await seedPod(club._id);
+    const otherPod = await seedPod(other._id);
+
+    await expect(
+      clubAdminService.deletePod({ id: admin }, String(otherPod._id))
+    ).rejects.toThrow(/do not administer/i);
+    await expect(clubAdminService.deletePod({ id: admin }, String(myPod._id))).resolves.toBe(true);
+    // Soft-deleted pods are auto-excluded from normal reads; check the raw doc.
+    const raw: any = await PodModel.collection.findOne({ _id: myPod._id });
+    expect(raw?.deleted_at).toBeTruthy();
+    expect(raw?.is_active).toBe(false);
+  });
+
+  it('rejects create/update on clubs/pods the user does not administer', async () => {
+    const admin = uid();
+    const other = await seedClub({ admin_user_ids: [uid()] });
+    const otherPod = await seedPod(other._id);
+    await expect(
+      clubAdminService.createPod({ id: admin }, { club_id: String(other._id) })
+    ).rejects.toThrow(/do not administer/i);
+    await expect(
+      clubAdminService.updatePod({ id: admin }, String(otherPod._id), { pod_title: 'X' })
+    ).rejects.toThrow(/do not administer/i);
+    await expect(
+      clubAdminService.updatePod({ id: admin }, 'bad-id', {})
+    ).rejects.toThrow(/pod not found/i);
+  });
+
+  it('records the club admin as host on create when the form supplies none', async () => {
+    const admin = uid();
+    const club = await seedClub({ admin_user_ids: [admin] });
+    const spy = jest.spyOn(podService, 'create').mockResolvedValue({ id: 'p' } as any);
+    try {
+      await clubAdminService.createPod({ id: admin }, { club_id: String(club._id), pod_hosts_id: [] });
+      expect(spy.mock.calls[0][0].pod_hosts_id).toEqual([admin]);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('keeps explicitly supplied hosts on create', async () => {
+    const admin = uid();
+    const host = uid();
+    const club = await seedClub({ admin_user_ids: [admin] });
+    const spy = jest.spyOn(podService, 'create').mockResolvedValue({ id: 'p' } as any);
+    try {
+      await clubAdminService.createPod({ id: admin }, { club_id: String(club._id), pod_hosts_id: [host] });
+      expect(spy.mock.calls[0][0].pod_hosts_id).toEqual([host]);
+    } finally {
+      spy.mockRestore();
+    }
+  });
+
+  it('lets a club admin edit their club but strips governance fields', async () => {
+    const admin = uid();
+    const other = uid();
+    const club = await seedClub({
+      admin_user_ids: [admin],
+      club_name: 'Old Name',
+      is_verified: false,
+      is_active: true,
+    });
+
+    await expect(
+      clubAdminService.updateClub({ id: uid() }, String(club._id), { club_name: 'Hacked' })
+    ).rejects.toThrow(/do not administer/i);
+
+    const updated: any = await clubAdminService.updateClub({ id: admin }, String(club._id), {
+      club_name: 'New Name',
+      club_description: 'Fresh copy',
+      admin_user_ids: [admin, other], // governance — must be ignored
+      is_verified: true, // governance — must be ignored
+      is_active: false, // governance — must be ignored
+    });
+
+    expect(updated.club_name).toBe('New Name');
+    expect(updated.club_description).toBe('Fresh copy');
+    expect(updated.admin_user_ids).toEqual([admin]); // unchanged
+    expect(updated.is_verified).toBe(false); // unchanged
+    expect(updated.is_active).toBe(true); // unchanged
+  });
+
+  it('never wipes hosts on update with an empty hosts array', async () => {
+    const admin = uid();
+    const club = await seedClub({ admin_user_ids: [admin] });
+    const pod = await seedPod(club._id);
+    const spy = jest.spyOn(podService, 'update').mockResolvedValue({ id: 'p' } as any);
+    try {
+      await clubAdminService.updatePod({ id: admin }, String(pod._id), {
+        pod_title: 'X',
+        pod_hosts_id: [],
+      });
+      expect(spy.mock.calls[0][1]).not.toHaveProperty('pod_hosts_id');
+      expect(spy.mock.calls[0][1].pod_title).toBe('X');
+    } finally {
+      spy.mockRestore();
+    }
+  });
+});
+
+describe('clubAdminService listAdminClubsPage (Your Clubs)', () => {
+  it('returns an empty page for a non-admin / invalid user', async () => {
+    expect(await clubAdminService.listAdminClubsPage('not-an-id')).toEqual({ items: [], total: 0 });
+    expect(await clubAdminService.listAdminClubsPage(uid())).toEqual({ items: [], total: 0 });
+  });
+
+  it('paginates and searches the admin’s clubs', async () => {
+    const admin = uid();
+    await seedClub({ admin_user_ids: [admin], club_name: 'Alpha', club_id: 'alpha' });
+    await seedClub({ admin_user_ids: [admin], club_name: 'Bravo', club_id: 'bravo' });
+    await seedClub({ admin_user_ids: [admin], club_name: 'Charlie', club_id: 'charlie' });
+    await seedClub({ admin_user_ids: [uid()], club_name: 'Other' });
+
+    const page1 = await clubAdminService.listAdminClubsPage(admin, { limit: 2, offset: 0 });
+    expect(page1.total).toBe(3);
+    expect(page1.items.map((c: any) => c.club_name)).toEqual(['Alpha', 'Bravo']);
+
+    const page2 = await clubAdminService.listAdminClubsPage(admin, { limit: 2, offset: 2 });
+    expect(page2.items.map((c: any) => c.club_name)).toEqual(['Charlie']);
+
+    const searched = await clubAdminService.listAdminClubsPage(admin, { search: 'brav' });
+    expect(searched.total).toBe(1);
+    expect(searched.items[0].club_name).toBe('Bravo');
+  });
+
+  it('filters by the Super → Category → Sub cascade', async () => {
+    const admin = uid();
+    const superCat = await CategoryModel.create({ name: 'Sports', slug: 'sports', level: 'SUPER' });
+    const midCat = await CategoryModel.create({ name: 'Racquet', slug: 'racquet', level: 'CATEGORY', parent_id: superCat._id });
+    const sub = await CategoryModel.create({ name: 'Tennis', slug: 'tennis', level: 'SUB', parent_id: midCat._id });
+    const otherSuper = await CategoryModel.create({ name: 'Arts', slug: 'arts', level: 'SUPER' });
+
+    await seedClub({
+      admin_user_ids: [admin],
+      club_name: 'Tennis Club',
+      super_category_id: superCat._id,
+      category_id: sub._id,
+    });
+    await seedClub({
+      admin_user_ids: [admin],
+      club_name: 'Art Club',
+      super_category_id: otherSuper._id,
+      category_id: null,
+    });
+
+    const bySuper = await clubAdminService.listAdminClubsPage(admin, {
+      super_category_id: String(superCat._id),
+    });
+    expect(bySuper.items.map((c: any) => c.club_name)).toEqual(['Tennis Club']);
+
+    const byMiddle = await clubAdminService.listAdminClubsPage(admin, {
+      category_id: String(midCat._id),
+    });
+    expect(byMiddle.items.map((c: any) => c.club_name)).toEqual(['Tennis Club']);
+
+    const bySub = await clubAdminService.listAdminClubsPage(admin, {
+      sub_category_id: String(sub._id),
+    });
+    expect(bySub.items.map((c: any) => c.club_name)).toEqual(['Tennis Club']);
+  });
+});
+
+describe('clubAdminService dashboard', () => {
+  it('returns a zeroed dashboard when the user administers no clubs', async () => {
+    const d = await clubAdminService.dashboard(uid());
+    expect(d.kpis.assigned_clubs).toBe(0);
+    expect(d.kpis.total_revenue).toBe(0);
+    expect(d.clubs).toEqual([]);
+    expect(d.trend).toEqual([]);
+  });
+
+  it('aggregates KPIs, per-club rows and revenue across assigned clubs', async () => {
+    const admin = uid();
+    const club = await seedClub({ admin_user_ids: [admin], club_name: 'Alpha' });
+    const upcoming = await seedPod(club._id, {
+      no_of_spots: 5,
+      pod_attendees: [uid(), uid()],
+      pod_hosts_id: [uid()],
+    });
+    await seedPod(club._id, {
+      pod_date_time: new Date(Date.now() - 86_400_000),
+      no_of_spots: 3,
+      pod_hosts_id: [uid()],
+    });
+    await PodMemberModel.create({
+      pod_id: upcoming._id,
+      user_id: uid(),
+      status: 'JOINED',
+      source: 'FREE',
+      refund_status: 'NONE',
+    });
+    await PodMemberModel.create({
+      pod_id: upcoming._id,
+      user_id: uid(),
+      status: 'BACKED_OUT',
+      source: 'FREE',
+      refund_status: 'NONE',
+    });
+    await ClubFollowerModel.create({ club_id: club._id, user_id: uid() });
+    await ClubRatingModel.create({ club_id: club._id, user_id: uid(), stars: 4 });
+    await seedPayment(upcoming._id);
+
+    const d = await clubAdminService.dashboard(admin);
+    expect(d.kpis).toMatchObject({
+      assigned_clubs: 1,
+      total_pods: 2,
+      upcoming_pods: 1,
+      completed_pods: 1,
+      total_bookings: 1,
+      backed_out: 1,
+      total_attendees: 2,
+      total_spots: 8,
+      total_followers: 1,
+      avg_rating: 4,
+      ratings_count: 1,
+      active_hosts: 2,
+      total_revenue: 120,
+    });
+    expect(d.clubs).toHaveLength(1);
+    expect(d.clubs[0]).toMatchObject({
+      club_name: 'Alpha',
+      total_pods: 2,
+      upcoming_pods: 1,
+      completed_pods: 1,
+      followers: 1,
+      rating: 4,
+      revenue: 120,
+    });
+    expect(d.trend.length).toBeGreaterThan(0);
+  });
+});

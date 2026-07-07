@@ -1,0 +1,67 @@
+import { gql } from '@apollo/client';
+
+export const CLUB_ADMIN_POD_LOOKUPS = gql`
+  query ClubAdminPodLookups {
+    myAdminClubs { id club_name meetup_venues_id }
+    myVenues { id venue_name city locality status is_active }
+    availablePodProducts {
+      id
+      product_name
+      unit_cost
+      available_count
+      listing_review_status
+    }
+  }
+`;
+
+export const CLUB_ADMIN_PODS = gql`
+  query ClubAdminPods($filter: PodFilterInput) {
+    pods(filter: $filter) {
+      id
+      pod_title
+      pod_description
+      pod_images_and_videos { url type }
+      club_id
+      venue_id
+      venue_slot_id
+      pod_mode
+      meeting_platform
+      meeting_url
+      meeting_notes
+      pod_hashtag
+      pod_date_time
+      pod_end_date_time
+      pod_type
+      pod_amount
+      pod_occurrence
+      no_of_spots
+      pod_info
+      what_this_pod_offers
+      available_perks
+      payment_terms
+      products_enabled
+      product_requests { product_id quantity }
+      pod_attendees
+      is_active
+      completed_at
+    }
+  }
+`;
+
+export const CLUB_ADMIN_CREATE_POD = gql`
+  mutation ClubAdminCreatePod($input: CreatePodInput!) {
+    clubAdminCreatePod(input: $input) { id }
+  }
+`;
+
+export const CLUB_ADMIN_UPDATE_POD = gql`
+  mutation ClubAdminUpdatePod($pod_doc_id: ID!, $input: UpdatePodInput!) {
+    clubAdminUpdatePod(pod_doc_id: $pod_doc_id, input: $input) { id }
+  }
+`;
+
+export const CLUB_ADMIN_DELETE_POD = gql`
+  mutation ClubAdminDeletePod($pod_doc_id: ID!) {
+    clubAdminDeletePod(pod_doc_id: $pod_doc_id)
+  }
+`;

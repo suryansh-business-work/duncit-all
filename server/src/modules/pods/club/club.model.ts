@@ -36,6 +36,10 @@ export interface IClub extends Document {
   /** Hosts explicitly linked to this club by an admin (Bug 5). When empty the
    *  Club Detail page falls back to the hosts of the club's pods. */
   host_ids: Types.ObjectId[];
+  /** Users who administer this club (assigned by a platform admin). A Club Admin
+   *  manages the club and its pods from the Partners portal. Distinct from
+   *  host_ids: this is permission-bearing (mirrors the CLUB_ADMIN role). */
+  admin_user_ids: Types.ObjectId[];
   category_id: Types.ObjectId | null;
   super_category_id: Types.ObjectId | null;
   /** Admin-set verified badge for official clubs (explore item 15). */
@@ -80,6 +84,7 @@ const clubSchema = new Schema<IClub>(
     location_id: { type: Schema.Types.ObjectId, ref: 'Location', default: null, index: true },
     locality: { type: String, default: '', trim: true, maxlength: 120 },
     host_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [] },
+    admin_user_ids: { type: [Schema.Types.ObjectId], ref: 'User', default: [], index: true },
     category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     super_category_id: { type: Schema.Types.ObjectId, ref: 'Category', default: null },
     is_verified: { type: Boolean, default: false },

@@ -1,26 +1,28 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import {
-  CLUBS,
-  CATEGORIES,
-  LOCATIONS,
-  CREATE,
-  UPDATE,
-  DELETE,
-  ClubForm,
-  blankForm,
-  linesToMedia,
-  cleanBullets,
-  cleanFaqs,
-} from './queries';
+  blankClubFormValues,
+  buildClubInput,
+  clubToFormValues,
+  type ClubAdmin,
+  type ClubFormConfig,
+  type ClubFormValues,
+} from '@duncit/club-form';
+import MediaPickerDialog from '../../components/MediaPickerDialog';
+import { CLUBS, CATEGORIES, CREATE, UPDATE, DELETE } from './queries';
 import ClubFormDialog from './ClubFormDialog';
-import { validateClub, type ClubErrors } from './club-form/clubValidation';
 import ClubsTable from './ClubsTable';
 import ClubsToolbar from './ClubsToolbar';
+
+const ADMIN_CLUB_CONFIG: ClubFormConfig = {
+  showAdmins: true,
+  showVerified: true,
+  showIsActive: true,
+};
 
 export default function ClubsPage() {
   const navigate = useNavigate();
@@ -32,50 +34,45 @@ export default function ClubsPage() {
     fetchPolicy: 'cache-and-network',
   });
   const { data: catData } = useQuery(CATEGORIES);
-  const { data: locData } = useQuery(LOCATIONS);
   const [createMut] = useMutation(CREATE);
   const [updateMut] = useMutation(UPDATE);
   const [deleteMut] = useMutation(DELETE);
   const confirm = useConfirm();
 
   const [open, setOpen] = useState(false);
-  const [form, setForm] = useState<ClubForm>(blankForm);
+  const [initialValues, setInitialValues] = useState<ClubFormValues>(blankClubFormValues);
+  const [initialAdmins, setInitialAdmins] = useState<ClubAdmin[]>([]);
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
-  const [fieldErrors, setFieldErrors] = useState<ClubErrors>({});
   const [toast, setToast] = useState<string | null>(null);
 
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [pickerFolder, setPickerFolder] = useState('/clubs');
+  const pickerResolve = useRef<((url: string | null) => void) | null>(null);
+
+  // Bridge the URL-callback media picker to the shared form's promise picker.
+  const pickImage = (folder = '/clubs') =>
+    new Promise<string | null>((resolve) => {
+      pickerResolve.current = resolve;
+      setPickerFolder(folder);
+      setPickerOpen(true);
+    });
+  const settlePicker = (url: string | null) => {
+    pickerResolve.current?.(url);
+    pickerResolve.current = null;
+    setPickerOpen(false);
+  };
+
   const openCreate = () => {
-    setForm({ ...blankForm });
+    setInitialValues({ ...blankClubFormValues });
+    setInitialAdmins([]);
     setOpError(null);
-    setFieldErrors({});
     setOpen(true);
   };
-  const openEdit = (c: any) => {
-    setForm({
-      id: c.id,
-      club_id: c.club_id,
-      club_name: c.club_name,
-      club_description: c.club_description ?? '',
-      category_id: c.category_id ?? '',
-      super_category_id: c.super_category_id ?? '',
-      location_id: c.location_id ?? '',
-      locality: c.locality ?? '',
-      feature_text: (c.club_feature_images_and_videos ?? [])
-        .map((m: any) => m.url)
-        .join('\n'),
-      moments_text: (c.club_moments ?? []).map((m: any) => m.url).join('\n'),
-      community_link: c.club_whats_app_community_link ?? '',
-      group_link: c.club_whats_app_group_link ?? '',
-      who_we_are: c.who_we_are ?? [],
-      what_we_do: c.what_we_do ?? [],
-      perks: c.perks ?? [],
-      values: c.values ?? [],
-      faqs: (c.faqs ?? []).map((f: any) => ({ question: f.question, answer: f.answer })),
-      is_active: c.is_active,
-    });
+  const openEdit = (club: any) => {
+    setInitialValues(clubToFormValues(club));
+    setInitialAdmins((club.club_admins ?? []) as ClubAdmin[]);
     setOpError(null);
-    setFieldErrors({});
     setOpen(true);
   };
 
@@ -87,49 +84,17 @@ export default function ClubsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId, data?.clubs]);
 
-  const submit = async (options?: { draft?: boolean }) => {
-    const isDraft = !!options?.draft;
-    // Full validation on final save; drafts may be incomplete.
-    if (!isDraft) {
-      const errs = validateClub(form);
-      setFieldErrors(errs);
-      if (Object.keys(errs).length > 0) {
-        setOpError('Please complete the highlighted required fields before saving.');
-        return;
-      }
-    } else {
-      setFieldErrors({});
-    }
+  const submit = async (values: ClubFormValues, options: { draft: boolean }) => {
     setBusy(true);
     setOpError(null);
     try {
-      const payload = {
-        club_name: form.club_name,
-        club_description: form.club_description,
-        club_feature_images_and_videos: linesToMedia(form.feature_text),
-        club_moments: linesToMedia(form.moments_text),
-        club_whats_app_community_link: form.community_link,
-        club_whats_app_group_link: form.group_link,
-        who_we_are: cleanBullets(form.who_we_are),
-        what_we_do: cleanBullets(form.what_we_do),
-        perks: cleanBullets(form.perks),
-        values: cleanBullets(form.values),
-        faqs: cleanFaqs(form.faqs),
-        location_id: form.location_id || null,
-        locality: form.locality,
-        category_id: form.category_id || null,
-        super_category_id: form.super_category_id || null,
-      };
-      if (form.id) {
-        await updateMut({
-          variables: { id: form.id, input: { ...payload, is_active: form.is_active } },
-        });
+      const input = buildClubInput(values, { draft: options.draft, config: ADMIN_CLUB_CONFIG });
+      if (values.id) {
+        await updateMut({ variables: { id: values.id, input } });
       } else {
-        await createMut({
-          variables: { input: { ...payload, club_id: form.club_id || undefined, is_active: !isDraft } },
-        });
+        await createMut({ variables: { input } });
       }
-      setToast(isDraft ? 'Draft saved' : 'Saved');
+      setToast(options.draft ? 'Draft saved' : 'Saved');
       setOpen(false);
       await refetch();
     } catch (e: any) {
@@ -156,8 +121,6 @@ export default function ClubsPage() {
     }
   };
 
-  const superCats = (catData?.categories ?? []).filter((c: any) => c.level === 'SUPER');
-  const locations = locData?.locations ?? [];
   const allCats = catData?.categories ?? [];
   const catName = (id: string) => allCats.find((c: any) => c.id === id)?.name ?? '—';
 
@@ -180,17 +143,22 @@ export default function ClubsPage() {
 
       <ClubFormDialog
         open={open}
-        form={form}
-        setForm={setForm}
         onClose={() => setOpen(false)}
-        onSubmit={submit}
-        onSaveDraft={() => submit({ draft: true })}
+        initialValues={initialValues}
+        initialAdmins={initialAdmins}
+        config={ADMIN_CLUB_CONFIG}
         busy={busy}
         opError={opError}
-        errors={fieldErrors}
-        superCats={superCats}
-        allCats={allCats}
-        locations={locations}
+        onSubmit={submit}
+        onPickImage={pickImage}
+      />
+
+      <MediaPickerDialog
+        open={pickerOpen}
+        onClose={() => settlePicker(null)}
+        onPicked={(url) => settlePicker(url)}
+        folder={pickerFolder}
+        title="Add club image"
       />
 
       <Snackbar

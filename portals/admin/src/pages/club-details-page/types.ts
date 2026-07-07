@@ -10,6 +10,12 @@ export interface ClubFaq {
   answer: string;
 }
 
+export interface ClubActor {
+  id: string;
+  name: string;
+  avatar_url?: string | null;
+}
+
 export interface ClubDetail {
   id: string;
   club_id: string;
@@ -31,6 +37,8 @@ export interface ClubDetail {
   faqs: ClubFaq[];
   club_feature_images_and_videos: ClubMedia[];
   club_moments: ClubMedia[];
+  admin_user_ids: string[];
+  club_admins: ClubActor[];
 }
 
 export interface ClubPodRow {

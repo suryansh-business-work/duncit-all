@@ -40,6 +40,7 @@ const toPub = (d: any) => {
     location_id: d.location_id ? String(d.location_id) : null,
     locality: d.locality ?? '',
     host_ids: (d.host_ids ?? []).map((x: any) => String(x)),
+    admin_user_ids: (d.admin_user_ids ?? []).map((x: any) => String(x)),
     category_id: d.category_id ? String(d.category_id) : null,
     super_category_id: d.super_category_id ? String(d.super_category_id) : null,
     is_verified: !!d.is_verified,
@@ -123,17 +124,22 @@ export const clubService = {
       location_id: input.location_id || null,
       locality: input.locality ?? '',
       host_ids: input.host_ids ?? [],
+      admin_user_ids: input.admin_user_ids ?? [],
       category_id: input.category_id || null,
       super_category_id: input.super_category_id || null,
       is_verified: input.is_verified ?? false,
       is_active: input.is_active ?? true,
     });
+    if ((input.admin_user_ids ?? []).length) {
+      await this.syncClubAdminRoles([], (doc.admin_user_ids ?? []).map(String));
+    }
     return toPub(doc);
   },
 
   async update(id: string, input: any) {
     const doc = await ClubModel.findById(id);
     if (!doc) notFound();
+    const prevAdminIds = (doc!.admin_user_ids ?? []).map(String);
     const fields = [
       'club_name',
       'club_description',
@@ -151,6 +157,7 @@ export const clubService = {
       'location_id',
       'locality',
       'host_ids',
+      'admin_user_ids',
       'category_id',
       'super_category_id',
       'is_verified',
@@ -162,6 +169,9 @@ export const clubService = {
       (doc as any)[f] = nullableRefs.has(f) ? input[f] || null : input[f];
     }
     await doc.save();
+    if (input.admin_user_ids !== undefined) {
+      await this.syncClubAdminRoles(prevAdminIds, (doc!.admin_user_ids ?? []).map(String));
+    }
     return toPub(doc);
   },
 
@@ -195,6 +205,61 @@ export const clubService = {
       name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'Host',
       avatar_url: u.profile?.profile_photo ?? null,
     }));
+  },
+
+  /** Resolved profiles of a club's assigned admins (explicit only — no fallback). */
+  async getClubAdmins(adminIds: string[]) {
+    const ids = (adminIds ?? []).filter((x) => Types.ObjectId.isValid(x));
+    if (ids.length === 0) return [];
+    const users = await UserModel.find({ _id: { $in: ids } }).select(
+      'profile.first_name profile.last_name profile.profile_photo'
+    );
+    return users.map((u: any) => ({
+      id: String(u._id),
+      name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'Member',
+      avatar_url: u.profile?.profile_photo ?? null,
+    }));
+  },
+
+  /** Keep the CLUB_ADMIN role in sync with club assignment. Newly-assigned users
+   * gain the role; users removed from a club lose it only when they no longer
+   * administer ANY club. Dynamic import breaks the club<->user service cycle;
+   * best-effort so a role hiccup never blocks the club write. */
+  async syncClubAdminRoles(prevIds: string[], nextIds: string[]) {
+    const prev = new Set(prevIds.map(String));
+    const next = new Set(nextIds.map(String));
+    const added = [...next].filter((x) => !prev.has(x));
+    const removed = [...prev].filter((x) => !next.has(x));
+    if (added.length === 0 && removed.length === 0) return;
+    const { userService } = await import('@modules/access/user/user.service');
+    for (const uid of added) {
+      try {
+        await userService.addRole(uid, 'CLUB_ADMIN');
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[clubService.syncClubAdminRoles] grant failed:', err);
+      }
+    }
+    for (const uid of removed) {
+      const stillAdmin = await ClubModel.exists({ admin_user_ids: new Types.ObjectId(uid) });
+      if (stillAdmin) continue;
+      try {
+        await userService.removeRole(uid, 'CLUB_ADMIN');
+      } catch (err) {
+        // eslint-disable-next-line no-console
+        console.error('[clubService.syncClubAdminRoles] revoke failed:', err);
+      }
+    }
+  },
+
+  /** Pull a user out of every club's admin list. Called when the CLUB_ADMIN role
+   * is revoked from the admin console (mirrors the Host/Venue revoke-sync). */
+  async revokeAdminForUser(userId: string) {
+    if (!Types.ObjectId.isValid(userId)) return;
+    await ClubModel.updateMany(
+      { admin_user_ids: new Types.ObjectId(userId) },
+      { $pull: { admin_user_ids: new Types.ObjectId(userId) } }
+    );
   },
 
   async followersCount(clubId: string) {

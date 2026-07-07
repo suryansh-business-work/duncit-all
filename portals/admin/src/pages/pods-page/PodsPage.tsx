@@ -1,11 +1,19 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { notifyError } from '../../components/notify';
 import { useConfirm } from '../../components/useConfirm';
 import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Alert, Snackbar, Stack } from '@mui/material';
 import { PodContentFormDialog, type PodContentValues } from '@duncit/portal-pod-form';
+import {
+  blankPodFormValues,
+  buildPodInput,
+  podToFormValues,
+  type PodFormConfig,
+  type PodFormValues,
+} from '@duncit/pod-form';
 import MediaPickerDialog from '../../components/MediaPickerDialog';
+import { useFeatureFlag } from '../../hooks/useFeatureFlag';
 import {
   PODS,
   CLUBS,
@@ -17,9 +25,7 @@ import {
   CREATE,
   UPDATE,
   DELETE,
-  PodForm,
 } from './queries';
-import { blankForm, buildEditValues, buildPayload } from './helpers';
 import CompletePodDialog from './complete-pod-dialog';
 import ReleaseSummaryDialog from './ReleaseSummaryDialog';
 import PodsTable from './PodsTable';
@@ -56,7 +62,8 @@ export default function PodsPage() {
   const confirm = useConfirm();
 
   const [open, setOpen] = useState(false);
-  const [initialValues, setInitialValues] = useState<PodForm>(blankForm);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [initialValues, setInitialValues] = useState<PodFormValues>(blankPodFormValues);
   const [busy, setBusy] = useState(false);
   const [opError, setOpError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -65,6 +72,21 @@ export default function PodsPage() {
   const [pickerOpen, setPickerOpen] = useState(false);
   const pickerResolve = useRef<((url: string | null) => void) | null>(null);
   const releaseRequest = usePodReleaseRequest({ refetch, setToast });
+
+  const productsFlag = useFeatureFlag('is_product_visible');
+  const config = useMemo<PodFormConfig>(
+    () => ({
+      showHosts: true,
+      showLocationZone: true,
+      showVenueSlot: false,
+      showPlaceCharges: true,
+      showInventory: true,
+      showFinance: true,
+      showIsActive: true,
+      showProducts: productsFlag,
+    }),
+    [productsFlag]
+  );
 
   // Bridge the URL-callback media picker to the shared form's promise picker.
   const pickImage = () =>
@@ -112,18 +134,16 @@ export default function PodsPage() {
   const clubName = (id: string) => clubs.find((c: any) => c.id === id)?.club_name ?? '—';
   const locName = (id: string) => locations.find((l: any) => l.id === id)?.location_name ?? '—';
   const venueName = (id: string) => approvedVenues.find((v: any) => v.id === id)?.venue_name ?? '—';
-  const userName = (id: string) =>
-    users.find((u: any) => u.user_id === id)?.full_name ??
-    users.find((u: any) => u.user_id === id)?.email ??
-    id.slice(0, 6);
 
   const openCreate = () => {
-    setInitialValues({ ...blankForm, club_id: clubFilter || '' });
+    setEditingId(null);
+    setInitialValues({ ...blankPodFormValues, club_id: clubFilter || '' });
     setOpError(null);
     setOpen(true);
   };
   const openEdit = (p: any) => {
-    setInitialValues(buildEditValues(p));
+    setEditingId(p.id);
+    setInitialValues(podToFormValues(p));
     setOpError(null);
     setOpen(true);
   };
@@ -136,20 +156,16 @@ export default function PodsPage() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [editId, data?.pods]);
 
-  const submit = async (values: PodForm, options?: { draft?: boolean }) => {
+  const submit = async (values: PodFormValues, options: { draft: boolean }) => {
     setBusy(true);
     setOpError(null);
     try {
-      const isDraft = !!options?.draft;
-      const payload = buildPayload(values);
-      if (values.id) {
-        await updateMut({
-          variables: { id: values.id, input: { ...payload, is_active: values.is_active } },
-        });
+      const isDraft = options.draft;
+      const input = buildPodInput(values, { draft: isDraft, config });
+      if (editingId) {
+        await updateMut({ variables: { id: editingId, input: { ...input, is_active: values.is_active } } });
       } else {
-        await createMut({
-          variables: { input: { ...payload, pod_id: values.pod_id || undefined, is_active: !isDraft } },
-        });
+        await createMut({ variables: { input: { ...input, pod_id: values.pod_id || undefined } } });
       }
       setToast(isDraft ? 'Draft saved' : 'Saved');
       setOpen(false);
@@ -223,15 +239,16 @@ export default function PodsPage() {
         open={open}
         onClose={() => setOpen(false)}
         initialValues={initialValues}
+        config={config}
         busy={busy}
         opError={opError}
         clubs={clubs}
         venues={approvedVenues}
         inventoryProducts={inventoryProducts}
         users={users}
-        userName={userName}
         onSubmit={submit}
         finance={financeData?.publicFinanceSettings}
+        onPickImage={pickImage}
       />
 
       {quickPod && (

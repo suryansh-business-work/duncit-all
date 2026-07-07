@@ -6,12 +6,14 @@ import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import EventIcon from '@mui/icons-material/Event';
 import ReceiptLongIcon from '@mui/icons-material/ReceiptLong';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
+import ReplayIcon from '@mui/icons-material/Replay';
 import RuleIcon from '@mui/icons-material/Rule';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import { notify } from '../../components/notify';
 import { usePricing } from '../../hooks/usePricing';
 import { parseApiError } from '../../utils/parseApiError';
 import { podUrl } from '../../utils/seoUrls';
+import { isPodActive } from '../../utils/podStatus';
 import { useDateFormat } from '../../utils/dateFormat';
 import PodHistoryTimeline from './PodHistoryTimeline';
 import PodProductOrdersCard from './PodProductOrdersCard';
@@ -25,7 +27,9 @@ import {
 interface Props {
   item: PodHistoryItem;
   backingOut: boolean;
+  rejoining: boolean;
   onBackout: () => void;
+  onRejoin: () => void;
 }
 
 const refundLabel: Record<PodHistoryItem['refund_status'], string> = {
@@ -49,7 +53,7 @@ const makeSupportPath = (item: PodHistoryItem) => {
   return `/support/tickets?${params.toString()}`;
 };
 
-export default function PodHistoryDetails({ item, backingOut, onBackout }: Readonly<Props>) {
+export default function PodHistoryDetails({ item, backingOut, rejoining, onBackout, onRejoin }: Readonly<Props>) {
   const { formatDateTime } = useDateFormat();
   const { format } = usePricing();
   const [loadInvoice, invoiceState] = useLazyQuery(POD_HISTORY_INVOICE_PDF, { fetchPolicy: 'network-only' });
@@ -59,6 +63,9 @@ export default function PodHistoryDetails({ item, backingOut, onBackout }: Reado
   const isDeleted = !!pod?.is_deleted;
   const imageUrl = pod?.pod_images_and_videos?.[0]?.url;
   const podDetailsPath = pod?.club_slug && pod?.pod_id ? podUrl(pod.club_slug, pod.pod_id) : '';
+  // Rejoin is offered only for a backed-out booking whose pod is still active (not
+  // completed/ended) and not deleted — the free, no-payment path back in.
+  const canRejoin = item.status === 'BACKED_OUT' && !isDeleted && !!pod?.id && isPodActive(pod?.pod_date_time, pod?.pod_end_date_time);
 
   const downloadInvoice = async () => {
     if (!item.payment_id) return;
@@ -137,6 +144,11 @@ export default function PodHistoryDetails({ item, backingOut, onBackout }: Reado
                 <Button onClick={onBackout} disabled={item.status !== 'JOINED' || backingOut} color="error" variant="outlined" startIcon={<RestartAltIcon />}>
                   {backingOut ? 'Backing out...' : 'Backout Pod'}
                 </Button>
+                {canRejoin && (
+                  <Button onClick={onRejoin} disabled={rejoining} color="success" variant="contained" startIcon={<ReplayIcon />}>
+                    {rejoining ? 'Rejoining...' : 'Rejoin Pod'}
+                  </Button>
+                )}
                 <Button variant="outlined" startIcon={<ReceiptLongIcon />} onClick={() => notify(`Refund status: ${refundLabel[item.refund_status]}`, 'info')}>
                   Refund Status: {refundLabel[item.refund_status]}
                 </Button>

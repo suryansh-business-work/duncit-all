@@ -21,6 +21,7 @@ interface Deductions {
   default_host_commission_pct: number;
   default_venue_commission_pct: number;
   default_product_commission_pct: number;
+  default_backout_deduction_pct: number;
 }
 
 const BLANK: Deductions = {
@@ -29,6 +30,7 @@ const BLANK: Deductions = {
   default_host_commission_pct: 0,
   default_venue_commission_pct: 0,
   default_product_commission_pct: 0,
+  default_backout_deduction_pct: 0,
 };
 
 interface SectionProps {
@@ -73,6 +75,7 @@ export default function DefaultDeductionsPage() {
       default_host_commission_pct: fs.default_host_commission_pct ?? 0,
       default_venue_commission_pct: fs.default_venue_commission_pct ?? 0,
       default_product_commission_pct: fs.default_product_commission_pct ?? 0,
+      default_backout_deduction_pct: fs.default_backout_deduction_pct ?? 0,
     });
   }, [data]);
 
@@ -138,6 +141,15 @@ export default function DefaultDeductionsPage() {
 
         <DeductionCard title="Products" subtitle="Duncit's commission on a product's selling price.">
           <DeductionSlider label="Product commission" value={form.default_product_commission_pct} onChange={set('default_product_commission_pct')} max={50} />
+        </DeductionCard>
+
+        <DeductionCard title="Backouts" subtitle="Kept from a member's refund when they back out of a paid pod.">
+          <DeductionSlider
+            label="Backout payment deduction charges (0-100%)"
+            value={form.default_backout_deduction_pct}
+            onChange={set('default_backout_deduction_pct')}
+            hint="Percentage kept from a member's refund when they back out of a paid pod. 0% = full refund. Applied by the refund flow (shipping later)."
+          />
         </DeductionCard>
 
         {error && <Alert severity="error">{error}</Alert>}

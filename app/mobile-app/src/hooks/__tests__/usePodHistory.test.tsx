@@ -8,6 +8,7 @@ import {
   usePodHistory,
   usePodHistoryCategories,
   usePodInvoice,
+  usePodRejoin,
   usePodTicket,
 } from '@/hooks/usePodHistory';
 
@@ -86,6 +87,31 @@ describe('usePodBackout', () => {
     const { result } = renderHook(() => usePodBackout());
     await act(async () => {
       await expect(result.current.backout('pod1')).rejects.toThrow('fail');
+    });
+    expect(result.current.busy).toBe(false);
+  });
+});
+
+describe('usePodRejoin', () => {
+  it('calls rejoinPod with the pod doc id', async () => {
+    mockRequest.mockResolvedValueOnce({ rejoinPod: { id: 'm1', status: 'JOINED' } });
+    const { result } = renderHook(() => usePodRejoin());
+    await act(async () => {
+      await result.current.rejoin('pod1');
+    });
+    expect(mockRequest).toHaveBeenCalledWith(
+      expect.anything(),
+      { pod_doc_id: 'pod1' },
+      { auth: true },
+    );
+    expect(result.current.busy).toBe(false);
+  });
+
+  it('clears busy even when the rejoin fails', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('fail'));
+    const { result } = renderHook(() => usePodRejoin());
+    await act(async () => {
+      await expect(result.current.rejoin('pod1')).rejects.toThrow('fail');
     });
     expect(result.current.busy).toBe(false);
   });

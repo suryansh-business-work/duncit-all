@@ -3,7 +3,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { refundLabel, type PodMembership } from '@/utils/pod-history';
+import { canRejoin, refundLabel, type PodMembership } from '@/utils/pod-history';
 
 type IconName = ComponentProps<typeof MaterialIcons>['name'];
 
@@ -62,10 +62,12 @@ function ActionButton({
 export interface PodHistoryActionsProps {
   item: PodMembership;
   backingOut: boolean;
+  rejoining: boolean;
   invoiceBusy: boolean;
   ticketBusy: boolean;
   onPodDetails: () => void;
   onBackout: () => void;
+  onRejoin: () => void;
   onRefundStatus: () => void;
   onInvoice: () => void;
   onTicket: () => void;
@@ -76,10 +78,12 @@ export interface PodHistoryActionsProps {
 export function PodHistoryActions({
   item,
   backingOut,
+  rejoining,
   invoiceBusy,
   ticketBusy,
   onPodDetails,
   onBackout,
+  onRejoin,
   onRefundStatus,
   onInvoice,
   onTicket,
@@ -87,6 +91,7 @@ export function PodHistoryActions({
 }: Readonly<PodHistoryActionsProps>) {
   // A deleted pod keeps its booking record but only allows Invoice + Support.
   const isDeleted = !!item.pod?.is_deleted;
+  const showRejoin = canRejoin(item);
   return (
     <XStack flexWrap="wrap" gap={8}>
       {!isDeleted ? (
@@ -107,6 +112,16 @@ export function PodHistoryActions({
             disabled={item.status !== 'JOINED' || backingOut}
             onPress={onBackout}
           />
+          {showRejoin ? (
+            <ActionButton
+              testID="ph-rejoin"
+              icon="replay"
+              label={rejoining ? 'Rejoining…' : 'Rejoin Pod'}
+              variant="contained"
+              disabled={rejoining}
+              onPress={onRejoin}
+            />
+          ) : null}
           <ActionButton
             testID="ph-refund"
             icon="receipt-long"

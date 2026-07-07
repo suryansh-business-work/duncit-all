@@ -2,7 +2,13 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 import { Linking } from 'react-native';
 
 import { PodHistoryDetailsScreen } from '@/screens/PodHistoryDetailsScreen';
-import { usePodBackout, usePodHistory, usePodInvoice, usePodTicket } from '@/hooks/usePodHistory';
+import {
+  usePodBackout,
+  usePodHistory,
+  usePodInvoice,
+  usePodRejoin,
+  usePodTicket,
+} from '@/hooks/usePodHistory';
 import { usePolicy } from '@/hooks/usePolicies';
 import { renderWithProviders } from '@/utils/test-utils';
 import type { PodMembership } from '@/utils/pod-history';
@@ -10,6 +16,7 @@ import type { PodMembership } from '@/utils/pod-history';
 jest.mock('@/hooks/usePodHistory', () => ({
   usePodHistory: jest.fn(),
   usePodBackout: jest.fn(),
+  usePodRejoin: jest.fn(),
   usePodInvoice: jest.fn(),
   usePodTicket: jest.fn(),
 }));
@@ -26,6 +33,7 @@ jest.mock('@react-navigation/native', () => ({
 
 const mockedHistory = usePodHistory as jest.Mock;
 const mockedBackout = usePodBackout as jest.Mock;
+const mockedRejoin = usePodRejoin as jest.Mock;
 const mockedInvoice = usePodInvoice as jest.Mock;
 const mockedTicket = usePodTicket as jest.Mock;
 const mockedPolicy = usePolicy as jest.Mock;
@@ -59,8 +67,13 @@ const membership = (over: Record<string, unknown> = {}): PodMembership =>
   }) as unknown as PodMembership;
 
 const backout = jest.fn();
+const rejoin = jest.fn();
 const download = jest.fn();
 const refetch = jest.fn();
+
+// A backed-out membership on a future pod → the Rejoin action is visible.
+const rejoinable = () =>
+  membership({ status: 'BACKED_OUT', pod: { ...pod, pod_date_time: '2999-01-01T10:00:00Z' } });
 
 function setHistory(over: Record<string, unknown> = {}) {
   mockedHistory.mockReturnValue({
@@ -76,9 +89,11 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockRouteParams = { membershipId: 'm1' };
   backout.mockResolvedValue(undefined);
+  rejoin.mockResolvedValue(undefined);
   download.mockResolvedValue(undefined);
   refetch.mockResolvedValue(undefined);
   mockedBackout.mockReturnValue({ backout, busy: false });
+  mockedRejoin.mockReturnValue({ rejoin, busy: false });
   mockedInvoice.mockReturnValue({ download, busy: false });
   mockedTicket.mockReturnValue({ download: jest.fn().mockResolvedValue(undefined), busy: false });
   mockedPolicy.mockReturnValue({
@@ -161,6 +176,36 @@ describe('PodHistoryDetailsScreen actions', () => {
     await waitFor(() =>
       expect(screen.getByTestId('ph-notice')).toHaveTextContent('cannot backout'),
     );
+  });
+
+  it('confirms a free rejoin and records the notice', async () => {
+    setHistory({ items: [rejoinable()] });
+    renderWithProviders(<PodHistoryDetailsScreen />);
+    fireEvent.press(screen.getByTestId('ph-rejoin'));
+    fireEvent.press(screen.getByTestId('rejoin-confirm'));
+    await waitFor(() => expect(rejoin).toHaveBeenCalledWith('pod1'));
+    expect(refetch).toHaveBeenCalled();
+    await waitFor(() =>
+      expect(screen.getByTestId('ph-notice')).toHaveTextContent('Rejoined pod successfully'),
+    );
+  });
+
+  it('surfaces a rejoin failure as a notice', async () => {
+    rejoin.mockRejectedValueOnce(new Error('cannot rejoin'));
+    setHistory({ items: [rejoinable()] });
+    renderWithProviders(<PodHistoryDetailsScreen />);
+    fireEvent.press(screen.getByTestId('ph-rejoin'));
+    fireEvent.press(screen.getByTestId('rejoin-confirm'));
+    await waitFor(() => expect(screen.getByTestId('ph-notice')).toHaveTextContent('cannot rejoin'));
+  });
+
+  it('closes the rejoin dialog via cancel', () => {
+    setHistory({ items: [rejoinable()] });
+    renderWithProviders(<PodHistoryDetailsScreen />);
+    fireEvent.press(screen.getByTestId('ph-rejoin'));
+    fireEvent.press(screen.getByTestId('rejoin-cancel'));
+    expect(rejoin).not.toHaveBeenCalled();
+    expect(screen.getByTestId('pod-history-details-screen')).toBeOnTheScreen();
   });
 
   it('navigates to terms from the backout dialog view-terms link', () => {

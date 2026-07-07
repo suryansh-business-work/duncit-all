@@ -71,6 +71,7 @@ export const appConfig: AppConfig = {
     { label: 'Startup Dashboard', to: '/startup-dashboard', icon: 'insights' },
     { label: 'Default Deductions', to: '/default-deductions', icon: 'percent' },
     { label: 'Pod Finance', to: '/pod-finance', icon: 'analytics' },
+    { label: 'Backout Refunds', to: '/backout-refunds', icon: 'quote' },
     { label: 'Payment Logs', to: '/payment-logs', icon: 'receipt' },
     { label: 'Payment Release', to: '/payment-release', icon: 'payments' },
     { label: 'Withdrawals', to: '/withdrawals', icon: 'payments' },

@@ -8,6 +8,7 @@ export const DEDUCTION_SETTINGS = gql`
       default_host_commission_pct
       default_venue_commission_pct
       default_product_commission_pct
+      default_backout_deduction_pct
       updated_at
     }
   }
@@ -21,6 +22,7 @@ export const UPDATE_DEDUCTIONS = gql`
       default_host_commission_pct
       default_venue_commission_pct
       default_product_commission_pct
+      default_backout_deduction_pct
       updated_at
     }
   }

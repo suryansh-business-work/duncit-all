@@ -4,6 +4,7 @@ import crypto from 'crypto';
 import { PodMemberModel, type IPodMember, type JoinSource } from './podMember.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
+import { UserModel } from '@modules/access/user/user.model';
 import { evaluateBadgesForUser } from '@modules/engagement/badge/badge.service';
 
 // % of spots that must be filled before a backout triggers a refund.
@@ -50,6 +51,49 @@ async function removeAttendee(pod: any, userId: string) {
   const before = pod.pod_attendees.length;
   pod.pod_attendees = pod.pod_attendees.filter((u: any) => String(u) !== userId);
   if (pod.pod_attendees.length !== before) await pod.save();
+}
+
+const fullName = (user: any) =>
+  `${user?.profile?.first_name ?? ''} ${user?.profile?.last_name ?? ''}`.trim();
+
+// Flat shape for the Finance "Backout Refunds" list/detail — a backed-out member
+// hydrated with the buyer's name/email and the linked join payment (if paid).
+const toBackoutRefund = (m: IPodMember, user: any, payment: any) => ({
+  id: String(m._id),
+  pod_id: String(m.pod_id),
+  user_id: String(m.user_id),
+  user_name: fullName(user) || null,
+  user_email: user?.auth?.email ?? null,
+  status: m.status,
+  joined_at: m.joined_at?.toISOString?.() ?? null,
+  backed_out_at: m.backed_out_at ? m.backed_out_at.toISOString() : null,
+  refund_status: m.refund_status,
+  payment_id: m.payment_id ? String(m.payment_id) : null,
+  payment_amount: payment ? payment.total : null,
+  payment_currency: payment ? payment.currency_symbol : null,
+  payment_status: payment ? payment.status : null,
+  refund_threshold_pct: REFUND_THRESHOLD_PCT,
+  created_at: m.created_at?.toISOString?.() ?? '',
+});
+
+// Batch-load users + payments to avoid an N+1 across the whole backed-out list.
+async function hydrateBackouts(docs: IPodMember[]) {
+  if (docs.length === 0) return [];
+  const userIds = [...new Set(docs.map((d) => String(d.user_id)))];
+  const paymentIds = docs.map((d) => d.payment_id).filter(Boolean).map(String);
+  const [users, payments] = await Promise.all([
+    UserModel.find({ _id: { $in: userIds } }).select('profile.first_name profile.last_name auth.email'),
+    PaymentModel.find({ _id: { $in: paymentIds } }).select('total currency_symbol status'),
+  ]);
+  const userById = new Map<string, any>(users.map((u: any) => [String(u._id), u]));
+  const paymentById = new Map<string, any>(payments.map((p: any) => [String(p._id), p]));
+  return docs.map((m) =>
+    toBackoutRefund(
+      m,
+      userById.get(String(m.user_id)),
+      m.payment_id ? paymentById.get(String(m.payment_id)) : null
+    )
+  );
 }
 
 export const podMemberService = {
@@ -292,5 +336,73 @@ export const podMemberService = {
       console.warn('Ticket issue (paid join) failed', e);
     }
     return doc;
+  },
+
+  /**
+   * Rejoin a pod the caller previously backed out of — no payment. Flips the
+   * existing BACKED_OUT membership back to JOINED (reusing its join payment) and
+   * re-adds the attendee. Allowed only until the pod completes / starts.
+   */
+  async rejoin(podDocId: string, userId: string) {
+    const pod = await PodModel.findById(podDocId);
+    if (!pod) throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
+    if (pod.completed_at) {
+      throw new GraphQLError('This pod is already complete — rejoin is closed.', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+    if (pod.pod_date_time && pod.pod_date_time.getTime() < Date.now()) {
+      throw new GraphQLError('This pod has already taken place — rejoin is closed.', {
+        extensions: { code: 'BAD_REQUEST' },
+      });
+    }
+
+    const uid = new Types.ObjectId(userId);
+    const alreadyJoined = await PodMemberModel.findOne({ pod_id: pod._id, user_id: uid, status: 'JOINED' });
+    if (alreadyJoined) return toPub(alreadyJoined);
+
+    const membership = await PodMemberModel.findOne({
+      pod_id: pod._id,
+      user_id: uid,
+      status: 'BACKED_OUT',
+    }).sort({ backed_out_at: -1 });
+    if (!membership) {
+      throw new GraphQLError('You have no backed-out booking for this pod', {
+        extensions: { code: 'NOT_FOUND' },
+      });
+    }
+
+    await ensureSpotAvailable(pod);
+
+    membership.status = 'JOINED';
+    membership.joined_at = new Date();
+    membership.backed_out_at = null;
+    membership.refund_status = 'NONE';
+    await membership.save();
+
+    await addAttendee(pod, userId);
+    evaluateBadgesForUser(userId, 'POD_JOIN').catch(() => {});
+    try {
+      const { ticketService } = await import('@modules/pods/ticket/ticket.service');
+      await ticketService.ensureForMembership(String(membership._id));
+    } catch (e) {
+      console.warn('Ticket issue (rejoin) failed', e);
+    }
+    return toPub(membership);
+  },
+
+  /** Finance: all currently backed-out members, newest backout first. */
+  async listBackoutRefunds() {
+    const docs = await PodMemberModel.find({ status: 'BACKED_OUT' }).sort({ backed_out_at: -1 });
+    return hydrateBackouts(docs);
+  },
+
+  /** Finance: one backed-out member by membership id (null once rejoined). */
+  async getBackoutRefund(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    const doc = await PodMemberModel.findById(id);
+    if (!doc || doc.status !== 'BACKED_OUT') return null;
+    const [hydrated] = await hydrateBackouts([doc]);
+    return hydrated ?? null;
   },
 };

@@ -2,6 +2,10 @@ import { GraphQLError } from 'graphql';
 import { podMemberService } from './podMember.service';
 import { podService } from '@modules/pods/pod/pod.service';
 import type { GraphQLContext } from '@context';
+import { requireRole } from '@middleware/rbac';
+
+// Finance/admin roles that may view the Backout Refunds list.
+const ADMIN_RW = ['SUPER_ADMIN', 'CITY_ADMIN', 'FINANCE_MANAGER'];
 
 function requireUser(ctx: GraphQLContext) {
   if (!ctx.user) {
@@ -13,6 +17,11 @@ function requireUser(ctx: GraphQLContext) {
 export const podMemberResolvers = {
   PodMember: {
     // Pod History must still show a booking whose pod was soft-deleted.
+    pod: async (parent: { pod_id: string }) =>
+      podService.getById(parent.pod_id, { includeDeleted: true }),
+  },
+  BackoutRefundRequest: {
+    // The pod may have been soft-deleted after the backout — still show it.
     pod: async (parent: { pod_id: string }) =>
       podService.getById(parent.pod_id, { includeDeleted: true }),
   },
@@ -32,6 +41,14 @@ export const podMemberResolvers = {
       podMemberService.listForPod(args.pod_doc_id, args.status),
     referralLookup: async (_p: unknown, args: { token: string }) =>
       podMemberService.lookupReferral(args.token),
+    backoutRefundRequests: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return podMemberService.listBackoutRefunds();
+    },
+    backoutRefundRequest: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_RW);
+      return podMemberService.getBackoutRefund(args.id);
+    },
   },
   Mutation: {
     joinFreePod: async (
@@ -49,6 +66,10 @@ export const podMemberResolvers = {
     redeemPodReferral: async (_p: unknown, args: { token: string }, ctx: GraphQLContext) => {
       const uid = requireUser(ctx);
       return podMemberService.redeemReferral(args.token, uid);
+    },
+    rejoinPod: async (_p: unknown, args: { pod_doc_id: string }, ctx: GraphQLContext) => {
+      const uid = requireUser(ctx);
+      return podMemberService.rejoin(args.pod_doc_id, uid);
     },
   },
 };

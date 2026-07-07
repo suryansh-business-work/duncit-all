@@ -49,16 +49,41 @@ export const podMemberTypeDefs = /* GraphQL */ `
     refund_threshold_pct: Int!
   }
 
+  "A member who has backed out of a pod — powers the Finance 'Backout Refunds' list + detail."
+  type BackoutRefundRequest {
+    id: ID!
+    pod_id: ID!
+    pod: Pod
+    user_id: ID!
+    user_name: String
+    user_email: String
+    status: MembershipStatus!
+    joined_at: String!
+    backed_out_at: String
+    refund_status: RefundStatus!
+    payment_id: ID
+    payment_amount: Float
+    payment_currency: String
+    payment_status: String
+    refund_threshold_pct: Int!
+    created_at: String!
+  }
+
   extend type Query {
     myPodMemberships(status: MembershipStatus): [PodMember!]!
     podMembershipState(pod_doc_id: ID!): PodMembershipState!
     podMembers(pod_doc_id: ID!, status: MembershipStatus): [PodMember!]!
     referralLookup(token: String!): PodMember
+    "Finance-only: every currently backed-out member (rejoined members drop off)."
+    backoutRefundRequests: [BackoutRefundRequest!]!
+    backoutRefundRequest(id: ID!): BackoutRefundRequest
   }
 
   extend type Mutation {
     joinFreePod(pod_doc_id: ID!, referral_token: String): PodMember!
     backoutPod(pod_doc_id: ID!): PodMember!
     redeemPodReferral(token: String!): PodMember!
+    "Rejoin a pod the caller previously backed out of — no payment, until the pod completes."
+    rejoinPod(pod_doc_id: ID!): PodMember!
   }
 `;

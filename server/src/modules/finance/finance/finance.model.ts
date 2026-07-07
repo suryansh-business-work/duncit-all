@@ -13,6 +13,9 @@ export interface IFinanceSettings extends Document {
   default_venue_share_pct: number;
   default_venue_commission_pct: number;
   default_product_commission_pct: number;
+  // % kept from a member's refund when they back out of a paid pod (0 = full
+  // refund). Config only for now — applied by the refund flow (built later).
+  default_backout_deduction_pct: number;
   // Payout cycles — when approved venue/host payouts are disbursed. IMMEDIATE
   // releases on approval; WEEKLY runs on payout_day_of_week; MONTH_END at the
   // month's last day. payout_time is the HH:mm the batch runs.
@@ -90,6 +93,7 @@ const financeSettingsSchema = new Schema<IFinanceSettings>(
     default_venue_share_pct: { type: Number, default: 90, min: 0, max: 100 },
     default_venue_commission_pct: { type: Number, default: 10, min: 0, max: 100 },
     default_product_commission_pct: { type: Number, default: 5, min: 0, max: 100 },
+    default_backout_deduction_pct: { type: Number, default: 0, min: 0, max: 100 },
     venue_payout_mode: { type: String, enum: ['IMMEDIATE', 'WEEKLY', 'MONTH_END'], default: 'IMMEDIATE' },
     host_payout_mode: { type: String, enum: ['IMMEDIATE', 'WEEKLY', 'MONTH_END'], default: 'IMMEDIATE' },
     payout_day_of_week: { type: Number, default: 1, min: 0, max: 6 },

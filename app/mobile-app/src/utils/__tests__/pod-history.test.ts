@@ -2,6 +2,7 @@ import {
   activePodHistoryFilterCount,
   applyPodHistory,
   buildTimeline,
+  canRejoin,
   categoriesUnder,
   dedupeByPod,
   DEFAULT_POD_HISTORY_FILTERS,
@@ -126,6 +127,43 @@ describe('buildTimeline', () => {
     expect(events[2]?.tag).toBe('Checked');
     expect(events[3]?.title).toBe('Refund not initiated');
     expect(events[3]?.state).toBe('current');
+  });
+});
+
+describe('canRejoin', () => {
+  const activePod = {
+    ...membership().pod!,
+    pod_date_time: '2999-01-01T10:00:00Z',
+    pod_end_date_time: null,
+  };
+
+  it('allows rejoin for an active backed-out booking', () => {
+    expect(canRejoin(membership({ status: 'BACKED_OUT', pod: activePod }))).toBe(true);
+  });
+
+  it('blocks rejoin for a joined booking', () => {
+    expect(canRejoin(membership({ pod: activePod }))).toBe(false);
+  });
+
+  it('blocks rejoin for a deleted pod', () => {
+    expect(
+      canRejoin(membership({ status: 'BACKED_OUT', pod: { ...activePod, is_deleted: true } })),
+    ).toBe(false);
+  });
+
+  it('blocks rejoin when the pod is missing', () => {
+    expect(canRejoin(membership({ status: 'BACKED_OUT', pod: null }))).toBe(false);
+  });
+
+  it('blocks rejoin once the pod has ended', () => {
+    expect(
+      canRejoin(
+        membership({
+          status: 'BACKED_OUT',
+          pod: { ...activePod, pod_date_time: '2000-01-01T10:00:00Z' },
+        }),
+      ),
+    ).toBe(false);
   });
 });
 

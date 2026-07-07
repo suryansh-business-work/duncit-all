@@ -6,6 +6,8 @@ import {
   DefaultDeductionsPage,
   PodFinancePage,
   PodFinanceDetailPage,
+  BackoutRefundPage,
+  BackoutRefundDetailPage,
   PaymentLogsPage,
   PaymentReleasePage,
   WithdrawalsPage,
@@ -43,6 +45,8 @@ export default function App() {
       <Route path="/default-deductions" element={authed(<DefaultDeductionsPage />)} />
       <Route path="/pod-finance" element={authed(<PodFinancePage />)} />
       <Route path="/pod-finance/:podId" element={authed(<PodFinanceDetailPage />)} />
+      <Route path="/backout-refunds" element={authed(<BackoutRefundPage />)} />
+      <Route path="/backout-refunds/:id" element={authed(<BackoutRefundDetailPage />)} />
       <Route path="/payment-logs" element={authed(<PaymentLogsPage />)} />
       <Route path="/payment-release" element={authed(<PaymentReleasePage />)} />
       <Route path="/withdrawals" element={authed(<WithdrawalsPage />)} />

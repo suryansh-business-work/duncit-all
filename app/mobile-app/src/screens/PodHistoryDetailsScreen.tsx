@@ -4,9 +4,19 @@ import { useNavigation, useRoute, type RouteProp } from '@react-navigation/nativ
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Spinner, Text, YStack } from 'tamagui';
 
-import { BackoutConfirmDialog, PodHistoryDetails } from '@/components/pod-history';
+import {
+  BackoutConfirmDialog,
+  PodHistoryDetails,
+  RejoinConfirmDialog,
+} from '@/components/pod-history';
 import { StackScreen } from '@/components/StackScreen';
-import { usePodBackout, usePodHistory, usePodInvoice, usePodTicket } from '@/hooks/usePodHistory';
+import {
+  usePodBackout,
+  usePodHistory,
+  usePodInvoice,
+  usePodRejoin,
+  usePodTicket,
+} from '@/hooks/usePodHistory';
 import { useProductOrders } from '@/hooks/useProductOrders';
 import type { RootStackParamList } from '@/navigation/types';
 import { toErrorMessage } from '@/utils/errors';
@@ -22,9 +32,11 @@ export function PodHistoryDetailsScreen() {
   const membershipId = route.params?.membershipId ?? '';
   const { items, isLoading, error, refetch } = usePodHistory();
   const { backout, busy: backingOut } = usePodBackout();
+  const { rejoin, busy: rejoining } = usePodRejoin();
   const { download, busy: invoiceBusy } = usePodInvoice();
   const { download: downloadTicketPdf, busy: ticketBusy } = usePodTicket();
   const [backoutOpen, setBackoutOpen] = useState(false);
+  const [rejoinOpen, setRejoinOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
 
   const selected = items.find((item) => item.id === membershipId) ?? null;
@@ -40,6 +52,19 @@ export function PodHistoryDetailsScreen() {
       await refetch();
     } catch (backoutError) {
       setNotice(toErrorMessage(backoutError));
+    }
+  };
+
+  const confirmRejoin = async () => {
+    /* istanbul ignore next -- the rejoin button is hidden without a pod id */
+    if (!selected?.pod?.id) return;
+    try {
+      await rejoin(selected.pod.id);
+      setNotice('Rejoined pod successfully');
+      setRejoinOpen(false);
+      await refetch();
+    } catch (rejoinError) {
+      setNotice(toErrorMessage(rejoinError));
     }
   };
 
@@ -82,6 +107,7 @@ export function PodHistoryDetailsScreen() {
           <PodHistoryDetails
             item={selected}
             backingOut={backingOut}
+            rejoining={rejoining}
             invoiceBusy={invoiceBusy}
             ticketBusy={ticketBusy}
             notice={notice}
@@ -95,6 +121,7 @@ export function PodHistoryDetailsScreen() {
               })
             }
             onBackout={() => setBackoutOpen(true)}
+            onRejoin={() => setRejoinOpen(true)}
             onRefundStatus={() =>
               setNotice(`Refund status: ${refundLabel(selected.refund_status)}`)
             }
@@ -121,6 +148,13 @@ export function PodHistoryDetailsScreen() {
           setBackoutOpen(false);
           navigation.navigate('Policy', { slug: 'backout-terms' });
         }}
+      />
+
+      <RejoinConfirmDialog
+        open={rejoinOpen}
+        busy={rejoining}
+        onClose={() => setRejoinOpen(false)}
+        onConfirm={confirmRejoin}
       />
     </StackScreen>
   );

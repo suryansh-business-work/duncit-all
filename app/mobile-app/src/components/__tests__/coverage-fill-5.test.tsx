@@ -26,10 +26,12 @@ describe('PodHistoryActions busy ticket', () => {
           } as never
         }
         backingOut={false}
+        rejoining={false}
         invoiceBusy={false}
         ticketBusy
         onPodDetails={jest.fn()}
         onBackout={jest.fn()}
+        onRejoin={jest.fn()}
         onRefundStatus={jest.fn()}
         onInvoice={jest.fn()}
         onTicket={jest.fn()}

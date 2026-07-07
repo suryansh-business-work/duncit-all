@@ -15,6 +15,7 @@ import { PodProductOrdersCard } from './PodProductOrdersCard';
 export interface PodHistoryDetailsProps {
   item: PodMembership;
   backingOut: boolean;
+  rejoining: boolean;
   invoiceBusy: boolean;
   ticketBusy: boolean;
   notice: string | null;
@@ -22,6 +23,7 @@ export interface PodHistoryDetailsProps {
   ordersLoading?: boolean;
   onPodDetails: () => void;
   onBackout: () => void;
+  onRejoin: () => void;
   onRefundStatus: () => void;
   onInvoice: () => void;
   onTicket: () => void;

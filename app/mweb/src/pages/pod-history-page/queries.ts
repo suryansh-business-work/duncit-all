@@ -62,6 +62,19 @@ export const BACKOUT_POD_HISTORY = gql`
   }
 `;
 
+export const REJOIN_POD = gql`
+  mutation RejoinPodFromHistory($pod_doc_id: ID!) {
+    rejoinPod(pod_doc_id: $pod_doc_id) {
+      id
+      status
+      backed_out_at
+      refund_status
+      refund_payment_id
+      referral_token
+    }
+  }
+`;
+
 export const POD_HISTORY_INVOICE_PDF = gql`
   query PodHistoryInvoicePdf($id: ID!) {
     paymentInvoicePdfBase64(payment_doc_id: $id)

@@ -1,3 +1,4 @@
+# syntax=docker/dockerfile:1
 # Builds a release Android APK or AAB inside Docker — no Android SDK / NDK
 # needed on the host machine.  Artifact is extracted to <repo-root>/build/.
 #
@@ -7,7 +8,15 @@
 #
 # Build context MUST be the REPO ROOT (same convention as Dockerfile) because
 # the build needs packages/auth-tokens, packages/logs, and the server GraphQL
-# schema for codegen.
+# schema for codegen. A per-Dockerfile ignore (Dockerfile.android.dockerignore)
+# prunes the context to just those paths.
+#
+# Requires BuildKit (default in Docker Desktop / `docker buildx`). The
+# `# syntax` line above + `--mount=type=cache` give incremental local builds:
+# the Gradle distribution, ~1 GB of Gradle dependencies, the Gradle build cache,
+# the Gradle configuration cache and the npm cache all persist ACROSS builds
+# without being baked into any image layer. None of this changes the APK/AAB
+# bytes — it only makes rebuilds fast.
 
 ARG BUILD_TYPE=apk
 
@@ -16,23 +25,37 @@ FROM node:20-slim AS js-builder
 WORKDIR /repo
 ENV CI=1 EXPO_NO_TELEMETRY=1
 
-# Shared packages required by file: deps and codegen schema
+# `file:` workspace deps — must exist BEFORE `npm ci` resolves them. They change
+# rarely, so keeping them above the install layer maximises cache reuse.
 COPY packages/auth-tokens ./packages/auth-tokens
 COPY packages/logs        ./packages/logs
-COPY server/src/modules   ./server/src/modules
 
 WORKDIR /repo/app/mobile-app
+# Dependency manifests only → the slow install layer is reused for every build
+# whose lockfile is unchanged, no matter how much app source changed. The npm
+# cache mount keeps downloaded tarballs across builds so a lockfile change is a
+# fast re-link instead of a full re-download.
 COPY app/mobile-app/package.json app/mobile-app/package-lock.json ./
-RUN npm ci --no-audit
+RUN --mount=type=cache,target=/root/.npm \
+    npm ci --no-audit --no-fund --prefer-offline
 
+# GraphQL schema for codegen — copied AFTER `npm ci` so unrelated server edits
+# can never invalidate the install. codegen reads server/src/modules/**/*.schema.ts.
+COPY server/src/modules /repo/server/src/modules
+
+# App source last (edited most often) → an app edit only re-runs codegen, not the
+# install. `.dockerignore` keeps node_modules/android build state out, so this
+# COPY never clobbers the freshly-installed node_modules.
 COPY app/mobile-app/ ./
-# Generate typed GraphQL documents before the native build reads the JS bundle
 RUN npm run codegen
 
-# ── Stage 2: Android SDK (JDK 21 + Node 20 + SDK 35 + NDK 27) ──────────────
-# The React Native Gradle plugin shells out to `node` during configuration
-# (resolveAppEntry, require.resolve('react-native/...'), Expo autolinking), so
-# Node must be present in the same image that runs Gradle.
+# ── Stage 2: Android SDK (JDK 21 + Node 20 + SDK 35 + NDK 27) ────────────────
+# Depends only on the base image + its own RUNs, so it stays fully cached across
+# every app-source rebuild (it never sees the JS layers). The React Native Gradle
+# plugin shells out to `node` during configuration (resolveAppEntry,
+# require.resolve('react-native/...'), Expo autolinking), so Node must live in the
+# same image that runs Gradle. Extract this stage into a prebuilt base image for
+# teams/CI — see the notes below the Dockerfile.
 FROM eclipse-temurin:21-jdk-noble AS android-sdk
 ENV ANDROID_HOME=/opt/android-sdk \
     PATH=/opt/android-sdk/cmdline-tools/latest/bin:/opt/android-sdk/platform-tools:$PATH
@@ -66,6 +89,12 @@ ARG BUILD_TYPE
 # the host — unthrottled Gradle maxes every core and can thermal-trip the PC.
 ARG GRADLE_WORKERS=4
 ARG GRADLE_HEAP=3g
+# Build-speed toggles. Both only affect SPEED, never the artifact. Flip
+# GRADLE_CONFIG_CACHE=false if a native/Expo plugin ever refuses the config cache
+# (it is enabled in `warn` mode below, so it degrades to a warning rather than
+# failing — this is just a hard off-switch).
+ARG GRADLE_CACHING=true
+ARG GRADLE_CONFIG_CACHE=true
 ENV JAVA_TOOL_OPTIONS="-Xmx${GRADLE_HEAP} -XX:+UseG1GC" \
     GRADLE_OPTS="-Dorg.gradle.workers.max=${GRADLE_WORKERS} -Dkotlin.compiler.execution.strategy=in-process"
 WORKDIR /repo
@@ -76,7 +105,33 @@ COPY --from=js-builder /repo/packages          /repo/packages
 
 RUN chmod +x /repo/app/mobile-app/android/gradlew
 
-RUN cd /repo/app/mobile-app/android && \
+# Turn on the Gradle build cache + configuration cache for fast incremental
+# rebuilds. Appended here (not the source gradle.properties) so it survives
+# `expo prebuild` regeneration and stays build-arg toggleable. `parallel` is
+# already set by the generated file. `problems=warn` guarantees the config cache
+# can never FAIL the build; `daemon=false`/`vfs.watch=false` drop work that is
+# pointless in a one-shot container.
+RUN { \
+      echo ''; \
+      echo '# --- injected by Dockerfile.android (build speed only, never affects the artifact) ---'; \
+      echo "org.gradle.caching=${GRADLE_CACHING}"; \
+      echo "org.gradle.configuration-cache=${GRADLE_CONFIG_CACHE}"; \
+      echo 'org.gradle.configuration-cache.problems=warn'; \
+      echo 'org.gradle.daemon=false'; \
+      echo 'org.gradle.vfs.watch=false'; \
+    } >> /repo/app/mobile-app/android/gradle.properties
+
+# BuildKit cache mounts — persisted across builds, NOT baked into the image:
+#   /root/.gradle  → the Gradle distribution (no re-download, goal 10), ~1 GB of
+#                    dependencies (goal 9) and the local build cache (task outputs
+#                    keyed by inputs → the real source of incrementality here).
+#   …/android/.gradle → the configuration cache (skips Gradle's configuration
+#                    phase on a hit, cutting startup time).
+# `sharing=locked` serialises access so a killed build can't corrupt them. The
+# APK/AAB lives in build/outputs (a real layer, NOT a mount) so stage 4 can copy it.
+RUN --mount=type=cache,target=/root/.gradle,sharing=locked \
+    --mount=type=cache,target=/repo/app/mobile-app/android/.gradle,sharing=locked \
+    cd /repo/app/mobile-app/android && \
     if [ "$BUILD_TYPE" = "aab" ]; then \
       ./gradlew bundleRelease  --no-daemon --stacktrace; \
     else \

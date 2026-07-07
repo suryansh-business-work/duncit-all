@@ -6,6 +6,7 @@ import {
   PodHistoryCard,
   PodHistoryDetails,
   PodHistoryTimeline,
+  RejoinConfirmDialog,
 } from '@/components/pod-history';
 import { usePolicy } from '@/hooks/usePolicies';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -27,6 +28,10 @@ const basePod = {
   pod_images_and_videos: [] as { url: string; type: string }[],
 };
 
+// A pod far in the future is "active" (rejoinable); one far in the past has ended.
+const futurePod = { ...basePod, pod_date_time: '2999-01-01T10:00:00Z', pod_end_date_time: null };
+const endedPod = { ...basePod, pod_date_time: '2000-01-01T10:00:00Z', pod_end_date_time: null };
+
 const membership = (over: Record<string, unknown> = {}): PodMembership =>
   ({
     id: 'm1',
@@ -46,6 +51,7 @@ const membership = (over: Record<string, unknown> = {}): PodMembership =>
 const handlers = () => ({
   onPodDetails: jest.fn(),
   onBackout: jest.fn(),
+  onRejoin: jest.fn(),
   onRefundStatus: jest.fn(),
   onInvoice: jest.fn(),
   onTicket: jest.fn(),
@@ -110,6 +116,7 @@ describe('PodHistoryActions', () => {
       <PodHistoryActions
         item={membership()}
         backingOut={false}
+        rejoining={false}
         invoiceBusy={false}
         ticketBusy={false}
         {...h}
@@ -135,6 +142,7 @@ describe('PodHistoryActions', () => {
       <PodHistoryActions
         item={membership({ pod: { ...basePod, is_deleted: true } })}
         backingOut={false}
+        rejoining={false}
         invoiceBusy={false}
         ticketBusy={false}
         {...h}
@@ -142,6 +150,7 @@ describe('PodHistoryActions', () => {
     );
     expect(screen.queryByTestId('ph-pod-details')).toBeNull();
     expect(screen.queryByTestId('ph-backout')).toBeNull();
+    expect(screen.queryByTestId('ph-rejoin')).toBeNull();
     expect(screen.queryByTestId('ph-refund')).toBeNull();
     expect(screen.queryByTestId('ph-ticket')).toBeNull();
     fireEvent.press(screen.getByTestId('ph-invoice'));
@@ -156,6 +165,7 @@ describe('PodHistoryActions', () => {
       <PodHistoryActions
         item={membership({ status: 'BACKED_OUT', pod: null, payment_id: null })}
         backingOut
+        rejoining={false}
         invoiceBusy
         ticketBusy={false}
         {...h}
@@ -170,6 +180,67 @@ describe('PodHistoryActions', () => {
     expect(screen.getByText('Backing out…')).toBeOnTheScreen();
     expect(screen.getByText('Downloading…')).toBeOnTheScreen();
   });
+
+  it('shows Rejoin for an active backed-out pod and fires onRejoin', () => {
+    const h = handlers();
+    renderWithProviders(
+      <PodHistoryActions
+        item={membership({ status: 'BACKED_OUT', pod: futurePod })}
+        backingOut={false}
+        rejoining={false}
+        invoiceBusy={false}
+        ticketBusy={false}
+        {...h}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('ph-rejoin'));
+    expect(h.onRejoin).toHaveBeenCalled();
+  });
+
+  it('hides Rejoin for a joined membership', () => {
+    renderWithProviders(
+      <PodHistoryActions
+        item={membership({ pod: futurePod })}
+        backingOut={false}
+        rejoining={false}
+        invoiceBusy={false}
+        ticketBusy={false}
+        {...handlers()}
+      />,
+    );
+    expect(screen.queryByTestId('ph-rejoin')).toBeNull();
+  });
+
+  it('hides Rejoin once the pod has ended', () => {
+    renderWithProviders(
+      <PodHistoryActions
+        item={membership({ status: 'BACKED_OUT', pod: endedPod })}
+        backingOut={false}
+        rejoining={false}
+        invoiceBusy={false}
+        ticketBusy={false}
+        {...handlers()}
+      />,
+    );
+    expect(screen.queryByTestId('ph-rejoin')).toBeNull();
+  });
+
+  it('disables Rejoin and shows a busy label while rejoining', () => {
+    const h = handlers();
+    renderWithProviders(
+      <PodHistoryActions
+        item={membership({ status: 'BACKED_OUT', pod: futurePod })}
+        backingOut={false}
+        rejoining
+        invoiceBusy={false}
+        ticketBusy={false}
+        {...h}
+      />,
+    );
+    expect(screen.getByText('Rejoining…')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('ph-rejoin'));
+    expect(h.onRejoin).not.toHaveBeenCalled();
+  });
 });
 
 describe('PodHistoryDetails', () => {
@@ -179,6 +250,7 @@ describe('PodHistoryDetails', () => {
       <PodHistoryDetails
         item={membership()}
         backingOut={false}
+        rejoining={false}
         invoiceBusy={false}
         ticketBusy={false}
         notice={null}
@@ -206,6 +278,7 @@ describe('PodHistoryDetails', () => {
           },
         })}
         backingOut={false}
+        rejoining={false}
         invoiceBusy={false}
         ticketBusy={false}
         notice="Refund status: Criteria pending"
@@ -223,6 +296,7 @@ describe('PodHistoryDetails', () => {
       <PodHistoryDetails
         item={membership({ pod: null })}
         backingOut={false}
+        rejoining={false}
         invoiceBusy={false}
         ticketBusy={false}
         notice={null}
@@ -273,5 +347,36 @@ describe('BackoutConfirmDialog', () => {
     expect(h.onConfirm).not.toHaveBeenCalled();
     expect(h.onClose).not.toHaveBeenCalled();
     expect(screen.getByText('Review the backout terms before confirming.')).toBeOnTheScreen();
+  });
+});
+
+describe('RejoinConfirmDialog', () => {
+  const dlg = () => ({ onClose: jest.fn(), onConfirm: jest.fn() });
+
+  it('does not render its body when closed', () => {
+    renderWithProviders(<RejoinConfirmDialog open={false} busy={false} {...dlg()} />);
+    expect(screen.queryByTestId('rejoin-confirm')).toBeNull();
+  });
+
+  it('confirms / cancels / closes when open and idle', () => {
+    const h = dlg();
+    renderWithProviders(<RejoinConfirmDialog open busy={false} {...h} />);
+    expect(screen.getByText('Rejoin for free')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('rejoin-close'));
+    fireEvent.press(screen.getByTestId('rejoin-cancel'));
+    fireEvent.press(screen.getByTestId('rejoin-confirm'));
+    expect(h.onClose).toHaveBeenCalledTimes(2);
+    expect(h.onConfirm).toHaveBeenCalledTimes(1);
+  });
+
+  it('blocks actions and shows a spinner while busy', () => {
+    const h = dlg();
+    renderWithProviders(<RejoinConfirmDialog open busy {...h} />);
+    expect(screen.getByText('Rejoining…')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('rejoin-confirm'));
+    fireEvent.press(screen.getByTestId('rejoin-cancel'));
+    fireEvent.press(screen.getByTestId('rejoin-close'));
+    expect(h.onConfirm).not.toHaveBeenCalled();
+    expect(h.onClose).not.toHaveBeenCalled();
   });
 });

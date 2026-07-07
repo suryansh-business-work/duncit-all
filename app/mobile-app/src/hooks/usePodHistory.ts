@@ -9,6 +9,7 @@ import {
   MyPodMembershipsDocument,
   PodHistoryCategoriesDocument,
   PodInvoicePdfDocument,
+  RejoinPodDocument,
 } from '@/graphql/pod-history';
 import { graphqlRequest } from '@/services/graphql.client';
 import { dedupeByPod, type PodHistoryCategory, type PodMembership } from '@/utils/pod-history';
@@ -74,6 +75,22 @@ export function usePodBackout() {
   }, []);
 
   return { backout, busy };
+}
+
+/** Free rejoin mutation with a busy flag — mWeb's REJOIN_POD. */
+export function usePodRejoin() {
+  const [busy, setBusy] = useState(false);
+
+  const rejoin = useCallback(async (podDocId: string) => {
+    setBusy(true);
+    try {
+      await graphqlRequest(RejoinPodDocument, { pod_doc_id: podDocId }, { auth: true });
+    } finally {
+      setBusy(false);
+    }
+  }, []);
+
+  return { rejoin, busy };
 }
 
 /**

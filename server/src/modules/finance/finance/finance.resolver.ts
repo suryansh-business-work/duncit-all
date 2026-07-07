@@ -33,6 +33,7 @@ const toPub = (d: IFinanceSettings) => ({
   default_venue_share_pct: d.default_venue_share_pct,
   default_venue_commission_pct: d.default_venue_commission_pct,
   default_product_commission_pct: d.default_product_commission_pct,
+  default_backout_deduction_pct: d.default_backout_deduction_pct,
   venue_payout_mode: d.venue_payout_mode,
   host_payout_mode: d.host_payout_mode,
   payout_day_of_week: d.payout_day_of_week,
@@ -144,6 +145,7 @@ export const financeResolvers = {
         'default_venue_share_pct',
         'default_venue_commission_pct',
         'default_product_commission_pct',
+        'default_backout_deduction_pct',
       ];
       for (const field of pctFields) {
         const value = input[field];

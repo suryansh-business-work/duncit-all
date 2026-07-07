@@ -68,6 +68,20 @@ export const BackoutPodDocument = gql(`
   }
 `);
 
+/** Rejoin a backed-out pod for free — mWeb's REJOIN_POD. */
+export const RejoinPodDocument = gql(`
+  mutation MobileRejoinPod($pod_doc_id: ID!) {
+    rejoinPod(pod_doc_id: $pod_doc_id) {
+      id
+      status
+      backed_out_at
+      refund_status
+      refund_payment_id
+      referral_token
+    }
+  }
+`);
+
 /** Base64 PDF invoice for a payment — mWeb's POD_HISTORY_INVOICE_PDF. */
 export const PodInvoicePdfDocument = gql(`
   query MobilePodInvoicePdf($id: ID!) {

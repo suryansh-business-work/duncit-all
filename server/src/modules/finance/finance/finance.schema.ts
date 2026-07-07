@@ -61,6 +61,7 @@ export const financeTypeDefs = /* GraphQL */ `
     default_venue_share_pct: Float!
     default_venue_commission_pct: Float!
     default_product_commission_pct: Float!
+    default_backout_deduction_pct: Float!
     venue_payout_mode: PayoutMode!
     host_payout_mode: PayoutMode!
     payout_day_of_week: Int!
@@ -97,6 +98,7 @@ export const financeTypeDefs = /* GraphQL */ `
     default_venue_share_pct: Float
     default_venue_commission_pct: Float
     default_product_commission_pct: Float
+    default_backout_deduction_pct: Float
     venue_payout_mode: PayoutMode
     host_payout_mode: PayoutMode
     payout_day_of_week: Int

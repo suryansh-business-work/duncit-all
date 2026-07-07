@@ -158,15 +158,17 @@ Cypress.Commands.add('typeIntoField', (labelText: RegExp | string, value: string
 });
 
 Cypress.Commands.add('pickMuiOption', (labelText: RegExp | string, optionText: RegExp | string) => {
-  // MUI's TextField/Select renders the floating label as a `<label>` whose
-  // sibling MuiFormControl-root contains the actual `[role="combobox"]`
-  // trigger. Locating the field via its visible label is far more robust
-  // than going by `name` (which sits on a hidden inner input) — works
-  // identically for single-select TextField and Select(multiple).
+  // Locate the field by its visible `<label>` (far more robust than `name`,
+  // which sits on a hidden inner input) then open its dropdown. MUI Select keeps
+  // `role="combobox"` as a DESCENDANT of the FormControl; MUI Autocomplete
+  // (v5.13+, ARIA 1.2) moved that role onto the wrapping `.MuiAutocomplete-root`
+  // ANCESTOR, so for Autocomplete we open via its popup-indicator (the dropdown
+  // arrow, which IS inside the FormControl). One locator covers single-select
+  // TextField, Select(multiple) and Autocomplete.
   const re = typeof labelText === 'string' ? new RegExp(labelText, 'i') : labelText;
   cy.contains('label', re)
     .closest('.MuiFormControl-root, .MuiTextField-root')
-    .find('[role="combobox"]')
+    .find('[role="combobox"], .MuiAutocomplete-popupIndicator')
     .first()
     .click({ force: true });
   cy.get('[role="listbox"]').should('be.visible');

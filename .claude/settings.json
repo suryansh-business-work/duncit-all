@@ -523,7 +523,13 @@
       "Bash(ls -d mweb-app)",
       "Bash(ls -d server app/server)",
       "Bash(echo \"=== TSC EXIT: $? ===\")",
-      "Bash(node mod.js)"
+      "Bash(node mod.js)",
+      "Bash(env)",
+      "Bash(docker buildx *)",
+      "Bash(timeout 40 docker manifest inspect eclipse-temurin:21-jdk-noble)",
+      "Bash(docker pull *)",
+      "Bash(MSYS_NO_PATHCONV=1 gh api \"repos/suryansh-business-work/duncit-all/actions/jobs/85566670398/logs\")",
+      "Bash(grep -nA12 \"cityOptions\")"
     ],
     "deny": [],
     "ask": [],

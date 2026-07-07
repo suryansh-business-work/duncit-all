@@ -268,4 +268,20 @@ export const clubService = {
     for (const row of rows) map[String(row._id)] = row.count as number;
     return map;
   },
+
+  /** Number of ACTIVE clubs per (city, locality) pair, keyed
+   * `${location_id}|${locality}`. Powers the per-locality club count shown at the
+   * locality level of the location picker. A club's `locality` is a Location
+   * zone_name; clubs with no locality are not counted. */
+  async activeClubCountsByLocality(): Promise<Record<string, number>> {
+    const rows = await ClubModel.aggregate([
+      { $match: { is_active: true, location_id: { $ne: null }, locality: { $nin: [null, ''] } } },
+      { $group: { _id: { location_id: '$location_id', locality: '$locality' }, count: { $sum: 1 } } },
+    ]);
+    const map: Record<string, number> = {};
+    for (const row of rows) {
+      map[`${String(row._id.location_id)}|${row._id.locality}`] = row.count as number;
+    }
+    return map;
+  },
 };

@@ -7,7 +7,15 @@ import { useThemeColors } from '@/hooks/useThemeColors';
 interface Zone {
   zone_name: string;
   pincode?: string | null;
+  active_club_count?: number | null;
 }
+
+/** Compact per-locality club count for the area rows, e.g. "3 clubs" / "No clubs yet". */
+const zoneClubLabel = (count?: number | null) => {
+  const n = count ?? 0;
+  if (n <= 0) return 'No clubs yet';
+  return `${n} club${n === 1 ? '' : 's'}`;
+};
 
 interface Props {
   locationName: string;
@@ -124,7 +132,9 @@ export function AreaList({ locationName, zones, draftZone, onZone }: Readonly<Pr
               key={z.zone_name}
               testID={`area-${z.zone_name}`}
               label={z.zone_name}
-              sub={z.pincode ? `PIN ${z.pincode}` : 'Locality'}
+              sub={[zoneClubLabel(z.active_club_count), z.pincode ? `PIN ${z.pincode}` : null]
+                .filter(Boolean)
+                .join(' · ')}
               active={draftZone === z.zone_name}
               onPress={() => onZone(z.zone_name)}
               icon="place"

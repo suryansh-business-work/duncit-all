@@ -3,6 +3,8 @@ export const locationTypeDefs = /* GraphQL */ `
     zone_name: String!
     zone_code: String
     pincode: String
+    "Count of active clubs whose locality matches this zone in the parent city."
+    active_club_count: Int!
   }
 
   input LocationZoneInput {

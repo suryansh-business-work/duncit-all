@@ -1,27 +1,17 @@
 import { useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
-import {
-  Alert,
-  Button,
-  Card,
-  CardContent,
-  Chip,
-  CircularProgress,
-  Divider,
-  List,
-  ListItemButton,
-  ListItemText,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Alert, Box, Button, Chip, CircularProgress, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import EditIcon from '@mui/icons-material/Edit';
-import GroupsIcon from '@mui/icons-material/Groups';
-import EventIcon from '@mui/icons-material/Event';
+import VerifiedIcon from '@mui/icons-material/Verified';
+import PhotoLibraryIcon from '@mui/icons-material/PhotoLibrary';
+import AutoAwesomeIcon from '@mui/icons-material/AutoAwesome';
 import { CLUB_DETAIL } from './queries';
-
-const fmtDate = (iso?: string | null) =>
-  iso ? new Date(iso).toLocaleDateString(undefined, { dateStyle: 'medium' }) : '—';
+import ClubOverviewCard from './ClubOverviewCard';
+import ClubContentSections from './ClubContentSections';
+import ClubPodsCard from './ClubPodsCard';
+import MediaGallery from './MediaGallery';
+import type { ClubDetail, ClubPodRow } from './types';
 
 export default function ClubDetailsPage() {
   const { id = '' } = useParams();
@@ -31,8 +21,8 @@ export default function ClubDetailsPage() {
     skip: !id,
     fetchPolicy: 'cache-and-network',
   });
-  const club = data?.club;
-  const pods = data?.pods ?? [];
+  const club = data?.club as ClubDetail | undefined;
+  const pods = (data?.pods ?? []) as ClubPodRow[];
 
   if (loading && !club)
     return (
@@ -43,97 +33,64 @@ export default function ClubDetailsPage() {
   if (error) return <Alert severity="error">{error.message}</Alert>;
   if (!club) return <Alert severity="warning">Club not found.</Alert>;
 
-  const media = club.club_feature_images_and_videos?.length ?? 0;
-  const moments = club.club_moments?.length ?? 0;
-
   return (
     <Stack spacing={3}>
-      <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={2}>
+      <Stack
+        direction={{ xs: 'column', sm: 'row' }}
+        alignItems={{ xs: 'flex-start', sm: 'center' }}
+        justifyContent="space-between"
+        spacing={2}
+      >
         <Stack direction="row" alignItems="center" spacing={1.5} sx={{ minWidth: 0 }}>
           <Button startIcon={<ArrowBackIcon />} onClick={() => navigate('/clubs')} size="small">
             Clubs
           </Button>
-          <Typography variant="h5" fontWeight={900} noWrap>
-            {club.club_name}
-          </Typography>
-          <Chip
-            size="small"
-            label={club.is_active ? 'Active' : 'Inactive'}
-            color={club.is_active ? 'success' : 'default'}
-          />
+          <Box sx={{ minWidth: 0 }}>
+            <Stack direction="row" alignItems="center" spacing={1} sx={{ flexWrap: 'wrap' }}>
+              <Typography variant="h5" fontWeight={900} noWrap>
+                {club.club_name}
+              </Typography>
+              {club.is_verified && <VerifiedIcon color="primary" fontSize="small" titleAccess="Verified" />}
+              <Chip
+                size="small"
+                label={club.is_active ? 'Active' : 'Inactive'}
+                color={club.is_active ? 'success' : 'default'}
+              />
+            </Stack>
+            <Typography variant="caption" color="text.secondary">
+              /{club.club_id}
+            </Typography>
+          </Box>
         </Stack>
-        <Button variant="contained" startIcon={<EditIcon />} onClick={() => navigate(`/clubs?edit=${club.id}`)}>
+        <Button
+          variant="contained"
+          startIcon={<EditIcon />}
+          onClick={() => navigate(`/clubs?edit=${club.id}`)}
+        >
           Edit club
         </Button>
       </Stack>
 
-      <Stack direction={{ xs: 'column', md: 'row' }} spacing={2.5} alignItems="flex-start">
-        <Card sx={{ flex: 1, minWidth: 0, width: '100%' }}>
-          <CardContent>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-              <GroupsIcon color="primary" />
-              <Typography variant="subtitle1" fontWeight={900}>
-                Overview
-              </Typography>
-            </Stack>
-            <Divider sx={{ mb: 1.5 }} />
-            {club.club_description && (
-              <Typography variant="body2" sx={{ whiteSpace: 'pre-wrap', mb: 1.5 }}>
-                {club.club_description}
-              </Typography>
-            )}
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              <Chip size="small" label={`${media} cover media`} />
-              <Chip size="small" label={`${moments} moments`} />
-              <Chip size="small" label={`${pods.length} pods`} />
-            </Stack>
-            {club.club_whats_app_community_link && (
-              <Typography variant="body2" sx={{ mt: 1.5 }}>
-                Community:{' '}
-                <a href={club.club_whats_app_community_link} target="_blank" rel="noreferrer">
-                  {club.club_whats_app_community_link}
-                </a>
-              </Typography>
-            )}
-          </CardContent>
-        </Card>
+      <Box sx={{ display: 'grid', gap: 2.5, gridTemplateColumns: { xs: '1fr', md: '2fr 1fr' }, alignItems: 'start' }}>
+        <Stack spacing={2.5} sx={{ minWidth: 0 }}>
+          <ClubOverviewCard club={club} podCount={pods.length} />
+          <MediaGallery
+            title="Cover media"
+            icon={<PhotoLibraryIcon color="primary" />}
+            items={club.club_feature_images_and_videos ?? []}
+            emptyText="No cover images or videos added yet."
+          />
+          <MediaGallery
+            title="Moments"
+            icon={<AutoAwesomeIcon color="primary" />}
+            items={club.club_moments ?? []}
+            emptyText="No moments captured for this club yet."
+          />
+          <ClubContentSections club={club} />
+        </Stack>
 
-        <Card sx={{ flex: 1, minWidth: 0, width: '100%' }}>
-          <CardContent>
-            <Stack direction="row" spacing={1} alignItems="center" sx={{ mb: 1 }}>
-              <EventIcon color="primary" />
-              <Typography variant="subtitle1" fontWeight={900}>
-                Pods ({pods.length})
-              </Typography>
-            </Stack>
-            <Divider />
-            {pods.length === 0 ? (
-              <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-                No pods in this club yet.
-              </Typography>
-            ) : (
-              <List dense>
-                {pods.map((p: any) => {
-                  const price = (p.pod_type ?? '').includes('FREE') ? 'Free' : `₹${p.pod_amount}`;
-                  return (
-                    <ListItemButton key={p.id} onClick={() => navigate(`/pods/${p.id}`)}>
-                      <ListItemText
-                        primary={p.pod_title}
-                        secondary={`${fmtDate(p.pod_date_time)} · ${price}`}
-                      />
-                      <Chip
-                        size="small"
-                        label={p.is_active ? 'Active' : 'Inactive'}
-                        color={p.is_active ? 'success' : 'default'}
-                      />
-                    </ListItemButton>
-                  );
-                })}
-              </List>
-            )}
-          </CardContent>
-        </Card>
-      </Stack>
+        <ClubPodsCard pods={pods} />
+      </Box>
     </Stack>
   );
 }

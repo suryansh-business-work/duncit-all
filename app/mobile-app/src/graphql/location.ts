@@ -17,6 +17,7 @@ export const LocationsDocument = gql(`
       location_zones {
         zone_name
         pincode
+        active_club_count
       }
     }
     activePodLocationIds

@@ -17,7 +17,10 @@ import {
   sendPodCancelledEmail,
   sendPodRefundEmail,
   sendPodUpdatedEmail,
+  sendVenueSlotRequestEmail,
 } from '@services/email/email.service';
+import { getUrlConfigs } from '@config/url-configs';
+import { moderationService } from '@modules/moderation/moderation.service';
 
 const slugify = (s: string) =>
   s
@@ -273,6 +276,51 @@ async function notifyVenueSlotRequested(pod: any, slot: any) {
   } catch (err) {
     // eslint-disable-next-line no-console
     console.error('[pod] slot request notification failed:', err);
+  }
+}
+
+/** Best-effort email to the venue owner mirroring the in-app slot-request note,
+ * so the venue is alerted off-platform too and can approve/decline it in the
+ * Partners portal. Recipient is the venue's contact email (owner account email
+ * as a fallback). */
+async function emailVenueSlotRequested(pod: any, slot: any) {
+  try {
+    const venue = await VenueModel.findById(slot.venue_id).select(
+      'venue_name owner_email owner_name owner_user_id'
+    );
+    if (!venue) return;
+    const owner = await UserModel.findById(venue.owner_user_id)
+      .select('profile.first_name profile.last_name auth.email')
+      .lean();
+    const to = (venue.owner_email || (owner as any)?.auth?.email || '').trim();
+    if (!to) return;
+    const ownerName =
+      (venue.owner_name ?? '').trim() ||
+      `${(owner as any)?.profile?.first_name ?? ''} ${(owner as any)?.profile?.last_name ?? ''}`.trim() ||
+      'there';
+    const host = await UserModel.findById((pod.pod_hosts_id ?? [])[0])
+      .select('profile.first_name profile.last_name')
+      .lean();
+    const hostName =
+      `${(host as any)?.profile?.first_name ?? ''} ${(host as any)?.profile?.last_name ?? ''}`.trim() ||
+      'A host';
+    const when = new Date(slot.start_at).toLocaleString('en-IN', {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+    });
+    const { partnersUrl } = await getUrlConfigs();
+    await sendVenueSlotRequestEmail({
+      to,
+      owner_name: ownerName,
+      venue_name: venue.venue_name || 'your venue',
+      pod_title: pod.pod_title,
+      host_name: hostName,
+      when,
+      review_url: `${partnersUrl.replace(/\/+$/, '')}/venues/requests`,
+    });
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[pod] slot request email failed:', err);
   }
 }
 
@@ -642,6 +690,7 @@ export const podService = {
         if (needsVenueApproval) {
           await venueSlotService.holdForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
           await notifyVenueSlotRequested(doc, slotDoc);
+          await emailVenueSlotRequested(doc, slotDoc);
         } else {
           await venueSlotService.bookForPod(String(slotDoc._id), String(slotDoc.venue_id), String(doc._id));
         }
@@ -672,6 +721,14 @@ export const podService = {
     if (!hasHostRole && !approvedHost) {
       throw new GraphQLError('Host access is required before creating pods', { extensions: { code: 'FORBIDDEN' } });
     }
+    // Deterministic content guard so a crafted client can't bypass the client-side
+    // AI preflight and publish a pod with a phone/email/link/payment handle etc.
+    moderationService.assertCleanOrThrow({
+      pod_title: input.pod_title ?? '',
+      pod_description: input.pod_description ?? '',
+      pod_info: input.pod_info ?? '',
+      pod_hashtag: input.pod_hashtag ?? [],
+    });
     const podMode = normalizePodMode(input.pod_mode);
     if (podMode === 'PHYSICAL') {
       // Slot bookings may target ANY approved venue partner (the venue approves

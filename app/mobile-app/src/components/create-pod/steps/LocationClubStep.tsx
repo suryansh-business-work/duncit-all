@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { Controller } from 'react-hook-form';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Input, Text, XStack, YStack } from 'tamagui';
+import { Text, XStack, YStack } from 'tamagui';
 
+import { LocationDialog } from '@/components/LocationDialog';
 import { MapEmbed } from '@/components/MapEmbed';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { ChipSelectField } from '../ChipSelectField';
 import { ClubPreview } from '../ClubPreview';
 import { ClubSearchField } from '../ClubSearchField';
+import { HostCategoryField } from './HostCategoryField';
 import type {
   CreatePodClub,
   CreatePodForm,
@@ -32,34 +34,25 @@ const locationLabel = (location: CreatePodLocation) =>
     ? `${location.location_name} (${location.city})`
     : location.location_name;
 
-const categoryPath = (category: CreatePodHostCategory) =>
-  [category.super_category_name, category.category_name, category.sub_category_name]
-    .filter(Boolean)
-    .join(' › ');
-
-/** Step 2 — pod location (defaults to the host's selected location, changeable
- * inline), the auto-selected host category (read-only) and the club. */
+/** Step 2 — pod city + locality (chosen in the header location picker, which
+ * shows the club count per locality), the host category, the pod mode and the club. */
 export function LocationClubStep({ form, clubs, locations, hostCategories }: Readonly<Props>) {
   const { control, setValue, watch } = form;
   const { primary } = useThemeColors();
   const locationId = watch('location_id');
+  const locality = watch('locality');
   const location = locations.find((item) => item.id === locationId);
-  const [changing, setChanging] = useState(false);
-  const [query, setQuery] = useState('');
+  const [pickerOpen, setPickerOpen] = useState(false);
 
-  const term = query.trim().toLowerCase();
-  const filtered = term
-    ? locations.filter((item) => locationLabel(item).toLowerCase().includes(term))
-    : locations;
-
-  const pickLocation = (nextId: string) => {
-    if (nextId && nextId !== locationId) {
+  // The header LocationDialog closes itself on apply; we just capture its pick.
+  const applyLocation = (nextId: string, zone: string) => {
+    if (nextId !== locationId) {
       setValue('location_id', nextId, { shouldDirty: true, shouldValidate: true });
       // Venue + slot belong to the old city — reselect them for the new one.
       setValue('venue_id', '', { shouldDirty: true });
       setValue('venue_slot_id', '', { shouldDirty: true });
     }
-    setChanging(false);
+    setValue('locality', zone, { shouldDirty: true, shouldValidate: true });
   };
 
   return (
@@ -76,12 +69,17 @@ export function LocationClubStep({ form, clubs, locations, hostCategories }: Rea
                 ? [locationLabel(location), location.state].filter(Boolean).join(', ')
                 : 'No location selected'}
             </Text>
+            {locality ? (
+              <Text testID="create-pod-locality-label" fontSize={12} color="$muted">
+                Locality: {locality}
+              </Text>
+            ) : null}
           </YStack>
           <XStack
             testID="create-pod-change-location"
             role="button"
             aria-label="Change location"
-            onPress={() => setChanging((prev) => !prev)}
+            onPress={() => setPickerOpen(true)}
             paddingHorizontal={12}
             paddingVertical={8}
             borderWidth={1}
@@ -90,44 +88,13 @@ export function LocationClubStep({ form, clubs, locations, hostCategories }: Rea
             pressStyle={{ opacity: 0.7 }}
           >
             <Text fontSize={13} fontWeight="800" color="$color">
-              {changing ? 'Close' : 'Change'}
+              Change
             </Text>
           </XStack>
         </XStack>
         <Text fontSize={12} color="$muted">
-          Defaults to your selected location — the pod is listed in this city.
+          Pick your city and locality — the picker shows how many clubs each locality has.
         </Text>
-        {changing ? (
-          <YStack gap={10} paddingTop={6}>
-            <Input
-              testID="create-pod-location-search"
-              size="$4"
-              backgroundColor="$surface"
-              color="$color"
-              placeholderTextColor="$muted"
-              borderColor="$borderColor"
-              value={query}
-              onChangeText={setQuery}
-              placeholder="Search cities"
-              aria-label="Search cities"
-            />
-            <Controller
-              control={control}
-              name="location_id"
-              render={({ field, fieldState }) => (
-                <ChipSelectField
-                  label="Pick a city"
-                  options={filtered.map((item) => ({ value: item.id, label: locationLabel(item) }))}
-                  value={field.value}
-                  onChange={pickLocation}
-                  error={fieldState.error?.message}
-                  emptyHint="No cities match your search."
-                  testID="create-pod-location"
-                />
-              )}
-            />
-          </YStack>
-        ) : null}
       </YStack>
 
       {location ? (
@@ -137,27 +104,7 @@ export function LocationClubStep({ form, clubs, locations, hostCategories }: Rea
         />
       ) : null}
 
-      <YStack gap={4}>
-        <Text fontSize={14} fontWeight="500" color="$color">
-          Category
-        </Text>
-        <YStack
-          padding={12}
-          borderWidth={1}
-          borderColor="$borderColor"
-          borderRadius={12}
-          opacity={0.7}
-        >
-          <Text testID="create-pod-category" fontSize={14} fontWeight="700" color="$color">
-            {hostCategories.length
-              ? hostCategories.map(categoryPath).join(' · ')
-              : 'Assigned after host onboarding'}
-          </Text>
-        </YStack>
-        <Text fontSize={12} color="$muted">
-          Auto-selected from your onboarded host category
-        </Text>
-      </YStack>
+      <HostCategoryField form={form} hostCategories={hostCategories} />
 
       <Controller
         control={control}
@@ -185,6 +132,13 @@ export function LocationClubStep({ form, clubs, locations, hostCategories }: Rea
         )}
       />
       <ClubPreview club={clubs.find((club) => club.id === watch('club_id')) ?? null} />
+
+      <LocationDialog
+        open={pickerOpen}
+        onClose={() => setPickerOpen(false)}
+        onApply={(loc, zone) => applyLocation(loc.id, zone)}
+        initialLocationId={locationId}
+      />
     </YStack>
   );
 }

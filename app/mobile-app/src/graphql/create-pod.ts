@@ -13,6 +13,7 @@ export const CreatePodOptionsDocument = gql(`
       id
       club_name
       location_id
+      locality
       super_category_id
       category_id
       matched_venues_count
@@ -39,6 +40,7 @@ export const CreatePodOptionsDocument = gql(`
       location_zones {
         zone_name
         pincode
+        active_club_count
       }
     }
     publicVenues {
@@ -170,6 +172,22 @@ export const PublishPodDraftDocument = gql(`
   mutation MobilePublishPodDraft($draft_id: ID!, $input: CreatePodInput!) {
     publishPodDraft(draft_id: $draft_id, input: $input) {
       id
+    }
+  }
+`);
+
+/** AI + rules moderation preflight run when the host taps "Create Pod". */
+export const ModeratePodContentDocument = gql(`
+  mutation MobileModeratePodContent($input: ModeratePodContentInput!) {
+    moderatePodContent(input: $input) {
+      allowed
+      violations {
+        field
+        step
+        type
+        message
+        evidence
+      }
     }
   }
 `);

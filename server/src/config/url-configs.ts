@@ -5,6 +5,7 @@ const developmentUrls = {
   graphqlUrl: 'http://localhost:2001/graphql',
   adminUrl: 'http://localhost:2002',
   mwebUrl: 'http://localhost:2003',
+  partnersUrl: 'http://localhost:2005',
   websiteUrl: 'http://localhost:2000',
   supportEmail: 'support@duncit.local',
   fromEmail: 'Duncit <noreply@duncit.local>',
@@ -15,6 +16,7 @@ const productionUrls = {
   graphqlUrl: 'https://server.duncit.com/graphql',
   adminUrl: 'https://admin.duncit.com',
   mwebUrl: 'https://mweb.duncit.com',
+  partnersUrl: 'https://partners-app.duncit.com',
   websiteUrl: 'https://duncit.com',
   supportEmail: 'support@duncit.com',
   fromEmail: 'Duncit <noreply@duncit.com>',
@@ -41,6 +43,7 @@ export async function getUrlConfigs() {
     adminUrl: await configValue('ADMIN_URL', defaults.adminUrl),
     mwebUrl,
     appUrl: mwebUrl,
+    partnersUrl: await configValue('PARTNERS_APP_URL', defaults.partnersUrl),
     websiteUrl: await configValue('PUBLIC_SITE_URL', defaults.websiteUrl),
     supportEmail: await configValue('SUPPORT_EMAIL', defaults.supportEmail),
     mail: {

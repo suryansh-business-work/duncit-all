@@ -11,14 +11,23 @@ import { CityList } from './CityList';
 import { CountryStateChips } from './CountryStateChips';
 import { LocationMap } from './LocationMap';
 import { useLocationDraft } from './useLocationDraft';
+import type { LocationItem } from '@/stores/location.store';
+
+interface Props {
+  open: boolean;
+  onClose: () => void;
+  /** Capture the pick into the caller (create-pod) instead of the global header. */
+  onApply?: (location: LocationItem, zone: string) => void;
+  /** Seed the drilldown from this location instead of the global selection. */
+  initialLocationId?: string;
+}
 
 /** Bottom-sheet location picker: GPS + country → state → city → area drilldown
- * with an interactive map. RN port of mWeb's LocationDialog (apply-on-confirm). */
-export function LocationDialog({
-  open,
-  onClose,
-}: Readonly<{ open: boolean; onClose: () => void }>) {
-  const draft = useLocationDraft(open, onClose);
+ * with an interactive map. RN port of mWeb's LocationDialog (apply-on-confirm).
+ * Defaults to setting the global header location; pass `onApply` to capture the
+ * pick into a form (create-pod). */
+export function LocationDialog({ open, onClose, onApply, initialLocationId }: Readonly<Props>) {
+  const draft = useLocationDraft(open, onClose, { onApply, initialId: initialLocationId });
   const { color, primary, onPrimary } = useThemeColors();
   const zonesLabel = draft.zones.length ? `Apply · ${draft.zones.length} areas` : 'Apply';
   const applyLabel = draft.draftZone ? `Apply · ${draft.draftZone}` : zonesLabel;

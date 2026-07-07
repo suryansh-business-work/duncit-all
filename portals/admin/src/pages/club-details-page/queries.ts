@@ -9,9 +9,23 @@ export const CLUB_DETAIL = gql`
       club_description
       category_id
       super_category_id
+      is_verified
+      is_active
+      locality
+      followers_count
+      matched_venues_count
+      rating
+      ratings_count
       club_whats_app_community_link
       club_whats_app_group_link
-      is_active
+      who_we_are
+      what_we_do
+      perks
+      values
+      faqs {
+        question
+        answer
+      }
       club_feature_images_and_videos {
         url
         type

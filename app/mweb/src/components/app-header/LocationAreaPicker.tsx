@@ -21,7 +21,15 @@ import { alpha, type Theme } from '@mui/material/styles';
 interface Zone {
   zone_name: string;
   pincode?: string | null;
+  active_club_count?: number | null;
 }
+
+/** Compact per-locality club count, e.g. "3 clubs" / "No clubs yet". */
+const zoneClubLabel = (count?: number | null) => {
+  const n = count ?? 0;
+  if (n <= 0) return 'No clubs yet';
+  return `${n} club${n === 1 ? '' : 's'}`;
+};
 
 interface Props {
   locationName: string;
@@ -121,7 +129,9 @@ export default function LocationAreaPicker({
                   </ListItemIcon>
                   <ListItemText
                     primary={zone.zone_name}
-                    secondary={zone.pincode ? `PIN ${zone.pincode}` : 'Locality'}
+                    secondary={[zoneClubLabel(zone.active_club_count), zone.pincode ? `PIN ${zone.pincode}` : null]
+                      .filter(Boolean)
+                      .join(' · ')}
                     primaryTypographyProps={{ variant: 'body2', fontWeight: 700, noWrap: true }}
                     secondaryTypographyProps={{ variant: 'caption' }}
                   />

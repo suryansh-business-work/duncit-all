@@ -49,6 +49,7 @@ const api = (over: Record<string, unknown> = {}) => ({
   initialStep: 0,
   initialDraftId: 'd1',
   saveDraft: jest.fn().mockResolvedValue('d1'),
+  moderate: jest.fn().mockResolvedValue({ allowed: true, violations: [] }),
   publish: jest.fn().mockResolvedValue(undefined),
   ...over,
 });

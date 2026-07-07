@@ -19,6 +19,7 @@ const CREATE_POD_OPTIONS = gql`
       id
       club_name
       location_id
+      locality
       super_category_id
       category_id
       matched_venues_count
@@ -37,7 +38,7 @@ const CREATE_POD_OPTIONS = gql`
       location_image
       location_pincode
       active_club_count
-      location_zones { zone_name pincode }
+      location_zones { zone_name pincode active_club_count }
     }
     publicVenues {
       id
@@ -92,6 +93,14 @@ const PUBLISH_POD_DRAFT = gql`
     publishPodDraft(draft_id: $draft_id, input: $input) { id }
   }
 `;
+const MODERATE_POD_CONTENT = gql`
+  mutation ModeratePodContent($input: ModeratePodContentInput!) {
+    moderatePodContent(input: $input) {
+      allowed
+      violations { field step type message evidence }
+    }
+  }
+`;
 
 /** Host-only page to create a pod via the 4-step stepper, reached from the Home
  * "+" button or by resuming a draft from Host Management (`/create-pod/:draftId`). */
@@ -102,6 +111,7 @@ export default function CreatePodPage() {
   const draftQuery = useQuery(MY_POD_DRAFT, { variables: { draft_id: draftId }, skip: !draftId });
   const [saveMut] = useMutation(SAVE_POD_DRAFT);
   const [publishMut] = useMutation(PUBLISH_POD_DRAFT);
+  const [moderateMut] = useMutation(MODERATE_POD_CONTENT);
 
   // Host access mirrors the server's createForPartner check: the cached HOST
   // role OR an approved, active host profile (legacy/HOSTREQ hosts may lack the
@@ -136,6 +146,10 @@ export default function CreatePodPage() {
   const publish = async (id: string, input: any) => {
     await publishMut({ variables: { draft_id: id, input } });
     navigate('/host/manage');
+  };
+  const moderate = async (input: any) => {
+    const res = await moderateMut({ variables: { input } });
+    return res.data.moderatePodContent;
   };
 
   const loading = (options.loading && !options.data) || (!!draftId && draftQuery.loading && !draftQuery.data);
@@ -174,6 +188,7 @@ export default function CreatePodPage() {
         hostCategories={hostCategories}
         viewerUserId={viewerUserId}
         onSaveDraft={saveDraft}
+        onModerate={moderate}
         onPublish={publish}
       />
     );

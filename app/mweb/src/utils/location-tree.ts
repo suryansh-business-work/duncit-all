@@ -12,7 +12,9 @@ export interface LocationLike {
   country_code?: string | null;
   location_image?: string | null;
   location_pincode?: string | null;
-  location_zones?: { zone_name: string; pincode?: string | null }[] | null;
+  location_zones?:
+    | { zone_name: string; pincode?: string | null; active_club_count?: number | null }[]
+    | null;
   active_club_count?: number | null;
 }
 

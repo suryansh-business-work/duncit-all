@@ -1,5 +1,10 @@
 import { z } from 'zod';
-import { blankCreatePodForm, type CreatePodFormValues } from './create-pod.types';
+import {
+  blankCreatePodForm,
+  type CreatePodClub,
+  type CreatePodFormValues,
+  type CreatePodHostCategory,
+} from './create-pod.types';
 
 const splitLines = (text: string) =>
   text
@@ -18,6 +23,8 @@ export const hasImageLine = (mediaText: string) =>
 export const createPodSchema = z
   .object({
     location_id: z.string().min(1, 'Select a location'),
+    locality: z.string(),
+    host_category_key: z.string(),
     pod_title: z.string().trim().min(3, 'Title is too short').max(120, 'Title is too long'),
     club_id: z.string().min(1, 'Select a club'),
     pod_mode: z.enum(['PHYSICAL', 'VIRTUAL']),
@@ -102,7 +109,7 @@ export const createPodSchema = z
 /** Fields validated when leaving each stepper step (index aligned with STEPS). */
 export const STEP_FIELDS: (keyof CreatePodFormValues)[][] = [
   ['pod_title', 'pod_description', 'media_text', 'pod_hashtag_text', 'pod_info', 'what_this_pod_offers', 'available_perks'],
-  ['location_id', 'pod_mode', 'club_id'],
+  ['location_id', 'locality', 'host_category_key', 'pod_mode', 'club_id'],
   ['venue_id', 'venue_slot_id', 'venue_space_label', 'meeting_platform', 'meeting_url', 'meeting_notes', 'pod_date_time', 'pod_end_date_time'],
   ['pod_type', 'pod_amount', 'no_of_spots', 'place_charges', 'payment_terms', 'products_enabled', 'product_requests', 'agreed_to_terms'],
 ];
@@ -134,7 +141,7 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     // approve it before the pod goes live (own venues confirm instantly).
     venue_slot_id: virtual ? null : values.venue_slot_id || null,
     location_id: values.location_id || null,
-    zone_name: null,
+    zone_name: virtual ? null : values.locality || null,
     meeting_platform: virtual ? values.meeting_platform.trim() || null : null,
     meeting_url: virtual ? values.meeting_url.trim() : null,
     meeting_notes: virtual ? values.meeting_notes.trim() || null : null,
@@ -163,6 +170,93 @@ export function buildCreatePodInput(values: CreatePodFormValues) {
     is_active: true,
   };
 }
+
+/** Composite key identifying one host category: `${super}|${sub}`. Shared by the
+ * step-2 category picker and the club filter so selection and matching align. */
+export const hostCategoryKeyOf = (category: {
+  super_category_id?: string | null;
+  sub_category_id?: string | null;
+}) => `${category.super_category_id ?? ''}|${category.sub_category_id ?? ''}`;
+
+interface ClubFilterOptions {
+  hostCategories: CreatePodHostCategory[];
+  selectedCategoryKey: string;
+  locationId: string;
+  locality: string;
+  podMode: string;
+}
+
+/** Clubs the host may attach this pod to: scoped by the SELECTED host category
+ * (Super + Sub) — or all of the host's categories when none is picked yet — then,
+ * for physical pods, by the chosen city and (optionally) locality. */
+export function filterClubs(clubs: CreatePodClub[], opts: ClubFilterOptions): CreatePodClub[] {
+  const activeCategories = opts.selectedCategoryKey
+    ? opts.hostCategories.filter((category) => hostCategoryKeyOf(category) === opts.selectedCategoryKey)
+    : opts.hostCategories;
+  const keys = new Set(
+    activeCategories.filter((category) => category.super_category_id).map(hostCategoryKeyOf)
+  );
+  const matchesCategory = (club: CreatePodClub) => {
+    if (keys.size === 0) return true;
+    if (!club.super_category_id) return false;
+    return (
+      keys.has(`${club.super_category_id}|${club.category_id ?? ''}`) ||
+      keys.has(`${club.super_category_id}|`)
+    );
+  };
+  return clubs.filter((club) => {
+    if (!matchesCategory(club)) return false;
+    if (opts.podMode === 'VIRTUAL') return true;
+    if (opts.locationId && club.location_id !== opts.locationId) return false;
+    if (opts.locality && (club.locality ?? '') !== opts.locality) return false;
+    return true;
+  });
+}
+
+/** The pod text + image URLs sent to the server moderation preflight. */
+export function buildModerationInput(values: CreatePodFormValues) {
+  return {
+    pod_title: values.pod_title.trim(),
+    pod_description: values.pod_description,
+    pod_info: values.pod_info || null,
+    pod_hashtag: values.pod_hashtag_text
+      .split(/[\s,]+/)
+      .map((item) => item.replace(/^#/, '').trim())
+      .filter(Boolean),
+    image_urls: splitLines(values.media_text).filter((url) => !VIDEO_URL_RE.test(url)),
+  };
+}
+
+/** Maps a server moderation `field` onto the matching form field. */
+export const MODERATION_FIELD_MAP: Record<string, keyof CreatePodFormValues> = {
+  pod_title: 'pod_title',
+  pod_description: 'pod_description',
+  pod_info: 'pod_info',
+  pod_hashtag: 'pod_hashtag_text',
+  image: 'media_text',
+};
+
+/** The stepper index a form field belongs to — powers jump-to-step on a violation. */
+export const stepForField = (field: keyof CreatePodFormValues): number => {
+  const index = STEP_FIELDS.findIndex((fields) => (fields as string[]).includes(field));
+  return index >= 0 ? index : 0;
+};
+
+/** Copy for the "AI monitoring" chip's guidelines dialog (shared with mobile). */
+export const POD_AI_GUIDELINES = {
+  intro:
+    "When you tap Create Pod, our AI (GPT-4o) deep-checks everything you entered — title, description, details, hashtags and uploaded images — against Duncit's community guidelines.",
+  rules: [
+    'No phone numbers, emails or personal contact details.',
+    'No external, social or payment links.',
+    'No payment handles (UPI, Paytm, GPay, PhonePe, bank details).',
+    'No abusive, hateful, sexual or offensive wording.',
+    'No nude, explicit or unwanted images.',
+    'Never ask people to contact or pay you off the platform.',
+  ],
+  warning:
+    'If your content breaks these rules the pod will not be created, your Account Health can drop, and repeat violations can get your account temporarily or permanently blocked.',
+};
 
 /** Serialises the live form state for a server draft (Dates -> ISO strings). */
 export function serializeDraft(values: CreatePodFormValues, step: number) {

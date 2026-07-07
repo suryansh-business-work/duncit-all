@@ -1,0 +1,42 @@
+<mjml>
+  <mj-head>
+    <mj-title>New slot booking request</mj-title>
+    <mj-attributes>
+      <mj-all font-family="Inter, Helvetica, Arial, sans-serif" />
+      <mj-text color="#222222" font-size="14px" line-height="22px" />
+      <mj-button background-color="#3b82f6" color="#ffffff" border-radius="8px" font-weight="700" />
+    </mj-attributes>
+  </mj-head>
+  <mj-body background-color="#f4f4f4">
+    <mj-section padding="20px 0 0 0">
+      <mj-column>
+        <mj-image src="{{brand_logo_url}}" alt="Duncit" width="110px" align="center" padding="0" />
+      </mj-column>
+    </mj-section>
+    <mj-section background-color="#ffffff" padding="20px">
+      <mj-column>
+        <mj-text font-size="22px" font-weight="bold" color="#222">
+          New slot booking request, {{owner_name}}
+        </mj-text>
+        <mj-text font-size="14px" color="#555">
+          <strong>{{host_name}}</strong> wants to run their pod at <strong>{{venue_name}}</strong>. The slot is on hold and your pod host is waiting on your approval — the pod only goes live once you approve it.
+        </mj-text>
+        <mj-text font-size="14px" color="#555">
+          Pod: <strong>{{pod_title}}</strong><br />
+          Requested slot: <strong>{{when}}</strong>
+        </mj-text>
+        <mj-button href="{{review_url}}" align="left" padding="14px 0 6px 0">
+          Review the request
+        </mj-button>
+        <mj-text font-size="13px" color="#888">
+          Or open the Partners portal and go to Slot Requests to approve or decline it.
+        </mj-text>
+      </mj-column>
+    </mj-section>
+    <mj-section padding="16px 0 24px 0">
+      <mj-column>
+        <mj-text align="center" font-size="12px" color="#888888">&copy; Duncit. You're receiving this because a host requested one of your venue's availability slots.</mj-text>
+      </mj-column>
+    </mj-section>
+  </mj-body>
+</mjml>

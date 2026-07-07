@@ -25,6 +25,9 @@ const toPub = (d: any) => {
       zone_name: z.zone_name,
       zone_code: z.zone_code ?? '',
       pincode: z.pincode ?? '',
+      // Hidden (not in the GraphQL schema) — lets the LocationZone.active_club_count
+      // field resolver key into the per-locality counts by its parent city.
+      _location_id: String(d._id),
     })),
     is_active: !!d.is_active,
     created_at: d.created_at?.toISOString?.() ?? '',

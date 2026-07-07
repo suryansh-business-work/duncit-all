@@ -6,12 +6,16 @@ import { Text, XStack, YStack } from 'tamagui';
 import { PrimaryButton } from '@/components/PrimaryButton';
 import { useVenueSlots } from '@/hooks/useVenueSlots';
 import {
+  MODERATION_FIELD_MAP,
   STEP_FIELDS,
   STEP_TITLES,
-  STEP_SUBTITLES,
   buildCreatePodInput,
+  buildModerationInput,
   createPodSchema,
+  filterClubs,
+  hostCategoryKeyOf,
   serializeDraft,
+  stepForField,
 } from './create-pod.form';
 import type {
   CreatePodClub,
@@ -21,11 +25,15 @@ import type {
   CreatePodLocation,
   CreatePodProduct,
   CreatePodVenue,
+  PodModerationResult,
+  PodModerationViolation,
 } from './create-pod.types';
 import { BasicsStep } from './steps/BasicsStep';
 import { LocationClubStep } from './steps/LocationClubStep';
 import { VenueSlotStep } from './steps/VenueSlotStep';
 import { PricingStep } from './steps/PricingStep';
+import { StepHeader } from './StepHeader';
+import { ModerationBlockedDialog, type BlockedViolation } from './ModerationBlockedDialog';
 import { useFeatureFlag } from '@/hooks/useFeatureFlag';
 
 export type DraftPayload = ReturnType<typeof serializeDraft>;
@@ -42,13 +50,14 @@ interface Props {
   viewerUserId: string;
   finance: CreatePodFinance;
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;
+  onModerate: (input: ReturnType<typeof buildModerationInput>) => Promise<PodModerationResult>;
   onPublish: (draftId: string, input: ReturnType<typeof buildCreatePodInput>) => Promise<void>;
 }
 
 /** 4-step host Create Pod stepper (mobile twin of mWeb): Basics →
- * Location/Category/Club → Venue & Slot (from the venue partner's availability
- * calendar) → Pricing. Per-step validation gates Next, the draft autosaves on
- * a timer + every step change, and the last step publishes the pod. */
+ * Location/Category/Club → Venue & Slot → Pricing. Per-step validation gates
+ * Next; tapping "Create Pod" runs the AI + rules moderation preflight and only
+ * publishes when the content is clean. */
 export function CreatePodStepper({
   initialValues,
   initialStep,
@@ -61,6 +70,7 @@ export function CreatePodStepper({
   viewerUserId,
   finance,
   onSaveDraft,
+  onModerate,
   onPublish,
 }: Readonly<Props>) {
   const form = useForm<CreatePodFormValues>({
@@ -68,13 +78,12 @@ export function CreatePodStepper({
     defaultValues: initialValues,
     mode: 'onTouched',
   });
-  // Products are a flag-gated section inside the Pricing step (not a step of
-  // their own), so the step list never changes shape.
   const showProducts = useFeatureFlag('is_product_visible');
 
   const [step, setStep] = useState(Math.min(initialStep, STEP_TITLES.length - 1));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
   const draftIdRef = useRef(initialDraftId);
   const dupTitleRef = useRef(false);
   const isLast = step === STEP_TITLES.length - 1;
@@ -89,8 +98,7 @@ export function CreatePodStepper({
     }
   }, [showProducts]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // A duplicate-title error is shown inline on the title field; clear it as soon
-  // as the host edits the title so the stale message can't linger (DIFF-7).
+  // Clear a duplicate-title error as soon as the host edits the title (DIFF-7).
   const podTitle = form.watch('pod_title');
   useEffect(() => {
     if (dupTitleRef.current) {
@@ -98,6 +106,15 @@ export function CreatePodStepper({
       dupTitleRef.current = false;
     }
   }, [podTitle]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // A host with a single onboarded category has it auto-selected, so they never
+  // see the extra choice; multi-category hosts must pick (enforced in next()).
+  useEffect(() => {
+    const sole = hostCategories[0];
+    if (hostCategories.length === 1 && sole && !form.getValues('host_category_key')) {
+      form.setValue('host_category_key', hostCategoryKeyOf(sole));
+    }
+  }, [hostCategories]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const persist = async (forStep: number) => {
     const id = await onSaveDraft(draftIdRef.current, serializeDraft(form.getValues(), forStep));
@@ -121,17 +138,48 @@ export function CreatePodStepper({
     persistSafely(target);
   };
   const next = async () => {
-    if (await form.trigger(STEP_FIELDS[step])) goTo(step + 1);
+    if (!(await form.trigger(STEP_FIELDS[step]))) return;
+    if (step === 1 && hostCategories.length > 0 && !form.getValues('host_category_key')) {
+      form.setError('host_category_key', { type: 'required', message: 'Select your category' });
+      return;
+    }
+    goTo(step + 1);
   };
+
+  // Map each flagged violation to its form field + step, set an inline error, and
+  // jump to the first offending step so the host can fix it.
+  const applyModeration = (violations: PodModerationViolation[]) => {
+    const mapped = violations.map((violation, index) => {
+      const formField = MODERATION_FIELD_MAP[violation.field] ?? 'pod_title';
+      const stepIndex = stepForField(formField);
+      form.setError(formField, { type: 'moderation', message: violation.message });
+      return {
+        id: `${violation.field}-${violation.type}-${index}`,
+        message: violation.message,
+        type: violation.type,
+        stepIndex,
+        // stepIndex is always an in-range STEP_TITLES index (the cast narrows the type).
+        stepTitle: STEP_TITLES[stepIndex] as string,
+      };
+    });
+    setBlocked(mapped);
+    // applyModeration only runs when there is ≥1 violation, so mapped[0] is present.
+    setStep((mapped[0] as BlockedViolation).stepIndex);
+  };
+
   const submit = form.handleSubmit(async (values) => {
     setBusy(true);
     setError('');
     try {
+      const moderation = await onModerate(buildModerationInput(values));
+      if (!moderation.allowed) {
+        applyModeration(moderation.violations);
+        return;
+      }
       const id = await persist(step);
       await onPublish(id, buildCreatePodInput(values));
     } catch (e) {
       const message = e instanceof Error ? e.message : 'Could not create the pod.';
-      // Surface a duplicate title inline on the title field and jump back to it.
       if (/already exists/i.test(message)) {
         dupTitleRef.current = true;
         form.setError('pod_title', { type: 'duplicate', message });
@@ -144,42 +192,29 @@ export function CreatePodStepper({
     }
   });
 
-  // Clubs are scoped by the host's category (Super + Sub) + the picked location.
-  // A club's `category_id` holds the Sub level, mirrored against the host's
-  // `sub_category_id`; a host entry with no Sub matches any Sub in that Super.
-  const locationId = form.watch('location_id');
-  const podMode = form.watch('pod_mode');
-  const hostCategoryKeys = new Set(
-    hostCategories
-      .filter((category) => category.super_category_id)
-      .map((category) => `${category.super_category_id}|${category.sub_category_id ?? ''}`),
-  );
-  const clubMatchesHostCategory = (club: {
-    super_category_id?: string | null;
-    category_id?: string | null;
-  }) => {
-    if (hostCategoryKeys.size === 0) return true; // host has no categories → don't over-filter
-    if (!club.super_category_id) return false;
-    return (
-      hostCategoryKeys.has(`${club.super_category_id}|${club.category_id ?? ''}`) ||
-      hostCategoryKeys.has(`${club.super_category_id}|`)
-    );
+  const jumpToStep = (target: number) => {
+    setBlocked([]);
+    setStep(target);
   };
-  const clubsForLocation = clubs.filter((club) => {
-    if (!clubMatchesHostCategory(club)) return false;
-    if (podMode === 'VIRTUAL' || !locationId) return true;
-    return club.location_id === locationId;
+
+  // Clubs are scoped by the selected host category (Super + Sub), then the picked
+  // city and locality (helper shared with mWeb + covered by unit tests).
+  const clubsForLocation = filterClubs(clubs, {
+    hostCategories,
+    selectedCategoryKey: form.watch('host_category_key'),
+    locationId: form.watch('location_id'),
+    locality: form.watch('locality'),
+    podMode: form.watch('pod_mode'),
   });
 
   // Step 3 venues are scoped to the selected club's auto-matched venues.
-  const clubId = form.watch('club_id');
-  const selectedClub = clubs.find((club) => club.id === clubId) ?? null;
+  const selectedClub = clubs.find((club) => club.id === form.watch('club_id')) ?? null;
   const clubVenueIds = new Set((selectedClub?.matched_venues ?? []).map((venue) => venue.id));
 
   // The picked slot feeds the Pricing panel (slot price + GST + earnings).
-  const venueId = form.watch('venue_id');
+  const podMode = form.watch('pod_mode');
   const slotId = form.watch('venue_slot_id');
-  const { slots } = useVenueSlots(podMode === 'PHYSICAL' ? venueId : '');
+  const { slots } = useVenueSlots(podMode === 'PHYSICAL' ? form.watch('venue_id') : '');
   const selectedSlot = slots.find((slot) => slot.id === slotId) ?? null;
 
   const steps = [
@@ -210,25 +245,7 @@ export function CreatePodStepper({
 
   return (
     <YStack gap={16} padding={16} paddingBottom={48}>
-      <YStack gap={6}>
-        <XStack height={6} borderRadius={999} backgroundColor="$borderColor" overflow="hidden">
-          <YStack
-            testID="create-pod-progress"
-            height="100%"
-            backgroundColor="$primary"
-            width={`${((step + 1) / STEP_TITLES.length) * 100}%`}
-          />
-        </XStack>
-        <Text fontSize={12} fontWeight="900" color="$primary" letterSpacing={1}>
-          Step {step + 1} of {STEP_TITLES.length}
-        </Text>
-        <Text fontSize={20} fontWeight="900" color="$color">
-          {STEP_TITLES[step]}
-        </Text>
-        <Text fontSize={13} color="$muted">
-          {STEP_SUBTITLES[step]}
-        </Text>
-      </YStack>
+      <StepHeader step={step} />
       {steps[step]}
       {error ? (
         <Text testID="create-pod-error" fontSize={12.5} color="$danger">
@@ -265,6 +282,11 @@ export function CreatePodStepper({
           />
         </YStack>
       </XStack>
+      <ModerationBlockedDialog
+        violations={blocked}
+        onJump={jumpToStep}
+        onClose={() => setBlocked([])}
+      />
     </YStack>
   );
 }

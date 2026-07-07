@@ -3,6 +3,7 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
   CreatePodOptionsDocument,
+  ModeratePodContentDocument,
   MyPodDraftDocument,
   PublishPodDraftDocument,
   SavePodDraftDocument,
@@ -11,9 +12,11 @@ import {
   STEP_TITLES,
   blankCreatePodForm,
   buildCreatePodInput,
+  buildModerationInput,
   hydrateDraft,
   serializeDraft,
   type CreatePodFormValues,
+  type PodModerationResult,
 } from '@/components/create-pod';
 import { graphqlRequest } from '@/services/graphql.client';
 
@@ -88,6 +91,13 @@ export function useCreatePod(draftId?: string) {
   const publish = async (id: string, input: ReturnType<typeof buildCreatePodInput>) => {
     await graphqlRequest(PublishPodDraftDocument, { draft_id: id, input }, { auth: true });
   };
+  // AI + rules moderation preflight run when the host taps "Create Pod".
+  const moderate = async (
+    input: ReturnType<typeof buildModerationInput>,
+  ): Promise<PodModerationResult> => {
+    const res = await graphqlRequest(ModeratePodContentDocument, { input }, { auth: true });
+    return res.moderatePodContent;
+  };
 
   // Host access mirrors the server's createForPartner check: the cached HOST
   // role OR an approved, active host profile (legacy/HOSTREQ hosts may lack the
@@ -111,6 +121,7 @@ export function useCreatePod(draftId?: string) {
     initialStep,
     initialDraftId: resolvedDraftId,
     saveDraft,
+    moderate,
     publish,
   };
 }

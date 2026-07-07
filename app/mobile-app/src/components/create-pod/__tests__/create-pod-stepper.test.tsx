@@ -33,6 +33,36 @@ jest.mock('@/hooks/useMediaUpload', () => ({
   }),
 }));
 
+// The header LocationDialog is covered by its own spec (GPS/map). Stub it to a
+// button that applies a configurable (location, zone) pick.
+let mockLocationApply: [{ id: string }, string] = [{ id: 'l1' }, ''];
+jest.mock('@/components/LocationDialog', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { Pressable, Text } = require('react-native');
+  return {
+    LocationDialog: ({
+      open,
+      onApply,
+      onClose,
+    }: {
+      open: boolean;
+      onApply: (loc: { id: string }, zone: string) => void;
+      onClose: () => void;
+    }) =>
+      open ? (
+        <Pressable
+          testID="mock-location-apply"
+          onPress={() => {
+            onApply(mockLocationApply[0], mockLocationApply[1]);
+            onClose();
+          }}
+        >
+          <Text>apply</Text>
+        </Pressable>
+      ) : null,
+  };
+});
+
 const futureIso = (hours: number) => new Date(Date.now() + hours * 3_600_000).toISOString();
 const slot = {
   id: 's1',
@@ -104,6 +134,7 @@ const initialValues = { ...blankCreatePodForm, location_id: 'l1' };
 const setup = (over: Record<string, unknown> = {}) => {
   const onSaveDraft = jest.fn().mockResolvedValue('draft-1');
   const onPublish = jest.fn().mockResolvedValue(undefined);
+  const onModerate = jest.fn().mockResolvedValue({ allowed: true, violations: [] });
   renderWithProviders(
     <CreatePodStepper
       initialValues={initialValues}
@@ -117,11 +148,12 @@ const setup = (over: Record<string, unknown> = {}) => {
       viewerUserId="me-1"
       finance={finance}
       onSaveDraft={onSaveDraft}
+      onModerate={onModerate}
       onPublish={onPublish}
       {...over}
     />,
   );
-  return { onSaveDraft, onPublish };
+  return { onSaveDraft, onModerate, onPublish };
 };
 
 const press = (testID: string) => fireEvent.press(screen.getByTestId(testID));
@@ -186,7 +218,8 @@ describe('CreatePodStepper', () => {
     // Step 2: default location card + auto category + club filter.
     await screen.findByTestId('create-pod-location-label');
     expect(screen.getByTestId('create-pod-location-label')).toHaveTextContent(/Pune/);
-    expect(screen.getByTestId('create-pod-category')).toHaveTextContent('Sports › Running › Trail');
+    // The sole host category is auto-selected and shown as a chip.
+    expect(screen.getByText('Sports › Running › Trail')).toBeOnTheScreen();
     // Category + location filter: c1 & c2 (l1 + Sports) stay; c3 (other city),
     // c4 (other category) and c5 (no category) all drop out.
     expect(screen.getByTestId('create-pod-club-c2')).toBeOnTheScreen();
@@ -251,8 +284,149 @@ describe('CreatePodStepper', () => {
     await screen.findByTestId('create-pod-location-label');
     // No category gate → any club in the pod city shows, incl. c4 (other category).
     expect(screen.getByTestId('create-pod-club-c4')).toBeOnTheScreen();
+    // The empty-state hint replaces the category picker.
+    expect(screen.getByTestId('create-pod-category-empty')).toBeOnTheScreen();
     // Different-city clubs still drop for a physical pod.
     expect(screen.queryByTestId('create-pod-club-c3')).toBeNull();
+    // With no categories, Next is not gated on a category pick — a club advances.
+    press('create-pod-club-c1');
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-venue-v1');
+  });
+
+  it('makes multi-category hosts pick a category before leaving step 2', async () => {
+    const multi = [
+      {
+        super_category_id: 'sc-sports',
+        super_category_name: 'Sports',
+        category_name: 'Running',
+        sub_category_name: 'Trail',
+      },
+      {
+        super_category_id: 'sc-games',
+        super_category_name: 'Games',
+        category_name: 'Board',
+        sub_category_name: 'Chess',
+      },
+    ];
+    const multiClubs = [
+      {
+        id: 'mc1',
+        club_name: 'Runners',
+        location_id: 'l1',
+        super_category_id: 'sc-sports',
+        matched_venues: [{ id: 'v1' }],
+      },
+      { id: 'mc2', club_name: 'Chess', location_id: 'l1', super_category_id: 'sc-games' },
+    ];
+    setup({ hostCategories: multi, clubs: multiClubs });
+    await fillBasics();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-location-label');
+    // Both categories' clubs show until a category is picked.
+    expect(screen.getByTestId('create-pod-club-mc1')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-club-mc2')).toBeOnTheScreen();
+    // Select a club but no category → Next blocks with a category error.
+    press('create-pod-club-mc1');
+    press('create-pod-submit');
+    await waitFor(() => expect(screen.getByTestId('create-pod-category-error')).toBeOnTheScreen());
+    // Pick the Sports category (clears the club) → only Sports clubs remain.
+    press('create-pod-category-sc-sports|');
+    expect(screen.queryByTestId('create-pod-club-mc2')).toBeNull();
+    // Re-pick a club and advance.
+    press('create-pod-club-mc1');
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-venue-v1');
+  });
+
+  it('filters clubs by the locality picked in the header location picker', async () => {
+    const localityClubs = [
+      {
+        id: 'lc1',
+        club_name: 'Camp Runners',
+        location_id: 'l1',
+        super_category_id: 'sc-sports',
+        locality: 'Camp',
+      },
+      {
+        id: 'lc2',
+        club_name: 'Baner Runners',
+        location_id: 'l1',
+        super_category_id: 'sc-sports',
+        locality: 'Baner',
+      },
+    ];
+    mockLocationApply = [{ id: 'l1' }, 'Camp'];
+    setup({ clubs: localityClubs });
+    await fillBasics();
+    press('create-pod-submit');
+    await screen.findByTestId('create-pod-location-label');
+    // Both localities' clubs show before a locality is picked.
+    expect(screen.getByTestId('create-pod-club-lc1')).toBeOnTheScreen();
+    expect(screen.getByTestId('create-pod-club-lc2')).toBeOnTheScreen();
+    // Pick Camp in the header picker → only Camp clubs remain.
+    press('create-pod-change-location');
+    press('mock-location-apply');
+    expect(screen.getByTestId('create-pod-club-lc1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('create-pod-club-lc2')).toBeNull();
+    expect(screen.getByTestId('create-pod-locality-label')).toHaveTextContent('Locality: Camp');
+  });
+
+  it('opens the AI-monitoring guidelines dialog from the header chip', async () => {
+    setup();
+    press('create-pod-ai-chip');
+    await screen.findByTestId('pod-guidelines-dialog');
+    expect(screen.getByText('What AI monitors')).toBeOnTheScreen();
+    press('pod-guidelines-close');
+  });
+
+  it('blocks publishing when moderation flags content and jumps to the offending step', async () => {
+    const onModerate = jest.fn().mockResolvedValue({
+      allowed: false,
+      violations: [
+        {
+          field: 'pod_description',
+          step: 'REGEX',
+          type: 'EMAIL',
+          message: 'Remove the email address',
+          evidence: 'a@b.com',
+        },
+      ],
+    });
+    const { onPublish } = setup({ onModerate });
+    await fillToPricing('PHYSICAL');
+    press('create-pod-submit');
+    await screen.findByTestId('moderation-blocked-dialog');
+    // The message shows in the dialog (and, after the jump, inline on the field).
+    expect(screen.getAllByText('Remove the email address').length).toBeGreaterThan(0);
+    expect(onPublish).not.toHaveBeenCalled();
+    // The "Fix in …" link jumps back to the Basics step and sets an inline error.
+    press('moderation-fix-pod_description-EMAIL-0');
+    await screen.findByTestId('field-pod_description');
+    expect(screen.getByTestId('pod_description-error')).toHaveTextContent(
+      'Remove the email address',
+    );
+  });
+
+  it('lets the host dismiss the moderation dialog without publishing (unknown field → Basics)', async () => {
+    const onModerate = jest.fn().mockResolvedValue({
+      allowed: false,
+      violations: [
+        {
+          field: 'weird',
+          step: 'AI',
+          type: 'ABUSE',
+          message: 'Remove offensive language',
+          evidence: 'x',
+        },
+      ],
+    });
+    const { onPublish } = setup({ onModerate });
+    await fillToPricing('PHYSICAL');
+    press('create-pod-submit');
+    await screen.findByTestId('moderation-blocked-dialog');
+    press('moderation-blocked-close');
+    expect(onPublish).not.toHaveBeenCalled();
   });
 
   it('lists category clubs from any city until a location is picked', async () => {

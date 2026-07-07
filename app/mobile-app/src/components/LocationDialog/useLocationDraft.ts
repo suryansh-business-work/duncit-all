@@ -6,10 +6,25 @@ import { buildLocationTree } from '@/utils/location-tree';
 import { matchLocation, matchZone } from '@/utils/location-match';
 import type { LocationItem } from '@/stores/location.store';
 
+/** When the picker should write its result somewhere other than the global
+ * header location (e.g. into the Create-Pod form). */
+interface LocationDraftOptions {
+  onApply?: (location: LocationItem, zone: string) => void;
+  initialId?: string;
+}
+
 /** Draft country/state/city/zone selection + GPS detection for the location
- * picker. Mirrors mWeb's drilldown (apply-on-confirm, GPS sets the draft). */
-export function useLocationDraft(open: boolean, onClose: () => void) {
+ * picker. Mirrors mWeb's drilldown (apply-on-confirm, GPS sets the draft).
+ * By default it commits to the global header location; pass `opts.onApply` to
+ * capture the pick elsewhere (create-pod) and `opts.initialId` to seed it. */
+export function useLocationDraft(open: boolean, onClose: () => void, opts?: LocationDraftOptions) {
   const { locations, activeLocationIds, select, selectedId } = useLocations();
+  const seedId = opts?.initialId ?? selectedId;
+  const commit = (location: LocationItem, zone: string) => {
+    if (opts?.onApply) opts.onApply(location, zone);
+    else select(location, zone);
+    onClose();
+  };
   const tree = useMemo(() => buildLocationTree(locations), [locations]);
 
   const [draftId, setDraftId] = useState('');
@@ -23,8 +38,8 @@ export function useLocationDraft(open: boolean, onClose: () => void) {
   // Re-sync the drilldown to the active selection each time the sheet opens.
   useEffect(() => {
     if (!open) return;
-    const loc = locations.find((l) => l.id === selectedId);
-    setDraftId(selectedId);
+    const loc = locations.find((l) => l.id === seedId);
+    setDraftId(seedId);
     setDraftZone('');
     setDetected('');
     setError('');
@@ -68,8 +83,7 @@ export function useLocationDraft(open: boolean, onClose: () => void) {
 
   const apply = () => {
     if (!draftLoc) return;
-    select(draftLoc, draftZone);
-    onClose();
+    commit(draftLoc, draftZone);
   };
 
   const detect = async () => {
@@ -100,8 +114,7 @@ export function useLocationDraft(open: boolean, onClose: () => void) {
       setDraftZone(zone);
       // Live pods here → commit and go straight to Home; otherwise prompt to pick.
       if (activeLocationIds.includes(match.id)) {
-        select(match, zone);
-        onClose();
+        commit(match, zone);
       } else {
         setError(`No live pods in ${match.location_name} right now. Pick a city below.`);
       }

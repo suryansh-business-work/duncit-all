@@ -148,6 +148,20 @@ describe('useCreatePod', () => {
       { draft_id: 'draft-1', input: { pod_title: 'x' } },
       { auth: true },
     );
+
+    // Moderation preflight goes through the same client.
+    mockRequest.mockResolvedValueOnce({ moderatePodContent: { allowed: true, violations: [] } });
+    let verdict: { allowed: boolean } | undefined;
+    await act(async () => {
+      verdict = await result.current.moderate({
+        pod_title: 'x',
+        pod_description: 'y',
+        pod_info: null,
+        pod_hashtag: [],
+        image_urls: [],
+      });
+    });
+    expect(verdict).toEqual({ allowed: true, violations: [] });
   });
 
   it('ignores results that resolve after unmount', async () => {

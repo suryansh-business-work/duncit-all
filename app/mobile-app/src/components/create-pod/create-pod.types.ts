@@ -24,6 +24,10 @@ export interface PodPlaceCharge {
 export interface CreatePodFormValues {
   /** Pod location — defaults to the host's selected location; filters clubs + venues. */
   location_id: string;
+  /** Optional locality within the city — narrows clubs to that zone. */
+  locality: string;
+  /** Which of the host's onboarded categories this pod is for: `${super}|${sub}`. */
+  host_category_key: string;
   pod_title: string;
   club_id: string;
   pod_mode: 'PHYSICAL' | 'VIRTUAL';
@@ -57,6 +61,8 @@ export interface CreatePodFormValues {
 
 export const blankCreatePodForm: CreatePodFormValues = {
   location_id: '',
+  locality: '',
+  host_category_key: '',
   pod_title: '',
   club_id: '',
   pod_mode: 'PHYSICAL',
@@ -88,6 +94,8 @@ export interface CreatePodClub {
   id: string;
   club_name: string;
   location_id?: string | null;
+  /** Club's locality (a Location zone_name) — used by the locality filter. */
+  locality?: string | null;
   super_category_id?: string | null;
   /** Club's Sub-level category (matched against the host's sub_category_id). */
   category_id?: string | null;
@@ -99,11 +107,33 @@ export interface CreatePodClub {
   club_feature_images_and_videos?: { url: string; type?: string | null }[] | null;
 }
 
+/** A city's locality/zone with its live active-club count. */
+export interface CreatePodLocationZone {
+  zone_name: string;
+  pincode?: string | null;
+  active_club_count?: number | null;
+}
+
 export interface CreatePodLocation {
   id: string;
   location_name: string;
   city?: string | null;
   state?: string | null;
+  location_zones?: CreatePodLocationZone[] | null;
+}
+
+/** One flagged issue returned by the AI + rules moderation preflight. */
+export interface PodModerationViolation {
+  field: string;
+  step: string;
+  type: string;
+  message: string;
+  evidence?: string | null;
+}
+
+export interface PodModerationResult {
+  allowed: boolean;
+  violations: PodModerationViolation[];
 }
 
 /** A venue partner whose published slots the host can book. */
@@ -139,7 +169,7 @@ export interface CreatePodSlot {
   status: string;
 }
 
-/** Host's onboarded category — auto-selected (read-only) on the pod. */
+/** One of the host's onboarded categories — the host picks which one the pod is for. */
 export interface CreatePodHostCategory {
   super_category_id?: string | null;
   category_id?: string | null;

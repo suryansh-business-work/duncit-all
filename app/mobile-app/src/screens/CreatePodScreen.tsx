@@ -30,6 +30,7 @@ export function CreatePodScreen() {
     initialStep,
     initialDraftId,
     saveDraft,
+    moderate,
     publish,
   } = useCreatePod(route.params?.draftId);
 
@@ -67,6 +68,7 @@ export function CreatePodScreen() {
               viewerUserId={viewerUserId}
               finance={finance}
               onSaveDraft={saveDraft}
+              onModerate={moderate}
               onPublish={async (id, input) => {
                 await publish(id, input);
                 void useHomeStore.getState().fetch(true);

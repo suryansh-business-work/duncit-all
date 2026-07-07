@@ -3,15 +3,21 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Alert, Box, Stack } from '@mui/material';
 import {
+  MODERATION_FIELD_MAP,
   STEP_FIELDS,
   STEP_TITLES,
   STEP_SUBTITLES,
   buildCreatePodInput,
+  buildModerationInput,
   createPodSchema,
+  filterClubs,
+  hostCategoryKeyOf,
   serializeDraft,
+  stepForField,
 } from './create-pod.form';
 import StepHero from './StepHero';
 import StepFooterBar from './StepFooterBar';
+import ModerationBlockedDialog, { type BlockedViolation } from './ModerationBlockedDialog';
 import type {
   CreatePodClub,
   CreatePodFormValues,
@@ -20,6 +26,8 @@ import type {
   CreatePodProduct,
   CreatePodSlot,
   CreatePodVenue,
+  PodModerationResult,
+  PodModerationViolation,
 } from './create-pod.types';
 import BasicsStep from './steps/BasicsStep';
 import LocationClubStep from './steps/LocationClubStep';
@@ -41,6 +49,7 @@ interface Props {
   hostCategories: CreatePodHostCategory[];
   viewerUserId: string;
   onSaveDraft: (draftId: string | null, payload: DraftPayload) => Promise<string>;
+  onModerate: (input: ReturnType<typeof buildModerationInput>) => Promise<PodModerationResult>;
   onPublish: (draftId: string, input: ReturnType<typeof buildCreatePodInput>) => Promise<void>;
 }
 
@@ -59,6 +68,7 @@ export default function CreatePodStepper({
   hostCategories,
   viewerUserId,
   onSaveDraft,
+  onModerate,
   onPublish,
 }: Readonly<Props>) {
   const form = useForm<CreatePodFormValues>({
@@ -73,6 +83,7 @@ export default function CreatePodStepper({
   const [step, setStep] = useState(Math.min(initialStep, STEP_TITLES.length - 1));
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [blocked, setBlocked] = useState<BlockedViolation[]>([]);
   const draftIdRef = useRef(initialDraftId);
   const dupTitleRef = useRef(false);
   const isLast = step === STEP_TITLES.length - 1;
@@ -95,6 +106,15 @@ export default function CreatePodStepper({
       dupTitleRef.current = false;
     }
   }, [podTitle, form]);
+
+  // A host with a single onboarded category has it auto-selected, so they never
+  // see the extra choice; multi-category hosts must pick (enforced in next()).
+  useEffect(() => {
+    const sole = hostCategories[0];
+    if (hostCategories.length === 1 && sole && !form.getValues('host_category_key')) {
+      form.setValue('host_category_key', hostCategoryKeyOf(sole));
+    }
+  }, [hostCategories, form]);
 
   const persist = async (forStep: number) => {
     const id = await onSaveDraft(draftIdRef.current, serializeDraft(form.getValues(), forStep));
@@ -119,12 +139,42 @@ export default function CreatePodStepper({
     persist(target).catch(() => undefined);
   };
   const next = async () => {
-    if (await form.trigger(STEP_FIELDS[step])) goTo(step + 1);
+    if (!(await form.trigger(STEP_FIELDS[step]))) return;
+    if (step === 1 && hostCategories.length > 0 && !form.getValues('host_category_key')) {
+      form.setError('host_category_key', { type: 'required', message: 'Select your category' });
+      return;
+    }
+    goTo(step + 1);
   };
+
+  // Map each flagged violation to its form field + step, set an inline error, and
+  // jump to the first offending step so the host can fix it.
+  const applyModeration = (violations: PodModerationViolation[]) => {
+    const mapped = violations.map((violation, index) => {
+      const formField = MODERATION_FIELD_MAP[violation.field] ?? 'pod_title';
+      const stepIndex = stepForField(formField);
+      form.setError(formField, { type: 'moderation', message: violation.message });
+      return {
+        id: `${violation.field}-${violation.type}-${index}`,
+        message: violation.message,
+        type: violation.type,
+        stepIndex,
+        stepTitle: STEP_TITLES[stepIndex] as string,
+      };
+    });
+    setBlocked(mapped);
+    setStep((mapped[0] as BlockedViolation).stepIndex);
+  };
+
   const submit = form.handleSubmit(async (values) => {
     setBusy(true);
     setError(null);
     try {
+      const moderation = await onModerate(buildModerationInput(values));
+      if (!moderation.allowed) {
+        applyModeration(moderation.violations);
+        return;
+      }
       const id = await persist(step);
       await onPublish(id, buildCreatePodInput(values));
     } catch (e) {
@@ -142,28 +192,20 @@ export default function CreatePodStepper({
     }
   });
 
-  // Clubs are scoped by the host's category (Super + Sub) + the picked location.
-  // A club's `category_id` holds the Sub level, mirrored against the host's
-  // `sub_category_id`; a host entry with no Sub matches any Sub in that Super.
-  const locationId = form.watch('location_id');
-  const podMode = form.watch('pod_mode');
-  const hostCategoryKeys = new Set(
-    (hostCategories ?? [])
-      .filter((category) => category.super_category_id)
-      .map((category) => `${category.super_category_id}|${category.sub_category_id ?? ''}`)
-  );
-  const clubMatchesHostCategory = (club: { super_category_id?: string | null; category_id?: string | null }) => {
-    if (hostCategoryKeys.size === 0) return true; // host has no categories → don't over-filter
-    if (!club.super_category_id) return false;
-    return (
-      hostCategoryKeys.has(`${club.super_category_id}|${club.category_id ?? ''}`) ||
-      hostCategoryKeys.has(`${club.super_category_id}|`)
-    );
+  const jumpToStep = (target: number) => {
+    setBlocked([]);
+    setStep(target);
   };
-  const clubsForLocation = clubs.filter((club) => {
-    if (!clubMatchesHostCategory(club)) return false;
-    if (podMode === 'VIRTUAL' || !locationId) return true;
-    return club.location_id === locationId;
+
+  // Clubs are scoped by the selected host category (Super + Sub), then the picked
+  // city and locality (helper shared with mobile + covered by unit tests).
+  const podMode = form.watch('pod_mode');
+  const clubsForLocation = filterClubs(clubs, {
+    hostCategories,
+    selectedCategoryKey: form.watch('host_category_key'),
+    locationId: form.watch('location_id'),
+    locality: form.watch('locality'),
+    podMode,
   });
 
   // Step 3 venues are scoped to the selected club's auto-matched venues.
@@ -208,6 +250,7 @@ export default function CreatePodStepper({
         onNext={() => void next()}
         onSubmit={() => void submit()}
       />
+      <ModerationBlockedDialog violations={blocked} onJump={jumpToStep} onClose={() => setBlocked([])} />
     </Stack>
   );
 }

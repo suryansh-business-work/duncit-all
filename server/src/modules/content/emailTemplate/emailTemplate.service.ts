@@ -8,6 +8,7 @@ import { EmailTemplateModel } from './emailTemplate.model';
 const DEFAULT_TEMPLATE_SUBJECTS: Record<string, string> = {
   'email-verification-otp': 'Verify your Duncit email',
   'payment-release-approved': 'Payment release approved',
+  'venue-slot-request': 'New slot booking request — {{pod_title}}',
 };
 
 /** Walk the MJML source and extract every {{ var }} reference. */

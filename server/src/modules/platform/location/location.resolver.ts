@@ -19,6 +19,23 @@ export const locationResolvers = {
       return counts[String(parent.id)] ?? 0;
     },
   },
+  LocationZone: {
+    // Active-club count for one locality. The per-locality aggregation is
+    // memoised once per request (like the city count above), so a city with many
+    // zones costs a single query. `_location_id` is injected by location.service.
+    active_club_count: async (
+      parent: { zone_name: string; _location_id?: string },
+      _a: unknown,
+      ctx: GraphQLContext
+    ) => {
+      const cache = ctx as GraphQLContext & {
+        _activeClubCountsByLocality?: Promise<Record<string, number>>;
+      };
+      cache._activeClubCountsByLocality ??= clubService.activeClubCountsByLocality();
+      const counts = await cache._activeClubCountsByLocality;
+      return counts[`${parent._location_id}|${parent.zone_name}`] ?? 0;
+    },
+  },
   Query: {
     locations: async (_p: unknown, args: { filter?: any }) => locationService.list(args.filter),
     location: async (_p: unknown, args: { location_doc_id: string }) =>

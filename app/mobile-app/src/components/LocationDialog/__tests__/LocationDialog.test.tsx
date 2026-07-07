@@ -27,8 +27,9 @@ const mumbai = {
   location_pincode: '400001',
   active_club_count: 128,
   location_zones: [
-    { zone_name: 'Andheri', pincode: '400053' },
-    { zone_name: 'Bandra', pincode: '400050' },
+    { zone_name: 'Andheri', pincode: '400053', active_club_count: 3 },
+    { zone_name: 'Bandra', pincode: '400050', active_club_count: 1 },
+    { zone_name: 'Colaba', active_club_count: 0 },
   ],
 };
 const delhi = {
@@ -136,6 +137,29 @@ describe('LocationDialog drilldown', () => {
     renderWithProviders(<LocationDialog open onClose={jest.fn()} />);
     fireEvent.changeText(screen.getByTestId('area-search'), 'zzz');
     expect(screen.getByText('No matching areas.')).toBeOnTheScreen();
+  });
+
+  it('shows the club count for each locality', () => {
+    setup({ selectedId: 'l1' });
+    renderWithProviders(<LocationDialog open onClose={jest.fn()} />);
+    expect(screen.getByText('3 clubs · PIN 400053')).toBeOnTheScreen();
+    expect(screen.getByText('1 club · PIN 400050')).toBeOnTheScreen();
+    expect(screen.getByText('No clubs yet')).toBeOnTheScreen();
+  });
+
+  it('captures the pick via onApply and seeds from initialLocationId', () => {
+    const value = setup();
+    const onApply = jest.fn();
+    const onClose = jest.fn();
+    renderWithProviders(
+      <LocationDialog open onClose={onClose} onApply={onApply} initialLocationId="l1" />,
+    );
+    // Seeded from Mumbai (l1) → its areas render without touching the global store.
+    fireEvent.press(screen.getByTestId('area-Bandra'));
+    fireEvent.press(screen.getByTestId('location-apply'));
+    expect(onApply).toHaveBeenCalledWith(mumbai, 'Bandra');
+    expect(value.select).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalled();
   });
 
   it('does not apply without a draft selection', () => {

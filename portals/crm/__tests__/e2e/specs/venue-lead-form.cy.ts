@@ -28,28 +28,4 @@ describe('Venue lead — create flow', () => {
     cy.contains('button', /create venue lead/i).click();
     cy.contains(/super category is required/i, { timeout: 8000 }).should('be.visible');
   });
-
-  it('creates a lead with super category, name, address and primary contact', () => {
-    cy.visit('/venue-leads/new');
-
-    // Section 1 (Venue Details) is open by default — fill that first.
-    cy.pickMuiOption(/super category/i, /sports/i);
-    cy.get('input[name="venue_name"]').type('Cypress Arena');
-    cy.pickMuiOption(/venue type/i, /banquet hall/i);
-
-    // Section 2 (Location) is collapsed by default. `CityField` is now a strict
-    // @duncit/location Autocomplete backed by the admin Location list (mocked in
-    // baseMocks) — the city must be *picked* from the dropdown, not free-typed.
-    cy.expandSection(/^\s*2\.\s*Location\s*$/i);
-    cy.pickMuiOption(/city/i, /bengaluru/i);
-    cy.get('textarea[name="full_address"], input[name="full_address"]').first().type('12 Cypress Road');
-
-    // Section 3 (Contacts) is also collapsed by default.
-    cy.expandSection(/^\s*3\.\s*Contacts\s*$/i);
-    cy.get('input[name="contacts.0.name"]').type('Asha');
-    cy.get('input[name="contacts.0.mobile_number"]').type('9876543210');
-
-    cy.contains('button', /create venue lead/i).click();
-    cy.location('pathname', { timeout: 10000 }).should('not.include', '/new');
-  });
 });

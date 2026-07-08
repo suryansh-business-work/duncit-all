@@ -17,6 +17,7 @@ import { isPodActive } from '../../utils/podStatus';
 import { useDateFormat } from '../../utils/dateFormat';
 import PodHistoryTimeline from './PodHistoryTimeline';
 import PodProductOrdersCard from './PodProductOrdersCard';
+import ReplacementNotice from './ReplacementNotice';
 import {
   POD_HISTORY_INVOICE_PDF,
   POD_HISTORY_TICKET_FOR_POD,
@@ -55,7 +56,7 @@ const makeSupportPath = (item: PodHistoryItem) => {
 
 export default function PodHistoryDetails({ item, backingOut, rejoining, onBackout, onRejoin }: Readonly<Props>) {
   const { formatDateTime } = useDateFormat();
-  const { format } = usePricing();
+  const { format, backoutDeductionPct } = usePricing();
   const [loadInvoice, invoiceState] = useLazyQuery(POD_HISTORY_INVOICE_PDF, { fetchPolicy: 'network-only' });
   const [loadTicketForPod] = useLazyQuery(POD_HISTORY_TICKET_FOR_POD, { fetchPolicy: 'network-only' });
   const [loadTicketPdf, ticketState] = useLazyQuery(POD_HISTORY_TICKET_PDF, { fetchPolicy: 'network-only' });
@@ -166,6 +167,7 @@ export default function PodHistoryDetails({ item, backingOut, rejoining, onBacko
               Contact Support
             </Button>
           </Stack>
+          {canRejoin && <ReplacementNotice deductionPct={backoutDeductionPct} />}
           {item.status === 'BACKED_OUT' && item.refund_status === 'PENDING' && (
             <Alert severity="info" sx={{ mt: 1.5 }}>
               Refund is waiting for criteria completion. Support can help if the status looks wrong.

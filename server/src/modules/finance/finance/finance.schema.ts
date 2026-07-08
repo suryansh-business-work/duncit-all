@@ -85,6 +85,8 @@ export const financeTypeDefs = /* GraphQL */ `
   type PublicFinanceSettings {
     platform_fee_pct: Float!
     gst_pct: Float!
+    "Global backout deduction % applied to a refund when a replacement fills the spot (Default Deductions → Backouts)."
+    default_backout_deduction_pct: Float!
     currency_symbol: String!
     dummy_mode: Boolean!
     razorpay_enabled: Boolean!

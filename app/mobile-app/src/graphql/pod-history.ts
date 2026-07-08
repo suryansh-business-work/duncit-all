@@ -82,6 +82,16 @@ export const RejoinPodDocument = gql(`
   }
 `);
 
+/** Global backout deduction % (Finance → Default Deductions → Backouts) for the
+ * "finding your replacement" refund note. Public settings. */
+export const BackoutDeductionDocument = gql(`
+  query MobileBackoutDeduction {
+    publicFinanceSettings {
+      default_backout_deduction_pct
+    }
+  }
+`);
+
 /** Base64 PDF invoice for a payment — mWeb's POD_HISTORY_INVOICE_PDF. */
 export const PodInvoicePdfDocument = gql(`
   query MobilePodInvoicePdf($id: ID!) {

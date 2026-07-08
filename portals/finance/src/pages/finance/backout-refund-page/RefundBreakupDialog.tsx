@@ -15,14 +15,15 @@ import { buildRefundBreakup, type BackoutRefundRequest } from './queries';
 interface Props {
   refundFor: BackoutRefundRequest | null;
   sym: string;
+  deductionPct: number;
   onClose: () => void;
   onConfirm: () => void;
 }
 
 /** Preview of a member's refund breakup. "Refund now" is a DUMMY — it calls the
  * page's onConfirm (which toasts + closes); no mutation runs yet. */
-export default function RefundBreakupDialog({ refundFor, sym, onClose, onConfirm }: Readonly<Props>) {
-  const lines = refundFor ? buildRefundBreakup(refundFor, sym) : [];
+export default function RefundBreakupDialog({ refundFor, sym, deductionPct, onClose, onConfirm }: Readonly<Props>) {
+  const lines = refundFor ? buildRefundBreakup(refundFor, sym, deductionPct) : [];
 
   return (
     <Dialog open={!!refundFor} onClose={onClose} fullWidth maxWidth="xs">
@@ -44,7 +45,8 @@ export default function RefundBreakupDialog({ refundFor, sym, onClose, onConfirm
               </Stack>
             </Box>
             <Alert severity="info">
-              This is a preview. Actual refund processing — including the backout deduction — ships later.
+              The estimate applies the current Backouts deduction from Default Deductions. Actual
+              refund processing (gateway payout) ships later.
             </Alert>
           </Stack>
         )}

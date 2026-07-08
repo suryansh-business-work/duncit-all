@@ -6,6 +6,7 @@ const PUBLIC_FINANCE = gql`
       platform_fee_pct
       gst_pct
       currency_symbol
+      default_backout_deduction_pct
     }
   }
 `;
@@ -31,6 +32,7 @@ export function usePricing() {
   const fs = data?.publicFinanceSettings;
   const feePct = fs?.platform_fee_pct ?? 0;
   const gstPct = fs?.gst_pct ?? 0;
+  const backoutDeductionPct = fs?.default_backout_deduction_pct ?? 0;
   const currency = fs?.currency_symbol ?? '\u20b9';
 
   /**
@@ -53,6 +55,6 @@ export function usePricing() {
     return `${currency}${p.total.toFixed(p.total % 1 === 0 ? 0 : 2)}`;
   };
 
-  return { feePct, gstPct, currency, compute, format, ready: !!fs };
+  return { feePct, gstPct, backoutDeductionPct, currency, compute, format, ready: !!fs };
 }
 

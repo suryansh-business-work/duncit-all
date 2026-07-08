@@ -4,6 +4,7 @@ import { Linking } from 'react-native';
 import { PodHistoryDetailsScreen } from '@/screens/PodHistoryDetailsScreen';
 import {
   usePodBackout,
+  usePodBackoutDeduction,
   usePodHistory,
   usePodInvoice,
   usePodRejoin,
@@ -17,6 +18,7 @@ jest.mock('@/hooks/usePodHistory', () => ({
   usePodHistory: jest.fn(),
   usePodBackout: jest.fn(),
   usePodRejoin: jest.fn(),
+  usePodBackoutDeduction: jest.fn(),
   usePodInvoice: jest.fn(),
   usePodTicket: jest.fn(),
 }));
@@ -34,6 +36,7 @@ jest.mock('@react-navigation/native', () => ({
 const mockedHistory = usePodHistory as jest.Mock;
 const mockedBackout = usePodBackout as jest.Mock;
 const mockedRejoin = usePodRejoin as jest.Mock;
+const mockedDeduction = usePodBackoutDeduction as jest.Mock;
 const mockedInvoice = usePodInvoice as jest.Mock;
 const mockedTicket = usePodTicket as jest.Mock;
 const mockedPolicy = usePolicy as jest.Mock;
@@ -92,6 +95,7 @@ beforeEach(() => {
   rejoin.mockResolvedValue(undefined);
   download.mockResolvedValue(undefined);
   refetch.mockResolvedValue(undefined);
+  mockedDeduction.mockReturnValue(0);
   mockedBackout.mockReturnValue({ backout, busy: false });
   mockedRejoin.mockReturnValue({ rejoin, busy: false });
   mockedInvoice.mockReturnValue({ download, busy: false });

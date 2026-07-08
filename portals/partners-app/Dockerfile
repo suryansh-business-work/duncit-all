@@ -42,6 +42,8 @@ COPY packages/availability-calendar/package.json ./packages/availability-calenda
 COPY packages/category/package.json ./packages/category/
 COPY packages/location/package.json ./packages/location/
 COPY packages/portal-pod-form/package.json ./packages/portal-pod-form/
+COPY packages/pod-form/package.json ./packages/pod-form/
+COPY packages/club-form/package.json ./packages/club-form/
 
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile

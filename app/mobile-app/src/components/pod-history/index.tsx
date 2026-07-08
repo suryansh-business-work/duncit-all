@@ -7,6 +7,7 @@ export { PodHistoryTimeline } from './PodHistoryTimeline';
 export { PodHistoryActions } from './PodHistoryActions';
 export { BackoutConfirmDialog } from './BackoutConfirmDialog';
 export { RejoinConfirmDialog } from './RejoinConfirmDialog';
+export { ReplacementNotice } from './ReplacementNotice';
 export { PodProductOrdersCard } from './PodProductOrdersCard';
 export { PodProductOrderItem } from './PodProductOrderItem';
 export { OrderTrackingTimeline } from './OrderTrackingTimeline';

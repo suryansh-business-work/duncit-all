@@ -28,6 +28,7 @@ export const BACKOUT_REFUND_REQUESTS = gql`
     }
     publicFinanceSettings {
       currency_symbol
+      default_backout_deduction_pct
     }
   }
 `;
@@ -78,6 +79,7 @@ export const BACKOUT_REFUND_DETAIL = gql`
     }
     publicFinanceSettings {
       currency_symbol
+      default_backout_deduction_pct
     }
   }
 `;
@@ -171,16 +173,23 @@ export interface BreakupLine {
 
 /**
  * Builds the read-only refund "breakup" lines from a backed-out membership row.
- * `default_backout_deduction_pct` is not returned by this query, so the estimate
- * shows the full amount for now — the final deduction is applied by the refund
- * flow once it ships.
+ * The estimated refund applies the global Backouts deduction % (Default
+ * Deductions → Backouts, `publicFinanceSettings.default_backout_deduction_pct`):
+ * estimated refund = amount − amount × pct%.
  */
-export function buildRefundBreakup(row: BackoutRefundRequest, symbol: string): BreakupLine[] {
+export function buildRefundBreakup(
+  row: BackoutRefundRequest,
+  symbol: string,
+  deductionPct: number
+): BreakupLine[] {
   const amount = Number(row.payment_amount ?? 0);
+  const pct = Math.max(0, Math.min(100, Number(deductionPct) || 0));
+  const deduction = Math.round(amount * pct) / 100; // amount × pct%, 2dp
+  const net = Math.max(0, amount - deduction);
   return [
     { key: 'paid', label: 'Amount paid', value: money(symbol, amount) },
     { key: 'refund-status', label: 'Refund status', value: row.refund_status },
-    { key: 'threshold', label: 'Refund threshold', value: `${row.refund_threshold_pct}%` },
-    { key: 'estimate', label: 'Estimated refund', value: money(symbol, amount), bold: true },
+    { key: 'deduction', label: `Backout deduction (${pct}%)`, value: `- ${money(symbol, deduction)}` },
+    { key: 'estimate', label: 'Estimated refund', value: money(symbol, net), bold: true },
   ];
 }

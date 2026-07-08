@@ -5,6 +5,7 @@ import * as Sharing from 'expo-sharing';
 import { graphqlRequest } from '@/services/graphql.client';
 import {
   usePodBackout,
+  usePodBackoutDeduction,
   usePodHistory,
   usePodHistoryCategories,
   usePodInvoice,
@@ -228,6 +229,38 @@ describe('usePodHistoryCategories', () => {
     unmount();
     await act(async () => {
       resolveFn({ categories: cats });
+    });
+    expect(mockRequest).toHaveBeenCalled();
+  });
+});
+
+describe('usePodBackoutDeduction', () => {
+  it('loads the backout deduction %', async () => {
+    mockRequest.mockResolvedValueOnce({
+      publicFinanceSettings: { default_backout_deduction_pct: 12 },
+    });
+    const { result } = renderHook(() => usePodBackoutDeduction());
+    await waitFor(() => expect(result.current).toBe(12));
+  });
+
+  it('stays 0 when the request fails', async () => {
+    mockRequest.mockRejectedValueOnce(new Error('boom'));
+    const { result } = renderHook(() => usePodBackoutDeduction());
+    await waitFor(() => expect(mockRequest).toHaveBeenCalled());
+    expect(result.current).toBe(0);
+  });
+
+  it('ignores a response that resolves after unmount', async () => {
+    let resolveFn: (value: unknown) => void = () => undefined;
+    mockRequest.mockReturnValueOnce(
+      new Promise((resolve) => {
+        resolveFn = resolve;
+      }),
+    );
+    const { unmount } = renderHook(() => usePodBackoutDeduction());
+    unmount();
+    await act(async () => {
+      resolveFn({ publicFinanceSettings: { default_backout_deduction_pct: 5 } });
     });
     expect(mockRequest).toHaveBeenCalled();
   });

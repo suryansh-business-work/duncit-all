@@ -12,6 +12,7 @@ import {
 import { StackScreen } from '@/components/StackScreen';
 import {
   usePodBackout,
+  usePodBackoutDeduction,
   usePodHistory,
   usePodInvoice,
   usePodRejoin,
@@ -35,6 +36,7 @@ export function PodHistoryDetailsScreen() {
   const { rejoin, busy: rejoining } = usePodRejoin();
   const { download, busy: invoiceBusy } = usePodInvoice();
   const { download: downloadTicketPdf, busy: ticketBusy } = usePodTicket();
+  const deductionPct = usePodBackoutDeduction();
   const [backoutOpen, setBackoutOpen] = useState(false);
   const [rejoinOpen, setRejoinOpen] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -111,6 +113,7 @@ export function PodHistoryDetailsScreen() {
             invoiceBusy={invoiceBusy}
             ticketBusy={ticketBusy}
             notice={notice}
+            deductionPct={deductionPct}
             productOrders={productOrders}
             ordersLoading={ordersLoading}
             onPodDetails={() =>

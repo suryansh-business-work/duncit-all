@@ -70,6 +70,7 @@ export const financeResolvers = {
       return {
         platform_fee_pct: doc.platform_fee_pct,
         gst_pct: doc.gst_pct,
+        default_backout_deduction_pct: doc.default_backout_deduction_pct ?? 0,
         currency_symbol: doc.currency_symbol,
         dummy_mode: doc.dummy_mode,
         razorpay_enabled: await isRazorpayConfigured(),

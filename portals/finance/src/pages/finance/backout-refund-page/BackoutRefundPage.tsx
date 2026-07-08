@@ -10,7 +10,7 @@ import { BACKOUT_REFUND_REQUESTS, type BackoutRefundRequest } from './queries';
 
 interface QueryData {
   backoutRefundRequests: BackoutRefundRequest[];
-  publicFinanceSettings: { currency_symbol: string };
+  publicFinanceSettings: { currency_symbol: string; default_backout_deduction_pct: number };
 }
 
 export default function BackoutRefundPage() {
@@ -22,6 +22,7 @@ export default function BackoutRefundPage() {
   const [refundFor, setRefundFor] = useState<BackoutRefundRequest | null>(null);
 
   const sym = data?.publicFinanceSettings?.currency_symbol ?? '';
+  const deductionPct = data?.publicFinanceSettings?.default_backout_deduction_pct ?? 0;
   const rows = data?.backoutRefundRequests ?? [];
   const showLoader = loading && rows.length === 0 && !error;
   const showEmpty = !loading && rows.length === 0 && !error;
@@ -60,6 +61,7 @@ export default function BackoutRefundPage() {
       <RefundBreakupDialog
         refundFor={refundFor}
         sym={sym}
+        deductionPct={deductionPct}
         onClose={() => setRefundFor(null)}
         onConfirm={confirmRefund}
       />

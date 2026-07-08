@@ -5,12 +5,13 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { podPriceCaption, refundLabel, type PodMembership } from '@/utils/pod-history';
+import { canRejoin, podPriceCaption, refundLabel, type PodMembership } from '@/utils/pod-history';
 import type { ProductOrder } from '@/utils/product-orders';
 import { formatDateTime } from '@/utils/date-format';
 import { PodHistoryActions } from './PodHistoryActions';
 import { PodHistoryTimeline } from './PodHistoryTimeline';
 import { PodProductOrdersCard } from './PodProductOrdersCard';
+import { ReplacementNotice } from './ReplacementNotice';
 
 export interface PodHistoryDetailsProps {
   item: PodMembership;
@@ -19,6 +20,7 @@ export interface PodHistoryDetailsProps {
   invoiceBusy: boolean;
   ticketBusy: boolean;
   notice: string | null;
+  deductionPct: number;
   productOrders?: ProductOrder[];
   ordersLoading?: boolean;
   onPodDetails: () => void;
@@ -73,7 +75,15 @@ function Card({ title, children }: Readonly<{ title?: string; children: ReactNod
 /** Membership details body — summary, actions, timeline and terms links.
  * RN twin of mWeb's PodHistoryDetails. */
 export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
-  const { item, notice, onBackoutTerms, onGeneralTerms, productOrders, ordersLoading } = props;
+  const {
+    item,
+    notice,
+    deductionPct,
+    onBackoutTerms,
+    onGeneralTerms,
+    productOrders,
+    ordersLoading,
+  } = props;
   const { onPrimary, primary } = useThemeColors();
   const pod = item.pod;
   const image = pod?.pod_images_and_videos?.[0]?.url;
@@ -124,6 +134,7 @@ export function PodHistoryDetails(props: Readonly<PodHistoryDetailsProps>) {
 
       <Card title="Actions">
         <PodHistoryActions {...props} />
+        {canRejoin(item) ? <ReplacementNotice deductionPct={deductionPct} /> : null}
         {item.status === 'BACKED_OUT' && item.refund_status === 'PENDING' ? (
           <Text testID="ph-refund-pending" fontSize={12} color="$muted">
             Refund is waiting for criteria completion. Support can help if the status looks wrong.

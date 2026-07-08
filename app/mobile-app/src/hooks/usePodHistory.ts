@@ -3,6 +3,7 @@ import * as FileSystem from 'expo-file-system/legacy';
 import * as Sharing from 'expo-sharing';
 
 import {
+  BackoutDeductionDocument,
   BackoutPodDocument,
   EventTicketPdfDocument,
   MyEventTicketForPodDocument,
@@ -59,6 +60,26 @@ export function usePodHistoryCategories() {
   }, []);
 
   return categories;
+}
+
+/** Global backout deduction % for the "finding your replacement" refund note
+ * (Finance → Default Deductions → Backouts). Public — fetched once. */
+export function usePodBackoutDeduction() {
+  const [pct, setPct] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    graphqlRequest(BackoutDeductionDocument, undefined, { auth: true })
+      .then((data) => {
+        if (active) setPct(data.publicFinanceSettings.default_backout_deduction_pct);
+      })
+      .catch(() => undefined);
+    return () => {
+      active = false;
+    };
+  }, []);
+
+  return pct;
 }
 
 /** Backout mutation with a busy flag — mWeb's BACKOUT_POD_HISTORY. */

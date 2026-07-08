@@ -7,6 +7,7 @@ import {
   PodHistoryDetails,
   PodHistoryTimeline,
   RejoinConfirmDialog,
+  ReplacementNotice,
 } from '@/components/pod-history';
 import { usePolicy } from '@/hooks/usePolicies';
 import { renderWithProviders } from '@/utils/test-utils';
@@ -254,6 +255,7 @@ describe('PodHistoryDetails', () => {
         invoiceBusy={false}
         ticketBusy={false}
         notice={null}
+        deductionPct={0}
         {...h}
       />,
     );
@@ -282,6 +284,7 @@ describe('PodHistoryDetails', () => {
         invoiceBusy={false}
         ticketBusy={false}
         notice="Refund status: Criteria pending"
+        deductionPct={0}
         {...handlers()}
       />,
     );
@@ -300,10 +303,50 @@ describe('PodHistoryDetails', () => {
         invoiceBusy={false}
         ticketBusy={false}
         notice={null}
+        deductionPct={0}
         {...handlers()}
       />,
     );
     expect(screen.getByText('Date not available')).toBeOnTheScreen();
+  });
+
+  it('shows the replacement notice with a toggleable deduction when rejoin is available', () => {
+    renderWithProviders(
+      <PodHistoryDetails
+        item={membership({ status: 'BACKED_OUT', pod: futurePod })}
+        backingOut={false}
+        rejoining={false}
+        invoiceBusy={false}
+        ticketBusy={false}
+        notice={null}
+        deductionPct={15}
+        {...handlers()}
+      />,
+    );
+    expect(screen.getByTestId('ph-replacement')).toBeOnTheScreen();
+    expect(screen.queryByTestId('ph-replacement-detail')).toBeNull();
+    fireEvent.press(screen.getByTestId('ph-replacement-info'));
+    expect(screen.getByTestId('ph-replacement-detail')).toHaveTextContent(/15% deduction/);
+  });
+});
+
+describe('ReplacementNotice', () => {
+  it('toggles the detail and clamps a high percentage', () => {
+    renderWithProviders(<ReplacementNotice deductionPct={150} />);
+    expect(screen.getByText('We are finding your replacement')).toBeOnTheScreen();
+    expect(screen.queryByTestId('ph-replacement-detail')).toBeNull();
+    fireEvent.press(screen.getByTestId('ph-replacement-info'));
+    expect(screen.getByTestId('ph-replacement-detail')).toHaveTextContent(/100% deduction/);
+    fireEvent.press(screen.getByTestId('ph-replacement-info'));
+    expect(screen.queryByTestId('ph-replacement-detail')).toBeNull();
+  });
+
+  it('clamps a negative percentage and defaults non-numeric to 0', () => {
+    const { rerender } = renderWithProviders(<ReplacementNotice deductionPct={-5} />);
+    fireEvent.press(screen.getByTestId('ph-replacement-info'));
+    expect(screen.getByTestId('ph-replacement-detail')).toHaveTextContent(/0% deduction/);
+    rerender(<ReplacementNotice deductionPct={NaN} />);
+    expect(screen.getByTestId('ph-replacement-detail')).toHaveTextContent(/0% deduction/);
   });
 });
 

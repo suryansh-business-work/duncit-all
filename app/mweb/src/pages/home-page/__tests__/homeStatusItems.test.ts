@@ -34,12 +34,28 @@ describe('buildHomeStatusEntries (bug 2/3 order)', () => {
       ],
       followedUsers: [{ user_id: 'u1', full_name: 'Asha Verma', first_name: 'Asha', profile_photo: 'u.jpg' }],
       followedPosts: [
-        { author_id: 'u1', image_url: 'st.jpg', media_type: 'IMAGE', caption: 'Hi', created_at: 'now', expires_at: 'later' },
+        { id: 'sp1', author_id: 'u1', image_url: 'st.jpg', media_type: 'IMAGE', caption: 'Hi', created_at: 'now', expires_at: 'later' },
       ],
     });
     expect(entries.map((e) => e.key)).toEqual(['club-c1', 'pod-p1', 'user-u1']);
     expect(entries[1].viewer.subLabel).toBe('Your pod status');
     expect(entries[2].viewer.slides?.[0]?.mediaUrl).toBe('st.jpg');
+    // The user's story carries a post id so it can be liked/recorded/viewed.
+    expect(entries[2].viewer.kind).toBe('user');
+    expect(entries[2].viewer.slides?.[0]?.id).toBeDefined();
+  });
+
+  it('marks a user ring unseen until every story is seen (Bug 2)', () => {
+    const withSeen = (seen: boolean) =>
+      buildHomeStatusEntries({
+        ...baseArgs,
+        followedUsers: [{ user_id: 'u1', full_name: 'Asha', first_name: 'Asha' }],
+        followedPosts: [
+          { id: 'p1', author_id: 'u1', image_url: 'a.jpg', media_type: 'IMAGE', seen_by_me: seen },
+        ],
+      })[0];
+    expect(withSeen(false).active).toBe(true);
+    expect(withSeen(true).active).toBe(false);
   });
 });
 

@@ -47,6 +47,12 @@ export const ecommBrandResolvers = {
       requireRole(ctx, BRAND_REVIEW);
       return ecommBrandService.getById(args.brand_doc_id);
     },
+    // Public brand card for the pod product-detail dialog — any signed-in user.
+    // Clients select only non-sensitive fields (no GST/PAN/payout/commission).
+    publicEcommBrand: (_p: unknown, args: { brand_doc_id: string }, ctx: GraphQLContext) => {
+      uid(ctx);
+      return ecommBrandService.getById(args.brand_doc_id);
+    },
   },
   Mutation: {
     saveEcommBrand: (_p: unknown, args: { brand_doc_id?: string | null; input: any }, ctx: GraphQLContext) =>

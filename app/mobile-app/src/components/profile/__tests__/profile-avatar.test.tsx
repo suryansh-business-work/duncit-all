@@ -199,6 +199,7 @@ describe('ProfileAvatar — story interaction (item 12)', () => {
       <ProfileAvatar photo="http://x/a.jpg" initial="A" size={76} onChanged={refetch} />,
     );
     fireEvent.press(screen.getByTestId('avatar-story-button'));
+    fireEvent.press(screen.getByTestId('status-viewer-kebab'));
     fireEvent.press(screen.getByTestId('status-viewer-delete'));
     expect(screen.getByTestId('delete-story-confirm')).toBeOnTheScreen();
     await act(async () => {
@@ -212,6 +213,7 @@ describe('ProfileAvatar — story interaction (item 12)', () => {
     mockedStatus.mockReturnValue({ mine: mineGroup, refetch });
     renderWithProviders(<ProfileAvatar photo="http://x/a.jpg" initial="A" size={76} />);
     fireEvent.press(screen.getByTestId('avatar-story-button'));
+    fireEvent.press(screen.getByTestId('status-viewer-kebab'));
     fireEvent.press(screen.getByTestId('status-viewer-delete'));
     fireEvent.press(screen.getByTestId('delete-story-confirm-cancel'));
     expect(mockDeleteStory).not.toHaveBeenCalled();

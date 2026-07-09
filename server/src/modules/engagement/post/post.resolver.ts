@@ -24,6 +24,16 @@ export const postResolvers = {
       }
     },
   },
+  StoryView: {
+    user: async (parent: any) => {
+      if (!parent.user_id) return null;
+      try {
+        return await userService.getById(parent.user_id);
+      } catch {
+        return null;
+      }
+    },
+  },
   Query: {
     posts: async (_p: unknown, args: { author_id?: string }, ctx: GraphQLContext) => {
       const viewerId = ctx.user?.id ?? null;
@@ -55,6 +65,10 @@ export const postResolvers = {
       const u = requireAuth(ctx);
       return postService.followingFeed(u.id, args.source, args.limit ?? 60);
     },
+    storyViewers: (_p: unknown, args: { post_doc_id: string }, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      return postService.listViewers(args.post_doc_id, u.id);
+    },
   },
   Mutation: {
     createPost: (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
@@ -64,6 +78,10 @@ export const postResolvers = {
     deletePost: (_p: unknown, args: { post_doc_id: string }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);
       return postService.remove(args.post_doc_id, u.id);
+    },
+    recordStoryView: (_p: unknown, args: { post_doc_id: string }, ctx: GraphQLContext) => {
+      const u = requireAuth(ctx);
+      return postService.recordView(args.post_doc_id, u.id);
     },
     togglePostLike: (_p: unknown, args: { post_doc_id: string }, ctx: GraphQLContext) => {
       const u = requireAuth(ctx);

@@ -27,6 +27,10 @@ function mediaToSlides(key: string, media: readonly Media[]): StatusSlide[] {
       caption: null,
       createdAt: '',
       expiresAt: null,
+      // Club/pod feature media aren't real stories: no seen/like tracking.
+      seenByMe: false,
+      likedByMe: false,
+      likesCount: 0,
     }));
 }
 

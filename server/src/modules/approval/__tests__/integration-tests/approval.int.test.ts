@@ -5,6 +5,7 @@ import { meetingService } from '@modules/survey/meeting.service';
 import { HostModel } from '@modules/venues/host/host.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
 import { UserModel } from '@modules/access/user/user.model';
 import type { SurveyKind } from '@modules/survey/survey.model';
 
@@ -122,6 +123,73 @@ describe('approval — meeting feedback flow', () => {
     // A denied meeting is terminal — feedback can't be re-sent without a re-apply.
     await expect(meetingService.sendFeedback(meetingId, 'reconsider', ADMIN)).rejects.toThrow(/already/i);
     await expect(approvalService.deny(String(req._id), ADMIN, 'x')).rejects.toThrow(/already/i);
+  });
+
+  it('submits a product change, lists it by kind, and applies the payload on approval (Task B item 2)', async () => {
+    const productId = new Types.ObjectId();
+    await InventoryProductModel.collection.insertOne({
+      _id: productId,
+      product_name: 'Old name',
+      selling_price: 100,
+    } as never);
+
+    const req = await approvalService.submitEcommChange(
+      {
+        kind: 'PRODUCT',
+        target_id: productId.toString(),
+        target_name: 'Old name',
+        details: [{ label: 'Selling price (₹)', value: '999' }],
+        payload: JSON.stringify({ selling_price: 999, product_name: 'New name' }),
+      },
+      { id: 'pm-1', name: 'pm@example.com' },
+    );
+    expect(req!.type).toBe('ECOMM_PRODUCT_CHANGE');
+    expect(req!.status).toBe('PENDING');
+    expect(req!.target_id).toBe(productId.toString());
+
+    // Listing is kind-scoped.
+    expect((await approvalService.listEcommChanges('PRODUCT')).some((r: any) => r.id === req!.id)).toBe(true);
+    expect((await approvalService.listEcommChanges('BRAND')).some((r: any) => r.id === req!.id)).toBe(false);
+    expect((await approvalService.listEcommChanges()).some((r: any) => r.id === req!.id)).toBe(true);
+
+    // Approval applies the payload to the product.
+    await approvalService.approve(req!.id, ADMIN);
+    const updated: any = await InventoryProductModel.findById(productId);
+    expect(updated.selling_price).toBe(999);
+    expect(updated.product_name).toBe('New name');
+  });
+
+  it('applies a brand change on approval and tolerates a malformed payload (Task B item 2)', async () => {
+    const brandId = new Types.ObjectId();
+    await EcommBrandModel.collection.insertOne({ _id: brandId, brand_name: 'B', tagline: 'old' } as never);
+    const brandReq = await approvalService.submitEcommChange(
+      {
+        kind: 'BRAND',
+        target_id: brandId.toString(),
+        target_name: 'B',
+        details: [{ label: 'Tagline', value: 'new tag' }],
+        payload: JSON.stringify({ tagline: 'new tag' }),
+      },
+      ADMIN,
+    );
+    expect(brandReq!.type).toBe('ECOMM_BRAND_CHANGE');
+    await approvalService.approve(brandReq!.id, ADMIN);
+    const brand: any = await EcommBrandModel.findById(brandId);
+    expect(brand.tagline).toBe('new tag');
+
+    // A malformed payload is swallowed — the approval still succeeds.
+    const bad = await approvalService.submitEcommChange(
+      {
+        kind: 'PRODUCT',
+        target_id: new Types.ObjectId().toString(),
+        target_name: 'X',
+        details: [{ label: 'x', value: 'y' }],
+        payload: 'not-json',
+      },
+      ADMIN,
+    );
+    const approved = await approvalService.approve(bad!.id, ADMIN);
+    expect(approved!.status).toBe('APPROVED');
   });
 
   it('lists requests filtered by status and type, and 404s an unknown id', async () => {

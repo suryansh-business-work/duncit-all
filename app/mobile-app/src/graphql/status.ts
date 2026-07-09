@@ -20,6 +20,9 @@ export const StatusFeedDocument = gql(`
       caption
       created_at
       expires_at
+      seen_by_me
+      liked_by_me
+      likes_count
     }
     myStories {
       id
@@ -29,6 +32,36 @@ export const StatusFeedDocument = gql(`
       caption
       created_at
       expires_at
+      seen_by_me
+      liked_by_me
+      likes_count
+      views_count
+    }
+  }
+`);
+
+/** Records that the viewer opened a story — greys the ring (Bug 2). */
+export const RecordStoryViewDocument = gql(`
+  mutation MobileRecordStoryView($id: ID!) {
+    recordStoryView(post_doc_id: $id) {
+      id
+      seen_by_me
+      views_count
+    }
+  }
+`);
+
+/** Owner-only: who viewed my story, newest first (Bug 4). */
+export const StoryViewersDocument = gql(`
+  query MobileStoryViewers($id: ID!) {
+    storyViewers(post_doc_id: $id) {
+      user_id
+      viewed_at
+      user {
+        user_id
+        full_name
+        profile_photo
+      }
     }
   }
 `);

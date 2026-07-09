@@ -52,6 +52,10 @@ export const HOME_DATA = gql`
       caption
       created_at
       expires_at
+      seen_by_me
+      liked_by_me
+      likes_count
+      views_count
     }
     categories {
       id
@@ -72,6 +76,50 @@ export const FOLLOWED_USERS = gql`
       first_name
       profile_photo
     }
+  }
+`;
+
+/** Record that the viewer opened a story — greys its ring (Bug 2). */
+export const RECORD_STORY_VIEW = gql`
+  mutation RecordStoryView($id: ID!) {
+    recordStoryView(post_doc_id: $id) {
+      id
+      seen_by_me
+      views_count
+    }
+  }
+`;
+
+/** Like/unlike a follower's story (Bug 5). */
+export const TOGGLE_STORY_LIKE = gql`
+  mutation ToggleStoryLike($id: ID!) {
+    togglePostLike(post_doc_id: $id) {
+      id
+      liked_by_me
+      likes_count
+    }
+  }
+`;
+
+/** Owner-only list of who viewed a story, newest first (Bug 4). */
+export const STORY_VIEWERS = gql`
+  query StoryViewers($id: ID!) {
+    storyViewers(post_doc_id: $id) {
+      user_id
+      viewed_at
+      user {
+        user_id
+        full_name
+        profile_photo
+      }
+    }
+  }
+`;
+
+/** Delete one of my own stories (Bug 7). */
+export const DELETE_STORY_POST = gql`
+  mutation DeleteStoryPost($id: ID!) {
+    deletePost(post_doc_id: $id)
   }
 `;
 

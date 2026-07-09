@@ -53,14 +53,7 @@ describe('StatusTile', () => {
     const onPress = jest.fn();
     const onBadgePress = jest.fn();
     renderWithProviders(
-      <StatusTile
-        testID="tile"
-        label="You"
-        badge
-        ring
-        onPress={onPress}
-        onBadgePress={onBadgePress}
-      />,
+      <StatusTile testID="tile" label="You" badge onPress={onPress} onBadgePress={onBadgePress} />,
     );
     fireEvent.press(screen.getByTestId('tile'));
     expect(onPress).toHaveBeenCalled();
@@ -71,6 +64,20 @@ describe('StatusTile', () => {
   it('renders a badge tile without a testID', () => {
     renderWithProviders(<StatusTile label="No id" badge />);
     expect(screen.getByText('No id')).toBeOnTheScreen();
+  });
+
+  it('shows the upload progress overlay while posting (Bug 1)', () => {
+    renderWithProviders(
+      <StatusTile testID="up" label="Me" image="http://x/me.jpg" progress={45} />,
+    );
+    expect(screen.getByTestId('up-progress')).toBeOnTheScreen();
+    expect(screen.getByText('45%')).toBeOnTheScreen();
+  });
+
+  it('hides the overlay once complete and renders a grey seen ring (Bug 2)', () => {
+    renderWithProviders(<StatusTile testID="dn" label="Me" progress={100} seen />);
+    expect(screen.queryByTestId('dn-progress')).toBeNull();
+    expect(screen.getByText('Me')).toBeOnTheScreen();
   });
 });
 
@@ -187,6 +194,63 @@ describe('StatusViewer', () => {
     fireEvent(area, 'responderRelease', { nativeEvent: { pageX: 110 } });
     expect(onNext).not.toHaveBeenCalled();
     expect(onPrev).not.toHaveBeenCalled();
+  });
+
+  it('likes a story and bumps the count, then unlikes it (Bug 5)', () => {
+    const onToggleLike = jest.fn();
+    const likeSlide = { ...imageSlide, id: 'lp', likedByMe: false, likesCount: 2 };
+    const likeGroup = { ...group, slides: [likeSlide], cover: likeSlide };
+    renderWithProviders(
+      <StatusViewer status={likeGroup as never} onClose={jest.fn()} onToggleLike={onToggleLike} />,
+    );
+    expect(screen.getByTestId('status-like-count')).toHaveTextContent('2');
+    fireEvent.press(screen.getByTestId('status-like'));
+    expect(onToggleLike).toHaveBeenCalledWith('lp');
+    expect(screen.getByTestId('status-like-count')).toHaveTextContent('3');
+  });
+
+  it('hides the like count when unliking down to zero (Bug 5)', () => {
+    const onToggleLike = jest.fn();
+    const likeSlide = { ...imageSlide, id: 'lp0', likedByMe: true, likesCount: 1 };
+    const likeGroup = { ...group, slides: [likeSlide], cover: likeSlide };
+    renderWithProviders(
+      <StatusViewer status={likeGroup as never} onClose={jest.fn()} onToggleLike={onToggleLike} />,
+    );
+    fireEvent.press(screen.getByTestId('status-like'));
+    expect(onToggleLike).toHaveBeenCalledWith('lp0');
+    expect(screen.queryByTestId('status-like-count')).toBeNull();
+  });
+
+  it('opens the viewers sheet for an own story (Bug 4)', () => {
+    const onViewers = jest.fn();
+    renderWithProviders(
+      <StatusViewer status={mineGroup as never} onClose={jest.fn()} onViewers={onViewers} />,
+    );
+    fireEvent.press(screen.getByTestId('status-viewers'));
+    expect(onViewers).toHaveBeenCalledWith('p1');
+  });
+
+  it('deletes an own story from the kebab menu, which then closes (Bug 7)', () => {
+    const onDelete = jest.fn();
+    renderWithProviders(
+      <StatusViewer status={mineGroup as never} onClose={jest.fn()} onDelete={onDelete} />,
+    );
+    expect(screen.queryByTestId('status-viewer-menu')).toBeNull();
+    fireEvent.press(screen.getByTestId('status-viewer-kebab'));
+    expect(screen.getByTestId('status-viewer-menu')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('status-viewer-delete'));
+    expect(onDelete).toHaveBeenCalledWith('p1');
+    expect(screen.queryByTestId('status-viewer-menu')).toBeNull();
+  });
+
+  it('records each slide as it is shown so the ring greys (Bug 2)', () => {
+    const onSlideSeen = jest.fn();
+    renderWithProviders(
+      <StatusViewer status={group as never} onClose={jest.fn()} onSlideSeen={onSlideSeen} />,
+    );
+    expect(onSlideSeen).toHaveBeenCalledWith('p1');
+    fireEvent.press(screen.getByTestId('status-next'));
+    expect(onSlideSeen).toHaveBeenCalledWith('p2');
   });
 });
 

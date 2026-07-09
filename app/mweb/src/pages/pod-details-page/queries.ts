@@ -125,11 +125,40 @@ export const PUBLIC_PRODUCT = gql`
     publicInventoryProduct(product_doc_id: $id) {
       id
       product_name
+      brand_id
       brand_name
       short_description
       description
       image_url
       images
+      size_label
+      color
+      height_cm
+      length_cm
+      breadth_cm
+      weight_kg
+      unit_cost
+      selling_price
+    }
+  }
+`;
+
+export const PUBLIC_BRAND = gql`
+  query PublicEcommBrand($id: ID!) {
+    publicEcommBrand(brand_doc_id: $id) {
+      id
+      brand_name
+      logo_url
+      cover_image_url
+      tagline
+      description
+      website_url
+      instagram_url
+      product_categories
+      established_year
+      city
+      state
+      approved_product_count
     }
   }
 `;

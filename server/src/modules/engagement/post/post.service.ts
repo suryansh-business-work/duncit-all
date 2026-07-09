@@ -29,6 +29,10 @@ const toPub = (p: IPost, viewerId?: string | null) => ({
       created_at: c.created_at.toISOString(),
     })),
   comments_count: p.comments?.length || 0,
+  seen_by_me: viewerId
+    ? (p.views || []).some((v) => String(v.user_id) === viewerId)
+    : false,
+  views_count: p.views?.length || 0,
   created_at: p.created_at.toISOString(),
   updated_at: p.updated_at.toISOString(),
 });
@@ -196,6 +200,37 @@ export const postService = {
       throw new GraphQLError('Not allowed', { extensions: { code: 'FORBIDDEN' } });
     await doc.deleteOne();
     return true;
+  },
+
+  /**
+   * Record that `viewerId` opened story `id`. Idempotent (a viewer is stored
+   * once) and the author's own views never count — so `seen_by_me` stays false
+   * for the owner and the viewers list excludes them (Bugs 2 & 4).
+   */
+  async recordView(id: string, viewerId: string) {
+    assertId(id);
+    const doc = await PostModel.findById(id);
+    if (!doc) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+    const isOwner = String(doc.author_id) === viewerId;
+    const alreadyViewed = (doc.views || []).some((v) => String(v.user_id) === viewerId);
+    if (!isOwner && !alreadyViewed) {
+      doc.views.push({ user_id: new Types.ObjectId(viewerId), viewed_at: new Date() } as any);
+      await doc.save();
+    }
+    return toPub(doc, viewerId);
+  },
+
+  /** Owner-only: who viewed a story, newest first (Bug 4). */
+  async listViewers(id: string, viewerId: string) {
+    assertId(id);
+    const doc = await PostModel.findById(id);
+    if (!doc) throw new GraphQLError('Post not found', { extensions: { code: 'NOT_FOUND' } });
+    if (String(doc.author_id) !== viewerId)
+      throw new GraphQLError('Not allowed', { extensions: { code: 'FORBIDDEN' } });
+    return (doc.views || [])
+      .slice()
+      .sort((a, b) => b.viewed_at.getTime() - a.viewed_at.getTime())
+      .map((v) => ({ user_id: String(v.user_id), viewed_at: v.viewed_at.toISOString() }));
   },
 
   async toggleLike(id: string, viewerId: string) {

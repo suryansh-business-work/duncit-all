@@ -11,11 +11,20 @@ const mockRequest = graphqlRequest as jest.Mock;
 const product = (over: Record<string, unknown> = {}) => ({
   id: 'pr1',
   product_name: 'Drum sticks',
+  brand_id: 'b1',
   brand_name: 'Vic Firth',
   short_description: 'Short',
   description: 'Maple 5A drumsticks',
   image_url: 'https://cdn/img.jpg',
   images: ['https://cdn/a.jpg', 'https://cdn/b.jpg'],
+  size_label: 'Large',
+  color: 'Black',
+  weight_kg: 1.2,
+  height_cm: 3,
+  length_cm: 10,
+  breadth_cm: 5,
+  unit_cost: 200,
+  selling_price: 0,
   ...over,
 });
 
@@ -61,10 +70,55 @@ describe('ProductDetailSheet', () => {
         image_url: '',
         description: '',
         short_description: '',
+        size_label: '',
+        color: '',
+        weight_kg: 0,
+        length_cm: 0,
+        breadth_cm: 0,
+        height_cm: 0,
       }),
     });
     renderWithProviders(<ProductDetailSheet productId="pr1" onClose={jest.fn()} />);
     await waitFor(() => expect(screen.getByText('No description provided.')).toBeOnTheScreen());
+    // With no spec fields the spec grid is omitted.
+    expect(screen.queryByTestId('product-detail-specs')).toBeNull();
+  });
+
+  it('shows price, MRP and the spec grid, and opens the zoom + brand sheets', async () => {
+    mockRequest.mockResolvedValue({ publicInventoryProduct: product({ selling_price: 300 }) });
+    renderWithProviders(<ProductDetailSheet productId="pr1" onClose={jest.fn()} />);
+    await waitFor(() =>
+      expect(screen.getByTestId('product-detail-price')).toHaveTextContent('₹200'),
+    );
+    // MRP (selling_price) is struck through when higher than the pod price.
+    expect(screen.getByText('₹300')).toBeOnTheScreen();
+    // Spec grid renders the physical attributes from the Product portal.
+    expect(screen.getByTestId('product-detail-specs')).toBeOnTheScreen();
+    expect(screen.getByText('Large')).toBeOnTheScreen();
+    expect(screen.getByText('Black')).toBeOnTheScreen();
+    expect(screen.getByText('10 × 5 × 3 cm')).toBeOnTheScreen();
+    // Tapping an image opens the pinch-zoom viewer.
+    fireEvent.press(screen.getByTestId('product-detail-image-0'));
+    expect(screen.getByTestId('zoom-image-modal')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('zoom-image-close'));
+    // Tapping the (linked) brand opens the brand sheet.
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('product-detail-brand'));
+    });
+    expect(screen.getByTestId('brand-detail-sheet')).toBeOnTheScreen();
+    // Closing the brand sheet clears the open brand id.
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('brand-detail-close'));
+    });
+  });
+
+  it('renders a non-tappable brand when the product has no brand_id', async () => {
+    mockRequest.mockResolvedValue({ publicInventoryProduct: product({ brand_id: '' }) });
+    renderWithProviders(<ProductDetailSheet productId="pr1" onClose={jest.fn()} />);
+    await waitFor(() => expect(screen.getByTestId('product-detail-brand')).toBeOnTheScreen());
+    // Pressing a non-linked brand does not open the brand sheet.
+    fireEvent.press(screen.getByTestId('product-detail-brand'));
+    expect(screen.queryByTestId('brand-detail-name')).toBeNull();
   });
 
   it('surfaces a load error', async () => {

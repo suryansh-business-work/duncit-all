@@ -1,9 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { Box, Stack } from '@mui/material';
+import { useMutation } from '@apollo/client';
+import ConfirmDialog from '../../components/ConfirmDialog';
 import HomeStatusTile from './HomeStatusTile';
 import HomeStatusViewer from './HomeStatusViewer';
 import MyStatusUploadTile from './MyStatusUploadTile';
+import StoryViewersDialog from './StoryViewersDialog';
 import { buildHomeStatusEntries, buildMyStatusViewer } from './homeStatusItems';
+import { DELETE_STORY_POST, RECORD_STORY_VIEW, TOGGLE_STORY_LIKE } from './queries';
 
 interface HomeStatusRailProps {
   me?: any;
@@ -16,7 +20,6 @@ interface HomeStatusRailProps {
 
 export default function HomeStatusRail({
   me,
-  branding,
   followedClubs,
   hostPods,
   followedPosts,
@@ -24,6 +27,12 @@ export default function HomeStatusRail({
 }: Readonly<HomeStatusRailProps>) {
   // Index into the ordered viewer sequence ([my status, …entries]); null = closed.
   const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  const [pendingDelete, setPendingDelete] = useState<string | null>(null);
+  const [viewersStoryId, setViewersStoryId] = useState<string | null>(null);
+
+  const [recordView] = useMutation(RECORD_STORY_VIEW);
+  const [toggleLike] = useMutation(TOGGLE_STORY_LIKE);
+  const [deleteStory] = useMutation(DELETE_STORY_POST, { refetchQueries: ['HomeFeed'] });
 
   const entries = useMemo(
     () =>
@@ -43,11 +52,31 @@ export default function HomeStatusRail({
   );
   const offset = myViewer ? 1 : 0;
   const activeItem = activeIndex != null ? viewerItems[activeIndex] ?? null : null;
+  const activeKind = activeItem?.kind;
 
   // Walk to the next/previous follower's story (bug 2); past the end, close.
   const goNext = () =>
     setActiveIndex((i) => (i != null && i < viewerItems.length - 1 ? i + 1 : null));
   const goPrev = () => setActiveIndex((i) => (i != null && i > 0 ? i - 1 : i));
+
+  const handleRecordView = useCallback(
+    (id: string) => {
+      recordView({ variables: { id } }).catch(() => undefined);
+    },
+    [recordView],
+  );
+  const handleLike = useCallback(
+    (id: string) => {
+      toggleLike({ variables: { id } }).catch(() => undefined);
+    },
+    [toggleLike],
+  );
+  const confirmDelete = () => {
+    const id = pendingDelete;
+    setPendingDelete(null);
+    setActiveIndex(null);
+    if (id) deleteStory({ variables: { id } }).catch(() => undefined);
+  };
 
   return (
     <>
@@ -75,6 +104,7 @@ export default function HomeStatusRail({
               imageUrl={entry.imageUrl}
               videoUrl={entry.videoUrl}
               initials={entry.initials}
+              active={entry.active}
               onClick={() => setActiveIndex(offset + entryIndex)}
             />
           ))}
@@ -85,6 +115,20 @@ export default function HomeStatusRail({
         onClose={() => setActiveIndex(null)}
         onNext={goNext}
         onPrev={goPrev}
+        onDelete={activeKind === 'mine' ? setPendingDelete : undefined}
+        onViewers={activeKind === 'mine' ? setViewersStoryId : undefined}
+        onToggleLike={activeKind === 'user' ? handleLike : undefined}
+        onRecordView={activeKind === 'user' ? handleRecordView : undefined}
+      />
+      <StoryViewersDialog storyId={viewersStoryId} onClose={() => setViewersStoryId(null)} />
+      <ConfirmDialog
+        open={pendingDelete !== null}
+        title="Delete story?"
+        message="This story will be removed for everyone. This can't be undone."
+        confirmLabel="Delete"
+        destructive
+        onConfirm={confirmDelete}
+        onClose={() => setPendingDelete(null)}
       />
     </>
   );

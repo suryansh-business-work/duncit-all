@@ -100,6 +100,8 @@ export const ecommBrandTypeDefs = gql`
     marketplaceBrands(status: EcommBrandStatus): [EcommBrand!]!
     "Onboarding/admin: a single brand by id."
     ecommBrand(brand_doc_id: ID!): EcommBrand
+    "Public brand card for the pod product-detail brand dialog (any signed-in user; select only non-sensitive fields client-side)."
+    publicEcommBrand(brand_doc_id: ID!): EcommBrand
   }
 
   extend type Mutation {

@@ -1,5 +1,4 @@
 import { Box, Stack, Typography } from '@mui/material';
-import FavoriteIcon from '@mui/icons-material/FavoriteBorder';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import type { HomeStatusViewerSlide } from './HomeStatusViewer';
 
@@ -43,20 +42,10 @@ export default function HomeStatusViewerDetails({
           {timeLabel}
         </Typography>
       )}
-      {(current?.likeCount != null || current?.commentCount != null) && (
-        <Stack direction="row" spacing={2} sx={{ color: 'rgba(255,255,255,0.92)' }}>
-          {current?.likeCount != null && (
-            <Stack direction="row" spacing={0.5} alignItems="center">
-              <FavoriteIcon fontSize="small" />
-              <Typography variant="caption">{current.likeCount}</Typography>
-            </Stack>
-          )}
-          {current?.commentCount != null && (
-            <Stack direction="row" spacing={0.5} alignItems="center">
-              <ChatBubbleOutlineIcon fontSize="small" />
-              <Typography variant="caption">{current.commentCount}</Typography>
-            </Stack>
-          )}
+      {current?.commentCount != null && (
+        <Stack direction="row" spacing={0.5} alignItems="center" sx={{ color: 'rgba(255,255,255,0.92)' }}>
+          <ChatBubbleOutlineIcon fontSize="small" />
+          <Typography variant="caption">{current.commentCount}</Typography>
         </Stack>
       )}
       {nextPeek.length > 0 && (

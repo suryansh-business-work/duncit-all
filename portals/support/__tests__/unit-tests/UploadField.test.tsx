@@ -5,8 +5,20 @@ import { gql } from '@apollo/client';
 import UploadField from '../../src/components/UploadField';
 
 const UPLOAD_IMAGE = gql`
-  mutation UploadImageToImagekit($fileBase64: String!, $fileName: String!, $mimeType: String, $folder: String) {
-    uploadImageToImagekit(fileBase64: $fileBase64, fileName: $fileName, mimeType: $mimeType, folder: $folder) {
+  mutation UploadImageToImagekit(
+    $fileBase64: String!
+    $fileName: String!
+    $mimeType: String
+    $folder: String
+    $allow_documents: Boolean
+  ) {
+    uploadImageToImagekit(
+      fileBase64: $fileBase64
+      fileName: $fileName
+      mimeType: $mimeType
+      folder: $folder
+      allow_documents: $allow_documents
+    ) {
       url
     }
   }
@@ -53,6 +65,15 @@ describe('UploadField', () => {
     expect(onChange).toHaveBeenCalledWith(['https://img/b.png']);
   });
 
+  it('renders a document attachment as a removable file chip', () => {
+    const onChange = vi.fn();
+    setup({ value: ['https://img/report.pdf'], onChange });
+    expect(screen.getByText('report.pdf')).toBeInTheDocument();
+    // The chip's delete affordance removes it.
+    fireEvent.click(screen.getByTestId('CancelIcon'));
+    expect(onChange).toHaveBeenCalledWith([]);
+  });
+
   it('uploads a picked file and appends the returned URL', async () => {
     const onChange = vi.fn();
     const { input } = setup({ onChange }, [uploadMock('https://img/uploaded.png')]);
@@ -71,7 +92,7 @@ describe('UploadField', () => {
   it('rejects a file that is too large', async () => {
     const onChange = vi.fn();
     const big = pngFile('big.png');
-    Object.defineProperty(big, 'size', { value: 16 * 1024 * 1024 });
+    Object.defineProperty(big, 'size', { value: 101 * 1024 * 1024 });
     const { input } = setup({ onChange });
     fireEvent.change(input, { target: { files: [big] } });
     await waitFor(() => expect(screen.getByText(/too large/i)).toBeInTheDocument());

@@ -27,6 +27,7 @@ import {
   TICKETS,
   type Ticket,
   type TicketCategory,
+  type TicketPriority,
   type TicketStatus,
 } from '../../graphql/tickets';
 import RichTextEditor, { htmlToText } from '../../components/RichTextEditor';
@@ -38,6 +39,12 @@ const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'de
   PENDING: 'warning',
   RESOLVED: 'success',
   CLOSED: 'default',
+};
+
+const PRIORITY_COLOR: Record<TicketPriority, 'error' | 'warning' | 'default'> = {
+  HIGH: 'error',
+  MEDIUM: 'warning',
+  LOW: 'default',
 };
 
 const CATEGORIES: TicketCategory[] = ['GENERAL', 'PAYMENT', 'BOOKING', 'SAFETY', 'TECHNICAL', 'OTHER'];
@@ -132,6 +139,7 @@ export default function TicketsListPage() {
         <Table size="small">
           <TableHead>
             <TableRow>
+              <TableCell>Ticket ID</TableCell>
               <TableCell>Subject</TableCell>
               <TableCell>User</TableCell>
               <TableCell>Category</TableCell>
@@ -148,13 +156,18 @@ export default function TicketsListPage() {
                 sx={{ cursor: 'pointer' }}
                 onClick={() => navigate(`/tickets/${t.id}`)}
               >
+                <TableCell sx={{ fontFamily: 'monospace', fontWeight: 700, whiteSpace: 'nowrap' }}>
+                  {t.ticket_no}
+                </TableCell>
                 <TableCell sx={{ fontWeight: 700 }}>{t.subject}</TableCell>
                 <TableCell>{t.user.name}</TableCell>
                 <TableCell>{t.category}</TableCell>
                 <TableCell>
                   <Chip size="small" color={STATUS_COLOR[t.status]} label={t.status} />
                 </TableCell>
-                <TableCell>{t.priority}</TableCell>
+                <TableCell>
+                  <Chip size="small" color={PRIORITY_COLOR[t.priority]} label={t.priority} />
+                </TableCell>
                 <TableCell>{formatDistanceToNow(new Date(t.last_message_at), { addSuffix: true })}</TableCell>
               </TableRow>
             ))}

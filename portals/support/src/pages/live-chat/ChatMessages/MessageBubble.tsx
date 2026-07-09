@@ -1,6 +1,7 @@
-import { Avatar, Chip, Paper, Stack, Typography } from '@mui/material';
+import { Chip, Paper, Stack, Typography } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
 import type { SupportChatMessage } from '../../../graphql/supportChat';
+import AttachmentList from '../../../components/AttachmentList';
 import MessageTicks, { tickState } from './MessageTicks';
 
 interface Props {
@@ -34,15 +35,7 @@ export default function MessageBubble({ message: m, time, userLastReadAt }: Read
           />
         )}
         {m.text && <Typography variant="body2">{m.text}</Typography>}
-        {m.attachments.length > 0 && (
-          <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 0.5, mt: m.text ? 0.5 : 0 }}>
-            {m.attachments.map((url) => (
-              <a key={url} href={url} target="_blank" rel="noopener noreferrer">
-                <Avatar variant="rounded" src={url} sx={{ width: 52, height: 52 }} />
-              </a>
-            ))}
-          </Stack>
-        )}
+        <AttachmentList urls={m.attachments} size={52} />
         <Typography variant="caption" sx={{ opacity: 0.7, display: 'block', mt: 0.25 }}>
           {time}
           {isAgent && <MessageTicks state={tickState(m.id, m.created_at, userLastReadAt)} />}

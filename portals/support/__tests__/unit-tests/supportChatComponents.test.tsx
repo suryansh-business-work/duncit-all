@@ -22,7 +22,7 @@ const session = (over: Partial<SupportChatSession> = {}): SupportChatSession => 
 });
 
 const ticket = (over: Partial<Ticket> = {}): Ticket => ({
-  id: 't', subject: 'S', category: 'GENERAL', status: 'OPEN', priority: 'LOW',
+  id: 't', ticket_no: 'ST-T', subject: 'S', category: 'GENERAL', status: 'OPEN', priority: 'LOW',
   assignee_id: null, assignee_name: null, last_message_at: '', message_count: 0,
   resolved_at: null, reopen_deadline: null, rating: null, feedback_comment: null, feedback_at: null,
   created_at: '', updated_at: '', user: { id: 'u', name: 'Riya', phone: null, avatar_url: null },
@@ -64,21 +64,35 @@ describe('ChatHeader', () => {
 });
 
 describe('TicketHeader', () => {
-  it('sets status, resolves and cancels', () => {
+  it('sets status, priority, resolves and cancels; shows the ticket number', () => {
     const onStatus = vi.fn();
+    const onPriority = vi.fn();
     const onResolve = vi.fn();
     render(
-      <TicketHeader ticket={ticket()} onBack={vi.fn()} onStatus={onStatus} onResolve={onResolve} onReopen={vi.fn()} onDownload={vi.fn()} onEmail={vi.fn()} />,
+      <TicketHeader ticket={ticket()} onBack={vi.fn()} onStatus={onStatus} onPriority={onPriority} onResolve={onResolve} onReopen={vi.fn()} onDownload={vi.fn()} onEmail={vi.fn()} />,
     );
-    fireEvent.mouseDown(screen.getByRole('combobox'));
+    expect(screen.getByText('ST-T')).toBeInTheDocument();
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status' }));
     fireEvent.click(screen.getByRole('option', { name: 'CLOSED' }));
     expect(onStatus).toHaveBeenCalledWith('CLOSED');
+
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Priority' }));
+    fireEvent.click(screen.getByRole('option', { name: 'HIGH' }));
+    expect(onPriority).toHaveBeenCalledWith('HIGH');
 
     fireEvent.click(screen.getByLabelText('Mark resolved'));
     fireEvent.click(screen.getByRole('button', { name: /cancel/i }));
     fireEvent.click(screen.getByLabelText('Mark resolved'));
     fireEvent.click(screen.getByRole('button', { name: /mark resolved/i }));
     expect(onResolve).toHaveBeenCalled();
+  });
+
+  it('shows the re-open control on a resolved ticket', () => {
+    render(
+      <TicketHeader ticket={ticket({ status: 'RESOLVED' })} onBack={vi.fn()} onStatus={vi.fn()} onPriority={vi.fn()} onResolve={vi.fn()} onReopen={vi.fn()} onDownload={vi.fn()} onEmail={vi.fn()} />,
+    );
+    expect(screen.getByLabelText('Re-open ticket')).toBeInTheDocument();
   });
 });
 

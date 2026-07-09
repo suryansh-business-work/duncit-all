@@ -3,7 +3,14 @@ import { useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, Chip, CircularProgress, Divider, IconButton, Snackbar, Stack, Typography } from '@mui/material';
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
-import { MARK_TICKET_READ, REPLY_TO_TICKET, TICKET, type Ticket, type TicketStatus } from '../../../graphql/tickets';
+import {
+  MARK_TICKET_READ,
+  REPLY_TO_TICKET,
+  TICKET,
+  type Ticket,
+  type TicketPriority,
+  type TicketStatus,
+} from '../../../graphql/tickets';
 import { htmlToText } from '../../../components/RichTextEditor';
 import { useSupportSocket } from '../../../lib/useSupportSocket';
 import TicketHeader from './TicketHeader';
@@ -16,6 +23,12 @@ const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'de
   PENDING: 'warning',
   RESOLVED: 'success',
   CLOSED: 'default',
+};
+
+const PRIORITY_COLOR: Record<TicketPriority, 'error' | 'warning' | 'default'> = {
+  HIGH: 'error',
+  MEDIUM: 'warning',
+  LOW: 'default',
 };
 
 export default function TicketDetailPage() {
@@ -73,6 +86,7 @@ export default function TicketDetailPage() {
       <>
         <Stack direction="row" spacing={1} alignItems="center" flexWrap="wrap">
           <Chip size="small" color={STATUS_COLOR[ticket.status]} label={ticket.status} />
+          <Chip size="small" color={PRIORITY_COLOR[ticket.priority]} label={`${ticket.priority} priority`} />
           <Chip size="small" variant="outlined" label={ticket.category} />
           <Typography variant="body2" color="text.secondary">
             {ticket.user.name}
@@ -105,6 +119,7 @@ export default function TicketDetailPage() {
           ticket={ticket}
           onBack={() => navigate('/tickets')}
           onStatus={actions.setStatus}
+          onPriority={actions.setPriority}
           onResolve={actions.resolve}
           onReopen={actions.reopen}
           onDownload={actions.download}

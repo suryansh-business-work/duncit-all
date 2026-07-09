@@ -119,7 +119,12 @@ export function ProductDetailSheet({ productId, onClose }: Readonly<Props>) {
                         </XStack>
                       </ScrollView>
                     ) : null}
-                    <Text testID="product-detail-name" fontSize={18} fontWeight="900" color="$color">
+                    <Text
+                      testID="product-detail-name"
+                      fontSize={18}
+                      fontWeight="900"
+                      color="$color"
+                    >
                       {product.product_name}
                     </Text>
                     {product.brand_name ? (

@@ -66,13 +66,22 @@ export default function SupportForm({
             sx={{ alignSelf: 'flex-start', fontWeight: 800 }}
           />
         ) : null}
-        <RhfTextField control={control} name="name" label="Your name" autoComplete="name" />
+        <RhfTextField
+          control={control}
+          name="name"
+          label="Name"
+          autoComplete="name"
+          hint="From your Duncit account"
+          InputProps={{ readOnly: true }}
+        />
         <RhfTextField
           control={control}
           name="email"
           label="Email"
           type="email"
           autoComplete="email"
+          hint="From your Duncit account"
+          InputProps={{ readOnly: true }}
         />
         <Controller
           control={control}

@@ -33,7 +33,11 @@ const ticket = (id: string, subject: string): any => ({
   message_count: 1,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
-  user: { id: 'u1', name: 'Riya', phone: null, avatar_url: null },
+  user: {
+    id: 'u1', name: 'Riya', email: null, phone: null, avatar_url: null,
+    city: null, state: null, country: null, joined_at: null,
+    is_email_verified: false, is_phone_verified: false,
+  },
 });
 
 const listMock = (status: string | null, tickets: Ticket[]) => ({

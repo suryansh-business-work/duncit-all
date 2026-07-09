@@ -21,21 +21,40 @@ const REOPEN_EXPIRED_MSG = 'This ticket can no longer be reopened — the 3-day 
 /** Statuses a user reply should re-open back to OPEN (they still have a question). */
 const USER_REOPENS = new Set<TicketStatus>(['PENDING', 'RESOLVED', 'CLOSED']);
 
+/** Empty actor used when a ticket's user/assignee can't be resolved. */
+const EMPTY_ACTOR_EXTRAS = {
+  email: null as string | null,
+  city: null as string | null,
+  state: null as string | null,
+  country: null as string | null,
+  joined_at: null as string | null,
+  is_email_verified: false,
+  is_phone_verified: false,
+};
+
 async function buildActor(userId: Types.ObjectId | string | null | undefined) {
   if (!userId) return null;
   const u = await UserModel.findById(userId).select(
-    'profile.first_name profile.last_name profile.profile_photo auth.phone.number auth.phone.extension'
+    'profile.first_name profile.last_name profile.profile_photo profile.city profile.state profile.country auth.email auth.is_email_verified auth.phone.number auth.phone.extension auth.phone.is_verified metadata.created_at'
   );
   if (!u) return null;
   const num = u.auth?.phone?.number || '';
   const ext = u.auth?.phone?.extension
     ? `+${String(u.auth.phone.extension).replace(/^\+/, '')}`
     : '';
+  const created = (u as any).metadata?.created_at as Date | undefined;
   return {
     id: String(u._id),
     name: `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || 'User',
+    email: u.auth?.email ?? null,
     phone: num ? `${ext}${num}` : null,
     avatar_url: u.profile?.profile_photo ?? null,
+    city: u.profile?.city ?? null,
+    state: u.profile?.state ?? null,
+    country: u.profile?.country ?? null,
+    joined_at: created ? created.toISOString() : null,
+    is_email_verified: !!u.auth?.is_email_verified,
+    is_phone_verified: !!u.auth?.phone?.is_verified,
   };
 }
 
@@ -47,7 +66,13 @@ async function toPub(doc: ITicket) {
   return {
     id: String(doc._id),
     ticket_no: ticketNo('ST', doc._id as Types.ObjectId),
-    user: user ?? { id: String(doc.user_id), name: 'User', phone: null, avatar_url: null },
+    user: user ?? {
+      id: String(doc.user_id),
+      name: 'User',
+      phone: null,
+      avatar_url: null,
+      ...EMPTY_ACTOR_EXTRAS,
+    },
     subject: doc.subject,
     category: doc.category,
     pod_id: doc.pod_id ? String(doc.pod_id) : null,

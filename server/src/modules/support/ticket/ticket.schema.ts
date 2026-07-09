@@ -31,8 +31,16 @@ export const ticketTypeDefs = /* GraphQL */ `
   type TicketActor {
     id: ID!
     name: String!
+    email: String
     phone: String
     avatar_url: String
+    city: String
+    state: String
+    country: String
+    "When the user joined Duncit (ISO)."
+    joined_at: String
+    is_email_verified: Boolean!
+    is_phone_verified: Boolean!
   }
 
   type TicketMessage {

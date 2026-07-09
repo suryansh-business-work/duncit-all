@@ -62,7 +62,11 @@ const td = (overrides: Partial<Ticket> = {}): any => ({
   feedback_at: null,
   created_at: new Date().toISOString(),
   updated_at: new Date().toISOString(),
-  user: { id: 'u1', name: 'Riya', phone: '+919800000000', avatar_url: null },
+  user: {
+    id: 'u1', name: 'Riya', email: 'riya@example.com', phone: '+919800000000', avatar_url: null,
+    city: 'Mumbai', state: 'MH', country: 'India', joined_at: '2026-01-01T00:00:00.000Z',
+    is_email_verified: true, is_phone_verified: false,
+  },
   messages: baseMessages(),
   ...overrides,
 });
@@ -293,7 +297,11 @@ describe('TicketDetailPage', () => {
 
   it('handles a nameless author and a user with no phone', async () => {
     const t = td({
-      user: { id: 'u1', name: 'Riya', phone: null, avatar_url: null },
+      user: {
+        id: 'u1', name: 'Riya', email: null, phone: null, avatar_url: null,
+        city: null, state: null, country: null, joined_at: null,
+        is_email_verified: false, is_phone_verified: false,
+      },
       messages: [
         { id: 'm1', author_id: 'u1', author_role: 'USER', author_name: '', author_photo: null, body_html: '', body_text: 'Anonymous note', attachments: [], created_at: new Date().toISOString() },
         { id: 'm2', author_id: 'a1', author_role: 'AGENT', author_name: '', author_photo: null, body_html: '', body_text: 'Agent note', attachments: [], created_at: new Date().toISOString() },

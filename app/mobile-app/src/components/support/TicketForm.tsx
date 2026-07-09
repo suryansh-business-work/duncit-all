@@ -21,6 +21,15 @@ interface Props {
  * mWeb's SupportForm: the same fields (name/email auto-filled), the same
  * dropdown categories and the same "Send to support" action.
  */
+/** A labelled field: a caption above its input (Item 1 — proper labels). */
+function FieldLabel({ children }: Readonly<{ children: string }>) {
+  return (
+    <Text fontSize={12.5} fontWeight="800" color="$muted">
+      {children}
+    </Text>
+  );
+}
+
 export function TicketForm({
   onCreated,
   initialName = '',
@@ -29,8 +38,6 @@ export function TicketForm({
   podTitle,
 }: Readonly<Props>) {
   const { primary } = useThemeColors();
-  const [name, setName] = useState(initialName);
-  const [email, setEmail] = useState(initialEmail);
   const [category, setCategory] = useState<string>(DEFAULT_TICKET_CATEGORY);
   const [subject, setSubject] = useState('');
   const [message, setMessage] = useState('');
@@ -89,40 +96,58 @@ export function TicketForm({
           </Text>
         </XStack>
       ) : null}
-      <Input
-        testID="ticket-name"
-        placeholder="Your name"
-        value={name}
-        onChangeText={setName}
-        autoComplete="name"
-        backgroundColor="$background"
-      />
-      <Input
-        testID="ticket-email"
-        placeholder="Email"
-        value={email}
-        onChangeText={setEmail}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        backgroundColor="$background"
-      />
-      <CategorySelect value={category} onChange={setCategory} />
-      <Input
-        testID="ticket-subject"
-        placeholder="Subject"
-        value={subject}
-        onChangeText={setSubject}
-        backgroundColor="$background"
-      />
-      <Input
-        testID="ticket-message"
-        placeholder="Tell us what's going on"
-        value={message}
-        onChangeText={setMessage}
-        multiline
-        numberOfLines={4}
-        backgroundColor="$background"
-      />
+      <YStack gap={4}>
+        <FieldLabel>Name</FieldLabel>
+        <Input
+          testID="ticket-name"
+          value={initialName}
+          disabled
+          autoComplete="name"
+          backgroundColor="$background"
+          opacity={0.7}
+        />
+      </YStack>
+      <YStack gap={4}>
+        <FieldLabel>Email</FieldLabel>
+        <Input
+          testID="ticket-email"
+          value={initialEmail}
+          disabled
+          autoCapitalize="none"
+          keyboardType="email-address"
+          backgroundColor="$background"
+          opacity={0.7}
+        />
+        <Text fontSize={11} color="$muted">
+          Name and email come from your Duncit account.
+        </Text>
+      </YStack>
+      <YStack gap={4}>
+        <FieldLabel>Category</FieldLabel>
+        <CategorySelect value={category} onChange={setCategory} />
+      </YStack>
+      <YStack gap={4}>
+        <FieldLabel>Subject</FieldLabel>
+        <Input
+          testID="ticket-subject"
+          placeholder="A short summary"
+          value={subject}
+          onChangeText={setSubject}
+          backgroundColor="$background"
+        />
+      </YStack>
+      <YStack gap={4}>
+        <FieldLabel>Message</FieldLabel>
+        <Input
+          testID="ticket-message"
+          placeholder="Tell us what's going on"
+          value={message}
+          onChangeText={setMessage}
+          multiline
+          numberOfLines={4}
+          backgroundColor="$background"
+        />
+      </YStack>
       <TicketAttachments attachments={attachments} onChange={setAttachments} />
       {error ? (
         <Text testID="ticket-error" color="$danger" fontSize={12}>

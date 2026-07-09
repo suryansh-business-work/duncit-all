@@ -16,6 +16,7 @@ import { useSupportSocket } from '../../../lib/useSupportSocket';
 import TicketHeader from './TicketHeader';
 import TicketThread from './TicketThread';
 import TicketComposerArea from './TicketComposerArea';
+import TicketUserDetails from './TicketUserDetails';
 import { useTicketActions } from './useTicketActions';
 
 const STATUS_COLOR: Record<TicketStatus, 'primary' | 'warning' | 'success' | 'default'> = {
@@ -88,11 +89,9 @@ export default function TicketDetailPage() {
           <Chip size="small" color={STATUS_COLOR[ticket.status]} label={ticket.status} />
           <Chip size="small" color={PRIORITY_COLOR[ticket.priority]} label={`${ticket.priority} priority`} />
           <Chip size="small" variant="outlined" label={ticket.category} />
-          <Typography variant="body2" color="text.secondary">
-            {ticket.user.name}
-            {ticket.user.phone ? ` · ${ticket.user.phone}` : ''}
-          </Typography>
         </Stack>
+
+        <TicketUserDetails user={ticket.user} />
 
         <TicketThread ticket={ticket} />
 

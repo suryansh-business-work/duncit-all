@@ -8,6 +8,8 @@ export interface HomeStatusEntry {
   imageUrl?: string | null;
   videoUrl?: string | null;
   initials: string;
+  /** False once every slide has been seen — greys the ring (Bug 2). */
+  active: boolean;
   viewer: HomeStatusViewerItem;
 }
 
@@ -41,7 +43,9 @@ function clubEntry(club: any): HomeStatusEntry {
     imageUrl: media?.type === 'VIDEO' ? null : media?.url,
     videoUrl: media?.type === 'VIDEO' ? media?.url : null,
     initials: initials(club.club_name),
+    active: true,
     viewer: {
+      kind: 'club',
       label: club.club_name,
       subLabel: 'Club status',
       avatarUrl: firstMedia(club.club_feature_images_and_videos)?.url,
@@ -66,7 +70,9 @@ function podEntry(pod: any): HomeStatusEntry {
     imageUrl: media?.type === 'VIDEO' ? null : media?.url,
     videoUrl: media?.type === 'VIDEO' ? media?.url : null,
     initials: initials(pod.pod_title),
+    active: true,
     viewer: {
+      kind: 'pod',
       label: pod.pod_title,
       subLabel: 'Your pod status',
       mediaUrl: media?.url,
@@ -93,18 +99,24 @@ function userEntry(user: any, followedPosts: any[]): HomeStatusEntry {
     imageUrl: firstIsVideo ? null : firstPost?.image_url || user.profile_photo,
     videoUrl: firstIsVideo ? firstPost?.image_url : null,
     initials: initials(user.full_name || user.first_name),
+    // Unseen while any of the author's stories hasn't been opened (Bug 2).
+    active: posts.some((post) => !post.seen_by_me),
     viewer: {
+      kind: 'user',
       label: name,
       subLabel: user.full_name,
       avatarUrl: user.profile_photo,
       mediaUrl: firstPost?.image_url || user.profile_photo,
       mediaType: firstPost?.media_type ?? 'IMAGE',
       slides: posts.map((post, index) => ({
+        id: post.id,
         mediaUrl: post.image_url,
         mediaType: post.media_type ?? 'IMAGE',
         subLabel: post.caption || `Status ${index + 1}/${posts.length}`,
         createdAt: post.created_at,
         expiresAt: post.expires_at,
+        likeCount: post.likes_count ?? 0,
+        likedByMe: post.liked_by_me ?? false,
       })),
       targetUrl: `/u/${user.user_id}`,
       internal: true,
@@ -133,11 +145,13 @@ export function buildMyStatusViewer(me: any): HomeStatusViewerItem | null {
   if (stories.length === 0) return null;
   const first = stories[0];
   return {
+    kind: 'mine',
     label: me?.full_name || me?.first_name || 'My status',
     avatarUrl: me?.profile_photo,
     mediaUrl: first.image_url,
     mediaType: first.media_type,
     slides: stories.map((story, storyIndex) => ({
+      id: story.id,
       mediaUrl: story.image_url,
       mediaType: story.media_type,
       subLabel: story.caption || `Story ${storyIndex + 1}/${stories.length}`,

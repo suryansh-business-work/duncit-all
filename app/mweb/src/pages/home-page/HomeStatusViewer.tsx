@@ -1,14 +1,18 @@
 import { useEffect, useRef, useState } from 'react';
-import { Box, Button, Dialog, IconButton, Stack, Typography } from '@mui/material';
+import { Box, Button, Dialog, IconButton, Menu, MenuItem, Stack, Typography } from '@mui/material';
 import CloseIcon from '@mui/icons-material/Close';
 import DeleteOutlineIcon from '@mui/icons-material/DeleteOutline';
+import MoreVertIcon from '@mui/icons-material/MoreVert';
+import FavoriteIcon from '@mui/icons-material/Favorite';
+import FavoriteBorderIcon from '@mui/icons-material/FavoriteBorder';
+import VisibilityIcon from '@mui/icons-material/Visibility';
 import ArrowForwardIcon from '@mui/icons-material/ArrowForward';
 import { useNavigate } from 'react-router-dom';
 import { formatDistanceToNowStrict } from 'date-fns';
 import HomeStatusViewerDetails from './HomeStatusViewerDetails';
 
 export interface HomeStatusViewerSlide {
-  /** Post id — present for own stories so the slide can be deleted (item 12). */
+  /** Post id — present for real stories so the slide can be recorded/liked/deleted. */
   id?: string;
   mediaUrl?: string | null;
   mediaType?: string | null;
@@ -18,6 +22,8 @@ export interface HomeStatusViewerSlide {
   /** When the status auto-expires (drives the "X remaining" countdown). */
   expiresAt?: string | null;
   likeCount?: number;
+  /** Has the viewer liked this story (Bug 5). */
+  likedByMe?: boolean;
   commentCount?: number;
   thumbnailUrl?: string;
 }
@@ -44,6 +50,8 @@ export interface HomeStatusViewerItem {
   slides?: HomeStatusViewerSlide[];
   targetUrl?: string;
   internal?: boolean;
+  /** Origin of the story — gates like (user) vs viewers/delete (mine) (Bugs 4,5,7). */
+  kind?: 'mine' | 'user' | 'club' | 'pod';
 }
 
 interface HomeStatusViewerProps {
@@ -53,17 +61,24 @@ interface HomeStatusViewerProps {
   onNext?: () => void;
   /** Jump to the previous follower's story (back tap on slide 1 / swipe right). */
   onPrev?: () => void;
-  /** Own story only — delete the currently shown slide by its post id (item 12). */
+  /** Own story only — delete the currently shown slide by its post id (Bug 7). */
   onDelete?: (slideId: string) => void;
+  /** Own story only — open the "seen by" viewers dialog for a slide (Bug 4). */
+  onViewers?: (slideId: string) => void;
+  /** Followers' stories only — like/unlike the current slide (Bug 5). */
+  onToggleLike?: (slideId: string) => void;
+  /** Record that a slide was shown so its ring greys (Bug 2). */
+  onRecordView?: (slideId: string) => void;
 }
 
 // A horizontal pointer drag longer than this (px) counts as a story swipe.
 const SWIPE_THRESHOLD = 48;
 
-// Each image slide runs 15s before auto-advancing; videos play to their end
-// (capped so a long clip can't hold the story open indefinitely).
+// Each slide runs 15s before auto-advancing; a video that ends sooner advances
+// immediately, and the 15s ceiling keeps a long clip from holding it open
+// (Bugs 3 & 8).
 const STATUS_DURATION_MS = 15000;
-const MAX_VIDEO_SECONDS = 30;
+const MAX_VIDEO_SECONDS = 15;
 
 export default function HomeStatusViewer({
   item,
@@ -71,11 +86,17 @@ export default function HomeStatusViewer({
   onNext,
   onPrev,
   onDelete,
+  onViewers,
+  onToggleLike,
+  onRecordView,
 }: Readonly<HomeStatusViewerProps>) {
   const navigate = useNavigate();
   const [progress, setProgress] = useState(0);
   const [paused, setPaused] = useState(false);
   const [index, setIndex] = useState(0);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
+  const [menuAnchor, setMenuAnchor] = useState<null | HTMLElement>(null);
   const frameRef = useRef<number | null>(null);
   const elapsedRef = useRef(0);
   const startedAtRef = useRef<number | null>(null);
@@ -101,6 +122,17 @@ export default function HomeStatusViewer({
     elapsedRef.current = 0;
     startedAtRef.current = null;
   }, [index]);
+
+  // Seed the like control from the shown slide and record the view (Bugs 2 & 5).
+  const currentId = current?.id;
+  const currentLiked = current?.likedByMe ?? false;
+  const currentLikeCount = current?.likeCount ?? 0;
+  useEffect(() => {
+    setLiked(currentLiked);
+    setLikeCount(currentLikeCount);
+    setMenuAnchor(null);
+    if (currentId && onRecordView) onRecordView(currentId);
+  }, [currentId, currentLiked, currentLikeCount, onRecordView]);
 
   useEffect(() => {
     // Videos drive their own progress/advance from the <video> element below.
@@ -154,6 +186,14 @@ export default function HomeStatusViewer({
     onClose();
     if (item.internal) navigate(item.targetUrl);
     else window.open(item.targetUrl, '_blank', 'noreferrer');
+  };
+
+  const toggleLike = () => {
+    if (!currentId || !onToggleLike) return;
+    const next = !liked;
+    setLiked(next);
+    setLikeCount((value) => (next ? value + 1 : value - 1));
+    onToggleLike(currentId);
   };
 
   const nextPeek = slides.slice(index + 1, index + 3);
@@ -225,15 +265,57 @@ export default function HomeStatusViewer({
                 </Typography>
               )}
             </Box>
-            {onDelete && current?.id && (
+            {onToggleLike && currentId && (
+              <Stack direction="row" spacing={0.25} alignItems="center" sx={{ color: '#fff' }}>
+                <IconButton
+                  onClick={toggleLike}
+                  aria-label={liked ? 'Unlike story' : 'Like story'}
+                  data-testid="status-like"
+                  sx={{ color: liked ? '#ff4f73' : '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
+                >
+                  {liked ? <FavoriteIcon fontSize="small" /> : <FavoriteBorderIcon fontSize="small" />}
+                </IconButton>
+                {likeCount > 0 && (
+                  <Typography variant="caption" sx={{ fontWeight: 900, minWidth: 12 }}>
+                    {likeCount}
+                  </Typography>
+                )}
+              </Stack>
+            )}
+            {onViewers && currentId && (
               <IconButton
-                onClick={() => onDelete(current.id as string)}
-                aria-label="Delete story"
-                data-testid="status-delete"
+                onClick={() => onViewers(currentId)}
+                aria-label="See who viewed this story"
+                data-testid="status-viewers"
                 sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
               >
-                <DeleteOutlineIcon fontSize="small" />
+                <VisibilityIcon fontSize="small" />
               </IconButton>
+            )}
+            {onDelete && currentId && (
+              <IconButton
+                onClick={(event) => setMenuAnchor(event.currentTarget)}
+                aria-label="Story options"
+                data-testid="status-kebab"
+                sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}
+              >
+                <MoreVertIcon fontSize="small" />
+              </IconButton>
+            )}
+            {onDelete && currentId && (
+              <Menu anchorEl={menuAnchor} open={!!menuAnchor} onClose={() => setMenuAnchor(null)}>
+                <MenuItem
+                  data-testid="status-delete"
+                  onClick={() => {
+                    setMenuAnchor(null);
+                    onDelete(currentId);
+                  }}
+                  sx={{ color: 'error.main', fontWeight: 700 }}
+                >
+                  <DeleteOutlineIcon fontSize="small" sx={{ mr: 1 }} />
+                  Delete
+                </MenuItem>
+              </Menu>
             )}
             <IconButton onClick={onClose} aria-label="Close status" sx={{ color: '#fff', bgcolor: 'rgba(0,0,0,0.34)' }}>
               <CloseIcon fontSize="small" />

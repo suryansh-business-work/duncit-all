@@ -25,8 +25,8 @@ const StatusUploadContext = createContext<StatusUploadContextValue | null>(null)
 const IDLE: StatusUploadState = { active: false, kind: null, progress: 0, message: '' };
 const MAX_IMAGE_BYTES = 15 * 1024 * 1024;
 const MAX_VIDEO_BYTES = 100 * 1024 * 1024;
-// Stories are short clips — keep videos to 30s so they fit the 24h story format.
-const MAX_STORY_VIDEO_SECONDS = 30;
+// Stories are short clips — capped at 15s (Bug 3).
+const MAX_STORY_VIDEO_SECONDS = 15;
 
 function toBase64(file: File) {
   return new Promise<string>((resolve, reject) => {

@@ -207,4 +207,4 @@ These guidelines are working if: fewer unnecessary changes in diffs, fewer rewri
 28. Do Not create mjml File in Local inside tech portal there is the option of /email-templates Usi se sabhi maintain karana hai
 29. Use MUI for mWeb & Portal components and for Native Web and Native App use Tamagui components
 30. Is mWeb, Native App, Portal, Native web use React Hooks Form and Zod
-31. For Icon Native me @expo/vector-icons and mWeb me @mui/icons-material Icon ka use karo
+31. No UTF Icons For Native Icons use @expo/vector-icons and mWeb & Portals me @mui/icons-material Icon ka use karo

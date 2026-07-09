@@ -26,8 +26,15 @@ export const TICKET_FIELDS = gql`
     user {
       id
       name
+      email
       phone
       avatar_url
+      city
+      state
+      country
+      joined_at
+      is_email_verified
+      is_phone_verified
     }
   }
 `;
@@ -185,7 +192,19 @@ export interface Ticket {
   agent_last_read_at: string | null;
   created_at: string;
   updated_at: string;
-  user: { id: string; name: string; phone: string | null; avatar_url: string | null };
+  user: {
+    id: string;
+    name: string;
+    email: string | null;
+    phone: string | null;
+    avatar_url: string | null;
+    city: string | null;
+    state: string | null;
+    country: string | null;
+    joined_at: string | null;
+    is_email_verified: boolean;
+    is_phone_verified: boolean;
+  };
   messages?: TicketMessage[];
 }
 

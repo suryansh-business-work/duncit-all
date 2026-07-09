@@ -103,8 +103,7 @@ describe('ClubBody', () => {
         pods={[] as never}
         members={[]}
         followingUserIds={[]}
-        categoryName=""
-        superCategoryName="Creative"
+        categoryCrumbs={['Creative']}
         following={false}
         followBusy={false}
         onToggleFollow={jest.fn()}
@@ -131,8 +130,7 @@ describe('ClubBody', () => {
         pods={[] as never}
         members={[]}
         followingUserIds={[]}
-        categoryName="Art"
-        superCategoryName=""
+        categoryCrumbs={['Art']}
         following={false}
         followBusy={false}
         onToggleFollow={jest.fn()}
@@ -143,7 +141,7 @@ describe('ClubBody', () => {
     expect(screen.getByText('Art')).toBeOnTheScreen();
   });
 
-  it('renders category chips when names are provided', () => {
+  it('renders the Super › Category breadcrumb when names are provided', () => {
     const club = {
       club_name: 'Art Club',
       club_description: '',
@@ -159,8 +157,7 @@ describe('ClubBody', () => {
         pods={[] as never}
         members={[]}
         followingUserIds={[]}
-        categoryName="Art"
-        superCategoryName="Creative"
+        categoryCrumbs={['Creative', 'Art']}
         following={false}
         followBusy={false}
         onToggleFollow={jest.fn()}
@@ -168,8 +165,7 @@ describe('ClubBody', () => {
         onOpenMember={jest.fn()}
       />,
     );
-    expect(screen.getByText('Art')).toBeOnTheScreen();
-    expect(screen.getByText('Creative')).toBeOnTheScreen();
+    expect(screen.getByTestId('category-breadcrumb')).toHaveTextContent('Creative › Art');
   });
 
   it('renders chat + pods (default Pods Schedule tab) and opens chat + a pod', () => {
@@ -208,8 +204,7 @@ describe('ClubBody', () => {
         pods={pods}
         members={[{ user_id: 'u1', full_name: 'Asha', profile_photo: null }]}
         followingUserIds={[]}
-        categoryName=""
-        superCategoryName=""
+        categoryCrumbs={[]}
         following={false}
         followBusy={false}
         onToggleFollow={jest.fn()}
@@ -261,8 +256,7 @@ describe('ClubBody', () => {
         pods={pods}
         members={[]}
         followingUserIds={[]}
-        categoryName=""
-        superCategoryName=""
+        categoryCrumbs={[]}
         following={false}
         followBusy={false}
         onToggleFollow={jest.fn()}
@@ -316,7 +310,7 @@ describe('empty / minimal branches', () => {
       what_this_pod_offers: ['Music'],
       available_perks: ['Snacks'],
     } as never;
-    const { rerender } = renderWithProviders(<PodInfo pod={full} />);
+    const { rerender } = renderWithProviders(<PodInfo pod={full} categoryCrumbs={[]} />);
     expect(screen.getByText('Jam')).toBeOnTheScreen();
 
     const minimal = {
@@ -334,7 +328,7 @@ describe('empty / minimal branches', () => {
       what_this_pod_offers: [],
       available_perks: [],
     } as never;
-    rerender(<PodInfo pod={minimal} />);
+    rerender(<PodInfo pod={minimal} categoryCrumbs={[]} />);
     expect(screen.getByText('Bare')).toBeOnTheScreen();
   });
 
@@ -370,8 +364,7 @@ describe('empty / minimal branches', () => {
         pods={[] as never}
         members={[]}
         followingUserIds={[]}
-        categoryName=""
-        superCategoryName=""
+        categoryCrumbs={[]}
         onOpenMember={jest.fn()}
         following={false}
         followBusy={false}

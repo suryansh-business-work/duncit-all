@@ -2,6 +2,7 @@ import type { ComponentProps } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import type { PodDetail } from '@/hooks/useDetails';
 import {
   podModeLabel,
@@ -68,7 +69,10 @@ function StatBox({ label, value }: Readonly<{ label: string; value: number | str
 /** Pod overview card — title, host, key chips (price · mode · occurrence ·
  * countdown), the People-in / Spots-left boxes and a quick-stats row. RN port of
  * mWeb's PodOverview + PodQuickStats. Detailed sections live in PodAccordions. */
-export function PodInfo({ pod }: Readonly<{ pod: PodDetail }>) {
+export function PodInfo({
+  pod,
+  categoryCrumbs,
+}: Readonly<{ pod: PodDetail; categoryCrumbs: readonly string[] }>) {
   const host = pod.host_names.join(', ');
   const isVirtual = pod.pod_mode === 'VIRTUAL';
   const attendees = pod.pod_attendees.length;
@@ -94,6 +98,7 @@ export function PodInfo({ pod }: Readonly<{ pod: PodDetail }>) {
           Hosted by {host}
         </Text>
       ) : null}
+      <CategoryBreadcrumb crumbs={categoryCrumbs} />
       <XStack gap={8} flexWrap="wrap">
         <Chip label={podPriceLabel(pod)} primary />
         <Chip icon={isVirtual ? 'videocam' : 'place'} label={podModeLabel(pod.pod_mode)} />

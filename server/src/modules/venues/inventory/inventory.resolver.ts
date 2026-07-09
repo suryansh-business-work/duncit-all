@@ -46,6 +46,16 @@ export const inventoryResolvers = {
       requireRole(ctx, ADMIN_RW);
       return inventoryService.getById(args.product_doc_id);
     },
+    // Any signed-in user can read a single product's public details (name, brand,
+    // description, images) — used by the product-detail view on a pod's shop.
+    publicInventoryProduct: async (
+      _p: unknown,
+      args: { product_doc_id: string },
+      ctx: GraphQLContext
+    ) => {
+      requireAuth(ctx);
+      return inventoryService.getById(args.product_doc_id);
+    },
     inventoryActivityLogs: async (
       _p: unknown,
       args: { product_doc_id: string; limit?: number },

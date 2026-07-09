@@ -3,7 +3,9 @@ import { Box, Checkbox, Chip, Divider, IconButton, Stack, Typography } from '@mu
 import AddIcon from '@mui/icons-material/Add';
 import RemoveIcon from '@mui/icons-material/Remove';
 import StorefrontIcon from '@mui/icons-material/Storefront';
+import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { alpha, useTheme } from '@mui/material/styles';
+import ProductDetailDialog from './ProductDetailDialog';
 
 interface Props {
   pod: any;
@@ -23,6 +25,7 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
   const isDark = theme.palette.mode === 'dark';
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
   const [imageErrors, setImageErrors] = useState<Record<string, boolean>>({});
+  const [infoProductId, setInfoProductId] = useState<string | null>(null);
 
   const selectedTotal = useMemo(
     () => requests.reduce((sum: number, item: any) => sum + (selectedProducts[item.product_id] || 0) * Number(item.unit_cost || 0), 0),
@@ -126,6 +129,17 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
                   <IconButton size="small" disabled={quantity >= maxQuantity} onClick={() => updateQuantity(item.product_id, Math.min(maxQuantity, quantity + 1))}><AddIcon fontSize="small" /></IconButton>
                 </Stack>}
               </Box>
+              <IconButton
+                size="small"
+                aria-label={`View ${item.product_name} details`}
+                onClick={(event) => {
+                  event.stopPropagation();
+                  setInfoProductId(item.product_id);
+                }}
+                sx={{ color: mutedColor }}
+              >
+                <InfoOutlinedIcon fontSize="small" />
+              </IconButton>
               <Typography variant="body2" sx={{ fontWeight: 900, color: isDark ? '#ffe1b8' : 'primary.dark' }}>
                 +{priceFormat(Number(item.unit_cost ?? 0) * Math.max(quantity, 1))}
               </Typography>
@@ -144,6 +158,8 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
           {priceFormat(selectedTotal)}
         </Typography>
       </Stack>
+
+      <ProductDetailDialog productId={infoProductId} onClose={() => setInfoProductId(null)} />
     </Box>
   );
 }

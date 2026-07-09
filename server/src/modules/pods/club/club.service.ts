@@ -64,6 +64,7 @@ export const clubService = {
     category_id?: string;
     super_category_id?: string;
     location_id?: string;
+    locality?: string;
     is_active?: boolean;
     is_verified?: boolean;
   }) {
@@ -77,6 +78,8 @@ export const clubService = {
     if (filter?.category_id) q.category_id = filter.category_id;
     if (filter?.super_category_id) q.super_category_id = filter.super_category_id;
     if (filter?.location_id) q.location_id = filter.location_id;
+    // Narrow to a specific locality/zone within the city (Home > Clubs area filter).
+    if (filter?.locality) q.locality = filter.locality;
     if (filter?.is_active !== undefined) q.is_active = filter.is_active;
     if (filter?.is_verified !== undefined) q.is_verified = filter.is_verified;
     const docs = await ClubModel.find(q).sort({ club_name: 1 });

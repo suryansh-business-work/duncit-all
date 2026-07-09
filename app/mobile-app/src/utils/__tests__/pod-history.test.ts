@@ -217,6 +217,27 @@ describe('pod history filter + sort', () => {
     ).toEqual(['b']);
   });
 
+  it('matches SUB-tagged clubs when their parent CATEGORY is selected (the fix)', () => {
+    const cats = [
+      { id: 's1', name: 'For You', level: 'SUPER', parent_id: null },
+      { id: 'cat1', name: 'Sports', level: 'CATEGORY', parent_id: 's1' },
+      { id: 'sub1', name: 'Football', level: 'SUB', parent_id: 'cat1' },
+      { id: 'sub2', name: 'Tennis', level: 'SUB', parent_id: 'cat1' },
+    ] as never;
+    // Clubs are tagged at the SUB level (category_id = sub*).
+    const football = withClub('f', 's1', 'sub1', 100, '2026-06-05T10:00:00Z');
+    const tennis = withClub('t', 's1', 'sub2', 100, '2026-06-04T10:00:00Z');
+    const list = [football, tennis];
+    // Selecting the parent CATEGORY keeps both SUB-tagged clubs (flat equality dropped them).
+    expect(
+      ids(applyPodHistory(list, { superId: 's1', categoryId: 'cat1', sort: 'DATE_DESC' }, cats)),
+    ).toEqual(['f', 't']);
+    // Selecting a specific SUB narrows to that one.
+    expect(
+      ids(applyPodHistory(list, { superId: 's1', categoryId: 'sub1', sort: 'DATE_DESC' }, cats)),
+    ).toEqual(['f']);
+  });
+
   it('drops items without a matching club (incl. missing club)', () => {
     const noClub = membership({ id: 'x', pod: { id: 'pod-x', pod_title: 'X' } });
     const items = applyPodHistory([a, noClub], {

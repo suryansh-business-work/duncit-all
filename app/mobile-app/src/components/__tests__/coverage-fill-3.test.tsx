@@ -29,7 +29,10 @@ const basePod = {
 describe('PodInfo virtual + dateless', () => {
   it('shows the video icon and no countdown chip', () => {
     renderWithProviders(
-      <PodInfo pod={{ ...basePod, pod_mode: 'VIRTUAL', pod_date_time: null } as never} />,
+      <PodInfo
+        pod={{ ...basePod, pod_mode: 'VIRTUAL', pod_date_time: null } as never}
+        categoryCrumbs={[]}
+      />,
     );
     expect(screen.getByText('Virtual')).toBeOnTheScreen();
   });
@@ -96,7 +99,13 @@ describe('PodAccordions toggle', () => {
       payment_terms: 'Pay upfront',
     } as never;
     renderWithProviders(
-      <PodAccordions pod={pod} people={[]} onOpenClub={jest.fn()} onOpenProfile={jest.fn()} />,
+      <PodAccordions
+        pod={pod}
+        people={[]}
+        categoryCrumbs={[]}
+        onOpenClub={jest.fn()}
+        onOpenProfile={jest.fn()}
+      />,
     );
     fireEvent.press(screen.getByTestId('accordion-about-header')); // open → delete
     fireEvent.press(screen.getByTestId('accordion-club-header')); // closed → add

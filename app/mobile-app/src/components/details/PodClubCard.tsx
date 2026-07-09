@@ -3,17 +3,20 @@ import { AppImage } from '@/components/AppImage';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 type PodClub = NonNullable<PodDetail['club']>;
 
-/** Club summary on the Pod Detail page — logo/initial + name + description and a
- * "View club" action. Brings mobile to parity with mWeb's PodClubSection. */
+/** Club summary on the Pod Detail page — logo/initial + name + the club's
+ * category breadcrumb + description and a "View club" action. Brings mobile to
+ * parity with mWeb's PodClubSection. */
 export function PodClubCard({
   club,
+  categoryCrumbs = [],
   onOpenClub,
-}: Readonly<{ club: PodClub; onOpenClub: () => void }>) {
+}: Readonly<{ club: PodClub; categoryCrumbs?: readonly string[]; onOpenClub: () => void }>) {
   const { primary } = useThemeColors();
   const logo = club.club_feature_images_and_videos[0]?.url || '';
   const initial = (club.club_name[0] ?? 'C').toUpperCase();
@@ -42,6 +45,7 @@ export function PodClubCard({
           <Text fontSize={15} fontWeight="900" color="$color" numberOfLines={1}>
             {club.club_name}
           </Text>
+          <CategoryBreadcrumb crumbs={categoryCrumbs} />
           {club.club_description ? (
             <Text fontSize={12.5} color="$muted" numberOfLines={2}>
               {club.club_description}

@@ -30,7 +30,10 @@ export function PodHistoryScreen() {
   const [filterOpen, setFilterOpen] = useState(false);
   const [sortOpen, setSortOpen] = useState(false);
 
-  const visible = useMemo(() => applyPodHistory(uniqueItems, filters), [uniqueItems, filters]);
+  const visible = useMemo(
+    () => applyPodHistory(uniqueItems, filters, categories),
+    [uniqueItems, filters, categories],
+  );
   const hasHistory = uniqueItems.length > 0;
   const resetFilters = () => setFilters(DEFAULT_POD_HISTORY_FILTERS);
 

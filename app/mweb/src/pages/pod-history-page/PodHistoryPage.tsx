@@ -34,7 +34,8 @@ export default function PodHistoryPage() {
     return Array.from(byPodId.values());
   }, [data]);
 
-  const visible = useMemo(() => applyPodHistory(items, filters), [items, filters]);
+  const categories = catData?.categories ?? [];
+  const visible = useMemo(() => applyPodHistory(items, filters, categories), [items, filters, categories]);
 
   if (loading && items.length === 0) {
     return (
@@ -64,7 +65,7 @@ export default function PodHistoryPage() {
         </Box>
         <PodHistoryToolbar
           filters={filters}
-          categories={catData?.categories ?? []}
+          categories={categories}
           onChange={setFilters}
           onReset={() => setFilters(DEFAULT_POD_HISTORY_FILTERS)}
         />

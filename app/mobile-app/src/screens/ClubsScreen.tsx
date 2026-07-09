@@ -3,6 +3,7 @@ import { useMemo } from 'react';
 import { Reveal } from '@/animations/Reveal';
 import { FeedList } from '@/components/FeedList';
 import { ClubCard } from '@/components/home/ClubCard';
+import { ClubsLocationEmpty } from '@/components/home/ClubsLocationEmpty';
 import { ClubsLocationNote } from '@/components/home/ClubsLocationNote';
 import { ClubsSearchFilter } from '@/components/home/ClubsSearchFilter';
 import { TabScreen } from '@/components/TabScreen';
@@ -12,23 +13,28 @@ import { useHomeData } from '@/hooks/useHomeFeed';
 import { useLocations } from '@/hooks/useLocations';
 
 /** Clubs tab — active communities in the selected location, with client-side
- * search + category filter. Changing the location re-scopes the list. */
+ * search + category filter. Selecting a Country > City > Area location re-scopes
+ * the list to that locality; an empty locality shows a Reset-Location prompt. */
 export function ClubsScreen() {
   const { clubs, categories, isLoading, refetch } = useHomeData();
-  const { selectedId: selectedLocationId } = useLocations();
+  const { selectedId: selectedLocationId, zoneName } = useLocations();
   const { openClub } = useDetailNav();
 
-  const locationClubs = useMemo(
-    () =>
-      selectedLocationId ? clubs.filter((club) => club.location_id === selectedLocationId) : clubs,
-    [clubs, selectedLocationId],
-  );
+  const locationClubs = useMemo(() => {
+    if (!selectedLocationId) return clubs;
+    return clubs.filter(
+      (club) =>
+        club.location_id === selectedLocationId && (!zoneName || club.locality === zoneName),
+    );
+  }, [clubs, selectedLocationId, zoneName]);
 
   const { query, setQuery, categoryId, setCategoryId, categoryOptions, filtered } = useClubsFilter(
     locationClubs,
     categories,
   );
   const isSearching = !!query || !!categoryId;
+  // No club operates in the selected locality at all (vs. a search that matched nothing).
+  const locationEmpty = !!selectedLocationId && locationClubs.length === 0;
   const emptyText = isSearching ? 'No clubs match your search.' : 'No clubs yet. Pull to refresh.';
 
   return (
@@ -46,6 +52,7 @@ export function ClubsScreen() {
         isLoading={isLoading}
         isEmpty={filtered.length === 0}
         emptyText={emptyText}
+        emptyComponent={locationEmpty ? <ClubsLocationEmpty /> : undefined}
         onRefresh={refetch}
         data={filtered}
         keyExtractor={(club) => club.id}

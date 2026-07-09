@@ -100,6 +100,7 @@ const podData = {
   viewerId: 'me',
   membershipState: null,
   people: [],
+  categoryCrumbs: [],
   refetch: jest.fn().mockResolvedValue(undefined),
 };
 

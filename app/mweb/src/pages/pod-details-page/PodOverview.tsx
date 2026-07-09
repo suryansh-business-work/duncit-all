@@ -7,6 +7,7 @@ import PlaceIcon from '@mui/icons-material/Place';
 import VideocamIcon from '@mui/icons-material/Videocam';
 import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import PodQuickStats from './PodQuickStats';
+import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
 import { podOccurrenceLabel } from '../../utils/podOccurrence';
 
 interface Props {
@@ -15,6 +16,8 @@ interface Props {
   isHost: boolean;
   priceFormat: (amount: number) => string;
   onAddStatus: () => void;
+  /** The pod's club category as Super › Category › Sub (root-first). */
+  categoryCrumbs?: readonly string[];
 }
 
 function TimeChip({ iso }: Readonly<{ iso?: string | null }>) {
@@ -32,7 +35,7 @@ function TimeChip({ iso }: Readonly<{ iso?: string | null }>) {
   return <Chip color={days <= 1 ? 'warning' : 'info'} icon={<HourglassBottomIcon />} label={label} />;
 }
 
-export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddStatus }: Readonly<Props>) {
+export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddStatus, categoryCrumbs = [] }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const hostLine = (pod.host_names ?? []).filter(Boolean).join(', ');
@@ -64,6 +67,11 @@ export default function PodOverview({ pod, isFree, isHost, priceFormat, onAddSta
         {pod.pod_title}
       </Typography>
           {hostLine && <Typography variant="body2" sx={{ color: mutedColor, mt: 0.6 }} noWrap>Hosted by {hostLine}</Typography>}
+          {categoryCrumbs.length > 0 && (
+            <Box sx={{ mt: 0.6, color: mutedColor }}>
+              <CategoryBreadcrumb crumbs={categoryCrumbs} />
+            </Box>
+          )}
         </Box>
         {isHost && (
           <Button size="small" variant="contained" startIcon={<AddPhotoAlternateIcon />} onClick={onAddStatus} sx={{ borderRadius: 999, bgcolor: chipBg, color: textColor, boxShadow: 'none', '&:hover': { bgcolor: isDark ? 'rgba(255,255,255,0.2)' : alpha(theme.palette.primary.main, 0.14) } }}>

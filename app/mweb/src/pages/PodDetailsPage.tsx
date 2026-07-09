@@ -9,6 +9,7 @@ import {
 } from '@mui/material';
 import ContactSupportIcon from '@mui/icons-material/ContactSupport';
 import { usePricing } from '../hooks/usePricing';
+import { categoryPath } from '../utils/category-match';
 import BackoutConfirmDialog from './pod-details-page/BackoutConfirmDialog';
 import PodHero from './pod-details-page/PodHero';
 import PodOverview from './pod-details-page/PodOverview';
@@ -86,6 +87,11 @@ export default function PodDetailsPage() {
   if (!pod) return <Alert severity="warning">Pod not found.</Alert>;
 
   const club = (data?.clusters ?? data?.clubs ?? []).find((c: any) => c.id === pod.club_id) ?? null;
+  const clubCategoryCrumbs = categoryPath(
+    data?.categories ?? [],
+    club?.super_category_id,
+    club?.category_id,
+  );
   const location = (data?.locations ?? []).find((l: any) => l.id === pod.location_id);
   const venue = (data?.publicVenues ?? []).find((item: any) => item.id === pod.venue_id);
   const allPeople: any[] = peopleData?.publicUsersByIds ?? [];
@@ -124,7 +130,7 @@ export default function PodDetailsPage() {
         onShare={actions.onShare}
       />
 
-      <PodOverview pod={pod} isFree={isFree} isHost={isPodHost} priceFormat={priceFormat} onAddStatus={() => openPodPicker(pod.id)} />
+      <PodOverview pod={pod} isFree={isFree} isHost={isPodHost} priceFormat={priceFormat} onAddStatus={() => openPodPicker(pod.id)} categoryCrumbs={clubCategoryCrumbs} />
 
       <PodMapSection pod={pod} location={location} venue={venue} />
 
@@ -152,6 +158,7 @@ export default function PodDetailsPage() {
         attendees={allPeople}
         isFree={isFree}
         priceCompute={priceCompute}
+        categoryCrumbs={clubCategoryCrumbs}
       />
 
       {pod.pod_hashtag?.length > 0 && (

@@ -2,7 +2,8 @@ import GroupsIcon from '@mui/icons-material/Groups';
 import ChatBubbleOutlineIcon from '@mui/icons-material/ChatBubbleOutline';
 import CheckIcon from '@mui/icons-material/Check';
 import PersonAddAltIcon from '@mui/icons-material/PersonAddAlt';
-import { Avatar, Box, Button, Chip, Stack, Typography } from '@mui/material';
+import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
+import CategoryBreadcrumb from '../../components/CategoryBreadcrumb';
 
 interface Props {
   club: any;
@@ -11,8 +12,8 @@ interface Props {
   venueCount: number;
   followersCount: number;
   membersCount: number;
-  categoryName?: string;
-  superCategoryName?: string;
+  /** Super › Category › Sub category names (root-first). */
+  categoryCrumbs: readonly string[];
   following: boolean;
   chatUrl?: string | null;
   onToggleFollow: () => void;
@@ -38,8 +39,7 @@ export default function ClubSummaryHeader({
   venueCount,
   followersCount,
   membersCount,
-  categoryName,
-  superCategoryName,
+  categoryCrumbs,
   following,
   chatUrl,
   onToggleFollow,
@@ -73,15 +73,10 @@ export default function ClubSummaryHeader({
           <Typography variant="h5" sx={{ fontWeight: 950, lineHeight: 1.1 }} noWrap>
             {club.club_name}
           </Typography>
-          {(superCategoryName || categoryName) && (
-            <Stack direction="row" spacing={0.5} sx={{ mt: 0.5, flexWrap: 'wrap', gap: 0.5 }}>
-              {superCategoryName && (
-                <Chip label={superCategoryName} size="small" variant="outlined" sx={{ height: 20, fontSize: 10, fontWeight: 700 }} />
-              )}
-              {categoryName && (
-                <Chip label={categoryName} size="small" color="primary" sx={{ height: 20, fontSize: 10, fontWeight: 700 }} />
-              )}
-            </Stack>
+          {categoryCrumbs.length > 0 && (
+            <Box sx={{ mt: 0.5 }}>
+              <CategoryBreadcrumb crumbs={categoryCrumbs} />
+            </Box>
           )}
           {club.club_description && (
             <Typography

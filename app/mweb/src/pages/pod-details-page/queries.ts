@@ -87,6 +87,8 @@ export const POD_DETAILS = gql`
       club_id
       club_name
       club_description
+      category_id
+      super_category_id
       club_feature_images_and_videos {
         url
         type
@@ -95,6 +97,12 @@ export const POD_DETAILS = gql`
         url
         type
       }
+    }
+    categories {
+      id
+      name
+      level
+      parent_id
     }
     locations {
       id
@@ -109,6 +117,20 @@ export const POD_DETAILS = gql`
     publicVenues { id venue_name address_line1 address_line2 locality city state country postal_code lat lng }
     publicHosts { id user_id full_name passport_photo_url }
     me { user_id saved_pod_ids }
+  }
+`;
+
+export const PUBLIC_PRODUCT = gql`
+  query PublicInventoryProduct($id: ID!) {
+    publicInventoryProduct(product_doc_id: $id) {
+      id
+      product_name
+      brand_name
+      short_description
+      description
+      image_url
+      images
+    }
   }
 `;
 

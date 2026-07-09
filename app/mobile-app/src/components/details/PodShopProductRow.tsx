@@ -52,25 +52,28 @@ export function PodShopProductRow({
   primary,
   onUpdate,
   onInfo,
+  readOnly,
 }: Readonly<{
   product: Product;
   quantity: number;
   primary: string;
   onUpdate: (productId: string, quantity: number) => void;
   onInfo: (productId: string) => void;
+  readOnly?: boolean;
 }>) {
   const image = product.image_url || product.images?.[0] || '';
   const maxQuantity = Number(product.available_count ?? product.quantity ?? 0);
-  const selected = quantity > 0;
+  // Members can only view products — never select them (avoids a re-charge).
+  const selected = !readOnly && quantity > 0;
   const atMax = quantity >= maxQuantity;
   const lineTotal = Number(product.unit_cost ?? 0) * Math.max(quantity, 1);
   return (
     <XStack
       testID={`pod-shop-row-${product.product_id}`}
-      role="button"
-      aria-label={`Select ${product.product_name}`}
-      aria-checked={selected}
-      onPress={() => onUpdate(product.product_id, selected ? 0 : 1)}
+      role={readOnly ? undefined : 'button'}
+      aria-label={readOnly ? undefined : `Select ${product.product_name}`}
+      aria-checked={readOnly ? undefined : selected}
+      onPress={readOnly ? undefined : () => onUpdate(product.product_id, selected ? 0 : 1)}
       gap={10}
       alignItems="center"
       padding={10}
@@ -78,13 +81,15 @@ export function PodShopProductRow({
       borderWidth={1}
       borderColor={selected ? '$primary' : '$borderColor'}
       backgroundColor="$surface"
-      pressStyle={{ opacity: 0.85 }}
+      pressStyle={readOnly ? undefined : { opacity: 0.85 }}
     >
-      <MaterialIcons
-        name={selected ? 'check-box' : 'check-box-outline-blank'}
-        size={22}
-        color={selected ? primary : MUTED_ICON}
-      />
+      {readOnly ? null : (
+        <MaterialIcons
+          name={selected ? 'check-box' : 'check-box-outline-blank'}
+          size={22}
+          color={selected ? primary : MUTED_ICON}
+        />
+      )}
       <YStack
         width={48}
         height={48}

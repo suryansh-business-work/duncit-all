@@ -89,3 +89,14 @@ export function locationMapEmbedUrl(_apiKey: string, query: string): string {
   if (!query) return '';
   return `https://maps.google.com/maps?q=${encodeURIComponent(query)}&z=14&output=embed`;
 }
+
+/**
+ * Wraps the keyless embed URL in a minimal HTML document that renders it inside
+ * an `<iframe>`. A react-native WebView is a top-level browsing context, and the
+ * `output=embed` map refuses to render unframed ("Google Maps Embed API must be
+ * used in the iframe"); framing it inside this HTML satisfies that check. mWeb
+ * already embeds via a DOM `<iframe>`, so this keeps native at parity.
+ */
+export function mapEmbedHtml(url: string): string {
+  return `<!doctype html><html><head><meta name="viewport" content="width=device-width, initial-scale=1"/><style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%;display:block}</style></head><body><iframe src="${url}" loading="lazy" referrerpolicy="no-referrer-when-downgrade" allowfullscreen></iframe></body></html>`;
+}

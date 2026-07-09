@@ -5,7 +5,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { locationMapEmbedUrl } from '@/utils/location-tree';
+import { locationMapEmbedUrl, mapEmbedHtml } from '@/utils/location-tree';
 
 interface Props {
   query: string;
@@ -52,7 +52,8 @@ export function MapEmbed({ query, height = 220 }: Readonly<Props>) {
       >
         <WebView
           testID="pod-map"
-          source={{ uri: url }}
+          originWhitelist={['*']}
+          source={{ html: mapEmbedHtml(url) }}
           style={{ flex: 1, backgroundColor: 'transparent' }}
         />
       </YStack>

@@ -327,6 +327,27 @@ describe('PodShop', () => {
     expect(screen.getByText('Closed')).toBeOnTheScreen();
     expect(screen.queryByTestId('pod-shop-total')).toBeNull();
   });
+
+  it('is view-only once the pod is already booked (no selecting, no steppers, booked note)', () => {
+    const onSelectionChange = jest.fn();
+    renderWithProviders(
+      <PodShop
+        pod={podWith()}
+        selectedProducts={{}}
+        onSelectionChange={onSelectionChange}
+        readOnly
+      />,
+    );
+    // Products are still visible (name + price + info icon), but not selectable.
+    expect(screen.getByText('Tee')).toBeOnTheScreen();
+    expect(screen.getByTestId('pod-shop-info-1')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('pod-shop-row-1'));
+    expect(onSelectionChange).not.toHaveBeenCalled();
+    // The selection total is replaced by an "already booked" note.
+    expect(screen.getByTestId('pod-shop-booked-note')).toBeOnTheScreen();
+    expect(screen.queryByTestId('pod-shop-total')).toBeNull();
+    expect(screen.queryByTestId('pod-shop-qty-1')).toBeNull();
+  });
 });
 
 describe('MapEmbed', () => {

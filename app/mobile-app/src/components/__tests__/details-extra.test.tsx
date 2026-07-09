@@ -47,12 +47,24 @@ describe('Accordion', () => {
 });
 
 describe('PodAccordions', () => {
-  it('expands all, opens the club, then collapses all', () => {
+  it('expands all, shows the club + its category breadcrumb, opens it, then collapses all', () => {
     const onOpenClub = jest.fn();
+    const podWithClub = {
+      ...pod,
+      club: {
+        club_id: 'c1',
+        club_name: 'Runners',
+        club_description: 'We run',
+        category_id: 'sub1',
+        super_category_id: 'sup1',
+        club_feature_images_and_videos: [],
+      },
+    };
     renderWithProviders(
       <PodAccordions
-        pod={pod as never}
+        pod={podWithClub as never}
         people={[]}
+        categoryCrumbs={['Sports', 'Racquet', 'Badminton']}
         onOpenClub={onOpenClub}
         onOpenProfile={jest.fn()}
       />,
@@ -61,15 +73,26 @@ describe('PodAccordions', () => {
     fireEvent.press(screen.getByTestId('pod-expand-all'));
     expect(screen.getByText('Place charges')).toBeOnTheScreen();
     expect(screen.getByText('Payment terms')).toBeOnTheScreen();
+    // The pod's club category renders as a breadcrumb in the Club details card.
+    expect(screen.getByText('Runners')).toBeOnTheScreen();
+    expect(screen.getByTestId('category-breadcrumb')).toHaveTextContent(
+      'Sports › Racquet › Badminton',
+    );
     fireEvent.press(screen.getByTestId('pod-view-club'));
     expect(onOpenClub).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('pod-collapse-all'));
   });
 
-  it('omits terms/charges when absent and toggles a section header', () => {
+  it('omits terms/charges and falls back when the pod has no club', () => {
     const bare = { ...pod, payment_terms: null, place_charges: [] } as never;
     renderWithProviders(
-      <PodAccordions pod={bare} people={[]} onOpenClub={jest.fn()} onOpenProfile={jest.fn()} />,
+      <PodAccordions
+        pod={bare}
+        people={[]}
+        categoryCrumbs={[]}
+        onOpenClub={jest.fn()}
+        onOpenProfile={jest.fn()}
+      />,
     );
     expect(screen.queryByText('Place charges')).toBeNull();
     expect(screen.queryByText('Payment terms')).toBeNull();

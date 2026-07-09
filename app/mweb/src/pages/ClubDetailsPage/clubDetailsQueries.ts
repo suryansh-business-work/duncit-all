@@ -97,18 +97,18 @@ export const CLUB_STORIES = gql`
   }
 `;
 
-/** Resolves category and super-category names for a club (B11). */
-export const CLUB_CATEGORY_NAMES = gql`
-  query ClubCategoryNames($catId: ID!, $superCatId: ID!) {
-    clubCategory: category(category_id: $catId) {
+/**
+ * Full category tree (Super/Category/Sub) used to build the club's
+ * Super › Category › Sub breadcrumb by walking parent_id from the club's leaf
+ * category up to the root.
+ */
+export const CATEGORY_TREE = gql`
+  query CategoryTree {
+    categories {
       id
       name
-      slug
-    }
-    clubSuperCategory: category(category_id: $superCatId) {
-      id
-      name
-      slug
+      level
+      parent_id
     }
   }
 `;

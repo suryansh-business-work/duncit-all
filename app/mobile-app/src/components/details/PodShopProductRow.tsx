@@ -51,11 +51,13 @@ export function PodShopProductRow({
   quantity,
   primary,
   onUpdate,
+  onInfo,
 }: Readonly<{
   product: Product;
   quantity: number;
   primary: string;
   onUpdate: (productId: string, quantity: number) => void;
+  onInfo: (productId: string) => void;
 }>) {
   const image = product.image_url || product.images?.[0] || '';
   const maxQuantity = Number(product.available_count ?? product.quantity ?? 0);
@@ -131,6 +133,20 @@ export function PodShopProductRow({
           </XStack>
         ) : null}
       </YStack>
+      <XStack
+        testID={`pod-shop-info-${product.product_id}`}
+        role="button"
+        aria-label={`View ${product.product_name} details`}
+        onPress={() => onInfo(product.product_id)}
+        width={30}
+        height={30}
+        alignItems="center"
+        justifyContent="center"
+        borderRadius={999}
+        pressStyle={{ opacity: 0.6 }}
+      >
+        <MaterialIcons name="info-outline" size={18} color={MUTED_ICON} />
+      </XStack>
       <Text fontSize={14} fontWeight="900" color="$color">
         +₹{lineTotal}
       </Text>

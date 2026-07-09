@@ -41,6 +41,7 @@ export function PodDetailsScreen() {
     savedInitially,
     membershipState,
     people,
+    categoryCrumbs,
     isLoading,
     refetch,
   } = usePodDetails(podId);
@@ -138,7 +139,7 @@ export function PodDetailsScreen() {
             <HeroButton testID="pod-share" icon="share" onPress={share} />
           </DetailHero>
           <Reveal index={0}>
-            <PodInfo pod={pod} />
+            <PodInfo pod={pod} categoryCrumbs={categoryCrumbs} />
           </Reveal>
           <Reveal index={1}>
             <PodSchedule
@@ -171,6 +172,7 @@ export function PodDetailsScreen() {
             <PodAccordions
               pod={pod}
               people={people}
+              categoryCrumbs={categoryCrumbs}
               onOpenClub={() =>
                 navigation.navigate('ClubDetails', { clubId: pod.club_id, title: 'Club' })
               }

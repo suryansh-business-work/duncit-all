@@ -1,9 +1,11 @@
+import { useState } from 'react';
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import type { PodDetail } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import { PodShopProductRow } from './PodShopProductRow';
+import { ProductDetailSheet } from './ProductDetailSheet';
 
 interface PodShopProps {
   pod: PodDetail;
@@ -23,6 +25,7 @@ function productCountLabel(count: number): string {
  * perks/placeholder data. */
 export function PodShop({ pod, selectedProducts, onSelectionChange }: Readonly<PodShopProps>) {
   const { primary } = useThemeColors();
+  const [infoProductId, setInfoProductId] = useState<string | null>(null);
   const products = pod.product_requests ?? [];
   const selectedTotal = products.reduce(
     (sum, item) => sum + (selectedProducts[item.product_id] ?? 0) * Number(item.unit_cost ?? 0),
@@ -88,6 +91,7 @@ export function PodShop({ pod, selectedProducts, onSelectionChange }: Readonly<P
               quantity={selectedProducts[product.product_id] ?? 0}
               primary={primary}
               onUpdate={updateQuantity}
+              onInfo={setInfoProductId}
             />
           ))}
         </YStack>
@@ -103,6 +107,8 @@ export function PodShop({ pod, selectedProducts, onSelectionChange }: Readonly<P
           </Text>
         </XStack>
       ) : null}
+
+      <ProductDetailSheet productId={infoProductId} onClose={() => setInfoProductId(null)} />
     </YStack>
   );
 }

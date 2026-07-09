@@ -1,6 +1,7 @@
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import type { MyPodMembershipsDocument, PodHistoryCategoriesDocument } from '@/graphql/pod-history';
+import { makeCategoryMatcher } from '@/utils/category-match';
 import { isPodActive } from '@/utils/pod-format';
 
 export type PodMembership = ResultOf<typeof MyPodMembershipsDocument>['myPodMemberships'][number];
@@ -43,16 +44,23 @@ const POD_HISTORY_COMPARATORS: Record<
   PRICE_DESC: (a, b) => (b.pod?.pod_amount ?? 0) - (a.pod?.pod_amount ?? 0),
 };
 
-/** Filter the joined-pod list by Super Category → Category, then sort it. */
+/**
+ * Filter the joined-pod list by Super Category → Category, then sort it.
+ *
+ * A club is tagged at its leaf category (typically the SUB level), so a naive
+ * `club.category_id === filters.categoryId` matched nothing. We instead match on
+ * the whole root-to-leaf path via {@link makeCategoryMatcher}: a Category filter
+ * keeps clubs tagged at that category OR any of its SUB descendants (mirrors the
+ * Clubs filter). The deepest selected level (category over super) wins.
+ */
 export function applyPodHistory(
   items: readonly PodMembership[],
   filters: PodHistoryFilters,
+  categories: readonly PodHistoryCategory[] = [],
 ): PodMembership[] {
-  const filtered = items.filter((item) => {
-    if (filters.superId && item.pod?.club?.super_category_id !== filters.superId) return false;
-    if (filters.categoryId && item.pod?.club?.category_id !== filters.categoryId) return false;
-    return true;
-  });
+  const matches = makeCategoryMatcher(categories);
+  const target = filters.categoryId || filters.superId;
+  const filtered = items.filter((item) => matches(item.pod?.club, target));
   const copy = [...filtered];
   copy.sort(POD_HISTORY_COMPARATORS[filters.sort]);
   return copy;

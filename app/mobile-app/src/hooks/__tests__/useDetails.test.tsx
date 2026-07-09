@@ -111,17 +111,20 @@ describe('usePodDetails / useClubDetails', () => {
     expect(bad.result.current.error).toBeUndefined();
   });
 
-  it('resolves categoryName and superCategoryName when club has category_id', async () => {
-    mockRequest
-      .mockResolvedValueOnce({
-        club: { id: 'c1', category_id: 'cat1', super_category_id: 'sup1' },
-        pods: [],
-      })
-      .mockResolvedValue({ category: { id: 'cat1', name: 'Art' } });
+  it('builds the club Super › Category › Sub breadcrumb from the category tree', async () => {
+    mockRequest.mockResolvedValueOnce({
+      club: { id: 'c1', category_id: 'sub1', super_category_id: 'sup1' },
+      pods: [],
+      categories: [
+        { id: 'sup1', name: 'Sports', level: 'SUPER', parent_id: null },
+        { id: 'cat1', name: 'Racquet', level: 'CATEGORY', parent_id: 'sup1' },
+        { id: 'sub1', name: 'Badminton', level: 'SUB', parent_id: 'cat1' },
+      ],
+    });
     const { result } = renderHook(() => useClubDetails('c1'));
     await waitFor(() => expect(result.current.isLoading).toBe(false));
-    await waitFor(() => expect(result.current.categoryName).toBe('Art'));
-    expect(result.current.superCategoryName).toBe('Art');
+    // Club tagged at the SUB leaf → the middle CATEGORY is derived from parent_id.
+    expect(result.current.categoryCrumbs).toEqual(['Sports', 'Racquet', 'Badminton']);
   });
 
   it('usePodDetails surfaces a load error', async () => {

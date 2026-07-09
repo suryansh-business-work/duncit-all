@@ -28,6 +28,7 @@ export const HomeFeedDocument = gql(`
       category_id
       super_category_id
       location_id
+      locality
     }
     pods(filter: $podFilter) {
       id

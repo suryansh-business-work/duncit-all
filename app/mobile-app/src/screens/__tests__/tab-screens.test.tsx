@@ -11,6 +11,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/components/AppHeader', () => ({ AppHeader: () => null }));
 jest.mock('@/components/home/ClubsLocationNote', () => ({ ClubsLocationNote: () => null }));
+jest.mock('@/components/LocationDialog', () => ({ LocationDialog: () => null }));
 jest.mock('@/hooks/useHomeFeed');
 jest.mock('@/hooks/useFollowingFeed', () => ({ useFollowingFeed: jest.fn() }));
 jest.mock('@/hooks/useChat');
@@ -137,6 +138,40 @@ describe('ClubsScreen', () => {
     renderWithProviders(<ClubsScreen />);
     expect(screen.getByTestId('club-card-cl-1')).toBeOnTheScreen();
     expect(screen.queryByTestId('club-card-cl-2')).toBeNull();
+  });
+
+  it('narrows to the selected locality/area within the city', () => {
+    mockedLocations.mockReturnValue({ selectedId: 'loc1', cityLabel: 'Delhi', zoneName: 'Saket' });
+    mockedHomeData.mockReturnValue({
+      pods: [],
+      clubs: [
+        { ...(club('1') as Record<string, unknown>), location_id: 'loc1', locality: 'Saket' },
+        { ...(club('2') as Record<string, unknown>), location_id: 'loc1', locality: 'Rohini' },
+      ] as never,
+      categories: [],
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+    renderWithProviders(<ClubsScreen />);
+    expect(screen.getByTestId('club-card-cl-1')).toBeOnTheScreen();
+    expect(screen.queryByTestId('club-card-cl-2')).toBeNull();
+  });
+
+  it('shows the Reset-Location empty state when no club operates in the locality', () => {
+    mockedLocations.mockReturnValue({ selectedId: 'loc1', cityLabel: 'Delhi', zoneName: 'Saket' });
+    mockedHomeData.mockReturnValue({
+      pods: [],
+      clubs: [
+        { ...(club('2') as Record<string, unknown>), location_id: 'loc1', locality: 'Rohini' },
+      ] as never,
+      categories: [],
+      isLoading: false,
+      refetch: jest.fn(),
+    });
+    renderWithProviders(<ClubsScreen />);
+    expect(screen.getByTestId('clubs-location-empty')).toBeOnTheScreen();
+    expect(screen.getByTestId('clubs-location-reset')).toBeOnTheScreen();
+    expect(screen.queryByTestId('clubs-list-empty')).toBeNull();
   });
 });
 

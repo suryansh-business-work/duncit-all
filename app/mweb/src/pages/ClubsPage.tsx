@@ -21,7 +21,7 @@ import { useSearchCategories } from './search-page/useSearchDiscovery';
 import { OPEN_LOCATION_PICKER_EVENT } from '../components/app-header/queries';
 
 const ALL_CLUBS = gql`
-  query AllClubs($locationId: ID) {
+  query AllClubs($locationId: ID, $locality: String) {
     superCategories: categories(filter: { level: SUPER }) {
       id
       slug
@@ -30,7 +30,7 @@ const ALL_CLUBS = gql`
       id
       location_name
     }
-    clubs(filter: { is_active: true, location_id: $locationId }) {
+    clubs(filter: { is_active: true, location_id: $locationId, locality: $locality }) {
       id
       club_id
       club_name
@@ -61,7 +61,7 @@ export default function ClubsPage({
   zoneName,
 }: Readonly<ClubsPageProps>) {
   const { data, loading, error } = useQuery(ALL_CLUBS, {
-    variables: { locationId: locationId || undefined },
+    variables: { locationId: locationId || undefined, locality: zoneName || undefined },
     fetchPolicy: 'cache-and-network',
   });
   const navigate = useNavigate();
@@ -112,6 +112,31 @@ export default function ClubsPage({
       </Stack>
     );
   if (error) return <Alert severity="error">{error.message}</Alert>;
+
+  // A location is applied but no club operates in that locality (vs. a search
+  // that matched nothing) — drives the "No Clubs operating…" + Reset CTA.
+  const locationHasNoClubs = Boolean(locationId) && (data?.clubs ?? []).length === 0;
+  const clubsBody =
+    clubs.length === 0 ? (
+      <Alert severity="info">No clubs found.</Alert>
+    ) : (
+      <Box
+        sx={{
+          display: 'grid',
+          gridTemplateColumns: { xs: '1fr', sm: 'repeat(2, 1fr)', md: 'repeat(3, 1fr)' },
+          gap: 2,
+        }}
+      >
+        {clubs.map((club: any) => (
+          <ClubListCard
+            key={club.id}
+            club={club}
+            podCount={podCounts.get(club.id) ?? 0}
+            onOpen={() => club.club_id && navigate(`/club/${club.club_id}`)}
+          />
+        ))}
+      </Box>
+    );
 
   return (
     <Stack
@@ -179,29 +204,21 @@ export default function ClubsPage({
           />
         </Box>
       )}
-      {clubs.length === 0 ? (
-        <Alert severity="info">No clubs found.</Alert>
+      {locationHasNoClubs ? (
+        <Stack alignItems="center" spacing={1.5} sx={{ py: 6, textAlign: 'center' }}>
+          <Typography variant="h6" fontWeight={800}>
+            No Clubs operating at the selected location,
+          </Typography>
+          <Button
+            variant="contained"
+            onClick={() => window.dispatchEvent(new CustomEvent(OPEN_LOCATION_PICKER_EVENT))}
+            sx={{ borderRadius: 999, fontWeight: 800 }}
+          >
+            Reset Location
+          </Button>
+        </Stack>
       ) : (
-        <Box
-          sx={{
-            display: 'grid',
-            gridTemplateColumns: {
-              xs: '1fr',
-              sm: 'repeat(2, 1fr)',
-              md: 'repeat(3, 1fr)',
-            },
-            gap: 2,
-          }}
-        >
-          {clubs.map((club: any) => (
-            <ClubListCard
-              key={club.id}
-              club={club}
-              podCount={podCounts.get(club.id) ?? 0}
-              onOpen={() => club.club_id && navigate(`/club/${club.club_id}`)}
-            />
-          ))}
-        </Box>
+        clubsBody
       )}
       <SearchFilterSheet
         open={filterOpen}

@@ -30,11 +30,13 @@ interface Section {
 export function PodAccordions({
   pod,
   people,
+  categoryCrumbs,
   onOpenClub,
   onOpenProfile,
 }: Readonly<{
   pod: PodDetail;
   people: PodPerson[];
+  categoryCrumbs: readonly string[];
   onOpenClub: () => void;
   onOpenProfile: (userId: string) => void;
 }>) {
@@ -51,7 +53,7 @@ export function PodAccordions({
         title: 'Club details',
         icon: 'place',
         content: pod.club ? (
-          <PodClubCard club={pod.club} onOpenClub={onOpenClub} />
+          <PodClubCard club={pod.club} categoryCrumbs={categoryCrumbs} onOpenClub={onOpenClub} />
         ) : (
           <XStack
             testID="pod-view-club"
@@ -148,7 +150,7 @@ export function PodAccordions({
       });
     }
     return list;
-  }, [pod, people, onOpenClub, onOpenProfile, primary]);
+  }, [pod, people, categoryCrumbs, onOpenClub, onOpenProfile, primary]);
 
   const [open, setOpen] = useState<Set<string>>(new Set(['about']));
   const toggle = (id: string) =>

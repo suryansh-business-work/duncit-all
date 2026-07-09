@@ -131,6 +131,23 @@ describe('clubService integration', () => {
     expect(reset!.location_id).toBe(loc2);
   });
 
+  it('filters the club list by locality/zone within a city (Home > Clubs area filter)', async () => {
+    const loc = new Types.ObjectId().toString();
+    await clubService.create({ club_name: 'Saket Club', location_id: loc, locality: 'Saket' });
+    await clubService.create({ club_name: 'Rohini Club', location_id: loc, locality: 'Rohini' });
+
+    const saket = await clubService.list({ location_id: loc, locality: 'Saket' });
+    expect(saket.map((c) => c.club_name)).toEqual(['Saket Club']);
+
+    // A locality with no clubs returns nothing (drives the "No Clubs operating…" state).
+    const none = await clubService.list({ location_id: loc, locality: 'Dwarka' });
+    expect(none).toHaveLength(0);
+
+    // Without a locality, every club in the city is returned.
+    const all = await clubService.list({ location_id: loc });
+    expect(all).toHaveLength(2);
+  });
+
   it('counts active clubs by their own location_id', async () => {
     const locA = new Types.ObjectId().toString();
     const locB = new Types.ObjectId().toString();

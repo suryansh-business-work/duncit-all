@@ -38,6 +38,8 @@ export const PodDetailsDocument = gql(`
         club_id
         club_name
         club_description
+        category_id
+        super_category_id
         club_feature_images_and_videos {
           url
         }
@@ -108,6 +110,27 @@ export const PodDetailsDocument = gql(`
       postal_code
       lat
       lng
+    }
+    categories {
+      id
+      name
+      level
+      parent_id
+    }
+  }
+`);
+
+/** Public product detail (any signed-in user) for the Pod Shop info sheet. */
+export const PublicInventoryProductDocument = gql(`
+  query MobilePublicInventoryProduct($productDocId: ID!) {
+    publicInventoryProduct(product_doc_id: $productDocId) {
+      id
+      product_name
+      brand_name
+      short_description
+      description
+      image_url
+      images
     }
   }
 `);
@@ -199,16 +222,6 @@ export const AddClubRatingDocument = gql(`
   }
 `);
 
-/** Category name lookup — used to resolve category/super-cat display names. */
-export const CategoryNameDocument = gql(`
-  query MobileCategoryName($id: ID!) {
-    category(category_id: $id) {
-      id
-      name
-    }
-  }
-`);
-
 /** Club + its active pods for the club-details screen. */
 export const ClubDetailsDocument = gql(`
   query MobileClubDetails($clubId: ID!) {
@@ -246,6 +259,7 @@ export const ClubDetailsDocument = gql(`
       club_whats_app_community_link
       club_whats_app_group_link
       matched_venues_count
+      followers_count
       category_id
       super_category_id
       rating
@@ -271,6 +285,12 @@ export const ClubDetailsDocument = gql(`
       pod_mode
       place_label
       place_detail
+    }
+    categories {
+      id
+      name
+      level
+      parent_id
     }
   }
 `);

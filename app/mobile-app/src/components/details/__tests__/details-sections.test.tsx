@@ -28,9 +28,15 @@ const overviewPod = {
 
 describe('PodInfo', () => {
   it('renders the overview card with countdown + spots-left chip', () => {
-    renderWithProviders(<PodInfo pod={overviewPod as never} />);
+    renderWithProviders(
+      <PodInfo pod={overviewPod as never} categoryCrumbs={['Sports', 'Racquet', 'Badminton']} />,
+    );
     expect(screen.getByText('Jam')).toBeOnTheScreen();
     expect(screen.getByText('Hosted by Asha')).toBeOnTheScreen();
+    // The pod's club category shows as a breadcrumb in the always-visible header.
+    expect(screen.getByTestId('category-breadcrumb')).toHaveTextContent(
+      'Sports › Racquet › Badminton',
+    );
     expect(screen.getByText('₹199')).toBeOnTheScreen();
     expect(screen.getByText('Physical')).toBeOnTheScreen();
     expect(screen.getByText('One time')).toBeOnTheScreen();
@@ -48,7 +54,7 @@ describe('PodInfo', () => {
       pod_type: 'NATIVE_FREE',
       pod_date_time: future(5 * 24 * 60 * 60 * 1000),
     } as never;
-    renderWithProviders(<PodInfo pod={pod as never} />);
+    renderWithProviders(<PodInfo pod={pod as never} categoryCrumbs={[]} />);
     expect(screen.getByText('Free')).toBeOnTheScreen();
     expect(screen.queryByText(/Hosted by/)).toBeNull();
     expect(screen.getByText('5 days remaining')).toBeOnTheScreen();

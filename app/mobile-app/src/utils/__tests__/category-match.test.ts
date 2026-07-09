@@ -1,4 +1,4 @@
-import { makeCategoryMatcher } from '@/utils/category-match';
+import { categoryPath, makeCategoryMatcher } from '@/utils/category-match';
 
 // super › category › sub tree
 const categories = [
@@ -38,5 +38,48 @@ describe('makeCategoryMatcher', () => {
   it('rejects clubs on a different branch', () => {
     expect(match({ category_id: 'other' }, 'cat')).toBe(false);
     expect(match({ category_id: null, super_category_id: null }, 'cat')).toBe(false);
+  });
+});
+
+describe('categoryPath', () => {
+  const named = [
+    { id: 'super', name: 'Sports', parent_id: null },
+    { id: 'cat', name: 'Racquet', parent_id: 'super' },
+    { id: 'sub', name: 'Badminton', parent_id: 'cat' },
+  ];
+
+  it('builds the full Super › Category › Sub path from a leaf sub', () => {
+    expect(categoryPath(named, 'super', 'sub')).toEqual(['Sports', 'Racquet', 'Badminton']);
+  });
+
+  it('walks the chain even without a super id', () => {
+    expect(categoryPath(named, null, 'sub')).toEqual(['Sports', 'Racquet', 'Badminton']);
+  });
+
+  it('does not duplicate the super when the leaf already is the super', () => {
+    expect(categoryPath(named, 'super', 'super')).toEqual(['Sports']);
+  });
+
+  it('prepends the super when the leaf chain never reaches it', () => {
+    const orphan = [
+      { id: 'super', name: 'Sports', parent_id: null },
+      { id: 'sub', name: 'Badminton', parent_id: 'missing' },
+    ];
+    expect(categoryPath(orphan, 'super', 'sub')).toEqual(['Sports', 'Badminton']);
+  });
+
+  it('returns [] for an empty/nullish tree, blank ids or unknown ids', () => {
+    expect(categoryPath([], 'super', 'sub')).toEqual([]);
+    expect(categoryPath(null, 'super', 'sub')).toEqual([]);
+    expect(categoryPath(named, '', '')).toEqual([]);
+    expect(categoryPath(named, 'nope', 'nope')).toEqual([]);
+  });
+
+  it('stops at the hop guard on a cyclic tree', () => {
+    const cyclic = [
+      { id: 'a', name: 'A', parent_id: 'b' },
+      { id: 'b', name: 'B', parent_id: 'a' },
+    ];
+    expect(categoryPath(cyclic, null, 'a')).toHaveLength(16);
   });
 });

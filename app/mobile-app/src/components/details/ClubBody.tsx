@@ -4,6 +4,7 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
 import { AttendeesSection, buildAttendeePeople } from '@/components/details/PodSections';
+import { CategoryBreadcrumb } from '@/components/CategoryBreadcrumb';
 import { ClubSegments } from '@/components/details/club/ClubSegments';
 import { ClubFriendsSection } from '@/components/details/club/ClubFriendsSection';
 import { ClubRatingSection } from '@/components/details/club/ClubRatingSection';
@@ -25,42 +26,6 @@ function Stat({ value, label }: Readonly<{ value: number; label: string }>) {
   );
 }
 
-function CategoryChips({
-  categoryName,
-  superCategoryName,
-}: Readonly<{ categoryName: string; superCategoryName: string }>) {
-  if (!superCategoryName && !categoryName) return null;
-  return (
-    <XStack gap={6} flexWrap="wrap">
-      {superCategoryName ? (
-        <XStack
-          paddingHorizontal={8}
-          paddingVertical={3}
-          borderRadius={8}
-          borderWidth={1}
-          borderColor="$borderColor"
-        >
-          <Text fontSize={11} fontWeight="700" color="$muted">
-            {superCategoryName}
-          </Text>
-        </XStack>
-      ) : null}
-      {categoryName ? (
-        <XStack
-          paddingHorizontal={8}
-          paddingVertical={3}
-          borderRadius={8}
-          backgroundColor="$primary"
-        >
-          <Text fontSize={11} fontWeight="700" color="$onPrimary">
-            {categoryName}
-          </Text>
-        </XStack>
-      ) : null}
-    </XStack>
-  );
-}
-
 /** The club-details body — summary, stats, WhatsApp chat, members and the
  * tabbed segments (pods schedule, moments, content sections, hosts). */
 export function ClubBody({
@@ -68,8 +33,7 @@ export function ClubBody({
   pods,
   members,
   followingUserIds,
-  categoryName,
-  superCategoryName,
+  categoryCrumbs,
   following,
   followBusy,
   onToggleFollow,
@@ -80,8 +44,7 @@ export function ClubBody({
   pods: ClubPod[];
   members: PodPerson[];
   followingUserIds: string[];
-  categoryName: string;
-  superCategoryName: string;
+  categoryCrumbs: readonly string[];
   following: boolean;
   followBusy: boolean;
   onToggleFollow: () => void;
@@ -109,7 +72,7 @@ export function ClubBody({
       <Text fontSize={24} fontWeight="900" color="$color">
         {club.club_name}
       </Text>
-      <CategoryChips categoryName={categoryName} superCategoryName={superCategoryName} />
+      <CategoryBreadcrumb crumbs={categoryCrumbs} />
       {club.club_description ? (
         <Text fontSize={14} color="$muted" lineHeight={20}>
           {club.club_description}
@@ -129,6 +92,7 @@ export function ClubBody({
         borderColor="$borderColor"
         backgroundColor="$surface"
       >
+        <Stat value={club.followers_count ?? 0} label="followers" />
         <Stat value={members.length} label="members" />
         <Stat value={pods.length} label="pods" />
         <Stat value={moments.length} label="moments" />

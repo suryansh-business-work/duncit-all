@@ -17,8 +17,9 @@ import ClubRatingSection from '../club-details-page/ClubRatingSection';
 import {
   CLUB_BY_SLUG,
   CLUB_DETAILS_RELATED,
-  CLUB_CATEGORY_NAMES,
+  CATEGORY_TREE,
 } from './clubDetailsQueries';
+import { categoryPath } from '../../utils/category-match';
 import useSavedClub from './useSavedClub';
 
 export default function ClubDetailsPage() {
@@ -42,13 +43,7 @@ export default function ClubDetailsPage() {
     fetchPolicy: 'cache-and-network',
   });
 
-  const catId = club?.category_id ?? '';
-  const superCatId = club?.super_category_id ?? '';
-  const { data: catData } = useQuery(CLUB_CATEGORY_NAMES, {
-    variables: { catId, superCatId },
-    skip: !catId && !superCatId,
-    fetchPolicy: 'cache-first',
-  });
+  const { data: catData } = useQuery(CATEGORY_TREE, { fetchPolicy: 'cache-first' });
 
   if (slugQuery.loading || (loading && !data)) return <ClubDetailsSkeleton />;
   if (error) return <Alert severity="error">{error.message}</Alert>;
@@ -65,8 +60,11 @@ export default function ClubDetailsPage() {
   const followingUserIds: string[] = data?.me?.following_user_ids ?? [];
   const friendIds = memberIds.filter((id) => followingUserIds.includes(id));
 
-  const categoryName = catData?.clubCategory?.name ?? '';
-  const superCategoryName = catData?.clubSuperCategory?.name ?? '';
+  const categoryCrumbs = categoryPath(
+    catData?.categories ?? [],
+    club.super_category_id,
+    club.category_id,
+  );
 
   const openPod = (podDocId: string) => {
     const pod = pods.find((podItem: any) => podItem.id === podDocId);
@@ -125,8 +123,7 @@ export default function ClubDetailsPage() {
         venueCount={venues.length}
         followersCount={club.followers_count ?? 0}
         membersCount={memberIds.length}
-        categoryName={categoryName}
-        superCategoryName={superCategoryName}
+        categoryCrumbs={categoryCrumbs}
         following={isFollowing(club.id)}
         chatUrl={club.club_whats_app_group_link || club.club_whats_app_community_link}
         onToggleFollow={toggleClubFollow}

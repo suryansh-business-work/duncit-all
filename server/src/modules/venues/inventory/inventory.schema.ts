@@ -290,6 +290,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
     myProductListings(brand_id: ID): [InventoryProduct!]!
     availablePodProducts(super_category_id: ID, category_id: ID, sub_category_id: ID): [InventoryProduct!]!
     inventoryProduct(product_doc_id: ID!): InventoryProduct
+    "Public read of a single product (any signed-in user) — powers the product-detail view on a pod's shop."
+    publicInventoryProduct(product_doc_id: ID!): InventoryProduct
     inventoryActivityLogs(product_doc_id: ID!, limit: Int): [InventoryActivityLog!]!
     inventoryStockMovements(product_doc_id: ID!, limit: Int): [InventoryStockMovement!]!
     inventoryAnalytics(product_doc_id: ID!, days: Int): [InventoryAnalyticsPoint!]!

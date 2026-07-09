@@ -26,6 +26,7 @@ interface Props {
   attendees: any[];
   isFree: boolean;
   priceCompute: any;
+  categoryCrumbs: readonly string[];
 }
 
 export default function PodDetailAccordions({
@@ -35,6 +36,7 @@ export default function PodDetailAccordions({
   attendees,
   isFree,
   priceCompute,
+  categoryCrumbs,
 }: Readonly<Props>) {
   const offers: string[] = pod.what_this_pod_offers ?? [];
   const perks: string[] = pod.available_perks ?? [];
@@ -45,7 +47,7 @@ export default function PodDetailAccordions({
     () =>
       [
         { id: 'about', title: 'About this pod', icon: <InfoIcon fontSize="small" />, render: () => <PodAboutSection description={pod.pod_description} info={pod.pod_info} /> },
-        { id: 'club', title: 'Club details', icon: <PlaceIcon fontSize="small" />, render: () => <PodClubSection club={club} /> },
+        { id: 'club', title: 'Club details', icon: <PlaceIcon fontSize="small" />, render: () => <PodClubSection club={club} categoryCrumbs={categoryCrumbs} /> },
         { id: 'offers', title: 'What this pod offers', icon: <StarIcon fontSize="small" />, render: () => <PodChipList items={offers} emptyText="Details coming soon." color="primary" /> },
         { id: 'hosts', title: 'Hosts', icon: <PersonIcon fontSize="small" />, render: () => <PodHostsSection hosts={hosts} /> },
         { id: 'attendees', title: 'Attendees', icon: <GroupsIcon fontSize="small" />, render: () => <PodAttendeesSection attendees={attendees} attendeeIds={pod.pod_attendees ?? []} hostIds={pod.pod_hosts_id ?? []} totalSpots={pod.no_of_spots ?? 0} /> },
@@ -54,7 +56,7 @@ export default function PodDetailAccordions({
         ...(paymentTerms ? [{ id: 'terms', title: 'Payment terms', icon: <PaymentIcon fontSize="small" />, render: () => <Box sx={{ whiteSpace: 'pre-wrap', fontSize: 14, color: 'text.secondary' }}>{paymentTerms}</Box> }] : []),
         ...(charges.length > 0 ? [{ id: 'charges', title: 'Place charges', icon: <ReceiptLongIcon fontSize="small" />, render: () => <PodPlaceChargesSection charges={charges} /> }] : []),
       ] as const,
-    [pod, club, hosts, attendees, isFree, priceCompute, offers, perks, charges, paymentTerms]
+    [pod, club, hosts, attendees, isFree, priceCompute, offers, perks, charges, paymentTerms, categoryCrumbs]
   );
 
   const [expanded, setExpanded] = useState<Set<string>>(new Set(['about']));

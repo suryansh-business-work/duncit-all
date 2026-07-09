@@ -31,6 +31,7 @@ const club = {
   club_whats_app_community_link: null,
   club_whats_app_group_link: null,
   matched_venues_count: 0,
+  followers_count: 42,
   category_id: null,
   who_we_are: [],
   what_we_do: [],
@@ -74,12 +75,21 @@ describe('ClubDetailsScreen', () => {
       club,
       pods: [pod],
       members: [{ user_id: 'm1', full_name: 'Asha', profile_photo: null }],
+      followingUserIds: [],
+      categoryCrumbs: ['Sports', 'Racquet', 'Badminton'],
       followingInitially: false,
       isLoading: false,
     });
     renderWithProviders(<ClubDetailsScreen />);
     expect(screen.getByText('Runners')).toBeOnTheScreen();
     expect(screen.getByText('Morning Run')).toBeOnTheScreen();
+    // The club's full Super › Category › Sub category renders as a breadcrumb.
+    expect(screen.getByTestId('category-breadcrumb')).toHaveTextContent(
+      'Sports › Racquet › Badminton',
+    );
+    // Followers count is shown in the stats row.
+    expect(screen.getByText('42')).toBeOnTheScreen();
+    expect(screen.getByText('followers')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('club-follow'));
     expect(mockClubToggle).toHaveBeenCalled();
     fireEvent.press(screen.getByTestId('pod-card-pod-1'));
@@ -100,6 +110,8 @@ describe('ClubDetailsScreen', () => {
       club,
       pods: [],
       members: [],
+      followingUserIds: [],
+      categoryCrumbs: [],
       followingInitially: false,
       isLoading: false,
     });

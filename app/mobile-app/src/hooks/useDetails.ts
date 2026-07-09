@@ -3,7 +3,6 @@ import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import {
   AddPodCommentDocument,
-  CategoryNameDocument,
   ClubDetailsDocument,
   DeletePodCommentDocument,
   PodCommentsDocument,
@@ -13,6 +12,7 @@ import {
 } from '@/graphql/details';
 import { TogglePodLikeDocument, ToggleSavedPodDocument } from '@/graphql/explore';
 import { graphqlRequest } from '@/services/graphql.client';
+import { categoryPath } from '@/utils/category-match';
 
 export type PodComment = ResultOf<typeof PodCommentsDocument>['podComments'][number];
 type PodDetailsResult = ResultOf<typeof PodDetailsDocument>;
@@ -36,6 +36,7 @@ export function usePodDetails(podId: string) {
   const [savedInitially, setSavedInitially] = useState(false);
   const [membershipState, setMembershipState] = useState<PodMembershipState | null>(null);
   const [people, setPeople] = useState<PodPerson[]>([]);
+  const [categoryCrumbs, setCategoryCrumbs] = useState<string[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
@@ -43,6 +44,10 @@ export function usePodDetails(podId: string) {
     const data = await graphqlRequest(PodDetailsDocument, { podId }, { auth: true });
     const nextPod = data.pod ?? null;
     setPod(nextPod);
+    // The pod's club category as a Super › Category › Sub breadcrumb.
+    setCategoryCrumbs(
+      categoryPath(data.categories, nextPod?.club?.super_category_id, nextPod?.club?.category_id),
+    );
     setViewerId(data.me?.user_id ?? null);
     setViewerPhoto(data.me?.profile_photo ?? null);
     setVenue(data.publicVenues.find((v) => v.id === nextPod?.venue_id) ?? null);
@@ -83,6 +88,7 @@ export function usePodDetails(podId: string) {
     savedInitially,
     membershipState,
     people,
+    categoryCrumbs,
     isLoading,
     error,
     refetch: load,
@@ -95,8 +101,6 @@ export function usePodDetails(podId: string) {
 export function useClubDetails(clubId: string) {
   const [data, setData] = useState<ClubDetailsResult | null>(null);
   const [members, setMembers] = useState<PodPerson[]>([]);
-  const [categoryName, setCategoryName] = useState('');
-  const [superCategoryName, setSuperCategoryName] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<unknown>();
 
@@ -115,23 +119,6 @@ export function useClubDetails(clubId: string) {
             ? await graphqlRequest(PodPeopleDocument, { ids }, { auth: true }).catch(() => null)
             : null;
         if (active) setMembers(people ? people.publicUsersByIds : []);
-
-        // Resolve category / super-category names (best-effort).
-        const catId = result.club?.category_id ?? '';
-        const superCatId = result.club?.super_category_id ?? '';
-        /* istanbul ignore next */
-        const fetchCat = catId
-          ? graphqlRequest(CategoryNameDocument, { id: catId }).catch(() => null)
-          : Promise.resolve(null);
-        /* istanbul ignore next */
-        const fetchSuperCat = superCatId
-          ? graphqlRequest(CategoryNameDocument, { id: superCatId }).catch(() => null)
-          : Promise.resolve(null);
-        const [catResult, superCatResult] = await Promise.all([fetchCat, fetchSuperCat]);
-        if (active) {
-          setCategoryName(catResult?.category?.name ?? '');
-          setSuperCategoryName(superCatResult?.category?.name ?? '');
-        }
       })
       .catch((err) => active && setError(err))
       .finally(() => active && setIsLoading(false));
@@ -142,13 +129,18 @@ export function useClubDetails(clubId: string) {
 
   const followingInitially = (data?.me?.following_club_ids ?? []).includes(clubId);
   const followingUserIds: string[] = data?.me?.following_user_ids ?? [];
+  // Super › Category › Sub names, walked from the club's leaf category up the tree.
+  const categoryCrumbs = categoryPath(
+    data?.categories ?? [],
+    data?.club?.super_category_id,
+    data?.club?.category_id,
+  );
   return {
     club: data?.club ?? null,
     pods: data?.pods ?? [],
     members,
     followingUserIds,
-    categoryName,
-    superCategoryName,
+    categoryCrumbs,
     followingInitially,
     isLoading,
     error,

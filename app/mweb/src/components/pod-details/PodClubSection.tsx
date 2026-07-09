@@ -3,12 +3,15 @@ import { Avatar, Box, Button, Stack, Typography } from '@mui/material';
 import { useNavigate } from 'react-router-dom';
 import MomentTile from '../moments/MomentTile';
 import MomentLightbox from '../moments/MomentLightbox';
+import CategoryBreadcrumb from '../CategoryBreadcrumb';
 
 interface Props {
   club: any | null;
+  /** The club's Super › Category › Sub category names (root-first). */
+  categoryCrumbs?: readonly string[];
 }
 
-export default function PodClubSection({ club }: Readonly<Props>) {
+export default function PodClubSection({ club, categoryCrumbs = [] }: Readonly<Props>) {
   const navigate = useNavigate();
   const [lightbox, setLightbox] = useState<number | null>(null);
   if (!club) {
@@ -37,6 +40,11 @@ export default function PodClubSection({ club }: Readonly<Props>) {
             <Typography variant="subtitle1" fontWeight={600} noWrap>
               {club.club_name}
             </Typography>
+            {categoryCrumbs.length > 0 && (
+              <Box sx={{ my: 0.25 }}>
+                <CategoryBreadcrumb crumbs={categoryCrumbs} />
+              </Box>
+            )}
             {club.club_description && (
               <Typography
                 variant="caption"

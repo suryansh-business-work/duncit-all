@@ -11,6 +11,8 @@ interface FeedListProps<T> {
   isLoading: boolean;
   isEmpty: boolean;
   emptyText: string;
+  /** Custom empty state (overrides emptyText) — e.g. an empty state with a CTA. */
+  emptyComponent?: ReactElement;
   testID: string;
   onRefresh?: () => void;
   data: readonly T[];
@@ -26,6 +28,7 @@ export function FeedList<T>({
   isLoading,
   isEmpty,
   emptyText,
+  emptyComponent,
   testID,
   onRefresh,
   data,
@@ -54,17 +57,19 @@ export function FeedList<T>({
       refreshControl={refreshControl}
       contentContainerStyle={{ padding: 16, gap: 14, paddingBottom: bottomSpace }}
       ListEmptyComponent={
-        <Reveal scale>
-          <Text
-            testID={`${testID}-empty`}
-            textAlign="center"
-            fontSize={13}
-            color="$muted"
-            paddingVertical={40}
-          >
-            {emptyText}
-          </Text>
-        </Reveal>
+        emptyComponent ?? (
+          <Reveal scale>
+            <Text
+              testID={`${testID}-empty`}
+              textAlign="center"
+              fontSize={13}
+              color="$muted"
+              paddingVertical={40}
+            >
+              {emptyText}
+            </Text>
+          </Reveal>
+        )
       }
     />
   );

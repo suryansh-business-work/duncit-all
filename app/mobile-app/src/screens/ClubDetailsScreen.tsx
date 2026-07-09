@@ -22,16 +22,8 @@ export function ClubDetailsScreen() {
   const goBack = useGoBack();
   const route = useRoute<RouteProp<RootStackParamList, 'ClubDetails'>>();
   const { clubId } = route.params;
-  const {
-    club,
-    pods,
-    members,
-    followingUserIds,
-    categoryName,
-    superCategoryName,
-    isLoading,
-    followingInitially,
-  } = useClubDetails(clubId);
+  const { club, pods, members, followingUserIds, categoryCrumbs, isLoading, followingInitially } =
+    useClubDetails(clubId);
   const {
     following,
     busy: followBusy,
@@ -72,8 +64,7 @@ export function ClubDetailsScreen() {
               pods={pods}
               members={members}
               followingUserIds={followingUserIds}
-              categoryName={categoryName}
-              superCategoryName={superCategoryName}
+              categoryCrumbs={categoryCrumbs}
               following={following}
               followBusy={followBusy}
               onToggleFollow={() => void toggleFollow()}

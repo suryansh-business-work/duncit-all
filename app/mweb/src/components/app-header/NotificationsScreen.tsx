@@ -7,6 +7,7 @@ import NotificationsActiveIcon from '@mui/icons-material/NotificationsActive';
 import ConfirmDialog from '../ConfirmDialog';
 import { isPushSupported, unsubscribePush } from '../../pwa';
 import { formatRelative } from './queries';
+import { notificationIcon } from './notificationIcon';
 
 interface NotificationsScreenProps {
   open: boolean;
@@ -88,10 +89,11 @@ export default function NotificationsScreen({
               </Stack>
               <Box sx={{ minWidth: 0, flex: 1 }}>
                 <Typography variant="subtitle2" sx={{ fontWeight: 950 }} noWrap>
-                  Duncit updates are live
+                  Never Miss an Update
                 </Typography>
                 <Typography variant="caption" color="text.secondary" sx={{ fontWeight: 700 }}>
-                  Pods, clubs, chats and account updates in one place.
+                  Get real-time updates about your Pods, Clubs, Host activities, Chats, and
+                  Account—all in one place.
                 </Typography>
               </Box>
               <Chip color="primary" label={`${notifs.length}`} sx={{ fontWeight: 900 }} />
@@ -123,6 +125,9 @@ export default function NotificationsScreen({
           {notifs.map((item: any) => {
             const unread = !item.read_at;
             const notification = item.notification;
+            // Contextual icon by notification type (falls back to the bell)
+            // instead of repeating a generic bell on every row.
+            const RowIcon = notificationIcon(notification?.title);
             // Unread cards get the primary gradient highlight — chat-style rows
             // (avatar · title + preview · time · NEW badge), like the mobile app.
             return (
@@ -148,7 +153,7 @@ export default function NotificationsScreen({
                     src={notification?.image_url || undefined}
                     sx={{ width: 48, height: 48, bgcolor: unread ? 'rgba(255,255,255,0.24)' : 'primary.main' }}
                   >
-                    <NotificationsActiveIcon />
+                    <RowIcon />
                   </Avatar>
                   <Box sx={{ minWidth: 0, flex: 1 }}>
                     <Stack direction="row" spacing={0.75} alignItems="center">

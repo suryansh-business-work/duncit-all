@@ -105,10 +105,11 @@ export function NotificationsScreen({
               <MaterialIcons name="notifications-active" size={26} color={primary} />
               <YStack flex={1}>
                 <Text fontSize={14} fontWeight="900" color="$color">
-                  Duncit updates are live
+                  Never Miss an Update
                 </Text>
                 <Text fontSize={12} color="$muted">
-                  Pods, clubs, chats and account updates in one place.
+                  Get real-time updates about your Pods, Clubs, Host activities, Chats, and
+                  Account—all in one place.
                 </Text>
               </YStack>
               <XStack

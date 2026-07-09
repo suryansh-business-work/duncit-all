@@ -18,6 +18,8 @@ const pub = (doc: any) => {
     summary: o.summary ?? '',
     details: (o.details ?? []).map((d: any) => ({ label: d.label, value: d.value ?? '' })),
     kind: o.kind ?? null,
+    target_id: o.target_id ?? null,
+    payload: o.payload ?? null,
     subject_user_id: o.subject_user_id ? String(o.subject_user_id) : null,
     subject_name: o.subject_name ?? null,
     subject_email: o.subject_email ?? null,
@@ -50,6 +52,15 @@ export interface CreateApprovalInput {
   requested_by_name?: string | null;
 }
 
+export interface EcommChangeInput {
+  kind: string;
+  target_id: string;
+  target_name: string;
+  summary?: string | null;
+  details: { label: string; value?: string | null }[];
+  payload: string;
+}
+
 interface Reviewer {
   id?: string | null;
   name?: string | null;
@@ -68,6 +79,27 @@ async function draftOnboardedEntity(doc: any) {
   if (doc.kind === 'HOST') await hostService.createDraftFromApproval(prefill);
   else if (doc.kind === 'VENUE') await venueService.createDraftFromApproval(prefill);
   else if (doc.kind === 'ECOMM') await ecommBrandService.createDraftFromApproval(prefill);
+}
+
+/** Apply an approved ecomm change-request's payload to its brand/product. The
+ * payload is a JSON object of the fields the requester proposed; on approval we
+ * $set exactly those fields on the target (Task B item 2). Best-effort — a bad
+ * payload never blocks the approval decision. */
+async function applyEcommChange(doc: any) {
+  try {
+    const changes = JSON.parse(doc.payload || '{}');
+    if (!doc.target_id || typeof changes !== 'object' || Array.isArray(changes)) return;
+    if (doc.type === 'ECOMM_PRODUCT_CHANGE') {
+      const { InventoryProductModel } = await import('@modules/venues/inventory/inventory.model');
+      await InventoryProductModel.findByIdAndUpdate(doc.target_id, { $set: changes });
+    } else if (doc.type === 'ECOMM_BRAND_CHANGE') {
+      const { EcommBrandModel } = await import('@modules/venues/ecommBrand/ecommBrand.model');
+      await EcommBrandModel.findByIdAndUpdate(doc.target_id, { $set: changes });
+    }
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error('[approval] applyEcommChange failed:', err);
+  }
 }
 
 /** Reflect the decision back onto the source meeting's approval column. */
@@ -118,6 +150,35 @@ export const approvalService = {
     return pub(doc);
   },
 
+  /** Products portal: list brand/product change requests (optionally by kind). */
+  async listEcommChanges(kind?: string | null) {
+    const upper = String(kind ?? '').toUpperCase();
+    let types = ['ECOMM_BRAND_CHANGE', 'ECOMM_PRODUCT_CHANGE'];
+    if (upper === 'BRAND') types = ['ECOMM_BRAND_CHANGE'];
+    else if (upper === 'PRODUCT') types = ['ECOMM_PRODUCT_CHANGE'];
+    const docs = await ApprovalRequestModel.find({ type: { $in: types } }).sort({ created_at: -1 });
+    return docs.map(pub);
+  },
+
+  /** Products portal: raise a brand/product change request for admin approval. */
+  async submitEcommChange(input: EcommChangeInput, requester: Reviewer) {
+    const kind = String(input.kind).toUpperCase() === 'BRAND' ? 'BRAND' : 'PRODUCT';
+    const type = kind === 'BRAND' ? 'ECOMM_BRAND_CHANGE' : 'ECOMM_PRODUCT_CHANGE';
+    const label = kind === 'BRAND' ? 'brand' : 'product';
+    const doc = await ApprovalRequestModel.create({
+      type,
+      source_portal: 'products',
+      title: `${kind === 'BRAND' ? 'Brand' : 'Product'} change — ${input.target_name}`,
+      summary: input.summary ?? `Proposed changes to the ${label} "${input.target_name}".`,
+      details: (input.details ?? []).map((d) => ({ label: d.label, value: d.value ?? '' })),
+      target_id: input.target_id,
+      payload: input.payload,
+      requested_by: requester.id ?? null,
+      requested_by_name: requester.name ?? null,
+    });
+    return pub(doc);
+  },
+
   async approve(id: string, reviewer: Reviewer, notes?: string | null) {
     const doc = await ApprovalRequestModel.findById(id);
     if (!doc) throw notFound();
@@ -134,6 +195,8 @@ export const approvalService = {
       await draftOnboardedEntity(doc);
       await syncMeetingStatus(doc, 'APPROVED');
       await notifySubject(doc, 'Onboarding approved', 'Your onboarding has been approved. Our team will help you complete the remaining steps.');
+    } else if (doc.type === 'ECOMM_BRAND_CHANGE' || doc.type === 'ECOMM_PRODUCT_CHANGE') {
+      await applyEcommChange(doc);
     }
     return pub(doc);
   },

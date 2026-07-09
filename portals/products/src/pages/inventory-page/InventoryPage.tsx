@@ -52,7 +52,7 @@ export default function InventoryPage() {
       <Stack direction={{ xs: 'column', md: 'row' }} spacing={2} justifyContent="space-between">
         <Box>
           <Typography variant="h4" fontWeight={700}>
-            Inventory
+            Duncit Products
           </Typography>
           <Typography variant="body2" color="text.secondary">
             Manage Duncit products, available units, and requested counts.

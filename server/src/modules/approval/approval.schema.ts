@@ -23,6 +23,9 @@ export const approvalTypeDefs = gql`
     summary: String
     details: [ApprovalDetail!]!
     kind: SurveyKind
+    "Ecomm change-request: the target brand/product id + JSON payload of proposed changes."
+    target_id: ID
+    payload: String
     subject_user_id: ID
     subject_name: String
     subject_email: String
@@ -39,12 +42,35 @@ export const approvalTypeDefs = gql`
   extend type Query {
     "Admin inbox of approval requests (defaults to all; filter by status/type)."
     approvalRequests(status: ApprovalStatus, type: String): [ApprovalRequest!]!
+    "Products portal: brand/product change requests raised from this portal (kind = BRAND | PRODUCT)."
+    myEcommChangeRequests(kind: String): [ApprovalRequest!]!
+  }
+
+  "A proposed label → value change row shown to the reviewer."
+  input ApprovalDetailInput {
+    label: String!
+    value: String
+  }
+
+  "Products portal: submit an edit to a brand or product for admin approval (Task B item 2)."
+  input EcommChangeRequestInput {
+    "BRAND or PRODUCT."
+    kind: String!
+    target_id: ID!
+    target_name: String!
+    summary: String
+    "Human-readable proposed changes for the reviewer."
+    details: [ApprovalDetailInput!]!
+    "JSON object of the fields to apply to the entity on approval."
+    payload: String!
   }
 
   extend type Mutation {
-    "Admin approves a request — runs the request type's side effect (e.g. drafts the onboarded host/venue/seller)."
+    "Admin approves a request — runs the request type's side effect (e.g. drafts the onboarded host/venue/seller, or applies an ecomm change)."
     approveRequest(id: ID!, notes: String): ApprovalRequest!
     "Admin denies a request."
     denyRequest(id: ID!, notes: String): ApprovalRequest!
+    "Products portal: raise a brand/product change request for admin approval (Task B item 2)."
+    submitEcommChangeRequest(input: EcommChangeRequestInput!): ApprovalRequest!
   }
 `;

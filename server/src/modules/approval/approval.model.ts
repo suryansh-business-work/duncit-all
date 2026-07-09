@@ -7,7 +7,11 @@ import { Schema, model, InferSchemaType, Types } from 'mongoose';
  * label → value rows the inbox renders, so new request types need no schema
  * change. The first use-case is onboarding meeting feedback.
  */
-export const APPROVAL_TYPES = ['ONBOARDING_MEETING_FEEDBACK'] as const;
+export const APPROVAL_TYPES = [
+  'ONBOARDING_MEETING_FEEDBACK',
+  'ECOMM_BRAND_CHANGE',
+  'ECOMM_PRODUCT_CHANGE',
+] as const;
 export type ApprovalType = (typeof APPROVAL_TYPES)[number];
 
 export const APPROVAL_STATUSES = ['PENDING', 'APPROVED', 'DENIED'] as const;
@@ -31,6 +35,10 @@ const approvalRequestSchema = new Schema(
     summary: { type: String, default: '' },
     /** Portal-agnostic rows the admin inbox renders (survey answers, feedback…). */
     details: { type: [detailSchema], default: [] },
+    /** Ecomm change-requests: target brand/product id + JSON payload of the
+     * proposed field changes, applied to the entity on approval (Task B item 2). */
+    target_id: { type: String, default: null },
+    payload: { type: String, default: null },
     /** Optional structured links for the onboarding-meeting use-case. */
     kind: { type: String, default: null },
     subject_user_id: { type: Schema.Types.ObjectId, ref: 'User', default: null, index: true },

@@ -96,39 +96,18 @@ beforeEach(() => {
   mockedTickets.mockReturnValue({ tickets: [], isLoading: false, reload: jest.fn() });
 });
 
-const ticket = {
-  id: 't1',
-  subject: 'Refund please',
-  category: 'PAYMENT',
-  status: 'OPEN',
-  priority: 'LOW',
-  message_count: 1,
-  last_message_at: '',
-  created_at: '',
-};
-
-describe('ChatWithUsScreen (inbox)', () => {
-  it('shows the live-chat shortcut and the loading state', () => {
-    mockedTickets.mockReturnValue({ tickets: [], isLoading: true, reload: jest.fn() });
+describe('ChatWithUsScreen', () => {
+  it('shows only the live-chat shortcut (no New button, no ticket list) and routes to LiveChat', () => {
     renderWithProviders(<ChatWithUsScreen />);
+    expect(screen.getByTestId('chat-inbox-subtitle')).toBeOnTheScreen();
     expect(screen.getByTestId('chat-live-card')).toBeOnTheScreen();
-    expect(screen.getByTestId('chat-inbox-loading')).toBeOnTheScreen();
-  });
+    // The "+ New" button and the ticket inbox list were removed.
+    expect(screen.queryByTestId('chat-inbox-new')).toBeNull();
+    expect(screen.queryByTestId('chat-inbox-empty')).toBeNull();
+    expect(screen.queryByTestId('chat-inbox-ticket-t1')).toBeNull();
 
-  it('shows the empty state and routes taps', () => {
-    renderWithProviders(<ChatWithUsScreen />);
-    expect(screen.getByTestId('chat-inbox-empty')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('chat-live-card'));
     expect(mockNavigate).toHaveBeenCalledWith('LiveChat');
-    fireEvent.press(screen.getByTestId('chat-inbox-new'));
-    expect(mockNavigate).toHaveBeenCalledWith('SupportTickets');
-  });
-
-  it('lists tickets and opens one', () => {
-    mockedTickets.mockReturnValue({ tickets: [ticket], isLoading: false, reload: jest.fn() });
-    renderWithProviders(<ChatWithUsScreen />);
-    fireEvent.press(screen.getByTestId('chat-inbox-ticket-t1'));
-    expect(mockNavigate).toHaveBeenCalledWith('TicketDetails', { ticketId: 't1' });
   });
 });
 
@@ -299,6 +278,34 @@ describe('LiveChatScreen — send + attach', () => {
       ),
     );
     await waitFor(() => expect(send).toHaveBeenCalledWith('', ['https://img/spec.pdf']));
+  });
+
+  it('rejects an over-size image or document (100 MB cap)', async () => {
+    const uploadAttachment = jest.fn().mockResolvedValue('https://img/up.jpg');
+    mockedChat.mockReturnValue({ ...chatBase(), uploadAttachment });
+    renderWithProviders(<LiveChatScreen />);
+    const tooBig = 101 * 1024 * 1024;
+
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ base64: 'abc', fileSize: tooBig }],
+    });
+    fireEvent.press(screen.getByTestId('support-chat-attach'));
+    await waitFor(() =>
+      expect(screen.getByTestId('support-chat-send-error')).toHaveTextContent(/max 100 MB/i),
+    );
+    expect(uploadAttachment).not.toHaveBeenCalled();
+
+    pickDoc.mockResolvedValueOnce({
+      canceled: false,
+      assets: [
+        { uri: 'file://big.pdf', name: 'big.pdf', mimeType: 'application/pdf', size: tooBig },
+      ],
+    });
+    fireEvent.press(screen.getByTestId('support-chat-attach-doc'));
+    await waitFor(() => expect(pickDoc).toHaveBeenCalled());
+    expect(uploadAttachment).not.toHaveBeenCalled();
   });
 });
 

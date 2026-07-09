@@ -1,45 +1,11 @@
-import { Linking } from 'react-native';
-import { AppImage } from '@/components/AppImage';
-
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { AttachmentView } from '@/components/AttachmentView';
 import type { SupportChatMessage } from '@/hooks/useSupportChat';
 import { formatTime, tickState } from '@/utils/support-chat';
 
-const IMAGE_RE = /\.(png|jpe?g|gif|webp|avif)$/i;
 const TICK_COLOR = { delivered: '#9aa0a6', seen: '#34b7f1' } as const;
-
-function Attachment({ url }: Readonly<{ url: string }>) {
-  if (IMAGE_RE.test(url)) {
-    return (
-      <AppImage
-        source={{ uri: url }}
-        style={{ width: 180, height: 180, borderRadius: 10 }}
-        resizeMode="cover"
-      />
-    );
-  }
-  return (
-    <XStack
-      testID={`support-attach-${url}`}
-      role="button"
-      aria-label="Open attachment"
-      onPress={() => void Linking.openURL(url)}
-      alignItems="center"
-      gap={6}
-      padding={8}
-      borderRadius={8}
-      backgroundColor="$background"
-      pressStyle={{ opacity: 0.8 }}
-    >
-      <MaterialIcons name="insert-drive-file" size={18} color="#9aa0a6" />
-      <Text fontSize={12.5} color="$color">
-        Attachment
-      </Text>
-    </XStack>
-  );
-}
 
 /** WhatsApp-style delivery indicator for the user's own message (B12):
  * clock = pending, single grey ✓ = Sent/delivered, double blue ✓✓ = Seen. */
@@ -111,9 +77,7 @@ export function SupportChatBubble({
             {message.is_ai ? 'Duncit Assistant' : message.sender_name || 'Support'}
           </Text>
         )}
-        {message.attachments.map((url) => (
-          <Attachment key={url} url={url} />
-        ))}
+        <AttachmentView urls={message.attachments} />
         {message.text ? (
           <Text fontSize={14} color={mine ? '$onPrimary' : '$color'}>
             {message.text}

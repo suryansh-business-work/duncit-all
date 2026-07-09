@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import { TicketModel, type ITicket, type TicketStatus, type TicketCategory } from './ticket.model';
+import { TicketModel, type ITicket, type TicketStatus, type TicketCategory, type TicketPriority } from './ticket.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { emitToSupportAgents, emitToSupportUser } from '@modules/support/supportChat/supportChat.socket';
 import { reopenDeadline, reopenExpired } from '@modules/support/reopenWindow';
@@ -46,6 +46,7 @@ async function toPub(doc: ITicket) {
   ]);
   return {
     id: String(doc._id),
+    ticket_no: ticketNo('ST', doc._id as Types.ObjectId),
     user: user ?? { id: String(doc.user_id), name: 'User', phone: null, avatar_url: null },
     subject: doc.subject,
     category: doc.category,
@@ -211,6 +212,23 @@ export const ticketService = {
     doc!.status = status;
     // Stamp/clear the resolution time that drives the 3-day reopen window.
     doc!.resolved_at = status === 'RESOLVED' || status === 'CLOSED' ? new Date() : null;
+    await doc!.save();
+    const pub = await toPub(doc!);
+    emitToSupportAgents('ticket:update', pub);
+    emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
+    return pub;
+  },
+
+  /**
+   * Agent-set ticket priority (High/Medium/Low). Emits ticket:update to both the
+   * agents room and the owner so the user's ticket detail + the Tickets table
+   * reflect the new flag live.
+   */
+  async updatePriority(ticketId: string, priority: TicketPriority) {
+    if (!Types.ObjectId.isValid(ticketId)) fail('BAD_USER_INPUT', 'Invalid ticket_id');
+    const doc = await TicketModel.findById(ticketId);
+    if (!doc) fail('NOT_FOUND', 'Ticket not found');
+    doc!.priority = priority;
     await doc!.save();
     const pub = await toPub(doc!);
     emitToSupportAgents('ticket:update', pub);

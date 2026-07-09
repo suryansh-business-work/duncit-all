@@ -5,6 +5,7 @@ export type { TranscriptFormat } from './supportChat';
 export const TICKET_FIELDS = gql`
   fragment TicketFields on Ticket {
     id
+    ticket_no
     subject
     category
     status
@@ -103,6 +104,15 @@ export const UPDATE_TICKET_STATUS = gql`
   }
 `;
 
+export const UPDATE_TICKET_PRIORITY = gql`
+  mutation UpdateTicketPriority($ticket_id: ID!, $priority: TicketPriority!) {
+    updateTicketPriority(ticket_id: $ticket_id, priority: $priority) {
+      id
+      priority
+    }
+  }
+`;
+
 export const RESOLVE_TICKET = gql`
   mutation ResolveTicket($ticket_id: ID!) {
     resolveTicket(ticket_id: $ticket_id) {
@@ -157,6 +167,7 @@ export interface TicketMessage {
 
 export interface Ticket {
   id: string;
+  ticket_no: string;
   subject: string;
   category: TicketCategory;
   status: TicketStatus;

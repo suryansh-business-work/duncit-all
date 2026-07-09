@@ -4,6 +4,7 @@ import {
   Avatar,
   Box,
   Button,
+  Chip,
   CircularProgress,
   IconButton,
   Stack,
@@ -11,14 +12,33 @@ import {
 } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CloseIcon from '@mui/icons-material/Close';
+import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
+import { describeAttachment } from '../lib/attachment';
 
 const UPLOAD_IMAGE = gql`
-  mutation UploadImageToImagekit($fileBase64: String!, $fileName: String!, $mimeType: String, $folder: String) {
-    uploadImageToImagekit(fileBase64: $fileBase64, fileName: $fileName, mimeType: $mimeType, folder: $folder) {
+  mutation UploadImageToImagekit(
+    $fileBase64: String!
+    $fileName: String!
+    $mimeType: String
+    $folder: String
+    $allow_documents: Boolean
+  ) {
+    uploadImageToImagekit(
+      fileBase64: $fileBase64
+      fileName: $fileName
+      mimeType: $mimeType
+      folder: $folder
+      allow_documents: $allow_documents
+    ) {
       url
     }
   }
 `;
+
+// Images, videos and documents, capped at 100 MB per file (support spec).
+const ACCEPT =
+  'image/*,video/*,application/pdf,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.txt,.csv';
+const MAX_BYTES = 100 * 1024 * 1024;
 
 interface Props {
   value: string[];
@@ -68,13 +88,19 @@ export default function UploadField({
     try {
       const urls: string[] = [];
       for (const f of slice) {
-        if (f.size > 15 * 1024 * 1024) {
-          setError(`${f.name} is too large (max 15 MB)`);
+        if (f.size > MAX_BYTES) {
+          setError(`${f.name} is too large (max 100 MB)`);
           continue;
         }
         const fileBase64 = await readAsDataUrl(f);
         const res = await uploadImage({
-          variables: { fileBase64, fileName: f.name, mimeType: f.type, folder },
+          variables: {
+            fileBase64,
+            fileName: f.name,
+            mimeType: f.type,
+            folder,
+            allow_documents: true,
+          },
         });
         const url = res.data?.uploadImageToImagekit?.url;
         if (url) urls.push(url);
@@ -96,7 +122,7 @@ export default function UploadField({
         <input
           ref={inputRef}
           type="file"
-          accept="image/*"
+          accept={ACCEPT}
           multiple
           hidden
           onChange={onPick}
@@ -112,28 +138,48 @@ export default function UploadField({
       </Stack>
       {value.length > 0 && (
         <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1 }}>
-          {value.map((url, i) => (
-            <Box key={url + i} sx={{ position: 'relative', width: 64, height: 64 }}>
-              <Avatar variant="rounded" src={url} sx={{ width: 64, height: 64, '& img': { objectFit: 'cover' } }} />
-              <IconButton
-                size="small"
-                aria-label="Remove attachment"
-                onClick={() => onChange(value.filter((_, j) => j !== i))}
-                sx={{
-                  position: 'absolute',
-                  top: -8,
-                  right: -8,
-                  bgcolor: 'background.paper',
-                  border: 1,
-                  borderColor: 'divider',
-                  width: 22,
-                  height: 22,
-                }}
-              >
-                <CloseIcon sx={{ fontSize: 13 }} />
-              </IconButton>
-            </Box>
-          ))}
+          {value.map((url, i) => {
+            const info = describeAttachment(url);
+            const onRemove = () => onChange(value.filter((_, j) => j !== i));
+            if (info.kind === 'image') {
+              return (
+                <Box key={url + i} sx={{ position: 'relative', width: 64, height: 64 }}>
+                  <Avatar
+                    variant="rounded"
+                    src={url}
+                    sx={{ width: 64, height: 64, '& img': { objectFit: 'cover' } }}
+                  />
+                  <IconButton
+                    size="small"
+                    aria-label="Remove attachment"
+                    onClick={onRemove}
+                    sx={{
+                      position: 'absolute',
+                      top: -8,
+                      right: -8,
+                      bgcolor: 'background.paper',
+                      border: 1,
+                      borderColor: 'divider',
+                      width: 22,
+                      height: 22,
+                    }}
+                  >
+                    <CloseIcon sx={{ fontSize: 13 }} />
+                  </IconButton>
+                </Box>
+              );
+            }
+            return (
+              <Chip
+                key={url + i}
+                variant="outlined"
+                icon={<InsertDriveFileIcon />}
+                label={info.name}
+                onDelete={onRemove}
+                sx={{ maxWidth: 200, '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
+              />
+            );
+          })}
         </Stack>
       )}
       {error && (

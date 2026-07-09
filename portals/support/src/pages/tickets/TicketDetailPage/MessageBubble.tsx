@@ -2,6 +2,7 @@ import { Avatar, Box, Chip, Paper, Stack, Typography } from '@mui/material';
 import CheckIcon from '@mui/icons-material/Check';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import type { TicketMessage } from '../../../graphql/tickets';
+import AttachmentList from '../../../components/AttachmentList';
 
 const SEEN_BLUE = '#34b7f1';
 
@@ -60,15 +61,7 @@ export default function MessageBubble({ msg, time, userLastReadAt }: Readonly<Pr
         ) : (
           <Typography variant="body2">{msg.body_text}</Typography>
         )}
-        {msg.attachments.length > 0 && (
-          <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 1, mt: 1 }}>
-            {msg.attachments.map((url) => (
-              <a key={url} href={url} target="_blank" rel="noopener noreferrer">
-                <Avatar variant="rounded" src={url} sx={{ width: 56, height: 56 }} />
-              </a>
-            ))}
-          </Stack>
-        )}
+        <AttachmentList urls={msg.attachments} size={56} />
       </Paper>
     </Stack>
   );

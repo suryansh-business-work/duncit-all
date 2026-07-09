@@ -124,17 +124,17 @@ export async function uploadBase64Image(opts: {
   if (!fileBytes.length) {
     throw new GraphQLError('Upload file is empty', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  let maxBytes = 15 * 1024 * 1024;
-  let tooLargeMsg = 'Image is too large (max 15 MB)';
-  if (isVideo) {
-    maxBytes = 100 * 1024 * 1024;
-    tooLargeMsg = 'Video is too large (max 100 MB)';
-  } else if (isDocument) {
-    maxBytes = 50 * 1024 * 1024;
-    tooLargeMsg = 'Document is too large (max 50 MB)';
-  }
+  // Unified 100 MB ceiling across images, videos and documents (support
+  // attachments spec). Non-attachment callers (avatars, pod media) still upload
+  // images that are far smaller than this.
+  const maxBytes = 100 * 1024 * 1024;
   if (fileBytes.length > maxBytes) {
-    throw new GraphQLError(tooLargeMsg, { extensions: { code: 'BAD_USER_INPUT' } });
+    let kind = 'Image';
+    if (isVideo) kind = 'Video';
+    else if (isDocument) kind = 'Document';
+    throw new GraphQLError(`${kind} is too large (max 100 MB)`, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
   }
 
   const safeName = (opts.fileName || `upload-${Date.now()}`)

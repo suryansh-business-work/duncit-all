@@ -60,6 +60,25 @@ describe('ticketService integration', () => {
     expect(assigned.assignee_id).toBe(agentId);
   });
 
+  it('exposes a derived ST- ticket number and lets an agent change priority', async () => {
+    const t = await ticketService.createTicket(userId, { subject: 'S', body_text: 'B' });
+    expect(t.priority).toBe('MEDIUM');
+    expect(t.ticket_no).toMatch(/^ST-[0-9A-Z]{6}$/);
+    expect(t.ticket_no).toBe(`ST-${t.id.slice(-6).toUpperCase()}`);
+
+    const high = await ticketService.updatePriority(t.id, 'HIGH');
+    expect(high.priority).toBe('HIGH');
+    const low = await ticketService.updatePriority(t.id, 'LOW');
+    expect(low.priority).toBe('LOW');
+  });
+
+  it('throws NOT_FOUND / BAD_USER_INPUT when changing priority on a bad or missing ticket', async () => {
+    await expect(ticketService.updatePriority('not-an-id', 'HIGH')).rejects.toThrow(/invalid/i);
+    await expect(
+      ticketService.updatePriority(new Types.ObjectId().toString(), 'HIGH')
+    ).rejects.toThrow(/not found/i);
+  });
+
   it('lists my tickets and filters by status', async () => {
     await ticketService.createTicket(userId, { subject: 'Mine', body_text: 'B' });
     await ticketService.createTicket(new Types.ObjectId().toString(), { subject: 'Other', body_text: 'B' });

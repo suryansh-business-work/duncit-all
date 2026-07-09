@@ -1,22 +1,14 @@
 import { Avatar, Chip, Link, Paper, Stack, Typography } from '@mui/material';
 import SmartToyIcon from '@mui/icons-material/SmartToy';
-import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import AccessTimeIcon from '@mui/icons-material/AccessTime';
 import CheckIcon from '@mui/icons-material/Check';
 import DoneAllIcon from '@mui/icons-material/DoneAll';
 import ErrorOutlineIcon from '@mui/icons-material/ErrorOutline';
+import AttachmentList from '../../components/AttachmentList';
 import { userMessageTick } from './chatHelpers';
 import type { SupportChatMessage } from './queries';
 
-const IMAGE_RE = /\.(png|jpe?g|gif|webp|avif)$/i;
 const SEEN_BLUE = '#34b7f1';
-
-/** Human-readable file name from an attachment URL (drops query + path). */
-function fileName(url: string): string {
-  const path = url.split('?')[0];
-  const last = path.slice(path.lastIndexOf('/') + 1);
-  return decodeURIComponent(last) || 'Attachment';
-}
 
 function Tick({
   msg,
@@ -39,29 +31,6 @@ function Tick({
   if (state === 'pending') return <AccessTimeIcon sx={{ fontSize: 14, opacity: 0.7 }} />;
   if (state === 'seen') return <DoneAllIcon sx={{ fontSize: 15, color: SEEN_BLUE }} />;
   return <CheckIcon sx={{ fontSize: 15, opacity: 0.6 }} />;
-}
-
-function Attachment({ url }: Readonly<{ url: string }>) {
-  if (IMAGE_RE.test(url)) {
-    return (
-      <a href={url} target="_blank" rel="noopener noreferrer">
-        <Avatar variant="rounded" src={url} sx={{ width: 56, height: 56 }} />
-      </a>
-    );
-  }
-  return (
-    <Chip
-      component="a"
-      href={url}
-      target="_blank"
-      rel="noopener noreferrer"
-      clickable
-      size="small"
-      icon={<InsertDriveFileIcon />}
-      label={fileName(url)}
-      sx={{ maxWidth: 220, '& .MuiChip-label': { overflow: 'hidden', textOverflow: 'ellipsis' } }}
-    />
-  );
 }
 
 interface Props {
@@ -109,13 +78,7 @@ export default function ChatBubble({ msg, agentLastReadAt, timeText, onRetry }: 
           </Typography>
         )}
         {msg.text && <Typography variant="body2">{msg.text}</Typography>}
-        {msg.attachments.length > 0 && (
-          <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 0.5, mt: msg.text ? 0.5 : 0 }}>
-            {msg.attachments.map((url) => (
-              <Attachment key={url} url={url} />
-            ))}
-          </Stack>
-        )}
+        <AttachmentList urls={msg.attachments} />
         <Stack direction="row" spacing={0.5} alignItems="center" sx={{ justifyContent: 'flex-end', mt: 0.25 }}>
           <Typography variant="caption" sx={{ opacity: 0.7 }}>
             {timeText}

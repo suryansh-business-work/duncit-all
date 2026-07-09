@@ -9,6 +9,7 @@ import {
   RESOLVE_TICKET,
   TICKET,
   TICKET_TRANSCRIPT,
+  UPDATE_TICKET_PRIORITY,
   UPDATE_TICKET_STATUS,
   type Ticket,
 } from '../../src/graphql/tickets';
@@ -45,6 +46,7 @@ const baseMessages = () => [
 const td = (overrides: Partial<Ticket> = {}): any => ({
   __typename: 'Ticket',
   id: ID,
+  ticket_no: 'ST-ABC123',
   subject: 'Cannot pay',
   category: 'PAYMENT',
   status: 'OPEN',
@@ -127,9 +129,32 @@ describe('TicketDetailPage', () => {
       ticketMock(td({ status: 'PENDING' })),
     ]);
     await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
-    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status' }));
     fireEvent.click(screen.getByRole('option', { name: 'PENDING' }));
     await waitFor(() => expect(screen.getAllByText('PENDING').length).toBeGreaterThan(0));
+  });
+
+  it('changes the ticket priority', async () => {
+    renderAt([
+      ticketMock(td()),
+      { request: { query: UPDATE_TICKET_PRIORITY, variables: { ticket_id: ID, priority: 'HIGH' } }, result: { data: { updateTicketPriority: { id: ID, priority: 'HIGH' } } } },
+      ticketMock(td({ priority: 'HIGH' })),
+    ]);
+    await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Priority' }));
+    fireEvent.click(screen.getByRole('option', { name: 'HIGH' }));
+    await waitFor(() => expect(screen.getAllByText(/HIGH/).length).toBeGreaterThan(0));
+  });
+
+  it('surfaces a priority-change error in the snackbar', async () => {
+    renderAt([
+      ticketMock(td()),
+      { request: { query: UPDATE_TICKET_PRIORITY, variables: { ticket_id: ID, priority: 'LOW' } }, error: new Error('Priority failed') },
+    ]);
+    await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Priority' }));
+    fireEvent.click(screen.getByRole('option', { name: 'LOW' }));
+    await waitFor(() => expect(screen.getByText(/priority failed/i)).toBeInTheDocument());
   });
 
   it('resolves an open ticket via the confirm dialog', async () => {
@@ -191,7 +216,7 @@ describe('TicketDetailPage', () => {
     ]);
     await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
 
-    fireEvent.mouseDown(screen.getByRole('combobox'));
+    fireEvent.mouseDown(screen.getByRole('combobox', { name: 'Status' }));
     fireEvent.click(screen.getByRole('option', { name: 'PENDING' }));
     await waitFor(() => expect(screen.getByText(/status failed/i)).toBeInTheDocument());
 

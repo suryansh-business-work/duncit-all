@@ -5,7 +5,9 @@ import {
   REOPEN_TICKET,
   RESOLVE_TICKET,
   TICKET_TRANSCRIPT,
+  UPDATE_TICKET_PRIORITY,
   UPDATE_TICKET_STATUS,
+  type TicketPriority,
   type TicketStatus,
   type TicketTranscript,
 } from '../../../graphql/tickets';
@@ -20,6 +22,7 @@ export function useTicketActions(ticketId: string | undefined, onChanged: () => 
   const [resolveTicket] = useMutation(RESOLVE_TICKET, { onCompleted: onChanged });
   const [reopenTicket] = useMutation(REOPEN_TICKET, { onCompleted: onChanged });
   const [updateStatus] = useMutation(UPDATE_TICKET_STATUS, { onCompleted: onChanged });
+  const [updatePriority] = useMutation(UPDATE_TICKET_PRIORITY, { onCompleted: onChanged });
   const [emailTicket] = useMutation(EMAIL_TICKET_TRANSCRIPT);
 
   const resolve = () =>
@@ -30,6 +33,11 @@ export function useTicketActions(ticketId: string | undefined, onChanged: () => 
 
   const setStatus = (status: TicketStatus) =>
     updateStatus({ variables: { ticket_id: ticketId, status } }).catch((e: Error) => setNotice(e.message));
+
+  const setPriority = (priority: TicketPriority) =>
+    updatePriority({ variables: { ticket_id: ticketId, priority } }).catch((e: Error) =>
+      setNotice(e.message)
+    );
 
   // Permanently close a resolved ticket — reuses the status mutation (CLOSED).
   const close = () =>
@@ -59,5 +67,5 @@ export function useTicketActions(ticketId: string | undefined, onChanged: () => 
     }
   };
 
-  return { notice, clearNotice: () => setNotice(''), resolve, reopen, setStatus, close, download, email };
+  return { notice, clearNotice: () => setNotice(''), resolve, reopen, setStatus, setPriority, close, download, email };
 }

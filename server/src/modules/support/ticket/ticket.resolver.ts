@@ -77,6 +77,14 @@ export const ticketResolvers = {
       requireRole(ctx, SUPPORT_ROLES);
       return ticketService.updateStatus(args.ticket_id, args.status);
     },
+    updateTicketPriority: (
+      _p: unknown,
+      args: { ticket_id: string; priority: any },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, SUPPORT_ROLES);
+      return ticketService.updatePriority(args.ticket_id, args.priority);
+    },
     markTicketRead: async (_p: unknown, args: { ticket_id: string }, ctx: GraphQLContext) => {
       const user = requireAuth(ctx);
       await requireTicketAccess(ctx, args.ticket_id);

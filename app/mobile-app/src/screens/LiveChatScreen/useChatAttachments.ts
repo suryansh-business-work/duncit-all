@@ -6,6 +6,23 @@ import { toErrorMessage } from '@/utils/errors';
 
 type Upload = ReturnType<typeof useSupportChat>['uploadAttachment'];
 
+// Images, videos and documents share a single 100 MB ceiling (support spec).
+const MAX_BYTES = 100 * 1024 * 1024;
+
+// Every document type accepted by the server (pdf / word / excel / powerpoint /
+// text) — mirrors the mWeb composer's `accept` list.
+const DOCUMENT_TYPES = [
+  'application/pdf',
+  'application/msword',
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
+  'application/vnd.ms-excel',
+  'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+  'application/vnd.ms-powerpoint',
+  'application/vnd.openxmlformats-officedocument.presentationml.presentation',
+  'text/plain',
+  'text/csv',
+];
+
 interface Deps {
   uploadAttachment: Upload;
   submit: (text: string, attachments: string[]) => Promise<void>;
@@ -29,6 +46,14 @@ export function useChatAttachments({ uploadAttachment, submit, setBusy, setSendE
     }
   };
 
+  const tooLarge = (size?: number | null) => {
+    if (typeof size === 'number' && size > MAX_BYTES) {
+      setSendError('File is too large (max 100 MB).');
+      return true;
+    }
+    return false;
+  };
+
   const attach = async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
@@ -42,16 +67,18 @@ export function useChatAttachments({ uploadAttachment, submit, setBusy, setSendE
     });
     const asset = result.canceled ? undefined : result.assets[0];
     if (!asset) return;
+    if (tooLarge(asset.fileSize)) return;
     await uploadAndSend(asset, false);
   };
 
   const attachDocument = async () => {
     const result = await DocumentPicker.getDocumentAsync({
-      type: ['application/pdf', 'application/msword', 'text/plain', 'text/csv'],
+      type: DOCUMENT_TYPES,
       copyToCacheDirectory: true,
     });
     const doc = result.canceled ? undefined : result.assets[0];
     if (!doc) return;
+    if (tooLarge(doc.size)) return;
     await uploadAndSend({ uri: doc.uri, fileName: doc.name, mimeType: doc.mimeType }, true);
   };
 

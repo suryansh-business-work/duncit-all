@@ -49,6 +49,8 @@ export const ticketTypeDefs = /* GraphQL */ `
 
   type Ticket {
     id: ID!
+    "Human-readable support ticket number, e.g. ST-A1B2C3 (derived from the id)."
+    ticket_no: String!
     user: TicketActor!
     subject: String!
     category: TicketCategory!
@@ -105,6 +107,8 @@ export const ticketTypeDefs = /* GraphQL */ `
       attachments: [String!]
     ): Ticket!
     updateTicketStatus(ticket_id: ID!, status: TicketStatus!): Ticket!
+    "Set a ticket's priority flag (High/Medium/Low) — support agents only."
+    updateTicketPriority(ticket_id: ID!, priority: TicketPriority!): Ticket!
     "Mark a ticket thread read (owner or agent) — updates the side's last-read so the other side's ticks turn 'Seen' (B12)."
     markTicketRead(ticket_id: ID!): Ticket!
     "Re-open a resolved/closed ticket (owner within 3 days, or an agent). Reason logged to the thread."

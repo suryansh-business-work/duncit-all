@@ -22,6 +22,7 @@ vi.mock('react-quill', () => ({
 const ticket = (id: string, subject: string): any => ({
   __typename: 'Ticket',
   id,
+  ticket_no: `ST-${id.slice(-6).toUpperCase()}`,
   subject,
   category: 'GENERAL',
   status: 'OPEN',

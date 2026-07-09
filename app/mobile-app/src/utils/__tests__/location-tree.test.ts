@@ -3,6 +3,7 @@ import {
   clubCountLabel,
   countryFlagUrl,
   locationMapEmbedUrl,
+  mapEmbedHtml,
   locationMapQuery,
 } from '@/utils/location-tree';
 import type { LocationItem } from '@/stores/location.store';
@@ -98,5 +99,12 @@ describe('locationMapQuery / locationMapEmbedUrl', () => {
   it('returns empty without a query, regardless of key', () => {
     expect(locationMapEmbedUrl('key', '')).toBe('');
     expect(locationMapEmbedUrl('', '')).toBe('');
+  });
+
+  it('wraps the embed URL in an iframe document (so the WebView frames it)', () => {
+    const html = mapEmbedHtml('https://maps.google.com/maps?q=Mumbai&output=embed');
+    expect(html).toContain('<iframe');
+    expect(html).toContain('src="https://maps.google.com/maps?q=Mumbai&output=embed"');
+    expect(html).toContain('</html>');
   });
 });

@@ -193,7 +193,7 @@ describe('venueService integration', () => {
     expect(updated.settings.rules.buffer_minutes).toBe(15);
     expect(updated.settings.rules.max_bookings_per_slot).toBe(10);
     expect(updated.settings.rules.allow_waitlist).toBe(true);
-    expect(updated.settings.rules.max_advance_days).toBe(365); // clamped to max
+    expect(updated.settings.rules.max_advance_days).toBe(60); // clamped to the 60-day max
   });
 
   it('validates settings input and guards ownership', async () => {

@@ -76,9 +76,9 @@ export const WEEKDAY_LABELS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 export const WEEKDAY_FULL = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
 // Slot creation is capped per venue by settings.rules.max_advance_days (default
-// 60, configurable up to 365 — the server honors the same value). The dialog
-// must never promise beyond it, so the effective window clamps the rule to a
-// sane [1, 365] range.
-export const MAX_ADVANCE_DAYS_CAP = 365;
+// 60, and a venue may schedule availability at most 60 days ahead — the server
+// honors the same cap). The dialog must never promise beyond it, so the
+// effective window clamps the rule to a sane [1, 60] range.
+export const MAX_ADVANCE_DAYS_CAP = 60;
 export const effectiveMaxAdvance = (maxAdvanceDays: number) =>
   Math.min(Math.max(1, Math.round(maxAdvanceDays) || 60), MAX_ADVANCE_DAYS_CAP);

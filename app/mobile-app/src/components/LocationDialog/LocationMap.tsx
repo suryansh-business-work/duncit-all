@@ -2,7 +2,7 @@ import { WebView } from 'react-native-webview';
 import { Text, YStack } from 'tamagui';
 
 import { useConfigStore } from '@/stores/config.store';
-import { locationMapEmbedUrl, locationMapQuery } from '@/utils/location-tree';
+import { locationMapEmbedUrl, locationMapQuery, mapEmbedHtml } from '@/utils/location-tree';
 
 interface Props {
   city?: string | null;
@@ -33,7 +33,8 @@ export function LocationMap({ city, zoneName, pincode, country }: Readonly<Props
       >
         <WebView
           testID="location-map"
-          source={{ uri: url }}
+          originWhitelist={['*']}
+          source={{ html: mapEmbedHtml(url) }}
           style={{ flex: 1, backgroundColor: 'transparent' }}
         />
       </YStack>

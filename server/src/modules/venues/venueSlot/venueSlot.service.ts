@@ -69,9 +69,10 @@ function parseDate(value: string, label: string): Date {
 
 // How many days ahead a venue may publish availability — keeps the calendar
 // finite and bookable windows realistic. Configurable per venue via
-// settings.rules.max_advance_days (default 60, clamped 1..365).
+// settings.rules.max_advance_days (default 60, clamped 1..60). A venue may
+// schedule availability at most 60 days ahead.
 const DEFAULT_MAX_ADVANCE_DAYS = 60;
-const MAX_ADVANCE_DAYS_CAP = 365;
+const MAX_ADVANCE_DAYS_CAP = 60;
 
 const venueMaxAdvance = (
   venue: { settings?: { rules?: { max_advance_days?: number } } } | null

@@ -11,6 +11,8 @@ interface PodShopProps {
   pod: PodDetail;
   selectedProducts: Record<string, number>;
   onSelectionChange: (next: Record<string, number>) => void;
+  /** View-only once the viewer has already booked this pod (no re-selecting). */
+  readOnly?: boolean;
 }
 
 /** Footer caption: neutral when nothing is picked, else the count of picks. */
@@ -23,7 +25,12 @@ function productCountLabel(count: number): string {
  * quantity steppers) tracked as a `{ productId: qty }` map, plus a running
  * selected-total. RN port of mWeb's PodCommercePreview; only real products, no
  * perks/placeholder data. */
-export function PodShop({ pod, selectedProducts, onSelectionChange }: Readonly<PodShopProps>) {
+export function PodShop({
+  pod,
+  selectedProducts,
+  onSelectionChange,
+  readOnly = false,
+}: Readonly<PodShopProps>) {
   const { primary } = useThemeColors();
   const [infoProductId, setInfoProductId] = useState<string | null>(null);
   const products = pod.product_requests ?? [];
@@ -92,12 +99,18 @@ export function PodShop({ pod, selectedProducts, onSelectionChange }: Readonly<P
               primary={primary}
               onUpdate={updateQuantity}
               onInfo={setInfoProductId}
+              readOnly={readOnly}
             />
           ))}
         </YStack>
       )}
 
-      {products.length > 0 ? (
+      {products.length > 0 && readOnly ? (
+        <Text testID="pod-shop-booked-note" fontSize={12.5} color="$muted">
+          {'You’ve already booked this pod.'}
+        </Text>
+      ) : null}
+      {products.length > 0 && !readOnly ? (
         <XStack justifyContent="space-between" alignItems="center" testID="pod-shop-total">
           <Text fontSize={12} color="$muted">
             {productCountLabel(selectedCount)}

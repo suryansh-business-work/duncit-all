@@ -148,6 +148,7 @@ export default function PodDetailsPage() {
           priceFormat={priceFormat}
           selectedProducts={productSelection.selectedProducts}
           onSelectionChange={productSelection.setSelectedProducts}
+          viewOnly={!!data?.podMembershipState?.is_member}
         />
       )}
 

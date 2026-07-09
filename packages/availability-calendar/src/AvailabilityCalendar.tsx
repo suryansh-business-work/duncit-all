@@ -126,11 +126,16 @@ function DayCell({ date, view, monthStart, today, bucket, isHoliday, selectedDat
   return (
     <Box
       role="button"
-      tabIndex={0}
-      onClick={() => onSelect(date)}
-      onKeyDown={(e) => {
-        if (e.key === 'Enter' || e.key === ' ') onSelect(date);
-      }}
+      tabIndex={isPast ? -1 : 0}
+      aria-disabled={isPast}
+      onClick={isPast ? undefined : () => onSelect(date)}
+      onKeyDown={
+        isPast
+          ? undefined
+          : (e) => {
+              if (e.key === 'Enter' || e.key === ' ') onSelect(date);
+            }
+      }
       sx={{
         aspectRatio: isDayView ? undefined : '1 / 1',
         minHeight: isDayView ? 120 : undefined,
@@ -140,14 +145,15 @@ function DayCell({ date, view, monthStart, today, bucket, isHoliday, selectedDat
         borderColor: isSelected ? 'primary.main' : 'divider',
         bgcolor,
         color,
-        cursor: 'pointer',
+        // Past days are read-only — dimmed and non-interactive.
+        cursor: isPast ? 'default' : 'pointer',
         opacity: isOtherMonth ? 0.5 : 1,
         display: 'flex',
         flexDirection: 'column',
         gap: 0.25,
         position: 'relative',
         outline: 'none',
-        '&:hover': { borderColor: 'primary.main' },
+        '&:hover': { borderColor: isPast ? 'divider' : 'primary.main' },
         '&:focus-visible': { boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}` },
       }}
     >

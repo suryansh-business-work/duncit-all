@@ -165,6 +165,7 @@ export function PodDetailsScreen() {
                 pod={pod}
                 selectedProducts={selectedProducts}
                 onSelectionChange={setSelectedProducts}
+                readOnly={!!membershipState?.is_member}
               />
             </Reveal>
           ) : null}

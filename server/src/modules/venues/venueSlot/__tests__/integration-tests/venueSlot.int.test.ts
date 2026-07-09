@@ -124,23 +124,28 @@ describe('venueSlotService integration', () => {
     ).rejects.toThrow(/60 days/i);
   });
 
-  it('honors a venue-configured advance cap above the default 60', async () => {
-    const v = await VenueModel.create({
-      owner_user_id: ownerId,
+  it('caps the advance window at 60 days even when a venue stored a higher value', async () => {
+    // Store 90 directly (past the model max) to prove the hard cap still clamps it.
+    const id = new Types.ObjectId();
+    await VenueModel.collection.insertOne({
+      _id: id,
+      owner_user_id: new Types.ObjectId(ownerId),
       status: 'APPROVED',
       is_active: true,
       venue_name: 'Hall',
       settings: { rules: { max_advance_days: 90 } },
-    });
-    const venueId = String(v._id);
+    } as never);
+    const venueId = String(id);
+    // 55 days is within the 60-day cap → allowed.
     const created = await venueSlotService.create(ownerId, {
       venue_id: venueId,
-      slots: [{ start_at: inDays(75), end_at: inDays(75.1) }],
+      slots: [{ start_at: inDays(55), end_at: inDays(55.1) }],
     });
     expect(created).toHaveLength(1);
+    // 61 days exceeds the hard 60-day cap despite the venue's stored 90.
     await expect(
-      venueSlotService.create(ownerId, { venue_id: venueId, slots: [{ start_at: inDays(91), end_at: inDays(91.1) }] })
-    ).rejects.toThrow(/90 days/i);
+      venueSlotService.create(ownerId, { venue_id: venueId, slots: [{ start_at: inDays(61), end_at: inDays(61.1) }] })
+    ).rejects.toThrow(/60 days/i);
   });
 
   it('createSkippingOverlaps drops past, beyond-cap and overlapping slots', async () => {

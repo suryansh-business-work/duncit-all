@@ -1,7 +1,9 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PaymentReleaseModel } from '@modules/finance/finance/paymentRelease.model';
+import { getFinanceSettings } from '@modules/finance/finance/finance.model';
 import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { EcommBrandModel } from '@modules/venues/ecommBrand/ecommBrand.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
@@ -39,12 +41,23 @@ function releaseTotal(docs: any[]) {
   return money(docs.reduce((sum, doc) => sum + Number(doc.approved_amount ?? doc.amount_requested ?? 0), 0));
 }
 
-function productTotal(pods: any[], productIds: Set<string>) {
+const clampPct = (n: number) => Math.min(100, Math.max(0, Number(n) || 0));
+
+/**
+ * A partner's product earning is the NET of the Duncit commission (gross −
+ * commission), mirroring the product invoice/payout (productInvoice.service).
+ * This keeps the product stream on the same settled basis as venue/host
+ * earnings, so Summary Total reflects actual earning rather than gross retail.
+ */
+function productTotal(pods: any[], productIds: Set<string>, commissionByProduct: Map<string, number>) {
   return money(pods.reduce((sum, pod) => {
     const items = pod.product_requests ?? [];
     return sum + items.reduce((itemSum: number, item: any) => {
-      if (!productIds.has(String(item.product_id))) return itemSum;
-      return itemSum + Number(item.total_cost ?? Number(item.unit_cost || 0) * Number(item.quantity || 0));
+      const pid = String(item.product_id);
+      if (!productIds.has(pid)) return itemSum;
+      const gross = Number(item.total_cost ?? Number(item.unit_cost || 0) * Number(item.quantity || 0));
+      const pct = commissionByProduct.get(pid) ?? 0;
+      return itemSum + gross * (1 - pct / 100);
     }, 0);
   }, 0));
 }
@@ -126,11 +139,28 @@ export const partnerDashboardService = {
 
     const [venues, products] = await Promise.all([
       VenueModel.find({ owner_user_id: userObjectId }).select('_id status').lean(),
-      InventoryProductModel.find({ listing_submitted_by_id: userId }).select('_id listing_review_status').lean(),
+      InventoryProductModel.find({ listing_submitted_by_id: userId })
+        .select('_id listing_review_status commission_pct brand_id')
+        .lean(),
     ]);
     const venueIds = venues.map((venue) => venue._id);
     const productIds = products.map((product) => product._id);
     const productIdSet = new Set(productIds.map(String));
+
+    // Duncit commission per product (brand override → per-product → global
+    // default) so product earning is netted like venue/host settled payouts.
+    const fs = await getFinanceSettings();
+    const brandIds = [...new Set(products.map((p: any) => String(p.brand_id ?? '')).filter(Boolean))];
+    const brands = brandIds.length
+      ? await EcommBrandModel.find({ _id: { $in: brandIds } }).select('product_commission_pct').lean()
+      : [];
+    const brandPctById = new Map(brands.map((b: any) => [String(b._id), b.product_commission_pct ?? 0]));
+    const commissionByProduct = new Map<string, number>(
+      products.map((p: any) => {
+        const brandPct = p.brand_id ? brandPctById.get(String(p.brand_id)) ?? 0 : 0;
+        return [String(p._id), clampPct(brandPct || p.commission_pct || fs.default_product_commission_pct)];
+      }),
+    );
 
     const [hostPods, venuePods, productPods, venueReleases, hostReleases] = await Promise.all([
       PodModel.find({ pod_hosts_id: userObjectId, ...podDateFilter }).lean(),
@@ -145,7 +175,7 @@ export const partnerDashboardService = {
     const summaryPods = uniquePods([hostPods, venuePods, productPods]);
     const venueEarning = releaseTotal(venueReleases);
     const hostEarning = releaseTotal(hostReleases);
-    const summaryProductEarning = productTotal(productPods, productIdSet);
+    const summaryProductEarning = productTotal(productPods, productIdSet, commissionByProduct);
 
     // Upcoming, still-available slots the owner has published across their venues.
     const addedSlots = venueIds.length
@@ -160,8 +190,8 @@ export const partnerDashboardService = {
       from: from.toISOString(),
       to: to.toISOString(),
       summary: metrics(summaryPods, { venue: venueEarning, host: hostEarning, product: summaryProductEarning }, addedSlots),
-      venue: metrics(venuePods, { venue: venueEarning, product: productTotal(venuePods, productIdSet) }, addedSlots),
-      host: metrics(hostPods, { host: hostEarning, product: productTotal(hostPods, productIdSet) }),
+      venue: metrics(venuePods, { venue: venueEarning, product: productTotal(venuePods, productIdSet, commissionByProduct) }, addedSlots),
+      host: metrics(hostPods, { host: hostEarning, product: productTotal(hostPods, productIdSet, commissionByProduct) }),
       products: metrics(productPods, { product: summaryProductEarning }),
     };
   },

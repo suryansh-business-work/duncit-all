@@ -12,6 +12,8 @@ interface Props {
   priceFormat: (amount: number) => string;
   selectedProducts: Record<string, number>;
   onSelectionChange: (next: Record<string, number>) => void;
+  /** View-only once the viewer has already booked this pod (no re-selecting). */
+  viewOnly?: boolean;
 }
 
 /** Footer label: a count of selected products, or a neutral total caption. */
@@ -20,7 +22,7 @@ function productCountLabel(count: number): string {
   return `${count} product${count === 1 ? '' : 's'} selected`;
 }
 
-export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange }: Readonly<Props>) {
+export default function PodCommercePreview({ pod, priceFormat, selectedProducts, onSelectionChange, viewOnly = false }: Readonly<Props>) {
   const theme = useTheme();
   const isDark = theme.palette.mode === 'dark';
   const requests = (pod.product_requests ?? []).filter((item: any) => item?.product_name);
@@ -88,35 +90,38 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
           {requests.map((item: any) => {
           const maxQuantity = Number(item.available_count ?? item.quantity ?? 0);
           const quantity = selectedProducts[item.product_id] || 0;
-          const selected = quantity > 0;
+          // Members can only view products — never re-select them.
+          const selected = !viewOnly && quantity > 0;
           const imageUrl = item.image_url || item.images?.[0] || '';
           return (
             <Stack
               key={`${item.product_id}-${item.product_name}`}
-              onClick={() => updateQuantity(item.product_id, selected ? 0 : 1)}
+              onClick={viewOnly ? undefined : () => updateQuantity(item.product_id, selected ? 0 : 1)}
               direction="row"
               spacing={1}
               alignItems="center"
               sx={{
                 p: 1,
                 borderRadius: 3,
-                cursor: 'pointer',
+                cursor: viewOnly ? 'default' : 'pointer',
                 border: '1px solid',
                 borderColor: selected ? selectedBorder : borderColor,
                 bgcolor: selected ? selectedBg : itemBg,
                 transition: 'all 0.18s ease',
               }}
             >
-              <Checkbox
-                checked={selected}
-                onChange={() => updateQuantity(item.product_id, selected ? 0 : 1)}
-                onClick={(event) => event.stopPropagation()}
-                sx={{
-                  p: 0.5,
-                  color: mutedColor,
-                  '&.Mui-checked': { color: '#ff8b5f' },
-                }}
-              />
+              {!viewOnly && (
+                <Checkbox
+                  checked={selected}
+                  onChange={() => updateQuantity(item.product_id, selected ? 0 : 1)}
+                  onClick={(event) => event.stopPropagation()}
+                  sx={{
+                    p: 0.5,
+                    color: mutedColor,
+                    '&.Mui-checked': { color: '#ff8b5f' },
+                  }}
+                />
+              )}
               <Box sx={{ width: 54, height: 54, borderRadius: 2, overflow: 'hidden', flex: '0 0 auto', bgcolor: 'rgba(255,139,95,0.18)' }}>
                 {imageUrl && !imageErrors[item.product_id] && <Box component="img" src={imageUrl} alt={item.product_name} onError={() => setImageErrors((prev) => ({ ...prev, [item.product_id]: true }))} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />}
               </Box>
@@ -150,14 +155,20 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
       )}
 
       <Divider sx={{ my: 1.5, borderColor: isDark ? 'rgba(255,255,255,0.16)' : 'divider' }} />
-      <Stack direction="row" alignItems="center" justifyContent="space-between">
+      {viewOnly ? (
         <Typography variant="caption" sx={{ color: mutedColor }}>
-          {productCountLabel(selectedCount)}
+          You&apos;ve already booked this pod.
         </Typography>
-        <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
-          {priceFormat(selectedTotal)}
-        </Typography>
-      </Stack>
+      ) : (
+        <Stack direction="row" alignItems="center" justifyContent="space-between">
+          <Typography variant="caption" sx={{ color: mutedColor }}>
+            {productCountLabel(selectedCount)}
+          </Typography>
+          <Typography variant="subtitle2" sx={{ fontWeight: 900 }}>
+            {priceFormat(selectedTotal)}
+          </Typography>
+        </Stack>
+      )}
 
       <ProductDetailDialog productId={infoProductId} onClose={() => setInfoProductId(null)} />
     </Box>

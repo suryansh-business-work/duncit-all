@@ -6,6 +6,7 @@ import { Text, XStack, YStack } from 'tamagui';
 import { useThemeColors } from '@/hooks/useThemeColors';
 import type { UserNotification } from '@/hooks/useNotifications';
 import { formatRelative } from '@/utils/date-format';
+import { notificationIconName } from '@/utils/notification-icon';
 
 /** A single notification card — chat-style row (avatar · title + preview ·
  * time), with unread cards highlighted by the primary gradient (B3-4).
@@ -26,6 +27,9 @@ export function NotificationRow({
   const titleColor = unread ? '#ffffff' : '$color';
   const bodyColor = unread ? '#ffffff' : '$color';
   const ink = unread ? '#ffffff' : undefined;
+  // Contextual icon by notification type (falls back to the bell) instead of
+  // repeating a generic bell on every row.
+  const fallbackIcon = notificationIconName(notification.title);
 
   const body = (
     <XStack flex={1} gap={12} padding={12} alignItems="center">
@@ -45,7 +49,7 @@ export function NotificationRow({
             resizeMode="cover"
           />
         ) : (
-          <MaterialIcons name="notifications-active" size={22} color={onPrimary} />
+          <MaterialIcons name={fallbackIcon} size={22} color={onPrimary} />
         )}
       </YStack>
       <YStack flex={1} gap={2}>

@@ -7,6 +7,13 @@ export const postTypeDefs = /* GraphQL */ `
     created_at: String!
   }
 
+  "One viewer of a STORY (Bugs 2 & 4)."
+  type StoryView {
+    user_id: ID!
+    user: User
+    viewed_at: String!
+  }
+
   type Post {
     id: ID!
     author_id: ID!
@@ -21,6 +28,10 @@ export const postTypeDefs = /* GraphQL */ `
     liked_by_me: Boolean!
     comments: [PostComment!]!
     comments_count: Int!
+    "Has the signed-in viewer opened this story? Drives the seen/unseen ring (Bug 2)."
+    seen_by_me: Boolean!
+    "How many distinct viewers have opened this story (Bug 4)."
+    views_count: Int!
     expires_at: String
     created_at: String!
     updated_at: String!
@@ -52,11 +63,15 @@ export const postTypeDefs = /* GraphQL */ `
     clubStories(club_id: ID!): [Post!]!
     "Posts + active stories from the people/clubs the viewer follows, newest first."
     followingFeed(source: FollowingFeedSource!, limit: Int): [Post!]!
+    "Owner-only list of who viewed a story, newest first (Bug 4)."
+    storyViewers(post_doc_id: ID!): [StoryView!]!
   }
 
   extend type Mutation {
     createPost(input: CreatePostInput!): Post!
     deletePost(post_doc_id: ID!): Boolean!
+    "Record that the signed-in viewer opened this story; idempotent (Bugs 2 & 4)."
+    recordStoryView(post_doc_id: ID!): Post!
     togglePostLike(post_doc_id: ID!): Post!
     addPostComment(post_doc_id: ID!, text: String!): Post!
     deletePostComment(post_doc_id: ID!, comment_id: ID!): Post!

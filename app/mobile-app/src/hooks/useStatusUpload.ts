@@ -2,9 +2,10 @@ import { useState } from 'react';
 import * as ImagePicker from 'expo-image-picker';
 
 import { useStatusStore } from '@/stores/status.store';
+import { scheduleLocalNotification } from '@/services/notifications.service';
 
-// Story videos are short clips — keep them to 30s like the web app.
-const MAX_STORY_VIDEO_SECONDS = 30;
+// Story videos are short clips — capped at 15s (Bug 3).
+const MAX_STORY_VIDEO_SECONDS = 15;
 
 /** Drives the "post a story" flow: pick an image or video from the library,
  * upload it and publish the story. Mirrors mWeb's StatusUploadProvider. */
@@ -12,6 +13,8 @@ export function useStatusUpload() {
   const [uploading, setUploading] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const publish = useStatusStore((s) => s.publish);
+  // Coarse upload progress, surfaced in-app on the "Your story" tile (Bug 1).
+  const progress = useStatusStore((s) => s.progress);
 
   const pickAndUpload = async () => {
     setError(undefined);
@@ -38,6 +41,11 @@ export function useStatusUpload() {
     }
 
     setUploading(true);
+    // Surface the upload in the notification tray (Bug 1) — best-effort so a
+    // denied notification permission never blocks posting.
+    scheduleLocalNotification('Posting your story…', 'Uploading your story to Duncit.').catch(
+      () => undefined,
+    );
     try {
       await publish({
         base64: asset.base64,
@@ -45,6 +53,10 @@ export function useStatusUpload() {
         mimeType: asset.mimeType,
         mediaType: isVideo ? 'VIDEO' : 'IMAGE',
       });
+      scheduleLocalNotification(
+        'Story posted 🎉',
+        'Your story is live for the next 24 hours.',
+      ).catch(() => undefined);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Could not post story.');
     } finally {
@@ -52,5 +64,5 @@ export function useStatusUpload() {
     }
   };
 
-  return { uploading, error, pickAndUpload };
+  return { uploading, error, progress, pickAndUpload };
 }

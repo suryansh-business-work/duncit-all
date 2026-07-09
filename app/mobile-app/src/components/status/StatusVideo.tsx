@@ -8,7 +8,7 @@ interface StatusVideoProps {
 
 const html = (uri: string) => `<!doctype html><html><head>
 <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-<style>html,body{margin:0;height:100%;background:#000}video{width:100%;height:100%;object-fit:contain}</style>
+<style>html,body{margin:0;height:100%;background:#000}video{width:100%;height:100%;object-fit:cover}</style>
 </head><body>
 <video src="${uri}" autoplay muted playsinline></video>
 <script>

@@ -5,11 +5,16 @@ import { useStatusUpload } from '@/hooks/useStatusUpload';
 
 const mockPublish = jest.fn();
 jest.mock('@/stores/status.store', () => ({
-  useStatusStore: (selector: (s: unknown) => unknown) => selector({ publish: mockPublish }),
+  useStatusStore: (selector: (s: unknown) => unknown) =>
+    selector({ publish: mockPublish, progress: 0 }),
 }));
 jest.mock('expo-image-picker', () => ({
   requestMediaLibraryPermissionsAsync: jest.fn(),
   launchImageLibraryAsync: jest.fn(),
+}));
+const mockNotify = jest.fn().mockResolvedValue('id');
+jest.mock('@/services/notifications.service', () => ({
+  scheduleLocalNotification: (...args: unknown[]) => mockNotify(...args),
 }));
 
 const reqPerm = ImagePicker.requestMediaLibraryPermissionsAsync as jest.Mock;
@@ -19,6 +24,7 @@ beforeEach(() => {
   mockPublish.mockReset();
   reqPerm.mockReset();
   launch.mockReset();
+  mockNotify.mockReset().mockResolvedValue('id');
 });
 
 describe('useStatusUpload', () => {
@@ -73,18 +79,33 @@ describe('useStatusUpload', () => {
     expect(mockPublish).toHaveBeenCalledWith(expect.objectContaining({ mediaType: 'VIDEO' }));
   });
 
-  it('rejects a video longer than 30 seconds with a warning', async () => {
+  it('rejects a video longer than the 15s story cap with a warning (Bug 3)', async () => {
     reqPerm.mockResolvedValue({ granted: true });
     launch.mockResolvedValue({
       canceled: false,
-      assets: [{ base64: 'vid', type: 'video', duration: 45000 }],
+      assets: [{ base64: 'vid', type: 'video', duration: 20000 }],
     });
     const { result } = renderHook(() => useStatusUpload());
     await act(async () => {
       await result.current.pickAndUpload();
     });
-    expect(result.current.error).toContain('45s');
+    expect(result.current.error).toContain('20s');
+    expect(result.current.error).toContain('15s');
     expect(mockPublish).not.toHaveBeenCalled();
+  });
+
+  it('posts start + success notifications, tolerating notification failures (Bug 1)', async () => {
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValue({ canceled: false, assets: [{ base64: 'abc', type: 'image' }] });
+    mockNotify.mockReset().mockRejectedValue(new Error('no permission'));
+    mockPublish.mockResolvedValue(undefined);
+    const { result } = renderHook(() => useStatusUpload());
+    await act(async () => {
+      await result.current.pickAndUpload();
+    });
+    // Both the "posting" and "posted" notifications were attempted.
+    expect(mockNotify).toHaveBeenCalledTimes(2);
+    expect(result.current.error).toBeUndefined();
   });
 
   it('sets an error when permission is denied', async () => {

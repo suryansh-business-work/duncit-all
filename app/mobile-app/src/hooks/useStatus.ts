@@ -12,6 +12,11 @@ export interface StatusSlide {
   createdAt: string;
   /** When the status auto-expires (drives the "X remaining" countdown). */
   expiresAt?: string | null;
+  /** Has the viewer already opened this slide — greys the ring (Bug 2). */
+  seenByMe: boolean;
+  /** Has the viewer liked this story, and the running like count (Bug 5). */
+  likedByMe: boolean;
+  likesCount: number;
 }
 
 export interface StatusGroup {
@@ -34,6 +39,9 @@ const toSlide = (post: StatusPost): StatusSlide => ({
   caption: post.caption,
   createdAt: post.created_at,
   expiresAt: post.expires_at,
+  seenByMe: post.seen_by_me ?? false,
+  likedByMe: post.liked_by_me ?? false,
+  likesCount: post.likes_count ?? 0,
 });
 
 /** Build one group per author, keeping every story as a chronological slide. */

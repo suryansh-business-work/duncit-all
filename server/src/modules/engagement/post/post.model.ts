@@ -10,6 +10,13 @@ export interface IPostComment {
   created_at: Date;
 }
 
+/** A record of one viewer opening a STORY — powers seen/unseen rings (Bug 2)
+ * and the owner's "who viewed" list (Bug 4). */
+export interface IStoryView {
+  user_id: Types.ObjectId;
+  viewed_at: Date;
+}
+
 export interface IPost extends Document {
   author_id: Types.ObjectId;
   /** Optional club a STORY is attached to — powers club-scoped stories (Bug 6). */
@@ -20,6 +27,8 @@ export interface IPost extends Document {
   caption: string;
   likes: Types.ObjectId[];
   comments: IPostComment[];
+  /** Who has opened this story (deduped). Empty for permanent posts. */
+  views: IStoryView[];
   expires_at?: Date | null;
   created_at: Date;
   updated_at: Date;
@@ -32,6 +41,14 @@ const commentSchema = new Schema<IPostComment>(
     created_at: { type: Date, default: () => new Date() },
   },
   { _id: true }
+);
+
+const storyViewSchema = new Schema<IStoryView>(
+  {
+    user_id: { type: Schema.Types.ObjectId, ref: 'User', required: true },
+    viewed_at: { type: Date, default: () => new Date() },
+  },
+  { _id: false }
 );
 
 const postSchema = new Schema<IPost>(
@@ -47,6 +64,8 @@ const postSchema = new Schema<IPost>(
     caption: { type: String, default: '', trim: true, maxlength: 2200 },
     likes: [{ type: Schema.Types.ObjectId, ref: 'User' }],
     comments: { type: [commentSchema], default: [] },
+    // Deduped viewers of a STORY (Bugs 2 & 4). Purged with the story by the TTL.
+    views: { type: [storyViewSchema], default: [] },
     // Set only for stories (created_at + 24h). Mongo TTL auto-purges expired
     // stories; permanent posts have no expires_at and are never touched.
     expires_at: { type: Date, default: null },

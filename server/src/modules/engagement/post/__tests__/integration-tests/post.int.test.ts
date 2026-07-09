@@ -125,6 +125,63 @@ describe('postService integration', () => {
     expect(inbox).toHaveLength(1);
   });
 
+  it('records story views idempotently, flips seen_by_me, and never counts the owner (Bugs 2 & 4)', async () => {
+    const owner = new Types.ObjectId().toString();
+    const story = await postService.create(owner, { image_url: img, kind: 'STORY' });
+    const viewer = new Types.ObjectId().toString();
+
+    // Before viewing, the viewer's ring is unseen and there are no views.
+    const before = await postService.getById(story.id, viewer);
+    expect(before?.seen_by_me).toBe(false);
+    expect(before?.views_count).toBe(0);
+
+    // Recording a view flips seen_by_me for that viewer and counts one view.
+    const seen = await postService.recordView(story.id, viewer);
+    expect(seen.seen_by_me).toBe(true);
+    expect(seen.views_count).toBe(1);
+
+    // Idempotent — re-viewing does not double-count.
+    await postService.recordView(story.id, viewer);
+    expect((await postService.getById(story.id, viewer))?.views_count).toBe(1);
+
+    // The owner viewing their own story is never recorded.
+    const ownerSeen = await postService.recordView(story.id, owner);
+    expect(ownerSeen.views_count).toBe(1);
+    expect(ownerSeen.seen_by_me).toBe(false);
+
+    // Another viewer with no view sees an unseen ring.
+    expect((await postService.getById(story.id, new Types.ObjectId().toString()))?.seen_by_me).toBe(
+      false
+    );
+  });
+
+  it('lists story viewers newest-first, owner-only (Bug 4)', async () => {
+    const owner = new Types.ObjectId().toString();
+    const story = await postService.create(owner, { image_url: img, kind: 'STORY' });
+    const first = new Types.ObjectId().toString();
+    const second = new Types.ObjectId().toString();
+
+    await postService.recordView(story.id, first);
+    await PostModel.updateOne(
+      { _id: story.id, 'views.user_id': new Types.ObjectId(first) },
+      { $set: { 'views.$.viewed_at': new Date(Date.now() - 60_000) } }
+    );
+    await postService.recordView(story.id, second);
+
+    const viewers = await postService.listViewers(story.id, owner);
+    // Newest (second) first.
+    expect(viewers.map((v) => v.user_id)).toEqual([second, first]);
+
+    // A non-owner cannot see the viewers list.
+    await expect(postService.listViewers(story.id, first)).rejects.toThrow(/not allowed/i);
+  });
+
+  it('rejects recording/listing views on a missing story', async () => {
+    const ghost = new Types.ObjectId().toString();
+    await expect(postService.recordView(ghost, author)).rejects.toThrow(/not found/i);
+    await expect(postService.listViewers(ghost, author)).rejects.toThrow(/not found/i);
+  });
+
   it('only lets the author delete their post', async () => {
     const post = await postService.create(author, { image_url: img });
     await expect(postService.remove(post.id, new Types.ObjectId().toString())).rejects.toThrow(/not allowed/i);

@@ -29,14 +29,21 @@ interface StatusViewerProps {
   onPrev?: () => void;
   /** Navigate to the item's club/pod/user when "Open details" is tapped (bug 3). */
   onOpenTarget?: (target: StoryTarget) => void;
-  /** Own story only — delete the currently shown slide (item 12). */
+  /** Own story only — delete the currently shown slide via the kebab menu (Bug 7). */
   onDelete?: (slideId: string) => void;
+  /** Own story only — open the "seen by" viewers sheet for a slide (Bug 4). */
+  onViewers?: (slideId: string) => void;
+  /** Followers' stories only — like/unlike the current slide (Bug 5). */
+  onToggleLike?: (slideId: string) => void;
+  /** Record that a slide was shown so its ring greys (Bug 2). */
+  onSlideSeen?: (slideId: string) => void;
 }
 
-// Each image slide runs 15s; videos play to their end, capped at 30s so a long
-// clip can't hold the story open.
+// Each slide runs 15s (images and videos alike); a video that ends sooner
+// advances immediately. The 15s ceiling keeps a long clip from holding the
+// story open (Bugs 3 & 8).
 const IMAGE_DURATION_MS = 15000;
-const VIDEO_CAP_MS = 30000;
+const VIDEO_CAP_MS = 15000;
 const TICK_MS = 100;
 
 /* istanbul ignore next -- placeholder ref value, replaced on the first render */
@@ -51,10 +58,16 @@ export function StatusViewer({
   onPrev,
   onOpenTarget,
   onDelete,
+  onViewers,
+  onToggleLike,
+  onSlideSeen,
 }: Readonly<StatusViewerProps>) {
   const { onPrimary } = useThemeColors();
   const [index, setIndex] = useState(0);
   const [progress, setProgress] = useState(0);
+  const [menuOpen, setMenuOpen] = useState(false);
+  const [liked, setLiked] = useState(false);
+  const [likeCount, setLikeCount] = useState(0);
   const slides = status?.slides ?? [];
   const current = slides[index];
   const isVideo = current?.mediaType === 'VIDEO';
@@ -89,6 +102,28 @@ export function StatusViewer({
     setIndex(0);
     setProgress(0);
   }, [status]);
+
+  // Per-slide setup: seed the like button, close any open menu, and record the
+  // view so the ring greys (Bugs 2 & 5). Keyed on the slide id + its like values
+  // (primitives) so an unrelated store update never resets a local like toggle.
+  const currentId = current?.id;
+  const currentLiked = current?.likedByMe ?? false;
+  const currentLikes = current?.likesCount ?? 0;
+  useEffect(() => {
+    setLiked(currentLiked);
+    setLikeCount(currentLikes);
+    setMenuOpen(false);
+    if (currentId && onSlideSeen) onSlideSeen(currentId);
+  }, [currentId, currentLiked, currentLikes, onSlideSeen]);
+
+  const toggleLike = () => {
+    /* istanbul ignore next -- the heart only mounts when both exist */
+    if (!current || !onToggleLike) return;
+    const next = !liked;
+    setLiked(next);
+    setLikeCount((c) => (next ? c + 1 : c - 1));
+    onToggleLike(current.id);
+  };
 
   useEffect(() => {
     if (!status || !current) return undefined;
@@ -165,10 +200,10 @@ export function StatusViewer({
               </YStack>
               {onDelete && current ? (
                 <XStack
-                  testID="status-viewer-delete"
+                  testID="status-viewer-kebab"
                   role="button"
-                  aria-label="Delete story"
-                  onPress={() => onDelete(current.id)}
+                  aria-label="Story options"
+                  onPress={() => setMenuOpen((open) => !open)}
                   width={36}
                   height={36}
                   marginRight={8}
@@ -177,7 +212,7 @@ export function StatusViewer({
                   borderRadius={18}
                   backgroundColor="rgba(255,255,255,0.16)"
                 >
-                  <MaterialIcons name="delete-outline" size={20} color="#ffffff" />
+                  <MaterialIcons name="more-vert" size={20} color="#ffffff" />
                 </XStack>
               ) : null}
               <XStack
@@ -195,6 +230,40 @@ export function StatusViewer({
                 <MaterialIcons name="close" size={20} color="#ffffff" />
               </XStack>
             </XStack>
+            {onDelete && menuOpen && current ? (
+              <YStack
+                testID="status-viewer-menu"
+                position="absolute"
+                top={92}
+                right={16}
+                zIndex={20}
+                backgroundColor="$surface"
+                borderRadius={12}
+                borderWidth={1}
+                borderColor="$borderColor"
+                overflow="hidden"
+              >
+                <XStack
+                  testID="status-viewer-delete"
+                  role="button"
+                  aria-label="Delete story"
+                  onPress={() => {
+                    setMenuOpen(false);
+                    onDelete(current.id);
+                  }}
+                  alignItems="center"
+                  gap={8}
+                  paddingHorizontal={16}
+                  paddingVertical={12}
+                  pressStyle={{ opacity: 0.7 }}
+                >
+                  <MaterialIcons name="delete-outline" size={18} color="#e0435a" />
+                  <Text fontSize={14} fontWeight="800" color="#e0435a">
+                    Delete
+                  </Text>
+                </XStack>
+              </YStack>
+            ) : null}
             <YStack
               flex={1}
               testID="status-swipe"
@@ -212,7 +281,7 @@ export function StatusViewer({
                   testID="status-viewer-image"
                   source={{ uri: current.imageUrl }}
                   style={{ flex: 1, width: '100%' }}
-                  resizeMode="contain"
+                  resizeMode="cover"
                 />
               ) : null}
               <XStack position="absolute" top={0} bottom={0} left={0} right={0}>
@@ -224,6 +293,49 @@ export function StatusViewer({
               <Text color="#ffffff" fontSize={14} textAlign="center" padding={16}>
                 {current.caption}
               </Text>
+            ) : null}
+            {onToggleLike && current ? (
+              <XStack paddingHorizontal={16} paddingTop={8} alignItems="center" gap={8}>
+                <XStack
+                  testID="status-like"
+                  role="button"
+                  aria-label={liked ? 'Unlike story' : 'Like story'}
+                  aria-checked={liked}
+                  onPress={toggleLike}
+                  alignItems="center"
+                  gap={6}
+                  pressStyle={{ opacity: 0.7 }}
+                >
+                  <MaterialIcons
+                    name={liked ? 'favorite' : 'favorite-border'}
+                    size={26}
+                    color={liked ? '#ff4f73' : '#ffffff'}
+                  />
+                  {likeCount > 0 ? (
+                    <Text testID="status-like-count" fontSize={14} fontWeight="800" color="#ffffff">
+                      {likeCount}
+                    </Text>
+                  ) : null}
+                </XStack>
+              </XStack>
+            ) : null}
+            {onViewers && current ? (
+              <XStack paddingHorizontal={16} paddingTop={8}>
+                <XStack
+                  testID="status-viewers"
+                  role="button"
+                  aria-label="See who viewed this story"
+                  onPress={() => onViewers(current.id)}
+                  alignItems="center"
+                  gap={6}
+                  pressStyle={{ opacity: 0.7 }}
+                >
+                  <MaterialIcons name="visibility" size={20} color="#ffffff" />
+                  <Text fontSize={13} fontWeight="800" color="#ffffff">
+                    Viewers
+                  </Text>
+                </XStack>
+              </XStack>
             ) : null}
             {status?.target && onOpenTarget ? (
               <XStack paddingHorizontal={16} paddingBottom={12}>

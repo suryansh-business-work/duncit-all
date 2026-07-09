@@ -32,6 +32,7 @@ export const PARTNER_DASHBOARD = gql`
       locality
       capacity
       status
+      is_active
       updated_at
       created_at
     }

@@ -78,7 +78,7 @@ function normalizeRulesInput(base: ReturnType<typeof toRulesPub>, input: any) {
   return {
     buffer_minutes: intField(input.buffer_minutes, 0, 1440, base.buffer_minutes),
     min_notice_minutes: intField(input.min_notice_minutes, 0, 525_600, base.min_notice_minutes),
-    max_advance_days: intField(input.max_advance_days, 1, 365, base.max_advance_days),
+    max_advance_days: intField(input.max_advance_days, 1, 60, base.max_advance_days),
     max_bookings_per_slot: intField(input.max_bookings_per_slot, 1, 100_000, base.max_bookings_per_slot),
     allow_instant_booking: boolField(input.allow_instant_booking, base.allow_instant_booking),
     allow_waitlist: boolField(input.allow_waitlist, base.allow_waitlist),

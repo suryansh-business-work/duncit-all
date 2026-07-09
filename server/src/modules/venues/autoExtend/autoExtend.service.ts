@@ -8,7 +8,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 const clampMaxAdvance = (v: number | undefined) => {
   const n = Math.round(Number(v));
   if (!Number.isFinite(n)) return 60;
-  return Math.max(1, Math.min(365, n));
+  return Math.max(1, Math.min(60, n));
 };
 
 const log = (msg: string, err?: unknown) => {

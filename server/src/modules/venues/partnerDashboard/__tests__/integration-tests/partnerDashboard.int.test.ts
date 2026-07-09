@@ -2,6 +2,8 @@ import { Types } from 'mongoose';
 import { partnerDashboardService } from '../../partnerDashboard.service';
 import { VenueModel } from '@modules/venues/venue/venue.model';
 import { VenueSlotModel } from '@modules/venues/venueSlot/venueSlot.model';
+import { InventoryProductModel } from '@modules/venues/inventory/inventory.model';
+import { PodModel } from '@modules/pods/pod/pod.model';
 
 const inDays = (d: number) => new Date(Date.now() + d * 86_400_000);
 
@@ -40,5 +42,27 @@ describe('partnerDashboardService integration', () => {
 
     const result = await partnerDashboardService.get(ownerId, { from: '2020-01-01', to: '2030-01-01' });
     expect(result.venue.added_slots).toBe(2);
+  });
+
+  it('nets product earning by the Duncit commission (settled basis, not gross)', async () => {
+    const ownerId = new Types.ObjectId().toString();
+    const productId = new Types.ObjectId();
+    await InventoryProductModel.collection.insertOne({
+      _id: productId,
+      listing_submitted_by_id: ownerId,
+      listing_review_status: 'APPROVED',
+      commission_pct: 20,
+    } as never);
+    await PodModel.collection.insertOne({
+      _id: new Types.ObjectId(),
+      pod_title: 'Jam',
+      pod_date_time: new Date('2025-06-01T00:00:00Z'),
+      product_requests: [{ product_id: productId, unit_cost: 100, quantity: 2, total_cost: 200 }],
+    } as never);
+
+    const result = await partnerDashboardService.get(ownerId, { from: '2020-01-01', to: '2030-01-01' });
+    // Gross ₹200 minus the 20% product commission = ₹160 net earning.
+    expect(result.products.product_earning).toBe(160);
+    expect(result.summary.product_earning).toBe(160);
   });
 });

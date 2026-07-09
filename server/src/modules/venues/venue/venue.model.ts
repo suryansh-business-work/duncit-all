@@ -164,7 +164,7 @@ const venueRulesSchema = new Schema<IVenueRules>(
   {
     buffer_minutes: { type: Number, default: 0, min: 0, max: 1440 },
     min_notice_minutes: { type: Number, default: 0, min: 0, max: 525_600 },
-    max_advance_days: { type: Number, default: 60, min: 1, max: 365 },
+    max_advance_days: { type: Number, default: 60, min: 1, max: 60 },
     max_bookings_per_slot: { type: Number, default: 1, min: 1, max: 100_000 },
     allow_instant_booking: { type: Boolean, default: true },
     allow_waitlist: { type: Boolean, default: false },

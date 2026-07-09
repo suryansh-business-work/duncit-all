@@ -44,8 +44,11 @@ export default function PartnerDashboardPage() {
   // Summary total must equal Venue + Host + Product earning (whichever apply).
   const summaryTotal =
     (summary?.venue_earning ?? 0) + (summary?.host_earning ?? 0) + (summary?.product_earning ?? 0);
-  // Venue Health is meaningless for a draft venue — only show meters once it exists.
-  const liveVenues = venues.filter((venue: any) => venue.status !== 'DRAFT');
+  // Venue Health is only meaningful for live venues — show meters for APPROVED,
+  // active venues only (never DRAFT / SUBMITTED / REJECTED / deactivated).
+  const activeVenues = venues.filter(
+    (venue: any) => venue.status === 'APPROVED' && venue.is_active !== false,
+  );
 
   return (
     <Stack spacing={2.25}>
@@ -60,7 +63,7 @@ export default function PartnerDashboardPage() {
         </Stack>
       </Box>
       {error && <Alert severity="error">{error.message}</Alert>}
-      <HealthStrip venues={liveVenues} />
+      <HealthStrip venues={activeVenues} />
 
       <Box sx={{ display: 'grid', gap: 2, gridTemplateColumns: { xs: '1fr', md: '1fr 1fr' } }}>
         <Card variant="outlined" sx={{ borderRadius: 2 }}>

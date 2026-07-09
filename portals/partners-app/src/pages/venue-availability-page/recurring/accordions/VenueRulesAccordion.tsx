@@ -25,10 +25,11 @@ type BoolKey =
   | 'booking_approval_required'
   | 'allow_multiple_bookings';
 
-const NUM_FIELDS: ReadonlyArray<{ key: NumKey; label: string }> = [
+const NUM_FIELDS: ReadonlyArray<{ key: NumKey; label: string; max?: number }> = [
   { key: 'buffer_minutes', label: 'Buffer between slots (min)' },
   { key: 'min_notice_minutes', label: 'Minimum booking notice (min)' },
-  { key: 'max_advance_days', label: 'Maximum advance booking (days)' },
+  // A venue may schedule availability at most 60 days ahead.
+  { key: 'max_advance_days', label: 'Maximum advance booking (days)', max: 60 },
   { key: 'max_bookings_per_slot', label: 'Maximum bookings per slot' },
 ];
 
@@ -50,8 +51,11 @@ export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonl
   const [saved, setSaved] = useState(false);
   const [save, { loading, error }] = useMutation(UPDATE_VENUE_SETTINGS);
 
-  const setNum = (key: NumKey, value: string) =>
-    setDraft((d) => ({ ...d, [key]: Math.max(0, Math.round(Number(value) || 0)) }));
+  const setNum = (key: NumKey, value: string, max?: number) =>
+    setDraft((d) => ({
+      ...d,
+      [key]: Math.min(max ?? Number.POSITIVE_INFINITY, Math.max(0, Math.round(Number(value) || 0))),
+    }));
   const setBool = (key: BoolKey, value: boolean) => setDraft((d) => ({ ...d, [key]: value }));
 
   const onSave = async () => {
@@ -84,8 +88,8 @@ export default function VenueRulesAccordion({ venueId, rules, onSaved }: Readonl
                 type="number"
                 size="small"
                 value={draft[f.key]}
-                onChange={(e) => setNum(f.key, e.target.value)}
-                inputProps={{ min: 0 }}
+                onChange={(e) => setNum(f.key, e.target.value, f.max)}
+                inputProps={{ min: 0, max: f.max }}
               />
             ))}
           </Box>

@@ -143,16 +143,16 @@ describe('generateRecurringSlots — generation', () => {
     expect(holiday.slots).toHaveLength(6);
   });
 
-  it("caps the advance window at the venue's max_advance_days rule (>60 allowed)", () => {
+  it('caps the advance window at 60 days even when the venue configures more', () => {
     const res = generateRecurringSlots(
       config({ startDate: new Date(2026, 6, 1), endDate: new Date(2026, 11, 31) }),
       settings({ rules: { max_advance_days: 90 } }),
       NOW,
     );
-    const cap = new Date(NOW.getTime() + 90 * 86_400_000);
-    expect(res.slots.every((s) => new Date(s.start_at) <= cap)).toBe(true);
-    const beyond60 = new Date(NOW.getTime() + 60 * 86_400_000);
-    expect(res.slots.some((s) => new Date(s.start_at) > beyond60)).toBe(true);
+    // Every generated slot is within the hard 60-day cap despite the configured 90.
+    const cap60 = new Date(NOW.getTime() + 60 * 86_400_000);
+    expect(res.slots.every((s) => new Date(s.start_at) <= cap60)).toBe(true);
+    // Slots beyond the 60-day cap were skipped.
     expect(res.summary.skippedBeyondCap).toBeGreaterThan(0);
   });
 

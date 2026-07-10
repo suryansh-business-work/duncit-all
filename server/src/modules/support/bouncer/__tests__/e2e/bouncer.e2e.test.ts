@@ -20,8 +20,13 @@ const TARGET = gql`
 const ALERTS = gql`
   query {
     bouncerSosAlerts {
-      id
-      status
+      items {
+        id
+        status
+      }
+      total
+      page
+      page_size
     }
   }
 `;
@@ -35,8 +40,9 @@ describe('bouncer e2e', () => {
 
   it('lets a support agent read SOS alerts but forbids a regular user', async () => {
     const agent = server.client(signToken({ roles: ['SUPPORT_MANAGER'] }));
-    const res = await agent.request<{ bouncerSosAlerts: unknown[] }>(ALERTS);
-    expect(Array.isArray(res.bouncerSosAlerts)).toBe(true);
+    const res = await agent.request<{ bouncerSosAlerts: { items: unknown[]; total: number } }>(ALERTS);
+    expect(Array.isArray(res.bouncerSosAlerts.items)).toBe(true);
+    expect(typeof res.bouncerSosAlerts.total).toBe('number');
 
     const user = server.client(signToken({ roles: ['USER'] }));
     await expect(user.request(ALERTS)).rejects.toThrow();

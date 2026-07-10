@@ -180,8 +180,8 @@ export const MarkTicketReadDocument = gql(`
 `);
 
 export const ReplyToTicketDocument = gql(`
-  mutation MobileReplyToTicket($ticketId: ID!, $bodyText: String!) {
-    replyToTicket(ticket_id: $ticketId, body_text: $bodyText) {
+  mutation MobileReplyToTicket($ticketId: ID!, $bodyText: String!, $attachments: [String!]) {
+    replyToTicket(ticket_id: $ticketId, body_text: $bodyText, attachments: $attachments) {
       id
       status
       message_count

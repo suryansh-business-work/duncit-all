@@ -1,64 +1,129 @@
 import { gql } from '@apollo/client';
 
+// Fields inlined (not a shared fragment) — the portal's MockedProvider test
+// setup does not normalize fragment-spread nested objects, so fragments make
+// user/pod come back undefined in unit tests.
+const SOS_FIELDS = `
+  id
+  ticket_no
+  status
+  message
+  contact_phone
+  acknowledged_at
+  resolved_at
+  created_at
+  location {
+    lat
+    lng
+    accuracy
+  }
+  user {
+    id
+    name
+    phone
+    avatar_url
+  }
+  host {
+    id
+    name
+    phone
+  }
+  pod {
+    id
+    title
+    venue_name
+    club_name
+    starts_at
+  }
+`;
+
+const CALLBACK_FIELDS = `
+  id
+  ticket_no
+  status
+  reason
+  contact_phone
+  contacted_at
+  duration_seconds
+  conclusion
+  created_at
+  user {
+    id
+    name
+    phone
+  }
+  pod {
+    id
+    title
+  }
+`;
+
 export const BOUNCER_SOS_ALERTS = gql`
-  query BouncerSosAlerts($status: BouncerSosStatus) {
-    bouncerSosAlerts(status: $status) {
-      id
-      ticket_no
-      status
-      message
-      contact_phone
-      acknowledged_at
-      resolved_at
-      created_at
-      location {
-        lat
-        lng
-        accuracy
+  query BouncerSosAlerts(
+    $status: BouncerSosStatus
+    $search: String
+    $page: Int
+    $page_size: Int
+    $sort_by: String
+    $sort_dir: String
+  ) {
+    bouncerSosAlerts(
+      status: $status
+      search: $search
+      page: $page
+      page_size: $page_size
+      sort_by: $sort_by
+      sort_dir: $sort_dir
+    ) {
+      items {
+        ${SOS_FIELDS}
       }
-      user {
-        id
-        name
-        phone
-        avatar_url
-      }
-      host {
-        id
-        name
-        phone
-      }
-      pod {
-        id
-        title
-        venue_name
-        club_name
-        starts_at
-      }
+      total
+      page
+      page_size
+    }
+  }
+`;
+
+export const BOUNCER_SOS_ALERT = gql`
+  query BouncerSosAlert($id: ID!) {
+    bouncerSosAlert(id: $id) {
+      ${SOS_FIELDS}
     }
   }
 `;
 
 export const BOUNCER_CALLBACK_REQUESTS = gql`
-  query BouncerCallbackRequests($status: BouncerCallbackStatus) {
-    bouncerCallbackRequests(status: $status) {
-      id
-      ticket_no
-      status
-      reason
-      contact_phone
-      contacted_at
-      duration_seconds
-      conclusion
-      created_at
-      user {
-        id
-        name
-        phone
+  query BouncerCallbackRequests(
+    $status: BouncerCallbackStatus
+    $search: String
+    $page: Int
+    $page_size: Int
+    $sort_by: String
+    $sort_dir: String
+  ) {
+    bouncerCallbackRequests(
+      status: $status
+      search: $search
+      page: $page
+      page_size: $page_size
+      sort_by: $sort_by
+      sort_dir: $sort_dir
+    ) {
+      items {
+        ${CALLBACK_FIELDS}
       }
-      pod {
-        id
-        title
-      }
+      total
+      page
+      page_size
+    }
+  }
+`;
+
+export const BOUNCER_CALLBACK_REQUEST = gql`
+  query BouncerCallbackRequest($id: ID!) {
+    bouncerCallbackRequest(id: $id) {
+      ${CALLBACK_FIELDS}
     }
   }
 `;
@@ -164,6 +229,20 @@ export interface CallbackRequest {
   created_at: string;
   user: { id: string; name: string; phone: string | null };
   pod: { id: string; title: string } | null;
+}
+
+export interface SosAlertPage {
+  items: SosAlert[];
+  total: number;
+  page: number;
+  page_size: number;
+}
+
+export interface CallbackRequestPage {
+  items: CallbackRequest[];
+  total: number;
+  page: number;
+  page_size: number;
 }
 
 export interface FeedbackEntry {

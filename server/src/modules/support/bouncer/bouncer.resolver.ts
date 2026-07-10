@@ -12,17 +12,57 @@ export const bouncerResolvers = {
       requireAuth(ctx);
       return bouncerService.getSupportTarget();
     },
-    bouncerSosAlerts: (_p: unknown, args: { status?: any; limit?: number }, ctx: GraphQLContext) => {
-      requireRole(ctx, ADMIN_ROLES);
-      return bouncerService.listSos(args.status, args.limit ?? 100);
-    },
-    bouncerCallbackRequests: (
+    bouncerSosAlerts: (
       _p: unknown,
-      args: { status?: any; limit?: number },
+      args: {
+        status?: any;
+        search?: string;
+        page?: number;
+        page_size?: number;
+        sort_by?: string;
+        sort_dir?: string;
+      },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, ADMIN_ROLES);
-      return bouncerService.listCallbacks(args.status, args.limit ?? 100);
+      return bouncerService.listSos({
+        status: args.status,
+        search: args.search,
+        page: args.page,
+        page_size: args.page_size,
+        sort_by: args.sort_by,
+        sort_dir: args.sort_dir,
+      });
+    },
+    bouncerCallbackRequests: (
+      _p: unknown,
+      args: {
+        status?: any;
+        search?: string;
+        page?: number;
+        page_size?: number;
+        sort_by?: string;
+        sort_dir?: string;
+      },
+      ctx: GraphQLContext
+    ) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return bouncerService.listCallbacks({
+        status: args.status,
+        search: args.search,
+        page: args.page,
+        page_size: args.page_size,
+        sort_by: args.sort_by,
+        sort_dir: args.sort_dir,
+      });
+    },
+    bouncerSosAlert: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return bouncerService.getSos(args.id);
+    },
+    bouncerCallbackRequest: (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {
+      requireRole(ctx, ADMIN_ROLES);
+      return bouncerService.getCallback(args.id);
     },
     bouncerFeedback: (_p: unknown, args: { limit?: number }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_ROLES);

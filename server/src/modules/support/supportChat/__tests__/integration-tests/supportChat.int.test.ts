@@ -61,8 +61,9 @@ describe('supportChatService integration', () => {
       })
     ).rejects.toThrow(/another user/i);
 
-    const open = await supportChatService.listSessions('OPEN');
-    expect(open).toHaveLength(1);
+    const open = await supportChatService.listSessions({ status: 'OPEN' });
+    expect(open.items).toHaveLength(1);
+    expect(open.total).toBe(1);
   });
 });
 

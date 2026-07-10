@@ -46,8 +46,8 @@ const clampPct = (n: number) => Math.min(100, Math.max(0, Number(n) || 0));
 /**
  * A partner's product earning is the NET of the Duncit commission (gross −
  * commission), mirroring the product invoice/payout (productInvoice.service).
- * This keeps the product stream on the same settled basis as venue/host
- * earnings, so Summary Total reflects actual earning rather than gross retail.
+ * Netting keeps product on the same "actual earning" footing as the venue/host
+ * payout releases, so Summary Total reflects real earning rather than gross retail.
  */
 function productTotal(pods: any[], productIds: Set<string>, commissionByProduct: Map<string, number>) {
   return money(pods.reduce((sum, pod) => {
@@ -135,7 +135,6 @@ export const partnerDashboardService = {
     const userObjectId = new Types.ObjectId(userId);
     const { from, to } = parseRange(range);
     const podDateFilter = { pod_date_time: { $gte: from, $lte: to } };
-    const releaseDateFilter = { reviewed_at: { $gte: from, $lte: to } };
 
     const [venues, products] = await Promise.all([
       VenueModel.find({ owner_user_id: userObjectId }).select('_id status').lean(),
@@ -162,15 +161,39 @@ export const partnerDashboardService = {
       }),
     );
 
-    const [hostPods, venuePods, productPods, venueReleases, hostReleases] = await Promise.all([
+    // Pods drive pod counts + product earning (current membership, in range).
+    const [hostPods, venuePods, productPods] = await Promise.all([
       PodModel.find({ pod_hosts_id: userObjectId, ...podDateFilter }).lean(),
       venueIds.length ? PodModel.find({ venue_id: { $in: venueIds }, ...podDateFilter }).lean() : [],
       productIds.length ? PodModel.find({ 'product_requests.product_id': { $in: productIds }, ...podDateFilter }).lean() : [],
-      venueIds.length
-        ? PaymentReleaseModel.find({ kind: 'VENUE_BILLING', status: 'APPROVED', venue_id: { $in: venueIds }, ...releaseDateFilter }).lean()
-        : [],
-      PaymentReleaseModel.find({ kind: 'HOST_PAYMENT', status: 'APPROVED', host_user_id: userObjectId, ...releaseDateFilter }).lean(),
     ]);
+
+    // Venue/host earning = APPROVED payout releases whose IMMUTABLE beneficiary
+    // (venue_id / host_user_id, stamped when the pod settled) is this partner,
+    // AND whose pod falls in the selected range. Keying on the release's own
+    // beneficiary + pod date — not the pod's CURRENT venue/host membership —
+    // puts all three streams on the same pod-date basis as the displayed
+    // activity WITHOUT dropping a real settled earning when a pod is later
+    // reassigned to a different host/venue.
+    const [venueReleasesAll, hostReleasesAll] = await Promise.all([
+      venueIds.length
+        ? PaymentReleaseModel.find({ kind: 'VENUE_BILLING', status: 'APPROVED', venue_id: { $in: venueIds } })
+            .select('approved_amount amount_requested pod_id')
+            .lean()
+        : [],
+      PaymentReleaseModel.find({ kind: 'HOST_PAYMENT', status: 'APPROVED', host_user_id: userObjectId })
+        .select('approved_amount amount_requested pod_id')
+        .lean(),
+    ]);
+    const releasePodIds = [
+      ...new Set([...venueReleasesAll, ...hostReleasesAll].map((r) => String(r.pod_id))),
+    ];
+    const inRangeReleasePods = releasePodIds.length
+      ? await PodModel.find({ _id: { $in: releasePodIds }, ...podDateFilter }).select('_id').lean()
+      : [];
+    const inRangeReleasePodSet = new Set(inRangeReleasePods.map((p) => String(p._id)));
+    const venueReleases = venueReleasesAll.filter((r) => inRangeReleasePodSet.has(String(r.pod_id)));
+    const hostReleases = hostReleasesAll.filter((r) => inRangeReleasePodSet.has(String(r.pod_id)));
 
     const summaryPods = uniquePods([hostPods, venuePods, productPods]);
     const venueEarning = releaseTotal(venueReleases);

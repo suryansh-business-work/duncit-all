@@ -38,9 +38,12 @@ const bareAlert: SosAlert = {
   pod: { id: 'p2', title: 'Yoga', venue_name: null, club_name: null, starts_at: null },
 };
 
-const queryMock = (alerts: SosAlert[], status: string | null = null) => ({
-  request: { query: BOUNCER_SOS_ALERTS, variables: { status } },
-  result: { data: { bouncerSosAlerts: alerts } },
+const queryMock = (alerts: SosAlert[], status: string | null = null, search: string | null = null) => ({
+  request: {
+    query: BOUNCER_SOS_ALERTS,
+    variables: { status, search, page: 1, page_size: 25, sort_by: 'created_at', sort_dir: 'desc' },
+  },
+  result: { data: { bouncerSosAlerts: { items: alerts, total: alerts.length, page: 1, page_size: 25 } } },
 });
 
 describe('SosListPage', () => {
@@ -77,17 +80,20 @@ describe('SosListPage', () => {
     });
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
 
-    fireEvent.mouseDown(screen.getByRole('combobox'));
+    // The header status filter is the first combobox (TablePagination adds another).
+    fireEvent.mouseDown(screen.getAllByRole('combobox')[0]);
     fireEvent.click(screen.getByRole('option', { name: 'Active' }));
     await waitFor(() => expect(screen.getByText(/no active sos alerts found/i)).toBeInTheDocument());
   });
 
-  it('filters the list client-side by the search box (ticket id / name)', async () => {
-    renderWithProviders(<SosListPage />, { mocks: [queryMock([alert, bareAlert])] });
+  it('searches on the server (a debounced query keyed on the search variable)', async () => {
+    renderWithProviders(<SosListPage />, {
+      mocks: [queryMock([alert]), queryMock([bareAlert], null, 'BBB222')],
+    });
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
 
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'BBB222' } });
-    await waitFor(() => expect(screen.getByText('Dev')).toBeInTheDocument());
-    expect(screen.queryByText('Riya')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Riya')).not.toBeInTheDocument());
+    expect(screen.getByText('Dev')).toBeInTheDocument();
   });
 });

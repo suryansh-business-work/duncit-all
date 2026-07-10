@@ -31,11 +31,11 @@ export function useTicketActions(details: Details) {
 
   // Resolves to whether the reply was sent (so the composer only clears on
   // success). The composer guards empty text + double-submits while `busy`.
-  const submitReply = async (text: string): Promise<boolean> => {
+  const submitReply = async (text: string, attachments: string[]): Promise<boolean> => {
     setBusy(true);
     setError('');
     try {
-      await reply(text);
+      await reply(text, attachments);
       return true;
     } catch (e) {
       setError(toErrorMessage(e, 'Could not send the reply.'));

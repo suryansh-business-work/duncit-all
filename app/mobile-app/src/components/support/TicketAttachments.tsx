@@ -1,9 +1,8 @@
-import { AppImage } from '@/components/AppImage';
-
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
-import { useMediaUpload } from '@/hooks/useMediaUpload';
+import { AttachmentView } from '@/components/AttachmentView';
+import { useSupportUpload } from '@/hooks/useSupportUpload';
 import { useThemeColors } from '@/hooks/useThemeColors';
 
 const MAX_ATTACHMENTS = 5;
@@ -14,12 +13,13 @@ interface Props {
 }
 
 /**
- * Screenshot attachments for a support ticket — RN twin of mWeb's
- * AttachmentsField. Picks + uploads via {@link useMediaUpload} (ImageKit) and
- * shows removable thumbnails, capped at five.
+ * File attachments for a support ticket — RN twin of mWeb's AttachmentsField.
+ * Picks + uploads images, videos and documents via {@link useSupportUpload}
+ * (video capped at 50 MB) and shows type-aware, removable previews, capped at
+ * five.
  */
 export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
-  const { uploading, pickAndUpload } = useMediaUpload('/support');
+  const { uploading, pickAndUpload } = useSupportUpload('/support');
   const { color: ink } = useThemeColors();
   const disabled = uploading || attachments.length >= MAX_ATTACHMENTS;
 
@@ -32,12 +32,12 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
     <YStack gap={8}>
       <XStack alignItems="center" gap={8}>
         <Text flex={1} fontSize={12} color="$muted">
-          Attach screenshots ({attachments.length}/{MAX_ATTACHMENTS})
+          Attach files ({attachments.length}/{MAX_ATTACHMENTS})
         </Text>
         <XStack
           testID="ticket-attach-add"
           role="button"
-          aria-label="Add image"
+          aria-label="Add files"
           aria-disabled={disabled}
           onPress={disabled ? undefined : () => void add()}
           alignItems="center"
@@ -51,15 +51,15 @@ export function TicketAttachments({ attachments, onChange }: Readonly<Props>) {
         >
           <MaterialIcons name="attach-file" size={16} color={ink} />
           <Text fontSize={12} fontWeight="800" color="$color">
-            {uploading ? 'Uploading…' : 'Add image'}
+            {uploading ? 'Uploading…' : 'Add files'}
           </Text>
         </XStack>
       </XStack>
       {attachments.length > 0 ? (
         <XStack flexWrap="wrap" gap={8}>
           {attachments.map((url, i) => (
-            <YStack key={url} testID={`ticket-attach-${i}`} width={64} height={64}>
-              <AppImage source={{ uri: url }} style={{ width: 64, height: 64, borderRadius: 10 }} />
+            <YStack key={url} testID={`ticket-attach-${i}`}>
+              <AttachmentView urls={[url]} size={64} />
               <XStack
                 testID={`ticket-attach-remove-${i}`}
                 role="button"

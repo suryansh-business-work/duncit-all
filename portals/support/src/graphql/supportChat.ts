@@ -1,26 +1,45 @@
 import { gql } from '@apollo/client';
 
 export const SUPPORT_CHAT_SESSIONS = gql`
-  query SupportChatSessions($status: SupportChatStatus) {
-    supportChatSessions(status: $status) {
-      id
-      ticket_no
-      status
-      last_message_at
-      last_message_preview
-      unread_for_agent
-      agent_id
-      user_last_read_at
-      rating
-      feedback_comment
-      feedback_at
-      resolved_at
-      user {
+  query SupportChatSessions(
+    $status: SupportChatStatus
+    $search: String
+    $page: Int
+    $page_size: Int
+    $sort_by: String
+    $sort_dir: String
+  ) {
+    supportChatSessions(
+      status: $status
+      search: $search
+      page: $page
+      page_size: $page_size
+      sort_by: $sort_by
+      sort_dir: $sort_dir
+    ) {
+      items {
         id
-        name
-        phone
-        avatar_url
+        ticket_no
+        status
+        last_message_at
+        last_message_preview
+        unread_for_agent
+        agent_id
+        user_last_read_at
+        rating
+        feedback_comment
+        feedback_at
+        resolved_at
+        user {
+          id
+          name
+          phone
+          avatar_url
+        }
       }
+      total
+      page
+      page_size
     }
   }
 `;
@@ -121,6 +140,13 @@ export interface SupportChatSession {
   feedback_at: string | null;
   resolved_at: string | null;
   user: { id: string; name: string; phone: string | null; avatar_url: string | null };
+}
+
+export interface SupportChatSessionPage {
+  items: SupportChatSession[];
+  total: number;
+  page: number;
+  page_size: number;
 }
 
 export interface SupportChatMessage {

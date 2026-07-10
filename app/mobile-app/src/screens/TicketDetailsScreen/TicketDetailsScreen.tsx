@@ -38,9 +38,27 @@ export function TicketDetailsScreen() {
   const { timeZone } = useAppSettings();
   const [showJump, setShowJump] = useState(false);
   const scrollRef = useRef<RNScrollView>(null);
+  // Default pinned so the thread OPENS at the latest reply; once the user
+  // scrolls up we stop auto-following so the jump button stays useful.
+  const pinnedRef = useRef(true);
 
   /* istanbul ignore next -- native autoscroll; method absent under the test renderer */
   const scrollToEnd = () => scrollRef.current?.scrollToEnd({ animated: true });
+  /* istanbul ignore next -- fired by native layout, not by the test renderer */
+  const handleContentSizeChange = () => {
+    if (pinnedRef.current) scrollToEnd();
+  };
+  const jumpToLatest = () => {
+    pinnedRef.current = true;
+    scrollToEnd();
+  };
+
+  // Re-pin on send so the user's own reply scrolls into view — once the new
+  // message renders, the pinned onContentSizeChange brings it to the bottom.
+  const onSendReply = (text: string, attachments: string[]): Promise<boolean> => {
+    pinnedRef.current = true;
+    return a.submitReply(text, attachments);
+  };
 
   const resolved = ticket?.status === 'RESOLVED' || ticket?.status === 'CLOSED';
   const reopenable = resolved && canReopen(ticket?.reopen_deadline);
@@ -56,7 +74,9 @@ export function TicketDetailsScreen() {
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentSize, layoutMeasurement, contentOffset } = e.nativeEvent;
-    setShowJump(contentSize.height - layoutMeasurement.height - contentOffset.y > 160);
+    const distance = contentSize.height - layoutMeasurement.height - contentOffset.y;
+    pinnedRef.current = distance <= 80;
+    setShowJump(distance > 160);
   };
 
   const openEmail = () => {
@@ -111,9 +131,10 @@ export function TicketDetailsScreen() {
             timeZone={timeZone}
             agentLastReadAt={ticket.agent_last_read_at}
             onScroll={onScroll}
+            onContentSizeChange={handleContentSizeChange}
           />
           {showJump ? (
-            <JumpToLatestButton testID="ticket-jump-bottom" bottom={12} onPress={scrollToEnd} />
+            <JumpToLatestButton testID="ticket-jump-bottom" bottom={12} onPress={jumpToLatest} />
           ) : null}
         </YStack>
         {a.error ? (
@@ -130,7 +151,7 @@ export function TicketDetailsScreen() {
             a.reopen.setOpen(true);
           }}
         />
-        <TicketComposer locked={!!resolved} busy={a.busy} onSend={a.submitReply} />
+        <TicketComposer locked={!!resolved} busy={a.busy} onSend={onSendReply} />
       </YStack>
     );
   }

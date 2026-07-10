@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { describeAttachment, typeLabel } from '../attachment';
+import { describeAttachment, isVideoUpload, typeLabel } from '../attachment';
 
 describe('describeAttachment', () => {
   it('classifies an image URL with a decoded file name', () => {
@@ -27,5 +27,19 @@ describe('typeLabel', () => {
   it('upper-cases a known extension and defaults to FILE', () => {
     expect(typeLabel('pdf')).toBe('PDF');
     expect(typeLabel('')).toBe('FILE');
+  });
+});
+
+describe('isVideoUpload', () => {
+  it('detects video by mime', () => {
+    expect(isVideoUpload('clip', 'video/mp4')).toBe(true);
+  });
+  it('detects video by extension when the mime is empty/unknown', () => {
+    expect(isVideoUpload('clip.mp4', '')).toBe(true);
+    expect(isVideoUpload('movie.MKV', 'application/octet-stream')).toBe(true);
+  });
+  it('is false for images and documents', () => {
+    expect(isVideoUpload('photo.png', 'image/png')).toBe(false);
+    expect(isVideoUpload('report.pdf', 'application/pdf')).toBe(false);
   });
 });

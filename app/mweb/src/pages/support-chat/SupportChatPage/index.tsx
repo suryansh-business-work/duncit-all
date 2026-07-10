@@ -23,10 +23,14 @@ export default function SupportChatPage() {
   const [confirmOpen, setConfirmOpen] = useState(false);
   const [reopenError, setReopenError] = useState<string | null>(null);
   const scrollRef = useRef<HTMLDivElement | null>(null);
+  // Default pinned so the thread opens at the latest message; onScroll unpins
+  // once the user scrolls up, so the auto-follow effect stops fighting them.
+  const pinnedRef = useRef(true);
 
   const { session, sessionId, messages, closed, reopenable, typingText } = chat;
 
   useEffect(() => {
+    if (!pinnedRef.current) return;
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
   }, [messages, typingText]);
 
@@ -38,10 +42,20 @@ export default function SupportChatPage() {
   const onScroll = () => {
     const el = scrollRef.current;
     if (!el) return;
-    setShowJump(el.scrollHeight - el.scrollTop - el.clientHeight > 160);
+    const distance = el.scrollHeight - el.scrollTop - el.clientHeight;
+    pinnedRef.current = distance <= 80;
+    setShowJump(distance > 160);
   };
-  const jumpToBottom = () =>
+  const jumpToBottom = () => {
+    pinnedRef.current = true;
+    setShowJump(false);
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' });
+  };
+  // Sending always re-pins so the user's own message follows into view.
+  const handleSend = (text: string, attachments: string[]) => {
+    pinnedRef.current = true;
+    chat.send(text, attachments);
+  };
 
   const onConfirmResolve = () => {
     setConfirmOpen(false);
@@ -95,7 +109,7 @@ export default function SupportChatPage() {
           formatDateTime={formatDateTime}
         />
       ) : (
-        <ChatComposer disabled={chat.sending} onSend={chat.send} onTyping={chat.emitTyping} />
+        <ChatComposer disabled={chat.sending} onSend={handleSend} onTyping={chat.emitTyping} />
       )}
 
       {sessionId && (

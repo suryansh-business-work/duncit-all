@@ -98,6 +98,12 @@ async function uploadToImagekit(opts: {
 // Documents are only accepted when the caller opts in (support attachments) —
 // avatars / pod media stay image+video only.
 const DOC_MIME_RE = /^(application\/pdf|application\/msword|application\/vnd\.openxmlformats-officedocument\.[a-z.]+|application\/vnd\.ms-(excel|powerpoint)|text\/plain|text\/csv)$/i;
+// Extension fallbacks: browsers / pickers frequently report an empty or generic
+// (application/octet-stream) mime for less-common containers, which would
+// otherwise let a video slip past the 50 MB cap as an "image". We classify by
+// the file extension too so the size rule can't be evaded.
+const VIDEO_EXT_RE = /\.(mp4|mov|m4v|avi|webm|mkv|3gp|ts|flv|wmv|mpe?g)$/i;
+const DOC_EXT_RE = /\.(pdf|docx?|xlsx?|pptx?|txt|csv)$/i;
 
 export async function uploadBase64Image(opts: {
   fileBase64: string;
@@ -107,9 +113,15 @@ export async function uploadBase64Image(opts: {
   allowDocuments?: boolean;
 }) {
   const mimeType = (opts.mimeType || '').trim() || 'image/jpeg';
-  const isImage = /^image\//i.test(mimeType);
-  const isVideo = /^video\//i.test(mimeType);
-  const isDocument = opts.allowDocuments === true && DOC_MIME_RE.test(mimeType);
+  const fileName = opts.fileName || '';
+  // Video wins if EITHER the mime or the extension says so, so a video with a
+  // missing/generic mime is still capped at 50 MB (not treated as a 100 MB image).
+  const isVideo = /^video\//i.test(mimeType) || VIDEO_EXT_RE.test(fileName);
+  const isDocument =
+    !isVideo &&
+    opts.allowDocuments === true &&
+    (DOC_MIME_RE.test(mimeType) || DOC_EXT_RE.test(fileName));
+  const isImage = !isVideo && !isDocument && /^image\//i.test(mimeType);
   if (!isImage && !isVideo && !isDocument) {
     const msg = opts.allowDocuments
       ? 'Only image, video or document uploads are allowed'
@@ -124,17 +136,24 @@ export async function uploadBase64Image(opts: {
   if (!fileBytes.length) {
     throw new GraphQLError('Upload file is empty', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  // Unified 100 MB ceiling across images, videos and documents (support
-  // attachments spec). Non-attachment callers (avatars, pod media) still upload
-  // images that are far smaller than this.
-  const maxBytes = 100 * 1024 * 1024;
-  if (fileBytes.length > maxBytes) {
-    let kind = 'Image';
-    if (isVideo) kind = 'Video';
-    else if (isDocument) kind = 'Document';
-    throw new GraphQLError(`${kind} is too large (max 100 MB)`, {
-      extensions: { code: 'BAD_USER_INPUT' },
-    });
+  // Videos are capped at 50 MB; images and documents keep the 100 MB ceiling
+  // (support attachments spec). Non-attachment callers (avatars, pod media)
+  // still upload images that are far smaller than this.
+  if (isVideo) {
+    const maxVideoBytes = 50 * 1024 * 1024;
+    if (fileBytes.length > maxVideoBytes) {
+      throw new GraphQLError('Video is too large (max 50 MB)', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+  } else {
+    const maxBytes = 100 * 1024 * 1024;
+    if (fileBytes.length > maxBytes) {
+      const kind = isDocument ? 'Document' : 'Image';
+      throw new GraphQLError(`${kind} is too large (max 100 MB)`, {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
   }
 
   const safeName = (opts.fileName || `upload-${Date.now()}`)

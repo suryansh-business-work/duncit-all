@@ -17,7 +17,7 @@ import {
 import ArrowBackIcon from '@mui/icons-material/ArrowBack';
 import { formatDistanceToNow } from 'date-fns';
 import {
-  BOUNCER_CALLBACK_REQUESTS,
+  BOUNCER_CALLBACK_REQUEST,
   CLOSE_CALLBACK,
   MARK_CALLBACK_CONTACTED,
   type CallbackRequest,
@@ -32,9 +32,9 @@ const STATUS_COLOR: Record<CallbackRequest['status'], 'warning' | 'primary' | 'd
 export default function CallbackDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data, loading, refetch } = useQuery<{ bouncerCallbackRequests: CallbackRequest[] }>(
-    BOUNCER_CALLBACK_REQUESTS,
-    { fetchPolicy: 'cache-and-network' }
+  const { data, loading, refetch } = useQuery<{ bouncerCallbackRequest: CallbackRequest | null }>(
+    BOUNCER_CALLBACK_REQUEST,
+    { variables: { id }, fetchPolicy: 'cache-and-network', skip: !id }
   );
   const [markContacted] = useMutation(MARK_CALLBACK_CONTACTED, { onCompleted: () => refetch() });
   const [closeCb] = useMutation(CLOSE_CALLBACK, { onCompleted: () => refetch() });
@@ -42,7 +42,7 @@ export default function CallbackDetailsPage() {
   const [durationMin, setDurationMin] = useState('');
   const [conclusion, setConclusion] = useState('');
 
-  const req = data?.bouncerCallbackRequests.find((r) => r.id === id);
+  const req = data?.bouncerCallbackRequest ?? undefined;
 
   const run = async (fn: () => Promise<any>) => {
     setBusy(true);

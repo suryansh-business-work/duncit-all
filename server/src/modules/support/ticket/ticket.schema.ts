@@ -98,8 +98,24 @@ export const ticketTypeDefs = /* GraphQL */ `
     pod_title: String
   }
 
+  "A page of tickets for the agent list (server-side pagination + sort + search)."
+  type TicketPage {
+    items: [Ticket!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
-    tickets(status: TicketStatus, assignee_id: ID, search: String, limit: Int): [Ticket!]!
+    tickets(
+      status: TicketStatus
+      assignee_id: ID
+      search: String
+      page: Int
+      page_size: Int
+      sort_by: String
+      sort_dir: String
+    ): TicketPage!
     ticket(id: ID!): Ticket
     myTickets: [Ticket!]!
     "Transcript of a ticket (.txt or .docx) — accessible to its owner or a support agent."

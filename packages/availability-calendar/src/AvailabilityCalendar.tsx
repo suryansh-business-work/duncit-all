@@ -18,6 +18,9 @@ interface Props {
   onSelect: (date: Date) => void;
   /** Venue leave/holiday dates ('yyyy-MM-dd') — rendered red; never bookable. */
   holidays?: string[];
+  /** Latest selectable day — days after this are dimmed and non-interactive
+   *  (e.g. the 60-day booking window). Omit for no upper bound. */
+  maxDate?: Date;
 }
 
 interface Bucket {
@@ -42,11 +45,11 @@ function bucketByDay(slots: VenueSlotRow[]): Map<string, Bucket> {
 }
 
 // Flat (non-nested) colour resolution keeps the JSX free of nested ternaries.
-function cellColors(isSelected: boolean, isOtherMonth: boolean, isPast: boolean, isHoliday: boolean) {
+function cellColors(isSelected: boolean, isOtherMonth: boolean, isDisabled: boolean, isHoliday: boolean) {
   if (isSelected) return { bgcolor: 'primary.main', color: 'primary.contrastText' };
   if (isOtherMonth) return { bgcolor: 'transparent', color: 'text.disabled' };
   if (isHoliday) return { bgcolor: 'error.light', color: 'error.contrastText' };
-  if (isPast) return { bgcolor: 'background.paper', color: 'text.disabled' };
+  if (isDisabled) return { bgcolor: 'background.paper', color: 'text.disabled' };
   return { bgcolor: 'background.paper', color: 'text.primary' };
 }
 
@@ -107,6 +110,7 @@ interface DayCellProps {
   view: CalendarView;
   monthStart: Date;
   today: Date;
+  maxDate?: Date;
   bucket?: Bucket;
   isHoliday: boolean;
   selectedDate: Date | null;
@@ -115,22 +119,26 @@ interface DayCellProps {
 
 /** A single day tile with its A/P/B/× slot counts. Hoisted to module scope so
  *  it is never re-created per render (S6478). */
-function DayCell({ date, view, monthStart, today, bucket, isHoliday, selectedDate, onSelect }: Readonly<DayCellProps>) {
+function DayCell({ date, view, monthStart, today, maxDate, bucket, isHoliday, selectedDate, onSelect }: Readonly<DayCellProps>) {
   const isOtherMonth = view === 'month' && !isSameMonth(date, monthStart);
   const isPast = date < today;
+  // Days past the booking window (e.g. > 60 days out) are non-bookable, so they
+  // are dimmed and non-interactive exactly like past days.
+  const isBeyondMax = !!maxDate && date > maxDate;
+  const isDisabled = isPast || isBeyondMax;
   const isSelected = !!selectedDate && isSameDay(date, selectedDate);
   const isToday = isSameDay(date, today);
   const isDayView = view === 'day';
-  const { bgcolor, color } = cellColors(isSelected, isOtherMonth, isPast, isHoliday);
+  const { bgcolor, color } = cellColors(isSelected, isOtherMonth, isDisabled, isHoliday);
 
   return (
     <Box
       role="button"
-      tabIndex={isPast ? -1 : 0}
-      aria-disabled={isPast}
-      onClick={isPast ? undefined : () => onSelect(date)}
+      tabIndex={isDisabled ? -1 : 0}
+      aria-disabled={isDisabled}
+      onClick={isDisabled ? undefined : () => onSelect(date)}
       onKeyDown={
-        isPast
+        isDisabled
           ? undefined
           : (e) => {
               if (e.key === 'Enter' || e.key === ' ') onSelect(date);
@@ -145,15 +153,15 @@ function DayCell({ date, view, monthStart, today, bucket, isHoliday, selectedDat
         borderColor: isSelected ? 'primary.main' : 'divider',
         bgcolor,
         color,
-        // Past days are read-only — dimmed and non-interactive.
-        cursor: isPast ? 'default' : 'pointer',
+        // Past and beyond-window days are read-only — dimmed and non-interactive.
+        cursor: isDisabled ? 'default' : 'pointer',
         opacity: isOtherMonth ? 0.5 : 1,
         display: 'flex',
         flexDirection: 'column',
         gap: 0.25,
         position: 'relative',
         outline: 'none',
-        '&:hover': { borderColor: isPast ? 'divider' : 'primary.main' },
+        '&:hover': { borderColor: isDisabled ? 'divider' : 'primary.main' },
         '&:focus-visible': { boxShadow: (theme) => `0 0 0 2px ${theme.palette.primary.main}` },
       }}
     >
@@ -197,6 +205,7 @@ export default function AvailabilityCalendar({
   selectedDate,
   onSelect,
   holidays = [],
+  maxDate,
 }: Readonly<Props>) {
   const buckets = bucketByDay(slots);
   const holidaySet = new Set(holidays);
@@ -231,6 +240,7 @@ export default function AvailabilityCalendar({
             view={view}
             monthStart={monthStart}
             today={today}
+            maxDate={maxDate}
             bucket={buckets.get(format(date, 'yyyy-MM-dd'))}
             isHoliday={holidaySet.has(format(date, 'yyyy-MM-dd'))}
             selectedDate={selectedDate}

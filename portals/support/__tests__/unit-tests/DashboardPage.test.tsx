@@ -19,43 +19,29 @@ const repeat = (mock: any, n: number) => Array.from({ length: n }, () => ({ ...m
 
 const sosMock = repeat(
   {
-    request: { query: BOUNCER_SOS_ALERTS, variables: { status: 'ACTIVE' } },
-    result: { data: { bouncerSosAlerts: [{ __ref: 1 }, { __ref: 2 }].map((_, i) => ({
-      id: `s${i}`, status: 'ACTIVE', message: '', contact_phone: '', acknowledged_at: null,
-      resolved_at: null, created_at: new Date().toISOString(), location: null,
-      user: { id: 'u', name: 'U', phone: null, avatar_url: null }, host: null,
-      pod: { id: 'p', title: 'T', venue_name: null, club_name: null, starts_at: null },
-    })) } },
+    request: { query: BOUNCER_SOS_ALERTS, variables: { status: 'ACTIVE', page_size: 1 } },
+    result: { data: { bouncerSosAlerts: { items: [], total: 2, page: 1, page_size: 1 } } },
   },
   3
 );
 const cbMock = repeat(
   {
-    request: { query: BOUNCER_CALLBACK_REQUESTS, variables: { status: 'PENDING' } },
-    result: { data: { bouncerCallbackRequests: [{
-      id: 'c0', status: 'PENDING', reason: '', contact_phone: '', contacted_at: null,
-      created_at: new Date().toISOString(), user: { id: 'u', name: 'U', phone: null }, pod: null,
-    }] } },
+    request: { query: BOUNCER_CALLBACK_REQUESTS, variables: { status: 'PENDING', page_size: 1 } },
+    result: { data: { bouncerCallbackRequests: { items: [], total: 1, page: 1, page_size: 1 } } },
   },
   3
 );
 const ticketMock = repeat(
   {
-    request: { query: TICKETS, variables: { status: 'OPEN' } },
-    result: { data: { tickets: ['a', 'b', 'c'].map((id) => ({
-      __typename: 'Ticket',
-      id, subject: 'S', category: 'GENERAL', status: 'OPEN', priority: 'MEDIUM',
-      assignee_id: null, assignee_name: null, last_message_at: new Date().toISOString(),
-      message_count: 1, created_at: new Date().toISOString(), updated_at: new Date().toISOString(),
-      user: { id: 'u', name: 'U', phone: null, avatar_url: null },
-    })) } },
+    request: { query: TICKETS, variables: { status: 'OPEN', page_size: 1 } },
+    result: { data: { tickets: { items: [], total: 3, page: 1, page_size: 1 } } },
   },
   3
 );
 const chatMock = repeat(
   {
-    request: { query: SUPPORT_CHAT_SESSIONS, variables: { status: 'OPEN' } },
-    result: { data: { supportChatSessions: [] } },
+    request: { query: SUPPORT_CHAT_SESSIONS, variables: { status: 'OPEN', page_size: 1 } },
+    result: { data: { supportChatSessions: { items: [], total: 0, page: 1, page_size: 1 } } },
   },
   3
 );

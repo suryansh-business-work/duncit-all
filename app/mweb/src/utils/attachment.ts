@@ -22,6 +22,15 @@ export function typeLabel(ext: string): string {
   return ext ? ext.toUpperCase() : 'FILE';
 }
 
+/**
+ * True when a picked file is a video by MIME OR by extension. Browsers report an
+ * empty/generic MIME for less-common containers (.mkv/.ts/.flv), so the
+ * extension is a needed fallback to apply the tighter 50 MB video cap.
+ */
+export function isVideoUpload(fileName: string, mimeType: string): boolean {
+  return /^video\//i.test(mimeType) || describeAttachment(fileName).kind === 'video';
+}
+
 export function describeAttachment(url: string): AttachmentInfo {
   const q = url.indexOf('?');
   const path = q >= 0 ? url.slice(0, q) : url;

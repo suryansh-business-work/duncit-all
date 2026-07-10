@@ -88,7 +88,9 @@ describe('ticketService integration', () => {
     expect(mine[0].subject).toBe('Mine');
 
     const open = await ticketService.list({ status: 'OPEN' });
-    expect(open).toHaveLength(2);
+    expect(open.items).toHaveLength(2);
+    expect(open.total).toBe(2);
+    expect(open.page).toBe(1);
     expect(await TicketModel.countDocuments()).toBe(2);
   });
 

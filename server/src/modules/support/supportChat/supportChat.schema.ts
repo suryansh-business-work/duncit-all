@@ -95,8 +95,23 @@ export const supportChatTypeDefs = /* GraphQL */ `
     password: String!
   }
 
+  "A page of support chat sessions for the agent list (server-side pagination + sort + search)."
+  type SupportChatSessionPage {
+    items: [SupportChatSession!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
-    supportChatSessions(status: SupportChatStatus): [SupportChatSession!]!
+    supportChatSessions(
+      status: SupportChatStatus
+      search: String
+      page: Int
+      page_size: Int
+      sort_by: String
+      sort_dir: String
+    ): SupportChatSessionPage!
     supportChatMessages(session_id: ID!, limit: Int, before: String): [SupportChatMessage!]!
     mySupportChat: SupportChatSession
     "All of the signed-in user's support items (tickets, SOS, callbacks, chats)."

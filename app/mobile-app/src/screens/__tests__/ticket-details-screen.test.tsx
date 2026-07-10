@@ -2,10 +2,12 @@ import { fireEvent, screen, waitFor } from '@testing-library/react-native';
 
 import { TicketDetailsScreen } from '@/screens/TicketDetailsScreen';
 import { useTicketDetails } from '@/hooks/useUnifiedTickets';
+import { useSupportUpload } from '@/hooks/useSupportUpload';
 import { shareTranscript } from '@/utils/transcript';
 import { renderWithProviders } from '@/utils/test-utils';
 
 jest.mock('@/hooks/useUnifiedTickets', () => ({ useTicketDetails: jest.fn() }));
+jest.mock('@/hooks/useSupportUpload', () => ({ useSupportUpload: jest.fn() }));
 jest.mock('@/hooks/useAppSettings', () => ({
   useAppSettings: () => ({ dateFormat: 'dd MMM yyyy', timeFormat: 'HH:mm', timeZone: 'UTC' }),
 }));
@@ -19,6 +21,8 @@ jest.mock('@react-navigation/native', () => ({
 }));
 
 const mockedDetails = useTicketDetails as jest.Mock;
+const mockedUpload = useSupportUpload as jest.Mock;
+const pickAndUpload = jest.fn();
 const mockShare = shareTranscript as jest.Mock;
 
 const FUTURE = '2999-01-01T00:00:00Z';
@@ -75,6 +79,14 @@ const detail = (status: string, over: Record<string, unknown> = {}) => ({
       attachments: [],
       created_at: '2026-06-02T12:00:00Z',
     },
+    {
+      id: 'm4',
+      author_role: 'USER',
+      author_name: 'Me',
+      body_text: '',
+      attachments: ['https://ik/support/spec.pdf'],
+      created_at: '2026-06-02T12:05:00Z',
+    },
   ],
 });
 
@@ -83,7 +95,11 @@ const mount = (status: string, over: Record<string, unknown> = {}, handlers = ba
   return handlers;
 };
 
-beforeEach(() => jest.clearAllMocks());
+beforeEach(() => {
+  jest.clearAllMocks();
+  pickAndUpload.mockReset();
+  mockedUpload.mockReturnValue({ uploading: false, error: '', pickAndUpload });
+});
 
 describe('TicketDetailsScreen — states + thread', () => {
   it('shows loading, then the missing state', () => {
@@ -137,7 +153,7 @@ describe('TicketDetailsScreen — reply (B7 lock)', () => {
     expect(h.reply).not.toHaveBeenCalled();
     fireEvent.changeText(screen.getByTestId('ticket-reply-input'), 'thanks');
     fireEvent.press(screen.getByTestId('ticket-reply-send'));
-    await waitFor(() => expect(h.reply).toHaveBeenCalledWith('thanks'));
+    await waitFor(() => expect(h.reply).toHaveBeenCalledWith('thanks', []));
 
     h.reply.mockRejectedValueOnce(new Error('server busy'));
     fireEvent.changeText(screen.getByTestId('ticket-reply-input'), 'again');
@@ -152,6 +168,40 @@ describe('TicketDetailsScreen — reply (B7 lock)', () => {
     renderWithProviders(<TicketDetailsScreen />);
     expect(screen.getByTestId('ticket-resolved-note')).toBeOnTheScreen();
     expect(screen.queryByTestId('ticket-reply-input')).toBeNull();
+  });
+
+  it('renders an attachment-only reply as a file card in the thread', () => {
+    mount('OPEN');
+    renderWithProviders(<TicketDetailsScreen />);
+    expect(screen.getByTestId('support-attach-https://ik/support/spec.pdf')).toBeOnTheScreen();
+  });
+
+  it('attaches a file and sends it with the reply', async () => {
+    const h = mount('OPEN');
+    pickAndUpload.mockResolvedValue('https://ik/support/proof.png');
+    renderWithProviders(<TicketDetailsScreen />);
+    fireEvent.press(screen.getByTestId('ticket-attach-add'));
+    await waitFor(() => expect(screen.getByTestId('ticket-attach-0')).toBeOnTheScreen());
+    fireEvent.changeText(screen.getByTestId('ticket-reply-input'), 'here you go');
+    fireEvent.press(screen.getByTestId('ticket-reply-send'));
+    await waitFor(() =>
+      expect(h.reply).toHaveBeenCalledWith('here you go', ['https://ik/support/proof.png']),
+    );
+  });
+
+  it('sends an attachment-only reply (no text)', async () => {
+    const h = mount('OPEN');
+    pickAndUpload.mockResolvedValue('https://ik/support/only.png');
+    renderWithProviders(<TicketDetailsScreen />);
+    // Empty + no attachments is a no-op.
+    fireEvent.press(screen.getByTestId('ticket-reply-send'));
+    expect(h.reply).not.toHaveBeenCalled();
+    fireEvent.press(screen.getByTestId('ticket-attach-add'));
+    await waitFor(() => expect(screen.getByTestId('ticket-attach-0')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('ticket-reply-send'));
+    await waitFor(() => expect(h.reply).toHaveBeenCalledWith('', ['https://ik/support/only.png']));
+    // Preview clears once the reply is sent.
+    await waitFor(() => expect(screen.queryByTestId('ticket-attach-0')).toBeNull());
   });
 });
 

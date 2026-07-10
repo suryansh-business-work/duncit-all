@@ -40,9 +40,28 @@ export const TICKET_FIELDS = gql`
 `;
 
 export const TICKETS = gql`
-  query Tickets($status: TicketStatus, $search: String) {
-    tickets(status: $status, search: $search) {
-      ...TicketFields
+  query Tickets(
+    $status: TicketStatus
+    $search: String
+    $page: Int
+    $page_size: Int
+    $sort_by: String
+    $sort_dir: String
+  ) {
+    tickets(
+      status: $status
+      search: $search
+      page: $page
+      page_size: $page_size
+      sort_by: $sort_by
+      sort_dir: $sort_dir
+    ) {
+      items {
+        ...TicketFields
+      }
+      total
+      page
+      page_size
     }
   }
   ${TICKET_FIELDS}
@@ -206,6 +225,13 @@ export interface Ticket {
     is_phone_verified: boolean;
   };
   messages?: TicketMessage[];
+}
+
+export interface TicketPage {
+  items: Ticket[];
+  total: number;
+  page: number;
+  page_size: number;
 }
 
 export interface TicketTranscript {

@@ -60,19 +60,27 @@ describe('supportChat e2e', () => {
     await server.client(signToken({ id: userId, roles: ['USER'] })).request(START, { text: 'hi' });
 
     const agent = server.client(signToken({ roles: ['SUPPORT_USER'] }));
-    const sessions = await agent.request<{ supportChatSessions: Array<{ id: string }> }>(gql`
+    const sessions = await agent.request<{
+      supportChatSessions: { items: Array<{ id: string }>; total: number };
+    }>(gql`
       query {
         supportChatSessions {
-          id
-          status
+          items {
+            id
+            status
+          }
+          total
+          page
+          page_size
         }
       }
     `);
-    expect(sessions.supportChatSessions.length).toBeGreaterThanOrEqual(1);
+    expect(sessions.supportChatSessions.items.length).toBeGreaterThanOrEqual(1);
+    expect(sessions.supportChatSessions.total).toBeGreaterThanOrEqual(1);
 
     const user = server.client(signToken({ roles: ['USER'] }));
     await expect(
-      user.request(gql`query { supportChatSessions { id } }`)
+      user.request(gql`query { supportChatSessions { total } }`)
     ).rejects.toThrow();
   });
 

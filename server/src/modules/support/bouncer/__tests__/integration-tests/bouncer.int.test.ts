@@ -17,10 +17,24 @@ describe('bouncerService integration', () => {
     await BouncerSosAlertModel.create({ user_id: userId, pod_id: podId, status: 'ACTIVE' });
 
     const all = await bouncerService.listSos();
-    expect(all).toHaveLength(1);
+    expect(all.items).toHaveLength(1);
+    expect(all.total).toBe(1);
 
     const mine = await bouncerService.getMyActiveSos(userId, podId);
     expect(mine?.status).toBe('ACTIVE');
+  });
+
+  it('fetches a single SOS / callback by id for the detail pages, null when missing', async () => {
+    const sos = await BouncerSosAlertModel.create({ user_id: userId, pod_id: podId, status: 'ACTIVE' });
+    const cb = await BouncerCallbackRequestModel.create({
+      user_id: userId, contact_phone: '+919999999999', status: 'PENDING',
+    });
+
+    expect((await bouncerService.getSos(String(sos._id)))?.id).toBe(String(sos._id));
+    expect((await bouncerService.getCallback(String(cb._id)))?.id).toBe(String(cb._id));
+    expect(await bouncerService.getSos(new Types.ObjectId().toString())).toBeNull();
+    expect(await bouncerService.getSos('not-an-id')).toBeNull();
+    expect(await bouncerService.getCallback(new Types.ObjectId().toString())).toBeNull();
   });
 
   it('exposes a derived SOS-/CB- ticket_no even for legacy docs without one (Item 20)', async () => {
@@ -31,8 +45,8 @@ describe('bouncerService integration', () => {
       status: 'PENDING',
     });
 
-    const [sosPub] = await bouncerService.listSos();
-    const [cbPub] = await bouncerService.listCallbacks();
+    const { items: [sosPub] } = await bouncerService.listSos();
+    const { items: [cbPub] } = await bouncerService.listCallbacks();
     expect(sosPub.ticket_no).toBe(`SOS-${String(sos._id).slice(-6).toUpperCase()}`);
     expect(cbPub.ticket_no).toBe(`CB-${String(cb._id).slice(-6).toUpperCase()}`);
   });
@@ -71,8 +85,8 @@ describe('bouncerService integration', () => {
     const closed = await bouncerService.closeCallback(adminId, id);
     expect(closed.status).toBe('CLOSED');
 
-    const list = await bouncerService.listCallbacks('CLOSED');
-    expect(list).toHaveLength(1);
+    const list = await bouncerService.listCallbacks({ status: 'CLOSED' });
+    expect(list.items).toHaveLength(1);
   });
 
   it('records call duration + conclusion and lists the user’s own callbacks (Bug 5)', async () => {

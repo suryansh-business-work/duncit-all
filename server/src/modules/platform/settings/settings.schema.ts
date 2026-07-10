@@ -93,6 +93,7 @@ export const settingsTypeDefs = gql`
     android_app_url: String!
     ios_app_url: String!
     home_all_vibe_icon_url: String!
+    home_header_tagline: String!
     updated_at: String
   }
 
@@ -129,6 +130,7 @@ export const settingsTypeDefs = gql`
     android_app_url: String
     ios_app_url: String
     home_all_vibe_icon_url: String
+    home_header_tagline: String
   }
 
   extend type Query {

@@ -15,6 +15,7 @@ export const HEADER_DATA = gql`
       confetti_lottie_url
       welcome_lottie_url
       home_all_vibe_icon_url
+      home_header_tagline
     }
     me {
       user_id

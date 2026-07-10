@@ -10,7 +10,7 @@ type Product = PodDetail['product_requests'][number];
 const MUTED_ICON = '#9aa0a6';
 
 /** A round +/- stepper button; disabled state greys out and drops the handler. */
-function StepButton({
+export function StepButton({
   testID,
   icon,
   color,

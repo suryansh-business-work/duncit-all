@@ -9,6 +9,7 @@ import { AppImage } from '@/components/AppImage';
 import { ModalThemeScope } from '@/components/ModalThemeScope';
 import { BrandDetailSheet } from '@/components/details/BrandDetailSheet';
 import { ZoomableImageModal } from '@/components/details/ZoomableImageModal';
+import { ProductQuantityBar } from '@/components/details/ProductQuantityBar';
 import { PublicInventoryProductDocument } from '@/graphql/details';
 import { graphqlRequest } from '@/services/graphql.client';
 import { useThemeColors } from '@/hooks/useThemeColors';
@@ -22,12 +23,27 @@ type Product = NonNullable<
 interface Props {
   productId: string | null;
   onClose: () => void;
+  /** Current selected quantity of this product (from the pod's selection map). */
+  quantity?: number;
+  /** Available stock — the sheet's own query does not return it, so the pod row passes it. */
+  maxQuantity?: number;
+  /** Update the selection for this product; 0 removes it. */
+  onUpdateQuantity?: (quantity: number) => void;
+  /** View-only once the viewer has already booked this pod (no re-selecting). */
+  readOnly?: boolean;
 }
 
 /** Product-detail bottom sheet opened from the Pod Shop info icon — image
  * gallery, name, brand and description, fetched on demand for any signed-in
  * user (RN twin of mWeb's ProductDetailDialog). */
-export function ProductDetailSheet({ productId, onClose }: Readonly<Props>) {
+export function ProductDetailSheet({
+  productId,
+  onClose,
+  quantity = 0,
+  maxQuantity = 0,
+  onUpdateQuantity,
+  readOnly,
+}: Readonly<Props>) {
   const { primary } = useThemeColors();
   const [product, setProduct] = useState<Product | null>(null);
   const [isLoading, setIsLoading] = useState(false);
@@ -214,6 +230,13 @@ export function ProductDetailSheet({ productId, onClose }: Readonly<Props>) {
                         ))}
                       </YStack>
                     ) : null}
+                    <ProductQuantityBar
+                      quantity={quantity}
+                      maxQuantity={maxQuantity}
+                      primary={primary}
+                      readOnly={readOnly}
+                      onUpdate={onUpdateQuantity}
+                    />
                   </YStack>
                 </ScrollView>
               ) : null}

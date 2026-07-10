@@ -47,6 +47,12 @@ export function PodShop({
     onSelectionChange(next);
   };
 
+  const infoProduct = products.find((item) => item.product_id === infoProductId);
+  const infoMax = Number(infoProduct?.available_count ?? infoProduct?.quantity ?? 0);
+  const onUpdateInfoQuantity = infoProductId
+    ? (quantity: number) => updateQuantity(infoProductId, quantity)
+    : undefined;
+
   return (
     <YStack
       margin={16}
@@ -121,7 +127,14 @@ export function PodShop({
         </XStack>
       ) : null}
 
-      <ProductDetailSheet productId={infoProductId} onClose={() => setInfoProductId(null)} />
+      <ProductDetailSheet
+        productId={infoProductId}
+        onClose={() => setInfoProductId(null)}
+        quantity={infoProductId ? (selectedProducts[infoProductId] ?? 0) : 0}
+        maxQuantity={infoMax}
+        readOnly={readOnly}
+        onUpdateQuantity={onUpdateInfoQuantity}
+      />
     </YStack>
   );
 }

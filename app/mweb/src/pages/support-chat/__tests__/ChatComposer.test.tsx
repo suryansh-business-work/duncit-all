@@ -1,17 +1,29 @@
 import '@testing-library/jest-dom/vitest';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { describe, expect, it, vi } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import ChatComposer from '../ChatComposer';
-import { UPLOAD_ATTACHMENT } from '../queries';
+import { GET_IMAGEKIT_AUTH } from '../../../utils/imagekit';
 
-const uploadedDoc: MockedResponse = {
-  request: { query: UPLOAD_ATTACHMENT },
+const authMock: MockedResponse = {
+  request: { query: GET_IMAGEKIT_AUTH },
   variableMatcher: () => true,
   result: {
-    data: { uploadImageToImagekit: { url: 'https://cdn/support-chat/notes.pdf', fileId: 'f9' } },
+    data: {
+      getImagekitAuth: {
+        token: 't',
+        expire: 1,
+        signature: 's',
+        publicKey: 'pk',
+        urlEndpoint: 'https://ik',
+      },
+    },
   },
 };
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 function fileOf(name: string, type: string, size: number): File {
   const f = new File(['x'], name, { type });
@@ -58,8 +70,12 @@ describe('ChatComposer — attachment size guards', () => {
 });
 
 describe('ChatComposer — document upload + send', () => {
-  it('uploads a document and sends it as an attachment', async () => {
-    const { onSend } = setup([uploadedDoc]);
+  it('uploads a document directly to ImageKit and sends it as an attachment', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ url: 'https://cdn/support-chat/notes.pdf' }) }),
+    );
+    const { onSend } = setup([authMock]);
     fireEvent.change(fileInput(), {
       target: { files: [fileOf('notes.pdf', 'application/pdf', 2048)] },
     });

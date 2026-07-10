@@ -32,6 +32,7 @@ export const BRANDING_FIELDS = `
   android_app_url
   ios_app_url
   home_all_vibe_icon_url
+  home_header_tagline
   updated_at
 `;
 
@@ -91,6 +92,7 @@ export interface BrandingFormState {
   android_app_url: string;
   ios_app_url: string;
   home_all_vibe_icon_url: string;
+  home_header_tagline: string;
 }
 
 export type PlatformPrefix = 'mweb' | 'mobile' | 'portals';
@@ -127,4 +129,5 @@ export const emptyBrandingForm: BrandingFormState = {
   android_app_url: '',
   ios_app_url: '',
   home_all_vibe_icon_url: '',
+  home_header_tagline: 'It All Starts Here!',
 };

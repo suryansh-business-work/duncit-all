@@ -26,21 +26,22 @@ const DOCUMENT_TYPES = [
 
 interface Deps {
   uploadAttachment: Upload;
-  submit: (text: string, attachments: string[]) => Promise<void>;
+  onStage: (url: string) => void;
   setBusy: (v: boolean) => void;
   setSendError: (v: string) => void;
 }
 
 /** Image/document picking + upload for the live chat composer (B9) — kept out
- * of the screen so LiveChatScreen stays ≤200 lines. */
-export function useChatAttachments({ uploadAttachment, submit, setBusy, setSendError }: Deps) {
-  const uploadAndSend = async (asset: Parameters<Upload>[0], asDoc: boolean) => {
+ * of the screen so LiveChatScreen stays ≤200 lines. Uploaded files are staged
+ * (previewed in the composer) rather than sent immediately. */
+export function useChatAttachments({ uploadAttachment, onStage, setBusy, setSendError }: Deps) {
+  const uploadAndStage = async (asset: Parameters<Upload>[0]) => {
     setBusy(true);
     setSendError('');
     try {
-      const url = await uploadAttachment(asset, asDoc);
+      const url = await uploadAttachment(asset);
       setBusy(false);
-      await submit('', [url]);
+      onStage(url);
     } catch (e) {
       setSendError(toErrorMessage(e, 'Could not attach the file.'));
       setBusy(false);
@@ -64,13 +65,12 @@ export function useChatAttachments({ uploadAttachment, submit, setBusy, setSendE
     }
     const result = await ImagePicker.launchImageLibraryAsync({
       mediaTypes: ['images', 'videos'],
-      base64: true,
       quality: 0.8,
     });
     const asset = result.canceled ? undefined : result.assets[0];
     if (!asset) return;
     if (tooLarge(asset.fileSize, asset.type === 'video')) return;
-    await uploadAndSend(asset, false);
+    await uploadAndStage(asset);
   };
 
   const attachDocument = async () => {
@@ -81,7 +81,7 @@ export function useChatAttachments({ uploadAttachment, submit, setBusy, setSendE
     const doc = result.canceled ? undefined : result.assets[0];
     if (!doc) return;
     if (tooLarge(doc.size, false)) return;
-    await uploadAndSend({ uri: doc.uri, fileName: doc.name, mimeType: doc.mimeType }, true);
+    await uploadAndStage({ uri: doc.uri, fileName: doc.name, mimeType: doc.mimeType });
   };
 
   return { attach, attachDocument };

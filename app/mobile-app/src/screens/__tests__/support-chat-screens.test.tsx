@@ -226,10 +226,9 @@ describe('LiveChatScreen — send + attach', () => {
     );
   });
 
-  it('attaches: permission denied, cancel, success and failure', async () => {
-    const send = jest.fn().mockResolvedValue(undefined);
+  it('does not stage without photo permission or on cancel', async () => {
     const uploadAttachment = jest.fn().mockResolvedValue('https://img/up.jpg');
-    mockedChat.mockReturnValue({ ...chatBase(), send, uploadAttachment });
+    mockedChat.mockReturnValue({ ...chatBase(), uploadAttachment });
     renderWithProviders(<LiveChatScreen />);
 
     reqPerm.mockResolvedValueOnce({ granted: false });
@@ -237,25 +236,92 @@ describe('LiveChatScreen — send + attach', () => {
     await waitFor(() =>
       expect(screen.getByTestId('support-chat-send-error')).toHaveTextContent(/photo access/i),
     );
+    expect(uploadAttachment).not.toHaveBeenCalled();
 
     reqPerm.mockResolvedValue({ granted: true });
     launch.mockResolvedValueOnce({ canceled: true });
     fireEvent.press(screen.getByTestId('support-chat-attach'));
     await waitFor(() => expect(uploadAttachment).not.toHaveBeenCalled());
+    expect(screen.queryByTestId('support-chat-attach-preview-0')).toBeNull();
+  });
 
-    launch.mockResolvedValueOnce({ canceled: false, assets: [{ base64: 'abc' }] });
+  it('stages a picked image as a preview, then sends it with the text and clears', async () => {
+    const send = jest.fn().mockResolvedValue(undefined);
+    const uploadAttachment = jest.fn().mockResolvedValue('https://img/photo.jpg');
+    mockedChat.mockReturnValue({ ...chatBase(), send, uploadAttachment });
+    renderWithProviders(<LiveChatScreen />);
+
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValueOnce({ canceled: false, assets: [{ uri: 'file://photo.jpg' }] });
     fireEvent.press(screen.getByTestId('support-chat-attach'));
-    await waitFor(() => expect(send).toHaveBeenCalledWith('', ['https://img/up.jpg']));
+    // Attaching now stages a removable preview instead of sending immediately.
+    await waitFor(() =>
+      expect(screen.getByTestId('support-chat-attach-preview-0')).toBeOnTheScreen(),
+    );
+    expect(send).not.toHaveBeenCalled();
 
-    uploadAttachment.mockRejectedValueOnce(new Error('upload failed'));
-    launch.mockResolvedValueOnce({ canceled: false, assets: [{ base64: 'abc' }] });
+    fireEvent.changeText(screen.getByTestId('support-chat-input'), 'here you go');
+    fireEvent.press(screen.getByTestId('support-chat-send'));
+    await waitFor(() =>
+      expect(send).toHaveBeenCalledWith('here you go', ['https://img/photo.jpg']),
+    );
+    // The staged preview clears once the message is sent.
+    await waitFor(() => expect(screen.queryByTestId('support-chat-attach-preview-0')).toBeNull());
+  });
+
+  it('removes a staged attachment before sending', async () => {
+    const send = jest.fn().mockResolvedValue(undefined);
+    const uploadAttachment = jest.fn().mockResolvedValue('https://img/photo.jpg');
+    mockedChat.mockReturnValue({ ...chatBase(), send, uploadAttachment });
+    renderWithProviders(<LiveChatScreen />);
+
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValueOnce({ canceled: false, assets: [{ uri: 'file://photo.jpg' }] });
+    fireEvent.press(screen.getByTestId('support-chat-attach'));
+    await waitFor(() =>
+      expect(screen.getByTestId('support-chat-attach-remove-0')).toBeOnTheScreen(),
+    );
+
+    fireEvent.press(screen.getByTestId('support-chat-attach-remove-0'));
+    await waitFor(() => expect(screen.queryByTestId('support-chat-attach-preview-0')).toBeNull());
+
+    // With nothing staged and no text, send stays a no-op.
+    fireEvent.press(screen.getByTestId('support-chat-send'));
+    expect(send).not.toHaveBeenCalled();
+  });
+
+  it('sends a staged attachment on its own (empty text)', async () => {
+    const send = jest.fn().mockResolvedValue(undefined);
+    const uploadAttachment = jest.fn().mockResolvedValue('https://img/only.jpg');
+    mockedChat.mockReturnValue({ ...chatBase(), send, uploadAttachment });
+    renderWithProviders(<LiveChatScreen />);
+
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValueOnce({ canceled: false, assets: [{ uri: 'file://only.jpg' }] });
+    fireEvent.press(screen.getByTestId('support-chat-attach'));
+    await waitFor(() =>
+      expect(screen.getByTestId('support-chat-attach-preview-0')).toBeOnTheScreen(),
+    );
+
+    fireEvent.press(screen.getByTestId('support-chat-send'));
+    await waitFor(() => expect(send).toHaveBeenCalledWith('', ['https://img/only.jpg']));
+  });
+
+  it('surfaces an attachment upload failure and stages nothing', async () => {
+    const uploadAttachment = jest.fn().mockRejectedValue(new Error('upload failed'));
+    mockedChat.mockReturnValue({ ...chatBase(), uploadAttachment });
+    renderWithProviders(<LiveChatScreen />);
+
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValueOnce({ canceled: false, assets: [{ uri: 'file://x.jpg' }] });
     fireEvent.press(screen.getByTestId('support-chat-attach'));
     await waitFor(() =>
       expect(screen.getByTestId('support-chat-send-error')).toHaveTextContent('upload failed'),
     );
+    expect(screen.queryByTestId('support-chat-attach-preview-0')).toBeNull();
   });
 
-  it('attaches a document: cancel then success (Bug 9)', async () => {
+  it('stages a document: cancel then success (Bug 9)', async () => {
     const send = jest.fn().mockResolvedValue(undefined);
     const uploadAttachment = jest.fn().mockResolvedValue('https://img/spec.pdf');
     mockedChat.mockReturnValue({ ...chatBase(), send, uploadAttachment });
@@ -272,12 +338,17 @@ describe('LiveChatScreen — send + attach', () => {
     });
     fireEvent.press(screen.getByTestId('support-chat-attach-doc'));
     await waitFor(() =>
-      expect(uploadAttachment).toHaveBeenCalledWith(
-        { uri: 'file://spec.pdf', fileName: 'spec.pdf', mimeType: 'application/pdf' },
-        true,
-      ),
+      expect(uploadAttachment).toHaveBeenCalledWith({
+        uri: 'file://spec.pdf',
+        fileName: 'spec.pdf',
+        mimeType: 'application/pdf',
+      }),
     );
-    await waitFor(() => expect(send).toHaveBeenCalledWith('', ['https://img/spec.pdf']));
+    // The document is staged (previewed), not sent immediately.
+    await waitFor(() =>
+      expect(screen.getByTestId('support-chat-attach-preview-0')).toBeOnTheScreen(),
+    );
+    expect(send).not.toHaveBeenCalled();
   });
 
   it('rejects an over-size image or document (100 MB cap)', async () => {

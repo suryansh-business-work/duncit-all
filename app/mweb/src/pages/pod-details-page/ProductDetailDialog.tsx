@@ -6,6 +6,7 @@ import {
   ButtonBase,
   CircularProgress,
   Dialog,
+  DialogActions,
   DialogContent,
   DialogTitle,
   Divider,
@@ -19,18 +20,34 @@ import StorefrontIcon from '@mui/icons-material/Storefront';
 import ChevronRightIcon from '@mui/icons-material/ChevronRight';
 import MomentLightbox from '../../components/moments/MomentLightbox';
 import BrandDetailDialog from './BrandDetailDialog';
+import ProductQuantityBar from './ProductQuantityBar';
 import { formatRupees, productSpecs } from './product-specs';
 import { PUBLIC_PRODUCT } from './queries';
 
 interface Props {
   productId: string | null;
   onClose: () => void;
+  /** Current selected quantity of this product (from the pod's selection map). */
+  quantity?: number;
+  /** Available stock — the dialog's own query does not return it, so the pod row passes it. */
+  maxQuantity?: number;
+  /** Update the selection for this product; 0 removes it. */
+  onUpdateQuantity?: (quantity: number) => void;
+  /** View-only once the viewer has already booked this pod (no re-selecting). */
+  viewOnly?: boolean;
 }
 
 /** Product-detail dialog opened from the Pod Shop info icon — image gallery
  * (tap to zoom), price, physical specs and a tappable brand that opens a brand
  * dialog, fetched on demand for any signed-in user (Task B item 1). */
-export default function ProductDetailDialog({ productId, onClose }: Readonly<Props>) {
+export default function ProductDetailDialog({
+  productId,
+  onClose,
+  quantity = 0,
+  maxQuantity = 0,
+  onUpdateQuantity,
+  viewOnly = false,
+}: Readonly<Props>) {
   const [zoomIndex, setZoomIndex] = useState<number | null>(null);
   const [brandOpen, setBrandOpen] = useState<string | null>(null);
   const { data, loading, error } = useQuery(PUBLIC_PRODUCT, {
@@ -149,6 +166,11 @@ export default function ProductDetailDialog({ productId, onClose }: Readonly<Pro
           </IconButton>
         </DialogTitle>
         <DialogContent>{body}</DialogContent>
+        {product && !viewOnly && onUpdateQuantity ? (
+          <DialogActions sx={{ px: 3, pb: 2 }}>
+            <ProductQuantityBar quantity={quantity} maxQuantity={maxQuantity} onUpdate={onUpdateQuantity} />
+          </DialogActions>
+        ) : null}
       </Dialog>
       <MomentLightbox
         moments={images.map((url) => ({ url }))}

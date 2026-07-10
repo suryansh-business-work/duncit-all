@@ -46,6 +46,14 @@ export default function IdentitySection({ form, setForm }: Readonly<Props>) {
         onChange={(e) => update('app_name', e.target.value)}
         fullWidth
       />
+      <TextField
+        label="Home header tagline"
+        value={form.home_header_tagline}
+        onChange={(e) => update('home_header_tagline', e.target.value)}
+        fullWidth
+        placeholder="It All Starts Here!"
+        helperText="Shown at the top of the home screen, above the location (mWeb + mobile app)."
+      />
       <MediaPickerField
         label="Logo URL"
         value={form.logo_url}

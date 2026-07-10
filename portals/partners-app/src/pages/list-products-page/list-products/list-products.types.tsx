@@ -1,7 +1,6 @@
 export type ProductListingDeliveryTarget = 'HOST' | 'VENUE';
 
 export interface ProductListingValues {
-  is_duncit_delivery_partner: boolean;
   super_category_id: string;
   category_id: string;
   sub_category_id: string;

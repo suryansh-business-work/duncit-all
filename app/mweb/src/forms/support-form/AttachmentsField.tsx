@@ -1,5 +1,4 @@
 import { useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
 import {
   Avatar,
   Box,
@@ -14,7 +13,7 @@ import AttachFileIcon from '@mui/icons-material/AttachFile';
 import CloseIcon from '@mui/icons-material/Close';
 import InsertDriveFileIcon from '@mui/icons-material/InsertDriveFile';
 import MovieIcon from '@mui/icons-material/Movie';
-import { UPLOAD_ATTACHMENT } from '../../pages/support-chat/queries';
+import { useImagekitUpload } from '../../utils/imagekit';
 import { describeAttachment, isVideoUpload, typeLabel } from '../../utils/attachment';
 
 const MAX_BYTES = 100 * 1024 * 1024; // Images & documents up to 100 MB.
@@ -25,15 +24,6 @@ const ACCEPT =
 interface Props {
   attachments: string[];
   setAttachments: (next: string[]) => void;
-}
-
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Could not read the selected file'));
-    reader.readAsDataURL(file);
-  });
 }
 
 interface PreviewProps {
@@ -102,7 +92,7 @@ function AttachmentPreview({ url, onRemove }: Readonly<PreviewProps>) {
 
 export default function AttachmentsField({ attachments, setAttachments }: Readonly<Props>) {
   const [error, setError] = useState<string | null>(null);
-  const [uploadFile, { loading: uploading }] = useMutation(UPLOAD_ATTACHMENT);
+  const { upload, uploading } = useImagekitUpload();
   const fileRef = useRef<HTMLInputElement | null>(null);
 
   const pickFile = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -119,17 +109,7 @@ export default function AttachmentsField({ attachments, setAttachments }: Readon
     }
     setError(null);
     try {
-      const fileBase64 = await readAsDataUrl(file);
-      const res = await uploadFile({
-        variables: {
-          fileBase64,
-          fileName: file.name,
-          mimeType: file.type,
-          folder: '/support',
-          allow_documents: true,
-        },
-      });
-      const url = res.data?.uploadImageToImagekit?.url;
+      const url = await upload(file, '/support');
       if (url) setAttachments([...attachments, url].slice(0, 5));
     } catch (err: any) {
       setError(err?.message || 'Upload failed');

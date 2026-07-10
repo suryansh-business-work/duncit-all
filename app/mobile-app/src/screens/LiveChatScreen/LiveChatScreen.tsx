@@ -38,6 +38,9 @@ export function LiveChatScreen() {
   } = chat;
   const { timeZone } = useAppSettings();
   const [showJump, setShowJump] = useState(false);
+  // Files picked and uploaded but not yet sent — previewed in the composer so the
+  // user can remove one before sending (they go out with the next message).
+  const [attachments, setAttachments] = useState<string[]>([]);
   const scrollRef = useRef<RNScrollView>(null);
   // Pinned (near the bottom) means the thread should auto-follow new messages;
   // once the user scrolls up we stop force-scrolling so the jump button works.
@@ -72,7 +75,7 @@ export function LiveChatScreen() {
 
   const { attach, attachDocument } = useChatAttachments({
     uploadAttachment,
-    submit,
+    onStage: (url: string) => setAttachments((prev) => [...prev, url].slice(0, 5)),
     setBusy,
     setSendError,
   });
@@ -86,7 +89,8 @@ export function LiveChatScreen() {
 
   const onSendText = (text: string) => {
     pinnedRef.current = true;
-    void submit(text);
+    void submit(text, attachments);
+    setAttachments([]);
   };
 
   const showToggle = closed ? reopenAllowed : true;
@@ -170,6 +174,8 @@ export function LiveChatScreen() {
         <SupportChatComposer
           busy={busy}
           locked={!!closed}
+          attachments={attachments}
+          onRemoveAttachment={(url) => setAttachments((prev) => prev.filter((u) => u !== url))}
           onSendText={onSendText}
           onAttach={() => void attach()}
           onAttachDocument={() => void attachDocument()}

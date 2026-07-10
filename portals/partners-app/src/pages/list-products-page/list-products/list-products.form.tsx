@@ -9,7 +9,6 @@ import { parseApiError } from '../../../utils/parseApiError';
 import type { ProductListingValues } from './list-products.types';
 import { productListingSchema } from './list-products.schema';
 import { StepBody } from './list-products.form-ui';
-import CategoryCascade from './CategoryCascade';
 
 export { productListingSchema } from './list-products.schema';
 
@@ -41,7 +40,6 @@ const UPDATE_PRODUCT_LISTING = gql`
 `;
 
 const emptyValues: ProductListingValues = {
-  is_duncit_delivery_partner: false,
   super_category_id: '',
   category_id: '',
   sub_category_id: '',
@@ -58,8 +56,8 @@ const emptyValues: ProductListingValues = {
   delivery_target: 'HOST',
 };
 
-const steps = ['Delivery partner', 'Product details', 'Inventory', 'Commission', 'Delivery', 'Preview'];
-const stepFields: Path<ProductListingValues>[][] = [['is_duncit_delivery_partner'], ['product_name', 'image_urls', 'description'], ['size_label', 'height_cm', 'weight_kg', 'color', 'inventory_count', 'unit_cost'], ['commission_pct'], ['delivery_target'], []];
+const steps = ['Category', 'Product details', 'Inventory', 'Commission', 'Delivery', 'Preview'];
+const stepFields: Path<ProductListingValues>[][] = [['super_category_id', 'category_id', 'sub_category_id'], ['product_name', 'image_urls', 'description'], ['size_label', 'height_cm', 'weight_kg', 'color', 'inventory_count', 'unit_cost'], ['commission_pct'], ['delivery_target'], []];
 
 interface Props {
   brandId: string;
@@ -112,7 +110,21 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
   const superId = watch('super_category_id');
   const categoryId = watch('category_id');
   const subId = watch('sub_category_id');
-  const cascadeError = Boolean(formState.submitCount) && (!superId || !categoryId || !subId);
+  const category = {
+    superId,
+    categoryId,
+    subId,
+    errors: {
+      super: formState.errors.super_category_id?.message,
+      category: formState.errors.category_id?.message,
+      sub: formState.errors.sub_category_id?.message,
+    },
+    onChange: (nextCascade: { superId: string; categoryId: string; subId: string }) => {
+      setValue('super_category_id', nextCascade.superId, { shouldValidate: true });
+      setValue('category_id', nextCascade.categoryId, { shouldValidate: true });
+      setValue('sub_category_id', nextCascade.subId, { shouldValidate: true });
+    },
+  };
 
   return (
     <Card variant="outlined" sx={{ borderRadius: 2 }}>
@@ -123,18 +135,7 @@ export default function ListProductsForm({ brandId, product = null, onSaved }: R
           </Stepper>
           {submitted && <Alert severity="success">Product {editing ? 'updated' : 'submitted'}. Products portal approval is required before it shows in matching pods.</Alert>}
           {apiError && <Alert severity="error">{apiError}</Alert>}
-          <CategoryCascade
-            superId={superId}
-            categoryId={categoryId}
-            subId={subId}
-            error={cascadeError}
-            onChange={(nextCascade) => {
-              setValue('super_category_id', nextCascade.superId, { shouldValidate: true });
-              setValue('category_id', nextCascade.categoryId, { shouldValidate: true });
-              setValue('sub_category_id', nextCascade.subId, { shouldValidate: true });
-            }}
-          />
-          <StepBody step={activeStep} control={control} watch={watch} setValue={setValue} onImageClick={() => setPickerOpen(true)} />
+          <StepBody step={activeStep} control={control} watch={watch} setValue={setValue} onImageClick={() => setPickerOpen(true)} category={category} />
           <Stack direction="row" spacing={1} justifyContent="space-between">
             <Button disabled={activeStep === 0 || loading} onClick={() => setActiveStep((step) => step - 1)}>Back</Button>
             {activeStep < steps.length - 1 ? <Button variant="contained" onClick={next}>Next</Button> : <Button type="submit" variant="contained" disabled={loading}>{loading ? 'Saving...' : editing ? 'Update listing' : 'Submit for approval'}</Button>}
@@ -156,7 +157,6 @@ function productToValues(product?: any | null): ProductListingValues {
 // extra fields like id/listing_* that the input would reject).
 function toSubmitInput(values: ProductListingValues, brandId: string) {
   return {
-    is_duncit_delivery_partner: values.is_duncit_delivery_partner,
     brand_id: brandId,
     super_category_id: values.super_category_id,
     category_id: values.category_id,

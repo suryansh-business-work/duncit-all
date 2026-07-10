@@ -1,31 +1,32 @@
 import { useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import { MaterialIcons } from '@expo/vector-icons';
-import { Text, XStack, YStack } from 'tamagui';
+import { Text, XStack } from 'tamagui';
 
 import { AccountButton } from '@/components/AccountButton';
-import { AuthLogo } from '@/components/AuthLogo';
-import { LocationButton } from '@/components/LocationButton';
 import { LogoutButton } from '@/components/LogoutButton';
-import { Mascot } from '@/components/Mascot';
 import { NotificationsBell } from '@/components/notifications';
 import { StudioSwitchDialog } from '@/components/StudioSwitchDialog';
+import { useBranding } from '@/hooks/useBranding';
 import { useMe } from '@/hooks/useMe';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { useHomeStore } from '@/stores/home.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { STUDIO_HOME_ROUTE, STUDIO_LABEL, resolveMode } from '@/utils/studio-mode';
 
+import { HeaderGreeting } from './HeaderGreeting';
+
 /**
- * In-app header — the two dynamic brand marks (logo + mascot, both from the
- * shared `branding` setting) on the left. On the right: theme toggle plus either
- * the account avatar (which opens the sidebar drawer) or — when `minimal`, i.e.
- * the pre-onboarding survey — a plain logout button.
+ * In-app header — the admin-configurable tagline plus the tappable location on
+ * the left (or the studio badge when in a Host/Venue/ecomm studio). On the
+ * right: search, notifications and either the account avatar (which opens the
+ * sidebar drawer) or — when `minimal`, i.e. the pre-onboarding survey — a plain
+ * logout button.
  */
 export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) {
   const navigation = useNavigation();
   const { color: ink, onPrimary } = useThemeColors();
   const me = useMe().data?.me;
+  const branding = useBranding().data?.branding;
   const roles = me?.roles ?? [];
   const studioMode = useStudioModeStore((s) => s.mode);
   const setStudioMode = useStudioModeStore((s) => s.setMode);
@@ -33,36 +34,16 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
   const [switchOpen, setSwitchOpen] = useState(false);
   const showBrowseActions = !minimal && effectiveStudio === 'USER';
 
-  // Tapping the logo returns to the Home tab and refreshes the feed. The nested
-  // screen param matters: from another tab (Explore/Clubs/…) the stack is already
-  // on "Home", so a bare navigate('Home') would be a no-op and never switch tabs.
-  const goHome = () => {
-    void useHomeStore.getState().fetch(true);
-    // Mirrors mWeb's HeaderBrand: always land on Home and, if already there,
-    // smooth-scroll the feed back to the top.
-    useHomeStore.getState().requestScrollTop();
-    navigation.navigate('Home', { screen: 'HomeTab' });
-  };
-
   return (
     <XStack
       testID="app-header"
       alignItems="center"
       justifyContent="space-between"
-      paddingLeft={8}
+      paddingLeft={16}
       paddingRight={16}
       paddingVertical={8}
     >
-      <XStack alignItems="center" gap={6}>
-        <YStack
-          testID="header-logo"
-          role="button"
-          aria-label="Go to home and refresh"
-          onPress={goHome}
-        >
-          <AuthLogo size={34} />
-        </YStack>
-        <Mascot />
+      <XStack alignItems="center" gap={6} flex={1} minWidth={0}>
         {!minimal && effectiveStudio !== 'USER' ? (
           <XStack
             testID="header-studio-badge"
@@ -82,10 +63,15 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
             </Text>
             <MaterialIcons name="swap-horiz" size={14} color={onPrimary} />
           </XStack>
-        ) : null}
+        ) : (
+          <HeaderGreeting
+            tagline={branding?.home_header_tagline}
+            showLocation={showBrowseActions}
+          />
+        )}
       </XStack>
       <XStack alignItems="center" gap={8}>
-        {/* Studio modes (Host/Venue/ecomm) get a focused header — no search, no location. */}
+        {/* Studio modes (Host/Venue/ecomm) get a focused header — no search. */}
         {showBrowseActions ? (
           <XStack
             testID="header-search"
@@ -102,7 +88,6 @@ export function AppHeader({ minimal = false }: Readonly<{ minimal?: boolean }>) 
             <MaterialIcons name="search" size={24} color={ink} />
           </XStack>
         ) : null}
-        {showBrowseActions ? <LocationButton /> : null}
         {minimal ? null : <NotificationsBell />}
         {minimal ? <LogoutButton /> : <AccountButton />}
       </XStack>

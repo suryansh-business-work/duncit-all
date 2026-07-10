@@ -1,9 +1,7 @@
 import { useState } from 'react';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system/legacy';
 
-import { UploadImageDocument } from '@/graphql/status';
-import { graphqlRequest } from '@/services/graphql.client';
+import { uploadToImagekitDirect } from '@/services/imagekit-upload';
 
 // Videos cap at 50 MB; images and documents keep the 100 MB ceiling (support spec).
 const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
@@ -31,8 +29,9 @@ const PICK_TYPES = [
 /**
  * Shared support-attachment picker + uploader used by the create-ticket field
  * and the ticket reply composer. Picks an image/video/document, enforces the
- * 50 MB video cap, uploads to ImageKit with `allow_documents` and returns the
- * hosted URL (or null on cancel / too-large / failure).
+ * 50 MB video cap, uploads the file DIRECTLY to ImageKit (bypassing the API's
+ * request-body size limit) and returns the hosted URL (or null on cancel /
+ * too-large / failure).
  */
 export function useSupportUpload(folder: string) {
   const [uploading, setUploading] = useState(false);
@@ -57,21 +56,11 @@ export function useSupportUpload(folder: string) {
 
     setUploading(true);
     try {
-      const base64 = await FileSystem.readAsStringAsync(asset.uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-      const res = await graphqlRequest(
-        UploadImageDocument,
-        {
-          fileBase64: `data:${mimeType};base64,${base64}`,
-          fileName: asset.name ?? `support-${Date.now()}`,
-          mimeType,
-          folder,
-          allowDocuments: true,
-        },
-        { auth: true },
+      const url = await uploadToImagekitDirect(
+        { uri: asset.uri, name: asset.name ?? `support-${Date.now()}`, type: mimeType },
+        folder,
       );
-      return res.uploadImageToImagekit.url;
+      return url;
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Upload failed');
       return null;

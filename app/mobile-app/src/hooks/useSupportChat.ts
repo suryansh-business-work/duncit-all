@@ -1,6 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { io, type Socket } from 'socket.io-client';
-import * as FileSystem from 'expo-file-system/legacy';
 import type { ResultOf } from '@graphql-typed-document-node/core';
 
 import { config } from '@/constants/config';
@@ -16,13 +15,13 @@ import {
   SupportChatMessagesDocument,
   SupportChatTranscriptDocument,
 } from '@/graphql/support-chat';
-import { UploadImageDocument } from '@/graphql/status';
 import {
   SupportChatSenderRole,
   SupportChatStatus,
   TranscriptFormat,
 } from '@/generated/graphql/graphql';
 import { graphqlRequest } from '@/services/graphql.client';
+import { uploadToImagekitDirect } from '@/services/imagekit-upload';
 import { appendUnique, mergeReal } from '@/utils/support-chat';
 import { typingLabel } from '@/utils/support-typing';
 
@@ -39,7 +38,6 @@ interface TypingPayload {
 }
 
 interface PickedAsset {
-  base64?: string | null;
   uri?: string | null;
   fileName?: string | null;
   mimeType?: string | null;
@@ -201,29 +199,18 @@ export function useSupportChat() {
     [deliver],
   );
 
-  /** Uploads a picked image/video/document to ImageKit and returns its URL.
-   * Documents need `allowDocuments` so the server accepts non-media mime types (Bug 9). */
-  const uploadAttachment = useCallback(async (asset: PickedAsset, allowDocuments = false) => {
-    const mimeType = asset.mimeType ?? 'image/jpeg';
-    let base64 = asset.base64 ?? null;
-    if (!base64 && asset.uri) {
-      base64 = await FileSystem.readAsStringAsync(asset.uri, {
-        encoding: FileSystem.EncodingType.Base64,
-      });
-    }
-    if (!base64) throw new Error('Could not read the selected file.');
-    const uploaded = await graphqlRequest(
-      UploadImageDocument,
+  /** Uploads a picked image/video/document DIRECTLY to ImageKit (bypassing the
+   * API's request-body size limit) and returns its hosted URL. */
+  const uploadAttachment = useCallback(async (asset: PickedAsset) => {
+    if (!asset.uri) throw new Error('Could not read the selected file.');
+    return uploadToImagekitDirect(
       {
-        fileBase64: `data:${mimeType};base64,${base64}`,
-        fileName: asset.fileName ?? `chat-${Date.now()}`,
-        mimeType,
-        folder: '/support/chat',
-        allowDocuments,
+        uri: asset.uri,
+        name: asset.fileName ?? `chat-${Date.now()}`,
+        type: asset.mimeType ?? 'application/octet-stream',
       },
-      { auth: true },
+      '/support/chat',
     );
-    return uploaded.uploadImageToImagekit.url;
   }, []);
 
   const resolve = useCallback(async () => {

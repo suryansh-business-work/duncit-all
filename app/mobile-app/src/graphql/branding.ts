@@ -20,6 +20,7 @@ export const BrandingDocument = gql(`
       mobile_splash_url
       mobile_splash_type
       home_all_vibe_icon_url
+      home_header_tagline
     }
   }
 `);

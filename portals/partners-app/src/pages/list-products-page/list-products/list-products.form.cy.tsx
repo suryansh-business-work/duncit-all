@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import { productListingSchema } from './list-products.form';
 
 const validListing = {
-  is_duncit_delivery_partner: true,
   super_category_id: '507f1f77bcf86cd799439011',
   category_id: '507f1f77bcf86cd799439012',
   sub_category_id: '507f1f77bcf86cd799439013',
@@ -32,6 +31,18 @@ describe('productListingSchema', () => {
   it('requires commission in allowed range', () => {
     const result = productListingSchema.safeParse({ ...validListing, commission_pct: 3 });
     expect(messages(result)).toMatch(/commission/i);
+  });
+
+  it('requires the super, category and sub category', () => {
+    const result = productListingSchema.safeParse({ ...validListing, super_category_id: '', category_id: '', sub_category_id: '' });
+    expect(messages(result)).toMatch(/super category/i);
+    expect(messages(result)).toMatch(/sub category/i);
+  });
+
+  it('rejects zero or negative inventory and price', () => {
+    const result = productListingSchema.safeParse({ ...validListing, inventory_count: 0, unit_cost: 0 });
+    expect(messages(result)).toMatch(/unit/i);
+    expect(messages(result)).toMatch(/price/i);
   });
 
   it('accepts a complete product listing', () => {

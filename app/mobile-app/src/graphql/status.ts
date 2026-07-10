@@ -89,6 +89,21 @@ export const UploadImageDocument = gql(`
   }
 `);
 
+/** Short-lived ImageKit auth so the app can upload a file DIRECTLY to ImageKit
+ * (multipart), bypassing the GraphQL API's request-body size limit that blocked
+ * large support attachments. The private key never leaves the server. */
+export const GetImagekitAuthDocument = gql(`
+  mutation MobileGetImagekitAuth {
+    getImagekitAuth {
+      token
+      expire
+      signature
+      publicKey
+      urlEndpoint
+    }
+  }
+`);
+
 /** Publishes a status post from an uploaded image url — mWeb's CREATE_STATUS_POST. */
 export const CreatePostDocument = gql(`
   mutation MobileCreatePost($input: CreatePostInput!) {

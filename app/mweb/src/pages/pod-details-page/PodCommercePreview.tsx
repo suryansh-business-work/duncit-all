@@ -47,6 +47,13 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
     onSelectionChange(next);
   };
 
+  const infoProduct = requests.find((item: any) => item.product_id === infoProductId);
+  const infoMax = Number(infoProduct?.available_count ?? infoProduct?.quantity ?? 0);
+  const infoQuantity = infoProductId ? selectedProducts[infoProductId] || 0 : 0;
+  const updateInfoQuantity = (quantity: number) => {
+    if (infoProductId) updateQuantity(infoProductId, quantity);
+  };
+
   return (
     <Box
       sx={{
@@ -170,7 +177,14 @@ export default function PodCommercePreview({ pod, priceFormat, selectedProducts,
         </Stack>
       )}
 
-      <ProductDetailDialog productId={infoProductId} onClose={() => setInfoProductId(null)} />
+      <ProductDetailDialog
+        productId={infoProductId}
+        onClose={() => setInfoProductId(null)}
+        quantity={infoQuantity}
+        maxQuantity={infoMax}
+        viewOnly={viewOnly}
+        onUpdateQuantity={updateInfoQuantity}
+      />
     </Box>
   );
 }

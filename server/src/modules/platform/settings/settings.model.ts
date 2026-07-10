@@ -110,6 +110,8 @@ export interface IBranding extends Document {
   // (mWeb + mobile). Admin-managed from the Category catalogue; empty string
   // falls back to the bundled apps/grid icon on each client.
   home_all_vibe_icon_url: string;
+  // Tagline shown in the home header, above the location (mWeb + mobile).
+  home_header_tagline: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -155,6 +157,7 @@ const brandingSchema = new Schema<IBranding>(
     android_app_url: { type: String, default: "" },
     ios_app_url: { type: String, default: "" },
     home_all_vibe_icon_url: { type: String, default: "" },
+    home_header_tagline: { type: String, default: "It All Starts Here!" },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

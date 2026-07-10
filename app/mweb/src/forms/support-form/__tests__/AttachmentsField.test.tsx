@@ -2,17 +2,29 @@ import '@testing-library/jest-dom/vitest';
 import { useState } from 'react';
 import { fireEvent, render, screen } from '@testing-library/react';
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import AttachmentsField from '../AttachmentsField';
-import { UPLOAD_ATTACHMENT } from '../../../pages/support-chat/queries';
+import { GET_IMAGEKIT_AUTH } from '../../../utils/imagekit';
 
-const uploadedPdf: MockedResponse = {
-  request: { query: UPLOAD_ATTACHMENT },
+const authMock: MockedResponse = {
+  request: { query: GET_IMAGEKIT_AUTH },
   variableMatcher: () => true,
   result: {
-    data: { uploadImageToImagekit: { url: 'https://cdn/support/report.pdf', fileId: 'f1' } },
+    data: {
+      getImagekitAuth: {
+        token: 't',
+        expire: 1,
+        signature: 's',
+        publicKey: 'pk',
+        urlEndpoint: 'https://ik',
+      },
+    },
   },
 };
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
 
 function Harness({ initial = [] as string[], mocks = [] as MockedResponse[] }: Readonly<{ initial?: string[]; mocks?: MockedResponse[] }>) {
   const [attachments, setAttachments] = useState<string[]>(initial);
@@ -67,8 +79,12 @@ describe('AttachmentsField — size guards', () => {
 });
 
 describe('AttachmentsField — upload + previews', () => {
-  it('uploads a document and shows a file chip preview', async () => {
-    render(<Harness mocks={[uploadedPdf]} />);
+  it('uploads a document directly to ImageKit and shows a file chip preview', async () => {
+    vi.stubGlobal(
+      'fetch',
+      vi.fn().mockResolvedValue({ ok: true, json: async () => ({ url: 'https://cdn/support/report.pdf' }) }),
+    );
+    render(<Harness mocks={[authMock]} />);
     fireEvent.change(fileInput(), {
       target: { files: [fileOf('report.pdf', 'application/pdf', 1024)] },
     });

@@ -261,7 +261,8 @@ export const inventoryTypeDefs = /* GraphQL */ `
   }
 
   input ProductListingInput {
-    is_duncit_delivery_partner: Boolean!
+    "Legacy delivery-partner flag. No longer collected from brands (defaults to false); kept optional for backward compatibility."
+    is_duncit_delivery_partner: Boolean
     brand_id: ID!
     super_category_id: ID!
     category_id: ID!

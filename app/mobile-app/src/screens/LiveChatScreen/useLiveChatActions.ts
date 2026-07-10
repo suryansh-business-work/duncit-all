@@ -29,7 +29,7 @@ export function useLiveChatActions(chat: Chat, scrollToEnd: (animated: boolean) 
   const [reopenBusy, setReopenBusy] = useState(false);
   const [reopenError, setReopenError] = useState('');
 
-  const submit = async (text: string, attachments: string[] = []) => {
+  const submit = async (text: string, attachments: string[]) => {
     if (busy) return;
     setBusy(true);
     setSendError('');

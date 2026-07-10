@@ -18,6 +18,15 @@ import AddPhotoAlternateIcon from '@mui/icons-material/AddPhotoAlternate';
 import CloseIcon from '@mui/icons-material/Close';
 import RhfTextField from '../../../forms/components/RhfTextField';
 import type { ProductListingValues } from './list-products.types';
+import CategoryCascade, { type CategoryErrors } from './CategoryCascade';
+
+export interface CategoryStep {
+  superId: string;
+  categoryId: string;
+  subId: string;
+  errors: CategoryErrors;
+  onChange: (next: { superId: string; categoryId: string; subId: string }) => void;
+}
 
 const hints: Record<string, string> = {
   product_name: 'Use the exact product name hosts will understand during pod creation.',
@@ -36,17 +45,18 @@ interface StepProps {
   watch: UseFormWatch<ProductListingValues>;
   setValue: UseFormSetValue<ProductListingValues>;
   onImageClick: () => void;
+  category: CategoryStep;
 }
 
-export function StepBody({ step, control, watch, setValue, onImageClick }: Readonly<StepProps>) {
+export function StepBody({ step, control, watch, setValue, onImageClick, category }: Readonly<StepProps>) {
   if (step === 0) {
-    return <BooleanRadioField control={control} name="is_duncit_delivery_partner" label="Are you a Duncit product delivery partner?" options={[['true', 'Yes, I deliver Duncit products'], ['false', 'No, I am not a delivery partner yet']]} />;
+    return <CategoryCascade superId={category.superId} categoryId={category.categoryId} subId={category.subId} errors={category.errors} onChange={category.onChange} />;
   }
   if (step === 1) {
     return <Stack spacing={2}>{field(control, 'product_name', 'Product title')}<ImageField control={control} watch={watch} setValue={setValue} onImageClick={onImageClick} />{field(control, 'description', 'Description', 'text', true)}</Stack>;
   }
   if (step === 2) {
-    return <Stack spacing={2}>{field(control, 'size_label', 'Size')}{field(control, 'height_cm', 'Height (cm)', 'number')}{field(control, 'weight_kg', 'Weight (kg)', 'number')}{field(control, 'color', 'Color')}{field(control, 'inventory_count', 'Available inventory', 'number')}{field(control, 'unit_cost', 'Product price', 'number')}</Stack>;
+    return <InventoryFields control={control} />;
   }
   if (step === 3) {
     return <CommissionField control={control} />;
@@ -59,6 +69,29 @@ export function StepBody({ step, control, watch, setValue, onImageClick }: Reado
 
 function field(control: Control<ProductListingValues>, name: keyof ProductListingValues, label: string, type = 'text', multiline = false) {
   return <RhfTextField control={control} name={name} label={label} type={type} multiline={multiline} minRows={multiline ? 4 : undefined} hint={hints[name]} />;
+}
+
+interface NumberInputProps {
+  min: number;
+  step: number;
+  inputMode: 'numeric' | 'decimal';
+}
+
+function numberField(control: Control<ProductListingValues>, name: keyof ProductListingValues, label: string, inputProps: NumberInputProps) {
+  return <RhfTextField control={control} name={name} label={label} type="number" hint={hints[name]} inputProps={inputProps} />;
+}
+
+function InventoryFields({ control }: Readonly<{ control: Control<ProductListingValues> }>) {
+  return (
+    <Stack spacing={2}>
+      {field(control, 'size_label', 'Size')}
+      {numberField(control, 'height_cm', 'Height (cm)', { min: 0.1, step: 0.1, inputMode: 'decimal' })}
+      {numberField(control, 'weight_kg', 'Weight (kg)', { min: 0.01, step: 0.01, inputMode: 'decimal' })}
+      {field(control, 'color', 'Color')}
+      {numberField(control, 'inventory_count', 'Available inventory', { min: 1, step: 1, inputMode: 'numeric' })}
+      {numberField(control, 'unit_cost', 'Product price (₹)', { min: 1, step: 1, inputMode: 'decimal' })}
+    </Stack>
+  );
 }
 
 function CommissionField({ control }: Readonly<{ control: Control<ProductListingValues> }>) {
@@ -117,24 +150,6 @@ interface RadioFieldProps {
   control: Control<ProductListingValues>;
   label: string;
   options: string[][];
-}
-
-function BooleanRadioField({ control, name, label, options }: Readonly<RadioFieldProps & { name: 'is_duncit_delivery_partner' }>) {
-  return (
-    <Controller
-      control={control}
-      name={name}
-      render={({ field, fieldState }) => (
-        <FormControl error={Boolean(fieldState.error)}>
-          <FormLabel>{label}</FormLabel>
-          <RadioGroup value={String(field.value)} onChange={(event) => field.onChange(event.target.value === 'true')}>
-            {options.map(([optionValue, optionLabel]) => <FormControlLabel key={optionValue} value={optionValue} control={<Radio />} label={optionLabel} />)}
-          </RadioGroup>
-          <FormHelperText>{fieldState.error?.message}</FormHelperText>
-        </FormControl>
-      )}
-    />
-  );
 }
 
 function StringRadioField({ control, name, label, options }: Readonly<RadioFieldProps & { name: 'delivery_target' }>) {

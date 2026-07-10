@@ -1,9 +1,8 @@
 import { useRef, useState } from 'react';
-import { useMutation } from '@apollo/client';
 import { Box, Button, Chip, CircularProgress, IconButton, Stack, TextField } from '@mui/material';
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SendIcon from '@mui/icons-material/Send';
-import { UPLOAD_ATTACHMENT } from './queries';
+import { useImagekitUpload } from '../../utils/imagekit';
 import { isVideoUpload } from '../../utils/attachment';
 
 const MAX_BYTES = 100 * 1024 * 1024; // Images & documents up to 100 MB.
@@ -16,20 +15,11 @@ interface Props {
   onTyping: () => void;
 }
 
-function readAsDataUrl(file: File): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
-    reader.onerror = () => reject(new Error('Could not read the selected file'));
-    reader.readAsDataURL(file);
-  });
-}
-
 export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Props>) {
   const [text, setText] = useState('');
   const [attachments, setAttachments] = useState<string[]>([]);
   const [error, setError] = useState<string | null>(null);
-  const [uploadFile, { loading: uploading }] = useMutation(UPLOAD_ATTACHMENT);
+  const { upload, uploading } = useImagekitUpload();
   const fileRef = useRef<HTMLInputElement | null>(null);
   const lastTyping = useRef(0);
 
@@ -56,17 +46,7 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
     }
     setError(null);
     try {
-      const fileBase64 = await readAsDataUrl(file);
-      const res = await uploadFile({
-        variables: {
-          fileBase64,
-          fileName: file.name,
-          mimeType: file.type,
-          folder: '/support-chat',
-          allow_documents: true,
-        },
-      });
-      const url = res.data?.uploadImageToImagekit?.url;
+      const url = await upload(file, '/support-chat');
       if (url) setAttachments((prev) => [...prev, url].slice(0, 5));
     } catch (err: any) {
       setError(err?.message || 'Upload failed');

@@ -171,4 +171,59 @@ describe('PodShop → ProductDetailSheet', () => {
     fireEvent.press(screen.getByTestId('product-detail-close'));
     await waitFor(() => expect(screen.queryByTestId('product-detail-name')).toBeNull());
   });
+
+  it('adds the product to the selection from the sheet quantity bar', async () => {
+    mockRequest.mockResolvedValue({ publicInventoryProduct: product() });
+    const onSelectionChange = jest.fn();
+    renderWithProviders(
+      <PodShop pod={podWith()} selectedProducts={{}} onSelectionChange={onSelectionChange} />,
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('pod-shop-info-pr1'));
+    });
+    await waitFor(() => expect(screen.getByTestId('product-detail-add')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('product-detail-add'));
+    expect(onSelectionChange).toHaveBeenCalledWith({ pr1: 1 });
+  });
+
+  it('derives the max quantity from stock quantity when available_count is absent', async () => {
+    mockRequest.mockResolvedValue({ publicInventoryProduct: product() });
+    const podQtyOnly = {
+      products_enabled: true,
+      product_requests: [
+        {
+          product_id: 'pr1',
+          product_name: 'Drum sticks',
+          quantity: 3,
+          unit_cost: 200,
+          image_url: '',
+          images: [],
+        },
+      ],
+    } as never;
+    const onSelectionChange = jest.fn();
+    renderWithProviders(
+      <PodShop pod={podQtyOnly} selectedProducts={{}} onSelectionChange={onSelectionChange} />,
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('pod-shop-info-pr1'));
+    });
+    await waitFor(() => expect(screen.getByTestId('product-detail-add')).toBeOnTheScreen());
+    fireEvent.press(screen.getByTestId('product-detail-add'));
+    expect(onSelectionChange).toHaveBeenCalledWith({ pr1: 1 });
+  });
+
+  it('hides the quantity bar when the pod is already booked (read-only)', async () => {
+    mockRequest.mockResolvedValue({ publicInventoryProduct: product() });
+    renderWithProviders(
+      <PodShop pod={podWith()} selectedProducts={{}} onSelectionChange={jest.fn()} readOnly />,
+    );
+    await act(async () => {
+      fireEvent.press(screen.getByTestId('pod-shop-info-pr1'));
+    });
+    await waitFor(() =>
+      expect(screen.getByTestId('product-detail-name')).toHaveTextContent('Drum sticks'),
+    );
+    expect(screen.queryByTestId('product-detail-add')).toBeNull();
+  });
 });

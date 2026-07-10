@@ -72,6 +72,7 @@ const BRANDING_FIELDS = [
   "android_app_url",
   "ios_app_url",
   "home_all_vibe_icon_url",
+  "home_header_tagline",
 ] as const;
 type BrandingField = (typeof BRANDING_FIELDS)[number];
 
@@ -108,6 +109,7 @@ const brandingToPub = (doc: any) => ({
   android_app_url: doc.android_app_url ?? "",
   ios_app_url: doc.ios_app_url ?? "",
   home_all_vibe_icon_url: doc.home_all_vibe_icon_url ?? "",
+  home_header_tagline: doc.home_header_tagline ?? "It All Starts Here!",
   updated_at: doc.updated_at?.toISOString?.() ?? "",
 });
 

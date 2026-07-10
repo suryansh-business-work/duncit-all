@@ -5,22 +5,26 @@ import { useStudioModeStore } from '@/stores/studio-mode.store';
 import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
-const mockFetch = jest.fn();
-const mockRequestScrollTop = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
 }));
-jest.mock('@/stores/home.store', () => ({
-  useHomeStore: {
-    getState: () => ({ fetch: mockFetch, requestScrollTop: mockRequestScrollTop }),
-  },
-}));
 const mockUseMe = jest.fn();
 jest.mock('@/hooks/useMe', () => ({ useMe: () => mockUseMe() }));
+jest.mock('@/hooks/useBranding', () => ({
+  useBranding: () => ({ data: { branding: { home_header_tagline: 'It All Starts Here!' } } }),
+}));
+jest.mock('@/hooks/useLocations', () => ({
+  useLocations: () => ({ cityLabel: 'Mumbai', countryCode: 'IN' }),
+}));
 
 // Children are unit-tested on their own; here we just assert composition.
-jest.mock('@/components/AuthLogo', () => ({ AuthLogo: () => null }));
-jest.mock('@/components/Mascot', () => ({ Mascot: () => null }));
+jest.mock('@/components/LocationDialog', () => {
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const { View: V } = require('react-native');
+  return {
+    LocationDialog: ({ open }: { open: boolean }) => (open ? <V testID="location-dialog" /> : null),
+  };
+});
 jest.mock('@/components/LogoutButton', () => {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { View: V } = require('react-native');
@@ -39,12 +43,21 @@ beforeEach(() => {
 });
 
 describe('AppHeader', () => {
-  it('renders the brand row with the account avatar and no studio badge in User mode', () => {
+  it('renders the greeting tagline + account avatar and no studio badge in User mode', () => {
     renderWithProviders(<AppHeader />);
     expect(screen.getByTestId('app-header')).toBeOnTheScreen();
     expect(screen.getByTestId('account-button')).toBeOnTheScreen();
+    expect(screen.getByTestId('header-greeting-title')).toHaveTextContent('It All Starts Here!');
     expect(screen.queryByTestId('logout-button')).toBeNull();
     expect(screen.queryByTestId('header-studio-badge')).toBeNull();
+  });
+
+  it('shows the tappable location in User mode and opens the picker on press', () => {
+    renderWithProviders(<AppHeader />);
+    expect(screen.getByTestId('header-location')).toBeOnTheScreen();
+    expect(screen.queryByTestId('location-dialog')).toBeNull();
+    fireEvent.press(screen.getByTestId('header-location'));
+    expect(screen.getByTestId('location-dialog')).toBeOnTheScreen();
   });
 
   it('shows the studio badge, closes via backdrop, and switches mode back to User', () => {
@@ -65,12 +78,10 @@ describe('AppHeader', () => {
     expect(screen.queryByTestId('account-button')).toBeNull();
   });
 
-  it('returns to the Home tab, refreshes the feed and scrolls to top on logo tap', () => {
-    renderWithProviders(<AppHeader />);
-    fireEvent.press(screen.getByTestId('header-logo'));
-    expect(mockNavigate).toHaveBeenCalledWith('Home', { screen: 'HomeTab' });
-    expect(mockFetch).toHaveBeenCalledWith(true);
-    expect(mockRequestScrollTop).toHaveBeenCalled();
+  it('shows the greeting title but no location row in minimal mode', () => {
+    renderWithProviders(<AppHeader minimal />);
+    expect(screen.getByTestId('header-greeting-title')).toBeOnTheScreen();
+    expect(screen.queryByTestId('header-location')).toBeNull();
   });
 
   it('opens the Search screen when the search icon is tapped', () => {
@@ -88,7 +99,7 @@ describe('AppHeader', () => {
     useStudioModeStore.setState({ mode: 'HOST' });
     renderWithProviders(<AppHeader />);
     expect(screen.queryByTestId('header-search')).toBeNull();
-    expect(screen.queryByTestId('location-button')).toBeNull();
+    expect(screen.queryByTestId('header-location')).toBeNull();
     expect(screen.getByTestId('header-studio-badge')).toBeOnTheScreen();
   });
 

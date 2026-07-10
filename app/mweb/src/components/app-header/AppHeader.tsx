@@ -9,9 +9,7 @@ import {
   PUBLIC_POLICIES,
   SET_MY_SELECTED_LOCATION,
 } from './queries';
-import HeaderBrand from './HeaderBrand';
-import HeaderMascotButton from './HeaderMascotButton';
-import HeaderLocationButton from './HeaderLocationButton';
+import HeaderGreeting from './HeaderGreeting';
 import HeaderNotificationsBell from './HeaderNotificationsBell';
 import HeaderSearchButton from './HeaderSearchButton';
 import HeaderToast from './HeaderToast';
@@ -100,16 +98,17 @@ export default function AppHeader({
     [locations, selectedLocationId]
   );
 
+  const openLocationPicker = useCallback(() => {
+    setDraftLocationId(selectedLocationId);
+    setDraftZone(selectedZoneName);
+    setLocDialogOpen(true);
+  }, [selectedLocationId, selectedZoneName]);
+
   // Open the picker when another screen (e.g. the Clubs page note) asks for it.
   useEffect(() => {
-    const openPicker = () => {
-      setDraftLocationId(selectedLocationId);
-      setDraftZone(selectedZoneName);
-      setLocDialogOpen(true);
-    };
-    window.addEventListener(OPEN_LOCATION_PICKER_EVENT, openPicker);
-    return () => window.removeEventListener(OPEN_LOCATION_PICKER_EVENT, openPicker);
-  }, [selectedLocationId, selectedZoneName]);
+    window.addEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
+    return () => window.removeEventListener(OPEN_LOCATION_PICKER_EVENT, openLocationPicker);
+  }, [openLocationPicker]);
 
   const { data: policiesData } = useQuery(PUBLIC_POLICIES, { fetchPolicy: 'cache-first' });
   const publicPolicies = policiesData?.publicPolicies ?? [];
@@ -137,15 +136,22 @@ export default function AppHeader({
       }}
     >
       <Toolbar sx={{ width: '100%', maxWidth: APP_SHELL_MAX_WIDTH, mx: 'auto', gap: 1, py: 0.75, minHeight: minimal ? 56 : 60, px: 1.5 }}>
-        <HeaderBrand logoUrl={branding?.mweb_logo_url || branding?.logo_url} appName={branding?.app_name} />
-        <HeaderMascotButton branding={branding} />
-        {!minimal && effectiveStudio !== 'USER' && (
+        {!minimal && effectiveStudio !== 'USER' ? (
           <Chip
             label={STUDIO_LABEL[effectiveStudio]}
             color="primary"
             size="small"
             onClick={() => setStudioSwitchOpen(true)}
             sx={{ fontWeight: 900, borderRadius: 999 }}
+          />
+        ) : (
+          <HeaderGreeting
+            tagline={branding?.home_header_tagline}
+            loading={loading}
+            hasData={!!data}
+            selectedLocationName={minimal ? undefined : selectedLocation?.location_name}
+            selectedZoneName={minimal ? undefined : selectedZoneName}
+            onOpenLocation={minimal ? undefined : openLocationPicker}
           />
         )}
 
@@ -158,20 +164,8 @@ export default function AppHeader({
             {/* Studio modes (Host/Venue/ecomm) get a focused header — no location, no search. */}
             {effectiveStudio === 'USER' && (
               <>
-                {/* Search sits first — same order as the native header (B4-6). */}
+                {/* Location now lives on the left (HeaderGreeting); search stays on the right. */}
                 <HeaderSearchButton locationId={selectedLocationId} zoneName={selectedZoneName} />
-                <HeaderLocationButton
-                  loading={loading}
-                  hasData={!!data}
-                  selectedLocationName={selectedLocation?.location_name}
-                  selectedZoneName={selectedZoneName}
-                  selectedCountryCode={selectedLocation?.country_code}
-                  onClick={() => {
-                    setDraftLocationId(selectedLocationId);
-                    setDraftZone(selectedZoneName);
-                    setLocDialogOpen(true);
-                  }}
-                />
                 <LocationDialog
                   open={locDialogOpen}
                   onClose={() => setLocDialogOpen(false)}

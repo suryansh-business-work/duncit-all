@@ -1,23 +1,20 @@
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import { io } from 'socket.io-client';
-import * as FileSystem from 'expo-file-system/legacy';
 
 import { useSupportChat } from '@/hooks/useSupportChat';
 import { graphqlRequest } from '@/services/graphql.client';
+import { uploadToImagekitDirect } from '@/services/imagekit-upload';
 import { getAuthToken } from '@/services/auth-token';
 
 jest.mock('socket.io-client', () => ({ io: jest.fn() }));
 jest.mock('@/services/auth-token', () => ({ getAuthToken: jest.fn() }));
 jest.mock('@/services/graphql.client', () => ({ graphqlRequest: jest.fn() }));
-jest.mock('expo-file-system/legacy', () => ({
-  readAsStringAsync: jest.fn(),
-  EncodingType: { Base64: 'base64' },
-}));
+jest.mock('@/services/imagekit-upload', () => ({ uploadToImagekitDirect: jest.fn() }));
 
 const mockIo = io as jest.Mock;
 const mockToken = getAuthToken as jest.Mock;
 const mockRequest = graphqlRequest as jest.Mock;
-const mockRead = FileSystem.readAsStringAsync as jest.Mock;
+const mockDirect = uploadToImagekitDirect as jest.Mock;
 
 type Handler = (...args: unknown[]) => void;
 function fakeSocket() {
@@ -110,6 +107,7 @@ async function bootedHook() {
 beforeEach(() => {
   jest.clearAllMocks();
   mockToken.mockResolvedValue('jwt');
+  mockDirect.mockResolvedValue('https://img/up.jpg');
 });
 
 describe('useSupportChat', () => {
@@ -241,44 +239,29 @@ describe('useSupportChat', () => {
     expect(result.current.aiThinking).toBe(false);
   });
 
-  it('uploads an attachment from base64, from a uri, and rejects when unreadable', async () => {
+  it('uploads an attachment directly to ImageKit and rejects when the uri is missing', async () => {
     const { result } = await bootedHook();
 
-    const byBase64 = await result.current.uploadAttachment({
-      base64: 'abc',
-      fileName: 'x.jpg',
-      mimeType: 'image/jpeg',
-    });
-    expect(byBase64).toBe('https://img/up.jpg');
-
-    mockRead.mockResolvedValueOnce('vid64');
+    // A picked image/video/document is streamed straight to ImageKit by its uri.
     const byUri = await result.current.uploadAttachment({
       uri: 'file://v.mp4',
+      fileName: 'clip.mp4',
       mimeType: 'video/mp4',
     });
     expect(byUri).toBe('https://img/up.jpg');
-    expect(mockRead).toHaveBeenCalledWith('file://v.mp4', { encoding: 'base64' });
-
-    // Default mime + name when absent.
-    await result.current.uploadAttachment({ base64: 'abc' });
-    const upVars = mockRequest.mock.calls
-      .filter((c) => JSON.stringify(c[0]).includes('uploadImageToImagekit'))
-      .at(-1)?.[1] as Record<string, unknown>;
-    expect(upVars.mimeType).toBe('image/jpeg');
-    expect(upVars.fileName).toMatch(/^chat-\d+$/);
-    expect(upVars.allowDocuments).toBe(false);
-
-    // A document upload forwards allowDocuments + the real mime type (Bug 9).
-    await result.current.uploadAttachment(
-      { base64: 'pdf64', fileName: 'spec.pdf', mimeType: 'application/pdf' },
-      true,
+    expect(mockDirect).toHaveBeenCalledWith(
+      { uri: 'file://v.mp4', name: 'clip.mp4', type: 'video/mp4' },
+      '/support/chat',
     );
-    const docVars = mockRequest.mock.calls
-      .filter((c) => JSON.stringify(c[0]).includes('uploadImageToImagekit'))
-      .at(-1)?.[1] as Record<string, unknown>;
-    expect(docVars.allowDocuments).toBe(true);
-    expect(docVars.mimeType).toBe('application/pdf');
 
+    // Default name + type when absent.
+    await result.current.uploadAttachment({ uri: 'file://doc' });
+    const [file] = mockDirect.mock.calls.at(-1) as [{ uri: string; name: string; type: string }];
+    expect(file.uri).toBe('file://doc');
+    expect(file.type).toBe('application/octet-stream');
+    expect(file.name).toMatch(/^chat-\d+$/);
+
+    // A missing uri throws before any upload is attempted.
     await expect(result.current.uploadAttachment({})).rejects.toThrow(/could not read/i);
   });
 

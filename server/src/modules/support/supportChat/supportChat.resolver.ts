@@ -12,9 +12,27 @@ const SUPPORT_ROLES = ['SUPER_ADMIN', 'SUPPORT_MANAGER', 'SUPPORT_USER'];
 
 export const supportChatResolvers = {
   Query: {
-    supportChatSessions: (_p: unknown, args: { status?: any }, ctx: GraphQLContext) => {
+    supportChatSessions: (
+      _p: unknown,
+      args: {
+        status?: any;
+        search?: string;
+        page?: number;
+        page_size?: number;
+        sort_by?: string;
+        sort_dir?: string;
+      },
+      ctx: GraphQLContext
+    ) => {
       requireRole(ctx, SUPPORT_ROLES);
-      return supportChatService.listSessions(args.status);
+      return supportChatService.listSessions({
+        status: args.status,
+        search: args.search,
+        page: args.page,
+        page_size: args.page_size,
+        sort_by: args.sort_by,
+        sort_dir: args.sort_dir,
+      });
     },
     supportChatMessages: async (
       _p: unknown,

@@ -12,9 +12,14 @@ import WarningAmberIcon from '@mui/icons-material/WarningAmber';
 import PhoneCallbackIcon from '@mui/icons-material/PhoneCallback';
 import ConfirmationNumberIcon from '@mui/icons-material/ConfirmationNumber';
 import ForumIcon from '@mui/icons-material/Forum';
-import { BOUNCER_SOS_ALERTS, BOUNCER_CALLBACK_REQUESTS, type SosAlert, type CallbackRequest } from '../graphql/bouncer';
-import { TICKETS, type Ticket } from '../graphql/tickets';
-import { SUPPORT_CHAT_SESSIONS, type SupportChatSession } from '../graphql/supportChat';
+import {
+  BOUNCER_SOS_ALERTS,
+  BOUNCER_CALLBACK_REQUESTS,
+  type SosAlertPage,
+  type CallbackRequestPage,
+} from '../graphql/bouncer';
+import { TICKETS, type TicketPage } from '../graphql/tickets';
+import { SUPPORT_CHAT_SESSIONS, type SupportChatSessionPage } from '../graphql/supportChat';
 import { useSupportSocket } from '../lib/useSupportSocket';
 
 interface StatCardProps {
@@ -49,20 +54,20 @@ function StatCard({ label, count, icon, color, to }: Readonly<StatCardProps>) {
 }
 
 export default function DashboardPage() {
-  const sos = useQuery<{ bouncerSosAlerts: SosAlert[] }>(BOUNCER_SOS_ALERTS, {
-    variables: { status: 'ACTIVE' },
+  const sos = useQuery<{ bouncerSosAlerts: SosAlertPage }>(BOUNCER_SOS_ALERTS, {
+    variables: { status: 'ACTIVE', page_size: 1 },
     fetchPolicy: 'cache-and-network',
   });
-  const callbacks = useQuery<{ bouncerCallbackRequests: CallbackRequest[] }>(BOUNCER_CALLBACK_REQUESTS, {
-    variables: { status: 'PENDING' },
+  const callbacks = useQuery<{ bouncerCallbackRequests: CallbackRequestPage }>(BOUNCER_CALLBACK_REQUESTS, {
+    variables: { status: 'PENDING', page_size: 1 },
     fetchPolicy: 'cache-and-network',
   });
-  const tickets = useQuery<{ tickets: Ticket[] }>(TICKETS, {
-    variables: { status: 'OPEN' },
+  const tickets = useQuery<{ tickets: TicketPage }>(TICKETS, {
+    variables: { status: 'OPEN', page_size: 1 },
     fetchPolicy: 'cache-and-network',
   });
-  const chats = useQuery<{ supportChatSessions: SupportChatSession[] }>(SUPPORT_CHAT_SESSIONS, {
-    variables: { status: 'OPEN' },
+  const chats = useQuery<{ supportChatSessions: SupportChatSessionPage }>(SUPPORT_CHAT_SESSIONS, {
+    variables: { status: 'OPEN', page_size: 1 },
     fetchPolicy: 'cache-and-network',
   });
 
@@ -91,28 +96,28 @@ export default function DashboardPage() {
       <Stack direction="row" useFlexGap sx={{ flexWrap: 'wrap', gap: 2 }}>
         <StatCard
           label="Active SOS alerts"
-          count={sos.data?.bouncerSosAlerts.length ?? 0}
+          count={sos.data?.bouncerSosAlerts.total ?? 0}
           icon={<WarningAmberIcon fontSize="large" />}
           color="error.main"
           to="/sos"
         />
         <StatCard
           label="Pending callbacks"
-          count={callbacks.data?.bouncerCallbackRequests.length ?? 0}
+          count={callbacks.data?.bouncerCallbackRequests.total ?? 0}
           icon={<PhoneCallbackIcon fontSize="large" />}
           color="warning.main"
           to="/callbacks"
         />
         <StatCard
           label="Open tickets"
-          count={tickets.data?.tickets.length ?? 0}
+          count={tickets.data?.tickets.total ?? 0}
           icon={<ConfirmationNumberIcon fontSize="large" />}
           color="primary.main"
           to="/tickets"
         />
         <StatCard
           label="Open chats"
-          count={chats.data?.supportChatSessions.length ?? 0}
+          count={chats.data?.supportChatSessions.total ?? 0}
           icon={<ForumIcon fontSize="large" />}
           color="success.main"
           to="/live-chat"

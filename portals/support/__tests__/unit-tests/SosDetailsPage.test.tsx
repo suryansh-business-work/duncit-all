@@ -4,7 +4,7 @@ import { screen, fireEvent, waitFor } from '@testing-library/react';
 import SosDetailsPage from '../../src/pages/sos/SosDetailsPage';
 import {
   ACK_SOS,
-  BOUNCER_SOS_ALERTS,
+  BOUNCER_SOS_ALERT,
   RESOLVE_SOS,
   type SosAlert,
 } from '../../src/graphql/bouncer';
@@ -42,9 +42,9 @@ const minimalResolved: SosAlert = {
   pod: { id: 'p1', title: 'Saturday Run', venue_name: null, club_name: null, starts_at: null },
 };
 
-const queryMock = (alerts: SosAlert[]) => ({
-  request: { query: BOUNCER_SOS_ALERTS, variables: { status: null } },
-  result: { data: { bouncerSosAlerts: alerts } },
+const queryMock = (alert: SosAlert | null) => ({
+  request: { query: BOUNCER_SOS_ALERT, variables: { id: ID } },
+  result: { data: { bouncerSosAlert: alert } },
 });
 
 const renderAt = (mocks: any[]) =>
@@ -61,17 +61,17 @@ const renderAt = (mocks: any[]) =>
 
 describe('SosDetailsPage', () => {
   it('shows a not-found message when the alert is missing', async () => {
-    renderAt([queryMock([])]);
+    renderAt([queryMock(null)]);
     await waitFor(() => expect(screen.getByText(/could not be found/i)).toBeInTheDocument());
   });
 
   it('acknowledges then resolves an active alert', async () => {
     renderAt([
-      queryMock([fullAlert('ACTIVE')]),
+      queryMock(fullAlert('ACTIVE')),
       { request: { query: ACK_SOS, variables: { id: ID } }, result: { data: { acknowledgeBouncerSos: { id: ID, status: 'ACKNOWLEDGED', acknowledged_at: 'now' } } } },
-      queryMock([fullAlert('ACKNOWLEDGED')]),
+      queryMock(fullAlert('ACKNOWLEDGED')),
       { request: { query: RESOLVE_SOS, variables: { id: ID } }, result: { data: { resolveBouncerSos: { id: ID, status: 'RESOLVED', resolved_at: 'now' } } } },
-      queryMock([fullAlert('RESOLVED')]),
+      queryMock(fullAlert('RESOLVED')),
     ]);
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
     expect(screen.getByText('SOS-AAA111')).toBeInTheDocument();
@@ -86,7 +86,7 @@ describe('SosDetailsPage', () => {
   });
 
   it('renders a resolved alert with no optional details and no actions', async () => {
-    renderAt([queryMock([minimalResolved])]);
+    renderAt([queryMock(minimalResolved)]);
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
     expect(screen.queryByText('Open in Maps')).not.toBeInTheDocument();
     expect(screen.queryByRole('button', { name: /mark resolved/i })).not.toBeInTheDocument();
@@ -94,13 +94,13 @@ describe('SosDetailsPage', () => {
 
   it('renders an acknowledged alert whose host has no phone', async () => {
     const ack = { ...fullAlert('ACKNOWLEDGED'), host: { id: 'h1', name: 'Sam', phone: null } };
-    renderAt([queryMock([ack])]);
+    renderAt([queryMock(ack)]);
     await waitFor(() => expect(screen.getByText(/Sam/)).toBeInTheDocument());
     expect(screen.queryByRole('button', { name: /acknowledge/i })).not.toBeInTheDocument();
   });
 
   it('navigates back to the list', async () => {
-    renderAt([queryMock([fullAlert('ACTIVE')])]);
+    renderAt([queryMock(fullAlert('ACTIVE'))]);
     await waitFor(() => expect(screen.getByText('Riya')).toBeInTheDocument());
     fireEvent.click(screen.getByLabelText('Back'));
     expect(screen.getByText('SOS LIST')).toBeInTheDocument();

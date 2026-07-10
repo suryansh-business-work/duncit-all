@@ -18,6 +18,9 @@ import {
   type TranscriptData,
   type TranscriptFormat,
 } from '@modules/support/transcript';
+import { paginateDocs, supportSearchRegex } from '@modules/support/support.pagination';
+
+const SESSION_SORTABLE = new Set(['last_message_at', 'created_at', 'status']);
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -253,11 +256,26 @@ export const supportChatService = {
     return pubMsg;
   },
 
-  async listSessions(status?: SupportChatStatus) {
+  async listSessions(opts: {
+    status?: SupportChatStatus;
+    search?: string;
+    page?: number | null;
+    page_size?: number | null;
+    sort_by?: string | null;
+    sort_dir?: string | null;
+  }) {
     const q: any = {};
-    if (status) q.status = status;
-    const docs = await SupportChatSessionModel.find(q).sort({ last_message_at: -1 }).limit(200);
-    return Promise.all(docs.map(sessionPub));
+    if (opts.status) q.status = opts.status;
+    if (opts.search) q.last_message_preview = supportSearchRegex(opts.search);
+    const { docs, total, page, page_size } = await paginateDocs<ISupportChatSession>(
+      SupportChatSessionModel,
+      q,
+      opts,
+      SESSION_SORTABLE,
+      { last_message_at: -1 }
+    );
+    const items = await Promise.all(docs.map(sessionPub));
+    return { items, total, page, page_size };
   },
 
   async listMessages(sessionId: string, limit = 50, before?: string) {

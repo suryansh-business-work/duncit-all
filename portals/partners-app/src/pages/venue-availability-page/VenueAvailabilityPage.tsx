@@ -100,7 +100,13 @@ export default function VenueAvailabilityPage() {
     await refetch();
   };
 
+  // Main slot availability is bookable only within the next 60 days — later days
+  // are non-selectable in the calendar (server + DayDrawer are the backstop).
+  const maxSelectableDate = useMemo(() => addDays(startOfDay(new Date()), 60), []);
+  const canGoNext = range.to < maxSelectableDate;
+
   const shift = (dir: 1 | -1) => {
+    if (dir === 1 && !canGoNext) return;
     if (view === 'month') setAnchor(addMonths(anchor, dir));
     else if (view === 'week') setAnchor(addDays(anchor, dir * 7));
     else setAnchor(addDays(anchor, dir));
@@ -184,7 +190,7 @@ export default function VenueAvailabilityPage() {
               <Typography variant="subtitle1" fontWeight={900} sx={{ minWidth: 160, textAlign: 'center' }}>
                 {periodLabel(view, anchor, range)}
               </Typography>
-              <IconButton onClick={() => shift(1)} aria-label="Next">
+              <IconButton onClick={() => shift(1)} aria-label="Next" disabled={!canGoNext}>
                 <ChevronRightIcon />
               </IconButton>
               <Button size="small" startIcon={<TodayIcon />} onClick={() => setAnchor(new Date())}>
@@ -214,6 +220,7 @@ export default function VenueAvailabilityPage() {
               selectedDate={selectedDate}
               onSelect={setSelectedDate}
               holidays={venueHolidays}
+              maxDate={maxSelectableDate}
             />
           )}
 

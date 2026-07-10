@@ -21,7 +21,15 @@ export const ticketResolvers = {
   Query: {
     tickets: (
       _p: unknown,
-      args: { status?: any; assignee_id?: string; search?: string; limit?: number },
+      args: {
+        status?: any;
+        assignee_id?: string;
+        search?: string;
+        page?: number;
+        page_size?: number;
+        sort_by?: string;
+        sort_dir?: string;
+      },
       ctx: GraphQLContext
     ) => {
       requireRole(ctx, SUPPORT_ROLES);
@@ -29,7 +37,10 @@ export const ticketResolvers = {
         status: args.status,
         assigneeId: args.assignee_id,
         search: args.search,
-        limit: args.limit,
+        page: args.page,
+        page_size: args.page_size,
+        sort_by: args.sort_by,
+        sort_dir: args.sort_dir,
       });
     },
     ticket: async (_p: unknown, args: { id: string }, ctx: GraphQLContext) => {

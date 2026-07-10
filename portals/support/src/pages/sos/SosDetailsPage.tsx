@@ -18,7 +18,7 @@ import LocationOnIcon from '@mui/icons-material/LocationOn';
 import { formatDistanceToNow } from 'date-fns';
 import {
   ACK_SOS,
-  BOUNCER_SOS_ALERTS,
+  BOUNCER_SOS_ALERT,
   RESOLVE_SOS,
   type SosAlert,
 } from '../../graphql/bouncer';
@@ -32,15 +32,15 @@ const STATUS_COLOR: Record<SosAlert['status'], 'error' | 'warning' | 'success'> 
 export default function SosDetailsPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { data, loading, refetch } = useQuery<{ bouncerSosAlerts: SosAlert[] }>(BOUNCER_SOS_ALERTS, {
-    variables: { status: null },
-    fetchPolicy: 'cache-and-network',
-  });
+  const { data, loading, refetch } = useQuery<{ bouncerSosAlert: SosAlert | null }>(
+    BOUNCER_SOS_ALERT,
+    { variables: { id }, fetchPolicy: 'cache-and-network', skip: !id },
+  );
   const [ack] = useMutation(ACK_SOS, { onCompleted: () => refetch() });
   const [resolve] = useMutation(RESOLVE_SOS, { onCompleted: () => refetch() });
   const [busy, setBusy] = useState(false);
 
-  const alert = data?.bouncerSosAlerts.find((a) => a.id === id);
+  const alert = data?.bouncerSosAlert ?? undefined;
 
   const run = async (fn: () => Promise<any>) => {
     setBusy(true);

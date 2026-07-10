@@ -6,8 +6,9 @@ import { toErrorMessage } from '@/utils/errors';
 
 type Upload = ReturnType<typeof useSupportChat>['uploadAttachment'];
 
-// Images, videos and documents share a single 100 MB ceiling (support spec).
-const MAX_BYTES = 100 * 1024 * 1024;
+// Videos cap at 50 MB; images and documents keep the 100 MB ceiling (support spec).
+const VIDEO_MAX_BYTES = 50 * 1024 * 1024;
+const FILE_MAX_BYTES = 100 * 1024 * 1024;
 
 // Every document type accepted by the server (pdf / word / excel / powerpoint /
 // text) — mirrors the mWeb composer's `accept` list.
@@ -46,9 +47,10 @@ export function useChatAttachments({ uploadAttachment, submit, setBusy, setSendE
     }
   };
 
-  const tooLarge = (size?: number | null) => {
-    if (typeof size === 'number' && size > MAX_BYTES) {
-      setSendError('File is too large (max 100 MB).');
+  const tooLarge = (size: number | null | undefined, isVideo: boolean) => {
+    const max = isVideo ? VIDEO_MAX_BYTES : FILE_MAX_BYTES;
+    if (typeof size === 'number' && size > max) {
+      setSendError(isVideo ? 'Video is too large (max 50 MB).' : 'File is too large (max 100 MB).');
       return true;
     }
     return false;
@@ -67,7 +69,7 @@ export function useChatAttachments({ uploadAttachment, submit, setBusy, setSendE
     });
     const asset = result.canceled ? undefined : result.assets[0];
     if (!asset) return;
-    if (tooLarge(asset.fileSize)) return;
+    if (tooLarge(asset.fileSize, asset.type === 'video')) return;
     await uploadAndSend(asset, false);
   };
 
@@ -78,7 +80,7 @@ export function useChatAttachments({ uploadAttachment, submit, setBusy, setSendE
     });
     const doc = result.canceled ? undefined : result.assets[0];
     if (!doc) return;
-    if (tooLarge(doc.size)) return;
+    if (tooLarge(doc.size, false)) return;
     await uploadAndSend({ uri: doc.uri, fileName: doc.name, mimeType: doc.mimeType }, true);
   };
 

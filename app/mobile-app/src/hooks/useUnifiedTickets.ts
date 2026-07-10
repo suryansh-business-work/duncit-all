@@ -105,10 +105,10 @@ export function useTicketDetails(ticketId: string) {
   }, [ticketId, markRead]);
 
   const reply = useCallback(
-    async (bodyText: string) => {
+    async (bodyText: string, attachments: string[] = []) => {
       await graphqlRequest(
         ReplyToTicketDocument,
-        { ticketId, bodyText: bodyText.trim() },
+        { ticketId, bodyText: bodyText.trim(), attachments },
         { auth: true },
       );
       await reload();

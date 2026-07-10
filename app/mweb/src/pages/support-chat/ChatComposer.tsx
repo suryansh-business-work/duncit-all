@@ -4,8 +4,10 @@ import { Box, Button, Chip, CircularProgress, IconButton, Stack, TextField } fro
 import AttachFileIcon from '@mui/icons-material/AttachFile';
 import SendIcon from '@mui/icons-material/Send';
 import { UPLOAD_ATTACHMENT } from './queries';
+import { isVideoUpload } from '../../utils/attachment';
 
-const MAX_BYTES = 100 * 1024 * 1024; // Bug 10: documents, images & videos up to 100 MB.
+const MAX_BYTES = 100 * 1024 * 1024; // Images & documents up to 100 MB.
+const VIDEO_MAX_BYTES = 50 * 1024 * 1024; // Videos are capped tighter at 50 MB.
 const ACCEPT = 'image/*,video/*,application/pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,.ppt,.pptx';
 
 interface Props {
@@ -44,6 +46,10 @@ export default function ChatComposer({ disabled, onSend, onTyping }: Readonly<Pr
     const file = e.target.files?.[0];
     e.target.value = '';
     if (!file) return;
+    if (isVideoUpload(file.name, file.type) && file.size > VIDEO_MAX_BYTES) {
+      setError('Video is too large (max 50 MB)');
+      return;
+    }
     if (file.size > MAX_BYTES) {
       setError('File is too large (max 100 MB)');
       return;

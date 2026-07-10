@@ -116,10 +116,44 @@ export const bouncerTypeDefs = /* GraphQL */ `
     available: Boolean!
   }
 
+  "A page of SOS alerts for the agent list (server-side pagination + sort + search)."
+  type BouncerSosAlertPage {
+    items: [BouncerSosAlert!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
+  "A page of callback requests for the agent list (server-side pagination + sort + search)."
+  type BouncerCallbackRequestPage {
+    items: [BouncerCallbackRequest!]!
+    total: Int!
+    page: Int!
+    page_size: Int!
+  }
+
   extend type Query {
     bouncerSupportTarget: BouncerSupportTarget!
-    bouncerSosAlerts(status: BouncerSosStatus, limit: Int): [BouncerSosAlert!]!
-    bouncerCallbackRequests(status: BouncerCallbackStatus, limit: Int): [BouncerCallbackRequest!]!
+    bouncerSosAlerts(
+      status: BouncerSosStatus
+      search: String
+      page: Int
+      page_size: Int
+      sort_by: String
+      sort_dir: String
+    ): BouncerSosAlertPage!
+    bouncerCallbackRequests(
+      status: BouncerCallbackStatus
+      search: String
+      page: Int
+      page_size: Int
+      sort_by: String
+      sort_dir: String
+    ): BouncerCallbackRequestPage!
+    "A single SOS alert by id — backs the agent SOS detail page (deep-linkable)."
+    bouncerSosAlert(id: ID!): BouncerSosAlert
+    "A single callback request by id — backs the agent callback detail page (deep-linkable)."
+    bouncerCallbackRequest(id: ID!): BouncerCallbackRequest
     bouncerFeedback(limit: Int): [BouncerFeedback!]!
     myActiveBouncerSos(pod_id: ID!): BouncerSosAlert
     "The signed-in user's own callback request history, newest first."

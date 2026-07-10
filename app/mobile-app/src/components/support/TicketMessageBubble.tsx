@@ -1,6 +1,7 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 
+import { AttachmentView } from '@/components/AttachmentView';
 import { formatTime, tickState } from '@/utils/support-chat';
 
 const TICK_COLOR = { delivered: '#9aa0a6', seen: '#34b7f1' } as const;
@@ -10,6 +11,7 @@ export interface TicketThreadMessage {
   author_role: string;
   author_name: string;
   body_text: string;
+  attachments: string[];
   created_at: string;
 }
 
@@ -61,9 +63,12 @@ export function TicketMessageBubble({ message, timeZone, agentLastReadAt }: Read
         <Text fontSize={11} fontWeight="800" color={mine ? '$onPrimary' : '$muted'}>
           {message.author_name}
         </Text>
-        <Text fontSize={13.5} color={mine ? '$onPrimary' : '$color'}>
-          {message.body_text}
-        </Text>
+        <AttachmentView urls={message.attachments} size={120} />
+        {message.body_text ? (
+          <Text fontSize={13.5} color={mine ? '$onPrimary' : '$color'}>
+            {message.body_text}
+          </Text>
+        ) : null}
         <XStack alignSelf="flex-end" alignItems="center" gap={4}>
           {time ? (
             <Text fontSize={10} color={mine ? '$onPrimary' : '$muted'} opacity={0.7}>

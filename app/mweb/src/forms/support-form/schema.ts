@@ -54,7 +54,7 @@ export const supportSchema = z.object({
     .min(1, 'Message is required')
     .min(10, 'Please describe in at least 10 characters')
     .max(2000, 'Max 2000 characters'),
-  attachments: z.array(z.string().url('Invalid URL')).max(5, 'Up to 5 images').default([]),
+  attachments: z.array(z.string().url('Invalid URL')).max(5, 'Up to 5 files').default([]),
   pod_id: z.string().optional(),
   pod_title: z.string().optional(),
 });

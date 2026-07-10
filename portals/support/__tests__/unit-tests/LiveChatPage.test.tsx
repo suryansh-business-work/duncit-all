@@ -64,8 +64,13 @@ const msg = (
 });
 
 const sessionsMock = (sessions: SupportChatSession[], status = 'OPEN') => ({
-  request: { query: SUPPORT_CHAT_SESSIONS, variables: { status } },
-  result: { data: { supportChatSessions: sessions } },
+  request: {
+    query: SUPPORT_CHAT_SESSIONS,
+    variables: { status, search: null, page: 1, page_size: 25 },
+  },
+  result: {
+    data: { supportChatSessions: { items: sessions, total: sessions.length, page: 1, page_size: 25 } },
+  },
   maxUsageCount: 30,
 });
 const messagesMock = (sessionId: string, messages: SupportChatMessage[]) => ({

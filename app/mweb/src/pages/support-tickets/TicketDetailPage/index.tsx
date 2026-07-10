@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useLazyQuery, useMutation, useQuery } from '@apollo/client';
 import { useNavigate, useParams } from 'react-router-dom';
 import { Box, CircularProgress, Stack, Typography } from '@mui/material';
@@ -10,7 +10,7 @@ import TicketMeta from '../TicketMeta';
 import TicketFeedbackDialog from '../TicketFeedbackDialog';
 import TicketEmailDialog from '../TicketEmailDialog';
 import TicketHeader from './TicketHeader';
-import TicketThread from './TicketThread';
+import TicketThread, { type TicketThreadHandle } from './TicketThread';
 import TicketComposer from './TicketComposer';
 import ResolvedNotice from './ResolvedNotice';
 import { useTicketSocket } from '../useTicketSocket';
@@ -63,7 +63,10 @@ export default function TicketDetailPage() {
     if (isResolved && ticket?.rating == null) setFeedbackOpen(true);
   }, [isResolved, ticket?.rating]);
 
+  const threadRef = useRef<TicketThreadHandle>(null);
   const send = async (message: string, attachments: string[]) => {
+    // Re-pin so the user's own reply scrolls into view even if they'd scrolled up.
+    threadRef.current?.pinToBottom();
     await reply({ variables: { ticket_id: id, body_text: message || '(attachment)', attachments } });
   };
 
@@ -120,6 +123,7 @@ export default function TicketDetailPage() {
 
       <TicketMeta ticket={ticket} />
       <TicketThread
+        ref={threadRef}
         messages={ticket.messages}
         timeZone={timeZone}
         formatTime={formatTime}

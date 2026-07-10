@@ -8,6 +8,7 @@ const msg = (over: Record<string, unknown> = {}) => ({
   author_role: 'USER',
   author_name: 'Me',
   body_text: 'Hello',
+  attachments: [] as string[],
   created_at: '2026-06-01T10:00:00Z',
   ...over,
 });
@@ -55,6 +56,17 @@ describe('TicketMessageBubble', () => {
     );
     expect(screen.getByText('10:00')).toBeOnTheScreen();
     expect(screen.queryByTestId('ticket-tick-m1')).toBeNull();
+  });
+
+  it('renders an attachment-only message as a file card without a body line', () => {
+    renderWithProviders(
+      <TicketMessageBubble
+        message={msg({ body_text: '', attachments: ['https://ik/support/spec.pdf'] })}
+        timeZone="UTC"
+      />,
+    );
+    expect(screen.getByTestId('support-attach-https://ik/support/spec.pdf')).toBeOnTheScreen();
+    expect(screen.queryByText('Hello')).toBeNull();
   });
 
   it('centers a SYSTEM timeline line (B7)', () => {

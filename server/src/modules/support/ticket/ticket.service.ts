@@ -11,6 +11,15 @@ import {
   type TranscriptData,
   type TranscriptFormat,
 } from '@modules/support/transcript';
+import { paginateDocs, supportSearchRegex } from '@modules/support/support.pagination';
+
+const TICKET_SORTABLE = new Set([
+  'last_message_at',
+  'created_at',
+  'status',
+  'priority',
+  'subject',
+]);
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -418,17 +427,30 @@ export const ticketService = {
     return pub;
   },
 
-  async list(opts: { status?: TicketStatus; assigneeId?: string; search?: string; limit?: number }) {
+  async list(opts: {
+    status?: TicketStatus;
+    assigneeId?: string;
+    search?: string;
+    page?: number | null;
+    page_size?: number | null;
+    sort_by?: string | null;
+    sort_dir?: string | null;
+  }) {
     const q: any = {};
     if (opts.status) q.status = opts.status;
     if (opts.assigneeId && Types.ObjectId.isValid(opts.assigneeId)) {
       q.assignee_id = new Types.ObjectId(opts.assigneeId);
     }
-    if (opts.search) q.subject = { $regex: opts.search.trim(), $options: 'i' };
-    const docs = await TicketModel.find(q)
-      .sort({ last_message_at: -1 })
-      .limit(Math.min(200, Math.max(1, opts.limit ?? 100)));
-    return Promise.all(docs.map(toPub));
+    if (opts.search) q.subject = supportSearchRegex(opts.search);
+    const { docs, total, page, page_size } = await paginateDocs<ITicket>(
+      TicketModel,
+      q,
+      opts,
+      TICKET_SORTABLE,
+      { last_message_at: -1 }
+    );
+    const items = await Promise.all(docs.map(toPub));
+    return { items, total, page, page_size };
   },
 
   async getById(id: string) {

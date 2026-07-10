@@ -1,31 +1,13 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery } from '@apollo/client';
 import { useNavigate } from 'react-router-dom';
-import {
-  Box,
-  Chip,
-  CircularProgress,
-  Stack,
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableRow,
-  TextField,
-  Typography,
-} from '@mui/material';
-import { formatDistanceToNow } from 'date-fns';
-import { BOUNCER_SOS_ALERTS, type SosAlert } from '../../graphql/bouncer';
+import { Box, Stack, TextField, Typography } from '@mui/material';
+import { BOUNCER_SOS_ALERTS, type SosAlert, type SosAlertPage } from '../../graphql/bouncer';
 import { useSupportSocket } from '../../lib/useSupportSocket';
 import StatusFilter, { type StatusOption } from '../../components/StatusFilter';
+import SosTable from './SosTable';
 
 type SosFilter = SosAlert['status'] | 'ALL';
-
-const STATUS_COLOR: Record<SosAlert['status'], 'error' | 'warning' | 'success'> = {
-  ACTIVE: 'error',
-  ACKNOWLEDGED: 'warning',
-  RESOLVED: 'success',
-};
 
 // "Active" groups the open ACTIVE + ACKNOWLEDGED states; "Resolved" = RESOLVED.
 const FILTER_OPTIONS: ReadonlyArray<StatusOption<SosAlert['status']>> = [
@@ -34,17 +16,33 @@ const FILTER_OPTIONS: ReadonlyArray<StatusOption<SosAlert['status']>> = [
   { value: 'RESOLVED', label: 'Resolved' },
 ];
 
-function matchesSearch(a: SosAlert, q: string): boolean {
-  const haystack = `${a.ticket_no} ${a.user.name} ${a.pod.title} ${a.contact_phone}`.toLowerCase();
-  return haystack.includes(q);
-}
-
 export default function SosListPage() {
   const navigate = useNavigate();
   const [filter, setFilter] = useState<SosFilter>('ALL');
+  const [searchInput, setSearchInput] = useState('');
   const [search, setSearch] = useState('');
-  const { data, loading, refetch } = useQuery<{ bouncerSosAlerts: SosAlert[] }>(BOUNCER_SOS_ALERTS, {
-    variables: { status: filter === 'ALL' ? null : filter },
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+  const [sortBy, setSortBy] = useState('created_at');
+  const [sortDir, setSortDir] = useState<'asc' | 'desc'>('desc');
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(0);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const { data, loading, refetch } = useQuery<{ bouncerSosAlerts: SosAlertPage }>(BOUNCER_SOS_ALERTS, {
+    variables: {
+      status: filter === 'ALL' ? null : filter,
+      search: search || null,
+      page: page + 1,
+      page_size: pageSize,
+      sort_by: sortBy,
+      sort_dir: sortDir,
+    },
     fetchPolicy: 'cache-and-network',
   });
 
@@ -53,61 +51,17 @@ export default function SosListPage() {
     onSosUpdate: () => refetch(),
   });
 
-  const query = search.trim().toLowerCase();
-  const alerts = useMemo(() => {
-    const rows = data?.bouncerSosAlerts ?? [];
-    return query ? rows.filter((a) => matchesSearch(a, query)) : rows;
-  }, [data, query]);
+  const alerts = data?.bouncerSosAlerts.items ?? [];
+  const total = data?.bouncerSosAlerts.total ?? 0;
 
-  const renderBody = () => {
-    if (loading && !alerts.length) {
-      return (
-        <Box sx={{ p: 4, textAlign: 'center' }}>
-          <CircularProgress size={24} />
-        </Box>
-      );
+  const onSort = (field: string) => {
+    if (sortBy === field) {
+      setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'));
+    } else {
+      setSortBy(field);
+      setSortDir('asc');
     }
-    if (!alerts.length) {
-      const empty = filter === 'ACTIVE' ? 'No Active SOS Alerts Found' : 'No SOS Alerts Found';
-      return (
-        <Typography variant="body2" color="text.secondary" sx={{ p: 2 }}>
-          {empty}
-        </Typography>
-      );
-    }
-    return (
-      <Table size="small">
-        <TableHead>
-          <TableRow>
-            <TableCell>ID</TableCell>
-            <TableCell>User</TableCell>
-            <TableCell>Pod</TableCell>
-            <TableCell>Phone</TableCell>
-            <TableCell>Status</TableCell>
-            <TableCell>Raised</TableCell>
-          </TableRow>
-        </TableHead>
-        <TableBody>
-          {alerts.map((a) => (
-            <TableRow
-              key={a.id}
-              hover
-              sx={{ cursor: 'pointer' }}
-              onClick={() => navigate(`/sos/${a.id}`)}
-            >
-              <TableCell sx={{ fontWeight: 700, whiteSpace: 'nowrap' }}>{a.ticket_no}</TableCell>
-              <TableCell sx={{ fontWeight: 700 }}>{a.user.name}</TableCell>
-              <TableCell>{a.pod.title}{a.pod.venue_name ? ` · ${a.pod.venue_name}` : ''}</TableCell>
-              <TableCell>{a.contact_phone || '—'}</TableCell>
-              <TableCell>
-                <Chip size="small" color={STATUS_COLOR[a.status]} label={a.status} />
-              </TableCell>
-              <TableCell>{formatDistanceToNow(new Date(a.created_at), { addSuffix: true })}</TableCell>
-            </TableRow>
-          ))}
-        </TableBody>
-      </Table>
-    );
+    setPage(0);
   };
 
   return (
@@ -125,14 +79,37 @@ export default function SosListPage() {
           <TextField
             size="small"
             label="Search"
-            value={search}
-            onChange={(e) => setSearch(e.target.value)}
+            value={searchInput}
+            onChange={(e) => setSearchInput(e.target.value)}
             sx={{ minWidth: 200 }}
           />
-          <StatusFilter value={filter} options={FILTER_OPTIONS} onChange={setFilter} />
+          <StatusFilter
+            value={filter}
+            options={FILTER_OPTIONS}
+            onChange={(v) => {
+              setFilter(v);
+              setPage(0);
+            }}
+          />
         </Stack>
       </Stack>
-      {renderBody()}
+      <SosTable
+        alerts={alerts}
+        total={total}
+        loading={loading}
+        emptyLabel={filter === 'ACTIVE' ? 'No Active SOS Alerts Found' : 'No SOS Alerts Found'}
+        page={page}
+        pageSize={pageSize}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSort={onSort}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(0);
+        }}
+        onRowClick={(id) => navigate(`/sos/${id}`)}
+      />
     </Stack>
   );
 }

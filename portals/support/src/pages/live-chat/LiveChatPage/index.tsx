@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
-import { Box, IconButton, Snackbar, Stack, Typography } from '@mui/material';
-import PersonAddAlt1Icon from '@mui/icons-material/PersonAddAlt1';
+import { Box, Snackbar } from '@mui/material';
 import {
   CLAIM_SUPPORT_CHAT,
   MARK_SUPPORT_CHAT_READ,
@@ -10,18 +9,14 @@ import {
   SUPPORT_CHAT_SESSIONS,
   type SupportChatMessage,
   type SupportChatSession,
+  type SupportChatSessionPage,
   type SupportChatStatus,
 } from '../../../graphql/supportChat';
 import { useSupportSocket, type ChatTypingPayload } from '../../../lib/useSupportSocket';
 import CreateUserDialog from '../CreateUserDialog';
-import ChatComposer from '../ChatComposer';
-import SessionList from '../SessionList';
-import SessionFilter from './SessionFilter';
-import ChatHeader from './ChatHeader';
-import ChatThread from './ChatThread';
+import SessionInbox from './SessionInbox';
+import ChatPane from './ChatPane';
 import { useChatActions } from './useChatActions';
-
-const LIST_WIDTH = 220;
 
 function typingLabelFor(p: ChatTypingPayload, fallbackName: string): string {
   if (p.role === 'AGENT') return 'Support is typing…';
@@ -30,11 +25,30 @@ function typingLabelFor(p: ChatTypingPayload, fallbackName: string): string {
 
 export default function LiveChatPage() {
   const [statusFilter, setStatusFilter] = useState<SupportChatStatus>('OPEN');
-  const sessionsQuery = useQuery<{ supportChatSessions: SupportChatSession[] }>(SUPPORT_CHAT_SESSIONS, {
-    variables: { status: statusFilter },
+  const [searchInput, setSearchInput] = useState('');
+  const [search, setSearch] = useState('');
+  const [page, setPage] = useState(0);
+  const [pageSize, setPageSize] = useState(25);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      setSearch(searchInput.trim());
+      setPage(0);
+    }, 350);
+    return () => clearTimeout(t);
+  }, [searchInput]);
+
+  const sessionsQuery = useQuery<{ supportChatSessions: SupportChatSessionPage }>(SUPPORT_CHAT_SESSIONS, {
+    variables: {
+      status: statusFilter,
+      search: search || null,
+      page: page + 1,
+      page_size: pageSize,
+    },
     fetchPolicy: 'cache-and-network',
   });
-  const sessions = sessionsQuery.data?.supportChatSessions ?? [];
+  const sessions = sessionsQuery.data?.supportChatSessions.items ?? [];
+  const totalSessions = sessionsQuery.data?.supportChatSessions.total ?? 0;
 
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [messages, setMessages] = useState<SupportChatMessage[]>([]);
@@ -119,60 +133,58 @@ export default function LiveChatPage() {
 
   return (
     <Box sx={{ display: 'flex', height: 'calc(100dvh - 150px)', border: 1, borderColor: 'divider', borderRadius: 1, overflow: 'hidden' }}>
-      <Box sx={{ width: LIST_WIDTH, flexShrink: 0, borderRight: 1, borderColor: 'divider', display: 'flex', flexDirection: 'column' }}>
-        <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ pr: 0.5 }}>
-          <Typography variant="overline" sx={{ px: 1.5, pt: 1, display: 'block', fontWeight: 800 }}>
-            Chat with Us
-          </Typography>
-          <IconButton size="small" aria-label="Create user account" onClick={() => setCreateUserOpen(true)}>
-            <PersonAddAlt1Icon fontSize="small" />
-          </IconButton>
-        </Stack>
-        <SessionFilter value={statusFilter} onChange={setStatusFilter} />
-        <Box sx={{ flex: 1, overflowY: 'auto' }}>
-          <SessionList
-            sessions={sessions}
-            loading={sessionsQuery.loading}
-            selectedId={selectedId}
-            freshIds={freshIds}
-            emptyLabel={emptyLabel}
-            onSelect={selectSession}
-          />
-        </Box>
-      </Box>
+      <SessionInbox
+        statusFilter={statusFilter}
+        onStatusChange={(v) => {
+          setStatusFilter(v);
+          setPage(0);
+        }}
+        searchInput={searchInput}
+        onSearchChange={setSearchInput}
+        sessions={sessions}
+        loading={sessionsQuery.loading}
+        selectedId={selectedId}
+        freshIds={freshIds}
+        emptyLabel={emptyLabel}
+        onSelect={selectSession}
+        page={page}
+        pageSize={pageSize}
+        total={totalSessions}
+        onPageChange={setPage}
+        onPageSizeChange={(size) => {
+          setPageSize(size);
+          setPage(0);
+        }}
+        onCreateUser={() => setCreateUserOpen(true)}
+      />
 
-      <Box sx={{ flex: 1, minWidth: 0, display: 'flex', flexDirection: 'column' }}>
-        {selected ? (
-          <>
-            <ChatHeader
-              session={selected}
-              busy={messagesQuery.loading}
-              onResolve={() => actions.resolve(selected.id)}
-              onReopen={() => actions.reopen(selected.id)}
-              onDownload={(format) => actions.download(selected.id, format)}
-              onEmail={(email) => actions.email(selected.id, email)}
-            />
-            <ChatThread session={selected} messages={messages} typingLabel={typingLabel} />
-            {selected.status !== 'CLOSED' && (
-              <ChatComposer
-                text={text}
-                attachments={attachments}
-                sending={sending}
-                onText={setText}
-                onAttachments={setAttachments}
-                onSend={send}
-                onTyping={() => {
-                  if (selectedId) socketRef.current?.emit('support_typing', selectedId);
-                }}
-              />
-            )}
-          </>
-        ) : (
-          <Box sx={{ flex: 1, display: 'grid', placeItems: 'center', color: 'text.secondary' }}>
-            <Typography variant="body2">Select a session to open the chat.</Typography>
-          </Box>
-        )}
-      </Box>
+      <ChatPane
+        selected={selected}
+        busy={messagesQuery.loading}
+        messages={messages}
+        typingLabel={typingLabel}
+        text={text}
+        attachments={attachments}
+        sending={sending}
+        onResolve={() => {
+          if (selected) actions.resolve(selected.id);
+        }}
+        onReopen={() => {
+          if (selected) actions.reopen(selected.id);
+        }}
+        onDownload={(format) => {
+          if (selected) actions.download(selected.id, format);
+        }}
+        onEmail={(email) => {
+          if (selected) actions.email(selected.id, email);
+        }}
+        onText={setText}
+        onAttachments={setAttachments}
+        onSend={send}
+        onTyping={() => {
+          if (selectedId) socketRef.current?.emit('support_typing', selectedId);
+        }}
+      />
 
       <CreateUserDialog open={createUserOpen} onClose={() => setCreateUserOpen(false)} />
       <Snackbar

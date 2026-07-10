@@ -307,6 +307,25 @@ describe('LiveChatScreen — send + attach', () => {
     await waitFor(() => expect(pickDoc).toHaveBeenCalled());
     expect(uploadAttachment).not.toHaveBeenCalled();
   });
+
+  it('rejects a video over the 50 MB cap', async () => {
+    const uploadAttachment = jest.fn().mockResolvedValue('https://img/clip.mp4');
+    mockedChat.mockReturnValue({ ...chatBase(), uploadAttachment });
+    renderWithProviders(<LiveChatScreen />);
+
+    reqPerm.mockResolvedValue({ granted: true });
+    launch.mockResolvedValueOnce({
+      canceled: false,
+      assets: [{ base64: 'abc', type: 'video', fileSize: 51 * 1024 * 1024 }],
+    });
+    fireEvent.press(screen.getByTestId('support-chat-attach'));
+    await waitFor(() =>
+      expect(screen.getByTestId('support-chat-send-error')).toHaveTextContent(
+        'Video is too large (max 50 MB).',
+      ),
+    );
+    expect(uploadAttachment).not.toHaveBeenCalled();
+  });
 });
 
 describe('LiveChatScreen — resolve + feedback (B7/B8)', () => {

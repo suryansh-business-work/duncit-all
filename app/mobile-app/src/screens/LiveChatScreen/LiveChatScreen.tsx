@@ -39,11 +39,20 @@ export function LiveChatScreen() {
   const { timeZone } = useAppSettings();
   const [showJump, setShowJump] = useState(false);
   const scrollRef = useRef<RNScrollView>(null);
+  // Pinned (near the bottom) means the thread should auto-follow new messages;
+  // once the user scrolls up we stop force-scrolling so the jump button works.
+  const pinnedRef = useRef(true);
 
   /* istanbul ignore next -- native autoscroll; method absent under the test renderer */
   const scrollToEnd = (animated: boolean) => scrollRef.current?.scrollToEnd({ animated });
   /* istanbul ignore next -- fired by native layout, not by the test renderer */
-  const handleContentSizeChange = () => scrollToEnd(false);
+  const handleContentSizeChange = () => {
+    if (pinnedRef.current) scrollToEnd(false);
+  };
+  const jumpToLatest = () => {
+    pinnedRef.current = true;
+    scrollToEnd(true);
+  };
 
   const a = useLiveChatActions(chat, scrollToEnd);
   const { busy, setBusy, sendError, setSendError, submit } = a;
@@ -70,7 +79,14 @@ export function LiveChatScreen() {
 
   const onScroll = (e: NativeSyntheticEvent<NativeScrollEvent>) => {
     const { contentSize, layoutMeasurement, contentOffset } = e.nativeEvent;
-    setShowJump(contentSize.height - layoutMeasurement.height - contentOffset.y > 160);
+    const distance = contentSize.height - layoutMeasurement.height - contentOffset.y;
+    pinnedRef.current = distance <= 80;
+    setShowJump(distance > 160);
+  };
+
+  const onSendText = (text: string) => {
+    pinnedRef.current = true;
+    void submit(text);
   };
 
   const showToggle = closed ? reopenAllowed : true;
@@ -133,11 +149,7 @@ export function LiveChatScreen() {
         />
 
         {showJump ? (
-          <JumpToLatestButton
-            testID="chat-jump-bottom"
-            bottom={84}
-            onPress={() => scrollToEnd(true)}
-          />
+          <JumpToLatestButton testID="chat-jump-bottom" bottom={84} onPress={jumpToLatest} />
         ) : null}
 
         {sendError ? (
@@ -158,7 +170,7 @@ export function LiveChatScreen() {
         <SupportChatComposer
           busy={busy}
           locked={!!closed}
-          onSendText={(t) => void submit(t)}
+          onSendText={onSendText}
           onAttach={() => void attach()}
           onAttachDocument={() => void attachDocument()}
           onTyping={emitTyping}

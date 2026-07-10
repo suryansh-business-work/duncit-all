@@ -17,11 +17,13 @@ interface Props {
   timeZone: string;
   agentLastReadAt?: string | null;
   onScroll: (e: NativeSyntheticEvent<NativeScrollEvent>) => void;
+  /** Auto-follows the newest reply while the thread is pinned to the bottom. */
+  onContentSizeChange: () => void;
 }
 
 /** The ticket reply thread with day separators and SYSTEM timeline lines (B7/B10). */
 export const TicketThread = forwardRef<RNScrollView, Props>(function TicketThread(
-  { messages, timeZone, agentLastReadAt, onScroll },
+  { messages, timeZone, agentLastReadAt, onScroll, onContentSizeChange },
   ref,
 ) {
   return (
@@ -31,6 +33,7 @@ export const TicketThread = forwardRef<RNScrollView, Props>(function TicketThrea
       onScroll={onScroll}
       scrollEventThrottle={64}
       contentContainerStyle={{ padding: 16, gap: 10 }}
+      onContentSizeChange={onContentSizeChange}
     >
       {messages.map((m, i) => (
         <YStack key={m.id} gap={6}>

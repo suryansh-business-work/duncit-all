@@ -7,6 +7,8 @@ import {
   type BouncerSosStatus,
   type BouncerCallbackStatus,
   type BouncerFeedbackCategory,
+  type IBouncerSosAlert,
+  type IBouncerCallbackRequest,
 } from './bouncer.model';
 import { UserModel } from '@modules/access/user/user.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
@@ -17,8 +19,15 @@ import { settingsService } from '@modules/platform/settings/settings.service';
 import { notificationService } from '@modules/engagement/notification/notification.service';
 import { getIo } from '@realtime/io';
 import { ticketNo } from '@modules/support/supportChat/unifiedTickets.service';
+import {
+  paginateDocs,
+  supportSearchRegex,
+  type SupportPageOpts,
+} from '@modules/support/support.pagination';
 
 const ADMIN_ROOM = 'admin:bouncers';
+
+const BOUNCER_SORTABLE = new Set(['created_at', 'status']);
 
 function fail(code: string, msg: string): never {
   throw new GraphQLError(msg, { extensions: { code } });
@@ -255,11 +264,28 @@ export const bouncerService = {
     return pub;
   },
 
-  async listSos(status?: BouncerSosStatus, limit = 100) {
+  async listSos(opts: { status?: BouncerSosStatus } & SupportPageOpts = {}) {
     const q: any = {};
-    if (status) q.status = status;
-    const docs = await BouncerSosAlertModel.find(q).sort({ created_at: -1 }).limit(limit);
-    return Promise.all(docs.map(toSosPub));
+    if (opts.status) q.status = opts.status;
+    if (opts.search) {
+      const rx = supportSearchRegex(opts.search);
+      q.$or = [{ message: rx }, { contact_phone: rx }];
+    }
+    const { docs, total, page, page_size } = await paginateDocs<IBouncerSosAlert>(
+      BouncerSosAlertModel,
+      q,
+      opts,
+      BOUNCER_SORTABLE,
+      { created_at: -1 }
+    );
+    const items = await Promise.all(docs.map(toSosPub));
+    return { items, total, page, page_size };
+  },
+
+  async getSos(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    const doc = await BouncerSosAlertModel.findById(id);
+    return doc ? toSosPub(doc) : null;
   },
 
   async getMyActiveSos(userId: string, podId: string) {
@@ -347,11 +373,28 @@ export const bouncerService = {
     return pub;
   },
 
-  async listCallbacks(status?: BouncerCallbackStatus, limit = 100) {
+  async listCallbacks(opts: { status?: BouncerCallbackStatus } & SupportPageOpts = {}) {
     const q: any = {};
-    if (status) q.status = status;
-    const docs = await BouncerCallbackRequestModel.find(q).sort({ created_at: -1 }).limit(limit);
-    return Promise.all(docs.map(toCallbackPub));
+    if (opts.status) q.status = opts.status;
+    if (opts.search) {
+      const rx = supportSearchRegex(opts.search);
+      q.$or = [{ reason: rx }, { contact_phone: rx }];
+    }
+    const { docs, total, page, page_size } = await paginateDocs<IBouncerCallbackRequest>(
+      BouncerCallbackRequestModel,
+      q,
+      opts,
+      BOUNCER_SORTABLE,
+      { created_at: -1 }
+    );
+    const items = await Promise.all(docs.map(toCallbackPub));
+    return { items, total, page, page_size };
+  },
+
+  async getCallback(id: string) {
+    if (!Types.ObjectId.isValid(id)) return null;
+    const doc = await BouncerCallbackRequestModel.findById(id);
+    return doc ? toCallbackPub(doc) : null;
   },
 
   async listMyCallbacks(userId: string, limit = 100) {

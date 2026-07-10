@@ -37,9 +37,12 @@ const bareReq: CallbackRequest = {
   pod: { id: 'p2', title: 'Sunday Brunch' },
 };
 
-const queryMock = (items: CallbackRequest[], status: string | null = null) => ({
-  request: { query: BOUNCER_CALLBACK_REQUESTS, variables: { status } },
-  result: { data: { bouncerCallbackRequests: items } },
+const queryMock = (items: CallbackRequest[], status: string | null = null, search: string | null = null) => ({
+  request: {
+    query: BOUNCER_CALLBACK_REQUESTS,
+    variables: { status, search, page: 1, page_size: 25, sort_by: 'created_at', sort_dir: 'desc' },
+  },
+  result: { data: { bouncerCallbackRequests: { items, total: items.length, page: 1, page_size: 25 } } },
 });
 
 describe('CallbacksListPage', () => {
@@ -73,17 +76,20 @@ describe('CallbacksListPage', () => {
     });
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
 
-    fireEvent.mouseDown(screen.getByRole('combobox'));
+    // The header status filter is the first combobox (TablePagination adds another).
+    fireEvent.mouseDown(screen.getAllByRole('combobox')[0]);
     fireEvent.click(screen.getByRole('option', { name: 'Resolved' }));
     await waitFor(() => expect(screen.getByText(/no callback requests found/i)).toBeInTheDocument());
   });
 
-  it('filters the list client-side by the search box', async () => {
-    renderWithProviders(<CallbacksListPage />, { mocks: [queryMock([req, bareReq])] });
+  it('searches on the server (a debounced query keyed on the search variable)', async () => {
+    renderWithProviders(<CallbacksListPage />, {
+      mocks: [queryMock([req]), queryMock([bareReq], null, 'Brunch')],
+    });
     await waitFor(() => expect(screen.getByText('Aman')).toBeInTheDocument());
 
     fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'Brunch' } });
-    await waitFor(() => expect(screen.getByText('Dev')).toBeInTheDocument());
-    expect(screen.queryByText('Aman')).not.toBeInTheDocument();
+    await waitFor(() => expect(screen.queryByText('Aman')).not.toBeInTheDocument());
+    expect(screen.getByText('Dev')).toBeInTheDocument();
   });
 });

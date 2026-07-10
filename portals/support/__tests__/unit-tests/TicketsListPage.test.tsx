@@ -40,9 +40,19 @@ const ticket = (id: string, subject: string): any => ({
   },
 });
 
-const listMock = (status: string | null, tickets: Ticket[]) => ({
-  request: { query: TICKETS, variables: { status } },
-  result: { data: { tickets } },
+const listMock = (status: string | null, tickets: Ticket[], search: string | null = null) => ({
+  request: {
+    query: TICKETS,
+    variables: {
+      status,
+      search,
+      page: 1,
+      page_size: 25,
+      sort_by: 'last_message_at',
+      sort_dir: 'desc',
+    },
+  },
+  result: { data: { tickets: { items: tickets, total: tickets.length, page: 1, page_size: 25 } } },
 });
 
 describe('TicketsListPage', () => {
@@ -74,9 +84,23 @@ describe('TicketsListPage', () => {
       mocks: [listMock(null, [ticket('t1', 'Open one')]), listMock('RESOLVED', [ticket('t2', 'Resolved one')])],
     });
     await waitFor(() => expect(screen.getByText('Open one')).toBeInTheDocument());
-    fireEvent.mouseDown(screen.getByRole('combobox'));
+    // The header Status select is the first combobox (TablePagination adds another).
+    fireEvent.mouseDown(screen.getAllByRole('combobox')[0]);
     fireEvent.click(screen.getByRole('option', { name: 'RESOLVED' }));
     await waitFor(() => expect(screen.getByText('Resolved one')).toBeInTheDocument());
+  });
+
+  it('searches on the server (a new query keyed on the search variable)', async () => {
+    renderWithProviders(<TicketsListPage />, {
+      mocks: [
+        listMock(null, [ticket('t1', 'Cannot pay'), ticket('t2', 'Refund please')]),
+        listMock(null, [ticket('t2', 'Refund please')], 'Refund'),
+      ],
+    });
+    await waitFor(() => expect(screen.getByText('Cannot pay')).toBeInTheDocument());
+    fireEvent.change(screen.getByLabelText('Search'), { target: { value: 'Refund' } });
+    await waitFor(() => expect(screen.queryByText('Cannot pay')).not.toBeInTheDocument());
+    expect(screen.getByText('Refund please')).toBeInTheDocument();
   });
 
   it('creates a ticket from the dialog and navigates to it', async () => {

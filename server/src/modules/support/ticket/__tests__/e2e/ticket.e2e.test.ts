@@ -69,7 +69,7 @@ describe('ticket e2e', () => {
 
   it('forbids a non-agent from listing all tickets', async () => {
     const user = server.client(signToken({ roles: ['USER'] }));
-    await expect(user.request(gql`query { tickets { id } }`)).rejects.toThrow();
+    await expect(user.request(gql`query { tickets { total } }`)).rejects.toThrow();
   });
 
   it('lets the owner resolve, then leave one-time feedback (B7 + B8)', async () => {

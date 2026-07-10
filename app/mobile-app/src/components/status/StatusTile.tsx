@@ -11,7 +11,7 @@ interface StatusTileProps {
   image?: string | null;
   /** Show the "+" add-story badge (own tile only). */
   badge?: boolean;
-  /** Grey/desaturated ring when true, vibrant gradient ring when false (Bug 2). */
+  /** No ring when true (already seen), vibrant gradient ring when false (Bug 2). */
   seen?: boolean;
   /** Upload progress 0–100 — shows a % overlay while posting (Bug 1). */
   progress?: number;
@@ -22,7 +22,7 @@ interface StatusTileProps {
 }
 
 /** A circular story avatar with a label. The ring is a vibrant gradient for an
- * unseen story and a grey ring once seen (Bug 2); an optional "+" badge marks
+ * unseen story and disappears once seen (Bug 2); an optional "+" badge marks
  * the upload tile and a % overlay shows upload progress (Bug 1). */
 export function StatusTile({
   label,
@@ -34,7 +34,7 @@ export function StatusTile({
   onBadgePress,
   testID,
 }: Readonly<StatusTileProps>) {
-  const { onPrimary, muted } = useThemeColors();
+  const { onPrimary } = useThemeColors();
   const initial = (label[0] ?? '?').toUpperCase();
   const badgeTestID = testID ? `${testID}-badge` : undefined;
   const progressTestID = testID ? `${testID}-progress` : undefined;
@@ -99,7 +99,7 @@ export function StatusTile({
       pressStyle={{ opacity: 0.8 }}
     >
       {seen ? (
-        <YStack padding={2.5} borderRadius={999} backgroundColor={muted}>
+        <YStack padding={2.5} borderRadius={999}>
           {ringInner}
         </YStack>
       ) : (

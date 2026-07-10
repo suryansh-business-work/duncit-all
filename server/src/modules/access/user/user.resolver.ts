@@ -87,14 +87,22 @@ export const userResolvers = {
       if (!ctx.user) return null;
       return userService.me(ctx.user.id);
     },
-    mySavedPods: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
+    mySavedPods: async (
+      _p: unknown,
+      args: { search?: string | null; category_id?: string | null; sort?: string | null },
+      ctx: GraphQLContext
+    ) => {
       if (!ctx.user) {
         const { GraphQLError } = await import('graphql');
         throw new GraphQLError('Authentication required', {
           extensions: { code: 'UNAUTHENTICATED' },
         });
       }
-      return userService.listSavedPods(ctx.user.id);
+      return userService.listSavedPods(ctx.user.id, {
+        search: args.search,
+        categoryId: args.category_id,
+        sort: args.sort,
+      });
     },
     users: async (_p: unknown, args: { filter?: any }, ctx: GraphQLContext) => {
       requireRole(ctx, DIRECTORY_ROLES);

@@ -189,4 +189,15 @@ describe('status store', () => {
     expect(mockRequest.mock.calls[0]?.[1]).toEqual({ id: 's1' });
     expect(mockRequest).toHaveBeenCalledTimes(2);
   });
+
+  it('recordView marks a story seen once (tolerating a persist failure) and skips repeats', async () => {
+    useStatusStore.setState({ seenIds: new Set() });
+    mockRequest.mockRejectedValue(new Error('offline'));
+    await useStatusStore.getState().recordView('st1');
+    expect(useStatusStore.getState().seenIds.has('st1')).toBe(true);
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+    // Already seen → early return, no second persist.
+    await useStatusStore.getState().recordView('st1');
+    expect(mockRequest).toHaveBeenCalledTimes(1);
+  });
 });

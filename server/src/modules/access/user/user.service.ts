@@ -104,6 +104,59 @@ async function loadRelationIds(userId: string) {
   };
 }
 
+const escapeSavedRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+
+/** Walk the category tree downward so a SUPER/CATEGORY selection also matches its
+ * descendant sub-categories (a club may be tagged at any level). */
+async function expandSavedCategoryIds(rootIds: string[]): Promise<Set<string>> {
+  const all = new Set(rootIds.filter((id) => Types.ObjectId.isValid(id)));
+  let frontier = Array.from(all);
+  while (frontier.length > 0) {
+    const children = await CategoryModel.find({ parent_id: { $in: frontier } })
+      .select("_id")
+      .lean();
+    const next: string[] = [];
+    for (const child of children as any[]) {
+      const id = String(child._id);
+      if (!all.has(id)) {
+        all.add(id);
+        next.push(id);
+      }
+    }
+    frontier = next;
+  }
+  return all;
+}
+
+type SavedPodSort =
+  | "RECENT"
+  | "DATE_ASC"
+  | "DATE_DESC"
+  | "PRICE_LOW"
+  | "PRICE_HIGH"
+  | "NAME_ASC"
+  | "NAME_DESC";
+
+/** Sort saved pods by the requested key (default: recently-saved order). Returns
+ * a sorted copy — never mutates the input. */
+function sortSavedPods(docs: any[], sort: string | null | undefined, savedOrder: Map<string, number>): any[] {
+  const podTime = (d: any) => new Date(d.pod_date_time ?? 0).getTime();
+  const amount = (d: any) => Number(d.pod_amount ?? 0);
+  const title = (d: any) => String(d.pod_title ?? "");
+  const savedRank = (d: any) => savedOrder.get(String(d._id)) ?? 0;
+  const comparators: Record<SavedPodSort, (a: any, b: any) => number> = {
+    RECENT: (a, b) => savedRank(a) - savedRank(b),
+    DATE_ASC: (a, b) => podTime(a) - podTime(b),
+    DATE_DESC: (a, b) => podTime(b) - podTime(a),
+    PRICE_LOW: (a, b) => amount(a) - amount(b),
+    PRICE_HIGH: (a, b) => amount(b) - amount(a),
+    NAME_ASC: (a, b) => title(a).localeCompare(title(b)),
+    NAME_DESC: (a, b) => title(b).localeCompare(title(a)),
+  };
+  const cmp = comparators[sort as SavedPodSort] ?? comparators.RECENT;
+  return [...docs].sort(cmp);
+}
+
 const podToPublic = (d: any, clubSlug = '') => ({
   id: String(d._id),
   pod_id: d.pod_id,
@@ -1206,7 +1259,10 @@ export const userService = {
     return { pod_id: podId, saved, saved_pod_ids: ids.map((d: any) => String(d.pod_id)) };
   },
 
-  async listSavedPods(user_id: string) {
+  async listSavedPods(
+    user_id: string,
+    opts: { search?: string | null; categoryId?: string | null; sort?: string | null } = {}
+  ) {
     const oid = new Types.ObjectId(user_id);
     const savedDocs = await UserSavedPodModel.find({ user_id: oid })
       .sort({ created_at: -1 })
@@ -1214,19 +1270,44 @@ export const userService = {
       .lean();
     const ids = savedDocs.map((d: any) => String(d.pod_id));
     if (!ids.length) return [];
-    const docs = await PodModel.find({ _id: { $in: ids }, is_active: true });
+    // Rank each pod by how recently it was saved — the default sort order.
+    const savedOrder = new Map(ids.map((id, index) => [id, index]));
+
+    let docs: any[] = await PodModel.find({ _id: { $in: ids }, is_active: true });
     const clubIds = Array.from(
       new Set(docs.map((d: any) => d.club_id && String(d.club_id)).filter(Boolean))
     );
     const clubs = clubIds.length
-      ? await ClubModel.find({ _id: { $in: clubIds } }, { club_id: 1 })
+      ? await ClubModel.find(
+          { _id: { $in: clubIds } },
+          { club_id: 1, category_id: 1, super_category_id: 1 }
+        )
       : [];
-    const clubSlugById = new Map((clubs as any[]).map((c) => [String(c._id), c.club_id ?? '']));
-    const byId = new Map(docs.map((doc: any) => [String(doc._id), doc]));
-    return ids
-      .map((id) => byId.get(id))
-      .filter(Boolean)
-      .map((doc: any) => podToPublic(doc, clubSlugById.get(String(doc.club_id)) ?? ''));
+    const clubById = new Map((clubs as any[]).map((c) => [String(c._id), c]));
+
+    // Category filter — match the pod's club against the selected node and all of
+    // its descendant sub-categories (a club is tagged at super + leaf level).
+    if (opts.categoryId && Types.ObjectId.isValid(opts.categoryId)) {
+      const catIds = await expandSavedCategoryIds([opts.categoryId]);
+      docs = docs.filter((doc: any) => {
+        const club = clubById.get(String(doc.club_id));
+        if (!club) return false;
+        return catIds.has(String(club.category_id)) || catIds.has(String(club.super_category_id));
+      });
+    }
+
+    // Server-side search over the pod title/description.
+    const term = opts.search?.trim();
+    if (term) {
+      const re = new RegExp(escapeSavedRegex(term), 'i');
+      docs = docs.filter(
+        (doc: any) => re.test(doc.pod_title ?? '') || re.test(doc.pod_description ?? '')
+      );
+    }
+
+    return sortSavedPods(docs, opts.sort, savedOrder).map((doc: any) =>
+      podToPublic(doc, clubById.get(String(doc.club_id))?.club_id ?? '')
+    );
   },
 
   async followClub(user_id: string, clubId: string) {

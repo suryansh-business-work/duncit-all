@@ -317,9 +317,23 @@ export const userTypeDefs = gql`
     can_view_content: Boolean!
   }
 
+  """
+  Sort order for the viewer's saved pods. RECENT = most recently saved first.
+  """
+  enum SavedPodSort {
+    RECENT
+    DATE_ASC
+    DATE_DESC
+    PRICE_LOW
+    PRICE_HIGH
+    NAME_ASC
+    NAME_DESC
+  }
+
   extend type Query {
     me: User
-    mySavedPods: [Pod!]!
+    "The viewer's saved pods, with optional server-side search, category filter (matches the selected category and its sub-categories) and sort."
+    mySavedPods(search: String, category_id: ID, sort: SavedPodSort): [Pod!]!
     users(filter: UsersFilter): [User!]!
     user(user_id: ID!): User
     userContactActions(user_id: ID!): [UserContactAction!]!

@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Box, Stack } from '@mui/material';
 import { useMutation } from '@apollo/client';
 import ConfirmDialog from '../../components/ConfirmDialog';
@@ -34,16 +34,18 @@ export default function HomeStatusRail({
   const [toggleLike] = useMutation(TOGGLE_STORY_LIKE);
   const [deleteStory] = useMutation(DELETE_STORY_POST, { refetchQueries: ['HomeFeed'] });
 
-  const entries = useMemo(
-    () =>
-      buildHomeStatusEntries({
-        followedClubs,
-        hostPods,
-        followedUsers,
-        followedPosts,
-      }),
+  const buildEntries = useCallback(
+    () => buildHomeStatusEntries({ followedClubs, hostPods, followedUsers, followedPosts }),
     [followedClubs, hostPods, followedUsers, followedPosts],
   );
+  // Order only while the viewer is closed (the rail sits behind the full-screen
+  // viewer). This keeps an open story from re-indexing mid-view; on close / data
+  // reload the unseen tiles reshuffle and any just-seen tile drops its ring and
+  // slides to the end.
+  const [entries, setEntries] = useState<ReturnType<typeof buildEntries>>(buildEntries);
+  useEffect(() => {
+    if (activeIndex === null) setEntries(buildEntries());
+  }, [buildEntries, activeIndex]);
 
   const myViewer = useMemo(() => buildMyStatusViewer(me), [me]);
   const viewerItems = useMemo(

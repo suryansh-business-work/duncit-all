@@ -45,6 +45,8 @@ const mineGroup = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  // Deterministic rail order (Fisher–Yates with random=0 is stable per input).
+  jest.spyOn(Math, 'random').mockReturnValue(0);
   mockDeleteStory.mockResolvedValue(undefined);
   mockGraphql.mockResolvedValue({ storyViewers: [] });
   mockUseStoryRail.mockReturnValue({
@@ -63,6 +65,10 @@ beforeEach(() => {
     isLoading: false,
   });
   mockUseStatusUpload.mockReturnValue({ uploading: false, pickAndUpload: jest.fn() });
+});
+
+afterEach(() => {
+  jest.restoreAllMocks();
 });
 
 describe('StatusRail', () => {
@@ -93,7 +99,8 @@ describe('StatusRail', () => {
     expect(screen.getByTestId('status-mine-progress')).toBeOnTheScreen();
   });
 
-  it('greys a followed ring once every slide is seen (Bug 2)', () => {
+  it('sends a fully-seen followed story to the end of the rail (Bug 2)', () => {
+    const seenSlide = { ...slide, id: 's2', seenByMe: true };
     mockUseStoryRail.mockReturnValue({
       mine: null,
       items: [
@@ -102,15 +109,29 @@ describe('StatusRail', () => {
           key: 'user-a1',
           name: 'Asha',
           photo: null,
-          slides: [{ ...slide, seenByMe: true }],
+          slides: [slide],
           cover: slide,
           target: { kind: 'user', id: 'a1' },
+        },
+        {
+          authorId: 'a2',
+          key: 'user-a2',
+          name: 'Bina',
+          photo: null,
+          slides: [seenSlide],
+          cover: seenSlide,
+          target: { kind: 'user', id: 'a2' },
         },
       ],
       isLoading: false,
     });
     renderWithProviders(<StatusRail userName="You" />);
-    expect(screen.getByTestId('status-user-a1')).toBeOnTheScreen();
+    // The seen tile (a2) is pushed behind the unseen one (a1): opening it lands
+    // on the last group, so advancing past its only slide closes the viewer.
+    fireEvent.press(screen.getByTestId('status-user-a2'));
+    expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('status-next'));
+    expect(screen.queryByTestId('status-viewer')).toBeNull();
   });
 
   it('records a view and likes a followed story, tolerating a like failure (Bugs 2 & 5)', async () => {

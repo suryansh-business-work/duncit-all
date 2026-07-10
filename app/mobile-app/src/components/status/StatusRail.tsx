@@ -22,15 +22,28 @@ interface StatusRailProps {
 }
 
 /** True once every slide in the group has been seen (server flag or this
- * session's views) — greys the ring (Bug 2). */
+ * session's views) — sends the tile to the end of the rail and drops its ring. */
 function isGroupSeen(group: StatusGroup, seenIds: Set<string>) {
   return group.slides.length > 0 && group.slides.every((s) => s.seenByMe || seenIds.has(s.id));
 }
 
-/** Home status rail — "Your story" upload tile first, then followed clubs /
- * people. Rings grey once seen (Bug 2), the own tile shows upload progress
- * (Bug 1), and the viewer supports like (Bug 5), viewers (Bug 4) and delete
- * (Bug 7). */
+/** Fisher–Yates shuffle returning a fresh copy — randomises the unseen tiles on
+ * every data load (refresh / app open) so the rail order feels alive. */
+function shuffleStatus<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    const swap = copy[i] as T;
+    copy[i] = copy[j] as T;
+    copy[j] = swap;
+  }
+  return copy;
+}
+
+/** Home status rail — "Your story" upload tile first, then the followed clubs /
+ * people ordered as [unseen (randomised)] → [seen, at the end]. The own tile
+ * shows upload progress (Bug 1), and the viewer supports like (Bug 5), viewers
+ * (Bug 4) and delete (Bug 7). */
 export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   const { mine, items } = useStoryRail();
   const { uploading, progress, pickAndUpload } = useStatusUpload();
@@ -45,7 +58,17 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   const [viewersStoryId, setViewersStoryId] = useState<string | null>(null);
   const myCoverIsVideo = mine?.cover.mediaType === 'VIDEO';
 
-  const groups = useMemo(() => (mine ? [mine, ...items] : items), [mine, items]);
+  // Stable-per-load shuffle: re-shuffles only when `items` changes (refetch /
+  // app open), NOT on every seen change.
+  const shuffled = useMemo(() => shuffleStatus(items), [items]);
+  // Partition by CURRENT seen state, keeping the shuffled relative order — a tile
+  // drops to the end once every slide has been viewed.
+  const ordered = useMemo(() => {
+    const unseen = shuffled.filter((g) => !isGroupSeen(g, seenIds));
+    const seen = shuffled.filter((g) => isGroupSeen(g, seenIds));
+    return [...unseen, ...seen];
+  }, [shuffled, seenIds]);
+  const groups = useMemo(() => (mine ? [mine, ...ordered] : ordered), [mine, ordered]);
   const active = activeIndex != null ? (groups[activeIndex] ?? null) : null;
   const activeIsMine = active != null && active === mine;
   // Followed people carry a `user-…` key; the own group and club items don't.
@@ -95,7 +118,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
             if (!uploading) void pickAndUpload();
           }}
         />
-        {items.map((item, itemIndex) => (
+        {ordered.map((item, itemIndex) => (
           <StatusTile
             key={item.key}
             testID={`status-${item.key}`}

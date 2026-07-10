@@ -124,19 +124,34 @@ function userEntry(user: any, followedPosts: any[]): HomeStatusEntry {
   };
 }
 
-/** Ordered rail entries: followed clubs → your hosted pods → followed users.
- * (The "my status" tile is handled separately by the rail.) */
-export function buildHomeStatusEntries({
-  followedClubs,
-  hostPods,
-  followedUsers,
-  followedPosts,
-}: BuildArgs): HomeStatusEntry[] {
-  return [
+export type StatusShuffle = <T>(items: T[]) => T[];
+
+/** Fisher–Yates shuffle (fresh copy) — randomises the unseen tiles on every
+ * data load so the rail re-orders on each refresh / app open. */
+function randomShuffle<T>(items: T[]): T[] {
+  const copy = [...items];
+  for (let i = copy.length - 1; i > 0; i -= 1) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copy[i], copy[j]] = [copy[j], copy[i]];
+  }
+  return copy;
+}
+
+/** Ordered rail entries: unseen tiles first (randomised each load), then the
+ * already-seen tiles pushed to the end (no ring). The "my status" tile is handled
+ * separately by the rail. `shuffle` is injectable so tests stay deterministic. */
+export function buildHomeStatusEntries(
+  { followedClubs, hostPods, followedUsers, followedPosts }: BuildArgs,
+  shuffle: StatusShuffle = randomShuffle,
+): HomeStatusEntry[] {
+  const all = [
     ...followedClubs.map((c) => clubEntry(c)),
     ...hostPods.map((p) => podEntry(p)),
     ...followedUsers.map((u) => userEntry(u, followedPosts)),
   ];
+  const unseen = all.filter((entry) => entry.active);
+  const seen = all.filter((entry) => !entry.active);
+  return [...shuffle(unseen), ...seen];
 }
 
 /** Build the "my status" viewer payload from the signed-in user's stories. */

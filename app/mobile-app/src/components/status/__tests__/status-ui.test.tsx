@@ -14,6 +14,17 @@ const mockNavigate = jest.fn();
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ navigate: mockNavigate }),
 }));
+// Controlled status store — an empty, frozen seenIds keeps the rail order driven
+// purely by the (deterministic) shuffle so the navigation walks stay stable.
+const mockSeenIds = new Set<string>();
+jest.mock('@/stores/status.store', () => ({
+  useStatusStore: (selector: (s: unknown) => unknown) =>
+    selector({
+      recordView: jest.fn(),
+      deleteStory: jest.fn().mockResolvedValue(undefined),
+      seenIds: mockSeenIds,
+    }),
+}));
 
 const mockedRail = useStoryRail as jest.Mock;
 const mockedUpload = useStatusUpload as jest.Mock;
@@ -74,7 +85,7 @@ describe('StatusTile', () => {
     expect(screen.getByText('45%')).toBeOnTheScreen();
   });
 
-  it('hides the overlay once complete and renders a grey seen ring (Bug 2)', () => {
+  it('hides the overlay once complete and drops the ring when seen (Bug 2)', () => {
     renderWithProviders(<StatusTile testID="dn" label="Me" progress={100} seen />);
     expect(screen.queryByTestId('dn-progress')).toBeNull();
     expect(screen.getByText('Me')).toBeOnTheScreen();
@@ -273,8 +284,14 @@ const userItem2 = {
 describe('StatusRail (bug 3 composite)', () => {
   beforeEach(() => {
     mockNavigate.mockClear();
+    // Deterministic rail order (Fisher–Yates with random=0 is stable per input).
+    jest.spyOn(Math, 'random').mockReturnValue(0);
     mockedUpload.mockReturnValue({ uploading: false, pickAndUpload: jest.fn() });
     mockedRail.mockReturnValue({ mine: null, items: [userItem], isLoading: false });
+  });
+
+  afterEach(() => {
+    jest.restoreAllMocks();
   });
 
   it('uploads from the own tile when there is no story yet', () => {
@@ -343,21 +360,23 @@ describe('StatusRail (bug 3 composite)', () => {
   it('walks to the next item at the end and closes after the last (bug 2)', () => {
     mockedRail.mockReturnValue({ mine: null, items: [userItem, userItem2], isLoading: false });
     renderWithProviders(<StatusRail userName="Sam" />);
-    fireEvent.press(screen.getByTestId('status-user-a1'));
+    // The two unseen tiles shuffle (random=0) to the order [a2, a1].
+    fireEvent.press(screen.getByTestId('status-user-a2'));
     expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('status-next')); // image → video (item 1)
-    fireEvent.press(screen.getByTestId('status-next')); // last slide → item 2
+    fireEvent.press(screen.getByTestId('status-next')); // a2's only slide → item a1 (image)
     expect(screen.getByTestId('status-viewer-image')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('status-next')); // item 2 last slide → close
+    fireEvent.press(screen.getByTestId('status-next')); // a1 image → video
+    fireEvent.press(screen.getByTestId('status-next')); // a1 last slide → close
     expect(screen.queryByTestId('status-viewer')).toBeNull();
   });
 
   it('walks back to the previous item from the first slide (bug 2)', () => {
     mockedRail.mockReturnValue({ mine: mineGroup, items: [userItem, userItem2], isLoading: false });
     renderWithProviders(<StatusRail userName="Sam" />);
-    fireEvent.press(screen.getByTestId('status-user-a2')); // open item 2
+    // groups = [mine, a2, a1] after the shuffle; a2 sits at index 1.
+    fireEvent.press(screen.getByTestId('status-user-a2')); // open item a2
     expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
-    fireEvent.press(screen.getByTestId('status-prev')); // first slide → previous item
+    fireEvent.press(screen.getByTestId('status-prev')); // first slide → previous item (mine)
     expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
   });
 

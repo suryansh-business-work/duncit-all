@@ -8,6 +8,9 @@ const baseArgs = {
   followedPosts: [] as any[],
 };
 
+/** Deterministic (identity) shuffle so ordering assertions stay stable. */
+const identity = <T,>(items: T[]) => items;
+
 describe('initials', () => {
   it('takes up to two leading letters, uppercased', () => {
     expect(initials('Asha Verma')).toBe('AV');
@@ -36,7 +39,7 @@ describe('buildHomeStatusEntries (bug 2/3 order)', () => {
       followedPosts: [
         { id: 'sp1', author_id: 'u1', image_url: 'st.jpg', media_type: 'IMAGE', caption: 'Hi', created_at: 'now', expires_at: 'later' },
       ],
-    });
+    }, identity);
     expect(entries.map((e) => e.key)).toEqual(['club-c1', 'pod-p1', 'user-u1']);
     expect(entries[1].viewer.subLabel).toBe('Your pod status');
     expect(entries[2].viewer.slides?.[0]?.mediaUrl).toBe('st.jpg');
@@ -56,6 +59,24 @@ describe('buildHomeStatusEntries (bug 2/3 order)', () => {
       })[0];
     expect(withSeen(false).active).toBe(true);
     expect(withSeen(true).active).toBe(false);
+  });
+
+  it('places unseen tiles first and pushes seen tiles to the end', () => {
+    const entries = buildHomeStatusEntries(
+      {
+        ...baseArgs,
+        followedUsers: [
+          { user_id: 'seen', full_name: 'Seen One', first_name: 'Seen' },
+          { user_id: 'unseen', full_name: 'Unseen One', first_name: 'Unseen' },
+        ],
+        followedPosts: [
+          { id: 'ps', author_id: 'seen', image_url: 'a.jpg', media_type: 'IMAGE', seen_by_me: true },
+          { id: 'pu', author_id: 'unseen', image_url: 'b.jpg', media_type: 'IMAGE', seen_by_me: false },
+        ],
+      },
+      identity,
+    );
+    expect(entries.map((e) => e.key)).toEqual(['user-unseen', 'user-seen']);
   });
 });
 

@@ -14,17 +14,11 @@ const Tab = createBottomTabNavigator<TabParamList>();
 
 const renderTabBar = (props: BottomTabBarProps) => <BottomNav {...props} />;
 
-/** The signed-in app's bottom-tab shell — Home + the four mWeb tabs, rendered
- * with the floating custom {@link BottomNav}. Account-menu destinations stay
- * stack screens pushed on top of this (see RootNavigator). */
 export function MainTabs() {
-  // Tapping a native push (e.g. a post-activity notification) deep-links here.
   usePushNotificationDeepLink();
   return (
     <>
       <Tab.Navigator
-        // Tab switches are instant (no cross-fade) — animating a tab's full-bleed
-        // backdrop janked the switch.
         screenOptions={{ headerShown: false, animation: 'none' }}
         tabBar={renderTabBar}
       >

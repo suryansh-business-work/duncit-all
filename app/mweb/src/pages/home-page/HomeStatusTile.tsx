@@ -1,5 +1,4 @@
 import { Avatar, Box, Stack, Typography } from '@mui/material';
-import { alpha, useTheme } from '@mui/material/styles';
 import AddIcon from '@mui/icons-material/Add';
 
 interface HomeStatusTileProps {
@@ -21,10 +20,10 @@ export default function HomeStatusTile({
   active = true,
   onClick,
 }: Readonly<HomeStatusTileProps>) {
-  const theme = useTheme();
-  const ring = active
-    ? 'linear-gradient(135deg, #ff4f73 0%, #ff8a3d 42%, #13d6b3 72%, #7c5cff 100%)'
-    : `linear-gradient(135deg, ${alpha(theme.palette.text.primary, 0.28)}, ${alpha(theme.palette.text.primary, 0.1)})`;
+  // Only unseen tiles get the gradient ring; seen tiles show no ring (they also
+  // shift to the end of the rail).
+  const showRing = !add && active;
+  const ring = 'linear-gradient(135deg, #ff4f73 0%, #ff8a3d 42%, #13d6b3 72%, #7c5cff 100%)';
 
   return (
     <Stack
@@ -53,7 +52,7 @@ export default function HomeStatusTile({
           height: 62,
           borderRadius: '50%',
           p: add ? 1.5 : 0.35,
-          background: add ? 'transparent' : ring,
+          background: showRing ? ring : 'transparent',
           border: add ? 1.5 : 0,
           borderStyle: add ? 'dashed' : 'solid',
           borderColor: 'divider',

@@ -3,14 +3,14 @@ import { ScrollView, Text } from 'tamagui';
 
 import { PodCard } from '@/components/home/PodCard';
 import { ListSkeleton } from '@/components/Skeleton';
-import type { LibraryPod } from '@/hooks/useLibrary';
+import type { SavedPod } from '@/hooks/useSavedPods';
 
 interface PodCardScrollProps {
-  pods: LibraryPod[];
+  pods: SavedPod[];
   isLoading: boolean;
   emptyText: string;
   testID: string;
-  onOpen: (pod: LibraryPod) => void;
+  onOpen: (pod: SavedPod) => void;
 }
 
 /** A simple vertical scroll of pod cards with skeleton/empty states — shared by

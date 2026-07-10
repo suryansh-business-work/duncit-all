@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import { useNavigation } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView } from 'tamagui';
@@ -61,22 +61,33 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
   // Stable-per-load shuffle: re-shuffles only when `items` changes (refetch /
   // app open), NOT on every seen change.
   const shuffled = useMemo(() => shuffleStatus(items), [items]);
-  // Partition by CURRENT seen state, keeping the shuffled relative order — a tile
-  // drops to the end once every slide has been viewed.
-  const ordered = useMemo(() => {
+  // Order = own-status first, then unseen (in shuffled order), then the seen
+  // tiles at the end. Read against the CURRENT seen state.
+  const orderGroups = useCallback(() => {
     const unseen = shuffled.filter((g) => !isGroupSeen(g, seenIds));
     const seen = shuffled.filter((g) => isGroupSeen(g, seenIds));
-    return [...unseen, ...seen];
-  }, [shuffled, seenIds]);
-  const groups = useMemo(() => (mine ? [mine, ...ordered] : ordered), [mine, ordered]);
-  const active = activeIndex != null ? (groups[activeIndex] ?? null) : null;
+    return mine ? [mine, ...unseen, ...seen] : [...unseen, ...seen];
+  }, [mine, shuffled, seenIds]);
+  // Freeze the order while a story is open: the rail sits behind the full-screen
+  // viewer, so re-partitioning on `seenIds` mid-view would re-index the open
+  // story and make it jump. Recompute ONLY when the viewer is closed (and on data
+  // reload) — on close the just-seen tile drops its ring and slides to the end.
+  const [groups, setGroups] = useState(() => orderGroups());
+  useEffect(() => {
+    if (activeIndex === null) setGroups(orderGroups());
+  }, [activeIndex, orderGroups]);
+
+  const active = activeIndex != null ? groups[activeIndex] : undefined;
   const activeIsMine = active != null && active === mine;
   // Followed people carry a `user-…` key; the own group and club items don't.
-  const activeKey = (active as StoryRailItem | null)?.key;
+  const activeKey = (active as StoryRailItem | undefined)?.key;
   const activeIsPerson = !!activeKey && activeKey.startsWith('user-');
   const openAt = (groupIndex: number) => setActiveIndex(groupIndex);
   const goNext = () => setActiveIndex((i) => (i != null && i < groups.length - 1 ? i + 1 : null));
   const goPrev = () => setActiveIndex((i) => (i != null && i > 0 ? i - 1 : i));
+  // The followed tiles are the frozen `groups` minus the leading own-status tile
+  // (rendered separately as the upload tile).
+  const followed = (mine ? groups.slice(1) : groups) as StoryRailItem[];
 
   const openTarget = (target: StoryTarget) => {
     setActiveIndex(null);
@@ -118,7 +129,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
             if (!uploading) void pickAndUpload();
           }}
         />
-        {ordered.map((item, itemIndex) => (
+        {followed.map((item, itemIndex) => (
           <StatusTile
             key={item.key}
             testID={`status-${item.key}`}
@@ -130,7 +141,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
         ))}
       </ScrollView>
       <StatusViewer
-        status={active}
+        status={active ?? null}
         onClose={() => setActiveIndex(null)}
         onNext={goNext}
         onPrev={goPrev}

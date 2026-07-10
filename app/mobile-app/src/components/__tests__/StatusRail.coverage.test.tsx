@@ -13,7 +13,9 @@ jest.mock('@react-navigation/native', () => ({
 
 const mockRecordView = jest.fn();
 const mockDeleteStory = jest.fn().mockResolvedValue(undefined);
-const mockSeenIds = new Set<string>();
+// A reassignable Set so a test can flip a story's seen state (a new reference)
+// and re-render to exercise the "freeze while open" behaviour.
+let mockSeenIds = new Set<string>();
 jest.mock('@/stores/status.store', () => ({
   useStatusStore: (selector: (s: unknown) => unknown) =>
     selector({
@@ -45,6 +47,7 @@ const mineGroup = {
 
 beforeEach(() => {
   jest.clearAllMocks();
+  mockSeenIds = new Set<string>();
   // Deterministic rail order (Fisher–Yates with random=0 is stable per input).
   jest.spyOn(Math, 'random').mockReturnValue(0);
   mockDeleteStory.mockResolvedValue(undefined);
@@ -131,6 +134,47 @@ describe('StatusRail', () => {
     fireEvent.press(screen.getByTestId('status-user-a2'));
     expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('status-next'));
+    expect(screen.queryByTestId('status-viewer')).toBeNull();
+  });
+
+  it('freezes the rail order while a story is open, re-ordering only on close (Bug 2)', () => {
+    const a1Slide = { ...slide, id: 'a1s', caption: 'A1CAP' };
+    const a2Slide = { ...slide, id: 'a2s', caption: 'A2CAP' };
+    mockUseStoryRail.mockReturnValue({
+      mine: null,
+      items: [
+        {
+          authorId: 'a1',
+          key: 'user-a1',
+          name: 'Asha',
+          photo: null,
+          slides: [a1Slide],
+          cover: a1Slide,
+          target: { kind: 'user', id: 'a1' },
+        },
+        {
+          authorId: 'a2',
+          key: 'user-a2',
+          name: 'Bina',
+          photo: null,
+          slides: [a2Slide],
+          cover: a2Slide,
+          target: { kind: 'user', id: 'a2' },
+        },
+      ],
+      isLoading: false,
+    });
+    const { rerender } = renderWithProviders(<StatusRail userName="You" />);
+    // Shuffle(random=0) → frozen order [a2, a1]; open a2 (the first tile).
+    fireEvent.press(screen.getByTestId('status-user-a2'));
+    expect(screen.getByText('A2CAP')).toBeOnTheScreen();
+    // a2 becomes fully seen mid-view. Live, that would drop it behind a1 and
+    // re-index the open viewer — frozen, the viewer stays on a2 (no jump).
+    mockSeenIds = new Set(['a2s']);
+    rerender(<StatusRail userName="You" />);
+    expect(screen.getByText('A2CAP')).toBeOnTheScreen();
+    // On close the rail re-orders against the new seen state.
+    fireEvent.press(screen.getByTestId('status-viewer-close'));
     expect(screen.queryByTestId('status-viewer')).toBeNull();
   });
 

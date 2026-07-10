@@ -387,12 +387,17 @@ describe('StatusRail (bug 3 composite)', () => {
     expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
   });
 
-  it('closes the viewer when the open item disappears from the rail', () => {
+  it('freezes the open story when the rail data changes, re-syncing on close', () => {
     const { rerender } = renderWithProviders(<StatusRail userName="Sam" />);
     fireEvent.press(screen.getByTestId('status-user-a1'));
     expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
+    // A background reload empties the rail — the open story stays frozen (visible),
+    // so viewing it never jumps/re-indexes mid-view.
     mockedRail.mockReturnValue({ mine: null, items: [], isLoading: false });
     rerender(<StatusRail userName="Sam" />);
+    expect(screen.getByTestId('status-viewer')).toBeOnTheScreen();
+    // Closing re-syncs the rail to the new (now empty) data.
+    fireEvent.press(screen.getByTestId('status-viewer-close'));
     expect(screen.queryByTestId('status-viewer')).toBeNull();
   });
 });

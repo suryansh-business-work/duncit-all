@@ -60,6 +60,9 @@ async function bootstrap() {
   });
   await safeSeed('settings', () => settingsService.seedDefaults());
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
+  // Sync the latest mobile app version into the DB from the APP_VERSION env
+  // (set by the deploy workflow from app.json) — updates on every push/boot.
+  await safeSeed('appVersion', () => settingsService.applyEnvVersion());
   await safeSeed('category', () => categoryService.seedDefaults());
   await safeSeed('vapid', () => notificationService.ensureVapid());
   await safeSeed('policy', () => policyService.seedDefaults());

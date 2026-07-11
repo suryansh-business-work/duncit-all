@@ -27,21 +27,18 @@ describe('Support hub', () => {
       .toBeVisible()
       .withTimeout(10000);
 
-    await element(by.id('support-sos')).tap();
+    await element(by.id('support-more-sos')).tap();
     await waitFor(element(by.id('sos-screen')))
       .toBeVisible()
       .withTimeout(10000);
     await expect(element(by.id('sos-send'))).toBeVisible();
   });
 
-  it('Scenario 3: opens the FAQs reader', async () => {
+  it('Scenario 3: opens the FAQs reader from the account drawer', async () => {
+    // FAQs live in the account drawer, not the support hub (the hub is now a
+    // FAQ-forward help center whose topics deep-link into this same reader).
     await element(by.id('account-button')).tap();
-    await element(by.id('sidebar-item-Support')).tap();
-    await waitFor(element(by.id('support-screen')))
-      .toBeVisible()
-      .withTimeout(10000);
-
-    await element(by.id('support-faqs')).tap();
+    await element(by.id('sidebar-item-Faqs')).tap();
     await waitFor(element(by.id('faqs-screen')))
       .toBeVisible()
       .withTimeout(10000);

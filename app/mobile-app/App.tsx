@@ -15,9 +15,11 @@ import { setWebFavicon } from '@/services/web-favicon';
 import { OfflineBanner } from '@/components/OfflineBanner';
 import { RootNavigator } from '@/navigation/RootNavigator';
 import { SplashOverlay } from '@/components/SplashOverlay';
+import { ForceUpdateGate } from '@/components/ForceUpdateGate';
 import { linking } from '@/navigation/linking';
 import { loadWebFonts } from '@/services/web-fonts';
 import { useAuthStore } from '@/stores/auth.store';
+import { useAppVersionStore } from '@/stores/app-version.store';
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
 import { useStudioModeStore } from '@/stores/studio-mode.store';
@@ -52,6 +54,7 @@ export default function App() {
   const bootstrap = useAuthStore((s) => s.bootstrap);
   const ready = useAuthStore((s) => s.ready);
   const loadConfig = useConfigStore((s) => s.load);
+  const loadAppVersion = useAppVersionStore((s) => s.fetch);
   const { data: brandingData } = useBranding();
 
   // Web build: swap the favicon to the admin-configured one once branding loads.
@@ -66,7 +69,10 @@ export default function App() {
     // Pull Google/Maps config from the server (Tech portal source); best-effort,
     // the env fallback applies until it resolves.
     loadConfig();
-  }, [hydrateTheme, hydrateStudioMode, bootstrap, loadConfig]);
+    // Fetch the latest published app version for the force-update gate (public,
+    // best-effort — a failure leaves the gate open, never locking users out).
+    loadAppVersion();
+  }, [hydrateTheme, hydrateStudioMode, bootstrap, loadConfig, loadAppVersion]);
 
   if (!ready) return null;
 
@@ -83,6 +89,7 @@ export default function App() {
                   <RootNavigator />
                 </NavigationContainer>
                 <SplashOverlay />
+                <ForceUpdateGate />
               </YStack>
             </ErrorBoundary>
           </SafeAreaProvider>

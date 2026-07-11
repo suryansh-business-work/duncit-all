@@ -1,13 +1,25 @@
 #!/usr/bin/env sh
 . "$(dirname -- "$0")/_/husky.sh"
 
-# 1) Lint-staged formatters/linters
+# 1) Lint-staged formatters/linters (fast; no typecheck/tests — those run in CI).
 npx --no-install lint-staged || exit 1
 
-# 2) Workspace typechecks (server + frontends). Skipped if SKIP_TYPECHECK=1.
-if [ "$SKIP_TYPECHECK" != "1" ]; then
-  npm run typecheck --silent || {
-    echo "✗ pre-commit: typecheck failed. Set SKIP_TYPECHECK=1 to bypass."
-    exit 1
-  }
+# 2) App version bump — every commit picks major / minor / patch (no skip).
+#    Interactive terminals are prompted via /dev/tty; automated commits (CI,
+#    tooling) fall back to $VERSION_BUMP, then to `patch`, so they never hang.
+#    The deploy workflow then syncs app.json's version into the DB on push.
+BUMP="${VERSION_BUMP:-}"
+if [ -z "$BUMP" ]; then
+  if [ -e /dev/tty ] && (: < /dev/tty) 2>/dev/null; then
+    printf 'Version bump for this commit — major / minor / patch ? ' > /dev/tty
+    read -r BUMP < /dev/tty
+  else
+    BUMP="patch"
+  fi
 fi
+case "$BUMP" in
+  major|minor|patch) ;;
+  *) echo "pre-commit: '$BUMP' is not major/minor/patch — defaulting to patch"; BUMP="patch" ;;
+esac
+node scripts/bump-version.mjs "$BUMP" || exit 1
+git add app/mobile-app/app.json app/mobile-app/package.json app/mweb/package.json

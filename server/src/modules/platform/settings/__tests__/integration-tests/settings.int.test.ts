@@ -70,6 +70,32 @@ describe('settingsService integration', () => {
     expect(updated.support_phone).toBe('+911234567890');
   });
 
+  it('serves app version info and syncs the latest version from APP_VERSION', async () => {
+    // Store URL falls back to the default Play Store URL when unset.
+    const before = await settingsService.getAppVersionInfo();
+    expect(before.latest_version).toBe('');
+    expect(before.android_store_url).toContain('play.google.com');
+
+    // applyEnvVersion upserts the DB latest version from the env (deploy path).
+    const original = process.env.APP_VERSION;
+    process.env.APP_VERSION = '2.4.1';
+    await settingsService.applyEnvVersion();
+    const after = await settingsService.getAppVersionInfo();
+    expect(after.latest_version).toBe('2.4.1');
+
+    // Empty env is a no-op (keeps the existing value).
+    process.env.APP_VERSION = '';
+    await settingsService.applyEnvVersion();
+    expect((await settingsService.getAppVersionInfo()).latest_version).toBe('2.4.1');
+
+    // An explicit admin-set store URL overrides the default.
+    await settingsService.updateBranding({ android_app_url: 'https://play.google.com/store/apps/details?id=x' });
+    expect((await settingsService.getAppVersionInfo()).android_store_url).toBe(
+      'https://play.google.com/store/apps/details?id=x'
+    );
+    process.env.APP_VERSION = original;
+  });
+
   it('exposes public client config from the active default env entries (Tech portal)', async () => {
     await EnvEntryModel.create({
       name: 'web',

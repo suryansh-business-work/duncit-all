@@ -94,6 +94,9 @@ export default function LoginCard({
             </Link>
           </Typography>
           <LegalLinks prefix="By signing in," />
+          <Typography variant="caption" color="text.disabled">
+            App version {__APP_VERSION__}
+          </Typography>
         </Stack>
       </Stack>
     </AuthScreenFrame>

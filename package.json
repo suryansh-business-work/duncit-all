@@ -21,6 +21,7 @@
     "dev:legal": "pnpm --filter legal dev",
     "dev:ai": "pnpm --filter ai dev",
     "dev:products": "pnpm --filter products dev",
+    "clear-branch": "git branch | grep -v \"main\" | grep -v \"staging\" | xargs git branch -D",
     "dev:marketing": "pnpm --filter marketing dev",
     "dev:onboarding": "pnpm --filter onboarding dev",
     "dev:hr": "pnpm --filter hr dev",

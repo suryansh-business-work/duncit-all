@@ -42,6 +42,14 @@ const chatFixtures = {
       { id: 'c1', ticket_no: 'CH-BBB222', title: 'Hi there', status: 'OPEN', source: 'CHAT', created_at: new Date().toISOString() },
     ],
   },
+  MobileFaqs: {
+    publicFaqGroups: [
+      {
+        super_category: { id: 'sc1', name: 'Getting started', icon: null, slug: 'getting-started' },
+        faqs: [{ id: 'faq1', question: 'How do I join a pod?', answer: 'Tap join on any pod.' }],
+      },
+    ],
+  },
 };
 
 test.describe('App · Support module', () => {
@@ -61,11 +69,14 @@ test.describe('App · Support module', () => {
     await expect(page.getByTestId('splash-overlay')).toBeHidden({ timeout: 5_000 });
   });
 
-  test('support hub shows Chat with Us + All Support Tickets, no Live Feedback', async ({ page }) => {
+  test('support help center: hero, FAQ topics, chat CTA + All Support Tickets, no Live Feedback', async ({ page }) => {
     await page.goto('/support');
-    await expect(page.getByTestId('support-intro')).toBeVisible();
-    await expect(page.getByTestId('support-chat')).toBeVisible();
-    await expect(page.getByTestId('support-all')).toBeVisible();
+    // FAQ-forward help center: hero + search, top FAQs, topics, chat CTA.
+    await expect(page.getByTestId('support-hero-title')).toBeVisible();
+    await expect(page.getByTestId('support-search')).toBeVisible();
+    await expect(page.getByTestId('support-topic-sc1')).toBeVisible();
+    await expect(page.getByTestId('support-start-chat')).toBeVisible();
+    await expect(page.getByTestId('support-more-all')).toBeVisible();
     await expect(page.getByText('Create Support Tickets')).toBeVisible();
     await expect(page.getByText('Live Feedback')).toHaveCount(0);
     // FAQs + Policies are in the account drawer, not the support hub (BUG-06).
@@ -98,7 +109,7 @@ test.describe('App · Support module', () => {
 
   test('callback screen has no pod picker (bug 1.2)', async ({ page }) => {
     await page.goto('/support');
-    await page.getByTestId('support-callback').click();
+    await page.getByTestId('support-more-callback').click();
     await expect(page.getByTestId('callback-screen')).toBeVisible();
     await expect(page.getByTestId('callback-subtitle')).toBeVisible();
     await expect(page.getByText(/select a pod|choose a pod/i)).toHaveCount(0);
@@ -106,7 +117,7 @@ test.describe('App · Support module', () => {
 
   test('Create Support Tickets opens onto the mWeb-style form (BUG-05/07/08/09)', async ({ page }) => {
     await page.goto('/support');
-    await page.getByTestId('support-tickets').click();
+    await page.getByTestId('support-more-tickets').click();
     await expect(page.getByTestId('support-tickets-screen')).toBeVisible();
     // Form-first (no existing-tickets list), with name/email fields + banners.
     await expect(page.getByTestId('ticket-form')).toBeVisible();
@@ -141,7 +152,7 @@ test.describe('App · Support module', () => {
       },
     });
     await page.goto('/support');
-    await page.getByTestId('support-sos').click();
+    await page.getByTestId('support-more-sos').click();
     await expect(page.getByTestId('sos-screen')).toBeVisible();
     await expect(page.getByTestId('sos-subtitle')).toBeVisible();
     await expect(page.getByText('Only tap SOS in a real emergency')).toBeVisible();
@@ -153,7 +164,7 @@ test.describe('App · Support module', () => {
 
   test('support hub labels the callback card "Callback Request" (BUG-14)', async ({ page }) => {
     await page.goto('/support');
-    await expect(page.getByTestId('support-callback')).toContainText('Callback Request');
+    await expect(page.getByTestId('support-more-callback')).toContainText('Callback Request');
     await expect(page.getByText('Request a Callback')).toHaveCount(0);
   });
 
@@ -163,7 +174,7 @@ test.describe('App · Support module', () => {
       MobileSupportCallTarget: { bouncerSupportTarget: { phone: '', available: false } },
     });
     await page.goto('/support');
-    await page.getByTestId('support-callback').click();
+    await page.getByTestId('support-more-callback').click();
     await expect(page.getByTestId('callback-call-now')).toHaveAttribute('aria-disabled', 'true');
   });
 
@@ -176,7 +187,7 @@ test.describe('App · Support module', () => {
       },
     });
     await page.goto('/support');
-    await page.getByTestId('support-callback').click();
+    await page.getByTestId('support-more-callback').click();
     await page.getByTestId('callback-request').click();
     await expect(page.getByTestId('callback-success')).toBeVisible();
     await page.getByTestId('callback-success-close').click();

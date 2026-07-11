@@ -73,6 +73,7 @@ const BRANDING_FIELDS = [
   "ios_app_url",
   "home_all_vibe_icon_url",
   "home_header_tagline",
+  "app_latest_version",
 ] as const;
 type BrandingField = (typeof BRANDING_FIELDS)[number];
 
@@ -110,8 +111,12 @@ const brandingToPub = (doc: any) => ({
   ios_app_url: doc.ios_app_url ?? "",
   home_all_vibe_icon_url: doc.home_all_vibe_icon_url ?? "",
   home_header_tagline: doc.home_header_tagline ?? "It All Starts Here!",
+  app_latest_version: doc.app_latest_version ?? "",
   updated_at: doc.updated_at?.toISOString?.() ?? "",
 });
+
+/** Default Play Store URL when the admin hasn't set an explicit one. */
+const DEFAULT_ANDROID_STORE_URL = "https://play.google.com/store/apps/details?id=com.duncit.mobile";
 
 const DEFAULT_FLAGS: {
   key: string;
@@ -308,6 +313,32 @@ export const settingsService = {
     let doc = await BrandingModel.findOne({ singleton_key: "branding" });
     if (!doc) doc = await BrandingModel.create({ singleton_key: "branding" });
     return brandingToPub(doc);
+  },
+
+  /** Public app-version info for the mobile force-update gate. */
+  async getAppVersionInfo() {
+    const b = await this.getBranding();
+    return {
+      latest_version: b.app_latest_version ?? "",
+      android_store_url: b.android_app_url || DEFAULT_ANDROID_STORE_URL,
+      ios_store_url: b.ios_app_url ?? "",
+    };
+  },
+
+  /**
+   * Sync the DB's latest app version from the APP_VERSION env (set by the
+   * deploy workflow from app/mobile-app/app.json) on every boot — this is how
+   * "the version updates in the database on every push". No-op when the env is
+   * unset or already matches, so it is safe to run each boot.
+   */
+  async applyEnvVersion() {
+    const version = (process.env.APP_VERSION ?? "").trim();
+    if (!version) return;
+    await BrandingModel.updateOne(
+      { singleton_key: "branding" },
+      { $set: { app_latest_version: version } },
+      { upsert: true },
+    );
   },
 
   async updateBranding(input: Partial<Record<BrandingField, string>>) {

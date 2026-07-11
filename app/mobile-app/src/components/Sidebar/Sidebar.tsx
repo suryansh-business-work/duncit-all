@@ -136,7 +136,7 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
                   onPress={() => setSwitchOpen(true)}
                   marginHorizontal={8}
                   marginTop={4}
-                  marginBottom={6}
+                  marginBottom={15}
                   alignItems="center"
                   gap={12}
                   borderRadius={10}
@@ -157,12 +157,13 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
                 </XStack>
               ) : null}
 
-              <Separator marginVertical={6} borderColor="$borderColor" />
+              <Separator borderColor="$borderColor" />
               <XStack
                 alignItems="center"
                 justifyContent="space-between"
+                minHeight={44}
                 paddingHorizontal={16}
-                paddingVertical={10}
+                paddingVertical={0}
               >
                 <XStack alignItems="center" gap={12}>
                   <MaterialIcons
@@ -182,7 +183,7 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
                   trackColor={{ true: primary }}
                 />
               </XStack>
-              <Separator marginVertical={6} borderColor="$borderColor" />
+              <Separator borderColor="$borderColor" />
               <SidebarPolicies
                 policies={policiesData?.publicPolicies ?? []}
                 onSelect={(slug) => {

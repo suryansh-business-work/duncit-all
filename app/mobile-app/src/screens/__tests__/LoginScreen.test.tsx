@@ -101,4 +101,9 @@ describe('LoginScreen', () => {
     fireEvent.press(screen.getByTestId('go-forgot-password'));
     expect(mockNavigate).toHaveBeenCalledWith('ForgotPassword');
   });
+
+  it('shows the running app version footer', () => {
+    renderWithProviders(<LoginScreen />);
+    expect(screen.getByTestId('login-app-version')).toHaveTextContent(/App version/);
+  });
 });

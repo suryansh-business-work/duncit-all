@@ -12,6 +12,7 @@ import { LoginForm, type LoginFormValues } from '@/forms/login';
 import type { RootStackParamList } from '@/navigation/types';
 import { login as loginService, loginWithGoogle } from '@/services/auth.service';
 import { useAuthStore } from '@/stores/auth.store';
+import { appVersion } from '@/utils/app-version';
 import { toErrorMessage } from '@/utils/errors';
 
 export function LoginScreen() {
@@ -82,6 +83,9 @@ export function LoginScreen() {
         </Text>
       </XStack>
       <LegalLinks prefix="By signing in," />
+      <Text testID="login-app-version" textAlign="center" fontSize={12} color="$muted">
+        App version {appVersion()}
+      </Text>
     </AuthScaffold>
   );
 }

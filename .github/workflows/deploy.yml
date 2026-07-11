@@ -1378,12 +1378,17 @@ jobs:
           STORAGE_LOCAL_PATH=/app/data/media
           API_MASTER_KEY=${OPENWA_API_MASTER_KEY}
           EOF
+          # Latest mobile app version (from app.json) — the server upserts this
+          # into the DB on boot so the mobile force-update gate knows the newest
+          # released version. Keeps "the DB version updates on every push" true.
+          APP_VERSION="$(node -p "require('./app/mobile-app/app.json').expo.version")"
           cat > /tmp/server.env <<EOF
           NODE_ENV=production
           PORT=2001
           MONGO_URI=${MONGO_URI}
           JWT_SECRET=${JWT_SECRET}
           OPENWA_API_MASTER_KEY=${OPENWA_API_MASTER_KEY}
+          APP_VERSION=${APP_VERSION}
           EOF
           # Staging runs against its OWN Mongo database on the same Atlas
           # cluster — everything (users, pods, Tech-portal env entries, ...) is

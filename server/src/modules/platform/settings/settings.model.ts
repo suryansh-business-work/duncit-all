@@ -112,6 +112,11 @@ export interface IBranding extends Document {
   home_all_vibe_icon_url: string;
   // Tagline shown in the home header, above the location (mWeb + mobile).
   home_header_tagline: string;
+  // Latest released mobile app version (semver, e.g. "1.2.3"). Auto-synced on
+  // every deploy from app/mobile-app/app.json via the APP_VERSION env. The
+  // mobile app compares its baked-in version to this and force-updates when
+  // it is behind.
+  app_latest_version: string;
   created_at: Date;
   updated_at: Date;
 }
@@ -158,6 +163,7 @@ const brandingSchema = new Schema<IBranding>(
     ios_app_url: { type: String, default: "" },
     home_all_vibe_icon_url: { type: String, default: "" },
     home_header_tagline: { type: String, default: "It All Starts Here!" },
+    app_latest_version: { type: String, default: "" },
   },
   { timestamps: { createdAt: "created_at", updatedAt: "updated_at" } },
 );

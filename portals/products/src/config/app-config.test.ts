@@ -14,7 +14,11 @@ describe('Duncit Products app config', () => {
   });
 
   it('exposes the inventory and ecomm nav entries', () => {
-    const targets = appConfig.nav.map((n) => n.to);
+    const flatten = (items: typeof appConfig.nav): typeof appConfig.nav =>
+      items.flatMap((item) => [item, ...flatten(item.children ?? [])]);
+    const targets = flatten(appConfig.nav)
+      .map((n) => n.to)
+      .filter(Boolean);
     expect(targets).toEqual(
       expect.arrayContaining(['/', '/inventory', '/ecomm/product-requests']),
     );

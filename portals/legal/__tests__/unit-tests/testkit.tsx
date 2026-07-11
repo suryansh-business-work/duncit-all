@@ -3,7 +3,7 @@ import { render } from '@testing-library/react';
 import { MockedProvider, type MockedResponse } from '@apollo/client/testing';
 import { gql } from '@apollo/client';
 import { MemoryRouter, Routes } from 'react-router-dom';
-import { ColorModeProvider } from '../../src/ColorModeContext';
+import { ColorModeProvider } from '@duncit/shell';
 
 export const APP_BRANDING = gql`
   query AppBranding {

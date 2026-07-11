@@ -43,7 +43,7 @@ const products = (element: JSX.Element) => authed(<RequireProducts>{element}</Re
 export default function App() {
   return (
     <Routes>
-        <Route path="/profile" element={authed(<ProfilePage />)} />
+      <Route path="/profile" element={authed(<ProfilePage />)} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<WelcomePage />)} />
       <Route path="/inventory" element={products(<InventoryPage />)} />

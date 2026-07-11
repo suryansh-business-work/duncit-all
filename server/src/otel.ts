@@ -70,7 +70,7 @@ function initOtelLogs(): void {
   try {
     const resource = resourceFromAttributes({
       'service.name': process.env.OTEL_SERVICE_NAME || 'duncit-server',
-      'deployment.environment': process.env.NODE_ENV || 'production',
+      'deployment.environment': process.env.APP_ENV ?? process.env.NODE_ENV ?? 'production',
     });
     const exporter = new OTLPLogExporter({ url: endpoint });
     const provider = new LoggerProvider({

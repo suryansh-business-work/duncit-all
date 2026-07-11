@@ -8,7 +8,7 @@ name: Websites CI
 # no workflow change; the Astro build is the verification gate today.
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master, develop, staging]
     paths:
       - 'website/**'
       - 'packages/**'
@@ -17,7 +17,7 @@ on:
       - 'pnpm-workspace.yaml'
       - '.github/workflows/websites-ci.yml'
   pull_request:
-    branches: [main, master, develop]
+    branches: [main, master, develop, staging]
     paths:
       - 'website/**'
       - 'packages/**'

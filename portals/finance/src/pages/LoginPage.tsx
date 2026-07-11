@@ -43,7 +43,7 @@ export default function LoginPage() {
   const handleLogin = async (values: LoginFormValues) => {
     setError(null);
     try {
-      const res = await loginMutation({ variables: { input: values } });
+      const res = await loginMutation({ variables: { input: { ...values, portal_key: appConfig.key } } });
       const data = res.data?.login;
       if (!data?.token) throw new Error('Login failed. Please try again.');
       if (!hasAppAccess(data?.user?.roles)) throw new Error(accessDeniedMessage());

@@ -24,6 +24,13 @@ COPY app/mobile-app/package.json app/mobile-app/package-lock.json ./
 RUN npm ci
 
 COPY app/mobile-app/ ./
+
+# The API base URL is baked into the web export (config.ts reads
+# EXPO_PUBLIC_API_URL, and a process-env value wins over .env.production).
+# Default = production; the staging pipeline passes staging.server.duncit.com.
+ARG EXPO_PUBLIC_API_URL=https://server.duncit.com
+ENV EXPO_PUBLIC_API_URL=$EXPO_PUBLIC_API_URL
+
 RUN npm run codegen
 RUN npx expo export --platform web --output-dir dist
 

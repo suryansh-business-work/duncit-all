@@ -6,7 +6,7 @@ name: Portals CI
 # typecheck job for the same set.)
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master, develop, staging]
     paths:
       - 'portals/**'
       - 'packages/**'
@@ -15,7 +15,7 @@ on:
       - 'pnpm-workspace.yaml'
       - '.github/workflows/portals-ci.yml'
   pull_request:
-    branches: [main, master, develop]
+    branches: [main, master, develop, staging]
     paths:
       - 'portals/**'
       - 'packages/**'

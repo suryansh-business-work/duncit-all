@@ -208,3 +208,4 @@ These guidelines are working if: fewer unnecessary changes in diffs, fewer rewri
 29. Use MUI for mWeb & Portal components and for Native Web and Native App use Tamagui components
 30. Is mWeb, Native App, Portal, Native web use React Hooks Form and Zod
 31. No UTF Icons For Native Icons use @expo/vector-icons and mWeb & Portals me @mui/icons-material Icon ka use karo
+32. Branching & deployment flow (ENFORCED): NEVER push directly to `main`/`master` — a husky pre-push hook blocks it (emergency bypass: ALLOW_MAIN_PUSH=1). All changes go feature-branch -> `staging` branch first. Pushing `staging` deploys the full replica stack to https://staging.<sub>.duncit.com (same VPS, /opt/duncit-staging, host ports = production + 100, images tagged :staging with staging URLs baked in, separate Mongo database `duncit-staging`). After verifying on staging, open a PR `staging` -> `main`; merging deploys production. PR base for feature work is `staging`, not `main`.

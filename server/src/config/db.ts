@@ -10,6 +10,8 @@ import mongoose from 'mongoose';
 export async function connectDB(): Promise<void> {
   const uri = process.env.MONGO_URI;
   if (!uri) throw new Error('MONGO_URI is not set');
+  // Staging shares the cluster but isolates its data in its own database.
+  const dbName = process.env.MONGO_DB_NAME;
 
   mongoose.set('strictQuery', true);
 
@@ -31,6 +33,7 @@ export async function connectDB(): Promise<void> {
         socketTimeoutMS: 60_000,
         family: 4, // prefer IPv4 — avoids some Atlas SRV resolution issues
         retryWrites: true,
+        ...(dbName ? { dbName } : {}),
       });
       // eslint-disable-next-line no-console
       console.log(`✅ MongoDB connected (attempt ${attempt})`);

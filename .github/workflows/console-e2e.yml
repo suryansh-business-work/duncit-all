@@ -7,7 +7,7 @@ name: Console E2E
 # never bounces a healthy production service.
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, staging]
     paths:
       - 'portals/support/**'
       - 'portals/website-app/**'
@@ -20,7 +20,7 @@ on:
       - 'pnpm-workspace.yaml'
       - '.github/workflows/console-e2e.yml'
   pull_request:
-    branches: [main, master]
+    branches: [main, master, staging]
     paths:
       - 'portals/support/**'
       - 'portals/website-app/**'

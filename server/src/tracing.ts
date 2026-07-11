@@ -22,7 +22,7 @@ if (base) {
     const sdk = new NodeSDK({
       resource: resourceFromAttributes({
         'service.name': process.env.OTEL_SERVICE_NAME || 'duncit-server',
-        'deployment.environment': process.env.NODE_ENV || 'production',
+        'deployment.environment': process.env.APP_ENV ?? process.env.NODE_ENV ?? 'production',
       }),
       traceExporter: new OTLPTraceExporter({ url: `${base.replace(/\/$/, '')}/v1/traces` }),
       instrumentations: [

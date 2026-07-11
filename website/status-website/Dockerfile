@@ -38,6 +38,8 @@ RUN pnpm install --frozen-lockfile
 
 COPY website/status-website ./website/status-website
 COPY packages/logs ./packages/logs
+ARG VITE_SERVER_URL
+ENV VITE_SERVER_URL=$VITE_SERVER_URL
 RUN pnpm --filter status build
 
 # --- runner ---

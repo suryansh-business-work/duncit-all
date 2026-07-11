@@ -3,6 +3,7 @@ import { gql, useMutation } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Divider, Stack } from '@mui/material';
 import { LoginScreen, type LoginFormValues, type LoginScreenConfig } from '@duncit/user-context';
+import { appConfig } from '../config/app-config';
 import { useColorMode } from '../ColorModeContext';
 import { useBranding } from '../lib/useBranding';
 import SendAdminCredentials from '../components/SendAdminCredentials';
@@ -48,7 +49,7 @@ export default function LoginPage() {
   const handleLogin = async (values: LoginFormValues) => {
     setError(null);
     try {
-      const res = await loginMutation({ variables: { input: values } });
+      const res = await loginMutation({ variables: { input: { ...values, portal_key: appConfig.key } } });
       const data = res.data?.login;
       const roles: string[] = data?.user?.roles ?? [];
       if (!roles.some((r) => ADMIN_ROLES.includes(r))) {

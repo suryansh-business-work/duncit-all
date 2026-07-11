@@ -1,6 +1,7 @@
 import { mountPortal } from '@duncit/shell';
 import { logs } from '@duncit/logs';
 import { urlConfigs } from './config/url-configs';
+import { appConfig } from './config/app-config';
 import { apolloClient } from './apollo';
 import { ConfirmProvider } from './components/useConfirm';
 import { NotifyHost } from './components/notify';
@@ -16,10 +17,10 @@ const loadUser = async () => {
 
 mountPortal({
   config: {
-    key: 'admin',
-    name: 'Admin',
-    tokenKey: 'admin_token',
-    colorModeKey: 'admin_color_mode',
+    key: appConfig.key,
+    name: appConfig.name,
+    tokenKey: appConfig.tokenKey,
+    colorModeKey: appConfig.colorModeKey,
   },
   apolloClient,
   graphqlUrl: urlConfigs.graphqlUrl,

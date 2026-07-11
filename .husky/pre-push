@@ -1,0 +1,24 @@
+#!/usr/bin/env sh
+. "$(dirname -- "$0")/_/husky.sh"
+
+# Block DIRECT pushes to main/master. The deployment flow is:
+#   feature branch -> staging (deploys staging.*.duncit.com) -> verify ->
+#   PR staging -> main (deploys production).
+# git feeds pushed refs on stdin: "<local ref> <local sha> <remote ref> <remote sha>".
+# Emergency bypass: ALLOW_MAIN_PUSH=1 git push ...
+if [ "$ALLOW_MAIN_PUSH" = "1" ]; then
+  exit 0
+fi
+
+while read -r _local_ref _local_sha remote_ref _remote_sha; do
+  case "$remote_ref" in
+    refs/heads/main|refs/heads/master)
+      echo "✗ pre-push: direct push to ${remote_ref#refs/heads/} is blocked."
+      echo "  Push to 'staging' (or a feature branch) and merge into main via PR."
+      echo "  Emergency bypass: ALLOW_MAIN_PUSH=1 git push"
+      exit 1
+      ;;
+  esac
+done
+
+exit 0

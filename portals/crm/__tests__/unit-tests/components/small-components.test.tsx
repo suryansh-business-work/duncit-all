@@ -9,8 +9,6 @@ import MapEmbed from '@/components/MapEmbed';
 import LeadTabs from '@/components/LeadTabs';
 import ServicesGrid from '@/components/ServicesGrid';
 import ConfirmDialog from '@/components/ConfirmDialog';
-import AppIcon from '@/components/AppIcon';
-import AppBreadcrumbs from '@/components/AppBreadcrumbs';
 import FormAccordion from '@/components/FormAccordion';
 import { LeadDetailCard, LeadDetailRow } from '@/components/LeadDetailCard';
 
@@ -164,53 +162,6 @@ describe('ConfirmDialog', () => {
   it('shows the loading state on the confirm button', () => {
     render(<ConfirmDialog open title="Delete" message="Sure?" loading onConfirm={() => undefined} onClose={() => undefined} />);
     expect(screen.getByRole('button', { name: /Working/i })).toBeTruthy();
-  });
-});
-
-describe('AppIcon', () => {
-  it('resolves a known icon name', () => {
-    const { container } = render(<AppIcon name="dashboard" />);
-    expect(container.querySelector('svg')).toBeTruthy();
-  });
-  it('falls back to the widgets glyph for unknown names', () => {
-    const { container } = render(<AppIcon name="not-a-real-icon" />);
-    expect(container.querySelector('svg')).toBeTruthy();
-  });
-});
-
-describe('AppBreadcrumbs', () => {
-  it('returns null on "/"', () => {
-    const { container } = render(
-      <MemoryRouter initialEntries={['/']}>
-        <AppBreadcrumbs />
-      </MemoryRouter>
-    );
-    expect(container.firstChild).toBeNull();
-  });
-  it('returns null on "/login"', () => {
-    const { container } = render(
-      <MemoryRouter initialEntries={['/login']}>
-        <AppBreadcrumbs />
-      </MemoryRouter>
-    );
-    expect(container.firstChild).toBeNull();
-  });
-  it('renders crumbs for a known nav path with a detail id', () => {
-    render(
-      <MemoryRouter initialEntries={['/venue-leads/507f1f77bcf86cd799439011']}>
-        <AppBreadcrumbs />
-      </MemoryRouter>
-    );
-    expect(screen.getByText('Detail')).toBeTruthy();
-  });
-  it('humanises arbitrary path segments when no nav match', () => {
-    render(
-      <MemoryRouter initialEntries={['/some-random/page-one']}>
-        <AppBreadcrumbs />
-      </MemoryRouter>
-    );
-    expect(screen.getByText('Some Random')).toBeTruthy();
-    expect(screen.getByText('Page One')).toBeTruthy();
   });
 });
 

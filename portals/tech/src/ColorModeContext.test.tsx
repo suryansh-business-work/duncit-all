@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it } from 'vitest';
 import { render, screen, fireEvent } from '@testing-library/react';
-import { ColorModeProvider, useColorMode } from './ColorModeContext';
+import { ColorModeProvider, useColorMode } from '@duncit/shell';
 import { appConfig } from './config/app-config';
 
 function Probe() {

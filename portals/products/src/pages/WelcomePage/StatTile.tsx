@@ -1,5 +1,5 @@
 import { Card, CardContent, Stack, Typography } from '@mui/material';
-import AppIcon from '../../components/AppIcon';
+import { AppIcon } from '@duncit/shell';
 
 /** A single KPI tile — icon, big value and a caption (Task B item 5). */
 export default function StatTile({

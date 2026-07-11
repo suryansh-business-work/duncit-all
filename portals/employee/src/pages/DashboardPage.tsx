@@ -2,7 +2,7 @@ import { gql, useQuery } from '@apollo/client';
 import { Alert, Box, Card, CardContent, Chip, CircularProgress, Grid, Stack, Typography } from '@mui/material';
 import { appConfig } from '../config/app-config';
 import { parseApiError } from '../utils/parseApiError';
-import AppIcon from '../components/AppIcon';
+import { AppIcon } from '@duncit/shell';
 import AccountSummary from './dashboard/AccountSummary';
 
 const DASHBOARD_ME = gql`

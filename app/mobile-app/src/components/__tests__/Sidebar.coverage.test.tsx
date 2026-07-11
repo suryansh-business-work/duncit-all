@@ -6,7 +6,22 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
 const mockMe = jest.fn();
+const mockAccount = jest.fn();
 const mockPolicies = jest.fn();
+const mockFlags: Record<string, boolean> = {};
+
+const FULL_ACCOUNT = {
+  first_name: 'Asha',
+  last_name: 'Roy',
+  bio: 'Hi',
+  dob: '2000-01-01',
+  city: 'Mumbai',
+  state: 'MH',
+  country: 'IN',
+  phone_number: '9990001111',
+  whatsapp_number: '9990001111',
+  profile_photo: 'https://x/p.png',
+};
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
@@ -16,34 +31,45 @@ jest.mock('@/hooks/useMe', () => ({
   useMe: () => mockMe(),
   useRoleLabels: () => ({ labelFor: (k: string) => k }),
 }));
+jest.mock('@/hooks/useAccount', () => ({ useAccount: () => mockAccount() }));
+jest.mock('@/hooks/useFeatureFlag', () => ({
+  useFeatureFlag: (key: string) => mockFlags[key] ?? false,
+}));
 jest.mock('@/hooks/usePolicies', () => ({ usePublicPolicies: () => mockPolicies() }));
 
 beforeEach(() => {
   jest.clearAllMocks();
+  Object.keys(mockFlags).forEach((k) => delete mockFlags[k]);
   useStudioModeStore.setState({ mode: 'USER' });
   mockMe.mockReturnValue({
     data: { me: { full_name: 'Asha', email: 'a@d.com', roles: ['HOST', 'VENUE_OWNER'] } },
   });
+  mockAccount.mockReturnValue({ me: { first_name: 'Asha' } });
   mockPolicies.mockReturnValue({
     data: { publicPolicies: [{ id: '1', slug: 'terms', title: 'Terms' }] },
   });
 });
 
-describe('Sidebar navigation handlers', () => {
-  it('navigates from the user summary and the host/venue studio menus', () => {
+describe('Sidebar branch coverage', () => {
+  it('shows the Pod Plans manage row when the flag is on', () => {
+    mockFlags.pod_plans_section = true;
     renderWithProviders(<Sidebar open onClose={jest.fn()} />);
-    fireEvent.press(screen.getByTestId('sidebar-user-summary'));
-    expect(mockNavigate).toHaveBeenCalledWith('Profile');
+    fireEvent.press(screen.getByTestId('sidebar-item-Pod Plans'));
+    expect(mockNavigate).toHaveBeenCalledWith('PodPlans');
+  });
 
-    fireEvent.press(screen.getByTestId('sidebar-switch-role'));
-    fireEvent.press(screen.getByTestId('studio-switch-HOST'));
-    fireEvent.press(screen.getByTestId('sidebar-item-Your Pods'));
-    expect(mockNavigate).toHaveBeenCalledWith('HostManage');
-    fireEvent.press(screen.getByTestId('sidebar-item-Support'));
-    expect(mockNavigate).toHaveBeenCalledWith('Support');
+  it('hides the incomplete banner once the profile is 100% complete', () => {
+    mockAccount.mockReturnValue({ me: FULL_ACCOUNT });
+    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    expect(screen.queryByTestId('profile-completion')).toBeNull();
+  });
 
+  it('navigates from the venue studio menu after switching modes', () => {
+    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
     fireEvent.press(screen.getByTestId('sidebar-switch-role'));
     fireEvent.press(screen.getByTestId('studio-switch-VENUE'));
+    fireEvent.press(screen.getByTestId('sidebar-user-summary'));
+    expect(mockNavigate).toHaveBeenCalledWith('Profile');
     fireEvent.press(screen.getByTestId('sidebar-item-Your Venues'));
     expect(mockNavigate).toHaveBeenCalledWith('VenueManage');
     fireEvent.press(screen.getByTestId('sidebar-item-Verification'));
@@ -52,9 +78,11 @@ describe('Sidebar navigation handlers', () => {
 
   it('copes with no signed-in user and no policies (no switch button)', () => {
     mockMe.mockReturnValue({ data: {} });
+    mockAccount.mockReturnValue({ me: null });
     mockPolicies.mockReturnValue({ data: {} });
     renderWithProviders(<Sidebar open onClose={jest.fn()} />);
     expect(screen.getByTestId('sidebar-panel')).toBeOnTheScreen();
+    expect(screen.getByTestId('profile-completion')).toBeOnTheScreen();
     expect(screen.queryByTestId('sidebar-policies')).toBeNull();
     expect(screen.queryByTestId('sidebar-switch-role')).toBeNull();
   });

@@ -21,10 +21,17 @@ export const HEADER_DATA = gql`
       user_id
       full_name
       first_name
+      last_name
       email
       is_email_verified
       profile_photo
+      bio
+      dob
       city
+      state
+      country
+      phone_number
+      whatsapp_number
       selected_location_id
       roles
       following_user_ids

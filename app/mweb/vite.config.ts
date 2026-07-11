@@ -1,6 +1,7 @@
 import path from 'node:path';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import pkg from './package.json' assert { type: 'json' };
 
 // Split large, stable vendor libraries into their own chunks so they cache
 // across deploys (app code changes far more often) and download in parallel,
@@ -19,6 +20,8 @@ function vendorChunk(id: string): string | undefined {
 
 export default defineConfig({
   plugins: [react()],
+  // Surface the package version to the app (shown in the profile drawer footer).
+  define: { __APP_VERSION__: JSON.stringify(pkg.version) },
   server: { port: 2003, host: true, strictPort: true },
   preview: { port: 2003, host: true, strictPort: true },
   build: {

@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import { importRemoteImage, pexelsSearch } from '@modules/platform/upload/upload.service';
 import { UserModel } from '@modules/access/user/user.model';
 import { analyticsService } from '@modules/platform/analytics/analytics.service';
@@ -104,14 +105,14 @@ function buildSystemPrompt(entity: Entity, userPrompt?: string | null) {
 }
 
 export async function generateDummy(entity: Entity, prompt?: string | null): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
   if (!apiKey) {
     throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
       extensions: { code: 'AI_NOT_CONFIGURED' },
     });
   }
 
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
   const body = {
     model,
     temperature: 0.9,
@@ -259,13 +260,13 @@ interface AiMjmlTemplateInput {
 }
 
 async function generateProductDescription(input: DescribeProductInput): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
   if (!apiKey) {
     throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
       extensions: { code: 'AI_NOT_CONFIGURED' },
     });
   }
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
   const context = [
     `Product name: ${input.product_name}`,
     input.brand_name ? `Brand: ${input.brand_name}` : null,
@@ -367,13 +368,13 @@ async function generateLocationAreas(input: LocationAreasInput): Promise<string>
       extensions: { code: 'BAD_USER_INPUT' },
     });
   }
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
   if (!apiKey) {
     throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
       extensions: { code: 'AI_NOT_CONFIGURED' },
     });
   }
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
   const body = {
     model,
     temperature: 0.2,
@@ -452,7 +453,7 @@ async function adminUserContext(prompt: string) {
 }
 
 async function adminAiChat(prompt: string) {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
   if (!apiKey) {
     throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
       extensions: { code: 'AI_NOT_CONFIGURED' },
@@ -464,7 +465,7 @@ async function adminAiChat(prompt: string) {
     adminUserContext(prompt),
     analyticsService.dashboardTotals(null).catch(() => null),
   ]);
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
   const body = {
     model,
     temperature: 0.2,
@@ -504,13 +505,13 @@ async function createOrUpdateMjml(input: AiMjmlTemplateInput) {
   if (!prompt) {
     throw new GraphQLError('Prompt is required', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
   if (!apiKey) {
     throw new GraphQLError('OPENAI_API_KEY is not configured on the server', {
       extensions: { code: 'AI_NOT_CONFIGURED' },
     });
   }
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
   const body = {
     model,
     temperature: 0.35,

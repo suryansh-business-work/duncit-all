@@ -26,10 +26,10 @@ export interface ProfileTile {
 
 /** The 2×2 quick-action grid — the four primary consumer destinations. */
 export const PROFILE_GRID: readonly ProfileTile[] = [
-  { key: 'bookings', label: 'My Bookings', caption: 'View all bookings', icon: 'bookings', to: '/pod-history' },
-  { key: 'saved', label: 'Saved Items', caption: 'Your saved pods', icon: 'saved', to: '/saved' },
-  { key: 'verification', label: 'Verification', caption: 'Verify your account', icon: 'verification', to: '/verification' },
+  { key: 'pod-history', label: 'Pod History', caption: 'Your bookings & history', icon: 'bookings', to: '/pod-history' },
   { key: 'support', label: 'Help & Support', caption: 'Get quick help', icon: 'support', to: '/support' },
+  { key: 'earn', label: 'Earn with Duncit', caption: 'Host, list or sell', icon: 'earn', to: '/earn' },
+  { key: 'ideas', label: 'Pod Ideas', caption: 'Get inspired', icon: 'ideas', to: '/pod-ideas' },
 ];
 
 /** The full-width featured referral card. */
@@ -41,12 +41,13 @@ export const REFERRAL_TILE: ProfileTile = {
   to: '/referral',
 };
 
-/** The "Manage Account" grouped list. `showPodPlans` gates the Pod Plans row. */
+/** The "Manage Account" grouped list — the destinations not in the grid.
+ * `showPodPlans` gates the Pod Plans row. */
 export function buildManageItems(showPodPlans: boolean): ProfileTile[] {
   const items: ProfileTile[] = [
     { key: 'account', label: 'Manage Account', caption: '', icon: 'account', to: '/account' },
-    { key: 'earn', label: 'Earn with Duncit', caption: '', icon: 'earn', to: '/earn' },
-    { key: 'ideas', label: 'Pod Ideas', caption: '', icon: 'ideas', to: '/pod-ideas' },
+    { key: 'saved', label: 'Saved Items', caption: '', icon: 'saved', to: '/saved' },
+    { key: 'verification', label: 'Verification', caption: '', icon: 'verification', to: '/verification' },
     { key: 'faqs', label: 'FAQs', caption: '', icon: 'faqs', to: '/faqs' },
   ];
   if (showPodPlans) {

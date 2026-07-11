@@ -70,7 +70,8 @@ export default function ProfileDrawer({
       onClose={onClose}
       PaperProps={{
         sx: {
-          width: { xs: 318, sm: 360 },
+          width: '100vw',
+          maxWidth: '100vw',
           borderLeft: 0,
           bgcolor: 'background.default',
           backgroundImage: 'var(--duncit-app-bg)',

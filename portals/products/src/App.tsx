@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
 import InventoryPage from './pages/inventory-page/InventoryPage';
@@ -42,6 +43,7 @@ const products = (element: JSX.Element) => authed(<RequireProducts>{element}</Re
 export default function App() {
   return (
     <Routes>
+      <Route path="/profile" element={authed(<ProfilePage />)} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<WelcomePage />)} />
       <Route path="/inventory" element={products(<InventoryPage />)} />

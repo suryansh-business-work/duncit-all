@@ -25,6 +25,7 @@ export { SidebarUserCard, type SidebarUserCardProps } from './chrome/AppSidebar/
 export { AppBreadcrumbs, type AppBreadcrumbsProps } from './chrome/AppBreadcrumbs';
 export { AppIcon } from './chrome/AppIcon';
 export { UserMenu, type UserMenuProps } from './chrome/UserMenu';
+export { ProfilePage } from './chrome/ProfilePage';
 export { AuthSplitLayout, type AuthSplitLayoutProps } from './chrome/AuthSplitLayout';
 export type { ShellUser } from './chrome/user-display';
 

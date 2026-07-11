@@ -14,9 +14,11 @@ import SmartToyIcon from '@mui/icons-material/SmartToy';
 import PersonIcon from '@mui/icons-material/Person';
 import CloseIcon from '@mui/icons-material/Close';
 import SendIcon from '@mui/icons-material/Send';
+import { tokens } from '@duncit/theme';
 import RichTextField from '../../forms/fields/RichTextField';
 import { parseApiError } from '../../utils/parseApiError';
-import { HEADER_HEIGHT } from '../AppShell';
+
+const HEADER_HEIGHT = tokens.size.headerHeight;
 
 const CRM_LEAD_AI_CHAT = gql`
   mutation CrmLeadAiChat($entity: CrmAiEntity!, $lead_id: ID!, $messages: [CrmChatMessageInput!]!) {

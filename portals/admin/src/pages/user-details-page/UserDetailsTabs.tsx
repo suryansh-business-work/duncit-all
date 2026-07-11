@@ -1,6 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Box, Tab, Tabs } from '@mui/material';
-import { HEADER_HEIGHT } from '../../admin-layout/styled';
+import { tokens } from '@duncit/theme';
 
 export interface UserDetailsTabItem {
   label: string;
@@ -19,7 +19,7 @@ export default function UserDetailsTabs({ tabs }: Readonly<{ tabs: UserDetailsTa
         allowScrollButtonsMobile
         sx={{
           position: 'sticky',
-          top: HEADER_HEIGHT,
+          top: tokens.size.headerHeight,
           zIndex: 10,
           bgcolor: 'background.paper',
           minHeight: 40,

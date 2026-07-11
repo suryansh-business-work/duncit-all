@@ -1,5 +1,5 @@
 import { Card, CardContent, FormControlLabel, Switch, Typography } from '@mui/material';
-import { useColorMode } from '../../ColorModeContext';
+import { useColorMode } from '@duncit/shell';
 
 export default function AppearanceSection() {
   const { mode, toggle } = useColorMode();

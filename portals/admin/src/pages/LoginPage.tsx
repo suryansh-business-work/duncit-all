@@ -1,23 +1,17 @@
-import { useState } from 'react';
+import { useMemo, useState } from 'react';
 import { gql, useMutation } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Divider, Stack } from '@mui/material';
 import { LoginScreen, type LoginFormValues, type LoginScreenConfig } from '@duncit/user-context';
+import { useColorMode, useBranding } from '@duncit/shell';
 import { appConfig } from '../config/app-config';
-import { useColorMode } from '../ColorModeContext';
-import { useBranding } from '../lib/useBranding';
+import { accessDeniedMessage, hasAppAccess, setToken } from '../lib/session';
 import SendAdminCredentials from '../components/SendAdminCredentials';
 import {
   getSafeRedirectPath,
   redirectPathFromLocation,
   type RedirectLocation,
 } from '../utils/redirect';
-
-const ADMIN_LOGIN_IMAGE =
-  (import.meta.env.VITE_LOGIN_IMAGE as string | undefined) ||
-  'https://images.pexels.com/photos/36713016/pexels-photo-36713016.jpeg';
-
-const ADMIN_ROLES = ['SUPER_ADMIN', 'CITY_ADMIN', 'ZONAL_ADMIN', 'SUPPORT_USER', 'FINANCE_USER'];
 
 const LOGIN = gql`
   mutation AdminLogin($input: LoginInput!) {
@@ -36,6 +30,11 @@ export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
 
+  const deniedFromRedirect = useMemo(
+    () => new URLSearchParams(location.search).get('denied') === '1',
+    [location.search],
+  );
+
   const redirectAfterLogin = () => {
     const params = new URLSearchParams(location.search);
     const stateFrom = (location.state as { from?: RedirectLocation } | null)?.from;
@@ -51,24 +50,22 @@ export default function LoginPage() {
     try {
       const res = await loginMutation({ variables: { input: { ...values, portal_key: appConfig.key } } });
       const data = res.data?.login;
-      const roles: string[] = data?.user?.roles ?? [];
-      if (!roles.some((r) => ADMIN_ROLES.includes(r))) {
-        throw new Error('You do not have admin access.');
-      }
-      localStorage.setItem('admin_token', data.token);
+      if (!data?.token) throw new Error('Login failed. Please try again.');
+      if (!hasAppAccess(data?.user?.roles)) throw new Error(accessDeniedMessage());
+      setToken(data.token);
       navigate(redirectAfterLogin(), { replace: true });
-    } catch (err: any) {
-      setError(err?.message ?? 'Login failed. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Login failed. Please try again.');
     }
   };
 
   const config: LoginScreenConfig = {
-    brandName: 'Duncit Admin',
-    portalName: 'Admin',
-    tagline: 'Operate the Duncit platform — one place.',
-    promoTitle: 'One unified portal',
-    promoText: 'Every team, every metric — one place. Sign in and get moving.',
-    bgImage: ADMIN_LOGIN_IMAGE,
+    brandName: appConfig.fullName,
+    portalName: appConfig.name,
+    tagline: appConfig.tagline,
+    promoTitle: appConfig.promoTitle,
+    promoText: appConfig.promoText,
+    bgImage: appConfig.loginImage,
     logoUrl,
   };
 
@@ -78,7 +75,7 @@ export default function LoginPage() {
       mode={mode}
       onToggleMode={toggle}
       loading={loading}
-      errorMessage={error}
+      errorMessage={error || (deniedFromRedirect ? accessDeniedMessage() : null)}
       onSubmit={handleLogin}
       footerSlot={
         <Stack spacing={1.5}>

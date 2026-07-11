@@ -1,26 +1,29 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { getToken, setToken, clearToken, hasAppAccess, accessDeniedMessage } from './session';
 import { appConfig } from '../config/app-config';
+import {
+  accessDeniedMessage,
+  clearToken,
+  getToken,
+  hasAppAccess,
+  setToken,
+  SUPER_ROLE,
+} from './session';
 
 afterEach(() => {
-  vi.restoreAllMocks();
   localStorage.clear();
+  vi.restoreAllMocks();
 });
 
-describe('session token storage', () => {
-  it('sets and gets the token', () => {
-    setToken('abc');
-    expect(localStorage.getItem(appConfig.tokenKey)).toBe('abc');
-    expect(getToken()).toBe('abc');
-  });
-
-  it('clears the token', () => {
-    setToken('abc');
+describe('token storage', () => {
+  it('sets, reads and clears the token', () => {
+    setToken('jwt-123');
+    expect(getToken()).toBe('jwt-123');
+    expect(localStorage.getItem(appConfig.tokenKey)).toBe('jwt-123');
     clearToken();
     expect(getToken()).toBeNull();
   });
 
-  it('returns null when reading throws (storage unavailable)', () => {
+  it('returns null when reading storage throws', () => {
     vi.spyOn(Storage.prototype, 'getItem').mockImplementation(() => {
       throw new Error('blocked');
     });
@@ -36,21 +39,23 @@ describe('session token storage', () => {
 });
 
 describe('hasAppAccess', () => {
-  it('denies missing/empty roles', () => {
+  it('denies empty role sets', () => {
     expect(hasAppAccess(null)).toBe(false);
     expect(hasAppAccess([])).toBe(false);
   });
 
-  it('allows SUPER_ADMIN regardless of app role', () => {
-    expect(hasAppAccess(['SUPER_ADMIN'])).toBe(true);
+  it('grants super admins unconditionally', () => {
+    expect(hasAppAccess([SUPER_ROLE])).toBe(true);
   });
 
-  it('allows a required app role and denies others', () => {
+  it('grants when a required role is present and denies otherwise', () => {
     expect(hasAppAccess(appConfig.requiredRoles)).toBe(true);
     expect(hasAppAccess(['SOME_OTHER_ROLE'])).toBe(false);
   });
+});
 
-  it('builds an access-denied message naming the app', () => {
+describe('accessDeniedMessage', () => {
+  it('names the current app', () => {
     expect(accessDeniedMessage()).toContain(appConfig.fullName);
   });
 });

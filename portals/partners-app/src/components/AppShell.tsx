@@ -2,22 +2,18 @@ import type { ReactNode } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUserData } from '@duncit/user-context';
 import { AppShell as ShellAppShell } from '@duncit/shell';
-import { appConfig } from '../config/app-config';
-import { clearToken, hasAppAccess } from '../lib/session';
-import { useFeatureFlag } from '../hooks/useFeatureFlag';
+import { appConfig, buildNav } from '../config/app-config';
+import { clearToken } from '../lib/session';
 
 /**
  * Thin adapter over the shared @duncit/shell chrome: wires this portal's
  * user-context + session into the one common header/sidebar/breadcrumbs.
- * The inventory/e-commerce nav is gated on the `is_product_visible` flag so
- * the sidebar only lists routes that actually resolve (the product routes
- * redirect to the dashboard when the feature is off).
+ * Partners is a portal-gate-exempt surface (any authenticated user may sign in),
+ * so no client-side role gate is applied — the nav adapts to the user's roles.
  */
 export default function AppShell({ children }: Readonly<{ children: ReactNode }>) {
   const navigate = useNavigate();
   const { user, loading, logout: ctxLogout } = useUserData();
-  const showProducts = useFeatureFlag('is_product_visible');
-  const nav = showProducts ? appConfig.nav : appConfig.nav.filter((item) => item.to === '/');
 
   const logout = () => {
     clearToken();
@@ -28,11 +24,9 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
   return (
     <ShellAppShell
       config={appConfig}
-      nav={nav}
+      nav={buildNav(user?.roles)}
       user={user ?? undefined}
       loading={loading}
-      hasAccess={user ? hasAppAccess(user.roles) : undefined}
-      onDenied={clearToken}
       profileTo="/profile"
       onLogout={logout}
     >

@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import PartnerDashboardPage from './pages/dashboard-page/PartnerDashboardPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
@@ -17,13 +18,13 @@ import ClubAdminDashboardPage from './pages/club-admin-dashboard-page/ClubAdminD
 import ClubAdminClubsPage from './pages/club-admin-clubs-page/ClubAdminClubsPage';
 import ClubAdminClubPodsPage from './pages/club-admin-club-pods-page/ClubAdminClubPodsPage';
 import ClubAdminEditClubPage from './pages/club-admin-edit-club-page/ClubAdminEditClubPage';
-import PartnerShell from './components/PartnerShell';
+import AppShell from './components/AppShell';
+import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
 
 function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
   const location = useLocation();
-  const token = localStorage.getItem('token');
-  if (!token) {
+  if (!getToken()) {
     const redirect = encodeURIComponent(redirectPathFromLocation(location));
     return <Navigate to={`/login?redirect=${redirect}`} replace state={{ from: location }} />;
   }
@@ -32,7 +33,7 @@ function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
 
 const authed = (element: JSX.Element) => (
   <RequireAuth>
-    <PartnerShell>{element}</PartnerShell>
+    <AppShell>{element}</AppShell>
   </RequireAuth>
 );
 
@@ -40,6 +41,7 @@ export default function App() {
   return (
     <Routes>
       <Route path="/login" element={<LoginPage />} />
+      <Route path="/profile" element={authed(<ProfilePage />)} />
       <Route path="/" element={authed(<PartnerDashboardPage />)} />
       <Route path="/faqs" element={authed(<PartnerFaqsPage />)} />
       <Route path="/register-venue" element={authed(<VenueListingsPage />)} />

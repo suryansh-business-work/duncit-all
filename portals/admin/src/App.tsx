@@ -1,12 +1,12 @@
 import { Routes, Route, Navigate, useLocation } from 'react-router-dom';
-import AdminLayout from './AdminLayout';
+import { ProfilePage } from '@duncit/shell';
+import AppShell from './components/AppShell';
 import LoginPage from './pages/LoginPage';
 import HubPage from './pages/HubPage';
 import UsersPage from './pages/UsersPage';
 import UserDetailsPage from './pages/UserDetailsPage';
 import DashboardPage from './pages/DashboardPage';
 import SettingsPage from './pages/SettingsPage';
-import ProfilePage from './pages/ProfilePage';
 import RolesPage from './pages/RolesPage';
 import CategoriesPage from './pages/CategoriesPage';
 import LocationsPage from './pages/LocationsPage';
@@ -25,12 +25,12 @@ import BadgesPage from './pages/BadgesPage';
 import PartnerFaqsPage from './pages/PartnerFaqsPage';
 import PodPlansPage from './pages/PodPlansPage';
 import ApprovalsPage from './pages/approvals-page';
+import { getToken } from './lib/session';
 import { redirectPathFromLocation } from './utils/redirect';
 
 function RequireAuth({ children }: Readonly<{ children: JSX.Element }>) {
   const location = useLocation();
-  const token = localStorage.getItem('admin_token');
-  if (!token) {
+  if (!getToken()) {
     const redirect = encodeURIComponent(redirectPathFromLocation(location));
     return <Navigate to={`/login?redirect=${redirect}`} replace state={{ from: location }} />;
   }
@@ -45,7 +45,7 @@ export default function App() {
         path="*"
         element={
           <RequireAuth>
-            <AdminLayout>
+            <AppShell>
               <Routes>
                 <Route path="/hub" element={<HubPage />} />
                 <Route path="/dashboard" element={<DashboardPage />} />
@@ -73,7 +73,7 @@ export default function App() {
                 <Route path="/settings" element={<SettingsPage />} />
                 <Route path="*" element={<Navigate to="/hub" replace />} />
               </Routes>
-            </AdminLayout>
+            </AppShell>
           </RequireAuth>
         }
       />

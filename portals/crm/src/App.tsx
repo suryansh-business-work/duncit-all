@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/dashboard';
 import VenueLeadsPage from './pages/venue-leads/VenueLeadsPage';
@@ -50,6 +51,7 @@ export default function App() {
   return (
     <ExtractionProvider>
       <Routes>
+        <Route path="/profile" element={authed(<ProfilePage />)} />
         <Route path="/login" element={<LoginPage />} />
       {/* Public, no-login survey fill page reached via a generated share link. */}
       <Route path="/s/:token" element={<PublicSurveyPage />} />

@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import DashboardPage from './pages/DashboardPage';
 import SosListPage from './pages/sos/SosListPage';
@@ -30,6 +31,7 @@ const authed = (element: JSX.Element) => (
 export default function App() {
   return (
     <Routes>
+        <Route path="/profile" element={authed(<ProfilePage />)} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/" element={authed(<DashboardPage />)} />
       <Route path="/sos" element={authed(<SosListPage />)} />

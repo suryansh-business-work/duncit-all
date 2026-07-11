@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import EnvironmentPage from './pages/environment';
 import PortalModesPage from './pages/portal-modes';
@@ -31,6 +32,7 @@ export default function App() {
   return (
     <>
       <Routes>
+        <Route path="/profile" element={authed(<ProfilePage />)} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={authed(<EnvironmentPage />)} />
         <Route path="/portal-modes" element={authed(<PortalModesPage />)} />

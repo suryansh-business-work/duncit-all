@@ -3,7 +3,7 @@ import { Box, Button, InputAdornment, List, Skeleton, Stack, TextField, Typograp
 import SearchIcon from '@mui/icons-material/Search';
 import UnfoldLessIcon from '@mui/icons-material/UnfoldLess';
 import UnfoldMoreIcon from '@mui/icons-material/UnfoldMore';
-import { useLocation } from 'react-router-dom';
+import { NavLink, useLocation } from 'react-router-dom';
 import { tokens } from '@duncit/theme';
 import type { AppNavItem } from '../../types';
 import { useBranding } from '../../hooks/useBranding';
@@ -41,6 +41,10 @@ export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigat
   return (
     <Stack sx={{ height: '100%' }}>
       <Box
+        component={NavLink}
+        to="/"
+        onClick={onNavigate}
+        aria-label="Go to home"
         sx={{
           minHeight: tokens.size.headerHeight,
           px: 2,
@@ -49,6 +53,10 @@ export function AppSidebar({ name, nav: navItems, user, footerCaption, onNavigat
           gap: 1.25,
           borderBottom: 1,
           borderColor: 'divider',
+          textDecoration: 'none',
+          color: 'inherit',
+          cursor: 'pointer',
+          '&:hover': { bgcolor: 'action.hover' },
         }}
       >
         {loading ? (

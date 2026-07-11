@@ -27,6 +27,7 @@ export default function AppShell({ children }: Readonly<{ children: ReactNode }>
       loading={loading}
       hasAccess={user ? hasAppAccess(user.roles) : undefined}
       onDenied={clearToken}
+      profileTo="/profile"
       onLogout={logout}
     >
       {children}

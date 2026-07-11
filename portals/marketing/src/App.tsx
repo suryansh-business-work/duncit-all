@@ -1,4 +1,5 @@
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
+import { ProfilePage } from '@duncit/shell';
 import LoginPage from './pages/LoginPage';
 import WelcomePage from './pages/WelcomePage';
 import MarketingCampaignsPage from './pages/marketing-campaigns-page/MarketingCampaignsPage';
@@ -27,6 +28,7 @@ export default function App() {
   return (
     <>
       <Routes>
+        <Route path="/profile" element={authed(<ProfilePage />)} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/" element={authed(<WelcomePage />)} />
         <Route path="/campaigns/email" element={authed(<MarketingCampaignsPage defaultChannel="EMAIL" />)} />

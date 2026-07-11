@@ -5,10 +5,10 @@
  */
 export interface AppNavItem {
   label: string;
-  to: string;
-  icon: string;
-  /** Optional sidebar section this item belongs to (renders a group header). */
-  group?: string;
+  to?: string;
+  icon?: string;
+  /** Nested items — rendered by the shared shell as a collapsible group. */
+  children?: AppNavItem[];
 }
 
 export interface AppModule {
@@ -63,12 +63,32 @@ export const appConfig: AppConfig = {
   accent: { light: '#fdba74', main: '#ea580c', hover: '#c2410c', active: '#9a3412' },
   nav: [
     { label: 'Dashboard', to: '/', icon: 'dashboard' },
-    { label: 'Duncit Products', to: '/inventory', icon: 'inventory', group: 'Catalog' },
-    { label: 'Brands', to: '/ecomm/brands', icon: 'storefront', group: 'E-commerce' },
-    { label: 'Listing Reviews', to: '/ecomm/product-requests', icon: 'rule', group: 'E-commerce' },
-    { label: 'Brand Request', to: '/ecomm/brand-request', icon: 'storefront', group: 'Ecomm Requests' },
-    { label: 'Product Request', to: '/ecomm/product-request', icon: 'inventory', group: 'Ecomm Requests' },
-    { label: 'Orders', to: '/orders', icon: 'local_shipping', group: 'Fulfilment' },
+    {
+      label: 'Catalog',
+      icon: 'inventory',
+      children: [{ label: 'Duncit Products', to: '/inventory', icon: 'inventory' }],
+    },
+    {
+      label: 'E-commerce',
+      icon: 'storefront',
+      children: [
+        { label: 'Brands', to: '/ecomm/brands', icon: 'storefront' },
+        { label: 'Listing Reviews', to: '/ecomm/product-requests', icon: 'rule' },
+      ],
+    },
+    {
+      label: 'Ecomm Requests',
+      icon: 'inventory',
+      children: [
+        { label: 'Brand Request', to: '/ecomm/brand-request', icon: 'storefront' },
+        { label: 'Product Request', to: '/ecomm/product-request', icon: 'inventory' },
+      ],
+    },
+    {
+      label: 'Fulfilment',
+      icon: 'local_shipping',
+      children: [{ label: 'Orders', to: '/orders', icon: 'local_shipping' }],
+    },
   ],
   modules: [],
 };

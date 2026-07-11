@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import { getRuntimeEnvValue } from '@config/runtimeEnv';
 import * as C from './crm.constants';
 import { VenueLeadModel, HostLeadModel } from './crm.model';
 import { WebsitePageModel } from '@modules/crm/websitePage/websitePage.model';
@@ -72,11 +73,11 @@ const SHAPES: Record<CrmAiEntity, string> = {
 
 /** Shared OpenAI JSON call: posts the messages, returns validated JSON content. */
 async function chatJson(systemContent: string, userContent: string): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
   if (!apiKey) {
     throw new GraphQLError('OPENAI_API_KEY is not configured on the server', { extensions: { code: 'AI_NOT_CONFIGURED' } });
   }
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
   const resp = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },
@@ -114,9 +115,9 @@ export interface ChatMessage {
 
 /** OpenAI chat returning free-form text/HTML (no JSON mode). */
 async function chatText(messages: { role: string; content: string }[]): Promise<string> {
-  const apiKey = process.env.OPENAI_API_KEY;
+  const apiKey = await getRuntimeEnvValue('OPENAI_API_KEY');
   if (!apiKey) throw new GraphQLError('OPENAI_API_KEY is not configured on the server', { extensions: { code: 'AI_NOT_CONFIGURED' } });
-  const model = process.env.OPENAI_MODEL || 'gpt-4o-mini';
+  const model = (await getRuntimeEnvValue('OPENAI_MODEL')) || 'gpt-4o-mini';
   const resp = await fetch('https://api.openai.com/v1/chat/completions', {
     method: 'POST',
     headers: { 'content-type': 'application/json', authorization: `Bearer ${apiKey}` },

@@ -92,6 +92,13 @@ async function bootstrap() {
     await podPlanService.seedDefaults();
   });
 
+  // Status-page incidents: seed minimum historical data so the 90-day chart
+  // and Incidents feed render (gated to staging / STATUS_SEED_INCIDENTS=1).
+  await safeSeed('statusIncidents', async () => {
+    const { seedStatusIncidents } = await import('./observability/incident.seed');
+    await seedStatusIncidents();
+  });
+
   // Status-page history: probe every monitored service every 5 minutes.
   if (process.env.NODE_ENV !== 'test' && process.env.STATUS_PROBES_DISABLED !== '1') {
     startStatusScheduler();

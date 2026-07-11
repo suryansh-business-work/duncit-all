@@ -1,23 +1,28 @@
 import { useMemo, useState } from 'react';
-import { Alert, Container, CssBaseline, Skeleton, Stack, ThemeProvider } from '@mui/material';
+import { Alert, Container, CssBaseline, Skeleton, Stack, ThemeProvider, Typography } from '@mui/material';
 import Header from './components/Header';
 import OverallStatusBanner from './components/OverallStatusBanner';
+import GlobalUptimeChart from './components/GlobalUptimeChart';
+import StatusFilters, { type FilterState } from './components/StatusFilters';
 import ServiceGroupCard from './components/ServiceGroupCard';
+import IncidentsSection from './components/IncidentsSection';
 import Footer from './components/Footer';
 import { ServiceDetailsDialog } from './components/service-details-dialog';
 import { useBranding } from './hooks/useBranding';
 import { useColorMode } from './hooks/useColorMode';
 import { useStatusData } from './hooks/useStatusData';
+import { useFilteredGroups } from './hooks/useFilteredGroups';
 import { buildTheme } from './theme';
 import type { StatusService } from './types';
 
 const SKELETON_GROUPS = ['consoles', 'platform', 'websites'];
+const INITIAL_FILTERS: FilterState = { query: '', status: 'all', group: 'all' };
 
 function GroupsSkeleton() {
   return (
     <Stack spacing={3} mb={4}>
       {SKELETON_GROUPS.map((key) => (
-        <Skeleton key={key} variant="rounded" height={140} />
+        <Skeleton key={key} variant="rounded" height={160} />
       ))}
     </Stack>
   );
@@ -28,8 +33,12 @@ export default function App() {
   const branding = useBranding();
   const data = useStatusData();
   const [selected, setSelected] = useState<StatusService | null>(null);
+  const [filters, setFilters] = useState<FilterState>(INITIAL_FILTERS);
 
   const theme = useMemo(() => buildTheme(mode, branding.primaryColor), [mode, branding.primaryColor]);
+  const groupTitles = useMemo(() => data.groups?.map((group) => group.title) ?? [], [data.groups]);
+  const filteredGroups = useFilteredGroups(data.groups, data.summary, filters);
+  const noMatches = data.groups !== null && filteredGroups.length === 0;
 
   return (
     <ThemeProvider theme={theme}>
@@ -42,10 +51,10 @@ export default function App() {
           mode={mode}
           onToggleMode={toggleMode}
         />
-        <OverallStatusBanner
-          groups={data.groups}
-          summary={data.summary}
-          lastUpdated={data.lastUpdated}
+        <OverallStatusBanner overall={data.summary?.overall} lastUpdated={data.lastUpdated} />
+        <GlobalUptimeChart
+          global={data.summary?.global}
+          overallUptime={data.summary?.overall.uptime_90d}
         />
         {data.error && (
           <Alert severity="error" sx={{ mb: 3 }}>
@@ -53,7 +62,15 @@ export default function App() {
           </Alert>
         )}
         {data.loading && <GroupsSkeleton />}
-        {data.groups?.map((group) => (
+        {data.groups && (
+          <StatusFilters value={filters} groupTitles={groupTitles} onChange={setFilters} />
+        )}
+        {noMatches && (
+          <Typography color="text.secondary" sx={{ py: 4, textAlign: 'center' }}>
+            No services match your filters.
+          </Typography>
+        )}
+        {filteredGroups.map((group) => (
           <ServiceGroupCard
             key={group.title}
             group={group}
@@ -61,6 +78,7 @@ export default function App() {
             onSelect={setSelected}
           />
         ))}
+        <IncidentsSection incidents={data.incidents} />
         <Footer appName={branding.appName} />
       </Container>
       <ServiceDetailsDialog service={selected} onClose={() => setSelected(null)} />

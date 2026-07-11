@@ -3,6 +3,7 @@ import type {
   Branding,
   HealthReport,
   HistoryResponse,
+  IncidentsResponse,
   ProbeResult,
   ServicesResponse,
   SummaryResponse,
@@ -20,6 +21,10 @@ export function fetchServices(signal?: AbortSignal): Promise<ServicesResponse> {
 
 export function fetchSummary(signal?: AbortSignal): Promise<SummaryResponse> {
   return getJson<SummaryResponse>(`${SERVER_BASE}/status/summary`, signal);
+}
+
+export function fetchIncidents(signal?: AbortSignal): Promise<IncidentsResponse> {
+  return getJson<IncidentsResponse>(`${SERVER_BASE}/status/incidents`, signal);
 }
 
 export function fetchHistory(

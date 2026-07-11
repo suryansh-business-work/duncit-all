@@ -40,6 +40,13 @@ env:
   ADS_SITE_URL: ${{ github.ref_name == 'staging' && 'https://staging.ads.duncit.com' || 'https://ads.duncit.com' }}
   ADS_PORTAL_URL: ${{ github.ref_name == 'staging' && 'https://staging.ads-portal.duncit.com' || 'https://ads-portal.duncit.com' }}
   EARNWITH_URL: ${{ github.ref_name == 'staging' && 'https://staging.earnwith.duncit.com' || 'https://earnwith.duncit.com' }}
+  # Build-time Google creds baked into the frontend bundles. Staging builds
+  # prefer the STAGING_-prefixed secret and fall back to the production one
+  # when it is not set. (Runtime service creds — SMTP/ImageKit/OpenAI/... —
+  # do NOT live here at all: the server reads them from the Tech portal's
+  # env entries, and each environment has its own database.)
+  BUILD_GOOGLE_CLIENT_ID: ${{ github.ref_name == 'staging' && secrets.STAGING_GOOGLE_CLIENT_ID || secrets.GOOGLE_CLIENT_ID }}
+  BUILD_GOOGLE_MAP_API: ${{ github.ref_name == 'staging' && secrets.STAGING_GOOGLE_MAP_API || secrets.GOOGLE_MAP_API }}
 
 jobs:
   # -----------------------------------------------------------
@@ -373,8 +380,8 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --build-arg VITE_GOOGLE_MAP_API=${{ secrets.GOOGLE_MAP_API }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_MAP_API=${{ env.BUILD_GOOGLE_MAP_API }} \
               --cache-from type=gha,scope=duncit-admin${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-admin${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -408,8 +415,8 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --build-arg VITE_GOOGLE_MAP_API=${{ secrets.GOOGLE_MAP_API }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_MAP_API=${{ env.BUILD_GOOGLE_MAP_API }} \
               --cache-from type=gha,scope=duncit-mweb${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-mweb${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -480,8 +487,8 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-app:${{ env.IMAGE_TAG }} \
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-app:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --build-arg VITE_GOOGLE_MAP_API=${{ secrets.GOOGLE_MAP_API }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_MAP_API=${{ env.BUILD_GOOGLE_MAP_API }} \
               --cache-from type=gha,scope=duncit-partners-app${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-partners-app${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -844,7 +851,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=SUPPORT_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-support${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-support${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -879,7 +886,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website-app:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=WEBSITE_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-website-app${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-website-app${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -914,7 +921,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-legal:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=LEGAL_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-legal${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-legal${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -949,7 +956,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ai:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=AI_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-ai${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-ai${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -984,7 +991,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-products:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=PRODUCTS_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-products${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-products${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1019,7 +1026,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=MARKETING_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-marketing${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-marketing${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1054,7 +1061,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=ONBOARDING_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-onboarding${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-onboarding${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1089,7 +1096,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=HR_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-hr${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-hr${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1124,7 +1131,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=EMPLOYEE \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-employee${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-employee${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1192,7 +1199,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-challenge:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=CHALLENGE_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-challenge${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-challenge${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1227,7 +1234,7 @@ jobs:
               --tag ${{ env.IMAGE_NAMESPACE }}/duncit-developers:${{ env.SHA_TAG }} \
               --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=DEVELOPERS_MANAGER \
-              --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
+              --build-arg VITE_GOOGLE_CLIENT_ID=${{ env.BUILD_GOOGLE_CLIENT_ID }} \
               --cache-from type=gha,scope=duncit-developers${{ env.SCOPE_SUFFIX }} \
               --cache-to   type=gha,scope=duncit-developers${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
@@ -1342,23 +1349,18 @@ jobs:
           echo "Restarting: ${PARTS[*]}"
 
       - name: Render compose + server.env from secrets
+        # server.env carries ONLY the keys the server reads from process.env
+        # (Mongo/JWT/OpenWA/bootstrap). Service credentials — SMTP, ImageKit,
+        # Pexels, Google OAuth/Maps, OpenAI, Twilio, Razorpay, ShipRocket,
+        # Servam — are managed in the Tech portal (EnvEntry) and resolved from
+        # the database at runtime; runtimeEnv.ts has NO process.env fallback
+        # for them, so putting them here would be dead config. Staging prefers
+        # STAGING_-prefixed secrets and falls back to the production value.
         env:
           DOCKERHUB_USERNAME:    ${{ secrets.DOCKERHUB_USERNAME }}
-          MONGO_URI:             ${{ secrets.MONGO_URI }}
-          JWT_SECRET:            ${{ secrets.JWT_SECRET }}
-          SMTP_HOST:             ${{ secrets.SMTP_HOST }}
-          SMTP_PORT:             ${{ secrets.SMTP_PORT }}
-          SMTP_USER:             ${{ secrets.SMTP_USER }}
-          SMTP_PASS:             ${{ secrets.SMTP_PASS }}
-          SMTP_FROM:             ${{ secrets.SMTP_FROM }}
-          OPENAI_API_KEY:        ${{ secrets.OPENAI_API_KEY }}
-          IMAGEKIT_PUBLIC_KEY:   ${{ secrets.IMAGEKIT_PUBLIC_KEY }}
-          IMAGEKIT_PRIVATE_KEY:  ${{ secrets.IMAGEKIT_PRIVATE_KEY }}
-          IMAGEKIT_URL_ENDPOINT: ${{ secrets.IMAGEKIT_URL_ENDPOINT }}
-          PEXELS_API_KEY:        ${{ secrets.PEXELS_API_KEY }}
-          GOOGLE_CLIENT_ID:      ${{ secrets.GOOGLE_CLIENT_ID }}
-          GOOGLE_CLIENT_SECRET:  ${{ secrets.GOOGLE_CLIENT_SECRET }}
-          OPENWA_API_MASTER_KEY: ${{ secrets.OPENWA_API_MASTER_KEY }}
+          MONGO_URI:             ${{ github.ref_name == 'staging' && secrets.STAGING_MONGO_URI || secrets.MONGO_URI }}
+          JWT_SECRET:            ${{ github.ref_name == 'staging' && secrets.STAGING_JWT_SECRET || secrets.JWT_SECRET }}
+          OPENWA_API_MASTER_KEY: ${{ github.ref_name == 'staging' && secrets.STAGING_OPENWA_API_MASTER_KEY || secrets.OPENWA_API_MASTER_KEY }}
           STAGING_SUPER_ADMIN_PASSWORD: ${{ secrets.STAGING_SUPER_ADMIN_PASSWORD }}
         run: |
           envsubst '$DOCKERHUB_USERNAME' < "${{ env.COMPOSE_SRC }}" > /tmp/docker-compose.yml
@@ -1381,18 +1383,6 @@ jobs:
           PORT=2001
           MONGO_URI=${MONGO_URI}
           JWT_SECRET=${JWT_SECRET}
-          SMTP_HOST=${SMTP_HOST}
-          SMTP_PORT=${SMTP_PORT}
-          SMTP_USER=${SMTP_USER}
-          SMTP_PASS=${SMTP_PASS}
-          SMTP_FROM=${SMTP_FROM}
-          OPENAI_API_KEY=${OPENAI_API_KEY}
-          IMAGEKIT_PUBLIC_KEY=${IMAGEKIT_PUBLIC_KEY}
-          IMAGEKIT_PRIVATE_KEY=${IMAGEKIT_PRIVATE_KEY}
-          IMAGEKIT_URL_ENDPOINT=${IMAGEKIT_URL_ENDPOINT}
-          PEXELS_API_KEY=${PEXELS_API_KEY}
-          GOOGLE_CLIENT_ID=${GOOGLE_CLIENT_ID}
-          GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
           OPENWA_API_MASTER_KEY=${OPENWA_API_MASTER_KEY}
           EOF
           # Staging runs against its OWN Mongo database on the same Atlas

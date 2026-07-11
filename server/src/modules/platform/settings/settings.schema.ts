@@ -94,7 +94,14 @@ export const settingsTypeDefs = gql`
     ios_app_url: String!
     home_all_vibe_icon_url: String!
     home_header_tagline: String!
+    app_latest_version: String!
     updated_at: String
+  }
+
+  type AppVersionInfo {
+    latest_version: String!
+    android_store_url: String!
+    ios_store_url: String!
   }
 
   input UpdateBrandingInput {
@@ -131,6 +138,7 @@ export const settingsTypeDefs = gql`
     ios_app_url: String
     home_all_vibe_icon_url: String
     home_header_tagline: String
+    app_latest_version: String
   }
 
   extend type Query {
@@ -141,6 +149,7 @@ export const settingsTypeDefs = gql`
     featureFlag(key: String!): FeatureFlag
     publicFeatureFlags: [PublicFeatureFlag!]!
     branding: Branding!
+    appVersionInfo: AppVersionInfo!
   }
 
   extend type Mutation {

@@ -33,3 +33,16 @@ export const PublicFeatureFlagsDocument = gql(`
     }
   }
 `);
+
+/** Public app-version info (latest published version + store URLs) used by the
+ * force-update gate. Public + unauthenticated — checked on every cold start
+ * before the app is usable. `latest_version` may be "" when unset. */
+export const AppVersionInfoDocument = gql(`
+  query MobileAppVersionInfo {
+    appVersionInfo {
+      latest_version
+      android_store_url
+      ios_store_url
+    }
+  }
+`);

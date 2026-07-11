@@ -34,6 +34,7 @@ export const settingsResolvers = {
     },
     publicFeatureFlags: async () => settingsService.listPublicFlags(),
     branding: async () => settingsService.getBranding(),
+    appVersionInfo: async () => settingsService.getAppVersionInfo(),
   },
   Mutation: {
     updateAppSettings: async (

@@ -11,7 +11,7 @@ interface ManageAccountListProps {
 /** The "Manage Account" grouped list — icon + label + chevron rows. */
 export default function ManageAccountList({ items, onNavigate }: Readonly<ManageAccountListProps>) {
   return (
-    <Box sx={{ px: 2.5, pb: 2 }}>
+    <Box sx={{ px: 2, pb: 1.25 }}>
       <Typography
         variant="overline"
         color="text.secondary"
@@ -19,14 +19,14 @@ export default function ManageAccountList({ items, onNavigate }: Readonly<Manage
       >
         Manage Account
       </Typography>
-      <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: 3.5, overflow: 'hidden' }}>
+      <Paper variant="outlined" sx={{ mt: 0.5, borderRadius: 3, overflow: 'hidden' }}>
         <List disablePadding>
           {items.map((item, index) => (
             <ListItemButton
               key={item.key}
               onClick={() => onNavigate(item.to)}
               divider={index < items.length - 1}
-              sx={{ px: 2, py: 1.35 }}
+              sx={{ px: 1.75, py: 1.1 }}
             >
               <ListItemIcon sx={{ minWidth: 36, color: 'text.secondary' }}>
                 {profileIcon(item.icon)}

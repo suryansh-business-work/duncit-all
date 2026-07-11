@@ -8,16 +8,16 @@ interface IncompleteBannerProps {
 /** "Your profile is incomplete" nudge — shown when completion < 100%. */
 export default function IncompleteBanner({ percent, onComplete }: Readonly<IncompleteBannerProps>) {
   return (
-    <Box sx={{ px: 2.5, pb: 2 }}>
+    <Box sx={{ px: 2, pb: 1.25 }}>
       <Stack
         direction="row"
         alignItems="center"
         justifyContent="space-between"
         spacing={1.5}
         sx={{
-          px: 2,
-          py: 1.5,
-          borderRadius: 3,
+          px: 1.75,
+          py: 1.25,
+          borderRadius: 2.5,
           border: 1,
           borderColor: 'divider',
           bgcolor: 'background.paper',

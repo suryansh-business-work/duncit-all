@@ -82,7 +82,7 @@ export default function ProfileDrawer({
       }}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <Box sx={{ p: 2.5, pb: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ px: 2, py: 1.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 900, letterSpacing: 0.4 }}>
             {effectiveMode === 'USER' ? 'Profile' : STUDIO_LABEL[effectiveMode]}
           </Typography>
@@ -106,7 +106,7 @@ export default function ProfileDrawer({
           )}
 
           {canSwitch && (
-            <Box sx={{ px: 2.5, pb: 1.5 }}>
+            <Box sx={{ px: 2, pb: 1.25 }}>
               <ListItemButton
                 onClick={() => setSwitchOpen(true)}
                 sx={{ borderRadius: 2.5, border: 1, borderColor: 'divider', '&:hover': { borderColor: 'primary.main' } }}
@@ -124,7 +124,7 @@ export default function ProfileDrawer({
           )}
 
           <Divider />
-          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.5, py: 1.25 }}>
+          <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2, py: 1.1 }}>
             <Stack direction="row" alignItems="center" spacing={1.5}>
               {isDark ? <DarkModeIcon fontSize="small" /> : <LightModeIcon fontSize="small" />}
               <Typography variant="body2" sx={{ fontWeight: 700 }}>

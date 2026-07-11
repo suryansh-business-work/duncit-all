@@ -6,7 +6,7 @@ import { REFERRAL_TILE } from './profileSections';
 /** The full-width "Refer & Earn" featured card (green gift accent). */
 export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to: string) => void }>) {
   return (
-    <Box sx={{ px: 2.5, pb: 2 }}>
+    <Box sx={{ px: 2, pb: 1.25 }}>
       <Paper
         variant="outlined"
         onClick={() => onNavigate(REFERRAL_TILE.to)}
@@ -16,8 +16,8 @@ export default function ReferralCard({ onNavigate }: Readonly<{ onNavigate: (to:
           if (e.key === 'Enter' || e.key === ' ') onNavigate(REFERRAL_TILE.to);
         }}
         sx={{
-          p: 1.75,
-          borderRadius: 3.5,
+          p: 1.5,
+          borderRadius: 3,
           cursor: 'pointer',
           transition: 'border-color 160ms ease',
           '&:hover': { borderColor: 'success.main' },

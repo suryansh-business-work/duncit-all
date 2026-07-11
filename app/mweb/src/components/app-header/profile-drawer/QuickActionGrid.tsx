@@ -14,8 +14,8 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
         if (e.key === 'Enter' || e.key === ' ') onNavigate(tile.to);
       }}
       sx={{
-        p: 1.75,
-        borderRadius: 3.5,
+        p: 1.5,
+        borderRadius: 3,
         cursor: 'pointer',
         transition: 'border-color 160ms ease, background-color 160ms ease',
         '&:hover': { borderColor: 'primary.main', bgcolor: (t) => alpha(t.palette.primary.main, 0.05) },
@@ -24,22 +24,22 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
     >
       <Box
         sx={{
-          width: 40,
-          height: 40,
-          borderRadius: 2.5,
+          width: 36,
+          height: 36,
+          borderRadius: 2,
           display: 'grid',
           placeItems: 'center',
           color: 'primary.main',
           bgcolor: (t) => alpha(t.palette.primary.main, 0.14),
-          mb: 1.25,
+          mb: 1,
         }}
       >
         {profileIcon(tile.icon)}
       </Box>
-      <Typography fontWeight={800} noWrap>
+      <Typography fontSize={14} fontWeight={800} noWrap>
         {tile.label}
       </Typography>
-      <Typography variant="caption" color="text.secondary" noWrap display="block">
+      <Typography fontSize={11.5} color="text.secondary" noWrap display="block">
         {tile.caption}
       </Typography>
     </Paper>
@@ -48,8 +48,8 @@ function ActionTile({ tile, onNavigate }: Readonly<{ tile: ProfileTile; onNaviga
 
 export default function QuickActionGrid({ onNavigate }: Readonly<{ onNavigate: (to: string) => void }>) {
   return (
-    <Box sx={{ px: 2.5, pb: 2 }}>
-      <Stack direction="row" flexWrap="wrap" sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.5 }}>
+    <Box sx={{ px: 2, pb: 1.25 }}>
+      <Stack direction="row" flexWrap="wrap" sx={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 1.25 }}>
         {PROFILE_GRID.map((tile) => (
           <ActionTile key={tile.key} tile={tile} onNavigate={onNavigate} />
         ))}

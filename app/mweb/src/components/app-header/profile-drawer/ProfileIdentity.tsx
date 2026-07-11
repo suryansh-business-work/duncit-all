@@ -11,40 +11,54 @@ interface ProfileIdentityProps {
   onClick: () => void;
 }
 
-/** Centered avatar + name that opens the social profile. */
+/** Compact identity row — name + email on the left, avatar on the right,
+ * the whole row opens the social profile. */
 export default function ProfileIdentity({ me, onClick }: Readonly<ProfileIdentityProps>) {
   const initial = (me?.first_name?.[0] ?? me?.full_name?.[0] ?? 'U').toUpperCase();
   return (
-    <Box sx={{ px: 2.5, pt: 1, pb: 2, textAlign: 'center' }}>
+    <Box sx={{ px: 2, py: 1 }}>
       <ButtonBase
         onClick={onClick}
-        sx={{ borderRadius: 4, p: 1, flexDirection: 'column', gap: 1 }}
+        sx={{
+          width: '100%',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          gap: 1.5,
+          textAlign: 'left',
+          px: 1.5,
+          py: 1,
+          borderRadius: 3,
+          '&:hover': { bgcolor: 'action.hover' },
+        }}
         aria-label="Open your profile"
       >
+        <Box sx={{ minWidth: 0, flex: 1 }}>
+          <Stack direction="row" alignItems="center" spacing={0.25}>
+            <Typography fontSize={15} fontWeight={800} noWrap>
+              {me?.full_name ?? 'User'}
+            </Typography>
+            <ChevronRightIcon sx={{ fontSize: 16 }} color="disabled" />
+          </Stack>
+          {me?.email && (
+            <Typography fontSize={12} color="text.secondary" noWrap display="block">
+              {me.email}
+            </Typography>
+          )}
+        </Box>
         <Avatar
           src={me?.profile_photo || undefined}
           sx={{
-            width: 76,
-            height: 76,
+            width: 44,
+            height: 44,
             bgcolor: 'primary.main',
-            fontSize: 28,
+            fontSize: 18,
             fontWeight: 800,
-            boxShadow: '0 0 0 3px rgba(255,79,115,0.18)',
+            boxShadow: '0 0 0 2px rgba(255,79,115,0.18)',
           }}
         >
           {initial}
         </Avatar>
-        <Stack direction="row" alignItems="center" spacing={0.25}>
-          <Typography variant="h6" fontWeight={800} noWrap sx={{ maxWidth: 240 }}>
-            {me?.full_name ?? 'User'}
-          </Typography>
-          <ChevronRightIcon fontSize="small" color="disabled" />
-        </Stack>
-        {me?.email && (
-          <Typography variant="caption" color="text.secondary" noWrap sx={{ maxWidth: 260 }}>
-            {me.email}
-          </Typography>
-        )}
       </ButtonBase>
     </Box>
   );

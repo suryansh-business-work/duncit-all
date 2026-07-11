@@ -136,7 +136,7 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
                   onPress={() => setSwitchOpen(true)}
                   marginHorizontal={8}
                   marginTop={4}
-                  marginBottom={6}
+                  marginBottom={15}
                   alignItems="center"
                   gap={12}
                   borderRadius={10}
@@ -163,7 +163,7 @@ export function Sidebar({ open, onClose }: Readonly<{ open: boolean; onClose: ()
                 justifyContent="space-between"
                 minHeight={44}
                 paddingHorizontal={16}
-                paddingVertical={4}
+                paddingVertical={0}
               >
                 <XStack alignItems="center" gap={12}>
                   <MaterialIcons

@@ -3,12 +3,14 @@ import { Alert, Box, Skeleton, Stack, Typography } from '@mui/material';
 import { alpha, useTheme, type Theme } from '@mui/material/styles';
 import { Bar, Line } from 'react-chartjs-2';
 import { formatUptime } from '../../utils/format';
+import { dayStateColor } from '../../utils/status';
 import type { DailyUptime, HistoryPoint, HistoryResponse } from '../../types';
 
-function uptimeBarColor(uptime: number | null, theme: Theme): string {
-  if (uptime === null) return theme.palette.action.disabledBackground;
-  if (uptime >= 99.9) return theme.palette.success.main;
-  if (uptime >= 95) return theme.palette.warning.main;
+function uptimeBarColor(day: DailyUptime, theme: Theme): string {
+  if (day.state) return dayStateColor(day.state, theme);
+  if (day.uptime === null) return theme.palette.action.disabledBackground;
+  if (day.uptime >= 99.9) return theme.palette.success.main;
+  if (day.uptime >= 95) return theme.palette.warning.main;
   return theme.palette.error.main;
 }
 
@@ -25,7 +27,7 @@ function UptimeBar({ daily }: Readonly<{ daily: DailyUptime[] }>) {
       {
         label: 'Uptime %',
         data: daily.map((day) => day.uptime),
-        backgroundColor: daily.map((day) => uptimeBarColor(day.uptime, theme)),
+        backgroundColor: daily.map((day) => uptimeBarColor(day, theme)),
         borderRadius: 2,
         maxBarThickness: 10,
       },

@@ -29,16 +29,44 @@ export interface LatestCheck {
   checked_at: string;
 }
 
+export type DayState = 'operational' | 'degraded' | 'partial_outage' | 'major_outage';
+export type ServiceState = DayState | 'down' | 'nodata';
+
+export interface DailyBar {
+  date: string;
+  uptime: number;
+  state: DayState;
+}
+
 export interface ServiceSummary {
   latest: LatestCheck | null;
   uptime_24h: number | null;
   uptime_7d: number | null;
   uptime_90d: number | null;
+  state: ServiceState;
+  active_incidents: number;
+  daily: DailyBar[];
+}
+
+export interface GlobalDaily extends DailyBar {
+  operational: number;
+  total: number;
+}
+
+export interface OverallRoll {
+  state: ServiceState;
+  operational: number;
+  degraded: number;
+  down: number;
+  total: number;
+  uptime_90d: number | null;
 }
 
 export interface SummaryResponse {
   generated_at: string;
+  overall: OverallRoll;
   services: Record<string, ServiceSummary>;
+  global: GlobalDaily[];
 }
 
 export interface HistoryPoint {
@@ -51,13 +79,34 @@ export interface HistoryPoint {
 export interface DailyUptime {
   date: string;
   uptime: number | null;
-  checks: number;
+  state?: DayState;
+  incidents?: number;
 }
 
 export interface HistoryResponse {
   service: string;
   points: HistoryPoint[];
   daily: DailyUptime[];
+}
+
+export type IncidentImpact = 'degraded' | 'partial_outage' | 'major_outage';
+export type IncidentStatus = 'investigating' | 'identified' | 'monitoring' | 'resolved';
+
+export interface Incident {
+  id: string;
+  service_key: string;
+  service_name: string;
+  title: string;
+  body: string;
+  impact: IncidentImpact;
+  status: IncidentStatus;
+  started_at: string;
+  resolved_at: string | null;
+}
+
+export interface IncidentsResponse {
+  generated_at: string;
+  incidents: Incident[];
 }
 
 export interface SslInfo {

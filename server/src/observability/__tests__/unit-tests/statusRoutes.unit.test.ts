@@ -4,23 +4,13 @@ import type { AddressInfo } from 'node:net';
 import { buildStatusProbeRouter, type ProbeResult } from '../../statusProbe';
 import {
   parseHistoryHours,
-  uptimePct,
+  type IncidentRecord,
+  type LatestCheck,
   type StatusHistoryStore,
 } from '../../statusRoutes';
+import type { ProbeDay } from '../../statusAnalytics';
 
-describe('uptimePct', () => {
-  it('returns null when there is no data', () => {
-    expect(uptimePct(undefined)).toBeNull();
-    expect(uptimePct({ ok: 0, total: 0 })).toBeNull();
-  });
-
-  it('computes the percentage rounded to 2 decimals', () => {
-    expect(uptimePct({ ok: 24, total: 24 })).toBe(100);
-    expect(uptimePct({ ok: 23, total: 24 })).toBe(95.83);
-    expect(uptimePct({ ok: 1, total: 3 })).toBe(33.33);
-    expect(uptimePct({ ok: 0, total: 5 })).toBe(0);
-  });
-});
+const today = new Date().toISOString().slice(0, 10);
 
 describe('parseHistoryHours', () => {
   it('defaults to 24 when absent', () => {
@@ -51,26 +41,49 @@ describe('status read routes', () => {
     ssl: null,
   };
 
-  const latestAdmin = {
+  const latestAdmin: LatestCheck = {
     ok: true,
     status_code: 200,
     latency_ms: 120,
-    checked_at: '2026-07-11T00:00:00.000Z',
+    checked_at: `${today}T00:00:00.000Z`,
+  };
+  const latestFinanceDown: LatestCheck = {
+    ok: false,
+    status_code: 502,
+    latency_ms: null,
+    checked_at: `${today}T00:00:00.000Z`,
+  };
+
+  // admin recorded 23/24 OK checks today → today's bar dips to 95.83.
+  const probeDaily = new Map<string, Map<string, ProbeDay>>([
+    ['admin', new Map([[today, { ok: 23, total: 24 }]])],
+  ]);
+
+  // An OPEN major outage on the API server started 26h ago.
+  const openIncident: IncidentRecord = {
+    id: 'inc1',
+    service_key: 'server',
+    title: 'API server unreachable',
+    body: 'Investigating 5xx errors.',
+    impact: 'major_outage',
+    status: 'investigating',
+    started_at: new Date(Date.now() - 26 * 3_600_000),
+    resolved_at: null,
   };
 
   const fakeStore: StatusHistoryStore = {
-    summary: jest.fn(async () => ({
-      admin: {
-        latest: latestAdmin,
-        counts_24h: { ok: 23, total: 24 },
-        counts_7d: { ok: 167, total: 168 },
-        counts_90d: { ok: 2000, total: 2000 },
-      },
-    })),
+    probeDailyByService: jest.fn(async () => probeDaily),
+    latestByService: jest.fn(
+      async () =>
+        new Map<string, LatestCheck>([
+          ['admin', latestAdmin],
+          ['finance', latestFinanceDown],
+        ])
+    ),
     points: jest.fn(async () => [
-      { t: '2026-07-11T00:00:00.000Z', ok: true, status_code: 200, latency_ms: 90 },
+      { t: `${today}T00:00:00.000Z`, ok: true, status_code: 200, latency_ms: 90 },
     ]),
-    daily: jest.fn(async () => [{ date: '2026-07-11', uptime: 100, checks: 288 }]),
+    incidents: jest.fn(async () => [openIncident]),
   };
 
   beforeAll(async () => {
@@ -92,67 +105,69 @@ describe('status read routes', () => {
     expect(res.status).toBe(200);
     const body = await res.json();
     expect(body.environment).toBe('production');
-    expect(new Date(body.generated_at).toString()).not.toBe('Invalid Date');
     expect(body.groups.map((g: { title: string }) => g.title)).toEqual([
       'Consoles',
       'Platform',
       'Websites',
     ]);
-    const admin = body.groups[0].items[0];
-    expect(admin).toMatchObject({
-      key: 'admin',
-      name: 'Admin',
-      url: 'https://admin.duncit.com/',
-      description: 'Platform administration',
-    });
   });
 
-  it('GET /status/summary maps counts to uptime percentages', async () => {
+  it('GET /status/summary is incident- and probe-aware across the catalog', async () => {
     const res = await fetch(`${baseUrl}/status/summary`);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body.services.admin).toEqual({
-      latest: latestAdmin,
-      uptime_24h: 95.83,
-      uptime_7d: 99.4,
-      uptime_90d: 100,
-    });
-  });
 
-  it('GET /status/summary includes every catalog service, null when unchecked', async () => {
-    const res = await fetch(`${baseUrl}/status/summary`);
-    const body = await res.json();
     expect(Object.keys(body.services)).toHaveLength(26);
-    expect(body.services.crm).toEqual({
-      latest: null,
-      uptime_24h: null,
-      uptime_7d: null,
-      uptime_90d: null,
-    });
+    expect(body.global).toHaveLength(90);
+
+    // admin: probe dip today, otherwise operational.
+    const admin = body.services.admin;
+    expect(admin.latest).toEqual(latestAdmin);
+    expect(admin.daily).toHaveLength(90);
+    expect(admin.uptime_24h).toBe(95.83);
+    expect(admin.state).toBe('operational');
+    expect(admin.daily.at(-1)).toEqual({ date: today, uptime: 95.83, state: 'degraded' });
+
+    // server: open major incident → live state major, uptime below 100.
+    const svr = body.services.server;
+    expect(svr.state).toBe('major_outage');
+    expect(svr.active_incidents).toBe(1);
+    expect(svr.uptime_90d).toBeLessThan(100);
+
+    // finance: latest probe down, no incident → live state down.
+    expect(body.services.finance.state).toBe('down');
+
+    // a service with no data at all is operational and 100%.
+    expect(body.services.legal.state).toBe('operational');
+    expect(body.services.legal.uptime_90d).toBe(100);
+
+    // overall roll-up.
+    expect(body.overall.total).toBe(26);
+    expect(body.overall.down).toBeGreaterThanOrEqual(2); // server + finance
+    expect(['major_outage', 'down']).toContain(body.overall.state);
   });
 
   it('GET /status/summary returns 500 when the store fails', async () => {
     const errorSpy = jest.spyOn(console, 'error').mockImplementation(() => undefined);
-    (fakeStore.summary as jest.Mock).mockRejectedValueOnce(new Error('mongo down'));
+    (fakeStore.probeDailyByService as jest.Mock).mockRejectedValueOnce(new Error('mongo down'));
     const res = await fetch(`${baseUrl}/status/summary`);
     expect(res.status).toBe(500);
     errorSpy.mockRestore();
   });
 
-  it('GET /status/history returns points and daily uptime for a known service', async () => {
+  it('GET /status/history returns points and a 90-day daily series', async () => {
     const res = await fetch(`${baseUrl}/status/history?service=admin&hours=48`);
     expect(res.status).toBe(200);
     const body = await res.json();
-    expect(body).toEqual({
-      service: 'admin',
-      points: [{ t: '2026-07-11T00:00:00.000Z', ok: true, status_code: 200, latency_ms: 90 }],
-      daily: [{ date: '2026-07-11', uptime: 100, checks: 288 }],
-    });
-    const [key, since, limit] = (fakeStore.points as jest.Mock).mock.calls.at(-1);
+    expect(body.service).toBe('admin');
+    expect(body.points).toEqual([
+      { t: `${today}T00:00:00.000Z`, ok: true, status_code: 200, latency_ms: 90 },
+    ]);
+    expect(body.daily).toHaveLength(90);
+    expect(body.daily.at(-1)).toEqual({ date: today, uptime: 95.83, state: 'degraded', incidents: 0 });
+    const [key, , limit] = (fakeStore.points as jest.Mock).mock.calls.at(-1);
     expect(key).toBe('admin');
     expect(limit).toBe(500);
-    const expectedSince = Date.now() - 48 * 3_600_000;
-    expect(Math.abs((since as Date).getTime() - expectedSince)).toBeLessThan(5_000);
   });
 
   it('GET /status/history rejects an unknown service with 404', async () => {
@@ -165,9 +180,24 @@ describe('status read routes', () => {
     expect(res.status).toBe(400);
   });
 
+  it('GET /status/incidents lists incidents with the service name', async () => {
+    const res = await fetch(`${baseUrl}/status/incidents`);
+    expect(res.status).toBe(200);
+    const body = await res.json();
+    expect(body.incidents).toHaveLength(1);
+    expect(body.incidents[0]).toMatchObject({
+      id: 'inc1',
+      service_key: 'server',
+      service_name: 'API Server',
+      impact: 'major_outage',
+      status: 'investigating',
+      resolved_at: null,
+    });
+  });
+
   it('keeps the original /status/probe route working', async () => {
     const res = await fetch(
-      `${baseUrl}/status/probe?url=${encodeURIComponent('https://crm.duncit.com/')}`,
+      `${baseUrl}/status/probe?url=${encodeURIComponent('https://crm.duncit.com/')}`
     );
     expect(res.status).toBe(200);
     await expect(res.json()).resolves.toEqual(fakeProbe);

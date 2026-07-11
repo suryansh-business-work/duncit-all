@@ -1,29 +1,17 @@
-import {
-  Box,
-  Chip,
-  Link,
-  ListItem,
-  ListItemButton,
-  Stack,
-  Typography,
-} from '@mui/material';
+import { Box, Chip, Link, ListItem, ListItemButton, Stack, Typography } from '@mui/material';
 import OpenInNewIcon from '@mui/icons-material/OpenInNew';
 import StatusDot, { type DotState } from './StatusDot';
+import UptimeBarStrip from './UptimeBarStrip';
 import { formatUptime } from '../utils/format';
-import type { LatestCheck, ServiceSummary, StatusService } from '../types';
+import { stateChipColor, stateLabel } from '../utils/status';
+import type { ServiceState, ServiceSummary, StatusService } from '../types';
 
-type ChipColor = 'success' | 'error' | 'default';
-
-interface RowStatus {
-  state: DotState;
-  label: string;
-  color: ChipColor;
-}
-
-function statusOf(latest: LatestCheck | null | undefined): RowStatus {
-  if (!latest) return { state: 'info', label: 'No data', color: 'default' };
-  if (latest.ok) return { state: 'success', label: 'Operational', color: 'success' };
-  return { state: 'error', label: 'Down', color: 'error' };
+function dotStateFor(state: ServiceState): DotState {
+  if (state === 'nodata') return 'info';
+  const chip = stateChipColor(state);
+  if (chip === 'success') return 'success';
+  if (chip === 'warning') return 'warning';
+  return 'error';
 }
 
 function UptimeChip({
@@ -40,6 +28,31 @@ function UptimeChip({
   );
 }
 
+function ServiceHeading({ service }: Readonly<{ service: StatusService }>) {
+  return (
+    <Box sx={{ minWidth: 0 }}>
+      <Stack direction="row" spacing={0.75} alignItems="center">
+        <Typography fontWeight={700} noWrap>
+          {service.name}
+        </Typography>
+        <Link
+          href={service.url}
+          target="_blank"
+          rel="noopener"
+          onClick={(event) => event.stopPropagation()}
+          sx={{ display: 'inline-flex', color: 'text.secondary' }}
+          aria-label={`Open ${service.name} in a new tab`}
+        >
+          <OpenInNewIcon sx={{ fontSize: 14 }} />
+        </Link>
+      </Stack>
+      <Typography variant="body2" color="text.secondary" noWrap>
+        {service.description}
+      </Typography>
+    </Box>
+  );
+}
+
 interface ServiceRowProps {
   service: StatusService;
   summary: ServiceSummary | null;
@@ -53,43 +66,33 @@ export default function ServiceRow({
   divider,
   onSelect,
 }: Readonly<ServiceRowProps>) {
-  const status = statusOf(summary?.latest);
+  const state: ServiceState = summary?.state ?? 'nodata';
   return (
     <ListItem disablePadding divider={divider}>
       <ListItemButton
         onClick={() => onSelect(service)}
-        sx={{ display: 'flex', flexWrap: 'wrap', gap: 1.5, py: 1.5 }}
+        sx={{ display: 'block', py: 1.5 }}
         aria-label={`Show status and details for ${service.name}`}
       >
-        <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: '1 1 240px', minWidth: 0 }}>
-          <StatusDot state={status.state} />
-          <Box sx={{ minWidth: 0 }}>
-            <Stack direction="row" spacing={0.75} alignItems="center">
-              <Typography fontWeight={700} noWrap>
-                {service.name}
-              </Typography>
-              <Link
-                href={service.url}
-                target="_blank"
-                rel="noopener"
-                onClick={(event) => event.stopPropagation()}
-                sx={{ display: 'inline-flex', color: 'text.secondary' }}
-                aria-label={`Open ${service.name} in a new tab`}
-              >
-                <OpenInNewIcon sx={{ fontSize: 14 }} />
-              </Link>
-            </Stack>
-            <Typography variant="body2" color="text.secondary" noWrap>
-              {service.description}
-            </Typography>
+        <Stack direction="row" gap={1.5} alignItems="center" flexWrap="wrap">
+          <Stack direction="row" spacing={1.5} alignItems="center" sx={{ flex: '1 1 220px', minWidth: 0 }}>
+            <StatusDot state={dotStateFor(state)} />
+            <ServiceHeading service={service} />
+          </Stack>
+          <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
+            <UptimeChip windowLabel="24h" value={summary?.uptime_24h} />
+            <UptimeChip windowLabel="90d" value={summary?.uptime_90d} />
+            {summary && summary.active_incidents > 0 && (
+              <Chip size="small" color="warning" variant="outlined" label={`${summary.active_incidents} active`} />
+            )}
+            <Chip size="small" color={stateChipColor(state)} label={stateLabel(state)} sx={{ fontWeight: 700 }} />
+          </Stack>
+        </Stack>
+        {summary && summary.daily.length > 0 && (
+          <Box mt={1.25}>
+            <UptimeBarStrip daily={summary.daily} height={26} />
           </Box>
-        </Stack>
-        <Stack direction="row" spacing={0.75} alignItems="center" flexWrap="wrap" useFlexGap>
-          <UptimeChip windowLabel="24h" value={summary?.uptime_24h} />
-          <UptimeChip windowLabel="7d" value={summary?.uptime_7d} />
-          <UptimeChip windowLabel="90d" value={summary?.uptime_90d} />
-          <Chip size="small" color={status.color} label={status.label} sx={{ fontWeight: 700 }} />
-        </Stack>
+        )}
       </ListItemButton>
     </ListItem>
   );

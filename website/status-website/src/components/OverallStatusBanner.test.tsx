@@ -1,59 +1,48 @@
 import { describe, expect, it } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import OverallStatusBanner, { deriveOverallStatus } from './OverallStatusBanner';
-import type { LatestCheck, ServiceGroup, SummaryResponse } from '../types';
+import type { OverallRoll, ServiceState } from '../types';
 
-const latest = (ok: boolean): LatestCheck => ({
-  ok,
-  status_code: ok ? 200 : null,
-  latency_ms: ok ? 100 : null,
-  checked_at: '2026-07-11T00:00:00.000Z',
-});
-
-const groups: ServiceGroup[] = [
-  {
-    title: 'Consoles',
-    items: [
-      { key: 'admin', name: 'Admin', url: 'https://admin.duncit.com/', description: 'Admin' },
-      { key: 'crm', name: 'CRM', url: 'https://crm.duncit.com/', description: 'CRM' },
-    ],
-  },
-];
-
-const summaryOf = (states: Record<string, LatestCheck | null>): SummaryResponse => ({
-  generated_at: '2026-07-11T00:00:00.000Z',
-  services: Object.fromEntries(
-    Object.entries(states).map(([key, value]) => [
-      key,
-      { latest: value, uptime_24h: null, uptime_7d: null, uptime_90d: null },
-    ]),
-  ),
+const roll = (over: Partial<OverallRoll>): OverallRoll => ({
+  state: 'operational',
+  operational: 0,
+  degraded: 0,
+  down: 0,
+  total: 0,
+  uptime_90d: 100,
+  ...over,
 });
 
 describe('deriveOverallStatus', () => {
   it('is pending while data loads', () => {
-    expect(deriveOverallStatus(null, null).severity).toBe('info');
+    expect(deriveOverallStatus(null).severity).toBe('info');
   });
 
-  it('reports awaiting first checks when no service has data', () => {
-    const status = deriveOverallStatus(groups, summaryOf({ admin: null, crm: null }));
+  it('reports awaiting first checks when the catalog is empty', () => {
+    const status = deriveOverallStatus(roll({ total: 0 }));
     expect(status.severity).toBe('info');
     expect(status.message).toContain('Awaiting');
   });
 
   it('reports all operational when every service is up', () => {
-    const status = deriveOverallStatus(groups, summaryOf({ admin: latest(true), crm: latest(true) }));
+    const status = deriveOverallStatus(roll({ operational: 2, total: 2, state: 'operational' }));
     expect(status).toEqual({ severity: 'success', message: 'All systems operational' });
   });
 
-  it('reports a partial outage with counts', () => {
-    const status = deriveOverallStatus(groups, summaryOf({ admin: latest(true), crm: latest(false) }));
-    expect(status).toEqual({ severity: 'warning', message: '1 of 2 services operational' });
+  it('reports a degraded state as a warning with counts', () => {
+    const status = deriveOverallStatus(
+      roll({ operational: 1, degraded: 1, total: 2, state: 'degraded' as ServiceState })
+    );
+    expect(status.severity).toBe('warning');
+    expect(status.message).toBe('1 of 2 services reporting issues');
   });
 
-  it('reports a full outage as an error', () => {
-    const status = deriveOverallStatus(groups, summaryOf({ admin: latest(false), crm: latest(false) }));
-    expect(status).toEqual({ severity: 'error', message: '0 of 2 services operational' });
+  it('reports an outage as an error', () => {
+    const status = deriveOverallStatus(
+      roll({ operational: 0, down: 2, total: 2, state: 'major_outage' as ServiceState })
+    );
+    expect(status.severity).toBe('error');
+    expect(status.message).toBe('2 of 2 services experiencing an outage');
   });
 });
 
@@ -62,28 +51,26 @@ describe('OverallStatusBanner', () => {
     const checkedAt = new Date('2026-07-11T10:30:00');
     render(
       <OverallStatusBanner
-        groups={groups}
-        summary={summaryOf({ admin: latest(true), crm: latest(true) })}
+        overall={roll({ operational: 2, total: 2, state: 'operational' })}
         lastUpdated={checkedAt}
-      />,
+      />
     );
     expect(screen.getByText('All systems operational')).toBeTruthy();
     expect(screen.getByText(`Last checked ${checkedAt.toLocaleTimeString()}`)).toBeTruthy();
   });
 
   it('renders the pending state while loading', () => {
-    render(<OverallStatusBanner groups={null} summary={null} lastUpdated={null} />);
+    render(<OverallStatusBanner overall={null} lastUpdated={null} />);
     expect(screen.getByText('Checking services…')).toBeTruthy();
   });
 
-  it('renders a partial-outage message', () => {
+  it('renders a degraded message', () => {
     render(
       <OverallStatusBanner
-        groups={groups}
-        summary={summaryOf({ admin: latest(true), crm: latest(false) })}
+        overall={roll({ operational: 1, degraded: 1, total: 2, state: 'degraded' as ServiceState })}
         lastUpdated={null}
-      />,
+      />
     );
-    expect(screen.getByText('1 of 2 services operational')).toBeTruthy();
+    expect(screen.getByText('1 of 2 services reporting issues')).toBeTruthy();
   });
 });

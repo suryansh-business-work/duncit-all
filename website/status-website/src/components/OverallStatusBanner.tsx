@@ -1,44 +1,33 @@
 import { Paper, Stack, Typography } from '@mui/material';
 import StatusDot, { type DotState } from './StatusDot';
-import type { ServiceGroup, SummaryResponse } from '../types';
+import { stateChipColor } from '../utils/status';
+import type { OverallRoll } from '../types';
 
 export interface OverallStatus {
   severity: DotState;
   message: string;
 }
 
-/** Pure state derivation, exported for unit tests. */
-export function deriveOverallStatus(
-  groups: ServiceGroup[] | null,
-  summary: SummaryResponse | null,
-): OverallStatus {
-  if (!groups || !summary) return { severity: 'info', message: 'Checking services…' };
-  const services = groups.flatMap((group) => group.items);
-  const total = services.length;
-  const latests = services
-    .map((service) => summary.services[service.key]?.latest)
-    .filter((latest) => latest !== null && latest !== undefined);
-  if (latests.length === 0) {
-    return { severity: 'info', message: 'Awaiting the first checks — probes run every 5 minutes.' };
-  }
-  const up = latests.filter((latest) => latest.ok).length;
-  if (up === total) return { severity: 'success', message: 'All systems operational' };
-  if (up === 0) return { severity: 'error', message: `0 of ${total} services operational` };
-  return { severity: 'warning', message: `${up} of ${total} services operational` };
+/** Pure derivation from the server roll-up, exported for unit tests. */
+export function deriveOverallStatus(overall: OverallRoll | null | undefined): OverallStatus {
+  if (!overall) return { severity: 'info', message: 'Checking services…' };
+  const { operational, total, down, degraded } = overall;
+  if (total === 0) return { severity: 'info', message: 'Awaiting the first checks.' };
+  if (operational === total) return { severity: 'success', message: 'All systems operational' };
+  const chip = stateChipColor(overall.state);
+  const severity: DotState = chip === 'error' ? 'error' : 'warning';
+  const issues = down + degraded;
+  const label = down > 0 && degraded === 0 ? 'experiencing an outage' : 'reporting issues';
+  return { severity, message: `${issues} of ${total} services ${label}` };
 }
 
 interface BannerProps {
-  groups: ServiceGroup[] | null;
-  summary: SummaryResponse | null;
+  overall: OverallRoll | null | undefined;
   lastUpdated: Date | null;
 }
 
-export default function OverallStatusBanner({
-  groups,
-  summary,
-  lastUpdated,
-}: Readonly<BannerProps>) {
-  const status = deriveOverallStatus(groups, summary);
+export default function OverallStatusBanner({ overall, lastUpdated }: Readonly<BannerProps>) {
+  const status = deriveOverallStatus(overall);
   return (
     <Paper variant="outlined" sx={{ px: 2.5, py: 1.75, mb: 4 }}>
       <Stack

@@ -28,6 +28,7 @@ import type {
   DeleteMyAccountDTO,
 } from './user.validator';
 import { verifyGoogleIdToken } from './user.google';
+import { assertPortalLogin } from './user.portalGate';
 import {
   sendWelcomeEmail,
   sendAdminCredentialsEmail,
@@ -671,10 +672,14 @@ export const userService = {
       }
     );
     const fresh = await UserModel.findById(user._id).select('+auth.password');
-    return authPayload(fresh);
+    const payload = await authPayload(fresh);
+    // Console portals: correct credentials are not enough — the account must
+    // also hold a role the admin has granted for the requesting portal.
+    assertPortalLogin(input.portal_key, payload.user.roles);
+    return payload;
   },
 
-  async loginWithGoogle(idToken: string) {
+  async loginWithGoogle(idToken: string, portalKey?: string | null) {
     const info = await verifyGoogleIdToken(idToken);
     const email = info.email.toLowerCase();
     const user = await UserModel.findOne({ 'auth.google_id': info.sub });
@@ -700,7 +705,9 @@ export const userService = {
     if (!user.profile?.profile_photo && info.picture) set['profile.profile_photo'] = info.picture;
     await UserModel.updateOne({ _id: user._id }, { $set: set });
     const fresh = await UserModel.findById(user._id);
-    return authPayload(fresh);
+    const payload = await authPayload(fresh);
+    assertPortalLogin(portalKey, payload.user.roles);
+    return payload;
   },
 
   async signupWithGoogle(input: GoogleSignupDTO) {
@@ -1860,6 +1867,17 @@ export const userService = {
   // the helper is wired so future enablement is a one-line flip.
   isPrivileged(roleKeys: readonly string[]): boolean {
     return roleKeys.some((r) => (PRIVILEGED_ROLE_KEYS as readonly string[]).includes(r));
+  },
+
+  // Boot-time variant: creates the root super admin only when it is missing
+  // (fresh database, e.g. a brand-new staging replica). No-ops — and sends no
+  // credentials email — when the account already exists, so restarts never
+  // spam the inbox. The manual seedSuperAdmin mutation below stays unchanged.
+  async ensureSuperAdmin(): Promise<void> {
+    const DEFAULT_EMAIL = process.env.DEFAULT_SUPER_ADMIN_EMAIL || 'admin@duncit.com';
+    const existing = await UserModel.findOne({ 'auth.email': DEFAULT_EMAIL }).select('_id').lean();
+    if (existing) return;
+    await userService.seedSuperAdmin();
   },
 
   async seedSuperAdmin(): Promise<{ created: boolean; emailed: boolean; email: string }> {

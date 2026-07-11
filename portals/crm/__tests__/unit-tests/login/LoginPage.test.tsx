@@ -5,6 +5,7 @@ import { MemoryRouter } from 'react-router-dom';
 import { gql } from '@apollo/client';
 import { DuncitThemeProvider } from '@duncit/theme';
 import LoginPage from '@/pages/LoginPage';
+import { appConfig } from '@/config/app-config';
 import { clearToken, getToken } from '@/lib/session';
 
 const LOGIN = gql`
@@ -34,7 +35,7 @@ const fillAndSubmit = (email: string, password: string) => {
 };
 
 const loginMock = (email: string, password: string, roles: string[], token = 'tok-123') => ({
-  request: { query: LOGIN, variables: { input: { email, password } } },
+  request: { query: LOGIN, variables: { input: { email, password, portal_key: appConfig.key } } },
   result: {
     data: {
       login: { token, user: { user_id: 'u1', first_name: 'A', last_name: 'B', email, roles } },

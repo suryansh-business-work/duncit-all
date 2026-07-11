@@ -69,6 +69,8 @@ export const PORTAL_ACCESS: PortalAccess[] = [
   { key: 'hr', name: 'HR', url: url('hr'), roles: [{ key: 'HR_MANAGER', name: 'HR Manager' }] },
   { key: 'employee', name: 'Employee', url: url('employee'), roles: [{ key: 'EMPLOYEE', name: 'Employee' }] },
   { key: 'onboarding', name: 'Onboarding', url: url('onboarding'), roles: [{ key: 'ONBOARDING_MANAGER', name: 'Onboarding Manager' }] },
+  { key: 'challenge', name: 'Challenges', url: url('challenge'), roles: [{ key: 'CHALLENGE_MANAGER', name: 'Challenge Manager' }] },
+  { key: 'developers', name: 'Developers', url: url('developers'), roles: [{ key: 'DEVELOPERS_MANAGER', name: 'Developers Manager' }] },
 ];
 
 export interface RolePortalInfo {

@@ -62,7 +62,7 @@ export function buildHealth(): HealthReport {
     status: database === 'connected' ? 'ok' : 'degraded',
     service: 'duncit-server',
     version: VERSION,
-    environment: process.env.NODE_ENV ?? 'development',
+    environment: process.env.APP_ENV ?? process.env.NODE_ENV ?? 'development',
     node: process.version,
     platform: `${os.type()} ${os.release()} (${os.arch()})`,
     hostname: os.hostname(),

@@ -190,8 +190,11 @@ export const userResolvers = {
       const data = await validate(deleteMyAccountSchema, args.input);
       return userService.deleteMyAccount(ctx.user.id, data);
     },
-    loginWithGoogle: async (_p: unknown, args: { input: { id_token: string } }) => {
-      return userService.loginWithGoogle(args.input?.id_token);
+    loginWithGoogle: async (
+      _p: unknown,
+      args: { input: { id_token: string; portal_key?: string | null } }
+    ) => {
+      return userService.loginWithGoogle(args.input?.id_token, args.input?.portal_key);
     },
     signupWithGoogle: async (_p: unknown, args: { input: unknown }) => {
       const data = await validate(googleSignupSchema, args.input);

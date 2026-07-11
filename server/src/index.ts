@@ -2,6 +2,7 @@ import 'dotenv/config';
 import './otel'; // OTLP log export to SignOz (gated on OTEL_EXPORTER_OTLP_ENDPOINT)
 import { logs, ingestRemoteLog } from './observability/log';
 import { buildStatusProbeRouter } from './observability/statusProbe';
+import { startStatusScheduler } from './observability/statusScheduler';
 import { buildHealth } from './observability/health';
 import { LANDING_HTML } from './observability/landing';
 import http from 'http';
@@ -51,6 +52,12 @@ async function safeSeed(name: string, fn: () => Promise<void>) {
 async function bootstrap() {
   await connectDB();
   await safeSeed('rbac', () => rbacService.seedDefaults());
+  // Fresh databases (e.g. a new staging replica) get the root super admin
+  // created on first boot; existing databases no-op.
+  await safeSeed('superAdmin', async () => {
+    const { userService } = await import('@modules/access/user/user.service');
+    await userService.ensureSuperAdmin();
+  });
   await safeSeed('settings', () => settingsService.seedDefaults());
   await safeSeed('settingsCaches', () => settingsService.refreshDerivedCaches());
   await safeSeed('category', () => categoryService.seedDefaults());
@@ -84,6 +91,11 @@ async function bootstrap() {
     const { podPlanService } = await import('@modules/pods/pod-plan/pod-plan.service');
     await podPlanService.seedDefaults();
   });
+
+  // Status-page history: probe every monitored service every 5 minutes.
+  if (process.env.NODE_ENV !== 'test' && process.env.STATUS_PROBES_DISABLED !== '1') {
+    startStatusScheduler();
+  }
 
   const app = express();
   const httpServer = http.createServer(app);

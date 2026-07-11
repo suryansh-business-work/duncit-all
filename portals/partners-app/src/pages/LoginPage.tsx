@@ -3,6 +3,7 @@ import { gql, useMutation } from '@apollo/client';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { Alert, Button } from '@mui/material';
 import { LoginScreen, type LoginFormValues, type LoginScreenConfig } from '@duncit/user-context';
+import { appConfig } from '../config/app-config';
 import { useColorMode } from '../ColorModeContext';
 import { useBranding } from '../lib/useBranding';
 import { parseApiError } from '../utils/parseApiError';
@@ -39,7 +40,7 @@ export default function LoginPage() {
   const handleLogin = async (values: LoginFormValues) => {
     setError(null);
     try {
-      const res = await loginMutation({ variables: { input: values } });
+      const res = await loginMutation({ variables: { input: { ...values, portal_key: appConfig.key } } });
       const token = res.data?.login?.token;
       if (!token) throw new Error('Login failed. Please try again.');
       localStorage.setItem('token', token);

@@ -212,6 +212,7 @@ export const userTypeDefs = gql`
   input LoginInput {
     email: String!
     password: String!
+    portal_key: String
   }
 
   input ResetPasswordInput {
@@ -252,6 +253,7 @@ export const userTypeDefs = gql`
 
   input GoogleAuthInput {
     id_token: String!
+    portal_key: String
   }
 
   input GoogleSignupInput {

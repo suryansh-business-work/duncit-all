@@ -12,6 +12,11 @@
 import { Router, type Request, type Response } from 'express';
 import https from 'node:https';
 import type { PeerCertificate, TLSSocket } from 'node:tls';
+import {
+  modelStatusHistoryStore,
+  registerStatusReadRoutes,
+  type StatusHistoryStore,
+} from './statusRoutes';
 
 const ALLOWED_HOST = 'duncit.com';
 const PROBE_TIMEOUT_MS = 8000;
@@ -126,13 +131,16 @@ export function probe(target: URL): Promise<ProbeResult> {
 }
 
 /**
- * Router for the status probe. `prober` is injectable so the route's
- * validation can be unit-tested without hitting the network.
+ * Router for the status page: the live probe plus the public read-only
+ * services/summary/history routes. `prober` and `store` are injectable so the
+ * routes can be unit-tested without hitting the network or the database.
  */
 export function buildStatusProbeRouter(
   prober: (target: URL) => Promise<ProbeResult> = probe,
+  store: StatusHistoryStore = modelStatusHistoryStore,
 ): Router {
   const router = Router();
+  registerStatusReadRoutes(router, store);
   router.get('/probe', async (req: Request, res: Response) => {
     const raw = String(req.query.url ?? '');
     let target: URL;

@@ -4,7 +4,7 @@ name: Server CI
 #   Test → Typecheck → Lint → Build
 on:
   push:
-    branches: [main, master, develop]
+    branches: [main, master, develop, staging]
     paths:
       - 'server/**'
       - 'package.json'
@@ -12,7 +12,7 @@ on:
       - 'pnpm-workspace.yaml'
       - '.github/workflows/server-ci.yml'
   pull_request:
-    branches: [main, master, develop]
+    branches: [main, master, develop, staging]
     paths:
       - 'server/**'
       - 'package.json'

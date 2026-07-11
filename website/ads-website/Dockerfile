@@ -33,6 +33,14 @@ COPY packages/logs/package.json ./packages/logs/
 RUN corepack enable && corepack prepare pnpm@9.15.0 --activate
 RUN pnpm install --frozen-lockfile
 
+# Cross-site/API URLs are baked into the Astro bundle at build time. Empty
+# defaults keep the in-code production fallbacks; the staging pipeline passes
+# staging.*.duncit.com values here.
+ARG PUBLIC_GRAPHQL_URL=
+ARG PUBLIC_ADS_PORTAL_URL=
+ARG PUBLIC_MAIN_SITE_URL=
+ENV PUBLIC_GRAPHQL_URL=$PUBLIC_GRAPHQL_URL \n    PUBLIC_ADS_PORTAL_URL=$PUBLIC_ADS_PORTAL_URL \n    PUBLIC_MAIN_SITE_URL=$PUBLIC_MAIN_SITE_URL
+
 COPY website/ads-website ./website/ads-website
 COPY packages/logs ./packages/logs
 RUN pnpm --filter ads-website build

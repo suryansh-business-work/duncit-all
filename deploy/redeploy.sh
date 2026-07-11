@@ -8,8 +8,16 @@
 #
 # When `SERVICES` is empty or unset, we exit cleanly: no rebuilds = nothing to
 # restart. Old containers continue running.
+#
+# The same script drives BOTH stacks. Defaults target production; the staging
+# deploy passes STACK_DIR=/opt/duncit-staging CONTAINER_PREFIX=duncit-staging-
+# PORT_OFFSET=100 (staging host ports = production + 100).
 set -euo pipefail
-cd /opt/duncit
+
+STACK_DIR="${STACK_DIR:-/opt/duncit}"
+CONTAINER_PREFIX="${CONTAINER_PREFIX:-duncit-}"
+PORT_OFFSET="${PORT_OFFSET:-0}"
+cd "$STACK_DIR"
 
 ALL_SERVICES=(server admin mweb website partners-website partners-app ads-portal ads-website native crm open-wa finance tech support website-app legal ai products marketing onboarding hr employee status earnwith challenge developers)
 declare -A PORT_OF=(
@@ -57,8 +65,9 @@ docker compose pull "${to_restart[@]}"
 # For each changed service: stop + remove the named container (releasing its
 # host port), then start fresh. Everything else keeps running.
 for s in "${to_restart[@]}"; do
-  cname="duncit-${s}"
+  cname="${CONTAINER_PREFIX}${s}"
   port="${PORT_OF[$s]:-}"
+  if [ -n "$port" ]; then port=$((port + PORT_OFFSET)); fi
 
   if docker ps -a --format '{{.Names}}' | grep -qx "$cname"; then
     echo ">>> Removing existing $cname"
@@ -92,7 +101,7 @@ echo ">>> Waiting for restarted containers to settle..."
 for i in {1..30}; do
   names_pattern="$(IFS='|'; echo "${to_restart[*]}")"
   if docker ps --format '{{.Names}} {{.Status}}' \
-      | grep -E "duncit-(${names_pattern})" \
+      | grep -E "${CONTAINER_PREFIX}(${names_pattern})" \
       | grep -vq 'Restarting\|Created'; then
     break
   fi

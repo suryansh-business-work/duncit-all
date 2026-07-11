@@ -28,6 +28,9 @@ export const registerSchema = yup.object({
 export const loginSchema = yup.object({
   email: yup.string().email().required(),
   password: yup.string().min(8).required(),
+  // Which portal the login request comes from (appConfig.key). Optional —
+  // consumer apps omit it; consoles send it so access can be enforced.
+  portal_key: yup.string().max(64).optional(),
 });
 
 export const requestPasswordResetSchema = yup.object({

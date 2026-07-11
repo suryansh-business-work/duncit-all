@@ -2,7 +2,7 @@ name: deploy
 
 on:
   push:
-    branches: [main, master]
+    branches: [main, master, staging]
   workflow_dispatch:
     inputs:
       services:
@@ -19,6 +19,27 @@ permissions:
 
 env:
   IMAGE_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME }}
+  # ---- branch-aware deployment identity --------------------------------------
+  # Pushes to `staging` deploy the full replica stack to staging.*.duncit.com:
+  # images are tagged :staging with the staging URLs baked into every frontend
+  # bundle (API base URLs are compile-time, so prod images are NOT reusable),
+  # and the deploy job targets /opt/duncit-staging on the same VPS (host ports =
+  # production + 100). main/master deploys production exactly as before.
+  DEPLOY_ENV: ${{ github.ref_name == 'staging' && 'staging' || 'production' }}
+  IMAGE_TAG: ${{ github.ref_name == 'staging' && 'staging' || 'latest' }}
+  SHA_TAG: ${{ github.ref_name == 'staging' && format('staging-{0}', github.sha) || github.sha }}
+  # Separate buildx cache scopes — staging layers (different build-args) must
+  # not evict the production cache.
+  SCOPE_SUFFIX: ${{ github.ref_name == 'staging' && '-staging' || '' }}
+  GRAPHQL_URL: ${{ github.ref_name == 'staging' && 'https://staging.server.duncit.com/graphql' || 'https://server.duncit.com/graphql' }}
+  SERVER_URL: ${{ github.ref_name == 'staging' && 'https://staging.server.duncit.com' || 'https://server.duncit.com' }}
+  MAIN_SITE_URL: ${{ github.ref_name == 'staging' && 'https://staging.duncit.com' || 'https://duncit.com' }}
+  MWEB_URL: ${{ github.ref_name == 'staging' && 'https://staging.mweb.duncit.com' || 'https://mweb.duncit.com' }}
+  PARTNERS_SITE_URL: ${{ github.ref_name == 'staging' && 'https://staging.partners.duncit.com' || 'https://partners.duncit.com' }}
+  PARTNERS_APP_URL: ${{ github.ref_name == 'staging' && 'https://staging.partners-app.duncit.com' || 'https://partners-app.duncit.com' }}
+  ADS_SITE_URL: ${{ github.ref_name == 'staging' && 'https://staging.ads.duncit.com' || 'https://ads.duncit.com' }}
+  ADS_PORTAL_URL: ${{ github.ref_name == 'staging' && 'https://staging.ads-portal.duncit.com' || 'https://ads-portal.duncit.com' }}
+  EARNWITH_URL: ${{ github.ref_name == 'staging' && 'https://staging.earnwith.duncit.com' || 'https://earnwith.duncit.com' }}
 
 jobs:
   # -----------------------------------------------------------
@@ -254,6 +275,8 @@ jobs:
               - 'package.json'
               - 'pnpm-lock.yaml'
               - 'pnpm-workspace.yaml'
+              - 'tsconfig.base.json'
+              - 'packages/**'
               - 'deploy/**'
               - '.github/workflows/deploy.yml'
             challenge:
@@ -315,10 +338,10 @@ jobs:
           command: |
             docker buildx build \
               --file server/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-server:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-server:${{ github.sha }} \
-              --cache-from type=gha,scope=duncit-server \
-              --cache-to   type=gha,scope=duncit-server,mode=max \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-server:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-server:${{ env.SHA_TAG }} \
+              --cache-from type=gha,scope=duncit-server${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-server${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-admin:
@@ -347,13 +370,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/admin/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-admin:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
               --build-arg VITE_GOOGLE_MAP_API=${{ secrets.GOOGLE_MAP_API }} \
-              --cache-from type=gha,scope=duncit-admin \
-              --cache-to   type=gha,scope=duncit-admin,mode=max \
+              --cache-from type=gha,scope=duncit-admin${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-admin${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-mweb:
@@ -382,13 +405,13 @@ jobs:
           command: |
             docker buildx build \
               --file app/mweb/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-mweb:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
               --build-arg VITE_GOOGLE_MAP_API=${{ secrets.GOOGLE_MAP_API }} \
-              --cache-from type=gha,scope=duncit-mweb \
-              --cache-to   type=gha,scope=duncit-mweb,mode=max \
+              --cache-from type=gha,scope=duncit-mweb${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-mweb${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-website:
@@ -416,10 +439,16 @@ jobs:
           command: |
             docker buildx build \
               --file website/main-website/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website:${{ github.sha }} \
-              --cache-from type=gha,scope=duncit-website \
-              --cache-to   type=gha,scope=duncit-website,mode=max \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website:${{ env.SHA_TAG }} \
+              --build-arg PUBLIC_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
+              --build-arg PUBLIC_SITE_URL=${{ env.MAIN_SITE_URL }} \
+              --build-arg PUBLIC_MWEB_URL=${{ env.MWEB_URL }} \
+              --build-arg PUBLIC_PARTNERS_SITE_URL=${{ env.PARTNERS_SITE_URL }} \
+              --build-arg PUBLIC_ADS_SITE_URL=${{ env.ADS_SITE_URL }} \
+              --build-arg PUBLIC_EARNWITH_URL=${{ env.EARNWITH_URL }} \
+              --cache-from type=gha,scope=duncit-website${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-website${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-partners-app:
@@ -448,13 +477,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/partners-app/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-app:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-app:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-app:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-app:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
               --build-arg VITE_GOOGLE_MAP_API=${{ secrets.GOOGLE_MAP_API }} \
-              --cache-from type=gha,scope=duncit-partners-app \
-              --cache-to   type=gha,scope=duncit-partners-app,mode=max \
+              --cache-from type=gha,scope=duncit-partners-app${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-partners-app${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-partners-website:
@@ -482,10 +511,14 @@ jobs:
           command: |
             docker buildx build \
               --file website/partners-website/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-website:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-website:${{ github.sha }} \
-              --cache-from type=gha,scope=duncit-partners-website \
-              --cache-to   type=gha,scope=duncit-partners-website,mode=max \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-website:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-partners-website:${{ env.SHA_TAG }} \
+              --build-arg PUBLIC_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
+              --build-arg PUBLIC_PARTNERS_SITE_URL=${{ env.PARTNERS_SITE_URL }} \
+              --build-arg PUBLIC_MAIN_SITE_URL=${{ env.MAIN_SITE_URL }} \
+              --build-arg PUBLIC_PARTNERS_APP_URL=${{ env.PARTNERS_APP_URL }} \
+              --cache-from type=gha,scope=duncit-partners-website${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-partners-website${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-ads-portal:
@@ -514,12 +547,12 @@ jobs:
           command: |
             docker buildx build \
               --file portals/ads-portal/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-portal:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-portal:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-portal:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-portal:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=ADS_MANAGER \
-              --cache-from type=gha,scope=duncit-ads-portal \
-              --cache-to   type=gha,scope=duncit-ads-portal,mode=max \
+              --cache-from type=gha,scope=duncit-ads-portal${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-ads-portal${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-ads-website:
@@ -547,10 +580,13 @@ jobs:
           command: |
             docker buildx build \
               --file website/ads-website/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-website:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-website:${{ github.sha }} \
-              --cache-from type=gha,scope=duncit-ads-website \
-              --cache-to   type=gha,scope=duncit-ads-website,mode=max \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-website:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ads-website:${{ env.SHA_TAG }} \
+              --build-arg PUBLIC_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
+              --build-arg PUBLIC_ADS_PORTAL_URL=${{ env.ADS_PORTAL_URL }} \
+              --build-arg PUBLIC_MAIN_SITE_URL=${{ env.MAIN_SITE_URL }} \
+              --cache-from type=gha,scope=duncit-ads-website${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-ads-website${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   # Native web = Expo web export of duncit-mobile-app (npm/standalone, build
@@ -575,10 +611,11 @@ jobs:
           command: |
             docker buildx build \
               --file app/mobile-app/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-native:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-native:${{ github.sha }} \
-              --cache-from type=gha,scope=duncit-native \
-              --cache-to   type=gha,scope=duncit-native,mode=max \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-native:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-native:${{ env.SHA_TAG }} \
+              --build-arg EXPO_PUBLIC_API_URL=${{ env.SERVER_URL }} \
+              --cache-from type=gha,scope=duncit-native${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-native${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   # -----------------------------------------------------------
@@ -672,12 +709,12 @@ jobs:
           command: |
             docker buildx build \
               --file portals/crm/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-crm:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-crm:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-crm:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-crm:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=CRM_MANAGER \
-              --cache-from type=gha,scope=duncit-crm \
-              --cache-to   type=gha,scope=duncit-crm,mode=max \
+              --cache-from type=gha,scope=duncit-crm${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-crm${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   # OpenWA WhatsApp gateway (NestJS, standalone npm project under portals/crm/
@@ -703,10 +740,10 @@ jobs:
           command: |
             docker buildx build \
               --file portals/crm/open-wa-server/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-open-wa-server:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-open-wa-server:${{ github.sha }} \
-              --cache-from type=gha,scope=duncit-open-wa-server \
-              --cache-to   type=gha,scope=duncit-open-wa-server,mode=max \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-open-wa-server:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-open-wa-server:${{ env.SHA_TAG }} \
+              --cache-from type=gha,scope=duncit-open-wa-server${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-open-wa-server${{ env.SCOPE_SUFFIX }},mode=max \
               --push portals/crm/open-wa-server
 
   build-finance:
@@ -735,12 +772,12 @@ jobs:
           command: |
             docker buildx build \
               --file portals/finance/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-finance:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=FINANCE_MANAGER \
-              --cache-from type=gha,scope=duncit-finance \
-              --cache-to   type=gha,scope=duncit-finance,mode=max \
+              --cache-from type=gha,scope=duncit-finance${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-finance${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-tech:
@@ -769,12 +806,12 @@ jobs:
           command: |
             docker buildx build \
               --file portals/tech/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-tech:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-tech:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-tech:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-tech:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=TECH_MANAGER \
-              --cache-from type=gha,scope=duncit-tech \
-              --cache-to   type=gha,scope=duncit-tech,mode=max \
+              --cache-from type=gha,scope=duncit-tech${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-tech${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-support:
@@ -803,13 +840,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/support/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-support:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=SUPPORT_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --cache-from type=gha,scope=duncit-support \
-              --cache-to   type=gha,scope=duncit-support,mode=max \
+              --cache-from type=gha,scope=duncit-support${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-support${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-website-app:
@@ -838,13 +875,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/website-app/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website-app:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website-app:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website-app:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-website-app:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=WEBSITE_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --cache-from type=gha,scope=duncit-website-app \
-              --cache-to   type=gha,scope=duncit-website-app,mode=max \
+              --cache-from type=gha,scope=duncit-website-app${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-website-app${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-legal:
@@ -873,13 +910,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/legal/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-legal:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-legal:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-legal:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-legal:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=LEGAL_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --cache-from type=gha,scope=duncit-legal \
-              --cache-to   type=gha,scope=duncit-legal,mode=max \
+              --cache-from type=gha,scope=duncit-legal${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-legal${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-ai:
@@ -908,13 +945,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/ai/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ai:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ai:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ai:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-ai:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=AI_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --cache-from type=gha,scope=duncit-ai \
-              --cache-to   type=gha,scope=duncit-ai,mode=max \
+              --cache-from type=gha,scope=duncit-ai${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-ai${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-products:
@@ -943,13 +980,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/products/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-products:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-products:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-products:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-products:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=PRODUCTS_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --cache-from type=gha,scope=duncit-products \
-              --cache-to   type=gha,scope=duncit-products,mode=max \
+              --cache-from type=gha,scope=duncit-products${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-products${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-marketing:
@@ -978,13 +1015,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/marketing/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-marketing:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=MARKETING_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --cache-from type=gha,scope=duncit-marketing \
-              --cache-to   type=gha,scope=duncit-marketing,mode=max \
+              --cache-from type=gha,scope=duncit-marketing${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-marketing${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-onboarding:
@@ -1013,13 +1050,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/onboarding/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-onboarding:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=ONBOARDING_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --cache-from type=gha,scope=duncit-onboarding \
-              --cache-to   type=gha,scope=duncit-onboarding,mode=max \
+              --cache-from type=gha,scope=duncit-onboarding${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-onboarding${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-hr:
@@ -1048,13 +1085,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/hr/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-hr:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=HR_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --cache-from type=gha,scope=duncit-hr \
-              --cache-to   type=gha,scope=duncit-hr,mode=max \
+              --cache-from type=gha,scope=duncit-hr${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-hr${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-employee:
@@ -1083,13 +1120,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/employee/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-employee:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=EMPLOYEE \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --cache-from type=gha,scope=duncit-employee \
-              --cache-to   type=gha,scope=duncit-employee,mode=max \
+              --cache-from type=gha,scope=duncit-employee${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-employee${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-status:
@@ -1098,6 +1135,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - name: TypeScript + Test
+        uses: ./.github/actions/portal-ci
+        with:
+          workspace: status
+          typecheck: 'tsc -b --noEmit'
+          test: 'test'
       - uses: docker/setup-buildx-action@v3
       - uses: docker/login-action@v3
         with:
@@ -1112,10 +1155,11 @@ jobs:
           command: |
             docker buildx build \
               --file website/status-website/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-status:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-status:${{ github.sha }} \
-              --cache-from type=gha,scope=duncit-status \
-              --cache-to   type=gha,scope=duncit-status,mode=max \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-status:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-status:${{ env.SHA_TAG }} \
+              --build-arg VITE_SERVER_URL=${{ env.SERVER_URL }} \
+              --cache-from type=gha,scope=duncit-status${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-status${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-challenge:
@@ -1144,13 +1188,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/challenge-portal/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-challenge:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-challenge:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-challenge:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-challenge:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=CHALLENGE_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --cache-from type=gha,scope=duncit-challenge \
-              --cache-to   type=gha,scope=duncit-challenge,mode=max \
+              --cache-from type=gha,scope=duncit-challenge${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-challenge${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-developers:
@@ -1179,13 +1223,13 @@ jobs:
           command: |
             docker buildx build \
               --file portals/developers/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-developers:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-developers:${{ github.sha }} \
-              --build-arg VITE_GRAPHQL_URL=https://server.duncit.com/graphql \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-developers:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-developers:${{ env.SHA_TAG }} \
+              --build-arg VITE_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
               --build-arg VITE_REQUIRED_ROLES=DEVELOPERS_MANAGER \
               --build-arg VITE_GOOGLE_CLIENT_ID=${{ secrets.GOOGLE_CLIENT_ID }} \
-              --cache-from type=gha,scope=duncit-developers \
-              --cache-to   type=gha,scope=duncit-developers,mode=max \
+              --cache-from type=gha,scope=duncit-developers${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-developers${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   build-earnwith:
@@ -1213,10 +1257,13 @@ jobs:
           command: |
             docker buildx build \
               --file website/earnwith-website/Dockerfile \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-earnwith:latest \
-              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-earnwith:${{ github.sha }} \
-              --cache-from type=gha,scope=duncit-earnwith \
-              --cache-to   type=gha,scope=duncit-earnwith,mode=max \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-earnwith:${{ env.IMAGE_TAG }} \
+              --tag ${{ env.IMAGE_NAMESPACE }}/duncit-earnwith:${{ env.SHA_TAG }} \
+              --build-arg PUBLIC_GRAPHQL_URL=${{ env.GRAPHQL_URL }} \
+              --build-arg PUBLIC_MWEB_URL=${{ env.MWEB_URL }} \
+              --build-arg PUBLIC_MAIN_SITE_URL=${{ env.MAIN_SITE_URL }} \
+              --cache-from type=gha,scope=duncit-earnwith${{ env.SCOPE_SUFFIX }} \
+              --cache-to   type=gha,scope=duncit-earnwith${{ env.SCOPE_SUFFIX }},mode=max \
               --push .
 
   # -----------------------------------------------------------
@@ -1225,8 +1272,16 @@ jobs:
   # -----------------------------------------------------------
   deploy:
     needs: [changes, build-server, build-admin, build-mweb, build-website, build-partners-app, build-partners-website, build-ads-portal, build-ads-website, build-native, build-crm, build-open-wa, build-finance, build-tech, build-support, build-website-app, build-legal, build-ai, build-products, build-marketing, build-onboarding, build-hr, build-employee, build-status, build-challenge, build-developers, build-earnwith]
-    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-earnwith.result == 'success')
+    if: always() && (needs.build-server.result == 'success' || needs.build-admin.result == 'success' || needs.build-mweb.result == 'success' || needs.build-website.result == 'success' || needs.build-partners-app.result == 'success' || needs.build-partners-website.result == 'success' || needs.build-ads-portal.result == 'success' || needs.build-ads-website.result == 'success' || needs.build-native.result == 'success' || needs.build-crm.result == 'success' || needs.build-open-wa.result == 'success' || needs.build-finance.result == 'success' || needs.build-tech.result == 'success' || needs.build-support.result == 'success' || needs.build-website-app.result == 'success' || needs.build-legal.result == 'success' || needs.build-ai.result == 'success' || needs.build-products.result == 'success' || needs.build-marketing.result == 'success' || needs.build-onboarding.result == 'success' || needs.build-hr.result == 'success' || needs.build-employee.result == 'success' || needs.build-status.result == 'success' || needs.build-challenge.result == 'success' || needs.build-developers.result == 'success' || needs.build-earnwith.result == 'success')
     runs-on: ubuntu-latest
+    env:
+      # Branch-aware deploy target: the staging stack lives side-by-side with
+      # production on the same VPS (own dir, container prefix and +100 ports).
+      STACK_DIR: ${{ github.ref_name == 'staging' && '/opt/duncit-staging' || '/opt/duncit' }}
+      CONTAINER_PREFIX: ${{ github.ref_name == 'staging' && 'duncit-staging-' || 'duncit-' }}
+      PORT_OFFSET: ${{ github.ref_name == 'staging' && '100' || '0' }}
+      NGINX_SITE: ${{ github.ref_name == 'staging' && 'staging.duncit.com' || 'duncit.com' }}
+      COMPOSE_SRC: ${{ github.ref_name == 'staging' && 'deploy/docker-compose.staging.yml' || 'deploy/docker-compose.yml' }}
     steps:
       - uses: actions/checkout@v4
 
@@ -1304,8 +1359,9 @@ jobs:
           GOOGLE_CLIENT_ID:      ${{ secrets.GOOGLE_CLIENT_ID }}
           GOOGLE_CLIENT_SECRET:  ${{ secrets.GOOGLE_CLIENT_SECRET }}
           OPENWA_API_MASTER_KEY: ${{ secrets.OPENWA_API_MASTER_KEY }}
+          STAGING_SUPER_ADMIN_PASSWORD: ${{ secrets.STAGING_SUPER_ADMIN_PASSWORD }}
         run: |
-          envsubst '$DOCKERHUB_USERNAME' < deploy/docker-compose.yml > /tmp/docker-compose.yml
+          envsubst '$DOCKERHUB_USERNAME' < "${{ env.COMPOSE_SRC }}" > /tmp/docker-compose.yml
           # OpenWA gateway env (SQLite + session data on the mounted /app/data
           # volume so a connected account survives restarts). API_MASTER_KEY
           # bootstraps the gateway's own API keys; set the OPENWA_API_MASTER_KEY
@@ -1339,28 +1395,44 @@ jobs:
           GOOGLE_CLIENT_SECRET=${GOOGLE_CLIENT_SECRET}
           OPENWA_API_MASTER_KEY=${OPENWA_API_MASTER_KEY}
           EOF
+          # Staging runs against its OWN Mongo database on the same Atlas
+          # cluster — everything (users, pods, Tech-portal env entries, ...) is
+          # fully separate, so values saved in the staging Tech portal apply to
+          # staging only. APP_ENV lets the server self-identify (health,
+          # telemetry, staging-aware status probes).
+          if [ "${{ env.DEPLOY_ENV }}" = "staging" ]; then
+            cat >> /tmp/server.env <<EOF
+          APP_ENV=staging
+          MONGO_DB_NAME=duncit-staging
+          DEFAULT_SUPER_ADMIN_PASSWORD=${STAGING_SUPER_ADMIN_PASSWORD}
+          EOF
+          fi
 
       - name: Push files to VPS
         run: |
           ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
-            "mkdir -p /opt/duncit /opt/duncit/nginx /opt/duncit/open-wa-data"
+            "mkdir -p ${{ env.STACK_DIR }} ${{ env.STACK_DIR }}/nginx ${{ env.STACK_DIR }}/open-wa-data"
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/docker-compose.yml \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/docker-compose.yml
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/docker-compose.yml
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/server.env \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/server.env
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/server.env
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 /tmp/open-wa.env \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/open-wa.env
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/open-wa.env
           scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/redeploy.sh \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/redeploy.sh
-          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/nginx/duncit.com \
-            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:/opt/duncit/nginx/duncit.com
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/redeploy.sh
+          scp -P "$SSH_PORT" -i ~/.ssh/id_ed25519 deploy/nginx/${{ env.NGINX_SITE }} \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }}:${{ env.STACK_DIR }}/nginx/${{ env.NGINX_SITE }}
+          ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
+            "chmod 600 ${{ env.STACK_DIR }}/server.env ${{ env.STACK_DIR }}/open-wa.env; chmod +x ${{ env.STACK_DIR }}/redeploy.sh"
+
+      - name: Configure nginx + TLS (production)
+        if: env.DEPLOY_ENV == 'production'
+        run: |
           ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
             ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'REMOTE'
           set -e
-          chmod 600 /opt/duncit/server.env
-          chmod 600 /opt/duncit/open-wa.env
-          chmod +x /opt/duncit/redeploy.sh
           SUDO=$(command -v sudo || echo)
           # Single consolidated vhost. Install duncit.com, then drop any legacy
           # per-subdomain files so their server_name blocks can't conflict.
@@ -1400,6 +1472,40 @@ jobs:
           $SUDO systemctl reload nginx
           REMOTE
 
+      - name: Configure nginx + TLS (staging)
+        if: env.DEPLOY_ENV == 'staging'
+        run: |
+          ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
+            ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} <<'REMOTE'
+          set -e
+          SUDO=$(command -v sudo || echo)
+          # Staging vhost is a SEPARATE site file next to the production one —
+          # a staging deploy never rewrites duncit.com, and vice versa.
+          $SUDO install -m 644 /opt/duncit-staging/nginx/staging.duncit.com /etc/nginx/sites-available/staging.duncit.com
+          $SUDO ln -sf /etc/nginx/sites-available/staging.duncit.com /etc/nginx/sites-enabled/staging.duncit.com
+          if ! command -v certbot >/dev/null 2>&1; then
+            $SUDO apt-get update -qq
+            $SUDO apt-get install -y -qq certbot python3-certbot-nginx
+          fi
+          # Own cert (--cert-name staging.duncit.com) so the production
+          # duncit.com cert is never touched by a staging run. Every staging
+          # domain is DNS-gated: a missing A record just drops that one host
+          # from the SAN list instead of failing the whole all-or-nothing cert.
+          CERTBOT_STAGING=""
+          for d in staging.duncit.com staging.server.duncit.com staging.admin.duncit.com staging.mweb.duncit.com staging.partners.duncit.com staging.partners-app.duncit.com staging.ads.duncit.com staging.ads-portal.duncit.com staging.crm.duncit.com staging.finance.duncit.com staging.tech.duncit.com staging.support.duncit.com staging.website.duncit.com staging.legal.duncit.com staging.ai.duncit.com staging.products.duncit.com staging.marketing.duncit.com staging.onboarding.duncit.com staging.hr.duncit.com staging.employee.duncit.com staging.status.duncit.com staging.native.duncit.com staging.open-wa-server.duncit.com staging.earnwith.duncit.com staging.challenge.duncit.com staging.developers.duncit.com; do
+            if getent hosts "$d" >/dev/null 2>&1 || host "$d" >/dev/null 2>&1; then
+              CERTBOT_STAGING="$CERTBOT_STAGING -d $d"
+            else
+              echo ">>> Skipping $d in certbot (DNS not resolving yet)"
+            fi
+          done
+          if [ -n "$CERTBOT_STAGING" ]; then
+            $SUDO certbot --nginx --non-interactive --agree-tos --redirect --expand --cert-name staging.duncit.com -m admin@duncit.com $CERTBOT_STAGING || true
+          fi
+          $SUDO nginx -t
+          $SUDO systemctl reload nginx
+          REMOTE
+
       - name: Remote redeploy (only changed services)
         uses: nick-fields/retry@v3
         with:
@@ -1411,7 +1517,11 @@ jobs:
               ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} \
               "set -e; \
                echo '${{ secrets.DOCKERHUB_TOKEN }}' | docker login -u '${{ secrets.DOCKERHUB_USERNAME }}' --password-stdin; \
-               SERVICES='${{ steps.which.outputs.list }}' /opt/duncit/redeploy.sh"
+               SERVICES='${{ steps.which.outputs.list }}' \
+               STACK_DIR='${{ env.STACK_DIR }}' \
+               CONTAINER_PREFIX='${{ env.CONTAINER_PREFIX }}' \
+               PORT_OFFSET='${{ env.PORT_OFFSET }}' \
+               ${{ env.STACK_DIR }}/redeploy.sh"
 
       - name: Wait for health (loop until all up)
         uses: nick-fields/retry@v3
@@ -1423,32 +1533,13 @@ jobs:
             ssh -p "$SSH_PORT" -i ~/.ssh/id_ed25519 \
               ${{ secrets.SSH_USER }}@${{ secrets.SSH_HOST }} '
               set -e
-              docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
-              curl -fsS http://127.0.0.1:2001/health && echo
-              curl -fsSI http://127.0.0.1:2002/ | head -1
-              curl -fsSI http://127.0.0.1:2003/ | head -1
-              curl -fsSI http://127.0.0.1:2000/ | head -1
-              curl -fsSI http://127.0.0.1:2004/ | head -1
-              curl -fsSI http://127.0.0.1:2005/ | head -1
-              curl -fsSI http://127.0.0.1:2006/ | head -1
-              curl -fsSI http://127.0.0.1:2020/ | head -1
-              curl -fsSI http://127.0.0.1:2022/ | head -1
-              curl -fsSI http://127.0.0.1:2007/ | head -1
-              # open-wa (2024) is optional/stateful — never block the gate on it.
-              curl -fsSI http://127.0.0.1:2024/ | head -1 || true
-              curl -fsSI http://127.0.0.1:2008/ | head -1
-              curl -fsSI http://127.0.0.1:2009/ | head -1
-              curl -fsSI http://127.0.0.1:2010/ | head -1
-              curl -fsSI http://127.0.0.1:2011/ | head -1
-              curl -fsSI http://127.0.0.1:2012/ | head -1
-              curl -fsSI http://127.0.0.1:2013/ | head -1
-              curl -fsSI http://127.0.0.1:2014/ | head -1
-              curl -fsSI http://127.0.0.1:2015/ | head -1
-              curl -fsSI http://127.0.0.1:2016/ | head -1
-              curl -fsSI http://127.0.0.1:2017/ | head -1
-              curl -fsSI http://127.0.0.1:2018/ | head -1
-              curl -fsSI http://127.0.0.1:2019/ | head -1
-              curl -fsSI http://127.0.0.1:2025/ | head -1
-              curl -fsSI http://127.0.0.1:2026/ | head -1
-              curl -fsSI http://127.0.0.1:2027/ | head -1
+              O=${{ env.PORT_OFFSET }}
+              docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}" | grep -E "NAMES|${{ env.CONTAINER_PREFIX }}"
+              curl -fsS http://127.0.0.1:$((2001+O))/health && echo
+              # open-wa is optional/stateful — never block the gate on it.
+              curl -fsSI http://127.0.0.1:$((2024+O))/ | head -1 || true
+              for p in 2000 2002 2003 2004 2005 2006 2007 2008 2009 2010 2011 2012 2013 2014 2015 2016 2017 2018 2019 2020 2022 2025 2026 2027; do
+                echo -n "$((p+O)): "
+                curl -fsSI http://127.0.0.1:$((p+O))/ | head -1
+              done
               '

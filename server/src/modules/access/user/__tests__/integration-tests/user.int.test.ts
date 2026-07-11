@@ -14,6 +14,7 @@ jest.mock("@services/email/email.service", () => ({
 
 import { userService } from "../../user.service";
 import { UserModel } from "../../user.model";
+import { UserRoleModel } from "../../relations";
 import { RoleModel } from "@modules/access/rbac/rbac.model";
 import { LocationModel } from "@modules/platform/location/location.model";
 import { Types } from "mongoose";
@@ -456,6 +457,64 @@ describe("userService integration", () => {
       // '.*' must be treated literally, not as a wildcard that matches everyone.
       const res = await userService.list({ search: ".*" });
       expect(res).toHaveLength(0);
+    });
+  });
+
+  describe("portal-gated login (server-side portal access)", () => {
+    const registerUser = async (email: string) => {
+      const res = await userService.register({
+        first_name: "Gate",
+        email,
+        password: "StrongPass123",
+        dob: new Date("1991-01-01").toISOString(),
+      } as any);
+      return res.user.user_id;
+    };
+
+    it("rejects a console login when the user lacks the portal's role", async () => {
+      await registerUser("gate-deny@duncit.com");
+      await expect(
+        userService.login({
+          email: "gate-deny@duncit.com",
+          password: "StrongPass123",
+          portal_key: "tech",
+        } as any),
+      ).rejects.toThrow(/do not have access to this portal/i);
+    });
+
+    it("logs in fine with no portal_key (consumer app unaffected)", async () => {
+      await registerUser("gate-open@duncit.com");
+      const res = await userService.login({
+        email: "gate-open@duncit.com",
+        password: "StrongPass123",
+      } as any);
+      expect(res.token).toBeTruthy();
+    });
+
+    it("logs in fine on an exempt surface even without console roles", async () => {
+      await registerUser("gate-exempt@duncit.com");
+      const res = await userService.login({
+        email: "gate-exempt@duncit.com",
+        password: "StrongPass123",
+        portal_key: "mweb",
+      } as any);
+      expect(res.token).toBeTruthy();
+    });
+
+    it("allows the console login once the portal's role is granted", async () => {
+      const userId = await registerUser("gate-allow@duncit.com");
+      await UserRoleModel.create({
+        user_id: userId,
+        role: "TECH_MANAGER",
+        scope: { city: null, zone: null },
+      });
+      const res = await userService.login({
+        email: "gate-allow@duncit.com",
+        password: "StrongPass123",
+        portal_key: "tech",
+      } as any);
+      expect(res.token).toBeTruthy();
+      expect(res.user.roles).toContain("TECH_MANAGER");
     });
   });
 

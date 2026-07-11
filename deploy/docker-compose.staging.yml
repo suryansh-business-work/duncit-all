@@ -1,0 +1,235 @@
+# Staging replica of deploy/docker-compose.yml. Same images, but:
+#   - project/container names carry a -staging suffix (both stacks share the VPS)
+#   - host ports are prod + 100 (2000->2100 ... 2027->2127), still loopback-only
+#   - env files live under /opt/duncit-staging (APP_ENV=staging,
+#     MONGO_DB_NAME=duncit-staging -> fully separate Mongo database)
+#   - IMAGE_TAG defaults to `staging` (images built from the `staging` branch
+#     with staging.*.duncit.com URLs baked in — prod images are NOT reusable
+#     because the API base URL is compiled into every frontend bundle)
+name: duncit-staging
+
+services:
+  server:
+    image: ${DOCKERHUB_USERNAME}/duncit-server:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-server
+    restart: unless-stopped
+    env_file:
+      - /opt/duncit-staging/server.env
+    environment:
+      # Ship backend logs to the shared SignOz collector, tagged as staging.
+      OTEL_EXPORTER_OTLP_ENDPOINT: http://signoz-otel-collector:4318
+      OTEL_SERVICE_NAME: duncit-server-staging
+      # Reach the staging WhatsApp gateway over the staging compose network.
+      OPENWA_INTERNAL_URL: http://open-wa:2024
+    ports:
+      - "127.0.0.1:2101:2001"
+    volumes:
+      # Read-only Docker socket so the Tech portal's Server > Docker page can
+      # list host containers (techDockerInfo) — same as prod.
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks:
+      - default
+      - signoz-net
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:2001/health || exit 1"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 25s
+
+  admin:
+    image: ${DOCKERHUB_USERNAME}/duncit-admin:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-admin
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2102:80"
+
+  mweb:
+    image: ${DOCKERHUB_USERNAME}/duncit-mweb:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-mweb
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2103:80"
+
+  website:
+    image: ${DOCKERHUB_USERNAME}/duncit-website:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-website
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2100:80"
+
+  partners-website:
+    image: ${DOCKERHUB_USERNAME}/duncit-partners-website:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-partners-website
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2104:80"
+
+  partners-app:
+    image: ${DOCKERHUB_USERNAME}/duncit-partners-app:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-partners-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2105:80"
+
+  ads-portal:
+    image: ${DOCKERHUB_USERNAME}/duncit-ads-portal:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-ads-portal
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2106:80"
+
+  ads-website:
+    image: ${DOCKERHUB_USERNAME}/duncit-ads-website:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-ads-website
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2120:80"
+
+  native:
+    image: ${DOCKERHUB_USERNAME}/duncit-native:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-native
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2122:80"
+
+  crm:
+    image: ${DOCKERHUB_USERNAME}/duncit-crm:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-crm
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2107:80"
+
+  # Staging WhatsApp gateway — own session/auth volume under /opt/duncit-staging
+  # so the staging WhatsApp account never collides with production's.
+  open-wa:
+    image: ${DOCKERHUB_USERNAME}/duncit-open-wa-server:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-open-wa
+    restart: unless-stopped
+    env_file:
+      - /opt/duncit-staging/open-wa.env
+    ports:
+      - "127.0.0.1:2124:2024"
+    volumes:
+      - /opt/duncit-staging/open-wa-data:/app/data
+    shm_size: "1gb"
+    healthcheck:
+      test: ["CMD-SHELL", "curl -fsS http://localhost:2024/api/health/ready || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 40s
+
+  finance:
+    image: ${DOCKERHUB_USERNAME}/duncit-finance:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-finance
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2108:80"
+
+  tech:
+    image: ${DOCKERHUB_USERNAME}/duncit-tech:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-tech
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2109:80"
+
+  support:
+    image: ${DOCKERHUB_USERNAME}/duncit-support:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-support
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2110:80"
+
+  website-app:
+    image: ${DOCKERHUB_USERNAME}/duncit-website-app:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-website-app
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2111:80"
+
+  legal:
+    image: ${DOCKERHUB_USERNAME}/duncit-legal:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-legal
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2112:80"
+
+  ai:
+    image: ${DOCKERHUB_USERNAME}/duncit-ai:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-ai
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2113:80"
+
+  products:
+    image: ${DOCKERHUB_USERNAME}/duncit-products:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-products
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2114:80"
+
+  marketing:
+    image: ${DOCKERHUB_USERNAME}/duncit-marketing:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-marketing
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2115:80"
+
+  onboarding:
+    image: ${DOCKERHUB_USERNAME}/duncit-onboarding:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-onboarding
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2116:80"
+
+  hr:
+    image: ${DOCKERHUB_USERNAME}/duncit-hr:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-hr
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2117:80"
+
+  employee:
+    image: ${DOCKERHUB_USERNAME}/duncit-employee:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-employee
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2118:80"
+
+  status:
+    image: ${DOCKERHUB_USERNAME}/duncit-status:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-status
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2119:80"
+
+  earnwith:
+    image: ${DOCKERHUB_USERNAME}/duncit-earnwith:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-earnwith
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2125:80"
+
+  challenge:
+    image: ${DOCKERHUB_USERNAME}/duncit-challenge:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-challenge
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2126:80"
+
+  developers:
+    image: ${DOCKERHUB_USERNAME}/duncit-developers:${IMAGE_TAG:-staging}
+    container_name: duncit-staging-developers
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:2127:80"
+
+networks:
+  # Implicit project network for the duncit-staging stack (isolated from prod).
+  default:
+  # SignOz's network (created by its own compose at /opt/signoz). The staging
+  # server joins it too, tagged via OTEL_SERVICE_NAME=duncit-server-staging.
+  signoz-net:
+    external: true
+    name: signoz-net

@@ -1,4 +1,4 @@
-import { Box, Button } from '@mui/material';
+import { Box, Button, Typography } from '@mui/material';
 import LogoutIcon from '@mui/icons-material/Logout';
 
 interface DrawerFooterProps {
@@ -18,6 +18,9 @@ export default function DrawerFooter({ onLogout }: Readonly<DrawerFooterProps>) 
       >
         Logout
       </Button>
+      <Typography variant="caption" color="text.disabled" display="block" textAlign="center" mt={1}>
+        App version {__APP_VERSION__}
+      </Typography>
     </Box>
   );
 }

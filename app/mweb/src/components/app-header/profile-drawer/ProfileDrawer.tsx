@@ -19,12 +19,14 @@ import SwapHorizIcon from '@mui/icons-material/SwapHoriz';
 import { useNavigate } from 'react-router-dom';
 import { useColorMode } from '../../../ColorModeContext';
 import { useStudioMode } from '../../../StudioModeContext';
+import { useFeatureFlag } from '../../../hooks/useFeatureFlag';
 import { STUDIO_HOME_PATH, STUDIO_LABEL, availableModes, resolveMode } from '../../../studio-mode';
 import DrawerFooter from './DrawerFooter';
 import MenuItemRow from './MenuItem';
 import PoliciesSection from './PoliciesSection';
 import StudioSwitchDialog from './StudioSwitchDialog';
 import UserSummary from './UserSummary';
+import UserModeContent from './UserModeContent';
 import { useMenuItems } from './useMenuItems';
 
 interface Props {
@@ -49,15 +51,16 @@ export default function ProfileDrawer({
   const navigate = useNavigate();
   const colorMode = useColorMode();
   const { mode, setMode } = useStudioMode();
+  const showPodPlans = useFeatureFlag('pod_plans_section');
   const [switchOpen, setSwitchOpen] = useState(false);
   const isDark = colorMode.mode === 'dark';
   const roles: string[] = me?.roles ?? [];
   const effectiveMode = resolveMode(mode, roles);
   const canSwitch = availableModes(roles).length > 1;
   const { items } = useMenuItems({ roles, onClose });
-  const openProfile = () => {
+  const go = (to: string) => {
     onClose();
-    navigate('/profile');
+    navigate(to);
   };
 
   return (
@@ -78,45 +81,47 @@ export default function ProfileDrawer({
       }}
     >
       <Box sx={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-        <Box sx={{ p: 2.5, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <Box sx={{ p: 2.5, pb: 1, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <Typography variant="subtitle2" color="text.secondary" sx={{ fontWeight: 900, letterSpacing: 0.4 }}>
-            {effectiveMode === 'USER' ? 'Account' : STUDIO_LABEL[effectiveMode]}
+            {effectiveMode === 'USER' ? 'Profile' : STUDIO_LABEL[effectiveMode]}
           </Typography>
           <IconButton size="small" onClick={onClose} sx={{ bgcolor: 'action.hover' }}>
             <CloseIcon fontSize="small" />
           </IconButton>
         </Box>
-        <UserSummary me={me} onClick={openProfile} />
-        {canSwitch && (
-          <List sx={{ py: 0.5 }}>
-            <ListItemButton
-              onClick={() => setSwitchOpen(true)}
-              sx={{
-                mx: 1.25,
-                borderRadius: 2.5,
-                border: 1,
-                borderColor: 'divider',
-                '&:hover': { borderColor: 'primary.main' },
-              }}
-            >
-              <ListItemIcon sx={{ minWidth: 36, color: 'primary.main' }}>
-                <SwapHorizIcon fontSize="small" />
-              </ListItemIcon>
-              <ListItemText
-                primary="Switch role"
-                secondary={STUDIO_LABEL[effectiveMode]}
-                primaryTypographyProps={{ fontSize: 14, fontWeight: 800 }}
-              />
-            </ListItemButton>
-          </List>
-        )}
-        <Divider />
+
         <Box sx={{ flex: 1, overflowY: 'auto' }}>
-          <List sx={{ py: 1 }}>
-            {items.map((it) => (
-              <MenuItemRow key={it.label} item={it} />
-            ))}
-          </List>
+          {effectiveMode === 'USER' ? (
+            <UserModeContent me={me} showPodPlans={showPodPlans} onNavigate={go} />
+          ) : (
+            <>
+              <UserSummary me={me} onClick={() => go('/profile')} />
+              <List sx={{ py: 1 }}>
+                {items.map((it) => (
+                  <MenuItemRow key={it.label} item={it} />
+                ))}
+              </List>
+            </>
+          )}
+
+          {canSwitch && (
+            <Box sx={{ px: 2.5, pb: 1.5 }}>
+              <ListItemButton
+                onClick={() => setSwitchOpen(true)}
+                sx={{ borderRadius: 2.5, border: 1, borderColor: 'divider', '&:hover': { borderColor: 'primary.main' } }}
+              >
+                <ListItemIcon sx={{ minWidth: 36, color: 'primary.main' }}>
+                  <SwapHorizIcon fontSize="small" />
+                </ListItemIcon>
+                <ListItemText
+                  primary="Switch role"
+                  secondary={STUDIO_LABEL[effectiveMode]}
+                  primaryTypographyProps={{ fontSize: 14, fontWeight: 800 }}
+                />
+              </ListItemButton>
+            </Box>
+          )}
+
           <Divider />
           <Stack direction="row" alignItems="center" justifyContent="space-between" sx={{ px: 2.5, py: 1.25 }}>
             <Stack direction="row" alignItems="center" spacing={1.5}>
@@ -139,6 +144,7 @@ export default function ProfileDrawer({
             </>
           )}
         </Box>
+
         <Divider />
         <DrawerFooter onLogout={onLogout} />
       </Box>
@@ -151,7 +157,6 @@ export default function ProfileDrawer({
           setMode(next);
           setSwitchOpen(false);
           onClose();
-          // Jump straight to the selected role's dashboard (B3-2).
           navigate(STUDIO_HOME_PATH[next]);
         }}
       />

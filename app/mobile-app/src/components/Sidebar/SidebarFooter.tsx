@@ -2,8 +2,11 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { Text, XStack, YStack } from 'tamagui';
 import { semantic } from '@duncit/auth-tokens';
 
-/** Logout footer — RN port of mWeb's <DrawerFooter/>. */
+import { appVersion } from '@/utils/app-version';
+
+/** Logout footer + app version — RN port of mWeb's <DrawerFooter/>. */
 export function SidebarFooter({ onLogout }: Readonly<{ onLogout: () => void }>) {
+  const version = appVersion();
   return (
     <YStack borderTopWidth={1} borderColor="$borderColor" padding={12}>
       <XStack
@@ -26,6 +29,15 @@ export function SidebarFooter({ onLogout }: Readonly<{ onLogout: () => void }>) 
           Logout
         </Text>
       </XStack>
+      <Text
+        testID="sidebar-app-version"
+        fontSize={11}
+        color="$muted"
+        textAlign="center"
+        paddingTop={8}
+      >
+        App version {version}
+      </Text>
     </YStack>
   );
 }

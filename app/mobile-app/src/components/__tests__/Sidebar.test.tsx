@@ -6,6 +6,7 @@ import { renderWithProviders } from '@/utils/test-utils';
 
 const mockNavigate = jest.fn();
 const mockLogout = jest.fn();
+const mockFlags: Record<string, boolean> = {};
 
 jest.mock('@react-navigation/native', () => ({
   useNavigation: () => ({ canGoBack: () => true, navigate: mockNavigate }),
@@ -13,9 +14,15 @@ jest.mock('@react-navigation/native', () => ({
 jest.mock('@/hooks/useLogout', () => ({ useLogout: () => mockLogout }));
 jest.mock('@/hooks/useMe', () => ({
   useMe: () => ({
-    data: { me: { full_name: 'Asha Roy', email: 'a@duncit.com', roles: ['HOST'] } },
+    data: {
+      me: { first_name: 'Asha', full_name: 'Asha Roy', email: 'a@duncit.com', roles: ['HOST'] },
+    },
   }),
   useRoleLabels: () => ({ labelFor: (k: string) => k }),
+}));
+jest.mock('@/hooks/useAccount', () => ({ useAccount: () => ({ me: { first_name: 'Asha' } }) }));
+jest.mock('@/hooks/useFeatureFlag', () => ({
+  useFeatureFlag: (key: string) => mockFlags[key] ?? false,
 }));
 jest.mock('@/hooks/usePolicies', () => ({
   usePublicPolicies: () => ({
@@ -34,12 +41,43 @@ describe('Sidebar', () => {
     expect(screen.queryByTestId('sidebar-panel')).toBeNull();
   });
 
-  it('shows the USER menu (Earn with Duncit), the switch-role button, and logout', () => {
+  it('shows the USER profile cards, the switch-role button, logout and app version', () => {
     renderWithProviders(<Sidebar open onClose={jest.fn()} />);
     expect(screen.getByText('Asha Roy')).toBeOnTheScreen();
-    expect(screen.getByTestId('sidebar-item-Earn with Duncit')).toBeOnTheScreen();
+    expect(screen.getByTestId('sidebar-grid-pod-history')).toBeOnTheScreen();
+    expect(screen.getByTestId('sidebar-grid-earn')).toBeOnTheScreen();
+    expect(screen.getByTestId('sidebar-referral')).toBeOnTheScreen();
+    expect(screen.getByTestId('sidebar-item-Saved Items')).toBeOnTheScreen();
     expect(screen.getByTestId('sidebar-switch-role')).toBeOnTheScreen();
     expect(screen.getByTestId('sidebar-logout')).toBeOnTheScreen();
+    expect(screen.getByTestId('sidebar-app-version')).toBeOnTheScreen();
+  });
+
+  it('opens the profile from the identity card', () => {
+    const onClose = jest.fn();
+    renderWithProviders(<Sidebar open onClose={onClose} />);
+    fireEvent.press(screen.getByTestId('sidebar-identity'));
+    expect(onClose).toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith('Profile');
+  });
+
+  it('closes and navigates from a quick-grid tile, referral and manage rows', () => {
+    const onClose = jest.fn();
+    renderWithProviders(<Sidebar open onClose={onClose} />);
+    fireEvent.press(screen.getByTestId('sidebar-grid-pod-history'));
+    expect(onClose).toHaveBeenCalled();
+    expect(mockNavigate).toHaveBeenCalledWith('PodHistory');
+    fireEvent.press(screen.getByTestId('sidebar-referral'));
+    expect(mockNavigate).toHaveBeenCalledWith('Referral');
+    fireEvent.press(screen.getByTestId('sidebar-item-Saved Items'));
+    expect(mockNavigate).toHaveBeenCalledWith('Saved');
+  });
+
+  it('shows the incomplete banner and opens Account from it', () => {
+    renderWithProviders(<Sidebar open onClose={jest.fn()} />);
+    expect(screen.getByTestId('profile-completion')).toBeOnTheScreen();
+    fireEvent.press(screen.getByTestId('profile-completion-cta'));
+    expect(mockNavigate).toHaveBeenCalledWith('Account');
   });
 
   it('switches into Host Studio and shows its menu', () => {
@@ -53,14 +91,6 @@ describe('Sidebar', () => {
     expect(screen.getByTestId('sidebar-item-Your Pods')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('sidebar-item-Your Pods'));
     expect(mockNavigate).toHaveBeenCalledWith('HostManage');
-  });
-
-  it('closes and navigates when a menu item is tapped', () => {
-    const onClose = jest.fn();
-    renderWithProviders(<Sidebar open onClose={onClose} />);
-    fireEvent.press(screen.getByTestId('sidebar-item-Saved Items'));
-    expect(onClose).toHaveBeenCalled();
-    expect(mockNavigate).toHaveBeenCalledWith('Saved');
   });
 
   it('logs out from the footer', () => {

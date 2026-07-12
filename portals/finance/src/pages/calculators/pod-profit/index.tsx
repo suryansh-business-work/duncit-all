@@ -3,8 +3,7 @@ import { Box, Button, Stack, Typography } from '@mui/material';
 import CalculateIcon from '@mui/icons-material/Calculate';
 import RestartAltIcon from '@mui/icons-material/RestartAlt';
 import PodInputsCard from './PodInputsCard';
-import HostInputsCard from './HostInputsCard';
-import ProductsCard from './ProductsCard';
+import VenueHostCard from './VenueHostCard';
 import ResultsCard from './ResultsCard';
 import { DEFAULT_INPUTS, type PodProfitInputs } from './types';
 import { useCalculator } from './useCalculator';
@@ -23,7 +22,7 @@ export default function PodProfitCalculatorPage() {
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="h5" fontWeight={800}>Pod Profit Calculator</Typography>
           <Typography variant="body2" color="text.secondary">
-            Estimate Duncit revenue + profit and the host payout for a single pod, with optional product add-ons.
+            Estimate the venue payout, host payout and Duncit revenue for a single pod — mirrors the live finance engine.
           </Typography>
         </Box>
         <Button
@@ -39,8 +38,7 @@ export default function PodProfitCalculatorPage() {
       <Stack direction={{ xs: 'column', lg: 'row' }} spacing={2} alignItems="flex-start">
         <Stack spacing={2} sx={{ flex: 1, minWidth: 0, width: '100%' }}>
           <PodInputsCard inputs={inputs} onChange={set} />
-          <HostInputsCard inputs={inputs} onChange={set} />
-          <ProductsCard products={inputs.products} onChange={(products) => set('products', products)} />
+          <VenueHostCard inputs={inputs} onChange={set} />
         </Stack>
         <Box sx={{ width: { xs: '100%', lg: 360 }, flexShrink: 0 }}>
           <ResultsCard results={results} />

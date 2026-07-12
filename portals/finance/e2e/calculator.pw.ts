@@ -11,12 +11,19 @@ test.describe('Pod profit calculator', () => {
     await expect(page.getByText('Pod Profit Calculator')).toBeVisible();
   });
 
-  test('edits inputs, adds/removes products, hits the zero-margin path and resets', async ({
-    page,
-  }) => {
-    await expect(page.getByText(/No products added/)).toBeVisible();
+  test('mirrors the finance engine across inputs, edge cases and reset', async ({ page }) => {
+    // Default state renders the full waterfall.
+    await expect(page.getByText('Total Duncit revenue')).toBeVisible();
+    await expect(page.getByText('Reconciles to pod amount')).toBeVisible();
 
-    // Nudge every percent slider → exercises each onChange + clamp helper.
+    const podAmount = page.getByRole('spinbutton', { name: 'Pod amount (GST-inclusive)' });
+    const venueCost = page.getByRole('spinbutton', { name: 'Venue fixed cost' });
+
+    // Edit the two currency inputs — exercises both cards' onChange handlers.
+    await podAmount.fill('1500');
+    await venueCost.fill('500');
+
+    // Nudge every percent slider → Slider onChange + value-label format.
     const sliders = page.getByRole('slider');
     const count = await sliders.count();
     for (let i = 0; i < count; i += 1) {
@@ -24,28 +31,19 @@ test.describe('Pod profit calculator', () => {
       await page.keyboard.press('ArrowRight');
     }
 
-    // Add two products → product rows; editing one with two present exercises
-    // the "leave the other product unchanged" map branch.
-    await page.getByRole('button', { name: 'Add product' }).click();
-    await page.getByRole('button', { name: 'Add product' }).click();
-    await expect(page.getByText('Product 2')).toBeVisible();
-    await page.getByRole('textbox', { name: 'Name' }).first().fill('Sticker pack');
-    await page.getByRole('spinbutton', { name: 'Price' }).first().fill('200');
-    await page.getByRole('slider').last().focus();
-    await page.keyboard.press('ArrowRight');
-    await expect(page.getByText(/Product revenue/)).toBeVisible();
+    // Type into a percent number field → the PercentSlider text onChange + clamp.
+    await page.getByRole('spinbutton', { name: 'GST', exact: true }).fill('20');
 
-    // Zero the pod cost, then remove both products so revenue denominator is 0 →
-    // the margin falls through to the 0% branch.
-    const podCost = page.getByRole('spinbutton', { name: 'Pod cost (gross)' });
-    await podCost.fill('0');
-    await page.getByRole('button', { name: 'remove product' }).first().click();
-    await page.getByRole('button', { name: 'remove product' }).click();
-    await expect(page.getByText(/No products added/)).toBeVisible();
-    await expect(page.getByText('0.0% margin')).toBeVisible();
+    // Venue price above the pool clamps the venue to the pool and zeroes the host.
+    await venueCost.fill('100000');
+    await expect(page.getByText('Host receives')).toBeVisible();
+
+    // Zero the pod amount → host take-home falls through to the 0% branch.
+    await podAmount.fill('0');
+    await expect(page.getByText('0.0% host take-home')).toBeVisible();
 
     // Reset restores the defaults.
     await page.getByRole('button', { name: 'Reset' }).click();
-    await expect(podCost).toHaveValue('1000');
+    await expect(podAmount).toHaveValue('1000');
   });
 });

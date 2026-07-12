@@ -42,6 +42,9 @@ jest.mock('@/hooks/useFeatureFlag', () => ({
 jest.mock('@/hooks/usePolicies', () => ({
   usePolicy: () => ({ data: null, isLoading: false }),
 }));
+jest.mock('@/hooks/usePublicFinance', () => ({
+  usePublicFinance: () => ({ gstPct: 18, currency: '₹' }),
+}));
 
 const mockGoBack = jest.fn();
 const mockNavigate = jest.fn();

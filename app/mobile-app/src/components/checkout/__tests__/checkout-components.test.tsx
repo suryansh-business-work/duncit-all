@@ -33,7 +33,9 @@ describe('OrderSummary', () => {
     );
     expect(screen.getByText('Sunset Pod')).toBeOnTheScreen();
     expect(screen.getByText('₹130.00')).toBeOnTheScreen();
-    expect(screen.getByText('Platform fee (10%)')).toBeOnTheScreen();
+    // Customer view shows GST only — the internal platform fee is not itemized.
+    expect(screen.getByText('GST (18%)')).toBeOnTheScreen();
+    expect(screen.queryByText('Platform fee (10%)')).not.toBeOnTheScreen();
   });
 
   it('breaks out carried products with the ticket price shown separately', () => {

@@ -53,7 +53,6 @@ export default function OrderSummaryCard({ pod, stateTitle, breakup, selectedPro
           {productTotal > 0 && <Row label="Product add-ons" value={fmt(productTotal)} />}
           <Divider sx={{ my: 1 }} />
           <Typography variant="caption" color="text.secondary">Inclusive of:</Typography>
-          <Row label={`Platform Fee (${breakup.feePct}%)`} value={fmt(breakup.fee)} />
           <Row label={`GST (${breakup.gstPct}%)`} value={fmt(breakup.gst)} />
           <Divider sx={{ my: 1 }} />
           <Row label="Total payable" value={fmt(breakup.total)} bold />

@@ -14,14 +14,16 @@ interface Props {
   results: PodProfitResults;
 }
 
+type Emphasis = 'primary' | 'success' | 'warning' | 'default';
+
 interface RowProps {
   label: string;
   value: string;
-  emphasis?: 'primary' | 'success' | 'warning' | 'default';
+  emphasis?: Emphasis;
   detail?: string;
 }
 
-const COLORS: Record<NonNullable<RowProps['emphasis']>, string> = {
+const COLORS: Record<Emphasis, string> = {
   primary: 'primary.main',
   success: 'success.main',
   warning: 'warning.main',
@@ -33,9 +35,9 @@ function Row({ label, value, emphasis = 'default', detail }: Readonly<RowProps>)
     <Stack direction="row" alignItems="flex-start" justifyContent="space-between" sx={{ py: 0.75 }}>
       <Box sx={{ flex: 1, minWidth: 0 }}>
         <Typography variant="body2" fontWeight={600} noWrap>{label}</Typography>
-        {detail && (
+        {detail ? (
           <Typography variant="caption" color="text.secondary">{detail}</Typography>
-        )}
+        ) : null}
       </Box>
       <Typography variant="subtitle1" fontWeight={800} color={COLORS[emphasis]} sx={{ ml: 1.5 }}>
         {value}
@@ -44,8 +46,16 @@ function Row({ label, value, emphasis = 'default', detail }: Readonly<RowProps>)
   );
 }
 
+function SectionLabel({ text }: Readonly<{ text: string }>) {
+  return (
+    <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
+      {text}
+    </Typography>
+  );
+}
+
 export default function ResultsCard({ results }: Readonly<Props>) {
-  const margin = Math.min(Math.max(results.effective_duncit_margin_percent, 0), 100);
+  const hostShare = Math.min(Math.max(results.host_earn_percent, 0), 100);
   return (
     <Card sx={{ position: { lg: 'sticky' }, top: { lg: 84 } }}>
       <CardContent>
@@ -64,50 +74,59 @@ export default function ResultsCard({ results }: Readonly<Props>) {
             mb: 2,
           })}
         >
-          <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
-            Total profit to Duncit
-          </Typography>
+          <SectionLabel text="Total Duncit revenue" />
           <Typography variant="h4" fontWeight={900} color="primary.main">
-            {formatRupees(results.duncit_profit_total)}
+            {formatRupees(results.duncit_revenue_total)}
           </Typography>
           <Stack direction="row" alignItems="center" spacing={1} sx={{ mt: 1 }}>
             <LinearProgress
               variant="determinate"
-              value={margin}
+              value={hostShare}
               sx={{ flex: 1, height: 8, borderRadius: 1 }}
             />
-            <Typography variant="caption" color="text.secondary" sx={{ minWidth: 64, textAlign: 'right' }}>
-              {results.effective_duncit_margin_percent.toFixed(1)}% margin
+            <Typography variant="caption" color="text.secondary" sx={{ minWidth: 100, textAlign: 'right' }}>
+              {results.host_earn_percent.toFixed(1)}% host take-home
             </Typography>
           </Stack>
         </Box>
 
-        <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 700 }}>
-          Breakdown
-        </Typography>
+        <SectionLabel text="Duncit revenue" />
         <Row label="Platform fee" value={formatRupees(results.platform_fee_amount)} emphasis="primary" />
-        <Row
-          label="Duncit cut from host"
-          value={formatRupees(results.duncit_cut_from_host)}
-          emphasis="primary"
-          detail="Slice of host earnings collected as platform income"
-        />
-        <Row label="Product commissions" value={formatRupees(results.product_commission_total)} emphasis="primary" />
+        <Row label="Venue commission" value={formatRupees(results.venue_commission_amount)} emphasis="primary" />
+        <Row label="Host commission" value={formatRupees(results.host_commission_amount)} emphasis="primary" />
+
         <Divider sx={{ my: 1 }} />
+        <SectionLabel text="Payouts" />
         <Row
-          label="Total host percentage amount"
-          value={formatRupees(results.host_amount_gross)}
+          label="Venue receives"
+          value={formatRupees(results.venue_receives)}
           emphasis="success"
-          detail={`Host net after Duncit cut: ${formatRupees(results.host_amount_net)}`}
+          detail={`Venue amount ${formatRupees(results.venue_amount)} − commission`}
         />
         <Row
-          label="Total GST amount"
+          label="Host receives"
+          value={formatRupees(results.host_receives)}
+          emphasis="success"
+          detail={`Host amount ${formatRupees(results.host_amount)} − commission`}
+        />
+
+        <Divider sx={{ my: 1 }} />
+        <SectionLabel text="Taxes & pool" />
+        <Row
+          label="GST (to government)"
           value={formatRupees(results.gst_amount)}
           emphasis="warning"
-          detail="Pass-through to tax authority"
+          detail="Extracted from the pod amount, remitted to the government"
         />
+        <Row label="Net after GST" value={formatRupees(results.net_amount)} />
+        <Row
+          label="Remaining pool"
+          value={formatRupees(results.pool_amount)}
+          detail="Net minus platform fee — split between venue and host"
+        />
+
         <Divider sx={{ my: 1 }} />
-        <Row label="Product revenue (gross)" value={formatRupees(results.product_revenue_total)} />
+        <Row label="Reconciles to pod amount" value={formatRupees(results.reconciled_total)} />
       </CardContent>
     </Card>
   );

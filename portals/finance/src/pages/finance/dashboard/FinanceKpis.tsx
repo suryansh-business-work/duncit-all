@@ -12,7 +12,7 @@ type StatKey = keyof Omit<FinanceDashboardStats, 'currency_symbol'>;
 type CardColor = 'primary' | 'success' | 'warning' | 'info' | 'error';
 
 const CARDS: ReadonlyArray<{ key: StatKey; label: string; icon: string; color: CardColor }> = [
-  { key: 'total_revenue', label: 'Total Revenue', icon: 'payments', color: 'primary' },
+  { key: 'total_revenue', label: 'Total Collected (GMV)', icon: 'payments', color: 'primary' },
   { key: 'duncit_revenue', label: 'Duncit Revenue', icon: 'insights', color: 'success' },
   { key: 'gst_collected', label: 'GST Collected', icon: 'quote', color: 'warning' },
   { key: 'pending_payouts', label: 'Pending Payouts', icon: 'receipt', color: 'info' },

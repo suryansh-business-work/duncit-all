@@ -77,21 +77,19 @@ export interface QuoteBreakup {
 export async function computeQuote(amount: number, opts?: { inclusive?: boolean }): Promise<QuoteBreakup> {
   const fs = await getFinanceSettings();
   const f = fs.platform_fee_pct / 100;
-  const g = fs.gst_pct / 100;
-  const inclusive = opts?.inclusive !== false; // default: pod_amount is gross/total
-  const gross = Math.max(0, Number(amount) || 0);
-  let subtotal: number;
-  if (inclusive) {
-    const divisor = (1 + f) * (1 + g);
-    subtotal = round2(divisor > 0 ? gross / divisor : gross);
-  } else {
-    subtotal = round2(gross);
-  }
+  const inclusive = opts?.inclusive !== false; // default: pod_amount is the gross GST-inclusive total
+  const value = Math.max(0, Number(amount) || 0);
+  // Mirror the settlement engine (breakdown.math.ts): GST is extracted inclusive
+  // from the total (P × g/(100+g)); the taxable value is the net-of-GST amount.
+  const gst_amount = inclusive
+    ? round2((value * fs.gst_pct) / (100 + fs.gst_pct))
+    : round2(value * (fs.gst_pct / 100));
+  const subtotal = inclusive ? round2(value - gst_amount) : round2(value);
+  const total = inclusive ? round2(value) : round2(subtotal + gst_amount);
+  // Platform fee is Duncit's revenue taken FROM the net (fee = net × f) — a memo
+  // line that already sits inside `subtotal`, never added on top of the total.
+  // Defined on the same base as the engine so invoices reconcile with settlement.
   const platform_fee_amount = round2(subtotal * f);
-  const gst_amount = round2((subtotal + platform_fee_amount) * g);
-  const total = inclusive
-    ? round2(gross)
-    : round2(subtotal + platform_fee_amount + gst_amount);
   return {
     subtotal,
     platform_fee_pct: fs.platform_fee_pct,
@@ -379,8 +377,6 @@ async function finalizePaidPayment(doc: IPayment, fs: any, methodLabel: string) 
       currency_symbol: fs.currency_symbol,
       items: buildInvoiceItems(doc),
       subtotal: doc.subtotal,
-      platform_fee_amount: doc.platform_fee_amount,
-      platform_fee_pct: doc.platform_fee_pct,
       gst_amount: doc.gst_amount,
       gst_pct: doc.gst_pct,
       total: doc.total,
@@ -678,8 +674,6 @@ export const paymentService = {
       currency_symbol: doc.currency_symbol,
       items: buildInvoiceItems(doc),
       subtotal: doc.subtotal,
-      platform_fee_amount: doc.platform_fee_amount,
-      platform_fee_pct: doc.platform_fee_pct,
       gst_amount: doc.gst_amount,
       gst_pct: doc.gst_pct,
       total: doc.total,

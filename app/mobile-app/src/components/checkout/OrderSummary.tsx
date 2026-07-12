@@ -146,7 +146,6 @@ export function OrderSummary({
         ) : (
           <Row label="Subtotal" value={fmt(breakup.subtotal)} />
         )}
-        <Row label={`Platform fee (${breakup.feePct}%)`} value={fmt(breakup.fee)} />
         <Row label={`GST (${breakup.gstPct}%)`} value={fmt(breakup.gst)} />
         <YStack height={1} backgroundColor="$borderColor" marginVertical={4} />
         <Row label="Total payable" value={fmt(breakup.total)} bold />

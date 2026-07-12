@@ -1,25 +1,28 @@
-import { buildBreakup, formatMoney } from '@/utils/checkout-math';
+import { buildBreakup, formatMoney, inclusiveGst } from '@/utils/checkout-math';
 
 describe('buildBreakup', () => {
   it('returns null without settings', () => {
     expect(buildBreakup(100, null)).toBeNull();
   });
 
-  it('splits an inclusive gross into subtotal + fee + gst summing to the total', () => {
+  it('extracts inclusive GST so taxable value + gst equals the total', () => {
     const b = buildBreakup(118, { platform_fee_pct: 0, gst_pct: 18, currency_symbol: '₹' })!;
     expect(b.total).toBe(118);
     expect(b.currency).toBe('₹');
     expect(b.feePct).toBe(0);
     expect(b.gstPct).toBe(18);
-    expect(b.subtotal).toBeCloseTo(100, 5);
-    expect(b.gst).toBeCloseTo(18, 5);
-    expect(b.subtotal + b.fee + b.gst).toBeCloseTo(118, 5);
+    expect(b.subtotal).toBeCloseTo(100, 2);
+    expect(b.gst).toBeCloseTo(18, 2);
+    expect(b.subtotal + b.gst).toBeCloseTo(118, 2);
   });
 
-  it('handles a fee + gst combination', () => {
-    const b = buildBreakup(100, { platform_fee_pct: 10, gst_pct: 18, currency_symbol: '$' })!;
-    expect(b.subtotal + b.fee + b.gst).toBeCloseTo(100, 5);
-    expect(b.fee).toBeGreaterThan(0);
+  it('takes the platform fee from the net (memo, not added to the total)', () => {
+    const b = buildBreakup(1000, { platform_fee_pct: 5, gst_pct: 18, currency_symbol: '$' })!;
+    // gst 152.54 → net (taxable value) 847.46 → fee 847.46×5% = 42.37.
+    expect(b.gst).toBeCloseTo(152.54, 2);
+    expect(b.subtotal).toBeCloseTo(847.46, 2);
+    expect(b.fee).toBeCloseTo(42.37, 2);
+    expect(b.subtotal + b.gst).toBeCloseTo(1000, 2);
   });
 
   it('treats a non-numeric amount as zero', () => {
@@ -29,13 +32,18 @@ describe('buildBreakup', () => {
       currency_symbol: '₹',
     })!;
     expect(b.total).toBe(0);
+    expect(b.gst).toBe(0);
+  });
+});
+
+describe('inclusiveGst', () => {
+  it('extracts GST from a GST-inclusive total', () => {
+    expect(inclusiveGst(1000, 18)).toBeCloseTo(152.54, 2);
   });
 
-  it('falls back to the gross when the divisor collapses to zero', () => {
-    // platform_fee_pct = -100 → feeRate = -1 → divisor = 0, so subtotal = gross.
-    const b = buildBreakup(100, { platform_fee_pct: -100, gst_pct: 18, currency_symbol: '₹' })!;
-    expect(b.subtotal).toBe(100);
-    expect(b.total).toBe(100);
+  it('treats non-numeric inputs as zero', () => {
+    expect(inclusiveGst(Number('x'), 18)).toBe(0);
+    expect(inclusiveGst(1000, Number('x'))).toBe(0);
   });
 });
 

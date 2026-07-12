@@ -103,6 +103,9 @@ describe('PodAccordions toggle', () => {
         pod={pod}
         people={[]}
         categoryCrumbs={[]}
+        isFree={false}
+        gstPct={18}
+        currency="₹"
         onOpenClub={jest.fn()}
         onOpenProfile={jest.fn()}
       />,

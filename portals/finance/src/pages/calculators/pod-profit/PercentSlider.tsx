@@ -4,7 +4,7 @@ interface Props {
   label: string;
   value: number;
   onChange: (next: number) => void;
-  hint?: string;
+  hint: string;
   max?: number;
   step?: number;
 }
@@ -25,7 +25,7 @@ export default function PercentSlider({ label, value, onChange, hint, max = 100,
   return (
     <Box>
       <Stack direction="row" alignItems="center" spacing={1.5} sx={{ mb: 0.5 }}>
-        <Tooltip title={hint ?? ''} placement="top" arrow disableHoverListener={!hint}>
+        <Tooltip title={hint} placement="top" arrow>
           <Typography variant="body2" fontWeight={700} sx={{ flex: 1, minWidth: 0 }} noWrap>
             {label}
           </Typography>
@@ -33,15 +33,16 @@ export default function PercentSlider({ label, value, onChange, hint, max = 100,
         <TextField
           size="small"
           type="number"
-          value={Number.isFinite(value) ? value : 0}
+          value={value}
           onChange={(e) => onChange(clampPct(Number(e.target.value), max))}
-          inputProps={{ min: 0, max, step }}
+          inputProps={{ 'aria-label': label, min: 0, max, step }}
           InputProps={{ endAdornment: <InputAdornment position="end">%</InputAdornment> }}
           sx={{ width: 110 }}
         />
       </Stack>
       <Slider
         size="small"
+        aria-label={label}
         value={clampPct(value, max)}
         onChange={(_, next) => onChange(clampPct(next as number, max))}
         min={0}
@@ -52,11 +53,9 @@ export default function PercentSlider({ label, value, onChange, hint, max = 100,
         valueLabelFormat={(v) => `${v}%`}
         sx={{ mt: 0.5 }}
       />
-      {hint && (
-        <Typography variant="caption" color="text.secondary">
-          {hint}
-        </Typography>
-      )}
+      <Typography variant="caption" color="text.secondary">
+        {hint}
+      </Typography>
     </Box>
   );
 }

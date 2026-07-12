@@ -74,6 +74,10 @@ describe('invoice itemization with products', () => {
     );
     // Payable = 1000 ticket + 750 products = 1750 gross; server recomputed.
     expect(res.total).toBe(1750);
+    // Re-based (engine-consistent): subtotal is the net taxable value and the
+    // platform fee is a memo taken FROM net (never added on top of the total).
+    expect(round2(res.subtotal + res.gst_amount)).toBe(res.total);
+    expect(res.platform_fee_amount).toBe(round2((res.subtotal * res.platform_fee_pct) / 100));
 
     const inv = mockPdf.mock.calls[0][0];
     const descs = inv.items.map((i: any) => i.description);

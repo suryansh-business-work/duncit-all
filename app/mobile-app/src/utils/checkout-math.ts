@@ -5,7 +5,10 @@ export interface FinanceSettings {
 }
 
 export interface CheckoutBreakup {
+  /** Taxable value: the net-of-GST amount (== total − gst). */
   subtotal: number;
+  /** Platform fee — Duncit revenue taken FROM the net (net × f); a memo already
+   * inside `subtotal`, never added on top of the total. */
   fee: number;
   gst: number;
   total: number;
@@ -14,10 +17,19 @@ export interface CheckoutBreakup {
   gstPct: number;
 }
 
+const round2 = (n: number) => Math.round(n * 100) / 100;
+
+/** GST extracted from a GST-inclusive total (total × g/(100+g)) — the finance
+ * engine's inclusive extraction, single-round. */
+export function inclusiveGst(total: number, gstPct: number): number {
+  const g = Number(gstPct) || 0;
+  return round2(((Number(total) || 0) * g) / (100 + g));
+}
+
 /**
- * Reverse-engineer the fee/GST breakup from a gross total — RN port of mWeb's
- * buildBreakup. The pod amount already includes platform fee + GST, so we divide
- * back out to show the inclusive split.
+ * Split a gross GST-inclusive total into the finance-engine breakup — RN port of
+ * mWeb's buildBreakup. GST is extracted inclusive; the taxable value is the net;
+ * the platform fee is a memo taken from net (net × f), never added to the total.
  */
 export function buildBreakup(
   amount: number,
@@ -25,17 +37,14 @@ export function buildBreakup(
 ): CheckoutBreakup | null {
   if (!settings) return null;
   const gross = Number(amount) || 0;
-  const feeRate = settings.platform_fee_pct / 100;
-  const gstRate = settings.gst_pct / 100;
-  const divisor = (1 + feeRate) * (1 + gstRate);
-  const subtotal = divisor > 0 ? gross / divisor : gross;
-  const fee = subtotal * feeRate;
-  const gst = (subtotal + fee) * gstRate;
+  const gst = inclusiveGst(gross, settings.gst_pct);
+  const subtotal = round2(gross - gst);
+  const fee = round2(subtotal * (settings.platform_fee_pct / 100));
   return {
     subtotal,
     fee,
     gst,
-    total: gross,
+    total: round2(gross),
     currency: settings.currency_symbol,
     feePct: settings.platform_fee_pct,
     gstPct: settings.gst_pct,

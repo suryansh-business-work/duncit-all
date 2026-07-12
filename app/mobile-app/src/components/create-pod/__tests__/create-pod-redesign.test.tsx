@@ -62,6 +62,12 @@ describe('SpotsStepper', () => {
     expect(screen.getByTestId('sp-readout')).toHaveTextContent('0');
     fireEvent.changeText(screen.getByTestId('field-no_of_spots_text'), '25');
     expect(screen.getByTestId('sp-readout')).toHaveTextContent('25');
+    // Non-digits are stripped — spots are whole seats, so "2.5"/"12abc" can
+    // never feed a fractional collection into the earnings preview.
+    fireEvent.changeText(screen.getByTestId('field-no_of_spots_text'), '2.5');
+    expect(screen.getByTestId('sp-readout')).toHaveTextContent('25');
+    fireEvent.changeText(screen.getByTestId('field-no_of_spots_text'), '12abc');
+    expect(screen.getByTestId('sp-readout')).toHaveTextContent('12');
   });
 
   it('treats a non-numeric value as the minimum and renders the error', () => {

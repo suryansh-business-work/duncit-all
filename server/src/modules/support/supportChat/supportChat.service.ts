@@ -183,12 +183,12 @@ export const supportChatService = {
       session!.last_message_at = new Date();
       session!.last_message_preview = sysMsg.text;
       await session!.save();
-      const pubSession = await sessionPub(session!);
+      const pubSession = await sessionPub(session);
       emitToSupportSession(String(session!._id), 'support_chat:message', messagePub(sysMsg));
       emitToSupportAgents('support_chat:session_update', pubSession);
       emitToSupportUser(String(session!.user_id), 'support_chat:session_update', pubSession);
     }
-    return sessionPub(session!);
+    return sessionPub(session);
   },
 
   async sendMessage(
@@ -241,7 +241,7 @@ export const supportChatService = {
     await session!.save();
 
     const pubMsg = messagePub(msg);
-    const pubSession = await sessionPub(session!);
+    const pubSession = await sessionPub(session);
     emitToSupportSession(String(session!._id), 'support_chat:message', pubMsg);
     emitToSupportAgents('support_chat:session_update', pubSession);
     emitToSupportUser(String(session!.user_id), 'support_chat:session_update', pubSession);

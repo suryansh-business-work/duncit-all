@@ -19,14 +19,24 @@ export default function PodInputsCard({ inputs, onChange }: Readonly<Props>) {
         </Stack>
         <Stack spacing={2}>
           <TextField
-            label="Pod amount (GST-inclusive)"
+            label="Ticket price per spot (GST-inclusive)"
             type="number"
             size="small"
             value={inputs.pod_amount}
             onChange={(e) => onChange('pod_amount', Math.max(0, Number(e.target.value)))}
             inputProps={{ min: 0, step: 50 }}
             InputProps={{ startAdornment: <InputAdornment position="start"><CurrencyRupeeIcon fontSize="small" /></InputAdornment> }}
-            helperText="Total price the customer pays for one pod seat, GST included."
+            helperText="Price the customer pays for one spot, GST included."
+            fullWidth
+          />
+          <TextField
+            label="No. of spots"
+            type="number"
+            size="small"
+            value={inputs.no_of_spots}
+            onChange={(e) => onChange('no_of_spots', Math.max(0, Math.round(Number(e.target.value))))}
+            inputProps={{ min: 0, step: 1 }}
+            helperText="Pod capacity — for physical pods this is the venue space's available spots. The waterfall runs on ticket × spots."
             fullWidth
           />
           <PercentSlider

@@ -1,10 +1,10 @@
 import { useEffect, useState } from 'react';
 import { gql, useQuery } from '@apollo/client';
-import { Card, CircularProgress, Divider, Stack, Typography } from '@mui/material';
+import { Card, CircularProgress, Stack, Typography } from '@mui/material';
 import InsightsIcon from '@mui/icons-material/Insights';
 import { usePricing } from '../../../hooks/usePricing';
 
-/** Server-side potential-earnings waterfall for a hypothetical ticket price. */
+/** Server-side potential-earnings waterfall for a hypothetical total collection. */
 export const POTENTIAL_POD_EARNINGS = gql`
   query PotentialPodEarnings($amount: Float!, $venue_id: ID, $venue_amount: Float) {
     potentialPodEarnings(amount: $amount, venue_id: $venue_id, venue_amount: $venue_amount) {
@@ -33,22 +33,24 @@ interface Props {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Debounced (400ms) copy of the ticket price so typing doesn't spam the API. */
-function useDebouncedAmount(podAmount: number) {
-  const [amount, setAmount] = useState(podAmount);
+/** Debounced (400ms) copy of the collection so typing doesn't spam the API. */
+function useDebouncedAmount(value: number) {
+  const [amount, setAmount] = useState(value);
   useEffect(() => {
-    const t = setTimeout(() => setAmount(podAmount), 400);
+    const t = setTimeout(() => setAmount(value), 400);
     return () => clearTimeout(t);
-  }, [podAmount]);
+  }, [value]);
   return amount;
 }
 
-/** The host's final calculation for a pod: the server-computed potentialPodEarnings
- * waterfall (Customer Pays → GST → Platform Fee → Venue slot price → your amount →
- * your commission → You Receive), per booking and across all spots. */
+/** The host's final calculation for a pod. The waterfall runs on the FULL
+ * collection (ticket price × number of pax) so the venue's fixed slot price is
+ * deducted once for the pod — not once per booking — matching how the pod is
+ * actually settled. */
 export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, isPhysical }: Readonly<Props>) {
   const { currency } = usePricing();
-  const amount = useDebouncedAmount(podAmount);
+  const collection = podAmount > 0 && noOfSpots > 0 ? round2(podAmount * noOfSpots) : 0;
+  const amount = useDebouncedAmount(collection);
   const hasVenue = isPhysical && slotPrice !== null;
   const { data, loading } = useQuery(POTENTIAL_POD_EARNINGS, {
     variables: { amount, venue_id: hasVenue ? venueId : null, venue_amount: hasVenue ? slotPrice : null },
@@ -61,19 +63,27 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
   const fmt = (value: number) => `${currency}${(Number(value) || 0).toFixed(2)}`;
 
   const breakdown = () => {
-    if (podAmount <= 0) {
+    if (podAmount <= 0 || noOfSpots <= 0) {
       return (
         <Typography variant="caption" color="text.secondary">
-          Set a ticket price to preview your earnings.
+          Set a ticket price and the number of spots to preview your earnings.
         </Typography>
       );
     }
-    if (!w) {
-      return loading ? <CircularProgress size={18} /> : null;
+    // During the debounce window the previous waterfall would render beside
+    // labels built from the live inputs — treat it as loading instead.
+    const stale = amount !== collection;
+    if (!w || stale) {
+      return loading || stale ? <CircularProgress size={18} /> : null;
     }
     return (
       <Stack spacing={0.75}>
-        <Row label="Customer Pays" value={fmt(w.amount)} />
+        <Row
+          label={`Total collection (${money(podAmount)} × ${noOfSpots})`}
+          value={fmt(w.amount)}
+          bold
+          color="success.main"
+        />
         <Row label={`− GST (${w.gst_pct}%)`} value={fmt(w.gst_amount)} />
         <Row label={`− Platform Fee (${w.platform_fee_pct}%)`} value={fmt(w.platform_fee_amount)} />
         {hasVenue && <Row label="− Venue slot price" value={fmt(w.venue_amount)} />}
@@ -81,19 +91,8 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
         <Row label={`− Your Commission (${w.host_commission_pct}%)`} value={fmt(w.host_commission_amount)} />
         <Row label="You Receive" value={fmt(w.host_receives)} bold color="success.main" />
         <Typography variant="caption" color="text.secondary">
-          ({w.host_earn_pct}% of customer amount) · per booking
+          For {noOfSpots} pax · {w.host_earn_pct}% of collection
         </Typography>
-        {noOfSpots > 0 && (
-          <>
-            <Divider sx={{ my: 0.5 }} />
-            <Row
-              label={`Total take-home (${noOfSpots} spots)`}
-              value={fmt(w.host_receives * noOfSpots)}
-              bold
-              color="success.main"
-            />
-          </>
-        )}
       </Stack>
     );
   };
@@ -107,19 +106,8 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
             Potential earnings
           </Typography>
         </Stack>
-        {podAmount > 0 && noOfSpots > 0 && (
-          <>
-            <Row
-              label={`Total collection (${money(podAmount)} × ${noOfSpots})`}
-              value={money(podAmount * noOfSpots)}
-              bold
-              color="success.main"
-            />
-            <Divider />
-          </>
-        )}
         <Typography variant="caption" fontWeight={800} color="text.secondary">
-          Quick Breakdown (per booking)
+          Your take-home for the full pod
         </Typography>
         {breakdown()}
         <Typography variant="caption" color="text.secondary">

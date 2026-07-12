@@ -47,7 +47,7 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     id: String(d._id),
     pod_id: d.pod_id,
     pod_title: d.pod_title,
-    pod_hosts_id: (d.pod_hosts_id ?? []).map((x: any) => String(x)),
+    pod_hosts_id: (d.pod_hosts_id ?? []).map(String),
     location_id: d.location_id ? String(d.location_id) : null,
     venue_id: d.venue_id ? String(d.venue_id) : null,
     venue_slot_id: d.venue_slot_id ? String(d.venue_slot_id) : null,
@@ -64,7 +64,7 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
       type: m.type ?? 'IMAGE',
     })),
     pod_hits: d.pod_hits ?? 0,
-    pod_attendees: (d.pod_attendees ?? []).map((x: any) => String(x)),
+    pod_attendees: (d.pod_attendees ?? []).map(String),
     pod_description: d.pod_description ?? '',
     pod_date_time: d.pod_date_time?.toISOString?.() ?? null,
     pod_end_date_time: d.pod_end_date_time?.toISOString?.() ?? null,
@@ -97,7 +97,7 @@ const toPub = (d: any, clubSlugById?: Map<string, string>) => {
     is_deleted: !!d.deleted_at,
     deleted_at: d.deleted_at?.toISOString?.() ?? null,
     venue_approval_status: d.venue_approval_status ?? 'NONE',
-    liked_user_ids: (d.liked_user_ids ?? []).map((x: any) => String(x)),
+    liked_user_ids: (d.liked_user_ids ?? []).map(String),
     like_count: (d.liked_user_ids ?? []).length,
     comment_count: (d.comments ?? []).length,
     completed_at: d.completed_at?.toISOString?.() ?? null,
@@ -524,7 +524,7 @@ export const podService = {
       location_id: { $ne: null },
       pod_date_time: { $gte: new Date() },
     });
-    return ids.map((id) => String(id));
+    return ids.map(String);
   },
 
   async listMyHostPods(userId: string, range?: { from?: string | null; to?: string | null }) {
@@ -788,8 +788,8 @@ export const podService = {
         club_id: input.club_id ?? String(doc.club_id),
         zone_name: input.zone_name ?? doc.zone_name,
       });
-      doc.venue_id = venueLocation.venue_id as any;
-      doc.location_id = venueLocation.location_id as any;
+      doc.venue_id = venueLocation.venue_id;
+      doc.location_id = venueLocation.location_id;
       doc.zone_name = venueLocation.zone_name;
     }
 
@@ -869,7 +869,7 @@ export const podService = {
     doc.pod_images_and_videos = (input.pod_images_and_videos ?? []).map((m: any) => ({
       url: m.url,
       type: m.type === 'VIDEO' ? 'VIDEO' : 'IMAGE',
-    })) as any;
+    }));
     await doc.save();
 
     // Best-effort: tell every attendee the pod changed.
@@ -923,7 +923,7 @@ export const podService = {
     for (const payment of payments) {
       payment.status = 'REFUNDED';
       (payment as any).metadata = {
-        ...((payment as any).metadata || {}),
+        ...(payment as any).metadata,
         refund_reason: reason,
         refunded_at: new Date().toISOString(),
         refund_initiated_by: 'HOST',
@@ -1086,7 +1086,7 @@ export const podService = {
       author_name: u ? `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() : null,
       author_photo: u?.profile?.profile_photo ?? null,
       text: c.text,
-      likes: (c.likes ?? []).map((x: any) => String(x)),
+      likes: (c.likes ?? []).map(String),
       created_at: new Date(c.created_at).toISOString(),
     };
   },
@@ -1130,7 +1130,7 @@ export const podService = {
         author_name: u ? `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() : null,
         author_photo: u?.profile?.profile_photo ?? null,
         text: c.text,
-        likes: (c.likes ?? []).map((x: any) => String(x)),
+        likes: (c.likes ?? []).map(String),
         created_at: new Date(c.created_at).toISOString(),
       };
     });

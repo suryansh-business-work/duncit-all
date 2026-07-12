@@ -554,7 +554,7 @@ export const venueService = {
     if (input.description !== undefined) v!.description = String(input.description ?? '').slice(0, 2000);
     if (input.cover_image_url !== undefined) v!.cover_image_url = String(input.cover_image_url ?? '');
     if (input.gallery !== undefined) {
-      v!.gallery = (input.gallery as unknown[]).map((u) => String(u)).filter(Boolean);
+      v!.gallery = (input.gallery as unknown[]).map(String).filter(Boolean);
     }
     const capacityItems = normalizeCapacityItems(input.capacity_items);
     if (capacityItems !== null) {
@@ -702,7 +702,7 @@ export const venueService = {
     // auto-extend is on. Best-effort — the scheduled job is the fallback.
     if (v!.settings.auto_extend?.enabled) {
       const venueDocId = String(v!._id);
-      void import('@modules/venues/autoExtend/autoExtend.service')
+      import('@modules/venues/autoExtend/autoExtend.service')
         .then(({ autoExtendService }) => autoExtendService.runForVenue(venueDocId))
         .catch(() => undefined);
     }

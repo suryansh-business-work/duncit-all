@@ -90,6 +90,14 @@ export default function ResultsCard({ results }: Readonly<Props>) {
           </Stack>
         </Box>
 
+        <SectionLabel text="Collection" />
+        <Row
+          label="Total collection"
+          value={formatRupees(results.collection_total)}
+          detail="Ticket price × no. of spots — the amount the waterfall runs on"
+        />
+
+        <Divider sx={{ my: 1 }} />
         <SectionLabel text="Duncit revenue" />
         <Row label="Platform fee" value={formatRupees(results.platform_fee_amount)} emphasis="primary" />
         <Row label="Venue commission" value={formatRupees(results.venue_commission_amount)} emphasis="primary" />
@@ -116,7 +124,7 @@ export default function ResultsCard({ results }: Readonly<Props>) {
           label="GST (to government)"
           value={formatRupees(results.gst_amount)}
           emphasis="warning"
-          detail="Extracted from the pod amount, remitted to the government"
+          detail="Extracted from the collection, remitted to the government"
         />
         <Row label="Net after GST" value={formatRupees(results.net_amount)} />
         <Row
@@ -126,7 +134,7 @@ export default function ResultsCard({ results }: Readonly<Props>) {
         />
 
         <Divider sx={{ my: 1 }} />
-        <Row label="Reconciles to pod amount" value={formatRupees(results.reconciled_total)} />
+        <Row label="Reconciles to collection" value={formatRupees(results.reconciled_total)} />
       </CardContent>
     </Card>
   );

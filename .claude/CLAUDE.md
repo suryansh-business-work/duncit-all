@@ -211,3 +211,56 @@ These guidelines are working if: fewer unnecessary changes in diffs, fewer rewri
 32. Branching & deployment flow (ENFORCED): NEVER push directly to `main`/`master` — a husky pre-push hook blocks it (emergency bypass: ALLOW_MAIN_PUSH=1). All changes go feature-branch -> `staging` branch first. Pushing `staging` deploys the full replica stack to https://staging.<sub>.duncit.com (same VPS, /opt/duncit-staging, host ports = production + 100, images tagged :staging with staging URLs baked in, separate Mongo database `duncit-staging`). After verifying on staging, open a PR `staging` -> `main`; merging deploys production. PR base for feature work is `staging`, not `main`.
 33. App versioning (ENFORCED): a single app version lives in app/mobile-app/app.json (expo.version) mirrored to app/mobile-app/package.json + app/mweb/package.json (keep all three equal). The husky pre-commit hook asks major/minor/patch on EVERY commit (no skip; interactive via /dev/tty, else $VERSION_BUMP env, else patch) and runs scripts/bump-version.mjs to bump all three. The deploy workflow passes app.json's version as APP_VERSION into server.env; the server upserts it into the DB (branding.app_latest_version) on boot, exposed via the public `appVersionInfo { latest_version android_store_url ios_store_url }` query. The mobile app force-update gate blocks (Play Store) when its baked-in version < DB latest_version. Version is shown on both login screens + both sidebars. pre-commit no longer runs typecheck/tests (CI does). CAVEAT: since the DB version bumps every push but the Play Store build publishes separately, only bump toward a release you will actually publish, or the gate can block users before the new build is live.
 34. No Duplicate Code Deep think on the same use common module generic jo multiple place me use ho sake, Create Common Utils, Common Packages, Shared File etc
+35. SonarQube Coding Standards — write clean the first time
+
+When writing or editing TS/TSX/JS/CSS in this repo, follow these. They map to the
+Sonar rules that keep failing here (rule id in brackets). **Get them right up front — there is no eslint autofix to save you.**
+
+### Globals, imports & modern APIs
+- Use `globalThis`, never `window`/`self`/`global`, for universal globals (`setTimeout`, `fetch`, `structuredClone`, `crypto`). Keep `window.document` / `window.location` / DOM-only APIs as-is. [S7764]
+- Node/NestJS builtins import with the `node:` protocol: `import fs from 'node:fs'`, `'node:path'`, `'node:crypto'`. (Not in Vite/Metro-bundled client code.) [S7772]
+- `Number.parseInt` / `Number.parseFloat` (keep the radix), not the bare globals. **Do NOT** swap `isNaN`→`Number.isNaN` — different behavior. [S7773]
+- `Date.now()` not `new Date().getTime()`. `Object.hasOwn(o, k)` not `hasOwnProperty.call`. [S7719, S6653]
+
+### Types & assertions (strict mode)
+- No redundant `as T` casts or trailing `!` when the type already fits — let inference work. [S4325]
+- Never put `any` in a union (`string | any` → just `any` or, better, a real type). [S6571]
+- Optional members: `foo?: string`, not `foo?: string | undefined`. [S4623]
+- Repeated unions → a named `type` alias. [S4323]
+
+### Control flow & readability
+- **No nested ternaries** — this is the #1 issue (236×). Extract to a variable, `if/else`, early return, or a lookup map. In JSX, compute above `return`. [S3358]
+- No negated condition when there's an `else` — lead with the positive case: `if (ok) {…} else {…}`. [S7735]
+- Optional chaining `a?.b` over `a && a.b` (but check for meaningful falsy `0/''/false` first). [S6582]
+- No nested template literals — extract the inner one to a variable. [S4624]
+- `else if (x)` not `else { if (x) {…} }`. Use `<=` not `!(a > b)`. [S6660, S1940]
+
+### Strings & regex
+- Regex shorthands: `\d` `\D` `\w` `\s`, not `[0-9]` etc. [S6353]
+- `String.raw`\`C:\dir\` for literals with backslashes (paths, regex sources). [S7780]
+- `str.replaceAll(...)` not `str.replace(/g/)`. `codePointAt()` not `charCodeAt()`. [S7781, S7758]
+
+### React / TSX
+- **Stable `key` props** on every list item — use `item.id`, never the array index; never omit it. [S6477, S6479]
+- Don't define a component inside another component — hoist to module scope, pass data via props. [S6478]
+- Context `value` object → wrap in `useMemo` so it doesn't change every render. [S6481]
+- Destructure `useState` symmetrically: `const [count, setCount] = useState(0)`. Mark props read-only: `Readonly<Props>`. [S6754, S6759]
+
+### Complexity — keep functions small
+- Cognitive complexity ≤ 15: extract cohesive blocks into named helpers, use early-return guard clauses, avoid deep nesting (functions ≤ 4 levels deep). [S3776, S2004]
+
+### Correctness & safety (highest priority)
+- **Never use the `void` operator.** For a floating promise use `await` or `.catch(err => …)` — don't hide it. [S3735]
+- `Array.prototype.sort()` **always takes a comparator**: `(a,b) => a-b` for numbers, `(a,b) => a.localeCompare(b)` for strings. Use `toSorted()` if the source must not mutate. [S2871]
+- **No hardcoded secrets or IPs** — passwords, tokens, IP addresses come from env/config, never literals. [S2068, S1313]
+- Every test needs a real assertion (`expect(...)`); for async use `await expect(fn()).rejects.toThrow()`. [S2699]
+- Don't stringify raw objects (`` `${obj}` `` → `[object Object]`) — use `JSON.stringify` or a specific field. [S6551]
+- Don't leave both branches of an `if`/ternary identical, dead assignments, empty functions, or commented-out code blocks. [S3923, S1854, S1186, S125]
+
+### Accessibility (web portals only)
+- Clickable elements = real `<button>`/`<a>`. If you must use a `<div>`, add `role`, `tabIndex={0}`, and an `onKeyDown` (Enter/Space) alongside `onClick`. [S1082, S6848]
+- Every form control has an associated `<label>` with text. Don't disable zoom (`user-scalable=no`). Ensure ≥4.5:1 text contrast. [S6853, S7926, S7924]
+
+### Before you finish
+- Typecheck the workspace you touched (`pnpm --filter <name> exec tsc -b --noEmit`, or `tsc --noEmit -p tsconfig.json` for server) and run its tests. Don't introduce a new Sonar issue to fix an old one.
+- `portals/crm/open-wa-server/**` is vendored third-party — don't apply these standards there.

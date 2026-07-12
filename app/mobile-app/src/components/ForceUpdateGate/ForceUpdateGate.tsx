@@ -1,11 +1,12 @@
 import { Linking } from 'react-native';
 import { MaterialIcons } from '@expo/vector-icons';
+import { dark, light } from '@duncit/auth-tokens';
 import { Text, YStack } from 'tamagui';
 
 import { AppBackground } from '@/components/AppBackground';
 import { PrimaryButton } from '@/components/PrimaryButton';
-import { useThemeColors } from '@/hooks/useThemeColors';
 import { useAppVersionStore } from '@/stores/app-version.store';
+import { useThemeStore } from '@/stores/theme.store';
 import { appVersion } from '@/utils/app-version';
 import { isOutdated } from '@/utils/semver';
 
@@ -29,7 +30,11 @@ const FALLBACK_STORE_URL = 'https://play.google.com/store/apps/details?id=com.du
  * the block with no update yet available. This is the chosen product behaviour.
  */
 export function ForceUpdateGate() {
-  const colors = useThemeColors();
+  // Colours are selected from the SAME scheme source AppBackground uses
+  // (`useThemeStore`), not Tamagui `$color` tokens — the two can desync for a
+  // root-level overlay, which rendered the text invisible on the light backdrop.
+  const scheme = useThemeStore((s) => s.scheme);
+  const tokens = scheme === 'dark' ? dark : light;
   const info = useAppVersionStore((s) => s.data)?.appVersionInfo;
   const current = appVersion();
   const latest = info?.latest_version ?? '';
@@ -59,20 +64,20 @@ export function ForceUpdateGate() {
       gap={16}
     >
       <AppBackground />
-      <MaterialIcons name="system-update" size={72} color={colors.primary} />
+      <MaterialIcons name="system-update" size={72} color={tokens.primary} />
       <Text
         testID="force-update-title"
         fontSize={24}
         fontWeight="800"
-        color="$color"
+        color={tokens.ink}
         textAlign="center"
       >
         Update required
       </Text>
-      <Text fontSize={15} lineHeight={22} color="$muted" textAlign="center">
+      <Text fontSize={15} lineHeight={22} color={tokens.muted} textAlign="center">
         This version is old. Update to the new version to start using the app.
       </Text>
-      <Text testID="force-update-versions" fontSize={13} color="$muted" textAlign="center">
+      <Text testID="force-update-versions" fontSize={13} color={tokens.muted} textAlign="center">
         Current v{current} · Latest v{latest}
       </Text>
       <YStack width="100%" maxWidth={320} marginTop={8}>

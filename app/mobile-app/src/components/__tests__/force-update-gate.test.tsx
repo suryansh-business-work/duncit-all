@@ -3,6 +3,7 @@ import { fireEvent, screen } from '@testing-library/react-native';
 
 import { ForceUpdateGate } from '@/components/ForceUpdateGate';
 import { useAppVersionStore } from '@/stores/app-version.store';
+import { useThemeStore } from '@/stores/theme.store';
 import { appVersion } from '@/utils/app-version';
 import { renderWithProviders } from '@/utils/test-utils';
 
@@ -24,6 +25,7 @@ beforeEach(() => {
   jest.clearAllMocks();
   mockedAppVersion.mockReturnValue('1.0.0');
   useAppVersionStore.setState({ data: undefined, isLoading: false, error: undefined });
+  useThemeStore.setState({ scheme: 'light' });
 });
 
 describe('ForceUpdateGate', () => {
@@ -42,6 +44,14 @@ describe('ForceUpdateGate', () => {
     expect(openURL).toHaveBeenCalledWith(
       'https://play.google.com/store/apps/details?id=com.duncit.mobile',
     );
+  });
+
+  it('renders with dark-scheme colours when the app is in dark mode', () => {
+    useThemeStore.setState({ scheme: 'dark' });
+    setVersionInfo('2.0.0', 'https://play.google.com/store/apps/details?id=com.duncit.mobile');
+    renderWithProviders(<ForceUpdateGate />);
+    expect(screen.getByTestId('force-update-title')).toBeOnTheScreen();
+    expect(screen.getByTestId('force-update-gate')).toBeOnTheScreen();
   });
 
   it('falls back to the Play Store URL when the server sends a blank one', () => {

@@ -1,7 +1,9 @@
 /**
  * Minimal semver comparison for the app force-update gate. Pure (no I/O) so
- * every branch is unit-testable. Only major.minor.patch are compared — any
- * pre-release/build suffix (`-beta`, `+build`) and extra segments are ignored.
+ * every branch is unit-testable. Only major.minor are compared for the force
+ * decision — PATCH bumps are optional and never force an update (see
+ * `isOutdated`). Pre-release/build suffixes (`-beta`, `+build`) and extra
+ * segments are ignored.
  */
 
 type Triple = [number, number, number];
@@ -27,19 +29,22 @@ function parseSemver(version: string): Triple | null {
 }
 
 /**
- * True only when `latest` is a valid, non-empty semver strictly greater than
- * `current`. An empty/invalid `latest` returns false so a server hiccup (blank
- * value) can never lock everyone out of the app. An unparseable `current`
- * degrades to 0.0.0 (treats the running build as the oldest possible).
+ * True only when `latest` is a valid, non-empty semver whose MAJOR or MINOR is
+ * ahead of `current` — i.e. a genuine feature release. PATCH-only differences
+ * (e.g. the routine per-deploy version bump) are treated as up-to-date and
+ * never force an update, so installed builds are not stranded every deploy
+ * until the store build catches up.
+ *
+ * An empty/invalid `latest` returns false so a server hiccup (blank value) can
+ * never lock everyone out of the app. An unparseable `current` degrades to
+ * 0.0.0 (treats the running build as the oldest possible).
  */
 export function isOutdated(current: string, latest: string): boolean {
   const latestTriple = parseSemver(latest);
   if (latestTriple === null) return false;
   const currentTriple: Triple = parseSemver(current) ?? [0, 0, 0];
-  const [lMajor, lMinor, lPatch] = latestTriple;
-  const [cMajor, cMinor, cPatch] = currentTriple;
+  const [lMajor, lMinor] = latestTriple;
+  const [cMajor, cMinor] = currentTriple;
   if (lMajor !== cMajor) return lMajor > cMajor;
-  if (lMinor !== cMinor) return lMinor > cMinor;
-  if (lPatch !== cPatch) return lPatch > cPatch;
-  return false;
+  return lMinor > cMinor;
 }

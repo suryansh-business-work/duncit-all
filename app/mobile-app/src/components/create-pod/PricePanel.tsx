@@ -25,7 +25,12 @@ function EarningsRows({
   symbol,
   venuePicked,
   noOfSpots,
-}: Readonly<{ waterfall: PotentialEarnings; symbol: string; venuePicked: boolean; noOfSpots: number }>) {
+}: Readonly<{
+  waterfall: PotentialEarnings;
+  symbol: string;
+  venuePicked: boolean;
+  noOfSpots: number;
+}>) {
   const money = (value: number) => `${symbol}${value.toFixed(2)}`;
   const rows = [
     { label: 'Customer Pays', value: money(waterfall.amount) },

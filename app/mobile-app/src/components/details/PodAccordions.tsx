@@ -165,7 +165,12 @@ export function PodAccordions({
         title: 'Payment details',
         icon: 'payments',
         content: (
-          <PaymentDetails amount={pod.pod_amount} isFree={isFree} gstPct={gstPct} currency={currency} />
+          <PaymentDetails
+            amount={pod.pod_amount}
+            isFree={isFree}
+            gstPct={gstPct}
+            currency={currency}
+          />
         ),
       },
     ];

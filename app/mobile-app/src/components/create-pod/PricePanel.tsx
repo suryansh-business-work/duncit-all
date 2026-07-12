@@ -18,22 +18,29 @@ interface Props {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Server-computed earnings waterfall (potentialPodEarnings): the host's final
- * per-booking payout, plus the total take-home across all spots. */
+/** Server-computed earnings waterfall (potentialPodEarnings) for the FULL pod
+ * collection — the venue's fixed slot price is deducted once, not per booking. */
 function EarningsRows({
   waterfall,
   symbol,
   venuePicked,
+  podAmount,
   noOfSpots,
 }: Readonly<{
   waterfall: PotentialEarnings;
   symbol: string;
   venuePicked: boolean;
+  podAmount: number;
   noOfSpots: number;
 }>) {
   const money = (value: number) => `${symbol}${value.toFixed(2)}`;
-  const rows = [
-    { label: 'Customer Pays', value: money(waterfall.amount) },
+  const rows: { label: string; value: string; bold?: boolean; color?: string }[] = [
+    {
+      label: `Total collection (${symbol}${round2(podAmount).toLocaleString('en-IN')} × ${noOfSpots})`,
+      value: money(waterfall.amount),
+      bold: true,
+      color: EARN_GREEN,
+    },
     { label: `− GST (${waterfall.gst_pct}%)`, value: money(waterfall.gst_amount) },
     {
       label: `− Platform Fee (${waterfall.platform_fee_pct}%)`,
@@ -53,29 +60,24 @@ function EarningsRows({
   return (
     <YStack gap={8} testID="create-pod-earnings">
       {rows.map((row) => (
-        <Row key={row.label} label={row.label} value={row.value} />
+        <Row
+          key={row.label}
+          label={row.label}
+          value={row.value}
+          bold={row.bold}
+          color={row.color}
+        />
       ))}
       <Row label="You Receive" value={money(waterfall.host_receives)} bold color={EARN_GREEN} />
       <Text fontSize={11.5} color="$muted">
-        ({waterfall.host_earn_pct}% of customer amount), per booking.
+        For {noOfSpots} pax · {waterfall.host_earn_pct}% of collection
       </Text>
-      {noOfSpots > 0 ? (
-        <>
-          <YStack height={1} backgroundColor="$borderColor" marginVertical={2} />
-          <Row
-            label={`Total take-home (${noOfSpots} spots)`}
-            value={money(waterfall.host_receives * noOfSpots)}
-            bold
-            color={EARN_GREEN}
-          />
-        </>
-      ) : null}
     </YStack>
   );
 }
 
-/** The host's final calculation for a pod — the server-computed
- * potential-earnings waterfall for the entered ticket price. mWeb twin. */
+/** The host's final calculation for a pod — the server-computed earnings for the
+ * full collection (ticket × pax), with the venue's fixed slot price once. mWeb twin. */
 export function PricePanel({
   finance,
   slotPrice,
@@ -84,10 +86,11 @@ export function PricePanel({
   noOfSpots,
   isPhysical,
 }: Readonly<Props>) {
-  const money = (value: number) => `${finance.currency_symbol}${round2(value)}`;
   const venuePicked = isPhysical && slotPrice !== null;
+  const ready = podAmount > 0 && noOfSpots > 0;
+  const collection = ready ? round2(podAmount * noOfSpots) : 0;
   const { waterfall, isLoading } = usePotentialEarnings(
-    podAmount,
+    collection,
     venuePicked ? venueId : null,
     venuePicked ? slotPrice : null,
   );
@@ -107,28 +110,25 @@ export function PricePanel({
           Potential earnings
         </Text>
       </XStack>
-      {podAmount > 0 && noOfSpots > 0 ? (
-        <>
-          <Row
-            label={`Total collection (${money(podAmount)} × ${noOfSpots})`}
-            value={money(podAmount * noOfSpots)}
-            bold
-            color={EARN_GREEN}
-          />
-          <YStack height={1} backgroundColor="$borderColor" marginVertical={2} />
-        </>
-      ) : null}
       <Text fontSize={11.5} fontWeight="800" color="$muted">
-        Quick Breakdown (per booking)
+        Your take-home for the full pod
       </Text>
-      {isLoading ? (
+      {ready ? null : (
+        <Text fontSize={12.5} color="$muted">
+          Set a ticket price and the number of spots to preview your earnings.
+        </Text>
+      )}
+      {ready && isLoading ? (
         <Spinner testID="create-pod-earnings-loading" size="small" color="$primary" />
       ) : null}
-      {waterfall ? (
+      {/* Hide the previous waterfall while a new amount is loading, so stale
+          money rows never render beside labels built from the live inputs. */}
+      {ready && waterfall && !isLoading ? (
         <EarningsRows
           waterfall={waterfall}
           symbol={finance.currency_symbol}
           venuePicked={venuePicked}
+          podAmount={podAmount}
           noOfSpots={noOfSpots}
         />
       ) : null}

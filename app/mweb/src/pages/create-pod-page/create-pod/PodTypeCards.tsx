@@ -57,7 +57,16 @@ export default function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>
         fullWidth
         sx={{ mt: 1.5 }}
         value={podType}
-        onChange={(e) => setValue('pod_type', e.target.value, { shouldDirty: true, shouldValidate: true })}
+        onChange={(e) => {
+          const next = e.target.value;
+          setValue('pod_type', next, { shouldDirty: true, shouldValidate: true });
+          // Refining to a FREE variant zeroes the ticket price (native parity) —
+          // otherwise the disabled amount field retains a stale paid price and
+          // the earnings preview keeps computing a collection for a free pod.
+          if (next.includes('FREE')) {
+            setValue('pod_amount', 0, { shouldDirty: true, shouldValidate: true });
+          }
+        }}
       >
         {POD_TYPES.map((type) => (
           <MenuItem key={type.value} value={type.value}>{type.label}</MenuItem>

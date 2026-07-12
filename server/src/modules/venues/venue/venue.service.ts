@@ -702,7 +702,7 @@ export const venueService = {
     // auto-extend is on. Best-effort — the scheduled job is the fallback.
     if (v!.settings.auto_extend?.enabled) {
       const venueDocId = String(v!._id);
-      void import('@modules/venues/autoExtend/autoExtend.service')
+      import('@modules/venues/autoExtend/autoExtend.service')
         .then(({ autoExtendService }) => autoExtendService.runForVenue(venueDocId))
         .catch(() => undefined);
     }

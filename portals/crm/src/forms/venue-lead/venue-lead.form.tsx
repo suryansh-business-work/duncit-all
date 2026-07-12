@@ -124,20 +124,20 @@ function VenueSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
     setSignal((s) => s + 1);
   };
   const components = [
-    <VenueDetailsSection config={config} />,
-    <VenueLocationSection />,
-    <VenueContactsSection />,
-    <VenueSuitabilitySection config={config} />,
-    <VenueAvailabilitySection config={config} />,
-    <VenueCommercialSection config={config} />,
-    <VenueAmenitiesSection config={config} />,
-    <VenueMediaSection />,
-    <VenueWebsiteSection />,
-    <VenueServicesSection />,
-    <VenueLinkedHostsSection />,
-    <VenueBrandingSection />,
-    <VenueDynamicSection />,
-    <VenueTrackingSection config={config} />,
+    <VenueDetailsSection key="details" config={config} />,
+    <VenueLocationSection key="location" />,
+    <VenueContactsSection key="contacts" />,
+    <VenueSuitabilitySection key="suitability" config={config} />,
+    <VenueAvailabilitySection key="availability" config={config} />,
+    <VenueCommercialSection key="commercial" config={config} />,
+    <VenueAmenitiesSection key="amenities" config={config} />,
+    <VenueMediaSection key="media" />,
+    <VenueWebsiteSection key="website" />,
+    <VenueServicesSection key="services" />,
+    <VenueLinkedHostsSection key="linked-hosts" />,
+    <VenueBrandingSection key="branding" />,
+    <VenueDynamicSection key="dynamic" />,
+    <VenueTrackingSection key="tracking" config={config} />,
   ];
   return (
     <>

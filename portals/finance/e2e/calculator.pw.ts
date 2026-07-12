@@ -12,15 +12,18 @@ test.describe('Pod profit calculator', () => {
   });
 
   test('mirrors the finance engine across inputs, edge cases and reset', async ({ page }) => {
-    // Default state renders the full waterfall.
+    // Default state renders the full waterfall on the collection (ticket × spots).
     await expect(page.getByText('Total Duncit revenue')).toBeVisible();
-    await expect(page.getByText('Reconciles to pod amount')).toBeVisible();
+    await expect(page.getByText('Total collection')).toBeVisible();
+    await expect(page.getByText('Reconciles to collection')).toBeVisible();
 
-    const podAmount = page.getByRole('spinbutton', { name: 'Pod amount (GST-inclusive)' });
+    const ticket = page.getByRole('spinbutton', { name: 'Ticket price per spot (GST-inclusive)' });
+    const spots = page.getByRole('spinbutton', { name: 'No. of spots' });
     const venueCost = page.getByRole('spinbutton', { name: 'Venue fixed cost' });
 
-    // Edit the two currency inputs — exercises both cards' onChange handlers.
-    await podAmount.fill('1500');
+    // Edit the currency + spots inputs — exercises each card's onChange handler.
+    await ticket.fill('1500');
+    await spots.fill('10');
     await venueCost.fill('500');
 
     // Nudge every percent slider → Slider onChange + value-label format.
@@ -35,15 +38,16 @@ test.describe('Pod profit calculator', () => {
     await page.getByRole('spinbutton', { name: 'GST', exact: true }).fill('20');
 
     // Venue price above the pool clamps the venue to the pool and zeroes the host.
-    await venueCost.fill('100000');
+    await venueCost.fill('1000000');
     await expect(page.getByText('Host receives')).toBeVisible();
 
-    // Zero the pod amount → host take-home falls through to the 0% branch.
-    await podAmount.fill('0');
+    // Zero the spot count → collection 0 → host take-home hits the 0% branch.
+    await spots.fill('0');
     await expect(page.getByText('0.0% host take-home')).toBeVisible();
 
-    // Reset restores the defaults.
+    // Reset restores the defaults (₹1000 ticket × 30 spots).
     await page.getByRole('button', { name: 'Reset' }).click();
-    await expect(podAmount).toHaveValue('1000');
+    await expect(ticket).toHaveValue('1000');
+    await expect(spots).toHaveValue('30');
   });
 });

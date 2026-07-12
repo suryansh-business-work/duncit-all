@@ -22,7 +22,7 @@ export default function PodProfitCalculatorPage() {
         <Box sx={{ flex: 1, minWidth: 0 }}>
           <Typography variant="h5" fontWeight={800}>Pod Profit Calculator</Typography>
           <Typography variant="body2" color="text.secondary">
-            Estimate the venue payout, host payout and Duncit revenue for a single pod — mirrors the live finance engine.
+            Estimate the venue payout, host payout and Duncit revenue for a pod (ticket × spots) — mirrors the live finance engine.
           </Typography>
         </Box>
         <Button

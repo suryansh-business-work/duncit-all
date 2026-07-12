@@ -103,7 +103,9 @@ export function SpotsStepper({
               borderColor="$borderColor"
               keyboardType="numeric"
               value={value}
-              onChangeText={onChange}
+              // Digits only — spots are whole seats, and a fractional/garbage
+              // value would feed a bogus collection into the earnings preview.
+              onChangeText={(text) => onChange(text.replace(/\D/g, ''))}
               aria-label="Total spots"
             />
             <StepButton

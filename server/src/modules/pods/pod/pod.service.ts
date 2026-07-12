@@ -788,8 +788,8 @@ export const podService = {
         club_id: input.club_id ?? String(doc.club_id),
         zone_name: input.zone_name ?? doc.zone_name,
       });
-      doc.venue_id = venueLocation.venue_id as any;
-      doc.location_id = venueLocation.location_id as any;
+      doc.venue_id = venueLocation.venue_id;
+      doc.location_id = venueLocation.location_id;
       doc.zone_name = venueLocation.zone_name;
     }
 
@@ -869,7 +869,7 @@ export const podService = {
     doc.pod_images_and_videos = (input.pod_images_and_videos ?? []).map((m: any) => ({
       url: m.url,
       type: m.type === 'VIDEO' ? 'VIDEO' : 'IMAGE',
-    })) as any;
+    }));
     await doc.save();
 
     // Best-effort: tell every attendee the pod changed.

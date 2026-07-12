@@ -1,5 +1,5 @@
 import bcrypt from 'bcryptjs';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import jwt from 'jsonwebtoken';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
@@ -51,7 +51,7 @@ import { USER_SCHEMA_FLAGS } from './user.featureFlags';
 import { toPostalAddress } from '@utils/address';
 
 const idStrings = (values: unknown[] | undefined | null) =>
-  (values ?? []).map((x: any) => String(x));
+  (values ?? []).map(String);
 // Escape user-supplied search terms before building a RegExp so special chars
 // (., *, (, etc.) are matched literally and cannot break the query.
 const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');

@@ -67,9 +67,9 @@ describe('PricePanel (potentialPodEarnings)', () => {
     expect(screen.getByText('− Your Commission (10%)')).toBeInTheDocument();
     expect(screen.getByText('You Receive')).toBeInTheDocument();
     expect(screen.getByText('(45.46% of customer amount) · per booking')).toBeInTheDocument();
-    // The venue-side slot-cost lines are untouched.
-    expect(screen.getByText('Venue slot price')).toBeInTheDocument();
-    expect(screen.getByText('Total venue cost')).toBeInTheDocument();
+    // The non-canonical "GST on slot / Total venue cost" block is gone — the
+    // waterfall's own "− Venue slot price" deduction is the single source.
+    expect(screen.queryByText('Total venue cost')).not.toBeInTheDocument();
   });
 
   it('skips the query and shows a hint when the amount is zero', () => {
@@ -78,9 +78,12 @@ describe('PricePanel (potentialPodEarnings)', () => {
     expect(screen.queryByText('You Receive')).not.toBeInTheDocument();
   });
 
-  it('shows the ticket × spots total when both are set', () => {
+  it('shows the ticket × spots total and the host total take-home when both are set', async () => {
     setup(1000, 30);
     expect(screen.getByText('Total collection (₹1,000 × 30)')).toBeInTheDocument();
     expect(screen.getByText('₹30,000')).toBeInTheDocument();
+    // host_receives 454.58 × 30 spots = 13,637.40 final take-home.
+    expect(await screen.findByText('Total take-home (30 spots)')).toBeInTheDocument();
+    expect(screen.getByText('₹13637.40')).toBeInTheDocument();
   });
 });

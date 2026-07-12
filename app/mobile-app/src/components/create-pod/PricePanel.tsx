@@ -1,7 +1,11 @@
+import { MaterialIcons } from '@expo/vector-icons';
 import { Spinner, Text, XStack, YStack } from 'tamagui';
 
 import { usePotentialEarnings, type PotentialEarnings } from '@/hooks/usePotentialEarnings';
 import type { CreatePodFinance } from './create-pod.types';
+
+/** Green earnings emphasis — matches mWeb's success.main highlight. */
+const EARN_GREEN = '#22c55e';
 
 interface Props {
   finance: CreatePodFinance;
@@ -14,12 +18,14 @@ interface Props {
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
-/** Server-computed per-booking earnings waterfall (potentialPodEarnings). */
+/** Server-computed earnings waterfall (potentialPodEarnings): the host's final
+ * per-booking payout, plus the total take-home across all spots. */
 function EarningsRows({
   waterfall,
   symbol,
   venuePicked,
-}: Readonly<{ waterfall: PotentialEarnings; symbol: string; venuePicked: boolean }>) {
+  noOfSpots,
+}: Readonly<{ waterfall: PotentialEarnings; symbol: string; venuePicked: boolean; noOfSpots: number }>) {
   const money = (value: number) => `${symbol}${value.toFixed(2)}`;
   const rows = [
     { label: 'Customer Pays', value: money(waterfall.amount) },
@@ -33,7 +39,7 @@ function EarningsRows({
     rows.push({ label: '− Venue slot price', value: money(waterfall.venue_amount) });
   }
   rows.push(
-    { label: 'Your Amount', value: money(waterfall.host_amount) },
+    { label: 'Your Amount (remainder)', value: money(waterfall.host_amount) },
     {
       label: `− Your Commission (${waterfall.host_commission_pct}%)`,
       value: money(waterfall.host_commission_amount),
@@ -44,15 +50,26 @@ function EarningsRows({
       {rows.map((row) => (
         <Row key={row.label} label={row.label} value={row.value} />
       ))}
-      <Row label="You Receive" value={money(waterfall.host_receives)} bold />
+      <Row label="You Receive" value={money(waterfall.host_receives)} bold color={EARN_GREEN} />
       <Text fontSize={11.5} color="$muted">
         ({waterfall.host_earn_pct}% of customer amount), per booking.
       </Text>
+      {noOfSpots > 0 ? (
+        <>
+          <YStack height={1} backgroundColor="$borderColor" marginVertical={2} />
+          <Row
+            label={`Total take-home (${noOfSpots} spots)`}
+            value={money(waterfall.host_receives * noOfSpots)}
+            bold
+            color={EARN_GREEN}
+          />
+        </>
+      ) : null}
     </YStack>
   );
 }
 
-/** Slot cost + GST from the venue's booked slot, and the server-computed
+/** The host's final calculation for a pod — the server-computed
  * potential-earnings waterfall for the entered ticket price. mWeb twin. */
 export function PricePanel({
   finance,
@@ -63,8 +80,6 @@ export function PricePanel({
   isPhysical,
 }: Readonly<Props>) {
   const money = (value: number) => `${finance.currency_symbol}${round2(value)}`;
-  const slotGst = slotPrice ? round2((slotPrice * finance.gst_pct) / 100) : 0;
-  const slotTotal = (slotPrice ?? 0) + slotGst;
   const venuePicked = isPhysical && slotPrice !== null;
   const { waterfall, isLoading } = usePotentialEarnings(
     podAmount,
@@ -81,29 +96,26 @@ export function PricePanel({
       borderColor="$borderColor"
       borderRadius={12}
     >
-      <Text fontSize={14} fontWeight="900" color="$color">
-        Slot cost & potential earnings
-      </Text>
+      <XStack alignItems="center" gap={6}>
+        <MaterialIcons name="insights" size={16} color={EARN_GREEN} />
+        <Text fontSize={14} fontWeight="900" color="$color">
+          Potential earnings
+        </Text>
+      </XStack>
       {podAmount > 0 && noOfSpots > 0 ? (
-        <Row
-          label={`Total collection (${money(podAmount)} × ${noOfSpots})`}
-          value={money(podAmount * noOfSpots)}
-          bold
-        />
-      ) : null}
-      {isPhysical ? (
         <>
           <Row
-            label="Venue slot price"
-            value={slotPrice === null ? 'Pick a slot first' : money(slotPrice)}
+            label={`Total collection (${money(podAmount)} × ${noOfSpots})`}
+            value={money(podAmount * noOfSpots)}
+            bold
+            color={EARN_GREEN}
           />
-          <Row
-            label={`GST on slot (${finance.gst_pct}%)`}
-            value={slotPrice === null ? '—' : money(slotGst)}
-          />
-          <Row label="Total venue cost" value={slotPrice === null ? '—' : money(slotTotal)} bold />
+          <YStack height={1} backgroundColor="$borderColor" marginVertical={2} />
         </>
       ) : null}
+      <Text fontSize={11.5} fontWeight="800" color="$muted">
+        Quick Breakdown (per booking)
+      </Text>
       {isLoading ? (
         <Spinner testID="create-pod-earnings-loading" size="small" color="$primary" />
       ) : null}
@@ -112,10 +124,11 @@ export function PricePanel({
           waterfall={waterfall}
           symbol={finance.currency_symbol}
           venuePicked={venuePicked}
+          noOfSpots={noOfSpots}
         />
       ) : null}
       <Text fontSize={11.5} color="$muted">
-        Estimates at today's rates — final settlement happens after the pod completes.
+        Estimates at today&apos;s rates — final settlement happens after the pod completes.
       </Text>
     </YStack>
   );
@@ -125,7 +138,8 @@ function Row({
   label,
   value,
   bold = false,
-}: Readonly<{ label: string; value: string; bold?: boolean }>) {
+  color = '$color',
+}: Readonly<{ label: string; value: string; bold?: boolean; color?: string }>) {
   return (
     <XStack justifyContent="space-between" gap={12}>
       <Text
@@ -136,7 +150,7 @@ function Row({
       >
         {label}
       </Text>
-      <Text fontSize={13} fontWeight={bold ? '900' : '700'} color="$color">
+      <Text fontSize={13} fontWeight={bold ? '900' : '700'} color={color}>
         {value}
       </Text>
     </XStack>

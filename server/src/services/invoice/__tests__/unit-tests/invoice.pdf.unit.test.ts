@@ -12,8 +12,6 @@ const base: InvoiceData = {
   currency_symbol: '₹',
   items: [{ description: 'Pod booking · Sunset Pod', qty: 1, unit_price: 847.46, amount: 847.46 }],
   subtotal: 847.46,
-  platform_fee_amount: 42.37,
-  platform_fee_pct: 5,
   gst_amount: 152.54,
   gst_pct: 18,
   total: 1000,

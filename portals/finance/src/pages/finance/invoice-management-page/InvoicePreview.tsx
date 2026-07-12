@@ -2,7 +2,9 @@ import { Box, Divider, Stack, Typography } from '@mui/material';
 import type { InvoiceSettingsForm } from './types';
 
 const ACCENT = '#ff4f73';
-const SAMPLE = { subtotal: 1000, fee: 50, gst: 189, total: 1239 };
+// GST-inclusive sample matching the settlement engine: the customer pays 1000
+// (GST-inclusive); GST is extracted (1000×18/118), leaving the net taxable value.
+const SAMPLE = { subtotal: 847.46, gst: 152.54, total: 1000 };
 
 /** A faithful, lightweight mirror of the generated invoice PDF so admins see the
  * effect of their edits live — uses sample figures, real branding values. */
@@ -50,8 +52,7 @@ export default function InvoicePreview({ value }: Readonly<{ value: InvoiceSetti
         </Stack>
 
         <Stack spacing={0.4} sx={{ mt: 1.5, ml: 'auto', maxWidth: 240 }}>
-          <Row label="Subtotal" value={money(SAMPLE.subtotal)} />
-          <Row label="Platform Fee (5%)" value={money(SAMPLE.fee)} />
+          <Row label="Taxable value" value={money(SAMPLE.subtotal)} />
           <Row label="GST (18%)" value={money(SAMPLE.gst)} />
           <Divider />
           <Row label="Total Paid" value={money(SAMPLE.total)} bold />

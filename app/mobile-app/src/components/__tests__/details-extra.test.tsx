@@ -65,6 +65,9 @@ describe('PodAccordions', () => {
         pod={podWithClub as never}
         people={[]}
         categoryCrumbs={['Sports', 'Racquet', 'Badminton']}
+        isFree={false}
+        gstPct={18}
+        currency="₹"
         onOpenClub={onOpenClub}
         onOpenProfile={jest.fn()}
       />,
@@ -73,6 +76,9 @@ describe('PodAccordions', () => {
     fireEvent.press(screen.getByTestId('pod-expand-all'));
     expect(screen.getByText('Place charges')).toBeOnTheScreen();
     expect(screen.getByText('Payment terms')).toBeOnTheScreen();
+    // Paid pod → customer sees GST + total only (no fee/host/venue internals).
+    expect(screen.getByText('GST (18%)')).toBeOnTheScreen();
+    expect(screen.getByText('Total payable')).toBeOnTheScreen();
     // The pod's club category renders as a breadcrumb in the Club details card.
     expect(screen.getByText('Runners')).toBeOnTheScreen();
     expect(screen.getByTestId('category-breadcrumb')).toHaveTextContent(
@@ -83,20 +89,43 @@ describe('PodAccordions', () => {
     fireEvent.press(screen.getByTestId('pod-collapse-all'));
   });
 
-  it('omits terms/charges and falls back when the pod has no club', () => {
+  it('omits terms/charges, shows the free-pod payment note, and falls back with no club', () => {
     const bare = { ...pod, payment_terms: null, place_charges: [] } as never;
     renderWithProviders(
       <PodAccordions
         pod={bare}
         people={[]}
         categoryCrumbs={[]}
+        isFree
+        gstPct={18}
+        currency="₹"
         onOpenClub={jest.fn()}
         onOpenProfile={jest.fn()}
       />,
     );
     expect(screen.queryByText('Place charges')).toBeNull();
     expect(screen.queryByText('Payment terms')).toBeNull();
+    fireEvent.press(screen.getByTestId('pod-expand-all'));
+    expect(screen.getByText('This pod is free to join. No payment required.')).toBeOnTheScreen();
     fireEvent.press(screen.getByTestId('accordion-about-header')); // collapse the default-open section
+  });
+
+  it('treats a non-free pod priced at 0 as free in the payment note', () => {
+    const zeroPriced = { ...pod, pod_amount: 0 } as never;
+    renderWithProviders(
+      <PodAccordions
+        pod={zeroPriced}
+        people={[]}
+        categoryCrumbs={[]}
+        isFree={false}
+        gstPct={18}
+        currency="₹"
+        onOpenClub={jest.fn()}
+        onOpenProfile={jest.fn()}
+      />,
+    );
+    fireEvent.press(screen.getByTestId('pod-expand-all'));
+    expect(screen.getByText('This pod is free to join. No payment required.')).toBeOnTheScreen();
   });
 });
 

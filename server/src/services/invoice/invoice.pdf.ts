@@ -27,8 +27,6 @@ export interface InvoiceData {
   currency_symbol: string;
   items: InvoiceLineItem[];
   subtotal: number;
-  platform_fee_amount: number;
-  platform_fee_pct: number;
   gst_amount: number;
   gst_pct: number;
   total: number;
@@ -198,8 +196,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
           .text(value, 456, y, { width: R - 456, align: 'right' });
         y += bold ? 22 : 17;
       };
-      totalsRow('Subtotal', fmt(data.subtotal));
-      totalsRow(`Platform Fee (${data.platform_fee_pct}%)`, fmt(data.platform_fee_amount));
+      totalsRow('Taxable value', fmt(data.subtotal));
       totalsRow(`GST (${data.gst_pct}%)`, fmt(data.gst_amount));
       doc.moveTo(300, y).lineTo(R, y).strokeColor('#cbd5e1').stroke();
       y += 8;

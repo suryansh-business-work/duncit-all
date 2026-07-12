@@ -1,59 +1,59 @@
 import { useMemo } from 'react';
 import type { PodProfitInputs, PodProfitResults } from './types';
 
-const pct = (value: number) => Math.max(0, value) / 100;
+const toPaise = (rupees: number) => Math.round(Math.max(0, rupees) * 100);
+const toRupees = (paise: number) => paise / 100;
+const clampPercent = (value: number) => Math.min(Math.max(value, 0), 100);
 
 /**
- * Calculator math
- * ---------------
- * pod_cost is treated as the GROSS pod price paid by the user. GST is the
- * amount Duncit collects on behalf of the government and is *not* part of
- * Duncit's profit — it is shown separately so finance can reconcile.
+ * Calculator math — a faithful mirror of the server finance engine
+ * (`server/src/modules/finance/finance/breakdown.math.ts`) so the estimate
+ * always agrees with real pod payouts.
  *
- * platform_fee_percent is the slice of pod_cost Duncit keeps as a platform
- * fee, before splitting the remainder with the host.
+ * The pod amount is the GST-INCLUSIVE customer payment. GST is extracted from
+ * it (`P × g/(100+g)`); the platform fee applies to the net; the venue takes
+ * its fixed booked slot price out of the remaining pool (clamped so the host
+ * can never go negative); the host keeps the remainder. Duncit's commission
+ * comes out of each side, and duncit_revenue = platform fee + both commissions.
  *
- * host_percent is the slice of pod_cost paid to the host as their gross
- * earning. Of that gross earning Duncit takes a further cut equal to
- * host_duncit_cut_percent — this is the platform's "host-success" margin.
- *
- * Each product adds product.price × commission% to Duncit's profit.
- *
- * duncit_profit_total = platform_fee_amount
- *                       + duncit_cut_from_host
- *                       + product_commission_total
+ * All arithmetic runs on paise integers with half-up rounding per line so the
+ * invariant holds exactly: gst + host_receives + venue_receives + duncit = amount.
  */
 export function useCalculator(inputs: PodProfitInputs): PodProfitResults {
   return useMemo(() => {
-    const podCost = Math.max(0, inputs.pod_cost);
-    const gstAmount = podCost * pct(inputs.gst_percent);
-    const platformFee = podCost * pct(inputs.platform_fee_percent);
-    const hostGross = podCost * pct(inputs.host_percent);
-    const duncitCutFromHost = hostGross * pct(inputs.host_duncit_cut_percent);
-    const hostNet = hostGross - duncitCutFromHost;
+    const amount = toPaise(inputs.pod_amount);
+    const gstPct = clampPercent(inputs.gst_percent);
+    const feePct = clampPercent(inputs.platform_fee_percent);
+    const hostPct = clampPercent(inputs.host_commission_percent);
+    const venuePct = clampPercent(inputs.venue_commission_percent);
 
-    let productRevenue = 0;
-    let productCommission = 0;
-    for (const product of inputs.products) {
-      const price = Math.max(0, product.price);
-      productRevenue += price;
-      productCommission += price * pct(product.commission_percent);
-    }
-
-    const duncitProfit = platformFee + duncitCutFromHost + productCommission;
-    const denom = podCost + productRevenue;
-    const margin = denom > 0 ? (duncitProfit / denom) * 100 : 0;
+    const gst = Math.round((amount * gstPct) / (100 + gstPct));
+    const net = amount - gst;
+    const fee = Math.round((net * feePct) / 100);
+    const pool = net - fee;
+    const venueAmount = Math.min(toPaise(inputs.venue_amount), pool);
+    const hostAmount = pool - venueAmount;
+    const venueCommission = Math.round((venueAmount * venuePct) / 100);
+    const hostCommission = Math.round((hostAmount * hostPct) / 100);
+    const venueReceives = venueAmount - venueCommission;
+    const hostReceives = hostAmount - hostCommission;
+    const duncitRevenue = fee + hostCommission + venueCommission;
+    const hostEarn = amount === 0 ? 0 : Math.round((hostReceives / amount) * 10000) / 100;
 
     return {
-      gst_amount: gstAmount,
-      platform_fee_amount: platformFee,
-      host_amount_gross: hostGross,
-      duncit_cut_from_host: duncitCutFromHost,
-      host_amount_net: hostNet,
-      product_revenue_total: productRevenue,
-      product_commission_total: productCommission,
-      duncit_profit_total: duncitProfit,
-      effective_duncit_margin_percent: margin,
+      gst_amount: toRupees(gst),
+      net_amount: toRupees(net),
+      platform_fee_amount: toRupees(fee),
+      pool_amount: toRupees(pool),
+      venue_amount: toRupees(venueAmount),
+      venue_commission_amount: toRupees(venueCommission),
+      venue_receives: toRupees(venueReceives),
+      host_amount: toRupees(hostAmount),
+      host_commission_amount: toRupees(hostCommission),
+      host_receives: toRupees(hostReceives),
+      duncit_revenue_total: toRupees(duncitRevenue),
+      host_earn_percent: hostEarn,
+      reconciled_total: toRupees(gst + hostReceives + venueReceives + duncitRevenue),
     };
   }, [inputs]);
 }

@@ -404,7 +404,7 @@ describe('VenueContactCard', () => {
 });
 
 describe('PricePanel', () => {
-  it('prompts for a slot before showing venue costs (physical)', () => {
+  it('asks for the preview without venue args until a slot is picked (physical)', () => {
     renderWithProviders(
       <PricePanel
         finance={finance}
@@ -415,7 +415,6 @@ describe('PricePanel', () => {
         isPhysical
       />,
     );
-    expect(screen.getByText('Pick a slot first')).toBeOnTheScreen();
     // Without a picked slot the preview is asked without venue args.
     expect(mockedEarnings).toHaveBeenCalledWith(100, null, null);
   });
@@ -449,7 +448,7 @@ describe('PricePanel', () => {
     expect(screen.queryByText(/Total collection/)).toBeNull();
   });
 
-  it('computes slot GST and renders the server waterfall with the venue line', () => {
+  it('renders the server waterfall with the venue line', () => {
     mockedEarnings.mockReturnValue({ waterfall, isLoading: false });
     renderWithProviders(
       <PricePanel
@@ -462,9 +461,9 @@ describe('PricePanel', () => {
       />,
     );
     expect(mockedEarnings).toHaveBeenCalledWith(1000, 'v1', 300);
-    // Slot cost lines (client-side, from the picked slot).
-    expect(screen.getByText('₹54')).toBeOnTheScreen();
-    expect(screen.getByText('₹354')).toBeOnTheScreen();
+    // The non-canonical slot-GST / "Total venue cost" block is gone — the
+    // waterfall's own "− Venue slot price" deduction is the single source.
+    expect(screen.queryByText('Total venue cost')).toBeNull();
     // Server waterfall rows.
     expect(screen.getByText('Customer Pays')).toBeOnTheScreen();
     expect(screen.getByText('₹1000.00')).toBeOnTheScreen();
@@ -473,12 +472,29 @@ describe('PricePanel', () => {
     expect(screen.getByText('− Platform Fee (5%)')).toBeOnTheScreen();
     expect(screen.getByText('− Venue slot price')).toBeOnTheScreen();
     expect(screen.getByText('₹300.00')).toBeOnTheScreen();
-    expect(screen.getByText('Your Amount')).toBeOnTheScreen();
+    expect(screen.getByText('Your Amount (remainder)')).toBeOnTheScreen();
     expect(screen.getByText('₹505.09')).toBeOnTheScreen();
     expect(screen.getByText('− Your Commission (10%)')).toBeOnTheScreen();
     expect(screen.getByText('You Receive')).toBeOnTheScreen();
     expect(screen.getByText('₹454.58')).toBeOnTheScreen();
     expect(screen.getByText('(45.46% of customer amount), per booking.')).toBeOnTheScreen();
+  });
+
+  it('shows the host total take-home across all spots', () => {
+    mockedEarnings.mockReturnValue({ waterfall, isLoading: false });
+    renderWithProviders(
+      <PricePanel
+        finance={finance}
+        slotPrice={300}
+        venueId="v1"
+        podAmount={1000}
+        noOfSpots={4}
+        isPhysical
+      />,
+    );
+    // host_receives 454.58 × 4 spots = 1818.32 final take-home.
+    expect(screen.getByText('Total take-home (4 spots)')).toBeOnTheScreen();
+    expect(screen.getByText('₹1818.32')).toBeOnTheScreen();
   });
 
   it('skips venue rows for virtual pods and shows the no-venue payout', () => {

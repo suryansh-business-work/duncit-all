@@ -43,12 +43,13 @@ function useDebouncedAmount(podAmount: number) {
   return amount;
 }
 
-/** Slot cost + GST (venue side, unchanged) and the server-computed potential
- * earnings waterfall for the host — potentialPodEarnings, per booking. */
+/** The host's final calculation for a pod: the server-computed potentialPodEarnings
+ * waterfall (Customer Pays → GST → Platform Fee → Venue slot price → your amount →
+ * your commission → You Receive), per booking and across all spots. */
 export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, isPhysical }: Readonly<Props>) {
-  const { gstPct, currency } = usePricing();
+  const { currency } = usePricing();
   const amount = useDebouncedAmount(podAmount);
-  const hasVenue = isPhysical && !!venueId;
+  const hasVenue = isPhysical && slotPrice !== null;
   const { data, loading } = useQuery(POTENTIAL_POD_EARNINGS, {
     variables: { amount, venue_id: hasVenue ? venueId : null, venue_amount: hasVenue ? slotPrice : null },
     skip: amount <= 0,
@@ -58,8 +59,6 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
 
   const money = (value: number) => `${currency}${round2(value).toLocaleString('en-IN')}`;
   const fmt = (value: number) => `${currency}${(Number(value) || 0).toFixed(2)}`;
-  const slotGst = slotPrice ? round2((slotPrice * gstPct) / 100) : 0;
-  const slotTotal = (slotPrice ?? 0) + slotGst;
 
   const breakdown = () => {
     if (podAmount <= 0) {
@@ -84,6 +83,17 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
         <Typography variant="caption" color="text.secondary">
           ({w.host_earn_pct}% of customer amount) · per booking
         </Typography>
+        {noOfSpots > 0 && (
+          <>
+            <Divider sx={{ my: 0.5 }} />
+            <Row
+              label={`Total take-home (${noOfSpots} spots)`}
+              value={fmt(w.host_receives * noOfSpots)}
+              bold
+              color="success.main"
+            />
+          </>
+        )}
       </Stack>
     );
   };
@@ -94,7 +104,7 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
         <Stack direction="row" spacing={1} alignItems="center">
           <InsightsIcon color="primary" fontSize="small" />
           <Typography variant="subtitle2" fontWeight={900}>
-            Slot cost & potential earnings
+            Potential earnings
           </Typography>
         </Stack>
         {podAmount > 0 && noOfSpots > 0 && (
@@ -108,18 +118,13 @@ export default function PricePanel({ slotPrice, podAmount, noOfSpots, venueId, i
             <Divider />
           </>
         )}
-        {isPhysical && (
-          <>
-            <Row label="Venue slot price" value={slotPrice === null ? 'Pick a slot first' : money(slotPrice)} />
-            <Row label={`GST on slot (${gstPct}%)`} value={slotPrice === null ? '—' : money(slotGst)} />
-            <Row label="Total venue cost" value={slotPrice === null ? '—' : money(slotTotal)} bold />
-            <Divider />
-          </>
-        )}
         <Typography variant="caption" fontWeight={800} color="text.secondary">
           Quick Breakdown (per booking)
         </Typography>
         {breakdown()}
+        <Typography variant="caption" color="text.secondary">
+          Estimates at today&apos;s rates — final settlement happens after the pod completes.
+        </Typography>
       </Stack>
     </Card>
   );

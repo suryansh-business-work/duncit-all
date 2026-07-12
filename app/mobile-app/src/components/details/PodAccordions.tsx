@@ -4,7 +4,7 @@ import { Text, XStack, YStack } from 'tamagui';
 
 import type { PodDetail, PodPerson } from '@/hooks/useDetails';
 import { useThemeColors } from '@/hooks/useThemeColors';
-import { podOccurrenceLabel, podPriceLabel } from '@/utils/pod-format';
+import { inclusiveGst } from '@/utils/checkout-math';
 import { Accordion } from '@/components/details/Accordion';
 import { PodClubCard } from '@/components/details/PodClubCard';
 import {
@@ -24,6 +24,47 @@ interface Section {
   content: ReactNode;
 }
 
+/** Customer payment details — GST + total only (mirrors mWeb's
+ * PodPaymentDetailsSection). Internal fee/host/venue splits are never shown. */
+function PaymentDetails({
+  amount,
+  isFree,
+  gstPct,
+  currency,
+}: Readonly<{ amount: number; isFree: boolean; gstPct: number; currency: string }>) {
+  if (isFree || amount <= 0) {
+    return (
+      <Text fontSize={13.5} color="$muted">
+        This pod is free to join. No payment required.
+      </Text>
+    );
+  }
+  const money = (v: number) => `${currency}${v.toFixed(2)}`;
+  return (
+    <YStack gap={6}>
+      <XStack justifyContent="space-between">
+        <Text fontSize={13.5} color="$muted">
+          GST ({gstPct}%)
+        </Text>
+        <Text fontSize={13.5} color="$color">
+          {money(inclusiveGst(amount, gstPct))}
+        </Text>
+      </XStack>
+      <XStack justifyContent="space-between">
+        <Text fontSize={14} fontWeight="800" color="$color">
+          Total payable
+        </Text>
+        <Text fontSize={14} fontWeight="800" color="$color">
+          {money(amount)}
+        </Text>
+      </XStack>
+      <Text fontSize={11.5} color="$muted">
+        Price is inclusive of GST.
+      </Text>
+    </YStack>
+  );
+}
+
 /** The full pod-details accordion stack (about · club · offers · hosts ·
  * attendees · perks · payment · terms · charges) with expand/collapse-all —
  * RN port of mWeb's PodDetailAccordions. */
@@ -31,12 +72,18 @@ export function PodAccordions({
   pod,
   people,
   categoryCrumbs,
+  isFree,
+  gstPct,
+  currency,
   onOpenClub,
   onOpenProfile,
 }: Readonly<{
   pod: PodDetail;
   people: PodPerson[];
   categoryCrumbs: readonly string[];
+  isFree: boolean;
+  gstPct: number;
+  currency: string;
   onOpenClub: () => void;
   onOpenProfile: (userId: string) => void;
 }>) {
@@ -118,14 +165,7 @@ export function PodAccordions({
         title: 'Payment details',
         icon: 'payments',
         content: (
-          <YStack gap={4}>
-            <Text fontSize={14} fontWeight="800" color="$color">
-              {podPriceLabel(pod)}
-            </Text>
-            <Text fontSize={12.5} color="$muted">
-              Occurrence: {podOccurrenceLabel(pod.pod_occurrence)}
-            </Text>
-          </YStack>
+          <PaymentDetails amount={pod.pod_amount} isFree={isFree} gstPct={gstPct} currency={currency} />
         ),
       },
     ];
@@ -150,7 +190,7 @@ export function PodAccordions({
       });
     }
     return list;
-  }, [pod, people, categoryCrumbs, onOpenClub, onOpenProfile, primary]);
+  }, [pod, people, categoryCrumbs, isFree, gstPct, currency, onOpenClub, onOpenProfile, primary]);
 
   const [open, setOpen] = useState<Set<string>>(new Set(['about']));
   const toggle = (id: string) =>

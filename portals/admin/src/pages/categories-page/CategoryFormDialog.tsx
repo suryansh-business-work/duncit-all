@@ -5,8 +5,10 @@ import {
   DialogActions,
   DialogContent,
   DialogTitle,
+  FormControlLabel,
   MenuItem,
   Stack,
+  Switch,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
@@ -14,6 +16,9 @@ import {
 import IconPickerField from '../../components/IconPickerField';
 import MediaPickerField from '../../components/MediaPickerField';
 import { Level, FormState } from './queries';
+
+/** Mirrors the server's MIN_CO_HOSTS..MAX_CO_HOSTS bounds. */
+const CO_HOST_LIMITS = [1, 2, 3, 4, 5];
 
 interface DialogState {
   open: boolean;
@@ -153,6 +158,49 @@ export default function CategoryFormDialog({
                 </TextField>
               )}
             </Stack>
+
+            {/* Co-hosting is configured per SUB-category — the server rejects
+                these fields on SUPER/CATEGORY, so they are only offered here. */}
+            {dialog.level === 'SUB' && (
+              <Stack spacing={1.5}>
+                <FormControlLabel
+                  control={
+                    <Switch
+                      inputProps={{ 'aria-label': 'Allow Co-Hosts' }}
+                      checked={dialog.form.allow_co_hosts}
+                      onChange={(e) =>
+                        setDialog({
+                          ...dialog,
+                          form: { ...dialog.form, allow_co_hosts: e.target.checked },
+                        })
+                      }
+                    />
+                  }
+                  label="Allow Co-Hosts"
+                />
+                {dialog.form.allow_co_hosts && (
+                  <TextField
+                    label="Max co-hosts per pod"
+                    select
+                    value={dialog.form.max_co_hosts}
+                    onChange={(e) =>
+                      setDialog({
+                        ...dialog,
+                        form: { ...dialog.form, max_co_hosts: Number(e.target.value) || 1 },
+                      })
+                    }
+                    helperText="How many co-hosts a host may invite to one pod in this sub-category."
+                    sx={{ maxWidth: 260 }}
+                  >
+                    {CO_HOST_LIMITS.map((n) => (
+                      <MenuItem key={n} value={n}>
+                        {n}
+                      </MenuItem>
+                    ))}
+                  </TextField>
+                )}
+              </Stack>
+            )}
             {opError && <Alert severity="error">{opError}</Alert>}
           </Stack>
         )}

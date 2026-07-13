@@ -52,3 +52,35 @@ describe('toCategoryInput', () => {
     expect(input.is_active).toBe(true);
   });
 });
+
+describe('co-hosts (SUB-category only)', () => {
+  const sub = { ...base, allow_co_hosts: true, max_co_hosts: 3 };
+
+  it('accepts a co-host limit of 1-5 and rejects anything outside it', async () => {
+    await expect(categoryFormSchema.validate(sub)).resolves.toMatchObject({ max_co_hosts: 3 });
+    await expect(
+      categoryFormSchema.validate({ ...sub, max_co_hosts: 0 })
+    ).rejects.toThrow(/at least 1/i);
+    await expect(
+      categoryFormSchema.validate({ ...sub, max_co_hosts: 6 })
+    ).rejects.toThrow(/at most 5/i);
+    await expect(
+      categoryFormSchema.validate({ ...sub, max_co_hosts: 2.5 })
+    ).rejects.toThrow(/whole number/i);
+  });
+
+  it('defaults to co-hosting off with a limit of 1', async () => {
+    const parsed = await categoryFormSchema.validate(base);
+    expect(parsed.allow_co_hosts).toBe(false);
+    expect(parsed.max_co_hosts).toBe(1);
+  });
+
+  // The server rejects allow_co_hosts/max_co_hosts on SUPER + CATEGORY, so the
+  // payload must not carry them from those dialogs.
+  it('only sends the co-host fields for a SUB-category', () => {
+    expect(toCategoryInput(sub, 'SUB')).toMatchObject({ allow_co_hosts: true, max_co_hosts: 3 });
+    expect(toCategoryInput(sub, 'CATEGORY')).not.toHaveProperty('allow_co_hosts');
+    expect(toCategoryInput(sub, 'SUPER')).not.toHaveProperty('max_co_hosts');
+    expect(toCategoryInput(sub)).not.toHaveProperty('allow_co_hosts');
+  });
+});

@@ -23,6 +23,15 @@ export const categoryFormSchema = yup.object({
     .max(9999)
     .default(0),
   is_active: yup.boolean().default(true),
+  // SUB-category only. The dialog hides these on SUPER/CATEGORY and the server
+  // rejects them there, so the defaults keep those levels valid.
+  allow_co_hosts: yup.boolean().default(false),
+  max_co_hosts: yup
+    .number()
+    .integer('Co-host limit must be a whole number')
+    .min(1, 'At least 1 co-host')
+    .max(5, 'At most 5 co-hosts')
+    .default(1),
 });
 
 export type CategoryFormValues = yup.InferType<typeof categoryFormSchema>;
@@ -43,14 +52,25 @@ export function parseCategoryMedia(text: string): CategoryMediaItem[] {
     }));
 }
 
-export function toCategoryInput(values: CategoryFormValues) {
+/**
+ * `level` decides whether the co-host fields travel: the server rejects them on
+ * anything but a SUB-category, so sending them from a SUPER/CATEGORY dialog
+ * would turn a harmless save into a BAD_USER_INPUT.
+ */
+export function toCategoryInput(values: CategoryFormValues, level?: string) {
   const cast = categoryFormSchema.cast(values, { stripUnknown: true });
-  return {
+  const base = {
     name: cast.name,
     icon: cast.icon || null,
     description: cast.description || null,
     media: parseCategoryMedia(cast.mediaText),
     sort_order: Number(cast.sort_order) || 0,
     is_active: cast.is_active,
+  };
+  if (level !== 'SUB') return base;
+  return {
+    ...base,
+    allow_co_hosts: cast.allow_co_hosts,
+    max_co_hosts: Number(cast.max_co_hosts) || 1,
   };
 }

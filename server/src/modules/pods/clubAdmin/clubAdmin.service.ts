@@ -12,7 +12,7 @@ import { PaymentModel } from '@modules/finance/payment/payment.model';
 
 type Actor = { id: string; roles?: string[] };
 
-const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 function forbidden(): never {
   throw new GraphQLError('You do not administer this club', {

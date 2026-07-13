@@ -37,7 +37,7 @@ export const COMPLETE_POD = gql`
 `;
 
 const hasMediaLine = (text: string) =>
-  text.split('\n').map((line) => line.trim()).filter(Boolean).length > 0;
+  text.split('\n').map((line) => line.trim()).some(Boolean);
 
 const splitLines = (text: string) =>
   text.split('\n').map((item) => item.trim()).filter(Boolean);

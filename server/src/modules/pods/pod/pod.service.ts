@@ -162,7 +162,7 @@ function normalizePodMode(mode?: string | null): PodMode {
 
 function validateMeetingDetails(mode: PodMode, input: any, current?: any) {
   if (mode !== 'VIRTUAL') return;
-  const meetingUrl = input.meeting_url !== undefined ? input.meeting_url : current?.meeting_url;
+  const meetingUrl = input.meeting_url === undefined ? current?.meeting_url : input.meeting_url;
   const trimmed = typeof meetingUrl === 'string' ? meetingUrl.trim() : '';
   if (!trimmed) {
     throw new GraphQLError('Meeting link is required for virtual pods', {
@@ -324,7 +324,7 @@ async function emailVenueSlotRequested(pod: any, slot: any) {
   }
 }
 
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 const requestMap = (items: any[] = []) => {
   const map = new Map<string, number>();
@@ -451,7 +451,7 @@ async function buildProductRequests(enabled: boolean, rawItems: any[] = []) {
   const next = [];
   for (const item of compact) {
     const product = await InventoryProductModel.findById(item.productId);
-    if (!product || !product.is_active) {
+    if (!product?.is_active) {
       throw new GraphQLError('Selected product is not available', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     next.push({
@@ -713,7 +713,7 @@ export const podService = {
     // A deactivated host may not create pods even if they still hold the cached
     // HOST role. Role-only hosts (no Host doc) are unaffected.
     const hostDoc = await HostModel.findOne({ user_id: userObjectId }).select('status is_active');
-    if (hostDoc && hostDoc.is_active === false) {
+    if (hostDoc?.is_active === false) {
       throw new GraphQLError('Your host account has been deactivated', { extensions: { code: 'FORBIDDEN' } });
     }
     const hasHostRole = await UserRoleModel.exists({ user_id: userObjectId, role: 'HOST' });
@@ -734,12 +734,11 @@ export const podService = {
       // Slot bookings may target ANY approved venue partner (the venue approves
       // the request before the pod goes live); the manual no-slot path is still
       // restricted to the host's own approved venues.
+      const venueMatch = input.venue_slot_id
+        ? { _id: input.venue_id, status: 'APPROVED', is_active: true }
+        : { _id: input.venue_id, owner_user_id: userObjectId, status: 'APPROVED', is_active: true };
       const venue = input.venue_id
-        ? await VenueModel.findOne(
-            input.venue_slot_id
-              ? { _id: input.venue_id, status: 'APPROVED', is_active: true }
-              : { _id: input.venue_id, owner_user_id: userObjectId, status: 'APPROVED', is_active: true }
-          ).select('_id')
+        ? await VenueModel.findOne(venueMatch).select('_id')
         : null;
       if (!venue) {
         throw new GraphQLError(

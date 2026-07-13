@@ -28,12 +28,12 @@ const log = (...m: unknown[]) => console.log("[sync-user-indexes]", ...m);
 // `phone_number_1_phone_extension_1` indexes phone-less users as (null,null),
 // so the 2nd phone-less signup collides. The schema's nested `auth.*` partial
 // indexes replace them.
-const LEGACY_AUTH_KEY_FIELDS = [
+const LEGACY_AUTH_KEY_FIELDS = new Set([
   "email",
   "google_id",
   "phone_number",
   "phone_extension",
-];
+]);
 
 async function run() {
   await connectDB();
@@ -73,7 +73,7 @@ async function run() {
     if (index.name === "_id_") continue;
     const keys = Object.keys(index.key);
     const isLegacyAuthIndex = keys.some((k) =>
-      LEGACY_AUTH_KEY_FIELDS.includes(k),
+      LEGACY_AUTH_KEY_FIELDS.has(k),
     );
     if (isLegacyAuthIndex && index.unique) {
       log(
@@ -95,7 +95,7 @@ async function run() {
         JSON.stringify({ "auth.phone.number": 1, "auth.phone.extension": 1 }),
     );
     const legacyGone = !after.some((i) =>
-      Object.keys(i.key).some((k) => LEGACY_AUTH_KEY_FIELDS.includes(k)),
+      Object.keys(i.key).some((k) => LEGACY_AUTH_KEY_FIELDS.has(k)),
     );
     log(
       "phone index now:",

@@ -32,16 +32,16 @@ export default function App() {
   const showBottomNav = isAuthed && !isSignupSurvey;
 
   const [splashOpen, setSplashOpen] = useState(
-    () => typeof window !== 'undefined' && !sessionStorage.getItem('duncit_splash_shown')
+    () => typeof globalThis.window !== 'undefined' && !sessionStorage.getItem('duncit_splash_shown')
   );
 
   useEffect(() => {
     if (!splashOpen) return;
-    const timer = window.setTimeout(() => {
+    const timer = globalThis.setTimeout(() => {
       sessionStorage.setItem('duncit_splash_shown', '1');
       setSplashOpen(false);
     }, 2200);
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [splashOpen]);
 
   const { faviconUrl } = useBrandingAssets();

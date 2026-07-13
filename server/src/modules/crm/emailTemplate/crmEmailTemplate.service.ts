@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { CrmEmailTemplateModel } from './crmEmailTemplate.model';
 // Reuse the pure MJML helpers (no DB access) from the core module.

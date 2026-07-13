@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import * as yup from 'yup';
 import { GraphQLError } from 'graphql';
 import { MarketingCampaignModel, type IMarketingCampaign } from './marketing.model';
@@ -80,7 +80,7 @@ async function podCards() {
     .exec();
   const clubIds = [...new Set(pods.map((pod) => String(pod.club_id)).filter(Boolean))];
   const clubs = await ClubModel.find({ _id: { $in: clubIds } }).select('club_id').lean().exec();
-  const clubSlugById = new Map(clubs.map((club: any) => [String(club._id), club.club_id]));
+  const clubSlugById = new Map<string, string>(clubs.map((club: any) => [String(club._id), club.club_id]));
   return Promise.all(
     pods.map(async (pod: any) => {
       const clubSlug = clubSlugById.get(String(pod.club_id)) || '';

@@ -19,7 +19,7 @@ export interface SupportPageOpts {
 
 /** Case-insensitive regex with the user input escaped (no ReDoS / injection). */
 export function supportSearchRegex(search: string): RegExp {
-  return new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+  return new RegExp(search.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
 }
 
 interface PaginableModel {

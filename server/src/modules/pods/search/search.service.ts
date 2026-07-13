@@ -24,7 +24,7 @@ interface ClubResult {
   followers: number;
 }
 
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 const toMs = (iso: string | null) => (iso ? new Date(iso).getTime() : Number.POSITIVE_INFINITY);
 const toObjectIds = (ids: string[]) => ids.map((id) => new Types.ObjectId(id));
 

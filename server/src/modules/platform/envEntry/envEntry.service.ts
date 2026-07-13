@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { EnvEntryModel, ENV_CATEGORIES, type EnvCategory } from './envEntry.model';
-import { CATEGORY_FIELDS, SECRET_FIELDS, maskSecret } from './envEntry.fields';
+import { CATEGORY_FIELDS, SECRET_FIELDS } from './envEntry.fields';
 
 const iso = (v: any) => (v instanceof Date ? v.toISOString() : v ?? null);
 
@@ -321,7 +321,7 @@ export const envEntryService = {
   async resolveRuntime(category: EnvCategory, entryId?: string | null) {
     if (entryId) {
       const doc = await EnvEntryModel.findById(entryId);
-      if (doc && doc.is_active) return { id: String(doc._id), name: doc.name, config: (doc.config ?? {}) as EnvEntryConfig };
+      if (doc?.is_active) return { id: String(doc._id), name: doc.name, config: (doc.config ?? {}) as EnvEntryConfig };
     }
     const fallback = await EnvEntryModel.findOne({ category, is_active: true, is_default: true });
     if (fallback) return { id: String(fallback._id), name: fallback.name, config: (fallback.config ?? {}) as EnvEntryConfig };
@@ -345,4 +345,4 @@ export const envEntryService = {
   },
 };
 
-export { maskSecret };
+export { maskSecret } from './envEntry.fields';

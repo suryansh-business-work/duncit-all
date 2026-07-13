@@ -1,4 +1,4 @@
-import http from 'http';
+import http from 'node:http';
 import jwt from 'jsonwebtoken';
 import { Server, Socket } from 'socket.io';
 import { isAllowedOrigin } from '../config/cors';

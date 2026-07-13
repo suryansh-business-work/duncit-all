@@ -51,7 +51,7 @@ export const challengeService = {
   async list(search?: string | null) {
     const q: Record<string, unknown> = {};
     if (search) {
-      q.name = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      q.name = new RegExp(search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
     }
     const docs = await ChallengeModel.find(q).sort({ created_at: -1 }).lean();
     const names = await nameMap(allCategoryIds(docs));

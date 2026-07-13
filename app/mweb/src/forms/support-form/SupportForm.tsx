@@ -37,7 +37,7 @@ export default function SupportForm({
 }: Readonly<Props>) {
   const [status, setStatus] = useState<string | undefined>(undefined);
   const { control, handleSubmit, formState } = useForm<SupportFormValues>({
-    defaultValues: { ...DEFAULTS, ...(initialValues ?? {}) },
+    defaultValues: { ...DEFAULTS, ...initialValues },
     resolver: zodResolver(supportSchema),
     mode: 'onBlur',
   });

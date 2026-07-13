@@ -130,7 +130,9 @@ export default function EarnPage() {
                   kind={box.kind}
                   bookedAt={pendingMeeting.scheduled_at ?? pendingMeeting.requested_at ?? null}
                   rescheduleCount={pendingMeeting.reschedule_count ?? 0}
-                  onChanged={() => void refetch()}
+                  onChanged={() => {
+                    refetch().catch(() => undefined);
+                  }}
                 />
               )}
             </Stack>

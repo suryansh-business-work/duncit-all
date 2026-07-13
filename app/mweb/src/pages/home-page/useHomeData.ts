@@ -216,7 +216,9 @@ export function useHomeData({
           return (Number(b.pod_amount) || 0) - (Number(a.pod_amount) || 0);
       }
     };
-    map.forEach((arr) => arr.sort(cmp));
+    map.forEach((arr) => {
+      arr.sort(cmp);
+    });
     return map;
   }, [activePods, sortBy]);
 
@@ -299,7 +301,9 @@ export function useHomeData({
         arr.push(s);
         subsByParent.set(s.parent_id, arr);
       });
-    subsByParent.forEach((arr) => arr.sort((a, b) => a.name.localeCompare(b.name)));
+    subsByParent.forEach((arr) => {
+      arr.sort((a, b) => a.name.localeCompare(b.name));
+    });
     const ordered: any[] = [];
     categories.forEach((c: any) => {
       ordered.push(c);
@@ -333,7 +337,9 @@ export function useHomeData({
         arr.push(s);
         subsByParent.set(s.parent_id, arr);
       });
-    subsByParent.forEach((arr) => arr.sort((a, b) => a.name.localeCompare(b.name)));
+    subsByParent.forEach((arr) => {
+      arr.sort((a, b) => a.name.localeCompare(b.name));
+    });
     return categories.map((c: any) => ({
       id: c.id,
       name: c.name,

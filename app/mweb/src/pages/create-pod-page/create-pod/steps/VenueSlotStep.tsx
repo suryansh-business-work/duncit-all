@@ -69,7 +69,7 @@ export default function VenueSlotStep({ form, venues, clubVenueIds, viewerUserId
     (venue) => clubVenueIds.has(venue.id) && (!locationId || venue.location_id === locationId)
   );
   const selectedVenue = venues.find((venue) => venue.id === venueId) ?? null;
-  const ownVenue = Boolean(selectedVenue && selectedVenue.owner_user_id === viewerUserId);
+  const ownVenue = Boolean(selectedVenue?.owner_user_id === viewerUserId);
   const spaces = venueSpaces(selectedVenue);
   const selectedSpace = spaces.find((space) => space.label === spaceLabel) ?? null;
 

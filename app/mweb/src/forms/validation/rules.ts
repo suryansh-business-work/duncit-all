@@ -3,7 +3,7 @@ import * as yup from 'yup';
 export const PERSON_NAME_PATTERN = /^[A-Za-z][A-Za-z .'-]{0,59}$/;
 export const PHONE_NUMBER_PATTERN = /^\d{6,15}$/;
 export const PHONE_EXTENSION_PATTERN = /^\+?\d{1,5}$/;
-export const OTP_PATTERN = /^[0-9]{4,8}$/;
+export const OTP_PATTERN = /^\d{4,8}$/;
 export const POSTAL_CODE_PATTERN = /^[0-9A-Za-z -]{3,12}$/;
 
 const optionalText = (label: string, max: number) =>

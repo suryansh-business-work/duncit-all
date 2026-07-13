@@ -125,7 +125,7 @@ export const productOrderService = {
    * throws are swallowed by the caller so a paid checkout is never failed.
    */
   async createFromPayment(payment: IPayment) {
-    const meta = (payment.metadata ?? {}) as Record<string, any>;
+    const meta = payment.metadata ?? {};
     const lines: any[] = Array.isArray(meta.product_lines) ? meta.product_lines : [];
     if (lines.length === 0) return [];
 
@@ -203,7 +203,7 @@ export const productOrderService = {
     if (filter?.fulfilment_method) q.fulfilment_method = filter.fulfilment_method;
     if (filter?.fulfilment_status) q.fulfilment_status = filter.fulfilment_status;
     if (filter?.search) {
-      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       q.$or = [{ order_no: r }, { buyer_name: r }, { buyer_email: r }, { 'shiprocket.awb': r }];
     }
     const docs = await ProductOrderModel.find(q).sort({ created_at: -1 }).limit(limit);

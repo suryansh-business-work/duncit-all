@@ -35,11 +35,13 @@ function buildTimeline(item: PodHistoryItem): TimelineEvent[] {
     events.push({ title: 'Backout requested', detail: 'No backout request yet. Use Backout Pod from actions when needed.', state: 'current', icon: 'backout', tag: 'Available' });
     return events;
   }
-  events.push({ title: 'Backout requested', date: item.backed_out_at, detail: 'Backout request was recorded.', state: 'done', icon: 'backout', tag: 'Completed' });
-  events.push({ title: 'Refund criteria', detail: refundPending ? 'Waiting for refund criteria to be completed.' : 'Refund criteria was checked for this backout.', state: refundPending ? 'current' : 'done', icon: 'wait', tag: refundPending ? 'Waiting' : 'Checked' });
-  events.push(refundProcessed
-    ? { title: 'Refund initiated', detail: 'Refund has been initiated for this membership.', state: 'done', icon: 'refund', tag: 'Initiated' }
-    : { title: 'Refund not initiated', detail: 'Refund has not been initiated for this backout yet.', state: 'current', icon: 'refund', tag: 'Not initiated' });
+  events.push(
+    { title: 'Backout requested', date: item.backed_out_at, detail: 'Backout request was recorded.', state: 'done', icon: 'backout', tag: 'Completed' },
+    { title: 'Refund criteria', detail: refundPending ? 'Waiting for refund criteria to be completed.' : 'Refund criteria was checked for this backout.', state: refundPending ? 'current' : 'done', icon: 'wait', tag: refundPending ? 'Waiting' : 'Checked' },
+    refundProcessed
+      ? { title: 'Refund initiated', detail: 'Refund has been initiated for this membership.', state: 'done', icon: 'refund', tag: 'Initiated' }
+      : { title: 'Refund not initiated', detail: 'Refund has not been initiated for this backout yet.', state: 'current', icon: 'refund', tag: 'Not initiated' }
+  );
   return events;
 }
 

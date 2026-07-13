@@ -197,15 +197,16 @@ export const sliderService = {
     const doc = await SliderModel.findById(id);
     if (!doc) throw new GraphQLError('Slider not found', { extensions: { code: 'NOT_FOUND' } });
 
+    let nextLocationId: any;
+    if (input.location_id === undefined) {
+      nextLocationId = doc.location_id ? String(doc.location_id) : null;
+    } else {
+      nextLocationId = input.location_id;
+    }
     const next = {
       scope: input.scope ?? doc.scope,
-      location_id:
-        input.location_id !== undefined
-          ? input.location_id
-          : doc.location_id
-            ? String(doc.location_id)
-            : null,
-      zone_name: input.zone_name !== undefined ? input.zone_name : doc.zone_name,
+      location_id: nextLocationId,
+      zone_name: input.zone_name === undefined ? doc.zone_name : input.zone_name,
     };
     validateScope(next);
 
@@ -243,7 +244,7 @@ export const sliderService = {
     }
 
     if (input.scope !== undefined || input.location_id !== undefined) {
-      doc.location_id = next.scope === 'GLOBAL' ? null : (next.location_id as any);
+      doc.location_id = next.scope === 'GLOBAL' ? null : next.location_id;
     }
     if (input.scope !== undefined || input.zone_name !== undefined) {
       doc.zone_name = next.scope === 'ZONE' ? next.zone_name ?? null : null;

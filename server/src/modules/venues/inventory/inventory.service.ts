@@ -283,7 +283,7 @@ function validateProductListingInput(input: any) {
 async function assertBrandActive(brandId: unknown) {
   if (!brandId || !Types.ObjectId.isValid(String(brandId))) return;
   const brand = await EcommBrandModel.findById(String(brandId)).select('is_active');
-  if (brand && brand.is_active === false) {
+  if (brand?.is_active === false) {
     throw new GraphQLError('This brand is deactivated and cannot list new products', {
       extensions: { code: 'BAD_REQUEST' },
     });
@@ -360,7 +360,7 @@ export const inventoryService = {
     if (filter?.status) q.status = filter.status;
     if (filter?.ownership) q.ownership = filter.ownership;
     if (filter?.search) {
-      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       q.$or = [{ product_name: r }, { sku: r }, { tags: r }, { brand_name: r }];
     }
     const docs = await InventoryProductModel.find(q).sort({ product_name: 1 });

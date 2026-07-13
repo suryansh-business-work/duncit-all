@@ -23,7 +23,7 @@ export async function getRuntimeEnvValue(key: string): Promise<string> {
       is_default: true,
     }).lean();
     const raw = (entry?.config as Record<string, unknown> | undefined)?.[mapping.field];
-    return raw !== undefined && raw !== null ? String(raw) : '';
+    return raw !== undefined && raw !== null ? String(raw as string | number | boolean) : '';
   }
   return process.env[normalized] ?? '';
 }

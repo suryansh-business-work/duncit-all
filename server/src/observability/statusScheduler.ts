@@ -46,7 +46,7 @@ export async function runStatusSweep(prober: Prober = probe): Promise<number> {
         ok: result.ok,
         status_code: result.statusCode,
         // Latency is only meaningful when the host actually answered.
-        latency_ms: result.statusCode !== null ? latency : null,
+        latency_ms: result.statusCode === null ? null : latency,
         checked_at,
       };
     })

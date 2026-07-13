@@ -206,7 +206,7 @@ export const crmResolvers = {
     ) => {
       const user = requireRole(ctx, RW);
       const result = await callService.startAiCall({
-        entity_type: args.entity as CommsLogEntity,
+        entity_type: args.entity,
         entity_id: args.id,
         to: args.contact_number,
         prompt_id: args.prompt_id,
@@ -228,7 +228,7 @@ export const crmResolvers = {
     ) => {
       const user = requireRole(ctx, RW);
       const result = await callService.startPortalCall({
-        entity_type: args.entity as CommsLogEntity,
+        entity_type: args.entity,
         entity_id: args.id,
         to: args.contact_number,
         agent_number: args.agent_number ?? null,

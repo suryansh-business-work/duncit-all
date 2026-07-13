@@ -102,6 +102,8 @@ export default function ExplorePodCard({
     }
   };
 
+  const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
+
   return (
     <Box
       onDoubleClick={openPod}
@@ -129,7 +131,7 @@ export default function ExplorePodCard({
           {
             key: 'join',
             icon: <HowToRegIcon />,
-            label: `${pod.pod_attendees?.length ?? 0}${pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''}`,
+            label: `${pod.pod_attendees?.length ?? 0}${spotsSuffix}`,
             onClick: openPod,
             tooltip: 'Join',
           },

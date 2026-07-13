@@ -1,8 +1,8 @@
 import * as yup from 'yup';
 import { STATUSES } from './user.constants';
 
-const phoneRegex = /^[0-9]{6,15}$/;
-const extRegex = /^\+?[0-9]{1,5}$/;
+const phoneRegex = /^\d{6,15}$/;
+const extRegex = /^\+?\d{1,5}$/;
 
 export const registerSchema = yup.object({
   first_name: yup.string().min(1).max(60).required(),
@@ -112,7 +112,7 @@ export const updateUserSchema = yup.object({
   zone: yup.string().optional(),
   bio: yup.string().max(500).optional(),
   profile_photo: yup.string().url().optional(),
-  status: yup.string().oneOf(STATUSES as readonly string[]).optional(),
+  status: yup.string().oneOf(STATUSES).optional(),
   roles: yup.array().of(yup.string().required()).optional(),
   assigned_city: yup.string().optional(),
   assigned_zones: yup.array().of(yup.string()).optional(),

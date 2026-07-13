@@ -11,7 +11,7 @@ const POLICY_PDF = gql`
 `;
 
 function base64ToBlobUrl(base64: string): string {
-  const bytes = Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+  const bytes = Uint8Array.from(atob(base64), (c) => c.codePointAt(0) ?? 0);
   return URL.createObjectURL(new Blob([bytes], { type: 'application/pdf' }));
 }
 

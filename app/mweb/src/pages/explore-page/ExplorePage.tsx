@@ -150,7 +150,7 @@ export default function ExplorePage({ superCategorySlug, locationId, zoneName }:
         '& .slick-slide > div': { height: '100%' },
       }}
     >
-      <ExploreHeader filters={filters} setFilters={setFilters} activeCount={activeCount} resultCount={pods.length} onOpenFilters={() => setFiltersOpen(true)} onRefresh={() => void refetch()} />
+      <ExploreHeader filters={filters} setFilters={setFilters} activeCount={activeCount} resultCount={pods.length} onOpenFilters={() => setFiltersOpen(true)} onRefresh={() => { refetch().catch(() => undefined); }} />
       {pods.length === 0 ? (
         <Stack alignItems="center" justifyContent="center" sx={{ height: '100%', px: 3 }}>
           <Alert severity="info">No pods match these filters.</Alert>

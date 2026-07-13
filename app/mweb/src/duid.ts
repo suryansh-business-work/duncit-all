@@ -14,7 +14,7 @@ function makeId(): string {
 }
 
 export function getOrCreateDuid(): string {
-  if (typeof window === 'undefined') return '';
+  if (typeof globalThis.window === 'undefined') return '';
   try {
     const existing = window.localStorage.getItem(KEY);
     if (existing && existing.length > 0) return existing;

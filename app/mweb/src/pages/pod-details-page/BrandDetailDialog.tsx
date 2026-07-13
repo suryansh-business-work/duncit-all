@@ -32,6 +32,54 @@ export default function BrandDetailDialog({
   const brand = data?.publicEcommBrand;
   const location = brand ? [brand.city, brand.state].filter(Boolean).join(', ') : '';
 
+  const brandBody = brand ? (
+    <Stack spacing={1.5}>
+      {brand.cover_image_url && (
+        <Box
+          component="img"
+          src={brand.cover_image_url}
+          alt={brand.brand_name}
+          sx={{ width: '100%', height: 128, borderRadius: 2, objectFit: 'cover' }}
+        />
+      )}
+      <Stack direction="row" spacing={1.5} alignItems="center">
+        <Avatar src={brand.logo_url || undefined} variant="rounded" sx={{ width: 52, height: 52 }}>
+          <StorefrontIcon />
+        </Avatar>
+        <Box sx={{ minWidth: 0 }}>
+          <Typography variant="h6" sx={{ fontWeight: 900 }} noWrap>
+            {brand.brand_name}
+          </Typography>
+          {brand.tagline && (
+            <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
+              {brand.tagline}
+            </Typography>
+          )}
+        </Box>
+      </Stack>
+      {brand.description && (
+        <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
+          {brand.description}
+        </Typography>
+      )}
+      <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
+        {location && <Chip size="small" icon={<PlaceIcon />} label={location} />}
+        {brand.established_year && (
+          <Chip size="small" icon={<EventIcon />} label={`Since ${brand.established_year}`} />
+        )}
+        <Chip
+          size="small"
+          icon={<Inventory2Icon />}
+          label={`${brand.approved_product_count} products`}
+        />
+      </Stack>
+    </Stack>
+  ) : (
+    <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
+      Brand details are unavailable.
+    </Typography>
+  );
+
   return (
     <Dialog open={Boolean(brandId)} onClose={onClose} fullWidth maxWidth="xs">
       <DialogTitle sx={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', pr: 1 }}>
@@ -45,52 +93,8 @@ export default function BrandDetailDialog({
           <Stack alignItems="center" sx={{ py: 4 }}>
             <CircularProgress size={26} />
           </Stack>
-        ) : brand ? (
-          <Stack spacing={1.5}>
-            {brand.cover_image_url && (
-              <Box
-                component="img"
-                src={brand.cover_image_url}
-                alt={brand.brand_name}
-                sx={{ width: '100%', height: 128, borderRadius: 2, objectFit: 'cover' }}
-              />
-            )}
-            <Stack direction="row" spacing={1.5} alignItems="center">
-              <Avatar src={brand.logo_url || undefined} variant="rounded" sx={{ width: 52, height: 52 }}>
-                <StorefrontIcon />
-              </Avatar>
-              <Box sx={{ minWidth: 0 }}>
-                <Typography variant="h6" sx={{ fontWeight: 900 }} noWrap>
-                  {brand.brand_name}
-                </Typography>
-                {brand.tagline && (
-                  <Typography variant="body2" color="text.secondary" sx={{ fontWeight: 700 }} noWrap>
-                    {brand.tagline}
-                  </Typography>
-                )}
-              </Box>
-            </Stack>
-            {brand.description && (
-              <Typography variant="body2" color="text.secondary" sx={{ whiteSpace: 'pre-wrap' }}>
-                {brand.description}
-              </Typography>
-            )}
-            <Stack direction="row" spacing={1} flexWrap="wrap" useFlexGap>
-              {location && <Chip size="small" icon={<PlaceIcon />} label={location} />}
-              {brand.established_year && (
-                <Chip size="small" icon={<EventIcon />} label={`Since ${brand.established_year}`} />
-              )}
-              <Chip
-                size="small"
-                icon={<Inventory2Icon />}
-                label={`${brand.approved_product_count} products`}
-              />
-            </Stack>
-          </Stack>
         ) : (
-          <Typography variant="body2" color="text.secondary" sx={{ py: 2 }}>
-            Brand details are unavailable.
-          </Typography>
+          brandBody
         )}
       </DialogContent>
     </Dialog>

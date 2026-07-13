@@ -121,7 +121,7 @@ export default function PetForm({ pet, onCancel, onSaved }: Readonly<PetFormProp
               <Autocomplete
                 freeSolo
                 options={AGE_OPTIONS}
-                value={field.value !== '' ? String(field.value) : ''}
+                value={field.value === '' ? '' : String(field.value)}
                 onChange={(_e, v) => field.onChange(v ? Number(v) : '')}
                 onInputChange={(_e, v) => field.onChange(v ? Number(v) : '')}
                 renderInput={(params) => (

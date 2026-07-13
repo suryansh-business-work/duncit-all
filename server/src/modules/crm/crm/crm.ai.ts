@@ -156,7 +156,10 @@ async function buildLeadContext(entity: CrmAiEntity, leadId: string): Promise<st
   const reminders = await ReminderModel.find({ entity_type: entity, lead_id: leadId })
     .select('title due_at status notes').sort({ due_at: 1 }).limit(50).lean();
   const remindersText = reminders.length
-    ? reminders.map((r: any) => `- [${r.status}] ${new Date(r.due_at).toISOString()} — ${r.title}${r.notes ? ` (${r.notes})` : ''}`).join('\n')
+    ? reminders.map((r: any) => {
+        const notes = r.notes ? ` (${r.notes})` : '';
+        return `- [${r.status}] ${new Date(r.due_at).toISOString()} — ${r.title}${notes}`;
+      }).join('\n')
     : '(No reminders.)';
 
   return [

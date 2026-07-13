@@ -192,7 +192,7 @@ podSchema.index({ venue_id: 1, pod_date_time: -1 });
 function excludeDeleted(this: any, next: (err?: any) => void) {
   if (this.getOptions?.().includeDeleted) return next();
   const filter = this.getQuery ? this.getQuery() : this.getFilter?.();
-  if (!filter || filter.deleted_at === undefined) this.where({ deleted_at: null });
+  if (filter?.deleted_at === undefined) this.where({ deleted_at: null });
   next();
 }
 podSchema.pre('find', excludeDeleted);

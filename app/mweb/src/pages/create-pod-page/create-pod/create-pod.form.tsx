@@ -18,6 +18,29 @@ const VIDEO_URL_RE = /\.(mp4|mov|webm)$/i;
 export const hasImageLine = (mediaText: string) =>
   splitLines(mediaText).some((url) => !VIDEO_URL_RE.test(url));
 
+/** Physical pods need a venue, a space/capacity and an approved slot; virtual pods
+ * need a valid meeting link. Extracted from the schema's superRefine to keep it
+ * under the cognitive-complexity limit. */
+function refineVenueOrMeeting(values: CreatePodFormValues, ctx: z.RefinementCtx) {
+  if (values.pod_mode === 'PHYSICAL') {
+    if (!values.venue_id) {
+      ctx.addIssue({ code: 'custom', path: ['venue_id'], message: 'Select a venue' });
+    } else if (!values.venue_space_label) {
+      // A space (capacity) is chosen after the venue and gates the slot list.
+      ctx.addIssue({ code: 'custom', path: ['venue_space_label'], message: 'Pick a space / capacity' });
+    }
+    if (!values.venue_slot_id) {
+      ctx.addIssue({ code: 'custom', path: ['venue_slot_id'], message: 'Pick an available slot from the venue calendar' });
+    }
+  } else if (values.pod_mode === 'VIRTUAL') {
+    if (!values.meeting_url) {
+      ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: 'Meeting link is required' });
+    } else if (!/^https?:\/\/\S+$/.test(values.meeting_url)) {
+      ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: 'Meeting link must be valid' });
+    }
+  }
+}
+
 /** Zod schema for the host Create Pod stepper — mirrors the server's
  * createPartnerPod rules (venue for physical, link for virtual, paid amounts). */
 export const createPodSchema = z
@@ -70,22 +93,7 @@ export const createPodSchema = z
     agreed_to_terms: z.boolean(),
   })
   .superRefine((values, ctx) => {
-    if (values.pod_mode === 'PHYSICAL' && !values.venue_id) {
-      ctx.addIssue({ code: 'custom', path: ['venue_id'], message: 'Select a venue' });
-    } else if (values.pod_mode === 'PHYSICAL' && !values.venue_space_label) {
-      // A space (capacity) is chosen after the venue and gates the slot list.
-      ctx.addIssue({ code: 'custom', path: ['venue_space_label'], message: 'Pick a space / capacity' });
-    }
-    if (values.pod_mode === 'PHYSICAL' && !values.venue_slot_id) {
-      ctx.addIssue({ code: 'custom', path: ['venue_slot_id'], message: 'Pick an available slot from the venue calendar' });
-    }
-    if (values.pod_mode === 'VIRTUAL') {
-      if (!values.meeting_url) {
-        ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: 'Meeting link is required' });
-      } else if (!/^https?:\/\/\S+$/.test(values.meeting_url)) {
-        ctx.addIssue({ code: 'custom', path: ['meeting_url'], message: 'Meeting link must be valid' });
-      }
-    }
+    refineVenueOrMeeting(values, ctx);
     if (values.pod_date_time.getTime() <= Date.now()) {
       ctx.addIssue({ code: 'custom', path: ['pod_date_time'], message: 'Start date/time must be in the future' });
     }
@@ -239,7 +247,7 @@ export const MODERATION_FIELD_MAP: Record<string, keyof CreatePodFormValues> = {
 /** The stepper index a form field belongs to — powers jump-to-step on a violation. */
 export const stepForField = (field: keyof CreatePodFormValues): number => {
   const index = STEP_FIELDS.findIndex((fields) => (fields as string[]).includes(field));
-  return index >= 0 ? index : 0;
+  return Math.max(index, 0);
 };
 
 /** Copy for the "AI monitoring" chip's guidelines dialog (shared with mobile). */

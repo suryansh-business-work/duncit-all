@@ -119,12 +119,13 @@ async function actorMeta(userId: string, role: 'USER' | 'AGENT') {
   const u = await UserModel.findById(userId).select(
     'profile.first_name profile.last_name profile.profile_photo'
   );
+  const fallbackName = role === 'AGENT' ? 'Support' : 'User';
   return {
     author_id: new Types.ObjectId(userId),
     author_role: role,
     author_name: u
-      ? `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || (role === 'AGENT' ? 'Support' : 'User')
-      : role === 'AGENT' ? 'Support' : 'User',
+      ? `${u.profile?.first_name ?? ''} ${u.profile?.last_name ?? ''}`.trim() || fallbackName
+      : fallbackName,
     author_photo: u?.profile?.profile_photo || '',
   };
 }
@@ -211,7 +212,7 @@ export const ticketService = {
     }
     await doc!.save();
 
-    const pub = await toPub(doc!);
+    const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
     return pub;
@@ -233,7 +234,7 @@ export const ticketService = {
     if (isAgent) doc!.agent_last_read_at = now;
     else doc!.user_last_read_at = now;
     await doc!.save();
-    const pub = await toPub(doc!);
+    const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
     return pub;
@@ -247,7 +248,7 @@ export const ticketService = {
     // Stamp/clear the resolution time that drives the 3-day reopen window.
     doc!.resolved_at = status === 'RESOLVED' || status === 'CLOSED' ? new Date() : null;
     await doc!.save();
-    const pub = await toPub(doc!);
+    const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
     return pub;
@@ -264,7 +265,7 @@ export const ticketService = {
     if (!doc) fail('NOT_FOUND', 'Ticket not found');
     doc!.priority = priority;
     await doc!.save();
-    const pub = await toPub(doc!);
+    const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
     return pub;
@@ -293,7 +294,7 @@ export const ticketService = {
     doc!.resolved_at = null;
     doc!.last_message_at = new Date();
     await doc!.save();
-    const pub = await toPub(doc!);
+    const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
     return pub;
@@ -324,7 +325,7 @@ export const ticketService = {
       attachments: [],
     } as any);
     await doc!.save();
-    const pub = await toPub(doc!);
+    const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
     return pub;
@@ -352,7 +353,7 @@ export const ticketService = {
     doc!.feedback_comment = (input.comment ?? '').trim();
     doc!.feedback_at = new Date();
     await doc!.save();
-    const pub = await toPub(doc!);
+    const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     emitToSupportUser(String(doc!.user_id), 'ticket:update', pub);
     return pub;
@@ -374,13 +375,14 @@ export const ticketService = {
         m.body_text || (m.attachments?.length ? `[${m.attachments.length} attachment(s)]` : '');
       return { who, when: m.created_at?.toISOString?.() ?? '', body };
     });
+    const phoneSuffix = user?.phone ? ` (${user.phone})` : '';
     return {
       title: 'Duncit — Support ticket transcript',
       no,
       header: [
         { label: 'Ticket', value: no },
         { label: 'Subject', value: doc!.subject || '' },
-        { label: 'User', value: `${userName}${user?.phone ? ` (${user.phone})` : ''}` },
+        { label: 'User', value: `${userName}${phoneSuffix}` },
         { label: 'Status', value: doc!.status },
         { label: 'Started', value: doc!.created_at?.toISOString?.() ?? '' },
         { label: 'Generated', value: new Date().toISOString() },
@@ -422,7 +424,7 @@ export const ticketService = {
     if (!doc) fail('NOT_FOUND', 'Ticket not found');
     doc!.assignee_id = assigneeId ? new Types.ObjectId(assigneeId) : null;
     await doc!.save();
-    const pub = await toPub(doc!);
+    const pub = await toPub(doc);
     emitToSupportAgents('ticket:update', pub);
     return pub;
   },

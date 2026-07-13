@@ -6,7 +6,7 @@ export const PHONE_EXTENSION_PATTERN = /^\+?\d{1,5}$/;
 export const PINCODE_PATTERN = /^\d{4,10}$/;
 // Mirrors the server billing validator (payment.validator.ts): 2 digits, 5
 // letters, 4 digits, 1 letter, then 2 alphanumerics. Validated uppercased.
-export const GSTIN_PATTERN = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z]{2}$/;
+export const GSTIN_PATTERN = /^\d{2}[A-Z]{5}\d{4}[A-Z][0-9A-Z]{2}$/;
 
 /** The seven postal-address parts shared by the main address and checkout billing. */
 export interface PostalAddressParts {

@@ -122,7 +122,7 @@ export async function generateDummy(entity: Entity, prompt?: string | null): Pro
       {
         role: 'user',
         content:
-          prompt && prompt.trim()
+          prompt?.trim()
             ? `Generate dummy ${entity.toLowerCase()} data for: ${prompt.trim()}`
             : `Generate dummy ${entity.toLowerCase()} data.`,
       },
@@ -184,6 +184,30 @@ const IMAGE_FIELDS_BY_ENTITY: Record<Entity, { single: string[]; multiline: stri
   INVENTORY_PRODUCT: { single: [], multiline: [], folder: '/inventory' },
 };
 
+const TITLE_FIELD_BY_ENTITY: Record<Entity, string> = {
+  SLIDER: 'title',
+  POD: 'pod_title',
+  INVENTORY_PRODUCT: 'product_name',
+  CLUB: 'club_name',
+};
+
+async function enrichMultilineField(
+  parsed: any,
+  field: string,
+  baseQuery: string,
+  folder: string
+): Promise<void> {
+  const original = typeof parsed[field] === 'string' ? parsed[field] : '';
+  const lines = original.split(/\r?\n/).map((s: string) => s.trim()).filter(Boolean);
+  const targetCount = Math.min(Math.max(lines.length || 3, 2), 4);
+  const urls: string[] = [];
+  for (let i = 0; i < targetCount; i++) {
+    const url = await pickPexelsImageKitUrl(baseQuery, folder, i);
+    if (url) urls.push(url);
+  }
+  if (urls.length) parsed[field] = urls.join('\n');
+}
+
 async function pickPexelsImageKitUrl(query: string, folder: string, offset = 0): Promise<string | null> {
   try {
     const page = 1 + Math.floor(offset / 12);
@@ -206,17 +230,10 @@ async function enrichImagesWithPexels(entity: Entity, raw: string, prompt?: stri
     return raw;
   }
   const cfg = IMAGE_FIELDS_BY_ENTITY[entity];
-  const titleField =
-    entity === 'SLIDER'
-      ? 'title'
-      : entity === 'POD'
-        ? 'pod_title'
-        : entity === 'INVENTORY_PRODUCT'
-          ? 'product_name'
-          : 'club_name';
+  const titleField = TITLE_FIELD_BY_ENTITY[entity];
   const baseQuery =
     (typeof parsed[titleField] === 'string' && parsed[titleField].trim()) ||
-    (prompt && prompt.trim()) ||
+    prompt?.trim() ||
     entity.toLowerCase();
 
   for (const field of cfg.single) {
@@ -225,15 +242,7 @@ async function enrichImagesWithPexels(entity: Entity, raw: string, prompt?: stri
   }
 
   for (const field of cfg.multiline) {
-    const original = typeof parsed[field] === 'string' ? parsed[field] : '';
-    const lines = original.split(/\r?\n/).map((s: string) => s.trim()).filter(Boolean);
-    const targetCount = Math.min(Math.max(lines.length || 3, 2), 4);
-    const urls: string[] = [];
-    for (let i = 0; i < targetCount; i++) {
-      const url = await pickPexelsImageKitUrl(baseQuery, cfg.folder, i);
-      if (url) urls.push(url);
-    }
-    if (urls.length) parsed[field] = urls.join('\n');
+    await enrichMultilineField(parsed, field, baseQuery, cfg.folder);
   }
 
   return JSON.stringify(parsed);
@@ -332,11 +341,8 @@ function normalizeLocationAreas(content: string): string {
       extensions: { code: 'AI_INVALID_JSON' },
     });
   }
-  const rawZones = Array.isArray(parsed?.zones)
-    ? parsed.zones
-    : Array.isArray(parsed?.areas)
-      ? parsed.areas
-      : [];
+  const areaZones = Array.isArray(parsed?.areas) ? parsed.areas : [];
+  const rawZones = Array.isArray(parsed?.zones) ? parsed.zones : areaZones;
   const seen = new Set<string>();
   const zones = rawZones
     .map((zone: any) => ({
@@ -412,11 +418,11 @@ async function generateLocationAreas(input: LocationAreasInput): Promise<string>
   return normalizeLocationAreas(content);
 }
 
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 function promptTerms(prompt: string) {
-  const email = prompt.match(/[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i)?.[0]?.toLowerCase() ?? '';
-  const phone = prompt.match(/\+?\d[\d\s-]{5,}\d/)?.[0]?.replace(/\D/g, '') ?? '';
+  const email = /[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}/i.exec(prompt)?.[0]?.toLowerCase() ?? '';
+  const phone = /\+?\d[\d\s-]{5,}\d/.exec(prompt)?.[0]?.replace(/\D/g, '') ?? '';
   const words = prompt
     .toLowerCase()
     .split(/[^a-z0-9]+/)

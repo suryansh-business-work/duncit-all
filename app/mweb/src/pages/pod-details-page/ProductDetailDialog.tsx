@@ -56,11 +56,10 @@ export default function ProductDetailDialog({
     fetchPolicy: 'cache-first',
   });
   const product = data?.publicInventoryProduct;
-  const images: string[] = product
-    ? product.images?.length
-      ? product.images
-      : [product.image_url].filter(Boolean)
-    : [];
+  let images: string[] = [];
+  if (product) {
+    images = product.images?.length ? product.images : [product.image_url].filter(Boolean);
+  }
   const description = product?.description || product?.short_description || '';
   const specs = product ? productSpecs(product) : [];
   const price = product?.unit_cost ?? 0;

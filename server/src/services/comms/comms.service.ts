@@ -19,7 +19,7 @@ export interface CommsResult {
 
 const str = (config: Record<string, unknown>, key: string) => {
   const v = config[key];
-  return v === undefined || v === null ? '' : String(v);
+  return v === undefined || v === null ? '' : String(v as string | number | boolean);
 };
 
 const notConfigured = (provider: string, what: string): CommsResult => ({

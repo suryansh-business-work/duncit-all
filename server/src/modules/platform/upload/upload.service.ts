@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { getRuntimeEnvValue } from '@config/runtimeEnv';
 
@@ -364,7 +364,7 @@ export async function pexelsSearchVideos(opts: {
         height: f.height || 0,
         link: f.link,
       }));
-    const pictures = (v.video_pictures || []).map((p: any) => p.picture).filter(Boolean);
+    const pictures = (v.video_pictures || []).map((p: any) => p.picture).find(Boolean);
     return {
       id: String(v.id),
       width: v.width,
@@ -374,7 +374,7 @@ export async function pexelsSearchVideos(opts: {
       image: v.image,
       user_name: v.user?.name || '',
       user_url: v.user?.url || '',
-      preview: pictures[0] || v.image,
+      preview: pictures || v.image,
       video_files: files,
     };
   });

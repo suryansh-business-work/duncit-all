@@ -22,7 +22,7 @@
 import 'dotenv/config';
 import mongoose from 'mongoose';
 import { connectDB } from '../src/config/db';
-import { EmailTemplateModel } from '../src/modules/content/emailTemplate/emailTemplate.model';
+import { EmailTemplateModel, type IEmailTemplate } from '../src/modules/content/emailTemplate/emailTemplate.model';
 
 const dryRun = process.argv.includes('--dry-run');
 const log = (...m: unknown[]) => console.log('[migrate-email-logo]', ...m);
@@ -51,6 +51,19 @@ function hasBrandLogoVar(variables: { key?: string }[] | undefined): boolean {
   return (variables ?? []).some((v) => v?.key === 'brand_logo_url');
 }
 
+/** Apply the logo rewrite + brand-var patch to one doc in place. Returns whether
+ * anything changed (false = nothing to do, doc left untouched). */
+function applyLogoFix(doc: IEmailTemplate): boolean {
+  const nextMjml = rewriteMjml(doc.mjml ?? '');
+  const mjmlChanged = nextMjml !== doc.mjml;
+  const needsVar = !hasBrandLogoVar(doc.variables);
+  if (!mjmlChanged && !needsVar) return false;
+  if (mjmlChanged) doc.mjml = nextMjml;
+  if (needsVar) doc.variables = [...(doc.variables ?? []), { key: 'brand_logo_url' }];
+  log(`update ${doc.slug} (mjml=${mjmlChanged}, var=${needsVar})`);
+  return true;
+}
+
 async function run() {
   await connectDB();
   log(`mode: ${dryRun ? 'DRY-RUN' : 'WRITE'}`);
@@ -64,17 +77,11 @@ async function run() {
 
   for (const doc of docs) {
     try {
-      const nextMjml = rewriteMjml(doc.mjml ?? '');
-      const mjmlChanged = nextMjml !== doc.mjml;
-      const needsVar = !hasBrandLogoVar(doc.variables);
-      if (!mjmlChanged && !needsVar) {
+      if (!applyLogoFix(doc)) {
         skipped += 1;
         continue;
       }
-      if (mjmlChanged) doc.mjml = nextMjml;
-      if (needsVar) doc.variables = [...(doc.variables ?? []), { key: 'brand_logo_url' }];
       updated += 1;
-      log(`update ${doc.slug} (mjml=${mjmlChanged}, var=${needsVar})`);
       if (!dryRun) await doc.save();
     } catch (e) {
       failed += 1;

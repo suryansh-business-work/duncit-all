@@ -48,6 +48,5 @@ export function assertScope(
     ) {
       throw new GraphQLError('Out of zone scope', { extensions: { code: 'FORBIDDEN' } });
     }
-    return;
   }
 }

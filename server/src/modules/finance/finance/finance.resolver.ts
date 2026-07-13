@@ -58,6 +58,39 @@ const toPub = (d: IFinanceSettings) => ({
   updated_at: d.updated_at.toISOString(),
 });
 
+function validatePctInputs(input: any) {
+  if (input.platform_fee_pct !== undefined && (input.platform_fee_pct < 0 || input.platform_fee_pct > 50))
+    throw new GraphQLError('platform_fee_pct must be between 0 and 50', { extensions: { code: 'BAD_USER_INPUT' } });
+  if (input.gst_pct !== undefined && (input.gst_pct < 0 || input.gst_pct > 50))
+    throw new GraphQLError('gst_pct must be between 0 and 50', { extensions: { code: 'BAD_USER_INPUT' } });
+  const pctFields = [
+    'default_host_share_pct',
+    'default_host_commission_pct',
+    'default_venue_share_pct',
+    'default_venue_commission_pct',
+    'default_product_commission_pct',
+    'default_backout_deduction_pct',
+  ];
+  for (const field of pctFields) {
+    const value = input[field];
+    if (value !== undefined && (value < 0 || value > 100)) {
+      throw new GraphQLError(`${field} must be between 0 and 100`, { extensions: { code: 'BAD_USER_INPUT' } });
+    }
+  }
+}
+
+function validatePayoutInputs(input: any) {
+  if (
+    input.payout_day_of_week !== undefined &&
+    (input.payout_day_of_week < 0 || input.payout_day_of_week > 6)
+  ) {
+    throw new GraphQLError('payout_day_of_week must be between 0 and 6', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  if (input.payout_time !== undefined && !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.payout_time)) {
+    throw new GraphQLError('payout_time must be in HH:mm format', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+}
+
 export const financeResolvers = {
   Query: {
     financeSettings: async (_p: unknown, _a: unknown, ctx: GraphQLContext) => {
@@ -136,33 +169,8 @@ export const financeResolvers = {
     updateFinanceSettings: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_RW);
       const input = args.input;
-      if (input.platform_fee_pct !== undefined && (input.platform_fee_pct < 0 || input.platform_fee_pct > 50))
-        throw new GraphQLError('platform_fee_pct must be between 0 and 50', { extensions: { code: 'BAD_USER_INPUT' } });
-      if (input.gst_pct !== undefined && (input.gst_pct < 0 || input.gst_pct > 50))
-        throw new GraphQLError('gst_pct must be between 0 and 50', { extensions: { code: 'BAD_USER_INPUT' } });
-      const pctFields = [
-        'default_host_share_pct',
-        'default_host_commission_pct',
-        'default_venue_share_pct',
-        'default_venue_commission_pct',
-        'default_product_commission_pct',
-        'default_backout_deduction_pct',
-      ];
-      for (const field of pctFields) {
-        const value = input[field];
-        if (value !== undefined && (value < 0 || value > 100)) {
-          throw new GraphQLError(`${field} must be between 0 and 100`, { extensions: { code: 'BAD_USER_INPUT' } });
-        }
-      }
-      if (
-        input.payout_day_of_week !== undefined &&
-        (input.payout_day_of_week < 0 || input.payout_day_of_week > 6)
-      ) {
-        throw new GraphQLError('payout_day_of_week must be between 0 and 6', { extensions: { code: 'BAD_USER_INPUT' } });
-      }
-      if (input.payout_time !== undefined && !/^([01]\d|2[0-3]):[0-5]\d$/.test(input.payout_time)) {
-        throw new GraphQLError('payout_time must be in HH:mm format', { extensions: { code: 'BAD_USER_INPUT' } });
-      }
+      validatePctInputs(input);
+      validatePayoutInputs(input);
       // Flatten nested invoice templates to dotted paths so a partial update of
       // one party's template doesn't wipe the others.
       const set: Record<string, any> = { ...input };

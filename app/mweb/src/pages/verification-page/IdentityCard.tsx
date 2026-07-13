@@ -19,7 +19,7 @@ interface Props {
 const readAsDataUrl = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result));
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
     reader.onerror = () => reject(new Error('Could not read the file.'));
     reader.readAsDataURL(file);
   });
@@ -60,6 +60,8 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
     }
   };
 
+  const uploadLabel = item.status === 'NOT_SUBMITTED' ? 'Upload document' : 'Re-upload';
+
   return (
     <VerificationCardShell item={item}>
       {!done && (
@@ -83,7 +85,7 @@ export default function IdentityCard({ item, onChanged, onError }: Readonly<Prop
             onClick={() => inputRef.current?.click()}
             sx={{ mt: 1, borderRadius: 999, fontWeight: 900 }}
           >
-            {busy ? 'Uploading…' : item.status === 'NOT_SUBMITTED' ? 'Upload document' : 'Re-upload'}
+            {busy ? 'Uploading…' : uploadLabel}
           </Button>
         </>
       )}

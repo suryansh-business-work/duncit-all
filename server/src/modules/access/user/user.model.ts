@@ -268,10 +268,13 @@ for (const [legacy, nested] of Object.entries(legacyVirtuals)) {
       let cursor: any = this;
       for (let i = 0; i < parts.length - 1; i += 1) {
         const key = parts[i];
-        if (cursor[key] == null) cursor[key] = {};
+        cursor[key] ??= {};
         cursor = cursor[key];
       }
-      cursor[parts[parts.length - 1]] = value;
+      const leaf = parts.at(-1);
+      if (leaf !== undefined) {
+        cursor[leaf] = value;
+      }
     });
 }
 

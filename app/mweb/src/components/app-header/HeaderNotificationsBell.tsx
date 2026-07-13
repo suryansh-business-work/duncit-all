@@ -20,7 +20,9 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
     fetchPolicy: 'cache-and-network',
   });
   useNotificationsSse(() => {
-    void refetchNotifs();
+    refetchNotifs().catch(() => {
+      /* ignore */
+    });
   });
   const [markReadMut] = useMutation(MARK_READ);
   const [markAllMut] = useMutation(MARK_ALL);
@@ -62,13 +64,15 @@ export default function HeaderNotificationsBell({ onToast }: Readonly<HeaderNoti
     }
   };
 
+  const unreadLabel = unreadCount ? ` (${unreadCount} unread)` : '';
+
   return (
     <>
       <Tooltip title="Notifications">
         <IconButton
           size="small"
           onClick={() => setNotificationsOpen(true)}
-          aria-label={`Notifications${unreadCount ? ` (${unreadCount} unread)` : ''}`}
+          aria-label={`Notifications${unreadLabel}`}
           sx={{
             minWidth: 40,
             minHeight: 40,

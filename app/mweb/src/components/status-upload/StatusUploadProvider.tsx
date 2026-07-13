@@ -31,7 +31,7 @@ const MAX_STORY_VIDEO_SECONDS = 15;
 function toBase64(file: File) {
   return new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result || ''));
+    reader.onload = () => resolve(typeof reader.result === 'string' ? reader.result : '');
     reader.onerror = () => reject(new Error('Could not read selected media'));
     reader.readAsDataURL(file);
   });

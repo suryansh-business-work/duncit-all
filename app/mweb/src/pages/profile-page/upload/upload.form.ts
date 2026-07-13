@@ -33,13 +33,14 @@ export type UploadFormValues = yup.InferType<typeof uploadFormSchema>;
 
 export function isAllowedExt(name: string, kind: UploadKind) {
   const lower = name.toLowerCase();
-  const allowed =
-    kind === 'IMAGE' ? ALLOWED_IMAGE_EXT : kind === 'VIDEO' ? ALLOWED_VIDEO_EXT : ALLOWED_DOC_EXT;
+  const videoOrDoc = kind === 'VIDEO' ? ALLOWED_VIDEO_EXT : ALLOWED_DOC_EXT;
+  const allowed = kind === 'IMAGE' ? ALLOWED_IMAGE_EXT : videoOrDoc;
   return allowed.some((ext) => lower.endsWith(ext));
 }
 
 export function maxSizeBytes(kind: UploadKind) {
-  const mb = kind === 'IMAGE' ? MAX_IMAGE_SIZE_MB : kind === 'VIDEO' ? MAX_VIDEO_SIZE_MB : MAX_DOC_SIZE_MB;
+  const videoOrDocMb = kind === 'VIDEO' ? MAX_VIDEO_SIZE_MB : MAX_DOC_SIZE_MB;
+  const mb = kind === 'IMAGE' ? MAX_IMAGE_SIZE_MB : videoOrDocMb;
   return mb * 1024 * 1024;
 }
 

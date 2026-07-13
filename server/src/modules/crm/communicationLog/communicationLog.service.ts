@@ -75,7 +75,7 @@ export const communicationLogService = {
     if (filter.type) query.type = filter.type;
     if (filter.status) query.status = filter.status;
     if (filter.search) {
-      const rx = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const rx = new RegExp(filter.search.trim().replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       query.$or = [
         { contact_value: rx },
         { contact_name: rx },

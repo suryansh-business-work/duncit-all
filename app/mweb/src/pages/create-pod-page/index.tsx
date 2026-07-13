@@ -162,20 +162,7 @@ export default function CreatePodPage() {
     );
   } else if (options.error) {
     body = <Alert severity="error">{options.error.message}</Alert>;
-  } else if (!isHost) {
-    body = (
-      <Alert
-        severity="info"
-        action={
-          <Button color="inherit" size="small" onClick={() => navigate('/become-host')}>
-            Become a host
-          </Button>
-        }
-      >
-        Host access is required before creating pods.
-      </Alert>
-    );
-  } else {
+  } else if (isHost) {
     body = (
       <CreatePodStepper
         initialValues={initialValues}
@@ -191,6 +178,19 @@ export default function CreatePodPage() {
         onModerate={moderate}
         onPublish={publish}
       />
+    );
+  } else {
+    body = (
+      <Alert
+        severity="info"
+        action={
+          <Button color="inherit" size="small" onClick={() => navigate('/become-host')}>
+            Become a host
+          </Button>
+        }
+      >
+        Host access is required before creating pods.
+      </Alert>
     );
   }
 

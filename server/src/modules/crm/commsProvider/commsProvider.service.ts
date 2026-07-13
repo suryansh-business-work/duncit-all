@@ -204,7 +204,7 @@ export const commsProviderService = {
   async resolveRuntime(type: CommsProviderType, providerId?: string | null) {
     if (providerId) {
       const doc = await CommsProviderModel.findById(providerId);
-      if (doc && doc.is_active) {
+      if (doc?.is_active) {
         await CommsProviderModel.updateOne({ _id: doc._id }, { $set: { last_used_at: new Date() } });
         return { id: String(doc._id), name: doc.name, config: (doc.config ?? {}) as CommsProviderRuntimeConfig };
       }

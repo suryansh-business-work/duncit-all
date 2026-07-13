@@ -54,7 +54,7 @@ const idStrings = (values: unknown[] | undefined | null) =>
   (values ?? []).map(String);
 // Escape user-supplied search terms before building a RegExp so special chars
 // (., *, (, etc.) are matched literally and cannot break the query.
-const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const escapeRegExp = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 const EMAIL_OTP_MINUTES = 10;
 const isDev = (process.env.NODE_ENV || 'development') !== 'production';
 // Privileged role keys that require phone-verified + 2FA for elevated session.
@@ -105,7 +105,7 @@ async function loadRelationIds(userId: string) {
   };
 }
 
-const escapeSavedRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+const escapeSavedRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 /** Walk the category tree downward so a SUPER/CATEGORY selection also matches its
  * descendant sub-categories (a club may be tagged at any level). */
@@ -270,10 +270,11 @@ async function startTwilioRecordedBridge(actionId: string, target: string) {
     From: fromNumber,
     Twiml: twiml,
   });
+  const basicAuth = Buffer.from(`${accountSid}:${authToken}`).toString('base64');
   const response = await fetch(`https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Calls.json`, {
     method: 'POST',
     headers: {
-      Authorization: `Basic ${Buffer.from(`${accountSid}:${authToken}`).toString('base64')}`,
+      Authorization: `Basic ${basicAuth}`,
       'Content-Type': 'application/x-www-form-urlencoded',
     },
     body,
@@ -455,6 +456,8 @@ async function toPublic(u: any) {
 
   const firstName = profile.first_name ?? legacy.first_name ?? '';
   const lastName = profile.last_name ?? legacy.last_name ?? '';
+  const legacyDob = legacy.dob ? new Date(legacy.dob).toISOString() : '';
+  const dob = profile.dob ? new Date(profile.dob).toISOString() : legacyDob;
   return {
     user_id: userId,
     first_name: firstName,
@@ -469,12 +472,7 @@ async function toPublic(u: any) {
     last_login_provider: auth.last_login_provider ?? legacy.last_login_provider ?? null,
     last_login_at:
       (auth.last_login_at ?? legacy.last_login_at)?.toISOString?.() ?? null,
-    dob:
-      profile.dob
-        ? new Date(profile.dob).toISOString()
-        : legacy.dob
-        ? new Date(legacy.dob).toISOString()
-        : '',
+    dob,
     country: profile.country ?? legacy.country ?? 'India',
     city: profile.city ?? legacy.city ?? null,
     state: profile.state ?? null,
@@ -1322,7 +1320,7 @@ export const userService = {
       throw new GraphQLError('Invalid club', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const club = await ClubModel.findById(clubId).select('_id is_active');
-    if (!club || !club.is_active) {
+    if (!club?.is_active) {
       throw new GraphQLError('Club not found', { extensions: { code: 'NOT_FOUND' } });
     }
     const oid = new Types.ObjectId(user_id);
@@ -1356,7 +1354,7 @@ export const userService = {
       throw new GraphQLError('Invalid pod', { extensions: { code: 'BAD_USER_INPUT' } });
     }
     const pod = await PodModel.findById(podId).select('_id is_active');
-    if (!pod || !pod.is_active) {
+    if (!pod?.is_active) {
       throw new GraphQLError('Pod not found', { extensions: { code: 'NOT_FOUND' } });
     }
     const oid = new Types.ObjectId(user_id);

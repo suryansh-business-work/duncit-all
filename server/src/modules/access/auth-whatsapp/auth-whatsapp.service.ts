@@ -6,7 +6,7 @@ const isDev = (process.env.NODE_ENV || 'development') !== 'production';
 
 function normalize(extension: string, number: string) {
   const ext = String(extension || '').trim().replace(/[^0-9+]/g, '');
-  const num = String(number || '').trim().replace(/[^0-9]/g, '');
+  const num = String(number || '').trim().replace(/\D/g, '');
   if (!ext) throw new GraphQLError('Country code is required', { extensions: { code: 'BAD_USER_INPUT' } });
   if (num.length < 6 || num.length > 15) {
     throw new GraphQLError('Enter a valid WhatsApp number', { extensions: { code: 'BAD_USER_INPUT' } });

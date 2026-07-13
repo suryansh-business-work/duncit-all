@@ -444,7 +444,7 @@ export const whatsappData = {
 };
 
 function rx(s: string) {
-  return new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+  return new RegExp(s.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
 }
 
 export interface PageOpts {

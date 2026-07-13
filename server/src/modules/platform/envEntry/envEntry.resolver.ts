@@ -78,7 +78,7 @@ export const envEntryResolvers = {
     updateEnvEntry: async (_p: unknown, args: { id: string; input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, TECH_MANAGE);
       const existing = await envEntryService.get(args.id);
-      const category = (existing?.category ?? 'EMAIL') as EnvCategory;
+      const category = existing?.category ?? 'EMAIL';
       const { config, ...rest } = args.input;
       return envEntryService.update(args.id, {
         ...rest,

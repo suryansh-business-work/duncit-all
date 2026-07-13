@@ -1,6 +1,6 @@
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { PodMemberModel, type IPodMember, type JoinSource } from './podMember.model';
 import { PodModel } from '@modules/pods/pod/pod.model';
 import { PaymentModel } from '@modules/finance/payment/payment.model';
@@ -226,10 +226,10 @@ export const podMemberService = {
       if (filledPct >= REFUND_THRESHOLD_PCT) {
         // Threshold met → process refund
         const payment = await PaymentModel.findById(membership.payment_id);
-        if (payment && payment.status === 'SUCCESS') {
+        if (payment?.status === 'SUCCESS') {
           payment.status = 'REFUNDED';
           (payment.metadata as any) = {
-            ...(payment.metadata || {}),
+            ...payment.metadata,
             refund_reason: 'pod_backout_threshold_met',
             refunded_at: new Date().toISOString(),
           };
@@ -291,10 +291,10 @@ export const podMemberService = {
     // process it now (paid pods).
     if (refDoc.payment_id && refDoc.refund_status === 'PENDING') {
       const payment = await PaymentModel.findById(refDoc.payment_id);
-      if (payment && payment.status === 'SUCCESS') {
+      if (payment?.status === 'SUCCESS') {
         payment.status = 'REFUNDED';
         (payment.metadata as any) = {
-          ...(payment.metadata || {}),
+          ...payment.metadata,
           refund_reason: 'referral_refilled_spot',
           refunded_at: new Date().toISOString(),
         };
@@ -401,7 +401,7 @@ export const podMemberService = {
   async getBackoutRefund(id: string) {
     if (!Types.ObjectId.isValid(id)) return null;
     const doc = await PodMemberModel.findById(id);
-    if (!doc || doc.status !== 'BACKED_OUT') return null;
+    if (doc?.status !== 'BACKED_OUT') return null;
     const [hydrated] = await hydrateBackouts([doc]);
     return hydrated ?? null;
   },

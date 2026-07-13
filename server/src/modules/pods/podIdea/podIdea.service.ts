@@ -7,7 +7,7 @@ const toPub = (p: IPodIdea, viewerId?: string | null) => ({
   author_id: String(p.author_id),
   title: p.title,
   description: p.description,
-  likes: (p.likes || []).map((x) => String(x)),
+  likes: (p.likes || []).map(String),
   likes_count: p.likes?.length || 0,
   liked_by_me: viewerId
     ? (p.likes || []).some((x) => String(x) === viewerId)
@@ -45,7 +45,7 @@ export const podIdeaService = {
       q.author_id = new Types.ObjectId(filter.author_id);
     }
     if (filter?.search) {
-      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'i');
+      const r = new RegExp(filter.search.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`), 'i');
       q.$or = [{ title: r }, { description: r }];
     }
     const docs = await PodIdeaModel.find(q).sort({ created_at: -1 });

@@ -112,6 +112,63 @@ describe('podService integration', () => {
     expect(pod?.pod_images_and_videos).toEqual([IMG]);
   });
 
+  // update() carries the pod edit path (amount, meeting details, window). It had
+  // no direct coverage, so these pin the behaviour the S3776 extraction moved out
+  // into validatePodDatesForUpdate / applyMeetingFieldsForUpdate / applyDatesForUpdate.
+  describe('update', () => {
+    const virtualPod = async () => {
+      const hostId = new Types.ObjectId();
+      const pod = await podService.create(makeVirtualInput(hostId));
+      return String(pod!.id);
+    };
+
+    it('edits scalar fields and re-validates the amount against the pod type', async () => {
+      const id = await virtualPod();
+      const updated = await podService.update(id, { pod_title: 'Renamed' });
+      expect(updated?.pod_title).toBe('Renamed');
+      // The free-pod invariant still holds on edit: a free type cannot carry a price.
+      await expect(
+        podService.update(id, { pod_type: 'NATIVE_FREE', pod_amount: 500 })
+      ).rejects.toThrow(/Free pods must have amount 0/i);
+      // …and the price ceiling is re-checked too.
+      await expect(
+        podService.update(id, { pod_type: 'NATIVE_PAID', pod_amount: 5000 })
+      ).rejects.toThrow(/between 0 and 1999/i);
+    });
+
+    it('normalises meeting details on a virtual pod', async () => {
+      const id = await virtualPod();
+      const updated = await podService.update(id, {
+        meeting_url: '  https://meet.example.com/y  ',
+        meeting_notes: '   ',
+      });
+      expect(updated?.meeting_url).toBe('https://meet.example.com/y');
+      expect(updated?.meeting_notes).toBeNull();
+    });
+
+    it('re-saving an unchanged past-free window does not re-validate the dates', async () => {
+      const id = await virtualPod();
+      const doc = await PodModel.findById(id);
+      const same = doc!.pod_date_time.toISOString();
+      // Same instant as stored → no change → validateFutureDates must not run.
+      const updated = await podService.update(id, { pod_date_time: same });
+      expect(new Date(updated!.pod_date_time).toISOString()).toBe(same);
+    });
+
+    it('rejects moving the pod window into the past', async () => {
+      const id = await virtualPod();
+      await expect(
+        podService.update(id, { pod_date_time: new Date(Date.now() - 86_400_000).toISOString() })
+      ).rejects.toThrow();
+    });
+
+    it('throws NOT_FOUND for a missing pod', async () => {
+      await expect(
+        podService.update(new Types.ObjectId().toString(), { pod_title: 'x' })
+      ).rejects.toThrow();
+    });
+  });
+
   describe('host self-service edit/delete', () => {
     it('hostUpdate changes only title, description and media', async () => {
       const hostId = new Types.ObjectId();

@@ -350,6 +350,35 @@ async function notifyApplicant(doc: any, kind: 'booked' | 'cancelled', reason?: 
   }
 }
 
+/** The staff-editable fields of a meeting (Onboarding portal update form). */
+interface MeetingStaffInput {
+  status?: MeetingStatus | null;
+  scheduled_at?: string | null;
+  meeting_link?: string | null;
+  notes?: string | null;
+}
+
+/** Staff can't schedule onto a slot another applicant already holds. */
+async function assertStaffSlotFree(meetingId: string, scheduledAt: string) {
+  const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeMeetingId: meetingId }), slotWindowMs()]);
+  if (isTaken(new Date(scheduledAt).getTime(), busy, slotMs)) {
+    throw new GraphQLError('That slot is already taken by another meeting', { extensions: { code: 'CONFLICT' } });
+  }
+}
+
+/** Anything schedule-related in the staff edit — drives the applicant notify. */
+const touchesSchedule = (input: MeetingStaffInput) =>
+  input.scheduled_at !== undefined || input.meeting_link !== undefined || input.status != null;
+
+/** Write the staff-editable fields onto the doc (caller saves). */
+function applyStaffFields(doc: any, input: MeetingStaffInput, by?: string | null) {
+  if (input.status != null) doc.status = input.status;
+  if (input.scheduled_at !== undefined) doc.scheduled_at = input.scheduled_at ? new Date(input.scheduled_at) : null;
+  if (input.meeting_link !== undefined) doc.meeting_link = input.meeting_link || null;
+  if (input.notes !== undefined) doc.notes = input.notes;
+  doc.created_by = doc.created_by ?? by ?? null;
+}
+
 export const meetingService = {
   /** Global slot-availability config (singleton; created with defaults on first read). */
   async availability() {
@@ -702,35 +731,17 @@ export const meetingService = {
   },
 
   /** Onboarding staff schedule/track a meeting (date, link, status, notes). */
-  async update(
-    id: string,
-    input: {
-      status?: MeetingStatus | null;
-      scheduled_at?: string | null;
-      meeting_link?: string | null;
-      notes?: string | null;
-    },
-    by?: string | null,
-  ) {
+  async update(id: string, input: MeetingStaffInput, by?: string | null) {
     const doc = await MeetingModel.findById(id);
     if (!doc) throw notFound();
-    // Staff can't schedule onto a slot another applicant already holds.
     if (input.scheduled_at) {
-      const [busy, slotMs] = await Promise.all([occupiedInstants({ excludeMeetingId: id }), slotWindowMs()]);
-      if (isTaken(new Date(input.scheduled_at).getTime(), busy, slotMs)) {
-        throw new GraphQLError('That slot is already taken by another meeting', { extensions: { code: 'CONFLICT' } });
-      }
+      await assertStaffSlotFree(id, input.scheduled_at);
     }
     // Capture the prior schedule state so we can classify the event after save.
     const wasScheduled = doc.status === 'SCHEDULED';
     const prevScheduledMs = doc.scheduled_at?.getTime() ?? null;
-    const touchedSchedule =
-      input.scheduled_at !== undefined || input.meeting_link !== undefined || input.status != null;
-    if (input.status != null) doc.status = input.status;
-    if (input.scheduled_at !== undefined) doc.scheduled_at = input.scheduled_at ? new Date(input.scheduled_at) : null;
-    if (input.meeting_link !== undefined) doc.meeting_link = input.meeting_link || null;
-    if (input.notes !== undefined) doc.notes = input.notes;
-    doc.created_by = doc.created_by ?? by ?? null;
+    const touchedSchedule = touchesSchedule(input);
+    applyStaffFields(doc, input, by);
     await doc.save();
     if (doc.status === 'SCHEDULED' && touchedSchedule) {
       await notifyScheduleChange(doc, wasScheduled, prevScheduledMs);

@@ -107,33 +107,45 @@ function normalizeAutoExtendInput(base: ReturnType<typeof toAutoExtendPub>, inpu
   return next;
 }
 
+function normalizeOperatingHoursInput(input: any) {
+  const open = String(input.open ?? '');
+  const close = String(input.close ?? '');
+  if (!HHMM_RE.test(open) || !HHMM_RE.test(close)) {
+    fail('BAD_USER_INPUT', 'Operating hours must be HH:mm (24-hour)');
+  }
+  if (hhmmToMinutes(open) >= hhmmToMinutes(close)) {
+    fail('BAD_USER_INPUT', 'Opening time must be before closing time');
+  }
+  return { open, close };
+}
+
+function normalizeWeeklyOffDaysInput(input: unknown) {
+  const days = (input as unknown[]).map((d) => Math.trunc(Number(d)));
+  if (days.some((d) => !Number.isFinite(d) || d < 0 || d > 6)) {
+    fail('BAD_USER_INPUT', 'weekly_off_days must be integers 0..6 (Sun..Sat)');
+  }
+  return [...new Set(days)].sort((a, b) => a - b);
+}
+
+function normalizeHolidaysInput(input: unknown) {
+  const hs = (input as unknown[]).map((h) => String(h).trim());
+  if (hs.some((h) => !ISO_DATE_RE.test(h))) {
+    fail('BAD_USER_INPUT', 'holidays must be YYYY-MM-DD dates');
+  }
+  return [...new Set(hs)].sort((a, b) => a.localeCompare(b));
+}
+
 function normalizeSettingsInput(current: IVenueSettings | undefined, input: any) {
   const base = toSettingsPub(current);
   const next = { ...base };
   if (input.operating_hours) {
-    const open = String(input.operating_hours.open ?? '');
-    const close = String(input.operating_hours.close ?? '');
-    if (!HHMM_RE.test(open) || !HHMM_RE.test(close)) {
-      fail('BAD_USER_INPUT', 'Operating hours must be HH:mm (24-hour)');
-    }
-    if (hhmmToMinutes(open) >= hhmmToMinutes(close)) {
-      fail('BAD_USER_INPUT', 'Opening time must be before closing time');
-    }
-    next.operating_hours = { open, close };
+    next.operating_hours = normalizeOperatingHoursInput(input.operating_hours);
   }
   if (input.weekly_off_days !== undefined) {
-    const days = (input.weekly_off_days as unknown[]).map((d) => Math.trunc(Number(d)));
-    if (days.some((d) => !Number.isFinite(d) || d < 0 || d > 6)) {
-      fail('BAD_USER_INPUT', 'weekly_off_days must be integers 0..6 (Sun..Sat)');
-    }
-    next.weekly_off_days = [...new Set(days)].sort((a, b) => a - b);
+    next.weekly_off_days = normalizeWeeklyOffDaysInput(input.weekly_off_days);
   }
   if (input.holidays !== undefined) {
-    const hs = (input.holidays as unknown[]).map((h) => String(h).trim());
-    if (hs.some((h) => !ISO_DATE_RE.test(h))) {
-      fail('BAD_USER_INPUT', 'holidays must be YYYY-MM-DD dates');
-    }
-    next.holidays = [...new Set(hs)].sort((a, b) => a.localeCompare(b));
+    next.holidays = normalizeHolidaysInput(input.holidays);
   }
   if (input.rules) next.rules = normalizeRulesInput(base.rules, input.rules);
   if (input.auto_extend) next.auto_extend = normalizeAutoExtendInput(base.auto_extend, input.auto_extend);

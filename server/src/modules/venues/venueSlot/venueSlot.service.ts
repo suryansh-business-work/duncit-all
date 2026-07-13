@@ -359,6 +359,29 @@ async function notifySlotDecision(pod: any, slot: IVenueSlot, approved: boolean,
   }
 }
 
+/** One pending booking request row: the slot joined with its requesting pod,
+ * that pod's first host's contact details and the venue name. */
+function toRequestRow(s: IVenueSlot, pod: any, host: any, venueName: string) {
+  const hostName = host
+    ? `${host.profile?.first_name ?? ''} ${host.profile?.last_name ?? ''}`.trim()
+    : '';
+  return {
+    slot_id: String(s._id),
+    venue_id: String(s.venue_id),
+    venue_name: venueName,
+    start_at: s.start_at.toISOString(),
+    end_at: s.end_at.toISOString(),
+    price: s.price ?? 0,
+    requested_at: s.updated_at?.toISOString() ?? '',
+    pod_id: String(pod._id),
+    pod_title: pod.pod_title ?? '',
+    pod_description: pod.pod_description ?? '',
+    host_name: hostName,
+    host_email: host?.auth?.email ?? '',
+    host_phone: `${host?.auth?.phone?.extension ?? ''}${host?.auth?.phone?.number ?? ''}`,
+  };
+}
+
 export const venueSlotService = {
   async listForVenue(viewerId: string, venueId: string, from?: string | null, to?: string | null) {
     if (!Types.ObjectId.isValid(venueId)) fail('BAD_USER_INPUT', 'Invalid venue_id');
@@ -616,24 +639,7 @@ export const venueSlotService = {
       .map((s) => {
         const pod = podMap.get(String(s.booked_by_pod_id))!;
         const host: any = hostMap.get(String((pod.pod_hosts_id ?? [])[0])) ?? null;
-        const hostName = host
-          ? `${host.profile?.first_name ?? ''} ${host.profile?.last_name ?? ''}`.trim()
-          : '';
-        return {
-          slot_id: String(s._id),
-          venue_id: String(s.venue_id),
-          venue_name: venueMap.get(String(s.venue_id)) ?? '',
-          start_at: s.start_at.toISOString(),
-          end_at: s.end_at.toISOString(),
-          price: s.price ?? 0,
-          requested_at: s.updated_at?.toISOString() ?? '',
-          pod_id: String(pod._id),
-          pod_title: pod.pod_title ?? '',
-          pod_description: pod.pod_description ?? '',
-          host_name: hostName,
-          host_email: host?.auth?.email ?? '',
-          host_phone: `${host?.auth?.phone?.extension ?? ''}${host?.auth?.phone?.number ?? ''}`,
-        };
+        return toRequestRow(s, pod, host, venueMap.get(String(s.venue_id)) ?? '');
       });
   },
 

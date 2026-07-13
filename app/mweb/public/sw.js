@@ -7,7 +7,7 @@ self.addEventListener('install', (event) => {
     caches
       .open(CACHE_NAME)
       .then((cache) => cache.addAll(SHELL).catch(() => undefined))
-      .then(() => self.skipWaiting())
+      .then(() => globalThis.skipWaiting())
   );
 });
 
@@ -18,7 +18,7 @@ self.addEventListener('activate', (event) => {
       .then((keys) =>
         Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
       )
-      .then(() => self.clients.claim())
+      .then(() => globalThis.clients.claim())
   );
 });
 
@@ -48,7 +48,7 @@ self.addEventListener('fetch', (event) => {
     caches.match(req).then((cached) => {
       const fetchPromise = fetch(req)
         .then((res) => {
-          if (res && res.status === 200 && res.type === 'basic') {
+          if (res?.status === 200 && res.type === 'basic') {
             const copy = res.clone();
             caches.open(CACHE_NAME).then((c) => c.put(req, copy)).catch(() => undefined);
           }
@@ -64,7 +64,7 @@ self.addEventListener('push', (event) => {
   let data = {};
   try {
     data = event.data ? event.data.json() : {};
-  } catch (e) {
+  } catch {
     data = { title: 'Duncit', body: event.data ? event.data.text() : '' };
   }
   const title = data.title || 'Duncit';
@@ -79,8 +79,8 @@ self.addEventListener('push', (event) => {
   };
   event.waitUntil(
     Promise.all([
-      self.registration.showNotification(title, options),
-      self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((cs) => {
+      globalThis.registration.showNotification(title, options),
+      globalThis.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((cs) => {
         for (const c of cs) {
           c.postMessage({ type: 'PUSH_RECEIVED', payload: { title, ...data } });
         }
@@ -91,16 +91,16 @@ self.addEventListener('push', (event) => {
 
 self.addEventListener('notificationclick', (event) => {
   event.notification.close();
-  const link = (event.notification.data && event.notification.data.link) || '/';
+  const link = event.notification.data?.link || '/';
   event.waitUntil(
-    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientsArr) => {
+    globalThis.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((clientsArr) => {
       for (const c of clientsArr) {
         if ('focus' in c) {
           c.navigate(link).catch(() => undefined);
           return c.focus();
         }
       }
-      if (self.clients.openWindow) return self.clients.openWindow(link);
+      if (globalThis.clients.openWindow) return globalThis.clients.openWindow(link);
     })
   );
 });

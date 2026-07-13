@@ -105,6 +105,28 @@ const DOC_MIME_RE = /^(application\/pdf|application\/msword|application\/vnd\.op
 const VIDEO_EXT_RE = /\.(mp4|mov|m4v|avi|webm|mkv|3gp|ts|flv|wmv|mpe?g)$/i;
 const DOC_EXT_RE = /\.(pdf|docx?|xlsx?|pptx?|txt|csv)$/i;
 
+// Videos are capped at 50 MB; images and documents keep the 100 MB ceiling
+// (support attachments spec). Non-attachment callers (avatars, pod media)
+// still upload images that are far smaller than this.
+function assertUploadSize(fileBytes: Buffer, isVideo: boolean, isDocument: boolean) {
+  if (isVideo) {
+    const maxVideoBytes = 50 * 1024 * 1024;
+    if (fileBytes.length > maxVideoBytes) {
+      throw new GraphQLError('Video is too large (max 50 MB)', {
+        extensions: { code: 'BAD_USER_INPUT' },
+      });
+    }
+    return;
+  }
+  const maxBytes = 100 * 1024 * 1024;
+  if (fileBytes.length > maxBytes) {
+    const kind = isDocument ? 'Document' : 'Image';
+    throw new GraphQLError(`${kind} is too large (max 100 MB)`, {
+      extensions: { code: 'BAD_USER_INPUT' },
+    });
+  }
+}
+
 export async function uploadBase64Image(opts: {
   fileBase64: string;
   fileName: string;
@@ -136,25 +158,7 @@ export async function uploadBase64Image(opts: {
   if (!fileBytes.length) {
     throw new GraphQLError('Upload file is empty', { extensions: { code: 'BAD_USER_INPUT' } });
   }
-  // Videos are capped at 50 MB; images and documents keep the 100 MB ceiling
-  // (support attachments spec). Non-attachment callers (avatars, pod media)
-  // still upload images that are far smaller than this.
-  if (isVideo) {
-    const maxVideoBytes = 50 * 1024 * 1024;
-    if (fileBytes.length > maxVideoBytes) {
-      throw new GraphQLError('Video is too large (max 50 MB)', {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-  } else {
-    const maxBytes = 100 * 1024 * 1024;
-    if (fileBytes.length > maxBytes) {
-      const kind = isDocument ? 'Document' : 'Image';
-      throw new GraphQLError(`${kind} is too large (max 100 MB)`, {
-        extensions: { code: 'BAD_USER_INPUT' },
-      });
-    }
-  }
+  assertUploadSize(fileBytes, isVideo, isDocument);
 
   const safeName = (opts.fileName || `upload-${Date.now()}`)
     .replace(/[^a-zA-Z0-9_.-]/g, '_')

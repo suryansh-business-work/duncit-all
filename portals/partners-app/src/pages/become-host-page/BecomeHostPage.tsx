@@ -14,9 +14,9 @@ type PickerKind = null | 'photo' | 'police';
 export default function BecomeHostPage() {
   const { data, loading, refetch } = useQuery(MY_HOST);
   const [step, setStep] = useState(0);
-  const [s1, set1] = useState(blankHostStep1);
-  const [s2, set2] = useState(blankHostStep2);
-  const [s3, set3] = useState(blankHostStep3);
+  const [s1, setS1] = useState(blankHostStep1);
+  const [s2, setS2] = useState(blankHostStep2);
+  const [s3, setS3] = useState(blankHostStep3);
   const [err, setErr] = useState<string | null>(null);
   const [picker, setPicker] = useState<PickerKind>(null);
 

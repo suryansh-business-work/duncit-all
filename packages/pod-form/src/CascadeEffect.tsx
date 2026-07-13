@@ -1,7 +1,25 @@
 import { useEffect } from 'react';
-import { useFormContext, useWatch } from 'react-hook-form';
+import { useFormContext, useWatch, type UseFormSetValue } from 'react-hook-form';
 import { usePodFormData } from './context';
 import type { PodFormValues } from './types';
+
+/** A VIRTUAL pod has no venue, place charges or products — clear them. */
+function clearPhysicalFields(values: PodFormValues, setValue: UseFormSetValue<PodFormValues>) {
+  if (values.venue_id) setValue('venue_id', '');
+  if (values.venue_slot_id) setValue('venue_slot_id', '');
+  if (values.location_id) setValue('location_id', '');
+  if (values.zone_name) setValue('zone_name', '');
+  if (values.place_charges.length > 0) setValue('place_charges', []);
+  if (values.products_enabled) setValue('products_enabled', false);
+  if (values.product_requests.length > 0) setValue('product_requests', []);
+}
+
+/** A PHYSICAL pod has no meeting link — clear it. */
+function clearVirtualFields(values: PodFormValues, setValue: UseFormSetValue<PodFormValues>) {
+  if (values.meeting_platform) setValue('meeting_platform', '');
+  if (values.meeting_url) setValue('meeting_url', '');
+  if (values.meeting_notes) setValue('meeting_notes', '');
+}
 
 /**
  * Keeps dependent fields consistent inside the RHF tree:
@@ -22,18 +40,10 @@ export default function CascadeEffect() {
   useEffect(() => {
     const values = getValues();
     if (podMode === 'VIRTUAL') {
-      if (values.venue_id) setValue('venue_id', '');
-      if (values.venue_slot_id) setValue('venue_slot_id', '');
-      if (values.location_id) setValue('location_id', '');
-      if (values.zone_name) setValue('zone_name', '');
-      if (values.place_charges.length > 0) setValue('place_charges', []);
-      if (values.products_enabled) setValue('products_enabled', false);
-      if (values.product_requests.length > 0) setValue('product_requests', []);
+      clearPhysicalFields(values, setValue);
       return;
     }
-    if (values.meeting_platform) setValue('meeting_platform', '');
-    if (values.meeting_url) setValue('meeting_url', '');
-    if (values.meeting_notes) setValue('meeting_notes', '');
+    clearVirtualFields(values, setValue);
   }, [podMode]); // eslint-disable-line react-hooks/exhaustive-deps
 
   useEffect(() => {

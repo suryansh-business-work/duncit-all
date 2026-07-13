@@ -77,7 +77,7 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
     if (activeIndex === null) setGroups(orderGroups());
   }, [activeIndex, orderGroups]);
 
-  const active = activeIndex != null ? groups[activeIndex] : undefined;
+  const active = activeIndex == null ? undefined : groups[activeIndex];
   const activeIsMine = active != null && active === mine;
   // Followed people carry a `user-…` key; the own group and club items don't.
   const activeKey = (active as StoryRailItem | undefined)?.key;

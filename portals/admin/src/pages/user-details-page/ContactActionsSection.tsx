@@ -37,7 +37,10 @@ export default function ContactActionsSection({ userId, refreshToken }: Readonly
 
   const actions = (data?.userContactActions ?? []) as any[];
   const statuses = useMemo<string[]>(
-    () => Array.from(new Set(actions.map((action) => String(action.status || '')).filter(Boolean))).sort(),
+    () =>
+      Array.from(new Set(actions.map((action) => String(action.status || '')).filter(Boolean))).sort((a, b) =>
+        a.localeCompare(b)
+      ),
     [actions]
   );
   const filtered = useMemo(() => {

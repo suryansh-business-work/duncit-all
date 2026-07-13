@@ -176,7 +176,7 @@ export default function PexelsVideosTab({
         >
           Pexels
         </a>
-        . Selected videos are imported into your ImageKit account.
+        {'. Selected videos are imported into your ImageKit account.'}
       </Typography>
     </Box>
   );

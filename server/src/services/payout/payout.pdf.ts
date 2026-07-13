@@ -91,6 +91,104 @@ function drawHeader(doc: PDFKit.PDFDocument, d: PayoutStatementData, logo: Buffe
   doc.fillColor('#ffffff').fontSize(18).font('Helvetica-Bold').text(title, L, 38, { width: R - L, align: 'right' });
 }
 
+/** Business block (left) + statement meta (right). */
+function drawMeta(doc: PDFKit.PDFDocument, d: PayoutStatementData, L: number, R: number, y: number) {
+  doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(d.business_name, L, y);
+  doc.fillColor(MUTED).fontSize(9).font('Helvetica');
+  if (d.business_address) doc.text(d.business_address, L, doc.y + 2, { width: 260 });
+  if (d.business_gstin) doc.text(`GSTIN: ${d.business_gstin}`, L, doc.y + 2);
+  doc.fillColor(MUTED).fontSize(9).text('Statement No', 360, y, { width: R - 360, align: 'right' });
+  doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(d.release_id, 360, doc.y, { width: R - 360, align: 'right' });
+  doc
+    .fillColor(MUTED)
+    .fontSize(9)
+    .font('Helvetica')
+    .text(`Date: ${d.statement_date.toLocaleDateString('en-IN')}`, 360, doc.y + 4, { width: R - 360, align: 'right' })
+    .text(`Pod: ${d.pod_title}`, 360, doc.y + 2, { width: R - 360, align: 'right' });
+}
+
+function drawPayableTo(
+  doc: PDFKit.PDFDocument,
+  d: PayoutStatementData,
+  L: number,
+  R: number,
+  y: number,
+  beneficiaryLabel: string
+) {
+  doc.roundedRect(L, y, R - L, 60, 10).fill(ACCENT_SOFT);
+  doc.fillColor(ACCENT).fontSize(8.5).font('Helvetica-Bold').text(`PAYABLE TO · ${beneficiaryLabel}`, L + 14, y + 12);
+  doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(d.beneficiary_name, L + 14, y + 24);
+  doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(d.beneficiary_email, L + 14, y + 40, { width: R - L - 28 });
+}
+
+/** One breakdown line + its rule. Returns the next y. */
+function drawRow(
+  doc: PDFKit.PDFDocument,
+  row: PayoutRow,
+  L: number,
+  R: number,
+  y: number,
+  fmt: (n: number) => string
+) {
+  const isTotal = row.sign === '=';
+  const prefix = row.sign === '-' ? '- ' : '';
+  doc
+    .font(isTotal ? 'Helvetica-Bold' : 'Helvetica')
+    .fontSize(isTotal ? 12 : 10)
+    .fillColor(isTotal ? INK : MUTED)
+    .text(row.label, L + 6, y, { width: 280 })
+    .fillColor(isTotal ? ACCENT : INK)
+    .text(`${prefix}${fmt(row.value)}`, 360, y, { width: R - 360, align: 'right' });
+  let next = doc.y + (isTotal ? 6 : 8);
+  doc.moveTo(L, next - 2).lineTo(R, next - 2).strokeColor(isTotal ? '#cbd5e1' : LINE).stroke();
+  next += isTotal ? 4 : 2;
+  return next;
+}
+
+/** Breakdown header + every reconciled line. Returns the next y. */
+function drawBreakdown(
+  doc: PDFKit.PDFDocument,
+  d: PayoutStatementData,
+  L: number,
+  R: number,
+  startY: number,
+  fmt: (n: number) => string
+) {
+  let y = startY;
+  doc.rect(L, y - 6, R - L, 24).fill(ACCENT);
+  doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');
+  doc.text('BREAKDOWN', L + 6, y, { width: 250 }).text('AMOUNT', 380, y, { width: R - 380, align: 'right' });
+  y += 26;
+  for (const row of buildRows(d)) {
+    y = drawRow(doc, row, L, R, y, fmt);
+  }
+  return y;
+}
+
+function drawFooter(doc: PDFKit.PDFDocument, d: PayoutStatementData, L: number, R: number, y: number) {
+  const support = [
+    d.invoice_support_email ? `Email: ${d.invoice_support_email}` : '',
+    d.invoice_support_phone ? `Phone: ${d.invoice_support_phone}` : '',
+  ]
+    .filter(Boolean)
+    .join('   ·   ');
+  if (support) doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(support, L, y);
+  if (d.invoice_terms) {
+    doc.fillColor(INK).fontSize(8.5).font('Helvetica-Bold').text('Terms', L, doc.y + 12);
+    doc.fillColor(MUTED).fontSize(8).font('Helvetica').text(d.invoice_terms, L, doc.y + 2, { width: R - L });
+  }
+  doc
+    .fontSize(8)
+    .fillColor('#9ca3af')
+    .text(
+      d.invoice_footer_note ||
+        'This payout statement is computer-generated and is shared once your pod completion is approved.',
+      L,
+      doc.y + 14,
+      { align: 'center', width: R - L }
+    );
+}
+
 export async function generatePayoutPdf(d: PayoutStatementData): Promise<Buffer> {
   const logo = await loadLogo(d.invoice_logo_url);
   const title = d.title || (d.statement_type === 'HOST' ? 'HOST PAYOUT' : 'VENUE PAYOUT');
@@ -113,73 +211,18 @@ export async function generatePayoutPdf(d: PayoutStatementData): Promise<Buffer>
       drawHeader(doc, d, logo, title);
 
       // Business + statement meta
-      let y = 116;
-      doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(d.business_name, L, y);
-      doc.fillColor(MUTED).fontSize(9).font('Helvetica');
-      if (d.business_address) doc.text(d.business_address, L, doc.y + 2, { width: 260 });
-      if (d.business_gstin) doc.text(`GSTIN: ${d.business_gstin}`, L, doc.y + 2);
-      doc.fillColor(MUTED).fontSize(9).text('Statement No', 360, y, { width: R - 360, align: 'right' });
-      doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(d.release_id, 360, doc.y, { width: R - 360, align: 'right' });
-      doc
-        .fillColor(MUTED)
-        .fontSize(9)
-        .font('Helvetica')
-        .text(`Date: ${d.statement_date.toLocaleDateString('en-IN')}`, 360, doc.y + 4, { width: R - 360, align: 'right' })
-        .text(`Pod: ${d.pod_title}`, 360, doc.y + 2, { width: R - 360, align: 'right' });
+      const metaY = 116;
+      drawMeta(doc, d, L, R, metaY);
 
       // Payable-to card
-      y = Math.max(doc.y, y + 64) + 14;
-      doc.roundedRect(L, y, R - L, 60, 10).fill(ACCENT_SOFT);
-      doc.fillColor(ACCENT).fontSize(8.5).font('Helvetica-Bold').text(`PAYABLE TO · ${beneficiaryLabel}`, L + 14, y + 12);
-      doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(d.beneficiary_name, L + 14, y + 24);
-      doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(d.beneficiary_email, L + 14, y + 40, { width: R - L - 28 });
+      const cardY = Math.max(doc.y, metaY + 64) + 14;
+      drawPayableTo(doc, d, L, R, cardY, beneficiaryLabel);
 
       // Breakdown rows
-      y += 60 + 22;
-      doc.rect(L, y - 6, R - L, 24).fill(ACCENT);
-      doc.fillColor('#ffffff').fontSize(9.5).font('Helvetica-Bold');
-      doc.text('BREAKDOWN', L + 6, y, { width: 250 }).text('AMOUNT', 380, y, { width: R - 380, align: 'right' });
-      y += 26;
-
-      const rows = buildRows(d);
-      for (const row of rows) {
-        const isTotal = row.sign === '=';
-        const prefix = row.sign === '-' ? '- ' : '';
-        doc
-          .font(isTotal ? 'Helvetica-Bold' : 'Helvetica')
-          .fontSize(isTotal ? 12 : 10)
-          .fillColor(isTotal ? INK : MUTED)
-          .text(row.label, L + 6, y, { width: 280 })
-          .fillColor(isTotal ? ACCENT : INK)
-          .text(`${prefix}${fmt(row.value)}`, 360, y, { width: R - 360, align: 'right' });
-        y = doc.y + (isTotal ? 6 : 8);
-        doc.moveTo(L, y - 2).lineTo(R, y - 2).strokeColor(isTotal ? '#cbd5e1' : LINE).stroke();
-        y += isTotal ? 4 : 2;
-      }
+      const rowsEndY = drawBreakdown(doc, d, L, R, cardY + 60 + 22, fmt);
 
       // Footer
-      y += 16;
-      const support = [
-        d.invoice_support_email ? `Email: ${d.invoice_support_email}` : '',
-        d.invoice_support_phone ? `Phone: ${d.invoice_support_phone}` : '',
-      ]
-        .filter(Boolean)
-        .join('   ·   ');
-      if (support) doc.fillColor(MUTED).fontSize(9).font('Helvetica').text(support, L, y);
-      if (d.invoice_terms) {
-        doc.fillColor(INK).fontSize(8.5).font('Helvetica-Bold').text('Terms', L, doc.y + 12);
-        doc.fillColor(MUTED).fontSize(8).font('Helvetica').text(d.invoice_terms, L, doc.y + 2, { width: R - L });
-      }
-      doc
-        .fontSize(8)
-        .fillColor('#9ca3af')
-        .text(
-          d.invoice_footer_note ||
-            'This payout statement is computer-generated and is shared once your pod completion is approved.',
-          L,
-          doc.y + 14,
-          { align: 'center', width: R - L }
-        );
+      drawFooter(doc, d, L, R, rowsEndY + 16);
 
       doc.end();
     } catch (e) {

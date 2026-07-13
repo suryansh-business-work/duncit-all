@@ -254,5 +254,6 @@ describe('useVerifications', () => {
     await act(async () => {
       resolveLoad({ myVerifications: [] });
     });
+    expect(mockRequest).toHaveBeenCalled();
   });
 });

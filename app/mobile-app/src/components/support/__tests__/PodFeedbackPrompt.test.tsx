@@ -42,6 +42,7 @@ describe('PodFeedbackPrompt', () => {
       resolvePod({ id: 'p1', title: 'X' });
       await Promise.resolve();
     });
+    expect(getPendingPodFeedback).toHaveBeenCalled();
   });
 
   it('dismisses on "Not now"', async () => {

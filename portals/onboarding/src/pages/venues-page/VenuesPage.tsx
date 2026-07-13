@@ -26,10 +26,10 @@ export default function VenuesPage() {
   const [reject] = useMutation(REJECT);
   const [setVenueDeductions, { loading: savingDeductions }] = useMutation(SET_VENUE_DEDUCTIONS);
   const lifecycle = useEntityLifecycle(SET_VENUE_ACTIVE, DELETE_VENUE, refetch);
-  const [active, setActive] = useState<any | null>(null);
+  const [active, setActive] = useState<any>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
-  const [editing, setEditing] = useState<any | null>(null);
+  const [editing, setEditing] = useState<any>(null);
 
   const parseTags = () =>
     tagsText.split(',').map((tag) => tag.trim()).filter(Boolean);

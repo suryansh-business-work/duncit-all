@@ -14,11 +14,8 @@ interface Props {
 }
 
 export default function ExploreMediaCarousel({ media, fallbackUrl, alt }: Readonly<Props>) {
-  const items = media && media.length > 0
-    ? media
-    : fallbackUrl
-      ? [{ url: fallbackUrl, type: 'IMAGE' as const }]
-      : [];
+  const fallbackItems: Media[] = fallbackUrl ? [{ url: fallbackUrl, type: 'IMAGE' as const }] : [];
+  const items = media && media.length > 0 ? media : fallbackItems;
 
   if (items.length === 0) {
     return (
@@ -65,8 +62,8 @@ export default function ExploreMediaCarousel({ media, fallbackUrl, alt }: Readon
         adaptiveHeight={false}
         swipeToSlide
       >
-        {items.map((m, i) => (
-          <Box key={i} sx={{ position: 'relative', height: '100%' }}>
+        {items.map((m) => (
+          <Box key={m.url} sx={{ position: 'relative', height: '100%' }}>
             {m.type === 'VIDEO' ? (
               <Box
                 component="video"

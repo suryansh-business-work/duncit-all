@@ -4,9 +4,9 @@
  * @duncit/theme.
  */
 import type { PaletteMode } from '@mui/material';
-import { createDuncitTheme, tokens, type AccentColors } from '@duncit/theme';
+import { createDuncitTheme, type AccentColors } from '@duncit/theme';
 
-export { tokens };
+export { tokens } from '@duncit/theme';
 
 const ADMIN_ACCENT: AccentColors = { light: '#60a5fa', main: '#2563eb', hover: '#1d4ed8', active: '#1e40af' };
 

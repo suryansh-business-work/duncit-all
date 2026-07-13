@@ -39,9 +39,7 @@ export default function PetProfileSection({ pet, onSaved }: Readonly<Props>) {
           )}
         </Stack>
 
-        {!editing ? (
-          <PetSummary pet={pet} />
-        ) : (
+        {editing ? (
           <PetForm
             pet={pet}
             onCancel={() => setEditing(false)}
@@ -51,6 +49,8 @@ export default function PetProfileSection({ pet, onSaved }: Readonly<Props>) {
               onSaved?.();
             }}
           />
+        ) : (
+          <PetSummary pet={pet} />
         )}
 
         {savedMsg && !editing && (

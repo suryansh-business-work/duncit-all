@@ -60,7 +60,7 @@ export function MeetingStatusCard({ kind }: Readonly<{ kind: SurveyKind }>) {
               testID={`meeting-join-${kind}`}
               role="button"
               aria-label="Join meeting"
-              onPress={() => void Linking.openURL(meeting.meeting_link as string)}
+              onPress={() => Linking.openURL(meeting.meeting_link as string)}
               alignSelf="flex-start"
               paddingHorizontal={14}
               paddingVertical={9}

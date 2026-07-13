@@ -1,5 +1,4 @@
-import { keyframes } from '@mui/material';
-import { Box } from '@mui/material';
+import { Box, keyframes } from '@mui/material';
 import EmailOutlinedIcon from '@mui/icons-material/EmailOutlined';
 import CallOutlinedIcon from '@mui/icons-material/CallOutlined';
 import GraphicEqIcon from '@mui/icons-material/GraphicEq';

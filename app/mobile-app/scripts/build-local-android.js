@@ -112,10 +112,10 @@ function run(cmd, args) {
       stopMonitor();
       if (aborted) {
         reject(new Error('Build cancelled by the resource monitor (host RAM critically low).'));
-      } else if ((code ?? 1) !== 0) {
-        reject(new Error(`Command failed with exit code ${code ?? 'unknown'}`));
-      } else {
+      } else if ((code ?? 1) === 0) {
         resolve();
+      } else {
+        reject(new Error(`Command failed with exit code ${code ?? 'unknown'}`));
       }
     });
     child.on('error', (err) => {

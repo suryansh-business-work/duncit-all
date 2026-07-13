@@ -51,7 +51,9 @@ export default function DeviceUploadTab({
                 objectFit: 'contain',
                 background: '#000',
               }}
-            />
+            >
+              <track kind="captions" />
+            </video>
           ) : (
             <img
               src={previewUrl}

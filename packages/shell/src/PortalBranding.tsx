@@ -60,7 +60,7 @@ export function PortalBranding(): React.ReactElement | null {
   const splashUrl: string = branding?.portals_splash_url || '';
   const isVideo = branding?.portals_splash_type === 'VIDEO';
   const [splashOpen, setSplashOpen] = useState(
-    () => typeof window !== 'undefined' && !sessionStorage.getItem(SPLASH_SESSION_KEY),
+    () => typeof globalThis.window !== 'undefined' && !sessionStorage.getItem(SPLASH_SESSION_KEY),
   );
 
   useEffect(() => {
@@ -70,14 +70,14 @@ export function PortalBranding(): React.ReactElement | null {
 
   useEffect(() => {
     if (!splashOpen || !splashUrl) return;
-    const timer = window.setTimeout(
+    const timer = globalThis.setTimeout(
       () => {
         sessionStorage.setItem(SPLASH_SESSION_KEY, '1');
         setSplashOpen(false);
       },
       isVideo ? VIDEO_SPLASH_MS : IMAGE_SPLASH_MS,
     );
-    return () => window.clearTimeout(timer);
+    return () => globalThis.clearTimeout(timer);
   }, [splashOpen, splashUrl, isVideo]);
 
   if (!splashOpen || !splashUrl) return null;

@@ -17,7 +17,7 @@ export default function PodIdeasPage() {
   const [statusFilter, setStatusFilter] = useState<(typeof STATUS_OPTIONS)[number]>('ALL');
   const [search, setSearch] = useState('');
   const [detailsId, setDetailsId] = useState<string | null>(null);
-  const [delTarget, setDelTarget] = useState<any | null>(null);
+  const [delTarget, setDelTarget] = useState<any>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const filter = useMemo(() => {

@@ -64,7 +64,7 @@ export default function UserLeadsPage() {
   const [importLeads, importState] = useMutation(WA_IMPORT_USER_LEADS);
 
   const bumpAll = () => {
-    void refetch();
+    refetch().catch(() => undefined);
     setReloadKey((k) => k + 1);
   };
 
@@ -105,6 +105,39 @@ export default function UserLeadsPage() {
     clear();
     bumpAll();
   };
+
+  const leadsContent = total === 0 ? (
+    <Alert severity="info" sx={{ borderRadius: 2 }}>
+      No WhatsApp leads yet. Add one with “New”, or “Import” an Excel/CSV.
+    </Alert>
+  ) : (
+    <Paper variant="outlined" sx={{ borderRadius: 2 }}>
+      <LeadsTable
+        rows={leads}
+        sortBy={sortBy}
+        sortDir={sortDir}
+        onSort={onSort}
+        onRowClick={(id) => navigate(`/user-leads/${id}`)}
+        selected={selected}
+        onToggle={toggleOne}
+        onToggleAll={toggleAll}
+        onEdit={setEditLead}
+        onDelete={(lead) => setDeleteIds([lead.id])}
+      />
+      <TablePagination
+        component="div"
+        count={total}
+        page={page}
+        onPageChange={(_e, p) => setPage(p)}
+        rowsPerPage={pageSize}
+        onRowsPerPageChange={(e) => {
+          setPageSize(Number.parseInt(e.target.value, 10));
+          setPage(0);
+        }}
+        rowsPerPageOptions={[10, 25, 50, 100]}
+      />
+    </Paper>
+  );
 
   return (
     <Box sx={{ p: { xs: 2, md: 3 }, maxWidth: 1100, mx: 'auto' }}>
@@ -153,37 +186,8 @@ export default function UserLeadsPage() {
       {error && <Alert severity="error" sx={{ mb: 1 }}>{error.message}</Alert>}
       {loading && leads.length === 0 ? (
         <Stack alignItems="center" sx={{ py: 6 }}><CircularProgress /></Stack>
-      ) : total === 0 ? (
-        <Alert severity="info" sx={{ borderRadius: 2 }}>
-          No WhatsApp leads yet. Add one with “New”, or “Import” an Excel/CSV.
-        </Alert>
       ) : (
-        <Paper variant="outlined" sx={{ borderRadius: 2 }}>
-          <LeadsTable
-            rows={leads}
-            sortBy={sortBy}
-            sortDir={sortDir}
-            onSort={onSort}
-            onRowClick={(id) => navigate(`/user-leads/${id}`)}
-            selected={selected}
-            onToggle={toggleOne}
-            onToggleAll={toggleAll}
-            onEdit={setEditLead}
-            onDelete={(lead) => setDeleteIds([lead.id])}
-          />
-          <TablePagination
-            component="div"
-            count={total}
-            page={page}
-            onPageChange={(_e, p) => setPage(p)}
-            rowsPerPage={pageSize}
-            onRowsPerPageChange={(e) => {
-              setPageSize(Number.parseInt(e.target.value, 10));
-              setPage(0);
-            }}
-            rowsPerPageOptions={[10, 25, 50, 100]}
-          />
-        </Paper>
+        leadsContent
       )}
 
       <CreateLeadDialog open={createOpen} onClose={() => setCreateOpen(false)} onCreated={bumpAll} />

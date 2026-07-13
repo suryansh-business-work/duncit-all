@@ -61,7 +61,11 @@ export function captureConsole(target: LevelFns, options: CaptureOptions = {}): 
     };
   }
 
-  if ((options.windowErrors ?? true) && typeof window !== 'undefined' && typeof window.addEventListener === 'function') {
+  if (
+    (options.windowErrors ?? true) &&
+    typeof globalThis.window !== 'undefined' &&
+    typeof window.addEventListener === 'function'
+  ) {
     window.addEventListener('error', (event: ErrorEvent) => {
       try {
         target.error(currentPage(options.page), 'window.onerror', {

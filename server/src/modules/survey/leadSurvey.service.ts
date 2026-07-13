@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { VenueLeadModel, HostLeadModel, EcommLeadModel } from '@modules/crm/crm/crm.model';
@@ -229,7 +229,7 @@ async function assertSurvey(surveyId: string) {
 
 /** Resolve a list of category ObjectIds to [{ id, name }], preserving order. */
 async function resolveCategoryRefs(ids: any[] = []): Promise<{ id: string; name: string }[]> {
-  const list = (ids ?? []).map((x) => String(x)).filter(Boolean);
+  const list = (ids ?? []).map(String).filter(Boolean);
   if (list.length === 0) return [];
   const cats = await CategoryModel.find({ _id: { $in: list } }).select('name').lean();
   const byId = new Map(cats.map((c: any) => [String(c._id), c.name as string]));

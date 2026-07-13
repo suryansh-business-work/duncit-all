@@ -8,7 +8,6 @@ import type { ThemeCtx } from '../types';
  */
 export const tooltip = (c: ThemeCtx): Components<Theme>['MuiTooltip'] => {
   const fill = c.isDark ? c.white : c.ink;
-  const text = c.isDark ? c.ink : c.white;
   return {
     styleOverrides: {
       tooltip: {

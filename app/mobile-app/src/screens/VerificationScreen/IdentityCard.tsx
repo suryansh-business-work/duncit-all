@@ -62,7 +62,7 @@ export function IdentityCard({ item, busy, docError, onPickImage, onPickPdf }: R
   const done = item.status === 'APPROVED';
   return (
     <VerificationCard item={item}>
-      {!done ? (
+      {done ? null : (
         <XStack gap={10} flexWrap="wrap">
           <PickButton
             testID="verification-upload-photo"
@@ -79,7 +79,7 @@ export function IdentityCard({ item, busy, docError, onPickImage, onPickPdf }: R
             onPress={onPickPdf}
           />
         </XStack>
-      ) : null}
+      )}
       {docError ? (
         <Text testID="verification-doc-error" fontSize={12} color="$danger">
           {docError}

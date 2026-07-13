@@ -38,15 +38,7 @@ function SettlementRow({ symbol, line }: Readonly<{ symbol: string; line: Line }
 /** "Host Share" preview of the reconciled split for the entered venue bill. */
 export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
   let body;
-  if (!settlement) {
-    body = isLoading ? (
-      <Spinner testID="settlement-loading" size="small" color="$primary" />
-    ) : (
-      <Text testID="settlement-empty" fontSize={12} color="$muted">
-        Enter a bill to preview your share.
-      </Text>
-    );
-  } else {
+  if (settlement) {
     const w = settlement.waterfall;
     const lines: Line[] = [
       { label: 'Customer Paid', value: w.amount },
@@ -70,6 +62,14 @@ export function SettlementSummary({ settlement, isLoading }: Readonly<Props>) {
           <SettlementRow key={line.label} symbol={settlement.currency_symbol} line={line} />
         ))}
       </YStack>
+    );
+  } else {
+    body = isLoading ? (
+      <Spinner testID="settlement-loading" size="small" color="$primary" />
+    ) : (
+      <Text testID="settlement-empty" fontSize={12} color="$muted">
+        Enter a bill to preview your share.
+      </Text>
     );
   }
 

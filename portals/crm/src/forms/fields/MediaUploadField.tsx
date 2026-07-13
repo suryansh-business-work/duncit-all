@@ -65,6 +65,8 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
 
   const removeAt = (idx: number) => field.onChange(toValue(list.filter((_, i) => i !== idx)));
 
+  const addLabel = kind === 'video' ? 'Add videos' : 'Add images';
+
   return (
     <Stack spacing={1}>
       <Stack direction="row" alignItems="center" justifyContent="space-between">
@@ -79,7 +81,7 @@ export default function MediaUploadField({ name, label, kind, folder = 'crm/medi
           disabled={busy}
           data-testid={`upload-${name}`}
         >
-          {busy ? 'Uploading…' : `Add ${kind === 'video' ? 'videos' : 'images'}`}
+          {busy ? 'Uploading…' : addLabel}
         </Button>
       </Stack>
 

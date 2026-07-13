@@ -40,7 +40,7 @@ const APPROVED_EDIT_SECTIONS = new Set<EditableSectionKey>([
 ]);
 
 interface Options {
-  venue: any | null;
+  venue: any;
   locations: any[];
   account: { name: string; email: string };
   mode: RegisterVenueMode;

@@ -58,7 +58,7 @@ export function UserProvider({
   children,
 }: Readonly<UserProviderProps>) {
   // Hydrate from localStorage synchronously so refreshes don't flash a logged-out shell.
-  const [user, setUserState] = useState<DuncitUser | null>(() => readCachedUser(storageKey));
+  const [userState, setUserState] = useState<DuncitUser | null>(() => readCachedUser(storageKey));
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<Error | null>(null);
   // Flips true after the first load attempt completes (success or failure).
@@ -123,12 +123,14 @@ export function UserProvider({
   const update = useCallback<UserDataContextValue['update']>(
     (patch) => {
       setUserState((current) => {
-        const next =
-          typeof patch === 'function'
-            ? (patch as (c: DuncitUser | null) => DuncitUser | null)(current)
-            : current
-              ? { ...current, ...patch }
-              : ({ ...patch } as DuncitUser);
+        let next: DuncitUser | null;
+        if (typeof patch === 'function') {
+          next = (patch as (c: DuncitUser | null) => DuncitUser | null)(current);
+        } else if (current) {
+          next = { ...current, ...patch };
+        } else {
+          next = { ...patch } as DuncitUser;
+        }
         writeCachedUser(next, storageKey);
         return next;
       });
@@ -144,7 +146,7 @@ export function UserProvider({
   );
 
   const reloadApp = useCallback(() => {
-    if (typeof window !== 'undefined') window.location.reload();
+    if (typeof globalThis.window !== 'undefined') window.location.reload();
   }, []);
 
   const logout = useCallback(() => {
@@ -153,7 +155,7 @@ export function UserProvider({
     setError(null);
     if (onLogoutRef.current) {
       onLogoutRef.current();
-    } else if (typeof window !== 'undefined') {
+    } else if (typeof globalThis.window !== 'undefined') {
       window.location.href = '/login';
     }
   }, []);
@@ -163,7 +165,7 @@ export function UserProvider({
   // when the user returns — keeps roles / profile_photo current.
   useEffect(() => {
     if (!isAuthed()) return;
-    void refetch();
+    refetch().catch(() => undefined);
     // Refresh `me` when the user RETURNS to a tab that's been hidden for a while
     // (e.g. left open overnight) so roles / profile stay current. Uses
     // visibilitychange — NOT window 'focus', which mobile taps fire constantly —
@@ -173,7 +175,7 @@ export function UserProvider({
       if (document.visibilityState !== 'visible') return;
       if (!isAuthedRef.current()) return;
       if (Date.now() - lastLoadedAtRef.current < MIN_REFRESH_MS) return;
-      void refetch();
+      refetch().catch(() => undefined);
     };
     document.addEventListener('visibilitychange', onVisible);
     return () => document.removeEventListener('visibilitychange', onVisible);
@@ -188,14 +190,14 @@ export function UserProvider({
     // could not be loaded even after RetryLink exhausted its retries. An active
     // session with a cached user never trips this, so the recovery dialog stays
     // hidden during deploys / transient blips.
-    () => isAuthed() && !loading && loadAttempted && !user,
+    () => isAuthed() && !loading && loadAttempted && !userState,
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [loading, user, loadAttempted]
+    [loading, userState, loadAttempted]
   );
 
   const value = useMemo<UserDataContextValue>(
     () => ({
-      user,
+      user: userState,
       loading,
       error,
       refetch,
@@ -205,7 +207,7 @@ export function UserProvider({
       hasLoadFailure,
       reloadApp,
     }),
-    [user, loading, error, refetch, update, setUser, logout, hasLoadFailure, reloadApp]
+    [userState, loading, error, refetch, update, setUser, logout, hasLoadFailure, reloadApp]
   );
 
   return (

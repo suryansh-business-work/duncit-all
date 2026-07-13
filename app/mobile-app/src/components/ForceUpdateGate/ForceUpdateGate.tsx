@@ -45,7 +45,8 @@ export function ForceUpdateGate() {
   if (!isOutdated(current, latest)) return null;
 
   const openStore = () => {
-    void Linking.openURL(storeUrl);
+    /* istanbul ignore next -- an OS-level open failure has no user-facing recovery */
+    Linking.openURL(storeUrl).catch(() => undefined);
   };
 
   return (

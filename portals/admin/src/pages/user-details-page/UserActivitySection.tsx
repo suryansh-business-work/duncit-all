@@ -133,7 +133,7 @@ export default function UserActivitySection({ userId }: Readonly<Props>) {
                       setSelectedDate(activity.date);
                       setJourneyDate(activity.date);
                     },
-                    style: { ...(block.props.style || {}), cursor: 'pointer' },
+                    style: { ...block.props.style, cursor: 'pointer' },
                   })}
                 </Tooltip>
               )}

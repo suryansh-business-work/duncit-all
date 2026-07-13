@@ -47,8 +47,7 @@ export async function cropToAvatar({
 
   const actions: ImageManipulator.Action[] = [];
   if (rotation) actions.push({ rotate: rotation });
-  actions.push({ crop });
-  actions.push({ resize: { width: OUTPUT_SIZE, height: OUTPUT_SIZE } });
+  actions.push({ crop }, { resize: { width: OUTPUT_SIZE, height: OUTPUT_SIZE } });
 
   const result = await ImageManipulator.manipulateAsync(uri, actions, {
     compress: 0.85,

@@ -84,14 +84,14 @@ export const DELETE_COMMENT = gql`
 export const STATUS_OPTIONS = ['ALL', 'PENDING', 'APPROVED', 'REJECTED'] as const;
 export type Status = 'PENDING' | 'APPROVED' | 'REJECTED';
 
-export const statusColor = (s: Status) =>
-  s === 'APPROVED' ? 'success' : s === 'REJECTED' ? 'error' : 'warning';
+export const statusColor = (s: Status) => {
+  if (s === 'APPROVED') return 'success';
+  if (s === 'REJECTED') return 'error';
+  return 'warning';
+};
 
-export const statusIcon = (s: Status) =>
-  s === 'APPROVED' ? (
-    <CheckCircleIcon fontSize="small" />
-  ) : s === 'REJECTED' ? (
-    <CancelIcon fontSize="small" />
-  ) : (
-    <HourglassEmptyIcon fontSize="small" />
-  );
+export const statusIcon = (s: Status) => {
+  if (s === 'APPROVED') return <CheckCircleIcon fontSize="small" />;
+  if (s === 'REJECTED') return <CancelIcon fontSize="small" />;
+  return <HourglassEmptyIcon fontSize="small" />;
+};

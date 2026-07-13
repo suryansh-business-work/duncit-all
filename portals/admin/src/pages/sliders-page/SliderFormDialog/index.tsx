@@ -44,7 +44,7 @@ export default function SliderFormDialog({
   const setForm = (next: SetStateAction<SliderForm>) => {
     const resolved = typeof next === 'function' ? (next as (prev: SliderForm) => SliderForm)(values) : next;
     reset(resolved, { keepSubmitCount: true, keepDefaultValues: true });
-    void trigger();
+    trigger().catch(() => undefined);
   };
 
   const submit = handleSubmit((accepted) => onSubmit(accepted));

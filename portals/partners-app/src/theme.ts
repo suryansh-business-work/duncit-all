@@ -4,9 +4,9 @@
  * in @duncit/theme.
  */
 import type { PaletteMode } from '@mui/material';
-import { createDuncitTheme, tokens, type AccentColors } from '@duncit/theme';
+import { createDuncitTheme, type AccentColors } from '@duncit/theme';
 
-export { tokens };
+export { tokens } from '@duncit/theme';
 
 export const PARTNERS_ACCENT: AccentColors = { light: '#ff7575', main: '#ff5757', hover: '#f03e3e', active: '#d92d2d' };
 

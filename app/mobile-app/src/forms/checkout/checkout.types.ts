@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 /** Mirror of the server GSTIN rule (14 checkout chars): 2 digits, 5 A-Z, 4
  * digits, 1 A-Z, then 2 alphanumerics. Validated only when non-empty. */
-const GSTIN_RE = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z]{2}$/;
+const GSTIN_RE = /^\d{2}[A-Z]{5}\d{4}[A-Z][0-9A-Z]{2}$/;
 const PINCODE_RE = /^\d{4,10}$/;
 const EMAIL_CHECK = z.string().email();
 

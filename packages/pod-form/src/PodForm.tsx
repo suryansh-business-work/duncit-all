@@ -111,7 +111,7 @@ export default function PodForm({
                 disabled={busyOrSubmitting}
                 onClick={() => {
                   submitMode.current = 'draft';
-                  void submit();
+                  submit().catch(() => undefined);
                 }}
               >
                 Save as Draft

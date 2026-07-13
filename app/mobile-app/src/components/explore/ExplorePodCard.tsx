@@ -54,7 +54,8 @@ export function ExplorePodCard({
   const railAvailable = height - contentBottom - (insets.top + 56);
   const cover = club?.club_feature_images_and_videos.find((m) => !!m.url)?.url ?? null;
   const attendees = pod.pod_attendees.length;
-  const joinLabel = `${attendees}${pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : ''}`;
+  const spotsSuffix = pod.no_of_spots > 0 ? `/${pod.no_of_spots}` : '';
+  const joinLabel = `${attendees}${spotsSuffix}`;
   // Free pods need no payment, so the "Confirm with UPI" copy is hidden for them.
   const ctaSubtitle = pod.pod_type.includes('FREE')
     ? 'Free spot'

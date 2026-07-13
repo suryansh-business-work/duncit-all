@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import {
@@ -14,8 +14,8 @@ import {
 const expenseId = () => `exp_${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
 const refundId = () => `ref_${Date.now().toString(36)}${crypto.randomBytes(3).toString('hex')}`;
 const round2 = (n: number) => Math.round((Number(n) || 0) * 100) / 100;
-const clean = (value: unknown, max = 1000) => String(value ?? '').trim().slice(0, max);
-const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+const clean = (value: string | number | null | undefined, max = 1000) => String(value ?? '').trim().slice(0, max);
+const escapeRegex = (value: string) => value.replace(/[.*+?^${}()|[\]\\]/g, String.raw`\$&`);
 
 const CATEGORY_SET = new Set<string>(EXPENSE_CATEGORIES);
 const METHOD_SET = new Set<string>(EXPENSE_PAYMENT_METHODS);

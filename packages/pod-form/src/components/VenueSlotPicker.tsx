@@ -41,7 +41,7 @@ export default function VenueSlotPicker({ venueId, selectedSlotId, onSelect }: R
   useEffect(() => {
     if (!selectedSlotId) return;
     if (loading) return;
-    if (!slots.find((s) => s.id === selectedSlotId)) {
+    if (!slots.some((s) => s.id === selectedSlotId)) {
       onSelect(null);
     }
   }, [slots, selectedSlotId, loading, onSelect]);

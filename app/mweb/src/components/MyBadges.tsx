@@ -25,7 +25,7 @@ const MY_BADGES = gql`
 export default function MyBadges() {
   const { data, loading } = useQuery(MY_BADGES, { fetchPolicy: 'cache-and-network' });
   const badges = data?.myBadges ?? [];
-  const [active, setActive] = useState<any | null>(null);
+  const [active, setActive] = useState<any>(null);
   if (loading && !data) return null;
 
   return (

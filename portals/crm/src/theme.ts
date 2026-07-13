@@ -7,9 +7,9 @@
 import type {} from '@mui/x-data-grid/themeAugmentation';
 import { alpha } from '@mui/material/styles';
 import type { PaletteMode } from '@mui/material';
-import { createDuncitTheme, tokens, type AccentColors, type ThemeCtx } from '@duncit/theme';
+import { createDuncitTheme, type AccentColors, type ThemeCtx } from '@duncit/theme';
 
-export { tokens };
+export { tokens } from '@duncit/theme';
 
 export const dataGrid = (c: ThemeCtx) => ({
   MuiDataGrid: {

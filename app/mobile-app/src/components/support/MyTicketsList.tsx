@@ -32,6 +32,45 @@ export function MyTicketsList() {
   const countFor = (f: Filter) =>
     f === 'ALL' ? tickets.length : tickets.filter((t) => t.status === f).length;
 
+  // Empty state or the ticket rows — hoisted so the render has no nested ternary.
+  const listBody =
+    items.length === 0 ? (
+      <Text testID="my-tickets-empty" fontSize={13} color="$muted" paddingVertical={8}>
+        {filter === 'ALL'
+          ? "You haven't raised any tickets yet."
+          : `No ${LABEL[filter].toLowerCase()} tickets.`}
+      </Text>
+    ) : (
+      items.map((t) => (
+        <YStack
+          key={t.id}
+          testID={`my-ticket-${t.id}`}
+          role="button"
+          aria-label={t.subject}
+          onPress={() => navigation.navigate('TicketDetails', { ticketId: t.id })}
+          padding={14}
+          borderRadius={14}
+          borderWidth={1}
+          borderColor="$borderColor"
+          backgroundColor="$surface"
+          gap={3}
+          pressStyle={{ opacity: 0.85 }}
+        >
+          <XStack justifyContent="space-between" alignItems="center" gap={8}>
+            <Text fontSize={14} fontWeight="800" color="$color" flex={1} numberOfLines={1}>
+              {t.subject}
+            </Text>
+            <Text fontSize={11} fontWeight="900" color="$primary">
+              {LABEL[t.status as Filter] ?? t.status}
+            </Text>
+          </XStack>
+          <Text fontSize={11.5} color="$muted">
+            {ticketNo(t.id)} · {t.category}
+          </Text>
+        </YStack>
+      ))
+    );
+
   return (
     <YStack gap={10} testID="my-tickets-list">
       <Text fontSize={12} fontWeight="900" textTransform="uppercase" color="$muted">
@@ -65,41 +104,8 @@ export function MyTicketsList() {
 
       {isLoading && tickets.length === 0 ? (
         <ListSkeleton testID="my-tickets-loading" count={2} />
-      ) : items.length === 0 ? (
-        <Text testID="my-tickets-empty" fontSize={13} color="$muted" paddingVertical={8}>
-          {filter === 'ALL'
-            ? "You haven't raised any tickets yet."
-            : `No ${LABEL[filter].toLowerCase()} tickets.`}
-        </Text>
       ) : (
-        items.map((t) => (
-          <YStack
-            key={t.id}
-            testID={`my-ticket-${t.id}`}
-            role="button"
-            aria-label={t.subject}
-            onPress={() => navigation.navigate('TicketDetails', { ticketId: t.id })}
-            padding={14}
-            borderRadius={14}
-            borderWidth={1}
-            borderColor="$borderColor"
-            backgroundColor="$surface"
-            gap={3}
-            pressStyle={{ opacity: 0.85 }}
-          >
-            <XStack justifyContent="space-between" alignItems="center" gap={8}>
-              <Text fontSize={14} fontWeight="800" color="$color" flex={1} numberOfLines={1}>
-                {t.subject}
-              </Text>
-              <Text fontSize={11} fontWeight="900" color="$primary">
-                {LABEL[t.status as Filter] ?? t.status}
-              </Text>
-            </XStack>
-            <Text fontSize={11.5} color="$muted">
-              {ticketNo(t.id)} · {t.category}
-            </Text>
-          </YStack>
-        ))
+        listBody
       )}
     </YStack>
   );

@@ -51,6 +51,24 @@ export function SurveyScreen() {
     }
   };
 
+  const surveyBody = error ? (
+    <Text color="$danger" testID="survey-error">
+      {toErrorMessage(error)}
+    </Text>
+  ) : (
+    <YStack gap={12}>
+      {supers.map((superCategory) => (
+        <SuperCategoryGroup
+          key={superCategory.id}
+          superCategory={superCategory}
+          childrenByParent={childrenByParent}
+          selected={selected}
+          onToggle={toggle}
+        />
+      ))}
+    </YStack>
+  );
+
   return (
     <YStack flex={1} backgroundColor="$background">
       <SafeAreaView edges={['top']} style={{ flex: 1 }}>
@@ -77,22 +95,8 @@ export function SurveyScreen() {
             <YStack alignItems="center" paddingVertical={40}>
               <Spinner testID="survey-loading" color="$primary" />
             </YStack>
-          ) : error ? (
-            <Text color="$danger" testID="survey-error">
-              {toErrorMessage(error)}
-            </Text>
           ) : (
-            <YStack gap={12}>
-              {supers.map((superCategory) => (
-                <SuperCategoryGroup
-                  key={superCategory.id}
-                  superCategory={superCategory}
-                  childrenByParent={childrenByParent}
-                  selected={selected}
-                  onToggle={toggle}
-                />
-              ))}
-            </YStack>
+            surveyBody
           )}
 
           {opError ? (

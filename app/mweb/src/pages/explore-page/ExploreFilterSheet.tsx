@@ -89,7 +89,7 @@ export default function ExploreFilterSheet({ open, filters, setFilters, categori
         <Stack spacing={0.8}>
           <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 900 }}>Vibe</Typography>
           <Stack direction="row" spacing={0.75} flexWrap="wrap" useFlexGap>
-            <Chip label="All" clickable color={!filters.categoryId ? 'primary' : 'default'} variant={!filters.categoryId ? 'filled' : 'outlined'} onClick={() => setFilters({ ...filters, categoryId: '' })} sx={{ height: 32, fontWeight: 800 }} />
+            <Chip label="All" clickable color={filters.categoryId ? 'default' : 'primary'} variant={filters.categoryId ? 'outlined' : 'filled'} onClick={() => setFilters({ ...filters, categoryId: '' })} sx={{ height: 32, fontWeight: 800 }} />
             {visibleCats.map((category: any) => {
               const selected = filters.categoryId === category.id;
               return <Chip key={category.id} label={category.name} clickable color={selected ? 'primary' : 'default'} variant={selected ? 'filled' : 'outlined'} onClick={() => setFilters({ ...filters, categoryId: selected ? '' : category.id })} sx={{ height: 32, fontWeight: 800 }} />;

@@ -43,7 +43,10 @@ export default function LinkedHostsField({ name, label = 'Linked Host Leads' }: 
             filterSelectedOptions
             options={hosts}
             value={selectedValues}
-            getOptionLabel={(h) => `${h.host_name}${h.city ? ` — ${h.city}` : ''}`}
+            getOptionLabel={(h) => {
+              const citySuffix = h.city ? ` — ${h.city}` : '';
+              return `${h.host_name}${citySuffix}`;
+            }}
             isOptionEqualToValue={(a, b) => a.id === b.id}
             loading={loading}
             onChange={(_, next) => field.onChange(next.map((h) => h.id))}

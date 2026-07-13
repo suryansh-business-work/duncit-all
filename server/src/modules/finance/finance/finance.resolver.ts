@@ -185,7 +185,7 @@ export const financeResolvers = {
         { $set: set },
         { new: true, upsert: true, setDefaultsOnInsert: true }
       );
-      return toPub(doc!);
+      return toPub(doc);
     },
     createPaymentReleaseRequest: async (_p: unknown, args: { input: any }, ctx: GraphQLContext) => {
       requireRole(ctx, ADMIN_POD);

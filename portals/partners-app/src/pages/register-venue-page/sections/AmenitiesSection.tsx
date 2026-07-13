@@ -15,6 +15,31 @@ interface GroupDef {
   options: string[];
 }
 
+interface OptionChipProps {
+  option: string;
+  selected: boolean;
+  disabled: boolean;
+  value: string[];
+  onChange: (next: string[]) => void;
+}
+
+/** One toggle chip. Hoisted to module scope so the toggle handler is not nested
+ * five function levels deep (SonarQube S2004). */
+function OptionChip({ option, selected, disabled, value, onChange }: Readonly<OptionChipProps>) {
+  const toggle = () => onChange(selected ? value.filter((item: string) => item !== option) : [...value, option]);
+  return (
+    <Chip
+      label={option}
+      clickable={!disabled}
+      disabled={disabled}
+      color={selected ? 'primary' : 'default'}
+      variant={selected ? 'filled' : 'outlined'}
+      aria-pressed={selected}
+      onClick={disabled ? undefined : toggle}
+    />
+  );
+}
+
 /** Toggle-chip checklist groups for Amenities, Facilities and Venue Security.
  * Options come from `venueRegistrationConfig` — never hardcoded. */
 export default function AmenitiesSection({ form, config, disabled = false }: Readonly<Props>) {
@@ -56,30 +81,16 @@ export default function AmenitiesSection({ form, config, disabled = false }: Rea
               <Typography variant="subtitle2" fontWeight={800}>{group.label}</Typography>
               <Typography variant="caption" color="text.secondary">{group.hint}</Typography>
               <Stack direction="row" flexWrap="wrap" sx={{ gap: 1 }} role="group" aria-label={group.label}>
-                {group.options.map((option) => {
-                  const selected = field.value.includes(option);
-                  return (
-                    <Chip
-                      key={option}
-                      label={option}
-                      clickable={!disabled}
-                      disabled={disabled}
-                      color={selected ? 'primary' : 'default'}
-                      variant={selected ? 'filled' : 'outlined'}
-                      aria-pressed={selected}
-                      onClick={
-                        disabled
-                          ? undefined
-                          : () =>
-                              field.onChange(
-                                selected
-                                  ? field.value.filter((item: string) => item !== option)
-                                  : [...field.value, option]
-                              )
-                      }
-                    />
-                  );
-                })}
+                {group.options.map((option) => (
+                  <OptionChip
+                    key={option}
+                    option={option}
+                    selected={field.value.includes(option)}
+                    disabled={disabled}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                ))}
               </Stack>
             </Stack>
           )}

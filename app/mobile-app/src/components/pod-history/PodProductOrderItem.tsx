@@ -101,7 +101,7 @@ export function PodProductOrderItem({ order }: Readonly<{ order: ProductOrder }>
             alignItems="center"
             gap={4}
             onPress={() => {
-              if (track) void Linking.openURL(track).catch(() => {});
+              if (track) Linking.openURL(track).catch(() => {});
             }}
           >
             <MaterialIcons name="open-in-new" size={14} color="#ff4f73" />

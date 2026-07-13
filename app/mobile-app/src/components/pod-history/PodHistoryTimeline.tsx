@@ -30,14 +30,14 @@ export function PodHistoryTimeline({ item }: Readonly<{ item: PodMembership }>) 
           <XStack key={`${event.title}-${index}`} gap={12} alignItems="flex-start">
             <YStack alignItems="center">
               <MaterialIcons name={icon.name} size={22} color={icon.color} />
-              {!last ? (
+              {last ? null : (
                 <YStack
                   width={2}
                   height={34}
                   marginVertical={4}
                   backgroundColor={event.state === 'current' ? '$borderColor' : primary}
                 />
-              ) : null}
+              )}
             </YStack>
             <YStack flex={1} paddingBottom={last ? 0 : 6}>
               <XStack alignItems="center" gap={8} flexWrap="wrap">

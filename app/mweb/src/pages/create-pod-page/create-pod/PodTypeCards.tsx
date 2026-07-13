@@ -32,16 +32,16 @@ export default function PodTypeCards({ form }: Readonly<{ form: CreatePodForm }>
   const { watch, setValue } = form;
   const podType = watch('pod_type');
   const isFree = podType.includes('FREE');
-  const freeTypes = POD_TYPES.filter((type) => type.value.includes('FREE'));
-  const paidTypes = POD_TYPES.filter((type) => !type.value.includes('FREE'));
+  const freeType = POD_TYPES.find((type) => type.value.includes('FREE'))!;
+  const paidType = POD_TYPES.find((type) => !type.value.includes('FREE'))!;
 
   const choose = (free: boolean) => {
     if (free === isFree) return;
     if (free) {
-      setValue('pod_type', freeTypes[0].value, { shouldDirty: true });
+      setValue('pod_type', freeType.value, { shouldDirty: true });
       setValue('pod_amount', 0, { shouldDirty: true, shouldValidate: true });
     } else {
-      setValue('pod_type', paidTypes[0].value, { shouldDirty: true, shouldValidate: true });
+      setValue('pod_type', paidType.value, { shouldDirty: true, shouldValidate: true });
     }
   };
 

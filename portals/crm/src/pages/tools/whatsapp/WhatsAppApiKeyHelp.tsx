@@ -55,8 +55,8 @@ export default function WhatsAppApiKeyHelp() {
             <Link href={GATEWAY} target="_blank" rel="noreferrer">
               {GATEWAY}
             </Link>
-            . It authenticates every request with an <b>API key</b> (sent as the
-            <code> X-API-Key</code> header). WhatsApp itself is linked later by scanning the QR — no
+            . It authenticates every request with an <b>API key</b> (sent as the{' '}
+            <code>X-API-Key</code> header). WhatsApp itself is linked later by scanning the QR — no
             WhatsApp password/token is ever needed.
           </Typography>
 
@@ -64,8 +64,8 @@ export default function WhatsAppApiKeyHelp() {
             Option A — use the master key (quickest)
           </Typography>
           <Step n={1}>
-            Ask your DevOps/admin for the gateway’s master key — it’s the value of the
-            <code> OPENWA_API_MASTER_KEY</code> deployment secret.
+            Ask your DevOps/admin for the gateway’s master key — it’s the value of the{' '}
+            <code>OPENWA_API_MASTER_KEY</code> deployment secret.
           </Step>
           <Step n={2}>Paste it into the “API Key” field above, then click <b>Save &amp; Connect</b>.</Step>
 

@@ -236,7 +236,7 @@ describe('VenueSlotStep', () => {
   it('surfaces the venue space validation error in danger styling', async () => {
     renderWithProviders(<SpaceErrorHarness />);
     fireEvent.press(screen.getByTestId('force-space-error'));
-    await screen.findByText('Pick a space / capacity');
+    expect(await screen.findByText('Pick a space / capacity')).toBeOnTheScreen();
   });
 
   it('shows the empty hint when the club matches no venue in the pod city', () => {
@@ -290,7 +290,7 @@ describe('VenueSlotStep', () => {
       <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
     );
     fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
-    await screen.findByTestId('create-pod-no-slots');
+    expect(await screen.findByTestId('create-pod-no-slots')).toBeOnTheScreen();
   });
 
   it('falls back to an empty slot list when the request fails', async () => {
@@ -299,7 +299,7 @@ describe('VenueSlotStep', () => {
       <VenueSlotHarness initial={{ pod_mode: 'PHYSICAL', location_id: 'l1', venue_id: 'v1' }} />,
     );
     fireEvent.press(screen.getByTestId('create-pod-space-Whole venue'));
-    await screen.findByTestId('create-pod-no-slots');
+    expect(await screen.findByTestId('create-pod-no-slots')).toBeOnTheScreen();
   });
 
   it('renders meeting fields (and no slot picker) for virtual pods', () => {

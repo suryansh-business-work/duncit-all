@@ -65,7 +65,7 @@ describe('ClubFriendsSection', () => {
     renderWithProviders(<ClubFriendsSection friendIds={['u1']} onOpenProfile={jest.fn()} />);
     await act(async () => {});
     // Should not crash; profiles empty → renders null
-    expect(true).toBe(true);
+    expect(screen.queryByTestId('club-friends')).toBeNull();
   });
 
   it('shows a single friend name without "and N more"', async () => {

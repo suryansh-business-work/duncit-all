@@ -31,7 +31,7 @@ interface Props {
 
 const readStored = (key: string, fallback: ColorMode): ColorMode => {
   /* v8 ignore next -- SSR guard, unreachable in the browser */
-  if (typeof window === 'undefined') return fallback;
+  if (typeof globalThis.window === 'undefined') return fallback;
   const saved = localStorage.getItem(key);
   return saved === 'dark' || saved === 'light' ? saved : fallback;
 };
@@ -41,7 +41,7 @@ const readStored = (key: string, fallback: ColorMode): ColorMode => {
  * applies CssBaseline and exposes a persisted light/dark color mode via
  * `useColorMode`. Pass the portal's brand `accent` and a unique `storageKey`.
  */
-export function DuncitThemeProvider({ accent = tokens.defaultAccent, storageKey = 'duncit_color_mode', defaultMode = 'dark', extend, children }: Props) {
+export function DuncitThemeProvider({ accent = tokens.defaultAccent, storageKey = 'duncit_color_mode', defaultMode = 'dark', extend, children }: Readonly<Props>) {
   const [mode, setMode] = useState<ColorMode>(() => readStored(storageKey, defaultMode));
 
   const value = useMemo<ColorModeContextValue>(

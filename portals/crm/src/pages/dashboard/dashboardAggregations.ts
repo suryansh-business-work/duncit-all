@@ -89,7 +89,7 @@ export function aggregateSuperCategories(
   const orphanKey = '__none__';
   const orphanLabel = 'Uncategorised';
   const bump = (id: string | null | undefined, kind: 'venue' | 'host', nameHint?: string | null) => {
-    const key = id && buckets.has(id) ? id : id ? id : orphanKey;
+    const key = id || orphanKey;
     let bucket = buckets.get(key);
     if (!bucket) {
       bucket = {

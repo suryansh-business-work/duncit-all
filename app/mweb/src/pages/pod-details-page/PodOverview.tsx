@@ -30,7 +30,8 @@ function TimeChip({ iso }: Readonly<{ iso?: string | null }>) {
 
   const days = Math.ceil(ms / (1000 * 60 * 60 * 24));
   const hours = Math.ceil(ms / (1000 * 60 * 60));
-  const label = days > 1 ? `${days} days remaining` : hours > 1 ? `${hours} hours remaining` : 'Starting soon';
+  const hoursLabel = hours > 1 ? `${hours} hours remaining` : 'Starting soon';
+  const label = days > 1 ? `${days} days remaining` : hoursLabel;
 
   return <Chip color={days <= 1 ? 'warning' : 'info'} icon={<HourglassBottomIcon />} label={label} />;
 }

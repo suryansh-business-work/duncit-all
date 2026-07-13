@@ -116,17 +116,17 @@ export default function HostLeadForm({ config, initialValues, submitting, submit
 
 function HostSections({ config }: Readonly<{ config: CrmOptionGroup }>) {
   const components = [
-    <HostBasicSection config={config} />,
-    <HostContactsSection />,
-    <HostPreferencesSection config={config} />,
-    <HostBudgetSection config={config} />,
-    <HostTimelineSection config={config} />,
-    <HostReachSection />,
-    <HostWebsiteSection />,
-    <HostServicesSection />,
-    <HostBrandingSection />,
-    <HostDynamicSection />,
-    <HostTrackingSection config={config} />,
+    <HostBasicSection key="basic" config={config} />,
+    <HostContactsSection key="contacts" />,
+    <HostPreferencesSection key="preferences" config={config} />,
+    <HostBudgetSection key="budget" config={config} />,
+    <HostTimelineSection key="timeline" config={config} />,
+    <HostReachSection key="reach" />,
+    <HostWebsiteSection key="website" />,
+    <HostServicesSection key="services" />,
+    <HostBrandingSection key="branding" />,
+    <HostDynamicSection key="dynamic" />,
+    <HostTrackingSection key="tracking" config={config} />,
   ];
   return (
     <>

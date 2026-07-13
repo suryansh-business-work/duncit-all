@@ -102,7 +102,7 @@ export default function RemindersTab({ entity, leadId }: Readonly<Props>) {
         message={`Delete "${removing?.title ?? ''}"?`}
         confirmLabel="Delete"
         loading={deleting}
-        onConfirm={async () => { if (removing) await deleteMut({ variables: { id: removing.id } }); setRemoving(null); }}
+        onConfirm={async () => { if (removing) { await deleteMut({ variables: { id: removing.id } }); } setRemoving(null); }}
         onClose={() => setRemoving(null)}
       />
     </LeadDetailCard>

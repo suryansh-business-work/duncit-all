@@ -617,7 +617,9 @@ describe('LiveChatScreen — reopen + transcript', () => {
         layoutMeasurement: { height: 300 },
       },
     });
-    fireEvent.press(screen.getByTestId('chat-jump-bottom'));
+    const jump = screen.getByTestId('chat-jump-bottom');
+    expect(jump).toBeOnTheScreen();
+    fireEvent.press(jump);
   });
 
   it('hides the header actions while the session is still booting', () => {

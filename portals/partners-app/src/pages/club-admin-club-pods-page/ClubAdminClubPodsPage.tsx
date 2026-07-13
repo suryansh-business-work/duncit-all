@@ -19,8 +19,8 @@ export default function ClubAdminClubPodsPage() {
   const [deletePod, deleteState] = useMutation(CLUB_ADMIN_DELETE_POD);
 
   const [formOpen, setFormOpen] = useState(false);
-  const [editPod, setEditPod] = useState<any | null>(null);
-  const [podToDelete, setPodToDelete] = useState<any | null>(null);
+  const [editPod, setEditPod] = useState<any>(null);
+  const [podToDelete, setPodToDelete] = useState<any>(null);
   const [message, setMessage] = useState<string | null>(null);
   const [opError, setOpError] = useState<string | null>(null);
 

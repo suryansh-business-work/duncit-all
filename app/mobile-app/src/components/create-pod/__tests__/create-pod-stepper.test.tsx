@@ -571,7 +571,7 @@ describe('CreatePodStepper', () => {
     setup({ onSaveDraft: jest.fn().mockRejectedValue(new Error('save failed')) });
     await fillBasics();
     press('create-pod-submit');
-    await screen.findByTestId('create-pod-location-label');
+    expect(await screen.findByTestId('create-pod-location-label')).toBeOnTheScreen();
   });
 
   it('autosaves the draft after the debounce window', () => {
@@ -592,7 +592,7 @@ describe('CreatePodStepper', () => {
     setup({ onPublish: jest.fn(() => new Promise<void>(() => undefined)) });
     await fillToPricing('PHYSICAL');
     press('create-pod-submit');
-    await screen.findByTestId('create-pod-submit-spinner');
+    expect(await screen.findByTestId('create-pod-submit-spinner')).toBeOnTheScreen();
   });
 
   it('resumes at the provided step and clamps out-of-range drafts', () => {

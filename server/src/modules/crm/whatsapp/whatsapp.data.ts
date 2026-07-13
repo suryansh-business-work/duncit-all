@@ -5,7 +5,7 @@ import {
   WaUserLeadModel,
   WaExtractionJobModel,
 } from './whatsapp.model';
-import { createWaClient } from './whatsapp.client';
+import { createWaClient, type WaClient } from './whatsapp.client';
 import { whatsappService } from './whatsapp.service';
 import { normalizePhone } from './whatsapp.phone';
 
@@ -104,16 +104,12 @@ async function upsertLead(args: {
   return { created: !existing };
 }
 
-/**
- * Core extraction: pull groups + contacts from the gateway, cache communities /
- * groups / contacts, validate each phone, and upsert a deduped lead per valid
- * number. Reports progress + a quality breakdown via `onProgress`. Shared by the
- * synchronous Refresh (sync) and the background extraction job.
- */
-async function extractCore(
-  onProgress?: (c: ExtractCounts) => Promise<void> | void
-): Promise<ExtractCounts> {
-  const { conn, client, sessionId } = await getClientAndSession();
+/** Pull the group + contact lists off the gateway. A failing list degrades to an
+ * empty one; only a total wipe-out (both empty *and* errored) throws. */
+async function fetchGroupsAndContacts(
+  client: WaClient,
+  sessionId: string
+): Promise<{ groups: any[]; contacts: any[] }> {
   const errors: string[] = [];
   const grab = async (label: string, p: Promise<any>): Promise<any[]> => {
     try {
@@ -129,8 +125,12 @@ async function extractCore(
   if (groups.length === 0 && contacts.length === 0 && errors.length > 0) {
     throw new Error(errors.join(' | '));
   }
+  return { groups, contacts };
+}
 
-  // Communities = distinct parent JIDs referenced by member groups.
+/** Cache communities + member groups. Communities = distinct parent JIDs
+ * referenced by member groups; returns them so the caller can count/skip them. */
+async function cacheGroupTree(groups: any[]): Promise<Set<string>> {
   const nameByJid = new Map<string, string>();
   groups.forEach((g) => nameByJid.set(pickJid(g), pickName(g)));
   const communityJids = new Set(groups.map((g) => g.linkedParentJID).filter((j): j is string => !!j));
@@ -151,6 +151,83 @@ async function extractCore(
       { upsert: true }
     );
   }
+  return communityJids;
+}
+
+/** In-memory state for the contact pass: counters, dedupe sets and the bulk ops
+ * pending their next flush. */
+interface ContactBatch {
+  counts: ExtractCounts;
+  existingPhones: Set<string>;
+  seenJids: Set<string>;
+  seenPhones: Set<string>;
+  contactOps: any[];
+  leadOps: any[];
+  source: string;
+}
+
+/** Validate + dedupe one raw contact into the batch's pending bulk ops. */
+function stageContact(raw: any, batch: ContactBatch): void {
+  const c = normaliseContact(raw);
+  const norm = c ? normalizePhone(c.phone) : { valid: false, phone: '' };
+  if (!c || !norm.valid) {
+    batch.counts.invalid += 1;
+    return;
+  }
+  batch.counts.valid += 1;
+  if (!batch.seenJids.has(c.jid)) {
+    batch.seenJids.add(c.jid);
+    batch.contactOps.push({
+      updateOne: {
+        filter: { connection_key: KEY, contact_jid: c.jid },
+        update: { $set: { phone: norm.phone, name: c.name, push_name: c.push_name, is_business: c.is_business, raw: c.raw } },
+        upsert: true,
+      },
+    });
+  }
+  if (batch.seenPhones.has(norm.phone)) {
+    batch.counts.duplicates += 1;
+    return;
+  }
+  batch.seenPhones.add(norm.phone);
+  if (batch.existingPhones.has(norm.phone)) batch.counts.duplicates += 1;
+  else batch.counts.leads_created += 1;
+  batch.leadOps.push({
+    updateOne: {
+      filter: { connection_key: KEY, phone: norm.phone },
+      update: {
+        $set: { contact_jid: c.jid, source_account: batch.source, ...(c.name ? { name: c.name } : {}) },
+        $setOnInsert: { imported_at: new Date() },
+      },
+      upsert: true,
+    },
+  });
+}
+
+/** Write out the pending bulk ops and reset them. */
+async function flushBatch(batch: ContactBatch): Promise<void> {
+  if (batch.contactOps.length) {
+    await WaContactModel.bulkWrite(batch.contactOps, { ordered: false });
+    batch.contactOps = [];
+  }
+  if (batch.leadOps.length) {
+    await WaUserLeadModel.bulkWrite(batch.leadOps, { ordered: false });
+    batch.leadOps = [];
+  }
+}
+
+/**
+ * Core extraction: pull groups + contacts from the gateway, cache communities /
+ * groups / contacts, validate each phone, and upsert a deduped lead per valid
+ * number. Reports progress + a quality breakdown via `onProgress`. Shared by the
+ * synchronous Refresh (sync) and the background extraction job.
+ */
+async function extractCore(
+  onProgress?: (c: ExtractCounts) => Promise<void> | void
+): Promise<ExtractCounts> {
+  const { conn, client, sessionId } = await getClientAndSession();
+  const { groups, contacts } = await fetchGroupsAndContacts(client, sessionId);
+  const communityJids = await cacheGroupTree(groups);
 
   const counts: ExtractCounts = {
     total: contacts.length,
@@ -165,67 +242,27 @@ async function extractCore(
   if (onProgress) await onProgress(counts);
 
   // Fast path: validate + dedupe in memory, then flush batched bulkWrites.
-  const existingPhones = new Set<string>(
-    (await WaUserLeadModel.distinct('phone', { connection_key: KEY })) as unknown as string[]
-  );
-  const seenJids = new Set<string>();
-  const seenPhones = new Set<string>();
-  let contactOps: any[] = [];
-  let leadOps: any[] = [];
-  const source = conn.phone ?? '';
-  const flush = async () => {
-    if (contactOps.length) {
-      await WaContactModel.bulkWrite(contactOps, { ordered: false });
-      contactOps = [];
-    }
-    if (leadOps.length) {
-      await WaUserLeadModel.bulkWrite(leadOps, { ordered: false });
-      leadOps = [];
-    }
+  const batch: ContactBatch = {
+    counts,
+    existingPhones: new Set<string>(
+      (await WaUserLeadModel.distinct('phone', { connection_key: KEY })) as unknown as string[]
+    ),
+    seenJids: new Set<string>(),
+    seenPhones: new Set<string>(),
+    contactOps: [],
+    leadOps: [],
+    source: conn.phone ?? '',
   };
 
   for (let i = 0; i < contacts.length; i += 1) {
-    const c = normaliseContact(contacts[i]);
-    const norm = c ? normalizePhone(c.phone) : { valid: false, phone: '' };
-    if (!c || !norm.valid) {
-      counts.invalid += 1;
-    } else {
-      counts.valid += 1;
-      if (!seenJids.has(c.jid)) {
-        seenJids.add(c.jid);
-        contactOps.push({
-          updateOne: {
-            filter: { connection_key: KEY, contact_jid: c.jid },
-            update: { $set: { phone: norm.phone, name: c.name, push_name: c.push_name, is_business: c.is_business, raw: c.raw } },
-            upsert: true,
-          },
-        });
-      }
-      if (seenPhones.has(norm.phone)) {
-        counts.duplicates += 1;
-      } else {
-        seenPhones.add(norm.phone);
-        if (existingPhones.has(norm.phone)) counts.duplicates += 1;
-        else counts.leads_created += 1;
-        leadOps.push({
-          updateOne: {
-            filter: { connection_key: KEY, phone: norm.phone },
-            update: {
-              $set: { contact_jid: c.jid, source_account: source, ...(c.name ? { name: c.name } : {}) },
-              $setOnInsert: { imported_at: new Date() },
-            },
-            upsert: true,
-          },
-        });
-      }
-    }
+    stageContact(contacts[i], batch);
     counts.processed = i + 1;
     if ((i + 1) % 200 === 0) {
-      await flush();
+      await flushBatch(batch);
       if (onProgress) await onProgress(counts); // also the cancellation checkpoint
     }
   }
-  await flush();
+  await flushBatch(batch);
   if (onProgress) await onProgress(counts);
   return counts;
 }

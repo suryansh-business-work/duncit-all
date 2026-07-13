@@ -16,15 +16,17 @@ const FALLBACK_DATE = 'dd MMM yyyy';
 const FALLBACK_TIME = 'hh:mm a';
 const FALLBACK_ZONE = 'Asia/Kolkata';
 
+type DateInput = string | number | Date | null | undefined;
+
 export function useDateFormat() {
   const { data } = useQuery(PUBLIC_APP_SETTINGS, { fetchPolicy: 'cache-first' });
   const dateFormat: string = data?.publicAppSettings?.date_format || FALLBACK_DATE;
   const timeFormat: string = data?.publicAppSettings?.time_format || FALLBACK_TIME;
   const timeZone: string = data?.publicAppSettings?.time_zone || FALLBACK_ZONE;
 
-  const toDate = (input: string | number | Date | null | undefined): Date | null => {
+  const toDate = (input: DateInput): Date | null => {
     if (!input) return null;
-    if (input instanceof Date) return isNaN(input.getTime()) ? null : input;
+    if (input instanceof Date) return Number.isNaN(input.getTime()) ? null : input;
     if (typeof input === 'number') return new Date(input);
     try {
       return parseISO(input);
@@ -48,12 +50,9 @@ export function useDateFormat() {
     dateFormat,
     timeFormat,
     timeZone,
-    formatDate: (input: string | number | Date | null | undefined) =>
-      safeFmt(toDate(input), dateFormat),
-    formatTime: (input: string | number | Date | null | undefined) =>
-      safeFmt(toDate(input), timeFormat),
-    formatDateTime: (input: string | number | Date | null | undefined) =>
-      safeFmt(toDate(input), `${dateFormat} · ${timeFormat}`),
+    formatDate: (input: DateInput) => safeFmt(toDate(input), dateFormat),
+    formatTime: (input: DateInput) => safeFmt(toDate(input), timeFormat),
+    formatDateTime: (input: DateInput) => safeFmt(toDate(input), `${dateFormat} · ${timeFormat}`),
   };
 }
 

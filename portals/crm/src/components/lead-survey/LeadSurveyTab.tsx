@@ -54,7 +54,7 @@ export default function LeadSurveyTab({ entity, leadId }: Readonly<Props>) {
 
   const run = async (fn: () => Promise<unknown>, ok?: string) => {
     setError(null);
-    try { await fn(); if (ok) setSnack(ok); await refetch(); } catch (e) { setError(parseApiError(e)); }
+    try { await fn(); if (ok) { setSnack(ok); } await refetch(); } catch (e) { setError(parseApiError(e)); }
   };
   const openFill = (entry?: LeadSurveyEntry) => { setSeed(entry?.answers); setFilling(true); };
   const onGenerateLink = () => survey && run(async () => {

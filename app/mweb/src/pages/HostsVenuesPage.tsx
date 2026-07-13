@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useMutation, useQuery } from '@apollo/client';
 import {
   Alert,
@@ -46,6 +46,47 @@ export default function HostsVenuesPage() {
       setPendingFollow(null);
     }
   };
+
+  let content: ReactNode;
+  if (tab === 'HOSTS') {
+    if (hostsQ.loading && !hostsQ.data) {
+      content = (
+        <Stack alignItems="center" sx={{ py: 6 }}>
+          <CircularProgress />
+        </Stack>
+      );
+    } else if (hostsQ.error) {
+      content = <Alert severity="error">{hostsQ.error.message}</Alert>;
+    } else {
+      content = (
+        <HostList
+          hosts={hosts}
+          meId={me?.user_id}
+          followingIds={followingIds}
+          pendingUserId={pendingFollow}
+          onToggleFollow={toggleFollow}
+        />
+      );
+    }
+  } else if (venuesQ.loading && !venuesQ.data) {
+    content = (
+      <Stack alignItems="center" sx={{ py: 6 }}>
+        <CircularProgress />
+      </Stack>
+    );
+  } else if (venuesQ.error) {
+    content = <Alert severity="error">{venuesQ.error.message}</Alert>;
+  } else {
+    content = (
+      <VenueList
+        venues={venues}
+        meId={me?.user_id}
+        followingIds={followingIds}
+        pendingUserId={pendingFollow}
+        onToggleFollow={toggleFollow}
+      />
+    );
+  }
 
   return (
     <Stack spacing={2.25} sx={{ maxWidth: 960, mx: 'auto', width: '100%' }}>
@@ -95,37 +136,7 @@ export default function HostsVenuesPage() {
         />
       </Tabs>
 
-      {tab === 'HOSTS' ? (
-        hostsQ.loading && !hostsQ.data ? (
-          <Stack alignItems="center" sx={{ py: 6 }}>
-            <CircularProgress />
-          </Stack>
-        ) : hostsQ.error ? (
-          <Alert severity="error">{hostsQ.error.message}</Alert>
-        ) : (
-          <HostList
-            hosts={hosts}
-            meId={me?.user_id}
-            followingIds={followingIds}
-            pendingUserId={pendingFollow}
-            onToggleFollow={toggleFollow}
-          />
-        )
-      ) : venuesQ.loading && !venuesQ.data ? (
-        <Stack alignItems="center" sx={{ py: 6 }}>
-          <CircularProgress />
-        </Stack>
-      ) : venuesQ.error ? (
-        <Alert severity="error">{venuesQ.error.message}</Alert>
-      ) : (
-        <VenueList
-          venues={venues}
-          meId={me?.user_id}
-          followingIds={followingIds}
-          pendingUserId={pendingFollow}
-          onToggleFollow={toggleFollow}
-        />
-      )}
+      {content}
     </Stack>
   );
 }

@@ -32,6 +32,6 @@ export const consoleTransport: Transport = (record: LogRecord) => {
     info: console.info,
   };
   /* eslint-enable no-console */
-  const sink = byLevel[record.level as keyof typeof byLevel] ?? byLevel.info;
+  const sink = byLevel[record.level] ?? byLevel.info;
   sink(line, record.data ?? '');
 };

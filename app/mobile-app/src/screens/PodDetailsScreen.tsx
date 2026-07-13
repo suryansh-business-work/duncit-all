@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { Share } from 'react-native';
 import { useFocusEffect, useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -112,95 +112,102 @@ export function PodDetailsScreen() {
     }
   };
 
+  let podBody: ReactNode;
+  if (isLoading && !pod) {
+    podBody = <DetailSkeleton testID="pod-details-loading" />;
+  } else if (pod) {
+    podBody = (
+      <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 110 }}>
+        <DetailHero media={pod.pod_images_and_videos} onBack={goBack}>
+          <HeroButton
+            testID="pod-save"
+            icon={saved ? 'bookmark' : 'bookmark-border'}
+            active={saved}
+            loading={savePending}
+            onPress={toggleSave}
+          />
+          <HeroButton testID="pod-share" icon="share" onPress={share} />
+        </DetailHero>
+        <Reveal index={0}>
+          <PodInfo pod={pod} categoryCrumbs={categoryCrumbs} />
+        </Reveal>
+        <Reveal index={1}>
+          <PodSchedule
+            pod={pod}
+            venue={venue}
+            location={location}
+            onOpenVenue={(venueId) => navigation.navigate('VenueDetails', { venueId })}
+          />
+        </Reveal>
+        <YStack height={14} />
+        <Reveal index={2}>
+          <PodSocialBar
+            liked={liked}
+            likeCount={likeCount}
+            commentCount={commentCount}
+            onToggleLike={toggleLike}
+            onOpenComments={() => setCommentsOpen(true)}
+          />
+        </Reveal>
+        {showProducts && pod.product_requests?.length ? (
+          <Reveal index={3}>
+            <PodShop
+              pod={pod}
+              selectedProducts={selectedProducts}
+              onSelectionChange={setSelectedProducts}
+              readOnly={!!membershipState?.is_member}
+            />
+          </Reveal>
+        ) : null}
+        <Reveal index={4}>
+          <PodAccordions
+            pod={pod}
+            people={people}
+            categoryCrumbs={categoryCrumbs}
+            isFree={isFree}
+            gstPct={finance.gstPct}
+            currency={finance.currency}
+            onOpenClub={() =>
+              navigation.navigate('ClubDetails', { clubId: pod.club_id, title: 'Club' })
+            }
+            onOpenProfile={(userId) => navigation.navigate('PublicProfile', { userId })}
+          />
+        </Reveal>
+        <XStack
+          testID="pod-contact-support"
+          role="button"
+          aria-label="Contact support about this pod"
+          onPress={() =>
+            navigation.navigate('SupportTickets', { podId: pod.id, podTitle: pod.pod_title })
+          }
+          paddingHorizontal={16}
+          paddingTop={12}
+        >
+          <Text fontSize={13} fontWeight="800" color="$primary">
+            Contact support about this pod
+          </Text>
+        </XStack>
+      </ScrollView>
+    );
+  } else {
+    podBody = (
+      <YStack flex={1} alignItems="center" justifyContent="center" gap={12} padding={24}>
+        <Text color="$muted" testID="pod-details-error">
+          This pod is unavailable.
+        </Text>
+        <XStack role="button" aria-label="Go back" onPress={goBack}>
+          <Text color="$primary" fontWeight="900">
+            Go back
+          </Text>
+        </XStack>
+      </YStack>
+    );
+  }
+
   return (
     <YStack flex={1} testID="pod-details-screen">
       <AppBackground />
-      {isLoading && !pod ? (
-        <DetailSkeleton testID="pod-details-loading" />
-      ) : !pod ? (
-        <YStack flex={1} alignItems="center" justifyContent="center" gap={12} padding={24}>
-          <Text color="$muted" testID="pod-details-error">
-            This pod is unavailable.
-          </Text>
-          <XStack role="button" aria-label="Go back" onPress={goBack}>
-            <Text color="$primary" fontWeight="900">
-              Go back
-            </Text>
-          </XStack>
-        </YStack>
-      ) : (
-        <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 110 }}>
-          <DetailHero media={pod.pod_images_and_videos} onBack={goBack}>
-            <HeroButton
-              testID="pod-save"
-              icon={saved ? 'bookmark' : 'bookmark-border'}
-              active={saved}
-              loading={savePending}
-              onPress={toggleSave}
-            />
-            <HeroButton testID="pod-share" icon="share" onPress={share} />
-          </DetailHero>
-          <Reveal index={0}>
-            <PodInfo pod={pod} categoryCrumbs={categoryCrumbs} />
-          </Reveal>
-          <Reveal index={1}>
-            <PodSchedule
-              pod={pod}
-              venue={venue}
-              location={location}
-              onOpenVenue={(venueId) => navigation.navigate('VenueDetails', { venueId })}
-            />
-          </Reveal>
-          <YStack height={14} />
-          <Reveal index={2}>
-            <PodSocialBar
-              liked={liked}
-              likeCount={likeCount}
-              commentCount={commentCount}
-              onToggleLike={toggleLike}
-              onOpenComments={() => setCommentsOpen(true)}
-            />
-          </Reveal>
-          {showProducts && pod.product_requests?.length ? (
-            <Reveal index={3}>
-              <PodShop
-                pod={pod}
-                selectedProducts={selectedProducts}
-                onSelectionChange={setSelectedProducts}
-                readOnly={!!membershipState?.is_member}
-              />
-            </Reveal>
-          ) : null}
-          <Reveal index={4}>
-            <PodAccordions
-              pod={pod}
-              people={people}
-              categoryCrumbs={categoryCrumbs}
-              isFree={isFree}
-              gstPct={finance.gstPct}
-              currency={finance.currency}
-              onOpenClub={() =>
-                navigation.navigate('ClubDetails', { clubId: pod.club_id, title: 'Club' })
-              }
-              onOpenProfile={(userId) => navigation.navigate('PublicProfile', { userId })}
-            />
-          </Reveal>
-          <XStack
-            testID="pod-contact-support"
-            role="button"
-            aria-label="Contact support about this pod"
-            onPress={() =>
-              navigation.navigate('SupportTickets', { podId: pod.id, podTitle: pod.pod_title })
-            }
-            paddingHorizontal={16}
-            paddingTop={12}
-          >
-            <Text fontSize={13} fontWeight="800" color="$primary">
-              Contact support about this pod
-            </Text>
-          </XStack>
-        </ScrollView>
-      )}
+      {podBody}
 
       {pod ? (
         <PodBookingBar

@@ -117,12 +117,12 @@ export default function PodHero({
         slidesToShow={1}
         slidesToScroll={1}
       >
-        {media.map((m, i) =>
+        {media.map((m) =>
           m.type === 'VIDEO' ? (
-            <VideoMedia key={i} src={m.url} height={{ xs: 280, md: 460 }} />
+            <VideoMedia key={m.url} src={m.url} height={{ xs: 280, md: 460 }} />
           ) : (
             <Box
-              key={i}
+              key={m.url}
               component="img"
               src={m.url}
               alt={title}

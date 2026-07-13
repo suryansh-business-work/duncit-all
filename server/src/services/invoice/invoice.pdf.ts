@@ -72,6 +72,40 @@ async function loadLogo(url?: string): Promise<Buffer | null> {
   }
 }
 
+/** Bill-To card (name · GSTIN · contact + billing email · address) drawn at `y`.
+ * Returns the card height so the caller can advance its cursor. */
+function drawBillToCard(doc: PDFKit.PDFDocument, data: InvoiceData, L: number, R: number, y: number): number {
+  const contact = [data.customer_email, data.customer_phone].filter(Boolean).join('  ·  ');
+  const addressLines = (data.customer_address_lines ?? []).map((s) => s.trim()).filter(Boolean);
+  const billingEmailRow = data.customer_billing_email ? 1 : 0;
+  // Height grows with the optional GSTIN + billing email + address lines.
+  const extraRows = (data.customer_gstin ? 1 : 0) + billingEmailRow + addressLines.length;
+  const cardH = 52 + extraRows * 13;
+  doc.roundedRect(L, y, R - L, cardH, 10).fill(ACCENT_SOFT);
+  doc.fillColor(ACCENT).fontSize(8.5).font('Helvetica-Bold').text('BILL TO', L + 14, y + 12);
+  doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(data.customer_name, L + 14, y + 24);
+  let by = y + 40;
+  doc.fillColor(MUTED).fontSize(9).font('Helvetica');
+  if (contact) {
+    doc.text(contact, L + 14, by, { width: R - L - 28 });
+    by += 13;
+  }
+  if (data.customer_billing_email) {
+    doc.text(`Billing email: ${data.customer_billing_email}`, L + 14, by, { width: R - L - 28 });
+    by += 13;
+  }
+  if (data.customer_gstin) {
+    doc.fillColor(INK).fontSize(9).font('Helvetica-Bold').text(`GSTIN: ${data.customer_gstin}`, L + 14, by);
+    doc.fillColor(MUTED).font('Helvetica');
+    by += 13;
+  }
+  for (const line of addressLines) {
+    doc.text(line, L + 14, by, { width: R - L - 28 });
+    by += 13;
+  }
+  return cardH;
+}
+
 export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
   const logo = await loadLogo(data.invoice_logo_url);
 
@@ -132,34 +166,7 @@ export async function generateInvoicePdf(data: InvoiceData): Promise<Buffer> {
 
       // ---- Bill To card (name · GSTIN · contact + billing email · address) ----
       y = Math.max(doc.y, y + 64) + 14;
-      const contact = [data.customer_email, data.customer_phone].filter(Boolean).join('  ·  ');
-      const addressLines = (data.customer_address_lines ?? []).map((s) => s.trim()).filter(Boolean);
-      const billingEmailRow = data.customer_billing_email ? 1 : 0;
-      // Height grows with the optional GSTIN + billing email + address lines.
-      const extraRows = (data.customer_gstin ? 1 : 0) + billingEmailRow + addressLines.length;
-      const cardH = 52 + extraRows * 13;
-      doc.roundedRect(L, y, R - L, cardH, 10).fill(ACCENT_SOFT);
-      doc.fillColor(ACCENT).fontSize(8.5).font('Helvetica-Bold').text('BILL TO', L + 14, y + 12);
-      doc.fillColor(INK).fontSize(11).font('Helvetica-Bold').text(data.customer_name, L + 14, y + 24);
-      let by = y + 40;
-      doc.fillColor(MUTED).fontSize(9).font('Helvetica');
-      if (contact) {
-        doc.text(contact, L + 14, by, { width: R - L - 28 });
-        by += 13;
-      }
-      if (data.customer_billing_email) {
-        doc.text(`Billing email: ${data.customer_billing_email}`, L + 14, by, { width: R - L - 28 });
-        by += 13;
-      }
-      if (data.customer_gstin) {
-        doc.fillColor(INK).fontSize(9).font('Helvetica-Bold').text(`GSTIN: ${data.customer_gstin}`, L + 14, by);
-        doc.fillColor(MUTED).font('Helvetica');
-        by += 13;
-      }
-      for (const line of addressLines) {
-        doc.text(line, L + 14, by, { width: R - L - 28 });
-        by += 13;
-      }
+      const cardH = drawBillToCard(doc, data, L, R, y);
 
       // ---- Items table ----
       y += cardH + 22;

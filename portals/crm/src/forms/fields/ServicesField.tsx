@@ -52,6 +52,30 @@ export default function ServicesField({ name, options }: Readonly<Props>) {
     return options.filter((o) => !taken.has(o));
   }, [options, selectedNames]);
 
+  const addPicked = (picked: string) => {
+    // De-dupe: ignore if already in the list (Autocomplete should have
+    // filtered, but `freeSolo` lets users press Enter on a substring of
+    // an existing label).
+    if (selectedNames.some((n) => n.toLowerCase() === picked.toLowerCase())) return;
+    const isCatalogue = options.includes(picked);
+    if (isCatalogue && picked !== 'Other') {
+      append({ service: picked, custom_name: '', description: '' });
+      return;
+    }
+    // "Other" catalogue value OR a free-typed name — both stored as
+    // Other + custom_name so the aggregate dashboard can group them
+    // under their human label.
+    const customName = picked === 'Other' ? '' : picked;
+    append({ service: 'Other', custom_name: customName, description: '' });
+  };
+
+  const removePicked = (next: string[]) => {
+    const removed = selectedNames.find((n) => !next.includes(n));
+    if (!removed) return;
+    const idx = rows.findIndex((r) => displayName(r) === removed);
+    if (idx >= 0) remove(idx);
+  };
+
   const handleChange = (
     _e: unknown,
     next: string[],
@@ -60,26 +84,9 @@ export default function ServicesField({ name, options }: Readonly<Props>) {
   ) => {
     if (reason === 'selectOption' || reason === 'createOption') {
       const picked = (detail?.option ?? '').trim();
-      if (!picked) return;
-      // De-dupe: ignore if already in the list (Autocomplete should have
-      // filtered, but `freeSolo` lets users press Enter on a substring of
-      // an existing label).
-      if (selectedNames.some((n) => n.toLowerCase() === picked.toLowerCase())) return;
-      const isCatalogue = options.some((o) => o === picked);
-      if (isCatalogue && picked !== 'Other') {
-        append({ service: picked, custom_name: '', description: '' });
-      } else {
-        // "Other" catalogue value OR a free-typed name — both stored as
-        // Other + custom_name so the aggregate dashboard can group them
-        // under their human label.
-        const customName = picked === 'Other' ? '' : picked;
-        append({ service: 'Other', custom_name: customName, description: '' });
-      }
+      if (picked) addPicked(picked);
     } else if (reason === 'removeOption') {
-      const removed = selectedNames.find((n) => !next.includes(n));
-      if (!removed) return;
-      const idx = rows.findIndex((r) => displayName(r) === removed);
-      if (idx >= 0) remove(idx);
+      removePicked(next);
     } else if (reason === 'clear') {
       remove();
     }

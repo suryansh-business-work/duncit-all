@@ -58,7 +58,7 @@ function groupByAuthor(
   return [...byAuthor.entries()].flatMap(([authorId, list]) => {
     const head = list[0];
     const slides = list.slice().sort(oldestFirst).map(toSlide);
-    const cover = slides[slides.length - 1];
+    const cover = slides.at(-1);
     /* istanbul ignore next -- defensive: a map entry always has at least one post */
     if (!head || !cover) return [];
     const info = meta?.(head) ?? { name: 'User', photo: null };

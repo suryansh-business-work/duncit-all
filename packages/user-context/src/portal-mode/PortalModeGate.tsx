@@ -51,10 +51,10 @@ export default function PortalModeGate({
       }
     };
     check();
-    const timer = window.setInterval(check, pollMs);
+    const timer = globalThis.setInterval(check, pollMs);
     return () => {
       active = false;
-      window.clearInterval(timer);
+      globalThis.clearInterval(timer);
     };
   }, [portalKey, graphqlUrl, pollMs]);
 

@@ -40,7 +40,7 @@ async function resolveLocation(venueIds: string[]): Promise<string | null> {
     .lean();
   const counts = new Map<string, number>();
   for (const v of venues) {
-    const key = String((v as { location_id: unknown }).location_id);
+    const key = String((v as { location_id?: mongoose.Types.ObjectId | null }).location_id);
     counts.set(key, (counts.get(key) ?? 0) + 1);
   }
   let best: string | null = null;

@@ -11,11 +11,14 @@ interface Props {
   json: string;
 }
 
+/** Dynamic values come from JSON, so a printable value is always a scalar. */
+const asText = (raw: unknown): string => String(raw as string | number | boolean);
+
 const fmt = (field: CrmDynamicField, raw: unknown): string => {
   if (raw === null || raw === undefined || raw === '') return '—';
   if (field.kind === 'boolean') return raw ? 'Yes' : 'No';
   if (field.kind === 'date') {
-    const d = new Date(String(raw));
+    const d = new Date(asText(raw));
     if (!Number.isNaN(d.getTime())) {
       return d.toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
     }
@@ -27,7 +30,7 @@ const fmt = (field: CrmDynamicField, raw: unknown): string => {
     if (Array.isArray(raw)) return raw.length ? raw.map(labelFor).join(', ') : '—';
     return labelFor(raw);
   }
-  return String(raw);
+  return asText(raw);
 };
 
 /**

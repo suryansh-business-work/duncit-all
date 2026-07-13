@@ -22,6 +22,12 @@ const AI_FILL = gql`
 
 export type AiDummyEntity = 'CLUB' | 'POD' | 'SLIDER';
 
+const promptPlaceholder = (entity: AiDummyEntity) => {
+  if (entity === 'POD') return 'e.g. weekend rooftop chess meetup in Bandra';
+  if (entity === 'CLUB') return 'e.g. urban hikers in Bangalore';
+  return 'e.g. monsoon photography promo banner';
+};
+
 interface Props {
   entity: AiDummyEntity;
   /** Called with the parsed JSON object returned by OpenAI. */
@@ -110,13 +116,7 @@ export default function AiFillButton({ entity, onFill, iconOnly, label }: Readon
           </Box>
           <TextField
             autoFocus
-            placeholder={
-              entity === 'POD'
-                ? 'e.g. weekend rooftop chess meetup in Bandra'
-                : entity === 'CLUB'
-                  ? 'e.g. urban hikers in Bangalore'
-                  : 'e.g. monsoon photography promo banner'
-            }
+            placeholder={promptPlaceholder(entity)}
             value={prompt}
             onChange={(e) => setPrompt(e.target.value)}
             multiline

@@ -23,6 +23,18 @@ export function PolicyScreen() {
   const { color: ink } = useThemeColors();
   const policy = data?.policyBySlug;
 
+  const body = error ? (
+    <Text testID="policy-error" paddingHorizontal={24} paddingVertical={32} color="$danger">
+      {toErrorMessage(error)}
+    </Text>
+  ) : (
+    <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
+      <Text fontSize={15} lineHeight={24} color="$color">
+        {stripHtml(policy?.content) || 'This policy has no content yet.'}
+      </Text>
+    </ScrollView>
+  );
+
   return (
     <YStack flex={1} testID="policy-screen">
       <AppBackground />
@@ -68,16 +80,8 @@ export function PolicyScreen() {
           <YStack flex={1} alignItems="center" justifyContent="center">
             <Spinner testID="policy-loading" color="$primary" />
           </YStack>
-        ) : error ? (
-          <Text testID="policy-error" paddingHorizontal={24} paddingVertical={32} color="$danger">
-            {toErrorMessage(error)}
-          </Text>
         ) : (
-          <ScrollView contentContainerStyle={{ paddingHorizontal: 20, paddingBottom: 40 }}>
-            <Text fontSize={15} lineHeight={24} color="$color">
-              {stripHtml(policy?.content) || 'This policy has no content yet.'}
-            </Text>
-          </ScrollView>
+          body
         )}
       </SafeAreaView>
     </YStack>

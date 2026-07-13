@@ -30,6 +30,12 @@ interface Props {
   onSubmit: () => void;
 }
 
+const levelLabel = (level?: Level) => {
+  if (level === 'SUPER') return 'Super Category';
+  if (level === 'CATEGORY') return 'Category';
+  return 'Sub-Category';
+};
+
 export default function CategoryFormDialog({
   dialog,
   setDialog,
@@ -40,12 +46,7 @@ export default function CategoryFormDialog({
   return (
     <Dialog open={!!dialog?.open} onClose={() => setDialog(null)} fullWidth maxWidth="sm">
       <DialogTitle>
-        {dialog?.form.id ? 'Edit' : 'New'}{' '}
-        {dialog?.level === 'SUPER'
-          ? 'Super Category'
-          : dialog?.level === 'CATEGORY'
-            ? 'Category'
-            : 'Sub-Category'}
+        {dialog?.form.id ? 'Edit' : 'New'} {levelLabel(dialog?.level)}
       </DialogTitle>
       <DialogContent>
         {dialog && (

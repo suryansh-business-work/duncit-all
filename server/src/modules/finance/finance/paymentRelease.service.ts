@@ -1,4 +1,4 @@
-import crypto from 'crypto';
+import crypto from 'node:crypto';
 import { GraphQLError } from 'graphql';
 import { Types } from 'mongoose';
 import { PaymentReleaseModel, type IPaymentRelease, type PaymentReleaseKind } from './paymentRelease.model';
@@ -17,7 +17,7 @@ import { generatePayoutPdf } from '@services/payout/payout.pdf';
 const releaseId = () => `rel_${Date.now().toString(36)}${crypto.randomBytes(4).toString('hex')}`;
 
 const mediaType = (url: string) => (/\.(mp4|webm|mov|m4v)(\?.*)?$/i.test(url) ? 'VIDEO' : 'IMAGE');
-const clean = (value: unknown) => String(value ?? '').trim();
+const clean = (value: string | number | null | undefined) => String(value ?? '').trim();
 
 function toPub(doc: IPaymentRelease) {
   return {
@@ -201,6 +201,59 @@ async function notifyApproval(doc: IPaymentRelease) {
   }
 }
 
+// Validate a review payload against the pending request and return the decided
+// fields. Throws the same BAD_USER_INPUT errors as before, in the same order.
+function parseReviewInput(doc: IPaymentRelease, input: any) {
+  const status = input.status;
+  if (!['APPROVED', 'REJECTED'].includes(status)) {
+    throw new GraphQLError('Select approval status', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const approvalType = input.approval_type || 'FULL';
+  if (status === 'APPROVED' && !['FULL', 'PARTIAL'].includes(approvalType)) {
+    throw new GraphQLError('Select full or partial release', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const amount = approvalType === 'FULL' ? doc.amount_requested : Number(input.approved_amount);
+  if (status === 'APPROVED' && (!Number.isFinite(amount) || amount <= 0 || amount > doc.amount_requested)) {
+    throw new GraphQLError('Approved amount must be between 1 and requested amount', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  const reason = clean(input.approval_reason);
+  if ((status === 'REJECTED' || approvalType === 'PARTIAL') && !reason) {
+    throw new GraphQLError('Reason is required for partial release or rejection', { extensions: { code: 'BAD_USER_INPUT' } });
+  }
+  return { status, approvalType, amount, reason };
+}
+
+// Host approval = pod completed: email each product seller their invoice.
+async function sendProductInvoices(doc: IPaymentRelease) {
+  try {
+    const pod = await PodModel.findById(doc.pod_id).select('pod_title product_requests');
+    if (pod && (pod as any).product_requests?.length) {
+      const fs = await getFinanceSettings();
+      const { sendProductInvoicesForPod } = await import('./productInvoice.service');
+      await sendProductInvoicesForPod(pod, fs);
+    }
+  } catch (e) {
+    console.warn('[paymentRelease] product invoices failed:', (e as Error).message);
+  }
+}
+
+// Side effects of an APPROVED review.
+async function applyApproval(doc: IPaymentRelease) {
+  // Finance approval is the moment the pod is officially completed.
+  await PodModel.updateOne({ _id: doc.pod_id, completed_at: null }, { $set: { completed_at: new Date() } });
+  if (doc.kind !== 'HOST_PAYMENT') return;
+  // The host's commission is credited to their wallet to withdraw later.
+  if (doc.host_user_id) {
+    const { walletService } = await import('@modules/finance/wallet/wallet.service');
+    await walletService.creditPodPayout(String(doc.host_user_id), doc.approved_amount ?? doc.amount_requested, {
+      pod_id: doc.pod_id,
+      release_id: doc.release_id,
+      reason: `Payout for ${doc.pod_title}`,
+    });
+  }
+  await sendProductInvoices(doc);
+}
+
 export const paymentReleaseService = {
   async list(filter?: { status?: string | null; kind?: PaymentReleaseKind | null }) {
     const query: any = {};
@@ -262,22 +315,7 @@ export const paymentReleaseService = {
     if (doc.status !== 'PENDING') {
       throw new GraphQLError('Only pending requests can be reviewed', { extensions: { code: 'BAD_USER_INPUT' } });
     }
-    const status = input.status;
-    if (!['APPROVED', 'REJECTED'].includes(status)) {
-      throw new GraphQLError('Select approval status', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    const approvalType = input.approval_type || 'FULL';
-    if (status === 'APPROVED' && !['FULL', 'PARTIAL'].includes(approvalType)) {
-      throw new GraphQLError('Select full or partial release', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    const amount = approvalType === 'FULL' ? doc.amount_requested : Number(input.approved_amount);
-    if (status === 'APPROVED' && (!Number.isFinite(amount) || amount <= 0 || amount > doc.amount_requested)) {
-      throw new GraphQLError('Approved amount must be between 1 and requested amount', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
-    const reason = clean(input.approval_reason);
-    if ((status === 'REJECTED' || approvalType === 'PARTIAL') && !reason) {
-      throw new GraphQLError('Reason is required for partial release or rejection', { extensions: { code: 'BAD_USER_INPUT' } });
-    }
+    const { status, approvalType, amount, reason } = parseReviewInput(doc, input);
     doc.status = status;
     doc.approval_type = status === 'APPROVED' ? approvalType : null;
     doc.approved_amount = status === 'APPROVED' ? amount : 0;
@@ -286,30 +324,7 @@ export const paymentReleaseService = {
     doc.reviewed_at = new Date();
     await doc.save();
     if (doc.status === 'APPROVED') {
-      // Finance approval is the moment the pod is officially completed.
-      await PodModel.updateOne({ _id: doc.pod_id, completed_at: null }, { $set: { completed_at: new Date() } });
-      // The host's commission is credited to their wallet to withdraw later.
-      if (doc.kind === 'HOST_PAYMENT' && doc.host_user_id) {
-        const { walletService } = await import('@modules/finance/wallet/wallet.service');
-        await walletService.creditPodPayout(String(doc.host_user_id), doc.approved_amount ?? doc.amount_requested, {
-          pod_id: doc.pod_id,
-          release_id: doc.release_id,
-          reason: `Payout for ${doc.pod_title}`,
-        });
-      }
-      // Host approval = pod completed: email each product seller their invoice.
-      if (doc.kind === 'HOST_PAYMENT') {
-        try {
-          const pod = await PodModel.findById(doc.pod_id).select('pod_title product_requests');
-          if (pod && (pod as any).product_requests?.length) {
-            const fs = await getFinanceSettings();
-            const { sendProductInvoicesForPod } = await import('./productInvoice.service');
-            await sendProductInvoicesForPod(pod, fs);
-          }
-        } catch (e) {
-          console.warn('[paymentRelease] product invoices failed:', (e as Error).message);
-        }
-      }
+      await applyApproval(doc);
     }
     await notifyApproval(doc);
     return toPub(doc);

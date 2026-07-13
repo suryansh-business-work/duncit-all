@@ -1,4 +1,4 @@
-import { test as base, expect } from '@playwright/test';
+import { test as base } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { randomUUID } from 'node:crypto';
 import path from 'node:path';
@@ -18,7 +18,7 @@ async function persist(coverage: CoverageMap | undefined): Promise<void> {
 async function read(page: Page): Promise<CoverageMap | undefined> {
   try {
     return await page.evaluate(
-      () => (window as unknown as { __coverage__?: CoverageMap }).__coverage__,
+      () => (globalThis as unknown as { __coverage__?: CoverageMap }).__coverage__,
     );
   } catch {
     return undefined;
@@ -32,13 +32,13 @@ async function read(page: Page): Promise<CoverageMap | undefined> {
  * since a full reload resets the in-page counter.
  */
 export const test = base.extend<{ saveCoverage: (page: Page) => Promise<void> }>({
-  saveCoverage: async ({}, use) => {
-    await use(async (page: Page) => persist(await read(page)));
+  saveCoverage: async ({}, provide) => {
+    await provide(async (page: Page) => persist(await read(page)));
   },
-  page: async ({ page }, use) => {
-    await use(page);
+  page: async ({ page }, provide) => {
+    await provide(page);
     await persist(await read(page));
   },
 });
 
-export { expect };
+export { expect } from '@playwright/test';

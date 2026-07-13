@@ -63,6 +63,12 @@ const ME = gql`
   }
 `;
 
+function bandHeadline(band: HealthScore['band']): string {
+  if (band === 'GREEN') return 'You’re in great shape.';
+  if (band === 'YELLOW') return 'A few things to tighten up.';
+  return 'Needs attention.';
+}
+
 export default function AccountPage() {
   const navigate = useNavigate();
   const { logout: ctxLogout } = useUserData();
@@ -147,7 +153,7 @@ export default function AccountPage() {
               />
               <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
-                  {health.band === 'GREEN' ? 'You’re in great shape.' : health.band === 'YELLOW' ? 'A few things to tighten up.' : 'Needs attention.'}
+                  {bandHeadline(health.band)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Base score: {health.base_score}

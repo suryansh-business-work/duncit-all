@@ -17,11 +17,14 @@ export interface TimeSlotRow {
 
 // Stable unique ids keep React keys off the array index (SonarQube S6479).
 let timeSeq = 0;
-export const newTimeSlot = (start = '13:00', end = '14:00'): TimeSlotRow => ({
-  id: `ts-${(timeSeq += 1)}`,
-  start: hhmmToDate(start),
-  end: hhmmToDate(end),
-});
+export const newTimeSlot = (start = '13:00', end = '14:00'): TimeSlotRow => {
+  timeSeq += 1;
+  return {
+    id: `ts-${timeSeq}`,
+    start: hhmmToDate(start),
+    end: hhmmToDate(end),
+  };
+};
 
 /** A venue space the owner can price + toggle for this run. */
 export interface SpaceRow {
@@ -173,7 +176,7 @@ export function useRecurringDialog(
       }));
       const existing = await fetchExisting(form.startDate, form.endDate);
 
-      let slots = generated;
+      let slots: typeof generated;
       if (form.conflictMode === 'REPLACE') {
         const overlapping = existing.filter((e) => generated.some((g) => intervalsOverlap(g, e)));
         const bookedOverlap = overlapping.filter((e) => e.status === 'BOOKED');

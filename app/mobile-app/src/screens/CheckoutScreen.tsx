@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { useNavigation, useRoute, type RouteProp } from '@react-navigation/native';
 import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { ScrollView, Spinner, Text, YStack } from 'tamagui';
@@ -162,59 +162,68 @@ export function CheckoutScreen() {
     }
   };
 
+  let checkoutBody: ReactNode;
+  if (isLoading && !finance) {
+    checkoutBody = (
+      <YStack flex={1} alignItems="center" justifyContent="center">
+        <Spinner testID="checkout-loading" color="$primary" />
+      </YStack>
+    );
+  } else if (breakup) {
+    checkoutBody = payment ? (
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <CheckoutSuccess
+          payment={payment}
+          pod={pod}
+          onDownloadInvoice={() => downloadInvoice(payment.id, payment.invoice_no ?? 'invoice')}
+          onDownloadTicket={onDownloadTicket}
+          onHome={() => navigation.navigate('Home')}
+          onProfile={() => navigation.navigate('PodHistory')}
+        />
+      </ScrollView>
+    ) : (
+      <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
+        <OrderSummary pod={pod} breakup={breakup} selectedProducts={selectedProducts} />
+        <CouponField
+          code={couponCode}
+          setCode={setCouponCode}
+          applied={coupon}
+          error={couponError}
+          applying={applyingCoupon}
+          currency={breakup.currency}
+          available={availableCoupons}
+          onApply={applyCoupon}
+          onRemove={removeCoupon}
+        />
+        <CouponTotal
+          coupon={coupon}
+          currency={breakup.currency}
+          effectiveTotal={effectiveTotal}
+          originalTotal={breakup.total}
+        />
+        <CheckoutForm
+          initialValues={initialValues}
+          mainAddress={me?.address ?? null}
+          contact={contact}
+          contactLoading={contactLoading}
+          loading={submitting}
+          errorMessage={error}
+          dummyMode={dummyMode}
+          onSubmit={submit}
+        />
+      </ScrollView>
+    );
+  } else {
+    checkoutBody = (
+      <Text testID="checkout-unavailable" padding={24} color="$muted">
+        Checkout is unavailable right now. Please try again later.
+      </Text>
+    );
+  }
+
   return (
     <StackScreen title="Checkout" testID="checkout-screen">
-      {isLoading && !finance ? (
-        <YStack flex={1} alignItems="center" justifyContent="center">
-          <Spinner testID="checkout-loading" color="$primary" />
-        </YStack>
-      ) : !breakup ? (
-        <Text testID="checkout-unavailable" padding={24} color="$muted">
-          Checkout is unavailable right now. Please try again later.
-        </Text>
-      ) : payment ? (
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
-          <CheckoutSuccess
-            payment={payment}
-            pod={pod}
-            onDownloadInvoice={() => downloadInvoice(payment.id, payment.invoice_no ?? 'invoice')}
-            onDownloadTicket={onDownloadTicket}
-            onHome={() => navigation.navigate('Home')}
-            onProfile={() => navigation.navigate('PodHistory')}
-          />
-        </ScrollView>
-      ) : (
-        <ScrollView contentContainerStyle={{ padding: 16, gap: 16, paddingBottom: 32 }}>
-          <OrderSummary pod={pod} breakup={breakup} selectedProducts={selectedProducts} />
-          <CouponField
-            code={couponCode}
-            setCode={setCouponCode}
-            applied={coupon}
-            error={couponError}
-            applying={applyingCoupon}
-            currency={breakup.currency}
-            available={availableCoupons}
-            onApply={applyCoupon}
-            onRemove={removeCoupon}
-          />
-          <CouponTotal
-            coupon={coupon}
-            currency={breakup.currency}
-            effectiveTotal={effectiveTotal}
-            originalTotal={breakup.total}
-          />
-          <CheckoutForm
-            initialValues={initialValues}
-            mainAddress={me?.address ?? null}
-            contact={contact}
-            contactLoading={contactLoading}
-            loading={submitting}
-            errorMessage={error}
-            dummyMode={dummyMode}
-            onSubmit={submit}
-          />
-        </ScrollView>
-      )}
+      {checkoutBody}
       <RazorpayWebView
         order={order}
         open={!!order}

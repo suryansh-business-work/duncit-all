@@ -99,7 +99,7 @@ export function toSaveInput(values: BrandFormValues) {
   const year = values.established_year ? Number(values.established_year) : null;
   return {
     ...values,
-    established_year: Number.isFinite(year as number) ? year : null,
+    established_year: Number.isFinite(year) ? year : null,
     documents: values.documents.filter((d) => d.url),
   };
 }

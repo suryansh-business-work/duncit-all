@@ -41,7 +41,7 @@ function CallNowCard({ target }: Readonly<{ target: SupportTarget }>) {
         role="button"
         aria-label="Call now"
         aria-disabled={disabled}
-        onPress={target?.available ? () => void Linking.openURL(`tel:${target.phone}`) : undefined}
+        onPress={target?.available ? () => Linking.openURL(`tel:${target.phone}`) : undefined}
         height={46}
         alignItems="center"
         justifyContent="center"

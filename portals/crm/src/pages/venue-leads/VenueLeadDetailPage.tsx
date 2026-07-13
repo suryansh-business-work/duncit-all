@@ -53,7 +53,7 @@ import MatchedUserBox, { MatchedUserChip } from '../../components/MatchedUserBox
 import { parseApiError } from '../../utils/parseApiError';
 import { venueVariableValues } from '../../config/leadVariables';
 
-const joinList = (values?: string[] | null) => (values && values.length ? values.join(', ') : '—');
+const joinList = (values?: string[] | null) => (values?.length ? values.join(', ') : '—');
 
 const formatDate = (iso?: string | null) => {
   if (!iso) return null;
@@ -89,6 +89,7 @@ export default function VenueLeadDetailPage() {
   if (!lead) return <Alert severity="info">Venue lead not found.</Alert>;
 
   const followUpLabel = formatDate(lead.next_follow_up_date) ?? '—';
+  const servicesPlural = lead.services_offered.length === 1 ? '' : 's';
 
   // ---- Tab definitions ----
   const tabs: LeadTab[] = [
@@ -195,7 +196,7 @@ export default function VenueLeadDetailPage() {
           title="Services offered"
           subtitle={
             lead.services_offered.length
-              ? `${lead.services_offered.length} service${lead.services_offered.length === 1 ? '' : 's'} tagged`
+              ? `${lead.services_offered.length} service${servicesPlural} tagged`
               : 'Catalogue managed via Manage Venue Services'
           }
           icon={<HandymanIcon color="primary" />}

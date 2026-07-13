@@ -36,6 +36,89 @@ interface DetailsProps {
   onChanged: () => void;
 }
 
+interface BodyProps {
+  loading: boolean;
+  hasData: boolean;
+  idea: any;
+  myId?: string;
+  onDelete: (commentId: string) => void;
+  onToggleLike: () => void;
+}
+
+function IdeaDetailsBody({
+  loading,
+  hasData,
+  idea,
+  myId,
+  onDelete,
+  onToggleLike,
+}: Readonly<BodyProps>) {
+  if (loading && !hasData) {
+    return (
+      <Box sx={{ textAlign: 'center', py: 4 }}>
+        <CircularProgress />
+      </Box>
+    );
+  }
+
+  if (!idea) {
+    return <Alert severity="warning">Idea not found.</Alert>;
+  }
+
+  return (
+    <>
+      <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
+        <Avatar
+          src={idea.author?.profile_photo || undefined}
+          sx={{ width: 40, height: 40 }}
+        >
+          {(idea.author?.first_name?.[0] ?? 'U').toUpperCase()}
+        </Avatar>
+        <Box>
+          <Typography variant="body2" fontWeight={600}>
+            {idea.author?.full_name ?? 'Member'}
+          </Typography>
+          <Typography variant="caption" color="text.secondary">
+            {formatRelative(idea.created_at)}
+          </Typography>
+        </Box>
+      </Stack>
+      <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: 2 }}>
+        {idea.description}
+      </Typography>
+      <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
+        <Button
+          size="small"
+          startIcon={
+            idea.liked_by_me ? (
+              <FavoriteIcon fontSize="small" sx={{ color: 'error.main' }} />
+            ) : (
+              <FavoriteBorderIcon fontSize="small" />
+            )
+          }
+          onClick={onToggleLike}
+          sx={{ color: idea.liked_by_me ? 'error.main' : 'text.secondary' }}
+        >
+          {idea.likes_count} like{idea.likes_count === 1 ? '' : 's'}
+        </Button>
+        <Typography variant="caption" color="text.secondary">
+          {idea.shares_count} share{idea.shares_count === 1 ? '' : 's'}
+        </Typography>
+      </Stack>
+      <Divider sx={{ mb: 1 }} />
+      <Typography variant="overline" color="text.secondary">
+        Comments ({idea.comments_count})
+      </Typography>
+      <IdeaCommentsList
+        comments={idea.comments}
+        ideaAuthorId={idea.author_id}
+        myId={myId}
+        onDelete={onDelete}
+      />
+    </>
+  );
+}
+
 export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Readonly<DetailsProps>) {
   const { data, loading, refetch } = useQuery(POD_IDEA_DETAILS, {
     variables: { id },
@@ -85,64 +168,14 @@ export default function IdeaDetailsDialog({ id, myId, onClose, onChanged }: Read
         </IconButton>
       </DialogTitle>
       <DialogContent dividers>
-        {loading && !data ? (
-          <Box sx={{ textAlign: 'center', py: 4 }}>
-            <CircularProgress />
-          </Box>
-        ) : !idea ? (
-          <Alert severity="warning">Idea not found.</Alert>
-        ) : (
-          <>
-            <Stack direction="row" spacing={1.5} alignItems="center" sx={{ mb: 1.5 }}>
-              <Avatar
-                src={idea.author?.profile_photo || undefined}
-                sx={{ width: 40, height: 40 }}
-              >
-                {(idea.author?.first_name?.[0] ?? 'U').toUpperCase()}
-              </Avatar>
-              <Box>
-                <Typography variant="body2" fontWeight={600}>
-                  {idea.author?.full_name ?? 'Member'}
-                </Typography>
-                <Typography variant="caption" color="text.secondary">
-                  {formatRelative(idea.created_at)}
-                </Typography>
-              </Box>
-            </Stack>
-            <Typography variant="body1" sx={{ whiteSpace: 'pre-wrap', mb: 2 }}>
-              {idea.description}
-            </Typography>
-            <Stack direction="row" spacing={2} alignItems="center" sx={{ mb: 2 }}>
-              <Button
-                size="small"
-                startIcon={
-                  idea.liked_by_me ? (
-                    <FavoriteIcon fontSize="small" sx={{ color: 'error.main' }} />
-                  ) : (
-                    <FavoriteBorderIcon fontSize="small" />
-                  )
-                }
-                onClick={onToggleLike}
-                sx={{ color: idea.liked_by_me ? 'error.main' : 'text.secondary' }}
-              >
-                {idea.likes_count} like{idea.likes_count === 1 ? '' : 's'}
-              </Button>
-              <Typography variant="caption" color="text.secondary">
-                {idea.shares_count} share{idea.shares_count === 1 ? '' : 's'}
-              </Typography>
-            </Stack>
-            <Divider sx={{ mb: 1 }} />
-            <Typography variant="overline" color="text.secondary">
-              Comments ({idea.comments_count})
-            </Typography>
-            <IdeaCommentsList
-              comments={idea.comments}
-              ideaAuthorId={idea.author_id}
-              myId={myId}
-              onDelete={onDeleteComment}
-            />
-          </>
-        )}
+        <IdeaDetailsBody
+          loading={loading}
+          hasData={!!data}
+          idea={idea}
+          myId={myId}
+          onDelete={onDeleteComment}
+          onToggleLike={onToggleLike}
+        />
       </DialogContent>
       {idea && myId && (
         <DialogActions sx={{ px: 3, py: 1.5 }}>

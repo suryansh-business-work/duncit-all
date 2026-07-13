@@ -70,6 +70,61 @@ export function RootNavigator() {
   const token = useAuthStore((s) => s.token);
   const surveyCompleted = useAuthStore((s) => s.surveyCompleted);
 
+  const signedInScreens = surveyCompleted ? (
+    <>
+      <Stack.Screen name="Home" component={MainTabs} />
+      <Stack.Screen name="Search" component={SearchScreen} />
+      <Stack.Screen name="Profile" component={ProfileScreen} />
+      <Stack.Screen name="Account" component={AccountScreen} />
+      <Stack.Screen name="AccountHealth" component={AccountHealthScreen} />
+      <Stack.Screen name="VenueHealth" component={VenueHealthScreen} />
+      <Stack.Screen name="Saved" component={SavedScreen} />
+      <Stack.Screen name="PodHistory" component={PodHistoryScreen} />
+      <Stack.Screen name="PodHistoryDetails" component={PodHistoryDetailsScreen} />
+      <Stack.Screen name="BecomeHost" component={BecomeHostScreen} />
+      <Stack.Screen name="HostManage" component={HostManageScreen} />
+      <Stack.Screen name="HostApply" component={HostApplyScreen} />
+      <Stack.Screen name="HostDashboard" component={HostDashboardScreen} />
+      <Stack.Screen name="Verification" component={VerificationScreen} />
+      <Stack.Screen name="Wallet" component={WalletScreen} />
+      <Stack.Screen name="CreatePod" component={CreatePodScreen} />
+      <Stack.Screen name="RegisterVenue" component={RegisterVenueScreen} />
+      <Stack.Screen name="VenueManage" component={VenueManageScreen} />
+      <Stack.Screen name="VenueEarnings" component={VenueEarningsScreen} />
+      <Stack.Screen name="Earn" component={EarnScreen} />
+      <Stack.Screen name="ListProduct" component={ListProductScreen} />
+      <Stack.Screen name="ProductsManage" component={ProductsManageScreen} />
+      <Stack.Screen name="Support" component={SupportScreen} />
+      <Stack.Screen name="Sos" component={SosScreen} />
+      <Stack.Screen name="Callback" component={CallbackScreen} />
+      <Stack.Screen name="ChatWithUs" component={ChatWithUsScreen} />
+      <Stack.Screen name="LiveChat" component={LiveChatScreen} />
+      <Stack.Screen name="AllSupportTickets" component={AllSupportTicketsScreen} />
+      <Stack.Screen name="TicketDetails" component={TicketDetailsScreen} />
+      <Stack.Screen name="PodIdeas" component={PodIdeasScreen} />
+      <Stack.Screen name="Referral" component={ReferralScreen} />
+      <Stack.Screen name="PreviousPods" component={PreviousPodsScreen} />
+      <Stack.Screen name="HappeningNearby" component={HappeningNearbyScreen} />
+      <Stack.Screen name="Faqs" component={FaqsScreen} />
+      <Stack.Screen name="PodPlans" component={PodPlansScreen} />
+      <Stack.Screen name="Policies" component={PoliciesScreen} />
+      <Stack.Screen name="SupportTickets" component={SupportTicketsScreen} />
+      <Stack.Screen name="Policy" component={PolicyScreen} />
+      <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
+      <Stack.Screen name="PodDetails" component={PodDetailsScreen} />
+      <Stack.Screen name="ClubDetails" component={ClubDetailsScreen} />
+      <Stack.Screen name="HostsVenues" component={HostsVenuesScreen} />
+      <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
+      <Stack.Screen name="PostDetail" component={PostDetailScreen} />
+      <Stack.Screen name="Follow" component={FollowListScreen} />
+      <Stack.Screen name="VenueDetails" component={VenueDetailsScreen} />
+      <Stack.Screen name="Checkout" component={CheckoutScreen} />
+      <Stack.Screen name="NotFound" component={NotFoundScreen} />
+    </>
+  ) : (
+    <Stack.Screen name="Survey" component={SurveyScreen} />
+  );
+
   return (
     <Stack.Navigator
       screenOptions={{
@@ -79,65 +134,14 @@ export function RootNavigator() {
         animation: 'none',
       }}
     >
-      {!token ? (
+      {token ? (
+        signedInScreens
+      ) : (
         <>
           <Stack.Screen name="Login" component={LoginScreen} />
           <Stack.Screen name="Signup" component={SignupScreen} />
           <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
           <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-        </>
-      ) : !surveyCompleted ? (
-        <Stack.Screen name="Survey" component={SurveyScreen} />
-      ) : (
-        <>
-          <Stack.Screen name="Home" component={MainTabs} />
-          <Stack.Screen name="Search" component={SearchScreen} />
-          <Stack.Screen name="Profile" component={ProfileScreen} />
-          <Stack.Screen name="Account" component={AccountScreen} />
-          <Stack.Screen name="AccountHealth" component={AccountHealthScreen} />
-          <Stack.Screen name="VenueHealth" component={VenueHealthScreen} />
-          <Stack.Screen name="Saved" component={SavedScreen} />
-          <Stack.Screen name="PodHistory" component={PodHistoryScreen} />
-          <Stack.Screen name="PodHistoryDetails" component={PodHistoryDetailsScreen} />
-          <Stack.Screen name="BecomeHost" component={BecomeHostScreen} />
-          <Stack.Screen name="HostManage" component={HostManageScreen} />
-          <Stack.Screen name="HostApply" component={HostApplyScreen} />
-          <Stack.Screen name="HostDashboard" component={HostDashboardScreen} />
-          <Stack.Screen name="Verification" component={VerificationScreen} />
-          <Stack.Screen name="Wallet" component={WalletScreen} />
-          <Stack.Screen name="CreatePod" component={CreatePodScreen} />
-          <Stack.Screen name="RegisterVenue" component={RegisterVenueScreen} />
-          <Stack.Screen name="VenueManage" component={VenueManageScreen} />
-          <Stack.Screen name="VenueEarnings" component={VenueEarningsScreen} />
-          <Stack.Screen name="Earn" component={EarnScreen} />
-          <Stack.Screen name="ListProduct" component={ListProductScreen} />
-          <Stack.Screen name="ProductsManage" component={ProductsManageScreen} />
-          <Stack.Screen name="Support" component={SupportScreen} />
-          <Stack.Screen name="Sos" component={SosScreen} />
-          <Stack.Screen name="Callback" component={CallbackScreen} />
-          <Stack.Screen name="ChatWithUs" component={ChatWithUsScreen} />
-          <Stack.Screen name="LiveChat" component={LiveChatScreen} />
-          <Stack.Screen name="AllSupportTickets" component={AllSupportTicketsScreen} />
-          <Stack.Screen name="TicketDetails" component={TicketDetailsScreen} />
-          <Stack.Screen name="PodIdeas" component={PodIdeasScreen} />
-          <Stack.Screen name="Referral" component={ReferralScreen} />
-          <Stack.Screen name="PreviousPods" component={PreviousPodsScreen} />
-          <Stack.Screen name="HappeningNearby" component={HappeningNearbyScreen} />
-          <Stack.Screen name="Faqs" component={FaqsScreen} />
-          <Stack.Screen name="PodPlans" component={PodPlansScreen} />
-          <Stack.Screen name="Policies" component={PoliciesScreen} />
-          <Stack.Screen name="SupportTickets" component={SupportTicketsScreen} />
-          <Stack.Screen name="Policy" component={PolicyScreen} />
-          <Stack.Screen name="ChatRoom" component={ChatRoomScreen} />
-          <Stack.Screen name="PodDetails" component={PodDetailsScreen} />
-          <Stack.Screen name="ClubDetails" component={ClubDetailsScreen} />
-          <Stack.Screen name="HostsVenues" component={HostsVenuesScreen} />
-          <Stack.Screen name="PublicProfile" component={PublicProfileScreen} />
-          <Stack.Screen name="PostDetail" component={PostDetailScreen} />
-          <Stack.Screen name="Follow" component={FollowListScreen} />
-          <Stack.Screen name="VenueDetails" component={VenueDetailsScreen} />
-          <Stack.Screen name="Checkout" component={CheckoutScreen} />
-          <Stack.Screen name="NotFound" component={NotFoundScreen} />
         </>
       )}
     </Stack.Navigator>

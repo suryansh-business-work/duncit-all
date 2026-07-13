@@ -2,7 +2,7 @@ import * as yup from 'yup';
 
 const phoneNumberRegex = /^\d{6,15}$/;
 const phoneExtensionRegex = /^\+?\d{1,5}$/;
-const gstinRegex = /^[0-9]{2}[A-Z]{5}[0-9]{4}[A-Z][0-9A-Z]{2}$/;
+const gstinRegex = /^\d{2}[A-Z]{5}\d{4}[A-Z][0-9A-Z]{2}$/;
 
 // Structured billing address entered at checkout (may differ from the main
 // address). line1/city/state/pincode are the minimum for a valid tax invoice.

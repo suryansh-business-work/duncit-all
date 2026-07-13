@@ -55,6 +55,98 @@ const MY_VENUE_DETAILS = gql`
   }
 `;
 
+function bandHeadline(band: HealthScore['band']): string {
+  if (band === 'GREEN') return 'Venue is in great shape.';
+  if (band === 'YELLOW') return 'A few things to polish.';
+  return 'Needs attention.';
+}
+
+interface VenueListBodyProps {
+  showSpinner: boolean;
+  error?: { message: string };
+  venue: any;
+}
+
+function VenueListBody({ showSpinner, error, venue }: Readonly<VenueListBodyProps>) {
+  if (showSpinner) {
+    return (
+      <Stack alignItems="center" sx={{ py: 4 }}>
+        <CircularProgress size={22} />
+      </Stack>
+    );
+  }
+  if (error) {
+    return <Alert severity="error">{error.message}</Alert>;
+  }
+  if (!venue) {
+    return (
+      <Alert severity="info">
+        You haven't registered a venue yet.
+        <Box sx={{ mt: 1.5 }}>
+          <Button component={RouterLink} to="/register-venue" variant="contained" size="small">
+            Register a venue
+          </Button>
+        </Box>
+      </Alert>
+    );
+  }
+  return (
+    <Box
+      sx={{
+        p: 1.25,
+        borderRadius: 3.5,
+        border: 1,
+        borderColor: 'divider',
+        bgcolor: 'background.paper',
+      }}
+    >
+      <Stack direction="row" spacing={1.25}>
+        <Box component="img" src={venue.cover_image_url || '/new-duncit-logo.png'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 2.5, bgcolor: 'action.hover', flex: '0 0 auto' }} />
+        <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
+        <Stack direction="row" alignItems="center" spacing={1}>
+          <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }} noWrap>
+            {venue.venue_name}
+          </Typography>
+        </Stack>
+        <Typography variant="caption" color="text.secondary" noWrap display="block">
+          {[venue.venue_type, venue.locality, venue.city, venue.state].filter(Boolean).join(' - ') || '-'}
+        </Typography>
+        {venue.postal_code && (
+          <Typography variant="caption" color="text.secondary">
+            PIN: {venue.postal_code}
+          </Typography>
+        )}
+        {venue.tags?.length > 0 && (
+          <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
+            {venue.tags.map((tag: string) => <Chip key={tag} size="small" label={tag} variant="outlined" />)}
+          </Stack>
+        )}
+        {typeof venue.capacity === 'number' && (
+          <Typography variant="caption" color="text.secondary">
+            Capacity: {venue.capacity}
+          </Typography>
+        )}
+        {venue.description && (
+          <Typography variant="body2" sx={{ mt: 0.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} color="text.primary">
+            {venue.description}
+          </Typography>
+        )}
+        </Stack>
+      </Stack>
+      <Stack direction="row" spacing={1} sx={{ mt: 1.25 }}>
+        <Button component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditIcon />} sx={{ flex: 1, borderRadius: 999, fontWeight: 900 }}>
+          Edit
+        </Button>
+        {venue?.status === 'APPROVED' && (
+          <Button component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ flex: 1, borderRadius: 999, fontWeight: 900 }}>
+            Public link
+          </Button>
+        )}
+      </Stack>
+    </Box>
+  );
+}
+
 export default function VenueManagePage() {
   const navigate = useNavigate();
   const { data, loading, error } = useQuery(MY_VENUE_DETAILS, {
@@ -138,7 +230,7 @@ export default function VenueManagePage() {
               />
               <Box sx={{ flex: 1, minWidth: 0, textAlign: { xs: 'center', sm: 'left' } }}>
                 <Typography variant="subtitle1" sx={{ fontWeight: 950 }}>
-                  {health.band === 'GREEN' ? 'Venue is in great shape.' : health.band === 'YELLOW' ? 'A few things to polish.' : 'Needs attention.'}
+                  {bandHeadline(health.band)}
                 </Typography>
                 <Typography variant="body2" color="text.secondary">
                   Base activity: {health.base_score}
@@ -179,81 +271,7 @@ export default function VenueManagePage() {
             </Box>
             <Chip size="small" label={isApproved ? 'Live' : 'Draft'} color={isApproved ? 'success' : 'warning'} sx={{ fontWeight: 900 }} />
           </Stack>
-          {loading && !data ? (
-            <Stack alignItems="center" sx={{ py: 4 }}>
-              <CircularProgress size={22} />
-            </Stack>
-          ) : error ? (
-            <Alert severity="error">{error.message}</Alert>
-          ) : !venue ? (
-            <Alert severity="info">
-              You haven't registered a venue yet.
-              <Box sx={{ mt: 1.5 }}>
-                <Button
-                  component={RouterLink}
-                  to="/register-venue"
-                  variant="contained"
-                  size="small"
-                >
-                  Register a venue
-                </Button>
-              </Box>
-            </Alert>
-          ) : (
-            <Box
-              sx={{
-                p: 1.25,
-                borderRadius: 3.5,
-                border: 1,
-                borderColor: 'divider',
-                bgcolor: 'background.paper',
-              }}
-            >
-              <Stack direction="row" spacing={1.25}>
-                <Box component="img" src={venue.cover_image_url || '/new-duncit-logo.png'} alt={venue.venue_name} sx={{ width: 72, height: 72, objectFit: 'cover', borderRadius: 2.5, bgcolor: 'action.hover', flex: '0 0 auto' }} />
-                <Stack spacing={0.35} sx={{ flex: 1, minWidth: 0 }}>
-                <Stack direction="row" alignItems="center" spacing={1}>
-                  <Typography variant="subtitle1" sx={{ flex: 1, fontWeight: 950 }} noWrap>
-                    {venue.venue_name}
-                  </Typography>
-                </Stack>
-                <Typography variant="caption" color="text.secondary" noWrap display="block">
-                  {[venue.venue_type, venue.locality, venue.city, venue.state].filter(Boolean).join(' - ') || '-'}
-                </Typography>
-                {venue.postal_code && (
-                  <Typography variant="caption" color="text.secondary">
-                    PIN: {venue.postal_code}
-                  </Typography>
-                )}
-                {venue.tags?.length > 0 && (
-                  <Stack direction="row" spacing={0.5} sx={{ flexWrap: 'wrap', gap: 0.5 }}>
-                    {venue.tags.map((tag: string) => <Chip key={tag} size="small" label={tag} variant="outlined" />)}
-                  </Stack>
-                )}
-                {typeof venue.capacity === 'number' && (
-                  <Typography variant="caption" color="text.secondary">
-                    Capacity: {venue.capacity}
-                  </Typography>
-                )}
-                {venue.description && (
-                  <Typography variant="body2" sx={{ mt: 0.5, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }} color="text.primary">
-                    {venue.description}
-                  </Typography>
-                )}
-                </Stack>
-              </Stack>
-              <Stack direction="row" spacing={1} sx={{ mt: 1.25 }}>
-                <Button component={RouterLink} to="/register-venue" variant="outlined" size="small" startIcon={<EditIcon />} sx={{ flex: 1, borderRadius: 999, fontWeight: 900 }}>
-                  Edit
-                </Button>
-                {venue?.status === 'APPROVED' && (
-                  <Button component={RouterLink} to={venueUrl(venue.id)} variant="contained" size="small" endIcon={<OpenInNewIcon fontSize="small" />} sx={{ flex: 1, borderRadius: 999, fontWeight: 900 }}>
-                    Public link
-                  </Button>
-                )}
-              </Stack>
-            </Box>
-          )}
+          <VenueListBody showSpinner={loading && !data} error={error} venue={venue} />
         </CardContent>
       </Card>
     </Stack>

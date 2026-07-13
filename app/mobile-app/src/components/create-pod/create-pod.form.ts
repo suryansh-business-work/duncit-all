@@ -332,7 +332,7 @@ export const MODERATION_FIELD_MAP: Record<string, keyof CreatePodFormValues> = {
 /** The stepper index a form field belongs to — powers jump-to-step on a violation. */
 export const stepForField = (field: keyof CreatePodFormValues): number => {
   const index = STEP_FIELDS.findIndex((fields) => (fields as string[]).includes(field));
-  return index >= 0 ? index : 0;
+  return Math.max(index, 0);
 };
 
 /** Copy for the "AI monitoring" chip's guidelines dialog (shared with mWeb). */

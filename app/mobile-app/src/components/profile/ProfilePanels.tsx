@@ -83,7 +83,10 @@ export function ProfilePanels({
               key={link.url}
               role="button"
               aria-label={link.label}
-              onPress={() => void Linking.openURL(link.url)}
+              onPress={() => {
+                /* istanbul ignore next -- an OS-level open failure has no user-facing recovery */
+                Linking.openURL(link.url).catch(() => undefined);
+              }}
               alignItems="center"
               gap={8}
             >

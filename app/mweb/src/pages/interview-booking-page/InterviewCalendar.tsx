@@ -34,7 +34,14 @@ export default function InterviewCalendar({
   onToggleSlot,
   onRemoveSlot,
 }: Readonly<InterviewCalendarProps>) {
-  const cells = useMemo(() => buildMonth(anchor), [anchor]);
+  const cells = useMemo(
+    () =>
+      buildMonth(anchor).map((date, i) => ({
+        key: date ? date.toDateString() : `blank-${i}`,
+        date,
+      })),
+    [anchor]
+  );
   const monthLabel = anchor.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
   const slotList = Array.from(slots.values()).sort((a, b) => +a.start - +b.start);
 
@@ -85,13 +92,14 @@ export default function InterviewCalendar({
               {d}
             </Typography>
           ))}
-          {cells.map((d, idx) => {
-            if (!d) return <Box key={idx} />;
+          {cells.map(({ key, date: d }) => {
+            if (!d) return <Box key={key} />;
             const past = isPastDay(d);
             const active = selectedDate && isSameDay(d, selectedDate);
+            const inactiveColor = past ? 'text.disabled' : 'text.primary';
             return (
               <Button
-                key={idx}
+                key={key}
                 onClick={() => !past && setSelectedDate(d)}
                 disabled={past}
                 sx={{
@@ -101,11 +109,7 @@ export default function InterviewCalendar({
                   p: 0,
                   fontWeight: active ? 700 : 500,
                   bgcolor: active ? 'primary.main' : 'transparent',
-                  color: active
-                    ? 'primary.contrastText'
-                    : past
-                      ? 'text.disabled'
-                      : 'text.primary',
+                  color: active ? 'primary.contrastText' : inactiveColor,
                   '&:hover': { bgcolor: active ? 'primary.dark' : 'action.hover' },
                 }}
               >
@@ -156,9 +160,9 @@ export default function InterviewCalendar({
               </Typography>
             </Stack>
             <Stack direction="row" spacing={1} sx={{ flexWrap: 'wrap', gap: 1 }}>
-              {slotList.map((s, i) => (
+              {slotList.map((s) => (
                 <Chip
-                  key={i}
+                  key={s.start.toISOString()}
                   label={`${s.start.toLocaleDateString(undefined, {
                     day: '2-digit',
                     month: 'short',

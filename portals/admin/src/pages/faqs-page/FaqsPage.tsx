@@ -29,8 +29,8 @@ import FaqEditDialog from './FaqEditDialog';
 export default function FaqsPage() {
   const [filterSuper, setFilterSuper] = useState<string>('');
   const [search, setSearch] = useState('');
-  const [editing, setEditing] = useState<any | null>(null);
-  const [delTarget, setDelTarget] = useState<any | null>(null);
+  const [editing, setEditing] = useState<any>(null);
+  const [delTarget, setDelTarget] = useState<any>(null);
   const [form, setForm] = useState<FormState>(emptyForm);
   const [error, setError] = useState<string | null>(null);
   const [toast, setToast] = useState<string | null>(null);
@@ -87,7 +87,7 @@ export default function FaqsPage() {
         is_active: form.is_active,
         sort_order: Number(form.sort_order) || 0,
       };
-      if (editing && editing.id) {
+      if (editing?.id) {
         await updateMut({ variables: { faq_doc_id: editing.id, input } });
         setToast('FAQ updated');
       } else {

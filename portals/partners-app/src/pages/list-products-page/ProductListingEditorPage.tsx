@@ -22,6 +22,12 @@ export default function ProductListingEditorPage() {
     return <Stack alignItems="center" sx={{ py: 5 }}><CircularProgress size={24} /></Stack>;
   }
 
+  const notFound = editing && !product && !loading;
+  const managedContent = notFound
+    ? <Alert severity="warning">Product listing was not found.</Alert>
+    : <ListProductsForm brandId={brandId} product={product} onSaved={() => navigate(productsHome, { replace: true })} />;
+  const content = canManageProducts ? managedContent : <Alert severity="warning">{PRODUCT_ACCESS_MESSAGE}</Alert>;
+
   return (
     <Stack spacing={2.25} sx={{ width: '100%' }}>
       <Box sx={{ p: 2.5, borderRadius: 2, color: 'primary.contrastText', background: (t) => `linear-gradient(135deg, ${t.palette.primary.dark} 0%, ${t.palette.primary.main} 100%)` }}>
@@ -37,7 +43,7 @@ export default function ProductListingEditorPage() {
       </Box>
       {accessError && <Alert severity="error">{accessError.message}</Alert>}
       {error && <Alert severity="error">{error.message}</Alert>}
-      {!canManageProducts ? <Alert severity="warning">{PRODUCT_ACCESS_MESSAGE}</Alert> : editing && !product && !loading ? <Alert severity="warning">Product listing was not found.</Alert> : <ListProductsForm brandId={brandId} product={product} onSaved={() => navigate(productsHome, { replace: true })} />}
+      {content}
     </Stack>
   );
 }

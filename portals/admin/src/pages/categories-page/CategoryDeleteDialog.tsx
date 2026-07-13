@@ -18,12 +18,8 @@ interface Props {
 }
 
 export default function CategoryDeleteDialog({ target, busy, error, onClose, onConfirm }: Readonly<Props>) {
-  const levelLabel =
-    target?.level === 'SUPER'
-      ? 'Super Category'
-      : target?.level === 'CATEGORY'
-        ? 'Category'
-        : 'Sub-Category';
+  const nonSuperLabel = target?.level === 'CATEGORY' ? 'Category' : 'Sub-Category';
+  const levelLabel = target?.level === 'SUPER' ? 'Super Category' : nonSuperLabel;
   return (
     <Dialog
       open={!!target}

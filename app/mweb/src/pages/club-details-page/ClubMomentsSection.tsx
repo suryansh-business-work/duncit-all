@@ -25,7 +25,7 @@ export default function ClubMomentsSection({ moments }: Readonly<Props>) {
       >
         {moments.map((moment, index) => (
           <MomentTile
-            key={index}
+            key={moment.url}
             url={moment.url}
             type={moment.type}
             aspect="1 / 1"

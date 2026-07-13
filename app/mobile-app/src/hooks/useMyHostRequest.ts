@@ -21,7 +21,7 @@ export function useMyHostRequest() {
   }, []);
 
   useEffect(() => {
-    void refetch();
+    refetch();
   }, [refetch]);
 
   return { request, isLoading, refetch };

@@ -16,10 +16,10 @@ function makeId(): string {
 export function getOrCreateDuid(): string {
   if (typeof globalThis.window === 'undefined') return '';
   try {
-    const existing = window.localStorage.getItem(KEY);
+    const existing = globalThis.localStorage.getItem(KEY);
     if (existing && existing.length > 0) return existing;
     const fresh = makeId();
-    window.localStorage.setItem(KEY, fresh);
+    globalThis.localStorage.setItem(KEY, fresh);
     return fresh;
   } catch {
     // Private mode / disabled storage: still return a value for headers,

@@ -49,7 +49,7 @@ export default function LeadContactActions({ entity, leadId, displayName, email,
   const [menuOpen, setMenuOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const anchorRef = useRef<HTMLDivElement>(null);
-  const waNumber = (whatsapp || mobile || '').replace(/[^0-9]/g, '');
+  const waNumber = (whatsapp || mobile || '').replace(/\D/g, '');
 
   const callLead = mobile
     ? { to: mobile, entityType: entity, entityId: leadId, displayName, contactName: displayName }

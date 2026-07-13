@@ -100,7 +100,8 @@ export default function HostLeadsPage() {
       const payload = kind === 'template' ? res.data.crmExcelTemplate : res.data.crmExcelExport;
       if (!payload) throw new Error('Empty response');
       downloadBase64Xlsx(payload.filename, payload.content_base64);
-      setToast(kind === 'template' ? 'Template downloaded' : `Exported ${leads.length} host lead${leads.length === 1 ? '' : 's'}`);
+      const plural = leads.length === 1 ? '' : 's';
+      setToast(kind === 'template' ? 'Template downloaded' : `Exported ${leads.length} host lead${plural}`);
     } catch (err) {
       setError(parseApiError(err));
     }

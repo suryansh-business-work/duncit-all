@@ -98,7 +98,7 @@ export function ReferralScreen() {
               ) : null}
             </YStack>
 
-            {!referral?.referred_by_name ? (
+            {referral?.referred_by_name ? null : (
               <YStack
                 gap={10}
                 padding={16}
@@ -151,7 +151,7 @@ export function ReferralScreen() {
                   </Text>
                 ) : null}
               </YStack>
-            ) : null}
+            )}
 
             <Text fontSize={16} fontWeight="900" color="$color">
               Friends you referred ({referredList.length})

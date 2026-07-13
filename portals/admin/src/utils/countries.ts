@@ -15,7 +15,7 @@ const normalizeDial = (phonecode?: string | number) => {
 const flagForIso = (iso: string) =>
   iso
     .toUpperCase()
-    .replace(/[A-Z]/g, (letter) => String.fromCodePoint(127397 + letter.charCodeAt(0)));
+    .replace(/[A-Z]/g, (letter) => String.fromCodePoint(127397 + (letter.codePointAt(0) ?? 0)));
 
 const allCountries = Object.entries(countries)
   .map(([iso, country]) => ({

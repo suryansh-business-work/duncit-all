@@ -21,7 +21,7 @@ import PodPaymentDetailsSection from '../../components/pod-details/PodPaymentDet
 
 interface Props {
   pod: any;
-  club: any | null;
+  club: any;
   hosts: any[];
   attendees: any[];
   isFree: boolean;

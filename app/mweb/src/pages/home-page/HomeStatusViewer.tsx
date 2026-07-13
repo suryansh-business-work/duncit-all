@@ -239,10 +239,8 @@ export default function HomeStatusViewer({
             onEnded={goNext}
             sx={{ width: '100%', height: '100%', objectFit: 'cover' }}
           />
-        ) : current?.mediaUrl ? (
-          <Box component="img" src={current.mediaUrl} alt={item.label} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
         ) : (
-          <Box sx={{ width: '100%', height: '100%', background: 'linear-gradient(145deg, #ff7a59 0%, #ed4f7a 45%, #15111c 100%)' }} />
+          nonVideoMedia
         )}
         <Box sx={{ position: 'absolute', inset: 0, background: 'linear-gradient(180deg, rgba(0,0,0,0.52) 0%, transparent 30%, rgba(0,0,0,0.82) 100%)' }} />
 
@@ -251,11 +249,16 @@ export default function HomeStatusViewer({
         <Box onClick={goNext} sx={{ position: 'absolute', top: 64, bottom: 120, right: 0, width: '40%', cursor: 'pointer', zIndex: 2 }} />
         <Stack spacing={1.2} sx={{ position: 'absolute', top: 12, left: 12, right: 12 }}>
           <Stack direction="row" spacing={0.5}>
-            {slides.map((_, slideIndex) => (
-              <Box key={slideIndex} sx={{ flex: 1, height: 3, borderRadius: 999, bgcolor: 'rgba(255,255,255,0.28)', overflow: 'hidden' }}>
-                <Box sx={{ height: '100%', width: `${(slideIndex < index ? 1 : slideIndex === index ? progress : 0) * 100}%`, borderRadius: 'inherit', bgcolor: '#fff' }} />
-              </Box>
-            ))}
+            {slides.map((slide, slideIndex) => {
+              let fill = 0;
+              if (slideIndex < index) fill = 1;
+              else if (slideIndex === index) fill = progress;
+              return (
+                <Box key={slide.id ?? slide.mediaUrl ?? item.label} sx={{ flex: 1, height: 3, borderRadius: 999, bgcolor: 'rgba(255,255,255,0.28)', overflow: 'hidden' }}>
+                  <Box sx={{ height: '100%', width: `${fill * 100}%`, borderRadius: 'inherit', bgcolor: '#fff' }} />
+                </Box>
+              );
+            })}
           </Stack>
           <Stack direction="row" alignItems="center" spacing={1}>
             <Box

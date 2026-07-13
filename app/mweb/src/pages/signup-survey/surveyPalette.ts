@@ -20,7 +20,7 @@ export const SURVEY_COLORS = [
 function hashId(id: string): number {
   let h = 0;
   for (let i = 0; i < id.length; i++) {
-    h = (h * 31 + id.charCodeAt(i)) >>> 0;
+    h = (h * 31 + (id.codePointAt(i) ?? 0)) >>> 0;
   }
   return h;
 }

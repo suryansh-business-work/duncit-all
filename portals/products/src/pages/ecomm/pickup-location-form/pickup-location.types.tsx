@@ -12,7 +12,7 @@ export const pickupLocationSchema = z.object({
   phone: z
     .string()
     .trim()
-    .regex(/^[0-9]{10}$/, 'Enter a valid 10-digit phone number'),
+    .regex(/^\d{10}$/, 'Enter a valid 10-digit phone number'),
   email: z
     .string()
     .trim()
@@ -26,7 +26,7 @@ export const pickupLocationSchema = z.object({
   pincode: z
     .string()
     .trim()
-    .regex(/^[0-9]{6}$/, 'Enter a valid 6-digit pincode'),
+    .regex(/^\d{6}$/, 'Enter a valid 6-digit pincode'),
   country: z.string().trim().min(2, 'Country is required').max(60),
   is_default: z.boolean(),
 });

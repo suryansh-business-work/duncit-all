@@ -54,7 +54,7 @@ const ADDRESS_LINES = (address: VerificationAddress) =>
     address.line2,
     [address.city, address.state, address.pincode].filter(Boolean).join(' '),
     address.country,
-  ].filter((line) => Boolean(line && line.trim()));
+  ].filter((line) => Boolean(line?.trim()));
 
 function IdentityDetail({ item }: Readonly<{ item: VerificationItem }>) {
   if (!item.document_url) {

@@ -50,7 +50,7 @@ export default function SliderScopeFields({
             ...form,
             scope: e.target.value as any,
             ...(e.target.value === 'GLOBAL' ? { location_id: '', zone_name: '' } : {}),
-            ...(e.target.value !== 'ZONE' ? { zone_name: '' } : {}),
+            ...(e.target.value === 'ZONE' ? {} : { zone_name: '' }),
           })
         }
         fullWidth

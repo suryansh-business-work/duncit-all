@@ -2,7 +2,10 @@
 export const fileToBase64 = (file: File) =>
   new Promise<string>((resolve, reject) => {
     const reader = new FileReader();
-    reader.onload = () => resolve(String(reader.result).split(',')[1] ?? '');
+    reader.onload = () => {
+      const result = typeof reader.result === 'string' ? reader.result : '';
+      resolve(result.split(',')[1] ?? '');
+    };
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
@@ -11,7 +14,7 @@ export const fileToBase64 = (file: File) =>
 export function downloadBase64Xlsx(base64: string, filename: string) {
   const bytes = atob(base64);
   const arr = new Uint8Array(bytes.length);
-  for (let i = 0; i < bytes.length; i += 1) arr[i] = bytes.charCodeAt(i);
+  for (let i = 0; i < bytes.length; i += 1) arr[i] = bytes.codePointAt(i) ?? 0;
   const blob = new Blob([arr], {
     type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
   });

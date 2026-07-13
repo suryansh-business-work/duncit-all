@@ -137,7 +137,9 @@ export function FollowListScreen() {
             person={person}
             isSelf={person.user_id === myId}
             busy={busyId === person.user_id}
-            onToggle={() => void toggle(person)}
+            onToggle={() => {
+              toggle(person);
+            }}
             onOpen={() => navigation.navigate('PublicProfile', { userId: person.user_id })}
           />
         )}

@@ -10,14 +10,13 @@ interface Props {
 }
 
 export default function FollowButton({ following, disabled, loading, onToggle }: Readonly<Props>) {
+  const followIcon = following ? <HowToRegIcon /> : <PersonAddAltIcon />;
   return (
     <Button
       size="small"
       variant={following ? 'contained' : 'outlined'}
       color={following ? 'primary' : 'inherit'}
-      startIcon={
-        loading ? <CircularProgress size={14} /> : following ? <HowToRegIcon /> : <PersonAddAltIcon />
-      }
+      startIcon={loading ? <CircularProgress size={14} /> : followIcon}
       disabled={disabled || loading}
       onClick={(event) => {
         event.stopPropagation();

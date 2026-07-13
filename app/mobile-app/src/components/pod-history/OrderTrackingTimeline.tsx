@@ -30,14 +30,14 @@ export function OrderTrackingTimeline({
           <XStack key={step.status} gap={12} alignItems="flex-start">
             <YStack alignItems="center">
               <MaterialIcons name={icon.name} size={20} color={icon.color} />
-              {!last ? (
+              {last ? null : (
                 <YStack
                   width={2}
                   height={18}
                   marginVertical={2}
                   backgroundColor={step.done ? primary : '$borderColor'}
                 />
-              ) : null}
+              )}
             </YStack>
             <Text
               flex={1}

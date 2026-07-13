@@ -167,7 +167,7 @@ export default function PexelsPhotosTab({
         >
           Pexels
         </a>
-        . Selected images are imported into your ImageKit account.
+        {'. Selected images are imported into your ImageKit account.'}
       </Typography>
     </Box>
   );

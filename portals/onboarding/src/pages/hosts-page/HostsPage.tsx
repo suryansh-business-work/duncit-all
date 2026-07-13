@@ -26,10 +26,10 @@ export default function HostsPage() {
   const [reject] = useMutation(REJECT);
   const [setHostDeductions, { loading: savingCommission }] = useMutation(SET_HOST_DEDUCTIONS);
   const lifecycle = useEntityLifecycle(SET_HOST_ACTIVE, DELETE_HOST, refetch);
-  const [active, setActive] = useState<any | null>(null);
+  const [active, setActive] = useState<any>(null);
   const [notes, setNotes] = useState('');
   const [tagsText, setTagsText] = useState('');
-  const [editing, setEditing] = useState<any | null>(null);
+  const [editing, setEditing] = useState<any>(null);
 
   const parseTags = () =>
     tagsText.split(',').map((tag) => tag.trim()).filter(Boolean);

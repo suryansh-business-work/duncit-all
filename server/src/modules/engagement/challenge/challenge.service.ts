@@ -1,4 +1,5 @@
 import { GraphQLError } from 'graphql';
+import type { Types } from 'mongoose';
 import { ChallengeModel } from './challenge.model';
 import { CategoryModel } from '@modules/pods/category/category.model';
 
@@ -11,7 +12,10 @@ export interface ChallengeInput {
   is_active?: boolean;
 }
 
-const idStr = (v: unknown): string | null => (v ? String(v) : null);
+/** A Category reference as it comes off a lean doc (ObjectId) or an input (string). */
+type IdLike = Types.ObjectId | string | null | undefined;
+
+const idStr = (v: IdLike): string | null => (v ? String(v) : null);
 
 /** One Category-id → name lookup for a batch of challenges (avoids N+1). */
 async function nameMap(ids: unknown[]): Promise<Map<string, string>> {
@@ -23,7 +27,7 @@ async function nameMap(ids: unknown[]): Promise<Map<string, string>> {
 
 function toPub(d: Record<string, any> | null, names: Map<string, string>) {
   if (!d) return null;
-  const nameOf = (v: unknown) => (v ? (names.get(String(v)) ?? null) : null);
+  const nameOf = (v: IdLike) => (v ? (names.get(String(v)) ?? null) : null);
   return {
     id: String(d._id),
     name: d.name,

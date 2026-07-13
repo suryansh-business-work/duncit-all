@@ -4,4 +4,6 @@
  * Metro resolves for `platform=web`. Kept as a no-op so callers stay
  * platform-agnostic — one correct path per platform.
  */
-export function loadWebFonts(): void {}
+export function loadWebFonts(): void {
+  // No-op on native — fonts ship with the bundle.
+}

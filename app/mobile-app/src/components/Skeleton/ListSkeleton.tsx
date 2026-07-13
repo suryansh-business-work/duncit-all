@@ -6,8 +6,8 @@ import { SkeletonCard } from '@/components/Skeleton/SkeletonCard';
 export function ListSkeleton({ count = 4, testID }: Readonly<{ count?: number; testID?: string }>) {
   return (
     <YStack padding={16} gap={14} testID={testID}>
-      {Array.from({ length: count }).map((_, i) => (
-        <SkeletonCard key={i} height={120} />
+      {Array.from({ length: count }, (_, i) => `list-card-${i}`).map((key) => (
+        <SkeletonCard key={key} height={120} />
       ))}
     </YStack>
   );

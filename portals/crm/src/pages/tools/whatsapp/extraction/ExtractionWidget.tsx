@@ -16,7 +16,6 @@ import {
 import SyncIcon from '@mui/icons-material/Sync';
 import CloseIcon from '@mui/icons-material/Close';
 import MinimizeIcon from '@mui/icons-material/Minimize';
-import OpenInFullIcon from '@mui/icons-material/OpenInFull';
 import InfoOutlinedIcon from '@mui/icons-material/InfoOutlined';
 import { useExtraction } from './ExtractionContext';
 import type { WaExtraction } from '../whatsappQueries';
@@ -36,6 +35,44 @@ function barColorFor(status: WaExtraction['status']): 'warning' | 'success' | 'e
   if (status === 'DONE') return 'success';
   if (status === 'FAILED') return 'error';
   return 'inherit';
+}
+
+/** Collapsed state — a floating status chip that reopens the widget. */
+function MinimizedChip({ job, pct, onOpen }: Readonly<{ job: WaExtraction; pct: number; onOpen: () => void }>) {
+  const running = job.status === 'RUNNING';
+  const title = STATUS_TITLE[job.status];
+  return (
+    <Tooltip title={running ? `Extracting… ${pct}%` : title}>
+      <Chip
+        icon={
+          running ? (
+            <SyncIcon sx={{ animation: `${spin} 1.2s linear infinite` }} />
+          ) : (
+            <InfoOutlinedIcon />
+          )
+        }
+        color={STATUS_COLOR[job.status]}
+        label={running ? `Extracting ${pct}%` : title}
+        onClick={onOpen}
+        sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1300, boxShadow: 4, cursor: 'pointer' }}
+      />
+    </Tooltip>
+  );
+}
+
+function ProgressSection({ job, running, pct }: Readonly<{ job: WaExtraction; running: boolean; pct: number }>) {
+  return (
+    <Box sx={{ px: 1.5 }}>
+      {running && job.total === 0 ? (
+        <LinearProgress sx={{ borderRadius: 1 }} />
+      ) : (
+        <LinearProgress variant="determinate" value={running ? pct : 100} color={barColorFor(job.status)} sx={{ borderRadius: 1 }} />
+      )}
+      <Typography variant="caption" color="text.secondary">
+        {running ? `${job.processed} / ${job.total || '…'} contacts (${pct}%)` : `${job.processed} contacts processed`}
+      </Typography>
+    </Box>
+  );
 }
 
 function StatRow({ job }: Readonly<{ job: WaExtraction }>) {
@@ -95,23 +132,7 @@ export default function ExtractionWidget() {
   const title = STATUS_TITLE[job.status];
 
   if (!open) {
-    return (
-      <Tooltip title={running ? `Extracting… ${pct}%` : title}>
-        <Chip
-          icon={
-            running ? (
-              <SyncIcon sx={{ animation: `${spin} 1.2s linear infinite` }} />
-            ) : (
-              <InfoOutlinedIcon />
-            )
-          }
-          color={STATUS_COLOR[job.status]}
-          label={running ? `Extracting ${pct}%` : title}
-          onClick={() => setOpen(true)}
-          sx={{ position: 'fixed', bottom: 20, right: 20, zIndex: 1300, boxShadow: 4, cursor: 'pointer' }}
-        />
-      </Tooltip>
-    );
+    return <MinimizedChip job={job} pct={pct} onOpen={() => setOpen(true)} />;
   }
 
   return (
@@ -145,16 +166,7 @@ export default function ExtractionWidget() {
         </Tooltip>
       </Stack>
 
-      <Box sx={{ px: 1.5 }}>
-        {running && job.total === 0 ? (
-          <LinearProgress sx={{ borderRadius: 1 }} />
-        ) : (
-          <LinearProgress variant="determinate" value={running ? pct : 100} color={barColorFor(job.status)} sx={{ borderRadius: 1 }} />
-        )}
-        <Typography variant="caption" color="text.secondary">
-          {running ? `${job.processed} / ${job.total || '…'} contacts (${pct}%)` : `${job.processed} contacts processed`}
-        </Typography>
-      </Box>
+      <ProgressSection job={job} running={running} pct={pct} />
 
       <Box sx={{ p: 1.5, pt: 1 }}>
         {job.status === 'FAILED' ? (

@@ -37,45 +37,45 @@ export function ClubDetailsScreen() {
     await Share.share({ title: club.club_name, message: `${club.club_name} — ${url}`, url });
   };
 
+  const content = club ? (
+    <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 110 }}>
+      <DetailHero media={club.club_feature_images_and_videos} onBack={goBack}>
+        <HeroButton testID="hb-share" icon="share" onPress={handleShare} />
+      </DetailHero>
+      <Reveal>
+        <ClubBody
+          club={club}
+          pods={pods}
+          members={members}
+          followingUserIds={followingUserIds}
+          categoryCrumbs={categoryCrumbs}
+          following={following}
+          followBusy={followBusy}
+          onToggleFollow={() => void toggleFollow()}
+          onOpenPod={(pod) =>
+            navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title })
+          }
+          onOpenMember={(userId) => navigation.navigate('PublicProfile', { userId })}
+        />
+      </Reveal>
+    </ScrollView>
+  ) : (
+    <YStack flex={1} alignItems="center" justifyContent="center" gap={12} padding={24}>
+      <Text color="$muted" testID="club-details-error">
+        This club is unavailable.
+      </Text>
+      <XStack role="button" aria-label="Go back" onPress={goBack}>
+        <Text color="$primary" fontWeight="900">
+          Go back
+        </Text>
+      </XStack>
+    </YStack>
+  );
+
   return (
     <YStack flex={1} testID="club-details-screen">
       <AppBackground />
-      {isLoading && !club ? (
-        <DetailSkeleton testID="club-details-loading" />
-      ) : !club ? (
-        <YStack flex={1} alignItems="center" justifyContent="center" gap={12} padding={24}>
-          <Text color="$muted" testID="club-details-error">
-            This club is unavailable.
-          </Text>
-          <XStack role="button" aria-label="Go back" onPress={goBack}>
-            <Text color="$primary" fontWeight="900">
-              Go back
-            </Text>
-          </XStack>
-        </YStack>
-      ) : (
-        <ScrollView flex={1} contentContainerStyle={{ paddingBottom: 110 }}>
-          <DetailHero media={club.club_feature_images_and_videos} onBack={goBack}>
-            <HeroButton testID="hb-share" icon="share" onPress={handleShare} />
-          </DetailHero>
-          <Reveal>
-            <ClubBody
-              club={club}
-              pods={pods}
-              members={members}
-              followingUserIds={followingUserIds}
-              categoryCrumbs={categoryCrumbs}
-              following={following}
-              followBusy={followBusy}
-              onToggleFollow={() => void toggleFollow()}
-              onOpenPod={(pod) =>
-                navigation.navigate('PodDetails', { podId: pod.id, title: pod.pod_title })
-              }
-              onOpenMember={(userId) => navigation.navigate('PublicProfile', { userId })}
-            />
-          </Reveal>
-        </ScrollView>
-      )}
+      {isLoading && !club ? <DetailSkeleton testID="club-details-loading" /> : content}
     </YStack>
   );
 }

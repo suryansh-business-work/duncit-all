@@ -95,5 +95,6 @@ describe('useHostDashboard', () => {
     await act(async () => {
       resolveMe({ me: { user_id: 'h1' }, myWallet: null, myAccountHealth: null });
     });
+    expect(mockRequest).toHaveBeenCalled();
   });
 });

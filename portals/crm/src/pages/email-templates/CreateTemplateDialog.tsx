@@ -69,7 +69,22 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
     <Dialog open={open} onClose={loading ? undefined : close} fullWidth maxWidth="sm">
       <DialogTitle>New email template</DialogTitle>
       <DialogContent>
-        {!target ? (
+        {target ? (
+          <Stack spacing={2} sx={{ mt: 0.5 }}>
+            {error && <Alert severity="error">{error}</Alert>}
+            <Stack direction="row" spacing={1} alignItems="center">
+              <Typography variant="caption" color="text.secondary">Type:</Typography>
+              <Typography variant="body2" fontWeight={700}>{TARGETS.find((t) => t.value === target)?.label}</Typography>
+              <Button size="small" onClick={() => setTarget(null)}>Change</Button>
+            </Stack>
+            <TextField size="small" label="Name" value={name} onChange={(e) => setName(e.target.value)} autoFocus fullWidth />
+            <TextField size="small" label="Slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={slugify(name) || 'welcome-email'} helperText="Stable code key. Auto-derived from name if left blank." fullWidth />
+            <TextField size="small" label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth />
+            <Stack direction="row" alignItems="center" spacing={1}>
+              <MjmlAiButton currentMjml={mjml} onApply={setMjml} label="Seed MJML with AI" />
+            </Stack>
+          </Stack>
+        ) : (
           <Stack spacing={1.5} sx={{ mt: 0.5 }}>
             <Typography variant="body2" color="text.secondary">Who is this template for?</Typography>
             {TARGETS.map((t) => (
@@ -85,21 +100,6 @@ export default function CreateTemplateDialog({ open, onClose, onCreated }: Reado
                 </CardActionArea>
               </Card>
             ))}
-          </Stack>
-        ) : (
-          <Stack spacing={2} sx={{ mt: 0.5 }}>
-            {error && <Alert severity="error">{error}</Alert>}
-            <Stack direction="row" spacing={1} alignItems="center">
-              <Typography variant="caption" color="text.secondary">Type:</Typography>
-              <Typography variant="body2" fontWeight={700}>{TARGETS.find((t) => t.value === target)?.label}</Typography>
-              <Button size="small" onClick={() => setTarget(null)}>Change</Button>
-            </Stack>
-            <TextField size="small" label="Name" value={name} onChange={(e) => setName(e.target.value)} autoFocus fullWidth />
-            <TextField size="small" label="Slug" value={slug} onChange={(e) => setSlug(e.target.value)} placeholder={slugify(name) || 'welcome-email'} helperText="Stable code key. Auto-derived from name if left blank." fullWidth />
-            <TextField size="small" label="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} fullWidth />
-            <Stack direction="row" alignItems="center" spacing={1}>
-              <MjmlAiButton currentMjml={mjml} onApply={setMjml} label="Seed MJML with AI" />
-            </Stack>
           </Stack>
         )}
       </DialogContent>

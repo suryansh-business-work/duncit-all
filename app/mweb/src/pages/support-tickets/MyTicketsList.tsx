@@ -40,6 +40,37 @@ export default function MyTicketsList() {
   const countFor = (f: Filter): number =>
     f === 'ALL' ? all.length : all.filter((t) => t.status === f).length;
 
+  const emptyOrList =
+    items.length === 0 ? (
+      <Typography variant="body2" color="text.secondary" sx={{ p: 1.5 }}>
+        {filter === 'ALL' ? "You haven't raised any tickets yet." : `No ${LABEL[filter].toLowerCase()} tickets.`}
+      </Typography>
+    ) : (
+      <Stack spacing={1.25}>
+        {items.map((t) => (
+          <Paper
+            key={t.id}
+            variant="outlined"
+            onClick={() => navigate(`/tickets/${t.id}`)}
+            sx={{ p: 1.5, borderRadius: 3, cursor: 'pointer' }}
+          >
+            <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
+              <Box sx={{ minWidth: 0 }}>
+                <Typography variant="subtitle2" sx={{ fontWeight: 800 }} noWrap>
+                  {t.subject}
+                </Typography>
+                <Typography variant="caption" color="text.secondary">
+                  {ticketNo(t.id)} · {t.category} ·{' '}
+                  {formatDistanceToNow(new Date(t.last_message_at), { addSuffix: true })}
+                </Typography>
+              </Box>
+              <Chip size="small" color={STATUS_COLOR[t.status]} label={LABEL[t.status]} />
+            </Stack>
+          </Paper>
+        ))}
+      </Stack>
+    );
+
   return (
     <Paper elevation={0} variant="outlined" sx={{ p: 2, borderRadius: 4 }}>
       <Typography variant="overline" color="text.secondary" sx={{ fontWeight: 950 }}>
@@ -61,34 +92,8 @@ export default function MyTicketsList() {
         <Box sx={{ p: 3, textAlign: 'center' }}>
           <CircularProgress size={22} />
         </Box>
-      ) : items.length === 0 ? (
-        <Typography variant="body2" color="text.secondary" sx={{ p: 1.5 }}>
-          {filter === 'ALL' ? "You haven't raised any tickets yet." : `No ${LABEL[filter].toLowerCase()} tickets.`}
-        </Typography>
       ) : (
-        <Stack spacing={1.25}>
-          {items.map((t) => (
-            <Paper
-              key={t.id}
-              variant="outlined"
-              onClick={() => navigate(`/tickets/${t.id}`)}
-              sx={{ p: 1.5, borderRadius: 3, cursor: 'pointer' }}
-            >
-              <Stack direction="row" alignItems="center" justifyContent="space-between" spacing={1}>
-                <Box sx={{ minWidth: 0 }}>
-                  <Typography variant="subtitle2" sx={{ fontWeight: 800 }} noWrap>
-                    {t.subject}
-                  </Typography>
-                  <Typography variant="caption" color="text.secondary">
-                    {ticketNo(t.id)} · {t.category} ·{' '}
-                    {formatDistanceToNow(new Date(t.last_message_at), { addSuffix: true })}
-                  </Typography>
-                </Box>
-                <Chip size="small" color={STATUS_COLOR[t.status]} label={LABEL[t.status]} />
-              </Stack>
-            </Paper>
-          ))}
-        </Stack>
+        emptyOrList
       )}
     </Paper>
   );

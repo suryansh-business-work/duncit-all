@@ -17,7 +17,7 @@ import {
 } from '@mui/material';
 
 interface Props {
-  active: any | null;
+  active: any;
   notes: string;
   setNotes: (v: string) => void;
   tagsText: string;

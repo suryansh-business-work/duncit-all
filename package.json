@@ -97,7 +97,10 @@
     "mobile:build:ios": "cd app/mobile-app && npm run build:ios",
     "mobile:upload:slack": "cd app/mobile-app && npm run upload:slack",
     "mobile:ci": "cd app/mobile-app && npm run ci",
-    "prepare": "husky || true"
+    "prepare": "husky || true",
+    "sonar:issues": "node scripts/sonar-issues.mjs",
+    "sonar:issues:high": "node scripts/sonar-issues.mjs --severity=HIGH",
+    "sonar:scan": "gh workflow run \"SonarQube Scan\" --ref $(git rev-parse --abbrev-ref HEAD)"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^1.6.1",

@@ -4,6 +4,15 @@ on:
   push:
     branches:
       - main
+  # Run it by hand from the Actions tab ("Run workflow") against ANY branch —
+  # the automatic scan only fires on main, so without this a staging cleanup is
+  # invisible in SonarQube until it is merged.
+  workflow_dispatch:
+    inputs:
+      fail_on_unreachable:
+        description: 'Fail the run (instead of skipping) if the SonarQube server is down'
+        type: boolean
+        default: false
 
 
 jobs:
@@ -27,6 +36,10 @@ jobs:
             echo "up=true" >> "$GITHUB_OUTPUT"
           else
             echo "up=false" >> "$GITHUB_OUTPUT"
+            if [ "${{ inputs.fail_on_unreachable }}" = "true" ]; then
+              echo "::error::SonarQube server unreachable (HTTP $code)."
+              exit 1
+            fi
             echo "::warning::SonarQube server unreachable (HTTP $code) — skipping scan."
           fi
       - uses: SonarSource/sonarqube-scan-action@fd88b7d7ccbaefd23d8f36f73b59db7a3d246602 # v6.0.0

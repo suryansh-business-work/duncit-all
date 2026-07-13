@@ -25,3 +25,6 @@ package-lock.json
 # `npm ci` for both, so both lockfiles must be committed.
 !portals/crm/open-wa-server/package-lock.json
 !portals/crm/open-wa-server/dashboard/package-lock.json
+# Local SonarQube issue dumps (pnpm sonar:issues)
+sonar-issues.json
+sonar-issues.md

@@ -286,7 +286,10 @@ describe('StatusRail (bug 3 composite)', () => {
     mockNavigate.mockClear();
     // Deterministic rail order (Fisher–Yates with random=0 is stable per input).
     jest.spyOn(Math, 'random').mockReturnValue(0);
-    mockedUpload.mockReturnValue({ uploading: false, pickAndUpload: jest.fn() });
+    mockedUpload.mockReturnValue({
+      uploading: false,
+      pickAndUpload: jest.fn().mockResolvedValue(undefined),
+    });
     mockedRail.mockReturnValue({ mine: null, items: [userItem], isLoading: false });
   });
 
@@ -295,7 +298,7 @@ describe('StatusRail (bug 3 composite)', () => {
   });
 
   it('uploads from the own tile when there is no story yet', () => {
-    const pickAndUpload = jest.fn();
+    const pickAndUpload = jest.fn().mockResolvedValue(undefined);
     mockedUpload.mockReturnValue({ uploading: false, pickAndUpload });
     renderWithProviders(<StatusRail userName="Sam" />);
     fireEvent.press(screen.getByTestId('status-mine'));
@@ -303,7 +306,7 @@ describe('StatusRail (bug 3 composite)', () => {
   });
 
   it('opens my own viewer when I already have a story, and adds via the badge', () => {
-    const pickAndUpload = jest.fn();
+    const pickAndUpload = jest.fn().mockResolvedValue(undefined);
     mockedUpload.mockReturnValue({ uploading: false, pickAndUpload });
     mockedRail.mockReturnValue({ mine: mineGroup, items: [userItem], isLoading: false });
     renderWithProviders(<StatusRail userName="Sam" />);
@@ -314,7 +317,7 @@ describe('StatusRail (bug 3 composite)', () => {
   });
 
   it('does not upload from the tile or the badge while an upload is in flight', () => {
-    const pickAndUpload = jest.fn();
+    const pickAndUpload = jest.fn().mockResolvedValue(undefined);
     mockedUpload.mockReturnValue({ uploading: true, pickAndUpload });
     renderWithProviders(<StatusRail userName="Sam" />);
     fireEvent.press(screen.getByTestId('status-mine'));

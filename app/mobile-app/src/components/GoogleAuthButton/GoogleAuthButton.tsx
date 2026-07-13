@@ -6,6 +6,7 @@ import { Text, XStack } from 'tamagui';
 
 import { useConfigStore } from '@/stores/config.store';
 import { useThemeStore } from '@/stores/theme.store';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 // Official Google "G" marks (from the Google sign-in branding kit). The light
 // mark sits on a white tile, the dark mark on a dark tile, so each blends into
@@ -62,7 +63,7 @@ export function GoogleAuthButton({
       aria-disabled={isDisabled}
       disabled={isDisabled}
       onPress={() => {
-        if (!isDisabled) void promptAsync();
+        if (!isDisabled) fireAndForget(promptAsync());
       }}
       alignItems="center"
       justifyContent="center"

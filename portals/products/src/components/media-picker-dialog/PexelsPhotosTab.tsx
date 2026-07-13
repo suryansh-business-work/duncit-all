@@ -68,14 +68,14 @@ export default function PexelsPhotosTab({
 
   useEffect(() => {
     if (open && active && photos.length === 0) {
-      void runPexels(pquery, 1, false);
+      runPexels(pquery, 1, false).catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, active]);
 
   useEffect(() => {
     if (open && active) {
-      void runPexels(pquery, 1, false);
+      runPexels(pquery, 1, false).catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [porientation]);
@@ -135,7 +135,7 @@ export default function PexelsPhotosTab({
           value={pquery}
           onChange={(e) => setPquery(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') void runPexels(pquery, 1, false);
+            if (e.key === 'Enter') runPexels(pquery, 1, false).catch(console.error);
           }}
           InputProps={{
             startAdornment: (

@@ -4,6 +4,7 @@ import { useProfilePhoto } from '@/hooks/useProfilePhoto';
 import { useStatus } from '@/hooks/useStatus';
 import { useStatusUpload } from '@/hooks/useStatusUpload';
 import { useStatusStore } from '@/stores/status.store';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 /**
  * State machine behind the profile avatar (items 9 + 12): the photo menu, the
@@ -33,7 +34,7 @@ export function useProfileAvatar(onChanged?: () => void | Promise<void>) {
   // Tap: view the active story, otherwise start adding one (item 12).
   const onAvatarPress = () => {
     if (hasStory) setStoryOpen(true);
-    else void addStory();
+    else fireAndForget(addStory());
   };
 
   const openMenu = () => setMenuOpen(true);
@@ -47,7 +48,7 @@ export function useProfileAvatar(onChanged?: () => void | Promise<void>) {
 
   const changePhoto = () => {
     setMenuOpen(false);
-    void pick();
+    fireAndForget(pick());
   };
 
   const askRemove = () => {

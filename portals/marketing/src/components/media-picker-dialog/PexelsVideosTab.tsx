@@ -69,14 +69,14 @@ export default function PexelsVideosTab({
 
   useEffect(() => {
     if (open && active && videos.length === 0) {
-      void runPexelsVideos(vquery, 1, false);
+      runPexelsVideos(vquery, 1, false).catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, active]);
 
   useEffect(() => {
     if (open && active) {
-      void runPexelsVideos(vquery, 1, false);
+      runPexelsVideos(vquery, 1, false).catch(console.error);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [vorientation]);
@@ -136,7 +136,7 @@ export default function PexelsVideosTab({
           value={vquery}
           onChange={(e) => setVquery(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === 'Enter') void runPexelsVideos(vquery, 1, false);
+            if (e.key === 'Enter') runPexelsVideos(vquery, 1, false).catch(console.error);
           }}
           InputProps={{
             startAdornment: (

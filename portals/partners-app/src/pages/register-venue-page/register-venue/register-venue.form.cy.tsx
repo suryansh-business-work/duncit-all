@@ -98,7 +98,10 @@ describe('registerVenueSchema', () => {
   it('maps every value field to exactly the sections that validate it', () => {
     const allFields = Object.values(SECTION_FIELDS).flat();
     expect(new Set(allFields).size).toBe(allFields.length);
-    expect([...allFields].sort()).toEqual(Object.keys(blankRegisterVenueValues).sort());
+    const byName = (a: string, b: string) => a.localeCompare(b);
+    expect([...allFields].sort(byName)).toEqual(
+      Object.keys(blankRegisterVenueValues).sort(byName),
+    );
   });
 });
 

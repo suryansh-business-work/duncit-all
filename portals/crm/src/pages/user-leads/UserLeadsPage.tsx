@@ -168,7 +168,7 @@ export default function UserLeadsPage() {
         hidden
         onChange={(e) => {
           const f = e.target.files?.[0];
-          if (f) void onImport(f);
+          if (f) onImport(f).catch(console.error);
           e.target.value = '';
         }}
       />

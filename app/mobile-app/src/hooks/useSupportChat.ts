@@ -43,6 +43,33 @@ interface PickedAsset {
   mimeType?: string | null;
 }
 
+interface SupportSocketHandlers {
+  onMessage: (m: SupportChatMessage) => void;
+  onSessionUpdate: (s: SupportChatSession) => void;
+  onTyping: (p: TypingPayload) => void;
+}
+
+/**
+ * Open the live socket for a support session and wire its listeners. Lives at
+ * module scope so the effect that calls it stays shallow (Sonar S2004).
+ */
+function connectSupportSocket(
+  token: string,
+  sessionId: string,
+  handlers: SupportSocketHandlers,
+): Socket {
+  const s = io(config.apiUrl, {
+    path: '/socket.io',
+    auth: { token },
+    transports: ['websocket', 'polling'],
+  });
+  s.on('connect', () => s.emit('join_support_session', sessionId));
+  s.on('support_chat:message', handlers.onMessage);
+  s.on('support_chat:session_update', handlers.onSessionUpdate);
+  s.on('support_typing', handlers.onTyping);
+  return s;
+}
+
 /**
  * Chat with Us — opens (or reuses) the user's session, streams messages, shows
  * the agent's typing + read state, and supports resolve/reopen, feedback and a
@@ -119,16 +146,11 @@ export function useSupportChat() {
     };
     getAuthToken().then((token) => {
       if (cancelled || !token) return;
-      const s = io(config.apiUrl, {
-        path: '/socket.io',
-        auth: { token },
-        transports: ['websocket', 'polling'],
+      socketRef.current = connectSupportSocket(token, sessionId, {
+        onMessage,
+        onSessionUpdate,
+        onTyping,
       });
-      socketRef.current = s;
-      s.on('connect', () => s.emit('join_support_session', sessionId));
-      s.on('support_chat:message', onMessage);
-      s.on('support_chat:session_update', onSessionUpdate);
-      s.on('support_typing', onTyping);
     });
     return () => {
       cancelled = true;

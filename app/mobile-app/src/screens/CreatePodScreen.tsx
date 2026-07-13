@@ -9,6 +9,7 @@ import { StackScreen } from '@/components/StackScreen';
 import { useCreatePod } from '@/hooks/useCreatePod';
 import { useHomeStore } from '@/stores/home.store';
 import type { RootStackParamList } from '@/navigation/types';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 /** Host-only Create Pod screen — reached from the Home "+" button or by resuming
  * a draft from Host Management. The draft autosaves; finishing the last step
@@ -71,7 +72,7 @@ export function CreatePodScreen() {
               onModerate={moderate}
               onPublish={async (id, input) => {
                 await publish(id, input);
-                void useHomeStore.getState().fetch(true);
+                fireAndForget(useHomeStore.getState().fetch(true));
                 navigation.replace('HostManage');
               }}
             />

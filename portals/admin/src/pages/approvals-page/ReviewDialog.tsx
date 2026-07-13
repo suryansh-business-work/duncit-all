@@ -42,7 +42,8 @@ export default function ReviewDialog({
       setDenying(true);
       return;
     }
-    void onDeny(request.id, notes.trim());
+    // onDeny may be sync or async — normalise so a rejection is reported, not dropped.
+    Promise.resolve(onDeny(request.id, notes.trim())).catch(console.error);
   };
 
   const actions = isPending ? (

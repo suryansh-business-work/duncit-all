@@ -10,6 +10,7 @@ import { TabScreen } from '@/components/TabScreen';
 import { useFollowingFeed, type FeedPost, type FeedSource } from '@/hooks/useFollowingFeed';
 import { useMe } from '@/hooks/useMe';
 import type { RootStackParamList } from '@/navigation/types';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 const TABS: FeedSource[] = ['PEOPLE', 'CLUBS'];
 const TAB_LABELS: Record<FeedSource, string> = { PEOPLE: 'People', CLUBS: 'Clubs' };
@@ -94,7 +95,7 @@ export function FollowingScreen() {
           onClose={() => setViewerPostId(null)}
           onDeleted={() => {
             setViewerPostId(null);
-            void feed.refetch();
+            fireAndForget(feed.refetch());
           }}
         />
       ) : null}

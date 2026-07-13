@@ -43,7 +43,7 @@ function mount(over: Record<string, unknown> = {}) {
   const actions = {
     sendText: jest.fn(),
     sendImage: jest.fn().mockResolvedValue(undefined),
-    react: jest.fn(),
+    react: jest.fn().mockResolvedValue(undefined),
     setError: jest.fn(),
   };
   hook.mockReturnValue({

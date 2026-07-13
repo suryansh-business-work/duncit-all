@@ -51,7 +51,7 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
         onChange={(e) => {
           const file = e.target.files?.[0] ?? null;
           e.target.value = '';
-          void a.onFileChange(file);
+          a.onFileChange(file).catch(console.error);
         }}
       />
       <input
@@ -63,7 +63,7 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
         onChange={(e) => {
           const file = e.target.files?.[0] ?? null;
           e.target.value = '';
-          void a.onStoryFileChange(file);
+          a.onStoryFileChange(file).catch(console.error);
         }}
       />
 
@@ -116,7 +116,9 @@ export default function ProfileAvatar({ photo, name, size = 96, onChanged }: Rea
         message="This story will be removed for everyone."
         confirmLabel="Delete"
         destructive
-        onConfirm={() => deleteId && void a.confirmDeleteStory(deleteId)}
+        onConfirm={() => {
+          if (deleteId) a.confirmDeleteStory(deleteId).catch(console.error);
+        }}
         onClose={() => a.setDeleteId(null)}
       />
 

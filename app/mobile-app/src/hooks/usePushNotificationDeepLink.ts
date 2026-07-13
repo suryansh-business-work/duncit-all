@@ -5,6 +5,7 @@ import type { NativeStackNavigationProp } from '@react-navigation/native-stack';
 
 import type { RootStackParamList } from '@/navigation/types';
 import { resolveNotificationLink } from '@/utils/notification-link';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 type Nav = NativeStackNavigationProp<RootStackParamList>;
 
@@ -13,7 +14,7 @@ type Nav = NativeStackNavigationProp<RootStackParamList>;
 export function navigateForPushLink(navigation: Nav, link: unknown) {
   const target = resolveNotificationLink(typeof link === 'string' ? link : null);
   if (target.kind === 'external') {
-    void Linking.openURL(target.url);
+    fireAndForget(Linking.openURL(target.url));
     return;
   }
   if (target.kind === 'post') {

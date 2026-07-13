@@ -15,6 +15,7 @@ import type { StatusGroup } from '@/hooks/useStatus';
 import { StatusTile } from '@/components/status/StatusTile';
 import { StatusViewer } from '@/components/status/StatusViewer';
 import { StoryViewersSheet } from '@/components/status/StoryViewersSheet';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 interface StatusRailProps {
   userName: string;
@@ -123,10 +124,10 @@ export function StatusRail({ userPhoto }: Readonly<StatusRailProps>) {
           onPress={() => {
             if (uploading) return;
             if (mine) openAt(0);
-            else void pickAndUpload();
+            else fireAndForget(pickAndUpload());
           }}
           onBadgePress={() => {
-            if (!uploading) void pickAndUpload();
+            if (!uploading) fireAndForget(pickAndUpload());
           }}
         />
         {followed.map((item, itemIndex) => (

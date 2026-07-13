@@ -11,6 +11,7 @@ import { useMe } from '@/hooks/useMe';
 import { MyMeetingsDocument, type MyMeetingsResult } from '@/graphql/onboarding-survey';
 import { graphqlRequest } from '@/services/graphql.client';
 import type { RootStackParamList } from '@/navigation/types';
+import { fireAndForget } from '@/utils/fire-and-forget';
 
 const BOXES = [
   {
@@ -68,7 +69,7 @@ export function EarnScreen() {
       .catch(() => undefined);
 
   useEffect(() => {
-    void loadMeetings();
+    fireAndForget(loadMeetings());
     // Reload whenever the screen regains focus (e.g. returning from the
     // onboarding gate after booking) so the cards lock/unlock immediately.
     const unsubscribe = navigation.addListener('focus', () => void loadMeetings());

@@ -96,7 +96,7 @@ export const autoExtendService = {
     started = true;
     await runAll().catch((e) => log('initial run failed:', e));
     setInterval(() => {
-      void runAll().catch((e) => log('daily run failed:', e));
+      runAll().catch((e) => log('daily run failed:', e));
     }, DAY_MS);
   },
 };

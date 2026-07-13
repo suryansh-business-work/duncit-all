@@ -37,7 +37,7 @@ const mineGroup = {
 };
 
 const refetch = jest.fn();
-const pick = jest.fn();
+const pick = jest.fn().mockResolvedValue(undefined);
 const upload = jest.fn();
 const remove = jest.fn().mockResolvedValue(undefined);
 const cancelPick = jest.fn();
